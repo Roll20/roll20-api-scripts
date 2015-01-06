@@ -1,0 +1,2 @@
+sendChat as a Player or Character (Contributed by Brian Shields)
+This is a few lines you can use in a chat:message event script to ensure you're sending a message with sendChat accurately as either a Player or a Character, depending on who triggered the event.
