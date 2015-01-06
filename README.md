@@ -6,7 +6,25 @@ This repository is the collection of all the community-contributed API scripts t
 Contributing
 ============
 
-If you want to help improve an existing API script, just clone this repository, make your changes, and submit a pull request. If you would like to contribute a new script for the community to use, just clone this repository and create a new folder with the name of the name of the script. Then send a pull request. If you have any questions or aren't familiar with Github or git in general, feel free to drop us a line at team@roll20.net and we can help you get set up.
+If you want to help improve an existing API script, just clone this repository, make your changes, and submit a pull request. If you would like to contribute a new script for the community to use, just clone this repository and create a new folder with the name of the script. You'll need to include a package.json file. Optionally you can add a help.txt with any instructions you want to include as well as any other files you feel will be helpful to the end user. Once everything is in the new folder send a pull request. If you have any questions or aren't familiar with Github or git in general, feel free to drop us a line at team@roll20.net and we can help you get set up.
+
+**Creating a package.json File**
+
+When you are ready to submit your template for **public use**, create a `package.json` file in your script's folder (see the cookbook folder for an example package.json file). The file has the following fields:
+
+* `name`: The name of the API script (e.g. `cookbook`)
+* `version`: The version number of the API script (e.g. `12.1.3`)
+* `description`: An short, less than 100 character, explination of the script and it's use.
+* `authors`: A simple string telling who contributed toward the sheet (e.g. `Riley Dutton,Steve Koontz`)
+* `roll20userid`: A simple string telling the Roll20 User ID's of the authors (e.g. `1` or `45672,145678`). Just used so we know who to credit internally, won't be shown publicly on the site.
+* `scripts`: A list of the API scripts (e.g. `cookbook.js`) 
+* `dependencies`: A list of other API scripts this set requires to function (e.g. `mykitchen.js`) 
+* `conflicts`: A list of other API scripts this set is known to conflict with (e.g. `recipes.js`) 
+* `license`: Roll20's API repository is working under a MIT license (e.g. `MIT`)
+
+After we have reviewed your package, if we approve it, we will add it to the `approved.yaml` file in the root directory which will cause it to be available to everyone on the main Roll20 site. If we reject your sheet, we will comment on your Github commit and let you know what changes need to be made before it can be accepted. 
+
+**PLEASE VERIFY YOUR PACKAGE.JSON IS VALID JSON at http://jsonlint.com before you submit it!**
 
 Update the Wiki
 ===============
@@ -32,16 +50,9 @@ Near the top of your script should be a comment providing the script's name, ver
 
 **Limit Your Script's Footprint**
 
-Include namespaces for your functions and variables, to avoid potential name collisions with other authors. Placing your functions and variable inside a unique namespace to your script protects both it, the user, and other community scripts.
+Include namespaces for your functions and variables, to avoid potential conflicts with other authors. Placing your functions and variables inside a unique namespace to your script protects both it, the user, and other community scripts.
 
 Do your best to limit what your script is manipulating at any given moment to achieve it's desired result. Add API "!" triggers to turn on and off your script's functionality. It is a safe practice to have your script disabled by default. Avoid functions that keep aggresive control and manipulation of objects whenever possible.
-
-namespaces
-limit changing things unnecessarily or controlling things constantly
-
-
-
-
 
 License
 =======
