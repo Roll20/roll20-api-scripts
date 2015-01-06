@@ -10,21 +10,20 @@ If you want to help improve an existing API script, just clone this repository, 
 
 **Creating a package.json File**
 
-When you are ready to submit your script for **public use**, create a `package.json` file in your script's folder (see the "Bloodied and Dead Status Markers" folder for an example package.json file). The file has the following fields:
+When you are ready to submit your script for **public use**, create a `package.json` file in your script's folder (see the "Example_package.json" in the root folder for an example). The file has the following fields:
 
 * `name`: The name of the API script (e.g. `Cookbook`)
-* `version`: The version number of the API script (e.g. `12.1.3`)
+* `version`: The version number of the API script (e.g. `12.3`)
 * `description`: A short, less than 100 character, explanation of the script and it's use.
 * `authors`: A simple string telling who contributed toward the sheet (e.g. `Riley Dutton,Steve Koontz`)
 * `roll20userid`: A simple string telling the Roll20 User ID's of the authors (e.g. `1` or `45672,145678`). Just used so we know who to credit internally, won't be shown publicly on the site.
-* `scripts`: A list of the API scripts (e.g. `cookbook.js`) 
-* `dependencies`: A list of other API scripts and API objects this set requires to function (e.g. `mykitchen.js`) 
-* `conflicts`: A list of other API scripts this set is known to conflict with (e.g. `recipes.js`) 
-* `license`: Roll20's API repository is working under a MIT license (e.g. `MIT`)
-
-After we have reviewed your package and approve it, we will merge in your changes to the root directory which will make it available to everyone. If we reject your sheet, we will comment on your Github commit and let you know what changes need to be made before it can be accepted. 
+* `dependencies`: A list of other API scripts and their version numbers this script requires to function (e.g. `My Kitchen: 1.0`) 
+* `modifies`: A list of the common Roll20 objects and properties the script reads and writes to. Custom objects and properties inside a namespace don't need to be included. (e.g. `bar1_value: write`)
+* `conflicts`: A list of other API scripts this script is known to conflict with (e.g. `Recipes`) 
 
 **PLEASE VERIFY YOUR PACKAGE.JSON IS VALID JSON at http://jsonlint.com before you submit it!**
+
+After we have reviewed your package and approve it, we will merge in your changes which will make them available to everyone. If we reject your package, we will comment on your Github commit and let you know what changes need to be made before it can be accepted. 
 
 Update the Wiki
 ===============
