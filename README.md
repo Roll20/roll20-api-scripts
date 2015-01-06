@@ -10,11 +10,11 @@ If you want to help improve an existing API script, just clone this repository, 
 
 **Creating a package.json File**
 
-When you are ready to submit your script for **public use**, create a `package.json` file in your script's folder (see the Cookbook folder for an example package.json file). The file has the following fields:
+When you are ready to submit your script for **public use**, create a `package.json` file in your script's folder (see the "Bloodied and Dead Status Markers" folder for an example package.json file). The file has the following fields:
 
 * `name`: The name of the API script (e.g. `Cookbook`)
 * `version`: The version number of the API script (e.g. `12.1.3`)
-* `description`: A short, less than 100 character, explination of the script and it's use.
+* `description`: A short, less than 100 character, explanation of the script and it's use.
 * `authors`: A simple string telling who contributed toward the sheet (e.g. `Riley Dutton,Steve Koontz`)
 * `roll20userid`: A simple string telling the Roll20 User ID's of the authors (e.g. `1` or `45672,145678`). Just used so we know who to credit internally, won't be shown publicly on the site.
 * `scripts`: A list of the API scripts (e.g. `cookbook.js`) 
