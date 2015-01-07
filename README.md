@@ -30,6 +30,17 @@ Update the Wiki
 
 After making any changes to a script or adding a new one, it is imortant to include those changes with the Roll20 wiki at (https://wiki.roll20.net/API:Script_Index).
 
+If you're making updates to an existing script, please find that script from the list and update:
+Author: Adding yourself as a contributor
+Version: To reflect your update
+Last Modified: To today's date
+Changelog: To reflect the new version and the changes you've made
+Optionally: Anything else such as the Description, Syntax, Installation and Configuration, or Script Use that may need altering or clarifying due to your changes.
+
+If you're contributing a new script that has been accepted and merged in, please add a new page to the Wiki. The naming convention for scripts is "https://wiki.roll20.net/Script:Script_Name". Please format your listing from the existing style. You can find an example at (https://wiki.roll20.net/Script:Example).
+
+After you've added the page, please go to the API Script Index (https://wiki.roll20.net/API:Script_Index) and add a link to your listing in the appropriate category.
+
 Guidelines
 ==========
 
