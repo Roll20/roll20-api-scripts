@@ -2,6 +2,8 @@
  * Compares two strings and returns the number of changes (substitutions,
  * insertions, and deletions) required to move from the first string to the
  * second.
+ * 
+ * As a convenience, this function has been added to the String prototype  
  */
 var bshields = bshields || {};
 bshields.levenshteinDistance = (function() {
@@ -48,3 +50,7 @@ bshields.levenshteinDistance = (function() {
     
     return levenshteinDistance;
 }());
+
+String.prototype.levenshteinDistance = String.prototype.levenshteinDistance || function(b) {
+    return bshields.levenshteinDistance(this, b);
+};

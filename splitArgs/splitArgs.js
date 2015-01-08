@@ -4,12 +4,15 @@
  * string will allow you to group delimited tokens. Single and double quotes
  * can be nested one level.
  * 
+ * As a convenience, this function has been added to the String prototype,
+ * letting you treat it like a function of the string object.  
+ * 
  * Example:
 
 on('chat:message', function(msg) {
     var command, params;
     
-    params = bshields.splitArgs(msg.content);
+    params = msg.content.splitArgs();
     command = params.shift().substring(1);
     
     // msg.content: !command with parameters, "including 'with quotes'"
@@ -69,3 +72,7 @@ bshields.splitArgs = (function() {
     
     return splitArgs;
 }());
+
+String.prototype.splitArgs = String.prototype.splitArgs || function(separator) {
+    return bshields.splitArgs(this, separator);
+};
