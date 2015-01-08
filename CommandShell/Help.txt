@@ -5,7 +5,7 @@ and avoid command name collisions.  CommandShell provides a central system for
 registering commands and marshalling chat commands to the appropriate callback,
 POSIX-style argument parsing, access control, and simple output functions.
 
-It is recommended that this script be used in conjuction with the isGM module,
+It is recommended that this script be used in conjunction with the isGM module,
 which will improve detection of messages coming from the GM.  In the absence of
 that module, a player will only be detected as GM when sending chat as their
 player name (i.e. not speaking as a character).
