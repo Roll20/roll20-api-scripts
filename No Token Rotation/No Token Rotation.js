@@ -1,1 +1,1 @@
-on('change:graphic:rotation', function(obj, prev) { obj.set('rotation', 0); });
+on('change:graphic:rotation', function(obj, prev) { obj.set('rotation', prev.rotation); });
