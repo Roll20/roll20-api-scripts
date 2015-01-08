@@ -1,0 +1,17 @@
+{
+  "name": "Atuo Initiative",
+  "version": "1.0",
+  "description": "Roll initiative for selected tokens",
+  "authors": "Josh",
+  "roll20userid": "84478",
+  "dependencies": {
+	"Movement Tracker": "1.0"
+  },
+  "modifies": {
+    "turnorder": "write",
+    "message": "write"
+  },
+  "conflicts": [
+    "none"
+  ]
+}
