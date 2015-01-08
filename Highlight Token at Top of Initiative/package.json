@@ -1,0 +1,16 @@
+{
+  "name": "Highlight Token at Top of Initiative",
+  "version": "1.0",
+  "description": "Highlights the topen currently at the top of the turn order window",
+  "authors": "Honey Badger",
+  "roll20userid": "48576",
+  "dependencies": {},
+  "modifies": {
+    "turnorder": "read",
+    "graphic": "write",
+	"message": "read"
+  },
+  "conflicts": [
+    "none"
+  ]
+}
