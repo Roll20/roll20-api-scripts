@@ -1,3 +1,8 @@
+/**
+ * Counts raises for Savage Worlds. Use !rc roll-expression target-number
+ * 
+ * Customize output with config.outputFormat, and customize raise size with config.raiseSize  
+ */
 var bshields = bshields || {};
 bshields.raiseCount = (function() {
     'use strict';

@@ -1,3 +1,6 @@
+/**
+ * Set selected tokens flying with !fly height. Clear the flight status markers with !fly.
+ */
 var bshields = bshields || {};
 bshields.flight = (function() {
     'use strict';

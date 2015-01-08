@@ -1,3 +1,10 @@
+/**
+ * Report number of successes on a roll for Exalted. Simply roll d10s, and the
+ * successes will be reported automatically.
+ * 
+ * Does not account for damage rolls (10s don't count double) or Sidereal
+ * Astrology (change target number)  
+ */
 var bshields = bshields || {};
 bshields.exalted = (function() {
     'use strict';
