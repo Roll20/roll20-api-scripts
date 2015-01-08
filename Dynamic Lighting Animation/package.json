@@ -1,13 +1,13 @@
 {
-  "name": "Collision Detection",
+  "name": "Dynamic Lighting Animation",
   "version": "1.0",
-  "description": "Watches for collisions between player-controlled tokens and a specified subset of path objects. When a collision is detected, the script may return the token to its position prior to the move, send a warning message to the token's controller, and/or halt the token at the path acting as a barrier to movement.",
+  "description": "Animates paths on the Dynamic Lighting layer.",
   "authors": "Brian Shields",
   "roll20userid": "235259",
   "dependencies": {},
   "modifies": {
-    "token": "write",
-    "path": "read"
+    "path": "write",
+    "message": "write"
   },
   "conflicts": [
     "none"
