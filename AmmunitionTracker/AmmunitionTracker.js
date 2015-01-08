@@ -130,3 +130,4 @@ on("chat:message", function(msg)
             }
     } //This ends !setgun
  })
+ 
