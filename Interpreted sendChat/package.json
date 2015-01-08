@@ -5,7 +5,7 @@
   "authors": "Brian Shields",
   "roll20userid": "235259",
   "dependencies": {
-    levenshteinDistance: "1.0"
+    "levenshteinDistance": "1.0"
   },
   "modifies": {
     "message": "write"

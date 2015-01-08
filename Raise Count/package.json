@@ -5,7 +5,7 @@
   "authors": "Brian Shields",
   "roll20userid": "235259",
   "dependencies": {
-    splitArgs: "1.0",
+    "splitArgs": "1.0",
     "Interpreted sendChat": "2.0"
   },
   "modifies": {
