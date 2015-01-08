@@ -13,6 +13,6 @@
     "message": "write"
   },
   "conflicts": [
-    "none"
+    "Store Commands"
   ]
 }
