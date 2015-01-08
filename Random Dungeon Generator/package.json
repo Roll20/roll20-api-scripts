@@ -1,0 +1,15 @@
+{
+  "name": "Random Dungeon Generator",
+  "version": "1.0",
+  "description": "Generates a random dungeon using geomorphic map tiles",
+  "authors": "Stephen S.,Alex L.",
+  "roll20userid": "135636,71687",
+  "dependencies": {},
+  "modifies": {
+    "graphic": "write",
+	"message": "write"
+  },
+  "conflicts": [
+    "none"
+  ]
+}
