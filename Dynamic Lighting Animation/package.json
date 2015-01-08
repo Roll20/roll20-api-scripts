@@ -1,0 +1,18 @@
+{
+  "name": "Dynamic Lighting Animation",
+  "version": "2.0",
+  "description": "Animates paths on the Dynamic Lighting layer.",
+  "authors": "Brian Shields",
+  "roll20userid": "235259",
+  "dependencies": {
+    "IsGM Auth Module": "1.1",
+    "splitArgs": "1.0"
+  },
+  "modifies": {
+    "path": "write",
+    "message": "write"
+  },
+  "conflicts": [
+    "Store Commands"
+  ]
+}
