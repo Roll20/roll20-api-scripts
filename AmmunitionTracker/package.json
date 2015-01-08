@@ -1,0 +1,13 @@
+{
+  "name": "AmmunitionTracker",
+  "version": ".6",
+  "description": "A bunch of commands to track ammunition.",
+  "authors": "Tristan Beard",
+  "roll20userid": "268993",
+  "dependencies": {},
+  "modifies": {
+  },
+  "conflicts": [
+  "GMCode"
+  ]
+}

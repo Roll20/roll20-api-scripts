@@ -1,0 +1,17 @@
+{
+  "name": "Flight",
+  "version": "3.0",
+  "description": "Adds 'fluffy-wings' status icon to selected token to represent some hieght.",
+  "authors": "Brian Shields",
+  "roll20userid": "235259",
+  "dependencies": {
+    "splitArgs": "1.0"
+  },
+  "modifies": {
+    "message": "read",
+    "token": "write"
+  },
+  "conflicts": [
+    "none"
+  ]
+}
