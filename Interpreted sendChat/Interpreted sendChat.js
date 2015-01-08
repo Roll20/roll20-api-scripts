@@ -25,7 +25,7 @@ bshields.sendChat = (function() {
     function interpretedSendChat(chatMsg, message) {
         var who = chatMsg.who,
             speaking = _.sortBy(filterObjs(function(obj) { return obj.get('type') === 'character' && obj.get('name').indexOf(who) >= 0; }),
-                                function(chr) { return Math.abs(bshields.levenshteinDistance(chr.get('name'), who)); })[0];
+                                function(chr) { return Math.abs(chr.get('name').toLowerCase().levenshteinDistance(who.toLowerCase()); })[0];
         
         sendChat(speaking ? 'character|' + speaking.id : 'player|' + chatMsg.playerid, message);
     }

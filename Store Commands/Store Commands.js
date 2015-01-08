@@ -51,7 +51,7 @@ bshields.storeCommands = (function() {
     
     function handleInput(msg) {
         var isApi = msg.type === 'api',
-            args = bshields.splitArgs(msg.content.trim()),
+            args = msg.content.trim().splitArgs(),
             command, args0, isHelp;
         
         if (!list[msg.playerid]) {
