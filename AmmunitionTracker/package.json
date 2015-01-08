@@ -8,6 +8,6 @@
   "modifies": {
   },
   "conflicts": [
-  GMCode
+  "GMCode"
   ]
 }
