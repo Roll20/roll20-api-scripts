@@ -1,0 +1,14 @@
+{
+  "name": "Language Script",
+  "version": "2.0",
+  "description": "Produces gibberish for players who can't speak the language being spoken",
+  "authors": "Stephen S.",
+  "roll20userid": "135636",
+  "dependencies": {},
+  "modifies": {
+    "message": "write"
+  },
+  "conflicts": [
+    "none"
+  ]
+}
