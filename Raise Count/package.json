@@ -1,10 +1,13 @@
 {
   "name": "Raise Count",
-  "version": "1.0",
+  "version": "2.0",
   "description": "Counts raises for the Savage Worlds system.",
   "authors": "Brian Shields",
   "roll20userid": "235259",
-  "dependencies": {},
+  "dependencies": {
+    splitArgs: "1.0",
+    "Interpreted sendChat": "2.0"
+  },
   "modifies": {
     "message": "write"
   },
