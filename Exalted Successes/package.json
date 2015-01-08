@@ -1,10 +1,12 @@
 {
   "name": "Exalted Successes",
-  "version": "1.0",
+  "version": "2.0",
   "description": "Reports successes on d10 rolls for use with the Exalted game system.",
   "authors": "Brian Shields",
   "roll20userid": "235259",
-  "dependencies": {},
+  "dependencies": {
+    "Interpreted sendChat": "1.0"
+  },
   "modifies": {
     "message": "write"
   },
