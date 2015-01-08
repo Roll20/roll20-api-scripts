@@ -1,0 +1,16 @@
+{
+  "name": "Conditions and Status Tracker",
+  "version": "1.0",
+  "description": "Tracks status associated with tokens",
+  "authors": "Josh",
+  "roll20userid": "84478",
+  "dependencies": {},
+  "modifies": {
+    "message": "write",
+    "graphic": "write",
+	"turnorder": "read"
+  },
+  "conflicts": [
+    "none"
+  ]
+}
