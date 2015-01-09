@@ -1,0 +1,14 @@
+{
+  "name": "IsGM Auth Module",
+  "version": "1.0",
+  "description": "Provides a function for determining if a user is a GM",
+  "authors": "Aaron C. M.",
+  "roll20userid": "104025",
+  "dependencies": {},
+  "modifies": {
+    "message": "write"
+  },
+  "conflicts": [
+    "none"
+  ]
+}

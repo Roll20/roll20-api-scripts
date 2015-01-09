@@ -1,0 +1,14 @@
+{
+  "name": "Custom Power Cards",
+  "version": "1.0",
+  "description": "Fancy-formatted power card macros",
+  "authors": "HoneyBadger,Brian Shields,Chris N.,Rob J.,Aaron C. M.",
+  "roll20userid": "48576,235259,415342,167919,104025",
+  "dependencies": {},
+  "modifies": {
+    "message": "write"
+  },
+  "conflicts": [
+    "none"
+  ]
+}

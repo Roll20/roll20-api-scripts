@@ -1,0 +1,15 @@
+{
+  "name": "Auto Teleporting and Chat Based Teleporting",
+  "version": "1.0",
+  "description": "Teleports tokens by chat command or by moving into the same sapce as specific other tokens",
+  "authors": "Josh",
+  "roll20userid": "84478",
+  "dependencies": {},
+  "modifies": {
+    "message": "write",
+    "graphic": "write"
+  },
+  "conflicts": [
+    "none"
+  ]
+}

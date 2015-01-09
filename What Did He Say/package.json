@@ -1,0 +1,14 @@
+{
+  "name": "What Did He Say?",
+  "version": "1.0",
+  "description": "Produces gibberish for players who can't speak the language being spoken",
+  "authors": "Roger A.",
+  "roll20userid": "61424",
+  "dependencies": {},
+  "modifies": {
+    "message": "write"
+  },
+  "conflicts": [
+    "none"
+  ]
+}
