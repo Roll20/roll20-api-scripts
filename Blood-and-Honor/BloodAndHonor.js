@@ -6,7 +6,7 @@ var BloodAndHonor = {
 		company: "Team Asshat" || "The Alehounds",
 		contact: "echo@TeamAsshat.com",
 	},
-	version: "0.7",
+	version: "0.8",
 	gist: "https://gist.github.com/SplenectomY/097dac3e427ec50f32c9",
 	forum: "https://app.roll20.net/forum/post/1477230/",
 	wiki: "https://wiki.roll20.net/Script:Blood_And_Honor:_Automatic_blood_spatter,_pooling_and_trail_effects",
@@ -115,12 +115,12 @@ on("ready", function(obj) {
 					BloodAndHonor.timeout += 2;
 				}
 			}
-		});
-	}
+		}
+	});
 	
 	on("chat:message", function(msg) {
 		if (msg.type == "api" && msg.content.indexOf("!clearblood") !== -1) {
-			if (isGM(msg.playerid) == false && BloodAndHonor.useIsGM == true) {
+			if (BloodAndHonor.useIsGM && !isGM(msg.playerid)) {
 				sendChat(msg.who,"/w " + msg.who + " You are not authorized to use that command!");
 				return;
 			} else {
