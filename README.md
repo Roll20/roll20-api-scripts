@@ -6,7 +6,7 @@ This repository is the collection of all the community-contributed API scripts t
 Contributing
 ============
 
-If you want to help improve an existing API script, just clone this repository, make your changes, and submit a pull request. If you would like to contribute a new script for the community to use, just clone this repository and create a new folder with the name of the script which matches the name in your package.json file. Optionally you can add a help.txt file with any instructions you want to include as well as any other files you feel will be helpful to the end user. Once everything is in the new folder send a pull request. If you have any questions or aren't familiar with Github or git in general, feel free to drop us a line at team@roll20.net and we can help you get set up.
+If you want to help improve an existing API script, just clone this repository, make your changes, and submit a pull request. If you would like to contribute a new script for the community to use, just clone this repository and create a new folder with the name of the script which matches the name in your package.json file. Optionally you can add a help.txt file with any instructions you want to include as well as any other files you feel will be helpful to the end user. Once everything is in the new folder send a pull request. If you have any questions or aren't familiar with Github or git in general, see [Beginner's Guide to GitHub](https://wiki.roll20.net/Beginner%27s_Guide_to_GitHub) on the wiki. If you still need help, feel free to drop us a line at team@roll20.net or post a question on the forums and we can help you get set up.
 
 **Creating a package.json File**
 
