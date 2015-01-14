@@ -17,13 +17,23 @@ var Tracker = Tracker || {
 
 
     initConfig: function(){
-	if (state.hasOwnProperty('InitiativeTracker')){ return; }
-	state.InitiativeTracker = {
-				    'highToLow':		true,
-				    'announceRounds':		true,
-				    'announceTurns':		true,
-				    'announceExpiration':	true
-	};
+	if (!state.hasOwnProperty('InitiativeTracker')){
+	    state.InitiativeTracker = {
+					'highToLow':		true,
+					'announceRounds':	true,
+					'announceTurns':	true,
+					'announceExpiration':	true
+	    };
+	}
+	if (!state.InitiativeTracker.hasOwnProperty('round')){
+	    state.InitiativeTracker.round = null;
+	}
+	if (!state.InitiativeTracker.hasOwnProperty('count')){
+	    state.InitiativeTracker.count = null;
+	}
+	if (!state.InitiativeTracker.hasOwnProperty('status')){
+	    state.InitiativeTracker.status = [];
+	}
     },
 
     write: function(s, who, style, from){
