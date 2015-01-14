@@ -1,0 +1,17 @@
+{
+  "name": "Marking Conditions",
+  "version": "3.0",
+  "description": "Sets and removes statusmarkers on tokens.",
+  "authors": "Brian Shields",
+  "roll20userid": "235259",
+  "dependencies": {
+    "splitArgs": "1.0"
+  },
+  "modifies": {
+    "message": "read",
+    "graphic": "write"
+  },
+  "conflicts": [
+    "none"
+  ]
+}
