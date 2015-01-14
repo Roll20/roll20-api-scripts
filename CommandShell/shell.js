@@ -239,7 +239,12 @@ var Shell = Shell || {
     // internal functions
 
     isFromGM: function(msg){
-	// try to determine if message sender is GM from msg
+	// try to determine if message sender is GM; use builtin playerIsGM function if available
+	if (typeof(playerIsGM) == typeof(Shell.isFromGM)){
+	    return playerIsGM(msg.playerid);
+	}
+
+	// playerIsGM not available; try to determine from msg.who
 	var player = getObj("player", msg.playerid);
 	if ((player.get('speakingas') == "") || (player.get('speakingas') == "player|" + msg.playerid)){
 	    return msg.who != player.get('_displayname');
