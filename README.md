@@ -28,7 +28,7 @@ After we have reviewed your package and approve it, we will merge in your change
 Update the Wiki
 ===============
 
-After making any changes to a script or adding a new one, it is imortant to include those changes with the Roll20 wiki at (https://wiki.roll20.net/API:Script_Index).
+After making any changes to a script or adding a new one, it is important to include those changes with the Roll20 wiki at (https://wiki.roll20.net/API:Script_Index).
 
 If you're making updates to an existing script, please find that script from the list and update:
 * Author: Adding yourself as a contributor
