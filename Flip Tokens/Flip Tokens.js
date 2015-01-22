@@ -11,7 +11,7 @@ var bshields = bshields || {};
 bshields.flip = (function() {
     'use strict';
     
-    var version = 2.0,
+    var version = 2.1,
         commands = {
             flip: function(args, msg) {
                 var selected = msg.selected;

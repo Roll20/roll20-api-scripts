@@ -10,7 +10,7 @@ var bshields = bshields || {};
 bshields.animation = (function() {
     'use strict';
     
-    var version = 2.0,
+    var version = 2.1,
         running = false,
         commands = {
             snapshot: function(args, msg) {

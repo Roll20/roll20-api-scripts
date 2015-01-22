@@ -12,7 +12,7 @@ var bshields = bshields || {};
 bshields.conditions = (function() {
     'use strict';
     
-    var version = 3.0,
+    var version = 3.1,
         commands = {
             mark: function(args, msg) {
                 var tok = getTokenMark(args[0], args[1], args[2]);
