@@ -41,6 +41,8 @@ bshields.shuffleturnorder = (function() {
             args = msg.content.trim().splitArgs(),
             command, arg0, isHelp;
         
+        if (!isGM(msg.playerid)) { return; }
+        
         if (isApi) {
             command = args.shift().substring(1).toLowerCase();
             arg0 = args.shift() || '';
