@@ -52,7 +52,7 @@ bshields.animation = (function() {
     function handleInput(msg) {
         var isApi = msg.type === 'api',
             args = msg.content.trim().splitArgs(),
-            command, args0, isHelp;
+            command, arg0, isHelp;
         
         if (!isGM(msg.playerid)) { return; }
         

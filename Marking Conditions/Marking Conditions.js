@@ -43,7 +43,7 @@ bshields.conditions = (function() {
     function handleInput(msg) {
         var isApi = msg.type === 'api',
             args = msg.content.trim().splitArgs(),
-            command, args0, isHelp;
+            command, arg0, isHelp;
         
         if (!list[msg.playerid]) {
             list[msg.playerid] = { cmds: [], delay: 500 };
