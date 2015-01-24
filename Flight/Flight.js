@@ -5,7 +5,7 @@ var bshields = bshields || {};
 bshields.flight = (function() {
     'use strict';
     
-    var version = 3.0,
+    var version = 3.1,
         commands = {
             fly: function(args, msg) {
                 var selected = msg.selected,

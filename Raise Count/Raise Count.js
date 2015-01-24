@@ -7,7 +7,7 @@ var bshields = bshields || {};
 bshields.raiseCount = (function() {
     'use strict';
     
-    var version = 2.0,
+    var version = 2.1,
         config = {
             raiseSize: 4,
             outputFormat: 'Roll: {0}, Target: {1}, Raises: {2}'
@@ -60,7 +60,7 @@ bshields.raiseCount = (function() {
     function handleInput(msg) {
         var isApi = msg.type === 'api',
             args = msg.content.trim().splitArgs(),
-            command, args0, isHelp;
+            command, arg0, isHelp;
         
         if (isApi) {
             command = args.shift().substring(1).toLowerCase();

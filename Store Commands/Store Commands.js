@@ -11,7 +11,7 @@ var bshields = bshields || {};
 bshields.storeCommands = (function() {
     'use strict';
     
-    var version = 2.0,
+    var version = 2.1,
         list = {},
         commands = {
             delay: function(args, msg) {
@@ -52,7 +52,7 @@ bshields.storeCommands = (function() {
     function handleInput(msg) {
         var isApi = msg.type === 'api',
             args = msg.content.trim().splitArgs(),
-            command, args0, isHelp;
+            command, arg0, isHelp;
         
         if (!list[msg.playerid]) {
             list[msg.playerid] = { cmds: [], delay: 500 };

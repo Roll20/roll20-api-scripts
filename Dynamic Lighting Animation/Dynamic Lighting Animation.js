@@ -10,7 +10,7 @@ var bshields = bshields || {};
 bshields.animation = (function() {
     'use strict';
     
-    var version = 2.0,
+    var version = 2.1,
         running = false,
         commands = {
             snapshot: function(args, msg) {
@@ -52,7 +52,7 @@ bshields.animation = (function() {
     function handleInput(msg) {
         var isApi = msg.type === 'api',
             args = msg.content.trim().splitArgs(),
-            command, args0, isHelp;
+            command, arg0, isHelp;
         
         if (!isGM(msg.playerid)) { return; }
         

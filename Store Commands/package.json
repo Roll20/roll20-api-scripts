@@ -1,6 +1,6 @@
 {
   "name": "Store Commands",
-  "version": "2.0",
+  "version": "2.1",
   "description": "Stores a series of commands (potentially with delays between them) to be executed in sequence later. Opens up GM-only commands such as /direct and /emas to players.",
   "authors": "Brian Shields",
   "roll20userid": "235259",

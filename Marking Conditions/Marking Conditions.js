@@ -12,7 +12,7 @@ var bshields = bshields || {};
 bshields.conditions = (function() {
     'use strict';
     
-    var version = 3.0,
+    var version = 3.1,
         commands = {
             mark: function(args, msg) {
                 var tok = getTokenMark(args[0], args[1], args[2]);
@@ -43,7 +43,7 @@ bshields.conditions = (function() {
     function handleInput(msg) {
         var isApi = msg.type === 'api',
             args = msg.content.trim().splitArgs(),
-            command, args0, isHelp;
+            command, arg0, isHelp;
         
         if (!list[msg.playerid]) {
             list[msg.playerid] = { cmds: [], delay: 500 };
