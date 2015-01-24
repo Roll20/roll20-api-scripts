@@ -46,7 +46,7 @@ bshields.flight = (function() {
     function handleInput(msg) {
         var isApi = msg.type === 'api',
             args = msg.content.trim().splitArgs(),
-            command, args0, isHelp;
+            command, arg0, isHelp;
         
         if (isApi) {
             command = args.shift().substring(1).toLowerCase();
