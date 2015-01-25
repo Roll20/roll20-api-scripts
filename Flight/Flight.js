@@ -5,41 +5,38 @@ var bshields = bshields || {};
 bshields.flight = (function() {
     'use strict';
     
-    var version = 3.1,
+    var version = 3.2,
         commands = {
             fly: function(args, msg) {
                 var selected = msg.selected,
-                    height = parseInt(args[0], 10) || 0;
+                    height = parseInt(args[0], 10) || 0,
+                    wings = '';
+                    
+                if(height) {
+                    wings = _.chain(height.toString().split(''))
+                        .map(function(d){
+                            return 'fluffy-wing@'+d;
+                        })
+                        .value()
+                        .reverse()
+                        .join(',');
+                }
                 
                 if (!selected) { return; }
                 _.each(selected, function(obj) {
                     var token = getObj('graphic', obj._id),
-                        wings = '',
-                        digit, markers;
+                        markers;
                     
                     if (obj._type !== 'graphic' || !token || token.get('subtype') !== 'token') { return; }
                     token.set('status_fluffy-wing', false);
-                    while (height > 0) {
-                        // Iterate over digits, from ones on up
-                        digit = height / 10;
-                        digit -= Math.floor(digit);
-                        digit = Math.round(digit * 10);
-                        
-                        // Shift height
-                        height = Math.floor(height / 10);
-                        
-                        wings += 'fluffy-wing@' + digit + ',';
-                    }
-                    
-                    if (wings.length > 0) {
-                        wings = wings.substring(0, wings.length - 1);
-                    }
                     
                     markers = token.get('statusmarkers');
-                    if (markers !== '') markers += ',';
-                    markers += wings;
+                    markers += ( markers ? ',' : '' ) + wings;
                     token.set('statusmarkers', markers);
                 });
+            },
+            help: function(args, msg) {
+              sendChat('Flight v'+version, 'Specify !fly &'+'lt;number&'+'gt; to add that number as wings on the selected token.' );
             }
         };
     
@@ -50,7 +47,7 @@ bshields.flight = (function() {
         
         if (isApi) {
             command = args.shift().substring(1).toLowerCase();
-            arg0 = args.shift();
+            arg0 = args.shift() || '';
             isHelp = arg0.toLowerCase() === 'help' || arg0.toLowerCase() === 'h';
             
             if (!isHelp) {
@@ -61,7 +58,7 @@ bshields.flight = (function() {
                 if (_.isFunction(commands[command])) {
                     commands[command](args, msg);
                 }
-            } else if (_.isFunction(commands.help)) {
+            } else if (_.has(commands,command) && _.isFunction(commands.help)) {
                 commands.help(command, args, msg);
             }
         } else if (_.isFunction(commands['msg_' + msg.type])) {
