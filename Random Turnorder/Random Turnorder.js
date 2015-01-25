@@ -33,6 +33,11 @@ bshields.shuffleturnorder = (function() {
                 
                 turnorder = _.shuffle(turnorder);
                 Campaign().set('turnorder', JSON.stringify(turnorder));
+            },
+            help: function(command, args, msg) {
+                if (_.isFunction(commands['help_' + command)) {
+                    commands['help_' + command](args, msg);
+                }
             }
         };
     
@@ -49,7 +54,7 @@ bshields.shuffleturnorder = (function() {
             isHelp = arg0.toLowerCase() === 'help' || arg0.toLowerCase() === 'h';
             
             if (!isHelp) {
-                if (arg0 && arg0.length > 0) {
+                if (arg0) {
                     args.unshift(arg0);
                 }
                 
