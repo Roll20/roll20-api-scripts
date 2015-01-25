@@ -35,7 +35,12 @@ bshields.flight = (function() {
                     token.set('statusmarkers', markers);
                 });
             },
-            help: function(args, msg) {
+            help: function(command, args, msg) {
+                if (_.isFunction(commands['help_' + command]) {
+                    commands['help_' + command](args, msg);
+                }
+            },
+            help_fly: function(args, msg) {
               sendChat('Flight v'+version, 'Specify !fly &'+'lt;number&'+'gt; to add that number as wings on the selected token.' );
             }
         };
@@ -58,7 +63,7 @@ bshields.flight = (function() {
                 if (_.isFunction(commands[command])) {
                     commands[command](args, msg);
                 }
-            } else if (_.has(commands,command) && _.isFunction(commands.help)) {
+            } else if (_.isFunction(commands.help)) {
                 commands.help(command, args, msg);
             }
         } else if (_.isFunction(commands['msg_' + msg.type])) {
