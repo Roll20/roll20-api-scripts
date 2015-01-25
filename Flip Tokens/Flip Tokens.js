@@ -11,7 +11,7 @@ var bshields = bshields || {};
 bshields.flip = (function() {
     'use strict';
     
-    var version = 2.1,
+    var version = 2.2,
         commands = {
             flip: function(args, msg) {
                 var selected = msg.selected;
@@ -35,6 +35,11 @@ bshields.flip = (function() {
                         }
                     }
                 });
+            },
+            help: function(command, args, msg) {
+                if (_.isFunction(commands['help_' + command])) {
+                    commands['help_' + command](args, msg);
+                }
             }
         };
     
@@ -45,11 +50,11 @@ bshields.flip = (function() {
         
         if (isApi) {
             command = args.shift().substring(1).toLowerCase();
-            arg0 = args.shift();
+            arg0 = args.shift() || '';
             isHelp = arg0.toLowerCase() === 'help' || arg0.toLowerCase() === 'h';
             
             if (!isHelp) {
-                if (arg0 && arg0.length > 0) {
+                if (arg0) {
                     args.unshift(arg0);
                 }
                 

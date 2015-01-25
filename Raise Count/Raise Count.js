@@ -7,7 +7,7 @@ var bshields = bshields || {};
 bshields.raiseCount = (function() {
     'use strict';
     
-    var version = 2.1,
+    var version = 2.2,
         config = {
             raiseSize: 4,
             outputFormat: 'Roll: {0}, Target: {1}, Raises: {2}'
@@ -46,6 +46,11 @@ bshields.raiseCount = (function() {
                     
                     bshields.sendChat(msg, '/direct ' + format(config.outputFormat, rollOut, target, raises));
                 });
+            },
+            help: function(command, args, msg) {
+                if (_.isFunction(commands['help_' + command])) {
+                    commands['help_' + command](args, msg);
+                }
             }
         };
     
@@ -64,11 +69,11 @@ bshields.raiseCount = (function() {
         
         if (isApi) {
             command = args.shift().substring(1).toLowerCase();
-            arg0 = args.shift();
+            arg0 = args.shift() || '';
             isHelp = arg0.toLowerCase() === 'help' || arg0.toLowerCase() === 'h';
             
             if (!isHelp) {
-                if (arg0 && arg0.length > 0) {
+                if (arg0) {
                     args.unshift(arg0);
                 }
                 

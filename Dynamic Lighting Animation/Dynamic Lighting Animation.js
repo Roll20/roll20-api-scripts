@@ -10,7 +10,7 @@ var bshields = bshields || {};
 bshields.animation = (function() {
     'use strict';
     
-    var version = 2.1,
+    var version = 2.2,
         running = false,
         commands = {
             snapshot: function(args, msg) {
@@ -46,7 +46,12 @@ bshields.animation = (function() {
                 state.bshields.animation.frames = [];
             },
             run: function(args, msg) { running = true; },
-            stop: function(args, msg) { running = false; }
+            stop: function(args, msg) { running = false; },
+            help: function(command, args, msg) {
+                if (_.isFunction(commands['help_' + command])) {
+                    commands['help_' + command](args, msg);
+                }
+            }
         };
     
     function handleInput(msg) {
@@ -58,11 +63,11 @@ bshields.animation = (function() {
         
         if (isApi) {
             command = args.shift().substring(1).toLowerCase();
-            arg0 = args.shift();
+            arg0 = args.shift() || '';
             isHelp = arg0.toLowerCase() === 'help' || arg0.toLowerCase() === 'h';
             
             if (!isHelp) {
-                if (arg0 && arg0.length > 0) {
+                if (arg0) {
                     args.unshift(arg0);
                 }
                 
