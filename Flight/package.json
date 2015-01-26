@@ -1,7 +1,7 @@
 {
   "name": "Flight",
-  "version": "3.1",
-  "description": "Adds 'fluffy-wings' status icon to selected token to represent some hieght.",
+  "version": "3.2",
+  "description": "Adds 'fluffy-wings' status icon to selected token to represent some height.",
   "authors": "Brian Shields",
   "roll20userid": "235259",
   "dependencies": {
