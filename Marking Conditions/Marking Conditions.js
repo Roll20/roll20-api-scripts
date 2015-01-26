@@ -12,7 +12,7 @@ var bshields = bshields || {};
 bshields.conditions = (function() {
     'use strict';
     
-    var version = 3.1,
+    var version = 3.2,
         commands = {
             mark: function(args, msg) {
                 var tok = getTokenMark(args[0], args[1], args[2]);
@@ -37,6 +37,11 @@ bshields.conditions = (function() {
                 if (tok) {
                     tok.target.set('status_' + tok.marker, false);
                 }
+            },
+            help: function(command, args, msg) {
+                if (_.isFunction(commands['help_' + command])) {
+                    commands['help_' + command](args, msg);
+                }
             }
         };
     
@@ -51,11 +56,11 @@ bshields.conditions = (function() {
         
         if (isApi) {
             command = args.shift().substring(1).toLowerCase();
-            arg0 = args.shift();
+            arg0 = args.shift() || '';
             isHelp = arg0.toLowerCase() === 'help' || arg0.toLowerCase() === 'h';
             
             if (!isHelp) {
-                if (arg0 && arg0.length > 0) {
+                if (arg0) {
                     args.unshift(arg0);
                 }
                 
