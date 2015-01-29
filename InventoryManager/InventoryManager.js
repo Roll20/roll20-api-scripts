@@ -1,6 +1,7 @@
 ﻿/////////////////////////////////////////////////
 /***********************************************/
 var Localization = {
+    'coins': 'Goldwert',
     'coin_copper': 'KM',
     'coin_silver': 'SM',
     'coin_electrum': 'EM',
@@ -41,8 +42,13 @@ var GIM = {
     logPlayerIds: true,
     invImg: 'https://s3.amazonaws.com/files.d20.io/images/7359609/N7-rgMNvKG5czBsAXGD-Mw/thumb.png?1422290877',
     coin: {
-        weight: 0.01, /* in lbs. */
-        volume: 0.0002 /* in cubic feet. (5,000 per ft3) */
+        weight: 0.02, /* in lbs. */
+        volume: 0.00004, /* in cubic feet. (25,000 per ft3) */
+        value_copper: 0.01,
+        value_silver: 0.1,
+        value_electrum: 0.2,
+        value_gold: 1,
+        value_platinum: 10
     },
     temperatureUnit: 'C', /* Change to C if Celsius is desired */
     storageItems: [// make sure that no name is any of 'storage'
@@ -133,7 +139,7 @@ var GIM = {
     },
     process: function ()
     {
-        var typeRegEx = /^(main)|(inv)%20rep_\S+|(worn)|(drop)|(ignore)|(status2?)$/,
+        var typeRegEx = /^(main)|(inv)%20rep_\S+|(worn)|(drop)|(ignore)|(status\d?)$/,
             coinRegEx = /^coins%20(\S+)$/,
             weightRegEx = /^weight%20([\d\.,]+)%20liquid$/,
             warmthRegEx = /^warmth%20(\d+)$/,
@@ -183,6 +189,7 @@ var GIM = {
                     break;
                 case 'status':
                 case 'status2':
+                case 'status3':
                     statuses.push(obj);
                     break;
                 case 'inv':
@@ -242,6 +249,7 @@ var GIM = {
             {
                 item.graphic.set('bar1_value', Math.ceil(GIM.coin.weight * item.properties.coinAmount * 10000) / 10000);
                 item.graphic.set('bar2_value', Math.ceil(GIM.coin.volume * item.properties.coinAmount * 10000) / 10000);
+                item.graphic.set('name', Localization['coin_' + item.properties.coinType] + ': ' + item.properties.coinAmount);
             }
             // if the item is an empty liquid container, reset its tint and name
             if (item.properties.isLiquidContainer)
@@ -261,14 +269,14 @@ var GIM = {
         {
             inventory.containedItems = [];
             inventory.containedWeight = 0;
-            inventory.containedWeightMax = parseFloat(inventory.graphic.get('bar1_max'));
+            inventory.containedWeightMax = parseFloat(inventory.graphic.get('bar1_max')) / 100;
             inventory.containedVolume = 0;
-            inventory.containedVolumeMax = parseFloat(inventory.graphic.get('bar2_max'));
+            inventory.containedVolumeMax = parseFloat(inventory.graphic.get('bar2_max')) / 100;
             _.each(items, function (item)
             {
                 if (itemIsInContainer(item.graphic, inventory.graphic))
                 {
-                    switch(inventory.type)
+                    switch (inventory.type)
                     {
                         case 'inv':
                             if (item.properties.isUnstowable)
@@ -328,7 +336,7 @@ var GIM = {
                 inventory.graphic.set({ status_dead: isFull });
 
                 // hide the inventory, if its representative is not equipped
-                if(!isEquipped)
+                if (!isEquipped)
                 {
                     inventory.graphic.set('layer', 'gmlayer');
                 }
@@ -337,12 +345,12 @@ var GIM = {
                     inventory.graphic.set('layer', 'objects');
                 }
             }
-            else if(inventory.type === 'drop')
+            else if (inventory.type === 'drop')
             {
                 inventory.graphic.set('layer', 'map');
             }
 
-            if(inventory.type === 'inv' || inventory.type === 'drop')
+            if (inventory.type === 'inv' || inventory.type === 'drop')
                 _.each(inventory.containedItems, function (item)
                 {
                     // copy layer from containing inventory
@@ -353,30 +361,40 @@ var GIM = {
         _.each(characterAreas, function (charArea)
         {
             //characterAreas.containedItems = [];
-            characterAreas.containedWeight = 0;
-            characterAreas.containedVolume = 0;
+            charArea.containedWeight = 0;
+            charArea.containedVolume = 0;
+            charArea.containedCoinValue = 0;
             _.each(items, function (item)
             {
                 if (itemIsInContainer(item.graphic, charArea.graphic) && item.graphic.get('layer') === 'objects')
                 {
                     item.graphic.set('controlledby', GIM.playerList[parseInt(charArea.graphic.get('bar3_value')) - 1] || '');
 
-                    item.graphic.set('status_fishing-net', true);
+                    //item.graphic.set('status_fishing-net', true);
 
-                    //characterAreas.containedItems.push(item);
-                    characterAreas.containedWeight += parseFloat(item.graphic.get('bar1_value') * item.properties.amount) + item.properties.baseWeight;
-                    characterAreas.containedVolume += parseFloat(item.graphic.get('bar2_value') * item.properties.amount);
+                    charArea.containedWeight += parseFloat(item.graphic.get('bar1_value') * item.properties.amount) + item.properties.baseWeight;
+                    charArea.containedVolume += parseFloat(item.graphic.get('bar2_value') * item.properties.amount);
+                    if (item.properties.coinType)
+                        charArea.containedCoinValue += GIM.coin['value_' + item.properties.coinType] * item.properties.coinAmount;
                 }
             });
 
             _.each(statuses, function (status)
             {
                 if (status.graphic.get('bar3_value') === charArea.graphic.get('bar3_value'))
-                {
-                    var totalWeight = Math.ceil(characterAreas.containedWeight * 100) / 100,
-                        totalVolume = Math.ceil(characterAreas.containedVolume * 100) / 100;
-                    status.graphic.set('name', Localization.weight + ': ' + totalWeight + ' | ' + Localization.profile + ': ' + totalVolume);
-                }
+                    switch (status.type)
+                    {
+                        case 'status':
+                            var totalWeight = Math.ceil(charArea.containedWeight * 100) / 100,
+                                totalVolume = Math.ceil(charArea.containedVolume * 100) / 100;
+                            status.graphic.set('name', Localization.weight + ': ' + totalWeight + ' | ' + Localization.profile + ': ' + totalVolume);
+                            break;
+                        case 'status2':
+                            break;
+                        case 'status3':
+                            status.graphic.set('name', Localization.coins + ': ' + Math.floor(charArea.containedCoinValue));
+                            break;
+                    }
             });
         });
     },
