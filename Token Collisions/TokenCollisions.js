@@ -84,6 +84,7 @@ var TokenCollisions = (function() {
      * @private
      * Checks if a token collided with another token during its movement between two points.
      * @param {Graphic} token
+     * @param {Graphic[]} otherTokens   The list of tokens we are testing collisions with.
      * @param {vec2} startPt
      * @param {vec2} endPt
      * @return {Graphic || false} The first other token that token collided with in its movement. If there was no collision, return false.
@@ -91,10 +92,29 @@ var TokenCollisions = (function() {
     var _getFirstCollisionInWaypoint = function(token, otherTokens, startPt, endPt) {
         var collisions = _getCollisionsInWaypoint(token, otherTokens, startPt, endPt);
         if(collisions.length > 0) {
-            return _getNearestTokenToPoint(startPt, collisions);
+            var bestToken;
+            var bestDist;
+            _.each(collisions, function(other) {
+                var otherPt = _getTokenPt(other);
+                var h = VecMath.ptSegDist(otherPt, startPt, endPt);
+                var r = (other.get('width') + token.get('width'))/2.0;
+                var ww = r*r - h*h;
+                
+                var projection = VecMath.projection(VecMath.vec(startPt, endPt), VecMath.vec(startPt, otherPt));
+                var dist = VecMath.length(projection);
+                dist *= dist;
+                dist -= ww;
+                dist = dist;
+                
+                if(bestDist === undefined || dist < bestDist) {
+                    bestDist = dist;
+                    bestToken = other;
+                }
+            });
+            return bestToken;
         }
         else {
-          return false;
+            return false;
         }
     };
     
@@ -138,12 +158,13 @@ var TokenCollisions = (function() {
         // We assume that all tokens are circular, therefore width = diameter.
         var thresholdDist = (parseInt(other.get("width")) + parseInt(token.get("width")))/2;
         
-        // Don't count the other token if our movement already started in it.
-        if(Math.round(VecMath.dist(startPt, otherPt)) >= thresholdDist) {
+        var distFromStart = Math.ceil(VecMath.dist(startPt, otherPt)) + 1; // +1 to make up for rounding error.
         
+        // Don't count the other token if our movement already started in it.
+        if(distFromStart >= thresholdDist) {
             // Figure out the closest distance we came to the other token during 
             // the movement.
-            var dist = Math.round(VecMath.ptSegDist(otherPt, startPt, endPt));
+            var dist = Math.ceil(VecMath.ptSegDist(otherPt, startPt, endPt)) + 1; // +1 to make up for rounding error.
             if(dist < thresholdDist) {
                 return true;
             }
