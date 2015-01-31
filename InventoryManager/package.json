@@ -1,8 +1,8 @@
 {
     "name": "Inventory Manager",
-    "version": "0.1",
-    "description": "A graphical inventory manager.",
-    "authors": "Jonathan Burke, John C.",
+    "version": "1.0",
+    "description": "A graphical inventory manager. Inspired by John C.",
+    "authors": "Jonathan Burke",
     "roll20userid": "682814",
     "dependencies": {
     },
@@ -13,7 +13,7 @@
         "bar2_max": "write",
         "bar3_value": "write",
         "status_markers": "write",
-        "token": "read"
+        "token": "write"
     },
     "conflicts": [
     ]

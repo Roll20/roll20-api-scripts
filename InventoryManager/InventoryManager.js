@@ -29,104 +29,119 @@ var Localization = {
 /////////////////////////////////////////////////
 /***********************************************/
 
-var GIM = {
+var RoubysInventoryManager = {
     /////////BEGIN USER CONFIG/////////
     playerList: [
-        '-JgXIBWtSs8su8RF-Slt', /* X1: Bor Bersk. */
-        '-JglZwTIFm0ivfDzMssH', /* X2: Ulfgar Ungart */
-    	'-JggSWGNp1gDvfdZSTPf', /* 3: Baba Frostbeard */
-    	'-JglZlSBA2oSX2ClDirs', /* X4: Goden Arthelast */
-    	'-JglZlRofAw79n0D-2ol', /* X5: Firalphien Variel */
-        '-JglZwTIFm0ivfDzMssH,-JggSWGNp1gDvfdZSTPf,-JglZlSBA2oSX2ClDirs,-JglZlRofAw79n0D-2ol' /* 6: Tamey (Esel) */
+        '', /* 1: Bor Bersk. */
+        '-JglZwTIFm0ivfDzMssH', /* 2: Ulfgar Ungart */
+        '-JggSWGNp1gDvfdZSTPf', /* 3: Baba Frostbeard */
+        '-JglZlSBA2oSX2ClDirs', /* 4: Goden Arthelast */
+        '-JglZlRofAw79n0D-2ol', /* 5: Firalphien Variel */
+        '-JglZwTIFm0ivfDzMssH,-JggSWGNp1gDvfdZSTPf,-JglZlSBA2oSX2ClDirs,-JglZlRofAw79n0D-2ol' /* 6: Tamey (community) */
     ],
     logPlayerIds: true,
-    invImg: 'https://s3.amazonaws.com/files.d20.io/images/7359609/N7-rgMNvKG5czBsAXGD-Mw/thumb.png?1422290877',
+    inventoryTokenImage: 'https://s3.amazonaws.com/files.d20.io/images/7359609/N7-rgMNvKG5czBsAXGD-Mw/thumb.png?1422290877',
     coin: {
-        weight: 0.02, /* in lbs. */
-        volume: 0.00004, /* in cubic feet. (25,000 per ft3) */
+        weight: 0.02, // in lbs
+        volume: 0.00004, // in cubic feet (25,000 per ft3)
         value_copper: 0.01,
         value_silver: 0.1,
         value_electrum: 0.2,
         value_gold: 1,
         value_platinum: 10
     },
-    temperatureUnit: 'C', /* Change to C if Celsius is desired */
-    storageItems: [// make sure that no name is any of 'storage'
-		{
-		    name: 'backpack',
-		    maxWeight: 30,
-		    maxVolume: 1
-		},
-		{
-		    name: 'quiver',
-		    maxWeight: 1,
-		    maxVolume: 0.1
-		},
-		{
-		    name: 'boltcase',
-		    maxWeight: 1.5,
-		    maxVolume: 0.15
-		},
-		{
-		    name: 'pouch',
-		    maxWeight: 6,
-		    maxVolume: .2
-		},
-    	{
-    	    name: 'pocket',
-    	    maxWeight: 3,
-    	    maxVolume: .1
-    	},
-		{
-		    name: 'bagofholding',
-		    maxWeight: 500,
-		    maxVolume: 64
-		},
-		{
-		    name: 'hhhside1',
-		    maxWeight: 20,
-		    maxVolume: 2
-		},
-		{
-		    name: 'hhhside2',
-		    maxWeight: 20,
-		    maxVolume: 2
-		},
-		{
-		    name: 'hhh',
-		    maxWeight: 80,
-		    maxVolume: 8
-		},
-    	{
-    	    name: 'chest',
-    	    maxWeight: 300,
-    	    maxVolume: 12
-    	},
+    temperatureUnit: 'C', // change to F if fahrenheit is desired
+    storageItems: [
+        {
+            name: 'backpack', // key of the storagekind, does not contain storage!
+            maxWeight: 30, // maximum weight allowed in this kind
+            maxVolume: 1 // maximum of contained volume allowed
+        },
+        {
+            name: 'quiver',
+            maxWeight: 1,
+            maxVolume: .1
+        },
+        {
+            name: 'boltcase',
+            maxWeight: 1.5,
+            maxVolume: .15
+        },
+        {
+            name: 'pouch',
+            maxWeight: 6,
+            maxVolume: .2
+        },
+        {
+            name: 'pocket',
+            maxWeight: 3,
+            maxVolume: .1
+        },
+        {
+            name: 'bagofholding',
+            maxWeight: 500,
+            maxVolume: 64
+        },
+        {
+            name: 'hhh',
+            maxWeight: 80,
+            maxVolume: 8
+        },
+        {
+            name: 'hhhside',
+            maxWeight: 20,
+            maxVolume: 2
+        },
+        {
+            name: 'chest',
+            maxWeight: 300,
+            maxVolume: 12
+        },
         {
             name: 'cart',
             maxWeight: 600,
             maxVolume: 50
         }
     ],
-    //////////END USER CONFIG//////////	
+    //////////END USER CONFIG//////////    
 
-    invRegex: /^(main|inv%20rep_\S+|worn|drop|ignore)$/i,
-    statusRegex: /^(status2?)$/i,
+    debugMode: false,
     objsToBeCreated: [],
     lastRun: Date.now(),
     run: function ()
     {
         var time = Date.now();
-        if (time - GIM.lastRun > 1000)
+        if (time - RoubysInventoryManager.lastRun > 1000)
         {
-            GIM.process();
-            _.each(GIM.objsToBeCreated, function (o)
+            RoubysInventoryManager.process();
+            _.each(RoubysInventoryManager.objsToBeCreated, function (o)
             {
-                GIM.create_inv(o.pageId, o.name, o.left, o.top, o.id, o.weight, o.volume);
+                RoubysInventoryManager.createInventory(o.pageId, o.name, o.left, o.top, o.id, o.weight, o.volume);
             });
-            GIM.objsToBeCreated = [];
-            GIM.lastRun = time;
+            RoubysInventoryManager.objsToBeCreated = [];
+            RoubysInventoryManager.lastRun = time;
         }
+    },
+    createInventory: function (g_page_id, g_name, g_left, g_top, g_id, g_wgt, g_vol)
+    {
+        setTimeout(function ()
+        {
+            toBack(RoubysInventoryManager.fixedCreateObj('graphic', {
+                name: g_name,
+                imgsrc: RoubysInventoryManager.inventoryTokenImage,
+                pageid: g_page_id,
+                left: g_left + 280,
+                top: g_top,
+                width: 70,
+                height: 70,
+                bar1_value: 0,
+                bar1_max: g_wgt,
+                bar2_value: 0,
+                bar2_max: g_vol,
+                layer: 'objects',
+                gmnotes: 'inv rep_' + g_id
+            }));
+        }, 5);
     },
     fixedCreateObj: function ()
     {
@@ -139,27 +154,89 @@ var GIM = {
     },
     process: function ()
     {
-        var typeRegEx = /^(main)|(inv)%20rep_\S+|(worn)|(drop)|(ignore)|(status\d?)$/,
-            coinRegEx = /^coins%20(\S+)$/,
-            weightRegEx = /^weight%20([\d\.,]+)%20liquid$/,
-            warmthRegEx = /^warmth%20(\d+)$/,
-            amountRegEx = /(\d+)x/,
-            representRegEx = /inv%20rep_(\S+)/;
+        var typeRegEx = /(main)|(inv)|(worn)|(drop)|(ignore)|(status\d?)/,
+            modifierRegEx = /(unstowable)|(constantweight)|(liquid)|(hosp)|(storage)/ig,
+            paramModifierRegEx = /(?:(weight)%20([\d\.,]+))|(?:(warmth)%20(\d+))|(?:(coins)%20(\S+))|(?:(rep)_(\S+))|(?:(weightfactor)%20([\d\.,]+))/ig,
+            amountRegEx = /(\d+)x/;
+
+        function getType(notes)
+        {
+            return _.reduceRight(typeRegEx.exec(notes), function (memo, val) { return memo || val; }, null) || 'item';
+        }
+
+        function getModifier(notes)
+        {
+            var match = null,
+                results = {
+                    unstowable: false,
+                    constantweight: false,
+                    liquid: false,
+                    hosp: false,
+                    storage: false
+                };
+            modifierRegEx.lastIndex = 0;
+            while (match = modifierRegEx.exec(notes))
+                results[match[0].toLowerCase()] = !!_.reduceRight(match, function (memo, val) { return memo || val; }, null);
+            return results;
+        }
+
+        function getParamModifier(notes)
+        {
+            var match = null,
+                results = {
+                    weight: null,
+                    warmth: null,
+                    coins: null,
+                    rep: null,
+                    weightfactor: null
+                };
+            paramModifierRegEx.lastIndex = 0;
+            while (match = paramModifierRegEx.exec(notes))
+            {
+                var index = -1,
+                    value = _.reduceRight(match, function (memo, val, i) { if (!memo) index = i; return memo || val; }, null);
+                results[match[index - 1].toLowerCase()] = value;
+            }
+            return results;
+        }
+
+        // returns true if the center of 'item' lies inside of 'container' dimensions
+        function itemIsInContainer(item, container)
+        {
+            var halfWidth = container.get('width') / 2,
+                halfHeight = container.get('height') / 2,
+                left = container.get('left') - halfWidth,
+                top = container.get('top') - halfHeight,
+                right = container.get('left') + halfWidth,
+                bottom = container.get('top') + halfHeight;
+
+            return item.get('left') >= left &&
+                   item.get('top') >= top &&
+                   item.get('left') <= right &&
+                   item.get('top') <= bottom;
+        }
 
         var characterAreas = [],
             statuses = [],
+            equipmentSlots = [],
             inventories = [],
             items = [],
             equipped = [];
 
+        /***
+         * Go thru all tokens on the current page and sort them into their groups, parse modifiers
+         * and store informations in their objects for the algorithm
+         **/
         var pageGraphics = findObjs({ _pageid: Campaign().get('playerpageid'), _type: 'graphic' });
         _.each(pageGraphics, function (graphic)
         {
-            var typeResult = typeRegEx.exec(graphic.get('gmnotes')),
-                specialType = _.reduceRight(typeResult, function (memo, val) { return memo || val; }, null);
+            var notes = graphic.get('gmnotes'),
+                specialType = getType(notes),
+                modifier = getModifier(notes),
+                paramModifier = getParamModifier(notes);
 
             var obj = {
-                type: specialType || 'item',
+                type: specialType,
                 graphic: graphic
             };
 
@@ -178,8 +255,6 @@ var GIM = {
                 playersedit_bar3: false,
             };
 
-            var notes = graphic.get('gmnotes');
-
             switch (specialType)
             {
                 case 'main':
@@ -191,64 +266,64 @@ var GIM = {
                 case 'status2':
                 case 'status3':
                     statuses.push(obj);
+
+                    if (graphic.get('bar1_max') > 0)
+                        options.showplayers_bar1 = true;
+                    break;
+                case 'worn':
+                    obj.properties = {
+                        isSlot: true
+                    };
+
+                    equipmentSlots.push(obj);
                     break;
                 case 'inv':
-                case 'worn':
-                case 'drop':
                     obj.properties = {
-                        representId: _.reduceRight(representRegEx.exec(notes), function (memo, val) { return memo || val; }, null)
+                        representId: paramModifier.rep
                     };
-                    inventories.push(obj);
 
                     options.showplayers_bar1 = true;
                     options.showplayers_bar2 = true;
+                case 'drop':
+                    inventories.push(obj);
                     break;
                 case 'ignore':
                     break;
                 default:
                     obj.properties = {
-                        isLiquidContainer: notes.indexOf('liquid') !== -1,
-                        isUnstowable: notes.indexOf('unstowable') !== -1,
-                        coinType: _.reduceRight(coinRegEx.exec(notes), function (memo, val) { return memo || val; }, null),
-                        coinAmount: parseFloat(graphic.get('bar3_value')),
-                        baseWeight: parseFloat(_.reduceRight(weightRegEx.exec(notes), function (memo, val) { return memo || val; }, null) || 0),
-                        warmthValue: parseInt(_.reduceRight(warmthRegEx.exec(notes), function (memo, val) { return memo || val; }, null) || 0),
-                        grantsHospitality: notes.indexOf('hosp') !== -1,
+                        equippedAt: null,
+                        isLiquidContainer: modifier.liquid,
+                        isUnstowable: modifier.unstowable,
+                        coinType: paramModifier.coins,
+                        coinAmount: paramModifier.coins ? parseFloat(graphic.get('bar3_value')) : 0,
+                        baseWeight: parseFloat(paramModifier.weight || 0),
+                        warmthValue: parseInt(paramModifier.warmth || 0),
+                        grantsHospitality: modifier.hosp,
                         amount: parseInt(_.reduceRight(amountRegEx.exec(graphic.get('name')), function (memo, val) { return memo || val; }, null) || 1),
-                        hasInventory: notes.indexOf('storage') !== -1
+                        hasInventory: modifier.storage,
+                        inventories: [],
+                        hasConstantWeight: modifier.constantweight
                     };
                     items.push(obj);
                     break;
             }
 
+            // show the name if the namefield is set (and longer than a char)
             options.showname = options.showname && _.isString(graphic.get('name')) && graphic.get('name').length > 1;
 
             graphic.set(options);
         });
 
-        // returns true if the center of 'item' lies inside of 'container'
-        function itemIsInContainer(item, container)
-        {
-            var halfWidth = container.get('width') / 2,
-                halfHeight = container.get('height') / 2,
-                left = container.get('left') - halfWidth,
-                top = container.get('top') - halfHeight,
-                right = container.get('left') + halfWidth,
-                bottom = container.get('top') + halfHeight;
-
-            return item.get('left') >= left &&
-                   item.get('top') >= top &&
-                   item.get('left') <= right &&
-                   item.get('top') <= bottom;
-        }
-
+        /***
+         * Go thru all items (tokens that represent bare items that one can carry) and calculate their weights / containers
+         **/
         _.each(items, function (item)
         {
             // update coin weight and volume based on amount
             if (item.properties.coinType)
             {
-                item.graphic.set('bar1_value', Math.ceil(GIM.coin.weight * item.properties.coinAmount * 10000) / 10000);
-                item.graphic.set('bar2_value', Math.ceil(GIM.coin.volume * item.properties.coinAmount * 10000) / 10000);
+                item.graphic.set('bar1_value', Math.ceil(RoubysInventoryManager.coin.weight * item.properties.coinAmount * 10000) / 10000);
+                item.graphic.set('bar2_value', Math.ceil(RoubysInventoryManager.coin.volume * item.properties.coinAmount * 10000) / 10000);
                 item.graphic.set('name', Localization['coin_' + item.properties.coinType] + ': ' + item.properties.coinAmount);
             }
             // if the item is an empty liquid container, reset its tint and name
@@ -263,60 +338,43 @@ var GIM = {
                     item.graphic.set('tint_color', 'transparent');
                 }
             }
-        });
 
-        _.each(inventories, function (inventory)
-        {
-            inventory.containedItems = [];
-            inventory.containedWeight = 0;
-            inventory.containedWeightMax = parseFloat(inventory.graphic.get('bar1_max')) / 100;
-            inventory.containedVolume = 0;
-            inventory.containedVolumeMax = parseFloat(inventory.graphic.get('bar2_max')) / 100;
-            _.each(items, function (item)
+            // check if this item is equipped
+            _.each(equipmentSlots, function (slot)
             {
-                if (itemIsInContainer(item.graphic, inventory.graphic))
+                if (itemIsInContainer(item.graphic, slot.graphic))
                 {
-                    switch (inventory.type)
+                    item.properties.equippedAt = slot;
+
+                    if (RoubysInventoryManager.debugMode)
+                        item.graphic.set('status_grab', true);
+
+                    // if this item has an inventory, add its id to the equipped list, otherwise check if a storage has to be created
+                    if (item.properties.hasInventory)
                     {
-                        case 'inv':
-                            if (item.properties.isUnstowable)
+                        //item.properties.hasConstantWeight
+                        equipped.push(item.graphic.get('_id'));
+                    }
+                    else
+                    {
+                        var notes = item.graphic.get('gmnotes');
+                        _.each(RoubysInventoryManager.storageItems, function (storageKind)
+                        {
+                            for (var i = 0; i < 10 && notes.indexOf(storageKind.name) !== -1; ++i)
                             {
-                                item.graphic.set('top', inventory.graphic.get('top') + inventory.graphic.get('height') / 2 + 35);
-                                break;
-                            }
-                        case 'drop':
-                            inventory.containedItems.push(item);
-                            inventory.containedWeight += parseFloat(item.graphic.get('bar1_value') * item.properties.amount) + item.properties.baseWeight;
-                            inventory.containedVolume += parseFloat(item.graphic.get('bar2_value') * item.properties.amount);
-                            break;
-                        case 'worn':
-                            // if this item has an inventory, add its id to the equipped list, otherwise check if a storage has to be created
-                            if (item.properties.hasInventory)
-                            {
-                                equipped.push(item.graphic.get('_id'));
-                            }
-                            else
-                            {
-                                var notes = item.graphic.get('gmnotes');
-                                _.each(GIM.storageItems, function (storageKind)
-                                {
-                                    for (var i = 0; i < 10 && notes.indexOf(storageKind.name) !== -1; ++i)
-                                    {
-                                        GIM.objsToBeCreated.push({
-                                            pageId: item.graphic.get('_pageid'),
-                                            name: Localization['storage_' + storage.name],
-                                            left: item.get('left'),
-                                            top: item.get('top'),
-                                            id: item.get('_id'),
-                                            weight: storageKind.maxWeight,
-                                            volume: storageKind.maxVolume
-                                        });
-                                        notes.replace(storageKind.name, 'storage');
-                                    }
+                                RoubysInventoryManager.objsToBeCreated.push({
+                                    pageId: item.graphic.get('_pageid'),
+                                    name: Localization['storage_' + storageKind.name],
+                                    left: item.graphic.get('left'),
+                                    top: item.graphic.get('top'),
+                                    id: item.graphic.get('_id'),
+                                    weight: storageKind.maxWeight * 100,
+                                    volume: storageKind.maxVolume * 100
                                 });
-                                item.graphic.set('gmnotes', notes);
+                                notes = notes.replace(storageKind.name, 'storage');
                             }
-                            break;
+                        });
+                        item.graphic.set('gmnotes', notes);
                     }
                 }
             });
@@ -324,6 +382,44 @@ var GIM = {
 
         _.each(inventories, function (inventory)
         {
+            inventory.containedItems = [];
+            inventory.containedWeight = 0;
+            inventory.containedVolume = 0;
+            // divide by 100 because values less than 1 dont display a bar, so we multiply bar-values when we set them
+            inventory.containedWeightMax = parseFloat(inventory.graphic.get('bar1_max')) / 100;
+            inventory.containedVolumeMax = parseFloat(inventory.graphic.get('bar2_max')) / 100;
+            _.each(items, function (item)
+            {
+                if (itemIsInContainer(item.graphic, inventory.graphic))
+                {
+                    if (inventory.type === 'inv' && item.properties.isUnstowable)
+                    {
+                        item.graphic.set('top', inventory.graphic.get('top') + inventory.graphic.get('height') / 2 + 35);
+                    }
+                    else
+                    {
+                        inventory.containedItems.push(item);
+                        inventory.containedWeight += parseFloat(item.graphic.get('bar1_value') * item.properties.amount) + item.properties.baseWeight;
+                        inventory.containedVolume += parseFloat(item.graphic.get('bar2_value') * item.properties.amount);
+
+                        if (RoubysInventoryManager.debugMode)
+                            item.graphic.set('status_fishing-net', true);
+                    }
+                }
+                else if (inventory.type === 'inv')
+                {
+                    if (item.properties.hasInventory && item.graphic.get('_id') === inventory.properties.representId)
+                    {
+                        item.properties.inventories.push(inventory);
+
+                        if (RoubysInventoryManager.debugMode)
+                        {
+                            inventory.graphic.set('status_padlock', true);
+                            item.graphic.set('status_padlock', true);
+                        }
+                    }
+                }
+            });
             // set weight and volume for backpack inventories and such
             if (inventory.type === 'inv')
             {
@@ -350,17 +446,15 @@ var GIM = {
                 inventory.graphic.set('layer', 'map');
             }
 
-            if (inventory.type === 'inv' || inventory.type === 'drop')
-                _.each(inventory.containedItems, function (item)
-                {
-                    // copy layer from containing inventory
-                    item.graphic.set('layer', inventory.graphic.get('layer'));
-                });
+            _.each(inventory.containedItems, function (item)
+            {
+                // copy layer from containing inventory
+                item.graphic.set('layer', inventory.graphic.get('layer'));
+            });
         });
 
         _.each(characterAreas, function (charArea)
         {
-            //characterAreas.containedItems = [];
             charArea.containedWeight = 0;
             charArea.containedVolume = 0;
             charArea.containedCoinValue = 0;
@@ -368,14 +462,40 @@ var GIM = {
             {
                 if (itemIsInContainer(item.graphic, charArea.graphic) && item.graphic.get('layer') === 'objects')
                 {
-                    item.graphic.set('controlledby', GIM.playerList[parseInt(charArea.graphic.get('bar3_value')) - 1] || '');
+                    var controller = RoubysInventoryManager.playerList[parseInt(charArea.graphic.get('bar3_value')) - 1] || '';
 
-                    //item.graphic.set('status_fishing-net', true);
+                    item.graphic.set('controlledby', controller);
 
-                    charArea.containedWeight += parseFloat(item.graphic.get('bar1_value') * item.properties.amount) + item.properties.baseWeight;
-                    charArea.containedVolume += parseFloat(item.graphic.get('bar2_value') * item.properties.amount);
-                    if (item.properties.coinType)
-                        charArea.containedCoinValue += GIM.coin['value_' + item.properties.coinType] * item.properties.coinAmount;
+                    if (!item.properties.containedIn && item.properties.equippedAt)
+                    {
+                        charArea.containedWeight += parseFloat(item.graphic.get('bar1_value') * item.properties.amount) + item.properties.baseWeight;
+                        charArea.containedVolume += parseFloat(item.graphic.get('bar2_value') * item.properties.amount);
+                        if (item.properties.coinType)
+                            charArea.containedCoinValue += RoubysInventoryManager.coin['value_' + item.properties.coinType] * item.properties.coinAmount;
+
+                        if (item.properties.hasInventory && !item.properties.hasConstantWeight)
+                        {
+                            _.each(item.properties.inventories, function (inventory)
+                            {
+                                _.each(inventory.containedItems, function (containerItem)
+                                {
+                                    containerItem.graphic.set('controlledby', controller);
+
+                                    charArea.containedWeight += parseFloat(containerItem.graphic.get('bar1_value') * containerItem.properties.amount) + containerItem.properties.baseWeight;
+                                    // dont add the volume (/profile) to the charater for contained items
+                                    //charArea.containedVolume += parseFloat(containerItem.graphic.get('bar2_value') * containerItem.properties.amount);
+                                    if (containerItem.properties.coinType)
+                                        charArea.containedCoinValue += RoubysInventoryManager.coin['value_' + containerItem.properties.coinType] * containerItem.properties.coinAmount;
+
+                                    if (RoubysInventoryManager.debugMode)
+                                        containerItem.graphic.set('status_bleeding-eye', true);
+                                })
+                            });
+                        }
+
+                        if (RoubysInventoryManager.debugMode)
+                            item.graphic.set('status_bleeding-eye', true);
+                    }
                 }
             });
 
@@ -386,8 +506,17 @@ var GIM = {
                     {
                         case 'status':
                             var totalWeight = Math.ceil(charArea.containedWeight * 100) / 100,
-                                totalVolume = Math.ceil(charArea.containedVolume * 100) / 100;
+                                totalVolume = Math.ceil(charArea.containedVolume * 100) / 100,
+                                maxWeight = parseFloat(status.graphic.get('bar1_max')) / 100,
+                                maxVolume = parseFloat(status.graphic.get('bar2_max')) / 100,
+                                isFull = totalWeight > maxWeight && maxWeight > 0 ||
+                                         totalVolume > maxVolume && maxVolume > 0;
+
                             status.graphic.set('name', Localization.weight + ': ' + totalWeight + ' | ' + Localization.profile + ': ' + totalVolume);
+
+                            status.graphic.set('bar1_value', Math.ceil(totalWeight * 100));
+                            status.graphic.set('bar2_value', Math.ceil(totalVolume * 100));
+                            status.graphic.set({ status_dead: isFull });
                             break;
                         case 'status2':
                             break;
@@ -397,33 +526,12 @@ var GIM = {
                     }
             });
         });
-    },
-    create_inv: function (g_page_id, g_name, g_left, g_top, g_id, g_wgt, g_vol)
-    {
-        setTimeout(function ()
-        {
-            toBack(GIM.fixedCreateObj('graphic', {
-                name: g_name,
-                imgsrc: GIM.invImg,
-                pageid: g_page_id,
-                left: g_left + 280,
-                top: g_top,
-                width: 70,
-                height: 70,
-                bar1_value: 0,
-                bar1_max: g_wgt * 100,
-                bar2_value: 0,
-                bar2_max: g_vol * 100,
-                layer: 'objects',
-                gmnotes: 'inv rep_' + g_id
-            }));
-        }, 5);
     }
 };
 
 on('ready', function ()
 {
-    if (GIM.logPlayerIds)
+    if (RoubysInventoryManager.logPlayerIds)
     {
         log('************* PLAYER IDs *************');
         filterObjs(function (obj)
@@ -434,11 +542,12 @@ on('ready', function ()
         });
         log('**************************************');
     }
-    //setInterval(function () { GIM.runMe() }, 500);
+    //setInterval(function () { RoubysInventoryManager.runMe() }, 500);
     on('change:graphic:lastmove', function (obj)
     {
-        obj.set({ status_spanner: true });
-        GIM.run();
+        if (RoubysInventoryManager.debugMode)
+            obj.set({ status_spanner: true });
+        RoubysInventoryManager.run();
     });
     on('add:graphic', function (obj)
     {
