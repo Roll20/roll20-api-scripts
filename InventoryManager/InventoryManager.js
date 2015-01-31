@@ -34,9 +34,15 @@ var RoubysInventoryManager = {
     playerList: [
         '', /* 1: Bor Bersk. */
         '-JglZwTIFm0ivfDzMssH', /* 2: Ulfgar Ungart */
+<<<<<<< HEAD
         '-JggSWGNp1gDvfdZSTPf', /* 3: Baba Frostbeard */
         '-JglZlSBA2oSX2ClDirs', /* 4: Goden Arthelast */
         '-JglZlRofAw79n0D-2ol', /* 5: Firalphien Variel */
+=======
+    	'-JggSWGNp1gDvfdZSTPf', /* 3: Baba Frostbeard */
+    	'-JglZlSBA2oSX2ClDirs', /* 4: Goden Arthelast */
+    	'-JglZlRofAw79n0D-2ol', /* 5: Firalphien Variel */
+>>>>>>> 9b9c4f505bc9e1d6f49411ebfec2c667885038dd
         '-JglZwTIFm0ivfDzMssH,-JggSWGNp1gDvfdZSTPf,-JglZlSBA2oSX2ClDirs,-JglZlRofAw79n0D-2ol' /* 6: Tamey (community) */
     ],
     logPlayerIds: true,
@@ -52,6 +58,7 @@ var RoubysInventoryManager = {
     },
     temperatureUnit: 'C', // change to F if fahrenheit is desired
     storageItems: [
+<<<<<<< HEAD
         {
             name: 'backpack', // key of the storagekind, does not contain storage!
             maxWeight: 30, // maximum weight allowed in this kind
@@ -97,6 +104,53 @@ var RoubysInventoryManager = {
             maxWeight: 300,
             maxVolume: 12
         },
+=======
+		{
+		    name: 'backpack', // key of the storagekind, does not contain storage!
+		    maxWeight: 30, // maximum weight allowed in this kind
+		    maxVolume: 1 // maximum of contained volume allowed
+		},
+		{
+		    name: 'quiver',
+		    maxWeight: 1,
+		    maxVolume: .1
+		},
+		{
+		    name: 'boltcase',
+		    maxWeight: 1.5,
+		    maxVolume: .15
+		},
+		{
+		    name: 'pouch',
+		    maxWeight: 6,
+		    maxVolume: .2
+		},
+    	{
+    	    name: 'pocket',
+    	    maxWeight: 3,
+    	    maxVolume: .1
+    	},
+		{
+		    name: 'bagofholding',
+		    maxWeight: 500,
+		    maxVolume: 64
+		},
+		{
+		    name: 'hhh',
+		    maxWeight: 80,
+		    maxVolume: 8
+		},
+		{
+		    name: 'hhhside',
+		    maxWeight: 20,
+		    maxVolume: 2
+		},
+    	{
+    	    name: 'chest',
+    	    maxWeight: 300,
+    	    maxVolume: 12
+    	},
+>>>>>>> 9b9c4f505bc9e1d6f49411ebfec2c667885038dd
         {
             name: 'cart',
             maxWeight: 600,
@@ -406,7 +460,11 @@ var RoubysInventoryManager = {
                             item.graphic.set('status_fishing-net', true);
                     }
                 }
+<<<<<<< HEAD
                 else if (inventory.type === 'inv')
+=======
+                else if(inventory.type === 'inv')
+>>>>>>> 9b9c4f505bc9e1d6f49411ebfec2c667885038dd
                 {
                     if (item.properties.hasInventory && item.graphic.get('_id') === inventory.properties.representId)
                     {
@@ -473,7 +531,11 @@ var RoubysInventoryManager = {
                         if (item.properties.coinType)
                             charArea.containedCoinValue += RoubysInventoryManager.coin['value_' + item.properties.coinType] * item.properties.coinAmount;
 
+<<<<<<< HEAD
                         if (item.properties.hasInventory && !item.properties.hasConstantWeight)
+=======
+                        if(item.properties.hasInventory && !item.properties.hasConstantWeight)
+>>>>>>> 9b9c4f505bc9e1d6f49411ebfec2c667885038dd
                         {
                             _.each(item.properties.inventories, function (inventory)
                             {
