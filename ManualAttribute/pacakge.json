@@ -1,0 +1,13 @@
+{
+  "name": "ManualAttribute",
+  "version": "0.1",
+  "description": "Creates a manual copy of an autocalculated field, and assigns it to the bar of a token.",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "dependencies": {
+  },
+  "modifies": {
+  },
+  "conflicts": [
+  ]
+}
