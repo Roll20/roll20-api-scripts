@@ -1,0 +1,15 @@
+{
+  "name": "SpellLevel5e",
+  "version": "0.1",
+  "description": "",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "dependencies": {
+	"isGMModule": "0.x"
+  },
+  "modifies": {
+	"state.SpellLevel5e": "read,write",
+  },
+  "conflicts": [
+  ]
+}
