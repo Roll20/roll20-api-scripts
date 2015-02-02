@@ -13,7 +13,7 @@
 	"campaign.playerspecificpages": "read",
 	"graphic.pageid": "read",
 	"graphic.rotation": "write",
-	"graphic.subtype": "read",
+	"graphic.subtype": "read"
   },
   "conflicts": [
   ]
