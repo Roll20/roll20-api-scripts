@@ -8,11 +8,11 @@
   },
   "modifies": {
 	"state.TokenNameNumber": "read,write",
-	"graphic.name", "read,write",
-	"graphic.pageid", "read",
-	"graphic.represents", "read",
-	"graphic.subtype", "read",
-	"graphic.type", "read"
+	"graphic.name": "read,write",
+	"graphic.pageid": "read",
+	"graphic.represents": "read",
+	"graphic.subtype": "read",
+	"graphic.type": "read"
   },
   "conflicts": [
   ]
