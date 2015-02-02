@@ -1,0 +1,24 @@
+{
+  "name": "TokenMod",
+  "version": "0.54",
+  "description": "An interface to adjusting properties of a token from a macro or the chat area.",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "dependencies": {
+	"isGMModule": "0.x"
+  },
+  "modifies": {
+	"state.TokenMod": "read,write",
+	"attribute.characterid": "read",
+	"attribute.current": "read",
+	"attribute.id": "read",
+	"attribute.max": "read",
+	"attribute.name": "read",
+	"attribute.type": "read",
+	"character.archived": "read",
+	"character.name": "read",
+	"graphic.*": "read,write"
+  },
+  "conflicts": [
+  ]
+}
