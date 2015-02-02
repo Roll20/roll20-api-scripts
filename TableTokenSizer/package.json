@@ -8,7 +8,7 @@
   },
   "modifies": {
 	"graphic.height": "write",
-	"graphic.isdrawing": "write"
+	"graphic.isdrawing": "write",
 	"graphic.sides": "read",
 	"graphic.width": "read,write"
   },
