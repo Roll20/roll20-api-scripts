@@ -5,22 +5,22 @@
 var APIHeartBeat = APIHeartBeat || (function() {
     'use strict';
 
-    var version = 0.1,
+    var version = 0.2,
         schemaVersion = 0.1,
         beatInterval = false,
-        beatPeriod = 400,
-        beatCycle = (beatPeriod * 8),
+        beatPeriod = 200,
+        beatCycle = 3000,
 
     animateHeartBeat = function() {
-        var x = (Date.now()%beatCycle)*12.5,
-            scale = Math.max(0, ( Math.sin( (x-1)/2) - Math.sin(x-(1+(Math.PI/2))))),
-	        beatColor = Math.round(0xff*scale).toString(16)+'0000';
+        var x = ((Date.now()%beatCycle)/beatCycle)*Math.PI*2,
+            scale = (Math.sin(x)+1)/2,
+            beatColor = '#'+Math.round(0xff*scale).toString(16)+'0000';
 
         _.chain(state.APIHeartBeat.heartBeaters)
             .map(function(pid){
                 return getObj('player',pid);
             })
-            .filter(_.isUndefined)
+            .reject(_.isUndefined)
             .each(function(p){
                 p.set({
                     color: beatColor
@@ -84,13 +84,6 @@ var APIHeartBeat = APIHeartBeat || (function() {
 on('ready',function() {
     'use strict';
 
-    if("undefined" !== typeof isGM && _.isFunction(isGM)) {
-		APIHeartBeat.CheckInstall();
-		APIHeartBeat.RegisterEventHandlers();
-    } else {
-        log('--------------------------------------------------------------');
-        log('APIHeartBeat requires the isGM module to work.');
-        log('isGM GIST: https://gist.github.com/shdwjk/8d5bb062abab18463625');
-        log('--------------------------------------------------------------');
-    }
+    APIHeartBeat.CheckInstall();
+    APIHeartBeat.RegisterEventHandlers();
 });
