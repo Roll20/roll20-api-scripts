@@ -2,55 +2,88 @@
 // By:       The Aaron, Arcane Scriptomancer
 // Contact:  https://app.roll20.net/users/104025/the-aaron
 
-// Version:  0.1
+var Measure = Measure || (function() {
+    'use strict';
 
-on('read',function(){
-	'use strict';
+    var version = 0.2,
 
-    log('measure: ready');
-    on('sendChat',function(msg){
-        var args;
+    handleInput = function(msg) {
+        var args,
+            pageid,
+            page,
+            measurements,
+            whisper = false,
+    	    who;
 
 		if (msg.type !== "api") {
 			return;
 		}
 
 		args = msg.content.split(/\s+/);
-		switch(args[0]) {
+		switch(args.shift()) {
+            case '!wmeasure':
+                whisper = true;
+                who=getObj('player',msg.playerid).get('_displayname').split(' ')[0];
+                // break; // Intentional fall through
+
             case '!measure':
-                _.chain(args)
-                    .rest()
+               measurements = _.chain(_.union(args,_.pluck(msg.selected,'_id')))
 					.uniq()
 					.map(function(t){
 						return getObj('graphic',t);
 					})
 					.reject(_.isUndefined)
-                    .tap(log)
-                    .reduce(m,function(t){
-                        if(!m.root){
-                            m.root=t;
-                            m.msgs.push('Root Node: '+t.get('name')+' ('+t.get('left')+','+t.get('top')+')');
-                        } else {
-                            var rx = m.root.get('left'),
-                                ry = m.root.get('top'),
-                                rcx =(rx+m.root.get('width')/2),
-                                rcy= (ry+m.root.get('height')/2),
-                                tx = t.get('left'),
-                                ty = t.get('top'),
-                                tcx =(tx+t.get('width')/2),
-                                tcy = (ty+t.get('height')/2),
-                                d = Math.sqrt( Math.pow( (rx-tx),2)+Math.pow( (ry-ty),2)),
-                                cd =  Math.sqrt( Math.pow( (rcx-tcx),2)+Math.pow( (rcy-tcy),2));
-                            m.msgs.push('Root -> '+t.get('name')+': [corner] '+d);
-                            m.msgs.push('Root -> '+t.get('name')+': [center] '+cd);
-                        }
+                    .map(function(t){
+                        pageid=t.get('pageid');
+                        return {
+                                name: t.get('name') || "Token @ "+Math.round(t.get('left')/70)+','+Math.round(t.get('top')/70),
+                                x: t.get('left'),
+                                y: t.get('top')
+                            };
+                    })
+                    .reduce(function(m,t,k,l){
+                        _.each(_.rest(l,k+1),function(t2){
+                            m.push({
+                                name1: t.name,
+                                name2: t2.name,
+                                distance: (Math.sqrt( Math.pow( (t.x-t2.x),2)+Math.pow( (t.y-t2.y),2))/70)
+                                });
+                        });
                         return m;
-                    },{root: false, msgs: []})
-                    .each(function(o){
-                        sendChat('Measure','/direct '+o.msgs.join('<br>'));
-                    });
+                    },[])
+                    .value()
+                    ;
+                page=getObj('page',pageid);
+                if(page) {
+                    _.chain(measurements)
+                        .reduce(function(m,e){
+                            var d=Math.round(page.get('scale_number')*e.distance,2);
+                            m.push("<li>"+e.name1+" to "+e.name2+": <b>"+d+" "+page.get('scale_units')+"</b></li>");
+                            return m;
+                        },[])
+                        .join('')
+                        .tap(function(o){
+                            sendChat('Measure',(whisper ? '/w '+who : '/direct')+' <div><b>Measurements:</b><ul>'+o+'</ul></div>');
+                        });
                     
+                    
+                }
                 break;
-		}
-    });
+            }
+    },
+
+    registerEventHandlers = function() {
+        on('chat:message', handleInput);
+    };
+
+    return {
+        RegisterEventHandlers: registerEventHandlers
+    };
+    
+}());
+
+on('ready',function() {
+    'use strict';
+
+    Measure.RegisterEventHandlers();
 });
