@@ -1,5 +1,9 @@
 # It's A Trap!
 
+###### Required Scripts
+* [Collision Detection](https://github.com/Roll20/roll20-api-scripts/tree/master/Collision%20Detection)
+* [Vector Math](https://github.com/Roll20/roll20-api-scripts/tree/master/Collision%20Detection)
+
 This is a script that allows GMs to quickly and very easily set up traps on the GM layer, and detect when tokens on the objects layer move over them. This trap detection even works for tokens moving by waypoints.
 
 ### To set up traps:
