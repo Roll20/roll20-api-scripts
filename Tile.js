@@ -5,7 +5,7 @@
 var Tile = Tile || (function() {
     'use strict';
 
-    var version = 0.1,
+    var version = 0.2,
         tileNextMove = false,
 
     getCleanImgsrc = function (imgsrc) {
@@ -52,7 +52,7 @@ var Tile = Tile || (function() {
                 sx = obj.get('width') * (prev.left < obj.get('left') ? 1 : -1 );
                 sy = obj.get('height') * (prev.top < obj.get('top') ? 1 : -1 );
                 cx = Math.round(Math.abs((obj.get('left')-prev.left)/sx));
-                cy = Math.round(Math.abs((obj.get('top')-prev.top)/sx));
+                cy = Math.round(Math.abs((obj.get('top')-prev.top)/sy));
                 t = {
                     imgsrc: img,
                     pageid: obj.get('pageid'),
