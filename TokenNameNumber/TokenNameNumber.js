@@ -5,8 +5,10 @@
 var TokenNameNumber = TokenNameNumber || (function() {
     'use strict';
 
-    var version = 0.2,
+    var version = 0.3,
     	schemaVersion = 0.1,
+        maxWaitTime = 1000,
+        randomSpace = 0,
 
     checkInstall = function() {    
         if( ! _.has(state,'TokenNameNumber') || state.TokenNameNumber.version !== schemaVersion) {
@@ -39,7 +41,7 @@ var TokenNameNumber = TokenNameNumber || (function() {
 		}
 	},
 
-	setNumberFunction = function(id) {
+	setNumberFunction = function(id,lastTimeout) {
 		var obj = getObj('graphic',id),
 			matchers = (obj && getMatchers(obj.get('pageid'), obj.get('represents'))) || [],
 			tokenName = (obj && obj.get('name')),
@@ -80,19 +82,23 @@ var TokenNameNumber = TokenNameNumber || (function() {
 					return Math.max(memo,c);
 				},0)
 				.value() );
+
+                num += ( randomSpace ? (randomInteger(randomSpace)-1) : 0);
 				
 			parts=renamer.exec(tokenName);
 			obj.set({
 				name: parts[1]+(++num)+parts[3]
 			});
-		}
+		} else if ( lastTimeout < maxWaitTime ) {
+            setTimeout(_.bind(setNumberFunction,this,id,lastTimeout*2), lastTimeout*2);
+        }
 	},
 
 	setNumberOnToken = function(obj) {
         if( 'graphic' === obj.get('type') 
             && 'token'   === obj.get('subtype') ) {
  
-            setTimeout(_.bind(setNumberFunction,this,obj.id), 500);
+            setTimeout(_.bind(setNumberFunction,this,obj.id,200), 200);
         }
     },
 
