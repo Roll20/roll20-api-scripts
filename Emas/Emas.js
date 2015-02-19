@@ -3,7 +3,7 @@
 var Emas = Emas || (function() {
     'use strict';
 
-	var version = 0.5,
+	var version = 0.6,
 
 	ch = function (c) {
 		var entities = {
@@ -54,45 +54,62 @@ var Emas = Emas || (function() {
 		+'</div>'
 	+'</div>'
 	+'<div style="padding-left:10px;">'
-		+'<b><span style="font-family: serif;">!as '+ch('<')+'message'+ch('>')+'</span></b>'
+		+'<b><span style="font-family: serif;">!as '+ch('<')+'target'+ch('>')+' '+ch('<')+'message'+ch('>')+'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>Sends a message in the same manner as <i>/as</i> does for GMs.</p>'
 			+'<ul>'
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<b><span style="font-family: serif;">'+ch('<')+'target'+ch('>')+'</span></b> '+ch('-')+' The person to speak as.'
+				+'</li> '
+				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<b><span style="font-family: serif;">'+ch('<')+'message'+ch('>')+'</span></b> '+ch('-')+' The message to output as part of the emote.'
 				+'</li> '
 			+'</ul>'
 		+'</div>'
 	+'</div>'
 	+'<div style="padding-left:10px;">'
-		+'<b><span style="font-family: serif;">!w '+ch('<')+'message'+ch('>')+'</span></b>'
+		+'<b><span style="font-family: serif;">!w '+ch('<')+'target'+ch('>')+' '+ch('<')+'message'+ch('>')+'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>Sends a message in the same manner as <i>/w</i> does.</p>'
 			+'<ul>'
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
-					+'<b><span style="font-family: serif;">'+ch('<')+'message'+ch('>')+'</span></b> '+ch('-')+' The message to output as part of the emote.'
+					+'<b><span style="font-family: serif;">'+ch('<')+'target'+ch('>')+'</span></b> '+ch('-')+' The target of the whisper.'
+				+'</li> '
+				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<b><span style="font-family: serif;">'+ch('<')+'message'+ch('>')+'</span></b> '+ch('-')+' The message to whisper.'
 				+'</li> '
 			+'</ul>'
 		+'</div>'
 	+'</div>'
 	+'<div style="padding-left:10px;">'
-		+'<b><span style="font-family: serif;">!r '+ch('<')+'message'+ch('>')+'</span></b>'
+		+'<b><span style="font-family: serif;">!r '+ch('<')+'expression'+ch('>')+'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
-			+'<p>Sends a message in the same manner as <i>/r</i> does.</p>'
+			+'<p>Sends a expression in the same manner as <i>/r</i> does.</p>'
 			+'<ul>'
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
-					+'<b><span style="font-family: serif;">'+ch('<')+'message'+ch('>')+'</span></b> '+ch('-')+' The message to output as part of the emote.'
+					+'<b><span style="font-family: serif;">'+ch('<')+'expression'+ch('>')+'</span></b> '+ch('-')+' The dice expression to output.'
 				+'</li> '
 			+'</ul>'
 		+'</div>'
 	+'</div>'
 	+'<div style="padding-left:10px;">'
-		+'<b><span style="font-family: serif;">!gr '+ch('<')+'message'+ch('>')+'</span></b>'
+		+'<b><span style="font-family: serif;">!gr '+ch('<')+'expression'+ch('>')+'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>Sends a message in the same manner as <i>/gr</i> does.</p>'
 			+'<ul>'
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
-					+'<b><span style="font-family: serif;">'+ch('<')+'message'+ch('>')+'</span></b> '+ch('-')+' The message to output as part of the emote.'
+					+'<b><span style="font-family: serif;">'+ch('<')+'expression'+ch('>')+'</span></b> '+ch('-')+' The dice expression to whisper to the GM (blindly).'
+				+'</li> '
+			+'</ul>'
+		+'</div>'
+	+'</div>'
+	+'<div style="padding-left:10px;">'
+		+'<b><span style="font-family: serif;">!desc '+ch('<')+'message'+ch('>')+'</span></b>'
+		+'<div style="padding-left: 10px;padding-right:20px">'
+			+'<p>Sends a message in the same manner as <i>/desc</i> does.</p>'
+			+'<ul>'
+				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<b><span style="font-family: serif;">'+ch('<')+'message'+ch('>')+'</span></b> '+ch('-')+' The message to output as part of the description.'
 				+'</li> '
 			+'</ul>'
 		+'</div>'
@@ -145,6 +162,13 @@ var Emas = Emas || (function() {
 					showHelp(who);
 				} else {
 					sendChat('','/gr '+_.rest(args).join(' '));
+				}
+				break;
+			case '!desc':
+				if(1 === args.length) {
+					showHelp(who);
+				} else {
+					sendChat('','/desc '+_.rest(args).join(' '));
 				}
 				break;
 		}
