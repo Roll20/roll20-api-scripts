@@ -3,7 +3,7 @@
 var Emas = Emas || (function() {
     'use strict';
 
-	var version = 0.4,
+	var version = 0.5,
 
 	ch = function (c) {
 		var entities = {
@@ -36,7 +36,10 @@ var Emas = Emas || (function() {
 		+'Emas v'+version
 	+'</div>'
 	+'<div style="padding-left:10px;margin-bottom:3px;">'
-		+'<p>Emas provides the <b>!emas</b> command, which looks like /emas but works for everyone, as well as the <b>!as</b> command, which looks like /as but works for everyone.</p>'
+        +'<p>Emas provides the <b>!emas</b> command, which looks like /emas but '
+        +'works for everyone, as well as the <b>!as</b> command, which looks like '
+        +'/as but works for everyone.  <b>!w</b>, <b>!r</b>, <b>!gr</b> as '
+        +'well.</p>'
 	+'</div>'
 	+'<b>Commands</b>'
 	+'<div style="padding-left:10px;">'
@@ -54,6 +57,39 @@ var Emas = Emas || (function() {
 		+'<b><span style="font-family: serif;">!as '+ch('<')+'message'+ch('>')+'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>Sends a message in the same manner as <i>/as</i> does for GMs.</p>'
+			+'<ul>'
+				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<b><span style="font-family: serif;">'+ch('<')+'message'+ch('>')+'</span></b> '+ch('-')+' The message to output as part of the emote.'
+				+'</li> '
+			+'</ul>'
+		+'</div>'
+	+'</div>'
+	+'<div style="padding-left:10px;">'
+		+'<b><span style="font-family: serif;">!w '+ch('<')+'message'+ch('>')+'</span></b>'
+		+'<div style="padding-left: 10px;padding-right:20px">'
+			+'<p>Sends a message in the same manner as <i>/w</i> does.</p>'
+			+'<ul>'
+				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<b><span style="font-family: serif;">'+ch('<')+'message'+ch('>')+'</span></b> '+ch('-')+' The message to output as part of the emote.'
+				+'</li> '
+			+'</ul>'
+		+'</div>'
+	+'</div>'
+	+'<div style="padding-left:10px;">'
+		+'<b><span style="font-family: serif;">!r '+ch('<')+'message'+ch('>')+'</span></b>'
+		+'<div style="padding-left: 10px;padding-right:20px">'
+			+'<p>Sends a message in the same manner as <i>/r</i> does.</p>'
+			+'<ul>'
+				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<b><span style="font-family: serif;">'+ch('<')+'message'+ch('>')+'</span></b> '+ch('-')+' The message to output as part of the emote.'
+				+'</li> '
+			+'</ul>'
+		+'</div>'
+	+'</div>'
+	+'<div style="padding-left:10px;">'
+		+'<b><span style="font-family: serif;">!gr '+ch('<')+'message'+ch('>')+'</span></b>'
+		+'<div style="padding-left: 10px;padding-right:20px">'
+			+'<p>Sends a message in the same manner as <i>/gr</i> does.</p>'
 			+'<ul>'
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<b><span style="font-family: serif;">'+ch('<')+'message'+ch('>')+'</span></b> '+ch('-')+' The message to output as part of the emote.'
@@ -87,6 +123,28 @@ var Emas = Emas || (function() {
 					showHelp(who);
 				} else {
 					sendChat('','/as '+_.rest(args).join(' '));
+				}
+				break;
+			case '!w':
+				if(1 === args.length) {
+					showHelp(who);
+				} else {
+					sendChat(msg.who,'/w '+who+' '+_.rest(args,2).join(' '));
+					sendChat(msg.who,'/w '+_.rest(args).join(' '));
+				}
+				break;
+			case '!r':
+				if(1 === args.length) {
+					showHelp(who);
+				} else {
+					sendChat('','/r '+_.rest(args).join(' '));
+				}
+				break;
+			case '!gr':
+				if(1 === args.length) {
+					showHelp(who);
+				} else {
+					sendChat('','/gr '+_.rest(args).join(' '));
 				}
 				break;
 		}
