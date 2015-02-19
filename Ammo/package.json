@@ -1,6 +1,6 @@
 {
   "name": "Ammo",
-  "version": "0.21",
+  "version": "0.22",
   "description": "Provides inventory management for ammunition stored in an attribute of a character.",
   "authors": "The Aaron",
   "roll20userid": "104025",
