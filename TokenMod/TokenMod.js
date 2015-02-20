@@ -5,7 +5,7 @@
 var TokenMod = TokenMod || (function() {
 	'use strict';
 
-	var version = 0.54,
+	var version = 0.6,
 		schemaVersion = 0.1,
 
 		fields = {
@@ -647,7 +647,7 @@ var TokenMod = TokenMod || (function() {
 
 				case 'tofront':
 					break;
-				case 'toback'
+				case 'toback':
 					break;
 				case 'randomdepth':
 					break;
