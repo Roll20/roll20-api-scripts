@@ -5,8 +5,8 @@
   "authors": "Brian Shields",
   "roll20userid": "235259",
   "dependencies": {
-    "IsGM Auth Module": "1.1",
-	"splitArgs": "1.0"
+    "IsGMModule": "0.7",
+    "splitArgs": "1.0"
   },
   "modifies": {
     "turnorder": "write",
