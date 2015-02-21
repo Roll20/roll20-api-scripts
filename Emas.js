@@ -3,7 +3,7 @@
 var Emas = Emas || (function() {
     'use strict';
 
-	var version = 0.6,
+	var version = 0.7,
 
 	ch = function (c) {
 		var entities = {
@@ -118,12 +118,25 @@ var Emas = Emas || (function() {
             );
     },
 	
-	handleInput = function(msg) {
-		var args, who;
+	handleInput = function(msg_orig) {
+		var args, who, msg = _.clone(msg_orig);
 
 		if (msg.type !== "api") {
 			return;
 		}
+
+		if(_.has(msg,'inlinerolls')){
+			msg.content = _.chain(msg.inlinerolls)
+				.reduce(function(m,v,k){
+					m['$[['+k+']]']="[["+v.expression+"]]";
+					return m;
+				},{})
+				.reduce(function(m,v,k){
+					return m.replace(k,v);
+				},msg.content)
+				.value();
+		}
+
 
 		args = msg.content.split(/\s+/);
 		who=getObj('player',msg.playerid).get('_displayname').split(' ')[0];
