@@ -5,7 +5,7 @@
 var Tile = Tile || (function() {
     'use strict';
 
-    var version = 0.2,
+    var version = 0.3,
         tileNextMove = false,
 
     getCleanImgsrc = function (imgsrc) {
@@ -56,6 +56,7 @@ var Tile = Tile || (function() {
                 t = {
                     imgsrc: img,
                     pageid: obj.get('pageid'),
+                    rotation: obj.get('rotation'),
                     layer: 'map',
                     width: prev.width,
                     height: prev.height       
