@@ -1,6 +1,6 @@
 {
   "name": "MonsterHitDice5e",
-  "version": "0.1",
+  "version": "0.2",
   "description": "Set Monster hit dice on add, usually via drag from journal.  Configured for Dungeons and Dragons 5e Character Sheet",
   "authors": "The Aaron",
   "roll20userid": "104025",
