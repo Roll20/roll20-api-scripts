@@ -1,4 +1,4 @@
-// Github:   https://github.com/shdwjk/Roll20API/blob/master/TurnMarker1/TurnMarker.js
+// Github:   https://github.com/shdwjk/Roll20API/blob/master/TurnMarker1/TurnMarker1.js
 // By:       The Aaron, Arcane Scriptomancer
 // Contact:  https://app.roll20.net/users/104025/the-aaron
 
