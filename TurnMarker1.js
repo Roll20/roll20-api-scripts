@@ -1,4 +1,4 @@
-// Github:   https://github.com/shdwjk/Roll20API/blob/master/TurnMarker1/TurnMarker.js
+// Github:   https://github.com/shdwjk/Roll20API/blob/master/TurnMarker1/TurnMarker1.js
 // By:       The Aaron, Arcane Scriptomancer
 // Contact:  https://app.roll20.net/users/104025/the-aaron
 
@@ -6,14 +6,17 @@
 /*  TurnMarker */
 /*  ############################################################### */
 
-var TurnMarker = TurnMarker || {
-    version: 1.25,
+var TurnMarker = TurnMarker || (function(){
+    "use strict";
+
+return {
+    version: 1.26,
     schemaVersion: 1.16,
     active: false,
     threadSync: 1,
 
     CheckInstall: function() {    
-        if( ! state.hasOwnProperty('TurnMarker') || state.TurnMarker.version != TurnMarker.schemaVersion)
+        if( ! state.hasOwnProperty('TurnMarker') || state.TurnMarker.version !== TurnMarker.schemaVersion)
         {
             /* Default Settings stored in the state. */
             state.TurnMarker = {
@@ -39,9 +42,9 @@ var TurnMarker = TurnMarker || {
                     size: 5,
                     color: '#00ff00'
                 }
-            }
+            };
         }
-        if(Campaign().get('turnorder') =='')
+        if(Campaign().get('turnorder') ==='')
         {
             Campaign().set('turnorder','[]');
         }
@@ -83,7 +86,7 @@ var TurnMarker = TurnMarker || {
     },
 
     Step: function( sync ){
-        if (!state.TurnMarker.playAnimations || sync != TurnMarker.threadSync)
+        if (!state.TurnMarker.playAnimations || sync !== TurnMarker.threadSync)
         {
             return;
         }
@@ -143,14 +146,14 @@ var TurnMarker = TurnMarker || {
         {
             marker.set({
                 aura1_radius: state.TurnMarker.aura1.size,
-                aura1_color: state.TurnMarker.aura1.color,
+                aura1_color: state.TurnMarker.aura1.color
             });   
         }
         if(state.TurnMarker.playAnimations && state.TurnMarker.aura2.pulse)
         {
             marker.set({
                 aura2_radius: state.TurnMarker.aura2.size,
-                aura2_color: state.TurnMarker.aura2.color,
+                aura2_color: state.TurnMarker.aura2.color
             });   
         }
         TurnMarker.active=true;
@@ -164,7 +167,7 @@ var TurnMarker = TurnMarker || {
             case 'reset':
                 var marker = TurnMarker.GetMarker();
                 marker.set({
-                    name: state.TurnMarker.tokenName+' '+0,
+                    name: state.TurnMarker.tokenName+' 0',
                     bar2_value: 0
                 });
                 sendChat('','/w '+who+' <b>Round</b> count is reset to <b>0</b>.');
@@ -201,7 +204,7 @@ var TurnMarker = TurnMarker || {
                     var marker = TurnMarker.GetMarker();
                     marker.set({
                         aura1_radius: '',
-                        aura2_radius: '',
+                        aura2_radius: ''
                     });
                 }
 
@@ -224,8 +227,8 @@ var TurnMarker = TurnMarker || {
                 break;
 
                 
-            default:
             case 'help':
+            default:
                 TurnMarker.Help(who);
                 break;
                 
@@ -234,7 +237,7 @@ var TurnMarker = TurnMarker || {
     
     Help: function(who){
         var marker = TurnMarker.GetMarker();
-        var rounds =parseInt(marker.get('bar2_value'));
+        var rounds =parseInt(marker.get('bar2_value'),10);
         sendChat('',
             '/w '+who+' '
 +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
@@ -281,7 +284,7 @@ var TurnMarker = TurnMarker || {
         {
             var turnOrder = TurnOrder.Get();
             var current = _.first(turnOrder);
-            if( obj && current && current.id == obj.id)
+            if( obj && current && current.id === obj.id)
             {
                TurnMarker.threadSync++;
                 
@@ -303,11 +306,11 @@ var TurnMarker = TurnMarker || {
             var current = getObj('graphic',_.first(turnOrder).id);
             var character = getObj('character',current.get('represents'));
             if(isGM(playerid) 
-                || ( undefined != current &&
+                || ( undefined !== current &&
                        ( _.contains(current.get('controlledby').split(','),playerid)
                        || _.contains(current.get('controlledby').split(','),'all') )
                     )
-                || ( undefined != character &&
+                || ( undefined !== character &&
                        ( _.contains(character.get('controlledby').split(','),playerid)
                        || _.contains(character.get('controlledby').split(','),'all') )
                     )
@@ -346,7 +349,7 @@ var TurnMarker = TurnMarker || {
         var marker = TurnMarker.GetMarker();
         var turnOrder = TurnOrder.Get();
 
-        if(turnOrder[0].id == marker.id)
+        if(turnOrder[0].id === marker.id)
         {
             var round=parseInt(marker.get('bar2_value'))+1;
             marker.set({
@@ -364,15 +367,15 @@ var TurnMarker = TurnMarker || {
             var marker = TurnMarker.GetMarker();
             var turnOrder = TurnOrder.Get();
             var currentToken = getObj("graphic", turnOrder[0].id);
-            if('gmlayer' == currentToken.get('layer'))
+            if('gmlayer' === currentToken.get('layer'))
             {
                 return;
             }
             var previousTurn=_.last(_.filter(turnOrder,function(element){
                 var token=getObj("graphic", element.id);
-                return ((undefined != token)
-                    && (token.get('layer')!='gmlayer')
-                    && (element.id != marker.id));
+                return ((undefined !== token)
+                    && (token.get('layer')!=='gmlayer')
+                    && (element.id !== marker.id));
             }));
             
             /* find previous token. */
@@ -411,9 +414,9 @@ var TurnMarker = TurnMarker || {
             if(state.TurnMarker.announcePlayerInTurnAnnounce)
             {
                 var Char=currentToken.get('represents');
-                if('' != Char)
+                if('' !== Char)
                 {
-                    var Char=getObj('character',Char);
+                    Char=getObj('character',Char);
                     if(Char && _.isFunction(Char.get))
                     {
                         var Controllers=Char.get('controlledby').split(',');
@@ -435,7 +438,7 @@ var TurnMarker = TurnMarker || {
                                             +'All'
                                         +'</div>';
                                     break;
-                                    break;
+
                                 default:
                                     var player=getObj('player',c);
                                     if(player) {
@@ -496,7 +499,9 @@ var TurnMarker = TurnMarker || {
         
         var turnOrder = TurnOrder.Get();
         
-        if (!turnOrder.length) return;
+        if (!turnOrder.length) {
+            return;
+        }
 
         var current = _.first(turnOrder);
 
@@ -506,7 +511,9 @@ var TurnMarker = TurnMarker || {
             setTimeout(_.bind(TurnMarker.Step,this,TurnMarker.threadSync), 300);
         }
         
-        if (current.id == "-1") return;
+        if (current.id === "-1") {
+            return;
+        }
       
         TurnMarker._HandleMarkerTurn();
 
@@ -518,7 +525,7 @@ var TurnMarker = TurnMarker || {
 
         turnOrder=TurnOrder.Get();
 
-        if(turnOrder[0].id == marker.id)
+        if(turnOrder[0].id === marker.id)
         {
             return;
         }
@@ -526,7 +533,7 @@ var TurnMarker = TurnMarker || {
         current = _.first(TurnOrder.Get());
         
         var currentToken = getObj("graphic", turnOrder[0].id);
-        if(undefined != currentToken)
+        if(undefined !== currentToken)
         {
 
             if(FirstTurnChanged)
@@ -536,7 +543,7 @@ var TurnMarker = TurnMarker || {
             
             var size = Math.max(currentToken.get("height"),currentToken.get("width")) * state.TurnMarker.scale;
               
-            if (marker.get("layer") == "gmlayer" && currentToken.get("layer") != "gmlayer") {
+            if (marker.get("layer") === "gmlayer" && currentToken.get("layer") !== "gmlayer") {
                 marker.set({
                     "top": currentToken.get("top"),
                     "left": currentToken.get("left"),
@@ -581,13 +588,13 @@ var TurnMarker = TurnMarker || {
             var prevOrder=JSON.parse(prev.turnorder);
             var objOrder=JSON.parse(obj.get('turnorder'));
 
-            if( undefined !=prevOrder
-             && undefined !=objOrder
+            if( undefined !==prevOrder
+             && undefined !==objOrder
                && _.isArray(prevOrder)
                && _.isArray(objOrder)
-               && 0 != prevOrder.length
-               && 0 != objOrder.length
-             && objOrder[0].id != prevOrder[0].id
+               && 0 !== prevOrder.length
+               && 0 !== objOrder.length
+             && objOrder[0].id !== prevOrder[0].id
               )
             {
                 TurnMarker.TurnOrderChange(true);
@@ -600,7 +607,9 @@ var TurnMarker = TurnMarker || {
 
         on("chat:message", function (msg) {
             /* Exit if not an api command */
-            if (msg.type != "api") return;
+            if (msg.type !== "api") {
+                return;
+            }
             
             /* clean up message bits. */
             msg.who = msg.who.replace(" (GM)", "");
@@ -631,6 +640,7 @@ var TurnMarker = TurnMarker || {
     }
 
 };
+}());
 
 
 
@@ -667,7 +677,7 @@ var fixNewObject = fixNewObject || function(obj){
     var new_p = p.replace(/([^\/]*\/){4}/, "/");
     obj.fbpath = new_p;
     return obj;
-}
+};
 
 
 var TurnOrder = TurnOrder || {
@@ -692,7 +702,7 @@ var TurnOrder = TurnOrder || {
             var token=getObj("graphic", element.id);
             if(
                 (undefined !== token) 
-                && (token.get('layer')!='gmlayer')
+                && (token.get('layer')!=='gmlayer')
             )
             {
                 return true;
@@ -709,8 +719,8 @@ var TurnOrder = TurnOrder || {
     },
     HasTurn: function(id){
      return (_.filter(this.Get(),function(turn){
-            return id == turn.id;
-        }).length != 0);
+            return id === turn.id;
+        }).length !== 0);
     },
     AddTurn: function(entry){
         var turnorder = this.Get();
@@ -735,4 +745,4 @@ Array.prototype.rotate = (function() {
         unshift.apply(this, splice.call(this, count % len, len));
         return this;
     };
-})();
+}());
