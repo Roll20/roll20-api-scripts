@@ -5,7 +5,7 @@
 var TokenMod = TokenMod || (function() {
 	'use strict';
 
-	var version = 0.6,
+	var version = 0.7,
 		schemaVersion = 0.1,
 
 		fields = {
@@ -513,7 +513,7 @@ var TokenMod = TokenMod || (function() {
 
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<b>Attribute Name</b>'
-			+'<p>These are resolved from the represented character id.  If the token doesn'+ch("'")+'t represent a character, these will be ignored.</p>'
+			+'<p>These are resolved from the represented character id.  If the token doesn'+ch("'")+'t represent a character, these will be ignored.  If the Attribute Name specified doesn'+ch("'")+'t exist for the represented character, the link is unchanged. You can clear a link by passing a blank Attribute Name.</p>'
 			+'<p><u>Available Attribute Name Properties:</u></p>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar1_link</div>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar2_link</div>'
@@ -523,6 +523,12 @@ var TokenMod = TokenMod || (function() {
 			+'<div style="padding-left: 10px;padding-right:20px">'
 				+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
 					+'!token-mod --set represents|'+ch('@')+ch('{')+'Bob'+ch('|')+'character_id'+ch('}')+' bar1_link|npc_HP'
+				+'</pre>'
+			+'</div>'
+			+'<p>Here is clearing the link for bar3:</p>'
+			+'<div style="padding-left: 10px;padding-right:20px">'
+				+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
+					+'!token-mod --set bar3_link|'
 				+'</pre>'
 			+'</div>'
 		+'</div>'
@@ -784,15 +790,19 @@ var TokenMod = TokenMod || (function() {
 				case 'bar1_link':
 				case 'bar2_link':
 				case 'bar3_link':
-					cid=mods.represents || token.get('represents') || '';
-					if('' !== cid) {
-						delta=findObjs({type: 'attribute', characterid: cid, name: f[0]})[0];
-						if(delta) {
-							mods[k]=delta.id;
-							mods[k.split(/_/)[0]+'_value']=delta.get('current');
-							mods[k.split(/_/)[0]+'_max']=delta.get('max');
-						}
-					}
+                    if( '' === f[0] ) {
+                        mods[k]='';
+                    } else {
+                        cid=mods.represents || token.get('represents') || '';
+                        if('' !== cid) {
+                            delta=findObjs({type: 'attribute', characterid: cid, name: f[0]})[0];
+                            if(delta) {
+                                mods[k]=delta.id;
+                                mods[k.split(/_/)[0]+'_value']=delta.get('current');
+                                mods[k.split(/_/)[0]+'_max']=delta.get('max');
+                            }
+                        }
+                    }
 					break;
 
 				case 'left':
