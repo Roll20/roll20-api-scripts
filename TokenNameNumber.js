@@ -5,10 +5,11 @@
 var TokenNameNumber = TokenNameNumber || (function() {
     'use strict';
 
-    var version = 0.3,
-    	schemaVersion = 0.1,
+    var version = 0.4,
+    	schemaVersion = 0.2,
         maxWaitTime = 1000,
         randomSpace = 0,
+        escapeForRegexp = /(\\|\/|\[|\]|\(|\)|\{|\}|\?|\+|\*|\||\.|\^|\$)/g,
 
     checkInstall = function() {    
         if( ! _.has(state,'TokenNameNumber') || state.TokenNameNumber.version !== schemaVersion) {
@@ -18,6 +19,9 @@ var TokenNameNumber = TokenNameNumber || (function() {
 				}
             };
         }
+    },
+    esRE = function (s) {
+        return s.replace(escapeForRegexp,"\\$1");
     },
 
 	getMatchers = function(pageid,represents) {
@@ -53,7 +57,7 @@ var TokenNameNumber = TokenNameNumber || (function() {
 
 	   if(obj && (tokenName.match( /%%NUMBERED%%/ ) || _.some(matchers,function(m) { return m.test(tokenName);}) ) ) {
 			if( 0 === matchers.length || !_.some(matchers,function(m) { return m.test(tokenName);}) ) {
-				matcher='^('+tokenName.replace(/%%NUMBERED%%/,')(\\d+)(')+')$';
+				matcher='^('+esRE(tokenName).replace(/%%NUMBERED%%/,')(\\d+)(')+')$';
 				addMatcher(obj.get('pageid'), obj.get('represents'), matcher );
 			}
 			if( !_.some(matchers,function(m) {
@@ -63,8 +67,8 @@ var TokenNameNumber = TokenNameNumber || (function() {
 					}
 					return false;
 				}) ) {
-				matcher=new RegExp('^('+tokenName.replace(/%%NUMBERED%%/,')(\\d+)(')+')$');
-				renamer=new RegExp('^('+tokenName.replace(/%%NUMBERED%%/,')(%%NUMBERED%%)(')+')$');
+				matcher=new RegExp('^('+esRE(tokenName).replace(/%%NUMBERED%%/,')(\\d+)(')+')$');
+				renamer=new RegExp('^('+esRE(tokenName).replace(/%%NUMBERED%%/,')(%%NUMBERED%%)(')+')$');
 			}
 			renamer = renamer || matcher;
 
