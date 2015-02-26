@@ -5,7 +5,7 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = 0.5,
+    var version = 0.6,
         schemaVersion = 0.6,
         bonusCache = {},
         statAdjustments = {
@@ -335,7 +335,7 @@ var GroupInitiative = GroupInitiative || (function() {
                 return memo+v;
             },0)
             .value();
-            return !(_.isUndefined(bonus) && _.isNaN(bonus));
+            return !(_.isUndefined(bonus) || _.isNaN(bonus) || _.isNull(bonus));
         });
         bonusCache[id]=bonus;
         return bonus;
