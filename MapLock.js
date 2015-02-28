@@ -5,7 +5,7 @@
 var MapLock = MapLock || (function() {
     'use strict';
 
-    var version = 0.2,
+    var version = 0.3,
         schemaVersion = 0.4,
 
     checkInstall = function() {
@@ -160,7 +160,7 @@ var MapLock = MapLock || (function() {
 
 	HandleMove = function(obj,prev) {
 
-		if(_.contains(state.MapLock.locked, obj.id)
+		if(_.has(state.MapLock.locked, obj.id)
 			&& (
                 obj.get('left') !== prev.left
                 || obj.get('top') !== prev.top
