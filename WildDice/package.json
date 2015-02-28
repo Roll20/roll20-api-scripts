@@ -1,0 +1,14 @@
+{
+  "name": "WildDice",
+  "version": "0.1",
+  "description": "Implements the Wild Dice rolling mechanic.",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "dependencies": {
+	"isGMModule": "0.x"
+  },
+  "modifies": {
+  },
+  "conflicts": [
+  ]
+}
