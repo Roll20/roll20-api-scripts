@@ -5,7 +5,7 @@
 var ZombieDice = ZombieDice || (function() {
     'use strict';
 
-    var version = 0.2,
+    var version = 0.3,
 
     getDiceCounts = function(msg,idx) {
         return ( msg.inlinerolls
@@ -97,8 +97,9 @@ var ZombieDice = ZombieDice || (function() {
                             + (c.length ? ('<strike style="color:red;"><span style="color:#666666;">'+c.join(', ')+'</span></strike>') : '' )
                         +'</div>') : '')
                         +'<div>'
-                            +'<div style="float:left; margin-left: 10px; background: '+(s.length ? 'green' : 'red' )+ '; border: 1px solid black; padding: 1px 3px;; color: white; bold;">'+(s.length ? 'Success' : 'Failure')+'</div>'
+                            +'<div style="float:left; margin-left: 10px; background: '+(s.length ? 'green' : 'red' )+ '; border: 1px solid black; padding: 1px 3px; color: white; font-weight: bold;">'+(s.length ? ''+s.length+' Success' : 'Failure')+'</div>'
                             +(np.length ? ('<div style="float:left; background: orange; margin-left: 10px; border: 1px solid black; padding: 1px 3px; color: red; font-weight: bold;">'+np.length +' Stress</div>') : '')
+                            +'<div style="float:right; margin-right: 10px; background: yellow; border: 1px solid black; padding: 1px 3px; color: black; font-weight: bold;">vs '+t+'</div>'
                             +'<div style="clear: both"></div>'
                         +'</div>'
                     +'</div>');
