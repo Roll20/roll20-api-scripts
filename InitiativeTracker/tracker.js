@@ -128,8 +128,8 @@ var Tracker = Tracker || {
 		}
 		var statusCount = status.count;
 		if (!state.InitiativeTracker.highToLow){ statusCount = -statusCount; }
-		if ((roundChanged) && (statusCount > oldCount) && (statusCount < newCount)){ continue; } // status not between last count and this count
-		if ((!roundChanged) && ((statusCount > oldCount) || (statusCount < newCount))){ continue; }
+		if ((roundChanged) && (statusCount >= oldCount) && (statusCount < newCount)){ continue; } // status not between last count and this count
+		if ((!roundChanged) && ((statusCount >= oldCount) || (statusCount < newCount))){ continue; }
 		if (status.expires <= state.InitiativeTracker.round){
 		    // status expired; remove marker and announce expiration
 		    token.set("status_" + status.status, false);
