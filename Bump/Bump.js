@@ -7,7 +7,7 @@
 var Bump = Bump || (function() {
     'use strict';
 
-    var version = 0.1,
+    var version = 0.2,
         schemaVersion = 0.1,
         clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
 
@@ -19,7 +19,7 @@ var Bump = Bump || (function() {
             'name', 'left', 'top', 'width', 'height', 'rotation',
             'flipv', 'fliph', 'bar1_value', 'bar1_max',
             'bar2_value', 'bar2_max', 'bar3_value', 'bar3_max',
-            'tint_color', 'statusmarkers', 'lastmove',
+            'tint_color', 'lastmove',
             'represents','bar1_link','bar2_link','bar3_link'
         ],
 
