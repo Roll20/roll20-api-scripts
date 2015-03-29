@@ -5,7 +5,8 @@
 var TokenMod = TokenMod || (function() {
 	'use strict';
 
-	var version = 0.7,
+	var version = '0.8.1',
+        lastUpdate = 1427607758,
 		schemaVersion = 0.1,
 
 		fields = {
@@ -45,6 +46,7 @@ var TokenMod = TokenMod || (function() {
 			// distance
 			light_radius: {type: 'numberBlank'},
 			light_dimradius: {type: 'numberBlank'},
+			light_multiplier: {type: 'numberBlank'},
 			aura1_radius: {type: 'numberBlank'},
 			aura2_radius: {type: 'numberBlank'},
 
@@ -58,6 +60,7 @@ var TokenMod = TokenMod || (function() {
 			bar1: {type: 'text'},
 			bar2: {type: 'text'},
 			bar3: {type: 'text'},
+
 
 			// colors
 			aura1_color: {type: 'color'},
@@ -125,6 +128,22 @@ var TokenMod = TokenMod || (function() {
 			return '';
 		},
 
+    getConfigOption_PlayersCanIDs = function() {
+        var text = ( state.TokenMod.playersCanUse_ids 
+                ? '<span style="color: red; font-weight:bold; padding: 0px 4px;">ON</span>' 
+                : '<span style="color: #999999; font-weight:bold; padding: 0px 4px;">OFF</span>' 
+            );
+        return '<div>'
+            +'Players can IDs is currently '
+                +text
+            +'<a href="!token-mod --config players-can-ids">'
+                +'Toggle'
+            +'</a>'
+        +'</div>';
+        
+    },
+
+
 	showHelp = function(id) {
 		var who=getObj('player',id).get('_displayname').split(' ')[0];
 		sendChat('',
@@ -169,7 +188,7 @@ var TokenMod = TokenMod || (function() {
 		+'</div>'
 	+'</div>'
 
-	+'<b>Configuration</b>'
+	+'<b>Specification</b>'
 	+'<div style="padding-left:10px;">'
 		+'<p><i>--ids</i> takes token ids to operate on, separated by spaces.</p>'
 			+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
@@ -179,23 +198,6 @@ var TokenMod = TokenMod || (function() {
 			+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
 				+'!token-mod --ids @{target|1|token_id} @{target|2|token_id} @{target|3|token_id} --on showname showplayers_name'
 			+'</pre>'
-
-		+'<p><i>--config</i> takes option value pairs, separated by | characters.</p>'
-			+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
-				+'!token-mod --config option|value option|value'
-			+'</pre>'
-		+'<p>There is currently one configuration option:</p>'
-
-		+'<div style="padding-left: 10px;padding-right:20px">'
-			+'<ul>'
-				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
-					+'<div style="float:right;width:40px;border:1px solid black;background-color:#ffc;text-align:center;">'
-						+( state.TokenMod.playersCanUse_ids ? '<span style="color: red; font-weight:bold; padding: 0px 4px;">ON</span>' : '<span style="color: #999999; font-weight:bold; padding: 0px 4px;">OFF</span>' )
-					+'</div>'
-					+'<b><span style="font-family: serif;">players-can-ids</span></b> '+ch('-')+' Determines if players can use <i>--ids</i>.  Specifying a value which is true allows players to use --ids.  Omitting a value flips the current setting.'
-				+'</li> '
-			+'</ul>'
-		+'</div>'
 	+'</div>'
 
 	+'<b>Booleans</b>'
@@ -280,6 +282,7 @@ var TokenMod = TokenMod || (function() {
 			+'<p><u>Available Numbers or Blank Properties:</u></p>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">light_radius</div>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">light_dimradius</div>'
+			+'<div style="width: 130px; padding: 0px 3px;float: left;">light_multiplier</div>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">aura1_radius</div>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">aura2_radius</div>'
 			+'<div style="clear:both;">'+ch(' ')+'</div>'
@@ -533,11 +536,35 @@ var TokenMod = TokenMod || (function() {
 			+'</div>'
 		+'</div>'
 
+	+'<b>Configuration</b>'
+	+'<div style="padding-left:10px;">'
+		+'<p><i>--config</i> takes option value pairs, separated by | characters.</p>'
+			+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
+				+'!token-mod --config option|value option|value'
+			+'</pre>'
+		+'<p>There is currently one configuration option:</p>'
+
+		+'<div style="padding-left: 10px;padding-right:20px">'
+			+'<ul>'
+				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<div style="float:right;width:40px;border:1px solid black;background-color:#ffc;text-align:center;">'
+						+( state.TokenMod.playersCanUse_ids ? '<span style="color: red; font-weight:bold; padding: 0px 4px;">ON</span>' : '<span style="color: #999999; font-weight:bold; padding: 0px 4px;">OFF</span>' )
+					+'</div>'
+					+'<b><span style="font-family: serif;">players-can-ids</span></b> '+ch('-')+' Determines if players can use <i>--ids</i>.  Specifying a value which is true allows players to use --ids.  Omitting a value flips the current setting.'
+				+'</li> '
+			+'</ul>'
+		+'</div>'
+        +getConfigOption_PlayersCanIDs()
+	+'</div>'
+
+
 
 	+'</div>'
 +'</div>'
 			);
 	},
+
+
 	getRelativeChange = function(current,update) {
 		var cnum = current
 			&& (_.isNumber(current)
@@ -826,8 +853,9 @@ var TokenMod = TokenMod || (function() {
 
 				case 'light_radius':
 				case 'light_dimradius':
-				case 'aura1_radius':
+				case 'light_multiplier':
 				case 'aura2_radius':
+				case 'aura1_radius':
 					delta=getRelativeChange(token.get(k),f[0]);
 					if(_.isNumber(delta) || '' === delta) {
 						mods[k]=delta;
@@ -851,37 +879,49 @@ var TokenMod = TokenMod || (function() {
 					break;
 			}
 		});
-		mods.statusmarkers=_.map(current,function(v,k){ return ('dead' === k) ? (k) : (k+'@'+v);}).join(',');
+		mods.statusmarkers=_.map(current,function(v,k){ return ('dead' === k ? k : k+'@'+v); }).join(',');
 		token.set(mods);
 	},
 
 	handleConfig = function(config, id) {
 		var args, cmd, who=getObj('player',id).get('_displayname').split(' ')[0];
 
-		while(config.length) {
-			args=config.shift().split(/\|/);
-			cmd=args.shift();
-			switch(cmd) {
-				case 'players-can-ids':
-					if(args.length) {
-						state.TokenMod.playersCanUse_ids = filters.isTruthyArgument(args.shift());
-					} else {
-						state.TokenMod.playersCanUse_ids = !state.TokenMod.playersCanUse_ids;
-					}
-					sendChat('', '/w '+who+' <div style="padding:1px 3px;border: 1px solid #8B4513;background: #eeffee; color: #8B4513; font-size: 80%;">'
-							+ ( state.TokenMod.playersCanUse_ids ? 'Players can now use --ids to specify targets to change.' : 'Players cannot use --ids.' )
-						+'</div>'
-					);
-					break;
-				default:
-					sendChat('', '/w '+who+' <div style="padding:1px 3px;border: 1px solid #8B4513;background: #eeffee; color: #8B4513; font-size: 80%;">'
-							+'<span style="font-weight:bold;color:#990000;">Error:</span> '
-							+'No configuration setting for ['+cmd+']'
-						+'</div>'
-					);
-					break;
-			}
-		}
+        if(config.length) {
+            while(config.length) {
+                args=config.shift().split(/\|/);
+                cmd=args.shift();
+                switch(cmd) {
+                    case 'players-can-ids':
+                        if(args.length) {
+                            state.TokenMod.playersCanUse_ids = filters.isTruthyArgument(args.shift());
+                        } else {
+                            state.TokenMod.playersCanUse_ids = !state.TokenMod.playersCanUse_ids;
+                        }
+                        sendChat('','/w '+who+' '
+                            +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                                +getConfigOption_PlayersCanIDs()
+                            +'</div>'
+                        );
+                        break;
+                    default:
+                        sendChat('', '/w '+who+' <div style="padding:1px 3px;border: 1px solid #8B4513;background: #eeffee; color: #8B4513; font-size: 80%;">'
+                                +'<span style="font-weight:bold;color:#990000;">Error:</span> '
+                                +'No configuration setting for ['+cmd+']'
+                            +'</div>'
+                        );
+                        break;
+                }
+            }
+        } else {
+            sendChat('','/w '+who+' '
+                +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                    +'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
+                        +'TokenMod v'+version
+                    +'</div>'
+                    +getConfigOption_PlayersCanIDs()
+                +'</div>'
+            );
+        }
 	},
 
 	 handleInput = function(msg_orig) {
@@ -910,7 +950,11 @@ var TokenMod = TokenMod || (function() {
 				.value();
 		}
 
-		args = msg.content.split(/\s+--/);
+		args = msg.content
+            .replace(/<br\/>\n/g, ' ')
+            .replace(/(\{\{(.*?)\}\})/g," $2 ")
+            .split(/\s+--/);
+
 		switch(args.shift()) {
 			case '!token-mod':
 
@@ -922,7 +966,7 @@ var TokenMod = TokenMod || (function() {
 							return;
 
 						case 'config':
-							if(isGM(msg.playerid)) {
+							if(playerIsGM(msg.playerid)) {
 								handleConfig(cmds,msg.playerid);
 							}
 							return;
@@ -951,7 +995,7 @@ var TokenMod = TokenMod || (function() {
 				modlist.off=_.difference(modlist.off,modlist.on);
 				modlist.flip=_.difference(modlist.flip,modlist.on,modlist.off);
 
-				if(isGM(msg.playerid) || state.TokenMod.playersCanUse_ids ) {
+				if(playerIsGM(msg.playerid) || state.TokenMod.playersCanUse_ids ) {
 					_.chain(ids)
 						.uniq()
 						.map(function(t){
@@ -972,6 +1016,8 @@ var TokenMod = TokenMod || (function() {
 
 	},
 	checkInstall = function() {
+		log('-=> TokenMod v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+
 		if( ! _.has(state,'TokenMod') || state.TokenMod.version !== schemaVersion) {
 			state.TokenMod = {
 				version: schemaVersion,
@@ -993,13 +1039,6 @@ var TokenMod = TokenMod || (function() {
 on("ready",function(){
 	'use strict';
 
-	if("undefined" !== typeof isGM && _.isFunction(isGM)) {
-		TokenMod.CheckInstall();
-		TokenMod.RegisterEventHandlers();
-	} else {
-		log('--------------------------------------------------------------');
-		log('TokenMod requires the isGM module to work.');
-		log('isGM GIST: https://gist.github.com/shdwjk/8d5bb062abab18463625');
-		log('--------------------------------------------------------------');
-	}
+	TokenMod.CheckInstall();
+	TokenMod.RegisterEventHandlers();
 });
