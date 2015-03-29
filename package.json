@@ -1,17 +1,15 @@
 {
-  "name": "Bump",
-  "version": "0.2",
-  "description": "Bump provides a way to invisibly manipulate tokens on the GM Layer from the Objects Layer, and vice versa.",
-  "authors": "The Aaron",
-  "roll20userid": "104025",
-  "dependencies": {
-  },
-  "modifies": {
-	"state.Bump": "read,write",
-	"graphics": "create,remove",
-	"graphics.*": "read,write",
-	"player.displayname": "read"
-  },
-  "conflicts": [
-  ]
+    "name": "Bump",
+    "version": "0.2.1",
+    "description": "Bump provides a way to invisibly manipulate tokens on the GM Layer from the Objects Layer, and vice versa.",
+    "authors": "The Aaron",
+    "roll20userid": "104025",
+    "dependencies": [],
+    "modifies": {
+        "state.Bump": "read,write",
+        "graphics": "create,remove",
+        "graphics.*": "read,write",
+        "player.displayname": "read"
+    },
+    "conflicts": []
 }
