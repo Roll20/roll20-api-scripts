@@ -7,8 +7,9 @@
 var Bump = Bump || (function() {
     'use strict';
 
-    var version = 0.2,
-        schemaVersion = 0.1,
+    var version = '0.2.1',
+        lastUpdate = 1427670567,
+        schemaVersion = 0.2,
         clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
 
         regex = {
@@ -24,21 +25,31 @@ var Bump = Bump || (function() {
         ],
 
     checkInstall = function() {
-        log('-=> Bump v'+version+' <=-');
+        log('-=> Bump v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
 
         if( ! _.has(state,'Bump') || state.Bump.version !== schemaVersion) {
             log('  > Updating Schema to v'+schemaVersion+' <');
-            state.Bump = {
-                version: schemaVersion,
-                config: {
-                    layerColors: {
-                        'gmlayer' : '#008000',
-                        'objects' : '#800080'
-                    },
-                    autoPush: false
-                },
-                mirrored: {}
-            };
+            switch(state.Bump && state.Bump.version) {
+                case 0.1:
+                    state.Bump.config.autoSlave = false;
+                    state.Bump.version = schemaVersion;
+                    break;
+
+                default:
+                    state.Bump = {
+                        version: schemaVersion,
+                        config: {
+                            layerColors: {
+                                'gmlayer' : '#008000',
+                                'objects' : '#800080'
+                            },
+                            autoPush: false,
+                            autoSlave: false
+                        },
+                        mirrored: {}
+                    };
+                    break;
+            }
         }
     },
 
@@ -152,7 +163,7 @@ var Bump = Bump || (function() {
         });
     },
 
-    bumpToken = function(id) {
+    bumpToken = function(id,who) {
         var pair=getMirroredPair(id);
         if(pair) {
             switch(pair.master.get('layer')){
@@ -166,6 +177,8 @@ var Bump = Bump || (function() {
                     setSlaveLayer(pair.slave,'objects');
                     break;
             }
+        } else if(state.Bump.config.autoSlave) {
+            createMirrored(id, false, who);
         }
     },
 
@@ -250,8 +263,21 @@ var Bump = Bump || (function() {
         
     },
 
+    getConfigOption_AutoSlave = function() {
+        var text = (state.Bump.config.autoSlave ? 'On' : 'Off' );
+        return '<div>'
+            +'Auto Slave is currently <b>'
+                +text
+            +'</b> '
+            +'<a href="!bump-config --toggle-auto-slave">'
+                +'Toggle'
+            +'</a>'
+        +'</div>';
+        
+    },
+
     getAllConfigOptions = function() {
-        return getConfigOption_GMLayerColor() + getConfigOption_ObjectsLayerColor() + getConfigOption_AutoPush();
+        return getConfigOption_GMLayerColor() + getConfigOption_ObjectsLayerColor() + getConfigOption_AutoPush() + getConfigOption_AutoSlave();
     },
 
     showHelp = function(who) {
@@ -303,7 +329,8 @@ var Bump = Bump || (function() {
                     +'<ul>'
                         +'<li><b><span style="font-family: serif;">--gm-layer-color|'+ch('<')+'html color|transparent'+ch('>')+'</span></b> '+ch('-')+' Set the aura color for the slave token when it is on the GM Layer (i.e.: the '+ch('"')+'Visible'+ch('"')+' color.)</li>'
                         +'<li><b><span style="font-family: serif;">--objects-layer-color|'+ch('<')+'html color|transparent'+ch('>')+'</span></b> '+ch('-')+' Set the aura color for the slave token when it is on the Objects Layer (i.e.: the '+ch('"')+'Invisible'+ch('"')+' color.)</li>'
-                        +'<li><b><span style="font-family: serif;">--toggle-autopush</span></b> '+ch('-')+' Sets whether !bump-slave always forces the master token to the GM Layer.</li>'
+                        +'<li><b><span style="font-family: serif;">--toggle-auto-push</span></b> '+ch('-')+' Sets whether !bump-slave always forces the master token to the GM Layer.</li>'
+                        +'<li><b><span style="font-family: serif;">--toggle-auto-slave</span></b> '+ch('-')+' Sets whether !bump automatically creates a slave for tokens without them.</li>'
                     +'</ul>'
 				+'</li> '
 			+'</ul>'
@@ -330,7 +357,7 @@ var Bump = Bump || (function() {
                     return;
                 }
                 _.each(msg.selected,function(s){
-                    bumpToken(s._id);
+                    bumpToken(s._id,who);
                 });
                 break;
 
@@ -400,6 +427,16 @@ var Bump = Bump || (function() {
                                 +'</div>'
                             );
                             break;
+
+                        case '--toggle-auto-slave':
+                            state.Bump.config.autoSlave=!state.Bump.config.autoSlave;
+                            sendChat('','/w '+who+' '
+                                +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                                    +getConfigOption_AutoSlave()
+                                +'</div>'
+                            );
+                            break;
+
                         default:
                             sendChat('','/w '+who+' '
                                 +'<div><b>Unsupported Option:</div> '+a+'</div>'
