@@ -7,10 +7,10 @@ var DitV = DitV || {
 
     MAX_VALUE: 10,
 
-    DEFAULT_URLS = {
+    DEFAULT_URLS: {
 	//1:	"https://s3.amazonaws.com/files.d20.io/images/USER_ID/SOME_RANDOM_CHARACTERS/thumb.png"
     },
-    GENERIC_URL = "";
+    GENERIC_URL: "http://pokerproppers.com/assets/poker-2.png",
 
 
     init: function(){
@@ -18,7 +18,7 @@ var DitV = DitV || {
 	if (!state.DitV.hasOwnProperty('characters')){ state.DitV.characters = {}; }
 	if (!state.DitV.hasOwnProperty('chipImages')){ state.DitV.chipImages = {}; }
 	if (!state.DitV.CHIP_URLS){ state.DitV.CHIP_URLS = {}; }
-	for (var i = 1; i <= MAX_VALUE; i++){
+	for (var i = 1; i <= DitV.MAX_VALUE; i++){
 	    if ((!state.DitV.CHIP_URLS[i]) && (DitV.DEFAULT_URLS[i])){
 		state.DitV.CHIP_URLS[i] = DitV.DEFAULT_URLS[i];
 	    }
@@ -39,15 +39,15 @@ var DitV = DitV || {
 				    _pageid:		pageId,
 				    _path:		JSON.stringify(path),
 				    stroke:		color,
-				    left:		x * DitV.GRID_SIZE,
-				    top:		y * DitV.GRID_SIZE,
+				    left:		x * DitV.GRID_SIZE + DitV.BOX_WIDTH * DitV.GRID_SIZE / 2,
+				    top:		y * DitV.GRID_SIZE + DitV.BOX_HEIGHT * DitV.GRID_SIZE / 2,
 				    width:		DitV.BOX_WIDTH * DitV.GRID_SIZE,
-				    width:		DitV.BOX_HEIGHT * DitV.GRID_SIZE,
+				    height:		DitV.BOX_HEIGHT * DitV.GRID_SIZE,
 				    layer:		"map"});
 	state.DitV.characters[name] = {
 	    'x':	x,
 	    'y':	y,
-	    'box':	box,
+	    'box':	box.id,
 	    'chips':	{}
 	};
     },
@@ -56,7 +56,8 @@ var DitV = DitV || {
 	if (!state.DitV.characters[name]){ return "Character '" + name + "' not registered."; }
 	var error = DitV.clearChips(name);
 	if (state.DitV.characters[name]['box']){
-	    state.DitV.characters[name]['box'].remove();
+	    var box = getObj("path", state.DitV.characters[name]['box']);
+	    if (box){ box.remove(); }
 	    delete state.DitV.characters[name]['box'];
 	}
 	delete state.DitV.characters[name];
@@ -81,7 +82,7 @@ var DitV = DitV || {
 	var character = state.DitV.characters[name];
 	var pos = value - 1 + DitV.CHIP_START; // position in wrapped list of 1x2 stacks (CHIP_START is the offset past the reserved top-left area)
 	var x = (pos % DitV.BOX_WIDTH) + character['x'];
-	var y = floor(pos / DitV.BOX_WIDTH) + character['y'];
+	var y = Math.floor(pos / DitV.BOX_WIDTH) + character['y'];
 	// translate from squares to pixels, and adjust for the fact that Roll20 uses center instead of top-left for position
 	x = (x * DitV.GRID_SIZE) + (DitV.GRID_SIZE / 2);
 	y = (y * DitV.GRID_SIZE) + (DitV.GRID_SIZE / 2);
@@ -103,14 +104,14 @@ var DitV = DitV || {
 //
 /////
 					});
-	if (!token){ return "Failed to create token for chip with value " + value"; }
+	if (!token){ return "Failed to create token for chip with value " + value; }
 /////
 //
 	if(!state.DitV.CHIP_URLS[value]){ token.set("status_blue", (value < 10 ? value : true)); }
 //
 /////
 	if (!character['chips'][value]){ character['chips'][value] = []; }
-	character['chips'][value].push(token._id);
+	character['chips'][value].push(token.id);
     },
 
     addChips: function(name, counts){
@@ -188,7 +189,7 @@ var DitV = DitV || {
 
     handleDitVMessage: function(tokens, msg){
 	if (tokens.length < 2){
-	    return DitV.showHelp(who, tokens[0]);
+	    return DitV.showHelp(msg.who, tokens[0]);
 	}
 	var error = "";
 	switch (tokens[1]){
@@ -236,7 +237,7 @@ var DitV = DitV || {
 		    countMsg += " {{" + i + "=" + counts[i] + "}}";
 		}
 	    }
-	    DitV.write(countMsg, "", "", who);
+	    DitV.write(countMsg, "", "", msg.who);
 	    break;
 	case "setimage":
 	    if (tokens.length <= 2){
@@ -262,12 +263,20 @@ var DitV = DitV || {
 		    error = "Unable to get selected token";
 		    break;
 		}
+		log("Token URL for value " + value + ": " + imgToken.get('imgsrc'));
 		imgUrl = imgToken.get('imgsrc').replace(/[/][^/.]*[.](jpg|png)/, "/thumb.$1");
 	    }
 	    state.DitV.CHIP_URLS[value] = imgUrl;
 	    break;
 	case "images":
-	    var imgMsg = "&{template:default} {{name=Chip Images}} {{Default=" + (DitV.GENERIC_URL || "undefined") + "}}";
+	    var imgMsg = "&{template:default} {{name=Chip Images}} {{Default=";
+	    if (DitV.GENERIC_URL){
+		    imgMsg += "[" + DitV.GENERIC_URL + "](" + DitV.GENERIC_URL + ")";
+	    }
+	    else{
+		imgMsg += "undefined";
+	    }
+	    imgMsg += "}}";
 	    for (var i = 1; i <= DitV.MAX_VALUE; i++){
 		imgMsg += "{{" + i + "=";
 		if (state.DitV.CHIP_URLS[i]){
@@ -279,22 +288,22 @@ var DitV = DitV || {
 		}
 		imgMsg += "}}";
 	    }
-	    DitV.write(imgMsg, who, "", "DitV");
+	    DitV.write(imgMsg, msg.who, "", "DitV");
 	    break;
 	case "help":
-	    DitV.showHelp(who, tokens[0]);
+	    DitV.showHelp(msg.who, tokens[0]);
 	    break;
 	default:
-	    DitV.write("Error: Unrecognized command: " + tokens[0], who, "", "DitV");
-	    DitV.showTrackerHelp(who, tokens[0]);
+	    DitV.write("Error: Unrecognized command: " + tokens[0], msg.who, "", "DitV");
+	    DitV.showTrackerHelp(msg.who, tokens[0]);
 	}
 	if (error){
-	    DitV.write("Error: " + error, who, "", "DitV");
+	    DitV.write("Error: " + error, msg.who, "", "DitV");
 	}
     },
 
     handleChatMessage: function(msg){
-	if ((msg.type != "api") || (msg.content.indexOf("!ditv") !=0)){ return; }
+	if ((msg.type != "api") || (msg.content.indexOf("!ditv") !=0 )){ return; }
 
 	return DitV.handleDitVMessage(msg.content.split(" "), msg);
     },
@@ -313,4 +322,4 @@ var DitV = DitV || {
     }
 };
 
-on("ready", function(){ DitV.registerDitV(); })
+on("ready", function(){ DitV.registerDitV(); });
