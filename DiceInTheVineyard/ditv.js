@@ -10,7 +10,7 @@ var DitV = DitV || {
     DEFAULT_URLS: {
 	//1:	"https://s3.amazonaws.com/files.d20.io/images/USER_ID/SOME_RANDOM_CHARACTERS/thumb.png"
     },
-    GENERIC_URL: "http://pokerproppers.com/assets/poker-2.png",
+    GENERIC_URL: "https://s3.amazonaws.com/files.d20.io/images/8713360/xSx7ppXB9KD2hIvGf64TaQ/thumb.png?1428459149",
 
 
     init: function(){
@@ -67,7 +67,7 @@ var DitV = DitV || {
     clearChips: function(name){
 	if (!state.DitV.characters[name]){ return "Character '" + name + "' not registered."; }
 	for (var value in state.DitV.characters[name]['chips']){
-	    while (state.DitV.characters[name]['chips'][value]){
+	    while ((state.DitV.characters[name]['chips'][value]) && (state.DitV.characters[name]['chips'][value].length > 0)){
 		var token = getObj("graphic", state.DitV.characters[name]['chips'][value].pop());
 		if (token){ token.remove(); }
 	    }
@@ -82,7 +82,7 @@ var DitV = DitV || {
 	var character = state.DitV.characters[name];
 	var pos = value - 1 + DitV.CHIP_START; // position in wrapped list of 1x2 stacks (CHIP_START is the offset past the reserved top-left area)
 	var x = (pos % DitV.BOX_WIDTH) + character['x'];
-	var y = Math.floor(pos / DitV.BOX_WIDTH) + character['y'];
+	var y = Math.floor(pos / DitV.BOX_WIDTH) * 2 + character['y'] + 1;
 	// translate from squares to pixels, and adjust for the fact that Roll20 uses center instead of top-left for position
 	x = (x * DitV.GRID_SIZE) + (DitV.GRID_SIZE / 2);
 	y = (y * DitV.GRID_SIZE) + (DitV.GRID_SIZE / 2);
