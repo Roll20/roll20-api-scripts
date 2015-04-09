@@ -139,7 +139,8 @@ var DitV = DitV || {
 		rollCounts[roll - 1] = (rollCounts[roll - 1] || 0) + 1;
 	    }
 	}
-	return DitV.addChips(name, rollCounts);
+	var error = DitV.addChips(name, rollCounts);
+	return error || rollCounts;
     },
 
     countChips: function(name){
@@ -219,7 +220,22 @@ var DitV = DitV || {
 		error = "The 'roll' command requires two argumenst: character name and dice specification";
 		break;
 	    }
-	    error = DitV.rollChips(tokens[2], tokens.slice(3).join(" "));
+	    var rollSpec = tokens.slice(3).join(" ");
+	    var rollCounts = DitV.rollChips(tokens[2], rollSpec);
+	    if (typeof(rollCounts) == typeof("")){
+		error = rollCounts;
+	    }
+	    else{
+		var rollMsg = tokens[2] + " rolling " + rollSpec.replace(/ /g, "+") + ":";
+		var joinStr = " ";
+		for (var i = 0; i <rollCounts.length; i++){
+		    for (var j = 0; j < rollCounts[i]; j++){
+			rollMsg += joinStr + (i + 1);
+			joinStr = ", ";
+		    }
+		}
+		DitV.write(rollMsg, "", "", msg.who);
+	    }
 	    break;
 	case "count":
 	    if (tokens.length <= 2){
