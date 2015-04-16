@@ -1,12 +1,12 @@
 /*
-    Current Version: 2.5
-    Last updated: 12.03.2014
+    Current Version: 2.6
+    Last updated: 04.15.2015
     Character Sheet and Script Maintained by: Steve Day
-    Current Verion: https://github.com/Roll20/roll20-character-sheets/tree/master/StarWarsEdgeOfTheEmpire_Dice
+    Current Verion: https://github.com/Roll20/roll20-api-scripts/tree/master/EotE%20Dice%20Roller
     Development and Older Verions: https://github.com/dayst/StarWarsEdgeOfTheEmpire_Dice
     
-	Credits:
-		Original creator: Konrad J.
+    Credits:
+    	Original creator: Konrad J.
 		Helped with Dice specs: Alicia G. and Blake the Lake
 		Dice graphics hosted by Alicia G. at galacticcampaigns.com
 		Dice graphics borrowed from the awesome google+ hangouts EotE Dice App
@@ -33,6 +33,13 @@
 		Test
 			* Description: Output every side of every die to the chat window
 			* !eed test
+			
+		Debug
+			* default: 'off'
+			* DescriptionL Sets the logging level of the script in the API console.  If you are having issues with the 
+			* script rolling incorect dice, turn on debug logging and post the result in the forums. No need to restart the
+			* script with this command.
+			* Command: !eed debug on|off
 	
 	Roll:
 		Label
@@ -91,7 +98,8 @@
             diceGraphicResult : "",
             diceGraphicResultLog : "",
             diceTestEnabled : false,
-            diceLogRolledOnOneLine : true
+            diceLogRolledOnOneLine : true,
+            scriptDebug : false
         },
         '-DicePoolID' : '',
         character : {
@@ -179,6 +187,7 @@
         regex : {
             cmd : /!eed/,
             log : /log (on|multi|single|off)/,
+            debug : /debug (on|off)/,
             graphics : /graphics (on|off|s|m|l)/,
             test : /test/,
             resetdice : /(resetgmdice|resetdice)/,
@@ -192,9 +201,10 @@
             downgrade : /downgrade\((.*?)\)/g,
             gmdice : /\(gmdice\)/,
             encum : /encum\((.*?)\)/g,
-            dice : /(\d{1,2}blk)\b|(\d{1,2}b)\b|(\d{1,2}g)\b|(\d{1,2}y)\b|(\d{1,2}p)\b|(\d{1,2}r)\b|(\d{1,2}w)\b|(\d{1,2}a)\b|(\d{1,2}s)|(\d{1,2}t)\b|(\d{1,2}f)/g,
+            dice : /(-?\d{1,2}blk)\b|(-?\d{1,2}b)\b|(-?\d{1,2}g)\b|(-?\d{1,2}y)\b|(-?\d{1,2}p)\b|(-?\d{1,2}r)\b|(-?\d{1,2}w)\b|(-?\d{1,2}a)\b|(-?\d{1,2}s)|(-?\d{1,2}t)\b|(-?\d{1,2}f)/g,
         	crit : /crit\((.*?)\)/,
         	critShip : /critship\((.*?)\)/,
+            unusable : /unusableWeapon/,
         }
     }
     
@@ -296,7 +306,8 @@
             
             if (updateAddAttributesObj.length != 0) {
                 
-                log('UPDATE/ADD ATTRIBUTES FOR:----------------------->'+ characterName);
+                //log('UPDATE/ADD ATTRIBUTES FOR:----------------------->'+ characterName);
+                
             
                _.each(updateAddAttributesObj, function(updateAddAttrObj){ //loop attributes to update / add
                     
@@ -306,12 +317,12 @@
     
                     if (attr) {
                        if (updateAddAttrObj.update) {
-                            log('Update Attr: '+ updateAddAttrObj.name);
+                            //log('Update Attr: '+ updateAddAttrObj.name);
                             attr.set({current: updateAddAttrObj.current});
                             attr.set({max: updateAddAttrObj.max ? updateAddAttrObj.max : ''});
             			}
             		} else {
-            		    log('Add Attr: '+ updateAddAttrObj.name);
+            		   // log('Add Attr: '+ updateAddAttrObj.name);
                         eote.createObj('attribute', {
                 			characterid: characterObj.id,
                 			name: updateAddAttrObj.name,
@@ -393,13 +404,27 @@
 	
     eote.process = {}
     
+    eote.process.logger = function(functionName, cmd){
+        if(eote.defaults.globalVars.debugScript) {
+            log(functionName + ' : ' + cmd);
+        }
+    }
+    
     eote.process.setup = function(cmd, playerName, playerID){
         
         if (!cmd.match(eote.defaults.regex.cmd)) { //check for api cmd !eed
             return false;
     	}
         
-        //log(cmd);
+        var debugMatch = cmd.match(eote.defaults.regex.debug);
+        if (debugMatch) {
+            eote.process.debug(debugMatch);
+            return false;
+        }
+        
+        eote.process.logger("eote.process.setup","NEW ROLL");
+    
+        eote.process.logger("eote.process.setup","Original Command: " + cmd);
         
         /* reset dice - test, might not need this
          * ------------------------------------------------------------- */
@@ -455,7 +480,16 @@
                 //it is possible that the character ID could contain dice values
                 //for ex. characterID(-JMBFmYX1i0L259bjb-X)  will add 59 blue dice to the pool
                 cmd = cmd.replace(characterIDMatch[0], '');
+                eote.process.logger("eote.process.setup.characterIDMatch","New command: " + cmd);
             }
+            
+        var unusableMatch = cmd.match(eote.defaults.regex.unusable);
+        
+        if (unusableMatch) {
+            eote.process.logger("eote.process.setup.unusableMatch","Roll ended because of unusable weapon");
+            sendChat(diceObj.vars.characterName, 'Weapon is too damaged to be used. Try repairing it.');
+            return false;
+        }
         
         var labelMatch = cmd.match(eote.defaults.regex.label);
             
@@ -471,12 +505,14 @@
             
             if (gmdiceMatch) {
                 cmd = eote.process.gmdice(cmd); // update the cmd string to contain the gmdice
+                eote.process.logger("eote.process.setup.gmDice","New command: " + cmd);
             }
             
         var encumMatch = cmd.match(eote.defaults.regex.encum);
         
             if (encumMatch) {
                 diceObj = eote.process.encum(encumMatch, diceObj);
+                //eote.process.logger("eote.process.setup.encumMatch","New dice:" + diceObj);
             }
         
         var skillMatch = cmd.match(eote.defaults.regex.skill);
@@ -585,6 +621,19 @@
 		}
     }
     
+    eote.process.debug = function(cmd){
+        switch(cmd[1]) {
+        	case "on":
+				eote.defaults.globalVars.debugScript = true;
+                sendChat("Dice Sytem", 'Debug Script "On"');
+				break;
+			case "off":
+				eote.defaults.globalVars.debugScript = false;
+                sendChat("Dice Sytem", 'Debug Script "Off"');
+				break;
+        }
+    }
+    
     eote.process.graphics = function(cmd){
         
         /* Graphics
@@ -622,7 +671,7 @@
     
     eote.process.test = function(cmd){
         
-        //log(cnd)
+        eote.process.logger("eote.process.test",cmd);
         
 		//Set test vars to true
         eote.defaults.globalVars.diceTestEnabled    = true;
@@ -709,7 +758,7 @@
          * Command: !eed characterID(##########)
          * ---------------------------------------------------------------- */
         
-        //log(cmd);
+        eote.process.logger("eote.process.characterID",cmd);
         
         var characterID = cmd[1];
         
@@ -759,7 +808,7 @@
         
         var characterObj = [{name: diceObj.vars.characterName, id: diceObj.vars.characterID}];
         
-        //log(cmd);
+        eote.process.logger("eote.process.resetdice",cmd);
         
         if (cmd[1] == 'resetdice') {
             var resetdice = [
@@ -920,9 +969,9 @@
         var NumAdvantage = diceObj.totals.advantage;
         var turnorder;
         
-        //log(diceObj);
-        //log(NumSuccess);
-        //log(NumAdvantage);
+        eote.process.logger("eote.process.initiative.diceObj",diceObj);
+        eote.process.logger("eote.process.initiative.NumSuccess",NumSuccess);
+        eote.process.logger("eote.process.initiativeNumAdvantage",NumAdvantage);
         
         if(Campaign().get("turnorder") == "") turnorder = []; //NOTE: We check to make sure that the turnorder isn't just an empty string first. If it is treat it like an empty array.
         else turnorder = JSON.parse(Campaign().get("turnorder"));
@@ -977,7 +1026,7 @@
          * Command: !eed crit(roll) crit(roll|#) crit(heal|#)
          * ---------------------------------------------------------------- */
 		
-        //log(cmd);
+        eote.process.logger("eote.process.crit","");
         
         var characterObj = [{name: diceObj.vars.characterName, id: diceObj.vars.characterID}];
         var critTable = [
@@ -1197,6 +1246,7 @@
     		var rollTotal = '';
             var rollOffset = parseInt(getAttrByName(diceObj.vars.characterID, 'critAddOffset'));
                 rollOffset = rollOffset ? rollOffset : 0;
+            eote.process.logger("critRoll","rollOffset: " + rollOffset)
             var totalcrits = 0;
             
             //check open critical spot
@@ -1221,6 +1271,9 @@
     			diceRoll = randomInteger(100);
     			critMod = (totalcrits * 10);
     			rollTotal = diceRoll + critMod + rollOffset;
+                eote.process.logger("critRoll","diceRoll: " + diceRoll);
+                eote.process.logger("critRoll","critMod: " + critMod);
+                eote.process.logger("critRoll","rollTotal " + rollTotal);
     		} else {
     			rollTotal = parseInt(addCritNum);
     		}
@@ -1667,7 +1720,7 @@
        
         var gmdiceCMD = g+'g '+y+'y '+p+'p '+r+'r '+b+'b '+blk+'blk '+w+'w upgrade(ability|'+upAbility+') downgrade(proficiency|'+downProficiency+') upgrade(difficulty|'+upDifficulty+') downgrade(challenge|'+downChallenge+')';
        
-        //log(charID);
+        eote.process.logger("eote.process.gmDice.charID",charID);
        
         cmd = cmd.replace('(gmdice)', gmdiceCMD);
         
@@ -1684,7 +1737,7 @@
          * Command: !eed encum(encum_current|encum_threshold)
          * ---------------------------------------------------------------- */
         
-        //log(cmd);
+        eote.process.logger("eote.process.encum",cmd);
 
         _.each(cmd, function(encum) {
             
@@ -1698,9 +1751,14 @@
                 
                 if (num2 > num1) {
                     diceObj.count.setback = setbackDice + (num2 - num1);
+                    eote.process.logger("eote.process.encum.NewSetbackTotal",diceObj.count.setback + "blk");
+                }
+                else {
+                    eote.process.logger("eote.process.encum","No New Setback");
                 }
             }
         });
+        
 		
 		return diceObj;
 
@@ -1714,7 +1772,7 @@
          * Command: !eed skill(char_value|skill_value)
          * ---------------------------------------------------------------- */
         
-        //log(cmd);
+        eote.process.logger("eote.process.skill",cmd);
         
         _.each(cmd, function(skill) {
         
@@ -1731,6 +1789,9 @@
                     
                     diceObj.count.ability = abilityDice + totalAbil;
                     diceObj.count.proficiency = proficiencyDice + totalProf;
+                    
+                eote.process.logger("eote.process.skill.abilityTotal",diceObj.count.ability + "g");
+                eote.process.logger("eote.process.skill.proficiencyTotal",diceObj.count.proficiency + "y");  
             }
         });
 		
@@ -1745,7 +1806,7 @@
 		* Command: !eed opposed(char_value|skill_value)
 		* ---------------------------------------------------------------- */
 		
-		//log(cmd);
+		eote.process.logger("eote.process.opposed",cmd);
 		
 		_.each(cmd, function(opposed) {
 			
@@ -1774,11 +1835,11 @@
          * Command: !eed g# y# b# blk# r# p# w# or g#+# or g#-#
          * ---------------------------------------------------------------- */
         
-        //log(cmd);
+        eote.process.logger("eote.process.setDice",cmd);
         
         _.each(cmd, function(dice) {
         
-            var diceArray = dice.match(/(\d{1,2})(\w{1,3})/);
+            var diceArray = dice.match(/(-?\d{1,2})(\w{1,3})/);
             
             if (diceArray && diceArray[1] && diceArray[2]) {
                 
@@ -1800,40 +1861,87 @@
                 switch(diceArray[2]) {
                     case 'b' :
                         diceObj.count.boost = boostDice + diceQty;
+                        if (diceObj.count.boost < 0) {
+                            eote.process.logger("eote.process.SetDice.boost","Setting count to 0 for being negative.")
+                            diceObj.count.boost = 0;
+                        }
+                           
                         break;
                     case 'g' :
                         diceObj.count.ability = abilityDice + diceQty;
+                        if (diceObj.count.ability < 0) {
+                            eote.process.logger("eote.process.SetDice.ability","Setting count to 0 for being negative.")
+                            diceObj.count.ability = 0;
+                        }
                         break;
                     case 'y' :
                         diceObj.count.proficiency = proficiencyDice + diceQty;
+                        if (diceObj.count.proficiency < 0) {
+                            eote.process.logger("eote.process.SetDice.proficiency","Setting count to 0 for being negative.")
+                            diceObj.count.proficiency = 0;    
+                        }
                         break;
                     case 'blk' :
                         diceObj.count.setback = setbackDice + diceQty;
+                        if (diceObj.count.setback < 0) {
+                            eote.process.logger("eote.process.SetDice.setback","Setting count to 0 for being negative.")
+                            diceObj.count.setback = 0;    
+                        }                       
                         break;
                     case 'p' :
                         diceObj.count.difficulty = difficultyDice + diceQty;
+                        if (diceObj.count.difficulty < 0) {
+                            eote.process.logger("eote.process.SetDice.difficulty","Setting count to 0 for being negative.")
+                            diceObj.count.difficulty = 0;    
+                        }      
                         break;
                     case 'r' :
                         diceObj.count.challenge = challengeDice + diceQty;
+                        if (diceObj.count.challenge < 0) {
+                            eote.process.logger("eote.process.SetDice.challenge","Setting count to 0 for being negative.")
+                            diceObj.count.challenge = 0;    
+                        }   
                         break;
                     case 'w' :
                         diceObj.count.force = forceDice + diceQty;
+                        if (diceObj.count.force < 0) {
+                            eote.process.logger("eote.process.SetDice.force","Setting count to 0 for being negative.")
+                            diceObj.count.force = 0;    
+                        }  
                         break;
                     case 's':
                         diceObj.count.success = success + diceQty;
+                        if (diceObj.count.success < 0) {
+                            eote.process.logger("eote.process.SetDice.success","Setting count to 0 for being negative.")
+                            diceObj.count.success = 0;    
+                        }
                         break;
                     case 'a':
                         diceObj.count.advantage = advantage + diceQty;
+                        if (diceObj.count.advantage < 0) {
+                            eote.process.logger("eote.process.SetDice.advantage","Setting count to 0 for being negative.")
+                            diceObj.count.advantage = 0;    
+                        }
                         break;
                     case 't':
                         diceObj.count.threat = threat + diceQty;
+                        if (diceObj.count.threat < 0) {
+                            eote.process.logger("eote.process.SetDice.threat","Setting count to 0 for being negative.")
+                            diceObj.count.threat = 0;    
+                        }
                         break;
                     case 'f':
                         diceObj.count.failure = failure + diceQty;
+                        if (diceObj.count.failure < 0) {
+                            eote.process.logger("eote.process.SetDice.failure","Setting count to 0 for being negative.")
+                            diceObj.count.failure = 0;    
+                        }
                         break;
                 }
             }
         });
+        
+        eote.process.logger("eote.process.setDice.DiceToRoll",diceObj.count.boost + "b," + diceObj.count.ability + "g," + diceObj.count.proficiency + "y," + diceObj.count.setback + "blk," + diceObj.count.difficulty + "p," + diceObj.count.challenge + "r," + diceObj.count.force +"w," + diceObj.count.advantage + "a," + diceObj.count.threat + "t," + diceObj.count.failure + "f" );
 		
 		return diceObj;
     }
@@ -1845,6 +1953,8 @@
          * Description: upgrades ability and difficulty dice
          * Command: !eed upgrade(ability|#) or upgrade(difficulty|#)
          * ---------------------------------------------------------------- */
+         
+         eote.process.logger("eote.process.upgrade",cmd);
         
         _.each(cmd, function(dice) {
             
@@ -1873,6 +1983,9 @@
                         diceObj.count.ability = totalAbil;
                         diceObj.count.proficiency = proficiencyDice + totalProf;
                         
+                        eote.process.logger("eote.process.upgrade.abilityTotal",diceObj.count.ability + "g");
+                        eote.process.logger("eote.process.upgrade.proficiencyTotal",diceObj.count.proficiency + "y");
+                        
                         break;
                     case 'difficulty':
                         
@@ -1886,6 +1999,9 @@
     
                         diceObj.count.difficulty = totalDiff;
                         diceObj.count.challenge = challengeDice + totalChall;
+                        
+                        eote.process.logger("eote.process.upgrade.difficultyTotal",diceObj.count.difficulty + "p");
+                        eote.process.logger("eote.process.upgrade.challengeTotal",diceObj.count.challenge + "r");
                         
                         break;
                 }  
@@ -1905,7 +2021,7 @@
          * Command: !eed downgrade(proficiency|#) or downgrade(challenge|#)
          * ---------------------------------------------------------------- */
         
-        //log(cmd);
+        eote.process.logger("eote.process.downgrade",cmd);
         
         _.each(cmd, function(dice) {
             
@@ -2080,6 +2196,8 @@
 			diceGraphicsLog : '',
 			diceTextLog : ''
 		}
+        
+        eote.process.logger("eote.process.rollDice.FinalDiceToRoll",diceObj.count.boost + "b," + diceObj.count.ability + "g," + diceObj.count.proficiency + "y," + diceObj.count.setback + "blk," + diceObj.count.difficulty + "p," + diceObj.count.challenge + "r," + diceObj.count.force +"w," + diceObj.count.advantage + "a," + diceObj.count.threat + "t," + diceObj.count.failure + "f" );
         
         //Blue "Boost" die (d6)
         if (diceObj.count.boost > 0) {
@@ -2336,6 +2454,7 @@
     		sendChat("Roll", diceTextResults);
     	}
     
+        eote.process.logger("eote.process.rollResult",diceTextResults);
         //All DONE!!!
     }
     
