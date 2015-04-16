@@ -1860,90 +1860,106 @@
                 
                 switch(diceArray[2]) {
                     case 'b' :
-                        diceObj.count.boost = boostDice + diceQty;
-                        if (diceObj.count.boost < 0) {
-                            eote.process.logger("eote.process.SetDice.boost","Setting count to 0 for being negative.")
-                            diceObj.count.boost = 0;
-                        }
-                           
+                        diceObj.count.boost = boostDice + diceQty;  
                         break;
                     case 'g' :
                         diceObj.count.ability = abilityDice + diceQty;
-                        if (diceObj.count.ability < 0) {
-                            eote.process.logger("eote.process.SetDice.ability","Setting count to 0 for being negative.")
-                            diceObj.count.ability = 0;
-                        }
                         break;
                     case 'y' :
                         diceObj.count.proficiency = proficiencyDice + diceQty;
-                        if (diceObj.count.proficiency < 0) {
-                            eote.process.logger("eote.process.SetDice.proficiency","Setting count to 0 for being negative.")
-                            diceObj.count.proficiency = 0;    
-                        }
                         break;
                     case 'blk' :
-                        diceObj.count.setback = setbackDice + diceQty;
-                        if (diceObj.count.setback < 0) {
-                            eote.process.logger("eote.process.SetDice.setback","Setting count to 0 for being negative.")
-                            diceObj.count.setback = 0;    
-                        }                       
+                        diceObj.count.setback = setbackDice + diceQty;                  
                         break;
                     case 'p' :
-                        diceObj.count.difficulty = difficultyDice + diceQty;
-                        if (diceObj.count.difficulty < 0) {
-                            eote.process.logger("eote.process.SetDice.difficulty","Setting count to 0 for being negative.")
-                            diceObj.count.difficulty = 0;    
-                        }      
+                        diceObj.count.difficulty = difficultyDice + diceQty;    
                         break;
                     case 'r' :
                         diceObj.count.challenge = challengeDice + diceQty;
-                        if (diceObj.count.challenge < 0) {
-                            eote.process.logger("eote.process.SetDice.challenge","Setting count to 0 for being negative.")
-                            diceObj.count.challenge = 0;    
-                        }   
                         break;
                     case 'w' :
-                        diceObj.count.force = forceDice + diceQty;
-                        if (diceObj.count.force < 0) {
-                            eote.process.logger("eote.process.SetDice.force","Setting count to 0 for being negative.")
-                            diceObj.count.force = 0;    
-                        }  
+                        diceObj.count.force = forceDice + diceQty;  
                         break;
                     case 's':
                         diceObj.count.success = success + diceQty;
-                        if (diceObj.count.success < 0) {
-                            eote.process.logger("eote.process.SetDice.success","Setting count to 0 for being negative.")
-                            diceObj.count.success = 0;    
-                        }
                         break;
                     case 'a':
                         diceObj.count.advantage = advantage + diceQty;
-                        if (diceObj.count.advantage < 0) {
-                            eote.process.logger("eote.process.SetDice.advantage","Setting count to 0 for being negative.")
-                            diceObj.count.advantage = 0;    
-                        }
                         break;
                     case 't':
                         diceObj.count.threat = threat + diceQty;
-                        if (diceObj.count.threat < 0) {
-                            eote.process.logger("eote.process.SetDice.threat","Setting count to 0 for being negative.")
-                            diceObj.count.threat = 0;    
-                        }
                         break;
                     case 'f':
                         diceObj.count.failure = failure + diceQty;
-                        if (diceObj.count.failure < 0) {
-                            eote.process.logger("eote.process.SetDice.failure","Setting count to 0 for being negative.")
-                            diceObj.count.failure = 0;    
-                        }
                         break;
                 }
             }
         });
         
+        diceObj = eote.process.checkNegative(diceObj);
+        
         eote.process.logger("eote.process.setDice.DiceToRoll",diceObj.count.boost + "b," + diceObj.count.ability + "g," + diceObj.count.proficiency + "y," + diceObj.count.setback + "blk," + diceObj.count.difficulty + "p," + diceObj.count.challenge + "r," + diceObj.count.force +"w," + diceObj.count.advantage + "a," + diceObj.count.threat + "t," + diceObj.count.failure + "f" );
 		
 		return diceObj;
+    }
+    
+    eote.process.checkNegative = function(diceObj) {
+        if (diceObj.count.boost < 0) {
+            eote.process.logger("eote.process.checkNegative.boost","Setting count to 0 for being negative.")
+            diceObj.count.boost = 0;
+        }                     
+        
+        if (diceObj.count.ability < 0) {
+            eote.process.logger("eote.process.checkNegative.ability","Setting count to 0 for being negative.")
+            diceObj.count.ability = 0;
+        }       
+        
+        if (diceObj.count.proficiency < 0) {
+            eote.process.logger("eote.process.checkNegative.proficiency","Setting count to 0 for being negative.")
+            diceObj.count.proficiency = 0;    
+        }        
+        
+        if (diceObj.count.setback < 0) {
+            eote.process.logger("eote.process.checkNegative.setback","Setting count to 0 for being negative.")
+            diceObj.count.setback = 0;    
+        }             
+        
+        if (diceObj.count.difficulty < 0) {
+            eote.process.logger("eote.process.checkNegative.difficulty","Setting count to 0 for being negative.")
+            diceObj.count.difficulty = 0;    
+        }  
+        
+        if (diceObj.count.challenge < 0) {
+            eote.process.logger("eote.process.checkNegative.challenge","Setting count to 0 for being negative.")
+            diceObj.count.challenge = 0;    
+        }
+        
+        if (diceObj.count.force < 0) {
+            eote.process.logger("eote.process.checkNegative.force","Setting count to 0 for being negative.")
+            diceObj.count.force = 0;    
+        }
+        
+        if (diceObj.count.success < 0) {
+            eote.process.logger("eote.process.checkNegative.success","Setting count to 0 for being negative.")
+            diceObj.count.success = 0;    
+        }
+        
+        if (diceObj.count.advantage < 0) {
+            eote.process.logger("eote.process.checkNegative.advantage","Setting count to 0 for being negative.")
+            diceObj.count.advantage = 0;    
+        }
+        
+        if (diceObj.count.threat < 0) {
+            eote.process.logger("eote.process.checkNegative.threat","Setting count to 0 for being negative.")
+            diceObj.count.threat = 0;    
+        }
+        
+        if (diceObj.count.failure < 0) {
+            eote.process.logger("eote.process.checkNegative.failure","Setting count to 0 for being negative.")
+            diceObj.count.failure = 0;    
+        }     
+        
+        return diceObj;
     }
     
     eote.process.upgrade = function(cmd, diceObj){
