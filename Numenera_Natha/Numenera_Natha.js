@@ -1,8 +1,8 @@
 /* read Help.txt */
 var NathaNumenera = NathaNumenera || (function () {
     'use strict';
-    var version = 4.0,
-	releasedate= "March 2015",
+    var version = 4.1,
+    releasedate= "2015-04-17",
 	schemaversion = 1.0,
 	author="Natha (roll20userid:75857)",
     warning = "Sheet must be in version 4+ : chat outputs and error messages are managed through the sheet's templates.",
@@ -515,7 +515,7 @@ var NathaNumenera = NathaNumenera || (function () {
 	    sendChat("character|" + charId, "&{template:nathaNumRecovery} {{recoverPoints=1d6+"+recovbonus+" ("+recovery+")}} {{currentAction="+curRecLib+"}} {{nextAction="+nextRecLib+"}}");
 	},
 	//-----------------------------------------------------------------------------
-	npcDamage = function (characterObj,tokenObj,dmgDealt, applyArmor) {
+	npcDamage = function (tokenObj,characterObj,dmgDealt, applyArmor) {
 	    // Apply damage (or healing if dmdDeal is negative ...) to Numenera NPC/Creature
 	    // And set "death" marker if health is 0 or less.
 	    // The Mook or Non Player full Character must have the following attributes :
@@ -528,9 +528,11 @@ var NathaNumenera = NathaNumenera || (function () {
 	    var npcName = characterObj.get("name");
 	    var npcHealth = 0;
 	    var npcMaxHealth = 0;
-	    var nbcArmor=0;
+	    var npcArmor=0;
 	    if (applyArmor!="n"){
 	        npcArmor = parseInt(getAttrByName(characterObj.id, "Armor", "current")) || 0;
+            //DEBUG
+            //sendChat("GM", "/w gm npcDamage() Debug : Armor of ('"+npcName+"', char id:"+characterObj.id+", token id:"+tokenObj.id+") = "+npcArmor);
 	    };
 	    // Is the token linked to the character ("full NPC") or a Mook ?
 	    var isChar = tokenObj.get("bar1_link");
@@ -541,7 +543,7 @@ var NathaNumenera = NathaNumenera || (function () {
 	    } else {
 	        // It's a "full" character NPC : get the attributes values
 	        var attObjArray = findObjs({
-	                        _type: 'attribute',
+	                        _type: "attribute",
 	                        name: "Health",
 	                        _characterid: characterObj.id
 	                    });
@@ -569,8 +571,12 @@ var NathaNumenera = NathaNumenera || (function () {
 	        attObjArray[0].set("current",npcHealthFinal);
 	    };
 	    tokenObj.set("status_dead", (npcHealthFinal == 0));
-	    sendChat("GM", "/w gm " + npcName + " takes " + dmg + "/" + dmgDealt + " damage. Health: " + npcHealth + "->" + npcHealthFinal + ".");
-	    return;
+        if (dmgDealt>0) {
+	        sendChat("GM", "/w gm " + npcName + " takes " + dmg + " damage (" + dmgDealt + " - " + npcArmor + " Armor). Health: " + npcHealth + "->" + npcHealthFinal + ".");
+        } else {
+            sendChat("GM", "/w gm " + npcName + " is healed for " + dmg + " points. Health: " + npcHealth + "->" + npcHealthFinal + ".");
+        };
+        return;
 	},
 	//-----------------------------------------------------------------------------
     handleAttributeEvent = function(obj, prev) {
