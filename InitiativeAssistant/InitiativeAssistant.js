@@ -5,8 +5,8 @@
 var InitiativeAssistant = InitiativeAssistant || (function() {
     'use strict';
 
-    var version = '0.1.0',
-        lastUpdate = 1429509755,
+    var version = '0.1.1',
+        lastUpdate = 1429510954,
         schemaVersion = 0.1,
 
     checkInstall = function() {
@@ -150,7 +150,6 @@ var InitiativeAssistant = InitiativeAssistant || (function() {
                 _.each(keys, function(k){
                     var char;
                     if(chars[k]) {
-                        log(chars[k]);
                         if(1 === chars[k].length) {
                             char = findObjs({
                                 type: 'graphic',
@@ -210,7 +209,7 @@ var InitiativeAssistant = InitiativeAssistant || (function() {
                                     '<div>'+
                                         _.map(rs, function(r){
                                             return '<h4>'+
-                                                    rs.input+
+                                                    r.input+
                                                 '<h4>'+
                                                 '<div style="margin-left:15px;">'+
                                                     _.map(r.matches,function(c){
