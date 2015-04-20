@@ -5,20 +5,39 @@
 var InitiativeAssistant = InitiativeAssistant || (function() {
     'use strict';
 
-    var version = '0.1.1',
-        lastUpdate = 1429510954,
-        schemaVersion = 0.1,
+    var version = '0.1.2',
+        lastUpdate = 1429545338,
+        schemaVersion = 0.2,
+        sorters = {
+            'None': function(to) {
+                return to;
+            },
+            'Ascending': function(to){
+                return _.sortBy(to,function(i){
+                    return (i.pr);
+                });
+            },
+            'Descending': function(to){
+                return _.sortBy(to,function(i){
+                    return (-i.pr);
+                });
+            }
+        },
 
     checkInstall = function() {
-    	log('-=> InitiativeAssistant v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+        log('-=> InitiativeAssistant v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
 
         if( ! _.has(state,'InitiativeAssistant') || state.InitiativeAssistant.version !== schemaVersion) {
             log('  > Updating Schema to v'+schemaVersion+' <');
             state.InitiativeAssistant = {
-                version: schemaVersion
+                version: schemaVersion,
+                config: {
+                    sortOption: 'None'
+                }
             };
         }
     },
+
 
 	ch = function (c) {
 		var entities = {
@@ -41,6 +60,22 @@ var InitiativeAssistant = InitiativeAssistant || (function() {
 		}
 		return '';
 	},
+
+    getConfigOption_SortOptions = function() {
+        var text = state.InitiativeAssistant.config.sortOption;
+        return '<div>'+
+            'Sort Options is currently <b>'+
+                text+
+            '</b>.'+
+            '<div>'+
+                _.map(_.keys(sorters),function(so){
+                    return '<a href="!init-assist-config --sort-option|'+so+'">'+
+                        so+
+                    '</a>';
+                }).join(' ')+
+            '</div>'+
+        '</div>';
+    },
 
     showHelp = function(who) {
         sendChat('','/w '+who+' '
@@ -66,6 +101,7 @@ var InitiativeAssistant = InitiativeAssistant || (function() {
                         +'</ul>'
                     +'</div>'
                 +'</div>'
+                +getConfigOption_SortOptions()
             +'</div>'
         );
     },
@@ -178,7 +214,7 @@ var InitiativeAssistant = InitiativeAssistant || (function() {
                     }
                 });
                 Campaign().set({
-                    turnorder: JSON.stringify(to)
+                    turnorder: JSON.stringify(sorters[state.InitiativeAssistant.config.sortOption](to))
                 });
 
                 _.each(redos,function(rs,k){
@@ -245,6 +281,49 @@ var InitiativeAssistant = InitiativeAssistant || (function() {
                     sendChat('Initiative Assistant','/w '+who+' '+output);
                 }
                 
+                break;
+            case '!init-assist-config':
+                if(_.contains(args,'--help')) {
+                    showHelp(who);
+                    return;
+                }
+                if(!args.length) {
+                    sendChat('','/w '+who+' '
+                        +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                            +'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
+                                +'InitiativeAssistant v'+version
+                            +'</div>'
+                            +getConfigOption_SortOptions()
+                        +'</div>'
+                    );
+                    return;
+                }
+                _.each(args,function(a){
+                    var opt=a.split(/\|/),
+                        msg='';
+                    switch(opt.shift()) {
+                        case 'sort-option':
+                            if(sorters[opt[0]]) {
+                               state.InitiativeAssistant.config.sortOption=opt[0];
+                            } else {
+                                msg='<div><b>Error:</b> Not a valid sort method: '+opt[0]+'</div>';
+                            }
+                            sendChat('','/w '+who+' '
+                                +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                                    +msg
+                                    +getConfigOption_SortOptions()
+                                +'</div>'
+                            );
+                            break;
+
+                        default:
+                            sendChat('','/w '+who+' '
+                                +'<div><b>Unsupported Option:</div> '+a+'</div>'
+                            );
+                    }
+                            
+                });
+
                 break;
         }
     },
