@@ -10,17 +10,42 @@ Sheet must be in version 4+ : chat outputs and error messages are managed throug
 ******************************************************
 **** RELEASE
 ******************************************************
-Version: 4.0
-Date: March 2015
+Version: 4.2
+Date: 2015-04-20
 Authors: Natha (75857)
+
+4.2: By popular demand (of one, Hi Marturin!), stat rolls can be called by macros and a selected character token. See the !nathanum-macroroll chat command below.
+Plus added assets handling to stat roll.
+
+4.1: Bug correction on the NPC damage function.
+
+4.0: Refactoring and adaptation to the 4+ version of the character sheets and the new template feature of Roll20.
+Functions are now called by the buttons on the sheet, no need for macros.
 
 ******************************************************
 **** Chat commands
 ******************************************************
+!nathanum-macroroll token_or_character_id|stat name|
+	New! Stat roll that can be called easier by macros.
+	Calls statRoll(character-objet,name-of-the-attibute,who-rolled, difficulty, Stat-expense,Assets,Effort-on-Roll,Effort-on-damage,Bonus-to-roll).
+	(see the comments of the function below for details).
+
+	MIGHT ROLL MACRO EXAMPLE:
+	!nathanum-macroroll @{selected|token_id}|might|?{Difficulty|0}|?{Cost|0}|?{Assets|0}|?{Effort on Roll|0}|?{Effort on Damage|0}|?{Bonus|0}
+
+	SPEED ROLL MACRO EXAMPLE:
+	!nathanum-macroroll @{selected|token_id}|speed|?{Difficulty|0}|?{Cost|0}|?{Assets|0}|?{Effort on Roll|0}|?{Effort on Damage|0}|?{Bonus|0}
+
+	INTELLECT ROLL MACRO EXAMPLE:
+	!nathanum-macroroll @{selected|token_id}|intellect|?{Difficulty|0}|?{Cost|0}|?{Assets|0}|?{Effort on Roll|0}|?{Effort on Damage|0}|?{Bonus|0}
+|-----------------------------------------------------
 !nathanum-numeneroll character_id|attribute
-	Stat roll.
-	Example: !nathanum-numeneroll @{character_id}|speed
-	Calls statRoll(character-objet,name-of-the-attibute,who-rolled).
+	Stat roll (called from the sheet mainly, as it requires a character id).
+	Example:
+		!nathanum-numeneroll @{character_id}|might
+		!nathanum-numeneroll @{character_id}|speed
+		!nathanum-numeneroll @{character_id}|intellect
+	Calls statRollFromSheet(character-objet,name-of-the-attibute,who-rolled).
 	(see the comments of the function below for details).
 |-----------------------------------------------------
 !nathanum-recoveryroll character_id
@@ -82,9 +107,12 @@ initRoll(character-object):
     Damage track and token state are checked/updated by calling checkCharStates().
     Chat output uses the "nathaNumInit" roll template.
 |-----------------------------------------------------
-statRoll(character-objet,name-of-the-attibute,who-rolled):
+statRollFromSheet(character-objet,name-of-the-attibute,who-rolled):
+    Gets the necessary parameters for this function as attributes from the character sheet (except the stat name).
+    And then calls statRoll(character-objet,name-of-the-attibute,who-rolled, difficulty, Stat-expense,Assets,Effort-on-Roll,Effort-on-damage,Bonus-to-roll).
+|-----------------------------------------------------
+statRoll(character-objet,name-of-the-attibute,who-rolled, difficulty, Stat-expense,Assets,Effort-on-Roll,Effort-on-damage,Bonus-to-roll).
     Might/speed/intellect roll (with eventual roll effort, additionnal cost, damage effort and bonus) against a difficulty (optional).
-    Every necessary parameters for this function are attributes of the character sheet (except the stat name).
     Difficulty is the level of difficulty, not the target number.
     The target number is calculated by the function.
     If difficulty is 0, the roll still happens, but is not confronted to any difficulty: instead of calculating success, it calculates the highest difficulty beaten.
