@@ -25,7 +25,7 @@ Functions are now called by the buttons on the sheet, no need for macros.
 ******************************************************
 **** Chat commands
 ******************************************************
-!nathanum-macroroll token_or_character_id|stat name|
+!nathanum-macroroll token_or_character_id|stat name|Difficulty|Cost|Assets|Effort on Roll|Effort on Damage|Bonus
 	New! Stat roll that can be called easier by macros.
 	Calls statRoll(character-objet,name-of-the-attibute,who-rolled, difficulty, Stat-expense,Assets,Effort-on-Roll,Effort-on-damage,Bonus-to-roll).
 	(see the comments of the function below for details).
