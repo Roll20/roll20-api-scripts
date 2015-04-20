@@ -1,0 +1,269 @@
+// Github:   https://github.com/shdwjk/Roll20API/blob/master/InitiativeAssistant/InitiativeAssistant.js
+// By:       The Aaron, Arcane Scriptomancer
+// Contact:  https://app.roll20.net/users/104025/the-aaron
+
+var InitiativeAssistant = InitiativeAssistant || (function() {
+    'use strict';
+
+    var version = '0.1.0',
+        lastUpdate = 1429509755,
+        schemaVersion = 0.1,
+
+    checkInstall = function() {
+    	log('-=> InitiativeAssistant v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+
+        if( ! _.has(state,'InitiativeAssistant') || state.InitiativeAssistant.version !== schemaVersion) {
+            log('  > Updating Schema to v'+schemaVersion+' <');
+            state.InitiativeAssistant = {
+                version: schemaVersion
+            };
+        }
+    },
+
+	ch = function (c) {
+		var entities = {
+			'<' : 'lt',
+			'>' : 'gt',
+			"'" : '#39',
+			'@' : '#64',
+			'{' : '#123',
+			'|' : '#124',
+			'}' : '#125',
+			'[' : '#91',
+			']' : '#93',
+			'"' : 'quot',
+			'-' : 'mdash',
+			' ' : 'nbsp'
+		};
+
+		if(_.has(entities,c) ){
+			return ('&'+entities[c]+';');
+		}
+		return '';
+	},
+
+    showHelp = function(who) {
+        sendChat('','/w '+who+' '
+            +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                +'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
+                    +'InitiativeAssistant v'+version
+                +'</div>'
+                +'<div style="padding-left:10px;margin-bottom:3px;">'
+                    +'<p>Provides an easy interface to adding players into the initiative, particularly if they are manually rolling.</p>'
+                +'</div>'
+                +'<b>Commands</b>'
+                +'<div style="padding-left:10px;">'
+                    +'<b><span style="font-family: serif;">!init-assist [ [--'+ch('<')+'name fragment'+ch('>')+'|'+ch('<')+'number'+ch('>')+'] ...] | --help</span></b>'
+                    +'<div style="padding-left: 10px;padding-right:20px">'
+                        +'<p>Adds one or more characters to the initiative order.</p>'
+                        +'<ul>'
+                            +'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+                                +'<b><span style="font-family: serif;">'+ch('<')+'name fragment'+ch('>')+'</span></b> '+ch('-')+' A part of the name of the character to add.  This can be the full name, or just a few letters.  Case-insensitive.'
+                            +'</li> '
+                            +'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+                                +'<b><span style="font-family: serif;">'+ch('<')+'number'+ch('>')+'</span></b> '+ch('-')+' A number or inline roll representing the character'+ch("'")+'s initiative score.'
+                            +'</li> '
+                        +'</ul>'
+                    +'</div>'
+                +'</div>'
+            +'</div>'
+        );
+    },
+
+
+    keyFormat = function(text) {
+        return text.toLowerCase().replace(/\s+/,'');
+    },
+
+    handleInput = function(msg_orig) {
+        var msg = _.clone(msg_orig),
+            output='',
+            redos={},
+            keys=[],
+            lookup,
+            chars,
+            args,
+            who,
+            to;
+
+        if (msg.type !== "api" || !playerIsGM(msg.playerid)) {
+            return;
+        }
+		who=getObj('player',msg.playerid).get('_displayname').split(' ')[0];
+
+		if(_.has(msg,'inlinerolls')){
+			msg.content = _.chain(msg.inlinerolls)
+				.reduce(function(m,v,k){
+					m['$[['+k+']]']=v.results.total || 0;
+					return m;
+				},{})
+				.reduce(function(m,v,k){
+					return m.replace(k,v);
+				},msg.content)
+				.value();
+		}
+
+		args = msg.content
+            .replace(/<br\/>\n/g, ' ')
+            .replace(/(\{\{(.*?)\}\})/g," $2 ")
+            .split(/\s+--/);
+
+        switch(args.shift()) {
+            case '!init-assist':
+                if( !args.length || _.contains(args,'--help')) {
+                    showHelp(who);
+                    return;
+                }
+
+                lookup = _.reduce(args,function(m,p){
+                    var parts=p.split(/\|/),
+                        key=keyFormat(parts[0]);
+
+                    keys.push(key);
+
+                    m[key]={
+                        key: key,
+                        input: parts[0],
+                        init: parts[1]
+                    };
+                    return m;
+                },{});
+                
+                chars = _.reduce(
+                    filterObjs(function(obj){
+                        return ('character' === obj.get('type')) && (_.reduce(keys,function(m,k){
+                            return m || (-1 !== keyFormat(obj.get('name')||'').indexOf(k));
+                        },false));
+                    }),
+                    function(m,c){
+                        var ckey=keyFormat(c.get('name')||''),
+                            key=_.find(keys,function(k){
+                                return (-1 !== ckey.indexOf(k));
+                            });
+                        m[key] = (m[key] ? m[key].push(c) && m[key] : [c]);
+                        return m;
+                    },
+                    {}
+                );
+
+                to=JSON.parse(Campaign().get('turnorder')) || [];
+                _.each(keys, function(k){
+                    var char;
+                    if(chars[k]) {
+                        log(chars[k]);
+                        if(1 === chars[k].length) {
+                            char = findObjs({
+                                type: 'graphic',
+                                pageid: Campaign().get('playerpageid'),
+                                subtype: 'token',
+                                represents: chars[k][0].id
+                            })[0];
+                            if(char) {
+                                to = _.reject(to, function(i){
+                                    return char.id === i.id;
+                                });
+                                to.push({
+                                    id: char.id,
+                                    pr: lookup[k].init
+                                });
+                            } else {
+                                lookup[k].matches=chars[k];
+                                redos.NT=(redos.NT ? redos.NT.push(lookup[k]) && redos.NT : [lookup[k]]);
+                            }
+                        } else {
+                            lookup[k].matches=chars[k];
+                            redos.DUP=(redos.DUP ? redos.DUP.push(lookup[k]) && redos.DUP : [lookup[k]]);
+                        }
+                    } else {
+                        redos.NM=(redos.NM ? redos.NM.push(lookup[k]) && redos.NM : [lookup[k]]);
+                    }
+                });
+                Campaign().set({
+                    turnorder: JSON.stringify(to)
+                });
+
+                _.each(redos,function(rs,k){
+                    var params=[];
+                    switch(k){
+                        case 'NT':
+                            output+=
+                                '<div style="border: 1px solid #999999;">'+
+                                    '<h3>Please Add Tokens</h3>'+
+                                    '<div>'+
+                                        _.map(rs, function(r){
+                                            var c = r.matches[0];
+                                            params.push('--'+r.key+'|'+r.init);
+                                            return '<div>'+
+                                                '<img style="background-color: white; border: 1px solid #ccc; max-width: 60px; max-height: 60px; float:left" src="'+c.get("avatar")+'">'+
+                                                '<b>'+c.get("name")+'</b>'+
+                                                '<div style="clear:both;"></div>'+
+                                                '</div>';
+                                        }).join(' ')+
+                                    '</div>'+
+                                    '<p>After adding tokens for the above characters: <a href="!init-assist '+params.join(' ')+'">Add Turn(s)</a></p>'+
+                                '</div>';
+                            break;
+                        case 'DUP':
+                            output+=
+                                '<div style="border: 1px solid #999999;">'+
+                                    '<h3>Which One?</h3>'+
+                                    '<div>'+
+                                        _.map(rs, function(r){
+                                            return '<h4>'+
+                                                    rs.input+
+                                                '<h4>'+
+                                                '<div style="margin-left:15px;">'+
+                                                    _.map(r.matches,function(c){
+                                                        var button='<a style="float:right;" href="!init-assist --'+keyFormat(c.get('name'))+'|'+r.init+'">Pick</a>';
+                                                        return '<div>'+
+                                                            '<img style="background-color: white; border: 1px solid #ccc; max-width: 60px; max-height: 60px; float:left" src="'+c.get("avatar")+'">'+
+                                                            button+
+                                                            '<b>'+c.get("name")+'</b>'+
+                                                            '<div style="clear:both;"></div>'+
+                                                            '</div>';
+                                                    }).join('')+
+                                                '</div>';
+                                        }).join(' ')+
+                                    '</div>'+
+                                '</div>';
+                            break;
+                        case 'NM':
+                            output+=
+                                '<div style="border: 1px solid #999999;">'+
+                                    '<h3>No Matching Characters</h3>'+
+                                    '<div>'+
+                                        _.map(rs, function(r){
+                                            return '<div>'+
+                                                    r.input+
+                                                '</div>';
+                                        }).join(' ')+
+                                    '</div>'+
+                                '</div>';
+                            break;
+                    }
+                });
+                if(output){
+                    sendChat('Initiative Assistant','/w '+who+' '+output);
+                }
+                
+                break;
+        }
+    },
+
+    registerEventHandlers = function() {
+        on('chat:message', handleInput);
+    };
+
+    return {
+        CheckInstall: checkInstall,
+        RegisterEventHandlers: registerEventHandlers
+    };
+    
+}());
+
+on('ready',function() {
+    'use strict';
+
+    InitiativeAssistant.CheckInstall();
+    InitiativeAssistant.RegisterEventHandlers();
+});
