@@ -1,9 +1,9 @@
 /* read Help.txt */
 var NathaNumenera = NathaNumenera || (function () {
     'use strict';
-    var version = 4.1,
-    releasedate= "2015-04-17",
-	schemaversion = 1.0,
+    var version = 4.2,
+    releasedate= "2015-04-20",
+    schemaversion = 1.0,
 	author="Natha (roll20userid:75857)",
     warning = "Sheet must be in version 4+ : chat outputs and error messages are managed through the sheet's templates.",
     //-----------------------------------------------------------------------------
@@ -282,8 +282,18 @@ var NathaNumenera = NathaNumenera || (function () {
 	    if(totalCost>0)  tmplt+=" {{totalCost="+totalCost+"}} {{attrPool="+speedPool+"}} {{attrPoolInit="+speedPoolInit+"}}";
 	    sendChat("character|"+charId, ""+tmplt);
 	},
+    //-----------------------------------------------------------------------------
+	statRollFromSheet= function (characterObj, statName,whoRolled) {
+	    var difficulty=parseInt(getAttrByName(characterObj.id, "rollVarDiff", "current")) || 0;
+	    var assets=parseInt(getAttrByName(characterObj.id, "rollVarAsset", "current")) || 0;
+	    var statexp=parseInt(getAttrByName(characterObj.id, "rollVarCost", "current")) || 0;
+	    var effortsOnRoll=parseInt(getAttrByName(characterObj.id, "rollVarRollEff", "current")) || 0;
+	    var effortsOnDmg=parseInt(getAttrByName(characterObj.id, "rollVarRollDmg", "current")) || 0;
+	    var rollBonus=parseInt(getAttrByName(characterObj.id, "rollVarBonus", "current")) || 0;
+	    statRoll(characterObj,statName,whoRolled,difficulty,statexp,assets,effortsOnRoll,effortsOnDmg,rollBonus);
+	},
 	//-----------------------------------------------------------------------------
-	statRoll = function (characterObj,statName,whoRolled) {
+	statRoll = function (characterObj,statName,whoRolled,difficulty,statexp,assets,effortsOnRoll,effortsOnDmg,rollBonus) {
 	    /*
 	    	Might/speed/intellect roll with eventual roll effort(s), additionnal cost,
 	    	damage effort(s), bonus to the roll (<3), against a difficulty (optional).
@@ -310,11 +320,6 @@ var NathaNumenera = NathaNumenera || (function () {
 	        sendChat("character|"+charId, "&{template:nathaNumMsg} {{nathaNumeneRoll=1}} {{pcDying=1}}");
 	        return;
 	    };
-	    var difficulty=parseInt(getAttrByName(characterObj.id, "rollVarDiff", "current")) || 0;
-	    var statexp=parseInt(getAttrByName(characterObj.id, "rollVarCost", "current")) || 0;
-	    var effortsOnRoll=parseInt(getAttrByName(characterObj.id, "rollVarRollEff", "current")) || 0;
-	    var effortsOnDmg=parseInt(getAttrByName(characterObj.id, "rollVarRollDmg", "current")) || 0;
-	    var rollBonus=parseInt(getAttrByName(characterObj.id, "rollVarBonus", "current")) || 0;
 
 	    // checking the stat
 	    var attributeName = "";
@@ -391,18 +396,19 @@ var NathaNumenera = NathaNumenera || (function () {
 	    // beginning output calculation
 	    var tmplt="&{template:nathaNumRoll} {{"+attributeName+"="+attributeName+"}} {{attrEdge="+attrEdge+"}} {{finalRoll="+finalRoll+"}} {{diceRoll="+diceRoll+"}}";
 	    if (bonusToRoll>0) tmplt += " {{bonusToRoll="+bonusToRoll+"}}";
+	    var assetsUsed = parseInt(0 || assets);
+        if (assetsUsed>0) tmplt += " {{assets="+assetsUsed+"}}";
 
 		//computing target task
-	    var targetRoll = 0;
-	    var target = 0;
-	    var finalDiff=0;
-	    if (parseInt(difficulty) > 0) {
-	        target = (parseInt(difficulty))*3;
-	        targetRoll = (parseInt(difficulty)-effortRoll)*3;
-	        finalDiff= difficulty-effortRoll;
-	        tmplt += "{{difficulty=" + difficulty + "}} {{target="+target+"}} {{finalDiff="+finalDiff+"}} {{targetRoll="+targetRoll+"}}";
+        var initDiff=parseInt(0 || difficulty);
+	    if (initDiff > 0) {
+	        var target = initDiff*3;
+	        var finalDiff= Math.max(0, initDiff-effortRoll-assetsUsed);
+            var targetRoll = finalDiff*3;
+	        tmplt += "{{difficulty=" + initDiff + "}} {{target="+target+"}} {{finalDiff="+finalDiff+"}} {{targetRoll="+targetRoll+"}}";
 	    } else {
-            tmplt += " {{rollBeats="+(Math.floor(finalRoll/3)+effortRoll)+"}}";
+            var rollBeats=Math.floor(finalRoll/3)+effortRoll+assetsUsed;
+            tmplt += " {{rollBeats="+rollBeats+" ("+(rollBeats*3)+")"+"}}";
 	    };
 
 	    // Checking result
@@ -424,7 +430,7 @@ var NathaNumenera = NathaNumenera || (function () {
 	        tmplt += " {{bonusToRoll=" + bonusToRoll + "}}";
 	    };
 	    // If not an automatic success or a known difficulty
-	    if (difficulty > 0) {
+	    if (initDiff > 0) {
 	        if( finalRoll >= targetRoll) {
 	            tmplt += " {{boolOK=1}}";
 	        }
@@ -627,7 +633,40 @@ var NathaNumenera = NathaNumenera || (function () {
                     sendChat("GM", "&{template:nathaNumMsg} {{chatmessage=nathanum-numeneroll}} {{wtfAttribute="+msg.content+"}}");
                     return false;
             	};
-	            statRoll(obj,paramArray[1],msg.who);
+	            statRollFromSheet(obj,paramArray[1],msg.who);
+                break;
+            case '!nathanum-macroroll':
+        		// macroroll can be called with a token_id or character_id
+                if(!obj) {
+	            	//not a character_id
+		            obj = findObjs({
+                        _pageid: Campaign().get("playerpageid"),
+            	        _type: "graphic",
+            	        layer:"objects",
+            	        _id: paramArray[0]
+            	    })[0];
+	            };
+	            if (!obj) {
+	            	//not a token either
+	                sendChat("GM", "&{template:nathaNumMsg} {{chatmessage=nathanum-macroroll}} {{noTokNoChar= "+msg.content+"}}");
+	                return false;
+		        } else {
+                    if(obj.get("type")=="graphic") {
+                        // it's a token but does it represents a character ?
+	            	    obj = getObj("character", obj.get("represents"));
+                        if (!obj) {
+                        	//not a token either
+        	                sendChat("GM", "&{template:nathaNumMsg} {{chatmessage=nathanum-macroroll}} {{noTokNoChar= "+msg.content+"}}");
+        	                return false;
+        		        };
+                    };
+	            };
+                if (paramArray.length != 8) {
+                	//this function requires more parameters
+                    sendChat("GM", "&{template:nathaNumMsg} {{chatmessage=nathanum-macroroll}} {{genericMsg=Requires 8 paramaters : token|stat name|difficulty|assets|Cost|Effort on Roll|Effort on Damage|Roll Bonus}}");
+                    return false;
+            	};
+	            statRoll(obj,paramArray[1],msg.who,paramArray[2],paramArray[3],paramArray[4],paramArray[5],paramArray[6],paramArray[7])
                 break;
             case '!nathanum-recoveryroll':
 	            if (!obj) {
