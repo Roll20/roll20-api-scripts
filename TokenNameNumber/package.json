@@ -1,19 +1,18 @@
 {
-  "name": "TokenNameNumber",
-  "version": "0.4",
-  "description": "Automatic Numbering of tokens with special placeholder.",
-  "authors": "The Aaron",
-  "roll20userid": "104025",
-  "dependencies": {
-  },
-  "modifies": {
-	"state.TokenNameNumber": "read,write",
-	"graphic.name": "read,write",
-	"graphic.pageid": "read",
-	"graphic.represents": "read",
-	"graphic.subtype": "read",
-	"graphic.type": "read"
-  },
-  "conflicts": [
-  ]
+    "name": "TokenNameNumber",
+    "version": "0.5.1",
+    "description": "Automatic Numbering of tokens with special placeholder.",
+    "authors": "The Aaron",
+    "roll20userid": "104025",
+    "dependencies": [],
+    "modifies": {
+        "state.TokenNameNumber": "read,write",
+        "graphic.name": "read,write",
+        "graphic.statusmarkers": "write",
+        "graphic.pageid": "read",
+        "graphic.represents": "read",
+        "graphic.subtype": "read",
+        "graphic.type": "read"
+    },
+    "conflicts": []
 }
