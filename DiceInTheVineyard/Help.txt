@@ -14,7 +14,7 @@ Using Dice in the Vineyard:
 Before using Dice in the Vineyard, it is recommended that image URLs be set for
 each chip value.  These can be set in the script in the DEFAULT_URLS dictionary
 or within the game via the "setimage" subcommand (described below).  For best
-results, us a PNG with transparency, so that chips will stack appropriately.
+results, use a PNG with transparency, so that chips will stack appropriately.
 You may wish to set the CHIP_HEIGHT parameter, which defines the height, in
 pixels, of the side of the chip (i.e. additional chips will be placed this many
 pixels above the chip beneath them in order to create a stacking effect).  Any
@@ -22,9 +22,9 @@ chip without a specific image set will use GENERIC_URL and will use a status
 icon to display its value.
 
 Each character to be tracked must have space allocated on the tabletop for its
-chips.  This can be accomplished via the "add" command, which will allocate an
-area starting at the specified square and extending six squares right and four
-squares down (this can be altered by changing the values of BOX_WIDTH and
+chips.  This can be accomplished via the "add" subcommand, which will allocate
+an area starting at the specified square and extending six squares right and
+four squares down (this can be altered by changing the values of BOX_WIDTH and
 BOX_HEIGHT, but should always be at least two wide and a multiple of two tall,
 and should have a total area of at least 24 squares).  A 2x2 area in the top
 left will be reserved for the character token and for chip tokens to be played;
