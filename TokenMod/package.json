@@ -1,6 +1,6 @@
 {
     "name": "TokenMod",
-    "version": "0.8.1",
+    "version": "0.8.2",
     "description": "An interface to adjusting properties of a token from a macro or the chat area.",
     "authors": "The Aaron",
     "roll20userid": "104025",
