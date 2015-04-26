@@ -5,8 +5,8 @@
 var TokenMod = TokenMod || (function() {
     'use strict';
 
-    var version = '0.8.3',
-        lastUpdate = 1430061567,
+    var version = '0.8.4',
+        lastUpdate = 1430074322,
     	schemaVersion = 0.1,
 
 		fields = {
@@ -800,7 +800,7 @@ var TokenMod = TokenMod || (function() {
 	applyModListToToken = function(modlist, token) {
 		var mods={},
 			delta, cid,
-			current=decomposeStatuses(token.get('statusmarkers')),
+			current=decomposeStatuses(token.get('statusmarkers')||''),
             statusCount=token.get('statusmarkers').split(/,/).length;
 
 		_.each(modlist.on,function(f){
