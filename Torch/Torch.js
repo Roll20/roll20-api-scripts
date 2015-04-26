@@ -5,20 +5,14 @@
 var Torch = Torch || (function() {
     'use strict';
 
-    var version = 0.7,
+    var version = '0.8.0',
+        lastUpdate = 1430061737,
     	schemaVersion = 0.1,
 		flickerURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
 		flickerPeriod = 400,
 		flickerDeltaLocation = 2,
 		flickerDeltaRadius = 0.1,
 		flickerInterval = false,
-
-	fixNewObj= function(obj) {
-		var p = obj.changed._fbpath,
-		    new_p = p.replace(/([^\/]*\/){4}/, "/");
-		obj.fbpath = new_p;
-		return obj;
-	},
 
 	ch = function (c) {
 		var entities = {
@@ -42,9 +36,9 @@ var Torch = Torch || (function() {
 		return '';
 	},
 
-	showHelp = function() {
+	showHelp = function(who) {
         sendChat('',
-            '/w gm '
+            '/w '+who+' '
 +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
 	+'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
 		+'Torch v'+version
@@ -158,7 +152,7 @@ var Torch = Torch || (function() {
 		
 		if(!fobj) {
 			// new flicker
-			fobj =fixNewObj(createObj('graphic',{
+			fobj =createObj('graphic',{
 				imgsrc: flickerURL,
 				subtype: 'token',
 				name: 'Flicker',
@@ -171,7 +165,7 @@ var Torch = Torch || (function() {
 				light_radius: r,
 				light_dimradius: d,
 				light_otherplayers: p
-			}));
+			});
 		}
 		toBack(fobj);
 		state.Torch.flickers[fobj.id]={
@@ -205,24 +199,25 @@ var Torch = Torch || (function() {
 	},
 	
 	handleInput = function(msg) {
-		var args, radius, dim_radius, other_players, page, obj, objs=[];
+		var args, radius, dim_radius, other_players, page, obj, objs=[],who;
 
 		if (msg.type !== "api") {
 			return;
 		}
+		var who=getObj('player',msg.playerid).get('_displayname').split(' ')[0];
 
 		args = msg.content.split(" ");
 		switch(args[0]) {
 			case '!torch':
-				if('help' === args[1] || ( !_.has(msg,'selected') && args.length < 5)) {
-					showHelp();
+				if((args[1]||'').match(/^(--)?help$/) || ( !_.has(msg,'selected') && args.length < 5)) {
+					showHelp(who);
 					return;
 				}
                 radius = parseInt(args[1],10) || 40;
                 dim_radius = parseInt(args[2],10) || (radius/2);
 				other_players = _.contains([1,'1','on','yes','true','sure','yup','-'], args[3] || 1 );
 
-				if(isGM(msg.playerid)) {
+				if(playerIsGM(msg.playerid)) {
 					_.chain(args)
 						.rest(4)
 						.uniq()
@@ -249,12 +244,12 @@ var Torch = Torch || (function() {
 				break;
 
             case '!snuff':
-				if('help' === args[1] || ( !_.has(msg,'selected') && args.length < 2)) {
-					showHelp();
+				if((args[1]||'').match(/^(--)?help$/) || ( !_.has(msg,'selected') && args.length < 2)) {
+					showHelp(who);
 					return;
 				}
 
-				if(isGM(msg.playerid)) {
+				if(playerIsGM(msg.playerid)) {
 					_.chain(args)
 						.rest(1)
 						.uniq()
@@ -280,11 +275,11 @@ var Torch = Torch || (function() {
                 break;
 
 			case '!daytime':
-				if('help' === args[1]) {
-					showHelp();
+				if((args[1]||'').match(/^(--)?help$/) ) {
+					showHelp(who);
 					return;
 				}
-				if(isGM(msg.playerid)) {
+				if(playerIsGM(msg.playerid)) {
 					if(msg.selected) {
 						obj=getObj('graphic', msg.selected[0]._id);
 					} else if(args[1]) {
@@ -302,11 +297,11 @@ var Torch = Torch || (function() {
 				break;
 
 			case '!nighttime':
-				if('help' === args[1]) {
-					showHelp();
+				if((args[1]||'').match(/^(--)?help$/) ) {
+					showHelp(who);
 					return;
 				}
-				if(isGM(msg.playerid)) {
+				if(playerIsGM(msg.playerid)) {
 					if(msg.selected) {
 						obj=getObj('graphic',msg.selected[0]._id);
 					} else if(args[1]) {
@@ -324,15 +319,15 @@ var Torch = Torch || (function() {
 				break;
 
 			case '!flicker-on':
-				if('help' === args[1] || ( !_.has(msg,'selected') && args.length < 5)) {
-					showHelp();
+				if((args[1]||'').match(/^(--)?help$/) || ( !_.has(msg,'selected') && args.length < 5)) {
+					showHelp(who);
 					return;
 				}
                 radius = parseInt(args[1],10) || 40;
                 dim_radius = parseInt(args[2],10) || (radius/2);
 				other_players = _.contains([1,'1','on','yes','true','sure','yup','-'], args[3] || 1 );
 
-				if(isGM(msg.playerid)) {
+				if(playerIsGM(msg.playerid)) {
 					objs=_.chain(args)
 						.rest(4)
 						.uniq()
@@ -352,12 +347,12 @@ var Torch = Torch || (function() {
 				break;
 
 			case '!flicker-off':
-				if('help' === args[1] || ( !_.has(msg,'selected') && args.length < 2)) {
-					showHelp();
+				if((args[1]||'').match(/^(--)?help$/) || ( !_.has(msg,'selected') && args.length < 2)) {
+					showHelp(who);
 					return;
 				}
                 
-				if(isGM(msg.playerid)) {
+				if(playerIsGM(msg.playerid)) {
 					objs=_.chain(args)
 						.rest(1)
 						.uniq()
@@ -420,8 +415,10 @@ var Torch = Torch || (function() {
 	},
 
 	checkInstall = function() {
+        log('-=> Torch v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+
         if( ! _.has(state,'Torch') || state.Torch.version !== schemaVersion) {
-            log('Torch: Resetting state');
+            log('  > Updating Schema to v'+schemaVersion+' <');
             /* Default Settings stored in the state. */
             state.Torch = {
 				version: schemaVersion,
@@ -446,13 +443,6 @@ var Torch = Torch || (function() {
 on("ready",function(){
 	'use strict';
 
-    if("undefined" !== typeof isGM && _.isFunction(isGM)) {
-		Torch.CheckInstall();
-		Torch.RegisterEventHandlers();
-    } else {
-        log('--------------------------------------------------------------');
-        log('Torch requires the isGM module to work.');
-        log('isGM GIST: https://gist.github.com/shdwjk/8d5bb062abab18463625');
-        log('--------------------------------------------------------------');
-    }
+	Torch.CheckInstall();
+	Torch.RegisterEventHandlers();
 });
