@@ -5,8 +5,8 @@
 var TokenMod = TokenMod || (function() {
     'use strict';
 
-    var version = '0.8.2',
-        lastUpdate = 1430003592,
+    var version = '0.8.3',
+        lastUpdate = 1430061567,
     	schemaVersion = 0.1,
 
 		fields = {
@@ -145,7 +145,6 @@ var TokenMod = TokenMod || (function() {
 
 
 	showHelp = function(id) {
-        log('here 2');
 		var who=getObj('player',id).get('_displayname').split(' ')[0];
 		sendChat('',
 			'/w '+who+' '
@@ -1026,7 +1025,6 @@ var TokenMod = TokenMod || (function() {
 					cmds=args.shift().match(/([^\s]+\|'[^']+'|[^\s]+\|"[^"]+"|[^\s]+)/g);
 					switch(cmds.shift()) {
 						case 'help':
-                            log('here');
 							showHelp(msg.playerid);
 							return;
 
