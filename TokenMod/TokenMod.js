@@ -5,9 +5,9 @@
 var TokenMod = TokenMod || (function() {
     'use strict';
 
-    var version = '0.8.4',
-        lastUpdate = 1430074322,
-    	schemaVersion = 0.1,
+    var version = '0.8.5',
+        lastUpdate = 1430082613,
+        schemaVersion = 0.1,
 
 		fields = {
 			// booleans
@@ -689,9 +689,9 @@ var TokenMod = TokenMod || (function() {
 				case 'status':
         			_.each(args, function(a) {
 						var s = a.split(/:/),
-							statparts = s.shift().match((/^(\S+?)(\[(\d*)\]|)$/)),
+							statparts = s.shift().match(/^(\S+?)(\[(\d*)\]|)$/)||[],
                             index = ( '[]' === statparts[2] ? statparts[2] : ( undefined !== statparts[3] ? Math.max(parseInt(statparts[3],10)-1,0) : 0 ) ),
-                            stat=statparts[1],
+                            stat=statparts[1]||'',
 							op = (_.contains(['-','+','=','!'],stat[0]) ? stat[0] : false),
 							numraw = s.shift() || '',
 							numop = (_.contains(['-','+'],numraw[0]) ? numraw[0] : false),
