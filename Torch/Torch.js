@@ -5,13 +5,14 @@
 var Torch = Torch || (function() {
     'use strict';
 
-    var version = '0.8.0',
-        lastUpdate = 1430061737,
-    	schemaVersion = 0.1,
+    var version = '0.8.1',
+        lastUpdate = 1430601526,
+        schemaVersion = 0.1,
 		flickerURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
 		flickerPeriod = 400,
 		flickerDeltaLocation = 2,
 		flickerDeltaRadius = 0.1,
+		flickerDeltaAngle = 5,
 		flickerInterval = false,
 
 	ch = function (c) {
@@ -49,7 +50,7 @@ var Torch = Torch || (function() {
 	+'</div>'
 	+'<b>Commands</b>'
 	+'<div style="padding-left:10px;">'
-		+'<b><span style="font-family: serif;">!torch ['+ch('<')+'Radius'+ch('>')+' ['+ch('<')+'Dim Start'+ch('>')+' ['+ch('<')+'All Players'+ch('>')+'  ['+ch('<')+'Token ID'+ch('>')+' ... ]]]]</span></b>'
+		+'<b><span style="font-family: serif;">!torch ['+ch('<')+'Radius'+ch('>')+' ['+ch('<')+'Dim Start'+ch('>')+' ['+ch('<')+'All Players'+ch('>')+'  ['+ch('<')+'Token ID'+ch('>')+ch('|')+ch('<')+'--Angle'+ch('>')+' ... ]]]]</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>Sets the light for the selected/supplied tokens.  Only GMs can supply token ids to adjust.</p>'
 			+'<p><b>Note:</b> If you are using multiple '+ch('@')+ch('{')+'target'+ch('|')+'token_id'+ch('}')+' calls in a macro, and need to adjust light on fewer than the supplied number of arguments, simply select the same token several times.  The duplicates will be removed.</p>'
@@ -66,6 +67,9 @@ var Torch = Torch || (function() {
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<b><span style="font-family: serif;">'+ch('<')+'Token ID'+ch('>')+'</span></b> '+ch('-')+' A Token ID, usually supplied with something like '+ch('@')+ch('{')+'target'+ch('|')+'Target 1'+ch('|')+'token_id'+ch('}')+'.'
 				+'</li> '
+				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<b><span style="font-family: serif;">'+ch('<')+'--Angle'+ch('>')+'</span></b> '+ch('-')+' The angle of the light arc of the light. (Default: 360)'
+				+'</li> '
 			+'</ul>'
 		+'</div>'
 		+'<b><span style="font-family: serif;">!snuff ['+ch('<')+'Token ID'+ch('>')+' ... ]</span></b>'
@@ -78,7 +82,7 @@ var Torch = Torch || (function() {
 				+'</li> '
 			+'</ul>'
 		+'</div>'
-		+'<b><span style="font-family: serif;">!flicker-on ['+ch('<')+'Radius'+ch('>')+' ['+ch('<')+'Dim Start'+ch('>')+' ['+ch('<')+'All Players'+ch('>')+'  ['+ch('<')+'Token ID'+ch('>')+' ... ]]]]</span></b>'
+		+'<b><span style="font-family: serif;">!flicker-on ['+ch('<')+'Radius'+ch('>')+' ['+ch('<')+'Dim Start'+ch('>')+' ['+ch('<')+'All Players'+ch('>')+'  ['+ch('<')+'Token ID'+ch('>')+ch('|')+ch('<')+'--Angle'+ch('>')+' ... ]]]]</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>Behaves identically to !torch, save that it creates a flickering light.</p>'
 		+'</div>'
@@ -108,7 +112,7 @@ var Torch = Torch || (function() {
 +'</div>'
             );
     },
-	setFlicker = function(o,r,d,p) {
+	setFlicker = function(o,r,d,p,a) {
 		var found = _.findWhere(state.Torch.flickers, {parent: o.id}),
 			fobj;
 
@@ -122,7 +126,8 @@ var Torch = Torch || (function() {
 					showplayers_aura1: false,
 					light_radius: r,
 					light_dimradius: d,
-					light_otherplayers: p
+					light_otherplayers: p,
+                    light_angle: a
 				});
 			} else {
 				delete state.Torch.flickers[found.id];
@@ -141,7 +146,9 @@ var Torch = Torch || (function() {
 						showplayers_aura1: false,
 						light_radius: r,
 						light_dimradius: d,
-						light_otherplayers: p
+						light_otherplayers: p,
+                        light_angle: a
+
 					});
 				} else {
 					delete state.Torch.flickers[found.id];
@@ -164,7 +171,9 @@ var Torch = Torch || (function() {
 				layer: 'objects',
 				light_radius: r,
 				light_dimradius: d,
-				light_otherplayers: p
+				light_otherplayers: p,
+                light_angle: a
+
 			});
 		}
 		toBack(fobj);
@@ -174,7 +183,9 @@ var Torch = Torch || (function() {
 			active: true,
 			page: o.get('pageid'),
 			light_radius: r,
-			light_dimradius: d
+			light_dimradius: d,
+            light_angle: a
+
 		};
 	},
 
@@ -189,6 +200,7 @@ var Torch = Torch || (function() {
 				light_radius: '',
 				ligh_dimradius: '',
 				light_otherplayers: false,
+                light_angle: 360,
 				showname: true,
 				top: 70,
 				left: 70,
@@ -199,12 +211,12 @@ var Torch = Torch || (function() {
 	},
 	
 	handleInput = function(msg) {
-		var args, radius, dim_radius, other_players, page, obj, objs=[],who;
+		var args, radius, dim_radius, arc_angle=360, other_players, page, obj, objs=[],who;
 
 		if (msg.type !== "api") {
 			return;
 		}
-		var who=getObj('player',msg.playerid).get('_displayname').split(' ')[0];
+		who=getObj('player',msg.playerid).get('_displayname').split(' ')[0];
 
 		args = msg.content.split(" ");
 		switch(args[0]) {
@@ -221,6 +233,14 @@ var Torch = Torch || (function() {
 					_.chain(args)
 						.rest(4)
 						.uniq()
+                        .filter(function(a){
+                            var angle=a.match(/^--(\d+)$/)[1];
+                            if(angle){
+                                arc_angle=(Math.min(360,Math.max(0,angle)));
+                                return false;
+                            }
+                            return true;
+                        })
 						.map(function(t){
 							return getObj('graphic',t);
 						})
@@ -229,7 +249,8 @@ var Torch = Torch || (function() {
 							t.set({
 								light_radius: radius,
 								light_dimradius: dim_radius,
-								light_otherplayers: other_players
+								light_otherplayers: other_players,
+                                light_angle: arc_angle
 							});
 						});
 				}
@@ -238,7 +259,8 @@ var Torch = Torch || (function() {
                     getObj(o._type,o._id).set({
                         light_radius: radius,
                         light_dimradius: dim_radius,
-                        light_otherplayers: other_players
+                        light_otherplayers: other_players,
+                        light_angle: arc_angle
                     });
                 });
 				break;
@@ -261,7 +283,8 @@ var Torch = Torch || (function() {
 							t.set({
 								light_radius: '',
 								light_dimradius: '',
-								light_otherplayers: false
+								light_otherplayers: false,
+                                light_angle: 360
 							});
 						});
 				}
@@ -269,7 +292,8 @@ var Torch = Torch || (function() {
                     getObj(o._type,o._id).set({
                         light_radius: '',
                         light_dimradius: '',
-                        light_otherplayers: false
+                        light_otherplayers: false,
+                        light_angle: 360
                     });
                 });
                 break;
@@ -331,6 +355,14 @@ var Torch = Torch || (function() {
 					objs=_.chain(args)
 						.rest(4)
 						.uniq()
+                        .filter(function(a){
+                            var angle=a.match(/^--(\d+)$/)[1];
+                            if(angle){
+                                arc_angle=(Math.min(360,Math.max(0,angle)));
+                                return false;
+                            }
+                            return true;
+                        })
 						.map(function(t){
 							return getObj('graphic',t);
 						})
@@ -341,7 +373,7 @@ var Torch = Torch || (function() {
                 _.each(_.union(objs,_.map(msg.selected,function (o) {
                     return getObj(o._type,o._id);
                 })), function(o){
-					setFlicker(o, radius, dim_radius, other_players);
+					setFlicker(o, radius, dim_radius, other_players,arc_angle);
 				});
 
 				break;
@@ -379,7 +411,7 @@ var Torch = Torch || (function() {
 			.each(function(fdata){
 				var o = getObj('graphic',fdata.parent),
 					f = getObj('graphic',fdata.id),
-					dx, dy, dr;
+					dx, dy, dr, da;
 
 				if(!o) {
 					clearFlicker(fdata.id);
@@ -390,10 +422,12 @@ var Torch = Torch || (function() {
 						dx = randomInteger(2 * flickerDeltaLocation)-flickerDeltaLocation;
 						dy = randomInteger(2 * flickerDeltaLocation)-flickerDeltaLocation;
 						dr = randomInteger(2 * (fdata.light_radius*flickerDeltaRadius)) - (fdata.light_radius*flickerDeltaRadius);
+						da = randomInteger(2 * flickerDeltaAngle)-flickerDeltaAngle;
 						f.set({
 							top: o.get('top')+dy,
 							left: o.get('left')+dx,
-							light_radius: fdata.light_radius+dr
+							light_radius: fdata.light_radius+dr,
+							light_angle: (360 === fdata.light_angle ? 360 : Math.min(360,Math.max(fdata.light_angle+da,0)))
 						});
 					}
 				}
