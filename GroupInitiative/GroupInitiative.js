@@ -5,8 +5,8 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.8.1',
-        lastUpdate = 1430682355,
+    var version = '0.8.2',
+        lastUpdate = 1430695680,
         schemaVersion = 0.6,
         bonusCache = {},
         statAdjustments = {
@@ -536,7 +536,7 @@ var GroupInitiative = GroupInitiative || (function() {
 
                         case 'bonus':
                             if(cmds[1].match(/^[\-\+]?\d+$/)){
-                                manualBonus=parseInt(cmds[1],10);
+                                manualBonus=parseFloat(cmds[1]);
                                 cont=true;
                             } else {
                                 sendChat('GroupInitiative', '/w gm ' 
