@@ -5,8 +5,8 @@
 var Torch = Torch || (function() {
     'use strict';
 
-    var version = '0.8.1',
-        lastUpdate = 1430601526,
+    var version = '0.8.2',
+        lastUpdate = 1430666803,
         schemaVersion = 0.1,
 		flickerURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
 		flickerPeriod = 400,
@@ -234,9 +234,9 @@ var Torch = Torch || (function() {
 						.rest(4)
 						.uniq()
                         .filter(function(a){
-                            var angle=a.match(/^--(\d+)$/)[1];
+                            var angle=a.match(/^--(\d+)$/);
                             if(angle){
-                                arc_angle=(Math.min(360,Math.max(0,angle)));
+                                arc_angle=(Math.min(360,Math.max(0,angle[1])));
                                 return false;
                             }
                             return true;
@@ -356,9 +356,9 @@ var Torch = Torch || (function() {
 						.rest(4)
 						.uniq()
                         .filter(function(a){
-                            var angle=a.match(/^--(\d+)$/)[1];
+                            var angle=a.match(/^--(\d+)$/);
                             if(angle){
-                                arc_angle=(Math.min(360,Math.max(0,angle)));
+                                arc_angle=(Math.min(360,Math.max(0,angle[1])));
                                 return false;
                             }
                             return true;
