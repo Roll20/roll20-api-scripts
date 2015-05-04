@@ -5,8 +5,8 @@
 var Facing = Facing || (function() {
     'use strict';
 
-    var version = '0.1.0',
-    lastUpdate = 1430550687,
+    var version = '0.1.1',
+    lastUpdate = 1430571841,
     schemaVersion = 0.1,
     defaults = {
         image: 'https://s3.amazonaws.com/files.d20.io/images/9183999/XcViJVf7-cGOXcZq1KWp-A/thumb.png?1430541914',
@@ -247,47 +247,47 @@ var Facing = Facing || (function() {
             'Direction Indicator:'+
             '<img src="'+text+'" style="width: 70px; height: 70px;">'+
             '<a href="!facing-config --set-image|&#64;{target|token_id}">'+
-            'Pick'+
+                'Pick'+
             '</a>'+
             '<a href="!facing-config --set-image|">'+
-            'Default'+
+                'Default'+
             '</a>'+
-            '</div>';
+        '</div>';
     },
     getConfigOption_AttributeName = function() {
         var text = state.Facing.config.attributeName;
-        return '<div>'
-        +'Attribute Name to set facing value: <b>'
-        +text
-        +'</b><a href="!facing-config --set-attribute-name|?{What attribute should the facing be stored in (empty for default):|'+state.Facing.config.attributeName+'}">'
-        +'Set Name'
-        +'</a>'
-        +'</div>';
+        return '<div>'+
+            'Attribute Name to set facing value: <b>'+
+                text+
+            '</b><a href="!facing-config --set-attribute-name|?{What attribute should the facing be stored in (empty for default):|'+state.Facing.config.attributeName+'}">'+
+                'Set Name'+
+            '</a>'+
+        '</div>';
     },
 
     getConfigOption_Relative = function() {
         var text = (state.Facing.config.relative ? 'On' : 'Off' );
-        return '<div>'
-        +'Relative Rotation is currently <b>'
-        +text
-        +'</b> '
-        +'<a href="!facing-config --toggle-relative">'
-        +'Toggle'
-        +'</a>'
-        +'</div>';
+        return '<div>'+
+            'Relative Rotation is currently <b>'+
+                text+
+            '</b> '+
+            '<a href="!facing-config --toggle-relative">'+
+                'Toggle'+
+            '</a>'+
+        '</div>';
 
     },
 
     getConfigOption_Scale = function() {
         var text = state.Facing.config.scale;
-        return '<div>'
-        +'Scale is currently <b>'
-        +text
-        +'</b> '
-        +'<a href="!facing-config --set-scale|?{Scale to adjust Facing Token to (empty for default):|'+state.Facing.config.scale+'}">'
-        +'Toggle'
-        +'</a>'
-        +'</div>';
+        return '<div>'+
+            'Scale is currently <b>'+
+                text+
+            '</b> '+
+            '<a href="!facing-config --set-scale|?{Scale to adjust Facing Token to (empty for default):|'+state.Facing.config.scale+'}">'+
+                'Set'+
+            '</a>'+
+        '</div>';
 
     },
 
