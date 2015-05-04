@@ -3,11 +3,11 @@
 // Contact:  https://app.roll20.net/users/104025/the-aaron
 
 var TokenMod = TokenMod || (function() {
-	'use strict';
+    'use strict';
 
-	var version = '0.8.1',
-        lastUpdate = 1427607758,
-		schemaVersion = 0.1,
+    var version = '0.8.5',
+        lastUpdate = 1430082613,
+        schemaVersion = 0.1,
 
 		fields = {
 			// booleans
@@ -682,16 +682,16 @@ var TokenMod = TokenMod || (function() {
 					break;
 				case 'toback':
 					break;
-				case 'randomdepth':
-					break;
 
 				case 'player_id':
 					break;
 
 				case 'status':
-					_.each(args, function(a) {
+        			_.each(args, function(a) {
 						var s = a.split(/:/),
-							stat = s.shift(),
+							statparts = s.shift().match(/^(\S+?)(\[(\d*)\]|)$/)||[],
+                            index = ( '[]' === statparts[2] ? statparts[2] : ( undefined !== statparts[3] ? Math.max(parseInt(statparts[3],10)-1,0) : 0 ) ),
+                            stat=statparts[1]||'',
 							op = (_.contains(['-','+','=','!'],stat[0]) ? stat[0] : false),
 							numraw = s.shift() || '',
 							numop = (_.contains(['-','+'],numraw[0]) ? numraw[0] : false),
@@ -703,6 +703,7 @@ var TokenMod = TokenMod || (function() {
 							retr[cmd].push({
 								status: stat,
 								number: num,
+                                index: index,
 								sign: numop,
 								operation: op || '+'
 							});
@@ -761,16 +762,46 @@ var TokenMod = TokenMod || (function() {
 			},base)
 			.value();
 	},
+    
+    decomposeStatuses = function(statuses){
+        return _.reduce(statuses.split(/,/).reverse(),function(memo,st,idx){
+            var parts=st.split(/@/),
+            entry = {
+                mark: parts[0],
+                num: parseInt(parts[1],10) || 0,
+                idx: idx
+            };
+            if(parts[0].length) {
+                memo[parts[0]] = ( memo[parts[0]] && memo[parts[0]].push(entry) && memo[parts[0]]) || [entry] ;
+            }
+            return memo;
+        },{});
+    },
+
+    composeStatuses = function(statuses){
+        return _.chain(statuses)
+            .reduce(function(m,s){
+                _.each(s,function(sd){
+                    m.push(sd);
+                });
+                return m;
+            },[])
+            .sortBy(function(s){
+                return s.idx;
+            })
+            .map(function(s){
+                return ('dead'===s.mark ? 'dead' : ( s.mark+(s.num>0 ? '@'+s.num : '')));
+            })
+            .value()
+            .reverse()
+            .join(',');
+    },    
+    
 	applyModListToToken = function(modlist, token) {
 		var mods={},
 			delta, cid,
-			current=_.reduce(token.get('statusmarkers').split(/,/),function(memo,st){
-				var parts=st.split(/@/);
-				if(parts[0].length) {
-					memo[parts[0]]=parseInt(parts[1],10)||0;
-				}
-				return memo;
-			},{});
+			current=decomposeStatuses(token.get('statusmarkers')||''),
+            statusCount=token.get('statusmarkers').split(/,/).length;
 
 		_.each(modlist.on,function(f){
 			mods[f]=true;
@@ -787,21 +818,52 @@ var TokenMod = TokenMod || (function() {
 					_.each(f, function (sm){
 						switch(sm.operation){
 							case '!':
-								if(_.has(current,sm.status)){
-									current = _.omit(current,sm.status);
+								if('[]' !== sm.index && _.has(current,sm.status) ){
+                                    if( _.has(current[sm.status],sm.index) ) {
+                                        current[sm.status]= _.filter(current[sm.status],function(e,idx){
+                                            return idx !== sm.index;
+                                        });
+                                    }
 								} else {
-									current[sm.status] = Math.max(0,Math.min(9,getRelativeChange(current[sm.status], sm.sign+sm.number)));
+                                    current[sm.status] = current[sm.status] || [];
+									current[sm.status].push({
+                                        mark: sm.status,
+                                        num: Math.max(0,Math.min(9,getRelativeChange(0, sm.sign+sm.number))),
+                                        index: statusCount++
+                                    });
 								}
 								break;
 							case '+':
-								current[sm.status] = Math.max(0,Math.min(9,getRelativeChange(current[sm.status], sm.sign+sm.number)));
+								if('[]' !== sm.index && _.has(current,sm.status) && _.has(current[sm.status],sm.index)){
+                                    current[sm.status][sm.index].num = (Math.max(0,Math.min(9,getRelativeChange(current[sm.status][sm.index].num, sm.sign+sm.number))));
+                                } else {
+                                    current[sm.status] = current[sm.status] || [];
+									current[sm.status].push({
+                                        mark: sm.status,
+                                        num: Math.max(0,Math.min(9,getRelativeChange(0, sm.sign+sm.number))),
+                                        index: statusCount++
+                                    });
+                                }
 								break;
 							case '-':
-								current = _.omit(current,sm.status);
+								if('[]' !== sm.index && _.has(current,sm.status)){
+                                    if( _.has(current[sm.status],sm.index )) {
+                                        current[sm.status]= _.filter(current[sm.status],function(e,idx){
+                                            return idx !== sm.index;
+                                        });
+                                    }
+                                } else {
+									current[sm.status]= _.first(current[sm.status],-1);
+                                }
 								break;
 							case '=':
 								current = {};
-								current[sm.status] = Math.max(0,Math.min(9,getRelativeChange(current[sm.status], sm.sign+sm.number)));
+                                current[sm.status] = [];
+                                current[sm.status].push({
+                                    mark: sm.status,
+                                    num: Math.max(0,Math.min(9,getRelativeChange(0, sm.sign+sm.number))),
+                                    index: statusCount++
+                                });
 								break;
 						}
 					});
@@ -879,9 +941,10 @@ var TokenMod = TokenMod || (function() {
 					break;
 			}
 		});
-		mods.statusmarkers=_.map(current,function(v,k){ return ('dead' === k ? k : k+'@'+v); }).join(',');
+		mods.statusmarkers=composeStatuses(current);
 		token.set(mods);
 	},
+
 
 	handleConfig = function(config, id) {
 		var args, cmd, who=getObj('player',id).get('_displayname').split(' ')[0];
