@@ -5,8 +5,8 @@
 var Torch = Torch || (function() {
     'use strict';
 
-    var version = '0.8.2',
-        lastUpdate = 1430666803,
+    var version = '0.8.3',
+        lastUpdate = 1430829710,
         schemaVersion = 0.1,
 		flickerURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
 		flickerPeriod = 400,
@@ -427,7 +427,7 @@ var Torch = Torch || (function() {
 							top: o.get('top')+dy,
 							left: o.get('left')+dx,
 							light_radius: fdata.light_radius+dr,
-							light_angle: (360 === fdata.light_angle ? 360 : Math.min(360,Math.max(fdata.light_angle+da,0)))
+							light_angle: (360 === fdata.light_angle ? 360 : Math.min(360,Math.max(fdata.light_angle+da,0))) || 360
 						});
 					}
 				}
