@@ -5,8 +5,8 @@
 var TokenNameNumber = TokenNameNumber || (function() {
     'use strict';
 
-    var version = '0.5.2',
-        lastUpdate = 1430870264,
+    var version = '0.5.3',
+        lastUpdate = 1430915009,
         schemaVersion = 0.3,
         addTokenCache = [],
         statuses = [
@@ -374,7 +374,7 @@ var TokenNameNumber = TokenNameNumber || (function() {
 
 	registerEventHandlers = function() {
         on('chat:message', handleInput);
-        on('add:graphic', setNumberOnToken);
+        on('change:graphic', setNumberOnToken);
 		on('add:graphic', handleAddGraphic);
 	};
 
