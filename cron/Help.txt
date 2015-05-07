@@ -95,3 +95,8 @@ Examples:
 
 !cron -t 0:00:00 -i 1:00:00 /desc The clock chimes.
     This will fire every hour, on the hour.  (Can also just do "-t 0").
+
+!cron -r 10 "!cron -R 42"
+    This will remove job 42 after 10 rounds.  Note that the quotes are required
+    around commands which contain tokens which are valid !cron arguments (e.g.
+    "-R").  Without the quotes, this will immediately remove job 42.
