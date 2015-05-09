@@ -6,9 +6,24 @@ var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
     var version = '0.8.3',
-        lastUpdate = 1430696649,
-        schemaVersion = 0.6,
+        lastUpdate = 1431205711,
+        schemaVersion = 0.7,
         bonusCache = {},
+        sorters = {
+            'None': function(to) {
+                return to;
+            },
+            'Ascending': function(to){
+                return _.sortBy(to,function(i){
+                    return (i.pr);
+                });
+            },
+            'Descending': function(to){
+                return _.sortBy(to,function(i){
+                    return (-i.pr);
+                });
+            }
+        },
         statAdjustments = {
             'Stat-DnD': {
                 func: function(v) {
@@ -51,7 +66,7 @@ var GroupInitiative = GroupInitiative || (function() {
                         this.init=_.chain(l)
                         .pluck('bonus')
                         .map(function(d){
-                            return randomInteger(20)+d;
+                            return randomInteger(state.GroupInitiative.config.dieSize)+d;
                         },{})
                         .min()
                         .value();
@@ -67,7 +82,7 @@ var GroupInitiative = GroupInitiative || (function() {
                         this.init=_.chain(l)
                         .pluck('bonus')
                         .map(function(d){
-                            return randomInteger(20)+d;
+                            return randomInteger(state.GroupInitiative.config.dieSize)+d;
                         },{})
                         .reduce(function(memo,r){
                             return memo+r;
@@ -84,7 +99,7 @@ var GroupInitiative = GroupInitiative || (function() {
             },
             'Individual-Roll': {
                 func: function(s,k,l){
-                    s.init=randomInteger(20)+s.bonus;
+                    s.init=randomInteger(state.GroupInitiative.config.dieSize)+s.bonus;
                     return s;
                 },
                 desc: 'Sets the initiative individually for each member of the group.'
@@ -104,10 +119,24 @@ var GroupInitiative = GroupInitiative || (function() {
         if( ! _.has(state,'GroupInitiative') || state.GroupInitiative.version !== schemaVersion) {
             log('  > Updating Schema to v'+schemaVersion+' <');
             switch(state.GroupInitiative && state.GroupInitiative.version) {
+                case 0.6:
+                    state.GroupInitiative.version = schemaVersion;
+                    state.GroupInitiative.config = {
+                        rollType: state.GroupInitiative.rollType,
+                        replaceRoll: state.GroupInitiative.replaceRoll,
+                        dieSize: 20,
+                        autoOpenInit: true,
+                        sortOption: 'Descending'
+                    };
+                    delete state.GroupInitiative.replaceRoll;
+                    delete state.GroupInitiative.rollType;
+                    break;
+                    
                 case 0.5:
                     state.GroupInitiative.version = schemaVersion;
                     state.GroupInitiative.replaceRoll = false;
                     break;
+
                 default:
                     state.GroupInitiative = {
                         version: schemaVersion,
@@ -118,9 +147,15 @@ var GroupInitiative = GroupInitiative || (function() {
                                 }
                             ]
                         ],
-                        rollType: 'Individual-Roll',
-                        replaceRoll: false
+                        config: {
+                            rollType: 'Individual-Roll',
+                            replaceRoll: false,
+                            dieSize: 20,
+                            autoOpenInit: true,
+                            sortOption: 'Descending'
+                        }
                     };
+                    break;
             }
         }
     },
@@ -172,12 +207,55 @@ var GroupInitiative = GroupInitiative || (function() {
         },"");
     },
 
+    getConfigOption_SortOptions = function() {
+        var text = state.GroupInitiative.config.sortOption;
+        return '<div>'+
+            'Sort Options is currently <b>'+
+                text+
+            '</b>.'+
+            '<div>'+
+                _.map(_.keys(sorters),function(so){
+                    return '<a href="!group-init-config --sort-option|'+so+'">'+
+                        so+
+                    '</a>';
+                }).join(' ')+
+            '</div>'+
+        '</div>';
+    },
+    getConfigOption_DieSize = function() {
+        return '<div>'
+            +'Initiative Die size is currently <b>'
+                +state.GroupInitiative.config.dieSize
+            +'</b> '
+            +'<a href="!group-init-config --set-die-size|?{Number of sides the initiative die has:|'+state.GroupInitiative.config.dieSize+'}">'
+                +'Set Die Size'
+            +'</a>'
+        +'</div>';
+    },
+
+    getConfigOption_AutoOpenInit = function() {
+        var text = (state.GroupInitiative.config.autoOpenInit ? 'On' : 'Off' );
+        return '<div>'
+            +'Auto Open Init is currently <b>'
+                +text
+            +'</b> '
+            +'<a href="!group-init-config --toggle-auto-open-init">'
+                +'Toggle'
+            +'</a>'
+        +'</div>';
+        
+    },
+
+    getAllConfigOptions = function() {
+        return getConfigOption_SortOptions() + getConfigOption_DieSize() + getConfigOption_AutoOpenInit();
+    },
+
     showHelp = function() {
         var rollerRows=_.reduce(rollers,function(memo,r,n){
-            var selected=((state.GroupInitiative.rollType === n) ? 
+            var selected=((state.GroupInitiative.config.rollType === n) ? 
             '<div style="float:right;width:90px;border:1px solid black;background-color:#ffc;text-align:center;"><span style="color: red; font-weight:bold; padding: 0px 4px;">Selected</span></div>'
             : '' ),
-            selectedStyleExtra=((state.GroupInitiative.rollType === n) ? ' style="border: 1px solid #aeaeae;background-color:#8bd87a;"' : '');
+            selectedStyleExtra=((state.GroupInitiative.config.rollType === n) ? ' style="border: 1px solid #aeaeae;background-color:#8bd87a;"' : '');
 
             return memo+selected+"<li "+selectedStyleExtra+"><b>"+n+"</b> - "+r.desc+"</li>";
         },""),
@@ -280,7 +358,7 @@ var GroupInitiative = GroupInitiative || (function() {
             +'<div style="padding-left:10px;">'
                 +'<b><span style="font-family: serif;">!group-init <i>--toggle-replace</i></span></b>'
                 +'<div style="padding-left: 10px;padding-right:20px">'
-                    +'<div style="float:right;width:40px;border:1px solid black;background-color:#ffc;text-align:center;">'+( state.GroupInitiative.replaceRoll ? '<span style="color: red; font-weight:bold; padding: 0px 4px;">ON</span>' : '<span style="color: #999999; font-weight:bold; padding: 0px 4px;">OFF</span>' )+'</div>'
+                    +'<div style="float:right;width:40px;border:1px solid black;background-color:#ffc;text-align:center;">'+( state.GroupInitiative.config.replaceRoll ? '<span style="color: red; font-weight:bold; padding: 0px 4px;">ON</span>' : '<span style="color: #999999; font-weight:bold; padding: 0px 4px;">OFF</span>' )+'</div>'
                     +'<p>Sets whether initative scores for selected tokens replace their current scores.</p>'
                 +'</div>'
             +'</div>'
@@ -305,6 +383,8 @@ var GroupInitiative = GroupInitiative || (function() {
             +bonusStatGroupRows
             +'</ol>'
             +'</div>'
+
+            +getAllConfigOptions()
 
             +'</div>'
         );
@@ -349,12 +429,13 @@ var GroupInitiative = GroupInitiative || (function() {
     HandleInput = function(msg_orig) {
         var msg = _.clone(msg_orig),
             args,
-        cmds,
-        workgroup,
-        workvar,
-        turnorder,
-        rolls,
-        error=false,
+            cmds,
+            workgroup,
+            workvar,
+            turnorder,
+            rolls,
+            pageid,
+            error=false,
             initFunc,
             cont=false,
             manualBonus=0;
@@ -504,7 +585,7 @@ var GroupInitiative = GroupInitiative || (function() {
 
                         case 'set-roller':
                             if(_.has(rollers,cmds[1])) {
-                                state.GroupInitiative.rollType=cmds[1];
+                                state.GroupInitiative.config.rollType=cmds[1];
                                 sendChat('GroupInitiative', '/w gm ' 
                                     +'<div style="padding:1px 3px;border: 1px solid #8B4513;background: #eeffee; color: #8B4513; font-size: 80%;">'
                                     +'Roller is now set to: <b>'+cmds[1]+'<br>'
@@ -526,16 +607,16 @@ var GroupInitiative = GroupInitiative || (function() {
                             break;
 
                         case 'toggle-replace':
-                            state.GroupInitiative.replaceRoll = !state.GroupInitiative.replaceRoll;
+                            state.GroupInitiative.config.replaceRoll = !state.GroupInitiative.config.replaceRoll;
                             sendChat('GroupInitiative', '/w gm '
                                 +'<div style="padding:1px 3px;border: 1px solid #8B4513;background: #eeffee; color: #8B4513; font-size: 80%;">'
-                                +'Replace Initiative on Roll is now: <b>'+ (state.GroupInitiative.replaceRoll ? 'ON' : 'OFF') +'</b>'
+                                +'Replace Initiative on Roll is now: <b>'+ (state.GroupInitiative.config.replaceRoll ? 'ON' : 'OFF') +'</b>'
                                 +'</div>'
                             );
                             break;
 
                         case 'bonus':
-                            if(cmds[1].match(/^[\-\+]?\d+(\.)?(\d+)?$/)){
+                            if(cmds[1].match(/^[\-\+]?\d+$/)){
                                 manualBonus=parseFloat(cmds[1]);
                                 cont=true;
                             } else {
@@ -564,52 +645,124 @@ var GroupInitiative = GroupInitiative || (function() {
                         bonusCache = {};
                         turnorder = Campaign().get('turnorder');
                         turnorder = ('' === turnorder) ? [] : JSON.parse(turnorder);
-                        if(state.GroupInitiative.replaceRoll) {
+                        if(state.GroupInitiative.config.replaceRoll) {
                             turnorder=_.reject(turnorder,function(i){
                                 return _.contains(_.pluck(msg.selected, '_id'),i.id);
                             });
                         }
 
-                        initFunc=rollers[state.GroupInitiative.rollType].func;
+                        initFunc=rollers[state.GroupInitiative.config.rollType].func;
 
                         Campaign().set({
                             turnorder: JSON.stringify(
-                                turnorder.concat(
-                                    _.chain(msg.selected)
-                                        .map(function(s){
-                                            return getObj(s._type,s._id);
-                                        })
-                                        .reject(_.isUndefined)
-                                        .reject(function(s){
-                                            return _.contains(_.pluck(turnorder,'id'),s.id);
-                                        })
-                                        .map(function(s){
-                                            return {
-                                                token: s,
-                                                character: getObj('character',s.get('represents'))
-                                            };
-                                        })
-                                        .map(function(s){
-                                            s.bonus=(s.character ? findInitiativeBonus(s.character.id) || 0 : 0)+manualBonus;
-                                            return s;
-                                        })
-                                        .map(initFunc)
-                                        .map(function(s){
-                                            return {
-                                                id: s.token.id,
-                                                pr: s.init,
-                                                custom: ''
-                                            };
-                                        })
-                                        .value()
+                                sorters[state.GroupInitiative.config.sortOption](
+                                    turnorder.concat(
+                                        _.chain(msg.selected)
+                                            .map(function(s){
+                                                return getObj(s._type,s._id);
+                                            })
+                                            .reject(_.isUndefined)
+                                            .reject(function(s){
+                                                return _.contains(_.pluck(turnorder,'id'),s.id);
+                                            })
+                                            .map(function(s){
+                                                pageid=pageid || s.get('pageid');
+                                                return {
+                                                    token: s,
+                                                    character: getObj('character',s.get('represents'))
+                                                };
+                                            })
+                                            .map(function(s){
+                                                s.bonus=(s.character ? findInitiativeBonus(s.character.id) || 0 : 0)+manualBonus;
+                                                return s;
+                                            })
+                                            .map(initFunc)
+                                            .map(function(s){
+                                                return {
+                                                    id: s.token.id,
+                                                    pr: s.init,
+                                                    custom: ''
+                                                };
+                                            })
+                                            .value()
+                                    )
                                 )
                             )
+                        });
+                        if(state.GroupInitiative.config.autoOpenInit && !Campaign().get('initativepage')) {
+                            Campaign().set({
+                                initiativepage: pageid
+                            });
                         }
-                        );
                     } else {
                         showHelp();
                     }
                 }
+                break;
+            case '!group-init-config':
+                if(_.contains(args,'--help')) {
+                    showHelp();
+                    return;
+                }
+                if(!args.length) {
+                    sendChat('','/w gm '
+                        +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                            +'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
+                                +'GroupInitiative v'+version
+                            +'</div>'
+                            +getAllConfigOptions()
+                        +'</div>'
+                    );
+                    return;
+                }
+                _.each(args,function(a){
+                    var opt=a.split(/\|/),
+                        omsg='';
+                    switch(opt.shift()) {
+                        case 'sort-option':
+                            if(sorters[opt[0]]) {
+                               state.GroupInitiative.config.sortOption=opt[0];
+                            } else {
+                                omsg='<div><b>Error:</b> Not a valid sort method: '+opt[0]+'</div>';
+                            }
+                            sendChat('','/w gm '
+                                +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                                    +omsg
+                                    +getConfigOption_SortOptions()
+                                +'</div>'
+                            );
+                            break;
+                        case 'set-die-size':
+                            if(opt[0].match(/^\d+$/)) {
+                               state.GroupInitiative.config.dieSize=parseInt(opt[0],10);
+                            } else {
+                                omsg='<div><b>Error:</b> Not a die size: '+opt[0]+'</div>';
+                            }
+                            sendChat('','/w gm '
+                                +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                                    +omsg
+                                    +getConfigOption_DieSize()
+                                +'</div>'
+                            );
+                            break;
+
+                        case 'toggle-auto-open-init':
+                            state.GroupInitiative.config.autoOpenInit = !state.GroupInitiative.config.autoOpenInit;
+                            sendChat('','/w gm '
+                                +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                                    +getConfigOption_AutoOpenInit()
+                                +'</div>'
+                            );
+                            break;
+
+                        default:
+                            sendChat('','/w gm '
+                                +'<div><b>Unsupported Option:</div> '+a+'</div>'
+                            );
+                    }
+                            
+                });
+
                 break;
         }
 
