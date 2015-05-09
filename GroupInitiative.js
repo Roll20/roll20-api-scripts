@@ -5,8 +5,8 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.8.3',
-        lastUpdate = 1431205711,
+    var version = '0.8.4',
+        lastUpdate = 1431206248,
         schemaVersion = 0.7,
         bonusCache = {},
         sorters = {
