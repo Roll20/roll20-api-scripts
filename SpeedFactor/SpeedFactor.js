@@ -1,6 +1,6 @@
 on("chat:message", function(msg) {
     // Start with selected tokens
-    if (msg.type == "api" && (msg.content.indexOf("!sfstart") !== -1 || msg.content.indexOf("!sfadd") !== -1) && isGM(msg.playerid)) {
+    if (msg.type == "api" && (msg.content.indexOf("!sfstart") !== -1 || msg.content.indexOf("!sfadd") !== -1) && playerIsGM(msg.playerid)) {
         
         // Display the initiative box
         Campaign().set("initiativepage", true );
@@ -50,7 +50,7 @@ on("chat:message", function(msg) {
     }
     
     // Start with tokens currently in initiative
-    if (msg.type == "api" && msg.content.indexOf("!sfround") !== -1 && isGM(msg.playerid)) {
+    if (msg.type == "api" && msg.content.indexOf("!sfround") !== -1 && playerIsGM(msg.playerid)) {
         // Get the turn order
         var turnorder = JSON.parse(Campaign().get("turnorder"));
         // Get all the tokens in the turn order
@@ -161,7 +161,7 @@ on("chat:message", function(msg) {
         turnorder[initiativeindex].pr = sfinitiative;
         Campaign().set("turnorder", JSON.stringify(turnorder));
     }
-    if (msg.type == "api" && msg.content.indexOf("!sfroll") !== -1 && isGM(msg.playerid)) {
+    if (msg.type == "api" && msg.content.indexOf("!sfroll") !== -1 && playerIsGM(msg.playerid)) {
         // Get the turn order
         var turnorder = JSON.parse(Campaign().get("turnorder"));
         // Roll for each slot, add the outcome to the turn order
