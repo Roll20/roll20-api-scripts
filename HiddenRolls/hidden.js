@@ -108,6 +108,8 @@ var HiddenRolls = HiddenRolls || {
 	    cmd = cmd.replace(/^\S+\s+/, "");
 	}
 
+	cmd = cmd.replace(/&amp;/g, "&");
+
 	switch(tokens[0]){
 	case "!hideroll":
 	case "!hiderolls":

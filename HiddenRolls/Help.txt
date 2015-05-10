@@ -49,6 +49,12 @@ be displayed as "[[{1d0+12}[1d20] +7]]".  The "1d0" allows the expression to
 function like a dice expression (otherwise the label would generate errors in
 certain conditions), and the label allows the GM to verify the roll formula.
 
+Roll20's chat system also automatically consumes template expressions before
+forwarding messages to scripts.  As a result, expressions like
+"&{template:default}" will never be seen by scripts.  To work around this,
+HiddenRolls replaces all instances of "&amp;" with "&".  To use a roll template,
+simply specify it as "&amp;{template:...}".
+
 
 Examples:
 
@@ -78,8 +84,12 @@ appear in the sender's chat log unless they are the target of the whisper.
 	Note the single brackets: the expression is not an inline roll, and is
 	present only to display the formula being rolled.
 
-!hidall -v Is it live or is it Magicex? [[1d20+8]] will save.
+!hideall -v Is it live or is it Magicex? [[1d20+8]] will save.
     /w gm Is it live or is it Magicex? [[1d20+8]] will save.
     Is it live or is it Magicex? [1d20+8] will save.
 	Note the single brackets: the expression is not an inline roll, and is
 	present only to display the formula being rolled.
+
+!hideall &amp;{template:default} {{name=Skill Check}} {{Hide=[[1d20+12]]}}
+    /w gm &{template:default} {{name=Skill Check}} {{Hide=[[1d20+12]]}}
+    /w Snake {template:default} {{name=Skill Check}} {{Hide=[1d20+12]}}

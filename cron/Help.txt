@@ -100,3 +100,7 @@ Examples:
     This will remove job 42 after 10 rounds.  Note that the quotes are required
     around commands which contain tokens which are valid !cron arguments (e.g.
     "-R").  Without the quotes, this will immediately remove job 42.
+
+!cron -a 1 &amp;{template:default} {{name=Test}} {{foo=bar}}
+    Note that the "&" must be "&amp;", otherwise the "&{template:default}" will
+    be consumed by the chat system before the message is passed to the script.
