@@ -5,8 +5,8 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.8.4',
-        lastUpdate = 1431206248,
+    var version = '0.8.5',
+        lastUpdate = 1431223037,
         schemaVersion = 0.7,
         bonusCache = {},
         sorters = {
@@ -616,7 +616,7 @@ var GroupInitiative = GroupInitiative || (function() {
                             break;
 
                         case 'bonus':
-                            if(cmds[1].match(/^[\-\+]?\d+$/)){
+                            if(cmds[1].match(/^[\-\+]?\d+(\.\d+)?$/)){
                                 manualBonus=parseFloat(cmds[1]);
                                 cont=true;
                             } else {
