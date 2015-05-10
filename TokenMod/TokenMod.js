@@ -3,10 +3,11 @@
 // Contact:  https://app.roll20.net/users/104025/the-aaron
 
 var TokenMod = TokenMod || (function() {
-	'use strict';
+    'use strict';
 
-	var version = 0.54,
-		schemaVersion = 0.1,
+    var version = '0.8.5',
+        lastUpdate = 1430082613,
+        schemaVersion = 0.1,
 
 		fields = {
 			// booleans
@@ -45,6 +46,7 @@ var TokenMod = TokenMod || (function() {
 			// distance
 			light_radius: {type: 'numberBlank'},
 			light_dimradius: {type: 'numberBlank'},
+			light_multiplier: {type: 'numberBlank'},
 			aura1_radius: {type: 'numberBlank'},
 			aura2_radius: {type: 'numberBlank'},
 
@@ -58,6 +60,7 @@ var TokenMod = TokenMod || (function() {
 			bar1: {type: 'text'},
 			bar2: {type: 'text'},
 			bar3: {type: 'text'},
+
 
 			// colors
 			aura1_color: {type: 'color'},
@@ -125,6 +128,22 @@ var TokenMod = TokenMod || (function() {
 			return '';
 		},
 
+    getConfigOption_PlayersCanIDs = function() {
+        var text = ( state.TokenMod.playersCanUse_ids 
+                ? '<span style="color: red; font-weight:bold; padding: 0px 4px;">ON</span>' 
+                : '<span style="color: #999999; font-weight:bold; padding: 0px 4px;">OFF</span>' 
+            );
+        return '<div>'
+            +'Players can IDs is currently '
+                +text
+            +'<a href="!token-mod --config players-can-ids">'
+                +'Toggle'
+            +'</a>'
+        +'</div>';
+        
+    },
+
+
 	showHelp = function(id) {
 		var who=getObj('player',id).get('_displayname').split(' ')[0];
 		sendChat('',
@@ -169,7 +188,7 @@ var TokenMod = TokenMod || (function() {
 		+'</div>'
 	+'</div>'
 
-	+'<b>Configuration</b>'
+	+'<b>Specification</b>'
 	+'<div style="padding-left:10px;">'
 		+'<p><i>--ids</i> takes token ids to operate on, separated by spaces.</p>'
 			+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
@@ -179,23 +198,6 @@ var TokenMod = TokenMod || (function() {
 			+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
 				+'!token-mod --ids @{target|1|token_id} @{target|2|token_id} @{target|3|token_id} --on showname showplayers_name'
 			+'</pre>'
-
-		+'<p><i>--config</i> takes option value pairs, separated by | characters.</p>'
-			+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
-				+'!token-mod --config option|value option|value'
-			+'</pre>'
-		+'<p>There is currently one configuration option:</p>'
-
-		+'<div style="padding-left: 10px;padding-right:20px">'
-			+'<ul>'
-				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
-					+'<div style="float:right;width:40px;border:1px solid black;background-color:#ffc;text-align:center;">'
-						+( state.TokenMod.playersCanUse_ids ? '<span style="color: red; font-weight:bold; padding: 0px 4px;">ON</span>' : '<span style="color: #999999; font-weight:bold; padding: 0px 4px;">OFF</span>' )
-					+'</div>'
-					+'<b><span style="font-family: serif;">players-can-ids</span></b> '+ch('-')+' Determines if players can use <i>--ids</i>.  Specifying a value which is true allows players to use --ids.  Omitting a value flips the current setting.'
-				+'</li> '
-			+'</ul>'
-		+'</div>'
 	+'</div>'
 
 	+'<b>Booleans</b>'
@@ -280,6 +282,7 @@ var TokenMod = TokenMod || (function() {
 			+'<p><u>Available Numbers or Blank Properties:</u></p>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">light_radius</div>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">light_dimradius</div>'
+			+'<div style="width: 130px; padding: 0px 3px;float: left;">light_multiplier</div>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">aura1_radius</div>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">aura2_radius</div>'
 			+'<div style="clear:both;">'+ch(' ')+'</div>'
@@ -513,7 +516,7 @@ var TokenMod = TokenMod || (function() {
 
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<b>Attribute Name</b>'
-			+'<p>These are resolved from the represented character id.  If the token doesn'+ch("'")+'t represent a character, these will be ignored.</p>'
+			+'<p>These are resolved from the represented character id.  If the token doesn'+ch("'")+'t represent a character, these will be ignored.  If the Attribute Name specified doesn'+ch("'")+'t exist for the represented character, the link is unchanged. You can clear a link by passing a blank Attribute Name.</p>'
 			+'<p><u>Available Attribute Name Properties:</u></p>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar1_link</div>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar2_link</div>'
@@ -525,13 +528,43 @@ var TokenMod = TokenMod || (function() {
 					+'!token-mod --set represents|'+ch('@')+ch('{')+'Bob'+ch('|')+'character_id'+ch('}')+' bar1_link|npc_HP'
 				+'</pre>'
 			+'</div>'
+			+'<p>Here is clearing the link for bar3:</p>'
+			+'<div style="padding-left: 10px;padding-right:20px">'
+				+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
+					+'!token-mod --set bar3_link|'
+				+'</pre>'
+			+'</div>'
 		+'</div>'
+
+	+'<b>Configuration</b>'
+	+'<div style="padding-left:10px;">'
+		+'<p><i>--config</i> takes option value pairs, separated by | characters.</p>'
+			+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
+				+'!token-mod --config option|value option|value'
+			+'</pre>'
+		+'<p>There is currently one configuration option:</p>'
+
+		+'<div style="padding-left: 10px;padding-right:20px">'
+			+'<ul>'
+				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<div style="float:right;width:40px;border:1px solid black;background-color:#ffc;text-align:center;">'
+						+( state.TokenMod.playersCanUse_ids ? '<span style="color: red; font-weight:bold; padding: 0px 4px;">ON</span>' : '<span style="color: #999999; font-weight:bold; padding: 0px 4px;">OFF</span>' )
+					+'</div>'
+					+'<b><span style="font-family: serif;">players-can-ids</span></b> '+ch('-')+' Determines if players can use <i>--ids</i>.  Specifying a value which is true allows players to use --ids.  Omitting a value flips the current setting.'
+				+'</li> '
+			+'</ul>'
+		+'</div>'
+        +getConfigOption_PlayersCanIDs()
+	+'</div>'
+
 
 
 	+'</div>'
 +'</div>'
 			);
 	},
+
+
 	getRelativeChange = function(current,update) {
 		var cnum = current
 			&& (_.isNumber(current)
@@ -647,18 +680,18 @@ var TokenMod = TokenMod || (function() {
 
 				case 'tofront':
 					break;
-				case 'toback'
-					break;
-				case 'randomdepth':
+				case 'toback':
 					break;
 
 				case 'player_id':
 					break;
 
 				case 'status':
-					_.each(args, function(a) {
+        			_.each(args, function(a) {
 						var s = a.split(/:/),
-							stat = s.shift(),
+							statparts = s.shift().match(/^(\S+?)(\[(\d*)\]|)$/)||[],
+                            index = ( '[]' === statparts[2] ? statparts[2] : ( undefined !== statparts[3] ? Math.max(parseInt(statparts[3],10)-1,0) : 0 ) ),
+                            stat=statparts[1]||'',
 							op = (_.contains(['-','+','=','!'],stat[0]) ? stat[0] : false),
 							numraw = s.shift() || '',
 							numop = (_.contains(['-','+'],numraw[0]) ? numraw[0] : false),
@@ -670,6 +703,7 @@ var TokenMod = TokenMod || (function() {
 							retr[cmd].push({
 								status: stat,
 								number: num,
+                                index: index,
 								sign: numop,
 								operation: op || '+'
 							});
@@ -728,16 +762,46 @@ var TokenMod = TokenMod || (function() {
 			},base)
 			.value();
 	},
+    
+    decomposeStatuses = function(statuses){
+        return _.reduce(statuses.split(/,/).reverse(),function(memo,st,idx){
+            var parts=st.split(/@/),
+            entry = {
+                mark: parts[0],
+                num: parseInt(parts[1],10) || 0,
+                idx: idx
+            };
+            if(parts[0].length) {
+                memo[parts[0]] = ( memo[parts[0]] && memo[parts[0]].push(entry) && memo[parts[0]]) || [entry] ;
+            }
+            return memo;
+        },{});
+    },
+
+    composeStatuses = function(statuses){
+        return _.chain(statuses)
+            .reduce(function(m,s){
+                _.each(s,function(sd){
+                    m.push(sd);
+                });
+                return m;
+            },[])
+            .sortBy(function(s){
+                return s.idx;
+            })
+            .map(function(s){
+                return ('dead'===s.mark ? 'dead' : ( s.mark+(s.num>0 ? '@'+s.num : '')));
+            })
+            .value()
+            .reverse()
+            .join(',');
+    },    
+    
 	applyModListToToken = function(modlist, token) {
 		var mods={},
 			delta, cid,
-			current=_.reduce(token.get('statusmarkers').split(/,/),function(memo,st){
-				var parts=st.split(/@/);
-				if(parts[0].length) {
-					memo[parts[0]]=parseInt(parts[1],10)||0;
-				}
-				return memo;
-			},{});
+			current=decomposeStatuses(token.get('statusmarkers')||''),
+            statusCount=token.get('statusmarkers').split(/,/).length;
 
 		_.each(modlist.on,function(f){
 			mods[f]=true;
@@ -754,21 +818,52 @@ var TokenMod = TokenMod || (function() {
 					_.each(f, function (sm){
 						switch(sm.operation){
 							case '!':
-								if(_.has(current,sm.status)){
-									current = _.omit(current,sm.status);
+								if('[]' !== sm.index && _.has(current,sm.status) ){
+                                    if( _.has(current[sm.status],sm.index) ) {
+                                        current[sm.status]= _.filter(current[sm.status],function(e,idx){
+                                            return idx !== sm.index;
+                                        });
+                                    }
 								} else {
-									current[sm.status] = Math.max(0,Math.min(9,getRelativeChange(current[sm.status], sm.sign+sm.number)));
+                                    current[sm.status] = current[sm.status] || [];
+									current[sm.status].push({
+                                        mark: sm.status,
+                                        num: Math.max(0,Math.min(9,getRelativeChange(0, sm.sign+sm.number))),
+                                        index: statusCount++
+                                    });
 								}
 								break;
 							case '+':
-								current[sm.status] = Math.max(0,Math.min(9,getRelativeChange(current[sm.status], sm.sign+sm.number)));
+								if('[]' !== sm.index && _.has(current,sm.status) && _.has(current[sm.status],sm.index)){
+                                    current[sm.status][sm.index].num = (Math.max(0,Math.min(9,getRelativeChange(current[sm.status][sm.index].num, sm.sign+sm.number))));
+                                } else {
+                                    current[sm.status] = current[sm.status] || [];
+									current[sm.status].push({
+                                        mark: sm.status,
+                                        num: Math.max(0,Math.min(9,getRelativeChange(0, sm.sign+sm.number))),
+                                        index: statusCount++
+                                    });
+                                }
 								break;
 							case '-':
-								current = _.omit(current,sm.status);
+								if('[]' !== sm.index && _.has(current,sm.status)){
+                                    if( _.has(current[sm.status],sm.index )) {
+                                        current[sm.status]= _.filter(current[sm.status],function(e,idx){
+                                            return idx !== sm.index;
+                                        });
+                                    }
+                                } else {
+									current[sm.status]= _.first(current[sm.status],-1);
+                                }
 								break;
 							case '=':
 								current = {};
-								current[sm.status] = Math.max(0,Math.min(9,getRelativeChange(current[sm.status], sm.sign+sm.number)));
+                                current[sm.status] = [];
+                                current[sm.status].push({
+                                    mark: sm.status,
+                                    num: Math.max(0,Math.min(9,getRelativeChange(0, sm.sign+sm.number))),
+                                    index: statusCount++
+                                });
 								break;
 						}
 					});
@@ -784,15 +879,19 @@ var TokenMod = TokenMod || (function() {
 				case 'bar1_link':
 				case 'bar2_link':
 				case 'bar3_link':
-					cid=mods.represents || token.get('represents') || '';
-					if('' !== cid) {
-						delta=findObjs({type: 'attribute', characterid: cid, name: f[0]})[0];
-						if(delta) {
-							mods[k]=delta.id;
-							mods[k.split(/_/)[0]+'_value']=delta.get('current');
-							mods[k.split(/_/)[0]+'_max']=delta.get('max');
-						}
-					}
+                    if( '' === f[0] ) {
+                        mods[k]='';
+                    } else {
+                        cid=mods.represents || token.get('represents') || '';
+                        if('' !== cid) {
+                            delta=findObjs({type: 'attribute', characterid: cid, name: f[0]})[0];
+                            if(delta) {
+                                mods[k]=delta.id;
+                                mods[k.split(/_/)[0]+'_value']=delta.get('current');
+                                mods[k.split(/_/)[0]+'_max']=delta.get('max');
+                            }
+                        }
+                    }
 					break;
 
 				case 'left':
@@ -816,8 +915,9 @@ var TokenMod = TokenMod || (function() {
 
 				case 'light_radius':
 				case 'light_dimradius':
-				case 'aura1_radius':
+				case 'light_multiplier':
 				case 'aura2_radius':
+				case 'aura1_radius':
 					delta=getRelativeChange(token.get(k),f[0]);
 					if(_.isNumber(delta) || '' === delta) {
 						mods[k]=delta;
@@ -841,37 +941,50 @@ var TokenMod = TokenMod || (function() {
 					break;
 			}
 		});
-		mods.statusmarkers=_.map(current,function(v,k){ return ('dead' === k) ? (k) : (k+'@'+v);}).join(',');
+		mods.statusmarkers=composeStatuses(current);
 		token.set(mods);
 	},
+
 
 	handleConfig = function(config, id) {
 		var args, cmd, who=getObj('player',id).get('_displayname').split(' ')[0];
 
-		while(config.length) {
-			args=config.shift().split(/\|/);
-			cmd=args.shift();
-			switch(cmd) {
-				case 'players-can-ids':
-					if(args.length) {
-						state.TokenMod.playersCanUse_ids = filters.isTruthyArgument(args.shift());
-					} else {
-						state.TokenMod.playersCanUse_ids = !state.TokenMod.playersCanUse_ids;
-					}
-					sendChat('', '/w '+who+' <div style="padding:1px 3px;border: 1px solid #8B4513;background: #eeffee; color: #8B4513; font-size: 80%;">'
-							+ ( state.TokenMod.playersCanUse_ids ? 'Players can now use --ids to specify targets to change.' : 'Players cannot use --ids.' )
-						+'</div>'
-					);
-					break;
-				default:
-					sendChat('', '/w '+who+' <div style="padding:1px 3px;border: 1px solid #8B4513;background: #eeffee; color: #8B4513; font-size: 80%;">'
-							+'<span style="font-weight:bold;color:#990000;">Error:</span> '
-							+'No configuration setting for ['+cmd+']'
-						+'</div>'
-					);
-					break;
-			}
-		}
+        if(config.length) {
+            while(config.length) {
+                args=config.shift().split(/\|/);
+                cmd=args.shift();
+                switch(cmd) {
+                    case 'players-can-ids':
+                        if(args.length) {
+                            state.TokenMod.playersCanUse_ids = filters.isTruthyArgument(args.shift());
+                        } else {
+                            state.TokenMod.playersCanUse_ids = !state.TokenMod.playersCanUse_ids;
+                        }
+                        sendChat('','/w '+who+' '
+                            +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                                +getConfigOption_PlayersCanIDs()
+                            +'</div>'
+                        );
+                        break;
+                    default:
+                        sendChat('', '/w '+who+' <div style="padding:1px 3px;border: 1px solid #8B4513;background: #eeffee; color: #8B4513; font-size: 80%;">'
+                                +'<span style="font-weight:bold;color:#990000;">Error:</span> '
+                                +'No configuration setting for ['+cmd+']'
+                            +'</div>'
+                        );
+                        break;
+                }
+            }
+        } else {
+            sendChat('','/w '+who+' '
+                +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                    +'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
+                        +'TokenMod v'+version
+                    +'</div>'
+                    +getConfigOption_PlayersCanIDs()
+                +'</div>'
+            );
+        }
 	},
 
 	 handleInput = function(msg_orig) {
@@ -900,7 +1013,11 @@ var TokenMod = TokenMod || (function() {
 				.value();
 		}
 
-		args = msg.content.split(/\s+--/);
+		args = msg.content
+            .replace(/<br\/>\n/g, ' ')
+            .replace(/(\{\{(.*?)\}\})/g," $2 ")
+            .split(/\s+--/);
+
 		switch(args.shift()) {
 			case '!token-mod':
 
@@ -912,7 +1029,7 @@ var TokenMod = TokenMod || (function() {
 							return;
 
 						case 'config':
-							if(isGM(msg.playerid)) {
+							if(playerIsGM(msg.playerid)) {
 								handleConfig(cmds,msg.playerid);
 							}
 							return;
@@ -941,7 +1058,7 @@ var TokenMod = TokenMod || (function() {
 				modlist.off=_.difference(modlist.off,modlist.on);
 				modlist.flip=_.difference(modlist.flip,modlist.on,modlist.off);
 
-				if(isGM(msg.playerid) || state.TokenMod.playersCanUse_ids ) {
+				if(playerIsGM(msg.playerid) || state.TokenMod.playersCanUse_ids ) {
 					_.chain(ids)
 						.uniq()
 						.map(function(t){
@@ -962,6 +1079,8 @@ var TokenMod = TokenMod || (function() {
 
 	},
 	checkInstall = function() {
+		log('-=> TokenMod v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+
 		if( ! _.has(state,'TokenMod') || state.TokenMod.version !== schemaVersion) {
 			state.TokenMod = {
 				version: schemaVersion,
@@ -983,13 +1102,6 @@ var TokenMod = TokenMod || (function() {
 on("ready",function(){
 	'use strict';
 
-	if("undefined" !== typeof isGM && _.isFunction(isGM)) {
-		TokenMod.CheckInstall();
-		TokenMod.RegisterEventHandlers();
-	} else {
-		log('--------------------------------------------------------------');
-		log('TokenMod requires the isGM module to work.');
-		log('isGM GIST: https://gist.github.com/shdwjk/8d5bb062abab18463625');
-		log('--------------------------------------------------------------');
-	}
+	TokenMod.CheckInstall();
+	TokenMod.RegisterEventHandlers();
 });
