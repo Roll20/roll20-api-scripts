@@ -8,14 +8,18 @@
 
 var TurnMarker = TurnMarker || (function(){
     "use strict";
+    
+    var version = '1.3.0',
+        schemaVersion = 1.16,
+        active = false,
+        threadSync = 1;
+
 
 return {
-    version: 1.26,
-    schemaVersion: 1.16,
-    active: false,
-    threadSync: 1,
 
     CheckInstall: function() {    
+    	log('-=> TurnMarker v'+version+' <=-');
+
         if( ! state.hasOwnProperty('TurnMarker') || state.TurnMarker.version !== TurnMarker.schemaVersion)
         {
             /* Default Settings stored in the state. */
@@ -71,7 +75,6 @@ return {
                 showplayers_aura1: true,
                 showplayers_aura2: true
             });
-            marker=fixNewObject(marker);
         }
         if(!TurnOrder.HasTurn(marker.id))
         {
@@ -302,15 +305,15 @@ return {
     RequestTurnAdvancement: function(playerid){
         if(TurnMarker.active)
         {
-            var turnOrder = TurnOrder.Get();
-            var current = getObj('graphic',_.first(turnOrder).id);
-            var character = getObj('character',current.get('represents'));
-            if(isGM(playerid) 
-                || ( undefined !== current &&
+            var turnOrder = TurnOrder.Get(),
+                current = getObj('graphic',_.first(turnOrder).id),
+                character = getObj('character',(current && current.get('represents')));
+            if(playerIsGM(playerid) 
+                || ( current &&
                        ( _.contains(current.get('controlledby').split(','),playerid)
                        || _.contains(current.get('controlledby').split(','),'all') )
                     )
-                || ( undefined !== character &&
+                || ( character &&
                        ( _.contains(character.get('controlledby').split(','),playerid)
                        || _.contains(character.get('controlledby').split(','),'all') )
                     )
@@ -650,35 +653,10 @@ return {
 on("ready",function(){
     'use strict';
 
-    var Has_IsGM=false;
-    try {
-        _.isFunction(isGM);
-        Has_IsGM=true;
-    }
-    catch (err)
-    {
-        log('--------------------------------------------------------------');
-        log('TurnMarker requires the isGM module to work.');
-        log('isGM GIST: https://gist.github.com/shdwjk/8d5bb062abab18463625');
-        log('--------------------------------------------------------------');
-    }
-
-    if( Has_IsGM )
-    {
-        TurnMarker.CheckInstall(); 
-        TurnMarker.RegisterEventHandlers();
-        TurnMarker.DispatchInitiativePage();
-    }
+	TurnMarker.CheckInstall(); 
+	TurnMarker.RegisterEventHandlers();
+	TurnMarker.DispatchInitiativePage();
 });
-
-// Utility Function
-var fixNewObject = fixNewObject || function(obj){
-    var p = obj.changed._fbpath;
-    var new_p = p.replace(/([^\/]*\/){4}/, "/");
-    obj.fbpath = new_p;
-    return obj;
-};
-
 
 var TurnOrder = TurnOrder || {
     Get: function(){
@@ -746,3 +724,4 @@ Array.prototype.rotate = (function() {
         return this;
     };
 }());
+
