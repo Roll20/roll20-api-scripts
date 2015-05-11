@@ -93,7 +93,7 @@ var cron = cron || {
 	jobsToFire.sort();
 	if (newCount < oldCount){ jobsToFire.reverse(); }
 	for (var i = 0; i < jobsToFire.length; i++){
-	    cron.handleJob(state.cron.countJobs[jobsToFire[i]]);
+	    cron.handleJob(state.cron.countJobs[jobsToFire[i][1]]);
 	}
 	for (var i = 0; i < jobsToDelete.length; i++){
 	    delete state.cron.countJobs[jobsToDelete[i]];
@@ -404,6 +404,15 @@ var cron = cron || {
 		else{ doCount = true; }
 	    }
 	    args['interval'] = cron.parseInterval(args['interval']);
+	    if (doCount){
+		if (!args.hasOwnProperty('rounds')){
+		    args['rounds'] = args['interval'];
+		}
+		if (!args.hasOwnProperty('count')){
+		    var turns = JSON.parse(Campaign().get('turnorder') || "[]");
+		    args['count'] = (turns.length > 0 ? turns[0].pr : 0);
+		}
+	    }
 	}
 	if ((doCount) && (doTimed)){
 	    cron.write("Error: Cannot mix initiative-based and timed jobs", msg.who, "", "CronD");
@@ -430,6 +439,7 @@ var cron = cron || {
 
     registerCron: function(){
 	cron.init();
+	on("change:campaign:turnorder", cron.handleTurnChange);
 	if ((typeof(Shell) != "undefined") && (Shell) && (Shell.registerCommand)){
 	    Shell.registerCommand("!cron", "!cron [options] command", "Schedule a command to run in the future", cron.handleCronMessage);
 	    if (Shell.write){
