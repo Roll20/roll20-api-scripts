@@ -1,7 +1,7 @@
 {
-    "name":		"cron",
+    "name":		"HiddenRolls",
     "version":		"0.2",
-    "description":	"Schedule (possibly recurring) commands to run at some point in the future.",
+    "description":	"Various types of roll hiding (unmodified roll only, final result only, only show GM)",
     "authors":		"manveti",
     "roll20userid":	"503018",
     "dependencies":	{},

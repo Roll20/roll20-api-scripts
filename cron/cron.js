@@ -279,7 +279,7 @@ var cron = cron || {
 	    if ((i < 0) || (i >= inlineRolls.length) || (!inlineRolls[i]) || (!inlineRolls[i]['expression'])){ return s; }
 	    return "[[" + inlineRolls[i]['expression'] + "]]";
 	}
-	return cmd.replace(/\$\[\[\d+\]\]/g, replaceInlines);
+	return cmd.replace(/\$\[\[\d+\]\]/g, replaceInlines).replace(/&amp;/g, "&");
     },
 
     handleCronMessage: function(tokens, msg){
