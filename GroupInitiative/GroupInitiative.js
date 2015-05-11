@@ -5,9 +5,10 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.8.7',
-        lastUpdate = 1431320918,
+    var version = '0.8.8',
+        lastUpdate = 1431382263,
         schemaVersion = 0.8,
+        intBaseSize = 10000,
         bonusCache = {},
         sorters = {
             'None': function(to) {
@@ -73,7 +74,7 @@ var GroupInitiative = GroupInitiative || (function() {
                         (bonus>=0 ? '+' :'-')+' <span style="font-weight:bold;">'+Math.abs(bonus)+'</span> [bonus]'+
                     '</span>'
                 ))+'">'+
-                    (die+bonus)+
+                    (((die*intBaseSize)+(bonus*intBaseSize))/intBaseSize)+
                 '</span>';
         },
         buildAnnounceGroups = function(l) {
@@ -100,7 +101,7 @@ var GroupInitiative = GroupInitiative || (function() {
                         ((s.token && s.token.get('name')) || (s.character && s.character.get('name')) || '(Creature)')+
                     '</div>'+
                     '<div>'+
-                        formatDieRoll(Math.round(s.init-s.bonus),s.bonus)+
+                        formatDieRoll( (s.dieRoll || Math.round(s.init-s.bonus)),s.bonus)+
                     '</div>'+
                     '<div style="clear: both;"></div>'+
                 '</div>');
@@ -191,7 +192,7 @@ var GroupInitiative = GroupInitiative || (function() {
                         this.init=_.chain(l)
                         .pluck('bonus')
                         .map(function(d){
-                            return randomInteger(state.GroupInitiative.config.dieSize)+d;
+                            return ((randomInteger(state.GroupInitiative.config.dieSize)*intBaseSize)+(d*intBaseSize))/intBaseSize;
                         },{})
                         .min()
                         .value();
@@ -205,17 +206,17 @@ var GroupInitiative = GroupInitiative || (function() {
                 func: function(s,k,l){
                     if(!_.has(this,'init')) {
                         this.init=_.chain(l)
-                        .pluck('bonus')
-                        .map(function(d){
-                            return randomInteger(state.GroupInitiative.config.dieSize)+d;
-                        },{})
-                        .reduce(function(memo,r){
-                            return memo+r;
-                        },[0])
-                        .map(function(v){
-                            return Math.floor(v/l.length);
-                        })
-                        .value();
+                            .pluck('bonus')
+                            .map(function(d){
+                                return ((randomInteger(state.GroupInitiative.config.dieSize)*intBaseSize)+(d*intBaseSize))/intBaseSize;
+                            },{})
+                            .reduce(function(memo,r){
+                                return memo+r;
+                            },[0])
+                            .map(function(v){
+                                return Math.floor(v/l.length);
+                            })
+                            .value();
                     }
                     s.init=this.init;
                     return s;
@@ -224,13 +225,15 @@ var GroupInitiative = GroupInitiative || (function() {
             },
             'Individual-Roll': {
                 func: function(s,k,l){
-                    s.init=randomInteger(state.GroupInitiative.config.dieSize)+s.bonus;
+                    s.dieRoll=randomInteger(state.GroupInitiative.config.dieSize);
+                    s.init=((s.dieRoll*intBaseSize)+(s.bonus*intBaseSize))/intBaseSize;
                     return s;
                 },
                 desc: 'Sets the initiative individually for each member of the group.'
             },
             'Constant-By-Stat': {
                 func: function(s,k,l){
+                    s.dieRoll=0;
                     s.init=s.bonus;
                     return s;
                 },
