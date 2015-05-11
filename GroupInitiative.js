@@ -5,9 +5,9 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.8.5',
-        lastUpdate = 1431223037,
-        schemaVersion = 0.7,
+    var version = '0.8.6',
+        lastUpdate = 1431319851,
+        schemaVersion = 0.8,
         bonusCache = {},
         sorters = {
             'None': function(to) {
@@ -22,6 +22,131 @@ var GroupInitiative = GroupInitiative || (function() {
                 return _.sortBy(to,function(i){
                     return (-i.pr);
                 });
+            }
+        },
+        esRE = function (s) {
+          var escapeForRegexp = /(\\|\/|\[|\]|\(|\)|\{|\}|\?|\+|\*|\||\.|\^|\$)/g;
+          return s.replace(escapeForRegexp,"\\$1");
+        },
+
+        HE = (function(){
+          var entities={
+                  //' ' : '&'+'nbsp'+';',
+                  '<' : '&'+'lt'+';',
+                  '>' : '&'+'gt'+';',
+                  "'" : '&'+'#39'+';',
+                  '@' : '&'+'#64'+';',
+                  '{' : '&'+'#123'+';',
+                  '|' : '&'+'#124'+';',
+                  '}' : '&'+'#125'+';',
+                  '[' : '&'+'#91'+';',
+                  ']' : '&'+'#93'+';',
+                  '"' : '&'+'quot'+';'
+              },
+              re=new RegExp('('+_.map(_.keys(entities),esRE).join('|')+')','g');
+          return function(s){
+            return s.replace(re, function(c){ return entities[c] || c; });
+          };
+        }()),
+        formatDieRoll = function(die, bonus) {
+            var highlight = ( 1 === die
+                    ? '#B31515' 
+                    : ( state.GroupInitiative.config.dieSize === die
+                        ? '#3FB315'
+                        : '#FEF68E'
+                    )
+                ),
+                dielight=( 1 === die
+                    ? '#ff0000' 
+                    : ( state.GroupInitiative.config.dieSize === die
+                        ? '#00ff00'
+                        : 'white'
+                    )
+                );
+            return '<span class="inlinerollresult showtip tipsy" style="min-width:1em;display: inline-block; border: 2px solid '+
+                highlight+
+                '; background-color: #FEF68E;color: #404040; font-weight:bold;padding: 0px 3px;cursor: help"'+
+                ' title="'+
+                HE(HE(
+                    '<span style="color:white;">'+
+                        '<span style="font-weight:bold;color:'+dielight+';">'+die+'</span> [init] '+
+                        (bonus>=0 ? '+' :'-')+' <span style="font-weight:bold;">'+Math.abs(bonus)+'</span> [bonus]'+
+                    '</span>'
+                ))+'">'+
+                    (die+bonus)+
+                '</span>';
+        },
+        buildAnnounceGroups = function(l) {
+            var groupColors = {
+                npc: '#eef',
+                character: '#efe',
+                gmlayer: '#aaa'
+            };
+            return _.reduce(l,function(m,s){
+                var type= ('gmlayer' === s.token.get('layer') 
+                    ? 'gmlayer' 
+                    : ( (s.character && _.filter(s.character.get('controlledby').split(/,/),function(c){ 
+                            return 'all' === c || ('' !== c && !playerIsGM(c) );
+                        }).length>0) || false 
+                        ? 'character'
+                        : 'npc'
+                    ));
+                if('graphic'!==s.token.get('type') || 'token' !==s.token.get('subtype')) {
+                    return m;
+                }
+                m[type].push('<div style="float: left;display: inline-block;border: 1px solid #888;border-radius:5px; padding: 1px 3px;background-color:'+groupColors[type]+';">'+
+                    '<div style="font-weight:bold; font-size: 1.3em;">'+
+                        '<img src="'+(s.token && s.token.get('imgsrc'))+'" style="height: 2.5em;float:left;margin-right:2px;">'+
+                        ((s.token && s.token.get('name')) || (s.character && s.character.get('name')) || '(Creature)')+
+                    '</div>'+
+                    '<div>'+
+                        formatDieRoll(s.init-s.bonus,s.bonus)+
+                    '</div>'+
+                    '<div style="clear: both;"></div>'+
+                '</div>');
+                return m;
+            },{npc:[],character:[],gmlayer:[]});
+        },
+        announcers = {
+            'None': function() {
+            },
+            'Hidden': function(l) {
+                var groups=buildAnnounceGroups(l);
+                sendChat('GroupInit','/w gm '+
+                    '<div>'+
+                        groups.character.join('')+
+                        groups.npc.join('')+
+                        groups.gmlayer.join('')+
+                        '<div style="clear:both;"></div>'+
+                    '</div>');
+            },
+            'Partial': function(l) {
+                var groups=buildAnnounceGroups(l);
+                sendChat('GroupInit','/direct '+
+                    '<div>'+
+                        groups.character.join('')+
+                        '<div style="clear:both;"></div>'+
+                    '</div>');
+                sendChat('GroupInit','/w gm '+
+                    '<div>'+
+                        groups.npc.join('')+
+                        groups.gmlayer.join('')+
+                        '<div style="clear:both;"></div>'+
+                    '</div>');
+            },
+            'Visible': function(l) {
+                var groups=buildAnnounceGroups(l);
+                sendChat('GroupInit','/direct '+
+                    '<div>'+
+                        groups.character.join('')+
+                        groups.npc.join('')+
+                        '<div style="clear:both;"></div>'+
+                    '</div>');
+                sendChat('GroupInit','/w gm '+
+                    '<div>'+
+                        groups.gmlayer.join('')+
+                        '<div style="clear:both;"></div>'+
+                    '</div>');
             }
         },
         statAdjustments = {
@@ -119,6 +244,11 @@ var GroupInitiative = GroupInitiative || (function() {
         if( ! _.has(state,'GroupInitiative') || state.GroupInitiative.version !== schemaVersion) {
             log('  > Updating Schema to v'+schemaVersion+' <');
             switch(state.GroupInitiative && state.GroupInitiative.version) {
+                case 0.7:
+                    state.GroupInitiative.version = schemaVersion;
+                    state.GroupInitiative.config.announcer = 'Partial';
+                    break;
+
                 case 0.6:
                     state.GroupInitiative.version = schemaVersion;
                     state.GroupInitiative.config = {
@@ -152,7 +282,8 @@ var GroupInitiative = GroupInitiative || (function() {
                             replaceRoll: false,
                             dieSize: 20,
                             autoOpenInit: true,
-                            sortOption: 'Descending'
+                            sortOption: 'Descending',
+                            announcer: 'Partial'
                         }
                     };
                     break;
@@ -245,9 +376,24 @@ var GroupInitiative = GroupInitiative || (function() {
         +'</div>';
         
     },
+    getConfigOption_AnnounceOptions = function() {
+        var text = state.GroupInitiative.config.announcer;
+        return '<div>'+
+            'Announcer is currently <b>'+
+                text+
+            '</b>.'+
+            '<div>'+
+                _.map(_.keys(announcers),function(an){
+                    return '<a href="!group-init-config --set-announcer|'+an+'">'+
+                        an+
+                    '</a>';
+                }).join(' ')+
+            '</div>'+
+        '</div>';
+    },
 
     getAllConfigOptions = function() {
-        return getConfigOption_SortOptions() + getConfigOption_DieSize() + getConfigOption_AutoOpenInit();
+        return getConfigOption_SortOptions() + getConfigOption_DieSize() + getConfigOption_AutoOpenInit() + getConfigOption_AnnounceOptions();
     },
 
     showHelp = function() {
@@ -260,7 +406,7 @@ var GroupInitiative = GroupInitiative || (function() {
             return memo+selected+"<li "+selectedStyleExtra+"><b>"+n+"</b> - "+r.desc+"</li>";
         },""),
         statAdjustmentRows = buildStatAdjustmentRows(),
-        bonusStatGroupRows = buildBonusStatGroupRows();			
+        bonusStatGroupRows = buildBonusStatGroupRows();            
 
         sendChat('',
             '/w gm '
@@ -677,6 +823,7 @@ var GroupInitiative = GroupInitiative || (function() {
                                                 return s;
                                             })
                                             .map(initFunc)
+                                            .tap(announcers[state.GroupInitiative.config.announcer])
                                             .map(function(s){
                                                 return {
                                                     id: s.token.id,
@@ -754,6 +901,19 @@ var GroupInitiative = GroupInitiative || (function() {
                                 +'</div>'
                             );
                             break;
+                        case 'set-announcer':
+                            if(announcers[opt[0]]) {
+                               state.GroupInitiative.config.announcer=opt[0];
+                            } else {
+                                omsg='<div><b>Error:</b> Not a valid announcer: '+opt[0]+'</div>';
+                            }
+                            sendChat('','/w gm '
+                                +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                                    +omsg
+                                    +getConfigOption_AnnounceOptions()
+                                +'</div>'
+                            );
+                            break;
 
                         default:
                             sendChat('','/w gm '
@@ -785,3 +945,6 @@ on("ready",function(){
         GroupInitiative.CheckInstall();
         GroupInitiative.RegisterEventHandlers();
 });
+
+
+
