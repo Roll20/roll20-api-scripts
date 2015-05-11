@@ -1,6 +1,6 @@
 {
     "name":		"cron",
-    "version":		"0.2",
+    "version":		"0.3",
     "description":	"Schedule (possibly recurring) commands to run at some point in the future.",
     "authors":		"manveti",
     "roll20userid":	"503018",
