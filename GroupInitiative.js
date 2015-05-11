@@ -5,8 +5,8 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.8.6',
-        lastUpdate = 1431319851,
+    var version = '0.8.7',
+        lastUpdate = 1431320918,
         schemaVersion = 0.8,
         bonusCache = {},
         sorters = {
@@ -100,7 +100,7 @@ var GroupInitiative = GroupInitiative || (function() {
                         ((s.token && s.token.get('name')) || (s.character && s.character.get('name')) || '(Creature)')+
                     '</div>'+
                     '<div>'+
-                        formatDieRoll(s.init-s.bonus,s.bonus)+
+                        formatDieRoll(Math.round(s.init-s.bonus),s.bonus)+
                     '</div>'+
                     '<div style="clear: both;"></div>'+
                 '</div>');
