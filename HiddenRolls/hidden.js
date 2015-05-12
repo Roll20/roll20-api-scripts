@@ -202,7 +202,7 @@ var HiddenRolls = HiddenRolls || {
 	    Shell.registerCommand("!hidetotal", "!hidetotal [--verbose] command", "Display only raw rolls in command", HiddenRolls.handleHideMessage);
 	    Shell.registerCommand("!hidetotals", "!hidetotals [--verbose] command", "Display only raw rolls in command", HiddenRolls.handleHideMessage);
 	    Shell.registerCommand("!hideall", "!hideall [--verbose] command", "Only show results of command to GM", HiddenRolls.handleHideMessage);
-	    Shell.permissionCommand(["!shell-permission", "add", "!hideall"], {'who': "HR"});
+	    Shell.permissionCommand(["!shell-permission", "add", "!hideall"], {'who': "gm"});
 	    if (Shell.write){
 		HiddenRolls.write = Shell.write;
 	    }
