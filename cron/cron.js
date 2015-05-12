@@ -386,7 +386,7 @@ var cron = cron || {
 		}
 		var tokens = args['time'].split(":").map(function(t){ return parseInt(t || "0"); });
 		while (tokens.length < 3){ tokens.push(0); }
-		d.setHours(tokens[0], tokens[1], tokens[2]);
+		d.setUTCHours(tokens[0], tokens[1], tokens[2]);
 		if (d.valueOf() <= dv){
 		    // specified time is in the past; add 24 hours so it's in the future
 		    d.setTime(d.valueOf() + 24 * 60 * 60 * 1000);
