@@ -42,9 +42,9 @@ The "cron" command accepts the following options:
 				time T (HH:MM:SS).  If not all values are given,
 				zeroes will be added to the smaller end (e.g.
 				"1:23" will be interpreted as "1:23:00").  Times
-				will be interpreted to be within the next
-				24 hours.  Cannot be used with initiative-based
-				arguments.
+				are in GMT and will be interpreted to be within
+				the next 24 hours.  Cannot be used with
+				initiative-based arguments.
     -a T, --after T		The first execution of the command will be after
 				interval T (HH:MM:SS).  If not all values are
 				given, zeroes will be added to the larger end
