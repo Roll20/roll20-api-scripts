@@ -5,8 +5,8 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.8.8',
-        lastUpdate = 1431382263,
+    var version = '0.8.9',
+        lastUpdate = 1431903099,
         schemaVersion = 0.8,
         intBaseSize = 10000,
         bonusCache = {},
@@ -168,6 +168,12 @@ var GroupInitiative = GroupInitiative || (function() {
                     return Math.floor(v);
                 },
                 desc: 'Rounds down to the nearest integer.'
+            },
+            'Tie-Breaker': {
+                func: function(v) {
+                    return parseFloat((0.01*v).toFixed(2));
+                },
+                desc: 'Adds the accompanying attribute as a decimal (0.01)'
             },
             'Ceiling': {
                 func: function(v) {
