@@ -5,8 +5,8 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.9.0',
-        lastUpdate = 1432098824,
+    var version = '0.9.1',
+        lastUpdate = 1432100871,
         schemaVersion = 0.10,
         bonusCache = {},
         sorters = {
@@ -211,7 +211,7 @@ var GroupInitiative = GroupInitiative || (function() {
 
         buildInitDiceExpression = function(s){
             var stat=getAttrByName(s.character.id, state.GroupInitiative.config.diceCountAttribute, 'current');
-            if('0' !== stat) {
+            if(stat && '0' !== stat) {
                 stat = stat.replace(/@\{([^\|]*?|[^\|]*?\|max|[^\|]*?\|current)\}/g, '@{'+(s.character.get('name'))+'|$1}');
                 return '('+stat+')d'+state.GroupInitiative.config.dieSize;
             } 
