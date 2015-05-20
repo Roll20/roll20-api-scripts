@@ -1,6 +1,6 @@
 {
     "name": "GroupInitiative",
-    "version": "0.8.9",
+    "version": "0.9.0",
     "description": "Adds the selected tokens to the turn order after rolling their initiative + configurable data.",
     "authors": "The Aaron",
     "roll20userid": "104025",
@@ -8,7 +8,9 @@
     "modifies": {
         "state.GroupInitiative": "read,write",
         "campaign.turnorder": "read,write",
-        "graphic.represents": "read"
+        "graphic.represents": "read",
+        "attribute.current": "read",
+        "attribute.max": "read"
     },
     "conflicts": []
 }

@@ -5,10 +5,9 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.8.9',
-        lastUpdate = 1431903099,
-        schemaVersion = 0.8,
-        intBaseSize = 10000,
+    var version = '0.9.0',
+        lastUpdate = 1432098824,
+        schemaVersion = 0.10,
         bonusCache = {},
         sorters = {
             'None': function(to) {
@@ -49,34 +48,53 @@ var GroupInitiative = GroupInitiative || (function() {
             return s.replace(re, function(c){ return entities[c] || c; });
           };
         }()),
-        formatDieRoll = function(die, bonus) {
-            var highlight = ( 1 === die
-                    ? '#B31515' 
-                    : ( state.GroupInitiative.config.dieSize === die
-                        ? '#3FB315'
-                        : '#FEF68E'
+
+        formatDieRoll = function(rollData) {
+            var critFail = _.reduce(rollData.rolls,function(m,r){
+                        return m || _.contains(r.rolls,1);
+                    },false),
+                critSuccess = _.reduce(rollData.rolls,function(m,r){
+                        return m || _.contains(r.rolls,r.sides);
+                    },false),
+                highlight = ( (critFail && critSuccess)
+                    ? '#4A57ED'
+                    : ( critFail
+                        ? '#B31515' 
+                        : ( critSuccess
+                            ? '#3FB315'
+                            : '#FEF68E'
+                        )
                     )
                 ),
-                dielight=( 1 === die
-                    ? '#ff0000' 
-                    : ( state.GroupInitiative.config.dieSize === die
-                        ? '#00ff00'
-                        : 'white'
-                    )
-                );
+                dicePart = _.reduce(rollData.rolls, function(m,r){
+                    _.reduce(r.rolls,function(dm,dr){
+                        var dielight=( 1 === dr
+                                ? '#ff0000' 
+                                : ( r.sides === dr
+                                    ? '#00ff00'
+                                    : 'white'
+                                )
+                            );
+                        dm.push('<span style="font-weight:bold;color:'+dielight+';">'+dr+'</span>');
+                        return dm;
+                    },m);
+                    return m;
+                },[]).join(' + ');
+
             return '<span class="inlinerollresult showtip tipsy" style="min-width:1em;display: inline-block; border: 2px solid '+
                 highlight+
                 '; background-color: #FEF68E;color: #404040; font-weight:bold;padding: 0px 3px;cursor: help"'+
                 ' title="'+
                 HE(HE(
                     '<span style="color:white;">'+
-                        '<span style="font-weight:bold;color:'+dielight+';">'+die+'</span> [init] '+
-                        (bonus>=0 ? '+' :'-')+' <span style="font-weight:bold;">'+Math.abs(bonus)+'</span> [bonus]'+
+                        dicePart+' [init] '+
+                        (rollData.bonus>=0 ? '+' :'-')+' <span style="font-weight:bold;">'+Math.abs(rollData.bonus)+'</span> [bonus]'+
                     '</span>'
                 ))+'">'+
-                    (((die*intBaseSize)+(bonus*intBaseSize))/intBaseSize)+
+                    rollData.total+
                 '</span>';
         },
+
         buildAnnounceGroups = function(l) {
             var groupColors = {
                 npc: '#eef',
@@ -101,13 +119,14 @@ var GroupInitiative = GroupInitiative || (function() {
                         ((s.token && s.token.get('name')) || (s.character && s.character.get('name')) || '(Creature)')+
                     '</div>'+
                     '<div>'+
-                        formatDieRoll( (s.dieRoll || Math.round(s.init-s.bonus)),s.bonus)+
+                        formatDieRoll(s.rollResults)+
                     '</div>'+
                     '<div style="clear: both;"></div>'+
                 '</div>');
                 return m;
             },{npc:[],character:[],gmlayer:[]});
         },
+
         announcers = {
             'None': function() {
             },
@@ -150,10 +169,11 @@ var GroupInitiative = GroupInitiative || (function() {
                     '</div>');
             }
         },
+
         statAdjustments = {
             'Stat-DnD': {
                 func: function(v) {
-                    return Math.floor((v-10)/2);
+                    return 'floor((('+v+')-10)/2))';
                 },
                 desc: 'Calculates the bonus as if the value were a DnD Stat.'
             },
@@ -165,83 +185,84 @@ var GroupInitiative = GroupInitiative || (function() {
             },
             'Floor': {
                 func: function(v) {
-                    return Math.floor(v);
+                    return 'floor('+v+')';
                 },
                 desc: 'Rounds down to the nearest integer.'
             },
             'Tie-Breaker': {
                 func: function(v) {
-                    return parseFloat((0.01*v).toFixed(2));
+                    return '(0.01*('+v+'))';
                 },
                 desc: 'Adds the accompanying attribute as a decimal (0.01)'
             },
             'Ceiling': {
                 func: function(v) {
-                    return Math.ceil(v);
+                    return 'ceil('+v+')';
                 },
                 desc: 'Rounds up to the nearest integer.'
             },
             'Bounded': {
-                func: function(v,l,h) {
-                    l=parseFloat(l,10) || v;
-                    h=parseFloat(h) || v;
-                    return Math.min(h,Math.max(l,v));
+                func: function(v) {
+                    return v;
                 },
-                desc: 'Restricts to a range.  Use Bounded:<lower bound>:<upper bound> for specifying bounds.  Leave a bound empty to be unrestricted in that direction.  Example: <b>Bounded::5</b> would specify a maximum of 5 with no minimum.'
+                desc: '<b>DEPREICATED - will not work with expresions.</b>'
             }
+        },
+
+        buildInitDiceExpression = function(s){
+            var stat=getAttrByName(s.character.id, state.GroupInitiative.config.diceCountAttribute, 'current');
+            if('0' !== stat) {
+                stat = stat.replace(/@\{([^\|]*?|[^\|]*?\|max|[^\|]*?\|current)\}/g, '@{'+(s.character.get('name'))+'|$1}');
+                return '('+stat+')d'+state.GroupInitiative.config.dieSize;
+            } 
+            return state.GroupInitiative.config.diceCount+'d'+state.GroupInitiative.config.dieSize;
         },
 
         rollers = {
             'Least-All-Roll':{
-                func: function(s,k,l){
-                    if(!_.has(this,'init')) {
-                        this.init=_.chain(l)
-                        .pluck('bonus')
-                        .map(function(d){
-                            return ((randomInteger(state.GroupInitiative.config.dieSize)*intBaseSize)+(d*intBaseSize))/intBaseSize;
-                        },{})
-                        .min()
-                        .value();
-                    }
-                    s.init=this.init;
-                    return s;
+                mutator: function(l){
+                    var min=_.reduce(l,function(m,r){
+                        if(!m || (r.total < m.total)) {
+                            return r;
+                        } 
+                        return m;
+                    },false);
+                    return _.times(l.length, function(c){
+                        return min;
+                    });
+                },
+                func: function(s){
+                    return buildInitDiceExpression(s);
                 },
                 desc: 'Sets the initiative to the lowest of all initiatives rolled for the group.'
             },
             'Mean-All-Roll':{
-                func: function(s,k,l){
-                    if(!_.has(this,'init')) {
-                        this.init=_.chain(l)
-                            .pluck('bonus')
-                            .map(function(d){
-                                return ((randomInteger(state.GroupInitiative.config.dieSize)*intBaseSize)+(d*intBaseSize))/intBaseSize;
-                            },{})
-                            .reduce(function(memo,r){
-                                return memo+r;
-                            },[0])
-                            .map(function(v){
-                                return Math.floor(v/l.length);
-                            })
-                            .value();
-                    }
-                    s.init=this.init;
-                    return s;
+                mutator: function(l){
+                    var mean = l[Math.round((l.length/2)-0.5)];
+                    return _.times(l.length, function(c){
+                        return mean;
+                    });
+                },
+                func: function(s){
+                    return buildInitDiceExpression(s);
                 },
                 desc: 'Sets the initiative to the mean (average) of all initiatives rolled for the group.'
             },
             'Individual-Roll': {
-                func: function(s,k,l){
-                    s.dieRoll=randomInteger(state.GroupInitiative.config.dieSize);
-                    s.init=((s.dieRoll*intBaseSize)+(s.bonus*intBaseSize))/intBaseSize;
-                    return s;
+                mutator: function(l){
+                    return l;
+                },
+                func: function(s){
+                    return buildInitDiceExpression(s);
                 },
                 desc: 'Sets the initiative individually for each member of the group.'
             },
             'Constant-By-Stat': {
-                func: function(s,k,l){
-                    s.dieRoll=0;
-                    s.init=s.bonus;
-                    return s;
+                mutator: function(l){
+                    return l;
+                },
+                func: function(s){
+                    return '0';
                 },
                 desc: 'Sets the initiative individually for each member of the group to their bonus with no roll.'
             }
@@ -253,13 +274,11 @@ var GroupInitiative = GroupInitiative || (function() {
         if( ! _.has(state,'GroupInitiative') || state.GroupInitiative.version !== schemaVersion) {
             log('  > Updating Schema to v'+schemaVersion+' <');
             switch(state.GroupInitiative && state.GroupInitiative.version) {
-                case 0.7:
-                    state.GroupInitiative.version = schemaVersion;
-                    state.GroupInitiative.config.announcer = 'Partial';
-                    break;
+                case 0.5:
+                    state.GroupInitiative.replaceRoll = false;
+                    /* break; // intentional dropthrough */
 
                 case 0.6:
-                    state.GroupInitiative.version = schemaVersion;
                     state.GroupInitiative.config = {
                         rollType: state.GroupInitiative.rollType,
                         replaceRoll: state.GroupInitiative.replaceRoll,
@@ -269,11 +288,23 @@ var GroupInitiative = GroupInitiative || (function() {
                     };
                     delete state.GroupInitiative.replaceRoll;
                     delete state.GroupInitiative.rollType;
-                    break;
+                    /* break; // intentional dropthrough */
+
+                case 0.7:
+                    state.GroupInitiative.config.announcer = 'Partial';
+                    /* break; // intentional dropthrough */
+
+                case 0.8:
+                    state.GroupInitiative.config.diceCount = 1;
+                    state.GroupInitiative.config.maxDecimal = 2;
+                    /* break; // intentional dropthrough */
                     
-                case 0.5:
+                case 0.9:
+                    state.GroupInitiative.config.diceCountAttribute = '';
+                    /* break; // intentional dropthrough */
+
+                case 'UpdateSchemaVersion':
                     state.GroupInitiative.version = schemaVersion;
-                    state.GroupInitiative.replaceRoll = false;
                     break;
 
                 default:
@@ -290,6 +321,8 @@ var GroupInitiative = GroupInitiative || (function() {
                             rollType: 'Individual-Roll',
                             replaceRoll: false,
                             dieSize: 20,
+                            dieCount: 1,
+                            dieCountAttribute: '',
                             autoOpenInit: true,
                             sortOption: 'Descending',
                             announcer: 'Partial'
@@ -373,6 +406,40 @@ var GroupInitiative = GroupInitiative || (function() {
         +'</div>';
     },
 
+    getConfigOption_DiceCount = function() {
+        return '<div>'
+            +'Initiative Dice Count is currently <b>'
+                +state.GroupInitiative.config.diceCount
+            +'</b> '
+            +'<a href="!group-init-config --set-dice-count|?{Number of initiative dice to roll:|'+state.GroupInitiative.config.diceCount+'}">'
+                +'Set Dice Count'
+            +'</a>'
+        +'</div>';
+    },
+
+    getConfigOption_MaxDecimal = function() {
+        return '<div>'
+            +'Max decimal places <b>'
+                +state.GroupInitiative.config.maxDecimal
+            +'</b> '
+            +'<a href="!group-init-config --set-max-decimal|?{Maximum number of decimal places:|'+state.GroupInitiative.config.maxDecimal+'}">'
+                +'Set Max Decimal'
+            +'</a>'
+        +'</div>';
+    },
+
+    getConfigOption_DiceCountAttribute = function() {
+        var text = (state.GroupInitiative.config.diceCountAttribute.length ? state.GroupInitiative.config.diceCountAttribute : 'DISABLED');
+        return '<div>'
+            +'Dice Count Attribute: <b>'
+                +text
+            +'</b> '
+            +'<a href="!group-init-config --set-dice-count-attribute|?{Attribute to use for number of initiative dice to roll (Blank to disable):|'+state.GroupInitiative.config.diceCountAttribute+'}">'
+                +'Set Attribute'
+            +'</a>'
+        +'</div>';
+    },
+
     getConfigOption_AutoOpenInit = function() {
         var text = (state.GroupInitiative.config.autoOpenInit ? 'On' : 'Off' );
         return '<div>'
@@ -384,6 +451,35 @@ var GroupInitiative = GroupInitiative || (function() {
             +'</a>'
         +'</div>';
         
+    },
+
+    getConfigOption_ReplaceRoll = function() {
+        var text = (state.GroupInitiative.config.replaceRoll ? 'On' : 'Off' );
+        return '<div>'
+            +'Replace Roll is currently <b>'
+                +text
+            +'</b> '
+            +'<a href="!group-init-config --toggle-replace-roll">'
+                +'Toggle'
+            +'</a>'
+            +'<p>Sets whether initative scores for selected tokens replace their current scores.</p>'
+        +'</div>';
+        
+    },
+    getConfigOption_RollerOptions = function() {
+        var text = state.GroupInitiative.config.rollType;
+        return '<div>'+
+            'Roller is currently <b>'+
+                text+
+            '</b>.'+
+            '<div>'+
+                _.map(_.keys(rollers),function(r){
+                    return '<a href="!group-init-config --set-roller|'+r+'">'+
+                        r+
+                    '</a>';
+                }).join(' ')+
+            '</div>'+
+        '</div>';
     },
     getConfigOption_AnnounceOptions = function() {
         var text = state.GroupInitiative.config.announcer;
@@ -402,7 +498,15 @@ var GroupInitiative = GroupInitiative || (function() {
     },
 
     getAllConfigOptions = function() {
-        return getConfigOption_SortOptions() + getConfigOption_DieSize() + getConfigOption_AutoOpenInit() + getConfigOption_AnnounceOptions();
+        return getConfigOption_RollerOptions() +
+            getConfigOption_SortOptions() +
+            getConfigOption_DieSize() +
+            getConfigOption_DiceCount() +
+            getConfigOption_DiceCountAttribute() +
+            getConfigOption_MaxDecimal() +
+            getConfigOption_AutoOpenInit() +
+            getConfigOption_ReplaceRoll() +
+            getConfigOption_AnnounceOptions();
     },
 
     showHelp = function() {
@@ -456,19 +560,6 @@ var GroupInitiative = GroupInitiative || (function() {
             +'</div>'
 
             +'<div style="padding-left:10px;">'
-            +'<b><span style="font-family: serif;">!group-init <i>--set-roller</i> '+ch('<')+'roller name'+ch('>')+'</span></b>'
-            +'<div style="padding-left: 10px;padding-right:20px">'
-            +'<p>Sets Roller to use for calculating initiative.</p>'
-            +'This command requires 1 parameter:'
-            +'<ul>'
-            +'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
-            +'<b><span style="font-family: serif;">roller name</span></b> -- The name of the Roller to use.  See <b>Roller Options</b> below.'
-            +'</li> '
-            +'</ul>'
-            +'</div>'
-            +'</div>'
-
-            +'<div style="padding-left:10px;">'
             +'<b><span style="font-family: serif;">!group-init <i>--promote</i> '+ch('<')+'index'+ch('>')+'</span></b>'
             +'<div style="padding-left: 10px;padding-right:20px">'
             +'<p>Increases the importance the specified Bonus Stat Group.</p>'
@@ -510,14 +601,6 @@ var GroupInitiative = GroupInitiative || (function() {
             +'</div>'
             +'</div>'
 
-            +'<div style="padding-left:10px;">'
-                +'<b><span style="font-family: serif;">!group-init <i>--toggle-replace</i></span></b>'
-                +'<div style="padding-left: 10px;padding-right:20px">'
-                    +'<div style="float:right;width:40px;border:1px solid black;background-color:#ffc;text-align:center;">'+( state.GroupInitiative.config.replaceRoll ? '<span style="color: red; font-weight:bold; padding: 0px 4px;">ON</span>' : '<span style="color: #999999; font-weight:bold; padding: 0px 4px;">OFF</span>' )+'</div>'
-                    +'<p>Sets whether initative scores for selected tokens replace their current scores.</p>'
-                +'</div>'
-            +'</div>'
-
             +'<b>Roller Options</b>'
             +'<div style="padding-left:10px;">'
             +'<ul>'
@@ -545,39 +628,38 @@ var GroupInitiative = GroupInitiative || (function() {
         );
     },
 
-    findInitiativeBonus = function(id) {
-        var bonus = 0;
-        if(_.has(bonusCache,id)) {
-            return bonusCache[id];
+    findInitiativeBonus = function(char) {
+        var bonus = '';
+        if(_.has(bonusCache,char.id)) {
+            return bonusCache[char.id];
         }
-        _.chain(state.GroupInitiative.bonusStatGroups)
-        .find(function(group){
+        _.find(state.GroupInitiative.bonusStatGroups, function(group){
             bonus = _.chain(group)
-            .map(function(details){
-                var stat=parseFloat(getAttrByName(id,details.attribute, details.type||'current'),10);
+                .map(function(details){
+                    var stat=getAttrByName(char.id,details.attribute, details.type||'current');
 
-                stat = _.reduce(details.adjustments || [],function(memo,a){
-                    var args,adjustment,func;
-                    if(memo) {
-                        args=a.split(':');
-                        adjustment=args.shift();
-                        args.unshift(memo);
-                        func=statAdjustments[adjustment].func;
-                        if(_.isFunction(func)) {
-                            memo =func.apply({},args);
+                    stat = stat.replace(/@\{([^\|]*?|[^\|]*?\|max|[^\|]*?\|current)\}/g, '@{'+(char.get('name'))+'|$1}');
+
+                    stat = _.reduce(details.adjustments || [],function(memo,a){
+                        var args,adjustment,func;
+                        if(memo) {
+                            args=a.split(':');
+                            adjustment=args.shift();
+                            args.unshift(memo);
+                            func=statAdjustments[adjustment].func;
+                            if(_.isFunction(func)) {
+                                memo =func.apply({},args);
+                            }
                         }
-                    }
-                    return memo;
-                },stat);
-                return stat;
-            })
-            .reduce(function(memo,v){
-                return memo+v;
-            },0)
-            .value();
+                        return memo;
+                    },stat);
+                    return stat;
+                })
+                .value()
+                .join('+');
             return !(_.isUndefined(bonus) || _.isNaN(bonus) || _.isNull(bonus));
         });
-        bonusCache[id]=bonus;
+        bonusCache[char.id]=bonus;
         return bonus;
     },
 
@@ -588,10 +670,11 @@ var GroupInitiative = GroupInitiative || (function() {
             workgroup,
             workvar,
             turnorder,
-            rolls,
-            pageid,
+            pageid=false,
             error=false,
             initFunc,
+            rollSetup,
+            initRolls,
             cont=false,
             manualBonus=0;
 
@@ -599,8 +682,8 @@ var GroupInitiative = GroupInitiative || (function() {
             return;
         }
 
-		if(_.has(msg,'inlinerolls')){
-			msg.content = _.chain(msg.inlinerolls)
+        if(_.has(msg,'inlinerolls')){
+        	msg.content = _.chain(msg.inlinerolls)
 				.reduce(function(m,v,k){
 					m['$[['+k+']]']=v.results.total || 0;
 					return m;
@@ -738,40 +821,9 @@ var GroupInitiative = GroupInitiative || (function() {
                             }
                             break;
 
-                        case 'set-roller':
-                            if(_.has(rollers,cmds[1])) {
-                                state.GroupInitiative.config.rollType=cmds[1];
-                                sendChat('GroupInitiative', '/w gm ' 
-                                    +'<div style="padding:1px 3px;border: 1px solid #8B4513;background: #eeffee; color: #8B4513; font-size: 80%;">'
-                                    +'Roller is now set to: <b>'+cmds[1]+'<br>'
-                                    +'</div>'
-                                );
-                            } else {
-                                sendChat('GroupInitiative', '/w gm ' 
-                                    +'<div style="padding:1px 3px;border: 1px solid #8B4513;background: #eeffee; color: #8B4513; font-size: 80%;">'
-                                    +'Not a valid Roller Name: <b>'+cmds[1]+'</b><br>'
-                                    +'Please use one of the following:'
-                                    +'<ul>'
-                                    +_.reduce(rollers,function(memo,r,n){
-                                        return memo+'<li>'+n+'</li>';
-                                    },'')
-                                    +'</ul>'
-                                    +'</div>'
-                                );
-                            }
-                            break;
-
-                        case 'toggle-replace':
-                            state.GroupInitiative.config.replaceRoll = !state.GroupInitiative.config.replaceRoll;
-                            sendChat('GroupInitiative', '/w gm '
-                                +'<div style="padding:1px 3px;border: 1px solid #8B4513;background: #eeffee; color: #8B4513; font-size: 80%;">'
-                                +'Replace Initiative on Roll is now: <b>'+ (state.GroupInitiative.config.replaceRoll ? 'ON' : 'OFF') +'</b>'
-                                +'</div>'
-                            );
-                            break;
 
                         case 'bonus':
-                            if(cmds[1].match(/^[\-\+]?\d+(\.\d+)?$/)){
+                            if(cmds[1] && cmds[1].match(/^[\-\+]?\d+(\.\d+)?$/)){
                                 manualBonus=parseFloat(cmds[1]);
                                 cont=true;
                             } else {
@@ -808,48 +860,112 @@ var GroupInitiative = GroupInitiative || (function() {
 
                         initFunc=rollers[state.GroupInitiative.config.rollType].func;
 
-                        Campaign().set({
-                            turnorder: JSON.stringify(
-                                sorters[state.GroupInitiative.config.sortOption](
-                                    turnorder.concat(
-                                        _.chain(msg.selected)
-                                            .map(function(s){
-                                                return getObj(s._type,s._id);
-                                            })
-                                            .reject(_.isUndefined)
-                                            .reject(function(s){
-                                                return _.contains(_.pluck(turnorder,'id'),s.id);
-                                            })
-                                            .map(function(s){
-                                                pageid=pageid || s.get('pageid');
-                                                return {
-                                                    token: s,
-                                                    character: getObj('character',s.get('represents'))
-                                                };
-                                            })
-                                            .map(function(s){
-                                                s.bonus=(s.character ? findInitiativeBonus(s.character.id) || 0 : 0)+manualBonus;
-                                                return s;
-                                            })
-                                            .map(initFunc)
-                                            .tap(announcers[state.GroupInitiative.config.announcer])
-                                            .map(function(s){
-                                                return {
-                                                    id: s.token.id,
-                                                    pr: s.init,
-                                                    custom: ''
-                                                };
-                                            })
-                                            .value()
+                        rollSetup = _.chain(msg.selected)
+                            .map(function(s){
+                                return getObj(s._type,s._id);
+                            })
+                            .reject(_.isUndefined)
+                            .reject(function(s){
+                                return _.contains(_.pluck(turnorder,'id'),s.id);
+                            })
+                            .map(function(s){
+                                pageid=pageid || s.get('pageid');
+                                return {
+                                    token: s,
+                                    character: getObj('character',s.get('represents'))
+                                };
+                            })
+                            .map(function(s){
+                                s.roll=[];
+                                if(s.character) {
+                                    s.roll.push( findInitiativeBonus(s.character) );
+                                }
+                                if(manualBonus) {
+                                    s.roll.push( manualBonus );
+                                }
+                                s.roll.push( initFunc(s) );
+                                return s;
+                            })
+                            .value();
+
+                        initRolls = _.chain(rollSetup)
+                            .pluck('roll')
+                            .map(function(r){
+                                return '[[('+r.join(') + (')+')]]';
+                            })
+                            .value()
+                            .join('');
+
+                        sendChat('',initRolls,function(msg){
+                            var turnEntries=_.chain(msg[0].content.match(/\d+/g))
+                                .map(function(idx){
+                                    return msg[0].inlinerolls[idx];  
+                                })
+                                .map(function(ird,k){
+                                    var rdata = {
+                                        order: k,
+                                        total: (ird.results.total%1===0
+                                            ? ird.results.total 
+                                            : parseFloat(ird.results.total.toFixed(state.GroupInitiative.config.maxDecimal))),
+                                        rolls: _.reduce(ird.results.rolls,function(m,rs){
+                                            if('R' === rs.type) {
+                                                m.push({
+                                                    sides: rs.sides,
+                                                    rolls: _.pluck(rs.results,'v')
+                                                });
+                                            }
+                                            return m;
+                                        },[])
+                                    };
+                                    rdata.bonus = (ird.results.total - (_.reduce(rdata.rolls,function(m,r){
+                                        m+=_.reduce(r.rolls,function(s,dieroll){
+                                            return s+dieroll;
+                                        },0);
+                                        return m;
+                                    },0)));
+
+                                    rdata.bonus = (rdata.bonus%1===0
+                                        ? rdata.bonus
+                                        : parseFloat(rdata.bonus.toFixed(state.GroupInitiative.config.maxDecimal)));
+
+                                    return rdata;
+                                })
+                                .sortBy('order')
+                                .value();
+
+
+                        turnEntries=rollers[state.GroupInitiative.config.rollType].mutator(turnEntries);
+
+                        
+                            Campaign().set({
+                                turnorder: JSON.stringify(
+                                    sorters[state.GroupInitiative.config.sortOption](
+                                        turnorder.concat(
+                                            _.chain(rollSetup)
+                                                .map(function(s){
+                                                    s.rollResults=turnEntries.shift();
+                                                    return s;
+                                                })
+                                                .tap(announcers[state.GroupInitiative.config.announcer])
+                                                .map(function(s){
+                                                    return {
+                                                        id: s.token.id,
+                                                        pr: s.rollResults.total,
+                                                        custom: ''
+                                                    };
+                                                })
+                                                .value()
+                                        )
                                     )
                                 )
-                            )
-                        });
-                        if(state.GroupInitiative.config.autoOpenInit && !Campaign().get('initativepage')) {
-                            Campaign().set({
-                                initiativepage: pageid
                             });
-                        }
+
+                            if(state.GroupInitiative.config.autoOpenInit && !Campaign().get('initativepage')) {
+                                Campaign().set({
+                                    initiativepage: pageid
+                                });
+                            }
+                        });
                     } else {
                         showHelp();
                     }
@@ -902,6 +1018,49 @@ var GroupInitiative = GroupInitiative || (function() {
                             );
                             break;
 
+                        case 'set-max-decimal':
+                            if(opt[0].match(/^\d+$/)) {
+                               state.GroupInitiative.config.maxDecimal=parseInt(opt[0],10);
+                            } else {
+                                omsg='<div><b>Error:</b> Not a valid decimal count: '+opt[0]+'</div>';
+                            }
+                            sendChat('','/w gm '
+                                +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                                    +omsg
+                                    +getConfigOption_MaxDecimal()
+                                +'</div>'
+                            );
+                            break;
+
+
+                        case 'set-dice-count':
+                            if(opt[0].match(/^\d+$/)) {
+                               state.GroupInitiative.config.diceCount=parseInt(opt[0],10);
+                            } else {
+                                omsg='<div><b>Error:</b> Not a valid dice count: '+opt[0]+'</div>';
+                            }
+                            sendChat('','/w gm '
+                                +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                                    +omsg
+                                    +getConfigOption_DiceCount()
+                                +'</div>'
+                            );
+                            break;
+
+                        case 'set-dice-count-attribute':
+                            if(opt[0]) {
+                               state.GroupInitiative.config.diceCountAttribute=opt[0];
+                            } else {
+                                omsg='<div>Cleared Dice Count Attribute.</div>';
+                            }
+                            sendChat('','/w gm '
+                                +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                                    +omsg
+                                    +getConfigOption_DiceCountAttribute()
+                                +'</div>'
+                            );
+                            break;
+
                         case 'toggle-auto-open-init':
                             state.GroupInitiative.config.autoOpenInit = !state.GroupInitiative.config.autoOpenInit;
                             sendChat('','/w gm '
@@ -910,6 +1069,16 @@ var GroupInitiative = GroupInitiative || (function() {
                                 +'</div>'
                             );
                             break;
+
+                        case 'toggle-replace-roll':
+                            state.GroupInitiative.config.replaceRoll = !state.GroupInitiative.config.replaceRoll;
+                            sendChat('','/w gm '
+                                +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                                    +getConfigOption_ReplaceRoll()
+                                +'</div>'
+                            );
+                            break;
+
                         case 'set-announcer':
                             if(announcers[opt[0]]) {
                                state.GroupInitiative.config.announcer=opt[0];
@@ -920,6 +1089,20 @@ var GroupInitiative = GroupInitiative || (function() {
                                 +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
                                     +omsg
                                     +getConfigOption_AnnounceOptions()
+                                +'</div>'
+                            );
+                            break;
+
+                        case 'set-roller':
+                            if(rollers[opt[0]]) {
+                               state.GroupInitiative.config.rollType=opt[0];
+                            } else {
+                                omsg='<div><b>Error:</b> Not a valid roller: '+opt[0]+'</div>';
+                            }
+                            sendChat('','/w gm '
+                                +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                                    +omsg
+                                    +getConfigOption_RollerOptions()
                                 +'</div>'
                             );
                             break;
@@ -954,6 +1137,5 @@ on("ready",function(){
         GroupInitiative.CheckInstall();
         GroupInitiative.RegisterEventHandlers();
 });
-
 
 
