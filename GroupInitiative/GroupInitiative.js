@@ -5,8 +5,8 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.9.1',
-        lastUpdate = 1432100871,
+    var version = '0.9.2',
+        lastUpdate = 1432133197,
         schemaVersion = 0.10,
         bonusCache = {},
         sorters = {
@@ -210,7 +210,7 @@ var GroupInitiative = GroupInitiative || (function() {
         },
 
         buildInitDiceExpression = function(s){
-            var stat=getAttrByName(s.character.id, state.GroupInitiative.config.diceCountAttribute, 'current');
+            var stat=(''!== state.GroupInitiative.config.diceCountAttribute && s.character && getAttrByName(s.character.id, state.GroupInitiative.config.diceCountAttribute, 'current'));
             if(stat && '0' !== stat) {
                 stat = stat.replace(/@\{([^\|]*?|[^\|]*?\|max|[^\|]*?\|current)\}/g, '@{'+(s.character.get('name'))+'|$1}');
                 return '('+stat+')d'+state.GroupInitiative.config.dieSize;
@@ -890,6 +890,11 @@ var GroupInitiative = GroupInitiative || (function() {
 
                         initRolls = _.chain(rollSetup)
                             .pluck('roll')
+                            .map(function(rs){
+                                return _.reject(rs,function(r){
+                                    return _.isString(r) && _.isEmpty(r);
+                                });
+                            })
                             .map(function(r){
                                 return '[[('+r.join(') + (')+')]]';
                             })
