@@ -5,8 +5,8 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.9.2',
-        lastUpdate = 1432133197,
+    var version = '0.9.3',
+        lastUpdate = 1432152561,
         schemaVersion = 0.10,
         bonusCache = {},
         sorters = {
@@ -638,26 +638,31 @@ var GroupInitiative = GroupInitiative || (function() {
                 .map(function(details){
                     var stat=getAttrByName(char.id,details.attribute, details.type||'current');
 
-                    stat = stat.replace(/@\{([^\|]*?|[^\|]*?\|max|[^\|]*?\|current)\}/g, '@{'+(char.get('name'))+'|$1}');
+                    if( ! _.isUndefined(stat) ) {
+                        stat = stat.replace(/@\{([^\|]*?|[^\|]*?\|max|[^\|]*?\|current)\}/g, '@{'+(char.get('name'))+'|$1}');
 
-                    stat = _.reduce(details.adjustments || [],function(memo,a){
-                        var args,adjustment,func;
-                        if(memo) {
-                            args=a.split(':');
-                            adjustment=args.shift();
-                            args.unshift(memo);
-                            func=statAdjustments[adjustment].func;
-                            if(_.isFunction(func)) {
-                                memo =func.apply({},args);
+                        stat = _.reduce(details.adjustments || [],function(memo,a){
+                            var args,adjustment,func;
+                            if(memo) {
+                                args=a.split(':');
+                                adjustment=args.shift();
+                                args.unshift(memo);
+                                func=statAdjustments[adjustment].func;
+                                if(_.isFunction(func)) {
+                                    memo =func.apply({},args);
+                                }
                             }
-                        }
-                        return memo;
-                    },stat);
-                    return stat;
+                            return memo;
+                        },stat);
+                        return stat;
+                    }
                 })
-                .value()
-                .join('+');
-            return !(_.isUndefined(bonus) || _.isNaN(bonus) || _.isNull(bonus));
+                .value();
+            if(_.contains(bonus,undefined)) {
+                return false;
+            }
+            bonus = bonus.join('+');
+            return true;
         });
         bonusCache[char.id]=bonus;
         return bonus;
