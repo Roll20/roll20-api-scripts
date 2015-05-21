@@ -5,8 +5,8 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.9.3',
-        lastUpdate = 1432152561,
+    var version = '0.9.4',
+        lastUpdate = 1432171923,
         schemaVersion = 0.10,
         bonusCache = {},
         sorters = {
@@ -173,7 +173,7 @@ var GroupInitiative = GroupInitiative || (function() {
         statAdjustments = {
             'Stat-DnD': {
                 func: function(v) {
-                    return 'floor((('+v+')-10)/2))';
+                    return 'floor((('+v+')-10)/2)';
                 },
                 desc: 'Calculates the bonus as if the value were a DnD Stat.'
             },
