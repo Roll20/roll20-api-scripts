@@ -89,7 +89,7 @@ Examples:
 
 !extend Attack: `(1d20+7)[tohit]`, `(${tohit}>=15 ? "hit for [[1d6]]" : "miss")`
     Internally rolls 1d20+7, compares the result against 15, and submits a
-    command like "[[12]], miss" or "[[19]], hit for [[1d6]]".
+    command like "Attack: [[12]], miss" or "Attack: [[19]], hit for [[1d6]]".
 
 !extend `1d6[foo]+1d6[bar]+${(1d2-1 ? "foo" : "bar")}`
     Internally rolls 1d2-1, then submits a command like "[[3+1d6[bar]+3]]" or
