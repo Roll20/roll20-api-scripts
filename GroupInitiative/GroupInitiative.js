@@ -5,8 +5,8 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.9.4',
-        lastUpdate = 1432171923,
+    var version = '0.9.5',
+        lastUpdate = 1432444729,
         schemaVersion = 0.10,
         bonusCache = {},
         sorters = {
@@ -681,9 +681,10 @@ var GroupInitiative = GroupInitiative || (function() {
             rollSetup,
             initRolls,
             cont=false,
-            manualBonus=0;
+            manualBonus=0
+			;
 
-        if (msg.type !== "api" || !playerIsGM(msg.playerid) ) {
+        if (msg.type !== "api" ) {
             return;
         }
 
@@ -707,10 +708,16 @@ var GroupInitiative = GroupInitiative || (function() {
 
                     switch(cmds[0]) {
                         case 'help':
+							if(!playerIsGM(msg.playerid)){
+								return;
+							}
                             showHelp();
                             break;
 
                         case 'add-group':
+							if(!playerIsGM(msg.playerid)){
+								return;
+							}
                             workgroup=[];
                             workvar={};
 
@@ -771,6 +778,9 @@ var GroupInitiative = GroupInitiative || (function() {
 
 
                         case 'promote':
+							if(!playerIsGM(msg.playerid)){
+								return;
+							}
                             cmds[1]=Math.max(parseInt(cmds[1],10),1);
                             if(state.GroupInitiative.bonusStatGroups.length >= cmds[1]) {
                                 if(1 !== cmds[1]) {
@@ -800,6 +810,9 @@ var GroupInitiative = GroupInitiative || (function() {
                             break;
 
                         case 'del-group':
+							if(!playerIsGM(msg.playerid)){
+								return;
+							}
                             cmds[1]=Math.max(parseInt(cmds[1],10),1);
                             if(state.GroupInitiative.bonusStatGroups.length >= cmds[1]) {
                                 state.GroupInitiative.bonusStatGroups=_.filter(state.GroupInitiative.bonusStatGroups, function(v,k){
@@ -841,6 +854,9 @@ var GroupInitiative = GroupInitiative || (function() {
                             break;
 
                         default:
+							if(!playerIsGM(msg.playerid)){
+								return;
+							}
                             sendChat('GroupInitiative', '/w gm ' 
                                 +'<div style="padding:1px 3px;border: 1px solid #8B4513;background: #eeffee; color: #8B4513; font-size: 80%;">'
                                 +'Not a valid command: <b>'+cmds[0]+'</b>'
@@ -982,6 +998,9 @@ var GroupInitiative = GroupInitiative || (function() {
                 }
                 break;
             case '!group-init-config':
+				if(!playerIsGM(msg.playerid)){
+					return;
+				}
                 if(_.contains(args,'--help')) {
                     showHelp();
                     return;
