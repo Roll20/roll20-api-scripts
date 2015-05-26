@@ -636,10 +636,13 @@ var ExExp = ExExp || {
 		}
 		return "[[" + inlineRolls[i]['expression'] + "]]";
 	    }
-	    return cmd.replace(/\$\[\[\d+\]\]/g, replaceInlines).replace(/&amp;/g, "&");
+	    return cmd.replace(/\$\[\[\d+\]\]/g, replaceInlines);
 	}
 
 	var chunks = [], asts = [], cmd = msg.content.substring(tokens[0].length).replace(/^\s+/, "");
+	if (msg.rolltemplate){
+	    cmd = "&{template:" + msg.rolltemplate + "} " + cmd;
+	}
 	var state = {'s': fixupCommand(cmd, msg.inlinerolls || [])};
 	var inline;
 
