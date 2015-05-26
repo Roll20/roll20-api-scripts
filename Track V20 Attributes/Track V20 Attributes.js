@@ -1,19 +1,12 @@
-// Github:   Track V20 Attributes.js
+// Github:   https://github.com/invincible-spleen/roll20-api-scripts/blob/master/Track%20V20%20Attributes/Track%20V20%20Attributes.js
 // By:       Invincible Spleen
 // Contact:  https://app.roll20.net/users/901082
-//
-// The V20 character sheet by Matt Zaldivar makes use of player filled text boxes for Disciplines and
-// Backgrounds. These show up as generic Discipline1, Discipline2, etc. attributes when used, making it
-// difficult to pull their values with macros and other functionality. This script solves the issue by
-// creating named attributes for this missing information and keeping them consistent with what players
-// are filling out on the sheet proper.
-// Future versions will likely include support for Dark Ages V20, as well.	
 
 var TrackV20Attributes = TrackV20Attributes || (function () {
     'use strict';
     
     var version = 0.1.0,
-        lastUpdate = 1432581700,
+        lastUpdate = 1432659997,
         schemaVersion = 0.1,
         
         checkInstall = function() {
