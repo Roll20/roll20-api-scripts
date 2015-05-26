@@ -279,7 +279,7 @@ var cron = cron || {
 	    if ((i < 0) || (i >= inlineRolls.length) || (!inlineRolls[i]) || (!inlineRolls[i]['expression'])){ return s; }
 	    return "[[" + inlineRolls[i]['expression'] + "]]";
 	}
-	return cmd.replace(/\$\[\[\d+\]\]/g, replaceInlines).replace(/&amp;/g, "&");
+	return cmd.replace(/\$\[\[\d+\]\]/g, replaceInlines);
     },
 
     handleCronMessage: function(tokens, msg){
@@ -360,6 +360,9 @@ var cron = cron || {
 	if (!command){
 	    cron.write("Error: No command specified for execution", msg.who, "", "CronD");
 	    return;
+	}
+	if (msg.rolltemplate){
+	    command = "&{template:" + msg.rolltemplate + "} " + command;
 	}
 	// determine whether new job is initiative-based or timed
 	var doCount = false;
