@@ -674,7 +674,7 @@ var ExExp = ExExp || {
 	if (msg.type != "api"){ return; }
 	if ((msg.content.indexOf("!exroll") != 0) && (msg.content.indexOf("!extend") != 0)){ return; }
 
-	return ExExp.handleCronMessage(msg.content.split(" "), msg);
+	return ExExp.handleExExpMessage(msg.content.split(" "), msg);
     },
 
     registerExExp: function(){
