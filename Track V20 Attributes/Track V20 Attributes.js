@@ -5,7 +5,7 @@
 var TrackV20Attributes = TrackV20Attributes || (function () {
     'use strict';
     
-    var version = 0.1.0,
+    var version = "0.1.0",
         lastUpdate = 1432659997,
         schemaVersion = 0.1,
         
