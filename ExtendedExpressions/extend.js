@@ -237,7 +237,15 @@ var ExExp = ExExp || {
 
 	return operands.pop();
     },
-    sendCommand: function(chunks, asts, evalResults, inline, from){
+
+    write: function(s, who, style, from){
+	if (who){
+	    who = "/w " + who.split(" ", 1)[0] + " ";
+	}
+	sendChat(from, who + s.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>"));
+    },
+
+    sendCommand: function(chunks, asts, evalResults, inline, from, labels){
 	// constants
 	var BINARY_FUNCTIONS = {
 	    '||':	function(x, y){ return x || y; },
@@ -273,7 +281,7 @@ var ExExp = ExExp || {
 
 
 	// local variables
-	var labels = {}, references = {}, unevalRefs = [], evalReqs = [];
+	var references = {}, unevalRefs = [], evalReqs = [];
 
 	// helper functions
 	function lazyEval(t, labels, references, unevalRefs, evalReqs, force){
@@ -488,7 +496,12 @@ var ExExp = ExExp || {
 	    if (t.type == "string"){ return t.value; }
 	    var retval = flattenAST(t);
 	    if (inline){ retval = "[[" + retval + "]]"; }
+	    else if (t.type == "number"){ retval = "1d0 + " + retval; }
 	    return retval;
+	}
+
+	function reportError(err){
+	    ExExp.write("Error: " + err, from);
 	}
 
 	// substitute in results of base evaluation
@@ -508,7 +521,7 @@ var ExExp = ExExp || {
 	    if (asts[i].baseValid){ continue; } // can be handled by base expression evaluator
 	    if ((asts[i].type == "string") || (asts[i].type == "number")){ continue; } // tree is fully evaluated
 	    var err = lazyEval(asts[i], labels, references, unevalRefs, evalReqs, false);
-	    if (typeof(err) == typeof("")){ return err; }
+	    if (typeof(err) == typeof("")){ return reportError(err); }
 	}
 
 	// do variable substitution; repeat until we don't make any more progress
@@ -518,12 +531,12 @@ var ExExp = ExExp || {
 	    // substitute in values for variables for which we already have names
 	    for (var label in references){
 		if (!labels[label]){
-		    return "Variable '" + label + "' not defined";
+		    return reportError("Variable '" + label + "' not defined");
 		}
 		if ((labels[label].type != "string") && (labels[label].type != "number")){
 		    // variable exists but not yet evaluated; try to evaluate
 		    var err = lazyEval(labels[label], labels, references, unevalRefs, evalReqs, true);
-		    if (typeof(err) == typeof("")){ return err; }
+		    if (typeof(err) == typeof("")){ return reportError(err); }
 		}
 		if ((labels[label].type == "string") || (labels[label].type == "number")){
 		    // variable fully evaluated; substitute it in
@@ -541,7 +554,7 @@ var ExExp = ExExp || {
 	    var newUneval = [];
 	    while (unevalRefs.length > 0){
 		var r = lazyEval(unevalRefs.shift(), labels, references, unevalRefs, evalReqs, true);
-		if (typeof(r) == typeof("")){ return err; }
+		if (typeof(r) == typeof("")){ return reportError(err); }
 		if ((r.type == "string") || (r.type == "number")){ doSubstitution = true; }
 		else{ newUneval.push(r); }
 	    }
@@ -563,23 +576,16 @@ var ExExp = ExExp || {
 		for (var i = 0; i < evalReqs.length; i++){
 		    evalResults.push([evalReqs[i], msg.inlinerolls[i].results.total]);
 		}
-		ExExp.sendCommand(chunks, asts, evalResults, inline, from);
+		ExExp.sendCommand(chunks, asts, evalResults, inline, from, labels);
 	    };
 	    sendChat(from, cmd, evalRecurse);
 	}
 	if (asts.length > 0){
 	    // need to finish evaluating some ASTs; recurse directly
-	    return ExExp.sendCommand(chunks, asts, [], inline, from)
+	    return ExExp.sendCommand(chunks, asts, [], inline, from, labels)
 	}
 	// if we got here, we're done evaluating everything; submit results via sendChat
 	sendChat(from, chunks.join(""));
-    },
-
-    write: function(s, who, style, from){
-	if (who){
-	    who = "/w " + who.split(" ", 1)[0] + " ";
-	}
-	sendChat(from, who + s.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>"));
     },
 
     showHelp: function(who){
@@ -661,14 +667,14 @@ var ExExp = ExExp || {
 	    }
 	}
 	chunks.push(state.s);
-	ExExp.sendCommand(chunks, asts, [], inline, msg.who);
+	ExExp.sendCommand(chunks, asts, [], inline, msg.who, {});
     },
 
     handleChatMessage: function(msg){
 	if (msg.type != "api"){ return; }
 	if ((msg.content.indexOf("!exroll") != 0) && (msg.content.indexOf("!extend") != 0)){ return; }
 
-	return ExExp.handleCronMessage(msg.content.split(" "), msg);
+	return ExExp.handleExExpMessage(msg.content.split(" "), msg);
     },
 
     registerExExp: function(){

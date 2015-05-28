@@ -1,6 +1,6 @@
 {
     "name":		"ExtendedExpressions",
-    "version":		"0.1",
+    "version":		"0.3",
     "description":	"Extended roll expression syntax, supporting conditionals, variable references, bitwise operators, and more.",
     "authors":		"manveti",
     "roll20userid":	"503018",

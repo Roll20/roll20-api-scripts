@@ -87,8 +87,8 @@ Examples:
     roll each round.
 
 !cron -f Nanny -t 23:00 Bedtime for sleepy-head.  Time to wrap things up.
-    Be aware that the time zone is based on the API server, not the client who
-    runs the command.
+    Be aware that the time zone is GMT, not local time of the client who runs
+    the command.
 
 !cron -a 30 Hey!  It's 30 seconds later than when I typed this.
     Probably more useful with larger delay amounts.
@@ -101,6 +101,6 @@ Examples:
     around commands which contain tokens which are valid !cron arguments (e.g.
     "-R").  Without the quotes, this will immediately remove job 42.
 
-!cron -a 1 &amp;{template:default} {{name=Test}} {{foo=bar}}
-    Note that the "&" must be "&amp;", otherwise the "&{template:default}" will
-    be consumed by the chat system before the message is passed to the script.
+!cron -a 1 &{template:default} {{name=Test}} {{foo=bar}}
+    As of version 0.5, templates are handled correctly, and do not need (or
+    support) &amp;-escaping.
