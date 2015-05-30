@@ -63,7 +63,7 @@ var TokenPath = TokenPath || {
 						    'width':		TokenPath.PIP_SIZE,
 						    'height':		TokenPath.PIP_SIZE,
 						    'layer':		layer,
-						    'name':		"" + (Math.round(pip.distance * 100) / 100),
+						    'name':		"" + (Math.round(pip.distance * 10) / 10),
 						    'controlledby':	controlledBy,
 						    'showname':		true,
 						    'showplayers_name':	true});
@@ -106,7 +106,7 @@ var TokenPath = TokenPath || {
 	// update pathEnd
 	newPath[newPath.length - 1].token = state.TokenPath.pips[pathEnd].token;
 	var pipTok = getObj("graphic", newPath[newPath.length - 1].token);
-	pipTok.set({'name': "" + (Math.round(newPath[newPath.length - 1].distance * 100) / 100)})
+	pipTok.set({'name': "" + (Math.round(newPath[newPath.length - 1].distance * 10) / 10)})
 	// splice in new path
 	var oldLen = pathEnd - pathStart, newLen = newPath.length, dLen = newLen - oldLen;
 	newPath.unshift(oldLen);
@@ -176,7 +176,7 @@ var TokenPath = TokenPath || {
 						    'width':		TokenPath.PIP_SIZE,
 						    'height':		TokenPath.PIP_SIZE,
 						    'layer':		tok.get('layer'),
-						    'name':		"" + (Math.round(state.TokenPath.pips[pipIdx].distance * 100) / 100),
+						    'name':		"" + (Math.round(state.TokenPath.pips[pipIdx].distance * 10) / 10),
 						    'controlledby':	tok.get('controlledby'),
 						    'tint_color':	TokenPath.START_TINT,
 						    'showname':		true,
@@ -280,7 +280,7 @@ var TokenPath = TokenPath || {
 						'width':		TokenPath.PIP_SIZE,
 						'height':		TokenPath.PIP_SIZE,
 						'layer':		tok.get('layer'),
-						'name':			"" + (Math.round(lastPip.distance * 100) / 100),
+						'name':			"" + (Math.round(lastPip.distance * 10) / 10),
 						'controlledby':		tok.get('controlledby'),
 						'showname':		true,
 						'showplayers_name':	true});
@@ -345,7 +345,7 @@ var TokenPath = TokenPath || {
 						'width':		TokenPath.PIP_SIZE,
 						'height':		TokenPath.PIP_SIZE,
 						'layer':		tok.get('layer'),
-						'name':			"" + (Math.round(pip.distance * 100) / 100),
+						'name':			"" + (Math.round(pip.distance * 10) / 10),
 						'controlledby':		tok.get('controlledby'),
 						'showname':		true,
 						'showplayers_name':	true});
