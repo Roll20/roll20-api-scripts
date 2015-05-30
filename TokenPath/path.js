@@ -1,6 +1,7 @@
 var TokenPath = TokenPath || {
     PIP_IMAGE: "https://s3.amazonaws.com/files.d20.io/images/9817292/f_tAiMi01sv2nba2Uuakig/thumb.png?1432944100",
     PIP_SIZE: 30,
+    START_TINT: "#80ffff",
     WAYPOINT_TINT: "#8080ff",
     GRID_SIZE: 70,
 
@@ -100,15 +101,104 @@ var TokenPath = TokenPath || {
 		// move pip to center of square
 		tok.set({'left': tok.get('left') + expOff - xOff, 'top': tok.get('top') + expOff - yOff});
 	    }
-/////
-//
-	    //if pipIdx==0: create a new waypoint at start of state.TokenPath.waypoints
-	    //elif tok is a waypoint: move that waypoint
-	    //else: create a new waypoint between waypoints to either side of pip
-	    //recalculate affected subpaths; delete affected pip tokens and create new ones (new pip tokens on same layer as existing ones)
-	    //be sure to update distances in later path segments (both in pips and in tokens)
-//
-/////
+	    var wpIdx, isWp = false;
+	    for (wpIdx = 0; wpIdx < state.TokenPath.waypoints.length; wpIdx++){
+		if (state.TokenPath.waypoints[wpIdx] == pipIdx){ isWp = true; }
+		if (state.TokenPath.waypoints[wpIdx] >= pipIdx){ break; }
+	    }
+	    function updatePath(pathStart, pathEnd, wp){
+		// remove old pips between pathStart and pathEnd (leaving endpoints in place)
+		for (var i = pathStart + 1; i < pathEnd; i++){
+		    if (!state.TokenPath.pips[i].token){ continue; }
+		    var pipTok = getObj("graphic", state.TokenPath.pips[i].token);
+		    if (pipTok){ pipTok.remove(); }
+		}
+		// draw a new path from pathStart to pathEnd
+		var newPath = drawPath(state.TokenPath.pips[pathStart], state.TokenPath.pips[pathEnd], diag, scale);
+		// update pathEnd
+		newPath[newPath.length - 1].token = state.TokenPath.pips[pathEnd].token;
+		var pipTok = getObj("graphic", newPath[newPath.length - 1].token);
+		pipTok.set({'name': "" + (Math.round(newPath[newPath.length - 1].distance * 100) / 100)})
+		// splice in new path
+		var oldLen = pathEnd - pathStart, newLen = newPath.length, dLen = newLen - oldLen;
+		newPath.unshift(oldLen);
+		newPath.unshift(pathStart + 1);
+		state.TokenPath.pips.splice.apply(state.TokenPath.pips, newPath);
+		// update waypoints based on the length difference between the old and new paths
+		for (var i = wp; i < state.TokenPath.waypoints.length; i++){
+		    state.TokenPath.waypoints[i] += dLen;
+		}
+		return pathEnd + dLen;
+	    }
+	    if (pipIdx == 0){
+		// tok was start point; create a new start point
+		var pipTok = createObj("graphic", {'_subtype':		"token",
+						    '_pageid':		tok.get('pageid'),
+						    'imgsrc':		TokenPath.PIP_IMAGE,
+						    'left':		state.TokenPath.pips[0].x,
+						    'top':		state.TokenPath.pips[0].y,
+						    'width':		TokenPath.PIP_SIZE,
+						    'height':		TokenPath.PIP_SIZE,
+						    'layer':		tok.get('layer'),
+						    'name':		"0",
+						    'controlledby':	tok.get('controlledby'),
+						    'tint_color':	TokenPath.START_TINT,
+						    'showname':		true,
+						    'showplayers_name':	true});
+		toFront(pipTok);
+		var startPip = {'x':		state.TokenPath.pips[0].x,
+				'y':		state.TokenPath.pips[0].y,
+				'distance':	0,
+				'round':	0,
+				'token':	pipTok.id};
+		state.TokenPath.pips.unshift(startPip);
+		for (var i = 0; i < state.TokenPath.waypoints.length; i++){
+		    state.TokenPath.waypoints[i] += 1;
+		}
+		pipIdx = 1;
+	    }
+	    state.TokenPath.pips[pipIdx].x = tok.get('left');
+	    state.TokenPath.pips[pipIdx].y = tok.get('top');
+	    var pathStart, pathEnd, newEnd;
+	    if (isWp){
+		// tok is already a waypoint; update paths leading into and out of it
+		pathStart = (wpIdx > 0 ? state.TokenPath.waypoints[wpIdx - 1] : 0);
+		pathEnd = pipIdx;
+		newEnd = updatePath(pathStart, pathEnd, wpIdx);
+		pathStart = newEnd;
+		pathEnd = (wpIdx + 1 < state.TokenPath.waypoints.length ? state.TokenPath.waypoints[wpIdx + 1] : state.TokenPath.pips.length - 1);
+		newEnd = updatePath(pathStart, pathEnd, wpIdx + 1);
+	    }
+	    else{
+		// tok was not a waypoint; upgrade it to one and split path it was on into one in and one out of it
+		pathStart = (wpIdx > 0 ? state.TokenPath.waypoints[wpIdx - 1] : 0);
+		pathEnd = pipIdx;
+		newEnd = updatePath(pathStart, pathEnd, wpIdx);
+		state.TokenPath.waypoints.splice(wpIdx, 0, newEnd);
+		tok.set({'tint_color': TokenPath.WAYPOINT_TINT});
+		pathStart = newEnd;
+		pathEnd = (wpIdx + 1 < state.TokenPath.waypoints.length ? state.TokenPath.waypoints[wpIdx + 1] : state.TokenPath.pips.length - 1);
+		newEnd = updatePath(pathStart, pathEnd, wpIdx + 1);
+	    }
+	    var allPips = state.TokenPath.pips;
+	    var distance = allPips[newEnd].distance, round = allPips[newEnd].round;
+	    for (var i = newEnd + 1; i < allPips.length; i++){
+		if ((allPips[i].x == allPips[i - 1].x) || (allPips[i].y == allPips[i - 1].y) || diag == "foure"){ distance += scale; }
+		else if (diag == "manhattan"){ distance += 2 * scale; }
+		else if (diag == "threefive"){
+		    distance += scale * (1 + round);
+		    round = 1 - round;
+		}
+		else{ distance += Math.sqrt(2) * scale; }
+		allPips[i].distance = distance;
+		allPips[i].round = round;
+		if (allPips[i].token){
+		    var pipTok = getObj("graphic", allPips[i].token);
+		    if (pipTok){
+			pipTok.set({'distance': distance, 'round': round});
+		    }
+		}
+	    }
 	    return;
 	}
 
@@ -128,7 +218,7 @@ var TokenPath = TokenPath || {
 						'layer':		tok.get('layer'),
 						'name':			"0",
 						'controlledby':		tok.get('controlledby'),
-						'tint_color':		TokenPath.WAYPOINT_TINT,
+						'tint_color':		TokenPath.START_TINT,
 						'showname':		true,
 						'showplayers_name':	true});
 	    state.TokenPath.pips[0].token = pipTok.id;
