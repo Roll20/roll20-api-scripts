@@ -157,6 +157,29 @@ var TokenPath = TokenPath || {
 		}
 		pipIdx = 1;
 	    }
+	    if (pipIdx == state.TokenPath.pips.length - 1){
+		// tok was end point; create a new end point
+		var pipTok = createObj("graphic", {'_subtype':		"token",
+						    '_pageid':		tok.get('pageid'),
+						    'imgsrc':		TokenPath.PIP_IMAGE,
+						    'left':		state.TokenPath.pips[pipIdx].x,
+						    'top':		state.TokenPath.pips[pipIdx].y,
+						    'width':		TokenPath.PIP_SIZE,
+						    'height':		TokenPath.PIP_SIZE,
+						    'layer':		tok.get('layer'),
+						    'name':		"" + (Math.round(state.TokenPath.pips[pipIdx].distance * 100) / 100),
+						    'controlledby':	tok.get('controlledby'),
+						    'tint_color':	TokenPath.START_TINT,
+						    'showname':		true,
+						    'showplayers_name':	true});
+		toFront(pipTok);
+		var endPip = {'x':		state.TokenPath.pips[pipIdx].x,
+				'y':		state.TokenPath.pips[pipIdx].y,
+				'distance':	state.TokenPath.pips[pipIdx].distance,
+				'round':	state.TokenPath.pips[pipIdx].round,
+				'token':	pipTok.id};
+		state.TokenPath.pips.push(endPip);
+	    }
 	    state.TokenPath.pips[pipIdx].x = tok.get('left');
 	    state.TokenPath.pips[pipIdx].y = tok.get('top');
 	    var pathStart, pathEnd, newEnd;
@@ -237,22 +260,24 @@ var TokenPath = TokenPath || {
 
 	// generate new path from last good pip to tok's current position
 	var newPips = drawPath(state.TokenPath.pips[lastGoodPip], {'x': tok.get('left'), 'y': tok.get('top')}, diag, scale);
-	var lastPip = newPips[newPips.length - 1];
-	var pipTok = createObj("graphic", {'_subtype':		"token",
-					    '_pageid':		tok.get('pageid'),
-					    'imgsrc':		TokenPath.PIP_IMAGE,
-					    'left':		lastPip.x,
-					    'top':		lastPip.y,
-					    'width':		TokenPath.PIP_SIZE,
-					    'height':		TokenPath.PIP_SIZE,
-					    'layer':		tok.get('layer'),
-					    'name':		"" + (Math.round(lastPip.distance * 100) / 100),
-					    'controlledby':	tok.get('controlledby'),
-					    'showname':		true,
-					    'showplayers_name':	true});
-	lastPip.token = pipTok.id;
-	toFront(pipTok);
-	for (var i = 0; i < newPips.length; i++){ state.TokenPath.pips.push(newPips[i]); }
+	if (newPips.length > 0){
+	    var lastPip = newPips[newPips.length - 1];
+	    var pipTok = createObj("graphic", {'_subtype':		"token",
+						'_pageid':		tok.get('pageid'),
+						'imgsrc':		TokenPath.PIP_IMAGE,
+						'left':			lastPip.x,
+						'top':			lastPip.y,
+						'width':		TokenPath.PIP_SIZE,
+						'height':		TokenPath.PIP_SIZE,
+						'layer':		tok.get('layer'),
+						'name':			"" + (Math.round(lastPip.distance * 100) / 100),
+						'controlledby':		tok.get('controlledby'),
+						'showname':		true,
+						'showplayers_name':	true});
+	    lastPip.token = pipTok.id;
+	    toFront(pipTok);
+	    for (var i = 0; i < newPips.length; i++){ state.TokenPath.pips.push(newPips[i]); }
+	}
     },
 
     registerTokenPath: function(){
