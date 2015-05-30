@@ -1,0 +1,21 @@
+TokenPath
+
+TokenPath continuously tracks the movement of the token at the top of the turn
+tracker.  The path is automatically computed, but waypoints can be placed along
+it to tweak it as the user desires.
+
+
+Use:
+
+No special user action is required.  Whenever the token at the top of the turn
+tracker moves, its path is automatically updated.  The path is automatically
+cleared when the turn changes.
+
+The pips which display a token's path are controlled by the same user(s) as the
+token in question.  When a pip is moved, it creates a waypoint, and the path is
+automatically updated to pass through that waypoint.  Waypoints are ordered, so
+creating a new waypoint B by dragging a pip between existing waypoints A and C
+will create a path that passes through A, then B, then C.
+
+Pips display distance based on the page settings (although they are not updated
+retroactively if the page settings are changed while a path is visible).
