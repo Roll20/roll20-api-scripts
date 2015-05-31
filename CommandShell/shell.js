@@ -115,9 +115,6 @@ var Shell = Shell || {
 	    if (idx < 0){
 		// no more quotes or whitespace, just add the rest of the string to the current token and terminate
 		curTok += s;
-		if (curTok){
-		    retval.push(curTok);
-		}
 		break;
 	    }
 	    curTok += s.substr(0, idx);
@@ -134,6 +131,9 @@ var Shell = Shell || {
 		}
 		curTok = "";
 	    }
+	}
+	if (curTok){
+	    retval.push(curTok);
 	}
 	return retval;
     },
