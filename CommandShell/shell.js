@@ -158,7 +158,7 @@ var Shell = Shell || {
 	}
 	if (helpMsg){
 	    Shell.write("Shell Commands:", msg.who);
-	    Shell.write(helpMsg, msg.who, "font-size: small");
+	    Shell.write(helpMsg.replace(/\//g, "&#47;"), msg.who, "font-size: small");
 	}
     },
 
