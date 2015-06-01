@@ -1,11 +1,11 @@
 /* read Help.txt */
 var NathaNumenera = NathaNumenera || (function () {
     'use strict';
-    var version = 4.2,
-    releasedate= "2015-04-20",
+    var version = 4.3,
+    releasedate= "2015-05-31",
     schemaversion = 1.0,
-	author="Natha (roll20userid:75857)",
-    warning = "Sheet must be in version 4+ : chat outputs and error messages are managed through the sheet's templates.",
+    author="Natha (roll20userid:75857)",
+    warning = "Sheet must be in version 4.3+ : chat outputs and error messages are managed through the sheet's templates.",
     //-----------------------------------------------------------------------------
 	checkInstall = function() {
         log(""+author+"'s Numenera API script version "+version+" ("+releasedate+") installed.");
@@ -290,10 +290,11 @@ var NathaNumenera = NathaNumenera || (function () {
 	    var effortsOnRoll=parseInt(getAttrByName(characterObj.id, "rollVarRollEff", "current")) || 0;
 	    var effortsOnDmg=parseInt(getAttrByName(characterObj.id, "rollVarRollDmg", "current")) || 0;
 	    var rollBonus=parseInt(getAttrByName(characterObj.id, "rollVarBonus", "current")) || 0;
-	    statRoll(characterObj,statName,whoRolled,difficulty,statexp,assets,effortsOnRoll,effortsOnDmg,rollBonus);
+	    var skillLevel=parseInt(getAttrByName(characterObj.id, "rollVarSkill", "current")) || 0;
+	    statRoll(characterObj,statName,whoRolled,difficulty,statexp,assets,effortsOnRoll,effortsOnDmg,rollBonus,skillLevel);
 	},
 	//-----------------------------------------------------------------------------
-	statRoll = function (characterObj,statName,whoRolled,difficulty,statexp,assets,effortsOnRoll,effortsOnDmg,rollBonus) {
+	statRoll = function (characterObj,statName,whoRolled,difficulty,statexp,assets,effortsOnRoll,effortsOnDmg,rollBonus,skillLevel) {
 	    /*
 	    	Might/speed/intellect roll with eventual roll effort(s), additionnal cost,
 	    	damage effort(s), bonus to the roll (<3), against a difficulty (optional).
@@ -305,8 +306,8 @@ var NathaNumenera = NathaNumenera || (function () {
 	    	The target number is calculated by the function.
 
 		    If difficulty is 0, the roll still happens, but is not confronted to any difficulty.
-
 		    Instead of calculating success, it calculates the highest difficulty beaten.
+
 	    	Unless d20 rolls a natural 20, pool points cost is calculted (taking the stat edge)
 	    	and expended, if necessary and if possible.
 
@@ -394,20 +395,24 @@ var NathaNumenera = NathaNumenera || (function () {
 	    };
 
 	    // beginning output calculation
-	    var tmplt="&{template:nathaNumRoll} {{"+attributeName+"="+attributeName+"}} {{attrEdge="+attrEdge+"}} {{finalRoll="+finalRoll+"}} {{diceRoll="+diceRoll+"}}";
+	    var tmplt="&{template:nathaNumRoll} {{"+attributeName+"="+attributeName+"}} {{attrEdge="+attrEdge+"}} {{finalRoll="+finalRoll+"}} {{diceRoll="+diceRoll+"}} {{skilled="+ skillLevel +"}}";
 	    if (bonusToRoll>0) tmplt += " {{bonusToRoll="+bonusToRoll+"}}";
 	    var assetsUsed = parseInt(0 || assets);
         if (assetsUsed>0) tmplt += " {{assets="+assetsUsed+"}}";
+        if (skillLevel == 0) tmplt += " {{Untrained=1}}";
+        if (skillLevel == 1) tmplt += " {{Trained=1}}";
+        if (skillLevel == 2) tmplt += " {{Specialized=1}}";
+        if (skillLevel == -1) tmplt += " {{Inability=1}}";
 
-		//computing target task
+		//computing final difficulty / target task
         var initDiff=parseInt(0 || difficulty);
 	    if (initDiff > 0) {
 	        var target = initDiff*3;
-	        var finalDiff= Math.max(0, initDiff-effortRoll-assetsUsed);
+	        var finalDiff= Math.max(0, initDiff-effortRoll-assetsUsed-skillLevel);
             var targetRoll = finalDiff*3;
 	        tmplt += "{{difficulty=" + initDiff + "}} {{target="+target+"}} {{finalDiff="+finalDiff+"}} {{targetRoll="+targetRoll+"}}";
 	    } else {
-            var rollBeats=Math.floor(finalRoll/3)+effortRoll+assetsUsed;
+            var rollBeats=Math.floor(finalRoll/3)+effortRoll+assetsUsed+skillLevel;
             tmplt += " {{rollBeats="+rollBeats+" ("+(rollBeats*3)+")"+"}}";
 	    };
 
