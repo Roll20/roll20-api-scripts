@@ -1,11 +1,11 @@
 /* read Help.txt */
 var NathaNumenera = NathaNumenera || (function () {
     'use strict';
-    var version = 4.3,
-    releasedate= "2015-05-31",
+    var version = 4.4,
+    releasedate= "2015-06-02",
     schemaversion = 1.0,
     author="Natha (roll20userid:75857)",
-    warning = "Sheet must be in version 4.3+ : chat outputs and error messages are managed through the sheet's templates.",
+    warning = "Sheet must be in version 4.4+ : chat outputs and error messages are managed through the sheet's templates.",
     //-----------------------------------------------------------------------------
 	checkInstall = function() {
         log(""+author+"'s Numenera API script version "+version+" ("+releasedate+") installed.");
@@ -181,6 +181,8 @@ var NathaNumenera = NathaNumenera || (function () {
 	    var bonusToRoll = parseInt(getAttrByName(characterObj.id, "InitVarBonus", "current")) || 0;
 	    var statExpense = parseInt(getAttrByName(characterObj.id, "InitVarCost", "current")) || 0;
 	    var effortsUsed = parseInt(getAttrByName(characterObj.id, "InitVarEffort", "current")) || 0;
+	    var assetsUsed = parseInt(getAttrByName(characterObj.id, "InitVarAsset", "current")) || 0;
+	    var skillLevel = parseInt(getAttrByName(characterObj.id, "InitVarSkill", "current")) || 0;
 	    // Rolling the dice
 	    var diceRoll = randomInteger(20);
 	    // checking for appliable effort and calculating statpool cost
@@ -211,7 +213,7 @@ var NathaNumenera = NathaNumenera || (function () {
 	    };
 
 	    // Calculating initiative
-	    var finalRoll = diceRoll + (effortsUsed*3) + bonusToRoll;
+	    var finalRoll = diceRoll + (effortsUsed*3) + (skillLevel*3) + (assetsUsed*3) + bonusToRoll;
 
 	    //Retrieving token, to add it to the turn tracker
 	    var tokenObj;
@@ -279,6 +281,11 @@ var NathaNumenera = NathaNumenera || (function () {
 	    if(bonusToRoll>0) tmplt+=" {{bonusToRoll="+bonusToRoll+"}}";
 	    if(effortsUsed>0) tmplt+=" {{effortsUsed="+effortsUsed+"}} {{effortCost="+effortCost+"}}";
 	    if(statExpense>0) tmplt+=" {{statExpense="+statExpense+"}}";
+	    if(assetsUsed>0) tmplt+=" {{assets="+assetsUsed+"}}";
+        if (skillLevel != 0) tmplt += " {{skilled=1}}";
+        if (skillLevel == 1) tmplt += " {{Trained=1}}";
+        if (skillLevel == 2) tmplt += " {{Specialized=1}}";
+        if (skillLevel == -1) tmplt += " {{Inability=1}}";
 	    if(totalCost>0)  tmplt+=" {{totalCost="+totalCost+"}} {{attrPool="+speedPool+"}} {{attrPoolInit="+speedPoolInit+"}}";
 	    sendChat("character|"+charId, ""+tmplt);
 	},
@@ -412,7 +419,7 @@ var NathaNumenera = NathaNumenera || (function () {
             var targetRoll = finalDiff*3;
 	        tmplt += "{{difficulty=" + initDiff + "}} {{target="+target+"}} {{finalDiff="+finalDiff+"}} {{targetRoll="+targetRoll+"}}";
 	    } else {
-            var rollBeats=Math.floor(finalRoll/3)+effortRoll+assetsUsed+skillLevel;
+            var rollBeats=Math.max(0, Math.floor(finalRoll/3)+effortRoll+assetsUsed+skillLevel);
             tmplt += " {{rollBeats="+rollBeats+" ("+(rollBeats*3)+")"+"}}";
 	    };
 
