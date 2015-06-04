@@ -1,11 +1,21 @@
 var ExExp = ExExp || {
     parseExpression: function(s, until){
+	var untilCb = (typeof(until) == typeof(function(){}) ? until : function(tok){ return (tok == until); });
+
 	// constants
+	var ARG_COUNTS = {
+	    'abs':	1,
+	    'ceil':	1,
+	    'floor':	1,
+	    'round':	1,
+	    'max':	[1],
+	    'min':	[1]
+	};
 	var BINARY_PRECEDENCE = {
 	    '?': 1, ':': 2,
 	    '||': 3, '&&': 4,
 	    '|': 5, '^': 6, '&': 7,
-	    '=': 8, '!=': 8,
+	    '=': 8, '==': 8, '!=': 8,
 	    '>=': 9, '>': 9, '<': 9, '<=': 9,
 	    '<<': 10, '>>': 10,
 	    '+': 11, '-': 11,
@@ -31,6 +41,8 @@ var ExExp = ExExp || {
 
 	    m = s.match(/^\s+/);
 	    if (m){ return retVal("whitespace", m); }
+	    m = s.match(/^(abs|ceil|floor|round|max|min)[(]/);
+	    if (m){ return retVal("function", m); }
 	    m = s.match(/^[({]/);
 	    if (m){ return retVal("opengroup", m); }
 	    m = s.match(/^[)}]/);
@@ -39,7 +51,7 @@ var ExExp = ExExp || {
 	    if (m){ return retVal("number", m); }
 	    m = s.match(/^['"]/);
 	    if (m){ return retVal("quote", m); }
-	    m = s.match(/^((\|\|)|(&&)|(!=)|(>=)|(<=)|(<<)|(>>)|(\*\*)|[?:|^&=><%!~])/);
+	    m = s.match(/^((\|\|)|(&&)|(==)|(!=)|(>=)|(<=)|(<<)|(>>)|(\*\*)|[?:|^&=><%!~])/);
 	    if (m){ return retVal("extoperator", m); }
 	    m = s.match(/^[-+*/td]/);
 	    if (m){ return retVal("baseoperator", m); }
@@ -119,6 +131,10 @@ var ExExp = ExExp || {
 	    operators.push(op);
 	}
 
+	function argListUntil(tok){
+	    return (tok == ',') || (tok == ')');
+	}
+
 	function parseHelper(){
 	    var err;
 
@@ -129,6 +145,40 @@ var ExExp = ExExp || {
 		if (!s.tok){ return "Error: Unrecognized token: " + s.s.split(" ", 1)[0]; }
 	    }
 	    switch (s.tok.type){
+	    case "function":
+		var func = s.tok.match[1];
+		var argCounts = ARG_COUNTS[func], minArgs, maxArgs;
+		if (typeof(argCounts) == typeof(0)){
+		    minArgs = argCounts;
+		    maxArgs = argCounts;
+		}
+		else if (typeof(argCounts) == typeof([])){
+		    minArgs = argCounts[0];
+		    maxArgs = argCounts[1];
+		}
+		else{
+		    return "Error: Unrecognized function: " + func;
+		}
+		var args = [];
+		while ((s.tok) && (s.tok.text != ')')){
+		    var argTree = ExExp.parseExpression(s, argListUntil);
+		    if (typeof(argTree) == typeof("")){ return argTree; } // error
+		    args.push(argTree);
+		    if (!s.tok){ return "Error: Unterminated function: " + func; }
+		    if (!argListUntil(s.tok.text)){
+			return "Error: Expected ',' or ')' to continue/close '" + func + "(', but got '" + s.tok.text + "'";
+		    }
+		}
+		if ((typeof(minArgs) != typeof(0)) || (minArgs < 0)){ minArgs = args.length; }
+		if ((typeof(maxArgs) != typeof(0)) || (maxArgs < 0)){ maxArgs = args.length; }
+		if (args.length < minArgs){
+		    return "Error: Function '" + func + "' requires at least " + minArgs + " argument(s)";
+		}
+		if (args.length > maxArgs){
+		    return "Error: Function '" + func + "' requires at most " + maxArgs + " argument(s)";
+		}
+		operands.push({'type': "function", 'datatype': "number", 'function': func, 'args': args});
+		return;
 	    case "number":
 		operands.push({'type': "number", 'datatype': "number", 'value': parseFloat(s.tok.text)});
 		return;
@@ -144,13 +194,16 @@ var ExExp = ExExp || {
 		return;
 	    case "opengroup":
 		var opener = s.tok.text, closer = CLOSERS[opener];
-		operands.push(ExExp.parseExpression(s, closer));
+		var operand = ExExp.parseExpression(s, closer);
+		if (typeof(operand) == typeof("")){ return operand; } // error
+		operands.push(operand);
 		if (s.tok.text != closer){
 		    return "Error: Expected '" + closer + "' to close '" + opener + "', but got '" + s.tok.text + "'";
 		}
 		return;
 	    case "openvariable":
 		var varExp = ExExp.parseExpression(s, "}");
+		if (typeof(varExp) == typeof("")){ return varExp; } // error
 		if (s.tok.text != "}"){
 		    return "Error: Expected '}' to close '${', but got '" + s.tok.text + "'";
 		}
@@ -175,7 +228,7 @@ var ExExp = ExExp || {
 	// push operators and operands to their respective stacks, building sub-ASTs in the operand stack as needed
 	var err = parseHelper();
 	if (err){ return err; }
-	for (popToken(s); (s.tok) && (s.tok.text != until) && ((until) || (s.tok.type != "raw")); popToken(s)){
+	for (popToken(s); (s.tok) && (!untilCb(s.tok.text)) && ((until) || (s.tok.type != "raw")); popToken(s)){
 	    switch(s.tok.type){
 	    case "extoperator":
 	    case "baseoperator":
@@ -197,6 +250,7 @@ var ExExp = ExExp || {
 		    else{
 			s.s = s.s.substring(1);
 			tableExp = ExExp.parseExpression(s, "]");
+			if (typeof(tableExp) == typeof("")){ return tableExp; } // error
 			if (s.tok.text != "]"){
 			    return "Error: Expected ']' to close 't[', but got '" + s.tok.text + "'";
 			}
@@ -247,6 +301,14 @@ var ExExp = ExExp || {
 
     sendCommand: function(chunks, asts, evalResults, inline, from, labels){
 	// constants
+	var FUNCTION_FUNCTIONS = {
+	    'abs':	Math.abs,
+	    'ceil':	Math.ceil,
+	    'floor':	Math.floor,
+	    'round':	Math.round,
+	    'max':	Math.max,
+	    'min':	Math.min
+	};
 	var BINARY_FUNCTIONS = {
 	    '||':	function(x, y){ return x || y; },
 	    '&&':	function(x, y){ return x && y; },
@@ -254,6 +316,7 @@ var ExExp = ExExp || {
 	    '^':	function(x, y){ return x ^ y; },
 	    '&':	function(x, y){ return x & y; },
 	    '=':	function(x, y){ return x == y; },
+	    '==':	function(x, y){ return x == y; },
 	    '!=':	function(x, y){ return x != y; },
 	    '>=':	function(x, y){ return x >= y; },
 	    '>':	function(x, y){ return x > y; },
@@ -315,6 +378,33 @@ var ExExp = ExExp || {
 		    t.value = x.value;
 		}
 		// if we got here, t.value is the name of a rollable table
+		t.baseValid = true;
+		return t;
+	    case "function":
+		var args = [];
+		for (var i = 0; i < t.args.length; i++){
+		    x = lazyEval(t.args[i], labels, references, unevalRefs, evalReqs, true);
+		    if (typeof(x) == typeof("")){ return x; } // error
+		    if (x.type == "string"){
+			x.value = parseFloat(x.value);
+			x.type = "number";
+		    }
+		    if (x.type != "number"){
+			// unable to fully evaluate argument
+			if (t.baseValid){ t.baseValid = false; }
+			return t;
+		    }
+		    args.push(x.value);
+		}
+		// successfully evaluated all arguments
+		t.type = "number";
+		t.datatype = "number";
+		t.value = FUNCTION_FUNCTIONS[t.function].apply(args, args);
+		for (var i = 0; i < t.args.length; i++){
+		    if (t.args[i].label){ labels[t.args[i].label] = t.args[i]; }
+		}
+		delete t.function;
+		delete t.args;
 		t.baseValid = true;
 		return t;
 	    case "unop":
@@ -450,6 +540,11 @@ var ExExp = ExExp || {
 
 	    // node has no label; check children
 	    switch(t.type){
+	    case "function":
+		for (var i = 0; i < t.args.length; i++){
+		    if (hasUnevaluatedLabels(t.args[i])){ return true; }
+		}
+		return false;
 	    case "tablename":
 	    case "variable":
 		if (typeof(t.value) == typeof("")){ return false; }
@@ -473,7 +568,7 @@ var ExExp = ExExp || {
 	    switch(t.type){
 	    case "number":
 	    case "rollspec":
-		retval = t.value;
+		retval = t.value | 0;
 		break;
 	    case "tablename":
 		retval = "[" + t.value + "]";
@@ -655,7 +750,13 @@ var ExExp = ExExp || {
 	if (tokens[0] == "!exroll"){
 	    inline = false;
 	    chunks.push("/roll ");
-	    asts.push(ExExp.parseExpression(state, null));
+	    var ast = ExExp.parseExpression(state, null);
+	    if (typeof(ast) == typeof("")){
+		// error
+		ExExp.write(ast, msg.who, "", "ExExp");
+		return;
+	    }
+	    asts.push(ast);
 	    state.s = " " + ((state.tok || {'text': ""}).text || "") + state.s;
 	}
 	else{
@@ -663,7 +764,13 @@ var ExExp = ExExp || {
 	    for (var i = state.s.indexOf('`'); i >= 0; i = state.s.indexOf('`')){
 		chunks.push(state.s.substring(0, i));
 		state.s = state.s.substring(i + 1);
-		asts.push(ExExp.parseExpression(state, '`'));
+		var ast = ExExp.parseExpression(state, '`');
+		if (typeof(ast) == typeof("")){
+		    // error
+		    ExExp.write(ast, msg.who, "", "ExExp");
+		    return;
+		}
+		asts.push(ast);
 	    }
 	}
 	chunks.push(state.s);
