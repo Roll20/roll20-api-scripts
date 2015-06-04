@@ -52,6 +52,7 @@ The following operators are supported, in decreasing precedence order:
     x <= y	Comparison (less than or equal)
 
     x = y	Equality
+    x == y	Equality (synonym for =)
     x != y	Inequality
 
     x & y	Bitwise AND
@@ -65,6 +66,16 @@ The following operators are supported, in decreasing precedence order:
     x || y	Logical OR
 
     x ? y : z	Conditional evaluation
+
+
+Functions:
+
+    abs(x)		Absolute value
+    ceil(x)		Round up to integer value
+    floor(x)		Round down to integer value
+    round(x)		Round to nearest integer value
+    max(x, y, ...)	Greatest of x, y, ...
+    min(x, y, ...)	Least of x, y, ...
 
 
 Additional Syntax:
@@ -94,3 +105,7 @@ Examples:
 !extend `1d6[foo]+1d6[bar]+${(1d2-1 ? "foo" : "bar")}`
     Internally rolls 1d2-1, then submits a command like "[[3+1d6[bar]+3]]" or
     "[[1d6[foo]+2+2]]".
+
+!extend `max(1d2[foo], 1d3[bar], 1d4[baz])`: `${foo}`, `${bar}`, `${baz}`
+    Internally rolls three dice of different sizes, then displays the largest of
+    the three rolls along with the values of all three.
