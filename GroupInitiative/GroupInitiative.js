@@ -5,9 +5,9 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.9.5',
-        lastUpdate = 1432444729,
-        schemaVersion = 0.10,
+    var version = '0.9.6',
+        lastUpdate = 1434424041,
+        schemaVersion = 1.0,
         bonusCache = {},
         sorters = {
             'None': function(to) {
@@ -303,6 +303,17 @@ var GroupInitiative = GroupInitiative || (function() {
                     state.GroupInitiative.config.diceCountAttribute = '';
                     /* break; // intentional dropthrough */
 
+                case 0.10:
+                    if(_.has(state.GroupInitiative.config,'dieCountAttribute')){
+                        delete state.GroupInitiative.config.dieCountAttribute;
+                        state.GroupInitiative.config.diceCountAttribute = '';
+                    }
+                    if(_.has(state.GroupInitiative.config,'dieCount')){
+                        delete state.GroupInitiative.config.dieCount;
+                        state.GroupInitiative.config.diceCount = 1;
+                    }
+                    /* break; // intentional dropthrough */
+
                 case 'UpdateSchemaVersion':
                     state.GroupInitiative.version = schemaVersion;
                     break;
@@ -321,8 +332,9 @@ var GroupInitiative = GroupInitiative || (function() {
                             rollType: 'Individual-Roll',
                             replaceRoll: false,
                             dieSize: 20,
-                            dieCount: 1,
-                            dieCountAttribute: '',
+                            diceCount: 1,
+                            maxDecimal: 2,
+                            diceCountAttribute: '',
                             autoOpenInit: true,
                             sortOption: 'Descending',
                             announcer: 'Partial'
