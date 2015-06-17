@@ -79,6 +79,9 @@ The following utility functions are provided for convenience:
 	Calls write(s, to) and logs each line of s to the API console.
     writeErr(s):
 	Shorthand for writeAndLog(s, "gm").
+    sendChat(speakingAs, input):
+	Wrapper around built-in sendChat, which will execute CommandShell-aware
+	API commands.
     tokenize(s):
 	Splits the string s into an array based on whitespace.  Quotes preserve
 	spaces, and adjacent quotes are merged (as with POSIX shell command

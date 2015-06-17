@@ -217,7 +217,7 @@ var ExExp = ExExp || {
 		if (err){ return err; }
 		return parseHelper();
 	    }
-	    return "Error: Unrecognized token: " + s.tok.text;
+	    return "Error: Unrecognized token: " + s.tok.text + (s.tok.type == "raw" ? s.s.split(" ", 1)[0] : "");
 	}
 
 	// if we were given a string, construct a state object
@@ -297,6 +297,10 @@ var ExExp = ExExp || {
 	    who = "/w " + who.split(" ", 1)[0] + " ";
 	}
 	sendChat(from, who + s.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>"));
+    },
+
+    sendChat: function(speakingAs, input){
+	return sendChat(speakingAs, input);
     },
 
     sendCommand: function(chunks, asts, evalResults, inline, from, labels){
@@ -680,7 +684,7 @@ var ExExp = ExExp || {
 	    return ExExp.sendCommand(chunks, asts, [], inline, from, labels)
 	}
 	// if we got here, we're done evaluating everything; submit results via sendChat
-	sendChat(from, chunks.join(""));
+	ExExp.sendChat(from, chunks.join(""));
     },
 
     showHelp: function(who){
@@ -792,6 +796,9 @@ var ExExp = ExExp || {
 	    Shell.permissionCommand(["!shell-permission", "add", "!extend"], {'who': "gm"});
 	    if (Shell.write){
 		ExExp.write = Shell.write;
+	    }
+	    if (Shell.sendChat){
+		ExExp.sendChat = Shell.sendChat;
 	    }
 	}
 	else{
