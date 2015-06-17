@@ -38,8 +38,12 @@ var cron = cron || {
 	cron.nextJob = 1; // we'll check for ID uniqueness when creating job, so initializing to 1 will give us the lowest available ID
     },
 
+    sendChat: function(speakingAs, input){
+	return sendChat(speakingAs, input);
+    },
+
     handleJob: function(job){
-	sendChat(job['from'] || "CronD", job['command']);
+	cron.sendChat(job['from'] || "CronD", job['command']);
     },
 
     handleTimedJob: function(jobId){
@@ -447,6 +451,9 @@ var cron = cron || {
 	    Shell.registerCommand("!cron", "!cron [options] command", "Schedule a command to run in the future", cron.handleCronMessage);
 	    if (Shell.write){
 		cron.write = Shell.write;
+	    }
+	    if (Shell.sendChat){
+		cron.sendChat = Shell.sendChat;
 	    }
 	}
 	else{

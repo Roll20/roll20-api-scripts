@@ -25,6 +25,22 @@ var Shell = Shell || {
 	Shell.writeAndLog(s, "gm");
     },
 
+    sendChat: function(speakingAs, input){
+	if ((input.length <= 0) || (input.charAt(0) != '!')){
+	    return sendChat(speakingAs, input);
+	}
+	function processCommand(msgs){
+	    var doSend = true;
+	    for (var i = 0; i < msgs.length; i++){
+		if (Shell.handleApiMessage(msgs[i])){
+		    doSend = false;
+		}
+	    }
+	    if (doSend){ sendChat(speakingAs, input); }
+	}
+	sendChat(speakingAs, input, processCommand);
+    },
+
 
     // command registration
 
@@ -271,9 +287,7 @@ var Shell = Shell || {
 	return false;
     },
 
-    handleChatMessage: function(msg){
-	if (msg.type != "api"){ return; }
-
+    handleApiMessage: function(msg){
 	// tokenize command string
 	var tokens = Shell.tokenize(msg.content);
 	if (typeof(tokens) == typeof("")){
@@ -294,6 +308,12 @@ var Shell = Shell || {
 
 	// execute command callback
 	Shell.commands[tokens[0]].callback(tokens, _.clone(msg));
+	return true;
+    },
+
+    handleChatMessage: function(msg){
+	if (msg.type != "api"){ return; }
+	Shell.handleApiMessage(msg);
     },
 
     init: function(){
