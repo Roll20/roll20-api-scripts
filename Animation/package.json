@@ -1,0 +1,10 @@
+{
+    "name":		"Animation",
+    "version":		"0.1",
+    "description":	"Create and display animations.",
+    "authors":		"manveti",
+    "roll20userid":	"503018",
+    "dependencies":	{},
+    "modifies":		{},
+    "conflicts":	[]
+}
