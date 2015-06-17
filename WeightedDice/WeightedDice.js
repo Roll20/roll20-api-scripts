@@ -3,11 +3,14 @@
 // Contact:  https://app.roll20.net/users/104025/the-aaron
 
 var WeightedDice = WeightedDice || {
-    version: 0.2,
+    version: 0.3,
     schemaVersion: 0.1,
 
     CheckInstall: function() {
+        log('-=> WeightedDice v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+
 		if( ! _.has(state,'WeightedDice') || state.WeightedDice.schemaVersion != WeightedDice.schemaVersion)
+            log('  > Updating Schema to v'+schemaVersion+' <');
 		{
 			/* Default Settings stored in the state. */
 			state.WeightedDice = {
@@ -44,14 +47,14 @@ var WeightedDice = WeightedDice || {
         }
         else
         {
-            var newTable=fixNewObject(createObj('rollabletable',{name: tableName}));
+            var newTable=createObj('rollabletable',{name: tableName});
             _.each(_.range(minroll,(sides+1)), function(r){
                 var weight = ( (r == minroll) ? minroll : 1);
-                var newTableItem=fixNewObject(createObj('tableitem',{
+                var newTableItem=createObj('tableitem',{
                     _rollabletableid: newTable.id,
                     name: r,
                     weight: weight
-                }));
+                });
             });
             sendChat('','/w gm Table '+tableName+' created.');
         }
@@ -69,7 +72,7 @@ var WeightedDice = WeightedDice || {
 			switch(command)
 			{
 				case "!weighted-die":
-					if(isGM(msg.playerid))
+					if(playerIsGM(msg.playerid))
 					{
 						WeightedDice.HandleInput(_.rest(tokenized),msg);
 					}
@@ -80,30 +83,6 @@ var WeightedDice = WeightedDice || {
 };
 
 on("ready",function(){
-	var Has_IsGM=false;
-	try {
-		_.isFunction(isGM);
-		Has_IsGM=true;
-	}
-	catch (err)
-	{
-		log('--------------------------------------------------------------');
-		log('WeightedDice requires the isGM module to work.');
-		log('isGM GIST: https://gist.github.com/shdwjk/8d5bb062abab18463625')
-		log('--------------------------------------------------------------');
-	}
-
-	if( Has_IsGM )
-	{
-		WeightedDice.CheckInstall(); 
-		WeightedDice.RegisterEventHandlers();
-	}
+	WeightedDice.CheckInstall(); 
+	WeightedDice.RegisterEventHandlers();
 });
-
-// Utility Function
-var fixNewObject = fixNewObject || function(obj){
-	var p = obj.changed._fbpath;
-	var new_p = p.replace(/([^\/]*\/){4}/, "/");
-	obj.fbpath = new_p;
-	return obj;
-};
