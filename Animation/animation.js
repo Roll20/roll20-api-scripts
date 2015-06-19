@@ -221,6 +221,13 @@ var Animation = Animation || {
 	    helpMsg += "  -I IMG, --image IMG   Name or URL of frame image\n";
 	    helpMsg += "  -D T, --duration T    Number of milliseconds to show the frame\n";
 	    break;
+	case "rename":
+	    usage += "Usage: " + cmd + " rename image NAME NEWNAME\n";
+	    usage += "  or:  " + cmd + " rename animation NAME NEWNAME";
+	    helpMsg += "Parameters:\n";
+	    helpMsg += "  NAME:         Current name of item to rename\n";
+	    helpMsg += "  NEWNAME:      New name to give to item\n";
+	    break;
 	case "remove":
 	    usage += "Usage: " + cmd + " remove image NAME\n";
 	    usage += "  or:  " + cmd + " remove animation NAME\n";
@@ -269,6 +276,7 @@ var Animation = Animation || {
 	    helpMsg += "help [COMMAND]:     display generic or command-specific help\n";
 	    helpMsg += "add TYPE [...]:     add/name an image, animation, or frame\n";
 	    helpMsg += "edit TYPE [...]:    edit a previously-added item\n";
+	    helpMsg += "rename TYPE [...]:  rename an image or animation\n";
 	    helpMsg += "remove TYPE NAME:   remove a previously-added item\n";
 	    helpMsg += "list TYPE [...]:    display information about items\n";
 	    helpMsg += "run NAME [...]:     display a specified animation\n";
@@ -299,6 +307,17 @@ var Animation = Animation || {
 	    return "Error: Image '" + imgName + "' not defined; please use add command";
 	}
 	state.Animation.images[imgName] = url;
+    },
+
+    renameImage: function(imgName, newName){
+	if (!state.Animation.images[imgName]){
+	    return "Error: Image '" + imgName + "' not defined; please use add command";
+	}
+	if (state.Animation.images[newName]){
+	    return "Error: Image '" + newName + "' already defined; please use edit or remove command";
+	}
+	state.Animation.images[newName] = state.Animation.images[imgName];
+	delete state.Animation.images[imgName];
     },
 
     removeImage: function(imgName){
@@ -344,6 +363,17 @@ var Animation = Animation || {
 	    return "Error: Animation '" + animName + "' not defined; please use add command";
 	}
 	state.Animation.animations[animName].cycles = cycles;
+    },
+
+    renameAnimation: function(animName, newName){
+	if (!state.Animation.animations[animName]){
+	    return "Error: Animation '" + animName + "' not defined; please use add command";
+	}
+	if (state.Animation.animations[newName]){
+	    return "Error: Animation '" + newName + "' already defined; please use edit or remove command";
+	}
+	state.Animation.animations[newName] = state.Animation.animations[animName];
+	delete state.Animation.animations[animName];
     },
 
     removeAnimation: function(animName){
@@ -685,6 +715,38 @@ var Animation = Animation || {
 		}
 		err = Animation.editFrame(posArgs[1], parseInt(posArgs[2]), args);
 		break;
+	    default:
+		Animation.write("Error: Unrecognized " + tokens[1] + " subcommand: " + posArgs[0], msg.who, "", "Anim");
+		return Animation.showHelp(msg.who, tokens[0], tokens[1]);
+	    }
+	    break;
+	case "rename":
+	    switch (posArgs[0]){
+	    case "image":
+		if (!posArgs[1]){
+		    Animation.write("Error: Must specify image to rename", msg.who, "", "Anim");
+		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
+		}
+		if (!posArgs[2]){
+		    Animation.write("Error: Must specify new image name", msg.who, "", "Anim");
+		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
+		}
+		err = Animation.renameImage(posArgs[1], posArgs[2]);
+		break;
+	    case "animation":
+		if (!posArgs[1]){
+		    Animation.write("Error: Must specify animation to rename", msg.who, "", "Anim");
+		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
+		}
+		if (!posArgs[2]){
+		    Animation.write("Error: Must specify new animation name", msg.who, "", "Anim");
+		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
+		}
+		err = Animation.renameAnimation(posArgs[1], posArgs[2]);
+		break;
+	    case "frame":
+		Animation.write("Error: Cannot rename frame", msg.who, "", "Anim");
+		return Animation.showHelp(msg.who, tokens[0], tokens[1]);
 	    default:
 		Animation.write("Error: Unrecognized " + tokens[1] + " subcommand: " + posArgs[0], msg.who, "", "Anim");
 		return Animation.showHelp(msg.who, tokens[0], tokens[1]);

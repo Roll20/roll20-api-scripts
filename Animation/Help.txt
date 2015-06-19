@@ -26,6 +26,9 @@ following subcommands (each described in greater detail in its own section):
 	Edit an existing image, animation, or frame (as determined by TYPE). See
 	"!anim edit" section below for full subcommand details.
 
+    !anim rename TYPE NAME NEWNAME
+	Rename an existing image or animation (as determined by TYPE).
+
     !anim remove TYPE [...]
 	Remove an existing image, animation, or frame (as determined by TYPE).
 	See "!anim remove" section below for full subcommand details.
@@ -142,6 +145,11 @@ The "!anim edit frame" subcommand accepts the following options:
 
     -D T, --duration T	Number of milliseconds to show frame
 
+
+The "!anim rename" subcommand renames an image or animation:
+
+    !anim rename image NAME NEWNAME
+    !anim rename animation NAME NEWNAME
 
 The "!anim remove" subcommand operates in three modes:
 
