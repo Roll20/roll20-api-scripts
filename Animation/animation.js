@@ -681,6 +681,9 @@ var Animation = Animation || {
 		}
 		url = url.replace(/[/][^/]+[.](jpg|png)/, "/thumb.$1");
 		err = Animation.addImage(posArgs[1], url);
+		if (!err){
+		    Animation.write("Added image " + posArgs[1], msg.who, "", "Anim");
+		}
 		break;
 	    case "animation":
 		if (!posArgs[1]){
@@ -693,6 +696,9 @@ var Animation = Animation || {
 		    return;
 		}
 		err = Animation.addAnimation(posArgs[1], cycles);
+		if (!err){
+		    Animation.write("Added animation " + posArgs[1], msg.who, "", "Anim");
+		}
 		break;
 	    case "frame":
 		if (!posArgs[1]){
@@ -715,6 +721,9 @@ var Animation = Animation || {
 		if (args['insertIdx']){ idx = parseInt(args['insertIdx']); }
 		if (args['copyIdx']){ copyIdx = parseInt(args['copyIdx']); }
 		err = Animation.addFrame(posArgs[1], idx, args, copyIdx);
+		if (!err){
+		    Animation.write("Added frame to " + posArgs[1], msg.who, "", "Anim");
+		}
 		break;
 	    default:
 		Animation.write("Error: Unrecognized " + tokens[1] + " subcommand: " + posArgs[0], msg.who, "", "Anim");
@@ -744,6 +753,9 @@ var Animation = Animation || {
 		}
 		url = url.replace(/[/][^/]+[.](jpg|png)/, "/thumb.$1");
 		err = Animation.editImage(posArgs[1], url);
+		if (!err){
+		    Animation.write("Edited image " + posArgs[1], msg.who, "", "Anim");
+		}
 		break;
 	    case "animation":
 		if (!posArgs[1]){
@@ -759,6 +771,9 @@ var Animation = Animation || {
 		    return;
 		}
 		err = Animation.addAnimation(posArgs[1], cycles);
+		if (!err){
+		    Animation.write("Edited animation " + posArgs[1], msg.who, "", "Anim");
+		}
 		break;
 	    case "frame":
 		if (!posArgs[1]){
@@ -770,6 +785,9 @@ var Animation = Animation || {
 		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
 		}
 		err = Animation.editFrame(posArgs[1], parseInt(posArgs[2]), args);
+		if (!err){
+		    Animation.write("Edited frame of animation " + posArgs[1], msg.who, "", "Anim");
+		}
 		break;
 	    default:
 		Animation.write("Error: Unrecognized " + tokens[1] + " subcommand: " + posArgs[0], msg.who, "", "Anim");
@@ -788,6 +806,9 @@ var Animation = Animation || {
 		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
 		}
 		err = Animation.renameImage(posArgs[1], posArgs[2]);
+		if (!err){
+		    Animation.write("Renamed image " + posArgs[1] + " to " + posArgs[2], msg.who, "", "Anim");
+		}
 		break;
 	    case "animation":
 		if (!posArgs[1]){
@@ -799,6 +820,9 @@ var Animation = Animation || {
 		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
 		}
 		err = Animation.renameAnimation(posArgs[1], posArgs[2]);
+		if (!err){
+		    Animation.write("Renamed animation " + posArgs[1] + " to " + posArgs[2], msg.who, "", "Anim");
+		}
 		break;
 	    case "frame":
 		Animation.write("Error: Cannot rename frame", msg.who, "", "Anim");
@@ -823,6 +847,9 @@ var Animation = Animation || {
 		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
 		}
 		err = Animation.copyAnimation(posArgs[1], posArgs[2]);
+		if (!err){
+		    Animation.write("Copied animation " + posArgs[1] + " to " + posArgs[2], msg.who, "", "Anim");
+		}
 		break;
 	    case "frame":
 		if (!posArgs[1]){
@@ -841,6 +868,9 @@ var Animation = Animation || {
 		    posArgs[4] = parseInt(posArgs[4]);
 		}
 		err = Animation.copyFrame(posArgs[1], parseInt(posArgs[2]), posArgs[3], posArgs[4]);
+		if (!err){
+		    Animation.write("Copied frame from " + posArgs[1] + " to " + posArgs[3], msg.who, "", "Anim");
+		}
 		break;
 	    default:
 		Animation.write("Error: Unrecognized " + tokens[1] + " subcommand: " + posArgs[0], msg.who, "", "Anim");
@@ -855,6 +885,9 @@ var Animation = Animation || {
 		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
 		}
 		err = Animation.removeImage(posArgs[1]);
+		if (!err){
+		    Animation.write("Removed image " + posArgs[1], msg.who, "", "Anim");
+		}
 		break;
 	    case "animation":
 		if (!posArgs[1]){
@@ -862,6 +895,9 @@ var Animation = Animation || {
 		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
 		}
 		err = Animation.removeAnimation(posArgs[1]);
+		if (!err){
+		    Animation.write("Removed animation " + posArgs[1], msg.who, "", "Anim");
+		}
 		break;
 	    case "frame":
 		if (!posArgs[1]){
@@ -873,6 +909,9 @@ var Animation = Animation || {
 		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
 		}
 		err = Animation.removeFrame(posArgs[1], parseInt(posArgs[2]));
+		if (!err){
+		    Animation.write("Removed frame from animation " + posArgs[1], msg.who, "", "Anim");
+		}
 		break;
 	    default:
 		Animation.write("Error: Unrecognized " + tokens[1] + " subcommand: " + posArgs[0], msg.who, "", "Anim");
