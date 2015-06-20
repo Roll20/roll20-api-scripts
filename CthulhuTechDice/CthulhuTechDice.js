@@ -5,8 +5,8 @@
 var CthulhuTechDice = CthulhuTechDice || (function() {
     'use strict';
 
-    var version = '0.1.1',
-        lastUpdate = 1434783356,
+    var version = '0.1.2',
+        lastUpdate = 1434813095,
         schemaVersion = 0.1,
 
     checkInstall = function() {
@@ -50,6 +50,7 @@ var CthulhuTechDice = CthulhuTechDice || (function() {
             maxMultiple=0,
             maxRun=0,
             diceArray,
+			bonus,
             result,
             w=false;
 
@@ -63,6 +64,10 @@ var CthulhuTechDice = CthulhuTechDice || (function() {
                 w=true;
                 /* break; */ // Intentional drop through
             case '!ct':
+
+				if(args.length>1){
+					bonus = parseInt(args[1],10) || undefined;
+				}
 
                 diceCounts=getDiceCounts(msg,0);
                 if(!diceCounts){
@@ -114,6 +119,9 @@ var CthulhuTechDice = CthulhuTechDice || (function() {
                             total: _.reduce(r,function(m,v){return m+v;},0)
                         };
                     })
+					.filter(function(o){
+						return o.run.length>2;
+					})
                     .sortBy('total')
                     .reverse()
                     .first()
@@ -160,9 +168,39 @@ var CthulhuTechDice = CthulhuTechDice || (function() {
                                     'font-size: 2em;'+
                                     'font-weight: bold;'+
                                     'margin-top: 8px;'+
+                                    'margin-bottom: 12px;'+
                                 '">'+
-                                    result.total+
+                                    (result.total+(bonus||0))+
                                 '</div>'+
+								(!_.isUndefined(bonus)
+									? (
+										'<span style="'+
+											'margin-top:8px;'+
+											'padding: 1px 0px 1px .3em;'+
+											//'border: solid #323132 1px;'+
+											'border: solid #746e6e 1px;'+
+											'border-radius: 1em;'+
+											'background-color: #ab1e23;'+
+											'font-weight: bold;'+
+										'">'+
+											'<span>'+
+												result.total+
+											'</span>'+
+											' + '+
+											'<span style="'+
+												'border: solid #746e6e 1px;'+
+												'border-radius: 1em;'+
+												'padding: 1px .5em;'+
+												'background-color: #323132;'+
+												'color: white;'+
+												'font-weight: normal;'+
+											'">'+
+												bonus+
+											'</span>'+
+										'</span>'
+									)
+									: ''
+								)+
                             '</div>'+
                             '<div style="'+
                                 'background: #161617 url(http://www.cthulhutech.com/images/textbox.jpg) repeat-y right top;'+
