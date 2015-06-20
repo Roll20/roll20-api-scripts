@@ -5,8 +5,8 @@
 var CthulhuTechDice = CthulhuTechDice || (function() {
     'use strict';
 
-    var version = '0.1.2',
-        lastUpdate = 1434813726,
+    var version = '0.1.6',
+        lastUpdate = 1434814969,
         schemaVersion = 0.1,
 
     checkInstall = function() {
@@ -79,7 +79,8 @@ var CthulhuTechDice = CthulhuTechDice || (function() {
             case '!ct':
 
 				if(args.length>1){
-					bonus = parseInt(args[1],10) || undefined;
+					bonus = parseInt(args[1],10);
+                    bonus = _.isNaN(bonus) ? undefined : bonus;
 				}
 
                 diceCounts=getDiceCounts(msg,0);
