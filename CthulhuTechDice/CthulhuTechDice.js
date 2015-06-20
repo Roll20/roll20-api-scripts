@@ -6,7 +6,7 @@ var CthulhuTechDice = CthulhuTechDice || (function() {
     'use strict';
 
     var version = '0.1.2',
-        lastUpdate = 1434813095,
+        lastUpdate = 1434813726,
         schemaVersion = 0.1,
 
     checkInstall = function() {
@@ -43,8 +43,9 @@ var CthulhuTechDice = CthulhuTechDice || (function() {
 
 
 
-    handleInput = function(msg) {
-        var args,
+    handleInput = function(msg_orig) {
+        var msg = _.clone(msg_orig),
+            args,
             diceCounts,
             maxSingle=0,
             maxMultiple=0,
@@ -57,6 +58,18 @@ var CthulhuTechDice = CthulhuTechDice || (function() {
         if (msg.type !== "api") {
             return;
         }
+
+		if(_.has(msg,'inlinerolls')){
+			msg.content = _.chain(msg.inlinerolls)
+				.reduce(function(m,v,k){
+					m['$[['+k+']]']=v.results.total || 0;
+					return m;
+				},{})
+				.reduce(function(m,v,k){
+					return m.replace(k,v);
+				},msg.content)
+				.value();
+		}
 
         args = msg.content.split(/\s+/);
         switch(args.shift()) {
