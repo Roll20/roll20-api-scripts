@@ -26,6 +26,11 @@ following subcommands (each described in greater detail in its own section):
 	Edit an existing image, animation, or frame (as determined by TYPE). See
 	"!anim edit" section below for full subcommand details.
 
+    !anim rename TYPE NAME NEWNAME
+	Rename an existing image or animation (as determined by TYPE).
+
+    !anim copy TYPE [...]
+
     !anim remove TYPE [...]
 	Remove an existing image, animation, or frame (as determined by TYPE).
 	See "!anim remove" section below for full subcommand details.
@@ -142,6 +147,22 @@ The "!anim edit frame" subcommand accepts the following options:
 
     -D T, --duration T	Number of milliseconds to show frame
 
+
+The "!anim rename" subcommand renames an image or animation:
+
+    !anim rename image NAME NEWNAME
+    !anim rename animation NAME NEWNAME
+
+The "!anim copy" subcommand operates in two modes:
+
+    !anim copy animation NAME NEWNAME
+	Copies the specified animation and names it NEWNAME.
+
+    !anim copy frame SRC_ANIMATION SRC_INDEX DEST_ANIMATION [DEST_INDEX]
+	Copies a frame from SRC_ANIMATION to DEST_ANIMATION.  SRC_INDEX is the
+	0-based index of the frame to copy.  DEST_INDEX is the 0-based index at
+	which to insert the copy into DEST_ANIMATION.  If it is absent, the new
+	copy will be appended after the last frame of DEST_ANIMATION.
 
 The "!anim remove" subcommand operates in three modes:
 

@@ -221,6 +221,26 @@ var Animation = Animation || {
 	    helpMsg += "  -I IMG, --image IMG   Name or URL of frame image\n";
 	    helpMsg += "  -D T, --duration T    Number of milliseconds to show the frame\n";
 	    break;
+	case "rename":
+	    usage += "Usage: " + cmd + " rename image NAME NEWNAME\n";
+	    usage += "  or:  " + cmd + " rename animation NAME NEWNAME";
+	    helpMsg += "Parameters:\n";
+	    helpMsg += "  NAME:         Current name of item to rename\n";
+	    helpMsg += "  NEWNAME:      New name to give to item\n";
+	    break;
+	case "copy":
+	    usage += "Usage: " + cmd + " copy animation NAME NEWNAME\n";
+	    usage += "  or:  " + cmd + " copy frame SRC_ANIM SRC_IDX DEST_ANIM [DEST_IDX]\n";
+	    usage += "In the first form, a named animation will be copied.\n";
+	    usage += "In the third form, the specified frame will be copied.";
+	    helpMsg += "Parameters:\n";
+	    helpMsg += "  NAME:         Name of animation to copy\n";
+	    helpMsg += "  NEWNAME:      Name of new copy of animation\n";
+	    helpMsg += "  SRC_ANIM:     Name of animation from which to copy frame\n";
+	    helpMsg += "  SRC_IDX:      Index (0-based) of frame to copy\n";
+	    helpMsg += "  DEST_ANIM:    Name of animation into which to copy frame\n";
+	    helpMsg += "  DEST_IDX:     Index (0-based) at which to insert copied frame\n";
+	    break;
 	case "remove":
 	    usage += "Usage: " + cmd + " remove image NAME\n";
 	    usage += "  or:  " + cmd + " remove animation NAME\n";
@@ -269,6 +289,8 @@ var Animation = Animation || {
 	    helpMsg += "help [COMMAND]:     display generic or command-specific help\n";
 	    helpMsg += "add TYPE [...]:     add/name an image, animation, or frame\n";
 	    helpMsg += "edit TYPE [...]:    edit a previously-added item\n";
+	    helpMsg += "rename TYPE [...]:  rename an image or animation\n";
+	    helpMsg += "copy TYPE [...]:    copy an animation or frame\n";
 	    helpMsg += "remove TYPE NAME:   remove a previously-added item\n";
 	    helpMsg += "list TYPE [...]:    display information about items\n";
 	    helpMsg += "run NAME [...]:     display a specified animation\n";
@@ -299,6 +321,17 @@ var Animation = Animation || {
 	    return "Error: Image '" + imgName + "' not defined; please use add command";
 	}
 	state.Animation.images[imgName] = url;
+    },
+
+    renameImage: function(imgName, newName){
+	if (!state.Animation.images[imgName]){
+	    return "Error: Image '" + imgName + "' not defined; please use add command";
+	}
+	if (state.Animation.images[newName]){
+	    return "Error: Image '" + newName + "' already defined; please use edit or remove command";
+	}
+	state.Animation.images[newName] = state.Animation.images[imgName];
+	delete state.Animation.images[imgName];
     },
 
     removeImage: function(imgName){
@@ -344,6 +377,37 @@ var Animation = Animation || {
 	    return "Error: Animation '" + animName + "' not defined; please use add command";
 	}
 	state.Animation.animations[animName].cycles = cycles;
+    },
+
+    renameAnimation: function(animName, newName){
+	if (!state.Animation.animations[animName]){
+	    return "Error: Animation '" + animName + "' not defined; please use add command";
+	}
+	if (state.Animation.animations[newName]){
+	    return "Error: Animation '" + newName + "' already defined; please use edit or remove command";
+	}
+	state.Animation.animations[newName] = state.Animation.animations[animName];
+	delete state.Animation.animations[animName];
+    },
+
+    copyAnimation: function(animName, newName){
+	if (!state.Animation.animations[animName]){
+	    return "Error: Animation '" + animName + "' not defined; please use add command";
+	}
+	if (state.Animation.animations[newName]){
+	    return "Error: Animation '" + newName + "' already defined; please use edit or remove command";
+	}
+	var src = state.Animation.animations[animName];
+	var dest = {'frames': [], 'cycles': src.cycles};
+	for (var i = 0; i < src.frames.length; i++){
+	    var newFrame = {};
+	    for (var k in src.frames[i]){
+		if (!src.frames[i].hasOwnProperty(k)){ continue; }
+		newFrame[k] = src.frames[i][k];
+	    }
+	    dest.frames.push(newFrame);
+	}
+	state.Animation.animations[newName] = dest;
     },
 
     removeAnimation: function(animName){
@@ -480,6 +544,28 @@ var Animation = Animation || {
 	}
     },
 
+    copyFrame: function(srcName, srcIdx, destName, destIdx){
+	if (!state.Animation.animations[srcName]){
+	    return "Error: Animation '" + srcName + "' not defined; please use add command";
+	}
+	if (!state.Animation.animations[destName]){
+	    return "Error: Animation '" + destName + "' not defined; please use add command";
+	}
+	var src = state.Animation.animations[srcName], dest = state.Animation.animations[destName];
+	if ((srcIdx < 0) || (srcIdx >= src.frames.length)){
+	    return "Error: Animation '" + srcName + "' frame " + srcIdx + " does not exist; please use add command";
+	}
+	if ((typeof(destIdx) != typeof(0)) || (destIdx < 0) || (destIdx >= dest.frames.length)){
+	    destIdx = dest.frames.length;
+	}
+	var newFrame = {};
+	for (var k in src.frames[srcIdx]){
+	    if (!src.frames[srcIdx].hasOwnProperty(k)){ continue; }
+	    newFrame[k] = src.frames[srcIdx][k];
+	}
+	dest.frames.splice(destIdx, 0, newFrame);
+    },
+
     removeFrame: function(animName, idx){
 	if (!state.Animation.animations[animName]){
 	    return "Error: Animation '" + animName + "' not defined";
@@ -595,6 +681,9 @@ var Animation = Animation || {
 		}
 		url = url.replace(/[/][^/]+[.](jpg|png)/, "/thumb.$1");
 		err = Animation.addImage(posArgs[1], url);
+		if (!err){
+		    Animation.write("Added image " + posArgs[1], msg.who, "", "Anim");
+		}
 		break;
 	    case "animation":
 		if (!posArgs[1]){
@@ -607,6 +696,9 @@ var Animation = Animation || {
 		    return;
 		}
 		err = Animation.addAnimation(posArgs[1], cycles);
+		if (!err){
+		    Animation.write("Added animation " + posArgs[1], msg.who, "", "Anim");
+		}
 		break;
 	    case "frame":
 		if (!posArgs[1]){
@@ -629,6 +721,9 @@ var Animation = Animation || {
 		if (args['insertIdx']){ idx = parseInt(args['insertIdx']); }
 		if (args['copyIdx']){ copyIdx = parseInt(args['copyIdx']); }
 		err = Animation.addFrame(posArgs[1], idx, args, copyIdx);
+		if (!err){
+		    Animation.write("Added frame to " + posArgs[1], msg.who, "", "Anim");
+		}
 		break;
 	    default:
 		Animation.write("Error: Unrecognized " + tokens[1] + " subcommand: " + posArgs[0], msg.who, "", "Anim");
@@ -658,6 +753,9 @@ var Animation = Animation || {
 		}
 		url = url.replace(/[/][^/]+[.](jpg|png)/, "/thumb.$1");
 		err = Animation.editImage(posArgs[1], url);
+		if (!err){
+		    Animation.write("Edited image " + posArgs[1], msg.who, "", "Anim");
+		}
 		break;
 	    case "animation":
 		if (!posArgs[1]){
@@ -673,6 +771,9 @@ var Animation = Animation || {
 		    return;
 		}
 		err = Animation.addAnimation(posArgs[1], cycles);
+		if (!err){
+		    Animation.write("Edited animation " + posArgs[1], msg.who, "", "Anim");
+		}
 		break;
 	    case "frame":
 		if (!posArgs[1]){
@@ -684,6 +785,92 @@ var Animation = Animation || {
 		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
 		}
 		err = Animation.editFrame(posArgs[1], parseInt(posArgs[2]), args);
+		if (!err){
+		    Animation.write("Edited frame of animation " + posArgs[1], msg.who, "", "Anim");
+		}
+		break;
+	    default:
+		Animation.write("Error: Unrecognized " + tokens[1] + " subcommand: " + posArgs[0], msg.who, "", "Anim");
+		return Animation.showHelp(msg.who, tokens[0], tokens[1]);
+	    }
+	    break;
+	case "rename":
+	    switch (posArgs[0]){
+	    case "image":
+		if (!posArgs[1]){
+		    Animation.write("Error: Must specify image to rename", msg.who, "", "Anim");
+		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
+		}
+		if (!posArgs[2]){
+		    Animation.write("Error: Must specify new image name", msg.who, "", "Anim");
+		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
+		}
+		err = Animation.renameImage(posArgs[1], posArgs[2]);
+		if (!err){
+		    Animation.write("Renamed image " + posArgs[1] + " to " + posArgs[2], msg.who, "", "Anim");
+		}
+		break;
+	    case "animation":
+		if (!posArgs[1]){
+		    Animation.write("Error: Must specify animation to rename", msg.who, "", "Anim");
+		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
+		}
+		if (!posArgs[2]){
+		    Animation.write("Error: Must specify new animation name", msg.who, "", "Anim");
+		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
+		}
+		err = Animation.renameAnimation(posArgs[1], posArgs[2]);
+		if (!err){
+		    Animation.write("Renamed animation " + posArgs[1] + " to " + posArgs[2], msg.who, "", "Anim");
+		}
+		break;
+	    case "frame":
+		Animation.write("Error: Cannot rename frame", msg.who, "", "Anim");
+		return Animation.showHelp(msg.who, tokens[0], tokens[1]);
+	    default:
+		Animation.write("Error: Unrecognized " + tokens[1] + " subcommand: " + posArgs[0], msg.who, "", "Anim");
+		return Animation.showHelp(msg.who, tokens[0], tokens[1]);
+	    }
+	    break;
+	case "copy":
+	    switch (posArgs[0]){
+	    case "image":
+		Animation.write("Error: Cannot copy image", msg.who, "", "Anim");
+		return Animation.showHelp(msg.who, tokens[0], tokens[1]);
+	    case "animation":
+		if (!posArgs[1]){
+		    Animation.write("Error: Must specify animation to copy", msg.who, "", "Anim");
+		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
+		}
+		if (!posArgs[2]){
+		    Animation.write("Error: Must specify new animation name", msg.who, "", "Anim");
+		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
+		}
+		err = Animation.copyAnimation(posArgs[1], posArgs[2]);
+		if (!err){
+		    Animation.write("Copied animation " + posArgs[1] + " to " + posArgs[2], msg.who, "", "Anim");
+		}
+		break;
+	    case "frame":
+		if (!posArgs[1]){
+		    Animation.write("Error: Must specify animation from which to copy frame", msg.who, "", "Anim");
+		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
+		}
+		if (!posArgs[2]){
+		    Animation.write("Error: Must specify index of frame to copy", msg.who, "", "Anim");
+		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
+		}
+		if (!posArgs[3]){
+		    Animation.write("Error: Must specify animation into which to copy frame", msg.who, "", "Anim");
+		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
+		}
+		if (posArgs[4]){
+		    posArgs[4] = parseInt(posArgs[4]);
+		}
+		err = Animation.copyFrame(posArgs[1], parseInt(posArgs[2]), posArgs[3], posArgs[4]);
+		if (!err){
+		    Animation.write("Copied frame from " + posArgs[1] + " to " + posArgs[3], msg.who, "", "Anim");
+		}
 		break;
 	    default:
 		Animation.write("Error: Unrecognized " + tokens[1] + " subcommand: " + posArgs[0], msg.who, "", "Anim");
@@ -698,6 +885,9 @@ var Animation = Animation || {
 		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
 		}
 		err = Animation.removeImage(posArgs[1]);
+		if (!err){
+		    Animation.write("Removed image " + posArgs[1], msg.who, "", "Anim");
+		}
 		break;
 	    case "animation":
 		if (!posArgs[1]){
@@ -705,6 +895,9 @@ var Animation = Animation || {
 		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
 		}
 		err = Animation.removeAnimation(posArgs[1]);
+		if (!err){
+		    Animation.write("Removed animation " + posArgs[1], msg.who, "", "Anim");
+		}
 		break;
 	    case "frame":
 		if (!posArgs[1]){
@@ -716,6 +909,9 @@ var Animation = Animation || {
 		    return Animation.showHelp(msg.who, tokens[0], tokens[1]);
 		}
 		err = Animation.removeFrame(posArgs[1], parseInt(posArgs[2]));
+		if (!err){
+		    Animation.write("Removed frame from animation " + posArgs[1], msg.who, "", "Anim");
+		}
 		break;
 	    default:
 		Animation.write("Error: Unrecognized " + tokens[1] + " subcommand: " + posArgs[0], msg.who, "", "Anim");
