@@ -5,10 +5,9 @@
 var MapSnap = MapSnap || (function() {
     'use strict';
 
-    var version = '0.1.0',
-        lastUpdate = 1435028985,
+    var version = '0.1.1',
+        lastUpdate = 1435029928,
         schemaVersion = 0.1,
-        addGraphicCache = [],
 
     checkInstall = function() {
 		log('-=> MapSnap v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
@@ -117,15 +116,10 @@ var MapSnap = MapSnap || (function() {
     },
 
     handleAddGraphic = function(obj) {
-        addGraphicCache.push(obj.id);
-    },
-
-    handleChangeGraphic = function(obj) {
-        if(_.contains(addGraphicCache,obj.id)) {
-            addGraphicCache = _.without(addGraphicCache,obj.id);
+        if(state.MapSnap.snap) {
             obj.set({
-                top: (Math.floor((obj.get('top')-35)/70)*70)+35,
-                left: (Math.floor((obj.get('left')-35)/70)*70)+35
+                top: (Math.floor((obj.get('top')-(obj.get('height')/2))/70)*70)+(obj.get('height')/2),
+                left: (Math.floor((obj.get('left')-(obj.get('width')/2))/70)*70)+(obj.get('width')/2)
             });
         }
     },
@@ -133,7 +127,6 @@ var MapSnap = MapSnap || (function() {
     registerEventHandlers = function() {
         on('chat:message', handleInput);
         on('add:graphic', handleAddGraphic);
-        on('change:graphic', handleChangeGraphic);
     };
 
     return {
