@@ -44,6 +44,11 @@ following subcommands (each described in greater detail in its own section):
 	Run a specified animation.  See "!anim run" section below for full
 	subcommand details.
 
+    !anim export NAME [HANDOUT]
+	Print the commands necessary to generate specified animation.  If
+	HANDOUT is specified, the commands will be written to a new handout with
+	the specified name.  Otherwise, the commands will be written to chat.
+
 
 Subcommand Reference:
 
@@ -194,7 +199,7 @@ The "!anim list" subcommand operates in three modes:
 	of the specified animation.
 
 
-The "!anim run" command displays an animation:
+The "!anim run" subcommand displays an animation:
 
     !anim run NAME [options]
 
@@ -226,6 +231,13 @@ The "!anim run" subcommand accepts the following options:
 			If no page is specified, the page containing the
 			currently selected token will be used.  If no token is
 			selected, the page with the player ribbon will be used.
+
+The "!anim export" subcommand displays the commands to generate an animation:
+
+    !anim export NAME [HANDOUT]
+	If HANDOUT is provided, will write the commands for the specified
+	animation to a new handout with the specified name.  Otherwise, will
+	whisper the commands to the user who executed the command.
 
 
 Examples:

@@ -20,6 +20,7 @@ var Animation = Animation || {
 				'--yscale':	"yScale",
 				'--cycles':	"cycles",
 	    '-p': "pageId",	'--page':	"pageId"},
+    REVERSE_ARG_MAP: {},
 
     FRAME_DEFAULTS: {'x': 0, 'y': 0, 'width': 70, 'height': 70, 'rotation': 0,
 		    'auraRadius': "", 'auraColor': "#ffff99", 'auraSquare': false,
@@ -284,6 +285,13 @@ var Animation = Animation || {
 	    helpMsg += "                        If no page is specified, page with selected token will be used.\n";
 	    helpMsg += "                        If no token is selected, page with player ribbon will be used\n";
 	    break;
+	case "export":
+	    usage += "Usage: " + cmd + " export NAME [HANDOUT]\n";
+	    helpMsg += "Parameters:\n";
+	    helpMsg += "  NAME:         Name of animation to export\n";
+	    helpMsg += "  HANDOUT:      Name of handout to which to write commands\n";
+	    helpMsg += "                If no handout is specified, commands will be whispered to player.\n";
+	    break;
 	default:
 	    usage += "Usage: " + cmd + " COMMAND [options]";
 	    helpMsg += "help [COMMAND]:     display generic or command-specific help\n";
@@ -294,6 +302,7 @@ var Animation = Animation || {
 	    helpMsg += "remove TYPE NAME:   remove a previously-added item\n";
 	    helpMsg += "list TYPE [...]:    display information about items\n";
 	    helpMsg += "run NAME [...]:     display a specified animation\n";
+	    helpMsg += "export NAME [...]:  display commands to generate a specified animation\n";
 	}
 	Animation.write(usage, who, "", "Anim");
 	Animation.write(helpMsg, who, "font-size: small; font-family: monospace", "Anim");
@@ -616,6 +625,81 @@ var Animation = Animation || {
 	    }
 	}
 	Animation.write(output, who, "font-size: small; font-family: monospace", "Anim");
+    },
+
+    exportAnimation: function(who, animName, handoutName){
+	if (!state.Animation.animations[animName]){
+	    return "Error: Animation '" + animName + "' not defined; please use add command";
+	}
+	// if not already done, generate map from property name to argument
+	if (!Animation.REVERSE_ARG_MAP['duration']){
+	    for (var arg in Animation.ARG_MAP){
+		var prop = Animation.ARG_MAP[arg];
+		if (!Animation.FRAME_DEFAULTS.hasOwnProperty(prop)){ continue; }
+		if ((!Animation.REVERSE_ARG_MAP[prop]) || (arg.length < Animation.REVERSE_ARG_MAP[prop].length)){
+		    Animation.REVERSE_ARG_MAP[prop] = arg;
+		}
+	    }
+	}
+	var quotedName = animName;
+	if (quotedName.indexOf(' ') >= 0){
+	    quotedName = '"' + quotedName.replace('"', "\"\'\"\'\"") + '"';
+	}
+	function generateCommand(frameIdx, baseIdx){
+	    var frame = state.Animation.animations[animName].frames[frameIdx];
+	    var retval = "!anim add frame " + quotedName;
+	    if (baseIdx >= 0){
+		var baseFrame = state.Animation.animations[animName].frames[baseIdx];
+		retval += " -C " + baseIdx;
+		if (frame['url'] != baseFrame['url']){
+		    retval += " -I " + frame['url'];
+		}
+		if (frame['duration'] != baseFrame['duration']){
+		    retval += " " + Animation.REVERSE_ARG_MAP['duration'] + " " + frame['duration'];
+		}
+		for (var prop in Animation.FRAME_DEFAULTS){
+		    if (!Animation.FRAME_DEFAULTS.hasOwnProperty(prop)){ continue; }
+		    if (frame[prop] != baseFrame[prop]){
+			retval += " " + Animation.REVERSE_ARG_MAP[prop] + " " + frame[prop];
+		    }
+		}
+	    }
+	    else{
+		retval += " " + frame['url'] + " " + frame['duration'];
+		for (var prop in Animation.FRAME_DEFAULTS){
+		    if (!Animation.FRAME_DEFAULTS.hasOwnProperty(prop)){ continue; }
+		    if (frame[prop] != Animation.FRAME_DEFAULTS[prop]){
+			retval += " " + Animation.REVERSE_ARG_MAP[prop] + " " + frame[prop];
+		    }
+		}
+	    }
+	    return retval;
+	}
+	// generate command to create animation, plus a command for each frame
+	var commands = "!anim add animation " + quotedName + " " + state.Animation.animations[animName].cycles;
+	var frames = state.Animation.animations[animName].frames;
+	var sep = (handoutName ? "<br>\n" : "\n");
+	for (var i = 0; i < frames.length; i++){
+	    // make use of copy ability to generate shortest command possible
+	    var cmd = generateCommand(i, -1);
+	    for (var j = 0; j < i; j++){
+		var copyCmd = generateCommand(i, j);
+		if (copyCmd.length < cmd.length){
+		    cmd = copyCmd;
+		}
+	    }
+	    commands += sep + cmd;
+	}
+	if (handoutName){
+	    // export to handout
+	    var handout = createObj("handout", {'name': handoutName, 'avatar': (frames[0] ? frames[0]['url'] || "" : "")});
+	    handout.set('notes', commands);
+	    Animation.write("Exported animation " + animName + " to handout " + handoutName, who, "", "Anim");
+	}
+	else{
+	    // export to whisper
+	    Animation.write(commands, who, "font-size: small; font-family: monospace", "Anim");
+	}
     },
 
     handleAnimationMessage: function(tokens, msg){
@@ -985,6 +1069,13 @@ var Animation = Animation || {
 	    var yScale = parseFloat(args['xScale'] || "1");
 	    var cycles = parseInt(args['cycles'] || "0");
 	    err = Animation.addJob(posArgs[0], pageId, x, y, rotation, timeScale, xScale, yScale, cycles);
+	    break;
+	case "export":
+	    if (!posArgs[0]){
+		Animation.write("Error: Must specify animation name", msg.who, "", "Anim");
+		return Animation.showHelp(msg.who, tokens[0], tokens[1]);
+	    }
+	    err = Animation.exportAnimation(msg.who, posArgs[0], posArgs[1]);
 	    break;
 	default:
 	    Animation.write("Error: Unrecognized command: " + tokens[1], msg.who, "", "Anim");
