@@ -5,8 +5,8 @@
 var MapSnap = MapSnap || (function() {
     'use strict';
 
-    var version = '0.1.1',
-        lastUpdate = 1435029928,
+    var version = '0.1.2',
+        lastUpdate = 1435116180,
         schemaVersion = 0.1,
 
     checkInstall = function() {
@@ -118,8 +118,8 @@ var MapSnap = MapSnap || (function() {
     handleAddGraphic = function(obj) {
         if(state.MapSnap.snap) {
             obj.set({
-                top: (Math.floor((obj.get('top')-(obj.get('height')/2))/70)*70)+(obj.get('height')/2),
-                left: (Math.floor((obj.get('left')-(obj.get('width')/2))/70)*70)+(obj.get('width')/2)
+                top: (Math.round((obj.get('top')-(obj.get('height')/2))/70)*70)+(obj.get('height')/2),
+                left: (Math.round((obj.get('left')-(obj.get('width')/2))/70)*70)+(obj.get('width')/2)
             });
         }
     },
