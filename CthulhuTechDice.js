@@ -5,12 +5,12 @@
 var CthulhuTechDice = CthulhuTechDice || (function() {
     'use strict';
 
-    var version = '0.1.6',
-        lastUpdate = 1434814969,
+    var version = '0.1.7',
+        lastUpdate = 1435121689,
         schemaVersion = 0.1,
 
     checkInstall = function() {
-    	log('-=> CthulhuTechDice v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+        log('-=> CthulhuTechDice v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
 
         if( ! _.has(state,'CthulhuTechDice') || state.CthulhuTechDice.version !== schemaVersion) {
             log('  > Updating Schema to v'+schemaVersion+' <');
@@ -53,6 +53,7 @@ var CthulhuTechDice = CthulhuTechDice || (function() {
             diceArray,
 			bonus,
             result,
+			bestOrBotch,
             w=false;
 
         if (msg.type !== "api") {
@@ -145,6 +146,74 @@ var CthulhuTechDice = CthulhuTechDice || (function() {
                     return ( (e && m && e.total>m.total ) ? e : m);
                 },maxSingle);
 
+				if(_.has(diceCounts,'1') && (diceCounts['1']*2 >= diceArray.length) ) {
+					bestOrBotch = '<div style="'+
+						'margin:8px;'+
+						'padding:1em;'+
+						'height: 2em;'+
+						'border: solid #323132 1px;'+
+						'overflow: hidden;'+
+						'position: relative;'+
+					'">'+
+						'<div style="'+
+							'position: absolute;'+
+							'top: -.5em;'+
+							'bottom: -.5em;'+
+							'left: -10em;'+
+							'right: -10em;'+
+							'font-size: 90%;'+
+							'overflow: hidden;'+
+							'z-index: 1;'+
+							'color: #ab1e23;'+
+						'">'+
+							_.times(200,function(){return 'Botch';}).join(' ')+
+						'</div>'+
+						'<div style="'+
+							'font-weight: bold;'+
+							'position:relative;'+
+							'z-index:100;'+
+							'color:white;'+
+							'font-size: 3em;'+
+						'">'+
+							'BOTCH'+
+						'</div>'+
+					'</div>';
+
+				} else {
+					bestOrBotch = '<div style="'+
+						'margin-top:8px;'+
+						'padding-top:8px;'+
+						'border-top: solid #323132 1px;'+
+					'">'+
+						'<span style="'+
+							'font-weight: bold;'+
+						'">'+
+							result.label+
+							' :: '+
+						'</span>'+
+						 
+						_.map(
+							( _.has(result,'count')
+								? (function(r,c){
+										var d={};
+										d[r]=c;
+										return getDiceArray(d);
+									}(result.roll,result.count)) 
+								: result.run
+							) ,function(r){
+							return '<span style="'+
+									'display:inline-block;'+
+									'border-radius: 1em;'+
+									'color: #ab1e23;'+
+									'border:1px solid #ab1e23;'+
+									'background-color: #757779;'+
+									'padding:1px 5px;'+
+									'margin: 1px 1px;'+
+								'">'+r+'</span>';
+						}).join('') +
+					'</div>';
+				}
+				
 
                 sendChat( msg.who, (w ? '/w gm ' : '/direct ')+
                     '<div style="'+
@@ -160,6 +229,7 @@ var CthulhuTechDice = CthulhuTechDice || (function() {
                                 'padding-left: 30px;'+
                                 'border: solid #323132 1px;'+
                                 'font-family: Verdana, Arial, Helvetica, sans-serif;'+
+								'postion: relative;'+
                             '">'+
                             '<div style="'+
                                 'background: #161617 url(http://www.cthulhutech.com/images/textbox.jpg) repeat-y right top;'+
@@ -236,38 +306,7 @@ var CthulhuTechDice = CthulhuTechDice || (function() {
                                             '">'+r+'</span>';
                                     }).join('') +
                                 '</div>'+
-                                '<div style="'+
-                                    'margin-top:8px;'+
-                                    'padding-top:8px;'+
-                                    'border-top: solid #323132 1px;'+
-                                '">'+
-                                    '<span style="'+
-                                        'font-weight: bold;'+
-                                    '">'+
-                                        result.label+
-                                        ' :: '+
-                                    '</span>'+
-                                     
-                                    _.map(
-                                        ( _.has(result,'count')
-                                            ? (function(r,c){
-                                                    var d={};
-                                                    d[r]=c;
-                                                    return getDiceArray(d);
-                                                }(result.roll,result.count)) 
-                                            : result.run
-                                        ) ,function(r){
-                                        return '<span style="'+
-                                                'display:inline-block;'+
-                                                'border-radius: 1em;'+
-                                                'color: #ab1e23;'+
-                                                'border:1px solid #ab1e23;'+
-                                                'background-color: #757779;'+
-                                                'padding:1px 5px;'+
-                                                'margin: 1px 1px;'+
-                                            '">'+r+'</span>';
-                                    }).join('') +
-                                '</div>'+
+								bestOrBotch+
                             '</div>'+
                             '<div style="clear:both;"></div>'+
                         '</div>'+
@@ -295,3 +334,4 @@ on('ready',function() {
     CthulhuTechDice.CheckInstall();
     CthulhuTechDice.RegisterEventHandlers();
 });
+
