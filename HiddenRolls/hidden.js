@@ -108,7 +108,9 @@ var HiddenRolls = HiddenRolls || {
 	    cmd = cmd.replace(/^\S+\s+/, "");
 	}
 
-	cmd = cmd.replace(/&amp;/g, "&");
+	if (msg.rolltemplate){
+	    cmd = "&{template:" + msg.rolltemplate + "} " + cmd;
+	}
 
 	switch(tokens[0]){
 	case "!hideroll":
