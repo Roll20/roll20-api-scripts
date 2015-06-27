@@ -310,3 +310,6 @@ Examples:
 !anim run Fireball -f 5 -x 500 -y 350 --xscale 2 --yscale 2
     Will run the "Fireball" animation centered at (500,350), doubled in size
     and running in slow-motion (taking five times as long to run).
+
+!anim run Fireball -T @{target|token_id}
+    Will run the "Fireball" animation centered on the targeted token.
