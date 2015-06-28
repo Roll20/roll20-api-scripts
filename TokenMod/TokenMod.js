@@ -5,8 +5,8 @@
 var TokenMod = TokenMod || (function() {
     'use strict';
 
-    var version = '0.8.5',
-        lastUpdate = 1430082613,
+    var version = '0.8.6',
+        lastUpdate = 1435500187,
         schemaVersion = 0.1,
 
 		fields = {
@@ -60,6 +60,9 @@ var TokenMod = TokenMod || (function() {
 			bar1: {type: 'text'},
 			bar2: {type: 'text'},
 			bar3: {type: 'text'},
+			bar1_reset: {type: 'text'},
+			bar2_reset: {type: 'text'},
+			bar3_reset: {type: 'text'},
 
 
 			// colors
@@ -340,6 +343,9 @@ var TokenMod = TokenMod || (function() {
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar1</div>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar2</div>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar3</div>'
+			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar1_reset</div>'
+			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar2_reset</div>'
+			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar3_reset</div>'
 			+'<div style="clear:both;">'+ch(' ')+'</div>'
 			+'<p>Setting the name to Sir Thomas and bar1 to 23.</p>'
 			+'<div style="padding-left: 10px;padding-right:20px">'
@@ -351,6 +357,12 @@ var TokenMod = TokenMod || (function() {
 			+'<div style="padding-left: 10px;padding-right:20px">'
 				+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
 					+'!token-mod --set bar1|'+ch('[')+ch('[')+'3d6+8'+ch(']')+ch(']')
+				+'</pre>'
+			+'</div>'
+			+'<p><i>bar1_reset</i>, <i>bar2_reset</i> and <i>bar3_reset</i> are special.  Any value set on them will be ignored, instead they well set the <i>_value</i> field for that bar to whatever the matching <i>_max</i> field is set to.  This is most useful for resetting hit points or resource counts like spells. (The | is currently stille required.)</p>'
+			+'<div style="padding-left: 10px;padding-right:20px">'
+				+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
+					+'!token-mod --set bar1_reset| bar3_reset|'
 				+'</pre>'
 			+'</div>'
 		+'</div>'
@@ -922,6 +934,12 @@ var TokenMod = TokenMod || (function() {
 					if(_.isNumber(delta) || '' === delta) {
 						mods[k]=delta;
 					}
+					break;
+
+				case 'bar1_reset':
+				case 'bar2_reset':
+				case 'bar3_reset':
+                    mods[k.replace(/_reset$/,'_value')]=token.get(k.replace(/_reset$/,'_max'));
 					break;
 
 				case 'bar1_value':
