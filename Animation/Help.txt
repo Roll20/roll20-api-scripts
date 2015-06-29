@@ -205,11 +205,14 @@ The "!anim run" subcommand displays an animation:
 
 The "!anim run" subcommand accepts the following options:
 
+    -T T, --target T	Token on which to center animation.  If not specified,
+			the currently selected token will be used.
+
     -x X, -y Y		Coordinates (in pixels) at which to display the
 			specified animation.  If either is not specified, the
-			corresponding coordinate of the currently selected
-			token will be used.  If no token is used, the midpoint
-			of the page will be used.
+			corresponding coordinate of the target token (see "-T"
+			above) will be used.  If no target is specified, the
+			midpoint of the page will be used.
 
     -r A, --rotation A	Rotation (in degrees) at which to display the animation
 			(default: 0, i.e. do not rotate)
@@ -229,8 +232,8 @@ The "!anim run" subcommand accepts the following options:
     -p ID, --page ID	ID of the page on which to display the animation
     -P, --playerpage	Display animation on page with player ribbon.
 			If no page is specified, the page containing the
-			currently selected token will be used.  If no token is
-			selected, the page with the player ribbon will be used.
+			target token will be used.  If no target is specified,
+			the page with the player ribbon will be used.
 
 The "!anim export" subcommand displays the commands to generate an animation:
 
@@ -307,3 +310,6 @@ Examples:
 !anim run Fireball -f 5 -x 500 -y 350 --xscale 2 --yscale 2
     Will run the "Fireball" animation centered at (500,350), doubled in size
     and running in slow-motion (taking five times as long to run).
+
+!anim run Fireball -T @{target|token_id}
+    Will run the "Fireball" animation centered on the targeted token.

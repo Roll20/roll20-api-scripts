@@ -15,6 +15,7 @@ var Animation = Animation || {
 	    '-D': "duration",	'--duration':	"duration",
 	    '-i': "insertIdx",	'--insert':	"insertIdx",
 	    '-C': "copyIdx",	'--copy':	"copyIdx",
+	    '-T': "target",	'--target':	"target",
 	    '-f': "timeScale",	'--timefactor':	"timeScale",
 				'--xscale':	"xScale",
 				'--yscale':	"yScale",
@@ -271,8 +272,9 @@ var Animation = Animation || {
 	    helpMsg += "Parameters:\n";
 	    helpMsg += "  NAME:         Name of animation to run\n";
 	    helpMsg += "Options:\n";
+	    helpMsg += "  -T T, --target T      Token on which to center animation\n";
 	    helpMsg += "  -x X, -y Y            Coordinates, in pixels, at which to display animation\n";
-	    helpMsg += "                        (default: selected token's position, or page center)\n";
+	    helpMsg += "                        (default: target token's center, or page center)\n";
 	    helpMsg += "  -r A, --rotation A    Animation rotation in degrees (default: 0)\n";
 	    helpMsg += "  -f F, --timefactor F  Scale factor for frame durations (default: 1)\n";
 	    helpMsg += "  --xscale F            Size scale factor in the X direction (default: 1)\n";
@@ -282,8 +284,8 @@ var Animation = Animation || {
 	    helpMsg += "                        (default: retain cycles defined in animation)\n";
 	    helpMsg += "  -p ID, --page ID      ID of page on which to display animation\n";
 	    helpMsg += "  -P, --playerpage      Display animation on page with player ribbon\n";
-	    helpMsg += "                        If no page is specified, page with selected token will be used.\n";
-	    helpMsg += "                        If no token is selected, page with player ribbon will be used\n";
+	    helpMsg += "                        If no page is specified, page with target token will be used.\n";
+	    helpMsg += "                        If no target is specified, page with player ribbon will be used\n";
 	    break;
 	case "export":
 	    usage += "Usage: " + cmd + " export NAME [HANDOUT]\n";
@@ -1028,16 +1030,23 @@ var Animation = Animation || {
 		Animation.write("Error: Must specify animation name", msg.who, "", "Anim");
 		return Animation.showHelp(msg.who, tokens[0], tokens[1]);
 	    }
+	    var target;
+	    if (args['target']){
+		target = getObj("graphic", args['target']);
+	    }
+	    else if (msg.selected){
+		for (var i = 0; i < msg.selected.length; i++){
+		    var tok = getObj(msg.selected[i]._type, msg.selected[i]._id);
+		    if (tok){
+			target = tok;
+			break;
+		    }
+		}
+	    }
 	    var pageId = args['pageId'];
 	    if (!pageId){
-		if (msg.selected){
-		    for (var i = 0; i < msg.selected.length; i++){
-			var tok = getObj(msg.selected[i]._type, msg.selected[i]._id);
-			if (tok){
-			    pageId = tok._pageid;
-			    break;
-			}
-		    }
+		if (target){
+		    pageId = target._pageid;
 		}
 		if (!pageId){ pageId = Campaign().get('playerpageid'); }
 	    }
@@ -1048,15 +1057,9 @@ var Animation = Animation || {
 	    }
 	    var x = args['x'], y = args['y'];
 	    if ((typeof(x) != typeof("")) || (typeof(y) != typeof(""))){
-		if (msg.selected){
-		    for (var i = 0; i < msg.selected.length; i++){
-			var tok = getObj(msg.selected[i]._type, msg.selected[i]._id);
-			if (tok){
-			    if (typeof(x) != typeof("")){ x = tok.get('left'); }
-			    if (typeof(y) != typeof("")){ y = tok.get('top'); }
-			    break;
-			}
-		    }
+		if (target){
+		    if (typeof(x) != typeof("")){ x = target.get('left'); }
+		    if (typeof(y) != typeof("")){ y = target.get('top'); }
 		}
 	    }
 	    if (typeof(x) == typeof("")){ x = parseInt(x); }
