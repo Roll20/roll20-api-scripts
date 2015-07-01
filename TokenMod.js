@@ -5,11 +5,11 @@
 var TokenMod = TokenMod || (function() {
     'use strict';
 
-    var version = '0.8.7',
-        lastUpdate = 1435504414,
+    var version = '0.8.8',
+        lastUpdate = 1435728169,
         schemaVersion = 0.1,
 
-		fields = {
+    	fields = {
 			// booleans
 			showname: {type: 'boolean'},
 			showplayers_name: {type: 'boolean'},
@@ -939,7 +939,7 @@ var TokenMod = TokenMod || (function() {
 				case 'bar1_reset':
 				case 'bar2_reset':
 				case 'bar3_reset':
-                    delta = token.get(k.replace(/_reset$/,'_max'))
+                    delta = token.get(k.replace(/_reset$/,'_max'));
                     if(!_.isUndefined(delta)) {
                         mods[k.replace(/_reset$/,'_value')]=delta;
                     }
@@ -1025,7 +1025,16 @@ var TokenMod = TokenMod || (function() {
 		if(_.has(msg,'inlinerolls')){
 			msg.content = _.chain(msg.inlinerolls)
 				.reduce(function(m,v,k){
-					m['$[['+k+']]']=v.results.total || 0;
+                    var ti=_.reduce(v.results.rolls,function(m2,v2){
+                        if(_.has(v2,'table')){
+                            m2.push(_.reduce(v2.results,function(m3,v3){
+                                m3.push(v3.tableItem.name);
+                                return m3;
+                            },[]).join(', '));
+                        }
+                        return m2;
+                    },[]).join(', ');
+					m['$[['+k+']]']= (ti.length && ti) || v.results.total || 0;
 					return m;
 				},{})
 				.reduce(function(m,v,k){
