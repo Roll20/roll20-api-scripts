@@ -145,7 +145,9 @@ var Conditions = Conditions || {
 		    var props = {};
 		    if ((!isNaN(curVal)) && (curVal != charRec.base[attr].current)){ props.current = curVal; }
 		    if ((!isNaN(maxVal)) && (maxVal != charRec.base[attr].max)){ props.max = maxVal; }
+		    Conditions.ignoreAttr = attrObj._id;
 		    attrObj.set(props);
+		    Conditions.ignoreAttr = null;
 		}
 	    }
 	    // reset attributes without mods to base value
@@ -168,7 +170,9 @@ var Conditions = Conditions || {
 		    if (attrObj.get('max') != charRec.base[attr].max){
 			props.max = charRec.base[attr].max;
 		    }
+		    Conditions.ignoreAttr = attrObj._id;
 		    attrObj.set(props);
+		    Conditions.ignoreAttr = null;
 		}
 		delete charRec.base[attr];
 	    }
@@ -176,13 +180,16 @@ var Conditions = Conditions || {
 	}
     },
 
-/////
-//
-    //handle attribute changes
-    //  ignore changes we make
-    //  otherwise, if modified attribute changes, use new value as base and recompute (delete existing base, set dirty bit, computeAttributes(charId))
-//
-/////
+    handleAttrChange: function(attrObj, prev){
+	if (attrObj.get('id') == Conditions.ignoreAttr){ return; }
+	if (attrObj.get('characterid') != prev._characterid){ return; }
+	var charRec = state.Conditions.characters[prev._characterid];
+	if ((!charRec) || (!charRec.base) || (!charRec.base[prev.name])){ return; }
+	// if we got this far, a modified attribute changed (and we didn't change it); use new value as base and recompute
+	delete charRec.base[prev.name];
+	charRec.dirty = true;
+	Conditions.computeAttributes(prev._characterid);
+    },
 
     write: function(s, who, style, from){
 	if (who){
@@ -1124,6 +1131,7 @@ var Conditions = Conditions || {
 	else{
 	    on("chat:message", Conditions.handleChatMessage);
 	}
+	on("change:attribute", Conditions.handleAttrChange);
     }
 };
 
