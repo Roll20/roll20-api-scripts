@@ -456,7 +456,9 @@ var Conditions = Conditions || {
 	    return "Error: Condition '" + condName + "' not defined; please use add command";
 	}
 	if (icon == "null"){ state.Conditions.conditions[condName].icon = undefined; }
+	else if (icon){ state.Conditions.conditions[condName].icon = icon; }
 	if (desc == "null"){ state.Conditions.conditions[condName].desc = undefined; }
+	else if (desc){ state.Conditions.conditions[condName].desc = desc; }
     },
 
     deleteCondition: function(condName){
@@ -496,8 +498,8 @@ var Conditions = Conditions || {
 		    }
 		    output += " [" + image + "](" + image + ")";
 		}
-		output += "\n";
 	    }
+	    output += "\n";
 	    if (state.Conditions.conditions[condName].desc){
 		output += state.Conditions.conditions[condName] + "\n";
 	    }
