@@ -95,11 +95,10 @@ var Conditions = Conditions || {
 	    if (!charRec.base){ charRec.base = {}; }
 	    for (var attr in mods){
 		if (!mods.hasOwnProperty(attr)){ continue; }
-		var objs = findObjs({_type: "attribute", _characterid: charIds[i], name: attr});
+		var objs = findObjs({_type: "attribute", _characterid: charIds[i], name: attr}) || [];
 /////
 //
 		//should make note that we couldn't find attribute
-		if (!objs){ continue; }
 		var attrObj = objs[0];
 		if (!attrObj){ continue; }
 //
@@ -153,11 +152,10 @@ var Conditions = Conditions || {
 	    // reset attributes without mods to base value
 	    for (var attr in charRec.base){
 		if (mods[attr]){ continue; }
-		var objs = findObjs({_type: "attribute", _characterid: charIds[i], name: attr});
+		var objs = findObjs({_type: "attribute", _characterid: charIds[i], name: attr}) || [];
 /////
 //
 		//should make note that we couldn't find attribute
-		if (!objs){ continue; }
 		var attrObj = objs[0];
 		if (!attrObj){ continue; }
 //
@@ -488,7 +486,7 @@ var Conditions = Conditions || {
 	else{
 	    output = condName;
 	    if (state.Conditions.conditions[condName].icon){
-		if (Conditions.STATUS_NOICON.indexOf(state.Conditions.conditions[condName].icon) < 0){
+		if (Conditions.STATUS_NOICON.indexOf(state.Conditions.conditions[condName].icon) >= 0){
 		    output += " (" + state.Conditions.conditions[condName].icon + ")";
 		}
 		else{
@@ -496,7 +494,7 @@ var Conditions = Conditions || {
 		    if (!image){
 			image = Conditions.STATUS_ICONS['__default__'].replace("%s", state.Conditions.conditions[condName].icon);
 		    }
-		    output += " [" + condName + "](" + image + ")";
+		    output += " [" + image + "](" + image + ")";
 		}
 		output += "\n";
 	    }
@@ -684,6 +682,14 @@ var Conditions = Conditions || {
 	    state.Conditions.characters[characters[i]].conditions[condName] = cond;
 	    state.Conditions.characters[characters[i]].dirty = true;
 	}
+	if (cond.icon){
+	    for (var i = 0; i < characters.length; i++){
+		var tokens = findObjs({_type: "graphic", represents: characters[i]}) || [];
+		for (var j = 0; j < tokens.length; j++){
+		    tokens[j].set("status_" + cond.icon, true);
+		}
+	    }
+	}
 	Conditions.computeAttributes();
     },
 
@@ -692,6 +698,13 @@ var Conditions = Conditions || {
 	    if (!state.Conditions.characters[characters[i]]){ continue; }
 	    if (!state.Conditions.characters[characters[i]].conditions){ continue; }
 	    if (!state.Conditions.characters[characters[i]].conditions[condName]){ continue; }
+	    var icon = state.Conditions.characters[characters[i]].conditions[condName].icon;
+	    if (icon){
+		var tokens = findObjs({_type: "graphic", represents: characters[i]}) || [];
+		for (var j = 0; j < tokens.length; j++){
+		    tokens[j].set("status_" + icon, false);
+		}
+	    }
 	    delete state.Conditions.characters[characters[i]].conditions[condName];
 	    state.Conditions.characters[characters[i]].dirty = true;
 	}
@@ -820,11 +833,7 @@ var Conditions = Conditions || {
 	    attrs.sort();
 	    output += "Modified Attributes (base value):";
 	    for (var j = 0; j < attrs.length; j++){
-		var objs = findObjs({_type: "attribute", _characterid: characters[i], name: attr});
-		if (!objs){
-		    Conditions.write("Warning: Unable to get attribute " + attrs[j], who, "", "Cond");
-		    continue;
-		}
+		var objs = findObjs({_type: "attribute", _characterid: characters[i], name: attr}) || [];
 		var attrObj = objs[0];
 		if (!attrObj){
 		    Conditions.write("Warning: Unable to get attribute " + attrs[j], who, "", "Cond");
@@ -902,11 +911,9 @@ var Conditions = Conditions || {
 			if (obj.get('represents')){ retval.push(obj.get('represents')); }
 			continue;
 		    }
-		    var objs = findObjs({_type: "graphic", name: charArgs[i]});
-		    if (objs){
-			for (var j = 0; j < objs.length; j++){
-			    retval.push(j._id);
-			}
+		    var objs = findObjs({_type: "graphic", name: charArgs[i]}) || [];
+		    for (var j = 0; j < objs.length; j++){
+			retval.push(j._id);
 		    }
 		}
 	    }
@@ -1084,7 +1091,7 @@ var Conditions = Conditions || {
 	case "active":
 	    var characters = getCharacters(args.characters, msg.selected);
 	    if (characters.length <= 0){
-		var objs = findObjs({_type: "character"});
+		var objs = findObjs({_type: "character"}) || [];
 		for (var i = 0; i < objs.length; i++){ characters.push(objs[i]._id); }
 		if (characters.length <= 0){
 		    Conditions.write("No characters in campaign", msg.who, "", "Cond");
@@ -1096,7 +1103,7 @@ var Conditions = Conditions || {
 	case "attrs":
 	    var characters = getCharacters(args.characters, msg.selected);
 	    if (characters.length <= 0){
-		var objs = findObjs({_type: "character"});
+		var objs = findObjs({_type: "character"}) || [];
 		for (var i = 0; i < objs.length; i++){ characters.push(objs[i]._id); }
 		if (characters.length <= 0){
 		    Conditions.write("No characters in campaign", msg.who, "", "Cond");
