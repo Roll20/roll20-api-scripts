@@ -76,16 +76,20 @@ var Conditions = Conditions || {
 	    var charRec = state.Conditions.characters[charIds[i]];
 	    if (!charRec.dirty){ continue; }
 	    var mods = {};
-	    for (var c in charRec.conditions){
-		if (!charRec.conditions.hasOwnProperty(c)){ continue; }
-		for (var attr in charRec.conditions[c].effects){
-		    trackEffect(mods, attr, charRec.conditions[c].effects[attr]);
+	    if (charRec.conditions){
+		for (var c in charRec.conditions){
+		    if (!charRec.conditions.hasOwnProperty(c)){ continue; }
+		    for (var attr in charRec.conditions[c].effects){
+			trackEffect(mods, attr, charRec.conditions[c].effects[attr]);
+		    }
 		}
 	    }
-	    for (var attr in charRec.anonymous){
-		if (!charRec.anonymous.hasOwnProperty(attr)){ continue; }
-		for (var i = 0; i < charRec.anonymous[attr].length; i++){
-		    trackEffect(mods, attr, charRec.anonymous[attr][i]);
+	    if (charRec.anonymous){
+		for (var attr in charRec.anonymous){
+		    if (!charRec.anonymous.hasOwnProperty(attr)){ continue; }
+		    for (var j = 0; j < charRec.anonymous[attr].length; j++){
+			trackEffect(mods, attr, charRec.anonymous[attr][j]);
+		    }
 		}
 	    }
 	    if (!charRec.base){ charRec.base = {}; }
@@ -103,7 +107,7 @@ var Conditions = Conditions || {
 		if (!charRec.base[attr]){
 		    charRec.base[attr] = {'current': attrObj.get('current'), 'max': attrObj.get('max')};
 		}
-		var curVal = charRec.base[attr].current, maxVal = charRec.base[attr].max;
+		var curVal = parseFloat(charRec.base[attr].current), maxVal = parseFloat(charRec.base[attr].max);
 		var fact = 1;
 		if (mods[attr]['addfact']){
 		    for (var sc in mods[attr]['addfact']){
@@ -112,37 +116,61 @@ var Conditions = Conditions || {
 		}
 		if (mods[attr]['multfact']){
 		    for (var sc in mods[attr]['multfact']){
-			if (mods[attr]['addfact'].hasOwnProperty(sc)){ fact *= mods[attr]['multfact'][sc]; }
+			if (mods[attr]['multifact'].hasOwnProperty(sc)){ fact *= mods[attr]['multfact'][sc]; }
 		    }
 		}
-		if (typeof(curVal) == typeof(0)){ curVal *= fact; }
-		if (typeof(maxVal) == typeof(0)){ maxVal *= fact; }
+		if (!isNaN(curVal)){ curVal *= fact; }
+		if (!isNaN(maxVal)){ maxVal *= fact; }
 		if (mods[attr]['offset']){
 		    var offset = 0;
 		    for (var sc in mods[attr]['offset']){
-			if (mods[attr]['addfact'].hasOwnProperty(sc)){ offset += mods[attr]['offset'][sc]; }
+			if (mods[attr]['offset'].hasOwnProperty(sc)){ offset += mods[attr]['offset'][sc]; }
 		    }
-		    if (typeof(curVal) == typeof(0)){ curVal += offset; }
-		    if (typeof(maxVal) == typeof(0)){ maxVal += offset; }
+		    if (!isNaN(curVal)){ curVal += offset; }
+		    if (!isNaN(maxVal)){ maxVal += offset; }
 		}
 		if (mods[attr].hasOwnProperty('max')){
-		    if ((typeof(curVal) == typeof(0)) && (curVal > mods[attr]['max'])){ curVal = mods[attr]['max']; }
-		    if ((typeof(maxVal) == typeof(0)) && (maxVal > mods[attr]['max'])){ maxVal = mods[attr]['max']; }
+		    if ((!isNaN(curVal)) && (curVal > mods[attr]['max'])){ curVal = mods[attr]['max']; }
+		    if ((!isNaN(maxVal)) && (maxVal > mods[attr]['max'])){ maxVal = mods[attr]['max']; }
 		}
 		if (mods[attr].hasOwnProperty('min')){
-		    if ((typeof(curVal) == typeof(0)) && (curVal < mods[attr]['min'])){ curVal = mods[attr]['min']; }
-		    if ((typeof(maxVal) == typeof(0)) && (maxVal < mods[attr]['min'])){ maxVal = mods[attr]['min']; }
+		    if ((!isNaN(curVal)) && (curVal < mods[attr]['min'])){ curVal = mods[attr]['min']; }
+		    if ((!isNaN(maxVal)) && (maxVal < mods[attr]['min'])){ maxVal = mods[attr]['min']; }
 		}
 		if (mods[attr].hasOwnProperty('max')){
-		    if (typeof(curVal) == typeof(0)){ curVal = mods[attr]['max']; }
-		    if (typeof(maxVal) == typeof(0)){ maxVal = mods[attr]['max']; }
+		    if (!isNaN(curVal)){ curVal = mods[attr]['max']; }
+		    if (!isNaN(maxVal)){ maxVal = mods[attr]['max']; }
 		}
 		if ((curVal != charRec.base[attr].current) || (maxVal != charRec.base[attr].max)){
 		    var props = {};
-		    if (curVal != charRec.base[attr].current){ props.current = curVal; }
-		    if (maxVal != charRec.base[attr].max){ props.max = maxVal; }
+		    if ((!isNaN(curVal)) && (curVal != charRec.base[attr].current)){ props.current = curVal; }
+		    if ((!isNaN(maxVal)) && (maxVal != charRec.base[attr].max)){ props.max = maxVal; }
 		    attrObj.set(props);
 		}
+	    }
+	    // reset attributes without mods to base value
+	    for (var attr in charRec.base){
+		if (mods[attr]){ continue; }
+		var objs = findObjs({_type: "attribute", _characterid: charIds[i], name: attr});
+/////
+//
+		//should make note that we couldn't find attribute
+		if (!objs){ continue; }
+		var attrObj = objs[0];
+		if (!attrObj){ continue; }
+//
+/////
+		if ((attrObj.get('current') != charRec.base[attr].current) || (attrObj.get('max') != charRec.base[attr].max)){
+		    var props = {};
+		    if (attrObj.get('current') != charRec.base[attr].current){
+			props.current = charRec.base[attr].current;
+		    }
+		    if (attrObj.get('max') != charRec.base[attr].max){
+			props.max = charRec.base[attr].max;
+		    }
+		    attrObj.set(props);
+		}
+		delete charRec.base[attr];
 	    }
 	    charRec.dirty = false;
 	}
@@ -387,7 +415,7 @@ var Conditions = Conditions || {
 	var retval = {'icon': cond.icon, 'desc': cond.desc, 'effects': {}};
 	for (var attr in cond.effects){
 	    if (!cond.effects.hasOwnProperty(attr)){ continue; }
-	    retval.effects[attr] = _.clone(cond.effects[attr];
+	    retval.effects[attr] = _.clone(cond.effects[attr]);
 	}
 	return retval;
     },
@@ -681,7 +709,7 @@ var Conditions = Conditions || {
 	    state.Conditions.characters[characters[i]].dirty = true;
 	}
 	Conditions.computeAttributes();
-    }
+    },
 
     removeAnonymous: function(characters, attrName, effectIdx){
 	for (var i = 0; i < characters.length; i++){
@@ -695,28 +723,115 @@ var Conditions = Conditions || {
     },
 
     clearConditions: function(characters){
-/////
-//
-	//remove all conditions and anonymous effects from characters
-//
-/////
+	for (var i = 0; i < characters.length; i++){
+	    if (!state.Conditions.characters[characters[i]]){ continue; }
+	    delete state.Conditions.characters[characters[i]].conditions;
+	    delete state.Conditions.characters[characters[i]].anonymous;
+	    state.Conditions.characters[characters[i]].dirty = true;
+	}
+	Conditions.computeAttributes();
     },
 
     listEffects: function(who, characters){
-/////
-//
-	//list active conditions and anonymous effects on characters
-//
-/////
+	var output = "";
+	var charNames = {};
+	for (var i = 0; i < characters.length; i++){
+	    var obj = getObj("character", characters[i]);
+	    if (!obj){
+		Conditions.write("Warning: Unable to get character " + characters[i], who, "", "Cond");
+		continue;
+	    }
+	    charNames[characters[i]] = obj.get('name');
+	}
+	characters.sort(function(x, y){
+			    if (charNames[x] < charNames[y]){ return -1; }
+			    if (charNames[x] > charNames[y]){ return 1; }
+			    return 0;
+			});
+	for (i = 0; i < characters.length; i++){
+	    if (i > 0){ output += "\n\n"; }
+	    output += charNames[characters[i]] + ":\n";
+	    if (!state.Conditions.characters[characters[i]]){
+		output += "No conditions or effects";
+		continue;
+	    }
+	    var conds = state.Conditions.characters[characters[i]].conditions || {};
+	    var anon = state.Conditions.characters[characters[i]].anonymous || {};
+	    var condNames = [];
+	    for (var cond in conds){
+		if (conds.hasOwnProperty(cond)){ condNames.push(cond); }
+	    }
+	    var anonAttrs = [];
+	    for (var attr in anon){
+		if (anon.hasOwnProperty(attr)){ anonAttrs.push(attr); }
+	    }
+	    if (condNames.length > 0){
+		condNames.sort();
+		output += "Conditions:\n  " + condNames.join("\n  ") + "\n";
+	    }
+	    else{
+		output += "No conditions\n";
+	    }
+	    if (anonAttrs.length > 0){
+		output += "Anonymous Effects:\n  " + anonAttrs.join("\n  ");
+	    }
+	    else{
+		output += "No anonymous effects";
+	    }
+	}
+	Conditions.write(output, who, "font-size: small; font-family: monospace", "Cond");
     },
 
     listModifications: function(who, characters){
-/////
-//
-	//list modified attributes and their base values for characters
-//
-/////
-    }
+	var output = "";
+	var charNames = {};
+	for (var i = 0; i < characters.length; i++){
+	    var obj = getObj("character", characters[i]);
+	    if (!obj){
+		Conditions.write("Warning: Unable to get character " + characters[i], who, "", "Cond");
+		continue;
+	    }
+	    charNames[characters[i]] = obj.get('name');
+	}
+	characters.sort(function(x, y){
+			    if (charNames[x] < charNames[y]){ return -1; }
+			    if (charNames[x] > charNames[y]){ return 1; }
+			    return 0;
+			});
+	for (i = 0; i < characters.length; i++){
+	    if (i > 0){ output += "\n\n"; }
+	    output += charNames[characters[i]] + ":\n";
+	    var baseVals = (state.Conditions.characters[characters[i]] || {}).base || {};
+	    var attrs = [];
+	    for (var attr in baseVals){
+		if (baseVals.hasOwnProperty(attr)){ attrs.push(attr); }
+	    }
+	    if (attrs.length <= 0){
+		output += "No modified attributes";
+		continue;
+	    }
+	    attrs.sort();
+	    output += "Modified Attributes (base value):";
+	    for (var j = 0; j < attrs.length; j++){
+		var objs = findObjs({_type: "attribute", _characterid: characters[i], name: attr});
+		if (!objs){
+		    Conditions.write("Warning: Unable to get attribute " + attrs[j], who, "", "Cond");
+		    continue;
+		}
+		var attrObj = objs[0];
+		if (!attrObj){
+		    Conditions.write("Warning: Unable to get attribute " + attrs[j], who, "", "Cond");
+		    continue;
+		}
+		output += "\n  " + attrs[j] + ": " + attrObj.get('current');
+		if (attrObj.get('max')){ output += " / " + attrObj.get('max'); }
+		output += " (" + baseVals[attrs[j]].current;
+		if (baseVals[attrs[j]].max != ""){ output += " / " + baseVals[attrs[j]].max; }
+		output += ")";
+	    }
+	}
+	Conditions.write(output, who, "font-size: small; font-family: monospace", "Cond");
+    },
 
     handleCondMessage: function(tokens, msg){
 	if (tokens.length < 2){
@@ -780,7 +895,7 @@ var Conditions = Conditions || {
 			if (obj.get('represents')){ retval.push(obj.get('represents')); }
 			continue;
 		    }
-		    var objs = findObjs({_type: "graphic", name: charArgs[i]);
+		    var objs = findObjs({_type: "graphic", name: charArgs[i]});
 		    if (objs){
 			for (var j = 0; j < objs.length; j++){
 			    retval.push(j._id);
@@ -788,7 +903,7 @@ var Conditions = Conditions || {
 		    }
 		}
 	    }
-	    else{
+	    else if (selected){
 		for (var i = 0; i < selected.length; i++){
 		    if (selected[i]._type != "graphic"){ continue; }
 		    var tok = getObj(selected[i]._type, selected[i]._id);
@@ -832,7 +947,6 @@ var Conditions = Conditions || {
 		Conditions.write("Renamed condition " + posArgs[0] + " to " + posArgs[1], msg.who, "", "Cond");
 	    }
 	    break;
-	}
 	case "edit":
 	    if (!posArgs[0]){
 		Conditions.write("Error: Must specify condition name", msg.who, "", "Cond");
