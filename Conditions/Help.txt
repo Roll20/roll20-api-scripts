@@ -150,6 +150,17 @@ are specified as follows:
     = X		Set attribute to X.
 
 
+Usage Notes:
+
+Modifications made to attributes which have active effects will modify the base
+value, automatically causing the attribute's effective value to be recomputed.
+For example, if a character has a "Strength" attribute with a value of 20, and
+a "Strength +4" effect is applied, the character journal will show a value of
+24.  If the value in the character journal is manually set to 21, Conditions
+will use 21 as the new base, recompute the value, and update the journal to
+show the new value of 25.
+
+
 Examples:
 
 !condition create Entangled -i cobweb
