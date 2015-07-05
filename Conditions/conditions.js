@@ -98,9 +98,10 @@ var Conditions = Conditions || {
 		var objs = findObjs({_type: "attribute", _characterid: charIds[i], name: attr}) || [];
 /////
 //
-		//should make note that we couldn't find attribute
 		var attrObj = objs[0];
 		if (!attrObj){ continue; }
+		//try getAttrByName; create attribute if it gives us results
+		//should make note that we couldn't find attribute
 //
 /////
 		if (!charRec.base[attr]){
@@ -155,9 +156,10 @@ var Conditions = Conditions || {
 		var objs = findObjs({_type: "attribute", _characterid: charIds[i], name: attr}) || [];
 /////
 //
-		//should make note that we couldn't find attribute
 		var attrObj = objs[0];
 		if (!attrObj){ continue; }
+		//try getAttrByName; create attribute if it gives us results
+		//should make note that we couldn't find attribute
 //
 /////
 		if ((attrObj.get('current') != charRec.base[attr].current) || (attrObj.get('max') != charRec.base[attr].max)){
@@ -468,6 +470,48 @@ var Conditions = Conditions || {
 	delete state.Conditions.conditions[condName];
     },
 
+    formatEffect: function(effect){
+	var retval = "";
+	switch (effect.type){
+	case "addfact":
+	    var op = (effect.value >= 0 ? "+ " : "- ");
+	    var val = Math.abs(effect.value);
+	    var pctStr = op + (val * 100) + "%";
+	    var absStr = op + val + "x";
+	    retval += (pctStr.length <= absStr.length ? pctStr : absStr);
+	    break;
+	case "multfact":
+	    var opts = ["* " + (effect.value * 100) + "%", "* " + effect.value];
+	    if (effect.value != 0){
+		opts.push("/ " + (100 / effect.value) + "%");
+		opts.push("/ " + (1 / effect.value));
+	    }
+	    opts.sort(function(x, y){ return x.length - y.length; });
+	    retval += opts[0];
+	    break;
+	case "offset":
+	    var op = (effect.value >= 0 ? "+ " : "- ");
+	    var val = Math.abs(effect.value);
+	    retval += op + val;
+	    break;
+	case "max":
+	    retval += "< " + effect.value;
+	    break;
+	case "min":
+	    retval += "> " + effect.value;
+	    break;
+	case "abs":
+	    retval += "= " + effect.value;
+	    break;
+	default:
+	    retval += "(unrecognized effect type: " + effect.type + ")";
+	}
+	if (effect.stackClass){
+	    retval += " (" + effect.stackClass + ")";
+	}
+	return retval;
+    },
+
     listCondition: function(who, condName){
 	var output = "";
 	if (!condName){
@@ -515,43 +559,7 @@ var Conditions = Conditions || {
 		for (var i = 0; i < effectAttrs.length; i++){
 		    var e = state.Conditions.conditions[condName].effects[effectAttrs[i]];
 		    output += "\n" + effectAttrs[i] + " ";
-		    switch (e.type){
-		    case "addfact":
-			var op = (e.value >= 0 ? "+ " : "- ");
-			var val = Math.abs(e.value);
-			var pctOutput = op + (val * 100) + "%";
-			var absOutput = op + val + "x";
-			output += (pctOutput.length <= absOutput.length ? pctOutput : absOutput);
-			break;
-		    case "multfact":
-			var outputOpts = ["* " + (e.value * 100) + "%", "* " + e.value];
-			if (e.value != 0){
-			    outputOpts.push("/ " + (100 / e.value) + "%");
-			    outputOpts.push("/ " + (1 / e.value));
-			}
-			outputOpts.sort(function(x, y){ return x.length - y.length; });
-			output += outputOpts[0];
-			break;
-		    case "offset":
-			var op = (e.value >= 0 ? "+ " : "- ");
-			var val = Math.abs(e.value);
-			output += op + val;
-			break;
-		    case "max":
-			output += "< " + e.value;
-			break;
-		    case "min":
-			output += "> " + e.value;
-			break;
-		    case "abs":
-			output += "= " + e.value;
-			break;
-		    default:
-			output += "(unrecognized effect type: " + e.type + ")";
-		    }
-		    if (e.stackClass){
-			output += " (" + e.stackClass + ")";
-		    }
+		    output += Conditions.formatEffect(e);
 		}
 	    }
 	    else{
@@ -795,7 +803,13 @@ var Conditions = Conditions || {
 		output += "No conditions\n";
 	    }
 	    if (anonAttrs.length > 0){
-		output += "Anonymous Effects:\n  " + anonAttrs.join("\n  ");
+		output += "Anonymous Effects:";
+		for (var j = 0; j < anonAttrs.length; j++){
+		    output += "\n  " + anonAttrs[j] + ":";
+		    for (var k = 0; k < anon[anonAttrs[j]].length; k++){
+			output += "\n    " + k + ": " + Conditions.formatEffect(anon[anonAttrs[j]][k]);
+		    }
+		}
 	    }
 	    else{
 		output += "No anonymous effects";
@@ -835,12 +849,17 @@ var Conditions = Conditions || {
 	    attrs.sort();
 	    output += "Modified Attributes (base value):";
 	    for (var j = 0; j < attrs.length; j++){
+/////
+//
 		var objs = findObjs({_type: "attribute", _characterid: characters[i], name: attr}) || [];
 		var attrObj = objs[0];
 		if (!attrObj){
+		    //try getAttrByName; suppress warning it gives us results
 		    Conditions.write("Warning: Unable to get attribute " + attrs[j], who, "", "Cond");
 		    continue;
 		}
+//
+/////
 		output += "\n  " + attrs[j] + ": " + attrObj.get('current');
 		if (attrObj.get('max')){ output += " / " + attrObj.get('max'); }
 		output += " (" + baseVals[attrs[j]].current;
@@ -862,7 +881,7 @@ var Conditions = Conditions || {
 		if (getArg == "help"){
 		    return Conditions.showHelp(msg.who, tokens[0], tokens[i]);
 		}
-		if (getArg == "character"){
+		if (getArg == "characters"){
 		    if (!args[getArg]){ args[getArg] = []; }
 		    args[getArg].push(tokens[i]);
 		}
@@ -885,7 +904,7 @@ var Conditions = Conditions || {
 		break;
 	    case "-c":
 	    case "--character":
-		getArg = 'character';
+		getArg = 'characters';
 		break;
 	    default:
 		posArgs.push(tokens[i]);
