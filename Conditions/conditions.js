@@ -755,6 +755,15 @@ var Conditions = Conditions || {
     clearConditions: function(characters){
 	for (var i = 0; i < characters.length; i++){
 	    if (!state.Conditions.characters[characters[i]]){ continue; }
+	    var conds = state.Conditions.characters[characters[i]].conditions || {};
+	    for (var condName in conds){
+		if (!conds.hasOwnProperty(condName)){ continue; }
+		if (!conds[condName].icon){ continue; }
+		var tokens = findObjs({_type: "graphic", represents: characters[i]}) || [];
+		for (var j = 0; j < tokens.length; j++){
+		    tokens[j].set("status_" + conds[condName].icon, false);
+		}
+	    }
 	    delete state.Conditions.characters[characters[i]].conditions;
 	    delete state.Conditions.characters[characters[i]].anonymous;
 	    state.Conditions.characters[characters[i]].dirty = true;
