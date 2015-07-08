@@ -545,7 +545,7 @@ var Conditions = Conditions || {
 	    }
 	    output += "\n";
 	    if (state.Conditions.conditions[condName].desc){
-		output += state.Conditions.conditions[condName] + "\n";
+		output += state.Conditions.conditions[condName].desc + "\n";
 	    }
 	    var effectAttrs = [];
 	    for (var a in state.Conditions.conditions[condName].effects){
