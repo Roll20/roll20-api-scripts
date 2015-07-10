@@ -291,6 +291,9 @@ var cron = cron || {
 	    return cron.showHelp(msg.who, tokens[0]);
 	}
 	var args = {};
+	if ((msg.playerid) || (msg.playerid != "API")){
+	    args['from'] = "player|" + msg.playerid;
+	}
 	var getArg = null;
 	var doList = false;
 	var doRemove = false;

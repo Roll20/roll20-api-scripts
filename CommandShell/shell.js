@@ -29,10 +29,18 @@ var Shell = Shell || {
 	if ((input.length <= 0) || (input.charAt(0) != '!')){
 	    return sendChat(speakingAs, input);
 	}
+	var playerId = null;
+	if (speakingAs.indexOf("player|") == 0){
+	    playerId = speakingAs.substring(7);
+	}
 	function processCommand(msgs){
 	    var doSend = true;
 	    for (var i = 0; i < msgs.length; i++){
-		if (Shell.handleApiMessage(msgs[i])){
+		var msg = _.clone(msgs[i]);
+		if (playerId){
+		    msg.playerid = playerId;
+		}
+		if (Shell.handleApiMessage(msg)){
 		    doSend = false;
 		}
 	    }
