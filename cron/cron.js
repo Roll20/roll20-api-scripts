@@ -276,20 +276,28 @@ var cron = cron || {
 	cron.write(helpMsg, who, "font-size: small; font-family: monospace", "CronD");
     },
 
-    fixupCommand: function(cmd, inlineRolls){
-	function replaceInlines(s){
+    handleCronMessage: function(tokens, msg){
+	if (tokens.length < 2){
+	    return cron.showHelp(msg.who, tokens[0]);
+	}
+
+	var inlineRolls = msg.inlinerolls || [];
+	function replaceArgInlines(s){
+	    if (!inlineRolls){ return s; }
+	    var i = parseInt(s.substring(3, s.length - 2));
+	    if ((i < 0) || (i >= inlineRolls.length) || (!inlineRolls[i]) || (!inlineRolls[i]['results'])){ return s; }
+	    return inlineRolls[i]['results'].total;
+	}
+	function replaceCommandInlines(s){
 	    if (!inlineRolls){ return s; }
 	    var i = parseInt(s.substring(3, s.length - 2));
 	    if ((i < 0) || (i >= inlineRolls.length) || (!inlineRolls[i]) || (!inlineRolls[i]['expression'])){ return s; }
 	    return "[[" + inlineRolls[i]['expression'] + "]]";
 	}
-	return cmd.replace(/\$\[\[\d+\]\]/g, replaceInlines);
-    },
-
-    handleCronMessage: function(tokens, msg){
-	if (tokens.length < 2){
-	    return cron.showHelp(msg.who, tokens[0]);
+	function fixupInlines(s, replaceFun){
+	    return s.replace(/\$\[\[\d+\]\]/g, replaceFun);
 	}
+
 	var args = {};
 	if ((msg.playerid) || (msg.playerid != "API")){
 	    args['from'] = "player|" + msg.playerid;
@@ -300,7 +308,7 @@ var cron = cron || {
 	var cmdArray = [];
 	for (var i = 1; i < tokens.length; i++){
 	    if (getArg){
-		args[getArg] = tokens[i];
+		args[getArg] = fixupInlines(tokens[i], replaceArgInlines);
 		getArg = null;
 		continue;
 	    }
@@ -363,7 +371,7 @@ var cron = cron || {
 	}
 
 	// add a job
-	var command = cron.fixupCommand(cmdArray.join(" "), msg.inlinerolls || []);
+	var command = fixupInlines(cmdArray.join(" "), replaceCommandInlines);
 	if (!command){
 	    cron.write("Error: No command specified for execution", msg.who, "", "CronD");
 	    return;

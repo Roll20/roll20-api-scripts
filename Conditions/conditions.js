@@ -742,14 +742,19 @@ var Conditions = Conditions || {
     },
 
     removeAnonymous: function(characters, attrName, effectIdx){
+	var removed = false;
 	for (var i = 0; i < characters.length; i++){
 	    if (!state.Conditions.characters[characters[i]]){ continue; }
 	    if (!state.Conditions.characters[characters[i]].anonymous){ continue; }
 	    if (!state.Conditions.characters[characters[i]].anonymous[attrName]){ continue; }
 	    state.Conditions.characters[characters[i]].anonymous[attrName].splice(effectIdx, 1);
 	    state.Conditions.characters[characters[i]].dirty = true;
+	    removed = true;
 	}
 	Conditions.computeAttributes();
+	if (!removed){
+	    return "Anonymous effect (" + attrName + ", " + effectIdx +") does not exist";
+	}
     },
 
     clearConditions: function(characters){
@@ -883,6 +888,18 @@ var Conditions = Conditions || {
 	if (tokens.length < 2){
 	    return Conditions.showHelp(msg.who, tokens[0], null);
 	}
+
+	var inlineRolls = msg.inlinerolls || [];
+	function replaceInlines(s){
+	    if (!inlineRolls){ return s; }
+	    var i = parseInt(s.substring(3, s.length - 2));
+	    if ((i < 0) || (i >= inlineRolls.length) || (!inlineRolls[i]) || (!inlineRolls[i]['results'])){ return s; }
+	    return inlineRolls[i]['results'].total;
+	}
+	function fixupArg(s){
+	    return s.replace(/\$\[\[\d+\]\]/g, replaceInlines);
+	}
+
 	var args = {}, posArgs = [];
 	var getArg = null;
 	for (var i = 2; i < tokens.length; i++){
@@ -894,7 +911,7 @@ var Conditions = Conditions || {
 		    if (!args[getArg]){ args[getArg] = []; }
 		    args[getArg].push(tokens[i]);
 		}
-		else{ args[getArg] = tokens[i]; }
+		else{ args[getArg] = fixupArg(tokens[i]); }
 		getArg = null;
 		continue;
 	    }
@@ -916,7 +933,7 @@ var Conditions = Conditions || {
 		getArg = 'characters';
 		break;
 	    default:
-		posArgs.push(tokens[i]);
+		posArgs.push(fixupArg(tokens[i]));
 	    }
 	}
 	if (tokens[1] == "help"){
