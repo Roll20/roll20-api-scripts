@@ -3,12 +3,13 @@
 // Contact:  https://app.roll20.net/users/104025/the-aaron
 
 var TokenMod = TokenMod || (function() {
-	'use strict';
+    'use strict';
 
-	var version = 0.7,
-		schemaVersion = 0.1,
+    var version = '0.8.8',
+        lastUpdate = 1435728169,
+        schemaVersion = 0.1,
 
-		fields = {
+    	fields = {
 			// booleans
 			showname: {type: 'boolean'},
 			showplayers_name: {type: 'boolean'},
@@ -45,6 +46,7 @@ var TokenMod = TokenMod || (function() {
 			// distance
 			light_radius: {type: 'numberBlank'},
 			light_dimradius: {type: 'numberBlank'},
+			light_multiplier: {type: 'numberBlank'},
 			aura1_radius: {type: 'numberBlank'},
 			aura2_radius: {type: 'numberBlank'},
 
@@ -58,6 +60,10 @@ var TokenMod = TokenMod || (function() {
 			bar1: {type: 'text'},
 			bar2: {type: 'text'},
 			bar3: {type: 'text'},
+			bar1_reset: {type: 'text'},
+			bar2_reset: {type: 'text'},
+			bar3_reset: {type: 'text'},
+
 
 			// colors
 			aura1_color: {type: 'color'},
@@ -125,6 +131,22 @@ var TokenMod = TokenMod || (function() {
 			return '';
 		},
 
+    getConfigOption_PlayersCanIDs = function() {
+        var text = ( state.TokenMod.playersCanUse_ids 
+                ? '<span style="color: red; font-weight:bold; padding: 0px 4px;">ON</span>' 
+                : '<span style="color: #999999; font-weight:bold; padding: 0px 4px;">OFF</span>' 
+            );
+        return '<div>'
+            +'Players can IDs is currently '
+                +text
+            +'<a href="!token-mod --config players-can-ids">'
+                +'Toggle'
+            +'</a>'
+        +'</div>';
+        
+    },
+
+
 	showHelp = function(id) {
 		var who=getObj('player',id).get('_displayname').split(' ')[0];
 		sendChat('',
@@ -169,7 +191,7 @@ var TokenMod = TokenMod || (function() {
 		+'</div>'
 	+'</div>'
 
-	+'<b>Configuration</b>'
+	+'<b>Specification</b>'
 	+'<div style="padding-left:10px;">'
 		+'<p><i>--ids</i> takes token ids to operate on, separated by spaces.</p>'
 			+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
@@ -179,23 +201,6 @@ var TokenMod = TokenMod || (function() {
 			+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
 				+'!token-mod --ids @{target|1|token_id} @{target|2|token_id} @{target|3|token_id} --on showname showplayers_name'
 			+'</pre>'
-
-		+'<p><i>--config</i> takes option value pairs, separated by | characters.</p>'
-			+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
-				+'!token-mod --config option|value option|value'
-			+'</pre>'
-		+'<p>There is currently one configuration option:</p>'
-
-		+'<div style="padding-left: 10px;padding-right:20px">'
-			+'<ul>'
-				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
-					+'<div style="float:right;width:40px;border:1px solid black;background-color:#ffc;text-align:center;">'
-						+( state.TokenMod.playersCanUse_ids ? '<span style="color: red; font-weight:bold; padding: 0px 4px;">ON</span>' : '<span style="color: #999999; font-weight:bold; padding: 0px 4px;">OFF</span>' )
-					+'</div>'
-					+'<b><span style="font-family: serif;">players-can-ids</span></b> '+ch('-')+' Determines if players can use <i>--ids</i>.  Specifying a value which is true allows players to use --ids.  Omitting a value flips the current setting.'
-				+'</li> '
-			+'</ul>'
-		+'</div>'
 	+'</div>'
 
 	+'<b>Booleans</b>'
@@ -280,6 +285,7 @@ var TokenMod = TokenMod || (function() {
 			+'<p><u>Available Numbers or Blank Properties:</u></p>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">light_radius</div>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">light_dimradius</div>'
+			+'<div style="width: 130px; padding: 0px 3px;float: left;">light_multiplier</div>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">aura1_radius</div>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">aura2_radius</div>'
 			+'<div style="clear:both;">'+ch(' ')+'</div>'
@@ -337,6 +343,9 @@ var TokenMod = TokenMod || (function() {
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar1</div>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar2</div>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar3</div>'
+			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar1_reset</div>'
+			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar2_reset</div>'
+			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar3_reset</div>'
 			+'<div style="clear:both;">'+ch(' ')+'</div>'
 			+'<p>Setting the name to Sir Thomas and bar1 to 23.</p>'
 			+'<div style="padding-left: 10px;padding-right:20px">'
@@ -348,6 +357,12 @@ var TokenMod = TokenMod || (function() {
 			+'<div style="padding-left: 10px;padding-right:20px">'
 				+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
 					+'!token-mod --set bar1|'+ch('[')+ch('[')+'3d6+8'+ch(']')+ch(']')
+				+'</pre>'
+			+'</div>'
+			+'<p><i>bar1_reset</i>, <i>bar2_reset</i> and <i>bar3_reset</i> are special.  Any value set on them will be ignored, instead they well set the <i>_value</i> field for that bar to whatever the matching <i>_max</i> field is set to.  This is most useful for resetting hit points or resource counts like spells. (The | is currently stille required.)</p>'
+			+'<div style="padding-left: 10px;padding-right:20px">'
+				+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
+					+'!token-mod --set bar1_reset| bar3_reset|'
 				+'</pre>'
 			+'</div>'
 		+'</div>'
@@ -533,11 +548,35 @@ var TokenMod = TokenMod || (function() {
 			+'</div>'
 		+'</div>'
 
+	+'<b>Configuration</b>'
+	+'<div style="padding-left:10px;">'
+		+'<p><i>--config</i> takes option value pairs, separated by | characters.</p>'
+			+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
+				+'!token-mod --config option|value option|value'
+			+'</pre>'
+		+'<p>There is currently one configuration option:</p>'
+
+		+'<div style="padding-left: 10px;padding-right:20px">'
+			+'<ul>'
+				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<div style="float:right;width:40px;border:1px solid black;background-color:#ffc;text-align:center;">'
+						+( state.TokenMod.playersCanUse_ids ? '<span style="color: red; font-weight:bold; padding: 0px 4px;">ON</span>' : '<span style="color: #999999; font-weight:bold; padding: 0px 4px;">OFF</span>' )
+					+'</div>'
+					+'<b><span style="font-family: serif;">players-can-ids</span></b> '+ch('-')+' Determines if players can use <i>--ids</i>.  Specifying a value which is true allows players to use --ids.  Omitting a value flips the current setting.'
+				+'</li> '
+			+'</ul>'
+		+'</div>'
+        +getConfigOption_PlayersCanIDs()
+	+'</div>'
+
+
 
 	+'</div>'
 +'</div>'
 			);
 	},
+
+
 	getRelativeChange = function(current,update) {
 		var cnum = current
 			&& (_.isNumber(current)
@@ -655,16 +694,16 @@ var TokenMod = TokenMod || (function() {
 					break;
 				case 'toback':
 					break;
-				case 'randomdepth':
-					break;
 
 				case 'player_id':
 					break;
 
 				case 'status':
-					_.each(args, function(a) {
+        			_.each(args, function(a) {
 						var s = a.split(/:/),
-							stat = s.shift(),
+							statparts = s.shift().match(/^(\S+?)(\[(\d*)\]|)$/)||[],
+                            index = ( '[]' === statparts[2] ? statparts[2] : ( undefined !== statparts[3] ? Math.max(parseInt(statparts[3],10)-1,0) : 0 ) ),
+                            stat=statparts[1]||'',
 							op = (_.contains(['-','+','=','!'],stat[0]) ? stat[0] : false),
 							numraw = s.shift() || '',
 							numop = (_.contains(['-','+'],numraw[0]) ? numraw[0] : false),
@@ -676,6 +715,7 @@ var TokenMod = TokenMod || (function() {
 							retr[cmd].push({
 								status: stat,
 								number: num,
+                                index: index,
 								sign: numop,
 								operation: op || '+'
 							});
@@ -734,16 +774,46 @@ var TokenMod = TokenMod || (function() {
 			},base)
 			.value();
 	},
+    
+    decomposeStatuses = function(statuses){
+        return _.reduce(statuses.split(/,/).reverse(),function(memo,st,idx){
+            var parts=st.split(/@/),
+            entry = {
+                mark: parts[0],
+                num: parseInt(parts[1],10) || 0,
+                idx: idx
+            };
+            if(parts[0].length) {
+                memo[parts[0]] = ( memo[parts[0]] && memo[parts[0]].push(entry) && memo[parts[0]]) || [entry] ;
+            }
+            return memo;
+        },{});
+    },
+
+    composeStatuses = function(statuses){
+        return _.chain(statuses)
+            .reduce(function(m,s){
+                _.each(s,function(sd){
+                    m.push(sd);
+                });
+                return m;
+            },[])
+            .sortBy(function(s){
+                return s.idx;
+            })
+            .map(function(s){
+                return ('dead'===s.mark ? 'dead' : ( s.mark+(s.num>0 ? '@'+s.num : '')));
+            })
+            .value()
+            .reverse()
+            .join(',');
+    },    
+    
 	applyModListToToken = function(modlist, token) {
 		var mods={},
 			delta, cid,
-			current=_.reduce(token.get('statusmarkers').split(/,/),function(memo,st){
-				var parts=st.split(/@/);
-				if(parts[0].length) {
-					memo[parts[0]]=parseInt(parts[1],10)||0;
-				}
-				return memo;
-			},{});
+			current=decomposeStatuses(token.get('statusmarkers')||''),
+            statusCount=token.get('statusmarkers').split(/,/).length;
 
 		_.each(modlist.on,function(f){
 			mods[f]=true;
@@ -760,21 +830,52 @@ var TokenMod = TokenMod || (function() {
 					_.each(f, function (sm){
 						switch(sm.operation){
 							case '!':
-								if(_.has(current,sm.status)){
-									current = _.omit(current,sm.status);
+								if('[]' !== sm.index && _.has(current,sm.status) ){
+                                    if( _.has(current[sm.status],sm.index) ) {
+                                        current[sm.status]= _.filter(current[sm.status],function(e,idx){
+                                            return idx !== sm.index;
+                                        });
+                                    }
 								} else {
-									current[sm.status] = Math.max(0,Math.min(9,getRelativeChange(current[sm.status], sm.sign+sm.number)));
+                                    current[sm.status] = current[sm.status] || [];
+									current[sm.status].push({
+                                        mark: sm.status,
+                                        num: Math.max(0,Math.min(9,getRelativeChange(0, sm.sign+sm.number))),
+                                        index: statusCount++
+                                    });
 								}
 								break;
 							case '+':
-								current[sm.status] = Math.max(0,Math.min(9,getRelativeChange(current[sm.status], sm.sign+sm.number)));
+								if('[]' !== sm.index && _.has(current,sm.status) && _.has(current[sm.status],sm.index)){
+                                    current[sm.status][sm.index].num = (Math.max(0,Math.min(9,getRelativeChange(current[sm.status][sm.index].num, sm.sign+sm.number))));
+                                } else {
+                                    current[sm.status] = current[sm.status] || [];
+									current[sm.status].push({
+                                        mark: sm.status,
+                                        num: Math.max(0,Math.min(9,getRelativeChange(0, sm.sign+sm.number))),
+                                        index: statusCount++
+                                    });
+                                }
 								break;
 							case '-':
-								current = _.omit(current,sm.status);
+								if('[]' !== sm.index && _.has(current,sm.status)){
+                                    if( _.has(current[sm.status],sm.index )) {
+                                        current[sm.status]= _.filter(current[sm.status],function(e,idx){
+                                            return idx !== sm.index;
+                                        });
+                                    }
+                                } else {
+									current[sm.status]= _.first(current[sm.status],-1);
+                                }
 								break;
 							case '=':
 								current = {};
-								current[sm.status] = Math.max(0,Math.min(9,getRelativeChange(current[sm.status], sm.sign+sm.number)));
+                                current[sm.status] = [];
+                                current[sm.status].push({
+                                    mark: sm.status,
+                                    num: Math.max(0,Math.min(9,getRelativeChange(0, sm.sign+sm.number))),
+                                    index: statusCount++
+                                });
 								break;
 						}
 					});
@@ -826,12 +927,22 @@ var TokenMod = TokenMod || (function() {
 
 				case 'light_radius':
 				case 'light_dimradius':
-				case 'aura1_radius':
+				case 'light_multiplier':
 				case 'aura2_radius':
+				case 'aura1_radius':
 					delta=getRelativeChange(token.get(k),f[0]);
 					if(_.isNumber(delta) || '' === delta) {
 						mods[k]=delta;
 					}
+					break;
+
+				case 'bar1_reset':
+				case 'bar2_reset':
+				case 'bar3_reset':
+                    delta = token.get(k.replace(/_reset$/,'_max'));
+                    if(!_.isUndefined(delta)) {
+                        mods[k.replace(/_reset$/,'_value')]=delta;
+                    }
 					break;
 
 				case 'bar1_value':
@@ -851,37 +962,50 @@ var TokenMod = TokenMod || (function() {
 					break;
 			}
 		});
-		mods.statusmarkers=_.map(current,function(v,k){ return ('dead' === k) ? (k) : (k+'@'+v);}).join(',');
+		mods.statusmarkers=composeStatuses(current);
 		token.set(mods);
 	},
+
 
 	handleConfig = function(config, id) {
 		var args, cmd, who=getObj('player',id).get('_displayname').split(' ')[0];
 
-		while(config.length) {
-			args=config.shift().split(/\|/);
-			cmd=args.shift();
-			switch(cmd) {
-				case 'players-can-ids':
-					if(args.length) {
-						state.TokenMod.playersCanUse_ids = filters.isTruthyArgument(args.shift());
-					} else {
-						state.TokenMod.playersCanUse_ids = !state.TokenMod.playersCanUse_ids;
-					}
-					sendChat('', '/w '+who+' <div style="padding:1px 3px;border: 1px solid #8B4513;background: #eeffee; color: #8B4513; font-size: 80%;">'
-							+ ( state.TokenMod.playersCanUse_ids ? 'Players can now use --ids to specify targets to change.' : 'Players cannot use --ids.' )
-						+'</div>'
-					);
-					break;
-				default:
-					sendChat('', '/w '+who+' <div style="padding:1px 3px;border: 1px solid #8B4513;background: #eeffee; color: #8B4513; font-size: 80%;">'
-							+'<span style="font-weight:bold;color:#990000;">Error:</span> '
-							+'No configuration setting for ['+cmd+']'
-						+'</div>'
-					);
-					break;
-			}
-		}
+        if(config.length) {
+            while(config.length) {
+                args=config.shift().split(/\|/);
+                cmd=args.shift();
+                switch(cmd) {
+                    case 'players-can-ids':
+                        if(args.length) {
+                            state.TokenMod.playersCanUse_ids = filters.isTruthyArgument(args.shift());
+                        } else {
+                            state.TokenMod.playersCanUse_ids = !state.TokenMod.playersCanUse_ids;
+                        }
+                        sendChat('','/w '+who+' '
+                            +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                                +getConfigOption_PlayersCanIDs()
+                            +'</div>'
+                        );
+                        break;
+                    default:
+                        sendChat('', '/w '+who+' <div style="padding:1px 3px;border: 1px solid #8B4513;background: #eeffee; color: #8B4513; font-size: 80%;">'
+                                +'<span style="font-weight:bold;color:#990000;">Error:</span> '
+                                +'No configuration setting for ['+cmd+']'
+                            +'</div>'
+                        );
+                        break;
+                }
+            }
+        } else {
+            sendChat('','/w '+who+' '
+                +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                    +'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
+                        +'TokenMod v'+version
+                    +'</div>'
+                    +getConfigOption_PlayersCanIDs()
+                +'</div>'
+            );
+        }
 	},
 
 	 handleInput = function(msg_orig) {
@@ -901,7 +1025,16 @@ var TokenMod = TokenMod || (function() {
 		if(_.has(msg,'inlinerolls')){
 			msg.content = _.chain(msg.inlinerolls)
 				.reduce(function(m,v,k){
-					m['$[['+k+']]']=v.results.total || 0;
+                    var ti=_.reduce(v.results.rolls,function(m2,v2){
+                        if(_.has(v2,'table')){
+                            m2.push(_.reduce(v2.results,function(m3,v3){
+                                m3.push(v3.tableItem.name);
+                                return m3;
+                            },[]).join(', '));
+                        }
+                        return m2;
+                    },[]).join(', ');
+					m['$[['+k+']]']= (ti.length && ti) || v.results.total || 0;
 					return m;
 				},{})
 				.reduce(function(m,v,k){
@@ -910,7 +1043,11 @@ var TokenMod = TokenMod || (function() {
 				.value();
 		}
 
-		args = msg.content.split(/\s+--/);
+		args = msg.content
+            .replace(/<br\/>\n/g, ' ')
+            .replace(/(\{\{(.*?)\}\})/g," $2 ")
+            .split(/\s+--/);
+
 		switch(args.shift()) {
 			case '!token-mod':
 
@@ -922,7 +1059,7 @@ var TokenMod = TokenMod || (function() {
 							return;
 
 						case 'config':
-							if(isGM(msg.playerid)) {
+							if(playerIsGM(msg.playerid)) {
 								handleConfig(cmds,msg.playerid);
 							}
 							return;
@@ -951,7 +1088,7 @@ var TokenMod = TokenMod || (function() {
 				modlist.off=_.difference(modlist.off,modlist.on);
 				modlist.flip=_.difference(modlist.flip,modlist.on,modlist.off);
 
-				if(isGM(msg.playerid) || state.TokenMod.playersCanUse_ids ) {
+				if(playerIsGM(msg.playerid) || state.TokenMod.playersCanUse_ids ) {
 					_.chain(ids)
 						.uniq()
 						.map(function(t){
@@ -972,6 +1109,8 @@ var TokenMod = TokenMod || (function() {
 
 	},
 	checkInstall = function() {
+		log('-=> TokenMod v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+
 		if( ! _.has(state,'TokenMod') || state.TokenMod.version !== schemaVersion) {
 			state.TokenMod = {
 				version: schemaVersion,
@@ -993,13 +1132,6 @@ var TokenMod = TokenMod || (function() {
 on("ready",function(){
 	'use strict';
 
-	if("undefined" !== typeof isGM && _.isFunction(isGM)) {
-		TokenMod.CheckInstall();
-		TokenMod.RegisterEventHandlers();
-	} else {
-		log('--------------------------------------------------------------');
-		log('TokenMod requires the isGM module to work.');
-		log('isGM GIST: https://gist.github.com/shdwjk/8d5bb062abab18463625');
-		log('--------------------------------------------------------------');
-	}
+	TokenMod.CheckInstall();
+	TokenMod.RegisterEventHandlers();
 });

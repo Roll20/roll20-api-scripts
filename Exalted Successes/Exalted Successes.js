@@ -9,7 +9,7 @@ var bshields = bshields || {};
 bshields.exalted = (function() {
     'use strict';
     
-    var version = 2.0;
+    var version = 2.1;
     
     function handleInput(msg) {
         var json = msg.type === 'rollresult' ? JSON.parse(msg.content) : null,
@@ -30,6 +30,10 @@ bshields.exalted = (function() {
                     results.push(roll.results);
                 });
             });
+        }
+
+        if (results.length === 0) {
+            return;
         }
         
         _.each(results, function(roll) {
