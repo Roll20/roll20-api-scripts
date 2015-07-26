@@ -5,8 +5,8 @@
 var TokenMod = TokenMod || (function() {
     'use strict';
 
-    var version = '0.8.8',
-        lastUpdate = 1435728169,
+    var version = '0.8.9',
+        lastUpdate = 1437936106,
         schemaVersion = 0.1,
 
     	fields = {
@@ -160,13 +160,16 @@ var TokenMod = TokenMod || (function() {
 	+'</div>'
 	+'<b>Commands</b>'
 	+'<div style="padding-left:10px;">'
-		+'<b><span style="font-family: serif;">!token-mod '+ch('<')+'<i>--help</i>|<i>--config</i>|<i>--on</i>|<i>--off</i>|<i>--flip</i>|<i>--set</i>'+ch('>')+' '+ch('<')+'parameter'+ch('>')+' '+ch('[')+ch('<')+'parameter'+ch('>')+' ...'+ch(']')+' ... '+ch('[')+'<i>--ids</i> '+ch('<')+'token_id'+ch('>')+' '+ch('[')+ch('<')+'token_id'+ch('>')+' ...'+ch(']')+ch(']')+'</span></b>'
+		+'<b><span style="font-family: serif;">!token-mod '+ch('<')+'<i>--help</i>|<i>--ignore-selected</i>|<i>--config</i>|<i>--on</i>|<i>--off</i>|<i>--flip</i>|<i>--set</i>'+ch('>')+' '+ch('<')+'parameter'+ch('>')+' '+ch('[')+ch('<')+'parameter'+ch('>')+' ...'+ch(']')+' ... '+ch('[')+'<i>--ids</i> '+ch('<')+'token_id'+ch('>')+' '+ch('[')+ch('<')+'token_id'+ch('>')+' ...'+ch(']')+ch(']')+'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>This command takes a list of modifications and applies them to the selected tokens (or tokens specified with --ids by a GM or Player depending on configuration).  Note that each --option can be specified multiple times and in any order.</p>'
 			+'<p><b>Note:</b> If you are using multiple '+ch('@')+ch('{')+'target'+ch('|')+'token_id'+ch('}')+' calls in a macro, and need to adjust fewer than the supplied number of token ids, simply select the same token several times.  The duplicates will be removed.</p>'
 			+'<ul>'
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<b><span style="font-family: serif;">'+ch('<')+'--help'+ch('>')+'</span></b> '+ch('-')+' Displays this help.'
+				+'</li> '
+				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<b><span style="font-family: serif;">'+ch('<')+'--ignore-selected'+ch('>')+'</span></b> '+ch('-')+' Prevents modifications to the selected tokens (only modifies tokens passed with --ids).'
 				+'</li> '
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<b><span style="font-family: serif;">'+ch('<')+'--config'+ch('>')+'</span></b> '+ch('-')+' Sets Config options. '
@@ -1011,6 +1014,7 @@ var TokenMod = TokenMod || (function() {
 	 handleInput = function(msg_orig) {
 		var msg = _.clone(msg_orig),
 			args, cmds, ids=[],
+            ignoreSelected = false,
 			modlist={
 				flip: [],
 				on: [],
@@ -1080,6 +1084,10 @@ var TokenMod = TokenMod || (function() {
 							modlist.set=parseSetArguments(cmds,modlist.set);
 							break;
 
+                        case 'ignore-selected':
+                            ignoreSelected=true;
+                            break;
+
 						case 'ids':
 							ids=_.union(cmds,ids);
 							break;
@@ -1100,9 +1108,11 @@ var TokenMod = TokenMod || (function() {
 						});
 				}
 
-				_.each(msg.selected,function (o) {
-					applyModListToToken(modlist,getObj(o._type,o._id));
-				});
+                if(!ignoreSelected) {
+                    _.each(msg.selected,function (o) {
+                        applyModListToToken(modlist,getObj(o._type,o._id));
+                    });
+                }
 				break;
 
 		}
