@@ -5,10 +5,13 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.9.6',
-        lastUpdate = 1434424041,
+    var version = '0.9.7',
+        lastUpdate = 1437941931,
         schemaVersion = 1.0,
         bonusCache = {},
+		observers = {
+			turnOrderChange: []
+			},
         sorters = {
             'None': function(to) {
                 return to;
@@ -48,6 +51,17 @@ var GroupInitiative = GroupInitiative || (function() {
             return s.replace(re, function(c){ return entities[c] || c; });
           };
         }()),
+
+		observeTurnOrderChange = function(handler){
+			if(handler && _.isFunction(handler)){
+				observers.turnOrderChange.push(handler);
+			}
+		},
+		notifyObservers = function(event){
+			_.each(observers[event],function(handler){
+				handler();
+			});
+		},
 
         formatDieRoll = function(rollData) {
             var critFail = _.reduce(rollData.rolls,function(m,r){
@@ -997,6 +1011,7 @@ var GroupInitiative = GroupInitiative || (function() {
                                     )
                                 )
                             });
+							notifyObservers('turnOrderChange');
 
                             if(state.GroupInitiative.config.autoOpenInit && !Campaign().get('initativepage')) {
                                 Campaign().set({
@@ -1168,6 +1183,7 @@ var GroupInitiative = GroupInitiative || (function() {
 
     return {
         RegisterEventHandlers: RegisterEventHandlers,
+		ObserveTurnOrderChange: observeTurnOrderChange,
         CheckInstall: checkInstall
     };
 }());
