@@ -5,11 +5,11 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.9.7',
-        lastUpdate = 1437941931,
+    var version = '0.9.8',
+        lastUpdate = 1438043381,
         schemaVersion = 1.0,
         bonusCache = {},
-		observers = {
+        observers = {
 			turnOrderChange: []
 			},
         sorters = {
@@ -682,9 +682,11 @@ var GroupInitiative = GroupInitiative || (function() {
                         },stat);
                         return stat;
                     }
+                    return undefined;
                 })
                 .value();
-            if(_.contains(bonus,undefined)) {
+            if(_.contains(bonus,undefined) || _.contains(bonus,null) || _.contains(bonus,NaN)) {
+                bonus=''
                 return false;
             }
             bonus = bonus.join('+');
@@ -943,7 +945,7 @@ var GroupInitiative = GroupInitiative || (function() {
                                 });
                             })
                             .map(function(r){
-                                return '[[('+r.join(') + (')+')]]';
+                                return ('[[('+r.join(') + (')+')]]').replace(/\[\[\[/g, "[[ [");
                             })
                             .value()
                             .join('');
@@ -1194,5 +1196,6 @@ on("ready",function(){
         GroupInitiative.CheckInstall();
         GroupInitiative.RegisterEventHandlers();
 });
+
 
 
