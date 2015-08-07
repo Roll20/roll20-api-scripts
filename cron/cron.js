@@ -44,12 +44,18 @@ var cron = cron || {
 
     handleJob: function(job){
 	cron.sendChat(job['from'] || "CronD", job['command']);
+	if (job.runs > 0){
+	    job.runs -= 1;
+	}
     },
 
     handleTimedJob: function(jobId){
 	var job = state.cron.timedJobs[jobId];
 	cron.handleJob(job);
-	if (job.interval <= 0){
+	if ((job.interval <= 0) || (job.runs == 0)){
+	    if (cron.jobTimers[jobId]['intervalId']){
+		clearInterval(cron.jobTimers[jobId]['intervalId']);
+	    }
 	    delete state.cron.timedJobs[jobId];
 	    if (cron.jobTimers[jobId]){
 		delete cron.jobTimers[jobId];
@@ -84,7 +90,7 @@ var cron = cron || {
 	    if (job.rounds > 0){ job.rounds -= 1; }
 	    if (job.rounds == 0){
 		jobsToFire.push([job.count, i]);
-		if (job.interval > 0){
+		if ((job.interval > 0) && ((job.runs < 0) || (job.runs > 1))){
 		    // reset job to fire again in interval rounds
 		    job.rounds = job.interval;
 		}
@@ -122,24 +128,26 @@ var cron = cron || {
 	return cron.nextJob++;
     },
 
-    addCountJob: function(command, from, count, rounds, interval){
+    addCountJob: function(command, from, count, rounds, interval, runs){
 	var jobId = cron.getNextId();
 	state.cron.countJobs[jobId] = {
 	    'command':	command,
 	    'from':	from,
 	    'count':	count,
 	    'rounds':	rounds,
-	    'interval':	interval
+	    'interval':	interval,
+	    'runs':	runs
 	};
 	cron.write("Added initiative-based job with ID " + jobId, "", "", "CronD");
     },
 
-    addTimedJob: function(command, from, timestamp, interval){
+    addTimedJob: function(command, from, timestamp, interval, runs){
 	var jobId = cron.getNextId();
 	state.cron.timedJobs[jobId] = {
 	    'command':		command,
 	    'from':		from,
 	    'interval':		interval,
+	    'runs':		runs,
 	    'timestamp':	timestamp
 	};
 	var handlerFunc = function(){ cron.handleTimedJob(jobId); };
@@ -223,7 +231,11 @@ var cron = cron || {
 		while (idStr.length < idLen){ idStr = " " + idStr; }
 		listMsg += idStr + ": \"" + state.cron.countJobs[countIds[i]]['command'] + "\"";
 		if (state.cron.countJobs[countIds[i]]['interval'] > 0){
-		    listMsg += " (every " + state.cron.countJobs[countIds[i]]['interval'] + " rounds)";
+		    listMsg += " (every " + state.cron.countJobs[countIds[i]]['interval'] + " rounds";
+		    if (state.cron.countJobs[countIds[i]]['runs'] > 0){
+			listMsg += "; " + state.cron.countJobs[countIds[i]]['runs'] + " runs";
+		    }
+		    listMsg += ")";
 		}
 		listMsg += "\n";
 	    }
@@ -242,7 +254,11 @@ var cron = cron || {
 		while (idStr.length < idLen){ idStr = " " + idStr; }
 		listMsg += idStr + ": \"" + state.cron.timedJobs[timedIds[i]]['command'] + "\"";
 		if (state.cron.timedJobs[timedIds[i]]['interval'] > 0){
-		    listMsg += " (every " + cron.formatInterval(state.cron.timedJobs[timedIds[i]]['interval']) + ")";
+		    listMsg += " (every " + cron.formatInterval(state.cron.timedJobs[timedIds[i]]['interval']);
+		    if (state.cron.timedJobs[timedIds[i]]['runs'] > 0){
+			listMsg += "; " + state.cron.timedJobs[timedIds[i]]['runs'] + " runs";
+		    }
+		    listMsg += ")";
 		}
 		listMsg += "\n";
 	    }
@@ -270,6 +286,7 @@ var cron = cron || {
 	helpMsg += "  -t T, --time T            execute command at time T (HH:MM:SS)\n";
 	helpMsg += "  -a T, --after T           execute command after interval T (HH:MM:SS)\n";
 	helpMsg += "  -i I, --interval I        repeat command every I rounds or time (HH:MM:SS)\n";
+	helpMsg += "  -n N, --runs N            remove repeating job after N executions\n";
 	helpMsg += "  -f USER, --from USER      execute command as specified user\n";
 	helpMsg += "  -l, --list                list all scheduled jobs\n";
 	helpMsg += "  -R, --remove              remove all specified jobs (separate IDs with spaces)\n";
@@ -332,6 +349,10 @@ var cron = cron || {
 	    case "-i":
 	    case "--interval":
 		getArg = 'interval';
+		break;
+	    case "-n":
+	    case "--runs":
+		getArg = 'runs';
 		break;
 	    case "-f":
 	    case "--from":
@@ -422,6 +443,9 @@ var cron = cron || {
 		else{ doCount = true; }
 	    }
 	    args['interval'] = cron.parseInterval(args['interval']);
+	    if (args['runs']){
+		args['runs'] = parseInt(args['runs']);
+	    }
 	    if (doCount){
 		if (!args.hasOwnProperty('rounds')){
 		    args['rounds'] = args['interval'];
@@ -442,10 +466,10 @@ var cron = cron || {
 	    return;
 	}
 	if (doCount){
-	    cron.addCountJob(command, args['from'], args['count'], args['rounds'], args['interval'] || 0);
+	    cron.addCountJob(command, args['from'], args['count'], args['rounds'], args['interval'] || 0, args['runs'] || -1);
 	}
 	if (doTimed){
-	    cron.addTimedJob(command, args['from'], args['time'], args['interval'] || 0);
+	    cron.addTimedJob(command, args['from'], args['time'], args['interval'] || 0, args['runs'] || -1);
 	}
     },
 

@@ -60,6 +60,9 @@ The "cron" command accepts the following options:
 				If no first execution time is specified, the
 				first execution will be I rounds or seconds in
 				the future.
+    -n N, --runs N		When combined with -i/--interval, the job will
+				be automatically removed after it is executed N
+				times.
     -f USER, --from USER	The command will be executed as USER.  This need
 				not be a player or character in the game.
 
