@@ -8,6 +8,7 @@ var cron = cron || {
 
 	// set timers for existing timed jobs
 	for (var jobId in state.cron.timedJobs){
+	    if (!state.cron.timedJobs.hasOwnProperty(jobId)){ continue; }
 	    var job = state.cron.timedJobs[jobId];
 	    var handlerFunc = function(){ cron.handleTimedJob(jobId); }
 	    var fireDate = new Date(job['timestamp']);
@@ -73,20 +74,47 @@ var cron = cron || {
 
 	if ((!newTurns) || (!oldTurns)){ return; }
 	if ((!newTurns.length) || (newTurns.length != oldTurns.length)){ return; } // something was added or removed; ignore
-	if (newTurns[0].id == oldTurns[0].id){ return; } // turn didn't change
+	if ((newTurns[0].id == oldTurns[0].id) && ((newTurns.length != 1) || (newTurns[0].pr != oldTurns[0].pr))){ return; } // turn didn't change
 
 	var newCount = newTurns[0].pr;
 	var oldCount = oldTurns[0].pr;
 
-	if (newCount == oldCount){ return; } // initiative count didn't change
+	if ((newCount == oldCount) && (newTurns[0].id != oldTurns[0].id)){ return; } // initiative count didn't change
+
+	// determine if initiative order is high-to-low or low-to-high
+	var highToLow = true;
+	if (newTurns.length > 2){
+	    var highIdx = 0;
+	    for (var i = 1; i < newTurns.length; i++){
+		if (newTurns[i].pr > newTurns[highIdx].pr){
+		    if (highIdx == 0){
+			highIdx = i;
+		    }
+		    else{
+			highToLow = false;
+			break;
+		    }
+		}
+	    }
+	}
+	var wrapped = ((newCount > oldCount) == highToLow) || (newTurns.length == 1);
 
 	var jobsToFire = [];
 	var jobsToDelete = [];
 	for (var i in state.cron.countJobs){
+	    if (!state.cron.countJobs.hasOwnProperty(i)){ continue; }
 	    var job = state.cron.countJobs[i];
-	    if ((job.count >= oldCount) && (job.count > newCount)){ continue; } // greater than oldCount and newCount, so not between them; ignore job
-	    if ((job.count <= oldCount) && (job.count < newCount)){ continue; } // less than oldCount and newCount, so not between them; ignore job
-	    // if we got here, then job is between oldCount and newCount (possibly equal to newCount); fire event or decrement rounds until firing
+	    if (wrapped){
+		// we wrapped around; ignore jobs between oldCount and newCount
+		if ((job.count >= oldCount) && (job.count < newCount)){ continue; } // greater than oldCount and less than newCount, so between them
+		if ((job.count <= oldCount) && (job.count > newCount)){ continue; } // less than oldCount and greater than newCount, so between them
+	    }
+	    else{
+		// we advanced without wrapping; ignore jobs not between oldCount and newCount
+		if ((job.count >= oldCount) && (job.count > newCount)){ continue; } // greater than oldCount and newCount, so not between them
+		if ((job.count <= oldCount) && (job.count < newCount)){ continue; } // less than oldCount and newCount, so not between them
+	    }
+	    // if we got here, then job's count has either come up or just been passed over; fire event or decrement rounds until firing
 	    if (job.rounds > 0){ job.rounds -= 1; }
 	    if (job.rounds == 0){
 		jobsToFire.push([job.count, i]);
@@ -217,8 +245,12 @@ var cron = cron || {
 	var countIds = [];
 	var timedIds = [];
 
-	for (var jobId in state.cron.countJobs){ countIds.push(jobId); }
-	for (var jobId in state.cron.timedJobs){ timedIds.push(jobId); }
+	for (var jobId in state.cron.countJobs){
+	    if (state.cron.countJobs.hasOwnProperty(jobId)){ countIds.push(jobId); }
+	}
+	for (var jobId in state.cron.timedJobs){
+	    if (state.cron.timedJobs.hasOwnProperty(jobId)){ timedIds.push(jobId); }
+	}
 	countIds.sort();
 	timedIds.sort();
 
