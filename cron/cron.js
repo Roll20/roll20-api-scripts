@@ -68,13 +68,15 @@ var cron = cron || {
 	}
     },
 
-    handleTurnChange: function(newTurnOrder, oldTurnOrder){
+    handleTurnChange: function(newTurnOrder, oldTurnOrder, force){
 	var newTurns = JSON.parse((typeof(newTurnOrder) == typeof("") ? newTurnOrder : newTurnOrder.get('turnorder') || "[]"));
 	var oldTurns = JSON.parse((typeof(oldTurnOrder) == typeof("") ? oldTurnOrder : oldTurnOrder.turnorder || "[]"));
 
-	if ((!newTurns) || (!oldTurns)){ return; }
-	if ((!newTurns.length) || (newTurns.length != oldTurns.length)){ return; } // something was added or removed; ignore
-	if ((newTurns[0].id == oldTurns[0].id) && ((newTurns.length != 1) || (newTurns[0].pr != oldTurns[0].pr))){ return; } // turn didn't change
+	if (!force){
+	    if ((!newTurns) || (!oldTurns)){ return; }
+	    if ((!newTurns.length) || (newTurns.length != oldTurns.length)){ return; } // something was added or removed; ignore
+	    if ((newTurns[0].id == oldTurns[0].id) && ((newTurns.length != 1) || (newTurns[0].pr != oldTurns[0].pr))){ return; } // turn didn't change
+	}
 
 	var newCount = newTurns[0].pr;
 	var oldCount = oldTurns[0].pr;
@@ -129,7 +131,23 @@ var cron = cron || {
 	    }
 	}
 	jobsToFire.sort();
-	if (newCount < oldCount){ jobsToFire.reverse(); }
+	if (highToLow){ jobsToFire.reverse(); }
+	if (wrapped){
+	    // wrapped, so some may be below lowest count, others above highest count; sort appropriately
+	    var cutIdx = 0;
+	    while (cutIdx < jobsToFire.length){
+		if ((highToLow) && (jobsToFire[cutIdx][0] < newCount)){ break; }
+		if ((!highToLow) && (jobsToFire[cutIdx][0] > newCount)){ break; }
+		cutIdx += 1;
+	    }
+	    if ((cutIdx > 0) && (cutIdx < jobsToFire.length)){
+		// move first cutIdx elements of jobsToFire to end
+		var cutChunk = jobsToFire.splice(0, cutIdx);
+		cutChunk.unshift(0);
+		cutChunk.unshift(jobsToFire.length);
+		jobsToFire.splice.apply(jobsToFire, cutChunk);
+	    }
+	}
 	for (var i = 0; i < jobsToFire.length; i++){
 	    cron.handleJob(state.cron.countJobs[jobsToFire[i][1]]);
 	}
@@ -305,11 +323,13 @@ var cron = cron || {
     showHelp: function(who, cmd){
 	var helpMsg = "";
 	helpMsg += "Usage: " + cmd + " [options] command\n";
+	helpMsg += "  or:  " + cmd + " -A n\n";
 	helpMsg += "  or:  " + cmd + " -l\n";
 	helpMsg += "  or:  " + cmd + " -R job_IDs\n";
 	helpMsg += "In the first form, the specified command is scheduled to be run later.\n";
-	helpMsg += "In the second form, all scheduled jobs are listed.\n";
-	helpMsg += "In the third form, one or more scheduled jobs are removed.\n";
+	helpMsg += "In the second form, the round counter is advanced n rounds, executing jobs as necessary.\n";
+	helpMsg += "In the third form, all scheduled jobs are listed.\n";
+	helpMsg += "In the fourth form, one or more scheduled jobs are removed.\n";
 	cron.write(helpMsg, who, "", "CronD");
 	helpMsg = "Options:\n";
 	helpMsg += "  -h, --help:               display this help message\n";
@@ -320,6 +340,7 @@ var cron = cron || {
 	helpMsg += "  -i I, --interval I        repeat command every I rounds or time (HH:MM:SS)\n";
 	helpMsg += "  -n N, --runs N            remove repeating job after N executions\n";
 	helpMsg += "  -f USER, --from USER      execute command as specified user\n";
+	helpMsg += "  -A N, --advance N         advance time by N rounds, executing jobs as necessary\n";
 	helpMsg += "  -l, --list                list all scheduled jobs\n";
 	helpMsg += "  -R, --remove              remove all specified jobs (separate IDs with spaces)\n";
 	cron.write(helpMsg, who, "font-size: small; font-family: monospace", "CronD");
@@ -352,6 +373,7 @@ var cron = cron || {
 	    args['from'] = "player|" + msg.playerid;
 	}
 	var getArg = null;
+	var doAdvance = false;
 	var doList = false;
 	var doRemove = false;
 	var cmdArray = [];
@@ -390,6 +412,11 @@ var cron = cron || {
 	    case "--from":
 		getArg = 'from';
 		break;
+	    case "-A":
+	    case "--advance":
+		getArg = 'advance';
+		doAdvance = true;
+		break;
 	    case "-l":
 	    case "--list":
 		doList = true;
@@ -404,6 +431,20 @@ var cron = cron || {
 	    default:
 		cmdArray.push(tokens[i]);
 	    }
+	}
+
+	if (doAdvance){
+	    // advance initiative-based jobs by args['advance'] rounds
+	    var advanceCount = parseInt(args['advance']);
+	    if (!(advanceCount > 0)){ // "!>0" rather than "<=0" to account for NaN
+		cron.write("Error: Invalid number of rounds to advance: " + args['advance'], msg.who, "", "CronD");
+		return;
+	    }
+	    var turnOrder = Campaign().get('turnorder') || "[]";
+	    for (var i = 0; i < advanceCount; i++){
+		cron.handleTurnChange(turnOrder, turnOrder, true);
+	    }
+	    return;
 	}
 
 	if (doList){
