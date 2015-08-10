@@ -369,7 +369,7 @@ var cron = cron || {
 	}
 
 	var args = {};
-	if ((msg.playerid) || (msg.playerid != "API")){
+	if ((msg.playerid) && (msg.playerid != "API")){
 	    args['from'] = "player|" + msg.playerid;
 	}
 	var getArg = null;
