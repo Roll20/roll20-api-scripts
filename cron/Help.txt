@@ -66,6 +66,11 @@ The "cron" command accepts the following options:
     -f USER, --from USER	The command will be executed as USER.  This need
 				not be a player or character in the game.
 
+    -A N, --advance N		Advance the round counter by N rounds.  This
+				will cause initiative-based jobs to advance as
+				if the tracker had been advanced through N full
+				rounds.
+
     -l, --list			List all scheduled jobs.
 
     -R, --remove		Remove all specified jobs.  All other arguments
