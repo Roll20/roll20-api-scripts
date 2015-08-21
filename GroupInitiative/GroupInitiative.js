@@ -5,8 +5,8 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.9.8',
-        lastUpdate = 1438043381,
+    var version = '0.9.9',
+        lastUpdate = 1440036997,
         schemaVersion = 1.0,
         bonusCache = {},
         observers = {
@@ -627,6 +627,13 @@ var GroupInitiative = GroupInitiative || (function() {
             +'</div>'
             +'</div>'
 
+            +'<div style="padding-left:10px;">'
+            +'<b><span style="font-family: serif;">!group-init <i>--reroll</i></span></b>'
+            +'<div style="padding-left: 10px;padding-right:20px">'
+            +'<p>Rerolls all the tokens in the turn order as if they were selected when you executed the bare <b>!group-init</b> command.</p>'
+            +'</div>'
+            +'</div>'
+
             +'<b>Roller Options</b>'
             +'<div style="padding-left:10px;">'
             +'<ul>'
@@ -696,7 +703,7 @@ var GroupInitiative = GroupInitiative || (function() {
         return bonus;
     },
 
-    HandleInput = function(msg_orig) {
+    handleInput = function(msg_orig) {
         var msg = _.clone(msg_orig),
             args,
             cmds,
@@ -866,6 +873,18 @@ var GroupInitiative = GroupInitiative || (function() {
                                 );
                             }
                             break;
+
+						case 'reroll':
+							msg.selected= _.chain(JSON.parse(Campaign().get('turnorder'))||[])
+								.filter(function(e){
+									return -1 !== e.id;
+								})
+								.map(function(e){
+									return {_type: 'graphic', _id: e.id};
+								})
+								.value();
+								cont=true;
+							break;
 
 
                         case 'bonus':
@@ -1179,12 +1198,12 @@ var GroupInitiative = GroupInitiative || (function() {
     },
 
 
-    RegisterEventHandlers = function() {
-        on('chat:message', HandleInput);
+    registerEventHandlers = function() {
+        on('chat:message', handleInput);
     };
 
     return {
-        RegisterEventHandlers: RegisterEventHandlers,
+        RegisterEventHandlers: registerEventHandlers,
 		ObserveTurnOrderChange: observeTurnOrderChange,
         CheckInstall: checkInstall
     };
