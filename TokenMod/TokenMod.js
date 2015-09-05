@@ -5,11 +5,11 @@
 var TokenMod = TokenMod || (function() {
     'use strict';
 
-    var version = '0.8.9',
-        lastUpdate = 1437936106,
+    var version = '0.8.10',
+        lastUpdate = 1441479906,
         schemaVersion = 0.1,
 
-    	fields = {
+        fields = {
 			// booleans
 			showname: {type: 'boolean'},
 			showplayers_name: {type: 'boolean'},
@@ -40,8 +40,8 @@ var TokenMod = TokenMod || (function() {
 
 			// 360 degrees
 			rotation: {type: 'degrees'},
-			light_angle: {type: 'degrees'},
-			light_losangle: {type: 'degrees'},
+			light_angle: {type: 'circleSegment'},
+			light_losangle: {type: 'circleSegment'},
 
 			// distance
 			light_radius: {type: 'numberBlank'},
@@ -105,6 +105,13 @@ var TokenMod = TokenMod || (function() {
 					var n = parseFloat(t,10);
 					if(!_.isNaN(n)) {
 						n %= 360;
+					}
+					return n;
+				},
+			circleSegment: function(t){
+					var n = Math.abs(parseFloat(t,10));
+					if(!_.isNaN(n)) {
+						n = Math.min(360,Math.max(0,n));
 					}
 					return n;
 				}
@@ -302,16 +309,29 @@ var TokenMod = TokenMod || (function() {
 
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<b>Degrees</b>'
-			+'<p>Any positive or negative integer.</p>'
+			+'<p>Any positive or negative number.</p>'
 			+'<p><u>Available Degrees Properties:</u></p>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">rotation</div>'
+			+'<div style="clear:both;">'+ch(' ')+'</div>'
+			+'<p>Rotating a token by 180 degrees.</p>'
+			+'<div style="padding-left: 10px;padding-right:20px">'
+				+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
+					+'!token-mod --set rotation|180'
+				+'</pre>'
+			+'</div>'
+		+'</div>'
+
+		+'<div style="padding-left: 10px;padding-right:20px">'
+			+'<b>Circle Segment</b>'
+			+'<p>Any positive or negative number between 0 and 360.</p>'
+			+'<p><u>Available Circle Segement Properties:</u></p>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">light_angle</div>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">light_losangle</div>'
 			+'<div style="clear:both;">'+ch(' ')+'</div>'
-			+'<p>Rotating a token by 180 degrees, and setting line of sight angle to 90 degrees.</p>'
+			+'<p>Setting line of sight angle to 90 degrees.</p>'
 			+'<div style="padding-left: 10px;padding-right:20px">'
 				+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
-					+'!token-mod --set rotation|180 light_losangle|90'
+					+'!token-mod --set light_losangle|90'
 				+'</pre>'
 			+'</div>'
 		+'</div>'
@@ -420,10 +440,17 @@ var TokenMod = TokenMod || (function() {
 				+'</pre>'
 			+'</div>'
 
-			+'<p>The numbers following a status can be prefaced with a + or -, which causes their value to be applyed to the current value. Here'+ch("'")+'s and example showing blue getting incremented by 2, and padlock getting decremented by 1.  Values will be bounded between 0 and 9.</p>'
+			+'<p>The numbers following a status can be prefaced with a + or -, which causes their value to be applyed to the current value. Here'+ch("'")+'s an example showing blue getting incremented by 2, and padlock getting decremented by 1.  Values will be bounded between 0 and 9.</p>'
 			+'<div style="padding-left: 10px;padding-right:20px">'
 				+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
 					+'!token-mod --set statusmarkers|blue:+2|padlock:-1'
+				+'</pre>'
+			+'</div>'
+
+			+'<p>You can optionally preface each status with a ? to modify the way + and - on status numbers work.  With ? on the front of the status, only selected tokens that have that status will be modified.  Additionally, if the status reaches 0, it will be removed.  Here'+ch("'")+'s an example showing blue getting decremented by 1.  If it reaches 0, it will be removed and no status will be added if it is missing.</p>'
+			+'<div style="padding-left: 10px;padding-right:20px">'
+				+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
+					+'!token-mod --set statusmarkers|?blue:-1'
 				+'</pre>'
 			+'</div>'
 
@@ -647,6 +674,10 @@ var TokenMod = TokenMod || (function() {
 					retr[cmd].push((_.contains(['-','+'],args[0][0]) ? args[0][0] : '') + Math.abs(transforms.degrees(args.shift())));
 					break;
 
+				case 'circleSegment':
+					retr[cmd].push((_.contains(['-','+'],args[0][0]) ? args[0][0] : '') + transforms.circleSegment(args.shift()));
+					break;
+
 				case 'layer':
 					retr[cmd].push((args.shift().match(regex.layers)||[]).shift());
 					if(0 === (retr[cmd][0]||'').length) {
@@ -707,7 +738,7 @@ var TokenMod = TokenMod || (function() {
 							statparts = s.shift().match(/^(\S+?)(\[(\d*)\]|)$/)||[],
                             index = ( '[]' === statparts[2] ? statparts[2] : ( undefined !== statparts[3] ? Math.max(parseInt(statparts[3],10)-1,0) : 0 ) ),
                             stat=statparts[1]||'',
-							op = (_.contains(['-','+','=','!'],stat[0]) ? stat[0] : false),
+							op = (_.contains(['-','+','=','!','?'],stat[0]) ? stat[0] : false),
 							numraw = s.shift() || '',
 							numop = (_.contains(['-','+'],numraw[0]) ? numraw[0] : false),
 							num = Math.max(0,Math.min(9,Math.abs(parseInt(numraw,10)))) || 0;
@@ -816,7 +847,7 @@ var TokenMod = TokenMod || (function() {
 		var mods={},
 			delta, cid,
 			current=decomposeStatuses(token.get('statusmarkers')||''),
-            statusCount=token.get('statusmarkers').split(/,/).length;
+            statusCount=(token.get('statusmarkers')||'').split(/,/).length;
 
 		_.each(modlist.on,function(f){
 			mods[f]=true;
@@ -848,6 +879,16 @@ var TokenMod = TokenMod || (function() {
                                     });
 								}
 								break;
+							case '?':
+								if('[]' !== sm.index && _.has(current,sm.status) && _.has(current[sm.status],sm.index)){
+                                    current[sm.status][sm.index].num = (Math.max(0,Math.min(9,getRelativeChange(current[sm.status][sm.index].num, sm.sign+sm.number))));
+                                    if(0 === current[sm.status][sm.index].num) {
+                                        current[sm.status]= _.filter(current[sm.status],function(e,idx){
+                                            return idx !== sm.index;
+                                        });
+                                    }
+                                } 
+                                break;
 							case '+':
 								if('[]' !== sm.index && _.has(current,sm.status) && _.has(current[sm.status],sm.index)){
                                     current[sm.status][sm.index].num = (Math.max(0,Math.min(9,getRelativeChange(current[sm.status][sm.index].num, sm.sign+sm.number))));
@@ -920,11 +961,17 @@ var TokenMod = TokenMod || (function() {
 					break;
 
 				case 'rotation':
+					delta=getRelativeChange(token.get(k),f[0]);
+					if(_.isNumber(delta)) {
+						mods[k]=(delta%360);
+					}
+					break;
+
 				case 'light_angle':
 				case 'light_losangle':
 					delta=getRelativeChange(token.get(k),f[0]);
 					if(_.isNumber(delta)) {
-						mods[k]=(delta%360);
+						mods[k] = Math.min(360,Math.max(0,delta));
 					}
 					break;
 
@@ -1109,9 +1156,14 @@ var TokenMod = TokenMod || (function() {
 				}
 
                 if(!ignoreSelected) {
-                    _.each(msg.selected,function (o) {
-                        applyModListToToken(modlist,getObj(o._type,o._id));
-                    });
+                    _.chain(msg.selected)
+                        .map(function(o){
+                            return getObj('graphic',o._id);
+                        })
+                        .reject(_.isUndefined)
+                        .each(function (o) {
+                            applyModListToToken(modlist,o);
+                        });
                 }
 				break;
 
