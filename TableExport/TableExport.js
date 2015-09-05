@@ -5,18 +5,9 @@
 var TableExport = TableExport || (function() {
 	'use strict';
 
-	var version  = 0.11,
+	var version  = '0.2.0',
+        lastUpdate = 1427604267,
 	tableCache = {},
-
-	fixedCreateObj = (function () {
-		return function () {
-			var obj = createObj.apply(this, arguments);
-			if (obj && !obj.fbpath) {
-				obj.fbpath = obj.changed._fbpath.replace(/([^\/]*\/){4}/, "/");
-			}
-			return obj;
-		};
-	}()),
 
 	ch = function (c) {
 		var entities = {
@@ -38,6 +29,10 @@ var TableExport = TableExport || (function() {
 			return ('&'+entities[c]+';');
 		}
 		return '';
+	},
+
+	checkInstall = function() {
+        log('-=> TableExport v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
 	},
 
 	showHelp = function() {
@@ -104,7 +99,7 @@ var TableExport = TableExport || (function() {
 	handleInput = function(msg) {
 		var args, matches, tables, tableIDs=[], errors=[], items, itemMatches, accum='';
 
-		if (msg.type !== "api" || !isGM(msg.playerid)) {
+		if (msg.type !== "api" || !playerIsGM(msg.playerid)) {
 			return;
 		}
 
@@ -133,7 +128,7 @@ var TableExport = TableExport || (function() {
     						+'</div>'
 						);
 					} else {
-						tableIDs=fixedCreateObj('rollabletable',{ 
+						tableIDs=createObj('rollabletable',{ 
 							name: args[1], 
 							showplayers: ('show'===args[2])
 						});
@@ -163,7 +158,7 @@ var TableExport = TableExport || (function() {
                         tableCache[args[1]]=tableIDs[0].id;
                     }
                 }
-                fixedCreateObj('tableitem',{
+                createObj('tableitem',{
                     name: args[2],
                     rollabletableid: tableCache[args[1]],
                     weight: parseInt(args[3],10),
@@ -257,6 +252,7 @@ var TableExport = TableExport || (function() {
 	};
 
 	return {
+		CheckInstall: checkInstall,
 		RegisterEventHandlers: registerEventHandlers
 	};
 }());
@@ -265,12 +261,6 @@ var TableExport = TableExport || (function() {
 on("ready",function(){
 	'use strict';
 
-    if("undefined" !== typeof isGM && _.isFunction(isGM)) {
-		TableExport.RegisterEventHandlers();
-    } else {
-		log('--------------------------------------------------------------');
-		log('TableExport requires the isGM module to work.');
-		log('isGM GIST: https://gist.github.com/shdwjk/8d5bb062abab18463625');
-		log('--------------------------------------------------------------');
-	}
+	TableExport.CheckInstall();
+	TableExport.RegisterEventHandlers();
 });
