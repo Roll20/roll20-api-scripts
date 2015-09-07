@@ -5,8 +5,8 @@
 var TokenMod = TokenMod || (function() {
     'use strict';
 
-    var version = '0.8.10',
-        lastUpdate = 1441479906,
+    var version = '0.8.11',
+        lastUpdate = 1441636305,
         schemaVersion = 0.1,
 
         fields = {
@@ -268,6 +268,11 @@ var TokenMod = TokenMod || (function() {
 		+'<p><b>Note:</b> You can now use + or - before any number to make an adjustment to the current value:</p>'
 			+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
 				+'!token-mod --set bar1_value|-3 statusmarkers|blue:+1|green:-1'
+			+'</pre>'
+
+		+'<p><b>Note:</b> You can now preface a + or - with a = to explicitly set the number to a negative or positive value:</p>'
+			+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
+				+'!token-mod --set bar1_value|=+3 light_radius|=-10'
 			+'</pre>'
 
 		+'<p>There are several types of keys with special value formats:</p>'
@@ -591,9 +596,7 @@ var TokenMod = TokenMod || (function() {
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<div style="float:right;width:40px;border:1px solid black;background-color:#ffc;text-align:center;">'
 						+( state.TokenMod.playersCanUse_ids ? '<span style="color: red; font-weight:bold; padding: 0px 4px;">ON</span>' : '<span style="color: #999999; font-weight:bold; padding: 0px 4px;">OFF</span>' )
-					+'</div>'
-					+'<b><span style="font-family: serif;">players-can-ids</span></b> '+ch('-')+' Determines if players can use <i>--ids</i>.  Specifying a value which is true allows players to use --ids.  Omitting a value flips the current setting.'
-				+'</li> '
+					+'</div>' +'<b><span style="font-family: serif;">players-can-ids</span></b> '+ch('-')+' Determines if players can use <i>--ids</i>.  Specifying a value which is true allows players to use --ids.  Omitting a value flips the current setting.' +'</li> '
 			+'</ul>'
 		+'</div>'
         +getConfigOption_PlayersCanIDs()
@@ -608,14 +611,20 @@ var TokenMod = TokenMod || (function() {
 
 
 	getRelativeChange = function(current,update) {
-		var cnum = current
+		var cnum,unum;
+
+        if( '=' === update[0] ){
+            return _.rest(update).join('');
+        }
+        
+        cnum = current
 			&& (_.isNumber(current)
 				? current
 				: ( _.isString(current)
 					? (current.match(regex.numberString) ? parseFloat(current,10) : NaN)
 					: NaN)
-				),
-			unum = update
+				);
+        unum = update
 			&& (_.isNumber(update)
 				? update
 				: ( _.isString(update)
@@ -671,11 +680,23 @@ var TokenMod = TokenMod || (function() {
 					break;
 
 				case 'degrees':
-					retr[cmd].push((_.contains(['-','+'],args[0][0]) ? args[0][0] : '') + Math.abs(transforms.degrees(args.shift())));
+                    if( '=' === args[0][0] ) {
+                        t='=';
+                        args[0]=_.rest(args[0]);
+                    } else {
+                        t='';
+                    }
+					retr[cmd].push(t+(_.contains(['-','+'],args[0][0]) ? args[0][0] : '') + Math.abs(transforms.degrees(args.shift())));
 					break;
 
 				case 'circleSegment':
-					retr[cmd].push((_.contains(['-','+'],args[0][0]) ? args[0][0] : '') + transforms.circleSegment(args.shift()));
+                    if( '=' === args[0][0] ) {
+                        t='=';
+                        args[0]=_.rest(args[0]);
+                    } else {
+                        t='';
+                    }
+					retr[cmd].push(t+(_.contains(['-','+'],args[0][0]) ? args[0][0] : '') + transforms.circleSegment(args.shift()));
 					break;
 
 				case 'layer':
