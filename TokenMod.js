@@ -5,8 +5,8 @@
 var TokenMod = TokenMod || (function() {
     'use strict';
 
-    var version = '0.8.11',
-        lastUpdate = 1441636305,
+    var version = '0.8.12',
+        lastUpdate = 1441680645,
         schemaVersion = 0.1,
 
         fields = {
@@ -614,7 +614,7 @@ var TokenMod = TokenMod || (function() {
 		var cnum,unum;
 
         if( '=' === update[0] ){
-            return _.rest(update).join('');
+            return parseFloat(_.rest(update).join(''));
         }
         
         cnum = current
@@ -666,16 +666,28 @@ var TokenMod = TokenMod || (function() {
 					break;
 
 				case 'numberBlank':
-					retr[cmd].push( args[0].match(regex.numberString) ? args[0] : '' );
-					if(_.isNaN(parseFloat(retr[cmd][0],10))) {
-						retr[cmd][0] = '';
+                    if( '=' === args[0][0] ) {
+                        t='=';
+                        args[0]=_.rest(args[0]).join('');
+                    } else {
+                        t='';
+                    }
+                    t2=args[0].match(regex.numberString) ? args[0] : '' ;
+					if(! _.isNaN(parseFloat(t2)) ) {
+						retr[cmd].push(t+t2);
 					}
 					break;
 
 				case 'number':
-					retr[cmd].push( args[0].match(regex.numberString) ? args[0] : undefined );
-					if(_.isNaN(parseFloat(retr[cmd][0],10))) {
-						retr = undefined;
+                    if( '=' === args[0][0] ) {
+                        t='=';
+                        args[0]=_.rest(args[0]).join('');
+                    } else {
+                        t='';
+                    }
+					t2=args[0].match(regex.numberString) ? args[0] : undefined ;
+					if(!_.isNaN(parseFloat(t2)) ) {
+						retr[cmd].push(t+t2);
 					}
 					break;
 
