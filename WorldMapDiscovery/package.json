@@ -1,0 +1,22 @@
+{
+    "name": "World Map Discovery",
+    "version": "1.0",
+    "description": "Set up dynamic landmarks on the map which can be discovered by the players.",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "dependencies": {
+        "Token Collisions": "1.1",
+        "Vector Math": "1.0"
+    },
+    "modifies": {
+        "aura1_radius": "read, write",
+        "chat": "write",
+        "lastmove": "write",
+        "layer": "read, write",
+        "left": "read, write",
+        "status_white-tower": "read",
+        "token": "read",
+        "top": "read, write"
+    },
+    "conflicts": []
+}
