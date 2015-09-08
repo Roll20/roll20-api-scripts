@@ -5,8 +5,8 @@
 var TokenMod = TokenMod || (function() {
     'use strict';
 
-    var version = '0.8.12',
-        lastUpdate = 1441680645,
+    var version = '0.8.13',
+        lastUpdate = 1441683816,
         schemaVersion = 0.1,
 
         fields = {
@@ -91,7 +91,7 @@ var TokenMod = TokenMod || (function() {
 		},
 		filters = {
 			hasArgument: function(a) {
-				return a.match(/.+\|/);
+				return a.match(/.+[\|#]/);
 			},
 			isBoolean: function(a) {
 				return _.has(fields,a) && 'boolean' === fields[a].type;
@@ -171,6 +171,7 @@ var TokenMod = TokenMod || (function() {
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>This command takes a list of modifications and applies them to the selected tokens (or tokens specified with --ids by a GM or Player depending on configuration).  Note that each --option can be specified multiple times and in any order.</p>'
 			+'<p><b>Note:</b> If you are using multiple '+ch('@')+ch('{')+'target'+ch('|')+'token_id'+ch('}')+' calls in a macro, and need to adjust fewer than the supplied number of token ids, simply select the same token several times.  The duplicates will be removed.</p>'
+			+'<p><b>Note:</b> Anywhere you use |, you can use # instead.  Sometimes this make macros easier.</p>'
 			+'<ul>'
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<b><span style="font-family: serif;">'+ch('<')+'--help'+ch('>')+'</span></b> '+ch('-')+' Displays this help.'
@@ -649,7 +650,7 @@ var TokenMod = TokenMod || (function() {
 		return update;
 	},
 	parseArguments = function(a) {
-		var args=a.split(/\|/),
+		var args=a.split(/[\|#]/),
 			cmd=args.shift(),
 			retr={},
 			t,t2;
@@ -799,7 +800,7 @@ var TokenMod = TokenMod || (function() {
 		return retr;
 	},
 	expandMetaArguments = function(memo,a) {
-		var args=a.split(/\|/),
+		var args=a.split(/[\|#]/),
 			cmd=args.shift();
 		switch(cmd) {
 			case 'bar1':
@@ -1055,7 +1056,7 @@ var TokenMod = TokenMod || (function() {
 
         if(config.length) {
             while(config.length) {
-                args=config.shift().split(/\|/);
+                args=config.shift().split(/[\|#]/);
                 cmd=args.shift();
                 switch(cmd) {
                     case 'players-can-ids':
@@ -1136,7 +1137,7 @@ var TokenMod = TokenMod || (function() {
 			case '!token-mod':
 
 				while(args.length) {
-					cmds=args.shift().match(/([^\s]+\|'[^']+'|[^\s]+\|"[^"]+"|[^\s]+)/g);
+					cmds=args.shift().match(/([^\s]+[\|#]'[^']+'|[^\s]+[\|#]"[^"]+"|[^\s]+)/g);
 					switch(cmds.shift()) {
 						case 'help':
 							showHelp(msg.playerid);
