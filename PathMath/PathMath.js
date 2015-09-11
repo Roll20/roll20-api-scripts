@@ -1,3 +1,11 @@
+/**
+ * PathMath script
+ *
+ * This is a library that provides mathematical operations involving Paths.
+ * It intended to be used by other scripts and has no stand-alone
+ * functionality of its own. All the library's operations are exposed by the
+ * PathMath object created by this script.
+ */
 var PathMath = (function() {
 
     /**
