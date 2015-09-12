@@ -39,19 +39,20 @@ CustomStatusMarkers = (function() {
      * @param  {String} path
      * @param  {[type]} bbox
      */
-    function StatusMarkerTemplate(pathStr, bbox) {
+    function StatusMarkerTemplate(pathStr, bbox, imgSrc) {
         this.pathStr = pathStr;
         this.bbox = bbox;
+        this.imgSrc = imgSrc;
     };
 
     /**
      * A class encapsulating a Path for a custom status marker, with an optional
      * Text for a number badge.
-     * @param {Path} path
+     * @param {Path | Graphic} icon
      * @param {Text} text
      */
-    function StatusMarker(path, text) {
-        this.path = path;
+    function StatusMarker(icon, text) {
+        this.icon = icon;
         this.text = text;
     };
 
@@ -103,20 +104,28 @@ CustomStatusMarkers = (function() {
      * @param {int} [count]
      */
     function createTokenStatusMarker(token, statusName, count, index) {
+        log('createTokenStatusMarker');
         var curPage = Campaign().get("playerpageid");
 
         loadTemplate(statusName, function(savedStatus) {
+            log(savedStatus);
+
             var pathStr = savedStatus.pathStr;
+            var imgSrc = savedStatus.imgSrc;
             var bbox = savedStatus.bbox;
+            log(bbox);
 
             var width = bbox.width;
             var height = bbox.height;
             var left = _calcStatusMarkerLeft(token, index);
             var top = _calcStatusMarkerTop(token);
-            var scale = PIXELS_PER_SQUARE / height / 3;
 
-            var path = _createTokenStatusMarkerPath(pathStr, left, top, width, height);
-            toFront(path);
+            var icon;
+            if(pathStr)
+                icon = _createTokenStatusMarkerPath(pathStr, left, top, width, height);
+            else
+                icon = _createTokenStatusMarkerGraphic(imgSrc, left, top, width, height);
+            toFront(icon);
 
             var text;
             if(count) {
@@ -124,8 +133,34 @@ CustomStatusMarkers = (function() {
                 toFront(text);
             }
 
-            token.customStatuses[statusName] = new StatusMarker(path, text);
+            token.customStatuses[statusName] = new StatusMarker(icon, text);
             token.customStatusesCount++;
+        });
+    };
+
+    /**
+     * @private
+     * @param  {String} imgSrc
+     * @param  {number} left
+     * @param  {number}} top
+     * @param  {number} width
+     * @param  {number} height
+     * @return {Graphic}
+     */
+    function _createTokenStatusMarkerGraphic(imgSrc, left, top, width, height) {
+        log('_CreateTokenStatusMarkerGraphic');
+
+        var curPage = Campaign().get("playerpageid");
+        var scale = getStatusMarkerIconScale(width, height);
+
+        return createObj('graphic', {
+            _pageid: curPage,
+            imgsrc: imgSrc,
+            layer: 'objects',
+            left: left,
+            top: top,
+            width: width*scale,
+            height: height*scale
         });
     };
 
@@ -140,7 +175,7 @@ CustomStatusMarkers = (function() {
      */
     function _createTokenStatusMarkerPath(pathStr, left, top, width, height) {
         var curPage = Campaign().get("playerpageid");
-        var scale = PIXELS_PER_SQUARE / height / 3;
+        var scale = getStatusMarkerIconScale(width, height);
 
         return createObj('path', {
             _pageid: curPage,
@@ -197,12 +232,27 @@ CustomStatusMarkers = (function() {
      */
     function deleteTokenStatusMarker(token, statusName) {
         var statusMarker = token.customStatuses[statusName];
-        statusMarker.path.remove();
+        statusMarker.icon.remove();
         if(statusMarker.text)
             statusMarker.text.remove();
 
         delete token.customStatuses[statusName];
         token.customStatusesCount--;
+    };
+
+    /**
+     * @private
+     * Gets the BoundingBox of a Graphic.
+     * @param {Graphic} graphic
+     * @return {PathMath.BoundingBox}
+     */
+    function _getGraphicBoundingBox(graphic) {
+        var left = graphic.get('left');
+        var top = graphic.get('top');
+        var width = graphic.get('width');
+        var height = graphic.get('height');
+
+        return new PathMath.BoundingBox(left, top, width, height);
     };
 
 
@@ -225,7 +275,8 @@ CustomStatusMarkers = (function() {
                     _id: s._id
                 })[0];
 
-                result.push(match);
+                if(match)
+                    result.push(match);
             });
         }
 
@@ -261,6 +312,18 @@ CustomStatusMarkers = (function() {
 
 
     /**
+     * Returns the scale for a status marker's icon.
+     * @param {number} width
+     * @param {number} height
+     * @return {number}
+     */
+    function getStatusMarkerIconScale(width, height) {
+        var length = Math.max(width, height);
+        return PIXELS_PER_SQUARE / length / 3;
+    };
+
+
+    /**
      * Loads a StatusMarkerTemplate from the save handout.
      * @param  {String}   statusName
      * @param  {Function(StatusMarkerTemplate)} callback
@@ -275,7 +338,7 @@ CustomStatusMarkers = (function() {
             var statusMarkers = JSON.parse(notes);
             var sm = statusMarkers[statusName];
 
-            callback(new StatusMarkerTemplate(sm.pathStr, sm.bbox));
+            callback(new StatusMarkerTemplate(sm.pathStr, sm.bbox, sm.imgSrc));
         });
     };
 
@@ -283,9 +346,9 @@ CustomStatusMarkers = (function() {
         var left = _calcStatusMarkerLeft(token, index);
         var top = _calcStatusMarkerTop(token);
 
-        statusMarker.path.set('left', left);
-        statusMarker.path.set('top', top);
-        toFront(statusMarker.path);
+        statusMarker.icon.set('left', left);
+        statusMarker.icon.set('top', top);
+        toFront(statusMarker.icon);
 
         if(statusMarker.text) {
             statusMarker.text.set('left', left + PIXELS_PER_SQUARE/8);
@@ -306,10 +369,21 @@ CustomStatusMarkers = (function() {
 
         var curPage = Campaign().get("playerpageid");
         var paths = _getPathsFromMsg(msg);
-        var bbox = PathMath.getBoundingBox(paths);
+        var graphics = _getGraphicsFromMsg(msg);
 
-        var mergedPathStr = PathMath.mergePathStr(paths);
-        saveTemplate(statusName, mergedPathStr, bbox);
+        // Save a path-based marker.
+        if(paths.length > 0) {
+            var bbox = PathMath.getBoundingBox(paths);
+            var mergedPathStr = PathMath.mergePathStr(paths);
+            saveTemplate(statusName, mergedPathStr, bbox, undefined);
+        }
+
+        // Save a graphic-based marker.
+        else {
+            var bbox = _getGraphicBoundingBox(graphics[0]);
+            var imgSrc = graphics[0].get('imgsrc');
+            saveTemplate(statusName, undefined, bbox, imgSrc);
+        }
     };
 
 
@@ -347,8 +421,9 @@ CustomStatusMarkers = (function() {
      * @param {String} statusName
      * @param {String} pathStr
      * @param {BoundingBox} bbox
+     * @param {String} imgSrc
      */
-    function saveTemplate(statusName, pathStr, bbox) {
+    function saveTemplate(statusName, pathStr, bbox, imgSrc) {
         var saveHandout = findObjs({
             _type: 'handout',
             name: SAVE_HANDOUT_NAME
@@ -362,7 +437,7 @@ CustomStatusMarkers = (function() {
             if(notes !== 'null')
                 savedMarkers = JSON.parse(notes);
 
-            savedMarkers[statusName] = new StatusMarkerTemplate(pathStr, bbox);
+            savedMarkers[statusName] = new StatusMarkerTemplate(pathStr, bbox, imgSrc);
             saveHandout.set('notes', JSON.stringify(savedMarkers));
             sendChat('CustomStatus script', 'Created status ' + statusName);
         });
@@ -436,6 +511,7 @@ CustomStatusMarkers = (function() {
 
         createTokenStatusMarker: createTokenStatusMarker,
         deleteTokenStatusMarker: deleteTokenStatusMarker,
+        getStatusMarkerIconScale: getStatusMarkerIconScale,
         loadTemplate: loadTemplate,
         replaceTokenStatusMarker: replaceTokenStatusMarker,
         saveTemplate: saveTemplate,
