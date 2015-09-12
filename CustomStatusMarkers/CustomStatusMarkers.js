@@ -104,16 +104,12 @@ CustomStatusMarkers = (function() {
      * @param {int} [count]
      */
     function createTokenStatusMarker(token, statusName, count, index) {
-        log('createTokenStatusMarker');
         var curPage = Campaign().get("playerpageid");
 
         loadTemplate(statusName, function(savedStatus) {
-            log(savedStatus);
-
             var pathStr = savedStatus.pathStr;
             var imgSrc = savedStatus.imgSrc;
             var bbox = savedStatus.bbox;
-            log(bbox);
 
             var width = bbox.width;
             var height = bbox.height;
@@ -148,8 +144,6 @@ CustomStatusMarkers = (function() {
      * @return {Graphic}
      */
     function _createTokenStatusMarkerGraphic(imgSrc, left, top, width, height) {
-        log('_CreateTokenStatusMarkerGraphic');
-
         var curPage = Campaign().get("playerpageid");
         var scale = getStatusMarkerIconScale(width, height);
 
