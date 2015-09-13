@@ -29,7 +29,8 @@
  */
 CustomStatusMarkers = (function() {
     var SAVE_MARKER_CMD = '!saveMarker';
-    var SET_MARKER_CMD = '!setMarker'
+    var SET_MARKER_CMD = '!setMarker';
+    var LIST_MARKERS_CMD = '!listMarkers';
 
     var PIXELS_PER_SQUARE = 70;
     var SAVE_HANDOUT_NAME = 'SavedCustomstatusMarkers';
@@ -354,6 +355,29 @@ CustomStatusMarkers = (function() {
 
     /**
      * @private
+     * Processes an API command to display the list of saved custom status markers.
+     */
+    function _processListMarkersCmd() {
+        var saveHandout = findObjs({
+            _type: 'handout',
+            name: SAVE_HANDOUT_NAME
+        })[0];
+
+        saveHandout.get('notes', function(notes) {
+            var statusMarkers = JSON.parse(notes);
+            var names = [];
+
+            _.each(statusMarkers, function(marker, name) {
+                names.push(name);
+            });
+            names.sort();
+            names = names.join('<br>');
+            sendChat('CustomStatus script', 'Saved markers: <br/>' + names);
+        });
+    };
+
+    /**
+     * @private
      * Processes an API command to create a custom status from a selected path.
      * @param {ChatMessage} msg
      */
@@ -473,6 +497,8 @@ CustomStatusMarkers = (function() {
                 _processSaveMarkerCmd(msg);
             else if(msg.content.indexOf(SET_MARKER_CMD) === 0)
                 _processSetMarkerCmd(msg);
+            else if(msg.content.indexOf(LIST_MARKERS_CMD) === 0)
+                _processListMarkersCmd(msg);
         }
         catch(err) {
             sendChat('Custom status markers Error', '/w ' + msg.who + ' bad command: ' + msg.content);
