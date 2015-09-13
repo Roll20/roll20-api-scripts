@@ -426,6 +426,9 @@ CustomStatusMarkers = (function() {
         if(!saveHandout)
             saveHandout = _createSaveHandout();
 
+        if(imgSrc)
+            imgSrc = imgSrc.replace(/(max|med)\.png/,'thumb.png');
+
         saveHandout.get('notes', function(notes) {
             var savedMarkers = {};
             if(notes !== 'null')
