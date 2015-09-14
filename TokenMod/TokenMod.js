@@ -5,8 +5,8 @@
 var TokenMod = TokenMod || (function() {
     'use strict';
 
-    var version = '0.8.13',
-        lastUpdate = 1441683816,
+    var version = '0.8.14',
+        lastUpdate = 1442235743,
         schemaVersion = 0.1,
 
         fields = {
@@ -614,7 +614,7 @@ var TokenMod = TokenMod || (function() {
 	getRelativeChange = function(current,update) {
 		var cnum,unum;
 
-        if( '=' === update[0] ){
+        if( update && _.has(update,0) && ('=' === update[0]) ){
             return parseFloat(_.rest(update).join(''));
         }
         
