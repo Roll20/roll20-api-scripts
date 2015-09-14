@@ -82,8 +82,8 @@ var PathMath = (function() {
     function mergePathStr(paths) {
         var merged = [];
         var bbox = getBoundingBox(paths);
-        log('bbox');
-        log(bbox);
+    //    log('bbox');
+    //    log(bbox);
 
         _.each(paths, function(p) {
             var pbox = getBoundingBox(p);
@@ -95,8 +95,8 @@ var PathMath = (function() {
                 var sx = p.get('scaleX');
                 var sy = p.get('scaleY');
 
-                log(pbox.left);
-                log(p.get('left'));
+            //    log(pbox.left);
+            //    log(p.get('left'));
 
                 // Bezier curve tuple
                 if(pathTuple[0] == 'Q') {
