@@ -5,10 +5,13 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.9.6',
-        lastUpdate = 1434424041,
+    var version = '0.9.9',
+        lastUpdate = 1440036997,
         schemaVersion = 1.0,
         bonusCache = {},
+        observers = {
+			turnOrderChange: []
+			},
         sorters = {
             'None': function(to) {
                 return to;
@@ -48,6 +51,17 @@ var GroupInitiative = GroupInitiative || (function() {
             return s.replace(re, function(c){ return entities[c] || c; });
           };
         }()),
+
+		observeTurnOrderChange = function(handler){
+			if(handler && _.isFunction(handler)){
+				observers.turnOrderChange.push(handler);
+			}
+		},
+		notifyObservers = function(event){
+			_.each(observers[event],function(handler){
+				handler();
+			});
+		},
 
         formatDieRoll = function(rollData) {
             var critFail = _.reduce(rollData.rolls,function(m,r){
@@ -613,6 +627,13 @@ var GroupInitiative = GroupInitiative || (function() {
             +'</div>'
             +'</div>'
 
+            +'<div style="padding-left:10px;">'
+            +'<b><span style="font-family: serif;">!group-init <i>--reroll</i></span></b>'
+            +'<div style="padding-left: 10px;padding-right:20px">'
+            +'<p>Rerolls all the tokens in the turn order as if they were selected when you executed the bare <b>!group-init</b> command.</p>'
+            +'</div>'
+            +'</div>'
+
             +'<b>Roller Options</b>'
             +'<div style="padding-left:10px;">'
             +'<ul>'
@@ -668,9 +689,11 @@ var GroupInitiative = GroupInitiative || (function() {
                         },stat);
                         return stat;
                     }
+                    return undefined;
                 })
                 .value();
-            if(_.contains(bonus,undefined)) {
+            if(_.contains(bonus,undefined) || _.contains(bonus,null) || _.contains(bonus,NaN)) {
+                bonus=''
                 return false;
             }
             bonus = bonus.join('+');
@@ -680,7 +703,7 @@ var GroupInitiative = GroupInitiative || (function() {
         return bonus;
     },
 
-    HandleInput = function(msg_orig) {
+    handleInput = function(msg_orig) {
         var msg = _.clone(msg_orig),
             args,
             cmds,
@@ -851,6 +874,18 @@ var GroupInitiative = GroupInitiative || (function() {
                             }
                             break;
 
+						case 'reroll':
+							msg.selected= _.chain(JSON.parse(Campaign().get('turnorder'))||[])
+								.filter(function(e){
+									return -1 !== e.id;
+								})
+								.map(function(e){
+									return {_type: 'graphic', _id: e.id};
+								})
+								.value();
+								cont=true;
+							break;
+
 
                         case 'bonus':
                             if(cmds[1] && cmds[1].match(/^[\-\+]?\d+(\.\d+)?$/)){
@@ -929,7 +964,7 @@ var GroupInitiative = GroupInitiative || (function() {
                                 });
                             })
                             .map(function(r){
-                                return '[[('+r.join(') + (')+')]]';
+                                return ('[[('+r.join(') + (')+')]]').replace(/\[\[\[/g, "[[ [");
                             })
                             .value()
                             .join('');
@@ -997,6 +1032,7 @@ var GroupInitiative = GroupInitiative || (function() {
                                     )
                                 )
                             });
+							notifyObservers('turnOrderChange');
 
                             if(state.GroupInitiative.config.autoOpenInit && !Campaign().get('initativepage')) {
                                 Campaign().set({
@@ -1162,12 +1198,13 @@ var GroupInitiative = GroupInitiative || (function() {
     },
 
 
-    RegisterEventHandlers = function() {
-        on('chat:message', HandleInput);
+    registerEventHandlers = function() {
+        on('chat:message', handleInput);
     };
 
     return {
-        RegisterEventHandlers: RegisterEventHandlers,
+        RegisterEventHandlers: registerEventHandlers,
+		ObserveTurnOrderChange: observeTurnOrderChange,
         CheckInstall: checkInstall
     };
 }());
@@ -1178,5 +1215,6 @@ on("ready",function(){
         GroupInitiative.CheckInstall();
         GroupInitiative.RegisterEventHandlers();
 });
+
 
 

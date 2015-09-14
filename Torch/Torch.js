@@ -5,8 +5,8 @@
 var Torch = Torch || (function() {
     'use strict';
 
-    var version = '0.8.3',
-        lastUpdate = 1430829710,
+    var version = '0.8.4',
+        lastUpdate = 1440364086,
         schemaVersion = 0.1,
 		flickerURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
 		flickerPeriod = 400,
@@ -39,18 +39,18 @@ var Torch = Torch || (function() {
 
 	showHelp = function(who) {
         sendChat('',
-            '/w '+who+' '
+            '/w "'+who+'" '
 +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
 	+'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
 		+'Torch v'+version
 	+'</div>'
 	+'<div style="padding-left:10px;margin-bottom:3px;">'
 		+'<p>Torch provides commands for managing dynamic lighting.  Supplying a first argument of <b>help</b> to any of the commands displays this help message, as will calling !torch or !snuff with nothing supplied or selected.</p>'
-		+'<p>Torch now supports <b><i>Jack Taylor</i></b> inspired flickering lights.  Flicker lights are only active on pages where a player is (GMs, drag yourself to other pages if you don'+ch("'")+'t want to move the party.) and are persisted in the state.  Flicker lights can be used in addition to regular lights as they are implemented on a separate invisible token that follows the nomal token.  Tokens for flicker lights that have been removed are stored on the GM layer in the upper left corner and can be removed if desired.  They will be reused if a new flicker light is requested.</p>'
+		+'<p>Torch now supports <b><i>Jack Taylor</i></b> inspired flickering lights.  Flicker lights are only active on pages where a player is (GMs, drag yourself to other pages if you don'+ch("'")+'t want to move the party.) and are persisted in the state.  Flicker lights can be used in addition to regular lights as they are implemented on a separate invisible token that follows the nomal token.</p>'
 	+'</div>'
 	+'<b>Commands</b>'
 	+'<div style="padding-left:10px;">'
-		+'<b><span style="font-family: serif;">!torch ['+ch('<')+'Radius'+ch('>')+' ['+ch('<')+'Dim Start'+ch('>')+' ['+ch('<')+'All Players'+ch('>')+'  ['+ch('<')+'Token ID'+ch('>')+ch('|')+ch('<')+'--Angle'+ch('>')+' ... ]]]]</span></b>'
+		+'<b><span style="font-family: serif;">!torch '+ch('[')+ch('<')+'Radius'+ch('>')+' '+ch('[')+ch('<')+'Dim Start'+ch('>')+' '+ch('[')+ch('<')+'All Players'+ch('>')+'  '+ch('[')+ch('<')+'Token ID'+ch('>')+ch('|')+ch('<')+'--Angle'+ch('>')+' ... '+ch(']')+ch(']')+ch(']')+ch(']')+'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>Sets the light for the selected/supplied tokens.  Only GMs can supply token ids to adjust.</p>'
 			+'<p><b>Note:</b> If you are using multiple '+ch('@')+ch('{')+'target'+ch('|')+'token_id'+ch('}')+' calls in a macro, and need to adjust light on fewer than the supplied number of arguments, simply select the same token several times.  The duplicates will be removed.</p>'
@@ -72,7 +72,7 @@ var Torch = Torch || (function() {
 				+'</li> '
 			+'</ul>'
 		+'</div>'
-		+'<b><span style="font-family: serif;">!snuff ['+ch('<')+'Token ID'+ch('>')+' ... ]</span></b>'
+		+'<b><span style="font-family: serif;">!snuff '+ch('[')+ch('<')+'Token ID'+ch('>')+' ... '+ch(']')+'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>Turns off light for the selected/supplied tokens. Only GMs can supply token ids to adjust.</p>'
 			+'<p><b>Note:</b> If you are using multiple '+ch('@')+ch('{')+'target'+ch('|')+'token_id'+ch('}')+' calls in a macro, and need to adjust light on fewer than the supplied number of arguments, simply select the same token several times.  The duplicates will be removed.</p>'
@@ -82,15 +82,15 @@ var Torch = Torch || (function() {
 				+'</li> '
 			+'</ul>'
 		+'</div>'
-		+'<b><span style="font-family: serif;">!flicker-on ['+ch('<')+'Radius'+ch('>')+' ['+ch('<')+'Dim Start'+ch('>')+' ['+ch('<')+'All Players'+ch('>')+'  ['+ch('<')+'Token ID'+ch('>')+ch('|')+ch('<')+'--Angle'+ch('>')+' ... ]]]]</span></b>'
+		+'<b><span style="font-family: serif;">!flicker-on '+ch('[')+ch('<')+'Radius'+ch('>')+' '+ch('[')+ch('<')+'Dim Start'+ch('>')+' '+ch('[')+ch('<')+'All Players'+ch('>')+'  '+ch('[')+ch('<')+'Token ID'+ch('>')+ch('|')+ch('<')+'--Angle'+ch('>')+' ... '+ch(']')+ch(']')+ch(']')+ch(']')+'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>Behaves identically to !torch, save that it creates a flickering light.</p>'
 		+'</div>'
-		+'<b><span style="font-family: serif;">!flicker-off ['+ch('<')+'Token ID'+ch('>')+' ... ]</span></b>'
+		+'<b><span style="font-family: serif;">!flicker-off '+ch('[')+ch('<')+'Token ID'+ch('>')+' ... '+ch(']')+'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>Behaves identically to !snuff, save that it affects the flickering light.</p>'
 		+'</div>'
-		+'<b><span style="font-family: serif;">!daytime ['+ch('<')+'Token ID'+ch('>')+']</span></b>'
+		+'<b><span style="font-family: serif;">!daytime '+ch('[')+ch('<')+'Token ID'+ch('>')+ch(']')+'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>Turns off dynamic lighting for the current player page, or the page of the selected/supplied token.</p>'
 			+'<ul>'
@@ -99,9 +99,18 @@ var Torch = Torch || (function() {
 				+'</li> '
 			+'</ul>'
 		+'</div>'
-		+'<b><span style="font-family: serif;">!nighttime ['+ch('<')+'Token ID'+ch('>')+']</span></b>'
+		+'<b><span style="font-family: serif;">!nighttime '+ch('[')+ch('<')+'Token ID'+ch('>')+ch(']')+'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>Turns on dynamic lighting for the current player page, or the page of the selected/supplied token.</p>'
+			+'<ul>'
+				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<b><span style="font-family: serif;">'+ch('<')+'Token ID'+ch('>')+'</span></b> '+ch('-')+' A Token ID, usually supplied with something like '+ch('@')+ch('{')+'target'+ch('|')+'Target 1'+ch('|')+'token_id'+ch('}')+'.'
+				+'</li> '
+			+'</ul>'
+		+'</div>'
+		+'<b><span style="font-family: serif;">!global-light '+ch('[')+ch('<')+'Token ID'+ch('>')+ch(']')+'</span></b>'
+		+'<div style="padding-left: 10px;padding-right:20px">'
+			+'<p>Toggles Global Illumination for the current player page, or the page of the selected/supplied token.</p>'
 			+'<ul>'
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<b><span style="font-family: serif;">'+ch('<')+'Token ID'+ch('>')+'</span></b> '+ch('-')+' A Token ID, usually supplied with something like '+ch('@')+ch('{')+'target'+ch('|')+'Target 1'+ch('|')+'token_id'+ch('}')+'.'
@@ -131,29 +140,6 @@ var Torch = Torch || (function() {
 				});
 			} else {
 				delete state.Torch.flickers[found.id];
-			}
-		} 
-		
-		if(!fobj) {
-			found = _.findWhere(state.Torch.flickers, {page: o.get('pageid'), active: false});
-			while(!fobj && found ) {
-				fobj = getObj('graphic', found.id);
-				if(fobj) {
-					fobj.set({
-						layer: 'objects',
-						showname: false,
-						aura1_radius: '',
-						showplayers_aura1: false,
-						light_radius: r,
-						light_dimradius: d,
-						light_otherplayers: p,
-                        light_angle: a
-
-					});
-				} else {
-					delete state.Torch.flickers[found.id];
-					found = _.findWhere(state.Torch.flickers, {page: o.get('pageid'), active: false});
-				}
 			}
 		} 
 		
@@ -191,23 +177,10 @@ var Torch = Torch || (function() {
 
 	clearFlicker = function(fid) {
 		var f = getObj('graphic',fid);
-		if(f) {
-			f.set({
-				aura1_radius: 1,
-				aura1_square: false,
-				aura1_color: '#ffbd00',
-				showplayers_aura1: false,
-				light_radius: '',
-				ligh_dimradius: '',
-				light_otherplayers: false,
-                light_angle: 360,
-				showname: true,
-				top: 70,
-				left: 70,
-				layer: 'gmlayer'
-			});
-		}
-		state.Torch.flickers[fid].active=false;
+        if(f) {
+            f.remove();
+        }
+		delete state.Torch.flickers[fid];
 	},
 	
 	handleInput = function(msg) {
@@ -216,7 +189,7 @@ var Torch = Torch || (function() {
 		if (msg.type !== "api") {
 			return;
 		}
-		who=getObj('player',msg.playerid).get('_displayname').split(' ')[0];
+		who=getObj('player',msg.playerid).get('_displayname');
 
 		args = msg.content.split(" ");
 		switch(args[0]) {
@@ -342,6 +315,28 @@ var Torch = Torch || (function() {
 				}
 				break;
 
+			case '!global-light':
+				if((args[1]||'').match(/^(--)?help$/) ) {
+					showHelp(who);
+					return;
+				}
+				if(playerIsGM(msg.playerid)) {
+					if(msg.selected) {
+						obj=getObj('graphic', msg.selected[0]._id);
+					} else if(args[1]) {
+						obj=getObj('graphic', args[1]);
+					}
+					page = getObj('page', (obj && obj.get('pageid')) || Campaign().get('playerpageid'));
+
+					if(page) {
+						page.set({
+							lightglobalillum: !(page.get('lightglobalillum'))
+						});
+						sendChat('','/w gm Global Illumination is now '+(page.get('lightglobalillum')?'<span style="font-weight:bold;color:#090;">ON</span>':'<span style="font-weight:bold;color:#900;">OFF</span>' )+' on page <b>'+page.get('name')+'</b>!');
+					}
+				}
+				break;
+
 			case '!flicker-on':
 				if((args[1]||'').match(/^(--)?help$/) || ( !_.has(msg,'selected') && args.length < 5)) {
 					showHelp(who);
@@ -427,12 +422,11 @@ var Torch = Torch || (function() {
 							top: o.get('top')+dy,
 							left: o.get('left')+dx,
 							light_radius: fdata.light_radius+dr,
-							light_angle: (360 === fdata.light_angle ? 360 : Math.min(360,Math.max(fdata.light_angle+da,0))) || 360
+							light_angle: ((360 === fdata.light_angle) ? (360) : (Math.min(360,Math.max(fdata.light_angle+da,0)))) || 360
 						});
 					}
 				}
 			});
-
 	},
 
 	handleTokenDelete = function(obj) {
