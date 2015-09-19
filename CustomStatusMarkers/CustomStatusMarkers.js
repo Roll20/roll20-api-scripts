@@ -31,6 +31,7 @@ CustomStatusMarkers = (function() {
     var SAVE_MARKER_CMD = '!saveMarker';
     var SET_MARKER_CMD = '!setMarker';
     var LIST_MARKERS_CMD = '!listMarkers';
+    var DEL_MARKER_CMD = '!delMarker';
 
     var PIXELS_PER_SQUARE = 70;
     var SAVE_HANDOUT_NAME = 'SavedCustomstatusMarkers';
@@ -219,6 +220,31 @@ CustomStatusMarkers = (function() {
         });
     };
 
+    /**
+     * Deletes a custom status marker.
+     * @param  {string}   statusName
+     * @param  {Function} callback
+     */
+    function deleteStatusMarker(statusName, callback) {
+        log('deleteStatusMarker');
+
+        var saveHandout = findObjs({
+            _type: 'handout',
+            name: SAVE_HANDOUT_NAME
+        })[0];
+
+        saveHandout.get('notes', function(notes) {
+            var statusMarkers = JSON.parse(notes);
+
+            delete statusMarkers[statusName];
+            saveHandout.set('notes', JSON.stringify(statusMarkers));
+            sendChat('CustomStatus script', 'Created status ' + statusName);
+
+            if(_.isFunction(callback))
+                callback();
+        });
+    };
+
 
     /**
      * Deletes a custom status marker from a token.
@@ -352,6 +378,19 @@ CustomStatusMarkers = (function() {
         }
     };
 
+    /**
+     * @private
+     * Process an API command to delete a saved custom status marker.
+     * @param  {ChatMessage} msg
+     */
+    function _processDelMarkerCmd(msg) {
+        var args = msg.content.split(' ');
+        var statusName = args[1];
+
+        deleteStatusMarker(statusName, function() {
+            log('Delete marker success');
+        });
+    };
 
     /**
      * @private
@@ -499,6 +538,8 @@ CustomStatusMarkers = (function() {
                 _processSetMarkerCmd(msg);
             else if(msg.content.indexOf(LIST_MARKERS_CMD) === 0)
                 _processListMarkersCmd(msg);
+            else if(msg.content.indexOf(DEL_MARKER_CMD) === 0)
+                _processDelMarkerCmd(msg);
         }
         catch(err) {
             sendChat('Custom status markers Error', '/w ' + msg.who + ' bad command: ' + msg.content);
@@ -533,6 +574,7 @@ CustomStatusMarkers = (function() {
         StatusMarker: StatusMarker,
 
         createTokenStatusMarker: createTokenStatusMarker,
+        deleteStatusMarker: deleteStatusMarker,
         deleteTokenStatusMarker: deleteTokenStatusMarker,
         getStatusMarkerIconScale: getStatusMarkerIconScale,
         loadTemplate: loadTemplate,

@@ -25,3 +25,18 @@ is an optional number badge to put on the status marker.
 
 If the status marker will be toggled for each selected token. If count is
 specified, the status marker will include count as a text badge.
+
+### Listing status markers
+
+You can view the list of custom status markers saved in your campaign
+by entering the command:
+
+!listMarkers
+
+### Deleting status markers
+
+You can delete one of your saved custom status markers by entering the command:
+
+!delMarker {statusName}
+
+e.g. '!delMarker sleep'
