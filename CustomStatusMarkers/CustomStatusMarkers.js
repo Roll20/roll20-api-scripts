@@ -262,6 +262,18 @@ CustomStatusMarkers = (function() {
     };
 
     /**
+     * Cookbook.getCleanImgsrc
+     * https://wiki.roll20.net/API:Cookbook#getCleanImgsrc
+     */
+    function _getCleanImgsrc(imgsrc) {
+         var parts = imgsrc.match(/(.*\/images\/.*)(thumb|max)(.*)$/);
+         if(parts) {
+            return parts[1]+'thumb'+parts[3];
+         }
+         return;
+    };
+
+    /**
      * @private
      * Gets the BoundingBox of a Graphic.
      * @param {Graphic} graphic
@@ -329,6 +341,18 @@ CustomStatusMarkers = (function() {
         }
 
         return result;
+    };
+
+    /**
+     * Returns this module's object for the Roll20 API state.
+     * @return {Object}
+     */
+    function getState() {
+        if(!state.CustomStatusMarkersModule)
+            state.CustomStatusMarkersModule = {
+                tokens: {}
+            };
+        return state.CustomStatusMarkersModule;
     };
 
 
@@ -490,7 +514,7 @@ CustomStatusMarkers = (function() {
             saveHandout = _createSaveHandout();
 
         if(imgSrc)
-            imgSrc = imgSrc.replace(/(max|med)\.png/,'thumb.png');
+            imgSrc = _getCleanImgsrc(imgSrc); //imgSrc.replace(/(max|med)\.png/,'thumb.png');
 
         saveHandout.get('notes', function(notes) {
             var savedMarkers = {};
