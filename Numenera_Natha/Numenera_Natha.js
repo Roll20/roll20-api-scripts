@@ -5,7 +5,7 @@ var NathaNumenera = NathaNumenera || (function () {
     releasedate= "2015-06-13",
     schemaversion = 1.0,
     author="Natha (roll20userid:75857)",
-    warning = "Sheet must be in version 4.5+ : chat outputs and error messages are managed through the sheet's templates.",
+    warning = "Sheet must be in version 4.7+ : chat outputs and error messages are managed through the sheet's templates.",
     //-----------------------------------------------------------------------------
     checkInstall = function() {
         log(""+author+"'s Numenera API script version "+version+" ("+releasedate+") installed.");
@@ -14,9 +14,9 @@ var NathaNumenera = NathaNumenera || (function () {
         log("English sheet : https://github.com/Roll20/roll20-character-sheets/tree/master/Numenera_NathasNumenera_English");
         log("French sheet: https://github.com/Roll20/roll20-character-sheets/tree/master/Numenera_NathasNumenera_French");
         log("Enjoy!");
-	},
+    },
     //-----------------------------------------------------------------------------
-	checkCharStates = function (characterObj) {
+    checkCharStates = function (characterObj) {
 		// Check the character and token states (damage track) based on her current stat pools attributes
 
 	    // Find the character's token object
@@ -351,6 +351,7 @@ var NathaNumenera = NathaNumenera || (function () {
 	        // effort cost is spent if the roll is less than 20
 	        if (diceRoll != 20) {
 	            totalCost = effortCost + statExpense - speedEdge;
+	            speedPool = Math.max(speedPoolInit - totalCost,0);
                 modStat(characterObj,"speed",totalCost,0);
 	        };
 	    };
@@ -420,16 +421,16 @@ var NathaNumenera = NathaNumenera || (function () {
 	    Campaign().set("turnorder", JSON.stringify(turnorder));
 
 	    //output
-	    var tmplt="&{template:nathaNumInit} {{finalRoll=[["+finalRoll+"]]}} {{diceRoll="+diceRoll+"}} {{speedEdge="+speedEdge+"}}";
-	    if(bonusToRoll>0) tmplt+=" {{bonusToRoll="+bonusToRoll+"}}";
-	    if(effortsUsed>0) tmplt+=" {{effortsUsed="+effortsUsed+"}} {{effortCost="+effortCost+"}}";
-	    if(statExpense>0) tmplt+=" {{statExpense="+statExpense+"}}";
-	    if(assetsUsed>0) tmplt+=" {{assets="+assetsUsed+"}}";
-        if (skillLevel != 0) tmplt += " {{skilled=1}}";
-        if (skillLevel == 1) tmplt += " {{Trained=1}}";
-        if (skillLevel == 2) tmplt += " {{Specialized=1}}";
-        if (skillLevel == -1) tmplt += " {{Inability=1}}";
-	    if(totalCost>0)  tmplt+=" {{totalCost="+totalCost+"}} {{attrPool="+speedPool+"}} {{attrPoolInit="+speedPoolInit+"}}";
+	    var tmplt="&{template:nathaNumInit} {{finalRoll=[["+finalRoll+"]]}} {{diceRoll=[["+diceRoll+"]]}} {{speedEdge=[["+speedEdge+"]]}}";
+	    if(bonusToRoll>0) tmplt+=" {{bonusToRoll=[["+bonusToRoll+"]]}}";
+	    if(effortsUsed>0) tmplt+=" {{effortsUsed=[["+effortsUsed+"]]}} {{effortCost=[["+effortCost+"]]}}";
+	    if(statExpense>0) tmplt+=" {{statExpense=[["+statExpense+"]]}}";
+	    if(assetsUsed>0) tmplt+=" {{assets=[["+assetsUsed+"]]}}";
+        if (skillLevel == -1) tmplt += " {{skilled=[[-3]]}}";
+        if (skillLevel == 1) tmplt += " {{skilled=[[3]]}}";
+        if (skillLevel == 2) tmplt += " {{skilled=[[6]]}}";
+	    if(totalCost>0)  tmplt+=" {{totalCost=[["+totalCost+"]]}} {{attrPool=[["+speedPool+"]]}} {{attrPoolInit=[["+speedPoolInit+"]]}}";
+		//log(tmplt);
 	    sendChat("character|"+charId, ""+tmplt);
 	},
     //-----------------------------------------------------------------------------
@@ -520,6 +521,8 @@ var NathaNumenera = NathaNumenera || (function () {
 	        // effort cost is spent if the roll is not 20
 	        if (diceRoll != 20) {
 	            totalCost = Math.max(0,(effortCost + statExpense - attrEdge));
+	            attrPoolInit = attrPool;
+	            attrPool = Math.max(attrPoolInit - totalCost,0);
 	            modStat(characterObj,attributeName,totalCost,0);
 	        };
 	    };
@@ -616,7 +619,7 @@ var NathaNumenera = NathaNumenera || (function () {
 	    // Rolls a recovery rolls and advances the recovery track
 
 	    var charId = characterObj.get("id");
-	    var recrolls=parseInt(recovObjArray[0].get("current")) || 0;
+	    var recrolls=parseInt(getAttrByName(charId, "recovery-rolls", "current")) || 0;
 	    var recovObjArray = findObjs({
 	                    _type: 'attribute',
 	                    name: "recovery-rolls",
@@ -638,23 +641,23 @@ var NathaNumenera = NathaNumenera || (function () {
 	    var nextRecLib = "";
 	    switch (recrolls) {
 	        case 0 :
-	            curRecLib = "1 action";
-	            nextRecLib = "10min";
+	            curRecLib = "1 ACTION";
+	            nextRecLib = "10 MINS";
 	            recrolls=1;
 	            break;
 	        case 1 :
-	            curRecLib = "10min";
-	            nextRecLib = "1h";
+	            curRecLib = "10 MINS";
+	            nextRecLib = "1 HOUR";
 	            recrolls=2;
 	            break;
 	        case 2 :
-	            curRecLib = "1h";
-	            nextRecLib = "10h";
+	            curRecLib = "1 HOUR";
+	            nextRecLib = "10 HOURS";
 	            recrolls=3;
 	            break;
 	        case 3 :
-	            curRecLib = "10h";
-	            nextRecLib = "1 action";
+	            curRecLib = "10 HOURS";
+	            nextRecLib = "1 ACTION";
 	            recrolls=0;
 	            break;
 	    }
