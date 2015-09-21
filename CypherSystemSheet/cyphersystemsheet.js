@@ -467,7 +467,7 @@ var NathaCypherSystem = NathaCypherSystem || (function () {
                     sendChat("GM", "&{template:cyphMsg} {{chatmessage=cypher-modstat}} {{notaCharacter="+paramArray[0]+"}}");
                     return false;
                 };
-                modStat(obj,paramArray[1],paramArray[2],paramArray[3]);
+                modStat(obj,paramArray[1],paramArray[2]);
     	}
         return;
     },
