@@ -5,8 +5,8 @@
 var CthulhuTechDice = CthulhuTechDice || (function() {
     'use strict';
 
-    var version = '0.1.8',
-        lastUpdate = 1441507639,
+    var version = '0.1.9',
+        lastUpdate = 1442927134,
         schemaVersion = 0.1,
 
     checkInstall = function() {
@@ -52,16 +52,18 @@ var CthulhuTechDice = CthulhuTechDice || (function() {
             maxMultiple=0,
             maxRun=0,
             diceArray,
-			bonus,
+    		bonus,
             result,
 			bestOrBotch,
-            w=false;
+            w=false,
+            rollIndex;
 
         if (msg.type !== "api") {
             return;
         }
 
 		if(_.has(msg,'inlinerolls')){
+            rollIndex=msg.content.match(/\$\[\[(\d+)\]\]/)[1];
 			msg.content = _.chain(msg.inlinerolls)
 				.reduce(function(m,v,k){
 					m['$[['+k+']]']=v.results.total || 0;
@@ -84,13 +86,12 @@ var CthulhuTechDice = CthulhuTechDice || (function() {
                 w=true;
                 /* break; */ // Intentional drop through
             case '!ct':
-
 				if(args.length>1){
 					bonus = parseInt(args[1],10);
                     bonus = _.isNaN(bonus) ? undefined : bonus;
 				}
 
-                diceCounts=getDiceCounts(msg,0);
+                diceCounts=getDiceCounts(msg,rollIndex);
                 if(!diceCounts){
                     return;
                 }
