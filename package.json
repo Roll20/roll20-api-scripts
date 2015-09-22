@@ -1,6 +1,6 @@
 {
     "name": "WeightedDice",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "description": "Automated creation of rollable tables where a minimum value is weighted with values it replaces. (example d6min4 possible values: 4 4 4 4 5 6)",
     "authors": "The Aaron",
     "roll20userid": "104025",
