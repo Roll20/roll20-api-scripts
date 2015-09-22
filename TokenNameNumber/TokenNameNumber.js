@@ -5,10 +5,9 @@
 var TokenNameNumber = TokenNameNumber || (function() {
     'use strict';
 
-    var version = '0.5.3',
-        lastUpdate = 1430915009,
+    var version = '0.5.4',
+        lastUpdate = 1442959498,
         schemaVersion = 0.3,
-        addTokenCache = [],
         statuses = [
             'red', 'blue', 'green', 'brown', 'purple', 'pink', 'yellow', // 0-6
             'skull', 'sleepy', 'half-heart', 'half-haze', 'interdiction',
@@ -163,7 +162,7 @@ var TokenNameNumber = TokenNameNumber || (function() {
                 '<div style="padding-left:10px;">'+
                     '<b><span style="font-family: serif;">!tnn [--help]</span></b>'+
                     '<div style="padding-left: 10px;padding-right:20px">'+
-                        '<p>Currently, this just displayed the help, which is used for configuring.</p>'+
+                        '<p>Currently, this just displays the help, which is used for configuring.</p>'+
                         '<ul>'+
                             '<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
                                 '<b><span style="font-family: serif;">--help</span></b> '+ch('-')+' Displays the help and configuration options.'+
@@ -305,11 +304,9 @@ var TokenNameNumber = TokenNameNumber || (function() {
 			num,
             statuspart='';
 
-        if( _.contains(addTokenCache,obj.id) 
-            &&'graphic' === obj.get('type') 
+        if( 'graphic' === obj.get('type') 
             && 'token'   === obj.get('subtype') ) {
 
-            addTokenCache = _.without(addTokenCache,obj.id);
 			matchers = (getMatchers(obj.get('pageid'), obj.get('represents'))) || [];
 			tokenName = (obj.get('name'));
 
@@ -368,14 +365,9 @@ var TokenNameNumber = TokenNameNumber || (function() {
 		}
 	},
 
-    handleAddGraphic = function(obj) {
-            addTokenCache.push(obj.id);
-    },
-
 	registerEventHandlers = function() {
         on('chat:message', handleInput);
-        on('change:graphic', setNumberOnToken);
-		on('add:graphic', handleAddGraphic);
+		on('add:graphic', setNumberOnToken);
 	};
 
 	return {
