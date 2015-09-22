@@ -378,7 +378,7 @@ var RollStats = RollStats || {
 	    }
 	}
 
-	if ((RollStats.doChatCommands) && (msg.type == "api") && (msg.indexOf("!rollstats") == 0)){
+	if ((RollStats.doChatCommands) && (msg.type == "api") && (msg.content.indexOf("!rollstats") == 0)){
 	    return RollStats.handleStatsMessage(msg.content.split(" "), msg);
 	}
     },
