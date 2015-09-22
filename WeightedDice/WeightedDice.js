@@ -2,87 +2,91 @@
 // By:       The Aaron, Arcane Scriptomancer
 // Contact:  https://app.roll20.net/users/104025/the-aaron
 
-var WeightedDice = WeightedDice || {
-    version: 0.3,
-    schemaVersion: 0.1,
+var WeightedDice = WeightedDice || (function() {
+    "use strict";
 
-    CheckInstall: function() {
+    var version  = '0.3.1',
+        lastUpdate = 1442947489,
+        schemaVersion = 0.1,
+
+    checkInstall = function() {
         log('-=> WeightedDice v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
 
-		if( ! _.has(state,'WeightedDice') || state.WeightedDice.schemaVersion != WeightedDice.schemaVersion)
+		if( ! _.has(state,'WeightedDice') || state.WeightedDice.schemaVersion !== schemaVersion) {
             log('  > Updating Schema to v'+schemaVersion+' <');
-		{
-			/* Default Settings stored in the state. */
+
 			state.WeightedDice = {
-				version: WeightedDice.schemaVersion
-			}
+				version: schemaVersion
+			};
 		}
 	},
     
-    HandleInput: function(tokens,msg) {
+    handleInput = function(tokens) {
         
-        var sides = parseInt(tokens[0]);
-        var minroll = parseInt(tokens[1]);
+        var sides = parseInt(tokens[0],10),
+            minroll = parseInt(tokens[1],10),
+            tableName, tables, newTable;
 
         if(
             tokens.length <2 
-            || 2 != tokens.length 
+            || 2 !== tokens.length 
             || _.isNull(sides) 
             || !_.isNumber(sides) 
             || _.isNull(minroll) 
             || !_.isNumber(minroll) 
             || sides < minroll
-        )
-        {
+        ) {
             sendChat('','/w gm Usage: !weighted-die [number of sides] [minimum roll number]');
             return;
         }
         
-        var tableName='d'+sides+'min'+minroll;
+        tableName='d'+sides+'min'+minroll;
         // see if it's already defined
-        var tables=findObjs({type: 'rollabletable', name: tableName});
-        if(tables.length)
-        {
+        tables=findObjs({type: 'rollabletable', name: tableName});
+        if(tables.length) {
             sendChat('','/w gm Table '+tableName+' already exists.');
-        }
-        else
-        {
-            var newTable=createObj('rollabletable',{name: tableName});
+        } else {
+            newTable=createObj('rollabletable',{name: tableName});
             _.each(_.range(minroll,(sides+1)), function(r){
-                var weight = ( (r == minroll) ? minroll : 1);
-                var newTableItem=createObj('tableitem',{
+                createObj('tableitem',{
                     _rollabletableid: newTable.id,
                     name: r,
-                    weight: weight
+                    weight: ( (r === minroll) ? minroll : 1)
                 });
             });
             sendChat('','/w gm Table '+tableName+' created.');
         }
     },
     
-    RegisterEventHandlers: function(){        
+    registerEventHandlers = function(){        
 		on("chat:message", function (msg) {
 			/* Exit if not an api command */
-			if (msg.type != "api") return;
+			if (msg.type !== "api") {
+                return;
+            }
 
+			var tokenized = msg.content.split(" "),
+                command = tokenized[0];
 
-			var tokenized = msg.content.split(" ");
-			var command = tokenized[0];
-
-			switch(command)
-			{
+			switch(command) {
 				case "!weighted-die":
-					if(playerIsGM(msg.playerid))
-					{
-						WeightedDice.HandleInput(_.rest(tokenized),msg);
+					if(playerIsGM(msg.playerid)) {
+						handleInput(_.rest(tokenized));
 					}
 					break;
 			}
 		});
-	}
-};
+	};
+
+    return {
+        RegisterEventHandlers: registerEventHandlers,
+        CheckInstall: checkInstall
+    };
+}());
 
 on("ready",function(){
+    "use strict";
+
 	WeightedDice.CheckInstall(); 
 	WeightedDice.RegisterEventHandlers();
 });
