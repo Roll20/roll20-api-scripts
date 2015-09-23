@@ -5,12 +5,12 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.9.9',
-        lastUpdate = 1440036997,
+    var version = '0.9.10',
+        lastUpdate = 1443050403,
         schemaVersion = 1.0,
         bonusCache = {},
         observers = {
-			turnOrderChange: []
+                turnOrderChange: []
 			},
         sorters = {
             'None': function(to) {
@@ -661,7 +661,7 @@ var GroupInitiative = GroupInitiative || (function() {
         );
     },
 
-    findInitiativeBonus = function(char) {
+    findInitiativeBonus = function(char,token) {
         var bonus = '';
         if(_.has(bonusCache,char.id)) {
             return bonusCache[char.id];
@@ -669,11 +669,10 @@ var GroupInitiative = GroupInitiative || (function() {
         _.find(state.GroupInitiative.bonusStatGroups, function(group){
             bonus = _.chain(group)
                 .map(function(details){
+                    
                     var stat=getAttrByName(char.id,details.attribute, details.type||'current');
-
-                    if( ! _.isUndefined(stat) ) {
-                        stat = stat.replace(/@\{([^\|]*?|[^\|]*?\|max|[^\|]*?\|current)\}/g, '@{'+(char.get('name'))+'|$1}');
-
+                    if( ! _.isUndefined(stat) && !_.isNull(stat) ) {
+                        stat = (stat+'').replace(/@\{([^\|]*?|[^\|]*?\|max|[^\|]*?\|current)\}/g, '@{'+(char.get('name'))+'|$1}');
                         stat = _.reduce(details.adjustments || [],function(memo,a){
                             var args,adjustment,func;
                             if(memo) {
@@ -692,8 +691,9 @@ var GroupInitiative = GroupInitiative || (function() {
                     return undefined;
                 })
                 .value();
+
             if(_.contains(bonus,undefined) || _.contains(bonus,null) || _.contains(bonus,NaN)) {
-                bonus=''
+                bonus='';
                 return false;
             }
             bonus = bonus.join('+');
@@ -946,7 +946,7 @@ var GroupInitiative = GroupInitiative || (function() {
                             .map(function(s){
                                 s.roll=[];
                                 if(s.character) {
-                                    s.roll.push( findInitiativeBonus(s.character) );
+                                    s.roll.push( findInitiativeBonus(s.character,s.token) );
                                 }
                                 if(manualBonus) {
                                     s.roll.push( manualBonus );
@@ -1128,6 +1128,7 @@ var GroupInitiative = GroupInitiative || (function() {
                             if(opt[0]) {
                                state.GroupInitiative.config.diceCountAttribute=opt[0];
                             } else {
+                                state.GroupInitiative.config.diceCountAttribute='';
                                 omsg='<div>Cleared Dice Count Attribute.</div>';
                             }
                             sendChat('','/w gm '
@@ -1215,6 +1216,4 @@ on("ready",function(){
         GroupInitiative.CheckInstall();
         GroupInitiative.RegisterEventHandlers();
 });
-
-
 
