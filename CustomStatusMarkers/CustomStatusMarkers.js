@@ -32,6 +32,7 @@ CustomStatusMarkers = (function() {
     var SET_MARKER_CMD = '!setMarker';
     var LIST_MARKERS_CMD = '!listMarkers';
     var DEL_MARKER_CMD = '!delMarker';
+    var CLEAR_STATE_CMD = '!clearMarkersState';
 
     var PIXELS_PER_SQUARE = 70;
     var SAVE_HANDOUT_NAME = 'SavedCustomstatusMarkers';
@@ -50,12 +51,14 @@ CustomStatusMarkers = (function() {
     /**
      * A class encapsulating a Path for a custom status marker, with an optional
      * Text for a number badge.
-     * @param {Path | Graphic} icon
-     * @param {Text} text
+     * @param {uuid} iconId
+     * @param {string} 'path' or 'graphic'
+     * @param {uuid} textId
      */
-    function StatusMarker(icon, text) {
-        this.icon = icon;
-        this.text = text;
+    function StatusMarker(iconId, type, textId) {
+        this.iconId = iconId;
+        this.type = type;
+        this.textId = textId;
     };
 
 
@@ -99,6 +102,17 @@ CustomStatusMarkers = (function() {
     };
 
     /**
+     * Clears the Custom Status Markers state for a particular token.
+     * @param  {Graphic} token
+     */
+    function clearTokenState(token) {
+        var csmState = getState();
+        var tokenId = token.get('_id');
+        delete csmState.tokens[tokenId];
+    };
+
+
+    /**
      * Creates an instance of a status marker to assign to a token,
      * with an optional count badge.
      * @param {Graphic} token
@@ -106,34 +120,39 @@ CustomStatusMarkers = (function() {
      * @param {int} [count]
      */
     function createTokenStatusMarker(token, statusName, count, index) {
-        var curPage = Campaign().get("playerpageid");
+        var template = loadTemplate(statusName);
+        var pathStr = template.pathStr;
+        var imgSrc = template.imgSrc;
+        var bbox = template.bbox;
 
-        loadTemplate(statusName, function(savedStatus) {
-            var pathStr = savedStatus.pathStr;
-            var imgSrc = savedStatus.imgSrc;
-            var bbox = savedStatus.bbox;
+        var width = bbox.width;
+        var height = bbox.height;
+        var left = _calcStatusMarkerLeft(token, index);
+        var top = _calcStatusMarkerTop(token);
 
-            var width = bbox.width;
-            var height = bbox.height;
-            var left = _calcStatusMarkerLeft(token, index);
-            var top = _calcStatusMarkerTop(token);
+        var icon;
+        var type;
+        if(pathStr) {
+            icon = _createTokenStatusMarkerPath(pathStr, left, top, width, height);
+            type = 'path';
+        }
+        else {
+            icon = _createTokenStatusMarkerGraphic(imgSrc, left, top, width, height);
+            type = 'graphic';
+        }
+        var iconId = icon.get('_id');
+        toFront(icon);
 
-            var icon;
-            if(pathStr)
-                icon = _createTokenStatusMarkerPath(pathStr, left, top, width, height);
-            else
-                icon = _createTokenStatusMarkerGraphic(imgSrc, left, top, width, height);
-            toFront(icon);
+        var textId;
+        if(count) {
+            var text = _createTokenStatusMarkerText(count, left, top);
+            textId = text.get('_id');
+            toFront(text);
+        }
 
-            var text;
-            if(count) {
-                text = _createTokenStatusMarkerText(count, left, top);
-                toFront(text);
-            }
-
-            token.customStatuses[statusName] = new StatusMarker(icon, text);
-            token.customStatusesCount++;
-        });
+        var tokenState = getTokenState(token);
+        tokenState.customStatuses[statusName] = new StatusMarker(iconId, type, textId);
+        tokenState.customStatusesCount++;
     };
 
     /**
@@ -223,26 +242,11 @@ CustomStatusMarkers = (function() {
     /**
      * Deletes a custom status marker.
      * @param  {string}   statusName
-     * @param  {Function} callback
      */
-    function deleteStatusMarker(statusName, callback) {
-        log('deleteStatusMarker');
-
-        var saveHandout = findObjs({
-            _type: 'handout',
-            name: SAVE_HANDOUT_NAME
-        })[0];
-
-        saveHandout.get('notes', function(notes) {
-            var statusMarkers = JSON.parse(notes);
-
-            delete statusMarkers[statusName];
-            saveHandout.set('notes', JSON.stringify(statusMarkers));
-            sendChat('CustomStatus script', 'Created status ' + statusName);
-
-            if(_.isFunction(callback))
-                callback();
-        });
+    function deleteStatusMarker(statusName) {
+        var csmState = getState();
+        delete csmState.templates[statusName];
+        sendChat('CustomStatus script', 'Deleted status ' + statusName);
     };
 
 
@@ -252,13 +256,32 @@ CustomStatusMarkers = (function() {
      * @param {String} statusName
      */
     function deleteTokenStatusMarker(token, statusName) {
-        var statusMarker = token.customStatuses[statusName];
-        statusMarker.icon.remove();
-        if(statusMarker.text)
-            statusMarker.text.remove();
+        var csmState = getState();
+        var id = token.get('_id');
+        var tokenState = csmState.tokens[id];
 
-        delete token.customStatuses[statusName];
-        token.customStatusesCount--;
+        if(tokenState) {
+            var statusMarker = tokenState.customStatuses[statusName];
+            var type = statusMarker.type;
+            var icon = findObjs({
+                _page: _getCurPage(),
+                _type: type,
+                _id: statusMarker.iconId
+            })[0];
+
+            icon.remove();
+
+            var text = findObjs({
+                _page: _getCurPage(),
+                _type: 'text',
+                _id: statusMarker.textId
+            })[0];
+            if(text)
+                text.remove();
+
+            delete tokenState.customStatuses[statusName];
+            tokenState.customStatusesCount--;
+        }
     };
 
     /**
@@ -271,6 +294,16 @@ CustomStatusMarkers = (function() {
             return parts[1]+'thumb'+parts[3];
          }
          return;
+    };
+
+
+    /**
+     * @private
+     * Gets the current players' page.
+     * @return {uuid}
+     */
+    function _getCurPage() {
+        var curPage = Campaign().get("playerpageid");
     };
 
     /**
@@ -350,7 +383,8 @@ CustomStatusMarkers = (function() {
     function getState() {
         if(!state.CustomStatusMarkersModule)
             state.CustomStatusMarkersModule = {
-                tokens: {}
+                tokens: {},
+                templates: {}
             };
         return state.CustomStatusMarkersModule;
     };
@@ -367,6 +401,29 @@ CustomStatusMarkers = (function() {
         return PIXELS_PER_SQUARE / length / 3;
     };
 
+    /**
+     * Returns the Custom Status Markers state for a token.
+     * @param  {Graphic} token
+     * @param {boolean} [createBlank: true] If the token state doesn't exist, create it.
+     * @return {Object}
+     */
+    function getTokenState(token, createBlank) {
+        if(createBlank === undefined)
+            createBlank = true;
+
+        var csmState = getState();
+        var tokenId = token.get('_id');
+        var tokenState = csmState.tokens[tokenId];
+
+        if(!tokenState && createBlank) {
+            tokenState = csmState.tokens[tokenId] = {
+                customStatuses: {},
+                customStatusesCount: 0
+            };
+        }
+        return tokenState;
+    };
+
 
     /**
      * Loads a StatusMarkerTemplate from the save handout.
@@ -374,31 +431,72 @@ CustomStatusMarkers = (function() {
      * @param  {Function(StatusMarkerTemplate)} callback
      */
     function loadTemplate(statusName, callback) {
-        var saveHandout = findObjs({
-            _type: 'handout',
-            name: SAVE_HANDOUT_NAME
-        })[0];
+        var csmState = getState();
+        var tpl = csmState.templates[statusName];
 
-        saveHandout.get('notes', function(notes) {
-            var statusMarkers = JSON.parse(notes);
-            var sm = statusMarkers[statusName];
-
-            callback(new StatusMarkerTemplate(sm.pathStr, sm.bbox, sm.imgSrc));
-        });
+        return new StatusMarkerTemplate(tpl.pathStr, tpl.bbox, tpl.imgSrc);
     };
 
+    /**
+     * Moves a status marker to its token's current position.
+     * @param  {Graphic} token
+     * @param  {Object} statusMarker
+     * @param  {int} index
+     * @return {string} An error message. Undefined if no error.
+     */
     function moveTokenStatusMarker(token, statusMarker, index) {
         var left = _calcStatusMarkerLeft(token, index);
         var top = _calcStatusMarkerTop(token);
 
-        statusMarker.icon.set('left', left);
-        statusMarker.icon.set('top', top);
-        toFront(statusMarker.icon);
+        var icon = findObjs({
+            _page: _getCurPage(),
+            _type: statusMarker.type,
+            _id: statusMarker.iconId
+        })[0];
+        if(!icon)
+            return 'Icon ' + statusMarker.iconId + ' is missing.';
 
-        if(statusMarker.text) {
-            statusMarker.text.set('left', left + PIXELS_PER_SQUARE/8);
-            statusMarker.text.set('top', top + PIXELS_PER_SQUARE/8);
-            toFront(statusMarker.text);
+        icon.set('left', left);
+        icon.set('top', top);
+        toFront(icon);
+
+        if(statusMarker.textId) {
+            var text = findObjs({
+                _page: _getCurPage(),
+                _type: 'text',
+                _id: statusMarker.textId
+            })[0];
+            if(!text)
+                return 'Text ' + statusMarker.textId + ' is missing.';
+
+            text.set('left', left + PIXELS_PER_SQUARE/8);
+            text.set('top', top + PIXELS_PER_SQUARE/8);
+            toFront(text);
+        }
+    };
+
+    /**
+     * @private
+     * Process an API command to clear the Custom Status Markers state.
+     * If a token selected, then only the CSM state for that token will be cleared.
+     * If the 'tokens' option is specified, then only the CSM's tokens state
+     * will be cleared and its saved templates will be left intact.
+     * If 'tokens' isn't specified and no token is selected, then this will
+     * clear all the CSM state!
+     * @param  {ChatMessage} msg
+     */
+    function _processClearMarkersStateCmd(msg) {
+        var args = msg.content.split(' ');
+        var token = _getGraphicsFromMsg(msg)[0];
+
+        if(token) {
+            clearTokenState(token);
+        }
+        else if(args[1] === 'tokens') {
+            getState().tokens = {};
+        }
+        else {
+            delete state.CustomStatusMarkersModule;
         }
     };
 
@@ -411,9 +509,7 @@ CustomStatusMarkers = (function() {
         var args = msg.content.split(' ');
         var statusName = args[1];
 
-        deleteStatusMarker(statusName, function() {
-            log('Delete marker success');
-        });
+        deleteStatusMarker(statusName);
     };
 
     /**
@@ -421,22 +517,16 @@ CustomStatusMarkers = (function() {
      * Processes an API command to display the list of saved custom status markers.
      */
     function _processListMarkersCmd() {
-        var saveHandout = findObjs({
-            _type: 'handout',
-            name: SAVE_HANDOUT_NAME
-        })[0];
+        var csmState = getState();
+        log(csmState);
 
-        saveHandout.get('notes', function(notes) {
-            var statusMarkers = JSON.parse(notes);
-            var names = [];
-
-            _.each(statusMarkers, function(marker, name) {
-                names.push(name);
-            });
-            names.sort();
-            names = names.join('<br>');
-            sendChat('CustomStatus script', 'Saved markers: <br/>' + names);
+        var names = [];
+        _.each(csmState.templates, function(tpl, name) {
+            names.push(name);
         });
+        names.sort();
+        names = names.join('<br>');
+        sendChat('CustomStatus script', 'Saved markers: <br/>' + names);
     };
 
     /**
@@ -505,26 +595,12 @@ CustomStatusMarkers = (function() {
      * @param {String} imgSrc
      */
     function saveTemplate(statusName, pathStr, bbox, imgSrc) {
-        var saveHandout = findObjs({
-            _type: 'handout',
-            name: SAVE_HANDOUT_NAME
-        })[0];
-
-        if(!saveHandout)
-            saveHandout = _createSaveHandout();
-
+        var csmState = getState();
         if(imgSrc)
             imgSrc = _getCleanImgsrc(imgSrc); //imgSrc.replace(/(max|med)\.png/,'thumb.png');
 
-        saveHandout.get('notes', function(notes) {
-            var savedMarkers = {};
-            if(notes !== 'null')
-                savedMarkers = JSON.parse(notes);
-
-            savedMarkers[statusName] = new StatusMarkerTemplate(pathStr, bbox, imgSrc);
-            saveHandout.set('notes', JSON.stringify(savedMarkers));
-            sendChat('CustomStatus script', 'Created status ' + statusName);
-        });
+        csmState.templates[statusName] = new StatusMarkerTemplate(pathStr, bbox, imgSrc);
+        sendChat('CustomStatus script', 'Created status ' + statusName);
     };
 
 
@@ -535,21 +611,18 @@ CustomStatusMarkers = (function() {
      * @param  {String} [count]
      */
     function toggleStatusToToken(token, statusName, count) {
-        if(!token.customStatuses) {
-            token.customStatuses = {};
-            token.customStatusesCount = 0;
-        }
+        var tokenState = getTokenState(token);
 
-        var statusMarker = token.customStatuses[statusName];
+        var statusMarker = tokenState.customStatuses[statusName];
         if(statusMarker) {
-            var hasCount = !!statusMarker.text;
+            var hasCount = !!statusMarker.textId;
             if(hasCount || count)
-                replaceTokenStatusMarker(token, statusName, count, token.customStatusesCount-1);
+                replaceTokenStatusMarker(token, statusName, count, tokenState.customStatusesCount-1);
             else
                 deleteTokenStatusMarker(token, statusName);
         }
         else
-            createTokenStatusMarker(token, statusName, count, token.customStatusesCount);
+            createTokenStatusMarker(token, statusName, count, tokenState.customStatusesCount);
     };
 
 
@@ -564,6 +637,8 @@ CustomStatusMarkers = (function() {
                 _processListMarkersCmd(msg);
             else if(msg.content.indexOf(DEL_MARKER_CMD) === 0)
                 _processDelMarkerCmd(msg);
+            else if(msg.content.indexOf(CLEAR_STATE_CMD) === 0)
+                _processClearMarkersStateCmd(msg);
         }
         catch(err) {
             sendChat('Custom status markers Error', '/w ' + msg.who + ' bad command: ' + msg.content);
@@ -574,10 +649,19 @@ CustomStatusMarkers = (function() {
     // Event handler for moving custom status markers with their tokens when
     // they are moved.
     on('change:graphic', function(graphic) {
-        if(graphic.customStatuses) {
+        var tokenState = getTokenState(graphic, false);
+
+        if(tokenState) {
             var index = 0;
-            _.each(graphic.customStatuses, function(statusMarker, statusName) {
-                moveTokenStatusMarker(graphic, statusMarker, index);
+
+            _.each(tokenState.customStatuses, function(statusMarker, statusName) {
+                var errorMsg = moveTokenStatusMarker(graphic, statusMarker, index);
+                if(errorMsg) {
+                    delete tokenState.customStatuses[statusName];
+                    tokenState.customStatusesCount--;
+
+                    log('Custom Status Markers [WARN]: ' + errorMsg);
+                }
                 index++;
             });
         }
@@ -586,9 +670,13 @@ CustomStatusMarkers = (function() {
     // Event handler for destroying a token's custom status markers when the
     // token is destroyed.
     on('destroy:graphic', function(graphic) {
-        if(graphic.customStatuses) {
-            _.each(graphic.customStatuses, function(statusMarker, statusName) {
+        var csmState = getState();
+        var tokenState = getTokenState(graphic, false);
+
+        if(tokenState) {
+            _.each(tokenState.customStatuses, function(statusMarker, statusName) {
                 deleteTokenStatusMarker(graphic, statusName);
+                clearTokenState(graphic);
             });
         }
     });
