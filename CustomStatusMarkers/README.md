@@ -40,3 +40,14 @@ You can delete one of your saved custom status markers by entering the command:
 !delMarker {statusName}
 
 e.g. '!delMarker sleep'
+
+### Clearing the Custom Status Markers state
+
+A command is provided for clearing the Custom Status Markers module's state.
+
+!clearMarkersState [tokens]
+
+If a token is selected when the command is entered, only the CSM state for that
+token will be cleared (any custom markers on that token will stop following it).
+If the 'tokens' option is given, then only the CSM tokens state is cleared.
+Otherwise, both the CSM's tokens state and its saved markers are cleared.
