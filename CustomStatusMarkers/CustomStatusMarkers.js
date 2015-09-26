@@ -227,18 +227,6 @@ CustomStatusMarkers = (function() {
         });
     };
 
-
-    /**
-     * @private
-     * Creates the handout used to persist the custom icons.
-     * @return {Handout}
-     */
-    function _createSaveHandout() {
-        return createObj('handout', {
-            name: SAVE_HANDOUT_NAME
-        });
-    };
-
     /**
      * Deletes a custom status marker.
      * @param  {string}   statusName
@@ -574,6 +562,7 @@ CustomStatusMarkers = (function() {
         });
     };
 
+
     /**
      * Moves a custom status for a token by deleting it and then recreating it at
      * the token's current location.
@@ -626,6 +615,45 @@ CustomStatusMarkers = (function() {
     };
 
 
+    /**
+     * Transfers saved Custom Status Marker templates from older versions
+     * (which persisted them in Handouts) to
+     * the new version (which persists them in the 'state').
+     */
+    function _transferLegacyMarkers() {
+        var saveHandout = findObjs({
+            _type: 'handout',
+            name: SAVE_HANDOUT_NAME
+        })[0];
+
+        // If there are legacy markers, transfer them.
+        if(saveHandout) {
+            saveHandout.get('notes', function(notes) {
+                var oldTemplates = JSON.parse(notes);
+                var csmState = getState();
+
+                _.each(oldTemplates, function(oldTpl, name) {
+                    var bbox = oldTpl.bbox;
+                    var imgSrc = oldTpl.imgSrc;
+                    var pathStr = oldTpl.pathStr;
+
+                    var newTpl = new StatusMarkerTemplate (pathStr, bbox, imgSrc);
+                    csmState.templates[name] = newTpl;
+                });
+            });
+
+            // When we're done, delete the old Handout used to persist the
+            // legacy markers.
+            saveHandout.remove();
+        }
+    };
+
+    // Automatically transfer any legacy markers.
+    on('ready', function() {
+        _transferLegacyMarkers();
+    });
+
+
     // Event handler for the script's API chat commands.
     on('chat:message', function(msg) {
         try {
@@ -656,6 +684,11 @@ CustomStatusMarkers = (function() {
 
             _.each(tokenState.customStatuses, function(statusMarker, statusName) {
                 var errorMsg = moveTokenStatusMarker(graphic, statusMarker, index);
+
+                // If there was an error while moving the marker (e.g.
+                // Someone deleted its graphic instead of unsetting it),
+                // then remove the status from the token's state and
+                // log a warning.
                 if(errorMsg) {
                     delete tokenState.customStatuses[statusName];
                     tokenState.customStatusesCount--;
@@ -685,9 +718,12 @@ CustomStatusMarkers = (function() {
         StatusMarkerTemplate: StatusMarkerTemplate,
         StatusMarker: StatusMarker,
 
+        clearTokenState: clearTokenState,
         createTokenStatusMarker: createTokenStatusMarker,
         deleteStatusMarker: deleteStatusMarker,
         deleteTokenStatusMarker: deleteTokenStatusMarker,
+        getState: getState,
+        getTokenState: getTokenState,
         getStatusMarkerIconScale: getStatusMarkerIconScale,
         loadTemplate: loadTemplate,
         replaceTokenStatusMarker: replaceTokenStatusMarker,
