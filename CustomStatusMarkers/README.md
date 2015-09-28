@@ -1,7 +1,7 @@
 # Custom Status Markers
 
 ###### Required Scripts
-* [Path Math](https://github.com/Roll20/roll20-api-scripts/tree/master/Path%20Math)
+* [Path Math](https://github.com/Roll20/roll20-api-scripts/tree/master/PathMath)
 
 Allows users to create custom status markers and set them onto tokens.
 
@@ -23,13 +23,31 @@ When the marker is saved, a confirmation message will be displayed in the chat.
 where {statusName} is the name of the saved custom status marker and [{count}]
 is an optional number badge to put on the status marker.
 
-e.g.  '!setMarker berserk'
-      '!setMarker doom 3'
-
 If the status marker will be toggled for each selected token. If count is
 specified, the status marker will include count as a text badge.
 
-### Listing names of saved status markers
+### Listing status markers
 
-To display a list of the names of all your saved custom status markers,
-enter '!listMarkers' in the chat.
+You can view the list of custom status markers saved in your campaign
+by entering the command:
+
+!listMarkers
+
+### Deleting status markers
+
+You can delete one of your saved custom status markers by entering the command:
+
+!delMarker {statusName}
+
+e.g. '!delMarker sleep'
+
+### Clearing the Custom Status Markers state
+
+A command is provided for clearing the Custom Status Markers module's state.
+
+!clearMarkersState [tokens]
+
+If a token is selected when the command is entered, only the CSM state for that
+token will be cleared (any custom markers on that token will stop following it).
+If the 'tokens' option is given, then only the CSM tokens state is cleared.
+Otherwise, both the CSM's tokens state and its saved markers are cleared.
