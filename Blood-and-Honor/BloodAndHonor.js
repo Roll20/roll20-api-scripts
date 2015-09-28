@@ -6,7 +6,7 @@ var BloodAndHonor = {
 		company: "Team Asshat" || "The Alehounds",
 		contact: "echo@TeamAsshat.com",
 	},
-	version: "0.8",
+	version: "0.8.1", // The Aaron - Patched for playerIsGM(), createObj(), and randomInteger() crash.
 	gist: "https://gist.github.com/SplenectomY/097dac3e427ec50f32c9",
 	forum: "https://app.roll20.net/forum/post/1477230/",
 	wiki: "https://wiki.roll20.net/Script:Blood_And_Honor:_Automatic_blood_spatter,_pooling_and_trail_effects",
@@ -52,7 +52,7 @@ var BloodAndHonor = {
 		gLeft = gLeft + (randomInteger(Math.floor(gWidth / 2)) * BloodAndHonor.getOffset());
 		gTop = gTop + (randomInteger(Math.floor(gWidth / 2)) * BloodAndHonor.getOffset());
 		setTimeout(function(){
-			toFront(fixedCreateObj("graphic",{
+			toFront(createObj("graphic",{
 				imgsrc: gType,
 				gmnotes: "blood",
 				pageid: gPage_id,
@@ -75,16 +75,6 @@ var BloodAndHonor = {
 		}
 	}
 };
-
-fixedCreateObj = (function () {
-	return function () {
-		var obj = createObj.apply(this, arguments);
-			if (obj && !obj.fbpath) {
-				obj.fbpath = obj.changed._fbpath.replace(/([^\/]*\/){4}/, "/");
-			}
-		return obj;
-	};
-}());
 
 on("ready", function(obj) {
 	
@@ -120,7 +110,7 @@ on("ready", function(obj) {
 	
 	on("chat:message", function(msg) {
 		if (msg.type == "api" && msg.content.indexOf("!clearblood") !== -1) {
-			if (BloodAndHonor.useIsGM && !isGM(msg.playerid)) {
+			if (BloodAndHonor.useIsGM && !playerIsGM(msg.playerid)) {
 				sendChat(msg.who,"/w " + msg.who + " You are not authorized to use that command!");
 				return;
 			} else {
