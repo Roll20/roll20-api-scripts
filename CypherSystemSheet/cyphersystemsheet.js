@@ -1,8 +1,8 @@
 /* read Help.txt */
 var NathaCypherSystem = NathaCypherSystem || (function () {
     'use strict';
-    var version = 1.0,
-    releasedate= "2015-09-16",
+    var version = 1.1,
+    releasedate= "2015-09-26",
     schemaversion = 1.0,
     author="Natha (roll20userid:75857)",
     warning = "This script is meant to be used with the Cypher System Sheet, as chat outputs and error messages are mostly done through the sheet's templates:",
@@ -18,8 +18,8 @@ var NathaCypherSystem = NathaCypherSystem || (function () {
         // Check the character and token states (damage track) based on her current stat pools attributes
 
         // Find the character's token object
-	    var might = 0;
-	    var speed = 0;
+        var might = 0;
+        var speed = 0;
 	    var intellect = 0;
         var specdmg = 0;
 	    var damage = 0;
@@ -299,6 +299,115 @@ var NathaCypherSystem = NathaCypherSystem || (function () {
 	    };
         checkCharStates(characterObj);
     },
+    //-----------------------------------------------------------------------------
+    resetAction = function (characterObj) {
+        //Resets (sets to 0) the action parameters
+
+	    // rollVarDiff - Difficulty
+	    var attrName = "rollVarDiff";
+	    var objArray = findObjs({
+	                    _type: 'attribute',
+	                    name: attrName,
+	                    _characterid: characterObj.id
+	                });
+        if(objArray.length>0){
+            objArray[0].set("current", 0);
+        } else {
+            createObj("attribute", {
+                name: attrName,
+                current: 0,
+                characterid: characterObj.id
+            });
+        };
+
+	    // rollVarCost - Cost
+	    attrName = "rollVarCost";
+	    objArray = findObjs({
+	                    _type: 'attribute',
+	                    name: attrName,
+	                    _characterid: characterObj.id
+	                });
+        if(objArray.length>0){
+            objArray[0].set("current", 0);
+        } else {
+            createObj("attribute", {
+                name: attrName,
+                current: 0,
+                characterid: characterObj.id
+            });
+        };
+
+	    // rollVarBonus - Bonus
+	    attrName = "rollVarBonus";
+	    objArray = findObjs({
+	                    _type: 'attribute',
+	                    name: attrName,
+	                    _characterid: characterObj.id
+	                });
+        if(objArray.length>0){
+            objArray[0].set("current", 0);
+        } else {
+            createObj("attribute", {
+                name: attrName,
+                current: 0,
+                characterid: characterObj.id
+            });
+        };
+
+	    // rollVarRollEff - Roll effort
+	    attrName = "rollVarRollEff";
+	    objArray = findObjs({
+	                    _type: 'attribute',
+	                    name: attrName,
+	                    _characterid: characterObj.id
+	                });
+        if(objArray.length>0){
+            objArray[0].set("current", 0);
+        } else {
+            createObj("attribute", {
+                name: attrName,
+                current: 0,
+                characterid: characterObj.id
+            });
+        };
+
+	    // rollVarRollDmg - Damage effort
+	    attrName = "rollVarRollDmg";
+	    objArray = findObjs({
+	                    _type: 'attribute',
+	                    name: attrName,
+	                    _characterid: characterObj.id
+	                });
+        if(objArray.length>0){
+            objArray[0].set("current", 0);
+        } else {
+            createObj("attribute", {
+                name: attrName,
+                current: 0,
+                characterid: characterObj.id
+            });
+        };
+
+	    // rollVarAsset - Asset
+	    attrName = "rollVarAsset";
+	    objArray = findObjs({
+	                    _type: 'attribute',
+	                    name: attrName,
+	                    _characterid: characterObj.id
+	                });
+        if(objArray.length>0){
+            objArray[0].set("current", 0);
+        } else {
+            createObj("attribute", {
+                name: attrName,
+                current: 0,
+                characterid: characterObj.id
+            });
+        };
+
+        //End
+        sendChat("character|"+characterObj.id,"Action parameters reset done.");
+    },
 	//-----------------------------------------------------------------------------
 	npcDamage = function (tokenObj,characterObj,dmgDealt, applyArmor) {
 	    // Apply damage (or healing if dmdDeal is negative ...) to Numenera NPC/Creature
@@ -467,7 +576,16 @@ var NathaCypherSystem = NathaCypherSystem || (function () {
                     sendChat("GM", "&{template:cyphMsg} {{chatmessage=cypher-modstat}} {{notaCharacter="+paramArray[0]+"}}");
                     return false;
                 };
-                modStat(obj,paramArray[1],paramArray[2]);
+                modStat(obj,paramArray[1],paramArray[2],paramArray[3]);
+                break;
+            case '!cypher-resetaction':
+                //this function requires no other parameter
+                if (!obj) {
+                    sendChat("GM", "&{template:cyphMsg} {{chatmessage=cypher-resetaction}} {{notaCharacter="+paramArray[0]+"}}");
+                    return false;
+                };
+                resetAction(obj);
+                break;
     	}
         return;
     },
