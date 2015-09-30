@@ -5,8 +5,8 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.9.10',
-        lastUpdate = 1443050403,
+    var version = '0.9.11',
+        lastUpdate = 1443613435,
         schemaVersion = 1.0,
         bonusCache = {},
         observers = {
@@ -225,9 +225,12 @@ var GroupInitiative = GroupInitiative || (function() {
 
         buildInitDiceExpression = function(s){
             var stat=(''!== state.GroupInitiative.config.diceCountAttribute && s.character && getAttrByName(s.character.id, state.GroupInitiative.config.diceCountAttribute, 'current'));
-            if(stat && '0' !== stat) {
-                stat = stat.replace(/@\{([^\|]*?|[^\|]*?\|max|[^\|]*?\|current)\}/g, '@{'+(s.character.get('name'))+'|$1}');
-                return '('+stat+')d'+state.GroupInitiative.config.dieSize;
+            if(stat ) {
+                stat = (_.isString(stat) ? stat : stat+'');
+                if('0' !== stat) {
+                    stat = stat.replace(/@\{([^\|]*?|[^\|]*?\|max|[^\|]*?\|current)\}/g, '@{'+(s.character.get('name'))+'|$1}');
+                    return '('+stat+')d'+state.GroupInitiative.config.dieSize;
+                }
             } 
             return state.GroupInitiative.config.diceCount+'d'+state.GroupInitiative.config.dieSize;
         },
@@ -661,18 +664,18 @@ var GroupInitiative = GroupInitiative || (function() {
         );
     },
 
-    findInitiativeBonus = function(char,token) {
+    findInitiativeBonus = function(charObj,token) {
         var bonus = '';
-        if(_.has(bonusCache,char.id)) {
-            return bonusCache[char.id];
+        if(_.has(bonusCache,charObj.id)) {
+            return bonusCache[charObj.id];
         }
         _.find(state.GroupInitiative.bonusStatGroups, function(group){
             bonus = _.chain(group)
                 .map(function(details){
                     
-                    var stat=getAttrByName(char.id,details.attribute, details.type||'current');
+                    var stat=getAttrByName(charObj.id,details.attribute, details.type||'current');
                     if( ! _.isUndefined(stat) && !_.isNull(stat) ) {
-                        stat = (stat+'').replace(/@\{([^\|]*?|[^\|]*?\|max|[^\|]*?\|current)\}/g, '@{'+(char.get('name'))+'|$1}');
+                        stat = (stat+'').replace(/@\{([^\|]*?|[^\|]*?\|max|[^\|]*?\|current)\}/g, '@{'+(charObj.get('name'))+'|$1}');
                         stat = _.reduce(details.adjustments || [],function(memo,a){
                             var args,adjustment,func;
                             if(memo) {
@@ -699,7 +702,7 @@ var GroupInitiative = GroupInitiative || (function() {
             bonus = bonus.join('+');
             return true;
         });
-        bonusCache[char.id]=bonus;
+        bonusCache[charObj.id]=bonus;
         return bonus;
     },
 
@@ -780,7 +783,7 @@ var GroupInitiative = GroupInitiative || (function() {
                                 } else {
                                     sendChat('!group-init --add-group', '/w gm ' 
                                         +'<div style="padding:1px 3px;border: 1px solid #8B4513;background: #eeffee; color: #8B4513; font-size: 80%;">'
-                                        +'Unknown Stat Adustment: '+c[0]+'<br>'
+                                        +'Unknown Stat Adjustment: '+c[0]+'<br>'
                                         +'Use one of the following:'
                                         +'<ul>'
                                         +buildStatAdjustmentRows()
