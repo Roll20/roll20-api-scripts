@@ -1,7 +1,7 @@
 {
   "name": "Cypher System Sheet",
-  "version": "1.1",
-  "description": "Enables the applying of stat cost, auto calculation of PC state and damage track in the Cypher System Sheet",
+  "version": "1.2",
+  "description": "Enables the applying of stat cost, recovery roll advance, auto calculation of PC state and damage track in the Cypher System Sheet",
   "authors": "Natha",
   "roll20userid": "75857",
   "dependencies": {},
