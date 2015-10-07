@@ -1,8 +1,8 @@
 /* read Help.txt */
 var NathaCypherSystem = NathaCypherSystem || (function () {
     'use strict';
-    var version = 1.1,
-    releasedate= "2015-09-26",
+    var version = 1.2,
+    releasedate= "2015-10-07",
     schemaversion = 1.0,
     author="Natha (roll20userid:75857)",
     warning = "This script is meant to be used with the Cypher System Sheet, as chat outputs and error messages are mostly done through the sheet's templates:",
@@ -20,7 +20,7 @@ var NathaCypherSystem = NathaCypherSystem || (function () {
         // Find the character's token object
         var might = 0;
         var speed = 0;
-	    var intellect = 0;
+        var intellect = 0;
         var specdmg = 0;
 	    var damage = 0;
 	    var CurrentDamage = 0;
@@ -188,116 +188,134 @@ var NathaCypherSystem = NathaCypherSystem || (function () {
     modStat = function (characterObj,statName,statCost) {
         // checking the stat
 	    var stat1 = "";
-	    if(statName == "might" || statName == "speed" || statName == "intellect") {
+	    if(statName == "might" || statName == "speed" || statName == "intellect" || statName=="recovery-rolls") {
 	        stat1 = statName;
 	    } else {
 	        sendChat("character|"+charId, "&{template:cyphMsg} {{modStat=1}} {{noAttribute=" + statName + "}}");
 	        return;
 	    };
-        //getting the stat values
-	    var pool1 = 0;
-	    var max1 = 0;
-	    var finalPool = 0;
-	    var objArray = findObjs({
-	                    _type: 'attribute',
-	                    name: stat1,
-	                    _characterid: characterObj.id
-	                });
-	    var obj1;
-	    if (!objArray.length) {
-		    pool1 = parseInt(getAttrByName(characterObj.id, stat1, "current")) || 0;
-		    max1 = parseInt(getAttrByName(characterObj.id, stat1, "max")) || 0;
-            obj1 = createObj("attribute", {
-                name: stat1,
-                current: pool1,
-                max: max1,
-                characterid: characterObj.id
-            });
-	    } else {
-	        obj1 = objArray[0];
-	        pool1=parseInt(obj1.get("current")) || 0;
-	    };
-	    if(statCost > pool1){
-	    	//several stats will be diminished
-	    	var pool2, pool3, max2, max3 = 0;
-	    	var stat2, stat3 = '';
-	    	var obj2, obj3;
-	    	switch(statName){
-	    		case "might":
-	    			stat2 = 'speed';
-	    			stat3 = 'intellect';
-	    			break;
-	    		case "speed":
-	    			stat2 = 'might';
-	    			stat3 = 'intellect';
-	    			break;
-	    		case "intellect":
-	    			stat2 = 'might';
-	    			stat3 = 'speed';
-	    			break;
-	    	}
-		    objArray = findObjs({
-		                    _type: 'attribute',
-		                    name: stat2,
-		                    _characterid: characterObj.id
-		                });
-		    if (!objArray.length) {
-			    pool2 = parseInt(getAttrByName(characterObj.id, stat2, "current")) || 0;
-			    max2 = parseInt(getAttrByName(characterObj.id, stat2, "max")) || 0;
-	            obj2 = createObj("attribute", {
-	                name: stat2,
-	                current: pool2,
-	                max: max2,
-	                characterid: characterObj.id
-	            });
-		    } else {
-		    	obj2= objArray[0];
-		        pool2=parseInt(obj2.get("current")) || 0;
-		    };
-		    objArray = findObjs({
-		                    _type: 'attribute',
-		                    name: stat3,
-		                    _characterid: characterObj.id
-		                });
-		    if (!objArray.length) {
-			    pool3 = parseInt(getAttrByName(characterObj.id, stat3, "current")) || 0;
-			    max3 = parseInt(getAttrByName(characterObj.id, stat3, "max")) || 0;
-	            obj3 = createObj("attribute", {
-	                name: stat3,
-	                current: pool3,
-	                max: max3,
-	                characterid: characterObj.id
-	            });
-		    } else {
-		    	obj3 = objArray[0];
-		        pool3=parseInt(obj3.get("current")) || 0;
-		    };
-		    // calculus
-   	    	statCost = statCost - pool1;
-	    	obj1.set("current",0);
-		    if(statCost > pool2){
-		    	statCost = statCost - pool2;
-		    	obj2.set("current",0);
-		    	if(statCost > pool3){
-		    		obj3.set("current",0);
-		    		sendChat("character|"+characterObj.id, "He's dead, Jim! Might, Speed and Intellect down to 0.");
-		    	}else{
-		    		finalPool = pool3 - statCost;
-		    		obj3.set("current",finalPool);
-		    		sendChat("character|"+characterObj.id, "" + stat1 + " and " + stat2 + " down to 0. " + stat3 + ": " + pool3 + "-" + statCost + "=" + finalPool);
-		    	};
-		    }else{
-		    	finalPool = pool2 - statCost;
-		    	obj2.set("current",finalPool);
-		    	sendChat("character|"+characterObj.id, "" + stat1 + " down to 0. " + stat2 + ": " + pool2 + "-" + statCost + "=" + finalPool);
-		    };
-	    }else{
-	    	//just the current stat is diminished
-	        finalPool = pool1 - statCost;
-    	    obj1.set("current",finalPool);
-    	    sendChat("character|"+characterObj.id, "" + stat1 + ": " + pool1 + "-" + statCost + "=" + finalPool);
-	    };
-        checkCharStates(characterObj);
+        if(stat1 == "recovery-rolls"){
+            var objArray = findObjs({
+    	                    _type: 'attribute',
+    	                    name: stat1,
+    	                    _characterid: characterObj.id
+    	                });
+            if (!objArray.length) {
+                obj1 = createObj("attribute", {
+                    name: stat1,
+                    current: statCost,
+                    characterid: characterObj.id
+                });
+    	    } else {
+    	        objArray[0].set("current",statCost);
+    	    };
+            sendChat("character|"+characterObj.id, "Next recovery action updated.");
+        } else {
+            //stat pool modification
+    	    var pool1 = 0;
+    	    var max1 = 0;
+    	    var finalPool = 0;
+    	    var objArray = findObjs({
+    	                    _type: 'attribute',
+    	                    name: stat1,
+    	                    _characterid: characterObj.id
+    	                });
+    	    var obj1;
+    	    if (!objArray.length) {
+    		    pool1 = parseInt(getAttrByName(characterObj.id, stat1, "current")) || 0;
+    		    max1 = parseInt(getAttrByName(characterObj.id, stat1, "max")) || 0;
+                obj1 = createObj("attribute", {
+                    name: stat1,
+                    current: pool1,
+                    max: max1,
+                    characterid: characterObj.id
+                });
+    	    } else {
+    	        obj1 = objArray[0];
+    	        pool1=parseInt(obj1.get("current")) || 0;
+    	    };
+    	    if(statCost > pool1){
+    	    	//several stats will be diminished
+    	    	var pool2, pool3, max2, max3 = 0;
+    	    	var stat2, stat3 = '';
+    	    	var obj2, obj3;
+    	    	switch(statName){
+    	    		case "might":
+    	    			stat2 = 'speed';
+    	    			stat3 = 'intellect';
+    	    			break;
+    	    		case "speed":
+    	    			stat2 = 'might';
+    	    			stat3 = 'intellect';
+    	    			break;
+    	    		case "intellect":
+    	    			stat2 = 'might';
+    	    			stat3 = 'speed';
+    	    			break;
+    	    	}
+    		    objArray = findObjs({
+    		                    _type: 'attribute',
+    		                    name: stat2,
+    		                    _characterid: characterObj.id
+    		                });
+    		    if (!objArray.length) {
+    			    pool2 = parseInt(getAttrByName(characterObj.id, stat2, "current")) || 0;
+    			    max2 = parseInt(getAttrByName(characterObj.id, stat2, "max")) || 0;
+    	            obj2 = createObj("attribute", {
+    	                name: stat2,
+    	                current: pool2,
+    	                max: max2,
+    	                characterid: characterObj.id
+    	            });
+    		    } else {
+    		    	obj2= objArray[0];
+    		        pool2=parseInt(obj2.get("current")) || 0;
+    		    };
+    		    objArray = findObjs({
+    		                    _type: 'attribute',
+    		                    name: stat3,
+    		                    _characterid: characterObj.id
+    		                });
+    		    if (!objArray.length) {
+    			    pool3 = parseInt(getAttrByName(characterObj.id, stat3, "current")) || 0;
+    			    max3 = parseInt(getAttrByName(characterObj.id, stat3, "max")) || 0;
+    	            obj3 = createObj("attribute", {
+    	                name: stat3,
+    	                current: pool3,
+    	                max: max3,
+    	                characterid: characterObj.id
+    	            });
+    		    } else {
+    		    	obj3 = objArray[0];
+    		        pool3=parseInt(obj3.get("current")) || 0;
+    		    };
+    		    // calculus
+       	    	statCost = statCost - pool1;
+    	    	obj1.set("current",0);
+    		    if(statCost > pool2){
+    		    	statCost = statCost - pool2;
+    		    	obj2.set("current",0);
+    		    	if(statCost > pool3){
+    		    		obj3.set("current",0);
+    		    		sendChat("character|"+characterObj.id, "He's dead, Jim! Might, Speed and Intellect down to 0.");
+    		    	}else{
+    		    		finalPool = pool3 - statCost;
+    		    		obj3.set("current",finalPool);
+    		    		sendChat("character|"+characterObj.id, "" + stat1 + " and " + stat2 + " down to 0. " + stat3 + ": " + pool3 + "-" + statCost + "=" + finalPool);
+    		    	};
+    		    }else{
+    		    	finalPool = pool2 - statCost;
+    		    	obj2.set("current",finalPool);
+    		    	sendChat("character|"+characterObj.id, "" + stat1 + " down to 0. " + stat2 + ": " + pool2 + "-" + statCost + "=" + finalPool);
+    		    };
+    	    }else{
+    	    	//just the current stat is diminished
+    	        finalPool = pool1 - statCost;
+        	    obj1.set("current",finalPool);
+        	    sendChat("character|"+characterObj.id, "" + stat1 + ": " + pool1 + "-" + statCost + "=" + finalPool);
+    	    };
+            checkCharStates(characterObj);
+        };
     },
     //-----------------------------------------------------------------------------
     resetAction = function (characterObj) {
