@@ -1,11 +1,11 @@
 /* read Help.txt */
 var NathaNumenera = NathaNumenera || (function () {
     'use strict';
-    var version = 4.7,
-    releasedate= "2015-06-13",
+    var version = 4.8,
+    releasedate= "2015-10-10",
     schemaversion = 1.0,
     author="Natha (roll20userid:75857)",
-    warning = "Sheet must be in version 4.7+ : chat outputs and error messages are managed through the sheet's templates.",
+    warning = "Sheet must be in version 4.8+ : chat outputs and error messages are managed through the sheet's templates.",
     //-----------------------------------------------------------------------------
     checkInstall = function() {
         log(""+author+"'s Numenera API script version "+version+" ("+releasedate+") installed.");
@@ -17,7 +17,7 @@ var NathaNumenera = NathaNumenera || (function () {
     },
     //-----------------------------------------------------------------------------
     checkCharStates = function (characterObj) {
-		// Check the character and token states (damage track) based on her current stat pools attributes
+    	// Check the character and token states (damage track) based on her current stat pools attributes
 
 	    // Find the character's token object
 	    var might = 0;
@@ -310,7 +310,133 @@ var NathaNumenera = NathaNumenera || (function () {
 	    };
         checkCharStates(characterObj);
     },
-	//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+    resetAction = function (characterObj) {
+        //Resets (sets to 0) the action parameters
+
+	    // rollVarDiff - Difficulty
+	    var attrName = "rollVarDiff";
+	    var objArray = findObjs({
+	                    _type: 'attribute',
+	                    name: attrName,
+	                    _characterid: characterObj.id
+	                });
+        if(objArray.length>0){
+            objArray[0].set("current", 0);
+        } else {
+            createObj("attribute", {
+                name: attrName,
+                current: 0,
+                characterid: characterObj.id
+            });
+        };
+
+	    // rollVarCost - Cost
+	    attrName = "rollVarCost";
+	    objArray = findObjs({
+	                    _type: 'attribute',
+	                    name: attrName,
+	                    _characterid: characterObj.id
+	                });
+        if(objArray.length>0){
+            objArray[0].set("current", 0);
+        } else {
+            createObj("attribute", {
+                name: attrName,
+                current: 0,
+                characterid: characterObj.id
+            });
+        };
+
+	    // rollVarBonus - Bonus
+	    attrName = "rollVarBonus";
+	    objArray = findObjs({
+	                    _type: 'attribute',
+	                    name: attrName,
+	                    _characterid: characterObj.id
+	                });
+        if(objArray.length>0){
+            objArray[0].set("current", 0);
+        } else {
+            createObj("attribute", {
+                name: attrName,
+                current: 0,
+                characterid: characterObj.id
+            });
+        };
+
+	    // rollVarRollEff - Roll effort
+	    attrName = "rollVarRollEff";
+	    objArray = findObjs({
+	                    _type: 'attribute',
+	                    name: attrName,
+	                    _characterid: characterObj.id
+	                });
+        if(objArray.length>0){
+            objArray[0].set("current", 0);
+        } else {
+            createObj("attribute", {
+                name: attrName,
+                current: 0,
+                characterid: characterObj.id
+            });
+        };
+
+	    // rollVarRollDmg - Damage effort
+	    attrName = "rollVarRollDmg";
+	    objArray = findObjs({
+	                    _type: 'attribute',
+	                    name: attrName,
+	                    _characterid: characterObj.id
+	                });
+        if(objArray.length>0){
+            objArray[0].set("current", 0);
+        } else {
+            createObj("attribute", {
+                name: attrName,
+                current: 0,
+                characterid: characterObj.id
+            });
+        };
+
+	    // rollVarAsset - Asset
+	    attrName = "rollVarAsset";
+	    objArray = findObjs({
+	                    _type: 'attribute',
+	                    name: attrName,
+	                    _characterid: characterObj.id
+	                });
+        if(objArray.length>0){
+            objArray[0].set("current", 0);
+        } else {
+            createObj("attribute", {
+                name: attrName,
+                current: 0,
+                characterid: characterObj.id
+            });
+        };
+
+	    // rollVarSkill - Skill level
+	    attrName = "rollVarSkill";
+	    objArray = findObjs({
+	                    _type: 'attribute',
+	                    name: attrName,
+	                    _characterid: characterObj.id
+	                });
+        if(objArray.length>0){
+            objArray[0].set("current", 0);
+        } else {
+            createObj("attribute", {
+                name: attrName,
+                current: 0,
+                characterid: characterObj.id
+            });
+        };
+
+        //End
+        sendChat("character|"+characterObj.id,"Action parameters reset done.");
+    },
+    //-----------------------------------------------------------------------------
 	initRoll = function (characterObj) {
 	  	/*
 		  	BEWARE : Not the standard Numenera initiative roll !
@@ -893,7 +1019,16 @@ var NathaNumenera = NathaNumenera || (function () {
                     return false;
                 };
                 modStat(obj,paramArray[1],paramArray[2],1);
-    	}
+                break;
+            case '!nathanum-resetaction':
+                //this function requires no other parameter
+                if (!obj) {
+                    sendChat("GM", "&{template:nathaNumMsg} {{chatmessage=nathanum-resetaction}} {{notaCharacter="+paramArray[0]+"}}");
+                    return false;
+                };
+                resetAction(obj);
+                break;
+        }
         return;
     },
     //-----------------------------------------------------------------------------
