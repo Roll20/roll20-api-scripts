@@ -5,8 +5,8 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.9.11',
-        lastUpdate = 1443613435,
+    var version = '0.9.12',
+        lastUpdate = 1444742270,
         schemaVersion = 1.0,
         bonusCache = {},
         observers = {
@@ -244,7 +244,7 @@ var GroupInitiative = GroupInitiative || (function() {
                         } 
                         return m;
                     },false);
-                    return _.times(l.length, function(c){
+                    return _.times(l.length, function(){
                         return min;
                     });
                 },
@@ -256,7 +256,7 @@ var GroupInitiative = GroupInitiative || (function() {
             'Mean-All-Roll':{
                 mutator: function(l){
                     var mean = l[Math.round((l.length/2)-0.5)];
-                    return _.times(l.length, function(c){
+                    return _.times(l.length, function(){
                         return mean;
                     });
                 },
@@ -278,7 +278,7 @@ var GroupInitiative = GroupInitiative || (function() {
                 mutator: function(l){
                     return l;
                 },
-                func: function(s){
+                func: function(){
                     return '0';
                 },
                 desc: 'Sets the initiative individually for each member of the group to their bonus with no roll.'
@@ -719,7 +719,9 @@ var GroupInitiative = GroupInitiative || (function() {
             rollSetup,
             initRolls,
             cont=false,
-            manualBonus=0
+            manualBonus=0,
+            turnEntries,
+            finalize
 			;
 
         if (msg.type !== "api" ) {
@@ -959,90 +961,89 @@ var GroupInitiative = GroupInitiative || (function() {
                             })
                             .value();
 
-                        initRolls = _.chain(rollSetup)
-                            .pluck('roll')
-                            .map(function(rs){
-                                return _.reject(rs,function(r){
-                                    return _.isString(r) && _.isEmpty(r);
-                                });
-                            })
-                            .map(function(r){
-                                return ('[[('+r.join(') + (')+')]]').replace(/\[\[\[/g, "[[ [");
-                            })
-                            .value()
-                            .join('');
-
-                        sendChat('',initRolls,function(msg){
-                            var turnEntries=_.chain(msg[0].content.match(/\d+/g))
-                                .map(function(idx){
-                                    return msg[0].inlinerolls[idx];  
-                                })
-                                .map(function(ird,k){
-                                    var rdata = {
-                                        order: k,
-                                        total: (ird.results.total%1===0
-                                            ? ird.results.total 
-                                            : parseFloat(ird.results.total.toFixed(state.GroupInitiative.config.maxDecimal))),
-                                        rolls: _.reduce(ird.results.rolls,function(m,rs){
-                                            if('R' === rs.type) {
-                                                m.push({
-                                                    sides: rs.sides,
-                                                    rolls: _.pluck(rs.results,'v')
-                                                });
-                                            }
-                                            return m;
-                                        },[])
-                                    };
-                                    rdata.bonus = (ird.results.total - (_.reduce(rdata.rolls,function(m,r){
-                                        m+=_.reduce(r.rolls,function(s,dieroll){
-                                            return s+dieroll;
-                                        },0);
-                                        return m;
-                                    },0)));
-
-                                    rdata.bonus = (rdata.bonus%1===0
-                                        ? rdata.bonus
-                                        : parseFloat(rdata.bonus.toFixed(state.GroupInitiative.config.maxDecimal)));
-
-                                    return rdata;
-                                })
-                                .sortBy('order')
-                                .value();
-
-
-                        turnEntries=rollers[state.GroupInitiative.config.rollType].mutator(turnEntries);
-
-                        
-                            Campaign().set({
-                                turnorder: JSON.stringify(
-                                    sorters[state.GroupInitiative.config.sortOption](
-                                        turnorder.concat(
-                                            _.chain(rollSetup)
-                                                .map(function(s){
-                                                    s.rollResults=turnEntries.shift();
-                                                    return s;
-                                                })
-                                                .tap(announcers[state.GroupInitiative.config.announcer])
-                                                .map(function(s){
-                                                    return {
-                                                        id: s.token.id,
-                                                        pr: s.rollResults.total,
-                                                        custom: ''
-                                                    };
-                                                })
-                                                .value()
-                                        )
-                                    )
-                                )
+                        initRolls = _.map(rollSetup,function(rs,i){
+                                return {
+                                    index: i,
+                                    roll: ('[[('+ _.reject(rs.roll,function(r){
+                                                return _.isString(r) && _.isEmpty(r);
+                                            })
+                                            .join(') + (')+')]]')
+                                            .replace(/\[\[\[/g, "[[ [")
+                                };
                             });
-							notifyObservers('turnOrderChange');
 
-                            if(state.GroupInitiative.config.autoOpenInit && !Campaign().get('initativepage')) {
-                                Campaign().set({
-                                    initiativepage: pageid
+
+    turnEntries = [];
+    finalize = _.after(initRolls.length,function(){
+        turnEntries = _.sortBy(turnEntries,'order');
+        turnEntries = rollers[state.GroupInitiative.config.rollType].mutator(turnEntries);
+
+        Campaign().set({
+            turnorder: JSON.stringify(
+                sorters[state.GroupInitiative.config.sortOption](
+                    turnorder.concat(
+                        _.chain(rollSetup)
+                        .map(function(s){
+                            s.rollResults=turnEntries.shift();
+                            return s;
+                        })
+                        .tap(announcers[state.GroupInitiative.config.announcer])
+                        .map(function(s){
+                            return {
+                                id: s.token.id,
+                                pr: s.rollResults.total,
+                                custom: ''
+                            };
+                        })
+                        .value()
+                    )
+                )
+            )
+        });
+        notifyObservers('turnOrderChange');
+
+        if(state.GroupInitiative.config.autoOpenInit && !Campaign().get('initativepage')) {
+            Campaign().set({
+                initiativepage: pageid
+            });
+        }
+    });
+
+    _.each(initRolls, function(ir){
+        sendChat('',ir.index+':'+ir.roll,function(msg){
+            var parts = msg[0].content.split(/:/),
+                ird = msg[0].inlinerolls[parts[1].match(/\d+/)],
+                rdata = {
+                    order: parts[0],
+                    total: (ird.results.total%1===0
+                        ? ird.results.total 
+                        : parseFloat(ird.results.total.toFixed(state.GroupInitiative.config.maxDecimal))),
+                        rolls: _.reduce(ird.results.rolls,function(m,rs){
+                            if('R' === rs.type) {
+                                m.push({
+                                    sides: rs.sides,
+                                    rolls: _.pluck(rs.results,'v')
                                 });
                             }
-                        });
+                            return m;
+                        },[])
+            };
+            rdata.bonus = (ird.results.total - (_.reduce(rdata.rolls,function(m,r){
+                m+=_.reduce(r.rolls,function(s,dieroll){
+                    return s+dieroll;
+                },0);
+                return m;
+            },0)));
+
+            rdata.bonus = (rdata.bonus%1===0
+                ? rdata.bonus
+                : parseFloat(rdata.bonus.toFixed(state.GroupInitiative.config.maxDecimal)));
+
+            turnEntries.push(rdata);
+
+            finalize();
+        });
+    });
                     } else {
                         showHelp();
                     }
