@@ -5,8 +5,8 @@
 var TotalMana = TotalMana || (function() {
     'use strict';
 
-    var version = '0.1.1',
-        lastUpdate = 1444829991,
+    var version = '0.1.2',
+        lastUpdate = 1444830577,
         schemaVersion = 0.1,
 
     checkInstall = function() {
@@ -52,9 +52,9 @@ var TotalMana = TotalMana || (function() {
                     isdrawing: false,
                     layer: 'objects'
                 }),function(m,o){
-                    m.bar1+=parseFloat(o.get('bar1.value'),10);
-                    m.bar2+=parseFloat(o.get('bar2.value'),10);
-                    m.bar3+=parseFloat(o.get('bar3.value'),10);
+                    m.bar1+=parseFloat(o.get('bar1_value'),10) || 0;
+                    m.bar2+=parseFloat(o.get('bar2_value'),10) || 0;
+                    m.bar3+=parseFloat(o.get('bar3_value'),10) || 0;
                     return m;
                 },{ bar1: 0, bar2: 0, bar3: 0 });
 
