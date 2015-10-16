@@ -5,8 +5,8 @@
 var Bet = Bet || (function() {
     'use strict';
 
-    var version = '0.1.0',
-        lastUpdate = 1445002463,
+    var version = '0.1.1',
+        lastUpdate = 1445003056,
         schemaVersion = 0.1,
 
     checkInstall = function() {
@@ -32,12 +32,13 @@ var Bet = Bet || (function() {
         args = msg.content.split(/\s+/);
         switch(args[0]) {
             case '!bet':
-                betamt = parseInt(args[1],10) || 0;
-                state.Bet.bets[msg.playerid] = {
+                betamt = _.rest(args).join(' ');
+                state.Bet.bets[msg.playerid+who] = {
                     bet: betamt,
-                    name: msg.who
+                    name: msg.who+' ('+who+')'
                 };
-                sendChat('Bets','/w "'+who+'" You have placed a bet for '+betamt);
+                sendChat('Bets', '<b>'+who+'</b> has placed a bet for <b>'+msg.who+'</b>.');
+                sendChat('Bets','/w "'+who+'" You have placed a bet of <b>'+betamt+'</b> for <b>'+msg.who+'</b>');
                 break;
 
             case '!show':
