@@ -5,8 +5,8 @@
 var Bet = Bet || (function() {
     'use strict';
 
-    var version = '0.1.1',
-        lastUpdate = 1445003056,
+    var version = '0.1.2',
+        lastUpdate = 1445881281,
         schemaVersion = 0.1,
 
     checkInstall = function() {
@@ -55,7 +55,7 @@ var Bet = Bet || (function() {
                         },'')+
                     '</div>'
                     );
-                    state.Bet = {};
+                    state.Bet.bets = {};
                 }
                 break;
         }
