@@ -3,8 +3,8 @@
 var ChangeTokenImg = ChangeTokenImg || (function() {
     'use strict';
 
-    var version = '0.1.20',
-    	lastUpdate = 1446822299,
+    var version = '0.1.30',
+        lastUpdate = 1447192861,
 		schemaVersion = 0.1,
 		
 	showHelp = function(id) {
@@ -47,7 +47,7 @@ var ChangeTokenImg = ChangeTokenImg || (function() {
 	},
     showError = function(id,n,tname,errortype) {
 		var who=getObj('player',id).get('_displayname').split(' ')[0];
-        var errorstr = ''
+        var errorstr = 'ChangeTokenImg: '
         if (errortype == 'SIDES') {
     		var sidestr='s';
     		if (n == 1) {
@@ -98,9 +98,10 @@ var ChangeTokenImg = ChangeTokenImg || (function() {
 			.replace(/(\{\{(.*?)\}\})/g," $2 ")
 			.split(/\s+--/);
 
-
+        var isthismethod= false;
 		switch(args.shift()) {
 			case '!change-token-img':
+                isthismethod=true;
 				while(args.length) {
 					cmds=args.shift().match(/([^\s]+[\|#]'[^']+'|[^\s]+[\|#]"[^"]+"|[^\s]+)/g);
 					switch(cmds.shift()) {
@@ -127,6 +128,9 @@ var ChangeTokenImg = ChangeTokenImg || (function() {
 					}
 				}
 		}
+        if (isthismethod == false) {
+            return;
+        }
         if (setimg == false && flipimg == false && incrementimg == false ) {
             showError(msg.playerid,'','','EMPTY');
 			return;
