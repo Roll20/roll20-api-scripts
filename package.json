@@ -1,0 +1,16 @@
+{
+  "name": "ScaleOnAdd",
+  "version": "0.1.0",
+  "description": "",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "dependencies": {
+  },
+  "modifies": {
+	"state.ScaleOnAdd": "read,write",
+        "graphic.width": "write",
+        "graphic.height": "write"
+  },
+  "conflicts": [
+  ]
+}
