@@ -2,7 +2,7 @@
     "name": "ChangeTokenImage",
     "version": "0.1.20",
     "description": "Interface to change token images from a rollable table.",
-    "authors": "Chris B",
+    "authors": "Chris B,Aaron",
     "roll20userid": "144324",
     "dependencies": [],
     "modifies": {
