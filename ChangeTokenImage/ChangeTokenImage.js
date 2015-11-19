@@ -3,8 +3,8 @@
 var ChangeTokenImg = ChangeTokenImg || (function() {
     'use strict';
 
-    var version = '0.1.30',
-        lastUpdate = 1447192861,
+    var version = '0.1.31',
+        lastUpdate = 1447948979,
 		schemaVersion = 0.1,
 		
 	showHelp = function(id) {
@@ -46,43 +46,51 @@ var ChangeTokenImg = ChangeTokenImg || (function() {
 		);
 	},
     showError = function(id,n,tname,errortype) {
-		var who=getObj('player',id).get('_displayname').split(' ')[0];
-        var errorstr = 'ChangeTokenImg: '
-        if (errortype == 'SIDES') {
-    		var sidestr='s';
-    		if (n == 1) {
+		var who=getObj('player',id).get('_displayname').split(' ')[0],
+			errorstr = 'ChangeTokenImg: ',
+			sidestr;
+        if (errortype === 'SIDES') {
+    		sidestr='s';
+    		if (n === 1) {
                 sidestr='';
         	}
             errorstr = tname+' has only ' + n + ' side'+sidestr+'!';
-        } else if (errortype == 'EMPTY') {
+        } else if (errortype === 'EMPTY') {
             errorstr = 'You must pick --flip, --set or --incr';
-        } else if (errortype == 'ARG') {
+        } else if (errortype === 'ARG') {
             errorstr = n + ' is not a valid value for set parameter';            
         }
 		sendChat('',
 		'/w '+who+' <div>'+errorstr+'</div>'
 		);
 	},    
-	setImg = function (o,nextSide,allSides) {
-		var nextURL = decodeURIComponent(allSides[nextSide]).replace(/med\.png/g, "thumb.png");
-		o.set({
-			currentSide: nextSide,
-			imgsrc: nextURL
-		});
-		return nextURL;
-	},
+    getCleanImgsrc = function (imgsrc) {
+        var parts = imgsrc.match(/(.*\/images\/.*)(thumb|max)(.*)$/);
+        if(parts) {
+            return parts[1]+'thumb'+parts[3];
+        }
+        return;
+    },
+    setImg = function (o,nextSide,allSides) {
+        var nextURL = getCleanImgsrc(decodeURIComponent(allSides[nextSide]));
+        o.set({
+            currentSide: nextSide,
+            imgsrc: nextURL
+        });
+        return nextURL;
+    },
 	setImgUrl = function (o, nextSide, nextURL) {
 		o.set({
 			currentSide: nextSide,
-			imgsrc: nextURL
+			imgsrc: getCleanImgsrc(nextURL)
 		});		
 	},
 	isInt = function (value) {
-		return !(value === undefined) &&  !isNaN(value) && parseInt(Number(value)) == value && !isNaN(parseInt(value, 10)) && value >= 0;
+		return !(value === undefined) &&  !isNaN(value) && parseInt(Number(value),10) === value && !isNaN(parseInt(value, 10)) && value >= 0;
 	},
 	handleInput = function(msg_orig) {
 		var msg = _.clone(msg_orig),
-			args, cmds,  allSides=[],  nextSide, nextURL, flipimg, setimg, incrementimg, sameimages, setval;
+			args, cmds,  allSides=[],  nextSide, nextURL, flipimg, setimg, incrementimg, sameimages, setval,isthismethod=false;
 		flipimg = false;
         setimg = false;
         sameimages = false;
@@ -98,7 +106,6 @@ var ChangeTokenImg = ChangeTokenImg || (function() {
 			.replace(/(\{\{(.*?)\}\})/g," $2 ")
 			.split(/\s+--/);
 
-        var isthismethod= false;
 		switch(args.shift()) {
 			case '!change-token-img':
                 isthismethod=true;
@@ -127,60 +134,61 @@ var ChangeTokenImg = ChangeTokenImg || (function() {
                             break;
 					}
 				}
+				break;
 		}
-        if (isthismethod == false) {
+        if (isthismethod === false) {
             return;
         }
-        if (setimg == false && flipimg == false && incrementimg == false ) {
+        if (setimg === false && flipimg === false && incrementimg === false ) {
             showError(msg.playerid,'','','EMPTY');
 			return;
-        } else {
-			//loop through selected tokens
-			_.chain(msg.selected)
-			.uniq()
-			.map(function(o){
-				return getObj('graphic',o._id);
-			})
-			.reject(_.isUndefined)
-			.each(function(o) {
-                if (sameimages == false || allSides === undefined || allSides.length == 0  ) {
-				    allSides = o.get("sides").split("|");
-                }
-				if ( allSides.length > 1) {
-                    if (setimg == true) {
-                       nextSide = setval;
-                    } else {
-						nextSide = o.get("currentSide") ;
-                        nextSide++;						
-						if (flipimg == true && nextSide > 1) {
-							nextSide = 0;
-						} else if (nextSide == allSides.length) {
-							nextSide = 0;
-						} 	
-					}
-					if (nextSide >= allSides.length) {
-						showError(msg.playerid,allSides.length,o.get("name"),'SIDES');
-						if (sameimages == true) {
-							//quit since they are all the same
-							return;
-						}
-					} else {
-						if (nextURL == 'BLANK' || sameimages == false) {
-							nextURL = setImg(o,nextSide,allSides);
-						} else {
-							setImgUrl(o,nextSide,nextURL);
-						}
+        }
+
+		//loop through selected tokens
+		_.chain(msg.selected)
+		.uniq()
+		.map(function(o){
+			return getObj('graphic',o._id);
+		})
+		.reject(_.isUndefined)
+		.each(function(o) {
+			if (sameimages === false || allSides === undefined || allSides.length === 0  ) {
+				allSides = o.get("sides").split("|");
+			}
+			if ( allSides.length > 1) {
+				if (setimg === true) {
+				   nextSide = setval;
+				} else {
+					nextSide = o.get("currentSide") ;
+					nextSide++;						
+					if (flipimg === true && nextSide > 1) {
+						nextSide = 0;
+					} else if (nextSide === allSides.length) {
+						nextSide = 0;
+					} 	
+				}
+				if (nextSide >= allSides.length) {
+					showError(msg.playerid,allSides.length,o.get("name"),'SIDES');
+					if (sameimages === true) {
+						//quit since they are all the same
+						return;
 					}
 				} else {
-				   showError(msg.playerid,allSides.length,o.get("name"),'SIDES');
-				   if (sameimages == true) {
-					   //quit since they are all the same
-					   return;
-				   }
+					if (nextURL === 'BLANK' || sameimages === false) {
+						nextURL = setImg(o,nextSide,allSides);
+					} else {
+						setImgUrl(o,nextSide,nextURL);
+					}
 				}
+			} else {
+			   showError(msg.playerid,allSides.length,o.get("name"),'SIDES');
+			   if (sameimages === true) {
+				   //quit since they are all the same
+				   return;
+			   }
+			}
 
-			});
-		}
+		});
 	},
 	checkInstall = function() {
 		log('-=> ChangeTokenImg v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
