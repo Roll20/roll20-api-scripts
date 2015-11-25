@@ -1,0 +1,16 @@
+{
+    "name": "13th Age Official Character Sheet Companion",
+    "version": "1.0",
+    "description": "Enhances the Official 13th Age Character Sheet with quick Escalation Die tracking, automatic recovery tracking, token setup, and automatic staggered and down icons.",
+    "authors": "Steve K.",
+    "roll20userid": "5047",
+    "dependencies": [],
+    "modifies": {
+        "state.autoStaggered": "read,write",
+        "state.autoRecovery": "read,write",
+        "token.bar1_link": "read,write",
+        "token.bar2_link": "read,write",
+        "token.bar3_link": "read,write"
+    },
+    "conflicts": []
+}
