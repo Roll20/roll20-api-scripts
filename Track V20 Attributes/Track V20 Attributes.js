@@ -1,6 +1,7 @@
 // Github:   https://github.com/invincible-spleen/roll20-api-scripts/blob/master/Track%20V20%20Attributes/Track%20V20%20Attributes.js
 // By:       Invincible Spleen
 // Contact:  https://app.roll20.net/users/901082
+// AquaAlex added items from V20 Dark Ages and V20 Anarch
 
 var TrackV20Attributes = TrackV20Attributes || (function () {
     'use strict';
@@ -29,39 +30,41 @@ var TrackV20Attributes = TrackV20Attributes || (function () {
 
         // Disciplines
         disciplineHash = {
+			"Abombwe": "Abombwe",
             "Animalism": "Animalism",
             "Auspex": "Auspex",
+			"Bardo": "Bardo",
             "Celerity": "Celerity",
             "Chimerstry": "Chimerstry",
+			"Daimoinon": "Daimoinon",
             "Dementation": "Dementation",
             "Dominate": "Dominate",
+			"Flight": "Flight",
             "Fortitude": "Fortitude",
-            "Necromancy": "Necromancy",
+			"Melpominee": "Melpominee",
+			"Mytherceria": "Mytherceria",
+			"Obeah": "Obeah",
             "Obfuscate": "Obfuscate",
             "Obtenebration": "Obtenebration",
+			"Ogham": "Ogham",
             "Potence": "Potence",
             "Presence": "Presence",
             "Protean": "Protean",
             "Quietus": "Quietus",
+			"Sanguinus": "Sanguinus",
             "Serpentis": "Serpentis",
-            "Thaumaturgy": "Thaumaturgy",
-            "Thaumaturgical Countermagic": "ThaumaturgicalCountermagic",
-            "Vicissitude": "Vicissitude",
-            "Assamite Sorcery": "AssamiteSorcery",
-            "Bardo": "Bardo",
-            "Daimoinon": "Daimoinon",
-            "Flight": "Flight",
-            "Koldunic Sorcery": "KoldunicSorcery",
-            "Melpominee": "Melpominee",
-            "Mytherceria": "Mytherceria",
-            "Obeah": "Obeah",
-            "Ogham": "Ogham",
-            "Sanguinus": "Sanguinus",
             "Spiritus": "Spiritus",
-            "Temporis": "Temporis",
+			"Temporis": "Temporis",
             "Thanatosis": "Thanatosis",
             "Valeren": "Valeren",
-            "Visceratika": "Visceratika"
+            "Visceratika": "Visceratika",
+            "Vicissitude": "Vicissitude",
+			"Abyss Mysticism": "AbyssMysticism",
+			"Assamite Sorcery": "AssamiteSorcery",
+			"Koldunic Sorcery": "KoldunicSorcery",
+			"Necromancy": "Necromancy",
+			"Thaumaturgy": "Thaumaturgy",
+            "Thaumaturgical Countermagic": "ThaumaturgicalCountermagic"
         },
 
         // Paths
@@ -73,7 +76,7 @@ var TrackV20Attributes = TrackV20Attributes || (function () {
             "The Corpse in the Monster": "TheCorpseInTheMonster",
             "The Grave's Decay": "TheGravesDecay",
             "Path of the Four Humors": "PathOfTheFourHumors",
-            "VitreousPath": "VitreousPath",
+            "Vitreous Path": "VitreousPath",
             "The Path of Blood": "ThePathOfBlood",
             "Elemental Mastery": "ElementalMastery",
             "The Green Path": "TheGreenPath",
@@ -83,7 +86,7 @@ var TrackV20Attributes = TrackV20Attributes || (function () {
             "Movement of the Mind": "MovementOfTheMind",
             "The Path of Conjuring": "ThePathOfConjuring",
             "The Path of Corruption": "ThePathOfCorruption",
-            "The Path pf Mars": "ThePathOfMars",
+            "The Path of Mars": "ThePathOfMars",
             "The Path of Technomancy": "ThePathOfTechnomancy",
             "The Path of the Father's Vengeance": "ThePathOfTheFathersVengeance",
             "Weather Control": "WeatherControl",
@@ -91,7 +94,19 @@ var TrackV20Attributes = TrackV20Attributes || (function () {
             "The Way of Earth": "TheWayOfEarth",
             "The Way of Wind": "TheWayOfWind",
             "The Way of Water": "TheWayOfWater",
-            "The Way of Fire": "TheWayOfFire"
+            "The Way of Fire": "TheWayOfFire",
+			"The Transylvanian Kraina": "TheTransylvanianKraina",
+			"The Black Sea Kraina": "TheBlackSeaKraina",
+			"Genius Loci": "GeniusLoci",
+			"The Path of the Twilight Garden":"ThePathoftheTwilightGarden",
+			"Creatio Ignis": "CreatioIgnis",
+			"Iter Pernix": "IterPernix",
+			"Potestas Motus": "PotestasMotus",
+			"Potestas Tempestatum": "PotestasTempestatum",
+			"Potestas Elementorum": "PotestasElementorum",
+			"Potestas Exsecrabilis": "PotestasExsecrabilis",
+			"Potestas Vitae": "PotestasVitae",
+			
         },
 
         // Backgrounds
@@ -109,7 +124,13 @@ var TrackV20Attributes = TrackV20Attributes || (function () {
             "Resources": "Resources",
             "Retainers": "Retainers",
             "Rituals": "Rituals",
-            "Status": "Status"
+            "Status": "Status",
+			"Anarch Information Exchange": "AnarchInformationExchange",
+			"Anarch Status": "AnarchStatus",
+			"Armory": "ArmoryBackground",
+			"Communal Haven Luxury": "CommunalHavenLuxury"
+			"Communal Haven Security": "CommunalHavenSecurity"
+			"Communal Haven Size": "CommunalHavenSize"
         },
 
         // Function which sets a character's attribute to a given value
