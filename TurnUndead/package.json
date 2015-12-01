@@ -1,0 +1,10 @@
+{
+    "name": "TurnUndead",
+    "version": "0.1.0",
+    "description": "AD&D Turning Undead.",
+    "authors": "AquaAlex, The Aaron",
+    "roll20userid": "1048758, 104025",
+    "dependencies": [],
+    "modifies": [],
+    "conflicts": []
+}
