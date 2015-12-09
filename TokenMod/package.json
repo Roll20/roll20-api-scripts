@@ -1,5 +1,6 @@
 {
     "name": "TokenMod",
+    "script": "TokenMod.js",
     "version": "0.8.14",
     "description": "An interface to adjusting properties of a token from a macro or the chat area.",
     "authors": "The Aaron",
