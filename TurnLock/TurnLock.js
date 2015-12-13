@@ -1,4 +1,4 @@
-// Github:   https://github.com/anthonytasca/roll20-api-scripts/turnlock
+// Github:   https://github.com/anthonytasca/roll20-api-scripts/blob/master/TurnLock/TurnLock.js
 // By:       Anthony Tasca
 // Contact:  https://app.roll20.net/users/1000007/target
 
