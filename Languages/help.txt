@@ -1,0 +1,33 @@
+Languages:
+
+This script allows users to speak in any language and only displays the meaning of the speaker's words to online users who are "speaking as" a character that has that language in their character sheet.
+
+Example Commands:
+
+>!Dwarven hello (if the character who says this has dwarven in their languages on their character sheet, they will say hello in dwarven)
+>!Celestial hello (same as before but celestial)
+
+Supported Languages:
+- Abyssal
+- Aquan
+- Auran
+- Celestial
+- Draconic
+- Druidic
+- Dwarven
+- Elven
+- Giant
+- Gnome
+- Goblin
+- Gnoll
+- Halfling
+- Ignan
+- Infernal
+- Orc
+- Sylvan
+- Terran
+- Undercommon
+
+Future Plans:
+- Create command for adding customized langugages
+-
