@@ -307,7 +307,6 @@ prepareSend = function(msg) {
 	_.each(roll20API.fluencyArray, function(indexPlayers) {
 		if(indexPlayers.displayNameFull != whoSpoke){
             if(indexPlayers.displayNameFull.indexOf(" ")>-1){
-                log("hi");
                 whoSpoke2 = indexPlayers.displayNameFull.substring(0,indexPlayers.displayNameFull.indexOf(" "));
             }else{
                 whoSpoke2 = indexPlayers.displayNameFull;
