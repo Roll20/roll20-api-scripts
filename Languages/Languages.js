@@ -294,8 +294,13 @@ prepareSend = function(msg) {
 		sendChat(msg.who + " Pretending to Speak " + whichLanguage, gibberish);
 		return
 	};
-
-	sendChat(msg.who, "/w " + whoSpoke.substr(0,whoSpoke.indexOf(' ')) + " '" + sentence +"' in " + whichLanguage + ".");
+    if(whoSpoke.substr(0,whoSpoke.indexOf(' '))==""){
+       var whoSpoke2= whoSpoke;
+    }else{
+    var whoSpoke2 = whoSpoke.substr(0,whoSpoke.indexOf(' '));
+    }
+    
+	sendChat(msg.who, "/w " + whoSpoke2 + " '" + sentence +"' in " + whichLanguage + ".");
 	sendChat("Languages2GM", "/w gm " + msg.who + " said '" + sentence + "' in " + whichLanguage);
 	
 	_.each(roll20API.fluencyArray, function(indexPlayers) {
