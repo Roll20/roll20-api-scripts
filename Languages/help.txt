@@ -1,39 +1,28 @@
+Introduction:
+This script is a re-work of "WhatSaywithUnknown.js" by derekkoehl which is an enhancement on "What Did He Say?" by Stephen S.
+
+Command:
+!theLanguage {theText}	
+
+Result:
+-If the player who types this is speaking as a character that has theLanguage (under languages on their character sheet), they will say {theText} in theLanguage . Any player who is speaking as a character that also has theLanguage on their character sheet will be whispered {theText}. Others will be whispered symbols representing the language.
+
+-If the player who types this is speaking as a character that does not have theLanguage (under languages on their character sheet), they will "Pretend to Speak" theLanguage .
+
+-If the player who types this is speaking as a player, they will be notified that players cannot speak character languages.
+
+-The GM is whispered {theText}.
+
 Languages:
-This script allows users to speak in multiple languages and only displays the meaning of the speaker's words to online users who are "speaking as" a character that has that language in their character sheet.
-
-Example Commands:
->!Dwarven hello (if the character who says this has dwarven in their languages on their character sheet, they will say hello in dwarven)
->!Celestial hello (same as before but celestial)
-
-How To Test:
-1. Make sure that each character has their approprate languages inserted into their character sheet.
-2. Make sure that atleast two players are online and "Speaking As" a character who knows the same langugage.
-3. Have one character execute a language command with that language. ("!Infernal hello there")
-
-Supported Languages:
-- Abyssal
-- Aquan
-- Auran
-- Celestial
-- Draconic
-- Druidic
-- Dwarven
-- Elven
-- Giant
-- Gnome
-- Goblin
-- Gnoll
-- Halfling
-- Ignan
-- Infernal
-- Orc
-- Sylvan
-- Terran
-- Undercommon
-- Unknown
+Abyssal	Aquan	Auran	Celestial	Common	Draconic	Druidic
+Druidic	Dwarven	Elven	Giant	Gnome	Goblin	Gnoll
+Halfling	Ignan	Infernal	Orc	Sylvan	Terran	Undercommon
 
 Future Plans:
-- Create command for adding customized langugages.
+- Create command for adding customized languages
 
 Bugs:
-- Offline users are rarely sent the translated version of the language but this is hard to recreate.
+- Offline users are sometimes sent the translated version of a message
+
+Notes:
+Please let me know if you find any bugs or would like to see any features added to this project!
