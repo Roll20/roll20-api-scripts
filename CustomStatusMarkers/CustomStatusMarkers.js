@@ -130,14 +130,18 @@ CustomStatusMarkers = (function() {
         var left = _calcStatusMarkerLeft(token, index);
         var top = _calcStatusMarkerTop(token);
 
+        var page = token.get('_pageid');
+
         var icon;
         var type;
         if(pathStr) {
-            icon = _createTokenStatusMarkerPath(pathStr, left, top, width, height);
+            icon = _createTokenStatusMarkerPath(pathStr, left, top, width,
+                height, page);
             type = 'path';
         }
         else {
-            icon = _createTokenStatusMarkerGraphic(imgSrc, left, top, width, height);
+            icon = _createTokenStatusMarkerGraphic(imgSrc, left, top, width,
+                height, page);
             type = 'graphic';
         }
         var iconId = icon.get('_id');
@@ -145,13 +149,14 @@ CustomStatusMarkers = (function() {
 
         var textId;
         if(count) {
-            var text = _createTokenStatusMarkerText(count, left, top);
+            var text = _createTokenStatusMarkerText(count, left, top, page);
             textId = text.get('_id');
             toFront(text);
         }
 
         var tokenState = getTokenState(token);
-        tokenState.customStatuses[statusName] = new StatusMarker(iconId, type, textId);
+        tokenState.customStatuses[statusName] = new StatusMarker(iconId, type,
+            textId);
         tokenState.customStatusesCount++;
     };
 
@@ -164,12 +169,12 @@ CustomStatusMarkers = (function() {
      * @param  {number} height
      * @return {Graphic}
      */
-    function _createTokenStatusMarkerGraphic(imgSrc, left, top, width, height) {
-        var curPage = Campaign().get("playerpageid");
+    function _createTokenStatusMarkerGraphic(imgSrc, left, top, width, height,
+      page) {
         var scale = getStatusMarkerIconScale(width, height);
 
         return createObj('graphic', {
-            _pageid: curPage,
+            _pageid: page,
             imgsrc: imgSrc,
             layer: 'objects',
             left: left,
@@ -188,12 +193,12 @@ CustomStatusMarkers = (function() {
      * @param  {number} height
      * @return {Path}
      */
-    function _createTokenStatusMarkerPath(pathStr, left, top, width, height) {
-        var curPage = Campaign().get("playerpageid");
+    function _createTokenStatusMarkerPath(pathStr, left, top, width, height,
+      page) {
         var scale = getStatusMarkerIconScale(width, height);
 
         return createObj('path', {
-            _pageid: curPage,
+            _pageid: page,
             _path: pathStr,
             layer: 'objects',
             stroke: 'transparent',
@@ -214,11 +219,9 @@ CustomStatusMarkers = (function() {
      * @param  {number} top
      * @return {Text}
      */
-    function _createTokenStatusMarkerText(count, left, top) {
-        var curPage = Campaign().get("playerpageid");
-
+    function _createTokenStatusMarkerText(count, left, top, page) {
         return createObj('text', {
-            _pageid: curPage,
+            _pageid: page,
             layer: 'objects',
             color: '#f00',
             text: count,
@@ -318,13 +321,11 @@ CustomStatusMarkers = (function() {
      */
     function _getGraphicsFromMsg(msg) {
         var result = [];
-        var curPage = Campaign().get("playerpageid");
 
         var selected = msg.selected;
         if(selected) {
             _.each(selected, function(s) {
                 var match = findObjs({
-                    _pageid: curPage,
                     _type: 'graphic',
                     _id: s._id
                 })[0];
@@ -344,13 +345,11 @@ CustomStatusMarkers = (function() {
      */
     function _getPathsFromMsg(msg) {
         var result = [];
-        var curPage = Campaign().get("playerpageid");
 
         var selected = msg.selected;
         if(selected) {
             _.each(selected, function(s) {
                 var matches = findObjs({
-                    _pageid: curPage,
                     _type: 'path',
                     _id: s._id
                 });
