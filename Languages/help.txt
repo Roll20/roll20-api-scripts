@@ -1,11 +1,14 @@
 Languages:
-
-This script allows users to speak in any language and only displays the meaning of the speaker's words to online users who are "speaking as" a character that has that language in their character sheet.
+This script allows users to speak in multiple languages and only displays the meaning of the speaker's words to online users who are "speaking as" a character that has that language in their character sheet.
 
 Example Commands:
-
 >!Dwarven hello (if the character who says this has dwarven in their languages on their character sheet, they will say hello in dwarven)
 >!Celestial hello (same as before but celestial)
+
+How To Test:
+1. Make sure that each character has their approprate languages inserted into their character sheet.
+2. Make sure that atleast two players are online and "Speaking As" a character who knows the same langugage.
+3. Have one character execute a language command with that language. ("!Infernal hello there")
 
 Supported Languages:
 - Abyssal
@@ -27,7 +30,10 @@ Supported Languages:
 - Sylvan
 - Terran
 - Undercommon
+- Unknown
 
 Future Plans:
-- Create command for adding customized langugages
--
+- Create command for adding customized langugages.
+
+Bugs:
+- Offline users are rarely sent the translated version of the language but this is hard to recreate.

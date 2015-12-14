@@ -2,7 +2,14 @@
 // By:       Anthony Tasca
 // Contact:  https://app.roll20.net/users/1000007/target
 
-//An enhancement on an enhacnement to the What Did He Say? script by Stephen S.
+/*
+This is an enhancement on "WhatSaywithUnknown.js" by derekkoehl which is an enhancement on "What Did He Say?" by Stephen S.
+
+New Key Features:
+- removed the language character sheets and implemented a command line interface for speaking langugages.
+- only user's who are online, and are speaking as a character who has that language in their character sheet, will be able understand the message.
+- cleaned up code and fixed up UI
+*/
 
 numbers = [];
 numbers["Common"] = ["1","2","3","4","5","6","7","8","9","0"];
@@ -36,21 +43,21 @@ vowel["Draconic"] = ["à","è","ì","õ","ù","ý","À","È","Ì","Ò","Ù","Ý"];
 vowel["Infernal"] = ["ô","‡","?","û","¦","î","Ô","?","F","Û","Î","?"];
 
 var roll20API = roll20API || {};
-var languageAvatar = "https://s3.amazonaws.com/files.d20.io/images/5538325/0OqDji-XRtAd9ilCHbTbOQ/thumb.png?1410447564"
 var whoSpoke = "";
 var whichLanguage = "Common";
 var languageSeed = 0;
 var gibberish = "";
 var playerIDGM = "-JwAP_Onk734JaP9UAOP";
 var separators = /[()\-\s,]+/;
+var spokenByIds;
 
 roll20API.languageData = [{
     Description: "Unknown", 
     languageSeed: 7,
     characters: whichLanguage
 },{
-	Description: "Abyssal",
-	languageSeed: 1, 
+    Description: "Abyssal",
+    languageSeed: 1, 
 	characters: "Infernal"
 },{
 	Description: "Aquan",
@@ -187,6 +194,9 @@ handleChat = function(msg) {
 	}else if(msg.content.indexOf('!Infernal ') == 0){
     	whichLanguage = 'Infernal';
 		msg.content = msg.content.replace("!Infernal ", "!");
+	}else if(msg.content.indexOf('!Unknown ') == 0){
+		whichLanguage = 'Unknown';
+		msg.content = msg.content.replace("!Unknown ", "!");
 	}
 	checkForLanguage(msg);
 };
@@ -204,14 +214,14 @@ checkForLanguage = function(msg) {
 checkForFluency = function(msg) {
 	var allPlayers = findObjs({_type: "player"}, {caseInsensitive: true});
 	if(findObjs({ _type: "character", name: msg.who }).length !== 0){
-		var spokenByIds = "";
+		spokenByIds = "";
 		_.each(allPlayers, function(p) {
 			var speakingas = p.get("speakingas");
 			if(speakingas != undefined){
 				var languages = getAttrByName(speakingas.split("|")[1], "prolanguages")
 				if(languages != undefined){
 					languages.split(separators).forEach(function(lang) {
-						if(lang == whichLanguage){
+						if(lang.toUpperCase() == whichLanguage.toUpperCase()){
 							spokenByIds += "," + p.get("id");
 						}
 					});
@@ -219,8 +229,8 @@ checkForFluency = function(msg) {
 			}
 		});
 	}else{
-		var languageError = "Speaker is not a character";
-		sendChat("API", languageError);
+		var languageError = "Only Characters May Speak Character Languages";
+		sendChat("API", "/w " + msg.who + " " + languageError);
 		return;
 	};
 	roll20API.fluencyArray = []
@@ -281,19 +291,19 @@ prepareSend = function(msg) {
 	};
 	var theSpeaker = _.findWhere(roll20API.fluencyArray, {isSpeaking: 1});
 	if(theSpeaker.speaks == -1){
-		sendChat(whoSpoke + " Pretending to Speak " + whichLanguage, gibberish);
+		sendChat(msg.who + " Pretending to Speak " + whichLanguage, gibberish);
 		return
 	};
-		
-	sendChat("yourself", "/w " + whoSpoke + " '" + sentence +"' in " + whichLanguage + ".");
-	sendChat("Lang To GM", "/w gm " + whoSpoke + " said '" + sentence + "' in " + whichLanguage);
+
+	sendChat(msg.who, "/w " + whoSpoke.substr(0,whoSpoke.indexOf(' ')) + " '" + sentence +"' in " + whichLanguage + ".");
+	sendChat("Languages2GM", "/w gm " + msg.who + " said '" + sentence + "' in " + whichLanguage);
 	
 	_.each(roll20API.fluencyArray, function(indexPlayers) {
 		if(indexPlayers.displayNameFull != whoSpoke){
 			if(indexPlayers.speaks != -1){
-				sendChat(whoSpoke, "/w " + indexPlayers.displayNameFull + " '" + sentence +"' in " + whichLanguage + ".");
+				sendChat(msg.who, "/w " + indexPlayers.displayNameShort + " '" + sentence +"' in " + whichLanguage + ".");
 			}else{
-				sendChat(whoSpoke, "/w " + indexPlayers.displayNameFull + " " + gibberish)
+				sendChat(msg.who, "/w " + indexPlayers.displayNameShort + " " + gibberish)
 			};    
 		};
 	});    
