@@ -217,17 +217,19 @@ checkForFluency = function(msg) {
 	if(findObjs({ _type: "character", name: msg.who }).length !== 0){
 		spokenByIds = "";
 		_.each(allPlayers, function(p) {
-			var speakingas = p.get("speakingas");
-			if(speakingas != undefined){
-				var languages = getAttrByName(speakingas.split("|")[1], "prolanguages")
-				if(languages != undefined){
-					languages.split(separators).forEach(function(lang) {
-						if(lang.toUpperCase() == whichLanguage.toUpperCase()){
-							spokenByIds += "," + p.get("id");
-						}
-					});
-				}
-			}
+			if(p.get("_online")){
+                var speakingas = p.get("speakingas");
+    			if(speakingas != undefined){
+    				var languages = getAttrByName(speakingas.split("|")[1], "prolanguages")
+    				if(languages != undefined){
+    					languages.split(separators).forEach(function(lang) {
+    						if(lang.toUpperCase() == whichLanguage.toUpperCase()){
+    							spokenByIds += "," + p.get("id");
+    						};
+    					});
+    				};
+    			};
+			};
 		});
 	}else{
 		var languageError = "Only characters may speak character languages";
@@ -236,28 +238,30 @@ checkForFluency = function(msg) {
 	};
 	roll20API.fluencyArray = []
 	_.each(allPlayers, function(indexPlayers) {
-		var isSpeaking = 0;
-		if(indexPlayers.get("_id") == msg.playerid){
-			isSpeaking = 1;
-			whoSpoke = indexPlayers.get("_displayname");
+		if(indexPlayers.get("_online")){
+    	    var isSpeaking = 0;
+        	if(indexPlayers.get("_id") == msg.playerid){
+    			isSpeaking = 1;
+    			whoSpoke = indexPlayers.get("_displayname");
+    		};
+    		var displayNameShort = indexPlayers.get("_displayname").substr(0,indexPlayers.get("_displayname").indexOf(' '));
+    		var displayNameFull = indexPlayers.get("_displayname");
+    		var playerID = indexPlayers.get("_id");
+    		var asWho = msg.who
+            if(spokenByIds.indexOf(indexPlayers.get("_id"))>-1){
+    		    var speaks = 1;
+        	}else{
+                var speaks = -1;
+        	}
+    		roll20API.fluencyArray.push({
+    			isSpeaking: isSpeaking,
+    			displayNameShort: displayNameShort,
+    			displayNameFull: displayNameFull,
+    			playerID: playerID,
+    			asWho: asWho,
+    			speaks: speaks
+    		});
 		};
-		var displayNameShort = indexPlayers.get("_displayname").substr(0,indexPlayers.get("_displayname").indexOf(' '));
-		var displayNameFull = indexPlayers.get("_displayname");
-		var playerID = indexPlayers.get("_id");
-		var asWho = msg.who
-        if(spokenByIds.indexOf(indexPlayers.get("_id"))>-1){
-		    var speaks = 1;
-    	}else{
-            var speaks = -1;
-    	}
-		roll20API.fluencyArray.push({
-			isSpeaking: isSpeaking,
-			displayNameShort: displayNameShort,
-			displayNameFull: displayNameFull,
-			playerID: playerID,
-			asWho: asWho,
-			speaks: speaks
-		});
 	});
 	prepareSend(msg);
 };
@@ -297,7 +301,6 @@ prepareSend = function(msg) {
 	};     
     
     if(whoSpoke.indexOf(" ")>-1){
-        log("hi");
         whoSpoke = whoSpoke.substring(0,whoSpoke.indexOf(" "));
     }
     
@@ -305,18 +308,18 @@ prepareSend = function(msg) {
 	sendChat("Languages2GM", "/w gm " + msg.who + " said '" + sentence + "' in " + whichLanguage);
 	
 	_.each(roll20API.fluencyArray, function(indexPlayers) {
-		if(indexPlayers.displayNameFull != whoSpoke){
-            if(indexPlayers.displayNameFull.indexOf(" ")>-1){
-                whoSpoke2 = indexPlayers.displayNameFull.substring(0,indexPlayers.displayNameFull.indexOf(" "));
-            }else{
-                whoSpoke2 = indexPlayers.displayNameFull;
-            }
-			if(indexPlayers.speaks != -1){
-				sendChat(msg.who, "/w " + whoSpoke2 + " '" + sentence +"' in " + whichLanguage + ".");
-			}else{
-				sendChat(msg.who, "/w " + whoSpoke2 + " " + gibberish)
-			};    
-		};
+            if(indexPlayers.displayNameFull != whoSpoke){
+                if(indexPlayers.displayNameFull.indexOf(" ")>-1){
+                    whoSpoke2 = indexPlayers.displayNameFull.substring(0,indexPlayers.displayNameFull.indexOf(" "));
+                }else{
+                    whoSpoke2 = indexPlayers.displayNameFull;
+                }
+                if(indexPlayers.speaks != -1){
+        			sendChat(msg.who, "/w " + whoSpoke2 + " '" + sentence +"' in " + whichLanguage + ".");
+        		}else{
+        			sendChat(msg.who, "/w " + whoSpoke2 + " " + gibberish)
+        		};    
+        	};
 	});    
 };
 
