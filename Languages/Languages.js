@@ -50,6 +50,7 @@ var gibberish = "";
 var playerIDGM = "-JwAP_Onk734JaP9UAOP";
 var separators = /[()\-\s,]+/;
 var spokenByIds;
+var whoSpoke2;
 
 roll20API.languageData = [{
     Description: "Unknown", 
@@ -229,7 +230,7 @@ checkForFluency = function(msg) {
 			}
 		});
 	}else{
-		var languageError = "Only Characters May Speak Character Languages";
+		var languageError = "Only characters may speak character languages";
 		sendChat("API", "/w " + msg.who + " " + languageError);
 		return;
 	};
@@ -262,7 +263,7 @@ checkForFluency = function(msg) {
 };
 
 prepareSend = function(msg) {
-	var sentence = msg.content.substr(1)
+	var sentence = msg.content.substr(1);
 
     if(sentence.length == 0) {
 		sendChat("API", "/w " + whoSpoke + " You didn't say anything.");
@@ -293,22 +294,28 @@ prepareSend = function(msg) {
 	if(theSpeaker.speaks == -1){
 		sendChat(msg.who + " Pretending to Speak " + whichLanguage, gibberish);
 		return
-	};
-    if(whoSpoke.substr(0,whoSpoke.indexOf(' '))==""){
-       var whoSpoke2= whoSpoke;
-    }else{
-    var whoSpoke2 = whoSpoke.substr(0,whoSpoke.indexOf(' '));
+	};     
+    
+    if(whoSpoke.indexOf(" ")>-1){
+        log("hi");
+        whoSpoke = whoSpoke.substring(0,whoSpoke.indexOf(" "));
     }
     
-	sendChat(msg.who, "/w " + whoSpoke2 + " '" + sentence +"' in " + whichLanguage + ".");
+	sendChat(msg.who, "/w " + whoSpoke + " '" + sentence +"' in " + whichLanguage + ".");
 	sendChat("Languages2GM", "/w gm " + msg.who + " said '" + sentence + "' in " + whichLanguage);
 	
 	_.each(roll20API.fluencyArray, function(indexPlayers) {
 		if(indexPlayers.displayNameFull != whoSpoke){
+            if(indexPlayers.displayNameFull.indexOf(" ")>-1){
+                log("hi");
+                whoSpoke2 = indexPlayers.displayNameFull.substring(0,indexPlayers.displayNameFull.indexOf(" "));
+            }else{
+                whoSpoke2 = indexPlayers.displayNameFull;
+            }
 			if(indexPlayers.speaks != -1){
-				sendChat(msg.who, "/w " + indexPlayers.displayNameShort + " '" + sentence +"' in " + whichLanguage + ".");
+				sendChat(msg.who, "/w " + whoSpoke2 + " '" + sentence +"' in " + whichLanguage + ".");
 			}else{
-				sendChat(msg.who, "/w " + indexPlayers.displayNameShort + " " + gibberish)
+				sendChat(msg.who, "/w " + whoSpoke2 + " " + gibberish)
 			};    
 		};
 	});    
