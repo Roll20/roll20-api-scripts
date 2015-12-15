@@ -56,7 +56,7 @@ roll20API.languageData = [{
     languageSeed: 1, 
     characters: "Infernal"
 },{
-	Description: "Aquan",
+    Description: "Aquan",
 	languageSeed: 1, 
 	characters: "Elven"
 },{
@@ -264,18 +264,18 @@ prepareSend = function(msg) {
 	sendChat("Languages2GM", "/w gm " + msg.who + " said '" + sentence + "' in " + whichLanguage);
 	
 	_.each(roll20API.fluencyArray, function(indexPlayers) {
-            if(indexPlayers.displayNameFull != whoSpoke){
-                if(indexPlayers.displayNameFull.indexOf(" ")>-1){
-                    whoSpoke2 = indexPlayers.displayNameFull.substring(0,indexPlayers.displayNameFull.indexOf(" "));
-                }else{
-                    whoSpoke2 = indexPlayers.displayNameFull;
-                }
-                if(indexPlayers.speaks != -1){
-        			sendChat(msg.who, "/w " + whoSpoke2 + " '" + sentence +"' in " + whichLanguage + ".");
-        		}else{
-        			sendChat(msg.who, "/w " + whoSpoke2 + " " + gibberish)
-        		};    
-        	};
+        if(indexPlayers.displayNameFull != whoSpoke && indexPlayers.displayNameShort != whoSpoke){
+            if(indexPlayers.displayNameFull.indexOf(" ")>-1){
+                whoSpoke2 = indexPlayers.displayNameFull.substring(0,indexPlayers.displayNameFull.indexOf(" "));
+            }else{
+                whoSpoke2 = indexPlayers.displayNameFull;
+            }
+            if(indexPlayers.speaks != -1){
+        		sendChat(msg.who, "/w " + whoSpoke2 + " '" + sentence +"' in " + whichLanguage + ".");
+        	}else{
+        		sendChat(msg.who, "/w " + whoSpoke2 + " " + gibberish)
+        	};    
+        };
 	});    
 };
 
