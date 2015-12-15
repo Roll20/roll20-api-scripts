@@ -139,10 +139,43 @@ handleChat = function(msg) {
 	if (msg.type != "api"){
 	    return;
 	}
+    
+    if(msg.content.toLowerCase().indexOf("setlanguagetag")==1 && playerIsGM(msg.playerid)){
+        if(msg.content.indexOf(" ")>0 && msg.content.indexOf(" ")<msg.content.length){
+            var tempLanguageTag = msg.content.substring(msg.content.indexOf(" ")+1, msg.content.length);
+            var flag = false;
+            var allCharacters = findObjs({_type: "character"}, {caseInsensitive: true});
+            _.each(allCharacters, function(c) {
+	        	if(!flag){
+    	        	var languages = getAttrByName(c.id, tempLanguageTag);
+            		if(languages == undefined){
+    	        		flag = true;
+		        	};
+            	};
+        	});
+	        if(!flag){
+                languageTag = tempLanguageTag;
+                var languageMessage = "language attribute name set to '" + languageTag + "'";
+                sendChat("Languages Script", "/w gm " + languageMessage);
+    	        return;
+	        }else{
+                log("The previous error was handled properly and there is nothing to worry about")
+                var languageMessage = "'" + tempLanguageTag + "' is not the name of an attribute in your character sheet";
+                sendChat("Languages Script", "/w gm " + languageMessage);
+                return;   
+	        }
+        }else{
+            var languageError = "invalid language tag";
+            sendChat("Languages Script", "/w gm " + languageError);
+		    return;
+        }
+    }else if(!playerIsGM(msg.playerid)){
+        sendChat("Languages Script", "/w " + msg.who + " access denied")
+    }
 
     var flag = false;
     _.each(roll20API.languageData, function(eachLanguage) {
-    	if(msg.content.toLowerCase().indexOf(eachLanguage.Description.toLowerCase())>0){
+    	if(msg.content.toLowerCase().indexOf(eachLanguage.Description.toLowerCase())==1){
             flag = true;
 			whichLanguage = eachLanguage.Description;
         	msg.content = msg.content.replace(eachLanguage.Description, "");
@@ -176,13 +209,19 @@ checkForFluency = function(msg) {
     							spokenByIds += "," + p.get("id");
     						};
     					});
-					};
+					}else if(findObjs({ _type: "character", _id: speakingas }).length !== 0){
+                        sendChat("Languages Script", "This script is not compatable with your character sheets. Use this command to fix: !setlanguagetag [character sheet language attribute name]");
+    				    log("This script is not compatable with your character sheets. Use this command to fix: !setlanguagetag [character sheet language attribute name]");   
+		                return;
+					}else if(playerIsGM(p.get("id"))){
+                        log("The previous error was handled properly and there is nothing to worry about");
+					}
     			};
 			};
 		});
 	}else{
 		var languageError = "Only characters or GMs may speak character languages";
-		sendChat("API", "/w " + msg.who + " " + languageError);
+		sendChat("Languages Script", "/w " + msg.who + " " + languageError);
 		return;
 	};
 	roll20API.fluencyArray = []
@@ -221,7 +260,7 @@ prepareSend = function(msg) {
 	var sentence = msg.content.substr(1);
 
     if(sentence.length == 0) {
-		sendChat("API", "/w " + whoSpoke + " You didn't say anything.");
+		sendChat("Languages Scripts", "/w " + whoSpoke + " You didn't say anything.");
 		return;
 	};
     
@@ -256,7 +295,7 @@ prepareSend = function(msg) {
     }
     
 	sendChat(msg.who, "/w " + whoSpoke + " '" + sentence +"' in " + whichLanguage + ".");
-	sendChat("Languages2GM", "/w gm " + msg.who + " said '" + sentence + "' in " + whichLanguage);
+	sendChat("Languages Scripts", "/w gm " + msg.who + " said '" + sentence + "' in " + whichLanguage);
 	
 	_.each(roll20API.fluencyArray, function(indexPlayers) {
         if(indexPlayers.displayNameFull != whoSpoke && indexPlayers.displayNameShort != whoSpoke){
@@ -319,6 +358,7 @@ on("ready", function() {
     	};
 	});
 	if(flag){
+        log("The previous error was handled properly and there is nothing to worry about");
         flag = false;
 		languageTag = "prolanguages";
 		_.each(allCharacters, function(c) {
@@ -330,7 +370,7 @@ on("ready", function() {
         	};
 	    });
         if(flag){
-        	sendChat("Languages Script", "Failed to load script.. This script is not compatable with your character sheets, please contact the creator");
+        	sendChat("Languages Script", "Failed to load script.. This script is not compatable with your character sheets. Use this command to fix: !setlanguagetag [language tag name].");
     	};
 	};
 });
