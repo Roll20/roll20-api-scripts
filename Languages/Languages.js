@@ -3,7 +3,7 @@
 // Contact:  https://app.roll20.net/users/1000007/target
 
 /*
-This is an enhancement on "WhatSaywithUnknown.js" by derekkoehl which is an enhancement on "What Did He Say?" by Stephen S.
+This is a re-work of "WhatSaywithUnknown.js" by derekkoehl which is an enhancement on "What Did He Say?" by Stephen S.
 */
 
 numbers = [];
@@ -46,6 +46,7 @@ var playerIDGM = "-JwAP_Onk734JaP9UAOP";
 var separators = /[()\-\s,]+/;
 var spokenByIds;
 var whoSpoke2;
+var languageTag = "languages";
 
 roll20API.languageData = [{
     Description: "Unknown", 
@@ -57,7 +58,7 @@ roll20API.languageData = [{
     characters: "Infernal"
 },{
     Description: "Aquan",
-	languageSeed: 1, 
+    languageSeed: 1, 
 	characters: "Elven"
 },{
 	Description: "Auran",   
@@ -167,23 +168,14 @@ checkForFluency = function(msg) {
 			if(p.get("_online")){
                 var speakingas = p.get("speakingas");
     			if(speakingas != undefined){
-    				var languages = getAttrByName(speakingas.split("|")[1], "prolanguages");
+    				var languages = getAttrByName(speakingas.split("|")[1], languageTag);
     				if(languages != undefined){
     					languages.split(separators).forEach(function(lang) {
     						if(lang.toUpperCase() == whichLanguage.toUpperCase()){
     							spokenByIds += "," + p.get("id");
     						};
     					});
-    				}else {
-        			    languages = getAttrByName(speakingas.split("|")[1], "languages");
-                        if(languages != undefined){
-            				languages.split(separators).forEach(function(lang) {
-        						if(lang.toUpperCase() == whichLanguage.toUpperCase()){
-        							spokenByIds += "," + p.get("id");
-        						};
-        					});
-                        };
-    				};
+					};
     			};
 			};
 		});
@@ -206,7 +198,7 @@ checkForFluency = function(msg) {
     		var asWho = msg.who
             if(spokenByIds.indexOf(indexPlayers.get("_id"))>-1){
     		    var speaks = 1;
-        	}else if(playerIsGM((indexPlayers.get("_id"))) && findObjs({ _type: "character", name: msg.who }).length==0){
+        	}else if(playerIsGM((indexPlayers.get("_id")))){
                 var speaks = 1;
         	}else{
                 var speaks = -1;   
@@ -254,7 +246,7 @@ prepareSend = function(msg) {
 	};
 	var theSpeaker = _.findWhere(roll20API.fluencyArray, {isSpeaking: 1});
 	if(theSpeaker.speaks == -1){
-		sendChat(msg.who + " Pretending to Speak " + whichLanguage, gibberish);
+		sendChat(msg.who + " Pretending to speak " + whichLanguage, gibberish);
 		return
 	};     
     
@@ -314,3 +306,30 @@ customRandom = function(nseed) {
 };
 
 on('chat:message', handleChat);
+on("ready", function() {
+	var flag = false;
+    var allCharacters = findObjs({_type: "character"}, {caseInsensitive: true});
+	_.each(allCharacters, function(c) {
+		if(!flag){
+    		var languages = getAttrByName(c.id, languageTag);
+    		if(languages == undefined){
+    			flag = true;
+			};
+    	};
+	});
+	if(flag){
+        flag = false;
+		languageTag = "prolanguages";
+		_.each(allCharacters, function(c) {
+    		if(!flag){
+        		var languages = getAttrByName(c.id, languageTag);
+        		if(languages == undefined){
+        			flag = true;
+    			};
+        	};
+	    });
+        if(flag){
+        	sendChat("Languages Script", "Failed to load script.. This script is not compatable with your character sheets, please contact the creator");
+    	};
+	};
+});
