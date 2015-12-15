@@ -4,11 +4,6 @@
 
 /*
 This is an enhancement on "WhatSaywithUnknown.js" by derekkoehl which is an enhancement on "What Did He Say?" by Stephen S.
-
-New Key Features:
-- removed the language character sheets and implemented a command line interface for speaking langugages.
-- only user's who are online, and are speaking as a character who has that language in their character sheet, will be able understand the message.
-- cleaned up code and fixed up UI
 */
 
 numbers = [];
@@ -59,9 +54,9 @@ roll20API.languageData = [{
 },{
     Description: "Abyssal",
     languageSeed: 1, 
-	characters: "Infernal"
+    characters: "Infernal"
 },{
-	Description: "Aquan",
+    Description: "Aquan",
 	languageSeed: 1, 
 	characters: "Elven"
 },{
@@ -132,107 +127,68 @@ roll20API.languageData = [{
 	Description: "Undercommon", 
 	languageSeed: 5, 
 	characters: "Elven"
+},{
+    Description: "ThievesCant", 
+	languageSeed: 3, 
+	characters: "Common"
 }];
 
-handleChat = function(msg) {
+handleChat = function(msg) {	
 	if (msg.type != "api"){
 	    return;
 	}
-	if(msg.content.indexOf('!Common ') == 0){
-		whichLanguage = 'Common';
-		msg.content = msg.content.replace("!Common ", "!");
-	}else if(msg.content.indexOf('!Dwarven ') == 0){
-		whichLanguage = 'Dwarven';
-		msg.content = msg.content.replace("!Dwarven ", "!");
-	}else if(msg.content.indexOf('!Elven ') == 0){
-		whichLanguage = 'Elven';
-		msg.content = msg.content.replace("!Elven ", "!");
-	}else if(msg.content.indexOf('!Sylvan ') == 0){
-		whichLanguage = 'Sylvan';
-		msg.content = msg.content.replace("!Sylvan ", "!");
-	}else if(msg.content.indexOf('!Orc ') == 0){
-		whichLanguage = 'Orc';
-		msg.content = msg.content.replace("!Orc ", "!");
-	}else if(msg.content.indexOf('!Terran ') == 0){
-    	whichLanguage = 'Terran';
-		msg.content = msg.content.replace("!Terran ", "!");
-	}else if(msg.content.indexOf('!Undercommon ') == 0){
-		whichLanguage = 'Undercommon';
-		msg.content = msg.content.replace("!Undercommon ", "!");
-	}else if(msg.content.indexOf('!Halfling ') == 0){
-    	whichLanguage = 'Halfling';
-		msg.content = msg.content.replace("!Halfling ", "!");
-	}else if(msg.content.indexOf('!Gnoll ') == 0){
-    	whichLanguage = 'Gnoll';
-		msg.content = msg.content.replace("!Gnoll ", "!");
-	}else if(msg.content.indexOf('!Goblin ') == 0){
-		whichLanguage = 'Goblin';
-		msg.content = msg.content.replace("!Goblin ", "!");
-	}else if(msg.content.indexOf('!Gnome ') == 0){
-        whichLanguage = 'Gnome';
-		msg.content = msg.content.replace("!Gnome ", "!");
-	}else if(msg.content.indexOf('!Giant ') == 0){
-    	whichLanguage = 'Giant';
-		msg.content = msg.content.replace("!Giant ", "!");
-	}else if(msg.content.indexOf('!Celestial ') == 0){
-		whichLanguage = 'Celestial';
-		msg.content = msg.content.replace("!Celestial ", "!");
-	}else if(msg.content.indexOf('!Druidic ') == 0){
-        whichLanguage = 'Druidic';
-		msg.content = msg.content.replace("!Druidic ", "!");
-	}else if(msg.content.indexOf('!Draconic ') == 0){
-		whichLanguage = 'Draconic';
-		msg.content = msg.content.replace("!Draconic ", "!");
-	}else if(msg.content.indexOf('!Auron ') == 0){
-    	whichLanguage = 'Auron';
-		msg.content = msg.content.replace("!Auron ", "!");
-	}else if(msg.content.indexOf('!Aquan ') == 0){
-        whichLanguage = 'Aquan';
-		msg.content = msg.content.replace("!Aquan ", "!");
-	}else if(msg.content.indexOf('!Abyssal ') == 0){
-		whichLanguage = 'Abyssal';
-		msg.content = msg.content.replace("!Abyssal ", "!");
-	}else if(msg.content.indexOf('!Infernal ') == 0){
-    	whichLanguage = 'Infernal';
-		msg.content = msg.content.replace("!Infernal ", "!");
-	}else if(msg.content.indexOf('!Unknown ') == 0){
-		whichLanguage = 'Unknown';
-		msg.content = msg.content.replace("!Unknown ", "!");
-	}
-	checkForLanguage(msg);
-};
 
-checkForLanguage = function(msg) {
-	_.each(roll20API.languageData, function(eachLanguage) {
-		if(whichLanguage == eachLanguage.Description){
-			languageSeed = eachLanguage.languageSeed;
-			characters = eachLanguage.characters;
+    var flag = false;
+    _.each(roll20API.languageData, function(eachLanguage) {
+    	if(msg.content.toLowerCase().indexOf(eachLanguage.Description.toLowerCase())>0){
+            flag = true;
+			whichLanguage = eachLanguage.Description;
+        	msg.content = msg.content.replace(eachLanguage.Description, "");
+    	    msg.content = msg.content.replace(eachLanguage.Description.toLowerCase(), "");
+            msg.content = msg.content.replace(eachLanguage.Description.toUpperCase(), "");
+            languageSeed = eachLanguage.languageSeed;
+    		characters = eachLanguage.characters;
 		};
 	});
+    
+    if(!flag){
+		return;
+    };
+    
 	checkForFluency(msg);
+    whichLanguage = 'Common';
 };
 
 checkForFluency = function(msg) {
 	var allPlayers = findObjs({_type: "player"}, {caseInsensitive: true});
-	if(findObjs({ _type: "character", name: msg.who }).length !== 0){
+	if(findObjs({ _type: "character", name: msg.who }).length !== 0 || playerIsGM(msg.playerid)){
 		spokenByIds = "";
 		_.each(allPlayers, function(p) {
 			if(p.get("_online")){
                 var speakingas = p.get("speakingas");
     			if(speakingas != undefined){
-    				var languages = getAttrByName(speakingas.split("|")[1], "prolanguages")
+    				var languages = getAttrByName(speakingas.split("|")[1], "prolanguages");
     				if(languages != undefined){
     					languages.split(separators).forEach(function(lang) {
     						if(lang.toUpperCase() == whichLanguage.toUpperCase()){
     							spokenByIds += "," + p.get("id");
     						};
     					});
+    				}else {
+        			    languages = getAttrByName(speakingas.split("|")[1], "languages");
+                        if(languages != undefined){
+            				languages.split(separators).forEach(function(lang) {
+        						if(lang.toUpperCase() == whichLanguage.toUpperCase()){
+        							spokenByIds += "," + p.get("id");
+        						};
+        					});
+                        };
     				};
     			};
 			};
 		});
 	}else{
-		var languageError = "Only characters may speak character languages";
+		var languageError = "Only characters or GMs may speak character languages";
 		sendChat("API", "/w " + msg.who + " " + languageError);
 		return;
 	};
@@ -250,8 +206,10 @@ checkForFluency = function(msg) {
     		var asWho = msg.who
             if(spokenByIds.indexOf(indexPlayers.get("_id"))>-1){
     		    var speaks = 1;
+        	}else if(playerIsGM((indexPlayers.get("_id"))) && findObjs({ _type: "character", name: msg.who }).length==0){
+                var speaks = 1;
         	}else{
-                var speaks = -1;
+                var speaks = -1;   
         	}
     		roll20API.fluencyArray.push({
     			isSpeaking: isSpeaking,
@@ -308,18 +266,18 @@ prepareSend = function(msg) {
 	sendChat("Languages2GM", "/w gm " + msg.who + " said '" + sentence + "' in " + whichLanguage);
 	
 	_.each(roll20API.fluencyArray, function(indexPlayers) {
-            if(indexPlayers.displayNameFull != whoSpoke){
-                if(indexPlayers.displayNameFull.indexOf(" ")>-1){
-                    whoSpoke2 = indexPlayers.displayNameFull.substring(0,indexPlayers.displayNameFull.indexOf(" "));
-                }else{
-                    whoSpoke2 = indexPlayers.displayNameFull;
-                }
-                if(indexPlayers.speaks != -1){
-        			sendChat(msg.who, "/w " + whoSpoke2 + " '" + sentence +"' in " + whichLanguage + ".");
-        		}else{
-        			sendChat(msg.who, "/w " + whoSpoke2 + " " + gibberish)
-        		};    
-        	};
+        if(indexPlayers.displayNameFull != whoSpoke && indexPlayers.displayNameShort != whoSpoke){
+            if(indexPlayers.displayNameFull.indexOf(" ")>-1){
+                whoSpoke2 = indexPlayers.displayNameFull.substring(0,indexPlayers.displayNameFull.indexOf(" "));
+            }else{
+                whoSpoke2 = indexPlayers.displayNameFull;
+            }
+            if(indexPlayers.speaks != -1){
+        		sendChat(msg.who, "/w " + whoSpoke2 + " '" + sentence +"' in " + whichLanguage + ".");
+        	}else{
+        		sendChat(msg.who, "/w " + whoSpoke2 + " " + gibberish)
+        	};    
+        };
 	});    
 };
 
