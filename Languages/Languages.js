@@ -132,74 +132,103 @@ roll20API.languageData = [{
 	Description: "Undercommon", 
 	languageSeed: 5, 
 	characters: "Elven"
+},{
+    Description: "ThievesCant", 
+	languageSeed: 3, 
+	characters: "Common"
 }];
 
 handleChat = function(msg) {
 	if (msg.type != "api"){
 	    return;
 	}
-	if(msg.content.indexOf('!Common ') == 0){
+	if(msg.content.toLowerCase().indexOf('!common ') == 0){
 		whichLanguage = 'Common';
-		msg.content = msg.content.replace("!Common ", "!");
-	}else if(msg.content.indexOf('!Dwarven ') == 0){
+		msg.content = msg.content.replace("!common ", "!");
+    	msg.content = msg.content.replace("!common ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!dwarven ') == 0){
 		whichLanguage = 'Dwarven';
 		msg.content = msg.content.replace("!Dwarven ", "!");
-	}else if(msg.content.indexOf('!Elven ') == 0){
+        msg.content = msg.content.replace("!dwarven ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!elven ') == 0){
 		whichLanguage = 'Elven';
 		msg.content = msg.content.replace("!Elven ", "!");
-	}else if(msg.content.indexOf('!Sylvan ') == 0){
+        msg.content = msg.content.replace("!elven ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!sylvan ') == 0){
 		whichLanguage = 'Sylvan';
 		msg.content = msg.content.replace("!Sylvan ", "!");
-	}else if(msg.content.indexOf('!Orc ') == 0){
+        msg.content = msg.content.replace("!sylvan ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!orc ') == 0){
 		whichLanguage = 'Orc';
 		msg.content = msg.content.replace("!Orc ", "!");
-	}else if(msg.content.indexOf('!Terran ') == 0){
+        msg.content = msg.content.replace("!orc ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!terran ') == 0){
     	whichLanguage = 'Terran';
 		msg.content = msg.content.replace("!Terran ", "!");
-	}else if(msg.content.indexOf('!Undercommon ') == 0){
+        msg.content = msg.content.replace("!terran ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!undercommon ') == 0){
 		whichLanguage = 'Undercommon';
 		msg.content = msg.content.replace("!Undercommon ", "!");
-	}else if(msg.content.indexOf('!Halfling ') == 0){
+        msg.content = msg.content.replace("!undercommon ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!halfling ') == 0){
     	whichLanguage = 'Halfling';
 		msg.content = msg.content.replace("!Halfling ", "!");
-	}else if(msg.content.indexOf('!Gnoll ') == 0){
+        msg.content = msg.content.replace("!halfling ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!gnoll ') == 0){
     	whichLanguage = 'Gnoll';
 		msg.content = msg.content.replace("!Gnoll ", "!");
-	}else if(msg.content.indexOf('!Goblin ') == 0){
+        msg.content = msg.content.replace("!gnoll ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!goblin ') == 0){
 		whichLanguage = 'Goblin';
 		msg.content = msg.content.replace("!Goblin ", "!");
-	}else if(msg.content.indexOf('!Gnome ') == 0){
+        msg.content = msg.content.replace("!goblin ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!gnome ') == 0){
         whichLanguage = 'Gnome';
 		msg.content = msg.content.replace("!Gnome ", "!");
-	}else if(msg.content.indexOf('!Giant ') == 0){
+        msg.content = msg.content.replace("!gnome ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!giant ') == 0){
     	whichLanguage = 'Giant';
 		msg.content = msg.content.replace("!Giant ", "!");
-	}else if(msg.content.indexOf('!Celestial ') == 0){
+        msg.content = msg.content.replace("!giant ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!celestial ') == 0){
 		whichLanguage = 'Celestial';
 		msg.content = msg.content.replace("!Celestial ", "!");
-	}else if(msg.content.indexOf('!Druidic ') == 0){
+        msg.content = msg.content.replace("!celestial ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!druidic ') == 0){
         whichLanguage = 'Druidic';
 		msg.content = msg.content.replace("!Druidic ", "!");
-	}else if(msg.content.indexOf('!Draconic ') == 0){
+        msg.content = msg.content.replace("!druidic ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!draconic ') == 0){
 		whichLanguage = 'Draconic';
 		msg.content = msg.content.replace("!Draconic ", "!");
-	}else if(msg.content.indexOf('!Auron ') == 0){
+        msg.content = msg.content.replace("!draconic ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!auron ') == 0){
     	whichLanguage = 'Auron';
 		msg.content = msg.content.replace("!Auron ", "!");
-	}else if(msg.content.indexOf('!Aquan ') == 0){
+        msg.content = msg.content.replace("!auron ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!aquan ') == 0){
         whichLanguage = 'Aquan';
 		msg.content = msg.content.replace("!Aquan ", "!");
-	}else if(msg.content.indexOf('!Abyssal ') == 0){
+        msg.content = msg.content.replace("!aquan ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!abyssal ') == 0){
 		whichLanguage = 'Abyssal';
 		msg.content = msg.content.replace("!Abyssal ", "!");
-	}else if(msg.content.indexOf('!Infernal ') == 0){
+        msg.content = msg.content.replace("!abyssal ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!infernal ') == 0){
     	whichLanguage = 'Infernal';
 		msg.content = msg.content.replace("!Infernal ", "!");
-	}else if(msg.content.indexOf('!Unknown ') == 0){
+        msg.content = msg.content.replace("!infernal ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!unknown ') == 0){
 		whichLanguage = 'Unknown';
 		msg.content = msg.content.replace("!Unknown ", "!");
+        msg.content = msg.content.replace("!unknown ", "!");
+	}else if(msg.content.toLowerCase().indexOf('!thievescant ') == 0){
+    	whichLanguage = 'ThievesCant';
+		msg.content = msg.content.replace("!Thievescant ", "!");
+        msg.content = msg.content.replace("!thievescant ", "!");
 	}
 	checkForLanguage(msg);
+    whichLanguage = 'Common';
 };
 
 checkForLanguage = function(msg) {
