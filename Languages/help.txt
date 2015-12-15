@@ -1,34 +1,34 @@
 Introduction:
 This script is a re-work of "WhatSaywithUnknown.js" by derekkoehl which is an enhancement on "What Did He Say?" by Stephen S.
 
-Command:
-!theLanguage {theText}	
+Forum Post:
+https://app.roll20.net/forum/post/2723217/script-languages
 
+Command 1:
+!theLanguage {theText}
+Example:
+!Draconic hello there dragonborn
 Result:
--If the player who types this is speaking as a character that has theLanguage (under languages on their character sheet), they will say {theText} in theLanguage . Any player who is speaking as a character that also has theLanguage on their character sheet will be whispered {theText}. Others will be whispered symbols representing the language.
+- If the player who types this is speaking as a character that has Draconic (under languages on their character sheet), they will say "hello there dragonborn" in Draconic. Any player who is speaking as a character that also has Draconic on their character sheet will be whispered "hello there dragonborn". Others will be whispered symbols representing the language.
+- If the player who types this is speaking as a character that does not have Draconic(under languages on their character sheet), they will "pretend to speak" Draconic.
+- If the player who types this is speaking as a player, they will be notified that players cannot speak character languages.
+- GMs can speak any language with any player or character
 
--If the player who types this is speaking as a character that does not have theLanguage (under languages on their character sheet), they will "Pretend to Speak" theLanguage .
-
--If the player who types this is speaking as a player, they will be notified that players cannot speak character languages.
-
--The GM is whispered {theText}.
-
-Command:
-!setLanguageTag {arg}
-
+Command 2:
+!setLanguageTag {attribute}
+Example:
+!setLanguageTag playerlanguages
 Result:
--If the player who types this is a GM and {arg} is an attribute that exists on the character sheets, the script will associate that attribute with languages
+- If the player who types this is a GM and playerlanguages is an attribute that exists on the character sheets, the script will use that attribute when it searches for player's languages
 
 Languages:
-Abyssal	Aquan	Auran	Celestial	Common	Draconic	Druidic
-Druidic	Dwarven	Elven	Giant	Gnome	Goblin	Gnoll
-Halfling	Ignan	Infernal	Orc	Sylvan	Terran	Undercommon
+Abyssal Aquan Auran Celestial Common Draconic Druidic
+Druidic Dwarven Elven Giant Gnome Goblin Gnoll
+Halfling Ignan Infernal Orc Sylvan Terran ThievesCant
+Undercommon Unknown
 
 Future Plans:
-- Create command for adding customized languages
-
-Bugs:
-- Offline users are sometimes sent the translated version of a message
+Create command for adding customized languages
 
 Notes:
-Please let me know if you find any bugs or would like to see any features added to this project!
+Please contact me if you find any bugs or have ideas for features that I can add to this script
