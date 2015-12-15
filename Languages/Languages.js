@@ -4,7 +4,7 @@
 
 /*
 This is a re-work of "WhatSaywithUnknown.js" by derekkoehl which is an enhancement on "What Did He Say?" by Stephen S.
-More information and a link to the credited work is provided here: https://app.roll20.net/forum/post/2719144/script-languages
+More information and a link to the credited work is provided here: https://app.roll20.net/forum/post/2723217/script-languages
 */
 
 numbers = [];

@@ -13,6 +13,12 @@ Result:
 
 -The GM is whispered {theText}.
 
+Command:
+!setLanguageTag {arg}
+
+Result:
+-If the player who types this is a GM and {arg} is an attribute that exists on the character sheets, the script will associate that attribute with languages
+
 Languages:
 Abyssal	Aquan	Auran	Celestial	Common	Draconic	Druidic
 Druidic	Dwarven	Elven	Giant	Gnome	Goblin	Gnoll
