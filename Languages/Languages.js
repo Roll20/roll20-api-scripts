@@ -133,8 +133,7 @@ roll20API.languageData = [{
 	characters: "Common"
 }];
 
-handleChat = function(msg) {
-	
+handleChat = function(msg) {	
 	if (msg.type != "api"){
 	    return;
 	}
@@ -147,6 +146,8 @@ handleChat = function(msg) {
         	msg.content = msg.content.replace(eachLanguage.Description, "");
     	    msg.content = msg.content.replace(eachLanguage.Description.toLowerCase(), "");
             msg.content = msg.content.replace(eachLanguage.Description.toUpperCase(), "");
+            languageSeed = eachLanguage.languageSeed;
+    		characters = eachLanguage.characters;
 		};
 	});
     
@@ -154,41 +155,40 @@ handleChat = function(msg) {
 		return;
     };
     
-	checkForLanguage(msg);
-    whichLanguage = 'Common';
-};
-
-checkForLanguage = function(msg) {
-	_.each(roll20API.languageData, function(eachLanguage) {
-		if(whichLanguage == eachLanguage.Description){
-			languageSeed = eachLanguage.languageSeed;
-			characters = eachLanguage.characters;
-		};
-	});
 	checkForFluency(msg);
+    whichLanguage = 'Common';
 };
 
 checkForFluency = function(msg) {
 	var allPlayers = findObjs({_type: "player"}, {caseInsensitive: true});
-	if(findObjs({ _type: "character", name: msg.who }).length !== 0){
+	if(findObjs({ _type: "character", name: msg.who }).length !== 0 || playerIsGM(msg.playerid)){
 		spokenByIds = "";
 		_.each(allPlayers, function(p) {
 			if(p.get("_online")){
                 var speakingas = p.get("speakingas");
     			if(speakingas != undefined){
-    				var languages = getAttrByName(speakingas.split("|")[1], "prolanguages")
+    				var languages = getAttrByName(speakingas.split("|")[1], "prolanguages");
     				if(languages != undefined){
     					languages.split(separators).forEach(function(lang) {
     						if(lang.toUpperCase() == whichLanguage.toUpperCase()){
     							spokenByIds += "," + p.get("id");
     						};
     					});
+    				}else {
+        			    languages = getAttrByName(speakingas.split("|")[1], "languages");
+                        if(languages != undefined){
+            				languages.split(separators).forEach(function(lang) {
+        						if(lang.toUpperCase() == whichLanguage.toUpperCase()){
+        							spokenByIds += "," + p.get("id");
+        						};
+        					});
+                        };
     				};
     			};
 			};
 		});
 	}else{
-		var languageError = "Only characters may speak character languages";
+		var languageError = "Only characters or GMs may speak character languages";
 		sendChat("API", "/w " + msg.who + " " + languageError);
 		return;
 	};
@@ -206,8 +206,10 @@ checkForFluency = function(msg) {
     		var asWho = msg.who
             if(spokenByIds.indexOf(indexPlayers.get("_id"))>-1){
     		    var speaks = 1;
+        	}else if(playerIsGM((indexPlayers.get("_id"))) && findObjs({ _type: "character", name: msg.who }).length==0){
+                var speaks = 1;
         	}else{
-                var speaks = -1;
+                var speaks = -1;   
         	}
     		roll20API.fluencyArray.push({
     			isSpeaking: isSpeaking,
