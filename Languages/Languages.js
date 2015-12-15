@@ -3,39 +3,40 @@
 // Contact:  https://app.roll20.net/users/1000007/target
 
 /*
-This is an enhancement on "WhatSaywithUnknown.js" by derekkoehl which is an enhancement on "What Did He Say?" by Stephen S.
+This is a re-work of "WhatSaywithUnknown.js" by derekkoehl which is an enhancement on "What Did He Say?" by Stephen S.
+More information and a link to the credited work is provided here: https://app.roll20.net/forum/post/2719144/script-languages
 */
 
 numbers = [];
 numbers["Common"] = ["1","2","3","4","5","6","7","8","9","0"];
-numbers["Dwarven"] = ["·",":","?","+","?","?·","?:","??","?+","°"];
-numbers["Elven"] = ["·",":","?","+","¤","¤·","¤:","¤?","¤+","°"];
-numbers["Draconic"] = ["·",":","?","+","×","×·","×:","×?","×+","°"];
-numbers["Infernal"] = ["·",":","?","+","?","?·","?:","??","?+","°"];
+numbers["Dwarven"] = ["Â·",":","?","+","?","?Â·","?:","??","?+","Â°"];
+numbers["Elven"] = ["Â·",":","?","+","Â¤","Â¤Â·","Â¤:","Â¤?","Â¤+","Â°"];
+numbers["Draconic"] = ["Â·",":","?","+","Ã—","Ã—Â·","Ã—:","Ã—?","Ã—+","Â°"];
+numbers["Infernal"] = ["Â·",":","?","+","?","?Â·","?:","??","?+","Â°"];
 symbols = [];
-symbols["Common"] = ["!","@","#","$","%","¦","&","*","(",")","`","-","=","~","_","+","[","]","{","}","|",";","'",":",",",".","/","<",">","?"];
-symbols["Dwarven"] = ["?","»","‡","?","‰","¦","?","¬","|","]","`","-","?","?","_","=","|","|","|","|","|","|","^","|","-","•","||","[","]","Ž"]; 
-symbols["Elven"] = ["~","•","?","§","‰","¦","8","F","}","|","`","-","?","˜","_","†","]","[",")","(","|","|","'","?","˜","·","?", "?","?","¿"];
-symbols["Draconic"] = ["~","•","?","§","‰","¦","8","F","}","|","`","-","?","˜","_","†","]","[",")","(","|","|","'","?","˜","·","?", "?","?","¿"];
-symbols["Infernal"] = ["?","•","‡","§","‰","¦","?","F","|","]","`","-","?","˜","_","?","|","|",")","(","|","|","'","?","˜","•","||","?","?","¿"];
+symbols["Common"] = ["!","@","#","$","%","Â¦","&","*","(",")","`","-","=","~","_","+","[","]","{","}","|",";","'",":",",",".","/","<",">","?"];
+symbols["Dwarven"] = ["?","Â»","â€¡","?","â€°","Â¦","?","Â¬","|","]","`","-","?","?","_","=","|","|","|","|","|","|","^","|","-","â€¢","||","[","]","Å½"]; 
+symbols["Elven"] = ["~","â€¢","?","Â§","â€°","Â¦","8","F","}","|","`","-","?","Ëœ","_","â€ ","]","[",")","(","|","|","'","?","Ëœ","Â·","?", "?","?","Â¿"];
+symbols["Draconic"] = ["~","â€¢","?","Â§","â€°","Â¦","8","F","}","|","`","-","?","Ëœ","_","â€ ","]","[",")","(","|","|","'","?","Ëœ","Â·","?", "?","?","Â¿"];
+symbols["Infernal"] = ["?","â€¢","â€¡","Â§","â€°","Â¦","?","F","|","]","`","-","?","Ëœ","_","?","|","|",")","(","|","|","'","?","Ëœ","â€¢","||","?","?","Â¿"];
 lower = [];
 lower["Common"] = ["b","c","d","f","g","h","j","k","l","m","n","p","q","r","s","t","v","w","x","z"," "];
-lower["Dwarven"] = ["?","?","?","?","¬","¦","G","?","?","?","‡","?","[","]","|","||","??","VV","M","|","|"]; 
-lower["Elven"] = ["?","?","?","?","f","ç","þ","Þ","q","r","?","?","~","?","?","?","?","?","?","?"," '"];
-lower["Draconic"] = ["v","c","x","?","þ","s","?","ð","l","?","n","?","q","r","h","‡","b","w","t","d"," "];
-lower["Infernal"] = ["?","?","?","?","?","ç","þ","?","q","?","?","Þ","?","?","?","?","?","?","?","µ","' "];
+lower["Dwarven"] = ["?","?","?","?","Â¬","Â¦","G","?","?","?","â€¡","?","[","]","|","||","??","VV","M","|","|"]; 
+lower["Elven"] = ["?","?","?","?","f","Ã§","Ã¾","Ãž","q","r","?","?","~","?","?","?","?","?","?","?"," '"];
+lower["Draconic"] = ["v","c","x","?","Ã¾","s","?","Ã°","l","?","n","?","q","r","h","â€¡","b","w","t","d"," "];
+lower["Infernal"] = ["?","?","?","?","?","Ã§","Ã¾","?","q","?","?","Ãž","?","?","?","?","?","?","?","Âµ","' "];
 upper = [];
 upper["Common"] = ["B","C","D","F","G","H","J","K","L","M","N","P","Q","R","S","T","V","W","X","Z"];
-upper["Dwarven"] = ["?","?","?","?","¬","¦","G","?","?","?","‡","?","[","]","|","||","??","VV","M","|"]; 
-upper["Elven"] = ["?","?","?","?","f","ç","þ","Þ","?","?","?","?","~","?","?","?","?","?","?","?"];
-upper["Draconic"] = ["B","C","D","?","þ","H","?","K","L","M","N","P","?","G","?","‡","V","W","‡","?"];
-upper["Infernal"] = ["?","?","?","?","?","ç","þ","Þ","?","?","?","?","?","E","?","?","?","?","?","µ"];
+upper["Dwarven"] = ["?","?","?","?","Â¬","Â¦","G","?","?","?","â€¡","?","[","]","|","||","??","VV","M","|"]; 
+upper["Elven"] = ["?","?","?","?","f","Ã§","Ã¾","Ãž","?","?","?","?","~","?","?","?","?","?","?","?"];
+upper["Draconic"] = ["B","C","D","?","Ã¾","H","?","K","L","M","N","P","?","G","?","â€¡","V","W","â€¡","?"];
+upper["Infernal"] = ["?","?","?","?","?","Ã§","Ã¾","Ãž","?","?","?","?","?","E","?","?","?","?","?","Âµ"];
 vowel = [];
 vowel["Common"] = ["a","e","i","o","u","y","A","E","I","O","U","Y"];
-vowel["Dwarven"]  = ["?","?","?","?","¬","¦","G","?","?","?","?","‡"];
-vowel["Elven"] = ["í","ä","ö","ý","ú","ë","Í","Ä","Ö","Ÿ","Ú","Ë"];
-vowel["Draconic"] = ["à","è","ì","õ","ù","ý","À","È","Ì","Ò","Ù","Ý"];
-vowel["Infernal"] = ["ô","‡","?","û","¦","î","Ô","?","F","Û","Î","?"];
+vowel["Dwarven"]  = ["?","?","?","?","Â¬","Â¦","G","?","?","?","?","â€¡"];
+vowel["Elven"] = ["Ã­","Ã¤","Ã¶","Ã½","Ãº","Ã«","Ã","Ã„","Ã–","Å¸","Ãš","Ã‹"];
+vowel["Draconic"] = ["Ã ","Ã¨","Ã¬","Ãµ","Ã¹","Ã½","Ã€","Ãˆ","ÃŒ","Ã’","Ã™","Ã"];
+vowel["Infernal"] = ["Ã´","â€¡","?","Ã»","Â¦","Ã®","Ã”","?","F","Ã›","ÃŽ","?"];
 
 var roll20API = roll20API || {};
 var whoSpoke = "";
@@ -46,6 +47,7 @@ var playerIDGM = "-JwAP_Onk734JaP9UAOP";
 var separators = /[()\-\s,]+/;
 var spokenByIds;
 var whoSpoke2;
+var languageTag = "languages";
 
 roll20API.languageData = [{
     Description: "Unknown", 
@@ -57,7 +59,7 @@ roll20API.languageData = [{
     characters: "Infernal"
 },{
     Description: "Aquan",
-	languageSeed: 1, 
+    languageSeed: 1, 
 	characters: "Elven"
 },{
 	Description: "Auran",   
@@ -167,23 +169,14 @@ checkForFluency = function(msg) {
 			if(p.get("_online")){
                 var speakingas = p.get("speakingas");
     			if(speakingas != undefined){
-    				var languages = getAttrByName(speakingas.split("|")[1], "prolanguages");
+    				var languages = getAttrByName(speakingas.split("|")[1], languageTag);
     				if(languages != undefined){
     					languages.split(separators).forEach(function(lang) {
     						if(lang.toUpperCase() == whichLanguage.toUpperCase()){
     							spokenByIds += "," + p.get("id");
     						};
     					});
-    				}else {
-        			    languages = getAttrByName(speakingas.split("|")[1], "languages");
-                        if(languages != undefined){
-            				languages.split(separators).forEach(function(lang) {
-        						if(lang.toUpperCase() == whichLanguage.toUpperCase()){
-        							spokenByIds += "," + p.get("id");
-        						};
-        					});
-                        };
-    				};
+					};
     			};
 			};
 		});
@@ -206,7 +199,7 @@ checkForFluency = function(msg) {
     		var asWho = msg.who
             if(spokenByIds.indexOf(indexPlayers.get("_id"))>-1){
     		    var speaks = 1;
-        	}else if(playerIsGM((indexPlayers.get("_id"))) && findObjs({ _type: "character", name: msg.who }).length==0){
+        	}else if(playerIsGM((indexPlayers.get("_id")))){
                 var speaks = 1;
         	}else{
                 var speaks = -1;   
@@ -254,7 +247,7 @@ prepareSend = function(msg) {
 	};
 	var theSpeaker = _.findWhere(roll20API.fluencyArray, {isSpeaking: 1});
 	if(theSpeaker.speaks == -1){
-		sendChat(msg.who + " Pretending to Speak " + whichLanguage, gibberish);
+		sendChat(msg.who + " Pretending to speak " + whichLanguage, gibberish);
 		return
 	};     
     
@@ -314,3 +307,30 @@ customRandom = function(nseed) {
 };
 
 on('chat:message', handleChat);
+on("ready", function() {
+	var flag = false;
+    var allCharacters = findObjs({_type: "character"}, {caseInsensitive: true});
+	_.each(allCharacters, function(c) {
+		if(!flag){
+    		var languages = getAttrByName(c.id, languageTag);
+    		if(languages == undefined){
+    			flag = true;
+			};
+    	};
+	});
+	if(flag){
+        flag = false;
+		languageTag = "prolanguages";
+		_.each(allCharacters, function(c) {
+    		if(!flag){
+        		var languages = getAttrByName(c.id, languageTag);
+        		if(languages == undefined){
+        			flag = true;
+    			};
+        	};
+	    });
+        if(flag){
+        	sendChat("Languages Script", "Failed to load script.. This script is not compatable with your character sheets, please contact the creator");
+    	};
+	};
+});
