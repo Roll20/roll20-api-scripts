@@ -4,11 +4,6 @@
 
 /*
 This is an enhancement on "WhatSaywithUnknown.js" by derekkoehl which is an enhancement on "What Did He Say?" by Stephen S.
-
-New Key Features:
-- removed the language character sheets and implemented a command line interface for speaking langugages.
-- only user's who are online, and are speaking as a character who has that language in their character sheet, will be able understand the message.
-- cleaned up code and fixed up UI
 */
 
 numbers = [];
@@ -59,7 +54,7 @@ roll20API.languageData = [{
 },{
     Description: "Abyssal",
     languageSeed: 1, 
-	characters: "Infernal"
+    characters: "Infernal"
 },{
 	Description: "Aquan",
 	languageSeed: 1, 
@@ -139,94 +134,26 @@ roll20API.languageData = [{
 }];
 
 handleChat = function(msg) {
+	
 	if (msg.type != "api"){
 	    return;
 	}
-	if(msg.content.toLowerCase().indexOf('!common ') == 0){
-		whichLanguage = 'Common';
-		msg.content = msg.content.replace("!common ", "!");
-    	msg.content = msg.content.replace("!common ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!dwarven ') == 0){
-		whichLanguage = 'Dwarven';
-		msg.content = msg.content.replace("!Dwarven ", "!");
-        msg.content = msg.content.replace("!dwarven ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!elven ') == 0){
-		whichLanguage = 'Elven';
-		msg.content = msg.content.replace("!Elven ", "!");
-        msg.content = msg.content.replace("!elven ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!sylvan ') == 0){
-		whichLanguage = 'Sylvan';
-		msg.content = msg.content.replace("!Sylvan ", "!");
-        msg.content = msg.content.replace("!sylvan ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!orc ') == 0){
-		whichLanguage = 'Orc';
-		msg.content = msg.content.replace("!Orc ", "!");
-        msg.content = msg.content.replace("!orc ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!terran ') == 0){
-    	whichLanguage = 'Terran';
-		msg.content = msg.content.replace("!Terran ", "!");
-        msg.content = msg.content.replace("!terran ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!undercommon ') == 0){
-		whichLanguage = 'Undercommon';
-		msg.content = msg.content.replace("!Undercommon ", "!");
-        msg.content = msg.content.replace("!undercommon ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!halfling ') == 0){
-    	whichLanguage = 'Halfling';
-		msg.content = msg.content.replace("!Halfling ", "!");
-        msg.content = msg.content.replace("!halfling ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!gnoll ') == 0){
-    	whichLanguage = 'Gnoll';
-		msg.content = msg.content.replace("!Gnoll ", "!");
-        msg.content = msg.content.replace("!gnoll ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!goblin ') == 0){
-		whichLanguage = 'Goblin';
-		msg.content = msg.content.replace("!Goblin ", "!");
-        msg.content = msg.content.replace("!goblin ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!gnome ') == 0){
-        whichLanguage = 'Gnome';
-		msg.content = msg.content.replace("!Gnome ", "!");
-        msg.content = msg.content.replace("!gnome ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!giant ') == 0){
-    	whichLanguage = 'Giant';
-		msg.content = msg.content.replace("!Giant ", "!");
-        msg.content = msg.content.replace("!giant ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!celestial ') == 0){
-		whichLanguage = 'Celestial';
-		msg.content = msg.content.replace("!Celestial ", "!");
-        msg.content = msg.content.replace("!celestial ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!druidic ') == 0){
-        whichLanguage = 'Druidic';
-		msg.content = msg.content.replace("!Druidic ", "!");
-        msg.content = msg.content.replace("!druidic ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!draconic ') == 0){
-		whichLanguage = 'Draconic';
-		msg.content = msg.content.replace("!Draconic ", "!");
-        msg.content = msg.content.replace("!draconic ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!auron ') == 0){
-    	whichLanguage = 'Auron';
-		msg.content = msg.content.replace("!Auron ", "!");
-        msg.content = msg.content.replace("!auron ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!aquan ') == 0){
-        whichLanguage = 'Aquan';
-		msg.content = msg.content.replace("!Aquan ", "!");
-        msg.content = msg.content.replace("!aquan ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!abyssal ') == 0){
-		whichLanguage = 'Abyssal';
-		msg.content = msg.content.replace("!Abyssal ", "!");
-        msg.content = msg.content.replace("!abyssal ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!infernal ') == 0){
-    	whichLanguage = 'Infernal';
-		msg.content = msg.content.replace("!Infernal ", "!");
-        msg.content = msg.content.replace("!infernal ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!unknown ') == 0){
-		whichLanguage = 'Unknown';
-		msg.content = msg.content.replace("!Unknown ", "!");
-        msg.content = msg.content.replace("!unknown ", "!");
-	}else if(msg.content.toLowerCase().indexOf('!thievescant ') == 0){
-    	whichLanguage = 'ThievesCant';
-		msg.content = msg.content.replace("!Thievescant ", "!");
-        msg.content = msg.content.replace("!thievescant ", "!");
-	}
+
+    var flag = false;
+    _.each(roll20API.languageData, function(eachLanguage) {
+    	if(msg.content.toLowerCase().indexOf(eachLanguage.Description.toLowerCase())>0){
+            flag = true;
+			whichLanguage = eachLanguage.Description;
+        	msg.content = msg.content.replace(eachLanguage.Description, "");
+    	    msg.content = msg.content.replace(eachLanguage.Description.toLowerCase(), "");
+            msg.content = msg.content.replace(eachLanguage.Description.toUpperCase(), "");
+		};
+	});
+    
+    if(!flag){
+		return;
+    };
+    
 	checkForLanguage(msg);
     whichLanguage = 'Common';
 };
