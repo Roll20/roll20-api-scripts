@@ -8,7 +8,7 @@ More information and a link to the credited work is provided here: https://app.r
 */
 
 /*
-THE DEFAULT LANGUAGE ATTRIBUTE NAME IS prolanguages , PLEASE CHANGE THIS IF YOUR CHARACTER SHEETS DO NOT USE THIS ATTRIBUTE NAME
+THE DEFAULT LANGUAGE ATTRIBUTE NAME IS "prolanguages", CHANGE THIS IF YOUR CHARACTER SHEETS DO NOT USE THIS ATTRIBUTE NAME
 TO CHANGE USE THIS COMMAND : !setLanugageTag newlanguagetag
 */
 
@@ -67,7 +67,7 @@ roll20API.languageData = [{
     languageSeed: 1, 
     characters: "Elven"
 },{
-	Description: "Auran",   
+    Description: "Auran",   
 	languageSeed: 1, 
 	characters: "Draconic"
 },{
@@ -135,7 +135,7 @@ roll20API.languageData = [{
 	languageSeed: 5, 
 	characters: "Elven"
 },{
-    Description: "ThievesCant", 
+    Description: "Thieve'sCant", 
 	languageSeed: 3, 
 	characters: "Common"
 }];
@@ -145,37 +145,39 @@ handleChat = function(msg) {
 	    return;
 	}
     
-    if(msg.content.toLowerCase().indexOf("setlanguagetag")==1 && playerIsGM(msg.playerid)){
-        if(msg.content.indexOf(" ")>0 && msg.content.indexOf(" ")<msg.content.length){
-            var tempLanguageTag = msg.content.substring(msg.content.indexOf(" ")+1, msg.content.length);
-            var flag = false;
-            var allCharacters = findObjs({_type: "character"}, {caseInsensitive: true});
-            _.each(allCharacters, function(c) {
-	        	if(!flag){
-    	        	var languages = getAttrByName(c.id, tempLanguageTag);
-            		if(languages == undefined){
-    	        		flag = true;
-		        	};
-            	};
-        	});
-	        if(!flag){
-                languageTag = tempLanguageTag;
-                var languageMessage = "language attribute name set to '" + languageTag + "'";
-                sendChat("Languages Script", "/w gm " + languageMessage);
-    	        return;
-	        }else{
-                log("The previous error was handled properly and there is nothing to worry about")
-                var languageMessage = "'" + tempLanguageTag + "' is not the name of an attribute in your character sheet";
-                sendChat("Languages Script", "/w gm " + languageMessage);
-                return;   
-	        }
-        }else{
-            var languageError = "invalid language tag";
-            sendChat("Languages Script", "/w gm " + languageError);
-		    return;
+    if(msg.content.toLowerCase().indexOf("setlanguagetag")==1){
+        if(playerIsGM(msg.playerid)){
+            if(msg.content.indexOf(" ")>0 && msg.content.indexOf(" ")<msg.content.length){
+                var tempLanguageTag = msg.content.substring(msg.content.indexOf(" ")+1, msg.content.length);
+                var flag = false;
+                var allCharacters = findObjs({_type: "character"}, {caseInsensitive: true});
+                _.each(allCharacters, function(c) {
+    	        	if(!flag){
+        	        	var languages = getAttrByName(c.id, tempLanguageTag);
+                		if(languages == undefined){
+        	        		flag = true;
+    		        	};
+                	};
+            	});
+    	        if(!flag){
+                    languageTag = tempLanguageTag;
+                    var languageMessage = "language attribute name set to '" + languageTag + "'";
+                    sendChat("Languages Script", "/w gm " + languageMessage);
+        	        return;
+    	        }else{
+                    log("The previous error was handled properly and there is nothing to worry about")
+                    var languageMessage = "'" + tempLanguageTag + "' is not the name of an attribute in your character sheet";
+                    sendChat("Languages Script", "/w gm " + languageMessage);
+                    return;   
+    	        }
+            }else{
+                var languageError = "invalid language tag";
+                sendChat("Languages Script", "/w gm " + languageError);
+    		    return;
+            }
+        }else if(msg.content.toLowerCase().indexOf("setlanguagetag")==1 && !playerIsGM(msg.playerid)){
+            sendChat("Languages Script", "/w " + msg.who + " access denied")
         }
-    }else if(msg.content.toLowerCase().indexOf("setlanguagetag")==1 && !playerIsGM(msg.playerid)){
-        sendChat("Languages Script", "/w " + msg.who + " access denied")
     }
 
     var flag = false;
@@ -215,8 +217,8 @@ checkForFluency = function(msg) {
     						};
     					});
 					}else if(findObjs({ _type: "character", _id: speakingas }).length !== 0){
-                        sendChat("Languages Script", "This script is not compatable with your character sheets. Use this command to fix: !setlanguagetag [character sheet language attribute name]");
-    				    log("This script is not compatable with your character sheets. Use this command to fix: !setlanguagetag [character sheet language attribute name]");   
+                        sendChat("Languages Script", "This script is set up properly for your character sheets. Use this command to fix: !setlanguagetag [character sheet language attribute name]");
+    				    log("This script is not set up for your character sheets. Use this command to fix: !setlanguagetag [character sheet language attribute name]");   
 		                return;
 					}else if(playerIsGM(p.get("id"))){
                         log("The previous error was handled properly and there is nothing to worry about");
@@ -289,6 +291,7 @@ prepareSend = function(msg) {
 		var gibberishCharacter = "";
 		gibberishFunction(standardArray,givenArray,characterGiven)
 	};
+	
 	var theSpeaker = _.findWhere(roll20API.fluencyArray, {isSpeaking: 1});
 	if(theSpeaker.speaks == -1){
 		sendChat(msg.who + " Pretending to speak " + whichLanguage, gibberish);
