@@ -7,17 +7,17 @@
     "roll20userid": "5047",
     "useroptions": [
         {
-            name: "variable1", 
-            type: "text"
+            "name": "variable1", 
+            "type": "text"
         },
         {
-            name: "variable2", 
-            type: "number"
+            "name": "variable2", 
+            "type": "number"
         }
         {
-            name: "selectoption",
-            type: "select", 
-            options: ["one", "two", "three"]
+            "name": "selectoption",
+            "type": "select", 
+            "options": ["one", "two", "three"]
         }
     ],
     "dependencies": [],
