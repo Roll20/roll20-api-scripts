@@ -174,7 +174,7 @@ handleChat = function(msg) {
             sendChat("Languages Script", "/w gm " + languageError);
 		    return;
         }
-    }else if(!playerIsGM(msg.playerid)){
+    }else if(msg.content.toLowerCase().indexOf("setlanguagetag")==1 && !playerIsGM(msg.playerid)){
         sendChat("Languages Script", "/w " + msg.who + " access denied")
     }
 
