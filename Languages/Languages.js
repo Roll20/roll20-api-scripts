@@ -293,14 +293,14 @@ prepareSend = function(msg) {
 	if(theSpeaker.speaks == -1){
 		sendChat(msg.who + " Pretending to speak " + whichLanguage, gibberish);
 		return
-	};     
+	};
     
     if(whoSpoke.indexOf(" ")>-1){
         whoSpoke = whoSpoke.substring(0,whoSpoke.indexOf(" "));
     }
     
-	sendChat(msg.who, "/w " + whoSpoke + " '" + sentence +"' in " + whichLanguage + ".");
-	sendChat("Languages Script", "/w gm " + msg.who + " said '" + sentence + "' in " + whichLanguage);
+	sendChat(msg.who, "/w " + whoSpoke + " '" + sentence +" ' in " + whichLanguage + ".");
+	sendChat("Languages Script", "/w gm " + msg.who + " said '" + sentence + " ' in " + whichLanguage);
 	
 	_.each(roll20API.fluencyArray, function(indexPlayers) {
         if(indexPlayers.displayNameFull != whoSpoke && indexPlayers.displayNameShort != whoSpoke){
@@ -310,7 +310,7 @@ prepareSend = function(msg) {
                 whoSpoke2 = indexPlayers.displayNameFull;
             }
             if(indexPlayers.speaks != -1){
-        		sendChat(msg.who, "/w " + whoSpoke2 + " '" + sentence +"' in " + whichLanguage + ".");
+        		sendChat(msg.who, "/w " + whoSpoke2 + " '" + sentence +" ' in " + whichLanguage + ".");
         	}else{
         		sendChat(msg.who, "/w " + whoSpoke2 + " " + gibberish)
         	};    
