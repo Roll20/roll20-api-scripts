@@ -7,19 +7,33 @@ https://app.roll20.net/forum/post/2723217/script-languages
 Command 1:
 !theLanguage {theText}
 Example:
-!Draconic hello there dragonborn
+> !Draconic hello there dragonborn
 Result:
-- If the player who types this is speaking as a character that has Draconic (under languages on their character sheet), they will say "hello there dragonborn" in Draconic. Any player who is speaking as a character that also has Draconic on their character sheet will be whispered "hello there dragonborn". Others will be whispered symbols representing the language.
-- If the player who types this is speaking as a character that does not have Draconic(under languages on their character sheet), they will "pretend to speak" Draconic.
-- If the player who types this is speaking as a player, they will be notified that players cannot speak character languages.
+- If the player who enters this is speaking as a character that has Draconic, under the languages on their character sheet, they will say "hello there dragonborn" in Draconic. Any player who is currently online and is speaking as a character that also has Draconic on their character sheet will be whispered "hello there dragonborn". Others will be whispered symbols representing the language.
+- If the player who enters this is speaking as a character that does not have Draconic(under languages on their character sheet), they will "pretend to speak" Draconic.
+- If the player who enters this is speaking as a player, they will be notified that players cannot speak character languages.
 - GMs can speak any language with any player or character
 
 Command 2:
-!setLanguageTag {attribute}
+!setLanguageTag {attribute name}
 Example:
-!setLanguageTag playerlanguages
+> !setLanguageTag playerlanguages
 Result:
-- If the player who types this is a GM and playerlanguages is an attribute that exists on the character sheets, the script will use that attribute when it searches for player's languages
+- If the player who enters this is a GM and playerlanguages is the name of a character sheet attribute in the campaign, the script will use "playerlanguages" when it searches character sheet attributes for player's languages (instead of the default "prolanguages")
+
+Command 3:
+!deleteLanguage {language name}
+Example:
+!deleteLanguage Dwarven
+Result:
+- If the player is a GM, Dwarven will be deleted as a language
+
+Command 4.
+!createLanguage {language name} {seed nubmer} {parent language}
+Example:
+!createLanguage Underdwarven 5 Dwarven
+Result:
+- If the player is a GM, Underdwarven will be created as a seed 5 language of Dwarven
 
 Languages:
 Abyssal Aquan Auran Celestial Common Draconic Druidic
