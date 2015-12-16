@@ -7,6 +7,11 @@ This is a re-work of "WhatSaywithUnknown.js" by derekkoehl which is an enhanceme
 More information and a link to the credited work is provided here: https://app.roll20.net/forum/post/2723217/script-languages
 */
 
+/*
+THE DEFAULT LANGUAGE ATTRIBUTE NAME IS prolanguages , PLEASE CHANGE THIS IF YOUR CHARACTER SHEETS DO NOT USE THIS ATTRIBUTE NAME
+TO CHANGE USE THIS COMMAND : !setLanugageTag newlanguagetag
+*/
+
 numbers = [];
 numbers["Common"] = ["1","2","3","4","5","6","7","8","9","0"];
 numbers["Dwarven"] = ["·",":","?","+","?","?·","?:","??","?+","°"];
@@ -47,7 +52,7 @@ var playerIDGM = "-JwAP_Onk734JaP9UAOP";
 var separators = /[()\-\s,]+/;
 var spokenByIds;
 var whoSpoke2;
-var languageTag = "languages";
+var languageTag = "prolanguages";
 
 roll20API.languageData = [{
     Description: "Unknown", 
@@ -60,7 +65,7 @@ roll20API.languageData = [{
 },{
     Description: "Aquan",
     languageSeed: 1, 
-	characters: "Elven"
+    characters: "Elven"
 },{
 	Description: "Auran",   
 	languageSeed: 1, 
@@ -260,7 +265,7 @@ prepareSend = function(msg) {
 	var sentence = msg.content.substr(1);
 
     if(sentence.length == 0) {
-		sendChat("Languages Scripts", "/w " + whoSpoke + " You didn't say anything.");
+		sendChat("Languages Script", "/w " + whoSpoke + " You didn't say anything.");
 		return;
 	};
     
@@ -295,7 +300,7 @@ prepareSend = function(msg) {
     }
     
 	sendChat(msg.who, "/w " + whoSpoke + " '" + sentence +"' in " + whichLanguage + ".");
-	sendChat("Languages Scripts", "/w gm " + msg.who + " said '" + sentence + "' in " + whichLanguage);
+	sendChat("Languages Script", "/w gm " + msg.who + " said '" + sentence + "' in " + whichLanguage);
 	
 	_.each(roll20API.fluencyArray, function(indexPlayers) {
         if(indexPlayers.displayNameFull != whoSpoke && indexPlayers.displayNameShort != whoSpoke){
@@ -346,31 +351,3 @@ customRandom = function(nseed) {
 };
 
 on('chat:message', handleChat);
-on("ready", function() {
-	var flag = false;
-    var allCharacters = findObjs({_type: "character"}, {caseInsensitive: true});
-	_.each(allCharacters, function(c) {
-		if(!flag){
-    		var languages = getAttrByName(c.id, languageTag);
-    		if(languages == undefined){
-    			flag = true;
-			};
-    	};
-	});
-	if(flag){
-        log("The previous error was handled properly and there is nothing to worry about");
-        flag = false;
-		languageTag = "prolanguages";
-		_.each(allCharacters, function(c) {
-    		if(!flag){
-        		var languages = getAttrByName(c.id, languageTag);
-        		if(languages == undefined){
-        			flag = true;
-    			};
-        	};
-	    });
-        if(flag){
-        	sendChat("Languages Script", "Failed to load script.. This script is not compatable with your character sheets. Use this command to fix: !setlanguagetag [language tag name].");
-    	};
-	};
-});
