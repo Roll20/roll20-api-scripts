@@ -5,8 +5,8 @@
 var TokenMod = TokenMod || (function() {
     'use strict';
 
-    var version = '0.8.14',
-        lastUpdate = 1442235743,
+    var version = '0.8.15',
+        lastUpdate = 1450226623,
         schemaVersion = 0.1,
 
         fields = {
@@ -674,7 +674,7 @@ var TokenMod = TokenMod || (function() {
                         t='';
                     }
                     t2=args[0].match(regex.numberString) ? args[0] : '' ;
-					if(! _.isNaN(parseFloat(t2)) ) {
+					if( ''===t2 || !_.isNaN(parseFloat(t2)) ) {
 						retr[cmd].push(t+t2);
 					}
 					break;
