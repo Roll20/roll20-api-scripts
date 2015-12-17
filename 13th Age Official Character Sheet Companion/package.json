@@ -20,7 +20,7 @@
             "options": ["one", "two", "three"]
         }
     ],
-    "dependencies": [],
+    "dependencies": ["Red"],
     "modifies": {
         "state.autoStaggered": "read,write",
         "state.autoRecovery": "read,write",
