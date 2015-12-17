@@ -100,7 +100,7 @@ var LanguageScript = LanguageScript || (function () {
         pushLanguage("Sylvan",4,"Elven");
         pushLanguage("Terran",6,"Dwarven");
         pushLanguage("Undercommon",5,"Elven");
-        pushLanguage("Thieve'sCant",3,"Common");
+        pushLanguage("Thieves'Cant",3,"Common");
     },  
     
     handleChat = function(msg) {    

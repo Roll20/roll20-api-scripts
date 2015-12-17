@@ -38,7 +38,7 @@ Result:
 Languages:
 Abyssal Aquan Auran Celestial Common Draconic Druidic
 Druidic Dwarven Elven Giant Gnome Goblin Gnoll
-Halfling Ignan Infernal Orc Sylvan Terran ThievesCant
+Halfling Ignan Infernal Orc Sylvan Terran Thieves'Cant
 Undercommon Unknown
 
 Future Plans:
