@@ -1,5 +1,6 @@
 {
   "name": "Flight",
+  "script": "Flight.js",
   "version": "3.2",
   "description": "Adds 'fluffy-wings' status icon to selected token to represent some height.",
   "authors": "Brian Shields",
