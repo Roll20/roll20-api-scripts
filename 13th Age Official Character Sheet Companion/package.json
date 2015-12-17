@@ -28,5 +28,5 @@
         "token.bar2_link": "read,write",
         "token.bar3_link": "read,write"
     },
-    "conflicts": []
+    "conflicts": ["TokenMod", "Blue"]
 }
