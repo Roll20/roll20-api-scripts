@@ -5,8 +5,8 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.9.12',
-        lastUpdate = 1444742270,
+    var version = '0.9.13',
+        lastUpdate = 1450988251,
         schemaVersion = 1.0,
         bonusCache = {},
         observers = {
@@ -1014,7 +1014,7 @@ var GroupInitiative = GroupInitiative || (function() {
             var parts = msg[0].content.split(/:/),
                 ird = msg[0].inlinerolls[parts[1].match(/\d+/)],
                 rdata = {
-                    order: parts[0],
+                    order: parseInt(parts[0],10),
                     total: (ird.results.total%1===0
                         ? ird.results.total 
                         : parseFloat(ird.results.total.toFixed(state.GroupInitiative.config.maxDecimal))),
