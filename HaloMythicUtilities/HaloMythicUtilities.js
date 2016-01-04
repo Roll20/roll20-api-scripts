@@ -4,7 +4,7 @@ on("ready", function() {
 
 on("chat:message", function(msg) {
   //
-  if (msg.type == "api" && state.SpecDmg.mode == 0 && msg.content.indexOf("!specdmg ") !== -1) {
+  if (msg.type == "api" && msg.content.indexOf("!specdmg ") !== -1) {
     var args = msg.content.split(" ");
     var dmg = parseInt(args[1]);
     var prc = parseInt(args[2]);
@@ -39,7 +39,7 @@ on("chat:message", function(msg) {
     var armor = parseInt(armorStr);
     
 	var prc = state.SpecDmg.pierce;
-    var dmg = state.SpecDmg.damage - (armor-prc);
+    var dmg = state.SpecDmg.damage - Math.max(armor-prc, 0);
     
 	//armor prints
 	if (prc >= armor) {
