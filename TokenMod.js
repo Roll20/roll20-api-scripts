@@ -5,8 +5,8 @@
 var TokenMod = TokenMod || (function() {
     'use strict';
 
-    var version = '0.8.15',
-        lastUpdate = 1450226623,
+    var version = '0.8.16',
+        lastUpdate = 1451916963,
         schemaVersion = 0.1,
 
         fields = {
@@ -114,7 +114,24 @@ var TokenMod = TokenMod || (function() {
 						n = Math.min(360,Math.max(0,n));
 					}
 					return n;
-				}
+				},
+            orderType: function(t){
+                    switch(t){
+                        case 'tofront':
+                        case 'front':
+                        case 'f':
+                        case 'top':
+                            return 'tofront';
+
+                        case 'toback':
+                        case 'back':
+                        case 'b':
+                        case 'bottom':
+                            return 'toback';
+                        default:
+                            return;
+                    }
+                }
 		},
 		ch = function (c) {
 			var entities = {
@@ -193,6 +210,9 @@ var TokenMod = TokenMod || (function() {
 				+'</li> '
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<b><span style="font-family: serif;">'+ch('<')+'--set'+ch('>')+'</span></b> '+ch('-')+' Each parameter is treated as a key and value, divided by a | character.  Sets the key to the value.  If the value has spaces, you must enclose it '+ch("'")+' or '+ch('quot')+'.  See below for specific value handling logic.'
+				+'</li> '
+				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<b><span style="font-family: serif;">'+ch('<')+'--order'+ch('>')+'</span></b> '+ch('-')+' changes the ordering of tokens.  Specify one of '+ch("'")+'tofront'+ch("'")+', '+ch("'")+'front'+ch("'")+', '+ch("'")+'f'+ch("'")+', '+ch("'")+'top'+ch("'")+' to bring something to the front or '+ch("'")+'toback'+ch("'")+', '+ch("'")+'back'+ch("'")+', '+ch("'")+'b'+ch("'")+', '+ch("'")+'bottom'+ch("'")+' to push it to the back.'
 				+'</li> '
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<b><span style="font-family: serif;">'+ch('<')+'--ids'+ch('>')+'</span></b> '+ch('-')+' Each parameter is a Token ID, usually supplied with something like '+ch('@')+ch('{')+'target'+ch('|')+'Target 1'+ch('|')+'token_id'+ch('}')+'. '
@@ -758,11 +778,6 @@ var TokenMod = TokenMod || (function() {
 					retr[cmd].push(args.shift().replace(regex.stripSingleQuotes,'$1').replace(regex.stripDoubleQuotes,'$1'));
 					break;
 
-				case 'tofront':
-					break;
-				case 'toback':
-					break;
-
 				case 'player_id':
 					break;
 
@@ -816,6 +831,14 @@ var TokenMod = TokenMod || (function() {
 		}
 		return memo;
 	},
+
+    parseOrderArguments = function(list,base) {
+        return _.chain(list)
+            .map(transforms.orderType)
+            .reject(_.isUndefined)
+            .union(base)
+            .value();
+    },
 
 	parseSetArguments = function(list,base) {
 		return _.chain(list)
@@ -883,6 +906,17 @@ var TokenMod = TokenMod || (function() {
 			current=decomposeStatuses(token.get('statusmarkers')||''),
             statusCount=(token.get('statusmarkers')||'').split(/,/).length;
 
+        _.each(modlist.order,function(f){
+            switch(f){
+                case 'tofront':
+                    toFront(token);
+                    break;
+
+                case 'toback':
+                    toBack(token);
+                    break;
+            }
+        });
 		_.each(modlist.on,function(f){
 			mods[f]=true;
 		});
@@ -1100,7 +1134,8 @@ var TokenMod = TokenMod || (function() {
 				flip: [],
 				on: [],
 				off: [],
-				set: {}
+				set: {},
+                order: []
 			};
 
 		if (msg.type !== "api") {
@@ -1164,6 +1199,10 @@ var TokenMod = TokenMod || (function() {
 						case 'set':
 							modlist.set=parseSetArguments(cmds,modlist.set);
 							break;
+
+                        case 'order':
+                            modlist.order=parseOrderArguments(cmds,modlist.order);
+                            break;
 
                         case 'ignore-selected':
                             ignoreSelected=true;
