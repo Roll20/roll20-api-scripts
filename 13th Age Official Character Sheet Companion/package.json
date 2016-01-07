@@ -26,7 +26,8 @@
         "state.autoRecovery": "read,write",
         "token.bar1_link": "read,write",
         "token.bar2_link": "read,write",
-        "token.bar3_link": "read,write"
+        "token.bar3_link": "read,write",
+        "attribute.id": "read,write"
     },
     "conflicts": ["TokenMod", "Blue"]
 }
