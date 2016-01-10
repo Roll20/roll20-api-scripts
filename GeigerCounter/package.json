@@ -1,0 +1,19 @@
+{
+    "name": "Geiger Counter",
+    "version": "1.0",
+    "description": "Dynamically create radioactive areas and give characters Geiger Counters to measure rads/s in those areas.",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "dependencies": {
+    },
+    "modifies": {
+        "chat": "write",
+        "aura1_radius": "read",
+        "bar1_value": "read",
+        "bar1_max": "read",
+        "token": "read",
+        "top": "read",
+        "status_radioactive": "read"
+    },
+    "conflicts": []
+}
