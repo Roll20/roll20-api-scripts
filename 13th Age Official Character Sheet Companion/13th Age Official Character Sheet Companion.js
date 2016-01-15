@@ -10,7 +10,67 @@ state.autoRecovery = true;
 
 // Listen for !API commands
 on('chat:message', function(msg) {
-    if(msg.type == 'api') {
+    if(msg.rolltemplate === 'icon') {
+        var numRolls = msg.inlinerolls[4].results.total > 4 ? 4 : msg.inlinerolls[4].results.total,
+            heartCount = 0,
+            lightCount = 0,
+            row = msg.content.substr((msg.content.indexOf('iconrow')+8), 1),
+            charNameTemp = msg.content.substr((msg.content.indexOf('charname')+9)),
+            charName = charNameTemp.substr(0, charNameTemp.indexOf('}}')),
+            charObj = findObjs({type: 'character', name: charName})[0],
+            heartObj = findObjs({type: 'attribute', characterid: charObj.id, name: 'icon'+row+'-6'})[0],
+            heartCountObj = findObjs({type: 'attribute', characterid: charObj.id, name: 'icon'+row+'-6-count'})[0],
+            lightObj = findObjs({type: 'attribute', characterid: charObj.id, name: 'icon'+row+'-5'})[0],
+            lightCountObj = findObjs({type: 'attribute', characterid: charObj.id, name: 'icon'+row+'-5-count'})[0];
+        for (var i = 0; i < numRolls; i++) {
+            var result = msg.inlinerolls[i].results.total;
+            heartCount += result === 6 ? 1 : 0;
+            lightCount += result === 5 ? 1 : 0;
+        }
+
+        if(heartObj) {
+            heartObj.set({ current: (heartCount > 0 ? 'on' : '0') });
+        }
+        else {
+            createObj('attribute', {
+                characterid: charObj.id,
+                name: 'icon'+row+'-6',
+                current: (heartCount > 0 ? 'on' : '0')
+            });
+        }
+        if(heartCountObj) {
+            heartCountObj.set({ current: heartCount });
+        }
+        else {
+            createObj('attribute', {
+                characterid: charObj.id,
+                name: 'icon'+row+'-6-count',
+                current: heartCount
+            });
+        }
+
+        if(lightObj) {
+            lightObj.set({ current: (lightCount > 0 ? 'on' : '0') });
+        }
+        else {
+            createObj('attribute', {
+                characterid: charObj.id,
+                name: 'icon'+row+'-5',
+                current: (lightCount > 0 ? 'on' : '0')
+            });
+        }
+        if(lightCountObj) {
+            lightCountObj.set({ current: lightCount });
+        }
+        else {
+            createObj('attribute', {
+                characterid: charObj.id,
+                name: 'icon'+row+'-5-count',
+                current: lightCount
+            });
+        }
+    }
+    if(msg.type === 'api') {
         // Check for "!edie" command to add the Escalation Die
         if(msg.content.indexOf('edie') !== -1) {
             addEscalationDie();
