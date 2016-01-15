@@ -5,8 +5,8 @@
 var TokenMod = TokenMod || (function() {
     'use strict';
 
-    var version = '0.8.16',
-        lastUpdate = 1451916963,
+    var version = '0.8.17',
+        lastUpdate = 1452883667,
         schemaVersion = 0.1,
 
         fields = {
@@ -749,29 +749,33 @@ var TokenMod = TokenMod || (function() {
 					break;
 
 				case 'character_id':
-					t=getObj('character', args[0]);
-					if(t) {
-						retr[cmd].push(args[0]);
-					} else {
-						// try to find a character with this name
-						t2=findObjs({type: 'character',archived: false});
-						t=_.chain([ args[0].replace(regex.stripSingleQuotes,'$1').replace(regex.stripDoubleQuotes,'$1') ])
-							.map(function(n){
-								var l=_.filter(t2,function(c){
-									return c.get('name').toLowerCase() === n.toLowerCase();
-								});
-								return ( 1 === l.length ? l : _.filter(t2,function(c){
-									return -1 !== c.get('name').toLowerCase().indexOf(n.toLowerCase());
-								}));
-							})
-							.flatten()
-							.value();
-						if(1 === t.length) {
-							retr[cmd].push(t[0].id);
-						} else {
-							retr=undefined;
-						}
-					}
+                    if('' === args[0]){
+                        retr[cmd].push('');
+                    } else {
+                        t=getObj('character', args[0]);
+                        if(t) {
+                            retr[cmd].push(args[0]);
+                        } else {
+                            // try to find a character with this name
+                            t2=findObjs({type: 'character',archived: false});
+                            t=_.chain([ args[0].replace(regex.stripSingleQuotes,'$1').replace(regex.stripDoubleQuotes,'$1') ])
+                                .map(function(n){
+                                    var l=_.filter(t2,function(c){
+                                        return c.get('name').toLowerCase() === n.toLowerCase();
+                                    });
+                                    return ( 1 === l.length ? l : _.filter(t2,function(c){
+                                        return -1 !== c.get('name').toLowerCase().indexOf(n.toLowerCase());
+                                    }));
+                                })
+                                .flatten()
+                                .value();
+                            if(1 === t.length) {
+                                retr[cmd].push(t[0].id);
+                            } else {
+                                retr=undefined;
+                            }
+                        }
+                    }
 					break;
 
 				case 'attribute':
