@@ -5,8 +5,8 @@
 var TableExport = TableExport || (function() {
 	'use strict';
 
-	var version  = '0.2.1',
-        lastUpdate = 1453179985,
+	var version  = '0.2.2',
+        lastUpdate = 1453209012,
         tableCache = {},
         escapes = {
             '['   : '<%%91%%>',
@@ -270,9 +270,13 @@ var TableExport = TableExport || (function() {
 		}
 
 	},
+    handleRemoveTable = function(obj){
+        tableCache = _.without(tableCache,obj.id);
+    },
 
 	registerEventHandlers = function() {
 		on('chat:message', handleInput);
+        on('destroy:rollabletable', handleRemoveTable);
 	};
 
 	return {
