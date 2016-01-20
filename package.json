@@ -1,6 +1,6 @@
 {
     "name": "Torch",
-    "version": "0.8.4",
+    "version": "0.8.5",
     "description": "A simple script for giving lights to tokens and turning off and on dynamic lighting.",
     "authors": "The Aaron",
     "roll20userid": "104025",
