@@ -5,8 +5,8 @@
 var Torch = Torch || (function() {
     'use strict';
 
-    var version = '0.8.4',
-        lastUpdate = 1440364086,
+    var version = '0.8.5',
+        lastUpdate = 1453326963,
         schemaVersion = 0.1,
 		flickerURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
 		flickerPeriod = 400,
@@ -129,7 +129,7 @@ var Torch = Torch || (function() {
 			fobj = getObj('graphic',found.id);
 			if(fobj) {
 				fobj.set({
-                    layer: 'objects',
+                    layer: 'walls',
 					showname: false,
 					aura1_radius: '',
 					showplayers_aura1: false,
@@ -154,7 +154,7 @@ var Torch = Torch || (function() {
 				height: 70,
 				top: o.get('top'),
 				left: o.get('left'),
-				layer: 'objects',
+				layer: 'walls',
 				light_radius: r,
 				light_dimradius: d,
 				light_otherplayers: p,
