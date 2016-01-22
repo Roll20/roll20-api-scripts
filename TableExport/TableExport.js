@@ -5,9 +5,20 @@
 var TableExport = TableExport || (function() {
 	'use strict';
 
-	var version  = '0.2.0',
-        lastUpdate = 1427604267,
-	tableCache = {},
+	var version  = '0.2.2',
+        lastUpdate = 1453209012,
+        tableCache = {},
+        escapes = {
+            '['   : '<%%91%%>',
+            ']'   : '<%%93%%>',
+            '--' : '<%%-%%>',
+            ' --' : '[TABLEEXPORT:ESCAPE]'
+        },
+    
+    esRE = function (s) {
+        var escapeForRegexp = /(\\|\/|\[|\]|\(|\)|\{|\}|\?|\+|\*|\||\.|\^|\$)/g;
+        return s.replace(escapeForRegexp,"\\$1");
+    },
 
 	ch = function (c) {
 		var entities = {
@@ -95,6 +106,19 @@ var TableExport = TableExport || (function() {
 +'</div>'
 		);
 	},
+    nameEscape = (function(){
+        var re=new RegExp('('+_.map(_.keys(escapes),esRE).join('|')+')','g');
+        return function(s){
+            return s.replace(re, function(c){ return escapes[c] || c; });
+        };
+    }()),
+    nameUnescape = (function(){
+        var sepacse = _.invert(escapes),
+        re=new RegExp('('+_.map(_.keys(sepacse),esRE).join('|')+')','g');
+        return function(s){
+            return s.replace(re, function(c){ return sepacse[c] || c; });
+        };
+    }()),
 
 	handleInput = function(msg) {
 		var args, matches, tables, tableIDs=[], errors=[], items, itemMatches, accum='';
@@ -143,7 +167,7 @@ var TableExport = TableExport || (function() {
 					showHelp();
 					break;
 				}
-				args[2] = args[2].replace(/\[TABLEEXPORT:ESCAPE\]/g, ' --');
+				args[2] = nameUnescape(args[2]);
 				if(!_.has(tableCache,args[1])) {
 					tableIDs=findObjs({type: 'rollabletable', name: args[1]});
 					if(!tableIDs.length) {
@@ -161,8 +185,8 @@ var TableExport = TableExport || (function() {
                 createObj('tableitem',{
                     name: args[2],
                     rollabletableid: tableCache[args[1]],
-                    weight: parseInt(args[3],10),
-                    avatar: args[4]
+                    weight: parseInt(args[3],10)||1,
+                    avatar: args[4]||''
                 });
                 break;
                 
@@ -232,9 +256,9 @@ var TableExport = TableExport || (function() {
                         },{})
 						.value();
                     _.each(matches, function(t){
-                        accum+='!import-table --'+t.get('name')+' --'+(t.get('showplayers') ? 'show' : 'hide')+'<br>';
+                        accum+='!import-table --'+nameEscape(t.get('name'))+' --'+(t.get('showplayers') ? 'show' : 'hide')+'<br>';
                         _.each(itemMatches[t.id], function(i){
-                            accum+='!import-table-item --'+t.get('name')+' --'+i.get('name').replace(/ --/g,'[TABLEEXPORT:ESCAPE]')+' --'+i.get('weight')+' --'+i.get('avatar')+'<br>';
+                            accum+='!import-table-item --'+nameEscape(t.get('name'))+' --'+nameEscape(i.get('name'))+' --'+i.get('weight')+' --'+i.get('avatar')+'<br>';
                         });
                     });
                     sendChat('', '/w gm '+accum);
@@ -246,9 +270,13 @@ var TableExport = TableExport || (function() {
 		}
 
 	},
+    handleRemoveTable = function(obj){
+        tableCache = _.without(tableCache,obj.id);
+    },
 
 	registerEventHandlers = function() {
 		on('chat:message', handleInput);
+        on('destroy:rollabletable', handleRemoveTable);
 	};
 
 	return {
