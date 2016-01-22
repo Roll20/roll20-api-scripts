@@ -1,6 +1,6 @@
 {
     "name":		"HiddenRolls",
-    "version":		"0.2",
+    "version":		"0.3",
     "description":	"Various types of roll hiding (unmodified roll only, final result only, only show GM)",
     "authors":		"manveti",
     "roll20userid":	"503018",

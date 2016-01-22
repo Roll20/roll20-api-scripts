@@ -5,18 +5,11 @@
 var Mark = Mark || (function() {
     'use strict';
 
-    var version = 0.23,
+    var version = '0.3.1',
+        lastUpdate = 1427606528,
 		schemaVersion = 0.2,
 		markerURL = 'https://s3.amazonaws.com/files.d20.io/images/4994795/7MdfzjgXCkaESbRbxATFSw/thumb.png?1406949835',
 
-
-	fixNewObj= function(obj) {
-		var p = obj.changed._fbpath,
-		    new_p = p.replace(/([^\/]*\/){4}/, "/");
-		obj.fbpath = new_p;
-		return obj;
-	},
-	
 	ch = function (c) {
 		var entities = {
 			'<' : 'lt',
@@ -106,7 +99,7 @@ var Mark = Mark || (function() {
 			.join(',');
 	},
 
-	HandleInput = function(msg) {
+	handleInput = function(msg) {
 		var args,
 			who,
 			errors=[],
@@ -123,7 +116,7 @@ var Mark = Mark || (function() {
 		args = msg.content.split(/ +/);
 		switch(args[0]) {
 			case '!mark-clear':
-				if(isGM(msg.playerid)) {
+				if(playerIsGM(msg.playerid)) {
 					reset();
 				}
 				break;
@@ -189,7 +182,7 @@ var Mark = Mark || (function() {
 							statusmarkers: status
 						});
 					} else {
-						m = fixNewObj(createObj('graphic',{
+						m = createObj('graphic',{
 							imgsrc: markerURL,
 							subtype: 'token',
 							pageid: playerPage,
@@ -199,7 +192,7 @@ var Mark = Mark || (function() {
 							left: t.get('left'),
 							layer: 'objects',
 							statusmarkers: status
-						}));
+						});
 					}
 					toBack(m);
 				});
@@ -209,8 +202,11 @@ var Mark = Mark || (function() {
 
 	},
 
-    CheckInstall = function() {    
+    checkInstall = function() {    
+        log('-=> Mark v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+
         if( ! _.has(state,'Mark') || state.Mark.version !== schemaVersion)
+            log('  > Updating Schema to v'+schemaVersion+' <');
         {
             /* Default Settings stored in the state. */
             state.Mark = {
@@ -221,11 +217,11 @@ var Mark = Mark || (function() {
 		}
 	},
 
-	HandlePlayerPageChange = function() {
+	handlePlayerPageChange = function() {
 		reset();
 	},
 
-	HandleTurnOrderChange = function(obj,prev) {
+	handleTurnOrderChange = function(obj,prev) {
 		var to = JSON.parse(obj.get("turnorder")),
 			po = JSON.parse(prev.turnorder);
 
@@ -234,36 +230,29 @@ var Mark = Mark || (function() {
 		}
 	},
 
-	HandleInitiativePageChange = function(obj) {
+	handleInitiativePageChange = function(obj) {
 		if(false === obj.get('initiativepage')) {
 			reset();
 		}
 	},
 
-	RegisterEventHandlers = function() {
-		on('chat:message', HandleInput);
-		on('change:campaign:playerpageid', HandlePlayerPageChange);
-		on('change:campaign:turnorder', HandleTurnOrderChange);
-		on('change:campaign:initiativepage', HandleInitiativePageChange);
+	registerEventHandlers = function() {
+		on('chat:message', handleInput);
+		on('change:campaign:playerpageid', handlePlayerPageChange);
+		on('change:campaign:turnorder', handleTurnOrderChange);
+		on('change:campaign:initiativepage', handleInitiativePageChange);
 	};
 
 	return {
-		RegisterEventHandlers: RegisterEventHandlers,
-		CheckInstall: CheckInstall
-
+		RegisterEventHandlers: registerEventHandlers,
+		CheckInstall: checkInstall,
+        Reset: reset
 	};
 }());
 
 on("ready",function(){
 	'use strict';
 
-    if("undefined" !== typeof isGM && _.isFunction(isGM)) {
-        Mark.CheckInstall();
-        Mark.RegisterEventHandlers();
-    } else {
-        log('--------------------------------------------------------------');
-        log('Mark requires the isGM module to work.');
-        log('isGM GIST: https://gist.github.com/shdwjk/8d5bb062abab18463625');
-        log('--------------------------------------------------------------');
-    }
+	Mark.CheckInstall();
+	Mark.RegisterEventHandlers();
 });

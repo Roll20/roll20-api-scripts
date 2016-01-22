@@ -25,6 +25,30 @@ var Shell = Shell || {
 	Shell.writeAndLog(s, "gm");
     },
 
+    sendChat: function(speakingAs, input){
+	if ((input.length <= 0) || (input.charAt(0) != '!')){
+	    return sendChat(speakingAs, input);
+	}
+	var playerId = null;
+	if (speakingAs.indexOf("player|") == 0){
+	    playerId = speakingAs.substring(7);
+	}
+	function processCommand(msgs){
+	    var doSend = true;
+	    for (var i = 0; i < msgs.length; i++){
+		var msg = _.clone(msgs[i]);
+		if (playerId){
+		    msg.playerid = playerId;
+		}
+		if (Shell.handleApiMessage(msg)){
+		    doSend = false;
+		}
+	    }
+	    if (doSend){ sendChat(speakingAs, input); }
+	}
+	sendChat(speakingAs, input, processCommand);
+    },
+
 
     // command registration
 
@@ -115,9 +139,6 @@ var Shell = Shell || {
 	    if (idx < 0){
 		// no more quotes or whitespace, just add the rest of the string to the current token and terminate
 		curTok += s;
-		if (curTok){
-		    retval.push(curTok);
-		}
 		break;
 	    }
 	    curTok += s.substr(0, idx);
@@ -134,6 +155,9 @@ var Shell = Shell || {
 		}
 		curTok = "";
 	    }
+	}
+	if (curTok){
+	    retval.push(curTok);
 	}
 	return retval;
     },
@@ -158,7 +182,7 @@ var Shell = Shell || {
 	}
 	if (helpMsg){
 	    Shell.write("Shell Commands:", msg.who);
-	    Shell.write(helpMsg, msg.who, "font-size: small");
+	    Shell.write(helpMsg.replace(/\//g, "&#47;"), msg.who, "font-size: small");
 	}
     },
 
@@ -271,9 +295,7 @@ var Shell = Shell || {
 	return false;
     },
 
-    handleChatMessage: function(msg){
-	if (msg.type != "api"){ return; }
-
+    handleApiMessage: function(msg){
 	// tokenize command string
 	var tokens = Shell.tokenize(msg.content);
 	if (typeof(tokens) == typeof("")){
@@ -294,6 +316,12 @@ var Shell = Shell || {
 
 	// execute command callback
 	Shell.commands[tokens[0]].callback(tokens, _.clone(msg));
+	return true;
+    },
+
+    handleChatMessage: function(msg){
+	if (msg.type != "api"){ return; }
+	Shell.handleApiMessage(msg);
     },
 
     init: function(){

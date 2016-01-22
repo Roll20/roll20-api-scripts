@@ -7,8 +7,8 @@
 var Bump = Bump || (function() {
     'use strict';
 
-    var version = '0.2.1',
-        lastUpdate = 1427670567,
+    var version = '0.2.4',
+        lastUpdate = 1437941889,
         schemaVersion = 0.2,
         clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
 
@@ -165,7 +165,7 @@ var Bump = Bump || (function() {
 
     bumpToken = function(id,who) {
         var pair=getMirroredPair(id);
-        if(pair) {
+        if(pair && pair.master && pair.slave) {
             switch(pair.master.get('layer')){
                 case 'gmlayer':
                     setMasterLayer(pair.master,'objects');
@@ -389,17 +389,17 @@ var Bump = Bump || (function() {
                 }
                 _.each(args,function(a){
                     var opt=a.split(/\|/),
-                        msg='';
+                        omsg='';
                     switch(opt.shift()) {
                         case '--gm-layer-color':
                             if(opt[0].match(regex.colors)) {
                                state.Bump.config.layerColors.gmlayer=opt[0];
                             } else {
-                                msg='<div><b>Error:</b> Not a valid color: '+opt[0]+'</div>';
+                                omsg='<div><b>Error:</b> Not a valid color: '+opt[0]+'</div>';
                             }
                             sendChat('','/w '+who+' '
                                 +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
-                                    +msg
+                                    +omsg
                                     +getConfigOption_GMLayerColor()
                                 +'</div>'
                             );
@@ -409,11 +409,11 @@ var Bump = Bump || (function() {
                             if(opt[0].match(regex.colors)) {
                                state.Bump.config.layerColors.objects=opt[0];
                             } else {
-                                msg='<div><b>Error:</b> Not a valid color: '+opt[0]+'</div>';
+                                omsg='<div><b>Error:</b> Not a valid color: '+opt[0]+'</div>';
                             }
                             sendChat('','/w '+who+' '
                                 +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
-                                    +msg
+                                    +omsg
                                     +getConfigOption_ObjectsLayerColor()
                                 +'</div>'
                             );
@@ -448,15 +448,38 @@ var Bump = Bump || (function() {
                 break;
         }
     },
+    
+    handleTurnOrderChange = function() {
+         Campaign().set({
+            turnorder: JSON.stringify(
+                _.map(JSON.parse( Campaign().get('turnorder') || '[]'), function(turn){
+                    _.find(state.Bump.mirrored,function(slaveid,masterid){
+                        if(slaveid === turn.id) {
+                            turn.id = masterid;
+                            return true;
+                        }
+                        return false;
+                    });
+                    return turn;
+                })
+            )
+        });
+    },
 
     registerEventHandlers = function() {
         on('chat:message', handleInput);
         on('change:graphic', handleTokenChange);
         on('destroy:graphic', handleRemoveToken);
+        on('change:campaign:turnorder', handleTurnOrderChange);
+
+        if('undefined' !== typeof GroupInitiative && GroupInitiative.ObserveTurnOrderChange){
+            GroupInitiative.ObserveTurnOrderChange(handleTurnOrderChange);
+        }
     };
 
     return {
         CheckInstall: checkInstall,
+        Notify_TurnOrderChange: handleTurnOrderChange,
         RegisterEventHandlers: registerEventHandlers
     };
     

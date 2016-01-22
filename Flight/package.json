@@ -1,12 +1,11 @@
 {
   "name": "Flight",
+  "script": "Flight.js",
   "version": "3.2",
   "description": "Adds 'fluffy-wings' status icon to selected token to represent some height.",
   "authors": "Brian Shields",
   "roll20userid": "235259",
-  "dependencies": {
-    "splitArgs": "1.0"
-  },
+  "dependencies": ["splitArgs"],
   "modifies": {
     "message": "read",
     "token": "write"

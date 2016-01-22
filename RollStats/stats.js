@@ -37,7 +37,7 @@ var RollStats = RollStats || {
     },
 
     processRolls: function(player, rolls){
-	if (!rolls){ return; }
+	if (!_.isArray(rolls) ){ return; }
 
 	for (var i = 0; i < rolls.length; i++){
 	    if (rolls[i].type == "R"){
@@ -378,7 +378,7 @@ var RollStats = RollStats || {
 	    }
 	}
 
-	if ((RollStats.doChatCommands) && (msg.type == "api") && (msg.indexOf("!rollstats") == 0)){
+	if ((RollStats.doChatCommands) && (msg.type == "api") && (msg.content.indexOf("!rollstats") == 0)){
 	    return RollStats.handleStatsMessage(msg.content.split(" "), msg);
 	}
     },

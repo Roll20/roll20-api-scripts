@@ -4,9 +4,9 @@ var BloodAndHonor = {
 	author: {
 		name: "John C." || "Echo" || "SplenectomY",
 		company: "Team Asshat" || "The Alehounds",
-		contact: "echo@TeamAsshat.com",
+		contact: "echo@TeamAsshat.com"
 	},
-	version: "0.8",
+	version: "0.8.2", // The Aaron - Patched for playerIsGM(), createObj(), and randomInteger() crash.
 	gist: "https://gist.github.com/SplenectomY/097dac3e427ec50f32c9",
 	forum: "https://app.roll20.net/forum/post/1477230/",
 	wiki: "https://wiki.roll20.net/Script:Blood_And_Honor:_Automatic_blood_spatter,_pooling_and_trail_effects",
@@ -20,6 +20,7 @@ var BloodAndHonor = {
 	// If you have it installed, this will plug in TheAaron's isGM auth module,
 	// which will make it so only the GM can use the !clearblood command
 	// Change to "true" if you want to check for authorization
+        // NOTE: Changed this to use the now built in playerIsGM()
 	useIsGM: false,
 	
 	// YOU MUST ADD YOUR OWN SPATTERS AND POOLS TO YOUR LIBRARY
@@ -52,7 +53,7 @@ var BloodAndHonor = {
 		gLeft = gLeft + (randomInteger(Math.floor(gWidth / 2)) * BloodAndHonor.getOffset());
 		gTop = gTop + (randomInteger(Math.floor(gWidth / 2)) * BloodAndHonor.getOffset());
 		setTimeout(function(){
-			toFront(fixedCreateObj("graphic",{
+			toFront(createObj("graphic",{
 				imgsrc: gType,
 				gmnotes: "blood",
 				pageid: gPage_id,
@@ -62,7 +63,7 @@ var BloodAndHonor = {
 				rotation: randomInteger(360) - 1,
 				width: gWidth,
 				height: gWidth,
-				layer: "map",
+				layer: "map"
 			}));
 		},50);
 	},
@@ -76,16 +77,6 @@ var BloodAndHonor = {
 	}
 };
 
-fixedCreateObj = (function () {
-	return function () {
-		var obj = createObj.apply(this, arguments);
-			if (obj && !obj.fbpath) {
-				obj.fbpath = obj.changed._fbpath.replace(/([^\/]*\/){4}/, "/");
-			}
-		return obj;
-	};
-}());
-
 on("ready", function(obj) {
 	
 	setInterval(function(){BloodAndHonor.onTimeout()},1000);
@@ -95,7 +86,10 @@ on("ready", function(obj) {
 		// Create spatter near token if "bloodied".
 		// Chance of spatter depends on severity of damage
 		else if (obj.get("bar3_value") <= obj.get("bar3_max") / 2 && prev["bar3_value"] > obj.get("bar3_value") && obj.get("bar3_value") > 0) {
-			if (randomInteger(obj.get("bar3_max")) > obj.get("bar3_value")) {
+                var m=parseInt(obj.get('bar3_max'),10)||1,
+                    v=parseInt(obj.get('bar3_value'),10)||1,
+                    r=randomInteger(m);
+			if (r>v) {
 				var bloodMult = 1 + ((obj.get("bar3_value") - prev["bar3_value"]) / obj.get("bar3_max"));
 				BloodAndHonor.createBlood(obj.get("_pageid"), obj.get("left"), obj.get("top"), Math.floor(BloodAndHonor.tokenSize * bloodMult), BloodAndHonor.chooseBlood("spatter"), BloodAndHonor.bloodColor(obj.get("gmnotes")));
 			}
@@ -110,7 +104,10 @@ on("ready", function(obj) {
 	on("change:graphic:lastmove", function(obj) {
 		if (BloodAndHonor.timeout == 0) {
 			if (obj.get("bar3_value") <= obj.get("bar3_max") / 2 && (obj.get("gmnotes")).indexOf("noblood") == -1) {
-				if (randomInteger(obj.get("bar3_max")) > obj.get("bar3_value")) {
+                var m=parseInt(obj.get('bar3_max'),10)||1,
+                    v=parseInt(obj.get('bar3_value'),10)||1,
+                    r=randomInteger(m);
+				if (r>v) {
 					BloodAndHonor.createBlood(obj.get("_pageid"), obj.get("left"), obj.get("top"), Math.floor(BloodAndHonor.tokenSize / 2), BloodAndHonor.chooseBlood("spatter"), BloodAndHonor.bloodColor(obj.get("gmnotes")));
 					BloodAndHonor.timeout += 2;
 				}
@@ -120,7 +117,7 @@ on("ready", function(obj) {
 	
 	on("chat:message", function(msg) {
 		if (msg.type == "api" && msg.content.indexOf("!clearblood") !== -1) {
-			if (BloodAndHonor.useIsGM && !isGM(msg.playerid)) {
+			if (BloodAndHonor.useIsGM && !playerIsGM(msg.playerid)) {
 				sendChat(msg.who,"/w " + msg.who + " You are not authorized to use that command!");
 				return;
 			} else {

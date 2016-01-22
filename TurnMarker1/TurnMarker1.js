@@ -9,7 +9,8 @@
 var TurnMarker = TurnMarker || (function(){
     "use strict";
     
-    var version = '1.3.0',
+    var version = '1.3.1',
+        lastUpdate = 1444742266,
         schemaVersion = 1.16,
         active = false,
         threadSync = 1;
@@ -18,7 +19,7 @@ var TurnMarker = TurnMarker || (function(){
 return {
 
     CheckInstall: function() {    
-    	log('-=> TurnMarker v'+version+' <=-');
+        log('-=> TurnMarker v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
 
         if( ! state.hasOwnProperty('TurnMarker') || state.TurnMarker.version !== TurnMarker.schemaVersion)
         {
@@ -348,9 +349,28 @@ return {
             );
         }
     },
+    HandleTurnOrderChange: function() {
+        var marker = TurnMarker.GetMarker(),
+    		turnorder = Campaign().get('turnorder'),
+			markerTurn;
+
+		turnorder = ('' === turnorder) ? [] : JSON.parse(turnorder);
+		markerTurn = _.filter(turnorder, function(i){
+			return marker.id === i.id;
+		})[0];
+
+		if(markerTurn.pr !== -1){
+			markerTurn.pr = -1;
+			turnorder =_.union([markerTurn], _.reject(turnorder, function(i){
+				return marker.id === i.id;
+			}));
+			Campaign().set('turnorder',JSON.stringify(turnorder));
+		}
+    },
     _HandleMarkerTurn: function(){
         var marker = TurnMarker.GetMarker();
         var turnOrder = TurnOrder.Get();
+
 
         if(turnOrder[0].id === marker.id)
         {
@@ -640,6 +660,10 @@ return {
                     break;
             }
         });
+
+        if('undefined' !== typeof GroupInitiative && GroupInitiative.ObserveTurnOrderChange){
+            GroupInitiative.ObserveTurnOrderChange(TurnMarker.HandleTurnOrderChange);
+        }
     }
 
 };

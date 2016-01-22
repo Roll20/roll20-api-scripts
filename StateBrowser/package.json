@@ -1,0 +1,10 @@
+{
+    "name":		"StateBrowser",
+    "version":		"0.1",
+    "description":	"View/modify the state object.",
+    "authors":		"manveti",
+    "roll20userid":	"503018",
+    "dependencies":	{},
+    "modifies":		{},
+    "conflicts":	[]
+}
