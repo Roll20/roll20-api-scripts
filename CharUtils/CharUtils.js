@@ -5,8 +5,8 @@
 var CharUtils = CharUtils || (function() {
     'use strict';
 
-    var version = '0.6.1',
-        lastUpdate = 1431628182,
+    var version = '0.6.3',
+        lastUpdate = 1453471300,
 
     ch = function (c) {
 		var entities = {
@@ -60,12 +60,12 @@ var CharUtils = CharUtils || (function() {
 		+'</div>'
 	+'</div>'
 	+'<div style="padding-left:10px;">'
-		+'<b><span style="font-family: serif;">!chardup-some --'+ch('<')+'Ability'+ch('>')+'  --'+ch('<')+'Source'+ch('>')+'  --'+ch('<')+'Destination'+ch('>')+' [--'+ch('<')+'Destination'+ch('>')+' ... ]</span></b>'
+		+'<b><span style="font-family: serif;">!chardup-some --'+ch('<')+'Ability[|Ability|...]'+ch('>')+'  --'+ch('<')+'Source'+ch('>')+'  --'+ch('<')+'Destination'+ch('>')+' [--'+ch('<')+'Destination'+ch('>')+' ... ]</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>This command requires a minimum of 3 parameters.  For the ability name, all matching abilities will be copied.  Case and whitespace are ignored in the match.  For all character names, case is ignored and you may use partical names so long as they are unique.  For example, '+ch('"')+'King Maximillian'+ch('"')+' could be called '+ch('"')+'max'+ch('"')+' as long as '+ch('"')+'max'+ch('"')+' does not appear in any other names.  Exception:  An exact match will trump a partial match.  In the previous example, if a character named '+ch('"')+'Max'+ch('"')+' existed, it would be the only character matched for <b>--max</b>.</p>'
 			+'<ul>'
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
-					+'<b><span style="font-family: serif;">--'+ch('<')+'Ability'+ch('>')+'</span></b> '+ch('-')+' This is the name (or part of it) of an ability.'
+					+'<b><span style="font-family: serif;">--'+ch('<')+'Ability[|Ability|...]'+ch('>')+'</span></b> '+ch('-')+' This is the name (or part of it) of one or more abilities separarted by |.'
 				+'</li> '
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<b><span style="font-family: serif;">--'+ch('<')+'Source'+ch('>')+'</span></b> '+ch('-')+' This is the name of the character to copy from.'
@@ -301,7 +301,7 @@ var CharUtils = CharUtils || (function() {
 					showHelp();
 					break;
 				}
-                ability = args.shift();
+                ability = args.shift().split(/\|/);
                 
                 /* intentinal fallthrough */
 
@@ -359,11 +359,11 @@ var CharUtils = CharUtils || (function() {
 					abilities=filterObjs(function(a){
                         return 'ability' === a.get('type')
                             && a.get('characterid') === matches[0].id 
-                            && ( ability ? -1 !== keyFormat(a.get('name')).indexOf(keyFormat(ability)) : true);
+                            && ( ability ? _.find(ability,function(aname){ return -1 !== keyFormat(a.get('name')).indexOf(keyFormat(aname));}) : true);
                     });
 
 					if(!abilities.length) {
-						sendChat('','/w gm Character [<b>'+matches[0].get('name')+'</b>] does not have any abilities'+(ability ? ' matching <b>'+ability+'</b>.' : '.') );
+						sendChat('','/w gm Character [<b>'+matches[0].get('name')+'</b>] does not have any abilities'+(ability ? ' matching <b>'+ability.join(',')+'</b>.' : '.') );
 						break;
 					}
 					_.each(abilities,function(a){
