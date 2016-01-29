@@ -5,8 +5,8 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.9.13',
-        lastUpdate = 1450988251,
+    var version = '0.9.14',
+        lastUpdate = 1454030952,
         schemaVersion = 1.0,
         bonusCache = {},
         observers = {
@@ -721,7 +721,8 @@ var GroupInitiative = GroupInitiative || (function() {
             cont=false,
             manualBonus=0,
             turnEntries,
-            finalize
+            finalize,
+            isReroll=false
 			;
 
         if (msg.type !== "api" ) {
@@ -880,6 +881,7 @@ var GroupInitiative = GroupInitiative || (function() {
                             break;
 
 						case 'reroll':
+                            isReroll=true;
 							msg.selected= _.chain(JSON.parse(Campaign().get('turnorder'))||[])
 								.filter(function(e){
 									return -1 !== e.id;
@@ -925,7 +927,7 @@ var GroupInitiative = GroupInitiative || (function() {
                         bonusCache = {};
                         turnorder = Campaign().get('turnorder');
                         turnorder = ('' === turnorder) ? [] : JSON.parse(turnorder);
-                        if(state.GroupInitiative.config.replaceRoll) {
+                        if(state.GroupInitiative.config.replaceRoll || isReroll) {
                             turnorder=_.reject(turnorder,function(i){
                                 return _.contains(_.pluck(msg.selected, '_id'),i.id);
                             });
