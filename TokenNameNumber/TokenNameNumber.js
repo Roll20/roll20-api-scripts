@@ -5,8 +5,8 @@
 var TokenNameNumber = TokenNameNumber || (function() {
     'use strict';
 
-    var version = '0.5.4',
-        lastUpdate = 1442959498,
+    var version = '0.5.5',
+        lastUpdate = 1454280144,
         schemaVersion = 0.3,
         statuses = [
             'red', 'blue', 'green', 'brown', 'purple', 'pink', 'yellow', // 0-6
@@ -26,6 +26,7 @@ var TokenNameNumber = TokenNameNumber || (function() {
         regex = {
             escape: /(\\|\/|\[|\]|\(|\)|\{|\}|\?|\+|\*|\||\.|\^|\$)/g
         },
+        tokenIds = [],
 
     checkInstall = function() {    
         log('-=> TokenNameNumber v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
@@ -294,6 +295,9 @@ var TokenNameNumber = TokenNameNumber || (function() {
        return base(num); 
     },
 
+    saveTokenId = function(obj){
+        tokenIds.push(obj.id);
+    },
 
 	setNumberOnToken = function(obj) {
 		var matchers,
@@ -304,70 +308,75 @@ var TokenNameNumber = TokenNameNumber || (function() {
 			num,
             statuspart='';
 
-        if( 'graphic' === obj.get('type') 
-            && 'token'   === obj.get('subtype') ) {
+        if(_.contains(tokenIds,obj.id)){
+            tokenIds=_.without(tokenIds,obj.id);
 
-			matchers = (getMatchers(obj.get('pageid'), obj.get('represents'))) || [];
-			tokenName = (obj.get('name'));
+            if( 'graphic' === obj.get('type') 
+                && 'token'   === obj.get('subtype') ) {
+
+                matchers = (getMatchers(obj.get('pageid'), obj.get('represents'))) || [];
+                tokenName = (obj.get('name'));
 
 
 
-			if(tokenName.match( /%%NUMBERED%%/ ) || _.some(matchers,function(m) { return m.test(tokenName);}) ) {
-				if( 0 === matchers.length || !_.some(matchers,function(m) { return m.test(tokenName);}) ) {
-					matcher='^('+esRE(tokenName).replace(/%%NUMBERED%%/,')(\\d+)(')+')$';
-					addMatcher(obj.get('pageid'), obj.get('represents'), matcher );
-				}
-				if( !_.some(matchers,function(m) {
-					if(m.test(tokenName)) {
-						matcher=m;
-						return true;
-					}
-					return false;
-				}) ) {
-					matcher=new RegExp('^('+esRE(tokenName).replace(/%%NUMBERED%%/,')(\\d+)(')+')$');
-					renamer=new RegExp('^('+esRE(tokenName).replace(/%%NUMBERED%%/,')(%%NUMBERED%%)(')+')$');
-				}
-				renamer = renamer || matcher;
+                if(tokenName.match( /%%NUMBERED%%/ ) || _.some(matchers,function(m) { return m.test(tokenName);}) ) {
+                    if( 0 === matchers.length || !_.some(matchers,function(m) { return m.test(tokenName);}) ) {
+                        matcher='^('+esRE(tokenName).replace(/%%NUMBERED%%/,')(\\d+)(')+')$';
+                        addMatcher(obj.get('pageid'), obj.get('represents'), matcher );
+                    }
+                    if( !_.some(matchers,function(m) {
+                        if(m.test(tokenName)) {
+                            matcher=m;
+                            return true;
+                        }
+                        return false;
+                    }) ) {
+                        matcher=new RegExp('^('+esRE(tokenName).replace(/%%NUMBERED%%/,')(\\d+)(')+')$');
+                        renamer=new RegExp('^('+esRE(tokenName).replace(/%%NUMBERED%%/,')(%%NUMBERED%%)(')+')$');
+                    }
+                    renamer = renamer || matcher;
 
-				num = (_.chain(findObjs({
-					type: 'graphic',
-					subtype: 'token',
-					represents: obj.get('represents'),
-					pageid: obj.get('pageid')
-				}))
-				.filter(function(t){
-					return matcher.test(t.get('name'));
-				})
-				.reduce(function(memo,t){
-					var c=parseInt(matcher.exec(t.get('name'))[2],10);
-					return Math.max(memo,c);
-				},0)
-				.value() );
+                    num = (_.chain(findObjs({
+                        type: 'graphic',
+                        subtype: 'token',
+                        represents: obj.get('represents'),
+                        pageid: obj.get('pageid')
+                    }))
+                    .filter(function(t){
+                        return matcher.test(t.get('name'));
+                    })
+                    .reduce(function(memo,t){
+                        var c=parseInt(matcher.exec(t.get('name'))[2],10);
+                        return Math.max(memo,c);
+                    },0)
+                    .value() );
 
-				num += ( state.TokenNameNumber.config.randomSpace ? (randomInteger(state.TokenNameNumber.config.randomSpace)-1) : 0);
+                    num += ( state.TokenNameNumber.config.randomSpace ? (randomInteger(state.TokenNameNumber.config.randomSpace)-1) : 0);
 
-				if(state.TokenNameNumber.config.useDots) {
-					statuspart = _.map(getDotNumber(num), function(n){
-						return state.TokenNameNumber.config.dots[n];
-					}).join(',');
-					if(statuspart) {
-						obj.set({
-							statusmarkers: statuspart
-						});
-					}
-				}
+                    if(state.TokenNameNumber.config.useDots) {
+                        statuspart = _.map(getDotNumber(num), function(n){
+                            return state.TokenNameNumber.config.dots[n];
+                        }).join(',');
+                        if(statuspart) {
+                            obj.set({
+                                statusmarkers: statuspart
+                            });
+                        }
+                    }
 
-				parts=renamer.exec(tokenName);
-				obj.set({
-					name: parts[1]+(++num)+parts[3]
-				});
-			}
-		}
+                    parts=renamer.exec(tokenName);
+                    obj.set({
+                        name: parts[1]+(++num)+parts[3]
+                    });
+                }
+            }
+        }
 	},
 
 	registerEventHandlers = function() {
         on('chat:message', handleInput);
-		on('add:graphic', setNumberOnToken);
+		on('add:graphic', saveTokenId);
+        on('change:graphic', setNumberOnToken);
 	};
 
 	return {
