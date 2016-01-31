@@ -5,8 +5,8 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.9.14',
-        lastUpdate = 1454030952,
+    var version = '0.9.15',
+        lastUpdate = 1454272318,
         schemaVersion = 1.0,
         bonusCache = {},
         observers = {
@@ -884,13 +884,13 @@ var GroupInitiative = GroupInitiative || (function() {
                             isReroll=true;
 							msg.selected= _.chain(JSON.parse(Campaign().get('turnorder'))||[])
 								.filter(function(e){
-									return -1 !== e.id;
+									return '-1' !== e.id;
 								})
 								.map(function(e){
 									return {_type: 'graphic', _id: e.id};
 								})
 								.value();
-								cont=true;
+                            cont=true;
 							break;
 
 
