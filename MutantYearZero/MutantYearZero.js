@@ -5,8 +5,8 @@
 var MutantYearZero = MutantYearZero || (function() {
     'use strict';
 
-    var version = '0.1.0',
-        lastUpdate = 1454462186,
+    var version = '0.1.1',
+        lastUpdate = 1454463052,
         schemaVersion = 0.1,
         defaults = {
             css: {
@@ -196,7 +196,7 @@ var MutantYearZero = MutantYearZero || (function() {
                 failures = (push ? diceCounts[1] : 0);
 
                 pushButton = (!push ? makeButton('!'+(w?'w':'')+'myz '+ch('[')+ch('[')+notSuccesses+'d'+dieSize+ch(']')+ch(']')+' '+successes, 'Push Yourself!') : '');
-                sendChat('', (w ? '/w gm ' : '/direct ') +
+                sendChat(msg.who, (w ? '/w gm ' : '/direct ') +
                     '<div style="margin-left: -45px;border: 1px solid #ccc;background-color:#eee;border-radius:.5em;padding:.5em;">'+
                         '<div><b>Successes: </b>'+successes+' '+pushButton+'</div>'+
                         (push && failures ? '<div style="color: red;"><b>Failures: </b>'+failures+'</div>' : '')+
