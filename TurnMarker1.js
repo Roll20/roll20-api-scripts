@@ -9,8 +9,8 @@
 var TurnMarker = TurnMarker || (function(){
     "use strict";
     
-    var version = '1.3.1',
-        lastUpdate = 1444742266,
+    var version = '1.3.2',
+        lastUpdate = 1455059959,
         schemaVersion = 1.16,
         active = false,
         threadSync = 1;
@@ -162,7 +162,7 @@ return {
         }
         TurnMarker.active=true;
         TurnMarker.Step(TurnMarker.threadSync);
-        TurnMarker.TurnOrderChange(false);
+        TurnMarker.TurnOrderChange(true);
     },
 
     HandleInput: function(tokens,who){
@@ -366,6 +366,7 @@ return {
 			}));
 			Campaign().set('turnorder',JSON.stringify(turnorder));
 		}
+        _.defer(_.bind(TurnMarker.DispatchInitiativePage,TurnMarker));
     },
     _HandleMarkerTurn: function(){
         var marker = TurnMarker.GetMarker();
