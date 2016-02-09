@@ -5,8 +5,8 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.9.15',
-        lastUpdate = 1454272318,
+    var version = '0.9.16',
+        lastUpdate = 1455059736,
         schemaVersion = 1.0,
         bonusCache = {},
         observers = {
@@ -637,6 +637,13 @@ var GroupInitiative = GroupInitiative || (function() {
             +'</div>'
             +'</div>'
 
+            +'<div style="padding-left:10px;">'
+            +'<b><span style="font-family: serif;">!group-init <i>--clear</i></span></b>'
+            +'<div style="padding-left: 10px;padding-right:20px">'
+            +'<p>Removes all tokens from the turn order.  If Auto Open Init is enabled it will also close the turn order box.</p>'
+            +'</div>'
+            +'</div>'
+
             +'<b>Roller Options</b>'
             +'<div style="padding-left:10px;">'
             +'<ul>'
@@ -893,6 +900,13 @@ var GroupInitiative = GroupInitiative || (function() {
                             cont=true;
 							break;
 
+						case 'clear':
+                            Campaign().set({
+                                turnorder: '[]',
+                                initiativepage: (state.GroupInitiative.config.autoOpenInit ? false : Campaign().get('initiativepage'))
+                            });
+                            notifyObservers('turnOrderChange');
+							break;
 
                         case 'bonus':
                             if(cmds[1] && cmds[1].match(/^[\-\+]?\d+(\.\d+)?$/)){
