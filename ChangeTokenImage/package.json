@@ -1,0 +1,18 @@
+{
+    "name": "ChangeTokenImage",
+    "version": "0.1.20",
+    "description": "Interface to change token images from a rollable table.",
+    "authors": "Chris B,Aaron",
+    "roll20userid": "144324",
+    "dependencies": [],
+    "modifies": {
+        "state.ChangeTokenImage": "read,write",
+        "attribute.characterid": "read",
+        "attribute.sides": "read",
+        "attribute.currentSide": "read,write",
+        "attribute.imgsrc": "write",
+        "character.name": "read",
+        "graphic.*": "read,write"
+    },
+    "conflicts": []
+}

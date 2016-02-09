@@ -5,7 +5,12 @@
 var RandomDepth = RandomDepth || (function() {
     'use strict';
 
-    var version = 0.2,
+    var version = '0.3.0',
+        lastUpdate = 1427604261,
+
+	checkInstall = function() {
+        log('-=> RandomDepth v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+	},
 
 	randomToFrontList = function (l) {
 		if( l.length ) {
@@ -46,6 +51,7 @@ var RandomDepth = RandomDepth || (function() {
     };
 
 	return {
+		CheckInstall: checkInstall,
 		RegisterEventHandlers: registerEventHandlers
 	};
     
@@ -54,5 +60,6 @@ var RandomDepth = RandomDepth || (function() {
 on('ready',function(){
 	'use strict';
 
+    RandomDepth.CheckInstall();
     RandomDepth.RegisterEventHandlers();
 });

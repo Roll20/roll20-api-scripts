@@ -1,5 +1,6 @@
 {
   "name": "splitArgs",
+  "script": "splitArgs.js",
   "version": "1.0",
   "description": "Provides a function for splitting arguments of an API command. This script is not intended to stand alone.",
   "authors": "Brian Shields",

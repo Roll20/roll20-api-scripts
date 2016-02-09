@@ -5,11 +5,66 @@
 var WildDice = WildDice || (function() {
     'use strict';
 
-    var version = 0.2,
+    var version = '0.3.0',
+        lastUpdate = 1435721274,
+
+	ch = function (c) {
+		var entities = {
+			'<' : 'lt',
+			'>' : 'gt',
+			"'" : '#39',
+			'@' : '#64',
+			'{' : '#123',
+			'|' : '#124',
+			'}' : '#125',
+			'[' : '#91',
+			']' : '#93',
+			'"' : 'quot',
+			'-' : 'mdash',
+			' ' : 'nbsp'
+		};
+
+		if(_.has(entities,c) ){
+			return ('&'+entities[c]+';');
+		}
+		return '';
+	},
 
     checkInstall = function() {
-		log('-=> WildDice v'+version+' <=-');
+        log('-=> WildDice v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
     },
+
+    showHelp = function(who) {
+
+        sendChat('','/w '+who+' '+
+'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
+	'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'+
+		'WildDice v'+version+
+	'</div>'+
+	'<div style="padding-left:10px;margin-bottom:3px;">'+
+		'<p>WildDice implements the rolling mechanics for WildDice systems.</p>'+
+	'</div>'+
+	'<b>Commands</b>'+
+	'<div style="padding-left:10px;">'+
+		'<b><span style="font-family: serif;">!wd '+ch('[')+ch('<')+'Dice Expression'+ch('>')+ch('|')+'--help'+ch(']')+'</span></b>'+
+		'<div style="padding-left: 10px;padding-right:20px">'+
+			'<p>Rolls the WildDice expression and diplays the results. <b>!wwd</b> can be used in place of <b>!wd</b> to whisper the results to the GM.</p>'+
+			'<ul>'+
+				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
+					'<b><span style="font-family: serif;">'+ch('<')+'Dice Expression'+ch('>')+'</span></b> '+ch('-')+' An inline dice expression, something akin to '+ch('[')+ch('[')+'5d6+8'+ch(']')+ch(']')+' which will then be parsed for the roll result.'+
+				'</li> '+
+				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
+					'<b><span style="font-family: serif;">--help</span></b> '+ch('-')+' Shows the Help screen'+
+				'</li> '+
+			'</ul>'+
+		'</div>'+
+    '</div>'+
+'</div>'
+        );
+    },
+
+
+
 
     getDiceCounts = function(rolls) {
         return ( _.reduce(rolls || [], function(m,r){
@@ -26,7 +81,7 @@ var WildDice = WildDice || (function() {
     },
 
     handleInput = function(msg) {
-        var args,
+        var args, who,
             w=false,
             rDice, wildDie, errorDie,
             bonusDice = [],
@@ -40,12 +95,18 @@ var WildDice = WildDice || (function() {
             return;
         }
 
+        who=getObj('player',msg.playerid).get('_displayname').split(' ')[0];
+
         args = msg.content.split(/\s+/);
         switch(args[0]) {
             case '!wwd':
                 w=true;
                 /* break; */ // Intentional drop through
             case '!wd':
+                if(!msg.inlinerolls || _.contains(args,'--help')){
+                    showHelp(who);
+                    return;
+                }
 
                 rDice = _.pluck( (msg.inlinerolls && msg.inlinerolls[0].results.rolls[0].results) || [], 'v');
                 pips = ((msg.inlinerolls && msg.inlinerolls[0].results.total-_.reduce(rDice,function(m,r){return m+r;},0)) || 0);
@@ -53,8 +114,10 @@ var WildDice = WildDice || (function() {
                 switch(wildDie) {
                     case 1:  // critical failure
                         critFailDice = getDiceCounts(rDice);
-                        critFailDice[_.max(rDice)]--;
-                        critFailDice = getDiceArray(critFailDice);
+                        if(critFailDice.length){
+                            critFailDice[_.max(rDice)]--;
+                            critFailDice = getDiceArray(critFailDice);
+                        }
                         sumFail=_.reduce(critFailDice,function(m,r){return parseInt(m,10) + parseInt(r,10);},0) + wildDie + pips;
                         markFirstMax = true;
                         break;
@@ -67,8 +130,6 @@ var WildDice = WildDice || (function() {
                         break;
                 }
                 sum = _.reduce(rDice.concat(bonusDice),function(m,r){return m+r;},0) + wildDie + pips;
-                log('Dice: '+rDice.join(',')+'  Wd['+wildDie+']  Bonus: '+bonusDice.join(',')+'  Crit Dice: '+critFailDice.join(','));
-
 
                 sendChat( 'WildDice', (w ? '/w gm ' : '/direct ')
                     +'<div>'

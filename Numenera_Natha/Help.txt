@@ -5,14 +5,16 @@ This script is meant to be used with Natha's Numenera character sheets:
 	- English sheet: https://github.com/Roll20/roll20-character-sheets/tree/master/Numenera_NathasNumenera_English
 	- French sheet: https://github.com/Roll20/roll20-character-sheets/tree/master/Numenera_NathasNumenera_French
 
-Sheet must be in version 4+ : chat outputs and error messages are managed through the sheet's templates.
+Sheet must be in version 4.5+ : chat outputs and error messages are managed through the sheet's templates.
 
 ******************************************************
 **** RELEASE
 ******************************************************
-Version: 4.2
-Date: 2015-04-20
+Version: 4.5
+Date: 2015-06-13
 Authors: Natha (75857)
+
+4.5: Added skill level to roll parameters (both from sheet and from macro), and Special damage handling to the damage track/check character state.
 
 4.2: By popular demand (of one, Hi Marturin!), stat rolls can be called by macros and a selected character token. See the !nathanum-macroroll chat command below.
 Plus added assets handling to stat roll.
@@ -25,19 +27,19 @@ Functions are now called by the buttons on the sheet, no need for macros.
 ******************************************************
 **** Chat commands
 ******************************************************
-!nathanum-macroroll token_or_character_id|stat name|Difficulty|Cost|Assets|Effort on Roll|Effort on Damage|Bonus
+!nathanum-macroroll token_or_character_id|stat name|Difficulty|Cost|Assets|Effort on Roll|Effort on Damage|Bonus|Skill level
 	New! Stat roll that can be called easier by macros.
-	Calls statRoll(character-objet,name-of-the-attibute,who-rolled, difficulty, Stat-expense,Assets,Effort-on-Roll,Effort-on-damage,Bonus-to-roll).
+	Calls statRoll(character-objet,name-of-the-attibute,who-rolled, difficulty, Stat-expense,Assets,Effort-on-Roll,Effort-on-damage,Bonus-to-roll,Skill-level).
 	(see the comments of the function below for details).
 
 	MIGHT ROLL MACRO EXAMPLE:
-	!nathanum-macroroll @{selected|token_id}|might|?{Difficulty|0}|?{Cost|0}|?{Assets|0}|?{Effort on Roll|0}|?{Effort on Damage|0}|?{Bonus|0}
+	!nathanum-macroroll @{selected|token_id}|might|?{Difficulty|0}|?{Cost|0}|?{Assets|0}|?{Effort on Roll|0}|?{Effort on Damage|0}|?{Bonus|0}|?{Skill level|0}
 
 	SPEED ROLL MACRO EXAMPLE:
-	!nathanum-macroroll @{selected|token_id}|speed|?{Difficulty|0}|?{Cost|0}|?{Assets|0}|?{Effort on Roll|0}|?{Effort on Damage|0}|?{Bonus|0}
+	!nathanum-macroroll @{selected|token_id}|speed|?{Difficulty|0}|?{Cost|0}|?{Assets|0}|?{Effort on Roll|0}|?{Effort on Damage|0}|?{Bonus|0}|?{Skill level|0}
 
 	INTELLECT ROLL MACRO EXAMPLE:
-	!nathanum-macroroll @{selected|token_id}|intellect|?{Difficulty|0}|?{Cost|0}|?{Assets|0}|?{Effort on Roll|0}|?{Effort on Damage|0}|?{Bonus|0}
+	!nathanum-macroroll @{selected|token_id}|intellect|?{Difficulty|0}|?{Cost|0}|?{Assets|0}|?{Effort on Roll|0}|?{Effort on Damage|0}|?{Bonus|0}|?{Skill level|0}
 |-----------------------------------------------------
 !nathanum-numeneroll character_id|attribute
 	Stat roll (called from the sheet mainly, as it requires a character id).
@@ -84,7 +86,7 @@ Functions are now called by the buttons on the sheet, no need for macros.
 ******************************************************
 General notes:
 	Functions statRoll, recoveryRoll, initRoll and restChar are for players (or GM), and can be called by clicking the RED buttons on the sheet.
-	Function checkCharStates is called by all the functions that modify stat pools (might, speed and intellect attributes) or when stat pools are manually modified (on the sheet or character).
+	Function checkCharStates is called by all the functions that modify stat pools (might, speed and intellect attributes, and Special Damage) or when stat pools are manually modified (on the sheet or character).
 	Function npcDamage is for the GM and meant to be called via macros with an NPC token selected (these characters require HEALTH and ARMOR attributes).
 	Errors and/or alert messages (insufficient stat pool points for example) are output in the chat using the "nathaNumMsg" roll template.
 |-----------------------------------------------------
@@ -100,7 +102,7 @@ initRoll(character-object):
     BEWARE: Not the standard Numenera initiative roll!
     The initiative roll is meant to be sorted/compared to (Level*3) of the NPCs/Creatures.
     The function:
-        - Rolls 1d20, adds the optional efforts (multiplied by 3) and bonus,
+        - Rolls 1d20, adds the optional efforts (multiplied by 3), skill level (multiplied by 3) and bonus,
         - Expends the optional speed points from effort and initial cost (using edge),
         - Then add the character, or its token (if on the map on the object layer), to the tracker, or replace the initiative value if it's already in the tracker
     Every necessary parameters for this function are attributes of the character sheet.
@@ -111,13 +113,14 @@ statRollFromSheet(character-objet,name-of-the-attibute,who-rolled):
     Gets the necessary parameters for this function as attributes from the character sheet (except the stat name).
     And then calls statRoll(character-objet,name-of-the-attibute,who-rolled, difficulty, Stat-expense,Assets,Effort-on-Roll,Effort-on-damage,Bonus-to-roll).
 |-----------------------------------------------------
-statRoll(character-objet,name-of-the-attibute,who-rolled, difficulty, Stat-expense,Assets,Effort-on-Roll,Effort-on-damage,Bonus-to-roll).
+statRoll(character-objet,name-of-the-attibute,who-rolled, difficulty, Stat-expense,Assets,Effort-on-Roll,Effort-on-damage,Bonus-to-roll, Skill-level).
     Might/speed/intellect roll (with eventual roll effort, additionnal cost, damage effort and bonus) against a difficulty (optional).
     Difficulty is the level of difficulty, not the target number.
     The target number is calculated by the function.
     If difficulty is 0, the roll still happens, but is not confronted to any difficulty: instead of calculating success, it calculates the highest difficulty beaten.
     Unless d20 rolls a natural 20, pool points cost is calculted (using edge) and expended, if necessary and if possible (not enough stat Pool points ends in an error message).
     Damage track and token state are checked/updated by calling checkCharStates().
+    Skill level should go from -1 (Inability) to +2 (Specialized).
     Chat output uses the "nathaNumRoll" roll template.
 |-----------------------------------------------------
 recoveryRoll(character-object):

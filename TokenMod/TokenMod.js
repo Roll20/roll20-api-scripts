@@ -5,11 +5,11 @@
 var TokenMod = TokenMod || (function() {
     'use strict';
 
-    var version = '0.8.5',
-        lastUpdate = 1430082613,
+    var version = '0.8.18',
+        lastUpdate = 1454855624,
         schemaVersion = 0.1,
 
-		fields = {
+        fields = {
 			// booleans
 			showname: {type: 'boolean'},
 			showplayers_name: {type: 'boolean'},
@@ -40,8 +40,8 @@ var TokenMod = TokenMod || (function() {
 
 			// 360 degrees
 			rotation: {type: 'degrees'},
-			light_angle: {type: 'degrees'},
-			light_losangle: {type: 'degrees'},
+			light_angle: {type: 'circleSegment'},
+			light_losangle: {type: 'circleSegment'},
 
 			// distance
 			light_radius: {type: 'numberBlank'},
@@ -60,6 +60,9 @@ var TokenMod = TokenMod || (function() {
 			bar1: {type: 'text'},
 			bar2: {type: 'text'},
 			bar3: {type: 'text'},
+			bar1_reset: {type: 'text'},
+			bar2_reset: {type: 'text'},
+			bar3_reset: {type: 'text'},
 
 
 			// colors
@@ -88,7 +91,7 @@ var TokenMod = TokenMod || (function() {
 		},
 		filters = {
 			hasArgument: function(a) {
-				return a.match(/.+\|/);
+				return a.match(/.+[\|#]/);
 			},
 			isBoolean: function(a) {
 				return _.has(fields,a) && 'boolean' === fields[a].type;
@@ -104,7 +107,31 @@ var TokenMod = TokenMod || (function() {
 						n %= 360;
 					}
 					return n;
-				}
+				},
+			circleSegment: function(t){
+					var n = Math.abs(parseFloat(t,10));
+					if(!_.isNaN(n)) {
+						n = Math.min(360,Math.max(0,n));
+					}
+					return n;
+				},
+            orderType: function(t){
+                    switch(t){
+                        case 'tofront':
+                        case 'front':
+                        case 'f':
+                        case 'top':
+                            return 'tofront';
+
+                        case 'toback':
+                        case 'back':
+                        case 'b':
+                        case 'bottom':
+                            return 'toback';
+                        default:
+                            return;
+                    }
+                }
 		},
 		ch = function (c) {
 			var entities = {
@@ -157,13 +184,17 @@ var TokenMod = TokenMod || (function() {
 	+'</div>'
 	+'<b>Commands</b>'
 	+'<div style="padding-left:10px;">'
-		+'<b><span style="font-family: serif;">!token-mod '+ch('<')+'<i>--help</i>|<i>--config</i>|<i>--on</i>|<i>--off</i>|<i>--flip</i>|<i>--set</i>'+ch('>')+' '+ch('<')+'parameter'+ch('>')+' '+ch('[')+ch('<')+'parameter'+ch('>')+' ...'+ch(']')+' ... '+ch('[')+'<i>--ids</i> '+ch('<')+'token_id'+ch('>')+' '+ch('[')+ch('<')+'token_id'+ch('>')+' ...'+ch(']')+ch(']')+'</span></b>'
+		+'<b><span style="font-family: serif;">!token-mod '+ch('<')+'<i>--help</i>|<i>--ignore-selected</i>|<i>--config</i>|<i>--on</i>|<i>--off</i>|<i>--flip</i>|<i>--set</i>'+ch('>')+' '+ch('<')+'parameter'+ch('>')+' '+ch('[')+ch('<')+'parameter'+ch('>')+' ...'+ch(']')+' ... '+ch('[')+'<i>--ids</i> '+ch('<')+'token_id'+ch('>')+' '+ch('[')+ch('<')+'token_id'+ch('>')+' ...'+ch(']')+ch(']')+'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>This command takes a list of modifications and applies them to the selected tokens (or tokens specified with --ids by a GM or Player depending on configuration).  Note that each --option can be specified multiple times and in any order.</p>'
 			+'<p><b>Note:</b> If you are using multiple '+ch('@')+ch('{')+'target'+ch('|')+'token_id'+ch('}')+' calls in a macro, and need to adjust fewer than the supplied number of token ids, simply select the same token several times.  The duplicates will be removed.</p>'
+			+'<p><b>Note:</b> Anywhere you use |, you can use # instead.  Sometimes this make macros easier.</p>'
 			+'<ul>'
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<b><span style="font-family: serif;">'+ch('<')+'--help'+ch('>')+'</span></b> '+ch('-')+' Displays this help.'
+				+'</li> '
+				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<b><span style="font-family: serif;">'+ch('<')+'--ignore-selected'+ch('>')+'</span></b> '+ch('-')+' Prevents modifications to the selected tokens (only modifies tokens passed with --ids).'
 				+'</li> '
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<b><span style="font-family: serif;">'+ch('<')+'--config'+ch('>')+'</span></b> '+ch('-')+' Sets Config options. '
@@ -181,6 +212,9 @@ var TokenMod = TokenMod || (function() {
 					+'<b><span style="font-family: serif;">'+ch('<')+'--set'+ch('>')+'</span></b> '+ch('-')+' Each parameter is treated as a key and value, divided by a | character.  Sets the key to the value.  If the value has spaces, you must enclose it '+ch("'")+' or '+ch('quot')+'.  See below for specific value handling logic.'
 				+'</li> '
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<b><span style="font-family: serif;">'+ch('<')+'--order'+ch('>')+'</span></b> '+ch('-')+' changes the ordering of tokens.  Specify one of '+ch("'")+'tofront'+ch("'")+', '+ch("'")+'front'+ch("'")+', '+ch("'")+'f'+ch("'")+', '+ch("'")+'top'+ch("'")+' to bring something to the front or '+ch("'")+'toback'+ch("'")+', '+ch("'")+'back'+ch("'")+', '+ch("'")+'b'+ch("'")+', '+ch("'")+'bottom'+ch("'")+' to push it to the back.'
+				+'</li> '
+				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<b><span style="font-family: serif;">'+ch('<')+'--ids'+ch('>')+'</span></b> '+ch('-')+' Each parameter is a Token ID, usually supplied with something like '+ch('@')+ch('{')+'target'+ch('|')+'Target 1'+ch('|')+'token_id'+ch('}')+'. '
 					+'By default, only a GM can use this argument.  You can enable players to use it as well with <b>--config players-can-ids|on</b>.'
 				+'</li> '
@@ -194,9 +228,9 @@ var TokenMod = TokenMod || (function() {
 			+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
 				+'!token-mod --ids -Jbz-mlHr1UXlfWnGaLh -JbjeTZycgyo0JqtFj-r -JbjYq5lqfXyPE89CJVs --on showname showplayers_name'
 			+'</pre>'
-		+'<p>Usually, you will want to specify these with the @{target} syntax:</p>'
+		+'<p>Usually, you will want to specify these with the '+ch('@')+ch('{')+'target'+ch('}')+' syntax:</p>'
 			+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
-				+'!token-mod --ids @{target|1|token_id} @{target|2|token_id} @{target|3|token_id} --on showname showplayers_name'
+				+'!token-mod --ids '+ch('@')+ch('{')+'target|1|token_id'+ch('}')+' '+ch('@')+ch('{')+'target|2|token_id'+ch('}')+' '+ch('@')+ch('{')+'target|3|token_id'+ch('}')+' --on showname showplayers_name'
 			+'</pre>'
 	+'</div>'
 
@@ -257,6 +291,11 @@ var TokenMod = TokenMod || (function() {
 				+'!token-mod --set bar1_value|-3 statusmarkers|blue:+1|green:-1'
 			+'</pre>'
 
+		+'<p><b>Note:</b> You can now preface a + or - with a = to explicitly set the number to a negative or positive value:</p>'
+			+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
+				+'!token-mod --set bar1_value|=+3 light_radius|=-10'
+			+'</pre>'
+
 		+'<p>There are several types of keys with special value formats:</p>'
 
 		+'<div style="padding-left: 10px;padding-right:20px">'
@@ -296,16 +335,29 @@ var TokenMod = TokenMod || (function() {
 
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<b>Degrees</b>'
-			+'<p>Any positive or negative integer.</p>'
+			+'<p>Any positive or negative number.</p>'
 			+'<p><u>Available Degrees Properties:</u></p>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">rotation</div>'
+			+'<div style="clear:both;">'+ch(' ')+'</div>'
+			+'<p>Rotating a token by 180 degrees.</p>'
+			+'<div style="padding-left: 10px;padding-right:20px">'
+				+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
+					+'!token-mod --set rotation|180'
+				+'</pre>'
+			+'</div>'
+		+'</div>'
+
+		+'<div style="padding-left: 10px;padding-right:20px">'
+			+'<b>Circle Segment</b>'
+			+'<p>Any positive or negative number between 0 and 360.</p>'
+			+'<p><u>Available Circle Segement Properties:</u></p>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">light_angle</div>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">light_losangle</div>'
 			+'<div style="clear:both;">'+ch(' ')+'</div>'
-			+'<p>Rotating a token by 180 degrees, and setting line of sight angle to 90 degrees.</p>'
+			+'<p>Setting line of sight angle to 90 degrees.</p>'
 			+'<div style="padding-left: 10px;padding-right:20px">'
 				+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
-					+'!token-mod --set rotation|180 light_losangle|90'
+					+'!token-mod --set light_losangle|90'
 				+'</pre>'
 			+'</div>'
 		+'</div>'
@@ -340,6 +392,9 @@ var TokenMod = TokenMod || (function() {
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar1</div>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar2</div>'
 			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar3</div>'
+			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar1_reset</div>'
+			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar2_reset</div>'
+			+'<div style="width: 130px; padding: 0px 3px;float: left;">bar3_reset</div>'
 			+'<div style="clear:both;">'+ch(' ')+'</div>'
 			+'<p>Setting the name to Sir Thomas and bar1 to 23.</p>'
 			+'<div style="padding-left: 10px;padding-right:20px">'
@@ -351,6 +406,12 @@ var TokenMod = TokenMod || (function() {
 			+'<div style="padding-left: 10px;padding-right:20px">'
 				+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
 					+'!token-mod --set bar1|'+ch('[')+ch('[')+'3d6+8'+ch(']')+ch(']')
+				+'</pre>'
+			+'</div>'
+			+'<p><i>bar1_reset</i>, <i>bar2_reset</i> and <i>bar3_reset</i> are special.  Any value set on them will be ignored, instead they well set the <i>_value</i> field for that bar to whatever the matching <i>_max</i> field is set to.  This is most useful for resetting hit points or resource counts like spells. (The | is currently stille required.)</p>'
+			+'<div style="padding-left: 10px;padding-right:20px">'
+				+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
+					+'!token-mod --set bar1_reset| bar3_reset|'
 				+'</pre>'
 			+'</div>'
 		+'</div>'
@@ -405,10 +466,17 @@ var TokenMod = TokenMod || (function() {
 				+'</pre>'
 			+'</div>'
 
-			+'<p>The numbers following a status can be prefaced with a + or -, which causes their value to be applyed to the current value. Here'+ch("'")+'s and example showing blue getting incremented by 2, and padlock getting decremented by 1.  Values will be bounded between 0 and 9.</p>'
+			+'<p>The numbers following a status can be prefaced with a + or -, which causes their value to be applyed to the current value. Here'+ch("'")+'s an example showing blue getting incremented by 2, and padlock getting decremented by 1.  Values will be bounded between 0 and 9.</p>'
 			+'<div style="padding-left: 10px;padding-right:20px">'
 				+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
 					+'!token-mod --set statusmarkers|blue:+2|padlock:-1'
+				+'</pre>'
+			+'</div>'
+
+			+'<p>You can optionally preface each status with a ? to modify the way + and - on status numbers work.  With ? on the front of the status, only selected tokens that have that status will be modified.  Additionally, if the status reaches 0, it will be removed.  Here'+ch("'")+'s an example showing blue getting decremented by 1.  If it reaches 0, it will be removed and no status will be added if it is missing.</p>'
+			+'<div style="padding-left: 10px;padding-right:20px">'
+				+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
+					+'!token-mod --set statusmarkers|?blue:-1'
 				+'</pre>'
 			+'</div>'
 
@@ -549,9 +617,7 @@ var TokenMod = TokenMod || (function() {
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<div style="float:right;width:40px;border:1px solid black;background-color:#ffc;text-align:center;">'
 						+( state.TokenMod.playersCanUse_ids ? '<span style="color: red; font-weight:bold; padding: 0px 4px;">ON</span>' : '<span style="color: #999999; font-weight:bold; padding: 0px 4px;">OFF</span>' )
-					+'</div>'
-					+'<b><span style="font-family: serif;">players-can-ids</span></b> '+ch('-')+' Determines if players can use <i>--ids</i>.  Specifying a value which is true allows players to use --ids.  Omitting a value flips the current setting.'
-				+'</li> '
+					+'</div>' +'<b><span style="font-family: serif;">players-can-ids</span></b> '+ch('-')+' Determines if players can use <i>--ids</i>.  Specifying a value which is true allows players to use --ids.  Omitting a value flips the current setting.' +'</li> '
 			+'</ul>'
 		+'</div>'
         +getConfigOption_PlayersCanIDs()
@@ -566,14 +632,20 @@ var TokenMod = TokenMod || (function() {
 
 
 	getRelativeChange = function(current,update) {
-		var cnum = current
+		var cnum,unum;
+
+        if( update && _.has(update,0) && ('=' === update[0]) ){
+            return parseFloat(_.rest(update).join(''));
+        }
+        
+        cnum = current
 			&& (_.isNumber(current)
 				? current
 				: ( _.isString(current)
 					? (current.match(regex.numberString) ? parseFloat(current,10) : NaN)
 					: NaN)
-				),
-			unum = update
+				);
+        unum = update
 			&& (_.isNumber(update)
 				? update
 				: ( _.isString(update)
@@ -598,7 +670,7 @@ var TokenMod = TokenMod || (function() {
 		return update;
 	},
 	parseArguments = function(a) {
-		var args=a.split(/\|/),
+		var args=a.split(/[\|#]/),
 			cmd=args.shift(),
 			retr={},
 			t,t2;
@@ -615,21 +687,49 @@ var TokenMod = TokenMod || (function() {
 					break;
 
 				case 'numberBlank':
-					retr[cmd].push( args[0].match(regex.numberString) ? args[0] : '' );
-					if(_.isNaN(parseFloat(retr[cmd][0],10))) {
-						retr[cmd][0] = '';
+                    if( '=' === args[0][0] ) {
+                        t='=';
+                        args[0]=_.rest(args[0]).join('');
+                    } else {
+                        t='';
+                    }
+                    t2=args[0].match(regex.numberString) ? args[0] : '' ;
+					if( ''===t2 || !_.isNaN(parseFloat(t2)) ) {
+						retr[cmd].push(t+t2);
 					}
 					break;
 
 				case 'number':
-					retr[cmd].push( args[0].match(regex.numberString) ? args[0] : undefined );
-					if(_.isNaN(parseFloat(retr[cmd][0],10))) {
-						retr = undefined;
+                    if( '=' === args[0][0] ) {
+                        t='=';
+                        args[0]=_.rest(args[0]).join('');
+                    } else {
+                        t='';
+                    }
+					t2=args[0].match(regex.numberString) ? args[0] : undefined ;
+					if(!_.isNaN(parseFloat(t2)) ) {
+						retr[cmd].push(t+t2);
 					}
 					break;
 
 				case 'degrees':
-					retr[cmd].push((_.contains(['-','+'],args[0][0]) ? args[0][0] : '') + Math.abs(transforms.degrees(args.shift())));
+                    if( '=' === args[0][0] ) {
+                        t='=';
+                        args[0]=_.rest(args[0]);
+                    } else {
+                        t='';
+                    }
+					retr[cmd].push(t+(_.contains(['-','+'],args[0][0]) ? args[0][0] : '') + Math.abs(transforms.degrees(args.shift())));
+					break;
+
+				case 'circleSegment':
+                    if( '=' === args[0][0] ) {
+                        t='=';
+                        args[0]=_.rest(args[0]);
+                    } else {
+                        t='';
+                    }
+					retr[cmd].push(t+(_.contains(['-','+'],args[0][0]) ? args[0][0] : '') + transforms.circleSegment(args.shift()));
 					break;
 
 				case 'layer':
@@ -649,38 +749,37 @@ var TokenMod = TokenMod || (function() {
 					break;
 
 				case 'character_id':
-					t=getObj('character', args[0]);
-					if(t) {
-						retr[cmd].push(args[0]);
-					} else {
-						// try to find a character with this name
-						t2=findObjs({type: 'character',archived: false});
-						t=_.chain([ args[0].replace(regex.stripSingleQuotes,'$1').replace(regex.stripDoubleQuotes,'$1') ])
-							.map(function(n){
-								var l=_.filter(t2,function(c){
-									return c.get('name').toLowerCase() === n.toLowerCase();
-								});
-								return ( 1 === l.length ? l : _.filter(t2,function(c){
-									return -1 !== c.get('name').toLowerCase().indexOf(n.toLowerCase());
-								}));
-							})
-							.flatten()
-							.value();
-						if(1 === t.length) {
-							retr[cmd].push(t[0].id);
-						} else {
-							retr=undefined;
-						}
-					}
+                    if('' === args[0]){
+                        retr[cmd].push('');
+                    } else {
+                        t=getObj('character', args[0]);
+                        if(t) {
+                            retr[cmd].push(args[0]);
+                        } else {
+                            // try to find a character with this name
+                            t2=findObjs({type: 'character',archived: false});
+                            t=_.chain([ args[0].replace(regex.stripSingleQuotes,'$1').replace(regex.stripDoubleQuotes,'$1') ])
+                                .map(function(n){
+                                    var l=_.filter(t2,function(c){
+                                        return c.get('name').toLowerCase() === n.toLowerCase();
+                                    });
+                                    return ( 1 === l.length ? l : _.filter(t2,function(c){
+                                        return -1 !== c.get('name').toLowerCase().indexOf(n.toLowerCase());
+                                    }));
+                                })
+                                .flatten()
+                                .value();
+                            if(1 === t.length) {
+                                retr[cmd].push(t[0].id);
+                            } else {
+                                retr=undefined;
+                            }
+                        }
+                    }
 					break;
 
 				case 'attribute':
 					retr[cmd].push(args.shift().replace(regex.stripSingleQuotes,'$1').replace(regex.stripDoubleQuotes,'$1'));
-					break;
-
-				case 'tofront':
-					break;
-				case 'toback':
 					break;
 
 				case 'player_id':
@@ -692,7 +791,7 @@ var TokenMod = TokenMod || (function() {
 							statparts = s.shift().match(/^(\S+?)(\[(\d*)\]|)$/)||[],
                             index = ( '[]' === statparts[2] ? statparts[2] : ( undefined !== statparts[3] ? Math.max(parseInt(statparts[3],10)-1,0) : 0 ) ),
                             stat=statparts[1]||'',
-							op = (_.contains(['-','+','=','!'],stat[0]) ? stat[0] : false),
+							op = (_.contains(['-','+','=','!','?'],stat[0]) ? stat[0] : false),
 							numraw = s.shift() || '',
 							numop = (_.contains(['-','+'],numraw[0]) ? numraw[0] : false),
 							num = Math.max(0,Math.min(9,Math.abs(parseInt(numraw,10)))) || 0;
@@ -720,7 +819,7 @@ var TokenMod = TokenMod || (function() {
 		return retr;
 	},
 	expandMetaArguments = function(memo,a) {
-		var args=a.split(/\|/),
+		var args=a.split(/[\|#]/),
 			cmd=args.shift();
 		switch(cmd) {
 			case 'bar1':
@@ -736,6 +835,14 @@ var TokenMod = TokenMod || (function() {
 		}
 		return memo;
 	},
+
+    parseOrderArguments = function(list,base) {
+        return _.chain(list)
+            .map(transforms.orderType)
+            .reject(_.isUndefined)
+            .union(base)
+            .value();
+    },
 
 	parseSetArguments = function(list,base) {
 		return _.chain(list)
@@ -801,8 +908,19 @@ var TokenMod = TokenMod || (function() {
 		var mods={},
 			delta, cid,
 			current=decomposeStatuses(token.get('statusmarkers')||''),
-            statusCount=token.get('statusmarkers').split(/,/).length;
+            statusCount=(token.get('statusmarkers')||'').split(/,/).length;
 
+        _.each(modlist.order,function(f){
+            switch(f){
+                case 'tofront':
+                    toFront(token);
+                    break;
+
+                case 'toback':
+                    toBack(token);
+                    break;
+            }
+        });
 		_.each(modlist.on,function(f){
 			mods[f]=true;
 		});
@@ -833,6 +951,16 @@ var TokenMod = TokenMod || (function() {
                                     });
 								}
 								break;
+							case '?':
+								if('[]' !== sm.index && _.has(current,sm.status) && _.has(current[sm.status],sm.index)){
+                                    current[sm.status][sm.index].num = (Math.max(0,Math.min(9,getRelativeChange(current[sm.status][sm.index].num, sm.sign+sm.number))));
+                                    if(0 === current[sm.status][sm.index].num) {
+                                        current[sm.status]= _.filter(current[sm.status],function(e,idx){
+                                            return idx !== sm.index;
+                                        });
+                                    }
+                                } 
+                                break;
 							case '+':
 								if('[]' !== sm.index && _.has(current,sm.status) && _.has(current[sm.status],sm.index)){
                                     current[sm.status][sm.index].num = (Math.max(0,Math.min(9,getRelativeChange(current[sm.status][sm.index].num, sm.sign+sm.number))));
@@ -905,11 +1033,17 @@ var TokenMod = TokenMod || (function() {
 					break;
 
 				case 'rotation':
+					delta=getRelativeChange(token.get(k),f[0]);
+					if(_.isNumber(delta)) {
+						mods[k]=(delta%360);
+					}
+					break;
+
 				case 'light_angle':
 				case 'light_losangle':
 					delta=getRelativeChange(token.get(k),f[0]);
 					if(_.isNumber(delta)) {
-						mods[k]=(delta%360);
+						mods[k] = Math.min(360,Math.max(0,delta));
 					}
 					break;
 
@@ -922,6 +1056,15 @@ var TokenMod = TokenMod || (function() {
 					if(_.isNumber(delta) || '' === delta) {
 						mods[k]=delta;
 					}
+					break;
+
+				case 'bar1_reset':
+				case 'bar2_reset':
+				case 'bar3_reset':
+                    delta = token.get(k.replace(/_reset$/,'_max'));
+                    if(!_.isUndefined(delta)) {
+                        mods[k.replace(/_reset$/,'_value')]=delta;
+                    }
 					break;
 
 				case 'bar1_value':
@@ -951,7 +1094,7 @@ var TokenMod = TokenMod || (function() {
 
         if(config.length) {
             while(config.length) {
-                args=config.shift().split(/\|/);
+                args=config.shift().split(/[\|#]/);
                 cmd=args.shift();
                 switch(cmd) {
                     case 'players-can-ids':
@@ -990,11 +1133,13 @@ var TokenMod = TokenMod || (function() {
 	 handleInput = function(msg_orig) {
 		var msg = _.clone(msg_orig),
 			args, cmds, ids=[],
+            ignoreSelected = false,
 			modlist={
 				flip: [],
 				on: [],
 				off: [],
-				set: {}
+				set: {},
+                order: []
 			};
 
 		if (msg.type !== "api") {
@@ -1004,7 +1149,16 @@ var TokenMod = TokenMod || (function() {
 		if(_.has(msg,'inlinerolls')){
 			msg.content = _.chain(msg.inlinerolls)
 				.reduce(function(m,v,k){
-					m['$[['+k+']]']=v.results.total || 0;
+                    var ti=_.reduce(v.results.rolls,function(m2,v2){
+                        if(_.has(v2,'table')){
+                            m2.push(_.reduce(v2.results,function(m3,v3){
+                                m3.push(v3.tableItem.name);
+                                return m3;
+                            },[]).join(', '));
+                        }
+                        return m2;
+                    },[]).join(', ');
+					m['$[['+k+']]']= (ti.length && ti) || v.results.total || 0;
 					return m;
 				},{})
 				.reduce(function(m,v,k){
@@ -1022,7 +1176,7 @@ var TokenMod = TokenMod || (function() {
 			case '!token-mod':
 
 				while(args.length) {
-					cmds=args.shift().match(/([^\s]+\|'[^']+'|[^\s]+\|"[^"]+"|[^\s]+)/g);
+					cmds=args.shift().match(/([^\s]+[\|#]'[^']+'|[^\s]+[\|#]"[^"]+"|[^\s]+)/g);
 					switch(cmds.shift()) {
 						case 'help':
 							showHelp(msg.playerid);
@@ -1050,6 +1204,14 @@ var TokenMod = TokenMod || (function() {
 							modlist.set=parseSetArguments(cmds,modlist.set);
 							break;
 
+                        case 'order':
+                            modlist.order=parseOrderArguments(cmds,modlist.order);
+                            break;
+
+                        case 'ignore-selected':
+                            ignoreSelected=true;
+                            break;
+
 						case 'ids':
 							ids=_.union(cmds,ids);
 							break;
@@ -1070,9 +1232,16 @@ var TokenMod = TokenMod || (function() {
 						});
 				}
 
-				_.each(msg.selected,function (o) {
-					applyModListToToken(modlist,getObj(o._type,o._id));
-				});
+                if(!ignoreSelected) {
+                    _.chain(msg.selected)
+                        .map(function(o){
+                            return getObj('graphic',o._id);
+                        })
+                        .reject(_.isUndefined)
+                        .each(function (o) {
+                            applyModListToToken(modlist,o);
+                        });
+                }
 				break;
 
 		}

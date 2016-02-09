@@ -42,9 +42,9 @@ The "cron" command accepts the following options:
 				time T (HH:MM:SS).  If not all values are given,
 				zeroes will be added to the smaller end (e.g.
 				"1:23" will be interpreted as "1:23:00").  Times
-				will be interpreted to be within the next
-				24 hours.  Cannot be used with initiative-based
-				arguments.
+				are in GMT and will be interpreted to be within
+				the next 24 hours.  Cannot be used with
+				initiative-based arguments.
     -a T, --after T		The first execution of the command will be after
 				interval T (HH:MM:SS).  If not all values are
 				given, zeroes will be added to the larger end
@@ -60,8 +60,16 @@ The "cron" command accepts the following options:
 				If no first execution time is specified, the
 				first execution will be I rounds or seconds in
 				the future.
+    -n N, --runs N		When combined with -i/--interval, the job will
+				be automatically removed after it is executed N
+				times.
     -f USER, --from USER	The command will be executed as USER.  This need
 				not be a player or character in the game.
+
+    -A N, --advance N		Advance the round counter by N rounds.  This
+				will cause initiative-based jobs to advance as
+				if the tracker had been advanced through N full
+				rounds.
 
     -l, --list			List all scheduled jobs.
 
@@ -87,8 +95,8 @@ Examples:
     roll each round.
 
 !cron -f Nanny -t 23:00 Bedtime for sleepy-head.  Time to wrap things up.
-    Be aware that the time zone is based on the API server, not the client who
-    runs the command.
+    Be aware that the time zone is GMT, not local time of the client who runs
+    the command.
 
 !cron -a 30 Hey!  It's 30 seconds later than when I typed this.
     Probably more useful with larger delay amounts.
@@ -100,3 +108,7 @@ Examples:
     This will remove job 42 after 10 rounds.  Note that the quotes are required
     around commands which contain tokens which are valid !cron arguments (e.g.
     "-R").  Without the quotes, this will immediately remove job 42.
+
+!cron -a 1 &{template:default} {{name=Test}} {{foo=bar}}
+    As of version 0.5, templates are handled correctly, and do not need (or
+    support) &amp;-escaping.
