@@ -5,8 +5,8 @@
 var MutantYearZero = MutantYearZero || (function() {
     'use strict';
 
-    var version = '0.1.2',
-        lastUpdate = 1454873934,
+    var version = '0.1.3',
+        lastUpdate = 1454881582,
         schemaVersion = 0.1,
         symbols = {
             biohazard: '&#'+'9763;',
@@ -158,7 +158,7 @@ var MutantYearZero = MutantYearZero || (function() {
 
             rollIndices=[],
             skillDice, // skill: green
-            baseDice, // base(stat): yellow, trama on 1s
+            baseDice, // base(stat): yellow, trauma on 1s
             gearDice, // gear: black, degradation on 1s
 
             skillDiceArray,
@@ -166,7 +166,7 @@ var MutantYearZero = MutantYearZero || (function() {
             gearDiceArray,
 
             successes=0,
-            trama=0,
+            trauma=0,
             gearDamage=0,
             pushedValues,
 
@@ -214,7 +214,7 @@ var MutantYearZero = MutantYearZero || (function() {
                 gearDice=getDiceCounts(msg,rollIndices[2]);
 
                 successes=(parseInt(pushedValues[0],10)||0) + (skillDice['6']||0) + (baseDice['6']||0) + (gearDice['6']||0) ;
-                trama=(parseInt(pushedValues[1],10)||0) + (baseDice['1']||0);
+                trauma=(parseInt(pushedValues[1],10)||0) + (baseDice['1']||0);
                 gearDamage=(parseInt(pushedValues[2],10)||0)+ (gearDice['1']||0);
 
 
@@ -254,7 +254,7 @@ var MutantYearZero = MutantYearZero || (function() {
                         makeRerollExpression(skillDiceArray)+
                         makeRerollExpression(baseDiceArray)+
                         makeRerollExpression(gearDiceArray)+
-                        '|| '+successes+' '+trama+' '+gearDamage,
+                        '|| '+successes+' '+trauma+' '+gearDamage,
                         symbols.push
                     ) 
                     : ''
@@ -277,7 +277,7 @@ var MutantYearZero = MutantYearZero || (function() {
                                     'background-color:'+colors.lightYellow+';'+
                                     'color:'+(push?'#1d1d1d':'#5a5a5a')+';'+
                                 '">'+
-                                    trama+' '+symbols.biohazard+
+                                    trauma+' '+symbols.biohazard+
                             '</div>'+
                             '<div style="'+
                                     'border:1px solid '+colors.black+';'+
