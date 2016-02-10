@@ -5,8 +5,8 @@
 var DryErase = DryErase || (function() {
     'use strict';
 
-    var version = '0.1.4',
-        lastUpdate = 1455111476,
+    var version = '0.1.5',
+        lastUpdate = 1455114250,
         schemaVersion = 0.3,
         clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
         defaults = {
@@ -136,56 +136,56 @@ var DryErase = DryErase || (function() {
 		return '';
 	},
 
+    makeConfigOption = function(config,command,text) {
+        var onOff = (config ? 'On' : 'Off' ),
+            color = (config ? '#5bb75b' : '#faa732' );
+        return '<div style="'+
+                'border: 1px solid #ccc;'+
+                'border-radius: .2em;'+
+                'background-color: white;'+
+                'margin: 0 1em;'+
+                'padding: .1em .3em;'+
+            '">'+
+                text+
+                '<div style="float:right;">'+
+                    makeButton(command,onOff,color)+
+                '</div>'+
+                '<div style="clear:both;"></div>'+
+            '</div>';
+        
+    },
+
     getConfigOption_Report = function() {
-        var text = (state.DryErase.config.report ? 'On' : 'Off' );
-        return '<div>'
-            +'Report is currently <b>'
-                +text
-            +'</b> '
-            +'<a href="!dry-erase-config --toggle-report">'
-                +'Toggle'
-            +'</a>'
-        +'</div>';
+        return makeConfigOption(
+            state.DryErase.config.report,
+            '!dry-erase-config --toggle-report',
+            '<b>Report</b> notifies the GM via a whisper when a player that has not been granted drawing permission makes a drawing. '
+        );
         
     },
 
     getConfigOption_LabelGranted = function() {
-        var text = (state.DryErase.config.labelGranted ? 'On' : 'Off' );
-        return '<div>'
-            +'Label Granted Player Drawings is currently <b>'
-                +text
-            +'</b> '
-            +'<a href="!dry-erase-config --toggle-label-granted">'
-                +'Toggle'
-            +'</a>'
-        +'</div>';
-        
+        return makeConfigOption(
+            state.DryErase.config.labelGranted,
+            '!dry-erase-config --toggle-label-granted',
+            '<b>Label Granted Player Drawings</b> adds a GM Layer highlight with the player name to drawings made by granted players.'
+        );
     },
 
     getConfigOption_AutoHide = function() {
-        var text = (state.DryErase.config.autoHide ? 'On' : 'Off' );
-        return '<div>'
-            +'Auto Hide is currently <b>'
-                +text
-            +'</b> '
-            +'<a href="!dry-erase-config --toggle-auto-hide">'
-                +'Toggle'
-            +'</a>'
-        +'</div>';
-        
+        return makeConfigOption(
+            state.DryErase.config.autoHide,
+            '!dry-erase-config --toggle-auto-hide',
+            '<b>Auto Hide</b> automatically moves to the GM Layer any drawings by players that have not been granted drawing permission.'
+        );
     },
 
     getConfigOption_AutoDelete = function() {
-        var text = (state.DryErase.config.autoDelete ? 'On' : 'Off' );
-        return '<div>'
-            +'Auto Delete is currently <b>'
-                +text
-            +'</b> '
-            +'<a href="!dry-erase-config --toggle-auto-delete">'
-                +'Toggle'
-            +'</a>'
-        +'</div>';
-        
+        return makeConfigOption(
+            state.DryErase.config.autoDelete,
+            '!dry-erase-config --toggle-auto-delete',
+            '<b>Auto Delete</b> automatically deletes drawings by players that have not been granted drawing permission.'
+        );
     },
     getAllConfigOptions = function() {
         return getConfigOption_AutoDelete() + getConfigOption_AutoHide() + getConfigOption_Report() + getConfigOption_LabelGranted();
