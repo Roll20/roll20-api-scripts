@@ -1,13 +1,13 @@
 {
-  "name": "CharUtils",
-  "version": "0.6.3",
+  "name": "RecursiveTable",
+  "version": "0.1.0",
   "description": "",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "dependencies": {
   },
   "modifies": {
-    "abilities": "create,delete"
+	"state.RecursiveTable": "read,write"
   },
   "conflicts": [
   ]

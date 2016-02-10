@@ -5,8 +5,8 @@
 var TokenMod = TokenMod || (function() {
     'use strict';
 
-    var version = '0.8.17',
-        lastUpdate = 1452883667,
+    var version = '0.8.18',
+        lastUpdate = 1454855624,
         schemaVersion = 0.1,
 
         fields = {
@@ -228,9 +228,9 @@ var TokenMod = TokenMod || (function() {
 			+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
 				+'!token-mod --ids -Jbz-mlHr1UXlfWnGaLh -JbjeTZycgyo0JqtFj-r -JbjYq5lqfXyPE89CJVs --on showname showplayers_name'
 			+'</pre>'
-		+'<p>Usually, you will want to specify these with the @{target} syntax:</p>'
+		+'<p>Usually, you will want to specify these with the '+ch('@')+ch('{')+'target'+ch('}')+' syntax:</p>'
 			+'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'
-				+'!token-mod --ids @{target|1|token_id} @{target|2|token_id} @{target|3|token_id} --on showname showplayers_name'
+				+'!token-mod --ids '+ch('@')+ch('{')+'target|1|token_id'+ch('}')+' '+ch('@')+ch('{')+'target|2|token_id'+ch('}')+' '+ch('@')+ch('{')+'target|3|token_id'+ch('}')+' --on showname showplayers_name'
 			+'</pre>'
 	+'</div>'
 

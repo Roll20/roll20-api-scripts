@@ -1,6 +1,6 @@
 {
     "name": "TableExport",
-    "version": "0.2.0",
+    "version": "0.2.2",
     "description": "A script for exporting Rollable Tables between accounts.",
     "authors": "The Aaron",
     "roll20userid": "104025",
