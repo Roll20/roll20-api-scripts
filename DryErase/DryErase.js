@@ -5,8 +5,8 @@
 var DryErase = DryErase || (function() {
     'use strict';
 
-    var version = '0.1.2',
-        lastUpdate = 1455086586,
+    var version = '0.1.3',
+        lastUpdate = 1455088714,
         schemaVersion = 0.3,
         clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
         defaults = {
@@ -465,7 +465,7 @@ var DryErase = DryErase || (function() {
                    'background-color: #333;'+
                    'margin: 0 .1em;'+
                    'font-weight: bold;'+
-                   'padding: 3em;'+
+                   'padding: .2em 1em;'+
                    'color: red;'+
                 '">DELETED</span>';
             } else if(state.DryErase.config.autoHide){
@@ -494,6 +494,7 @@ var DryErase = DryErase || (function() {
                 page=getObj('page',path.get('pageid'));
                 sendChat('DryErase','/w gm '+
                     '<div style="'+
+                        'margin-left: -40px;'+
                         'border: 1px solid #ccc;'+
                         'border-radius: .5em;'+
                         'padding: .1em .5em;'+
@@ -508,7 +509,7 @@ var DryErase = DryErase || (function() {
                         '<span style="color: #339;">'+
                             page.get('name')+
                         '</span>'+
-                        '.'+msg+
+                        '. '+msg+
                     '</div>'
                 );
             }
