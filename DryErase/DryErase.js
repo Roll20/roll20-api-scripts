@@ -5,28 +5,113 @@
 var DryErase = DryErase || (function() {
     'use strict';
 
-    var version = '0.1.0',
-        lastUpdate = 1453338952,
-        schemaVersion = 0.2,
+    var version = '0.1.2',
+        lastUpdate = 1455086586,
+        schemaVersion = 0.3,
         clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
+        defaults = {
+            css: {
+                button: {
+                    'border': '1px solid #cccccc',
+                    'border-radius': '1em',
+                    'background-color': '#006dcc',
+                    'margin': '0 .1em',
+                    'font-weight': 'bold',
+                    'padding': '.1em 1em',
+                    'color': 'white'
+                }
+            }
+        },
+        templates = {},
+
+    buildTemplates = function() {
+        templates.cssProperty =_.template(
+            '<%=name %>: <%=value %>;'
+        );
+
+        templates.style = _.template(
+            'style="<%='+
+                '_.map(css,function(v,k) {'+
+                    'return templates.cssProperty({'+
+                        'defaults: defaults,'+
+                        'templates: templates,'+
+                        'name:k,'+
+                        'value:v'+
+                    '});'+
+                '}).join("")'+
+            ' %>"'
+        );
+
+        templates.button = _.template(
+            '<a <%= templates.style({'+
+                'defaults: defaults,'+
+                'templates: templates,'+
+                'css: _.defaults(css,defaults.css.button)'+
+                '}) %> href="<%= command %>"><%= label||"Button" %></a>'
+        );
+
+    },
+    makeButton = function(command, label, backgroundColor, color){
+        return templates.button({
+            command: command,
+            label: label,
+            templates: templates,
+            defaults: defaults,
+            css: {
+                color: color,
+                'background-color': backgroundColor
+            }
+        });
+    },
+
+	parseExistingPaths = function(){
+		_.each(filterObjs(function(o){
+			return 'path'===o.get('type') && !_.has(state.DryErase.drawings,o.id) && 'objects' === o.get('layer');
+		}),handlePathDraw);
+	},
+
+	cleanupObjectReferences = function(){
+		var ids = _.keys(state.DryErase.drawings);
+		filterObjs(function(o){
+			ids=_.without(ids,o.id);
+			return false;
+		});
+		_.each(ids,eraseDrawing);
+	},
 
     checkInstall = function() {
 		log('-=> DryErase v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
 
         if( ! _.has(state,'DryErase') || state.DryErase.version !== schemaVersion) {
             log('  > Updating Schema to v'+schemaVersion+' <');
-            state.DryErase = {
-                version: schemaVersion,
-                config: {
-                    report: true,
-                    autoHide: true,
-                    autoDelete: false
-                },
-                drawings: {},
-                grantedPlayers: []
+			switch(state.DryErase && state.DryErase.version) {
+				case 0.2:
+					state.GroupInitiative.config.labelGranted = false;
+                    /* break; // intentional dropthrough */
+					
+                case 'UpdateSchemaVersion':
+                    state.DryErase.version = schemaVersion;
+                    break;
 
-            };
+                default:
+					state.DryErase = {
+						version: schemaVersion,
+						config: {
+							report: true,
+							autoHide: true,
+							autoDelete: false,
+							labelGranted: false
+						},
+						drawings: {},
+						grantedPlayers: []
+
+					};
+					break;
+			}
         }
+        buildTemplates();
+		cleanupObjectReferences(); 
+		parseExistingPaths();
     },
 
 	ch = function (c) {
@@ -64,6 +149,19 @@ var DryErase = DryErase || (function() {
         
     },
 
+    getConfigOption_LabelGranted = function() {
+        var text = (state.DryErase.config.labelGranted ? 'On' : 'Off' );
+        return '<div>'
+            +'Label Granted Player Drawings is currently <b>'
+                +text
+            +'</b> '
+            +'<a href="!dry-erase-config --toggle-label-granted">'
+                +'Toggle'
+            +'</a>'
+        +'</div>';
+        
+    },
+
     getConfigOption_AutoHide = function() {
         var text = (state.DryErase.config.autoHide ? 'On' : 'Off' );
         return '<div>'
@@ -90,44 +188,17 @@ var DryErase = DryErase || (function() {
         
     },
     getAllConfigOptions = function() {
-        return getConfigOption_AutoDelete() + getConfigOption_AutoHide() + getConfigOption_Report();
+        return getConfigOption_AutoDelete() + getConfigOption_AutoHide() + getConfigOption_Report() + getConfigOption_LabelGranted();
     },
     getPlayerGrantOption = function (player) {
         var p=(_.has(player,'id') ? player : getObj('player',player)),button;
         if(p){
-            button = (playerIsGM(p.id) ?
-                '<div style="'+
-                   'border: 1px solid #666;'+
-                   'border-radius: 1em;'+
-                   'background-color: #333;'+
-                   'margin: 0 .1em;'+
-                   'font-weight: bold;'+
-                   'padding: .1em 1em;'+
-                   'color: red;'+
-                   'float:right;'+
-                '">GM</div>' :
-                ( _.contains(state.DryErase.grantedPlayers,p.id) ?  
-                    '<a style="'+
-                       'border: 1px solid #ff5200;'+
-                       'border-radius: 1em;'+
-                       'background-color: #ff9d12;'+
-                       'margin: 0 .1em;'+
-                       'font-weight: bold;'+
-                       'padding: .1em 1em;'+
-                       'color: white;'+
-                       'float:right;'+
-                    '" href="!dry-erase --revoke-playerid '+p.id+'">Revoke</a>'
-                    :
-                    '<a style="'+
-                       'border: 1px solid #0052ff;'+
-                       'border-radius: 1em;'+
-                       'background-color: #129dff;'+
-                       'margin: 0 .1em;'+
-                       'font-weight: bold;'+
-                       'padding: .1em 1em;'+
-                       'color: white;'+
-                       'float:right;'+
-                    '" href="!dry-erase --grant-playerid '+p.id+'">Grant</a>')
+            button = (playerIsGM(p.id) 
+                ? makeButton('','GM','black','red')
+                : ( _.contains(state.DryErase.grantedPlayers,p.id)
+                    ? makeButton('!dry-erase --revoke-playerid '+p.id,'Revoke','#faa732')
+                    : makeButton('!dry-erase --grant-playerid '+p.id, 'Grant')
+                  )
                 );
             return '<div style="'+
                     'border: 1px solid #ccc;'+
@@ -138,7 +209,9 @@ var DryErase = DryErase || (function() {
                 '"><b>'+
                 p.get('displayname')+
                 '</b>'+
-                button+
+				'<div style="float:right;">'+
+					button+
+				'</div>'+
                 '<div style="clear:both;"></div>'+
             '</div>';
         }
@@ -181,36 +254,54 @@ var DryErase = DryErase || (function() {
 +'</div>'
         );
     },
+
     allowDrawing = function(id){
         var details, path, highlight;
         if(_.has(state.DryErase.drawings,id)){
             details = state.DryErase.drawings[id];
-            highlight = getObj('graphic',details.highlight);
             path = getObj('path',details.path);
+            highlight = getObj('graphic',details.highlight);
             if(path && 'gmlayer' === path.get('layer')){
                 path.set({layer: 'objects'});
             }
-            delete state.DryErase.drawings[details.path];
-            delete state.DryErase.drawings[details.highlight];
-            if(highlight){
-                highlight.remove();
-            }
+			if(!state.DryErase.config.labelGranted){
+				delete state.DryErase.drawings[details.highlight];
+				if(highlight){
+					highlight.remove();
+				}
+			}
         }
     },
+
     eraseDrawing = function(id){
         var details, path, highlight;
         if(_.has(state.DryErase.drawings,id)){
             details = state.DryErase.drawings[id];
-            path = getObj('graphic',details.highlight);
-            highlight = getObj('path',details.path);
-            if(path ){
-                path.remove();
-            }
-            if(highlight){
-                highlight.remove();
-            }
-            delete state.DryErase.drawings[details.path];
-            delete state.DryErase.drawings[details.highlight];
+            path = getObj('path',details.path);
+            highlight = getObj('graphic',details.highlight);
+
+			if(details.path === id){
+				if(path){
+					path.remove();
+				}
+				if(highlight){
+					highlight.remove();
+				}
+				delete state.DryErase.drawings[details.path];
+				delete state.DryErase.drawings[details.highlight];
+			} else {
+				if(highlight){
+					highlight.remove();
+				}
+				delete state.DryErase.drawings[details.highlight];
+
+				if(path && 'gmlayer' === path.get('layer')){
+					path.remove();
+					delete state.DryErase.drawings[details.path];
+				} else {
+					delete details.highlight;
+				}
+			}
         }
     },
     grantPlayer = function(id){
@@ -221,9 +312,6 @@ var DryErase = DryErase || (function() {
         state.DryErase.grantedPlayers = _.without( state.DryErase.grantedPlayers, id);
         sendChat('','/w gm '+getPlayerGrantOption(id));
     },
-
-
-
 
     handleInput = function(msg) {
         var args,
@@ -291,6 +379,15 @@ var DryErase = DryErase || (function() {
                             );
                             break;
 
+                        case 'toggle-label-granted':
+                            state.DryErase.config.labelGranted=!state.DryErase.config.labelGranted;
+                            sendChat('','/w "'+who+'" '
+                                +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                                    +getConfigOption_LabelGranted()
+                                +'</div>'
+                            );
+                            break;
+
                         case 'toggle-auto-hide':
                             state.DryErase.config.autoHide=!state.DryErase.config.autoHide;
                             sendChat('','/w "'+who+'" '
@@ -323,8 +420,25 @@ var DryErase = DryErase || (function() {
     },
 
     allowedToDraw = function(playerid){
-        return playerIsGM(playerid) || _.contains(state.DryErase.grantedPlayers,playerid);
+        return playerIsGM(playerid) || _.contains(state.DryErase.grantedPlayers,playerid) || _.contains(['all',''],playerid);
     },
+
+	makeHighlight = function(path,player){
+		return createObj('graphic',{
+			imgsrc: clearURL,
+			layer: 'gmlayer',
+			pageid: path.get('pageid'),
+			width: path.get('width'),
+			height: path.get('height'),
+			left: path.get('left'),
+			top: path.get('top'),
+			name: 'Created by: '+((player && player.get && player.get('displayname')) || 'UNKNOWN'),
+			aura1_color: (player && player.get && player.get('color')) || '#ff0000',
+			aura1_square: true,
+			aura1_radius: 0.000001,
+			showname: true
+		});
+	},
     
     handlePathDraw = function(path){
         var msg ='',
@@ -332,10 +446,17 @@ var DryErase = DryErase || (function() {
             player,
             page,
             highlight,
-            details={};
+            details={
+                path: path.id,
+                player: playerid
+			};
+
+		if(_.has(state.DryErase.drawings, path.id) || 'objects' !== path.get('layer')){
+			return;
+		}
+		player=getObj('player',playerid);
 
         if(!allowedToDraw(playerid)) {
-            player=getObj('player',playerid);
             if(state.DryErase.config.autoDelete){
                 path.remove();
                 msg='<span style="'+
@@ -349,52 +470,25 @@ var DryErase = DryErase || (function() {
                 '">DELETED</span>';
             } else if(state.DryErase.config.autoHide){
                 path.set({layer:'gmlayer'});
-                highlight=createObj('graphic',{
-                    imgsrc: clearURL,
-                    layer: 'gmlayer',
-                    pageid: path.get('pageid'),
-                    width: path.get('width'),
-                    height: path.get('height'),
-                    left: path.get('left'),
-                    top: path.get('top'),
-                    name: 'Created by: '+player.get('displayname'),
-                    aura1_color: player.get('color'),
-                    aura1_square: true,
-                    aura1_radius: 0.000001,
-                    showname: true
-                });
-                details.highlight = highlight.id;
-                details.path = path.id;
-                details.player = playerid;
+                highlight=makeHighlight(path,player);
+				details.highlight = highlight.id;
                 state.DryErase.drawings[path.id]=details;
                 state.DryErase.drawings[highlight.id]=details;
-                msg='<a style="'+
-                   'border: 1px solid #ff5200;'+
-                   'border-radius: 1em;'+
-                   'background-color: #ff9d12;'+
-                   'margin: 0 .1em;'+
-                   'font-weight: bold;'+
-                   'padding: .1em 1em;'+
-                   'color: white;'+
-                '" href="!dry-erase --erase '+path.id+'">Erase</a>'+
-                '<a style="'+
-                   'border: 1px solid #52ff00;'+
-                   'border-radius: 1em;'+
-                   'background-color: #9dff12;'+
-                   'margin: 0 .1em;'+
-                   'font-weight: bold;'+
-                   'padding: .1em 1em;'+
-                   'color: white;'+
-                '" href="!dry-erase --allow '+path.id+'">Allow</a>'+
-                '<a style="'+
-                   'border: 1px solid #0052ff;'+
-                   'border-radius: 1em;'+
-                   'background-color: #129dff;'+
-                   'margin: 0 .1em;'+
-                   'font-weight: bold;'+
-                   'padding: .1em 1em;'+
-                   'color: white;'+
-                '" href="!dry-erase --grant-playerid '+playerid+'">Grant Player</a>';
+                
+                msg += makeButton(
+                    '!dry-erase --erase '+path.id,
+                    'Erase',
+                    '#faa732'
+                );
+                msg += makeButton(
+                    '!dry-erase --allow '+path.id,
+                    'Allow',
+                    '#5bb75b'
+                );
+                msg += makeButton(
+                    '!dry-erase --grant-playerid '+playerid,
+                    'Grant Player'
+                );
             }
             if(state.DryErase.config.report){
                 page=getObj('page',path.get('pageid'));
@@ -408,7 +502,7 @@ var DryErase = DryErase || (function() {
                         'font-weight: bold;'+
                     '">'+
                         '<span style="color: #933;">'+
-                            player.get('displayname')+
+                            ((player && player.get && player.get('displayname')) || 'UNKNOWN')+
                         '</span>'+
                         ' created a drawing on the page '+
                         '<span style="color: #339;">'+
@@ -418,15 +512,26 @@ var DryErase = DryErase || (function() {
                     '</div>'
                 );
             }
+        } else {
+            if(state.DryErase.config.labelGranted && _.contains(state.DryErase.grantedPlayers,playerid) ){
+                highlight=makeHighlight(path,player);
+				details.highlight = highlight.id;
+                state.DryErase.drawings[highlight.id]=details;
+			}
+			state.DryErase.drawings[path.id]=details;
         }
     },
+
     handleMoves = function(obj,prev){
         var details, other;
         if(_.has(state.DryErase.drawings,obj.id)){
+			details=state.DryErase.drawings[obj.id];
+
             if(obj.get('layer') !== prev.layer){
                 allowDrawing(obj.id);
-            } else {
-                details = state.DryErase.drawings[obj.id];
+            } 
+
+			if (_.has(details,'highlight')) {
                 other = (details.path === obj.id ? getObj('graphic',details.highlight) : getObj('path',details.path) );
                 if(other){
                     other.set({
@@ -437,8 +542,9 @@ var DryErase = DryErase || (function() {
                     });
                 }
             }
-        }
-
+        } else if ('path' === obj.get('type') && 'objects' === obj.get('layer')){
+			handlePathDraw(obj);
+		}
     },
     handleDeletes = function(obj){
         eraseDrawing(obj.id);
