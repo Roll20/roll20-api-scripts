@@ -5,8 +5,8 @@
 var DryErase = DryErase || (function() {
     'use strict';
 
-    var version = '0.1.3',
-        lastUpdate = 1455088714,
+    var version = '0.1.4',
+        lastUpdate = 1455111476,
         schemaVersion = 0.3,
         clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
         defaults = {
@@ -86,7 +86,7 @@ var DryErase = DryErase || (function() {
             log('  > Updating Schema to v'+schemaVersion+' <');
 			switch(state.DryErase && state.DryErase.version) {
 				case 0.2:
-					state.GroupInitiative.config.labelGranted = false;
+					state.DryErase.config.labelGranted = false;
                     /* break; // intentional dropthrough */
 					
                 case 'UpdateSchemaVersion':
