@@ -5,7 +5,8 @@
 var Ammo = Ammo || (function() {
     'use strict';
 
-    var version = 0.22,
+    var version = '0.3.0',
+        lastUpdate = 1427602798,
 		schemaVersion = 0.1,
 
 	ch = function (c) {
@@ -48,7 +49,7 @@ var Ammo = Ammo || (function() {
 				'<b>'+chr.get('name') + '</b> does not have enough ammo.  Needs '+Math.abs(amount)+', but only has '
 				+'<span style="color: #ff0000;">'+val+'</span>.'
 				+'<span style="font-weight:normal;color:#708090;>'+ch('[')+'Attribute: '+attr.get('name')+ch(']')+'</span>',
-				(isGM(playerid) ? 'gm' : false)
+				(playerIsGM(playerid) ? 'gm' : false)
 			);
 			valid = false;
 		} else if( adj > max) {
@@ -56,21 +57,21 @@ var Ammo = Ammo || (function() {
 				'<b>'+chr.get('name') + '</b> does not have enough storage space for ammo.  Needs '+adj+', but only has '
 				+'<span style="color: #ff0000;">'+max+'</span>.'
 				+'<span style="font-weight:normal;color:#708090;>'+ch('[')+'Attribute: '+attr.get('name')+ch(']')+'</span>',
-				(isGM(playerid) ? 'gm' : false)
+				(playerIsGM(playerid) ? 'gm' : false)
 			);
 			valid = false;
 		}
 
-		if( isGM(playerid) || valid ) {
+		if( playerIsGM(playerid) || valid ) {
 			attr.set({current: adj});
 			sendMessage(
 				'<b>'+chr.get('name') + '</b> '+( (adj<val) ? 'uses' : 'gains' )+' '+Math.abs(amount)+' ammo and has '+adj+' remaining.',
-				(isGM(playerid) ? 'gm' : false)
+				(playerIsGM(playerid) ? 'gm' : false)
 			);
 			if(!valid) {
 				sendMessage(
 					'Ignoring warnings and applying adjustment anyway.  Was: '+val+'/'+max+' Now: '+adj+'/'+max,
-					(isGM(playerid) ? 'gm' : false)
+					(playerIsGM(playerid) ? 'gm' : false)
 				);
 			}
 		}
@@ -91,7 +92,7 @@ var Ammo = Ammo || (function() {
 		+'it\'s maximum value, a warning will be issued and the attribute will not be'
 		+'changed.</p>'
 
-		+( (isGM(playerid)) ? '<p><b>Note:</b> As the GM, bounds will not be '
+		+( (playerIsGM(playerid)) ? '<p><b>Note:</b> As the GM, bounds will not be '
 		+'enforced for you.  You will be whispered the warnings, but the operation '
 		+'will succeed.  You will also be told the previous and current state in case '
 		+'you want to revert the change.' : '')
@@ -181,7 +182,7 @@ var Ammo = Ammo || (function() {
 						}
 					}
 					if(chr) {
-						if(! isGM(msg.playerid) 
+						if(! playerIsGM(msg.playerid) 
 							&& ! _.contains(chr.get('controlledby').split(','),msg.playerid) 
 							&& ! _.contains(chr.get('controlledby').split(','),'all') 
 							)
@@ -204,20 +205,20 @@ var Ammo = Ammo || (function() {
 						if(attr) {
 							sendMessage(
 								'Amount ['+args[3]+'] is not correct.  Please specify a positive or negative integer value like -1 or 4.',
-								(isGM(msg.playerid) ? 'gm' : false)
+								(playerIsGM(msg.playerid) ? 'gm' : false)
 							);
 
 						} else {
 							if(chr) {
 								sendMessage(
 									'Attribute ['+args[2]+'] was not found.  Please verify that you have the right name.',
-									(isGM(msg.playerid) ? 'gm' : false)
+									(playerIsGM(msg.playerid) ? 'gm' : false)
 								);
 							} else {
 								sendMessage(
 									( (undefined !== token) ? ('Token id ['+args[1]+'] does not represent a character. ') : ('Character/Token id ['+args[1]+'] is not valid. ') )
 									+'Please be sure you are specifying it correctly, either with '+ch('@')+ch('{')+'selected|token_id'+ch('}')+' or copying the character id from: !get-represents '+ch('@')+ch('{')+'selected|token_id'+ch('}'),
-									(isGM(msg.playerid) ? 'gm' : false)
+									(playerIsGM(msg.playerid) ? 'gm' : false)
 								);
 							}
 						}
@@ -236,12 +237,12 @@ var Ammo = Ammo || (function() {
 							sendMessage(
 									'The specified token represents the following character:'
 									+'<ul><li>'+ ( ('' !== token.get('name')) ? token.get('name') : 'BLANK' )+' -> '+ ( ('' !== token.get('represents')) ? token.get('represents') : 'NOTHING' ) + '</li></ul>',
-								(isGM(msg.playerid) ? 'gm' : false)
+								(playerIsGM(msg.playerid) ? 'gm' : false)
 							);
 						} else {
 							sendMessage(
 								' Token id ['+args[1]+'] is not valid.',
-								(isGM(msg.playerid) ? 'gm' : false)
+								(playerIsGM(msg.playerid) ? 'gm' : false)
 							);
 						}
 					}
@@ -254,7 +255,7 @@ var Ammo = Ammo || (function() {
 					});
 					sendMessage(
 						'The selected tokens represent the following characters:'+'<ul>' + text + '</ul>',
-						(isGM(msg.playerid) ? 'gm' : false)
+						(playerIsGM(msg.playerid) ? 'gm' : false)
 					);
 				} else {
 					showHelp(msg.playerid);
@@ -264,7 +265,9 @@ var Ammo = Ammo || (function() {
 
 	},
     checkInstall = function() {    
+        log('-=> Ammo v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
         if( ! _.has(state,'Ammo') || state.Ammo.version !== schemaVersion) {
+            log('  > Updating Schema to v'+schemaVersion+' <');
             state.Ammo = {
 				version: schemaVersion,
 				config: {
@@ -295,13 +298,6 @@ var Ammo = Ammo || (function() {
 on("ready",function(){
 	'use strict';
 
-    if("undefined" !== typeof isGM && _.isFunction(isGM)) {
-        Ammo.CheckInstall();
-        Ammo.RegisterEventHandlers();
-    } else {
-        log('--------------------------------------------------------------');
-        log('Ammo requires the isGM module to work.');
-        log('isGM GIST: https://gist.github.com/shdwjk/8d5bb062abab18463625');
-        log('--------------------------------------------------------------');
-    }
+	Ammo.CheckInstall();
+	Ammo.RegisterEventHandlers();
 });

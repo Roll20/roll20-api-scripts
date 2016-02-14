@@ -12,7 +12,7 @@ var bshields = bshields || {};
 bshields.conditions = (function() {
     'use strict';
     
-    var version = 3.2,
+    var version = 3.3,
         commands = {
             mark: function(args, msg) {
                 var tok = getTokenMark(args[0], args[1], args[2]);
@@ -50,17 +50,13 @@ bshields.conditions = (function() {
             args = msg.content.trim().splitArgs(),
             command, arg0, isHelp;
         
-        if (!list[msg.playerid]) {
-            list[msg.playerid] = { cmds: [], delay: 500 };
-        }
-        
         if (isApi) {
             command = args.shift().substring(1).toLowerCase();
             arg0 = args.shift() || '';
             isHelp = arg0.toLowerCase() === 'help' || arg0.toLowerCase() === 'h';
             
             if (!isHelp) {
-                if (arg0) {
+                if (arg0 && arg0.length > 0) {
                     args.unshift(arg0);
                 }
                 
@@ -202,7 +198,7 @@ bshields.conditions = (function() {
     }
     
     return {
-        registerEventHandlers: registerEventHandlers,
+        registerEventHandlers: registerEventHandlers
     };
 }());
 

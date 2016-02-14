@@ -5,20 +5,15 @@
 var Torch = Torch || (function() {
     'use strict';
 
-    var version = 0.7,
-    	schemaVersion = 0.1,
+    var version = '0.8.5',
+        lastUpdate = 1453326963,
+        schemaVersion = 0.1,
 		flickerURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
 		flickerPeriod = 400,
 		flickerDeltaLocation = 2,
 		flickerDeltaRadius = 0.1,
+		flickerDeltaAngle = 5,
 		flickerInterval = false,
-
-	fixNewObj= function(obj) {
-		var p = obj.changed._fbpath,
-		    new_p = p.replace(/([^\/]*\/){4}/, "/");
-		obj.fbpath = new_p;
-		return obj;
-	},
 
 	ch = function (c) {
 		var entities = {
@@ -42,20 +37,20 @@ var Torch = Torch || (function() {
 		return '';
 	},
 
-	showHelp = function() {
+	showHelp = function(who) {
         sendChat('',
-            '/w gm '
+            '/w "'+who+'" '
 +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
 	+'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
 		+'Torch v'+version
 	+'</div>'
 	+'<div style="padding-left:10px;margin-bottom:3px;">'
 		+'<p>Torch provides commands for managing dynamic lighting.  Supplying a first argument of <b>help</b> to any of the commands displays this help message, as will calling !torch or !snuff with nothing supplied or selected.</p>'
-		+'<p>Torch now supports <b><i>Jack Taylor</i></b> inspired flickering lights.  Flicker lights are only active on pages where a player is (GMs, drag yourself to other pages if you don'+ch("'")+'t want to move the party.) and are persisted in the state.  Flicker lights can be used in addition to regular lights as they are implemented on a separate invisible token that follows the nomal token.  Tokens for flicker lights that have been removed are stored on the GM layer in the upper left corner and can be removed if desired.  They will be reused if a new flicker light is requested.</p>'
+		+'<p>Torch now supports <b><i>Jack Taylor</i></b> inspired flickering lights.  Flicker lights are only active on pages where a player is (GMs, drag yourself to other pages if you don'+ch("'")+'t want to move the party.) and are persisted in the state.  Flicker lights can be used in addition to regular lights as they are implemented on a separate invisible token that follows the nomal token.</p>'
 	+'</div>'
 	+'<b>Commands</b>'
 	+'<div style="padding-left:10px;">'
-		+'<b><span style="font-family: serif;">!torch ['+ch('<')+'Radius'+ch('>')+' ['+ch('<')+'Dim Start'+ch('>')+' ['+ch('<')+'All Players'+ch('>')+'  ['+ch('<')+'Token ID'+ch('>')+' ... ]]]]</span></b>'
+		+'<b><span style="font-family: serif;">!torch '+ch('[')+ch('<')+'Radius'+ch('>')+' '+ch('[')+ch('<')+'Dim Start'+ch('>')+' '+ch('[')+ch('<')+'All Players'+ch('>')+'  '+ch('[')+ch('<')+'Token ID'+ch('>')+ch('|')+ch('<')+'--Angle'+ch('>')+' ... '+ch(']')+ch(']')+ch(']')+ch(']')+'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>Sets the light for the selected/supplied tokens.  Only GMs can supply token ids to adjust.</p>'
 			+'<p><b>Note:</b> If you are using multiple '+ch('@')+ch('{')+'target'+ch('|')+'token_id'+ch('}')+' calls in a macro, and need to adjust light on fewer than the supplied number of arguments, simply select the same token several times.  The duplicates will be removed.</p>'
@@ -72,9 +67,12 @@ var Torch = Torch || (function() {
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<b><span style="font-family: serif;">'+ch('<')+'Token ID'+ch('>')+'</span></b> '+ch('-')+' A Token ID, usually supplied with something like '+ch('@')+ch('{')+'target'+ch('|')+'Target 1'+ch('|')+'token_id'+ch('}')+'.'
 				+'</li> '
+				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<b><span style="font-family: serif;">'+ch('<')+'--Angle'+ch('>')+'</span></b> '+ch('-')+' The angle of the light arc of the light. (Default: 360)'
+				+'</li> '
 			+'</ul>'
 		+'</div>'
-		+'<b><span style="font-family: serif;">!snuff ['+ch('<')+'Token ID'+ch('>')+' ... ]</span></b>'
+		+'<b><span style="font-family: serif;">!snuff '+ch('[')+ch('<')+'Token ID'+ch('>')+' ... '+ch(']')+'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>Turns off light for the selected/supplied tokens. Only GMs can supply token ids to adjust.</p>'
 			+'<p><b>Note:</b> If you are using multiple '+ch('@')+ch('{')+'target'+ch('|')+'token_id'+ch('}')+' calls in a macro, and need to adjust light on fewer than the supplied number of arguments, simply select the same token several times.  The duplicates will be removed.</p>'
@@ -84,15 +82,15 @@ var Torch = Torch || (function() {
 				+'</li> '
 			+'</ul>'
 		+'</div>'
-		+'<b><span style="font-family: serif;">!flicker-on ['+ch('<')+'Radius'+ch('>')+' ['+ch('<')+'Dim Start'+ch('>')+' ['+ch('<')+'All Players'+ch('>')+'  ['+ch('<')+'Token ID'+ch('>')+' ... ]]]]</span></b>'
+		+'<b><span style="font-family: serif;">!flicker-on '+ch('[')+ch('<')+'Radius'+ch('>')+' '+ch('[')+ch('<')+'Dim Start'+ch('>')+' '+ch('[')+ch('<')+'All Players'+ch('>')+'  '+ch('[')+ch('<')+'Token ID'+ch('>')+ch('|')+ch('<')+'--Angle'+ch('>')+' ... '+ch(']')+ch(']')+ch(']')+ch(']')+'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>Behaves identically to !torch, save that it creates a flickering light.</p>'
 		+'</div>'
-		+'<b><span style="font-family: serif;">!flicker-off ['+ch('<')+'Token ID'+ch('>')+' ... ]</span></b>'
+		+'<b><span style="font-family: serif;">!flicker-off '+ch('[')+ch('<')+'Token ID'+ch('>')+' ... '+ch(']')+'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>Behaves identically to !snuff, save that it affects the flickering light.</p>'
 		+'</div>'
-		+'<b><span style="font-family: serif;">!daytime ['+ch('<')+'Token ID'+ch('>')+']</span></b>'
+		+'<b><span style="font-family: serif;">!daytime '+ch('[')+ch('<')+'Token ID'+ch('>')+ch(']')+'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>Turns off dynamic lighting for the current player page, or the page of the selected/supplied token.</p>'
 			+'<ul>'
@@ -101,9 +99,18 @@ var Torch = Torch || (function() {
 				+'</li> '
 			+'</ul>'
 		+'</div>'
-		+'<b><span style="font-family: serif;">!nighttime ['+ch('<')+'Token ID'+ch('>')+']</span></b>'
+		+'<b><span style="font-family: serif;">!nighttime '+ch('[')+ch('<')+'Token ID'+ch('>')+ch(']')+'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<p>Turns on dynamic lighting for the current player page, or the page of the selected/supplied token.</p>'
+			+'<ul>'
+				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<b><span style="font-family: serif;">'+ch('<')+'Token ID'+ch('>')+'</span></b> '+ch('-')+' A Token ID, usually supplied with something like '+ch('@')+ch('{')+'target'+ch('|')+'Target 1'+ch('|')+'token_id'+ch('}')+'.'
+				+'</li> '
+			+'</ul>'
+		+'</div>'
+		+'<b><span style="font-family: serif;">!global-light '+ch('[')+ch('<')+'Token ID'+ch('>')+ch(']')+'</span></b>'
+		+'<div style="padding-left: 10px;padding-right:20px">'
+			+'<p>Toggles Global Illumination for the current player page, or the page of the selected/supplied token.</p>'
 			+'<ul>'
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<b><span style="font-family: serif;">'+ch('<')+'Token ID'+ch('>')+'</span></b> '+ch('-')+' A Token ID, usually supplied with something like '+ch('@')+ch('{')+'target'+ch('|')+'Target 1'+ch('|')+'token_id'+ch('}')+'.'
@@ -114,7 +121,7 @@ var Torch = Torch || (function() {
 +'</div>'
             );
     },
-	setFlicker = function(o,r,d,p) {
+	setFlicker = function(o,r,d,p,a) {
 		var found = _.findWhere(state.Torch.flickers, {parent: o.id}),
 			fobj;
 
@@ -122,13 +129,14 @@ var Torch = Torch || (function() {
 			fobj = getObj('graphic',found.id);
 			if(fobj) {
 				fobj.set({
-                    layer: 'objects',
+                    layer: 'walls',
 					showname: false,
 					aura1_radius: '',
 					showplayers_aura1: false,
 					light_radius: r,
 					light_dimradius: d,
-					light_otherplayers: p
+					light_otherplayers: p,
+                    light_angle: a
 				});
 			} else {
 				delete state.Torch.flickers[found.id];
@@ -136,29 +144,8 @@ var Torch = Torch || (function() {
 		} 
 		
 		if(!fobj) {
-			found = _.findWhere(state.Torch.flickers, {page: o.get('pageid'), active: false});
-			while(!fobj && found ) {
-				fobj = getObj('graphic', found.id);
-				if(fobj) {
-					fobj.set({
-						layer: 'objects',
-						showname: false,
-						aura1_radius: '',
-						showplayers_aura1: false,
-						light_radius: r,
-						light_dimradius: d,
-						light_otherplayers: p
-					});
-				} else {
-					delete state.Torch.flickers[found.id];
-					found = _.findWhere(state.Torch.flickers, {page: o.get('pageid'), active: false});
-				}
-			}
-		} 
-		
-		if(!fobj) {
 			// new flicker
-			fobj =fixNewObj(createObj('graphic',{
+			fobj =createObj('graphic',{
 				imgsrc: flickerURL,
 				subtype: 'token',
 				name: 'Flicker',
@@ -167,11 +154,13 @@ var Torch = Torch || (function() {
 				height: 70,
 				top: o.get('top'),
 				left: o.get('left'),
-				layer: 'objects',
+				layer: 'walls',
 				light_radius: r,
 				light_dimradius: d,
-				light_otherplayers: p
-			}));
+				light_otherplayers: p,
+                light_angle: a
+
+			});
 		}
 		toBack(fobj);
 		state.Torch.flickers[fobj.id]={
@@ -180,52 +169,51 @@ var Torch = Torch || (function() {
 			active: true,
 			page: o.get('pageid'),
 			light_radius: r,
-			light_dimradius: d
+			light_dimradius: d,
+            light_angle: a
+
 		};
 	},
 
 	clearFlicker = function(fid) {
 		var f = getObj('graphic',fid);
-		if(f) {
-			f.set({
-				aura1_radius: 1,
-				aura1_square: false,
-				aura1_color: '#ffbd00',
-				showplayers_aura1: false,
-				light_radius: '',
-				ligh_dimradius: '',
-				light_otherplayers: false,
-				showname: true,
-				top: 70,
-				left: 70,
-				layer: 'gmlayer'
-			});
-		}
-		state.Torch.flickers[fid].active=false;
+        if(f) {
+            f.remove();
+        }
+		delete state.Torch.flickers[fid];
 	},
 	
 	handleInput = function(msg) {
-		var args, radius, dim_radius, other_players, page, obj, objs=[];
+		var args, radius, dim_radius, arc_angle=360, other_players, page, obj, objs=[],who;
 
 		if (msg.type !== "api") {
 			return;
 		}
+		who=getObj('player',msg.playerid).get('_displayname');
 
 		args = msg.content.split(" ");
 		switch(args[0]) {
 			case '!torch':
-				if('help' === args[1] || ( !_.has(msg,'selected') && args.length < 5)) {
-					showHelp();
+				if((args[1]||'').match(/^(--)?help$/) || ( !_.has(msg,'selected') && args.length < 5)) {
+					showHelp(who);
 					return;
 				}
                 radius = parseInt(args[1],10) || 40;
                 dim_radius = parseInt(args[2],10) || (radius/2);
 				other_players = _.contains([1,'1','on','yes','true','sure','yup','-'], args[3] || 1 );
 
-				if(isGM(msg.playerid)) {
+				if(playerIsGM(msg.playerid)) {
 					_.chain(args)
 						.rest(4)
 						.uniq()
+                        .filter(function(a){
+                            var angle=a.match(/^--(\d+)$/);
+                            if(angle){
+                                arc_angle=(Math.min(360,Math.max(0,angle[1])));
+                                return false;
+                            }
+                            return true;
+                        })
 						.map(function(t){
 							return getObj('graphic',t);
 						})
@@ -234,7 +222,8 @@ var Torch = Torch || (function() {
 							t.set({
 								light_radius: radius,
 								light_dimradius: dim_radius,
-								light_otherplayers: other_players
+								light_otherplayers: other_players,
+                                light_angle: arc_angle
 							});
 						});
 				}
@@ -243,18 +232,19 @@ var Torch = Torch || (function() {
                     getObj(o._type,o._id).set({
                         light_radius: radius,
                         light_dimradius: dim_radius,
-                        light_otherplayers: other_players
+                        light_otherplayers: other_players,
+                        light_angle: arc_angle
                     });
                 });
 				break;
 
             case '!snuff':
-				if('help' === args[1] || ( !_.has(msg,'selected') && args.length < 2)) {
-					showHelp();
+				if((args[1]||'').match(/^(--)?help$/) || ( !_.has(msg,'selected') && args.length < 2)) {
+					showHelp(who);
 					return;
 				}
 
-				if(isGM(msg.playerid)) {
+				if(playerIsGM(msg.playerid)) {
 					_.chain(args)
 						.rest(1)
 						.uniq()
@@ -266,7 +256,8 @@ var Torch = Torch || (function() {
 							t.set({
 								light_radius: '',
 								light_dimradius: '',
-								light_otherplayers: false
+								light_otherplayers: false,
+                                light_angle: 360
 							});
 						});
 				}
@@ -274,17 +265,18 @@ var Torch = Torch || (function() {
                     getObj(o._type,o._id).set({
                         light_radius: '',
                         light_dimradius: '',
-                        light_otherplayers: false
+                        light_otherplayers: false,
+                        light_angle: 360
                     });
                 });
                 break;
 
 			case '!daytime':
-				if('help' === args[1]) {
-					showHelp();
+				if((args[1]||'').match(/^(--)?help$/) ) {
+					showHelp(who);
 					return;
 				}
-				if(isGM(msg.playerid)) {
+				if(playerIsGM(msg.playerid)) {
 					if(msg.selected) {
 						obj=getObj('graphic', msg.selected[0]._id);
 					} else if(args[1]) {
@@ -302,11 +294,11 @@ var Torch = Torch || (function() {
 				break;
 
 			case '!nighttime':
-				if('help' === args[1]) {
-					showHelp();
+				if((args[1]||'').match(/^(--)?help$/) ) {
+					showHelp(who);
 					return;
 				}
-				if(isGM(msg.playerid)) {
+				if(playerIsGM(msg.playerid)) {
 					if(msg.selected) {
 						obj=getObj('graphic',msg.selected[0]._id);
 					} else if(args[1]) {
@@ -323,19 +315,49 @@ var Torch = Torch || (function() {
 				}
 				break;
 
+			case '!global-light':
+				if((args[1]||'').match(/^(--)?help$/) ) {
+					showHelp(who);
+					return;
+				}
+				if(playerIsGM(msg.playerid)) {
+					if(msg.selected) {
+						obj=getObj('graphic', msg.selected[0]._id);
+					} else if(args[1]) {
+						obj=getObj('graphic', args[1]);
+					}
+					page = getObj('page', (obj && obj.get('pageid')) || Campaign().get('playerpageid'));
+
+					if(page) {
+						page.set({
+							lightglobalillum: !(page.get('lightglobalillum'))
+						});
+						sendChat('','/w gm Global Illumination is now '+(page.get('lightglobalillum')?'<span style="font-weight:bold;color:#090;">ON</span>':'<span style="font-weight:bold;color:#900;">OFF</span>' )+' on page <b>'+page.get('name')+'</b>!');
+					}
+				}
+				break;
+
 			case '!flicker-on':
-				if('help' === args[1] || ( !_.has(msg,'selected') && args.length < 5)) {
-					showHelp();
+				if((args[1]||'').match(/^(--)?help$/) || ( !_.has(msg,'selected') && args.length < 5)) {
+					showHelp(who);
 					return;
 				}
                 radius = parseInt(args[1],10) || 40;
                 dim_radius = parseInt(args[2],10) || (radius/2);
 				other_players = _.contains([1,'1','on','yes','true','sure','yup','-'], args[3] || 1 );
 
-				if(isGM(msg.playerid)) {
+				if(playerIsGM(msg.playerid)) {
 					objs=_.chain(args)
 						.rest(4)
 						.uniq()
+                        .filter(function(a){
+                            var angle=a.match(/^--(\d+)$/);
+                            if(angle){
+                                arc_angle=(Math.min(360,Math.max(0,angle[1])));
+                                return false;
+                            }
+                            return true;
+                        })
 						.map(function(t){
 							return getObj('graphic',t);
 						})
@@ -346,18 +368,18 @@ var Torch = Torch || (function() {
                 _.each(_.union(objs,_.map(msg.selected,function (o) {
                     return getObj(o._type,o._id);
                 })), function(o){
-					setFlicker(o, radius, dim_radius, other_players);
+					setFlicker(o, radius, dim_radius, other_players,arc_angle);
 				});
 
 				break;
 
 			case '!flicker-off':
-				if('help' === args[1] || ( !_.has(msg,'selected') && args.length < 2)) {
-					showHelp();
+				if((args[1]||'').match(/^(--)?help$/) || ( !_.has(msg,'selected') && args.length < 2)) {
+					showHelp(who);
 					return;
 				}
                 
-				if(isGM(msg.playerid)) {
+				if(playerIsGM(msg.playerid)) {
 					objs=_.chain(args)
 						.rest(1)
 						.uniq()
@@ -384,7 +406,7 @@ var Torch = Torch || (function() {
 			.each(function(fdata){
 				var o = getObj('graphic',fdata.parent),
 					f = getObj('graphic',fdata.id),
-					dx, dy, dr;
+					dx, dy, dr, da;
 
 				if(!o) {
 					clearFlicker(fdata.id);
@@ -395,15 +417,16 @@ var Torch = Torch || (function() {
 						dx = randomInteger(2 * flickerDeltaLocation)-flickerDeltaLocation;
 						dy = randomInteger(2 * flickerDeltaLocation)-flickerDeltaLocation;
 						dr = randomInteger(2 * (fdata.light_radius*flickerDeltaRadius)) - (fdata.light_radius*flickerDeltaRadius);
+						da = randomInteger(2 * flickerDeltaAngle)-flickerDeltaAngle;
 						f.set({
 							top: o.get('top')+dy,
 							left: o.get('left')+dx,
-							light_radius: fdata.light_radius+dr
+							light_radius: fdata.light_radius+dr,
+							light_angle: ((360 === fdata.light_angle) ? (360) : (Math.min(360,Math.max(fdata.light_angle+da,0)))) || 360
 						});
 					}
 				}
 			});
-
 	},
 
 	handleTokenDelete = function(obj) {
@@ -420,8 +443,10 @@ var Torch = Torch || (function() {
 	},
 
 	checkInstall = function() {
+        log('-=> Torch v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+
         if( ! _.has(state,'Torch') || state.Torch.version !== schemaVersion) {
-            log('Torch: Resetting state');
+            log('  > Updating Schema to v'+schemaVersion+' <');
             /* Default Settings stored in the state. */
             state.Torch = {
 				version: schemaVersion,
@@ -446,13 +471,6 @@ var Torch = Torch || (function() {
 on("ready",function(){
 	'use strict';
 
-    if("undefined" !== typeof isGM && _.isFunction(isGM)) {
-		Torch.CheckInstall();
-		Torch.RegisterEventHandlers();
-    } else {
-        log('--------------------------------------------------------------');
-        log('Torch requires the isGM module to work.');
-        log('isGM GIST: https://gist.github.com/shdwjk/8d5bb062abab18463625');
-        log('--------------------------------------------------------------');
-    }
+	Torch.CheckInstall();
+	Torch.RegisterEventHandlers();
 });

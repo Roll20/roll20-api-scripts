@@ -181,4 +181,4 @@ on('ready', function() {
     'use strict';
     
     bshields.Collision.registerPostloadEventHandlers();
-}
+});

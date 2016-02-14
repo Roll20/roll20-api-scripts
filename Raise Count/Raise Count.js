@@ -7,7 +7,7 @@ var bshields = bshields || {};
 bshields.raiseCount = (function() {
     'use strict';
     
-    var version = 2.2,
+    var version = 2.3,
         config = {
             raiseSize: 4,
             outputFormat: 'Roll: {0}, Target: {1}, Raises: {2}'
@@ -18,13 +18,17 @@ bshields.raiseCount = (function() {
                     roll = args.join(' ');
                 
                 sendChat('', '[[' + roll + ']]', function(ops) {
-                    var expression = ops[0].inlinerolls[1].expression,
-                        total = ops[0].inlinerolls[1].results.total,
+                    var inline = _.sortBy(ops[0].inlinerolls, function(rolldata, index) {
+                            // Force inline rolls into 0-index array, should work on both prod and dev
+                            return index;
+                        })[0],
+                        expression = inline.expression,
+                        total = inline.results.total,
                         raises = Math.floor((total - target) / config.raiseSize),
                         rollOut = '<span title="Rollin ' + expression + ' = ',
                         fail = crit = false;
                     
-                    _.each(ops[0].inlinerolls[1].results.rolls, function(roll) {
+                    _.each(inline.results.rolls, function(roll) {
                         var max = roll.sides;
                         
                         if (roll.type !== 'R') { return; }

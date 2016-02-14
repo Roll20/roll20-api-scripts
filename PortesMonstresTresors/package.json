@@ -1,0 +1,12 @@
+{
+  "name": "Portes Monsres Tresors",
+  "version": "1.3",
+  "description": "Character creation helper for the Portes Monstres Tresors character sheet (french free OGL retroclone of DnD B/X)",
+  "authors": "Natha",
+  "roll20userid": "75857",
+  "dependencies": {},
+  "modifies": {
+    "character": "write"
+  },
+  "conflicts": []
+}

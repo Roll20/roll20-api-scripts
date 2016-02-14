@@ -128,8 +128,8 @@ var Tracker = Tracker || {
 		}
 		var statusCount = status.count;
 		if (!state.InitiativeTracker.highToLow){ statusCount = -statusCount; }
-		if ((roundChanged) && (statusCount > oldCount) && (statusCount < newCount)){ continue; } // status not between last count and this count
-		if ((!roundChanged) && ((statusCount > oldCount) || (statusCount < newCount))){ continue; }
+		if ((roundChanged) && (statusCount >= oldCount) && (statusCount < newCount)){ continue; } // status not between last count and this count
+		if ((!roundChanged) && ((statusCount >= oldCount) || (statusCount < newCount))){ continue; }
 		if (status.expires <= state.InitiativeTracker.round){
 		    // status expired; remove marker and announce expiration
 		    token.set("status_" + status.status, false);
@@ -157,7 +157,7 @@ var Tracker = Tracker || {
 	}
 	else {
 	    var err = true;
-	    for (var i = 0; i < CONFIG_PARAMS.length; i++){
+	    for (var i = 0; i < Tracker.CONFIG_PARAMS.length; i++){
 		if (Tracker.CONFIG_PARAMS[i][0] == param){
 		    var head = Tracker.CONFIG_PARAMS[i][1] + " (" + Tracker.CONFIG_PARAMS[i][0] + "): ";
 		    Tracker.write(head + state.InitiativeTracker[Tracker.CONFIG_PARAMS[i][0]], who, "", "Tracker");
@@ -174,7 +174,7 @@ var Tracker = Tracker || {
     setConfigParam: function(who, param, value){
 	var err = true;
 	for (var i = 0; i < Tracker.CONFIG_PARAMS.length; i++){
-	    if (CONFIG_PARAMS[i][0] == param){
+	    if (Tracker.CONFIG_PARAMS[i][0] == param){
 		state.InitiativeTracker[Tracker.CONFIG_PARAMS[i][0]] = (value == null ? !state.InitiativeTracker[Tracker.CONFIG_PARAMS[i][0]] : value);
 		err = false;
 		break;
