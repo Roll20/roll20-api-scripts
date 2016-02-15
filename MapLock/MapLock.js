@@ -5,16 +5,18 @@
 var MapLock = MapLock || (function() {
     'use strict';
 
-    var version = 0.1,
-        schemaVersion = 0.2,
+    var version = 0.3,
+        schemaVersion = 0.4,
 
     checkInstall = function() {
+		log('-=> MapLock v'+version+' <=-');
+
         if( ! _.has(state,'MapLock') || state.MapLock.version !== schemaVersion) {
             log('MapLock: Resetting state');
             state.MapLock = {
                 version: schemaVersion,
                 highlighting: false,
-                locked: []
+                locked: {}
             };
         }
     },
@@ -59,10 +61,10 @@ var MapLock = MapLock || (function() {
 			+'<p>Adjusts locking options for selected graphics.</p>'
 			+'<ul>'
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
-					+'<b><span style="font-family: serif;">lock</span></b> '+ch('-')+' Adds thsee graphics to the list of locked items.'
+					+'<b><span style="font-family: serif;">lock</span></b> '+ch('-')+' Adds these graphics to the list of locked items.'
 				+'</li> '
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
-					+'<b><span style="font-family: serif;">unlock</span></b> '+ch('-')+' Removes thsee graphics from the list of locked items.'
+					+'<b><span style="font-family: serif;">unlock</span></b> '+ch('-')+' Removes these graphics from the list of locked items.'
 				+'</li> '
 				+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<b><span style="font-family: serif;">toggle-highlight</span></b> '+ch('-')+' Turns on or off the red tinting of locked graphics.'
@@ -84,22 +86,23 @@ var MapLock = MapLock || (function() {
             +'</div>'
         );
     },
-    tintGraphics = function(gids, transparent) {
-        var c = ( transparent ? 'transparent' : '#ff0000');
+    tintGraphics = function(gids, highlight) {
         _.chain(gids)
             .map(function(id){
                 return getObj('graphic',id);
             })
             .reject(_.isUndefined)
             .each(function(o){
+                var t = state.MapLock.locked[o.id];
+
                 o.set({
-                    tint_color: c
+                    tint_color: ( highlight ? '#ff0000' : t || 'transparent')
                 });
             });
     },
 
     handleInput = function(msg) {
-        var args,who;
+        var args,who,ids,cnt=0;
 
         if (msg.type !== "api" || !isGM(msg.playerid)) {
             return;
@@ -109,31 +112,43 @@ var MapLock = MapLock || (function() {
         switch(args.shift()) {
             case '!map-lock':
                 who=getObj('player',msg.playerid).get('_displayname').split(' ')[0];
+                ids=_.pluck(msg.selected,'_id');
                 switch(args.shift()) {
                     case 'lock':
-                        if(msg.selected && msg.selected.length) {
-                            state.MapLock.locked=_.union(state.MapLock.Locked,_.pluck(msg.selected,'_id'));
-                            tintGraphics(_.pluck(msg.selected,'_id'), !state.MapLock.highlighting);
-                            msgPlayer(who, 'Locked '+msg.selected.length+' token'+(1 === msg.selected.length ? '' : 's'));
+                        if(ids) {
+                            _.each(ids,function(id){
+                                var o=getObj('graphic',id);
+                                if( o && !_.has(state.MapLock,id) ){
+                                    ++cnt;
+                                    state.MapLock.locked[id]=o.get('tint_color');
+                                }
+                            });
+                            tintGraphics(ids, state.MapLock.highlighting);
+                            msgPlayer(who, 'Locked '+cnt+' token'+(1 === cnt ? '' : 's'));
                         } else {
                             msgPlayer(who, '<span style="font-color: #ff0000;">ERROR:</span> Nothing selected.');
                         }
                         break;
 
                     case 'unlock':
-                        if(msg.selected && msg.selected.length) {
-                            state.MapLock.locked=_.difference(state.MapLock.Locked,_.pluck(msg.selected,'_id'));
-                            tintGraphics(_.pluck(msg.selected,'_id'), true);
-                            msgPlayer(who, 'Unlocked '+msg.selected.length+' token'+(1 === msg.selected.length ? '' : 's'));
+                        if(ids) {
+                            ids=_.intersection(ids,_.keys(state.MapLock.locked));
+                            tintGraphics(ids, false);
+                            _.each(ids,function(id){
+                                delete state.MapLock.locked[id];
+                                ++cnt;
+                            });
+                            msgPlayer(who, 'Unlocked '+cnt+' token'+(1 === cnt ? '' : 's'));
                         } else {
                             msgPlayer(who, '<span style="font-color: #ff0000;">ERROR:</span> Nothing selected.');
                         }
                         break;
 
                     case 'toggle-highlight':
-                        tintGraphics(state.MapLock.locked, !state.MapLock.highlighting);
                         state.MapLock.highlighting = !state.MapLock.highlighting;
+                        tintGraphics(_.keys(state.MapLock.locked), state.MapLock.highlighting);
                         break;
+
                     case '--help':
                     default:
                         showHelp(who);
@@ -142,9 +157,10 @@ var MapLock = MapLock || (function() {
                 break;
         }
     },
+
 	HandleMove = function(obj,prev) {
 
-		if(_.contains(state.MapLock.locked, obj.id)
+		if(_.has(state.MapLock.locked, obj.id)
 			&& (
                 obj.get('left') !== prev.left
                 || obj.get('top') !== prev.top
