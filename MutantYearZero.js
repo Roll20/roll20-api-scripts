@@ -5,8 +5,8 @@
 var MutantYearZero = MutantYearZero || (function() {
     'use strict';
 
-    var version = '0.1.6',
-        lastUpdate = 1455510207,
+    var version = '0.1.7',
+        lastUpdate = 1455510787,
         schemaVersion = 0.4,
         symbols = {
             biohazard: '&#'+'9763;',
@@ -524,7 +524,7 @@ var MutantYearZero = MutantYearZero || (function() {
                     );
                 } else {
                     sendChat('','/w gm '+
-                        makeErrorMsg(player.get('displayname')+' attempted to Push with an alterned number of dice.')
+                        makeErrorMsg(player.get('displayname')+' attempted to Push with an altered number of dice.')
                     );
                 }
                 break;
@@ -554,7 +554,7 @@ var MutantYearZero = MutantYearZero || (function() {
                 if(playerIsGM(playerid)){
                     sendChat('','/w gm '+makeErrorMsg('Cannot Push old rolls.'));
                 } else {
-                    sendChat('','/w gm '+makeErrorMsg(player.get('displayname')+' attempted to Push a from an old roll.'));
+                    sendChat('','/w gm '+makeErrorMsg(player.get('displayname')+' attempted to Push from an old roll.'));
                 }
                 break;
 
