@@ -5,8 +5,8 @@
 var MutantYearZero = MutantYearZero || (function() {
     'use strict';
 
-    var version = '0.1.4',
-        lastUpdate = 1455506351,
+    var version = '0.1.5',
+        lastUpdate = 1455508327,
         schemaVersion = 0.4,
         symbols = {
             biohazard: '&#'+'9763;',
@@ -384,18 +384,26 @@ var MutantYearZero = MutantYearZero || (function() {
 	'</div>'+
 	'<b>Commands</b>'+
 	'<div style="padding-left:10px;">'+
-		'<b><span style="font-family: serif;">!myz '+ch('[')+'Skill Roll'+ch(']')+' '+ch('[')+'Base Roll'+ch(']')+' '+ch('[')+'Gear Roll'+ch(']')+'</span></b>'+
+		'<b><span style="font-family: serif;">!myz '+ch('[')+'Skill Roll'+ch(']')+' '+ch('[')+'Base Roll'+ch(']')+' '+ch('[')+'Gear Roll'+ch(']')+' '+ch('[')+'--'+ch('<')+'Label'+ch('>')+ch('|')+ch('<')+'Message'+ch('>')+' ...'+ch(']')+'</span></b>'+
 		'<div style="padding-left: 10px;padding-right:20px">'+
 			'<p>Performs a Mutant Year Zero Roll.</p>'+
 			'<ul>'+
 				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
-					'<b><span style="font-family: serif;">'+ch('[')+'Skill Roll'+ch(']')+'</span></b> '+ch('-')+' an inline dice expression rolling the d6s. 6s are counted as a success ('+symbols.radioactive+'). Example: '+ch('[')+ch('[')+'3d6'+ch(']')+ch(']')+
+					'<b><span style="font-family: serif;">'+ch('[')+'Skill Roll'+ch(']')+'</span></b> '+ch('-')+' An inline dice expression rolling the d6s. 6s are counted as a success ('+symbols.radioactive+'). Example: '+ch('[')+ch('[')+'3d6'+ch(']')+ch(']')+
 				'</li> '+
 				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
-					'<b><span style="font-family: serif;">'+ch('[')+'Base Roll'+ch(']')+'</span></b> '+ch('-')+' an inline dice expression rolling the d6s. 6s are counted as a success ('+symbols.radioactive+'). 1s are counted as Trama ('+symbols.biohazard+'). Example: '+ch('[')+ch('[')+'4d6'+ch(']')+ch(']')+
+					'<b><span style="font-family: serif;">'+ch('[')+'Base Roll'+ch(']')+'</span></b> '+ch('-')+' An inline dice expression rolling the d6s. 6s are counted as a success ('+symbols.radioactive+'). 1s are counted as Trama ('+symbols.biohazard+'). Example: '+ch('[')+ch('[')+'4d6'+ch(']')+ch(']')+
 				'</li> '+
 				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
-					'<b><span style="font-family: serif;">'+ch('[')+'Gear Roll'+ch(']')+'</span></b> '+ch('-')+' an inline dice expression rolling the d6s ('+symbols.radioactive+').  1s are counted as Gear Degradation ('+symbols.explosion+'). Example: '+ch('[')+ch('[')+'2d6'+ch(']')+ch(']')+
+					'<b><span style="font-family: serif;">'+ch('[')+'Gear Roll'+ch(']')+'</span></b> '+ch('-')+' An inline dice expression rolling the d6s ('+symbols.radioactive+').  1s are counted as Gear Degradation ('+symbols.explosion+'). Example: '+ch('[')+ch('[')+'2d6'+ch(']')+ch(']')+
+				'</li> '+
+				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
+					'<b><span style="font-family: serif;">'+ch('[')+'--'+ch('<')+'Label'+ch('>')+ch('|')+ch('<')+'Message'+ch('>')+' ...'+ch(']')+'</span></b> '+ch('-')+' An optional set of text to be shown above the die roll. Label may be omitted to just provid a text field.  You can specify as many optional descriptions as you like.'+
+                    '<div style="padding-left: 10px;padding-right:20px">'+
+                        '<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'+
+                            '!myz '+ch('[')+ch('[')+'5d6'+ch(']')+ch(']')+' '+ch('[')+ch('[')+'3d6'+ch(']')+ch(']')+' '+ch('[')+ch('[')+'4d6'+ch(']')+ch(']')+' --Player|Buzzard --Skill|Know the Zone (Wits)'+
+                        '</pre>'+
+                    '</div>'+
 				'</li> '+
 			'</ul>'+
 		'</div>'+
