@@ -5,15 +5,16 @@
 var MutantYearZero = MutantYearZero || (function() {
     'use strict';
 
-    var version = '0.1.3',
-        lastUpdate = 1454881582,
-        schemaVersion = 0.1,
+    var version = '0.1.4',
+        lastUpdate = 1455506351,
+        schemaVersion = 0.4,
         symbols = {
             biohazard: '&#'+'9763;',
             radioactive: '&#'+'9762;',
             explosion:  '&#'+'128165;',
             push: '&#'+'10150;'
         },
+        myzBackground = 'https://s3.amazonaws.com/files.d20.io/images/16289834/HuG1AuH9EWsSI2tLJZubBA/original.png?1455490062',
         colors = {
             green: '#3ea62a',
             lightGreen: '#89D878',
@@ -32,9 +33,92 @@ var MutantYearZero = MutantYearZero || (function() {
                     'font-weight': 'bold',
                     'padding': '.1em .4em',
                     'color': 'white'
+                },
+                errorMsg: {
+                    'font-size': '.8em',
+                    'border': '.2em solid #990000',
+                    'border-radius': '1em',
+                    'background-color': '#cccccc',
+                    'margin': '0 .1em',
+                    'padding': '.1em .6em',
+                    'overflow': 'hidden'
+                },
+                errorMsgLabel: {
+                    'font-weight': 'bold',
+                    'background-color': '#990000',
+                    'color': '#ffffff',
+                    'display': 'inline-block',
+                    'padding': '.1em .6em',
+                    'border-radius': '0 0 .75em 0',
+                    'margin': '-.1em .2em 0em -.6em'
+                },
+
+                optionalMsg: {
+                    'font-size': '.6em',
+                    'border': '.1em solid #a2521f',
+                    'border-radius': '.5em',
+                    'background-color': '#c3701b',
+                    'margin': '0 .1em .2em .1em',
+                    'padding': '.1em .4em',
+                    'overflow': 'hidden'
+                },
+                optionalMsgLabel: {
+                    'font-weight': 'bold',
+                    'background-color': '#a2521f',
+                    'color': '#ffffff',
+                    'display': 'inline-block',
+                    'padding': '.1em .6em .1em .4em',
+                    'border-radius': '0 0 .75em 0',
+                    'margin': '-.1em .2em 0em -.4em'
+                },
+
+                myzMsg: {
+                    'font-size': '1.25em',
+                    'border': '.2em solid #8b3f1f',
+                    'border-radius': '.5em',
+                    'background-color': '#2c2119',
+                    'background-image': 'url('+myzBackground+')',
+                    'background-repeat': 'no-repeat',
+                    'background-position': 'top',
+                    'background-size': '100%',
+                    'margin': '0 0',
+                    'padding': '.3em',
+                    'overflow': 'hidden'
+                },
+                myzMsgLabelContainer: {
+                    'max-width': '10em',
+                    'float': 'left',
+                    'font-size': '1.5em',
+                    'margin-right': '.2em'
+                },
+                myzMsgLabel: {
+                    'border': '.1em solid #a2521f',
+                    'border-radius': '.25em',
+                    'font-weight': 'normal',
+                    'padding': '.1em',
+                    'margin-bottom': '.1em',
+                    'text-align': 'right'
+                },
+                myzDie: {
+                    'display': 'inline-block',
+                    'border': '1px solid black',
+                    'border-radius': '.3em',
+                    'padding': '.2em 0 0 0',
+                    'text-align': 'center',
+                    'width': '1.3em',
+                    'height': '1.1em',
+                    'float': 'left',
+                    'margin-right': '.1em',
+                    'margin-bottom': '.1em'
                 }
             }
         },
+        reportingModes = {
+            'off': 'None',
+            'gm': 'GM',
+            'gm+player': 'GM &amp; Player',
+            'public': 'Public'
+        }, 
         templates = {},
 
     buildTemplates = function() {
@@ -63,6 +147,90 @@ var MutantYearZero = MutantYearZero || (function() {
                 '}) %> href="<%= command %>"><%= label||"Button" %></a>'
         );
 
+        templates.errorMsg = _.template(
+            '<div <%= templates.style({defaults: defaults,templates: templates,css: defaults.css.errorMsg}) %>>'+
+                '<div <%= templates.style({defaults: defaults,templates: templates,css: defaults.css.errorMsgLabel}) %>>'+
+                    '<%= label %>'+
+                '</div>'+
+                '<%= text %>'+
+            '</div>'
+        );
+        templates.optionalMsg = _.template(
+            '<div <%= templates.style({defaults: defaults,templates: templates,css: defaults.css.optionalMsg}) %>>'+
+                '<% if(label){ %>'+
+                    '<div <%= templates.style({defaults: defaults,templates: templates,css: defaults.css.optionalMsgLabel}) %>>'+
+                        '<%= label %>'+
+                    '</div>'+
+                '<% } %>'+
+                '<%= text %>'+
+            '</div>'
+        );
+
+        templates.die = _.template(
+            '<div <%= templates.style({defaults: defaults,templates: templates,css: _.defaults(css,defaults.css.myzDie)}) %> >'+
+                '<%= text %>'+
+            '</div>'
+        );
+
+        templates.outputLabel = _.template(
+            '<div <%= templates.style({defaults: defaults,templates: templates,css: _.defaults(css,defaults.css.myzMsgLabel)}) %> >'+
+                '<%= labelText %>'+
+            '</div>'
+        );
+
+        templates.output = _.template(
+            '<div <%= templates.style({defaults: defaults,templates: templates,css: defaults.css.myzMsg}) %> >'+
+                '<div <%= templates.style({defaults: defaults,templates: templates,css: defaults.css.myzMsgLabelContainer}) %>>'+
+                    '<%= results %>'+
+                '</div>'+
+                '<%= diceImages %>'+
+            '</div>'
+        );
+
+    },
+    makeErrorMsg = function(msg){
+        return templates.errorMsg({
+            text: msg,
+            label: 'Error',
+            templates: templates,
+            defaults: defaults,
+            css: {}
+        });
+    },
+    makeOptionalMsg = function(label,msg){
+        return templates.optionalMsg({
+            text: msg,
+            label: label,
+            templates: templates,
+            defaults: defaults,
+            css: {}
+        });
+    },
+
+    makeOptionalText = function (optional){
+        return '<div>'+_.map(optional,function(o){
+            return makeOptionalMsg(o.label,o.msg);
+        }).join('')+'</div>';
+    },
+
+    makeLabel = function(text,color){
+        return templates.outputLabel({
+            labelText: text,
+            templates: templates,
+            defaults: defaults,
+            css: {
+                'background-color': color
+            }
+        });
+    },
+    makeOutput = function (results,diceImages){
+        return templates.output({
+            results: results,
+            diceImages: diceImages,
+            templates: templates,
+            defaults: defaults,
+            css: {}
+        });
     },
     makeButton = function(command, label, backgroundColor, color){
         return templates.button({
@@ -82,15 +250,43 @@ var MutantYearZero = MutantYearZero || (function() {
 
         if( ! _.has(state,'MutantYearZero') || state.MutantYearZero.version !== schemaVersion) {
             log('  > Updating Schema to v'+schemaVersion+' <');
-            state.MutantYearZero = {
-                version: schemaVersion
-            };
+            switch(state.MutantYearZero && state.MutantYearZero.version) {
+                case 0.1:
+                    state.MutantYearZero.config = {
+                        reportMode: 'public'
+                    };
+                    /* break; // intentional drop through */
+
+                case 0.2:
+                    state.MutantYearZero.playerRolls={};
+                    state.MutantYearZero.sequence=0;
+                    /* break; // intentional drop through */
+
+                case 0.3:
+                    state.MutantYearZero.config.gmCanPush=false;
+                    /* break; // intentional drop through */
+
+                case 'UpdateSchemaVersion':
+                    state.MutantYearZero.version = schemaVersion;
+                    break;
+
+                default:
+                    state.MutantYearZero = {
+                        version: schemaVersion,
+                        config: {
+                            reportMode: 'public'
+                        },
+                        sequence: 0,
+                        playerRolls: {}
+                    };
+                    break;
+            }
         }
         buildTemplates();
     },
 
     ch = function (c) {
-		var entities = {
+        var entities = {
 			'<' : 'lt',
 			'>' : 'gt',
 			"'" : '#39',
@@ -110,6 +306,113 @@ var MutantYearZero = MutantYearZero || (function() {
 		}
 		return '';
 	},
+
+
+    makeConfigOption = function(config,command,text) {
+        var onOff = (config ? 'On' : 'Off' ),
+            color = (config ? '#5bb75b' : '#faa732' );
+        return '<div style="'+
+                'border: 1px solid #ccc;'+
+                'border-radius: .2em;'+
+                'background-color: white;'+
+                'margin: 0 1em;'+
+                'padding: .1em .3em;'+
+            '">'+
+                '<div style="float:right;">'+
+                    makeButton(command,onOff,color)+
+                '</div>'+
+                text+
+                '<div style="clear:both;"></div>'+
+            '</div>';
+        
+    },
+
+    makeConfigOptionSelection = function(config,values,command,text) {
+        var buttons=_.map(values,function(v,k){
+                return makeButton(
+                    command+' '+k,
+                    v,
+                    (config === k ? '#5bb75b' : '#faa732' )
+                );
+            });
+        return '<div style="'+
+                'border: 1px solid #ccc;'+
+                'border-radius: .2em;'+
+                'background-color: white;'+
+                'margin: 0 1em;'+
+                'padding: .1em .3em;'+
+            '">'+
+                text+
+                '<div style="float:right;text-align:right;">'+
+                    buttons.join('') +
+                '</div>'+
+                '<div style="clear:both;"></div>'+
+            '</div>';
+    },
+
+    getConfigOption_GMCanPush = function() {
+        return makeConfigOption(
+            state.MutantYearZero.config.gmCanPush,
+            '!myz-config --toggle-gm-can-push',
+            '<b>GM Can Push</b> determines if the GM is allowed to push a player'+ch("'")+' roll.'
+        );
+    },
+
+    getConfigOption_ErrorReporting = function() {
+        return makeConfigOptionSelection(
+            state.MutantYearZero.config.reportMode,
+            reportingModes,
+            '!myz-config --set-report-mode',
+            '<b>Report Mode</b> determines when and how invalid push attempts are reported.'
+        );
+    },
+
+    getAllConfigOptions = function() {
+        return getConfigOption_GMCanPush() + getConfigOption_ErrorReporting();
+    },
+
+    showHelp = function(playerid) {
+        var who=getObj('player',playerid).get('_displayname');
+
+        sendChat('','/w "'+who+'" '+
+'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
+	'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'+
+		'MutantYearZero v'+version+
+	'</div>'+
+	'<div style="padding-left:10px;margin-bottom:3px;">'+
+		'<p>MutantYearZero automates the rolling of Skill, Base (Stat), and Gear dice using Mutant: Year Zero dice mechanics.</p>'+
+	'</div>'+
+	'<b>Commands</b>'+
+	'<div style="padding-left:10px;">'+
+		'<b><span style="font-family: serif;">!myz '+ch('[')+'Skill Roll'+ch(']')+' '+ch('[')+'Base Roll'+ch(']')+' '+ch('[')+'Gear Roll'+ch(']')+'</span></b>'+
+		'<div style="padding-left: 10px;padding-right:20px">'+
+			'<p>Performs a Mutant Year Zero Roll.</p>'+
+			'<ul>'+
+				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
+					'<b><span style="font-family: serif;">'+ch('[')+'Skill Roll'+ch(']')+'</span></b> '+ch('-')+' an inline dice expression rolling the d6s. 6s are counted as a success ('+symbols.radioactive+'). Example: '+ch('[')+ch('[')+'3d6'+ch(']')+ch(']')+
+				'</li> '+
+				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
+					'<b><span style="font-family: serif;">'+ch('[')+'Base Roll'+ch(']')+'</span></b> '+ch('-')+' an inline dice expression rolling the d6s. 6s are counted as a success ('+symbols.radioactive+'). 1s are counted as Trama ('+symbols.biohazard+'). Example: '+ch('[')+ch('[')+'4d6'+ch(']')+ch(']')+
+				'</li> '+
+				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
+					'<b><span style="font-family: serif;">'+ch('[')+'Gear Roll'+ch(']')+'</span></b> '+ch('-')+' an inline dice expression rolling the d6s ('+symbols.radioactive+').  1s are counted as Gear Degradation ('+symbols.explosion+'). Example: '+ch('[')+ch('[')+'2d6'+ch(']')+ch(']')+
+				'</li> '+
+			'</ul>'+
+		'</div>'+
+    '</div>'+
+	'<div style="padding-left:10px;">'+
+		'<b><span style="font-family: serif;">!wmyz '+ch('[')+'Skill Roll'+ch(']')+' '+ch('[')+'Base Roll'+ch(']')+' '+ch('[')+'Gear Roll'+ch(']')+'</span></b>'+
+		'<div style="padding-left: 10px;padding-right:20px">'+
+			'<p>Identical to !myz except that the results are whispered to the player rolling and the GM.</p>'+
+		'</div>'+
+    '</div>'+
+    ( playerIsGM(playerid)
+        ?  '<b>Configuration</b>' + getAllConfigOptions() 
+        : ''
+    )+
+'</div>'
+        );
+    },
 
     getDiceCounts = function(msg,idx) {
         var rolls = {};
@@ -141,20 +444,154 @@ var MutantYearZero = MutantYearZero || (function() {
         bgcolor=bgcolor||'black';
         color=color||'white';
         return _.map(dice,function(r){
-            return '<div style="display:inline-block;background:'+bgcolor+'; color:'+color+'; border:1px solid black;border-radius:.5em;padding:.1em 0 0 0;text-align:center;width:1.1em;height:1.1em;float:left;margin-right:.1em;">'+r+'</div>';
+            return templates.die({
+                text: r,
+                templates:templates,
+                defaults:defaults,
+                css: {
+                    'background-color': bgcolor,
+                    'color': color
+                }
+            });
         }).reverse().join('');
     },
+    getRollableDiceCount = function(dice){
+        return _.filter(dice,function(v){return v.match(/^\d+$/);}).length;
+    },
     makeRerollExpression = function(dice){
-        var cnt = _.filter(dice,function(v){return v.match(/^\d+$/);}).length;
+        var cnt = getRollableDiceCount(dice);
         return ' '+ch('[')+ch('[')+cnt+'d6'+ch(']')+ch(']')+' ';
     },
+    validatePlayerRollHash = function(playerid, hash, skill,base,gear){
+        var obj=state.MutantYearZero.playerRolls[playerid];
+        return (obj && obj.hash === hash
+            && obj.dice.skillDice === skill 
+            && obj.dice.baseDice === base 
+            && obj.dice.gearDice === gear 
+        );
+    },
+    getCountsForRoll = function(playerid,hash){
+        if(hash && _.has(state.MutantYearZero.playerRolls,playerid)){
+            return state.MutantYearZero.playerRolls[playerid].counts;
+        }
+        return {
+            success: 0,
+            trauma: 0,
+            damage: 0,
+            pushes: 0
+        };
+    },
+    getOptionalForRoll = function(playerid,hash){
+        if(hash && _.has(state.MutantYearZero.playerRolls,playerid)){
+            return state.MutantYearZero.playerRolls[playerid].optional;
+        }
+        return [];
+    },
 
+    recordPlayerRollHash = function(playerid, obj){
+        state.MutantYearZero.playerRolls[playerid]=obj;
+    },
+
+    reportBadPushCounts = function(playerid){
+        var player=getObj('player',playerid);
+        switch(state.MutantYearZero.config.reportMode){
+            case 'public':
+                    sendChat(player.get('displayname'),'/direct '+
+                        makeErrorMsg('Attempting to push with modified dice counts.')
+                    );
+                break;
+            case 'gm+player':
+                if(!playerIsGM(playerid)){
+                    sendChat('','/w "'+player.get('displayname')+'" '+
+                       makeErrorMsg('Do not adjust the number of dice when pushing.')
+                    );
+                }
+                /* break; // intentional drop thru */
+
+            case 'gm':
+                if(playerIsGM(playerid)){
+                    sendChat('','/w gm '+
+                        makeErrorMsg('Cannot adjust the number of dice in a Push attempt.')
+                    );
+                } else {
+                    sendChat('','/w gm '+
+                        makeErrorMsg(player.get('displayname')+' attempted to Push with an alterned number of dice.')
+                    );
+                }
+                break;
+
+            default:
+                break;
+        }
+    },
+
+    reportBadPush = function(playerid){
+        var player=getObj('player',playerid);
+        switch(state.MutantYearZero.config.reportMode){
+            case 'public':
+                    sendChat(player.get('displayname'),'/direct '+
+                        makeErrorMsg('Cannot Push old rolls.  Please use the current result'+ch("'")+'s Push button.')
+                    );
+                break;
+            case 'gm+player':
+                if(!playerIsGM(playerid)){
+                    sendChat('','/w "'+player.get('displayname')+'" '+
+                        makeErrorMsg('Cannot Push old rolls.  Please use the current result'+ch("'")+'s Push button.')
+                    );
+                }
+                /* break; // intentional drop thru */
+
+            case 'gm':
+                if(playerIsGM(playerid)){
+                    sendChat('','/w gm '+makeErrorMsg('Cannot Push old rolls.'));
+                } else {
+                    sendChat('','/w gm '+makeErrorMsg(player.get('displayname')+' attempted to Push a from an old roll.'));
+                }
+                break;
+
+            default:
+                break;
+        }
+    },
+
+    reportNotAllowed = function(playerid,ownerid){
+        var player=getObj('player',playerid),
+            owner=getObj('player',ownerid);
+        switch(state.MutantYearZero.config.reportMode){
+            case 'public':
+                    sendChat(player.get('displayname'),'/direct '+
+                        makeErrorMsg('Cannot Push '+owner.get('displayname')+ch("'")+'s roll.')
+                    );
+                break;
+            case 'gm+player':
+                if(!playerIsGM(playerid)){
+                    sendChat('','/w "'+player.get('displayname')+'" '+
+                        makeErrorMsg('Cannot Push '+owner.get('displayname')+ch("'")+'s roll.')
+                    );
+                }
+                /* break; // intentional drop thru */
+
+            case 'gm':
+                if(playerIsGM(playerid)){
+                    sendChat('','/w gm '+
+                        makeErrorMsg('Cannot Push '+owner.get('displayname')+ch("'")+'s roll because <b>GM Can Push</b> is not enabled.  See '+makeButton('!myz-config','Configuration')+' for details.')
+                    );
+                } else {
+                    sendChat('','/w gm '+makeErrorMsg(player.get('displayname')+' attempted to Push '+owner.get('displayname')+ch("'")+'s roll.'));
+                }
+                break;
+
+            default:
+                break;
+        }
+    },
 
 
     handleInput = function(msg_orig) {
         var msg = _.clone(msg_orig),
             args,
             optional,
+            who,
 
             rollIndices=[],
             skillDice, // skill: green
@@ -169,10 +606,16 @@ var MutantYearZero = MutantYearZero || (function() {
             trauma=0,
             gearDamage=0,
             pushedValues,
+            pushes,
 
             push=false,
             pushButton,
-            w=false;
+            w=false,
+            cmd,
+            hash,
+            matches,
+            owner,
+            output;
 
         if (msg.type !== "api") {
             return;
@@ -193,30 +636,84 @@ var MutantYearZero = MutantYearZero || (function() {
 				.value();
 		}
 
+        who=getObj('player',msg.playerid).get('_displayname');
         optional = msg.content.split(/\s+--/);
-        pushedValues = _.first(optional).split(/\|\|/);
-        args = pushedValues.shift().split(/\s+/);
-        pushedValues = (pushedValues.shift()||'').trim().split(/\s+/);
-        pushedValues = (pushedValues[0] === '' ? [] : pushedValues);
-        optional = _.map(_.rest(optional),function(o){
-           return o.split(/\|/);
+        args = optional.shift().split(/\s+/);
+        optional = _.map(optional,function(o){
+            var s=o.split(/\|/),
+                k=s.shift();
+                s=s.join('|');
+            return {
+                label: k,
+                msg: s
+            };
         });
 
-        switch(args.shift()) {
+        cmd=args.shift();
+        matches=cmd.match(/^(!\S+)\[([^\]]+)\]/);
+        if(matches){
+            cmd=matches[1];
+            hash=parseInt(matches[2],10);
+        }
+
+        switch(cmd) {
             case '!wmyz':
                 w=true;
                 /* break; */ // Intentional drop through
             case '!myz':
-                push=!!pushedValues.length;
+                if( 0 === args.length || _.contains(args,'--help')) {
+                    showHelp(msg.playerid);
+                    return;
+                }
+
+                push=!!hash;
+                if( push
+                    && ( _.has(state.MutantYearZero.playerRolls,msg.playerid) && ( hash !== state.MutantYearZero.playerRolls[msg.playerid].hash))
+                ) {
+                    owner = _.find(state.MutantYearZero.playerRolls,function(v){
+                        return hash === v.hash;
+                    });
+                    if(owner){
+                        owner=owner.playerid;
+                        if(!(playerIsGM(msg.playerid) && state.MutantYearZero.config.gmCanPush)){
+                            reportNotAllowed(msg.playerid,owner);
+                            return;
+                        }
+                    } else {
+                        reportBadPush(msg.playerid);
+                        return;
+                    }
+                }
+
+                owner = owner || msg.playerid;
 
                 skillDice=getDiceCounts(msg,rollIndices[0]);
                 baseDice=getDiceCounts(msg,rollIndices[1]);
                 gearDice=getDiceCounts(msg,rollIndices[2]);
 
-                successes=(parseInt(pushedValues[0],10)||0) + (skillDice['6']||0) + (baseDice['6']||0) + (gearDice['6']||0) ;
-                trauma=(parseInt(pushedValues[1],10)||0) + (baseDice['1']||0);
-                gearDamage=(parseInt(pushedValues[2],10)||0)+ (gearDice['1']||0);
+                
+                if(push
+                    && (
+                        _.has(state.MutantYearZero.playerRolls,owner) 
+                        && ( hash === state.MutantYearZero.playerRolls[owner].hash)
+                    )
+                    && !validatePlayerRollHash(owner,hash,
+                        getDiceArray(skillDice).length,
+                        getDiceArray(baseDice).length,
+                        getDiceArray(gearDice).length
+                    )
+                ){
+                    reportBadPushCounts(msg.playerid);
+                    return;
+                }
+                pushedValues=getCountsForRoll(owner,hash);
 
+                successes=pushedValues.success + (skillDice['6']||0) + (baseDice['6']||0) + (gearDice['6']||0) ;
+                trauma=pushedValues.trauma + (baseDice['1']||0);
+                gearDamage=pushedValues.damage + (gearDice['1']||0);
+                pushes=pushedValues.pushes+1;
+
+                optional = (optional.length && optional) || getOptionalForRoll(owner,hash);
 
                 skillDiceArray=_.map(getDiceArray(skillDice),function(v){
                     switch(v){
@@ -248,54 +745,120 @@ var MutantYearZero = MutantYearZero || (function() {
                     }
                 });
 
-                pushButton = (!push
+               // record push
+               hash=(++state.MutantYearZero.sequence);
+               recordPlayerRollHash(owner,{
+                   hash: hash,
+                   playerid: owner,
+                   dice: {
+                       skillDice: getRollableDiceCount(skillDiceArray),
+                       baseDice: getRollableDiceCount(baseDiceArray),
+                       gearDice: getRollableDiceCount(gearDiceArray)
+                    },
+                    counts: {
+                        success: successes,
+                        trauma: trauma,
+                        damage: gearDamage,
+                        pushes: pushes
+                    },
+                    optional: optional
+                });
+
+                pushButton = (_.reduce([skillDiceArray,baseDiceArray,gearDiceArray],function(m,dice){ return m+getRollableDiceCount(dice);},0)
                     ? makeButton(
-                        '!'+(w?'w':'')+'myz '+
+                        '!'+(w?'w':'')+'myz['+hash+'] '+
                         makeRerollExpression(skillDiceArray)+
                         makeRerollExpression(baseDiceArray)+
-                        makeRerollExpression(gearDiceArray)+
-                        '|| '+successes+' '+trauma+' '+gearDamage,
-                        symbols.push
+                        makeRerollExpression(gearDiceArray),
+                        symbols.push+' '+pushes
                     ) 
                     : ''
                 );
 
-                sendChat(msg.who, (w ? '/w gm ' : '/direct ') +
-                    '<div style="margin-left: -45px;border: 1px solid #ccc;background-color:#eee;border-radius:.5em;padding:.5em;font-size: 1.25em">'+
-                        '<div style="max-width:10em;float:left;font-size: 1.25em; margin-right: .2em;">'+
-                            '<div style="'+
-                                    'border:1px solid '+colors.green+';'+
-                                    'padding: .05em .2em;'+
-                                    'background-color:'+colors.lightGreen+';'+
-                                    'color:#1d1d1d;'+
-                                '">'+
-                                    successes+' '+symbols.radioactive+
-                            '</div>'+
-                            '<div style="'+
-                                    'border:1px solid '+colors.yellow+';'+
-                                    'padding: .05em .2em;'+
-                                    'background-color:'+colors.lightYellow+';'+
-                                    'color:'+(push?'#1d1d1d':'#5a5a5a')+';'+
-                                '">'+
-                                    trauma+' '+symbols.biohazard+
-                            '</div>'+
-                            '<div style="'+
-                                    'border:1px solid '+colors.black+';'+
-                                    'padding: .05em .2em;'+
-                                    'background-color:'+colors.lightBlack+';'+
-                                    'color:'+(push?'#1d1d1d':'#5a5a5a')+';'+
-                                '">'+
-                                    gearDamage+' '+symbols.explosion+
-                            '</div>'+
-                            '<div>'+pushButton+'</div>'+
-                        '</div>'+
-                            makeDiceImages(skillDiceArray,colors.green)+
-                            makeDiceImages(baseDiceArray,colors.yellow, colors.black)+
-                            makeDiceImages(gearDiceArray,colors.black)+
-                        '<div style="clear:both;"></div>'+
-                    '</div>');
+                output = makeOutput([
+                        makeLabel( successes+' '+symbols.radioactive, colors.lightGreen),
+                        makeLabel( trauma+' '+symbols.biohazard, colors.lightYellow),
+                        makeLabel( gearDamage+' '+symbols.explosion, colors.lightBlack),
+                        pushButton
+                    ].join(''),
+                    [
+                        makeOptionalText(optional),
+                        makeDiceImages(skillDiceArray,colors.green),
+                        makeDiceImages(baseDiceArray,colors.yellow, colors.black),
+                        makeDiceImages(gearDiceArray,colors.black)
+                    ].join('')
+                );
 
 
+
+                who=getObj('player',owner).get('displayname');
+                if(w){
+                    sendChat(msg.who, '/w gm '+output);
+                    if(!playerIsGM(owner)){
+                        sendChat(who, '/w "'+who+'" '+output);
+                    }
+                } else {
+                    sendChat(who, '/direct '+output);
+                }
+
+                break;
+
+            case '!myz-config':
+                if(!playerIsGM(msg.playerid)){
+                    return;
+                }
+                args = _.rest(msg.content.split(/\s+--/));
+                if(_.contains(args,'help')) {
+                    showHelp(who);
+                    return;
+                }
+                if(!args.length) {
+                    sendChat('','/w "'+who+'" '+
+'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
+	'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'+
+		'MutantYearZero v'+version+
+	'</div>'+
+    '<b>Configuration</b>'+
+    getAllConfigOptions()+
+'</div>'
+                    );
+                    return;
+                }
+                _.each(args,function(a){
+                    var opt=a.split(/\s+/);
+                    switch(opt.shift()) {
+
+                        case 'toggle-gm-can-push':
+                            state.MutantYearZero.config.gmCanPush=!state.MutantYearZero.config.gmCanPush;
+                            sendChat('','/w '+who+' '
+                                +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                                    +getConfigOption_GMCanPush()
+                                +'</div>'
+                            );
+                            break;
+                        
+                        case 'set-report-mode':
+                            if(_.has(reportingModes,opt[0])){
+                                state.MutantYearZero.config.reportMode=opt[0];
+                                sendChat('','/w '+who+' '
+                                    +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                                        +getConfigOption_ErrorReporting()
+                                    +'</div>'
+                                );
+                            } else {
+                                sendChat('','/w '+who+' '
+                                    +'<div><b>Unsupported Reporting Mode Option:</div> '+opt[0]+'</div>'
+                                );
+                            }
+                            break;
+
+                        default:
+                            sendChat('','/w '+who+' '
+                                +'<div><b>Unsupported Option:</div> '+a+'</div>'
+                            );
+                    }
+                            
+                });
 
                 break;
         }
@@ -318,4 +881,7 @@ on('ready',function() {
     MutantYearZero.CheckInstall();
     MutantYearZero.RegisterEventHandlers();
 });
+
+
+
 
