@@ -5,8 +5,8 @@
 var MutantYearZero = MutantYearZero || (function() {
     'use strict';
 
-    var version = '0.1.5',
-        lastUpdate = 1455508327,
+    var version = '0.1.6',
+        lastUpdate = 1455510207,
         schemaVersion = 0.4,
         symbols = {
             biohazard: '&#'+'9763;',
@@ -274,7 +274,8 @@ var MutantYearZero = MutantYearZero || (function() {
                     state.MutantYearZero = {
                         version: schemaVersion,
                         config: {
-                            reportMode: 'public'
+                            reportMode: 'public',
+                            gmCanPush: false
                         },
                         sequence: 0,
                         playerRolls: {}
