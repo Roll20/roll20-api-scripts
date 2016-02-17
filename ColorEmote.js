@@ -5,8 +5,8 @@
 var ColorEmote = ColorEmote || (function() {
     'use strict';
 
-    var version = '0.1.1',
-        lastUpdate = 1455689112,
+    var version = '0.1.2',
+        lastUpdate = 1455714420,
         schemaVersion = 0.4,
         symbols = {
             whitePawn: '&#'+'9817;',
@@ -152,14 +152,14 @@ var ColorEmote = ColorEmote || (function() {
         templates.output = _.template(
             '<div <%= templates.style({defaults: defaults,templates: templates,css: defaults.css.emoteMsg}) %> >'+
                 '<div <%= templates.style({defaults: defaults,templates: templates,css: _.defaults({},css,defaults.css.emoteHeader)}) %>>'+
-                    '<%= templates.emoteImage({img: img, defaults: defaults, templates:templates, css: defaults.css.emoteImage}) %>'+
+                    '<%= templates.emoteImage({img: img, defaults: defaults, templates:templates, ccss: {}, css: defaults.css.emoteImage}) %>'+
                     '<% if(isTurn) { %>'+
                         '<%= templates.turnMarker({defaults: defaults,templates:templates,css:css.turnMarker}) %>'+
                     '<% } %>'+
                     '<%= name %>'+
                     '<div style="clear:both;"></div>'+
                 '</div>'+
-                '<div <%= templates.style({defaults: defaults,templates: templates,css:defaults.css.emoteBody}) %>>'+
+                '<div <%= templates.style({defaults: defaults,templates: templates,css:_.defaults(css,defaults.css.emoteBody)}) %>>'+
                     '<%= message %>'+
                 '</div>'+
             '</div>'
