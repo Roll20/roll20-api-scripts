@@ -5,13 +5,17 @@
 var ColorEmote = ColorEmote || (function() {
     'use strict';
 
-    var version = '0.1.0',
-        lastUpdate = 1455592592,
-        schemaVersion = 0.3,
+    var version = '0.1.1',
+        lastUpdate = 1455689112,
+        schemaVersion = 0.4,
         symbols = {
             whitePawn: '&#'+'9817;',
             blackPawn: '&#'+'9823;',
             dropDown: '&#'+'9660;'
+        },
+        parseOrders = {
+            'character first': ['character','token','player'],
+            'token first': ['token','character','player']
         },
         imageScales = {
             'small': '1em',
@@ -133,13 +137,13 @@ var ColorEmote = ColorEmote || (function() {
         );
 
         templates.emoteImage = _.template(
-            '<div <%= templates.style({defaults: defaults,templates: templates,css: defaults.css.emoteImageContainer}) %> >'+
+            '<div <%= templates.style({defaults: defaults,templates: templates,css: _.defaults(ccss||{},defaults.css.emoteImageContainer)}) %> >'+
                 '<img <%= templates.style({defaults: defaults,templates: templates,css: defaults.css.emoteImage}) %> src="<%=img %>"/>'+
             '</div>'
         );
 
         templates.turnMarker = _.template(
-            '<div <%= templates.style({defaults: defaults,templates: templates,css: defaults.css.turnMarker}) %> >'+
+            '<div <%= templates.style({defaults: defaults,templates: templates,css: _.defaults(css,defaults.css.turnMarker)}) %> >'+
                 symbols.blackPawn+
             '</div>'
             
@@ -155,8 +159,21 @@ var ColorEmote = ColorEmote || (function() {
                     '<%= name %>'+
                     '<div style="clear:both;"></div>'+
                 '</div>'+
-                '<div <%= templates.style({defaults: defaults,templates: templates,css: _.defaults({},css,defaults.css.emoteBody)}) %>>'+
+                '<div <%= templates.style({defaults: defaults,templates: templates,css:defaults.css.emoteBody}) %>>'+
                     '<%= message %>'+
+                '</div>'+
+            '</div>'
+        );
+
+        templates.outputShortForm = _.template(
+            '<div <%= templates.style({defaults: defaults,templates: templates,css: defaults.css.emoteMsg}) %> >'+
+                '<div <%= templates.style({defaults: defaults,templates: templates,css: _.defaults({},css,defaults.css.emoteBody)}) %>>'+
+                    '<%= templates.emoteImage({img: img, defaults: defaults, templates:templates, ccss: {"font-size":"1.25em"}, css: defaults.css.emoteImage}) %>'+
+                    '<% if(isTurn) { %>'+
+                        '<%= templates.turnMarker({defaults: defaults,templates:templates,css:_.defaults({"font-size":"1.5625em"},css.turnMarker)}) %>'+
+                    '<% } %>'+
+                    '<%= message %>'+
+                    '<div style="clear:both;"></div>'+
                 '</div>'+
             '</div>'
         );
@@ -185,7 +202,7 @@ var ColorEmote = ColorEmote || (function() {
 
     makeOutput = function (name,img,isTurn,message,color){
 
-        return templates.output({
+        return templates[(state.ColorEmote.config.shortForm ? 'outputShortForm': 'output')]({
             name: name,
             img: img,
             isTurn: isTurn,
@@ -217,13 +234,28 @@ var ColorEmote = ColorEmote || (function() {
 
         if( ! _.has(state,'ColorEmote') || state.ColorEmote.version !== schemaVersion) {
             log('  > Updating Schema to v'+schemaVersion+' <');
-            state.ColorEmote = {
-                version: schemaVersion,
-                config: {
-                    imageScale: 'medium',
-                    vignetteMode: 'none'
-                }
-            };
+			switch(state.ColorEmote && state.ColorEmote.version) {
+				case 0.3:
+					state.ColorEmote.config.parseOrder = 'character first';
+					state.ColorEmote.config.shortForm = false;
+                    /* break; // intentional dropthrough */
+					
+                case 'UpdateSchemaVersion':
+                    state.ColorEmote.version = schemaVersion;
+                    break;
+
+                default:
+                    state.ColorEmote = {
+                        version: schemaVersion,
+                        config: {
+                            shortForm: false,
+                            parseOrder: 'character first',
+                            imageScale: 'medium',
+                            vignetteMode: 'none'
+                        }
+                    };
+                    break;
+            }
         }
         setDynamicCSS();
         buildTemplates();
@@ -270,6 +302,24 @@ var ColorEmote = ColorEmote || (function() {
         
     },
 
+    getConfigOption_ShortForm = function() {
+        return makeConfigOption(
+            state.ColorEmote.config.shortForm,
+            '!cem-config --toggle-short-form',
+            '<b>Short Form</b> determines if the emote should be condensed into just the header space.'
+        );
+    },
+
+    getConfigOption_ParseOrder = function() {
+        return makeConfigOption(
+            state.ColorEmote.config.parseOrder+symbols.dropDown,
+            '!cem-config --set-parse-order ?{Parse Order|'+
+            state.ColorEmote.config.parseOrder+' (current),'+ state.ColorEmote.config.parseOrder+'|'+
+            _.keys(parseOrders).join('|')+'}',
+            '<b>Parse Order</b> determines the order which images are searched for between Characters, Tokens, and Players.'
+        );
+    },
+
     getConfigOption_ImageScale = function() {
         return makeConfigOption(
             state.ColorEmote.config.imageScale+symbols.dropDown,
@@ -291,7 +341,10 @@ var ColorEmote = ColorEmote || (function() {
     },
 
     getAllConfigOptions = function() {
-        return getConfigOption_ImageScale() + getConfigOption_VignetteMode();
+        return getConfigOption_ShortForm() +
+             getConfigOption_ParseOrder() +
+             getConfigOption_ImageScale() +
+             getConfigOption_VignetteMode();
     },
 
 
@@ -388,7 +441,8 @@ var ColorEmote = ColorEmote || (function() {
     handleInput = function(msg_orig) {
         var msg = _.clone(msg_orig),
             args, cmd, matches, ctid, turnData,
-            player,character,token,
+            parsers={},
+            player,character,token,data,
             img, name, text, color,who,
             isTurn = false, whisper=false
             ;
@@ -436,6 +490,7 @@ var ColorEmote = ColorEmote || (function() {
                 turnData=getCharacterAndTokenTurn();
                 text=args.join(' ');
 
+                
                 // explicit token
                 if(ctid){
                     character=getObj('character',ctid);
@@ -456,58 +511,74 @@ var ColorEmote = ColorEmote || (function() {
                     })[0];
                 }
 
-                if( character ){
-                    name=character.get('name');
-                    isTurn = character.id === turnData.cid;
-                    color=getAttrByName(character.id,'color');
-                    color=(color && color.match(/#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?/) ? color : player.get('color') );
-                    character.get('defaulttoken',function(dt){
-                        img=character.get('avatar')
-                            || (JSON.parse(dt||'')||{imgsrc:''}).imgsrc
-                            || 'https://app.roll20.net/users/avatar/'+player.get('d20userid')+'/150#.png';
+                parsers={
+                    character: function(){
+                        name=character.get('name');
+                        isTurn = character.id === turnData.cid;
+                        color=getAttrByName(character.id,'color');
+                        color=(color && color.match(/#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?/) ? color : player.get('color') );
+                        character.get('defaulttoken',function(dt){
+                            img=character.get('avatar')
+                                || (JSON.parse(dt||'')||{imgsrc:''}).imgsrc
+                                || 'https://app.roll20.net/users/avatar/'+player.get('d20userid')+'/150#.png';
 
-                            performOutput({
-                                playerid: msg.playerid,
-                                who: player.get('displayname'),
-                                name: name,
-                                img: img,
-                                isTurn: isTurn,
-                                color: color,
-                                whisper: whisper,
-                                message: text
-                            });
+                                performOutput({
+                                    playerid: msg.playerid,
+                                    who: player.get('displayname'),
+                                    name: name,
+                                    img: img,
+                                    isTurn: isTurn,
+                                    color: color,
+                                    whisper: whisper,
+                                    message: text
+                                });
 
-                    });
-                } else if (token){
-                    name=token.get('name');
-                    img=token.get('imgsrc');
-                    isTurn = token.id === turnData.tid;
-                    color=token.get('aura2_color')||player.get('color');
-                            performOutput({
-                                playerid: msg.playerid,
-                                who: player.get('displayname'),
-                                name: name,
-                                img: img,
-                                isTurn: isTurn,
-                                color: color,
-                                whisper: whisper,
-                                message: text
-                            });
-                } else {
-                    name=player.get('displayname');
-                    img='https://app.roll20.net/users/avatar/'+player.get('d20userid')+'/150#.png';
-                    color=player.get('color');
-                            performOutput({
-                                playerid: msg.playerid,
-                                who: player.get('displayname'),
-                                name: name,
-                                img: img,
-                                isTurn: isTurn,
-                                color: color,
-                                whisper: whisper,
-                                message: text
-                            });
-                } 
+                        });
+                    },
+                    token: function(){
+                        name=token.get('name');
+                        img=token.get('imgsrc');
+                        isTurn = token.id === turnData.tid;
+                        color=token.get('aura2_color')||player.get('color');
+                        performOutput({
+                            playerid: msg.playerid,
+                            who: player.get('displayname'),
+                            name: name,
+                            img: img,
+                            isTurn: isTurn,
+                            color: color,
+                            whisper: whisper,
+                            message: text
+                        });
+                    },
+                    player: function(){
+                        name=player.get('displayname');
+                        img='https://app.roll20.net/users/avatar/'+player.get('d20userid')+'/150#.png';
+                        color=player.get('color');
+                        performOutput({
+                            playerid: msg.playerid,
+                            who: player.get('displayname'),
+                            name: name,
+                            img: img,
+                            isTurn: isTurn,
+                            color: color,
+                            whisper: whisper,
+                            message: text
+                        });
+                    }
+                };
+                data={
+                    character:character,
+                    token:token,
+                    player:player
+                };
+                _.find(parseOrders[state.ColorEmote.config.parseOrder],function(k){
+                    if(data[k]){
+                        parsers[k]();
+                        return true;
+                    }
+                });
+
 
                 break;
             case '!cem-config':
@@ -537,6 +608,31 @@ var ColorEmote = ColorEmote || (function() {
                     var opt=a.split(/\s+/);
                     switch(opt.shift()) {
 
+                        case 'toggle-short-form':
+                            state.ColorEmote.config.shortForm=!state.ColorEmote.config.shortForm;
+                            sendChat('','/w "'+who+'" '
+                                +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                                    +getConfigOption_ShortForm()
+                                +'</div>'
+                            );
+                            break;
+
+                        case 'set-parse-order':
+                            opt=opt.join(' ');
+                            if(_.has(parseOrders,opt)){
+                                state.ColorEmote.config.parseOrder=opt;
+                                sendChat('','/w '+who+' '
+                                    +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                                        +getConfigOption_ParseOrder()
+                                    +'</div>'
+                                );
+                            } else {
+                                sendChat('','/w '+who+' '
+                                    +'<div><b>Unsupported Parse Order:</div> '+opt+'</div>'
+                                );
+                            }
+                            break;
+
                         case 'set-image-scale':
                             if(_.has(imageScales,opt[0])){
                                 state.ColorEmote.config.imageScale=opt[0];
@@ -548,10 +644,11 @@ var ColorEmote = ColorEmote || (function() {
                                 setDynamicCSS();
                             } else {
                                 sendChat('','/w '+who+' '
-                                    +'<div><b>Unsupported Reporting Mode Option:</div> '+opt[0]+'</div>'
+                                    +'<div><b>Unsupported Image Scale:</div> '+opt[0]+'</div>'
                                 );
                             }
                             break;
+
                         case 'set-vignette-mode':
                             if(_.has(vignetteModes,opt[0])){
                                 state.ColorEmote.config.vignetteMode=opt[0];
@@ -563,7 +660,7 @@ var ColorEmote = ColorEmote || (function() {
                                 setDynamicCSS();
                             } else {
                                 sendChat('','/w '+who+' '
-                                    +'<div><b>Unsupported Reporting Mode Option:</div> '+opt[0]+'</div>'
+                                    +'<div><b>Unsupported Vignette Mode:</div> '+opt[0]+'</div>'
                                 );
                             }
                             break;
