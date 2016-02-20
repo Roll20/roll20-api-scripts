@@ -20,7 +20,7 @@ If you want to redo your light-blocking for a particular tile, drop a copy on yo
 !dl-attach --overwrite
 ```
 
-This will replace the existing bindings with the new ones. As things stand it will not update any existing tiles with the new light blocking until you move, rotate or scale them, at which point it will redraw.
+This will replace the existing bindings with the new ones. As things stand it will not update any existing tiles with the new light blocking until you move, rotate or scale them, at which point it will redraw. You can force a redraw for selected tokens, or the whole campaign, by using the `!dl-redraw` command (see below).
 
 ### Doors
 
@@ -54,6 +54,14 @@ replacing <exportedText> with the text that you exported. This will import all y
 * By default this will not overwrite any templates that they've created for the same map tiles. Add --overwrite to overwrite any existing definitions with those from the import
 * This *will not work* with tiles that you've uploaded to your library, for obvious reasons - the tiles need to be stored at some commonly accessible URL (marketplace content or content referenced directly from the web).
 
+### Redrawing
+
+If you redefine the template paths for a particular map tile, it won't immediately update the DL paths for all the existing instances of that tile until you move or otherwise adjust them. You can force a redraw of the selected tokens by running:
+```
+!dl-redraw
+```
+If you run this with nothing selected, it will redraw the DL paths for ***every tile that it has a template for*** in the whole campaign. ***Be careful!***
+
 ### Reset
 If it all goes wrong you can run 
 
@@ -65,7 +73,6 @@ If it all goes wrong you can run
 
 Ideas for the future:
 
-* Update existing tiles with new light blocking
 * Mark some instances of a tile as special, don't redraw with standard template, but just keep the existing light blocking with rotation/scaling/movement support.
 * Transmogrifier compatibility
 * Selective export - only export templates for selected tokens

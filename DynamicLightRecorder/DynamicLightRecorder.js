@@ -4,7 +4,7 @@
 var DynamicLightRecorder = DynamicLightRecorder || (function() {
     'use strict';
 
-    var version = '0.4',
+    var version = '0.5',
         schemaVersion = 0.3,
         clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
         
@@ -103,18 +103,41 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 };
                 sendChat('DynamicLightRecorder', 'Path export\n' + JSON.stringify(exportObject));
                 break;
+    		case '!dl-redraw':
+				redraw(msg.selected);
+				break;
             default:
             //Do nothing
         }
     },
     
+	redraw = function(selection) {
+		if (selection && !_.isEmpty(selection)) {
+			_.chain(selection)
+					.map(function(object) {
+						return getObj(object._type, object._id);
+					})
+					.filter(function(object) {
+						return object.get('_type') === 'graphic' && object.get('layer') === 'map' && state.DynamicLightRecorder.tileTemplates[object.get('imgsrc')];
+					})
+					.each(function(tile) {
+						handleTokenChange(tile);
+					});
+		}
+		else {
+			_.chain(state.DynamicLightRecorder.tileTemplates)
+	                .keys()
+	                .map(function(imgsrc) {
+	                    return findObjs({_type: 'graphic', imgsrc:imgsrc, layer:'map', _subtype:'token'});
+	                })
+	                .flatten()
+	                .each(function(graphic) {
+				    	handleTokenChange(graphic);	
+				    });
+		}
+	},
+
     importTileTemplates = function(jsonString, overwrite) {
-        //if(!selection || _.isEmpty(selection) || _.size(selection) !== 1 || selection[0]._type !== 'graphic') {
-        //    sendChat('DynamicLightRecorder', 'You must have exactly one token selected to perform an import');
-        //    return;
-        //}
-        //var object = getObj('graphic', selection[0]._id);
-        //var jsonString = object.get('gmnotes');
         try {
             var importObject = JSON.parse(jsonString);
             if (!importObject.version || importObject.version !== schemaVersion) {
@@ -608,4 +631,5 @@ on("ready",function(){
         DynamicLightRecorder.CheckInstall();
         DynamicLightRecorder.RegisterEventHandlers();
 });
+
 
