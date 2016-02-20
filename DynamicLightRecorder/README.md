@@ -22,6 +22,22 @@ If you want to redo your light-blocking for a particular tile, drop a copy on yo
 
 This will replace the existing bindings with the new ones. As things stand it will not update any existing tiles with the new light blocking until you move, rotate or scale them, at which point it will redraw.
 
+### Doors
+
+The script can also manage doors for you. Drop the door graphic on the map layer. The script makes some assumptions about door graphics: 
+* the door should be vertical centred in its graphic
+* the door should be horizontal
+* The hinge should be on the left.
+
+Move/rotate/flip your door so that it satisfies these conditions. Then select the door and run:
+
+```
+!dl-door
+```
+
+This will create a lighting path for the door (running through the middle of it), and will also create a magic rotation token centred on the hinge. Give control of this token to any player that you want to be able to control the door. When this token is rotated, the door will rotate accordingly, opening and shutting. Naturally this move the DL path for the door as well.
+
+### Reset
 If it all goes wrong you can run 
 
 ```
@@ -34,7 +50,6 @@ Ideas for the future:
 
 * Update existing tiles with new light blocking
 * Mark some instances of a tile as special, don't redraw with standard template, but just keep the existing light blocking with rotation/scaling/movement support.
-* Doors!
 * Transmogrifier compatibility
 * Import/export for marketplace content so you can share your light-blocking with other Roll20 users!
 
