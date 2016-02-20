@@ -4,26 +4,62 @@
 var DynamicLightRecorder = DynamicLightRecorder || (function() {
     'use strict';
 
-    var version = '0.2',
-        schemaVersion = 0.2,
+    var version = '0.3',
+        schemaVersion = 0.3,
+        clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
         
     checkInstall = function() {
-        log('-=> DynamicLightRecorder v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+        log('-=> DynamicLightRecorder v'+version);
         if( ! _.has(state,'DynamicLightRecorder') || state.DynamicLightRecorder.version !== schemaVersion) {
             log('  > Updating Schema to v'+schemaVersion+' <');
             switch(state.DynamicLightRecorder && state.DynamicLightRecorder.version) {
-                case '0.1':
+                case 0.1:
                     _.each(state.DynamicLightRecorder.tilePaths, function(tilePath) {
                         var tileToken = getObj('graphic', tilePath.tileId);
                         if (tileToken) {
-                            tileToken.set('controlledby', tilePath.pathIds.join(','));
+                            var controlInfo = _.reduce(tilePath.pathIds, function(controlInfo, pathId) {
+                                var path = getObj('path', pathId);
+                                if (path && path !== null) {
+                                    controlInfo.dlPaths.push(path);
+                                }
+                            }, { dlPaths: [], doorControl: null});
+                            saveControlInfo(tileToken, controlInfo);
                         }
                     });
                     delete state.DynamicLightRecorder.tilePaths;
+                case 0.2:
+                    state.DynamicLightRecorder.doorControls = {};
+                    _.chain(state.DynamicLightRecorder.tileTemplates)
+                        .keys()
+                        .map(function(imgsrc) {
+                            return findObjs({_type: 'graphic', imgsrc:imgsrc, layer:'map', _subtype:'token'});
+                        })
+                        .tap(LHU.logTap)
+                        .flatten()
+                        .tap(LHU.logTap)
+                        .each(function(graphic) {
+                            var cb = graphic.get('controlledby');
+                            log("controlledby: " + cb)
+                            if (cb && !_.isEmpty(cb)) {
+                                var paths = _.chain(cb.split(","))
+                                            .map(function(pathId) {
+                                                return getObj('path', pathId);
+                                            })
+                                            .compact()
+                                            .tap(LHU.logTap)
+                                            .value();
+                                if (!_.isEmpty(paths)) {
+                                    saveControlInfo(graphic, { dlPaths: paths, doorControl: null});
+                                }
+                            }
+                        });
+                    state.DynamicLightRecorder.version = 0.3;
                     break;
                 default:
+                    log('making state object');
                     state.DynamicLightRecorder = {
                         version: schemaVersion,
+                        doorControls: {},
                         tileTemplates: {},
                         config: {
                         }
@@ -42,6 +78,9 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             case '!dl-attach':
                 attach(msg.selected, !_.isEmpty(args) && args.shift() === 'overwrite');
                 break;
+            case '!dl-door':
+                makeDoors(msg.selected);
+                break;
             case '!dl-dump':
                 sendChat('DynamicLightRecorder', JSON.stringify(state.DynamicLightRecorder));
                 break;
@@ -49,6 +88,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 sendChat('DynamicLightRecorder', 'Wiping all data');
                 state.DynamicLightRecorder.tilePaths = {};
                 state.DynamicLightRecorder.tileTemplates = {};
+                state.DynamicLightRecorder.doorControls = {};
                 break;
             case '!dump-obj':
                 sendChat('', JSON.stringify(_.map(msg.selected, function(obj){ return getObj(obj._type, obj._id)})));
@@ -58,6 +98,43 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         }
     },
 
+    makeDoors = function(selection) {
+        if (!selection || _.isEmpty(selection)) {
+            sendChat('DynamicLightRecord', 'You must have at least one token selected to run !dl-door');
+            return;
+        }
+
+        _.each(selection, function(object) {
+            var object = getObj(object._type, object._id);
+            log(object);
+            if(object.get('_subtype') === 'token') {
+               makeDoor(object); 
+            }
+        });
+        
+
+    },
+
+    makeDoor = function(token) {
+        var tokenWidth = token.get('width');
+        var dlLineWidth = tokenWidth + 4;
+        var centreX = token.get('left');
+        var centreY = token.get('top');
+        var left = centreX - tokenWidth / 2;
+
+        token.set('layer', 'map');
+        var dlPath = createObj('path', {
+            pageid: token.get('_pageid'),
+            layer: 'walls',
+            stroke_width: 1,
+            top: centreY,
+            left: centreX,
+            width: dlLineWidth,
+            height: 1,
+            path: '[["M",0,0],["L",' + dlLineWidth + ',0]]'
+            });
+        buildTemplate(token, [dlPath], true);
+    },
     
     attach = function(selection, overwrite) {
         
@@ -99,7 +176,17 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
            return;
         }
         
-        var template = {
+        buildTemplate(tile, paths, false);
+        sendChat("DynamicLightRecorder", "DL paths successfully recorded for map tile");
+    },
+
+    buildTemplate = function(tile, paths, isDoor) {
+        log("Building new DL template for " + isDoor ? "door" : "tile");
+        log(tile);
+        log("with paths");
+        log(paths);
+         var template = {
+            isDoor: isDoor,  
             top: tile.get('top'),
             left: tile.get('left'),
             width: tile.get('width'),
@@ -114,13 +201,65 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     offsetX: path.get('left') - tile.get('left'),
                     width: path.get('width'),
                     height: path.get('height'),
+                    stroke_width: 1,
                     layer: 'walls'
                 };
+                path.set('layer', 'walls');
+                path.set('stroke_width', 1);
                 return savedPath;
             })
         };
-        state.DynamicLightRecorder.tileTemplates[tile.get('imgsrc')] = template;
         
+        state.DynamicLightRecorder.tileTemplates[tile.get('imgsrc')] = template;
+        saveTokenPaths(tile, paths);
+        if (isDoor) {
+            attachDoorControl(tile, template);
+        }
+    },
+    
+    attachDoorControl = function(doorToken, template) {
+        var tokenWidth = doorToken.get('width');
+        var tokenHeight = doorToken.get('height');
+        var centreX = doorToken.get('left');
+        var centreY = doorToken.get('top');
+        var hingeX = centreX - tokenWidth / 2;
+        var hingeY = centreY;
+        var fliph = (template.fliph !== doorToken.get('fliph'));
+        var flipv = (template.flipv !== doorToken.get('flipv'));
+        var rotation = doorToken.get('rotation') - template.rotation;
+        
+        if (fliph || flipv) {
+            hingeX = fliph ? tokenWidth - hingeX : hingeX;
+            hingeY = fliph ? tokenHeight - hingeY : hingeY;
+        }
+        
+        if (rotation % 360 != 0) {
+            var newHinge = rotatePoint([hingeX, hingeY], [centreX, centreY], rotation);
+            hingeX = newHinge[0];
+            hingeY = newHinge[1];
+        }
+        
+        var control = createObj('graphic', {
+            imgsrc: clearURL,
+            subtype: 'token',
+            pageid: doorToken.get('_pageid'),
+            layer: 'objects',
+            playersedit_name: false,
+            playersedit_bar1: false,
+            playersedit_bar2: false,
+            playersedit_bar3: false,
+            aura1_radius: 0.1,
+            rotation:rotation,
+            isdrawing:1,
+            top:hingeY,
+            left: hingeX,
+            width: 140,
+            height: 140
+        });
+        var controlInfo = getTokenControlInfo(doorToken);
+        controlInfo.doorControl = control;
+        saveControlInfo(doorToken, controlInfo);
+        state.DynamicLightRecorder.doorControls[control.id] = doorToken.id;
     },
     
     handleNewToken = function(token) {
@@ -130,30 +269,62 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             return;
         }
         
-        drawTokenPaths(token, template);   
+        drawTokenPaths(token, template);
+        if (template.isDoor) {
+            attachDoorControl(token, template);
+        }
     },
     
     handleTokenChange = function(token, previous) {
         var template = state.DynamicLightRecorder.tileTemplates[token.get('imgsrc')];
         if (template) {
-            deleteTokenPaths(token);
-            drawTokenPaths(token, template);
+            deleteTokenPaths(token, function() {
+                deleteDoorControls(token);
+                drawTokenPaths(token, template);
+                if(template.isDoor) {
+                    attachDoorControl(token, template)
+                }
+            }); 
+        }
+        
+        //Check if the changed token is a door control - do we have a door 
+        //token keyed off its id in our lookup
+        var doorId = state.DynamicLightRecorder.doorControls[token.id];
+        var door = getObj('graphic', doorId);
+        if (door) {
+            var rotation = token.get('rotation') - previous.rotation;
+            log("Checking door control rotation " + rotation);
+            if (rotation % 360 !== 0) {
+                //The control is centred on the hinge of the door
+                var hinge = [token.get('left'), token.get('top')];
+                var doorCentre = [door.get('left'), door.get('top')];
+                var offset = rotatePoint(doorCentre, hinge, rotation);
+                
+                door.set('left', offset[0]);
+                door.set('top', offset[1]);
+                door.set('rotation', door.get('rotation') + rotation);
+                //Now redraw the door and associate DL paths
+                handleTokenChange(door, {});
+            }
+            //Reset attempts to move the door control away from the door
+            else if (token.get('top') !== previous.top || token.get('left') !== previous.left
+                    || token.get('width') !== previous.width || token.get('height') !== previous.height) {
+                token.set('top', previous.top);
+                token.set('left', previous.left);
+                token.set('width', previous.width);
+                token.set('height', previous.height);
+            }
         }
     },
   
     drawTokenPaths = function(token, template) {
         log(token);
         var paths = makeWorkingTemplate(template, token)
-            .logme()
             .flip()
-            .logme()
             .rotate()
-            .logme()
             .scale()
-            .logme()
             .buildPaths();
-        log(paths);
-        token.set("controlledby", _.pluck(paths, 'id').join(','));
+        saveTokenPaths(token, paths);
     },
     
     makeWorkingTemplate = function(template, token) {
@@ -286,25 +457,89 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
     
     handleDeleteToken = function(token) {
         deleteTokenPaths(token);
+        deleteDoorControls(token);
     },
     
-    deleteTokenPaths = function(token) {
-         log('deleting paths for token ' + token.id);
-        var paths = getPathsForToken(token);
-        _.invoke(_.compact(paths), 'remove');
-    },
     
-    getPathsForToken = function(token) {
-        var pathIds = token.get('controlledby').split(',');
-        
-        var paths = _.map(pathIds, function(pathId) {
-            var path = getObj('path', pathId);
-            if (!path) {
-                log('Warning, path with id [' + pathId + '] that should have been attached to token ' + JSON.stringify(token) + ' was not present.');
+    
+    getTokenControlInfo = function(token) {
+        var controlInfoString = token.get('controlledby');
+        var controlInfo = { dlPaths: [], doorControl: null};
+        if (controlInfoString && !_.isEmpty(controlInfoString)) {
+            var parsedControlInfo = JSON.parse(controlInfoString);
+            controlInfo.dlPaths = _.chain(parsedControlInfo.dlPaths)
+                .map(function(pathId) {
+                    var path = getObj('path', pathId);
+                    if (!path) {
+                        log('Warning, path with id [' + pathId + '] that should have been attached to token ' + JSON.stringify(token) + ' was not present.');
+                    }
+                    return path;
+                })
+                .compact()
+                .value();
+            
+            if (parsedControlInfo.doorControl !== null) {
+                var control = getObj('graphic', parsedControlInfo.doorControl);
+                   
+                if (!control) {
+                    log('Warning, control with id [' + parsedControlInfo.doorControl + '] that should have been attached to token ' + JSON.stringify(token) + ' was not present.');
+                }
+                else {
+                    controlInfo.doorControl = control
+                }
             }
-            return path;
+        }
+   
+        //Overwrite whatever is in the field in case we've pruned delete paths
+        //or the controlInfo was missing.
+        saveControlInfo(token, controlInfo);  
+       return controlInfo;
+    },
+    
+    
+    
+    saveTokenPaths = function(token, paths) {
+        var controlInfo = getTokenControlInfo(token);
+        controlInfo.dlPaths = _.compact(paths);
+        saveControlInfo(token, controlInfo);
+    },
+    
+    saveControlInfo = function(token, controlInfo) {
+        var json = JSON.stringify(controlInfo, function(key, value) {
+            if (key === '') {
+                //root object
+                return value;
+            }
+            if (_.isArray(value)) {
+                return _.pluck(value, 'id');
+            }
+            if (typeof value === 'object' && value !== null) {
+                return value._id;
+            }
+            return value;
         });
-        return paths;
+        token.set("controlledby", json);      
+    },
+    
+    deleteDoorControls = function(token) {
+         var controlInfo = getTokenControlInfo(token);
+         if (controlInfo.doorControl && !_.isEmpty(controlInfo.doorControl)) {
+            controlInfo.doorControl.remove();
+            controlInfo.doorControl = null;    
+         }     
+        saveControlInfo(token, controlInfo);
+    },
+    
+    deleteTokenPaths = function(token, callbackBeforeRemovingFromCanvas) {
+        log('deleting paths for token ' + token.id);
+        var controlInfo = getTokenControlInfo(token);
+        var pathsToDelete =  controlInfo.dlPaths;
+        controlInfo.dlPaths = [];
+        saveControlInfo(token, controlInfo);
+        if (typeof callbackBeforeRemovingFromCanvas === 'function') {
+            callbackBeforeRemovingFromCanvas();
+        }
+        _.invoke(pathsToDelete, 'remove');
     },
     
     registerEventHandlers = function() {
@@ -328,3 +563,4 @@ on("ready",function(){
         DynamicLightRecorder.CheckInstall();
         DynamicLightRecorder.RegisterEventHandlers();
 });
+
