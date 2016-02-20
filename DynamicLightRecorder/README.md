@@ -68,5 +68,6 @@ Ideas for the future:
 * Update existing tiles with new light blocking
 * Mark some instances of a tile as special, don't redraw with standard template, but just keep the existing light blocking with rotation/scaling/movement support.
 * Transmogrifier compatibility
-* Selective export - only export templates for selected tokens 
+* Selective export - only export templates for selected tokens
+* SVG import/export
 
