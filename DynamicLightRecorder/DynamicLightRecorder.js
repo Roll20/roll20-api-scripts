@@ -34,26 +34,22 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                         .map(function(imgsrc) {
                             return findObjs({_type: 'graphic', imgsrc:imgsrc, layer:'map', _subtype:'token'});
                         })
-                        .tap(LHU.logTap)
                         .flatten()
-                        .tap(LHU.logTap)
                         .each(function(graphic) {
                             var cb = graphic.get('controlledby');
-                            log("controlledby: " + cb)
                             if (cb && !_.isEmpty(cb)) {
                                 var paths = _.chain(cb.split(","))
                                             .map(function(pathId) {
                                                 return getObj('path', pathId);
                                             })
                                             .compact()
-                                            .tap(LHU.logTap)
                                             .value();
                                 if (!_.isEmpty(paths)) {
                                     saveControlInfo(graphic, { dlPaths: paths, doorControl: null});
                                 }
                             }
                         });
-                    state.DynamicLightRecorder.version = 0.3;
+                    state.DynamicLightRecorder.version = schemaVersion3;
                     break;
                 default:
                     log('making state object');
@@ -73,6 +69,16 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
        if (msg.type !== "api" ) {
             return;
         }
+        if (msg.content.indexOf('!dl-import') === 0) {
+            var restOfString = msg.content.slice('!dl-import'.length).trim();
+            var overwrite = false;
+            if (restOfString.indexOf('--overwrite') === 0) {
+                overwrite = true;
+                restOfString = restOfString.slice('--overwrite'.length).trim();
+            }
+            importTileTemplates(restOfString, overwrite);
+            return;
+        }
         var args = msg.content.split(/\s+--/);
         switch(args.shift()) {
             case '!dl-attach':
@@ -90,11 +96,57 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 state.DynamicLightRecorder.tileTemplates = {};
                 state.DynamicLightRecorder.doorControls = {};
                 break;
-            case '!dump-obj':
-                sendChat('', JSON.stringify(_.map(msg.selected, function(obj){ return getObj(obj._type, obj._id)})));
+            case '!dl-export':
+                var exportObject = {
+                    version: schemaVersion,
+                    templates: state.DynamicLightRecorder.tileTemplates
+                };
+                sendChat('DynamicLightRecorder', 'Path export\n' + JSON.stringify(exportObject));
                 break;
             default:
             //Do nothing
+        }
+    },
+    
+    importTileTemplates = function(jsonString, overwrite) {
+        //if(!selection || _.isEmpty(selection) || _.size(selection) !== 1 || selection[0]._type !== 'graphic') {
+        //    sendChat('DynamicLightRecorder', 'You must have exactly one token selected to perform an import');
+        //    return;
+        //}
+        //var object = getObj('graphic', selection[0]._id);
+        //var jsonString = object.get('gmnotes');
+        try {
+            var importObject = JSON.parse(jsonString);
+            if (!importObject.version || importObject.version !== schemaVersion) {
+                sendChat('DynamicLightRecorder', 'Imported templates were generated with schema version [' 
+                                                    + importObject.version + '] which is not the same as script schema version ['
+                                                    + schemaVersion + ']');
+                return;
+            }
+       
+            var overlapKeys = _.chain(importObject.templates)
+                        .keys()
+                        .intersection(_.keys(state.DynamicLightRecorder.tileTemplates))
+                        .value();
+            var toImport = overwrite ? importObject.templates : _.omit(importObject.templates, overlapKeys);
+            _.extend(state.DynamicLightRecorder.tileTemplates, toImport);
+            var message = '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
+                            +'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">Import completed</div>' +
+                            '<p>Total templates in import: <b>' + _.size(importObject.templates) + '</b></p>'
+            if (!overwrite) {
+                message += '<p> Skipped <b>' + _.size(overlapKeys) + '</b> templates for tiles which already have templates. '
+                                                    + 'Rerun with <b>--overwrite</b> to replace these with the imported tiles. '
+                                                    + ' See log for more details. </p>';
+                log("Skipped template image URLs:");
+                _.each(overlapKeys, function(key) { log(key); });
+            }
+            message += '</div>';
+            sendChat('DynamicLightRecorder', message);
+           
+        }
+        catch(e) {
+            log(e);
+            sendChat('DynamicLightRecorder', 'There was an error trying to read the gmnotes of the selected token - did you paste the JSON text in correctly?');
         }
     },
 
@@ -106,7 +158,6 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
 
         _.each(selection, function(object) {
             var object = getObj(object._type, object._id);
-            log(object);
             if(object.get('_subtype') === 'token') {
                makeDoor(object); 
             }
@@ -181,10 +232,6 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
     },
 
     buildTemplate = function(tile, paths, isDoor) {
-        log("Building new DL template for " + isDoor ? "door" : "tile");
-        log(tile);
-        log("with paths");
-        log(paths);
          var template = {
             isDoor: isDoor,  
             top: tile.get('top'),
@@ -293,7 +340,6 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         var door = getObj('graphic', doorId);
         if (door) {
             var rotation = token.get('rotation') - previous.rotation;
-            log("Checking door control rotation " + rotation);
             if (rotation % 360 !== 0) {
                 //The control is centred on the hinge of the door
                 var hinge = [token.get('left'), token.get('top')];
@@ -318,7 +364,6 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
     },
   
     drawTokenPaths = function(token, template) {
-        log(token);
         var paths = makeWorkingTemplate(template, token)
             .flip()
             .rotate()
@@ -546,7 +591,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         on('chat:message', handleInput);
         on('change:token', handleTokenChange);
         on('add:token', handleNewToken);
-        on('destroy:graphic', handleDeleteToken);
+        on('destroy:token', handleDeleteToken);
     };
 
     return {
