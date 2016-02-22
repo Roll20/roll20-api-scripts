@@ -25,9 +25,9 @@ This will replace the existing bindings with the new ones. As things stand it wi
 ### Doors
 
 The script can also manage doors for you. Drop the door graphic on the map layer. The script makes some assumptions about door graphics: 
-* the door should be vertical centred in its graphic
 * the door should be horizontal
 * The hinge should be on the left.
+* the door should be vertically centred in its graphic
 
 Move/rotate/flip your door so that it satisfies these conditions. Then select the door and run:
 
@@ -36,6 +36,16 @@ Move/rotate/flip your door so that it satisfies these conditions. Then select th
 ```
 
 This will create a lighting path for the door (running through the middle of it), and will also create a magic rotation token centred on the hinge. Give control of this token to any player that you want to be able to control the door. When this token is rotated, the door will rotate accordingly, opening and shutting. Naturally this move the DL path for the door as well.
+
+If run on a door token alone, the command will assume that the door occupies the full width of the token. If this is not the case (e.g. for doors that are designed to pivot properly around the centre of their token), you can draw a rectangular path around the part of the token that represents the door itself. Select this along with the token image before running `!dl-door` and the command will position the hinge of the door at the vertical middle of the left hand edge of the path.
+
+One downside of the door system is that the door animates slightly clunkily thanks to the way Roll20 handles token moving. If you have door tokens that already rotate properly around their centre, you can select one and run 
+
+```
+dl-directDoor
+```
+
+Note that this command also assumes your door's hinge is on the left, so rotate your token appropriately. With this command, instead of creating a transparent control token at the hinge of the door, it makes the door image itself into a control token on the objects layer. This means that players can rotate the door image directly, which means that it will respond directly to player input, rather than updating when it's dropped back on the canvas. Since the door image resides on the token layer, and since the script automatically undoes any attempt to move or scale the door token (other than rotating it), the script creates an identically shaped, linked, clear token on the map layer that matches up with the door token. The GM can use this as a handle to move the door around.
 
 ### Import/Export
 
@@ -46,7 +56,7 @@ Once you have built up a set of templates for map tiles and doors using the `dl-
 and the script will dump a big bunch of text out into the chat window. Copy this text and share it with your friends on Roll20. They need to type 
 
 ```
-!dl-import <exportedText>
+!dl-import -- <exportedText>
 ```
 
 replacing <exportedText> with the text that you exported. This will import all your carefully drawn paths into their campaign. Points to note:
