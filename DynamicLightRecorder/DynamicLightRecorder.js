@@ -69,66 +69,123 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
        if (msg.type !== "api" ) {
             return;
         }
-        if (msg.content.indexOf('!dl-import') === 0) {
-            var restOfString = msg.content.slice('!dl-import'.length).trim();
-            var overwrite = false;
-            if (restOfString.indexOf('--overwrite') === 0) {
-                overwrite = true;
-                restOfString = restOfString.slice('--overwrite'.length).trim();
+        try {
+            var args = msg.content.split(/\s+--/);
+            switch(args.shift()) {
+                case '!dl-import':
+                    if(!_.isEmpty(args)) {
+                        var overwrite = (args[0] === 'overwrite');
+                        args = overwrite ? args.slice(1) : args;
+                        if(!_.isEmpty(args)) {
+                            //Just in case the import string happens to contain a -- that has
+                            //been accidentially split :-(
+                            importTileTemplates(args.join(' --'), overwrite);
+                            return;
+                        }
+                    }
+                    sendChat('DynamicLightRecorder', 'No import JSON specified');
+                    break;
+                case '!dl-attach':
+                    attach(processSelection(msg, {
+                        graphic: {min:1, max:1},
+                        path: {min:1, max:Infinity}
+                    }), !_.isEmpty(args) && args.shift() === 'overwrite');
+                    break;
+                case '!dl-door':
+                    var objects = processSelection(msg, {
+                        graphic: {min:1, max:1},
+                        path: {min: 0, max:1}
+                    });
+                    makeDoor(objects.graphic, objects.path);
+                    break;
+                case '!dl-directDoor':
+                    makeDirectDoor(processSelection(msg, {
+                        graphic: {min:1, max:1}
+                    }).graphic);
+                    break;
+                case '!dl-dump':
+                    log(state.DynamicLightRecorder);
+                    //sendChat('DynamicLightRecorder', JSON.stringify(state.DynamicLightRecorder));
+                    break;
+                case '!dl-wipe':
+                    sendChat('DynamicLightRecorder', 'Wiping all data');
+                    state.DynamicLightRecorder.tileTemplates = {};
+                    state.DynamicLightRecorder.doorControls = {};
+                    break;
+                case '!dl-export':
+                    var exportObject = {
+                        version: schemaVersion,
+                        templates: state.DynamicLightRecorder.tileTemplates
+                    };
+                    sendChat('DynamicLightRecorder', 'Path export\n' + JSON.stringify(exportObject));
+                    break;
+            	case '!dl-redraw':
+    				redraw(processSelection(msg, {
+                        graphic: {min:0, max:Infinity}
+                    }).graphic);
+    				break;
+                default:
+                //Do nothing
             }
-            importTileTemplates(restOfString, overwrite);
-            return;
         }
-        var args = msg.content.split(/\s+--/);
-        switch(args.shift()) {
-            case '!dl-attach':
-                attach(msg.selected, !_.isEmpty(args) && args.shift() === 'overwrite');
-                break;
-            case '!dl-door':
-                makeDoors(msg.selected);
-                break;
-            case '!dl-dump':
-                sendChat('DynamicLightRecorder', JSON.stringify(state.DynamicLightRecorder));
-                break;
-            case '!dl-wipe':
-                sendChat('DynamicLightRecorder', 'Wiping all data');
-                state.DynamicLightRecorder.tilePaths = {};
-                state.DynamicLightRecorder.tileTemplates = {};
-                state.DynamicLightRecorder.doorControls = {};
-                break;
-            case '!dl-export':
-                var exportObject = {
-                    version: schemaVersion,
-                    templates: state.DynamicLightRecorder.tileTemplates
-                };
-                sendChat('DynamicLightRecorder', 'Path export\n' + JSON.stringify(exportObject));
-                break;
-    		case '!dl-redraw':
-				redraw(msg.selected);
-				break;
-            default:
-            //Do nothing
+        catch(e) {
+            if (typeof e === 'string') {
+                sendChat('DynamicLightRecorder', 'An error occurred: ' + e);
+            }
+            else {
+                log(typeof e);
+                sendChat('DynamicLightRecorder', 'An error occurred. Please see the log for more details.');
+                log(e);
+            }
         }
     },
     
-	redraw = function(selection) {
-		if (selection && !_.isEmpty(selection)) {
-			_.chain(selection)
-					.map(function(object) {
-						return getObj(object._type, object._id);
-					})
-					.filter(function(object) {
-						return object.get('_type') === 'graphic' && object.get('layer') === 'map' && state.DynamicLightRecorder.tileTemplates[object.get('imgsrc')];
-					})
-					.each(function(tile) {
-						handleTokenChange(tile);
-					});
+    processSelection = function(msg, constraints) {
+        var selection = msg.selected ? msg.selected : [];
+        return _.reduce(constraints, function(result, constraintDetails, type) {
+            var objects = _.chain(selection)
+                                .where({_type: type})
+                                .map(function(selected) {
+                                    return getObj(selected._type, selected._id);
+                                })
+                                .compact()
+                                .value();
+            if (_.size(objects) < constraintDetails.min || _.size(objects) > constraintDetails.max) {
+                throw ('Wrong number of objects of type [' + type + '] selected, should be between ' + constraintDetails.min + ' and ' + constraintDetails.max);
+            }
+            switch(_.size(objects)) {
+                case 0:
+                    break;
+                case 1:
+                    if (constraintDetails.max === 1) {
+                        result[type] = objects[0];
+                    }
+                    else {
+                        result[type] = objects;
+                    }
+                    break;
+                default:
+                    result[type] = objects;
+            }
+            return result;
+        }, {});
+    },
+    
+    redraw = function(objects) {
+        if (!_.isEmpty(objects)) {
+		    _.chain(objects)
+				.filter(function(object) {
+					return object.get('layer') === 'map' && state.DynamicLightRecorder.tileTemplates[object.get('imgsrc')];
+				})
+				.each(function(tile) {
+					handleTokenChange(tile);
+				});
 		}
 		else {
 			_.chain(state.DynamicLightRecorder.tileTemplates)
 	                .keys()
 	                .map(function(imgsrc) {
-	                    return findObjs({_type: 'graphic', imgsrc:imgsrc, layer:'map', _subtype:'token'});
+	                    return findObjs({_type: 'graphic', imgsrc:imgsrc, _subtype:'token'});
 	                })
 	                .flatten()
 	                .each(function(graphic) {
@@ -172,74 +229,97 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             sendChat('DynamicLightRecorder', 'There was an error trying to read the gmnotes of the selected token - did you paste the JSON text in correctly?');
         }
     },
-
-    makeDoors = function(selection) {
-        if (!selection || _.isEmpty(selection)) {
-            sendChat('DynamicLightRecord', 'You must have at least one token selected to run !dl-door');
-            return;
-        }
-
-        _.each(selection, function(object) {
-            var object = getObj(object._type, object._id);
-            if(object.get('_subtype') === 'token') {
-               makeDoor(object); 
-            }
-        });
+    
+    makeBoundingBox = function(object) {
+        return {
+            left: object.get('left'),
+            top: object.get('top'),
+            width: object.get('width'),
+            height: object.get('height')
+        };
+    },
+    
+    //Make a normal door with a transparent control token
+    makeDoor = function(doorToken, doorBoundsPath) {
+        var doorBoundingBox = doorBoundsPath ? makeBoundingBox(doorBoundsPath) : makeBoundingBox(doorToken);
+        var template = makeDoorTemplate(doorToken, doorBoundingBox);
+        var hinge = [doorBoundingBox.left - (doorBoundingBox.width/2), doorBoundingBox.top];
+        var hingeOffset = [hinge[0] - doorToken.get('left'), hinge[1] - doorToken.get('top')];
+        template.doorDetails = {type: 'indirect', offset: hingeOffset};
         
-
+        makeTemplateWrapper(template, doorToken).setUpNewDoorControls();
+        if (doorBoundsPath) {
+            doorBoundsPath.remove();
+        }
+    },
+    
+    makeDirectDoor = function(token) {
+        var doorBoundingBox = {
+            left: token.get('left') - (token.get('width')/4),
+            top: token.get('top'),
+            width: token.get('width')/2,
+            height: token.get('height')
+        };
+        
+        var template = makeDoorTemplate(token, doorBoundingBox);
+        template.doorDetails = {type: 'direct'};
+        
+        setupDirectDoorPlaceholder(token, template);
+    },
+    
+    setupDirectDoorPlaceholder = function(token, template) {
+        //With a direct door, the original graphic becomes the control
+        //token and we place a placeholder on the map layer instead
+        token.set('layer', 'objects');
+        token.set('aura1_radius', 0.1);
+        token.set('isdrawing', 1);
+        
+        var placeholder = createObj('graphic', {
+                imgsrc: clearURL,
+                subtype: 'token',
+                pageid: token.get('_pageid'),
+                layer: 'map',
+                playersedit_name: false,
+                playersedit_bar1: false,
+                playersedit_bar2: false,
+                playersedit_bar3: false,
+                rotation:token.get('rotation'),
+                isdrawing:1,
+                top:token.get('top'),
+                left: token.get('left'),
+                width: token.get('width'),
+                height: token.get('height'),
+                controlledby: token.get('controlledby')
+            });
+       
+        token.set('controlledby', '');
+        var controlInfo = getTokenControlInfo(placeholder);
+        controlInfo.doorControl = token;
+        saveControlInfo(placeholder, controlInfo);
+        state.DynamicLightRecorder.doorControls[token.id] = placeholder.id;    
     },
 
-    makeDoor = function(token) {
-        var tokenWidth = token.get('width');
-        var dlLineWidth = tokenWidth + 4;
-        var centreX = token.get('left');
-        var centreY = token.get('top');
-        var left = centreX - tokenWidth / 2;
-
+    makeDoorTemplate = function(token, doorBoundingBox) {
+        var doorWidth = doorBoundingBox.width;
+        var dlLineWidth = doorWidth + 4;
+        
         token.set('layer', 'map');
         var dlPath = createObj('path', {
             pageid: token.get('_pageid'),
             layer: 'walls',
             stroke_width: 1,
-            top: centreY,
-            left: centreX,
+            top: doorBoundingBox.top,
+            left: doorBoundingBox.left,
             width: dlLineWidth,
             height: 1,
             path: '[["M",0,0],["L",' + dlLineWidth + ',0]]'
             });
-        buildTemplate(token, [dlPath], true);
+        return buildTemplate(token, [dlPath]);
     },
     
     attach = function(selection, overwrite) {
         
-        if (!selection || _.isEmpty(selection) || selection.length < 2) {
-            sendChat('DynamicLightRecorder', 'You must have one map tile and at least one path select to run attach');
-            return;
-        }
-        
-        
-        var objects = _.map(selection, function(object) {
-            return getObj(object._type, object._id);
-        });
-        
-        var tiles = [];
-        var paths = [];
-        _.each(objects, function(object) {
-            if(object.get('_type') === 'path') {
-                paths.push(object);
-            }
-            else {
-                tiles.push(object);
-            }
-        });
-        
-        if (_.isEmpty(tiles) || tiles.length !== 1) {
-            sendChat('DynamicLightRecorder', 'You must have exactly one map tile to run attach');
-            return;
-        }
-        
-        
-        var tile = tiles[0];
+        var tile = selection.graphic;
         if (tile.get('_subtype') !== 'token' || !tile.get('imgsrc') || tile.get('imgsrc').indexOf('marketplace') === -1 || tile.get('layer') !== 'map') {
             sendChat('DynamicLightRecorder', 'Selected tile must be from marketplace and must be on the map layer.');
             return;
@@ -250,13 +330,12 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
            return;
         }
         
-        buildTemplate(tile, paths, false);
+        buildTemplate(tile, selection.path);
         sendChat("DynamicLightRecorder", "DL paths successfully recorded for map tile");
     },
 
-    buildTemplate = function(tile, paths, isDoor) {
+    buildTemplate = function(tile, paths) {
          var template = {
-            isDoor: isDoor,  
             top: tile.get('top'),
             left: tile.get('left'),
             width: tile.get('width'),
@@ -282,133 +361,133 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         
         state.DynamicLightRecorder.tileTemplates[tile.get('imgsrc')] = template;
         saveTokenPaths(tile, paths);
-        if (isDoor) {
-            attachDoorControl(tile, template);
-        }
+        return template;
     },
     
-    attachDoorControl = function(doorToken, template) {
-        var tokenWidth = doorToken.get('width');
-        var tokenHeight = doorToken.get('height');
-        var centreX = doorToken.get('left');
-        var centreY = doorToken.get('top');
-        var hingeX = centreX - tokenWidth / 2;
-        var hingeY = centreY;
-        var fliph = (template.fliph !== doorToken.get('fliph'));
-        var flipv = (template.flipv !== doorToken.get('flipv'));
-        var rotation = doorToken.get('rotation') - template.rotation;
-        
-        if (fliph || flipv) {
-            hingeX = fliph ? tokenWidth - hingeX : hingeX;
-            hingeY = fliph ? tokenHeight - hingeY : hingeY;
-        }
-        
-        if (rotation % 360 != 0) {
-            var newHinge = rotatePoint([hingeX, hingeY], [centreX, centreY], rotation);
-            hingeX = newHinge[0];
-            hingeY = newHinge[1];
-        }
-        
-        var control = createObj('graphic', {
-            imgsrc: clearURL,
-            subtype: 'token',
-            pageid: doorToken.get('_pageid'),
-            layer: 'objects',
-            playersedit_name: false,
-            playersedit_bar1: false,
-            playersedit_bar2: false,
-            playersedit_bar3: false,
-            aura1_radius: 0.1,
-            rotation:rotation,
-            isdrawing:1,
-            top:hingeY,
-            left: hingeX,
-            width: 140,
-            height: 140
-        });
-        var controlInfo = getTokenControlInfo(doorToken);
-        controlInfo.doorControl = control;
-        saveControlInfo(doorToken, controlInfo);
-        state.DynamicLightRecorder.doorControls[control.id] = doorToken.id;
-    },
     
+ 
     handleNewToken = function(token) {
         var template = state.DynamicLightRecorder.tileTemplates[token.get('imgsrc')];
         if (!template) {
-            log('no template found')
             return;
         }
         
-        drawTokenPaths(token, template);
-        if (template.isDoor) {
-            attachDoorControl(token, template);
-        }
+        makeTemplateWrapper(template,token)
+            .reDrawDLPaths()
+            .setUpNewDoorControls();
     },
+    
+    
     
     handleTokenChange = function(token, previous) {
         var template = state.DynamicLightRecorder.tileTemplates[token.get('imgsrc')];
-        if (template) {
-            deleteTokenPaths(token, function() {
-                deleteDoorControls(token);
-                drawTokenPaths(token, template);
-                if(template.isDoor) {
-                    attachDoorControl(token, template)
-                }
-            }); 
-        }
         
-        //Check if the changed token is a door control - do we have a door 
-        //token keyed off its id in our lookup
-        var doorId = state.DynamicLightRecorder.doorControls[token.id];
-        var door = getObj('graphic', doorId);
-        if (door) {
-            var rotation = token.get('rotation') - previous.rotation;
-            if (rotation % 360 !== 0) {
-                //The control is centred on the hinge of the door
-                var hinge = [token.get('left'), token.get('top')];
-                var doorCentre = [door.get('left'), door.get('top')];
-                var offset = rotatePoint(doorCentre, hinge, rotation);
-                
-                door.set('left', offset[0]);
-                door.set('top', offset[1]);
-                door.set('rotation', door.get('rotation') + rotation);
-                //Now redraw the door and associate DL paths
-                handleTokenChange(door, {});
+        if (template) {
+            if (template.doorDetails && template.doorDetails.type === 'direct') {
+                //With direct doors, it's the actual door graphic that
+                //sits on the token layer and acts as the control directly
+                //Door controls should only be rotated, never moved, so process
+                //accordingly
+                var placeholderId = state.DynamicLightRecorder.doorControls[token.id];
+                var placeholder = getObj('graphic', placeholderId);
+                if(!previous) {
+                    //Triggered as part of a global redraw, don't need
+                    //to deal with the door control moving, but we should
+                    //redraw all the DL paths
+                    makeTemplateWrapper(template, placeholder).reDrawDLPaths();
+                }
+                else {
+                    doorControlMoved(token, placeholder, previous);
+                }
             }
-            //Reset attempts to move the door control away from the door
-            else if (token.get('top') !== previous.top || token.get('left') !== previous.left
-                    || token.get('width') !== previous.width || token.get('height') !== previous.height) {
-                token.set('top', previous.top);
-                token.set('left', previous.left);
-                token.set('width', previous.width);
-                token.set('height', previous.height);
+            else {
+                //This is a map token (indirect door or normal map tile)
+                //that has moved, we need to update the DL paths and move
+                //any corresponding door controls.
+                makeTemplateWrapper(template, token)
+                    .reDrawDLPaths()
+                    .positionDoorControls(); 
             }
+            
         }
+        else if (token.get('imgsrc') === clearURL){
+            //This might either be an indirect door control token,
+            //or a placeholder on the map layer for a direct door.
+            
+            var doorId = state.DynamicLightRecorder.doorControls[token.id];
+            var door = getObj('graphic', doorId);
+            if (door) {
+                if (token.get('layer') !== 'objects') {
+                    throw "Error, found a door control that wasn't on the objects layer! " + JSON.stringify(token);
+                }
+                template = state.DynamicLightRecorder.tileTemplates[door.id];
+                doorControlMoved(token, door, previous);
+                
+            }
+            else if (token.get('layer') === 'map') {
+                //This might be a placeholder for a direct door
+                var controlInfo = getTokenControlInfo(token);
+                if (controlInfo) {
+                    if (controlInfo.doorControl) {
+                        template = state.DynamicLightRecorder.tileTemplates[controlInfo.doorControl.get('imgsrc')];
+                        makeTemplateWrapper(template, token)
+                            .reDrawDLPaths()
+                            .positionDoorControls(); 
+                    }
+                }
+            }
+            
+            
+        }
+
     },
   
-    drawTokenPaths = function(token, template) {
-        var paths = makeWorkingTemplate(template, token)
-            .flip()
-            .rotate()
-            .scale()
-            .buildPaths();
-        saveTokenPaths(token, paths);
+    doorControlMoved = function(control, door, previous) {
+        
+        var rotation = control.get('rotation') - previous.rotation;
+        if (rotation % 360 !== 0) {
+            //The control is centred on the hinge of the door
+            var hinge = [control.get('left'), control.get('top')];
+            var doorCentre = [door.get('left'), door.get('top')];
+            var offset = rotatePoint(doorCentre, hinge, rotation);
+            
+            door.set('left', offset[0]);
+            door.set('top', offset[1]);
+            door.set('rotation', door.get('rotation') + rotation);
+            //Now redraw the door and associate DL paths
+            handleTokenChange(door);
+        }
+        //Reset attempts to move the door control away from the door
+        else if (control.get('top') !== previous.top || control.get('left') !== previous.left
+                || control.get('width') !== previous.width || control.get('height') !== previous.height
+                || control.get('fliph') !== previous.fliph || control.get('flipv') !== previous.flipv) {
+            control.set('top', previous.top);
+            control.set('left', previous.left);
+            control.set('width', previous.width);
+            control.set('height', previous.height);
+            control.set('fliph', previous.fliph);
+            control.set('flipv', previous.flipv);
+        }
     },
     
-    makeWorkingTemplate = function(template, token) {
+    makeTemplateWrapper = function(template, token) {
         template = _.clone(template);
         template.paths = _.map(template.paths, function(path) {
             path = _.clone(path);
             path.points = JSON.parse(path.path);
             return path;
         });
+        template.doorDetails = _.clone(template.doorDetails);
+        if(template.doorDetails) {
+            template.doorDetails.offset = _.clone(template.doorDetails.offset);
+        }
         
-        template.flip = function() {
+        var flip = function() {
             var fliph = token.get('fliph'), flipv = token.get('flipv');
-            fliph = (fliph !== this.fliph);
-            flipv = (flipv !== this.flipv);
+            fliph = (fliph !== template.fliph);
+            flipv = (flipv !== template.flipv);
             if (fliph || flipv) {
-                this.paths = _.map(this.paths, function(path) {
+                template.paths = _.map(template.paths, function(path) {
                     path.points = _.map(path.points, function(point) {
                         return [point[0],
                                 fliph ? path.width - point[1] : point[1],
@@ -418,19 +497,23 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     path.offsetX = fliph ? 0 - path.offsetX : path.offsetX;
                     path.offsetY = flipv ? 0 - path.offsetY : path.offsetY;
                     return path;
-                }.bind(this));
+                }.bind(template));
+                if (template.doorDetails && template.doorDetails.offset) {
+                    template.doorDetails.offset[0] = fliph ? 0 - template.doorDetails.offset[0] : template.doorDetails.offset[0];
+                    template.doorDetails.offset[1] = fliph ? 0 - template.doorDetails.offset[1] : template.doorDetails.offset[1];
+                }
+                template.fliph = fliph;
+                template.flipv = flipv;
             }
-            return this;
-        };
+        },
         
-        template.rotate = function() {
+        rotate = function() {
             'use strict';
             var angle = token.get('rotation');
-            angle -= this.rotation;
-            if (angle % 360 == 0) return this;
-            var tokenCentre = [token.get('left'), token.get('top')];
-    
-            _.each(this.paths, function(path) {
+            angle -= template.rotation;
+            if (angle % 360 == 0) return;
+            
+            _.each(template.paths, function(path) {
                     
                     var pointsCentre = [path.width/2, path.height/2];
                     
@@ -472,23 +555,40 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     path.offsetX = oldCentreRotated[0] + newCentreXOffset;
                     path.offsetY = oldCentreRotated[1] + newCentreYOffset;
                 });
-            return this;
-        };
+                
+            if (template.doorDetails && template.doorDetails.offset) {
+                template.doorDetails.offset = rotatePoint(template.doorDetails.offset, [0, 0], angle);
+            }
+            template.rotation = token.get('rotation');
+        },
         
-        template.scale = function() {
-            var scaleX = token.get('width') / this.width;
-            var scaleY = token.get('height') / this.height;
-            _.each(this.paths, function(path) {
-                path.scaleX = scaleX;
-                path.scaleY = scaleY;
+        scale = function() {
+            var scaleX = token.get('width') / template.width;
+            var scaleY = token.get('height') / template.height;
+            
+            _.each(template.paths, function(path) {
+                _.each(path.points, function(point) {
+                    point[1] *= scaleX;
+                    point[2] *= scaleY;
+                });
+                
                 path.offsetX *= scaleX;
                 path.offsetY *= scaleY;
+                path.width *= scaleX;
+                path.height *= scaleY;
             });
-            return this;
-        }; 
+            
+            if (template.doorDetails && template.doorDetails.offset) {
+                template.doorDetails.offset[0] *= scaleX;
+                template.doorDetails.offset[1] *= scaleY;
+            }
+            
+            template.width = token.get('width');
+            template.height = token.get('height');
+        },
         
-        template.buildPaths = function() {
-            return _.map(this.paths, function(templatePath) {
+        buildPaths = function() {
+            return _.map(template.paths, function(templatePath) {
                 var attributes = _.clone(templatePath);
                 attributes.path = JSON.stringify(templatePath.points);
                 attributes.pageid = token.get('_pageid');
@@ -496,12 +596,90 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 attributes.top = token.get('top') + attributes.offsetY;
                 return createObj('path', attributes);
             });
+        },
+        
+        alignWithToken = function() {
+            scale();
+            flip();
+            rotate();
+            logme();
+            log('log here');
+        },
+        
+        reDrawDLPaths = function() {
+            alignWithToken();
+            deleteTokenPaths(token, function(){
+                var paths = buildPaths();
+                saveTokenPaths(token, paths);
+            });
+            return this;
+        },
+        
+        positionDoorControls = function() {
+            alignWithToken();
+            if (!this.doorDetails) return;
+            if (this.doorDetails.type === 'direct') {
+                //Move control token to match placeholder - they are 
+                //the same size and shape so this is easy
+                var placeholder = token;
+                var controlInfo = getTokenControlInfo(placeholder);
+                var control = controlInfo.doorControl;
+    
+                control.set('width', placeholder.get('width'));
+                control.set('height', placeholder.get('height'));
+                control.set('rotation', placeholder.get('rotation'));
+                control.set('top', placeholder.get('top'));
+                control.set('left', placeholder.get('left'));
+                control.set('fliph', placeholder.get('fliph'));
+                control.set('flipv', placeholder.get('flipv'));
+            }
+            else {
+                //Easier just to redraw and start again in this case
+                deleteDoorControls(token);
+                this.setUpNewDoorControls();
+            }
+        },
+        
+        setUpNewDoorControls = function() {
+            alignWithToken();
+            if(this.doorDetails) {
+                if (this.doorDetails.type === 'direct') {
+                    setupDirectDoorPlaceholder(token, this);
+                }
+                else {
+                    var control = createObj('graphic', {
+                        imgsrc: clearURL,
+                        subtype: 'token',
+                        pageid: token.get('_pageid'),
+                        layer: 'objects',
+                        playersedit_name: false,
+                        playersedit_bar1: false,
+                        playersedit_bar2: false,
+                        playersedit_bar3: false,
+                        aura1_radius: 0.1,
+                        rotation:this.rotation,
+                        isdrawing:1,
+                        top: token.get('top') + this.doorDetails.offset[1],
+                        left: token.get('left') + this.doorDetails.offset[0],
+                        width: 140,
+                        height: 140
+                    });
+                    var controlInfo = getTokenControlInfo(token);
+                    controlInfo.doorControl = control;
+                    saveControlInfo(token, controlInfo);
+                    state.DynamicLightRecorder.doorControls[control.id] = token.id;
+                }
+            }
+        },
+
+        
+        logme = function() {
+            log(template);
         };
         
-        template.logme = function() {
-            log(this);
-            return this;
-        };
+        template.setUpNewDoorControls = setUpNewDoorControls;
+        template.positionDoorControls = positionDoorControls;
+        template.reDrawDLPaths = reDrawDLPaths;
         
         return template;
     },
@@ -524,8 +702,10 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
     },
     
     handleDeleteToken = function(token) {
-        deleteTokenPaths(token);
-        deleteDoorControls(token);
+        if (state.DynamicLightRecorder.tileTemplates[token.get('imgsrc')]) {
+            deleteTokenPaths(token);
+            deleteDoorControls(token);
+        }   
     },
     
     
@@ -599,7 +779,6 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
     },
     
     deleteTokenPaths = function(token, callbackBeforeRemovingFromCanvas) {
-        log('deleting paths for token ' + token.id);
         var controlInfo = getTokenControlInfo(token);
         var pathsToDelete =  controlInfo.dlPaths;
         controlInfo.dlPaths = [];
@@ -631,5 +810,6 @@ on("ready",function(){
         DynamicLightRecorder.CheckInstall();
         DynamicLightRecorder.RegisterEventHandlers();
 });
+
 
 
