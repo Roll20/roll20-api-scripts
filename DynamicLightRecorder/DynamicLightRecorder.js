@@ -128,7 +128,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     };
                     sendChat('DynamicLightRecorder', 'Path export\n' + JSON.stringify(exportObject));
                     break;
-            	case '!dl-redraw':
+                case '!dl-redraw':
     				redraw(processSelection(msg, {
                         graphic: {min:0, max:Infinity}
                     }).graphic);
@@ -611,8 +611,6 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             scale();
             flip();
             rotate();
-            logme();
-            log('log here');
         },
         
         reDrawDLPaths = function() {
@@ -819,6 +817,7 @@ on("ready",function(){
         DynamicLightRecorder.CheckInstall();
         DynamicLightRecorder.RegisterEventHandlers();
 });
+
 
 
 
