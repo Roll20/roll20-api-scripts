@@ -2,20 +2,16 @@
 
 13thageofficial:
 - "13th Age Official Character Sheet Companion"
-- "13th Age Official Character Sheet Companion"
 - "System Toolbox"
 
 tokenmod:
-- "TokenMod"
 - "TokenMod"
 - "Tokens"
 
 flight:
 - "Flight"
-- "Flight"
 - "Tokens"
 
 splitargs:
-- "splitArgs"
 - "splitArgs"
 - "Utility"
