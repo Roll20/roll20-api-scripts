@@ -5,7 +5,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
     'use strict';
 
     var version = '0.5',
-        schemaVersion = 0.3,
+        schemaVersion = 0.4,
         clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
         
     checkInstall = function() {
@@ -49,7 +49,16 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                                 }
                             }
                         });
-                    state.DynamicLightRecorder.version = schemaVersion3;
+                case 0.3:
+                    _.each(state.DynamicLightRecorder.tileTemplates, function(template) {
+                        if (template.isDoor) {
+                            delete template.isDoor;
+                            var hingeOffset = [-(template.width/2), 0];
+                            template.doorDetails = { type:'indirect', offset:hingeOffset};
+                        }
+                    });
+
+                    state.DynamicLightRecorder.version = schemaVersion;
                     break;
                 default:
                     log('making state object');
