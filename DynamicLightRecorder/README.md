@@ -53,7 +53,7 @@ Once you have built up a set of templates for map tiles and doors using the `dl-
 ```
 !dl-export
 ```
-and the script will dump a big bunch of text out into the chat window. Copy this text and share it with your friends on Roll20. They need to type 
+and the script will dump a big bunch of text out into the chat window. If you have some map tiles selected when you run this command, the export will be limited to these rather than everything the script nows about. Copy this text and share it with your friends on Roll20. They need to type 
 
 ```
 !dl-import -- <exportedText>
