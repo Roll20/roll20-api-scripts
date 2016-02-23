@@ -12,7 +12,7 @@ Once you have drawn all the paths, select them and the tile they relate to toget
 !dl-attach
 ```
 
-This will register the connection between that tile and the paths you've set up for it. You can now delete the template tile and paths. When you next drop the same tile from the Art Library, the system will automatically recreate the paths that you previously drew. It will also scale, rotate and move them with the tile.
+This will register the connection between that tile and the paths you've set up for it. When you next drop the same tile from the Art Library, the system will automatically recreate the paths that you previously drew. It will also scale, rotate and move them with the tile.
 
 If you want to redo your light-blocking for a particular tile, drop a copy on your canvas, go to the DL layer, select all the paths that relate to it and move them to the map layer. Edit them as you need, deleting or adding as appropriate. Then select the whole lot and the underlying map tile again, and run:
 
@@ -20,11 +20,11 @@ If you want to redo your light-blocking for a particular tile, drop a copy on yo
 !dl-attach --overwrite
 ```
 
-This will replace the existing bindings with the new ones. As things stand it will not update any existing tiles with the new light blocking until you move, rotate or scale them, at which point it will redraw. You can force a redraw for selected tokens, or the whole campaign, by using the `!dl-redraw` command (see below).
+This will replace the existing bindings with the new ones. It will not update any existing tiles with the new light blocking until you move, rotate or scale them, at which point they will redraw. You can force a redraw for selected tokens, or the whole campaign, by using the `!dl-redraw` command (see below).
 
 ### Doors
 
-The script can also manage doors for you. Drop the door graphic on the map layer. The script makes some assumptions about door graphics: 
+The script can also manage doors for you. Drop the door graphic on the map layer. The script makes some assumptions about door graphics when recording them: 
 * the door should be horizontal
 * The hinge should be on the left.
 * the door should be vertically centred in its graphic
