@@ -4,7 +4,7 @@
 var DynamicLightRecorder = DynamicLightRecorder || (function() {
     'use strict';
     
-    var version = '0.6',
+    var version = '0.7',
     schemaVersion = 0.5,
     clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
     myState = state.DynamicLightRecorder,
