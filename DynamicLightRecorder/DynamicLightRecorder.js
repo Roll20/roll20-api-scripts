@@ -860,7 +860,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             var args = arguments.length > 2 ? _.toArray(arguments).slice(2) : [];
             message = stringify(message);
     
-            message = message.replace('$$$', function() {
+            message = message.replace(/\$\$\$/g, function() {
                 return stringify(args.shift());
             });
             log('DynamicLightRecorder ' + Date.now() + ': ' + (myState.config.logLevel == logger.TRACE ? logger.prefixString : '') +  message);
