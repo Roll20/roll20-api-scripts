@@ -99,7 +99,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                         report('No import JSON specified');
                         break;
                     case '!dl-attach':
-                        this.attach(processSelection(msg, {
+                        this.attach(this.processSelection(msg, {
                             graphic: {min:1, max:1},
                             path: {min:1, max:Infinity}
                         }), !_.isEmpty(args) && args.shift() === 'overwrite');
@@ -112,12 +112,12 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                         this.makeDoor(objects.graphic, objects.path);
                         break;
                     case '!dl-directDoor':
-                        this.makeDirectDoor(processSelection(msg, {
+                        this.makeDirectDoor(this.processSelection(msg, {
                             graphic: {min:1, max:1}
                         }).graphic);
                         break;
                     case '!dl-dump':
-                        log(myState);
+                        logger.info(myState);
                         //sendChat('DynamicLightRecorder', JSON.stringify(state.DynamicLightRecorder));
                         break;
                     case '!dl-wipe':
@@ -126,17 +126,18 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                         myState.doorControls = {};
                         break;
                     case '!dl-export':
-                        var exportObject = {
-                            version: schemaVersion,
-                            templates: myState.tileTemplates
-                        };
-                        report('Path export\n' + JSON.stringify(exportObject));
+                        this.export(this.processSelection(msg, {
+                            graphic: {min:0, max:Infinity}
+                        }).graphic);
                         break;
                     case '!dl-redraw':
         				this.redraw(this.processSelection(msg, {
                             graphic: {min:0, max:Infinity}
                         }).graphic);
         				break;
+                    case '!dl-setLogLevel':
+                        var newLogLevel = logger[args.shift()];
+                        myState.config.logLevel = newLogLevel || myState.config.logLevel;
                     default:
                     //Do nothing
                 }
@@ -147,10 +148,12 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     logger.error("Error: $$$", e)
                 }
                 else {
-                    logger.error('Error with type $$$', typeof e);
+                    logger.error('Error: ' +  e.toString());
                     report('An error occurred. Please see the log for more details.');
-                    logger.error(e);
                 }
+            }
+            finally {
+                logger.prefixString = '';
             }
         },
         
@@ -183,6 +186,22 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 }
                 return result;
             }, {});
+        },
+        
+        export: function(graphics) {
+            var exportObject = {
+                version: schemaVersion,
+                templates: myState.tileTemplates
+            };
+            
+            if (graphics && !_.isEmpty(graphics)) {
+                exportObject.templates = _.pick(exportObject.templates, 
+                                                _.map(graphics, function(graphic) {
+                                                    return graphic.get('imgsrc');
+                                                })
+                                            );
+            }
+            report('Path export\n' + JSON.stringify(exportObject));        
         },
         
         redraw: function(objects) {
@@ -231,8 +250,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     message += '<p> Skipped <b>' + _.size(overlapKeys) + '</b> templates for tiles which already have templates. '
                                                         + 'Rerun with <b>--overwrite</b> to replace these with the imported tiles. '
                                                         + ' See log for more details. </p>';
-                    log("Skipped template image URLs:");
-                    _.each(overlapKeys, function(key) { log(key); });
+                    logger.info("Skipped template image URLs: $$$", overlapKeys);
                 }
                 message += '</div>';
                 report(message);
@@ -741,7 +759,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     .map(function(pathId) {
                         var path = getObj('path', pathId);
                         if (!path) {
-                            log('Warning, path with id [' + pathId + '] that should have been attached to token ' + JSON.stringify(token) + ' was not present.');
+                            logger.warn('Warning, path with id [$$$] that should have been attached to token $$$ was not present.', pathId, token);
                         }
                         return path;
                     })
@@ -752,7 +770,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     var control = getObj('graphic', parsedControlInfo.doorControl);
                        
                     if (!control) {
-                        log('Warning, control with id [' + parsedControlInfo.doorControl + '] that should have been attached to token ' + JSON.stringify(token) + ' was not present.');
+                        log.warn('Warning, control with id [$$$] that should have been attached to token $$$ was not present.', parsedControlInfo.doorControl, token);
                     }
                     else {
                         controlInfo.doorControl = control
@@ -814,7 +832,10 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
     
     
     var report = function(msg) {
-        sendChat('DynamicLightRecorder', '/w gm ' + msg, null, {noarchive:true});
+        //Horrible bug with this at the moment - seems to generate spurious chat
+        //messages when noarchive:true is set
+        //sendChat('DynamicLightRecorder', '' + msg, null, {noarchive:true});
+        sendChat('DynamicLightRecorder', '/w gm ' + msg);
     },
     
     logger = (function() {
@@ -881,7 +902,6 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
     };
     
     logger.wrapModule(module);
-    myState.config.logLevel = logger.INFO;
     return {
         RegisterEventHandlers: registerEventHandlers,
         CheckInstall: module.checkInstall.bind(module)
