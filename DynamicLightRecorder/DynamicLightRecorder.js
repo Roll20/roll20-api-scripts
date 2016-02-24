@@ -4,7 +4,7 @@
 var DynamicLightRecorder = DynamicLightRecorder || (function() {
     'use strict';
     
-    var version = '0.8',
+    var version = '0.9',
     schemaVersion = 0.6,
     clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
     dummyDoorURL = 'https://s3.amazonaws.com/files.d20.io/images/16153846/MUP9-gWjKpFgoUwFCRy8Vg/thumb.png?1455099323',
@@ -251,6 +251,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         },
         
         export: function(graphics) {
+            var module = this;
             var exportObject = {
                 version: schemaVersion,
                 templates: myState.tileTemplates
@@ -259,7 +260,8 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             if (graphics && !_.isEmpty(graphics)) {
                 exportObject.templates = _.pick(exportObject.templates, 
                                                 _.map(graphics, function(graphic) {
-                                                    return graphic.get('imgsrc');
+                                                    var controlInfo = module.getControlInfoObject(graphic);
+                                                    return controlInfo.getImageURL();
                                                 })
                                             );
             }
@@ -732,6 +734,8 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     data.doorControl = newDoorControl;
                     save();
                 },
+                
+                getImageURL: getImgSrc,
                 
                 wipeTemplate: function() {
                     var template = getTemplate();
