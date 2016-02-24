@@ -79,12 +79,11 @@ If it all goes wrong you can run
 !dl-wipe
 ```
 
-... but be very careful, as this will throw away all of your trained paths for all of your tiles. It will not delete any light blocking for existing tiles on the canvas, however.
+... but be very careful, as this will throw away all of your trained paths for all of your tiles. It will not delete any light blocking for existing tiles on the canvas, however. For a slightly safer version, select some map tiles/doors before running this command. This will only wipe the templates associated with those map items, rather than wiping all of them.
 
 Ideas for the future:
 
 * Mark some instances of a tile as special, don't redraw with standard template, but just keep the existing light blocking with rotation/scaling/movement support.
 * Transmogrifier compatibility
-* Selective export - only export templates for selected tokens
 * SVG import/export
 

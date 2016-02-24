@@ -163,8 +163,9 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                         //sendChat('DynamicLightRecorder', JSON.stringify(state.DynamicLightRecorder));
                         break;
                     case '!dl-wipe':
-                        report('Wiping all data');
-                        myState.tileTemplates = {};
+                        this.wipe(this.processSelection(msg, {
+                            graphic: {min:0, max:Infinity}
+                        }).graphic, args.shift() === 'confirm');
                         break;
                     case '!dl-export':
                         this.export(this.processSelection(msg, {
@@ -179,6 +180,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     case '!dl-setLogLevel':
                         var newLogLevel = logger[args.shift()];
                         myState.config.logLevel = newLogLevel || myState.config.logLevel;
+                        report("Log level is now " + logger.getLabel(myState.config.logLevel));
                     default:
                     //Do nothing
                 }
@@ -229,6 +231,25 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             }, {});
         },
         
+        wipe: function(graphics, confirm) {
+            var module = this;
+            if (graphics) {
+                _.each(graphics, function(graphic) {
+                    var controlInfo = module.getControlInfoObject(graphic);
+                    if (controlInfo) {
+                        controlInfo.wipeTemplate();
+                    }
+                });
+            }
+            else if (!confirm){
+                report('You are about to wipe all of your stored templates, are you *really* sure you want to do this? [Confirm](!dl-wipe --confirm)');
+            }
+            else {
+                myState.tileTemplates = {};
+                report('All your dynamic lighting templates have been wiped');
+            }
+        },
+        
         export: function(graphics) {
             var exportObject = {
                 version: schemaVersion,
@@ -242,7 +263,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                                                 })
                                             );
             }
-            report('Path export\n' + JSON.stringify(exportObject));        
+            report(JSON.stringify(exportObject));        
         },
         
         redraw: function(objects) {
@@ -546,7 +567,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 dlPaths:dlPaths
             },
             
-            getTemplate = function() {
+            getImgSrc = function() {
                 var imgSrcObject;
                 switch(type) {
                     case 'directDoorPlaceholder':
@@ -558,9 +579,13 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     default:
                         imgSrcObject = token;
                 }
-                var template = myState.tileTemplates[imgSrcObject.get('imgsrc')];
+                return imgSrcObject.get('imgsrc');
+            },
+            
+            getTemplate = function() {
+                var template = myState.tileTemplates[getImgSrc()];
                 if(!template) {
-                    logger.error('Could not find template information for token $$$ using imgsrc $$$', token, imgSrcObject.get('imgsrc'));
+                    logger.warn('Could not find template information for token $$$ using imgsrc $$$', token, getImgSrc());
                 }
                 return template;
             },
@@ -635,7 +660,11 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             
             return {
                 onChange: function(previous) {
-                    var tw = module.getTemplateWrapper(getTemplate());
+                    var template = getTemplate();
+                    if (!template) {
+                        return;
+                    }
+                    var tw = module.getTemplateWrapper();
                     
                     switch(data.type) {
                         case 'directDoor':
@@ -704,10 +733,21 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     save();
                 },
                 
+                wipeTemplate: function() {
+                    var template = getTemplate();
+                    if (template) {
+                        delete myState.tileTemplates[getImgSrc()];
+                        report("Wiped template for image URL: " + getImgSrc());
+                    }
+                    else {
+                        report("No templates found that correspond to the selected token with image URL: " + getImgSrc());
+                    }
+                },
+                
                 logWrap: true,
                 
                 toJSON: function() {
-                    return data;
+                    return _.extend({token:token},data);
                 }
             };
 
@@ -969,6 +1009,11 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             prefixString: ''
         };
         
+        logger.getLabel = function(logLevel) {
+            var logPair = _.chain(this).pairs().find(function(pair) { return pair[1] === logLevel;}).value();
+            return logPair ? logPair[0] : 'UNKNOWN';
+        };
+        
         var stringify = function(object) {
             if (typeof object === 'undefined') return object;
             return (typeof object === 'string' ? object : JSON.stringify(object).replace(/"/g, ''));
@@ -985,7 +1030,10 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     return stringify(args.shift());
                 });
             }
-            log('DynamicLightRecorder ' + Date.now() + ': ' + (myState.config.logLevel == logger.TRACE ? logger.prefixString : '') +  message);
+            log('DynamicLightRecorder ' + Date.now() 
+                + ' ' + logger.getLabel(level) + ' : '
+                + (myState.config.logLevel == logger.TRACE ? logger.prefixString : '') 
+                +  message);
         };
         
         _.each(logger, function(level, levelName) {
