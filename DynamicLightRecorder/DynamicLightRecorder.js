@@ -100,10 +100,11 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                             });
                     case 0.6:
                         myState.config.autoLink = true;
+                        myState.config.logLevel = 'INFO';
                         logger.info('Upgrading existing tokens with transmogrifier-protection');
                         _.each(myState.tileTemplates, function(template, key) {
                             template.imgsrc = key;
-                            _.each(findObjs({type:'graphic', imgsrc:imgsrc}), function(graphic) {
+                            _.each(findObjs({type:'graphic', imgsrc:template.imgsrc}), function(graphic) {
                                 var gmn = graphic.get('gmnotes');
                                 if (gmn.indexOf('DynamicLightData:') === 0) {
                                     graphic.set('name', 'DynamicLightRecorder');
@@ -1530,7 +1531,6 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         on('add:token', module.handleNewToken.bind(module));
         on('destroy:token', module.handleDeleteToken.bind(module));
     };
-    
     logger.wrapModule(module);
     return {
         RegisterEventHandlers: registerEventHandlers,
