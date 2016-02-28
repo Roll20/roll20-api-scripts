@@ -78,6 +78,11 @@ Note that this command also assumes your door's hinge is on the left, so rotate 
 ###Local doors
 Both the door commands support the --local switch in exactly the same way as the `!dl-link` command, so you can configure individual door tokens rather than campaign-wide bindings if you wish.
 
+###Door angle restrictions
+By default, doors can rotate 90 degrees in each direction from the position that you place the map layer token. If you want to change this, edit the bar1_value and bar1_max values for the door graphic before running the `!dl-door` or `!dl-directDoor` command. bar1_value is the maximum counter-clockwise rotation in degrees and should be a negative number. bar1_max is the maximum clockwise rotation in degrees  and should be a positive number. Whenever you move the map layer token for a door, this redefines the zero point against which these limits are calculated. When you or the players rotate the token layer control token, it checks to see if the requested position is within the defined bounds relative to the map token zero point. If not, it positions the door at the closest limit to the angle requested. It's not as complicated as it sounds in practice. 
+
+You may well find that you want to define custom limits for individual doors; to do this, create a local template for the door with the relevant restrictions. I may add some commands to simplify this process at a later point.
+
 ### Import/Export
 Once you have built up a set of templates for map tiles and doors using the commands above you can export them for others to use. Run
 ```
@@ -122,12 +127,15 @@ If it all goes wrong you can run
 !dl-wipe
 ```
 
-... but be very careful, as this will throw away all of your global templates for all of your tiles. It will not delete any light blocking for existing tiles on the canvas, nor will it delete local templates. To delete these, simply delete the relevant graphics from the map layer and the script will clean up after itself. For a slightly safer version, select some map tiles/doors before running this command. This works as follows:
+... but be very careful, as this will throw away all of your global templates for all of your tiles and remove all of the corresponding DL paths and door controls. It will not delete local templates or the controls/paths they define. To delete these, simply delete the relevant graphics from the map layer and the script will clean up after itself. For a slightly safer version, select some map tiles/doors before running this command. This works as follows:
 * For any graphic that has a local template, it will erase the local template. If there is also a global template for this graphic, this graphic will now use the global templateinstead (so this effectively works like a sort of 'reattach' command
-* For any graphic that has no local template, but does have an associated global template, it will wipe the global template. New instances of this graphic will not have dynamic lighting paths drawn for them. Existing DL paths will remain on the canvas, but will no longer move correctly with their graphics. I might change this behaviour in the future, either deleting all the existing DL paths on a wipe, or creating local templates for all affected graphics before wiping the global template. Not sure which is more helpful.
-
+* For any graphic that has no local template, but does have an associated global template, it will wipe the global template and remove on DL paths/door controls that refer to it. 
 ##Backups and Transmogrification considerations
-The way that the tokens link to each other is relatively safe, and will also survive transmogrification. It should be relatively difficult to lose the relationships between the paths and graphics.  The global templates, however, are stored in the API state for the campaign, which can get corrupted, (possibly by another script), and doesn't get Transmogrified. It is **strongly** recommended that you perform a ``!dl-export`` and save the results somewhere safe if you put a lot of work into defining DL paths with this system. Furthermore, if you Transmogrify stuff from your campaign, you should import the relevant global templates into the new campaign before you start manipulating anything or the script will complain. 
+The way that the tokens link to each other is relatively safe, and can also survive Transmogrification if the correct steps are followed (see below). It should be relatively difficult to lose the relationships between the paths and graphics.  The global templates, however, are stored in the API state for the campaign, which can get corrupted, (possibly by another script), and doesn't get Transmogrified. It is **strongly** recommended that you perform a ``!dl-export`` and save the results somewhere safe if you put a lot of work into defining DL paths with this system. Furthermore, if you Transmogrify stuff from your campaign, you should import the relevant global templates ***before*** you copy any objects into the new campaign. Once you've copied stuff over, you should run:
+```
+!dl-tmFixup
+```
+to reattach all the DL paths to their relevant map graphics. This could take a while on a big campaign, so I don't run it automatically on startup or in the background - it's up to you to run this once you've imported everything you need. 
 
 ##Debugging
 If you find a bug in the script, it would help enormously if you could reproduce it with the logging turned up and then post the log information on the forum. To turn the logging up to maximum, run:
@@ -139,6 +147,17 @@ This will generate a **lot** of logging, so you probably want to turn it off aga
 !dl-config --logLevel INFO
 ```
 
+##Known issues/intended enhancements:
+* Overwriting a directDoor global template leaves some orphan paths behind
+* Automatically reset attempts to move DL paths
+* Find a nice way to show door opening limits graphically (on GM layer?)
+* Sometimes the control token for directDoors can be moved once after creation (thanks to the APICREATE cb thing)
+* !dl-wipe destroys direct doors completely
+* !dl-link on a tile that already has a local template will just overwrite the local template - this is probably right, although I think it should require —overwrite before doing it. I think we need another command, “makeGlobal” to push a local template up to global, which will also need a —overwrite option to ensure you don’t overwrite a global template accidentally.
+* Allow setting local template with no paths - perhaps a special command for this?
+* Creating a local door out of one that is already global creates an extra orphaned control token
+* Very slight bug with rotation thanks to approximation of path height (doesn’t take stroke width into account)
+
+
 Ideas for the future:
 * SVG import/export
-* Angle restrictions for doors using token bar values (along with a global chat message when you try and open it further)
