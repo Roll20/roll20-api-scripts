@@ -4,25 +4,20 @@
 var DynamicLightRecorder = DynamicLightRecorder || (function() {
     'use strict';
     
-    var version = '0.9',
-    schemaVersion = 0.6,
+    var version = '1.0',
+    schemaVersion = 0.7,
     clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
-    dummyDoorURL = 'https://s3.amazonaws.com/files.d20.io/images/16153846/MUP9-gWjKpFgoUwFCRy8Vg/thumb.png?1455099323',
     myState = state.DynamicLightRecorder,
-    getObjectMapper = function(type, notFoundCallback) {
-        return function(id) {
-            if (!id) return;
-            var object = getObj(type, id);
-            if (!object && (typeof notFoundCallback ==='function')) notFoundCallback(id, type);
-            return object;
-        };
-    },
     
+    //All the main functions sit inside a module object so that I can 
+    //wrap them for log tracing purposes
     module = {
         checkInstall: function() {
+            var module=this;
             logger.info('-=> DynamicLightRecorder v$$$ <=-', version);
-            if( ! _.has(state,'DynamicLightRecorder') || state.DynamicLightRecorder.version !== schemaVersion) {
-                logger.info('  > Updating Schema to v$$$ <', schemaVersion);
+            if( ! _.has(state,'DynamicLightRecorder') || myState.version !== schemaVersion) {
+                logger.info('  > Updating Schema to v$$$ from $$$<', schemaVersion, myState && myState.version);
+                logger.info('Preupgrade state: $$$', myState);
                 switch(myState && myState.version) {
                     case 0.1:
                         _.each(myState.tilePaths, function(tilePath) {
@@ -67,7 +62,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                             }
                         });
                     case 0.4:
-                        myState.config.logLevel = logger.INFO;
+                        myState.config.logLevel = 'INFO';
                     case 0.5:
                         _.each(myState.doorControls, function(doorId, controlId) {
                             var door = getObj('graphic', doorId);
@@ -103,20 +98,51 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                                 }
                                 catch(e) {}
                             });
+                    case 0.6:
+                        myState.config.autoLink = true;
+                        logger.info('Upgrading existing tokens with transmogrifier-protection');
+                        _.each(myState.tileTemplates, function(template, key) {
+                            template.imgsrc = key;
+                            _.each(findObjs({type:'graphic', imgsrc:imgsrc}), function(graphic) {
+                                var gmn = graphic.get('gmnotes');
+                                if (gmn.indexOf('DynamicLightData:') === 0) {
+                                    graphic.set('name', 'DynamicLightRecorder');
+    								var tokenStorage = module.tokenStorage(graphic)
+                                    var dlPaths = tokenStorage.get('dlPaths');
+                                    _.each(dlPaths, function(dlPath) {
+                                        dlPath.set('controlledby', graphic.id);
+                                    });
+									var doorControl = tokenStorage.get('doorControl');
+									var door = tokenStorage.get('door');
+									doorControl && doorControl.set('name', 'DynamicLightRecorder');
+									door && door.set('name', 'DynamicLightRecorder');
+                                }
+                            });
+                        });
                         myState.version = schemaVersion;
                         break;
                     default:
-                        state.DynamicLightRecorder = {
-                            version: schemaVersion,
-                            tileTemplates: {},
-                            config: {
-                                logLevel: logger.INFO
-                            }
-                        };
-                        myState = state.DynamicLightRecorder;
-                        logger.info('Making new state object $$$', myState);
+                        if (!myState) {
+                            state.DynamicLightRecorder = {
+                                version: schemaVersion,
+                                tileTemplates: {},
+                                config: {
+                                    logLevel: 'INFO',
+                                    autoLink: true
+                                }
+                            };
+                            myState = state.DynamicLightRecorder;
+                            logger.info('Making new state object $$$', myState);
+                        }
+                        else {
+                            logger.fatal('Unknown schema version for state $$$', myState);
+                            report('Serious error attempting to upgrade your global state, please see log for details. '
+                                    +'DynamicLightRecorder will not function correctly until this is fixed');
+                            myState = undefined;
+                        }
                         break;
                 }
+                logger.info('Upgraded state: $$$', myState);
             }
         },
         
@@ -127,6 +153,34 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             try {
                 var args = msg.content.split(/\s+--/);
                 switch(args.shift()) {
+                    case '!dl-link':
+                        this.link(this.processSelection(msg, {
+                            graphic: {min:1, max:1},
+                            path: {min:1, max:Infinity}
+                        }), args);
+                        break;
+                    case '!dl-detach':
+                        this.detach(this.processSelection(msg, {
+                            graphic: {min:1, max:Infinity}
+                        }).graphic);
+                        break;
+                    case '!dl-door':
+                        var objects = this.processSelection(msg, {
+                            graphic: {min:1, max:1},
+                            path: {min: 0, max:1}
+                        });
+                        this.makeDoor(objects.graphic, objects.path, args);
+                        break;
+                    case '!dl-directDoor':
+                        this.makeDirectDoor(this.processSelection(msg, {
+                            graphic: {min:1, max:1}
+                        }).graphic, args);
+                        break;
+                    case '!dl-wipe':
+                        this.wipe(this.processSelection(msg, {
+                            graphic: {min:0, max:Infinity}
+                        }).graphic, args.shift() === 'confirm');
+                        break;
                     case '!dl-import':
                         if(!_.isEmpty(args)) {
                             var overwrite = (args[0] === 'overwrite');
@@ -140,47 +194,22 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                         }
                         report('No import JSON specified');
                         break;
-                    case '!dl-attach':
-                        this.attach(this.processSelection(msg, {
-                            graphic: {min:1, max:1},
-                            path: {min:1, max:Infinity}
-                        }), !_.isEmpty(args) && args.shift() === 'overwrite');
-                        break;
-                    case '!dl-door':
-                        var objects = this.processSelection(msg, {
-                            graphic: {min:1, max:1},
-                            path: {min: 0, max:1}
-                        });
-                        this.makeDoor(objects.graphic, objects.path);
-                        break;
-                    case '!dl-directDoor':
-                        this.makeDirectDoor(this.processSelection(msg, {
-                            graphic: {min:1, max:1}
-                        }).graphic);
-                        break;
-                    case '!dl-dump':
-                        logger.info(myState);
-                        //sendChat('DynamicLightRecorder', JSON.stringify(state.DynamicLightRecorder));
-                        break;
-                    case '!dl-wipe':
-                        this.wipe(this.processSelection(msg, {
-                            graphic: {min:0, max:Infinity}
-                        }).graphic, args.shift() === 'confirm');
-                        break;
                     case '!dl-export':
                         this.export(this.processSelection(msg, {
                             graphic: {min:0, max:Infinity}
                         }).graphic);
                         break;
                     case '!dl-redraw':
-        				this.redraw(this.processSelection(msg, {
+                        this.redraw(this.processSelection(msg, {
                             graphic: {min:0, max:Infinity}
                         }).graphic);
-        				break;
-                    case '!dl-setLogLevel':
-                        var newLogLevel = logger[args.shift()];
-                        myState.config.logLevel = newLogLevel || myState.config.logLevel;
-                        report("Log level is now " + logger.getLabel(myState.config.logLevel));
+                		break;
+                    case '!dl-config':
+                        this.configure(args);
+                        break;
+                    case '!dl-tmFixup':
+                        this.transmogrifierFixup();
+                        break;
                     default:
                     //Do nothing
                 }
@@ -230,23 +259,70 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 return result;
             }, {});
         },
-        
+    
+    /////////////////////////////////////////
+    // Command handlers    
+    /////////////////////////////////////////
+        configure: function(args) {
+            
+            var configPropertyValidators = {
+                logLevel: function(value) {
+                    var converted = value.toUpperCase();
+                    return {valid:_.has(logger, converted), converted:converted};
+                },
+                autoLink: function(value) {
+                    var converted = value === 'true' || (value === 'false' ? false : value);
+                    return {
+                            valid:(typeof value === 'boolean') || value ==='true' || value === 'false',
+                            converted:converted};
+                }
+            };
+            
+            _.each(args, function(arg) {
+                var parts = arg.split(/\s+/);
+                var success = false;
+                if (parts.length <= 2) {
+                    //Allow for bare switches
+                    var value = parts.length == 2 ? parts[1] : true;
+                    var validator = configPropertyValidators[parts[0]];
+                    if (validator) {
+                        var result = validator(value);
+                        if (result.valid) {
+                            logger.info('Setting configuration option $$$ to $$$', parts[0], result.converted);
+                            myState.config[parts[0]] = result.converted;
+                            success = true;
+                        }
+                    }
+                }
+                if (!success) {
+                    logger.error('Unrecognised or poorly formed configuration option [$$$]', arg);
+                    report('ERROR: unrecognised or poorly formed configuration option [' + arg + ']');
+                }
+            });
+            
+            report('Configuration is now: ' + JSON.stringify(myState.config));
+        },
+    
         wipe: function(graphics, confirm) {
             var module = this;
             if (graphics) {
+                var results = {
+                        global:0,
+                        local:0
+                    };
                 _.each(graphics, function(graphic) {
                     var controlInfo = module.getControlInfoObject(graphic);
-                    if (controlInfo) {
-                        controlInfo.wipeTemplate();
-                    }
+                    
+                    controlInfo.wipeTemplate(results);
                 });
+                report('Wiped ' + results.local + ' local templates and ' + results.global + ' global templates');
             }
             else if (!confirm){
                 report('You are about to wipe all of your stored templates, are you *really* sure you want to do this? [Confirm](!dl-wipe --confirm)');
             }
             else {
-                myState.tileTemplates = {};
-                report('All your dynamic lighting templates have been wiped');
+                var removeCount = this.globalTemplateStorage().removeAll();
+                report('' + removeCount + ' global dynamic lighting templates have been wiped');
             }
         },
         
@@ -254,39 +330,32 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             var module = this;
             var exportObject = {
                 version: schemaVersion,
-                templates: myState.tileTemplates
+                templates: this.globalTemplateStorage().load(graphics)
             };
             
-            if (graphics && !_.isEmpty(graphics)) {
-                exportObject.templates = _.pick(exportObject.templates, 
-                                                _.map(graphics, function(graphic) {
-                                                    var controlInfo = module.getControlInfoObject(graphic);
-                                                    return controlInfo.getImageURL();
-                                                })
-                                            );
-            }
+            
             report(JSON.stringify(exportObject));        
         },
         
         redraw: function(objects) {
+            var module = this;
             if (!_.isEmpty(objects)) {
     		    _.chain(objects)
     				.filter(function(object) {
-    					return object.get('layer') === 'map' && myState.tileTemplates[object.get('imgsrc')];
+    					return module.tokenStorage(object).get('template');
     				})
     				.each(function(tile) {
-    					this.handleTokenChange(tile);
+    					module.handleTokenChange(tile);
     				});
     		}
     		else {
-    			_.chain(myState.tileTemplates)
-    	                .keys()
-    	                .map(function(imgsrc) {
-    	                    return findObjs({_type: 'graphic', imgsrc:imgsrc, _subtype:'token'});
+    			_.chain(module.globalTemplateStorage().load())
+    	                .map(function(template) {
+    	                    return findObjs({_type: 'graphic', imgsrc:template.imgsrc, _subtype:'token'});
     	                })
     	                .flatten()
     	                .each(function(graphic) {
-    				    	this.handleTokenChange(graphic);	
+    				    	module.handleTokenChange(graphic);	
     				    });
     		}
     	},
@@ -301,68 +370,55 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     return;
                 }
            
-                var overlapKeys = _.chain(importObject.templates)
-                            .keys()
-                            .intersection(_.keys(myState.tileTemplates))
-                            .value();
-                var toImport = overwrite ? importObject.templates : _.omit(importObject.templates, overlapKeys);
-                _.extend(myState, toImport);
+                var importCount = this.globalTemplateStorage().importTemplates(importObject.templates);
                 var message = '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
                                 +'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">Import completed</div>' +
                                 '<p>Total templates in import: <b>' + _.size(importObject.templates) + '</b></p>'
                 if (!overwrite) {
-                    message += '<p> Skipped <b>' + _.size(overlapKeys) + '</b> templates for tiles which already have templates. '
+                    var skipCount = _.size(importObject.templates) - importCount;
+                    message += '<p> Skipped <b>' + skipCount + '</b> templates for tiles which already have templates. '
                                                         + 'Rerun with <b>--overwrite</b> to replace these with the imported tiles. '
                                                         + ' See log for more details. </p>';
-                    logger.info("Skipped template image URLs: $$$", overlapKeys);
                 }
                 message += '</div>';
                 report(message);
                
             }
             catch(e) {
-                logger.error(e);
+                logger.error(e.toString());
                 report('There was an error trying to read the supplied JSON text, see the log for more details');
             }
         },
         
-        attach: function(selection, overwrite) {
-            
+        link: function(selection, options) {
+            var local = _.contains(options, 'local');
+            var overwrite = _.contains(options, 'overwrite');
             var tile = selection.graphic;
-            if (tile.get('_subtype') !== 'token' || !tile.get('imgsrc') || tile.get('imgsrc').indexOf('marketplace') === -1 || tile.get('layer') !== 'map') {
-                report('Selected tile must be from marketplace and must be on the map layer.');
+            if (tile.get('_subtype') !== 'token' || tile.get('layer') !== 'map') {
+                report('Selected tile must be on the map layer.');
                 return;
             }
             
-            if (myState.tileTemplates[tile.get('imgsrc')] && !overwrite) {
-               report('Tile already has dynamic lighting paths recorded. Call with --overwrite to replace them');
+            if (this.globalTemplateStorage().load(tile) && !overwrite && !local) {
+               report('Tile already has a global template defined. Call with --overwrite to replace it');
                return;
             }
             
-            this.buildTemplate(tile, selection.path);
-            this.getControlInfoObject(tile).onAdded();
+            var template = this.buildTemplate(tile, selection.path);
+            this.getControlInfoObject(tile, {template: template, local:local}).onAdded();
             
-            report("DL paths successfully recorded for map tile");
-        },
-        
-        makeBoundingBox: function(object) {
-            return {
-                left: object.get('left'),
-                top: object.get('top'),
-                width: object.get('width'),
-                height: object.get('height')
-            };
+            report("DL paths successfully linked for map tile");
         },
         
         //Make a normal door with a transparent control token
-        makeDoor: function(doorToken, doorBoundsPath) {
+        makeDoor: function(doorToken, doorBoundsPath, options) {
             var doorBoundingBox = doorBoundsPath ? this.makeBoundingBox(doorBoundsPath) : this.makeBoundingBox(doorToken);
             var template = this.makeDoorTemplate(doorToken, doorBoundingBox);
             var hinge = [doorBoundingBox.left - (doorBoundingBox.width/2), doorBoundingBox.top];
             var hingeOffset = [hinge[0] - doorToken.get('left'), hinge[1] - doorToken.get('top')];
             template.doorDetails = {type: 'indirect', offset: hingeOffset};
             
-            this.getControlInfoObject(doorToken).onAdded();
+            this.getControlInfoObject(doorToken, {template:template, local:_.contains(options, 'local')}).onAdded();
             
             if (doorBoundsPath) {
                 doorBoundsPath.remove();
@@ -370,9 +426,9 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             report('Door created successfully');
         },
         
-        makeDirectDoor: function(token) {
+        makeDirectDoor: function(token, options) {
             var doorBoundingBox = {
-                left: token.get('left') - (token.get('width')/4),
+                left: token.get('left') + (token.get('width')/4),
                 top: token.get('top'),
                 width: token.get('width')/2,
                 height: token.get('height')
@@ -380,31 +436,97 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             
             var template = this.makeDoorTemplate(token, doorBoundingBox);
             template.doorDetails = {type: 'direct'};
-            this.getControlInfoObject(token).onAdded();
+            
+            this.getControlInfoObject(token, {template:template, local:_.contains(options, 'local')}).onAdded();
             
             report('Direct control door created successfully');
         },
         
-        makeDoorTemplate: function(token, doorBoundingBox) {
-            var doorWidth = doorBoundingBox.width;
-            var dlLineWidth = doorWidth + 4;
-            
-            token.set('layer', 'map');
-            var dlPath = createObj('path', {
-                pageid: token.get('_pageid'),
-                layer: 'walls',
-                stroke_width: 1,
-                top: doorBoundingBox.top,
-                left: doorBoundingBox.left,
-                width: dlLineWidth,
-                height: 1,
-                path: '[["M",0,0],["L",' + dlLineWidth + ',0]]'
-                });
-            return this.buildTemplate(token, [dlPath]);
+        detach: function(graphics) {
+            var module = this;
+            _.chain(graphics)
+                .map(function(graphic) {
+                    return module.getControlInfoObject(graphic);    
+                })
+                .invoke('detach');
+            report('Detach complete');
         },
+        
+        transmogrifierFixup: function() {
+            var module = this;
+            var graphicCount = 0;
+            _.chain(findObjs({_type:'path', layer:'walls'}))
+                .map(function(path) {
+                    var graphicId = path.get('controlledby');
+                    if(graphicId) {
+                        var graphic = getObj('graphic', graphicId);
+                        if (graphic) {
+                            if(!_.contains(module.tokenStorage(graphic).get('dlPaths'), path.id)) {
+                                path.remove();
+                                return graphic;
+                            }
+                        }
+                    }
+                })
+                .uniq()
+                .compact()
+                .each(function(graphic) {
+                    graphicCount++;
+                    module.getControlInfoObject(graphic).onChange();
+                });
+            report('Deleted orphaned DL paths for ' + graphicCount + ' graphics and redrew.');
+        },
+       
+        
+    /////////////////////////////////////////////////        
+    // Event Handlers        
+    /////////////////////////////////////////////////
     
+        handleNewToken: function(token) {
+            logger.debug('Got new token $$$', token);
+            if(token.get('name') === 'DynamicLightRecorder') {
+                //This can only happen when this token is being added by the transmogrifier, AFAICT
+                //In any case, if the token is already set up, we have nothing to do
+                return;
+            }
+            
+            
+			if (myState.config.autoLink) {
+                this.getControlInfoObject(token).onAdded();
+            }
+        },
+
+        handleTokenChange: function(token, previous) {
+            logger.debug('Changed token $$$ from $$$', token, previous);            
+            if(_.isEqual(_.omit(token.attributes, '_fbpath'), previous)) {
+                //this is a spurious change event generated by the API creating an object,
+                //we can safely ignore it.
+                return;
+            }
+			if (previous && previous.gmnotes.indexOf('DynamicLightData') === 0 && previous.gmnotes !== token.get('gmnotes')) {
+                logger.debug('Resetting changed gmnotes');
+                token.set('gmnotes', previous.gmnotes);
+            }
+
+            this.getControlInfoObject(token).onChange(previous);
+        },
+        
+        handleDeleteToken: function(token) {
+            if (token.get('controlledby') === 'APIREMOVE') return;
+            var controlInfo = this.getControlInfoObject(token).onDelete();
+        },
+        
+        
+        
+        ///////////////////////////////////////////////
+        //Template handling
+        ///////////////////////////////////////////////
+        
+        //Make a DL template for a tile
+        //using a set of paths
         buildTemplate: function(tile, paths) {
              var template = {
+                imgsrc : tile.get('imgsrc'),
                 top: tile.get('top'),
                 left: tile.get('left'),
                 width: tile.get('width'),
@@ -425,202 +547,166 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 })
             };
             
-            myState.tileTemplates[tile.get('imgsrc')] = template;
             //These will get redrawn on the walls layer later.
             _.invoke(paths, 'remove');
             return template;
         },
         
-        
-     
-        handleNewToken: function(token) {
-            logger.debug('New token: $$$', token);
-            var controlInfo = this.getControlInfoObject(token);
-            if (!controlInfo) {
-                return;
-            }
-            controlInfo.onAdded();
+        /////////////////////////////////////////
+        //Door templates
+        /////////////////////////////////////////
+        makeBoundingBox: function(object) {
+            return {
+                left: object.get('left'),
+                top: object.get('top'),
+                width: object.get('width'),
+                height: object.get('height')
+            };
         },
         
-        
-        
-        handleTokenChange: function(token, previous) {
-            logger.debug('Changed token $$$ from $$$', token, previous);
-            if (previous && previous.gmnotes.indexOf('DynamicLightData') === 0 && previous.gmnotes !== token.get('gmnotes')) {
-                token.set('gmnotes', previous.gmnotes);
-            }
-            var controlInfo = this.getControlInfoObject(token);
-            if (!controlInfo) return;
-            controlInfo.onChange(previous);
-        },
-        
-        handleDeleteToken: function(token) {
-            var controlInfo = this.getControlInfoObject(token);
-            if (!controlInfo) return;
-            controlInfo.onDelete();
-        },
-        
-        
-        getControlInfoObject: function(token) {
-            var controlInfoString = token.get('gmnotes');
-            var controlInfo;
-            var imgsrc = token.get('imgsrc');
-            if (controlInfoString.indexOf('DynamicLightData:') !== 0) {
-                if(myState.tileTemplates[imgsrc]) {
-                   return this.configureNewControl(token);
-                }
-            }
-            else {
-               return this.loadControlInfo(token, controlInfoString.slice('DynamicLightData:'.length));
-            }
-            return;
-        },
-        
-        loadControlInfo: function(token, controlInfoString) {
-            var controlInfo = JSON.parse(controlInfoString);
-            return this.makeBaseControlInfoObject(token, 
-                        controlInfo.type, 
-                        _.chain(controlInfo.dlPaths)
-                            .map(getObjectMapper('path', function(pathId) {
-                                    logger.warn('Warning, path with id [$$$] that should have been attached to token $$$ was not present.', pathId, token);
-                                }))
-                            .compact()
-                            .value(),            
-                        getObjectMapper('graphic', function() {
-                                logger.warn('Warning, control with id [$$$] that should have been attached to token $$$ was not present.', controlInfo.doorControl, token);
-                             })(controlInfo.doorControl),
-                        getObjectMapper('graphic', function() {
-                                logger.warn('Warning, door with id [$$$] that should have been attached to token $$$ was not present.', controlInfo.door, token);
-                            })(controlInfo.door)
-                        );
-        },
-
-        configureNewControl: function(token) {
-            var template = myState.tileTemplates[token.get('imgsrc')];
-            var tw = this.getTemplateWrapper(template);
-            var type = "mapTile";
-            var control;
-            var placeholder;
-            if (template.doorDetails) {
-                var offset = tw.getHingeOffset();
-                type = (template.doorDetails.type === 'direct') ? 'directDoor' : 'indirectDoor';
-                if (type === 'directDoor') {
-                    token.set('layer', 'objects');
-                    token.set('aura1_radius', 0.1);
-                    token.set('isdrawing', 1);
+        makeDoorTemplate: function(token, doorBoundingBox) {
+            var doorWidth = doorBoundingBox.width;
+            var dlLineWidth = doorWidth + 4;
             
-                    placeholder = createObj('graphic', {
-                            imgsrc: clearURL,
-                            subtype: 'token',
-                            pageid: token.get('_pageid'),
-                            layer: 'map',
-                            playersedit_name: false,
-                            playersedit_bar1: false,
-                            playersedit_bar2: false,
-                            playersedit_bar3: false,
-                            rotation:token.get('rotation'),
-                            isdrawing:1,
-                            top:token.get('top'),
-                            left: token.get('left'),
-                            width: token.get('width'),
-                            height: token.get('height')
-                        });
-                    
-                    var placeholderControlInfo = this.makeBaseControlInfoObject(placeholder, 'directDoorPlaceholder', [], token)
-                    placeholderControlInfo.onAdded();
-                }
-                else {
-                    control = createObj('graphic', {
-                            imgsrc: clearURL,
-                            subtype: 'token',
-                            pageid: token.get('_pageid'),
-                            layer: 'objects',
-                            playersedit_name: false,
-                            playersedit_bar1: false,
-                            playersedit_bar2: false,
-                            playersedit_bar3: false,
-                            aura1_radius: 0.1,
-                            rotation:token.get('rotation'),
-                            isdrawing:1,
-                            top: token.get('top') + offset.y(),
-                            left: token.get('left') + offset.x(),
-                            width: 140,
-                            height: 140
-                        });
-                        var controlControlInfo = this.makeBaseControlInfoObject(control, 'doorControl', [], undefined, token);
-                        controlControlInfo.onAdded();
-                }
+            token.set('layer', 'map');
+            var dlPath = createObj('path', {
+                pageid: token.get('_pageid'),
+                layer: 'walls',
+                stroke_width: 1,
+                top: doorBoundingBox.top,
+                left: doorBoundingBox.left,
+                width: dlLineWidth,
+                height: 1,
+                path: '[["M",0,0],["L",' + dlLineWidth + ',0]]'
+                });
+            return this.buildTemplate(token, [dlPath]);
+        },
+    
+        ///////////////////////////////////////////////
+        //A control info object wraps a token
+        //and abstracts away all the handling of
+        //interrelated controls (for doors) and the relationship
+        //to a set of DL paths.
+        ////////////////////////////////////////////////
+        
+        getControlInfoObject: function(token, options) {
+            options = options || {};
+            var storage = this.tokenStorage(token);
+             _.defaults(options, {
+                    doorControl:storage.get('doorControl'),
+                    door:storage.get('door'),
+                    type:storage.get('type')
+             });
+            
+            if(options.template) {
+                options.type = this.getTypeFromTemplate(options.template);
             }
-            var controlInfo = this.makeBaseControlInfoObject(token, type, [], control, placeholder);
-            return controlInfo;
+        
+            switch (options.type) {
+                case 'directDoorPlaceholder':
+                    if (options.doorControl) {
+                        storage.setTemplateStorage(this.tokenStorage(options.doorControl));
+                    }
+                    break;
+                case 'doorControl':
+                    if(options.door) {
+                        storage.setTemplateStorage(this.tokenStorage(options.door));
+                    }
+                    break;
+                default:
+                    //leave as supplied token
+            }
+            
+            if(options.local) {
+                logger.debug('Using local template storage');
+                storage.detachTemplate();
+            }
+            
+            
+            //Perhaps we can work out the type from a global template
+            //now that we have wired up the storage to delegate to it
+            //But it autoLinking is turned off we shouldn't do this as
+            //this could be a newly dropped tile that we're supposed to be 
+            //ignoring
+            if(!options.type && myState.config.autoLink) {
+                options.type = this.getTypeFromTemplate(storage.get('template'));
+            }
+            
+            
+            //Only set values in the token storage if this is a token
+            //we recognise or have been given a new type for, otherwise
+            //we might end up spamming random other tokens with our GM notes!
+            if(options.type) {
+                _.each(options, function(value, key) {
+                    if(value && key !== 'local'){
+                        storage.set(key, value);
+                    }
+                });
+            }
+             
+            return this.makeControlInfoObject(token, storage);
+        },
+    
+        getTypeFromTemplate: function(template) {
+            if (!template) return undefined;
+            return template.doorDetails ? ((template.doorDetails.type === 'direct') ? 'directDoor' : 'indirectDoor') : 'mapTile';
         },
 
-        makeBaseControlInfoObject: function(token, type, dlPaths, doorControl, door) {
-            if (!_.contains(['directDoorPlaceholder','directDoor', 'indirectDoor', 'doorControl', 'mapTile'], type)) {
-                logger.error('unknown token type: ' + type);
-                return;
+        getDummyControlInfo: function(token) {
+            return {
+                    onChange:function(){},
+                    onDelete:function(){},
+                    onAdded:function(){},
+                    updateDoorControl:function(){},
+                    wipeTemplate:function(){},
+                    detach:function(){},
+                    getImageURL: function(){ return ''; },
+                    logWrap: false,
+                    toJSON: function() {
+                        return "Dummy controlInfo object for token " + (token && token.id);
+                    }
+                };
+        },
+
+        ////////////////////////////////////////////////////
+        // This is the beast method that actually defines the
+        // core of the control info object, along with all of 
+        // its functions. There's a bunch of internal functions
+        // first, and then the public interface at the bottom
+        ////////////////////////////////////////////////////
+        makeControlInfoObject: function(token, tokenStorage) {
+            if (!_.contains(['directDoorPlaceholder','directDoor', 'indirectDoor', 'doorControl', 'mapTile'], tokenStorage.get('type'))) {
+                //This isn't a token we manage, return a null object for it
+                return module.getDummyControlInfo(token);
             }
+            
             
             var module = this,
-            data = {
-                type: type,
-                doorControl:doorControl,
-                door:door,
-                dlPaths:dlPaths
-            },
-            
-            getImgSrc = function() {
-                var imgSrcObject;
-                switch(type) {
-                    case 'directDoorPlaceholder':
-                        imgSrcObject = doorControl;
-                        break;
-                    case 'doorControl':
-                        imgSrcObject = door;
-                        break;
-                    default:
-                        imgSrcObject = token;
-                }
-                return imgSrcObject.get('imgsrc');
-            },
-            
-            getTemplate = function() {
-                var template = myState.tileTemplates[getImgSrc()];
-                if(!template) {
-                    logger.warn('Could not find template information for token $$$ using imgsrc $$$', token, getImgSrc());
-                }
-                return template;
-            },
-            
-            save = function() {
-                token.set('gmnotes', 'DynamicLightData:' + JSON.stringify(data, function(key, value) {
-                        if (key === '') {
-                            //root object
-                            return value;
-                        }
-                        if (_.isArray(value)) {
-                            return _.pluck(value, 'id');
-                        }
-                        if (typeof value === 'object' && value !== null) {
-                            return value._id;
-                        }
-                        return value;
-                    }));
-            },
-            
+            type = tokenStorage.get('type'),
             updateDLPaths = function(templatePaths) {
-                var old = data.dlPaths;
-                data.dlPaths = _.map(templatePaths, function(path) {
+                var old = tokenStorage.get('dlPaths');
+                tokenStorage.set('dlPaths', _.map(templatePaths, function(path) {
                     return path.draw(token);
-                });
+                }));
                 _.invoke(old, 'remove');
             },
             
             moveDoorControl = function(hingeOffset) {
                 logger.debug('Moving door control to offset $$$ from token centre: [$$$,$$$]', hingeOffset, token.get('left'), token.get('top'));
-                var control = data.doorControl;
+                var control = tokenStorage.get('doorControl');
+                var type = tokenStorage.get('type');
+                if(!control) {
+                    //This shouldn't happen, but if it does we can fix it
+                    //in the case of an indirectDoor
+                    logger.error('Door control somehow deleted for map token $$$. Will attempt to recreate.', token.id);
+                    if(type === 'indirectDoor') {
+                        tokenStorage.set('doorControl', module.makeDoorControl(token, hingeOffset));
+                    }
+                    return;
+                }
+                
                 control.set('rotation', token.get('rotation'));
-                if(data.type =='directDoorPlaceholder') {
+                if(type =='directDoorPlaceholder') {
                     //Move control token to match placeholder - they are 
                     //the same size and shape so this is easy
                     control.set('top', token.get('top'));
@@ -653,113 +739,447 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
            
             moveDoor = function(doorOffset) {
                 logger.debug('Moving door to offset : $$$', doorOffset);
-                data.door.set('rotation', token.get('rotation'));
+                var door = tokenStorage.get('door');
+                door.set('rotation', token.get('rotation'));
                 logger.debug('Setting new door position to [$$$,$$$]', token.get('left') + doorOffset.x(), token.get('top') + doorOffset.y());
-                data.door.set('left', token.get('left') + doorOffset.x());
-                data.door.set('top', token.get('top') + doorOffset.y());
-                module.getControlInfoObject(data.door).onChange();
+                door.set('left', token.get('left') + doorOffset.x());
+                door.set('top', token.get('top') + doorOffset.y());
+                module.getControlInfoObject(door).onChange();
+            },
+            
+            detach = function() {
+                tokenStorage.detachTemplate();
+            },
+            
+            onChange = function(previous) {
+                var tw = module.getTemplateWrapper(tokenStorage.get('template'));
+                if (!tw) {
+                    //this token is no longer attached to any template,
+                    //make sure we clean up any dependencies
+                    return onDelete();
+                };
+                var transformations = tw.getTransformations(token);
+                switch(type) {
+                    case 'directDoor':
+                    case 'doorControl':
+                        logger.debug('Door control has been moved');
+                        if(previous) {
+                            undoMove(previous);
+                        }
+                        moveDoor(tw.getNewDoorOffset(token));
+                        return;
+                    case 'directDoorPlaceholder':
+                    case 'indirectDoor':
+                        logger.debug('Door has been moved');
+                        moveDoorControl(_.reduce(transformations, function(result, transformation) {
+                            return transformation(result);
+                        }, tw.getHingeOffset()));
+                        //Intentional drop through
+                    case 'mapTile':
+                        updateDLPaths(_.reduce(transformations, function(result, transformation) {
+                            return _.map(result, transformation);
+                        }, tw.getDLTemplatePaths()));
+                        
+                }
+            },
+            
+            onDelete = function() {
+                var door = tokenStorage.get('door'),
+                    doorControl = tokenStorage.get('doorControl'),
+                    dlPaths = tokenStorage.get('dlPaths');
+                switch(type) {
+                    case 'directDoor':
+                        //This is a real problem, we can't redraw it because of Roll20 imgsrc restrictions,
+                        //for the time being we'll just have to delete everything. I think the proper way 
+                        //to do this would be to put another placeholder image in on the objects layer, but
+                        //that relies on us having tiles with their own individual template, which we don't
+                        //support yet.
+                        if(door){
+                            module.getControlInfoObject(door).onDelete();
+                            door.set('controlledby', 'APIREMOVE');
+                            door.remove();
+                            tokenStorage.remove('door');
+                        }
+                        break;
+                    case 'doorControl':
+                        if(door) {
+                            //Force a redraw, we don't want this deleted!
+                            module.getControlInfoObject(door).onChange();
+                        }
+                        break;
+                    case 'directDoorPlaceholder':
+                    case 'indirectDoor':
+                        if(doorControl) {
+                            doorControl.set('controlledby', 'APIREMOVE');
+                            doorControl.remove();
+                            tokenStorage.remove('doorControl');
+                        }
+                        //Intentional drop through
+                    case 'mapTile':
+                        _.invoke(tokenStorage.get('dlPaths'), 'remove');
+                        tokenStorage.remove('dlPaths');
+                }
+            },
+            
+            onAdded = function() {
+                var tw = module.getTemplateWrapper(tokenStorage.get('template'));
+                if (!tw) return;
+                token.set('name', 'DynamicLightRecorder')
+                switch(tokenStorage.get('type')) {
+                    case 'directDoor':
+                        var placeholder = module.makePlaceholder(token);
+                        token.set('layer', 'objects');
+                        token.set('aura1_radius', 0.1);
+                        token.set('isdrawing', 1);
+                        token.set('controlledby', 'JUST_ADDED');
+                        tokenStorage.set('door', placeholder);
+                        break;
+                    case 'indirectDoor':
+                        var control = module.makeDoorControl(token, tw.getHingeOffset());
+                        tokenStorage.set('doorControl', control);
+                        //Drop through.
+                    case 'mapTile':
+                    case 'directDoorPlaceholder':
+                        updateDLPaths(tw.getDLTemplatePaths());
+                }
+            },
+            
+            wipeTemplate = function(results) {
+                tokenStorage.wipeTemplate(results);
             };
             
             return {
-                onChange: function(previous) {
-                    var template = getTemplate();
-                    if (!template) {
-                        return;
-                    }
-                    var tw = module.getTemplateWrapper();
-                    
-                    switch(data.type) {
-                        case 'directDoor':
-                        case 'doorControl':
-                            logger.debug('Door control has been moved');
-                            if(previous) {
-                                undoMove(previous);
-                            }
-                            moveDoor(tw.getNewDoorOffset(token));
-                            return;
-                        case 'directDoorPlaceholder':
-                        case 'indirectDoor':
-                            logger.debug('Door has been moved');
-                            var transformations = tw.getTransformations(token);
-                            moveDoorControl(_.reduce(transformations, function(result, transformation) {
-                                return transformation(result);
-                            }, tw.getHingeOffset()));
-                            //Intentional drop through
-                        case 'mapTile':
-                            updateDLPaths(_.reduce(transformations, function(result, transformation) {
-                                return _.map(result, transformation);
-                            }, tw.getDLTemplatePaths()));
-                            
-                    }
-                    save();
-                },
-                onDelete: function() {
-                    switch(data.type) {
-                        case 'directDoor':
-                            //This is a real problem, we can't redraw it because of Roll20 imgsrc restrictions,
-                            //for the time being we'll just have to delete everything. I think the proper way 
-                            //to do this would be to put another placeholder image in on the objects layer, but
-                            //that relies on us having tiles with their own individual template, which we don't
-                            //support yet.
-                            module.getControlInfoObject(data.door).onDelete();
-                            data.door.remove();
-                            break;
-                        case 'doorControl':
-                            var attributes = _.reduce(token.attributes, function(result, value, key){
-                                result[key.replace('_','')] = value;
-                                return result;
-                            }, {});
-                            var newControl = createObj('graphic', attributes);
-                            module.getControlInfoObject(data.door).updateDoorControl(newControl);
-                            break;
-                        case 'directDoorPlaceholder':
-                        case 'indirectDoor':
-                            data.doorControl && data.doorControl.remove();
-                            //Intentional drop through
-                        case 'mapTile':
-                            _.invoke(data.dlPaths, 'remove');
-                    }
-                },
-                onAdded: function() {
-                    var tw = module.getTemplateWrapper(getTemplate());
-                    if(_.contains(['mapTile', 'directDoorPlaceholder', 'indirectDoor'], data.type)) {
-                         updateDLPaths(tw.getDLTemplatePaths());
-                    }
-                    else if(data.type === 'directDoor') {
-                        token.set('controlledby', 'JUST_ADDED');
-                    }
-                    save();    
-                },
-                updateDoorControl: function(newDoorControl) {
-                    data.doorControl = newDoorControl;
-                    save();
-                },
-                
-                getImageURL: getImgSrc,
-                
-                wipeTemplate: function() {
-                    var template = getTemplate();
-                    if (template) {
-                        delete myState.tileTemplates[getImgSrc()];
-                        report("Wiped template for image URL: " + getImgSrc());
-                    }
-                    else {
-                        report("No templates found that correspond to the selected token with image URL: " + getImgSrc());
-                    }
-                },
-                
-                logWrap: true,
-                
+                onChange: onChange,
+                onDelete: onDelete,
+                onAdded: onAdded,
+                wipeTemplate: wipeTemplate,
+                detach: detach,
+                getImageURL: function() { var template = tokenStorage.get('template'); return template && template.imgsrc; },
+                logWrap: 'controlInfoObject',
                 toJSON: function() {
-                    return _.extend({token:token},data);
+                    return tokenStorage.toJSON();
                 }
             };
 
         },
   
+        makePlaceholder: function(token) {
+           var placeholder = createObj('graphic', {
+                    imgsrc: clearURL,
+                    subtype: 'token',
+                    pageid: token.get('_pageid'),
+                    layer: 'map',
+                    playersedit_name: false,
+                    playersedit_bar1: false,
+                    playersedit_bar2: false,
+                    playersedit_bar3: false,
+                    gmnotes:'APICREATE',
+                    rotation:token.get('rotation'),
+                    isdrawing:1,
+                    top:token.get('top'),
+                    left: token.get('left'),
+                    width: token.get('width'),
+                    height: token.get('height')
+                });
+            
+            this.getControlInfoObject(placeholder, { 
+                    type:'directDoorPlaceholder', 
+                    doorControl: token}).onAdded();
+                    
+            return placeholder;
+        },
         
+        makeDoorControl: function(token, offset) {
+            var control = createObj('graphic', {
+                imgsrc: clearURL,
+                subtype: 'token',
+                pageid: token.get('_pageid'),
+                layer: 'objects',
+                playersedit_name: false,
+                playersedit_bar1: false,
+                playersedit_bar2: false,
+                playersedit_bar3: false,
+                aura1_radius: 0.1,
+                rotation:token.get('rotation'),
+                gmnotes:'APICREATE',
+                isdrawing:1,
+                top: token.get('top') + offset.y(),
+                left: token.get('left') + offset.x(),
+                width: 140,
+                height: 140
+            });
+            this.getControlInfoObject(control, {
+                    type:'doorControl',
+                    door: token
+                }).onAdded();
+            return control;
+        },
+        
+        
+        globalTemplateStorage: function() {
+            var module = this;
+            return {
+            
+                save: function(template) {
+                    logger.debug('saving template $$$ to state storage', template);
+                    myState.tileTemplates[template.imgsrc] = template;
+                },
+                
+                load: function(key) {
+                    if (!key) {
+                        return _.clone(myState.tileTemplates);
+                    }
+                    if (_.isArray(key)) {
+                        return _.chain(key)
+                                .map(this.load.bind(this))
+                                .compact()
+                                .value();
+                    }
+                    var imgsrc = (typeof key === 'object') ? module.getControlInfoObject(key).getImageURL() : key;
+                    logger.debug('Retrieving template $$$ from state storage', myState.tileTemplates[imgsrc], imgsrc);
+                    return myState.tileTemplates[imgsrc];
+                },
+                
+                remove: function(imgsrc) {
+                    if (myState.tileTemplates[imgsrc]) {
+                        delete myState.tileTemplates[imgsrc];
+                        _.each(findObjs({_type:'graphic', imgsrc:imgsrc}), function(graphic) {
+                            module.getControlInfoObject(graphic).onChange();
+                        });
+                        return true;
+                    }
+                    return false;
+                },
+                
+                removeAll: function() {
+                    var removeCount = _.size(myState.tileTemplates);
+                    _.chain(myState.tileTemplates)
+                    .keys()
+                    .each(this.remove);
+                    return removeCount;
+                },
+                
+                importTemplates: function(templates, overwrite) {
+                    var overlapKeys = _.chain(templates)
+                                .keys()
+                                .intersection(_.keys(myState.tileTemplates))
+                                .value();
+                    if (overwrite) {
+                        _extend(myState.tileTemplates, templates);
+                        return _.size(templates);
+                    }
+                    else {
+                        _.extend(myState.tileTemplates, _.omit(templates, overlapKeys));
+                        logger.info("Skipped template image URLs: $$$", overlapKeys);
+                        return _.size(templates) - _.size(overlapKeys);
+                    }
+                },
+                
+                asTokenStorageFor: function(token) {
+                    var global = this,
+                    imgsrc = token.get('imgsrc');
+                    return {
+                        set: function(key, template) {
+                            if (key === 'template') {
+                                if (imgsrc === template.imgsrc) {
+                                     return global.save(template);
+                                }
+                                else {
+                                    logger.error('Attempting to save template against a token with non-matching imgsrc. Token imgsrc: $$$, template: $$$', 
+                                                    imgsrc,
+                                                    template);
+                                }
+                            }
+                            else {
+                                logger.warn('templateStorage wrapper for token $$$ asked to save non-template key $$$', token.id, key);
+                            }
+                        },
+                        get: function(key) {
+                            if (key === 'template') {
+                                return global.load(imgsrc);
+                            }
+                            else {
+                                logger.warn('templateStorage wrapper for token $$$ asked to get non-template key $$$', token.id, key);
+                            }
+                        },
+                        
+                        remove: function(key) {
+                            if (key === 'template') {
+                                return global.remove(imgsrc);
+                            }
+                        },
+                        
+                        wipeTemplate: function(results) {
+                            global.remove(imgsrc) && results.global++;
+                        },
+                        
+                        detachTemplate: function(callback) {
+                            callback && callback(global.load(imgsrc));
+                        },
+                        
+                        logWrap: 'templateStorageWrapper',
+                        toJSON: function() { return 'templateStorageWrapper for token with id ' + token.id; }
+                        
+                    };
+                },
+                
+                logWrap: 'globalTemplateStorage',
+                toJSON: function() { return myState.tileTemplates; }
+            }
+        },
+        
+        tokenStorage: function(token) {
+            var properties = {
+                template: _.identity,
+                doorControl: getObjectMapper('graphic', function(id) {
+                                logger.warn('Warning, control with id [$$$] that should have been attached to token $$$ was not present.', id, token);
+                             }),
+                door: getObjectMapper('graphic', function(id) {
+                                logger.warn('Warning, door with id [$$$] that should have been attached to token $$$ was not present.', id, token);
+                            }),
+                dlPaths: function(dlPaths) {
+                    return _.chain(dlPaths)
+                            .map(getObjectMapper('path', function(pathId) {
+                                    logger.warn('Warning, path with id [$$$] that should have been attached to token $$$ was not present.', pathId, token);
+                                }))
+                            .compact()
+                            .value();
+                },
+                type: _.identity
+            };
+            
+            var gmn = token.get('gmnotes'),
+                data = {}, 
+                module=this,
+                templateStorage,
+                previousTemplateStorage,
+                persist = function() {
+                    var string = JSON.stringify(data, function(key, value) {
+                        if (typeof value === 'object' && _.isEmpty(value)) return undefined;
+                        if (key === 'dlPaths') {
+                            return _.chain(value).compact().pluck('id').value();
+                        }
+                        if (_.contains(['door', 'doorControl'], key) && value !== null) {
+                            return value._id || value.id;
+                        }
+                        return value;
+                    });
+                    logger.debug("Persisting token info $$$ on token with id $$$ as string $$$", data, token.id, string);
+                    token.set('gmnotes', 'DynamicLightData:' + string);
+                },
+                storage = {
+                    set: function(key, value) {
+                        if (!properties[key]) {
+                            logger.warn('Unrecognised token property key $$$, ignoring', key);
+                            return;
+                        }
+                        
+                        if(key === 'template' && templateStorage) {
+                            return templateStorage.set(key, value);
+                        }
+                 
+                 
+                        if (value !== data[key]) {
+                            data[key] = value;
+                            persist();
+                        }
+                    },
+                    
+                    get: function(key) {
+                        if (key === 'template' && templateStorage) {
+                            return templateStorage.get(key);
+                        }
+                        return data[key];
+                    },
+                    
+                    remove: function(key) {
+                        if (key === 'template' && templateStorage) {
+                            return templateStorage.remove(key);
+                        }
+                        if (data[key]) {
+                            delete data[key];
+                            persist();
+                            return true;
+                        }
+                        return false;
+                    },
+                    
+                    setTemplateStorage: function(newTemplateStorage) {
+                        previousTemplateStorage = templateStorage;
+                        templateStorage = newTemplateStorage;
+                        //If we are delegating to different template storage
+                        //then we should wipe our own template
+                        if(templateStorage !== undefined) {
+                            data.template = undefined;
+                            persist();
+                        }
+                    },
+                    
+                    detachTemplate: function(callback) {
+                        if (templateStorage) {
+                            templateStorage.detachTemplate(function(template) {
+                                data.template = template;
+                                previousTemplateStorage = templateStorage;
+                                templateStorage = undefined;
+                                persist();
+                            });
+                        }
+                    },
+                    
+                    wipeTemplate: function(results) {
+                        if(!templateStorage) {
+                            logger.debug('Wiping local template $$$ and resetting template storage to $$$', data.template, previousTemplateStorage);
+                            data.template = undefined;
+                            results.local++;
+                            templateStorage = previousTemplateStorage;
+                            persist();
+                            module.getControlInfoObject(token).onChange();
+                            
+                        }
+                        else {
+                            templateStorage.wipeTemplate(results);
+                        }
+                    },
+                    
+                    logWrap:'tokenTemplateStorage',
+                    toJSON: function() {
+                        return data;
+                    }
+                };
+                
+            var changedValues = false;
+            if (gmn.indexOf('DynamicLightData:') === 0) {
+                data = _.chain(JSON.parse(gmn.slice('DynamicLightData:'.length)))
+                    .pick(_.functions(properties))
+                    .reduce(function(result, value, key) {
+                        
+                        logger.debug("Transforming parsed GM Notes data, property name : $$$, property value $$$", key, value);
+                        var transformed = properties[key](value);
+                        logger.debug("Transformed value: $$$", transformed);
+                        if (transformed) {
+                            result[key] = transformed;
+                        }
+                        else if(value) {
+                            changedValues = true;
+                        }
+                        
+                        return result;
+                    }, {})
+                    .value();
+            }
+            
+            templateStorage = data.template ? undefined : this.globalTemplateStorage().asTokenStorageFor(token);
+            previousTemplateStorage = data.template ? this.globalTemplateStorage().asTokenStorageFor(token) : undefined;
+     
+            if (changedValues) {
+                persist();
+            }
+            
+            return storage;
+        },
         
         getTemplateWrapper: function(template) {
+            if (!template) return;
             var layout =  _.chain(template)
                 .clone()
                 .pick(['fliph', 'flipv', 'height', 'width', 'top', 'left', 'rotation'])
@@ -808,16 +1228,17 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                             return module.point(template.doorDetails.offset[0], template.doorDetails.offset[1]);
                         }
                     }
-                    return;
+                    logger.error('Requested hingeOffset but no doorDetails on template');
                 },
                 
-                logWrap: true,
+                logWrap: 'templateWrapper',
                 toJSON: function() {
-                    return {templateWrapper:{template:template}};
+                    return template;
                 }
             };
         },
-          
+        
+        //Immutable point object 'constructor'
         point: function(x,y) {
             var module = this;
             //Already a point object
@@ -883,7 +1304,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     return y;
                 },
                 
-                logWrap: true,
+                logWrap: 'point',
                 
                 toJSON: function() {
                     return{x:x, y:y};
@@ -891,6 +1312,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             };
         },
         
+        //Immutable path object 'constructor'
         path: function(inPoints, offsetX, offsetY, width, height) {
             var module = this;
             var points = _.map(inPoints, function(point) {
@@ -971,15 +1393,17 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                         pageid: relativeToToken.get('_pageid'),
                         left: relativeToToken.get('left') + offset.x(),
                         top: relativeToToken.get('top') + offset.y(),
+                        controlledby: relativeToToken.id, //Help survive the transmogrifier
                         path: JSON.stringify(_.map(points, function(point, index) {
                             return point.asPathPoint(index === 0);
                         }))
                     };
                     logger.debug("Drawing path for token $$$ with properties: $$$", relativeToToken, attributes)
+                    
                     return createObj('path', attributes);
                 },
                 
-                logWrap: true,
+                logWrap: 'path',
                 
                 toJSON: function() {
                     return{
@@ -991,15 +1415,28 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 }
             };
             
-        }
+        },
+        logWrap: 'module'
     };
     
+    /////////////////////////////
+    // General helpers
+    /////////////////////////////
     
     var report = function(msg) {
         //Horrible bug with this at the moment - seems to generate spurious chat
         //messages when noarchive:true is set
         //sendChat('DynamicLightRecorder', '' + msg, null, {noarchive:true});
         sendChat('DynamicLightRecorder', '/w gm ' + msg);
+    },
+    
+    getObjectMapper = function(type, notFoundCallback) {
+        return function(id) {
+            if (!id) return;
+            var object = getObj(type, id);
+            if (!object && (typeof notFoundCallback ==='function')) notFoundCallback(id, type);
+            return object;
+        };
     },
     
     logger = (function() {
@@ -1020,12 +1457,23 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         
         var stringify = function(object) {
             if (typeof object === 'undefined') return object;
-            return (typeof object === 'string' ? object : JSON.stringify(object).replace(/"/g, ''));
-        }
+            var result = (typeof object === 'string') ? object : JSON.stringify(object);
+            if (result) result = result.replace(/"/g, '');
+            return result;
+        };
+        
+        var shouldLog = function(level) {
+            var logLevel = logger.INFO;
+            if (myState && myState.config && myState.config.logLevel !== undefined) {
+                logLevel = logger[myState.config.logLevel]
+            }
+            
+            return level <= logLevel;
+        };
         
         var outputLog = function(level, message) {
             
-            if(level > myState.config.logLevel) return;
+            if(!shouldLog(level)) return;
             
             var args = arguments.length > 2 ? _.toArray(arguments).slice(2) : [];
             message = stringify(message);
@@ -1036,7 +1484,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             }
             log('DynamicLightRecorder ' + Date.now() 
                 + ' ' + logger.getLabel(level) + ' : '
-                + (myState.config.logLevel == logger.TRACE ? logger.prefixString : '') 
+                + (shouldLog(logger.TRACE) ? logger.prefixString : '') 
                 +  message);
         };
         
@@ -1045,32 +1493,33 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         });
         
         logger.wrapModule = function(modToWrap) {
-            if (myState.config.logLevel == logger.TRACE) {
+            if (shouldLog(logger.TRACE)) {
                 _.chain(modToWrap)
                     .functions()
                     .each(function(funcName){
                         var origFunc = modToWrap[funcName];
-                        modToWrap[funcName] = logger.wrapFunction(funcName, origFunc);
+                        modToWrap[funcName] = logger.wrapFunction(funcName, origFunc, modToWrap.logWrap);
                     });
                 modToWrap.isLogWrapped = true;
             }
         };
         
-        logger.wrapFunction = function(name, func) {
-            if (myState.config.logLevel == logger.TRACE) {
+        logger.wrapFunction = function(name, func, moduleName) {
+            if (shouldLog(logger.TRACE)) {
                 if (name === 'toJSON') { return func };
                 return function() {
-                    logger.trace(name + ' starting with args $$$', arguments);
+                    logger.trace('$$$.$$$ starting with args $$$', moduleName, name, arguments);
                     logger.prefixString = logger.prefixString + '  ';
                     var retVal = func.apply(this, arguments);
                     logger.prefixString = logger.prefixString.slice(0, -2);
-                    logger.trace(name + ' ending with return value $$$', retVal);
+                    logger.trace('$$$.$$$ ending with return value $$$', moduleName, name, retVal);
                     if (retVal && retVal.logWrap && !retVal.isLogWrapped) {
-                        logger.wrapModule(retVal);
+                        logger.wrapModule(retVal, retVal.logWrap);
                     }
                     return retVal;
                 };
             }
+            return func;
         };
         return logger;
     })(),
@@ -1096,6 +1545,8 @@ on("ready",function(){
         DynamicLightRecorder.CheckInstall();
         DynamicLightRecorder.RegisterEventHandlers();
 });
+
+
 
 
 
