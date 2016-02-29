@@ -11,7 +11,7 @@ mod = function(n, m) {
 var DynamicLightRecorder = DynamicLightRecorder || (function() {
     'use strict';
     
-    var version = '1.0',
+    var version = '1.0.1',
     schemaVersion = 0.7,
     clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
     myState = state.DynamicLightRecorder,
