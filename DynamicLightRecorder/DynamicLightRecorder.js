@@ -451,7 +451,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     };
                 })
             };
-            
+            logger.debug('Created new template $$$', template);
             //These will get redrawn on the walls layer later.
             _.invoke(paths, 'remove');
             return template;
@@ -490,8 +490,10 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 dlPath.remove();
                 return;
             }
-            var minRotation = mod((token.get('bar1_value') || -90) + template.rotation, 360);
-            var maxRotation = mod((token.get('bar1_max') || 90) + template.rotation, 360);
+            var minRotation = mod(+(token.get('bar1_value') || -90) + template.rotation, 360);
+            var maxRotation = mod(+(token.get('bar1_max') || 90) + template.rotation, 360);
+            token.set('bar1_value', '');
+            token.set('bar1_max', '');
             template.doorDetails = {minRotation: minRotation, maxRotation:maxRotation};
             return template;
         },
