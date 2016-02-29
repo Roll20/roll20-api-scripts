@@ -408,6 +408,22 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             var controlInfo = this.getControlInfoObject(token).onDelete();
         },
         
+        handlePathChange: function(path, previous) {
+            if (previous.controlledby && previous.layer === 'walls') {
+                var graphic = getObj('graphic', previous.controlledby);
+                if (graphic && graphic.get('name') === 'DynamicLightRecorder') {
+                    path.set('top', previous.top);
+                    path.set('left', previous.left);
+                    path.set('width', previous.width);
+                    path.set('height', previous.height);
+                    path.set('scaleX', previous.scaleX);
+                    path.set('scaleY', previous.scaleY);
+                    path.set('rotation', previous.rotation);
+                    path.set('controlledby', previous.controlledby);
+                }
+            }
+        },
+        
         
         
         ///////////////////////////////////////////////
@@ -1661,6 +1677,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
     registerEventHandlers = function() {
         on('chat:message', module.handleInput.bind(module));
         on('change:token', module.handleTokenChange.bind(module));
+        on('change:path', module.handlePathChange.bind(module));
         on('add:token', module.handleNewToken.bind(module));
         on('destroy:token', module.handleDeleteToken.bind(module));
     };
