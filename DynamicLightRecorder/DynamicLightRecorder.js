@@ -291,7 +291,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 return;
             }
             
-            var template = this.buildTemplate(tile, selection.path, options);
+            var template = this.buildTemplate(tile, selection.path, options, '!dl-link');
             if (!template) return;
             this.getControlInfoObject(tile, _.extend(options, {template: template})).onAdded();
             
@@ -301,7 +301,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         //Make a normal door with a transparent control token
         makeDoor: function(doorToken, doorBoundsPath, options) {
             var doorBoundingBox = doorBoundsPath ? this.makeBoundingBox(doorBoundsPath) : this.makeBoundingBox(doorToken);
-            var template = this.makeDoorTemplate(doorToken, doorBoundingBox, options);
+            var template = this.makeDoorTemplate(doorToken, doorBoundingBox, options, '!dl-door');
             if(!template) return;
             var hinge = [doorBoundingBox.left - (doorBoundingBox.width/2), doorBoundingBox.top];
             var hingeOffset = [hinge[0] - doorToken.get('left'), hinge[1] - doorToken.get('top')];
@@ -325,8 +325,8 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 height: token.get('height')
             };
             
-            var template = this.makeDoorTemplate(token, doorBoundingBox, options);
-            if (!template) return;
+            var template = this.makeDoorTemplate(token, doorBoundingBox, options, '!dl-directDoor');
+            if (!template) return
             template.doorDetails.type = 'direct';
             
             this.getControlInfoObject(token,  _.extend(options, {template: template})).onAdded();
@@ -404,7 +404,6 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         },
         
         handleDeleteToken: function(token) {
-            if (token.get('controlledby') === 'APIREMOVE') return;
             var controlInfo = this.getControlInfoObject(token).onDelete();
         },
         
@@ -416,18 +415,18 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         
         //Make a DL template for a tile
         //using a set of paths
-        buildTemplate: function(tile, paths, options) {
+        buildTemplate: function(tile, paths, options, cmd) {
             if (tile.get('imgsrc') === clearURL) {
                 report("You are trying to define a template for the clear placeholder image. This isn't a good plan.");
                 return;
             }
             
             if (this.globalTemplateStorage().load(tile) && !options.overwrite && !options.local) {
-               report('Tile already has a global template defined. Do you want to [Overwrite](!dl-link --overwrite) it?');
+               report('Tile already has a global template defined. Do you want to [Overwrite](' + cmd + ' --overwrite) it?');
                return;
             }
             else if(this.tokenStorage(tile).get('template', true) && !options.overwrite && options.local) {
-                report('Tile already has a local template defined. Do you want to [Overwrite](!dl-link --overwrite --local) it?');
+                report('Tile already has a local template defined. Do you want to [Overwrite](' + cmd + ' --overwrite --local) it?');
                 return;
             }
             
@@ -470,7 +469,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             };
         },
         
-        makeDoorTemplate: function(token, doorBoundingBox, options) {
+        makeDoorTemplate: function(token, doorBoundingBox, options, cmd) {
             var doorWidth = doorBoundingBox.width;
             var dlLineWidth = doorWidth + 4;
             
@@ -486,7 +485,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 height: 1,
                 path: '[["M",0,0],["L",' + dlLineWidth + ',0]]'
                 });
-            var template = this.buildTemplate(token, [dlPath], options);
+            var template = this.buildTemplate(token, [dlPath], options, cmd);
             if (!template) {
                 dlPath.remove();
                 return;
@@ -631,6 +630,8 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     control.set('height', token.get('height'));
                     control.set('fliph', token.get('fliph'));
                     control.set('flipv', token.get('flipv'));
+                    //Redraw DLpaths
+                    module.getControlInfoObject(control).onChange();
                 }
                 else {
                     control.set('top', token.get('top') + hingeOffset.y());
@@ -669,6 +670,15 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 module.getControlInfoObject(door).onChange();
             },
             
+            removeDependentObject = function(name) {
+                var object = tokenStorage.get(name); 
+                if (object) {
+                    object.set('controlledby', 'APIREMOVE');
+                    object.remove();
+                    object.remove(name);
+                }
+            },
+            
             detach = function() {
                 tokenStorage.detachTemplate();
             },
@@ -683,15 +693,33 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 var transformations = tw.getTransformations(token);
                 switch(type) {
                     case 'directDoor':
+                        //Either this an internal trigger from the placeholder being
+                        //created or moved, or it's the first move immediately after placement 
+                        //thanks to grid snapping. In either case we should process the move and
+                        //update the DL paths. Otherwise it's the user moving the door control on
+                        //the tokens layer, so we snap it back to match the map layer graphic.
+                        if(!previous || previous.controlledby === 'JUST_ADDED') {
+                            updateDLPaths(_.reduce(transformations, function(result, transformation) {
+                                return _.map(result, transformation);
+                            }, tw.getDLTemplatePaths()));
+                        }
+                        //Drop through
                     case 'doorControl':
                         logger.debug('Door control has been moved');
                         if(previous) {
                             undoMove(previous);
+                            rotateDoor(tw);
                         }
-                        rotateDoor(tw);
-                        return;
-                    case 'directDoorPlaceholder':
+                        break;
                     case 'indirectDoor':
+                        moveDoorControl(_.reduce(transformations, function(result, transformation) {
+                            return transformation(result);
+                        }, tw.getHingeOffset()));
+                        updateDLPaths(_.reduce(transformations, function(result, transformation) {
+                            return _.map(result, transformation);
+                        }, tw.getDLTemplatePaths()));
+                        break;
+                    case 'directDoorPlaceholder':
                         logger.debug('Door has been moved');
                         moveDoorControl(_.reduce(transformations, function(result, transformation) {
                             return transformation(result);
@@ -701,7 +729,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                             //are applied.
                             token.set('bar1_value', token.get('rotation') % 360);
                         }
-                        //Intentional drop through
+                        break;
                     case 'mapTile':
                         updateDLPaths(_.reduce(transformations, function(result, transformation) {
                             return _.map(result, transformation);
@@ -712,35 +740,31 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             
             onDelete = function() {
                 var door = tokenStorage.get('door'),
-                    doorControl = tokenStorage.get('doorControl'),
-                    dlPaths = tokenStorage.get('dlPaths');
+                    doorControl = tokenStorage.get('doorControl');
                 switch(type) {
                     case 'directDoor':
                         //This is a real problem, we can't redraw it because of Roll20 imgsrc restrictions,
-                        //for the time being we'll just have to delete everything. I think the proper way 
-                        //to do this would be to put another placeholder image in on the objects layer, but
-                        //that relies on us having tiles with their own individual template, which we don't
-                        //support yet.
-                        if(door){
-                            module.getControlInfoObject(door).onDelete();
-                            door.set('controlledby', 'APIREMOVE');
-                            door.remove();
-                            tokenStorage.remove('door');
+                        //for the time being we'll just leave everything as it is with the placeholder and
+                        //the DLPaths. Perhaps consider moving to the token layer to highlight?
+                        if (token.get('controlledby') === 'APIREMOVE') {
+                            _.invoke(tokenStorage.get('dlPaths'), 'remove');
+                            tokenStorage.remove('dlPaths');
+                        }
+                        else {
+                            logger.warn("Direct door control with id $$$ has been deleted, can't recreate", token.id);
                         }
                         break;
                     case 'doorControl':
-                        if(door) {
+                        if(door && token.get('controlledby') !== 'APIREMOVE') {
                             //Force a redraw, we don't want this deleted!
-                            module.getControlInfoObject(door).onChange();
+                            module.getControlInfoObject(door).onAdded();
                         }
                         break;
                     case 'directDoorPlaceholder':
+                        removeDependentObject('doorControl');
+                        break;
                     case 'indirectDoor':
-                        if(doorControl) {
-                            doorControl.set('controlledby', 'APIREMOVE');
-                            doorControl.remove();
-                            tokenStorage.remove('doorControl');
-                        }
+                        removeDependentObject('doorControl');
                         //Intentional drop through
                     case 'mapTile':
                         _.invoke(tokenStorage.get('dlPaths'), 'remove');
@@ -751,23 +775,27 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             onAdded = function() {
                 var tw = module.getTemplateWrapper(tokenStorage.get('template'));
                 if (!tw) return;
-                token.set('name', 'DynamicLightRecorder')
+                token.set('name', 'DynamicLightRecorder');
                 switch(tokenStorage.get('type')) {
                     case 'directDoor':
+                        //Tidy up any previous placeholder
+                        removeDependentObject('door');
                         var placeholder = module.makePlaceholder(token);
                         token.set('layer', 'objects');
                         token.set('aura1_radius', 0.1);
                         token.set('isdrawing', 1);
                         token.set('controlledby', 'JUST_ADDED');
                         tokenStorage.set('door', placeholder);
+                        onChange();
                         break;
                     case 'indirectDoor':
+                        //Remove previous door control if any
+                        removeDependentObject('doorControl');
                         var control = module.makeDoorControl(token, tw.getHingeOffset());
                         tokenStorage.set('doorControl', control);
                         //Drop through.
                     case 'mapTile':
-                    case 'directDoorPlaceholder':
-                        updateDLPaths(tw.getDLTemplatePaths());
+                        onChange();
                 }
             },
             
@@ -812,10 +840,9 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     bar1_value: token.get('rotation') % 360
                 });
             
-            this.getControlInfoObject(placeholder, { 
-                    type:'directDoorPlaceholder', 
-                    doorControl: token}).onAdded();
-                    
+            var storage = this.tokenStorage(placeholder);
+            storage.set('type', 'directDoorPlaceholder');
+            storage.set('doorControl', token);
             return placeholder;
         },
         
@@ -836,13 +863,13 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 isdrawing:1,
                 top: token.get('top') + offset.y(),
                 left: token.get('left') + offset.x(),
-                width: 140,
-                height: 140
+                width: 70,
+                height: 70
             });
-            this.getControlInfoObject(control, {
-                    type:'doorControl',
-                    door: token
-                }).onAdded();
+            
+            var storage = this.tokenStorage(control);
+            storage.set('type', 'doorControl');
+            storage.set('door', token);
             return control;
         },
         
