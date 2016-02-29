@@ -1,7 +1,9 @@
 // Github:    https://github.com/symposion/roll20-api-scripts/   
 // By:       Lucian Holland
 
-//Modulus is broken in JS
+//Who the hell thought that it was a good idea to use  % as "remainder" 
+//instead of modulus like every other sensible programming language? That's
+//two hours of my life I'll never get back.
 mod = function(n, m) {
     return ((n%m)+m)%m;
 };
@@ -17,148 +19,14 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
     //All the main functions sit inside a module object so that I can 
     //wrap them for log tracing purposes
     module = {
-        checkInstall: function() {
-            var module=this;
-            logger.info('-=> DynamicLightRecorder v$$$ <=-', version);
-            if( ! _.has(state,'DynamicLightRecorder') || myState.version !== schemaVersion) {
-                logger.info('  > Updating Schema to v$$$ from $$$<', schemaVersion, myState && myState.version);
-                logger.info('Preupgrade state: $$$', myState);
-                switch(myState && myState.version) {
-                    case 0.1:
-                        _.each(myState.tilePaths, function(tilePath) {
-                            var tileToken = getObj('graphic', tilePath.tileId);
-                            if (tileToken) {
-                                var controlInfo = _.reduce(tilePath.pathIds, function(controlInfo, pathId) {
-                                    var path = getObj('path', pathId);
-                                    if (path && path !== null) {
-                                        controlInfo.dlPaths.push(path);
-                                    }
-                                }, { dlPaths: [], doorControl: null});
-                                this.saveControlInfo(tileToken, controlInfo);
-                            }
-                        });
-                        delete myState.tilePaths;
-                    case 0.2:
-                        myState.doorControls = {};
-                        _.chain(myState.tileTemplates)
-                            .keys()
-                            .map(function(imgsrc) {
-                                return findObjs({_type: 'graphic', imgsrc:imgsrc, layer:'map', _subtype:'token'});
-                            })
-                            .flatten()
-                            .each(function(graphic) {
-                                var cb = graphic.get('controlledby');
-                                if (cb && !_.isEmpty(cb)) {
-                                    var paths = _.chain(cb.split(","))
-                                                .map(getObjectMapper('path'))
-                                                .compact()
-                                                .value();
-                                    if (!_.isEmpty(paths)) {
-                                        this.saveControlInfo(graphic, { dlPaths: paths, doorControl: null});
-                                    }
-                                }
-                            });
-                    case 0.3:
-                        _.each(myState.tileTemplates, function(template) {
-                            if (template.isDoor) {
-                                delete template.isDoor;
-                                var hingeOffset = [-(template.width/2), 0];
-                                template.doorDetails = { type:'indirect', offset:hingeOffset};
-                            }
-                        });
-                    case 0.4:
-                        myState.config.logLevel = 'INFO';
-                    case 0.5:
-                        _.each(myState.doorControls, function(doorId, controlId) {
-                            var door = getObj('graphic', doorId);
-                            var control = getObj('graphic', controlId);
-                            if (door && control) {
-                                var type = control.get('imgsrc') === clearURL ? 'doorControl' : 'directDoorl';
-                                control.set('gmnotes'), 'DynamicLightData:' + JSON.stringify({type:type, door:doorId});
-                            }
-                        });
-                        delete myState.doorControls;
-                        _.chain(myState.tileTemplates)
-                            .keys()
-                            .map(function(imgsrc) {
-                                return findObjs({_type:'graphic', layer:'map', imgsrc:imgsrc});
-                            })
-                            .tap(function(tokens) {
-                                tokens.push(findObjs({type:'graphic', layer:'map', imgsrc:clearURL}));
-                            })
-                            .flatten()
-                            .each(function(token) {
-                                var cb = token.get('controlledby');
-                                try {
-                                    var controlInfo = JSON.parse(cb);
-                                    if (controlInfo && controlInfo.dlPaths) {
-                                        var newData = {dlPaths:controlInfo.dlPaths, type:'mapTile'};
-                                        if (controlInfo.doorControl) {
-                                            newData.type = (token.get('imgsrc') === clearURL) ? 'directDoorPlaceholder' : 'indirectDoor';
-                                            newData.doorControl = controlInfo.doorControl;
-                                        }
-                                        token.set('gmnotes', 'DynamicLightData:' + JSON.stringify(newData));
-                                        token.set('controlledby', '');
-                                    }
-                                }
-                                catch(e) {}
-                            });
-                    case 0.6:
-                        myState.config.autoLink = true;
-                        myState.config.logLevel = 'INFO';
-                        logger.info('Upgrading existing tokens with transmogrifier-protection');
-                        _.each(myState.tileTemplates, function(template, key) {
-                            template.imgsrc = key;
-                            _.each(findObjs({type:'graphic', imgsrc:template.imgsrc}), function(graphic) {
-                                var gmn = graphic.get('gmnotes');
-                                if (gmn.indexOf('DynamicLightData:') === 0) {
-                                    graphic.set('name', 'DynamicLightRecorder');
-    								var tokenStorage = module.tokenStorage(graphic)
-                                    var dlPaths = tokenStorage.get('dlPaths');
-                                    _.each(dlPaths, function(dlPath) {
-                                        dlPath.set('controlledby', graphic.id);
-                                    });
-									var doorControl = tokenStorage.get('doorControl');
-									var door = tokenStorage.get('door');
-									doorControl && doorControl.set('name', 'DynamicLightRecorder');
-									door && door.set('name', 'DynamicLightRecorder');
-                                }
-                            });
-                        });
-                        myState.version = schemaVersion;
-                        break;
-                    default:
-                        if (!myState) {
-                            state.DynamicLightRecorder = {
-                                version: schemaVersion,
-                                tileTemplates: {},
-                                config: {
-                                    logLevel: 'INFO',
-                                    autoLink: true
-                                }
-                            };
-                            myState = state.DynamicLightRecorder;
-                            logger.info('Making new state object $$$', myState);
-                        }
-                        else {
-                            logger.fatal('Unknown schema version for state $$$', myState);
-                            report('Serious error attempting to upgrade your global state, please see log for details. '
-                                    +'DynamicLightRecorder will not function correctly until this is fixed');
-                            myState = undefined;
-                        }
-                        break;
-                }
-                logger.info('Upgraded state: $$$', myState);
-            }
-        },
-        
         handleInput: function(msg) {
            if (msg.type !== "api" ) {
                 return;
             }
             try {
                 var args = msg.content.split(/\s+--/);
-                switch(args.shift()) {
+                var command = args.shift();
+                switch(command) {
                     case '!dl-link':
                         this.link(this.processSelection(msg, {
                             graphic: {min:1, max:1},
@@ -189,6 +57,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                         break;
                     case '!dl-import':
                         if(!_.isEmpty(args)) {
+                            logger.info(args);
                             var overwrite = (args[0] === 'overwrite');
                             args = overwrite ? args.slice(1) : args;
                             if(!_.isEmpty(args)) {
@@ -217,7 +86,12 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                         this.transmogrifierFixup();
                         break;
                     default:
-                    //Do nothing
+                        if(command.indexOf('!dl') === 0) {
+                            if(command.length > 20) {
+                                command = command.slice(0,18) + '...';
+                            }
+                            report('Unrecognised command: "' + command + '". Maybe you forgot a "--"?');
+                        }
                 }
             }
             catch(e) {
@@ -406,7 +280,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             }
             
             if (this.globalTemplateStorage().load(tile) && !overwrite && !local) {
-               report('Tile already has a global template defined. Call with --overwrite to replace it');
+               report('Tile already has a global template defined. Do you want to [Overwrite](!dl-link --overwrite) it?');
                return;
             }
             
@@ -1465,6 +1339,142 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             };
             
         },
+        
+        checkInstall: function() {
+            var module=this;
+            logger.info('-=> DynamicLightRecorder v$$$ <=-', version);
+            if( ! _.has(state,'DynamicLightRecorder') || myState.version !== schemaVersion) {
+                logger.info('  > Updating Schema to v$$$ from $$$<', schemaVersion, myState && myState.version);
+                logger.info('Preupgrade state: $$$', myState);
+                switch(myState && myState.version) {
+                    case 0.1:
+                        _.each(myState.tilePaths, function(tilePath) {
+                            var tileToken = getObj('graphic', tilePath.tileId);
+                            if (tileToken) {
+                                var controlInfo = _.reduce(tilePath.pathIds, function(controlInfo, pathId) {
+                                    var path = getObj('path', pathId);
+                                    if (path && path !== null) {
+                                        controlInfo.dlPaths.push(path);
+                                    }
+                                }, { dlPaths: [], doorControl: null});
+                                this.saveControlInfo(tileToken, controlInfo);
+                            }
+                        });
+                        delete myState.tilePaths;
+                    case 0.2:
+                        myState.doorControls = {};
+                        _.chain(myState.tileTemplates)
+                            .keys()
+                            .map(function(imgsrc) {
+                                return findObjs({_type: 'graphic', imgsrc:imgsrc, layer:'map', _subtype:'token'});
+                            })
+                            .flatten()
+                            .each(function(graphic) {
+                                var cb = graphic.get('controlledby');
+                                if (cb && !_.isEmpty(cb)) {
+                                    var paths = _.chain(cb.split(","))
+                                                .map(getObjectMapper('path'))
+                                                .compact()
+                                                .value();
+                                    if (!_.isEmpty(paths)) {
+                                        this.saveControlInfo(graphic, { dlPaths: paths, doorControl: null});
+                                    }
+                                }
+                            });
+                    case 0.3:
+                        _.each(myState.tileTemplates, function(template) {
+                            if (template.isDoor) {
+                                delete template.isDoor;
+                                var hingeOffset = [-(template.width/2), 0];
+                                template.doorDetails = { type:'indirect', offset:hingeOffset};
+                            }
+                        });
+                    case 0.4:
+                        myState.config.logLevel = 'INFO';
+                    case 0.5:
+                        _.each(myState.doorControls, function(doorId, controlId) {
+                            var door = getObj('graphic', doorId);
+                            var control = getObj('graphic', controlId);
+                            if (door && control) {
+                                var type = control.get('imgsrc') === clearURL ? 'doorControl' : 'directDoorl';
+                                control.set('gmnotes'), 'DynamicLightData:' + JSON.stringify({type:type, door:doorId});
+                            }
+                        });
+                        delete myState.doorControls;
+                        _.chain(myState.tileTemplates)
+                            .keys()
+                            .map(function(imgsrc) {
+                                return findObjs({_type:'graphic', layer:'map', imgsrc:imgsrc});
+                            })
+                            .tap(function(tokens) {
+                                tokens.push(findObjs({type:'graphic', layer:'map', imgsrc:clearURL}));
+                            })
+                            .flatten()
+                            .each(function(token) {
+                                var cb = token.get('controlledby');
+                                try {
+                                    var controlInfo = JSON.parse(cb);
+                                    if (controlInfo && controlInfo.dlPaths) {
+                                        var newData = {dlPaths:controlInfo.dlPaths, type:'mapTile'};
+                                        if (controlInfo.doorControl) {
+                                            newData.type = (token.get('imgsrc') === clearURL) ? 'directDoorPlaceholder' : 'indirectDoor';
+                                            newData.doorControl = controlInfo.doorControl;
+                                        }
+                                        token.set('gmnotes', 'DynamicLightData:' + JSON.stringify(newData));
+                                        token.set('controlledby', '');
+                                    }
+                                }
+                                catch(e) {}
+                            });
+                    case 0.6:
+                        myState.config.autoLink = true;
+                        myState.config.logLevel = 'INFO';
+                        logger.info('Upgrading existing tokens with transmogrifier-protection');
+                        _.each(myState.tileTemplates, function(template, key) {
+                            template.imgsrc = key;
+                            _.each(findObjs({type:'graphic', imgsrc:template.imgsrc}), function(graphic) {
+                                var gmn = graphic.get('gmnotes');
+                                if (gmn.indexOf('DynamicLightData:') === 0) {
+                                    graphic.set('name', 'DynamicLightRecorder');
+        							var tokenStorage = module.tokenStorage(graphic)
+                                    var dlPaths = tokenStorage.get('dlPaths');
+                                    _.each(dlPaths, function(dlPath) {
+                                        dlPath.set('controlledby', graphic.id);
+                                    });
+									var doorControl = tokenStorage.get('doorControl');
+									var door = tokenStorage.get('door');
+									doorControl && doorControl.set('name', 'DynamicLightRecorder');
+									door && door.set('name', 'DynamicLightRecorder');
+                                }
+                            });
+                        });
+                        myState.version = schemaVersion;
+                        break;
+                    default:
+                        if (!myState) {
+                            state.DynamicLightRecorder = {
+                                version: schemaVersion,
+                                tileTemplates: {},
+                                config: {
+                                    logLevel: 'INFO',
+                                    autoLink: true
+                                }
+                            };
+                            myState = state.DynamicLightRecorder;
+                            logger.info('Making new state object $$$', myState);
+                        }
+                        else {
+                            logger.fatal('Unknown schema version for state $$$', myState);
+                            report('Serious error attempting to upgrade your global state, please see log for details. '
+                                    +'DynamicLightRecorder will not function correctly until this is fixed');
+                            myState = undefined;
+                        }
+                        break;
+                }
+                logger.info('Upgraded state: $$$', myState);
+            }
+        },
+        
         logWrap: 'module'
     };
     
