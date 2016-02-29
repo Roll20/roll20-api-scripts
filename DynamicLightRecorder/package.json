@@ -6,10 +6,10 @@
 "authors": "Lucian Holland",
 "roll20userid": "791452",
 "dependencies": [],
-"modifies": "{
-        "state.DynamicLightRecorder": "read,write",
-        "graphic.*": "read,write",
-		"path.*": "read,write"
-   },
+"modifies": {
+	"state.DynamicLightRecorder": "read,write",
+	"graphic.*": "read,write",
+	"path.*": "read,write"
+	},
 "conflicts":[]
 }
