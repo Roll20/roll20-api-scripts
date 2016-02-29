@@ -308,6 +308,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
 
             template.doorDetails.type = 'indirect';
             template.doorDetails.offset = hingeOffset;
+            doorToken.set('layer', 'map');
             
             this.getControlInfoObject(doorToken,  _.extend(options, {template: template})).onAdded();
             
@@ -326,7 +327,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             };
             
             var template = this.makeDoorTemplate(token, doorBoundingBox, options, '!dl-directDoor');
-            if (!template) return
+            if (!template) return;
             template.doorDetails.type = 'direct';
             
             this.getControlInfoObject(token,  _.extend(options, {template: template})).onAdded();
@@ -473,8 +474,6 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             var doorWidth = doorBoundingBox.width;
             var dlLineWidth = doorWidth + 4;
             
-            
-            token.set('layer', 'map');
             var dlPath = createObj('path', {
                 pageid: token.get('_pageid'),
                 layer: 'walls',
@@ -490,6 +489,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 dlPath.remove();
                 return;
             }
+            
             var minRotation = mod(+(token.get('bar1_value') || -90) + template.rotation, 360);
             var maxRotation = mod(+(token.get('bar1_max') || 90) + template.rotation, 360);
             token.set('bar1_value', '');
@@ -673,6 +673,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             },
             
             removeDependentObject = function(name) {
+                logger.debug('Removing dependent object: $$$', name);
                 var object = tokenStorage.get(name); 
                 if (object) {
                     object.set('controlledby', 'APIREMOVE');
@@ -690,7 +691,17 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 if (!tw) {
                     //this token is no longer attached to any template,
                     //make sure we clean up any dependencies
-                    return onDelete();
+                    _.invoke(tokenStorage.get('dlPaths'), 'remove');
+                            tokenStorage.remove('dlPaths');
+                    switch(tokenStorage.get('type')) {
+                        case 'directDoor':
+                            removeDependentObject('door');
+                            break;
+                        case 'indirectDoor':
+                            removeDependentObject('doorControl');
+                            break;
+                    }
+                    return;
                 };
                 var transformations = tw.getTransformations(token);
                 switch(type) {
@@ -745,14 +756,14 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     doorControl = tokenStorage.get('doorControl');
                 switch(type) {
                     case 'directDoor':
-                        //This is a real problem, we can't redraw it because of Roll20 imgsrc restrictions,
-                        //for the time being we'll just leave everything as it is with the placeholder and
-                        //the DLPaths. Perhaps consider moving to the token layer to highlight?
                         if (token.get('controlledby') === 'APIREMOVE') {
                             _.invoke(tokenStorage.get('dlPaths'), 'remove');
                             tokenStorage.remove('dlPaths');
                         }
                         else {
+                            //This is a real problem, we can't redraw it because of Roll20 imgsrc restrictions,
+                            //for the time being we'll just leave everything as it is with the placeholder and
+                            //the DLPaths. Perhaps consider moving to the token layer to highlight?
                             logger.warn("Direct door control with id $$$ has been deleted, can't recreate", token.id);
                         }
                         break;
@@ -763,7 +774,9 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                         }
                         break;
                     case 'directDoorPlaceholder':
-                        removeDependentObject('doorControl');
+                        if (token.get('controlledby') !== 'APIREMOVE') {
+                            removeDependentObject('doorControl');
+                        }
                         break;
                     case 'indirectDoor':
                         removeDependentObject('doorControl');
