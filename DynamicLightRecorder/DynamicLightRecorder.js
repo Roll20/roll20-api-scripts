@@ -197,7 +197,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             report('Configuration is now: ' + JSON.stringify(myState.config));
         },
     
-        wipe: function(graphics, confirm) {
+        wipe: function(graphics, options) {
             var module = this;
             if (graphics) {
                 var results = {
@@ -211,7 +211,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 });
                 report('Wiped ' + results.local + ' local templates and ' + results.global + ' global templates');
             }
-            else if (!confirm){
+            else if (!options.confirm){
                 report('You are about to wipe all of your stored templates, are you *really* sure you want to do this? [Confirm](!dl-wipe --confirm)');
             }
             else {
