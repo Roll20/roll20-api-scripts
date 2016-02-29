@@ -15,6 +15,13 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
     schemaVersion = 0.7,
     clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
     myState = state.DynamicLightRecorder,
+    booleanValidator = function(value) {
+        var converted = value === 'true' || (value === 'false' ? false : value);
+        return {
+                valid:(typeof value === 'boolean') || value ==='true' || value === 'false',
+                converted:converted
+        };
+    },
     
     //All the main functions sit inside a module object so that I can 
     //wrap them for log tracing purposes
@@ -31,7 +38,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                         this.link(this.processSelection(msg, {
                             graphic: {min:1, max:1},
                             path: {min:1, max:Infinity}
-                        }), args);
+                        }), this.makeOpts(args, this.templateOptionsSpec));
                         break;
                     case '!dl-detach':
                         this.detach(this.processSelection(msg, {
@@ -43,17 +50,17 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                             graphic: {min:1, max:1},
                             path: {min: 0, max:1}
                         });
-                        this.makeDoor(objects.graphic, objects.path, args);
+                        this.makeDoor(objects.graphic, objects.path, this.makeOpts(args, this.templateOptionsSpec));
                         break;
                     case '!dl-directDoor':
                         this.makeDirectDoor(this.processSelection(msg, {
                             graphic: {min:1, max:1}
-                        }).graphic, args);
+                        }).graphic, this.makeOpts(args, this.templateOptionsSpec));
                         break;
                     case '!dl-wipe':
                         this.wipe(this.processSelection(msg, {
                             graphic: {min:0, max:Infinity}
-                        }).graphic, args.shift() === 'confirm');
+                        }).graphic, this.makeOpts(args, this.wipeOptionsSpec));
                         break;
                     case '!dl-import':
                         if(!_.isEmpty(args)) {
@@ -80,7 +87,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                         }).graphic);
                 		break;
                     case '!dl-config':
-                        this.configure(args);
+                        this.configure(this.makeOpts(args, this.configOptionsSpec));
                         break;
                     case '!dl-tmFixup':
                         this.transmogrifierFixup();
@@ -107,6 +114,44 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             finally {
                 logger.prefixString = '';
             }
+        },
+        
+        wipeOptionsSpec: {
+            confirm: booleanValidator
+        },
+        
+        configOptionsSpec: {
+            logLevel: function(value) {
+                var converted = value.toUpperCase();
+                return {valid:_.has(logger, converted), converted:converted};
+            },
+            autoLink: booleanValidator
+        },
+            
+        templateOptionsSpec: {
+            local:booleanValidator,
+            overwrite:booleanValidator
+        },
+        
+        makeOpts: function(args, spec) {
+            return _.reduce(args, function(options, arg) {
+                var parts = arg.split(/\s+/);
+                if (parts.length <= 2) {
+                    //Allow for bare switches
+                    var value = parts.length == 2 ? parts[1] : true;
+                    var validator = spec[parts[0]];
+                    if (validator) {
+                        var result = validator(value);
+                        if (result.valid) {
+                            options[parts[0]] = result.converted;
+                            return options;
+                        }
+                    }
+                }
+                logger.error('Unrecognised or poorly formed option [$$$]', arg);
+                report('ERROR: unrecognised or poorly formed option --' + arg + '');
+                return options;
+            }, {});
         },
         
         processSelection: function(msg, constraints) {
@@ -143,41 +188,10 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
     /////////////////////////////////////////
     // Command handlers    
     /////////////////////////////////////////
-        configure: function(args) {
-            
-            var configPropertyValidators = {
-                logLevel: function(value) {
-                    var converted = value.toUpperCase();
-                    return {valid:_.has(logger, converted), converted:converted};
-                },
-                autoLink: function(value) {
-                    var converted = value === 'true' || (value === 'false' ? false : value);
-                    return {
-                            valid:(typeof value === 'boolean') || value ==='true' || value === 'false',
-                            converted:converted};
-                }
-            };
-            
-            _.each(args, function(arg) {
-                var parts = arg.split(/\s+/);
-                var success = false;
-                if (parts.length <= 2) {
-                    //Allow for bare switches
-                    var value = parts.length == 2 ? parts[1] : true;
-                    var validator = configPropertyValidators[parts[0]];
-                    if (validator) {
-                        var result = validator(value);
-                        if (result.valid) {
-                            logger.info('Setting configuration option $$$ to $$$', parts[0], result.converted);
-                            myState.config[parts[0]] = result.converted;
-                            success = true;
-                        }
-                    }
-                }
-                if (!success) {
-                    logger.error('Unrecognised or poorly formed configuration option [$$$]', arg);
-                    report('ERROR: unrecognised or poorly formed configuration option [' + arg + ']');
-                }
+        configure: function(options) {
+            _.each(options, function(value, key) {
+                logger.info('Setting configuration option $$$ to $$$',key, value);
+                myState.config[key] = value;
             });
             
             report('Configuration is now: ' + JSON.stringify(myState.config));
@@ -271,21 +285,15 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         },
         
         link: function(selection, options) {
-            var local = _.contains(options, 'local');
-            var overwrite = _.contains(options, 'overwrite');
             var tile = selection.graphic;
             if (tile.get('_subtype') !== 'token' || tile.get('layer') !== 'map') {
                 report('Selected tile must be on the map layer.');
                 return;
             }
             
-            if (this.globalTemplateStorage().load(tile) && !overwrite && !local) {
-               report('Tile already has a global template defined. Do you want to [Overwrite](!dl-link --overwrite) it?');
-               return;
-            }
-            
-            var template = this.buildTemplate(tile, selection.path);
-            this.getControlInfoObject(tile, {template: template, local:local}).onAdded();
+            var template = this.buildTemplate(tile, selection.path, options);
+            if (!template) return;
+            this.getControlInfoObject(tile, _.extend(options, {template: template})).onAdded();
             
             report("DL paths successfully linked for map tile");
         },
@@ -293,13 +301,15 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         //Make a normal door with a transparent control token
         makeDoor: function(doorToken, doorBoundsPath, options) {
             var doorBoundingBox = doorBoundsPath ? this.makeBoundingBox(doorBoundsPath) : this.makeBoundingBox(doorToken);
-            var template = this.makeDoorTemplate(doorToken, doorBoundingBox);
+            var template = this.makeDoorTemplate(doorToken, doorBoundingBox, options);
+            if(!template) return;
             var hinge = [doorBoundingBox.left - (doorBoundingBox.width/2), doorBoundingBox.top];
             var hingeOffset = [hinge[0] - doorToken.get('left'), hinge[1] - doorToken.get('top')];
+
             template.doorDetails.type = 'indirect';
             template.doorDetails.offset = hingeOffset;
             
-            this.getControlInfoObject(doorToken, {template:template, local:_.contains(options, 'local')}).onAdded();
+            this.getControlInfoObject(doorToken,  _.extend(options, {template: template})).onAdded();
             
             if (doorBoundsPath) {
                 doorBoundsPath.remove();
@@ -315,10 +325,11 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 height: token.get('height')
             };
             
-            var template = this.makeDoorTemplate(token, doorBoundingBox);
+            var template = this.makeDoorTemplate(token, doorBoundingBox, options);
+            if (!template) return;
             template.doorDetails.type = 'direct';
             
-            this.getControlInfoObject(token, {template:template, local:_.contains(options, 'local')}).onAdded();
+            this.getControlInfoObject(token,  _.extend(options, {template: template})).onAdded();
             
             report('Direct control door created successfully');
         },
@@ -405,8 +416,22 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         
         //Make a DL template for a tile
         //using a set of paths
-        buildTemplate: function(tile, paths) {
-             var template = {
+        buildTemplate: function(tile, paths, options) {
+            if (tile.get('imgsrc') === clearURL) {
+                report("You are trying to define a template for the clear placeholder image. This isn't a good plan.");
+                return;
+            }
+            
+            if (this.globalTemplateStorage().load(tile) && !options.overwrite && !options.local) {
+               report('Tile already has a global template defined. Do you want to [Overwrite](!dl-link --overwrite) it?');
+               return;
+            }
+            else if(this.tokenStorage(tile).get('template', true) && !options.overwrite && options.local) {
+                report('Tile already has a local template defined. Do you want to [Overwrite](!dl-link --overwrite --local) it?');
+                return;
+            }
+            
+            var template = {
                 imgsrc : tile.get('imgsrc'),
                 top: tile.get('top'),
                 left: tile.get('left'),
@@ -445,7 +470,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             };
         },
         
-        makeDoorTemplate: function(token, doorBoundingBox) {
+        makeDoorTemplate: function(token, doorBoundingBox, options) {
             var doorWidth = doorBoundingBox.width;
             var dlLineWidth = doorWidth + 4;
             
@@ -461,7 +486,11 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 height: 1,
                 path: '[["M",0,0],["L",' + dlLineWidth + ',0]]'
                 });
-            var template = this.buildTemplate(token, [dlPath]);
+            var template = this.buildTemplate(token, [dlPath], options);
+            if (!template) {
+                dlPath.remove();
+                return;
+            }
             var minRotation = mod((token.get('bar1_value') || -90) + template.rotation, 360);
             var maxRotation = mod((token.get('bar1_max') || 90) + template.rotation, 360);
             template.doorDetails = {minRotation: minRotation, maxRotation:maxRotation};
@@ -512,7 +541,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             
             //Perhaps we can work out the type from a global template
             //now that we have wired up the storage to delegate to it
-            //But it autoLinking is turned off we shouldn't do this as
+            //But if autoLinking is turned off we shouldn't do this as
             //this could be a newly dropped tile that we're supposed to be 
             //ignoring
             if(!options.type && myState.config.autoLink) {
@@ -525,7 +554,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             //we might end up spamming random other tokens with our GM notes!
             if(options.type) {
                 _.each(options, function(value, key) {
-                    if(value && key !== 'local'){
+                    if(value){
                         storage.set(key, value);
                     }
                 });
@@ -950,6 +979,8 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 type: _.identity
             };
             
+            var noWarnKeys = ['local', 'overwrite'];
+            
             var gmn = token.get('gmnotes'),
                 data = {}, 
                 module=this,
@@ -972,7 +1003,9 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 storage = {
                     set: function(key, value) {
                         if (!properties[key]) {
-                            logger.warn('Unrecognised token property key $$$, ignoring', key);
+                            if (!_.contains(noWarnKeys, key)) {
+                                logger.warn('Unrecognised token property key $$$, ignoring', key);
+                            }
                             return;
                         }
                         
@@ -987,8 +1020,8 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                         }
                     },
                     
-                    get: function(key) {
-                        if (key === 'template' && templateStorage) {
+                    get: function(key, localOnly) {
+                        if (key === 'template' && templateStorage && !localOnly) {
                             return templateStorage.get(key);
                         }
                         return data[key];
