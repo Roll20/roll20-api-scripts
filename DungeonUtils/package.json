@@ -1,0 +1,7 @@
+{
+  "name": "DungeonUtils",
+  "version": "1.0.0",
+  "description": "A few handy functions for building maps quickly, including a random dungeon generator",
+  "authors": "Alex Babis",
+  "keywords": []
+}
