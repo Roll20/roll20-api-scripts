@@ -1,20 +1,21 @@
 {
   "name": "SpinTokens",
-  "version": "0.3",
+  "version": "0.4.1",
   "description": "Allows the GM to toggle spinning of selected tokens.",
   "authors": "The Aaron",
   "roll20userid": "104025",
-  "dependencies": {
-	"isGMModule": "0.x"
-  },
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": [],
   "modifies": {
-	"state.SpinTokens": "read,write",
-	"campaign.playerpageid": "read",
-	"campaign.playerspecificpages": "read",
-	"graphic.pageid": "read",
-	"graphic.rotation": "write",
-	"graphic.subtype": "read"
+    "state.SpinTokens": "read,write",
+    "campaign.playerpageid": "read",
+    "campaign.playerspecificpages": "read",
+    "graphic.pageid": "read",
+    "graphic.rotation": "write",
+    "graphic.subtype": "read"
   },
-  "conflicts": [
-  ]
+  "conflicts": [],
+  "script": "SpinTokens.js",
+  "useroptions": {},
+  "previousversions": []
 }

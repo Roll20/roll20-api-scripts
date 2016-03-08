@@ -1,16 +1,18 @@
 {
   "name": "ScaleOnAdd",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "authors": "The Aaron",
   "roll20userid": "104025",
-  "dependencies": {
-  },
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": {},
   "modifies": {
-	"state.ScaleOnAdd": "read,write",
-        "graphic.width": "write",
-        "graphic.height": "write"
+    "state.ScaleOnAdd": "read,write",
+    "graphic.width": "write",
+    "graphic.height": "write"
   },
-  "conflicts": [
-  ]
+  "conflicts": [],
+  "script": "ScaleOnAdd.js",
+  "useroptions": {},
+  "previousversions": []
 }

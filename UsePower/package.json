@@ -1,20 +1,21 @@
 {
   "name": "UsePower",
-  "version": "0.31",
+  "version": "0.4.1",
   "description": "A script for instrumenting and tracking the use of encounter and daily powers.",
   "authors": "The Aaron",
   "roll20userid": "104025",
-  "dependencies": {
-	"isGMModule": "0.x"
-  },
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": [],
   "modifies": {
-	"state.UsePower": "read,write",
-	"ability.action": "read,write",
-	"ability.istokenaction": "write",
-	"ability.name": "read",
-	"character.name": "read",
-	"player.displayname": "read"
+    "state.UsePower": "read,write",
+    "ability.action": "read,write",
+    "ability.istokenaction": "write",
+    "ability.name": "read",
+    "character.name": "read",
+    "player.displayname": "read"
   },
-  "conflicts": [
-  ]
+  "conflicts": [],
+  "script": "UsePower.js",
+  "useroptions": {},
+  "previousversions": []
 }

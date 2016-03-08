@@ -1,13 +1,14 @@
 {
   "name": "Base64",
-  "version": "0.2",
+  "version": "0.3.1",
   "description": "Base 64 encoding for Roll20 Scripts. (Adapted from http://www.webtoolkit.info/ )",
   "authors": "The Aaron",
   "roll20userid": "104025",
-  "dependencies": {
-  },
-  "modifies": {
-  },
-  "conflicts": [
-  ]
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": [],
+  "modifies": [],
+  "conflicts": [],
+  "script": "Base64.js",
+  "useroptions": {},
+  "previousversions": []
 }

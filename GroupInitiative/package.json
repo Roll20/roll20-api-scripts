@@ -1,16 +1,20 @@
 {
-    "name": "GroupInitiative",
-    "version": "0.9.16",
-    "description": "Adds the selected tokens to the turn order after rolling their initiative + configurable data.",
-    "authors": "The Aaron",
-    "roll20userid": "104025",
-    "dependencies": [],
-    "modifies": {
-        "state.GroupInitiative": "read,write",
-        "campaign.turnorder": "read,write",
-        "graphic.represents": "read",
-        "attribute.current": "read",
-        "attribute.max": "read"
-    },
-    "conflicts": []
+  "name": "GroupInitiative",
+  "version": "0.9.17",
+  "description": "Adds the selected tokens to the turn order after rolling their initiative + configurable data.",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": [],
+  "modifies": {
+    "state.GroupInitiative": "read,write",
+    "campaign.turnorder": "read,write",
+    "graphic.represents": "read",
+    "attribute.current": "read",
+    "attribute.max": "read"
+  },
+  "conflicts": [],
+  "script": "GroupInitiative.js",
+  "useroptions": {},
+  "previousversions": []
 }

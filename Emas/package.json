@@ -1,13 +1,14 @@
 {
   "name": "emas",
-  "version": "0.7",
+  "version": "0.8.1",
   "description": "Provides player !emas and !as commands.",
   "authors": "The Aaron",
   "roll20userid": "104025",
-  "dependencies": {
-  },
-  "modifies": {
-  },
-  "conflicts": [
-  ]
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": [],
+  "modifies": [],
+  "conflicts": [],
+  "script": "Emas.js",
+  "useroptions": {},
+  "previousversions": []
 }

@@ -1,16 +1,18 @@
 {
   "name": "ColorNote",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "",
   "authors": "The Aaron",
   "roll20userid": "104025",
-  "dependencies": {
-  },
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": {},
   "modifies": {
-	"state.ColorNote": "read,write",
-        "player.displayname": "read",
-        "player.color": "read"
+    "state.ColorNote": "read,write",
+    "player.displayname": "read",
+    "player.color": "read"
   },
-  "conflicts": [
-  ]
+  "conflicts": [],
+  "script": "ColorNote.js",
+  "useroptions": {},
+  "previousversions": []
 }
