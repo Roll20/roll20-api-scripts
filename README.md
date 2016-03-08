@@ -12,12 +12,15 @@ If you want to help improve an existing API script, just clone this repository, 
 
 When you are ready to submit your script for **public use**, create a `package.json` file in your script's folder (see the "Example_package.json" in the root folder for an example). The file has the following fields:
 
-* `name`: The name of the API script (e.g. `Cookbook`)
-* `version`: The version number of the API script (e.g. `12.3`)
-* `description`: A short, less than 100 character, explanation of the script and it's use.
+* `name`: The name of the API script as it will appear on Roll20
+* `script`: The name of the javascript file, which must remain uniform throughout versions
+* `version`: The current version number of the API script (e.g. `12.3`)
+* `previousversions`: All previous versions of the script in an array format (e.g. `["0.5","0.1"]`)
+* `description`: A short explanation of the script and it's use that will appear along side the script on Roll20.
 * `authors`: A simple string telling who contributed toward the script (e.g. `Riley Dutton,Steve Koontz`)
-* `roll20userid`: A simple string telling the Roll20 User ID's of the authors (e.g. `1` or `45672,145678`). Just used so we know who to credit internally, won't be shown publicly on the site.
-* `dependencies`: A list of other API scripts and their version numbers this script requires to function (e.g. `My Kitchen: 1.0`) 
+* `roll20userid`: A simple string telling the Roll20 User ID's of the authors (e.g. `1` or `45672,145678`). Used internally and won't be shown publicly on the site.
+* `useroptions`: An array of hashes that allow script authors to set pre-determined options for users to customize the functionality of the script. For more information check out the _Example folder's package.json for an example or see the Roll20 Wiki for more documentation.
+* `dependencies`: A list of other API scripts this script requires to function (e.g. `My Kitchen`) 
 * `modifies`: A list of the common Roll20 objects and properties the script reads and writes to. Custom objects and properties inside a namespace don't need to be included. (e.g. `bar1_value: write`)
 * `conflicts`: A list of other API scripts this script is known to conflict with (e.g. `Recipes`) 
 
