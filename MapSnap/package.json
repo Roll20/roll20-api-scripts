@@ -1,16 +1,18 @@
 {
   "name": "MapSnap",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "",
   "authors": "The Aaron",
   "roll20userid": "104025",
-  "dependencies": {
-  },
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": {},
   "modifies": {
-	"state.MapSnap": "read,write",
-        "graphic.top": "read,write",
-        "graphic.left": "read,write"
+    "state.MapSnap": "read,write",
+    "graphic.top": "read,write",
+    "graphic.left": "read,write"
   },
-  "conflicts": [
-  ]
+  "conflicts": [],
+  "script": "MapSnap.js",
+  "useroptions": {},
+  "previousversions": []
 }

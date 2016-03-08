@@ -1,14 +1,14 @@
 {
   "name": "ZombieDice",
-  "version": "0.3",
+  "version": "0.4.1",
   "description": "Rolls canceling Zombie Dice",
   "authors": "The Aaron",
   "roll20userid": "104025",
-  "dependencies": {
-	"isGMModule": "0.x"
-  },
-  "modifies": {
-  },
-  "conflicts": [
-  ]
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": [],
+  "modifies": [],
+  "conflicts": [],
+  "script": "ZombieDice.js",
+  "useroptions": {},
+  "previousversions": []
 }

@@ -1,22 +1,25 @@
 {
-    "name": "TokenMod",
-    "script": "TokenMod.js",
-    "version": "0.8.18",
-    "description": "An interface to adjusting properties of a token from a macro or the chat area.",
-    "authors": "The Aaron",
-    "roll20userid": "104025",
-    "dependencies": [],
-    "modifies": {
-        "state.TokenMod": "read,write",
-        "attribute.characterid": "read",
-        "attribute.current": "read",
-        "attribute.id": "read",
-        "attribute.max": "read",
-        "attribute.name": "read",
-        "attribute.type": "read",
-        "character.archived": "read",
-        "character.name": "read",
-        "graphic.*": "read,write"
-    },
-    "conflicts": []
+  "name": "TokenMod",
+  "version": "0.8.19",
+  "description": "An interface to adjusting properties of a token from a macro or the chat area.",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": [],
+  "modifies": {
+    "state.TokenMod": "read,write",
+    "attribute.characterid": "read",
+    "attribute.current": "read",
+    "attribute.id": "read",
+    "attribute.max": "read",
+    "attribute.name": "read",
+    "attribute.type": "read",
+    "character.archived": "read",
+    "character.name": "read",
+    "graphic.*": "read,write"
+  },
+  "conflicts": [],
+  "script": "TokenMod.js",
+  "useroptions": {},
+  "previousversions": []
 }
