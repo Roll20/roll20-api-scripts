@@ -1,7 +1,7 @@
 {
   "name": "TokenNameNumber",
-  "version": "0.5.6",
-  "description": "Automatic Numbering of tokens with special placeholder.",
+  "version": "0.5.7",
+  "description": "Automatically numbers tokens dragged to the table top.\n\n**!tnn --help** displays the help and configuration options.",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -18,5 +18,7 @@
   "conflicts": [],
   "script": "TokenNameNumber.js",
   "useroptions": {},
-  "previousversions": []
+  "previousversions": [
+    "0.5.6"
+  ]
 }
