@@ -1,19 +1,29 @@
 {
   "name": "Slide Tokens",
+  "script": "Slide Tokens.js",
   "version": "1.1",
+  "previousversions": ["1.0"],
   "description": "Move tokens with an API command, while showing the path and waypoints as though it had been moved manually.",
   "authors": "Brian Shields",
   "roll20userid": "235259",
-  "dependencies": {
-    "IsGMModule": "0.7",
-    "splitArgs": "1.0"
-  },
+  "useroptions": [],
+  "dependencies": ["splitArgs"],
   "modifies": {
-    "path": "write",
-    "message": "write",
-    "graphic": "write"
+    "player.displayname": "read",
+    "path.width": "read",
+    "path.height": "read",
+    "path.top": "write",
+    "path.left": "write",
+    "path.scaleX": "write",
+    "path.scaleY": "write",
+    "path.layer": "write",
+    "token.pageid": "read",
+    "token.top": "read,write",
+    "token.left": "read,write",
+    "token.lastmove": "write",
+    "page.snapping_increment": "read",
+    "page.scale_number": "read",
+    "state.bshields.translateToken": "read,write"
   },
-  "conflicts": [
-    "None"
-  ]
+  "conflicts": []
 }
