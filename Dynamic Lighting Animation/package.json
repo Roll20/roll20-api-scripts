@@ -1,18 +1,25 @@
 {
   "name": "Dynamic Lighting Animation",
-  "version": "2.2",
-  "description": "Animates paths on the Dynamic Lighting layer.",
+  "script": "Dynamic Lighting Animation.js",
+  "version": "2.3",
+  "previousversions": ["2.2","2.1","2.0","1.0"],
+  "description": "Animates paths on the Dynamic Lighting layer like a stop-motion video.",
   "authors": "Brian Shields",
   "roll20userid": "235259",
-  "dependencies": {
-    "IsGMModule": "0.7",
-    "splitArgs": "1.0"
-  },
+  "useroptions": [],
+  "dependencies": ["splitArgs"],
   "modifies": {
-    "path": "write",
-    "message": "write"
+    "Campaign.playerpageid": "read",
+    "player.displayname": "read",
+    "path.id": "read",
+    "path.top": "read,write",
+    "path.left": "read,write",
+    "path.rotation": "read,write",
+    "path.width": "read,write",
+    "path.height": "read,write",
+    "path.scaleX": "read,write",
+    "path.scaleY": "read,write",
+    "state.bshields.animation": "read,write"
   },
-  "conflicts": [
-    "Store Commands"
-  ]
+  "conflicts": ["Store Commands"]
 }
