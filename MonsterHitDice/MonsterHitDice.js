@@ -3,17 +3,17 @@
 // Contact:  https://app.roll20.net/users/104025/the-aaron
 
 var globalConfig = globalConfig || undefined;
-var MonsterHitDice5e = MonsterHitDice5e || (function() {
+var MonsterHitDice = MonsterHitDice || (function() {
     'use strict';
 
-    var version = '0.3.1',
-        lastUpdate = 1457421795,
+    var version = '0.3.2',
+        lastUpdate = 1457484454,
         schemaVersion = 0.1,
         tokenIds = [],
 
     checkGlobalConfig = function(){
-        var s=state.MonsterHitDice5e,
-            g=globalConfig && globalConfig.monsterhitdice5e;
+        var s=state.MonsterHitDice,
+            g=globalConfig && globalConfig.monsterhitdice;
         if(g && g.lastsaved && g.lastsaved > s.globalConfigCache.lastsaved
         ){
            log('  > Updating from Global Config <  ['+(new Date(g.lastsaved*1000))+']');
@@ -49,15 +49,15 @@ var MonsterHitDice5e = MonsterHitDice5e || (function() {
                     s.config.conBonusIsStat = 'conIsStat' === g['Constitution is Stat'];
                     break;
             }
-            state.MonsterHitDice5e.globalConfigCache=globalConfig.monsterhitdice5e;
+            state.MonsterHitDice.globalConfigCache=globalConfig.monsterhitdice;
         }
     },
     checkInstall = function() {
-    	log('-=> MonsterHitDice5e v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+    	log('-=> MonsterHitDice v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
 
-        if( ! _.has(state,'MonsterHitDice5e') || state.MonsterHitDice5e.version !== schemaVersion) {
+        if( ! _.has(state,'MonsterHitDice') || state.MonsterHitDice.version !== schemaVersion) {
             log('  > Updating Schema to v'+schemaVersion+' <');
-            state.MonsterHitDice5e = {
+            state.MonsterHitDice = {
                 version: schemaVersion,
                 globalConfigCache: {lastsaved:0},
                 config: {
@@ -82,7 +82,7 @@ var MonsterHitDice5e = MonsterHitDice5e || (function() {
 
         args = msg.content.split(/\s+/);
         switch(args[0]) {
-            case '!mhd5e':
+            case '!mhd':
                 break;
         }
     },
@@ -93,7 +93,7 @@ var MonsterHitDice5e = MonsterHitDice5e || (function() {
 
     rollHitDice = function(obj) {
         var sets = {},
-        bar = 'bar'+state.MonsterHitDice5e.config.bar,
+        bar = 'bar'+state.MonsterHitDice.config.bar,
         hdAttrib,
         conAttrib,
         hdExpression = 0,
@@ -112,21 +112,21 @@ var MonsterHitDice5e = MonsterHitDice5e || (function() {
                     hdAttrib = findObjs({
                         type: 'attribute', 
                         characterid: obj.get('represents'),
-                        name: state.MonsterHitDice5e.config.hitDiceAttribute
+                        name: state.MonsterHitDice.config.hitDiceAttribute
                     })[0];
                     conAttrib = findObjs({
                         _type: 'attribute', 
                         _characterid:obj.get('represents'),
-                        name: state.MonsterHitDice5e.config.conBonusAttribute
+                        name: state.MonsterHitDice.config.conBonusAttribute
                     })[0];
 
                     if( hdAttrib ) {
-                        hdExpression = state.MonsterHitDice5e.config.findSRDFormula ?
+                        hdExpression = state.MonsterHitDice.config.findSRDFormula ?
                         findSRDRoll(hdAttrib.get('current')) :
                         hdAttrib.get('current') ;
 
-                        if( state.MonsterHitDice5e.config.useConBonus && conAttrib ) {
-                            conExpression = state.MonsterHitDice5e.config.conBonusIsStat ?
+                        if( state.MonsterHitDice.config.useConBonus && conAttrib ) {
+                            conExpression = state.MonsterHitDice.config.conBonusIsStat ?
                             Math.round((conAttrib.get('current')-10)/2) :
                             conAttrib.get('current') ;
 
@@ -185,7 +185,7 @@ var MonsterHitDice5e = MonsterHitDice5e || (function() {
 on('ready',function() {
     'use strict';
 
-    MonsterHitDice5e.CheckInstall();
-    MonsterHitDice5e.RegisterEventHandlers();
+    MonsterHitDice.CheckInstall();
+    MonsterHitDice.RegisterEventHandlers();
 });
 
