@@ -1,16 +1,15 @@
 {
   "name": "Store Commands",
-  "version": "2.2",
+  "script": "Store Commands.js",
+  "version": "2.3",
+  "previousversions": ["2.2","2.1","2.0","1.0"],
   "description": "Stores a series of commands (potentially with delays between them) to be executed in sequence later. Opens up GM-only commands such as /direct and /emas to players.",
   "authors": "Brian Shields",
   "roll20userid": "235259",
-  "dependencies": {
-    "splitArgs": "1.0"
-  },
+  "useroptions": [],
+  "dependencies": ["splitArgs"],
   "modifies": {
-    "message": "write"
+    "player.displayname": "read"
   },
-  "conflicts": [
-    "Dynamic Lighting Animation"
-  ]
+  "conflicts": ["Dynamic Lighting Animation"]
 }
