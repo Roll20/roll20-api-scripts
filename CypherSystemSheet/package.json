@@ -1,9 +1,12 @@
 {
   "name": "Cypher System Sheet",
+  "script": "cyphersystemsheet.js",
+  "previousversions" : [],
   "version": "1.2",
-  "description": "Enables the applying of stat cost, recovery roll advance, auto calculation of PC state and damage track in the Cypher System Sheet",
+  "description": "Enables the applying of stat cost, recovery roll advance, auto calculation of PC state and damage track in the Cypher System Sheet, from the roll template or sheet buttons.",
   "authors": "Natha",
   "roll20userid": "75857",
+  "useroptions": [],
   "dependencies": {},
   "modifies": {
     "token": "write",
