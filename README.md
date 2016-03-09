@@ -16,7 +16,7 @@ When you are ready to submit your script for **public use**, create a `package.j
 * `script`: The name of the javascript file, which must remain uniform throughout versions
 * `version`: The current version number of the API script (e.g. `12.3`)
 * `previousversions`: All previous versions of the script in an array format (e.g. `["0.5","0.1"]`)
-* `description`: A short explanation of the script and it's use that will appear along side the script on Roll20.
+* `description`: A short explanation of the script and it's use that will appear along side the script on Roll20. It is important for this section to be filled out in detail, as it's the primary way users will get information about the purpose and use of the script. Included in the description section needs to be an example use or purpose, list and explanation of API Commands, and any other information necessary to operating the script.
 * `authors`: A simple string telling who contributed toward the script (e.g. `Riley Dutton,Steve Koontz`)
 * `roll20userid`: A simple string telling the Roll20 User ID's of the authors (e.g. `1` or `45672,145678`). Used internally and won't be shown publicly on the site.
 * `useroptions`: An array of hashes that allow script authors to set pre-determined options for users to customize the functionality of the script. For more information check out the _Example folder's package.json for an example or see the Roll20 Wiki for more documentation.
