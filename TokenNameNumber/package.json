@@ -1,8 +1,8 @@
 {
   "name": "TokenNameNumber",
   "script": "TokenNameNumber.js",
-  "version": "0.5.8",
-  "description": "Provides automatic numbering of tokens dragged into onto the tabletop.  Token names need to have the special word **%%NUMBERED%%** somewhere in them.\n\n**!tnn --help** displays the help and configuration options.",
+  "version": "0.5.9",
+  "description": "Provides automatic numbering of tokens dragged onto the tabletop.  Token names need to have the special word `%%NUMBERED%%` somewhere in them.\n\n`!tnn --help` displays the help and configuration options.",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -39,6 +39,7 @@
   "conflicts": [],
   "previousversions": [
     "0.5.6",
-    "0.5.7"
+    "0.5.7",
+    "0.5.8"
   ]
 }
