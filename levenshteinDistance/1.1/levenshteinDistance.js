@@ -1,15 +1,8 @@
-/**
- * Compares two strings and returns the number of changes (substitutions,
- * insertions, and deletions) required to move from the first string to the
- * second.
- * 
- * As a convenience, this function has been added to the String prototype  
- */
 var bshields = bshields || {};
 bshields.levenshteinDistance = (function() {
     'use strict';
     
-    var version = 1.0;
+    var version = 1.1;
     
     function levenshteinDistance(a, b) {
         var i, j,
