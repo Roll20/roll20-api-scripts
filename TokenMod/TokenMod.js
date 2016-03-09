@@ -7,7 +7,7 @@ var TokenMod = TokenMod || (function() {
     'use strict';
 
     var version = '0.8.20',
-        lastUpdate = 1457501048,
+        lastUpdate = 1457501862,
         schemaVersion = 0.2,
 
         fields = {
@@ -135,15 +135,15 @@ var TokenMod = TokenMod || (function() {
                 }
 		},
     checkGlobalConfig = function(){
-        var s=state.TokenNameNumber,
-            g=globalConfig && globalConfig.tokennamenumber,
+        var s=state.TokenMod,
+            g=globalConfig && globalConfig.tokenmod,
             parsedDots;
         if(g && g.lastsaved && g.lastsaved > s.globalConfigCache.lastsaved
         ){
           log('  > Updating from Global Config <  ['+(new Date(g.lastsaved*1000))+']');
 
           s.config.playersCanUse_ids = 'playersCanIDs' === g['Players can use --ids'];
-          state.TokenNameNumber.globalConfigCache=globalConfig.tokennamenumber;
+          state.TokenMod.globalConfigCache=globalConfig.tokenmod;
         }
     },
 	checkInstall = function() {
