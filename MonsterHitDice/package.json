@@ -1,7 +1,7 @@
 {
   "name": "MonsterHitDice",
   "script": "MonsterHitDice.js",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Automatically fills in the hit points for a characters dragged onto the table top. The default token for the character needs to represent that creature but **should not** have the bar used for hit points linked to an attribute.",
   "authors": "The Aaron",
   "roll20userid": "104025",
