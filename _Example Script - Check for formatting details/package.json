@@ -3,7 +3,7 @@
     "script": "example.js",
     "version": "1.1",
     "previousversions": ["1.0","0.5"],
-    "description": "This is an example package.json file in order to show the formatting and syntax required for the script to be deployed in Roll20.",
+    "description": "This is an example package.json file in order to show the formatting and syntax required for the script to be deployed in Roll20. It is important for this section to be filled out in detail, as it's the primary way users will get information about the purpose and use of the script. Included in the description section needs to be an example use or purpose, list and explanation of API Commands, and any other information necessary to operating the script.",
     "authors": "Steve K.",
     "roll20userid": "5047",
     "useroptions": [
