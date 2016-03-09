@@ -1,10 +1,64 @@
 {
-  "name": "MonsterHitDice",
-  "version": "0.1.1",
-  "description": "Set Monster hit dice on add, usually via drag from journal.",
+  "name": "MonsterHitDice5e",
+  "script": "MonsterHitDice5e.js",
+  "version": "0.3.1",
+  "description": "Automatically fills in the hit points for a characters dragged onto the table top. The default token for the character needs to represent that creature but **should not** have the bar used for hit points linked to an attribute.",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
+  "useroptions": [
+    {
+      "name": "Bar",
+      "type": "select",
+      "default": "Bar 3",
+      "description": "Select the bar to use for hitpoints.",
+      "options": [
+        "Bar 1",
+        "Bar 2",
+        "Bar 3"
+      ]
+    },
+    {
+      "name": "Sheet",
+      "type": "select",
+      "default": "DnD 5e - Community Contributed",
+      "description": "Select the character sheet you are using to attempt to preconfigure for that sheet.",
+      "options": [
+        "DnD 5e - Community Contributed",
+        "DnD 5e - Shaped v2",
+        "DnD 5e - OGL by roll20",
+        "Custom - (Use settings below)"
+      ]
+    },
+    {
+      "name": "HitDice Attribute",
+      "type": "text",
+      "description": "Type the name of the attribute used to store the HitDice formula."
+    },
+    {
+      "name": "SRD Embedded Formula",
+      "type": "checkbox",
+      "description": "Select this checkbox if the HitDice attribute has formula in the SRD embedded format '12 (3d4+5)' ",
+      "value": "findSRDFormula"
+    },
+    {
+      "name": "Separate Constitution Modifier",
+      "type": "checkbox",
+      "description": "Select this checkbox if you store the constitution modifier separately from the HitDice formula.",
+      "value": "useSeparateCon"
+    },
+    {
+      "name": "Constitution Attribute",
+      "type": "text",
+      "description": "Type the name of the attribute used to store the constitution value."
+    },
+    {
+      "name": "Constitution is Stat",
+      "type": "checkbox",
+      "description": "Select this checkbox if the Constitution attribute should be converted to a modifier ((CON-10)/2).",
+      "value": "conIsStat"
+    }
+  ],
   "dependencies": [],
   "modifies": {
     "attribute.current": "read",
@@ -19,7 +73,8 @@
     "graphic.type": "read"
   },
   "conflicts": [],
-  "script": "MonsterHitDice.js",
-  "useroptions": {},
-  "previousversions": []
+  "previousversions": [
+    "0.2.2",
+    "0.3.0"
+  ]
 }
