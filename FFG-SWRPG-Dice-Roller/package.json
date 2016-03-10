@@ -1,0 +1,13 @@
+{
+	"name": "Star Wars: Fantasy Flight Games - Dice Roller",
+	"script": "FFG-SWRPG-Dice-Roller.js",
+	"version": "4.0.2.17",
+	"previousversions": ["2.6", "3.0", "4.0.2.17", "4.0.4.0" ],
+	"description": "This is the Fantasy Flight Games Star Wars Role Playing Game Dice Roller. It is used in combination with the Star Wars FFG API-Compatible Character Sheet.",
+	"authors": "Konrad J.,Steve Day, Arron, Andrew H., Tom F., Akashan, GM Knowledge Rhino",
+	"roll20userid": "77736,446406,104025,45755,193829,173154,472728",
+	"useroptions": [],
+	"dependencies": [],
+	"modifies": {},
+	"conflicts": ["EotE-Dice.js"]
+}
