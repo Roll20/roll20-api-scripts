@@ -323,7 +323,7 @@ var handleammo = function (msg,character,player) {
         // UNABLE TO FIND AMMO
         return;
     }
-    var ammofull = msg.content.split("ammo=")[1].split(" charname")[0];
+    var ammofull = msg.content.split("ammo=")[1].split(" {{charname")[0];
     var ammoid = "";
     var ammoname = "";
     if(ammofull.substring(0,1) === "-") {
