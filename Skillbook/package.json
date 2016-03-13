@@ -2,7 +2,7 @@
 	"name": "Skillbook",
 	"script": "Skillbook.js",
 	"version": "1.1",
-	"description": "Creates a token action to provide API buttons for each of a character's skills; for use with the Pathfinder character sheet.",
+	"description": "Creates a token action to provide API buttons for each of a character's skills; for use with the Pathfinder character sheet.  Use v1.0 for the current version (v.37) of the character sheet; use v1.1 for newer versions with extra Artistry and Lore skills.",
 	"authors": "James W.",
 	"roll20userid": "92730",
 	"useroptions": [],
