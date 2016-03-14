@@ -43,3 +43,15 @@ torch:
 tokennamenumber:
 - "TokenNameNumber"
 - "Tokens"
+
+cyphersystemsheet:
+- "CypherSystemSheet"
+- "System Toolkit"
+
+numeneranatha:
+- "Numenera_Natha"
+- "System Toolkit"
+
+portesmonstrestresors:
+- "PortesMonstresTresors"
+- "System Toolkit"
