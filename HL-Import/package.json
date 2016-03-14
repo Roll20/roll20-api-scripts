@@ -1,0 +1,21 @@
+{
+	"name": "HL-Import",
+	"script": "HL-Import.js",
+	"version": "0.5",
+	"description": "A script for importing characters from Hero Lab to the Pathfinder character sheet; visit the forum thread for usage: https://app.roll20.net/forum/post/3100954/script-pf-character-sheet-hero-lab-character-importer/?pageforid=3100954",
+	"authors": "James W.",
+	"roll20userid": "92730",
+	"useroptions": [],
+	"dependencies": [],
+	"modifies": {
+		"attribute.characterid": "read,write",
+		"attribute.current": "read,write",
+		"attribute.id": "read,write",
+		"attribute.name": "read,write",
+		"attribute.type": "read",
+		"character.name": "read,write",
+		"graphic.represents": "read,write"
+	},
+	"conflicts": [],
+	"previousversions": [ ]
+}
