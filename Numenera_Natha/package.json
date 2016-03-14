@@ -1,9 +1,12 @@
 {
   "name": "Natha's Numenera",
+  "script": "Numenera_Natha.js",
+  "previousversions" : [],
   "version": "4.8",
-  "description": "Enables the use of advance rolls and functions in Natha's Numenera character sheets (both english and french) version 4+. See Help.txt",
+  "description": "Enables the use of advance rolls and functions in Natha's Numenera Tabbed character sheets (both english and french) version 4+. Read the [Wiki page](https://wiki.roll20.net/Script:Numenera_Natha) for help about chat commands and macros.",
   "authors": "Natha",
   "roll20userid": "75857",
+  "useroptions": [],
   "dependencies": {},
   "modifies": {
     "token": "write",
