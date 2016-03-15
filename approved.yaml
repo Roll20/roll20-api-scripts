@@ -55,3 +55,11 @@ numeneranatha:
 portesmonstrestresors:
 - "PortesMonstresTresors"
 - "System Toolbox"
+
+pathfinderherolabimport:
+- "Pathfinder HeroLab Import"
+- "System Toolbox"
+
+pathfinderskillbook:
+- "Pathfinder Skillbook"
+- "System Toolbox"
