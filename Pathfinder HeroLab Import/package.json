@@ -1,8 +1,8 @@
 {
-	"name": "HL-Import",
+	"name": "Pathfinder HeroLab Character Import",
 	"script": "HL-Import.js",
 	"version": "0.5",
-	"description": "A script for importing characters from Hero Lab to the Pathfinder character sheet; visit the forum thread for usage: https://app.roll20.net/forum/post/3100954/script-pf-character-sheet-hero-lab-character-importer/?pageforid=3100954",
+	"description": "A script for importing characters from Hero Lab to the Pathfinder character sheet; visit the forum thread for usage: https://wiki.roll20.net/Script:HL-Import",
 	"authors": "James W.",
 	"roll20userid": "92730",
 	"useroptions": [],

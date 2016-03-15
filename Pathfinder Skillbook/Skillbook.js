@@ -38,8 +38,8 @@ function getCharacterObj(obj) {
 
 var SkillBook = SkillBook || (function() {
     'use strict';
-    var version = '1.1',
-	lastUpdate = 1457910689,
+    var version = '1.11',
+	lastUpdate = 1458017730,
 	skills = { "acrobatics":"Acrobatics", "artistry":"Artistry", "artistry2":"Artistry", "artistry3":"Artistry", "appraise":"Appraise", "bluff":"Bluff", "climb":"Climb", "craft":"Craft", "craft2":"Craft", "craft3":"Craft", "diplomacy":"Diplomacy", "disable-Device":"Disable Device", "disguise":"Disguise", "escape-Artist":"Escape Artist", "fly":"Fly", "handle-Animal":"Handle", "heal":"Heal", "intimidate":"Intimidate", "linguistics":"Linguistics", "lore":"Lore", "lore2":"Lore", "lore3":"Lore", "knowledge-arcana":"Know (arcana)", "knowledge-dungeoneering":"Know (dungeoneering)", "knowledge-engineering":"Know (engineering)", "knowledge-geography":"Know (geography)", "knowledge-history":"Know (history)", "knowledge-local":"Know (local)", "knowledge-nature":"Know (nature)", "knowledge-nobility":"Know (nobility)", "knowledge-planes":"Know (planes)", "knowledge-religion":"Know (religion)", "perception":"Perception", "perform":"Perform", "perform2":"Perform", "perform3":"Perform", "profession":"Profession", "profession2":"Profession", "profession3":"Profession", "ride":"Ride", "sense-Motive":"Sense Motive", "sleight-of-Hand":"Sleight of Hand", "spellcraft":"Spellcraft", "stealth":"Stealth", "survival":"Survival", "swim":"Swim", "use-magic-device":"UMD", "misc-skill-0":"misc-skill-0", "misc-skill-1":"misc-skill-1", "misc-skill-2":"misc-skill-2", "misc-skill-3":"misc-skill-3", "misc-skill-4":"misc-skill-4", "misc-skill-5":"misc-skill-5" },
 	miscSkills = [ "artistry", "artistry2", "artistry3", "craft", "craft2", "craft3", "lore", "lore2", "lore3", "perform", "perform2", "perform3", "profession", "profession2", "profession3" ],
 
@@ -65,12 +65,12 @@ var SkillBook = SkillBook || (function() {
 			selected = msg.selected;
 			skillAttrs = Object.keys(skills);
 			_.each(selected, function(obj) {
-                tok = getObj("graphic", obj._id);
-        		// Get the character token represents
-                characterObj = getCharacterObj(obj);
-                if ( ! characterObj) {
-                    return;
-        		}
+				tok = getObj("graphic", obj._id);
+				// Get the character token represents
+				characterObj = getCharacterObj(obj);
+				if ( ! characterObj) {
+					return;
+				}
 				characterID = characterObj.get("_id");
 				characterName = characterObj.get("name");
 				macroText = "/w @{character_name} &{template:pf_generic} {{character_name=@{character_name}}} {{character_id=@{character_id}}} {{name=Skills}} {{header_image=@{header_image-pf_generic}}} {{";	// Base macro text
@@ -84,12 +84,12 @@ var SkillBook = SkillBook || (function() {
 						skillName = getAttrByName(characterID,attrName);
 						
 						// If we don't find it the first time, it may be a caps issue
-						if (skillName === "")
+						if (skillName === "" || _.isUndefined(skillName))
 						{
 							attrName = attrName.substr(0,1).toUpperCase() + attrName.substr(1,attrName.length);
 							skillName = getAttrByName(characterID,attrName);
 							// If they haven't filled in the skill name, skip this skill
-							if (skillName === "")
+							if (skillName === "" || _.isUndefined(skillName))
 								continue;
 						}
 						skillName = skills[skillAttrs[i]] + " (@{"+attrName+"})";
@@ -101,13 +101,19 @@ var SkillBook = SkillBook || (function() {
 						skillName = getAttrByName(characterID,attrName);
 						
 						// If we don't find it the first time, it may be a caps issue
-						if (skillName === "")
+						if (skillName === "" || _.isUndefined(skillName))
 						{
 							attrName = attrName.substr(0,1).toUpperCase() + attrName.substr(1,attrName.length);
 							skillName = getAttrByName(characterID,attrName);
 							// If they haven't filled in the skill name, skip this skill
-							if (skillName === "")
-								continue;
+							if (skillName === "" || _.isUndefined(skillName))
+							{
+								attrName = attrName.replace("skill","Skill");
+								skillName = getAttrByName(characterID,attrName);
+								// If they haven't filled in the skill name, skip this skill
+								if (skillName === "" || _.isUndefined(skillName))
+									continue;
+							}
 						}
 						skillName = "@{"+skillAttrs[i]+"-name}";
 					}
