@@ -43,3 +43,23 @@ torch:
 tokennamenumber:
 - "TokenNameNumber"
 - "Tokens"
+
+cyphersystemsheet:
+- "CypherSystemSheet"
+- "System Toolbox"
+
+numeneranatha:
+- "Numenera_Natha"
+- "System Toolbox"
+
+portesmonstrestresors:
+- "PortesMonstresTresors"
+- "System Toolbox"
+
+pathfinderherolabimport:
+- "Pathfinder HeroLab Import"
+- "System Toolbox"
+
+pathfinderskillbook:
+- "Pathfinder Skillbook"
+- "System Toolbox"
