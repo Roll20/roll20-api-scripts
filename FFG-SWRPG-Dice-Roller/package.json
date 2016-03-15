@@ -1,0 +1,81 @@
+{
+	"name": "Star Wars: Fantasy Flight Games - Dice Roller",
+	"script": "FFG-SWRPG-Dice-Roller.js",
+	"version": "4.0.4.2",
+	"previousversions": ["2.6", "3.0", "4.0.2.17"],
+	"description": "This is the Fantasy Flight Games Star Wars Role Playing Game Dice Roller. It is used in combination with the Star Wars FFG API-Compatible Character Sheet.",
+	"authors": "Konrad J.,Steve Day, Arron, Andrew H., Tom F., Akashan, GM Knowledge Rhino",
+	"roll20userid": "77736,446406,104025,45755,193829,173154,472728",
+	"useroptions": [{
+		"name": "Log",
+		"type": "select",
+		"options": ["on", "off", "multi", "single"],
+		"default": "on and single",
+		"description": "Sets the visual output in the chat window for the dice rolls.  Command: !eed log on|off|multi|single "
+	}, {
+		"name": "Graphics",
+		"type": "select",
+		"options": ["on", "off", "s", "m", "l"],
+		"default": "on and m",
+		"description": "Description: Sets chat window dice output as graphic, small, medium, or large. Command: !eed graphics on|off|s|m|l"
+	}, {
+		"name": "Test",
+		"type": "Text",
+		"default": "",
+		"description": "Description: Output every side of every die to the chat window. * Command !eed test"
+	}, {
+		"name": "Debug",
+		"type": "select",
+		"options": ["on", "off"],
+		"default": "off",
+		"description": "Sets the logging level of the script in the API console.  If you are having issues with the script rolling incorect dice, turn on debug logging and post the result in the forums. No need to restart the script with this command. Command: !eed debug on|off"
+	}, {
+		"name": "Roll",
+		"type": "text",
+		"default": null,
+		"description": "Set the skill name of the roll. Command: !eed label(Name of Skill)"
+	}, {
+		"name": "Initiative",
+		"type": "text",
+		"default": "false",
+		"description": "Set NPC/PC initiative true. Command: !eed npcinit or pcinit and #b #g #y #blk #p #r #w"
+	}, {
+		"name": "Skill",
+		"type": "text",
+		"default": "",
+		"description": "Create the ability and proficiency dice for a skill check. Command: !eed skill(char_value|skill_value)"
+	}, {
+		"name": "Opposed",
+		"type": "text",
+		"default": "",
+		"description": "Create the difficulty and challenge dice for an opposed skill check. Command: !eed opposed(char_value|skill_value)"
+	}, {
+		"name": "Dice",
+		"type": "select",
+		"default": "three",
+		"description": "Loop thru the dice and adds or subtracts them from the dice object. Command: !eed #g #y #b #blk #r #p #w #s #a"
+	}, {
+		"name": "Upgrade",
+		"type": "text",
+		"default": "",
+		"description": "Upgrades ability and difficulty dice. Command: !eed upgrade(ability|#) or upgrade(difficulty|#)"
+	}, {
+		"name": "Downgrade",
+		"type": "text",
+		"default": "",
+		"description": "Downgrades proficiency and challenge dice. Command: !eed downgrade(proficiency|#) or downgrade(challenge|#)"
+	}, {
+		"name": "Destiny",
+		"type": "text",
+		"default": "",
+		"description": "Rolls 1w die and adds the result to the destiny pool. Command: !eed #w destiny doRoll"
+	}, {
+		"name": "Charsheet",
+		"type": "text",
+		"default": "",
+		"description": "Generates a blank character sheet and automatically makes it viewable and editable by the person calling the script. Command: !charsheet"
+	}],
+	"dependencies": [],
+	"modifies": {},
+	"conflicts": ["EotE-Dice.js"]
+}
