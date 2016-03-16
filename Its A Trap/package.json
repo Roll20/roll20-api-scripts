@@ -1,9 +1,12 @@
 {
     "name": "It's a Trap!",
+    "script": "ItsATrap.js",
     "version": "2.0",
+    "previousversions": [],
     "description": "Provides a simple means to set traps and detect when tokens move across them.",
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
+    "useroptions": [],
     "dependencies": {
         "Token Collisions": "1.1",
         "Vector Math": "1.0"
