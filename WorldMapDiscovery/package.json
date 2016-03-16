@@ -1,11 +1,13 @@
 {
     "name": "World Map Discovery",
+    "script": "WorldMapDiscovery.js",
     "version": "1.0",
+    "previousversions": [],
     "description": "Set up dynamic landmarks on the map which can be discovered by the players.",
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
+    "useroptions": [],
     "dependencies": {
-        "Token Collisions": "1.1",
         "Vector Math": "1.0"
     },
     "modifies": {
