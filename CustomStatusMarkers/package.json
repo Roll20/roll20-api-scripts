@@ -1,9 +1,12 @@
 {
     "name": "Custom Status Markers",
+    "script": "CustomStatusMarkers.js",
     "version": "1.5",
+    "previousversions": [],
     "description": "Allows users to create custom status markers and set them onto tokens.",
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
+    "useroptions": [],
     "dependencies": {
         "Path Math": "1.0"
     },
