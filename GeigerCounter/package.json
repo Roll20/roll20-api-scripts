@@ -1,9 +1,12 @@
 {
     "name": "Geiger Counter",
+    "script": "GeigerCounter.js",
     "version": "1.0",
+    "previousversions": [],
     "description": "Dynamically create radioactive areas and give characters Geiger Counters to measure rads/s in those areas.",
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
+    "useroptions": [],
     "dependencies": {
     },
     "modifies": {
