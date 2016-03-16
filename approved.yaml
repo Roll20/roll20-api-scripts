@@ -38,7 +38,7 @@ tokenmod:
 
 torch:
 - "Torch"
-- "Dyanmic Lighting"
+- "Dynamic Lighting"
 
 tokennamenumber:
 - "TokenNameNumber"
