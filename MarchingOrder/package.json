@@ -1,9 +1,12 @@
 {
     "name": "Marching Order",
+    "script": "marchingOrder.js",
     "version": "2.0",
+    "previousversions": [],
     "description": "Makes tokens follow each other in some specified order.",
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
+    "useroptions": [],
     "dependencies": {},
     "modifies": {
         "left": "read, write",
