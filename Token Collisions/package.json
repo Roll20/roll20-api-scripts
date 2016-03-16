@@ -2,7 +2,7 @@
     "name": "Token Collisions",
     "script": "TokenCollisions.js",
     "version": "1.1",
-    "previousVersions": [],
+    "previousversions": [],
     "description": "A small library for detecting collisions among tokens.",
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,

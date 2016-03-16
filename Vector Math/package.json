@@ -2,7 +2,7 @@
     "name": "Vector Math",
     "script": "VecMath.js",
     "version": "1.0",
-    "previousVersions": [],
+    "previousversions": [],
     "desciption": "A small library for (mostly 2D) vector mathematics.",
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
