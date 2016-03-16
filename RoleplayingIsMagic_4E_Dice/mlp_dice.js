@@ -47,9 +47,9 @@
  *      skillXMisc is a number field for the total of any other modifiers for
  *      the skill, which aren't Advantages and Drawbacks.
  *
- * 			skillXConds is a text field where players can write any notes about
- * 			the skill, such as for conditional modifiers. Nothing here is parsed
- * 			for the dice rolling math.
+ *      skillXConds is a text field where players can write any notes about
+ *      the skill, such as for conditional modifiers. Nothing here is parsed
+ *      for the dice rolling math.
  */
 (function() {
 
