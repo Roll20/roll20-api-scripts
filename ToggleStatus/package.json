@@ -1,0 +1,16 @@
+{
+	"name": "ToggleStatus",
+	"script": "ToggleStatus.js",
+	"version": "1.5",
+	"description": "A script to toggle a status marker on/off, and set an attribute to 0 or 1 to match; useful for toggling bonuses on and off.",
+	"authors": "James W.",
+	"roll20userid": "92730",
+	"useroptions": [],
+	"dependencies": [],
+	"modifies": {
+		"attribute.*": "read,write"
+		"graphic.*": "read,write"
+	},
+	"conflicts": [],
+	"previousversions": [ "1.0" ]
+}
