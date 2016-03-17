@@ -23,7 +23,7 @@ When the marker is saved, a confirmation message will be displayed in the chat.
 where {statusName} is the name of the saved custom status marker and [{count}]
 is an optional number badge to put on the status marker.
 
-If the status marker will be toggled for each selected token. If count is
+The status marker will be toggled for each selected token. If count is
 specified, the status marker will include count as a text badge.
 
 ### Listing status markers
