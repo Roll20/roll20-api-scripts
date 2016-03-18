@@ -1,7 +1,7 @@
 var TokenSync = TokenSync || (function() {
     'use strict';
-    var version = '1.0',
-    lastUpdate = 1458191219,
+    var version = '1.1',
+    lastUpdate = 1458259062,
 	
 	syncable = [ "imgsrc", "bar1_link", "bar2_link", "bar3_link", "width", "height", "rotation", "layer", "isdrawing", "flipv", "fliph", "name", "aura1_radius", "aura2_radius", "aura1_color", "aura2_color", "aura1_square", "aura2_square", "tint_color", "statusmarkers", "showname", "showplayers_name", "showplayers_bar1", "showplayers_bar2", "showplayers_bar3", "showplayers_aura1", "showplayers_aura2", "light_radius", "light_dimradius", "light_otherplayers", "light_hassight", "light_angle", "light_losangle", "light_multiplier" ],
 	syncAll = "imgsrc|bar1_link|bar2_link|bar3_link|width|height|rotation|layer|isdrawing|flipv|fliph|name|aura1_radius|aura2_radius|aura1_color|aura2_color|aura1_square|aura2_square|tint_color|statusmarkers|showname|showplayers_name|showplayers_bar1|showplayers_bar2|showplayers_bar3|showplayers_aura1|showplayers_aura2|light_radius|light_dimradius|light_otherplayers|light_hassight|light_angle|light_losangle|light_multiplier",
@@ -76,7 +76,7 @@ var TokenSync = TokenSync || (function() {
 		}
 	},
 
-	remove = function(charID,properties)
+	remove = function(charID,properties,silent)
 	{
 		var i, propList;
 		if (properties === "")
@@ -87,7 +87,7 @@ var TokenSync = TokenSync || (function() {
 		{
 			if (!_.contains(Object.keys(state.TokenSync.syncList),propList[i]))
 			{
-				if (properties.indexOf(propList[i]) !== -1)
+				if (properties.indexOf(propList[i]) !== -1 && silent !== true)
 					sendChat("TokenSync","Property "+propList[i]+" not in sync list");
 				continue;
 			}
@@ -98,11 +98,10 @@ var TokenSync = TokenSync || (function() {
 					delete state.TokenSync.syncList[propList[i]];
 				else
 				{
-					log(state.TokenSync.syncList[propList[i]]);
 					state.TokenSync.syncList[propList[i]].splice(state.TokenSync.syncList[propList[i]].indexOf(charID),1);
-					log(state.TokenSync.syncList[propList[i]]);
 				}
-				sendChat("TokenSync","Removed "+propList[i]+" from the sync list.");
+				if (silent !== true)
+					sendChat("TokenSync","Removed "+propList[i]+" from the sync list.");
 			}
 		}
 	},
@@ -180,9 +179,34 @@ var TokenSync = TokenSync || (function() {
             state.TokenSync = { module: "TokenSync", syncList: {}, propsListened: [] };
         log('-=> TokenSync v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
 	},
+	
+	syncNewToken = function(newTok)
+	{
+		var existingTok;
+		var tokens = findObjs({ _subtype: "token", represents: newTok.get("represents") });
+		for (var i = 0; i < tokens.length; i++)
+		{
+			if (tokens[i].get("_id") !== newTok.get("_id"))
+			{
+				existingTok = tokens[i];
+				break;
+			}
+		}
+		if (!_.isUndefined(existingTok))
+			syncProperty(existingTok,"");
+	},
+	
+	removeDeletedCharacter = function(oldChar)
+	{
+		remove(oldChar.get("_id"),"",true);
+	},
 
 	RegisterEventHandlers = function() {
 		on('chat:message', HandleInput);
+		on('add:token', syncNewToken);
+		on('destroy:character', removeDeletedCharacter);
+		on('change:token:represents', syncNewToken);
+
 		var prop, i;
 		state.TokenSync.propsListened = [];
 		log (state.TokenSync.syncList);
