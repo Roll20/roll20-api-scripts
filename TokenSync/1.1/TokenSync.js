@@ -1,25 +1,27 @@
 var TokenSync = TokenSync || (function() {
     'use strict';
-    var version = '1.5',
-    lastUpdate = 1458277726,
+    var version = '1.1',
+    lastUpdate = 1458259062,
 	
 	syncable = [ "imgsrc", "bar1_link", "bar2_link", "bar3_link", "width", "height", "rotation", "layer", "isdrawing", "flipv", "fliph", "name", "aura1_radius", "aura2_radius", "aura1_color", "aura2_color", "aura1_square", "aura2_square", "tint_color", "statusmarkers", "showname", "showplayers_name", "showplayers_bar1", "showplayers_bar2", "showplayers_bar3", "showplayers_aura1", "showplayers_aura2", "light_radius", "light_dimradius", "light_otherplayers", "light_hassight", "light_angle", "light_losangle", "light_multiplier" ],
-		
+	syncAll = "imgsrc|bar1_link|bar2_link|bar3_link|width|height|rotation|layer|isdrawing|flipv|fliph|name|aura1_radius|aura2_radius|aura1_color|aura2_color|aura1_square|aura2_square|tint_color|statusmarkers|showname|showplayers_name|showplayers_bar1|showplayers_bar2|showplayers_bar3|showplayers_aura1|showplayers_aura2|light_radius|light_dimradius|light_otherplayers|light_hassight|light_angle|light_losangle|light_multiplier",
+	
 	syncProperty = function(updatedToken, properties) 
 	{
 		var value;
 		if (!updatedToken.get("represents"))
 			return;
-		var propList;
-		if (_.isUndefined(properties) || properties === "")
-			propList = state.TokenSync.syncList[updatedToken.get('represents')];
-		else
-			propList = _.intersection(properties.split("|"),(state.TokenSync.syncList[updatedToken.get('represents')]||[]));
+		if (properties === "")
+			properties = syncAll;
+		var propList = properties.split("|");
 
-		var tokens = findObjs({ _subtype: "token", represents: updatedToken.get("represents") });
 		propList.forEach(function(prop) {
-			value = updatedToken.get(prop);
-			tokens.forEach(function(tok) { tok.set(prop,value); });
+			if (!_.isUndefined(state.TokenSync.syncList[prop]) && _.contains(state.TokenSync.syncList[prop],updatedToken.get("represents")))
+			{
+				var tokens = findObjs({ _subtype: "token", represents: updatedToken.get("represents") });
+				value = updatedToken.get(prop);
+				tokens.forEach(function(tok) { tok.set(prop,value); });
+			}
 		});
 	},
 	
@@ -39,51 +41,78 @@ var TokenSync = TokenSync || (function() {
 		}
 	},
 
-	add = function(charID,properties,silent)
+	add = function(charID,properties)
 	{
-		var propsRequested = properties.split("|");
-		var propsRejected = _.difference(propsRequested, syncable);
-		var propList = _.intersection(propsRequested, syncable);
-		var propsAlready = _.intersection(propList,(state.TokenSync.syncList[charID]||[]));
-		propList = _.difference(propList,(state.TokenSync.syncList[charID]||[]));
-		if (silent !== true)
+		var i;
+		var propList = properties.split("|");
+		for (i = 0; i < propList.length; i++)
 		{
-			if (propsRejected.length > 1)
-				sendChat("TokenSync","Invalid sync properties: " + _.reduce(propsRejected, function(memo, prop) { return memo + ", " + prop; }));
-			else if (propsRejected.length === 1)
-				sendChat("TokenSync","Invalid sync property: " + propsRejected[0]);
-				
-			if (propsAlready.length > 0)
-				sendChat("TokenSync","Already synchronizing: " + _.reduce(propsAlready, function(memo, prop) { return memo + ", " + prop; }));
-			
-			if (propList.length > 0)
-				sendChat("TokenSync","Now synchronizing: " + _.reduce(propList, function(memo, prop) { return memo + ", " + prop; }));
+			if (_.indexOf(syncable,propList[i]) === -1)
+			{
+				// Not on our list of properties that can be synchronized
+				sendChat("TokenSync","Invalid token property: "+propList[i]);
+				continue;
+			}
+			if (_.contains(Object.keys(state.TokenSync.syncList),propList[i]))
+			{
+				if (_.contains(state.TokenSync.syncList[propList[i]],charID))
+				{
+					sendChat("TokenSync","Property already added to sync list: "+propList[i]);
+					continue;
+				}
+				else
+				{
+					state.TokenSync.syncList[propList[i]].push(charID);
+					sendChat("TokenSync","Added "+propList[i]+" to the sync list.");
+				}
+			}
+			else
+			{
+				log("Created new "+propList[i]);
+				state.TokenSync.syncList[propList[i]] = [ charID ];
+				registerListener(propList[i]);
+				sendChat("TokenSync","Added "+propList[i]+" to the sync list.");
+			}
 		}
-		state.TokenSync.syncList[charID] = _.union( (state.TokenSync.syncList[charID]||[]), propList);
-		_.each(propList,registerListener);
 	},
 
 	remove = function(charID,properties,silent)
 	{
+		var i, propList;
 		if (properties === "")
-		{	
-			delete state.TokenSync.syncList[charID];
-			if (silent !== true)
-				sendChat("TokenSync","Removed all sync properties!");
-			return;
+			propList = syncAll.split("|");
+		else
+			propList = properties.split("|");
+		for (i = 0; i < propList.length; i++)
+		{
+			if (!_.contains(Object.keys(state.TokenSync.syncList),propList[i]))
+			{
+				if (properties.indexOf(propList[i]) !== -1 && silent !== true)
+					sendChat("TokenSync","Property "+propList[i]+" not in sync list");
+				continue;
+			}
+			else if (_.contains(state.TokenSync.syncList[propList[i]],charID))
+			{
+				// If this is the only character in the list, gank the whole property from the list
+				if (state.TokenSync.syncList[propList[i]].length === 1)
+					delete state.TokenSync.syncList[propList[i]];
+				else
+				{
+					state.TokenSync.syncList[propList[i]].splice(state.TokenSync.syncList[propList[i]].indexOf(charID),1);
+				}
+				if (silent !== true)
+					sendChat("TokenSync","Removed "+propList[i]+" from the sync list.");
+			}
 		}
-		var propList = _.intersection(properties.split("|"),syncable);
-		state.TokenSync.syncList[charID] = _.difference((state.TokenSync.syncList[charID]||[]),propList);
-		if (state.TokenSync.syncList[charID].length === 0)
-			delete state.TokenSync.syncList[charID];
-		if (silent !== true)
-			sendChat("TokenSync","No longer synchronizing: " + _.reduce(propList,function(memo,prop){ return memo + ", " + prop; }));
 	},
 
 	HandleInput = function(msg)
 	{
 
-		var selected,
+		var msg,
+			selected,
+            characterObj,
+            tokens,
 			tok,
 			params,
 			i;
@@ -130,7 +159,10 @@ var TokenSync = TokenSync || (function() {
 							remove(tok.get("represents"),"");
 							break;
 						case "--forcesync":
-							syncProperty(tok);
+							syncProperty(tok,"");
+							break;
+						case "--register":
+						registerListeners();
 							break;
 						default:
 							break;
@@ -140,23 +172,11 @@ var TokenSync = TokenSync || (function() {
 		}
 	},
 	
-	updateSchema = function()
-	{
-		var oldList = _.clone(state.TokenSync.syncList);
-		state.TokenSync.syncList = {};
-		state.TokenSync.schema = 2.0;
-		// Old schema was property: character list, new schema is character: property list
-		_.each(oldList,function(charList,prop) { _.each(charList,function(charID) { add(charID,prop,true); }); });
+	registerListeners = function() {
 	},
-	
     checkInstall = function() {    
-		state.TokenSync.propsListened = [];
         if (!state.TokenSync)
-            state.TokenSync = { module: "TokenSync", syncList: {}, propsListened: [], schema: 2.0 };
-		else if (_.isUndefined(state.TokenSync.schema))
-			updateSchema();
-		else
-			_.each(_.uniq(_.flatten(_.values(state.TokenSync.syncList))),registerListener);
+            state.TokenSync = { module: "TokenSync", syncList: {}, propsListened: [] };
         log('-=> TokenSync v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
 	},
 	
@@ -173,7 +193,7 @@ var TokenSync = TokenSync || (function() {
 			}
 		}
 		if (!_.isUndefined(existingTok))
-			syncProperty(existingTok);
+			syncProperty(existingTok,"");
 	},
 	
 	removeDeletedCharacter = function(oldChar)
@@ -186,6 +206,12 @@ var TokenSync = TokenSync || (function() {
 		on('add:token', syncNewToken);
 		on('destroy:character', removeDeletedCharacter);
 		on('change:token:represents', syncNewToken);
+
+		var prop, i;
+		state.TokenSync.propsListened = [];
+		log (state.TokenSync.syncList);
+		var keys = Object.keys(state.TokenSync.syncList);
+		for(i = 0; i < keys.length; i++) registerListener(keys[i]);
 	};
 
 	return {
