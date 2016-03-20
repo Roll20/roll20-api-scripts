@@ -1,10 +1,10 @@
 {
 	"name": "TokenSync",
 	"script": "TokenSync.js",
-	"version": "1.5",
+	"version": "1.6",
 	"description": "A script for syncronizing changes to a token to all other tokens representing the same character",
-	"authors": "James W.",
-	"roll20userid": "92730",
+	"authors": "James W., The Aaron",
+	"roll20userid": "92730,104025",
 	"useroptions": [],
 	"dependencies": [],
 	"modifies": {
@@ -12,5 +12,5 @@
 		"graphic.*": "read,write"
 	},
 	"conflicts": [],
-	"previousversions": [ "1.1", "1.0" ]
+	"previousversions": [ "1.5", "1.1", "1.0" ]
 }
