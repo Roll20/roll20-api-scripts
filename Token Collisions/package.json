@@ -3,7 +3,14 @@
     "script": "TokenCollisions.js",
     "version": "1.1",
     "previousversions": [],
-    "description": "# Token Collisions\r\rThis script provides a small library for checking for collisions between tokens. It provides no functionality by itself, but it is used by other scripts such as ```It's A Trap``` and ```World Map Discovery```.\r\rThe library is exposed through the ```TokenCollisions``` object.",
+    "description": "# Token Collisions
+
+    This script provides a small library for checking for collisions between
+    tokens. It provides no functionality by itself, but it is used by other
+    scripts such as ```It's A Trap``` and ```World Map Discovery```.
+
+    The library is exposed through the ```TokenCollisions``` object.
+",
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
     "useroptions": [],
