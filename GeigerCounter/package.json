@@ -3,31 +3,7 @@
     "script": "GeigerCounter.js",
     "version": "1.0",
     "previousversions": [],
-    "description": "# Geiger Counter
-
-    This script allows the GM to dynamically create radioactive areas in their
-    maps. Characters that have Geiger counters will be alerted how many rads
-    they are taking.
-
-    ## To create a radioactive source object:
-    1) Create a token representing the source on the GM layer.
-    2) Set that token's 'radioactive' status marker to on.
-    3) Set its aura1 radius to the distance at which characters will start
-    taking rads from it.
-    4) Set the bar1 value to amount of rads/s characters will take at the edge
-    of its aura.
-    5) Set the bar1 max value to the maximum amount of rads/s characters can take
-    from it.
-
-    ## To give a player a Geiger counter:
-    1) Give them a 'hasGeigerCounter' attribute.
-    2) Set the attribute to 'true'.
-
-    If a character moves in a radioactive area and they have a Geiger counter,
-    their Geiger counter will alert everyone how many rads/s they are taking.
-    If a character moves in a radioactive area and they don't have a Geiger
-    counter, only the GM will be alerted how many rads/s they are taking.
-",
+    "description": "# Geiger Counter\r\rThis script allows the GM to dynamically create radioactive areas in their\rmaps. Characters that have Geiger counters will be alerted how many rads\rthey are taking.\r\r## To create a radioactive source object:\r1) Create a token representing the source on the GM layer.\r2) Set that token's 'radioactive' status marker to on.\r3) Set its aura1 radius to the distance at which characters will start\rtaking rads from it.\r4) Set the bar1 value to amount of rads/s characters will take at the edge\rof its aura.\r5) Set the bar1 max value to the maximum amount of rads/s characters can take\rfrom it.\r\r## To give a player a Geiger counter:\r1) Give them a 'hasGeigerCounter' attribute.\r2) Set the attribute to 'true'.\r\rIf a character moves in a radioactive area and they have a Geiger counter,\rtheir Geiger counter will alert everyone how many rads/s they are taking.\rIf a character moves in a radioactive area and they don't have a Geiger\rcounter, only the GM will be alerted how many rads/s they are taking.\r",
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
     "useroptions": [],

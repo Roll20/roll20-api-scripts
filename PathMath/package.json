@@ -3,16 +3,7 @@
     "script": "PathMath.js",
     "version": "1.0",
     "previousversions": [],
-    "description": "# Path Math
-
-    A library that provides some mathematical operations involving Paths.
-
-    ### To Use:
-
-    This is a library intended to be used by other scripts. It has no stand-alone
-    functionality of its own. All the library's operations are exposed by the
-    ```PathMath``` object created by this script.
-",
+    "description": "# Path Math\r\rA library that provides some mathematical operations involving Paths.\r\r### To Use:\r\rThis is a library intended to be used by other scripts. It has no stand-alone\rfunctionality of its own. All the library's operations are exposed by the\r```PathMath``` object created by this script.\r",
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
     "useroptions": [],
