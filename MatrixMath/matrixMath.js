@@ -20,6 +20,11 @@ var MatrixMath = (function() {
    */
 
   /**
+   * An N-degree vector.
+   * @typedef {number[]} Vector
+   */
+
+  /**
    * Gets the adjugate of a matrix, the tranpose of its cofactor matrix.
    * @param  {[type]} mat
    * @return {[type]}
@@ -93,9 +98,13 @@ var MatrixMath = (function() {
    * Tests if two matrices are equal.
    * @param  {Matrix} a
    * @param  {Matrix} b
+   * @param {number} [tolerance=0]
+   *        If specified, this specifies the amount of tolerance to use for
+   *        each value of the matrices when testing for equality.
    * @return {boolean}
    */
-  function equal(a, b) {
+  function equal(a, b, tolerance) {
+    tolerance = tolerance || 0;
     var sizeA = MatrixMath.size(a);
     var sizeB = MatrixMath.size(b);
 
@@ -104,7 +113,7 @@ var MatrixMath = (function() {
 
     for(var col=0; col<sizeA; col++) {
       for(var row=0; row<sizeA; row++) {
-        if(a[col][row] !== b[col][row])
+        if(Math.abs(a[col][row] - b[col][row]) > tolerance)
           return false;
       }
     }
@@ -213,12 +222,51 @@ var MatrixMath = (function() {
   }
 
   /**
+   * Produces a 2D rotation affine transformation. The direction of the
+   * rotation depends upon the coordinate system.
+   * @param  {number} angle
+   *         The angle, in radians.
+   * @return {Matrix}
+   */
+  function rotate(angle) {
+    var cos = Math.cos(angle);
+    var sin = Math.sin(angle);
+    return [[cos, sin, 0], [-sin, cos, 0], [0,0,1]];
+  }
+
+  /**
+   * Produces a 2D scale affine transformation matrix.
+   * The matrix is used to transform homogenous coordinates, so it is
+   * actually size 3 instead of size 2, despite being used for 2D geometry.
+   * @param  {(number|Vector)} amount
+   *         If specified as a number, then it is a uniform scale. Otherwise,
+   *         it defines a scale by parts.
+   * @return {Matrix}
+   */
+  function scale(amount) {
+    if(_.isNumber(amount)
+      amount = [amount, amount];
+    return [[amount[0], 0, 0], [0, amount[1], 0], [0, 0, 1]];
+  }
+
+  /**
    * Gets the size N of a NxN square matrix.
    * @param  {Matrix} mat
    * @return {uint}
    */
   function size(mat) {
     return mat[0].length;
+  }
+
+  /**
+   * Produces a 2D translation affine transformation matrix.
+   * The matrix is used to transform homogenous coordinates, so it is
+   * actually size 3 instead of size 2, despite being used for 2D geometry.
+   * @param  {Vector} vec
+   * @return {Matrix}
+   */
+  function translate(vec) {
+    return [[1,0,0], [0,1,0],[vec[0], vec[1], 1]];
   }
 
   /**
@@ -273,8 +321,8 @@ var MatrixMath = (function() {
       throw new Error(failMsg);
   }
 
-  function assertEqual(actual, expected) {
-    assert(MatrixMath.equal(actual, expected),
+  function assertEqual(actual, expected, tolerance) {
+    assert(MatrixMath.equal(actual, expected, tolerance),
       'Expected: ' + JSON.stringify(expected) +
       '\nActual: ' + JSON.stringify(actual));
   }
@@ -405,6 +453,10 @@ var MatrixMath = (function() {
                     [-6/11, 3/22, 1/11],
                     [-1/11, -5/22, 2/11]];
     assertEqual(actual, expected);
+
+    var inverse = MatrixMath.multiply(a, actual);
+    var expected = MatrixMath.identity(3);
+    assertEqual(inverse, expected, 0.001);
   });
 
   unitTest('MatrixMath.minor()', function() {
@@ -412,6 +464,14 @@ var MatrixMath = (function() {
     var actual = MatrixMath.minor(a, 1, 1);
     var expected = -12;
     assert(actual === expected, 'Got ' + actual + '\nExpected ' + expected);
+  });
+
+  unitTest('MatrixMath.multiply()', function() {
+    var a = [[1,2,3], [4,5,6], [7,8,9]];
+    var b = [[9,8,7], [6,5,4], [3,2,1]];
+    var actual = MatrixMath.multiply(a,b);
+    var expected = [[90, 114, 138], [54,69,84], [18,24,30]];
+    assertEqual(actual, expected);
   });
 
   unitTest('MatrixMath.omit()', function() {
