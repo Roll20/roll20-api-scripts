@@ -1,0 +1,17 @@
+{
+  "name": "RandomRotate",
+  "version": "0.2.1",
+  "description": "Allows the GM to easily rotate all selected tokens to a random angle.",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": [],
+  "modifies": {
+    "graphic.rotation": "write",
+    "graphic.subtype": "read"
+  },
+  "conflicts": [],
+  "script": "RandomRotate.js",
+  "useroptions": {},
+  "previousversions": []
+}

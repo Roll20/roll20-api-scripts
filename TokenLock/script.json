@@ -1,0 +1,23 @@
+{
+  "name": "TokenLock",
+  "version": "0.2.3",
+  "description": "Allows GMs to selectively lock the movement of Player Tokens.",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": [],
+  "modifies": {
+    "state.TokenLock": "read,write",
+    "character.controlledby": "read",
+    "graphic.controlledby": "read",
+    "graphic.left": "read,write",
+    "graphic.represents": "read",
+    "graphic.rotation": "read,write",
+    "graphic.subtype": "read",
+    "graphic.top": "read,write"
+  },
+  "conflicts": [],
+  "script": "TokenLock.js",
+  "useroptions": {},
+  "previousversions": []
+}

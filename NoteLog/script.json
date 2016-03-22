@@ -1,0 +1,17 @@
+{
+  "name": "NoteLog",
+  "version": "0.1.1",
+  "description": "",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": {},
+  "modifies": {
+    "state.NoteLog": "read,write",
+    "handout.notes": "read,write"
+  },
+  "conflicts": [],
+  "script": "NoteLog.js",
+  "useroptions": {},
+  "previousversions": []
+}

@@ -1,0 +1,16 @@
+{
+  "name": "RecursiveTable",
+  "version": "0.1.2",
+  "description": "",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": {},
+  "modifies": {
+    "state.RecursiveTable": "read,write"
+  },
+  "conflicts": [],
+  "script": "RecursiveTable.js",
+  "useroptions": {},
+  "previousversions": []
+}

@@ -1,13 +1,11 @@
 {
     "name": "World Map Discovery",
-    "script": "WorldMapDiscovery.js",
     "version": "1.0",
-    "previousversions": [],
-    "description": "# World Map Discovery\r\r###### Required Scripts\r* [Vector Math](https://github.com/Roll20/roll20-api-scripts/tree/master/Vector%20Math)\r\rThis script allows the GM to set hidden locations on a world map that can be\rrevealed when a character gets close enough.\r\r### To use:\r\r1) Turn on the landmark's white-tower status (The one that looks like a tower).\r2) Set the landmark's aura 1 radius to whatever radius you want players to come within to discover the landmark.\r3) Put the landmark on the GM layer.\r\r### Discovering landmarks:\r\rWhen a character token moves within the aura radius of the landmark, the landmark\rwill appear on the graphics layer and a message will be displayed\rtelling everyone that the character discovered it. When the landmark is\rdiscovered, its aura1 radius is removed.\r",
+    "description": "Set up dynamic landmarks on the map which can be discovered by the players.",
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
-    "useroptions": [],
     "dependencies": {
+        "Token Collisions": "1.1",
         "Vector Math": "1.0"
     },
     "modifies": {

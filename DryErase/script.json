@@ -1,0 +1,27 @@
+{
+  "name": "DryErase",
+  "version": "0.1.6",
+  "description": "",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": {},
+  "modifies": {
+    "state.DryErase": "read,write",
+    "graphics": "create,remove",
+    "graphics.width": "read,write",
+    "graphics.height": "read,write",
+    "graphics.top": "read,write",
+    "graphics.left": "read,write",
+    "path": "create,remove",
+    "path.width": "read,write",
+    "path.height": "read,write",
+    "path.top": "read,write",
+    "path.left": "read,write",
+    "path.layer": "read,write"
+  },
+  "conflicts": [],
+  "script": "DryErase.js",
+  "useroptions": {},
+  "previousversions": []
+}

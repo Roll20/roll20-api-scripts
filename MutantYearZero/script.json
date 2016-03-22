@@ -1,0 +1,16 @@
+{
+  "name": "MutantYearZero",
+  "version": "0.1.8",
+  "description": "!myz and !wmyz provide the Mutant Year Zero dice mechanics.",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": {},
+  "modifies": {
+    "state.MutantYearZero": "read,write"
+  },
+  "conflicts": [],
+  "script": "MutantYearZero.js",
+  "useroptions": {},
+  "previousversions": []
+}

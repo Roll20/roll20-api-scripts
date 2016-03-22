@@ -34,6 +34,7 @@ var LanguageScript = LanguageScript || (function () {
     roll20API = roll20API || {},
     
     whoSpoke = "",
+	whoSpoke2 = "",
     gibberish = "",
     spokenByIds = "",
     characters = "",

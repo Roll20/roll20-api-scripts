@@ -1,0 +1,14 @@
+{
+  "name": "WildDice",
+  "version": "0.3.1",
+  "description": "Implements the Wild Dice rolling mechanic.",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": [],
+  "modifies": [],
+  "conflicts": [],
+  "script": "WildDice.js",
+  "useroptions": {},
+  "previousversions": []
+}
