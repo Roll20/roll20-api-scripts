@@ -3,7 +3,7 @@
     "script": "VecMath.js",
     "version": "1.0",
     "previousversions": [],
-    "desciption": "# Vector Math\r\rThis script provides a small library of vector mathematics operations used by\rother scripts to assist in geometric computations. For example, this is\rused prominently in the ```Token Collisions``` script.\r\rThe library is exposed through the ```VecMath``` object.\r",
+    "desciption": "# Vector Math\r\rThis script provides a small library of vector mathematics operations used by other scripts to assist in geometric computations. For example, this is used prominently in the ```Token Collisions``` script.\r\rThe library is exposed through the ```VecMath``` object.",
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
     "useroptions": [],
