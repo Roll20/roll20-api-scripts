@@ -1,7 +1,7 @@
 {
-  "name": "GlitchCatcher",
+  "name": "Shadowrun5e",
   "version": "0.1",
-  "description": "Requires SR5 character sheet. Will listen to roll templates from that sheet and send chat messages from user rolling if they glitch.",
+  "description": "leverages SR5 character sheet.",
   "authors": "jflo",
   "roll20userid": "742034",
   "dependencies": {},

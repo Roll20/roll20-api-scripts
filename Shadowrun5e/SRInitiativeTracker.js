@@ -1,3 +1,13 @@
+/**
+ * SRInitiativeTracker will handle any iniative rolls which come from the SR5
+ * character sheet roll templates. The character being "spoken as" will have
+ * their token added to the initiative tracker in sorted order.
+ * 
+ * This script also provides a '!nextpass' chat command which will automatically
+ * subtract 10 from all entries and remove those which have no initiative left.
+ * 
+ */
+ 
 on('chat:message', function(msg) {
     if(msg.type == 'general' && (msg.rolltemplate.indexOf('sr') == 0) && (msg.content.indexOf('Initiative') > -1)) {
         //script should only respond to template rolls from sr which have 'Initiative' in them somewhere
