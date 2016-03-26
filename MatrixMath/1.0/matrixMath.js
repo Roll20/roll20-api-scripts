@@ -176,23 +176,46 @@ var MatrixMath = (function() {
 
   /**
    * Returns the matrix multiplication of a*b.
+   * This function works for non-square matrices (and also for transforming
+   * vectors by a matrix).
+   * For matrix multiplication to work, the # of columns in A must be equal
+   * to the # of rows in B.
+   * The resulting matrix will have the same number of rows as A and the
+   * same number of columns as B.
+   * If b was given as a vector, then the result will also be a vector.
    * @param  {Matrix} a
-   * @param  {Matrix} b
-   * @return {Matrix}
+   * @param  {Matrix|Vector} b
+   * @return {Matrix|Vector}
    */
   function multiply(a, b) {
-    var size = MatrixMath.size(a);
+    // If a vector is given for b, convert it to a nx1 matrix, where n
+    // is the length of b.
+    var bIsVector = _.isNumber(b[0]);
+    if(bIsVector)
+      b = [b];
+
+    var colsA = a.length;
+    var rowsA = a[0].length;
+    var colsB = b.length;
+    var rowsB = b[0].length;
+    if(colsA !== rowsB)
+      throw new Error('MatrixMath.multiply ERROR: # columns in A must be ' +
+        'the same as the # rows in B. Got A: ' + rowsA + 'x' + colsA +
+        ', B: ' + rowsB + 'x' + colsB + '.');
 
     var result = [];
-    for(var col=0; col<size; col++) {
+    for(var col=0; col<colsB; col++) {
       result[col] = [];
-      for(var row=0; row<size; row++) {
+      for(var row=0; row<rowsA; row++) {
         result[col][row] = 0;
-        for(var i=0; i<size; i++) {
+        for(var i=0; i<colsA; i++) {
           result[col][row] += a[i][row] * b[col][i];
         }
       }
     }
+
+    if(bIsVector)
+      result = result[0];
     return result;
   }
 
@@ -244,7 +267,7 @@ var MatrixMath = (function() {
    * @return {Matrix}
    */
   function scale(amount) {
-    if(_.isNumber(amount)
+    if(_.isNumber(amount))
       amount = [amount, amount];
     return [[amount[0], 0, 0], [0, amount[1], 0], [0, 0, 1]];
   }
@@ -300,7 +323,10 @@ var MatrixMath = (function() {
     minor: minor,
     multiply: multiply,
     omit: omit,
+    rotate: rotate,
+    scale: scale,
     size: size,
+    translate: translate,
     transpose: transpose
   };
 })();
@@ -472,6 +498,23 @@ var MatrixMath = (function() {
     var actual = MatrixMath.multiply(a,b);
     var expected = [[90, 114, 138], [54,69,84], [18,24,30]];
     assertEqual(actual, expected);
+  });
+
+  unitTest('Matrix.multiply() to transform a vector', function() {
+    // A 2D point in homogenous coordinates.
+    var pt = [1,2,1];
+
+    var scale = MatrixMath.scale([10,20]);
+    var rotate = MatrixMath.rotate(Math.PI/2);
+    var translate = MatrixMath.translate([2,-8]);
+
+    var m = MatrixMath.multiply(scale, rotate);
+    m = MatrixMath.multiply(m, translate);
+
+    // Transform the point.
+    var actual = MatrixMath.multiply(m, pt);
+    var expected = [60, 60, 1];
+    assertEqual(actual, expected, 0.01);
   });
 
   unitTest('MatrixMath.omit()', function() {
