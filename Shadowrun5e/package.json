@@ -1,7 +1,7 @@
 {
   "name": "Shadowrun5e",
   "version": "0.1",
-  "description": "leverages SR5 character sheet.",
+  "description": "Shadowrun 5e scripts. Leverages SR5 character sheet.",
   "authors": "jflo",
   "roll20userid": "742034",
   "dependencies": {},
