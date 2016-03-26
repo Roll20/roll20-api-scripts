@@ -2,7 +2,7 @@
 
 Counts the "raises" of a die roll for the _Savage Worlds_ game system.
 
-Use `!rc roll target` to roll. _roll_ should be a dice expression (do **not** include `/r`, `/roll`, or inline roll brackets `[[]]`), white _target_ should be the target number of the roll.
+Use `!rc roll target` to roll. _roll_ should be a dice expression (do **not** include `/r`, `/roll`, or inline roll brackets `[[]]`), while _target_ should be the target number of the roll.
 
 ### Output Format
 

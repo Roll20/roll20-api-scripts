@@ -1,0 +1,23 @@
+{
+  "name": "Walls",
+  "version": "0.3.1",
+  "description": "Builds dynamic lighting walls with an exported SVG path file.",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": [],
+  "modifies": {
+    "state.Walls": "read,write",
+    "graphic.height": "read",
+    "graphic.left": "read",
+    "graphic.pageid": "read",
+    "graphic.top": "read",
+    "graphic.width": "read",
+    "path": "create",
+    "player.displayname": "read"
+  },
+  "conflicts": [],
+  "script": "Walls.js",
+  "useroptions": {},
+  "previousversions": []
+}

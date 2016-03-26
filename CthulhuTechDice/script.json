@@ -1,0 +1,16 @@
+{
+  "name": "CthulhuTechDice",
+  "version": "0.1.12",
+  "description": "",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": {},
+  "modifies": {
+    "state.CthulhutechDice": "read,write"
+  },
+  "conflicts": [],
+  "script": "CthulhuTechDice.js",
+  "useroptions": {},
+  "previousversions": []
+}

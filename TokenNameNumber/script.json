@@ -1,0 +1,45 @@
+{
+  "name": "TokenNameNumber",
+  "script": "TokenNameNumber.js",
+  "version": "0.5.9",
+  "description": "Provides automatic numbering of tokens dragged onto the tabletop.  Token names need to have the special word `%%NUMBERED%%` somewhere in them.\n\n`!tnn --help` displays the help and configuration options.",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "useroptions": [
+    {
+      "name": "Random Space",
+      "type": "number",
+      "default": "0",
+      "description": "Set a number other than 0 to set the size of the potential gap between named creatures. 0 retains the default behavior of only increasing by 1 each time."
+    },
+    {
+      "name": "Use Dots",
+      "type": "checkbox",
+      "description": "Select this option to add a distribution of status markers to newly added tokens which can be used to verbally identify a creature without knowing it's name, or the number of other creatures of it's kind.",
+      "value": "useDots"
+    },
+    {
+      "name": "Dots",
+      "type": "text",
+      "default": "red,brown,yellow,green,blue,purple",
+      "description": "A comma/space/symbol separated list of statuses to use for the dots.  Possible statuses: red, blue, green, brown, purple, pink, yellow, skull, sleepy, half-heart, half-haze, interdiction, snail, lightning-helix, spanner, chained-heart, chemical-bolt, death-zone, drink-me, edge-crack, ninja-mask, stopwatch, fishing-net, overdrive, strong, fist, padlock, three-leaves, fluffy-wing, pummeled, tread, arrowed, aura, back-pain, black-flag, bleeding-eye, bolt-shield, broken-heart, cobweb, broken-shield, flying-flag, radioactive, trophy, broken-skull, frozen-orb, rolling-bomb, white-tower, grab, screaming, grenade, sentry-gun, all-for-one, angel-outfit, archery-target"
+    }
+  ],
+  "dependencies": [],
+  "modifies": {
+    "state.TokenNameNumber": "read,write",
+    "graphic.name": "read,write",
+    "graphic.statusmarkers": "write",
+    "graphic.pageid": "read",
+    "graphic.represents": "read",
+    "graphic.subtype": "read",
+    "graphic.type": "read"
+  },
+  "conflicts": [],
+  "previousversions": [
+    "0.5.6",
+    "0.5.7",
+    "0.5.8"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+    "name": "13th Age Official Character Sheet Companion",
+    "script": "13th Age Official Character Sheet Companion.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "Enhances the Official 13th Age Character Sheet with quick Escalation Die tracking, automatic recovery tracking, token setup, and automatic staggered and down icons.\r\r**API COMMANDS**\r\r**!edie** will add the Escalation Die if there isn't one already in the scene. It will be placed at the top of the turn order. It will continue to count above 6 however it will never add more than a 6 bonus to roll attached to the character sheet. The associated character sheet stat is @{E-DIE} for use in personal macros or @{tracker|Escalation Die} for global macros. Note that the tracker attribute doesn't cap the result at 6 and can return a higher value.\r**!setup** will attempt to set up the bars of every token on the current page that represents a character. A token must already be set to represent a character for **!setup** to work. Bar1 is Temp HP, Bar2 is Recoveries, and Bar3 is HP. Note that the token still needs to be saved once for the HP_max to calculate since it's a disabled attribute.\r**!stag** is on by default. It will automatically add a Staggered or Dead status icon to tokens that represent a character. Using the **!stag** command will toggle the automatic icons on and off.\r**!rec** is on by default. It will automatically tick off a recovery each time to the rollbutton is used. Using the **!rec** command will toggle the automatic recovery tracking on and off.",
+    "authors": "Steve K.",
+    "roll20userid": "5047",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {},
+    "conflicts": []
+}

@@ -1,0 +1,51 @@
+{
+  "name": "Collision Detection",
+  "script": "Collision Detection.js",
+  "version": "2.1",
+  "previousversions": ["2.0", "1.0"],
+  "description": "Watches for collisions between player-controlled tokens and a specified subset of path objects. When a collision is detected, the script may return the token to its position prior to the move, send a warning message to the token's controller, and/or halt the token at the path acting as a barrier to movement.",
+  "authors": "Brian Shields",
+  "roll20userid": "235259",
+  "useroptions": [
+    {
+      "name": "config.pathColor",
+      "type": "text",
+      "default": "#ff00ff",
+      "description": "The script only considers paths of a specific color, allowing you to also use paths of other colors which your players will not collide with. By default, this is fuchsia (#ff00ff); the color is specified as a hexadecimal web color, which you can see when selecting a color from the drawing interface. A path's fill color is ignored."
+    },
+    {
+      "name": "layer",
+      "type": "select",
+      "options": ["all", "walls", "gmlayer", "objects", "map"],
+      "default": "walls",
+      "description": "The script will only look at paths on the specified layer. You can also set this value to \"all\" and paths on every layer will be considered."
+    },
+    {
+      "name": "behavior",
+      "type": "number",
+      "default": "6",
+      "description": "You can customize the script's behavior when a collision event is detected. Behaviors include DONT_MOVE, WARN_PLAYER, and STOP_AT_WALL. Use 1 for DONT_MOVE, 4 for STOP_AT_WALL, 2 for WARN_PLAYER, and add the values together to achieve multiple behaviors. STOP_AT_WALL will override DONT_MOVE if you set the value to 5 or 7."
+    }
+  ],
+  "dependencies": [],
+  "modifies": {
+    "token.subtype": "read",
+    "token.left": "read,write",
+    "token.top": "read,write",
+    "token.represents": "read",
+    "token.controlledby": "read",
+    "character.controlledby": "read",
+    "character.name": "read",
+    "player.displayname": "read",
+    "path.pageid": "read",
+    "path.stroke": "read",
+    "path.layer": "read",
+    "path.path": "read",
+    "path.left": "read",
+    "path.top": "read",
+    "path.width": "read",
+    "path.height": "read",
+    "Campaign.playerpageid": "read"
+  },
+  "conflicts": []
+}
