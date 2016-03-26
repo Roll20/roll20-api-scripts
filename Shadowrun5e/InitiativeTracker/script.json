@@ -1,0 +1,15 @@
+{
+  "name": "SRInitiative",
+  "version": "0.1",
+  "description": "SRInitiativeTracker will handle any iniative rolls which come from the SR5
+    character sheet roll templates. The character being \"spoken as\" will have
+    their token added to the initiative tracker in sorted order.
+  
+    This script also provides a '!nextpass' chat command which will automatically
+    subtract 10 from all entries and remove those which have no initiative left.",
+  "authors": "jflo",
+  "roll20userid": "742034",
+  "modifies": {
+    "Campaign.turnorder": "write"
+  }
+}
