@@ -63,3 +63,39 @@ pathfinderskillbook:
 ffgstarwarsdice:
 - "FFG-SWRPG-Dice-Roller"
 - "System Toolbox"
+
+customstatusmarkers:
+- "CustomStatusMarkers"
+- "Tokens"
+
+geigercounter:
+- "GeigerCounter"
+- "Tokens"
+
+itsatrap:
+- "Its A Trap"
+- "Tokens"
+
+marchingorder:
+- "MarchingOrder"
+- "Tokens"
+
+pathmath:
+- "PathMath"
+- "Utility"
+
+tokencollisions:
+- "Token Collisions"
+- "Utility"
+
+vectormath":
+- "Vector Math"
+- "Utility"
+
+worldmapdiscovery:
+- "WorldMapDiscovery"
+- "Maps & Drawing"
+
+matrixmath:
+- "MatrixMath"
+- "Utility"
