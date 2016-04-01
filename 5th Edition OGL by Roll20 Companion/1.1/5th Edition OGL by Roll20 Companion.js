@@ -239,11 +239,14 @@ var handlenpctoken = function(msg,character,player) {
 };
 
 var getCleanImgsrc = function (imgsrc) {
-   var parts = imgsrc.match(/(.*\/images\/.*)(thumb|med|original|max)(.*)$/);
-   if(parts) {
-      return parts[1]+'thumb'+parts[3];
-   }
-   return;
+    var parts = imgsrc.match(/(.*\/images\/.*)(thumb|med|original|max)(.*)$/);
+    if(parts) {
+        return parts[1]+'thumb'+parts[3];
+    }
+    else {
+        parts = imgsrc.match(/(.*\/marketplace\/.*)(thumb|med|original|max)(.*)$/);
+        return parts[1]+'thumb'+parts[3];
+    }
 };
 
 var handleslotattack = function (msg,character,player) {
