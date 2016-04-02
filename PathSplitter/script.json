@@ -1,0 +1,15 @@
+{
+    "name": "Path Splitter",
+    "script": "PathSplitter.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "# Path Splitter\r\r###### Required Scripts\r* [Matrix Math](https://github.com/Roll20/roll20-api-scripts/tree/master/MatrixMath)\r* [Path Math](https://github.com/Roll20/roll20-api-scripts/tree/master/PathMath)\r* [Vector Math](https://github.com/Roll20/roll20-api-scripts/tree/master/Vector%20Math)\r\rThis script allows players to split up a polygonal path by drawing another polygonal path on top of it. The original path is split up where it intersects the splitting path. This script also supports scaled and rotated paths.\r\r## To use:\r\r1) Draw a a polygonal path over the path your want to split up. Set this path to the splitting path color (by default this is pink: #ff00ff).\r\r2) Select the path you want to split and the splitting path.\r\r3) In the chat, enter the command ```!pathSplit```.\r\r## Changing the splitting path color:\r\rBy default, the reserved color for the splitting path is pink (#ff00ff). To change it, set your splitting path to whichever color you want to use. Then, select it and enter the command ```!pathSplitColor``` in the chat.",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [],
+    "dependencies": ["Matrix Math", "Path Math", "Vector Math"],
+    "modifies": {
+        "path": "read, write"
+    },
+    "conflicts": []
+}
