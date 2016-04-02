@@ -223,7 +223,6 @@
                     _type: 'path',
                     _id: selected[0]._id
                 })[0];
-                log(path);
 
                 var stroke = path.get('stroke');
                 state.PathSplitter.splitPathColor = stroke;
@@ -258,14 +257,7 @@
                 else {
                     throw new Error('No splitting path selected.');
                 }
-                log('!pathSplit old paths:')
-                log(mainPath)
-                log(splitPath)
                 var newPaths = splitPathAtIntersections(mainPath, splitPath);
-                log('!pathSplit new paths:');
-                _.each(newPaths, function(p) {
-                    log(p);
-                });
             }
             catch(err) {
                 log('!pathSplit ERROR: ', err.message)
