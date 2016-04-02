@@ -167,8 +167,14 @@ var PathMath = (function() {
 
         // Get the bounds of the segment.
         var pts = [];
+        var isFirst = true;
         _.each(segments, function(segment) {
             var p1 = segment[0];
+            if(isFirst) {
+                isFirst = false;
+                pts.push(p1);
+            }
+
             var p2 = segment[1];
 
             left = Math.min(left, p1[0], p2[0]);
@@ -176,7 +182,6 @@ var PathMath = (function() {
             top = Math.min(top, p1[1], p2[1]);
             bottom = Math.max(bottom, p1[1], p2[1]);
 
-            pts.push(p1);
             pts.push(p2);
         });
 
@@ -195,7 +200,7 @@ var PathMath = (function() {
                 type = 'M';
                 firstPt = false;
             }
-            _path.push([type, pt[0], pt[1]]);
+            _path.push([type, pt[0]-left, pt[1]-top]);
         });
 
         return {
@@ -256,6 +261,43 @@ var PathMath = (function() {
 
         return segments;
     }
+
+    on('chat:message', function(msg) {
+        if(msg.type === 'api' && msg.content.indexOf('!pathInfo')  === 0) {
+            log('!pathInfo');
+
+            try {
+                var path = findObjs({
+                    _type: 'path',
+                    _id: msg.selected[0]._id
+                })[0];
+                log(path);
+                log(path.get('_path'));
+
+                var segments = toSegments(path);
+                log('Segments: ');
+                log(segments);
+
+                var pathData = segmentsToPath(segments);
+                log('New path data: ');
+                log(pathData);
+
+                var curPage = path.get('_pageid');
+                _.extend(pathData, {
+                    stroke: '#ff0000',
+                    _pageid: curPage,
+                    layer: path.get('layer')
+                });
+
+                var newPath = createObj('path', pathData);
+                log(newPath);
+            }
+            catch(err) {
+                log('Lines ERROR: ', err.message)
+            }
+
+        }
+    });
 
     return {
         BoundingBox: BoundingBox,
