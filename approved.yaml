@@ -99,3 +99,7 @@ worldmapdiscovery:
 matrixmath:
 - "MatrixMath"
 - "Utility"
+
+pathsplitter:
+- "PathSplitter"
+- "Maps & Drawing"
