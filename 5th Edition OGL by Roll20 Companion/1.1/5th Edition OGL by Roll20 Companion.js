@@ -128,16 +128,16 @@ var handledeathsave = function(msg,character) {
         var fail2 = findObjs({type: 'attribute', characterid: character.id, name: "deathsave_fail2"}, {caseInsensitive: true})[0];
         var fail3 = findObjs({type: 'attribute', characterid: character.id, name: "deathsave_fail3"}, {caseInsensitive: true})[0];
         if(!fail1) {
-            createObj("attribute", {name: "deathsave_fail1", current: "0", max: "", characterid: character.id});
-            var fail1 = findObjs({type: 'attribute', characterid: character.id, name: "deathsave_fail1"}, {caseInsensitive: true})[0];
+            fail1 = createObj("attribute", {name: "deathsave_fail1", current: "0", max: "", characterid: character.id});
+            //var fail1 = findObjs({type: 'attribute', characterid: character.id, name: "deathsave_fail1"}, {caseInsensitive: true})[0];
         }
         if(!fail2) {
-            createObj("attribute", {name: "deathsave_fail2", current: "0", max: "", characterid: character.id});
-            var fail2 = findObjs({type: 'attribute', characterid: character.id, name: "deathsave_fail2"}, {caseInsensitive: true})[0];
+            fail2 = createObj("attribute", {name: "deathsave_fail2", current: "0", max: "", characterid: character.id});
+            //var fail2 = findObjs({type: 'attribute', characterid: character.id, name: "deathsave_fail2"}, {caseInsensitive: true})[0];
         }
         if(!fail3) {
-            createObj("attribute", {name: "deathsave_fail3", current: "0", max: "", characterid: character.id});
-            var fail3 = findObjs({type: 'attribute', characterid: character.id, name: "deathsave_fail3"}, {caseInsensitive: true})[0];
+            fail3 = createObj("attribute", {name: "deathsave_fail3", current: "0", max: "", characterid: character.id});
+            //var fail3 = findObjs({type: 'attribute', characterid: character.id, name: "deathsave_fail3"}, {caseInsensitive: true})[0];
         }
         if(fail2.get("current") === "on" || (fail1.get("current") === "on" && resultbase === 1)) {
             fail3.set({current:"on"});
@@ -158,16 +158,16 @@ var handledeathsave = function(msg,character) {
         var succ2 = findObjs({type: 'attribute', characterid: character.id, name: "deathsave_succ2"}, {caseInsensitive: true})[0];
         var succ3 = findObjs({type: 'attribute', characterid: character.id, name: "deathsave_succ3"}, {caseInsensitive: true})[0];
         if(!succ1) {
-            createObj("attribute", {name: "deathsave_succ1", current: "0", max: "", characterid: character.id});
-            var succ1 = findObjs({type: 'attribute', characterid: character.id, name: "deathsave_succ1"}, {caseInsensitive: true})[0];
+            succ1 = createObj("attribute", {name: "deathsave_succ1", current: "0", max: "", characterid: character.id});
+            //var succ1 = findObjs({type: 'attribute', characterid: character.id, name: "deathsave_succ1"}, {caseInsensitive: true})[0];
         }
         if(!succ2) {
-            createObj("attribute", {name: "deathsave_succ2", current: "0", max: "", characterid: character.id});
-            var succ2 = findObjs({type: 'attribute', characterid: character.id, name: "deathsave_succ2"}, {caseInsensitive: true})[0];
+            succ2 = createObj("attribute", {name: "deathsave_succ2", current: "0", max: "", characterid: character.id});
+            //var succ2 = findObjs({type: 'attribute', characterid: character.id, name: "deathsave_succ2"}, {caseInsensitive: true})[0];
         }
         if(!succ3) {
-            createObj("attribute", {name: "deathsave_succ3", current: "0", max: "", characterid: character.id});
-            var succ3 = findObjs({type: 'attribute', characterid: character.id, name: "deathsave_succ3"}, {caseInsensitive: true})[0];
+            succ3 = createObj("attribute", {name: "deathsave_succ3", current: "0", max: "", characterid: character.id});
+            //var succ3 = findObjs({type: 'attribute', characterid: character.id, name: "deathsave_succ3"}, {caseInsensitive: true})[0];
         }
         if(succ2.get("current") === "on") {
             succ3.set({current:"on"});
