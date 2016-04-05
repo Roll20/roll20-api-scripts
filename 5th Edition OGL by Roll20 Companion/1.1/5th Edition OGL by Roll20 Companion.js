@@ -272,13 +272,13 @@ var handleslotspell = function (msg,character,player) {
 var resolveslot = function(msg,character,player,spellslot) {
     var charslot = findObjs({type: 'attribute', characterid: character.id, name: "lvl" + spellslot + "_slots_expended"}, {caseInsensitive: true})[0];
     if(!charslot) {
-        createObj("attribute", {name: "lvl" + spellslot + "_slots_expended", current: "0", max: "", characterid: character.id});
-        var charslot = findObjs({type: 'attribute', characterid: character.id, name: "lvl" + spellslot + "_slots_expended"}, {caseInsensitive: true})[0];
+        charslot = createObj("attribute", {name: "lvl" + spellslot + "_slots_expended", current: "0", max: "", characterid: character.id});
+        //var charslot = findObjs({type: 'attribute', characterid: character.id, name: "lvl" + spellslot + "_slots_expended"}, {caseInsensitive: true})[0];
     }
     var charslotmax = findObjs({type: 'attribute', characterid: character.id, name: "lvl" + spellslot + "_slots_total"}, {caseInsensitive: true})[0];
     if(!charslotmax) {
-        createObj("attribute", {name: "lvl" + spellslot + "_slots_total", current: "0", max: "", characterid: character.id});
-        var charslotmax = findObjs({type: 'attribute', characterid: character.id, name: "lvl" + spellslot + "_slots_total"}, {caseInsensitive: true})[0];
+        charslotmax = createObj("attribute", {name: "lvl" + spellslot + "_slots_total", current: "0", max: "", characterid: character.id});
+        //var charslotmax = findObjs({type: 'attribute', characterid: character.id, name: "lvl" + spellslot + "_slots_total"}, {caseInsensitive: true})[0];
     }
     var spent = parseInt(charslot.get("current"), 10) + 1;
     charslot.set({current:spent});
