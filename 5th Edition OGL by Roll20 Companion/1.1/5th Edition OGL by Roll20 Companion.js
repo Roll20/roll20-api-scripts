@@ -410,3 +410,21 @@ var handleammo = function (msg,character,player) {
         }
     }
 };
+
+on('ready', function() {
+    if(!state.FifthEditionOGLbyRoll20) {
+        state.FifthEditionOGLbyRoll20 = {};
+    }
+    if(!state.FifthEditionOGLbyRoll20.deathsavetracking) {
+        state.FifthEditionOGLbyRoll20.deathsavetracking = "on";
+    }
+    if(!state.FifthEditionOGLbyRoll20.autonpctoken) {
+        state.FifthEditionOGLbyRoll20.autonpctoken = "on";
+    }
+    if(!state.FifthEditionOGLbyRoll20.spelltracking) {
+        state.FifthEditionOGLbyRoll20.spelltracking = "on";
+    }
+    if(!state.FifthEditionOGLbyRoll20.ammotracking) {
+        state.FifthEditionOGLbyRoll20.ammotracking = "on";
+    }
+});
