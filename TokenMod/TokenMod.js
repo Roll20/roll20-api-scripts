@@ -2,12 +2,11 @@
 // By:       The Aaron, Arcane Scriptomancer
 // Contact:  https://app.roll20.net/users/104025/the-aaron
 
-var globalconfig = globalconfig || undefined;
 var TokenMod = TokenMod || (function() {
     'use strict';
 
     var version = '0.8.21',
-        lastUpdate = 1457563254,
+        lastUpdate = 1460077744,
         schemaVersion = 0.3,
 
         fields = {
@@ -142,7 +141,7 @@ var TokenMod = TokenMod || (function() {
         ){
           log('  > Updating from Global Config <  ['+(new Date(g.lastsaved*1000))+']');
 
-          s.config.playersCanUse_ids = 'playersCanIDs' === g['Players can use --ids'];
+          s.playersCanUse_ids = 'playersCanIDs' === g['Players can use --ids'];
           state.TokenMod.globalconfigCache=globalconfig.tokenmod;
         }
     },
