@@ -1,5 +1,5 @@
 {
-    "name": "ExperienceTracker",
+    "name": "Experience Tracker",
     "script": "ExperienceTracker.js",
     "version": "2.02",
     "previousversions": [],
@@ -9,9 +9,14 @@
     "useroptions": [],
     "dependencies": [],
     "modifies": {
+        "attribute": "create",
+        "attribute.characterid": "read",
         "attribute.current": "read,write",
+        "attribute.id": "read",
         "attribute.max": "read",
         "attribute.name": "read",
+        "character": "create",
+        "character.id": "read",
         "character.name": "read"
     },
     "conflicts": []
