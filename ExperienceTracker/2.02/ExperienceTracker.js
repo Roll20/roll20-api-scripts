@@ -1,4 +1,3 @@
-//ExperienceTracker v2.02 by Kasper K
 var ExperienceTracker;  //if you know the _id of the ExperienceTracker sheet you 
                         //can put it here for a boost in startup performance ex.
                         //var ExperienceTracker = getObj("character", "-Jixfi5HgiFi0C4RNih9");
@@ -47,6 +46,20 @@ function isNumber (o) {
 function updateCurrentXP(xp){
     var currXP = findObjs({_type: "attribute", name: "currentXP/toNextLVL", _characterid: ExperienceTracker.id})[0];
     var partySize = parseInt(findObjs({_type: "attribute", name: "CurrentPartySize", _characterid: ExperienceTracker.id})[0].get("current"));
+    
+    //type-safety
+    if (!isNumber(currXP.get("current"))){
+        sendChat(announcerName, "The field currentXP needs to be a real number! fix in ExperienceTracker");
+        return 1;
+    }   
+    else if (!isNumber(currXP.get("max"))){
+        sendChat(announcerName, "The field toNextLVL needs to be a real number! fix in ExperienceTracker");
+        return 1;
+    }
+    else if (!isNumber(partySize)){
+        sendChat(announcerName, "The field CurrentPartySize needs to be a real number! fix in ExperienceTracker");
+        return 1;
+    }
     
     currXP.set("current", parseFloat(currXP.get("current")) + (xp/partySize));
     
