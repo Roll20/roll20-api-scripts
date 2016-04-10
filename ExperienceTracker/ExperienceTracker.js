@@ -1,3 +1,4 @@
+//ExperienceTracker v2.02 by Kasper K
 var ExperienceTracker;  //if you know the _id of the ExperienceTracker sheet you 
                         //can put it here for a boost in startup performance ex.
                         //var ExperienceTracker = getObj("character", "-Jixfi5HgiFi0C4RNih9");
@@ -49,11 +50,11 @@ function updateCurrentXP(xp){
     
     currXP.set("current", parseFloat(currXP.get("current")) + (xp/partySize));
     
-    sendChat(announcerName, "Party gained " + xp + "xp");
+    sendChat("", "/desc Party gained " + xp + "xp, resulting in " + currXP.get("current") + "xp total.");
     
     //check for level up
     if (currXP.get("current") >= currXP.get("max")){
-        sendChat(announcerName,"LEVEL UP!");
+        sendChat("","/em LEVEL UP!");
         tooltip++;
         if (tooltip >= 3){
             sendChat(announcerName, "Remember to set the treshold for the next level, in the ExperienceTracker.");
@@ -78,11 +79,5 @@ on("chat:message", function(msg) {
             tooltip = 0;
         }
     }
-  }
-  if(msg.type == "api" && msg.content.indexOf("!kill ") !== -1) {
-    var xp = parseInt(msg.content.replace("!xp ", ""));
-    sendChat(announcerName, "Party gained " + xp + "xp");
-    
-    updateCurrentXP(xp);
   }
 });
