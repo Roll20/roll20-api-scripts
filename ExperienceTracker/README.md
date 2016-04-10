@@ -9,4 +9,4 @@ Features:
   Ability to set party size and level up threshold.
 
 Tool tip: 
-  create a macro like this "!xp @{selected|npc_xp}", and use it assign xp when the party kills a foe in combat!
+  create a macro like this "!xp @{selected|npc_xp}", and use it to assign xp when the party kills a foe in combat!
