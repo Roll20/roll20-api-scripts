@@ -10,7 +10,8 @@
     "dependencies": [],
     "modifies": {
         "attribute.current": "read,write",
-        "attribute.max" "read",
+        "attribute.max": "read",
+        "attribute.name": "read",
         "character.name": "read"
     },
     "conflicts": []
