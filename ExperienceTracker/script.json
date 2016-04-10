@@ -1,0 +1,17 @@
+{
+    "name": "ExperienceTracker",
+    "script": "ExperienceTracker.js",
+    "version": "2.02",
+    "previousversions": [],
+    "description": "!xp handles experience and announces level up",
+    "authors": "Kasper K.",
+    "roll20userid": "Where do you find it?",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {
+        "attribute.current": "read,write",
+        "attribute.max" "read",
+        "character.name": "read"
+    },
+    "conflicts": []
+}
