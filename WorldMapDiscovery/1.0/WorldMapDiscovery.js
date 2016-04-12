@@ -26,17 +26,16 @@ var WorldMapDiscovery = (function() {
      * @param {Graphic} token
      * @return {Graphic}
      */
-    var getLocationCollision = function(token) {
+    var getLocationCollisions = function(token) {
         var allLocations = getLocationTokens();
         var tokenPt = getTokenPt(token);
 
-        var result = _.find(allLocations, function(location) {
+        return _.filter(allLocations, function(location) {
             var locationPt = getTokenPt(location);
             var dist = VecMath.dist(tokenPt, locationPt);
             var threshold = getDiscoveryDistance(location);
             return (dist <= threshold);
         });
-        return result;
     };
 
     /**
@@ -115,18 +114,15 @@ var WorldMapDiscovery = (function() {
 
         if(obj && obj.get('status_white-tower') == true) {
             var locationPt = getTokenPt(obj);
-        //    log('Location: ');
-        //    log(obj);
-        //    log(locationPt);
         }
 
         // Objects on the GM layer don't set off traps.
         if(obj.get("layer") === "objects" && obj.get("represents") && obj.get('_pageid') == activePage) {
-            var location = getLocationCollision(obj);
+            var locations = getLocationCollisions(obj);
 
-            if(location) {
+            _.each(locations, function(location) {
                 discoverLocation(location, obj);
-            }
+            });
         }
     });
 })();
