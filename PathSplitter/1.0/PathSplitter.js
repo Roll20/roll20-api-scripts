@@ -98,8 +98,10 @@
      * Let C be the first point in seg2 and D be the second point in seg2.
      * Let U be the vector from A to B.
      * Let V be the vector from C to D.
+     * Let UHat be the unit vector of U.
+     * Let VHat be the unit vector of V.
      *
-     * Observe that if the dot product of U and V is 1 or -1, then
+     * Observe that if the dot product of UHat and VHat is 1 or -1, then
      * seg1 and seg2 are parallel, so they will either never intersect or they
      * will overlap. We will ignore the case where seg1 and seg2 are parallel.
      *
@@ -149,8 +151,10 @@
 
         // If the two segments are parallel, then either they never intersect
         // or they overlap. Either way, return undefined in this case.
-        var uvDot = VecMath.dot(u,v);
-        if(Math.abs(uvDot) === 1)
+        var uHat = VecMath.normalize(u);
+        var vHat = VecMath.normalize(v);
+        var uvDot = VecMath.dot(uHat,vHat);
+        if(Math.abs(uvDot) > 0.9999)
             return undefined;
 
         // Build the inverse matrix for getting the intersection point's
