@@ -62,8 +62,6 @@ bshields.Collision = (function() {
                     
                     case 'don\'t move & warn player':
                         return behaviors.DONT_MOVE | behaviors.WARN_PLAYER;
-                    case 'don\'t move & stop at wall':
-                        return behaviors.DONT_MOVE | behavrios.STOP_AT_WALL;
                     case 'warn player & stop at wall':
                         return behavrios.WARN_PLAYER | behaviors.STOP_AT_WALL;
                     
