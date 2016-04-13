@@ -6,6 +6,7 @@
   "description": "Adds 'fluffy-wings' status icon to selected token to represent some height.",
   "authors": "Brian Shields,Aaron C. Meadows",
   "roll20userid": "235259,104025",
+  "patreon": "https://www.patreon.com/bshields",
   "useroptions": [],
   "dependencies": ["splitArgs"],
   "modifies": {

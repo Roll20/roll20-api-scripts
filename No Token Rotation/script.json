@@ -6,6 +6,7 @@
   "description": "Prevents tokens from being rotated by anyone.",
   "authors": "Brian Shields",
   "roll20userid": "235259",
+  "patreon": "https://www.patreon.com/bshields",
   "useroptions": [],
   "dependencies": [],
   "modifies": {

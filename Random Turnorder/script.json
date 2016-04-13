@@ -6,6 +6,7 @@
   "description": "Shuffles items in the turnorder window, and adds any selected tokens if they are not already present in the turnorder.",
   "authors": "Brian Shields",
   "roll20userid": "235259",
+  "patreon": "https://www.patreon.com/bshields",
   "useroptions": [],
   "dependencies": ["splitArgs"],
   "modifies": {
