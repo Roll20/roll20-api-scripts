@@ -34,23 +34,17 @@ e.g. ```!setMarker sleep``` or ```!setMarker poison 3```
 ## Listing status markers
 
 You can view the list of custom status markers saved in your campaign
-by entering the command:
-
-```!listMarkers```
+by entering the command ```!listMarkers```.
 
 ## Deleting status markers
 
-You can delete one of your saved custom status markers by entering the command:
-
-```!delMarker NAME```
+You can delete one of your saved custom status markers by entering the command: ```!delMarker NAME```.
 
 e.g. ```!delMarker sleep```
 
 ## Clearing the Custom Status Markers state
 
-A command is provided for clearing the Custom Status Markers module's state.
-
-```!clearMarkersState [tokens]```
+A command is provided for clearing the Custom Status Markers module's state: ```!clearMarkersState [tokens]```.
 
 If a token is selected when the command is entered, only the CSM state for that
 token will be cleared (any custom markers on that token will stop following it).
