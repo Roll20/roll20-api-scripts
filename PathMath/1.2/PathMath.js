@@ -52,6 +52,22 @@ var PathMath = (function() {
     };
 
     /**
+     * @private
+     * Adds two bounding boxes.
+     * @param  {BoundingBox} a
+     * @param  {BoundingBox} b
+     * @return {BoundingBox}
+     */
+    function _addBoundingBoxes(a, b) {
+        var left = Math.min(a.left, b.left);
+        var top = Math.min(a.top, b.top);
+        var right = Math.max(a.left + a.width, b.left + b.width);
+        var bottom = Math.max(a.top + a.height, b.top + b.height);
+
+        return new BoundingBox(left, top, right - left, bottom - top);
+    };
+
+    /**
      * Calculates the bounding box for a list of paths.
      * @param {Path | Path[]} paths
      * @return {BoundingBox}
@@ -97,28 +113,14 @@ var PathMath = (function() {
      * @return {BoundingBox}
      */
     function _getSingleBoundingBox(path) {
-        var width = path.get('width')*path.get('scaleX');
-        var height = path.get('height')*path.get('scaleY');
-        var left = path.get('left') - width/2;
-        var top = path.get('top') - height/2;
+        var pathData = normalizePath(path);
+
+        var width = pathData.width;
+        var height = pathData.height;
+        var left = pathData.left - width/2;
+        var top = pathData.top - height/2;
 
         return new BoundingBox(left, top, width, height);
-    };
-
-    /**
-     * @private
-     * Adds two bounding boxes.
-     * @param  {BoundingBox} a
-     * @param  {BoundingBox} b
-     * @return {BoundingBox}
-     */
-    function _addBoundingBoxes(a, b) {
-        var left = Math.min(a.left, b.left);
-        var top = Math.min(a.top, b.top);
-        var right = Math.max(a.left + a.width, b.left + b.width);
-        var bottom = Math.max(a.top + a.height, b.top + b.height);
-
-        return new BoundingBox(left, top, right - left, bottom - top);
     };
 
     /**
@@ -163,28 +165,17 @@ var PathMath = (function() {
         _.each(paths, function(p) {
             var pbox = getBoundingBox(p);
 
-            var parsed = JSON.parse(p.get('_path'));
+            // Convert the path to a normalized polygonal path.
+            p = normalizePath(p);
+            var parsed = JSON.parse(p._path);
             _.each(parsed, function(pathTuple, index) {
                 var dx = pbox.left - bbox.left;
                 var dy = pbox.top - bbox.top;
-                var sx = p.get('scaleX');
-                var sy = p.get('scaleY');
-
-                // Bezier curve tuple
-                if(pathTuple[0] == 'Q') {
-                    var cx = pathTuple[1]*sx + dx;
-                    var cy = pathTuple[2]*sy + dy;
-                    var x = pathTuple[3]*sx + dx;
-                    var y = pathTuple[4]*sy + dy;
-                    merged.push([pathTuple[0], cx, cy, x, y]);
-                }
 
                 // Move and Line tuples
-                else {
-                    var x = pathTuple[1]*sx + dx;
-                    var y = pathTuple[2]*sy + dy;
-                    merged.push([pathTuple[0], x, y]);
-                }
+                var x = pathTuple[1] + dx;
+                var y = pathTuple[2] + dy;
+                merged.push([pathTuple[0], x, y]);
             });
         });
 
@@ -194,6 +185,9 @@ var PathMath = (function() {
     /**
      * Reproduces the data for a polygonal path such that the scales are 1 and
      * its rotate is 0.
+     * This can also normalize freehand paths, but they will be converted to
+     * polygonal paths. The quatric Bezier curves used in freehand paths are
+     * so short though, that it doesn't make much difference though.
      * @param {Path}
      * @return {PathData}
      */
@@ -362,7 +356,8 @@ var PathMath = (function() {
                 log(newPath);
             }
             catch(err) {
-                log('Lines ERROR: ', err.message)
+                log('!pathInfo ERROR: ');
+                log(err.message);
             }
 
         }
