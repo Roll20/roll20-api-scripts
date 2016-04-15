@@ -1,11 +1,11 @@
 # Page FX
 
-#### Dependencies:
-None
+##### Dependencies:
+* None
 
 This script allows GMs to set up environmental special effects for their maps by producing customizable, randomly distributed fx over some area. This can be used to produce various sorts of atmospheric effects like rain, geysers, steam, bubbling magma, sparks, etc.
 
-This script also exposes several of its functions through a PageFX object, for API contributors to be able to use it programmatically.
+This script also exposes a ```PageFX``` object to allow script writers to use it programmatically.
 
 ## Creating effects
 
@@ -25,11 +25,11 @@ An effect can be disabled by setting its ```interdiction``` <img src="http://gam
 
 ## Chat commands
 
-### Turn on all PageFX
+#### Turn on all PageFX
 
 The ```!pageFX on``` command can be used to reactivate all the PageFX on the current page, except those that are disabled.
 
-### Turn off all PageFX
+#### Turn off all PageFX
 
 The ```!pageFX off``` command can be used to deactivate all the PageFX.
 
