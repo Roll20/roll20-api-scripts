@@ -11,7 +11,7 @@ const semver = require('semver');
 const jeditor = require('gulp-json-editor');
 const merge = require('merge-stream');
 const gutil = require('gulp-util');
-
+const del = require('del');
 
 const repoInfo = {
   owner: 'symposion',
@@ -23,7 +23,7 @@ const auth = {
   token: process.env.GH_TOKEN,
 };
 
-gulp.task('syncReleases', () => {
+gulp.task('syncReleases', ['clean'], () => {
   const localReleases = getReleaseDirectories();
   github.authenticate(auth);
   const releasesAsync = github.releases.listReleases(repoInfo);
@@ -50,13 +50,14 @@ gulp.task('syncReleases', () => {
     .then(updateJSON);
 });
 
+gulp.task('clean', () => {
+  return del(['latest/*']);
+});
+
 function updateJSON() {
   const releaseDirs = getReleaseDirectories().sort(semver.rcompare);
   const latestVersion = releaseDirs[0];
   if (latestVersion) {
-    fs.unlinkSync('latest');
-    fs.symlinkSync(latestVersion, 'latest');
-    
     const scriptStream = gulp.src('./script.json')
       .pipe(jeditor(json => {
         json.version = latestVersion;
@@ -69,7 +70,10 @@ function updateJSON() {
       .pipe(jeditor({ version: latestVersion }))
       .pipe(gulp.dest('./'));
 
-    return merge(scriptStream, packageStream);
+    const copyStream = gulp.src(`./${latestVersion}/*`)
+     .pipe(gulp.dest('./latest/'));
+
+    return merge(scriptStream, packageStream).add(copyStream);
   }
   return _.noop;
 }

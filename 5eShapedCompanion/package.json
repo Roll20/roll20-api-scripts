@@ -15,8 +15,9 @@
   "bugs": {
     "url": "https://github.com/symposion/roll20-api-scripts/issues"
   },
-  "homepage": "https://github.com/symposion/roll20-api-scripts#readme",
+  "homepage": "https://github.com/symposion/roll20-api-scripts/5eShapedCompanion/README.md",
   "devDependencies": {
+    "del": "^2.2.0",
     "eslint": "^2.8.0",
     "eslint-config-airbnb": "^7.0.0",
     "github": "^0.2.4",
