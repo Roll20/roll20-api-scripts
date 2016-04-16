@@ -1,0 +1,26 @@
+{
+    "name": "5e Shaped Companion Script",
+    "script": "5eShapedCompanion.js",
+    "version": "v1.0.8",
+    "previousversions": [
+        "v1.0.7",
+        "v1.0.5",
+        "v1.0.4",
+        "v1.0.3",
+        "v1.0.2",
+        "v1.0.1",
+        "v1.0.0"
+    ],
+    "description": "",
+    "authors": "Lucian H.",
+    "roll20userid": "791452",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {
+        "state.ShapedScripts": "read,write",
+        "token.*": "read,write",
+        "character.*": "read,write",
+        "attribute.*": "read,write"
+    },
+    "conflicts": []
+}
