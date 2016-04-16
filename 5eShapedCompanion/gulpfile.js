@@ -56,7 +56,11 @@ function updateJSON() {
   if (latestVersion) {
     gutil.log('here');
     const scriptStream = gulp.src('./script.json')
-      .pipe(jeditor({ version: latestVersion, previousversions: releaseDirs.slice(1) }))
+      .pipe(jeditor(json => {
+        json.version = latestVersion;
+        json.previousversions = releaseDirs.slice(1);
+        return json;
+      }))
       .pipe(gulp.dest('./'));
 
     const packageStream = gulp.src('./package.json')
@@ -69,21 +73,22 @@ function updateJSON() {
 }
 
 function addRelease(release) {
-  return new Promise((resolve, reject) => {
-    const releaseDir = release.tag_name;
-    fs.mkdirSync(`./${releaseDir}`);
-    release.assets.forEach(asset => {
+  const releaseDir = release.tag_name;
+  gutil.log(`Making directory for release ${releaseDir}`);
+  fs.mkdirSync(`./${releaseDir}`);
+  return Promise.all(release.assets.map(asset =>
+    new Promise((resolve, reject) => {
       const fileName = `./${releaseDir}/${asset.name}`;
       const file = fs.createWriteStream(fileName);
       file.on('finish', () => file.close(resolve));
       request
-      .get(asset.browser_download_url)
+        .get(asset.browser_download_url)
         .on('error', err => {
           reject(err);
         })
         .pipe(file);
-    });
-  });
+    })
+  ));
 }
 
 
