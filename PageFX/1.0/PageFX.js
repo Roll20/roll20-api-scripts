@@ -1,6 +1,14 @@
 /**
  * This script allows GMs to create looping effects that are dispersed through
  * an entire page.
+ * To use it, just create a token named PageFX. Then set the maximum distance
+ * of its effect in its bar1 value, and specify its effect in the
+ * gmnotes.
+ *
+ * Effects will start automatically when you switch to the effect's page or
+ * when you enter the ```!pageFX on``` command.
+ * You can turn off all the effects on a page with the ```!pageFX off```
+ * command.
  */
 var PageFX = (function() {
     var PIXELS_PER_UNIT = 70;
