@@ -54,6 +54,7 @@ function updateJSON() {
   const releaseDirs = getReleaseDirectories().sort(semver.rcompare);
   const latestVersion = releaseDirs[0];
   if (latestVersion) {
+    fs.unlinkSync('latest');
     fs.symlinkSync(latestVersion, 'latest');
     
     const scriptStream = gulp.src('./script.json')
