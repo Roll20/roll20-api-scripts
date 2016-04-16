@@ -54,7 +54,8 @@ function updateJSON() {
   const releaseDirs = getReleaseDirectories().sort(semver.rcompare);
   const latestVersion = releaseDirs[0];
   if (latestVersion) {
-    gutil.log('here');
+    fs.symlinkSync(latestVersion, 'latest');
+    
     const scriptStream = gulp.src('./script.json')
       .pipe(jeditor(json => {
         json.version = latestVersion;
