@@ -237,6 +237,15 @@ var PathMath = (function() {
         _.each(_path, function(tuple) {
             var type = tuple[0];
 
+            // In freehand paths, approximate the quadratic curve by just
+            // using the endpoint of the curve. The curves are so short that
+            // they may as well be tiny segments anyways.
+            if(type === 'Q') {
+              tuple[1] = tuple[3];
+              tuple[2] = tuple[4];
+              type = 'L';
+            }
+
             // The point in path coordinates, relative to the path center.
             var x = tuple[1] - width/2;
             var y = tuple[2] - height/2;
@@ -254,8 +263,9 @@ var PathMath = (function() {
 
             // If we have an 'L' type point, then add the segment.
             // Either way, keep track of the point we've moved to.
-            if(type === 'L')
+            if(type === 'L' && !(prevPt[0] == pt[0] && prevPt[1] == pt[1]))
                 segments.push([prevPt, pt]);
+
             prevPt = pt;
         });
 
