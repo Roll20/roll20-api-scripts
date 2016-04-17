@@ -50,18 +50,18 @@ gulp.task('syncReleases', ['clean'], () => {
     .then(updateJSON);
 });
 
-gulp.task('clean', () => {
-  return del(['latest/*']);
-});
+gulp.task('clean', () => del(['latest/*']));
 
 function updateJSON() {
   const releaseDirs = getReleaseDirectories().sort(semver.rcompare);
   const latestVersion = releaseDirs[0];
   if (latestVersion) {
+    const readme = fs.readFileSync(`${latestVersion}/README.md`, 'utf8').replace(/\n/, '\\n').replace(/"/, '\\"');
     const scriptStream = gulp.src('./script.json')
       .pipe(jeditor(json => {
         json.version = latestVersion;
         json.previousversions = releaseDirs.slice(1);
+        json.description = readme;
         return json;
       }))
       .pipe(gulp.dest('./'));
@@ -71,7 +71,7 @@ function updateJSON() {
       .pipe(gulp.dest('./'));
 
     const copyStream = gulp.src(`./${latestVersion}/*`)
-     .pipe(gulp.dest('./latest/'));
+      .pipe(gulp.dest('./latest/'));
 
     return merge(scriptStream, packageStream).add(copyStream);
   }
