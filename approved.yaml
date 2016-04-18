@@ -123,3 +123,15 @@ pagefx:
 5theShapedCompanion:
 - "5eShapedCompanion"
 - "System Toolbox"
+
+splitargs:
+- "splitArgs"
+- "Utility"
+
+interpretedsendchat:
+- "Interpreted sendChat"
+- "Utility"
+
+levenshteindistance:
+- "levenshteinDistance"
+- "Utility"
