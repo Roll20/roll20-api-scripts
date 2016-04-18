@@ -1,20 +1,20 @@
 {
   "name": "Raise Count",
   "script": "Raise Count.js",
-  "version": "2.4",
-  "previousversions": ["2.3","2.2","2.1","2.0","1.0"],
+  "version": "2.5",
+  "previousversions": ["2.4", "2.3","2.2","2.1","2.0","1.0"],
   "description": "Counts raises for the Savage Worlds system.",
   "authors": "Brian Shields",
   "roll20userid": "235259",
   "useroptions": [
     {
-      "name": "config.raiseSize",
+      "name": "Raise Size",
       "type": "number",
       "default": "4",
       "description": "The size of a \"raise\" for all rolls."
     },
     {
-      "name": "config.outputFormat",
+      "name": "Output Format",
       "type": "text",
       "default": "Roll: {0}, Target: {1}, Raises: {2}",
       "description": "The text to output from the `!rc` command. `{0}` will be replaced with an inline roll, `{1}` will be the supplied target number, and `{2}` will be the number of raises."
