@@ -15,7 +15,26 @@ var PathMath = (function() {
 
     /**
      * A line segment defined by two homogeneous 2D points.
-     * @typdef {Vector[]} Segment
+     * @typedef {Vector[]} Segment
+     */
+
+    /**
+     * Information about a path's 2D transform.
+     * @typedef {Object} PathTransformInfo
+     * @property {number} angle
+     *           The path's rotation angle in radians.
+     * @property {number} cx
+     *           The x coordinate of the center of the path's bounding box.
+     * @property {number} cy
+     *           The y coordinate of the center of the path's bounding box.
+     * @property {number} height
+     *           The unscaled height of the path's bounding box.
+     * @property {number} scaleX
+     *           The path's X-scale.
+     * @property {number} scaleY
+     *           The path's Y-scale.
+     * @property {number} width
+     *           The unscaled width of the path's bounding box.
      */
 
     /**
@@ -30,6 +49,22 @@ var PathMath = (function() {
         this.top = top;
         this.width = width;
         this.height = height;
+    };
+
+    /**
+     * @private
+     * Adds two bounding boxes.
+     * @param  {BoundingBox} a
+     * @param  {BoundingBox} b
+     * @return {BoundingBox}
+     */
+    function _addBoundingBoxes(a, b) {
+        var left = Math.min(a.left, b.left);
+        var top = Math.min(a.top, b.top);
+        var right = Math.max(a.left + a.width, b.left + b.width);
+        var bottom = Math.max(a.top + a.height, b.top + b.height);
+
+        return new BoundingBox(left, top, right - left, bottom - top);
     };
 
     /**
@@ -78,29 +113,45 @@ var PathMath = (function() {
      * @return {BoundingBox}
      */
     function _getSingleBoundingBox(path) {
-        var width = path.get('width')*path.get('scaleX');
-        var height = path.get('height')*path.get('scaleY');
-        var left = path.get('left') - width/2;
-        var top = path.get('top') - height/2;
+        var pathData = normalizePath(path);
+
+        var width = pathData.width;
+        var height = pathData.height;
+        var left = pathData.left - width/2;
+        var top = pathData.top - height/2;
 
         return new BoundingBox(left, top, width, height);
     };
 
     /**
-     * @private
-     * Adds two bounding boxes.
-     * @param  {BoundingBox} a
-     * @param  {BoundingBox} b
-     * @return {BoundingBox}
+     * Gets the 2D transform information about a path.
+     * @param  {Path} path
+     * @return {PathTransformInfo}
      */
-    function _addBoundingBoxes(a, b) {
-        var left = Math.min(a.left, b.left);
-        var top = Math.min(a.top, b.top);
-        var right = Math.max(a.left + a.width, b.left + b.width);
-        var bottom = Math.max(a.top + a.height, b.top + b.height);
+    function getTransformInfo(path) {
+        var scaleX = path.get('scaleX');
+        var scaleY = path.get('scaleY');
+        var angle = path.get('rotation')/180*Math.PI;
 
-        return new BoundingBox(left, top, right - left, bottom - top);
+        // The transformed center of the path.
+        var cx = path.get('left');
+        var cy = path.get('top');
+
+        // The untransformed width and height.
+        var width = path.get('width');
+        var height = path.get('height');
+
+        return {
+            angle: angle,
+            cx: cx,
+            cy: cy,
+            height: height,
+            scaleX: scaleX,
+            scaleY: scaleY,
+            width: width
+        };
     };
+
 
     /**
      * Produces a merged path string from a list of path objects.
@@ -114,28 +165,17 @@ var PathMath = (function() {
         _.each(paths, function(p) {
             var pbox = getBoundingBox(p);
 
-            var parsed = JSON.parse(p.get('_path'));
+            // Convert the path to a normalized polygonal path.
+            p = normalizePath(p);
+            var parsed = JSON.parse(p._path);
             _.each(parsed, function(pathTuple, index) {
                 var dx = pbox.left - bbox.left;
                 var dy = pbox.top - bbox.top;
-                var sx = p.get('scaleX');
-                var sy = p.get('scaleY');
-
-                // Bezier curve tuple
-                if(pathTuple[0] == 'Q') {
-                    var cx = pathTuple[1]*sx + dx;
-                    var cy = pathTuple[2]*sy + dy;
-                    var x = pathTuple[3]*sx + dx;
-                    var y = pathTuple[4]*sy + dy;
-                    merged.push([pathTuple[0], cx, cy, x, y]);
-                }
 
                 // Move and Line tuples
-                else {
-                    var x = pathTuple[1]*sx + dx;
-                    var y = pathTuple[2]*sy + dy;
-                    merged.push([pathTuple[0], x, y]);
-                }
+                var x = pathTuple[1] + dx;
+                var y = pathTuple[2] + dy;
+                merged.push([pathTuple[0], x, y]);
             });
         });
 
@@ -145,6 +185,9 @@ var PathMath = (function() {
     /**
      * Reproduces the data for a polygonal path such that the scales are 1 and
      * its rotate is 0.
+     * This can also normalize freehand paths, but they will be converted to
+     * polygonal paths. The quatric Bezier curves used in freehand paths are
+     * so short though, that it doesn't make much difference though.
      * @param {Path}
      * @return {PathData}
      */
@@ -219,17 +262,7 @@ var PathMath = (function() {
      */
     function toSegments(path) {
         var _path = JSON.parse(path.get('_path'));
-        var scaleX = path.get('scaleX');
-        var scaleY = path.get('scaleY');
-        var angle = path.get('rotation')/180*Math.PI;
-
-        // The transformed center of the path.
-        var cx = path.get('left');
-        var cy = path.get('top');
-
-        // The untransformed width and height.
-        var width = path.get('width');
-        var height = path.get('height');
+        var transformInfo = getTransformInfo(path);
 
         var segments = [];
         var prevPt;
@@ -246,20 +279,8 @@ var PathMath = (function() {
               type = 'L';
             }
 
-            // The point in path coordinates, relative to the path center.
-            var x = tuple[1] - width/2;
-            var y = tuple[2] - height/2;
-            var pt = [x,y,1];
-
-            // The transform of the point from path coordinates to map
-            // coordinates.
-            var scale = MatrixMath.scale([scaleX, scaleY]);
-            var rotate = MatrixMath.rotate(angle);
-            var transform = MatrixMath.translate([cx, cy]);
-            transform = MatrixMath.multiply(transform, rotate);
-            transform = MatrixMath.multiply(transform, scale);
-
-            pt = MatrixMath.multiply(transform, pt);
+            // Transform the point to 2D homogeneous map coordinates.
+            pt = tupleToPoint(tuple, transformInfo);
 
             // If we have an 'L' type point, then add the segment.
             // Either way, keep track of the point we've moved to.
@@ -270,6 +291,38 @@ var PathMath = (function() {
         });
 
         return segments;
+    }
+
+    /**
+     * Transforms a tuple for a point in a path into a point in
+     * homogeneous 2D map coordinates.
+     * @param  {PathTuple} tuple
+     * @param  {PathTransformInfo} transformInfo
+     * @return {Vector}
+     */
+    function tupleToPoint(tuple, transformInfo) {
+        var width = transformInfo.width;
+        var height = transformInfo.height;
+        var scaleX = transformInfo.scaleX;
+        var scaleY = transformInfo.scaleY;
+        var angle = transformInfo.angle;
+        var cx = transformInfo.cx;
+        var cy = transformInfo.cy;
+
+        // The point in path coordinates, relative to the path center.
+        var x = tuple[1] - width/2;
+        var y = tuple[2] - height/2;
+        var pt = [x,y,1];
+
+        // The transform of the point from path coordinates to map
+        // coordinates.
+        var scale = MatrixMath.scale([scaleX, scaleY]);
+        var rotate = MatrixMath.rotate(angle);
+        var transform = MatrixMath.translate([cx, cy]);
+        transform = MatrixMath.multiply(transform, rotate);
+        transform = MatrixMath.multiply(transform, scale);
+
+        return MatrixMath.multiply(transform, pt);
     }
 
     on('chat:message', function(msg) {
@@ -303,7 +356,8 @@ var PathMath = (function() {
                 log(newPath);
             }
             catch(err) {
-                log('Lines ERROR: ', err.message)
+                log('!pathInfo ERROR: ');
+                log(err.message);
             }
 
         }
@@ -314,9 +368,11 @@ var PathMath = (function() {
 
         getBoundingBox: getBoundingBox,
         getCenter: getCenter,
+        getTransformInfo: getTransformInfo,
         mergePathStr: mergePathStr,
         normalizePath: normalizePath,
         segmentsToPath: segmentsToPath,
-        toSegments: toSegments
+        toSegments: toSegments,
+        tupleToPoint: tupleToPoint
     };
 })();
