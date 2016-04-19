@@ -2534,38 +2534,18 @@ var ShapedScripts =
 	    logger.info('Importing statblocks for tokens $$$', options.selected.graphic);
 	    var self = this;
 	    _.each(options.selected.graphic, function (token) {
-	      const error = `Could not find GM notes on either selected token ${token.get('name')} or the character it represents. Have you` +
-	        ' pasted it in correctly?';
 	      var text = token.get('gmnotes');
-	      if (!text) {
-	        const char = roll20.getObj('character', token.get('represents'));
-	        if (char) {
-	          char.get('gmnotes', notes => {
-	            if (notes) {
-	              return self.processGMNotes(options, token, notes);
-	            }
-	            reportError(error);
-	          });
-	        }
-	        else {
-	          reportError(error);
-	        }
-	      }
-	      else {
-	        self.processGMNotes(options, token, text);
+	      if (text) {
+	        text = sanitise(unescape(text), logger);
+	        var monsters = parser.parse(text).monsters;
+	        mpp(monsters, entityLookup);
+	        self.importMonsters(monsters, options, token, [
+	          function (character) {
+	            character.set('gmnotes', text.replace(/\n/g, '<br>'));
+	          }
+	        ]);
 	      }
 	    });
-	  };
-
-	  this.processGMNotes = function (options, token, text) {
-	    text = sanitise(unescape(text), logger);
-	    var monsters = parser.parse(text).monsters;
-	    mpp(monsters, entityLookup);
-	    self.importMonsters(monsters, options, token, [
-	      function (character) {
-	        character.set('gmnotes', text.replace(/\n/g, '<br>'));
-	      }
-	    ]);
 	  };
 
 	  this.importMonstersFromJson = function (options) {
@@ -3195,7 +3175,7 @@ var ShapedScripts =
 
 	  this.addAbility = function (options) {
 	    if (_.isEmpty(options.abilities)) {
-	      reportError('No abilities specified. Take a look at the documentation for a list of ability options.');
+	      //TODO report some sort of error?
 	      return;
 	    }
 	    var messages = _.map(options.selected.character, function (character) {
@@ -3404,7 +3384,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function () {
-	    logger.info('-=> ShapedScripts v1.2.0 <=-');
+	    logger.info('-=> ShapedScripts v1.1.1 <=-');
 	    if (myState.version !== schemaVersion) {
 	      logger.info('  > Updating Schema to v$$$ from $$$<', schemaVersion, myState && myState.version);
 	      logger.info('Preupgrade state: $$$', myState);
@@ -3885,34 +3865,22 @@ var ShapedScripts =
 	  }
 	  this.parsers.push(function (arg, errors, options) {
 	    options[groupName] = options[groupName] || [];
-	    const singleResolved = lookup(arg, options);
-	    if (singleResolved) {
-	      options[groupName].push(singleResolved);
-	      return true;
+	    var someMatch = false;
+	    var resolved = lookup(arg, options);
+	    if (resolved) {
+	      options[groupName].push(resolved);
+	      someMatch = true;
 	    }
-
-
-	    const results = _.chain(arg.split(','))
-	      .map(_.partial(_.result, _, 'trim'))
-	      .uniq()
-	      .reduce(function (results, name) {
-	        const resolvedPart = lookup(name, options);
-	        if (resolvedPart) {
-	          results.resolved.push(resolvedPart);
+	    else {
+	      _.each(arg.split(','), function (name) {
+	        var resolved = lookup(name.trim(), options);
+	        if (resolved) {
+	          options[groupName].push(resolved);
+	          someMatch = true;
 	        }
-	        else {
-	          results.errors.push(`Unrecognised item ${name} for option group ${groupName}`);
-	        }
-	        return results;
-	      }, { errors: [], resolved: [] })
-	      .value();
-
-	    if (!_.isEmpty(results.resolved)) {
-	      options[groupName] = results.resolved;
-	      errors.push.apply(errors, results.errors);
-	      return true;
+	      });
 	    }
-	    return false;
+	    return someMatch;
 	  });
 	  return this;
 	};
@@ -3976,7 +3944,6 @@ var ShapedScripts =
 	        return object;
 	      })
 	      .compact()
-	      .uniq()
 	      .value();
 	    if (_.size(objects) < constraintDetails.min || _.size(objects) > constraintDetails.max) {
 	      throw 'Wrong number of objects of type [' + type + '] selected, should be between ' + constraintDetails.min +

@@ -23,7 +23,43 @@ const auth = {
   token: process.env.GH_TOKEN,
 };
 
-gulp.task('syncReleases', ['clean'], () => {
+
+gulp.task('syncReleases', ['makeLatest'], () => {
+  const releaseDirs = getReleaseDirectories().sort(semver.rcompare);
+  const latestVersion = releaseDirs[0];
+  const mungedText = fs.readFileSync('./latest/README.md', 'utf8')
+    .replace(/^\[!\[Build Status\].*$/m, '')
+    .replace(/<!-- START[\w\W]+<!-- END[^>]+>/, '')
+    .replace(/\[([^\]]+)\]\(#[^\)]+\)/, '$1');
+
+  const scriptStream = gulp.src('./script.json')
+    .pipe(jeditor(json => {
+      json.version = latestVersion;
+      json.previousversions = releaseDirs.slice(1);
+      json.description = mungedText;
+      return json;
+    }))
+    .pipe(gulp.dest('./'));
+
+  const packageStream = gulp.src('./package.json')
+    .pipe(jeditor({ version: latestVersion }))
+    .pipe(gulp.dest('./'));
+
+  return merge(scriptStream, packageStream);
+});
+
+
+gulp.task('makeLatest', ['getReleasesFromGithub', 'clean'], () => {
+  const releaseDirs = getReleaseDirectories().sort(semver.rcompare);
+  const latestVersion = releaseDirs[0];
+  if (latestVersion) {
+    return gulp.src(`./${latestVersion}/*`)
+      .pipe(gulp.dest('./latest/'));
+  }
+  return null;
+});
+
+gulp.task('getReleasesFromGithub', () => {
   const localReleases = getReleaseDirectories();
   github.authenticate(auth);
   const releasesAsync = github.releases.listReleases(repoInfo);
@@ -46,37 +82,10 @@ gulp.task('syncReleases', ['clean'], () => {
         })
         .filter(release => !_.contains(localReleases, release.tag_name));
     })
-    .then(releases => Promise.all(releases.map(addRelease)))
-    .then(updateJSON);
+    .then(releases => Promise.all(releases.map(addRelease)));
 });
 
 gulp.task('clean', () => del(['latest/*']));
-
-function updateJSON() {
-  const releaseDirs = getReleaseDirectories().sort(semver.rcompare);
-  const latestVersion = releaseDirs[0];
-  if (latestVersion) {
-    const readme = fs.readFileSync(`${latestVersion}/README.md`, 'utf8').replace(/\n/, '\\n').replace(/"/, '\\"');
-    const scriptStream = gulp.src('./script.json')
-      .pipe(jeditor(json => {
-        json.version = latestVersion;
-        json.previousversions = releaseDirs.slice(1);
-        json.description = readme;
-        return json;
-      }))
-      .pipe(gulp.dest('./'));
-
-    const packageStream = gulp.src('./package.json')
-      .pipe(jeditor({ version: latestVersion }))
-      .pipe(gulp.dest('./'));
-
-    const copyStream = gulp.src(`./${latestVersion}/*`)
-      .pipe(gulp.dest('./latest/'));
-
-    return merge(scriptStream, packageStream).add(copyStream);
-  }
-  return _.noop;
-}
 
 function addRelease(release) {
   const releaseDir = release.tag_name;

@@ -1,28 +1,3 @@
-<a name="1.2.0"></a>
-# [1.2.0](https://github.com/symposion/roll20-shaped-scripts/compare/1.1.2...1.2.0) (2016-04-19)
-
-
-### Bug Fixes
-
-* **abilities:** Don't create lots of junk token actions for multiple tokens from same char ([c53a4fe](https://github.com/symposion/roll20-shaped-scripts/commit/c53a4fe))
-* **build:** Fix changelog compare links ([59436ed](https://github.com/symposion/roll20-shaped-scripts/commit/59436ed))
-* **build:** Inject correct version number into released script. ([431c1d4](https://github.com/symposion/roll20-shaped-scripts/commit/431c1d4))
-* **command-parser:** Report errors for unresolved options when comma-separated ([6e1cad9](https://github.com/symposion/roll20-shaped-scripts/commit/6e1cad9))
-* **docs:** Prune TOC slightly and ensure README gets committed ([aa43e7a](https://github.com/symposion/roll20-shaped-scripts/commit/aa43e7a))
-* **docs:** Unmangle docs for roll20 script page - they don't deal well with linebreaks. ([9e38035](https://github.com/symposion/roll20-shaped-scripts/commit/9e38035))
-
-### Features
-
-* **statblock-import:** Read statblocks from character GM notes as well as tokens. ([1b3d594](https://github.com/symposion/roll20-shaped-scripts/commit/1b3d594))
-
-
-
-<a name="1.1.2"></a>
-## [1.1.2](https://github.com/symposion/roll20-shaped-scripts/compare/1.1.1...v1.1.2) (2016-04-19)
-
-
-
-
 <a name="1.1.1"></a>
 ## [1.1.1](https://github.com/symposion/roll20-shaped-scripts/compare/1.1.0...v1.1.1) (2016-04-19)
 
@@ -34,7 +9,7 @@
 
 
 <a name="1.1.0"></a>
-# [1.1.0](https://github.com/symposion/roll20-shaped-scripts/compare/1.0.3...1.1.0) (2016-04-18)
+# [1.1.0](https://github.com/symposion/roll20-shaped-scripts/compare/1.0.3...v1.1.0) (2016-04-18)
 
 
 ### Bug Fixes
@@ -51,13 +26,13 @@
 
 
 <a name="1.0.3"></a>
-## [1.0.3](https://github.com/symposion/roll20-shaped-scripts/compare/1.0.2...1.0.3) (2016-04-17)
+## [1.0.3](https://github.com/symposion/roll20-shaped-scripts/compare/1.0.2...v1.0.3) (2016-04-17)
 
 
 
 
 <a name="1.0.2"></a>
-## [1.0.2](https://github.com/symposion/roll20-shaped-scripts/compare/1.0.1...1.0.2) (2016-04-16)
+## [1.0.2](https://github.com/symposion/roll20-shaped-scripts/compare/1.0.1...v1.0.2) (2016-04-16)
 
 
 ### Bug Fixes
@@ -67,13 +42,13 @@
 
 
 <a name="1.0.1"></a>
-## [1.0.1](https://github.com/symposion/roll20-shaped-scripts/compare/1.0.0...1.0.1) (2016-04-16)
+## [1.0.1](https://github.com/symposion/roll20-shaped-scripts/compare/1.0.0...v1.0.1) (2016-04-16)
 
 
 
 
 <a name="1.0.0"></a>
-# [1.0.0](/https://github.com/symposion/roll20-api-scripts//compare/v0.1.0...1.0.0) (2016-04-15)
+# [1.0.0](/https://github.com/symposion/roll20-api-scripts//compare/v0.1.0...v1.0.0) (2016-04-15)
 
 
 ### Bug Fixes
