@@ -3384,7 +3384,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function () {
-	    logger.info('-=> ShapedScripts v1.1.1 <=-');
+	    logger.info('-=> ShapedScripts v1.1.0 <=-');
 	    if (myState.version !== schemaVersion) {
 	      logger.info('  > Updating Schema to v$$$ from $$$<', schemaVersion, myState && myState.version);
 	      logger.info('Preupgrade state: $$$', myState);
