@@ -7,7 +7,8 @@
 ###### Updates
 '''2.1'''
 * Refactored code.
-* ItsATrap now exposes an API for its functions. 
+* ItsATrap now exposes an API for its functions.
+* Customizable trap messages via GM notes.
 
 This is a script that allows GMs to quickly and very easily set up traps on
 the GM layer, and detect when tokens on the objects layer move over them. This

@@ -33,6 +33,23 @@ var ItsATrap = (function() {
     return TokenCollisions.getFirstCollision(token, traps);
   };
 
+  function getTrapMessage(victim, trap) {
+    var notes = unescape(trap.get('gmnotes'));
+
+    log(notes);
+
+    var index = notes.indexOf('TRAP:');
+    if(index !== -1)
+      return notes.slice(index + 5).trim();
+    else {
+      var trapName = trap.get("name");
+      if(trapName)
+        return victim.get("name") + " set off a trap: " + trapName + "!";
+      else
+        return victim.get("name") + " set off a trap!";
+    }
+  }
+
 
   /**
    * Determines whether a token is currently flying.
@@ -63,17 +80,14 @@ var ItsATrap = (function() {
    * When a graphic on the objects layer moves, run the script to see if it
    * passed through any traps.
    */
-  on("change:graphic", function(obj, prev) {
+  on("change:graphic", function(victim) {
     // Objects on the GM layer don't set off traps.
-    if(obj.get("layer") === "objects") {
-      var trap = getTrapCollision(obj);
+    if(victim.get("layer") === "objects") {
+      var trap = getTrapCollision(victim);
       if(trap) {
-        var trapName = trap.get("name");
-        if(trapName)
-          sendChat("Admiral Ackbar", "IT'S A TRAP!!! " + obj.get("name") + " set off a trap: " + trapName + "!");
-        else
-          sendChat("Admiral Ackbar", "IT'S A TRAP!!! " + obj.get("name") + " set off a trap!");
-        moveTokenToTrap(obj, trap);
+        var msg = getTrapMessage(victim, trap);
+        sendChat("Admiral Ackbar", "IT'S A TRAP!!! " + msg);
+        moveTokenToTrap(victim, trap);
 
         // Reveal the trap if it's set to become visible.
         if(trap.get("status_bleeding-eye")) {
@@ -86,6 +100,7 @@ var ItsATrap = (function() {
 
   return {
     getTrapCollision: getTrapCollision,
+    getTrapMessage: getTrapMessage,
     isTokenFlying: isTokenFlying,
     moveTokenToTrap: moveTokenToTrap
   }
