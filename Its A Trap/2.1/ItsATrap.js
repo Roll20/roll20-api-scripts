@@ -36,8 +36,6 @@ var ItsATrap = (function() {
   function getTrapMessage(victim, trap) {
     var notes = unescape(trap.get('gmnotes'));
 
-    log(notes);
-
     var index = notes.indexOf('TRAP:');
     if(index !== -1)
       return notes.slice(index + 5).trim();
