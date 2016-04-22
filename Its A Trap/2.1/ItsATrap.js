@@ -82,7 +82,9 @@ var ItsATrap = (function() {
       var trap = getTrapCollision(victim);
       if(trap) {
         var msg = getTrapMessage(victim, trap);
-        sendChat("Admiral Ackbar", "IT'S A TRAP!!! " + msg);
+        if(msg.indexOf('!') !== 0)
+          msg = "IT'S A TRAP!!! " + msg;
+        sendChat("Admiral Ackbar", msg);
         moveTokenToTrap(victim, trap);
 
         // Reveal the trap if it's set to become visible.
