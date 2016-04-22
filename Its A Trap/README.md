@@ -33,7 +33,7 @@ the ```bleeding eye``` <img src="http://game-icons.net/icons/lorc/originals/png/
 By default, when a character activates a trap, it will just display a
 generic message that the character activated the trap.
 
-You can specify a custom message, which can include roll templates and inline
+You can specify a custom message, which can include inline
 rolls, in the GM notes for the trap. Admiral Ackbar will still dramatically
 announce it.
 
