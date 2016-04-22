@@ -33,6 +33,16 @@ var ItsATrap = (function() {
     return TokenCollisions.getFirstCollision(token, traps);
   };
 
+  /**
+   * Gets the message for a trap set off by a character's token.
+   * This message is just whatever is in the trap's GM notes, but if that
+   * is not set, then it will generate a default message using the trap and
+   * victim's names.
+   * @param  {Graphic} victim
+   *         The token that set off the trap.
+   * @param  {Graphic} trap
+   * @return {str}
+   */
   function getTrapMessage(victim, trap) {
     var notes = unescape(trap.get('gmnotes'));
     if(notes)
