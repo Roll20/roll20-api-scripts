@@ -12,6 +12,19 @@
 var ItsATrap = (function() {
 
   /**
+   * A message describing the chat message and other special effects for a trap
+   * being set off.
+   * @typedef {object} TrapEffect
+   * @property {string} message
+   *           The message template that will be sent in the chat by Admiral Ackbar.
+   *           This can include inline rolls and API chat commands.
+   * @property {string} trapId
+   *           The ID of the trap.
+   * @property {string} victimId
+   *           The ID of the token that activated the trap.
+   */
+
+  /**
    * Returns the first trap a token collided with during its last movement.
    * If it didn't collide with any traps, return false.
    * @param {Graphic} token
@@ -34,19 +47,81 @@ var ItsATrap = (function() {
   };
 
   /**
-   * Gets the message for a trap set off by a character's token.
-   * This message is just whatever is in the trap's GM notes, but if that
-   * is not set, then it will generate a default message using the trap and
-   * victim's names.
+   * Gets the effect for a trap set off by a character's token defined in the
+   * trap's GM notes.
+   * If the GM notes property is not set, then it will generate a default
+   * message using the trap and victim's names.
    * @param  {Graphic} victim
    *         The token that set off the trap.
    * @param  {Graphic} trap
-   * @return {str}
+   * @return {TrapEffect}
+   */
+  function getTrapEffect(victim, trap) {
+    var effect;
+
+    // URI-escape the notes and remove the HTML elements.
+    var notes = decodeURIComponent(trap.get('gmnotes')).trim();
+    notes = notes.split(/<[/]?.+?>/g).join('');
+
+    // If GM notes are set, interpret those.
+    if(notes) {
+
+      // Should the message be interpretted as a JSON object?
+      if(notes.indexOf('{') === 0)
+        try {
+          effect = JSON.parse(notes);
+        }
+        catch(err) {
+          effect = {
+            message: 'ERROR: invalid TrapEffect JSON.'
+          };
+        }
+      else
+        effect = {
+          message: notes
+        };
+    }
+
+    // Use a default message.
+    else {
+      var trapName = trap.get("name");
+      if(trapName)
+        effect = {
+          message: victim.get("name") + " set off a trap: " + trapName + "!"
+        };
+      else
+        effect = {
+          message: victim.get("name") + " set off a trap!"
+        };
+    }
+
+    // Capture the token and victim's IDs in the effect.
+    _.extend(effect, {
+      trapId: trap.get('_id'),
+      victimId: victim.get('_id')
+    });
+    return effect;
+  }
+
+  /**
+   * Gets the message template sent to the chat by a trap.
+   * @param  {Graphic} victim
+   *         The token that set off the trap.
+   * @param  {Graphic} trap
+   * @return {string}
    */
   function getTrapMessage(victim, trap) {
-    var notes = unescape(trap.get('gmnotes'));
-    if(notes)
-      return notes.trim();
+    var notes = unescape(trap.get('gmnotes')).trim();
+    if(notes) {
+
+      // Should the message be interpretted as a JSON object?
+      if(notes.indexOf('{') === 0)
+        return JSON.parse(notes).message;
+      else
+        return notes;
+    }
+
+    // Use a default message.
     else {
       var trapName = trap.get("name");
       if(trapName)
@@ -91,7 +166,9 @@ var ItsATrap = (function() {
     if(victim.get("layer") === "objects") {
       var trap = getTrapCollision(victim);
       if(trap) {
-        var msg = getTrapMessage(victim, trap);
+        var effect = getTrapEffect(victim, trap);
+        var msg = effect.message;
+
         if(msg.indexOf('!') !== 0)
           msg = "IT'S A TRAP!!! " + msg;
         sendChat("Admiral Ackbar", msg);
@@ -108,6 +185,7 @@ var ItsATrap = (function() {
 
   return {
     getTrapCollision: getTrapCollision,
+    getTrapEffect: getTrapEffect,
     getTrapMessage: getTrapMessage,
     isTokenFlying: isTokenFlying,
     moveTokenToTrap: moveTokenToTrap
