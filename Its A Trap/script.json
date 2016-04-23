@@ -7,7 +7,7 @@
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
     "useroptions": [],
-    "dependencies": ["Token Collisions"],
+    "dependencies": ["Token Collisions", "Path Math"],
     "modifies": {
         "chat": "write",
         "gmnotes": "read",

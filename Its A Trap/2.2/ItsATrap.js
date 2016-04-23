@@ -55,12 +55,7 @@ var ItsATrap = (function() {
    */
   function getTrapCollision(token) {
     var pageId = token.get('_pageid');
-    var traps = findObjs({
-      _pageid: pageId,
-      _type: "graphic",
-      status_cobweb: true,
-      layer: "gmlayer"
-    });
+    var traps = getTrapsOnPage(pageId);
 
     // Some traps don't affect flying tokens.
     traps = _.filter(traps, function(trap) {
@@ -127,6 +122,45 @@ var ItsATrap = (function() {
   }
 
   /**
+   * Gets all the traps that a token has line-of-sight to, with no limit for
+   * range. Line-of-sight is blocked by paths on the dynamic lighting layer.
+   * @param  {Graphic} charToken
+   * @return {Graphic[]}
+   *         The list of traps that charToken has line-of-sight to.
+   */
+  function getSearchableTraps(charToken) {
+    var pageId = charToken.get('_pageid');
+    var charPt = [
+      charToken.get('left'),
+      charToken.get('top'),
+      1
+    ];
+
+    var wallPaths = findObjs({
+      _type: 'path',
+      _pageid: pageId,
+      layer: 'walls'
+    });
+    var wallSegments = PathMath.toSegments(wallPaths);
+
+    var traps = getTrapsOnPage(pageId);
+    return _.filter(traps, function(trap) {
+      var trapPt = [
+        trap.get('left'),
+        trap.get('top'),
+        1
+      ];
+      var segToTrap = [charPt, trapPt];
+
+      return !_.find(wallSegments, function(wallSeg) {
+        return PathMath.segmentIntersection(segToTrap, wallSeg);
+      });
+    });
+  }
+
+
+
+  /**
    * Gets the message template sent to the chat by a trap.
    * @param  {Graphic} victim
    *         The token that set off the trap.
@@ -152,6 +186,20 @@ var ItsATrap = (function() {
       else
         return victim.get("name") + " set off a trap!";
     }
+  }
+
+  /**
+   * Gets the list of all the traps on the specified page.
+   * @param  {string} pageId
+   * @return {Graphic[]}
+   */
+  function getTrapsOnPage(pageId) {
+    return findObjs({
+      _pageid: pageId,
+      _type: "graphic",
+      status_cobweb: true,
+      layer: "gmlayer"
+    });
   }
 
 
@@ -180,6 +228,25 @@ var ItsATrap = (function() {
   }
 
   /**
+   * Plays a TrapEffect's sound, if it has one.
+   * @param  {TrapEffect} effect
+   */
+  function playEffectSound(effect) {
+    if(effect.sound) {
+      var sound = findObjs({
+        _type: 'jukeboxtrack',
+        title: effect.sound
+      })[0];
+      if(sound) {
+        sound.set('playing', true);
+        sound.set('softstop', false);
+      }
+      else
+        log('ERROR: Could not find sound "' + effect.sound + '".');
+    }
+  }
+
+  /**
    * Registers a TrapTheme.
    * @param  {TrapTheme} theme
    */
@@ -192,23 +259,17 @@ var ItsATrap = (function() {
    * When a graphic on the objects layer moves, run the script to see if it
    * passed through any traps.
    */
-  on("change:graphic", function(victim) {
+  on("change:graphic", function(token) {
     // Objects on the GM layer don't set off traps.
-    if(victim.get("layer") === "objects") {
-      var trap = getTrapCollision(victim);
+    if(token.get("layer") === "objects") {
+      var theme = getTheme();
+
+      // Did the character set off a trap?
+      var trap = getTrapCollision(token);
       if(trap) {
-        var effect = getTrapEffect(victim, trap);
+        var effect = getTrapEffect(token, trap);
 
-        /*
-        var msg = effect.message;
-
-        if(msg.indexOf('!') !== 0)
-          msg = "IT'S A TRAP!!! " + msg;
-        sendChat("Admiral Ackbar", msg);
-
-        */
-        moveTokenToTrap(victim, trap);
-        var theme = getTheme();
+        moveTokenToTrap(token, trap);
         theme.activateEffect(effect);
 
         // Reveal the trap if it's set to become visible.
@@ -217,6 +278,15 @@ var ItsATrap = (function() {
           toBack(trap);
         }
       }
+
+      // If no trap was activated and the theme has passive searching,
+      // do a passive search for traps.
+      else if(theme.passiveSearch && theme.passiveSearch !== _.noop) {
+        var searchableTraps = getSearchableTraps(token);
+        _.each(searchableTraps, function(trap) {
+          theme.passiveSearch(trap, token);
+        });
+      }
     }
   });
 
@@ -224,9 +294,11 @@ var ItsATrap = (function() {
     getTheme: getTheme,
     getTrapCollision: getTrapCollision,
     getTrapEffect: getTrapEffect,
+    getTrapsOnPage: getTrapsOnPage,
     getTrapMessage: getTrapMessage,
     isTokenFlying: isTokenFlying,
     moveTokenToTrap: moveTokenToTrap,
+    playEffectSound: playEffectSound,
     registerTheme: registerTheme
   }
 })();
@@ -293,18 +365,7 @@ ItsATrap.registerTheme({
     sendChat("Admiral Ackbar", msg);
 
     // If the effect has a sound, try to play it.
-    if(effect.sound) {
-      var sound = findObjs({
-        _type: 'jukeboxtrack',
-        title: effect.sound
-      })[0];
-      if(sound) {
-        sound.set('playing', true);
-        sound.set('softstop', false);
-      }
-      else
-        log('ERROR: Could not find sound "' + effect.sound + '".');
-    }
+    ItsATrap.playEffectSound(effect);
   },
 
   /**
@@ -318,4 +379,62 @@ ItsATrap.registerTheme({
    * @inheritdoc
    */
   passiveSearch: _.noop
+});
+
+
+/**
+ * A theme used purely for testing.
+ * @implements TrapTheme
+ */
+ItsATrap.registerTheme({
+  name: 'test',
+
+  /**
+   * Display the raw message and play the effect's sound.
+   * @inheritdoc
+   */
+  activateEffect: function(effect) {
+    sendChat("ItsATrap-test", effect.message);
+    ItsATrap.playEffectSound(effect);
+  },
+
+  /**
+   * Display a message if the character is within 5 units of the trap.
+   * @inheritdoc
+   */
+  activeSearch: function(trap, charToken) {
+    var trapPt = [
+      trap.get('left'),
+      trap.get('top')
+    ];
+    var charPt = [
+      charToken.get('left'),
+      charToken.get('top')
+    ];
+    if(VecMath.dist(trapPt, charPt) <= 70*5) {
+      var name = charToken.get('name');
+      sendChat('Admiral Ackbar', name + ' notices a trap: ' + trap.get('name'));
+      sendPing(trap.get('left'), trap.get('top'), trap.get('_pageid'));
+    }
+  },
+
+  /**
+   * Display a message if the character is within 5 units of the trap.
+   * @inheritdoc
+   */
+  passiveSearch: function(trap, charToken) {
+    var trapPt = [
+      trap.get('left'),
+      trap.get('top')
+    ];
+    var charPt = [
+      charToken.get('left'),
+      charToken.get('top')
+    ];
+    if(VecMath.dist(trapPt, charPt) <= 70*5) {
+      var name = charToken.get('name');
+      sendChat('Admiral Ackbar', name + ' notices a trap: ' + trap.get('name'));
+      sendPing(trap.get('left'), trap.get('top'), trap.get('_pageid'));
+    }
+  }
 });
