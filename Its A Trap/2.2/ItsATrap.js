@@ -21,7 +21,8 @@ var ItsATrap = (function() {
    *           damage, etc.. It is entirely up to the current TrapTheme how
    *           these properties are interpreted.
    * @property {string} message
-   *           The message template that will be sent in the chat by Admiral Ackbar.
+   *           The message that will be sent in the chat by Admiral Ackbar
+   *           when the trap activates.
    *           This can include inline rolls and API chat commands.
    * @property {string} sound
    *           The name of a sound to play from the jukebox when the trap
@@ -32,8 +33,17 @@ var ItsATrap = (function() {
    *           The ID of the token that activated the trap.
    */
 
-  state.ItsATrap = state.ItsATrap || {
-    theme: 'default'
+  /**
+   * The ItsATrap state data.
+   * @typedef {object} ItsATrapState
+   * @property {object} noticedTraps
+   *           The set of IDs for traps that have been noticed by passive perception.
+   * @property {string} theme
+   *           The name of the TrapTheme currently being used.
+   */
+  state.ItsATrap = {
+    noticedTraps: {},
+    theme: 'D&D5'
   };
 
   var trapThemes = {};
@@ -212,6 +222,38 @@ var ItsATrap = (function() {
     return token.get("status_fluffy-wing") || token.get("status_angel-outfit");
   }
 
+  /**
+   * Marks a trap with a circle and a ping.
+   * @private
+   * @param  {Graphic} trap
+   */
+  function _markTrap(trap) {
+    var radius = trap.get('width')/2;
+    var x = trap.get('left');
+    var y = trap.get('top');
+    var pageId = trap.get('_pageid');
+
+    // Circle the trap's trigger area.
+    var circle = PathMath.createCircleData(radius);
+    createObj('path', _.extend(circle, {
+      layer: 'objects',
+      left: x,
+      _pageid: pageId,
+      stroke_width: 10,
+      top: y
+    }));
+    createObj('path', _.extend(circle, {
+      layer: 'objects',
+      left: x,
+      _pageid: pageId,
+      stroke: '#ffff00', // yellow
+      stroke_width: 5,
+      top: y
+    }));
+
+    sendPing(x, y, pageId);
+  }
+
 
   /**
    * Moves the specified token to the same position as the trap.
@@ -225,6 +267,26 @@ var ItsATrap = (function() {
     token.set("lastmove","");
     token.set("left", x);
     token.set("top", y);
+  }
+
+  /**
+   * Marks a trap as being noticed by a character's passive search.
+   * Does nothing if the trap has already been noticed.
+   * @param  {Graphic} trap
+   * @param {string} A message to display when the trap is noticed.
+   * @return {boolean}
+   *         true if the trap has not been noticed yet.
+   */
+  function noticeTrap(trap, noticeMessage) {
+    var id = trap.get('_id');
+    if(!state.ItsATrap.noticedTraps[id]) {
+      state.ItsATrap.noticedTraps[id] = true;
+      sendChat('Admiral Ackbar', noticeMessage);
+      _markTrap(trap);
+      return true;
+    }
+    else
+      return false;
   }
 
   /**
@@ -298,6 +360,7 @@ var ItsATrap = (function() {
     getTrapMessage: getTrapMessage,
     isTokenFlying: isTokenFlying,
     moveTokenToTrap: moveTokenToTrap,
+    noticeTrap: noticeTrap,
     playEffectSound: playEffectSound,
     registerTheme: registerTheme
   }
@@ -319,15 +382,6 @@ var ItsATrap = (function() {
  * automating any system specific trap mechanics for it.
  * @function TrapTheme#activateEffect
  * @param {TrapEffect} effect
- */
-
-/**
- * The system-specific behavior for a character actively searching for a trap.
- * @function TrapTheme#activeSearch
- * @param {Graphic} trap
- *        The trap's token.
- * @param {Graphic} charToken
- *        The character's token.
  */
 
 /**
@@ -372,12 +426,6 @@ ItsATrap.registerTheme({
    * No trap search mechanics, since this theme is system-agnostic.
    * @inheritdoc
    */
-  activeSearch: _.noop,
-
-  /**
-   * No trap search mechanics, since this theme is system-agnostic.
-   * @inheritdoc
-   */
   passiveSearch: _.noop
 });
 
@@ -398,25 +446,6 @@ ItsATrap.registerTheme({
     ItsATrap.playEffectSound(effect);
   },
 
-  /**
-   * Display a message if the character is within 5 units of the trap.
-   * @inheritdoc
-   */
-  activeSearch: function(trap, charToken) {
-    var trapPt = [
-      trap.get('left'),
-      trap.get('top')
-    ];
-    var charPt = [
-      charToken.get('left'),
-      charToken.get('top')
-    ];
-    if(VecMath.dist(trapPt, charPt) <= 70*5) {
-      var name = charToken.get('name');
-      sendChat('Admiral Ackbar', name + ' notices a trap: ' + trap.get('name'));
-      sendPing(trap.get('left'), trap.get('top'), trap.get('_pageid'));
-    }
-  },
 
   /**
    * Display a message if the character is within 5 units of the trap.
@@ -435,6 +464,111 @@ ItsATrap.registerTheme({
       var name = charToken.get('name');
       sendChat('Admiral Ackbar', name + ' notices a trap: ' + trap.get('name'));
       sendPing(trap.get('left'), trap.get('top'), trap.get('_pageid'));
+    }
+  }
+});
+
+
+
+
+/**
+ * A theme for D&D 5th edition.
+ * This theme uses the following trap attributes:
+ * 		attack {int}
+ * 				The trap's attack roll bonus.
+ * 				Omit if the trap does not make an attack roll.
+ * 		damage {string}
+ * 				The roll expression for the trap's damage if it hits.
+ * 				Omit if the trap does not deal damage.
+ * 		missHalf {boolean}
+ * 				If true, then the character takes half damage if the trap misses.
+ * 	  notes {string}
+ * 	  		A description of the trap's effect. This will be whispered to the GM.
+ * 		save {string}
+ * 				The saving throw for the trap. This is one of
+ * 				'str', 'con', 'dex', 'int', 'wis', or 'cha'
+ * 		saveDC {int}
+ * 				The saving throw DC to avoid the trap.
+ * 		spotDC {int}
+ * 				The DC to spot the trap using passive wisdom (perception) or
+ * 				investigation.
+ *
+ * @implements TrapTheme
+ */
+ItsATrap.registerTheme({
+  name: 'D&D5',
+
+  /**
+   * Display the raw message and play the effect's sound.
+   * @inheritdoc
+   */
+  activateEffect: function(effect) {
+    sendChat("Admiral Ackbar", "IT'S A TRAP!!!<br/>" + effect.message);
+    ItsATrap.playEffectSound(effect);
+  },
+
+
+  /**
+   * Asynchronously gets the values of one or more character sheet attributes.
+   * @param  {Character}   character
+   * @param  {(string|string[])}   attrNames
+   * @param  {Function} callback
+   *         The callback takes one parameter: a map of attribute names to their
+   *         values.
+   */
+  getSheetAttrs: function(character, attrNames, callback) {
+    if(!_.isArray(attrNames))
+      attrNames = [attrNames];
+
+    var count = 0;
+    var values = {};
+    _.each(attrNames, function(attrName) {
+      try {
+        sendChat('ItsATrap-DnD5', '/w gm [[@{' + character.get('name') + '|' + attrName + '}]]', function(msg) {
+          try {
+            var attrValue = msg[0].inlinerolls[0].results.total;
+            values[attrName] = attrValue;
+          }
+          catch(err) {
+            values[attrName] = undefined;
+          }
+          count++;
+
+          if(count === attrNames.length)
+            callback(values);
+        });
+      }
+      catch(err) {
+        values[attrName] = undefined;
+        count++;
+
+        if(count === attrNames.length)
+          callback(values);
+      }
+    });
+  },
+
+  /**
+   * Display a message if the character is within 5 units of the trap.
+   * @inheritdoc
+   */
+  passiveSearch: function(trap, charToken) {
+    var effect = ItsATrap.getTrapEffect(charToken, trap);
+    var character = getObj('character', charToken.get('represents'));
+
+    // Only do passive search for traps that have a spotDC.
+    if(effect.spotDC && character) {
+
+      // Get the character's passive wisdom (perception).
+      this.getSheetAttrs(character, 'passive_wisdom', function(values) {
+
+        // If the character's passive wisdom beats the spot DC, then
+        // display a message and mark the trap's trigger area.
+        if(values['passive_wisdom'] >= effect.spotDC) {
+          ItsATrap.noticeTrap(trap, "IT'S A TRAP!!!<br/>" +
+            character.get('name') + ' notices a trap: <br/>' + trap.get('name'));
+        }
+      });
     }
   }
 });
