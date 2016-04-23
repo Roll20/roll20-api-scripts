@@ -69,6 +69,47 @@ var PathMath = (function() {
     }
 
     /**
+     * Returns the partial path data for creating a circular path.
+     * @param  {number} radius
+     * @param {int} [sides]
+     *        If specified, then a polygonal path with the specified number of
+     *        sides approximating the circle will be created instead of a true
+     *        circle.
+     * @return {PathData}
+     */
+    function createCircleData(radius, sides) {
+      var _path = [];
+      if(sides) {
+        var cx = radius;
+        var cy = radius;
+        var angleInc = Math.PI*2/sides;
+        path.push(['M', cx + radius, cy]);
+        _.each(_.range(1, sides+1), function(i) {
+          var angle = angleInc*i;
+          var x = cx + radius*Math.cos(angle);
+          var y = cy + radius*Math.sin(angle);
+          path.push(['L', x, y]);
+        });
+      }
+      else {
+        var r = radius;
+        _path = [
+          ['M', 0,      r],
+          ['C', 0,      r*0.5,  r*0.5,  0,      r,      0],
+          ['C', r*1.5,  0,      r*2,    r*0.5,  r*2.0,  r],
+          ['C', r*2.0,  r*1.5,  r*1.5,  r*2.0,  r,      r*2.0],
+          ['C', r*0.5,  r*2,    0,      r*1.5,  0,      r]
+        ];
+      }
+      return {
+        height: radius*2,
+        _path: JSON.stringify(_path),
+        width: radius*2
+      };
+    }
+
+
+    /**
      * Calculates the bounding box for a list of paths.
      * @param {Path | Path[]} paths
      * @return {BoundingBox}
@@ -475,6 +516,7 @@ var PathMath = (function() {
     return {
         BoundingBox: BoundingBox,
 
+        createCircleData: createCircleData,
         getBoundingBox: getBoundingBox,
         getCenter: getCenter,
         getTransformInfo: getTransformInfo,
