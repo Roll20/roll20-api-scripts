@@ -291,6 +291,20 @@ ItsATrap.registerTheme({
     if(msg.indexOf('!') !== 0)
       msg = "IT'S A TRAP!!! " + msg;
     sendChat("Admiral Ackbar", msg);
+
+    // If the effect has a sound, try to play it.
+    if(effect.sound) {
+      var sound = findObjs({
+        _type: 'jukeboxtrack',
+        title: effect.sound
+      })[0];
+      if(sound) {
+        sound.set('playing', true);
+        sound.set('softstop', false);
+      }
+      else
+        log('ERROR: Could not find sound "' + effect.sound + '".');
+    }
   },
 
   /**
