@@ -20,11 +20,6 @@ var ItsATrap = (function() {
    *           The command may contain the template values TRAP_ID and
    *           VICTIM_ID. These will be replaced by the values for trapId
    *           and victimId, respectively in the API chat command message.
-   * @property {object} attributes
-   *           The trap's system-specific attributes. This might include such
-   *           things as passive and active search check DCs, attack rolls,
-   *           damage, etc.. It is entirely up to the current TrapTheme how
-   *           these properties are interpreted.
    * @property {string} message
    *           The message that will be sent in the chat by Admiral Ackbar
    *           when the trap activates.

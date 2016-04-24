@@ -60,3 +60,19 @@ and has no passive search mechanics.
 Additional system-specific themes will be made available as their own API scripts.
 If you would like to implement a TrapTheme for your system, take a look at the
 5E-OGL TrapTheme as an example to get you started.
+
+### TrapEffects JSON:
+
+In addition to being able to specify custom messages for traps, you can also define
+the effects of a trap using JSON. This allows you to do things with traps beyond
+just displaying simple messages such as playing sounds, providing attributes
+for use in trap automation with TrapThemes, and even executing API chat commands.
+
+Just enter the JSON definition in for the trap in its GM notes.
+
+The following basic TrapEffect properties are supported:
+* api (string): An API chat command that will be executed when the trap is activated. If the constants TRAP_ID and VICTIM_ID are provided, they will be replaced by the IDs for the trap token and the token for the trap's victim, respectively in the API chat command message.
+* message (string): This is the message that will be displayed when the trap activates.
+* sound (string): The name of a sound that will be played when the trap activates.
+* trapId (string): The ID of the trap token. This is set automatically by the script.
+* victimId (string): The I of the victim token. This is set automatically by the script.
