@@ -41,7 +41,7 @@ var ItsATrap = (function() {
    * @property {string} theme
    *           The name of the TrapTheme currently being used.
    */
-  state.ItsATrap = {
+  state.ItsATrap = state.ItsATrap || {
     noticedTraps: {},
     theme: 'D&D5'
   };
@@ -352,6 +352,13 @@ var ItsATrap = (function() {
     }
   });
 
+  // When a trap's token is destroyed, remove it from the set of noticed traps.
+  on('destroy:graphic', function(token) {
+    var id = token.get('_id');
+    if(state.ItsATrap.noticedTraps[id])
+      delete state.ItsATrap.noticedTraps[id];
+  });
+
   return {
     getTheme: getTheme,
     getTrapCollision: getTrapCollision,
@@ -480,6 +487,8 @@ ItsATrap.registerTheme({
  * 		damage {string}
  * 				The roll expression for the trap's damage if it hits.
  * 				Omit if the trap does not deal damage.
+ * 	  hideSave {boolean}
+ * 	  		If true, only the GM sees the saving throw roll.
  * 		missHalf {boolean}
  * 				If true, then the character takes half damage if the trap misses.
  * 	  notes {string}
@@ -503,8 +512,80 @@ ItsATrap.registerTheme({
    * @inheritdoc
    */
   activateEffect: function(effect) {
-    sendChat("Admiral Ackbar", "IT'S A TRAP!!!<br/>" + effect.message);
+    var me = this;
+    var charToken = getObj('graphic', effect.victimId);
+    var character = getObj('character', charToken.get('represents'));
+
+    var msg = '<table style="background-color: #fff; border: solid 1px #000; border-collapse: separate; border-radius: 10px; overflow: hidden;">';
+    msg += "<thead><tr style='background-color: #000; color: #fff; font-weight: bold;'><th>IT'S A TRAP!!!</th></tr></thead>";
+    msg += '<tbody>';
+    msg += me.paddedRow(effect.message, 'background-color: #ccc; font-style: italic;');
+
+    // Remind the GM about the trap's effects.
+    if(effect.notes)
+      sendChat('Admiral Ackbar', '/w gm Trap Effects:<br/> ' + effect.notes);
+
+    // Automate trap attack/save mechanics.
+    if(character) {
+
+      // Does the trap make an attack vs AC?
+      if(effect.attack) {
+        me.getSheetAttrs(character, 'ac', function(values) {
+          var ac = values.ac;
+          me.rollAsync('1d20 + ' + effect.attack, function(atkRoll) {
+            msg += me.paddedRow('<span style="font-weight: bold;">Attack roll:</span> ' +
+              me.htmlRollResult(atkRoll, '1d20 + ' + effect.attack) + ' vs AC ' + ac);
+            msg += me.paddedRow(me.resolveTrapHit(atkRoll.total >= ac, effect, character));
+
+            msg += '</tbody></table>';
+            sendChat('Admiral Ackbar', msg);
+          });
+        });
+      }
+
+      // Does the trap require a saving throw?
+      else if(effect.save && effect.saveDC) {
+        var saveAttr = me.getSaveAttrLongname(effect.save);
+        me.getSheetAttrs(character, saveAttr, function(saves) {
+          var saveBonus = saves[saveAttr];
+          me.rollAsync('1d20 + ' + saveBonus, function(saveRoll) {
+            var saveMsg = '<span style="font-weight: bold;">' + effect.save.toUpperCase() + ' save:</span> ' +
+              me.htmlRollResult(saveRoll, '1d20 + ' + saveBonus) + ' vs DC ' + effect.saveDC;
+
+            if(effect.hideSave)
+              sendChat('Admiral Ackbar', '/w gm ' + saveMsg);
+            else
+              msg += me.paddedRow(saveMsg);
+            msg += me.paddedRow(me.resolveTrapHit(saveRoll.total < effect.saveDC, effect, character));
+
+            msg += '</tbody></table>';
+            sendChat('Admiral Ackbar', msg);
+          });
+        });
+      }
+    }
+
     ItsATrap.playEffectSound(effect);
+  },
+
+  /**
+   * Gets the long name of a save bonus attribute.
+   * @param  {string} shortname
+   * @return {string}
+   */
+  getSaveAttrLongname: function(shortname) {
+    if(shortname === 'str')
+      return 'strength_save_bonus';
+    else if(shortname === 'dex')
+      return 'dexterity_save_bonus';
+    else if(shortname === 'con')
+      return 'constitution_save_bonus';
+    else if(shortname === 'int')
+      return 'intelligence_save_bonus';
+    else if(shortname === 'wis')
+      return 'wisdom_save_bonus';
+    else
+      return 'charisma_save_bonus';
   },
 
 
@@ -517,6 +598,8 @@ ItsATrap.registerTheme({
    *         values.
    */
   getSheetAttrs: function(character, attrNames, callback) {
+    var me = this;
+
     if(!_.isArray(attrNames))
       attrNames = [attrNames];
 
@@ -524,14 +607,9 @@ ItsATrap.registerTheme({
     var values = {};
     _.each(attrNames, function(attrName) {
       try {
-        sendChat('ItsATrap-DnD5', '/w gm [[@{' + character.get('name') + '|' + attrName + '}]]', function(msg) {
-          try {
-            var attrValue = msg[0].inlinerolls[0].results.total;
-            values[attrName] = attrValue;
-          }
-          catch(err) {
-            values[attrName] = undefined;
-          }
+        me.rollAsync('@{' + character.get('name') + '|' + attrName + '}', function(roll) {
+          var attrValue = roll.total;
+          values[attrName] = attrValue;
           count++;
 
           if(count === attrNames.length)
@@ -546,6 +624,34 @@ ItsATrap.registerTheme({
           callback(values);
       }
     });
+  },
+
+  /**
+   * Produces HTML for a faked inline roll result.
+   * @param  {int} result
+   * @param  {string} expr
+   * @return {string}
+   */
+  htmlRollResult: function(result, expr) {
+    var d20 = result.rolls[0].results[0].v;
+
+    var style = 'background-color: #FEF68E; cursor: help; font-size: 1.1em; font-weight: bold; padding: 0 3px;';
+    if(d20 === 20)
+      style += 'border: 2px solid #3FB315;';
+    if(d20 === 1)
+      style += 'border: 2px solid #B31515';
+
+    return '<span title="' + expr + '" style="' + style + '">' + result.total + '</span>';
+  },
+
+  /**
+   * Produces HTML for a padded table row.
+   * @param  {string} innerHTML
+   * @param  {string} style
+   * @return {string}
+   */
+  paddedRow: function(innerHTML, style) {
+    return '<tr><td style="padding: 1px 1em; ' + style + '">' + innerHTML + '</td></tr>';
   },
 
   /**
@@ -565,10 +671,54 @@ ItsATrap.registerTheme({
         // If the character's passive wisdom beats the spot DC, then
         // display a message and mark the trap's trigger area.
         if(values['passive_wisdom'] >= effect.spotDC) {
-          ItsATrap.noticeTrap(trap, "IT'S A TRAP!!!<br/>" +
+          ItsATrap.noticeTrap(trap, "<span style='font-weight: bold;'>IT'S A TRAP!!!</span><br/>" +
             character.get('name') + ' notices a trap: <br/>' + trap.get('name'));
         }
       });
     }
+  },
+
+  /**
+   * Resolves the hit/miss effect of a trap.
+   * @param  {boolean} trapHit
+   *         Whether the trap hit.
+   * @param  {TrapEffect} effect
+   * @param  {Character} character
+   * @return {string}
+   */
+  resolveTrapHit: function(trapHit, effect, character) {
+    var msg = '<div>';
+    if(trapHit) {
+      var msg = '<span style="color: #f00; font-weight: bold;">HIT! </span>';
+      if(effect.damage)
+        msg += 'Damage: [[' + effect.damage + ']]';
+      else
+        msg += character.get('name') + ' falls prey to the trap\'s effects!';
+    }
+    else {
+      msg += '<span style="color: #620; font-weight: bold;">MISS! </span>';
+      if(effect.damage && effect.missHalf)
+        msg += 'Half damage: [[floor((' + effect.damage + ')/2)]].';
+    }
+    msg += '</div>';
+    return msg;
+  },
+
+  /**
+   * Asynchronously rolls a dice roll expression and returns the result's total in
+   * a callback. The result is undefined if an invalid expression is given.
+   * @param  {string} expr
+   * @return {int}
+   */
+  rollAsync: function(expr, callback) {
+    sendChat('ItsATrap-DnD5', '/w gm [[' + expr + ']]', function(msg) {
+      try {
+        var results = msg[0].inlinerolls[0].results;
+        callback(results);
+      }
+      catch(err) {
+        callback(undefined);
+      }
+    });
   }
 });
