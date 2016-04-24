@@ -39,6 +39,7 @@ var PathMath = (function() {
 
     /**
      * A simple class for BoundingBoxes.
+     * @class BoundingBox
      * @param {Number} left
      * @param {Number} top
      * @param {Number} width
@@ -49,7 +50,7 @@ var PathMath = (function() {
         this.top = top;
         this.width = width;
         this.height = height;
-    };
+    }
 
     /**
      * @private
@@ -65,7 +66,48 @@ var PathMath = (function() {
         var bottom = Math.max(a.top + a.height, b.top + b.height);
 
         return new BoundingBox(left, top, right - left, bottom - top);
-    };
+    }
+
+    /**
+     * Returns the partial path data for creating a circular path.
+     * @param  {number} radius
+     * @param {int} [sides]
+     *        If specified, then a polygonal path with the specified number of
+     *        sides approximating the circle will be created instead of a true
+     *        circle.
+     * @return {PathData}
+     */
+    function createCircleData(radius, sides) {
+      var _path = [];
+      if(sides) {
+        var cx = radius;
+        var cy = radius;
+        var angleInc = Math.PI*2/sides;
+        path.push(['M', cx + radius, cy]);
+        _.each(_.range(1, sides+1), function(i) {
+          var angle = angleInc*i;
+          var x = cx + radius*Math.cos(angle);
+          var y = cy + radius*Math.sin(angle);
+          path.push(['L', x, y]);
+        });
+      }
+      else {
+        var r = radius;
+        _path = [
+          ['M', 0,      r],
+          ['C', 0,      r*0.5,  r*0.5,  0,      r,      0],
+          ['C', r*1.5,  0,      r*2,    r*0.5,  r*2.0,  r],
+          ['C', r*2.0,  r*1.5,  r*1.5,  r*2.0,  r,      r*2.0],
+          ['C', r*0.5,  r*2,    0,      r*1.5,  0,      r]
+        ];
+      }
+      return {
+        height: radius*2,
+        _path: JSON.stringify(_path),
+        width: radius*2
+      };
+    }
+
 
     /**
      * Calculates the bounding box for a list of paths.
@@ -85,7 +127,7 @@ var PathMath = (function() {
                 result = pBox;
         });
         return result;
-    };
+    }
 
     /**
      * Returns the center of the bounding box countaining a path or list
@@ -104,7 +146,8 @@ var PathMath = (function() {
         var cy = bbox.top + bbox.height/2;
 
         return [cx, cy, 1];
-    };
+    }
+
 
     /**
      * @private
@@ -121,7 +164,7 @@ var PathMath = (function() {
         var top = pathData.top - height/2;
 
         return new BoundingBox(left, top, width, height);
-    };
+    }
 
     /**
      * Gets the 2D transform information about a path.
@@ -150,7 +193,7 @@ var PathMath = (function() {
             scaleY: scaleY,
             width: width
         };
-    };
+    }
 
 
     /**
@@ -180,7 +223,7 @@ var PathMath = (function() {
         });
 
         return JSON.stringify(merged);
-    };
+    }
 
     /**
      * Reproduces the data for a polygonal path such that the scales are 1 and
@@ -195,6 +238,95 @@ var PathMath = (function() {
         var segments = toSegments(path);
         return segmentsToPath(segments);
     }
+
+    /**
+     * Computes the intersection between two homogenous 2D line segments,
+     * if it exists.
+     *
+     * Explanation of the fancy mathemagics:
+     * Let A be the first point in seg1 and B be the second point in seg1.
+     * Let C be the first point in seg2 and D be the second point in seg2.
+     * Let U be the vector from A to B.
+     * Let V be the vector from C to D.
+     * Let UHat be the unit vector of U.
+     * Let VHat be the unit vector of V.
+     *
+     * Observe that if the dot product of UHat and VHat is 1 or -1, then
+     * seg1 and seg2 are parallel, so they will either never intersect or they
+     * will overlap. We will ignore the case where seg1 and seg2 are parallel.
+     *
+     * We can represent any point P along the line projected by seg1 as
+     * P = A + SU, where S is some scalar value such that S = 0 yeilds A,
+     * S = 1 yields B, and P is on seg1 if and only if 0 <= S <= 1.
+     *
+     * We can also represent any point Q along the line projected by seg2 as
+     * Q = C + TV, where T is some scalar value such that T = 0 yeilds C,
+     * T = 1 yields D, and Q is on seg2 if and only if 0 <= T <= 1.
+     *
+     * Assume that seg1 and seg2 are not parallel and that their
+     * projected lines intersect at some point P.
+     * Therefore, we have A + SU = C + TV.
+     *
+     * We can rearrange this such that we have C - A = SU - TV.
+     * Let vector W = C - A, thus W = SU - TV.
+     * Also, let coeffs = [S, T, 1].
+     *
+     * We can now represent this system of equations as the matrix
+     * multiplication problem W = M * coeffs, where in column-major
+     * form, M = [U, -V, [0,0,1]].
+     *
+     * By matrix-multiplying both sides by M^-1, we get
+     * M^-1 * W = M^-1 * M * coeffs = coeffs, from which we can extract the
+     * values for S and T.
+     *
+     * We can now get the point of intersection on the projected lines of seg1
+     * and seg2 by substituting S in P = A + SU or T in Q = C + TV.
+     * Seg1 and seg2 also intersect at that point if and only if 0 <= S, T <= 1.
+     *
+     * @param {Segment} seg1
+     * @param {Segment} seg2
+     * @return {Intersection}
+     *      The point of intersection in homogenous 2D coordiantes and its
+     *      parametric coefficients along seg1 and seg2,
+     *      or undefined if the segments are parallel.
+     */
+    function segmentIntersection(seg1, seg2) {
+        var u = VecMath.sub(seg1[1], seg1[0]);
+        var v = VecMath.sub(seg2[1], seg2[0]);
+        var w = VecMath.sub(seg2[0], seg1[0]);
+
+        // Can't use 0-length vectors.
+        if(VecMath.length(u) === 0 || VecMath.length(v) === 0)
+            return undefined;
+
+        // If the two segments are parallel, then either they never intersect
+        // or they overlap. Either way, return undefined in this case.
+        var uHat = VecMath.normalize(u);
+        var vHat = VecMath.normalize(v);
+        var uvDot = VecMath.dot(uHat,vHat);
+        if(Math.abs(uvDot) > 0.9999)
+            return undefined;
+
+        // Build the inverse matrix for getting the intersection point's
+        // parametric coefficients along the projected segments.
+        var m = [[u[0], u[1], 0], [-v[0], -v[1], 0], [0, 0, 1]];
+        var mInv = MatrixMath.inverse(m);
+
+        // Get the parametric coefficients for getting the point of intersection
+        // on the projected semgents.
+        var coeffs = MatrixMath.multiply(mInv, w);
+        var s = coeffs[0];
+        var t = coeffs[1];
+
+        // Return the intersection only if it lies on both the segments.
+        if(s >= 0 && s <= 1 && t >= 0 && t <= 1) {
+            var uPrime = VecMath.scale(u, s);
+            return [VecMath.add(seg1[0], uPrime), s, t];
+        }
+        else
+            return undefined;
+    }
+
 
     /**
      * Produces the data for creating a path from a list of segments forming a
@@ -256,11 +388,15 @@ var PathMath = (function() {
     }
 
     /**
-     * Converts a path into a list of line segments. As the nature of this
-     * method suggests, this does not work to convert quadratic paths
-     * (for freehand paths) or cubic paths (for oval paths).
+     * Converts a path into a list of line segments.
+     * This supports freehand paths, but not elliptical paths.
+     * @param {(Path|Path[])} path
+     * @return {Segment[]}
      */
     function toSegments(path) {
+        if(_.isArray(path))
+            return _toSegmentsMany(path);
+
         var _path = JSON.parse(path.get('_path'));
         var transformInfo = getTransformInfo(path);
 
@@ -291,6 +427,20 @@ var PathMath = (function() {
         });
 
         return segments;
+    }
+
+    /**
+     * Converts several paths into a single list of segments.
+     * @private
+     * @param  {Path[]} paths
+     * @return {Segment[]}
+     */
+    function _toSegmentsMany(paths) {
+        return _.chain(paths)
+          .reduce(function(allSegments, path) {
+              return allSegments.concat(toSegments(path));
+          }, [])
+          .value();
     }
 
     /**
@@ -366,11 +516,13 @@ var PathMath = (function() {
     return {
         BoundingBox: BoundingBox,
 
+        createCircleData: createCircleData,
         getBoundingBox: getBoundingBox,
         getCenter: getCenter,
         getTransformInfo: getTransformInfo,
         mergePathStr: mergePathStr,
         normalizePath: normalizePath,
+        segmentIntersection: segmentIntersection,
         segmentsToPath: segmentsToPath,
         toSegments: toSegments,
         tupleToPoint: tupleToPoint
