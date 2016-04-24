@@ -3,6 +3,18 @@ bshields.esro = (function() {
     'use strict';
     
     var version = 0.1,
+        statuses = ['red', 'blue', 'green', 'brown', 'purple', 'pink', 'yellow',
+            'dead', 'skull', 'sleepy', 'half-heart', 'half-haze',
+            'interdiction', 'snail', 'lightning-helix', 'spanner',
+            'chained-heart', 'chemical-bolt', 'death-zone', 'drink-me',
+            'edge-crack', 'ninja-mask', 'stopwatch', 'fishing-net', 'overdrive',
+            'strong', 'fist', 'padlock', 'three-leaves', 'fluffy-wing',
+            'pummeled', 'tread', 'arrowed', 'aura', 'back-pain', 'black-flag',
+            'bleeding-eye', 'bolt-shield', 'broken-heart', 'cobweb',
+            'broken-shield', 'flying-flag', 'radioactive', 'trophy',
+            'broken-skull', 'frozen-orb', 'rolling-bomb', 'white-tower', 'grab',
+            'screaming', 'grenade', 'sentry-gun', 'all-for-one', 'angel-outfit',
+            'archery-target'],
         r20GetObj = getObj,
         r20Campaign = Campaign,
         r20FindObjs = findObjs,
@@ -69,6 +81,55 @@ bshields.esro = (function() {
                 });
             }
         });
+        
+        if (newObj.type === 'graphic') {
+            _.each(statuses, function(status) {
+                Object.defineProperty(newObj, 'status_' + status, {
+                    enumerable: false,
+                    configurable: false,
+                    get: function() {
+                        function extractStatus(s) {
+                            if (s.indexOf(status) < 0) return false;
+                            s = s.substring(s.indexOf(status));
+                            if (s.indexOf(',') === status.length || s.indexOf(',') < 0 && s.length === status.length) return true;
+                            s = s.substring(s.indexOf('@') + 1, s.indexOf(',') < 0 ? s.length : s.indexOf(','));
+                            return parseInt(s);
+                        }
+                        
+                        return newObj.get ? newObj.get('status_' + status) : extractStatus(newObj.attributes.statusmarkers);
+                    },
+                    set: function(v) {
+                        function insertStatus(s) {
+                            var statusInsert;
+                            if (v) {
+                                if (_.isNumber(v)) statusInsert = status + '@' + v;
+                                else statusInsert = status;
+                                
+                                if (s.length === 0) return statusInsert;
+                                if (s.indexOf(status) < 0) return [s, statusInsert].join(',');
+                                s = s.split(',');
+                                _.each(s, function(t, i) {
+                                    if (t.indexOf(status) === 0) s[i] = statusInsert;
+                                    else s[i] = '';
+                                });
+                                s = _.reject(s, function(t) { return t.length === 0; });
+                                return s.join(',');
+                            } else {
+                                if (s.indexOf(status) >= 0) {
+                                    s = s.split(',');
+                                    _.each(s, function(t, i) { if (t.indexOf(status) === 0) t[i] = ''; });
+                                    s = _.reject(s, function(t) { return t.length === 0; });
+                                    return s.join(',');
+                                }
+                                return s;
+                            }
+                        }
+                        
+                        newObj.set ? newObj.set('status_' + status, v) : newObj.attributes.statusmarkers = insertStatus(newObj.attributes.statusmarkers);
+                    }
+                });
+            });
+        }
         
         return newObj;
     }
