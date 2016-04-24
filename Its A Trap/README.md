@@ -5,6 +5,9 @@
 * [Vector Math](https://github.com/Roll20/roll20-api-scripts/tree/master/Vector%20Math)
 
 ###### Updates
+'''2.2'''
+* TrapThemes now supported for system-specific trap automation.
+
 '''2.1'''
 * Refactored code.
 * ItsATrap now exposes an API for its functions.
@@ -41,3 +44,19 @@ announce it.
 
 If a token moves across a trap at ANY point during its movement, the trap will
 be activated!
+
+### TrapThemes:
+
+TrapThemes are used to provide support for displaying messages for traps and
+automating system-specific trap activation and passive search mechanics.
+
+If you are using the One-Click API Library, you can specify which theme to use
+in the 'theme' user option.
+
+By default the 'default' theme will be used. This is a very basic,
+system-agnostic TrapTheme which provides support for the basic TrapEffect properties
+and has no passive search mechanics.
+
+Additional system-specific themes will be made available as their own API scripts.
+If you would like to implement a TrapTheme for your system, take a look at the
+5E-OGL TrapTheme as an example to get you started.
