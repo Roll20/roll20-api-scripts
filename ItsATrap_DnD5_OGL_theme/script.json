@@ -1,0 +1,13 @@
+{
+    "name": "It's a Trap! - D&D 5E OGL theme",
+    "script": "TrapTheme.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "# It's A Trap! - 5th Edition OGL theme\r\rThis is a D&D 5th edition trap theme for the It's A Trap! script, compatible with\rthe 5th Edition (OGL by Roll20) character sheet.\r\rIt provides support for D&D 5th edition mechanics to automate resolving trap\rattacks, saving throws, and passive searching.\r\rTo use this theme for the It's A Trap! script, enter \"5E-OGL\" for the ```theme``` user option.\r\r## TrapEffect properties\r\rThis TrapTheme supports the following TrapEffect JSON properties in addition\rto all the basic TrapEffect JSON properties:\r* attack (int): The trap's attack roll bonus. Omit if the trap does not make an attack roll.\r* damage (string): The dice roll expression for the trap's damage. Omit if the trap does not deal damage.\r* hideSave (boolean): If true, then only the GM will see the saving throw rolled for the trap.\r* missHalf (boolean): If true, then the trap deals half damage on a miss.\r* notes (string): A reminder about the trap's effects, which will be whispered to the GM.\r* save (string): The saving throw for the trap. This can be one of 'str', 'con', 'dex', 'int', 'wis', or 'cha'.\r* saveDC (int): The saving throw DC for the trap.\r* spotDC (int): The DC to spot the trap with passive wisdom (perception).\r\r## Notes on trap automation:\rThe theme's automated attacks and saving throws do not account for conditional\rmodifiers, Advantage, or Disadvantage. Players will need to apply those in an\rad hoc fashion.\r\rIf a trap deals damage, the theme will not automatically subtract\rthe damage from the character's hit points. Players will still need to do that\rthemselves after applying conditional modifiers to their AC/saves,\rapplying damage resistance, vulnerability, etc..\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [],
+    "dependencies": ["It's a Trap!"],
+    "modifies": {},
+    "conflicts": []
+}

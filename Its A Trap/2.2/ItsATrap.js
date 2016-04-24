@@ -13,8 +13,13 @@ var ItsATrap = (function() {
 
   /**
    * A message describing the chat message and other special effects for a trap
-   * being set off.
+   * being set off. All fields are optional.
    * @typedef {object} TrapEffect
+   * @property {string} api
+   *           An API chat command that will be executed when the trap activates.
+   *           The command may contain the template values TRAP_ID and
+   *           VICTIM_ID. These will be replaced by the values for trapId
+   *           and victimId, respectively in the API chat command message.
    * @property {object} attributes
    *           The trap's system-specific attributes. This might include such
    *           things as passive and active search check DCs, attack rolls,
@@ -29,8 +34,10 @@ var ItsATrap = (function() {
    *           is activated.
    * @property {string} trapId
    *           The ID of the trap.
+   *           This is set automatically.
    * @property {string} victimId
    *           The ID of the token that activated the trap.
+   *           This is set automatically.
    */
 
   /**
@@ -43,10 +50,49 @@ var ItsATrap = (function() {
    */
   state.ItsATrap = state.ItsATrap || {
     noticedTraps: {},
-    theme: 'D&D5'
+    theme: 'default'
   };
 
+  // Set the theme from the useroptions.
+  var useroptions = globalconfig && globalconfig.itsatrap;
+  if(useroptions)
+    state.ItsATrap.theme = useroptions['theme'] || 'default';
+
+  // The collection of registered TrapThemes keyed by name.
   var trapThemes = {};
+
+
+  /**
+   * Creates a default message for a TrapEffect.
+   * @private
+   * @param  {Graphic} victim
+   * @param  {Graphic} trap
+   * @return {string}
+   */
+  function _createDefaultTrapMessage(victim, trap) {
+    var trapName = trap.get("name");
+    if(trapName)
+      return victim.get("name") + " set off a trap: " + trapName + "!";
+    else
+      return victim.get("name") + " set off a trap!";
+  }
+
+  /**
+   * Executes an API chat command involving a trap.
+   * @param  {TrapEffect} effect
+   */
+  function executeTrapCommand(effect) {
+    if(effect.api) {
+      effect.api = effect.api.split('TRAP_ID').join(effect.trapId);
+      effect.api = effect.api.split('VICTIM_ID').join(effect.victimId);
+      try {
+        sendChat('ItsATrap-api', effect.api);
+      }
+      catch(err) {
+        log('ItsATrap api command ERROR: ' + err.message);
+      }
+    }
+  }
 
   /**
    * Gets the theme currently being used to interpret TrapEffects spawned
@@ -85,7 +131,7 @@ var ItsATrap = (function() {
    * @return {TrapEffect}
    */
   function getTrapEffect(victim, trap) {
-    var effect;
+    var effect = {};
 
     // URI-escape the notes and remove the HTML elements.
     var notes = decodeURIComponent(trap.get('gmnotes')).trim();
@@ -100,28 +146,15 @@ var ItsATrap = (function() {
           effect = JSON.parse(notes);
         }
         catch(err) {
-          effect = {
-            message: 'ERROR: invalid TrapEffect JSON.'
-          };
+          effect.message = 'ERROR: invalid TrapEffect JSON.';
         }
       else
-        effect = {
-          message: notes
-        };
+        effect.message = notes;
     }
 
-    // Use a default message.
-    else {
-      var trapName = trap.get("name");
-      if(trapName)
-        effect = {
-          message: victim.get("name") + " set off a trap: " + trapName + "!"
-        };
-      else
-        effect = {
-          message: victim.get("name") + " set off a trap!"
-        };
-    }
+    // Use a default message if one wasn't provided.
+    if(!effect.message)
+      effect.message = _createDefaultTrapMessage(victim, trap);
 
     // Capture the token and victim's IDs in the effect.
     _.extend(effect, {
@@ -313,6 +346,7 @@ var ItsATrap = (function() {
    * @param  {TrapTheme} theme
    */
   function registerTheme(theme) {
+    log('It\'s A Trap!: Registered TrapTheme - ' + theme.name + '.');
     trapThemes[theme.name] = theme;
   }
 
@@ -324,30 +358,39 @@ var ItsATrap = (function() {
   on("change:graphic", function(token) {
     // Objects on the GM layer don't set off traps.
     if(token.get("layer") === "objects") {
-      var theme = getTheme();
+      try {
+        var theme = getTheme();
+        if(!theme) {
+          log('ERROR - It\'s A Trap!: TrapTheme does not exist - ' + state.ItsATrap.theme + '. Using default TrapTheme.');
+          theme = trapThemes['default'];
+        }
 
-      // Did the character set off a trap?
-      var trap = getTrapCollision(token);
-      if(trap) {
-        var effect = getTrapEffect(token, trap);
+        // Did the character set off a trap?
+        var trap = getTrapCollision(token);
+        if(trap) {
+          var effect = getTrapEffect(token, trap);
 
-        moveTokenToTrap(token, trap);
-        theme.activateEffect(effect);
+          moveTokenToTrap(token, trap);
+          theme.activateEffect(effect);
 
-        // Reveal the trap if it's set to become visible.
-        if(trap.get("status_bleeding-eye")) {
-          trap.set("layer","objects");
-          toBack(trap);
+          // Reveal the trap if it's set to become visible.
+          if(trap.get("status_bleeding-eye")) {
+            trap.set("layer","objects");
+            toBack(trap);
+          }
+        }
+
+        // If no trap was activated and the theme has passive searching,
+        // do a passive search for traps.
+        else if(theme.passiveSearch && theme.passiveSearch !== _.noop) {
+          var searchableTraps = getSearchableTraps(token);
+          _.each(searchableTraps, function(trap) {
+            theme.passiveSearch(trap, token);
+          });
         }
       }
-
-      // If no trap was activated and the theme has passive searching,
-      // do a passive search for traps.
-      else if(theme.passiveSearch && theme.passiveSearch !== _.noop) {
-        var searchableTraps = getSearchableTraps(token);
-        _.each(searchableTraps, function(trap) {
-          theme.passiveSearch(trap, token);
-        });
+      catch(err) {
+        log('ERROR - It\'s A Trap!: ' + err.message);
       }
     }
   });
@@ -360,6 +403,7 @@ var ItsATrap = (function() {
   });
 
   return {
+    executeTrapCommand: executeTrapCommand,
     getTheme: getTheme,
     getTrapCollision: getTrapCollision,
     getTrapEffect: getTrapEffect,
@@ -418,15 +462,28 @@ ItsATrap.registerTheme({
    * @inheritdoc
    */
   activateEffect: function(effect) {
-    var msg = effect.message;
-
-    // Only prepend IT'S A TRAP!!! to the
-    if(msg.indexOf('!') !== 0)
-      msg = "IT'S A TRAP!!! " + msg;
-    sendChat("Admiral Ackbar", msg);
+    var html = '<table style="background-color: #fff; border: solid 1px #000; border-collapse: separate; border-radius: 10px; overflow: hidden; width: 100%;">';
+    html += "<thead><tr style='background-color: #000; color: #fff; font-weight: bold;'><th>IT'S A TRAP!!!</th></tr></thead>";
+    html += '<tbody>';
+    html += this._paddedRow( effect.message);
+    html += '</tbody></table>';
+    sendChat("Admiral Ackbar", html);
 
     // If the effect has a sound, try to play it.
     ItsATrap.playEffectSound(effect);
+
+    // If the effect has an api command, execute it.
+    ItsATrap.executeTrapCommand(effect);
+  },
+
+  /**
+   * Produces HTML for a padded table row.
+   * @param  {string} innerHTML
+   * @param  {string} style
+   * @return {string}
+   */
+  _paddedRow: function(innerHTML, style) {
+    return '<tr><td style="padding: 1px 1em; ' + style + '">' + innerHTML + '</td></tr>';
   },
 
   /**
@@ -456,6 +513,8 @@ ItsATrap.registerTheme({
 
   /**
    * Display a message if the character is within 5 units of the trap.
+   * This is just a bare-bones example what sort of behavior can be done with
+   * passiveSearch implementations.
    * @inheritdoc
    */
   passiveSearch: function(trap, charToken) {
@@ -472,253 +531,5 @@ ItsATrap.registerTheme({
       sendChat('Admiral Ackbar', name + ' notices a trap: ' + trap.get('name'));
       sendPing(trap.get('left'), trap.get('top'), trap.get('_pageid'));
     }
-  }
-});
-
-
-
-
-/**
- * A theme for D&D 5th edition.
- * This theme uses the following trap attributes:
- * 		attack {int}
- * 				The trap's attack roll bonus.
- * 				Omit if the trap does not make an attack roll.
- * 		damage {string}
- * 				The roll expression for the trap's damage if it hits.
- * 				Omit if the trap does not deal damage.
- * 	  hideSave {boolean}
- * 	  		If true, only the GM sees the saving throw roll.
- * 		missHalf {boolean}
- * 				If true, then the character takes half damage if the trap misses.
- * 	  notes {string}
- * 	  		A description of the trap's effect. This will be whispered to the GM.
- * 		save {string}
- * 				The saving throw for the trap. This is one of
- * 				'str', 'con', 'dex', 'int', 'wis', or 'cha'
- * 		saveDC {int}
- * 				The saving throw DC to avoid the trap.
- * 		spotDC {int}
- * 				The DC to spot the trap using passive wisdom (perception) or
- * 				investigation.
- *
- * @implements TrapTheme
- */
-ItsATrap.registerTheme({
-  name: 'D&D5',
-
-  /**
-   * Display the raw message and play the effect's sound.
-   * @inheritdoc
-   */
-  activateEffect: function(effect) {
-    var me = this;
-    var charToken = getObj('graphic', effect.victimId);
-    var character = getObj('character', charToken.get('represents'));
-
-    var msg = '<table style="background-color: #fff; border: solid 1px #000; border-collapse: separate; border-radius: 10px; overflow: hidden;">';
-    msg += "<thead><tr style='background-color: #000; color: #fff; font-weight: bold;'><th>IT'S A TRAP!!!</th></tr></thead>";
-    msg += '<tbody>';
-    msg += me.paddedRow(effect.message, 'background-color: #ccc; font-style: italic;');
-
-    // Remind the GM about the trap's effects.
-    if(effect.notes)
-      sendChat('Admiral Ackbar', '/w gm Trap Effects:<br/> ' + effect.notes);
-
-    // Automate trap attack/save mechanics.
-    if(character) {
-
-      // Does the trap make an attack vs AC?
-      if(effect.attack) {
-        me.getSheetAttrs(character, 'ac', function(values) {
-          var ac = values.ac;
-          me.rollAsync('1d20 + ' + effect.attack, function(atkRoll) {
-            msg += me.paddedRow('<span style="font-weight: bold;">Attack roll:</span> ' +
-              me.htmlRollResult(atkRoll, '1d20 + ' + effect.attack) + ' vs AC ' + ac);
-            msg += me.paddedRow(me.resolveTrapHit(atkRoll.total >= ac, effect, character));
-
-            msg += '</tbody></table>';
-            sendChat('Admiral Ackbar', msg);
-          });
-        });
-      }
-
-      // Does the trap require a saving throw?
-      else if(effect.save && effect.saveDC) {
-        var saveAttr = me.getSaveAttrLongname(effect.save);
-        me.getSheetAttrs(character, saveAttr, function(saves) {
-          var saveBonus = saves[saveAttr];
-          me.rollAsync('1d20 + ' + saveBonus, function(saveRoll) {
-            var saveMsg = '<span style="font-weight: bold;">' + effect.save.toUpperCase() + ' save:</span> ' +
-              me.htmlRollResult(saveRoll, '1d20 + ' + saveBonus) + ' vs DC ' + effect.saveDC;
-
-            if(effect.hideSave)
-              sendChat('Admiral Ackbar', '/w gm ' + saveMsg);
-            else
-              msg += me.paddedRow(saveMsg);
-            msg += me.paddedRow(me.resolveTrapHit(saveRoll.total < effect.saveDC, effect, character));
-
-            msg += '</tbody></table>';
-            sendChat('Admiral Ackbar', msg);
-          });
-        });
-      }
-    }
-
-    ItsATrap.playEffectSound(effect);
-  },
-
-  /**
-   * Gets the long name of a save bonus attribute.
-   * @param  {string} shortname
-   * @return {string}
-   */
-  getSaveAttrLongname: function(shortname) {
-    if(shortname === 'str')
-      return 'strength_save_bonus';
-    else if(shortname === 'dex')
-      return 'dexterity_save_bonus';
-    else if(shortname === 'con')
-      return 'constitution_save_bonus';
-    else if(shortname === 'int')
-      return 'intelligence_save_bonus';
-    else if(shortname === 'wis')
-      return 'wisdom_save_bonus';
-    else
-      return 'charisma_save_bonus';
-  },
-
-
-  /**
-   * Asynchronously gets the values of one or more character sheet attributes.
-   * @param  {Character}   character
-   * @param  {(string|string[])}   attrNames
-   * @param  {Function} callback
-   *         The callback takes one parameter: a map of attribute names to their
-   *         values.
-   */
-  getSheetAttrs: function(character, attrNames, callback) {
-    var me = this;
-
-    if(!_.isArray(attrNames))
-      attrNames = [attrNames];
-
-    var count = 0;
-    var values = {};
-    _.each(attrNames, function(attrName) {
-      try {
-        me.rollAsync('@{' + character.get('name') + '|' + attrName + '}', function(roll) {
-          var attrValue = roll.total;
-          values[attrName] = attrValue;
-          count++;
-
-          if(count === attrNames.length)
-            callback(values);
-        });
-      }
-      catch(err) {
-        values[attrName] = undefined;
-        count++;
-
-        if(count === attrNames.length)
-          callback(values);
-      }
-    });
-  },
-
-  /**
-   * Produces HTML for a faked inline roll result.
-   * @param  {int} result
-   * @param  {string} expr
-   * @return {string}
-   */
-  htmlRollResult: function(result, expr) {
-    var d20 = result.rolls[0].results[0].v;
-
-    var style = 'background-color: #FEF68E; cursor: help; font-size: 1.1em; font-weight: bold; padding: 0 3px;';
-    if(d20 === 20)
-      style += 'border: 2px solid #3FB315;';
-    if(d20 === 1)
-      style += 'border: 2px solid #B31515';
-
-    return '<span title="' + expr + '" style="' + style + '">' + result.total + '</span>';
-  },
-
-  /**
-   * Produces HTML for a padded table row.
-   * @param  {string} innerHTML
-   * @param  {string} style
-   * @return {string}
-   */
-  paddedRow: function(innerHTML, style) {
-    return '<tr><td style="padding: 1px 1em; ' + style + '">' + innerHTML + '</td></tr>';
-  },
-
-  /**
-   * Display a message if the character is within 5 units of the trap.
-   * @inheritdoc
-   */
-  passiveSearch: function(trap, charToken) {
-    var effect = ItsATrap.getTrapEffect(charToken, trap);
-    var character = getObj('character', charToken.get('represents'));
-
-    // Only do passive search for traps that have a spotDC.
-    if(effect.spotDC && character) {
-
-      // Get the character's passive wisdom (perception).
-      this.getSheetAttrs(character, 'passive_wisdom', function(values) {
-
-        // If the character's passive wisdom beats the spot DC, then
-        // display a message and mark the trap's trigger area.
-        if(values['passive_wisdom'] >= effect.spotDC) {
-          ItsATrap.noticeTrap(trap, "<span style='font-weight: bold;'>IT'S A TRAP!!!</span><br/>" +
-            character.get('name') + ' notices a trap: <br/>' + trap.get('name'));
-        }
-      });
-    }
-  },
-
-  /**
-   * Resolves the hit/miss effect of a trap.
-   * @param  {boolean} trapHit
-   *         Whether the trap hit.
-   * @param  {TrapEffect} effect
-   * @param  {Character} character
-   * @return {string}
-   */
-  resolveTrapHit: function(trapHit, effect, character) {
-    var msg = '<div>';
-    if(trapHit) {
-      var msg = '<span style="color: #f00; font-weight: bold;">HIT! </span>';
-      if(effect.damage)
-        msg += 'Damage: [[' + effect.damage + ']]';
-      else
-        msg += character.get('name') + ' falls prey to the trap\'s effects!';
-    }
-    else {
-      msg += '<span style="color: #620; font-weight: bold;">MISS! </span>';
-      if(effect.damage && effect.missHalf)
-        msg += 'Half damage: [[floor((' + effect.damage + ')/2)]].';
-    }
-    msg += '</div>';
-    return msg;
-  },
-
-  /**
-   * Asynchronously rolls a dice roll expression and returns the result's total in
-   * a callback. The result is undefined if an invalid expression is given.
-   * @param  {string} expr
-   * @return {int}
-   */
-  rollAsync: function(expr, callback) {
-    sendChat('ItsATrap-DnD5', '/w gm [[' + expr + ']]', function(msg) {
-      try {
-        var results = msg[0].inlinerolls[0].results;
-        callback(results);
-      }
-      catch(err) {
-        callback(undefined);
-      }
-    });
   }
 });
