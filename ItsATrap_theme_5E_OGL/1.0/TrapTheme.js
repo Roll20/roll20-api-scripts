@@ -70,6 +70,10 @@
           sendChat('Admiral Ackbar', msg);
         }
       }
+      else {
+        msg += '</tbody></table>';
+        sendChat('Admiral Ackbar', msg);
+      }
 
       // If the effect has a sound, try to play it.
       ItsATrap.playEffectSound(effect);
