@@ -348,7 +348,6 @@
     if(ItsATrap) {
       clearInterval(register);
       ItsATrap.registerTheme(theme);
-      state.ItsATrap.theme = '5E-Community';
     }
   }, 1000);
 })();
