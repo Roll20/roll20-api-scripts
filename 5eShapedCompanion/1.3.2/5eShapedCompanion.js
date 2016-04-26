@@ -3051,11 +3051,9 @@ var ShapedScripts =
 
 	    const spellLevel = parseInt(options.friendlyLevel.slice(0, 1), 10);
 	    const level = options.castAsLevel ? parseInt(options.castAsLevel, 10) : spellLevel;
-	    const availableSlots = _.chain(_.range(spellLevel, 10))
+	    const availableSlots = _.range(spellLevel, 10)
 	      .map(slotLevel => roll20.getAttrObjectByName(options.character.id, `spell_slots_l${slotLevel}`))
-	      .compact()
-	      .filter(attr => attr.get('current') > 0)
-	      .value();
+	      .filter(attr => attr.get('current') > 0);
 
 	    const spellId = _.chain(roll20.getRepeatingSectionItemIdsByName(options.character.id, 'spell'))
 	      .pick(options.title.toLowerCase())
@@ -3490,7 +3488,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v1.3.4 <=-');
+	    logger.info('-=> ShapedScripts v1.3.2 <=-');
 	    if (myState.version !== schemaVersion) {
 	      logger.info('  > Updating Schema to v$$$ from $$$<', schemaVersion, myState && myState.version);
 	      logger.info('Preupgrade state: $$$', myState);
@@ -3596,7 +3594,7 @@ var ShapedScripts =
 	    this.registerChatWatcher(this.handleFX, ['fx', 'character']);
 	    this.registerChatWatcher(this.handleHD, ['character', 'title']);
 	    this.registerChatWatcher(this.handleD20Roll, ['character', 'roll1']);
-	    // this.registerChatWatcher(this.handleSpellCast, ['character', 'spell', 'friendlyLevel']);
+	    this.registerChatWatcher(this.handleSpellCast, ['character', 'spell', 'friendlyLevel']);
 	  };
 
 	  logger.wrapModule(this);
@@ -3807,7 +3805,10 @@ var ShapedScripts =
 	      .map(selected => roll20.getObj(selected._type, selected._id))
 	      .map(object => {
 	        if (type === 'character' && object) {
-	          return roll20.getObj('character', object.get('represents'));
+	          const represents = object.get('represents');
+	          if (represents) {
+	            return roll20.getObj('character', represents);
+	          }
 	        }
 	        return object;
 	      })

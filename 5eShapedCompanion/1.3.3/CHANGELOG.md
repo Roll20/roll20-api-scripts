@@ -1,14 +1,3 @@
-<a name="1.3.4"></a>
-## [1.3.4](https://github.com/symposion/roll20-shaped-scripts/compare/1.3.3...1.3.4) (2016-04-23)
-
-
-### Bug Fixes
-
-* **spell-slots:** Disable spell slot handling, not ready for use yet. ([dac9f21](https://github.com/symposion/roll20-shaped-scripts/commit/dac9f21))
-* **spell-slots:** Prevent error when normal spell slots are missing - e.g. for warlock spells. ([5f75e45](https://github.com/symposion/roll20-shaped-scripts/commit/5f75e45))
-
-
-
 <a name="1.3.3"></a>
 ## [1.3.3](https://github.com/symposion/roll20-shaped-scripts/compare/1.3.2...1.3.3) (2016-04-23)
 
