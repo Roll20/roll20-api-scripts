@@ -18,7 +18,8 @@ var ItsATrap = (function() {
    * @return {Graphic || false}
    */
   var getTrapCollision = function(token) {
-      var traps = getTrapTokens();
+      var pageId = token.get('_pageid');
+      var traps = getTrapTokens(pageId);
       traps = filterList(traps, function(trap) {
           return !isTokenFlying(token) || isTokenFlying(trap);
       });
@@ -57,10 +58,10 @@ var ItsATrap = (function() {
 
   /**
    * Returns all trap tokens on the players' page.
+   * @param {string} pageId
    */
-  var getTrapTokens = function() {
-      var currentPageId = Campaign().get("playerpageid");
-      return findObjs({_pageid: currentPageId,
+  var getTrapTokens = function(pageId) {
+      return findObjs({_pageid: pageId,
                               _type: "graphic",
                               status_cobweb: true,
                               layer: "gmlayer"});
@@ -95,13 +96,8 @@ var ItsATrap = (function() {
    * passed through any traps.
    */
   on("change:graphic", function(obj, prev) {
-      var activePage = Campaign().get('playerpageid');
-
       // Objects on the GM layer don't set off traps.
-      if(obj.get("layer") === "objects" && obj.get('_pageid') == activePage) {
-        //  log('last move for ' + obj.get('name') + ':');
-        //  log(obj.get('lastmove'));
-
+      if(obj.get("layer") === "objects") {
           var trap = getTrapCollision(obj);
 
           if(trap) {
@@ -112,7 +108,6 @@ var ItsATrap = (function() {
               else {
                 sendChat("Admiral Ackbar", "IT'S A TRAP!!! " + obj.get("name") + " set off a trap!");
               }
-
 
               moveTokenToTrap(obj, trap);
 

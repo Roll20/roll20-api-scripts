@@ -103,3 +103,35 @@ matrixmath:
 pathsplitter:
 - "PathSplitter"
 - "Maps & Drawing"
+
+collisiondetection:
+- "Collision Detection"
+- "Tokens"
+
+raisecount:
+- "Raise Count"
+- "System Toolbox"
+
+monsterhitdice:
+- "MonsterHitDice"
+- "Tokens"
+
+pagefx:
+- "PageFX"
+- "Maps & Drawing"
+
+5theShapedCompanion:
+- "5eShapedCompanion"
+- "System Toolbox"
+
+splitargs:
+- "splitArgs"
+- "Utility"
+
+interpretedsendchat:
+- "Interpreted sendChat"
+- "Utility"
+
+levenshteindistance:
+- "levenshteinDistance"
+- "Utility"

@@ -24,7 +24,7 @@
     {
       "name": "Behavior",
       "type": "select",
-      "options": ["Don't Move". "Warn Player", "Stop at Wall", "Don't Move & Warn Player", "Warn Player & Stop at Wall"],
+      "options": ["Don't Move", "Warn Player", "Stop at Wall", "Don't Move & Warn Player", "Warn Player & Stop at Wall"],
       "default": "Warn Player & Stop at Wall",
       "description": "You can customize the script's behavior when a collision event is detected. \"Don't Move\" will return the token to its original position if it collides with something. \"Warn Player\" will send the player a mesasge indicating that they aren't supposed to be able to move there. \"Stop at Wall\" will halt the token at the wall."
     }
