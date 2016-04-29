@@ -135,3 +135,11 @@ interpretedsendchat:
 levenshteindistance:
 - "levenshteinDistance"
 - "Utility"
+
+charsheet:
+- "Charsheet"
+- "Character"
+
+essro:
+- "ESRO"
+- "Utility"

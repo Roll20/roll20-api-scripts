@@ -136,11 +136,9 @@ Your new spells are now ready for use!
 1. Run **!shaped-config** from the chat window, click on 'Advantage Tracker' and then set 'Show Markers' to 'on' if
 it isn't already
 1. During play, when a character should have advantage or disadvantage, select their token and run **!shaped-at --advantage** from the chat window to give them advantage. Replace **--advantage** with **--disadvantage** or **--normal** for disadvantage/normal respectively.
+1. When a character has advantage, all tokens representing it will be marked with a green dot. For disadvantage, the dot will be red
 
 **IMPORTANT NOTE:** Advantage/disadvantage is a per-character setting, not per-token. If you have monster characters for which many tokens appear on the map at once (e.g. a horde of goblins), they will all get (dis)advantage at the same time - so don't forget to turn it off when you're finished with the token if it's only supposed to apply to one!
-
-### Auto reverting advantage/disadvantage
-When enabled, if the script detects a d20 roll with advantage or disadvantage, the character's roll option will be automatically reverted back to "normal".
 
 ## Creating token actions for characters
 It can be useful to create token action buttons for your characters to allow quick access to commonly used attacks, spells, actions, etc. For this you need to use the **!shaped-abilities** command. For example, **!shaped-abilities --attacks** will create a token action for each attack defined for your character. For full details of all the available options, please see [below](#shaped-abilities)
@@ -189,8 +187,6 @@ Gives the selected character advantage or disadvantage, or  neither.
 * **--advantage** give the selected character advantage
 * **--disadvantage** give the selected character disadvantage
 * **--normal** clears (dis)advantage status for the selected character
-* **--revert** turns on auto revert advantage/disadvantage for the selected character
-* **--persist** turns off auto revert advantage/disadvantage for the selected character
 
 ### Selection
 You must select at least one token that represents a character. The specified setting will apply to the characters of all selected tokens.
@@ -216,8 +212,6 @@ Creates token actions for your character as shortcuts to a variety of rolls and 
 * **--abilitychecks** or **--abilchecks** - create an ability to launch the chat window ability check buttons
 * **--abilitychecksquery** or **--abilchecksquery** - create an ability launch the ability check drop-down query
 * **--statblock** - create an ability to launch a chat window statblock display
-* **--advantagetracker** - create 3 abilities, one for each Advantage Tracker option (Advantage, Disadvantage, Normal)
-* **--advantagetracker-query** - create an ability to set an Advantage Tracker option from a drop-down query
 * **--DELETE** - delete all abilities on the token (including those not created by this script)
 
 In addition, you can pass the names of spells like **--Fireball** to create token actions for each spell. Obviously the character in question must actually have this spell in its spellbook for this to work.
@@ -233,11 +227,7 @@ Apply the same defaults that are used when setting up tokens on import to whatev
 
 # Configuration
 ## Advantage Tracker
-* **Output** Decides how Advantage Tracker will report changes (whisper the gm, public to all, or silent)
-* **Show Markers** If this is 'on', all tokens for a character will be marked with the specified markers if they have advantage or disadvantage. Designed for use with the [!shaped-at](#shaped-at) command
-* **Ignore NPCs** If this is 'on', Advantage Tracker will ignore NPCs
-* **Advantage Marker** Sets the status marker to be displayed when a character has Advantage if **Show Markers** is on
-* **Disadvantage Marker** Sets the status marker to be displayed when a character has Disadvantage if **Show Markers** is on
+* **Show Markers** If this is 'on', all tokens for a character will be marked with a green or a red dot if they have advantage or disadvantage respectively. Designed for use with the [!shaped-at](#shaped-at) command
 
 ## Token Defaults
 * **Numbered Tokens** If this is 'on', new tokens will have %%NUMBERED%% appended to their name to work with Aaron's TokenNameNumbered script. Please search for this on the API forum for more details.
