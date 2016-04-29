@@ -3432,7 +3432,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v1.4.3 <=-');
+	    logger.info('-=> ShapedScripts v1.4.2 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
