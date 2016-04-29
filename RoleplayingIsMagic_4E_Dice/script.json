@@ -1,12 +1,13 @@
 {
     "name": "Roleplaying is Magic 4E Dice",
+    "script": "mlp_dice.js",
     "version": "1.0",
+    "previousversions": [],
     "description": "A dice rolling script for the Roleplaying is Magic 4E system. See README.md.",
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
-    "dependencies": {},
-    "modifies": {
-        "chat": "write"
-    },
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {},
     "conflicts": []
 }

@@ -1,5 +1,8 @@
 # Roleplaying is Magic 4E dice
 
+*v1.1 Updates*
+* The script now has an API, mainly to integrate with the TrapTheme for MLP:RiM 4E character sheets.
+
 This is a script for rolling dice checks and skill checks for the
 [Roleplaying is Magic: Season 4 edition](http://roleplayingismagic.com/),
 a popular fan-created tabletop RPG system based upon the world of

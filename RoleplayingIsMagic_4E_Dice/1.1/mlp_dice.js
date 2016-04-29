@@ -51,7 +51,7 @@
  *      the skill, such as for conditional modifiers. Nothing here is parsed
  *      for the dice rolling math.
  */
-(function() {
+RiM4Dice = (function() {
 
     var cmd = "!r ";
 
@@ -65,8 +65,6 @@
           _type: 'player',
           _id: playerId
         })[0];
-
-        log(player);
 
         var speakingAs = player.get('speakingas') || player.get('_displayname');
         if(speakingAs.indexOf('player') === 0)
@@ -251,11 +249,23 @@
      * Rolls a skill check for a character using the skillcheck template.
      * @param {Character} character
      * @param  {SkillCheck} skillCheck
+     * @param {Function} [callback]
+     *        A callback with the roll result.
      */
-    function rollSkillCheck(character, skillCheck) {
+    function rollSkillCheck(character, skillCheck, callback) {
       var charName = character.get('name');
 
+      if(_.isString(skillCheck))
+        skillCheck = {
+          skillName: skillCheck,
+          advDis: 0
+        };
+
       var skill = getSkill(character, skillCheck.skillName);
+      if(!skill && callback) {
+        callback(undefined);
+        return;
+      }
 
       var notes = skill.notes;
       if(skillCheck.note) {
@@ -263,6 +273,8 @@
           notes += '<br>'
         notes += skillCheck.note;
       }
+
+      skillCheck.advDis = skillCheck.advDis || 0;
       var advDis = skill.advDis + skillCheck.advDis;
       if(advDis >= 0)
         advDis = '+' + advDis;
@@ -295,7 +307,18 @@
         templateStr += '{{notes=' + notes + '}}';
       }
 
-      sendChat(character.get('name'), templateStr);
+      if(callback)
+        sendChat(character.get('name'), templateStr, function(msg) {
+          try {
+            var results = msg[0].inlinerolls[0].results;
+            callback(results);
+          }
+          catch(err) {
+            callback(undefined);
+          }
+        });
+      else
+        sendChat(character.get('name'), templateStr);
     }
 
     on("chat:message", function(msg) {
@@ -335,4 +358,8 @@
         }
 
     });
+
+    return {
+      rollSkillCheck: rollSkillCheck
+    };
 })();

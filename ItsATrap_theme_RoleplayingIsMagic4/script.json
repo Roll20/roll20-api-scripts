@@ -1,0 +1,13 @@
+{
+    "name": "It's a Trap! - Roleplaying is Magic 4E theme",
+    "script": "TrapTheme.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [],
+    "dependencies": ["It's a Trap!", "Roleplaying is Magic 4E Dice"],
+    "modifies": {},
+    "conflicts": []
+}
