@@ -512,9 +512,6 @@ ItsATrap.registerTheme({
     if(effect.notes)
       sendChat('Admiral Ackbar', '/w gm ' + effect.notes);
 
-    // If the effect has fx, play them.
-    ItsATrap.playTrapFX(effect);
-
     // If the effect has a sound, try to play it.
     ItsATrap.playEffectSound(effect);
 
@@ -553,7 +550,15 @@ ItsATrap.registerTheme({
    */
   activateEffect: function(effect) {
     sendChat("ItsATrap-test", effect.message);
+
+    // If the effect has a sound, try to play it.
     ItsATrap.playEffectSound(effect);
+
+    // If the effect has fx, play them.
+    ItsATrap.playTrapFX(effect);
+
+    // If the effect has an api command, execute it.
+    ItsATrap.executeTrapCommand(effect);
   },
 
 
@@ -574,8 +579,7 @@ ItsATrap.registerTheme({
     ];
     if(VecMath.dist(trapPt, charPt) <= 70*5) {
       var name = charToken.get('name');
-      sendChat('Admiral Ackbar', name + ' notices a trap: ' + trap.get('name'));
-      sendPing(trap.get('left'), trap.get('top'), trap.get('_pageid'));
+      ItsATrap.noticeTrap(trap, name + ' notices a trap: ' + trap.get('name'));
     }
   }
 });
