@@ -69,7 +69,6 @@ var ShapedScripts =
 	roll20.logWrap = 'roll20';
 	// logger.wrapModule(el);
 	logger.wrapModule(roll20);
-	logger.wrapModule(srdConverter);
 
 	const jsonValidator = new JSONValidator(__webpack_require__(4));
 	el.configureEntity('monsters', [
@@ -3432,7 +3431,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v1.4.3 <=-');
+	    logger.info('-=> ShapedScripts v1.4.0 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -4978,7 +4977,8 @@ var ShapedScripts =
 	  castingTime: camelCaseFixMapper,
 	  target: identityMapper,
 	  description(key, value, output) {
-	    output.content = value + (output.content ? `\n${output.content}` : '');
+	    output.content = value;
+	    output.content += output.content ? `\n${output.content}` : '';
 	  },
 	  higherLevel(key, value, output) {
 	    output.content = output.content ? `${output.content}\n` : '';
