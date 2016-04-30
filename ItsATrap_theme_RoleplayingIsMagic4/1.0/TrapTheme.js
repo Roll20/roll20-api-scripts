@@ -204,10 +204,10 @@
 
     msgData.skill = {
       name: msgData.effect.skill.name,
-      difficulty: msgData.effect.skillDif,
+      difficulty: msgData.effect.skill.dif,
       roll: skillRoll
     };
-    msgData.trapHit = skillRoll.total < msgData.effect.skillDif;
+    msgData.trapHit = skillRoll.total < msgData.effect.skill.dif;
     sendHtmlTrapMessage(msgData);
   }
 

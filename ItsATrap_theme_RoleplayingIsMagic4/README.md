@@ -1,32 +1,67 @@
-# It's A Trap! - 5th Edition OGL theme
+# It's A Trap! - Roleplaying is Magic 4E theme
 
-This is a D&D 5th edition trap theme for the It's A Trap! script, compatible with
-the 5th Edition (OGL by Roll20) character sheet.
+This is a My Little Pony: Roleplaying is Magic 4th edition theme for the It's A Trap! script,
+built for use with the Roleplaying is Magic 4E character sheet.
 
-It provides support for D&D 5th edition mechanics to automate resolving trap
-attacks, saving throws, and passive searching.
+It provides support for automated passive perception of traps using a passive
+Perception skill roll, and it allows automated skill rolls to avoid activated traps.
 
-To use this theme for the It's A Trap! script, enter "5E-OGL" for the ```theme``` user option.
+To use this theme for the It's A Trap! script, enter "MLP-RIM-4" for the ```theme``` user option.
 
 ## TrapEffect properties
 
 This TrapTheme supports the following TrapEffect JSON properties in addition
 to all the basic TrapEffect JSON properties:
-* attack (int): The trap's attack roll bonus. Omit if the trap does not make an attack roll.
 * damage (string): The dice roll expression for the trap's damage. Omit if the trap does not deal damage.
-* hideSave (boolean): If true, then only the GM will see the saving throw rolled for the trap.
 * missHalf (boolean): If true, then the trap deals half damage on a miss.
-* notes (string): A reminder about the trap's effects, which will be whispered to the GM.
-* save (string): The saving throw for the trap. This can be one of 'str', 'con', 'dex', 'int', 'wis', or 'cha'.
-* saveDC (int): The saving throw DC for the trap.
-* spotDC (int): The DC to spot the trap with passive wisdom (perception). When a character spots the trap, its trigger area will be circled.
+* skill (object)
+  * attr (string): The skill's primary attribute (used if the character is not trained in the skill).
+  * dif (int): The difficulty for the skill check.
+  * name (string): The name of the skill.
+* spotDif (int): The difficulty to spot the trap with a passive Perception skill check.
+
+*Example JSON*
+
+Here's an example of how to use the trap JSON for this theme:
+
+```
+{
+  "damage": "2d6 + 5",
+  "message": "Spectral spears suddenly launch out of the ground!",
+  "missHalf": true,
+  "skill": {
+    "name": "dodge",
+    "attr": "body",
+    ​"dif": 10
+  },
+  "spotDif": 8
+}
+```
+
+This trap makes the character roll a dodge skill check when it is activated
+(if they don't have that skill, the character rolls a Body check instead).
+The difficulty for the skill check is 10. On a hit, the trap deals 2d6 + 5 damage.
+On a miss, the trap deals half damage.
+
+### Note about passive Perception
+
+The Roleplaying is Magic 4E system doesn't actually have any defined rolls for
+passive skill checks. For the purpose of this script, a character's passive Perception is
+calculated as follows:
+
+```
+4 + (total Advantage/Disadvantage modifier) + Mind + (3 if trained) + (2 if improved) + (1 if greater) + (total Misc modifiers)
+```
+
+So for example, a character not trained in Perception with a Mind of 2 would
+have a passive Perception of 6. A character trained in Perception with a Mind
+of 4 would have a passive Perception of 11.
 
 ## Notes on trap automation:
 The theme's automated attacks and saving throws do not account for conditional
-modifiers, Advantage, or Disadvantage. Players will need to apply those in an
-ad hoc fashion.
+modifiers. Players will need to apply those in an ad hoc fashion.
 
 If a trap deals damage, the theme will not automatically subtract
-the damage from the character's hit points. Players will still need to do that
-themselves after applying conditional modifiers to their AC/saves,
+the damage from the character's Fortitude or Willpower. Players will still need to do that
+themselves after applying conditional modifiers to skill check,
 applying damage resistance, vulnerability, etc..
