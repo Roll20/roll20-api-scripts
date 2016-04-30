@@ -24,8 +24,8 @@
         var trained = values[prefix + 'skillMT'];
         var improved = values[prefix + 'skillMI'];
         var greater = values[prefix + 'skillMG'];
-        var mind = values['mind'];
-        var modifier = values[prefix + 'skillMMisc'];
+        var mind = values['mind'] || 0;
+        var modifier = values[prefix + 'skillMMisc'] || 0;
 
         var result = 4 + mind + modifier;
         if(trained)
@@ -45,16 +45,18 @@
       _.each(_.range(maxSkills), function(row) {
         getSheetAttrText(character, 'repeating_skillsMind_$' + row + '_skillM', function(skillName) {
           count++;
+          log(count);
           if(skillName) {
             skillName = skillName.trim().toLowerCase();
             if(skillName === 'perception') {
+              count--;
               perceptionRowNumCache[charName] = row;
 
               // Now that we know the row number, try again.
               getPassivePerception(character, callback);
             }
           }
-          else if(count === maxSkills) {
+          if(count === maxSkills) {
             callback(undefined);
           }
         });
@@ -81,6 +83,28 @@
     catch(err) {
       callback(undefined);
     }
+  }
+
+  /**
+   * Asynchronously gets the value of multiple character sheet attributes in
+   * parallel.
+   * @param  {Character}   character
+   * @param  {string[]}   attrList
+   * @param  {Function} callback
+   *         The callback takes one parameter: the value of the attribute.
+   */
+  function getSheetAttrs(character, attrList, callback) {
+    var count = 0;
+    var values = {};
+    _.each(attrList, function(attr) {
+      getSheetAttr(character, attr, function(value) {
+        values[attr] = value;
+        count++;
+
+        if(count === attrList.length)
+          callback(values);
+      });
+    });
   }
 
   /**
@@ -143,7 +167,7 @@
    * Displays the message to notice a trap.
    * @param  {Graphic} trap
    */
-  function noticeTrap(trap) {
+  function noticeTrap(character, trap) {
     var noticeHtml = "<span style='font-weight: bold;'>IT'S A TRAP!!!</span><br/>" +
       character.get('name') + ' notices a trap: <br/>' + trap.get('name')
     ItsATrap.noticeTrap(trap, noticeHtml);
@@ -175,8 +199,11 @@
 
 
   function resolveSkillRoll(msgData, skillRoll) {
+    log('resolve skill roll');
+    log(skillRoll);
+
     msgData.skill = {
-      name: msgData.effect.skill,
+      name: msgData.effect.skill.name,
       difficulty: msgData.effect.skillDif,
       roll: skillRoll
     };
@@ -190,6 +217,10 @@
    * @param  {object} data
    */
   function sendHtmlTrapMessage(data) {
+    log('html message');
+    log(data);
+
+
     var tableStyle = [
       'background-color: #fff;',
       'border: solid 1px #000;',
@@ -219,8 +250,8 @@
     // Add the saving throw message.
     if(data.skill) {
       var rollHtml = htmlRollResult(data.skill.roll);
-      var saveMsg = '<span style="font-weight: bold;">' + data.skill.name.toUpperCase() + ' save:</span> ' + rollHtml
-         + ' vs DC ' + data.skill.difficulty;
+      var saveMsg = '<span style="font-weight: bold;">' + data.skill.name.toUpperCase() + ' check:</span> ' + rollHtml
+         + ' vs Dif ' + data.skill.difficulty;
       msg += htmlPaddedRow(saveMsg);
     }
 
@@ -243,6 +274,7 @@
     // End message.
     msg += '</tbody></table>';
 
+    log('send');
     // Send the HTML message to the chat.
     sendChat('Admiral Ackbar', msg);
   }
@@ -276,13 +308,14 @@
         sendChat('Admiral Ackbar', '/w gm Trap Effects:<br/> ' + effect.notes);
 
       // Automate trap attack/save mechanics.
-      if(character && effect.skill && effect.skillDC)
+      if(character && effect.skill)
         RiM4Dice.rollSkillCheck(character, effect.skill.name, function(skillRoll) {
           if(skillRoll)
             resolveSkillRoll(msgData, skillRoll);
           else
             RiM4Dice.rollSkillCheck(character, effect.skill.attr, function(attrRoll) {
-              resolveSkillRoll(msgData, attrRoll);
+              if(attrRoll)
+                resolveSkillRoll(msgData, attrRoll);
             });
         });
       else
@@ -307,12 +340,12 @@
       if(effect.spotDif && character) {
         getPassivePerception(character, function(passPerception) {
           if(passPerception === undefined)
-            RiMDice.rollSkillCheck(character, 'mind', function(mindRoll) {
-              if(mindRoll.total >= effect.spotDif)
-                noticeTrap(trap);
+            getSheetAttr(character, 'mind', function(mind) {
+              if(mind && mind + 4 >= effect.spotDif)
+                noticeTrap(character, trap);
             });
           else if(passPerception >= effect.spotDif)
-            noticeTrap(trap);
+            noticeTrap(character, trap);
         });
       }
     }
