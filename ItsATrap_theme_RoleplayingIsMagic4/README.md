@@ -32,7 +32,7 @@ Here's an example of how to use the trap JSON for this theme:
   "skill": {
     "name": "dodge",
     "attr": "body",
-    ​"dif": 10
+    "dif": 10
   },
   "spotDif": 8
 }
