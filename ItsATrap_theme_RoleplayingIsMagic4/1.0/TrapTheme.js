@@ -16,52 +16,27 @@
    */
   function getPassivePerception(character, callback) {
     var charName = character.get('name');
-    var rowNum = perceptionRowNumCache[charName];
 
-    if(rowNum !== undefined) {
-      var prefix = 'repeating_skillsMind_$' + rowNum + '_';
-      getSheetAttrs(character, [prefix + 'skillMT', prefix + 'skillMI', prefix + 'skillMG', prefix + 'skillMMisc', 'mind'], function(values) {
-        var trained = values[prefix + 'skillMT'];
-        var improved = values[prefix + 'skillMI'];
-        var greater = values[prefix + 'skillMG'];
-        var mind = values['mind'] || 0;
-        var modifier = values[prefix + 'skillMMisc'] || 0;
+    var mind = parseInt(findObjs({
+      _type: 'attribute',
+      _characterid: character.get('_id'),
+      name: 'mind'
+    })[0].get('current'));
 
-        var result = 4 + mind + modifier;
-        if(trained)
-          result += 3;
-        if(improved)
-          result += 2;
-        if(greater)
-          result += 1;
-        callback(result);
-      });
+    var skill = RiM4Dice.getSkill(character, 'perception');
+
+    var result = 4 + mind;
+    if(skill) {
+      if(skill.trained)
+        result += 3;
+      if(skill.improved)
+        result += 2;
+      if(skill.greater)
+        result += 1;
+
+      result += (skill.misc || 0) + (skill.advDis || 0);
     }
-    else {
-      // There's no way at the time of this writing to get the exact number of
-      // rows in a repeating section. So for now 30 is used as a reasonable upper limit.
-      var maxSkills = 10;
-      count = 0;
-      _.each(_.range(maxSkills), function(row) {
-        getSheetAttrText(character, 'repeating_skillsMind_$' + row + '_skillM', function(skillName) {
-          count++;
-          log(count);
-          if(skillName) {
-            skillName = skillName.trim().toLowerCase();
-            if(skillName === 'perception') {
-              count--;
-              perceptionRowNumCache[charName] = row;
-
-              // Now that we know the row number, try again.
-              getPassivePerception(character, callback);
-            }
-          }
-          if(count === maxSkills) {
-            callback(undefined);
-          }
-        });
-      });
-    }
+    callback(result);
   }
 
   /**
@@ -154,13 +129,13 @@
 
   /**
    * Produces HTML for a faked inline roll result.
-   * @param  {int} result
-   * @param  {string} expr
+   * @param  {roll} result
+   * @param  {string} tooltip
    * @return {string}
    */
-  function htmlRollResult(result) {
+  function htmlRollResult(result, tooltip) {
     var style = 'background-color: #FEF68E; cursor: help; font-size: 1.1em; font-weight: bold; padding: 0 3px;';
-    return '<span style="' + style + '">' + result.total + '</span>';
+    return '<span style="' + style + '" title="' + tooltip + '">' + result.total + '</span>';
   }
 
   /**
@@ -185,23 +160,20 @@
       sendChat('ItsATrap-DnD5', '/w gm [[' + expr + ']]', function(msg) {
         try {
           var results = msg[0].inlinerolls[0].results;
-          callback(results);
+          callback(results, expr);
         }
         catch(err) {
-          callback(undefined);
+          callback(undefined, expr);
         }
       });
     }
     catch(err) {
-      callback(undefined);
+      callback(undefined, expr);
     }
   }
 
 
   function resolveSkillRoll(msgData, skillRoll) {
-    log('resolve skill roll');
-    log(skillRoll);
-
     msgData.skill = {
       name: msgData.effect.skill.name,
       difficulty: msgData.effect.skill.dif,
@@ -217,10 +189,6 @@
    * @param  {object} data
    */
   function sendHtmlTrapMessage(data) {
-    log('html message');
-    log(data);
-
-
     var tableStyle = [
       'background-color: #fff;',
       'border: solid 1px #000;',
@@ -247,12 +215,21 @@
     // Add the flavor message.
     msg += htmlPaddedRow(data.message, messageStyle);
 
+    var targetMsg = '<span style="font-weight: bold;">Target: </span>' + data.character.get('name');
+    msg += htmlPaddedRow(targetMsg);
+
     // Add the saving throw message.
     if(data.skill) {
-      var rollHtml = htmlRollResult(data.skill.roll);
-      var saveMsg = '<span style="font-weight: bold;">' + data.skill.name.toUpperCase() + ' check:</span> ' + rollHtml
+      var rollHtml = htmlRollResult(data.skill.roll, data.rollExpr);
+      var skillMsg = '<span style="font-weight: bold;">' + data.skill.name.toUpperCase() + ' check:</span> ' + rollHtml
          + ' vs Dif ' + data.skill.difficulty;
-      msg += htmlPaddedRow(saveMsg);
+      msg += htmlPaddedRow(skillMsg);
+
+      var skill = RiM4Dice.getSkill(data.character, data.skill.name);
+      if(skill && skill.notes) {
+        var skillNotesMsg = '<span style="font-size: 0.8em; font-style: italic;">' + skill.notes + '</span>';
+        msg += htmlPaddedRow(skillNotesMsg);
+      }
     }
 
     // Add the hit/miss message.
@@ -264,7 +241,7 @@
         resultHtml += data.character.get('name') + ' falls prey to the trap\'s effects!';
       msg += htmlPaddedRow(resultHtml);
     }
-    else {
+    else if(data.skill) {
       var resultHtml = '<span style="color: #620; font-weight: bold;">MISS! </span>';
       if(data.damage && data.missHalf)
         resultHtml += 'Half damage: [[floor((' + data.damage + ')/2)]].';
@@ -274,7 +251,6 @@
     // End message.
     msg += '</tbody></table>';
 
-    log('send');
     // Send the HTML message to the chat.
     sendChat('Admiral Ackbar', msg);
   }
@@ -295,8 +271,15 @@
       var charToken = getObj('graphic', effect.victimId);
       var character = getObj('character', charToken.get('represents'));
 
+      var attr = findObjs({
+        _type: 'attribute',
+        _characterid: character.get('_id'),
+        name: effect.skill.attr
+      })[0].get('current');
+
       var msgData = {
         character: character,
+        attr: attr,
         damage: effect.damage,
         effect: effect,
         message: effect.message,
@@ -309,14 +292,18 @@
 
       // Automate trap attack/save mechanics.
       if(character && effect.skill)
-        RiM4Dice.rollSkillCheck(character, effect.skill.name, function(skillRoll) {
-          if(skillRoll)
+        RiM4Dice.rollSkillCheck(character, effect.skill.name, function(skillRoll, expr) {
+          if(skillRoll) {
+            msgData.rollExpr = expr;
             resolveSkillRoll(msgData, skillRoll);
-          else
-            RiM4Dice.rollSkillCheck(character, effect.skill.attr, function(attrRoll) {
-              if(attrRoll)
-                resolveSkillRoll(msgData, attrRoll);
+          }
+          else {
+            // default to primary attribute.
+            rollAsync('2d6 + ' + attr + ' [' + effect.skill.attr + ']', function(attrRoll, expr) {
+              msgData.rollExpr = expr;
+              resolveSkillRoll(msgData, attrRoll);
             });
+          }
         });
       else
         sendHtmlTrapMessage(msgData);

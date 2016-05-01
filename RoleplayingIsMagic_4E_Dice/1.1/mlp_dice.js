@@ -47,7 +47,6 @@ RiM4Dice = (function() {
             throw new Error('You are not currently speaking as a character.');
         else if(speakingAs.indexOf('character') === 0) {
             var characterId = speakingAs.replace('character|', '');
-            log(speakingAs, characterId);
             return findObjs({
               _type: 'character',
               _id: characterId
@@ -145,7 +144,7 @@ RiM4Dice = (function() {
      * @param {Character} character
      * @param  {(string|SkillCheck)} skillCheck
      * @param {Function} [callback]
-     *        A callback with the roll result.
+     *        A callback with the roll result and the dice roll expression.
      */
     function rollSkillCheck(character, skillCheck, callback) {
       var charName = character.get('name');
@@ -218,10 +217,10 @@ RiM4Dice = (function() {
         sendChat(character.get('name'), templateStr, function(msg) {
           try {
             var results = msg[0].inlinerolls[0].results;
-            callback(results);
+            callback(results, roll);
           }
           catch(err) {
-            callback(undefined);
+            callback(undefined, roll);
           }
         });
       else
@@ -240,8 +239,6 @@ RiM4Dice = (function() {
                   _characterid: character.get('_id'),
                   name: 'skillsJSON'
                 })[0];
-                log('skills');
-                log(skillsJSONAttr.get('current'));
 
                 // Process the roll command as a regular expression.
                 //
