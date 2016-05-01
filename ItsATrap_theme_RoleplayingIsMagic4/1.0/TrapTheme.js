@@ -215,11 +215,14 @@
     // Add the flavor message.
     msg += htmlPaddedRow(data.message, messageStyle);
 
-    var targetMsg = '<span style="font-weight: bold;">Target: </span>' + data.character.get('name');
-    msg += htmlPaddedRow(targetMsg);
+    // Add message for who triggered it.
+    if(data.character) {
+      var targetMsg = '<span style="font-weight: bold;">Target: </span>' + data.character.get('name');
+      msg += htmlPaddedRow(targetMsg);
+    }
 
-    // Add the saving throw message.
-    if(data.skill) {
+    // Add the skill check message.
+    if(data.character && data.skill) {
       var rollHtml = htmlRollResult(data.skill.roll, data.rollExpr);
       var skillMsg = '<span style="font-weight: bold;">' + data.skill.name.toUpperCase() + ' check:</span> ' + rollHtml
          + ' vs Dif ' + data.skill.difficulty;
@@ -230,22 +233,22 @@
         var skillNotesMsg = '<span style="font-size: 0.8em; font-style: italic;">' + skill.notes + '</span>';
         msg += htmlPaddedRow(skillNotesMsg);
       }
-    }
 
-    // Add the hit/miss message.
-    if(data.trapHit) {
-      var resultHtml = '<span style="color: #f00; font-weight: bold;">HIT! </span>';
-      if(data.damage)
-        resultHtml += 'Damage: [[' + data.damage + ']]';
-      else
-        resultHtml += data.character.get('name') + ' falls prey to the trap\'s effects!';
-      msg += htmlPaddedRow(resultHtml);
-    }
-    else if(data.skill) {
-      var resultHtml = '<span style="color: #620; font-weight: bold;">MISS! </span>';
-      if(data.damage && data.missHalf)
-        resultHtml += 'Half damage: [[floor((' + data.damage + ')/2)]].';
-      msg += htmlPaddedRow(resultHtml);
+      // Add the hit/miss message.
+      if(data.trapHit) {
+        var resultHtml = '<span style="color: #f00; font-weight: bold;">HIT! </span>';
+        if(data.damage)
+          resultHtml += 'Damage: [[' + data.damage + ']]';
+        else
+          resultHtml += data.character.get('name') + ' falls prey to the trap\'s effects!';
+        msg += htmlPaddedRow(resultHtml);
+      }
+      else {
+        var resultHtml = '<span style="color: #620; font-weight: bold;">MISS! </span>';
+        if(data.damage && data.missHalf)
+          resultHtml += 'Half damage: [[floor((' + data.damage + ')/2)]].';
+        msg += htmlPaddedRow(resultHtml);
+      }
     }
 
     // End message.
@@ -271,15 +274,8 @@
       var charToken = getObj('graphic', effect.victimId);
       var character = getObj('character', charToken.get('represents'));
 
-      var attr = findObjs({
-        _type: 'attribute',
-        _characterid: character.get('_id'),
-        name: effect.skill.attr
-      })[0].get('current');
-
       var msgData = {
         character: character,
-        attr: attr,
         damage: effect.damage,
         effect: effect,
         message: effect.message,
@@ -291,7 +287,14 @@
         sendChat('Admiral Ackbar', '/w gm Trap Effects:<br/> ' + effect.notes);
 
       // Automate trap attack/save mechanics.
-      if(character && effect.skill)
+      if(character && effect.skill) {
+        var attr = findObjs({
+          _type: 'attribute',
+          _characterid: character.get('_id'),
+          name: effect.skill.attr
+        })[0].get('current');
+        msgData.attr = attr;
+
         RiM4Dice.rollSkillCheck(character, effect.skill.name, function(skillRoll, expr) {
           if(skillRoll) {
             msgData.rollExpr = expr;
@@ -305,6 +308,7 @@
             });
           }
         });
+      }
       else
         sendHtmlTrapMessage(msgData);
 
