@@ -20,12 +20,37 @@
   function getSheetAttr(character, attr, callback) {
     try {
       rollAsync('@{' + character.get('name') + '|' + attr + '}', function(roll) {
-        callback(roll.total);
+        if(roll)
+          callback(roll.total);
+        else
+          callback(undefined);
       });
     }
     catch(err) {
       callback(undefined);
     }
+  }
+
+  /**
+   * Asynchronously gets the value of multiple character sheet attributes in
+   * parallel.
+   * @param  {Character}   character
+   * @param  {string[]}   attrList
+   * @param  {Function} callback
+   *         The callback takes one parameter: the value of the attribute.
+   */
+  function getSheetAttrs(character, attrList, callback) {
+    var count = 0;
+    var values = {};
+    _.each(attrList, function(attr) {
+      getSheetAttr(character, attr, function(value) {
+        values[attr] = value;
+        count++;
+
+        if(count === attrList.length)
+          callback(values);
+      });
+    });
   }
 
   /**
@@ -78,9 +103,9 @@
 
   /**
    * Sends an HTML-stylized message about an activated trap.
-   * @param  {object} data
+   * @param  {object} effect
    */
-  function sendHtmlTrapMessage(data) {
+  function sendHtmlTrapMessage(effect) {
     var tableStyle = [
       'background-color: #fff;',
       'border: solid 1px #000;',
@@ -105,42 +130,45 @@
     msg += '<tbody>';
 
     // Add the flavor message.
-    msg += htmlPaddedRow(data.message, messageStyle);
+    msg += htmlPaddedRow(effect.message, messageStyle);
 
-    // Add the attack roll message.
-    if(data.attack) {
-      var rollHtml = htmlRollResult(data.attack.roll,
-        '1d20 + ' + data.attack.bonus);
-      msg += htmlPaddedRow('<span style="font-weight: bold;">Attack roll:</span> ' + rollHtml + ' vs AC ' + data.attack.ac);
-    }
+    if(effect.character) {
 
-    // Add the saving throw message.
-    if(data.save) {
-      var rollHtml = htmlRollResult(data.save.roll, '1d20 + ' + data.save.bonus);
-      var saveMsg = '<span style="font-weight: bold;">' + data.save.name.toUpperCase() + ' save:</span> ' + rollHtml
-         + ' vs DC ' + data.save.dc;
+      // Add the attack roll message.
+      if(effect.attack) {
+        var rollHtml = htmlRollResult(effect.roll,
+          '1d20 + ' + effect.attack);
+        msg += htmlPaddedRow('<span style="font-weight: bold;">Attack roll:</span> ' + rollHtml + ' vs AC ' + effect.ac);
+      }
 
-      // If the save result is a secret, whisper it to the GM.
-      if(data.hideSave)
-        sendChat('Admiral Ackbar', '/w gm ' + saveMsg);
-      else
-        msg += htmlPaddedRow(saveMsg);
-    }
+      // Add the saving throw message.
+      if(effect.save) {
+        var rollHtml = htmlRollResult(effect.roll, '1d20 + ' + effect.saveBonus);
+        var saveMsg = '<span style="font-weight: bold;">' + effect.save.toUpperCase() + ' save:</span> ' + rollHtml
+           + ' vs DC ' + effect.saveDC;
 
-    // Add the hit/miss message.
-    if(data.trapHit) {
-      var resultHtml = '<span style="color: #f00; font-weight: bold;">HIT! </span>';
-      if(data.damage)
-        resultHtml += 'Damage: [[' + data.damage + ']]';
-      else
-        resultHtml += data.character.get('name') + ' falls prey to the trap\'s effects!';
-      msg += htmlPaddedRow(resultHtml);
-    }
-    else {
-      var resultHtml = '<span style="color: #620; font-weight: bold;">MISS! </span>';
-      if(data.damage && data.missHalf)
-        resultHtml += 'Half damage: [[floor((' + data.damage + ')/2)]].';
-      msg += htmlPaddedRow(resultHtml);
+        // If the save result is a secret, whisper it to the GM.
+        if(effect.hideSave)
+          sendChat('Admiral Ackbar', '/w gm ' + saveMsg);
+        else
+          msg += htmlPaddedRow(saveMsg);
+      }
+
+      // Add the hit/miss message.
+      if(effect.trapHit) {
+        var resultHtml = '<span style="color: #f00; font-weight: bold;">HIT! </span>';
+        if(effect.damage)
+          resultHtml += 'Damage: [[' + effect.damage + ']]';
+        else
+          resultHtml += effect.character.get('name') + ' falls prey to the trap\'s effects!';
+        msg += htmlPaddedRow(resultHtml);
+      }
+      else {
+        var resultHtml = '<span style="color: #620; font-weight: bold;">MISS! </span>';
+        if(effect.damage && effect.missHalf)
+          resultHtml += 'Half damage: [[floor((' + effect.damage + ')/2)]].';
+        msg += htmlPaddedRow(resultHtml);
+      }
     }
 
     // End message.
@@ -166,13 +194,7 @@
       var charToken = getObj('graphic', effect.victimId);
       var character = getObj('character', charToken.get('represents'));
 
-      var msgData = {
-        character: character,
-        damage: effect.damage,
-        hideSave: effect.hideSave,
-        message: effect.message,
-        missHalf: effect.missHalf
-      };
+      effect.character = character;
 
       // Remind the GM about the trap's effects.
       if(effect.notes)
@@ -184,14 +206,12 @@
         // Does the trap make an attack vs AC?
         if(effect.attack) {
           getSheetAttr(character, 'ac', function(ac) {
+            ac = ac || 10;
             rollAsync('1d20 + ' + effect.attack, function(atkRoll) {
-              msgData.attack = {
-                ac: ac,
-                bonus: effect.attack,
-                roll: atkRoll
-              };
-              msgData.trapHit = atkRoll.total >= ac;
-              sendHtmlTrapMessage(msgData);
+              effect.ac = ac;
+              effect.roll = atkRoll;
+              effect.trapHit = atkRoll.total >= ac;
+              sendHtmlTrapMessage(effect);
             });
           });
         }
@@ -199,26 +219,22 @@
         // Does the trap require a saving throw?
         else if(effect.save && effect.saveDC) {
           getSheetAttr(character, saveNames[effect.save], function(saveBonus) {
+            saveBonus = saveBonus || 0;
             rollAsync('1d20 + ' + saveBonus, function(saveRoll) {
-              msgData.save = {
-                bonus: saveBonus,
-                dc: effect.saveDC,
-                name: effect.save,
-                roll: saveRoll
-              };
-              msgData.trapHit = saveRoll.total < effect.saveDC;
-
-              sendHtmlTrapMessage(msgData);
+              effect.saveBonus = saveBonus;
+              effect.roll = saveRoll;
+              effect.trapHit = saveRoll.total < effect.saveDC;
+              sendHtmlTrapMessage(effect);
             });
           });
         }
 
         // If neither, just send the basic message.
         else
-          sendHtmlTrapMessage(msgData);
+          sendHtmlTrapMessage(effect);
       }
       else
-        sendHtmlTrapMessage(msgData);
+        sendHtmlTrapMessage(effect);
 
       // If the effect has a sound, try to play it.
       ItsATrap.playEffectSound(effect);
@@ -237,6 +253,22 @@
 
       // Only do passive search for traps that have a spotDC.
       if(effect.spotDC && character) {
+
+        // Workaround: Due to some weirdness with how computed attributes are calculated
+        // in the API, perception_type needs to be set or else
+        // passive_wisdom will be undefined, even though it works fine
+        // in macros.
+        var percType = findObjs({
+          _type: 'attribute',
+          _characterid: character.get('_id'),
+          name: 'perception_type'
+        })[0];
+        if(!percType)
+          createObj('attribute', {
+            _characterid: character.get('_id'),
+            name: 'perception_type',
+            current: 1
+          });
 
         // If the character's passive wisdom beats the spot DC, then
         // display a message and mark the trap's trigger area.
