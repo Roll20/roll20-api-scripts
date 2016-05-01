@@ -11,10 +11,8 @@
    * Gets the passive perception for a character. It is assumed that
    * Perception is the 12th skill in the character's skill list.
    * @param  {Character}   character
-   * @param  {Function} callback
-   *         This callback takes one parameter - the character's passive perception.
    */
-  function getPassivePerception(character, callback) {
+  function getPassivePerception(character) {
     var charName = character.get('name');
 
     var mind = parseInt(findObjs({
@@ -36,84 +34,7 @@
 
       result += (skill.misc || 0) + (skill.advDis || 0);
     }
-    callback(result);
-  }
-
-  /**
-   * Asynchronously gets the value of a character sheet attribute.
-   * @param  {Character}   character
-   * @param  {string}   attr
-   * @param  {Function} callback
-   *         The callback takes one parameter: the value of the attribute.
-   */
-  function getSheetAttr(character, attr, callback) {
-    try {
-      rollAsync('@{' + character.get('name') + '|' + attr + '}', function(roll) {
-        if(roll)
-          callback(roll.total);
-        else
-          callback(undefined);
-      });
-    }
-    catch(err) {
-      callback(undefined);
-    }
-  }
-
-  /**
-   * Asynchronously gets the value of multiple character sheet attributes in
-   * parallel.
-   * @param  {Character}   character
-   * @param  {string[]}   attrList
-   * @param  {Function} callback
-   *         The callback takes one parameter: the value of the attribute.
-   */
-  function getSheetAttrs(character, attrList, callback) {
-    var count = 0;
-    var values = {};
-    _.each(attrList, function(attr) {
-      getSheetAttr(character, attr, function(value) {
-        values[attr] = value;
-        count++;
-
-        if(count === attrList.length)
-          callback(values);
-      });
-    });
-  }
-
-  /**
-   * Asynchronously gets the value of a text attribute on a character sheet.
-   * @param  {Character}   character
-   * @param  {string}   attr
-   * @param  {Function} callback
-   *         The callback takes one parameter: the value of the attribute.
-   */
-  function getSheetAttrText(character, attr, callback) {
-    try {
-      var rollExpr = '[[0 @{' + character.get('name') + '|' + attr + '}]]';
-      sendChat('TrapTheme', rollExpr, function(msg) {
-        try {
-          var results = msg[0].inlinerolls[0].results;
-          var text = _.find(results.rolls, function(roll) {
-            if(roll.type === 'C')
-              return roll.text;
-          });
-          callback(text);
-        }
-        catch(err) {
-          callback(undefined);
-        }
-      });
-    }
-    catch(err) {
-      var regex = /"text":"(.*)?"/;
-      var match = regex.exec(err);
-      if(match)
-        callback(match[1]);
-      else
-        callback(undefined);
-    }
+    return result;
   }
 
   /**
@@ -173,22 +94,11 @@
   }
 
 
-  function resolveSkillRoll(msgData, skillRoll) {
-    msgData.skill = {
-      name: msgData.effect.skill.name,
-      difficulty: msgData.effect.skill.dif,
-      roll: skillRoll
-    };
-    msgData.trapHit = skillRoll.total < msgData.effect.skill.dif;
-    sendHtmlTrapMessage(msgData);
-  }
-
-
   /**
    * Sends an HTML-stylized message about an activated trap.
-   * @param  {object} data
+   * @param  {object} effect
    */
-  function sendHtmlTrapMessage(data) {
+  function sendHtmlTrapMessage(effect) {
     var tableStyle = [
       'background-color: #fff;',
       'border: solid 1px #000;',
@@ -213,40 +123,40 @@
     msg += '<tbody>';
 
     // Add the flavor message.
-    msg += htmlPaddedRow(data.message, messageStyle);
+    msg += htmlPaddedRow(effect.message, messageStyle);
 
     // Add message for who triggered it.
-    if(data.character) {
-      var targetMsg = '<span style="font-weight: bold;">Target: </span>' + data.character.get('name');
+    if(effect.character) {
+      var targetMsg = '<span style="font-weight: bold;">Target: </span>' + effect.character.get('name');
       msg += htmlPaddedRow(targetMsg);
     }
 
     // Add the skill check message.
-    if(data.character && data.skill) {
-      var rollHtml = htmlRollResult(data.skill.roll, data.rollExpr);
-      var skillMsg = '<span style="font-weight: bold;">' + data.skill.name.toUpperCase() + ' check:</span> ' + rollHtml
-         + ' vs Dif ' + data.skill.difficulty;
+    if(effect.character && effect.skill) {
+      var rollHtml = htmlRollResult(effect.skill.roll, effect.skill.rollExpr);
+      var skillMsg = '<span style="font-weight: bold;">' + effect.skill.name.toUpperCase() + ' check:</span> ' + rollHtml
+         + ' vs Dif ' + effect.skill.dif;
       msg += htmlPaddedRow(skillMsg);
 
-      var skill = RiM4Dice.getSkill(data.character, data.skill.name);
+      var skill = RiM4Dice.getSkill(effect.character, effect.skill.name);
       if(skill && skill.notes) {
         var skillNotesMsg = '<span style="font-size: 0.8em; font-style: italic;">' + skill.notes + '</span>';
         msg += htmlPaddedRow(skillNotesMsg);
       }
 
       // Add the hit/miss message.
-      if(data.trapHit) {
+      if(effect.trapHit) {
         var resultHtml = '<span style="color: #f00; font-weight: bold;">HIT! </span>';
-        if(data.damage)
-          resultHtml += 'Damage: [[' + data.damage + ']]';
+        if(effect.damage)
+          resultHtml += 'Damage: [[' + effect.damage + ']]';
         else
-          resultHtml += data.character.get('name') + ' falls prey to the trap\'s effects!';
+          resultHtml += effect.character.get('name') + ' falls prey to the trap\'s effects!';
         msg += htmlPaddedRow(resultHtml);
       }
       else {
         var resultHtml = '<span style="color: #620; font-weight: bold;">MISS! </span>';
-        if(data.damage && data.missHalf)
-          resultHtml += 'Half damage: [[floor((' + data.damage + ')/2)]].';
+        if(effect.damage && effect.missHalf)
+          resultHtml += 'Half damage: [[floor((' + effect.damage + ')/2)]].';
         msg += htmlPaddedRow(resultHtml);
       }
     }
@@ -256,6 +166,10 @@
 
     // Send the HTML message to the chat.
     sendChat('Admiral Ackbar', msg);
+
+    // Remind the GM about the trap's effects.
+    if(effect.notes)
+      sendChat('Admiral Ackbar', '/w gm Trap Effects:<br/> ' + effect.notes);
   }
 
 
@@ -274,17 +188,7 @@
       var charToken = getObj('graphic', effect.victimId);
       var character = getObj('character', charToken.get('represents'));
 
-      var msgData = {
-        character: character,
-        damage: effect.damage,
-        effect: effect,
-        message: effect.message,
-        missHalf: effect.missHalf
-      };
-
-      // Remind the GM about the trap's effects.
-      if(effect.notes)
-        sendChat('Admiral Ackbar', '/w gm Trap Effects:<br/> ' + effect.notes);
+      effect.character = character;
 
       // Automate trap attack/save mechanics.
       if(character && effect.skill) {
@@ -293,24 +197,27 @@
           _characterid: character.get('_id'),
           name: effect.skill.attr
         })[0].get('current');
-        msgData.attr = attr;
 
         RiM4Dice.rollSkillCheck(character, effect.skill.name, function(skillRoll, expr) {
           if(skillRoll) {
-            msgData.rollExpr = expr;
-            resolveSkillRoll(msgData, skillRoll);
+            effect.skill.roll = skillRoll;
+            effect.skill.rollExpr = expr;
+            effect.trapHit = skillRoll.total < effect.skill.dif;
+            sendHtmlTrapMessage(effect);
           }
           else {
             // default to primary attribute.
             rollAsync('2d6 + ' + attr + ' [' + effect.skill.attr + ']', function(attrRoll, expr) {
-              msgData.rollExpr = expr;
-              resolveSkillRoll(msgData, attrRoll);
+              effect.skill.roll = attrRoll;
+              effect.skill.rollExpr = expr;
+              effect.trapHit = attrRoll.total < effect.skill.dif;
+              sendHtmlTrapMessage(effect);
             });
           }
         });
       }
       else
-        sendHtmlTrapMessage(msgData);
+        sendHtmlTrapMessage(effect);
 
       // If the effect has a sound, try to play it.
       ItsATrap.playEffectSound(effect);
@@ -329,15 +236,19 @@
 
       // Only do passive search for traps that have a spotDC.
       if(effect.spotDif && character) {
-        getPassivePerception(character, function(passPerception) {
-          if(passPerception === undefined)
-            getSheetAttr(character, 'mind', function(mind) {
-              if(mind && mind + 4 >= effect.spotDif)
-                noticeTrap(character, trap);
-            });
-          else if(passPerception >= effect.spotDif)
+        var passPerception = getPassivePerception(character);
+        if(passPerception === undefined) {
+          var mind = findObjs({
+            _type: 'attribute',
+            _characterid: character.get('_id'),
+            name: 'mind'
+          })[0].get('current');
+
+          if(mind && mind + 4 >= effect.spotDif)
             noticeTrap(character, trap);
-        });
+        }
+        else if(passPerception >= effect.spotDif)
+          noticeTrap(character, trap);
       }
     }
   };
