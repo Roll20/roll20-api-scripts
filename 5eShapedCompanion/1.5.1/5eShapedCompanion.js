@@ -2341,14 +2341,6 @@ var ShapedScripts =
 	      savingThrowsHalfProf: booleanValidator,
 	      mediumArmorMaxDex: getOptionList([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
 	    },
-	    tab: getOptionList({
-	      core: 'core',
-	      spells: 'spells',
-	      equipment: 'equipment',
-	      character: 'character',
-	      settings: 'settings',
-	      all: 'all',
-	    }),
 	  },
 	  advTrackerSettings: {
 	    showMarkers: booleanValidator,
@@ -2533,7 +2525,6 @@ var ShapedScripts =
 	      characterProcessors.push(this.getAvatarCopier(token).bind(this));
 	      if (_.size(monsters) === 1) {
 	        characterProcessors.push(this.getTokenConfigurer(token).bind(this));
-	        characterProcessors.push(this.getTokenVisionConfigurer(token, monsters[0].senses));
 	        if (options.replace || options.overwrite) {
 	          characterRetrievalStrategies.push(this.getTokenRetrievalStrategy(token).bind(this));
 	        }
@@ -2637,7 +2628,7 @@ var ShapedScripts =
 	    const defaultIndex = Math.min(myState.config.defaultGenderIndex, myState.config.genderPronouns.length);
 	    const defaultPronounInfo = myState.config.genderPronouns[defaultIndex];
 	    const pronounInfo = _.clone(_.find(myState.config.genderPronouns,
-	        pronounDetails => new RegExp(pronounDetails.matchPattern, 'i').test(gender)) || defaultPronounInfo);
+	      pronounDetails => new RegExp(pronounDetails.matchPattern, 'i').test(gender)) || defaultPronounInfo);
 
 	    _.defaults(pronounInfo, defaultPronounInfo);
 
@@ -2654,7 +2645,7 @@ var ShapedScripts =
 
 	  this.monsterDataPopulator = function monsterDataPopulator(character, monsterData) {
 	    _.each(utils.flattenObject(myState.config.newCharSettings), (value, key) => {
-	      const attribute = roll20.getOrCreateAttr(character.id, configToAttributeLookup[key] || key);
+	      const attribute = roll20.getOrCreateAttr(character.id, configToAttributeLookup[key]);
 	      attribute.set('current', _.isBoolean(value) ? (value ? 'on' : 0) : value);
 	    });
 
@@ -2764,47 +2755,6 @@ var ShapedScripts =
 	      token.set('light_angle', settings.light.angle);
 	      token.set('light_losangle', settings.light.losAngle);
 	      token.set('light_multiplier', settings.light.multiplier);
-	    };
-	  };
-
-	  this.getTokenVisionConfigurer = function getTokenVisionConfigurer(token, sensesString) {
-	    if (_.isEmpty(sensesString)) {
-	      return _.noop;
-	    }
-
-	    function fullRadiusLightConfigurer() {
-	      token.set('light_radius', Math.max(token.get('light_radius') || 0, this.lightRadius));
-	      token.set('light_dimradius', Math.max(token.get('light_dimradius') || 0, this.lightRadius));
-	    }
-
-	    function darkvisionLightConfigurer() {
-	      token.set('light_radius', Math.max(token.get('light_radius') || 0, this.lightRadius * 1.1666666));
-	      if (!token.get('light_dimradius')) {
-	        token.set('light_dimradius', -5);
-	      }
-	    }
-
-	    const configureFunctions = {
-	      blindsight: fullRadiusLightConfigurer,
-	      truesight: fullRadiusLightConfigurer,
-	      tremorsense: fullRadiusLightConfigurer,
-	      darkvision: darkvisionLightConfigurer,
-	    };
-
-	    const re = /(blindsight|darkvision|tremorsense|truesight)\s+(\d+)/;
-	    let match;
-	    const senses = [];
-	    while ((match = sensesString.match(re))) {
-	      senses.push({
-	        name: match[1],
-	        lightRadius: parseInt(match[2], 10),
-	        configureVision: configureFunctions[match[1]],
-	      });
-	      sensesString = sensesString.slice(match.index + match[0].length);
-	    }
-
-	    return function configureTokenVision() {
-	      senses.forEach(sense => sense.configureVision());
 	    };
 	  };
 
@@ -2919,7 +2869,7 @@ var ShapedScripts =
 	        }
 	      };
 	      /* eslint-disable no-spaced-func */
-	    }(token.id)), 100);
+	    } (token.id)), 100);
 	  };
 
 	  this.handleChangeToken = function handleChangeToken(token) {
@@ -2957,7 +2907,7 @@ var ShapedScripts =
 	                character.get('name'));
 	              return;
 	            }
-	            roll20.sendChat('', `%{${character.get('name')}|shaped_npc_hp}`, results => {
+	            roll20.sendChat('', `%{${character.get('name')}|npc_hp}`, results => {
 	              if (results && results.length === 1) {
 	                const message = this.processInlinerolls(results[0]);
 	                if (!results[0].inlinerolls || !results[0].inlinerolls[0]) {
@@ -3013,7 +2963,7 @@ var ShapedScripts =
 	      .groupBy(attribute => attribute.get('name').replace(/(repeating_ammo_[^_]+).*/, '$1'))
 	      .find(attributeList =>
 	        _.find(attributeList, attribute =>
-	        attribute.get('name').match(/.*name$/) && attribute.get('current') === options.ammoName)
+	          attribute.get('name').match(/.*name$/) && attribute.get('current') === options.ammoName)
 	      )
 	      .find(attribute => attribute.get('name').match(/.*qty$/))
 	      .value();
@@ -3122,7 +3072,7 @@ var ShapedScripts =
 	    let msg;
 
 	    const bestSlot = availableSlots
-	        .find(slot => parseInt(slot.get('name').match(/spell_slots_l(\d)/)[1], 10) === level) ||
+	      .find(slot => parseInt(slot.get('name').match(/spell_slots_l(\d)/)[1], 10) === level) ||
 	      _.first(availableSlots);
 
 	    if (bestSlot) {
@@ -3411,41 +3361,37 @@ var ShapedScripts =
 	  const staticAbilityOptions = {
 	    DELETE: abilityDeleter,
 	    initiative: new RollAbilityMaker('shaped_initiative', 'Init'),
-	    abilityChecks: new RollAbilityMaker('shaped_ability_checks', 'Ability Checks'),
-	    abilityChecksSmall: new RollAbilityMaker('shaped_ability_checks_small', 'Ability Checks'),
-	    abilityChecksQuery: new RollAbilityMaker('shaped_ability_checks_query', 'Ability Checks'),
-	    abilChecks: new RollAbilityMaker('shaped_ability_checks', 'AbilChecks'),
-	    abilChecksSmall: new RollAbilityMaker('shaped_ability_checks_small', 'AbilChecks'),
-	    abilChecksQuery: new RollAbilityMaker('shaped_ability_checks_query', 'AbilChecks'),
-	    advantageTracker: new MultiCommandAbilityMaker([
+	    abilitychecks: new RollAbilityMaker('shaped_ability_checks', 'Ability Checks'),
+	    abilitychecksquery: new RollAbilityMaker('shaped_ability_checks_query', 'Ability Checks'),
+	    abilchecks: new RollAbilityMaker('shaped_ability_checks', 'AbilChecks'),
+	    abilchecksquery: new RollAbilityMaker('shaped_ability_checks_query', 'AbilChecks'),
+	    advantagetracker: new MultiCommandAbilityMaker([
 	      { command: 'shaped-at', options: ['advantage'], abilityName: 'Advantage' },
 	      { command: 'shaped-at', options: ['disadvantage'], abilityName: 'Disadvantage' },
 	      { command: 'shaped-at', options: ['normal'], abilityName: 'Normal' },
 	    ]),
-	    advantageTrackerQuery: new CommandAbilityMaker('shaped-at',
+	    'advantagetracker-query': new CommandAbilityMaker('shaped-at',
 	      ['?{Roll Option|Normal,normal|w/ Advantage,advantage|w/ Disadvantage,disadvantage}'], '(dis)Adv Query'),
-	    savingThrows: new RollAbilityMaker('shaped_saving_throw', 'Saving Throws'),
-	    savingThrowsSmall: new RollAbilityMaker('shaped_saving_throw_small', 'Saving Throws'),
-	    savingThrowsQuery: new RollAbilityMaker('shaped_saving_throw_query', 'Saving Throws'),
+	    savingthrows: new RollAbilityMaker('shaped_saving_throw', 'Saving Throws'),
+	    savingthrowsquery: new RollAbilityMaker('shaped_saving_throw_query', 'Saving Throws'),
 	    saves: new RollAbilityMaker('shaped_saving_throw', 'Saves'),
-	    savesSmall: new RollAbilityMaker('shaped_saving_throw_small', 'Saves'),
-	    savesQuery: new RollAbilityMaker('shaped_saving_throw_query', 'Saves'),
+	    savesquery: new RollAbilityMaker('shaped_saving_throw_query', 'Saves'),
 	    attacks: new RepeatingAbilityMaker('attack', 'attack', 'Attacks', true),
 	    statblock: new RollAbilityMaker('shaped_statblock', 'Statblock'),
 	    traits: new RepeatingAbilityMaker('trait', 'trait', 'Traits'),
-	    traitsMacro: new RepeatingSectionMacroMaker('shaped_traits', 'trait', 'Traits'),
+	    'traits-macro': new RepeatingSectionMacroMaker('shaped_traits', 'trait', 'Traits'),
 	    actions: new RepeatingAbilityMaker('action', 'action', 'Actions', true),
-	    actionsMacro: new RepeatingSectionMacroMaker('shaped_actions', 'action', 'Actions'),
+	    'actions-macro': new RepeatingSectionMacroMaker('shaped_actions', 'action', 'Actions'),
 	    reactions: new RepeatingAbilityMaker('reaction', 'action', 'Reactions'),
-	    reactionsMacro: new RepeatingSectionMacroMaker('shaped_reactions', 'reaction', 'Reactions'),
-	    legendaryActions: new RepeatingAbilityMaker('legendaryaction', 'action', 'Legendary Actions'),
-	    legendaryActionsMacro: new RepeatingSectionMacroMaker('shaped_legendaryactions', 'legendaryaction', 'Legendary' +
+	    'reactions-macro': new RepeatingSectionMacroMaker('shaped_reactions', 'reaction', 'Reactions'),
+	    legendaryactions: new RepeatingAbilityMaker('legendaryaction', 'action', 'Legendary Actions'),
+	    'legendaryactions-macro': new RepeatingSectionMacroMaker('shaped_legendaryactions', 'legendaryaction', 'Legendary' +
 	      ' Actions'),
-	    legendaryA: new RepeatingAbilityMaker('legendaryaction', 'action', 'LegendaryA'),
-	    lairActions: new RepeatingSectionMacroMaker('shaped_lairactions', 'lairaction', 'Lair Actions'),
-	    lairA: new RepeatingSectionMacroMaker('shaped_lairactions', 'lairaction', 'LairA'),
-	    regionalEffects: new RepeatingSectionMacroMaker('shaped_regionaleffects', 'regionaleffect', 'Regional Effects'),
-	    regionalE: new RepeatingSectionMacroMaker('shaped_regionaleffects', 'regionaleffect', 'RegionalE'),
+	    legendarya: new RepeatingAbilityMaker('legendaryaction', 'action', 'LegendaryA'),
+	    lairactions: new RepeatingSectionMacroMaker('shaped_lairactions', 'lairaction', 'Lair Actions'),
+	    laira: new RepeatingSectionMacroMaker('shaped_lairactions', 'lairaction', 'LairA'),
+	    regionaleffects: new RepeatingSectionMacroMaker('shaped_regionaleffects', 'regionaleffect', 'Regional Effects'),
+	    regionale: new RepeatingSectionMacroMaker('shaped_regionaleffects', 'regionaleffect', 'RegionalE'),
 	  };
 
 	  function abilityLookup(optionName, existingOptions) {
@@ -3467,7 +3413,7 @@ var ShapedScripts =
 
 	  this.getCommandProcessor = function getCommandProcessor() {
 	    return cp('shaped', roll20)
-	    // !shaped-config
+	      // !shaped-config
 	      .addCommand('config', this.configure.bind(this))
 	      .options(configOptionsSpec)
 	      .option('atMenu', booleanValidator)
@@ -3567,7 +3513,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v2.0.0 <=-');
+	    logger.info('-=> ShapedScripts v1.5.1 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -4473,7 +4419,7 @@ var ShapedScripts =
 	    const ncs = 'newCharSettings';
 
 	    const optionRows = this.makeQuerySetting(config, `${ncs}.sheetOutput`, 'Sheet Output',
-	        optionsSpec.newCharSettings.sheetOutput()) +
+	      optionsSpec.newCharSettings.sheetOutput()) +
 	      this.makeQuerySetting(config, `${ncs}.deathSaveOutput`,
 	        'Death Save Output', optionsSpec.newCharSettings.deathSaveOutput()) +
 	      this.makeQuerySetting(config, `${ncs}.initiativeOutput`, 'Initiative Output',
@@ -4495,8 +4441,6 @@ var ShapedScripts =
 	        optionsSpec.newCharSettings.showTargetName()) +
 	      this.makeToggleSetting(config, `${ncs}.autoAmmo`, 'Auto Use Ammo',
 	        optionsSpec.newCharSettings.autoAmmo()) +
-	      this.makeQuerySetting(config, `${ncs}.tab`, 'Default tab',
-	        optionsSpec.newCharSettings.tab()) +
 	      this.makeOptionRow('Houserule Settings', 'hrMenu', '', 'view', '', '#02baf2');
 
 	    const th = utils.buildHTML('th', 'New Character Sheets', { colspan: '2' });
@@ -4561,7 +4505,7 @@ var ShapedScripts =
 	    }
 
 	    return this.makeOptionRow(title, path, `?{${prompt}|${currentVal}}`, emptyHint, 'click to edit', emptyHint ===
-	    '[not set]' ? '#f84545' : '#02baf2');
+	      '[not set]' ? '#f84545' : '#02baf2');
 	  }
 
 	  // noinspection JSUnusedGlobalSymbols
@@ -4590,14 +4534,8 @@ var ShapedScripts =
 	  }
 
 	  makeQuerySetting(config, path, title, optionsSpec) {
-	    let currentVal = _.invert(optionsSpec)[utils.getObjectFromPath(config, path)];
+	    const currentVal = _.invert(optionsSpec)[utils.getObjectFromPath(config, path)];
 	    const optionList = _.keys(optionsSpec);
-
-	    // Fix up if we've somehow ended up with an illegal value
-	    if (_.isUndefined(currentVal)) {
-	      currentVal = _.first(optionList);
-	      utils.deepExtend(config, utils.createObjectFromPath(path, optionsSpec[currentVal]));
-	    }
 
 	    // move the current option to the front of the list
 	    optionList.splice(optionList.indexOf(currentVal), 1);
@@ -4816,7 +4754,6 @@ var ShapedScripts =
 	      `Copying property from ${oldPath} to ${newPath}`);
 	  }
 
-
 	  static propertyCopy(oldPath, newPath, config) {
 	    const oldVal = utils.getObjectFromPath(config, oldPath);
 	    if (!_.isUndefined(oldVal)) {
@@ -4880,114 +4817,116 @@ var ShapedScripts =
 	}
 
 	/*
-	 FOR REFERENCE: CURRENT SCHEMA
-	 {
-	 logLevel: 'INFO',
-	 tokenSettings: {
-	 number: false,
-	 bar1: {
-	 attribute: 'HP',
-	 max: true,
-	 link: false,
-	 showPlayers: false,
-	 },
-	 bar2: {
-	 attribute: 'speed',
-	 max: false,
-	 link: true,
-	 showPlayers: false,
-	 },
-	 bar3: {
-	 attribute: '',
-	 max: false,
-	 link: false,
-	 showPlayers: false,
-	 },
-	 aura1: {
-	 radius: '',
-	 color: '#FFFF99',
-	 square: false,
-	 },
-	 aura2: {
-	 radius: '',
-	 color: '#59e594',
-	 square: false,
-	 },
-	 light: {
-	 otherPlayers: false,
-	 hasSight: true,
-	 angle: 360,
-	 losAngle: 360,
-	 multiplier: 1,
-	 },
-	 showName: true,
-	 showNameToPlayers: false,
-	 showAura1ToPlayers: true,
-	 showAura2ToPlayers: true,
-	 },
-	 newCharSettings: {
-	 sheetOutput: '@{output_to_all}',
-	 deathSaveOutput: '@{output_to_all}',
-	 initiativeOutput: '@{output_to_all}',
-	 showNameOnRollTemplate: '@{show_character_name_yes}',
-	 rollOptions: '@{normal}',
-	 initiativeRoll: '@{normal_initiative}',
-	 initiativeToTracker: '@{initiative_to_tracker_yes}',
-	 breakInitiativeTies: '@{initiative_tie_breaker_var}',
-	 showTargetAC: '@{attacks_vs_target_ac_no}',
-	 showTargetName: '@{attacks_vs_target_name_no}',
-	 autoAmmo: '@{ammo_auto_use_var}',
-	 autoRevertAdvantage: false,
-	 houserules: {
-	 savingThrowsHalfProf: false,
-	 mediumArmorMaxDex: 2,
-	 },
-	 tab: 'core',
-	 },
-	 advTrackerSettings: {
-	 showMarkers: false,
-	 ignoreNpcs: false,
-	 advantageMarker: 'green',
-	 disadvantageMarker: 'red',
-	 output: 'public',
-	 },
-	 sheetEnhancements: {
-	 rollHPOnDrop: true,
-	 autoHD: true,
-	 autoSpellSlots: true,
-	 autoTraits: true,
-	 },
-	 genderPronouns: [
-	 {
-	 matchPattern: '^f$|female|girl|woman|feminine',
-	 nominative: 'she',
-	 accusative: 'her',
-	 possessive: 'her',
-	 reflexive: 'herself',
-	 },
-	 {
-	 matchPattern: '^m$|male|boy|man|masculine',
-	 nominative: 'he',
-	 accusative: 'him',
-	 possessive: 'his',
-	 reflexive: 'himself',
-	 },
-	 {
-	 matchPattern: '^n$|neuter|none|construct|thing|object',
-	 nominative: 'it',
-	 accusative: 'it',
-	 possessive: 'its',
-	 reflexive: 'itself',
-	 },
-	 ],
-	 defaultGenderIndex: 2,
-	 variants: {
-	 rests: {
-	 longNoHpFullHd: false,
-	 },
-	 },
-	 };
-	 */
+	FOR REFERENCE: CURRENT SCHEMA
+
+	{
+	  logLevel: 'INFO',
+	  tokenSettings: {
+	    number: false,
+	    bar1: {
+	      attribute: 'HP',
+	      max: true,
+	      link: false,
+	      showPlayers: false,
+	    },
+	    bar2: {
+	      attribute: 'speed',
+	      max: false,
+	      link: true,
+	      showPlayers: false,
+	    },
+	    bar3: {
+	      attribute: '',
+	      max: false,
+	      link: false,
+	      showPlayers: false,
+	    },
+	    aura1: {
+	      radius: '',
+	      color: '#FFFF99',
+	      square: false,
+	    },
+	    aura2: {
+	      radius: '',
+	      color: '#59e594',
+	      square: false,
+	    },
+	    light: {
+	      radius: '',
+	      dimRadius: '',
+	      otherPlayers: false,
+	      hasSight: false,
+	      angle: 360,
+	      losAngle: 360,
+	      multiplier: 1,
+	    },
+	    showName: true,
+	    showNameToPlayers: false,
+	    showAura1ToPlayers: true,
+	    showAura2ToPlayers: true,
+	  },
+	  newCharSettings: {
+	    sheetOutput: '@{output_to_all}',
+	    deathSaveOutput: '@{output_to_all}',
+	    initiativeOutput: '@{output_to_all}',
+	    showNameOnRollTemplate: '@{show_character_name_yes}',
+	    rollOptions: '@{normal}',
+	    initiativeRoll: '@{normal_initiative}',
+	    initiativeToTracker: '@{initiative_to_tracker_yes}',
+	    breakInitiativeTies: '@{initiative_tie_breaker_var}',
+	    showTargetAC: '@{attacks_vs_target_ac_no}',
+	    showTargetName: '@{attacks_vs_target_name_no}',
+	    autoAmmo: '@{ammo_auto_use_var}',
+	    autoRevertAdvantage: false,
+	    houserules: {
+	      savingThrowsHalfProf: false,
+	      mediumArmorMaxDex: 2,
+	    },
+	  },
+	  advTrackerSettings: {
+	    showMarkers: false,
+	    ignoreNpcs: false,
+	    advantageMarker: 'green',
+	    disadvantageMarker: 'red',
+	    output: 'public',
+	  },
+	  sheetEnhancements: {
+	    rollHPOnDrop: true,
+	    autoHD: true,
+	    autoSpellSlots: true,
+	    autoTraits: true,
+	  },
+	  genderPronouns: [
+	    {
+	      matchPattern: '^f$|female|girl|woman|feminine',
+	      nominative: 'she',
+	      accusative: 'her',
+	      possessive: 'her',
+	      reflexive: 'herself',
+	    },
+	    {
+	      matchPattern: '^m$|male|boy|man|masculine',
+	      nominative: 'he',
+	      accusative: 'him',
+	      possessive: 'his',
+	      reflexive: 'himself',
+	    },
+	    {
+	      matchPattern: '^n$|neuter|none|construct|thing|object',
+	      nominative: 'it',
+	      accusative: 'it',
+	      possessive: 'its',
+	      reflexive: 'itself',
+	    },
+	  ],
+	  defaultGenderIndex: 2,
+	  variants: {
+	    rests: {
+	      longNoHpFullHd: false,
+	    },
+	  },
+	};
+	*/
 
 	const migrator = new Migrator()
 	  .addProperty('config', {})
@@ -5017,14 +4956,7 @@ var ShapedScripts =
 	      longNoHpFullHd: false,
 	    },
 	  })
-	  .addProperty('config.sheetEnhancements.autoTraits', true)
-	  // 1.8
-	  // Set tokens to have vision by default so that people see the auto-generated stuff based on senses
-	  .nextVersion()
-	  .overwriteProperty('config.tokenSettings.light.hasSight', true)
-	  // 1.9 Add default tab setting
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.tab', 'core');
+	  .addProperty('config.sheetEnhancements.autoTraits', true);
 
 	Migrator.migrateShapedConfig = migrator.migrateConfig.bind(migrator);
 
