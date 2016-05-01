@@ -72,6 +72,7 @@ Just enter the JSON definition in for the trap in its GM notes.
 
 The following basic TrapEffect properties are supported:
 * api (string): An API chat command that will be executed when the trap is activated. If the constants TRAP_ID and VICTIM_ID are provided, they will be replaced by the IDs for the trap token and the token for the trap's victim, respectively in the API chat command message.
+* fx (string or FX definition JSON): The name of a special FX object or a definition for custom special FX.
 * message (string): This is the message that will be displayed when the trap activates.
 * sound (string): The name of a sound that will be played when the trap activates.
 * trapId (string): The ID of the trap token. This is set automatically by the script.
