@@ -67,7 +67,7 @@ var ShapedScripts =
 	const _ = __webpack_require__(2);
 
 	roll20.logWrap = 'roll20';
-	logger.wrapModule(el);
+	// logger.wrapModule(el);
 	logger.wrapModule(roll20);
 	logger.wrapModule(srdConverter);
 
@@ -89,11 +89,7 @@ var ShapedScripts =
 	      if (typeof entities === 'string') {
 	        entities = JSON.parse(entities);
 	      }
-	      // Suppress excessive logging when adding big lists of entities
-	      const prevLogLevel = myState.config.logLevel;
-	      myState.config.logLevel = Logger.INFO;
 	      const result = el.addEntities(entities);
-	      myState.config.logLevel = prevLogLevel;
 	      const summary = _.mapObject(result, (resultObject, type) => {
 	        if (type === 'errors') {
 	          return resultObject.length;
@@ -1425,8 +1421,8 @@ var ShapedScripts =
 	  configureEntity(entityName, processors, versionChecker) {
 	    this.entities[entityName] = {};
 	    this.noWhiteSpaceEntities[entityName] = {};
-	    this.entityProcessors[entityName] = processors || [];
-	    this.versionCheckers[entityName] = versionChecker || _.constant(true);
+	    this.entityProcessors[entityName] = processors;
+	    this.versionCheckers[entityName] = versionChecker;
 	  }
 
 	  addEntities(entitiesObject) {
@@ -1511,35 +1507,6 @@ var ShapedScripts =
 	      found = this.noWhiteSpaceEntities[type][key.replace(/\s+/g, '')];
 	    }
 	    return found && utils.deepClone(found);
-	  }
-
-	  searchEntities(type, criteria) {
-	    function containsSomeIgnoreCase(array, testValues) {
-	      testValues = (_.isArray(testValues) ? testValues : [testValues]).map(s => s.toLowerCase());
-	      return !!_.chain(array)
-	        .map(s => s.toLowerCase())
-	        .intersection(testValues)
-	        .value().length;
-	    }
-
-	    return _.reduce(criteria, (results, criterionValue, criterionField) => {
-	      const re = new RegExp(criterionValue, 'i');
-	      const matcher = (entity) => {
-	        const value = entity[criterionField];
-	        switch (typeof value) {
-	          case 'string':
-	            return value.match(re);
-	          case 'boolean':
-	          case 'number':
-	            return value === criterionValue;
-	          case 'object':
-	            return _.isArray(value) && containsSomeIgnoreCase(value, criterionValue);
-	          default:
-	            return false;
-	        }
-	      };
-	      return results.filter(matcher);
-	    }, this.getAll(type));
 	  }
 
 	  getAll(type) {
@@ -2187,13 +2154,6 @@ var ShapedScripts =
 	  };
 	}
 
-	function arrayValidator(value) {
-	  return {
-	    valid: true,
-	    converted: value.split(',').map(s => s.trim()),
-	  };
-	}
-
 	function getOptionList(options) {
 	  return function optionList(value) {
 	    if (value === undefined) {
@@ -2575,33 +2535,6 @@ var ShapedScripts =
 	    else {
 	      this.addSpellsToCharacter(options.selected.character, options.spells);
 	    }
-	  };
-
-	  const spellSearchCriteria = {
-	    classes: arrayValidator,
-	    domains: arrayValidator,
-	    oaths: arrayValidator,
-	    patrons: arrayValidator,
-	    school: stringValidator,
-	    level: integerValidator,
-	  };
-
-	  this.importSpellListFromJson = function importSpellListFromJson(options) {
-	    const spells = entityLookup.searchEntities('spells', _.pick(options, _.keys(spellSearchCriteria)));
-	    const newOpts = _.omit(options, _.keys(spellSearchCriteria));
-	    newOpts.spells = spells;
-	    this.importSpellsFromJson(newOpts);
-	  };
-
-	  this.getEntityCriteriaAdaptor = function getEntityCriteriaAdaptor(entityType) {
-	    return function entityCriteriaAdaptor(criterionOption, options) {
-	      const result = entityLookup.searchEntities(entityType, criterionOption, options[entityType]);
-	      if (result) {
-	        // If we get a result, wipe the existing list so that the new one replaces it
-	        options[entityType] = [];
-	      }
-	      return result;
-	    };
 	  };
 
 	  this.showEntityPicker = function showEntityPicker(entityName, entityNamePlural) {
@@ -3013,10 +2946,6 @@ var ShapedScripts =
 	  };
 
 	  this.handleRest = function handleRest(options) {
-	    if (!_.isUndefined(options.id)) {
-	      // if an ID is passed, overwrite any selection, and only process for the passed charId
-	      options.selected.character = [options.id];
-	    }
 	    if (options.long) {
 	      // handle long rest
 	      rester.doLongRest(options.selected.character);
@@ -3360,11 +3289,11 @@ var ShapedScripts =
 
 	  const staticAbilityOptions = {
 	    DELETE: abilityDeleter,
-	    initiative: new RollAbilityMaker('shaped_initiative', 'Init'),
-	    abilitychecks: new RollAbilityMaker('shaped_ability_checks', 'Ability Checks'),
-	    abilitychecksquery: new RollAbilityMaker('shaped_ability_checks_query', 'Ability Checks'),
-	    abilchecks: new RollAbilityMaker('shaped_ability_checks', 'AbilChecks'),
-	    abilchecksquery: new RollAbilityMaker('shaped_ability_checks_query', 'AbilChecks'),
+	    initiative: new RollAbilityMaker('initiative', 'Init'),
+	    abilitychecks: new RollAbilityMaker('ability_checks_macro', 'Ability Checks'),
+	    abilitychecksquery: new RollAbilityMaker('ability_checks_query_macro', 'Ability Checks'),
+	    abilchecks: new RollAbilityMaker('ability_checks_macro', 'AbilChecks'),
+	    abilchecksquery: new RollAbilityMaker('ability_checks_query_macro', 'AbilChecks'),
 	    advantagetracker: new MultiCommandAbilityMaker([
 	      { command: 'shaped-at', options: ['advantage'], abilityName: 'Advantage' },
 	      { command: 'shaped-at', options: ['disadvantage'], abilityName: 'Disadvantage' },
@@ -3372,26 +3301,26 @@ var ShapedScripts =
 	    ]),
 	    'advantagetracker-query': new CommandAbilityMaker('shaped-at',
 	      ['?{Roll Option|Normal,normal|w/ Advantage,advantage|w/ Disadvantage,disadvantage}'], '(dis)Adv Query'),
-	    savingthrows: new RollAbilityMaker('shaped_saving_throw', 'Saving Throws'),
-	    savingthrowsquery: new RollAbilityMaker('shaped_saving_throw_query', 'Saving Throws'),
-	    saves: new RollAbilityMaker('shaped_saving_throw', 'Saves'),
-	    savesquery: new RollAbilityMaker('shaped_saving_throw_query', 'Saves'),
+	    savingthrows: new RollAbilityMaker('saving_throw_macro', 'Saving Throws'),
+	    savingthrowsquery: new RollAbilityMaker('saving_throw_query_macro', 'Saving Throws'),
+	    saves: new RollAbilityMaker('saving_throw_macro', 'Saves'),
+	    savesquery: new RollAbilityMaker('saving_throw_query_macro', 'Saves'),
 	    attacks: new RepeatingAbilityMaker('attack', 'attack', 'Attacks', true),
-	    statblock: new RollAbilityMaker('shaped_statblock', 'Statblock'),
+	    statblock: new RollAbilityMaker('statblock', 'Statblck'),
 	    traits: new RepeatingAbilityMaker('trait', 'trait', 'Traits'),
-	    'traits-macro': new RepeatingSectionMacroMaker('shaped_traits', 'trait', 'Traits'),
+	    'traits-macro': new RepeatingSectionMacroMaker('traits_macro', 'trait', 'Traits'),
 	    actions: new RepeatingAbilityMaker('action', 'action', 'Actions', true),
-	    'actions-macro': new RepeatingSectionMacroMaker('shaped_actions', 'action', 'Actions'),
+	    'actions-macro': new RepeatingSectionMacroMaker('actions_macro', 'action', 'Actions'),
 	    reactions: new RepeatingAbilityMaker('reaction', 'action', 'Reactions'),
-	    'reactions-macro': new RepeatingSectionMacroMaker('shaped_reactions', 'reaction', 'Reactions'),
+	    'reactions-macro': new RepeatingSectionMacroMaker('reactions_macro', 'reaction', 'Reactions'),
 	    legendaryactions: new RepeatingAbilityMaker('legendaryaction', 'action', 'Legendary Actions'),
-	    'legendaryactions-macro': new RepeatingSectionMacroMaker('shaped_legendaryactions', 'legendaryaction', 'Legendary' +
+	    'legendaryactions-macro': new RepeatingSectionMacroMaker('legendaryactions_macro', 'legendaryaction', 'Legendary' +
 	      ' Actions'),
 	    legendarya: new RepeatingAbilityMaker('legendaryaction', 'action', 'LegendaryA'),
-	    lairactions: new RepeatingSectionMacroMaker('shaped_lairactions', 'lairaction', 'Lair Actions'),
-	    laira: new RepeatingSectionMacroMaker('shaped_lairactions', 'lairaction', 'LairA'),
-	    regionaleffects: new RepeatingSectionMacroMaker('shaped_regionaleffects', 'regionaleffect', 'Regional Effects'),
-	    regionale: new RepeatingSectionMacroMaker('shaped_regionaleffects', 'regionaleffect', 'RegionalE'),
+	    lairactions: new RepeatingSectionMacroMaker('lairactions_macro', 'lairaction', 'Lair Actions'),
+	    laira: new RepeatingSectionMacroMaker('lairactions_macro', 'lairaction', 'LairA'),
+	    regionaleffects: new RepeatingSectionMacroMaker('regionaleffects_macro', 'regionaleffect', 'Regional Effects'),
+	    regionale: new RepeatingSectionMacroMaker('regionaleffects_macro', 'regionaleffect', 'RegionalE'),
 	  };
 
 	  function abilityLookup(optionName, existingOptions) {
@@ -3435,7 +3364,7 @@ var ShapedScripts =
 	      // !shaped-import-monster , !shaped-monster
 	      .addCommand(['import-monster', 'monster'], this.importMonstersFromJson.bind(this))
 	      .option('all', booleanValidator)
-	      .optionLookup('monsters', _.partial(entityLookup.findEntity.bind(entityLookup), 'monsters', _, false))
+	      .optionLookup('monsters', entityLookup.findEntity.bind(entityLookup, 'monsters'))
 	      .option('overwrite', booleanValidator)
 	      .option('replace', booleanValidator)
 	      .withSelection({
@@ -3446,16 +3375,7 @@ var ShapedScripts =
 	      })
 	      // !shaped-import-spell, !shaped-spell
 	      .addCommand(['import-spell', 'spell'], this.importSpellsFromJson.bind(this))
-	      .optionLookup('spells', _.partial(entityLookup.findEntity.bind(entityLookup), 'spells', _, false))
-	      .withSelection({
-	        character: {
-	          min: 1,
-	          max: 1,
-	        },
-	      })
-	      // !shaped-import-spell-list
-	      .addCommand('import-spell-list', this.importSpellListFromJson.bind(this))
-	      .options(spellSearchCriteria)
+	      .optionLookup('spells', entityLookup.findEntity.bind(entityLookup, 'spells'))
 	      .withSelection({
 	        character: {
 	          min: 1,
@@ -3502,10 +3422,9 @@ var ShapedScripts =
 	      .addCommand('rest', this.handleRest.bind(this))
 	      .option('long', booleanValidator)
 	      .option('short', booleanValidator)
-	      .option('id', getCharacterValidator(roll20), false)
 	      .withSelection({
 	        character: {
-	          min: 0,
+	          min: 1,
 	          max: Infinity,
 	        },
 	      })
@@ -3513,7 +3432,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v1.5.1 <=-');
+	    logger.info('-=> ShapedScripts v1.4.1 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -3544,9 +3463,14 @@ var ShapedScripts =
 	    roll20.on('chat:message', this.wrapHandler(this.handleInput));
 	    roll20.on('add:token', this.wrapHandler(this.handleAddToken));
 	    roll20.on('change:token', this.wrapHandler(this.handleChangeToken));
-	    roll20.on('change:attribute', this.wrapHandler((curr) => {
+	    roll20.on('change:attribute', this.wrapHandler((curr, prev) => {
 	      if (curr.get('name') === 'roll_setting') {
 	        at.handleRollOptionChange(curr);
+	      }
+	      if (curr.get('name') === 'long_rest' || curr.get('name') === 'short_rest') {
+	        if (curr.get('current') !== prev.current) {
+	          rester.handleRestButton(curr);
+	        }
 	      }
 	    }));
 	    this.registerChatWatcher(this.handleDeathSave, ['deathSavingThrow', 'character', 'roll1']);
@@ -3638,12 +3562,11 @@ var ShapedScripts =
 	 */
 
 	class Command {
-	  constructor(root, handler, roll20, name) {
+	  constructor(root, handler, roll20) {
 	    this.root = root;
 	    this.handler = handler;
 	    this.parsers = [];
 	    this.roll20 = roll20;
-	    this.name = name;
 	  }
 
 
@@ -3676,11 +3599,10 @@ var ShapedScripts =
 	      lookup = _.propertyOf(lookup);
 	    }
 	    const parser = (arg, errors, options) => {
+	      options[groupName] = options[groupName] || [];
 	      const singleResolved = lookup(arg, options);
 	      if (singleResolved) {
-	        options[groupName] = options[groupName] || [];
-	        options[groupName].push.apply(options[groupName],
-	          _.isArray(singleResolved) ? singleResolved : [singleResolved]);
+	        options[groupName].push(singleResolved);
 	        return true;
 	      }
 
@@ -3759,10 +3681,6 @@ var ShapedScripts =
 	  end() {
 	    return this.root;
 	  }
-
-	  get logWrap() {
-	    return `command [${this.name}]`;
-	  }
 	}
 
 	function processSelection(selection, constraints, roll20) {
@@ -3805,7 +3723,7 @@ var ShapedScripts =
 	  const commands = {};
 	  return {
 	    addCommand(cmds, handler) {
-	      const command = new Command(this, handler, roll20, _.isArray(cmds) ? cmds.join(',') : cmds);
+	      const command = new Command(this, handler, roll20);
 	      (_.isArray(cmds) ? cmds : [cmds]).forEach(cmdString => (commands[cmdString] = command));
 	      return command;
 	    },
@@ -3823,8 +3741,6 @@ var ShapedScripts =
 	        cmd.handle(parts, msg.selected, `${prefix}${cmdName}`);
 	      }
 	    },
-
-	    logWrap: 'commandParser',
 	  };
 	};
 
@@ -4014,6 +3930,18 @@ var ShapedScripts =
 	    this.logger = logger;
 	    this.myState = myState;
 	    this.roll20 = roll20;
+	  }
+
+	  /**
+	   * Handles the click event of the 'short rest' or 'long rest' buttons
+	   * @param {object} msg - The Roll20 mesage
+	   */
+	  handleRestButton(msg) {
+	    this.logger.debug(`msg: ${msg}`);
+	    const char = this.roll20.getObj('character', msg.get('_characterid'));
+
+	    if (msg.get('name') === 'short_rest') { this.doShortRest([char]); }
+	    else if (msg.get('name') === 'long_rest') { this.doLongRest([char]); }
 	  }
 
 	  /**

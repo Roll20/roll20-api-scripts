@@ -3435,7 +3435,7 @@ var ShapedScripts =
 	      // !shaped-import-monster , !shaped-monster
 	      .addCommand(['import-monster', 'monster'], this.importMonstersFromJson.bind(this))
 	      .option('all', booleanValidator)
-	      .optionLookup('monsters', _.partial(entityLookup.findEntity.bind(entityLookup), 'monsters', _, false))
+	      .optionLookup('monsters', entityLookup.findEntity.bind(entityLookup, 'monsters', false))
 	      .option('overwrite', booleanValidator)
 	      .option('replace', booleanValidator)
 	      .withSelection({
@@ -3446,7 +3446,7 @@ var ShapedScripts =
 	      })
 	      // !shaped-import-spell, !shaped-spell
 	      .addCommand(['import-spell', 'spell'], this.importSpellsFromJson.bind(this))
-	      .optionLookup('spells', _.partial(entityLookup.findEntity.bind(entityLookup), 'spells', _, false))
+	      .optionLookup('spells', entityLookup.findEntity.bind(entityLookup, 'spells', false))
 	      .withSelection({
 	        character: {
 	          min: 1,
@@ -3513,7 +3513,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v1.5.1 <=-');
+	    logger.info('-=> ShapedScripts v1.5.0 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 

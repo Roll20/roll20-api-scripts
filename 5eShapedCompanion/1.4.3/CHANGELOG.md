@@ -1,29 +1,3 @@
-<a name="1.5.1"></a>
-## [1.5.1](https://github.com/symposion/roll20-shaped-scripts/compare/1.5.0...1.5.1) (2016-05-01)
-
-
-### Bug Fixes
-
-* **import:** Fix bug with import commands introduced in 1.5.0([71e1f1a](https://github.com/symposion/roll20-shaped-scripts/commit/71e1f1a))
-
-
-
-<a name="1.5.0"></a>
-# [1.5.0](https://github.com/symposion/roll20-shaped-scripts/compare/1.4.3...1.5.0) (2016-04-30)
-
-
-### Bug Fixes
-
-* **abilities:** Alter macro names to fix naming collisions([acee188](https://github.com/symposion/roll20-shaped-scripts/commit/acee188)), closes [#4](https://github.com/symposion/roll20-shaped-scripts/issues/4)
-
-
-### Features
-
-* **rests:** Support passing character ID option([3dae840](https://github.com/symposion/roll20-shaped-scripts/commit/3dae840))
-* **spell-import:** Allow spell import option to import spells according to criteria([9a730eb](https://github.com/symposion/roll20-shaped-scripts/commit/9a730eb)), closes [#9](https://github.com/symposion/roll20-shaped-scripts/issues/9)
-
-
-
 <a name="1.4.3"></a>
 ## [1.4.3](https://github.com/symposion/roll20-shaped-scripts/compare/1.4.2...1.4.3) (2016-04-29)
 

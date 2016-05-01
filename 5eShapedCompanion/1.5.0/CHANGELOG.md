@@ -1,13 +1,3 @@
-<a name="1.5.1"></a>
-## [1.5.1](https://github.com/symposion/roll20-shaped-scripts/compare/1.5.0...1.5.1) (2016-05-01)
-
-
-### Bug Fixes
-
-* **import:** Fix bug with import commands introduced in 1.5.0([71e1f1a](https://github.com/symposion/roll20-shaped-scripts/commit/71e1f1a))
-
-
-
 <a name="1.5.0"></a>
 # [1.5.0](https://github.com/symposion/roll20-shaped-scripts/compare/1.4.3...1.5.0) (2016-04-30)
 
