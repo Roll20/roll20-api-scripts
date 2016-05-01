@@ -9,10 +9,9 @@
     "useroptions": [
         {
           "name": "theme",
-          "type": "select",
-          "options": ["default", "test", "5E-OGL"],
+          "type": "text",
           "default": "default",
-          "description": "Which TrapTheme will be used for system-specific trap messages, effects, and passive searching?"
+          "description": "Which TrapTheme will be used for system-specific trap messages, effects, and passive searching? (Enter the theme's name provided in its README. E.g. \"5E-OGL\", \"5E-Shaped\", \"MLP-RIM-4\". \rSystem-specific themes must be installed separately from It's A Trap!.)"
         }
     ],
     "dependencies": ["Token Collisions", "Path Math"],
