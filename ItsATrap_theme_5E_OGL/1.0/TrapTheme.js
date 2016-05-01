@@ -32,28 +32,6 @@
   }
 
   /**
-   * Asynchronously gets the value of multiple character sheet attributes in
-   * parallel.
-   * @param  {Character}   character
-   * @param  {string[]}   attrList
-   * @param  {Function} callback
-   *         The callback takes one parameter: the value of the attribute.
-   */
-  function getSheetAttrs(character, attrList, callback) {
-    var count = 0;
-    var values = {};
-    _.each(attrList, function(attr) {
-      getSheetAttr(character, attr, function(value) {
-        values[attr] = value;
-        count++;
-
-        if(count === attrList.length)
-          callback(values);
-      });
-    });
-  }
-
-  /**
    * Produces HTML for a padded table row.
    * @param  {string} innerHTML
    * @param  {string} style
