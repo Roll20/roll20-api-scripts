@@ -5,10 +5,13 @@
 * [Vector Math](https://github.com/Roll20/roll20-api-scripts/tree/master/Vector%20Math)
 
 ###### Updates
-'''2.2'''
+_2.3_
+* Trap JSON now supports special FX. This is specified through the 'fx' property.
+
+_2.2_
 * TrapThemes now supported for system-specific trap automation.
 
-'''2.1'''
+_2.1_
 * Refactored code.
 * ItsATrap now exposes an API for its functions.
 * Customizable trap messages via GM notes.
@@ -72,7 +75,7 @@ Just enter the JSON definition in for the trap in its GM notes.
 
 The following basic TrapEffect properties are supported:
 * api (string): An API chat command that will be executed when the trap is activated. If the constants TRAP_ID and VICTIM_ID are provided, they will be replaced by the IDs for the trap token and the token for the trap's victim, respectively in the API chat command message.
-* fx (string or FX definition JSON): The name of a special FX object or a definition for custom special FX.
+* fx (string or FX definition JSON): The name of a special FX object or a definition for custom special FX. Names of saved custom effects cannot contain hyphens '-'.
 * message (string): This is the message that will be displayed when the trap activates.
 * sound (string): The name of a sound that will be played when the trap activates.
 * trapId (string): The ID of the trap token. This is set automatically by the script.
