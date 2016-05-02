@@ -368,8 +368,17 @@ var ItsATrap = (function() {
     var y = trap.get('top');
     var pageId = trap.get('_pageid');
     if(effect.fx) {
-      if(_.isString(effect.fx))
-        spawnFx(x, y, effect.fx, pageId);
+      if(_.isString(effect.fx)) {
+        if(effect.fx.indexOf('-') !== -1)
+          spawnFx(x, y, effect.fx, pageId);
+        else {
+          fx = findObjs({ _type: 'custfx', name: effect.fx })[0];
+          if(fx)
+            spawnFx(x, y, fx.get('_id'));
+          else
+            sendChat('ItsATrap ERROR', 'Custom FX "' + effect.fx + '" not found.');
+        }
+      }
       else {
         _.defaults(effect.fx, defaultFx);
         if(effect.fx.duration === -1)
@@ -514,6 +523,9 @@ ItsATrap.registerTheme({
 
     // If the effect has a sound, try to play it.
     ItsATrap.playEffectSound(effect);
+
+    // If the effect has fx, play them.
+    ItsATrap.playTrapFX(effect);
 
     // If the effect has an api command, execute it.
     ItsATrap.executeTrapCommand(effect);
