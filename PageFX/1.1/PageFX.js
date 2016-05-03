@@ -58,24 +58,19 @@ var PageFX = (function() {
 
         // URI-escape the notes and remove the HTML elements.
         var effect = decodeURIComponent(effectToken.get('gmnotes')).trim();
-        effect = notes.split(/<[/]?.+?>/g).join('');
+        effect = effect.split(/<[/]?.+?>/g).join('');
 
         // Deactivate the old effect.
         deactivateEffect(effectToken);
 
         // Build the FX spawner function.
         var spawnFunc;
-        if(effect.indexOf('{') === 0) {
+        if(effect.indexOf('{') === 0)
             spawnFunc = _createSpawnerCustom(effectToken, effect);
-        }
-        else if(effect.indexOf('-') !== -1) {
+        else if(effect.indexOf('-') !== -1)
             spawnFunc = _createSpawnerBuiltIn(effectToken, effect);
-        }
-
-        // This is probably a saved custom effect.
-        else {
-
-        }
+        else
+            spawnFunc = _createSpawnerSaved(effectToken, effect);
 
         // Start up and register the effect interval.
         var interval = setInterval(spawnFunc, time);
@@ -105,9 +100,8 @@ var PageFX = (function() {
                 };
                 spawnFxBetweenPoints(start, end, effect);
             }
-            else {
+            else
                 spawnFx(start.x, start.y, effect);
-            }
         };
     }
 
@@ -126,7 +120,7 @@ var PageFX = (function() {
             };
         }
         catch(err) {
-            throw new Error('PageFX ERROR: Invalid FX JSON: <br/>' + effect);
+            throw new Error('Invalid FX JSON: <br/>' + effect);
         }
     }
 
@@ -146,7 +140,7 @@ var PageFX = (function() {
             };
         }
         else {
-            throw new Error('PageFX ERROR: Could not find saved FX: "' + effect + '".');
+            throw new Error('Could not find saved FX: "' + effect + '".');
         }
     }
 
@@ -229,26 +223,38 @@ var PageFX = (function() {
             activateEffect(effectToken);
     }
 
-    // Register the !pageFX on/off commands.
-    on('chat:message', function(msg) {
+    /**
+     * Catches and logs PageFX errors in a try-catch block.
+     * @private
+     * @param  {function} func
+     *         The try block body.
+     */
+    function _try(func) {
         try {
-            if(msg.content === '!pageFX on') {
-                activateAllEffects();
-            }
-            if(msg.content === '!pageFX off') {
-                deactivateAllEffects();
-            }
+            func();
         }
         catch(err) {
-            log('PageEffects ERROR: ');
+            log('PageFX ERROR: ');
             log(err.message);
         }
+    }
+
+    // Register the !pageFX on/off commands.
+    on('chat:message', function(msg) {
+        _try(function() {
+            if(msg.content === '!pageFX on')
+                activateAllEffects();
+            if(msg.content === '!pageFX off')
+                deactivateAllEffects();
+        });
     });
 
     // When the player switches the active page, activate the
     // PageFX for the new page.
     on('change:campaign:playerpageid', function() {
-        activateAllEffects();
+        _try(function() {
+            activateAllEffects();
+        });
     });
 
     // When a PageFX token is destroyed, also end its effects.
@@ -267,7 +273,9 @@ var PageFX = (function() {
             if(obj.get('status_interdiction'))
                 deactivateEffect(obj);
             else
-                activateEffect(obj);
+                _try(function() {
+                    activateEffect(obj);
+                });
         }
     });
 
