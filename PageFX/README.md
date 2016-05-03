@@ -1,5 +1,9 @@
 # Page FX
 
+_v1.1 Updates_
+* PageFX can now use saved custom FX names or custom FX JSON definitions.
+* Implemented NullFX areas.
+
 ##### Dependencies:
 * None
 
@@ -23,6 +27,14 @@ PageFX will start automatically when they are created and when the page is chang
 
 An effect can be disabled by setting its ```interdiction``` <img src="http://game-icons.net/icons/lorc/originals/png/interdiction.png" width="32"> status marker. (The one that looks like this: http://game-icons.net/icons/lorc/originals/png/interdiction.png)
 
+## NullFX Areas
+
+NullFX areas can be used to prevent PageFX from being spawned in a square or
+circular area. To create a NullFX area:
+
+1. Create a token named "NullFX".
+2. In its ```Aura 1``` property, specify the area of effect either as a circle or square with the desired radius.
+
 ## Chat commands
 
 #### Turn on all PageFX
@@ -32,11 +44,6 @@ The ```!pageFX on``` command can be used to reactivate all the PageFX on the cur
 #### Turn off all PageFX
 
 The ```!pageFX off``` command can be used to deactivate all the PageFX.
-
-## Development roadmap:
-The following features are planned for future versions of this script:
-* Support for custom JSON-defined fx.
-* Nullified effect areas where fx from a PageFX token cannot be spawned.
 
 ## Known issues:
 * If the Roll20 game's tab becomes inactive, PageFX will continue to run because there currently isn't a way from the API to tell whether the Roll20 tab has become inactive. This can cause some significant lag when the user returns to the tab, especially for PageFX with a fast spawn rate.
