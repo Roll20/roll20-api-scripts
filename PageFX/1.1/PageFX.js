@@ -98,9 +98,10 @@ var PageFX = (function() {
                     x: start.x + PIXELS_PER_UNIT*dx,
                     y: start.y + PIXELS_PER_UNIT*dy
                 };
-                spawnFxBetweenPoints(start, end, effect);
+                if(!isPointInNullFX(start, effectToken))
+                    spawnFxBetweenPoints(start, end, effect);
             }
-            else
+            else if(!isPointInNullFX(start, effectToken))
                 spawnFx(start.x, start.y, effect);
         };
     }
@@ -116,7 +117,8 @@ var PageFX = (function() {
             effect = JSON.parse(effect);
             return function() {
                 var start = _getRandomPagePt(effectToken);
-                spawnFxWithDefinition(start.x, start.y, effect);
+                if(!isPointInNullFX(start, effectToken))
+                    spawnFxWithDefinition(start.x, start.y, effect);
             };
         }
         catch(err) {
@@ -136,7 +138,8 @@ var PageFX = (function() {
             var fxId = savedFx.get('_id');
             return function() {
                 var start = _getRandomPagePt(effectToken);
-                spawnFx(start.x, start.y, fxId);
+                if(!isPointInNullFX(start, effectToken))
+                    spawnFx(start.x, start.y, fxId);
             };
         }
         else {
@@ -170,6 +173,20 @@ var PageFX = (function() {
     }
 
     /**
+     * Get the NullFX tokens on the same page as a PageFX token.
+     * @param  {Graphic} effectToken
+     * @return {Graphic[]}
+     */
+    function getNullFx(effectToken) {
+        var pageId = effectToken.get('_pageid');
+        return findObjs({
+            _type: 'graphic',
+            _pageid: pageId,
+            name: 'NullFX'
+        });
+    }
+
+    /**
      * Gets a random point within a PageFX token's bar1 value.
      * @param {Graphic} effectToken
      * @return {Point}
@@ -183,6 +200,7 @@ var PageFX = (function() {
 
         var unitScale = page.get('scale_number');
         var maxDist = effectToken.get('aura1_radius')*PIXELS_PER_UNIT/unitScale || 0;
+        maxDist += effectToken.get('width')/2;
         var x = effectToken.get('left');
         var y = effectToken.get('top');
 
@@ -206,10 +224,43 @@ var PageFX = (function() {
 
         var pageWidth = page.get('width') * PIXELS_PER_UNIT;
         var pageHeight = page.get('height') * PIXELS_PER_UNIT;
+
         return {
             x: Math.max(0, Math.min(x, pageWidth)),
             y: Math.max(0, Math.min(y, pageHeight))
         };
+    }
+
+    /**
+     * Checks if some point on the page is within the area of a NullFX token.
+     * @param  {Point}  pt
+     * @param  {Graphic}  effectToken
+     *         The effectToken that the point was spawned relative to.
+     * @return {Boolean}
+     */
+    function isPointInNullFX(pt, effectToken) {
+        var nullTokens = getNullFx(effectToken);
+        var curPageId = effectToken.get("_pageid");
+        var page = findObjs({
+            _type: 'page',
+            _id: curPageId
+        })[0];
+
+        return !!_.find(nullTokens, function(nullToken) {
+            var unitScale = page.get('scale_number');
+            var maxDist = nullToken.get('aura1_radius') *PIXELS_PER_UNIT/unitScale || 0;
+            maxDist += effectToken.get('width')/2;
+            var x = nullToken.get('left');
+            var y = nullToken.get('top');
+            var dx = pt.x - x;
+            var dy = pt.y - y;
+
+            if(nullToken.get('aura1_square')) {
+                return Math.abs(dx) <= maxDist && Math.abs(dy) <= maxDist;
+            }
+            else
+                return dx*dx + dy*dy <= maxDist*maxDist
+        });
     }
 
     /**
