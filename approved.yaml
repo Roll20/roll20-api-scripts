@@ -143,3 +143,31 @@ charsheet:
 essro:
 - "ESRO"
 - "Utility"
+
+experiencetracker:
+- "ExperienceTracker"
+- "Character"
+
+customfx:
+- "Custom FX"
+- "Maps & Drawing"
+
+itsatraptheme5eshaped:
+- "ItsATrap_theme_5E_Shaped"
+- "System Toolbox"
+
+roleplayingismagic4edice:
+- "RoleplayingIsMagic_4E_Dice"
+- "System Toolbox"
+
+itsatrapthemeroleplayingismagic4:
+- "ItsATrap_theme_RoleplayingIsMagic4"
+- "System Toolbox"
+
+itsatrapthemednd35:
+- "ItsATrap_theme_DnD3.5"
+- "System Toolbox"
+
+itsatrapthemegammaworld7:
+- "ItsATrap_theme_GammaWorld7"
+- "System Toolbox"
