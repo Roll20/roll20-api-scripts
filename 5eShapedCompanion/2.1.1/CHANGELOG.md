@@ -1,22 +1,3 @@
-<a name="2.2.0"></a>
-# [2.2.0](https://github.com/symposion/roll20-shaped-scripts/compare/2.1.1...2.2.0) (2016-05-04)
-
-
-### Bug Fixes
-
-* **abilities:** Fix multi-token ability creation([8572d0d](https://github.com/symposion/roll20-shaped-scripts/commit/8572d0d)), closes [#120](https://github.com/symposion/roll20-shaped-scripts/issues/120)
-* **AdvTrack:** Command respects IgnoreNpcs option([3f40533](https://github.com/symposion/roll20-shaped-scripts/commit/3f40533))
-* **AdvTrack:** Make output more consistent([a72090d](https://github.com/symposion/roll20-shaped-scripts/commit/a72090d))
-
-
-### Features
-
-* **abilities:** Add --attacksMacro to launch chat window attack macro([03e035c](https://github.com/symposion/roll20-shaped-scripts/commit/03e035c))
-* **abilities:** Add rest options for ability creation([1b25670](https://github.com/symposion/roll20-shaped-scripts/commit/1b25670)), closes [#124](https://github.com/symposion/roll20-shaped-scripts/issues/124)
-* **abilities:** Allow creation of abilities for individual traits([b108466](https://github.com/symposion/roll20-shaped-scripts/commit/b108466)), closes [#116](https://github.com/symposion/roll20-shaped-scripts/issues/116)
-
-
-
 <a name="2.1.1"></a>
 ## [2.1.1](https://github.com/symposion/roll20-shaped-scripts/compare/2.1.0...2.1.1) (2016-05-03)
 
