@@ -3,7 +3,7 @@
     "script": "ExperienceTracker.js",
     "version": "2.02",
     "previousversions": [],
-    "description": "!xp handles experience and announces level up",
+    "description": "This script allows for automatic tracking of a Dungeons and Dragons 5e like experience system, aswell as level up announcement in chat. !xp handles experience and announces level up",
     "authors": "Kasper K.",
     "roll20userid": "56818",
     "useroptions": [],
