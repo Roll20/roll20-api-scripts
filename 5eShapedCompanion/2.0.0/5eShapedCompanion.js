@@ -2427,8 +2427,7 @@ var ShapedScripts =
 	  /////////////////////////////////////////
 	  this.configure = function configure(options) {
 	    // drop "menu" options
-	    const menuCmds = ['atMenu', 'tsMenu', 'ncMenu', 'seMenu', 'hrMenu', 'barMenu', 'varsMenu', 'auraMenu'];
-	    utils.deepExtend(myState.config, _.omit(options, menuCmds));
+	    utils.deepExtend(myState.config, _.omit(options, ['atMenu', 'tsMenu', 'ncMenu', 'seMenu', 'hrMenu', 'varsMenu']));
 
 	    const cui = new ConfigUI();
 
@@ -2439,16 +2438,8 @@ var ShapedScripts =
 	    if (options.atMenu || options.advTrackerSettings) {
 	      menu = cui.getConfigOptionGroupAdvTracker(myState.config, configOptionsSpec);
 	    }
-	    else if (options.tsMenu || options.barMenu || options.auraMenu || options.tokenSettings) {
-	      if (options.barMenu) {
-	        menu = cui.getConfigOptionGroupTokenBars(myState.config, configOptionsSpec);
-	      }
-	      else if (options.auraMenu) {
-	        menu = cui.getConfigOptionGroupTokenAuras(myState.config, configOptionsSpec);
-	      }
-	      else {
-	        menu = cui.getConfigOptionGroupTokens(myState.config, configOptionsSpec);
-	      }
+	    else if (options.tsMenu || options.tokenSettings) {
+	      menu = cui.getConfigOptionGroupTokens(myState.config, configOptionsSpec);
 	    }
 	    else if (options.ncMenu || options.hrMenu || options.newCharSettings) {
 	      if (options.hrMenu) {
@@ -2646,7 +2637,7 @@ var ShapedScripts =
 	    const defaultIndex = Math.min(myState.config.defaultGenderIndex, myState.config.genderPronouns.length);
 	    const defaultPronounInfo = myState.config.genderPronouns[defaultIndex];
 	    const pronounInfo = _.clone(_.find(myState.config.genderPronouns,
-	      pronounDetails => new RegExp(pronounDetails.matchPattern, 'i').test(gender)) || defaultPronounInfo);
+	        pronounDetails => new RegExp(pronounDetails.matchPattern, 'i').test(gender)) || defaultPronounInfo);
 
 	    _.defaults(pronounInfo, defaultPronounInfo);
 
@@ -2866,11 +2857,6 @@ var ShapedScripts =
 	  this.handleAdvantageTracker = function handleAdvantageTracker(options) {
 	    let type = undefined;
 
-	    if (!_.isUndefined(options.id)) {
-	      // if an ID is passed, overwrite any selection, and only process for the passed charId
-	      options.selected.character = [options.id];
-	    }
-
 	    if (options.normal) {
 	      type = 'normal';
 	    }
@@ -2933,7 +2919,7 @@ var ShapedScripts =
 	        }
 	      };
 	      /* eslint-disable no-spaced-func */
-	    } (token.id)), 100);
+	    }(token.id)), 100);
 	  };
 
 	  this.handleChangeToken = function handleChangeToken(token) {
@@ -3027,7 +3013,7 @@ var ShapedScripts =
 	      .groupBy(attribute => attribute.get('name').replace(/(repeating_ammo_[^_]+).*/, '$1'))
 	      .find(attributeList =>
 	        _.find(attributeList, attribute =>
-	          attribute.get('name').match(/.*name$/) && attribute.get('current') === options.ammoName)
+	        attribute.get('name').match(/.*name$/) && attribute.get('current') === options.ammoName)
 	      )
 	      .find(attribute => attribute.get('name').match(/.*qty$/))
 	      .value();
@@ -3136,7 +3122,7 @@ var ShapedScripts =
 	    let msg;
 
 	    const bestSlot = availableSlots
-	      .find(slot => parseInt(slot.get('name').match(/spell_slots_l(\d)/)[1], 10) === level) ||
+	        .find(slot => parseInt(slot.get('name').match(/spell_slots_l(\d)/)[1], 10) === level) ||
 	      _.first(availableSlots);
 
 	    if (bestSlot) {
@@ -3481,7 +3467,7 @@ var ShapedScripts =
 
 	  this.getCommandProcessor = function getCommandProcessor() {
 	    return cp('shaped', roll20)
-	      // !shaped-config
+	    // !shaped-config
 	      .addCommand('config', this.configure.bind(this))
 	      .options(configOptionsSpec)
 	      .option('atMenu', booleanValidator)
@@ -3489,9 +3475,7 @@ var ShapedScripts =
 	      .option('ncMenu', booleanValidator)
 	      .option('seMenu', booleanValidator)
 	      .option('hrMenu', booleanValidator)
-	      .option('barMenu', booleanValidator)
 	      .option('varsMenu', booleanValidator)
-	      .option('auraMenu', booleanValidator)
 	      // !shaped-import-statblock
 	      .addCommand('import-statblock', this.importStatblock.bind(this))
 	      .option('overwrite', booleanValidator)
@@ -3539,7 +3523,6 @@ var ShapedScripts =
 	      .option('normal', booleanValidator)
 	      .option('revert', booleanValidator)
 	      .option('persist', booleanValidator)
-	      .option('id', getCharacterValidator(roll20), false)
 	      .withSelection({
 	        character: {
 	          min: 1,
@@ -3584,7 +3567,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v2.1.0 <=-');
+	    logger.info('-=> ShapedScripts v2.0.0 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -4351,11 +4334,11 @@ var ShapedScripts =
 	  // Menus
 	  ////////////
 	  getConfigOptionsMenu() {
-	    const optionRows = this.makeOptionRow('Advantage Tracker', 'atMenu', '', 'view --&gt;', '', '#02baf2') +
-	      this.makeOptionRow('Token Defaults', 'tsMenu', '', 'view --&gt;', '', '#02baf2') +
-	      this.makeOptionRow('New Characters', 'ncMenu', '', 'view --&gt;', '', '#02baf2') +
-	      this.makeOptionRow('Character Sheet Enhancements', 'seMenu', '', 'view --&gt;', '', '#02baf2') +
-	      this.makeOptionRow('Houserules & Variants', 'varsMenu', '', 'view --&gt;', '', '#02baf2');
+	    const optionRows = this.makeOptionRow('Advantage Tracker', 'atMenu', '', 'view', '', '#02baf2') +
+	      this.makeOptionRow('Token Defaults', 'tsMenu', '', 'view', '', '#02baf2') +
+	      this.makeOptionRow('New Characters', 'ncMenu', '', 'view', '', '#02baf2') +
+	      this.makeOptionRow('Character Sheet Enhancements', 'seMenu', '', 'view', '', '#02baf2') +
+	      this.makeOptionRow('Houserules & Variants', 'varsMenu', '', 'view', '', '#02baf2');
 
 	    const th = utils.buildHTML('th', 'Main Menu', { colspan: '2' });
 	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
@@ -4382,140 +4365,121 @@ var ShapedScripts =
 	  }
 
 	  getConfigOptionGroupTokens(config) {
-	    const ts = 'tokenSettings';
-
-	    const optionRows = this.makeToggleSetting(config, `${ts}.number`, 'Numbered Tokens') +
-	      this.makeToggleSetting(config, `${ts}.showName`, 'Show Name Tag') +
-	      this.makeToggleSetting(config, `${ts}.showNameToPlayers`, 'Show Name to Players') +
-	      this.makeInputSetting(config, `${ts}.light.radius`, 'Light Radius', 'Light Radius (empty to unset)') +
-	      this.makeInputSetting(config, `${ts}.light.dimRadius`, 'Dim Radius', 'Light Dim Radius (empty to unset)') +
-	      this.makeToggleSetting(config, `${ts}.light.otherPlayers`, 'Other players see light') +
-	      this.makeToggleSetting(config, `${ts}.light.hasSight`, 'Has Sight') +
-	      this.makeInputSetting(config, `${ts}.light.angle`, 'Light Angle', 'Light Angle') +
-	      this.makeInputSetting(config, `${ts}.light.losAngle`, 'LOS Angle', 'LOS Angle') +
-	      this.makeInputSetting(config, `${ts}.light.multiplier`, 'Light Muliplier', 'Light Muliplier') +
-	      this.makeOptionRow('Token Bar Options', 'barMenu', '', 'view --&gt;', '', '#02baf2') +
-	      this.makeOptionRow('Token Aura Options', 'auraMenu', '', 'view --&gt;', '', '#02baf2');
-
-	    const th = utils.buildHTML('th', 'Token Options', { colspan: '2' });
-	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
-	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
-
-	    return table + this.backToMainMenuButton();
-	  }
-
-	  getConfigOptionGroupTokenBars(config) {
-	    const barButtonWidth = 60;
-	    const ts = 'tokenSettings';
-
-	    let optionRows = '';
-
-	    for (let i = 1; i <= 3; i++) {
-	      const currAttr = utils.getObjectFromPath(config, `${ts}.bar${i}.attribute`);
-	      const currAttrEmptyHint = currAttr || '[not set]';
-	      const currMax = utils.getObjectFromPath(config, `${ts}.bar${i}.max`);
-	      const currLink = utils.getObjectFromPath(config, `${ts}.bar${i}.link`);
-
-	      const attBtn = this.makeOptionButton(`${ts}.bar${i}.attribute`,
-	        `?{Bar ${i} Attribute (empty to unset)|${currAttr}} --barMenu`, this.makeText(currAttrEmptyHint),
-	        'click to edit', currAttrEmptyHint === '[not set]' ? '#f84545' : '#02baf2', undefined, barButtonWidth);
-	      const maxBtn = this.makeOptionButton(`${ts}.bar${i}.max`, `${!currMax} --barMenu`, this.makeBoolText(currMax),
-	        'click to toggle', currMax ? '#65c4bd' : '#f84545', undefined, barButtonWidth);
-	      const linkBtn = this.makeOptionButton(`${ts}.bar${i}.link`, `${!currLink} --barMenu`, this.makeBoolText(currLink),
-	        'click to togle', currLink ? '#65c4bd' : '#f84545', undefined, barButtonWidth);
-
-	      optionRows += this.makeThreColOptionTable({
-	        tableTitle: `Bar ${i}`,
-	        colTitles: ['Attribute', 'Max', 'Link'],
-	        buttons: [attBtn, maxBtn, linkBtn],
-	      });
-	    }
-
-	    for (let i = 1; i <= 3; i++) {
-	      optionRows += this.makeToggleSetting(config, `${ts}.bar${i}.showPlayers`,
-	        `Bar ${i} Show Players`, null, 'barMenu');
-	    }
-
-	    const th = utils.buildHTML('th', 'Token Bar Options', { colspan: '2' });
-	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
-	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
-
-	    return table + this.backToTokenOptions();
-	  }
-
-	  getConfigOptionGroupTokenAuras(config) {
 	    const auraButtonWidth = 60;
-
 	    const ts = 'tokenSettings';
 
-	    let optionRows = '';
+	    let retVal = '<table style="width: 100%; font-size: 0.9em;">' +
+	      '<tr style="margin-top: 5px;"><th colspan=2>Token Options</th></tr>';
 
+	    retVal +=
+	      this.makeToggleSetting(config, `${ts}.number`, 'Numbered Tokens') +
+	      this.makeToggleSetting(config, `${ts}.showName`, 'Show Name Tag') +
+	      this.makeToggleSetting(config, `${ts}.showNameToPlayers`, 'Show Name to Players');
+
+	    for (let i = 1; i <= 3; i++) {
+	      retVal += this.makeInputSetting(config, `${ts}.bar${i}.attribute`, `Bar ${i} Attribute`,
+	        `Bar ${i} Attribute (empty to unset)`);
+	      retVal += this.makeToggleSetting(config, `${ts}.bar${i}.max`, `Bar ${i} Set Max`);
+	      retVal += this.makeToggleSetting(config, `${ts}.bar${i}.link`, `Bar ${i} Link`);
+	      retVal += this.makeToggleSetting(config, `${ts}.bar${i}.showPlayers`, `Bar ${i} Show Players`);
+	    }
+
+	    // Build out the aura grids
 	    for (let i = 1; i <= 2; i++) {
 	      const currRad = utils.getObjectFromPath(config, `${ts}.aura${i}.radius`);
 	      const currRadEmptyHint = currRad || '[not set]';
 	      const currColor = utils.getObjectFromPath(config, `${ts}.aura${i}.color`);
 	      const currSquare = utils.getObjectFromPath(config, `${ts}.aura${i}.square`);
 
-	      const radBtn = this.makeOptionButton(`${ts}.aura${i}.radius`,
-	        `?{Aura ${i} Radius (empty to unset)|${currRad}} --auraMenu`, this.makeText(currRadEmptyHint), 'click to edit',
-	        currRadEmptyHint === '[not set]' ? '#f84545' : '#02baf2', undefined, auraButtonWidth);
+	      const radBtn = this.makeOptionButton(`${ts}.aura${i}.radius`, `?{Aura ${i} Radius (empty to unset)|${currRad}}`,
+	        this.makeText(currRadEmptyHint), 'click to edit', currRadEmptyHint === '[not set]' ? '#f84545' : '#02baf2',
+	        undefined, auraButtonWidth);
 	      const colorBtn = this.makeOptionButton(`tokenSettings.aura${i}.color`,
-	        `?{Aura ${i} Color (hex colors)|${currColor}} --auraMenu`, this.makeText(currColor), 'click to edit',
-	        currColor, utils.getContrastYIQ(currColor), auraButtonWidth);
-	      const squareBtn = this.makeOptionButton(`tokenSettings.aura${i}.square`, `${!currSquare} --auraMenu`,
+	        `?{Aura ${i} Color (hex colors)|${currColor}}`,
+	        this.makeText(currColor), 'click to edit', currColor, utils.getContrastYIQ(currColor), auraButtonWidth);
+	      const squareBtn = this.makeOptionButton(`tokenSettings.aura${i}.square`, !currSquare,
 	        this.makeBoolText(currSquare), 'click to toggle', currSquare ? '#65c4bd' : '#f84545',
 	        undefined, auraButtonWidth);
 
-	      optionRows += this.makeThreColOptionTable({
-	        tableTitle: `Aura ${i}`,
-	        colTitles: ['Range', 'Color', 'Square'],
-	        buttons: [radBtn, colorBtn, squareBtn],
-	      });
+	      retVal += utils
+	        .buildHTML('tr', [
+	          {
+	            tag: 'td',
+	            innerHtml: [
+	              {
+	                tag: 'table',
+	                innerHtml: [
+	                  {
+	                    tag: 'tr',
+	                    innerHtml: [{ tag: 'th', innerHtml: `Aura${i}`, attrs: { colspan: 3 } }],
+	                  },
+	                  {
+	                    tag: 'tr',
+	                    innerHtml: [
+	                      {
+	                        tag: 'td',
+	                        innerHtml: 'Range',
+	                      },
+	                      {
+	                        tag: 'td',
+	                        innerHtml: 'Color',
+	                      },
+	                      {
+	                        tag: 'td',
+	                        innerHtml: 'Square',
+	                      },
+	                    ],
+	                  },
+	                  {
+	                    tag: 'tr',
+	                    innerHtml: [
+	                      {
+	                        tag: 'td',
+	                        innerHtml: radBtn,
+	                      },
+	                      {
+	                        tag: 'td',
+	                        innerHtml: colorBtn,
+	                      },
+	                      {
+	                        tag: 'td',
+	                        innerHtml: squareBtn,
+	                      },
+	                    ],
+	                  },
+	                ],
+	                attrs: { style: 'width: 100%; text-align: center;' },
+	              },
+	            ], attrs: { colspan: '2' },
+	          },
+	        ], { style: 'border: 1px solid gray;' });
 	    }
 
-	    for (let i = 1; i <= 2; i++) {
-	      optionRows += this.makeToggleSetting(config, `${ts}.showAura${i}ToPlayers`, `Aura ${i} Show Players`,
-	        null, 'auraMenu');
-	    }
+	    // Vision\Light options
+	    retVal += this.makeInputSetting(config, `${ts}.light.radius`, 'Light Radius', 'Light Radius (empty to unset)');
+	    retVal += this.makeInputSetting(config, `${ts}.light.dimRadius`, 'Dim Radius', 'Light Dim Radius (empty to unset)');
+	    retVal += this.makeToggleSetting(config, `${ts}.light.otherPlayers`, 'Show other players');
+	    retVal += this.makeToggleSetting(config, `${ts}.light.hasSight`, 'Has Sight');
+	    retVal += this.makeInputSetting(config, `${ts}.light.angle`, 'Light Angle', 'Light Amgle');
+	    retVal += this.makeInputSetting(config, `${ts}.light.losAngle`, 'LOS Angle', 'LOS Angle');
+	    retVal += this.makeInputSetting(config, `${ts}.light.multiplier`, 'Light Muliplier', 'Light Muliplier');
 
-	    const th = utils.buildHTML('th', 'Token Aura Options', { colspan: '2' });
-	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
-	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+	    retVal += `</table>${this.backToMainMenuButton()}`;
 
-	    return table + this.backToTokenOptions();
+	    return retVal;
 	  }
 
 	  getConfigOptionGroupNewCharSettings(config, optionsSpec) {
 	    const ncs = 'newCharSettings';
-	    let optionRows = '';
 
-	    const spec = optionsSpec.newCharSettings;
-
-	    const currSheetOut = _.invert(spec.sheetOutput())[utils.getObjectFromPath(config, `${ncs}.sheetOutput`)];
-	    const currDSaveOut = _.invert(spec.deathSaveOutput())[utils.getObjectFromPath(config, `${ncs}.deathSaveOutput`)];
-	    const currInitOut = _.invert(spec.initiativeOutput())[utils.getObjectFromPath(config, `${ncs}.initiativeOutput`)];
-
-	    const sheetBtn = this.makeOptionButton(`${ncs}.sheetOutput`,
-	      this.getQueryCommand(config, `${ncs}.sheetOutput`, 'Sheet Output',
-	        optionsSpec.newCharSettings.sheetOutput()), this.makeText(currSheetOut),
-	      'click to change', '#02baf2', null, 60);
-	    const dSaveBtn = this.makeOptionButton(`${ncs}.deathSaveOutput`,
-	      this.getQueryCommand(config, `${ncs}.deathSaveOutput`, 'Deat Save Output',
-	        optionsSpec.newCharSettings.deathSaveOutput()), this.makeText(currDSaveOut),
-	      'click to change', '#02baf2', null, 60);
-	    const initBtn = this.makeOptionButton(`${ncs}.initiativeOutput`,
-	      this.getQueryCommand(config, `${ncs}.initiativeOutput`, 'Initiative Output',
-	        optionsSpec.newCharSettings.initiativeOutput()), this.makeText(currInitOut),
-	      'click to change', '#02baf2', null, 60);
-
-	    optionRows += this.makeThreColOptionTable({
-	      tableTitle: 'Output',
-	      colTitles: ['Sheet', 'Death Save', 'Initiative'],
-	      buttons: [sheetBtn, dSaveBtn, initBtn],
-	    });
-
-	    optionRows += this.makeToggleSetting(config, `${ncs}.showNameOnRollTemplate`, 'Show Name on Roll Template',
-	      optionsSpec.newCharSettings.showNameOnRollTemplate()) +
+	    const optionRows = this.makeQuerySetting(config, `${ncs}.sheetOutput`, 'Sheet Output',
+	        optionsSpec.newCharSettings.sheetOutput()) +
+	      this.makeQuerySetting(config, `${ncs}.deathSaveOutput`,
+	        'Death Save Output', optionsSpec.newCharSettings.deathSaveOutput()) +
+	      this.makeQuerySetting(config, `${ncs}.initiativeOutput`, 'Initiative Output',
+	        optionsSpec.newCharSettings.initiativeOutput()) +
+	      this.makeToggleSetting(config, `${ncs}.showNameOnRollTemplate`, 'Show Name on Roll Template',
+	        optionsSpec.newCharSettings.showNameOnRollTemplate()) +
 	      this.makeQuerySetting(config, `${ncs}.rollOptions`, 'Roll Options',
 	        optionsSpec.newCharSettings.rollOptions()) +
 	      this.makeToggleSetting(config, `${ncs}.autoRevertAdvantage`, 'Revert Advantage') +
@@ -4533,7 +4497,7 @@ var ShapedScripts =
 	        optionsSpec.newCharSettings.autoAmmo()) +
 	      this.makeQuerySetting(config, `${ncs}.tab`, 'Default tab',
 	        optionsSpec.newCharSettings.tab()) +
-	      this.makeOptionRow('Houserule Settings', 'hrMenu', '', 'view --&gt;', '', '#02baf2');
+	      this.makeOptionRow('Houserule Settings', 'hrMenu', '', 'view', '', '#02baf2');
 
 	    const th = utils.buildHTML('th', 'New Character Sheets', { colspan: '2' });
 	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
@@ -4545,16 +4509,15 @@ var ShapedScripts =
 	  getConfigOptionsGroupNewCharHouserules(config, optionsSpec) {
 	    const hr = 'newCharSettings.houserules';
 
-	    let optionRows = this.makeToggleSetting(config, `${hr}.savingThrowsHalfProf`, 'Half Proficiency Saves',
-	      null, 'hrMenu');
-	    optionRows += this.makeQuerySetting(config, `${hr}.mediumArmorMaxDex`, 'Medium Armor Max Dex',
-	      optionsSpec.newCharSettings.houserules.mediumArmorMaxDex(), 'hrMenu');
+	    const optionRows = this.makeToggleSetting(config, `${hr}.savingThrowsHalfProf`, 'Half Proficiency Saves') +
+	      this.makeQuerySetting(config, `${hr}.mediumArmorMaxDex`, 'Medium Armor Max Dex',
+	        optionsSpec.newCharSettings.houserules.mediumArmorMaxDex());
 
 	    const th = utils.buildHTML('th', 'Houserule Settings', { colspan: '2' });
 	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
 	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
 
-	    return table + this.backToNewCharOptions();
+	    return table + this.backToMainMenuButton();
 	  }
 
 	  getConfigOptionGroupVariants(config) {
@@ -4583,24 +4546,8 @@ var ShapedScripts =
 	  }
 
 	  backToMainMenuButton() {
-	    return utils.buildHTML('a', '&lt;-- Main Menu', {
+	    return utils.buildHTML('a', 'back to main menu', {
 	      href: '!shaped-config',
-	      style: 'text-align: center; margin: 5px 0 0 0; padding: 2px 2px ; border-radius: 10px; white-space: nowrap; ' +
-	      'overflow: hidden; text-overflow: ellipsis; background-color: #02baf2; border-color: #c0c0c0;',
-	    });
-	  }
-
-	  backToTokenOptions() {
-	    return utils.buildHTML('a', '&lt;-- Token Options', {
-	      href: '!shaped-config --tsMenu',
-	      style: 'text-align: center; margin: 5px 0 0 0; padding: 2px 2px ; border-radius: 10px; white-space: nowrap; ' +
-	      'overflow: hidden; text-overflow: ellipsis; background-color: #02baf2; border-color: #c0c0c0;',
-	    });
-	  }
-
-	  backToNewCharOptions() {
-	    return utils.buildHTML('a', '&lt;-- New Character Options', {
-	      href: '!shaped-config --ncMenu',
 	      style: 'text-align: center; margin: 5px 0 0 0; padding: 2px 2px ; border-radius: 10px; white-space: nowrap; ' +
 	      'overflow: hidden; text-overflow: ellipsis; background-color: #02baf2; border-color: #c0c0c0;',
 	    });
@@ -4614,7 +4561,7 @@ var ShapedScripts =
 	    }
 
 	    return this.makeOptionRow(title, path, `?{${prompt}|${currentVal}}`, emptyHint, 'click to edit', emptyHint ===
-	      '[not set]' ? '#f84545' : '#02baf2');
+	    '[not set]' ? '#f84545' : '#02baf2');
 	  }
 
 	  // noinspection JSUnusedGlobalSymbols
@@ -4632,24 +4579,17 @@ var ShapedScripts =
 	      utils.getContrastYIQ(buttonColor));
 	  }
 
-	  makeToggleSetting(config, path, title, optionsSpec, menuCommand) {
+	  makeToggleSetting(config, path, title, optionsSpec) {
 	    let currentVal = utils.getObjectFromPath(config, path);
 	    if (optionsSpec) {
 	      currentVal = _.invert(optionsSpec)[currentVal] === 'true';
 	    }
 
-	    return this.makeOptionRow(title, path, `${!currentVal}${!_.isUndefined(menuCommand) ? ` --${menuCommand}` : ''}`,
+	    return this.makeOptionRow(title, path, !currentVal,
 	      this.makeBoolText(currentVal), 'click to toggle', currentVal ? '#65c4bd' : '#f84545');
 	  }
 
-	  makeQuerySetting(config, path, title, optionsSpec, menuCommand) {
-	    const currentVal = _.invert(optionsSpec)[utils.getObjectFromPath(config, path)];
-	    const cmd = this.getQueryCommand(config, path, title, optionsSpec);
-	    return this.makeOptionRow(title, path, `${cmd}${!_.isUndefined(menuCommand) ? ` --${menuCommand}` : ''}`,
-	      this.makeText(currentVal), 'click to change', '#02baf2');
-	  }
-
-	  getQueryCommand(config, path, title, optionsSpec) {
+	  makeQuerySetting(config, path, title, optionsSpec) {
 	    let currentVal = _.invert(optionsSpec)[utils.getObjectFromPath(config, path)];
 	    const optionList = _.keys(optionsSpec);
 
@@ -4663,7 +4603,8 @@ var ShapedScripts =
 	    optionList.splice(optionList.indexOf(currentVal), 1);
 	    optionList.unshift(currentVal);
 
-	    return `?{${title}|${optionList.join('|')}}`;
+	    return this.makeOptionRow(title, path, `?{${title}|${optionList.join('|')}}`, this.makeText(currentVal),
+	      'click to change', '#02baf2');
 	  }
 
 	  makeOptionRow(optionTitle, path, command, linkText, tooltip, buttonColor, buttonTextColor) {
@@ -4679,7 +4620,7 @@ var ShapedScripts =
 	      width = 80;
 	    }
 
-	    let css = `text-align: center; width: ${width}px; margin: 2px 0 -3px 0; ` +
+	    let css = `text-align: center; width: ${width}px; margin: 5px 0 0 0; ` +
 	      'padding: 2px 2px ; border-radius: 10px; border-color: #c0c0c0;' +
 	      `white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background-color: ${buttonColor};`;
 	    if (buttonTextColor) {
@@ -4700,62 +4641,6 @@ var ShapedScripts =
 	    return value === true ?
 	      utils.buildHTML('span', 'on', { style: 'padding: 0 2px;' }) :
 	      utils.buildHTML('span', 'off', { style: 'padding: 0 2px;' });
-	  }
-
-	  makeThreColOptionTable(options) {
-	    return utils
-	      .buildHTML('tr', [
-	        {
-	          tag: 'td',
-	          innerHtml: [
-	            {
-	              tag: 'table',
-	              innerHtml: [
-	                {
-	                  tag: 'tr',
-	                  innerHtml: [{ tag: 'th', innerHtml: options.tableTitle, attrs: { colspan: 3 } }],
-	                },
-	                {
-	                  tag: 'tr',
-	                  innerHtml: [
-	                    {
-	                      tag: 'td',
-	                      innerHtml: options.colTitles[0],
-	                    },
-	                    {
-	                      tag: 'td',
-	                      innerHtml: options.colTitles[1],
-	                    },
-	                    {
-	                      tag: 'td',
-	                      innerHtml: options.colTitles[2],
-	                    },
-	                  ],
-	                  attrs: { style: 'line-height: 1;' },
-	                },
-	                {
-	                  tag: 'tr',
-	                  innerHtml: [
-	                    {
-	                      tag: 'td',
-	                      innerHtml: options.buttons[0],
-	                    },
-	                    {
-	                      tag: 'td',
-	                      innerHtml: options.buttons[1],
-	                    },
-	                    {
-	                      tag: 'td',
-	                      innerHtml: options.buttons[2],
-	                    },
-	                  ],
-	                },
-	              ],
-	              attrs: { style: 'width: 100%; text-align: center;' },
-	            },
-	          ], attrs: { colspan: '2' },
-	        },
-	      ], { style: 'border: 1px solid gray;' });
 	  }
 
 	  static validStatusMarkers() {

@@ -1,107 +1,3 @@
-<a name="2.1.0"></a>
-# [2.1.0](https://github.com/symposion/roll20-shaped-scripts/compare/2.0.0...2.1.0) (2016-05-02)
-
-
-### Bug Fixes
-
-* **config:** Make config UI fit on small displays([dfbbdfc](https://github.com/symposion/roll20-shaped-scripts/commit/dfbbdfc))
-
-
-### Features
-
-* **AT:** Support passing character ID([d4f1d11](https://github.com/symposion/roll20-shaped-scripts/commit/d4f1d11))
-
-
-
-<a name="2.0.0"></a>
-# [2.0.0](https://github.com/symposion/roll20-shaped-scripts/compare/1.5.1...2.0.0) (2016-05-01)
-
-
-### Bug Fixes
-
-* **config:** Fix up bad values in option lists([12b82f6](https://github.com/symposion/roll20-shaped-scripts/commit/12b82f6))
-* **hpRolling:** Fix hp rolling after sheet macro name changes([722059c](https://github.com/symposion/roll20-shaped-scripts/commit/722059c))
-
-
-### Features
-
-* **abilities:** Support small text ability checks macros([44adbc4](https://github.com/symposion/roll20-shaped-scripts/commit/44adbc4)), closes [#67](https://github.com/symposion/roll20-shaped-scripts/issues/67)
-* **config:** Add option for default char sheet page([2aac251](https://github.com/symposion/roll20-shaped-scripts/commit/2aac251)), closes [#105](https://github.com/symposion/roll20-shaped-scripts/issues/105)
-* **tokens:** Auto-configure vision based on senses([633a708](https://github.com/symposion/roll20-shaped-scripts/commit/633a708)), closes [#15](https://github.com/symposion/roll20-shaped-scripts/issues/15)
-
-
-### BREAKING CHANGES
-
-* abilities: S: !shaped-abilities option names have changed to be camelCase to match
-all the other options in the script. Sorry for any inconvenience but they were getting unreadable
-and there's no reason for them to be different.
-
-
-
-<a name="1.5.1"></a>
-## [1.5.1](https://github.com/symposion/roll20-shaped-scripts/compare/1.5.0...1.5.1) (2016-05-01)
-
-
-### Bug Fixes
-
-* **import:** Fix bug with import commands introduced in 1.5.0([71e1f1a](https://github.com/symposion/roll20-shaped-scripts/commit/71e1f1a))
-
-
-
-<a name="1.5.0"></a>
-# [1.5.0](https://github.com/symposion/roll20-shaped-scripts/compare/1.4.3...1.5.0) (2016-04-30)
-
-
-### Bug Fixes
-
-* **abilities:** Alter macro names to fix naming collisions([acee188](https://github.com/symposion/roll20-shaped-scripts/commit/acee188)), closes [#4](https://github.com/symposion/roll20-shaped-scripts/issues/4)
-
-
-### Features
-
-* **rests:** Support passing character ID option([3dae840](https://github.com/symposion/roll20-shaped-scripts/commit/3dae840))
-* **spell-import:** Allow spell import option to import spells according to criteria([9a730eb](https://github.com/symposion/roll20-shaped-scripts/commit/9a730eb)), closes [#9](https://github.com/symposion/roll20-shaped-scripts/issues/9)
-
-
-
-<a name="1.4.3"></a>
-## [1.4.3](https://github.com/symposion/roll20-shaped-scripts/compare/1.4.2...1.4.3) (2016-04-29)
-
-
-
-<a name="1.4.2"></a>
-## [1.4.2](https://github.com/symposion/roll20-shaped-scripts/compare/1.4.1...1.4.2) (2016-04-29)
-
-
-
-<a name="1.4.1"></a>
-## [1.4.1](https://github.com/symposion/roll20-shaped-scripts/compare/1.4.0...1.4.1) (2016-04-29)
-
-
-
-
-<a name="1.4.0"></a>
-# [1.4.0](https://github.com/symposion/roll20-shaped-scripts/compare/1.3.4...1.4.0) (2016-04-29)
-
-
-### Bug Fixes
-
-* **config:** Fix upgrade crash ([77bb76c](https://github.com/symposion/roll20-shaped-scripts/commit/77bb76c)), closes [#85](https://github.com/symposion/roll20-shaped-scripts/issues/85)
-* **rests:** Fix crash on undefined trait uses ([4b84523](https://github.com/symposion/roll20-shaped-scripts/commit/4b84523))
-* **rests:** Fix infinite loop of rest calls ([3879fb5](https://github.com/symposion/roll20-shaped-scripts/commit/3879fb5))
-* **rests:** Quickly fix long/short rest buttons to respond to every press ([6d1327b](https://github.com/symposion/roll20-shaped-scripts/commit/6d1327b))
-* **Rests:** Make recharge types more forgiving ([2f75d99](https://github.com/symposion/roll20-shaped-scripts/commit/2f75d99))
-* **spell-import:** Fix duplicate spell description text on import ([95a8fbc](https://github.com/symposion/roll20-shaped-scripts/commit/95a8fbc)), closes [#84](https://github.com/symposion/roll20-shaped-scripts/issues/84)
-
-### Features
-
-* Add short/long rest command support ([30768fd](https://github.com/symposion/roll20-shaped-scripts/commit/30768fd))
-* **rests:** Add new long rest house rule ([4f9ebcc](https://github.com/symposion/roll20-shaped-scripts/commit/4f9ebcc))
-* **Rests:** Support sheet rest buttons ([57075db](https://github.com/symposion/roll20-shaped-scripts/commit/57075db))
-* **traits:** Add auto consume traits ([68793ba](https://github.com/symposion/roll20-shaped-scripts/commit/68793ba))
-
-
-
 <a name="1.3.4"></a>
 ## [1.3.4](https://github.com/symposion/roll20-shaped-scripts/compare/1.3.3...1.3.4) (2016-04-23)
 
@@ -172,13 +68,13 @@ and there's no reason for them to be different.
 
 
 <a name="1.1.2"></a>
-## [1.1.2](https://github.com/symposion/roll20-shaped-scripts/compare/1.1.1...1.1.2) (2016-04-19)
+## [1.1.2](https://github.com/symposion/roll20-shaped-scripts/compare/1.1.1...v1.1.2) (2016-04-19)
 
 
 
 
 <a name="1.1.1"></a>
-## [1.1.1](https://github.com/symposion/roll20-shaped-scripts/compare/1.1.0...1.1.1) (2016-04-19)
+## [1.1.1](https://github.com/symposion/roll20-shaped-scripts/compare/1.1.0...v1.1.1) (2016-04-19)
 
 
 ### Bug Fixes
@@ -227,15 +123,15 @@ and there's no reason for them to be different.
 
 
 <a name="1.0.0"></a>
-# [1.0.0](https://github.com/symposion/roll20-shaped-scripts/compare/58c2b63...1.0.0) (2016-04-16)
+# [1.0.0](/https://github.com/symposion/roll20-api-scripts//compare/v0.1.0...1.0.0) (2016-04-15)
 
 
 ### Bug Fixes
 
-* **build:** add push so that version numbering actually gets applies ([0e96b0b](https://github.com/symposion/roll20-shaped-scripts/commit/0e96b0b))
-* **build:** another go at fixing the build ([2441bc9](https://github.com/symposion/roll20-shaped-scripts/commit/2441bc9))
-* **build:** another go at fixing the build ([6dd25e3](https://github.com/symposion/roll20-shaped-scripts/commit/6dd25e3))
-* **build:** Attempt to get changelog working ([58c2b63](https://github.com/symposion/roll20-shaped-scripts/commit/58c2b63))
+* **build:** add push so that version numbering actually gets applies ([0e96b0b](https://github.com/symposion/roll20-api-scripts//commits/0e96b0b))
+* **build:** another go at fixing the build ([2441bc9](https://github.com/symposion/roll20-api-scripts//commits/2441bc9))
+* **build:** another go at fixing the build ([6dd25e3](https://github.com/symposion/roll20-api-scripts//commits/6dd25e3))
+* **build:** Attempt to get changelog working ([58c2b63](https://github.com/symposion/roll20-api-scripts//commits/58c2b63))
 
 
 ### BREAKING CHANGES

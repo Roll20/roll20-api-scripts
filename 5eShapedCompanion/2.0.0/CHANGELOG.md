@@ -1,18 +1,3 @@
-<a name="2.1.0"></a>
-# [2.1.0](https://github.com/symposion/roll20-shaped-scripts/compare/2.0.0...2.1.0) (2016-05-02)
-
-
-### Bug Fixes
-
-* **config:** Make config UI fit on small displays([dfbbdfc](https://github.com/symposion/roll20-shaped-scripts/commit/dfbbdfc))
-
-
-### Features
-
-* **AT:** Support passing character ID([d4f1d11](https://github.com/symposion/roll20-shaped-scripts/commit/d4f1d11))
-
-
-
 <a name="2.0.0"></a>
 # [2.0.0](https://github.com/symposion/roll20-shaped-scripts/compare/1.5.1...2.0.0) (2016-05-01)
 

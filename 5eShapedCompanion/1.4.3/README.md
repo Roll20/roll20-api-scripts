@@ -25,8 +25,6 @@ This is a script designed for use with the API on the [Roll20 Virtual Table Top]
 - [Full command list](#full-command-list)
   - [!shaped-import-statblock](#shaped-import-statblock)
   - [!shaped-import-monster](#shaped-import-monster)
-  - [!shaped-import-spell](#shaped-import-spell)
-  - [!shaped-import-spell-list](#shaped-import-spell-list)
   - [!shaped-at](#shaped-at)
   - [!shaped-abilities](#shaped-abilities)
   - [!shaped-config](#shaped-config)
@@ -168,7 +166,6 @@ Imports details from a text statblock into a Roll20 character. The statblock mus
 You must have at least one token selected. If you have more than one, it will attempt to import a statblock from each one in turn. When importing, each token will be set to represent the newly created character for it, and the script will also attempt to set the avatar for the character to be the token graphic<sup>[1](#avatar-note)</sup>.
 
 ## !shaped-import-monster
-* Alias !shaped-monster *
 Imports details of named monsters from a database of custom monsters loaded as a separate script. If run with no options, this command will display a chat window button that allows you to launch a select list of all available monsters to choose from. The imported character will be configured with the default settings that you specify in the [default character settings configuration](#new-characters) . In addition the tokens you use will be configured according to the [default token settings configuration](#token-defaults) ready to be set as the default token for the character.
 
 ### Options
@@ -184,30 +181,6 @@ You may no or 1 tokens selected when running this command:
 * If you have 1 token selected and you are importing more than one monster, the script will only attempt to use the token image as the avatar for your new character<sup>[1](#avatar-note)</sup>.
 
 <a name="avatar-note"/><sup>1</sup> Note that avatars will ony successfully be set for token images from your library, not marketplace or web content. This is due to security restrictions within the Roll20 platform. If you really want an image as a character avatar, please unpload it to your library and then create a token from it before doing your import.
-
-## !shaped-import-spell
-* Alias !shaped-spell *
-Imports details of named spells from a database of customer spells loaded as a separate script. All spells will be added to the currently selected character. If run with no options, this command will display a chat window button that allows you to launch a select list of all available spells to choose from.
-
-### Options
-* **--<spell name>** (e.g. **--Fireball**) specifies a spell to import. You may supply multiple spells as separate options, or you may supply multiple in one option separate by commas (**--Fireball, Lightning Bolt, Wish**)
-
-### Selection
-You must have exactly one token that represents a character selected when running this command.
-
-## !shaped-import-spell-list
-Imports a complete list of spells according to specified criteria into the currently selected character. This allows you to e.g. import all 1st level cleric spells. Please note that importing very large lists of spells into a character may result in character sheet lag, please exercise caution when using this command.
-
-### Options
-* **--level <level>** (e.g. **--level 1**) Restrict the list to the specified level
-* **--classes <classes>** (e.g. **--classes Cleric**) Restrict the list to the specified class or classes. If multiple, comma-separated classes are given, it will match any spell that has any of the supplied classes
-* **--school <school>** (e.g. **--school Transmutation**) Restrict the list to the specified school of magic
-* **--oaths <oaths>** (e.g. **--oaths Ancients) Restrict the list the specified paladin oath or oaths. If multiple, comma-separated oaths are given, it will match any of spell that falls under any of the supplied oaths. Valid values are Ancients, Vengeance and Devotion
-* **--domains <domains>** (e.g. **--domains War, Light**) Restrict the list to the specified cleric domain or domains. If multiple, comma-separated domains are given, it will match any spell that has any of the supplied domains
-* **--patrons <patrons>** (e.g. **--patrons Archfey**) Restrict the list to the specified warlock patron or patrons. If multiple, comma-separated patrons are given, it will match any spell that has any of the supplied patrons. Valid values are Archfey, Fiend and Great Old One
-
-### Selection
-You must have exactly one token that represents a character selected when running this command.
 
 ## !shaped-at
 Gives the selected character advantage or disadvantage, or  neither.
@@ -228,25 +201,23 @@ Creates token actions for your character as shortcuts to a variety of rolls and 
 ### Options
 * **--attacks** - create an ability for each attack present in the character sheet
 * **--traits** - create an ability for each trait present in the character sheet
-* **--traitsMacro** - create an ability to launch the chat window traits buttons
+* **--traits-macro** - create an ability to launch the chat window traits buttons
 * **--actions** - create an ability for each action present in the character sheet
-* **--actionsMacro** - create an ability to launch the chat window actions buttons
+* **--actions-macro** - create an ability to launch the chat window actions buttons
 * **--reactions** - create an ability for each reaction present in the character sheet
-* **--reactionsMacro** - create an ability to launch the chat window reactions buttons
-* **--legendaryActions** or **--legendaryA** - create an ability for each legendary action present in the character sheet
-* **--legendaryActionsMacro** - create an ability to launch chat window legendary actions buttons
-* **--lairActions** or **--lairA** - create an ability to launch chat window lair actions buttons
-* **--regionalEffects** or **--regionalE** - create an ability to launch chat window regional effects buttons
+* **--reactions-macro** - create an ability to launch the chat window reactions buttons
+* **--legendaryactions** or **--legendarya** - create an ability for each legendary action present in the character sheet
+* **--legendaryactions-macro** - create an ability to launch chat window legendary actions buttons
+* **--lairactions** or **--laira** - create an ability to launch chat window lair actions buttons
+* **--regionaleffects** or --regionale - create an ability to launch chat window regional effects buttons
 * **--initiative** - create an ability to roll initiative
-* **--saves** or **--savingThrows** - create an ability to launch the chat window save buttons
-* **--savesSmall** or **--savingThrowsSmall** - create an ability to launch the chat window save buttons with smaller text to use less space in the chat window
-* **--savesQuery** or **--savingThrowsQuery** - create an ability to launch the save drop-down query
-* **--abilityChecks** or **--abilChecks** - create an ability to launch the chat window ability check buttons
-* **--abilityChecksSmall** or **--abilChecksSmall** - create an ability to launch the chat window ability check buttons with smaller text to use less space in the chat window
-* **--abilityChecksQuery** or **--abilChecksQuery** - create an ability launch the ability check drop-down query
+* **--saves** or **--savingthrows** - create an ability to launch the chat window save buttons
+* **--savesquery** or **--savingthrowsquery** - create an ability to launch the save drop-down query
+* **--abilitychecks** or **--abilchecks** - create an ability to launch the chat window ability check buttons
+* **--abilitychecksquery** or **--abilchecksquery** - create an ability launch the ability check drop-down query
 * **--statblock** - create an ability to launch a chat window statblock display
-* **--advantageTracker** - create 3 abilities, one for each Advantage Tracker option (Advantage, Disadvantage, Normal)
-* **--advantageTrackerQuery** - create an ability to set an Advantage Tracker option from a drop-down query
+* **--advantagetracker** - create 3 abilities, one for each Advantage Tracker option (Advantage, Disadvantage, Normal)
+* **--advantagetracker-query** - create an ability to set an Advantage Tracker option from a drop-down query
 * **--DELETE** - delete all abilities on the token (including those not created by this script)
 
 In addition, you can pass the names of spells like **--Fireball** to create token actions for each spell. Obviously the character in question must actually have this spell in its spellbook for this to work.
