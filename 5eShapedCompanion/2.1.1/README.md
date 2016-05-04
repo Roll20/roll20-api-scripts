@@ -227,7 +227,6 @@ Creates token actions for your character as shortcuts to a variety of rolls and 
 
 ### Options
 * **--attacks** - create an ability for each attack present in the character sheet
-* **--attacksMacro** - create an ability to launch chat window attack buttons
 * **--traits** - create an ability for each trait present in the character sheet
 * **--traitsMacro** - create an ability to launch the chat window traits buttons
 * **--actions** - create an ability for each action present in the character sheet

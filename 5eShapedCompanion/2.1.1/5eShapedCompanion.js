@@ -59,9 +59,9 @@ var ShapedScripts =
 	const Reporter = __webpack_require__(9);
 	const reporter = new Reporter(roll20, 'Shaped Scripts');
 	const ShapedScripts = __webpack_require__(10);
-	const srdConverter = __webpack_require__(21);
-	const sanitise = __webpack_require__(22);
-	const mpp = __webpack_require__(23);
+	const srdConverter = __webpack_require__(18);
+	const sanitise = __webpack_require__(19);
+	const mpp = __webpack_require__(20);
 	const shaped = new ShapedScripts(logger, myState, roll20, parseModule.getParser(mmFormat, logger), el, reporter,
 	  srdConverter, sanitise, mpp);
 	const _ = __webpack_require__(2);
@@ -2145,16 +2145,15 @@ var ShapedScripts =
 	'use strict';
 	const _ = __webpack_require__(2);
 	const parseModule = __webpack_require__(3);
-	const makeCommandProc = __webpack_require__(11);
+	const cp = __webpack_require__(11);
 	const utils = __webpack_require__(7);
-	const AdvantageTracker = __webpack_require__(14);
-	const RestManager = __webpack_require__(15);
-	const TraitManager = __webpack_require__(16);
-	const ConfigUI = __webpack_require__(17);
+	const AdvantageTracker = __webpack_require__(13);
+	const RestManager = __webpack_require__(14);
+	const TraitManager = __webpack_require__(15);
+	const ConfigUI = __webpack_require__(16);
+	const Logger = __webpack_require__(5);
 	const UserError = __webpack_require__(12);
-	const Migrator = __webpack_require__(19);
-	const ShapedConfig = __webpack_require__(18);
-	const AbilityMaker = __webpack_require__(20);
+	const Migrator = __webpack_require__(17);
 
 	const configToAttributeLookup = {
 	  sheetOutput: 'output_option',
@@ -2173,6 +2172,213 @@ var ShapedScripts =
 	  mediumArmorMaxDex: 'medium_armor_max_dex',
 	};
 
+	function booleanValidator(value) {
+	  const converted = value === 'true' || (value === 'false' ? false : value);
+	  return {
+	    valid: typeof value === 'boolean' || value === 'true' || value === 'false',
+	    converted,
+	  };
+	}
+
+	function stringValidator(value) {
+	  return {
+	    valid: true,
+	    converted: value,
+	  };
+	}
+
+	function arrayValidator(value) {
+	  return {
+	    valid: true,
+	    converted: value.split(',').map(s => s.trim()),
+	  };
+	}
+
+	function getOptionList(options) {
+	  return function optionList(value) {
+	    if (value === undefined) {
+	      return options;
+	    }
+	    return {
+	      converted: options[value],
+	      valid: options[value] !== undefined,
+	    };
+	  };
+	}
+
+	function integerValidator(value) {
+	  const parsed = parseInt(value, 10);
+	  return {
+	    converted: parsed,
+	    valid: !isNaN(parsed),
+	  };
+	}
+
+	function colorValidator(value) {
+	  return {
+	    converted: value,
+	    valid: /(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(value),
+	  };
+	}
+
+	const sheetOutputValidator = getOptionList({
+	  public: '@{output_to_all}',
+	  whisper: '@{output_to_gm}',
+	});
+	const commandOutputValidator = getOptionList({
+	  public: 'public',
+	  whisper: 'whisper',
+	  silent: 'silent',
+	});
+	const statusMarkerValidator = getOptionList(ConfigUI.validStatusMarkers());
+	const barValidator = {
+	  attribute: stringValidator,
+	  max: booleanValidator,
+	  link: booleanValidator,
+	  showPlayers: booleanValidator,
+	};
+	const auraValidator = {
+	  radius: stringValidator,
+	  color: colorValidator,
+	  square: booleanValidator,
+	};
+	const lightValidator = {
+	  radius: stringValidator,
+	  dimRadius: stringValidator,
+	  otherPlayers: booleanValidator,
+	  hasSight: booleanValidator,
+	  angle: integerValidator,
+	  losAngle: integerValidator,
+	  multiplier: integerValidator,
+	};
+
+	function getCharacterValidator(roll20) {
+	  return function characterValidator(value) {
+	    const char = roll20.getObj('character', value);
+	    return {
+	      converted: char,
+	      valid: !!char,
+	    };
+	  };
+	}
+
+	function regExpValidator(value) {
+	  try {
+	    new RegExp(value, 'i').test('');
+	    return {
+	      converted: value,
+	      valid: true,
+	    };
+	  }
+	  catch (e) {
+	    return {
+	      converted: null,
+	      valid: false,
+	    };
+	  }
+	}
+
+
+	const configOptionsSpec = {
+	  logLevel(value) {
+	    const converted = value.toUpperCase();
+	    return { valid: _.has(Logger.levels, converted), converted };
+	  },
+	  tokenSettings: {
+	    number: booleanValidator,
+	    bar1: barValidator,
+	    bar2: barValidator,
+	    bar3: barValidator,
+	    aura1: auraValidator,
+	    aura2: auraValidator,
+	    light: lightValidator,
+	    showName: booleanValidator,
+	    showNameToPlayers: booleanValidator,
+	    showAura1ToPlayers: booleanValidator,
+	    showAura2ToPlayers: booleanValidator,
+	  },
+	  newCharSettings: {
+	    sheetOutput: sheetOutputValidator,
+	    deathSaveOutput: sheetOutputValidator,
+	    initiativeOutput: sheetOutputValidator,
+	    showNameOnRollTemplate: getOptionList({
+	      true: '@{show_character_name_yes}',
+	      false: '@{show_character_name_no}',
+	    }),
+	    rollOptions: getOptionList({
+	      normal: '@{roll_1}',
+	      advantage: '@{roll_advantage}',
+	      disadvantage: '@{roll_disadvantage}',
+	      two: '@{roll_2}',
+	    }),
+	    initiativeRoll: getOptionList({
+	      normal: '@{normal_initiative}',
+	      advantage: '@{advantage_on_initiative}',
+	      disadvantage: '@{disadvantage_on_initiative}',
+	    }),
+	    initiativeToTracker: getOptionList({
+	      true: '@{initiative_to_tracker_yes}',
+	      false: '@{initiative_to_tracker_no}',
+	    }),
+	    breakInitiativeTies: getOptionList({
+	      true: '@{initiative_tie_breaker_var}',
+	      false: '',
+	    }),
+	    showTargetAC: getOptionList({
+	      true: '@{attacks_vs_target_ac_yes}',
+	      false: '@{attacks_vs_target_ac_no}',
+	    }),
+	    showTargetName: getOptionList({
+	      true: '@{attacks_vs_target_name_yes}',
+	      false: '@{attacks_vs_target_name_no}',
+	    }),
+	    autoAmmo: getOptionList({
+	      true: '@{ammo_auto_use_var}',
+	      false: '',
+	    }),
+	    autoRevertAdvantage: booleanValidator,
+	    houserules: {
+	      savingThrowsHalfProf: booleanValidator,
+	      mediumArmorMaxDex: getOptionList([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+	    },
+	    tab: getOptionList({
+	      core: 'core',
+	      spells: 'spells',
+	      equipment: 'equipment',
+	      character: 'character',
+	      settings: 'settings',
+	      all: 'all',
+	    }),
+	  },
+	  advTrackerSettings: {
+	    showMarkers: booleanValidator,
+	    ignoreNpcs: booleanValidator,
+	    advantageMarker: statusMarkerValidator,
+	    disadvantageMarker: statusMarkerValidator,
+	    output: commandOutputValidator,
+	  },
+	  sheetEnhancements: {
+	    rollHPOnDrop: booleanValidator,
+	    autoHD: booleanValidator,
+	    autoSpellSlots: booleanValidator,
+	    autoTraits: booleanValidator,
+	  },
+	  genderPronouns: [
+	    {
+	      matchPattern: regExpValidator,
+	      nominative: stringValidator,
+	      accusative: stringValidator,
+	      possessive: stringValidator,
+	      reflexive: stringValidator,
+	    },
+	  ],
+	  defaultGenderIndex: integerValidator,
+	  variants: {
+	    rests: {
+	      longNoHpFullHd: booleanValidator,
+	    },
+	  },
+	};
 
 	/**
 	 * @typedef {Object} ChatMessage
@@ -2200,13 +2406,6 @@ var ShapedScripts =
 	  const chatWatchers = [];
 	  const at = new AdvantageTracker(logger, myState, roll20);
 	  const rester = new RestManager(logger, myState, roll20);
-	  const commandProc = makeCommandProc('shaped', roll20);
-	  const modules = [
-	    new AbilityMaker(),
-	    new ConfigUI(),
-	  ];
-
-	  modules.forEach(module => module.configure(roll20, reporter, logger, myState, commandProc));
 
 	  /**
 	   *
@@ -2219,13 +2418,59 @@ var ShapedScripts =
 	      return;
 	    }
 
-	    this.oldStyleModulesConfigure(commandProc).processCommand(msg);
+	    this.getCommandProcessor().processCommand(msg);
 	  };
 
 
 	  /////////////////////////////////////////
 	  // Command handlers
 	  /////////////////////////////////////////
+	  this.configure = function configure(options) {
+	    // drop "menu" options
+	    const menuCmds = ['atMenu', 'tsMenu', 'ncMenu', 'seMenu', 'hrMenu', 'barMenu', 'varsMenu', 'auraMenu'];
+	    utils.deepExtend(myState.config, _.omit(options, menuCmds));
+
+	    const cui = new ConfigUI();
+
+	    logger.debug('options: $$$', options);
+	    logger.debug('state.config: $$$', myState.config);
+
+	    let menu;
+	    if (options.atMenu || options.advTrackerSettings) {
+	      menu = cui.getConfigOptionGroupAdvTracker(myState.config, configOptionsSpec);
+	    }
+	    else if (options.tsMenu || options.barMenu || options.auraMenu || options.tokenSettings) {
+	      if (options.barMenu) {
+	        menu = cui.getConfigOptionGroupTokenBars(myState.config, configOptionsSpec);
+	      }
+	      else if (options.auraMenu) {
+	        menu = cui.getConfigOptionGroupTokenAuras(myState.config, configOptionsSpec);
+	      }
+	      else {
+	        menu = cui.getConfigOptionGroupTokens(myState.config, configOptionsSpec);
+	      }
+	    }
+	    else if (options.ncMenu || options.hrMenu || options.newCharSettings) {
+	      if (options.hrMenu) {
+	        menu = cui.getConfigOptionsGroupNewCharHouserules(myState.config, configOptionsSpec);
+	      }
+	      else {
+	        menu = cui.getConfigOptionGroupNewCharSettings(myState.config, configOptionsSpec);
+	      }
+	    }
+	    else if (options.seMenu || options.sheetEnhancements) {
+	      menu = cui.getConfigOptionGroupSheetEnhancements(myState.config, configOptionsSpec);
+	    }
+	    else if (options.varsMenu || options.variants) {
+	      menu = cui.getConfigOptionGroupVariants(myState.config, configOptionsSpec);
+	    }
+	    else {
+	      menu = cui.getConfigOptionsMenu();
+	    }
+
+	    report('Configuration', menu);
+	  };
+
 	  this.applyTokenDefaults = function applyTokenDefaults(options) {
 	    _.each(options.selected.graphic, token => {
 	      const represents = token.get('represents');
@@ -2350,9 +2595,18 @@ var ShapedScripts =
 	    }
 	  };
 
+	  const spellSearchCriteria = {
+	    classes: arrayValidator,
+	    domains: arrayValidator,
+	    oaths: arrayValidator,
+	    patrons: arrayValidator,
+	    school: stringValidator,
+	    level: integerValidator,
+	  };
+
 	  this.importSpellListFromJson = function importSpellListFromJson(options) {
-	    const spells = entityLookup.searchEntities('spells', _.pick(options, _.keys(ShapedConfig.spellSearchOptions)));
-	    const newOpts = _.omit(options, _.keys(ShapedConfig.spellSearchOptions));
+	    const spells = entityLookup.searchEntities('spells', _.pick(options, _.keys(spellSearchCriteria)));
+	    const newOpts = _.omit(options, _.keys(spellSearchCriteria));
 	    newOpts.spells = spells;
 	    this.importSpellsFromJson(newOpts);
 	  };
@@ -3054,18 +3308,199 @@ var ShapedScripts =
 	    return msg.content;
 	  };
 
-	  // This method can go once all functions are moved into modules which handle their own configuration
-	  this.commandProcConfigured = false;
-	  this.oldStyleModulesConfigure = function oldStyleModulesConfigure(cp) {
-	    if (this.commandProcConfigured) {
-	      return cp;
+	  this.addAbility = function addAbility(options) {
+	    if (_.isEmpty(options.abilities)) {
+	      reportError('No abilities specified. Take a look at the documentation for a list of ability options.');
+	      return;
 	    }
+	    const messages = _.map(options.selected.character, (character) => {
+	      const operationMessages = _.chain(options.abilities)
+	        .sortBy('sortKey')
+	        .map(maker => maker.run(character, options))
+	        .value();
 
-	    return cp
+
+	      if (_.isEmpty(operationMessages)) {
+	        return `<li>${character.get('name')}: Nothing to do</li>`;
+	      }
+
+	      let message;
+	      message = `<li>Configured the following abilities for character ${character.get('name')}:<ul><li>`;
+	      message += operationMessages.join('</li><li>');
+	      message += '</li></ul></li>';
+
+	      return message;
+	    });
+
+	    report('Ability Creation', `<ul>${messages.join('')}</ul>`);
+	  };
+
+	  function getAbilityMaker(character) {
+	    return function abilityMaker(abilitySpec) {
+	      const ability = roll20.getOrCreateObj('ability', { characterid: character.id, name: abilitySpec.name });
+	      ability.set({ action: abilitySpec.action, istokenaction: true }); // TODO configure this
+	      return abilitySpec.name;
+	    };
+	  }
+
+	  const abilityDeleter = {
+	    run(character) {
+	      const abilities = roll20.findObjs({ type: 'ability', characterid: character.id });
+	      const deleted = _.map(abilities, obj => {
+	        const name = obj.get('name');
+	        obj.remove();
+	        return name;
+	      });
+
+	      return `Deleted: ${_.isEmpty(deleted) ? 'None' : deleted.join(', ')}`;
+	    },
+	    sortKey: '',
+	  };
+
+	  function RepeatingAbilityMaker(repeatingSection, abilityName, label, canMark) {
+	    this.run = function run(character, options) {
+	      options[`cache${repeatingSection}`] = options[`cache${repeatingSection}`] ||
+	        roll20.getRepeatingSectionItemIdsByName(character.id, repeatingSection);
+
+	      const configured = _.chain(options[`cache${repeatingSection}`])
+	        .map((repeatingId, repeatingName) => {
+	          let repeatingAction = `%{${character.get('name')}|repeating_${repeatingSection}_${repeatingId}` +
+	            `_${abilityName}}`;
+	          if (canMark && options.mark) {
+	            repeatingAction += '\n!mark @{target|token_id}';
+	          }
+	          return { name: utils.toTitleCase(repeatingName), action: repeatingAction };
+	        })
+	        .map(getAbilityMaker(character))
+	        .value();
+
+	      const addedText = _.isEmpty(configured) ? 'Not present for character' : configured.join(', ');
+	      return `${label}: ${addedText}`;
+	    };
+	    this.sortKey = 'originalOrder';
+	  }
+
+	  function RollAbilityMaker(abilityName, newName) {
+	    this.run = function run(character) {
+	      return getAbilityMaker(character)({
+	        name: newName,
+	        action: `%{${character.get('name')}|${abilityName}}`,
+	      });
+	    };
+	    this.sortKey = 'originalOrder';
+	  }
+
+
+	  function CommandAbilityMaker(command, options, newName) {
+	    this.run = function run(character) {
+	      return getAbilityMaker(character)({
+	        name: newName,
+	        action: `!${command} ${utils.toOptionsString(options)}`,
+	      });
+	    };
+	    this.sortKey = 'originalOrder';
+	  }
+
+	  function MultiCommandAbilityMaker(commandSpecs) {
+	    this.run = function run(character) {
+	      const abilMaker = getAbilityMaker(character);
+	      return commandSpecs.map(cmdSpec =>
+	        abilMaker({
+	          name: cmdSpec.abilityName,
+	          action: `!${cmdSpec.command} ${utils.toOptionsString(cmdSpec.options)}`,
+	        })
+	      );
+	    };
+	    this.sortKey = 'originalOrder';
+	  }
+
+	  function RepeatingSectionMacroMaker(abilityName, repeatingSection, macroName) {
+	    this.run = function run(character) {
+	      if (!_.isEmpty(roll20.getRepeatingSectionAttrs(character.id, repeatingSection))) {
+	        return getAbilityMaker(character)({
+	          name: macroName,
+	          action: `%{${character.get('name')}|${abilityName}}`,
+	        });
+	      }
+	      return `${macroName}: Not present for character`;
+	    };
+	    this.sortKey = 'originalOrder';
+	  }
+
+	  const staticAbilityOptions = {
+	    DELETE: abilityDeleter,
+	    initiative: new RollAbilityMaker('shaped_initiative', 'Init'),
+	    abilityChecks: new RollAbilityMaker('shaped_ability_checks', 'Ability Checks'),
+	    abilityChecksSmall: new RollAbilityMaker('shaped_ability_checks_small', 'Ability Checks'),
+	    abilityChecksQuery: new RollAbilityMaker('shaped_ability_checks_query', 'Ability Checks'),
+	    abilChecks: new RollAbilityMaker('shaped_ability_checks', 'AbilChecks'),
+	    abilChecksSmall: new RollAbilityMaker('shaped_ability_checks_small', 'AbilChecks'),
+	    abilChecksQuery: new RollAbilityMaker('shaped_ability_checks_query', 'AbilChecks'),
+	    advantageTracker: new MultiCommandAbilityMaker([
+	      { command: 'shaped-at', options: ['advantage'], abilityName: 'Advantage' },
+	      { command: 'shaped-at', options: ['disadvantage'], abilityName: 'Disadvantage' },
+	      { command: 'shaped-at', options: ['normal'], abilityName: 'Normal' },
+	    ]),
+	    advantageTrackerQuery: new CommandAbilityMaker('shaped-at',
+	      ['?{Roll Option|Normal,normal|w/ Advantage,advantage|w/ Disadvantage,disadvantage}'], '(dis)Adv Query'),
+	    savingThrows: new RollAbilityMaker('shaped_saving_throw', 'Saving Throws'),
+	    savingThrowsSmall: new RollAbilityMaker('shaped_saving_throw_small', 'Saving Throws'),
+	    savingThrowsQuery: new RollAbilityMaker('shaped_saving_throw_query', 'Saving Throws'),
+	    saves: new RollAbilityMaker('shaped_saving_throw', 'Saves'),
+	    savesSmall: new RollAbilityMaker('shaped_saving_throw_small', 'Saves'),
+	    savesQuery: new RollAbilityMaker('shaped_saving_throw_query', 'Saves'),
+	    attacks: new RepeatingAbilityMaker('attack', 'attack', 'Attacks', true),
+	    statblock: new RollAbilityMaker('shaped_statblock', 'Statblock'),
+	    traits: new RepeatingAbilityMaker('trait', 'trait', 'Traits'),
+	    traitsMacro: new RepeatingSectionMacroMaker('shaped_traits', 'trait', 'Traits'),
+	    actions: new RepeatingAbilityMaker('action', 'action', 'Actions', true),
+	    actionsMacro: new RepeatingSectionMacroMaker('shaped_actions', 'action', 'Actions'),
+	    reactions: new RepeatingAbilityMaker('reaction', 'action', 'Reactions'),
+	    reactionsMacro: new RepeatingSectionMacroMaker('shaped_reactions', 'reaction', 'Reactions'),
+	    legendaryActions: new RepeatingAbilityMaker('legendaryaction', 'action', 'Legendary Actions'),
+	    legendaryActionsMacro: new RepeatingSectionMacroMaker('shaped_legendaryactions', 'legendaryaction', 'Legendary' +
+	      ' Actions'),
+	    legendaryA: new RepeatingAbilityMaker('legendaryaction', 'action', 'LegendaryA'),
+	    lairActions: new RepeatingSectionMacroMaker('shaped_lairactions', 'lairaction', 'Lair Actions'),
+	    lairA: new RepeatingSectionMacroMaker('shaped_lairactions', 'lairaction', 'LairA'),
+	    regionalEffects: new RepeatingSectionMacroMaker('shaped_regionaleffects', 'regionaleffect', 'Regional Effects'),
+	    regionalE: new RepeatingSectionMacroMaker('shaped_regionaleffects', 'regionaleffect', 'RegionalE'),
+	  };
+
+	  function abilityLookup(optionName, existingOptions) {
+	    let maker = staticAbilityOptions[optionName];
+
+	    // Makes little sense to add named spells to multiple characters at once
+	    if (!maker && existingOptions.selected.character.length === 1) {
+	      existingOptions.spellToRepeatingIdLookup = existingOptions.spellToRepeatingIdLookup ||
+	        roll20.getRepeatingSectionItemIdsByName(existingOptions.selected.character[0].id, 'spell');
+
+	      const repeatingId = existingOptions.spellToRepeatingIdLookup[optionName.toLowerCase()];
+	      if (repeatingId) {
+	        maker = new RollAbilityMaker(`repeating_spell_${repeatingId}_spell`, utils.toTitleCase(optionName));
+	      }
+	    }
+	    return maker;
+	  }
+
+
+	  this.getCommandProcessor = function getCommandProcessor() {
+	    return cp('shaped', roll20)
+	      // !shaped-config
+	      .addCommand('config', this.configure.bind(this))
+	      .options(configOptionsSpec)
+	      .option('atMenu', booleanValidator)
+	      .option('tsMenu', booleanValidator)
+	      .option('ncMenu', booleanValidator)
+	      .option('seMenu', booleanValidator)
+	      .option('hrMenu', booleanValidator)
+	      .option('barMenu', booleanValidator)
+	      .option('varsMenu', booleanValidator)
+	      .option('auraMenu', booleanValidator)
 	      // !shaped-import-statblock
 	      .addCommand('import-statblock', this.importStatblock.bind(this))
-	      .option('overwrite', ShapedConfig.booleanValidator)
-	      .option('replace', ShapedConfig.booleanValidator)
+	      .option('overwrite', booleanValidator)
+	      .option('replace', booleanValidator)
 	      .withSelection({
 	        graphic: {
 	          min: 1,
@@ -3074,10 +3509,10 @@ var ShapedScripts =
 	      })
 	      // !shaped-import-monster , !shaped-monster
 	      .addCommand(['import-monster', 'monster'], this.importMonstersFromJson.bind(this))
-	      .option('all', ShapedConfig.booleanValidator)
+	      .option('all', booleanValidator)
 	      .optionLookup('monsters', _.partial(entityLookup.findEntity.bind(entityLookup), 'monsters', _, false))
-	      .option('overwrite', ShapedConfig.booleanValidator)
-	      .option('replace', ShapedConfig.booleanValidator)
+	      .option('overwrite', booleanValidator)
+	      .option('replace', booleanValidator)
 	      .withSelection({
 	        graphic: {
 	          min: 0,
@@ -3095,7 +3530,7 @@ var ShapedScripts =
 	      })
 	      // !shaped-import-spell-list
 	      .addCommand('import-spell-list', this.importSpellListFromJson.bind(this))
-	      .options(ShapedConfig.spellSearchOptions)
+	      .options(spellSearchCriteria)
 	      .withSelection({
 	        character: {
 	          min: 1,
@@ -3104,18 +3539,28 @@ var ShapedScripts =
 	      })
 	      // !shaped-at
 	      .addCommand('at', this.handleAdvantageTracker.bind(this))
-	      .option('advantage', ShapedConfig.booleanValidator)
-	      .option('disadvantage', ShapedConfig.booleanValidator)
-	      .option('normal', ShapedConfig.booleanValidator)
-	      .option('revert', ShapedConfig.booleanValidator)
-	      .option('persist', ShapedConfig.booleanValidator)
-	      .option('id', ShapedConfig.getCharacterValidator(roll20), false)
+	      .option('advantage', booleanValidator)
+	      .option('disadvantage', booleanValidator)
+	      .option('normal', booleanValidator)
+	      .option('revert', booleanValidator)
+	      .option('persist', booleanValidator)
+	      .option('id', getCharacterValidator(roll20), false)
 	      .withSelection({
 	        character: {
 	          min: 0,
 	          max: Infinity,
 	        },
 	      })
+	      // !shaped-abilities
+	      .addCommand('abilities', this.addAbility.bind(this))
+	      .withSelection({
+	        character: {
+	          min: 1,
+	          max: Infinity,
+	        },
+	      })
+	      .optionLookup('abilities', abilityLookup)
+	      .option('mark', booleanValidator)
 	      // !shaped-token-defaults
 	      .addCommand('token-defaults', this.applyTokenDefaults.bind(this))
 	      .withSelection({
@@ -3126,24 +3571,25 @@ var ShapedScripts =
 	      })
 	      // !shaped-slots
 	      .addCommand('slots', this.handleSlots.bind(this))
-	      .option('character', ShapedConfig.getCharacterValidator(roll20), true)
-	      .option('use', ShapedConfig.integerValidator)
-	      .option('restore', ShapedConfig.integerValidator)
+	      .option('character', getCharacterValidator(roll20), true)
+	      .option('use', integerValidator)
+	      .option('restore', integerValidator)
 	      // !shaped-rest
 	      .addCommand('rest', this.handleRest.bind(this))
-	      .option('long', ShapedConfig.booleanValidator)
-	      .option('short', ShapedConfig.booleanValidator)
-	      .option('id', ShapedConfig.getCharacterValidator(roll20), false)
+	      .option('long', booleanValidator)
+	      .option('short', booleanValidator)
+	      .option('id', getCharacterValidator(roll20), false)
 	      .withSelection({
 	        character: {
 	          min: 0,
 	          max: Infinity,
 	        },
-	      });
+	      })
+	      .end();
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v2.2.0 <=-');
+	    logger.info('-=> ShapedScripts v2.1.1 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -3202,7 +3648,6 @@ var ShapedScripts =
 	const _ = __webpack_require__(2);
 	const utils = __webpack_require__(7);
 	const UserError = __webpack_require__(12);
-	const ShapedModule = __webpack_require__(13);
 
 
 	function getParser(optionString, validator) {
@@ -3345,17 +3790,7 @@ var ShapedScripts =
 	  }
 
 	  handle(args, selection, cmdString) {
-	    const caches = {};
-	    const startOptions = {
-	      errors: [],
-	    };
-	    Object.defineProperty(startOptions, 'getCache', {
-	      enumerable: false,
-	      value: function getCache(key) {
-	        return (caches[key] = caches[key] || {});
-	      },
-	    });
-
+	    const startOptions = { errors: [] };
 	    startOptions.selected = this.selectionSpec && processSelection(selection || [], this.selectionSpec, this.roll20);
 	    const finalOptions = _.chain(args)
 	      .reduce((options, arg) => {
@@ -3365,12 +3800,7 @@ var ShapedScripts =
 
 	        return options;
 	      }, startOptions)
-	      .each((propVal, propName, obj) => {
-	        // NB Cannot use omit or it will remove the getCache property
-	        if (_.isUndefined(propVal)) {
-	          delete obj[propName];
-	        }
-	      })
+	      .omit(_.isUndefined)
 	      .value();
 
 	    if (finalOptions.errors.length > 0) {
@@ -3398,16 +3828,12 @@ var ShapedScripts =
 	  }
 
 
-	  addCommand() {
-	    return this.root.addCommand.apply(this.root, arguments);
+	  addCommand(cmdString, handler) {
+	    return this.root.addCommand(cmdString, handler);
 	  }
 
-	  addModule() {
-	    return this.root.addModule.apply(this.root, arguments);
-	  }
-
-	  processCommand() {
-	    return this.root.processCommand.apply(this.root, arguments);
+	  end() {
+	    return this.root;
 	  }
 
 	  get logWrap() {
@@ -3460,13 +3886,6 @@ var ShapedScripts =
 	      return command;
 	    },
 
-	    addModule(module) {
-	      if (!module instanceof ShapedModule) {
-	        throw new Error('Can only pass ShapedModules to addModule');
-	      }
-	      return module.configure(this);
-	    },
-
 	    processCommand(msg) {
 	      const prefix = `!${rootCommand}-`;
 	      if (msg.type === 'api' && msg.content.indexOf(prefix) === 0) {
@@ -3505,35 +3924,6 @@ var ShapedScripts =
 
 /***/ },
 /* 13 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	module.exports = class ShapedModule {
-	  configure(roll20, reporter, logger, myState, commandProcessor) {
-	    this.roll20 = roll20;
-	    this.reporter = reporter;
-	    this.logger = logger;
-	    this.myState = myState;
-	    this.addCommands(commandProcessor);
-	  }
-
-	  addCommands(/* commandProcessor */) {
-	    throw new Error('Subclasses must implement addCommands');
-	  }
-
-	  report(heading, text) {
-	    this.reporter.report(heading, text);
-	  }
-
-	  reportError(text) {
-	    this.reporter.reportError(text);
-	  }
-	};
-
-
-/***/ },
-/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3584,25 +3974,9 @@ var ShapedScripts =
 	    char.push(msg.get('_characterid'));
 	    const br = this.buildResources(_.uniq(_.union(char)));
 
-	    if (!_.isEmpty(br)) {
-	      this.setStatusMarkers(br[0].tokens,
-	        msg.get('current') === '@{roll_advantage}',
-	        msg.get('current') === '@{roll_disadvantage}');
-
-	      switch (msg.get('current')) {
-	        case '@{roll_1}':
-	          this.sendChatNotification(br[0], 'normal');
-	          break;
-	        case '@{roll_advantage}':
-	          this.sendChatNotification(br[0], 'advantage');
-	          break;
-	        case '@{roll_disadvantage}':
-	          this.sendChatNotification(br[0], 'disadvantage');
-	          break;
-	        default:
-	          break;
-	      }
-	    }
+	    this.setStatusMarkers(br[0].tokens,
+	      msg.get('current') === '@{roll_advantage}',
+	      msg.get('current') === '@{roll_disadvantage}');
 	  }
 
 	  handleTokenChange(token) {
@@ -3623,7 +3997,7 @@ var ShapedScripts =
 	  }
 
 	  buildResources(characterIds) {
-	    let res = _.chain(characterIds)
+	    return _.chain(characterIds)
 	      .map((charId) => this.roll20.getObj('character', charId))
 	      .reject(_.isUndefined)
 	      .map((char) => ({
@@ -3631,17 +4005,6 @@ var ShapedScripts =
 	        tokens: this.roll20.filterObjs((obj) => obj.get('_type') === 'graphic' && char.id === obj.get('represents')),
 	      }))
 	      .value();
-
-	    if (this.shouldIgnoreNpcs()) {
-	      res = _.chain(res)
-	        .filter((c) => {
-	          const isNpc = this.roll20.getAttrByName(c.character.id, 'is_npc');
-	          return isNpc && parseInt(isNpc, 10) === 0;
-	        })
-	        .value();
-	    }
-
-	    return res;
 	  }
 
 	  setStatusMarkers(tokens, showAdvantage, showDisadvantage) {
@@ -3678,20 +4041,16 @@ var ShapedScripts =
 	      this.roll20.setAttrByName(charId, 'preroll', rollOptions[type].preroll);
 	      this.roll20.setAttrByName(charId, 'postroll', rollOptions[type].postroll);
 
-	      this.sendChatNotification(resource, type);
-	    });
-	  }
-
-	  sendChatNotification(resource, type) {
-	    if (this.outputOption() !== 'silent') {
-	      let msg = ` &{template:5e-shaped} {{character_name=${resource.character.get('name')}}} ` +
-	        `@{${resource.character.get('name')}|show_character_name} {{title=${utils.toTitleCase(type)}}} ` +
-	        `{{text_top=${resource.character.get('name')} is rolling ${rollOptions[type].message}!}}`;
-	      if (this.outputOption() === 'whisper') {
-	        msg = `/w gm ${msg}`;
+	      if (this.outputOption() !== 'silent') {
+	        let msg = ` &{template:5e-shaped} {{character_name=${resource.character.get('name')}}} ` +
+	          `@{${resource.character.get('name')}|show_character_name} {{title=${utils.toTitleCase(type)}}} ` +
+	          `{{text_top=${resource.character.get('name')} is rolling ${rollOptions[type].message}!}}`;
+	        if (this.outputOption() === 'whisper') {
+	          msg = `/w gm ${msg}`;
+	        }
+	        this.roll20.sendChat('Shaped AdvantageTracker', msg);
 	      }
-	      this.roll20.sendChat('Shaped AdvantageTracker', msg);
-	    }
+	    });
 	  }
 
 	  outputOption() {
@@ -3719,7 +4078,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 15 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3940,7 +4299,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 16 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3984,107 +4343,248 @@ var ShapedScripts =
 
 
 /***/ },
-/* 17 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	const _ = __webpack_require__(2);
 	const utils = __webpack_require__(7);
-	const ShapedModule = __webpack_require__(13);
-	const ShapedConfig = __webpack_require__(18);
 
-	class ConfigUi extends ShapedModule {
+	class ConfigUi {
 
-	  addCommands(commandProcessor) {
-	    const menus = {
-	      atMenu: new AdvantageTrackerMenu(this.myState.config, ShapedConfig.configOptionsSpec),
-	      tsMenu: new TokensMenu(this.myState.config, ShapedConfig.configOptionsSpec),
-	      barMenu: new TokenBarsMenu(this.myState.config, ShapedConfig.configOptionsSpec),
-	      auraMenu: new TokenAurasMenu(this.myState.config, ShapedConfig.configOptionsSpec),
-	      ncMenu: new NewCharacterMenu(this.myState.config, ShapedConfig.configOptionsSpec),
-	      hrMenu: new NewCharacterHouseruleMenu(this.myState.config, ShapedConfig.configOptionsSpec),
-	      varsMenu: new VariantsMenu(this.myState.config, ShapedConfig.configOptionsSpec),
-	      seMenu: new SheetEnhancementsMenu(this.myState.config, ShapedConfig.configOptionsSpec),
-	    };
+	  ////////////
+	  // Menus
+	  ////////////
+	  getConfigOptionsMenu() {
+	    const optionRows = this.makeOptionRow('Advantage Tracker', 'atMenu', '', 'view --&gt;', '', '#02baf2') +
+	      this.makeOptionRow('Token Defaults', 'tsMenu', '', 'view --&gt;', '', '#02baf2') +
+	      this.makeOptionRow('New Characters', 'ncMenu', '', 'view --&gt;', '', '#02baf2') +
+	      this.makeOptionRow('Character Sheet Enhancements', 'seMenu', '', 'view --&gt;', '', '#02baf2') +
+	      this.makeOptionRow('Houserules & Variants', 'varsMenu', '', 'view --&gt;', '', '#02baf2');
 
-	    return commandProcessor.addCommand('config', this.process.bind(this))
-	      .options(ShapedConfig.configOptionsSpec)
-	      .optionLookup('menu', menus);
+	    const th = utils.buildHTML('th', 'Main Menu', { colspan: '2' });
+	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+
+	    return utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
 	  }
 
-	  process(options) {
-	    // drop "menu" options
-	    utils.deepExtend(this.myState.config, _.omit(options, 'menu'));
+	  getConfigOptionGroupAdvTracker(config, optionsSpec) {
+	    const ats = 'advTrackerSettings';
+	    const optionRows =
+	      this.makeQuerySetting(config, `${ats}.output`, 'Output', optionsSpec.advTrackerSettings.output()) +
+	      this.makeToggleSetting(config, `${ats}.showMarkers`, 'Show Markers') +
+	      this.makeToggleSetting(config, `${ats}.ignoreNpcs`, 'Ignore NPCs') +
+	      this.makeQuerySetting(config, `${ats}.advantageMarker`, 'Advantage Marker',
+	        optionsSpec.advTrackerSettings.advantageMarker()) +
+	      this.makeQuerySetting(config, `${ats}.disadvantageMarker`, 'Disadvantage Marker',
+	        optionsSpec.advTrackerSettings.disadvantageMarker());
 
-	    if (options.menu) {
-	      this.report('Configuration', options.menu[0].getMenu());
+	    const th = utils.buildHTML('th', 'Advantage Tracker Options', { colspan: '2' });
+	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToMainMenuButton();
+	  }
+
+	  getConfigOptionGroupTokens(config) {
+	    const ts = 'tokenSettings';
+
+	    const optionRows = this.makeToggleSetting(config, `${ts}.number`, 'Numbered Tokens') +
+	      this.makeToggleSetting(config, `${ts}.showName`, 'Show Name Tag') +
+	      this.makeToggleSetting(config, `${ts}.showNameToPlayers`, 'Show Name to Players') +
+	      this.makeInputSetting(config, `${ts}.light.radius`, 'Light Radius', 'Light Radius (empty to unset)') +
+	      this.makeInputSetting(config, `${ts}.light.dimRadius`, 'Dim Radius', 'Light Dim Radius (empty to unset)') +
+	      this.makeToggleSetting(config, `${ts}.light.otherPlayers`, 'Other players see light') +
+	      this.makeToggleSetting(config, `${ts}.light.hasSight`, 'Has Sight') +
+	      this.makeInputSetting(config, `${ts}.light.angle`, 'Light Angle', 'Light Angle') +
+	      this.makeInputSetting(config, `${ts}.light.losAngle`, 'LOS Angle', 'LOS Angle') +
+	      this.makeInputSetting(config, `${ts}.light.multiplier`, 'Light Muliplier', 'Light Muliplier') +
+	      this.makeOptionRow('Token Bar Options', 'barMenu', '', 'view --&gt;', '', '#02baf2') +
+	      this.makeOptionRow('Token Aura Options', 'auraMenu', '', 'view --&gt;', '', '#02baf2');
+
+	    const th = utils.buildHTML('th', 'Token Options', { colspan: '2' });
+	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToMainMenuButton();
+	  }
+
+	  getConfigOptionGroupTokenBars(config) {
+	    const barButtonWidth = 60;
+	    const ts = 'tokenSettings';
+
+	    let optionRows = '';
+
+	    for (let i = 1; i <= 3; i++) {
+	      const currAttr = utils.getObjectFromPath(config, `${ts}.bar${i}.attribute`);
+	      const currAttrEmptyHint = currAttr || '[not set]';
+	      const currMax = utils.getObjectFromPath(config, `${ts}.bar${i}.max`);
+	      const currLink = utils.getObjectFromPath(config, `${ts}.bar${i}.link`);
+
+	      const attBtn = this.makeOptionButton(`${ts}.bar${i}.attribute`,
+	        `?{Bar ${i} Attribute (empty to unset)|${currAttr}} --barMenu`, this.makeText(currAttrEmptyHint),
+	        'click to edit', currAttrEmptyHint === '[not set]' ? '#f84545' : '#02baf2', undefined, barButtonWidth);
+	      const maxBtn = this.makeOptionButton(`${ts}.bar${i}.max`, `${!currMax} --barMenu`, this.makeBoolText(currMax),
+	        'click to toggle', currMax ? '#65c4bd' : '#f84545', undefined, barButtonWidth);
+	      const linkBtn = this.makeOptionButton(`${ts}.bar${i}.link`, `${!currLink} --barMenu`, this.makeBoolText(currLink),
+	        'click to togle', currLink ? '#65c4bd' : '#f84545', undefined, barButtonWidth);
+
+	      optionRows += this.makeThreColOptionTable({
+	        tableTitle: `Bar ${i}`,
+	        colTitles: ['Attribute', 'Max', 'Link'],
+	        buttons: [attBtn, maxBtn, linkBtn],
+	      });
 	    }
-	    else {
-	      const menu = new MainMenu(this.myState.config, ShapedConfig.configOptionsSpec);
-	      this.report('Configuration', menu.getMenu());
-	    }
-	  }
-	}
 
-	module.exports = ConfigUi;
-
-	/////////////////////////////////////////////////
-	// Menu Base
-	/////////////////////////////////////////////////
-	class ConfigMenu {
-	  constructor(config, specRoot) {
-	    this.config = config;
-	    this.specRoot = specRoot;
-	  }
-
-	  makeToggleSetting(params) {
-	    let currentVal = utils.getObjectFromPath(this.config, params.path);
-	    if (params.spec) {
-	      currentVal = _.invert(params.spec)[currentVal] === 'true';
+	    for (let i = 1; i <= 3; i++) {
+	      optionRows += this.makeToggleSetting(config, `${ts}.bar${i}.showPlayers`,
+	        `Bar ${i} Show Players`, null, 'barMenu');
 	    }
 
-	    params.command = `${!currentVal}${!_.isUndefined(params.menuCmd) ? ` --${params.menuCmd}` : ''}`;
-	    params.linkText = this.makeBoolText(currentVal);
-	    params.tooltip = 'click to toggle';
-	    params.buttonColor = currentVal ? '#65c4bd' : '#f84545';
+	    const th = utils.buildHTML('th', 'Token Bar Options', { colspan: '2' });
+	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
 
-	    return this.makeOptionRow(params);
+	    return table + this.backToTokenOptions();
 	  }
 
-	  makeQuerySetting(params) {
-	    const currentVal = _.invert(params.spec)[utils.getObjectFromPath(this.config, params.path)];
-	    const cmd = this.getQueryCommand(params.path, params.title, params.spec);
+	  getConfigOptionGroupTokenAuras(config) {
+	    const auraButtonWidth = 60;
 
-	    params.command = `${cmd}${!_.isUndefined(params.menuCmd) ? ` --${params.menuCmd}` : ''}`;
-	    params.linkText = this.makeText(currentVal);
-	    params.tooltip = 'click to change';
-	    params.buttonColor = '#02baf2';
+	    const ts = 'tokenSettings';
 
-	    return this.makeOptionRow(params);
+	    let optionRows = '';
+
+	    for (let i = 1; i <= 2; i++) {
+	      const currRad = utils.getObjectFromPath(config, `${ts}.aura${i}.radius`);
+	      const currRadEmptyHint = currRad || '[not set]';
+	      const currColor = utils.getObjectFromPath(config, `${ts}.aura${i}.color`);
+	      const currSquare = utils.getObjectFromPath(config, `${ts}.aura${i}.square`);
+
+	      const radBtn = this.makeOptionButton(`${ts}.aura${i}.radius`,
+	        `?{Aura ${i} Radius (empty to unset)|${currRad}} --auraMenu`, this.makeText(currRadEmptyHint), 'click to edit',
+	        currRadEmptyHint === '[not set]' ? '#f84545' : '#02baf2', undefined, auraButtonWidth);
+	      const colorBtn = this.makeOptionButton(`tokenSettings.aura${i}.color`,
+	        `?{Aura ${i} Color (hex colors)|${currColor}} --auraMenu`, this.makeText(currColor), 'click to edit',
+	        currColor, utils.getContrastYIQ(currColor), auraButtonWidth);
+	      const squareBtn = this.makeOptionButton(`tokenSettings.aura${i}.square`, `${!currSquare} --auraMenu`,
+	        this.makeBoolText(currSquare), 'click to toggle', currSquare ? '#65c4bd' : '#f84545',
+	        undefined, auraButtonWidth);
+
+	      optionRows += this.makeThreColOptionTable({
+	        tableTitle: `Aura ${i}`,
+	        colTitles: ['Range', 'Color', 'Square'],
+	        buttons: [radBtn, colorBtn, squareBtn],
+	      });
+	    }
+
+	    for (let i = 1; i <= 2; i++) {
+	      optionRows += this.makeToggleSetting(config, `${ts}.showAura${i}ToPlayers`, `Aura ${i} Show Players`,
+	        null, 'auraMenu');
+	    }
+
+	    const th = utils.buildHTML('th', 'Token Aura Options', { colspan: '2' });
+	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToTokenOptions();
 	  }
 
-	  makeInputSetting(params) {
-	    const currentVal = utils.getObjectFromPath(this.config, params.path);
+	  getConfigOptionGroupNewCharSettings(config, optionsSpec) {
+	    const ncs = 'newCharSettings';
+	    let optionRows = '';
 
-	    params.command = `?{${params.prompt}|${currentVal}}${!_.isUndefined(params.menuCmd) ? ` --${params.menuCmd}` : ''}`;
-	    params.linkText = currentVal || '[not set]';
-	    params.tooltip = 'click to edit';
-	    params.buttonColor = params.linkText === '[not set]' ? '#f84545' : '#02baf2';
+	    const spec = optionsSpec.newCharSettings;
 
-	    return this.makeOptionRow(params);
+	    const currSheetOut = _.invert(spec.sheetOutput())[utils.getObjectFromPath(config, `${ncs}.sheetOutput`)];
+	    const currDSaveOut = _.invert(spec.deathSaveOutput())[utils.getObjectFromPath(config, `${ncs}.deathSaveOutput`)];
+	    const currInitOut = _.invert(spec.initiativeOutput())[utils.getObjectFromPath(config, `${ncs}.initiativeOutput`)];
+
+	    const sheetBtn = this.makeOptionButton(`${ncs}.sheetOutput`,
+	      this.getQueryCommand(config, `${ncs}.sheetOutput`, 'Sheet Output',
+	        optionsSpec.newCharSettings.sheetOutput()), this.makeText(currSheetOut),
+	      'click to change', '#02baf2', null, 60);
+	    const dSaveBtn = this.makeOptionButton(`${ncs}.deathSaveOutput`,
+	      this.getQueryCommand(config, `${ncs}.deathSaveOutput`, 'Deat Save Output',
+	        optionsSpec.newCharSettings.deathSaveOutput()), this.makeText(currDSaveOut),
+	      'click to change', '#02baf2', null, 60);
+	    const initBtn = this.makeOptionButton(`${ncs}.initiativeOutput`,
+	      this.getQueryCommand(config, `${ncs}.initiativeOutput`, 'Initiative Output',
+	        optionsSpec.newCharSettings.initiativeOutput()), this.makeText(currInitOut),
+	      'click to change', '#02baf2', null, 60);
+
+	    optionRows += this.makeThreColOptionTable({
+	      tableTitle: 'Output',
+	      colTitles: ['Sheet', 'Death Save', 'Initiative'],
+	      buttons: [sheetBtn, dSaveBtn, initBtn],
+	    });
+
+	    optionRows += this.makeToggleSetting(config, `${ncs}.showNameOnRollTemplate`, 'Show Name on Roll Template',
+	      optionsSpec.newCharSettings.showNameOnRollTemplate()) +
+	      this.makeQuerySetting(config, `${ncs}.rollOptions`, 'Roll Options',
+	        optionsSpec.newCharSettings.rollOptions()) +
+	      this.makeToggleSetting(config, `${ncs}.autoRevertAdvantage`, 'Revert Advantage') +
+	      this.makeQuerySetting(config, `${ncs}.initiativeRoll`, 'Init Roll',
+	        optionsSpec.newCharSettings.initiativeRoll()) +
+	      this.makeToggleSetting(config, `${ncs}.initiativeToTracker`, 'Init To Tracker',
+	        optionsSpec.newCharSettings.initiativeToTracker()) +
+	      this.makeToggleSetting(config, `${ncs}.breakInitiativeTies`, 'Break Init Ties',
+	        optionsSpec.newCharSettings.breakInitiativeTies()) +
+	      this.makeToggleSetting(config, `${ncs}.showTargetAC`, 'Show Target AC',
+	        optionsSpec.newCharSettings.showTargetAC()) +
+	      this.makeToggleSetting(config, `${ncs}.showTargetName`, 'Show Target Name',
+	        optionsSpec.newCharSettings.showTargetName()) +
+	      this.makeToggleSetting(config, `${ncs}.autoAmmo`, 'Auto Use Ammo',
+	        optionsSpec.newCharSettings.autoAmmo()) +
+	      this.makeQuerySetting(config, `${ncs}.tab`, 'Default tab',
+	        optionsSpec.newCharSettings.tab()) +
+	      this.makeOptionRow('Houserule Settings', 'hrMenu', '', 'view --&gt;', '', '#02baf2');
+
+	    const th = utils.buildHTML('th', 'New Character Sheets', { colspan: '2' });
+	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToMainMenuButton();
 	  }
 
-	  // noinspection JSUnusedGlobalSymbols
-	  makeColorSetting(params) {
-	    const currentVal = utils.getObjectFromPath(this.config, params.path);
+	  getConfigOptionsGroupNewCharHouserules(config, optionsSpec) {
+	    const hr = 'newCharSettings.houserules';
 
-	    params.command = `?{${params.prompt}|${currentVal}}${!_.isUndefined(params.menuCmd) ? ` --${params.menuCmd}` : ''}`;
-	    params.linkText = currentVal || '[not set]';
-	    params.tooltip = 'click to edit';
-	    params.buttonColor = params.linkText === '[not set]' ? '#02baf2' : currentVal;
-	    params.buttonTextColor = utils.getContrastYIQ(params.buttonColor);
+	    let optionRows = this.makeToggleSetting(config, `${hr}.savingThrowsHalfProf`, 'Half Proficiency Saves',
+	      null, 'hrMenu');
+	    optionRows += this.makeQuerySetting(config, `${hr}.mediumArmorMaxDex`, 'Medium Armor Max Dex',
+	      optionsSpec.newCharSettings.houserules.mediumArmorMaxDex(), 'hrMenu');
 
-	    return this.makeOptionRow(params);
+	    const th = utils.buildHTML('th', 'Houserule Settings', { colspan: '2' });
+	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToNewCharOptions();
+	  }
+
+	  getConfigOptionGroupVariants(config) {
+	    const root = 'variants';
+
+	    const optionRows = this.makeToggleSetting(config, `${root}.rests.longNoHpFullHd`, 'Long Rest: No HP, full HD');
+
+	    const th = utils.buildHTML('th', 'Houserules & Variants', { colspan: '2' });
+	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToMainMenuButton();
+	  }
+
+	  getConfigOptionGroupSheetEnhancements(config) {
+	    const root = 'sheetEnhancements';
+	    const optionRows = this.makeToggleSetting(config, `${root}.rollHPOnDrop`, 'Roll HP On Drop') +
+	      this.makeToggleSetting(config, `${root}.autoHD`, 'Process HD Automatically') +
+	      this.makeToggleSetting(config, `${root}.autoSpellSlots`, 'Process Spell Slots Automatically') +
+	      this.makeToggleSetting(config, `${root}.autoTraits`, 'Process Traits automatically');
+
+	    const th = utils.buildHTML('th', 'New Character Sheets', { colspan: '2' });
+	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+	    return table + this.backToMainMenuButton();
 	  }
 
 	  backToMainMenuButton() {
@@ -4111,14 +4611,57 @@ var ShapedScripts =
 	    });
 	  }
 
-	  getQueryCommand(path, title, optionsSpec) {
-	    let currentVal = _.invert(optionsSpec)[utils.getObjectFromPath(this.config, path)];
+	  makeInputSetting(config, path, title, prompt) {
+	    const currentVal = utils.getObjectFromPath(config, path);
+	    let emptyHint = '[not set]';
+	    if (currentVal) {
+	      emptyHint = currentVal;
+	    }
+
+	    return this.makeOptionRow(title, path, `?{${prompt}|${currentVal}}`, emptyHint, 'click to edit', emptyHint ===
+	      '[not set]' ? '#f84545' : '#02baf2');
+	  }
+
+	  // noinspection JSUnusedGlobalSymbols
+	  makeColorSetting(config, path, title, prompt) {
+	    const currentVal = utils.getObjectFromPath(config, path);
+	    let emptyHint = '[not set]';
+
+	    if (currentVal) {
+	      emptyHint = currentVal;
+	    }
+
+	    const buttonColor = emptyHint === '[not set]' ? '#02baf2' : currentVal;
+
+	    return this.makeOptionRow(title, path, `?{${prompt}|${currentVal}}`, emptyHint, 'click to edit', buttonColor,
+	      utils.getContrastYIQ(buttonColor));
+	  }
+
+	  makeToggleSetting(config, path, title, optionsSpec, menuCommand) {
+	    let currentVal = utils.getObjectFromPath(config, path);
+	    if (optionsSpec) {
+	      currentVal = _.invert(optionsSpec)[currentVal] === 'true';
+	    }
+
+	    return this.makeOptionRow(title, path, `${!currentVal}${!_.isUndefined(menuCommand) ? ` --${menuCommand}` : ''}`,
+	      this.makeBoolText(currentVal), 'click to toggle', currentVal ? '#65c4bd' : '#f84545');
+	  }
+
+	  makeQuerySetting(config, path, title, optionsSpec, menuCommand) {
+	    const currentVal = _.invert(optionsSpec)[utils.getObjectFromPath(config, path)];
+	    const cmd = this.getQueryCommand(config, path, title, optionsSpec);
+	    return this.makeOptionRow(title, path, `${cmd}${!_.isUndefined(menuCommand) ? ` --${menuCommand}` : ''}`,
+	      this.makeText(currentVal), 'click to change', '#02baf2');
+	  }
+
+	  getQueryCommand(config, path, title, optionsSpec) {
+	    let currentVal = _.invert(optionsSpec)[utils.getObjectFromPath(config, path)];
 	    const optionList = _.keys(optionsSpec);
 
 	    // Fix up if we've somehow ended up with an illegal value
 	    if (_.isUndefined(currentVal)) {
 	      currentVal = _.first(optionList);
-	      utils.deepExtend(this.config, utils.createObjectFromPath(path, optionsSpec[currentVal]));
+	      utils.deepExtend(config, utils.createObjectFromPath(path, optionsSpec[currentVal]));
 	    }
 
 	    // move the current option to the front of the list
@@ -4128,28 +4671,29 @@ var ShapedScripts =
 	    return `?{${title}|${optionList.join('|')}}`;
 	  }
 
-	  makeOptionRow(params) {
-	    const col1 = utils.buildHTML('td', params.title);
-	    const col2 = utils.buildHTML('td', this.makeOptionButton(params), { style: 'text-align:right;' });
+	  makeOptionRow(optionTitle, path, command, linkText, tooltip, buttonColor, buttonTextColor) {
+	    const col1 = utils.buildHTML('td', optionTitle);
+	    const col2 = utils.buildHTML('td', this.makeOptionButton(path, command, linkText, tooltip, buttonColor,
+	      buttonTextColor), { style: 'text-align:right;' });
 
 	    return utils.buildHTML('tr', col1 + col2, { style: 'border: 1px solid gray;' });
 	  }
 
-	  makeOptionButton(params) {
-	    if (_.isUndefined(params.width)) {
-	      params.width = 80;
+	  makeOptionButton(path, command, linkText, tooltip, buttonColor, buttonTextColor, width) {
+	    if (_.isUndefined(width)) {
+	      width = 80;
 	    }
 
-	    let css = `text-align: center; width: ${params.width}px; margin: 2px 0 -3px 0; ` +
+	    let css = `text-align: center; width: ${width}px; margin: 2px 0 -3px 0; ` +
 	      'padding: 2px 2px ; border-radius: 10px; border-color: #c0c0c0;' +
-	      `white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background-color: ${params.buttonColor};`;
-	    if (params.buttonTextColor) {
-	      css += `color: ${params.buttonTextColor}`;
+	      `white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background-color: ${buttonColor};`;
+	    if (buttonTextColor) {
+	      css += `color: ${buttonTextColor}`; // 'color: ' + buttonTextColor + '; ';
 	    }
 
-	    return utils.buildHTML('a', params.linkText, {
+	    return utils.buildHTML('a', linkText, {
 	      style: css,
-	      href: `!shaped-config --${params.path} ${params.command}`,
+	      href: `!shaped-config --${path} ${command}`, // '!shaped-config --' + path + ' ' + command
 	    });
 	  }
 
@@ -4163,7 +4707,7 @@ var ShapedScripts =
 	      utils.buildHTML('span', 'off', { style: 'padding: 0 2px;' });
 	  }
 
-	  makeThreeColOptionTable(options) {
+	  makeThreColOptionTable(options) {
 	    return utils
 	      .buildHTML('tr', [
 	        {
@@ -4218,621 +4762,6 @@ var ShapedScripts =
 	        },
 	      ], { style: 'border: 1px solid gray;' });
 	  }
-	}
-
-	/////////////////////////////////////////////////
-	// Menus
-	/////////////////////////////////////////////////
-	class MainMenu extends ConfigMenu {
-	  getMenu() {
-	    const optionRows =
-	      this.makeOptionRow({
-	        title: 'Advantage Tracker', path: 'atMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
-	      }) +
-	      this.makeOptionRow({
-	        title: 'Token Defaults', path: 'tsMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
-	      }) +
-	      this.makeOptionRow({
-	        title: 'New Characters', path: 'ncMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
-	      }) +
-	      this.makeOptionRow({
-	        title: 'Char. Sheet Enhancements', path: 'seMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
-	      }) +
-	      this.makeOptionRow({
-	        title: 'Houserules & Variants', path: 'varsMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
-	      });
-
-	    const th = utils.buildHTML('th', 'Main Menu', { colspan: '2' });
-	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
-
-	    return utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
-	  }
-	}
-
-	class AdvantageTrackerMenu extends ConfigMenu {
-	  getMenu() {
-	    const ats = 'advTrackerSettings';
-	    const menu = 'atMenu';
-
-	    const optionRows =
-	      this.makeQuerySetting({
-	        path: `${ats}.output`, title: 'Output', menuCmd: menu,
-	        spec: this.specRoot.advTrackerSettings.output(),
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${ats}.showMarkers`, title: 'Show Markers', menuCmd: menu,
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${ats}.ignoreNpcs`, title: 'Ignore NPCs', menuCmd: menu,
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${ats}.advantageMarker`, title: 'Advantage Marker', menuCmd: menu,
-	        spec: this.specRoot.advTrackerSettings.advantageMarker(),
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${ats}.disadvantageMarker`, title: 'Disadvantage Marker', menuCmd: menu,
-	        spec: this.specRoot.advTrackerSettings.disadvantageMarker(),
-	      });
-
-
-	    const th = utils.buildHTML('th', 'Advantage Tracker Options', { colspan: '2' });
-	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
-	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
-
-	    return table + this.backToMainMenuButton();
-	  }
-	}
-
-	class TokensMenu extends ConfigMenu {
-	  getMenu() { // config) {
-	    // this.config = config;
-	    const ts = 'tokenSettings';
-	    const menu = 'tsMenu';
-
-	    const optionRows =
-	      this.makeToggleSetting({
-	        path: `${ts}.number`, title: 'Numbered Tokens', menuCmd: menu,
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${ts}.showName`, title: 'Show Name Tag', menuCmd: menu,
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${ts}.showNameToPlayers`, title: 'Show Name to Players', menuCmd: menu,
-	      }) +
-	      this.makeInputSetting({
-	        path: `${ts}.light.radius`, title: 'Light Radius', prompt: 'Light Radius (empty to unset)', menuCmd: menu,
-	      }) +
-	      this.makeInputSetting({
-	        path: `${ts}.light.dimRadius`, title: 'Dim Radius', prompt: 'Light Dim Radius (empty to unset)', menuCmd: menu,
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${ts}.light.otherPlayers`, title: 'Other players see light', menuCmd: menu,
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${ts}.light.hasSight`, title: 'Has Sight', menuCmd: menu,
-	      }) +
-	      this.makeInputSetting({
-	        path: `${ts}.light.angle`, title: 'Light Angle', prompt: 'Light Angle', menuCmd: menu,
-	      }) +
-	      this.makeInputSetting({
-	        path: `${ts}.light.losAngle`, title: 'LOS Angle', prompt: 'LOS Angle', menuCmd: menu,
-	      }) +
-	      this.makeInputSetting({
-	        path: `${ts}.light.multiplier`, title: 'Light Muliplier', prompt: 'Light Muliplier', menuCmd: menu,
-	      }) +
-	      this.makeOptionRow({
-	        title: 'Token Bar Options', path: 'barMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
-	      }) +
-	      this.makeOptionRow({
-	        title: 'Token Aura Options', path: 'auraMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
-	      });
-
-	    const th = utils.buildHTML('th', 'Token Options', { colspan: '2' });
-	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
-	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
-
-	    return table + this.backToMainMenuButton();
-	  }
-	}
-
-	class TokenBarsMenu extends ConfigMenu {
-	  getMenu() {
-	    const ts = 'tokenSettings';
-	    const menu = 'barMenu';
-
-	    let optionRows = '';
-
-	    for (let i = 1; i <= 3; i++) {
-	      const currAttr = utils.getObjectFromPath(this.config, `${ts}.bar${i}.attribute`);
-	      const currAttrEmptyHint = currAttr || '[not set]';
-	      const currMax = utils.getObjectFromPath(this.config, `${ts}.bar${i}.max`);
-	      const currLink = utils.getObjectFromPath(this.config, `${ts}.bar${i}.link`);
-
-	      const attBtn = this.makeOptionButton({
-	        path: `${ts}.bar${i}.attribute`, linkText: this.makeText(currAttrEmptyHint), tooltip: 'click to edit',
-	        buttonColor: currAttrEmptyHint === '[not set]' ? '#f84545' : '#02baf2', width: 60,
-	        command: `?{Bar ${i} Attribute (empty to unset)|${currAttr}} --${menu}`,
-	      });
-	      const maxBtn = this.makeOptionButton({
-	        path: `${ts}.bar${i}.max`, linkText: this.makeBoolText(currMax), tooltip: 'click to toggle',
-	        buttonColor: currMax ? '#65c4bd' : '#f84545', width: 60,
-	        command: `${!currMax} --${menu}`,
-	      });
-	      const linkBtn = this.makeOptionButton({
-	        path: `${ts}.bar${i}.link`, linkText: this.makeBoolText(currLink), tooltip: 'click to togle',
-	        buttonColor: currLink ? '#65c4bd' : '#f84545', width: 60,
-	        command: `${!currLink} --${menu}`,
-	      });
-
-	      optionRows += this.makeThreeColOptionTable({
-	        tableTitle: `Bar ${i}`,
-	        colTitles: ['Attribute', 'Max', 'Link'],
-	        buttons: [attBtn, maxBtn, linkBtn],
-	      });
-	    }
-
-	    for (let i = 1; i <= 3; i++) {
-	      optionRows += this.makeToggleSetting({
-	        path: `${ts}.bar${i}.showPlayers`, title: `Bar ${i} Show Players`, menuCmd: 'barMenu',
-	      });
-	    }
-
-	    const th = utils.buildHTML('th', 'Token Bar Options', { colspan: '2' });
-	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
-	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
-
-	    return table + this.backToTokenOptions();
-	  }
-	}
-
-	class TokenAurasMenu extends ConfigMenu {
-	  getMenu() {
-	    const ts = 'tokenSettings';
-	    const menu = 'auraMenu';
-
-	    let optionRows = '';
-
-	    for (let i = 1; i <= 2; i++) {
-	      const currRad = utils.getObjectFromPath(this.config, `${ts}.aura${i}.radius`);
-	      const currRadEmptyHint = currRad || '[not set]';
-	      const currColor = utils.getObjectFromPath(this.config, `${ts}.aura${i}.color`);
-	      const currSquare = utils.getObjectFromPath(this.config, `${ts}.aura${i}.square`);
-
-	      const radBtn = this.makeOptionButton({
-	        path: `${ts}.aura${i}.radius`, linkText: this.makeText(currRadEmptyHint), tooltip: 'click to edit',
-	        buttonColor: currRadEmptyHint === '[not set]' ? '#f84545' : '#02baf2', width: 60,
-	        command: `?{Aura ${i} Radius (empty to unset)|${currRad}} --${menu}`,
-	      });
-	      const colorBtn = this.makeOptionButton({
-	        path: `tokenSettings.aura${i}.color`, linkText: this.makeText(currColor), tooltip: 'click to edit',
-	        buttonColor: currColor, buttonTextColor: utils.getContrastYIQ(currColor), width: 60,
-	        command: `?{Aura ${i} Color (hex colors)|${currColor}} --${menu}`,
-	      });
-	      const squareBtn = this.makeOptionButton({
-	        path: `tokenSettings.aura${i}.square`, linkText: this.makeBoolText(currSquare), tooltip: 'click to toggle',
-	        buttonColor: currSquare ? '#65c4bd' : '#f84545', width: 60,
-	        command: `${!currSquare} --${menu}`,
-
-	      });
-
-	      optionRows += this.makeThreeColOptionTable({
-	        tableTitle: `Aura ${i}`,
-	        colTitles: ['Range', 'Color', 'Square'],
-	        buttons: [radBtn, colorBtn, squareBtn],
-	      });
-	    }
-
-	    for (let i = 1; i <= 2; i++) {
-	      optionRows += this.makeToggleSetting({
-	        path: `${ts}.showAura${i}ToPlayers`, title: `Aura ${i} Show Players`, menuCmd: 'auraMenu',
-	      });
-	    }
-
-	    const th = utils.buildHTML('th', 'Token Aura Options', { colspan: '2' });
-	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
-	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
-
-	    return table + this.backToTokenOptions();
-	  }
-	}
-
-	class NewCharacterMenu extends ConfigMenu {
-	  getMenu() {
-	    const menu = 'ncMenu';
-	    const ncs = 'newCharSettings';
-	    let optionRows = '';
-
-	    const spec = this.specRoot.newCharSettings;
-
-	    const currSheetOut =
-	      _.invert(spec.sheetOutput())[utils.getObjectFromPath(this.config, `${ncs}.sheetOutput`)];
-	    const currDSaveOut =
-	      _.invert(spec.deathSaveOutput())[utils.getObjectFromPath(this.config, `${ncs}.deathSaveOutput`)];
-	    const currInitOut =
-	      _.invert(spec.initiativeOutput())[utils.getObjectFromPath(this.config, `${ncs}.initiativeOutput`)];
-
-	    const sheetBtn = this.makeOptionButton({
-	      path: `${ncs}.sheetOutput`, linkText: this.makeText(currSheetOut), tooltip: 'click to change',
-	      buttonColor: '#02baf2', width: 60,
-	      command: `${this.getQueryCommand(`${ncs}.sheetOutput`, 'Sheet Output', spec.sheetOutput())}`
-	      + ` --${menu}`,
-	    });
-	    const dSaveBtn = this.makeOptionButton({
-	      path: `${ncs}.deathSaveOutput`, linkText: this.makeText(currDSaveOut), tooltip: 'click to change',
-	      buttonColor: '#02baf2', width: 60,
-	      command: `${this.getQueryCommand(`${ncs}.deathSaveOutput`, 'Death Save Output', spec.deathSaveOutput())}`
-	      + ` --${menu}`,
-	    });
-	    const initBtn = this.makeOptionButton({
-	      path: `${ncs}.initiativeOutput`, linkText: this.makeText(currInitOut), tooltip: 'click to change',
-	      buttonColor: '#02baf2', width: 60,
-	      command: `${this.getQueryCommand(`${ncs}.initiativeOutput`, 'Initiative Output', spec.initiativeOutput())}`
-	      + ` --${menu}`,
-	    });
-
-	    optionRows += this.makeThreeColOptionTable({
-	      tableTitle: 'Output',
-	      colTitles: ['Sheet', 'Death Save', 'Initiative'],
-	      buttons: [sheetBtn, dSaveBtn, initBtn],
-	    });
-
-	    optionRows +=
-	      this.makeToggleSetting({
-	        path: `${ncs}.showNameOnRollTemplate`, title: 'Show Name on Roll Template', menuCmd: menu,
-	        spec: spec.showNameOnRollTemplate(),
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${ncs}.rollOptions`, title: 'Roll Options', menuCmd: menu, spec: spec.rollOptions(),
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${ncs}.autoRevertAdvantage`, title: 'Revert Advantage', menuCmd: menu,
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${ncs}.initiativeRoll`, title: 'Init Roll', menuCmd: menu, spec: spec.initiativeRoll(),
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${ncs}.initiativeToTracker`, title: 'Init To Tracker', menuCmd: menu, spec: spec.initiativeToTracker(),
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${ncs}.breakInitiativeTies`, title: 'Break Init Ties', menuCmd: menu, spec: spec.breakInitiativeTies(),
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${ncs}.showTargetAC`, title: 'Show Target AC', menuCmd: menu, spec: spec.showTargetAC(),
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${ncs}.showTargetName`, title: 'Show Target Name', menuCmd: menu, spec: spec.showTargetName(),
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${ncs}.autoAmmo`, title: 'Auto Use Ammo', menuCmd: menu, spec: spec.autoAmmo(),
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${ncs}.tab`, title: 'Default tab', menuCmd: menu, spec: spec.tab(),
-	      }) +
-	      this.makeOptionRow({
-	        title: 'Houserule Settings', path: 'hrMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
-	      });
-
-	    const th = utils.buildHTML('th', 'New Character Sheets', { colspan: '2' });
-	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
-	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
-
-	    return table + this.backToMainMenuButton();
-	  }
-	}
-
-	class NewCharacterHouseruleMenu extends ConfigMenu {
-	  getMenu() {
-	    const hr = 'newCharSettings.houserules';
-	    const menu = 'hrMenu';
-
-	    let optionRows = this.makeToggleSetting({
-	      path: `${hr}.savingThrowsHalfProf`, title: 'Half Proficiency Saves', menuCmd: menu,
-	    });
-	    optionRows += this.makeQuerySetting({
-	      path: `${hr}.mediumArmorMaxDex`, title: 'Medium Armor Max Dex', menuCmd: menu,
-	      spec: this.specRoot.newCharSettings.houserules.mediumArmorMaxDex(),
-	    });
-
-	    const th = utils.buildHTML('th', 'Houserule Settings', { colspan: '2' });
-	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
-	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
-
-	    return table + this.backToNewCharOptions();
-	  }
-	}
-
-	class VariantsMenu extends ConfigMenu {
-	  getMenu() {
-	    const root = 'variants';
-	    const menu = 'varsMenu';
-
-	    const optionRows = this.makeToggleSetting({
-	      path: `${root}.rests.longNoHpFullHd`, title: 'Long Rest: No HP, full HD', menuCmd: menu,
-	    });
-
-	    const th = utils.buildHTML('th', 'Houserules & Variants', { colspan: '2' });
-	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
-	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
-
-	    return table + this.backToMainMenuButton();
-	  }
-	}
-
-	class SheetEnhancementsMenu extends ConfigMenu {
-	  getMenu() {
-	    const root = 'sheetEnhancements';
-	    const menu = 'seMenu';
-
-	    const optionRows =
-	      this.makeToggleSetting({
-	        path: `${root}.rollHPOnDrop`, title: 'Roll HP On Drop', menuCmd: menu,
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${root}.autoHD`, title: 'Process HD Automatically', menuCmd: menu,
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${root}.autoSpellSlots`, title: 'Process Spell Slots Automatically', menuCmd: menu,
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${root}.autoTraits`, title: 'Process Traits automatically', menuCmd: menu,
-	      });
-
-	    const th = utils.buildHTML('th', 'New Character Sheets', { colspan: '2' });
-	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
-	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
-	    return table + this.backToMainMenuButton();
-	  }
-	}
-
-
-
-/***/ },
-/* 18 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	const _ = __webpack_require__(2);
-	const Logger = __webpack_require__(5);
-	// const ConfigUI = require('./config-ui');
-
-	module.exports = class ShapedConfig {
-	  static booleanValidator(value) {
-	    const converted = value === 'true' || (value === 'false' ? false : value);
-	    return {
-	      valid: typeof value === 'boolean' || value === 'true' || value === 'false',
-	      converted,
-	    };
-	  }
-
-	  static stringValidator(value) {
-	    return {
-	      valid: true,
-	      converted: value,
-	    };
-	  }
-
-	  static arrayValidator(value) {
-	    return {
-	      valid: true,
-	      converted: value.split(',').map(s => s.trim()),
-	    };
-	  }
-
-	  static getOptionList(options) {
-	    return function optionList(value) {
-	      if (value === undefined) {
-	        return options;
-	      }
-	      return {
-	        converted: options[value],
-	        valid: options[value] !== undefined,
-	      };
-	    };
-	  }
-
-	  static integerValidator(value) {
-	    const parsed = parseInt(value, 10);
-	    return {
-	      converted: parsed,
-	      valid: !isNaN(parsed),
-	    };
-	  }
-
-	  static colorValidator(value) {
-	    return {
-	      converted: value,
-	      valid: /(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(value),
-	    };
-	  }
-
-	  static get sheetOutputValidator() {
-	    return this.getOptionList({
-	      public: '@{output_to_all}',
-	      whisper: '@{output_to_gm}',
-	    });
-	  }
-
-	  static get commandOutputValidator() {
-	    return this.getOptionList({
-	      public: 'public',
-	      whisper: 'whisper',
-	      silent: 'silent',
-	    });
-	  }
-
-	  static get statusMarkerValidator() {
-	    return this.getOptionList(ShapedConfig.validStatusMarkers());
-	  }
-
-	  static get barValidator() {
-	    return {
-	      attribute: this.stringValidator,
-	      max: this.booleanValidator,
-	      link: this.booleanValidator,
-	      showPlayers: this.booleanValidator,
-	    };
-	  }
-
-	  static get auraValidator() {
-	    return {
-	      radius: this.stringValidator,
-	      color: this.colorValidator,
-	      square: this.booleanValidator,
-	    };
-	  }
-
-	  static get lightValidator() {
-	    return {
-	      radius: this.stringValidator,
-	      dimRadius: this.stringValidator,
-	      otherPlayers: this.booleanValidator,
-	      hasSight: this.booleanValidator,
-	      angle: this.integerValidator,
-	      losAngle: this.integerValidator,
-	      multiplier: this.integerValidator,
-	    };
-	  }
-
-	  static getCharacterValidator(roll20) {
-	    return function characterValidator(value) {
-	      const char = roll20.getObj('character', value);
-	      return {
-	        converted: char,
-	        valid: !!char,
-	      };
-	    };
-	  }
-
-	  static get spellSearchOptions() {
-	    return {
-	      classes: this.arrayValidator,
-	      domains: this.arrayValidator,
-	      oaths: this.arrayValidator,
-	      patrons: this.arrayValidator,
-	      school: this.stringValidator,
-	      level: this.integerValidator,
-	    };
-	  }
-
-
-	  static regExpValidator(value) {
-	    try {
-	      new RegExp(value, 'i').test('');
-	      return {
-	        converted: value,
-	        valid: true,
-	      };
-	    }
-	    catch (e) {
-	      return {
-	        converted: null,
-	        valid: false,
-	      };
-	    }
-	  }
-
-	  static get configOptionsSpec() {
-	    return {
-	      logLevel(value) {
-	        const converted = value.toUpperCase();
-	        return { valid: _.has(Logger.levels, converted), converted };
-	      },
-	      tokenSettings: {
-	        number: this.booleanValidator,
-	        bar1: this.barValidator,
-	        bar2: this.barValidator,
-	        bar3: this.barValidator,
-	        aura1: this.auraValidator,
-	        aura2: this.auraValidator,
-	        light: this.lightValidator,
-	        showName: this.booleanValidator,
-	        showNameToPlayers: this.booleanValidator,
-	        showAura1ToPlayers: this.booleanValidator,
-	        showAura2ToPlayers: this.booleanValidator,
-	      },
-	      newCharSettings: {
-	        sheetOutput: this.sheetOutputValidator,
-	        deathSaveOutput: this.sheetOutputValidator,
-	        initiativeOutput: this.sheetOutputValidator,
-	        showNameOnRollTemplate: this.getOptionList({
-	          true: '@{show_character_name_yes}',
-	          false: '@{show_character_name_no}',
-	        }),
-	        rollOptions: this.getOptionList({
-	          normal: '@{roll_1}',
-	          advantage: '@{roll_advantage}',
-	          disadvantage: '@{roll_disadvantage}',
-	          two: '@{roll_2}',
-	        }),
-	        initiativeRoll: this.getOptionList({
-	          normal: '@{normal_initiative}',
-	          advantage: '@{advantage_on_initiative}',
-	          disadvantage: '@{disadvantage_on_initiative}',
-	        }),
-	        initiativeToTracker: this.getOptionList({
-	          true: '@{initiative_to_tracker_yes}',
-	          false: '@{initiative_to_tracker_no}',
-	        }),
-	        breakInitiativeTies: this.getOptionList({
-	          true: '@{initiative_tie_breaker_var}',
-	          false: '',
-	        }),
-	        showTargetAC: this.getOptionList({
-	          true: '@{attacks_vs_target_ac_yes}',
-	          false: '@{attacks_vs_target_ac_no}',
-	        }),
-	        showTargetName: this.getOptionList({
-	          true: '@{attacks_vs_target_name_yes}',
-	          false: '@{attacks_vs_target_name_no}',
-	        }),
-	        autoAmmo: this.getOptionList({
-	          true: '@{ammo_auto_use_var}',
-	          false: '',
-	        }),
-	        autoRevertAdvantage: this.booleanValidator,
-	        houserules: {
-	          savingThrowsHalfProf: this.booleanValidator,
-	          mediumArmorMaxDex: this.getOptionList([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
-	        },
-	        tab: this.getOptionList({
-	          core: 'core',
-	          spells: 'spells',
-	          equipment: 'equipment',
-	          character: 'character',
-	          settings: 'settings',
-	          all: 'all',
-	        }),
-	      },
-	      advTrackerSettings: {
-	        showMarkers: this.booleanValidator,
-	        ignoreNpcs: this.booleanValidator,
-	        advantageMarker: this.statusMarkerValidator,
-	        disadvantageMarker: this.statusMarkerValidator,
-	        output: this.commandOutputValidator,
-	      },
-	      sheetEnhancements: {
-	        rollHPOnDrop: this.booleanValidator,
-	        autoHD: this.booleanValidator,
-	        autoSpellSlots: this.booleanValidator,
-	        autoTraits: this.booleanValidator,
-	      },
-	      genderPronouns: [
-	        {
-	          matchPattern: this.regExpValidator,
-	          nominative: this.stringValidator,
-	          accusative: this.stringValidator,
-	          possessive: this.stringValidator,
-	          reflexive: this.stringValidator,
-	        },
-	      ],
-	      defaultGenderIndex: this.integerValidator,
-	      variants: {
-	        rests: {
-	          longNoHpFullHd: this.booleanValidator,
-	        },
-	      },
-	    };
-	  }
 
 	  static validStatusMarkers() {
 	    const markers = [
@@ -4852,12 +4781,13 @@ var ShapedScripts =
 
 	    return obj;
 	  }
-	};
+	}
 
+	module.exports = ConfigUi;
 
 
 /***/ },
-/* 19 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5222,261 +5152,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 20 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	const _ = __webpack_require__(2);
-	const utils = __webpack_require__(7);
-	const ShapedModule = __webpack_require__(13);
-	const ShapedConfig = __webpack_require__(18);
-
-	class MacroMaker {
-	  constructor(roll20) {
-	    if (!roll20) {
-	      throw new Error('Rol20 parameter is required for MacroMaker constructor');
-	    }
-	    this.roll20 = roll20;
-	    this.sortKey = 'originalOrder';
-	  }
-
-	  getAbilityMaker(character) {
-	    const self = this;
-	    return function abilityMaker(abilitySpec) {
-	      const ability = self.roll20.getOrCreateObj('ability', { characterid: character.id, name: abilitySpec.name });
-	      ability.set({ action: abilitySpec.action, istokenaction: true }); // TODO configure this
-	      return abilitySpec.name;
-	    };
-	  }
-	}
-
-	class AbilityDeleter extends MacroMaker {
-	  constructor(roll20) {
-	    super(roll20);
-	    this.sortKey = '';
-	  }
-
-	  run(character) {
-	    const abilities = this.roll20.findObjs({ type: 'ability', characterid: character.id });
-	    const deleted = _.map(abilities, obj => {
-	      const name = obj.get('name');
-	      obj.remove();
-	      return name;
-	    });
-
-	    return `Deleted: ${_.isEmpty(deleted) ? 'None' : deleted.join(', ')}`;
-	  }
-	}
-
-	class RepeatingAbilityMaker extends MacroMaker {
-	  constructor(repeatingSection, abilityName, label, canMark, roll20) {
-	    super(roll20);
-	    this.repeatingSection = repeatingSection;
-	    this.abilityName = abilityName;
-	    this.label = label;
-	    this.canMark = canMark;
-	  }
-
-	  run(character, options) {
-	    const cache = options.getCache(character.id);
-	    cache[this.repeatingSection] = cache[this.repeatingSection] ||
-	      this.roll20.getRepeatingSectionItemIdsByName(character.id, this.repeatingSection);
-
-	    const configured = _.chain(cache[this.repeatingSection])
-	      .map((repeatingId, repeatingName) => {
-	        let repeatingAction = `%{${character.get('name')}|repeating_${this.repeatingSection}_${repeatingId}` +
-	          `_${this.abilityName}}`;
-	        if (this.canMark && options.mark) {
-	          repeatingAction += '\n!mark @{target|token_id}';
-	        }
-	        return { name: utils.toTitleCase(repeatingName), action: repeatingAction };
-	      })
-	      .map(this.getAbilityMaker(character))
-	      .value();
-
-	    const addedText = _.isEmpty(configured) ? 'Not present for character' : configured.join(', ');
-	    return `${this.label}: ${addedText}`;
-	  }
-	}
-
-	class RollAbilityMaker extends MacroMaker {
-	  constructor(abilityName, newName, roll20) {
-	    super(roll20);
-	    this.abilityName = abilityName;
-	    this.newName = newName;
-	  }
-
-	  run(character) {
-	    return this.getAbilityMaker(character)({
-	      name: this.newName,
-	      action: `%{${character.get('name')}|${this.abilityName}}`,
-	    });
-	  }
-	}
-
-
-	class CommandAbilityMaker extends MacroMaker {
-	  constructor(command, options, newName, roll20) {
-	    super(roll20);
-	    this.command = command;
-	    this.options = options;
-	    this.newName = newName;
-	  }
-
-	  run(character) {
-	    return this.getAbilityMaker(character)({
-	      name: this.newName,
-	      action: `!${this.command} ${utils.toOptionsString(this.options)}`,
-	    });
-	  }
-	}
-
-	class MultiCommandAbilityMaker extends MacroMaker {
-	  constructor(commandSpecs, roll20) {
-	    super(roll20);
-	    this.commandSpecs = commandSpecs;
-	  }
-
-	  run(character) {
-	    const abilMaker = this.getAbilityMaker(character);
-	    return this.commandSpecs.map(cmdSpec =>
-	      abilMaker({
-	        name: cmdSpec.abilityName,
-	        action: `!${cmdSpec.command} ${utils.toOptionsString(cmdSpec.options)}`,
-	      })
-	    );
-	  }
-	}
-
-	class RepeatingSectionMacroMaker extends MacroMaker {
-	  constructor(abilityName, repeatingSection, macroName, roll20) {
-	    super(roll20);
-	    this.abilityName = abilityName;
-	    this.repeatingSection = repeatingSection;
-	    this.macroName = macroName;
-	    this.sortKey = 'originalOrder';
-	  }
-
-	  run(character) {
-	    if (!_.isEmpty(this.roll20.getRepeatingSectionAttrs(character.id, this.repeatingSection))) {
-	      return this.getAbilityMaker(character)({
-	        name: this.macroName,
-	        action: `%{${character.get('name')}|${this.abilityName}}`,
-	      });
-	    }
-	    return `${this.macroName}: Not present for character`;
-	  }
-	}
-
-	function getRepeatingSectionAbilityLookup(sectionName, rollName, roll20) {
-	  return function repeatingSectionAbilityLookup(optionName, existingOptions) {
-	    const characterId = existingOptions.selected.character[0].id;
-	    const cache = existingOptions.getCache(characterId);
-
-	    cache[sectionName] = cache[sectionName] || roll20.getRepeatingSectionItemIdsByName(characterId, sectionName);
-
-	    const repeatingId = cache[sectionName][optionName.toLowerCase()];
-
-	    if (repeatingId) {
-	      return new RollAbilityMaker(`repeating_${sectionName}_${repeatingId}_${rollName}`,
-	        utils.toTitleCase(optionName), roll20);
-	    }
-	    return undefined;
-	  };
-	}
-
-	module.exports = class AbilityMaker extends ShapedModule {
-	  addCommands(commandProcessor) {
-	    const roll20 = this.roll20;
-	    const staticAbilityOptions = {
-	      DELETE: new AbilityDeleter(roll20),
-	      initiative: new RollAbilityMaker('shaped_initiative', 'Init', roll20),
-	      abilityChecks: new RollAbilityMaker('shaped_ability_checks', 'Ability Checks', roll20),
-	      abilityChecksSmall: new RollAbilityMaker('shaped_ability_checks_small', 'Ability Checks', roll20),
-	      abilityChecksQuery: new RollAbilityMaker('shaped_ability_checks_query', 'Ability Checks', roll20),
-	      abilChecks: new RollAbilityMaker('shaped_ability_checks', 'AbilChecks', roll20),
-	      abilChecksSmall: new RollAbilityMaker('shaped_ability_checks_small', 'AbilChecks', roll20),
-	      abilChecksQuery: new RollAbilityMaker('shaped_ability_checks_query', 'AbilChecks', roll20),
-	      advantageTracker: new MultiCommandAbilityMaker([
-	        { command: 'shaped-at', options: ['advantage'], abilityName: 'Advantage' },
-	        { command: 'shaped-at', options: ['disadvantage'], abilityName: 'Disadvantage' },
-	        { command: 'shaped-at', options: ['normal'], abilityName: 'Normal' },
-	      ], roll20),
-	      advantageTrackerQuery: new CommandAbilityMaker('shaped-at',
-	        ['?{Roll Option|Normal,normal|w/ Advantage,advantage|w/ Disadvantage,disadvantage}'], '(dis)Adv Query', roll20),
-	      savingThrows: new RollAbilityMaker('shaped_saving_throw', 'Saving Throws', roll20),
-	      savingThrowsSmall: new RollAbilityMaker('shaped_saving_throw_small', 'Saving Throws', roll20),
-	      savingThrowsQuery: new RollAbilityMaker('shaped_saving_throw_query', 'Saving Throws', roll20),
-	      saves: new RollAbilityMaker('shaped_saving_throw', 'Saves', roll20),
-	      savesSmall: new RollAbilityMaker('shaped_saving_throw_small', 'Saves', roll20),
-	      savesQuery: new RollAbilityMaker('shaped_saving_throw_query', 'Saves', roll20),
-	      attacks: new RepeatingAbilityMaker('attack', 'attack', 'Attacks', true, roll20),
-	      attacksMacro: new RepeatingSectionMacroMaker('shaped_attacks', 'attack', 'Attacks', roll20),
-	      statblock: new RollAbilityMaker('shaped_statblock', 'Statblock', roll20),
-	      traits: new RepeatingAbilityMaker('trait', 'trait', 'Traits', false, roll20),
-	      traitsMacro: new RepeatingSectionMacroMaker('shaped_traits', 'trait', 'Traits', roll20),
-	      actions: new RepeatingAbilityMaker('action', 'action', 'Actions', true, roll20),
-	      actionsMacro: new RepeatingSectionMacroMaker('shaped_actions', 'action', 'Actions', roll20),
-	      reactions: new RepeatingAbilityMaker('reaction', 'action', 'Reactions', false, roll20),
-	      reactionsMacro: new RepeatingSectionMacroMaker('shaped_reactions', 'reaction', 'Reactions', roll20),
-	      legendaryActions: new RepeatingAbilityMaker('legendaryaction', 'action', 'Legendary Actions', false, roll20),
-	      legendaryActionsMacro: new RepeatingSectionMacroMaker('shaped_legendaryactions', 'legendaryaction',
-	        'Legendary Actions', roll20),
-	      legendaryA: new RepeatingAbilityMaker('legendaryaction', 'action', 'LegendaryA', false, roll20),
-	      lairActions: new RepeatingSectionMacroMaker('shaped_lairactions', 'lairaction', 'Lair Actions', roll20),
-	      lairA: new RepeatingSectionMacroMaker('shaped_lairactions', 'lairaction', 'LairA', roll20),
-	      regionalEffects: new RepeatingSectionMacroMaker('shaped_regionaleffects', 'regionaleffect',
-	        'Regional Effects', roll20),
-	      regionalE: new RepeatingSectionMacroMaker('shaped_regionaleffects', 'regionaleffect', 'RegionalE', roll20),
-	      rests: new CommandAbilityMaker('shaped-rest', ['?{Rest type|Short,short|Long,long}'], 'Rests', roll20),
-	    };
-
-
-	    return commandProcessor.addCommand('abilities', this.addAbility.bind(this))
-	      .withSelection({
-	        character: {
-	          min: 1,
-	          max: Infinity,
-	        },
-	      })
-	      .optionLookup('abilities', staticAbilityOptions)
-	      .optionLookup('abilities', getRepeatingSectionAbilityLookup('spell', 'spell', this.roll20))
-	      .optionLookup('abilities', getRepeatingSectionAbilityLookup('trait', 'trait', this.roll20))
-	      .option('mark', ShapedConfig.booleanValidator);
-	  }
-
-	  addAbility(options) {
-	    if (_.isEmpty(options.abilities)) {
-	      this.reportError('No abilities specified. ' +
-	        'Take a look at the documentation for a list of ability options.');
-	      return;
-	    }
-	    const messages = _.map(options.selected.character, (character) => {
-	      const operationMessages = _.chain(options.abilities)
-	        .sortBy('sortKey')
-	        .map(maker => maker.run(character, options))
-	        .value();
-
-
-	      if (_.isEmpty(operationMessages)) {
-	        return `<li>${character.get('name')}: Nothing to do</li>`;
-	      }
-
-	      let message;
-	      message = `<li>Configured the following abilities for character ${character.get('name')}:<ul><li>`;
-	      message += operationMessages.join('</li><li>');
-	      message += '</li></ul></li>';
-
-	      return message;
-	    });
-
-	    this.report('Ability Creation', `<ul>${messages.join('')}</ul>`);
-	  }
-	};
-
-
-/***/ },
-/* 21 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5738,7 +5414,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 22 */
+/* 19 */
 /***/ function(module, exports) {
 
 	function sanitise(statblock, logger) {
@@ -5911,7 +5587,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 23 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
