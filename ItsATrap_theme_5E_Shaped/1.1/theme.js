@@ -351,6 +351,9 @@
       // If the effect has a sound, try to play it.
       ItsATrap.playEffectSound(effect);
 
+      // If the effect has fx, play them.
+      ItsATrap.playTrapFX(effect);
+
       // If the effect has an api command, execute it.
       ItsATrap.executeTrapCommand(effect);
     },
