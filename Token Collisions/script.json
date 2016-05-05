@@ -3,7 +3,7 @@
     "script": "TokenCollisions.js",
     "version": "1.2",
     "previousversions": [1.1],
-    "description": "# Token Collisions\r\rThis script provides a small library for checking for collisions between tokens. It provides no functionality by itself, but it is used by other scripts such as ```It's A Trap``` and ```World Map Discovery```.\r\rThe library is exposed through the ```TokenCollisions``` object.",
+    "description": "# Token Collisions\r\rThis script provides a small library for checking for collisions between\rtokens. It provides no functionality by itself, but it is used by other\rscripts such as ```It's A Trap``` and ```World Map Discovery```.\r\r## API Documentation:\r\rThe following functions are exposed by the ```TokenCollisions``` object:\r\r```\r/**\r * Returns the list of other tokens that some token collided with during\r * its last movement.\r * The tokens are sorted in the order they are collided with.\r * @param {Graphic} token\r * @param {Graphic[]} others\r * @return {Graphic[]}\r */\rfunction getCollisions(token, others)\r```\r\r```\r/**\r * Returns the first token, from some list of tokens, that a token has\r * collided with during its last movement, or undfined if there was\r * no collision.\r * @param {Graphic} token\r * @param {Graphic[]} others\r * @return {Graphic}\r */\rfunction getFirstCollision(token, others)\r```\r",
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
     "useroptions": [],
