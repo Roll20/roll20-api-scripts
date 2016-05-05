@@ -1,6 +1,6 @@
 # It's A Trap! - 5th Edition OGL theme
 
-_v1.1 udpates:_
+_v1.1 updates:_
 * The theme now supports the 'fx' basic JSON property made available in It's A Trap! v2.3.
 
 This is a D&D 5th edition trap theme for the It's A Trap! script, compatible with
