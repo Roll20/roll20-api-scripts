@@ -7,7 +7,7 @@
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
     "useroptions": [],
-    "dependencies": ["Vector Math"],
+    "dependencies": ["Matrix Math", "Path Math", "Vector Math"],
     "modifies": {
         "lastmove": "read",
         "left": "read",
