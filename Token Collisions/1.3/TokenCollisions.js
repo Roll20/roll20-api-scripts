@@ -2,6 +2,7 @@
  * A small library for testing collisions between moving tokens in Roll20.
  */
 var TokenCollisions = (function() {
+    'use strict';
 
     /**
      * A movement waypoint defined by two points: The starting point and the
@@ -49,7 +50,10 @@ var TokenCollisions = (function() {
          .sortBy(function(other) {
            var dist;
            if(other.get('aura1_square'))
-              dist = _testCircleRectCollision(token, other, waypoint);
+              if(token.get('aura1_square'))
+                dist = _testRectsCollision(token, other, waypoint);
+              else
+                dist = _testCircleRectCollision(token, other, waypoint);
            else
               dist = _testCirclesCollision(token, other, waypoint);
 
@@ -190,7 +194,7 @@ var TokenCollisions = (function() {
      * @param  {Graphic} other
      * @param {waypoint} waypoint
      * @return {number}
-     *         The distance from the start point at which the collision happens,
+     *         The distance along the waypoint at which the collision happens,
      *         or undefined if there is no collision.
      */
     function _testCirclesCollision(token, other, waypoint) {
@@ -233,7 +237,7 @@ var TokenCollisions = (function() {
      * @param  {Graphic} other
      * @param {waypoint} waypoint
      * @return {number}
-     *         The distance from the start point at which the collision happens,
+     *         The distance along the waypoint at which the collision happens,
      *         or undefined if there is no collision.
      */
     function _testCircleRectCollision(token, other, waypoint) {
@@ -300,6 +304,98 @@ var TokenCollisions = (function() {
         return undefined;
       else
         return shortest;
+    }
+
+    /**
+     * Tests for a collision between two rectangular tokens and returns
+     * the shortest distance to the collision.
+     * @param  {Graphic} token
+     * @param  {Graphic} other
+     * @param {waypoint} waypoint
+     * @return {number}
+     *         The distance along the waypoint at which the collision happens,
+     *         or undefined if there is no collision.
+     */
+    function _testRectsCollision(token, other, waypoint) {
+      var startPt = _.clone(waypoint[0]);
+      startPt[2] = 1;
+      var endPt = _.clone(waypoint[1]);
+      endPt[2] = 1;
+      var u = VecMath.vec(startPt, endPt);
+      var negateU = VecMath.scale(u, -1);
+
+      // Get token's corner points (from where it started).
+      var tokenCorners = _.map(_getRectTokenCorners(token), function(corner) {
+        return VecMath.sub(corner, u);
+      });
+      var otherCorners = _getRectTokenCorners(other);
+
+      // Get the segments of the two rectangles.
+      var tokenSegments = [
+        [tokenCorners[0], tokenCorners[1]],
+        [tokenCorners[1], tokenCorners[3]],
+        [tokenCorners[3], tokenCorners[2]],
+        [tokenCorners[2], tokenCorners[0]]
+      ];
+      var otherSegments = [
+        [otherCorners[0], otherCorners[1]],
+        [otherCorners[1], otherCorners[3]],
+        [otherCorners[3], otherCorners[2]],
+        [otherCorners[2], otherCorners[0]]
+      ];
+
+      // Skip if the movement started inside other.
+      var isOverlapping = !!_.find(tokenSegments, function(seg1) {
+          return !!_.find(otherSegments, function(seg2) {
+            return PathMath.segmentIntersection(seg1, seg2);
+          });
+        });
+      if(isOverlapping)
+        return undefined;
+
+      var shortest = _.min([
+        _testRectsCollisionProjection(tokenCorners, otherSegments, u),
+        _testRectsCollisionProjection(otherCorners, tokenSegments, negateU)
+      ]);
+
+      // _.min will return Infinity if all distances are undefined. So guard against that.
+      if(shortest === Infinity)
+        return undefined;
+      else
+        return shortest;
+    }
+
+    /**
+     * Helper for _testRectsCollision. It projects a rectangle's corners along
+     * the movement vector to find the closest intersection to the other
+     * rectangle's segemnts.
+     * @private
+     * @param  {vec3[]} tokenCorners
+     * @param  {Segment[]} otherSegments
+     * @param  {vec3} u
+     * @return {number}
+     */
+    function _testRectsCollisionProjection(tokenCorners, otherSegments, u) {
+
+      // Project each corner along u and find the shortest distance to an intersection.
+      return _.chain(tokenCorners)
+        .map(function(corner) {
+          var projectedSeg = [corner, VecMath.add(corner, u)];
+
+          // Get the shortest distance from the current corner to its projected intersection.
+          return _.chain(otherSegments)
+            .map(function(seg) {
+              var intersection = PathMath.segmentIntersection(projectedSeg, seg);
+              if(intersection)
+                return VecMath.dist(corner, intersection[0]);
+              else
+                return undefined;
+            })
+            .min()
+            .value()
+        })
+        .min()
+        .value();
     }
 
 
