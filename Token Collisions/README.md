@@ -2,6 +2,7 @@
 
 _v1.3 Updates:_
 * Supports circle-to-rectangle token collisions.
+* Added isOverlapping() function.
 
 This script provides a small library for checking for collisions between
 tokens. It provides no functionality by itself, but it is used by other
@@ -39,4 +40,19 @@ function getCollisions(token, others)
  * @return {Graphic}
  */
 function getFirstCollision(token, others)
+```
+
+```
+/**
+ * Checks if a non-moving token is currently overlapping another token.
+ * This supports circular and rectangular tokens.
+ * Tokens are considered to be rectangular if their aura1 is a square.
+ * @param  {Graphic}  token
+ * @param  {Graphic}  other
+ * @param {boolean} [collideOnEdge=false]
+ *        Whether tokens should count as overlapping even if they are only
+ *        touching on the very edge.
+ * @return {Boolean}
+ */
+function isOverlapping(token, other, collideOnEdge)
 ```
