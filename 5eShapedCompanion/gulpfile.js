@@ -62,11 +62,11 @@ gulp.task('makeLatest', ['getReleasesFromGithub', 'clean'], () => {
 gulp.task('getReleasesFromGithub', () => {
   const localReleases = getReleaseDirectories();
   github.authenticate(auth);
-  const releasesAsync = github.releases.listReleases(repoInfo);
+  const releasesAsync = github.releases.listReleases(_.extend({per_page:100}, repoInfo));
 
   const assetsAsync = releasesAsync
     .then(releases =>
-      Promise.all(releases.map(release =>
+      Promise.all(releases.filter(release => !release.prerelease).map(release =>
         github.releases.listAssets(_.defaults({ id: release.id }, repoInfo))
       ))
     );

@@ -1,0 +1,26 @@
+{
+  "name": "Custom FX",
+  "script": "Custom FX.js",
+  "version": "0.1",
+  "previousversions": [],
+  "description": "Enables the creation and previewing of FX objects. `!createfx` will create an FX object directly, while `!previewfx` will allow you to build an FX object incrementally, seeing the changes to the effect live. Use `!savepreview` to save the FX being built, and `!endpreview` to stop displaying it. (Ending the preview will not erase the saved properties for the preview object, however.) See `!help` for more detailed information.",
+  "authors": "Brian Shields",
+  "roll20userid": "235259",
+  "patreon": "https://www.patreon.com/bshields",
+  "useroptions": [],
+  "dependencies": ["splitArgs"],
+  "modifies": {
+    "Campaign.playerpageid": "read",
+    "graphic.left": "read",
+    "graphic.top": "read",
+    "path.top": "read,write",
+    "path.left": "read,write",
+    "path.rotation": "read,write",
+    "path.width": "read,write",
+    "path.height": "read,write",
+    "path.scaleX": "read,write",
+    "path.scaleY": "read,write",
+    "state.bshields.customfx": "read,write"
+  },
+  "conflicts": []
+}
