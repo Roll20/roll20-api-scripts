@@ -5,6 +5,21 @@ var TokenCollisions = (function() {
     'use strict';
 
     /**
+     * A circle, defined by its center point and radius.
+     * @typedef {object} circle
+     * @property {vec3} pt
+     *           The center point.
+     * @property {number} r
+     *           The radius.
+     */
+
+    /**
+     * A rectangle defined by its corner points, going either clockwise or
+     * counter-clockwise around its center.
+     * @typedef {vec3[]}
+     */
+
+    /**
      * A movement waypoint defined by two points: The starting point and the
      * movement's endpoint.
      * @typedef {vec2[]} waypoint
@@ -49,13 +64,16 @@ var TokenCollisions = (function() {
          // from the starting point at which they occur.
          .sortBy(function(other) {
            var dist;
-           if(other.get('aura1_square'))
-              if(token.get('aura1_square'))
+           if(token.get('aura1_square'))
+              if(other.get('aura1_square'))
                 dist = _testRectsCollision(token, other, waypoint);
               else
-                dist = _testCircleRectCollision(token, other, waypoint);
+                dist = _testRectCircleCollision(token, other, waypoint);
            else
-              dist = _testCirclesCollision(token, other, waypoint);
+              if(other.get('aura1_square'))
+                dist = _testCircleRectCollision(token, other, waypoint);
+              else
+                dist = _testCirclesCollision(token, other, waypoint);
 
            if(dist !== undefined)
              numCollisions++;
@@ -127,28 +145,29 @@ var TokenCollisions = (function() {
     }
 
     /**
-     * Gets the points of a rectangular token's corners. This allows for
-     * rotated tokens.
-     * @param  {Graphic} rectToken
-     * @return {vec3[]}
+     * Gets the rectangule bounding a token.
+     * @param  {Graphic} token
+     * @return {rectangle}
      */
-    function _getRectTokenCorners(rectToken) {
-      var width = rectToken.get('width');
-      var height = rectToken.get('height');
-      var rectX = rectToken.get('left');
-      var rectY = rectToken.get('top');
-      var angle = rectToken.get('rotation')*Math.PI/180;
+    function _getTokenRectangle(token, inset) {
+      inset = inset || 0;
+
+      var width = token.get('width') - inset;
+      var height = token.get('height') - inset;
+      var x = token.get('left');
+      var y = token.get('top');
+      var angle = token.get('rotation')*Math.PI/180;
 
       var m = MatrixMath.multiply(
-        MatrixMath.translate([rectX, rectY]),
+        MatrixMath.translate([x, y]),
         MatrixMath.rotate(angle)
       );
-
-      var a = MatrixMath.multiply(m, [-width/2, -height/2, 1]);
-      var b = MatrixMath.multiply(m, [width/2, -height/2, 1]);
-      var c = MatrixMath.multiply(m, [-width/2, height/2, 1]);
-      var d = MatrixMath.multiply(m, [width/2, height/2, 1]);
-      return [a, b, c, d];
+      return [
+        MatrixMath.multiply(m, [-width/2, -height/2, 1]),
+        MatrixMath.multiply(m, [width/2, -height/2, 1]),
+        MatrixMath.multiply(m, [width/2, height/2, 1]),
+        MatrixMath.multiply(m, [-width/2, height/2, 1])
+      ];
     }
 
     /**
@@ -164,27 +183,100 @@ var TokenCollisions = (function() {
     }
 
     /**
-     * Checks if a point is inside a rectangular token's area.
-     * The rectangular token might be rotated.
-     * @param  {vec3}  pt
-     * @param  {Graphic}  rectToken
+     * Checks if a circle is overlapping a rectangle.
+     * @param  {circle}  circle
+     * @param  {rectangle}  rect
      * @return {Boolean}
      */
-    function _isPointInRectToken(pt, rectToken) {
-      var width = rectToken.get('width');
-      var height = rectToken.get('height');
-      var rectX = rectToken.get('left');
-      var rectY = rectToken.get('top');
-      var angle = rectToken.get('rotation')*Math.PI/180;
+    function _isOverlappingCircleRect(circle, rect) {
+      var rectSegs = [
+        [rect[0], rect[1]],
+        [rect[1], rect[2]],
+        [rect[2], rect[3]],
+        [rect[3], rect[0]]
+      ];
 
-      var m = MatrixMath.multiply(
-        MatrixMath.translate([rectX, rectY]),
-        MatrixMath.rotate(angle)
-      );
-      var mInv = MatrixMath.inverse(m);
+      // True if the circle's center is inside the rectangle or if the circle's
+      // radius intersects one of the rectangle's segments.
+      return _isPointInRect(circle.pt, rect) ||
+        !!_.find(rectSegs, function(seg1) {
+          var u = VecMath.vec(seg1[0], seg1[1]);
+          var uAngle = Math.atan2(u[1], u[0]);
 
-      var pt2 = MatrixMath.multiply(mInv, pt);
-      return (Math.abs(pt2[0]) <= width/2 && Math.abs(pt2[1]) <= height/2);
+          var orthogonalAngles = [uAngle + Math.PI/2, uAngle - Math.PI/2];
+          return !!_.find(orthogonalAngles, function(angle) {
+            var endPt = [
+              circle.pt[0] + circle.r*Math.cos(angle),
+              circle.pt[1] + circle.r*Math.sin(angle)
+            ];
+            var seg2 = [
+              circle.pt,
+              endPt
+            ];
+            return PathMath.segmentIntersection(seg1, seg2);
+          });
+        });
+    }
+
+    /**
+     * Checks if a rectangle is overlapping a rectangle.
+     * @param  {rectangle}  rect1
+     *         The segments of the first rectangle, going around either
+     *         clockwise or counter-clockwise.
+     * @param  {rectangle}  rect2
+     *         The segments of the first rectangle, going around either
+     *         clockwise or counter-clockwise.
+     * @return {Boolean}
+     */
+    function _isOverlappingRectRect(rect1, rect2) {
+      var rect1Segs = [
+        [rect1[0], rect1[1]],
+        [rect1[1], rect1[2]],
+        [rect1[2], rect1[3]],
+        [rect1[3], rect1[0]]
+      ];
+      var rect2Segs = [
+        [rect2[0], rect2[1]],
+        [rect2[1], rect2[2]],
+        [rect2[2], rect2[3]],
+        [rect2[3], rect2[0]]
+      ];
+
+      // True iff the rectangles intersect or if one entirely contains the other.
+      return !!_.find(rect1Segs, function(seg1) {
+          return !!_.find(rect2Segs, function(seg2) {
+            return PathMath.segmentIntersection(seg1, seg2);
+          });
+        }) ||
+        _isPointInRect(rect1Segs[0][0], rect2) ||
+        _isPointInRect(rect2Segs[0][0], rect1);
+    }
+
+    /**
+     * Checks if a point is inside a rectangle.
+     * @param  {vec3}  pt
+     * @param  {rectangle}  rect
+     * @return {Boolean}
+     */
+    function _isPointInRect(pt, rect) {
+      var rectSegs = [
+        [rect[0], rect[1]],
+        [rect[1], rect[2]],
+        [rect[2], rect[3]],
+        [rect[3], rect[0]]
+      ];
+
+      var underCount = 0;
+      _.each(rectSegs, function(seg) {
+        var u = VecMath.vec(seg[0], seg[1]);
+        var v = VecMath.vec(seg[0], pt);
+        var crossUV = VecMath.cross(u, v);
+        if(crossUV[2] > 0)
+          underCount++;
+        else
+          underCount--;
+      });
+      return Math.abs(underCount) === 4;
     }
 
     /**
@@ -247,49 +339,68 @@ var TokenCollisions = (function() {
       endPt[2] = 1;
       var u = VecMath.vec(startPt, endPt);
 
-      var otherPt = _getTokenPt(other);
+      // Convert the tokens to shapes.
+      var circle = {
+        pt: startPt,
+        r: token.get('width')/2 - 1
+      };
+      var rect = _getTokenRectangle(other);
 
       // No collision if token is already inside other's area.
-      if(_isPointInRectToken(startPt, other))
+      if(_isOverlappingCircleRect(circle, rect))
         return undefined;
 
-      // Token's radius.
-      var r = token.get('width')/2;
+      // Find shortest distance to one of the segments.
+      var shortest = _testCircleRectCollisionProjection(circle, rect, u);
 
-      // Get the segments for the rectangle's sides.
-      var corners = _getRectTokenCorners(other);
+      // _.min will return Infinity if all distances are undefined. So guard against that.
+      if(shortest === Infinity)
+        return undefined;
+      else
+        return shortest;
+    }
+
+    /**
+     * Helper for _testCircleRectCollisionProjection.
+     * Gets the shortest distance from a circle to its tangent point on a rectangle.
+     * @private
+     * @param  {circle} circle
+     * @param  {rectangle} rect
+     * @param  {vec3} u
+     * @return {number}
+     */
+    function _testCircleRectCollisionProjection(circle, rect, u) {
       var rectSegs = [
-        [corners[0], corners[1]],
-        [corners[1], corners[3]],
-        [corners[3], corners[2]],
-        [corners[2], corners[0]]
+        [rect[0], rect[1]],
+        [rect[1], rect[2]],
+        [rect[2], rect[3]],
+        [rect[3], rect[0]]
       ];
 
-      // Find shortest distance to one of the segments.
-      var shortest = _.chain(rectSegs)
-        .map(function(seg) {
-          var segVec = VecMath.vec(seg[0], seg[1]);
-          var segAngle = Math.atan2(segVec[1], segVec[0]);
+      var moveSegs = [];
+      var uAngle = Math.atan2(u[1], u[0]);
+      _.each([uAngle + Math.PI/2, uAngle, uAngle - Math.PI/2], function(angle) {
+        var p = [
+          circle.pt[0] + circle.r*Math.cos(angle),
+          circle.pt[1] + circle.r*Math.sin(angle),
+          1
+        ];
+        var q = VecMath.add(p, u);
+        moveSegs.push([p, q]);
+      });
+      moveSegs.push([moveSegs[0][0], moveSegs[1][1]]);
+      moveSegs.push([moveSegs[2][0], moveSegs[1][1]]);
 
-          // The closest points where token will collide is where the segment
-          // is tangent to it.
-          var orthogonalAngles = [segAngle + 90, segAngle - 90];
-          return _.chain(orthogonalAngles)
-            .map(function(angle) {
-
-              // Project a segment from the orthogonal point on token in the
-              // direction and with the length of u.
-              var p = [
-                startPt[0] + r*Math.cos(angle),
-                startPt[1] + r*Math.sin(angle),
-                1
-              ];
-              var q = VecMath.add(p, u);
-
-              // Find the distance to where the projected line intersects.
-              var intersection = PathMath.segmentIntersection([p, q], seg);
-              if(intersection)
-                return VecMath.dist(intersection[0], p);
+      return _.chain(rectSegs)
+        .map(function(seg1) {
+          return _.chain(moveSegs)
+            .map(function(seg2) {
+              var intersection = PathMath.segmentIntersection(seg1, seg2);
+              if(intersection) {
+                var v = VecMath.sub(intersection[0], seg2[0]);
+                //log(v);
+                return VecMath.length(v);
+              }
               else
                 return undefined;
             })
@@ -298,6 +409,47 @@ var TokenCollisions = (function() {
         })
         .min()
         .value();
+    }
+
+    /**
+     * Tests for an in-movement collisions between a rectangular token and a circular token.
+     * @param  {Graphic} token
+     * @param  {Graphic} other
+     * @param {waypoint} waypoint
+     * @return {number}
+     *         The distance along the waypoint at which the collision happens,
+     *         or undefined if there is no collision.
+     */
+    function _testRectCircleCollision(token, other, waypoint) {
+      var startPt = _.clone(waypoint[0]);
+      startPt[2] = 1;
+      var endPt = _.clone(waypoint[1]);
+      endPt[2] = 1;
+
+      var otherPt = _getTokenPt(other);
+      otherPt[2] = 1;
+
+      var u = VecMath.vec(startPt, endPt);
+      var negateU = VecMath.vec(endPt, startPt);
+
+      // A circle for the token at its start point.
+      var circle = {
+        pt: otherPt,
+        r: other.get('width')/2
+      };
+
+      // Get token's corner points (from where it started).
+      var tokenRect = _.map(_getTokenRectangle(token), function(corner) {
+        var offset = VecMath.sub(corner, [token.get('left'), token.get('top'), 1]);
+        return VecMath.add(startPt, offset);
+      });
+
+      // No collision if token is already inside other's area.
+      if(_isOverlappingCircleRect(circle, tokenRect))
+        return undefined;
+
+      // Find shortest distance to one of the segments.
+      var shortest = _testCircleRectCollisionProjection(circle, tokenRect, negateU);
 
       // _.min will return Infinity if all distances are undefined. So guard against that.
       if(shortest === Infinity)
@@ -325,37 +477,19 @@ var TokenCollisions = (function() {
       var negateU = VecMath.scale(u, -1);
 
       // Get token's corner points (from where it started).
-      var tokenCorners = _.map(_getRectTokenCorners(token), function(corner) {
-        return VecMath.sub(corner, u);
+      var tokenRect = _.map(_getTokenRectangle(token, 1), function(corner) {
+        var offset = VecMath.sub(corner, [token.get('left'), token.get('top'), 1]);
+        return VecMath.add(startPt, offset);
       });
-      var otherCorners = _getRectTokenCorners(other);
+      var otherRect = _getTokenRectangle(other);
 
-      // Get the segments of the two rectangles.
-      var tokenSegments = [
-        [tokenCorners[0], tokenCorners[1]],
-        [tokenCorners[1], tokenCorners[3]],
-        [tokenCorners[3], tokenCorners[2]],
-        [tokenCorners[2], tokenCorners[0]]
-      ];
-      var otherSegments = [
-        [otherCorners[0], otherCorners[1]],
-        [otherCorners[1], otherCorners[3]],
-        [otherCorners[3], otherCorners[2]],
-        [otherCorners[2], otherCorners[0]]
-      ];
-
-      // Skip if the movement started inside other.
-      var isOverlapping = !!_.find(tokenSegments, function(seg1) {
-          return !!_.find(otherSegments, function(seg2) {
-            return PathMath.segmentIntersection(seg1, seg2);
-          });
-        });
-      if(isOverlapping)
+      // Skip if they were already overlapping at the start.
+      if(_isOverlappingRectRect(tokenRect, otherRect))
         return undefined;
 
       var shortest = _.min([
-        _testRectsCollisionProjection(tokenCorners, otherSegments, u),
-        _testRectsCollisionProjection(otherCorners, tokenSegments, negateU)
+        _testRectsCollisionProjection(tokenRect, otherRect, u),
+        _testRectsCollisionProjection(otherRect, tokenRect, negateU)
       ]);
 
       // _.min will return Infinity if all distances are undefined. So guard against that.
@@ -370,20 +504,26 @@ var TokenCollisions = (function() {
      * the movement vector to find the closest intersection to the other
      * rectangle's segemnts.
      * @private
-     * @param  {vec3[]} tokenCorners
-     * @param  {Segment[]} otherSegments
+     * @param  {rectangle} rect1
+     * @param  {rectangle} rect2
      * @param  {vec3} u
      * @return {number}
      */
-    function _testRectsCollisionProjection(tokenCorners, otherSegments, u) {
+    function _testRectsCollisionProjection(rect1, rect2, u) {
+      var rect2Segs = [
+        [rect2[0], rect2[1]],
+        [rect2[1], rect2[2]],
+        [rect2[2], rect2[3]],
+        [rect2[3], rect2[0]]
+      ];
 
       // Project each corner along u and find the shortest distance to an intersection.
-      return _.chain(tokenCorners)
+      return _.chain(rect1)
         .map(function(corner) {
           var projectedSeg = [corner, VecMath.add(corner, u)];
 
           // Get the shortest distance from the current corner to its projected intersection.
-          return _.chain(otherSegments)
+          return _.chain(rect2Segs)
             .map(function(seg) {
               var intersection = PathMath.segmentIntersection(projectedSeg, seg);
               if(intersection)
