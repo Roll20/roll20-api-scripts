@@ -145,8 +145,28 @@ var TokenCollisions = (function() {
     }
 
     /**
-     * Gets the rectangule bounding a token.
+     * Gets the circle bounding a token.
      * @param  {Graphic} token
+     * @param  {number} inset
+     * @return {circle}
+     */
+    function _getTokenCircle(token, inset) {
+      inset = inset || 0;
+      var x = token.get('left');
+      var y = token.get('top');
+      var r = token.get('width')/2 - inset;
+
+      return {
+        pt: [x, y, 1],
+        r: r
+      };
+    }
+
+    /**
+     * Gets the rectangule bounding a token.
+     * @private
+     * @param  {Graphic} token
+     * @param {number} inset
      * @return {rectangle}
      */
     function _getTokenRectangle(token, inset) {
@@ -183,7 +203,68 @@ var TokenCollisions = (function() {
     }
 
     /**
+     * Checks if a non-moving token is currently overlapping another token.
+     * This supports circular and rectangular tokens.
+     * Tokens are considered to be rectangular if their aura1 is a square.
+     * @param  {Graphic}  token
+     * @param  {Graphic}  other
+     * @param {boolean} [collideOnEdge=false]
+     *        Whether tokens should count as overlapping even if they are only
+     *        touching on the very edge.
+     * @return {Boolean}
+     */
+    function isOverlapping(token, other, collideOnEdge) {
+      // A token cannot overlap itself.
+      if(token.get('_id') === other.get('_id'))
+        return false;
+
+      // Inset by 1 pixel if we don't want to collide on edges.
+      var inset = 1;
+      if(collideOnEdge)
+        inset = 0;
+
+      // All the overlap tests inset the shapes by 1, so that we don't collide
+      // if we're just on the very edge (which is most often the case on grid maps).
+      if(token.get('aura1_square')) {
+        var tokenRect = _getTokenRectangle(token, inset);
+        if(other.get('aura1_square')) {
+          var otherRect = _getTokenRectangle(other, inset);
+          return _isOverlappingRectRect(tokenRect, otherRect);
+        }
+        else {
+          var otherCircle = _getTokenCircle(other, inset);
+          return _isOverlappingCircleRect(otherCircle, tokenRect);
+        }
+      }
+      else {
+        var tokenCircle = _getTokenCircle(token, inset);
+        if(other.get('aura1_square')) {
+          var otherRect = _getTokenRectangle(other, inset);
+          return _isOverlappingCircleRect(tokenCircle, otherRect);
+        }
+        else {
+          var otherCircle = _getTokenCircle(other, inset);
+          return _isOverlappingCircleCircle(tokenCircle, otherCircle);
+        }
+      }
+    }
+
+    /**
+     * Checks if a circle is overlapping a circle.
+     * @private
+     * @param  {circle}  circle1
+     * @param  {circle}  circle2
+     * @return {Boolean}
+     */
+    function _isOverlappingCircleCircle(circle1, circle2) {
+      var threshold = circle1.r + circle2.r;
+      var dist = VecMath.dist(circle1.pt, circle2.pt);
+      return dist <= threshold;
+    }
+
+    /**
      * Checks if a circle is overlapping a rectangle.
+     * @private
      * @param  {circle}  circle
      * @param  {rectangle}  rect
      * @return {Boolean}
@@ -542,6 +623,7 @@ var TokenCollisions = (function() {
     // The exposed API.
     return {
         getFirstCollision: getFirstCollision,
-        getCollisions: getCollisions
+        getCollisions: getCollisions,
+        isOverlapping: isOverlapping
     };
 })();
