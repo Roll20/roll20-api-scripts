@@ -10,145 +10,40 @@
     'cha': 'charisma_saving_throw_mod_with_sign'
   };
 
-  // A cache mapping character names to the row number of their Perception skill.
-  // Ideally, the row IDs would be cached instead, since that is impervious to
-  // changing the order of the rows.
-  // In order to use row IDs, the 5E Shaped character sheet would need hidden
-  // attributes in each row to store their IDs.
-  var perceptionRowNumCache = {};
-
   /**
    * Gets the total Armor Class for a character.
    * @param  {Character}   character
-   * @param  {Function} callback
-   *         The callback takes one parameter - the AC total.
+   * @return {number}
    */
-  function getAC(character, callback) {
-    getSheetAttr(character, 'ac_armored_calc', function(armoredBonus) {
-      callback(armoredBonus + 10);
-    });
+  function getAC(character) {
+   return parseInt(getAttrByName(character.get('_id'), 'AC'));
   }
 
   /**
    * Gets the passive perception for a character. It is assumed that
    * Perception is the 12th skill in the character's skill list.
-   * @param  {[type]}   character [description]
-   * @param  {Function} callback  [description]
-   * @return {[type]}             [description]
+   * @param  {Character}   character
+   * @return {number}
    */
-  function getPassivePerception(character, callback) {
-    var charName = character.get('name');
-    var rowNum = perceptionRowNumCache[charName];
-
-    if(rowNum !== undefined) {
-      getSheetAttr(character, 'repeating_skill_$' + rowNum + '_total_with_sign', function(value) {
-        callback(10 + value);
-      });
+  function getPassivePerception(character) {
+    var skills = filterObjs(function(o) {
+      return o.get('type') === 'attribute' &&
+        o.get('characterid') === character.get('_id') &&
+        /repeating_skill_(-|\$)([a-zA-Z]|\d)+_name/.test(o.get('name'));
+    });
+    var skill = _.find(skills, function(skill) {
+      return skill.get('current').toLowerCase().trim() === 'perception';
+    });
+    if(skill) {
+      var rowId = skill.get('name').split('_')[2];
+      var perception = getAttrByName(character.get('_id'), 'repeating_skill_' + rowId + '_passive');
+      return parseInt(perception);
     }
     else {
-      // There's no way at the time of this writing to get the exact number of
-      // rows in a repeating section. So for now 30 is used as a reasonable upper limit.
-      var maxSkills = 30;
-      count = 0;
-      _.each(_.range(maxSkills), function(row) {
-        getSheetAttrText(character, 'repeating_skill_$' + row + '_name', function(skillName) {
-          count++;
-          if(skillName) {
-            skillName = skillName.trim().toLowerCase();
-            if(skillName === 'perception') {
-              perceptionRowNumCache[charName] = row;
-
-              // Now that we know the row number, try again.
-              getPassivePerception(character, callback);
-            }
-          }
-          else if(count === maxSkills) {
-            callback(undefined);
-          }
-        });
-      });
+      return undefined;
     }
   }
 
-
-  /**
-   * Asynchronously gets the value of a character sheet attribute.
-   * @param  {Character}   character
-   * @param  {string}   attr
-   * @param  {Function} callback
-   *         The callback takes one parameter: the value of the attribute.
-   */
-  function getSheetAttr(character, attr, callback) {
-    try {
-      var rollExpr = '@{' + character.get('name') + '|' + attr + '}'
-      rollAsync(rollExpr, function(roll) {
-        if(roll)
-          callback(roll.total);
-        else {
-          callback(undefined);
-        }
-      });
-    }
-    catch(err) {
-      callback(undefined);
-    }
-  }
-
-  /**
-   * Asynchronously gets the value of a text attribute on a character sheet.
-   * @param  {Character}   character
-   * @param  {string}   attr
-   * @param  {Function} callback
-   *         The callback takes one parameter: the value of the attribute.
-   */
-  function getSheetAttrText(character, attr, callback) {
-    try {
-      var rollExpr = '[[0 @{' + character.get('name') + '|' + attr + '}]]';
-      sendChat('TrapTheme', rollExpr, function(msg) {
-        try {
-          var results = msg[0].inlinerolls[0].results;
-          var text = _.find(results.rolls, function(roll) {
-            if(roll.type === 'C')
-              return roll.text;
-          });
-          callback(text);
-        }
-        catch(err) {
-          callback(undefined);
-        }
-      });
-    }
-    catch(err) {
-      var regex = /"text":"(.*)?"/;
-      var match = regex.exec(err);
-      if(match)
-        callback(match[1]);
-      else
-        callback(undefined);
-    }
-  }
-
-  /**
-   * Asynchronously gets the value of multiple character sheet attributes in
-   * parallel.
-   * @param  {Character}   character
-   * @param  {string[]}   attrList
-   * @param  {Function} callback
-   *         The callback takes one parameter: the value of the attribute.
-   */
-  function getSheetAttrs(character, attrList, callback) {
-    var count = 0;
-    var values = {};
-    _.each(attrList, function(attr) {
-      getSheetAttr(character, attr, function(value) {
-        values[attr] = value;
-        count++;
-
-        if(count === attrList.length)
-          callback(values);
-      });
-    });
-  }
 
   /**
    * Produces HTML for a padded table row.
@@ -311,33 +206,32 @@
 
         // Does the trap make an attack vs AC?
         if(effect.attack) {
-          getAC(character, function(ac) {
-            rollAsync('1d20 + ' + effect.attack, function(atkRoll) {
-              msgData.attack = {
-                ac: ac,
-                bonus: effect.attack,
-                roll: atkRoll
-              };
-              msgData.trapHit = atkRoll.total >= ac;
-              sendHtmlTrapMessage(msgData);
-            });
+          var ac = getAC(character);
+          rollAsync('1d20 + ' + effect.attack, function(atkRoll) {
+            msgData.attack = {
+              ac: ac,
+              bonus: effect.attack,
+              roll: atkRoll
+            };
+            msgData.trapHit = atkRoll.total >= ac;
+            sendHtmlTrapMessage(msgData);
           });
         }
 
         // Does the trap require a saving throw?
         else if(effect.save && effect.saveDC) {
-          getSheetAttr(character, saveNames[effect.save], function(saveBonus) {
-            rollAsync('1d20 + ' + saveBonus, function(saveRoll) {
-              msgData.save = {
-                bonus: saveBonus,
-                dc: effect.saveDC,
-                name: effect.save,
-                roll: saveRoll
-              };
-              msgData.trapHit = saveRoll.total < effect.saveDC;
+          var saveBonus = getAttrByName(character.get('_id'), saveNames[effect.save]);
+          saveBonus = parseInt(saveBonus);
+          rollAsync('1d20 + ' + saveBonus, function(saveRoll) {
+            msgData.save = {
+              bonus: saveBonus,
+              dc: effect.saveDC,
+              name: effect.save,
+              roll: saveRoll
+            };
+            msgData.trapHit = saveRoll.total < effect.saveDC;
 
-              sendHtmlTrapMessage(msgData);
-            });
+            sendHtmlTrapMessage(msgData);
           });
         }
 
@@ -350,9 +244,6 @@
 
       // If the effect has a sound, try to play it.
       ItsATrap.playEffectSound(effect);
-
-      // If the effect has fx, play them.
-      ItsATrap.playTrapFX(effect);
 
       // If the effect has an api command, execute it.
       ItsATrap.executeTrapCommand(effect);
@@ -371,13 +262,12 @@
 
         // If the character's passive wisdom beats the spot DC, then
         // display a message and mark the trap's trigger area.
-        getPassivePerception(character, function(passPerc) {
-          if(passPerc >= effect.spotDC) {
-            var noticeHtml = "<span style='font-weight: bold;'>IT'S A TRAP!!!</span><br/>" +
-              character.get('name') + ' notices a trap: <br/>' + trap.get('name')
-            ItsATrap.noticeTrap(trap, noticeHtml);
-          }
-        });
+        var passPerc = getPassivePerception(character);
+        if(passPerc >= effect.spotDC) {
+          var noticeHtml = "<span style='font-weight: bold;'>IT'S A TRAP!!!</span><br/>" +
+            character.get('name') + ' notices a trap: <br/>' + trap.get('name')
+          ItsATrap.noticeTrap(trap, noticeHtml);
+        }
       }
     }
   };
