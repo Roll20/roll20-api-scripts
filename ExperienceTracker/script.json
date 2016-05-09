@@ -1,7 +1,7 @@
 {
     "name": "Experience Tracker",
     "script": "ExperienceTracker.js",
-    "version": "2.02",
+    "version": "2.1",
     "previousversions": [],
     "description": "This script allows for automatic tracking of a Dungeons and Dragons 5e like experience system, aswell as level up announcement in chat. !xp handles experience and announces level up",
     "authors": "Kasper K.",
