@@ -35,7 +35,11 @@
       return skill.get('current').toLowerCase().trim() === 'perception';
     });
     if(skill) {
-      var rowId = skill.get('name').split('_')[2];
+      var attrName = skill.get('name').replace('_storage', '');
+      var idStart = attrName.indexOf('_', attrName.indexOf('_') + 1) + 1;
+      var idEnd = attrName.lastIndexOf('_');
+      var rowId = attrName.substring(idStart, idEnd);
+
       var perception = getAttrByName(character.get('_id'), 'repeating_skill_' + rowId + '_passive');
       return parseInt(perception);
     }
