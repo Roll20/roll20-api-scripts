@@ -29,13 +29,13 @@
     var skills = filterObjs(function(o) {
       return o.get('type') === 'attribute' &&
         o.get('characterid') === character.get('_id') &&
-        /repeating_skill_(-[0-9a-zA-Z\-_]+?|\$\d+)_name/.test(o.get('name'));
+        /repeating_skill_(-([0-9a-zA-Z\-_](?!_storage))+?|\$\d+?)_name/.test(o.get('name'));
     });
     var skill = _.find(skills, function(skill) {
       return skill.get('current').toLowerCase().trim() === 'perception';
     });
     if(skill) {
-      var attrName = skill.get('name').replace('_storage', '');
+      var attrName = skill.get('name');
       var idStart = attrName.indexOf('_', attrName.indexOf('_') + 1) + 1;
       var idEnd = attrName.lastIndexOf('_');
       var rowId = attrName.substring(idStart, idEnd);
