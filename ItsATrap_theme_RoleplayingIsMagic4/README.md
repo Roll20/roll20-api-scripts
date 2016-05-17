@@ -1,5 +1,8 @@
 # It's A Trap! - Roleplaying is Magic 4E theme
 
+_v1.1 updates:_
+* The theme now supports the 'fx' basic JSON property made available in It's A Trap! v2.3.
+
 This is a My Little Pony: Roleplaying is Magic 4th edition theme for the It's A Trap! script,
 built for use with the Roleplaying is Magic 4E character sheet.
 
@@ -27,6 +30,7 @@ Here's an example of how to use the trap JSON for this theme:
 ```
 {
   "damage": "2d6 + 5",
+  "fx": "explode-fire",
   "message": "Spectral spears suddenly launch out of the ground!",
   "missHalf": true,
   "skill": {
