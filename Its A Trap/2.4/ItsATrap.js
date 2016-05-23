@@ -20,7 +20,7 @@ var ItsATrap = (function() {
    *           The command may contain the template values TRAP_ID and
    *           VICTIM_ID. These will be replaced by the values for trapId
    *           and victimId, respectively in the API chat command message.
-   * @property {(string|FXDefinition)} fx
+   * @property {(string|FXDefinition|FXConfig)} fx
    *           A special FX that is spawned from the trap when it is activated.
    * @property {string} message
    *           The message that will be sent in the chat by Admiral Ackbar
@@ -38,6 +38,23 @@ var ItsATrap = (function() {
    * @property {string} victimId
    *           The ID of the token that activated the trap.
    *           This is set automatically.
+   */
+
+  /**
+   * A custom FX configuration for a trap.
+   * @typedef {object} FXConfig
+   * @property {(string|FXDefinition|TrapFX)} name
+   *           The name or defintion of the FX to spawn.
+   * @property {vec2} offset
+   *           The offset from the trap's center where the FX is spawned.
+   * @property {vec2} direction
+   *           The direction vector for a beam-like FX. By default,
+   *           the vector towards the trap's victim will be used.
+   */
+
+  /**
+   * A degree-2 vector, which is used to represent a point or direction.
+   * @typedef {Number[]} vec2
    */
 
   /**
@@ -365,27 +382,89 @@ var ItsATrap = (function() {
    */
   function playTrapFX(effect) {
     var trap = getObj('graphic', effect.trapId);
-    var x = trap.get('left');
-    var y = trap.get('top');
+    var victim = getObj('graphic', effect.victimId);
     var pageId = trap.get('_pageid');
+
     if(effect.fx) {
-      if(_.isString(effect.fx)) {
-        if(effect.fx.indexOf('-') !== -1)
-          spawnFx(x, y, effect.fx, pageId);
-        else {
-          fx = findObjs({ _type: 'custfx', name: effect.fx })[0];
-          if(fx)
-            spawnFx(x, y, fx.get('_id'));
-          else
-            sendChat('ItsATrap ERROR', 'Custom FX "' + effect.fx + '" not found.');
-        }
-      }
-      else {
-        _.defaults(effect.fx, defaultFx);
-        if(effect.fx.duration === -1)
-          effect.fx.duration = 25;
-        spawnFxWithDefinition(x, y, effect.fx, pageId);
-      }
+      var offset = effect.fx.offset || [0, 0];
+      var origin = [
+        trap.get('left') + offset[0]*70,
+        trap.get('top') + offset[1]*70
+      ];
+
+      var direction = effect.fx.direction || [
+        victim.get('left') - origin[0],
+        victim.get('top') - origin[1]
+      ];
+
+      // FX name
+      if(_.isString(effect.fx))
+        _playTrapFXNamed(effect.fx, pageId, origin, direction);
+
+      // FXConfig
+      else if(effect.fx.name)
+        if(_.isString(effect.fx.name))
+          _playTrapFXNamed(effect.fx.name, pageId, origin, direction);
+        else
+          _playTrapFXDefinition(effect.fx.name, pageId, origin);
+
+      // FX Definition
+      else
+        _playTrapFXDefinition(effect.fx, pageId, origin);
+    }
+  }
+
+  /**
+   * Play FX using a custom definition.
+   * @private
+   */
+  function _playTrapFXDefinition(definition, pageId, origin) {
+    var x = origin[0];
+    var y = origin[1];
+
+    _.defaults(definition, defaultFx);
+    if(definition === -1)
+      definition = 25;
+    spawnFxWithDefinition(x, y, definition, pageId);
+  }
+
+  /**
+   * Play FX using a named effect.
+   * @private
+   */
+  function _playTrapFXNamed(name, pageId, origin, direction) {
+    var x = origin[0];
+    var y = origin[1];
+
+    var fx;
+    var isBeamLike = false;
+
+    var custFx = findObjs({ _type: 'custfx', name: name })[0];
+    if(custFx) {
+      fx = custFx.get('_id');
+      isBeamLike = custFx.get('definition').angle === -1;
+    }
+    else {
+      fx = name;
+      isBeamLike = !!_.find(['beam', 'breath', 'splatter'], function(type) {
+        return name.indexOf(type) !== -1;
+      });
+    }
+
+    if(isBeamLike) {
+      var p1 = {
+        x: x,
+        y: y
+      };
+      var p2 = {
+        x: x + direction[0],
+        y: y + direction[1]
+      };
+
+      spawnFxBetweenPoints(p1, p2, fx, pageId);
+    }
+    else {
+      spawnFx(x, y, fx, pageId);
     }
   }
 
