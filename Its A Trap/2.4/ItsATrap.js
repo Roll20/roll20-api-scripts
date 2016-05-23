@@ -65,15 +65,23 @@ var ItsATrap = (function() {
    * @property {string} theme
    *           The name of the TrapTheme currently being used.
    */
-  state.ItsATrap = state.ItsATrap || {
+  state.ItsATrap = state.ItsATrap || {};
+  _.defaults(state.ItsATrap, {
     noticedTraps: {},
-    theme: 'default'
-  };
+    theme: 'default',
+    userOptions: {
+      revealTrapsToMap: false
+    }
+  });
 
   // Set the theme from the useroptions.
   var useroptions = globalconfig && globalconfig.itsatrap;
-  if(useroptions)
+  if(useroptions) {
     state.ItsATrap.theme = useroptions['theme'] || 'default';
+    state.ItsATrap.userOptions = {
+      revealTrapsToMap: useroptions['revealTrapsToMap'] || false
+    };
+  }
 
   // The collection of registered TrapThemes keyed by name.
   var trapThemes = {};
@@ -280,6 +288,12 @@ var ItsATrap = (function() {
     });
   }
 
+  /**
+   * @private
+   */
+  function _getUserOption(opName) {
+    return state.ItsATrap.userOptions[opName];
+  }
 
   /**
    * Determines whether a token is currently flying.
@@ -477,6 +491,25 @@ var ItsATrap = (function() {
     trapThemes[theme.name] = theme;
   }
 
+  /**
+   * Reveals a trap with the bleeding-eye status to either the back of the
+   * objects layer, or the front of the map layer, depending on the user
+   * configurations.
+   * @param  {Graphic} trap
+   */
+  function revealTrap(trap) {
+    if(trap.get("status_bleeding-eye")) {
+      if(_getUserOption('revealTrapsToMap')) {
+        trap.set("layer","map");
+        toFront(trap);
+      }
+      else {
+        trap.set("layer","objects");
+        toBack(trap);
+      }
+    }
+  }
+
 
   /**
    * When a graphic on the objects layer moves, run the script to see if it
@@ -501,10 +534,7 @@ var ItsATrap = (function() {
           theme.activateEffect(effect);
 
           // Reveal the trap if it's set to become visible.
-          if(trap.get("status_bleeding-eye")) {
-            trap.set("layer","objects");
-            toBack(trap);
-          }
+          revealTrap(trap);
         }
 
         // If no trap was activated and the theme has passive searching,
