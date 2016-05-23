@@ -138,6 +138,73 @@ var ItsATrap = (function() {
   }
 
   /**
+   * Gets the tokens that a token has line of sight to.
+   * @private
+   * @param  {Graphic} token
+   * @param  {Graphic[]} otherTokens
+   * @param  {number} [range=Infinity]
+   *         The line-of-sight range in pixels.
+   * @param {boolean} [isSquareRange=false]
+   * @return {Graphic[]}
+   */
+  function _getTokensInLineOfSight(token, otherTokens, range, isSquareRange) {
+    if(_.isUndefined(range))
+      range = Infinity;
+
+    var pageId = token.get('_pageid');
+    var tokenPt = [
+      token.get('left'),
+      token.get('top'),
+      1
+    ];
+    var tokenRW = token.get('width')/2-1;
+    var tokenRH = token.get('height')/2-1;
+
+    var wallPaths = findObjs({
+      _type: 'path',
+      _pageid: pageId,
+      layer: 'walls'
+    });
+    var wallSegments = PathMath.toSegments(wallPaths);
+
+    return _.filter(otherTokens, function(other) {
+      var otherPt = [
+        other.get('left'),
+        other.get('top'),
+        1
+      ];
+      var otherRW = other.get('width')/2;
+      var otherRH = other.get('height')/2;
+
+      // Skip tokens that are out of range.
+      if(isSquareRange && (
+        Math.abs(tokenPt[0]-otherPt[0]) >= range + otherRW + tokenRW ||
+        Math.abs(tokenPt[1]-otherPt[1]) >= range + otherRH + tokenRH))
+        return false
+      else if(!isSquareRange && VecMath.dist(tokenPt, otherPt) >= range + tokenRW + otherRW)
+        return false;
+
+      var segToOther = [tokenPt, otherPt];
+      return !_.find(wallSegments, function(wallSeg) {
+        return PathMath.segmentIntersection(segToOther, wallSeg);
+      });
+    });
+  }
+
+  /**
+   * Gets all the traps that a token has line-of-sight to, with no limit for
+   * range. Line-of-sight is blocked by paths on the dynamic lighting layer.
+   * @param  {Graphic} charToken
+   * @return {Graphic[]}
+   *         The list of traps that charToken has line-of-sight to.
+   */
+  function getSearchableTraps(charToken) {
+    var pageId = charToken.get('_pageid');
+    var traps = getTrapsOnPage(pageId);
+    return _getTokensInLineOfSight(charToken, traps);
+  }
+
+  /**
    * Gets the theme currently being used to interpret TrapEffects spawned
    * when a character activates a trap.
    * @return {TrapTheme}
@@ -208,45 +275,6 @@ var ItsATrap = (function() {
   }
 
   /**
-   * Gets all the traps that a token has line-of-sight to, with no limit for
-   * range. Line-of-sight is blocked by paths on the dynamic lighting layer.
-   * @param  {Graphic} charToken
-   * @return {Graphic[]}
-   *         The list of traps that charToken has line-of-sight to.
-   */
-  function getSearchableTraps(charToken) {
-    var pageId = charToken.get('_pageid');
-    var charPt = [
-      charToken.get('left'),
-      charToken.get('top'),
-      1
-    ];
-
-    var wallPaths = findObjs({
-      _type: 'path',
-      _pageid: pageId,
-      layer: 'walls'
-    });
-    var wallSegments = PathMath.toSegments(wallPaths);
-
-    var traps = getTrapsOnPage(pageId);
-    return _.filter(traps, function(trap) {
-      var trapPt = [
-        trap.get('left'),
-        trap.get('top'),
-        1
-      ];
-      var segToTrap = [charPt, trapPt];
-
-      return !_.find(wallSegments, function(wallSeg) {
-        return PathMath.segmentIntersection(segToTrap, wallSeg);
-      });
-    });
-  }
-
-
-
-  /**
    * Gets the message template sent to the chat by a trap.
    * @param  {Graphic} victim
    *         The token that set off the trap.
@@ -286,6 +314,35 @@ var ItsATrap = (function() {
       status_cobweb: true,
       layer: "gmlayer"
     });
+  }
+
+  /**
+   * Gets the list of victims within an activated trap's area of effect.
+   * @param  {Graphic} trap
+   * @param  {Graphic} triggerVictim
+   * @return {Graphic[]}
+   */
+  function getTrapVictims(trap, triggerVictim) {
+    var range = trap.get('aura1_radius');
+    var pageId = trap.get('_pageid');
+
+    if(range !== '') {
+      var otherTokens = findObjs({
+        _pageid: pageId,
+        _type: 'graphic',
+        layer: 'objects'
+      });
+
+      var pageScale = getObj('page', pageId).get('scale_number');
+      range *= 70/pageScale;
+      var squareArea = trap.get('aura1_square');
+
+      var victims = _getTokensInLineOfSight(trap, otherTokens, range, squareArea);
+      victims.push(triggerVictim);
+      return _.unique(victims);
+    }
+    else
+      return [triggerVictim];
   }
 
   /**
@@ -528,13 +585,17 @@ var ItsATrap = (function() {
         // Did the character set off a trap?
         var trap = getTrapCollision(token);
         if(trap) {
-          var effect = getTrapEffect(token, trap);
-
           moveTokenToTrap(token, trap);
-          theme.activateEffect(effect);
 
           // Reveal the trap if it's set to become visible.
           revealTrap(trap);
+
+          // Apply the trap's effects to any victims in its area.
+          var victims = getTrapVictims(trap, token);
+          _.each(victims, function(victim) {
+            var effect = getTrapEffect(victim, trap);
+            theme.activateEffect(effect);
+          });
         }
 
         // If no trap was activated and the theme has passive searching,

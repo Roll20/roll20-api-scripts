@@ -21,7 +21,7 @@
           "description": "When a trap with the bleeding-eye status is activated, it will be moved to the Map layer instead of the Objects layer."
         }
     ],
-    "dependencies": ["Token Collisions", "Path Math"],
+    "dependencies": ["Token Collisions", "Path Math", "Vector Math"],
     "modifies": {
         "chat": "write",
         "gmnotes": "read",
