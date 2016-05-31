@@ -14,7 +14,7 @@ var MapChange = MapChange || (function() {
                 // Version number
                 version: version,
                 // Date last modified in unix timestamp format.
-                lastModified: "1464698943",
+                lastModified: "1464699646",
                 // Name of the person who last modified the script.
                 modifiedBy: "TheWhiteWolves",
                 // Timestamp when the global config was last updated.
@@ -41,18 +41,26 @@ var MapChange = MapChange || (function() {
         loadGlobalConfig();
     };
     
+    // Loads the config options from the global config.
     var loadGlobalConfig = function() {
+        // Get a reference to the global config.
         var gc = globalconfig && globalconfig.mapchange;
+        // Get a reference to the state.
         var st = state.MapChange;
-            
+        // Check if the settings need updating from the global config.
         if (gc && gc.lastsaved && gc.lastsaved > st.gcUpdated) {
+            // Get the last saved time.
             st.gcUpdated = gc.lastsaved;
+            // Get the debug setting from the global config.
             st.config.debug = JSON.parse(gc['Debug Mode']) === false;
+            // Get the gmNotify setting from the global config.
             st.config.gmNotify = JSON.parse(gc['GM Notification']) === true;
-            st.config.invertedMarker = gc['Marker'] === "[GM]";
-            st.config.marker = JSON.parse(gc['Inverted Marker']) === false;
+            // Get the invertedMarker setting from the global config.
+            st.config.marker = gc['Marker'] === "[GM]";
+            // Get the marker setting from the global config.
+            st.config.invertedMarker = JSON.parse(gc['Inverted Marker']) === false;
         }
-        
+        // Debug
         if (st.config.debug) {
             log(st.config);
         }
@@ -69,7 +77,6 @@ var MapChange = MapChange || (function() {
             var name = pages[key].get("name");
             // Get the id of the page that is current being processed.
             var id = pages[key].get("_id");
-            
             // Check if the name of the page contains the marker.
             if (name.indexOf(state.MapChange.config.marker) > -1) {
                 // If the name does then remove the marker from the name and trim off any whitespace.
@@ -676,18 +683,24 @@ var MapChange = MapChange || (function() {
         chat("/w", msg.who, text);
     };
 
+    // Refreshes the maps without needing to restart the script.
     var refresh = function(msg) {
         log("Refreshing Maps...");
+        // Clear out the public maps.
         state.MapChange.publicMaps = {};
+        // Clear out the private maps.
         state.MapChange.privateMaps = {};
+        // Reassemble the maps.
         constructMaps();
         log("Refresh Complete");
-        
+        // Check if the GM should be notified.
         if (state.MapChange.config.gmNotify) {
+            // If they should then send them a message.
             chat("/w", msg.who, "Map Refresh Complete");
         }
     };
     
+    // Moves a player to the specified map.
     var move = function(msg, sender, target) {
         var pages = findObjs({_type: 'page'});
         var playerPages = Campaign().get("playerspecificpages");
