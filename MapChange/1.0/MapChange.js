@@ -4,8 +4,26 @@
 
 var MapChange = MapChange || (function() {
     'use strict';
+    // Defaults.
+    // Date last modified in unix timestamp format.
+    var lastModified = "1464699646";
+    // Name of the person who last modified the script.
+    var modifiedBy = "TheWhiteWolves";
     // Local version of the script.
-    var version = "1.0";
+    var version = "1.00";
+    // Set to true to use built in debug statements
+    var debug = true;
+    // Set to false to turn off notifing the GM when a player moves.
+    var gmNotify = true;
+    // The marker used to decide what is placed in the private map.
+    var marker = "[GM]";
+    // When true this places the pages with name containing the marker into the public list.
+    // Use this if you want maps to be private by default instead of public by default.
+    var invertedMarker = false;
+    // These are maps that players are able to move to using the commands.
+    var publicMaps = {};
+    // These are maps that only the GM can move people to.
+    var privateMaps = {};
     // Check the installation of the script and setup the default configs.
     var checkInstall = function() {
         if (!state.MapChange || state.MapChange.version !== version) {
@@ -14,28 +32,28 @@ var MapChange = MapChange || (function() {
                 // Version number
                 version: version,
                 // Date last modified in unix timestamp format.
-                lastModified: "1464699646",
+                lastModified: lastModified,
                 // Name of the person who last modified the script.
-                modifiedBy: "TheWhiteWolves",
+                modifiedBy: modifiedBy,
                 // Timestamp when the global config was last updated.
                 gcUpdated: 0,
                 // List of available user configs.
                 config: {
                     // Set to true to use built in debug statements
-                    debug: true,
+                    debug: debug,
                     // Set to false to turn off notifing the GM when a player moves.
-                    gmNotify: true,
+                    gmNotify: gmNotify,
                     // The marker used to decide what is placed in the private map.
-                    marker: "[GM]",
+                    marker: marker,
                     // When true this places the pages with name containing the marker into the public list.
                     // Use this if you want maps to be private by default instead of public by default.
-                    invertedMarker: false
+                    invertedMarker: invertedMarker
                 },
                 // These are maps that players are able to move to using the commands.
-                publicMaps: {},
+                publicMaps: publicMaps,
                 // These are maps that only the GM can move people to.
-                privateMaps: {}
-            }
+                privateMaps: privateMaps
+            };
         }
         // Load and changes to the defaults from the global config.
         loadGlobalConfig();
@@ -857,8 +875,8 @@ var MapChange = MapChange || (function() {
         ConstructMaps: constructMaps,
         RegisterEventHandlers: registerEventHandlers,
         CheckInstall: checkInstall,
-        Debug: state.MapChange.config.debug,
-        GMNotify: state.MapChange.config.gmNotify
+        Debug: debug,
+        GMNotify: gmNotify
     };
 }());
 
