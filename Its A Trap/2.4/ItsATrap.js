@@ -20,7 +20,7 @@ var ItsATrap = (function() {
    *           The command may contain the template values TRAP_ID and
    *           VICTIM_ID. These will be replaced by the values for trapId
    *           and victimId, respectively in the API chat command message.
-   * @property {(string|FXDefinition)} fx
+   * @property {(string|FXDefinition|FXConfig)} fx
    *           A special FX that is spawned from the trap when it is activated.
    * @property {string} message
    *           The message that will be sent in the chat by Admiral Ackbar
@@ -41,6 +41,23 @@ var ItsATrap = (function() {
    */
 
   /**
+   * A custom FX configuration for a trap.
+   * @typedef {object} FXConfig
+   * @property {(string|FXDefinition|TrapFX)} name
+   *           The name or defintion of the FX to spawn.
+   * @property {vec2} offset
+   *           The offset from the trap's center where the FX is spawned.
+   * @property {vec2} direction
+   *           The direction vector for a beam-like FX. By default,
+   *           the vector towards the trap's victim will be used.
+   */
+
+  /**
+   * A degree-2 vector, which is used to represent a point or direction.
+   * @typedef {Number[]} vec2
+   */
+
+  /**
    * The ItsATrap state data.
    * @typedef {object} ItsATrapState
    * @property {object} noticedTraps
@@ -48,15 +65,23 @@ var ItsATrap = (function() {
    * @property {string} theme
    *           The name of the TrapTheme currently being used.
    */
-  state.ItsATrap = state.ItsATrap || {
+  state.ItsATrap = state.ItsATrap || {};
+  _.defaults(state.ItsATrap, {
     noticedTraps: {},
-    theme: 'default'
-  };
+    theme: 'default',
+    userOptions: {
+      revealTrapsToMap: false
+    }
+  });
 
   // Set the theme from the useroptions.
   var useroptions = globalconfig && globalconfig.itsatrap;
-  if(useroptions)
+  if(useroptions) {
     state.ItsATrap.theme = useroptions['theme'] || 'default';
+    state.ItsATrap.userOptions = {
+      revealTrapsToMap: useroptions['revealTrapsToMap'] || false
+    };
+  }
 
   // The collection of registered TrapThemes keyed by name.
   var trapThemes = {};
@@ -110,6 +135,73 @@ var ItsATrap = (function() {
         log('ItsATrap api command ERROR: ' + err.message);
       }
     }
+  }
+
+  /**
+   * Gets the tokens that a token has line of sight to.
+   * @private
+   * @param  {Graphic} token
+   * @param  {Graphic[]} otherTokens
+   * @param  {number} [range=Infinity]
+   *         The line-of-sight range in pixels.
+   * @param {boolean} [isSquareRange=false]
+   * @return {Graphic[]}
+   */
+  function _getTokensInLineOfSight(token, otherTokens, range, isSquareRange) {
+    if(_.isUndefined(range))
+      range = Infinity;
+
+    var pageId = token.get('_pageid');
+    var tokenPt = [
+      token.get('left'),
+      token.get('top'),
+      1
+    ];
+    var tokenRW = token.get('width')/2-1;
+    var tokenRH = token.get('height')/2-1;
+
+    var wallPaths = findObjs({
+      _type: 'path',
+      _pageid: pageId,
+      layer: 'walls'
+    });
+    var wallSegments = PathMath.toSegments(wallPaths);
+
+    return _.filter(otherTokens, function(other) {
+      var otherPt = [
+        other.get('left'),
+        other.get('top'),
+        1
+      ];
+      var otherRW = other.get('width')/2;
+      var otherRH = other.get('height')/2;
+
+      // Skip tokens that are out of range.
+      if(isSquareRange && (
+        Math.abs(tokenPt[0]-otherPt[0]) >= range + otherRW + tokenRW ||
+        Math.abs(tokenPt[1]-otherPt[1]) >= range + otherRH + tokenRH))
+        return false
+      else if(!isSquareRange && VecMath.dist(tokenPt, otherPt) >= range + tokenRW + otherRW)
+        return false;
+
+      var segToOther = [tokenPt, otherPt];
+      return !_.find(wallSegments, function(wallSeg) {
+        return PathMath.segmentIntersection(segToOther, wallSeg);
+      });
+    });
+  }
+
+  /**
+   * Gets all the traps that a token has line-of-sight to, with no limit for
+   * range. Line-of-sight is blocked by paths on the dynamic lighting layer.
+   * @param  {Graphic} charToken
+   * @return {Graphic[]}
+   *         The list of traps that charToken has line-of-sight to.
+   */
+  function getSearchableTraps(charToken) {
+    var pageId = charToken.get('_pageid');
+    var traps = getTrapsOnPage(pageId);
+    return _getTokensInLineOfSight(charToken, traps);
   }
 
   /**
@@ -183,45 +275,6 @@ var ItsATrap = (function() {
   }
 
   /**
-   * Gets all the traps that a token has line-of-sight to, with no limit for
-   * range. Line-of-sight is blocked by paths on the dynamic lighting layer.
-   * @param  {Graphic} charToken
-   * @return {Graphic[]}
-   *         The list of traps that charToken has line-of-sight to.
-   */
-  function getSearchableTraps(charToken) {
-    var pageId = charToken.get('_pageid');
-    var charPt = [
-      charToken.get('left'),
-      charToken.get('top'),
-      1
-    ];
-
-    var wallPaths = findObjs({
-      _type: 'path',
-      _pageid: pageId,
-      layer: 'walls'
-    });
-    var wallSegments = PathMath.toSegments(wallPaths);
-
-    var traps = getTrapsOnPage(pageId);
-    return _.filter(traps, function(trap) {
-      var trapPt = [
-        trap.get('left'),
-        trap.get('top'),
-        1
-      ];
-      var segToTrap = [charPt, trapPt];
-
-      return !_.find(wallSegments, function(wallSeg) {
-        return PathMath.segmentIntersection(segToTrap, wallSeg);
-      });
-    });
-  }
-
-
-
-  /**
    * Gets the message template sent to the chat by a trap.
    * @param  {Graphic} victim
    *         The token that set off the trap.
@@ -263,6 +316,41 @@ var ItsATrap = (function() {
     });
   }
 
+  /**
+   * Gets the list of victims within an activated trap's area of effect.
+   * @param  {Graphic} trap
+   * @param  {Graphic} triggerVictim
+   * @return {Graphic[]}
+   */
+  function getTrapVictims(trap, triggerVictim) {
+    var range = trap.get('aura1_radius');
+    var pageId = trap.get('_pageid');
+
+    if(range !== '') {
+      var otherTokens = findObjs({
+        _pageid: pageId,
+        _type: 'graphic',
+        layer: 'objects'
+      });
+
+      var pageScale = getObj('page', pageId).get('scale_number');
+      range *= 70/pageScale;
+      var squareArea = trap.get('aura1_square');
+
+      var victims = _getTokensInLineOfSight(trap, otherTokens, range, squareArea);
+      victims.push(triggerVictim);
+      return _.unique(victims);
+    }
+    else
+      return [triggerVictim];
+  }
+
+  /**
+   * @private
+   */
+  function _getUserOption(opName) {
+    return state.ItsATrap.userOptions[opName];
+  }
 
   /**
    * Determines whether a token is currently flying.
@@ -365,27 +453,89 @@ var ItsATrap = (function() {
    */
   function playTrapFX(effect) {
     var trap = getObj('graphic', effect.trapId);
-    var x = trap.get('left');
-    var y = trap.get('top');
+    var victim = getObj('graphic', effect.victimId);
     var pageId = trap.get('_pageid');
+
     if(effect.fx) {
-      if(_.isString(effect.fx)) {
-        if(effect.fx.indexOf('-') !== -1)
-          spawnFx(x, y, effect.fx, pageId);
-        else {
-          fx = findObjs({ _type: 'custfx', name: effect.fx })[0];
-          if(fx)
-            spawnFx(x, y, fx.get('_id'));
-          else
-            sendChat('ItsATrap ERROR', 'Custom FX "' + effect.fx + '" not found.');
-        }
-      }
-      else {
-        _.defaults(effect.fx, defaultFx);
-        if(effect.fx.duration === -1)
-          effect.fx.duration = 25;
-        spawnFxWithDefinition(x, y, effect.fx, pageId);
-      }
+      var offset = effect.fx.offset || [0, 0];
+      var origin = [
+        trap.get('left') + offset[0]*70,
+        trap.get('top') + offset[1]*70
+      ];
+
+      var direction = effect.fx.direction || [
+        victim.get('left') - origin[0],
+        victim.get('top') - origin[1]
+      ];
+
+      // FX name
+      if(_.isString(effect.fx))
+        _playTrapFXNamed(effect.fx, pageId, origin, direction);
+
+      // FXConfig
+      else if(effect.fx.name)
+        if(_.isString(effect.fx.name))
+          _playTrapFXNamed(effect.fx.name, pageId, origin, direction);
+        else
+          _playTrapFXDefinition(effect.fx.name, pageId, origin);
+
+      // FX Definition
+      else
+        _playTrapFXDefinition(effect.fx, pageId, origin);
+    }
+  }
+
+  /**
+   * Play FX using a custom definition.
+   * @private
+   */
+  function _playTrapFXDefinition(definition, pageId, origin) {
+    var x = origin[0];
+    var y = origin[1];
+
+    _.defaults(definition, defaultFx);
+    if(definition === -1)
+      definition = 25;
+    spawnFxWithDefinition(x, y, definition, pageId);
+  }
+
+  /**
+   * Play FX using a named effect.
+   * @private
+   */
+  function _playTrapFXNamed(name, pageId, origin, direction) {
+    var x = origin[0];
+    var y = origin[1];
+
+    var fx;
+    var isBeamLike = false;
+
+    var custFx = findObjs({ _type: 'custfx', name: name })[0];
+    if(custFx) {
+      fx = custFx.get('_id');
+      isBeamLike = custFx.get('definition').angle === -1;
+    }
+    else {
+      fx = name;
+      isBeamLike = !!_.find(['beam', 'breath', 'splatter'], function(type) {
+        return name.indexOf(type) !== -1;
+      });
+    }
+
+    if(isBeamLike) {
+      var p1 = {
+        x: x,
+        y: y
+      };
+      var p2 = {
+        x: x + direction[0],
+        y: y + direction[1]
+      };
+
+      spawnFxBetweenPoints(p1, p2, fx, pageId);
+    }
+    else {
+      spawnFx(x, y, fx, pageId);
     }
   }
 
@@ -396,6 +546,25 @@ var ItsATrap = (function() {
   function registerTheme(theme) {
     log('It\'s A Trap!: Registered TrapTheme - ' + theme.name + '.');
     trapThemes[theme.name] = theme;
+  }
+
+  /**
+   * Reveals a trap with the bleeding-eye status to either the back of the
+   * objects layer, or the front of the map layer, depending on the user
+   * configurations.
+   * @param  {Graphic} trap
+   */
+  function revealTrap(trap) {
+    if(trap.get("status_bleeding-eye")) {
+      if(_getUserOption('revealTrapsToMap')) {
+        trap.set("layer","map");
+        toFront(trap);
+      }
+      else {
+        trap.set("layer","objects");
+        toBack(trap);
+      }
+    }
   }
 
 
@@ -416,16 +585,17 @@ var ItsATrap = (function() {
         // Did the character set off a trap?
         var trap = getTrapCollision(token);
         if(trap) {
-          var effect = getTrapEffect(token, trap);
-
           moveTokenToTrap(token, trap);
-          theme.activateEffect(effect);
 
           // Reveal the trap if it's set to become visible.
-          if(trap.get("status_bleeding-eye")) {
-            trap.set("layer","objects");
-            toBack(trap);
-          }
+          revealTrap(trap);
+
+          // Apply the trap's effects to any victims in its area.
+          var victims = getTrapVictims(trap, token);
+          _.each(victims, function(victim) {
+            var effect = getTrapEffect(victim, trap);
+            theme.activateEffect(effect);
+          });
         }
 
         // If no trap was activated and the theme has passive searching,
