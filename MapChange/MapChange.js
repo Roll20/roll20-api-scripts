@@ -12,7 +12,7 @@ var MapChange = MapChange || (function() {
     // Local version of the script.
     var version = "1.1";
     // Set to true to use built in debug statements
-    var debug = true;
+    var debug = false;
     // Set to false to turn off notifing the GM when a player moves.
     var gmNotify = true;
     // The marker used to decide what is placed in the private map.
@@ -81,6 +81,7 @@ var MapChange = MapChange || (function() {
         // Debug
         if (st.config.debug) {
             log(st.config);
+            log(globalconfig.mapchange);
         }
     };
     
