@@ -10,12 +10,13 @@
 		"name": "Debug Mode",
 		"type": "checkbox",
 		"description": "Set to true to use built in debug statements",
-		"value": "false"
+		"value": "debug"
 	}, {
 		"name": "GM Notification",
 		"type": "checkbox",
 		"description": "Set to false to turn off notifing the GM when a player moves.",
-		"value": "true"
+		"checked" : "checked",
+		"value": "gmNotify"
 	}, {
 		"name": "Marker",
 		"type": "text",
@@ -25,7 +26,7 @@
 		"name": "Inverted Marker",
 		"type": "checkbox",
 		"description": "When true this places the pages with name containing the marker into the public list.\nUse this if you want maps to be private by default instead of public by default.",
-		"value": "false"
+		"value": "invertedMarker"
 	}],
 	"dependencies": [],
 	"modifies": {
