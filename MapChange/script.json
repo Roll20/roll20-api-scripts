@@ -1,7 +1,7 @@
 {
 	"name": "MapChange",
 	"script": "MapChange.js",
-	"version": "1.1",
+	"version": "1.2",
 	"description": "Provides a way for users to move between maps in a campaign without the GM needing to move them.\n\nFor full information on how to use the script, use the command '!mc help' in game.",
 	"authors": "TheWhiteWolves",
 	"roll20userid": "1043",
@@ -10,13 +10,12 @@
 		"name": "Debug Mode",
 		"type": "checkbox",
 		"description": "Set to true to use built in debug statements",
-		"value": "debug"
+		"value": "false"
 	}, {
 		"name": "GM Notification",
 		"type": "checkbox",
 		"description": "Set to false to turn off notifing the GM when a player moves.",
-		"checked" : "checked",
-		"value": "gmNotify"
+		"value": "true"
 	}, {
 		"name": "Marker",
 		"type": "text",
@@ -26,7 +25,7 @@
 		"name": "Inverted Marker",
 		"type": "checkbox",
 		"description": "When true this places the pages with name containing the marker into the public list.\nUse this if you want maps to be private by default instead of public by default.",
-		"value": "invertedMarker"
+		"value": "false"
 	}],
 	"dependencies": [],
 	"modifies": {
@@ -34,10 +33,11 @@
 		"Campaign.playerspecificpages": "read,write",
 		"Page.name": "read",
 		"Page._id": "read",
+		"Page.archived": "read",
 		"Player._displayname": "read",
 		"Player._id": "read",
 		"state.MapChange": "read,write"
 	},
 	"conflicts": [],
-	"previousversions": []
+	"previousversions": [1.0, 1.1]
 }
