@@ -6,13 +6,13 @@ var MapChange = MapChange || (function() {
     'use strict';
     // Defaults.
     // Date last modified in unix timestamp format.
-    var lastModified = "1464885227";
+    var lastModified = "1464992684";
     // Name of the person who last modified the script.
     var modifiedBy = "TheWhiteWolves";
     // Local version of the script.
-    var version = "1.1";
+    var version = "1.2";
     // Set to true to use built in debug statements
-    var debug = false;
+    var debug = true;
     // Set to false to turn off notifing the GM when a player moves.
     var gmNotify = true;
     // The marker used to decide what is placed in the private map.
@@ -20,10 +20,6 @@ var MapChange = MapChange || (function() {
     // When true this places the pages with name containing the marker into the public list.
     // Use this if you want maps to be private by default instead of public by default.
     var invertedMarker = false;
-    // These are maps that players are able to move to using the commands.
-    var publicMaps = {};
-    // These are maps that only the GM can move people to.
-    var privateMaps = {};
     // Check the installation of the script and setup the default configs.
     var checkInstall = function() {
         if (!state.MapChange || state.MapChange.version !== version) {
@@ -50,10 +46,17 @@ var MapChange = MapChange || (function() {
                     invertedMarker: invertedMarker
                 },
                 // These are maps that players are able to move to using the commands.
-                publicMaps: publicMaps,
+                publicMaps: {},
                 // These are maps that only the GM can move people to.
-                privateMaps: privateMaps
+                privateMaps: {},
+                // These are maps that have been moved to the archived folder.
+                archiveMaps: {}
             };
+        }
+        // Check if the state doesn't contain the blocked players list.
+        if (!_.has(state.MapChange, "blockedPlayers")) {
+            // If it doesn't then initilise it with an empty array.
+            state.MapChange.blockedPlayers = [];
         }
         // Load and changes to the defaults from the global config.
         loadGlobalConfig();
@@ -81,12 +84,17 @@ var MapChange = MapChange || (function() {
         // Debug
         if (st.config.debug) {
             log(st.config);
-            log(globalconfig.mapchange);
         }
     };
     
     // Constructs the private and public maps for use in the api script.
     var constructMaps = function() {
+        // Clear the public maps.
+        state.MapChange.publicMaps = {};
+        // Clear the private maps.
+        state.MapChange.privateMaps = {};
+        // Clear the archive maps.
+        state.MapChange.archiveMaps = {};
         // Get an object containing all the pages in the campaign.
         var pages = findObjs({_type: 'page'});
         // Loop through the pages adding them to their relevent maps.
@@ -96,18 +104,27 @@ var MapChange = MapChange || (function() {
                 var name = pages[key].get("name");
                 // Get the id of the page that is current being processed.
                 var id = pages[key].get("_id");
-                // Check if the name of the page contains the marker.
-                if (name.indexOf(state.MapChange.config.marker) > -1) {
-                    // If the name does then remove the marker from the name and trim off any whitespace.
+                // Check if the page is an archived page.
+                if (pages[key].get("archived") === true) {
+                    // If it is then remove the private map marker if it exists and trim off any whitespace..
                     name = name.replace(state.MapChange.config.marker, "").trim();
-                    // If invertedMarker is being used then place the name and id of the page in the 
-                    // public map else place it in the private map.
-                    state.MapChange.config.invertedMarker ? state.MapChange.publicMaps[name] = id : state.MapChange.privateMaps[name] = id;
+                    // Place the name and id in the archive maps.
+                    state.MapChange.archiveMaps[name] = id;
                 }
                 else {
-                    // If the name does not contain the marker then place the name and id in the public map
-                    // if invertedMarker is being used else place it in the private map.
-                    state.MapChange.config.invertedMarker ? state.MapChange.privateMaps[name] = id : state.MapChange.publicMaps[name] = id;
+                    // Check if the name of the page contains the marker.
+                    if (name.indexOf(state.MapChange.config.marker) > -1) {
+                        // If the name does then remove the marker from the name and trim off any whitespace.
+                        name = name.replace(state.MapChange.config.marker, "").trim();
+                        // If invertedMarker is being used then place the name and id of the page in the 
+                        // public map else place it in the private map.
+                        state.MapChange.config.invertedMarker ? state.MapChange.publicMaps[name] = id : state.MapChange.privateMaps[name] = id;
+                    }
+                    else {
+                        // If the name does not contain the marker then place the name and id in the public map
+                        // if invertedMarker is being used else place it in the private map.
+                        state.MapChange.config.invertedMarker ? state.MapChange.privateMaps[name] = id : state.MapChange.publicMaps[name] = id;
+                    }
                 }
             }
         }
@@ -117,6 +134,8 @@ var MapChange = MapChange || (function() {
             log(state.MapChange.publicMaps);
             log("Private:");
             log(state.MapChange.privateMaps);
+            log("Archived:");
+            log(state.MapChange.archiveMaps);
         }
     };
     
@@ -137,15 +156,22 @@ var MapChange = MapChange || (function() {
         switch (commands.shift().toLowerCase()) {
             case "!mapchange":
             case "!mc":
-                // Check to see if any further commands were passed in and process them, else
-                // show the help test on how to use the script.
-                if (commands.length > 0) {
-                    // Process the remaining commands with the passed in paramters.
-                    processCommands(msg, commands, params);
+                // Check if the sending player is on the list of blocked players and is not a GM.
+                if (_.contains(state.MapChange.blockedPlayers, msg.playerid) && !playerIsGM(msg.playerid)) {
+                    // Send the player a message 
+                    chat("/w", msg.who, "Your GM has blocked you from using commands from MapChange.<br>Please contact a GM to remove the block.");
                 }
                 else {
-                    // Show the sender the script help message.
-                    showHelp(msg, "index");
+                    // Check to see if any further commands were passed in and process them, else
+                    // show the help test on how to use the script.
+                    if (commands.length > 0) {
+                        // Process the remaining commands with the passed in paramters.
+                        processCommands(msg, commands, params);
+                    }
+                    else {
+                        // Show the sender the script help message.
+                        showHelp(msg, "index");
+                    }
                 }
                 break;
             default:
@@ -250,7 +276,7 @@ var MapChange = MapChange || (function() {
                         rejoin(msg, getPlayerIdFromDisplayName(params.player));
                     }
                     else {
-                        // Send a warning to the sender to tell tehm that they cannot perform the action.
+                        // Send a warning to the sender to tell them that they cannot perform the action.
                         chat("/w", msg.who, "You do not have the permission required to perform that action.");
                     }
                 }
@@ -263,6 +289,24 @@ var MapChange = MapChange || (function() {
                 // Move all the players back to the bookmark and then move the bookmark to the map with
                 // the provided name.
                 moveall(msg, params.target);
+                break;
+            case "block":
+                // Check if the sender of the message is a GM.
+                if (playerIsGM(msg.playerid)) {
+                    // If they are then check to see if the params contain the player parameter.
+                    if (params.hasOwnProperty("player")) {
+                        // Toggle the block on the provided player.
+                        block(msg, getPlayerIdFromDisplayName(params.player));
+                    }
+                    else {
+                        // Toggle the block on the sender of the message
+                        block(msg, msg.playerid);
+                    }
+                }
+                else {
+                    // Send a warning to the sender to tell them that they cannot perform the action.
+                    chat("/w", msg.who, "You do not have the permission required to perform that action.");
+                }
                 break;
             default:
                 // Show the scripts help text is no further command was provided.
@@ -336,7 +380,12 @@ var MapChange = MapChange || (function() {
                 text += "<tr><td>refresh</td><td>Refreshes the map lists.</td><td><a href='!mc help --show refresh'>Info</a></td></tr>";
             }
             // Add a row for the help command.
-            text += "<tr><td>help</td><td>Shows the help for the script</td><td><a href='!mc help --show help'>Info</a></td></tr>";
+            text += "<tr><td>help</td><td>Shows the help for the script.</td><td><a href='!mc help --show help'>Info</a></td></tr>";
+            // Check if the calling player is a GM or not.
+            if (playerIsGM(msg.playerid)) {
+                // Add a row for the block command.
+                text += "<tr><td>block</td><td>Toggle blocking of command use.</td><td><a href='!mc help --show block'>Info</a></td></tr>";
+            }
             // Add the closing tag for the table.
             text += "</table>";
             // Add in a blank line to seperate the command information from the general information.
@@ -369,7 +418,7 @@ var MapChange = MapChange || (function() {
             // Add a row for the parameters section headers.
             text += "<tr><td><strong>Parameter</strong></td><td><strong>Description</strong></td><td><strong>Options</strong></td></tr>";
             // Add a row for the show parameter.
-            text += "<tr><td>--show</td><td><em>[Optional]</em><br>Used to filter the returned view.</td><td>All<br>Public<br>" + ((playerIsGM(msg.playerid)) ? "Private<br>" : "") + "Utilities<br>Utils</td></tr>";
+            text += "<tr><td>--show</td><td><em>[Optional]</em><br>Used to filter the returned view.</td><td>All<br>Public<br>" + ((playerIsGM(msg.playerid)) ? "Private<br>Archive<br>" : "") + "Utilities<br>Utils</td></tr>";
             // Add a row for the example header.
             text += "<tr><td colspan='3'><strong>Example</strong></td></tr>";
             // Add a row with an example and an api button to launch that example.
@@ -498,7 +547,30 @@ var MapChange = MapChange || (function() {
             // Add the closing tag for the table.
             text += "</table>";
             // Add in a back button for going back to the menu.
-            text += navigation("refresh", "");
+            text += navigation("refresh", "block");
+        }
+        // 
+        if (show === "block") {
+            // Add the opening tag for the table.
+            text += "<table border='1' cellspacing='2' cellpadding='4'>";
+            // Add in the header row for the move help.
+            text += "<tr><td colspan='3'><strong><em>Block</em></strong></td></tr>";
+            // Add a row for the description header.
+            text += "<tr><td colspan='3'><strong>Description</strong></td></tr>";
+            // Add a row for the description of the command.
+            text += "<tr><td colspan='3'>The block command toggles the players ability to use MapChange commands.</td></tr>";
+            // Add a row for the parameters section headers.
+            text += "<tr><td><strong>Parameter</strong></td><td><strong>Description</strong></td><td><strong>Options</strong></td></tr>";
+            // If they are then add a row for the player parameter.
+            text += "<tr><td>--player</td><td><em>[Optional]</em><br>The player to block/unblock.</td><td>Player Name</td></tr>";
+            // Add a row for the example header.
+            text += "<tr><td colspan='3'><strong>Example</strong></td></tr>";
+            // Add a row with an example and an api button to launch that example.
+            text += "<tr><td colspan='2'>!mc block</td><td><a href='!mc help'>Show Me!</a></td></tr>";
+            // Add the closing tag for the table.
+            text += "</table>";
+            // Add in a back button for going back to the menu.
+            text += navigation("help", "");
         }
         // Assemble the text for the constructing an API documentation.
         if (show === "api") {
@@ -603,7 +675,7 @@ var MapChange = MapChange || (function() {
         // Create the variable to hold the assembled menu text.
         var text = "";
         // Check if the show parameter is set to show any of the maps.
-        if (show === "all" || show === "public" || show === "private") {
+        if (show === "all" || show === "public" || show === "private" || show === "archive") {
             // Start off the chat message with the Available Maps title.
             text += "<tr><td colspan='3'><strong><em>Available Maps:</em></strong></td></tr>";
         }
@@ -676,18 +748,61 @@ var MapChange = MapChange || (function() {
                 }
             }
         }
+        // Check if the "show" parameter is set to "archive".
+        if (show === "archive") {
+            // If it is then check if the calling player is a GM or not.
+            if (playerIsGM(msg.playerid)) {
+                // If they are then add a row for the Private title..
+                text += "<tr><td colspan='3'><strong><em>Archive</em></strong></td></tr>";
+                // Loop through the map displaying an api button for each one.
+                for (var key in state.MapChange.archiveMaps) {
+                    if (state.MapChange.archiveMaps.hasOwnProperty(key)) {
+                        // Add a tag to open start a row on the table.
+                        text += "<tr>";
+                        // Generate an api button with the map name that will teleport the user to that map.
+                        // If the map name is longer than 20 characters then trim it and add an elipse.
+                        text += "<td><a href='!mc move --target " + key + "'>" + ((key.length > displayLength) ? key.substr(0, displayLength) + "..." : key) + "</a></td>";
+                        // Add a button to teleport all players to the chosen map.
+                        text += "<td><a href='!mc moveall --target " + key + "'>All</a></td>";
+                        // Add a button to teleport a differnet player to the chosen map.
+                        text += "<td><a href='!mc move --target " + key + " --player ?{Player";
+                        // Loop through the players in the campaign adding them to the dropdown for the command.
+                        for (var key in players) {
+                            // Add the current players name with any brackets replaced for their ASCII equivalents.
+                            text += "|" + players[key].get("_displayname").replace("(", _.escape("(")).replace(")", _.escape(")"));
+                        }
+                        // Complete the Other api button.
+                        text += "}'>Other</a></td>";
+                        
+                        // Add a closing tag to finish the row in the table.
+                        text += "</tr>";
+                    }
+                }
+            }
+        }
+        else {
+            if (show === "all") {
+                // If it is then check if the calling player is a GM or not.
+                if (playerIsGM(msg.playerid)) {
+                    // If they are then add a row for the Private title..
+                    text += "<tr><td colspan='3'><strong><em>Archive</em></strong></td></tr>";
+                    // Add a row with a placeholder button for the archived maps.
+                    text += "<tr><td colspan='3'><a href='!mc menu --show archive'>List All Archive Maps</a></td></tr>";
+                }
+            }
+        }
         // Check to see if the text is currently empty.
         if (text !== "") {
             // If it isn't then wrap the text within a set of table tags.
             text = "<table border='1' cellspacing='0' cellpadding='0'>" + text + "</table>";
         }
         // Check to see if the filter is set to display all.
-        if (show === "all") {
+        if (show === "all" || show === "archive") {
             // Add in a blank line to seperate the menus.
             text += "<br line-height='1'>";
         }
         // Check if the "show" paramter is set to either "all" or "utilities"/"utils".
-        if (show === "all" || show === "utilities" || show === "utils") {
+        if (show === "all" || show === "utilities" || show === "utils" || show === "archive") {
             // Add a table to start a new table.
             text += "<table <table border='1' cellspacing='0' cellpadding='0'>";
             // Add in the title for the utilities section.
@@ -714,6 +829,24 @@ var MapChange = MapChange || (function() {
             }
             // Add an api button for the help command.
             text += "<td><a href='!mc help'>Help</a></td>";
+            // Add the closing tag of the last row.
+            text += "</tr>";
+            // Check if the caller is a GM or not.
+            if (playerIsGM(msg.playerid)) {
+                // Add the opening tag for a new row.
+                text += "<tr>";
+                // Add an api button for toggling the block on a player.
+                text += "<td colspan='2'><a href='!mc block --player ?{Player";
+                // Loop through the players in the campaign adding them to the dropdown for the command.
+                for (var key in players) {
+                    if (players.hasOwnProperty(key)) {
+                        // Add the current players name with any brackets replaced for their ASCII equivalents.
+                        text += "|" + players[key].get("_displayname").replace("(", _.escape("(")).replace(")", _.escape(")"));
+                    }
+                }
+                // Complete the Toggle Block api button.
+                text += "}'>Toggle Block</a></td></tr>";
+            }
             // Add a tag to close the table.
             text += "</table>";
         }
@@ -733,13 +866,33 @@ var MapChange = MapChange || (function() {
         state.MapChange.publicMaps = {};
         // Clear out the private maps.
         state.MapChange.privateMaps = {};
+        // Clear out the archive maps.
+        state.MapChange.archiveMaps = {};
+        // Debug
+        if (state.MapChange.config.debug) {
+            log("Clear Public:");
+            log(state.MapChange.publicMaps);
+            log("Clear Private:");
+            log(state.MapChange.privateMaps);
+            log("Clear Archived:");
+            log(state.MapChange.archiveMaps);
+        }
         // Reassemble the maps.
         constructMaps();
         log("Refresh Complete");
         // Check if the GM should be notified.
         if (state.MapChange.config.gmNotify) {
             // If they should then send them a message.
-            chat("/w", msg.who, "Map Refresh Complete");
+            chat("/w", "gm", "Map Refresh Complete");
+        }
+        // Debug
+        if (state.MapChange.config.debug) {
+            log("Rebuilt Public:");
+            log(state.MapChange.publicMaps);
+            log("Rebuilt Private:");
+            log(state.MapChange.privateMaps);
+            log("Rebuilt Archived:");
+            log(state.MapChange.archiveMaps);
         }
     };
     
@@ -848,6 +1001,37 @@ var MapChange = MapChange || (function() {
         }
     };
     
+    var block = function(msg, player) {
+        // Check if the sender is a GM.
+        if (playerIsGM(msg.playerid)) {
+            // Check if the block players list contains the provided player.
+            if (_.contains(state.MapChange.blockedPlayers, player)) {
+                // Find the index of the player in the list.
+                var index = _.indexOf(state.MapChange.blockedPlayers, player);
+                // Remove the player from the list.
+                state.MapChange.blockedPlayers = state.MapChange.blockedPlayers.splice(index - 1, index);
+                // Check if the GM should be notified.
+                if (state.MapChange.config.gmNotify) {
+                    // Send a message to the GM to tell them that a player has been unblocked.
+                    chat("/w", "gm", "Unblocked " + getDisplayNameFromPlayerId(player) + " from using commands.");
+                }
+            }
+            else {
+                // Add the player to the blocked player list.
+                state.MapChange.blockedPlayers.push(player);
+                // Check if the GM should be notified.
+                if (state.MapChange.config.gmNotify) {
+                    // Send a message to the GM to tell them that a player has been unblocked.
+                    chat("/w", "gm", "Blocked " + getDisplayNameFromPlayerId(player) + " from using commands.");
+                }
+            }
+        }
+        // Debug
+        if (state.MapChange.config.debug) {
+            log(state.MapChange.blockedPlayers);
+        }
+    };
+    
     var chat = function(type, who, message) {
         who = who.split(" ")[0].replace(" (GM)", "");
         sendChat("MapChange", type + " " + who + " " + message, {noarchive:true});
@@ -915,6 +1099,8 @@ on("ready", function() {
     if (MapChange.Debug) {
         // If it is then log out the map construction.
         log("Map Change Started");
+        log("Blocked Players");
+        log(state.MapChange.blockedPlayers);
         MapChange.ConstructMaps();
         log("Maps Constructed");
         MapChange.RegisterEventHandlers();
