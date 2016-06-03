@@ -1,6 +1,6 @@
 {
     "name": "Page Navigator",
-    "script": "Page Navigator.js",
+    "script": "PageNavigator.js",
     "version": "1.031",
     "previousversions": [],
     "description": "Page Navigator allows you to more easily move your players from page to page. You can utilize the script through API commands or by relying on token collisions to provide a more interactive map for your players. Use <b>!nav help</b> in game to bring up a help dialog with details on using all the scripts features.",
