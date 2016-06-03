@@ -1,6 +1,6 @@
 {
     "name": "ShareVision",
-    "script": "shareVision.js",
+    "script": "ShareVision.js",
     "version": "1.4",
     "previousversions": [],
     "description": "ShareVision allows you to share a token's sight with the whole party. Use the aura status marker to share normal vision and the overdrive status marker to share darkvision.",
