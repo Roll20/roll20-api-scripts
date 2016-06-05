@@ -1,33 +1,3 @@
-<a name="2.4.2"></a>
-## [2.4.2](https://github.com/symposion/roll20-shaped-scripts/compare/2.4.1...2.4.2) (2016-06-05)
-
-
-
-<a name="2.4.1"></a>
-## [2.4.1](https://github.com/symposion/roll20-shaped-scripts/compare/2.4.0...2.4.1) (2016-06-05)
-
-
-
-<a name="2.4.0"></a>
-# [2.4.0](https://github.com/symposion/roll20-shaped-scripts/compare/2.3.1...2.4.0) (2016-06-05)
-
-
-### Bug Fixes
-
-* **hp-rolling:** Fix HP rolling on drop bug introduced in last release ([66bc93f](https://github.com/symposion/roll20-shaped-scripts/commit/66bc93f)), closes [#136](https://github.com/symposion/roll20-shaped-scripts/issues/136)
-
-
-### Features
-
-* **abilities:** Add "spells" option for token actions ([21c0538](https://github.com/symposion/roll20-shaped-scripts/commit/21c0538)), closes [#137](https://github.com/symposion/roll20-shaped-scripts/issues/137)
-
-
-
-<a name="2.3.1"></a>
-## [2.3.1](https://github.com/symposion/roll20-shaped-scripts/compare/2.3.0...2.3.1) (2016-05-16)
-
-
-
 <a name="2.3.0"></a>
 # [2.3.0](https://github.com/symposion/roll20-shaped-scripts/compare/2.2.0...2.3.0) (2016-05-15)
 

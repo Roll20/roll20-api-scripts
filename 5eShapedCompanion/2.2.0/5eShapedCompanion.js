@@ -52,16 +52,16 @@ var ShapedScripts =
 	const mmFormat = __webpack_require__(4);
 	const myState = roll20.getState('ShapedScripts');
 	const Logger = __webpack_require__(5);
-	const logger = new Logger('5eShapedCompanion', roll20);
+	const logger = new Logger('5eShapedCompanion', myState.config, roll20);
 	const EntityLookup = __webpack_require__(6);
 	const JSONValidator = __webpack_require__(8);
 	const el = new EntityLookup();
 	const Reporter = __webpack_require__(9);
 	const reporter = new Reporter(roll20, 'Shaped Scripts');
 	const ShapedScripts = __webpack_require__(10);
-	const srdConverter = __webpack_require__(22);
-	const sanitise = __webpack_require__(23);
-	const mpp = __webpack_require__(24);
+	const srdConverter = __webpack_require__(21);
+	const sanitise = __webpack_require__(22);
+	const mpp = __webpack_require__(23);
 	const shaped = new ShapedScripts(logger, myState, roll20, parseModule.getParser(mmFormat, logger), el, reporter,
 	  srdConverter, sanitise, mpp);
 	const _ = __webpack_require__(2);
@@ -1322,26 +1322,15 @@ var ShapedScripts =
 	}
 
 	module.exports = class Logger {
-	  constructor(loggerName, roll20) {
+	  constructor(loggerName, config, roll20) {
 	    this.prefixString = '';
-	    const state = roll20.getState('roll20-logger');
-	    state[loggerName] = state[loggerName] || Logger.levels.INFO;
-
-	    roll20.on('chat:message', (msg) => {
-	      if (msg.type === 'api' && msg.content.startsWith('!logLevel')) {
-	        const parts = msg.content.split(/\s/);
-	        if (parts.length > 2) {
-	          if (!state[parts[1]]) {
-	            roll20.sendChat('Logger', `Unrecognised logger name ${parts[1]}`);
-	            return;
-	          }
-	          state[parts[1]] = Logger.levels[parts[2].toUpperCase()] || Logger.levels.INFO;
-	        }
-	      }
-	    });
 
 	    function shouldLog(level) {
-	      return level <= state[loggerName];
+	      let logLevel = Logger.levels.INFO;
+	      if (config && config.logLevel) {
+	        logLevel = Logger.levels[config.logLevel];
+	      }
+	      return level <= logLevel;
 	    }
 
 	    function outputLog(level, message) {
@@ -1369,7 +1358,6 @@ var ShapedScripts =
 	        wrapFunctions(modToWrap, modToWrap.logWrap, this.wrapFunction.bind(this));
 	        modToWrap.isLogWrapped = true;
 	      }
-	      return modToWrap;
 	    };
 
 	    this.getLogTap = function getLogTap(level, messageString) {
@@ -2159,16 +2147,33 @@ var ShapedScripts =
 	const parseModule = __webpack_require__(3);
 	const makeCommandProc = __webpack_require__(11);
 	const utils = __webpack_require__(7);
-	const UserError = __webpack_require__(12);
-	const Migrator = __webpack_require__(14);
-	const ShapedConfig = __webpack_require__(15);
-	// Modules
-	const AbilityMaker = __webpack_require__(16);
+	const AdvantageTracker = __webpack_require__(14);
+	const RestManager = __webpack_require__(15);
+	const TraitManager = __webpack_require__(16);
 	const ConfigUI = __webpack_require__(17);
-	const AdvantageTracker = __webpack_require__(18);
-	const RestManager = __webpack_require__(19);
-	const TraitManager = __webpack_require__(20);
-	const AmmoManager = __webpack_require__(21);
+	const UserError = __webpack_require__(12);
+	const Migrator = __webpack_require__(19);
+	const ShapedConfig = __webpack_require__(18);
+	const AbilityMaker = __webpack_require__(20);
+
+	const configToAttributeLookup = {
+	  sheetOutput: 'output_option',
+	  deathSaveOutput: 'death_save_output_option',
+	  initiativeOutput: 'initiative_output_option',
+	  showNameOnRollTemplate: 'show_character_name',
+	  rollOptions: 'roll_setting',
+	  initiativeRoll: 'initiative_roll',
+	  initiativeToTracker: 'initiative_to_tracker',
+	  breakInitiativeTies: 'initiative_tie_breaker',
+	  showTargetAC: 'attacks_vs_target_ac',
+	  showTargetName: 'attacks_vs_target_name',
+	  autoAmmo: 'ammo_auto_use',
+	  autoRevertAdvantage: 'auto_revert_advantage',
+	  savingThrowsHalfProf: 'saving_throws_half_proficiency',
+	  mediumArmorMaxDex: 'medium_armor_max_dex',
+	};
+
+
 	/**
 	 * @typedef {Object} ChatMessage
 	 * @property {string} content
@@ -2192,19 +2197,13 @@ var ShapedScripts =
 	  let addedTokenIds = [];
 	  const report = reporter.report.bind(reporter);
 	  const reportError = reporter.reportError.bind(reporter);
-	  const commandProc = makeCommandProc('shaped', roll20);
 	  const chatWatchers = [];
-	  const advantageTracker = new AdvantageTracker();
-	  const traitManager = new TraitManager();
-	  const ammoManager = new AmmoManager();
-	  const abilityMaker = new AbilityMaker();
+	  const at = new AdvantageTracker(logger, myState, roll20);
+	  const rester = new RestManager(logger, myState, roll20);
+	  const commandProc = makeCommandProc('shaped', roll20);
 	  const modules = [
-	    abilityMaker,
+	    new AbilityMaker(),
 	    new ConfigUI(),
-	    advantageTracker,
-	    traitManager,
-	    new RestManager(),
-	    ammoManager,
 	  ];
 
 	  modules.forEach(module => module.configure(roll20, reporter, logger, myState, commandProc));
@@ -2232,7 +2231,6 @@ var ShapedScripts =
 	      const represents = token.get('represents');
 	      const character = roll20.getObj('character', represents);
 	      if (character) {
-	        this.applyCharacterDefaults(character);
 	        this.getTokenConfigurer(token)(character);
 	      }
 	    });
@@ -2394,7 +2392,7 @@ var ShapedScripts =
 	    const defaultIndex = Math.min(myState.config.defaultGenderIndex, myState.config.genderPronouns.length);
 	    const defaultPronounInfo = myState.config.genderPronouns[defaultIndex];
 	    const pronounInfo = _.clone(_.find(myState.config.genderPronouns,
-	        pronounDetails => new RegExp(pronounDetails.matchPattern, 'i').test(gender)) || defaultPronounInfo);
+	      pronounDetails => new RegExp(pronounDetails.matchPattern, 'i').test(gender)) || defaultPronounInfo);
 
 	    _.defaults(pronounInfo, defaultPronounInfo);
 
@@ -2408,8 +2406,12 @@ var ShapedScripts =
 	    }
 	  };
 
+
 	  this.monsterDataPopulator = function monsterDataPopulator(character, monsterData) {
-	    this.applyCharacterDefaults(character);
+	    _.each(utils.flattenObject(myState.config.newCharSettings), (value, key) => {
+	      const attribute = roll20.getOrCreateAttr(character.id, configToAttributeLookup[key] || key);
+	      attribute.set('current', _.isBoolean(value) ? (value ? 'on' : 0) : value);
+	    });
 
 	    const converted = srdConverter.convertMonster(monsterData);
 	    logger.debug('Converted monster data: $$$', converted);
@@ -2467,19 +2469,6 @@ var ShapedScripts =
 	    return function avatarCopier(character) {
 	      character.set('avatar', token.get('imgsrc'));
 	    };
-	  };
-
-	  this.applyCharacterDefaults = function applyCharacterDefaults(character) {
-	    _.each(utils.flattenObject(_.omit(myState.config.newCharSettings, 'tokenActions')), (value, key) => {
-	      const attribute = roll20.getOrCreateAttr(character.id, ShapedConfig.configToAttributeLookup[key] || key);
-	      attribute.set('current', _.isBoolean(value) ? (value ? 'on' : 0) : value);
-	    });
-
-	    const abilityNames = _.chain(myState.config.newCharSettings.tokenActions)
-	      .map((action, actionName) => (action === true ? actionName : action))
-	      .compact()
-	      .values();
-	    abilityMaker.addAbilitiesByName(abilityNames, character);
 	  };
 
 	  this.getTokenConfigurer = function getTokenConfigurer(token) {
@@ -2620,6 +2609,41 @@ var ShapedScripts =
 	    };
 	  };
 
+	  this.handleAdvantageTracker = function handleAdvantageTracker(options) {
+	    let type = undefined;
+
+	    if (!_.isUndefined(options.id)) {
+	      // if an ID is passed, overwrite any selection, and only process for the passed charId
+	      options.selected.character = [options.id];
+	    }
+
+	    if (_.isEmpty(options.selected.character)) {
+	      reportError('Advantage Tracker was called, but no token was selected, and no character id was passed.');
+	    }
+	    else {
+	      if (options.normal) {
+	        type = 'normal';
+	      }
+	      else if (options.advantage) {
+	        type = 'advantage';
+	      }
+	      else if (options.disadvantage) {
+	        type = 'disadvantage';
+	      }
+
+	      if (!_.isUndefined(type)) {
+	        at.setRollOption(type, options.selected.character);
+	      }
+
+	      if (options.revert) {
+	        at.setAutoRevert(true, options.selected.character);
+	      }
+	      else if (options.persist) {
+	        at.setAutoRevert(false, options.selected.character);
+	      }
+	    }
+	  };
+
 	  this.handleSlots = function handleSlots(options) {
 	    if (options.use) {
 	      roll20.processAttrValue(options.character.id, `spell_slots_l${options.use}`, val => Math.max(0, --val));
@@ -2660,19 +2684,18 @@ var ShapedScripts =
 	        }
 	      };
 	      /* eslint-disable no-spaced-func */
-	    }(token.id)), 100);
-	    /* eslint-enable no-spaced-func */
+	    } (token.id)), 100);
 	  };
 
 	  this.handleChangeToken = function handleChangeToken(token) {
 	    if (_.contains(addedTokenIds, token.id)) {
 	      addedTokenIds = _.without(addedTokenIds, token.id);
-	      this.setTokenBarsOnDrop(token, true);
-	      advantageTracker.handleTokenChange(token);
+	      this.setTokenBarsOnDrop(token);
+	      at.handleTokenChange(token);
 	    }
 	  };
 
-	  this.setTokenBarsOnDrop = function setTokenBarsOnDrop(token, overwrite) {
+	  this.setTokenBarsOnDrop = function setTokenBarsOnDrop(token) {
 	    const character = roll20.getObj('character', token.get('represents'));
 	    if (!character) {
 	      return;
@@ -2690,7 +2713,7 @@ var ShapedScripts =
 	    _.chain(myState.config.tokenSettings)
 	      .pick('bar1', 'bar2', 'bar3')
 	      .each((bar, barName) => {
-	        if (bar.attribute && !token.get(`${barName}_link`) && (!token.get(`${barName}_value`) || overwrite)) {
+	        if (bar.attribute && !token.get(`${barName}_link`)) {
 	          if (bar.attribute === 'HP' && myState.config.sheetEnhancements.rollHPOnDrop) {
 	            // Guard against characters that aren't properly configured - i.e. ones used for templates and system
 	            // things rather than actual characters
@@ -2750,7 +2773,35 @@ var ShapedScripts =
 	      return;
 	    }
 
-	    ammoManager.consumeAmmo(options, msg);
+	    const ammoAttr = _.chain(roll20.findObjs({ type: 'attribute', characterid: options.character.id }))
+	      .filter(attribute => attribute.get('name').indexOf('repeating_ammo') === 0)
+	      .groupBy(attribute => attribute.get('name').replace(/(repeating_ammo_[^_]+).*/, '$1'))
+	      .find(attributeList =>
+	        _.find(attributeList, attribute =>
+	          attribute.get('name').match(/.*name$/) && attribute.get('current') === options.ammoName)
+	      )
+	      .find(attribute => attribute.get('name').match(/.*qty$/))
+	      .value();
+
+	    if (!ammoAttr) {
+	      logger.error('No ammo attribute found corresponding to name $$$', options.ammoName);
+	      return;
+	    }
+
+	    let ammoUsed = 1;
+	    if (options.ammo) {
+	      const rollRef = options.ammo.match(/\$\[\[(\d+)\]\]/);
+	      if (rollRef) {
+	        const rollExpr = msg.inlinerolls[rollRef[1]].expression;
+	        const match = rollExpr.match(/\d+-(\d+)/);
+	        if (match) {
+	          ammoUsed = match[1];
+	        }
+	      }
+	    }
+
+	    const val = parseInt(ammoAttr.get('current'), 10) || 0;
+	    ammoAttr.set('current', Math.max(0, val - ammoUsed));
 	  };
 
 	  this.handleHD = function handleHD(options, msg) {
@@ -2776,18 +2827,37 @@ var ShapedScripts =
 	    }
 	  };
 
+	  this.handleRest = function handleRest(options) {
+	    if (!_.isUndefined(options.id)) {
+	      // if an ID is passed, overwrite any selection, and only process for the passed charId
+	      options.selected.character = [options.id];
+	    }
+	    if (options.long) {
+	      // handle long rest
+	      rester.doLongRest(options.selected.character);
+	    }
+	    else if (options.short) {
+	      // handle short rest
+	      rester.doShortRest(options.selected.character);
+	    }
+	    else {
+	      this.roll20.reportError('please specify long (!shaped-rest --long) or short (!shaped-rest --short) rest');
+	    }
+	  };
+
 	  this.handleD20Roll = function handleD20Roll(options) {
 	    if (options.disadvantage || options.advantage) {
 	      const autoRevertOptions = roll20.getAttrByName(options.character.id, 'auto_revert_advantage');
 	      if (autoRevertOptions === 'on') {
-	        advantageTracker.setRollOption('normal', [options.character]);
+	        at.setRollOption('normal', [options.character]);
 	      }
 	    }
 	  };
 
 	  this.handleTraitClick = function handleTraitClick(options) {
 	    if (myState.config.sheetEnhancements.autoTraits) {
-	      traitManager.handleTraitClick(options);
+	      const traitMan = new TraitManager(logger, roll20, reporter);
+	      traitMan.handleTraitClick(options);
 	    }
 	  };
 
@@ -2817,7 +2887,7 @@ var ShapedScripts =
 	    let msg;
 
 	    const bestSlot = availableSlots
-	        .find(slot => parseInt(slot.get('name').match(/spell_slots_l(\d)/)[1], 10) === level) ||
+	      .find(slot => parseInt(slot.get('name').match(/spell_slots_l(\d)/)[1], 10) === level) ||
 	      _.first(availableSlots);
 
 	    if (bestSlot) {
@@ -2991,9 +3061,8 @@ var ShapedScripts =
 	      return cp;
 	    }
 
-	    this.commandProcConfigured = true;
 	    return cp
-	    // !shaped-import-statblock
+	      // !shaped-import-statblock
 	      .addCommand('import-statblock', this.importStatblock.bind(this))
 	      .option('overwrite', ShapedConfig.booleanValidator)
 	      .option('replace', ShapedConfig.booleanValidator)
@@ -3033,8 +3102,22 @@ var ShapedScripts =
 	          max: 1,
 	        },
 	      })
+	      // !shaped-at
+	      .addCommand('at', this.handleAdvantageTracker.bind(this))
+	      .option('advantage', ShapedConfig.booleanValidator)
+	      .option('disadvantage', ShapedConfig.booleanValidator)
+	      .option('normal', ShapedConfig.booleanValidator)
+	      .option('revert', ShapedConfig.booleanValidator)
+	      .option('persist', ShapedConfig.booleanValidator)
+	      .option('id', ShapedConfig.getCharacterValidator(roll20), false)
+	      .withSelection({
+	        character: {
+	          min: 0,
+	          max: Infinity,
+	        },
+	      })
 	      // !shaped-token-defaults
-	      .addCommand(['token-defaults', 'apply-defaults'], this.applyTokenDefaults.bind(this))
+	      .addCommand('token-defaults', this.applyTokenDefaults.bind(this))
 	      .withSelection({
 	        graphic: {
 	          min: 1,
@@ -3045,11 +3128,22 @@ var ShapedScripts =
 	      .addCommand('slots', this.handleSlots.bind(this))
 	      .option('character', ShapedConfig.getCharacterValidator(roll20), true)
 	      .option('use', ShapedConfig.integerValidator)
-	      .option('restore', ShapedConfig.integerValidator);
+	      .option('restore', ShapedConfig.integerValidator)
+	      // !shaped-rest
+	      .addCommand('rest', this.handleRest.bind(this))
+	      .option('long', ShapedConfig.booleanValidator)
+	      .option('short', ShapedConfig.booleanValidator)
+	      .option('id', ShapedConfig.getCharacterValidator(roll20), false)
+	      .withSelection({
+	        character: {
+	          min: 0,
+	          max: Infinity,
+	        },
+	      });
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v2.4.2 <=-');
+	    logger.info('-=> ShapedScripts v2.2.0 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -3076,37 +3170,13 @@ var ShapedScripts =
 	    };
 	  };
 
-	  this.updateBarsForCharacterTokens = function updateBarsForCharacterTokens(curr) {
-	    roll20.findObjs({ type: 'graphic', represents: curr.get('characterid') })
-	      .forEach(token => this.setTokenBarsOnDrop(token, false));
-	  };
-
-	  this.getAttributeChangeHandler = function getAttributeChangeHandler(attributeName) {
-	    const handlers = {
-	      roll_setting: advantageTracker.handleRollOptionChange.bind(advantageTracker),
-	    };
-
-	    _.chain(myState.config.tokenSettings)
-	      .pick('bar1', 'bar2', 'bar3')
-	      .pluck('attribute')
-	      .each(attrName => {
-	        if (attrName === 'HP') {
-	          attrName = 'hp_formula';
-	        }
-	        handlers[attrName] = this.updateBarsForCharacterTokens.bind(this);
-	      });
-
-	    return handlers[attributeName];
-	  };
-
 	  this.registerEventHandlers = function registerEventHandlers() {
 	    roll20.on('chat:message', this.wrapHandler(this.handleInput));
 	    roll20.on('add:token', this.wrapHandler(this.handleAddToken));
 	    roll20.on('change:token', this.wrapHandler(this.handleChangeToken));
-	    roll20.on('change:attribute', this.wrapHandler((curr, prev) => {
-	      const handler = this.getAttributeChangeHandler(curr.get('name'));
-	      if (handler) {
-	        handler(curr, prev);
+	    roll20.on('change:attribute', this.wrapHandler((curr) => {
+	      if (curr.get('name') === 'roll_setting') {
+	        at.handleRollOptionChange(curr);
 	      }
 	    }));
 	    this.registerChatWatcher(this.handleDeathSave, ['deathSavingThrow', 'character', 'roll1']);
@@ -3470,393 +3540,182 @@ var ShapedScripts =
 	const _ = __webpack_require__(2);
 	const utils = __webpack_require__(7);
 
-	const oneSixConfig = {
-	  logLevel: 'INFO',
-	  tokenSettings: {
-	    number: false,
-	    bar1: {
-	      attribute: 'HP',
-	      max: true,
-	      link: false,
-	      showPlayers: false,
-	    },
-	    bar2: {
-	      attribute: 'speed',
-	      max: false,
-	      link: true,
-	      showPlayers: false,
-	    },
-	    bar3: {
-	      attribute: '',
-	      max: false,
-	      link: false,
-	      showPlayers: false,
-	    },
-	    aura1: {
-	      radius: '',
-	      color: '#FFFF99',
-	      square: false,
-	    },
-	    aura2: {
-	      radius: '',
-	      color: '#59e594',
-	      square: false,
-	    },
-	    light: {
-	      radius: '',
-	      dimRadius: '',
-	      otherPlayers: false,
-	      hasSight: false,
-	      angle: 360,
-	      losAngle: 360,
-	      multiplier: 1,
-	    },
-	    showName: true,
-	    showNameToPlayers: false,
-	    showAura1ToPlayers: true,
-	    showAura2ToPlayers: true,
+	const rollOptions = {
+	  normal: {
+	    rollSetting: '@{roll_1}',
+	    message: 'normally',
+	    rollInfo: '',
+	    preroll: '',
+	    postroll: '',
 	  },
-	  newCharSettings: {
-	    sheetOutput: '@{output_to_all}',
-	    deathSaveOutput: '@{output_to_all}',
-	    initiativeOutput: '@{output_to_all}',
-	    showNameOnRollTemplate: '@{show_character_name_yes}',
-	    rollOptions: '@{normal}',
-	    initiativeRoll: '@{normal_initiative}',
-	    initiativeToTracker: '@{initiative_to_tracker_yes}',
-	    breakInitiativeTies: '@{initiative_tie_breaker_var}',
-	    showTargetAC: '@{attacks_vs_target_ac_no}',
-	    showTargetName: '@{attacks_vs_target_name_no}',
-	    autoAmmo: '@{ammo_auto_use_var}',
-	    autoRevertAdvantage: false,
-	    houserules: {
-	      savingThrowsHalfProf: false,
-	      mediumArmorMaxDex: 2,
-	    },
+	  advantage: {
+	    rollSetting: '@{roll_advantage}',
+	    message: 'with advantage',
+	    rollInfo: '{{advantage=1}}',
+	    preroll: 2,
+	    postroll: 'kh1',
 	  },
-	  advTrackerSettings: {
-	    showMarkers: false,
-	    ignoreNpcs: false,
-	    advantageMarker: 'green',
-	    disadvantageMarker: 'red',
-	    output: 'public',
+	  disadvantage: {
+	    rollSetting: '@{roll_disadvantage}',
+	    message: 'with disadvantage',
+	    rollInfo: '{{disadvantage=1}}',
+	    preroll: 2,
+	    postroll: 'kl1',
 	  },
-	  sheetEnhancements: {
-	    rollHPOnDrop: true,
-	    autoHD: true,
-	    autoSpellSlots: true,
+	  roll2: {
+	    rollSetting: '@{roll_2}',
+	    message: 'two dice',
+	    rollInfo: '',
+	    preroll: '',
+	    postroll: '',
 	  },
-	  genderPronouns: [
-	    {
-	      matchPattern: '^f$|female|girl|woman|feminine',
-	      nominative: 'she',
-	      accusative: 'her',
-	      possessive: 'her',
-	      reflexive: 'herself',
-	    },
-	    {
-	      matchPattern: '^m$|male|boy|man|masculine',
-	      nominative: 'he',
-	      accusative: 'him',
-	      possessive: 'his',
-	      reflexive: 'himself',
-	    },
-	    {
-	      matchPattern: '^n$|neuter|none|construct|thing|object',
-	      nominative: 'it',
-	      accusative: 'it',
-	      possessive: 'its',
-	      reflexive: 'itself',
-	    },
-	  ],
-	  defaultGenderIndex: 2,
-
 	};
 
+	class AdvantageTracker {
 
-	class Migrator {
-
-	  constructor(startVersion) {
-	    this._versions = [{ version: startVersion || 0.1, migrations: [] }];
+	  constructor(logger, myState, roll20) {
+	    this.logger = logger;
+	    this.myState = myState;
+	    this.roll20 = roll20;
 	  }
 
-	  skipToVersion(version) {
-	    this._versions.push({ version, migrations: [] });
-	    return this;
-	  }
+	  handleRollOptionChange(msg) {
+	    const char = [];
+	    char.push(msg.get('_characterid'));
+	    const br = this.buildResources(_.uniq(_.union(char)));
 
-	  nextVersion() {
-	    const currentVersion = this._versions.slice(-1)[0].version;
-	    const nextVersion = (currentVersion * 10 + 1) / 10; // Avoid FP errors
-	    this._versions.push({ version: nextVersion, migrations: [] });
-	    return this;
-	  }
+	    if (!_.isEmpty(br)) {
+	      this.setStatusMarkers(br[0].tokens,
+	        msg.get('current') === '@{roll_advantage}',
+	        msg.get('current') === '@{roll_disadvantage}');
 
-	  addProperty(path, value) {
-	    const expandedProperty = utils.createObjectFromPath(path, value);
-	    return this.transformConfig((config) => utils.deepExtend(config, expandedProperty),
-	      `Adding property ${path} with value ${value}`);
-	  }
-
-	  overwriteProperty(path, value) {
-	    return this.transformConfig((config) => {
-	      const parts = path.split('.');
-	      const obj = parts.length > 1 ? utils.getObjectFromPath(config, parts.slice(0, -1).join('.')) : config;
-	      obj[parts.slice(-1)[0]] = value;
-	      return config;
-	    }, `Overwriting property ${path} with value ${JSON.stringify(value)}`);
-	  }
-
-	  copyProperty(oldPath, newPath) {
-	    return this.transformConfig(Migrator.propertyCopy.bind(null, oldPath, newPath),
-	      `Copying property from ${oldPath} to ${newPath}`);
-	  }
-
-
-	  static propertyCopy(oldPath, newPath, config) {
-	    const oldVal = utils.getObjectFromPath(config, oldPath);
-	    if (!_.isUndefined(oldVal)) {
-	      const expandedProperty = utils.createObjectFromPath(newPath, oldVal);
-	      utils.deepExtend(config, expandedProperty);
+	      switch (msg.get('current')) {
+	        case '@{roll_1}':
+	          this.sendChatNotification(br[0], 'normal');
+	          break;
+	        case '@{roll_advantage}':
+	          this.sendChatNotification(br[0], 'advantage');
+	          break;
+	        case '@{roll_disadvantage}':
+	          this.sendChatNotification(br[0], 'disadvantage');
+	          break;
+	        default:
+	          break;
+	      }
 	    }
-	    return config;
 	  }
 
-	  static propertyDelete(path, config) {
-	    const parts = path.split('.');
-	    const obj = parts.length > 1 ? utils.getObjectFromPath(config, parts.slice(0, -1).join('.')) : config;
-	    if (obj && !_.isUndefined(obj[parts.slice(-1)[0]])) {
-	      delete obj[parts.slice(-1)[0]];
+	  handleTokenChange(token) {
+	    this.logger.debug('AT: Updating New Token');
+	    if (this.shouldShowMarkers() && token.get('represents') !== '') {
+	      const character = this.roll20.getObj('character', token.get('represents'));
+	      const setting = this.roll20.getAttrByName(character.id, 'roll_setting');
+
+	      if (this.shouldIgnoreNpcs()) {
+	        if (this.roll20.getAttrByName(character.id, 'is_npc') === '1') {
+	          return;
+	        }
+	      }
+
+	      token.set(`status_${this.disadvantageMarker()}`, setting === '@{roll_disadvantage}');
+	      token.set(`status_${this.advantageMarker()}`, setting === '@{roll_advantage}');
 	    }
-	    return config;
 	  }
 
-	  deleteProperty(propertyPath) {
-	    return this.transformConfig(Migrator.propertyDelete.bind(null, propertyPath),
-	      `Deleting property ${propertyPath} from config`);
-	  }
+	  buildResources(characterIds) {
+	    let res = _.chain(characterIds)
+	      .map((charId) => this.roll20.getObj('character', charId))
+	      .reject(_.isUndefined)
+	      .map((char) => ({
+	        character: char,
+	        tokens: this.roll20.filterObjs((obj) => obj.get('_type') === 'graphic' && char.id === obj.get('represents')),
+	      }))
+	      .value();
 
-	  moveProperty(oldPath, newPath) {
-	    return this.transformConfig((config) => {
-	      config = Migrator.propertyCopy(oldPath, newPath, config);
-	      return Migrator.propertyDelete(oldPath, config);
-	    }, `Moving property from ${oldPath} to ${newPath}`);
-	  }
-
-	  transformConfig(transformer, message) {
-	    const lastVersion = this._versions.slice(-1)[0];
-	    lastVersion.migrations.push({ transformer, message });
-	    return this;
-	  }
-
-	  migrateConfig(state, logger) {
-	    logger.info('Checking config for upgrade, starting state: $$$', state);
-	    if (_.isEmpty(state)) {
-	      // working with a fresh install here
-	      state.version = 0;
-	    }
-	    if (!this._versions.find(version => version.version >= state.version)) {
-	      throw new Error(`Unrecognised schema state ${state.version} - cannot upgrade.`);
+	    if (this.shouldIgnoreNpcs()) {
+	      res = _.chain(res)
+	        .filter((c) => {
+	          const isNpc = this.roll20.getAttrByName(c.character.id, 'is_npc');
+	          return isNpc && parseInt(isNpc, 10) === 0;
+	        })
+	        .value();
 	    }
 
-	    return this._versions
-	      .filter(version => version.version > state.version)
-	      .reduce((versionResult, version) => {
-	        logger.info('Upgrading schema to version $$$', version.version);
+	    return res;
+	  }
 
-	        versionResult = version.migrations.reduce((result, migration) => {
-	          logger.info(migration.message);
-	          return migration.transformer(result);
-	        }, versionResult);
-	        versionResult.version = version.version;
-	        logger.info('Post-upgrade state: $$$', versionResult);
-	        return versionResult;
-	      }, state);
+	  setStatusMarkers(tokens, showAdvantage, showDisadvantage) {
+	    if (this.shouldShowMarkers()) {
+	      _.each(tokens, (token) => {
+	        token.set(`status_${this.advantageMarker()}`, showAdvantage);
+	        token.set(`status_${this.disadvantageMarker()}`, showDisadvantage);
+	      });
+	    }
+	  }
+
+	  setAutoRevert(value, selectedChars) {
+	    const resources = this.buildResources(_.chain(selectedChars).map(c => c.get('_id')).value());
+	    _.each(resources, (resource) => {
+	      const charId = resource.character.get('_id');
+	      this.roll20.setAttrByName(charId, 'auto_revert_advantage', value ? 'on' : 0);
+	    });
+	  }
+
+	  setRollOption(type, selectedChars) {
+	    const resources = this.buildResources(_.chain(selectedChars).map(c => c.get('_id')).value());
+
+	    _.each(resources, (resource) => {
+	      const charId = resource.character.get('_id');
+
+	      this.setStatusMarkers(resource.tokens, type === 'advantage', type === 'disadvantage');
+
+	      if (this.roll20.getAttrByName(charId, 'roll_setting') === rollOptions[type].rollSetting) {
+	        return;
+	      }
+
+	      this.roll20.setAttrByName(charId, 'roll_setting', rollOptions[type].rollSetting);
+	      this.roll20.setAttrByName(charId, 'roll_info', rollOptions[type].rollInfo);
+	      this.roll20.setAttrByName(charId, 'preroll', rollOptions[type].preroll);
+	      this.roll20.setAttrByName(charId, 'postroll', rollOptions[type].postroll);
+
+	      this.sendChatNotification(resource, type);
+	    });
+	  }
+
+	  sendChatNotification(resource, type) {
+	    if (this.outputOption() !== 'silent') {
+	      let msg = ` &{template:5e-shaped} {{character_name=${resource.character.get('name')}}} ` +
+	        `@{${resource.character.get('name')}|show_character_name} {{title=${utils.toTitleCase(type)}}} ` +
+	        `{{text_top=${resource.character.get('name')} is rolling ${rollOptions[type].message}!}}`;
+	      if (this.outputOption() === 'whisper') {
+	        msg = `/w gm ${msg}`;
+	      }
+	      this.roll20.sendChat('Shaped AdvantageTracker', msg);
+	    }
+	  }
+
+	  outputOption() {
+	    return this.myState.config.advTrackerSettings.output;
+	  }
+
+	  shouldShowMarkers() {
+	    return this.myState.config.advTrackerSettings.showMarkers;
+	  }
+
+	  shouldIgnoreNpcs() {
+	    return this.myState.config.advTrackerSettings.ignoreNpcs;
+	  }
+
+	  advantageMarker() {
+	    return this.myState.config.advTrackerSettings.advantageMarker;
+	  }
+
+	  disadvantageMarker() {
+	    return this.myState.config.advTrackerSettings.disadvantageMarker;
 	  }
 	}
 
-
-	/* FOR REFERENCE: CURRENT SCHEMA
-	 {
-	 logLevel: 'INFO',
-	 tokenSettings: {
-	 number: false,
-	 bar1: {
-	 attribute: 'HP',
-	 max: true,
-	 link: false,
-	 showPlayers: false,
-	 },
-	 bar2: {
-	 attribute: 'speed',
-	 max: false,
-	 link: true,
-	 showPlayers: false,
-	 },
-	 bar3: {
-	 attribute: '',
-	 max: false,
-	 link: false,
-	 showPlayers: false,
-	 },
-	 aura1: {
-	 radius: '',
-	 color: '#FFFF99',
-	 square: false,
-	 },
-	 aura2: {
-	 radius: '',
-	 color: '#59e594',
-	 square: false,
-	 },
-	 light: {
-	 otherPlayers: false,
-	 hasSight: true,
-	 angle: 360,
-	 losAngle: 360,
-	 multiplier: 1,
-	 },
-	 showName: true,
-	 showNameToPlayers: false,
-	 showAura1ToPlayers: true,
-	 showAura2ToPlayers: true,
-	 },
-	 newCharSettings: {
-	 sheetOutput: '@{output_to_all}',
-	 deathSaveOutput: '@{output_to_all}',
-	 initiativeOutput: '@{output_to_all}',
-	 showNameOnRollTemplate: '@{show_character_name_yes}',
-	 rollOptions: '@{normal}',
-	 initiativeRoll: '@{normal_initiative}',
-	 initiativeToTracker: '@{initiative_to_tracker_yes}',
-	 breakInitiativeTies: '@{initiative_tie_breaker_var}',
-	 showTargetAC: '@{attacks_vs_target_ac_no}',
-	 showTargetName: '@{attacks_vs_target_name_no}',
-	 autoAmmo: '@{ammo_auto_use_var}',
-	 autoRevertAdvantage: false,
-	 houserules: {
-	 savingThrowsHalfProf: false,
-	 mediumArmorMaxDex: 2,
-	 },
-	 tab: 'core',
-	 tokenActions: {
-	 initiative: false,
-	 abilityChecks: null,
-	 advantageTracker: null,
-	 savingThrows: null,
-	 attacks: null,
-	 statblock: false,
-	 traits: null,
-	 actions: null,
-	 reactions: null,
-	 legendaryActions: null,
-	 lairActions: null,
-	 regionalEffects: null,
-	 rests: false,
-	 },
-	 },
-	 advTrackerSettings: {
-	 showMarkers: false,
-	 ignoreNpcs: false,
-	 advantageMarker: 'green',
-	 disadvantageMarker: 'red',
-	 output: 'public',
-	 },
-	 sheetEnhancements: {
-	 rollHPOnDrop: true,
-	 autoHD: true,
-	 autoSpellSlots: true,
-	 autoTraits: true,
-	 },
-	 genderPronouns: [
-	 {
-	 matchPattern: '^f$|female|girl|woman|feminine',
-	 nominative: 'she',
-	 accusative: 'her',
-	 possessive: 'her',
-	 reflexive: 'herself',
-	 },
-	 {
-	 matchPattern: '^m$|male|boy|man|masculine',
-	 nominative: 'he',
-	 accusative: 'him',
-	 possessive: 'his',
-	 reflexive: 'himself',
-	 },
-	 {
-	 matchPattern: '^n$|neuter|none|construct|thing|object',
-	 nominative: 'it',
-	 accusative: 'it',
-	 possessive: 'its',
-	 reflexive: 'itself',
-	 },
-	 ],
-	 defaultGenderIndex: 2,
-	 variants: {
-	 rests: {
-	 longNoHpFullHd: false,
-	 },
-	 },
-	 }; */
-
-
-	const migrator = new Migrator()
-	  .addProperty('config', {})
-	  .skipToVersion(0.4)
-	  .overwriteProperty('config.genderPronouns', utils.deepClone(oneSixConfig).genderPronouns)
-	  .skipToVersion(1.2)
-	  .moveProperty('config.autoHD', 'config.sheetEnhancements.autoHD')
-	  .moveProperty('config.rollHPOnDrop', 'config.sheetEnhancements.rollHPOnDrop')
-	  .skipToVersion(1.4)
-	  .moveProperty('config.newCharSettings.savingThrowsHalfProf', 'config.newCharSettings.houserules.savingThrowsHalfProf')
-	  .moveProperty('config.newCharSettings.mediumArmorMaxDex', 'config.newCharSettings.houserules.mediumArmorMaxDex')
-	  .skipToVersion(1.6)
-	  .transformConfig(state => {
-	    _.defaults(state.config, oneSixConfig);
-	    _.defaults(state.config.tokenSettings, oneSixConfig.tokenSettings);
-	    _.defaults(state.config.newCharSettings, oneSixConfig.newCharSettings);
-	    _.defaults(state.config.advTrackerSettings, oneSixConfig.advTrackerSettings);
-	    _.defaults(state.config.sheetEnhancements, oneSixConfig.sheetEnhancements);
-	    return state;
-	  }, 'Applying defaults as at schema version 1.6')
-	  // 1.7
-	  // add base houserules and variants section
-	  // add sheetEnhancements.autoTraits
-	  .nextVersion()
-	  .addProperty('config.variants', {
-	    rests: {
-	      longNoHpFullHd: false,
-	    },
-	  })
-	  .addProperty('config.sheetEnhancements.autoTraits', true)
-	  // 1.8
-	  // Set tokens to have vision by default so that people see the auto-generated stuff based on senses
-	  .nextVersion()
-	  .overwriteProperty('config.tokenSettings.light.hasSight', true)
-	  // 1.9 Add default tab setting
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.tab', 'core')
-	  // 2.0 Add default token actions
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.tokenActions', {
-	    initiative: false,
-	    abilityChecks: null,
-	    advantageTracker: null,
-	    savingThrows: null,
-	    attacks: null,
-	    statblock: false,
-	    traits: null,
-	    actions: null,
-	    reactions: null,
-	    legendaryActions: null,
-	    lairActions: null,
-	    regionalEffects: null,
-	    rests: false,
-	  });
-
-	Migrator.migrateShapedConfig = migrator.migrateConfig.bind(migrator);
-
-	module.exports = Migrator;
+	module.exports = AdvantageTracker;
 
 
 /***/ },
@@ -3865,352 +3724,219 @@ var ShapedScripts =
 
 	'use strict';
 	const _ = __webpack_require__(2);
-	const Logger = __webpack_require__(5);
-	// const ConfigUI = require('./config-ui');
 
-	module.exports = class ShapedConfig {
+	class RestManager {
 
-	  static get configToAttributeLookup() {
-	    return {
-	      sheetOutput: 'output_option',
-	      deathSaveOutput: 'death_save_output_option',
-	      initiativeOutput: 'initiative_output_option',
-	      showNameOnRollTemplate: 'show_character_name',
-	      rollOptions: 'roll_setting',
-	      initiativeRoll: 'initiative_roll',
-	      initiativeToTracker: 'initiative_to_tracker',
-	      breakInitiativeTies: 'initiative_tie_breaker',
-	      showTargetAC: 'attacks_vs_target_ac',
-	      showTargetName: 'attacks_vs_target_name',
-	      autoAmmo: 'ammo_auto_use',
-	      autoRevertAdvantage: 'auto_revert_advantage',
-	      savingThrowsHalfProf: 'saving_throws_half_proficiency',
-	      mediumArmorMaxDex: 'medium_armor_max_dex',
-	    };
+	  constructor(logger, myState, roll20) {
+	    this.logger = logger;
+	    this.myState = myState;
+	    this.roll20 = roll20;
 	  }
 
-	  static booleanValidator(value) {
-	    const converted = value === 'true' || (value === 'false' ? false : value);
-	    return {
-	      valid: typeof value === 'boolean' || value === 'true' || value === 'false',
-	      converted,
-	    };
+	  /**
+	   * Performs all of the short rest actions for the specified character
+	   * @param {collection of characters} selectedChars - The characters to perform short rest actions on
+	   */
+	  doShortRest(selectedChars) {
+	    _.each(selectedChars, (currentChar) => {
+	      const charId = currentChar.get('_id');
+	      const charName = this.roll20.getObj('character', charId).get('name');
+	      this.logger.debug(`Processing short rest for ${charName}:`);
+
+	      const traits = this.rechargeTraits(charId, 'short');
+
+	      const msg = this.buildRestMessage('Short Rest', charName, charId, traits);
+
+	      this.roll20.sendChat(`character|${charId}`, msg);
+	    });
 	  }
 
-	  static stringValidator(value) {
-	    return {
-	      valid: true,
-	      converted: value,
-	    };
-	  }
+	  /**
+	   * Performs all of the long rest actions for the specified character - including short rest actions
+	   * @param {collection of characters} selectedChars - The characters to perform long rest actions on
+	   */
+	  doLongRest(selectedChars) {
+	    _.each(selectedChars, (currentChar) => {
+	      const charId = currentChar.get('_id');
+	      const charName = this.roll20.getObj('character', charId).get('name');
+	      let healed = 0;
 
-	  static arrayValidator(value) {
-	    return {
-	      valid: true,
-	      converted: value.split(',').map(s => s.trim()),
-	    };
-	  }
+	      this.logger.debug(`Processing long rest for ${charName}:`);
 
-	  static getOptionList(options) {
-	    return function optionList(value) {
-	      if (value === undefined) {
-	        return options;
+	      let traits = this.rechargeTraits(charId, 'short');
+	      traits = traits.concat(this.rechargeTraits(charId, 'long'));
+
+	      if (!this.myState.config.variants.rests.longNoHpFullHd) {
+	        healed = this.resetHP(charId);
 	      }
-	      return {
-	        converted: options[value],
-	        valid: options[value] !== undefined,
-	      };
-	    };
-	  }
+	      const hd = this.regainHitDie(charId);
+	      const slots = this.regainSpellSlots(charId);
+	      const exhaus = this.reduceExhaustion(charId);
 
-	  static integerValidator(value) {
-	    const parsed = parseInt(value, 10);
-	    return {
-	      converted: parsed,
-	      valid: !isNaN(parsed),
-	    };
-	  }
+	      const msg = this.buildRestMessage('Long Rest', charName, charId, traits, healed, hd, slots, exhaus);
 
-	  static colorValidator(value) {
-	    return {
-	      converted: value,
-	      valid: /(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(value),
-	    };
-	  }
-
-	  static get sheetOutputValidator() {
-	    return this.getOptionList({
-	      public: '@{output_to_all}',
-	      whisper: '@{output_to_gm}',
+	      this.roll20.sendChat(`character|${charId}`, msg);
 	    });
 	  }
 
-	  static get commandOutputValidator() {
-	    return this.getOptionList({
-	      public: 'public',
-	      whisper: 'whisper',
-	      silent: 'silent',
-	    });
-	  }
+	  /**
+	   * Builds the rest message using the sheet's roll template to report the results of a rest
+	   * @param {string} restType - The type of rest performed; either 'Long Rest' or 'Short Rest'
+	   * @param {string} charName - The name of the character
+	   * @param {string} charId - The Roll20 character ID
+	   * @param {array} traitNames - An array of the trait names that have been recharged
+	   * @param {int} healed - The number of HP healed
+	   * @param {array} hdRegained - Array of objects each representing a die type and the number regained
+	   * @param {boolean} spellSlots - Whether or not spell slots were recharged
+	   * @param {boolean} exhaustion - Whether or not a level of exhaustoin was removed
+	   */
+	  buildRestMessage(restType, charName, charId, traitNames, healed, hdRegained, spellSlots, exhaustion) {
+	    let msg = `&{template:5e-shaped} {{title=${restType}}} {{character_name=${charName}}}`;
 
-	  static get statusMarkerValidator() {
-	    return this.getOptionList(ShapedConfig.validStatusMarkers());
-	  }
-
-	  static get barValidator() {
-	    return {
-	      attribute: this.stringValidator,
-	      max: this.booleanValidator,
-	      link: this.booleanValidator,
-	      showPlayers: this.booleanValidator,
-	    };
-	  }
-
-	  static get auraValidator() {
-	    return {
-	      radius: this.stringValidator,
-	      color: this.colorValidator,
-	      square: this.booleanValidator,
-	    };
-	  }
-
-	  static get lightValidator() {
-	    return {
-	      radius: this.stringValidator,
-	      dimRadius: this.stringValidator,
-	      otherPlayers: this.booleanValidator,
-	      hasSight: this.booleanValidator,
-	      angle: this.integerValidator,
-	      losAngle: this.integerValidator,
-	      multiplier: this.integerValidator,
-	    };
-	  }
-
-	  static getCharacterValidator(roll20) {
-	    return function characterValidator(value) {
-	      const char = roll20.getObj('character', value);
-	      return {
-	        converted: char,
-	        valid: !!char,
-	      };
-	    };
-	  }
-
-	  static get spellSearchOptions() {
-	    return {
-	      classes: this.arrayValidator,
-	      domains: this.arrayValidator,
-	      oaths: this.arrayValidator,
-	      patrons: this.arrayValidator,
-	      school: this.stringValidator,
-	      level: this.integerValidator,
-	    };
-	  }
-
-
-	  static regExpValidator(value) {
-	    try {
-	      new RegExp(value, 'i').test('');
-	      return {
-	        converted: value,
-	        valid: true,
-	      };
-	    }
-	    catch (e) {
-	      return {
-	        converted: null,
-	        valid: false,
-	      };
-	    }
-	  }
-
-	  static get configOptionsSpec() {
-	    return {
-	      logLevel(value) {
-	        const converted = value.toUpperCase();
-	        return { valid: _.has(Logger.levels, converted), converted };
-	      },
-	      tokenSettings: {
-	        number: this.booleanValidator,
-	        bar1: this.barValidator,
-	        bar2: this.barValidator,
-	        bar3: this.barValidator,
-	        aura1: this.auraValidator,
-	        aura2: this.auraValidator,
-	        light: this.lightValidator,
-	        showName: this.booleanValidator,
-	        showNameToPlayers: this.booleanValidator,
-	        showAura1ToPlayers: this.booleanValidator,
-	        showAura2ToPlayers: this.booleanValidator,
-	      },
-	      newCharSettings: {
-	        sheetOutput: this.sheetOutputValidator,
-	        deathSaveOutput: this.sheetOutputValidator,
-	        initiativeOutput: this.sheetOutputValidator,
-	        showNameOnRollTemplate: this.getOptionList({
-	          true: '@{show_character_name_yes}',
-	          false: '@{show_character_name_no}',
-	        }),
-	        rollOptions: this.getOptionList({
-	          normal: '@{roll_1}',
-	          advantage: '@{roll_advantage}',
-	          disadvantage: '@{roll_disadvantage}',
-	          two: '@{roll_2}',
-	        }),
-	        initiativeRoll: this.getOptionList({
-	          normal: '@{normal_initiative}',
-	          advantage: '@{advantage_on_initiative}',
-	          disadvantage: '@{disadvantage_on_initiative}',
-	        }),
-	        initiativeToTracker: this.getOptionList({
-	          true: '@{initiative_to_tracker_yes}',
-	          false: '@{initiative_to_tracker_no}',
-	        }),
-	        breakInitiativeTies: this.getOptionList({
-	          true: '@{initiative_tie_breaker_var}',
-	          false: '',
-	        }),
-	        showTargetAC: this.getOptionList({
-	          true: '@{attacks_vs_target_ac_yes}',
-	          false: '@{attacks_vs_target_ac_no}',
-	        }),
-	        showTargetName: this.getOptionList({
-	          true: '@{attacks_vs_target_name_yes}',
-	          false: '@{attacks_vs_target_name_no}',
-	        }),
-	        autoAmmo: this.getOptionList({
-	          true: '@{ammo_auto_use_var}',
-	          false: '',
-	        }),
-	        autoRevertAdvantage: this.booleanValidator,
-	        houserules: {
-	          savingThrowsHalfProf: this.booleanValidator,
-	          mediumArmorMaxDex: this.getOptionList([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
-	        },
-	        tab: this.getOptionList({
-	          core: 'core',
-	          spells: 'spells',
-	          equipment: 'equipment',
-	          character: 'character',
-	          settings: 'settings',
-	          all: 'all',
-	        }),
-	        tokenActions: {
-	          initiative: this.booleanValidator,
-	          abilityChecks: this.getOptionList({
-	            none: null,
-	            small: 'abilityChecksSmall',
-	            query: 'abilityChecksQuery',
-	            large: 'abilityChecks',
-	            smallShort: 'abilChecksSmall',
-	            queryShort: 'abilChecksQuery',
-	            largeShort: 'abilChecks',
-	          }),
-	          advantageTracker: this.getOptionList({
-	            none: null,
-	            normal: 'advantageTracker',
-	            query: 'advantageTrackerQuery',
-	          }),
-	          savingThrows: this.getOptionList({
-	            none: null,
-	            small: 'savingThrowsSmall',
-	            query: 'savingThrowsQuery',
-	            large: 'savingThrows',
-	            smallShort: 'savesSmall',
-	            queryShort: 'savesQuery',
-	            largeShort: 'saves',
-	          }),
-	          attacks: this.getOptionList({
-	            none: null,
-	            individualActions: 'attacks',
-	            chatWindow: 'attacksMacro',
-	          }),
-	          statblock: this.booleanValidator,
-	          traits: this.getOptionList({
-	            none: null,
-	            individualActions: 'traits',
-	            chatWindow: 'traitsMacro',
-	          }),
-	          actions: this.getOptionList({
-	            none: null,
-	            individualActions: 'actions',
-	            chatWindow: 'actionsMacro',
-	          }),
-	          reactions: this.getOptionList({
-	            none: null,
-	            individualActions: 'reactions',
-	            chatWindow: 'reactionsMacro',
-	          }),
-	          legendaryActions: this.getOptionList({
-	            none: null,
-	            individualActions: 'legendaryActions',
-	            chatWindow: 'legendaryActionsMacro',
-	            chatWindowShort: 'legendaryA',
-	          }),
-	          lairActions: this.getOptionList({
-	            none: null,
-	            chatWindow: 'lairActions',
-	            chatWindowShort: 'lairA',
-	          }),
-	          regionalEffects: this.getOptionList({
-	            none: null,
-	            chatWindow: 'regionalEffects',
-	            chatWindowShort: 'regionalE',
-	          }),
-	          rests: this.booleanValidator,
-	        },
-	      },
-	      advTrackerSettings: {
-	        showMarkers: this.booleanValidator,
-	        ignoreNpcs: this.booleanValidator,
-	        advantageMarker: this.statusMarkerValidator,
-	        disadvantageMarker: this.statusMarkerValidator,
-	        output: this.commandOutputValidator,
-	      },
-	      sheetEnhancements: {
-	        rollHPOnDrop: this.booleanValidator,
-	        autoHD: this.booleanValidator,
-	        autoSpellSlots: this.booleanValidator,
-	        autoTraits: this.booleanValidator,
-	      },
-	      genderPronouns: [
-	        {
-	          matchPattern: this.regExpValidator,
-	          nominative: this.stringValidator,
-	          accusative: this.stringValidator,
-	          possessive: this.stringValidator,
-	          reflexive: this.stringValidator,
-	        },
-	      ],
-	      defaultGenderIndex: this.integerValidator,
-	      variants: {
-	        rests: {
-	          longNoHpFullHd: this.booleanValidator,
-	        },
-	      },
-	    };
-	  }
-
-	  static validStatusMarkers() {
-	    const markers = [
-	      'red', 'blue', 'green', 'brown', 'purple', 'pink', 'yellow', 'dead', 'skull', 'sleepy',
-	      'half-heart', 'half-haze', 'interdiction', 'snail', 'lightning-helix', 'spanner', 'chained-heart',
-	      'chemical-bolt', 'death-zone', 'drink-me', 'edge-crack', 'ninja-mask', 'stopwatch', 'fishing-net', 'overdrive',
-	      'strong', 'fist', 'padlock', 'three-leaves', 'fluffy-wing', 'pummeled', 'tread', 'arrowed', 'aura',
-	      'back-pain', 'black-flag', 'bleeding-eye', 'bolt-shield', 'broken-heart', 'cobweb', 'broken-shield',
-	      'flying-flag', 'radioactive', 'trophy', 'broken-skull', 'frozen-orb', 'rolling-bomb', 'white-tower',
-	      'grab', 'screaming', 'grenade', 'sentry-gun', 'all-for-one', 'angel-outfit', 'archery-target',
-	    ];
-
-	    const obj = {};
-	    for (let i = 0; i < markers.length; i++) {
-	      obj[markers[i]] = markers[i];
+	    if (this.roll20.getAttrByName(charId, 'show_character_name') === '@{show_character_name_yes}') {
+	      msg += '{{show_character_name=1}}';
 	    }
 
-	    return obj;
-	  }
-	};
+	    if (hdRegained) {
+	      _.each(hdRegained, hd => {
+	        if (hd.quant > 0) {
+	          msg += `{{Hit Die Regained (${hd.die})=${hd.quant}}}`;
+	        }
+	      });
+	    }
 
+	    if (traitNames) { msg += `{{Traits Recharged=${traitNames.join(', ')}}}`; }
+	    if (healed > 0) { msg += `{{heal=[[${healed}]]}}`; }
+	    if (spellSlots) { msg += '{{text_center=Spell Slots Regained}}'; }
+	    if (exhaustion) { msg += '{{text_top=Removed 1 Level Of Exhaustion}}'; }
+
+	    return msg;
+	  }
+
+	  /**
+	   * Recharges all of the repeating 'traits' section items that have a 'recharge' defined
+	   * @param {string} charId - the Roll20 character ID
+	   * @param {string} restType - the type of rest being performed; either 'Short Rest' or 'Long Rest'
+	   * @returns {Array} - An array of the trait names that were recharged
+	   */
+	  rechargeTraits(charId, restType) {
+	    const traitNames = [];
+
+	    _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
+	      .map(attribute => (attribute.get('name').match(/^repeating_trait_([^_]+)_recharge$/) || [])[1])
+	      .reject(_.isUndefined)
+	      .uniq()
+	      .each(attId => {
+	        const traitPre = `repeating_trait_${attId}`;
+	        const rechargeAtt = this.roll20.getAttrByName(charId, `${traitPre}_recharge`);
+	        if (rechargeAtt.toLowerCase().indexOf(restType) !== -1) {
+	          const attName = this.roll20.getAttrByName(charId, `${traitPre}_name`);
+	          this.logger.debug(`Recharging '${attName}'`);
+	          traitNames.push(attName);
+	          const max = this.roll20.getAttrByName(charId, `${traitPre}_uses`, 'max');
+	          if (max === undefined) {
+	            this.logger.error(`Tried to recharge the trait '${attName}' for character with id ${charId}, ` +
+	              'but there were no uses defined.');
+	          }
+	          else {
+	            this.roll20.setAttrByName(charId, `${traitPre}_uses`, max);
+	          }
+	        }
+	      });
+
+	    return traitNames;
+	  }
+
+	  /**
+	   * Resets the HP of the specified character to its maximum value
+	   * @param {string} charId - the Roll20 character ID
+	   * @returns {int} - the number of HP that were healed
+	   */
+	  resetHP(charId) {
+	    this.logger.debug('Resetting HP to max');
+	    const max = parseInt(this.roll20.getAttrByName(charId, 'HP', 'max'), 10);
+	    const current = parseInt(this.roll20.getAttrByName(charId, 'HP', 'current'), 10);
+
+	    this.roll20.setAttrByName(charId, 'HP', max);
+
+	    return max - current;
+	  }
+
+	  /**
+	   * Adds Hit die to the specified character based on PHB rules
+	   * @param {string} charId - the Roll20 character ID
+	   * @returns {Array} - Array of objects each representing a die type and the number regained
+	   */
+	  regainHitDie(charId) {
+	    const hitDieRegained = [];
+	    this.logger.debug('Regaining Hit Die');
+	    _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
+	      .filter(attribute => (attribute.get('name').match(/^hd_d\d{1,2}$/)))
+	      .uniq()
+	      .each(hdAttr => {
+	        const max = parseInt(hdAttr.get('max'), 10);
+	        if (max > 0) {
+	          const oldCurrent = parseInt(hdAttr.get('current'), 10);
+	          let newCurrent = oldCurrent;
+	          let regained = max === 1 ? 1 : Math.floor(max / 2);
+	          if (this.myState.config.variants.rests.longNoHpFullHd) {
+	            regained = max - oldCurrent;
+	          }
+	          newCurrent += regained;
+	          newCurrent = newCurrent > max ? max : newCurrent;
+	          this.roll20.setAttrByName(charId, hdAttr.get('name'), newCurrent);
+	          hitDieRegained.push({
+	            die: hdAttr.get('name').replace(/hd_/, ''),
+	            quant: newCurrent - oldCurrent,
+	          });
+	        }
+	      });
+
+	    return hitDieRegained;
+	  }
+
+	  /**
+	   * Resets all (non warlock) spell slots of the specified character to their maximum values
+	   * @param {string} charId - the Roll20 character ID
+	   * @returns {bool} - true if any spell slots were recharged; false otherwise
+	   */
+	  regainSpellSlots(charId) {
+	    let slotsFound = false;
+
+	    this.logger.debug('Regaining Spell Slots');
+	    _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
+	      .filter(attribute => (attribute.get('name').match(/^spell_slots_l\d$/)))
+	      .uniq()
+	      .each(slotAttr => {
+	        const max = parseInt(slotAttr.get('max'), 10);
+	        if (max > 0) {
+	          this.roll20.setAttrByName(charId, slotAttr.get('name'), max);
+	          slotsFound = true;
+	        }
+	      });
+
+	    return slotsFound;
+	  }
+
+	  /**
+	   * Reduces the specified character's level of exhaustion by 1
+	   * @param {string} charId - the Roll20 character ID
+	   * @returns {bool} - true if a level of exhaustion was reduced; false otherwise
+	   */
+	  reduceExhaustion(charId) {
+	    this.logger.debug('Reducing Exhaustion');
+	    const currentLevel = parseInt(this.roll20.getAttrByName(charId, 'exhaustion_level'), 10);
+
+	    if (currentLevel > 0) {
+	      this.roll20.setAttrByName(charId, 'exhaustion_level', currentLevel - 1);
+	      return true;
+	    }
+
+	    return false;
+	  }
+	}
+
+	module.exports = RestManager;
 
 
 /***/ },
@@ -4219,264 +3945,42 @@ var ShapedScripts =
 
 	'use strict';
 	const _ = __webpack_require__(2);
-	const utils = __webpack_require__(7);
-	const ShapedModule = __webpack_require__(13);
-	const ShapedConfig = __webpack_require__(15);
 
-	class MacroMaker {
-	  constructor(roll20) {
-	    if (!roll20) {
-	      throw new Error('Rol20 parameter is required for MacroMaker constructor');
-	    }
+	class TraitManager {
+
+	  constructor(logger, roll20, reporter) {
+	    this.logger = logger;
 	    this.roll20 = roll20;
-	    this.sortKey = 'originalOrder';
+	    this.reporter = reporter;
 	  }
 
-	  getAbilityMaker(character) {
-	    const self = this;
-	    return function abilityMaker(abilitySpec) {
-	      const ability = self.roll20.getOrCreateObj('ability', { characterid: character.id, name: abilitySpec.name });
-	      ability.set({ action: abilitySpec.action, istokenaction: true }); // TODO configure this
-	      return abilitySpec.name;
-	    };
-	  }
-	}
-
-	class AbilityDeleter extends MacroMaker {
-	  constructor(roll20) {
-	    super(roll20);
-	    this.sortKey = '';
-	  }
-
-	  run(character) {
-	    const abilities = this.roll20.findObjs({ type: 'ability', characterid: character.id });
-	    const deleted = _.map(abilities, obj => {
-	      const name = obj.get('name');
-	      obj.remove();
-	      return name;
-	    });
-
-	    return `Deleted: ${_.isEmpty(deleted) ? 'None' : deleted.join(', ')}`;
-	  }
-	}
-
-	class RepeatingAbilityMaker extends MacroMaker {
-	  constructor(repeatingSection, abilityName, label, canMark, roll20) {
-	    super(roll20);
-	    this.repeatingSection = repeatingSection;
-	    this.abilityName = abilityName;
-	    this.label = label;
-	    this.canMark = canMark;
-	  }
-
-	  run(character, options) {
-	    const cache = options.getCache(character.id);
-	    cache[this.repeatingSection] = cache[this.repeatingSection] ||
-	      this.roll20.getRepeatingSectionItemIdsByName(character.id, this.repeatingSection);
-
-	    const configured = _.chain(cache[this.repeatingSection])
-	      .map((repeatingId, repeatingName) => {
-	        let repeatingAction = `%{${character.get('name')}|repeating_${this.repeatingSection}_${repeatingId}` +
-	          `_${this.abilityName}}`;
-	        if (this.canMark && options.mark) {
-	          repeatingAction += '\n!mark @{target|token_id}';
-	        }
-	        return { name: utils.toTitleCase(repeatingName), action: repeatingAction };
-	      })
-	      .map(this.getAbilityMaker(character))
+	  /**
+	   * Handles the click event of a trait when 'autoTraits' is true
+	   * Consumes one use of the clicked trait
+	   * @param {object} options - The message options
+	   */
+	  handleTraitClick(options) {
+	    const traitId = _.chain(this.roll20.findObjs({ type: 'attribute', characterid: options.character.id }))
+	      .map(attribute => (attribute.get('name').match(/^repeating_trait_([^_]+)_name$/) || [])[1])
+	      .reject(_.isUndefined)
+	      .uniq()
+	      .find(attId => this.roll20.getAttrByName(options.character.id, `repeating_trait_${attId}_name`) === options.title)
 	      .value();
 
-	    const addedText = _.isEmpty(configured) ? 'Not present for character' : configured.join(', ');
-	    return `${this.label}: ${addedText}`;
-	  }
-	}
-
-	class RollAbilityMaker extends MacroMaker {
-	  constructor(abilityName, newName, roll20) {
-	    super(roll20);
-	    this.abilityName = abilityName;
-	    this.newName = newName;
-	  }
-
-	  run(character) {
-	    return this.getAbilityMaker(character)({
-	      name: this.newName,
-	      action: `%{${character.get('name')}|${this.abilityName}}`,
-	    });
-	  }
-	}
-
-
-	class CommandAbilityMaker extends MacroMaker {
-	  constructor(command, options, newName, roll20) {
-	    super(roll20);
-	    this.command = command;
-	    this.options = options;
-	    this.newName = newName;
-	  }
-
-	  run(character) {
-	    return this.getAbilityMaker(character)({
-	      name: this.newName,
-	      action: `!${this.command} ${utils.toOptionsString(this.options)}`,
-	    });
-	  }
-	}
-
-	class MultiCommandAbilityMaker extends MacroMaker {
-	  constructor(commandSpecs, roll20) {
-	    super(roll20);
-	    this.commandSpecs = commandSpecs;
-	  }
-
-	  run(character) {
-	    const abilMaker = this.getAbilityMaker(character);
-	    return this.commandSpecs.map(cmdSpec =>
-	      abilMaker({
-	        name: cmdSpec.abilityName,
-	        action: `!${cmdSpec.command} ${utils.toOptionsString(cmdSpec.options)}`,
-	      })
-	    );
-	  }
-	}
-
-	class RepeatingSectionMacroMaker extends MacroMaker {
-	  constructor(abilityName, repeatingSection, macroName, roll20) {
-	    super(roll20);
-	    this.abilityName = abilityName;
-	    this.repeatingSection = repeatingSection;
-	    this.macroName = macroName;
-	    this.sortKey = 'originalOrder';
-	  }
-
-	  run(character) {
-	    if (!_.isEmpty(this.roll20.getRepeatingSectionAttrs(character.id, this.repeatingSection))) {
-	      return this.getAbilityMaker(character)({
-	        name: this.macroName,
-	        action: `%{${character.get('name')}|${this.abilityName}}`,
-	      });
-	    }
-	    return `${this.macroName}: Not present for character`;
-	  }
-	}
-
-	function getRepeatingSectionAbilityLookup(sectionName, rollName, roll20) {
-	  return function repeatingSectionAbilityLookup(optionName, existingOptions) {
-	    const characterId = existingOptions.selected.character[0].id;
-	    const cache = existingOptions.getCache(characterId);
-
-	    cache[sectionName] = cache[sectionName] || roll20.getRepeatingSectionItemIdsByName(characterId, sectionName);
-
-	    const repeatingId = cache[sectionName][optionName.toLowerCase()];
-
-	    if (repeatingId) {
-	      return new RollAbilityMaker(`repeating_${sectionName}_${repeatingId}_${rollName}`,
-	        utils.toTitleCase(optionName), roll20);
-	    }
-	    return undefined;
-	  };
-	}
-
-	module.exports = class AbilityMaker extends ShapedModule {
-	  addCommands(commandProcessor) {
-	    const roll20 = this.roll20;
-	    this.staticAbilityOptions = {
-	      DELETE: new AbilityDeleter(roll20),
-	      initiative: new RollAbilityMaker('shaped_initiative', 'Init', roll20),
-	      abilityChecks: new RollAbilityMaker('shaped_ability_checks', 'Ability Checks', roll20),
-	      abilityChecksSmall: new RollAbilityMaker('shaped_ability_checks_small', 'Ability Checks', roll20),
-	      abilityChecksQuery: new RollAbilityMaker('shaped_ability_checks_query', 'Ability Checks', roll20),
-	      abilChecks: new RollAbilityMaker('shaped_ability_checks', 'AbilChecks', roll20),
-	      abilChecksSmall: new RollAbilityMaker('shaped_ability_checks_small', 'AbilChecks', roll20),
-	      abilChecksQuery: new RollAbilityMaker('shaped_ability_checks_query', 'AbilChecks', roll20),
-	      advantageTracker: new MultiCommandAbilityMaker([
-	        { command: 'shaped-at', options: ['advantage'], abilityName: 'Advantage' },
-	        { command: 'shaped-at', options: ['disadvantage'], abilityName: 'Disadvantage' },
-	        { command: 'shaped-at', options: ['normal'], abilityName: 'Normal' },
-	      ], roll20),
-	      advantageTrackerQuery: new CommandAbilityMaker('shaped-at',
-	        ['?{Roll Option|Normal,normal|w/ Advantage,advantage|w/ Disadvantage,disadvantage}'], '(dis)Adv Query', roll20),
-	      savingThrows: new RollAbilityMaker('shaped_saving_throw', 'Saving Throws', roll20),
-	      savingThrowsSmall: new RollAbilityMaker('shaped_saving_throw_small', 'Saving Throws', roll20),
-	      savingThrowsQuery: new RollAbilityMaker('shaped_saving_throw_query', 'Saving Throws', roll20),
-	      saves: new RollAbilityMaker('shaped_saving_throw', 'Saves', roll20),
-	      savesSmall: new RollAbilityMaker('shaped_saving_throw_small', 'Saves', roll20),
-	      savesQuery: new RollAbilityMaker('shaped_saving_throw_query', 'Saves', roll20),
-	      attacks: new RepeatingAbilityMaker('attack', 'attack', 'Attacks', true, roll20),
-	      attacksMacro: new RepeatingSectionMacroMaker('shaped_attacks', 'attack', 'Attacks', roll20),
-	      spells: new RepeatingSectionMacroMaker('shaped_spells', 'spell', 'Spells', roll20),
-	      statblock: new RollAbilityMaker('shaped_statblock', 'Statblock', roll20),
-	      traits: new RepeatingAbilityMaker('trait', 'trait', 'Traits', false, roll20),
-	      traitsMacro: new RepeatingSectionMacroMaker('shaped_traits', 'trait', 'Traits', roll20),
-	      actions: new RepeatingAbilityMaker('action', 'action', 'Actions', true, roll20),
-	      actionsMacro: new RepeatingSectionMacroMaker('shaped_actions', 'action', 'Actions', roll20),
-	      reactions: new RepeatingAbilityMaker('reaction', 'action', 'Reactions', false, roll20),
-	      reactionsMacro: new RepeatingSectionMacroMaker('shaped_reactions', 'reaction', 'Reactions', roll20),
-	      legendaryActions: new RepeatingAbilityMaker('legendaryaction', 'action', 'Legendary Actions', false, roll20),
-	      legendaryActionsMacro: new RepeatingSectionMacroMaker('shaped_legendaryactions', 'legendaryaction',
-	        'Legendary Actions', roll20),
-	      legendaryA: new RepeatingSectionMacroMaker('shaped_legendaryactions', 'legendaryaction',
-	        'LegendaryA', roll20),
-	      lairActions: new RepeatingSectionMacroMaker('shaped_lairactions', 'lairaction', 'Lair Actions', roll20),
-	      lairA: new RepeatingSectionMacroMaker('shaped_lairactions', 'lairaction', 'LairA', roll20),
-	      regionalEffects: new RepeatingSectionMacroMaker('shaped_regionaleffects', 'regionaleffect',
-	        'Regional Effects', roll20),
-	      regionalE: new RepeatingSectionMacroMaker('shaped_regionaleffects', 'regionaleffect', 'RegionalE', roll20),
-	      rests: new CommandAbilityMaker('shaped-rest', ['?{Rest type|Short,short|Long,long}'], 'Rests', roll20),
-	    };
-
-
-	    return commandProcessor.addCommand('abilities', this.addAbility.bind(this))
-	      .withSelection({
-	        character: {
-	          min: 1,
-	          max: Infinity,
-	        },
-	      })
-	      .optionLookup('abilities', this.staticAbilityOptions)
-	      .optionLookup('abilities', getRepeatingSectionAbilityLookup('spell', 'spell', this.roll20))
-	      .optionLookup('abilities', getRepeatingSectionAbilityLookup('trait', 'trait', this.roll20))
-	      .option('mark', ShapedConfig.booleanValidator);
-	  }
-
-	  addAbilitiesByName(abilities, character) {
-	    const caches = {};
-	    const options = {
-	      getCache(key) {
-	        return (caches[key] = caches[key] || {});
-	      },
-	    };
-	    abilities.each(ability => this.staticAbilityOptions[ability].run(character, options));
-	  }
-
-	  addAbility(options) {
-	    if (_.isEmpty(options.abilities)) {
-	      this.reportError('No abilities specified. ' +
-	        'Take a look at the documentation for a list of ability options.');
-	      return;
-	    }
-	    const messages = _.map(options.selected.character, (character) => {
-	      const operationMessages = _.chain(options.abilities)
-	        .sortBy('sortKey')
-	        .map(maker => maker.run(character, options))
-	        .value();
-
-
-	      if (_.isEmpty(operationMessages)) {
-	        return `<li>${character.get('name')}: Nothing to do</li>`;
+	    const usesAttr = this.roll20.getAttrObjectByName(options.character.id, `repeating_trait_${traitId}_uses`);
+	    if (usesAttr) {
+	      if (usesAttr.get('current') > 0) {
+	        usesAttr.set('current', parseInt(usesAttr.get('current'), 10) - 1);
 	      }
-
-	      let message;
-	      message = `<li>Configured the following abilities for character ${character.get('name')}:<ul><li>`;
-	      message += operationMessages.join('</li><li>');
-	      message += '</li></ul></li>';
-
-	      return message;
-	    });
-
-	    this.report('Ability Creation', `<ul>${messages.join('')}</ul>`);
+	      else {
+	        this.reporter.report('Trait Police', `${options.characterName} can't use ${options.title} because ` +
+	          'they don\'t have any uses left.');
+	      }
+	    }
 	  }
-	};
+	}
+
+	module.exports = TraitManager;
 
 
 /***/ },
@@ -4487,7 +3991,7 @@ var ShapedScripts =
 	const _ = __webpack_require__(2);
 	const utils = __webpack_require__(7);
 	const ShapedModule = __webpack_require__(13);
-	const ShapedConfig = __webpack_require__(15);
+	const ShapedConfig = __webpack_require__(18);
 
 	class ConfigUi extends ShapedModule {
 
@@ -4498,7 +4002,6 @@ var ShapedScripts =
 	      barMenu: new TokenBarsMenu(this.myState.config, ShapedConfig.configOptionsSpec),
 	      auraMenu: new TokenAurasMenu(this.myState.config, ShapedConfig.configOptionsSpec),
 	      ncMenu: new NewCharacterMenu(this.myState.config, ShapedConfig.configOptionsSpec),
-	      taMenu: new TokenActionsMenu(this.myState.config, ShapedConfig.configOptionsSpec),
 	      hrMenu: new NewCharacterHouseruleMenu(this.myState.config, ShapedConfig.configOptionsSpec),
 	      varsMenu: new VariantsMenu(this.myState.config, ShapedConfig.configOptionsSpec),
 	      seMenu: new SheetEnhancementsMenu(this.myState.config, ShapedConfig.configOptionsSpec),
@@ -5006,9 +4509,6 @@ var ShapedScripts =
 	        path: `${ncs}.tab`, title: 'Default tab', menuCmd: menu, spec: spec.tab(),
 	      }) +
 	      this.makeOptionRow({
-	        title: 'Default Token Actions', path: 'taMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
-	      }) +
-	      this.makeOptionRow({
 	        title: 'Houserule Settings', path: 'hrMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      });
 
@@ -5084,60 +4584,6 @@ var ShapedScripts =
 	  }
 	}
 
-	class TokenActionsMenu extends ConfigMenu {
-	  getMenu() {
-	    const root = 'newCharSettings.tokenActions';
-	    const menu = 'taMenu';
-	    const spec = this.specRoot.newCharSettings.tokenActions;
-
-	    const optionRows =
-	      this.makeToggleSetting({
-	        path: `${root}.initiative`, title: 'Initiative', menuCmd: menu,
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${root}.abilityChecks`, title: 'Ability Checks', menuCmd: menu, spec: spec.abilityChecks(),
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${root}.advantageTracker`, title: 'Advantage Tracker', menuCmd: menu, spec: spec.advantageTracker(),
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${root}.savingThrows`, title: 'Saves', menuCmd: menu, spec: spec.savingThrows(),
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${root}.attacks`, title: 'Attacks', menuCmd: menu, spec: spec.attacks(),
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${root}.statblock`, title: 'Statblock', menuCmd: menu,
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${root}.traits`, title: 'Traits', menuCmd: menu, spec: spec.traits(),
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${root}.actions`, title: 'Actions', menuCmd: menu, spec: spec.actions(),
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${root}.reactions`, title: 'Reactions', menuCmd: menu, spec: spec.reactions(),
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${root}.legendaryActions`, title: 'Legendary Actions', menuCmd: menu, spec: spec.legendaryActions(),
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${root}.lairActions`, title: 'Lair Actions', menuCmd: menu, spec: spec.lairActions(),
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${root}.regionalEffects`, title: 'Regional Effects', menuCmd: menu, spec: spec.regionalEffects(),
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${root}.rests`, title: 'Rests', menuCmd: menu,
-	      });
-
-	    const th = utils.buildHTML('th', 'Default Token Actions', { colspan: '2' });
-	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
-	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
-	    return table + this.backToMainMenuButton();
-	  }
-	}
-
 
 
 /***/ },
@@ -5146,233 +4592,268 @@ var ShapedScripts =
 
 	'use strict';
 	const _ = __webpack_require__(2);
-	const utils = __webpack_require__(7);
-	const ShapedModule = __webpack_require__(13);
-	const ShapedConfig = __webpack_require__(15);
+	const Logger = __webpack_require__(5);
+	// const ConfigUI = require('./config-ui');
 
-	const rollOptions = {
-	  normal: {
-	    rollSetting: '@{roll_1}',
-	    message: 'normally',
-	    rollInfo: '',
-	    preroll: '',
-	    postroll: '',
-	  },
-	  advantage: {
-	    rollSetting: '@{roll_advantage}',
-	    message: 'with advantage',
-	    rollInfo: '{{advantage=1}}',
-	    preroll: 2,
-	    postroll: 'kh1',
-	  },
-	  disadvantage: {
-	    rollSetting: '@{roll_disadvantage}',
-	    message: 'with disadvantage',
-	    rollInfo: '{{disadvantage=1}}',
-	    preroll: 2,
-	    postroll: 'kl1',
-	  },
-	  roll2: {
-	    rollSetting: '@{roll_2}',
-	    message: 'two dice',
-	    rollInfo: '',
-	    preroll: '',
-	    postroll: '',
-	  },
+	module.exports = class ShapedConfig {
+	  static booleanValidator(value) {
+	    const converted = value === 'true' || (value === 'false' ? false : value);
+	    return {
+	      valid: typeof value === 'boolean' || value === 'true' || value === 'false',
+	      converted,
+	    };
+	  }
+
+	  static stringValidator(value) {
+	    return {
+	      valid: true,
+	      converted: value,
+	    };
+	  }
+
+	  static arrayValidator(value) {
+	    return {
+	      valid: true,
+	      converted: value.split(',').map(s => s.trim()),
+	    };
+	  }
+
+	  static getOptionList(options) {
+	    return function optionList(value) {
+	      if (value === undefined) {
+	        return options;
+	      }
+	      return {
+	        converted: options[value],
+	        valid: options[value] !== undefined,
+	      };
+	    };
+	  }
+
+	  static integerValidator(value) {
+	    const parsed = parseInt(value, 10);
+	    return {
+	      converted: parsed,
+	      valid: !isNaN(parsed),
+	    };
+	  }
+
+	  static colorValidator(value) {
+	    return {
+	      converted: value,
+	      valid: /(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(value),
+	    };
+	  }
+
+	  static get sheetOutputValidator() {
+	    return this.getOptionList({
+	      public: '@{output_to_all}',
+	      whisper: '@{output_to_gm}',
+	    });
+	  }
+
+	  static get commandOutputValidator() {
+	    return this.getOptionList({
+	      public: 'public',
+	      whisper: 'whisper',
+	      silent: 'silent',
+	    });
+	  }
+
+	  static get statusMarkerValidator() {
+	    return this.getOptionList(ShapedConfig.validStatusMarkers());
+	  }
+
+	  static get barValidator() {
+	    return {
+	      attribute: this.stringValidator,
+	      max: this.booleanValidator,
+	      link: this.booleanValidator,
+	      showPlayers: this.booleanValidator,
+	    };
+	  }
+
+	  static get auraValidator() {
+	    return {
+	      radius: this.stringValidator,
+	      color: this.colorValidator,
+	      square: this.booleanValidator,
+	    };
+	  }
+
+	  static get lightValidator() {
+	    return {
+	      radius: this.stringValidator,
+	      dimRadius: this.stringValidator,
+	      otherPlayers: this.booleanValidator,
+	      hasSight: this.booleanValidator,
+	      angle: this.integerValidator,
+	      losAngle: this.integerValidator,
+	      multiplier: this.integerValidator,
+	    };
+	  }
+
+	  static getCharacterValidator(roll20) {
+	    return function characterValidator(value) {
+	      const char = roll20.getObj('character', value);
+	      return {
+	        converted: char,
+	        valid: !!char,
+	      };
+	    };
+	  }
+
+	  static get spellSearchOptions() {
+	    return {
+	      classes: this.arrayValidator,
+	      domains: this.arrayValidator,
+	      oaths: this.arrayValidator,
+	      patrons: this.arrayValidator,
+	      school: this.stringValidator,
+	      level: this.integerValidator,
+	    };
+	  }
+
+
+	  static regExpValidator(value) {
+	    try {
+	      new RegExp(value, 'i').test('');
+	      return {
+	        converted: value,
+	        valid: true,
+	      };
+	    }
+	    catch (e) {
+	      return {
+	        converted: null,
+	        valid: false,
+	      };
+	    }
+	  }
+
+	  static get configOptionsSpec() {
+	    return {
+	      logLevel(value) {
+	        const converted = value.toUpperCase();
+	        return { valid: _.has(Logger.levels, converted), converted };
+	      },
+	      tokenSettings: {
+	        number: this.booleanValidator,
+	        bar1: this.barValidator,
+	        bar2: this.barValidator,
+	        bar3: this.barValidator,
+	        aura1: this.auraValidator,
+	        aura2: this.auraValidator,
+	        light: this.lightValidator,
+	        showName: this.booleanValidator,
+	        showNameToPlayers: this.booleanValidator,
+	        showAura1ToPlayers: this.booleanValidator,
+	        showAura2ToPlayers: this.booleanValidator,
+	      },
+	      newCharSettings: {
+	        sheetOutput: this.sheetOutputValidator,
+	        deathSaveOutput: this.sheetOutputValidator,
+	        initiativeOutput: this.sheetOutputValidator,
+	        showNameOnRollTemplate: this.getOptionList({
+	          true: '@{show_character_name_yes}',
+	          false: '@{show_character_name_no}',
+	        }),
+	        rollOptions: this.getOptionList({
+	          normal: '@{roll_1}',
+	          advantage: '@{roll_advantage}',
+	          disadvantage: '@{roll_disadvantage}',
+	          two: '@{roll_2}',
+	        }),
+	        initiativeRoll: this.getOptionList({
+	          normal: '@{normal_initiative}',
+	          advantage: '@{advantage_on_initiative}',
+	          disadvantage: '@{disadvantage_on_initiative}',
+	        }),
+	        initiativeToTracker: this.getOptionList({
+	          true: '@{initiative_to_tracker_yes}',
+	          false: '@{initiative_to_tracker_no}',
+	        }),
+	        breakInitiativeTies: this.getOptionList({
+	          true: '@{initiative_tie_breaker_var}',
+	          false: '',
+	        }),
+	        showTargetAC: this.getOptionList({
+	          true: '@{attacks_vs_target_ac_yes}',
+	          false: '@{attacks_vs_target_ac_no}',
+	        }),
+	        showTargetName: this.getOptionList({
+	          true: '@{attacks_vs_target_name_yes}',
+	          false: '@{attacks_vs_target_name_no}',
+	        }),
+	        autoAmmo: this.getOptionList({
+	          true: '@{ammo_auto_use_var}',
+	          false: '',
+	        }),
+	        autoRevertAdvantage: this.booleanValidator,
+	        houserules: {
+	          savingThrowsHalfProf: this.booleanValidator,
+	          mediumArmorMaxDex: this.getOptionList([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+	        },
+	        tab: this.getOptionList({
+	          core: 'core',
+	          spells: 'spells',
+	          equipment: 'equipment',
+	          character: 'character',
+	          settings: 'settings',
+	          all: 'all',
+	        }),
+	      },
+	      advTrackerSettings: {
+	        showMarkers: this.booleanValidator,
+	        ignoreNpcs: this.booleanValidator,
+	        advantageMarker: this.statusMarkerValidator,
+	        disadvantageMarker: this.statusMarkerValidator,
+	        output: this.commandOutputValidator,
+	      },
+	      sheetEnhancements: {
+	        rollHPOnDrop: this.booleanValidator,
+	        autoHD: this.booleanValidator,
+	        autoSpellSlots: this.booleanValidator,
+	        autoTraits: this.booleanValidator,
+	      },
+	      genderPronouns: [
+	        {
+	          matchPattern: this.regExpValidator,
+	          nominative: this.stringValidator,
+	          accusative: this.stringValidator,
+	          possessive: this.stringValidator,
+	          reflexive: this.stringValidator,
+	        },
+	      ],
+	      defaultGenderIndex: this.integerValidator,
+	      variants: {
+	        rests: {
+	          longNoHpFullHd: this.booleanValidator,
+	        },
+	      },
+	    };
+	  }
+
+	  static validStatusMarkers() {
+	    const markers = [
+	      'red', 'blue', 'green', 'brown', 'purple', 'pink', 'yellow', 'dead', 'skull', 'sleepy',
+	      'half-heart', 'half-haze', 'interdiction', 'snail', 'lightning-helix', 'spanner', 'chained-heart',
+	      'chemical-bolt', 'death-zone', 'drink-me', 'edge-crack', 'ninja-mask', 'stopwatch', 'fishing-net', 'overdrive',
+	      'strong', 'fist', 'padlock', 'three-leaves', 'fluffy-wing', 'pummeled', 'tread', 'arrowed', 'aura',
+	      'back-pain', 'black-flag', 'bleeding-eye', 'bolt-shield', 'broken-heart', 'cobweb', 'broken-shield',
+	      'flying-flag', 'radioactive', 'trophy', 'broken-skull', 'frozen-orb', 'rolling-bomb', 'white-tower',
+	      'grab', 'screaming', 'grenade', 'sentry-gun', 'all-for-one', 'angel-outfit', 'archery-target',
+	    ];
+
+	    const obj = {};
+	    for (let i = 0; i < markers.length; i++) {
+	      obj[markers[i]] = markers[i];
+	    }
+
+	    return obj;
+	  }
 	};
 
-	class AdvantageTracker extends ShapedModule {
-
-	  addCommands(commandProcessor) {
-	    return commandProcessor.addCommand('at', this.process.bind(this))
-	      .option('advantage', ShapedConfig.booleanValidator)
-	      .option('disadvantage', ShapedConfig.booleanValidator)
-	      .option('normal', ShapedConfig.booleanValidator)
-	      .option('revert', ShapedConfig.booleanValidator)
-	      .option('persist', ShapedConfig.booleanValidator)
-	      .option('id', ShapedConfig.getCharacterValidator(this.roll20), false)
-	      .withSelection({
-	        character: {
-	          min: 0,
-	          max: Infinity,
-	        },
-	      });
-	  }
-
-	  process(options) {
-	    let type = undefined;
-
-	    // const at = new AdvantageTracker(this.logger, this.myState, this.roll20);
-
-	    if (!_.isUndefined(options.id)) {
-	      // if an ID is passed, overwrite any selection, and only process for the passed charId
-	      options.selected.character = [options.id];
-	    }
-
-	    if (_.isEmpty(options.selected.character)) {
-	      this.reportError('Advantage Tracker was called, but no token was selected, and no character id was passed.');
-	    }
-	    else {
-	      if (options.normal) {
-	        type = 'normal';
-	      }
-	      else if (options.advantage) {
-	        type = 'advantage';
-	      }
-	      else if (options.disadvantage) {
-	        type = 'disadvantage';
-	      }
-
-	      if (!_.isUndefined(type)) {
-	        this.setRollOption(type, options.selected.character);
-	      }
-
-	      if (options.revert) {
-	        this.setAutoRevert(true, options.selected.character);
-	      }
-	      else if (options.persist) {
-	        this.setAutoRevert(false, options.selected.character);
-	      }
-	    }
-	  }
-
-	  handleRollOptionChange(msg) {
-	    const char = [];
-	    char.push(msg.get('_characterid'));
-	    const br = this.buildResources(_.uniq(_.union(char)));
-
-	    if (!_.isEmpty(br)) {
-	      this.setStatusMarkers(br[0].tokens,
-	        msg.get('current') === '@{roll_advantage}',
-	        msg.get('current') === '@{roll_disadvantage}');
-
-	      switch (msg.get('current')) {
-	        case '@{roll_1}':
-	          this.sendChatNotification(br[0], 'normal');
-	          break;
-	        case '@{roll_advantage}':
-	          this.sendChatNotification(br[0], 'advantage');
-	          break;
-	        case '@{roll_disadvantage}':
-	          this.sendChatNotification(br[0], 'disadvantage');
-	          break;
-	        default:
-	          break;
-	      }
-	    }
-	  }
-
-	  handleTokenChange(token) {
-	    this.logger.debug('AT: Updating New Token');
-	    if (this.shouldShowMarkers() && token.get('represents') !== '') {
-	      const character = this.roll20.getObj('character', token.get('represents'));
-	      const setting = this.roll20.getAttrByName(character.id, 'roll_setting');
-
-	      if (this.shouldIgnoreNpcs()) {
-	        if (this.roll20.getAttrByName(character.id, 'is_npc') === '1') {
-	          return;
-	        }
-	      }
-
-	      token.set(`status_${this.disadvantageMarker()}`, setting === '@{roll_disadvantage}');
-	      token.set(`status_${this.advantageMarker()}`, setting === '@{roll_advantage}');
-	    }
-	  }
-
-	  buildResources(characterIds) {
-	    let res = _.chain(characterIds)
-	      .map((charId) => this.roll20.getObj('character', charId))
-	      .reject(_.isUndefined)
-	      .map((char) => ({
-	        character: char,
-	        tokens: this.roll20.filterObjs((obj) => obj.get('_type') === 'graphic' && char.id === obj.get('represents')),
-	      }))
-	      .value();
-
-	    if (this.shouldIgnoreNpcs()) {
-	      res = _.chain(res)
-	        .filter((c) => {
-	          const isNpc = this.roll20.getAttrByName(c.character.id, 'is_npc');
-	          return isNpc && parseInt(isNpc, 10) === 0;
-	        })
-	        .value();
-	    }
-
-	    return res;
-	  }
-
-	  setStatusMarkers(tokens, showAdvantage, showDisadvantage) {
-	    if (this.shouldShowMarkers()) {
-	      _.each(tokens, (token) => {
-	        token.set(`status_${this.advantageMarker()}`, showAdvantage);
-	        token.set(`status_${this.disadvantageMarker()}`, showDisadvantage);
-	      });
-	    }
-	  }
-
-	  setAutoRevert(value, selectedChars) {
-	    const resources = this.buildResources(_.chain(selectedChars).map(c => c.get('_id')).value());
-	    _.each(resources, (resource) => {
-	      const charId = resource.character.get('_id');
-	      this.roll20.setAttrByName(charId, 'auto_revert_advantage', value ? 'on' : 0);
-	    });
-	  }
-
-	  setRollOption(type, selectedChars) {
-	    const resources = this.buildResources(_.chain(selectedChars).map(c => c.get('_id')).value());
-
-	    _.each(resources, (resource) => {
-	      const charId = resource.character.get('_id');
-
-	      this.setStatusMarkers(resource.tokens, type === 'advantage', type === 'disadvantage');
-
-	      if (this.roll20.getAttrByName(charId, 'roll_setting') === rollOptions[type].rollSetting) {
-	        return;
-	      }
-
-	      this.roll20.setAttrByName(charId, 'roll_setting', rollOptions[type].rollSetting);
-	      this.roll20.setAttrByName(charId, 'roll_info', rollOptions[type].rollInfo);
-	      this.roll20.setAttrByName(charId, 'preroll', rollOptions[type].preroll);
-	      this.roll20.setAttrByName(charId, 'postroll', rollOptions[type].postroll);
-
-	      this.sendChatNotification(resource, type);
-	    });
-	  }
-
-	  sendChatNotification(resource, type) {
-	    if (this.outputOption() !== 'silent') {
-	      let msg = ` &{template:5e-shaped} {{character_name=${resource.character.get('name')}}} ` +
-	        `@{${resource.character.get('name')}|show_character_name} {{title=${utils.toTitleCase(type)}}} ` +
-	        `{{text_top=${resource.character.get('name')} is rolling ${rollOptions[type].message}!}}`;
-	      if (this.outputOption() === 'whisper') {
-	        msg = `/w gm ${msg}`;
-	      }
-	      this.roll20.sendChat('Shaped AdvantageTracker', msg);
-	    }
-	  }
-
-	  outputOption() {
-	    return this.myState.config.advTrackerSettings.output;
-	  }
-
-	  shouldShowMarkers() {
-	    return this.myState.config.advTrackerSettings.showMarkers;
-	  }
-
-	  shouldIgnoreNpcs() {
-	    return this.myState.config.advTrackerSettings.ignoreNpcs;
-	  }
-
-	  advantageMarker() {
-	    return this.myState.config.advTrackerSettings.advantageMarker;
-	  }
-
-	  disadvantageMarker() {
-	    return this.myState.config.advTrackerSettings.disadvantageMarker;
-	  }
-	}
-
-	module.exports = AdvantageTracker;
 
 
 /***/ },
@@ -5381,246 +4862,363 @@ var ShapedScripts =
 
 	'use strict';
 	const _ = __webpack_require__(2);
-	const ShapedModule = __webpack_require__(13);
-	const ShapedConfig = __webpack_require__(15);
+	const utils = __webpack_require__(7);
 
-	class RestManager extends ShapedModule {
+	const oneSixConfig = {
+	  logLevel: 'INFO',
+	  tokenSettings: {
+	    number: false,
+	    bar1: {
+	      attribute: 'HP',
+	      max: true,
+	      link: false,
+	      showPlayers: false,
+	    },
+	    bar2: {
+	      attribute: 'speed',
+	      max: false,
+	      link: true,
+	      showPlayers: false,
+	    },
+	    bar3: {
+	      attribute: '',
+	      max: false,
+	      link: false,
+	      showPlayers: false,
+	    },
+	    aura1: {
+	      radius: '',
+	      color: '#FFFF99',
+	      square: false,
+	    },
+	    aura2: {
+	      radius: '',
+	      color: '#59e594',
+	      square: false,
+	    },
+	    light: {
+	      radius: '',
+	      dimRadius: '',
+	      otherPlayers: false,
+	      hasSight: false,
+	      angle: 360,
+	      losAngle: 360,
+	      multiplier: 1,
+	    },
+	    showName: true,
+	    showNameToPlayers: false,
+	    showAura1ToPlayers: true,
+	    showAura2ToPlayers: true,
+	  },
+	  newCharSettings: {
+	    sheetOutput: '@{output_to_all}',
+	    deathSaveOutput: '@{output_to_all}',
+	    initiativeOutput: '@{output_to_all}',
+	    showNameOnRollTemplate: '@{show_character_name_yes}',
+	    rollOptions: '@{normal}',
+	    initiativeRoll: '@{normal_initiative}',
+	    initiativeToTracker: '@{initiative_to_tracker_yes}',
+	    breakInitiativeTies: '@{initiative_tie_breaker_var}',
+	    showTargetAC: '@{attacks_vs_target_ac_no}',
+	    showTargetName: '@{attacks_vs_target_name_no}',
+	    autoAmmo: '@{ammo_auto_use_var}',
+	    autoRevertAdvantage: false,
+	    houserules: {
+	      savingThrowsHalfProf: false,
+	      mediumArmorMaxDex: 2,
+	    },
+	  },
+	  advTrackerSettings: {
+	    showMarkers: false,
+	    ignoreNpcs: false,
+	    advantageMarker: 'green',
+	    disadvantageMarker: 'red',
+	    output: 'public',
+	  },
+	  sheetEnhancements: {
+	    rollHPOnDrop: true,
+	    autoHD: true,
+	    autoSpellSlots: true,
+	  },
+	  genderPronouns: [
+	    {
+	      matchPattern: '^f$|female|girl|woman|feminine',
+	      nominative: 'she',
+	      accusative: 'her',
+	      possessive: 'her',
+	      reflexive: 'herself',
+	    },
+	    {
+	      matchPattern: '^m$|male|boy|man|masculine',
+	      nominative: 'he',
+	      accusative: 'him',
+	      possessive: 'his',
+	      reflexive: 'himself',
+	    },
+	    {
+	      matchPattern: '^n$|neuter|none|construct|thing|object',
+	      nominative: 'it',
+	      accusative: 'it',
+	      possessive: 'its',
+	      reflexive: 'itself',
+	    },
+	  ],
+	  defaultGenderIndex: 2,
 
-	  addCommands(commandProcessor) {
-	    return commandProcessor.addCommand('rest', this.handleRest.bind(this))
-	      .option('long', ShapedConfig.booleanValidator)
-	      .option('short', ShapedConfig.booleanValidator)
-	      .option('id', ShapedConfig.getCharacterValidator(this.roll20), false)
-	      .withSelection({
-	        character: {
-	          min: 0,
-	          max: Infinity,
-	        },
-	      });
+	};
+
+
+	class Migrator {
+
+	  constructor(startVersion) {
+	    this._versions = [{ version: startVersion || 0.1, migrations: [] }];
 	  }
 
-	  handleRest(options) {
-	    if (!_.isUndefined(options.id)) {
-	      // if an ID is passed, overwrite any selection, and only process for the passed charId
-	      options.selected.character = [options.id];
+	  skipToVersion(version) {
+	    this._versions.push({ version, migrations: [] });
+	    return this;
+	  }
+
+	  nextVersion() {
+	    const currentVersion = this._versions.slice(-1)[0].version;
+	    const nextVersion = (currentVersion * 10 + 1) / 10; // Avoid FP errors
+	    this._versions.push({ version: nextVersion, migrations: [] });
+	    return this;
+	  }
+
+	  addProperty(path, value) {
+	    const expandedProperty = utils.createObjectFromPath(path, value);
+	    return this.transformConfig((config) => utils.deepExtend(config, expandedProperty),
+	      `Adding property ${path} with value ${value}`);
+	  }
+
+	  overwriteProperty(path, value) {
+	    return this.transformConfig((config) => {
+	      const parts = path.split('.');
+	      const obj = parts.length > 1 ? utils.getObjectFromPath(config, parts.slice(0, -1).join('.')) : config;
+	      obj[parts.slice(-1)[0]] = value;
+	      return config;
+	    }, `Overwriting property ${path} with value ${JSON.stringify(value)}`);
+	  }
+
+	  copyProperty(oldPath, newPath) {
+	    return this.transformConfig(Migrator.propertyCopy.bind(null, oldPath, newPath),
+	      `Copying property from ${oldPath} to ${newPath}`);
+	  }
+
+
+	  static propertyCopy(oldPath, newPath, config) {
+	    const oldVal = utils.getObjectFromPath(config, oldPath);
+	    if (!_.isUndefined(oldVal)) {
+	      const expandedProperty = utils.createObjectFromPath(newPath, oldVal);
+	      utils.deepExtend(config, expandedProperty);
 	    }
-	    if (options.long) {
-	      // handle long rest
-	      this.doLongRest(options.selected.character);
+	    return config;
+	  }
+
+	  static propertyDelete(path, config) {
+	    const parts = path.split('.');
+	    const obj = parts.length > 1 ? utils.getObjectFromPath(config, parts.slice(0, -1).join('.')) : config;
+	    if (obj && !_.isUndefined(obj[parts.slice(-1)[0]])) {
+	      delete obj[parts.slice(-1)[0]];
 	    }
-	    else if (options.short) {
-	      // handle short rest
-	      this.doShortRest(options.selected.character);
+	    return config;
+	  }
+
+	  deleteProperty(propertyPath) {
+	    return this.transformConfig(Migrator.propertyDelete.bind(null, propertyPath),
+	      `Deleting property ${propertyPath} from config`);
+	  }
+
+	  moveProperty(oldPath, newPath) {
+	    return this.transformConfig((config) => {
+	      config = Migrator.propertyCopy(oldPath, newPath, config);
+	      return Migrator.propertyDelete(oldPath, config);
+	    }, `Moving property from ${oldPath} to ${newPath}`);
+	  }
+
+	  transformConfig(transformer, message) {
+	    const lastVersion = this._versions.slice(-1)[0];
+	    lastVersion.migrations.push({ transformer, message });
+	    return this;
+	  }
+
+	  migrateConfig(state, logger) {
+	    logger.info('Checking config for upgrade, starting state: $$$', state);
+	    if (_.isEmpty(state)) {
+	      // working with a fresh install here
+	      state.version = 0;
 	    }
-	    else {
-	      this.reportError('please specify long (!shaped-rest --long) or short (!shaped-rest --short) rest');
-	    }
-	  }
-
-	  /**
-	   * Performs all of the short rest actions for the specified character
-	   * @param {collection of characters} selectedChars - The characters to perform short rest actions on
-	   */
-	  doShortRest(selectedChars) {
-	    _.each(selectedChars, (currentChar) => {
-	      const charId = currentChar.get('_id');
-	      const charName = this.roll20.getObj('character', charId).get('name');
-	      this.logger.debug(`Processing short rest for ${charName}:`);
-
-	      const traits = this.rechargeTraits(charId, 'short');
-
-	      const msg = this.buildRestMessage('Short Rest', charName, charId, traits);
-
-	      this.roll20.sendChat(`character|${charId}`, msg);
-	    });
-	  }
-
-	  /**
-	   * Performs all of the long rest actions for the specified character - including short rest actions
-	   * @param {collection of characters} selectedChars - The characters to perform long rest actions on
-	   */
-	  doLongRest(selectedChars) {
-	    _.each(selectedChars, (currentChar) => {
-	      const charId = currentChar.get('_id');
-	      const charName = this.roll20.getObj('character', charId).get('name');
-	      let healed = 0;
-
-	      this.logger.debug(`Processing long rest for ${charName}:`);
-
-	      let traits = this.rechargeTraits(charId, 'short');
-	      traits = traits.concat(this.rechargeTraits(charId, 'long'));
-
-	      if (!this.myState.config.variants.rests.longNoHpFullHd) {
-	        healed = this.resetHP(charId);
-	      }
-	      const hd = this.regainHitDie(charId);
-	      const slots = this.regainSpellSlots(charId);
-	      const exhaus = this.reduceExhaustion(charId);
-
-	      const msg = this.buildRestMessage('Long Rest', charName, charId, traits, healed, hd, slots, exhaus);
-
-	      this.roll20.sendChat(`character|${charId}`, msg);
-	    });
-	  }
-
-	  /**
-	   * Builds the rest message using the sheet's roll template to report the results of a rest
-	   * @param {string} restType - The type of rest performed; either 'Long Rest' or 'Short Rest'
-	   * @param {string} charName - The name of the character
-	   * @param {string} charId - The Roll20 character ID
-	   * @param {array} traitNames - An array of the trait names that have been recharged
-	   * @param {int} healed - The number of HP healed
-	   * @param {array} hdRegained - Array of objects each representing a die type and the number regained
-	   * @param {boolean} spellSlots - Whether or not spell slots were recharged
-	   * @param {boolean} exhaustion - Whether or not a level of exhaustoin was removed
-	   */
-	  buildRestMessage(restType, charName, charId, traitNames, healed, hdRegained, spellSlots, exhaustion) {
-	    let msg = `&{template:5e-shaped} {{title=${restType}}} {{character_name=${charName}}}`;
-
-	    if (this.roll20.getAttrByName(charId, 'show_character_name') === '@{show_character_name_yes}') {
-	      msg += '{{show_character_name=1}}';
-	    }
-
-	    if (hdRegained) {
-	      _.each(hdRegained, hd => {
-	        if (hd.quant > 0) {
-	          msg += `{{Hit Die Regained (${hd.die})=${hd.quant}}}`;
-	        }
-	      });
-	    }
-
-	    if (traitNames) { msg += `{{Traits Recharged=${traitNames.join(', ')}}}`; }
-	    if (healed > 0) { msg += `{{heal=[[${healed}]]}}`; }
-	    if (spellSlots) { msg += '{{text_center=Spell Slots Regained}}'; }
-	    if (exhaustion) { msg += '{{text_top=Removed 1 Level Of Exhaustion}}'; }
-
-	    return msg;
-	  }
-
-	  /**
-	   * Recharges all of the repeating 'traits' section items that have a 'recharge' defined
-	   * @param {string} charId - the Roll20 character ID
-	   * @param {string} restType - the type of rest being performed; either 'Short Rest' or 'Long Rest'
-	   * @returns {Array} - An array of the trait names that were recharged
-	   */
-	  rechargeTraits(charId, restType) {
-	    const traitNames = [];
-
-	    _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
-	      .map(attribute => (attribute.get('name').match(/^repeating_trait_([^_]+)_recharge$/) || [])[1])
-	      .reject(_.isUndefined)
-	      .uniq()
-	      .each(attId => {
-	        const traitPre = `repeating_trait_${attId}`;
-	        const rechargeAtt = this.roll20.getAttrByName(charId, `${traitPre}_recharge`);
-	        if (rechargeAtt.toLowerCase().indexOf(restType) !== -1) {
-	          const attName = this.roll20.getAttrByName(charId, `${traitPre}_name`);
-	          this.logger.debug(`Recharging '${attName}'`);
-	          traitNames.push(attName);
-	          const max = this.roll20.getAttrByName(charId, `${traitPre}_uses`, 'max');
-	          if (max === undefined) {
-	            this.logger.error(`Tried to recharge the trait '${attName}' for character with id ${charId}, ` +
-	              'but there were no uses defined.');
-	          }
-	          else {
-	            this.roll20.setAttrByName(charId, `${traitPre}_uses`, max);
-	          }
-	        }
-	      });
-
-	    return traitNames;
-	  }
-
-	  /**
-	   * Resets the HP of the specified character to its maximum value
-	   * @param {string} charId - the Roll20 character ID
-	   * @returns {int} - the number of HP that were healed
-	   */
-	  resetHP(charId) {
-	    this.logger.debug('Resetting HP to max');
-	    const max = parseInt(this.roll20.getAttrByName(charId, 'HP', 'max'), 10);
-	    const current = parseInt(this.roll20.getAttrByName(charId, 'HP', 'current'), 10);
-
-	    this.roll20.setAttrByName(charId, 'HP', max);
-
-	    return max - current;
-	  }
-
-	  /**
-	   * Adds Hit die to the specified character based on PHB rules
-	   * @param {string} charId - the Roll20 character ID
-	   * @returns {Array} - Array of objects each representing a die type and the number regained
-	   */
-	  regainHitDie(charId) {
-	    const hitDieRegained = [];
-	    this.logger.debug('Regaining Hit Die');
-	    _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
-	      .filter(attribute => (attribute.get('name').match(/^hd_d\d{1,2}$/)))
-	      .uniq()
-	      .each(hdAttr => {
-	        const max = parseInt(hdAttr.get('max'), 10);
-	        if (max > 0) {
-	          const oldCurrent = parseInt(hdAttr.get('current'), 10);
-	          let newCurrent = oldCurrent;
-	          let regained = max === 1 ? 1 : Math.floor(max / 2);
-	          if (this.myState.config.variants.rests.longNoHpFullHd) {
-	            regained = max - oldCurrent;
-	          }
-	          newCurrent += regained;
-	          newCurrent = newCurrent > max ? max : newCurrent;
-	          this.roll20.setAttrByName(charId, hdAttr.get('name'), newCurrent);
-	          hitDieRegained.push({
-	            die: hdAttr.get('name').replace(/hd_/, ''),
-	            quant: newCurrent - oldCurrent,
-	          });
-	        }
-	      });
-
-	    return hitDieRegained;
-	  }
-
-	  /**
-	   * Resets all (non warlock) spell slots of the specified character to their maximum values
-	   * @param {string} charId - the Roll20 character ID
-	   * @returns {bool} - true if any spell slots were recharged; false otherwise
-	   */
-	  regainSpellSlots(charId) {
-	    let slotsFound = false;
-
-	    this.logger.debug('Regaining Spell Slots');
-	    _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
-	      .filter(attribute => (attribute.get('name').match(/^spell_slots_l\d$/)))
-	      .uniq()
-	      .each(slotAttr => {
-	        const max = parseInt(slotAttr.get('max'), 10);
-	        if (max > 0) {
-	          this.roll20.setAttrByName(charId, slotAttr.get('name'), max);
-	          slotsFound = true;
-	        }
-	      });
-
-	    return slotsFound;
-	  }
-
-	  /**
-	   * Reduces the specified character's level of exhaustion by 1
-	   * @param {string} charId - the Roll20 character ID
-	   * @returns {bool} - true if a level of exhaustion was reduced; false otherwise
-	   */
-	  reduceExhaustion(charId) {
-	    this.logger.debug('Reducing Exhaustion');
-	    const currentLevel = parseInt(this.roll20.getAttrByName(charId, 'exhaustion_level'), 10);
-
-	    if (currentLevel > 0) {
-	      this.roll20.setAttrByName(charId, 'exhaustion_level', currentLevel - 1);
-	      return true;
+	    if (!this._versions.find(version => version.version >= state.version)) {
+	      throw new Error(`Unrecognised schema state ${state.version} - cannot upgrade.`);
 	    }
 
-	    return false;
+	    return this._versions
+	      .filter(version => version.version > state.version)
+	      .reduce((versionResult, version) => {
+	        logger.info('Upgrading schema to version $$$', version.version);
+
+	        versionResult = version.migrations.reduce((result, migration) => {
+	          logger.info(migration.message);
+	          return migration.transformer(result);
+	        }, versionResult);
+	        versionResult.version = version.version;
+	        logger.info('Post-upgrade state: $$$', versionResult);
+	        return versionResult;
+	      }, state);
 	  }
 	}
 
-	module.exports = RestManager;
+	/*
+	 FOR REFERENCE: CURRENT SCHEMA
+	 {
+	 logLevel: 'INFO',
+	 tokenSettings: {
+	 number: false,
+	 bar1: {
+	 attribute: 'HP',
+	 max: true,
+	 link: false,
+	 showPlayers: false,
+	 },
+	 bar2: {
+	 attribute: 'speed',
+	 max: false,
+	 link: true,
+	 showPlayers: false,
+	 },
+	 bar3: {
+	 attribute: '',
+	 max: false,
+	 link: false,
+	 showPlayers: false,
+	 },
+	 aura1: {
+	 radius: '',
+	 color: '#FFFF99',
+	 square: false,
+	 },
+	 aura2: {
+	 radius: '',
+	 color: '#59e594',
+	 square: false,
+	 },
+	 light: {
+	 otherPlayers: false,
+	 hasSight: true,
+	 angle: 360,
+	 losAngle: 360,
+	 multiplier: 1,
+	 },
+	 showName: true,
+	 showNameToPlayers: false,
+	 showAura1ToPlayers: true,
+	 showAura2ToPlayers: true,
+	 },
+	 newCharSettings: {
+	 sheetOutput: '@{output_to_all}',
+	 deathSaveOutput: '@{output_to_all}',
+	 initiativeOutput: '@{output_to_all}',
+	 showNameOnRollTemplate: '@{show_character_name_yes}',
+	 rollOptions: '@{normal}',
+	 initiativeRoll: '@{normal_initiative}',
+	 initiativeToTracker: '@{initiative_to_tracker_yes}',
+	 breakInitiativeTies: '@{initiative_tie_breaker_var}',
+	 showTargetAC: '@{attacks_vs_target_ac_no}',
+	 showTargetName: '@{attacks_vs_target_name_no}',
+	 autoAmmo: '@{ammo_auto_use_var}',
+	 autoRevertAdvantage: false,
+	 houserules: {
+	 savingThrowsHalfProf: false,
+	 mediumArmorMaxDex: 2,
+	 },
+	 tab: 'core',
+	 },
+	 advTrackerSettings: {
+	 showMarkers: false,
+	 ignoreNpcs: false,
+	 advantageMarker: 'green',
+	 disadvantageMarker: 'red',
+	 output: 'public',
+	 },
+	 sheetEnhancements: {
+	 rollHPOnDrop: true,
+	 autoHD: true,
+	 autoSpellSlots: true,
+	 autoTraits: true,
+	 },
+	 genderPronouns: [
+	 {
+	 matchPattern: '^f$|female|girl|woman|feminine',
+	 nominative: 'she',
+	 accusative: 'her',
+	 possessive: 'her',
+	 reflexive: 'herself',
+	 },
+	 {
+	 matchPattern: '^m$|male|boy|man|masculine',
+	 nominative: 'he',
+	 accusative: 'him',
+	 possessive: 'his',
+	 reflexive: 'himself',
+	 },
+	 {
+	 matchPattern: '^n$|neuter|none|construct|thing|object',
+	 nominative: 'it',
+	 accusative: 'it',
+	 possessive: 'its',
+	 reflexive: 'itself',
+	 },
+	 ],
+	 defaultGenderIndex: 2,
+	 variants: {
+	 rests: {
+	 longNoHpFullHd: false,
+	 },
+	 },
+	 };
+	 */
+
+	const migrator = new Migrator()
+	  .addProperty('config', {})
+	  .skipToVersion(0.4)
+	  .overwriteProperty('config.genderPronouns', utils.deepClone(oneSixConfig).genderPronouns)
+	  .skipToVersion(1.2)
+	  .moveProperty('config.autoHD', 'config.sheetEnhancements.autoHD')
+	  .moveProperty('config.rollHPOnDrop', 'config.sheetEnhancements.rollHPOnDrop')
+	  .skipToVersion(1.4)
+	  .moveProperty('config.newCharSettings.savingThrowsHalfProf', 'config.newCharSettings.houserules.savingThrowsHalfProf')
+	  .moveProperty('config.newCharSettings.mediumArmorMaxDex', 'config.newCharSettings.houserules.mediumArmorMaxDex')
+	  .skipToVersion(1.6)
+	  .transformConfig(state => {
+	    _.defaults(state.config, oneSixConfig);
+	    _.defaults(state.config.tokenSettings, oneSixConfig.tokenSettings);
+	    _.defaults(state.config.newCharSettings, oneSixConfig.newCharSettings);
+	    _.defaults(state.config.advTrackerSettings, oneSixConfig.advTrackerSettings);
+	    _.defaults(state.config.sheetEnhancements, oneSixConfig.sheetEnhancements);
+	    return state;
+	  }, 'Applying defaults as at schema version 1.6')
+	  // 1.7
+	  // add base houserules and variants section
+	  // add sheetEnhancements.autoTraits
+	  .nextVersion()
+	  .addProperty('config.variants', {
+	    rests: {
+	      longNoHpFullHd: false,
+	    },
+	  })
+	  .addProperty('config.sheetEnhancements.autoTraits', true)
+	  // 1.8
+	  // Set tokens to have vision by default so that people see the auto-generated stuff based on senses
+	  .nextVersion()
+	  .overwriteProperty('config.tokenSettings.light.hasSight', true)
+	  // 1.9 Add default tab setting
+	  .nextVersion()
+	  .addProperty('config.newCharSettings.tab', 'core');
+
+	Migrator.migrateShapedConfig = migrator.migrateConfig.bind(migrator);
+
+	module.exports = Migrator;
 
 
 /***/ },
@@ -5629,96 +5227,256 @@ var ShapedScripts =
 
 	'use strict';
 	const _ = __webpack_require__(2);
+	const utils = __webpack_require__(7);
 	const ShapedModule = __webpack_require__(13);
+	const ShapedConfig = __webpack_require__(18);
 
-	class TraitManager extends ShapedModule {
-
-	  addCommands(commandProcessor) {
-	    // no commands for this module
-	    return commandProcessor;
+	class MacroMaker {
+	  constructor(roll20) {
+	    if (!roll20) {
+	      throw new Error('Rol20 parameter is required for MacroMaker constructor');
+	    }
+	    this.roll20 = roll20;
+	    this.sortKey = 'originalOrder';
 	  }
 
-	  /**
-	   * Handles the click event of a trait when 'autoTraits' is true
-	   * Consumes one use of the clicked trait
-	   * @param {object} options - The message options
-	   */
-	  handleTraitClick(options) {
-	    const traitId = _.chain(this.roll20.findObjs({ type: 'attribute', characterid: options.character.id }))
-	      .map(attribute => (attribute.get('name').match(/^repeating_trait_([^_]+)_name$/) || [])[1])
-	      .reject(_.isUndefined)
-	      .uniq()
-	      .find(attId => this.roll20.getAttrByName(options.character.id, `repeating_trait_${attId}_name`) === options.title)
-	      .value();
-
-	    const usesAttr = this.roll20.getAttrObjectByName(options.character.id, `repeating_trait_${traitId}_uses`);
-	    if (usesAttr) {
-	      if (usesAttr.get('current') > 0) {
-	        usesAttr.set('current', parseInt(usesAttr.get('current'), 10) - 1);
-	      }
-	      else {
-	        this.reporter.report('Trait Police', `${options.characterName} can't use ${options.title} because ` +
-	          'they don\'t have any uses left.');
-	      }
-	    }
+	  getAbilityMaker(character) {
+	    const self = this;
+	    return function abilityMaker(abilitySpec) {
+	      const ability = self.roll20.getOrCreateObj('ability', { characterid: character.id, name: abilitySpec.name });
+	      ability.set({ action: abilitySpec.action, istokenaction: true }); // TODO configure this
+	      return abilitySpec.name;
+	    };
 	  }
 	}
 
-	module.exports = TraitManager;
+	class AbilityDeleter extends MacroMaker {
+	  constructor(roll20) {
+	    super(roll20);
+	    this.sortKey = '';
+	  }
+
+	  run(character) {
+	    const abilities = this.roll20.findObjs({ type: 'ability', characterid: character.id });
+	    const deleted = _.map(abilities, obj => {
+	      const name = obj.get('name');
+	      obj.remove();
+	      return name;
+	    });
+
+	    return `Deleted: ${_.isEmpty(deleted) ? 'None' : deleted.join(', ')}`;
+	  }
+	}
+
+	class RepeatingAbilityMaker extends MacroMaker {
+	  constructor(repeatingSection, abilityName, label, canMark, roll20) {
+	    super(roll20);
+	    this.repeatingSection = repeatingSection;
+	    this.abilityName = abilityName;
+	    this.label = label;
+	    this.canMark = canMark;
+	  }
+
+	  run(character, options) {
+	    const cache = options.getCache(character.id);
+	    cache[this.repeatingSection] = cache[this.repeatingSection] ||
+	      this.roll20.getRepeatingSectionItemIdsByName(character.id, this.repeatingSection);
+
+	    const configured = _.chain(cache[this.repeatingSection])
+	      .map((repeatingId, repeatingName) => {
+	        let repeatingAction = `%{${character.get('name')}|repeating_${this.repeatingSection}_${repeatingId}` +
+	          `_${this.abilityName}}`;
+	        if (this.canMark && options.mark) {
+	          repeatingAction += '\n!mark @{target|token_id}';
+	        }
+	        return { name: utils.toTitleCase(repeatingName), action: repeatingAction };
+	      })
+	      .map(this.getAbilityMaker(character))
+	      .value();
+
+	    const addedText = _.isEmpty(configured) ? 'Not present for character' : configured.join(', ');
+	    return `${this.label}: ${addedText}`;
+	  }
+	}
+
+	class RollAbilityMaker extends MacroMaker {
+	  constructor(abilityName, newName, roll20) {
+	    super(roll20);
+	    this.abilityName = abilityName;
+	    this.newName = newName;
+	  }
+
+	  run(character) {
+	    return this.getAbilityMaker(character)({
+	      name: this.newName,
+	      action: `%{${character.get('name')}|${this.abilityName}}`,
+	    });
+	  }
+	}
+
+
+	class CommandAbilityMaker extends MacroMaker {
+	  constructor(command, options, newName, roll20) {
+	    super(roll20);
+	    this.command = command;
+	    this.options = options;
+	    this.newName = newName;
+	  }
+
+	  run(character) {
+	    return this.getAbilityMaker(character)({
+	      name: this.newName,
+	      action: `!${this.command} ${utils.toOptionsString(this.options)}`,
+	    });
+	  }
+	}
+
+	class MultiCommandAbilityMaker extends MacroMaker {
+	  constructor(commandSpecs, roll20) {
+	    super(roll20);
+	    this.commandSpecs = commandSpecs;
+	  }
+
+	  run(character) {
+	    const abilMaker = this.getAbilityMaker(character);
+	    return this.commandSpecs.map(cmdSpec =>
+	      abilMaker({
+	        name: cmdSpec.abilityName,
+	        action: `!${cmdSpec.command} ${utils.toOptionsString(cmdSpec.options)}`,
+	      })
+	    );
+	  }
+	}
+
+	class RepeatingSectionMacroMaker extends MacroMaker {
+	  constructor(abilityName, repeatingSection, macroName, roll20) {
+	    super(roll20);
+	    this.abilityName = abilityName;
+	    this.repeatingSection = repeatingSection;
+	    this.macroName = macroName;
+	    this.sortKey = 'originalOrder';
+	  }
+
+	  run(character) {
+	    if (!_.isEmpty(this.roll20.getRepeatingSectionAttrs(character.id, this.repeatingSection))) {
+	      return this.getAbilityMaker(character)({
+	        name: this.macroName,
+	        action: `%{${character.get('name')}|${this.abilityName}}`,
+	      });
+	    }
+	    return `${this.macroName}: Not present for character`;
+	  }
+	}
+
+	function getRepeatingSectionAbilityLookup(sectionName, rollName, roll20) {
+	  return function repeatingSectionAbilityLookup(optionName, existingOptions) {
+	    const characterId = existingOptions.selected.character[0].id;
+	    const cache = existingOptions.getCache(characterId);
+
+	    cache[sectionName] = cache[sectionName] || roll20.getRepeatingSectionItemIdsByName(characterId, sectionName);
+
+	    const repeatingId = cache[sectionName][optionName.toLowerCase()];
+
+	    if (repeatingId) {
+	      return new RollAbilityMaker(`repeating_${sectionName}_${repeatingId}_${rollName}`,
+	        utils.toTitleCase(optionName), roll20);
+	    }
+	    return undefined;
+	  };
+	}
+
+	module.exports = class AbilityMaker extends ShapedModule {
+	  addCommands(commandProcessor) {
+	    const roll20 = this.roll20;
+	    const staticAbilityOptions = {
+	      DELETE: new AbilityDeleter(roll20),
+	      initiative: new RollAbilityMaker('shaped_initiative', 'Init', roll20),
+	      abilityChecks: new RollAbilityMaker('shaped_ability_checks', 'Ability Checks', roll20),
+	      abilityChecksSmall: new RollAbilityMaker('shaped_ability_checks_small', 'Ability Checks', roll20),
+	      abilityChecksQuery: new RollAbilityMaker('shaped_ability_checks_query', 'Ability Checks', roll20),
+	      abilChecks: new RollAbilityMaker('shaped_ability_checks', 'AbilChecks', roll20),
+	      abilChecksSmall: new RollAbilityMaker('shaped_ability_checks_small', 'AbilChecks', roll20),
+	      abilChecksQuery: new RollAbilityMaker('shaped_ability_checks_query', 'AbilChecks', roll20),
+	      advantageTracker: new MultiCommandAbilityMaker([
+	        { command: 'shaped-at', options: ['advantage'], abilityName: 'Advantage' },
+	        { command: 'shaped-at', options: ['disadvantage'], abilityName: 'Disadvantage' },
+	        { command: 'shaped-at', options: ['normal'], abilityName: 'Normal' },
+	      ], roll20),
+	      advantageTrackerQuery: new CommandAbilityMaker('shaped-at',
+	        ['?{Roll Option|Normal,normal|w/ Advantage,advantage|w/ Disadvantage,disadvantage}'], '(dis)Adv Query', roll20),
+	      savingThrows: new RollAbilityMaker('shaped_saving_throw', 'Saving Throws', roll20),
+	      savingThrowsSmall: new RollAbilityMaker('shaped_saving_throw_small', 'Saving Throws', roll20),
+	      savingThrowsQuery: new RollAbilityMaker('shaped_saving_throw_query', 'Saving Throws', roll20),
+	      saves: new RollAbilityMaker('shaped_saving_throw', 'Saves', roll20),
+	      savesSmall: new RollAbilityMaker('shaped_saving_throw_small', 'Saves', roll20),
+	      savesQuery: new RollAbilityMaker('shaped_saving_throw_query', 'Saves', roll20),
+	      attacks: new RepeatingAbilityMaker('attack', 'attack', 'Attacks', true, roll20),
+	      attacksMacro: new RepeatingSectionMacroMaker('shaped_attacks', 'attack', 'Attacks', roll20),
+	      statblock: new RollAbilityMaker('shaped_statblock', 'Statblock', roll20),
+	      traits: new RepeatingAbilityMaker('trait', 'trait', 'Traits', false, roll20),
+	      traitsMacro: new RepeatingSectionMacroMaker('shaped_traits', 'trait', 'Traits', roll20),
+	      actions: new RepeatingAbilityMaker('action', 'action', 'Actions', true, roll20),
+	      actionsMacro: new RepeatingSectionMacroMaker('shaped_actions', 'action', 'Actions', roll20),
+	      reactions: new RepeatingAbilityMaker('reaction', 'action', 'Reactions', false, roll20),
+	      reactionsMacro: new RepeatingSectionMacroMaker('shaped_reactions', 'reaction', 'Reactions', roll20),
+	      legendaryActions: new RepeatingAbilityMaker('legendaryaction', 'action', 'Legendary Actions', false, roll20),
+	      legendaryActionsMacro: new RepeatingSectionMacroMaker('shaped_legendaryactions', 'legendaryaction',
+	        'Legendary Actions', roll20),
+	      legendaryA: new RepeatingAbilityMaker('legendaryaction', 'action', 'LegendaryA', false, roll20),
+	      lairActions: new RepeatingSectionMacroMaker('shaped_lairactions', 'lairaction', 'Lair Actions', roll20),
+	      lairA: new RepeatingSectionMacroMaker('shaped_lairactions', 'lairaction', 'LairA', roll20),
+	      regionalEffects: new RepeatingSectionMacroMaker('shaped_regionaleffects', 'regionaleffect',
+	        'Regional Effects', roll20),
+	      regionalE: new RepeatingSectionMacroMaker('shaped_regionaleffects', 'regionaleffect', 'RegionalE', roll20),
+	      rests: new CommandAbilityMaker('shaped-rest', ['?{Rest type|Short,short|Long,long}'], 'Rests', roll20),
+	    };
+
+
+	    return commandProcessor.addCommand('abilities', this.addAbility.bind(this))
+	      .withSelection({
+	        character: {
+	          min: 1,
+	          max: Infinity,
+	        },
+	      })
+	      .optionLookup('abilities', staticAbilityOptions)
+	      .optionLookup('abilities', getRepeatingSectionAbilityLookup('spell', 'spell', this.roll20))
+	      .optionLookup('abilities', getRepeatingSectionAbilityLookup('trait', 'trait', this.roll20))
+	      .option('mark', ShapedConfig.booleanValidator);
+	  }
+
+	  addAbility(options) {
+	    if (_.isEmpty(options.abilities)) {
+	      this.reportError('No abilities specified. ' +
+	        'Take a look at the documentation for a list of ability options.');
+	      return;
+	    }
+	    const messages = _.map(options.selected.character, (character) => {
+	      const operationMessages = _.chain(options.abilities)
+	        .sortBy('sortKey')
+	        .map(maker => maker.run(character, options))
+	        .value();
+
+
+	      if (_.isEmpty(operationMessages)) {
+	        return `<li>${character.get('name')}: Nothing to do</li>`;
+	      }
+
+	      let message;
+	      message = `<li>Configured the following abilities for character ${character.get('name')}:<ul><li>`;
+	      message += operationMessages.join('</li><li>');
+	      message += '</li></ul></li>';
+
+	      return message;
+	    });
+
+	    this.report('Ability Creation', `<ul>${messages.join('')}</ul>`);
+	  }
+	};
 
 
 /***/ },
 /* 21 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	const _ = __webpack_require__(2);
-	const ShapedModule = __webpack_require__(13);
-
-	class AmmoManager extends ShapedModule {
-
-	  addCommands(commandProcessor) {
-	    return commandProcessor;
-	  }
-
-	  consumeAmmo(options, msg) {
-	    const ammoAttr = _.chain(this.roll20.findObjs({ type: 'attribute', characterid: options.character.id }))
-	      .filter(attribute => attribute.get('name').indexOf('repeating_ammo') === 0)
-	      .groupBy(attribute => attribute.get('name').replace(/(repeating_ammo_[^_]+).*/, '$1'))
-	      .find(attributeList =>
-	        _.find(attributeList, attribute =>
-	          attribute.get('name').match(/.*name$/) && attribute.get('current') === options.ammoName)
-	      )
-	      .find(attribute => attribute.get('name').match(/.*qty$/))
-	      .value();
-
-	    if (!ammoAttr) {
-	      this.logger.error('No ammo attribute found corresponding to name $$$', options.ammoName);
-	      return;
-	    }
-
-	    let ammoUsed = 1;
-	    if (options.ammo) {
-	      const rollRef = options.ammo.match(/\$\[\[(\d+)\]\]/);
-	      if (rollRef) {
-	        const rollExpr = msg.inlinerolls[rollRef[1]].expression;
-	        const match = rollExpr.match(/\d+-(\d+)/);
-	        if (match) {
-	          ammoUsed = match[1];
-	        }
-	      }
-	    }
-
-	    const val = parseInt(ammoAttr.get('current'), 10) || 0;
-	    ammoAttr.set('current', Math.max(0, val - ammoUsed));
-	  }
-	}
-
-	module.exports = AmmoManager;
-
-
-/***/ },
-/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5980,7 +5738,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 23 */
+/* 22 */
 /***/ function(module, exports) {
 
 	function sanitise(statblock, logger) {
@@ -6153,7 +5911,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 24 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';

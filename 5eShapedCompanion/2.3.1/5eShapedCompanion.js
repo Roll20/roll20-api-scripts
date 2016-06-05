@@ -2667,12 +2667,12 @@ var ShapedScripts =
 	  this.handleChangeToken = function handleChangeToken(token) {
 	    if (_.contains(addedTokenIds, token.id)) {
 	      addedTokenIds = _.without(addedTokenIds, token.id);
-	      this.setTokenBarsOnDrop(token, true);
+	      this.setTokenBarsOnDrop(token);
 	      advantageTracker.handleTokenChange(token);
 	    }
 	  };
 
-	  this.setTokenBarsOnDrop = function setTokenBarsOnDrop(token, overwrite) {
+	  this.setTokenBarsOnDrop = function setTokenBarsOnDrop(token) {
 	    const character = roll20.getObj('character', token.get('represents'));
 	    if (!character) {
 	      return;
@@ -2690,7 +2690,7 @@ var ShapedScripts =
 	    _.chain(myState.config.tokenSettings)
 	      .pick('bar1', 'bar2', 'bar3')
 	      .each((bar, barName) => {
-	        if (bar.attribute && !token.get(`${barName}_link`) && (!token.get(`${barName}_value`) || overwrite)) {
+	        if (bar.attribute && !token.get(`${barName}_link`) && !token.get(`${barName}_value`)) {
 	          if (bar.attribute === 'HP' && myState.config.sheetEnhancements.rollHPOnDrop) {
 	            // Guard against characters that aren't properly configured - i.e. ones used for templates and system
 	            // things rather than actual characters
@@ -3049,7 +3049,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v2.4.2 <=-');
+	    logger.info('-=> ShapedScripts v2.3.1 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -3078,7 +3078,7 @@ var ShapedScripts =
 
 	  this.updateBarsForCharacterTokens = function updateBarsForCharacterTokens(curr) {
 	    roll20.findObjs({ type: 'graphic', represents: curr.get('characterid') })
-	      .forEach(token => this.setTokenBarsOnDrop(token, false));
+	      .forEach(this.setTokenBarsOnDrop.bind(this));
 	  };
 
 	  this.getAttributeChangeHandler = function getAttributeChangeHandler(attributeName) {
@@ -4404,7 +4404,6 @@ var ShapedScripts =
 	      savesQuery: new RollAbilityMaker('shaped_saving_throw_query', 'Saves', roll20),
 	      attacks: new RepeatingAbilityMaker('attack', 'attack', 'Attacks', true, roll20),
 	      attacksMacro: new RepeatingSectionMacroMaker('shaped_attacks', 'attack', 'Attacks', roll20),
-	      spells: new RepeatingSectionMacroMaker('shaped_spells', 'spell', 'Spells', roll20),
 	      statblock: new RollAbilityMaker('shaped_statblock', 'Statblock', roll20),
 	      traits: new RepeatingAbilityMaker('trait', 'trait', 'Traits', false, roll20),
 	      traitsMacro: new RepeatingSectionMacroMaker('shaped_traits', 'trait', 'Traits', roll20),
