@@ -26,8 +26,8 @@ var MatrixMath = (function() {
 
   /**
    * Gets the adjugate of a matrix, the tranpose of its cofactor matrix.
-   * @param  {[type]} mat
-   * @return {[type]}
+   * @param  {Matrix} mat
+   * @return {Matrix}
    */
   function adjoint(mat) {
     var cofactorMat = MatrixMath.cofactorMatrix(mat);

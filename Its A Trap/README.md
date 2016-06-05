@@ -1,10 +1,11 @@
 # It's A Trap!
 
-###### Required Scripts
-* [Token Collisions](https://github.com/Roll20/roll20-api-scripts/tree/master/Token%20Collisions)
-* [Vector Math](https://github.com/Roll20/roll20-api-scripts/tree/master/Vector%20Math)
-
 ###### Updates
+_2.4_
+* Offsets and directions can be specified for beam-like special FX in the trap JSON.
+* A user option is provided for revealed traps to be sent to the map layer instead of the objects layer.
+* Traps can now have areas of effect beyond their trigger.
+
 _2.3_
 * Trap JSON now supports special FX. This is specified through the 'fx' property.
 
@@ -24,24 +25,29 @@ trap detection even works for tokens moving by waypoints.
 
 Place the token for your trap on the ```GM layer```. Give it the ```cobweb``` <img src="http://game-icons.net/icons/lorc/originals/png/cobweb.png" width="32"> status marker.
 
-<br/><br/>
+#### Flying tokens
 By default, traps will only affect characters on the ground (ones that don't
 have a ```wing``` <img src="http://game-icons.net/icons/lorc/originals/png/fluffy-wing.png" width="32"> or ```angel``` <img src="http://game-icons.net/icons/lorc/originals/png/angel-outfit.png" width="32"> status marker). To have a trap also affect flying
 characters, give it the ```wing``` <img src="http://game-icons.net/icons/lorc/originals/png/fluffy-wing.png" width="32"> or ```angel``` <img src="http://game-icons.net/icons/lorc/originals/png/angel-outfit.png" width="32"> status marker.
 
-<br/><br/>
-By default, trap tokens won't appear when they are activated. If you would
-like the trap to become visible to the players when it is activated, give it
-the ```bleeding eye``` <img src="http://game-icons.net/icons/lorc/originals/png/bleeding-eye.png" width="32"> status marker. When the trap is activated, it will be moved to the ```Objects layer```.
+#### Revealing traps
+If you would like the trap to become visible to the players when it is activated, give it
+the ```bleeding eye``` <img src="http://game-icons.net/icons/lorc/originals/png/bleeding-eye.png" width="32"> status marker.
+If you checked the ```revealTrapsToMap``` option for this script, then the trap will be moved to the ```Map layer```.
+Otherwise, it will be moved to the ```Objects layer```.
 
-### Customizing trap messages:
+#### Area of effect
+You can specify an area of effect for a trap by setting its ```Aura 1``` property.
+When the trap is activated, all tokens within that area will be affected by the
+trap. Trap areas can be square or circular.
 
-By default, when a character activates a trap, it will just display a
-generic message that the character activated the trap.
+#### Customizing trap messages:
 
-You can specify a custom message, which can include inline
-rolls, in the GM notes for the trap. Admiral Ackbar will still dramatically
-announce it.
+When a character activates a trap, it will display a
+generic message to tell everyone that the character activated the trap.
+
+You can specify a custom message in the GM notes for the trap. This message
+can include inline rolls.
 
 ### Activating traps:
 
@@ -75,7 +81,10 @@ Just enter the JSON definition in for the trap in its GM notes.
 
 The following basic TrapEffect properties are supported:
 * api (string): An API chat command that will be executed when the trap is activated. If the constants TRAP_ID and VICTIM_ID are provided, they will be replaced by the IDs for the trap token and the token for the trap's victim, respectively in the API chat command message.
-* fx (string or FX definition JSON): The name of a special FX object or a definition for custom special FX. Names of saved custom effects cannot contain hyphens '-'.
+* fx (string, FX definition JSON, or object): The name of a special FX object or a definition for custom special FX.
+ * fx.name (string or FX definition JSON): The name of a special FX object or a definition for custom special FX.
+ * fx.offset (2-number array): The offset of the trap's FX, relative to the trap's token.
+ * fx.direction (2-number array): For beam-like FX, this is the vector for the FX's direction.
 * message (string): This is the message that will be displayed when the trap activates.
 * sound (string): The name of a sound that will be played when the trap activates.
 * trapId (string): The ID of the trap token. This is set automatically by the script.

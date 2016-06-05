@@ -25,7 +25,10 @@
    */
   function getAC(character, callback) {
     getSheetAttr(character, 'ac_armored_calc', function(armoredBonus) {
-      callback(armoredBonus + 10);
+      if(armoredBonus)
+        callback(armoredBonus);
+      else
+        getSheetAttr(character, ''
     });
   }
 
@@ -51,21 +54,26 @@
       var maxSkills = 30;
       count = 0;
       _.each(_.range(maxSkills), function(row) {
-        getSheetAttrText(character, 'repeating_skill_$' + row + '_name', function(skillName) {
-          count++;
-          if(skillName) {
-            skillName = skillName.trim().toLowerCase();
-            if(skillName === 'perception') {
-              perceptionRowNumCache[charName] = row;
+        try {
+          getSheetAttrText(character, 'repeating_skill_$' + row + '_name', function(skillName) {
+            count++;
+            if(skillName) {
+              skillName = skillName.trim().toLowerCase();
+              if(skillName === 'perception') {
+                perceptionRowNumCache[charName] = row;
 
-              // Now that we know the row number, try again.
-              getPassivePerception(character, callback);
+                // Now that we know the row number, try again.
+                getPassivePerception(character, callback);
+              }
             }
-          }
-          else if(count === maxSkills) {
-            callback(undefined);
-          }
-        });
+            else if(count === maxSkills) {
+              callback(undefined);
+            }
+          });
+        }
+        catch(err) {
+          // Do nothing. We've gone beyond the actual number of rows.
+        }
       });
     }
   }
