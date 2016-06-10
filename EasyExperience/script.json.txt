@@ -2,7 +2,7 @@
     "name": "EasyExperience",
     "script": "EasyExperience.js",
     "version": "1.0",
-    "previousversions": [],
+    "previousversions": [0.4],
     "description": "Make awarding experience simple. Use <b>!xp help</b> to pull up the help menu for complete details.",
     "authors": "Scott C.",
     "roll20userid": "459831",
