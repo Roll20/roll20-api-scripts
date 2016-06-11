@@ -42,7 +42,7 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
     ch = function (c) {
         var entities = {
             '<' : 'lt',
-			'>' : 'gt',
+    		'>' : 'gt',
 			"'" : '#39',
 			'@' : '#64',
 			'{' : '#123',
@@ -157,7 +157,7 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
             });
         }else{
             sendChat('Easy Experience', '/w gm There is already a character called ExperienceThresholds in the game. Please delete this old instance '
-            +'of the thresholds and reselect your desired experience progression in the'+state.PAGENAVIGATOR.configButton+'menu.');
+            +'of the thresholds and reselect your desired experience progression in the'+state.EASYEXPERIENCE.configButton+'menu.');
         };
     },
     
