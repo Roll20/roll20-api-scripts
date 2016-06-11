@@ -166,7 +166,7 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
     //Set PCs to eligible/ineligible for XP awards
     configPlayers = function(cid, status){
         state.EASYEXPERIENCE.config.PCs[cid].playing = status;
-        outputConfig();
+        update();
     },
     
     //Configure the progression system used. Options are - Pathfinder:Slow, Medium, Fast; PFS Standard; D&D 5e
@@ -179,7 +179,6 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
     configXPAttr = function(choice){
         state.EASYEXPERIENCE.xpattr = choice;
         update();
-        outputConfig();
     },
     
     //Update all the list of character ids for all PCs, active PCs, and MIA PCs
@@ -481,9 +480,6 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
                     name: state.EASYEXPERIENCE.xpattr,
                     characterid: obj.id
                 });
-                log('xp');
-                log(xp);
-                log(xp.length);
                 if(parseInt(xp[0].get('max'))===0 || !xp[0].get('max')){
                     levelUP(level);
                 }
@@ -540,14 +536,10 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
         }),
         character = getObj('character', level.get('characterid')),
         nextLevel;
-        log(character);
         if(level.get('current')<20){
             if(level.get('current')>0){
                 if(currXP[0]){
                     nextLevel = parseInt(level.get('current')) + 1;
-                    log(nextLevel);
-                    log(currXP);
-                    log(thresholds[0].attrs[nextLevel].get('current'));
                     currXP[0].set('max', thresholds[0].attrs[nextLevel].get('current'));
                     return
                 }
@@ -577,7 +569,7 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
                     'Update Players', '#CDAE88', 'black'
         ),
         xpButton = makeButton(
-                    '!xp-config attribute ?{Sheet XP attribute|experience}', state.EASYEXPERIENCE.xpattr, '#CDAE88', 'black'
+                    '!xp-config attribute ?{Sheet XP attribute|'+state.EASYEXPERIENCE.xpattr+'}', state.EASYEXPERIENCE.xpattr, '#CDAE88', 'black'
         );
         _.each(PCs,function(obj){
             if(state.EASYEXPERIENCE.config.PCs[obj.id].playing === 'active'){
