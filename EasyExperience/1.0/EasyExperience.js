@@ -41,7 +41,7 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
 
     ch = function (c) {
         var entities = {
-    		'<' : 'lt',
+        	'<' : 'lt',
 			'>' : 'gt',
 			"'" : '#39',
 			'@' : '#64',
@@ -77,7 +77,7 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
 					},
 					byCharacter: {
 					}
-				}
+				},
 			};
 		}
         if(!state.EASYEXPERIENCE.PCs){
@@ -85,8 +85,8 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
         }
         loadSettings();
         buildTemplates();
-        if(!state.PAGENAVIGATOR.configButton){
-            state.PAGENAVIGATOR.configButton = makeButton(
+        if(!state.EASYEXPERIENCE.configButton){
+            state.EASYEXPERIENCE.configButton = makeButton(
                 '!xp config', 
                 'Options', '#191970', '#fff8dc'
             );
