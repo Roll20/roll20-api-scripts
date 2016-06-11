@@ -2864,7 +2864,7 @@ var ShapedScripts =
 	    }
 
 	    // TODO: Advantage?
-	    if (roll20.getAttrByName(options.character.id, 'roll_setting') !== '@{roll_2}') {
+	    if (roll20.getAttrByName(options.character.id, 'roll_setting') !== rollOptions.roll2.rollSetting) {
 	      const result = this.getRollValue(msg, options.roll1);
 	      const attributeToIncrement = result >= 10 ? 'death_saving_throw_successes' : 'death_saving_throw_failures';
 	      roll20.processAttrValue(options.character.id, attributeToIncrement, increment);
@@ -4052,38 +4052,38 @@ var ShapedScripts =
 	        deathSaveOutput: this.sheetOutputValidator,
 	        initiativeOutput: this.sheetOutputValidator,
 	        showNameOnRollTemplate: this.getOptionList({
-	          true: '@{show_character_name_yes}',
-	          false: '@{show_character_name_no}',
+	          true: '/w GM',
+	          false: '',
 	        }),
 	        rollOptions: this.getOptionList({
-	          normal: '@{roll_1}',
-	          advantage: '@{roll_advantage}',
-	          disadvantage: '@{roll_disadvantage}',
-	          two: '@{roll_2}',
+	          normal: rollOptions.normal.rollSetting,
+	          advantage: 'adv {{ignore=[[0',
+	          disadvantage: 'dis {{ignore=[[0',
+	          two: rollOptions.roll2.rollSetting,
 	        }),
 	        initiativeRoll: this.getOptionList({
-	          normal: '@{normal_initiative}',
-	          advantage: '@{advantage_on_initiative}',
-	          disadvantage: '@{disadvantage_on_initiative}',
+	          normal: '@{shaped_d20}',
+	          advantage: '2d20@{d20_mod}kh1',
+	          disadvantage: '2d20@{d20_mod}kl1',
 	        }),
 	        initiativeToTracker: this.getOptionList({
-	          true: '@{initiative_to_tracker_yes}',
-	          false: '@{initiative_to_tracker_no}',
+	          true: '@{selected|initiative_formula} &{tracker}',
+	          false: '@{initiative_formula}',
 	        }),
 	        breakInitiativeTies: this.getOptionList({
-	          true: '@{initiative_tie_breaker_var}',
+	          true: '[[@{initiative} / 100]][tie breaker]',
 	          false: '',
 	        }),
 	        showTargetAC: this.getOptionList({
-	          true: '@{attacks_vs_target_ac_yes}',
-	          false: '@{attacks_vs_target_ac_no}',
+	          true: '[[@{target|AC}]]',
+	          false: '',
 	        }),
 	        showTargetName: this.getOptionList({
-	          true: '@{attacks_vs_target_name_yes}',
-	          false: '@{attacks_vs_target_name_no}',
+	          true: '@{target|token_name}',
+	          false: '',
 	        }),
 	        autoAmmo: this.getOptionList({
-	          true: '@{ammo_auto_use_var}',
+	          true: '1',
 	          false: '',
 	        }),
 	        autoRevertAdvantage: this.booleanValidator,
@@ -5160,32 +5160,28 @@ var ShapedScripts =
 
 	const rollOptions = {
 	  normal: {
-	    rollSetting: '@{roll_1}',
+	    rollSetting: '{{ignore=[[0',
 	    message: 'normally',
 	    rollInfo: '',
-	    preroll: '',
-	    postroll: '',
+			shaped_d20: '',
 	  },
 	  advantage: {
-	    rollSetting: '@{roll_advantage}',
+	    rollSetting: 'adv {{ignore=[[0',
 	    message: 'with advantage',
 	    rollInfo: '{{advantage=1}}',
-	    preroll: 2,
-	    postroll: 'kh1',
+			shaped_d20: '2d20@{d20_mod}kh1',
 	  },
 	  disadvantage: {
-	    rollSetting: '@{roll_disadvantage}',
+	    rollSetting: 'dis {{ignore=[[0',
 	    message: 'with disadvantage',
 	    rollInfo: '{{disadvantage=1}}',
-	    preroll: 2,
-	    postroll: 'kl1',
+			shaped_d20: '2d20@{d20_mod}kl1',
 	  },
 	  roll2: {
-	    rollSetting: '@{roll_2}',
+	    rollSetting: '{{roll2=[[d20@{d20_mod}',
 	    message: 'two dice',
 	    rollInfo: '',
-	    preroll: '',
-	    postroll: '',
+			shaped_d20: '',
 	  },
 	};
 
@@ -5251,17 +5247,17 @@ var ShapedScripts =
 
 	    if (!_.isEmpty(br)) {
 	      this.setStatusMarkers(br[0].tokens,
-	        msg.get('current') === '@{roll_advantage}',
-	        msg.get('current') === '@{roll_disadvantage}');
+	        msg.get('current') === rollOptions.advantage.rollSetting,
+	        msg.get('current') === rollOptions.disadvantage.rollSetting);
 
 	      switch (msg.get('current')) {
-	        case '@{roll_1}':
+	        case rollOptions.normal.rollSetting:
 	          this.sendChatNotification(br[0], 'normal');
 	          break;
-	        case '@{roll_advantage}':
+	        case rollOptions.advantage.rollSetting:
 	          this.sendChatNotification(br[0], 'advantage');
 	          break;
-	        case '@{roll_disadvantage}':
+	        case rollOptions.disadvantage.rollSetting:
 	          this.sendChatNotification(br[0], 'disadvantage');
 	          break;
 	        default:
@@ -5282,8 +5278,8 @@ var ShapedScripts =
 	        }
 	      }
 
-	      token.set(`status_${this.disadvantageMarker()}`, setting === '@{roll_disadvantage}');
-	      token.set(`status_${this.advantageMarker()}`, setting === '@{roll_advantage}');
+				token.set(`status_${this.disadvantageMarker()}`, setting === rollOptions.disadvantage.rollSetting);
+				token.set(`status_${this.advantageMarker()}`, setting === rollOptions.advantage.rollSetting);
 	    }
 	  }
 
@@ -5340,8 +5336,7 @@ var ShapedScripts =
 
 	      this.roll20.setAttrByName(charId, 'roll_setting', rollOptions[type].rollSetting);
 	      this.roll20.setAttrByName(charId, 'roll_info', rollOptions[type].rollInfo);
-	      this.roll20.setAttrByName(charId, 'preroll', rollOptions[type].preroll);
-	      this.roll20.setAttrByName(charId, 'postroll', rollOptions[type].postroll);
+	      this.roll20.setAttrByName(charId, 'shaped_d20', rollOptions[type].shaped_d20);
 
 	      this.sendChatNotification(resource, type);
 	    });
