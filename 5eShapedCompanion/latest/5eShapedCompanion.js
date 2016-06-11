@@ -3517,17 +3517,17 @@ var ShapedScripts =
 	    showAura2ToPlayers: true,
 	  },
 	  newCharSettings: {
-	    sheetOutput: '@{output_to_all}',
-	    deathSaveOutput: '@{output_to_all}',
-	    initiativeOutput: '@{output_to_all}',
-	    showNameOnRollTemplate: '@{show_character_name_yes}',
-	    rollOptions: '@{normal}',
-	    initiativeRoll: '@{normal_initiative}',
-	    initiativeToTracker: '@{initiative_to_tracker_yes}',
-	    breakInitiativeTies: '@{initiative_tie_breaker_var}',
-	    showTargetAC: '@{attacks_vs_target_ac_no}',
-	    showTargetName: '@{attacks_vs_target_name_no}',
-	    autoAmmo: '@{ammo_auto_use_var}',
+	    sheetOutput: '',
+	    deathSaveOutput: '',
+	    initiativeOutput: '',
+	    showNameOnRollTemplate: '',
+	    rollOptions: '',
+	    initiativeRoll: '',
+	    initiativeToTracker: '',
+	    breakInitiativeTies: '',
+	    showTargetAC: '',
+	    showTargetName: '',
+	    autoAmmo: '1',
 	    autoRevertAdvantage: false,
 	    houserules: {
 	      savingThrowsHalfProf: false,
@@ -3944,8 +3944,8 @@ var ShapedScripts =
 
 	  static get sheetOutputValidator() {
 	    return this.getOptionList({
-	      public: '@{output_to_all}',
-	      whisper: '@{output_to_gm}',
+	      public: '',
+	      whisper: '/w GM',
 	    });
 	  }
 
@@ -4057,8 +4057,8 @@ var ShapedScripts =
 	        }),
 	        rollOptions: this.getOptionList({
 	          normal: rollOptions.normal.rollSetting,
-	          advantage: 'adv {{ignore=[[0',
-	          disadvantage: 'dis {{ignore=[[0',
+	          advantage: rollOptions.advantage.rollSetting,
+	          disadvantage: rollOptions.disadvantage.rollSetting,
 	          two: rollOptions.roll2.rollSetting,
 	        }),
 	        initiativeRoll: this.getOptionList({
