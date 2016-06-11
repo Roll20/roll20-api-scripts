@@ -42,7 +42,7 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
     ch = function (c) {
         var entities = {
             '<' : 'lt',
-        	'>' : 'gt',
+            '>' : 'gt',
 			"'" : '#39',
 			'@' : '#64',
 			'{' : '#123',
@@ -435,17 +435,25 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
             numPCs,
             sessionXP,
             errors,
+            xp,
             eachTrack = 0;
             activePCs = _.reject(activePCs, function(obj){
                 return _.isUndefined(obj)
             });
+            log(PCs);
         sessionXP = parseInt(thresholds[0]['Session XP'].get('current'));
         if(sessionXP>0){
             numPCs = parseInt(activePCs.length);
             errors = 0;
             _.each(activePCs, function(obj){
-                if(!obj.xp){
-                    sendChat('EasyExperience Script', "/w gm Error MSG: Character" + obj.get('name') + " does not have an "
+                xp = findObjs({
+                    type: 'attribute',
+                    name: 'experience',
+                    characterid: obj.id
+                });
+                if(!xp){
+                    log(xp);
+                    sendChat('EasyExperience Script', "/w gm Error MSG: Character " + obj.get('name') + " does not have an "
                     +"experience attribute, please set that character's experience to some value (even if it is 0). No experience was awarded to "
                     +"any character.");
                     errors++;
@@ -458,16 +466,19 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
                 var level = findObjs({
                     type: 'attribute',
                     name: 'level',
-                    characterid: obj.cid
+                    characterid: obj.id
                 })[0];
-                if(obj.xp){
-                    if(parseInt(obj.xp.get('max'))===0 || !obj.xp.get('max')){
-                        levelUP(level);
-                    }
-                    obj.xp.set('current', parseInt(obj.xp.get('current')) + (sessionXP/numPCs));
-                    if(parseInt(obj.xp.get('current'))>=parseInt(obj.xp.get('max'))){
-                        sendChat('Congratulations! ' + obj.char.get('name'), obj.char.get('name') + ' has leveled up!');
-                    }
+                xp = findObjs({
+                    type: 'attribute',
+                    name: 'experience',
+                    characterid: obj.id
+                });
+                if(parseInt(xp[0].get('max'))===0 || !xp[0].get('max')){
+                    levelUP(level);
+                }
+                xp.set('current', parseInt(xp[0].get('current')) + (sessionXP/numPCs));
+                if(parseInt(xp[0].get('current'))>=parseInt(xp[0].get('max'))){
+                    sendChat('Congratulations! ' + obj.get('name'), 'You have leveled up!');
                 }
             });
             sendChat('EasyExperience Script', 'The GM has ended the session. All players have been awarded ' + (sessionXP/numPCs) + ' XP.')
@@ -528,7 +539,10 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
         if(level.get('current')<20){
             if(level.get('current')>0){
                 if(currXP[0]){
-                    nextLevel = level.get('current') + 1;
+                    nextLevel = parseInt(level.get('current')) + 1;
+                    log(nextLevel);
+                    log(currXP);
+                    log(thresholds[0].attrs[nextLevel].get('current'));
                     currXP[0].set('max', thresholds[0].attrs[nextLevel].get('current'));
                     return
                 }
