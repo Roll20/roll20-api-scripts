@@ -42,7 +42,7 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
     ch = function (c) {
         var entities = {
             '<' : 'lt',
-    		'>' : 'gt',
+        	'>' : 'gt',
 			"'" : '#39',
 			'@' : '#64',
 			'{' : '#123',
@@ -574,7 +574,7 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
         sendChat('','/w gm '
                     +'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
                     +'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
-                    +'Page Navigator v'+version+'<b> Options</b>'
+                    +'EasyExperience v'+version+'<b> Options</b>'
                     +'</div>'
                     +'<div style="border: 1px solid #ccc; border-radius: .2em; background-color: white; margin: 0 1em; padding: .1em .3em;">'
                     +'XP Progression:'
