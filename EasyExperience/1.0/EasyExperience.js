@@ -618,7 +618,7 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
             +'If you would like this xp to only be awarded to a specific character(s); simply add the character(s)'+ch("'")+'s ids to the end. In '
             +'this case you must specify a multiplication value.'
             +'<ul><li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
-            +'e.g. !xp challenge '+ch('@')+ch('{')+'target|npc-xp'+ch('}')+' 1 '+ch('@')+ch('{')+'character1|character_id'+ch('}')+ch('}')+' 1 ' 
+            +'e.g. !xp challenge '+ch('@')+ch('{')+'target|npc-xp'+ch('}')+' 1 '+ch('@')+ch('{')+'character1|character_id'+ch('}')+ch('}') 
             +ch('@')+ch('{')+'character1|character_id'+ch('}')+' ...'
             +'</li></ul>'
             +'</li>'
