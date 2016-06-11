@@ -41,7 +41,7 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
 
     ch = function (c) {
         var entities = {
-    		'<' : 'lt',
+            '<' : 'lt',
 			'>' : 'gt',
 			"'" : '#39',
 			'@' : '#64',
@@ -77,7 +77,7 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
 					},
 					byCharacter: {
 					}
-				}
+				},
 			};
 		}
         if(!state.EASYEXPERIENCE.PCs){
@@ -85,7 +85,7 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
         }
         loadSettings();
         buildTemplates();
-        if(!state.EASYEXPERIENCE.configButton{
+        if(!state.EASYEXPERIENCE.configButton){
             state.EASYEXPERIENCE.configButton = makeButton(
                 '!xp config', 
                 'Options', '#191970', '#fff8dc'
@@ -157,7 +157,7 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
             });
         }else{
             sendChat('Easy Experience', '/w gm There is already a character called ExperienceThresholds in the game. Please delete this old instance '
-            +'of the thresholds and reselect your desired experience progression in the'+state.EASYEXPERIENCE.configButton+'menu.');
+            +'of the thresholds and reselect your desired experience progression in the'+state.PAGENAVIGATOR.configButton+'menu.');
         };
     },
     
