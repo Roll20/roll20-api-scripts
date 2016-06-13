@@ -12,7 +12,7 @@
         "state.EASYEXPERIENCE": "read,write",
 	"attribute.id": "read,write",
 	"attribute": "read,write",
-	"character": "read,write",
+	"character": "read,write"
     },
     "conflicts": []
 }

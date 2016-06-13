@@ -179,3 +179,11 @@ arsmagica5estressdie:
 mapchange:
 - "MapChange"
 - "Maps & Drawing"
+
+easyexperience:
+- "EasyExperience"
+- "Character"
+
+pagenavigator:
+- "Page Navigator"
+- "Maps & Drawing"
