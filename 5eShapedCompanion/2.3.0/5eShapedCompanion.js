@@ -1322,26 +1322,15 @@ var ShapedScripts =
 	}
 
 	module.exports = class Logger {
-	  constructor(loggerName, roll20) {
+	  constructor(loggerName, config, roll20) {
 	    this.prefixString = '';
-	    const state = roll20.getState('roll20-logger');
-	    state[loggerName] = state[loggerName] || Logger.levels.INFO;
-
-	    roll20.on('chat:message', (msg) => {
-	      if (msg.type === 'api' && msg.content.startsWith('!logLevel')) {
-	        const parts = msg.content.split(/\s/);
-	        if (parts.length > 2) {
-	          if (!state[parts[1]]) {
-	            roll20.sendChat('Logger', `Unrecognised logger name ${parts[1]}`);
-	            return;
-	          }
-	          state[parts[1]] = Logger.levels[parts[2].toUpperCase()] || Logger.levels.INFO;
-	        }
-	      }
-	    });
 
 	    function shouldLog(level) {
-	      return level <= state[loggerName];
+	      let logLevel = Logger.levels.INFO;
+	      if (config && config.logLevel) {
+	        logLevel = Logger.levels[config.logLevel];
+	      }
+	      return level <= logLevel;
 	    }
 
 	    function outputLog(level, message) {
@@ -1369,7 +1358,6 @@ var ShapedScripts =
 	        wrapFunctions(modToWrap, modToWrap.logWrap, this.wrapFunction.bind(this));
 	        modToWrap.isLogWrapped = true;
 	      }
-	      return modToWrap;
 	    };
 
 	    this.getLogTap = function getLogTap(level, messageString) {
@@ -2667,12 +2655,12 @@ var ShapedScripts =
 	  this.handleChangeToken = function handleChangeToken(token) {
 	    if (_.contains(addedTokenIds, token.id)) {
 	      addedTokenIds = _.without(addedTokenIds, token.id);
-	      this.setTokenBarsOnDrop(token, true);
+	      this.setTokenBarsOnDrop(token);
 	      advantageTracker.handleTokenChange(token);
 	    }
 	  };
 
-	  this.setTokenBarsOnDrop = function setTokenBarsOnDrop(token, overwrite) {
+	  this.setTokenBarsOnDrop = function setTokenBarsOnDrop(token) {
 	    const character = roll20.getObj('character', token.get('represents'));
 	    if (!character) {
 	      return;
@@ -2690,7 +2678,7 @@ var ShapedScripts =
 	    _.chain(myState.config.tokenSettings)
 	      .pick('bar1', 'bar2', 'bar3')
 	      .each((bar, barName) => {
-	        if (bar.attribute && !token.get(`${barName}_link`) && (!token.get(`${barName}_value`) || overwrite)) {
+	        if (bar.attribute && !token.get(`${barName}_link`) && !token.get(`${barName}_value`)) {
 	          if (bar.attribute === 'HP' && myState.config.sheetEnhancements.rollHPOnDrop) {
 	            // Guard against characters that aren't properly configured - i.e. ones used for templates and system
 	            // things rather than actual characters
@@ -2864,7 +2852,7 @@ var ShapedScripts =
 	    }
 
 	    // TODO: Advantage?
-	    if (roll20.getAttrByName(options.character.id, 'roll_setting') !== '{{roll2=[[d20@{d20_mod}') {
+	    if (roll20.getAttrByName(options.character.id, 'roll_setting') !== '@{roll_2}') {
 	      const result = this.getRollValue(msg, options.roll1);
 	      const attributeToIncrement = result >= 10 ? 'death_saving_throw_successes' : 'death_saving_throw_failures';
 	      roll20.processAttrValue(options.character.id, attributeToIncrement, increment);
@@ -3049,7 +3037,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v3.0.0 <=-');
+	    logger.info('-=> ShapedScripts v2.3.0 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -3078,7 +3066,7 @@ var ShapedScripts =
 
 	  this.updateBarsForCharacterTokens = function updateBarsForCharacterTokens(curr) {
 	    roll20.findObjs({ type: 'graphic', represents: curr.get('characterid') })
-	      .forEach(token => this.setTokenBarsOnDrop(token, false));
+	      .forEach(this.setTokenBarsOnDrop.bind(this));
 	  };
 
 	  this.getAttributeChangeHandler = function getAttributeChangeHandler(attributeName) {
@@ -3139,13 +3127,16 @@ var ShapedScripts =
 	  return function parseOptions(arg, errors, options) {
 	    const argParts = arg.split(/\s+/);
 	    if (argParts[0].toLowerCase() === optionString.toLowerCase()) {
-	      const value = argParts.length === 1 ? true : argParts.slice(1).join(' ');
-	      const result = validator(value);
-	      if (result.valid) {
-	        options[argParts[0]] = result.converted;
-	      }
-	      else {
-	        errors.push(`Invalid value [${value}] for option [${argParts[0]}]`);
+	      if (argParts.length <= 2) {
+	        // Allow for bare switches
+	        const value = argParts.length === 2 ? argParts[1] : true;
+	        const result = validator(value);
+	        if (result.valid) {
+	          options[argParts[0]] = result.converted;
+	        }
+	        else {
+	          errors.push(`Invalid value [${value}] for option [${argParts[0]}]`);
+	        }
 	      }
 	      return true;
 	    }
@@ -3673,6 +3664,130 @@ var ShapedScripts =
 	}
 
 
+	/* FOR REFERENCE: CURRENT SCHEMA
+	 {
+	 logLevel: 'INFO',
+	 tokenSettings: {
+	 number: false,
+	 bar1: {
+	 attribute: 'HP',
+	 max: true,
+	 link: false,
+	 showPlayers: false,
+	 },
+	 bar2: {
+	 attribute: 'speed',
+	 max: false,
+	 link: true,
+	 showPlayers: false,
+	 },
+	 bar3: {
+	 attribute: '',
+	 max: false,
+	 link: false,
+	 showPlayers: false,
+	 },
+	 aura1: {
+	 radius: '',
+	 color: '#FFFF99',
+	 square: false,
+	 },
+	 aura2: {
+	 radius: '',
+	 color: '#59e594',
+	 square: false,
+	 },
+	 light: {
+	 otherPlayers: false,
+	 hasSight: true,
+	 angle: 360,
+	 losAngle: 360,
+	 multiplier: 1,
+	 },
+	 showName: true,
+	 showNameToPlayers: false,
+	 showAura1ToPlayers: true,
+	 showAura2ToPlayers: true,
+	 },
+	 newCharSettings: {
+	 sheetOutput: '@{output_to_all}',
+	 deathSaveOutput: '@{output_to_all}',
+	 initiativeOutput: '@{output_to_all}',
+	 showNameOnRollTemplate: '@{show_character_name_yes}',
+	 rollOptions: '@{normal}',
+	 initiativeRoll: '@{normal_initiative}',
+	 initiativeToTracker: '@{initiative_to_tracker_yes}',
+	 breakInitiativeTies: '@{initiative_tie_breaker_var}',
+	 showTargetAC: '@{attacks_vs_target_ac_no}',
+	 showTargetName: '@{attacks_vs_target_name_no}',
+	 autoAmmo: '@{ammo_auto_use_var}',
+	 autoRevertAdvantage: false,
+	 houserules: {
+	 savingThrowsHalfProf: false,
+	 mediumArmorMaxDex: 2,
+	 },
+	 tab: 'core',
+	 tokenActions: {
+	 initiative: false,
+	 abilityChecks: null,
+	 advantageTracker: null,
+	 savingThrows: null,
+	 attacks: null,
+	 statblock: false,
+	 traits: null,
+	 actions: null,
+	 reactions: null,
+	 legendaryActions: null,
+	 lairActions: null,
+	 regionalEffects: null,
+	 rests: false,
+	 },
+	 },
+	 advTrackerSettings: {
+	 showMarkers: false,
+	 ignoreNpcs: false,
+	 advantageMarker: 'green',
+	 disadvantageMarker: 'red',
+	 output: 'public',
+	 },
+	 sheetEnhancements: {
+	 rollHPOnDrop: true,
+	 autoHD: true,
+	 autoSpellSlots: true,
+	 autoTraits: true,
+	 },
+	 genderPronouns: [
+	 {
+	 matchPattern: '^f$|female|girl|woman|feminine',
+	 nominative: 'she',
+	 accusative: 'her',
+	 possessive: 'her',
+	 reflexive: 'herself',
+	 },
+	 {
+	 matchPattern: '^m$|male|boy|man|masculine',
+	 nominative: 'he',
+	 accusative: 'him',
+	 possessive: 'his',
+	 reflexive: 'himself',
+	 },
+	 {
+	 matchPattern: '^n$|neuter|none|construct|thing|object',
+	 nominative: 'it',
+	 accusative: 'it',
+	 possessive: 'its',
+	 reflexive: 'itself',
+	 },
+	 ],
+	 defaultGenderIndex: 2,
+	 variants: {
+	 rests: {
+	 longNoHpFullHd: false,
+	 },
+	 },
+	 }; */
+
+
 	const migrator = new Migrator()
 	  .addProperty('config', {})
 	  .skipToVersion(0.4)
@@ -3725,23 +3840,7 @@ var ShapedScripts =
 	    lairActions: null,
 	    regionalEffects: null,
 	    rests: false,
-	  })
-	  // 2.1 Add spells token action
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.tokenActions.spells', false)
-	  // 2.2 Changes to support new roll behaviour in sheet 4.2.1
-	  .nextVersion()
-	  .overwriteProperty('config.newCharSettings.sheetOutput', '')
-	  .overwriteProperty('config.newCharSettings.deathSaveOutput', '')
-	  .overwriteProperty('config.newCharSettings.initiativeOutput', '')
-	  .overwriteProperty('config.newCharSettings.showNameOnRollTemplate', '')
-	  .overwriteProperty('config.newCharSettings.rollOptions', '')
-	  .overwriteProperty('config.newCharSettings.initiativeRoll', '')
-	  .overwriteProperty('config.newCharSettings.initiativeToTracker', '')
-	  .overwriteProperty('config.newCharSettings.breakInitiativeTies', '')
-	  .overwriteProperty('config.newCharSettings.showTargetAC', '')
-	  .overwriteProperty('config.newCharSettings.showTargetName', '')
-	  .overwriteProperty('config.newCharSettings.autoAmmo', '1');
+	  });
 
 	Migrator.migrateShapedConfig = migrator.migrateConfig.bind(migrator);
 
@@ -3750,9 +3849,12 @@ var ShapedScripts =
 
 /***/ },
 /* 15 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
+	const _ = __webpack_require__(2);
+	const Logger = __webpack_require__(5);
+	// const ConfigUI = require('./config-ui');
 
 	module.exports = class ShapedConfig {
 
@@ -3826,8 +3928,8 @@ var ShapedScripts =
 
 	  static get sheetOutputValidator() {
 	    return this.getOptionList({
-	      public: '',
-	      whisper: '/w GM',
+	      public: '@{output_to_all}',
+	      whisper: '@{output_to_gm}',
 	    });
 	  }
 
@@ -3912,6 +4014,10 @@ var ShapedScripts =
 
 	  static get configOptionsSpec() {
 	    return {
+	      logLevel(value) {
+	        const converted = value.toUpperCase();
+	        return { valid: _.has(Logger.levels, converted), converted };
+	      },
 	      tokenSettings: {
 	        number: this.booleanValidator,
 	        bar1: this.barValidator,
@@ -3930,38 +4036,38 @@ var ShapedScripts =
 	        deathSaveOutput: this.sheetOutputValidator,
 	        initiativeOutput: this.sheetOutputValidator,
 	        showNameOnRollTemplate: this.getOptionList({
-	          true: '/w GM',
-	          false: '',
+	          true: '@{show_character_name_yes}',
+	          false: '@{show_character_name_no}',
 	        }),
 	        rollOptions: this.getOptionList({
-	          normal: '{{ignore=[[0',
-	          advantage: 'adv {{ignore=[[0',
-	          disadvantage: 'dis {{ignore=[[0',
-	          two: '{{roll2=[[d20@{d20_mod}',
+	          normal: '@{roll_1}',
+	          advantage: '@{roll_advantage}',
+	          disadvantage: '@{roll_disadvantage}',
+	          two: '@{roll_2}',
 	        }),
 	        initiativeRoll: this.getOptionList({
-	          normal: '@{shaped_d20}',
-	          advantage: '2d20@{d20_mod}kh1',
-	          disadvantage: '2d20@{d20_mod}kl1',
+	          normal: '@{normal_initiative}',
+	          advantage: '@{advantage_on_initiative}',
+	          disadvantage: '@{disadvantage_on_initiative}',
 	        }),
 	        initiativeToTracker: this.getOptionList({
-	          true: '@{selected|initiative_formula} &{tracker}',
-	          false: '@{initiative_formula}',
+	          true: '@{initiative_to_tracker_yes}',
+	          false: '@{initiative_to_tracker_no}',
 	        }),
 	        breakInitiativeTies: this.getOptionList({
-	          true: '[[@{initiative} / 100]][tie breaker]',
+	          true: '@{initiative_tie_breaker_var}',
 	          false: '',
 	        }),
 	        showTargetAC: this.getOptionList({
-	          true: '[[@{target|AC}]]',
-	          false: '',
+	          true: '@{attacks_vs_target_ac_yes}',
+	          false: '@{attacks_vs_target_ac_no}',
 	        }),
 	        showTargetName: this.getOptionList({
-	          true: '@{target|token_name}',
-	          false: '',
+	          true: '@{attacks_vs_target_name_yes}',
+	          false: '@{attacks_vs_target_name_no}',
 	        }),
 	        autoAmmo: this.getOptionList({
-	          true: '1',
+	          true: '@{ammo_auto_use_var}',
 	          false: '',
 	        }),
 	        autoRevertAdvantage: this.booleanValidator,
@@ -4018,7 +4124,6 @@ var ShapedScripts =
 	            individualActions: 'actions',
 	            chatWindow: 'actionsMacro',
 	          }),
-	          spells: this.booleanValidator,
 	          reactions: this.getOptionList({
 	            none: null,
 	            individualActions: 'reactions',
@@ -4287,7 +4392,6 @@ var ShapedScripts =
 	      savesQuery: new RollAbilityMaker('shaped_saving_throw_query', 'Saves', roll20),
 	      attacks: new RepeatingAbilityMaker('attack', 'attack', 'Attacks', true, roll20),
 	      attacksMacro: new RepeatingSectionMacroMaker('shaped_attacks', 'attack', 'Attacks', roll20),
-	      spells: new RepeatingSectionMacroMaker('shaped_spells', 'spell', 'Spells', roll20),
 	      statblock: new RollAbilityMaker('shaped_statblock', 'Statblock', roll20),
 	      traits: new RepeatingAbilityMaker('trait', 'trait', 'Traits', false, roll20),
 	      traitsMacro: new RepeatingSectionMacroMaker('shaped_traits', 'trait', 'Traits', roll20),
@@ -4998,9 +5102,6 @@ var ShapedScripts =
 	      this.makeQuerySetting({
 	        path: `${root}.actions`, title: 'Actions', menuCmd: menu, spec: spec.actions(),
 	      }) +
-	      this.makeToggleSetting({
-	        path: `${root}.spells`, title: 'Spells', menuCmd: menu,
-	      }) +
 	      this.makeQuerySetting({
 	        path: `${root}.reactions`, title: 'Reactions', menuCmd: menu, spec: spec.reactions(),
 	      }) +
@@ -5038,28 +5139,32 @@ var ShapedScripts =
 
 	const rollOptions = {
 	  normal: {
-	    rollSetting: '{{ignore=[[0',
+	    rollSetting: '@{roll_1}',
 	    message: 'normally',
 	    rollInfo: '',
-	    shaped_d20: '',
+	    preroll: '',
+	    postroll: '',
 	  },
 	  advantage: {
-	    rollSetting: 'adv {{ignore=[[0',
+	    rollSetting: '@{roll_advantage}',
 	    message: 'with advantage',
 	    rollInfo: '{{advantage=1}}',
-	    shaped_d20: '2d20@{d20_mod}kh1',
+	    preroll: 2,
+	    postroll: 'kh1',
 	  },
 	  disadvantage: {
-	    rollSetting: 'dis {{ignore=[[0',
+	    rollSetting: '@{roll_disadvantage}',
 	    message: 'with disadvantage',
 	    rollInfo: '{{disadvantage=1}}',
-	    shaped_d20: '2d20@{d20_mod}kl1',
+	    preroll: 2,
+	    postroll: 'kl1',
 	  },
 	  roll2: {
-	    rollSetting: '{{roll2=[[d20@{d20_mod}',
+	    rollSetting: '@{roll_2}',
 	    message: 'two dice',
 	    rollInfo: '',
-	    shaped_d20: '',
+	    preroll: '',
+	    postroll: '',
 	  },
 	};
 
@@ -5125,17 +5230,17 @@ var ShapedScripts =
 
 	    if (!_.isEmpty(br)) {
 	      this.setStatusMarkers(br[0].tokens,
-	        msg.get('current') === rollOptions.advantage.rollSetting,
-	        msg.get('current') === rollOptions.disadvantage.rollSetting);
+	        msg.get('current') === '@{roll_advantage}',
+	        msg.get('current') === '@{roll_disadvantage}');
 
 	      switch (msg.get('current')) {
-	        case rollOptions.normal.rollSetting:
+	        case '@{roll_1}':
 	          this.sendChatNotification(br[0], 'normal');
 	          break;
-	        case rollOptions.advantage.rollSetting:
+	        case '@{roll_advantage}':
 	          this.sendChatNotification(br[0], 'advantage');
 	          break;
-	        case rollOptions.disadvantage.rollSetting:
+	        case '@{roll_disadvantage}':
 	          this.sendChatNotification(br[0], 'disadvantage');
 	          break;
 	        default:
@@ -5156,8 +5261,8 @@ var ShapedScripts =
 	        }
 	      }
 
-	      token.set(`status_${this.disadvantageMarker()}`, setting === rollOptions.disadvantage.rollSetting);
-	      token.set(`status_${this.advantageMarker()}`, setting === rollOptions.advantage.rollSetting);
+	      token.set(`status_${this.disadvantageMarker()}`, setting === '@{roll_disadvantage}');
+	      token.set(`status_${this.advantageMarker()}`, setting === '@{roll_advantage}');
 	    }
 	  }
 
@@ -5214,7 +5319,8 @@ var ShapedScripts =
 
 	      this.roll20.setAttrByName(charId, 'roll_setting', rollOptions[type].rollSetting);
 	      this.roll20.setAttrByName(charId, 'roll_info', rollOptions[type].rollInfo);
-	      this.roll20.setAttrByName(charId, 'shaped_d20', rollOptions[type].shaped_d20);
+	      this.roll20.setAttrByName(charId, 'preroll', rollOptions[type].preroll);
+	      this.roll20.setAttrByName(charId, 'postroll', rollOptions[type].postroll);
 
 	      this.sendChatNotification(resource, type);
 	    });

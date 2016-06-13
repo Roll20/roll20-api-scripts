@@ -1,19 +1,3 @@
-<a name="3.0.0"></a>
-# [3.0.0](https://github.com/symposion/roll20-shaped-scripts/compare/2.5.0...3.0.0) (2016-06-12)
-
-
-### Bug Fixes
-
-* **command-parsing:** Allow spaces in option strings ([d56cceb](https://github.com/symposion/roll20-shaped-scripts/commit/d56cceb))
-* **config:** Update configuration options to match changes for sheet 4.2.1 ([f28e8fe](https://github.com/symposion/roll20-shaped-scripts/commit/f28e8fe))
-
-
-### BREAKING CHANGES
-
-* config: This resets most of the default new character settings - you will need to put them back to your desired values using !shaped-config
-
-
-
 <a name="2.5.0"></a>
 # [2.5.0](https://github.com/symposion/roll20-shaped-scripts/compare/2.4.2...2.5.0) (2016-06-06)
 
