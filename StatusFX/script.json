@@ -1,0 +1,56 @@
+{
+    "name": "Status FX",
+    "script": "statusFx.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [
+      {
+        "name": "red",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'red' status."
+      },
+      {
+        "name": "blue",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'blue' status."
+      },
+      {
+        "name": "green",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'green' status."
+      },
+      {
+        "name": "blue",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'blue' status."
+      },
+      {
+        "name": "blue",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'blue' status."
+      },
+      {
+        "name": "blue",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'blue' status."
+      },
+      {
+        "name": "blue",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'blue' status."
+      },
+    ],
+    "dependencies": [],
+    "modifies": {},
+    "conflicts": []
+}
