@@ -315,7 +315,7 @@ var StatusFX = (function() {
   on('destroy:graphic', function(token) {
     var tokenState = getTokenStatusFx(token);
     if(tokenState)
-      delete state.statusFX.tokens[token.get('_id')];
+      delete state.StatusFX.tokens[token.get('_id')];
   });
 
   return {
