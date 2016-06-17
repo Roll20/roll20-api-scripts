@@ -27,7 +27,7 @@ when the 'red' status marker is on.
 Creates some sort of custom effect when the 'death-zone' status marker is on.
 
 *chemical-bolt* ```splatter-holy [random]```
-Creates a custom spark effect fired in a random direction when the 'chemical-bolt'
+Creates a spark effect fired in a random direction when the 'chemical-bolt'
 status marker is on.
 
 *custom* ```sleep: glow-holy|stars: beam-fire [2,3]```
