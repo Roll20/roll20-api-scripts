@@ -112,6 +112,8 @@ var StatusFX = (function() {
        'custom': 'sleep: glow-holy|stars: beam-fire [2,3]'
      };
 
+     state.StatusFX.fx = {};
+
      // Configure built-in status markers.
      _.chain(allStatusNames)
       .filter(function(status) {
