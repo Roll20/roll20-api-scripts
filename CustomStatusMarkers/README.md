@@ -94,6 +94,13 @@ function deleteTemplate(statusName)
 function getState()
 
 /**
+ * Gets the names of all the custom status markers on a token.
+ * @param {Graphic} token
+ * @return {string[]}
+ */
+function getStatusMarkers(token)
+
+/**
  * Loads a StatusMarkerTemplate from the module state.
  * @param  {String}   statusName
  * @param  {Function(StatusMarkerTemplate)} callback
@@ -108,6 +115,15 @@ function getTemplate(statusName, callback)
  *         True iff the token has the custom status marker active.
  */
 function hasStatusMarker(token, statusName)
+
+/**
+ * Registers a Custom Status Markers event handler.
+ * Each handler takes a token and a StatusMarker as parameters.
+ * The following events are supported: 'add', 'change', 'remove'
+ * @param {string} event
+ * @param {function} handler
+ */
+function onEvent(event, handler)
 
 /**
  * Deletes a custom status marker from a token.
@@ -142,4 +158,11 @@ function saveTemplate(statusName, icon)
  * @param  {String} [count]
  */
 function toggleStatusMarker(token, statusName, count)
+
+/**
+ * Removes a custom status marker event handler.
+ * @param {string} event
+ * @param {function} handler
+ */
+function unEvent(event, handler)
 ```

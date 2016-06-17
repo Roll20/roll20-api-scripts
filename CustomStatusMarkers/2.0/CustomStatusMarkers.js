@@ -52,6 +52,8 @@ CustomStatusMarkers = (function() {
     /**
      * A rendered custom status marker with an optional number badge.
      * @typedef {object} StatusMarker
+     * @property {string} name
+     *           The name of the status.
      * @property {string} type
      *           'path' or 'graphic'
      * @property {uuid} iconId
@@ -59,18 +61,34 @@ CustomStatusMarkers = (function() {
      * @property {uuid} [textId]
      *           The _id of the Text object for the marker's number badge.
      *           If omitted, then the marker has no badge.
+     * @property {uuid} tokenId
+     *           The _id of the token the marker is assigned to.
+     * @property {int} [count]
+     *           The displayed count for the badge.
      */
+
+    var statusListeners = {
+      'add': [],
+      'change': [],
+      'remove': []
+    };
 
      /**
       * Adds a custom status marker to a token, with an optional count badge.
       * @param  {Graphic} token
       * @param  {String} statusName
       * @param  {String} [count]
+      * @param {boolean} [silent=false]
       */
-     function addStatusMarker(token, statusName, count) {
-         removeStatusMarker(token, statusName);
+     function addStatusMarker(token, statusName, count, silent) {
+         removeStatusMarker(token, statusName, true);
          _createTokenStatusMarker(token, statusName, count);
          repositionStatusMarkers(token);
+
+         if(!silent) {
+           var statusMarker = _getTokenState(token).customStatuses[statusName];
+           _fireAddEvent(token, statusMarker);
+         }
      }
 
     /**
@@ -153,9 +171,12 @@ CustomStatusMarkers = (function() {
 
         var tokenState = _getTokenState(token);
         tokenState.customStatuses[statusName] = {
+            name: statusName,
             type: template.type,
             iconId: iconId,
-            textId: textId
+            textId: textId,
+            tokenId: token.get('_id'),
+            count: count
         };
     }
 
@@ -223,6 +244,48 @@ CustomStatusMarkers = (function() {
         var csmState = getState();
         delete csmState.templates[statusName];
         sendChat('CustomStatus script', 'Deleted status ' + statusName);
+    }
+
+    /**
+     * Fires an 'add' custom status markers event.
+     * @private
+     * @param {string} event
+     * @param {Graphic} token
+     * @param {StatusMarker} marker
+     */
+    function _fireAddEvent(token, marker) {
+      var handlers = statusListeners['add'];
+      _.each(handlers, function(handler) {
+        handler(token, _.clone(marker));
+      });
+    }
+
+    /**
+     * Fires a 'change' custom status markers event.
+     * @private
+     * @param {string} event
+     * @param {Graphic} token
+     * @param {StatusMarker} marker
+     */
+    function _fireChangeEvent(token, marker) {
+      var handlers = statusListeners['change'];
+      _.each(handlers, function(handler) {
+        handler(token, _.clone(marker));
+      });
+    }
+
+    /**
+     * Fires a 'remove' custom status markers event.
+     * @private
+     * @param {string} event
+     * @param {Graphic} token
+     * @param {StatusMarker} marker
+     */
+    function _fireRemoveEvent(token, marker) {
+      var handlers = statusListeners['remove'];
+      _.each(handlers, function(handler) {
+        handler(token, _.clone(marker));
+      });
     }
 
     /**
@@ -317,6 +380,19 @@ CustomStatusMarkers = (function() {
     }
 
     /**
+     * Gets the names of all the custom status markers on a token.
+     * @param {Graphic} token
+     * @return {string[]}
+     */
+    function getStatusMarkers(token) {
+      var tokenState = _getTokenState(token);
+      if(token) {
+        return _.keys(tokenState.customStatuses);
+      }
+      return [];
+    }
+
+    /**
      * Returns the scale for a status marker's icon.
      * @private
      * @param {number} width
@@ -374,6 +450,19 @@ CustomStatusMarkers = (function() {
         return tokenState.customStatuses[statusName];
       }
       return false;
+    }
+
+    /**
+     * Registers a Custom Status Markers event handler.
+     * Each handler takes a token and a StatusMarker as parameters.
+     * The following events are supported: 'add', 'change', 'remove'
+     * @param {string} event
+     * @param {function} handler
+     */
+    function onEvent(event, handler) {
+      if(statusListeners[event]) {
+        statusListeners[event].push(handler);
+      }
     }
 
     /**
@@ -473,8 +562,12 @@ CustomStatusMarkers = (function() {
      * Deletes a custom status marker from a token.
      * @param {Graphic} token
      * @param {String} statusName
+     * @param {boolean} [silent=false]
+     *        If true, events won't be fired.
+     * @fires change
+     * @fires remove
      */
-    function removeStatusMarker(token, statusName) {
+    function removeStatusMarker(token, statusName, silent) {
         var csmState = getState();
         var id = token.get('_id');
         var tokenState = csmState.tokens[id];
@@ -503,22 +596,26 @@ CustomStatusMarkers = (function() {
 
             delete tokenState.customStatuses[statusName];
             repositionStatusMarkers(token);
+
+            if(!silent)
+              _fireRemoveEvent(token, statusMarker);
         }
     }
 
     /**
      * Removes all custom status markers from a token.
      * @param {Graphic} token
+     * @param {boolean} [silent=false]
+     *        If true, events won't be fired.
      */
-    function removeStatusMarkers(token) {
+    function removeStatusMarkers(token, silent) {
         var csmState = getState();
         var tokenState = _getTokenState(token, false);
 
         if(tokenState) {
             _.each(tokenState.customStatuses, function(statusMarker, statusName) {
-                removeStatusMarker(token, statusName);
+                removeStatusMarker(token, statusName, silent);
             });
-            clearTokenState(token);
         }
     }
 
@@ -633,20 +730,41 @@ CustomStatusMarkers = (function() {
      * @param  {Graphic} token
      * @param  {String} statusName
      * @param  {String} [count]
+     * @param {boolean} [silent=false]
      */
-    function toggleStatusMarker(token, statusName, count) {
+    function toggleStatusMarker(token, statusName, count, silent) {
         var tokenState = _getTokenState(token);
 
         var statusMarker = tokenState.customStatuses[statusName];
         if(statusMarker) {
             var hasCount = !!statusMarker.textId;
-            if(hasCount || count)
-                addStatusMarker(token, statusName, count);
+            if(hasCount || count) {
+                addStatusMarker(token, statusName, count, true);
+
+                if(!silent) {
+                  var statusMarker = _getTokenState(token).customStatuses[statusName];
+                  _fireChangeEvent(token, statusMarker);
+                }
+            }
             else
-                removeStatusMarker(token, statusName);
+                removeStatusMarker(token, statusName, silent);
         }
         else
-            addStatusMarker(token, statusName, count);
+            addStatusMarker(token, statusName, count, silent);
+    }
+
+    /**
+     * Removes a custom status marker event handler.
+     * @param {string} event
+     * @param {function} handler
+     */
+    function unEvent(event, handler) {
+      var handlers = statusListeners[event];
+      if(handlers) {
+        var index = handlers.indexOf(handler);
+        if(index !== -1)
+          handlers.splice(index, 1);
+      }
     }
 
 
@@ -687,12 +805,15 @@ CustomStatusMarkers = (function() {
         clearTokenState: clearTokenState,
         deleteTemplate: deleteTemplate,
         getState: getState,
+        getStatusMarkers: getStatusMarkers,
         getTemplate: getTemplate,
         hasStatusMarker: hasStatusMarker,
+        on: onEvent,
         removeStatusMarker: removeStatusMarker,
         removeStatusMarkers: removeStatusMarkers,
         repositionStatusMarkers: repositionStatusMarkers,
         saveTemplate: saveTemplate,
-        toggleStatusMarker: toggleStatusMarker
+        toggleStatusMarker: toggleStatusMarker,
+        un: unEvent
     };
 })();
