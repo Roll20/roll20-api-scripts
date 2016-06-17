@@ -24,3 +24,7 @@ when the 'red' status marker is on.
 
 *death-zone* ```MyCustomEffect```
 Creates some sort of custom effect when the 'death-zone' status marker is on.
+
+*custom* ```sleep: glow-holy|stars: beam-fire [2,3]```
+Example of FX for CustomStatusMarkers.
+Creates FX for the custom status markers 'sleep' and 'stars'.

@@ -107,35 +107,63 @@ var StatusFX = (function() {
 
      // Get the FX configurations from the useroptions.
      var useroptions = (globalconfig && globalconfig.StatusFX) || {
-       'red': 'splatter-blood',
-       'green': 'bubbling-acid'
+       'red': 'splatter-blood [1,-1]',
+       'green': 'bubbling-acid',
+       'custom': 'sleep: glow-holy|stars: beam-fire [2,3]'
      };
+
+     // Configure built-in status markers.
      _.chain(allStatusNames)
       .filter(function(status) {
         return useroptions[status];
       })
       .each(function(status) {
-        var match = /^((\S| (?!\[))+) *(\[(.+?),(.+?)\])?/.exec(useroptions[status]);
-        if(match) {
-          log('StatusFX: ' + status + ' -> ' + match[0]);
-
-          var fxName = match[1];
-          var direction = [0,1];
-          if(match[3]) {
-            direction = [
-              parseFloat(match[4]),
-              parseFloat(match[5])
-            ];
-          }
-          state.StatusFX.fx[status] = {
-            name: fxName,
-            direction: direction
-          };
-        }
-        else
-         state.StatusFX.fx[status] = undefined;
+        _initStatus(status, useroptions);
       });
-   };
+
+      // Configure custom status markers.
+      var customList = useroptions.custom.split('|');
+      if(customList[0] === '')
+        customList = [];
+      var customMap = {};
+      _.each(customList, function(item) {
+        var parts = item.split(':');
+        var status = parts[0].trim();
+        var fx = parts[1].trim();
+        customMap[status] = fx;
+      });
+      _.chain(customMap)
+        .keys()
+        .each(function(status) {
+          _initStatus(status, customMap);
+        });
+   }
+
+   /**
+    * @private
+    */
+   function _initStatus(status, statuses) {
+     var fxRegex = /^((\S| (?!\[))+) *(\[(.+?),(.+?)\])?/;
+     var match = fxRegex.exec(statuses[status]);
+     if(match) {
+       log('StatusFX: ' + status + ' -> ' + match[0]);
+
+       var fxName = match[1];
+       var direction = [0,1];
+       if(match[3]) {
+         direction = [
+           parseFloat(match[4]),
+           parseFloat(match[5])
+         ];
+       }
+       state.StatusFX.fx[status] = {
+         name: fxName,
+         direction: direction
+       };
+     }
+     else
+       state.StatusFX.fx[status] = undefined;
+   }
 
    /**
     * Gets the FX configured for a status.
@@ -259,6 +287,47 @@ var StatusFX = (function() {
     }
   }
 
+  /**
+   * Updates the state for a token's tracked statuses.
+   * @param {Graphic} token
+   */
+  function _updateTokenState(token) {
+    var tokenState = getTokenStatusFx(token);
+
+    // Get the token's current status markers, without the number component.
+    var statuses = token.get('statusmarkers');
+    if(statuses === '')
+      statuses = [];
+    else
+      statuses = statuses.split(',');
+    statuses = _.map(statuses, function(status) {
+      return status.replace(/@\d+/, '');
+    });
+
+    // If CustomStatusMarkers is installed, get the active custom markers for
+    // this token too.
+    if(state.CustomStatusMarkers) {
+      var customStatuses = CustomStatusMarkers.getStatusMarkers(token);
+      statuses = statuses.concat(customStatuses);
+    }
+
+    // Update the token state's active statuses.
+    if(statuses.length > 0) {
+      if(!tokenState) {
+        tokenState = {
+          statuses: [],
+          index: 0
+        };
+        state.StatusFX.tokens[token.get('_id')] = tokenState;
+      }
+      tokenState.statuses = statuses;
+    }
+
+    // If there are no more active statuses, remove the token from the state.
+    else if(tokenState)
+      delete state.StatusFX.tokens[token.get('_id')];
+  }
+
   // Start the FX spawn interval.
   on('ready', function() {
     _initState();
@@ -282,33 +351,20 @@ var StatusFX = (function() {
 
   // Keep track of the tokens' active statuses in the state.
   on('change:graphic:statusmarkers', function(token) {
-    var tokenState = getTokenStatusFx(token);
+    _updateTokenState(token);
+  });
 
-    // Get the token's current status markers, without the number component.
-    var statuses = token.get('statusmarkers');
-    if(statuses === '')
-      statuses = [];
-    else
-      statuses = statuses.split(',');
-    statuses = _.map(statuses, function(status) {
-      return status.replace(/@\d+/, '');
-    });
-
-    // Update the token state's active statuses.
-    if(statuses.length > 0) {
-      if(!tokenState) {
-        tokenState = {
-          statuses: [],
-          index: 0
-        };
-        state.StatusFX.tokens[token.get('_id')] = tokenState;
-      }
-      tokenState.statuses = statuses;
+  // Also keep track of custom status markers if the CustomStatusMarkers
+  // script is installed.
+  on('ready', function() {
+    if(state.CustomStatusMarkers) {
+      CustomStatusMarkers.on('add', function(token) {
+        _updateTokenState(token);
+      });
+      CustomStatusMarkers.on('remove', function(token) {
+        _updateTokenState(token);
+      });
     }
-
-    // If there are no more active statuses, remove the token from the state.
-    else if(tokenState)
-      delete state.StatusFX.tokens[token.get('_id')];
   });
 
   // When a token is deleted, delete its state.

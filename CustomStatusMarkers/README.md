@@ -123,7 +123,7 @@ function hasStatusMarker(token, statusName)
  * @param {string} event
  * @param {function} handler
  */
-function onEvent(event, handler)
+function on(event, handler)
 
 /**
  * Deletes a custom status marker from a token.
@@ -164,5 +164,5 @@ function toggleStatusMarker(token, statusName, count)
  * @param {string} event
  * @param {function} handler
  */
-function unEvent(event, handler)
+function un(event, handler)
 ```
