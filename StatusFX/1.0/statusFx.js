@@ -145,14 +145,16 @@ var StatusFX = (function() {
     * @private
     */
    function _initStatus(status, statuses) {
-     var fxRegex = /^((\S| (?!\[))+) *(\[(.+?),(.+?)\])?/;
+     var fxRegex = /^((\S| (?!\[))+) *(\[(.+?),?(.+?)\])?/;
      var match = fxRegex.exec(statuses[status]);
      if(match) {
        log('StatusFX: ' + status + ' -> ' + match[0]);
 
        var fxName = match[1];
        var direction = [0,1];
-       if(match[3]) {
+       if(match[3] === '[random]')
+         direction = 'random';
+       else if(match[3]) {
          direction = [
            parseFloat(match[4]),
            parseFloat(match[5])
@@ -186,50 +188,55 @@ var StatusFX = (function() {
      return state.StatusFX.tokens[token.get('_id')];
    }
 
-   /**
-    * Gets a token's next status FX and increments its status FX index.
-    * @private
-    * @param {graphic} token
-    * @return {namedFx}
-    */
-   function _nextTokenStatusFx(token) {
-     var tokenStatus = getTokenStatusFx(token);
+  /**
+   * Gets a token's next status FX and increments its status FX index.
+   * @private
+   * @param {graphic} token
+   * @return {namedFx}
+   */
+  function _nextTokenStatusFx(token) {
+    var tokenStatus = getTokenStatusFx(token);
 
-     if(tokenStatus) {
+    if(tokenStatus) {
 
-       // Only processes statuses that have FX.
-       var statuses = _.filter(tokenStatus.statuses, function(status) {
-         return state.StatusFX.fx[status];
-       });
+      // Only processes statuses that have FX.
+      var statuses = _.filter(tokenStatus.statuses, function(status) {
+        return state.StatusFX.fx[status];
+      });
 
-       // Increment the token's status FX index.
-       tokenStatus.index = ((tokenStatus.index + 1)%statuses.length) || 0;
+      // Increment the token's status FX index.
+      tokenStatus.index = ((tokenStatus.index + 1)%statuses.length) || 0;
 
-       // Return the current status FX name.
-       var status = statuses[tokenStatus.index];
-       return getStatusFx(status);
-     }
-   }
+      // Return the current status FX name.
+      var status = statuses[tokenStatus.index];
+      return getStatusFx(status);
+    }
+  }
 
-   /**
-    * @private
-    */
-   function _spawnBuiltInFx(name, pageId, origin, direction) {
-     var p1 = {
-       x: origin[0],
-       y: origin[1]
-     };
-     // Is this a beam-like FX?
-     if(/^(beam|breath|splatter)/.test(name)) {
-       var p2 = {
-         x: origin[0] + direction[0],
-         y: origin[1] + direction[1]
-       };
-       spawnFxBetweenPoints(p1, p2, name, pageId);
-     }
-     else
+  /**
+   * @private
+   */
+  function _spawnBuiltInFx(name, pageId, origin, direction) {
+    var p1 = {
+      x: origin[0],
+      y: origin[1]
+    };
+    // Is this a beam-like FX?
+    if(/^(beam|breath|splatter)/.test(name)) {
+      if(direction === 'random')
+        direction = [
+          Math.random() - 0.5,
+          Math.random() - 0.5
+        ];
+      var p2 = {
+        x: origin[0] + direction[0],
+        y: origin[1] + direction[1]
+      };
+      spawnFxBetweenPoints(p1, p2, name, pageId);
+    }
+    else
       spawnFx(p1.x, p1.y, name, pageId);
-   }
+  }
 
   /**
    * Spawns a named built-in or custom FX.
@@ -264,6 +271,11 @@ var StatusFX = (function() {
 
     // Is this a beam-like FX?
     if(custFx.get('definition').angle === -1) {
+      if(direction === 'random')
+        direction = [
+          Math.random() - 0.5,
+          Math.random() - 0.5
+        ];
       var p2 = {
         x: origin[0] + direction[0],
         y: origin[1] + direction[1]
