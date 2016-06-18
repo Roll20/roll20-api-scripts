@@ -1,7 +1,7 @@
 {
 	"name": "MapChange",
 	"script": "MapChange.js",
-	"version": "1.2",
+	"version": "1.3",
 	"description": "Provides a way for users to move between maps in a campaign without the GM needing to move them.\n\nFor full information on how to use the script, use the command '!mc help' in game.",
 	"authors": "TheWhiteWolves",
 	"roll20userid": "1043",
@@ -14,13 +14,18 @@
 	}, {
 		"name": "GM Notification",
 		"type": "checkbox",
-		"description": "Set to false to turn off notifing the GM when a player moves.",
-		"value": "true"
+		"description": "Set to true to turn on notifing the GM when events happen.",
+		"value": "false"
 	}, {
 		"name": "Marker",
 		"type": "text",
 		"default": "[GM]",
 		"description": "The marker used to decide what is placed in the private map."
+	}, {
+		"name": "Hide Marker",
+		"type": "text",
+		"default": "[Hide]",
+		"description": "The marker used to decide what is placed in the hidden map."
 	}, {
 		"name": "Inverted Marker",
 		"type": "checkbox",
@@ -39,5 +44,5 @@
 		"state.MapChange": "read,write"
 	},
 	"conflicts": [],
-	"previousversions": [1.0, 1.1]
+	"previousversions": [1.0, 1.1, 1.2]
 }
