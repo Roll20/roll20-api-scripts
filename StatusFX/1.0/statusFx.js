@@ -106,7 +106,7 @@ var StatusFX = (function() {
      };
 
      // Get the FX configurations from the useroptions.
-     var useroptions = (globalconfig && globalconfig.StatusFX) || {
+     var useroptions = (globalconfig && (globalconfig.StatusFX || globalconfig.statusfx)) || {
        'red': 'splatter-blood [1,-1]',
        'green': 'bubbling-acid',
        'custom': 'sleep: glow-holy|stars: beam-fire [2,3]'
