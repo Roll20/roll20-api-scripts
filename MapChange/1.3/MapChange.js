@@ -6,15 +6,15 @@ var MapChange = MapChange || (function() {
     'use strict';
     // Defaults.
     // Date last modified in unix timestamp format.
-    var lastModified = "1466247059";
+    var lastModified = "1466627592";
     // Name of the person who last modified the script.
     var modifiedBy = "TheWhiteWolves";
     // Local version of the script.
     var version = "1.3";
     // Set to true to use built in debug statements
-    var debug = state.MapChange.config.debug || false;
+    var debug = false;
     // Set to false to turn off notifing the GM when a player moves.
-    var gmNotify = state.MapChange.config.gmNotify || false;
+    var gmNotify = false;
     // The marker used to decide what is placed in the private map.
     var marker = "[GM]";
     // The marker used to decide what is placed in the hidden map.
@@ -1272,9 +1272,7 @@ var MapChange = MapChange || (function() {
     return {
         ConstructMaps: constructMaps,
         RegisterEventHandlers: registerEventHandlers,
-        CheckInstall: checkInstall,
-        Debug: debug,
-        GMNotify: gmNotify
+        CheckInstall: checkInstall
     };
 }());
 
@@ -1284,20 +1282,14 @@ on("ready", function() {
     'use strict';
     // Load in the global config settings.
     MapChange.CheckInstall();
-    // Check if the debug config is turned on.
-    if (MapChange.Debug) {
-        // If it is then log out the map construction.
-        log("Map Change Started");
-        log("Blocked Players");
-        log(state.MapChange.blockedPlayers);
-        MapChange.ConstructMaps();
-        log("Maps Constructed");
-        MapChange.RegisterEventHandlers();
-        log("Map Change Ready");
-    }
-    // Check if the GM notificaiton config is turned on.
-    if (MapChange.GMNotify) {
-        // If it is then send a message to the GM to tell them the script is ready.
-        sendChat("Map Change", "/w gm Map Change Ready");
-    }
+    // If it is then log out the map construction.
+    log("Map Change Started");
+    log("Blocked Players");
+    log(state.MapChange.blockedPlayers);
+    MapChange.ConstructMaps();
+    log("Maps Constructed");
+    MapChange.RegisterEventHandlers();
+    log("Map Change Ready");
+    // If it is then send a message to the GM to tell them the script is ready.
+    sendChat("Map Change", "/w gm Map Change Ready");
 });
