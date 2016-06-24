@@ -214,9 +214,31 @@ var StatusFX = (function() {
   }
 
   /**
+   * Resolves a user-inputted built-in FX name to its canonical name.
+   * @private
+   * @param {string} name
+   * @return {string}
+   */
+  function _resolveBuiltInFxName(name) {
+    var parts = name.split('-');
+    var type = parts[0].toLowerCase();
+    var color = parts[1].toLowerCase();
+
+    var convertTypes = {
+      'explosion': 'explode'
+    };
+    if(convertTypes[type])
+      type = convertTypes[type];
+
+    return type + '-' + color;
+  }
+
+  /**
    * @private
    */
   function _spawnBuiltInFx(name, pageId, origin, direction) {
+    name = _resolveBuiltInFxName(name);
+
     var p1 = {
       x: origin[0],
       y: origin[1]
