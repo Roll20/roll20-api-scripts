@@ -300,7 +300,9 @@ CustomStatusMarkers = (function() {
          if(parts) {
             return parts[1]+'thumb'+parts[3];
          }
-         return;
+         throw new Error('Only images that you have uploaded to your library ' +
+            'can be used as custom status markers. ' +
+            'See https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions for more information.');
     }
 
     /**
@@ -867,7 +869,7 @@ CustomStatusMarkers = (function() {
                 _processClearTokenCmd(msg);
         }
         catch(err) {
-            sendChat('Custom status markers Error', '/w ' + msg.who + ' bad command: ' + msg.content);
+            sendChat('Custom status markers Error', '/w ' + msg.who + ' ' + err.message);
             log('Custom Status Markers ERROR: ' + err.message);
         }
     });
