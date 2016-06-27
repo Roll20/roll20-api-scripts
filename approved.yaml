@@ -187,3 +187,7 @@ easyexperience:
 pagenavigator:
 - "Page Navigator"
 - "Maps & Drawing"
+
+statusfx:
+- "StatusFX"
+- "Character"
