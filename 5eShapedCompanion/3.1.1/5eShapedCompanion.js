@@ -3061,7 +3061,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v4.0.0 <=-');
+	    logger.info('-=> ShapedScripts v3.1.1 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -5631,14 +5631,10 @@ var ShapedScripts =
 	'use strict';
 	const _ = __webpack_require__(2);
 
-	function getRenameMapper(newName, upperCaseValue) {
+	function getRenameMapper(newName) {
 	  return function renameMapper(key, value, output) {
-	    output[newName] = upperCaseValue && value ? value.toUpperCase() : value;
+	    output[newName] = value;
 	  };
-	}
-
-	function upperCaseMapper(key, value, output) {
-	  output[key] = value ? value.toUpperCase() : value;
 	}
 
 	function identityMapper(key, value, output) {
@@ -5650,50 +5646,14 @@ var ShapedScripts =
 	    output[key] = 'Yes';
 	  }
 	}
-
-	function durationMapper(key, value, output, spellObj) {
-	  let newDuration = spellObj.concentration ? 'CONCENTRATION_' : '';
-	  newDuration += value.toUpperCase().replace(/\s/g, '_');
-	  output[key] = newDuration;
-	}
-
-	function spellLevelMapper(key, value, output) {
-	  let spellLevel;
-	  if (value === 0) {
-	    spellLevel = 'CANTRIP';
-	  }
-	  else {
-	    switch (value % 10) {
-	      case 1:
-	        spellLevel = `${value}ST_LEVEL`;
-	        break;
-	      case 2:
-	        spellLevel = `${value}ND_LEVEL`;
-	        break;
-	      case 3:
-	        spellLevel = `${value}RD_LEVEL`;
-	        break;
-	      default:
-	        spellLevel = `${value}TH_LEVEL`;
-	        break;
-	    }
-	  }
-	  output.spell_level = spellLevel;
-	}
-
 	function camelCaseFixMapper(key, value, output) {
 	  const newKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
 	  output[newKey] = value;
 	}
-
 	function castingStatMapper(key, value, output) {
 	  if (value) {
 	    output.add_casting_modifier = 'Yes';
 	  }
-	}
-
-	function castingTimeMapper(key, value, output) {
-	  output.casting_time = value && value.toUpperCase().replace(/\s/g, '_');
 	}
 
 	function secondaryCastingStatMapper(key, value, output) {
@@ -5703,7 +5663,7 @@ var ShapedScripts =
 	}
 
 	function componentMapper(key, value, output) {
-	  const components = _.chain(value)
+	  output.components = _.chain(value)
 	    .map((propValue, propName) => {
 	      if (propName !== 'materialMaterial') {
 	        return propName.toUpperCase().slice(0, 1);
@@ -5714,14 +5674,10 @@ var ShapedScripts =
 	    })
 	    .compact()
 	    .value()
-	    .join('_');
-
-	  if (components) {
-	    output.components = `COMPONENTS_${components}`;
-	  }
+	    .join(' ');
 	}
 	const saveAttackMappings = {
-	  ability: getRenameMapper('saving_throw_vs_ability', true),
+	  ability: getRenameMapper('saving_throw_vs_ability'),
 	  type: identityMapper,
 	  damage: identityMapper,
 	  damageBonus: camelCaseFixMapper,
@@ -5748,19 +5704,19 @@ var ShapedScripts =
 	        throw new Error('Unrecognised property when attempting to convert to srd format: ' +
 	          `[${propName}] ${JSON.stringify(output)}`);
 	      }
-	      mapper(propName, propVal, output, value);
+	      mapper(propName, propVal, output);
 	    });
 	  };
 	}
 
 	const spellMapper = getObjectMapper({
 	  name: identityMapper,
-	  duration: durationMapper,
-	  level: spellLevelMapper,
-	  school: upperCaseMapper,
+	  duration: identityMapper,
+	  level: getRenameMapper('spell_level'),
+	  school: identityMapper,
 	  emote: identityMapper,
 	  range: identityMapper,
-	  castingTime: castingTimeMapper,
+	  castingTime: camelCaseFixMapper,
 	  target: identityMapper,
 	  description(key, value, output) {
 	    output.content = value + (output.content ? `\n${output.content}` : '');

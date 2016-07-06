@@ -1,18 +1,3 @@
-<a name="4.0.0"></a>
-# [4.0.0](https://github.com/symposion/roll20-shaped-scripts/compare/3.1.1...4.0.0) (2016-06-28)
-
-
-### Features
-
-* **spell-import:** Support translations for various spell fields ([88d9615](https://github.com/symposion/roll20-shaped-scripts/commit/88d9615))
-
-
-### BREAKING CHANGES
-
-* spell-import: Will not work correctly with character sheet < 5.0.2
-
-
-
 <a name="3.1.1"></a>
 ## [3.1.1](https://github.com/symposion/roll20-shaped-scripts/compare/3.1.0...3.1.1) (2016-06-19)
 

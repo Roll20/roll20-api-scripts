@@ -1,28 +1,3 @@
-<a name="4.0.0"></a>
-# [4.0.0](https://github.com/symposion/roll20-shaped-scripts/compare/3.1.1...4.0.0) (2016-06-28)
-
-
-### Features
-
-* **spell-import:** Support translations for various spell fields ([88d9615](https://github.com/symposion/roll20-shaped-scripts/commit/88d9615))
-
-
-### BREAKING CHANGES
-
-* spell-import: Will not work correctly with character sheet < 5.0.2
-
-
-
-<a name="3.1.1"></a>
-## [3.1.1](https://github.com/symposion/roll20-shaped-scripts/compare/3.1.0...3.1.1) (2016-06-19)
-
-
-### Bug Fixes
-
-* **ammo-processing:** Fix bug introduced in ammo handling in 3.1.0 ([f4e7723](https://github.com/symposion/roll20-shaped-scripts/commit/f4e7723)), closes [#161](https://github.com/symposion/roll20-shaped-scripts/issues/161)
-
-
-
 <a name="3.1.0"></a>
 # [3.1.0](https://github.com/symposion/roll20-shaped-scripts/compare/3.0.0...3.1.0) (2016-06-19)
 

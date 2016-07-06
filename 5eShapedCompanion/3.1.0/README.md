@@ -22,9 +22,6 @@ This is a script designed for use with the API on the [Roll20 Virtual Table Top]
   - [Decrementing ammo](#decrementing-ammo)
   - [Death saves, Hit Dice](#death-saves-hit-dice)
   - [Roll HP for monsters](#roll-hp-for-monsters)
-  - [Process HD rolls](#process-hd-rolls)
-  - [Decrement trait uses](#decrement-trait-uses)
-  - [Short/Long rest](#shortlong-rest)
 - [Full command list](#full-command-list)
   - [!shaped-import-statblock](#shaped-import-statblock)
   - [!shaped-import-monster](#shaped-import-monster)
@@ -33,17 +30,12 @@ This is a script designed for use with the API on the [Roll20 Virtual Table Top]
   - [!shaped-at](#shaped-at)
   - [!shaped-abilities](#shaped-abilities)
   - [!shaped-config](#shaped-config)
-  - [!shaped-apply-defaults](#shaped-apply-defaults)
-  - [!shaped-rest](#shaped-rest)
+  - [!shaped-token-defaults](#shaped-token-defaults)
 - [Configuration](#configuration)
   - [Advantage Tracker](#advantage-tracker)
   - [Token Defaults](#token-defaults)
-  - [Token Defaults/Token Bar Options](#token-defaultstoken-bar-options)
-  - [Token Defaults/Token Aura Options](#token-defaultstoken-aura-options)
   - [New Characters](#new-characters)
-  - [New Characters/Houserule Settings](#new-charactershouserule-settings)
-  - [Character Sheet Enhancements](#character-sheet-enhancements)
-  - [Houserules & Variants](#houserules-&-variants)
+  - [Sheet Enhancements](#sheet-enhancements)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -59,8 +51,6 @@ This is a script designed for use with the API on the [Roll20 Virtual Table Top]
 * Auto HD reduction/HP increase on HD roll
 * Advantage tracking commands - set a character to have (dis)advantage and mark which tokens this applies to
 * Commands to create token actions for new characters
-* Short/Long Rest handling
-* Trait use count decrementing
 
 # Setup
 ## Prerequisites:
@@ -166,15 +156,6 @@ The script will automatically decrement hit dice and apply regained HP when you 
 ## Roll HP for monsters
 You can configure one of your token bars to represent HP by default in the script [configuration](#configuration). If you do this, and enable the 'Roll HP on Drop' option, the script will automatically Roll HP for any character whose default token doesn't have a linked attribute for the specified bar. PCs and important individual NPCs should have their HP bar linked directly to the character sheet in their token setting, since they are individuals with a single HP value. Generic monsters ('mooks') should not have their HP bar linked to a character sheet attribute, however, since there can be several individuals all sharing a single character sheet. For these monsters, the script will automatically roll HP and apply it to a new token whenever you drag the character from the journal onto the table top. If you would prefer to have a static HP value for your mooks, you should disable this feature in the script configuration and set the HP value for the token manually before setting it as the default token for your character.
 
-## Process HD rolls
-If enabled in the configuration (see below), the script will automatically apply hit dice rolled by clicking on the relevant HD line on the character sheet to the character's HP total. It will also decrement the number of HD remaining. It will issue a warning if no HD of the relevant size remain and won't add the amount to the HP total.
-
-## Decrement trait uses
-If enabled in the configuration (see below), the script will automatically decrement the number of uses remaining for traits and features each time they are used. It will also issue a warning if a trait is used when no uses remain.
-
-## Short/Long rest
-The script will apply the effects of a short/long rest if you run the command **!shaped-rest --long** or **!shaped-rest --short** with a character token selected. There are also buttons that link to this functionality on the character sheet itself. You can show these by entering "edit mode" on the sheet and ticking the checkbox on the Core page for "Show Rests".
-
 # Full command list
 ## !shaped-import-statblock
 Imports details from a text statblock into a Roll20 character. The statblock must be inserted into the GM notes field of a token (_not_ a character!) and the token must be selected before running this command. The imported character will be configured with the default settings that you specify in the [default character settings configuration](#new-characters) . In addition the tokens you use will be configured according to the [default token settings configuration](#token-defaults) ready to be set as the default token for the character.
@@ -267,8 +248,6 @@ Creates token actions for your character as shortcuts to a variety of rolls and 
 * **--statblock** - create an ability to launch a chat window statblock display
 * **--advantageTracker** - create 3 abilities, one for each Advantage Tracker option (Advantage, Disadvantage, Normal)
 * **--advantageTrackerQuery** - create an ability to set an Advantage Tracker option from a drop-down query
-* **--spells** - create an ability to launch chat window spellbook display
-* **--rests** - create an ability to do a short or long rest (pops up a query to ask which)
 * **--DELETE** - delete all abilities on the token (including those not created by this script)
 
 In addition, you can pass the names of spells like **--Fireball** to create token actions for each spell. Obviously the character in question must actually have this spell in its spellbook for this to work.
@@ -279,20 +258,8 @@ You must have at least one token that represents a character selected for this c
 ## !shaped-config
 Display configuration UI to change default behaviours. The significance of all the options is detailed [below](#configuration)
 
-## !shaped-apply-defaults
-* Alias !shaped-token-defaults *
+## !shaped-token-defaults
 Apply the same defaults that are used when setting up tokens on import to whatever tokens are currently selected. Useful for mass-configuring manually created tokens. See [below](#config-token-settings) for more details on what these options are.
-
-## !shaped-rest
-Applies the effects of a long or short rest.
-
-### Options
-* **--long** do a long rest
-* **--short** do a short rest
-* **--id** Apply the rest to the supplied character id instead of the selected tokens
-
-### Selection
-You must select at least one token that represents a character unless you supply the --id option. The selected character(s) will have the effects of the specified type of rest applied to them.
 
 # Configuration
 ## Advantage Tracker
@@ -303,34 +270,23 @@ You must select at least one token that represents a character unless you supply
 * **Disadvantage Marker** Sets the status marker to be displayed when a character has Disadvantage if **Show Markers** is on
 
 ## Token Defaults
-Note that all of the settings under Token Defaults are applied to tokens only when **!shaped-import-monster**, **!shaped-import-statblock** or **!shaped-apply-defaults** are run.
-
 * **Numbered Tokens** If this is 'on', new tokens will have %%NUMBERED%% appended to their name to work with Aaron's TokenNameNumbered script. Please search for this on the API forum for more details.
 * **Show Name Tag** If this is 'on', the token will show its name tag to anyone who has permission to see it
 * **Show Name to Players** If this is 'on', and **Show Name Tag** is also 'on', players will be able to see the token's name.
-* **Light Radius** Default light radius emitted from token (Note that this value will be overriden by a value derived from a monster's senses attribute where available)
-* **Dim Radius** Start of dim light within the above-specified light radius (Note that this value will be overriden by a value derived from a monster's senses attribute where available)
+* **Bar X Attribute** Set this to the name of a sheet attribute (e.g. HP, AC, speed) to automatically set the specified token bar/bubble to the value of this attribute
+* **Bar X Link** If this is 'on' then the specified bar/bubble will be _linked_ to the configured attribute on the character sheet, i.e. changes to the bar/bubble will update the value on the character sheet. This is generally a good idea for everything except HP for generic tokens.
+* **Bar X Set Max** If this is 'on' then the specified bar will be given a maximum value (which will initially be the same as the main bar value) and will consequently display as a bar above the token as well as a value in the 'bubble'. Mainly useful for HP.
+* **Bar X Show Players** If this is 'on' then the specified bar/bubble will be shown to everyone, otherwise it will only be visible to the GM and controlling players
+* **Auras** Sets up default auras for new character tokens. If you specify a range, new characters will have an aura with the specified size, colour and shape
+* **Light Radius** Default light radius emitted from token
+* **Dim Radius** Start of dim light within the above-specified light radius
 * **Show other players** Whether light emitted from the token is visible only to the controlling player(s) or to all players
 * **Has Sight** If 'on' then controlling players will be able to see areas of maps with dynamic lighting enabled based on the position of this token
 * **Light angle** Emitted light will be cast in arc this many degrees wide.
 * **LOS angle** the token's vision will be limited to an arc this many degrees wide
 * **Light multiplier** The multiplier affects how far the token can see from existing light sources. This is a good way to simulate a character who has the ability to see further than normal in low light situations or has an alternate form of vision that might allow them to navigate in the dark. For example, someone who can see twice as far in low light would have a multiplier of two.
 
-## Token Defaults/Token Bar Options
-
-* **Bar X Attribute** Set this to the name of a sheet attribute (e.g. HP, AC, speed) to automatically set the specified token bar/bubble to the value of this attribute
-* **Bar X Link** If this is 'on' then the specified bar/bubble will be _linked_ to the configured attribute on the character sheet, i.e. changes to the bar/bubble will update the value on the character sheet. This is generally a good idea for everything except HP for generic tokens.
-* **Bar X Set Max** If this is 'on' then the specified bar will be given a maximum value (which will initially be the same as the main bar value) and will consequently display as a bar above the token as well as a value in the 'bubble'. Mainly useful for HP.
-* **Bar X Show Players** If this is 'on' then the specified bar/bubble will be shown to everyone, otherwise it will only be visible to the GM and controlling players
-
-## Token Defaults/Token Aura Options
-* **Auras** Sets up default auras for new character tokens. If you specify a range, new characters will have an aura with the specified size, colour and shape
-* **Aura X Show Players** If this is 'on' then the specified aura will be shown to everyone, otherwise it will only be visible to the GM and controlling players
-
-
 ## New Characters
-Note that all of the settings under New Characters are applied to tokens only when **!shaped-import-monster**, **!shaped-import-statblock** or **!shaped-apply-defaults** are run.
-
 * **Sheet Output** Set whether output from the new character sheet should be public or whispered to the controlling player by default
 * **Death Save Output** Same as Sheet Output, but specifically for death saves
 * **Initiative Output** Same as Sheet Output, but specifically for Initiative rolls
@@ -340,25 +296,13 @@ Note that all of the settings under New Characters are applied to tokens only wh
     * **Roll with Advantage**: Roll two dice, display the highest value
     * **Roll with Disadvantage**: Roll two dice, display the lowest value
     * **Roll 2**: Roll two dice, display both results
-* **Revert advantage** If enabled, (dis)advantage will automatically be reverted back to rolling normally after the next d20 roll. Useful for the most common case where you get advantage on a single roll.
 * **Init Roll** Same as above, but only applies to Initiative rolls. There is no Roll 2 option in this case because initiative must have a single value to be sent to the turn tracker
 * **Init to Tracker** If 'on', automatically send all initiative rolls to the turn tracker.
 * **Break Init Ties** If 'on', the value a character's initiative bonus will be divided by 100 and added to their initiative roll to break initiative ties (matching rolls mean the character with the highest bonus goes first)
 * **Show Target AC** If 'on', all attacks and spells with a target will require a target to be clicked and will display the target's AC on the Roll output
 * **Show Target Name** If 'on', all attacks and spells with a target will require a target to be clicked and will display the target's character name on the Roll output
 * **Auto Use Ammo** If 'on', new characters will be set to automatically decrement ammo when launching attacks that are configured with ammo.
-* **Default tab** Sets the default tab which will be open when you first go to the new character sheet.
-* **Default token actions** Configures which token actions will be created automatically for the character. For details of what each of these actions are, please see the documentation for [!shaped-abilities](#roll-hp-for-monsters). **PLEASE NOTE:** There is currently a bug for which we have no sensible resolution that prevents this functionality working for attacks, actions, spells, reactions, lair actions, legendary actions, regional effects and traits when using **!shaped-import-monster** or **!shaped-import-statblock**. For the time being the workaround is to run **!shaped-apply-defaults** after you have run the import and clicked the "Import" button on the character sheet.
 
-## New Characters/Houserule Settings
-* **Half Proficiency Saves** Will tick the box for adding half proficiency to unproficient saving throws.
-* **Medium Armor Max Dex** Sets the default value for medium armor max dex setting on the character sheet. This changes the maximum dexterity bonus allowed when wearing medium armor.
-
-## Character Sheet Enhancements
+## Sheet Enhancements
 * **Roll HP On Drop** If 'on' the script will automatically Roll HP for any character whose default token doesn't have a linked attribute for the specified bar. See the [Roll HP for monsters](#roll-hp-for-monsters) section for more details.
 * **Process HD Automatically** If 'on' the script will automatically decrement your HD count when you roll hit dice and will also add the amount rolled to your HP total.
-* **Process Spell Slots Automatically** Not currently working.
-* **Process Traits Automatically** If 'on' the script will automatically decrement the number of uses remaining for traits and features when they are used. It will also issue a warning if they are used when no uses remain.
-
-## Houserules & Variants
-* **Long Rest: No HP, full HD** If 'on', the long rest command will reset all HD to full, but will not restore any HP.
