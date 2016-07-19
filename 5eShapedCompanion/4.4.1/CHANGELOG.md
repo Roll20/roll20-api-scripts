@@ -1,14 +1,3 @@
-<a name="4.4.2"></a>
-## [4.4.2](https://github.com/symposion/roll20-shaped-scripts/compare/4.4.1...4.4.2) (2016-07-19)
-
-
-### Bug Fixes
-
-* **config:** fix broken text size UI ([715eea0](https://github.com/symposion/roll20-shaped-scripts/commit/715eea0)), closes [#211](https://github.com/symposion/roll20-shaped-scripts/issues/211)
-* **token-config:** Round fractional numbers on darkvision ([2f718f0](https://github.com/symposion/roll20-shaped-scripts/commit/2f718f0)), closes [#210](https://github.com/symposion/roll20-shaped-scripts/issues/210)
-
-
-
 <a name="4.4.1"></a>
 ## [4.4.1](https://github.com/symposion/roll20-shaped-scripts/compare/4.4.0...4.4.1) (2016-07-19)
 

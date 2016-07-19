@@ -2585,7 +2585,7 @@ var ShapedScripts =
 	    }
 
 	    function darkvisionLightConfigurer() {
-	      token.set('light_radius', Math.max(token.get('light_radius') || 0, Math.round(this.lightRadius * 1.1666666)));
+	      token.set('light_radius', Math.max(token.get('light_radius') || 0, this.lightRadius * 1.1666666));
 	      if (!token.get('light_dimradius')) {
 	        token.set('light_dimradius', -5);
 	      }
@@ -3099,7 +3099,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v4.4.2 <=-');
+	    logger.info('-=> ShapedScripts v4.4.1 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -5362,11 +5362,11 @@ var ShapedScripts =
 	        spec: this.specRoot.newCharSettings.textSizes.spellsTextSize(),
 	      }) +
 	      this.makeQuerySetting({
-	        path: `${textSizes}.abilityChecksTextSize`, title: 'Ability Checks', menuCmd: menu,
+	        path: `${textSizes}.abilityChecksSize`, title: 'Ability Checks', menuCmd: menu,
 	        spec: this.specRoot.newCharSettings.textSizes.abilityChecksTextSize(),
 	      }) +
 	      this.makeQuerySetting({
-	        path: `${textSizes}.savingThrowsTextSize`, title: 'Saving Throws', menuCmd: menu,
+	        path: `${textSizes}.savingThrowsSize`, title: 'Saving Throws', menuCmd: menu,
 	        spec: this.specRoot.newCharSettings.textSizes.savingThrowsTextSize(),
 	      });
 
