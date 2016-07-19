@@ -1,30 +1,3 @@
-<a name="4.4.0"></a>
-# [4.4.0](https://github.com/symposion/roll20-shaped-scripts/compare/4.3.0...4.4.0) (2016-07-18)
-
-
-### Features
-
-* **config:** Add hidden option for specifying custom skills data ([feace4d](https://github.com/symposion/roll20-shaped-scripts/commit/feace4d)), closes [#190](https://github.com/symposion/roll20-shaped-scripts/issues/190)
-
-
-
-<a name="4.3.0"></a>
-# [4.3.0](https://github.com/symposion/roll20-shaped-scripts/compare/4.2.0...4.3.0) (2016-07-18)
-
-
-### Bug Fixes
-
-* **config:** Correct name for hide saving throw DC option ([c686588](https://github.com/symposion/roll20-shaped-scripts/commit/c686588))
-* **config:** Correct name for hide_freetext ([81e8fcd](https://github.com/symposion/roll20-shaped-scripts/commit/81e8fcd))
-
-
-### Features
-
-* **config:** Make applying config to manually created chars optional ([7f4d837](https://github.com/symposion/roll20-shaped-scripts/commit/7f4d837))
-* **token-action:** Add option for adv/dis without "normal" ([358f6e7](https://github.com/symposion/roll20-shaped-scripts/commit/358f6e7))
-
-
-
 <a name="4.2.0"></a>
 # [4.2.0](https://github.com/symposion/roll20-shaped-scripts/compare/4.1.0...4.2.0) (2016-07-17)
 

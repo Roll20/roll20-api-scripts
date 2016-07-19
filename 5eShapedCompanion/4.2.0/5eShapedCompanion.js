@@ -2503,15 +2503,12 @@ var ShapedScripts =
 
 	  this.applyCharacterDefaults = function applyCharacterDefaults(character) {
 	    _.each(utils.flattenObject(_.omit(myState.config.newCharSettings, 'tokenActions')), (value, key) => {
-	      const attrName = ShapedConfig.configToAttributeLookup[key];
-	      if (attrName) {
-	        const attribute = roll20.getOrCreateAttr(character.id, attrName);
-	        if (value === '***default***' || (_.isBoolean(value) && !value)) {
-	          attribute.remove();
-	        }
-	        else {
-	          attribute.set('current', _.isBoolean(value) ? 'on' : value);
-	        }
+	      const attribute = roll20.getOrCreateAttr(character.id, ShapedConfig.configToAttributeLookup[key] || key);
+	      if (value === '***default***' || (_.isBoolean(value) && !value)) {
+	        attribute.remove();
+	      }
+	      else {
+	        attribute.set('current', _.isBoolean(value) ? 'on' : value);
 	      }
 	    });
 
@@ -2714,9 +2711,7 @@ var ShapedScripts =
 	  };
 
 	  this.handleAddCharacter = function handleAddCharacter(character) {
-	    if (myState.config.newCharSettings.applyToAll) {
-	      this.applyCharacterDefaults(character);
-	    }
+	    this.applyCharacterDefaults(character);
 	  };
 
 	  this.setTokenBarsOnDrop = function setTokenBarsOnDrop(token, overwrite) {
@@ -3099,7 +3094,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v4.4.0 <=-');
+	    logger.info('-=> ShapedScripts v4.2.0 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -3914,13 +3909,7 @@ var ShapedScripts =
 	    hideSavingThrowFailure: '***default***',
 	    hideSavingThrowSuccess: '***default***',
 	    hideRecharge: '***default***',
-	  })
-	  // 2.8 rename hideActionFreetext
-	  .nextVersion()
-	  .moveProperty('config.newCharSettings.hide.hideActionFreetext', 'config.newCharSettings.hide.hideFreetext')
-	  // 2.9 make auto-applying new character settings optional (and switched off by default)
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.applyToAll', false);
+	  });
 
 
 	Migrator.migrateShapedConfig = migrator.migrateConfig.bind(migrator);
@@ -3957,7 +3946,6 @@ var ShapedScripts =
 	      abilityChecksTextSize: 'ability_checks_text_size',
 	      savingThrowsTextSize: 'saving_throws_text_size',
 	      baseDC: 'base_dc',
-	      tab: 'tab',
 	      useCustomSaves: 'use_custom_saving_throws',
 	      useAverageOfAbilities: 'average_of_abilities',
 	      expertiseAsAdvantage: 'expertise_as_advantage',
@@ -3967,11 +3955,10 @@ var ShapedScripts =
 	      hideSavingThrows: 'hide_saving_throws',
 	      hideSavingThrowDC: 'hide_saving_throw_dc',
 	      hideSpellContent: 'hide_spell_content',
-	      hideFreetext: 'hide_freetext',
+	      hideActionFreetext: 'hide_action_freetext',
 	      hideSavingThrowFailure: 'hide_saving_throw_failure',
 	      hideSavingThrowSuccess: 'hide_saving_throw_success',
 	      hideRecharge: 'hide_recharge',
-	      customSkills: 'custom_skills',
 	    };
 
 	    ['fortitude', 'reflex', 'will'].forEach(save => {
@@ -4152,7 +4139,6 @@ var ShapedScripts =
 	        showAura2ToPlayers: this.booleanValidator,
 	      },
 	      newCharSettings: {
-	        applyToAll: this.booleanValidator,
 	        sheetOutput: this.sheetOutputValidator,
 	        deathSaveOutput: this.sheetOutputValidator,
 	        initiativeOutput: this.sheetOutputValidator,
@@ -4253,7 +4239,6 @@ var ShapedScripts =
 	            none: null,
 	            normal: 'advantageTracker',
 	            short: 'advantageTrackerShort',
-	            shortest: 'advantageTrackerShortest',
 	            query: 'advantageTrackerQuery',
 	          }),
 	          savingThrows: this.getOptionList({
@@ -4315,12 +4300,11 @@ var ShapedScripts =
 	          hideSavingThrows: this.getHideOption('hide_saving_throws'),
 	          hideSavingThrowDC: this.getHideOption('hide_saving_throw_dc'),
 	          hideSpellContent: this.getHideOption('hide_spell_content'),
-	          hideFreetext: this.getHideOption('hide_freetext'),
+	          hideActionFreetext: this.getHideOption('hide_action_freetext'),
 	          hideSavingThrowFailure: this.getHideOption('hide_saving_throw_failure'),
 	          hideSavingThrowSuccess: this.getHideOption('hide_saving_throw_success'),
 	          hideRecharge: this.getHideOption('hide_recharge'),
 	        },
-	        customSkills: this.stringValidator,
 	      },
 	      advTrackerSettings: {
 	        showMarkers: this.booleanValidator,
@@ -4553,10 +4537,6 @@ var ShapedScripts =
 	        { command: 'shaped-at', options: ['advantage'], abilityName: 'Adv' },
 	        { command: 'shaped-at', options: ['disadvantage'], abilityName: 'Dis' },
 	        { command: 'shaped-at', options: ['normal'], abilityName: 'Normal' },
-	      ], roll20),
-	      advantageTrackerShortest: new MultiCommandAbilityMaker([
-	        { command: 'shaped-at', options: ['advantage'], abilityName: 'Adv' },
-	        { command: 'shaped-at', options: ['disadvantage'], abilityName: 'Dis' },
 	      ], roll20),
 	      advantageTrackerQuery: new CommandAbilityMaker('shaped-at',
 	        ['?{Roll Option|Normal,normal|w/ Advantage,advantage|w/ Disadvantage,disadvantage}'], '(dis)Adv Query', roll20),
@@ -5142,8 +5122,7 @@ var ShapedScripts =
 	  getMenu() {
 	    const menu = 'ncMenu';
 	    const ncs = 'newCharSettings';
-	    let optionRows =
-	      this.makeToggleSetting({ path: `${ncs}.applyToAll`, title: 'Apply to all new chars?', menuCmd: menu });
+	    let optionRows = '';
 
 	    const spec = this.specRoot.newCharSettings;
 
@@ -5270,7 +5249,7 @@ var ShapedScripts =
 	    const optionRows =
 	      _.functions(this.specRoot.newCharSettings.hide).reduce((result, functionName) => {
 	        const title = utils.toTitleCase(
-	          functionName.replace(/([a-z])([A-Z]+)/g, (match, lower, upper) => `${lower} ${upper.toLowerCase()}`));
+	          functionName.replace(/([a-z])([A-Z])+/g, (match, lower, upper) => `${lower} ${upper.toLowerCase()}`));
 	        result += this.makeToggleSetting({
 	          path: `${hide}.${functionName}`, title, menuCmd: menu,
 	          spec: this.specRoot.newCharSettings.hide[functionName](),

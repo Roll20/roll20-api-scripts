@@ -2503,15 +2503,12 @@ var ShapedScripts =
 
 	  this.applyCharacterDefaults = function applyCharacterDefaults(character) {
 	    _.each(utils.flattenObject(_.omit(myState.config.newCharSettings, 'tokenActions')), (value, key) => {
-	      const attrName = ShapedConfig.configToAttributeLookup[key];
-	      if (attrName) {
-	        const attribute = roll20.getOrCreateAttr(character.id, attrName);
-	        if (value === '***default***' || (_.isBoolean(value) && !value)) {
-	          attribute.remove();
-	        }
-	        else {
-	          attribute.set('current', _.isBoolean(value) ? 'on' : value);
-	        }
+	      const attribute = roll20.getOrCreateAttr(character.id, ShapedConfig.configToAttributeLookup[key] || key);
+	      if (value === '***default***' || (_.isBoolean(value) && !value)) {
+	        attribute.remove();
+	      }
+	      else {
+	        attribute.set('current', _.isBoolean(value) ? 'on' : value);
 	      }
 	    });
 
@@ -3099,7 +3096,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v4.4.0 <=-');
+	    logger.info('-=> ShapedScripts v4.3.0 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -3971,7 +3968,6 @@ var ShapedScripts =
 	      hideSavingThrowFailure: 'hide_saving_throw_failure',
 	      hideSavingThrowSuccess: 'hide_saving_throw_success',
 	      hideRecharge: 'hide_recharge',
-	      customSkills: 'custom_skills',
 	    };
 
 	    ['fortitude', 'reflex', 'will'].forEach(save => {
@@ -4320,7 +4316,6 @@ var ShapedScripts =
 	          hideSavingThrowSuccess: this.getHideOption('hide_saving_throw_success'),
 	          hideRecharge: this.getHideOption('hide_recharge'),
 	        },
-	        customSkills: this.stringValidator,
 	      },
 	      advTrackerSettings: {
 	        showMarkers: this.booleanValidator,

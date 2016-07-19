@@ -1,13 +1,3 @@
-<a name="4.4.0"></a>
-# [4.4.0](https://github.com/symposion/roll20-shaped-scripts/compare/4.3.0...4.4.0) (2016-07-18)
-
-
-### Features
-
-* **config:** Add hidden option for specifying custom skills data ([feace4d](https://github.com/symposion/roll20-shaped-scripts/commit/feace4d)), closes [#190](https://github.com/symposion/roll20-shaped-scripts/issues/190)
-
-
-
 <a name="4.3.0"></a>
 # [4.3.0](https://github.com/symposion/roll20-shaped-scripts/compare/4.2.0...4.3.0) (2016-07-18)
 
