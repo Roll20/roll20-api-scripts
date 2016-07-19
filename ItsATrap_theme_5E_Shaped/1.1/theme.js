@@ -174,7 +174,7 @@
     msg += '</tbody></table>';
 
     // Send the HTML message to the chat.
-    sendChat('Admiral Ackbar', msg);
+    ItsATrap.announceTrap(data.effect, msg);
   }
 
 
@@ -198,12 +198,9 @@
         damage: effect.damage,
         hideSave: effect.hideSave,
         message: effect.message,
-        missHalf: effect.missHalf
+        missHalf: effect.missHalf,
+        effect: effect
       };
-
-      // Remind the GM about the trap's effects.
-      if(effect.notes)
-        sendChat('Admiral Ackbar', '/w gm Trap Effects:<br/> ' + effect.notes);
 
       // Automate trap attack/save mechanics.
       if(character) {
@@ -245,12 +242,6 @@
       }
       else
         sendHtmlTrapMessage(msgData);
-
-      // If the effect has a sound, try to play it.
-      ItsATrap.playEffectSound(effect);
-
-      // If the effect has an api command, execute it.
-      ItsATrap.executeTrapCommand(effect);
     },
 
     /**

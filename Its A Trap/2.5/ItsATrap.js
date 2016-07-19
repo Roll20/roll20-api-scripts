@@ -136,7 +136,7 @@ var ItsATrap = (function() {
 
     // Whisper any secret notes to the GM.
     if(effect.notes)
-      sendChat('Admiral Ackbar', '/w gm ' + effect.notes);
+      sendChat('Admiral Ackbar', '/w gm Trap Notes:<br/>' + effect.notes);
 
     // If the effect has a sound, try to play it.
     playEffectSound(effect);
