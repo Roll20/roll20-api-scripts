@@ -444,14 +444,16 @@ var TokenCollisions = (function() {
 
         // Get the projection offset where the tokens should first collide.
         // At this point their distance would equal the sum of their radii.
-        var h = dist - 1;
+        var h = VecMath.ptLineDist(otherPt, startPt, endPt);
         var r = (other.get('width') + token.get('width'))/2.0;
         var offset = Math.sqrt(r*r - h*h);
 
         // Return the length of the projection of v onto u, minus the offset.
         var u = VecMath.vec(startPt, endPt);
         var v = VecMath.vec(startPt, otherPt);
-        return VecMath.scalarProjection(u, v) - offset;
+        var projection = VecMath.scalarProjection(u, v);
+
+        return projection - offset;
       }
       else
         return undefined;
