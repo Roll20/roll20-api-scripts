@@ -22,6 +22,8 @@ var ItsATrap = (function() {
    *           and victimId, respectively in the API chat command message.
    * @property {(string|FXDefinition|FXConfig)} fx
    *           A special FX that is spawned from the trap when it is activated.
+   * @property {boolean} gmOnly
+   *           If true, the trap's message will only be shown to the GM.
    * @property {string} message
    *           The message that will be sent in the chat by Admiral Ackbar
    *           when the trap activates.
@@ -114,6 +116,37 @@ var ItsATrap = (function() {
     endColour: [220, 35, 0, 0],
     endColourRandom:[60, 60, 60, 0]
   };
+
+  /**
+   * Announces a message for a trap.
+   * This should be called by TrapThemes to inform everyone about a trap
+   * that has been triggered and its results. Fancy HTML formatting for
+   * the message is encouraged. If the trap's effect has gmOnly set,
+   * then the message will only be shown to the GM.
+   * This also takes care of playing the trap's sound, FX, and API command,
+   * they are provided.
+   * @param  {TrapEffect} effect
+   * @param  {string} message
+   */
+  function announceTrap(effect, message) {
+    // Display the message to everyone, unless it's a secret.
+    if(effect.gmOnly)
+      message = '/w gm ' + message;
+    sendChat('Admiral Ackbar', message);
+
+    // Whisper any secret notes to the GM.
+    if(effect.notes)
+      sendChat('Admiral Ackbar', '/w gm ' + effect.notes);
+
+    // If the effect has a sound, try to play it.
+    playEffectSound(effect);
+
+    // If the effect has fx, play them.
+    playTrapFX(effect);
+
+    // If the effect has an api command, execute it.
+    executeTrapCommand(effect);
+  }
 
   /**
    * Creates a default message for a TrapEffect.
@@ -665,6 +698,7 @@ var ItsATrap = (function() {
   });
 
   return {
+    announceTrap: announceTrap,
     executeTrapCommand: executeTrapCommand,
     getTheme: getTheme,
     getTrapCollision: getTrapCollision,
@@ -731,20 +765,7 @@ ItsATrap.registerTheme({
     html += '<tbody>';
     html += this._paddedRow( effect.message);
     html += '</tbody></table>';
-    sendChat("Admiral Ackbar", html);
-
-    // If the effect has notes, whisper them to the GM.
-    if(effect.notes)
-      sendChat('Admiral Ackbar', '/w gm ' + effect.notes);
-
-    // If the effect has a sound, try to play it.
-    ItsATrap.playEffectSound(effect);
-
-    // If the effect has fx, play them.
-    ItsATrap.playTrapFX(effect);
-
-    // If the effect has an api command, execute it.
-    ItsATrap.executeTrapCommand(effect);
+    ItsATrap.announceTrap(effect, html);
   },
 
   /**
@@ -777,16 +798,7 @@ ItsATrap.registerTheme({
    * @inheritdoc
    */
   activateEffect: function(effect) {
-    sendChat("ItsATrap-test", effect.message);
-
-    // If the effect has a sound, try to play it.
-    ItsATrap.playEffectSound(effect);
-
-    // If the effect has fx, play them.
-    ItsATrap.playTrapFX(effect);
-
-    // If the effect has an api command, execute it.
-    ItsATrap.executeTrapCommand(effect);
+    ItsATrap.announceTrap(effect, 'TEST - ' + effect.message);
   },
 
 
