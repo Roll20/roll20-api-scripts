@@ -629,12 +629,7 @@ var ItsATrap = (function() {
     }
   }
 
-
-  /**
-   * When a graphic on the objects layer moves, run the script to see if it
-   * passed through any traps.
-   */
-  on("change:graphic", function(token) {
+  function _updateToken(token) {
     // Objects on the GM layer don't set off traps.
     if(token.get("layer") === "objects") {
       try {
@@ -688,6 +683,14 @@ var ItsATrap = (function() {
         log('ERROR - It\'s A Trap!: ' + err.message);
       }
     }
+  }
+
+  /**
+   * When a graphic on the objects layer moves, run the script to see if it
+   * passed through any traps.
+   */
+  on("change:graphic:lastmove", function(token) {
+    _updateToken(token);
   });
 
   // When a trap's token is destroyed, remove it from the set of noticed traps.
