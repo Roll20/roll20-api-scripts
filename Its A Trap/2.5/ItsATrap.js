@@ -307,7 +307,6 @@ var ItsATrap = (function() {
 
     // URI-escape the notes and remove the HTML elements.
     var notes = decodeURIComponent(trap.get('gmnotes')).trim();
-    notes = notes.split(/<[/]?.+?>/g).join('');
 
     // If GM notes are set, interpret those.
     if(notes) {
@@ -315,6 +314,7 @@ var ItsATrap = (function() {
       // Should the message be interpretted as a JSON object?
       if(notes.indexOf('{') === 0)
         try {
+          notes = notes.split(/<[/]?.+?>/g).join('');
           effect = JSON.parse(notes);
         }
         catch(err) {
@@ -334,34 +334,6 @@ var ItsATrap = (function() {
       victimId: victim.get('_id')
     });
     return effect;
-  }
-
-  /**
-   * Gets the message template sent to the chat by a trap.
-   * @param  {Graphic} victim
-   *         The token that set off the trap.
-   * @param  {Graphic} trap
-   * @return {string}
-   */
-  function getTrapMessage(victim, trap) {
-    var notes = unescape(trap.get('gmnotes')).trim();
-    if(notes) {
-
-      // Should the message be interpretted as a JSON object?
-      if(notes.indexOf('{') === 0)
-        return JSON.parse(notes).message;
-      else
-        return notes;
-    }
-
-    // Use a default message.
-    else {
-      var trapName = trap.get("name");
-      if(trapName)
-        return victim.get("name") + " set off a trap: " + trapName + "!";
-      else
-        return victim.get("name") + " set off a trap!";
-    }
   }
 
   /**
@@ -708,7 +680,6 @@ var ItsATrap = (function() {
     getTrapCollisions: getTrapCollisions,
     getTrapEffect: getTrapEffect,
     getTrapsOnPage: getTrapsOnPage,
-    getTrapMessage: getTrapMessage,
     isTokenFlying: isTokenFlying,
     moveTokenToTrap: moveTokenToTrap,
     noticeTrap: noticeTrap,
