@@ -42,7 +42,6 @@ This is a script designed for use with the API on the [Roll20 Virtual Table Top]
   - [Token Defaults/Token Aura Options](#token-defaultstoken-aura-options)
   - [New Characters](#new-characters)
   - [New Characters/Houserule Settings](#new-charactershouserule-settings)
-  - [New Characters/Houserule Settings/Saving Throws](#new-charactershouserule-settingssaving-throws)
   - [Character Sheet Enhancements](#character-sheet-enhancements)
   - [Houserules & Variants](#houserules-&-variants)
 
@@ -62,16 +61,15 @@ This is a script designed for use with the API on the [Roll20 Virtual Table Top]
 * Commands to create token actions for new characters
 * Short/Long Rest handling
 * Trait use count decrementing
-* Automatic configuration of new characters
 
 # Setup
 ## Prerequisites:
 * You, or the person who created your game, must be a **Pro** subscriber to Roll20 to use this script.
 * You should be familiar with [how to use roll20](https://app.roll20.net/editor/tutorial), have a basic understanding of how to [configure a game](https://wiki.roll20.net/Game_Management) on Roll20, including setting up [character sheets](https://wiki.roll20.net/Character_Sheets) and installing API scripts. If you've only just started using Roll20 and haven't found your feet yet, setting this script up and using it is probably a bad place to start - it's an advanced tool, many of whose features presume a good working understanding of standard Roll20 capabilities. Play around with a simple campaign first, get used to making characters, working with tokens, and using the 5e Shaped Character Sheet manually; and then come back here for power-user goodness.
-* You should have a recent version of the 5e Shaped Character Sheet. If you are installing it from the list on the game settings page, it's under Dungeons & Dragons, and at the time of writing it's called 5th Edition (Shapedv2). If you want the version of the sheet with all the very latest fixes and features, you can install it directly from [Kryx's Github](http://github.com/mlenser/roll20-character-sheets/tree/master/D%26D_5e_Reshaped). Instructions for how to do this can be found on the thread on the [character sheets forum](https://app.roll20.net/forum/category/277980) - the threads change frequently but at the time of writing the latest one was [here](https://app.roll20.net/forum/post/3668698/5e-shaped-5-dot-0-8-plus)
+* You should have a recent version of the 5e Shaped Character Sheet. If you are installing it from the list on the game settings page, it's under Dungeons & Dragons, and at the time of writing it's called 5th Edition (Shapedv2). If you want the version of the sheet with all the very latest fixes and features, you can install it directly from [Kryx's Github](http://github.com/mlenser/roll20-character-sheets/tree/master/D%26D_5e_Reshaped). Instructions for how to do this can be found on the thread on the [character sheets forum](https://app.roll20.net/forum/category/277980) - the threads change frequently but at the time of writing the latest one was [here](https://app.roll20.net/forum/post/3212109/5e-shaped-2-dot-3-2-plus)
 
 ## Installation
-1. Open the [raw text of the script](https://raw.githubusercontent.com/symposion/roll20-api-scripts/master/5eShapedCompanion/latest/5eShapedCompanion.js)
+1. Open the [raw text of the script](https://raw.githubusercontent.com/symposion/roll20-api-scripts/shaped-sheet-update/5eShapedCompanion/latest/5eShapedCompanion.js)
 1. Copy all the text - **Ctrl-A** followed by **Ctrl-C** (or **Cmd-A**, **Cmd-C** on a Mac)
 1. Got to the API scripts page for your campaign
 1. Paste the text into a new script, and then give it a sensible name in the box at the top - e.g. "5e Shaped Companion"
@@ -177,7 +175,6 @@ If enabled in the configuration (see below), the script will automatically decre
 ## Short/Long rest
 The script will apply the effects of a short/long rest if you run the command **!shaped-rest --long** or **!shaped-rest --short** with a character token selected. There are also buttons that link to this functionality on the character sheet itself. You can show these by entering "edit mode" on the sheet and ticking the checkbox on the Core page for "Show Rests".
 
-
 # Full command list
 ## !shaped-import-statblock
 Imports details from a text statblock into a Roll20 character. The statblock must be inserted into the GM notes field of a token (_not_ a character!) and the token must be selected before running this command. The imported character will be configured with the default settings that you specify in the [default character settings configuration](#new-characters) . In addition the tokens you use will be configured according to the [default token settings configuration](#token-defaults) ready to be set as the default token for the character.
@@ -248,10 +245,6 @@ You must select at least one token that represents a character. The specified se
 Creates token actions for your character as shortcuts to a variety of rolls and other actions from the sheet.
 
 ### Options
-* **--advantageTracker** - create 3 abilities, one for each Advantage Tracker option (Advantage, Disadvantage, Normal)
-* **--advantageTrackerShort** - create 3 abilities, one for each Advantage Tracker option, but with shorter names (Adv, Dis, Normal)
-* **--advantageTrackerShortest** - as **advantageTrackerShort**, but omit the "normal" option (for use with the auto-revert advantage option)
-* **--advantageTrackerQuery** - create an ability to set an Advantage Tracker option from a drop-down query
 * **--attacks** - create an ability for each attack present in the character sheet
 * **--attacksMacro** - create an ability to launch chat window attack buttons
 * **--traits** - create an ability for each trait present in the character sheet
@@ -266,10 +259,14 @@ Creates token actions for your character as shortcuts to a variety of rolls and 
 * **--regionalEffects** or **--regionalE** - create an ability to launch chat window regional effects buttons
 * **--initiative** - create an ability to roll initiative
 * **--saves** or **--savingThrows** - create an ability to launch the chat window save buttons
+* **--savesSmall** or **--savingThrowsSmall** - create an ability to launch the chat window save buttons with smaller text to use less space in the chat window
 * **--savesQuery** or **--savingThrowsQuery** - create an ability to launch the save drop-down query
 * **--abilityChecks** or **--abilChecks** - create an ability to launch the chat window ability check buttons
+* **--abilityChecksSmall** or **--abilChecksSmall** - create an ability to launch the chat window ability check buttons with smaller text to use less space in the chat window
 * **--abilityChecksQuery** or **--abilChecksQuery** - create an ability launch the ability check drop-down query
 * **--statblock** - create an ability to launch a chat window statblock display
+* **--advantageTracker** - create 3 abilities, one for each Advantage Tracker option (Advantage, Disadvantage, Normal)
+* **--advantageTrackerQuery** - create an ability to set an Advantage Tracker option from a drop-down query
 * **--spells** - create an ability to launch chat window spellbook display
 * **--rests** - create an ability to do a short or long rest (pops up a query to ask which)
 * **--DELETE** - delete all abilities on the token (including those not created by this script)
@@ -332,10 +329,8 @@ Note that all of the settings under Token Defaults are applied to tokens only wh
 
 
 ## New Characters
-The settings in this section will be applied to new characters when they are created, since the sheet has no way of storing default options
-for new characters.
+Note that all of the settings under New Characters are applied to tokens only when **!shaped-import-monster**, **!shaped-import-statblock** or **!shaped-apply-defaults** are run.
 
-* **Apply to all new chars?** If this is on, then the settings in this section will be applied to every new character, otherwise they will only be applied to characters created by the script using the various import commands, or when **!shaped-apply-defaults** is run.
 * **Sheet Output** Set whether output from the new character sheet should be public or whispered to the controlling player by default
 * **Death Save Output** Same as Sheet Output, but specifically for death saves
 * **Initiative Output** Same as Sheet Output, but specifically for Initiative rolls
@@ -354,20 +349,10 @@ for new characters.
 * **Auto Use Ammo** If 'on', new characters will be set to automatically decrement ammo when launching attacks that are configured with ammo.
 * **Default tab** Sets the default tab which will be open when you first go to the new character sheet.
 * **Default token actions** Configures which token actions will be created automatically for the character. For details of what each of these actions are, please see the documentation for [!shaped-abilities](#roll-hp-for-monsters). **PLEASE NOTE:** There is currently a bug for which we have no sensible resolution that prevents this functionality working for attacks, actions, spells, reactions, lair actions, legendary actions, regional effects and traits when using **!shaped-import-monster** or **!shaped-import-statblock**. For the time being the workaround is to run **!shaped-apply-defaults** after you have run the import and clicked the "Import" button on the character sheet.
-* **Hiding Settings** This submenu configures the default settings for the various "hide" options from the settings page of the character sheet. These settings are designed for use with a browser extension to help mask parts of the sheet output (see character sheet documentation for more details).
-* **Text sizes** This submenu configures the default text sizes for the output of various macros in the character sheet.
 
 ## New Characters/Houserule Settings
-* **Base DC** Configures the default value for Base DC from the character sheet
-* **Medium Armor Max Dex** Sets the default value for medium armor max dex setting on the character sheet. This changes the maximum dexterity bonus allowed when wearing medium armor.
-* **Expertise as advantage** Configures the default value the "expertise as advantage" option on the character sheet
-
-## New Characters/Houserule Settings/Saving Throws
 * **Half Proficiency Saves** Will tick the box for adding half proficiency to unproficient saving throws.
-* **Use Custom Saves** Will turn on the option to use custom saving throws for new characters
-* **Use average of Highest Abils** If true, the custom saves configured below will use the average of the two highest abilities assigned to them rather than just taking the highest ability.
-* **Fortitude, Reflex, Will** These submenus configure the three custom saving throws for new characters. Under each one, you can assign which abilities are used to generate the respective saving throw.
-
+* **Medium Armor Max Dex** Sets the default value for medium armor max dex setting on the character sheet. This changes the maximum dexterity bonus allowed when wearing medium armor.
 
 ## Character Sheet Enhancements
 * **Roll HP On Drop** If 'on' the script will automatically Roll HP for any character whose default token doesn't have a linked attribute for the specified bar. See the [Roll HP for monsters](#roll-hp-for-monsters) section for more details.

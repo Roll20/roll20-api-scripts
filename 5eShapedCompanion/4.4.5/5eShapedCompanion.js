@@ -1217,7 +1217,7 @@ var ShapedScripts =
 						"name": "legendaryPoints",
 						"type": "number",
 						"bare": true,
-						"pattern": "^The[ \\w]+can take (\\d+) legendary actions.*?start.*?turn[.]?",
+						"pattern": "^The[ \\w]+can take (\\d+) legendary actions.*?start of its turn[.]?",
 						"matchGroup": 1
 					},
 					{
@@ -2270,8 +2270,6 @@ var ShapedScripts =
 	      if (character) {
 	        this.applyCharacterDefaults(character);
 	        this.getTokenConfigurer(token)(character);
-	        const sensesString = roll20.getAttrByName(character.id, 'senses');
-	        this.getTokenVisionConfigurer(token, sensesString)();
 	      }
 	    });
 	  };
@@ -2582,7 +2580,6 @@ var ShapedScripts =
 
 	  this.getTokenVisionConfigurer = function getTokenVisionConfigurer(token, sensesString) {
 	    if (_.isEmpty(sensesString)) {
-	      logger.debug('Empty senses string, using default values');
 	      return _.noop;
 	    }
 
@@ -3106,7 +3103,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v4.4.6 <=-');
+	    logger.info('-=> ShapedScripts v4.4.5 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 

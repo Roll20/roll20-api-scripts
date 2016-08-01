@@ -132,7 +132,7 @@ var ShapedScripts =
 /***/ function(module, exports, __webpack_require__) {
 
 	/* globals state, createObj, findObjs, getObj, getAttrByName, sendChat, on, log, Campaign, playerIsGM, spawnFx,
-	 spawnFxBetweenPoints, filterObjs, randomInteger */
+	 spawnFxBetweenPoints, filterObjs */
 	'use strict';
 	const _ = __webpack_require__(2);
 
@@ -267,10 +267,6 @@ var ShapedScripts =
 
 	  on(event, callback) {
 	    return on(event, callback);
-	  }
-
-	  randomInteger(max) {
-	    return randomInteger(max);
 	  }
 
 	  log(msg) {
@@ -1011,7 +1007,7 @@ var ShapedScripts =
 						"name": "skills",
 						"minOccurs": 0,
 						"type": "string",
-						"pattern": "(?:(?:^|,\\s*)(?:Acrobatics|Animal Handling|Arcana|Athletics|Deception|History|Insight|Intimidation|Investigation|Medicine|Nature|Perception|Performance|Persuasion|Religion|Sleight of Hand|Stealth|Survival|Influence|Society)\\s+[\\-\\+]\\d+)+"
+						"pattern": "(?:(?:^|,\\s*)(?:Acrobatics|Animal Handling|Arcana|Athletics|Deception|History|Insight|Intimidation|Investigation|Medicine|Nature|Perception|Performance|Persuasion|Religion|Sleight of Hand|Stealth|Survival)\\s+[\\-\\+]\\d+)+"
 					},
 					{
 						"minOccurs": 0,
@@ -1217,7 +1213,7 @@ var ShapedScripts =
 						"name": "legendaryPoints",
 						"type": "number",
 						"bare": true,
-						"pattern": "^The[ \\w]+can take (\\d+) legendary actions.*?start.*?turn[.]?",
+						"pattern": "^The[ \\w]+can take (\\d+) legendary actions.*?start of its turn[.]?",
 						"matchGroup": 1
 					},
 					{
@@ -2111,6 +2107,7 @@ var ShapedScripts =
 	    this.versionProp = {
 	      type: 'string',
 	      name: 'version',
+	      pattern: `^${spec.formatVersion.replace('.', '\\.')}$`,
 	    };
 	    this.spec = spec;
 	    this.contentValidator = makeValidator({ type: 'unorderedContent', contentModel: [spec, this.versionProp] });
@@ -2134,19 +2131,6 @@ var ShapedScripts =
 
 	'use strict';
 
-
-	function makeNormalMessage(scriptName, heading, text) {
-	  return '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">' +
-	    '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">' +
-	    `${scriptName} ${heading}</div>${text}</div>`;
-	}
-
-	function makeErrorMessage(scriptName, text) {
-	  return '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">' +
-	    '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;color:red;">' +
-	    `${scriptName}</div>${text}</div>`;
-	}
-
 	class Reporter {
 
 	  constructor(roll20, scriptName) {
@@ -2154,28 +2138,22 @@ var ShapedScripts =
 	    this.scriptName = scriptName;
 	  }
 
-	  setPlayer(playerId) {
-	    this.playerId = playerId;
-	  }
-
-	  reportPublic(heading, text) {
+	  report(heading, text) {
 	    // Horrible bug with this at the moment - seems to generate spurious chat
 	    // messages when noarchive:true is set
 	    // sendChat('ShapedScripts', '' + msg, null, {noarchive:true});
 
-	    this.roll20.sendChat('', `${makeNormalMessage(this.scriptName, heading, text)}`);
-	  }
-
-	  reportPlayer(heading, text) {
-	    this.roll20.sendChat('', `/w ${this.getPlayerName()} ${makeNormalMessage(this.scriptName, heading, text)}`);
+	    this.roll20.sendChat('',
+	      '/w gm <div style="border: 1px solid black; background-color: white; padding: 3px 3px;">' +
+	      '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">' +
+	      `${this.scriptName} ${heading}</div>${text}</div>`);
 	  }
 
 	  reportError(text) {
-	    this.roll20.sendChat('', `/w ${this.getPlayerName()} ${makeErrorMessage(this.scriptName, text)}`);
-	  }
-
-	  getPlayerName() {
-	    return this.playerId ? this.roll20.getObj('player', this.playerId).get('displayname').split(/ /)[0] : 'gm';
+	    this.roll20.sendChat('',
+	      '/w gm <div style="border: 1px solid black; background-color: white; padding: 3px 3px;">' +
+	      '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;color:red;">' +
+	      `${this.scriptName}</div>${text}</div>`);
 	  }
 	}
 
@@ -2224,8 +2202,7 @@ var ShapedScripts =
 
 	function ShapedScripts(logger, myState, roll20, parser, entityLookup, reporter, srdConverter, sanitise, mpp) {
 	  let addedTokenIds = [];
-	  const reportPublic = reporter.reportPublic.bind(reporter);
-	  const reportPlayer = reporter.reportPlayer.bind(reporter);
+	  const report = reporter.report.bind(reporter);
 	  const reportError = reporter.reportError.bind(reporter);
 	  const commandProc = makeCommandProc('shaped', roll20);
 	  const chatWatchers = [];
@@ -2250,7 +2227,6 @@ var ShapedScripts =
 	   */
 	  this.handleInput = function handleInput(msg) {
 	    logger.debug(msg);
-	    reporter.setPlayer(msg.playerid);
 	    if (msg.type !== 'api') {
 	      this.triggerChatWatchers(msg);
 	      return;
@@ -2270,8 +2246,6 @@ var ShapedScripts =
 	      if (character) {
 	        this.applyCharacterDefaults(character);
 	        this.getTokenConfigurer(token)(character);
-	        const sensesString = roll20.getAttrByName(character.id, 'senses');
-	        this.getTokenVisionConfigurer(token, sensesString)();
 	      }
 	    });
 	  };
@@ -2373,7 +2347,7 @@ var ShapedScripts =
 
 	    if (!_.isEmpty(importedList)) {
 	      const monsterList = importedList.join('</li><li>');
-	      reportPlayer('Import Success', `Added the following monsters: <ul><li>${monsterList}</li></ul>`);
+	      report('Import Success', `Added the following monsters: <ul><li>${monsterList}</li></ul>`);
 	    }
 	    if (!_.isEmpty(errors)) {
 	      const errorList = errors.join('</li><li>');
@@ -2416,7 +2390,7 @@ var ShapedScripts =
 	      list.forEach((part, index) => (list[index] = utils.toTitleCase(part)));
 
 	      // create a clickable button with a roll query to select an entity from the loaded json
-	      reportPlayer(`${utils.toTitleCase(entityName)} Importer`,
+	      report(`${utils.toTitleCase(entityName)} Importer`,
 	        `<a href="!shaped-import-${entityName} --?{Pick a ${entityName}|${list.join('|')}}">Click to select a ` +
 	        `${entityName}</a>`);
 	    }
@@ -2441,7 +2415,7 @@ var ShapedScripts =
 	    };
 	    this.getImportDataWrapper(character).mergeImportData(importData);
 	    if (!noreport) {
-	      reportPlayer('Import Success', 'Added the following spells:  <ul><li>' +
+	      report('Import Success', 'Added the following spells:  <ul><li>' +
 	        `${_.map(importData.spells, spell => spell.name).join('</li><li>')}</li></ul>`);
 	    }
 	  };
@@ -2509,23 +2483,14 @@ var ShapedScripts =
 
 	  this.applyCharacterDefaults = function applyCharacterDefaults(character) {
 	    _.each(utils.flattenObject(_.omit(myState.config.newCharSettings, 'tokenActions')), (value, key) => {
-	      const attrName = ShapedConfig.configToAttributeLookup[key];
-	      if (attrName) {
-	        const attribute = roll20.getOrCreateAttr(character.id, attrName);
-	        if (value === '***default***' || (_.isBoolean(value) && !value)) {
-	          attribute.remove();
-	        }
-	        else {
-	          attribute.set('current', _.isBoolean(value) ? 'on' : value);
-	        }
-	      }
+	      const attribute = roll20.getOrCreateAttr(character.id, ShapedConfig.configToAttributeLookup[key] || key);
+	      attribute.set('current', _.isBoolean(value) ? (value ? 'on' : 0) : value);
 	    });
 
 	    const abilityNames = _.chain(myState.config.newCharSettings.tokenActions)
 	      .map((action, actionName) => (action === true ? actionName : action))
 	      .compact()
-	      .values()
-	      .value();
+	      .values();
 	    abilityMaker.addAbilitiesByName(abilityNames, character);
 	  };
 
@@ -2582,7 +2547,6 @@ var ShapedScripts =
 
 	  this.getTokenVisionConfigurer = function getTokenVisionConfigurer(token, sensesString) {
 	    if (_.isEmpty(sensesString)) {
-	      logger.debug('Empty senses string, using default values');
 	      return _.noop;
 	    }
 
@@ -2592,7 +2556,7 @@ var ShapedScripts =
 	    }
 
 	    function darkvisionLightConfigurer() {
-	      token.set('light_radius', Math.max(token.get('light_radius') || 0, Math.round(this.lightRadius * 1.1666666)));
+	      token.set('light_radius', Math.max(token.get('light_radius') || 0, this.lightRadius * 1.1666666));
 	      if (!token.get('light_dimradius')) {
 	        token.set('light_dimradius', -5);
 	      }
@@ -2720,12 +2684,6 @@ var ShapedScripts =
 	    }
 	  };
 
-	  this.handleAddCharacter = function handleAddCharacter(character) {
-	    if (myState.config.newCharSettings.applyToAll) {
-	      this.applyCharacterDefaults(character);
-	    }
-	  };
-
 	  this.setTokenBarsOnDrop = function setTokenBarsOnDrop(token, overwrite) {
 	    const character = roll20.getObj('character', token.get('represents'));
 	    if (!character) {
@@ -2826,8 +2784,8 @@ var ShapedScripts =
 	          }
 	        }
 	        else {
-	          reportPublic('HD Police', `${options.characterName} can't use ${hdCount}d${hdSize} hit dice because they ` +
-	            `only have ${hdAttr.get('current')} left`);
+	          report('HD Police', `${options.characterName} can't use ${hdCount}d${hdSize} hit dice because they only ` +
+	            `have ${hdAttr.get('current')} left`);
 	        }
 	      }
 	    }
@@ -3051,7 +3009,7 @@ var ShapedScripts =
 	    this.commandProcConfigured = true;
 	    return cp
 	    // !shaped-import-statblock
-	      .addCommand('import-statblock', this.importStatblock.bind(this), true)
+	      .addCommand('import-statblock', this.importStatblock.bind(this))
 	      .option('overwrite', ShapedConfig.booleanValidator)
 	      .option('replace', ShapedConfig.booleanValidator)
 	      .withSelection({
@@ -3061,7 +3019,7 @@ var ShapedScripts =
 	        },
 	      })
 	      // !shaped-import-monster , !shaped-monster
-	      .addCommand(['import-monster', 'monster'], this.importMonstersFromJson.bind(this), true)
+	      .addCommand(['import-monster', 'monster'], this.importMonstersFromJson.bind(this))
 	      .option('all', ShapedConfig.booleanValidator)
 	      .optionLookup('monsters', _.partial(entityLookup.findEntity.bind(entityLookup), 'monsters', _, false))
 	      .option('overwrite', ShapedConfig.booleanValidator)
@@ -3073,7 +3031,7 @@ var ShapedScripts =
 	        },
 	      })
 	      // !shaped-import-spell, !shaped-spell
-	      .addCommand(['import-spell', 'spell'], this.importSpellsFromJson.bind(this), false)
+	      .addCommand(['import-spell', 'spell'], this.importSpellsFromJson.bind(this))
 	      .optionLookup('spells', _.partial(entityLookup.findEntity.bind(entityLookup), 'spells', _, false))
 	      .withSelection({
 	        character: {
@@ -3082,7 +3040,7 @@ var ShapedScripts =
 	        },
 	      })
 	      // !shaped-import-spell-list
-	      .addCommand('import-spell-list', this.importSpellListFromJson.bind(this), false)
+	      .addCommand('import-spell-list', this.importSpellListFromJson.bind(this))
 	      .options(ShapedConfig.spellSearchOptions)
 	      .withSelection({
 	        character: {
@@ -3091,7 +3049,7 @@ var ShapedScripts =
 	        },
 	      })
 	      // !shaped-token-defaults
-	      .addCommand(['token-defaults', 'apply-defaults'], this.applyTokenDefaults.bind(this), false)
+	      .addCommand(['token-defaults', 'apply-defaults'], this.applyTokenDefaults.bind(this))
 	      .withSelection({
 	        graphic: {
 	          min: 1,
@@ -3099,14 +3057,14 @@ var ShapedScripts =
 	        },
 	      })
 	      // !shaped-slots
-	      .addCommand('slots', this.handleSlots.bind(this), false)
+	      .addCommand('slots', this.handleSlots.bind(this))
 	      .option('character', ShapedConfig.getCharacterValidator(roll20), true)
 	      .option('use', ShapedConfig.integerValidator)
 	      .option('restore', ShapedConfig.integerValidator);
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v4.4.6 <=-');
+	    logger.info('-=> ShapedScripts v4.0.1 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -3166,7 +3124,6 @@ var ShapedScripts =
 	        handler(curr, prev);
 	      }
 	    }));
-	    roll20.on('add:character', this.wrapHandler(this.handleAddCharacter));
 	    this.registerChatWatcher(this.handleDeathSave, ['deathSavingThrow', 'character', 'roll1']);
 	    this.registerChatWatcher(this.handleAmmo, ['ammoName', 'character']);
 	    this.registerChatWatcher(this.handleFX, ['fx', 'character']);
@@ -3254,13 +3211,12 @@ var ShapedScripts =
 	 */
 
 	class Command {
-	  constructor(root, handler, roll20, name, gmOnly) {
+	  constructor(root, handler, roll20, name) {
 	    this.root = root;
 	    this.handler = handler;
 	    this.parsers = [];
 	    this.roll20 = roll20;
 	    this.name = name;
-	    this.gmOnly = gmOnly;
 	  }
 
 
@@ -3330,10 +3286,7 @@ var ShapedScripts =
 	    return this;
 	  }
 
-	  handle(args, selection, cmdString, playerIsGM, playerId) {
-	    if (!playerIsGM && this.gmOnly) {
-	      throw new UserError('You must be a GM to run this command');
-	    }
+	  handle(args, selection, cmdString) {
 	    const caches = {};
 	    const startOptions = {
 	      errors: [],
@@ -3376,14 +3329,6 @@ var ShapedScripts =
 
 	    if (!_.isEmpty(missingOpts)) {
 	      throw new UserError(`Command ${cmdString} was missing options: [${missingOpts.join(',')}]`);
-	    }
-
-	    if (finalOptions.character && !playerIsGM) {
-	      finalOptions.character.forEach(character => {
-	        if (!character.controlledby.contains(playerId) && !character.controlledby.contains('all')) {
-	          throw new UserError(`You do not have permission to make changes to character ${character.get('name')}`);
-	        }
-	      });
 	    }
 
 	    this.handler(finalOptions);
@@ -3451,8 +3396,8 @@ var ShapedScripts =
 	module.exports = function commandParser(rootCommand, roll20) {
 	  const commands = {};
 	  return {
-	    addCommand(cmds, handler, gmOnly) {
-	      const command = new Command(this, handler, roll20, _.isArray(cmds) ? cmds.join(',') : cmds, gmOnly);
+	    addCommand(cmds, handler) {
+	      const command = new Command(this, handler, roll20, _.isArray(cmds) ? cmds.join(',') : cmds);
 	      (_.isArray(cmds) ? cmds : [cmds]).forEach(cmdString => (commands[cmdString] = command));
 	      return command;
 	    },
@@ -3474,7 +3419,7 @@ var ShapedScripts =
 	        if (!cmd) {
 	          throw new UserError(`Unrecognised command ${prefix}${cmdName}`);
 	        }
-	        cmd.handle(parts, msg.selected, `${prefix}${cmdName}`, roll20.playerIsGM(msg.playerid), msg.playerid);
+	        cmd.handle(parts, msg.selected, `${prefix}${cmdName}`);
 	      }
 	    },
 
@@ -3520,12 +3465,8 @@ var ShapedScripts =
 	    throw new Error('Subclasses must implement addCommands');
 	  }
 
-	  reportPublic(heading, text) {
-	    this.reporter.reportPublic(heading, text);
-	  }
-
-	  reportPlayer(heading, text) {
-	    this.reporter.reportPlayer(heading, text);
+	  report(heading, text) {
+	    this.reporter.report(heading, text);
 	  }
 
 	  reportError(text) {
@@ -3615,7 +3556,7 @@ var ShapedScripts =
 	    ignoreNpcs: false,
 	    advantageMarker: 'green',
 	    disadvantageMarker: 'red',
-	    output: 'silent',
+	    output: 'public',
 	  },
 	  sheetEnhancements: {
 	    rollHPOnDrop: true,
@@ -3820,115 +3761,7 @@ var ShapedScripts =
 	  .overwriteProperty('config.newCharSettings.breakInitiativeTies', '')
 	  .overwriteProperty('config.newCharSettings.showTargetAC', '')
 	  .overwriteProperty('config.newCharSettings.showTargetName', '')
-	  .overwriteProperty('config.newCharSettings.autoAmmo', '1')
-	  // 2.3 Remove "small" macros
-	  .nextVersion()
-	  .transformConfig(config => {
-	    _.each(config.config.newCharSettings.tokenActions, (value, key) => {
-	      if (typeof value === 'string' && value.match('.*Small$')) {
-	        config.config.newCharSettings.tokenActions[key] = value.replace(/Small$/, '');
-	      }
-	    });
-	    return config;
-	  }, 'Removing "small" macros')
-	  .addProperty('config.newCharSettings.textSizes', {
-	    spellsTextSize: 'text',
-	    abilityChecksTextSize: 'text',
-	    savingThrowsTextSize: 'text',
-	  })
-	  // 2.4 Don't set default values for sheet options to save on attribute bloat
-	  .nextVersion()
-	  .transformConfig(config => {
-	    const ncs = config.config.newCharSettings;
-	    const defaults = {
-	      sheetOutput: '',
-	      deathSaveOutput: '',
-	      initiativeOutput: '',
-	      showNameOnRollTemplate: '',
-	      rollOptions: '{{ignore=[[0',
-	      initiativeRoll: '@{shaped_d20}',
-	      initiativeToTracker: '@{selected|initiative_formula} &{tracker}',
-	      breakInitiativeTies: '',
-	      showTargetAC: '',
-	      showTargetName: '',
-	      autoAmmo: '',
-	      tab: 'core',
-	    };
-	    _.each(defaults, (defaultVal, key) => {
-	      if (ncs[key] === defaultVal) {
-	        ncs[key] = '***default***';
-	      }
-	    });
-
-	    if (ncs.houserules.mediumArmorMaxDex === '2') {
-	      ncs.houserules.mediumArmorMaxDex = '***default***';
-	    }
-
-	    ['spellsTextSize', 'abilityChecksTextSize', 'savingThrowsTextSize'].forEach(prop => {
-	      if (ncs.textSizes[prop] === 'text_big') {
-	        ncs.textSizes[prop] = '***default***';
-	      }
-	    });
-
-	    return config;
-	  }, 'Removing default values')
-	  // 2.5 Custom saving throws
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.houserules.saves', {
-	    useCustomSaves: '***default***',
-	    useAverageOfAbilities: '***default***',
-	    fortitude: {
-	      fortitudeStrength: '***default***',
-	      fortitudeDexterity: '***default***',
-	      fortitudeConstitution: '***default***',
-	      fortitudeIntelligence: '***default***',
-	      fortitudeWisdom: '***default***',
-	      fortitudeCharisma: '***default***',
-	    },
-	    reflex: {
-	      reflexStrength: '***default***',
-	      reflexDexterity: '***default***',
-	      reflexConstitution: '***default***',
-	      reflexIntelligence: '***default***',
-	      reflexWisdom: '***default***',
-	      reflexCharisma: '***default***',
-	    },
-	    will: {
-	      willStrength: '***default***',
-	      willDexterity: '***default***',
-	      willConstitution: '***default***',
-	      willIntelligence: '***default***',
-	      willWisdom: '***default***',
-	      willCharisma: '***default***',
-	    },
-	  })
-	  .moveProperty('config.newCharSettings.houserules.savingThrowsHalfProf',
-	    'config.newCharSettings.houserules.saves.savingThrowsHalfProf')
-	  .addProperty('config.newCharSettings.houserules.baseDC', '***default***')
-	  // 2.6 expertise_as_advantage
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.houserules.expertiseAsAdvantage', '***default***')
-	  // 2.7 add hide options
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.hide', {
-	    hideAttack: '***default***',
-	    hideDamage: '***default***',
-	    hideAbilityChecks: '***default***',
-	    hideSavingThrows: '***default***',
-	    hideSavingThrowDC: '***default***',
-	    hideSpellContent: '***default***',
-	    hideActionFreetext: '***default***',
-	    hideSavingThrowFailure: '***default***',
-	    hideSavingThrowSuccess: '***default***',
-	    hideRecharge: '***default***',
-	  })
-	  // 2.8 rename hideActionFreetext
-	  .nextVersion()
-	  .moveProperty('config.newCharSettings.hide.hideActionFreetext', 'config.newCharSettings.hide.hideFreetext')
-	  // 2.9 make auto-applying new character settings optional (and switched off by default)
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.applyToAll', false);
-
+	  .overwriteProperty('config.newCharSettings.autoAmmo', '1');
 
 	Migrator.migrateShapedConfig = migrator.migrateConfig.bind(migrator);
 
@@ -3937,15 +3770,14 @@ var ShapedScripts =
 
 /***/ },
 /* 15 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	'use strict';
-	const _ = __webpack_require__(2);
 
 	module.exports = class ShapedConfig {
 
 	  static get configToAttributeLookup() {
-	    const lookup = {
+	    return {
 	      sheetOutput: 'output_option',
 	      deathSaveOutput: 'death_save_output_option',
 	      initiativeOutput: 'initiative_output_option',
@@ -3960,34 +3792,7 @@ var ShapedScripts =
 	      autoRevertAdvantage: 'auto_revert_advantage',
 	      savingThrowsHalfProf: 'saving_throws_half_proficiency',
 	      mediumArmorMaxDex: 'medium_armor_max_dex',
-	      spellsTextSize: 'spells_text_size',
-	      abilityChecksTextSize: 'ability_checks_text_size',
-	      savingThrowsTextSize: 'saving_throws_text_size',
-	      baseDC: 'base_dc',
-	      tab: 'tab',
-	      useCustomSaves: 'use_custom_saving_throws',
-	      useAverageOfAbilities: 'average_of_abilities',
-	      expertiseAsAdvantage: 'expertise_as_advantage',
-	      hideAttack: 'hide_attack',
-	      hideDamage: 'hide_damage',
-	      hideAbilityChecks: 'hide_ability_checks',
-	      hideSavingThrows: 'hide_saving_throws',
-	      hideSavingThrowDC: 'hide_saving_throw_dc',
-	      hideSpellContent: 'hide_spell_content',
-	      hideFreetext: 'hide_freetext',
-	      hideSavingThrowFailure: 'hide_saving_throw_failure',
-	      hideSavingThrowSuccess: 'hide_saving_throw_success',
-	      hideRecharge: 'hide_recharge',
-	      customSkills: 'custom_skills',
 	    };
-
-	    ['fortitude', 'reflex', 'will'].forEach(save => {
-	      ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma'].forEach(ability => {
-	        lookup[`${save}${ability}`] = `${save}_${ability.toLowerCase()}`;
-	      });
-	    });
-
-	    return lookup;
 	  }
 
 	  static booleanValidator(value) {
@@ -4024,17 +3829,6 @@ var ShapedScripts =
 	    };
 	  }
 
-	  static getHideOption(propertyName) {
-	    return this.getOptionList({ false: '***default***', true: `{{${propertyName}=1}}` });
-	  }
-
-	  static getBooleanOptionList() {
-	    return this.getOptionList({
-	      true: 1,
-	      false: '***default***',
-	    });
-	  }
-
 	  static integerValidator(value) {
 	    const parsed = parseInt(value, 10);
 	    return {
@@ -4052,7 +3846,7 @@ var ShapedScripts =
 
 	  static get sheetOutputValidator() {
 	    return this.getOptionList({
-	      public: '***default***',
+	      public: '',
 	      whisper: '/w GM',
 	    });
 	  }
@@ -4152,88 +3946,51 @@ var ShapedScripts =
 	        showAura2ToPlayers: this.booleanValidator,
 	      },
 	      newCharSettings: {
-	        applyToAll: this.booleanValidator,
 	        sheetOutput: this.sheetOutputValidator,
 	        deathSaveOutput: this.sheetOutputValidator,
 	        initiativeOutput: this.sheetOutputValidator,
 	        showNameOnRollTemplate: this.getOptionList({
-	          true: '{{show_character_name=1}}',
-	          false: '***default***',
+	          true: '/w GM',
+	          false: '',
 	        }),
 	        rollOptions: this.getOptionList({
-	          normal: '***default***',
+	          normal: '{{ignore=[[0',
 	          advantage: 'adv {{ignore=[[0',
 	          disadvantage: 'dis {{ignore=[[0',
 	          two: '{{roll2=[[d20@{d20_mod}',
 	        }),
 	        initiativeRoll: this.getOptionList({
-	          normal: '***default***',
+	          normal: '@{shaped_d20}',
 	          advantage: '2d20@{d20_mod}kh1',
 	          disadvantage: '2d20@{d20_mod}kl1',
 	        }),
 	        initiativeToTracker: this.getOptionList({
-	          true: '***default***',
+	          true: '@{selected|initiative_formula} &{tracker}',
 	          false: '@{initiative_formula}',
 	        }),
 	        breakInitiativeTies: this.getOptionList({
 	          true: '[[@{initiative} / 100]][tie breaker]',
-	          false: '***default***',
+	          false: '',
 	        }),
 	        showTargetAC: this.getOptionList({
 	          true: '[[@{target|AC}]]',
-	          false: '***default***',
+	          false: '',
 	        }),
 	        showTargetName: this.getOptionList({
 	          true: '@{target|token_name}',
-	          false: '***default***',
+	          false: '',
 	        }),
 	        autoAmmo: this.getOptionList({
 	          true: '1',
-	          false: '***default***',
+	          false: '',
 	        }),
 	        autoRevertAdvantage: this.booleanValidator,
 	        houserules: {
-	          baseDC: this.getOptionList(_.range(0, 21).reduce((result, val) => {
-	            result[val] = val === 8 ? '***default***' : val;
-	            return result;
-	          }, {})),
-	          mediumArmorMaxDex: this.getOptionList(_.range(0, 11).reduce((result, val) => {
-	            result[val] = val === 2 ? '***default***' : val;
-	            return result;
-	          }, {})),
-	          expertiseAsAdvantage: this.getBooleanOptionList(),
-	          saves: {
-	            savingThrowsHalfProf: this.booleanValidator,
-	            useCustomSaves: this.getBooleanOptionList(),
-	            useAverageOfAbilities: this.getBooleanOptionList(),
-	            fortitude: {
-	              fortitudeStrength: this.getBooleanOptionList(),
-	              fortitudeDexterity: this.getBooleanOptionList(),
-	              fortitudeConstitution: this.getBooleanOptionList(),
-	              fortitudeIntelligence: this.getBooleanOptionList(),
-	              fortitudeWisdom: this.getBooleanOptionList(),
-	              fortitudeCharisma: this.getBooleanOptionList(),
-	            },
-	            reflex: {
-	              reflexStrength: this.getBooleanOptionList(),
-	              reflexDexterity: this.getBooleanOptionList(),
-	              reflexConstitution: this.getBooleanOptionList(),
-	              reflexIntelligence: this.getBooleanOptionList(),
-	              reflexWisdom: this.getBooleanOptionList(),
-	              reflexCharisma: this.getBooleanOptionList(),
-	            },
-	            will: {
-	              willStrength: this.getBooleanOptionList(),
-	              willDexterity: this.getBooleanOptionList(),
-	              willConstitution: this.getBooleanOptionList(),
-	              willIntelligence: this.getBooleanOptionList(),
-	              willWisdom: this.getBooleanOptionList(),
-	              willCharisma: this.getBooleanOptionList(),
-	            },
-	          },
+	          savingThrowsHalfProf: this.booleanValidator,
+	          mediumArmorMaxDex: this.getOptionList([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
 	        },
 	        tab: this.getOptionList({
-	          core: '***default***',
+	          core: 'core',
 	          spells: 'spells',
 	          equipment: 'equipment',
 	          character: 'character',
@@ -4244,24 +4001,26 @@ var ShapedScripts =
 	          initiative: this.booleanValidator,
 	          abilityChecks: this.getOptionList({
 	            none: null,
+	            small: 'abilityChecksSmall',
 	            query: 'abilityChecksQuery',
-	            chatWindow: 'abilityChecks',
+	            large: 'abilityChecks',
+	            smallShort: 'abilChecksSmall',
 	            queryShort: 'abilChecksQuery',
-	            chatWindowShort: 'abilChecks',
+	            largeShort: 'abilChecks',
 	          }),
 	          advantageTracker: this.getOptionList({
 	            none: null,
 	            normal: 'advantageTracker',
-	            short: 'advantageTrackerShort',
-	            shortest: 'advantageTrackerShortest',
 	            query: 'advantageTrackerQuery',
 	          }),
 	          savingThrows: this.getOptionList({
 	            none: null,
+	            small: 'savingThrowsSmall',
 	            query: 'savingThrowsQuery',
-	            chatWindow: 'savingThrows',
+	            large: 'savingThrows',
+	            smallShort: 'savesSmall',
 	            queryShort: 'savesQuery',
-	            chatWindowShort: 'saves',
+	            largeShort: 'saves',
 	          }),
 	          attacks: this.getOptionList({
 	            none: null,
@@ -4303,33 +4062,6 @@ var ShapedScripts =
 	          }),
 	          rests: this.booleanValidator,
 	        },
-	        textSizes: {
-	          spellsTextSize: this.getOptionList({
-	            normal: '***default***',
-	            big: 'big',
-	          }),
-	          abilityChecksTextSize: this.getOptionList({
-	            normal: 'text',
-	            big: '***default***',
-	          }),
-	          savingThrowsTextSize: this.getOptionList({
-	            normal: 'text',
-	            big: '***default***',
-	          }),
-	        },
-	        hide: {
-	          hideAbilityChecks: this.getHideOption('hide_ability_checks'),
-	          hideSavingThrows: this.getHideOption('hide_saving_throws'),
-	          hideAttack: this.getHideOption('hide_attack'),
-	          hideDamage: this.getHideOption('hide_damage'),
-	          hideFreetext: this.getHideOption('hide_freetext'),
-	          hideRecharge: this.getHideOption('hide_recharge'),
-	          hideSavingThrowDC: this.getHideOption('hide_saving_throw_dc'),
-	          hideSavingThrowFailure: this.getHideOption('hide_saving_throw_failure'),
-	          hideSavingThrowSuccess: this.getHideOption('hide_saving_throw_success'),
-	          hideSpellContent: this.getHideOption('hide_spell_content'),
-	        },
-	        customSkills: this.stringValidator,
 	      },
 	      advTrackerSettings: {
 	        showMarkers: this.booleanValidator,
@@ -4553,32 +4285,26 @@ var ShapedScripts =
 	    const roll20 = this.roll20;
 	    this.staticAbilityOptions = {
 	      DELETE: new AbilityDeleter(roll20),
+	      initiative: new RollAbilityMaker('shaped_initiative', 'Init', roll20),
+	      abilityChecks: new RollAbilityMaker('shaped_ability_checks', 'Ability Checks', roll20),
+	      abilityChecksSmall: new RollAbilityMaker('shaped_ability_checks_small', 'Ability Checks', roll20),
+	      abilityChecksQuery: new RollAbilityMaker('shaped_ability_checks_query', 'Ability Checks', roll20),
+	      abilChecks: new RollAbilityMaker('shaped_ability_checks', 'AbilChecks', roll20),
+	      abilChecksSmall: new RollAbilityMaker('shaped_ability_checks_small', 'AbilChecks', roll20),
+	      abilChecksQuery: new RollAbilityMaker('shaped_ability_checks_query', 'AbilChecks', roll20),
 	      advantageTracker: new MultiCommandAbilityMaker([
 	        { command: 'shaped-at', options: ['advantage'], abilityName: 'Advantage' },
 	        { command: 'shaped-at', options: ['disadvantage'], abilityName: 'Disadvantage' },
 	        { command: 'shaped-at', options: ['normal'], abilityName: 'Normal' },
 	      ], roll20),
-	      advantageTrackerShort: new MultiCommandAbilityMaker([
-	        { command: 'shaped-at', options: ['advantage'], abilityName: 'Adv' },
-	        { command: 'shaped-at', options: ['disadvantage'], abilityName: 'Dis' },
-	        { command: 'shaped-at', options: ['normal'], abilityName: 'Normal' },
-	      ], roll20),
-	      advantageTrackerShortest: new MultiCommandAbilityMaker([
-	        { command: 'shaped-at', options: ['advantage'], abilityName: 'Adv' },
-	        { command: 'shaped-at', options: ['disadvantage'], abilityName: 'Dis' },
-	      ], roll20),
 	      advantageTrackerQuery: new CommandAbilityMaker('shaped-at',
 	        ['?{Roll Option|Normal,normal|w/ Advantage,advantage|w/ Disadvantage,disadvantage}'], '(dis)Adv Query', roll20),
-	      initiative: new RollAbilityMaker('shaped_initiative', 'Init', roll20),
-	      abilityChecks: new RollAbilityMaker('shaped_ability_checks', 'Ability Checks', roll20),
-	      abilityChecksQuery: new RollAbilityMaker('shaped_ability_checks_query', 'Ability Checks', roll20),
-	      abilChecks: new RollAbilityMaker('shaped_ability_checks', 'AbilChecks', roll20),
-	      abilChecksQuery: new RollAbilityMaker('shaped_ability_checks_query', 'AbilChecks', roll20),
 	      savingThrows: new RollAbilityMaker('shaped_saving_throw', 'Saving Throws', roll20),
+	      savingThrowsSmall: new RollAbilityMaker('shaped_saving_throw_small', 'Saving Throws', roll20),
 	      savingThrowsQuery: new RollAbilityMaker('shaped_saving_throw_query', 'Saving Throws', roll20),
 	      saves: new RollAbilityMaker('shaped_saving_throw', 'Saves', roll20),
+	      savesSmall: new RollAbilityMaker('shaped_saving_throw_small', 'Saves', roll20),
 	      savesQuery: new RollAbilityMaker('shaped_saving_throw_query', 'Saves', roll20),
-	      rests: new CommandAbilityMaker('shaped-rest', ['?{Rest type|Short,short|Long,long}'], 'Rests', roll20),
 	      attacks: new RepeatingAbilityMaker('attack', 'attack', 'Attacks', true, roll20),
 	      attacksMacro: new RepeatingSectionMacroMaker('shaped_attacks', 'attack', 'Attacks', roll20),
 	      spells: new RepeatingSectionMacroMaker('shaped_spells', 'spell', 'Spells', roll20),
@@ -4599,10 +4325,11 @@ var ShapedScripts =
 	      regionalEffects: new RepeatingSectionMacroMaker('shaped_regionaleffects', 'regionaleffect',
 	        'Regional Effects', roll20),
 	      regionalE: new RepeatingSectionMacroMaker('shaped_regionaleffects', 'regionaleffect', 'RegionalE', roll20),
+	      rests: new CommandAbilityMaker('shaped-rest', ['?{Rest type|Short,short|Long,long}'], 'Rests', roll20),
 	    };
 
 
-	    return commandProcessor.addCommand('abilities', this.addAbility.bind(this), false)
+	    return commandProcessor.addCommand('abilities', this.addAbility.bind(this))
 	      .withSelection({
 	        character: {
 	          min: 1,
@@ -4622,13 +4349,7 @@ var ShapedScripts =
 	        return (caches[key] = caches[key] || {});
 	      },
 	    };
-	    // Slightly backwards way of doing this that ensures that we run the items in the order they are listed above
-	    // rather than the order they are passed in the parameter. Ideally we'd allow users to configure this but
-	    // since we haven't implemented that functionality the order is determine by the order in the saved configuration
-	    // object which is quite hard to control.
-	    _.chain(this.staticAbilityOptions)
-	      .pick((value, key) => _.contains(abilities, key))
-	      .each(abilityMaker => abilityMaker.run(character, options));
+	    abilities.each(ability => this.staticAbilityOptions[ability].run(character, options));
 	  }
 
 	  addAbility(options) {
@@ -4656,7 +4377,7 @@ var ShapedScripts =
 	      return message;
 	    });
 
-	    this.reportPlayer('Ability Creation', `<ul>${messages.join('')}</ul>`);
+	    this.report('Ability Creation', `<ul>${messages.join('')}</ul>`);
 	  }
 	};
 
@@ -4681,20 +4402,12 @@ var ShapedScripts =
 	      auraMenu: new TokenAurasMenu(this.myState.config, ShapedConfig.configOptionsSpec),
 	      ncMenu: new NewCharacterMenu(this.myState.config, ShapedConfig.configOptionsSpec),
 	      taMenu: new TokenActionsMenu(this.myState.config, ShapedConfig.configOptionsSpec),
-	      hideMenu: new HideMenu(this.myState.config, ShapedConfig.configOptionsSpec),
 	      hrMenu: new NewCharacterHouseruleMenu(this.myState.config, ShapedConfig.configOptionsSpec),
-	      savesMenu: new SavesMenu(this.myState.config, ShapedConfig.configOptionsSpec),
-	      fortitudeMenu: new CustomSaveTypeMenu(this.myState.config, ShapedConfig.configOptionsSpec, 'fortitude'),
-	      reflexMenu: new CustomSaveTypeMenu(this.myState.config, ShapedConfig.configOptionsSpec, 'reflex'),
-	      willMenu: new CustomSaveTypeMenu(this.myState.config, ShapedConfig.configOptionsSpec, 'will'),
-	      textMenu: new NewCharacterTextSizeMenu(this.myState.config, ShapedConfig.configOptionsSpec),
 	      varsMenu: new VariantsMenu(this.myState.config, ShapedConfig.configOptionsSpec),
 	      seMenu: new SheetEnhancementsMenu(this.myState.config, ShapedConfig.configOptionsSpec),
 	    };
 
-	    _.each(menus, menu => this.logger.wrapModule(menu));
-
-	    return commandProcessor.addCommand('config', this.process.bind(this), true)
+	    return commandProcessor.addCommand('config', this.process.bind(this))
 	      .options(ShapedConfig.configOptionsSpec)
 	      .optionLookup('menu', menus);
 	  }
@@ -4704,11 +4417,11 @@ var ShapedScripts =
 	    utils.deepExtend(this.myState.config, _.omit(options, 'menu'));
 
 	    if (options.menu) {
-	      this.reportPlayer('Configuration', options.menu[0].getMenu());
+	      this.report('Configuration', options.menu[0].getMenu());
 	    }
 	    else {
 	      const menu = new MainMenu(this.myState.config, ShapedConfig.configOptionsSpec);
-	      this.reportPlayer('Configuration', menu.getMenu());
+	      this.report('Configuration', menu.getMenu());
 	    }
 	  }
 	}
@@ -4793,22 +4506,6 @@ var ShapedScripts =
 	  backToNewCharOptions() {
 	    return utils.buildHTML('a', '&lt;-- New Character Options', {
 	      href: '!shaped-config --ncMenu',
-	      style: 'text-align: center; margin: 5px 0 0 0; padding: 2px 2px ; border-radius: 10px; white-space: nowrap; ' +
-	      'overflow: hidden; text-overflow: ellipsis; background-color: #02baf2; border-color: #c0c0c0;',
-	    });
-	  }
-
-	  backToHouseRuleOptions() {
-	    return utils.buildHTML('a', '&lt;-- Houserule Options', {
-	      href: '!shaped-config --hrMenu',
-	      style: 'text-align: center; margin: 5px 0 0 0; padding: 2px 2px ; border-radius: 10px; white-space: nowrap; ' +
-	      'overflow: hidden; text-overflow: ellipsis; background-color: #02baf2; border-color: #c0c0c0;',
-	    });
-	  }
-
-	  backToSavesOptions() {
-	    return utils.buildHTML('a', '&lt;-- Saves Options', {
-	      href: '!shaped-config --savesMenu',
 	      style: 'text-align: center; margin: 5px 0 0 0; padding: 2px 2px ; border-radius: 10px; white-space: nowrap; ' +
 	      'overflow: hidden; text-overflow: ellipsis; background-color: #02baf2; border-color: #c0c0c0;',
 	    });
@@ -4920,14 +4617,6 @@ var ShapedScripts =
 	          ], attrs: { colspan: '2' },
 	        },
 	      ], { style: 'border: 1px solid gray;' });
-	  }
-
-	  get logWrap() {
-	    return this.constructor.name;
-	  }
-
-	  toJSON() {
-	    return {};
 	  }
 	}
 
@@ -5151,8 +4840,7 @@ var ShapedScripts =
 	  getMenu() {
 	    const menu = 'ncMenu';
 	    const ncs = 'newCharSettings';
-	    let optionRows =
-	      this.makeToggleSetting({ path: `${ncs}.applyToAll`, title: 'Apply to all new chars?', menuCmd: menu });
+	    let optionRows = '';
 
 	    const spec = this.specRoot.newCharSettings;
 
@@ -5225,12 +4913,6 @@ var ShapedScripts =
 	      }) +
 	      this.makeOptionRow({
 	        title: 'Houserule Settings', path: 'hrMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
-	      }) +
-	      this.makeOptionRow({
-	        title: 'Hide Settings', path: 'hideMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
-	      }) +
-	      this.makeOptionRow({
-	        title: 'Text sizes', path: 'textMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      });
 
 	    const th = utils.buildHTML('th', 'New Character Sheets', { colspan: '2' });
@@ -5246,22 +4928,13 @@ var ShapedScripts =
 	    const hr = 'newCharSettings.houserules';
 	    const menu = 'hrMenu';
 
-	    const optionRows =
-	      this.makeQuerySetting({
-	        path: `${hr}.baseDC`, title: 'Base DC', prompt: 'Base DC', menuCmd: menu,
-	        spec: this.specRoot.newCharSettings.houserules.baseDC(),
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${hr}.mediumArmorMaxDex`, title: 'Medium Armor Max Dex', menuCmd: menu,
-	        spec: this.specRoot.newCharSettings.houserules.mediumArmorMaxDex(),
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${hr}.expertiseAsAdvantage`, title: 'Expertise as advantage', menuCmd: menu,
-	        spec: this.specRoot.newCharSettings.houserules.expertiseAsAdvantage(),
-	      }) +
-	      this.makeOptionRow({
-	        title: 'Saving Throws', path: 'savesMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
-	      });
+	    let optionRows = this.makeToggleSetting({
+	      path: `${hr}.savingThrowsHalfProf`, title: 'Half Proficiency Saves', menuCmd: menu,
+	    });
+	    optionRows += this.makeQuerySetting({
+	      path: `${hr}.mediumArmorMaxDex`, title: 'Medium Armor Max Dex', menuCmd: menu,
+	      spec: this.specRoot.newCharSettings.houserules.mediumArmorMaxDex(),
+	    });
 
 	    const th = utils.buildHTML('th', 'Houserule Settings', { colspan: '2' });
 	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
@@ -5270,125 +4943,6 @@ var ShapedScripts =
 	    return table + this.backToNewCharOptions();
 	  }
 	}
-
-	class HideMenu extends ConfigMenu {
-	  getMenu() {
-	    const hide = 'newCharSettings.hide';
-	    const menu = 'hideMenu';
-
-	    const optionRows = [
-	      'hideAbilityChecks', 'hideSavingThrows', 'hideAttack', 'hideDamage', 'hideFreetext', 'hideRecharge',
-	      'hideSavingThrowDC', 'hideSavingThrowFailure', 'hideSavingThrowSuccess', 'hideSpellContent',
-	    ].reduce((result, functionName) => {
-	      const title = utils.toTitleCase(
-	        functionName.replace(/([a-z])([A-Z]+)/g, (match, lower, upper) => `${lower} ${upper.toLowerCase()}`));
-	      result += this.makeToggleSetting({
-	        path: `${hide}.${functionName}`, title, menuCmd: menu,
-	        spec: this.specRoot.newCharSettings.hide[functionName](),
-	      });
-	      return result;
-	    }, '');
-
-	    const th = utils.buildHTML('th', 'Hide Settings', { colspan: '2' });
-	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
-	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
-
-	    return table + this.backToNewCharOptions();
-	  }
-	}
-
-	class SavesMenu extends ConfigMenu {
-	  getMenu() {
-	    const saves = 'newCharSettings.houserules.saves';
-	    const menu = 'savesMenu';
-
-	    const optionRows =
-	      this.makeToggleSetting({
-	        path: `${saves}.savingThrowsHalfProf`, title: 'Half Proficiency Saves', menuCmd: menu,
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${saves}.useCustomSaves`, title: 'Use Custom Saves', menuCmd: menu,
-	        spec: this.specRoot.newCharSettings.houserules.saves.useCustomSaves(),
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${saves}.useAverageOfAbilities`, title: 'Use Average of Highest Abils', menuCmd: menu,
-	        spec: this.specRoot.newCharSettings.houserules.saves.useAverageOfAbilities(),
-	      }) +
-	      this.makeOptionRow({
-	        title: 'Fortitude', path: 'fortitudeMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
-	      }) +
-	      this.makeOptionRow({
-	        title: 'Reflex', path: 'reflexMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
-	      }) +
-	      this.makeOptionRow({
-	        title: 'Will', path: 'willMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
-	      });
-
-	    const th = utils.buildHTML('th', 'Houserule Settings', { colspan: '2' });
-	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
-	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
-
-	    return table + this.backToHouseRuleOptions();
-	  }
-	}
-
-	class CustomSaveTypeMenu extends ConfigMenu {
-
-	  constructor(config, specRoot, saveName) {
-	    super(config, specRoot);
-	    this.saveName = saveName;
-	  }
-
-	  getMenu() {
-	    const saves = `newCharSettings.houserules.saves.${this.saveName}`;
-	    const menu = `${this.saveName}Menu`;
-	    const spec = this.specRoot.newCharSettings.houserules.saves[this.saveName];
-
-	    const optionRows = ['Strength', 'Dexterity', 'Constitution', 'Intelligence', 'Wisdom', 'Charisma']
-	      .reduce((result, attr) => {
-	        const propName = `${this.saveName}${attr}`;
-	        result += this.makeToggleSetting({
-	          path: `${saves}.${propName}`, title: attr, menuCmd: menu, spec: spec[propName](),
-	        });
-	        return result;
-	      }, '');
-
-	    const th = utils.buildHTML('th', `${this.saveName} Saves`, { colspan: '2' });
-	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
-	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
-
-	    return table + this.backToSavesOptions();
-	  }
-	}
-
-
-	class NewCharacterTextSizeMenu extends ConfigMenu {
-	  getMenu() {
-	    const textSizes = 'newCharSettings.textSizes';
-	    const menu = 'textMenu';
-
-	    const optionRows =
-	      this.makeQuerySetting({
-	        path: `${textSizes}.spellsTextSize`, title: 'Spells', menuCmd: menu,
-	        spec: this.specRoot.newCharSettings.textSizes.spellsTextSize(),
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${textSizes}.abilityChecksTextSize`, title: 'Ability Checks', menuCmd: menu,
-	        spec: this.specRoot.newCharSettings.textSizes.abilityChecksTextSize(),
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${textSizes}.savingThrowsTextSize`, title: 'Saving Throws', menuCmd: menu,
-	        spec: this.specRoot.newCharSettings.textSizes.savingThrowsTextSize(),
-	      });
-
-	    const th = utils.buildHTML('th', 'Text sizes', { colspan: '2' });
-	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
-	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
-
-	    return table + this.backToNewCharOptions();
-	  }
-	}
-
 
 	class VariantsMenu extends ConfigMenu {
 	  getMenu() {
@@ -5440,9 +4994,6 @@ var ShapedScripts =
 	    const spec = this.specRoot.newCharSettings.tokenActions;
 
 	    const optionRows =
-	      this.makeQuerySetting({
-	        path: `${root}.advantageTracker`, title: 'Advantage Tracker', menuCmd: menu, spec: spec.advantageTracker(),
-	      }) +
 	      this.makeToggleSetting({
 	        path: `${root}.initiative`, title: 'Initiative', menuCmd: menu,
 	      }) +
@@ -5450,16 +5001,13 @@ var ShapedScripts =
 	        path: `${root}.abilityChecks`, title: 'Ability Checks', menuCmd: menu, spec: spec.abilityChecks(),
 	      }) +
 	      this.makeQuerySetting({
-	        path: `${root}.savingThrows`, title: 'Saves', menuCmd: menu, spec: spec.savingThrows(),
+	        path: `${root}.advantageTracker`, title: 'Advantage Tracker', menuCmd: menu, spec: spec.advantageTracker(),
 	      }) +
-	      this.makeToggleSetting({
-	        path: `${root}.rests`, title: 'Rests', menuCmd: menu,
+	      this.makeQuerySetting({
+	        path: `${root}.savingThrows`, title: 'Saves', menuCmd: menu, spec: spec.savingThrows(),
 	      }) +
 	      this.makeQuerySetting({
 	        path: `${root}.attacks`, title: 'Attacks', menuCmd: menu, spec: spec.attacks(),
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${root}.spells`, title: 'Spells', menuCmd: menu,
 	      }) +
 	      this.makeToggleSetting({
 	        path: `${root}.statblock`, title: 'Statblock', menuCmd: menu,
@@ -5469,6 +5017,9 @@ var ShapedScripts =
 	      }) +
 	      this.makeQuerySetting({
 	        path: `${root}.actions`, title: 'Actions', menuCmd: menu, spec: spec.actions(),
+	      }) +
+	      this.makeToggleSetting({
+	        path: `${root}.spells`, title: 'Spells', menuCmd: menu,
 	      }) +
 	      this.makeQuerySetting({
 	        path: `${root}.reactions`, title: 'Reactions', menuCmd: menu, spec: spec.reactions(),
@@ -5481,6 +5032,9 @@ var ShapedScripts =
 	      }) +
 	      this.makeQuerySetting({
 	        path: `${root}.regionalEffects`, title: 'Regional Effects', menuCmd: menu, spec: spec.regionalEffects(),
+	      }) +
+	      this.makeToggleSetting({
+	        path: `${root}.rests`, title: 'Rests', menuCmd: menu,
 	      });
 
 	    const th = utils.buildHTML('th', 'Default Token Actions', { colspan: '2' });
@@ -5532,7 +5086,7 @@ var ShapedScripts =
 	class AdvantageTracker extends ShapedModule {
 
 	  addCommands(commandProcessor) {
-	    return commandProcessor.addCommand('at', this.process.bind(this), false)
+	    return commandProcessor.addCommand('at', this.process.bind(this))
 	      .option('advantage', ShapedConfig.booleanValidator)
 	      .option('disadvantage', ShapedConfig.booleanValidator)
 	      .option('normal', ShapedConfig.booleanValidator)
@@ -5734,7 +5288,7 @@ var ShapedScripts =
 	class RestManager extends ShapedModule {
 
 	  addCommands(commandProcessor) {
-	    return commandProcessor.addCommand('rest', this.handleRest.bind(this), false)
+	    return commandProcessor.addCommand('rest', this.handleRest.bind(this))
 	      .option('long', ShapedConfig.booleanValidator)
 	      .option('short', ShapedConfig.booleanValidator)
 	      .option('id', ShapedConfig.getCharacterValidator(this.roll20), false)
@@ -6013,7 +5567,7 @@ var ShapedScripts =
 	        usesAttr.set('current', parseInt(usesAttr.get('current'), 10) - 1);
 	      }
 	      else {
-	        this.reportPublic('Trait Police', `${options.characterName} can't use ${options.title} because ` +
+	        this.reporter.report('Trait Police', `${options.characterName} can't use ${options.title} because ` +
 	          'they don\'t have any uses left.');
 	      }
 	    }
@@ -6153,7 +5707,6 @@ var ShapedScripts =
 
 	function componentMapper(key, value, output) {
 	  const components = _.chain(value)
-	    .omit('materialCost')
 	    .map((propValue, propName) => {
 	      if (propName !== 'materialMaterial') {
 	        return propName.toUpperCase().slice(0, 1);
@@ -6376,7 +5929,6 @@ var ShapedScripts =
 	    return _.map(spellObjects, spellObject => {
 	      const converted = {};
 	      spellMapper(null, spellObject, converted);
-	      converted.toggle_details = 0;
 	      if (converted.emote) {
 	        _.each(pronounTokens, (pronounType, token) => {
 	          const replacement = pronounInfo[pronounType];

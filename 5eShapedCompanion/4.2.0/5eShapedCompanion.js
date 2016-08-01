@@ -132,7 +132,7 @@ var ShapedScripts =
 /***/ function(module, exports, __webpack_require__) {
 
 	/* globals state, createObj, findObjs, getObj, getAttrByName, sendChat, on, log, Campaign, playerIsGM, spawnFx,
-	 spawnFxBetweenPoints, filterObjs, randomInteger */
+	 spawnFxBetweenPoints, filterObjs */
 	'use strict';
 	const _ = __webpack_require__(2);
 
@@ -267,10 +267,6 @@ var ShapedScripts =
 
 	  on(event, callback) {
 	    return on(event, callback);
-	  }
-
-	  randomInteger(max) {
-	    return randomInteger(max);
 	  }
 
 	  log(msg) {
@@ -1217,7 +1213,7 @@ var ShapedScripts =
 						"name": "legendaryPoints",
 						"type": "number",
 						"bare": true,
-						"pattern": "^The[ \\w]+can take (\\d+) legendary actions.*?start.*?turn[.]?",
+						"pattern": "^The[ \\w]+can take (\\d+) legendary actions.*?start of its turn[.]?",
 						"matchGroup": 1
 					},
 					{
@@ -2270,8 +2266,6 @@ var ShapedScripts =
 	      if (character) {
 	        this.applyCharacterDefaults(character);
 	        this.getTokenConfigurer(token)(character);
-	        const sensesString = roll20.getAttrByName(character.id, 'senses');
-	        this.getTokenVisionConfigurer(token, sensesString)();
 	      }
 	    });
 	  };
@@ -2509,15 +2503,12 @@ var ShapedScripts =
 
 	  this.applyCharacterDefaults = function applyCharacterDefaults(character) {
 	    _.each(utils.flattenObject(_.omit(myState.config.newCharSettings, 'tokenActions')), (value, key) => {
-	      const attrName = ShapedConfig.configToAttributeLookup[key];
-	      if (attrName) {
-	        const attribute = roll20.getOrCreateAttr(character.id, attrName);
-	        if (value === '***default***' || (_.isBoolean(value) && !value)) {
-	          attribute.remove();
-	        }
-	        else {
-	          attribute.set('current', _.isBoolean(value) ? 'on' : value);
-	        }
+	      const attribute = roll20.getOrCreateAttr(character.id, ShapedConfig.configToAttributeLookup[key] || key);
+	      if (value === '***default***' || (_.isBoolean(value) && !value)) {
+	        attribute.remove();
+	      }
+	      else {
+	        attribute.set('current', _.isBoolean(value) ? 'on' : value);
 	      }
 	    });
 
@@ -2582,7 +2573,6 @@ var ShapedScripts =
 
 	  this.getTokenVisionConfigurer = function getTokenVisionConfigurer(token, sensesString) {
 	    if (_.isEmpty(sensesString)) {
-	      logger.debug('Empty senses string, using default values');
 	      return _.noop;
 	    }
 
@@ -2592,7 +2582,7 @@ var ShapedScripts =
 	    }
 
 	    function darkvisionLightConfigurer() {
-	      token.set('light_radius', Math.max(token.get('light_radius') || 0, Math.round(this.lightRadius * 1.1666666)));
+	      token.set('light_radius', Math.max(token.get('light_radius') || 0, this.lightRadius * 1.1666666));
 	      if (!token.get('light_dimradius')) {
 	        token.set('light_dimradius', -5);
 	      }
@@ -2721,9 +2711,7 @@ var ShapedScripts =
 	  };
 
 	  this.handleAddCharacter = function handleAddCharacter(character) {
-	    if (myState.config.newCharSettings.applyToAll) {
-	      this.applyCharacterDefaults(character);
-	    }
+	    this.applyCharacterDefaults(character);
 	  };
 
 	  this.setTokenBarsOnDrop = function setTokenBarsOnDrop(token, overwrite) {
@@ -3106,7 +3094,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v4.4.6 <=-');
+	    logger.info('-=> ShapedScripts v4.2.0 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -3921,13 +3909,7 @@ var ShapedScripts =
 	    hideSavingThrowFailure: '***default***',
 	    hideSavingThrowSuccess: '***default***',
 	    hideRecharge: '***default***',
-	  })
-	  // 2.8 rename hideActionFreetext
-	  .nextVersion()
-	  .moveProperty('config.newCharSettings.hide.hideActionFreetext', 'config.newCharSettings.hide.hideFreetext')
-	  // 2.9 make auto-applying new character settings optional (and switched off by default)
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.applyToAll', false);
+	  });
 
 
 	Migrator.migrateShapedConfig = migrator.migrateConfig.bind(migrator);
@@ -3964,7 +3946,6 @@ var ShapedScripts =
 	      abilityChecksTextSize: 'ability_checks_text_size',
 	      savingThrowsTextSize: 'saving_throws_text_size',
 	      baseDC: 'base_dc',
-	      tab: 'tab',
 	      useCustomSaves: 'use_custom_saving_throws',
 	      useAverageOfAbilities: 'average_of_abilities',
 	      expertiseAsAdvantage: 'expertise_as_advantage',
@@ -3974,11 +3955,10 @@ var ShapedScripts =
 	      hideSavingThrows: 'hide_saving_throws',
 	      hideSavingThrowDC: 'hide_saving_throw_dc',
 	      hideSpellContent: 'hide_spell_content',
-	      hideFreetext: 'hide_freetext',
+	      hideActionFreetext: 'hide_action_freetext',
 	      hideSavingThrowFailure: 'hide_saving_throw_failure',
 	      hideSavingThrowSuccess: 'hide_saving_throw_success',
 	      hideRecharge: 'hide_recharge',
-	      customSkills: 'custom_skills',
 	    };
 
 	    ['fortitude', 'reflex', 'will'].forEach(save => {
@@ -4054,6 +4034,13 @@ var ShapedScripts =
 	    return this.getOptionList({
 	      public: '***default***',
 	      whisper: '/w GM',
+	    });
+	  }
+
+	  static get textSizeValidator() {
+	    return this.getOptionList({
+	      normal: 'text',
+	      big: '***default***',
 	    });
 	  }
 
@@ -4152,12 +4139,11 @@ var ShapedScripts =
 	        showAura2ToPlayers: this.booleanValidator,
 	      },
 	      newCharSettings: {
-	        applyToAll: this.booleanValidator,
 	        sheetOutput: this.sheetOutputValidator,
 	        deathSaveOutput: this.sheetOutputValidator,
 	        initiativeOutput: this.sheetOutputValidator,
 	        showNameOnRollTemplate: this.getOptionList({
-	          true: '{{show_character_name=1}}',
+	          true: '/w GM',
 	          false: '***default***',
 	        }),
 	        rollOptions: this.getOptionList({
@@ -4253,7 +4239,6 @@ var ShapedScripts =
 	            none: null,
 	            normal: 'advantageTracker',
 	            short: 'advantageTrackerShort',
-	            shortest: 'advantageTrackerShortest',
 	            query: 'advantageTrackerQuery',
 	          }),
 	          savingThrows: this.getOptionList({
@@ -4304,32 +4289,22 @@ var ShapedScripts =
 	          rests: this.booleanValidator,
 	        },
 	        textSizes: {
-	          spellsTextSize: this.getOptionList({
-	            normal: '***default***',
-	            big: 'big',
-	          }),
-	          abilityChecksTextSize: this.getOptionList({
-	            normal: 'text',
-	            big: '***default***',
-	          }),
-	          savingThrowsTextSize: this.getOptionList({
-	            normal: 'text',
-	            big: '***default***',
-	          }),
+	          spellsTextSize: this.textSizeValidator,
+	          abilityChecksTextSize: this.textSizeValidator,
+	          savingThrowsTextSize: this.textSizeValidator,
 	        },
 	        hide: {
-	          hideAbilityChecks: this.getHideOption('hide_ability_checks'),
-	          hideSavingThrows: this.getHideOption('hide_saving_throws'),
 	          hideAttack: this.getHideOption('hide_attack'),
 	          hideDamage: this.getHideOption('hide_damage'),
-	          hideFreetext: this.getHideOption('hide_freetext'),
-	          hideRecharge: this.getHideOption('hide_recharge'),
+	          hideAbilityChecks: this.getHideOption('hide_ability_checks'),
+	          hideSavingThrows: this.getHideOption('hide_saving_throws'),
 	          hideSavingThrowDC: this.getHideOption('hide_saving_throw_dc'),
+	          hideSpellContent: this.getHideOption('hide_spell_content'),
+	          hideActionFreetext: this.getHideOption('hide_action_freetext'),
 	          hideSavingThrowFailure: this.getHideOption('hide_saving_throw_failure'),
 	          hideSavingThrowSuccess: this.getHideOption('hide_saving_throw_success'),
-	          hideSpellContent: this.getHideOption('hide_spell_content'),
+	          hideRecharge: this.getHideOption('hide_recharge'),
 	        },
-	        customSkills: this.stringValidator,
 	      },
 	      advTrackerSettings: {
 	        showMarkers: this.booleanValidator,
@@ -4562,10 +4537,6 @@ var ShapedScripts =
 	        { command: 'shaped-at', options: ['advantage'], abilityName: 'Adv' },
 	        { command: 'shaped-at', options: ['disadvantage'], abilityName: 'Dis' },
 	        { command: 'shaped-at', options: ['normal'], abilityName: 'Normal' },
-	      ], roll20),
-	      advantageTrackerShortest: new MultiCommandAbilityMaker([
-	        { command: 'shaped-at', options: ['advantage'], abilityName: 'Adv' },
-	        { command: 'shaped-at', options: ['disadvantage'], abilityName: 'Dis' },
 	      ], roll20),
 	      advantageTrackerQuery: new CommandAbilityMaker('shaped-at',
 	        ['?{Roll Option|Normal,normal|w/ Advantage,advantage|w/ Disadvantage,disadvantage}'], '(dis)Adv Query', roll20),
@@ -5151,8 +5122,7 @@ var ShapedScripts =
 	  getMenu() {
 	    const menu = 'ncMenu';
 	    const ncs = 'newCharSettings';
-	    let optionRows =
-	      this.makeToggleSetting({ path: `${ncs}.applyToAll`, title: 'Apply to all new chars?', menuCmd: menu });
+	    let optionRows = '';
 
 	    const spec = this.specRoot.newCharSettings;
 
@@ -5276,18 +5246,16 @@ var ShapedScripts =
 	    const hide = 'newCharSettings.hide';
 	    const menu = 'hideMenu';
 
-	    const optionRows = [
-	      'hideAbilityChecks', 'hideSavingThrows', 'hideAttack', 'hideDamage', 'hideFreetext', 'hideRecharge',
-	      'hideSavingThrowDC', 'hideSavingThrowFailure', 'hideSavingThrowSuccess', 'hideSpellContent',
-	    ].reduce((result, functionName) => {
-	      const title = utils.toTitleCase(
-	        functionName.replace(/([a-z])([A-Z]+)/g, (match, lower, upper) => `${lower} ${upper.toLowerCase()}`));
-	      result += this.makeToggleSetting({
-	        path: `${hide}.${functionName}`, title, menuCmd: menu,
-	        spec: this.specRoot.newCharSettings.hide[functionName](),
-	      });
-	      return result;
-	    }, '');
+	    const optionRows =
+	      _.functions(this.specRoot.newCharSettings.hide).reduce((result, functionName) => {
+	        const title = utils.toTitleCase(
+	          functionName.replace(/([a-z])([A-Z])+/g, (match, lower, upper) => `${lower} ${upper.toLowerCase()}`));
+	        result += this.makeToggleSetting({
+	          path: `${hide}.${functionName}`, title, menuCmd: menu,
+	          spec: this.specRoot.newCharSettings.hide[functionName](),
+	        });
+	        return result;
+	      }, '');
 
 	    const th = utils.buildHTML('th', 'Hide Settings', { colspan: '2' });
 	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
@@ -5373,11 +5341,11 @@ var ShapedScripts =
 	        spec: this.specRoot.newCharSettings.textSizes.spellsTextSize(),
 	      }) +
 	      this.makeQuerySetting({
-	        path: `${textSizes}.abilityChecksTextSize`, title: 'Ability Checks', menuCmd: menu,
+	        path: `${textSizes}.abilityChecksSize`, title: 'Ability Checks', menuCmd: menu,
 	        spec: this.specRoot.newCharSettings.textSizes.abilityChecksTextSize(),
 	      }) +
 	      this.makeQuerySetting({
-	        path: `${textSizes}.savingThrowsTextSize`, title: 'Saving Throws', menuCmd: menu,
+	        path: `${textSizes}.savingThrowsSize`, title: 'Saving Throws', menuCmd: menu,
 	        spec: this.specRoot.newCharSettings.textSizes.savingThrowsTextSize(),
 	      });
 
@@ -6376,7 +6344,6 @@ var ShapedScripts =
 	    return _.map(spellObjects, spellObject => {
 	      const converted = {};
 	      spellMapper(null, spellObject, converted);
-	      converted.toggle_details = 0;
 	      if (converted.emote) {
 	        _.each(pronounTokens, (pronounType, token) => {
 	          const replacement = pronounInfo[pronounType];

@@ -132,7 +132,7 @@ var ShapedScripts =
 /***/ function(module, exports, __webpack_require__) {
 
 	/* globals state, createObj, findObjs, getObj, getAttrByName, sendChat, on, log, Campaign, playerIsGM, spawnFx,
-	 spawnFxBetweenPoints, filterObjs, randomInteger */
+	 spawnFxBetweenPoints, filterObjs */
 	'use strict';
 	const _ = __webpack_require__(2);
 
@@ -267,10 +267,6 @@ var ShapedScripts =
 
 	  on(event, callback) {
 	    return on(event, callback);
-	  }
-
-	  randomInteger(max) {
-	    return randomInteger(max);
 	  }
 
 	  log(msg) {
@@ -1011,7 +1007,7 @@ var ShapedScripts =
 						"name": "skills",
 						"minOccurs": 0,
 						"type": "string",
-						"pattern": "(?:(?:^|,\\s*)(?:Acrobatics|Animal Handling|Arcana|Athletics|Deception|History|Insight|Intimidation|Investigation|Medicine|Nature|Perception|Performance|Persuasion|Religion|Sleight of Hand|Stealth|Survival|Influence|Society)\\s+[\\-\\+]\\d+)+"
+						"pattern": "(?:(?:^|,\\s*)(?:Acrobatics|Animal Handling|Arcana|Athletics|Deception|History|Insight|Intimidation|Investigation|Medicine|Nature|Perception|Performance|Persuasion|Religion|Sleight of Hand|Stealth|Survival)\\s+[\\-\\+]\\d+)+"
 					},
 					{
 						"minOccurs": 0,
@@ -1217,7 +1213,7 @@ var ShapedScripts =
 						"name": "legendaryPoints",
 						"type": "number",
 						"bare": true,
-						"pattern": "^The[ \\w]+can take (\\d+) legendary actions.*?start.*?turn[.]?",
+						"pattern": "^The[ \\w]+can take (\\d+) legendary actions.*?start of its turn[.]?",
 						"matchGroup": 1
 					},
 					{
@@ -2270,8 +2266,6 @@ var ShapedScripts =
 	      if (character) {
 	        this.applyCharacterDefaults(character);
 	        this.getTokenConfigurer(token)(character);
-	        const sensesString = roll20.getAttrByName(character.id, 'senses');
-	        this.getTokenVisionConfigurer(token, sensesString)();
 	      }
 	    });
 	  };
@@ -2509,23 +2503,19 @@ var ShapedScripts =
 
 	  this.applyCharacterDefaults = function applyCharacterDefaults(character) {
 	    _.each(utils.flattenObject(_.omit(myState.config.newCharSettings, 'tokenActions')), (value, key) => {
-	      const attrName = ShapedConfig.configToAttributeLookup[key];
-	      if (attrName) {
-	        const attribute = roll20.getOrCreateAttr(character.id, attrName);
-	        if (value === '***default***' || (_.isBoolean(value) && !value)) {
-	          attribute.remove();
-	        }
-	        else {
-	          attribute.set('current', _.isBoolean(value) ? 'on' : value);
-	        }
+	      const attribute = roll20.getOrCreateAttr(character.id, ShapedConfig.configToAttributeLookup[key] || key);
+	      if (value === '***default***' || (_.isBoolean(value) && !value)) {
+	        attribute.remove();
+	      }
+	      else {
+	        attribute.set('current', _.isBoolean(value) ? 'on' : value);
 	      }
 	    });
 
 	    const abilityNames = _.chain(myState.config.newCharSettings.tokenActions)
 	      .map((action, actionName) => (action === true ? actionName : action))
 	      .compact()
-	      .values()
-	      .value();
+	      .values();
 	    abilityMaker.addAbilitiesByName(abilityNames, character);
 	  };
 
@@ -2582,7 +2572,6 @@ var ShapedScripts =
 
 	  this.getTokenVisionConfigurer = function getTokenVisionConfigurer(token, sensesString) {
 	    if (_.isEmpty(sensesString)) {
-	      logger.debug('Empty senses string, using default values');
 	      return _.noop;
 	    }
 
@@ -2592,7 +2581,7 @@ var ShapedScripts =
 	    }
 
 	    function darkvisionLightConfigurer() {
-	      token.set('light_radius', Math.max(token.get('light_radius') || 0, Math.round(this.lightRadius * 1.1666666)));
+	      token.set('light_radius', Math.max(token.get('light_radius') || 0, this.lightRadius * 1.1666666));
 	      if (!token.get('light_dimradius')) {
 	        token.set('light_dimradius', -5);
 	      }
@@ -2721,9 +2710,7 @@ var ShapedScripts =
 	  };
 
 	  this.handleAddCharacter = function handleAddCharacter(character) {
-	    if (myState.config.newCharSettings.applyToAll) {
-	      this.applyCharacterDefaults(character);
-	    }
+	    this.applyCharacterDefaults(character);
 	  };
 
 	  this.setTokenBarsOnDrop = function setTokenBarsOnDrop(token, overwrite) {
@@ -3106,7 +3093,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v4.4.6 <=-');
+	    logger.info('-=> ShapedScripts v4.1.0 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -3904,30 +3891,7 @@ var ShapedScripts =
 	  })
 	  .moveProperty('config.newCharSettings.houserules.savingThrowsHalfProf',
 	    'config.newCharSettings.houserules.saves.savingThrowsHalfProf')
-	  .addProperty('config.newCharSettings.houserules.baseDC', '***default***')
-	  // 2.6 expertise_as_advantage
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.houserules.expertiseAsAdvantage', '***default***')
-	  // 2.7 add hide options
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.hide', {
-	    hideAttack: '***default***',
-	    hideDamage: '***default***',
-	    hideAbilityChecks: '***default***',
-	    hideSavingThrows: '***default***',
-	    hideSavingThrowDC: '***default***',
-	    hideSpellContent: '***default***',
-	    hideActionFreetext: '***default***',
-	    hideSavingThrowFailure: '***default***',
-	    hideSavingThrowSuccess: '***default***',
-	    hideRecharge: '***default***',
-	  })
-	  // 2.8 rename hideActionFreetext
-	  .nextVersion()
-	  .moveProperty('config.newCharSettings.hide.hideActionFreetext', 'config.newCharSettings.hide.hideFreetext')
-	  // 2.9 make auto-applying new character settings optional (and switched off by default)
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.applyToAll', false);
+	  .addProperty('config.newCharSettings.houserules.baseDC', '***default***');
 
 
 	Migrator.migrateShapedConfig = migrator.migrateConfig.bind(migrator);
@@ -3964,21 +3928,8 @@ var ShapedScripts =
 	      abilityChecksTextSize: 'ability_checks_text_size',
 	      savingThrowsTextSize: 'saving_throws_text_size',
 	      baseDC: 'base_dc',
-	      tab: 'tab',
 	      useCustomSaves: 'use_custom_saving_throws',
 	      useAverageOfAbilities: 'average_of_abilities',
-	      expertiseAsAdvantage: 'expertise_as_advantage',
-	      hideAttack: 'hide_attack',
-	      hideDamage: 'hide_damage',
-	      hideAbilityChecks: 'hide_ability_checks',
-	      hideSavingThrows: 'hide_saving_throws',
-	      hideSavingThrowDC: 'hide_saving_throw_dc',
-	      hideSpellContent: 'hide_spell_content',
-	      hideFreetext: 'hide_freetext',
-	      hideSavingThrowFailure: 'hide_saving_throw_failure',
-	      hideSavingThrowSuccess: 'hide_saving_throw_success',
-	      hideRecharge: 'hide_recharge',
-	      customSkills: 'custom_skills',
 	    };
 
 	    ['fortitude', 'reflex', 'will'].forEach(save => {
@@ -4024,10 +3975,6 @@ var ShapedScripts =
 	    };
 	  }
 
-	  static getHideOption(propertyName) {
-	    return this.getOptionList({ false: '***default***', true: `{{${propertyName}=1}}` });
-	  }
-
 	  static getBooleanOptionList() {
 	    return this.getOptionList({
 	      true: 1,
@@ -4054,6 +4001,13 @@ var ShapedScripts =
 	    return this.getOptionList({
 	      public: '***default***',
 	      whisper: '/w GM',
+	    });
+	  }
+
+	  static get textSizeValidator() {
+	    return this.getOptionList({
+	      normal: 'text',
+	      big: '***default***',
 	    });
 	  }
 
@@ -4152,12 +4106,11 @@ var ShapedScripts =
 	        showAura2ToPlayers: this.booleanValidator,
 	      },
 	      newCharSettings: {
-	        applyToAll: this.booleanValidator,
 	        sheetOutput: this.sheetOutputValidator,
 	        deathSaveOutput: this.sheetOutputValidator,
 	        initiativeOutput: this.sheetOutputValidator,
 	        showNameOnRollTemplate: this.getOptionList({
-	          true: '{{show_character_name=1}}',
+	          true: '/w GM',
 	          false: '***default***',
 	        }),
 	        rollOptions: this.getOptionList({
@@ -4201,7 +4154,6 @@ var ShapedScripts =
 	            result[val] = val === 2 ? '***default***' : val;
 	            return result;
 	          }, {})),
-	          expertiseAsAdvantage: this.getBooleanOptionList(),
 	          saves: {
 	            savingThrowsHalfProf: this.booleanValidator,
 	            useCustomSaves: this.getBooleanOptionList(),
@@ -4252,8 +4204,6 @@ var ShapedScripts =
 	          advantageTracker: this.getOptionList({
 	            none: null,
 	            normal: 'advantageTracker',
-	            short: 'advantageTrackerShort',
-	            shortest: 'advantageTrackerShortest',
 	            query: 'advantageTrackerQuery',
 	          }),
 	          savingThrows: this.getOptionList({
@@ -4304,32 +4254,10 @@ var ShapedScripts =
 	          rests: this.booleanValidator,
 	        },
 	        textSizes: {
-	          spellsTextSize: this.getOptionList({
-	            normal: '***default***',
-	            big: 'big',
-	          }),
-	          abilityChecksTextSize: this.getOptionList({
-	            normal: 'text',
-	            big: '***default***',
-	          }),
-	          savingThrowsTextSize: this.getOptionList({
-	            normal: 'text',
-	            big: '***default***',
-	          }),
+	          spellsTextSize: this.textSizeValidator,
+	          abilityChecksTextSize: this.textSizeValidator,
+	          savingThrowsTextSize: this.textSizeValidator,
 	        },
-	        hide: {
-	          hideAbilityChecks: this.getHideOption('hide_ability_checks'),
-	          hideSavingThrows: this.getHideOption('hide_saving_throws'),
-	          hideAttack: this.getHideOption('hide_attack'),
-	          hideDamage: this.getHideOption('hide_damage'),
-	          hideFreetext: this.getHideOption('hide_freetext'),
-	          hideRecharge: this.getHideOption('hide_recharge'),
-	          hideSavingThrowDC: this.getHideOption('hide_saving_throw_dc'),
-	          hideSavingThrowFailure: this.getHideOption('hide_saving_throw_failure'),
-	          hideSavingThrowSuccess: this.getHideOption('hide_saving_throw_success'),
-	          hideSpellContent: this.getHideOption('hide_spell_content'),
-	        },
-	        customSkills: this.stringValidator,
 	      },
 	      advTrackerSettings: {
 	        showMarkers: this.booleanValidator,
@@ -4553,32 +4481,22 @@ var ShapedScripts =
 	    const roll20 = this.roll20;
 	    this.staticAbilityOptions = {
 	      DELETE: new AbilityDeleter(roll20),
-	      advantageTracker: new MultiCommandAbilityMaker([
-	        { command: 'shaped-at', options: ['advantage'], abilityName: 'Advantage' },
-	        { command: 'shaped-at', options: ['disadvantage'], abilityName: 'Disadvantage' },
-	        { command: 'shaped-at', options: ['normal'], abilityName: 'Normal' },
-	      ], roll20),
-	      advantageTrackerShort: new MultiCommandAbilityMaker([
-	        { command: 'shaped-at', options: ['advantage'], abilityName: 'Adv' },
-	        { command: 'shaped-at', options: ['disadvantage'], abilityName: 'Dis' },
-	        { command: 'shaped-at', options: ['normal'], abilityName: 'Normal' },
-	      ], roll20),
-	      advantageTrackerShortest: new MultiCommandAbilityMaker([
-	        { command: 'shaped-at', options: ['advantage'], abilityName: 'Adv' },
-	        { command: 'shaped-at', options: ['disadvantage'], abilityName: 'Dis' },
-	      ], roll20),
-	      advantageTrackerQuery: new CommandAbilityMaker('shaped-at',
-	        ['?{Roll Option|Normal,normal|w/ Advantage,advantage|w/ Disadvantage,disadvantage}'], '(dis)Adv Query', roll20),
 	      initiative: new RollAbilityMaker('shaped_initiative', 'Init', roll20),
 	      abilityChecks: new RollAbilityMaker('shaped_ability_checks', 'Ability Checks', roll20),
 	      abilityChecksQuery: new RollAbilityMaker('shaped_ability_checks_query', 'Ability Checks', roll20),
 	      abilChecks: new RollAbilityMaker('shaped_ability_checks', 'AbilChecks', roll20),
 	      abilChecksQuery: new RollAbilityMaker('shaped_ability_checks_query', 'AbilChecks', roll20),
+	      advantageTracker: new MultiCommandAbilityMaker([
+	        { command: 'shaped-at', options: ['advantage'], abilityName: 'Advantage' },
+	        { command: 'shaped-at', options: ['disadvantage'], abilityName: 'Disadvantage' },
+	        { command: 'shaped-at', options: ['normal'], abilityName: 'Normal' },
+	      ], roll20),
+	      advantageTrackerQuery: new CommandAbilityMaker('shaped-at',
+	        ['?{Roll Option|Normal,normal|w/ Advantage,advantage|w/ Disadvantage,disadvantage}'], '(dis)Adv Query', roll20),
 	      savingThrows: new RollAbilityMaker('shaped_saving_throw', 'Saving Throws', roll20),
 	      savingThrowsQuery: new RollAbilityMaker('shaped_saving_throw_query', 'Saving Throws', roll20),
 	      saves: new RollAbilityMaker('shaped_saving_throw', 'Saves', roll20),
 	      savesQuery: new RollAbilityMaker('shaped_saving_throw_query', 'Saves', roll20),
-	      rests: new CommandAbilityMaker('shaped-rest', ['?{Rest type|Short,short|Long,long}'], 'Rests', roll20),
 	      attacks: new RepeatingAbilityMaker('attack', 'attack', 'Attacks', true, roll20),
 	      attacksMacro: new RepeatingSectionMacroMaker('shaped_attacks', 'attack', 'Attacks', roll20),
 	      spells: new RepeatingSectionMacroMaker('shaped_spells', 'spell', 'Spells', roll20),
@@ -4599,6 +4517,7 @@ var ShapedScripts =
 	      regionalEffects: new RepeatingSectionMacroMaker('shaped_regionaleffects', 'regionaleffect',
 	        'Regional Effects', roll20),
 	      regionalE: new RepeatingSectionMacroMaker('shaped_regionaleffects', 'regionaleffect', 'RegionalE', roll20),
+	      rests: new CommandAbilityMaker('shaped-rest', ['?{Rest type|Short,short|Long,long}'], 'Rests', roll20),
 	    };
 
 
@@ -4622,13 +4541,7 @@ var ShapedScripts =
 	        return (caches[key] = caches[key] || {});
 	      },
 	    };
-	    // Slightly backwards way of doing this that ensures that we run the items in the order they are listed above
-	    // rather than the order they are passed in the parameter. Ideally we'd allow users to configure this but
-	    // since we haven't implemented that functionality the order is determine by the order in the saved configuration
-	    // object which is quite hard to control.
-	    _.chain(this.staticAbilityOptions)
-	      .pick((value, key) => _.contains(abilities, key))
-	      .each(abilityMaker => abilityMaker.run(character, options));
+	    abilities.each(ability => this.staticAbilityOptions[ability].run(character, options));
 	  }
 
 	  addAbility(options) {
@@ -4681,7 +4594,6 @@ var ShapedScripts =
 	      auraMenu: new TokenAurasMenu(this.myState.config, ShapedConfig.configOptionsSpec),
 	      ncMenu: new NewCharacterMenu(this.myState.config, ShapedConfig.configOptionsSpec),
 	      taMenu: new TokenActionsMenu(this.myState.config, ShapedConfig.configOptionsSpec),
-	      hideMenu: new HideMenu(this.myState.config, ShapedConfig.configOptionsSpec),
 	      hrMenu: new NewCharacterHouseruleMenu(this.myState.config, ShapedConfig.configOptionsSpec),
 	      savesMenu: new SavesMenu(this.myState.config, ShapedConfig.configOptionsSpec),
 	      fortitudeMenu: new CustomSaveTypeMenu(this.myState.config, ShapedConfig.configOptionsSpec, 'fortitude'),
@@ -5151,8 +5063,7 @@ var ShapedScripts =
 	  getMenu() {
 	    const menu = 'ncMenu';
 	    const ncs = 'newCharSettings';
-	    let optionRows =
-	      this.makeToggleSetting({ path: `${ncs}.applyToAll`, title: 'Apply to all new chars?', menuCmd: menu });
+	    let optionRows = '';
 
 	    const spec = this.specRoot.newCharSettings;
 
@@ -5227,9 +5138,6 @@ var ShapedScripts =
 	        title: 'Houserule Settings', path: 'hrMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      }) +
 	      this.makeOptionRow({
-	        title: 'Hide Settings', path: 'hideMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
-	      }) +
-	      this.makeOptionRow({
 	        title: 'Text sizes', path: 'textMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      });
 
@@ -5255,41 +5163,11 @@ var ShapedScripts =
 	        path: `${hr}.mediumArmorMaxDex`, title: 'Medium Armor Max Dex', menuCmd: menu,
 	        spec: this.specRoot.newCharSettings.houserules.mediumArmorMaxDex(),
 	      }) +
-	      this.makeToggleSetting({
-	        path: `${hr}.expertiseAsAdvantage`, title: 'Expertise as advantage', menuCmd: menu,
-	        spec: this.specRoot.newCharSettings.houserules.expertiseAsAdvantage(),
-	      }) +
 	      this.makeOptionRow({
 	        title: 'Saving Throws', path: 'savesMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      });
 
 	    const th = utils.buildHTML('th', 'Houserule Settings', { colspan: '2' });
-	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
-	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
-
-	    return table + this.backToNewCharOptions();
-	  }
-	}
-
-	class HideMenu extends ConfigMenu {
-	  getMenu() {
-	    const hide = 'newCharSettings.hide';
-	    const menu = 'hideMenu';
-
-	    const optionRows = [
-	      'hideAbilityChecks', 'hideSavingThrows', 'hideAttack', 'hideDamage', 'hideFreetext', 'hideRecharge',
-	      'hideSavingThrowDC', 'hideSavingThrowFailure', 'hideSavingThrowSuccess', 'hideSpellContent',
-	    ].reduce((result, functionName) => {
-	      const title = utils.toTitleCase(
-	        functionName.replace(/([a-z])([A-Z]+)/g, (match, lower, upper) => `${lower} ${upper.toLowerCase()}`));
-	      result += this.makeToggleSetting({
-	        path: `${hide}.${functionName}`, title, menuCmd: menu,
-	        spec: this.specRoot.newCharSettings.hide[functionName](),
-	      });
-	      return result;
-	    }, '');
-
-	    const th = utils.buildHTML('th', 'Hide Settings', { colspan: '2' });
 	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
 	    const table = utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
 
@@ -5373,11 +5251,11 @@ var ShapedScripts =
 	        spec: this.specRoot.newCharSettings.textSizes.spellsTextSize(),
 	      }) +
 	      this.makeQuerySetting({
-	        path: `${textSizes}.abilityChecksTextSize`, title: 'Ability Checks', menuCmd: menu,
+	        path: `${textSizes}.abilityChecksSize`, title: 'Ability Checks', menuCmd: menu,
 	        spec: this.specRoot.newCharSettings.textSizes.abilityChecksTextSize(),
 	      }) +
 	      this.makeQuerySetting({
-	        path: `${textSizes}.savingThrowsTextSize`, title: 'Saving Throws', menuCmd: menu,
+	        path: `${textSizes}.savingThrowsSize`, title: 'Saving Throws', menuCmd: menu,
 	        spec: this.specRoot.newCharSettings.textSizes.savingThrowsTextSize(),
 	      });
 
@@ -5440,9 +5318,6 @@ var ShapedScripts =
 	    const spec = this.specRoot.newCharSettings.tokenActions;
 
 	    const optionRows =
-	      this.makeQuerySetting({
-	        path: `${root}.advantageTracker`, title: 'Advantage Tracker', menuCmd: menu, spec: spec.advantageTracker(),
-	      }) +
 	      this.makeToggleSetting({
 	        path: `${root}.initiative`, title: 'Initiative', menuCmd: menu,
 	      }) +
@@ -5450,16 +5325,13 @@ var ShapedScripts =
 	        path: `${root}.abilityChecks`, title: 'Ability Checks', menuCmd: menu, spec: spec.abilityChecks(),
 	      }) +
 	      this.makeQuerySetting({
-	        path: `${root}.savingThrows`, title: 'Saves', menuCmd: menu, spec: spec.savingThrows(),
+	        path: `${root}.advantageTracker`, title: 'Advantage Tracker', menuCmd: menu, spec: spec.advantageTracker(),
 	      }) +
-	      this.makeToggleSetting({
-	        path: `${root}.rests`, title: 'Rests', menuCmd: menu,
+	      this.makeQuerySetting({
+	        path: `${root}.savingThrows`, title: 'Saves', menuCmd: menu, spec: spec.savingThrows(),
 	      }) +
 	      this.makeQuerySetting({
 	        path: `${root}.attacks`, title: 'Attacks', menuCmd: menu, spec: spec.attacks(),
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${root}.spells`, title: 'Spells', menuCmd: menu,
 	      }) +
 	      this.makeToggleSetting({
 	        path: `${root}.statblock`, title: 'Statblock', menuCmd: menu,
@@ -5469,6 +5341,9 @@ var ShapedScripts =
 	      }) +
 	      this.makeQuerySetting({
 	        path: `${root}.actions`, title: 'Actions', menuCmd: menu, spec: spec.actions(),
+	      }) +
+	      this.makeToggleSetting({
+	        path: `${root}.spells`, title: 'Spells', menuCmd: menu,
 	      }) +
 	      this.makeQuerySetting({
 	        path: `${root}.reactions`, title: 'Reactions', menuCmd: menu, spec: spec.reactions(),
@@ -5481,6 +5356,9 @@ var ShapedScripts =
 	      }) +
 	      this.makeQuerySetting({
 	        path: `${root}.regionalEffects`, title: 'Regional Effects', menuCmd: menu, spec: spec.regionalEffects(),
+	      }) +
+	      this.makeToggleSetting({
+	        path: `${root}.rests`, title: 'Rests', menuCmd: menu,
 	      });
 
 	    const th = utils.buildHTML('th', 'Default Token Actions', { colspan: '2' });
@@ -6376,7 +6254,6 @@ var ShapedScripts =
 	    return _.map(spellObjects, spellObject => {
 	      const converted = {};
 	      spellMapper(null, spellObject, converted);
-	      converted.toggle_details = 0;
 	      if (converted.emote) {
 	        _.each(pronounTokens, (pronounType, token) => {
 	          const replacement = pronounInfo[pronounType];

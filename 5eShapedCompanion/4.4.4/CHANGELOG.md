@@ -1,24 +1,3 @@
-<a name="4.4.6"></a>
-## [4.4.6](https://github.com/symposion/roll20-shaped-scripts/compare/4.4.5...4.4.6) (2016-07-24)
-
-
-### Bug Fixes
-
-* **apply-defaults:** Apply vision settings from senses to tokens using apply-defaults ([30a5534](https://github.com/symposion/roll20-shaped-scripts/commit/30a5534))
-* **statblock-import:** Relax matching on legendary action point text ([ccce353](https://github.com/symposion/roll20-shaped-scripts/commit/ccce353))
-
-
-
-<a name="4.4.5"></a>
-## [4.4.5](https://github.com/symposion/roll20-shaped-scripts/compare/4.4.4...4.4.5) (2016-07-22)
-
-
-### Bug Fixes
-
-* **config:** Fix spell text size option for new characters ([0dbf43c](https://github.com/symposion/roll20-shaped-scripts/commit/0dbf43c)), closes [#223](https://github.com/symposion/roll20-shaped-scripts/issues/223)
-
-
-
 <a name="4.4.4"></a>
 ## [4.4.4](https://github.com/symposion/roll20-shaped-scripts/compare/4.4.3...4.4.4) (2016-07-20)
 

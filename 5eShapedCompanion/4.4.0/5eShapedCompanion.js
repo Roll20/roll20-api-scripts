@@ -132,7 +132,7 @@ var ShapedScripts =
 /***/ function(module, exports, __webpack_require__) {
 
 	/* globals state, createObj, findObjs, getObj, getAttrByName, sendChat, on, log, Campaign, playerIsGM, spawnFx,
-	 spawnFxBetweenPoints, filterObjs, randomInteger */
+	 spawnFxBetweenPoints, filterObjs */
 	'use strict';
 	const _ = __webpack_require__(2);
 
@@ -267,10 +267,6 @@ var ShapedScripts =
 
 	  on(event, callback) {
 	    return on(event, callback);
-	  }
-
-	  randomInteger(max) {
-	    return randomInteger(max);
 	  }
 
 	  log(msg) {
@@ -1217,7 +1213,7 @@ var ShapedScripts =
 						"name": "legendaryPoints",
 						"type": "number",
 						"bare": true,
-						"pattern": "^The[ \\w]+can take (\\d+) legendary actions.*?start.*?turn[.]?",
+						"pattern": "^The[ \\w]+can take (\\d+) legendary actions.*?start of its turn[.]?",
 						"matchGroup": 1
 					},
 					{
@@ -2270,8 +2266,6 @@ var ShapedScripts =
 	      if (character) {
 	        this.applyCharacterDefaults(character);
 	        this.getTokenConfigurer(token)(character);
-	        const sensesString = roll20.getAttrByName(character.id, 'senses');
-	        this.getTokenVisionConfigurer(token, sensesString)();
 	      }
 	    });
 	  };
@@ -2582,7 +2576,6 @@ var ShapedScripts =
 
 	  this.getTokenVisionConfigurer = function getTokenVisionConfigurer(token, sensesString) {
 	    if (_.isEmpty(sensesString)) {
-	      logger.debug('Empty senses string, using default values');
 	      return _.noop;
 	    }
 
@@ -2592,7 +2585,7 @@ var ShapedScripts =
 	    }
 
 	    function darkvisionLightConfigurer() {
-	      token.set('light_radius', Math.max(token.get('light_radius') || 0, Math.round(this.lightRadius * 1.1666666)));
+	      token.set('light_radius', Math.max(token.get('light_radius') || 0, this.lightRadius * 1.1666666));
 	      if (!token.get('light_dimradius')) {
 	        token.set('light_dimradius', -5);
 	      }
@@ -3106,7 +3099,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v4.4.6 <=-');
+	    logger.info('-=> ShapedScripts v4.4.0 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -4057,6 +4050,13 @@ var ShapedScripts =
 	    });
 	  }
 
+	  static get textSizeValidator() {
+	    return this.getOptionList({
+	      normal: 'text',
+	      big: '***default***',
+	    });
+	  }
+
 	  static get commandOutputValidator() {
 	    return this.getOptionList({
 	      public: 'public',
@@ -4157,7 +4157,7 @@ var ShapedScripts =
 	        deathSaveOutput: this.sheetOutputValidator,
 	        initiativeOutput: this.sheetOutputValidator,
 	        showNameOnRollTemplate: this.getOptionList({
-	          true: '{{show_character_name=1}}',
+	          true: '/w GM',
 	          false: '***default***',
 	        }),
 	        rollOptions: this.getOptionList({
@@ -4304,30 +4304,21 @@ var ShapedScripts =
 	          rests: this.booleanValidator,
 	        },
 	        textSizes: {
-	          spellsTextSize: this.getOptionList({
-	            normal: '***default***',
-	            big: 'big',
-	          }),
-	          abilityChecksTextSize: this.getOptionList({
-	            normal: 'text',
-	            big: '***default***',
-	          }),
-	          savingThrowsTextSize: this.getOptionList({
-	            normal: 'text',
-	            big: '***default***',
-	          }),
+	          spellsTextSize: this.textSizeValidator,
+	          abilityChecksTextSize: this.textSizeValidator,
+	          savingThrowsTextSize: this.textSizeValidator,
 	        },
 	        hide: {
-	          hideAbilityChecks: this.getHideOption('hide_ability_checks'),
-	          hideSavingThrows: this.getHideOption('hide_saving_throws'),
 	          hideAttack: this.getHideOption('hide_attack'),
 	          hideDamage: this.getHideOption('hide_damage'),
-	          hideFreetext: this.getHideOption('hide_freetext'),
-	          hideRecharge: this.getHideOption('hide_recharge'),
+	          hideAbilityChecks: this.getHideOption('hide_ability_checks'),
+	          hideSavingThrows: this.getHideOption('hide_saving_throws'),
 	          hideSavingThrowDC: this.getHideOption('hide_saving_throw_dc'),
+	          hideSpellContent: this.getHideOption('hide_spell_content'),
+	          hideFreetext: this.getHideOption('hide_freetext'),
 	          hideSavingThrowFailure: this.getHideOption('hide_saving_throw_failure'),
 	          hideSavingThrowSuccess: this.getHideOption('hide_saving_throw_success'),
-	          hideSpellContent: this.getHideOption('hide_spell_content'),
+	          hideRecharge: this.getHideOption('hide_recharge'),
 	        },
 	        customSkills: this.stringValidator,
 	      },
@@ -5276,18 +5267,16 @@ var ShapedScripts =
 	    const hide = 'newCharSettings.hide';
 	    const menu = 'hideMenu';
 
-	    const optionRows = [
-	      'hideAbilityChecks', 'hideSavingThrows', 'hideAttack', 'hideDamage', 'hideFreetext', 'hideRecharge',
-	      'hideSavingThrowDC', 'hideSavingThrowFailure', 'hideSavingThrowSuccess', 'hideSpellContent',
-	    ].reduce((result, functionName) => {
-	      const title = utils.toTitleCase(
-	        functionName.replace(/([a-z])([A-Z]+)/g, (match, lower, upper) => `${lower} ${upper.toLowerCase()}`));
-	      result += this.makeToggleSetting({
-	        path: `${hide}.${functionName}`, title, menuCmd: menu,
-	        spec: this.specRoot.newCharSettings.hide[functionName](),
-	      });
-	      return result;
-	    }, '');
+	    const optionRows =
+	      _.functions(this.specRoot.newCharSettings.hide).reduce((result, functionName) => {
+	        const title = utils.toTitleCase(
+	          functionName.replace(/([a-z])([A-Z]+)/g, (match, lower, upper) => `${lower} ${upper.toLowerCase()}`));
+	        result += this.makeToggleSetting({
+	          path: `${hide}.${functionName}`, title, menuCmd: menu,
+	          spec: this.specRoot.newCharSettings.hide[functionName](),
+	        });
+	        return result;
+	      }, '');
 
 	    const th = utils.buildHTML('th', 'Hide Settings', { colspan: '2' });
 	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
@@ -5373,11 +5362,11 @@ var ShapedScripts =
 	        spec: this.specRoot.newCharSettings.textSizes.spellsTextSize(),
 	      }) +
 	      this.makeQuerySetting({
-	        path: `${textSizes}.abilityChecksTextSize`, title: 'Ability Checks', menuCmd: menu,
+	        path: `${textSizes}.abilityChecksSize`, title: 'Ability Checks', menuCmd: menu,
 	        spec: this.specRoot.newCharSettings.textSizes.abilityChecksTextSize(),
 	      }) +
 	      this.makeQuerySetting({
-	        path: `${textSizes}.savingThrowsTextSize`, title: 'Saving Throws', menuCmd: menu,
+	        path: `${textSizes}.savingThrowsSize`, title: 'Saving Throws', menuCmd: menu,
 	        spec: this.specRoot.newCharSettings.textSizes.savingThrowsTextSize(),
 	      });
 
@@ -6376,7 +6365,6 @@ var ShapedScripts =
 	    return _.map(spellObjects, spellObject => {
 	      const converted = {};
 	      spellMapper(null, spellObject, converted);
-	      converted.toggle_details = 0;
 	      if (converted.emote) {
 	        _.each(pronounTokens, (pronounType, token) => {
 	          const replacement = pronounInfo[pronounType];
