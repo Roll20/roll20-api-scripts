@@ -1,5 +1,8 @@
 # Token Collisions
 
+_v1.4 Updates:_
+* getCollisions and getFirstCollision now accept an options object parameter. See the CollisionOptions typedef jsdoc for supported properties.
+
 _v1.3 Updates:_
 * Supports circle-to-rectangle token collisions.
 * Added isOverlapping() function.

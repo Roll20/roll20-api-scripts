@@ -1,6 +1,11 @@
 # It's A Trap!
 
 ###### Updates
+_2.5_
+* The script's API now exposes a announceTrap method for handling all universally supported trap output (messages, sounds, FX, etc.).
+* Trap JSON now supports a "gmOnly" property that displays the trap's message only to the GM.
+* Trap JSON now supports a "stopAt" property to make traps stop tokens at their center, edge, or not at all.
+
 _2.4_
 * Offsets and directions can be specified for beam-like special FX in the trap JSON.
 * A user option is provided for revealed traps to be sent to the map layer instead of the objects layer.
@@ -68,7 +73,7 @@ and has no passive search mechanics.
 
 Additional system-specific themes will be made available as their own API scripts.
 If you would like to implement a TrapTheme for your system, take a look at the
-5E-OGL TrapTheme as an example to get you started.
+"default" or "5E-OGL" TrapThemes as an example to get you started.
 
 ### TrapEffects JSON:
 
@@ -85,7 +90,9 @@ The following basic TrapEffect properties are supported:
  * fx.name (string or FX definition JSON): The name of a special FX object or a definition for custom special FX.
  * fx.offset (2-number array): The offset of the trap's FX, relative to the trap's token.
  * fx.direction (2-number array): For beam-like FX, this is the vector for the FX's direction.
+* gmOnly (boolean): If true, then the trap's message is only displayed to the GM.
 * message (string): This is the message that will be displayed when the trap activates.
 * sound (string): The name of a sound that will be played when the trap activates.
+* stopAt (string): This is where the trap stops the token. If "edge", then the token is stopped at the trap's edge. If "center", then the token is stopped at the trap's center. If "none", the token is not stopped by the trap. Default: "center".
 * trapId (string): The ID of the trap token. This is set automatically by the script.
 * victimId (string): The I of the victim token. This is set automatically by the script.
