@@ -1,5 +1,8 @@
 # It's A Trap! - 5th Edition (Shapedv2) theme
 
+_v1.1 updates:_
+* The theme now supports the 'fx' basic JSON property made available in It's A Trap! v2.3.
+
 This is a D&D 5th edition trap theme for the It's A Trap! script, compatible with
 the 5th Edition (Shapedv2) character sheet by Mlenser.
 
@@ -47,6 +50,7 @@ The DC to spot the trap with passive perception is 14.
 ```
 {
 	"damage": "8d6 + 8",
+	"fx": "explode-fire",
 	"message": "A magical glyph flashes to life and then erupts in a whirling storm of fire!",
 	"missHalf": true,
 	"notes": "The sound of the trap going off alerts the mindflayers in area K26.",

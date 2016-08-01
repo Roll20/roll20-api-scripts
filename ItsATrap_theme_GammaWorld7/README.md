@@ -1,5 +1,8 @@
 # It's A Trap! - Gamma World 7E theme
 
+_v1.1 updates:_
+* The theme now supports the 'fx' basic JSON property made available in It's A Trap! v2.3.
+
 This is a trap theme to support the Gamma World 7E character sheet.
 
 It provides support for D&D 5th edition mechanics to automate resolving trap
@@ -27,6 +30,7 @@ Here is a trap JSON example to get you started:
 	"attack": 4,
 	"damage": "2d8 + 6",
   "defense": "ac",
+	"fx": "explode-fire",
 	"message": "A pressure plate gives way and darts fire forth from hidden compartments in the walls!",
 	"notes": "If the character is hit, they also become poisoned.",
 	"spotDC": 14
