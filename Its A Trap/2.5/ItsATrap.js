@@ -306,13 +306,7 @@ var ItsATrap = (function() {
     var effect = {};
 
     // URI-escape the notes and remove the HTML elements.
-    var notes = trap.get('gmnotes');
-    try {
-        notes = decodeURIComponent(notes).trim();
-    }
-    catch(err) {
-        notes = unescape(notes).trim();
-    }
+    var notes = decodeURIComponent(trap.get('gmnotes')).trim();
 
     // If GM notes are set, interpret those.
     if(notes) {
