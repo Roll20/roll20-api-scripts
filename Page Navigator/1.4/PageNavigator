@@ -612,7 +612,7 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
         squareObj,
         landingPt = [loc.left,loc.top,1];
         wallSegments = PathMath.toSegments(wallPaths);
-        while(squareNum<numChar && iterations<(~~((loc.width + loc.height)/35) + 4 + numChar)){
+        while(squareNum<numChar && iterations<(~~(2*(loc.width + loc.height)/35) + 4 + numChar)){
             error = null;
             var squareFilter = _.filter(squareTest,function(obj){
                 var x = false,
