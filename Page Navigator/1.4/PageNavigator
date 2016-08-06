@@ -605,28 +605,7 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
         page = getObj('page',loc.pageid),
         squarePt,
         squareObj,
-        landingPt = [loc.left,loc.top,1],
-        wallPaths = findObjs({
-            _type: 'path',
-            _pageid: loc.pageid,
-            layer: 'walls'
-        }),
-        squareTest = findObjs({
-                type: 'graphic',
-                layer: 'objects',
-                pageid: loc.pageid,
-                isdrawing: false
-        });
-        log('loc');
-        log(loc);
-        log('page');
-        log(page);
-        log('squareTest');
-        log(squareTest);
-        log('loc colXrow: '+(~~(loc.left/70 - 0.5) + 1)+'x'+(~~(loc.top/70 - 0.5) + 1));
-        log('Start colXrow: '+(~~(surround.left/70 - 0.5) + 1)+'x'+(~~(surround.top/70 - 0.5) + 1));
-        log('loc pix colXrow: '+loc.left+'x'+loc.top);
-        log('Start pixcolXrow: '+surround.left+'x'+surround.top);
+        landingPt = [loc.left,loc.top,1];
         wallSegments = PathMath.toSegments(wallPaths);
         while(squareNum<numChar && iterations<(~~((loc.width + loc.height)/35) + 4 + numChar)){
             error = null;
@@ -657,14 +636,6 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
                 };
                 return (x && y);
             });
-            squareObj = findObjs({
-                type: 'graphic',
-                left: surround.left,
-                top: surround.top,
-                layer: 'objects',
-                pageid: loc.pageid,
-                isdrawing: false
-            }),
             //need to add DL path detection
             landingPt = [loc.left,loc.top,1];
             wallSegments = PathMath.toSegments(wallPaths);
