@@ -16,7 +16,7 @@ Chat menu selection of default player character's/pets
 */
 var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
     'use strict';
-
+    
     var version = '0.1.4',
         lastUpdate = 1469482359,
         schemaVersion = 1.4,
@@ -453,6 +453,7 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
         pageButton,
         pageMsg,
         teleportButton,
+        removeButton,
         teleportMsg = '',
         playerButton;
         if(state.PAGENAVIGATOR.teleport === 'on'){
@@ -580,86 +581,13 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
         );
     },
     
-    map_coordinates = function(obj){
-        var g,l,t,s,v,h,rv,
-            //size = 91.14378277661477,
-            //side = 50,
-            left_h = 46.48512749037782,
-            top_h = 39.8443949917523,
-            left_step_h = 69.585127490378,
-            top_step_h = 39.84439499,
-            left_v = 37.5992809922301,
-            top_v = 43.8658278242683,
-            left_step_v = 37.5992809922301,
-            top_step_v = 66.9658278242677;
-        if(!_.has(obj,'remove') && !_.isFunction(obj.remove) ){
-            return {page: Campaign().get('playerpageid'), col:0, row:0, grid: 'unknown', valid: false};
-        }
-        s = function(d){ return ~~((d/70) - 0.5) + 1; };
-        v = function(d,sd,sv){ return ( ~~d === ~~sd ) ? 1 : ~~((d-sd)/sv ) + 1; };
-        h = function(d,sd,sv){ return Math.round( (d-sd)/sv) + 1; };
-        g = getObj('page',obj.get('pageid')).get('grid_type');
-        l = obj.get('left');
-        t = obj.get('top');
-        rv = ('square' === g ) ? {page: obj.get('pageid'), col: s(l), row: s(t), grid: g, valid: true} :
-            ('hex' === g ) ? {page: obj.get('pageid'), col: v(l,left_v,left_step_v), row: v(t,top_v,top_step_v), grid: g, valid: true} :
-            ('hexr' === g ) ? {page: obj.get('pageid'), col: h(l,left_h,left_step_h), row: h(t,top_h,top_step_h), grid: g, valid: true} :
-            {page: obj.get('pageid'), col:0, row:0, grid: 'unknown', valid: false};
-        return rv;
-    },
-    
-    map_adjacent = function(o){
-        var isat = map_coordinates(o),rv,cg=[],ma;
-        if(!isat.valid){
-            return {o_id: 'unknown', page: Campaign().get('playerpageid'), layer: 'unknown', col:0, row:0, grid: 'unknown', adjacent: {}, valid: false};
-        }
-        _.each(findObjs({_pageid: isat.page, _type: 'graphic'}), function(e) {
-            ma = map_coordinates(e);
-            if(ma.valid){
-               cg.push({id: e.get('id'), col: ma.col, row: ma.row, layer: e.get('layer')}); 
-            }
-        });
-        rv = {o_id: o.get('id'), page: o.get('pageid'), layer: o.get('layer'), col: isat.col, row: isat.row, grid: isat.grid, adjacent: {}, valid: true};
-        rv.adjacent = ('hex' === isat.grid) ? rv.adjacent = {
-                c0: _.where(cg, {col: isat.col, row: isat.row}),
-                c1: _.where(cg, {col: isat.col - 1, row: isat.row - 1}),
-                c2: _.where(cg, {col: isat.col + 1, row: isat.row - 1}),
-                c3: _.where(cg, {col: isat.col + 2, row: isat.row}),
-                c4: _.where(cg, {col: isat.col + 1, row: isat.row + 1}),
-                c5: _.where(cg, {col: isat.col - 1, row: isat.row + 1}),
-                c6: _.where(cg, {col: isat.col - 2, row: isat.row}),
-                c7: [],
-                c8: []
-            } : ('hexr' === isat.grid) ? rv.adjacent = {
-                c0: _.where(cg, {col: isat.col, row: isat.row}),
-                c1: _.where(cg, {col: isat.col - 1, row: isat.row - 1}),
-                c2: _.where(cg, {col: isat.col, row: isat.row - 2}),
-                c3: _.where(cg, {col: isat.col + 1, row: isat.row - 1}),
-                c4: _.where(cg, {col: isat.col + 1, row: isat.row + 1}),
-                c5: _.where(cg, {col: isat.col, row: isat.row + 2}),
-                c6: _.where(cg, {col: isat.col - 1, row: isat.row + 1}),
-                c7: [],
-                c8: []
-            } : ('square' === isat.grid) ? rv.adjacent = {  
-                c0: _.where(cg, {col: isat.col, row: isat.row}),
-                c1: _.where(cg, {col: isat.col - 1, row: isat.row - 1}),
-                c2: _.where(cg, {col: isat.col, row: isat.row - 1}),
-                c3: _.where(cg, {col: isat.col + 1, row: isat.row - 1}),
-                c4: _.where(cg, {col: isat.col + 1, row: isat.row}),
-                c5: _.where(cg, {col: isat.col + 1, row: isat.row + 1}),
-                c6: _.where(cg, {col: isat.col, row: isat.row + 1}),
-                c7: _.where(cg, {col: isat.col - 1, row: isat.row + 1}),
-                c8: _.where(cg, {col: isat.col - 1, row: isat.row})
-            } : rv.adjacent = {};
-        return rv;
-    },
     //loc attributes: left, top, width,height,pageid
     mapSurrounding = function(loc,numChar){//landing token will be filled, finds nearest center of a square that does not ahve a token in it. Pushes the coords to an
     //                                      array, returns the array
         var map = [],
         surround = {
-            left : (loc.left - (loc.width/2) - 35),
-            top : (loc.top - (loc.height/2) - 35),
+            left : (loc.left - 70),
+            top : (loc.top - 70),
             width : 0,
             height : 0
         },
@@ -674,17 +602,62 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
         }),
         wallSegments,
         squareSeg,
+        page = getObj('page',loc.pageid),
         squarePt,
+        squareObj,
         landingPt = [loc.left,loc.top,1],
         wallPaths = findObjs({
             _type: 'path',
             _pageid: loc.pageid,
             layer: 'walls'
+        }),
+        squareTest = findObjs({
+                type: 'graphic',
+                layer: 'objects',
+                pageid: loc.pageid,
+                isdrawing: false
         });
+        log('loc');
+        log(loc);
+        log('page');
+        log(page);
+        log('squareTest');
+        log(squareTest);
+        log('loc colXrow: '+(~~(loc.left/70 - 0.5) + 1)+'x'+(~~(loc.top/70 - 0.5) + 1));
+        log('Start colXrow: '+(~~(surround.left/70 - 0.5) + 1)+'x'+(~~(surround.top/70 - 0.5) + 1));
+        log('loc pix colXrow: '+loc.left+'x'+loc.top);
+        log('Start pixcolXrow: '+surround.left+'x'+surround.top);
         wallSegments = PathMath.toSegments(wallPaths);
         while(squareNum<numChar && iterations<(~~((loc.width + loc.height)/35) + 4 + numChar)){
             error = null;
-            var squareObj = findObjs({
+            var squareFilter = _.filter(squareTest,function(obj){
+                var x = false,
+                    y = false;
+                if((~~(obj.get('left')/70 - 0.5) + 1) === (~~(surround.left/70 - 0.5) + 1)){
+                    x = true;
+                }else if((~~(obj.get('left')/70 - 0.5) + 1) < (~~(surround.left/70 - 0.5) + 1)){
+                    if((~~((obj.get('left') + obj.get('width')/2)/70 - 0.5) + 1) >= (~~(surround.left/70 - 0.5) + 1)){
+                        x = true;
+                    };
+                }else if((~~(obj.get('left')/70 - 0.5) + 1) > (~~(surround.left/70 - 0.5) + 1)){
+                    if((~~((obj.get('left') - obj.get('width')/2)/70 - 0.5) + 1) < (~~(surround.left/70 - 0.5) + 1)){
+                        x = true;
+                    };
+                };
+                if((~~(obj.get('top')/70 - 0.5) + 1) === (~~(surround.top/70 - 0.5) + 1)){
+                    y = true;
+                }else if((~~(obj.get('top')/70 - 0.5) + 1) < (~~(surround.top/70 - 0.5) + 1)){
+                    if((~~((obj.get('top') + obj.get('height')/2)/70 - 0.5) + 1) >= (~~(surround.top/70 - 0.5) + 1)){
+                        y = true;
+                    };
+                }else if((~~(obj.get('top')/70 - 0.5) + 1) > (~~(surround.top/70 - 0.5) + 1)){
+                    if((~~((obj.get('top') - obj.get('height')/2)/70 - 0.5) + 1) < (~~(surround.top/70 - 0.5) + 1)){
+                        y = true;
+                    };
+                };
+                return (x && y);
+            });
+            squareObj = findObjs({
                 type: 'graphic',
                 left: surround.left,
                 top: surround.top,
@@ -697,13 +670,17 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
             wallSegments = PathMath.toSegments(wallPaths);
             squarePt = [surround.left,surround.top];
             squareSeg = [landingPt,squarePt];
-             _.each(wallSegments,function(wallSeg){
+            _.each(wallSegments,function(wallSeg){
                 if(PathMath.segmentIntersection(squareSeg,wallSeg)){
                     iterations--;
                     error=1;
                 };
             });
-            if(squareObj.length === 0 && !error){
+            if(surround.left<=0 || surround.top <=0 || (~~(surround.top/70 - 0.5) + 1)>page.get('height') 
+            || (~~(surround.left/70 - 0.5) + 1)>page.get('weight')){
+                error=1;
+            };
+            if(squareFilter.length === 0 && !error){
                 var square = {
                     left : surround.left,
                     top : surround.top,
@@ -766,8 +743,7 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
         if(typeof landingToken ==='string'){
             landingToken = getObj('graphic',landingToken);
         };
-        var tokenMap = map_adjacent(landingToken),
-        landingLocation = {
+        var landingLocation = {
             top : landingToken.get('top') - ((landingToken.get('height')/2) - 35),
             left : landingToken.get('left') - ((landingToken.get('width')/2) - 35),
             pageid : landingToken.get('pageid'),
@@ -798,17 +774,13 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
         _.each(characters, function(obj){
             objWork = null;
             objWork = _.clone(obj);
-            if(landingMod.left<(landingSize.width - 70)){
+            if(landingMod.left<(landingSize.width - 70) && landingMod.top<(landingSize.height)){
                 createObj('graphic', _.defaults(objWork,landingWork));
                 landingWork.left+=70;
                 landingMod.left+=70;
                 charNum++;
             }else if(landingMod.left>=(landingSize.width - 70) && landingMod.top<(landingSize.height)){
-                if(charNum === 0){
-                    firstChar = createObj('graphic', _.defaults(objWork,landingWork));
-                }else{
-                    createObj('graphic', _.defaults(objWork,landingWork));
-                }
+                createObj('graphic', _.defaults(objWork,landingWork));
                 landingMod.left = 0;
                 landingWork.left = _.clone(landingLocation.left);
                 landingWork.top += 70;
@@ -1039,12 +1011,15 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
             playerList += id + ' ';
         });
         _.each(landingTokens,function(obj){
-            landingDetails = JSON.parse(decodeURIComponent(obj.get('gmnotes')).split(/<[/]?.+?>/g).join(''));
-            landingButton = makeButton(
-                '!nav-teleport ' + obj.id + ' ' + playerList, 
-                landingDetails.location, '#fff8dc', '#191970'
-            );
-            landingMsg += landingButton;
+            var notes = decodeURIComponent(obj.get('gmnotes')).trim();
+            if(notes.indexOf('{')===0){
+                landingDetails = JSON.parse(notes.split(/<[/]?.+?>/g).join(''));
+                landingButton = makeButton(
+                    '!nav-teleport ' + obj.id + ' ' + playerList, 
+                    landingDetails.location, '#fff8dc', '#191970'
+                );
+                landingMsg += landingButton;
+            };
         });
         sendChat('Page Navigation', landingMsg + '<p> </div>');
     },
