@@ -46,7 +46,7 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
         var entities = {
             '<' : 'lt',
             '>' : 'gt',
-			"'" : '#39',
+    		"'" : '#39',
 			'@' : '#64',
 			'{' : '#123',
 			'|' : '#124',
@@ -601,6 +601,11 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
             layer: 'walls'
         }),
         wallSegments,
+        squareTest = findObjs({
+            type: 'page',
+            page: loc.pageid,
+            layer: 'objects'
+        }),
         squareSeg,
         page = getObj('page',loc.pageid),
         squarePt,
