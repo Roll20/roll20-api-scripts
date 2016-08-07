@@ -18,7 +18,7 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
     'use strict';
     
     var version = '0.1.4',
-        lastUpdate = 1469482359,
+        lastUpdate = 1470610566,
         schemaVersion = 1.4,
         defaults = {
             css: {
@@ -91,6 +91,44 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
             return s.replace(re, function(c){ return entities[c] || c; });
         };
     }()),
+    
+    /*Checks the API environment to make sure everything is prepped for the script*/
+    checkInstall = function() {
+        log('-=> Page Navigator v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+        if( ! _.has(state,'PAGENAVIGATOR') || state.PAGENAVIGATOR.version !== schemaVersion) {
+            log('  > Updating Schema to v'+schemaVersion+' <');
+                    	switch(state.PAGENAVIGATOR&& state.PAGENAVIGATOR.version) {
+                case 'UpdateSchemaVersion':
+                    state.PAGENAVIGATOR.version = schemaVersion;
+                    
+                    break;
+
+                default:
+					state.PAGENAVIGATOR= {
+						version: schemaVersion,
+					};
+					break;
+			}
+		};
+        if(!state.PAGENAVIGATOR.players){
+            state.PAGENAVIGATOR.players={};
+        };
+        loadObjects();
+        _.each(players,function(p){
+            if(!state.PAGENAVIGATOR.players[p.id]){
+                state.PAGENAVIGATOR.players[p.id]=[];
+            };
+        })
+        log('Page Navigator Memory: Stored Page & Destination-Token Ids converted to Roll20 objects. Ready to be accessed');
+        defaultOptions();
+        buildTemplates();
+        if(!state.PAGENAVIGATOR.configButton){
+            state.PAGENAVIGATOR.configButton = makeButton(
+                '!nav config', 
+                '<b>Configuration Options</b>', '#191970', '#fff8dc'
+            );
+        }
+	},
     
     /*Builds templates for use in all other functions*/
     buildTemplates = function() {
@@ -168,45 +206,6 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
             }
         });
     },
-    
-    /*Checks the API environment to make sure everything is prepped for the script*/
-    checkInstall = function() {
-        log('-=> Page Navigator v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
-        if( ! _.has(state,'PAGENAVIGATOR') || state.PAGENAVIGATOR.version !== schemaVersion) {
-            log('  > Updating Schema to v'+schemaVersion+' <');
-                		switch(state.PAGENAVIGATOR&& state.PAGENAVIGATOR.version) {
-                case 'UpdateSchemaVersion':
-                    state.PAGENAVIGATOR.version = schemaVersion;
-                    
-                    break;
-
-                default:
-					state.PAGENAVIGATOR= {
-						version: schemaVersion,
-					};
-					break;
-			}
-		};
-        if(!state.PAGENAVIGATOR.players){
-            state.PAGENAVIGATOR.players={};
-        };
-        loadObjects();
-        _.each(players,function(p){
-            if(!state.PAGENAVIGATOR.players[p.id]){
-                state.PAGENAVIGATOR.players[p.id]=[];
-            };
-        })
-        log('Page Navigator Memory: Stored Page & Destination-Token Ids converted to Roll20 objects. Ready to be accessed');
-        defaultOptions();
-        buildTemplates();
-        if(!state.PAGENAVIGATOR.configButton){
-            state.PAGENAVIGATOR.configButton = makeButton(
-                '!nav config', 
-                '<b>Configuration Options</b>', '#191970', '#fff8dc'
-            );
-        }
-
-	},
     
     /*stores all tokens designated as a destination token in the state*/
     getDestinations = function(){
@@ -582,17 +581,18 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
     },
     
     //loc attributes: left, top, width,height,pageid
-    mapSurrounding = function(loc,numChar){//landing token will be filled, finds nearest center of a square that does not ahve a token in it. Pushes the coords to an
+    mapSurrounding = function(loc,newToken,start){//landing token will be filled, finds nearest center of a square that does not ahve a token in it. Pushes the coords to an
     //                                      array, returns the array
         var map = [],
         surround = {
-            left : (loc.left - 70),
-            top : (loc.top - 70),
+            left : loc.left - (loc.width/2 - 35) + (newToken.width - 70)/2,
+            top : loc.top - (loc.height/2 - 35) + (newToken.height - 70)/2,
             width : 0,
             height : 0
         },
         squareNum = 0,
         iterations = 0,
+        created = false,
         error,
         flip = false,
         wallPaths = findObjs({
@@ -602,8 +602,8 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
         }),
         wallSegments,
         squareTest = findObjs({
-            type: 'page',
-            page: loc.pageid,
+            type: 'graphic',
+            pageid: loc.pageid,
             layer: 'objects'
         }),
         squareSeg,
@@ -611,40 +611,43 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
         squarePt,
         squareObj,
         landingPt = [loc.left,loc.top,1];
+        log(squareTest.length);
         wallSegments = PathMath.toSegments(wallPaths);
-        while(squareNum<numChar && iterations<(~~(2*(loc.width + loc.height)/35) + 4 + numChar)){
+        while(!created && ((_.now() - start)/1000)<20){
             error = null;
-            var squareFilter = _.filter(squareTest,function(obj){
+            var squareFilter = _.find(squareTest,function(obj){
                 var x = false,
                     y = false;
                 if((~~(obj.get('left')/70 - 0.5) + 1) === (~~(surround.left/70 - 0.5) + 1)){
                     x = true;
-                }else if((~~(obj.get('left')/70 - 0.5) + 1) < (~~(surround.left/70 - 0.5) + 1)){
-                    if((~~((obj.get('left') + obj.get('width')/2)/70 - 0.5) + 1) >= (~~(surround.left/70 - 0.5) + 1)){
+                }else if(obj.get('left') < surround.left){
+                    if((obj.get('left') + obj.get('width')/2) > (surround.left - newToken.width/2)){
                         x = true;
                     };
-                }else if((~~(obj.get('left')/70 - 0.5) + 1) > (~~(surround.left/70 - 0.5) + 1)){
-                    if((~~((obj.get('left') - obj.get('width')/2)/70 - 0.5) + 1) < (~~(surround.left/70 - 0.5) + 1)){
+                }else if(obj.get('left') > surround.left){
+                    if((obj.get('left') - obj.get('width')/2) < (surround.left + newToken.width/2)){
                         x = true;
                     };
                 };
                 if((~~(obj.get('top')/70 - 0.5) + 1) === (~~(surround.top/70 - 0.5) + 1)){
                     y = true;
-                }else if((~~(obj.get('top')/70 - 0.5) + 1) < (~~(surround.top/70 - 0.5) + 1)){
-                    if((~~((obj.get('top') + obj.get('height')/2)/70 - 0.5) + 1) >= (~~(surround.top/70 - 0.5) + 1)){
+                }else if(obj.get('top') < surround.top){
+                    if((obj.get('top') + obj.get('height')/2) > (surround.top - newToken.height/2)){
                         y = true;
                     };
-                }else if((~~(obj.get('top')/70 - 0.5) + 1) > (~~(surround.top/70 - 0.5) + 1)){
-                    if((~~((obj.get('top') - obj.get('height')/2)/70 - 0.5) + 1) < (~~(surround.top/70 - 0.5) + 1)){
+                }else if(obj.get('top') > surround.top){
+                    if((obj.get('top') - obj.get('height')/2) < (surround.top + newToken.height/2)){
                         y = true;
                     };
                 };
-                return (x && y);
+                if(x && y){
+                    return true
+                }
             });
             //need to add DL path detection
             landingPt = [loc.left,loc.top,1];
             wallSegments = PathMath.toSegments(wallPaths);
-            squarePt = [surround.left,surround.top];
+            squarePt = [surround.left,surround.top,1];
             squareSeg = [landingPt,squarePt];
             _.each(wallSegments,function(wallSeg){
                 if(PathMath.segmentIntersection(squareSeg,wallSeg)){
@@ -656,29 +659,30 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
             || (~~(surround.left/70 - 0.5) + 1)>page.get('weight')){
                 error=1;
             };
-            if(squareFilter.length === 0 && !error){
-                var square = {
+            if(!squareFilter && !error){
+                return {
                     left : surround.left,
                     top : surround.top,
+                    layer: 'objects',
+                    pageid:loc.pageid
                 };
-                map.push(square);
-                squareNum++;
+                created = true;
             };
-            if(surround.width<(loc.width + 70)){
+            if(surround.width<(loc.width- 70)){
                 surround.width += 70;
                 if(flip === false){
                     surround.left += 70;
                 }else{
                     surround.left -= 70;
                 };
-            }else if(surround.height<(loc.height + 70)){
+            }else if(surround.height<(loc.height- 70)){
                 surround.height += 70;
                 if(flip === false){
                     surround.top += 70;
                 }else{
                     surround.top -= 70;
                 };
-            }else if(surround.height >= loc.height && surround.width >= loc.width){
+            }else if(surround.height >= (loc.height - 70) && surround.width >= (loc.width - 70)){
                 if(flip===false){
                     surround.height = 70;
                     surround.width = 70;
@@ -696,23 +700,6 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
             };
             iterations++
         };
-        return map;
-    },
-    
-    createRestToken = function(landingLocation,characters){
-        var tokenMap = mapSurrounding(landingLocation,(characters.length)),
-        iteration = 0,
-        error;
-        _.each(characters,function(obj){
-            if(tokenMap[iteration]){
-                createObj('graphic', _.defaults({left:tokenMap[iteration].left, top:tokenMap[iteration].top,pageid:landingLocation.pageid,layer: 'objects'},obj));
-            }else if(!error){
-                error=true;
-                sendChat('Page Navigator','/w gm A free square could not be found for one or more tokens on page: ' 
-                + getObj('page',landingLocation.pageid)+'.<br>Please manually drag-n-drop/copy any missing tokens');
-            };
-            iteration++;
-        });
     },
     
     createTokenLanding = function(landingToken, playerId){
@@ -720,8 +707,8 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
             landingToken = getObj('graphic',landingToken);
         };
         var landingLocation = {
-            top : landingToken.get('top') - ((landingToken.get('height')/2) - 35),
-            left : landingToken.get('left') - ((landingToken.get('width')/2) - 35),
+            top : landingToken.get('top'),
+            left : landingToken.get('left'),
             pageid : landingToken.get('pageid'),
             height : landingToken.get('height'),
             width : landingToken.get('width'),
@@ -740,6 +727,7 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
         firstChar,
         charNum = 0,
         characters = [],
+        newToken,
         landingWork = _.clone(landingLocation);
         _.each(playerId,function(id){
             var stored = _.clone(state.PAGENAVIGATOR.players[id]);
@@ -747,26 +735,16 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
                 characters.push(c);
             });
         });
+        var start = _.now(),
+        surr,
+        createdTok = [];
+        log(`landingLocation leftXtop: ${landingLocation.left - landingLocation.width/2 + 35} X ${landingLocation.top - landingLocation.height/2 + 35}`);
         _.each(characters, function(obj){
-            objWork = null;
-            objWork = _.clone(obj);
-            if(landingMod.left<(landingSize.width - 70) && landingMod.top<(landingSize.height)){
-                createObj('graphic', _.defaults(objWork,landingWork));
-                landingWork.left+=70;
-                landingMod.left+=70;
-                charNum++;
-            }else if(landingMod.left>=(landingSize.width - 70) && landingMod.top<(landingSize.height)){
-                createObj('graphic', _.defaults(objWork,landingWork));
-                landingMod.left = 0;
-                landingWork.left = _.clone(landingLocation.left);
-                landingWork.top += 70;
-                landingMod.top += 70;
-                charNum++;
-            }else if(landingMod.top >= (landingSize.height) && landingMod.left <= (landingSize.width-70) && charNum){
-                createRestToken(landingLocation, _.rest(characters,charNum));
-                charNum = null
-            };
+            surr = null;
+            surr = mapSurrounding(landingLocation,{width:obj.width,height:obj.height},start);
+            createObj('graphic',_.defaults(surr,obj));
         });
+        log(`Tokens created in ${(_.now()-start)/1000} seconds`);
         
     },
     
