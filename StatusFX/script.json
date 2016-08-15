@@ -1,0 +1,350 @@
+{
+    "name": "Status FX",
+    "script": "statusFx.js",
+    "version": "1.1",
+    "previousversions": ["1.0"],
+    "description": "# Status FX\r\rThis script allows you to assign special FX to appear on a token when status\rmarkers are turned on. When multiple status FX are assigned to a token, it\rwill cycle through each one. Built-in and Custom FX are supported.\r\rFX are assigned to status markers through the One-Click user options for the\rscript. For each status marker that you want to assign a special FX to, just\renter the name of the special FX. If it is a beam-like effect (such as beam,\rbreath, splatter, or a custom effect whose definition has an angle of -1),\ralso enter the vector for the effect's direction in the form ```[X, Y]```.\rBeam-like effects can also be given a random vector with ```[random]```.\r\rNote: For most statuses, this script looks best using custom special FX with a\rshort range and fewer,smaller particles.\r\r### Examples:\r\r*green* ```bubbling-acid```\rCreates green bubbles on the token when the 'green' status marker is on.\r\r*red* ```splatter-blood [1, -2]```\rCreates a bleeding effect with blood spurting up and slightly to the right\rwhen the 'red' status marker is on.\r\r*death-zone* ```MyCustomEffect```\rCreates some sort of custom effect when the 'death-zone' status marker is on.\r\r*chemical-bolt* ```splatter-holy [random]```\rCreates a spark effect fired in a random direction when the 'chemical-bolt'\rstatus marker is on.\r\r*custom* ```sleep: glow-holy|stars: beam-fire [2,3]```\rExample of FX for CustomStatusMarkers.\rCreates FX for the custom status markers 'sleep' and 'stars'.\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [
+      {
+        "name": "all-for-one",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'all-for-one' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/all-for-one.html)"
+      },
+      {
+        "name": "angel-outfit",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'angel-outfit' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/angel-outfit.html)"
+      },
+      {
+        "name": "archery-target",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'archery-target' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/archery-target.html)"
+      },
+      {
+        "name": "arrowed",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'arrowed' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/arrowed.html)"
+      },
+      {
+        "name": "aura",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'aura' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/aura.html)"
+      },
+      {
+        "name": "back-pain",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'back-pain' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/back-pain.html)"
+      },
+      {
+        "name": "black-flag",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'black-flag' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/black-flag.html)"
+      },
+      {
+        "name": "bleeding-eye",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'bleeding-eye' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/bleeding-eye.html)"
+      },
+      {
+        "name": "blue",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'blue' status."
+      },
+      {
+        "name": "bolt-shield",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'bolt-shield' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/bolt-shield.html)"
+      },
+      {
+        "name": "broken-heart",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'broken-heart' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/broken-heart.html)"
+      },
+      {
+        "name": "broken-shield",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'broken-shield' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/broken-shield.html)"
+      },
+      {
+        "name": "broken-skull",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'broken-skull' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/broken-skull.html)"
+      },
+      {
+        "name": "brown",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'brown' status."
+      },
+      {
+        "name": "chained-heart",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'chained-heart' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/chained-heart.html)"
+      },
+      {
+        "name": "chemical-bolt",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'chemical-bolt' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/chemical-bolt.html)"
+      },
+      {
+        "name": "cobweb",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'cobweb' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/cobweb.html)"
+      },
+      {
+        "name": "dead",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'dead' status."
+      },
+      {
+        "name": "death-zone",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'death-zone' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/death-zone.html)"
+      },
+      {
+        "name": "drink-me",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'drink-me' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/drink-me.html)"
+      },
+      {
+        "name": "edge-crack",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'edge-crack' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/edge-crack.html)"
+      },
+      {
+        "name": "fishing-net",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'fishing-net' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/fishing-net.html)"
+      },
+      {
+        "name": "fist",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'fist' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/fist.html)"
+      },
+      {
+        "name": "fluffy-wing",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'fluffy-wing' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/fluffy-wing.html)"
+      },
+      {
+        "name": "flying-flag",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'flying-flag' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/flying-flag.html)"
+      },
+      {
+        "name": "frozen-orb",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'frozen-orb' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/frozen-orb.html)"
+      },
+      {
+        "name": "grab",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'grab' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/grab.html)"
+      },
+      {
+        "name": "green",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'green' status."
+      },
+      {
+        "name": "grenade",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'grenade' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/grenade.html)"
+      },
+      {
+        "name": "half-haze",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'half-haze' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/half-haze.html)"
+      },
+      {
+        "name": "half-heart",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'half-heart' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/half-heart.html)"
+      },
+      {
+        "name": "interdiction",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'interdiction' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/interdiction.html)"
+      },
+      {
+        "name": "lightning-helix",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'lightning-helix' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/lightning-helix.html)"
+      },
+      {
+        "name": "ninja-mask",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'ninja-mask' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/ninja-mask.html)"
+      },
+      {
+        "name": "overdrive",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'overdrive' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/overdrive.html)"
+      },
+      {
+        "name": "padlock",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'padlock' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/padlock.html)"
+      },
+      {
+        "name": "pink",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'pink' status."
+      },
+      {
+        "name": "pummeled",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'pummeled' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/pummeled.html)"
+      },
+      {
+        "name": "purple",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'purple' status."
+      },
+      {
+        "name": "radioactive",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'radioactive' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/radioactive.html)"
+      },
+      {
+        "name": "red",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'red' status."
+      },
+      {
+        "name": "rolling-bomb",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'rolling-bomb' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/rolling-bomb.html)"
+      },
+      {
+        "name": "screaming",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'screaming' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/screaming.html)"
+      },
+      {
+        "name": "sentry-gun",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'sentry-gun' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/sentry-gun.html)"
+      },
+      {
+        "name": "skull",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'skull' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/skull.html)"
+      },
+      {
+        "name": "sleepy",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'sleepy' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/sleepy.html)"
+      },
+      {
+        "name": "snail",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'snail' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/snail.html)"
+      },
+      {
+        "name": "spanner",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'spanner' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/spanner.html)"
+      },
+      {
+        "name": "stopwatch",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'stopwatch' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/stopwatch.html)"
+      },
+      {
+        "name": "strong",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'strong' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/strong.html)"
+      },
+      {
+        "name": "three-leaves",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'three-leaves' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/three-leaves.html)"
+      },
+      {
+        "name": "tread",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'tread' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/tread.html)"
+      },
+      {
+        "name": "trophy",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'trophy' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/trophy.html)"
+      },
+      {
+        "name": "white-tower",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'white-tower' status. (Looks like this: http:\/\/game-icons.net\/lorc\/originals\/white-tower.html)"
+      },
+      {
+        "name": "yellow",
+        "type": "text",
+        "default": "",
+        "description": "FX for the 'yellow' status."
+      },
+      {
+        "name": "custom",
+        "type": "text",
+        "default": "",
+        "description": "FX for CustomStatusMarkers."
+      }
+    ],
+    "dependencies": [],
+    "modifies": {},
+    "conflicts": []
+}

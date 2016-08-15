@@ -109,7 +109,7 @@ var WorldMapDiscovery = (function() {
      * When a graphic on the objects layer moves, run the script to see if it
      * passed through any traps.
      */
-    on("change:graphic", function(obj, prev) {
+    on("change:graphic:lastmove", function(obj, prev) {
         var activePage = Campaign().get('playerpageid');
 
         if(obj && obj.get('status_white-tower') == true) {

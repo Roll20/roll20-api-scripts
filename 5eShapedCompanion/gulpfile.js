@@ -20,7 +20,7 @@ const repoInfo = {
 
 const auth = {
   type: 'oauth',
-  token: process.env.GH_TOKEN,
+  token: process.env.GH_TOKEN || require('./ghToken.json').ghToken,
 };
 
 
