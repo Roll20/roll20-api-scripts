@@ -13,7 +13,7 @@
         "Campaign.playerspecificpages": "read,write",
         "state.PAGENAVIGATOR.version": "read,write",
         "token.statusmarker": "read",
-        "token.gmnotes":"read",
+        "token.gmnotes":"read"
     },
     "conflicts": []
 }
