@@ -191,3 +191,7 @@ pagenavigator:
 statusfx:
 - "StatusFX"
 - "Character"
+
+itsatrapthemepathfinder:
+- "ItsATrap_theme_Pathfinder"
+- "System Toolbox"
