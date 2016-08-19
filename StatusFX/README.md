@@ -1,5 +1,9 @@
 # Status FX
 
+_v1.2 Updates:_
+* Added a user option to set the interval that it cycles through effects.
+* Improved the script's ability to detect when status markers change.
+
 This script allows you to assign special FX to appear on a token when status
 markers are turned on. When multiple status FX are assigned to a token, it
 will cycle through each one. Built-in and Custom FX are supported.
