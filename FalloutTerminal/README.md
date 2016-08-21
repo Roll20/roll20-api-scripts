@@ -8,6 +8,12 @@ Fallout-like terminal in the chat.
 To create a terminal, create a token whose name starts with 'terminal'
 and copy-paste the JSON defining your terminal's content into its gmnotes.
 
+## Activating a Terminal
+
+When this script is installed, it creates a 'displayTerminal' token macro
+for all the GM players. Just select the terminal's token and click the
+token macro to activate the terminal.
+
 ## Terminal JSON specification
 
 The JSON for defining a terminal's content has the following structure:
