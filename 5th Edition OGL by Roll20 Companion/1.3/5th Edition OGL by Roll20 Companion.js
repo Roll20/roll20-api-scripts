@@ -34,7 +34,7 @@ on('chat:message', function(msg) {
     else if(msg.playerid.toLowerCase() != "api" && msg.rolltemplate) {
         var cnamebase = msg.content.split("charname=")[1];
         var cname = cnamebase ? cnamebase.replace('}}','').trim() : (msg.content.split("{{name=")[1]||'').split("}}")[0].trim();
-        var character = cname ? findObjs({name: cname})[0] : undefined;
+        var character = cname ? findObjs({name: cname, type: 'character'})[0] : undefined;
         var player = getObj("player", msg.playerid);
         if(["simple","npc"].indexOf(msg.rolltemplate) > -1) {
             if(_.has(msg,'inlinerolls') && msg.content.indexOf("DEATH SAVE") > -1 && character && state.FifthEditionOGLbyRoll20.deathsavetracking != "off") {
