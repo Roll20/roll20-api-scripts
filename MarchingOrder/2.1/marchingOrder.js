@@ -182,12 +182,7 @@ var MarchingOrder = (function() {
      * @param {Msg} msg
      */
     var _replyHowToMessage = function(msg) {
-        var playerName = msg.who;
-        if(playerName.indexOf(" ") !== -1) {
-            playerName = playerName.substring(0, playerName.indexOf(" "));
-        }
-
-        _whisper(playerName, " Invalid " +
+        _whisper(msg.who, " Invalid " +
                 "command. After the command enter either north, south," +
                 " east, or west for the direction of the marching order, " +
                 "or the name of a character to follow.");
