@@ -259,10 +259,11 @@ var MarchingOrder = (function() {
 
     /**
      * @private
-     * Whispers a Custom Status Markers message to someone.
+     * Whispers a Marching Order message to someone.
      */
     function _whisper(who, msg) {
-      sendChat('Marching Order', '/w ' + who + ' ' + msg);
+      var name = who.replace(/\(GM\)/, '').trim();
+      sendChat('Marching Order', '/w "' + name + '" ' + msg);
     }
 
     // When the API is loaded, install the Custom Status Marker menu macro

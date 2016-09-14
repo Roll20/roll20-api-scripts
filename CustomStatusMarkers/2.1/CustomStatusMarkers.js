@@ -848,7 +848,8 @@ CustomStatusMarkers = (function() {
      * Whispers a Custom Status Markers message to someone.
      */
     function _whisper(who, msg) {
-      sendChat('Custom Status Markers', '/w ' + who + ' ' + msg);
+      var name = who.replace(/\(GM\)/, '').trim();
+      sendChat('Custom Status Markers', '/w "' + name + '" ' + msg);
     }
 
 
