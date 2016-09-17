@@ -80,7 +80,7 @@
    * Produces HTML for a faked inline roll result.
    * @param  {int} result
    * @param  {string} expr
-   * @return {string}
+   * @return {HtmlBuilder}
    */
   function htmlRollResult(result, expr) {
     let d20 = result.rolls[0].results[0].v;
