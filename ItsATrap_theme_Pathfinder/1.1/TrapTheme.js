@@ -11,6 +11,53 @@
     will: 'Will'
   };
 
+  const THEME_CSS = {
+    'bold': {
+      'font-weight': 'bold'
+    },
+    'critFail': {
+      'border': '2px solid #B31515'
+    },
+    'critSuccess': {
+      'border': '2px solid #3FB315'
+    },
+    'hit': {
+      'color': '#f00',
+      'font-weight': 'bold'
+    },
+    'miss': {
+      'color': '#620',
+      'font-weight': 'bold'
+    },
+    'paddedRow': {
+      'padding': '1px 1em'
+    },
+    'rollResult': {
+      'background-color': '#FEF68E',
+      'cursor': 'help',
+      'font-size': '1.1em',
+      'font-weight': 'bold',
+      'padding': '0 3px'
+    },
+    'trapMessage': {
+      'background-color': '#ccc',
+      'font-style': 'italic'
+    },
+    'trapTable': {
+      'background-color': '#fff',
+      'border': 'solid 1px #000',
+      'border-collapse': 'separate',
+      'border-radius': '10px',
+      'overflow': 'hidden',
+      'width': '100%'
+    },
+    'trapTableHead': {
+      'background-color': '#000',
+      'color': '#fff',
+      'font-weight': 'bold'
+    }
+  };
+
   /**
    * Asynchronously gets the value of a character sheet attribute.
    * @param  {Character}   character
@@ -30,16 +77,6 @@
   }
 
   /**
-   * Produces HTML for a padded table row.
-   * @param  {string} innerHTML
-   * @param  {string} style
-   * @return {string}
-   */
-  function htmlPaddedRow(innerHTML, style) {
-    return '<div style="padding: 1px 1em; ' + style + '">' + innerHTML + '</div>';
-  }
-
-  /**
    * Produces HTML for a faked inline roll result.
    * @param  {int} result
    * @param  {string} expr
@@ -48,13 +85,14 @@
   function htmlRollResult(result, expr) {
     let d20 = result.rolls[0].results[0].v;
 
-    let style = 'background-color: #FEF68E; cursor: help; font-size: 1.1em; font-weight: bold; padding: 0 3px;';
+    let clazzes = ['rollResult'];
     if(d20 === 20)
-      style += 'border: 2px solid #3FB315;';
+      clazzes.push('critSuccess');
     if(d20 === 1)
-      style += 'border: 2px solid #B31515';
-
-    return '<span title="' + expr + '" style="' + style + '">' + result.total + '</span>';
+      clazzes.push('critFail');
+    return new HtmlBuilder('span.' + clazzes.join(' '), result.total, {
+      title: expr
+    });
   }
 
   /**
@@ -79,28 +117,20 @@
 
   /**
    * Sends an HTML-stylized message about a noticed trap.
-   * @param {string} message
+   * @param {(HtmlBuilder|string)} content
    * @param {string} borderColor
    */
-  function htmlTable(message, borderColor) {
-    let tableStyle = [
-      'background-color: #fff;',
-      'border: solid 1px ' + borderColor + ';',
-      'border-collapse: separate;',
-      'border-radius: 10px;',
-      'overflow: hidden;',
-      'width: 100%;'
-    ].join(' ');
-    let headerStyle = [
-      'background-color: ' + borderColor + ';',
-      'color: #fff;',
-      'font-weight: bold;'
-    ].join(' ');
-
-    let msg = '<table style="' + tableStyle + '">';
-    msg += "<thead><tr style='" + headerStyle + "'><th>IT'S A TRAP!!!</th></tr></thead>";
-    msg += '<tbody><tr><td style="padding: 0;">' + message + '</td></tr></tbody></table>';
-    return msg;
+  function htmlTable(content, borderColor) {
+    let table = new HtmlBuilder('table.trapTable', '', {
+      style: { 'border-color': borderColor }
+    });
+    table.append('thead.trapTableHead', '', {
+      style: { 'background-color': borderColor }
+    }).append('th', 'IT\'S A TRAP!!!');
+    table.append('tbody').append('tr').append('td', content, {
+      style: { 'padding': '0' }
+    });
+    return table;
   }
 
   /**
@@ -108,62 +138,61 @@
    * @param  {object} effect
    */
   function sendHtmlTrapMessage(effect) {
-    let messageStyle = [
-      'background-color: #ccc;',
-      'font-style: italic;'
-    ].join(' ');
+    let content = new HtmlBuilder('div');
 
     // Add the flavor message.
-    let msg = htmlPaddedRow(effect.message, messageStyle);
+    content.append('.paddedRow trapMessage', effect.message);
 
     if(effect.character) {
 
       // Add the attack roll message.
       if(effect.attack) {
-        let rollHtml = htmlRollResult(effect.roll,
-          '1d20 + ' + effect.attack);
-        msg += htmlPaddedRow('<span style="font-weight: bold;">Attack roll:</span> ' + rollHtml + ' vs AC ' + effect.ac);
+        let rollResult = htmlRollResult(effect.roll, '1d20 + ' + effect.attack);
+        content.append('.paddedRow')
+          .append('span.bold', 'Attack roll:')
+          .append('span', rollResult)
+          .append('span', ' vs AC ' + effect.ac);
       }
 
       // Add the saving throw message.
       if(effect.save) {
-        let rollHtml = htmlRollResult(effect.roll, '1d20 + ' + effect.saveBonus);
-        let saveMsg = '<span style="font-weight: bold;">' + effect.save.toUpperCase() + ' save:</span> ' + rollHtml
-           + ' vs DC ' + effect.saveDC;
+        let rollResult = htmlRollResult(effect.roll, '1d20 + ' + effect.saveBonus);
+        let saveMsg = new HtmlBuilder('.paddedRow')
+        saveMsg.append('span.bold', effect.save.toUpperCase() + ' save:')
+        saveMsg.append('span', rollResult)
+        saveMsg.append('span', ' vs DC ' + effect.saveDC);
 
         // If the save result is a secret, whisper it to the GM.
         if(effect.hideSave)
-          sendChat('Admiral Ackbar', '/w gm ' + saveMsg);
+          sendChat('Admiral Ackbar', '/w gm ' + saveMsg.toString(THEME_CSS));
         else
-          msg += htmlPaddedRow(saveMsg);
+          content.append(saveMsg);
       }
 
       // Add the hit/miss message.
       if(effect.trapHit === 'AC unknown') {
-        let resultHtml = '<div>AC could not be determined with the current version of your character sheet. For the time being, please resolve the attack against AC manually.</div>';
+        content.append('.paddedRow', 'AC could not be determined with the current version of your character sheet. For the time being, please resolve the attack against AC manually.');
         if(effect.damage)
-          resultHtml += '<div>Damage: [[' + effect.damage + ']]</div>';
-        msg += htmlPaddedRow(resultHtml);
+          content.append('.paddedRow', 'Damage: [[' + effect.damage + ']]');
       }
       else if(effect.trapHit) {
-        let resultHtml = '<span style="color: #f00; font-weight: bold;">HIT! </span>';
+        let row = content.append('.paddedRow')
+        row.append('span.hit', 'HIT! ');
         if(effect.damage)
-          resultHtml += 'Damage: [[' + effect.damage + ']]';
+          row.append('span', 'Damage: [[' + effect.damage + ']]');
         else
-          resultHtml += effect.character.get('name') + ' falls prey to the trap\'s effects!';
-        msg += htmlPaddedRow(resultHtml);
+          row.append('span', effect.character.get('name') + ' falls prey to the trap\'s effects!');
       }
       else {
-        let resultHtml = '<span style="color: #620; font-weight: bold;">MISS! </span>';
+        let row = content.append('.paddedRow');
+        row.append('span.miss', 'MISS! ');
         if(effect.damage && effect.missHalf)
-          resultHtml += 'Half damage: [[floor((' + effect.damage + ')/2)]].';
-        msg += htmlPaddedRow(resultHtml);
+          row.append('span', 'Half damage: [[floor((' + effect.damage + ')/2)]].');
       }
     }
 
     // Send the HTML message to the chat.
-    msg = htmlTable(msg, '#a22');
-    ItsATrap.announceTrap(effect, msg);
+    ItsATrap.announceTrap(effect, htmlTable(content, '#a22').toString(THEME_CSS));
   }
 
 
@@ -203,6 +232,7 @@
       .then(sendHtmlTrapMessage)
       .catch(err => {
         sendChat(CHAT_NAME, '/w gm ' + err.message);
+        log(err.stack);
       });
     }
 
@@ -256,17 +286,16 @@
         getSheetAttr(character, 'Perception')
         .then(spot => {
           if(spot + 10 >= effect.spotDC) {
-            let messageStyle = [
-              'background-color: #ccc;',
-              'font-style: italic;'
-            ].join(' ');
+            let content = new HtmlBuilder();
+            content.append('.paddedRow trapMessage', character.get('name') + ' notices a trap:');
+            content.append('.paddedRow', trap.get('name'));
 
-            // Add the flavor message.
-            let msg = htmlPaddedRow(character.get('name') + ' notices a trap:', messageStyle);
-            msg += htmlPaddedRow(trap.get('name'));
-            msg = htmlTable(msg, '#000');
-            ItsATrap.noticeTrap(trap, msg);
+            ItsATrap.noticeTrap(trap, htmlTable(content, '#000').toString(THEME_CSS));
           }
+        })
+        .catch(err => {
+          sendChat(CHAT_NAME, '/w gm ' + err.message);
+          log(err.stack);
         });
       }
     }

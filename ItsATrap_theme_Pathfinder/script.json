@@ -7,7 +7,7 @@
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
     "useroptions": [],
-    "dependencies": ["It's a Trap!"],
+    "dependencies": ["HTML Builder", "It's a Trap!"],
     "modifies": {},
     "conflicts": []
 }

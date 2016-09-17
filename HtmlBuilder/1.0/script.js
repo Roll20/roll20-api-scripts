@@ -43,12 +43,12 @@ var HtmlBuilder = (() => {
     /**
      * Creates an HTML Builder.
      * @constructor
-     * @param {string} tag
-     * @param {(HtmlBuilder|string)} content
-     * @param {object} attrs
+     * @param {string} [tag='div']
+     * @param {(HtmlBuilder|string)} [content='']
+     * @param {object} [attrs={}]
      */
     constructor(tag, content, attrs) {
-      this._tag = tag;
+      this._tag = tag || 'div';
       this._attrs = _.clone(attrs) || {};
       this._css = {};
       this._children = [content || ''];
@@ -73,9 +73,8 @@ var HtmlBuilder = (() => {
      */
     _applyCssToStyle(css, style) {
       style = _.clone(style) || {};
-      let classes = this.getClasses();
-      log(classes);
 
+      let classes = this.getClasses();
       _.each(classes, (clazz) => {
         let clazzStyle = css[clazz];
         if(clazzStyle)
@@ -107,8 +106,9 @@ var HtmlBuilder = (() => {
      */
     _getTagAndClasses() {
       if(!this._match)
-        this._match = /((\w|\d)+)(\.((.)+))?/.exec(this._tag);
-      let tag = this._match[1];
+        this._match = /((\w|\d)+)?(\.((.)+))?/.exec(this._tag);
+
+      let tag = this._match[1] || 'div';
       let classes = (this._match[4] || '').split(' ');
       return [tag, classes];
     }
@@ -128,21 +128,26 @@ var HtmlBuilder = (() => {
      * @return {string}
      */
     toString(parentCss) {
+      // Add the tag start.
       let tagName = this.getTag();
-      log(tagName);
       let result = '<' + tagName;
 
+      // Add the attributes.
       let css = _.extend(_.clone(parentCss) || {}, this._css);
       let attrs = _.clone(this._attrs);
       attrs.style = this._applyCssToStyle(css, attrs.style);
       result += ' ' + HtmlBuilder.attrsToString(attrs);
 
+      // Add the inner HTML and tag end.
       if(tagName === 'br' || tagName === 'img')
         result += '/>';
       else {
         result += '>';
         _.each(this._children, child => {
-          result += child.toString(css);
+          if(child instanceof HtmlBuilder)
+            result += child.toString(css);
+          else
+            result += child;
         });
         result += '</' + tagName + '>';
       }
@@ -152,7 +157,7 @@ var HtmlBuilder = (() => {
 })();
 
 /**
-// Demo: 
+// Demo:
 on('ready', () => {
   'use strict';
 
