@@ -56,14 +56,19 @@ var HtmlBuilder = (() => {
 
     /**
      * Appends a child element to this one.
-     * @param {string} tag
-     * @param {(HtmlBuilder|string)} content
-     * @param {object} attrs
+     * @param {(HtmlBuilder|string)} tag
+     *        The tag or pre-made element to append.
+     * @param {(HtmlBuilder|string)} [content]
+     *        If tag is a string, this is the inner content of the element.
+     * @param {object} [attrs]
+     *        If tag is a string, this is the set of its element's attributes.
      * @return {HtmlBuilder}
      *         The child element.
      */
     append(tag, content, attrs) {
-      let elem = new HtmlBuilder(tag, content, attrs);
+      let elem = tag;
+      if(_.isString(elem))
+        elem = new HtmlBuilder(tag, content, attrs);
       this._children.push(elem);
       return elem;
     }

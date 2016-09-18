@@ -1,5 +1,8 @@
 # It's A Trap! - 5th Edition OGL theme
 
+_v1.2 updates:_
+* This update only includes some code refactoring. Revert to the previous version if you have any problems with this version.
+
 _v1.1 updates:_
 * The theme now supports the 'fx' basic JSON property made available in It's A Trap! v2.3.
 

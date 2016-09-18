@@ -2,18 +2,20 @@
   'use strict';
 
   // The name used by this script to send alerts to the GM in the chat.
-  const CHAT_NAME = 'ItsATrap-Pathfinder';
+  const CHAT_NAME = 'ItsATrap-5E_OGL';
 
   // A mapping of saving throw short names to their attribute names.
   const SAVE_NAMES = {
-    fort: 'Fort',
-    ref: 'Ref',
-    will: 'Will'
+    'str': 'strength_save_bonus',
+    'dex': 'dexterity_save_bonus',
+    'con': 'constitution_save_bonus',
+    'int': 'intelligence_save_bonus',
+    'wis': 'wisdom_save_bonus',
+    'cha': 'charisma_save_bonus'
   };
 
   /**
-   * A theme for the Pathfinder character sheet by Samuel Marino, Nibrodooh,
-   * Vince, Samuel Terrazas, chris-b, Magik, and James W..
+   * A theme for the 5th Edition OGL character sheet.
    * @implements ItsATrap#TrapTheme
    */
   class TrapTheme {
@@ -22,7 +24,7 @@
     }
 
     get name() {
-      return 'Pathfinder';
+      return '5E-OGL';
     }
 
     /**
@@ -37,15 +39,13 @@
       Promise.resolve()
       .then(() => {
         effect.character = character;
-        if(character)
+        if(character) {
           if(effect.attack)
             return this._doTrapAttack(character, effect);
           else if(effect.save && effect.saveDC)
             return this._doTrapSave(character, effect);
-          else
-            return effect;
-        else
-          return effect;
+        }
+        return effect;
       })
       .then(effect => {
         let html = TrapThemeHelper.htmlActivateTrapD20(effect);
@@ -58,31 +58,28 @@
     }
 
     /**
-     * Does the asynchronous roll for an attack.
+     * Does a trap's attack roll.
      * @private
      */
     _doTrapAttack(character, effect) {
       return Promise.all([
-        TrapThemeHelper.getSheetAttr(character, 'AC'),
+        TrapThemeHelper.getSheetAttr(character, 'ac'),
         TrapThemeHelper.rollAsync('1d20 + ' + effect.attack)
       ])
-      .then((tuple) => {
+      .then(tuple => {
         let ac = tuple[0];
         let atkRoll = tuple[1];
 
-        effect.ac = ac || '??';
+        ac = ac || 10;
+        effect.ac = ac;
         effect.roll = atkRoll;
-        if(ac)
-          effect.trapHit = atkRoll.total >= ac;
-        else
-          effect.trapHit = 'AC unknown';
-
+        effect.trapHit = atkRoll.total >= ac;
         return effect;
       });
     }
 
     /**
-     * Does the asynchronous roll for a save.
+     * Does a trap's save.
      * @private
      */
     _doTrapSave(character, effect) {
@@ -92,11 +89,44 @@
         effect.saveBonus = saveBonus;
         return TrapThemeHelper.rollAsync('1d20 + ' + saveBonus);
       })
-      .then(saveRoll => {
+      .then((saveRoll) => {
         effect.roll = saveRoll;
         effect.trapHit = saveRoll.total < effect.saveDC;
         return effect;
       });
+    }
+
+    /**
+     * @private
+     */
+    _initPerceptionType(character) {
+      // Due to some weirdness with how computed attributes are calculated
+      // in the API, perception_type needs to be set or else
+      // passive_wisdom will be undefined, even though it works fine
+      // in macros.
+      var percType = findObjs({
+        _type: 'attribute',
+        _characterid: character.get('_id'),
+        name: 'perception_type'
+      })[0];
+      if(!percType)
+        createObj('attribute', {
+          _characterid: character.get('_id'),
+          name: 'perception_type',
+          current: 1
+        });
+
+      var passPerc = findObjs({
+        _type: 'attribute',
+        _characterid: character.get('_id'),
+        name: 'passive_perception'
+      })[0];
+      if(!passPerc)
+        createObj('attribute', {
+          _characterid: character.get('_id'),
+          name: 'passive_perception',
+          current: 0
+        });
     }
 
     /**
@@ -109,12 +139,13 @@
 
       // Only do passive search for traps that have a spotDC.
       if(effect.spotDC && character) {
+        this._initPerceptionType(character);
 
         // If the character's passive wisdom beats the spot DC, then
         // display a message and mark the trap's trigger area.
-        TrapThemeHelper.getSheetAttr(character, 'Perception')
-        .then(spot => {
-          if(spot + 10 >= effect.spotDC) {
+        return TrapThemeHelper.getSheetAttr(character, 'passive_wisdom')
+        .then((passWis) => {
+          if(passWis >= effect.spotDC) {
             let html = TrapThemeHelper.htmlNoticeTrap(character, trap);
             ItsATrap.noticeTrap(trap, html.toString(this.css));
           }
