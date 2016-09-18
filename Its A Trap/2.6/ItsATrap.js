@@ -10,7 +10,6 @@
  * circular traps of any size.
  */
 var ItsATrap = (function() {
-
   /**
    * A message describing the chat message and other special effects for a trap
    * being set off. All fields are optional.
@@ -82,7 +81,8 @@ var ItsATrap = (function() {
     noticedTraps: {},
     theme: 'default',
     userOptions: {
-      revealTrapsToMap: false
+      revealTrapsToMap: false,
+      announcer: 'Admiral Ackbar'
     }
   });
 
@@ -91,7 +91,8 @@ var ItsATrap = (function() {
   if(useroptions) {
     state.ItsATrap.theme = useroptions['theme'] || 'default';
     state.ItsATrap.userOptions = {
-      revealTrapsToMap: useroptions['revealTrapsToMap'] || false
+      revealTrapsToMap: useroptions['revealTrapsToMap'] || false,
+      announcer: useroptions.announcer || 'Admiral Ackbar'
     };
   }
 
@@ -132,11 +133,13 @@ var ItsATrap = (function() {
     // Display the message to everyone, unless it's a secret.
     if(effect.gmOnly)
       message = '/w gm ' + message;
-    sendChat('Admiral Ackbar', message);
+
+    var announcer = state.ItsATrap.userOptions.announcer;
+    sendChat(announcer, message);
 
     // Whisper any secret notes to the GM.
     if(effect.notes)
-      sendChat('Admiral Ackbar', '/w gm Trap Notes:<br/>' + effect.notes);
+      sendChat(accouncer, '/w gm Trap Notes:<br/>' + effect.notes);
 
     // If the effect has a sound, try to play it.
     playEffectSound(effect);

@@ -18,7 +18,7 @@
     let content = new HtmlBuilder('div');
 
     // Add the flavor message.
-    content.append('.paddedRow.trapMessage', effect.message);
+    content.append('.paddedRow trapMessage', effect.message);
 
     if(effect.character) {
 

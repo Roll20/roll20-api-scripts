@@ -19,6 +19,12 @@
           "value": "true",
           "checked": "checked",
           "description": "When a trap with the bleeding-eye status is activated, it will be moved to the Map layer instead of the Objects layer."
+        },
+        {
+          "name": "announcer",
+          "type": "text",
+          "default": "Admiral Ackbar",
+          "description": "What name is displayed in the chat for trap messages?"
         }
     ],
     "dependencies": ["HTML Builder", "Token Collisions", "Path Math", "Vector Math"],
