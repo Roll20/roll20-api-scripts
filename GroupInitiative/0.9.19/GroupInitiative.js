@@ -5,8 +5,8 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.9.20',
-        lastUpdate = 1473946693,
+    var version = '0.9.19',
+        lastUpdate = 1473946107,
         schemaVersion = 1.0,
         bonusCache = {},
         observers = {
@@ -951,7 +951,7 @@ var GroupInitiative = GroupInitiative || (function() {
                                     turnorder: JSON.stringify(
                                         _.map(JSON.parse(Campaign().get('turnorder'))||[], function(e){
                                             if('-1' !== e.id){
-                                                e.pr=Math.max((_.isNaN(parseFloat(e.pr))?0:parseFloat(e.pr))+manualBonus,manualBonusMin).toFixed(state.GroupInitiative.config.maxDecimal);
+                                                e.pr=Math.max(e.pr+manualBonus,manualBonusMin);
                                             }
                                             return e;
                                         })
