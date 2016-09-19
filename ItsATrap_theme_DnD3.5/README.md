@@ -1,5 +1,8 @@
 # It's A Trap! - D&D 3.5 theme
 
+_v1.2 updates:_
+* This update only includes code refactoring. If any problems arise, revert to the previous version.
+
 _v1.1 updates:_
 * The theme now supports the 'fx' basic JSON property made available in It's A Trap! v2.3.
 

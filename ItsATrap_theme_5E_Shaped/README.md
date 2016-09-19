@@ -1,5 +1,8 @@
 # It's A Trap! - 5th Edition (Shapedv2) theme
 
+_v1.2 updates:_
+* This version only contains code refactoring. If there are any problems, revert to the previous version.
+
 _v1.1 updates:_
 * The theme now supports the 'fx' basic JSON property made available in It's A Trap! v2.3.
 
