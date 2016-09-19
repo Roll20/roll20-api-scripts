@@ -1,6 +1,6 @@
 {
   "name": "TurnMarker1",
-  "version": "1.3.5",
+  "version": "1.3.7",
   "description": "Round counter and a moving marker that shows who's turn it is.",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -36,6 +36,7 @@
   "useroptions": [],
   "previousversions": [
     "1.3.3",
-    "1.3.4"
+    "1.3.4",
+    "1.3.5"
   ]
 }
