@@ -208,6 +208,6 @@ bouncetokens:
 - "BounceTokens"
 - "Tokens"
 
-htmlbuilder
+htmlbuilder:
 - "HtmlBuilder"
 - "Utility"
