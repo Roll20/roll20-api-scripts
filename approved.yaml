@@ -203,3 +203,11 @@ falloutterminal:
 chatsetattr:
 - "ChatSetAttr"
 - "Character"
+
+bouncetokens:
+- "BounceTokens"
+- "Tokens"
+
+htmlbuilder
+- "HtmlBuilder"
+- "Utility"
