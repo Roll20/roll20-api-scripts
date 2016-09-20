@@ -392,6 +392,26 @@ var ItsATrap = (() => {
   }
 
   /**
+   * Gets the distance between two tokens in their page's units.
+   * @param {Graphic} token1
+   * @param {Graphic} token2
+   * @return {number}
+   */
+  function _getUnitsDistance(token1, token2) {
+    let p1 = [
+      token1.get('left'),
+      token1.get('top')
+    ];
+    let p2 = [
+      token2.get('left'),
+      token2.get('top')
+    ];
+    let page = getObj('page', token1.get('_pageid'));
+    let scale = page.get('scale_number');
+    return VecMath.dist(p1, p2)/70*scale;
+  }
+
+  /**
    * @private
    */
   function _getUserOption(opName) {
@@ -657,14 +677,21 @@ var ItsATrap = (() => {
 
         // If the theme has passive searching, do a passive search for traps.
         if(theme.passiveSearch && theme.passiveSearch !== _.noop) {
-          var searchableTraps = getSearchableTraps(token);
-          _.each(searchableTraps, function(trap) {
-            theme.passiveSearch(trap, token);
-          });
+          _.chain(getSearchableTraps(token))
+            .filter(trap => {
+              // Only search for traps that are close enough to be spotted.
+              let effect = getTrapEffect(token, trap);
+              let dist = _getUnitsDistance(token, trap);
+              return (!effect.searchDist || dist <= effect.searchDist);
+            })
+            .each(trap => {
+              theme.passiveSearch(trap, token);
+            });
         }
       }
       catch(err) {
         log('ERROR - It\'s A Trap!: ' + err.message);
+        log(err.stack);
       }
     }
   }
