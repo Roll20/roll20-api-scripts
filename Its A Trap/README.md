@@ -1,6 +1,14 @@
 # It's A Trap!
 
 ###### Updates
+
+_2.7_
+* Passive searching now supports a maximum search distance for traps using the 'searchDist' JSON option.
+
+_2.6_
+* The script now exposes a TrapThemeHelper object that provides common functions used for creating trap themes.
+* The announcer for the script can be changed as a user option.
+
 _2.5_
 * The script's API now exposes a announceTrap method for handling all universally supported trap output (messages, sounds, FX, etc.).
 * Trap JSON now supports a "gmOnly" property that displays the trap's message only to the GM.
@@ -15,7 +23,7 @@ _2.3_
 * Trap JSON now supports special FX. This is specified through the 'fx' property.
 
 _2.2_
-* TrapThemes now supported for system-specific trap automation.
+* TrapThemes now supported for system-specific trap automation via trap themes.
 
 _2.1_
 * Refactored code.
@@ -92,6 +100,7 @@ The following basic TrapEffect properties are supported:
  * fx.direction (2-number array): For beam-like FX, this is the vector for the FX's direction.
 * gmOnly (boolean): If true, then the trap's message is only displayed to the GM.
 * message (string): This is the message that will be displayed when the trap activates.
+* searchDist (number): A character must be no further than this many units away to passively search for the trap.
 * sound (string): The name of a sound that will be played when the trap activates.
 * stopAt (string): This is where the trap stops the token. If "edge", then the token is stopped at the trap's edge. If "center", then the token is stopped at the trap's center. If "none", the token is not stopped by the trap. Default: "center".
 * trapId (string): The ID of the trap token. This is set automatically by the script.

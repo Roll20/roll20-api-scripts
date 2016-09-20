@@ -155,6 +155,68 @@ var ItsATrap = (() => {
   }
 
   /**
+   * Checks if a token passively searched for any traps during its last
+   * movement.
+   * @private
+   * @param {TrapTheme} theme
+   * @param {Graphic} token
+   */
+  function _checkPassiveSearch(theme, token) {
+    if(theme.passiveSearch && theme.passiveSearch !== _.noop) {
+      _.chain(getSearchableTraps(token))
+        .filter(trap => {
+          // Only search for traps that are close enough to be spotted.
+          let effect = getTrapEffect(token, trap);
+          let dist = _getPassiveSearchDistance(token, trap);
+          return (!effect.searchDist || dist < effect.searchDist);
+        })
+        .each(trap => {
+          theme.passiveSearch(trap, token);
+        });
+    }
+  }
+
+  /**
+   * Checks if a token activated any traps during its last movement.
+   * @private
+   * @param {TrapTheme} theme
+   * @param {Graphic} token
+   */
+  function _checkTrapActivations(theme, token) {
+    var collisions = getTrapCollisions(token);
+    _.find(collisions, function(collision) {
+      var trap = collision.other;
+      var trapEffect = getTrapEffect(token, trap);
+      trapEffect.stopAt = trapEffect.stopAt || 'center';
+
+      if(trapEffect.stopAt === 'edge') {
+        var x = collision.pt[0];
+        var y = collision.pt[1];
+
+        token.set("lastmove","");
+        token.set("left", x);
+        token.set("top", y);
+      }
+      else if(trapEffect.stopAt === 'center')
+        moveTokenToTrap(token, trap);
+
+      // Reveal the trap if it's set to become visible.
+      revealTrap(trap);
+
+      // Apply the trap's effects to any victims in its area.
+      var victims = getTrapVictims(trap, token);
+      _.each(victims, function(victim) {
+        var effect = getTrapEffect(victim, trap);
+        theme.activateEffect(effect);
+      });
+
+      // Stop activating traps if this trap stopped the token.
+      return (trapEffect.stopAt !== 'none');
+    });
+  }
+
+
+  /**
    * Creates a default message for a TrapEffect.
    * @private
    * @param  {Graphic} victim
@@ -184,6 +246,30 @@ var ItsATrap = (() => {
         log('ItsATrap api command ERROR: ' + err.message);
       }
     }
+  }
+
+  /**
+   * Gets the distance between two tokens in their page's units.
+   * @param {Graphic} token1
+   * @param {Graphic} token2
+   * @return {number}
+   */
+  function _getPassiveSearchDistance(token1, token2) {
+    let p1 = [
+      token1.get('left'),
+      token1.get('top')
+    ];
+    let p2 = [
+      token2.get('left'),
+      token2.get('top')
+    ];
+    let r1 = token1.get('width')/2;
+    let r2 = token2.get('width')/2;
+
+    let page = getObj('page', token1.get('_pageid'));
+    let scale = page.get('scale_number');
+    let pixelDist = Math.max(0, VecMath.dist(p1, p2) - r1 - r2);
+    return pixelDist/70*scale;
   }
 
   /**
@@ -389,26 +475,6 @@ var ItsATrap = (() => {
     }
     else
       return [triggerVictim];
-  }
-
-  /**
-   * Gets the distance between two tokens in their page's units.
-   * @param {Graphic} token1
-   * @param {Graphic} token2
-   * @return {number}
-   */
-  function _getUnitsDistance(token1, token2) {
-    let p1 = [
-      token1.get('left'),
-      token1.get('top')
-    ];
-    let p2 = [
-      token2.get('left'),
-      token2.get('top')
-    ];
-    let page = getObj('page', token1.get('_pageid'));
-    let scale = page.get('scale_number');
-    return VecMath.dist(p1, p2)/70*scale;
   }
 
   /**
@@ -633,6 +699,12 @@ var ItsATrap = (() => {
     }
   }
 
+  /**
+   * Checks if a token activated or passively spotted any traps during
+   * its last movement.
+   * @private
+   * @param {Graphic} token
+   */
   function _updateToken(token) {
     // Objects on the GM layer don't set off traps.
     if(token.get("layer") === "objects") {
@@ -644,50 +716,10 @@ var ItsATrap = (() => {
         }
 
         // Did the character set off a trap?
-        var collisions = getTrapCollisions(token);
-        _.find(collisions, function(collision) {
-          var trap = collision.other;
-          var trapEffect = getTrapEffect(token, trap);
-          trapEffect.stopAt = trapEffect.stopAt || 'center';
-
-          if(trapEffect.stopAt === 'edge') {
-            var x = collision.pt[0];
-            var y = collision.pt[1];
-
-            token.set("lastmove","");
-            token.set("left", x);
-            token.set("top", y);
-          }
-          else if(trapEffect.stopAt === 'center')
-            moveTokenToTrap(token, trap);
-
-          // Reveal the trap if it's set to become visible.
-          revealTrap(trap);
-
-          // Apply the trap's effects to any victims in its area.
-          var victims = getTrapVictims(trap, token);
-          _.each(victims, function(victim) {
-            var effect = getTrapEffect(victim, trap);
-            theme.activateEffect(effect);
-          });
-
-          // Stop activating traps if this trap stopped the token.
-          return (trapEffect.stopAt !== 'none');
-        });
+        _checkTrapActivations(theme, token);
 
         // If the theme has passive searching, do a passive search for traps.
-        if(theme.passiveSearch && theme.passiveSearch !== _.noop) {
-          _.chain(getSearchableTraps(token))
-            .filter(trap => {
-              // Only search for traps that are close enough to be spotted.
-              let effect = getTrapEffect(token, trap);
-              let dist = _getUnitsDistance(token, trap);
-              return (!effect.searchDist || dist <= effect.searchDist);
-            })
-            .each(trap => {
-              theme.passiveSearch(trap, token);
-            });
-        }
+        _checkPassiveSearch(theme, token);
       }
       catch(err) {
         log('ERROR - It\'s A Trap!: ' + err.message);
