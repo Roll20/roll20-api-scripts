@@ -20,7 +20,8 @@ var ItsATrap = (function() {
    *           The command may contain the template values TRAP_ID and
    *           VICTIM_ID. These will be replaced by the values for trapId
    *           and victimId, respectively in the API chat command message.
-   * @property {(string|FXDefinition)}
+   * @property {(string|FXDefinition)} fx
+   *           A special FX that is spawned from the trap when it is activated.
    * @property {string} message
    *           The message that will be sent in the chat by Admiral Ackbar
    *           when the trap activates.

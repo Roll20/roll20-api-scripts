@@ -1,0 +1,28 @@
+{
+    "name": "Ars Magica 5e--Automated Stress Die",
+    "script": "ArsMagica5eStressDie.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "This allows players to enter '!st <number1>' or '!st <number1>, <number2>' (_nomod version: !st or !st <number2>) to roll a stress die with modifier <number1> and optional botch dice count <number2>. Botch dice count defaults to 1 when used with one argument. The _nomod version is designed for users who want to add their modifier separately. Multiple botches are possible, and will be reported in the case of a botch. Note that a result of 1 in the code corresponds to a result of zero in the text, and a 10 in the code is a 1 described in the corebook's text. This does not bias results, as both are special cases. Only results of 2-9 actually keep their numeric value. A macro for a stress die--modified or otherwise--can be easily made with syntax similar to !st ?{Modifier|0}, ?{Botch Dice|1}",
+    "authors": "Chris Lankford",
+    "roll20userid": "390978",
+    "useroptions": [
+        {
+			"name": "Modifier", 
+            "type": "integer (as char)",
+            "default": "",
+            "description": "The basic version (as opposed to the _nomod version) of this script uses a modifier as the first input, and is required."
+        },
+		{
+            "name": "Botch dice count", 
+            "type": "nonnegative integer (as char)",
+            "default": "1",
+            "description": "This optional argument, which can be used with either the original or _nomod versions, determines the number of botch dice to roll when a critical failure is possible. Increasing this value increases the possibility and potential severity of critical failure."
+        }
+    ],
+    "dependencies": ["Math"],
+    "modifies": {
+        "": ""
+    },
+    "conflicts": ["The two versions (standard and _nomod) conflict with each other."]
+}

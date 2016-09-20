@@ -1,8 +1,8 @@
 # Page FX
 
-_v1.1 Updates_
-* PageFX can now use saved custom FX names or custom FX JSON definitions.
-* Implemented NullFX areas.
+_v1.2 Updates_
+* There is now support for beam-like saved FX.
+* Beam-like effects can now be given a random vector.
 
 ##### Dependencies:
 * None
@@ -19,7 +19,7 @@ All the effects created with this script are centered around PageFX tokens which
 2. In its ```GM Notes``` property, specify the type of effect to produce. E.g. "explode-fire".
 3. In its ```Bar 1 value``` property specify the spawn rate (in milliseconds) of the effect.
 4. In its ```Aura 1``` property, specify the area of effect either as a circle or square with the desired radius.
-5. If the effect is a beam-like effect ("beam", "breath", or "splatter"), specify the X and Y offsets (in units) of the effect's end point using the ```Bar 2 value``` and ```Bar 2 max``` properties, respectively.
+5. If the effect is a beam-like effect ("beam", "breath", or "splatter"), specify the X and Y offsets (in units) of the effect's end point using the ```Bar 2 value``` and ```Bar 2 max``` properties, respectively. This can be set to "random" to make the effect fire in a random direction.
 
 PageFX will start automatically when they are created and when the page is changed. When the active page is changed, all currently active effects will end and the new page's effects will begin automatically.
 
