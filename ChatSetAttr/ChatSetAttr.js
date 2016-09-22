@@ -1,14 +1,13 @@
-// ChatSetAttr version 1.0
-// Last Updated: 2016-09-20
+// ChatSetAttr version 0.9.1
+// Last Updated: 2016-09-16
 // A script to create, modify, or delete character attributes from the chat area or macros.
 // If you don't like my choices for --replace, you can edit the replacers variable at your own peril to change them.
 
 var chatSetAttr = chatSetAttr || (function() {
     'use strict';
 
-	const version = '1.0',
+	const version = '0.9.1',
 	feedback = true,
-	caseSensitive = false,
 	replacers = [ ['<', '[', /</g, /\[/g],
 				['>',']' , />/g, /\]/g],
 				['#','|', /#/g, /\|/g],
@@ -38,6 +37,15 @@ var chatSetAttr = chatSetAttr || (function() {
 		}
 	},
 
+	myGetAttrByName = function(charId, attrName, createMissing) {
+		// Returns attribute object by name
+		let attr = findObjs({type: 'attribute', characterid: charId, name: attrName}, {caseInsensitive: true})[0];
+		if (!attr && createMissing) {
+			attr = createObj('attribute', {characterid: charId,	name: attrName});
+		}
+		return attr;
+	},
+
 	processInlinerolls = function (msg) {
 		// Input:	msg - chat message
 		// Output:	msg.content, with all inline rolls evaluated
@@ -56,193 +64,104 @@ var chatSetAttr = chatSetAttr || (function() {
 		}
 	},
 
-	deleteAttributes = function (allAttrs) {
-		_.each(allAttrs, function(ch) {
-			_.each(ch, function(attr) {
-				attr.remove();
-			});
-		});
-	},
-
-	getRepeatingAttributes = function(who, list, setting, createMissing) {
-		let allAttrs = {}, allKeys = _.keys(setting), indexMatch, attrNameSplit,
-			allSectionAttrs, id, name, repSectionIds, rowNum, rowId, idMatch;
-
+	deleteAttributes = function (list, setting) {
+		let attr;
 		list.forEach(function(charid) {
-			allAttrs[charid] = {};
-		});
-
-		allKeys.forEach(function(attrName) {
-			indexMatch = attrName.match(/_\$\d+?_/);
-			allSectionAttrs = {}, repSectionIds = {};
-
-			list.forEach(function(charid) {
-				allSectionAttrs[charid] = {};
-			});
-
-			if (indexMatch) {
-				rowNum = parseInt(indexMatch[0].replace('$','').replace(/_/g,''));
-				attrNameSplit = attrName.split(indexMatch[0]);
-			}
-			else {
-				idMatch = attrName.match(/_(-[-A-Za-z0-9]+?)_/)[0], rowId = idMatch.replace(/_/g,'');
-				attrNameSplit = attrName.split(idMatch);
-			}
-
-			filterObjs(function(o) {
-				if (o.get('_type') === 'attribute') {
-					id = o.get('_characterid');
-					name = o.get('name');
-				 	if (_.contains(list,id) && name.search('^' + attrNameSplit[0] + '_(-[-A-Za-z0-9]+?)_') !== -1) {
-				 		allSectionAttrs[id][name] = o;
-				 		return true;
-				 	}
+			_.each(setting, function(attrValue,attrName) {
+				if (attrName.search(/^repeating_/) !== -1) {
+					attr = getRepeatingAttribute(charid,attrName,false);
+					if (attr) {
+						attr.remove();
+					}
+				} else {
+					attr = findObjs({type: 'attribute', characterid: charid, name: attrName}, {caseInsensitive: true});
+					attr.forEach(a =>  a.remove());
 				}
 			});
+		});
+		return;
+	},
 
-			list.forEach(function(charid) {
-				repSectionIds[charid] = _.chain(allSectionAttrs[charid])
-					.map((o,n) => n.match('^' + attrNameSplit[0] + '_(-[-A-Za-z0-9]+?)_'))
+	setAttributes = function(who, list, setting, createMissing, mod) {
+		// Input:	list - array of valid character IDs
+		//			setting - object containing attribute names and desired values
+		// Output:	null. Attribute values are changed.
+		let attr, current, max;
+		list.forEach(function(charid) {
+			_.each(setting, function(attrValue,attrName) {
+				if (attrName.search(/^repeating_/) !== -1) {
+					attr = getRepeatingAttribute(charid,attrName,createMissing);
+				} else {
+					attr = myGetAttrByName(charid,attrName,createMissing);
+				}
+				if (attr) {
+					if (attrValue.current !== undefined) {
+						if (mod) {
+							current = parseInt(attrValue.current) + parseInt(attr.get('current') || '0');
+							if (!_.isNaN(current)) {
+								attr.set('current',current);
+							} else {
+								handleError(who,'Attribute '+attrName+' is not integer-valued for character '+getAttrByName(charid,'character_name')+'. Attribute left unchanged.');
+							}
+						}
+						else {
+							attr.set('current', attrValue.current);
+						}
+					}
+					if (attrValue.max !== undefined) {
+						if (mod) {
+							max = parseInt(attrValue.max) + parseInt(attr.get('max') || '0');
+							if (!_.isNaN(max)) {
+								attr.set('max',max);
+							} else {
+								handleError(who,'Attribute maximum of '+attrName+' is not integer-valued for character '+getAttrByName(charid,'character_name')+'. Attribute left unchanged.');
+							}
+						}
+						else {
+							attr.set('max',attrValue.max);
+						}
+					}
+				} else if (!createMissing) {
+					handleError(who,'Missing attribute '+attrName+' not created for character '+getAttrByName(charid,'character_name')+'.');
+				} else {
+					handleError(who,'Repeating attribute '+attrName+' invalid for character '+getAttrByName(charid,'character_name')+'.');
+				}
+			});
+		});
+		return;
+	},
+
+	getRepeatingAttribute = function(charId, attrName, createMissing) {
+		let attrMatch = attrName.match(/_\$\d+?_/), attr, attrNameSplit, repSectionIds;
+		if (attrMatch) {
+			let rowNum = parseInt(attrMatch[0].replace('$','').replace(/_/g,''));
+			attrNameSplit = attrName.split(attrMatch[0]);
+			repSectionIds = _.chain(findObjs({type: 'attribute', characterid: charId}, {caseInsensitive: true}))
+				.map(a => a.get('name').match('^' + attrNameSplit[0] + '_(-[-A-Za-z0-9]+?)_'))
+				.compact()
+				.map(a => a[1])
+				.uniq()
+				.value();
+			if (!_.isUndefined(repSectionIds[rowNum])) {
+ 				attr = myGetAttrByName(charId, attrNameSplit[0] + '_' + repSectionIds[rowNum] + '_' + attrNameSplit[1], createMissing);
+			}
+		} else {
+			let idMatch = attrName.match(/_(-[-A-Za-z0-9]+?)_/)[0];
+			if (idMatch) {
+				let id = idMatch.replace(/_/g,'');
+				attrNameSplit = attrName.split(idMatch);
+				repSectionIds = _.chain(findObjs({type: 'attribute', characterid: charId}, {caseInsensitive: true}))
+					.map(a => a.get('name').match('^' + attrNameSplit[0] + '_(-[-A-Za-z0-9]+?)_'))
 					.compact()
 					.map(a => a[1])
 					.uniq()
 					.value();
-			});
-
-			list.forEach(function(charid) {
-				if (indexMatch && !_.isUndefined(repSectionIds[charid][rowNum])) {
-					let realRepName = attrNameSplit[0] + '_' + repSectionIds[charid][rowNum] + '_' + attrNameSplit[1];
-					if (_.has(allSectionAttrs[charid], realRepName)) {
-						allAttrs[charid][attrName] = allSectionAttrs[charid][realRepName]
-					}
-					else if (createMissing) {
-						allAttrs[charid][attrName] = createObj('attribute', {characterid: charid , name: realRepName});
-					}
-					else {
-						handleError(who, 'Missing attribute '+realRepName+' not created for character '+getAttrByName(charid,'character_name')+'.');
-					}
+				if (_.contains(repSectionIds, id) ){
+ 					attr = myGetAttrByName(charId, attrNameSplit[0] + '_' + id + '_' + attrNameSplit[1], createMissing);
 				}
-
-				else if (indexMatch) {
-					handleError(who, 'Row number '+rowNum+' invalid for character '+getAttrByName(charid,'character_name')+' and repeating section '+attrNameSplit[0]+'.');
-				}
-				else if (_.contains(repSectionIds[charid], rowId)) {
-					let realRepName = attrNameSplit[0] + '_' + rowId + '_' + attrNameSplit[1];
-					sendChat('Test', realRepName);
-					if (_.has(allSectionAttrs[charid], realRepName)) {
-						allAttrs[charid][attrName] = allSectionAttrs[charid][realRepName]
-					}
-					else if (createMissing) {
-						allAttrs[charid][attrName] = createObj('attribute', {characterid: charid , name: realRepName});
-					}
-					else {
-						handleError(who, 'Missing attribute '+realRepName+' not created for character '+getAttrByName(charid,'character_name')+'.');
-					}
-				}
-				else {
-					handleError(who, 'Repeating section id '+rowId+' invalid for character '+getAttrByName(charid,'character_name')+' and repeating section '+attrNameSplit[0]+'.');
-				}
-
-			});
-		});
-		return allAttrs;
-	},
-
-	getStandardAttributes = function(who, list, setting, createMissing) {
-		let allAttrs = {}, allKeys = _.keys(setting), allKeysUpper, id, name;
-
-		if (!caseSensitive) {
-			allKeysUpper = allKeys.map(x => x.toUpperCase());
+			}
 		}
-
-		list.forEach(function(charid) {
-			allAttrs[charid] = {};
-		});
-
-		filterObjs(function(o) {
-			if (o.get('_type') === 'attribute') {
-				id = o.get('_characterid');
-				name = o.get('name');
-				if (caseSensitive && _.contains(list,id) && _.contains(allKeys,name)) {
-					allAttrs[id][name] = o;
-					return true;
-				}
-				else if (_.contains(list,id) && _.contains(allKeysUpper,name.toUpperCase())) {
-					allAttrs[id][allKeys[_.indexOf(allKeysUpper, name.toUpperCase())]] = o;
-					return true;
-				}
-			}
-        });
-
-		list.forEach(function(charid) {
-			_.each(_.difference(allKeys, _.keys(allAttrs[charid])), function (key) {
-				if (createMissing) {
-					allAttrs[charid][key] = createObj('attribute', {characterid: charid , name: key});
-				}
-				else {
-					handleError(who, 'Missing attribute '+key+' not created for character '+getAttrByName(charid,'character_name')+'.');
-				}
-			});
-		});
-
-		return allAttrs;
-	},
-
-	getAllAttributes = function(who, list, setting, createMissing) {
-		let standardAttrs = getStandardAttributes(who, list, setting.standard, createMissing);
-		let repeatingAttrs = getRepeatingAttributes(who, list, setting.repeating, createMissing);
-		let allAttrs = {};
-
-		list.forEach(function(charid) {
- 			allAttrs[charid] = _.defaults(standardAttrs[charid],repeatingAttrs[charid]);
-		});
-		return allAttrs;
-	},
-
-	delayedSetAttributes = function(who, list, setting, allAttrs, mod) {
-		let cList = _.clone(list),
-			dWork = function(charid) {
-				setCharAttributes(who, charid, setting, allAttrs[charid], mod);
-				if (cList.length) {
-					_.delay(dWork, 50, cList.shift());
-				}
-			}
-		dWork(cList.shift());
-	},
-
-	setCharAttributes = function(who, charid, setting, attrs, mod) {
-		let current, max;
-		_.each(_.pick(setting, _.keys(attrs)), function (attrValue,attrName) {
-			let attr = attrs[attrName];
-			if (_.has(attrValue,'current')) {
-				if (mod) {
-					current = parseInt(attrValue.current) + parseInt(attr.get('current') || '0');
-					if (!_.isNaN(current)) {
-						attr.set('current',current);
-					}
-					else {
-						handleError(who,'Attribute '+attrName+' is not integer-valued for character '+getAttrByName(charid,'character_name')+'. Attribute left unchanged.');
-					}
-				}
-				else {
-					attr.set('current', attrValue.current);
-				}
-			}
-			if (_.has(attrValue,'max')) {
-				if (mod) {
-					max = parseInt(attrValue.max) + parseInt(attr.get('max') || '0');
-					if (!_.isNaN(max)) {
-						attr.set('max',max);
-					}
-					else {
-						handleError(who,'Attribute maximum '+attrName+' is not integer-valued for character '+getAttrByName(charid,'character_name')+'. Attribute maximum left unchanged.');
-					}
-				}
-				else {
-					attr.set('max', attrValue.max);
-				}
-			}
-		});
+		return attr;
 	},
 
 	parseOpts = function(content, hasValue) {
@@ -269,30 +188,14 @@ var chatSetAttr = chatSetAttr || (function() {
 		// 			an expression of the form key|value or key|value|maxvalue
 		//			replace - true if characters from the replacers array should be replaced
 		// Output:	Object containing key|value for all expressions.
-		let repeating, standard, setting = {};
-		standard = _.chain(args)
+		args = _.chain(args)
 		.map(str => str.split(/\s*\|\s*/))
 		.reject(a => a.length === 0)
 		.map(sanitizeAttributeArray)
 		.object()
-		.tap(function (o) {
-			repeating = _.pick(o, function(v,k) {
-					return (k.search(/^repeating_/) !== -1);
-			})
-		})
-		.omit(_.keys(repeating))
 		.value();
-
 		if (replace) {
-			standard = _.mapObject(standard, function(obj) {
-				return _.mapObject(obj,	function (str) {
-					for (let rep in replacers) {
-						str = str.replace(replacers[rep][2],replacers[rep][1]);
-					}
-					return str;
-				});
-			});
-			repeating = _.mapObject(repeating, function(obj) {
+			args = _.mapObject(args, function(obj) {
 				return _.mapObject(obj,	function (str) {
 					for (let rep in replacers) {
 						str = str.replace(replacers[rep][2],replacers[rep][1]);
@@ -301,9 +204,7 @@ var chatSetAttr = chatSetAttr || (function() {
 				});
 			});
 		}
-		setting['repeating'] = repeating;
-		setting['standard'] = standard;
-		return setting;
+		return args;
 	},
 
 	sanitizeAttributeArray = function (arr) {
@@ -424,7 +325,7 @@ var chatSetAttr = chatSetAttr || (function() {
 				optsArray = ['all','allgm','charid','name','silent','sel','replace', 'nocreate','mod'],
 				opts = parseOpts(processInlinerolls(msg), hasValue),
 				setting = parseAttributes(_.chain(opts).omit(optsArray).keys().value(),opts.replace);
-			if (_.isEmpty(setting.standard) && _.isEmpty(setting.repeating)) {
+			if (_.isEmpty(setting)) {
 				handleError(who, 'No attributes supplied.');
 				return;
 			}
@@ -448,20 +349,17 @@ var chatSetAttr = chatSetAttr || (function() {
 				return;
 			}
 
-			// Get attributes
-			let allAttrs = getAllAttributes(who, charIDList, setting, !opts.nocreate);
-
 			// Set attributes
 			if (msg.content.search(/^!delattr\b/) !== -1) {
-				deleteAttributes(allAttrs);
+				deleteAttributes(charIDList, setting);
 				if (feedback && !opts.silent && !_.isEmpty(charIDList)) {
-					sendDeleteFeedback(who, charIDList, _.defaults(setting.standard, setting.repeating));
+					sendDeleteFeedback(who, charIDList, setting);
 				}
 			}
 			else {
-				delayedSetAttributes(who, charIDList, _.defaults(setting.standard, setting.repeating), allAttrs, opts.mod);
+				setAttributes(who, charIDList, setting, !opts.nocreate, opts.mod);
 				if (feedback && !opts.silent && !_.isEmpty(charIDList)) {
-					sendFeedback(who, charIDList, _.defaults(setting.standard, setting.repeating), opts.replace, opts.mod);
+					sendFeedback(who, charIDList, setting, opts.replace, opts.mod);
 				}
 			}
 		}
