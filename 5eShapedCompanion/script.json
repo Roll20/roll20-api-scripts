@@ -1,8 +1,9 @@
 {
     "name": "5e Shaped Companion Script",
     "script": "5eShapedCompanion.js",
-    "version": "4.4.7",
+    "version": "4.4.8",
     "previousversions": [
+        "4.4.7",
         "4.4.6",
         "4.4.5",
         "4.4.4",
