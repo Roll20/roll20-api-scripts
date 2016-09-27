@@ -195,3 +195,19 @@ statusfx:
 itsatrapthemepathfinder:
 - "ItsATrap_theme_Pathfinder"
 - "System Toolbox"
+
+falloutterminal:
+- "FalloutTerminal"
+- "System Toolbox"
+
+chatsetattr:
+- "ChatSetAttr"
+- "Character"
+
+bouncetokens:
+- "BounceTokens"
+- "Tokens"
+
+htmlbuilder:
+- "HtmlBuilder"
+- "Utility"

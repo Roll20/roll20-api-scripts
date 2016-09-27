@@ -1,7 +1,7 @@
 # It's A Trap! - Roleplaying is Magic 4E theme
 
-_v1.1 updates:_
-* The theme now supports the 'fx' basic JSON property made available in It's A Trap! v2.3.
+_v1.2 updates:_
+* The script has been refactored to use ES6 Javascript technology. No new functionality though. If any issues arise using this issue of the script, just switch back to the previous version.
 
 This is a My Little Pony: Roleplaying is Magic 4th edition theme for the It's A Trap! script,
 built for use with the Roleplaying is Magic 4E character sheet.
