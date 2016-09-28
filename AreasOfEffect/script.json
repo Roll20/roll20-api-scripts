@@ -1,0 +1,17 @@
+{
+    "name": "Areas of Effect",
+    "script": "aoe.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [],
+    "dependencies": ["MatrixMath", "Path Math", "Vector Math"],
+    "modifies": {
+      "tokens": true,
+      "paths": true,
+      "macros": true
+    },
+    "conflicts": []
+}
