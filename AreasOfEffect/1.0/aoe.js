@@ -114,7 +114,7 @@ var AreasOfEffect = (() => {
     * https://wiki.roll20.net/API:Cookbook#getCleanImgsrc
     */
    function _getCleanImgsrc(imgsrc) {
-     var parts = imgsrc.match(/(.*\/images\/.*)(thumb|max)(.*)$/);
+     var parts = imgsrc.match(/(.*\/images\/.*)(thumb|med|original|max)(.*)$/);
      if(parts)
        return parts[1]+'thumb'+parts[3];
      throw new Error('Only images that you have uploaded to your library ' +
@@ -186,7 +186,6 @@ var AreasOfEffect = (() => {
     path.remove();
 
     _whisper(who, 'Created Area of Effect: ' + name);
-    log(state.AreasOfEffect);
     _showMainMenu(who, playerid);
   }
 
@@ -348,6 +347,7 @@ var AreasOfEffect = (() => {
     }
     catch(err) {
       log('Areas Of Effect ERROR: ' + err.message);
+      sendChat('Areas Of Effect ERROR:', '/w ' + _fixWho(msg.who) + ' ' + err.message);
       log(err.stack);
     }
   });
