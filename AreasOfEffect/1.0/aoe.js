@@ -80,7 +80,7 @@ var AreasOfEffect = (() => {
        top: pt[1],
        rotation: rotation,
        width: width,
-       height: width,
+       height: width/effect.aspectRatio,
        imgsrc: _getCleanImgsrc(effect.imgsrc),
        controlledby: playerid
      });
@@ -178,6 +178,7 @@ var AreasOfEffect = (() => {
       ptTransform: m,
       rotateOffset: effect.get('rotation')/180*Math.PI + radians,
       scale: scale,
+      aspectRatio: effect.get('width')/effect.get('height'),
       imgsrc: _getCleanImgsrc(effect.get('imgsrc'))
     };
 
