@@ -7,7 +7,7 @@
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
     "useroptions": [],
-    "dependencies": ["MatrixMath", "Path Math", "Vector Math"],
+    "dependencies": ["HTML Builder", "MatrixMath", "Path Math", "Vector Math"],
     "modifies": {
       "tokens": true,
       "paths": true,
