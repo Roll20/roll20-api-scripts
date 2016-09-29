@@ -1,5 +1,5 @@
 /*
- Current Version: 6.3.2
+ Current Version: 6.3.0
  Last updated: 09.28.2016
  Character Sheet and Script Maintained by: Samuel T.
  Older Verions: https://github.com/dayst/StarWarsEdgeOfTheEmpire_Dice
