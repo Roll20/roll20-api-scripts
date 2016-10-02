@@ -415,7 +415,7 @@ var chatSetAttr = chatSetAttr || (function() {
 			let who = getPlayerName(msg.who);
 			const hasValue = ['charid','name'],
 				optsArray = ['all','allgm','charid','name','silent','sel','replace', 'nocreate','mod'],
-				opts = parseOpts(processInlinerolls(msg), hasValue),
+				opts = parseOpts(processInlinerolls(msg).replace(/<br\/>\n/g, '').replace(/({{(.*?)\s*}}$)/g, "$2"),hasValue),
 				setting = parseAttributes(_.chain(opts).omit(optsArray).keys().value(),opts.replace);
 			if (_.isEmpty(setting)) {
 				handleError(who, 'No attributes supplied.');
