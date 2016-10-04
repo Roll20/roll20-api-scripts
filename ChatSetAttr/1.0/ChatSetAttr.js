@@ -1,5 +1,5 @@
 // ChatSetAttr version 1.0
-// Last Updated: 2016-09-22
+// Last Updated: 2016-10-04
 // A script to create, modify, or delete character attributes from the chat area or macros.
 // If you don't like my choices for --replace, you can edit the replacers variable at your own peril to change them.
 
@@ -258,7 +258,10 @@ var chatSetAttr = chatSetAttr || (function() {
 		// Output:	object containing key:true if key is not in hasValue. and containing
 		//			key:value otherwise
 		let args, kv, opts = {};
-		args = _.rest(content.split(/\s+--/));
+		args = _.rest(content.replace(/<br\/>\n/g, '')
+			.replace(/\s*$/g, '')
+			.replace(/({{(.*?)\s*}}$)/g, "$2")
+			.split(/\s+--/));
 		for (let k in args) {
 			kv = args[k].split(/\s(.+)/);
 			if (_.contains(hasValue, kv[0])) {
@@ -415,7 +418,7 @@ var chatSetAttr = chatSetAttr || (function() {
 			let who = getPlayerName(msg.who);
 			const hasValue = ['charid','name'],
 				optsArray = ['all','allgm','charid','name','silent','sel','replace', 'nocreate','mod'],
-				opts = parseOpts(processInlinerolls(msg), hasValue),
+				opts = parseOpts(processInlinerolls(msg),hasValue),
 				setting = parseAttributes(_.chain(opts).omit(optsArray).keys().value(),opts.replace);
 			if (_.isEmpty(setting)) {
 				handleError(who, 'No attributes supplied.');
