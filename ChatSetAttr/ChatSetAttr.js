@@ -258,7 +258,7 @@ var chatSetAttr = chatSetAttr || (function() {
 		// Output:	object containing key:true if key is not in hasValue. and containing
 		//			key:value otherwise
 		let args, kv, opts = {};
-		args = _.rest(content.replace(/<br\/>\n/g, '')
+		args = _.rest(content.replace(/<br\/>\n/g, ' ')
 			.replace(/\s*$/g, '')
 			.replace(/({{(.*?)\s*}}$)/g, "$2")
 			.split(/\s+--/));
