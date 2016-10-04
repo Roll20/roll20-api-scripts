@@ -221,7 +221,7 @@ var chatSetAttr = chatSetAttr || (function() {
 			let attr = attrs[attrName];
 			if (_.has(attrValue,'current')) {
 				if (mod) {
-					current = parseInt(attrValue.current) + parseInt(attr.get('current') || '0');
+					current = parseFloat(attrValue.current) + parseFloat(attr.get('current') || '0');
 					if (!_.isNaN(current)) {
 						attr.set('current',current);
 					}
@@ -235,7 +235,7 @@ var chatSetAttr = chatSetAttr || (function() {
 			}
 			if (_.has(attrValue,'max')) {
 				if (mod) {
-					max = parseInt(attrValue.max) + parseInt(attr.get('max') || '0');
+					max = parseFloat(attrValue.max) + parseFloat(attr.get('max') || '0');
 					if (!_.isNaN(max)) {
 						attr.set('max',max);
 					}
