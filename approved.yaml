@@ -211,3 +211,11 @@ bouncetokens:
 htmlbuilder:
 - "HtmlBuilder"
 - "Utility"
+
+itsatraptheme5eogl:
+- "ItsATrap_theme_5E_OGL"
+- "System Toolbox"
+
+itsatrapthemepathfindersimple:
+- "ItsATrap_theme_PathfinderSimple"
+- "System Toolbox"
