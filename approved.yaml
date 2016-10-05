@@ -219,3 +219,7 @@ itsatraptheme5eogl:
 itsatrapthemepathfindersimple:
 - "ItsATrap_theme_PathfinderSimple"
 - "System Toolbox"
+
+areasofeffect:
+- "AreasOfEffect"
+- "Tokens"
