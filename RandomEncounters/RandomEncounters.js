@@ -1,6 +1,24 @@
-// Github:   
+﻿// Github:   
 // By:       Olav Müller & chipbuddy
 // Contact:  olav.mueller@gmx.de
+
+//
+// Usage:
+// You need a random table in roll20 with the name "RE-Location" where "location" is the 
+// name of the location you want to roll random encounters for. This random table can bei weighted
+// as usual. 
+// To roll for a random encounter use the command 
+//    ! enc <location> <roll> <threshold>
+// <location> is the name of your random table. Without the "RE-" part. 
+// <roll> is the die-roll used for the chance for a random encounter
+// <threshold> is the target number for the random encounter roll. 
+// example:
+//    !enc location 1d20 15
+// This command will roll 1d20. If the result is 15 or higher the random table "RE-location" will
+// be used to generate a random encounter. 
+//
+// Inside the random table you can use expressions like "[[1d10]] Goblins". 
+// --------------------------------------------------------------------------------------------
 
 // A shorthand to create new events in the encountertable.
 var event = function(freq, msg) {
@@ -49,22 +67,20 @@ var findTable = function( lok ) {
     });
     
     var correctTable = null; 
-    
+
     _.each( encounterTables, function( obj ) {
         tablename = obj.get( "name" );
-        tableid = obj.id;
-
+        
         if( tablename.lastIndexOf( "RE-", 0 ) === 0 ) {
             var locForTable = tablename.replace("RE-", "");
             say( "-------------------------------------------" );
             if( locForTable == lok ) {
                 correctTable = obj;
-                return correctTable;
             }
         }
     });
 
-    return null;
+    return correctTable;
 };
       
 on("chat:message", function(msg) {
