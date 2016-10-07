@@ -12,6 +12,8 @@
 var ItsATrap = (() => {
   'use strict';
 
+  let REMOTE_ACTIVATE_CMD = '!itsATrapRemoteActivate';
+
   /**
    * A message describing the chat message and other special effects for a trap
    * being set off. All fields are optional.
@@ -32,6 +34,9 @@ var ItsATrap = (() => {
    * @property {string} notes
    *           This is a reminder about the trap's effects which will be whispered
    *           only to the GM.
+   * @property {number} searchDist
+   *           The maximum distance away a character can be to passively search
+   *           for the trap. This is measured in the current page's units.
    * @property {string} sound
    *           The name of a sound to play from the jukebox when the trap
    *           is activated.
@@ -48,6 +53,10 @@ var ItsATrap = (() => {
    * @property {string} trapId
    *           The ID of the trap.
    *           This is set automatically.
+   * @property {(string|string[])} triggers
+   *           A list of names or IDs for other traps that this trap sets off. This
+   *           could be useful for setting up a trap that is merely the trigger
+   *           area for another trap.
    * @property {string} victimId
    *           The ID of the token that activated the trap.
    *           This is set automatically.
@@ -122,6 +131,35 @@ var ItsATrap = (() => {
   };
 
   /**
+   * Activates a trap without any primary victim.
+   * @param {TrapTheme} theme
+   * @param {Graphic} trap
+   */
+  function activateTrapManually(theme, trap) {
+    // Activate the trap with the default theme, which will only display
+    // the trap's message.
+    let defaultTheme = trapThemes['default'];
+    let anonVictim = {
+      get: () => {
+        return undefined;
+      }
+    };
+    let effect = getTrapEffect(anonVictim, trap);
+    defaultTheme.activateEffect(effect);
+
+    // Reveal the trap if it's set to become visible.
+    revealTrap(trap);
+
+    // Apply the trap's effects to any victims in its area, using the configured
+    // trap theme.
+    var victims = getTrapVictims(trap, undefined);
+    _.each(victims, function(victim) {
+      var effect = getTrapEffect(victim, trap);
+      theme.activateEffect(effect);
+    });
+  }
+
+  /**
    * Announces a message for a trap.
    * This should be called by TrapThemes to inform everyone about a trap
    * that has been triggered and its results. Fancy HTML formatting for
@@ -133,6 +171,9 @@ var ItsATrap = (() => {
    * @param  {string} message
    */
   function announceTrap(effect, message) {
+    let theme = getTheme();
+    var effectTrap = getObj('graphic', effect.trapId);
+
     // Display the message to everyone, unless it's a secret.
     if(effect.gmOnly)
       message = '/w gm ' + message;
@@ -152,6 +193,22 @@ var ItsATrap = (() => {
 
     // If the effect has an api command, execute it.
     executeTrapCommand(effect);
+
+    // Allow traps to trigger each other using the 'triggers' property.
+    if(effect.triggers) {
+      if(!_.isArray(effect.triggers))
+        effect.triggers = [effect.triggers];
+
+      let otherTraps = getTrapsOnPage(effectTrap.get('_pageid'));
+      let triggeredTraps = _.filter(otherTraps, trap => {
+        return effect.triggers.indexOf(trap.get('name')) !== -1 ||
+          effect.triggers.indexOf(trap.get('_id')) !== -1;
+      });
+
+      _.each(triggeredTraps, trap => {
+        activateTrapManually(theme, trap);
+      });
+    }
   }
 
   /**
@@ -458,6 +515,7 @@ var ItsATrap = (() => {
     var range = trap.get('aura1_radius');
     var pageId = trap.get('_pageid');
 
+    let victims = [triggerVictim];
     if(range !== '') {
       var otherTokens = findObjs({
         _pageid: pageId,
@@ -469,12 +527,12 @@ var ItsATrap = (() => {
       range *= 70/pageScale;
       var squareArea = trap.get('aura1_square');
 
-      var victims = _getTokensInLineOfSight(trap, otherTokens, range, squareArea);
-      victims.push(triggerVictim);
-      return _.unique(victims);
+      victims = victims.concat(_getTokensInLineOfSight(trap, otherTokens, range, squareArea));
     }
-    else
-      return [triggerVictim];
+    return _.chain(victims)
+      .unique()
+      .compact()
+      .value();
   }
 
   /**
@@ -524,7 +582,6 @@ var ItsATrap = (() => {
 
     sendPing(x, y, pageId);
   }
-
 
   /**
    * Moves the specified token to the same position as the trap.
@@ -595,10 +652,15 @@ var ItsATrap = (() => {
         trap.get('top') + offset[1]*70
       ];
 
-      var direction = effect.fx.direction || [
-        victim.get('left') - origin[0],
-        victim.get('top') - origin[1]
-      ];
+      var direction = effect.fx.direction || (() => {
+        if(victim)
+          return [
+            victim.get('left') - origin[0],
+            victim.get('top') - origin[1]
+          ];
+        else
+          return [ 0, 1 ];
+      })();
 
       // FX name
       if(_.isString(effect.fx))
@@ -727,6 +789,43 @@ var ItsATrap = (() => {
       }
     }
   }
+
+  // Create macro for the remote activation command.
+  on('ready', () => {
+    let macro = findObjs({
+      _type: 'macro',
+      name: 'ItsATrap_manuallyActivateTrap'
+    })[0];
+
+    if(!macro) {
+      let players = findObjs({
+        _type: 'player'
+      });
+      let gms = _.filter(players, player => {
+        return playerIsGM(player.get('_id'));
+      });
+
+      _.each(gms, gm => {
+        createObj('macro', {
+          _playerid: gm.get('_id'),
+          name: 'ItsATrap_manuallyActivateTrap',
+          action: REMOTE_ACTIVATE_CMD,
+          istokenaction: true
+        });
+      });
+    }
+  });
+
+  // Handle macro commands.
+  on('chat:message', msg => {
+    if(msg.content === REMOTE_ACTIVATE_CMD) {
+      let theme = getTheme();
+      _.each(msg.selected, item => {
+        let trap = getObj('graphic', item._id);
+        activateTrapManually(theme, trap);
+      });
+    }
+  });
 
   /**
    * When a graphic on the objects layer moves, run the script to see if it
