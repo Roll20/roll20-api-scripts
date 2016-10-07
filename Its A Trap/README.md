@@ -4,6 +4,9 @@
 
 _2.7_
 * Passive searching now supports a maximum search distance for traps using the 'searchDist' JSON option.
+* Trap JSON now supports a "triggers" property which contains a list of names or IDs of other traps that this trap will trigger.
+* The script now installs a token action macro to manually select and activate traps.
+* Fixed "accouncer" bug.
 
 _2.6_
 * The script now exposes a TrapThemeHelper object that provides common functions used for creating trap themes.
@@ -104,4 +107,5 @@ The following basic TrapEffect properties are supported:
 * sound (string): The name of a sound that will be played when the trap activates.
 * stopAt (string): This is where the trap stops the token. If "edge", then the token is stopped at the trap's edge. If "center", then the token is stopped at the trap's center. If "none", the token is not stopped by the trap. Default: "center".
 * trapId (string): The ID of the trap token. This is set automatically by the script.
+* triggers {(string|string[])}:  A list of names or IDs for other traps that this trap sets off. This is useful for setting up a trap that is merely the trigger area for another trap.
 * victimId (string): The I of the victim token. This is set automatically by the script.
