@@ -23,19 +23,13 @@ var chatSetAttr = chatSetAttr || (function() {
 	handleError = function(who, errorMsg) {
 		let output = '/w "' + who
 			+ '" <div style="border: 1px solid black; background-color: #FFBABA; padding: 3px 3px;">'
-			+ '<h4>Error</h4>'
-			+ '<p>'+errorMsg+'</p>'
-			+ '</div>';
+			+ '<h4>Error</h4>'+'<p>'+errorMsg+'</p>'+'</div>';
 		sendChat('ChatSetAttr', output, null, {noarchive:true});
 	},
 
 	getPlayerName = function(who) {
 		let match = who.match(/(.*) \(GM\)/);
-		if (match) {
-			return match[1];
-		} else {
-			return who;
-		}
+		return (match) ? match[1] : who;
 	},
 
 	processInlinerolls = function (msg) {
@@ -414,12 +408,14 @@ var chatSetAttr = chatSetAttr || (function() {
 	handleInput = function(msg) {
 		if (msg.type === 'api' && msg.content.search(/^!(set|del)attr\b/) !== -1) {
 			// Parsing input
-			let charIDList, deleteMode = false;
-			let who = getPlayerName(msg.who);
+			let charIDList;
 			const hasValue = ['charid','name'],
 				optsArray = ['all','allgm','charid','name','silent','sel','replace', 'nocreate','mod'],
+				who = getPlayerName(msg.who),
 				opts = parseOpts(processInlinerolls(msg),hasValue),
-				setting = parseAttributes(_.chain(opts).omit(optsArray).keys().value(),opts.replace);
+				setting = parseAttributes(_.chain(opts).omit(optsArray).keys().value(),opts.replace),
+				deleteMode = (msg.content.search(/^!delattr\b/) !== -1);
+
 			if (_.isEmpty(setting)) {
 				handleError(who, 'No attributes supplied.');
 				return;
@@ -443,9 +439,7 @@ var chatSetAttr = chatSetAttr || (function() {
 				handleError(who,'No target characters. You need to supply one of --all, --allgm, --sel, --charid, or --name.');
 				return;
 			}
-			if (msg.content.search(/^!delattr\b/) !== -1) {
-				deleteMode = true;
-			}
+
 			// Get attributes
 			let allAttrs = getAllAttributes(who, charIDList, setting, !opts.nocreate && !deleteMode, deleteMode);
 
