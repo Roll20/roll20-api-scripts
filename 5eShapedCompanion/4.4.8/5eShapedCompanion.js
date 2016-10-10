@@ -77,8 +77,8 @@ var ShapedScripts =
 	el.configureEntity('monsters', [
 	  EntityLookup.jsonValidatorAsEntityProcessor(jsonValidator),
 	  el.getSpellHydrator(),
-	], EntityLookup.jsonValidatorAsVersionChecker(jsonValidator, 'monsters'));
-	el.configureEntity('spells', [el.getMonsterSpellUpdater()], EntityLookup.getVersionChecker('0.2.1', 'spells'));
+	], EntityLookup.jsonValidatorAsVersionChecker(jsonValidator));
+	el.configureEntity('spells', [el.getMonsterSpellUpdater()], EntityLookup.getVersionChecker('0.2.1'));
 
 	roll20.on('ready', () => {
 	  shaped.checkInstall();
@@ -499,16 +499,16 @@ var ShapedScripts =
 	      if (fieldSpec.bare) {
 	        parser.matchValue = function matchValue(myParseState, textLines) {
 	          const firstMatch = _.chain(fieldSpec.enumValues)
-	              .map((enumValue) => {
-	                logger.debug('Attempting to parse as enum property $$$', enumValue);
-	                const pattern = `^(.*?)(${enumValue})(?:[\\s.]+|$)`;
-	                const re = new RegExp(pattern, this.caseSensitive ? '' : 'i');
-	                return textLines[0].match(re);
-	              })
-	              .compact()
-	              .sortBy(match => match[1].length)
-	              .first()
-	              .value();
+	            .map((enumValue) => {
+	              logger.debug('Attempting to parse as enum property $$$', enumValue);
+	              const pattern = `^(.*?)(${enumValue})(?:[\\s.]+|$)`;
+	              const re = new RegExp(pattern, this.caseSensitive ? '' : 'i');
+	              return textLines[0].match(re);
+	            })
+	            .compact()
+	            .sortBy(match => match[1].length)
+	            .first()
+	            .value();
 
 
 	          if (firstMatch) {
@@ -605,7 +605,7 @@ var ShapedScripts =
 	        parse(stateManager, textLines) {
 	          const parseState = stateManager.enterChildParser(this);
 	          const match = this.matchParseToken(parseState, textLines) &&
-	              this.matchValue(parseState, textLines);
+	            this.matchValue(parseState, textLines);
 	          if (match) {
 	            stateManager.completeCurrentStack(parseState.forPrevious);
 	            delete parseState.forPrevious;
@@ -697,7 +697,7 @@ var ShapedScripts =
 
 	            if (_.isArray(currentValue)) {
 	              let arrayItem = _.find(currentValue, _.partial(_.negate(_.contains), completedObjects));
-	              if (!arrayItem || (typeof arrayItem === 'string')) {
+	              if (!arrayItem) {
 	                currentValue.push(newValue);
 	                arrayItem = _.last(currentValue);
 	              }
@@ -757,7 +757,7 @@ var ShapedScripts =
 
 	          if (!resume || _.isEmpty(incompleteParserStack) || parser !== _.last(incompleteParserStack).parser) {
 	            return module.makeBaseParseState(parser.skipOutput, _.clone(currentPropertyPath), this.outputObject,
-	                completedObjects);
+	              completedObjects);
 	          }
 
 	          return incompleteParserStack.pop().state;
@@ -800,12 +800,12 @@ var ShapedScripts =
 	    makeParserList(contentModelArray) {
 	      const module = this;
 	      return _.chain(contentModelArray)
-	          .reject('noParse')
-	          .reduce((parsers, fieldSpec) => {
-	            parsers.push(module.getParserFor(fieldSpec));
-	            return parsers;
-	          }, [])
-	          .value();
+	        .reject('noParse')
+	        .reduce((parsers, fieldSpec) => {
+	          parsers.push(module.getParserFor(fieldSpec));
+	          return parsers;
+	        }, [])
+	        .value();
 	    },
 
 	    logWrap: 'parseModule',
@@ -817,40 +817,26 @@ var ShapedScripts =
 	  return {
 	    parse(text) {
 	      logger.debug('Text: $$$', text);
+
+	      const textLines = _.chain(text.split('\n'))
+	        .invoke('trim')
+	        .compact()
+	        .value();
 	      logger.debug(parser);
+	      const stateManager = parserModule.makeParseStateManager();
+	      const success = parser.parse(stateManager, textLines);
+	      while (success && !_.isEmpty(textLines)) {
+	        parser.resumeParse(stateManager, textLines);
+	      }
 
-	      const result = {
-	        version: formatSpec.formatVersion,
-	        monsters: [],
-	      };
+	      stateManager.completeCurrentStack(textLines.join('\n'));
 
-	      text.split('**********\n').forEach((statblock) => {
-	        const textLines = _.chain(statblock.split('\n'))
-	            .invoke('trim')
-	            .compact()
-	            .value();
-	        const stateManager = parserModule.makeParseStateManager();
-	        let success = false;
-	        try {
-	          success = parser.parse(stateManager, textLines);
-	          while (success && !_.isEmpty(textLines)) {
-	            success = parser.resumeParse(stateManager, textLines);
-	          }
-	          stateManager.completeCurrentStack(textLines.join('\n'));
-	        }
-	        catch (e) {
-	          e.statblock = statblock;
-	          throw e;
-	        }
-
-
-	        if (success && textLines.length === 0) {
-	          logger.info(stateManager.outputObject);
-	          result.monsters.push(stateManager.outputObject.monsters[0]);
-	        }
-	      });
-
-	      return result;
+	      if (success && textLines.length === 0) {
+	        stateManager.outputObject.version = formatSpec.formatVersion;
+	        logger.info(stateManager.outputObject);
+	        return stateManager.outputObject;
+	      }
+	      return null;
 	    },
 	  };
 	}
@@ -871,8 +857,8 @@ var ShapedScripts =
 	  this.missingFieldParsers = missingFieldParsers;
 	  this.message = '<ul>';
 	  this.message += _.reduce(this.missingFieldParsers, (memo, parser) =>
-	          `${memo}<li>Field ${parser.parseToken} should have appeared ${parser.required} more times</li>`
-	      , '');
+	      `${memo}<li>Field ${parser.parseToken} should have appeared ${parser.required} more times</li>`
+	    , '');
 	  this.message += '</ul>';
 	}
 	MissingContentError.prototype = new ParserError();
@@ -902,7 +888,7 @@ var ShapedScripts =
 /***/ function(module, exports) {
 
 	module.exports = {
-		"formatVersion": "1.0.0",
+		"formatVersion": "0.2",
 		"name": "monsters",
 		"maxOccurs": "Infinity",
 		"type": "orderedContent",
@@ -942,7 +928,6 @@ var ShapedScripts =
 						"name": "alignment",
 						"type": "enumType",
 						"enumValues": [
-							"(?:lawful|neutral|chaotic) (?:good|neutral|evil)(?:\\s?\\(\\d+%\\))? or (?:lawful|neutral|chaotic) (?:good|neutral|evil)(?:\\s?\\(\\d+%\\))?",
 							"lawful good",
 							"lawful neutral",
 							"lawful evil",
@@ -952,10 +937,6 @@ var ShapedScripts =
 							"chaotic good",
 							"chaotic neutral",
 							"chaotic evil",
-							"chaotic",
-							"lawful",
-							"good",
-							"evil",
 							"unaligned",
 							"any alignment",
 							"any good alignment",
@@ -966,7 +947,8 @@ var ShapedScripts =
 							"any non-lawful alignment",
 							"any chaotic alignment",
 							"any non-chaotic alignment",
-							"construct"
+							"construct",
+							"(?:lawful|neutral|chaotic) (?:good|neutral|evil) \\(\\d+%\\) or (?:lawful|neutral|chaotic) (?:good|neutral|evil) \\(\\d+%\\)"
 						],
 						"bare": true
 					}
@@ -992,7 +974,8 @@ var ShapedScripts =
 					{
 						"name": "speed",
 						"minOccurs": 0,
-						"type": "string"
+						"type": "string",
+						"pattern": "^\\d+\\s?ft[\\.]?(,\\s?(fly|swim|burrow|climb)\\s\\d+\\s?ft[\\.]?)*(\\s?\\([^\\)]+\\))?$"
 					},
 					{
 						"name": "strength",
@@ -1064,7 +1047,8 @@ var ShapedScripts =
 					{
 						"name": "senses",
 						"type": "string",
-						"minOccurs": 0
+						"minOccurs": 0,
+						"pattern": "(?:(?:^|,\\s*)(?:blindsight|darkvision|tremorsense|truesight)\\s+\\d+\\s*ft\\.?(?: or \\d+ ft\\. while deafened)?(?:\\s?\\([^\\)]+\\))?)+"
 					},
 					{
 						"name": "passivePerception",
@@ -1107,7 +1091,7 @@ var ShapedScripts =
 							{
 								"name": "name",
 								"type": "string",
-								"pattern": "(^|.*?[a-z0-9]\\.\\s?)((?:[A-Z0-9][\\w\\-']+[,:!]?|A)(?:\\s(?:[A-Z0-9][\\w\\-']+[,:!]?|of|to|in|the|with|and|or|a|by|for)+)*)(\\s?\\([^\\)]+\\))?\\.(?!$)",
+								"pattern": "(^|.*?[a-z]\\.\\s?)((?:[A-Z][\\w\\-']+[,:!]?|A)(?:\\s(?:[A-Z][\\w\\-']+[,:!]?|of|to|in|the|with|and|or|a)+)*)(\\s?\\([^\\)]+\\))?\\.(?!$)",
 								"matchGroup": 2,
 								"forPreviousMatchGroup": 1,
 								"forNextMatchGroup": 3,
@@ -1153,7 +1137,7 @@ var ShapedScripts =
 							{
 								"name": "name",
 								"type": "string",
-								"pattern": "(^|.*?[a-z]\\.\\s?)((?:\\d+\\.\\s?)?(?:[A-Z][\\w\\-']+[,:!]?|A|\\+\\d)(?:\\s(?:[A-Z][\\w\\-']+[,:!]?|of|in|to|with|the|and|or|by|for|a|\\+\\d+|2hd)+)*)(\\s?\\([^\\)]+\\))?\\.(?!$)",
+								"pattern": "(^|.*?[a-z]\\.\\s?)((?:\\d+\\.\\s?)?(?:[A-Z][\\w\\-']+[,:!]?|A)(?:\\s(?:[A-Z][\\w\\-']+[,:!]?|of|in|to|with|the|and|or|a|\\+\\d+)+)*)(\\s?\\([^\\)]+\\))?\\.(?!$)",
 								"matchGroup": 2,
 								"forPreviousMatchGroup": 1,
 								"forNextMatchGroup": 3,
@@ -1240,7 +1224,7 @@ var ShapedScripts =
 						"name": "legendaryPoints",
 						"type": "number",
 						"bare": true,
-						"pattern": "^(?:The)?[ \\w-]+(?:can|may) take (\\d+) legendary action(?:s)?.*?start.*?turn[.]?",
+						"pattern": "^The[ \\w]+can take (\\d+) legendary actions.*?start.*?turn[.]?",
 						"matchGroup": 1
 					},
 					{
@@ -1263,7 +1247,7 @@ var ShapedScripts =
 								"name": "cost",
 								"type": "number",
 								"bare": true,
-								"pattern": "^\\s*\\(\\s*(?:costs )?(\\d+) actions\\s*\\)",
+								"pattern": "^\\s*\\(\\s*costs (\\d+) actions\\s*\\)",
 								"matchGroup": 1,
 								"minOccurs": 0
 							},
@@ -1286,19 +1270,13 @@ var ShapedScripts =
 					{
 						"name": "actionHeader",
 						"type": "heading",
+						"bare": true,
 						"pattern": "^Lair Actions$"
-					},
-					{
-						"name": "lairActionBlurb",
-						"type": "heading",
-						"pattern": "^On initiative count 20[^:]+:*$"
 					},
 					{
 						"name": "lairActions",
 						"type": "string",
 						"bare": true,
-						"pattern": "^(?:\\*|•)\\s?((?:.|\n)*)",
-						"matchGroup": 1,
 						"minOccurs": 1,
 						"maxOccurs": "Infinity"
 					}
@@ -1314,28 +1292,20 @@ var ShapedScripts =
 					{
 						"name": "actionHeader",
 						"type": "heading",
+						"bare": true,
 						"pattern": "^Regional Effects$"
-					},
-					{
-						"name": "regionalBlurb",
-						"type": "heading",
-						"minOccurs": 0,
-						"pattern": "^The region (?:containing|around|surrounding)[^:]+:$"
 					},
 					{
 						"name": "regionalEffects",
 						"type": "string",
 						"minOccurs": 1,
 						"maxOccurs": "Infinity",
-						"bare": true,
-						"pattern": "^(?:\\*|•)\\s?((?:.|\n)*)",
-						"matchGroup": 1
+						"bare": true
 					},
 					{
 						"name": "regionalEffectsFade",
 						"type": "string",
-						"bare": true,
-						"pattern": "^(?:if|when)[\\w\\s-]+(?:dies|is destroyed).*$"
+						"bare": true
 					}
 				]
 			}
@@ -1699,11 +1669,11 @@ var ShapedScripts =
 	    };
 	  }
 
-	  static jsonValidatorAsVersionChecker(jsonValidator, entityType) {
-	    return EntityLookup.getVersionChecker(jsonValidator.getVersionNumber(), entityType);
+	  static jsonValidatorAsVersionChecker(jsonValidator) {
+	    return EntityLookup.getVersionChecker(jsonValidator.getVersionNumber());
 	  }
 
-	  static getVersionChecker(requiredVersion, entityType) {
+	  static getVersionChecker(requiredVersion) {
 	    function pruneToMinor(versionString) {
 	      return versionString.split('.', 2).join('.');
 	    }
@@ -1715,9 +1685,7 @@ var ShapedScripts =
 	      if (!valid) {
 	        errorsArray.push({
 	          entity: 'general',
-	          errors: [`Incorrect ${entityType} data format version: [${version}]. Required is: ${requiredVersion}.` +
-	          'This probably means you need to download an updated version to be compatible with the latest version of' +
-	          ' the Companion Script.'],
+	          errors: [`Incorrect entity objects version: [${version}]. Required is: ${requiredVersion}`],
 	        });
 	      }
 	      return valid;
@@ -2198,6 +2166,10 @@ var ShapedScripts =
 	  }
 
 	  reportPublic(heading, text) {
+	    // Horrible bug with this at the moment - seems to generate spurious chat
+	    // messages when noarchive:true is set
+	    // sendChat('ShapedScripts', '' + msg, null, {noarchive:true});
+
 	    this.roll20.sendChat('', `${makeNormalMessage(this.scriptName, heading, text)}`);
 	  }
 
@@ -2212,7 +2184,7 @@ var ShapedScripts =
 	  }
 
 	  getPlayerName() {
-	    return this.playerId ? `"${this.roll20.getObj('player', this.playerId).get('displayname')}"` : 'gm';
+	    return this.playerId ? this.roll20.getObj('player', this.playerId).get('displayname').split(/ /)[0] : 'gm';
 	  }
 	}
 
@@ -3163,7 +3135,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v4.6.1 <=-');
+	    logger.info('-=> ShapedScripts v4.4.8 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -6453,49 +6425,44 @@ var ShapedScripts =
 /***/ function(module, exports) {
 
 	'use strict';
-	function sanitise(statblock, logger, noOcrFixes) {
+	function sanitise(statblock, logger) {
 	  logger.debug('Pre-sanitise: $$$', statblock);
 	  statblock = statblock
-	      .replace(/\s+([\.,;:])/g, '$1')
-	      .replace(/\n+/g, '#')
-	      .replace(/–/g, '-')
-	      .replace(/‒/g, '-')
-	      .replace(/−/g, '-') // Watch out: this and the two lines above containing funny unicode versions of '-'
-	      .replace(/’/gi, '\'')
-	      .replace(/<br[^>]*>/g, '#')
-	      .replace(/#+/g, '#')
-	      .replace(/\s*#\s*/g, '#')
-	      .replace(/(<([^>]+)>)/gi, '')
-	      .replace(/legendary actions/gi, 'Legendary Actions')
-	      .replace(/(\S)\sACTIONS/, '$1#ACTIONS')
-	      .replace(/LAIR#ACTIONS/gi, 'LAIR ACTIONS')
-	      .replace(/#(?=[a-z]|DC)/g, ' ')
-	      .replace(/\s+/g, ' ')
-	      .replace(/#Hit:/gi, 'Hit:')
-	      .replace(/Hit:#/gi, 'Hit: ')
-	      .replace(/#Each /gi, 'Each ')
-	      .replace(/#On a successful save/gi, 'On a successful save')
-	      .replace(/DC#(\d+)/g, 'DC $1')
-	      .replace('LanguagesChallenge', 'Languages -\nChallenge')
-	      .replace('\' Speed', 'Speed')
-	      .replace(/(\w+) s([\s\.,])/g, '$1s$2')
-	      .replace(/#Medium or/gi, ' Medium or')
-	      .replace(/take#(\d+)/gi, 'take $1')
-	      .replace(/#/g, '\n')
-	      .replace(/&gt;/g, '>')
-	      .replace(/&lt;/g, '<')
-	      .replace(/&amp;/g, '&');
-
+	    .replace(/\s+([\.,;:])/g, '$1')
+	    .replace(/\n+/g, '#')
+	    .replace(/–/g, '-')
+	    .replace(/−/g, '-') // Watch out: this and the line above containing funny unicode versions of '-'
+	    .replace(/<br[^>]*>/g, '#')
+	    .replace(/#+/g, '#')
+	    .replace(/\s*#\s*/g, '#')
+	    .replace(/(<([^>]+)>)/gi, '')
+	    .replace(/legendary actions/gi, 'Legendary Actions')
+	    .replace(/(\S)\sACTIONS/, '$1#ACTIONS')
+	    .replace(/#(?=[a-z]|DC)/g, ' ')
+	    .replace(/\s+/g, ' ')
+	    .replace(/#Hit:/gi, 'Hit:')
+	    .replace(/Hit:#/gi, 'Hit: ')
+	    .replace(/#Each /gi, 'Each ')
+	    .replace(/#On a successful save/gi, 'On a successful save')
+	    .replace(/DC#(\d+)/g, 'DC $1')
+	    .replace('LanguagesChallenge', 'Languages -\nChallenge')
+	    .replace('\' Speed', 'Speed')
+	    .replace(/(\w+) s([\s\.,])/g, '$1s$2')
+	    .replace(/#Medium or/gi, ' Medium or')
+	    .replace(/take#(\d+)/gi, 'take $1')
+	    .replace(/#/g, '\n')
+	    .replace(/&gt;/g, '>')
+	    .replace(/&lt;/g, '<')
+	    .replace(/&amp;/g, '&');
 
 	  logger.debug('First stage cleaned statblock: $$$', statblock);
 
 	  // Sometimes the texts ends up like 'P a r a l y z i n g T o u c h . M e l e e S p e l l A t t a c k : + 1 t o h i t
 	  // In this case we can fix the title case stuff, because we can find the word boundaries. That will at least meaning
-	  // that the core statblock parsing will work. If this happens inside the lowercase body text, however, there's
-	  // nothing we can do about it because you need to understand the natural language to reinsert the word breaks
-	  // properly.
+	  // that the core statblock parsing will work. If this happens inside the lowercase body text, however, there's nothing
+	  // we can do about it because you need to understand the natural language to reinsert the word breaks properly.
 	  statblock = statblock.replace(/([A-Z])(\s[a-z]){2,}/g, (match, p1) =>
-	      p1 + match.slice(1).replace(/\s([a-z])/g, '$1')
+	    p1 + match.slice(1).replace(/\s([a-z])/g, '$1')
 	  );
 
 
@@ -6506,120 +6473,119 @@ var ShapedScripts =
 	  // This covers abilites that end up as 'C O N' or similar
 	  statblock = statblock.replace(/^[A-Z]\s?[A-Z]\s?[A-Z](?=\s|$)/mg, match => match.replace(/\s/g, ''));
 
-	  statblock = statblock.replace(/^[A-Z '()-]+$/mg, match =>
-	      match.replace(/([A-Z])([A-Z'-]+)(?=\s|\)|$)/g, (innerMatch, p1, p2) => p1 + p2.toLowerCase())
+	  statblock = statblock.replace(/^[A-Z ]+$/m, match =>
+	    match.replace(/([A-Z])([A-Z]+)(?=\s|$)/g, (innerMatch, p1, p2) => p1 + p2.toLowerCase())
 	  );
 
 
 	  statblock = statblock.replace(/(\d+)\s*?plus\s*?((?:\d+d\d+)|(?:\d+))/gi, '$2 + $1');
 	  /* eslint-disable quote-props */
-	  if (!noOcrFixes) {
-	    const replaceObj = {
-	      'Jly': 'fly',
-	      ',1\'': ',*',
-	      'jday': '/day',
-	      'abol eth': 'aboleth',
-	      'ACT IONS': 'ACTIONS',
-	      'Afrightened': 'A frightened',
-	      'Alesser': 'A lesser',
-	      'Athl etics': 'Athletics',
-	      'blindn ess': 'blindness',
-	      'blind sight': 'blindsight',
-	      'bofh': 'both',
-	      'brea stplate': 'breastplate',
-	      'Can trips': 'Cantrips',
-	      'choos in g': 'choosing',
-	      'com muni cate': 'communicate',
-	      'Constituti on': 'Constitution',
-	      'creatu re': 'creature',
-	      'darkvi sion': 'darkvision',
-	      'dea ls': 'deals',
-	      'di sease': 'disease',
-	      'di stance': 'distance',
-	      'fa lls': 'falls',
-	      'fe et': 'feet',
-	      'exha les': 'exhales',
-	      'ex istence': 'existence',
-	      'lfthe': 'If the',
-	      'Ifthe': 'If the',
-	      'ifthe': 'if the',
-	      'lnt': 'Int',
-	      'magica lly': 'magically',
-	      'Med icine': 'Medicine',
-	      'minlilte': 'minute',
-	      'natura l': 'natural',
-	      'ofeach': 'of each',
-	      'ofthe': 'of the',
-	      'on\'e': 'one',
-	      'on ly': 'only',
-	      '0n': 'on',
-	      'pass ive': 'passive',
-	      'Perce ption': 'Perception',
-	      'radi us': 'radius',
-	      'ra nge': 'range',
-	      'rega ins': 'regains',
-	      'rest.oration': 'restoration',
-	      'savin g': 'saving',
-	      'si lvery': 'silvery',
-	      's lashing': 'slashing',
-	      'slas hing': 'slashing',
-	      'slash in g': 'slashing',
-	      'slash ing': 'slashing',
-	      'Spel/casting': 'Spellcasting',
-	      'successfu l': 'successful',
-	      'ta rget': 'target',
-	      ' Th e ': ' The ',
-	      't_urns': 'turns',
-	      'unti l': 'until',
-	      'withi n': 'within',
-	      'tohit': 'to hit',
-	      'At wi ll': 'At will',
-	      'per-son': 'person',
-	      'ab ility': 'ability',
-	      'spe ll': 'spell',
-	    };
-	    /* eslint-enable quote-props */
+	  const replaceObj = {
+	    'Jly': 'fly',
+	    ',1\'': ',*',
+	    'jday': '/day',
+	    'abol eth': 'aboleth',
+	    'ACT IONS': 'ACTIONS',
+	    'Afrightened': 'A frightened',
+	    'Alesser': 'A lesser',
+	    'Athl etics': 'Athletics',
+	    'blindn ess': 'blindness',
+	    'blind sight': 'blindsight',
+	    'bofh': 'both',
+	    'brea stplate': 'breastplate',
+	    'Can trips': 'Cantrips',
+	    'choos in g': 'choosing',
+	    'com muni cate': 'communicate',
+	    'Constituti on': 'Constitution',
+	    'creatu re': 'creature',
+	    'darkvi sion': 'darkvision',
+	    'dea ls': 'deals',
+	    'di sease': 'disease',
+	    'di stance': 'distance',
+	    'fa lls': 'falls',
+	    'fe et': 'feet',
+	    'exha les': 'exhales',
+	    'ex istence': 'existence',
+	    'lfthe': 'If the',
+	    'Ifthe': 'If the',
+	    'ifthe': 'if the',
+	    'lnt': 'Int',
+	    'magica lly': 'magically',
+	    'Med icine': 'Medicine',
+	    'minlilte': 'minute',
+	    'natura l': 'natural',
+	    'ofeach': 'of each',
+	    'ofthe': 'of the',
+	    'on\'e': 'one',
+	    'on ly': 'only',
+	    '0n': 'on',
+	    'pass ive': 'passive',
+	    'Perce ption': 'Perception',
+	    'radi us': 'radius',
+	    'ra nge': 'range',
+	    'rega ins': 'regains',
+	    'rest.oration': 'restoration',
+	    'savin g': 'saving',
+	    'si lvery': 'silvery',
+	    's lashing': 'slashing',
+	    'slas hing': 'slashing',
+	    'slash in g': 'slashing',
+	    'slash ing': 'slashing',
+	    'Spel/casting': 'Spellcasting',
+	    'successfu l': 'successful',
+	    'ta rget': 'target',
+	    ' Th e ': ' The ',
+	    't_urns': 'turns',
+	    'unti l': 'until',
+	    'withi n': 'within',
+	    'tohit': 'to hit',
+	    'At wi ll': 'At will',
+	    'per-son': 'person',
+	    'ab ility': 'ability',
+	    'spe ll': 'spell',
+	  };
+	  /* eslint-enable quote-props */
 
-	    const re = new RegExp(Object.keys(replaceObj).join('|'), 'g');
-	    statblock = statblock.replace(re, matched => replaceObj[matched]);
+	  const re = new RegExp(Object.keys(replaceObj).join('|'), 'g');
+	  statblock = statblock.replace(re, matched => replaceObj[matched]);
 
-	    statblock = statblock
-	        .replace(/,\./gi, ',')
-	        .replace(/:\./g, ':')
-	        .replace(/(\W)l(\W)/g, '$11$2')
-	        .replace(/\.([\w])/g, '. $1')
-	        .replace(/1</g, '*')
-	        .replace(/(\w)ii/g, '$1ll')
-	        .replace(/([a-z\/])1/g, '$1l')
-	        .replace(/([a-z])\/([a-z])/g, '$1l$2')
-	        .replace(/blindnessldeafness/g, 'blindness/deafness')
-	        .replace(/(^| )l /gm, '$11 ')
-	        .replace(/ft\s+\./gi, 'ft.')
-	        .replace(/ft\.\s,/gi, 'ft.,')
-	        .replace(/\bft\b(?!\.)/gi, 'ft.')
-	        .replace(/(\d+) ft\/(\d+) ft/gi, '$1/$2 ft')
-	        .replace(/lOd/g, '10d')
-	        .replace(/dl0/gi, 'd10')
-	        .replace(/dlO/gi, 'd10')
-	        .replace(/dl2/gi, 'd12')
-	        .replace(/S(\d+)d(\d+)/gi, '5$1d$2')
-	        .replace(/l(\d+)d(\d+)/gi, '1$1d$2')
-	        .replace(/ld(\d+)/gi, '1d$1')
-	        .replace(/l(\d+)d\s+(\d+)/gi, '1$1d$2')
-	        .replace(/(\d+)d\s+(\d+)/gi, '$1d$2')
-	        .replace(/(\d+)\s+d(\d+)/gi, '$1d$2')
-	        .replace(/(\d+)\s+d(\d+)/gi, '$1d$2')
-	        .replace(/(\d+)d(\d)\s(\d)/gi, '$1d$2$3')
-	        .replace(/(\d+)j(?:Day|day)/gi, '$1/Day')
-	        .replace(/(\d+)f(?:Day|day)/gi, '$1/Day')
-	        .replace(/(\d+)j(\d+)/gi, '$1/$2')
-	        .replace(/(\d+)f(\d+)/gi, '$1/$2')
-	        .replace(/{/gi, '(')
-	        .replace(/}/gi, ')')
-	        .replace(/(\d+)\((\d+) ft/gi, '$1/$2 ft');
+	  statblock = statblock
+	    .replace(/,\./gi, ',')
+	    .replace(/:\./g, ':')
+	    .replace(/(\W)l(\W)/g, '$11$2')
+	    .replace(/\.([\w])/g, '. $1')
+	    .replace(/1</g, '*')
+	    .replace(/(\w)ii/g, '$1ll')
+	    .replace(/([a-z\/])1/g, '$1l')
+	    .replace(/([a-z])\/([a-z])/g, '$1l$2')
+	    .replace(/(^| )l /gm, '$11 ')
+	    .replace(/ft\s\./gi, 'ft.')
+	    .replace(/ft\.\s,/gi, 'ft')
+	    .replace(/ft\./gi, 'ft')
+	    .replace(/(\d+) ft\/(\d+) ft/gi, '$1/$2 ft')
+	    .replace(/lOd/g, '10d')
+	    .replace(/dl0/gi, 'd10')
+	    .replace(/dlO/gi, 'd10')
+	    .replace(/dl2/gi, 'd12')
+	    .replace(/S(\d+)d(\d+)/gi, '5$1d$2')
+	    .replace(/l(\d+)d(\d+)/gi, '1$1d$2')
+	    .replace(/ld(\d+)/gi, '1d$1')
+	    .replace(/l(\d+)d\s+(\d+)/gi, '1$1d$2')
+	    .replace(/(\d+)d\s+(\d+)/gi, '$1d$2')
+	    .replace(/(\d+)\s+d(\d+)/gi, '$1d$2')
+	    .replace(/(\d+)\s+d(\d+)/gi, '$1d$2')
+	    .replace(/(\d+)d(\d)\s(\d)/gi, '$1d$2$3')
+	    .replace(/(\d+)j(?:Day|day)/gi, '$1/Day')
+	    .replace(/(\d+)f(?:Day|day)/gi, '$1/Day')
+	    .replace(/(\d+)j(\d+)/gi, '$1/$2')
+	    .replace(/(\d+)f(\d+)/gi, '$1/$2')
+	    .replace(/{/gi, '(')
+	    .replace(/}/gi, ')')
+	    .replace(/(\d+)\((\d+) ft/gi, '$1/$2 ft')
+	    .replace(/• /gi, '')
+	    .replace(/’/gi, '\'');
 
-	    logger.debug('Final stage cleaned statblock: $$$', statblock);
-	  }
+	  logger.debug('Final stage cleaned statblock: $$$', statblock);
 	  return statblock;
 	}
 
@@ -6637,7 +6603,7 @@ var ShapedScripts =
 	_.each(_.range(4, 10), level => (levelStrings[level] = `${level}th level `));
 
 	const spellcastingHandler = {
-	  splitRegex: /(Cantrips|(?:1st|2nd|3rd|[4-9]th)\s*level)\.?\s*(?:\(([^\)]+)\))?\s*:/i,
+	  splitRegex: /(Cantrips|(?:1st|2nd|3rd|[4-9]th)\s*level)\.?\s*\(([^\)]+)\)\s*:/i,
 
 	  makeLevelDetailsObject(match) {
 	    const levelMatch = match[1].match(/\d/);
@@ -6655,16 +6621,21 @@ var ShapedScripts =
 	};
 
 	const innateHandler = {
-	  splitRegex: /(At\s?will|\d\s?\/\s?(?:day|week|rest)(?:\s?each)?)\s?:/i,
+	  splitRegex: /(At\s?will|\d\s?\/\s?day)(?:\s?each)?\s?:/i,
 
 	  makeLevelDetailsObject(match) {
+	    const usesMatch = match[1].match(/\d/);
 	    return {
-	      uses: match[1],
+	      uses: usesMatch ? parseInt(usesMatch[0], 10) : 0,
+	      slots: match[2],
 	    };
 	  },
 
 	  setLevelDetailsString(levelDetails) {
-	    levelDetails.newText = levelDetails.uses;
+	    levelDetails.newText = levelDetails.uses === 0 ? 'At will' : `${levelDetails.uses}/day`;
+	    if (levelDetails.spells.length > 1) {
+	      levelDetails.newText += ' each';
+	    }
 	    levelDetails.newText += ': ';
 	    levelDetails.newText += levelDetails.spells.join(', ');
 	  },

@@ -1,38 +1,3 @@
-<a name="4.6.1"></a>
-## [4.6.1](https://github.com/symposion/roll20-shaped-scripts/compare/4.6.0...4.6.1) (2016-10-03)
-
-
-### Bug Fixes
-
-* **chat-output:** Fix bug with multiple players with same forename ([a2898ce](https://github.com/symposion/roll20-shaped-scripts/commit/a2898ce)), closes [#243](https://github.com/symposion/roll20-shaped-scripts/issues/243)
-
-
-
-<a name="4.6.0"></a>
-# [4.6.0](https://github.com/symposion/roll20-shaped-scripts/compare/4.5.1...4.6.0) (2016-10-03)
-
-
-### Features
-
-* **import-statblock:** Changes to support parsing Tome of Beasts text ([6ebd6c6](https://github.com/symposion/roll20-shaped-scripts/commit/6ebd6c6))
-
-
-
-<a name="4.5.1"></a>
-## [4.5.1](https://github.com/symposion/roll20-shaped-scripts/compare/4.5.0...4.5.1) (2016-09-25)
-
-
-
-<a name="4.5.0"></a>
-# [4.5.0](https://github.com/symposion/roll20-shaped-scripts/compare/4.4.8...4.5.0) (2016-09-25)
-
-
-### Features
-
-* **blah:** test commit ([1209c22](https://github.com/symposion/roll20-shaped-scripts/commit/1209c22))
-
-
-
 <a name="4.4.8"></a>
 ## [4.4.8](https://github.com/symposion/roll20-shaped-scripts/compare/4.4.7...4.4.8) (2016-09-25)
 

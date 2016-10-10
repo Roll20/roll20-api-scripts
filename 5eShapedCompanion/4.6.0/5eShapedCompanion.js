@@ -2198,6 +2198,10 @@ var ShapedScripts =
 	  }
 
 	  reportPublic(heading, text) {
+	    // Horrible bug with this at the moment - seems to generate spurious chat
+	    // messages when noarchive:true is set
+	    // sendChat('ShapedScripts', '' + msg, null, {noarchive:true});
+
 	    this.roll20.sendChat('', `${makeNormalMessage(this.scriptName, heading, text)}`);
 	  }
 
@@ -2212,7 +2216,7 @@ var ShapedScripts =
 	  }
 
 	  getPlayerName() {
-	    return this.playerId ? `"${this.roll20.getObj('player', this.playerId).get('displayname')}"` : 'gm';
+	    return this.playerId ? this.roll20.getObj('player', this.playerId).get('displayname').split(/ /)[0] : 'gm';
 	  }
 	}
 
@@ -3163,7 +3167,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v4.6.1 <=-');
+	    logger.info('-=> ShapedScripts v4.6.0 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
