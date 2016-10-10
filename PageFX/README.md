@@ -11,6 +11,8 @@ This script allows GMs to set up environmental special effects for their maps by
 
 This script also exposes a ```PageFX``` object to allow script writers to use it programmatically.
 
+Page FX are only active on the page with the Player Ribbon on them.
+
 ## Creating effects
 
 All the effects created with this script are centered around PageFX tokens which designate the effect's center, their area, their spawn rate, and the type of effect that is produced. To create an effect:
