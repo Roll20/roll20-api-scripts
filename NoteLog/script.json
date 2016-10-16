@@ -1,7 +1,7 @@
 {
   "name": "NoteLog",
-  "version": "0.1.1",
-  "description": "",
+  "version": "0.1.2",
+  "description": "NoteLog provides a facility to write notes into a handout named `Log`.\r\r You can use the `!note-log <text>` command to write a bulleted line of text to the `Log` handout.  You can use the `!note-text [{{] block of text [}}]` command to write an entire block of text to the `Log` handout preserving linebreaks.  You can insert linebreaks in the chat by typing _shift-enter_.  Both commands will expand inline rolls.",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -12,6 +12,8 @@
   },
   "conflicts": [],
   "script": "NoteLog.js",
-  "useroptions": {},
-  "previousversions": []
+  "useroptions": [],
+  "previousversions": [
+    "0.1.1"
+  ]
 }
