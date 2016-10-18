@@ -63,7 +63,7 @@ bshields.Collision = (function() {
                     case 'don\'t move & warn player':
                         return behaviors.DONT_MOVE | behaviors.WARN_PLAYER;
                     case 'warn player & stop at wall':
-                        return behavrios.WARN_PLAYER | behaviors.STOP_AT_WALL;
+                        return behaviors.WARN_PLAYER | behaviors.STOP_AT_WALL;
                     
                     default:
                         return configDefaults.behavior;
