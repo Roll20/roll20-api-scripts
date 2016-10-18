@@ -1,0 +1,23 @@
+{
+  "name": "Observer",
+  "script": "Observer.js",
+  "version": "0.1.2",
+  "description": "Manages observer players, who are given the visiblilty (and control) of all player characters. This is useful for both podcasting views and local play on a single player screen. Note that observers will lose their former character associations when they are nolonger observers.\r\r## Commands\r\r```!observer <--help|--add|--del>```\r\r* `--help` -- Displays in game help.\r* `--add <Player Name Fragment> [<Player Name Fragment> ...] -- Adds the matching players as obsevers.  Partial names should work fine.\r* `--del <Player Name Fragment> [<Player Name Fragment> ...] -- Removes the matching players as obsevers.  Partial names should work fine.\r\rSee in game help for configuration options and their meanings.",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "useroptions": {},
+  "dependencies": {},
+  "modifies": {
+    "state.Observer": "read,write",
+    "graphic.controlledby": "read,write",
+    "token.controlledby": "read,write",
+    "campaign.turnorder": "read",
+    "campaign.initiativepage": "read"
+  },
+  "conflicts": [],
+  "previousversions": [
+    "0.1.0",
+    "0.1.1"
+  ]
+}
