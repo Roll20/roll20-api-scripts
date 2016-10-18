@@ -3246,7 +3246,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v4.9.0 <=-');
+	    logger.info('-=> ShapedScripts v4.8.0 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -5921,15 +5921,15 @@ var ShapedScripts =
 
 	  addCommands(commandProcessor) {
 	    return commandProcessor.addCommand('rest', this.handleRest.bind(this), false)
-	        .option('long', ShapedConfig.booleanValidator)
-	        .option('short', ShapedConfig.booleanValidator)
-	        .option('id', ShapedConfig.getCharacterValidator(this.roll20), false)
-	        .withSelection({
-	          character: {
-	            min: 0,
-	            max: Infinity,
-	          },
-	        });
+	      .option('long', ShapedConfig.booleanValidator)
+	      .option('short', ShapedConfig.booleanValidator)
+	      .option('id', ShapedConfig.getCharacterValidator(this.roll20), false)
+	      .withSelection({
+	        character: {
+	          min: 0,
+	          max: Infinity,
+	        },
+	      });
 	  }
 
 	  handleRest(options) {
@@ -5965,9 +5965,8 @@ var ShapedScripts =
 	      this.logger.debug(`Processing short rest for ${charName}:`);
 
 	      const traits = this.rechargeTraits(charId, 'short');
-	      const warlockSlots = this.regainWarlockSpellSlots(charId);
 
-	      const msg = this.buildRestMessage('Short Rest', charName, charId, traits, warlockSlots);
+	      const msg = this.buildRestMessage('Short Rest', charName, charId, traits);
 
 	      this.roll20.sendChat(`character|${charId}`, msg, { noarchive: true });
 	    });
@@ -5993,12 +5992,9 @@ var ShapedScripts =
 	      }
 	      const hd = this.regainHitDie(charId);
 	      const slots = this.regainSpellSlots(charId);
-	      const spellPoints = this.regainSpellPoints(charId);
 	      const exhaus = this.reduceExhaustion(charId);
-	      const warlockSlots = this.regainWarlockSpellSlots(charId);
 
-	      const msg = this.buildRestMessage('Long Rest', charName, charId, traits, warlockSlots, healed, hd, slots, exhaus,
-	          spellPoints);
+	      const msg = this.buildRestMessage('Long Rest', charName, charId, traits, healed, hd, slots, exhaus);
 
 	      this.roll20.sendChat(`character|${charId}`, msg, { noarchive: true });
 	    });
@@ -6014,11 +6010,8 @@ var ShapedScripts =
 	   * @param {Object[]} hdRegained - Array of objects each representing a die type and the number regained
 	   * @param {boolean} spellSlots - Whether or not spell slots were recharged
 	   * @param {boolean} exhaustion - Whether or not a level of exhaustoin was removed
-	   * @param {boolean} spellPoints - Whether or not spell points were recharged
-	   * @param {boolean} warlockSpellSlots - Whether or not warlock spell slots were recharged
 	   */
-	  buildRestMessage(restType, charName, charId, traitNames, warlockSpellSlots, healed, hdRegained, spellSlots,
-	      exhaustion, spellPoints) {
+	  buildRestMessage(restType, charName, charId, traitNames, healed, hdRegained, spellSlots, exhaustion) {
 	    let msg = `&{template:5e-shaped} {{title=${restType}}} {{character_name=${charName}}}`;
 
 	    if (this.roll20.getAttrByName(charId, 'show_character_name') === '@{show_character_name_yes}') {
@@ -6033,24 +6026,10 @@ var ShapedScripts =
 	      });
 	    }
 
-	    if (traitNames) {
-	      msg += `{{Traits Recharged=${traitNames.join(', ')}}}`;
-	    }
-	    if (healed > 0) {
-	      msg += `{{heal=[[${healed}]]}}`;
-	    }
-	    if (spellSlots) {
-	      msg += '{{Spell Slots Regained=&nbsp;}}';
-	    }
-	    if (exhaustion) {
-	      msg += '{{text_top=Removed 1 Level Of Exhaustion}}';
-	    }
-	    if (spellPoints) {
-	      msg += '{{Spell Points Regained=&nbsp;}}';
-	    }
-	    if (warlockSpellSlots) {
-	      msg += '{{Warlock Spell Slots Regained=&nbsp;}}';
-	    }
+	    if (traitNames) { msg += `{{Traits Recharged=${traitNames.join(', ')}}}`; }
+	    if (healed > 0) { msg += `{{heal=[[${healed}]]}}`; }
+	    if (spellSlots) { msg += '{{text_center=Spell Slots Regained}}'; }
+	    if (exhaustion) { msg += '{{text_top=Removed 1 Level Of Exhaustion}}'; }
 
 	    return msg;
 	  }
@@ -6065,26 +6044,26 @@ var ShapedScripts =
 	    const traitNames = [];
 
 	    _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
-	        .map(attribute => (attribute.get('name').match(/^repeating_trait_([^_]+)_recharge$/) || [])[1])
-	        .reject(_.isUndefined)
-	        .uniq()
-	        .each((attId) => {
-	          const traitPre = `repeating_trait_${attId}`;
-	          const rechargeAtt = this.roll20.getAttrByName(charId, `${traitPre}_recharge`);
-	          if (rechargeAtt.toLowerCase().indexOf(restType) !== -1) {
-	            const attName = this.roll20.getAttrByName(charId, `${traitPre}_name`);
-	            this.logger.debug(`Recharging '${attName}'`);
-	            traitNames.push(attName);
-	            const max = this.roll20.getAttrByName(charId, `${traitPre}_uses`, 'max');
-	            if (max === undefined) {
-	              this.logger.error(`Tried to recharge the trait '${attName}' for character with id ${charId}, ` +
-	                  'but there were no uses defined.');
-	            }
-	            else {
-	              this.roll20.setAttrByName(charId, `${traitPre}_uses`, max);
-	            }
+	      .map(attribute => (attribute.get('name').match(/^repeating_trait_([^_]+)_recharge$/) || [])[1])
+	      .reject(_.isUndefined)
+	      .uniq()
+	      .each((attId) => {
+	        const traitPre = `repeating_trait_${attId}`;
+	        const rechargeAtt = this.roll20.getAttrByName(charId, `${traitPre}_recharge`);
+	        if (rechargeAtt.toLowerCase().indexOf(restType) !== -1) {
+	          const attName = this.roll20.getAttrByName(charId, `${traitPre}_name`);
+	          this.logger.debug(`Recharging '${attName}'`);
+	          traitNames.push(attName);
+	          const max = this.roll20.getAttrByName(charId, `${traitPre}_uses`, 'max');
+	          if (max === undefined) {
+	            this.logger.error(`Tried to recharge the trait '${attName}' for character with id ${charId}, ` +
+	              'but there were no uses defined.');
 	          }
-	        });
+	          else {
+	            this.roll20.setAttrByName(charId, `${traitPre}_uses`, max);
+	          }
+	        }
+	      });
 
 	    return traitNames;
 	  }
@@ -6118,26 +6097,26 @@ var ShapedScripts =
 	    const hitDieRegained = [];
 	    this.logger.debug('Regaining Hit Die');
 	    _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
-	        .filter(attribute => (attribute.get('name').match(/^hd_d\d{1,2}$/)))
-	        .uniq()
-	        .each((hdAttr) => {
-	          const max = parseInt(hdAttr.get('max'), 10);
-	          if (max > 0) {
-	            const oldCurrent = parseInt(hdAttr.get('current') || 0, 10);
-	            let newCurrent = oldCurrent;
-	            let regained = max === 1 ? 1 : Math.floor(max / 2);
-	            if (this.myState.config.variants.rests.longNoHpFullHd) {
-	              regained = max - oldCurrent;
-	            }
-	            newCurrent += regained;
-	            newCurrent = newCurrent > max ? max : newCurrent;
-	            this.roll20.setAttrByName(charId, hdAttr.get('name'), newCurrent);
-	            hitDieRegained.push({
-	              die: hdAttr.get('name').replace(/hd_/, ''),
-	              quant: newCurrent - oldCurrent,
-	            });
+	      .filter(attribute => (attribute.get('name').match(/^hd_d\d{1,2}$/)))
+	      .uniq()
+	      .each((hdAttr) => {
+	        const max = parseInt(hdAttr.get('max'), 10);
+	        if (max > 0) {
+	          const oldCurrent = parseInt(hdAttr.get('current') || 0, 10);
+	          let newCurrent = oldCurrent;
+	          let regained = max === 1 ? 1 : Math.floor(max / 2);
+	          if (this.myState.config.variants.rests.longNoHpFullHd) {
+	            regained = max - oldCurrent;
 	          }
-	        });
+	          newCurrent += regained;
+	          newCurrent = newCurrent > max ? max : newCurrent;
+	          this.roll20.setAttrByName(charId, hdAttr.get('name'), newCurrent);
+	          hitDieRegained.push({
+	            die: hdAttr.get('name').replace(/hd_/, ''),
+	            quant: newCurrent - oldCurrent,
+	          });
+	        }
+	      });
 
 	    return hitDieRegained;
 	  }
@@ -6152,49 +6131,17 @@ var ShapedScripts =
 
 	    this.logger.debug('Regaining Spell Slots');
 	    _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
-	        .filter(attribute => (attribute.get('name').match(/^spell_slots_l\d$/)))
-	        .uniq()
-	        .each((slotAttr) => {
-	          const max = parseInt(slotAttr.get('max'), 10);
-	          if (max > 0) {
-	            this.roll20.setAttrByName(charId, slotAttr.get('name'), max);
-	            slotsFound = true;
-	          }
-	        });
+	      .filter(attribute => (attribute.get('name').match(/^spell_slots_l\d$/)))
+	      .uniq()
+	      .each((slotAttr) => {
+	        const max = parseInt(slotAttr.get('max'), 10);
+	        if (max > 0) {
+	          this.roll20.setAttrByName(charId, slotAttr.get('name'), max);
+	          slotsFound = true;
+	        }
+	      });
 
 	    return slotsFound;
-	  }
-
-	  /**
-	   * Resets spell points of the specified character to maximum value
-	   * @param {string} charId - the Roll20 character ID
-	   * @returns {boolean} - true if spell points were recharged; false otherwise
-	   */
-	  regainSpellPoints(charId) {
-	    this.logger.debug('Regaining Spell Points');
-	    const spellPointsAttr = this.roll20.getAttrObjectByName(charId, 'spell_points');
-	    const spellPointsMax = spellPointsAttr ? parseInt(spellPointsAttr.get('max'), 10) : 0;
-	    if (spellPointsMax) {
-	      spellPointsAttr.set('current', spellPointsMax);
-	      return true;
-	    }
-	    return false;
-	  }
-
-	  /**
-	   * Resets warlock spell slots of the specified character to maximum value
-	   * @param {string} charId - the Roll20 character ID
-	   * @returns {boolean} - true if any spell slots were recharged; false otherwise
-	   */
-	  regainWarlockSpellSlots(charId) {
-	    this.logger.debug('Regaining Warlock Spell slots');
-	    const warlockSlotsAttr = this.roll20.getAttrObjectByName(charId, 'warlock_spell_slots');
-	    const slotsMax = warlockSlotsAttr ? parseInt(warlockSlotsAttr.get('max'), 10) : 0;
-	    if (slotsMax) {
-	      warlockSlotsAttr.set('current', slotsMax);
-	      return true;
-	    }
-	    return false;
 	  }
 
 	  /**
@@ -6213,7 +6160,6 @@ var ShapedScripts =
 
 	    return false;
 	  }
-
 	}
 
 	module.exports = RestManager;
