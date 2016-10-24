@@ -1639,7 +1639,7 @@ var D20TrapTheme = (() => {
           name: 'Saving Throw',
           desc: 'The type of saving throw used by the trap.',
           value: trapEffect.save,
-          options: [ 'none', 'str', 'dex', 'con', 'int', 'wis', 'cha', 'fort', 'ref', 'will' ]
+          options: [ 'none', 'str', 'dex', 'con', 'int', 'wis', 'cha' ]
         },
         {
           id: 'saveDC',
@@ -1803,46 +1803,6 @@ var D20TrapTheme4E = (() => {
   'use strict';
 
   return class D20TrapTheme4E extends D20TrapTheme {
-    /**
-     * Creates the HTML for an activated trap's result.
-     * @param  {object} effectResult
-     * @return {HtmlBuilder}
-     */
-    static htmlActivateTrap(effectResult) {
-      let content = new HtmlBuilder('div');
-
-      // Add the flavor message.
-      content.append('.paddedRow trapMessage', effectResult.message);
-
-      if(effectResult.character) {
-
-        // Add the attack roll message.
-        if(effectResult.attack) {
-          let rollHtml = D20TrapTheme.htmlRollResult(effectResult.roll, '1d20 + ' + effectResult.attack);
-          let row = content.append('.paddedRow');
-          row.append('span.bold', 'Attack roll: ');
-          row.append('span', rollHtml + ' vs ' + DEFENSE_NAMES[effectResult.defense] + ' ' + effectResult.defenseValue)
-        }
-
-        // Add the hit/miss message.
-        if(effectResult.trapHit) {
-          let row = content.append('.paddedRow');
-          row.append('span.hit', 'HIT! ');
-          if(effectResult.damage)
-            row.append('span', 'Damage: [[' + effectResult.damage + ']]');
-          else
-            row.append('span', effectResult.character.get('name') + ' falls prey to the trap\'s effects!');
-        }
-        else {
-          let row = content.append('.paddedRow');
-          row.append('span.miss', 'MISS! ');
-          if(effectResult.damage && effectResult.missHalf)
-            row.append('span', 'Half damage: [[floor((' + effectResult.damage + ')/2)]].');
-        }
-      }
-
-      return TrapTheme.htmlTable(content, '#a22');
-    }
 
     /**
      * @inheritdoc
@@ -1875,7 +1835,7 @@ var D20TrapTheme4E = (() => {
         return effectResult;
       })
       .then(effectResult => {
-        let html = D20TrapTheme.htmlTrapActivation(effectResult);
+        let html = D20TrapTheme4E.htmlTrapActivation(effectResult);
         effect.announce(html.toString(TrapTheme.css));
       })
       .catch(err => {
@@ -1892,6 +1852,49 @@ var D20TrapTheme4E = (() => {
      */
     getDefense(character, defenseName) {
       throw new Error('Not implemented.');
+    }
+
+    /**
+     * Creates the HTML for an activated trap's result.
+     * @param  {object} effectResult
+     * @return {HtmlBuilder}
+     */
+    static htmlTrapActivation(effectResult) {
+      log('TEST');
+
+      let content = new HtmlBuilder('div');
+
+      // Add the flavor message.
+      content.append('.paddedRow trapMessage', effectResult.message);
+
+      if(effectResult.character) {
+
+        // Add the attack roll message.
+        if(_.isNumber(effectResult.attack)) {
+          let rollHtml = D20TrapTheme.htmlRollResult(effectResult.roll, '1d20 + ' + effectResult.attack);
+          let row = content.append('.paddedRow');
+          row.append('span.bold', 'Attack roll: ');
+          row.append('span', rollHtml + ' vs ' + effectResult.defense + ' ' + effectResult.defenseValue)
+        }
+
+        // Add the hit/miss message.
+        if(effectResult.trapHit) {
+          let row = content.append('.paddedRow');
+          row.append('span.hit', 'HIT! ');
+          if(effectResult.damage)
+            row.append('span', 'Damage: [[' + effectResult.damage + ']]');
+          else
+            row.append('span', effectResult.character.get('name') + ' falls prey to the trap\'s effects!');
+        }
+        else {
+          let row = content.append('.paddedRow');
+          row.append('span.miss', 'MISS! ');
+          if(effectResult.damage && effectResult.missHalf)
+            row.append('span', 'Half damage: [[floor((' + effectResult.damage + ')/2)]].');
+        }
+      }
+
+      return TrapTheme.htmlTable(content, '#a22');
     }
   };
 })();

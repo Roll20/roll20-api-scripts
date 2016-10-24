@@ -51,7 +51,12 @@
        * @inheritdoc
        */
       getPassivePerception(character) {
-        this._initPerceptionType(character);
+        if(!getAttrByName(character.get('_id'), 'spot'))
+          createObj('attribute', {
+            name: 'spot',
+            current: 0,
+            characterid: character.get('_id')
+          });
         return TrapTheme.getSheetAttr(character, 'spot')
         .then(spot => {
           return spot + 10;
@@ -63,6 +68,18 @@
        */
       getSaveBonus(character, saveName) {
         return TrapTheme.getSheetAttr(character, SAVE_NAMES[saveName]);
+      }
+
+      /**
+       * @inheritdoc
+       */
+      getThemeProperties(trapToken) {
+        let result = super.getThemeProperties(trapToken);
+        let save = _.find(result, item => {
+          return item.id === 'save';
+        });
+        save.options = [ 'none', 'fort', 'ref', 'will' ];
+        return result;
       }
     }
     ItsATrap.registerTheme(new TrapThemeDnD3_5());

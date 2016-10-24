@@ -14,7 +14,7 @@
     /**
      * A theme for the Gamma World 7E character sheet.
      */
-    class TrapThemeGW extends D20TrapTheme {
+    class TrapThemeGW extends D20TrapTheme4E {
       /**
        * @inheritdoc
        */
@@ -26,6 +26,7 @@
        * @inheritdoc
        */
       getDefense(character, defenseName) {
+        log(defenseName);
         return TrapTheme.getSheetAttr(character, DEFENSE_NAMES[defenseName]);
       }
 
@@ -33,7 +34,6 @@
        * @inheritdoc
        */
       getPassivePerception(character) {
-        this._initPerceptionType(character);
         return TrapTheme.getSheetAttr(character, 'perception');
       }
 
@@ -60,7 +60,7 @@
             name: 'Defense',
             desc: `The defense targeted by the trap's attack.`,
             value: trapEffect.defense,
-            options: [ 'ac', 'fort', 'ref', 'will' ]
+            options: [ 'none', 'ac', 'fort', 'ref', 'will' ]
           },
           {
             id: 'missHalf',
@@ -95,7 +95,7 @@
         if(prop === 'damage')
           trapEffect.damage = params[0];
         if(prop === 'defense')
-          trapEffect.defense = params[0];
+          trapEffect.defense = params[0] === 'none' ? undefined : params[0];
         if(prop === 'missHalf')
           trapEffect.missHalf = params[0] === 'yes';
         if(prop === 'spotDC')
