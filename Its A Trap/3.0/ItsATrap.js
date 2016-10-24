@@ -475,7 +475,18 @@ var ItsATrap = (() => {
 
   // Create macro for the remote activation command.
   on('ready', () => {
-    log(`☒☠☒ Initialized It's A Trap! using theme '${getTheme().name}' ☒☠☒`);
+    let numRetries = 3;
+    let interval = setInterval(() => {
+      let theme = getTheme();
+      if(theme) {
+        log(`☒☠☒ Initialized It's A Trap! using theme '${getTheme().name}' ☒☠☒`);
+        clearInterval(interval);
+      }
+      else if(numRetries > 0)
+        numRetries--;
+      else
+        clearInterval(interval);
+    }, 1000);
   });
 
   // Handle macro commands.
@@ -961,13 +972,17 @@ var ItsATrapCreationWizard = (() => {
     // Theme properties
     let theme = ItsATrap.getTheme();
     if(theme.getThemeProperties) {
-      content.append('h4', 'Theme-specific properties');
+      content.append('h4', 'Theme-specific properties', {
+        style: { 'margin-top' : '2em' }
+      });
       let properties = theme.getThemeProperties(trapToken);
       content.append(_displayWizardProperties(MODIFY_THEME_PROPERTY_CMD, properties));
     }
 
     // Remote activate button
-    content.append('div', `[Activate Trap](${ItsATrap.REMOTE_ACTIVATE_CMD})`);
+    content.append('div', `[Activate Trap](${ItsATrap.REMOTE_ACTIVATE_CMD})`, {
+      style: { 'margin-top' : '2em' }
+    });
 
     let menu = _showMenuPanel('Trap Configuration', content);
     _whisper(who, menu.toString(MENU_CSS));
@@ -992,8 +1007,12 @@ var ItsATrapCreationWizard = (() => {
         params.push(`?{${item.name} ${item.desc} ${options}}`);
       });
 
-      row.append('td', `[${prop.name}](${modificationCommand} ${prop.id}&&${params.join('&&')})`);
-      row.append('td', `${prop.value || ''}`);
+      row.append('td', `[${prop.name}](${modificationCommand} ${prop.id}&&${params.join('&&')})`, {
+        style: { 'font-size': '0.8em' }
+      });
+      row.append('td', `${prop.value || ''}`, {
+        style: { 'font-size': '0.8em' }
+      });
     });
 
     return table;
@@ -1137,6 +1156,12 @@ var ItsATrapCreationWizard = (() => {
         value: trapToken.get('aura2_radius') || trapEffect.searchDist
       },
       {
+        id: 'sound',
+        name: 'Sound',
+        desc: 'A sound from your jukebox that will play when the trap is activated.',
+        value: trapEffect.sound
+      },
+      {
         id: 'stopAt',
         name: 'Stops Tokens At',
         desc: 'Does this trap stop tokens that pass through its trigger area?',
@@ -1171,9 +1196,6 @@ var ItsATrapCreationWizard = (() => {
 
     let prop = argv[0];
     let params = argv.slice(1);
-
-    log(prop);
-    log(params);
 
     if(prop === 'name')
       trapToken.set('name', params[0]);
@@ -1215,6 +1237,8 @@ var ItsATrapCreationWizard = (() => {
       trapEffect.revealWhenSpotted = params[0] === 'yes';
     if(prop === 'searchDist')
       trapToken.set('aura2_radius', parseInt(params[0]));
+    if(prop === 'sound')
+      trapEffect.sound = params[0];
     if(prop === 'stopAt')
       trapEffect.stopAt = params[0];
     if(prop === 'triggers')
@@ -1860,8 +1884,6 @@ var D20TrapTheme4E = (() => {
      * @return {HtmlBuilder}
      */
     static htmlTrapActivation(effectResult) {
-      log('TEST');
-
       let content = new HtmlBuilder('div');
 
       // Add the flavor message.

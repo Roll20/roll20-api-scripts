@@ -155,7 +155,7 @@
     let content = new HtmlBuilder('div');
 
     // Add the flavor message.
-    content.append('.paddedRow trapMessage', effectResult.message);
+    content.append('.paddedRow trapMessage', effect.message);
 
     // Add message for who triggered it.
     if(effectResult.character) {
@@ -201,7 +201,7 @@
   /**
    * A theme for the Roleplaying is Magic 4 character sheet.
    */
-  class TrapThemeMLPRIM4 {
+  class TrapThemeMLPRIM4 extends TrapTheme {
     get name() {
       return 'MLP-RIM-4';
     }
@@ -347,19 +347,25 @@
     }
 
     /**
-     * Display a message if the character is within 5 units of the trap.
      * @inheritdoc
      */
     passiveSearch(trap, charToken) {
       let effect = new TrapEffect(trap, charToken);
       let character = getObj('character', charToken.get('represents'));
 
+      log(effect);
+      log(character);
+
       // Only do passive search for traps that have a spotDC.
-      if(effect.spotDif && character) {
+      if(effect.json.spotDif && character) {
+        log('TEST');
+
         Promise.resolve()
         .then(() => {
           let passPerception = getPassivePerception(character);
-          return (passPerception >= effect.spotDif);
+          log(passPerception);
+
+          return (passPerception >= effect.json.spotDif);
         })
         .then(passed => {
           if(passed)

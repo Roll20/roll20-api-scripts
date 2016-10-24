@@ -16,7 +16,7 @@
     /**
      * A theme for the Pathfinder (Simple) OGL character sheet by Stephen L..
      */
-    class TrapThemePFSimple {
+    class TrapThemePFSimple extends D20TrapTheme {
       /**
        * @inheritdoc
        */
@@ -28,14 +28,17 @@
        * @inheritdoc
        */
       getAC(character) {
-        return parseInt(TrapTheme.getSheetAttr(character.get('_id'), 'ac'));
+        return TrapTheme.getSheetAttr(character, 'ac');
       }
 
       /**
        * @inheritdoc
        */
       getPassivePerception(character) {
-        return TrapThemeHelper.getSheetAttr(character, 'perception');
+        return TrapTheme.getSheetAttr(character, 'perception')
+        .then(perception => {
+          return perception + 10;
+        });
       }
 
       /**
@@ -43,6 +46,18 @@
        */
       getSaveBonus(character, saveName) {
         return TrapTheme.getSheetAttr(character, SAVE_NAMES[saveName]);
+      }
+
+      /**
+       * @inheritdoc
+       */
+      getThemeProperties(trapToken) {
+        let result = super.getThemeProperties(trapToken);
+        let save = _.find(result, item => {
+          return item.id === 'save';
+        });
+        save.options = [ 'none', 'fort', 'ref', 'will' ];
+        return result;
       }
     }
 

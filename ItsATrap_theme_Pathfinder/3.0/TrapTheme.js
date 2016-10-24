@@ -27,14 +27,17 @@
        * @inheritdoc
        */
       getAC(character) {
-        return parseInt(TrapTheme.getSheetAttr(character.get('_id'), 'AC'));
+        return TrapTheme.getSheetAttr(character, 'AC');
       }
 
       /**
        * @inheritdoc
        */
       getPassivePerception(character) {
-        return TrapThemeHelper.getSheetAttr(character, 'Perception');
+        return TrapTheme.getSheetAttr(character, 'Perception')
+        .then(perception => {
+          return perception + 10;
+        });
       }
 
       /**
@@ -42,6 +45,18 @@
        */
       getSaveBonus(character, saveName) {
         return TrapTheme.getSheetAttr(character, SAVE_NAMES[saveName]);
+      }
+
+      /**
+       * @inheritdoc
+       */
+      getThemeProperties(trapToken) {
+        let result = super.getThemeProperties(trapToken);
+        let save = _.find(result, item => {
+          return item.id === 'save';
+        });
+        save.options = [ 'none', 'fort', 'ref', 'will' ];
+        return result;
       }
     }
     ItsATrap.registerTheme(new TrapThemePF());
