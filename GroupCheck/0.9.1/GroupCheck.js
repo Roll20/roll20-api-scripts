@@ -514,7 +514,7 @@ var groupCheck = groupCheck || (function() {
 		let checkCmd, checkName, checkFormula, output, rollBoundary, rollText;
 
 		// Options processing
-		let who = getPlayerName(msg.who)
+		let who = getPlayerName(msg.who);
 		let opts = processOpts(recoverInlinerollFormulae(msg), hasValue);
 		checkCmd = _.intersection(_.keys(state.groupCheck.checkList), _.keys(opts))[0];
 		// Print menu if we don't know what to roll
