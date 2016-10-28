@@ -360,11 +360,10 @@ var groupCheck = groupCheck || (function() {
 	},
 
 	// This is where we do the work
-	addCharacterToOutput = function(selected, checkFormula, rollOption, opts, rollBoundary) {
+	addTokenToOutput = function(token, checkFormula, opts, rollBoundary) {
 		let displayName, computedFormula, rollAppendix = '', charName, tokenPic;
-		const token = getObj('graphic', selected._id),
-			characterId = token.get('represents'),
-			ro = rollOption(characterId),
+		const characterId = token.get('represents'),
+			ro = opts.rollOption(characterId),
 			character = getObj('character', characterId);
 
 		if (character) {
@@ -404,7 +403,7 @@ var groupCheck = groupCheck || (function() {
 				computedFormula += ` + ${opts.globalmod}[global modifier]`;
 		}
 
-		return outputStyle.makeRow(tokenPic, displayName,ro,computedFormula,rollBoundary,rollAppendix);
+		return outputStyle.makeRow(tokenPic, displayName, ro, computedFormula, rollBoundary, rollAppendix);
 	},
 
 	handleConfig = function (msg) {
@@ -512,10 +511,10 @@ var groupCheck = groupCheck || (function() {
 
 	handleOutput = function (msg) {
 		const hasValue = ['fallback','custom','die_adv','die_dis','globalmod','ro','multi'];
-		let checkCmd, checkName, checkFormula, output, rollBoundary, rollOption;
-		let who = getPlayerName(msg.who), charOutput, rollText = '';
+		let checkCmd, checkName, checkFormula, output, rollBoundary, rollText;
 
 		// Options processing
+		let who = getPlayerName(msg.who)
 		let opts = processOpts(recoverInlinerollFormulae(msg), hasValue);
 		checkCmd = _.intersection(_.keys(state.groupCheck.checkList), _.keys(opts))[0];
 		// Print menu if we don't know what to roll
@@ -560,7 +559,6 @@ var groupCheck = groupCheck || (function() {
 			}
 			checkName = kv.shift();
 			checkFormula = kv.join().replace(/\{\{/g,'[[').replace(/\}\}/g,']]');
-			checkCmd = true;
 		}
 
 		// Plug in defaults for unspecified options
@@ -574,18 +572,16 @@ var groupCheck = groupCheck || (function() {
 		output = opts.whisper ? '/w GM ' : '';
 		opts.multi = (opts.multi > 1 ) ? parseInt(opts.multi) : 1;
 		rollBoundary = (opts.hideformula) ? ['[[',']]'] : ['',''];
-		rollOption = (opts.ro === 'rollsetting') ? getRollOption : ( (charid) => opts.ro);
+		opts.rollOption = (opts.ro === 'rollsetting') ? getRollOption : ( (charid) => opts.ro);
 
-		if (msg.selected) {
-			msg.selected.forEach(function(obj) {
-				if (obj._type === 'graphic') {
-					charOutput = addCharacterToOutput(obj, checkFormula, rollOption, opts, rollBoundary);
-					for (let i=0; i < opts.multi; i++) {
-						rollText += charOutput;
-					}
-				}
-			});
-		}
+		rollText = _.chain(msg.selected)
+			.map(obj => getObj('graphic', obj._id))
+			.compact()
+			.map(function (token) {
+				return addTokenToOutput(token, checkFormula, opts, rollBoundary)
+					.repeat(opts.multi);
+			})
+			.value().join('');
 
 		output += outputStyle.makeBox(checkName, rollText);
 
