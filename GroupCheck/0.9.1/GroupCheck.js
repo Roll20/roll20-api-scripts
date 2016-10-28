@@ -1,3 +1,7 @@
+// GroupCheck version 0.9.1
+// Last Updated: 2016-10-28
+// A script to roll checks for many tokens at once with one command.
+
 var groupCheck = groupCheck || (function() {
 	'use strict';
 	const version = '0.9.1', stateVersion = 4,
