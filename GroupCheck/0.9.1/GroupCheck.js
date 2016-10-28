@@ -151,29 +151,19 @@ var groupCheck = groupCheck || (function() {
 		}
 	},
 
-	defaultOptions = {
-		'die_adv': '2d20kh1',
-		'die_dis': '2d20kl1',
-		'ro': 'roll1',
-		'whisper': false,
-		'usetokenname': true,
-		'hideformula': false,
-		'showpicture': true
-	},
-
 	optsData = {
 		list : {
-			ro : {type: 'string', admissible: ['roll1', 'roll2', 'adv', 'dis', 'rollsetting']},
+			ro : {type: 'string', def: 'roll1', admissible: ['roll1', 'roll2', 'adv', 'dis', 'rollsetting']},
 			multi : {type: 'string', local: true},
 			fallback : {type: 'string'},
 			custom : {type: 'string', local: true},
-			die_adv : {type: 'string'},
-			die_dis : {type: 'string'},
+			die_adv : {type: 'string', def: '2d20kh1'},
+			die_dis : {type: 'string', def: '2d20kl1'},
 			globalmod : {type: 'string'},
-			whisper : {type: 'bool', negate : 'public'},
-			hideformula : {type: 'bool', negate : 'showformula'},
-			usetokenname : {type: 'bool', negate : 'usecharname'},
-			showpicture : {type: 'bool', negate : 'hidepicture'},
+			whisper : {type: 'bool', def: false, negate : 'public'},
+			hideformula : {type: 'bool', def: false, negate : 'showformula'},
+			usetokenname : {type: 'bool', def: true, negate : 'usecharname'},
+			showpicture : {type: 'bool', def: true, negate : 'hidepicture'},
 			help : {type : 'other'}
 		},
 		meta : {}
@@ -201,7 +191,7 @@ var groupCheck = groupCheck || (function() {
 	initializeState = function() {
 		state.groupCheck = {
 			'checkList' : {},
-			'options' : defaultOptions,
+			'options' : _.chain(optsData.list).pick(v => _.has(v,'def')).mapObject(v => v.def).value(),
 			'version' : stateVersion
 		};
 		log('-=> groupCheck initialized with default settings!<=-');
