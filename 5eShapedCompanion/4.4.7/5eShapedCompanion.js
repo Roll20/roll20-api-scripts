@@ -52,13 +52,12 @@ var ShapedScripts =
 	const Logger = __webpack_require__(5);
 	const EntityLookup = __webpack_require__(6);
 	const JSONValidator = __webpack_require__(8);
-	const EntityLookupResultReporter = __webpack_require__(9);
-	const Reporter = __webpack_require__(10);
-	const ShapedScripts = __webpack_require__(11);
-	const srdConverter = __webpack_require__(23);
-	const sanitise = __webpack_require__(24);
-	const mpp = __webpack_require__(25);
-
+	const Reporter = __webpack_require__(9);
+	const ShapedScripts = __webpack_require__(10);
+	const srdConverter = __webpack_require__(22);
+	const sanitise = __webpack_require__(23);
+	const mpp = __webpack_require__(24);
+	const _ = __webpack_require__(2);
 
 	const roll20 = new Roll20();
 	const myState = roll20.getState('ShapedScripts');
@@ -67,7 +66,6 @@ var ShapedScripts =
 	const reporter = new Reporter(roll20, 'Shaped Scripts');
 	const shaped = new ShapedScripts(logger, myState, roll20, parseModule.getParser(mmFormat, logger), el, reporter,
 	  srdConverter, sanitise, mpp);
-	const elrr = new EntityLookupResultReporter(logger, reporter);
 
 
 	roll20.logWrap = 'roll20';
@@ -79,8 +77,8 @@ var ShapedScripts =
 	el.configureEntity('monsters', [
 	  EntityLookup.jsonValidatorAsEntityProcessor(jsonValidator),
 	  el.getSpellHydrator(),
-	], EntityLookup.jsonValidatorAsVersionChecker(jsonValidator, 'monsters'));
-	el.configureEntity('spells', [el.getMonsterSpellUpdater()], EntityLookup.getVersionChecker('0.2.1', 'spells'));
+	], EntityLookup.jsonValidatorAsVersionChecker(jsonValidator));
+	el.configureEntity('spells', [el.getMonsterSpellUpdater()], EntityLookup.getVersionChecker('0.2.1'));
 
 	roll20.on('ready', () => {
 	  shaped.checkInstall();
@@ -94,10 +92,33 @@ var ShapedScripts =
 	        entities = JSON.parse(entities);
 	      }
 	      // Suppress excessive logging when adding big lists of entities
-	      const prevLogLevel = logger.getLogLevel();
-	      logger.setLogLevel(Logger.levels.INFO);
-	      el.addEntities(entities, elrr);
-	      logger.setLogLevel(prevLogLevel);
+	      const prevLogLevel = myState.config.logLevel;
+	      myState.config.logLevel = Logger.INFO;
+	      const result = el.addEntities(entities);
+	      myState.config.logLevel = prevLogLevel;
+	      const summary = _.mapObject(result, (resultObject, type) => {
+	        if (type === 'errors') {
+	          return resultObject.length;
+	        }
+
+	        return _.mapObject(resultObject, operationResultArray => operationResultArray.length);
+	      });
+	      logger.info('Summary of adding entities to the lookup: $$$', summary);
+	      logger.info('Details: $$$', result);
+	      if (!_.isEmpty(result.errors)) {
+	        const message = _.chain(result.errors)
+	          .groupBy('entity')
+	          .mapObject(entityErrors =>
+	            _.chain(entityErrors)
+	              .pluck('errors')
+	              .flatten()
+	              .value()
+	          )
+	          .map((errors, entityName) => `<li>${entityName}:<ul><li>${errors.join('</li><li>')}</li></ul></li>`)
+	          .value();
+
+	        reporter.reportError(`JSON import error:<ul>${message}</ul>`);
+	      }
 	    }
 	    catch (e) {
 	      reporter.reportError('JSON parse error, please see log for more information');
@@ -478,16 +499,16 @@ var ShapedScripts =
 	      if (fieldSpec.bare) {
 	        parser.matchValue = function matchValue(myParseState, textLines) {
 	          const firstMatch = _.chain(fieldSpec.enumValues)
-	              .map((enumValue) => {
-	                logger.debug('Attempting to parse as enum property $$$', enumValue);
-	                const pattern = `^(.*?)(${enumValue})(?:[\\s.]+|$)`;
-	                const re = new RegExp(pattern, this.caseSensitive ? '' : 'i');
-	                return textLines[0].match(re);
-	              })
-	              .compact()
-	              .sortBy(match => match[1].length)
-	              .first()
-	              .value();
+	            .map((enumValue) => {
+	              logger.debug('Attempting to parse as enum property $$$', enumValue);
+	              const pattern = `^(.*?)(${enumValue})(?:[\\s.]+|$)`;
+	              const re = new RegExp(pattern, this.caseSensitive ? '' : 'i');
+	              return textLines[0].match(re);
+	            })
+	            .compact()
+	            .sortBy(match => match[1].length)
+	            .first()
+	            .value();
 
 
 	          if (firstMatch) {
@@ -584,7 +605,7 @@ var ShapedScripts =
 	        parse(stateManager, textLines) {
 	          const parseState = stateManager.enterChildParser(this);
 	          const match = this.matchParseToken(parseState, textLines) &&
-	              this.matchValue(parseState, textLines);
+	            this.matchValue(parseState, textLines);
 	          if (match) {
 	            stateManager.completeCurrentStack(parseState.forPrevious);
 	            delete parseState.forPrevious;
@@ -676,7 +697,7 @@ var ShapedScripts =
 
 	            if (_.isArray(currentValue)) {
 	              let arrayItem = _.find(currentValue, _.partial(_.negate(_.contains), completedObjects));
-	              if (!arrayItem || (typeof arrayItem === 'string')) {
+	              if (!arrayItem) {
 	                currentValue.push(newValue);
 	                arrayItem = _.last(currentValue);
 	              }
@@ -736,7 +757,7 @@ var ShapedScripts =
 
 	          if (!resume || _.isEmpty(incompleteParserStack) || parser !== _.last(incompleteParserStack).parser) {
 	            return module.makeBaseParseState(parser.skipOutput, _.clone(currentPropertyPath), this.outputObject,
-	                completedObjects);
+	              completedObjects);
 	          }
 
 	          return incompleteParserStack.pop().state;
@@ -779,12 +800,12 @@ var ShapedScripts =
 	    makeParserList(contentModelArray) {
 	      const module = this;
 	      return _.chain(contentModelArray)
-	          .reject('noParse')
-	          .reduce((parsers, fieldSpec) => {
-	            parsers.push(module.getParserFor(fieldSpec));
-	            return parsers;
-	          }, [])
-	          .value();
+	        .reject('noParse')
+	        .reduce((parsers, fieldSpec) => {
+	          parsers.push(module.getParserFor(fieldSpec));
+	          return parsers;
+	        }, [])
+	        .value();
 	    },
 
 	    logWrap: 'parseModule',
@@ -796,40 +817,26 @@ var ShapedScripts =
 	  return {
 	    parse(text) {
 	      logger.debug('Text: $$$', text);
+
+	      const textLines = _.chain(text.split('\n'))
+	        .invoke('trim')
+	        .compact()
+	        .value();
 	      logger.debug(parser);
+	      const stateManager = parserModule.makeParseStateManager();
+	      const success = parser.parse(stateManager, textLines);
+	      while (success && !_.isEmpty(textLines)) {
+	        parser.resumeParse(stateManager, textLines);
+	      }
 
-	      const result = {
-	        version: formatSpec.formatVersion,
-	        monsters: [],
-	      };
+	      stateManager.completeCurrentStack(textLines.join('\n'));
 
-	      text.split('**********\n').forEach((statblock) => {
-	        const textLines = _.chain(statblock.split('\n'))
-	            .invoke('trim')
-	            .compact()
-	            .value();
-	        const stateManager = parserModule.makeParseStateManager();
-	        let success = false;
-	        try {
-	          success = parser.parse(stateManager, textLines);
-	          while (success && !_.isEmpty(textLines)) {
-	            success = parser.resumeParse(stateManager, textLines);
-	          }
-	          stateManager.completeCurrentStack(textLines.join('\n'));
-	        }
-	        catch (e) {
-	          e.statblock = statblock;
-	          throw e;
-	        }
-
-
-	        if (success && textLines.length === 0) {
-	          logger.info(stateManager.outputObject);
-	          result.monsters.push(stateManager.outputObject.monsters[0]);
-	        }
-	      });
-
-	      return result;
+	      if (success && textLines.length === 0) {
+	        stateManager.outputObject.version = formatSpec.formatVersion;
+	        logger.info(stateManager.outputObject);
+	        return stateManager.outputObject;
+	      }
+	      return null;
 	    },
 	  };
 	}
@@ -850,8 +857,8 @@ var ShapedScripts =
 	  this.missingFieldParsers = missingFieldParsers;
 	  this.message = '<ul>';
 	  this.message += _.reduce(this.missingFieldParsers, (memo, parser) =>
-	          `${memo}<li>Field ${parser.parseToken} should have appeared ${parser.required} more times</li>`
-	      , '');
+	      `${memo}<li>Field ${parser.parseToken} should have appeared ${parser.required} more times</li>`
+	    , '');
 	  this.message += '</ul>';
 	}
 	MissingContentError.prototype = new ParserError();
@@ -881,7 +888,7 @@ var ShapedScripts =
 /***/ function(module, exports) {
 
 	module.exports = {
-		"formatVersion": "1.0.0",
+		"formatVersion": "0.2",
 		"name": "monsters",
 		"maxOccurs": "Infinity",
 		"type": "orderedContent",
@@ -921,7 +928,6 @@ var ShapedScripts =
 						"name": "alignment",
 						"type": "enumType",
 						"enumValues": [
-							"(?:lawful|neutral|chaotic) (?:good|neutral|evil)(?:\\s?\\(\\d+%\\))? or (?:lawful|neutral|chaotic) (?:good|neutral|evil)(?:\\s?\\(\\d+%\\))?",
 							"lawful good",
 							"lawful neutral",
 							"lawful evil",
@@ -931,10 +937,6 @@ var ShapedScripts =
 							"chaotic good",
 							"chaotic neutral",
 							"chaotic evil",
-							"chaotic",
-							"lawful",
-							"good",
-							"evil",
 							"unaligned",
 							"any alignment",
 							"any good alignment",
@@ -945,7 +947,8 @@ var ShapedScripts =
 							"any non-lawful alignment",
 							"any chaotic alignment",
 							"any non-chaotic alignment",
-							"construct"
+							"construct",
+							"(?:lawful|neutral|chaotic) (?:good|neutral|evil) \\(\\d+%\\) or (?:lawful|neutral|chaotic) (?:good|neutral|evil) \\(\\d+%\\)"
 						],
 						"bare": true
 					}
@@ -971,7 +974,8 @@ var ShapedScripts =
 					{
 						"name": "speed",
 						"minOccurs": 0,
-						"type": "string"
+						"type": "string",
+						"pattern": "^\\d+\\s?ft[\\.]?(,\\s?(fly|swim|burrow|climb)\\s\\d+\\s?ft[\\.]?)*(\\s?\\([^\\)]+\\))?$"
 					},
 					{
 						"name": "strength",
@@ -1043,7 +1047,8 @@ var ShapedScripts =
 					{
 						"name": "senses",
 						"type": "string",
-						"minOccurs": 0
+						"minOccurs": 0,
+						"pattern": "(?:(?:^|,\\s*)(?:blindsight|darkvision|tremorsense|truesight)\\s+\\d+\\s*ft\\.?(?: or \\d+ ft\\. while deafened)?(?:\\s?\\([^\\)]+\\))?)+"
 					},
 					{
 						"name": "passivePerception",
@@ -1086,7 +1091,7 @@ var ShapedScripts =
 							{
 								"name": "name",
 								"type": "string",
-								"pattern": "(^|.*?[a-z0-9]\\.\\s?)((?:[A-Z0-9][\\w\\-']+[,:!]?|A)(?:\\s(?:[A-Z0-9][\\w\\-']+[,:!]?|of|to|in|the|with|and|or|a|by|for)+)*)(\\s?\\([^\\)]+\\))?\\.(?!$)",
+								"pattern": "(^|.*?[a-z]\\.\\s?)((?:[A-Z][\\w\\-']+[,:!]?|A)(?:\\s(?:[A-Z][\\w\\-']+[,:!]?|of|to|in|the|with|and|or|a)+)*)(\\s?\\([^\\)]+\\))?\\.(?!$)",
 								"matchGroup": 2,
 								"forPreviousMatchGroup": 1,
 								"forNextMatchGroup": 3,
@@ -1132,7 +1137,7 @@ var ShapedScripts =
 							{
 								"name": "name",
 								"type": "string",
-								"pattern": "(^|.*?[a-z]\\.\\s?)((?:\\d+\\.\\s?)?(?:[A-Z][\\w\\-']+[,:!]?|A|\\+\\d)(?:\\s(?:[A-Z][\\w\\-']+[,:!]?|of|in|to|with|the|and|or|by|for|a|\\+\\d+|2hd)+)*)(\\s?\\([^\\)]+\\))?\\.(?!$)",
+								"pattern": "(^|.*?[a-z]\\.\\s?)((?:\\d+\\.\\s?)?(?:[A-Z][\\w\\-']+[,:!]?|A)(?:\\s(?:[A-Z][\\w\\-']+[,:!]?|of|in|to|with|the|and|or|a|\\+\\d+)+)*)(\\s?\\([^\\)]+\\))?\\.(?!$)",
 								"matchGroup": 2,
 								"forPreviousMatchGroup": 1,
 								"forNextMatchGroup": 3,
@@ -1219,7 +1224,7 @@ var ShapedScripts =
 						"name": "legendaryPoints",
 						"type": "number",
 						"bare": true,
-						"pattern": "^(?:The)?[ \\w-]+(?:can|may) take (\\d+) legendary action(?:s)?.*?start.*?turn[.]?",
+						"pattern": "^The[ \\w]+can take (\\d+) legendary actions.*?start.*?turn[.]?",
 						"matchGroup": 1
 					},
 					{
@@ -1242,7 +1247,7 @@ var ShapedScripts =
 								"name": "cost",
 								"type": "number",
 								"bare": true,
-								"pattern": "^\\s*\\(\\s*(?:costs )?(\\d+) actions\\s*\\)",
+								"pattern": "^\\s*\\(\\s*costs (\\d+) actions\\s*\\)",
 								"matchGroup": 1,
 								"minOccurs": 0
 							},
@@ -1265,19 +1270,13 @@ var ShapedScripts =
 					{
 						"name": "actionHeader",
 						"type": "heading",
+						"bare": true,
 						"pattern": "^Lair Actions$"
-					},
-					{
-						"name": "lairActionBlurb",
-						"type": "heading",
-						"pattern": "^On initiative count 20[^:]+:*$"
 					},
 					{
 						"name": "lairActions",
 						"type": "string",
 						"bare": true,
-						"pattern": "^(?:\\*|•)\\s?((?:.|\n)*)",
-						"matchGroup": 1,
 						"minOccurs": 1,
 						"maxOccurs": "Infinity"
 					}
@@ -1293,28 +1292,20 @@ var ShapedScripts =
 					{
 						"name": "actionHeader",
 						"type": "heading",
+						"bare": true,
 						"pattern": "^Regional Effects$"
-					},
-					{
-						"name": "regionalBlurb",
-						"type": "heading",
-						"minOccurs": 0,
-						"pattern": "^The region (?:containing|around|surrounding)[^:]+:$"
 					},
 					{
 						"name": "regionalEffects",
 						"type": "string",
 						"minOccurs": 1,
 						"maxOccurs": "Infinity",
-						"bare": true,
-						"pattern": "^(?:\\*|•)\\s?((?:.|\n)*)",
-						"matchGroup": 1
+						"bare": true
 					},
 					{
 						"name": "regionalEffectsFade",
 						"type": "string",
-						"bare": true,
-						"pattern": "^(?:if|when)[\\w\\s-]+(?:dies|is destroyed).*$"
+						"bare": true
 					}
 				]
 			}
@@ -1404,19 +1395,6 @@ var ShapedScripts =
 	      return modToWrap;
 	    };
 
-	    this.getLogLevel = function getLogLevel() {
-	      return state[loggerName] || Logger.levels.INFO;
-	    };
-
-	    this.setLogLevel = function setLogLevel(level) {
-	      if (typeof level === 'string') {
-	        level = Logger.levels[level.toUpperCase()];
-	      }
-	      if (typeof level === 'number' && level >= Logger.levels.OFF && level <= Logger.levels.TRACE) {
-	        state[loggerName] = level;
-	      }
-	    };
-
 	    this.getLogTap = function getLogTap(level, messageString) {
 	      return _.partial(outputLog, level, messageString);
 	    };
@@ -1476,9 +1454,6 @@ var ShapedScripts =
 	    this.noWhiteSpaceEntities = {};
 	    this.entityProcessors = {};
 	    this.versionCheckers = {};
-	    this.processedEntityGroupNames = [];
-	    this.deferredEntityGroups = [];
-	    this.lastEntityLoadTime = 0;
 	  }
 
 
@@ -1489,125 +1464,76 @@ var ShapedScripts =
 	    this.versionCheckers[entityName] = versionChecker || _.constant(true);
 	  }
 
-	  addEntities(entitiesObject, resultReporter) {
-	    try {
-	      entitiesObject.name = entitiesObject.name || 'unnamed';
-	      const results = {
-	        errors: [],
-	        entityGroupName: entitiesObject.name,
-	      };
+	  addEntities(entitiesObject) {
+	    const results = {
+	      errors: [],
+	    };
 
-	      if (entitiesObject.dependencies && !_.isEmpty(entitiesObject.dependencies)) {
-	        if (typeof entitiesObject.dependencies === 'string') {
-	          entitiesObject.dependencies = entitiesObject.dependencies.split(/,/)
-	              .map(Function.prototype.call, String.prototype.trim);
-	        }
-	        if (!_.isEmpty(_.difference(entitiesObject.dependencies, this.processedEntityGroupNames))) {
-	          this.deferredEntityGroups.push(entitiesObject);
-	          _.delay(this.checkForUnresolvedDependencies.bind(this), 10000, resultReporter);
+
+	    _.chain(entitiesObject)
+	      .omit('version', 'patch')
+	      .each((entityArray, type) => {
+	        results[type] = {
+	          withErrors: [],
+	          skipped: [],
+	          deleted: [],
+	          patched: [],
+	          added: [],
+	        };
+
+	        if (!this.entities[type]) {
+	          results.errors.push({ entity: 'general', errors: [`Unrecognised entity type ${type}`] });
 	          return;
 	        }
-	      }
 
-	      _.chain(entitiesObject)
-	          .omit('version', 'patch', 'name', 'dependencies')
-	          .each((entityArray, type) => {
-	            results[type] = {
-	              withErrors: [],
-	              skipped: [],
-	              deleted: [],
-	              patched: [],
-	              added: [],
-	            };
+	        if (!this.versionCheckers[type](entitiesObject.version, results.errors)) {
+	          return;
+	        }
 
-	            if (!this.entities[type]) {
-	              results.errors.push({ entity: 'general', errors: [`Unrecognised entity type ${type}`] });
-	              return;
+
+	        _.each(entityArray, (entity) => {
+	          let key = entity.name.toLowerCase();
+	          let operation = this.entities[type][key] ? (entitiesObject.patch ? 'patched' : 'skipped') : 'added';
+
+	          if (operation === 'patched') {
+	            entity = patchEntity(this.entities[type][key], entity);
+	            if (!entity) {
+	              operation = 'deleted';
+	              delete this.entities[type][key];
+	              delete this.noWhiteSpaceEntities[type][key.replace(/\s+/g, '')];
 	            }
+	          }
 
-	            if (!this.versionCheckers[type](entitiesObject.version, results.errors)) {
-	              return;
-	            }
-
-
-	            _.each(entityArray, (entity) => {
-	              let key = entity.name.toLowerCase();
-	              let operation = this.entities[type][key] ? (entitiesObject.patch ? 'patched' : 'skipped') : 'added';
-
-	              if (operation === 'patched') {
-	                entity = patchEntity(this.entities[type][key], entity);
-	                if (!entity) {
-	                  operation = 'deleted';
-	                  delete this.entities[type][key];
-	                  delete this.noWhiteSpaceEntities[type][key.replace(/\s+/g, '')];
-	                }
-	              }
-
-	              if (_.contains(['patched', 'added'], operation)) {
-	                const processed = _.reduce(this.entityProcessors[type], utils.executor, {
-	                  entity,
-	                  type,
-	                  version: entitiesObject.version,
-	                  errors: [],
-	                });
-	                if (!_.isEmpty(processed.errors)) {
-	                  processed.entity = processed.entity.name;
-	                  results.errors.push(processed);
-	                  operation = 'withErrors';
-	                }
-	                else {
-	                  if (processed.entity.name.toLowerCase() !== key) {
-	                    results[type].deleted.push(key);
-	                    delete this.entities[type][key];
-	                    delete this.noWhiteSpaceEntities[type][key.replace(/\s+/g, '')];
-	                    key = processed.entity.name.toLowerCase();
-	                  }
-	                  this.entities[type][key] = processed.entity;
-	                  this.noWhiteSpaceEntities[type][key.replace(/\s+/g, '')] = processed.entity;
-	                }
-	              }
-
-
-	              results[type][operation].push(key);
+	          if (_.contains(['patched', 'added'], operation)) {
+	            const processed = _.reduce(this.entityProcessors[type], utils.executor, {
+	              entity,
+	              type,
+	              version: entitiesObject.version,
+	              errors: [],
 	            });
-	          });
+	            if (!_.isEmpty(processed.errors)) {
+	              processed.entity = processed.entity.name;
+	              results.errors.push(processed);
+	              operation = 'withErrors';
+	            }
+	            else {
+	              if (processed.entity.name.toLowerCase() !== key) {
+	                results[type].deleted.push(key);
+	                delete this.entities[type][key];
+	                delete this.noWhiteSpaceEntities[type][key.replace(/\s+/g, '')];
+	                key = processed.entity.name.toLowerCase();
+	              }
+	              this.entities[type][key] = processed.entity;
+	              this.noWhiteSpaceEntities[type][key.replace(/\s+/g, '')] = processed.entity;
+	            }
+	          }
 
-	      this.processedEntityGroupNames.push(entitiesObject.name);
-	      if (resultReporter) {
-	        resultReporter.report(results);
-	      }
-	      this.deferredEntityGroups = _.without(this.deferredEntityGroups, entitiesObject);
-	      this.checkForUnresolvedDependencies(resultReporter);
-	    }
-	    finally {
-	      this.lastEntityLoadTime = Date.now();
-	    }
-	  }
 
-	  checkForUnresolvedDependencies(resultReporter) {
-	    this.deferredEntityGroups.forEach((deferred) => {
-	      if (_.isEmpty(_.difference(deferred.dependencies, this.processedEntityGroupNames))) {
-	        this.addEntities(deferred, resultReporter);
-	      }
-	    });
-
-	    if (Date.now() - this.lastEntityLoadTime >= 10000) {
-	      if (resultReporter) {
-	        this.deferredEntityGroups.forEach((deferred) => {
-	          const missingDeps = _.difference(deferred.dependencies, this.processedEntityGroupNames);
-	          resultReporter.report({
-	            errors: [{
-	              entity: 'Missing dependencies',
-	              errors: [`Entity group is missing dependencies [${missingDeps.join(', ')}]`],
-	            }],
-	            entityGroupName: deferred.name,
-	          });
+	          results[type][operation].push(key);
 	        });
-	      }
-	    }
-	    else {
-	      _.delay(this.checkForUnresolvedDependencies.bind(this), 10000, resultReporter);
-	    }
+	      });
+
+	    return results;
 	  }
 
 	  findEntity(type, name, tryWithoutWhitespace) {
@@ -1626,9 +1552,9 @@ var ShapedScripts =
 	    function containsSomeIgnoreCase(array, testValues) {
 	      testValues = (_.isArray(testValues) ? testValues : [testValues]).map(s => s.toLowerCase());
 	      return !!_.chain(array)
-	          .map(s => s.toLowerCase())
-	          .intersection(testValues)
-	          .value().length;
+	        .map(s => s.toLowerCase())
+	        .intersection(testValues)
+	        .value().length;
 	    }
 
 	    return _.reduce(criteria, (results, criterionValue, criterionField) => {
@@ -1703,20 +1629,20 @@ var ShapedScripts =
 	    return function spellUpdater(spellInfo) {
 	      const spell = spellInfo.entity;
 	      _.chain(self.entities.monsters)
-	          .pluck('spells')
-	          .compact()
-	          .each((spellArray) => {
-	            const spellIndex = _.findIndex(spellArray, (monsterSpell) => {
-	              if (typeof monsterSpell === 'string') {
-	                return monsterSpell.toLowerCase() === spell.name.toLowerCase();
-	              }
-
-	              return monsterSpell !== spell && monsterSpell.name.toLowerCase() === spell.name.toLowerCase();
-	            });
-	            if (spellIndex !== -1) {
-	              spellArray[spellIndex] = spell;
+	        .pluck('spells')
+	        .compact()
+	        .each((spellArray) => {
+	          const spellIndex = _.findIndex(spellArray, (monsterSpell) => {
+	            if (typeof monsterSpell === 'string') {
+	              return monsterSpell.toLowerCase() === spell.name.toLowerCase();
 	            }
+
+	            return monsterSpell !== spell && monsterSpell.name.toLowerCase() === spell.name.toLowerCase();
 	          });
+	          if (spellIndex !== -1) {
+	            spellArray[spellIndex] = spell;
+	          }
+	        });
 	      return spellInfo;
 	    };
 	  }
@@ -1743,11 +1669,11 @@ var ShapedScripts =
 	    };
 	  }
 
-	  static jsonValidatorAsVersionChecker(jsonValidator, entityType) {
-	    return EntityLookup.getVersionChecker(jsonValidator.getVersionNumber(), entityType);
+	  static jsonValidatorAsVersionChecker(jsonValidator) {
+	    return EntityLookup.getVersionChecker(jsonValidator.getVersionNumber());
 	  }
 
-	  static getVersionChecker(requiredVersion, entityType) {
+	  static getVersionChecker(requiredVersion) {
 	    function pruneToMinor(versionString) {
 	      return versionString.split('.', 2).join('.');
 	    }
@@ -1759,9 +1685,7 @@ var ShapedScripts =
 	      if (!valid) {
 	        errorsArray.push({
 	          entity: 'general',
-	          errors: [`Incorrect ${entityType} data format version: [${version}]. Required is: ${requiredVersion}.` +
-	          'This probably means you need to download an updated version to be compatible with the latest version of' +
-	          ' the Companion Script.'],
+	          errors: [`Incorrect entity objects version: [${version}]. Required is: ${requiredVersion}`],
 	        });
 	      }
 	      return valid;
@@ -2213,45 +2137,6 @@ var ShapedScripts =
 
 /***/ },
 /* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	const _ = __webpack_require__(2);
-
-	module.exports = class EntityLookupResultReporter {
-
-	  constructor(logger, reporter) {
-	    this.report = function report(result) {
-	      const summary = _.mapObject(result, (resultObject, type) => {
-	        if (type === 'errors') {
-	          return resultObject.length;
-	        }
-
-	        return _.mapObject(resultObject, operationResultArray => operationResultArray.length);
-	      });
-	      logger.info('Summary of adding $$$ entity group to the lookup: $$$', result.entityGroupName, summary);
-	      logger.debug('Details: $$$', result);
-	      if (!_.isEmpty(result.errors)) {
-	        const message = _.chain(result.errors)
-	            .groupBy('entity')
-	            .mapObject(entityErrors =>
-	                _.chain(entityErrors)
-	                    .pluck('errors')
-	                    .flatten()
-	                    .value()
-	            )
-	            .map((errors, entityName) => `<li>${entityName}:<ul><li>${errors.join('</li><li>')}</li></ul></li>`)
-	            .value();
-
-	        reporter.reportError(`JSON import error for ${result.entityGroupName} entity group:<ul>${message}</ul>`);
-	      }
-	    };
-	  }
-	};
-
-
-/***/ },
-/* 10 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -2281,6 +2166,10 @@ var ShapedScripts =
 	  }
 
 	  reportPublic(heading, text) {
+	    // Horrible bug with this at the moment - seems to generate spurious chat
+	    // messages when noarchive:true is set
+	    // sendChat('ShapedScripts', '' + msg, null, {noarchive:true});
+
 	    this.roll20.sendChat('', `${makeNormalMessage(this.scriptName, heading, text)}`);
 	  }
 
@@ -2295,7 +2184,7 @@ var ShapedScripts =
 	  }
 
 	  getPlayerName() {
-	    return this.playerId ? `"${this.roll20.getObj('player', this.playerId).get('displayname')}"` : 'gm';
+	    return this.playerId ? this.roll20.getObj('player', this.playerId).get('displayname').split(/ /)[0] : 'gm';
 	  }
 	}
 
@@ -2304,25 +2193,25 @@ var ShapedScripts =
 
 
 /***/ },
-/* 11 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* globals unescape */
 	'use strict';
 	const _ = __webpack_require__(2);
 	const parseModule = __webpack_require__(3);
-	const makeCommandProc = __webpack_require__(12);
+	const makeCommandProc = __webpack_require__(11);
 	const utils = __webpack_require__(7);
-	const UserError = __webpack_require__(13);
-	const Migrator = __webpack_require__(15);
-	const ShapedConfig = __webpack_require__(16);
+	const UserError = __webpack_require__(12);
+	const Migrator = __webpack_require__(14);
+	const ShapedConfig = __webpack_require__(15);
 	// Modules
-	const AbilityMaker = __webpack_require__(17);
-	const ConfigUI = __webpack_require__(18);
-	const AdvantageTracker = __webpack_require__(19);
-	const RestManager = __webpack_require__(20);
-	const TraitManager = __webpack_require__(21);
-	const AmmoManager = __webpack_require__(22);
+	const AbilityMaker = __webpack_require__(16);
+	const ConfigUI = __webpack_require__(17);
+	const AdvantageTracker = __webpack_require__(18);
+	const RestManager = __webpack_require__(19);
+	const TraitManager = __webpack_require__(20);
+	const AmmoManager = __webpack_require__(21);
 	/**
 	 * @typedef {Object} ChatMessage
 	 * @property {string} content
@@ -2390,20 +2279,8 @@ var ShapedScripts =
 	      if (character) {
 	        this.applyCharacterDefaults(character);
 	        this.getTokenConfigurer(token)(character);
-	        const isNpc = roll20.getAttrByName(character.id, 'is_npc');
-	        let sensesString;
-	        if (isNpc === 1) {
-	          sensesString = roll20.getAttrByName(character.id, 'senses');
-	        }
-	        else {
-	          sensesString = ['blindsight', 'darkvision', 'tremorsense', 'truesight']
-	            .map(sense => [sense, roll20.getAttrByName(character.id, sense)])
-	            .filter(senseInfo => senseInfo[1])
-	            .map(senseInfo => `${senseInfo[0]} ${senseInfo[1]}`)
-	            .join(',');
-	        }
+	        const sensesString = roll20.getAttrByName(character.id, 'senses');
 	        this.getTokenVisionConfigurer(token, sensesString)();
-	        this.getDefaultTokenPersister(token)(character);
 	      }
 	    });
 	  };
@@ -2470,7 +2347,6 @@ var ShapedScripts =
 	      if (_.size(monsters) === 1) {
 	        characterProcessors.push(this.getTokenConfigurer(token).bind(this));
 	        characterProcessors.push(this.getTokenVisionConfigurer(token, monsters[0].senses));
-	        characterProcessors.push(this.getDefaultTokenPersister(token));
 	        if (options.replace || options.overwrite) {
 	          characterRetrievalStrategies.push(this.getTokenRetrievalStrategy(token).bind(this));
 	        }
@@ -2664,11 +2540,10 @@ var ShapedScripts =
 
 	  this.getTokenConfigurer = function getTokenConfigurer(token) {
 	    return function tokenConfigurer(character) {
-	      const isNpc = roll20.getAttrByName(character.id, 'is_npc') === 1;
 	      token.set('represents', character.id);
 	      token.set('name', character.get('name'));
 	      const settings = myState.config.tokenSettings;
-	      if (settings.number && isNpc && token.get('name').indexOf('%%NUMBERED%%') === -1) {
+	      if (settings.number && token.get('name').indexOf('%%NUMBERED%%') === -1) {
 	        token.set('name', `${token.get('name')} %%NUMBERED%%`);
 	      }
 
@@ -2711,6 +2586,7 @@ var ShapedScripts =
 	      token.set('light_angle', settings.light.angle);
 	      token.set('light_losangle', settings.light.losAngle);
 	      token.set('light_multiplier', settings.light.multiplier);
+	      roll20.setDefaultTokenForCharacter(character, token);
 	    };
 	  };
 
@@ -2753,12 +2629,6 @@ var ShapedScripts =
 
 	    return function configureTokenVision() {
 	      senses.forEach(sense => sense.configureVision());
-	    };
-	  };
-
-	  this.getDefaultTokenPersister = function getDefaultTokenPersister(token) {
-	    return function persistDefaultToken(character) {
-	      roll20.setDefaultTokenForCharacter(character, token);
 	    };
 	  };
 
@@ -3246,7 +3116,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v4.9.0 <=-');
+	    logger.info('-=> ShapedScripts v4.4.7 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -3323,14 +3193,14 @@ var ShapedScripts =
 
 
 /***/ },
-/* 12 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	const _ = __webpack_require__(2);
 	const utils = __webpack_require__(7);
-	const UserError = __webpack_require__(13);
-	const ShapedModule = __webpack_require__(14);
+	const UserError = __webpack_require__(12);
+	const ShapedModule = __webpack_require__(13);
 
 
 	function getParser(optionString, validator) {
@@ -3624,7 +3494,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 13 */
+/* 12 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -3641,7 +3511,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 14 */
+/* 13 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -3679,7 +3549,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 15 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3811,7 +3681,7 @@ var ShapedScripts =
 	  addProperty(path, value) {
 	    const expandedProperty = utils.createObjectFromPath(path, value);
 	    return this.transformConfig(config => utils.deepExtend(config, expandedProperty),
-	        `Adding property ${path} with value ${value}`);
+	      `Adding property ${path} with value ${value}`);
 	  }
 
 	  overwriteProperty(path, value) {
@@ -3825,7 +3695,7 @@ var ShapedScripts =
 
 	  copyProperty(oldPath, newPath) {
 	    return this.transformConfig(Migrator.propertyCopy.bind(null, oldPath, newPath),
-	        `Copying property from ${oldPath} to ${newPath}`);
+	      `Copying property from ${oldPath} to ${newPath}`);
 	  }
 
 
@@ -3849,7 +3719,7 @@ var ShapedScripts =
 
 	  deleteProperty(propertyPath) {
 	    return this.transformConfig(Migrator.propertyDelete.bind(null, propertyPath),
-	        `Deleting property ${propertyPath} from config`);
+	      `Deleting property ${propertyPath} from config`);
 	  }
 
 	  moveProperty(oldPath, newPath) {
@@ -3876,203 +3746,198 @@ var ShapedScripts =
 	    }
 
 	    return this._versions
-	        .filter(version => version.version > state.version)
-	        .reduce((versionResult, version) => {
-	          logger.info('Upgrading schema to version $$$', version.version);
+	      .filter(version => version.version > state.version)
+	      .reduce((versionResult, version) => {
+	        logger.info('Upgrading schema to version $$$', version.version);
 
-	          versionResult = version.migrations.reduce((result, migration) => {
-	            logger.info(migration.message);
-	            return migration.transformer(result);
-	          }, versionResult);
-	          versionResult.version = version.version;
-	          logger.info('Post-upgrade state: $$$', versionResult);
-	          return versionResult;
-	        }, state);
+	        versionResult = version.migrations.reduce((result, migration) => {
+	          logger.info(migration.message);
+	          return migration.transformer(result);
+	        }, versionResult);
+	        versionResult.version = version.version;
+	        logger.info('Post-upgrade state: $$$', versionResult);
+	        return versionResult;
+	      }, state);
 	  }
 	}
 
 
 	const migrator = new Migrator()
-	    .addProperty('config', {})
-	    .skipToVersion(0.4)
-	    .overwriteProperty('config.genderPronouns', utils.deepClone(oneSixConfig).genderPronouns)
-	    .skipToVersion(1.2)
-	    .moveProperty('config.autoHD', 'config.sheetEnhancements.autoHD')
-	    .moveProperty('config.rollHPOnDrop', 'config.sheetEnhancements.rollHPOnDrop')
-	    .skipToVersion(1.4)
-	    .moveProperty('config.newCharSettings.savingThrowsHalfProf',
-	        'config.newCharSettings.houserules.savingThrowsHalfProf')
-	    .moveProperty('config.newCharSettings.mediumArmorMaxDex', 'config.newCharSettings.houserules.mediumArmorMaxDex')
-	    .skipToVersion(1.6)
-	    .transformConfig((state) => {
-	      _.defaults(state.config, oneSixConfig);
-	      _.defaults(state.config.tokenSettings, oneSixConfig.tokenSettings);
-	      _.defaults(state.config.newCharSettings, oneSixConfig.newCharSettings);
-	      _.defaults(state.config.advTrackerSettings, oneSixConfig.advTrackerSettings);
-	      _.defaults(state.config.sheetEnhancements, oneSixConfig.sheetEnhancements);
-	      return state;
-	    }, 'Applying defaults as at schema version 1.6')
-	    // 1.7
-	    // add base houserules and variants section
-	    // add sheetEnhancements.autoTraits
-	    .nextVersion()
-	    .addProperty('config.variants', {
-	      rests: {
-	        longNoHpFullHd: false,
-	      },
-	    })
-	    .addProperty('config.sheetEnhancements.autoTraits', true)
-	    // 1.8
-	    // Set tokens to have vision by default so that people see the auto-generated stuff based on senses
-	    .nextVersion()
-	    .overwriteProperty('config.tokenSettings.light.hasSight', true)
-	    // 1.9 Add default tab setting
-	    .nextVersion()
-	    .addProperty('config.newCharSettings.tab', 'core')
-	    // 2.0 Add default token actions
-	    .nextVersion()
-	    .addProperty('config.newCharSettings.tokenActions', {
-	      initiative: false,
-	      abilityChecks: null,
-	      advantageTracker: null,
-	      savingThrows: null,
-	      attacks: null,
-	      statblock: false,
-	      traits: null,
-	      actions: null,
-	      reactions: null,
-	      legendaryActions: null,
-	      lairActions: null,
-	      regionalEffects: null,
-	      rests: false,
-	    })
-	    // 2.1 Add spells token action
-	    .nextVersion()
-	    .addProperty('config.newCharSettings.tokenActions.spells', false)
-	    // 2.2 Changes to support new roll behaviour in sheet 4.2.1
-	    .nextVersion()
-	    .overwriteProperty('config.newCharSettings.sheetOutput', '')
-	    .overwriteProperty('config.newCharSettings.deathSaveOutput', '')
-	    .overwriteProperty('config.newCharSettings.initiativeOutput', '')
-	    .overwriteProperty('config.newCharSettings.showNameOnRollTemplate', '')
-	    .overwriteProperty('config.newCharSettings.rollOptions', '')
-	    .overwriteProperty('config.newCharSettings.initiativeRoll', '')
-	    .overwriteProperty('config.newCharSettings.initiativeToTracker', '')
-	    .overwriteProperty('config.newCharSettings.breakInitiativeTies', '')
-	    .overwriteProperty('config.newCharSettings.showTargetAC', '')
-	    .overwriteProperty('config.newCharSettings.showTargetName', '')
-	    .overwriteProperty('config.newCharSettings.autoAmmo', '1')
-	    // 2.3 Remove "small" macros
-	    .nextVersion()
-	    .transformConfig((config) => {
-	      _.each(config.config.newCharSettings.tokenActions, (value, key) => {
-	        if (typeof value === 'string' && value.match('.*Small$')) {
-	          config.config.newCharSettings.tokenActions[key] = value.replace(/Small$/, '');
-	        }
-	      });
-	      return config;
-	    }, 'Removing "small" macros')
-	    .addProperty('config.newCharSettings.textSizes', {
-	      spellsTextSize: 'text',
-	      abilityChecksTextSize: 'text',
-	      savingThrowsTextSize: 'text',
-	    })
-	    // 2.4 Don't set default values for sheet options to save on attribute bloat
-	    .nextVersion()
-	    .transformConfig((config) => {
-	      const ncs = config.config.newCharSettings;
-	      const defaults = {
-	        sheetOutput: '',
-	        deathSaveOutput: '',
-	        initiativeOutput: '',
-	        showNameOnRollTemplate: '',
-	        rollOptions: '{{ignore=[[0',
-	        initiativeRoll: '@{shaped_d20}',
-	        initiativeToTracker: '@{selected|initiative_formula} &{tracker}',
-	        breakInitiativeTies: '',
-	        showTargetAC: '',
-	        showTargetName: '',
-	        autoAmmo: '',
-	        tab: 'core',
-	      };
-	      _.each(defaults, (defaultVal, key) => {
-	        if (ncs[key] === defaultVal) {
-	          ncs[key] = '***default***';
-	        }
-	      });
-
-	      if (ncs.houserules.mediumArmorMaxDex === '2') {
-	        ncs.houserules.mediumArmorMaxDex = '***default***';
+	  .addProperty('config', {})
+	  .skipToVersion(0.4)
+	  .overwriteProperty('config.genderPronouns', utils.deepClone(oneSixConfig).genderPronouns)
+	  .skipToVersion(1.2)
+	  .moveProperty('config.autoHD', 'config.sheetEnhancements.autoHD')
+	  .moveProperty('config.rollHPOnDrop', 'config.sheetEnhancements.rollHPOnDrop')
+	  .skipToVersion(1.4)
+	  .moveProperty('config.newCharSettings.savingThrowsHalfProf', 'config.newCharSettings.houserules.savingThrowsHalfProf')
+	  .moveProperty('config.newCharSettings.mediumArmorMaxDex', 'config.newCharSettings.houserules.mediumArmorMaxDex')
+	  .skipToVersion(1.6)
+	  .transformConfig((state) => {
+	    _.defaults(state.config, oneSixConfig);
+	    _.defaults(state.config.tokenSettings, oneSixConfig.tokenSettings);
+	    _.defaults(state.config.newCharSettings, oneSixConfig.newCharSettings);
+	    _.defaults(state.config.advTrackerSettings, oneSixConfig.advTrackerSettings);
+	    _.defaults(state.config.sheetEnhancements, oneSixConfig.sheetEnhancements);
+	    return state;
+	  }, 'Applying defaults as at schema version 1.6')
+	  // 1.7
+	  // add base houserules and variants section
+	  // add sheetEnhancements.autoTraits
+	  .nextVersion()
+	  .addProperty('config.variants', {
+	    rests: {
+	      longNoHpFullHd: false,
+	    },
+	  })
+	  .addProperty('config.sheetEnhancements.autoTraits', true)
+	  // 1.8
+	  // Set tokens to have vision by default so that people see the auto-generated stuff based on senses
+	  .nextVersion()
+	  .overwriteProperty('config.tokenSettings.light.hasSight', true)
+	  // 1.9 Add default tab setting
+	  .nextVersion()
+	  .addProperty('config.newCharSettings.tab', 'core')
+	  // 2.0 Add default token actions
+	  .nextVersion()
+	  .addProperty('config.newCharSettings.tokenActions', {
+	    initiative: false,
+	    abilityChecks: null,
+	    advantageTracker: null,
+	    savingThrows: null,
+	    attacks: null,
+	    statblock: false,
+	    traits: null,
+	    actions: null,
+	    reactions: null,
+	    legendaryActions: null,
+	    lairActions: null,
+	    regionalEffects: null,
+	    rests: false,
+	  })
+	  // 2.1 Add spells token action
+	  .nextVersion()
+	  .addProperty('config.newCharSettings.tokenActions.spells', false)
+	  // 2.2 Changes to support new roll behaviour in sheet 4.2.1
+	  .nextVersion()
+	  .overwriteProperty('config.newCharSettings.sheetOutput', '')
+	  .overwriteProperty('config.newCharSettings.deathSaveOutput', '')
+	  .overwriteProperty('config.newCharSettings.initiativeOutput', '')
+	  .overwriteProperty('config.newCharSettings.showNameOnRollTemplate', '')
+	  .overwriteProperty('config.newCharSettings.rollOptions', '')
+	  .overwriteProperty('config.newCharSettings.initiativeRoll', '')
+	  .overwriteProperty('config.newCharSettings.initiativeToTracker', '')
+	  .overwriteProperty('config.newCharSettings.breakInitiativeTies', '')
+	  .overwriteProperty('config.newCharSettings.showTargetAC', '')
+	  .overwriteProperty('config.newCharSettings.showTargetName', '')
+	  .overwriteProperty('config.newCharSettings.autoAmmo', '1')
+	  // 2.3 Remove "small" macros
+	  .nextVersion()
+	  .transformConfig((config) => {
+	    _.each(config.config.newCharSettings.tokenActions, (value, key) => {
+	      if (typeof value === 'string' && value.match('.*Small$')) {
+	        config.config.newCharSettings.tokenActions[key] = value.replace(/Small$/, '');
 	      }
+	    });
+	    return config;
+	  }, 'Removing "small" macros')
+	  .addProperty('config.newCharSettings.textSizes', {
+	    spellsTextSize: 'text',
+	    abilityChecksTextSize: 'text',
+	    savingThrowsTextSize: 'text',
+	  })
+	  // 2.4 Don't set default values for sheet options to save on attribute bloat
+	  .nextVersion()
+	  .transformConfig((config) => {
+	    const ncs = config.config.newCharSettings;
+	    const defaults = {
+	      sheetOutput: '',
+	      deathSaveOutput: '',
+	      initiativeOutput: '',
+	      showNameOnRollTemplate: '',
+	      rollOptions: '{{ignore=[[0',
+	      initiativeRoll: '@{shaped_d20}',
+	      initiativeToTracker: '@{selected|initiative_formula} &{tracker}',
+	      breakInitiativeTies: '',
+	      showTargetAC: '',
+	      showTargetName: '',
+	      autoAmmo: '',
+	      tab: 'core',
+	    };
+	    _.each(defaults, (defaultVal, key) => {
+	      if (ncs[key] === defaultVal) {
+	        ncs[key] = '***default***';
+	      }
+	    });
 
-	      ['spellsTextSize', 'abilityChecksTextSize', 'savingThrowsTextSize'].forEach((prop) => {
-	        if (ncs.textSizes[prop] === 'text_big') {
-	          ncs.textSizes[prop] = '***default***';
-	        }
-	      });
+	    if (ncs.houserules.mediumArmorMaxDex === '2') {
+	      ncs.houserules.mediumArmorMaxDex = '***default***';
+	    }
 
-	      return config;
-	    }, 'Removing default values')
-	    // 2.5 Custom saving throws
-	    .nextVersion()
-	    .addProperty('config.newCharSettings.houserules.saves', {
-	      useCustomSaves: '***default***',
-	      useAverageOfAbilities: '***default***',
-	      fortitude: {
-	        fortitudeStrength: '***default***',
-	        fortitudeDexterity: '***default***',
-	        fortitudeConstitution: '***default***',
-	        fortitudeIntelligence: '***default***',
-	        fortitudeWisdom: '***default***',
-	        fortitudeCharisma: '***default***',
-	      },
-	      reflex: {
-	        reflexStrength: '***default***',
-	        reflexDexterity: '***default***',
-	        reflexConstitution: '***default***',
-	        reflexIntelligence: '***default***',
-	        reflexWisdom: '***default***',
-	        reflexCharisma: '***default***',
-	      },
-	      will: {
-	        willStrength: '***default***',
-	        willDexterity: '***default***',
-	        willConstitution: '***default***',
-	        willIntelligence: '***default***',
-	        willWisdom: '***default***',
-	        willCharisma: '***default***',
-	      },
-	    })
-	    .moveProperty('config.newCharSettings.houserules.savingThrowsHalfProf',
-	        'config.newCharSettings.houserules.saves.savingThrowsHalfProf')
-	    .addProperty('config.newCharSettings.houserules.baseDC', '***default***')
-	    // 2.6 expertise_as_advantage
-	    .nextVersion()
-	    .addProperty('config.newCharSettings.houserules.expertiseAsAdvantage', '***default***')
-	    // 2.7 add hide options
-	    .nextVersion()
-	    .addProperty('config.newCharSettings.hide', {
-	      hideAttack: '***default***',
-	      hideDamage: '***default***',
-	      hideAbilityChecks: '***default***',
-	      hideSavingThrows: '***default***',
-	      hideSavingThrowDC: '***default***',
-	      hideSpellContent: '***default***',
-	      hideActionFreetext: '***default***',
-	      hideSavingThrowFailure: '***default***',
-	      hideSavingThrowSuccess: '***default***',
-	      hideRecharge: '***default***',
-	    })
-	    // 2.8 rename hideActionFreetext
-	    .nextVersion()
-	    .moveProperty('config.newCharSettings.hide.hideActionFreetext', 'config.newCharSettings.hide.hideFreetext')
-	    // 2.9 make auto-applying new character settings optional (and switched off by default)
-	    .nextVersion()
-	    .addProperty('config.newCharSettings.applyToAll', false)
-	    // 3.0 add hit dice output option + show rests option
-	    .nextVersion()
-	    .addProperty('config.newCharSettings.hitDiceOutput', '***default***')
-	    .addProperty('config.newCharSettings.showRests', '***default***');
+	    ['spellsTextSize', 'abilityChecksTextSize', 'savingThrowsTextSize'].forEach((prop) => {
+	      if (ncs.textSizes[prop] === 'text_big') {
+	        ncs.textSizes[prop] = '***default***';
+	      }
+	    });
+
+	    return config;
+	  }, 'Removing default values')
+	  // 2.5 Custom saving throws
+	  .nextVersion()
+	  .addProperty('config.newCharSettings.houserules.saves', {
+	    useCustomSaves: '***default***',
+	    useAverageOfAbilities: '***default***',
+	    fortitude: {
+	      fortitudeStrength: '***default***',
+	      fortitudeDexterity: '***default***',
+	      fortitudeConstitution: '***default***',
+	      fortitudeIntelligence: '***default***',
+	      fortitudeWisdom: '***default***',
+	      fortitudeCharisma: '***default***',
+	    },
+	    reflex: {
+	      reflexStrength: '***default***',
+	      reflexDexterity: '***default***',
+	      reflexConstitution: '***default***',
+	      reflexIntelligence: '***default***',
+	      reflexWisdom: '***default***',
+	      reflexCharisma: '***default***',
+	    },
+	    will: {
+	      willStrength: '***default***',
+	      willDexterity: '***default***',
+	      willConstitution: '***default***',
+	      willIntelligence: '***default***',
+	      willWisdom: '***default***',
+	      willCharisma: '***default***',
+	    },
+	  })
+	  .moveProperty('config.newCharSettings.houserules.savingThrowsHalfProf',
+	    'config.newCharSettings.houserules.saves.savingThrowsHalfProf')
+	  .addProperty('config.newCharSettings.houserules.baseDC', '***default***')
+	  // 2.6 expertise_as_advantage
+	  .nextVersion()
+	  .addProperty('config.newCharSettings.houserules.expertiseAsAdvantage', '***default***')
+	  // 2.7 add hide options
+	  .nextVersion()
+	  .addProperty('config.newCharSettings.hide', {
+	    hideAttack: '***default***',
+	    hideDamage: '***default***',
+	    hideAbilityChecks: '***default***',
+	    hideSavingThrows: '***default***',
+	    hideSavingThrowDC: '***default***',
+	    hideSpellContent: '***default***',
+	    hideActionFreetext: '***default***',
+	    hideSavingThrowFailure: '***default***',
+	    hideSavingThrowSuccess: '***default***',
+	    hideRecharge: '***default***',
+	  })
+	  // 2.8 rename hideActionFreetext
+	  .nextVersion()
+	  .moveProperty('config.newCharSettings.hide.hideActionFreetext', 'config.newCharSettings.hide.hideFreetext')
+	  // 2.9 make auto-applying new character settings optional (and switched off by default)
+	  .nextVersion()
+	  .addProperty('config.newCharSettings.applyToAll', false);
 
 
 	Migrator.migrateShapedConfig = migrator.migrateConfig.bind(migrator);
@@ -4081,7 +3946,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 16 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4094,7 +3959,6 @@ var ShapedScripts =
 	      sheetOutput: 'output_option',
 	      deathSaveOutput: 'death_save_output_option',
 	      initiativeOutput: 'initiative_output_option',
-	      hitDiceOutput: 'hit_dice_output_option',
 	      showNameOnRollTemplate: 'show_character_name',
 	      rollOptions: 'roll_setting',
 	      initiativeRoll: 'initiative_roll',
@@ -4104,7 +3968,6 @@ var ShapedScripts =
 	      showTargetName: 'attacks_vs_target_name',
 	      autoAmmo: 'ammo_auto_use',
 	      autoRevertAdvantage: 'auto_revert_advantage',
-	      showRests: 'show_rests',
 	      savingThrowsHalfProf: 'saving_throws_half_proficiency',
 	      mediumArmorMaxDex: 'medium_armor_max_dex',
 	      spellsTextSize: 'spells_text_size',
@@ -4200,14 +4063,6 @@ var ShapedScripts =
 	  static get sheetOutputValidator() {
 	    return this.getOptionList({
 	      public: '***default***',
-	      whisper: '/w GM',
-	    });
-	  }
-
-	  static get rollOutputValidator() {
-	    return this.getOptionList({
-	      sheetStandard: '***default***',
-	      public: '',
 	      whisper: '/w GM',
 	    });
 	  }
@@ -4309,9 +4164,8 @@ var ShapedScripts =
 	      newCharSettings: {
 	        applyToAll: this.booleanValidator,
 	        sheetOutput: this.sheetOutputValidator,
-	        deathSaveOutput: this.rollOutputValidator,
-	        hitDiceOutput: this.rollOutputValidator,
-	        initiativeOutput: this.rollOutputValidator,
+	        deathSaveOutput: this.sheetOutputValidator,
+	        initiativeOutput: this.sheetOutputValidator,
 	        showNameOnRollTemplate: this.getOptionList({
 	          true: '{{show_character_name=1}}',
 	          false: '***default***',
@@ -4348,7 +4202,6 @@ var ShapedScripts =
 	          false: '***default***',
 	        }),
 	        autoRevertAdvantage: this.booleanValidator,
-	        showRests: this.booleanValidator,
 	        houserules: {
 	          baseDC: this.getOptionList(_.range(0, 21).reduce((result, val) => {
 	            result[val] = val === 8 ? '***default***' : val;
@@ -4542,14 +4395,14 @@ var ShapedScripts =
 
 
 /***/ },
-/* 17 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	const _ = __webpack_require__(2);
 	const utils = __webpack_require__(7);
-	const ShapedModule = __webpack_require__(14);
-	const ShapedConfig = __webpack_require__(16);
+	const ShapedModule = __webpack_require__(13);
+	const ShapedConfig = __webpack_require__(15);
 
 	class MacroMaker {
 	  constructor(roll20) {
@@ -4819,14 +4672,14 @@ var ShapedScripts =
 
 
 /***/ },
-/* 18 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	const _ = __webpack_require__(2);
 	const utils = __webpack_require__(7);
-	const ShapedModule = __webpack_require__(14);
-	const ShapedConfig = __webpack_require__(16);
+	const ShapedModule = __webpack_require__(13);
+	const ShapedConfig = __webpack_require__(15);
 
 	class ConfigUi extends ShapedModule {
 
@@ -5069,25 +4922,6 @@ var ShapedScripts =
 	                    {
 	                      tag: 'td',
 	                      innerHtml: options.buttons[2],
-	                    },
-	                  ],
-	                },
-	                {
-	                  tag: 'tr',
-	                  innerHtml: [
-	                    {
-	                      tag: 'td',
-	                      innerHtml: options.colTitles[3],
-	                    },
-	                  ],
-	                  attrs: { style: 'line-height: 1;' },
-	                },
-	                {
-	                  tag: 'tr',
-	                  innerHtml: [
-	                    {
-	                      tag: 'td',
-	                      innerHtml: options.buttons[3],
 	                    },
 	                  ],
 	                },
@@ -5337,8 +5171,6 @@ var ShapedScripts =
 	      _.invert(spec.sheetOutput())[utils.getObjectFromPath(this.config, `${ncs}.sheetOutput`)];
 	    const currDSaveOut =
 	      _.invert(spec.deathSaveOutput())[utils.getObjectFromPath(this.config, `${ncs}.deathSaveOutput`)];
-	    const currHDOut =
-	        _.invert(spec.hitDiceOutput())[utils.getObjectFromPath(this.config, `${ncs}.hitDiceOutput`)];
 	    const currInitOut =
 	      _.invert(spec.initiativeOutput())[utils.getObjectFromPath(this.config, `${ncs}.initiativeOutput`)];
 
@@ -5354,12 +5186,6 @@ var ShapedScripts =
 	      command: `${this.getQueryCommand(`${ncs}.deathSaveOutput`, 'Death Save Output', spec.deathSaveOutput())}`
 	      + ` --${menu}`,
 	    });
-	    const hdBtn = this.makeOptionButton({
-	      path: `${ncs}.hitDiceOutput`, linkText: this.makeText(currHDOut), tooltip: 'click to change',
-	      buttonColor: '#02baf2', width: 60,
-	      command: `${this.getQueryCommand(`${ncs}.hitDiceOutput`, 'Death Save Output', spec.hitDiceOutput())}`
-	      + ` --${menu}`,
-	    });
 	    const initBtn = this.makeOptionButton({
 	      path: `${ncs}.initiativeOutput`, linkText: this.makeText(currInitOut), tooltip: 'click to change',
 	      buttonColor: '#02baf2', width: 60,
@@ -5369,8 +5195,8 @@ var ShapedScripts =
 
 	    optionRows += this.makeThreeColOptionTable({
 	      tableTitle: 'Output',
-	      colTitles: ['Sheet', 'Death Save', 'Hit Dice', 'Initiative'],
-	      buttons: [sheetBtn, dSaveBtn, hdBtn, initBtn],
+	      colTitles: ['Sheet', 'Death Save', 'Initiative'],
+	      buttons: [sheetBtn, dSaveBtn, initBtn],
 	    });
 
 	    optionRows +=
@@ -5679,14 +5505,14 @@ var ShapedScripts =
 
 
 /***/ },
-/* 19 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	const _ = __webpack_require__(2);
 	const utils = __webpack_require__(7);
-	const ShapedModule = __webpack_require__(14);
-	const ShapedConfig = __webpack_require__(16);
+	const ShapedModule = __webpack_require__(13);
+	const ShapedConfig = __webpack_require__(15);
 
 	const rollOptions = {
 	  normal: {
@@ -5909,27 +5735,27 @@ var ShapedScripts =
 
 
 /***/ },
-/* 20 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	const _ = __webpack_require__(2);
-	const ShapedModule = __webpack_require__(14);
-	const ShapedConfig = __webpack_require__(16);
+	const ShapedModule = __webpack_require__(13);
+	const ShapedConfig = __webpack_require__(15);
 
 	class RestManager extends ShapedModule {
 
 	  addCommands(commandProcessor) {
 	    return commandProcessor.addCommand('rest', this.handleRest.bind(this), false)
-	        .option('long', ShapedConfig.booleanValidator)
-	        .option('short', ShapedConfig.booleanValidator)
-	        .option('id', ShapedConfig.getCharacterValidator(this.roll20), false)
-	        .withSelection({
-	          character: {
-	            min: 0,
-	            max: Infinity,
-	          },
-	        });
+	      .option('long', ShapedConfig.booleanValidator)
+	      .option('short', ShapedConfig.booleanValidator)
+	      .option('id', ShapedConfig.getCharacterValidator(this.roll20), false)
+	      .withSelection({
+	        character: {
+	          min: 0,
+	          max: Infinity,
+	        },
+	      });
 	  }
 
 	  handleRest(options) {
@@ -5965,9 +5791,8 @@ var ShapedScripts =
 	      this.logger.debug(`Processing short rest for ${charName}:`);
 
 	      const traits = this.rechargeTraits(charId, 'short');
-	      const warlockSlots = this.regainWarlockSpellSlots(charId);
 
-	      const msg = this.buildRestMessage('Short Rest', charName, charId, traits, warlockSlots);
+	      const msg = this.buildRestMessage('Short Rest', charName, charId, traits);
 
 	      this.roll20.sendChat(`character|${charId}`, msg, { noarchive: true });
 	    });
@@ -5993,12 +5818,9 @@ var ShapedScripts =
 	      }
 	      const hd = this.regainHitDie(charId);
 	      const slots = this.regainSpellSlots(charId);
-	      const spellPoints = this.regainSpellPoints(charId);
 	      const exhaus = this.reduceExhaustion(charId);
-	      const warlockSlots = this.regainWarlockSpellSlots(charId);
 
-	      const msg = this.buildRestMessage('Long Rest', charName, charId, traits, warlockSlots, healed, hd, slots, exhaus,
-	          spellPoints);
+	      const msg = this.buildRestMessage('Long Rest', charName, charId, traits, healed, hd, slots, exhaus);
 
 	      this.roll20.sendChat(`character|${charId}`, msg, { noarchive: true });
 	    });
@@ -6014,11 +5836,8 @@ var ShapedScripts =
 	   * @param {Object[]} hdRegained - Array of objects each representing a die type and the number regained
 	   * @param {boolean} spellSlots - Whether or not spell slots were recharged
 	   * @param {boolean} exhaustion - Whether or not a level of exhaustoin was removed
-	   * @param {boolean} spellPoints - Whether or not spell points were recharged
-	   * @param {boolean} warlockSpellSlots - Whether or not warlock spell slots were recharged
 	   */
-	  buildRestMessage(restType, charName, charId, traitNames, warlockSpellSlots, healed, hdRegained, spellSlots,
-	      exhaustion, spellPoints) {
+	  buildRestMessage(restType, charName, charId, traitNames, healed, hdRegained, spellSlots, exhaustion) {
 	    let msg = `&{template:5e-shaped} {{title=${restType}}} {{character_name=${charName}}}`;
 
 	    if (this.roll20.getAttrByName(charId, 'show_character_name') === '@{show_character_name_yes}') {
@@ -6033,24 +5852,10 @@ var ShapedScripts =
 	      });
 	    }
 
-	    if (traitNames) {
-	      msg += `{{Traits Recharged=${traitNames.join(', ')}}}`;
-	    }
-	    if (healed > 0) {
-	      msg += `{{heal=[[${healed}]]}}`;
-	    }
-	    if (spellSlots) {
-	      msg += '{{Spell Slots Regained=&nbsp;}}';
-	    }
-	    if (exhaustion) {
-	      msg += '{{text_top=Removed 1 Level Of Exhaustion}}';
-	    }
-	    if (spellPoints) {
-	      msg += '{{Spell Points Regained=&nbsp;}}';
-	    }
-	    if (warlockSpellSlots) {
-	      msg += '{{Warlock Spell Slots Regained=&nbsp;}}';
-	    }
+	    if (traitNames) { msg += `{{Traits Recharged=${traitNames.join(', ')}}}`; }
+	    if (healed > 0) { msg += `{{heal=[[${healed}]]}}`; }
+	    if (spellSlots) { msg += '{{text_center=Spell Slots Regained}}'; }
+	    if (exhaustion) { msg += '{{text_top=Removed 1 Level Of Exhaustion}}'; }
 
 	    return msg;
 	  }
@@ -6065,26 +5870,26 @@ var ShapedScripts =
 	    const traitNames = [];
 
 	    _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
-	        .map(attribute => (attribute.get('name').match(/^repeating_trait_([^_]+)_recharge$/) || [])[1])
-	        .reject(_.isUndefined)
-	        .uniq()
-	        .each((attId) => {
-	          const traitPre = `repeating_trait_${attId}`;
-	          const rechargeAtt = this.roll20.getAttrByName(charId, `${traitPre}_recharge`);
-	          if (rechargeAtt.toLowerCase().indexOf(restType) !== -1) {
-	            const attName = this.roll20.getAttrByName(charId, `${traitPre}_name`);
-	            this.logger.debug(`Recharging '${attName}'`);
-	            traitNames.push(attName);
-	            const max = this.roll20.getAttrByName(charId, `${traitPre}_uses`, 'max');
-	            if (max === undefined) {
-	              this.logger.error(`Tried to recharge the trait '${attName}' for character with id ${charId}, ` +
-	                  'but there were no uses defined.');
-	            }
-	            else {
-	              this.roll20.setAttrByName(charId, `${traitPre}_uses`, max);
-	            }
+	      .map(attribute => (attribute.get('name').match(/^repeating_trait_([^_]+)_recharge$/) || [])[1])
+	      .reject(_.isUndefined)
+	      .uniq()
+	      .each((attId) => {
+	        const traitPre = `repeating_trait_${attId}`;
+	        const rechargeAtt = this.roll20.getAttrByName(charId, `${traitPre}_recharge`);
+	        if (rechargeAtt.toLowerCase().indexOf(restType) !== -1) {
+	          const attName = this.roll20.getAttrByName(charId, `${traitPre}_name`);
+	          this.logger.debug(`Recharging '${attName}'`);
+	          traitNames.push(attName);
+	          const max = this.roll20.getAttrByName(charId, `${traitPre}_uses`, 'max');
+	          if (max === undefined) {
+	            this.logger.error(`Tried to recharge the trait '${attName}' for character with id ${charId}, ` +
+	              'but there were no uses defined.');
 	          }
-	        });
+	          else {
+	            this.roll20.setAttrByName(charId, `${traitPre}_uses`, max);
+	          }
+	        }
+	      });
 
 	    return traitNames;
 	  }
@@ -6118,26 +5923,26 @@ var ShapedScripts =
 	    const hitDieRegained = [];
 	    this.logger.debug('Regaining Hit Die');
 	    _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
-	        .filter(attribute => (attribute.get('name').match(/^hd_d\d{1,2}$/)))
-	        .uniq()
-	        .each((hdAttr) => {
-	          const max = parseInt(hdAttr.get('max'), 10);
-	          if (max > 0) {
-	            const oldCurrent = parseInt(hdAttr.get('current') || 0, 10);
-	            let newCurrent = oldCurrent;
-	            let regained = max === 1 ? 1 : Math.floor(max / 2);
-	            if (this.myState.config.variants.rests.longNoHpFullHd) {
-	              regained = max - oldCurrent;
-	            }
-	            newCurrent += regained;
-	            newCurrent = newCurrent > max ? max : newCurrent;
-	            this.roll20.setAttrByName(charId, hdAttr.get('name'), newCurrent);
-	            hitDieRegained.push({
-	              die: hdAttr.get('name').replace(/hd_/, ''),
-	              quant: newCurrent - oldCurrent,
-	            });
+	      .filter(attribute => (attribute.get('name').match(/^hd_d\d{1,2}$/)))
+	      .uniq()
+	      .each((hdAttr) => {
+	        const max = parseInt(hdAttr.get('max'), 10);
+	        if (max > 0) {
+	          const oldCurrent = parseInt(hdAttr.get('current') || 0, 10);
+	          let newCurrent = oldCurrent;
+	          let regained = max === 1 ? 1 : Math.floor(max / 2);
+	          if (this.myState.config.variants.rests.longNoHpFullHd) {
+	            regained = max - oldCurrent;
 	          }
-	        });
+	          newCurrent += regained;
+	          newCurrent = newCurrent > max ? max : newCurrent;
+	          this.roll20.setAttrByName(charId, hdAttr.get('name'), newCurrent);
+	          hitDieRegained.push({
+	            die: hdAttr.get('name').replace(/hd_/, ''),
+	            quant: newCurrent - oldCurrent,
+	          });
+	        }
+	      });
 
 	    return hitDieRegained;
 	  }
@@ -6152,49 +5957,17 @@ var ShapedScripts =
 
 	    this.logger.debug('Regaining Spell Slots');
 	    _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
-	        .filter(attribute => (attribute.get('name').match(/^spell_slots_l\d$/)))
-	        .uniq()
-	        .each((slotAttr) => {
-	          const max = parseInt(slotAttr.get('max'), 10);
-	          if (max > 0) {
-	            this.roll20.setAttrByName(charId, slotAttr.get('name'), max);
-	            slotsFound = true;
-	          }
-	        });
+	      .filter(attribute => (attribute.get('name').match(/^spell_slots_l\d$/)))
+	      .uniq()
+	      .each((slotAttr) => {
+	        const max = parseInt(slotAttr.get('max'), 10);
+	        if (max > 0) {
+	          this.roll20.setAttrByName(charId, slotAttr.get('name'), max);
+	          slotsFound = true;
+	        }
+	      });
 
 	    return slotsFound;
-	  }
-
-	  /**
-	   * Resets spell points of the specified character to maximum value
-	   * @param {string} charId - the Roll20 character ID
-	   * @returns {boolean} - true if spell points were recharged; false otherwise
-	   */
-	  regainSpellPoints(charId) {
-	    this.logger.debug('Regaining Spell Points');
-	    const spellPointsAttr = this.roll20.getAttrObjectByName(charId, 'spell_points');
-	    const spellPointsMax = spellPointsAttr ? parseInt(spellPointsAttr.get('max'), 10) : 0;
-	    if (spellPointsMax) {
-	      spellPointsAttr.set('current', spellPointsMax);
-	      return true;
-	    }
-	    return false;
-	  }
-
-	  /**
-	   * Resets warlock spell slots of the specified character to maximum value
-	   * @param {string} charId - the Roll20 character ID
-	   * @returns {boolean} - true if any spell slots were recharged; false otherwise
-	   */
-	  regainWarlockSpellSlots(charId) {
-	    this.logger.debug('Regaining Warlock Spell slots');
-	    const warlockSlotsAttr = this.roll20.getAttrObjectByName(charId, 'warlock_spell_slots');
-	    const slotsMax = warlockSlotsAttr ? parseInt(warlockSlotsAttr.get('max'), 10) : 0;
-	    if (slotsMax) {
-	      warlockSlotsAttr.set('current', slotsMax);
-	      return true;
-	    }
-	    return false;
 	  }
 
 	  /**
@@ -6213,19 +5986,18 @@ var ShapedScripts =
 
 	    return false;
 	  }
-
 	}
 
 	module.exports = RestManager;
 
 
 /***/ },
-/* 21 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	const _ = __webpack_require__(2);
-	const ShapedModule = __webpack_require__(14);
+	const ShapedModule = __webpack_require__(13);
 
 	class TraitManager extends ShapedModule {
 
@@ -6264,12 +6036,12 @@ var ShapedScripts =
 
 
 /***/ },
-/* 22 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	const _ = __webpack_require__(2);
-	const ShapedModule = __webpack_require__(14);
+	const ShapedModule = __webpack_require__(13);
 
 	class AmmoManager extends ShapedModule {
 
@@ -6314,7 +6086,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 23 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -6630,53 +6402,48 @@ var ShapedScripts =
 
 
 /***/ },
-/* 24 */
+/* 23 */
 /***/ function(module, exports) {
 
 	'use strict';
-	function sanitise(statblock, logger, noOcrFixes) {
+	function sanitise(statblock, logger) {
 	  logger.debug('Pre-sanitise: $$$', statblock);
 	  statblock = statblock
-	      .replace(/\s+([\.,;:])/g, '$1')
-	      .replace(/\n+/g, '#')
-	      .replace(/–/g, '-')
-	      .replace(/‒/g, '-')
-	      .replace(/−/g, '-') // Watch out: this and the two lines above containing funny unicode versions of '-'
-	      .replace(/’/gi, '\'')
-	      .replace(/<br[^>]*>/g, '#')
-	      .replace(/#+/g, '#')
-	      .replace(/\s*#\s*/g, '#')
-	      .replace(/(<([^>]+)>)/gi, '')
-	      .replace(/legendary actions/gi, 'Legendary Actions')
-	      .replace(/(\S)\sACTIONS/, '$1#ACTIONS')
-	      .replace(/LAIR#ACTIONS/gi, 'LAIR ACTIONS')
-	      .replace(/#(?=[a-z]|DC)/g, ' ')
-	      .replace(/\s+/g, ' ')
-	      .replace(/#Hit:/gi, 'Hit:')
-	      .replace(/Hit:#/gi, 'Hit: ')
-	      .replace(/#Each /gi, 'Each ')
-	      .replace(/#On a successful save/gi, 'On a successful save')
-	      .replace(/DC#(\d+)/g, 'DC $1')
-	      .replace('LanguagesChallenge', 'Languages -\nChallenge')
-	      .replace('\' Speed', 'Speed')
-	      .replace(/(\w+) s([\s\.,])/g, '$1s$2')
-	      .replace(/#Medium or/gi, ' Medium or')
-	      .replace(/take#(\d+)/gi, 'take $1')
-	      .replace(/#/g, '\n')
-	      .replace(/&gt;/g, '>')
-	      .replace(/&lt;/g, '<')
-	      .replace(/&amp;/g, '&');
-
+	    .replace(/\s+([\.,;:])/g, '$1')
+	    .replace(/\n+/g, '#')
+	    .replace(/–/g, '-')
+	    .replace(/−/g, '-') // Watch out: this and the line above containing funny unicode versions of '-'
+	    .replace(/<br[^>]*>/g, '#')
+	    .replace(/#+/g, '#')
+	    .replace(/\s*#\s*/g, '#')
+	    .replace(/(<([^>]+)>)/gi, '')
+	    .replace(/legendary actions/gi, 'Legendary Actions')
+	    .replace(/(\S)\sACTIONS/, '$1#ACTIONS')
+	    .replace(/#(?=[a-z]|DC)/g, ' ')
+	    .replace(/\s+/g, ' ')
+	    .replace(/#Hit:/gi, 'Hit:')
+	    .replace(/Hit:#/gi, 'Hit: ')
+	    .replace(/#Each /gi, 'Each ')
+	    .replace(/#On a successful save/gi, 'On a successful save')
+	    .replace(/DC#(\d+)/g, 'DC $1')
+	    .replace('LanguagesChallenge', 'Languages -\nChallenge')
+	    .replace('\' Speed', 'Speed')
+	    .replace(/(\w+) s([\s\.,])/g, '$1s$2')
+	    .replace(/#Medium or/gi, ' Medium or')
+	    .replace(/take#(\d+)/gi, 'take $1')
+	    .replace(/#/g, '\n')
+	    .replace(/&gt;/g, '>')
+	    .replace(/&lt;/g, '<')
+	    .replace(/&amp;/g, '&');
 
 	  logger.debug('First stage cleaned statblock: $$$', statblock);
 
 	  // Sometimes the texts ends up like 'P a r a l y z i n g T o u c h . M e l e e S p e l l A t t a c k : + 1 t o h i t
 	  // In this case we can fix the title case stuff, because we can find the word boundaries. That will at least meaning
-	  // that the core statblock parsing will work. If this happens inside the lowercase body text, however, there's
-	  // nothing we can do about it because you need to understand the natural language to reinsert the word breaks
-	  // properly.
+	  // that the core statblock parsing will work. If this happens inside the lowercase body text, however, there's nothing
+	  // we can do about it because you need to understand the natural language to reinsert the word breaks properly.
 	  statblock = statblock.replace(/([A-Z])(\s[a-z]){2,}/g, (match, p1) =>
-	      p1 + match.slice(1).replace(/\s([a-z])/g, '$1')
+	    p1 + match.slice(1).replace(/\s([a-z])/g, '$1')
 	  );
 
 
@@ -6687,120 +6454,119 @@ var ShapedScripts =
 	  // This covers abilites that end up as 'C O N' or similar
 	  statblock = statblock.replace(/^[A-Z]\s?[A-Z]\s?[A-Z](?=\s|$)/mg, match => match.replace(/\s/g, ''));
 
-	  statblock = statblock.replace(/^[A-Z '()-]+$/mg, match =>
-	      match.replace(/([A-Z])([A-Z'-]+)(?=\s|\)|$)/g, (innerMatch, p1, p2) => p1 + p2.toLowerCase())
+	  statblock = statblock.replace(/^[A-Z ]+$/m, match =>
+	    match.replace(/([A-Z])([A-Z]+)(?=\s|$)/g, (innerMatch, p1, p2) => p1 + p2.toLowerCase())
 	  );
 
 
 	  statblock = statblock.replace(/(\d+)\s*?plus\s*?((?:\d+d\d+)|(?:\d+))/gi, '$2 + $1');
 	  /* eslint-disable quote-props */
-	  if (!noOcrFixes) {
-	    const replaceObj = {
-	      'Jly': 'fly',
-	      ',1\'': ',*',
-	      'jday': '/day',
-	      'abol eth': 'aboleth',
-	      'ACT IONS': 'ACTIONS',
-	      'Afrightened': 'A frightened',
-	      'Alesser': 'A lesser',
-	      'Athl etics': 'Athletics',
-	      'blindn ess': 'blindness',
-	      'blind sight': 'blindsight',
-	      'bofh': 'both',
-	      'brea stplate': 'breastplate',
-	      'Can trips': 'Cantrips',
-	      'choos in g': 'choosing',
-	      'com muni cate': 'communicate',
-	      'Constituti on': 'Constitution',
-	      'creatu re': 'creature',
-	      'darkvi sion': 'darkvision',
-	      'dea ls': 'deals',
-	      'di sease': 'disease',
-	      'di stance': 'distance',
-	      'fa lls': 'falls',
-	      'fe et': 'feet',
-	      'exha les': 'exhales',
-	      'ex istence': 'existence',
-	      'lfthe': 'If the',
-	      'Ifthe': 'If the',
-	      'ifthe': 'if the',
-	      'lnt': 'Int',
-	      'magica lly': 'magically',
-	      'Med icine': 'Medicine',
-	      'minlilte': 'minute',
-	      'natura l': 'natural',
-	      'ofeach': 'of each',
-	      'ofthe': 'of the',
-	      'on\'e': 'one',
-	      'on ly': 'only',
-	      '0n': 'on',
-	      'pass ive': 'passive',
-	      'Perce ption': 'Perception',
-	      'radi us': 'radius',
-	      'ra nge': 'range',
-	      'rega ins': 'regains',
-	      'rest.oration': 'restoration',
-	      'savin g': 'saving',
-	      'si lvery': 'silvery',
-	      's lashing': 'slashing',
-	      'slas hing': 'slashing',
-	      'slash in g': 'slashing',
-	      'slash ing': 'slashing',
-	      'Spel/casting': 'Spellcasting',
-	      'successfu l': 'successful',
-	      'ta rget': 'target',
-	      ' Th e ': ' The ',
-	      't_urns': 'turns',
-	      'unti l': 'until',
-	      'withi n': 'within',
-	      'tohit': 'to hit',
-	      'At wi ll': 'At will',
-	      'per-son': 'person',
-	      'ab ility': 'ability',
-	      'spe ll': 'spell',
-	    };
-	    /* eslint-enable quote-props */
+	  const replaceObj = {
+	    'Jly': 'fly',
+	    ',1\'': ',*',
+	    'jday': '/day',
+	    'abol eth': 'aboleth',
+	    'ACT IONS': 'ACTIONS',
+	    'Afrightened': 'A frightened',
+	    'Alesser': 'A lesser',
+	    'Athl etics': 'Athletics',
+	    'blindn ess': 'blindness',
+	    'blind sight': 'blindsight',
+	    'bofh': 'both',
+	    'brea stplate': 'breastplate',
+	    'Can trips': 'Cantrips',
+	    'choos in g': 'choosing',
+	    'com muni cate': 'communicate',
+	    'Constituti on': 'Constitution',
+	    'creatu re': 'creature',
+	    'darkvi sion': 'darkvision',
+	    'dea ls': 'deals',
+	    'di sease': 'disease',
+	    'di stance': 'distance',
+	    'fa lls': 'falls',
+	    'fe et': 'feet',
+	    'exha les': 'exhales',
+	    'ex istence': 'existence',
+	    'lfthe': 'If the',
+	    'Ifthe': 'If the',
+	    'ifthe': 'if the',
+	    'lnt': 'Int',
+	    'magica lly': 'magically',
+	    'Med icine': 'Medicine',
+	    'minlilte': 'minute',
+	    'natura l': 'natural',
+	    'ofeach': 'of each',
+	    'ofthe': 'of the',
+	    'on\'e': 'one',
+	    'on ly': 'only',
+	    '0n': 'on',
+	    'pass ive': 'passive',
+	    'Perce ption': 'Perception',
+	    'radi us': 'radius',
+	    'ra nge': 'range',
+	    'rega ins': 'regains',
+	    'rest.oration': 'restoration',
+	    'savin g': 'saving',
+	    'si lvery': 'silvery',
+	    's lashing': 'slashing',
+	    'slas hing': 'slashing',
+	    'slash in g': 'slashing',
+	    'slash ing': 'slashing',
+	    'Spel/casting': 'Spellcasting',
+	    'successfu l': 'successful',
+	    'ta rget': 'target',
+	    ' Th e ': ' The ',
+	    't_urns': 'turns',
+	    'unti l': 'until',
+	    'withi n': 'within',
+	    'tohit': 'to hit',
+	    'At wi ll': 'At will',
+	    'per-son': 'person',
+	    'ab ility': 'ability',
+	    'spe ll': 'spell',
+	  };
+	  /* eslint-enable quote-props */
 
-	    const re = new RegExp(Object.keys(replaceObj).join('|'), 'g');
-	    statblock = statblock.replace(re, matched => replaceObj[matched]);
+	  const re = new RegExp(Object.keys(replaceObj).join('|'), 'g');
+	  statblock = statblock.replace(re, matched => replaceObj[matched]);
 
-	    statblock = statblock
-	        .replace(/,\./gi, ',')
-	        .replace(/:\./g, ':')
-	        .replace(/(\W)l(\W)/g, '$11$2')
-	        .replace(/\.([\w])/g, '. $1')
-	        .replace(/1</g, '*')
-	        .replace(/(\w)ii/g, '$1ll')
-	        .replace(/([a-z\/])1/g, '$1l')
-	        .replace(/([a-z])\/([a-z])/g, '$1l$2')
-	        .replace(/blindnessldeafness/g, 'blindness/deafness')
-	        .replace(/(^| )l /gm, '$11 ')
-	        .replace(/ft\s+\./gi, 'ft.')
-	        .replace(/ft\.\s,/gi, 'ft.,')
-	        .replace(/\bft\b(?!\.)/gi, 'ft.')
-	        .replace(/(\d+) ft\/(\d+) ft/gi, '$1/$2 ft')
-	        .replace(/lOd/g, '10d')
-	        .replace(/dl0/gi, 'd10')
-	        .replace(/dlO/gi, 'd10')
-	        .replace(/dl2/gi, 'd12')
-	        .replace(/S(\d+)d(\d+)/gi, '5$1d$2')
-	        .replace(/l(\d+)d(\d+)/gi, '1$1d$2')
-	        .replace(/ld(\d+)/gi, '1d$1')
-	        .replace(/l(\d+)d\s+(\d+)/gi, '1$1d$2')
-	        .replace(/(\d+)d\s+(\d+)/gi, '$1d$2')
-	        .replace(/(\d+)\s+d(\d+)/gi, '$1d$2')
-	        .replace(/(\d+)\s+d(\d+)/gi, '$1d$2')
-	        .replace(/(\d+)d(\d)\s(\d)/gi, '$1d$2$3')
-	        .replace(/(\d+)j(?:Day|day)/gi, '$1/Day')
-	        .replace(/(\d+)f(?:Day|day)/gi, '$1/Day')
-	        .replace(/(\d+)j(\d+)/gi, '$1/$2')
-	        .replace(/(\d+)f(\d+)/gi, '$1/$2')
-	        .replace(/{/gi, '(')
-	        .replace(/}/gi, ')')
-	        .replace(/(\d+)\((\d+) ft/gi, '$1/$2 ft');
+	  statblock = statblock
+	    .replace(/,\./gi, ',')
+	    .replace(/:\./g, ':')
+	    .replace(/(\W)l(\W)/g, '$11$2')
+	    .replace(/\.([\w])/g, '. $1')
+	    .replace(/1</g, '*')
+	    .replace(/(\w)ii/g, '$1ll')
+	    .replace(/([a-z\/])1/g, '$1l')
+	    .replace(/([a-z])\/([a-z])/g, '$1l$2')
+	    .replace(/(^| )l /gm, '$11 ')
+	    .replace(/ft\s\./gi, 'ft.')
+	    .replace(/ft\.\s,/gi, 'ft')
+	    .replace(/ft\./gi, 'ft')
+	    .replace(/(\d+) ft\/(\d+) ft/gi, '$1/$2 ft')
+	    .replace(/lOd/g, '10d')
+	    .replace(/dl0/gi, 'd10')
+	    .replace(/dlO/gi, 'd10')
+	    .replace(/dl2/gi, 'd12')
+	    .replace(/S(\d+)d(\d+)/gi, '5$1d$2')
+	    .replace(/l(\d+)d(\d+)/gi, '1$1d$2')
+	    .replace(/ld(\d+)/gi, '1d$1')
+	    .replace(/l(\d+)d\s+(\d+)/gi, '1$1d$2')
+	    .replace(/(\d+)d\s+(\d+)/gi, '$1d$2')
+	    .replace(/(\d+)\s+d(\d+)/gi, '$1d$2')
+	    .replace(/(\d+)\s+d(\d+)/gi, '$1d$2')
+	    .replace(/(\d+)d(\d)\s(\d)/gi, '$1d$2$3')
+	    .replace(/(\d+)j(?:Day|day)/gi, '$1/Day')
+	    .replace(/(\d+)f(?:Day|day)/gi, '$1/Day')
+	    .replace(/(\d+)j(\d+)/gi, '$1/$2')
+	    .replace(/(\d+)f(\d+)/gi, '$1/$2')
+	    .replace(/{/gi, '(')
+	    .replace(/}/gi, ')')
+	    .replace(/(\d+)\((\d+) ft/gi, '$1/$2 ft')
+	    .replace(/• /gi, '')
+	    .replace(/’/gi, '\'');
 
-	    logger.debug('Final stage cleaned statblock: $$$', statblock);
-	  }
+	  logger.debug('Final stage cleaned statblock: $$$', statblock);
 	  return statblock;
 	}
 
@@ -6808,7 +6574,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 25 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -6818,7 +6584,7 @@ var ShapedScripts =
 	_.each(_.range(4, 10), level => (levelStrings[level] = `${level}th level `));
 
 	const spellcastingHandler = {
-	  splitRegex: /(Cantrips|(?:1st|2nd|3rd|[4-9]th)\s*level)\.?\s*(?:\(([^\)]+)\))?\s*:/i,
+	  splitRegex: /(Cantrips|(?:1st|2nd|3rd|[4-9]th)\s*level)\.?\s*\(([^\)]+)\)\s*:/i,
 
 	  makeLevelDetailsObject(match) {
 	    const levelMatch = match[1].match(/\d/);
@@ -6836,16 +6602,21 @@ var ShapedScripts =
 	};
 
 	const innateHandler = {
-	  splitRegex: /(At\s?will|\d\s?\/\s?(?:day|week|rest)(?:\s?each)?)\s?:/i,
+	  splitRegex: /(At\s?will|\d\s?\/\s?day)(?:\s?each)?\s?:/i,
 
 	  makeLevelDetailsObject(match) {
+	    const usesMatch = match[1].match(/\d/);
 	    return {
-	      uses: match[1],
+	      uses: usesMatch ? parseInt(usesMatch[0], 10) : 0,
+	      slots: match[2],
 	    };
 	  },
 
 	  setLevelDetailsString(levelDetails) {
-	    levelDetails.newText = levelDetails.uses;
+	    levelDetails.newText = levelDetails.uses === 0 ? 'At will' : `${levelDetails.uses}/day`;
+	    if (levelDetails.spells.length > 1) {
+	      levelDetails.newText += ' each';
+	    }
 	    levelDetails.newText += ': ';
 	    levelDetails.newText += levelDetails.spells.join(', ');
 	  },

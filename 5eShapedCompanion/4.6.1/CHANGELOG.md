@@ -1,33 +1,3 @@
-<a name="4.9.0"></a>
-# [4.9.0](https://github.com/symposion/roll20-shaped-scripts/compare/4.8.0...4.9.0) (2016-10-14)
-
-
-### Features
-
-* **rests:** Regain spell points and warlock slots on rests ([eb52191](https://github.com/symposion/roll20-shaped-scripts/commit/eb52191)), closes [#131](https://github.com/symposion/roll20-shaped-scripts/issues/131)
-
-
-
-<a name="4.8.0"></a>
-# [4.8.0](https://github.com/symposion/roll20-shaped-scripts/compare/4.7.0...4.8.0) (2016-10-13)
-
-
-### Features
-
-* **json-import:** Internal improvements to JSON database loading ([7a62d0c](https://github.com/symposion/roll20-shaped-scripts/commit/7a62d0c)), closes [#248](https://github.com/symposion/roll20-shaped-scripts/issues/248)
-
-
-
-<a name="4.7.0"></a>
-# [4.7.0](https://github.com/symposion/roll20-shaped-scripts/compare/4.6.1...4.7.0) (2016-10-11)
-
-
-### Features
-
-* **config:** Add Hit Dice Output and Show Rests to "!shaped-config" ([d5ab14b](https://github.com/symposion/roll20-shaped-scripts/commit/d5ab14b)), closes [#246](https://github.com/symposion/roll20-shaped-scripts/issues/246)
-
-
-
 <a name="4.6.1"></a>
 ## [4.6.1](https://github.com/symposion/roll20-shaped-scripts/compare/4.6.0...4.6.1) (2016-10-03)
 

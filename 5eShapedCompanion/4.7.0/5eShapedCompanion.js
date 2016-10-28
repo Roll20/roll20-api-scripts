@@ -52,13 +52,12 @@ var ShapedScripts =
 	const Logger = __webpack_require__(5);
 	const EntityLookup = __webpack_require__(6);
 	const JSONValidator = __webpack_require__(8);
-	const EntityLookupResultReporter = __webpack_require__(9);
-	const Reporter = __webpack_require__(10);
-	const ShapedScripts = __webpack_require__(11);
-	const srdConverter = __webpack_require__(23);
-	const sanitise = __webpack_require__(24);
-	const mpp = __webpack_require__(25);
-
+	const Reporter = __webpack_require__(9);
+	const ShapedScripts = __webpack_require__(10);
+	const srdConverter = __webpack_require__(22);
+	const sanitise = __webpack_require__(23);
+	const mpp = __webpack_require__(24);
+	const _ = __webpack_require__(2);
 
 	const roll20 = new Roll20();
 	const myState = roll20.getState('ShapedScripts');
@@ -67,7 +66,6 @@ var ShapedScripts =
 	const reporter = new Reporter(roll20, 'Shaped Scripts');
 	const shaped = new ShapedScripts(logger, myState, roll20, parseModule.getParser(mmFormat, logger), el, reporter,
 	  srdConverter, sanitise, mpp);
-	const elrr = new EntityLookupResultReporter(logger, reporter);
 
 
 	roll20.logWrap = 'roll20';
@@ -94,10 +92,33 @@ var ShapedScripts =
 	        entities = JSON.parse(entities);
 	      }
 	      // Suppress excessive logging when adding big lists of entities
-	      const prevLogLevel = logger.getLogLevel();
-	      logger.setLogLevel(Logger.levels.INFO);
-	      el.addEntities(entities, elrr);
-	      logger.setLogLevel(prevLogLevel);
+	      const prevLogLevel = myState.config.logLevel;
+	      myState.config.logLevel = Logger.INFO;
+	      const result = el.addEntities(entities);
+	      myState.config.logLevel = prevLogLevel;
+	      const summary = _.mapObject(result, (resultObject, type) => {
+	        if (type === 'errors') {
+	          return resultObject.length;
+	        }
+
+	        return _.mapObject(resultObject, operationResultArray => operationResultArray.length);
+	      });
+	      logger.info('Summary of adding entities to the lookup: $$$', summary);
+	      logger.info('Details: $$$', result);
+	      if (!_.isEmpty(result.errors)) {
+	        const message = _.chain(result.errors)
+	          .groupBy('entity')
+	          .mapObject(entityErrors =>
+	            _.chain(entityErrors)
+	              .pluck('errors')
+	              .flatten()
+	              .value()
+	          )
+	          .map((errors, entityName) => `<li>${entityName}:<ul><li>${errors.join('</li><li>')}</li></ul></li>`)
+	          .value();
+
+	        reporter.reportError(`JSON import error:<ul>${message}</ul>`);
+	      }
 	    }
 	    catch (e) {
 	      reporter.reportError('JSON parse error, please see log for more information');
@@ -1404,19 +1425,6 @@ var ShapedScripts =
 	      return modToWrap;
 	    };
 
-	    this.getLogLevel = function getLogLevel() {
-	      return state[loggerName] || Logger.levels.INFO;
-	    };
-
-	    this.setLogLevel = function setLogLevel(level) {
-	      if (typeof level === 'string') {
-	        level = Logger.levels[level.toUpperCase()];
-	      }
-	      if (typeof level === 'number' && level >= Logger.levels.OFF && level <= Logger.levels.TRACE) {
-	        state[loggerName] = level;
-	      }
-	    };
-
 	    this.getLogTap = function getLogTap(level, messageString) {
 	      return _.partial(outputLog, level, messageString);
 	    };
@@ -1476,9 +1484,6 @@ var ShapedScripts =
 	    this.noWhiteSpaceEntities = {};
 	    this.entityProcessors = {};
 	    this.versionCheckers = {};
-	    this.processedEntityGroupNames = [];
-	    this.deferredEntityGroups = [];
-	    this.lastEntityLoadTime = 0;
 	  }
 
 
@@ -1489,125 +1494,76 @@ var ShapedScripts =
 	    this.versionCheckers[entityName] = versionChecker || _.constant(true);
 	  }
 
-	  addEntities(entitiesObject, resultReporter) {
-	    try {
-	      entitiesObject.name = entitiesObject.name || 'unnamed';
-	      const results = {
-	        errors: [],
-	        entityGroupName: entitiesObject.name,
-	      };
+	  addEntities(entitiesObject) {
+	    const results = {
+	      errors: [],
+	    };
 
-	      if (entitiesObject.dependencies && !_.isEmpty(entitiesObject.dependencies)) {
-	        if (typeof entitiesObject.dependencies === 'string') {
-	          entitiesObject.dependencies = entitiesObject.dependencies.split(/,/)
-	              .map(Function.prototype.call, String.prototype.trim);
-	        }
-	        if (!_.isEmpty(_.difference(entitiesObject.dependencies, this.processedEntityGroupNames))) {
-	          this.deferredEntityGroups.push(entitiesObject);
-	          _.delay(this.checkForUnresolvedDependencies.bind(this), 10000, resultReporter);
+
+	    _.chain(entitiesObject)
+	      .omit('version', 'patch')
+	      .each((entityArray, type) => {
+	        results[type] = {
+	          withErrors: [],
+	          skipped: [],
+	          deleted: [],
+	          patched: [],
+	          added: [],
+	        };
+
+	        if (!this.entities[type]) {
+	          results.errors.push({ entity: 'general', errors: [`Unrecognised entity type ${type}`] });
 	          return;
 	        }
-	      }
 
-	      _.chain(entitiesObject)
-	          .omit('version', 'patch', 'name', 'dependencies')
-	          .each((entityArray, type) => {
-	            results[type] = {
-	              withErrors: [],
-	              skipped: [],
-	              deleted: [],
-	              patched: [],
-	              added: [],
-	            };
+	        if (!this.versionCheckers[type](entitiesObject.version, results.errors)) {
+	          return;
+	        }
 
-	            if (!this.entities[type]) {
-	              results.errors.push({ entity: 'general', errors: [`Unrecognised entity type ${type}`] });
-	              return;
+
+	        _.each(entityArray, (entity) => {
+	          let key = entity.name.toLowerCase();
+	          let operation = this.entities[type][key] ? (entitiesObject.patch ? 'patched' : 'skipped') : 'added';
+
+	          if (operation === 'patched') {
+	            entity = patchEntity(this.entities[type][key], entity);
+	            if (!entity) {
+	              operation = 'deleted';
+	              delete this.entities[type][key];
+	              delete this.noWhiteSpaceEntities[type][key.replace(/\s+/g, '')];
 	            }
+	          }
 
-	            if (!this.versionCheckers[type](entitiesObject.version, results.errors)) {
-	              return;
-	            }
-
-
-	            _.each(entityArray, (entity) => {
-	              let key = entity.name.toLowerCase();
-	              let operation = this.entities[type][key] ? (entitiesObject.patch ? 'patched' : 'skipped') : 'added';
-
-	              if (operation === 'patched') {
-	                entity = patchEntity(this.entities[type][key], entity);
-	                if (!entity) {
-	                  operation = 'deleted';
-	                  delete this.entities[type][key];
-	                  delete this.noWhiteSpaceEntities[type][key.replace(/\s+/g, '')];
-	                }
-	              }
-
-	              if (_.contains(['patched', 'added'], operation)) {
-	                const processed = _.reduce(this.entityProcessors[type], utils.executor, {
-	                  entity,
-	                  type,
-	                  version: entitiesObject.version,
-	                  errors: [],
-	                });
-	                if (!_.isEmpty(processed.errors)) {
-	                  processed.entity = processed.entity.name;
-	                  results.errors.push(processed);
-	                  operation = 'withErrors';
-	                }
-	                else {
-	                  if (processed.entity.name.toLowerCase() !== key) {
-	                    results[type].deleted.push(key);
-	                    delete this.entities[type][key];
-	                    delete this.noWhiteSpaceEntities[type][key.replace(/\s+/g, '')];
-	                    key = processed.entity.name.toLowerCase();
-	                  }
-	                  this.entities[type][key] = processed.entity;
-	                  this.noWhiteSpaceEntities[type][key.replace(/\s+/g, '')] = processed.entity;
-	                }
-	              }
-
-
-	              results[type][operation].push(key);
+	          if (_.contains(['patched', 'added'], operation)) {
+	            const processed = _.reduce(this.entityProcessors[type], utils.executor, {
+	              entity,
+	              type,
+	              version: entitiesObject.version,
+	              errors: [],
 	            });
-	          });
+	            if (!_.isEmpty(processed.errors)) {
+	              processed.entity = processed.entity.name;
+	              results.errors.push(processed);
+	              operation = 'withErrors';
+	            }
+	            else {
+	              if (processed.entity.name.toLowerCase() !== key) {
+	                results[type].deleted.push(key);
+	                delete this.entities[type][key];
+	                delete this.noWhiteSpaceEntities[type][key.replace(/\s+/g, '')];
+	                key = processed.entity.name.toLowerCase();
+	              }
+	              this.entities[type][key] = processed.entity;
+	              this.noWhiteSpaceEntities[type][key.replace(/\s+/g, '')] = processed.entity;
+	            }
+	          }
 
-	      this.processedEntityGroupNames.push(entitiesObject.name);
-	      if (resultReporter) {
-	        resultReporter.report(results);
-	      }
-	      this.deferredEntityGroups = _.without(this.deferredEntityGroups, entitiesObject);
-	      this.checkForUnresolvedDependencies(resultReporter);
-	    }
-	    finally {
-	      this.lastEntityLoadTime = Date.now();
-	    }
-	  }
 
-	  checkForUnresolvedDependencies(resultReporter) {
-	    this.deferredEntityGroups.forEach((deferred) => {
-	      if (_.isEmpty(_.difference(deferred.dependencies, this.processedEntityGroupNames))) {
-	        this.addEntities(deferred, resultReporter);
-	      }
-	    });
-
-	    if (Date.now() - this.lastEntityLoadTime >= 10000) {
-	      if (resultReporter) {
-	        this.deferredEntityGroups.forEach((deferred) => {
-	          const missingDeps = _.difference(deferred.dependencies, this.processedEntityGroupNames);
-	          resultReporter.report({
-	            errors: [{
-	              entity: 'Missing dependencies',
-	              errors: [`Entity group is missing dependencies [${missingDeps.join(', ')}]`],
-	            }],
-	            entityGroupName: deferred.name,
-	          });
+	          results[type][operation].push(key);
 	        });
-	      }
-	    }
-	    else {
-	      _.delay(this.checkForUnresolvedDependencies.bind(this), 10000, resultReporter);
-	    }
+	      });
+
+	    return results;
 	  }
 
 	  findEntity(type, name, tryWithoutWhitespace) {
@@ -1626,9 +1582,9 @@ var ShapedScripts =
 	    function containsSomeIgnoreCase(array, testValues) {
 	      testValues = (_.isArray(testValues) ? testValues : [testValues]).map(s => s.toLowerCase());
 	      return !!_.chain(array)
-	          .map(s => s.toLowerCase())
-	          .intersection(testValues)
-	          .value().length;
+	        .map(s => s.toLowerCase())
+	        .intersection(testValues)
+	        .value().length;
 	    }
 
 	    return _.reduce(criteria, (results, criterionValue, criterionField) => {
@@ -1703,20 +1659,20 @@ var ShapedScripts =
 	    return function spellUpdater(spellInfo) {
 	      const spell = spellInfo.entity;
 	      _.chain(self.entities.monsters)
-	          .pluck('spells')
-	          .compact()
-	          .each((spellArray) => {
-	            const spellIndex = _.findIndex(spellArray, (monsterSpell) => {
-	              if (typeof monsterSpell === 'string') {
-	                return monsterSpell.toLowerCase() === spell.name.toLowerCase();
-	              }
-
-	              return monsterSpell !== spell && monsterSpell.name.toLowerCase() === spell.name.toLowerCase();
-	            });
-	            if (spellIndex !== -1) {
-	              spellArray[spellIndex] = spell;
+	        .pluck('spells')
+	        .compact()
+	        .each((spellArray) => {
+	          const spellIndex = _.findIndex(spellArray, (monsterSpell) => {
+	            if (typeof monsterSpell === 'string') {
+	              return monsterSpell.toLowerCase() === spell.name.toLowerCase();
 	            }
+
+	            return monsterSpell !== spell && monsterSpell.name.toLowerCase() === spell.name.toLowerCase();
 	          });
+	          if (spellIndex !== -1) {
+	            spellArray[spellIndex] = spell;
+	          }
+	        });
 	      return spellInfo;
 	    };
 	  }
@@ -2213,45 +2169,6 @@ var ShapedScripts =
 
 /***/ },
 /* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	const _ = __webpack_require__(2);
-
-	module.exports = class EntityLookupResultReporter {
-
-	  constructor(logger, reporter) {
-	    this.report = function report(result) {
-	      const summary = _.mapObject(result, (resultObject, type) => {
-	        if (type === 'errors') {
-	          return resultObject.length;
-	        }
-
-	        return _.mapObject(resultObject, operationResultArray => operationResultArray.length);
-	      });
-	      logger.info('Summary of adding $$$ entity group to the lookup: $$$', result.entityGroupName, summary);
-	      logger.debug('Details: $$$', result);
-	      if (!_.isEmpty(result.errors)) {
-	        const message = _.chain(result.errors)
-	            .groupBy('entity')
-	            .mapObject(entityErrors =>
-	                _.chain(entityErrors)
-	                    .pluck('errors')
-	                    .flatten()
-	                    .value()
-	            )
-	            .map((errors, entityName) => `<li>${entityName}:<ul><li>${errors.join('</li><li>')}</li></ul></li>`)
-	            .value();
-
-	        reporter.reportError(`JSON import error for ${result.entityGroupName} entity group:<ul>${message}</ul>`);
-	      }
-	    };
-	  }
-	};
-
-
-/***/ },
-/* 10 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -2304,25 +2221,25 @@ var ShapedScripts =
 
 
 /***/ },
-/* 11 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* globals unescape */
 	'use strict';
 	const _ = __webpack_require__(2);
 	const parseModule = __webpack_require__(3);
-	const makeCommandProc = __webpack_require__(12);
+	const makeCommandProc = __webpack_require__(11);
 	const utils = __webpack_require__(7);
-	const UserError = __webpack_require__(13);
-	const Migrator = __webpack_require__(15);
-	const ShapedConfig = __webpack_require__(16);
+	const UserError = __webpack_require__(12);
+	const Migrator = __webpack_require__(14);
+	const ShapedConfig = __webpack_require__(15);
 	// Modules
-	const AbilityMaker = __webpack_require__(17);
-	const ConfigUI = __webpack_require__(18);
-	const AdvantageTracker = __webpack_require__(19);
-	const RestManager = __webpack_require__(20);
-	const TraitManager = __webpack_require__(21);
-	const AmmoManager = __webpack_require__(22);
+	const AbilityMaker = __webpack_require__(16);
+	const ConfigUI = __webpack_require__(17);
+	const AdvantageTracker = __webpack_require__(18);
+	const RestManager = __webpack_require__(19);
+	const TraitManager = __webpack_require__(20);
+	const AmmoManager = __webpack_require__(21);
 	/**
 	 * @typedef {Object} ChatMessage
 	 * @property {string} content
@@ -3246,7 +3163,7 @@ var ShapedScripts =
 	  };
 
 	  this.checkInstall = function checkInstall() {
-	    logger.info('-=> ShapedScripts v4.9.0 <=-');
+	    logger.info('-=> ShapedScripts v4.7.0 <=-');
 	    Migrator.migrateShapedConfig(myState, logger);
 	  };
 
@@ -3323,14 +3240,14 @@ var ShapedScripts =
 
 
 /***/ },
-/* 12 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	const _ = __webpack_require__(2);
 	const utils = __webpack_require__(7);
-	const UserError = __webpack_require__(13);
-	const ShapedModule = __webpack_require__(14);
+	const UserError = __webpack_require__(12);
+	const ShapedModule = __webpack_require__(13);
 
 
 	function getParser(optionString, validator) {
@@ -3624,7 +3541,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 13 */
+/* 12 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -3641,7 +3558,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 14 */
+/* 13 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -3679,7 +3596,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 15 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4081,7 +3998,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 16 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4542,14 +4459,14 @@ var ShapedScripts =
 
 
 /***/ },
-/* 17 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	const _ = __webpack_require__(2);
 	const utils = __webpack_require__(7);
-	const ShapedModule = __webpack_require__(14);
-	const ShapedConfig = __webpack_require__(16);
+	const ShapedModule = __webpack_require__(13);
+	const ShapedConfig = __webpack_require__(15);
 
 	class MacroMaker {
 	  constructor(roll20) {
@@ -4819,14 +4736,14 @@ var ShapedScripts =
 
 
 /***/ },
-/* 18 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	const _ = __webpack_require__(2);
 	const utils = __webpack_require__(7);
-	const ShapedModule = __webpack_require__(14);
-	const ShapedConfig = __webpack_require__(16);
+	const ShapedModule = __webpack_require__(13);
+	const ShapedConfig = __webpack_require__(15);
 
 	class ConfigUi extends ShapedModule {
 
@@ -5679,14 +5596,14 @@ var ShapedScripts =
 
 
 /***/ },
-/* 19 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	const _ = __webpack_require__(2);
 	const utils = __webpack_require__(7);
-	const ShapedModule = __webpack_require__(14);
-	const ShapedConfig = __webpack_require__(16);
+	const ShapedModule = __webpack_require__(13);
+	const ShapedConfig = __webpack_require__(15);
 
 	const rollOptions = {
 	  normal: {
@@ -5909,27 +5826,27 @@ var ShapedScripts =
 
 
 /***/ },
-/* 20 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	const _ = __webpack_require__(2);
-	const ShapedModule = __webpack_require__(14);
-	const ShapedConfig = __webpack_require__(16);
+	const ShapedModule = __webpack_require__(13);
+	const ShapedConfig = __webpack_require__(15);
 
 	class RestManager extends ShapedModule {
 
 	  addCommands(commandProcessor) {
 	    return commandProcessor.addCommand('rest', this.handleRest.bind(this), false)
-	        .option('long', ShapedConfig.booleanValidator)
-	        .option('short', ShapedConfig.booleanValidator)
-	        .option('id', ShapedConfig.getCharacterValidator(this.roll20), false)
-	        .withSelection({
-	          character: {
-	            min: 0,
-	            max: Infinity,
-	          },
-	        });
+	      .option('long', ShapedConfig.booleanValidator)
+	      .option('short', ShapedConfig.booleanValidator)
+	      .option('id', ShapedConfig.getCharacterValidator(this.roll20), false)
+	      .withSelection({
+	        character: {
+	          min: 0,
+	          max: Infinity,
+	        },
+	      });
 	  }
 
 	  handleRest(options) {
@@ -5965,9 +5882,8 @@ var ShapedScripts =
 	      this.logger.debug(`Processing short rest for ${charName}:`);
 
 	      const traits = this.rechargeTraits(charId, 'short');
-	      const warlockSlots = this.regainWarlockSpellSlots(charId);
 
-	      const msg = this.buildRestMessage('Short Rest', charName, charId, traits, warlockSlots);
+	      const msg = this.buildRestMessage('Short Rest', charName, charId, traits);
 
 	      this.roll20.sendChat(`character|${charId}`, msg, { noarchive: true });
 	    });
@@ -5993,12 +5909,9 @@ var ShapedScripts =
 	      }
 	      const hd = this.regainHitDie(charId);
 	      const slots = this.regainSpellSlots(charId);
-	      const spellPoints = this.regainSpellPoints(charId);
 	      const exhaus = this.reduceExhaustion(charId);
-	      const warlockSlots = this.regainWarlockSpellSlots(charId);
 
-	      const msg = this.buildRestMessage('Long Rest', charName, charId, traits, warlockSlots, healed, hd, slots, exhaus,
-	          spellPoints);
+	      const msg = this.buildRestMessage('Long Rest', charName, charId, traits, healed, hd, slots, exhaus);
 
 	      this.roll20.sendChat(`character|${charId}`, msg, { noarchive: true });
 	    });
@@ -6014,11 +5927,8 @@ var ShapedScripts =
 	   * @param {Object[]} hdRegained - Array of objects each representing a die type and the number regained
 	   * @param {boolean} spellSlots - Whether or not spell slots were recharged
 	   * @param {boolean} exhaustion - Whether or not a level of exhaustoin was removed
-	   * @param {boolean} spellPoints - Whether or not spell points were recharged
-	   * @param {boolean} warlockSpellSlots - Whether or not warlock spell slots were recharged
 	   */
-	  buildRestMessage(restType, charName, charId, traitNames, warlockSpellSlots, healed, hdRegained, spellSlots,
-	      exhaustion, spellPoints) {
+	  buildRestMessage(restType, charName, charId, traitNames, healed, hdRegained, spellSlots, exhaustion) {
 	    let msg = `&{template:5e-shaped} {{title=${restType}}} {{character_name=${charName}}}`;
 
 	    if (this.roll20.getAttrByName(charId, 'show_character_name') === '@{show_character_name_yes}') {
@@ -6033,24 +5943,10 @@ var ShapedScripts =
 	      });
 	    }
 
-	    if (traitNames) {
-	      msg += `{{Traits Recharged=${traitNames.join(', ')}}}`;
-	    }
-	    if (healed > 0) {
-	      msg += `{{heal=[[${healed}]]}}`;
-	    }
-	    if (spellSlots) {
-	      msg += '{{Spell Slots Regained=&nbsp;}}';
-	    }
-	    if (exhaustion) {
-	      msg += '{{text_top=Removed 1 Level Of Exhaustion}}';
-	    }
-	    if (spellPoints) {
-	      msg += '{{Spell Points Regained=&nbsp;}}';
-	    }
-	    if (warlockSpellSlots) {
-	      msg += '{{Warlock Spell Slots Regained=&nbsp;}}';
-	    }
+	    if (traitNames) { msg += `{{Traits Recharged=${traitNames.join(', ')}}}`; }
+	    if (healed > 0) { msg += `{{heal=[[${healed}]]}}`; }
+	    if (spellSlots) { msg += '{{text_center=Spell Slots Regained}}'; }
+	    if (exhaustion) { msg += '{{text_top=Removed 1 Level Of Exhaustion}}'; }
 
 	    return msg;
 	  }
@@ -6065,26 +5961,26 @@ var ShapedScripts =
 	    const traitNames = [];
 
 	    _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
-	        .map(attribute => (attribute.get('name').match(/^repeating_trait_([^_]+)_recharge$/) || [])[1])
-	        .reject(_.isUndefined)
-	        .uniq()
-	        .each((attId) => {
-	          const traitPre = `repeating_trait_${attId}`;
-	          const rechargeAtt = this.roll20.getAttrByName(charId, `${traitPre}_recharge`);
-	          if (rechargeAtt.toLowerCase().indexOf(restType) !== -1) {
-	            const attName = this.roll20.getAttrByName(charId, `${traitPre}_name`);
-	            this.logger.debug(`Recharging '${attName}'`);
-	            traitNames.push(attName);
-	            const max = this.roll20.getAttrByName(charId, `${traitPre}_uses`, 'max');
-	            if (max === undefined) {
-	              this.logger.error(`Tried to recharge the trait '${attName}' for character with id ${charId}, ` +
-	                  'but there were no uses defined.');
-	            }
-	            else {
-	              this.roll20.setAttrByName(charId, `${traitPre}_uses`, max);
-	            }
+	      .map(attribute => (attribute.get('name').match(/^repeating_trait_([^_]+)_recharge$/) || [])[1])
+	      .reject(_.isUndefined)
+	      .uniq()
+	      .each((attId) => {
+	        const traitPre = `repeating_trait_${attId}`;
+	        const rechargeAtt = this.roll20.getAttrByName(charId, `${traitPre}_recharge`);
+	        if (rechargeAtt.toLowerCase().indexOf(restType) !== -1) {
+	          const attName = this.roll20.getAttrByName(charId, `${traitPre}_name`);
+	          this.logger.debug(`Recharging '${attName}'`);
+	          traitNames.push(attName);
+	          const max = this.roll20.getAttrByName(charId, `${traitPre}_uses`, 'max');
+	          if (max === undefined) {
+	            this.logger.error(`Tried to recharge the trait '${attName}' for character with id ${charId}, ` +
+	              'but there were no uses defined.');
 	          }
-	        });
+	          else {
+	            this.roll20.setAttrByName(charId, `${traitPre}_uses`, max);
+	          }
+	        }
+	      });
 
 	    return traitNames;
 	  }
@@ -6118,26 +6014,26 @@ var ShapedScripts =
 	    const hitDieRegained = [];
 	    this.logger.debug('Regaining Hit Die');
 	    _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
-	        .filter(attribute => (attribute.get('name').match(/^hd_d\d{1,2}$/)))
-	        .uniq()
-	        .each((hdAttr) => {
-	          const max = parseInt(hdAttr.get('max'), 10);
-	          if (max > 0) {
-	            const oldCurrent = parseInt(hdAttr.get('current') || 0, 10);
-	            let newCurrent = oldCurrent;
-	            let regained = max === 1 ? 1 : Math.floor(max / 2);
-	            if (this.myState.config.variants.rests.longNoHpFullHd) {
-	              regained = max - oldCurrent;
-	            }
-	            newCurrent += regained;
-	            newCurrent = newCurrent > max ? max : newCurrent;
-	            this.roll20.setAttrByName(charId, hdAttr.get('name'), newCurrent);
-	            hitDieRegained.push({
-	              die: hdAttr.get('name').replace(/hd_/, ''),
-	              quant: newCurrent - oldCurrent,
-	            });
+	      .filter(attribute => (attribute.get('name').match(/^hd_d\d{1,2}$/)))
+	      .uniq()
+	      .each((hdAttr) => {
+	        const max = parseInt(hdAttr.get('max'), 10);
+	        if (max > 0) {
+	          const oldCurrent = parseInt(hdAttr.get('current') || 0, 10);
+	          let newCurrent = oldCurrent;
+	          let regained = max === 1 ? 1 : Math.floor(max / 2);
+	          if (this.myState.config.variants.rests.longNoHpFullHd) {
+	            regained = max - oldCurrent;
 	          }
-	        });
+	          newCurrent += regained;
+	          newCurrent = newCurrent > max ? max : newCurrent;
+	          this.roll20.setAttrByName(charId, hdAttr.get('name'), newCurrent);
+	          hitDieRegained.push({
+	            die: hdAttr.get('name').replace(/hd_/, ''),
+	            quant: newCurrent - oldCurrent,
+	          });
+	        }
+	      });
 
 	    return hitDieRegained;
 	  }
@@ -6152,49 +6048,17 @@ var ShapedScripts =
 
 	    this.logger.debug('Regaining Spell Slots');
 	    _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
-	        .filter(attribute => (attribute.get('name').match(/^spell_slots_l\d$/)))
-	        .uniq()
-	        .each((slotAttr) => {
-	          const max = parseInt(slotAttr.get('max'), 10);
-	          if (max > 0) {
-	            this.roll20.setAttrByName(charId, slotAttr.get('name'), max);
-	            slotsFound = true;
-	          }
-	        });
+	      .filter(attribute => (attribute.get('name').match(/^spell_slots_l\d$/)))
+	      .uniq()
+	      .each((slotAttr) => {
+	        const max = parseInt(slotAttr.get('max'), 10);
+	        if (max > 0) {
+	          this.roll20.setAttrByName(charId, slotAttr.get('name'), max);
+	          slotsFound = true;
+	        }
+	      });
 
 	    return slotsFound;
-	  }
-
-	  /**
-	   * Resets spell points of the specified character to maximum value
-	   * @param {string} charId - the Roll20 character ID
-	   * @returns {boolean} - true if spell points were recharged; false otherwise
-	   */
-	  regainSpellPoints(charId) {
-	    this.logger.debug('Regaining Spell Points');
-	    const spellPointsAttr = this.roll20.getAttrObjectByName(charId, 'spell_points');
-	    const spellPointsMax = spellPointsAttr ? parseInt(spellPointsAttr.get('max'), 10) : 0;
-	    if (spellPointsMax) {
-	      spellPointsAttr.set('current', spellPointsMax);
-	      return true;
-	    }
-	    return false;
-	  }
-
-	  /**
-	   * Resets warlock spell slots of the specified character to maximum value
-	   * @param {string} charId - the Roll20 character ID
-	   * @returns {boolean} - true if any spell slots were recharged; false otherwise
-	   */
-	  regainWarlockSpellSlots(charId) {
-	    this.logger.debug('Regaining Warlock Spell slots');
-	    const warlockSlotsAttr = this.roll20.getAttrObjectByName(charId, 'warlock_spell_slots');
-	    const slotsMax = warlockSlotsAttr ? parseInt(warlockSlotsAttr.get('max'), 10) : 0;
-	    if (slotsMax) {
-	      warlockSlotsAttr.set('current', slotsMax);
-	      return true;
-	    }
-	    return false;
 	  }
 
 	  /**
@@ -6213,19 +6077,18 @@ var ShapedScripts =
 
 	    return false;
 	  }
-
 	}
 
 	module.exports = RestManager;
 
 
 /***/ },
-/* 21 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	const _ = __webpack_require__(2);
-	const ShapedModule = __webpack_require__(14);
+	const ShapedModule = __webpack_require__(13);
 
 	class TraitManager extends ShapedModule {
 
@@ -6264,12 +6127,12 @@ var ShapedScripts =
 
 
 /***/ },
-/* 22 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	const _ = __webpack_require__(2);
-	const ShapedModule = __webpack_require__(14);
+	const ShapedModule = __webpack_require__(13);
 
 	class AmmoManager extends ShapedModule {
 
@@ -6314,7 +6177,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 23 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -6630,7 +6493,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 24 */
+/* 23 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -6808,7 +6671,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 25 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
