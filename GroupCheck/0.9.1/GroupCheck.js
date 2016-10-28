@@ -398,14 +398,14 @@ var groupCheck = groupCheck || (function() {
 			else {
 				displayName = charName;
 			}
-			computedFormula = checkFormula.replace(/\%(\S.*?)\%/g,
-				'@{' + charName + '|' + '$1' + '}');
+			computedFormula = checkFormula.join(charName);
 		}
-
 		else if (opts.fallback) {
 			displayName = token.get('name');
-			computedFormula = checkFormula.replace(/\%(\S.*?)\%/,opts.fallback)
-				.replace(/\%(\S.*?)\%/g,'0');
+			computedFormula = checkFormula
+				.join('INSERT_NAME')
+				.replace(/@\{INSERT_NAME\|.*?\}/,opts.fallback)
+				.replace(/@\{INSERT_NAME\|.*?\}/g,'0');
 		}
 		else {
 			return '';
@@ -538,7 +538,9 @@ var groupCheck = groupCheck || (function() {
 		}
 		// Continue with options processing
 		if (checkCmd) {
-			checkFormula = state.groupCheck.checkList[checkCmd].formula;
+			checkFormula = state.groupCheck.checkList[checkCmd].formula
+				.replace(/\%(\S.*?)\%/g,'@{INSERT_NAME|$1}')
+				.split('INSERT_NAME');
 			checkName = state.groupCheck.checkList[checkCmd].name;
 		}
 		_.each(optsData.meta.boolNeg, function (name,index) {
@@ -562,7 +564,11 @@ var groupCheck = groupCheck || (function() {
 				return;
 			}
 			checkName = kv.shift();
-			checkFormula = kv.join().replace(/\{\{/g,'[[').replace(/\}\}/g,']]');
+			checkFormula = kv.join()
+				.replace(/\{\{/g,'[[')
+				.replace(/\}\}/g,']]')
+				.replace(/\%(\S.*?)\%/g, '@{INSERT_NAME|$1}')
+				.split('INSERT_NAME');
 		}
 
 		// Plug in defaults for unspecified options
@@ -579,11 +585,12 @@ var groupCheck = groupCheck || (function() {
 		opts.rollOption = (opts.ro === 'rollsetting') ? getRollOption : ( (charid) => opts.ro);
 
 		if (opts.globalmod) {
-			if (checkFormula.search(/\]\](?=$)/) !== -1) {
-				checkFormula = checkFormula.replace(/\]\](?=$)/, ' + ' + opts.globalmod + '[global modifier]]]');
+			if (checkFormula[checkFormula.length -1].search(/\]\](?=$)/) !== -1) {
+				checkFormula[checkFormula.length -1] = checkFormula[checkFormula.length -1]
+					.replace(/\]\](?=$)/, ' + ' + opts.globalmod + '[global modifier]]]');
 			}
 			else {
-				checkFormula += ` + ${opts.globalmod}[global]`;
+				checkFormula[checkFormula.length -1] += ` + ${opts.globalmod}[global]`;
 			}
 		}
 
