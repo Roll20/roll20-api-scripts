@@ -1,5 +1,5 @@
 // ChatSetAttr version 1.0.2
-// Last Updated: 2016-10-18
+// Last Updated: 2016-10-28
 // A script to create, modify, or delete character attributes from the chat area or macros.
 // If you don't like my choices for --replace, you can edit the replacers variable at your own peril to change them.
 
@@ -215,7 +215,7 @@ var chatSetAttr = chatSetAttr || (function() {
 			let attr = attrs[attrName];
 
 			if (reset) {
-				attrNew = _.extend({}, {'current' : attr.get('max')});
+				attrNew = {'current' : attr.get('max')};
 			}
 			else if (mod) {
 				attrNew = {};
@@ -381,11 +381,11 @@ var chatSetAttr = chatSetAttr || (function() {
 			.join(', ');
 		let output = '/w "'+ who;
 		output += '" <div style="border: 1px solid black; background-color: #FFFFFF; padding: 3px 3px;">';
-		if (mod) {
-			output += `<p>Modifying ${_.keys(setting).join(', ')} by ${values} `;
-		}
-		else if (reset) {
+		if (reset) {
 			output += `<p>Resetting ${_.keys(setting).join(', ')} to their maximum `;
+		}
+		else if (mod) {
+			output += `<p>Modifying ${_.keys(setting).join(', ')} by ${values} `;
 		}
 		else {
 			output += `<p>Setting ${_.keys(setting).join(', ')} to ${values} `;
@@ -414,7 +414,11 @@ var chatSetAttr = chatSetAttr || (function() {
 
 	// Main function, called after chat message input
 	handleInput = function(msg) {
-		if (msg.type === 'api' && msg.content.search(/^!(reset|set|del)attr\b/) !== -1) {
+		if (msg.type !== 'api') {
+			return;
+		}
+		let mode = msg.content.match(/^!(reset|set|del)attr\b/);
+		if (mode) {
 			// Parsing input
 			let charIDList;
 			const hasValue = ['charid','name'],
@@ -422,8 +426,8 @@ var chatSetAttr = chatSetAttr || (function() {
 				who = getPlayerName(msg.who),
 				opts = parseOpts(processInlinerolls(msg),hasValue),
 				setting = parseAttributes(_.chain(opts).omit(optsArray).keys().value(),opts.replace),
-				deleteMode = (msg.content.search(/^!delattr\b/) !== -1),
-				resetMode = (msg.content.search(/^!resetattr\b/) !== -1);
+				deleteMode = (mode[1] === 'del'),
+				resetMode = (mode[1] === 'reset');
 
 			if (_.isEmpty(setting)) {
 				handleError(who, 'No attributes supplied.');
