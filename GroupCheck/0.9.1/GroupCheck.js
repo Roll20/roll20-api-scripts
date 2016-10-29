@@ -151,17 +151,23 @@ var groupCheck = groupCheck || (function() {
 		}
 	},
 
-	defaultOptions = {
-		'die_adv': '2d20kh1',
-		'die_dis': '2d20kl1',
-		'ro': 'roll1',
-		'whisper': false,
-		'usetokenname': true,
-		'hideformula': false,
-		'showpicture': true
+	optsData = {
+		list : {
+			ro : {type: 'string', def: 'roll1', admissible: ['roll1', 'roll2', 'adv', 'dis', 'rollsetting']},
+			multi : {type: 'string', local: true},
+			fallback : {type: 'string'},
+			custom : {type: 'string', local: true},
+			die_adv : {type: 'string', def: '2d20kh1'},
+			die_dis : {type: 'string', def: '2d20kl1'},
+			globalmod : {type: 'string'},
+			whisper : {type: 'bool', def: false, negate : 'public'},
+			hideformula : {type: 'bool', def: false, negate : 'showformula'},
+			usetokenname : {type: 'bool', def: true, negate : 'usecharname'},
+			showpicture : {type: 'bool', def: true, negate : 'hidepicture'},
+			help : {type : 'other'}
+		},
+		meta : {}
 	},
-
-	admissibleRollOptions = ['roll1', 'roll2', 'adv', 'dis', 'rollsetting'],
 
 	// Setup
 	checkInstall = function() {
@@ -171,13 +177,21 @@ var groupCheck = groupCheck || (function() {
 		else if (state.groupCheck.version < stateVersion) {
 			updateState();
 		}
+		// Build metadata for available options
+		optsData.meta = {
+			allopts : _.keys(optsData.list),
+			str : _.chain(optsData.list).pick(v => v.type === 'string').keys().value(),
+			glob :  _.chain(optsData.list).omit(v => v.local).keys().value(),
+			bool : _.chain(optsData.list).pick(v => v.type === 'bool').keys().value(),
+			boolNeg : _.chain(optsData.list).pick(v => v.type === 'bool').pluck('negate').value()
+		};
 		log('-=> groupCheck v'+version+' <=-');
 	},
 
 	initializeState = function() {
 		state.groupCheck = {
 			'checkList' : {},
-			'options' : defaultOptions,
+			'options' : _.chain(optsData.list).pick(v => _.has(v,'def')).mapObject(v => v.def).value(),
 			'version' : stateVersion
 		};
 		log('-=> groupCheck initialized with default settings!<=-');
@@ -360,7 +374,7 @@ var groupCheck = groupCheck || (function() {
 	},
 
 	// This is where we do the work
-	addTokenToOutput = function(token, checkFormula, opts, rollBoundary) {
+	addTokenToOutput = function(token, checkFormula, opts) {
 		let displayName, computedFormula, rollAppendix = '', charName, tokenPic;
 		const characterId = token.get('represents'),
 			ro = opts.rollOption(characterId),
@@ -374,14 +388,14 @@ var groupCheck = groupCheck || (function() {
 			else {
 				displayName = charName;
 			}
-			computedFormula = checkFormula.replace(/\%(\S.*?)\%/g,
-				'@{' + charName + '|' + '$1' + '}');
-
+			computedFormula = checkFormula.join(charName);
 		}
 		else if (opts.fallback) {
 			displayName = token.get('name');
-			computedFormula = checkFormula.replace(/\%(\S.*?)\%/,opts.fallback)
-				.replace(/\%(\S.*?)\%/g,'0');
+			computedFormula = checkFormula
+				.join('INSERT_NAME')
+				.replace(/@\{INSERT_NAME\|.*?\}/,opts.fallback)
+				.replace(/@\{INSERT_NAME\|.*?\}/g,'0');
 		}
 		else {
 			return '';
@@ -399,18 +413,11 @@ var groupCheck = groupCheck || (function() {
 				break;
 		}
 
-		if (opts.globalmod) {
-				computedFormula += ` + ${opts.globalmod}[global modifier]`;
-		}
-
-		return outputStyle.makeRow(tokenPic, displayName, ro, computedFormula, rollBoundary, rollAppendix);
+		return outputStyle.makeRow(tokenPic, displayName, ro, computedFormula, opts.rollBoundary, rollAppendix);
 	},
 
 	handleConfig = function (msg) {
 		const hasValueConfig = ['import','add','delete','set'];
-		const valueOptions = ['fallback','die_adv','die_dis','globalmod'];
-		const booleanOptions = ['whisper', 'usetokenname', 'hideformula', 'showpicture'];
-		const booleanOptionsNegative = ['public', 'usecharname', 'showformula', 'hidepicture'];
 		let opts = processOpts(recoverInlinerollFormulae(msg), hasValueConfig);
 		let who = getPlayerName(msg.who), output;
 
@@ -458,12 +465,12 @@ var groupCheck = groupCheck || (function() {
 		}
 		else if (opts.set) {
 			const kv = opts.set.split(/\s(.+)/);
-			if (_.indexOf(valueOptions, kv[0]) !== -1) {
+			if (_.indexOf(optsData.meta.str, kv[0]) !== -1 && _.indexOf(optsData.meta.glob, kv[0]) !== -1 ) {
 				state.groupCheck.options[kv[0]] = kv[1];
 				output = 'Option ' + kv[0] + ' set to ' + kv[1] + '.';
 			}
 			else if (kv[0] === 'ro') {
-				if (_.indexOf(admissibleRollOptions, kv[1]) !== -1) {
+				if (_.indexOf(optsData.list.ro.admissible, kv[1]) !== -1) {
 					state.groupCheck.options.ro = kv[1];
 					output = 'Option ' + kv[0] + ' set to ' + kv[1] + '.';
 				} else {
@@ -471,15 +478,12 @@ var groupCheck = groupCheck || (function() {
 					return;
 				}
 			}
-			else if (_.indexOf(booleanOptions, kv[0]) !== -1) {
+			else if (_.indexOf(optsData.meta.bool, kv[0]) !== -1) {
 				state.groupCheck.options[kv[0]] = true;
 				output = 'Option ' + kv[0] + ' set to ' + state.groupCheck.options[kv[0]] + '.';
 			}
-			else if (_.indexOf(booleanOptionsNegative, kv[0]) !== -1) {
-				if (kv[0] === 'public') kv[0] = 'whisper';
-				if (kv[0] === 'showformula') kv[0] = 'hideformula';
-				if (kv[0] === 'usecharname') kv[0] = 'usetokenname';
-				if (kv[0] === 'hidepicture') kv[0] = 'showpicture';
+			else if (_.indexOf(optsData.meta.boolNeg, kv[0]) !== -1) {
+				kv[0] = optsData.meta.bool[_.indexOf(optsData.meta.boolNeg, kv[0])];
 				state.groupCheck.options[kv[0]] = false;
 				output = 'Option ' + kv[0] + ' set to ' + state.groupCheck.options[kv[0]] + '.';
 			}
@@ -510,13 +514,13 @@ var groupCheck = groupCheck || (function() {
 	},
 
 	handleOutput = function (msg) {
-		const hasValue = ['fallback','custom','die_adv','die_dis','globalmod','ro','multi'];
 		let checkCmd, checkName, checkFormula, output, rollBoundary, rollText;
 
 		// Options processing
-		let who = getPlayerName(msg.who)
-		let opts = processOpts(recoverInlinerollFormulae(msg), hasValue);
+		let who = getPlayerName(msg.who);
+		let opts = processOpts(recoverInlinerollFormulae(msg), optsData.meta.str);
 		checkCmd = _.intersection(_.keys(state.groupCheck.checkList), _.keys(opts))[0];
+		
 		// Print menu if we don't know what to roll
 		if (!checkCmd && !opts.custom && !opts.help) {
 			printCommandMenu(who,opts);
@@ -524,25 +528,17 @@ var groupCheck = groupCheck || (function() {
 		}
 		// Continue with options processing
 		if (checkCmd) {
-			checkFormula = state.groupCheck.checkList[checkCmd].formula;
+			checkFormula = state.groupCheck.checkList[checkCmd].formula
+				.replace(/\%(\S.*?)\%/g,'@{INSERT_NAME|$1}')
+				.split('INSERT_NAME');
 			checkName = state.groupCheck.checkList[checkCmd].name;
 		}
-		if (opts.showformula) {
-			opts.hideformula = false;
-			delete opts.showformula;
-		}
-		if (opts.usecharname) {
-			opts.usetokenname = false;
-			delete opts.usecharname;
-		}
-		if (opts.public) {
-			opts.whisper = false;
-			delete opts.public;
-		}
-		if (opts.hidepicture) {
-			opts.showpicture = false;
-			delete opts.hidepicture;
-		}
+		_.each(optsData.meta.boolNeg, function (name,index) {
+			if (opts[name]) {
+				opts[optsData.meta.bool[index]] = false;
+			}
+		});
+		opts = _.pick(opts, optsData.meta.allopts);
 
 		// Help
 		if (opts.help) {
@@ -558,12 +554,16 @@ var groupCheck = groupCheck || (function() {
 				return;
 			}
 			checkName = kv.shift();
-			checkFormula = kv.join().replace(/\{\{/g,'[[').replace(/\}\}/g,']]');
+			checkFormula = kv.join()
+				.replace(/\{\{/g,'[[')
+				.replace(/\}\}/g,']]')
+				.replace(/\%(\S.*?)\%/g, '@{INSERT_NAME|$1}')
+				.split('INSERT_NAME');
 		}
 
 		// Plug in defaults for unspecified options
 		opts = _.defaults(opts, state.groupCheck.options);
-		if (_.indexOf(admissibleRollOptions, opts.ro) === -1) {
+		if (_.indexOf(optsData.list.ro.admissible, opts.ro) === -1) {
 			handleError(who,'Roll option ' + opts.ro + ' is invalid, sorry.');
 			return;
 		}
@@ -571,14 +571,24 @@ var groupCheck = groupCheck || (function() {
 		// Output
 		output = opts.whisper ? '/w GM ' : '';
 		opts.multi = (opts.multi > 1 ) ? parseInt(opts.multi) : 1;
-		rollBoundary = (opts.hideformula) ? ['[[',']]'] : ['',''];
+		opts.rollBoundary = (opts.hideformula) ? ['[[',']]'] : ['',''];
 		opts.rollOption = (opts.ro === 'rollsetting') ? getRollOption : ( (charid) => opts.ro);
+
+		if (opts.globalmod) {
+			if (checkFormula[checkFormula.length -1].search(/\]\](?=$)/) !== -1) {
+				checkFormula[checkFormula.length -1] = checkFormula[checkFormula.length -1]
+					.replace(/\]\](?=$)/, ' + ' + opts.globalmod + '[global modifier]]]');
+			}
+			else {
+				checkFormula[checkFormula.length -1] += ` + ${opts.globalmod}[global]`;
+			}
+		}
 
 		rollText = _.chain(msg.selected)
 			.map(obj => getObj('graphic', obj._id))
 			.compact()
 			.map(function (token) {
-				return addTokenToOutput(token, checkFormula, opts, rollBoundary)
+				return addTokenToOutput(token, checkFormula, opts)
 					.repeat(opts.multi);
 			})
 			.value().join('');
