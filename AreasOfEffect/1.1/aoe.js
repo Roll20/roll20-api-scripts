@@ -226,9 +226,11 @@ var AreasOfEffect = (() => {
           title: 'Apply effect to selected path.'
         })
       );
+
+      let AT = encodeURIComponent('@');
       row.append('td',
         new HtmlBuilder('a', '➙', {
-          href: `${APPLY_EFFECT_BETWEEN_TOKENS_CMD} @{selected|token_id} @{target|token_id} ${effect.name}`,
+          href: `${APPLY_EFFECT_BETWEEN_TOKENS_CMD} &#64;{selected|token_id} &#64;{target|token_id} ${effect.name}`,
           title: 'Create the effect from selected token to target token.'
         })
       );
@@ -245,6 +247,7 @@ var AreasOfEffect = (() => {
     content.append('div', '[Back](' + MENU_CMD + ')');
 
     let menu = _showMenuPanel('Choose effect', content);
+    log(menu.toString(MENU_CSS));
     _whisper(who, menu.toString(MENU_CSS));
   }
 
