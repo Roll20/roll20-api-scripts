@@ -1,12 +1,12 @@
-// ChatSetAttr version 1.0.2
-// Last Updated: 2016-10-28
+// ChatSetAttr version 1.1
+// Last Updated: 2016-10-31
 // A script to create, modify, or delete character attributes from the chat area or macros.
 // If you don't like my choices for --replace, you can edit the replacers variable at your own peril to change them.
 
 var chatSetAttr = chatSetAttr || (function() {
 	'use strict';
 
-	const version = '1.0.2',
+	const version = '1.1',
 	feedback = true,
 	caseSensitive = false,
 	replacers = [ ['<', '[', /</g, /\[/g],
@@ -198,10 +198,10 @@ var chatSetAttr = chatSetAttr || (function() {
 
 	// Setting attributes happens in a delayed recursive way to prevent the sandbox
 	// from overheating.
-	delayedSetAttributes = function(who, list, setting, allAttrs, mod, reset) {
+	delayedSetAttributes = function(who, list, setting, allAttrs, fillInAttrs, mod, modb, evaluate) {
 		let cList = _.clone(list),
 			dWork = function(charid) {
-				setCharAttributes(who, charid, setting, allAttrs[charid], mod, reset);
+				setCharAttributes(who, charid, setting, allAttrs[charid], fillInAttrs, mod, modb, evaluate);
 				if (cList.length) {
 					_.delay(dWork, 50, cList.shift());
 				}
@@ -209,43 +209,64 @@ var chatSetAttr = chatSetAttr || (function() {
 		dWork(cList.shift());
 	},
 
-	setCharAttributes = function(who, charid, setting, attrs, mod, reset) {
-		let current, max, attrNew;
+	setCharAttributes = function(who, charid, setting, attrs, fillInAttrs, mod, modb, evaluate) {
+		let moddedValue, attrNew;
 		_.each(_.pick(setting, _.keys(attrs)), function (attrValue,attrName) {
 			let attr = attrs[attrName];
 
-			if (reset) {
-				attrNew = {'current' : attr.get('max')};
-			}
-			else if (mod) {
-				attrNew = {};
-				if (_.has(attrValue,'current')) {
-					current = parseFloat(attrValue.current) + parseFloat(attr.get('current') || '0');
-					if (!_.isNaN(current)) {
-						attrNew.current = current;
-					}
-					else {
-						handleError(who,'Attribute '+attrName+' is not number-valued for character '+getAttrByName(charid,'character_name')+'. Attribute left unchanged.');
-					}
-				}
-				if (_.has(attrValue,'max')) {
-					max = parseFloat(attrValue.max) + parseFloat(attr.get('max') || '0');
-					if (!_.isNaN(max)) {
-						attrNew.max = max;
-					}
-					else {
-						handleError(who,'Attribute maximum '+attrName+' is not number-valued for character '+getAttrByName(charid,'character_name')+'. Attribute maximum left unchanged.');
-					}
+			let attrNew = (fillInAttrs[attrName]) ?
+				_.mapObject(attrValue, v => fillInAttrValues(charid, v)) : _.clone(attrValue);
 
+			if (evaluate) {
+				try {
+					attrNew = _.mapObject(attrNew, function (v) {
+						let parsed = eval(v);
+						if (!_.isNaN(parsed) && !_.isUndefined(parsed)) {
+							return parsed;
+						}
+						else return v;
+						});
+				}
+				catch(err) {
+					handleError(who,'Something went wrong with --evaluate. '
+					+ 'You were warned. The error message was.' + err);
 				}
 			}
-			else {
-				attrNew = attrValue;
+
+			if (mod || modb) {
+				_.each(attrNew, function(v,k) {
+					moddedValue = parseFloat(v) + parseFloat(attr.get(k) || '0');
+					if (!_.isNaN(moddedValue)) {
+						if (modb && k === 'current') {
+							moddedValue = Math.max(moddedValue, 0);
+							moddedValue = Math.min(moddedValue, parseFloat(attr.get('max') || Infinity));
+						}
+						attrNew[k] = moddedValue;
+					}
+					else {
+						delete attrNew[k];
+						let type = (k === 'max') ? 'maximum ' : '';
+						handleError(who,'Attribute ' + type + attrName+ ' is not number-'
+						+ 'valued for character ' + getAttrByName(charid,'character_name')
+						+ '. Attribute ' + type + 'left unchanged.');
+					}
+				});
 			}
 
 			attr.set(attrNew);
+// 			attr.setWithWorker(attrNew);
 		});
 		return;
+	},
+
+	fillInAttrValues = function(charid, expression) {
+		let match = expression.match(/%(\S.*?)(?:_(max))?%/), replacer;
+		while (match) {
+			replacer = getAttrByName(charid, match[1], match[2] || 'current') || '';
+			expression = expression.replace(/%(\S.*?)(?:_(max))?%/, replacer);
+			match = expression.match(/%(\S.*?)(?:_(max))?%/);
+		}
+		return expression;
 	},
 
 	//  These functions parse the chat input.
@@ -271,7 +292,7 @@ var chatSetAttr = chatSetAttr || (function() {
 		return opts;
 	},
 
-	parseAttributes = function(args, replace) {
+	parseAttributes = function(args, replace, fillInAttrs) {
 		// Input:	args - array containing comma-separated list of strings, every one of which contains
 		//			an expression of the form key|value or key|value|maxvalue
 		//			replace - true if characters from the replacers array should be replaced
@@ -292,8 +313,14 @@ var chatSetAttr = chatSetAttr || (function() {
 					return str;
 				});
 			});
-
 		}
+
+		_.extend(fillInAttrs, _.mapObject(setting, function (obj) {
+			if ((obj.current && obj.current.search(/%(\S.*?)(?:_(max))?%/) !== -1) ||
+				(obj.max && obj.max.search(/%(\S.*?)(?:_(max))?%/) !== -1) )
+				return true;
+			else return false;
+		}));
 		return setting;
 	},
 
@@ -328,39 +355,35 @@ var chatSetAttr = chatSetAttr || (function() {
 				list.splice(k,1);
 			}
 		}
-		return _.uniq(list);
+		return list;
 	},
 
 	getIDsFromTokens = function (selected) {
-		let charIDList = [], characterId, token;
-		selected.forEach(function(a) {
-			token = getObj('graphic', a._id);
-			if (token) {
-				characterId = token.get('represents');
-				if (characterId) {
-					charIDList.push(characterId);
-				}
-			}
-		});
-		return _.uniq(charIDList);
+		return _.chain(selected)
+		.map(obj => getObj('graphic', obj._id))
+		.compact()
+		.map(token => token.get('represents'))
+		.compact()
+		.filter(id => getObj('character', id))
+		.uniq()
+		.value();
 	},
 
 	getIDsFromNames = function(who, charNames, playerid) {
 		let charIDList = _.chain(charNames.split(/\s*,\s*/))
-			.map(function (n) {
-				let character = findObjs({type: 'character', name: n}, {caseInsensitive: true})[0];
-				if (character) return character.id;
-				else return '';})
-			.compact()
-			.value();
+		.map(n => findObjs({type: 'character', name: n}, {caseInsensitive: true})[0])
+		.compact()
+		.map(c => c.id)
+		.uniq()
+		.value();
 		return checkPermissions(who, charIDList, playerid);
 	},
 
 	getIDsFromList = function(who, charid, playerid) {
-		return checkPermissions(who, charid.split(/\s*,\s*/), playerid);
+		return checkPermissions(who, _.uniq(charid.split(/\s*,\s*/)), playerid);
 	},
 
-	sendFeedback = function (who, list, setting, replace, mod, reset) {
+	sendFeedback = function (who, list, setting, replace, mod, modb) {
 		let charNames = list.map(id => getAttrByName(id, "character_name")).join(', ');
 		let values = _.chain(setting).values()
 			.map(function (o) {
@@ -381,8 +404,8 @@ var chatSetAttr = chatSetAttr || (function() {
 			.join(', ');
 		let output = '/w "'+ who;
 		output += '" <div style="border: 1px solid black; background-color: #FFFFFF; padding: 3px 3px;">';
-		if (reset) {
-			output += `<p>Resetting ${_.keys(setting).join(', ')} to their maximum `;
+		if (modb) {
+			output += `<p>Modifying ${_.keys(setting).join(', ')} by ${values} (within bounds) `;
 		}
 		else if (mod) {
 			output += `<p>Modifying ${_.keys(setting).join(', ')} by ${values} `;
@@ -404,11 +427,10 @@ var chatSetAttr = chatSetAttr || (function() {
 
 	sendDeleteFeedback = function (who, list, setting) {
 		let charNames = list.map(id => getAttrByName(id, 'character_name')).join(', ');
-		let output = '/w "'+ who +
-			'" <div style="border: 1px solid black; background-color: #FFFFFF; padding: 3px 3px;">' +
+		let output = '/w "'+ who + '" <div style="border:' +
+			' 1px solid black; background-color: #FFFFFF; padding: 3px 3px;">' +
 			'<p>Deleting attributes ' + _.keys(setting).join(', ') +
-			' for characters ' + charNames +
-			'.</p></div>';
+			' for characters ' + charNames + '.</p></div>';
 		sendChat('ChatSetAttr', output);
 	},
 
@@ -420,14 +442,14 @@ var chatSetAttr = chatSetAttr || (function() {
 		let mode = msg.content.match(/^!(reset|set|del)attr\b/);
 		if (mode) {
 			// Parsing input
-			let charIDList;
+			let charIDList, fillInAttrs = {};
 			const hasValue = ['charid','name'],
-				optsArray = ['all','allgm','charid','name','silent','sel','replace', 'nocreate','mod'],
+				optsArray = ['all','allgm','charid','name','silent','sel','replace', 'nocreate','mod','modb','evaluate'],
 				who = getPlayerName(msg.who),
 				opts = parseOpts(processInlinerolls(msg),hasValue),
-				setting = parseAttributes(_.chain(opts).omit(optsArray).keys().value(),opts.replace),
-				deleteMode = (mode[1] === 'del'),
-				resetMode = (mode[1] === 'reset');
+				setting = parseAttributes(_.chain(opts).omit(optsArray).keys().value(),
+					opts.replace, fillInAttrs),
+				deleteMode = (mode[1] === 'del');
 
 			if (_.isEmpty(setting)) {
 				handleError(who, 'No attributes supplied.');
@@ -464,9 +486,9 @@ var chatSetAttr = chatSetAttr || (function() {
 				}
 			}
 			else {
-				delayedSetAttributes(who, charIDList, setting, allAttrs, opts.mod, resetMode);
+				delayedSetAttributes(who, charIDList, setting, allAttrs, fillInAttrs, opts.mod, opts.modb, opts.evaluate);
 				if (feedback && !opts.silent && !_.isEmpty(charIDList)) {
-					sendFeedback(who, charIDList, setting, opts.replace, opts.mod, resetMode);
+					sendFeedback(who, charIDList, setting, opts.replace, opts.mod, opts.modb);
 				}
 			}
 		}
