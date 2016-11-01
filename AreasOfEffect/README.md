@@ -1,5 +1,9 @@
 # Areas of Effect
 
+_v1.1 Updates_
+* The menu now includes an arrow button for each effect that allows you to spawn the effect between two tokens.
+* Implemented tooltips for the menu buttons.
+
 GMs, your spellcasting players will love you for this script! It lets you
 create graphical areas of effect for various spells and other powers, and then
 your players can create these effects by drawing lines specifying their
@@ -37,17 +41,24 @@ To spawn an area of effect from this list, follow these steps:
 2. Select the line.
 3. Click the effect to apply to the line from the list of saved areas of effect.
 
+OR
+
+1. Select the token the effect originates from.
+2. Click the arrow button for the effect.
+3. Click the target token for the effect's endpoint.
+
 Both GMs and players can spawn areas of effect!
 
 ## Sample graphics
 
 In the Roll20 API Scripts repository, this script includes a small collection of
 sample AoE graphics you are free to use in your own games to try out this script.
+Additional effects graphics created by various artists are available from the
+Roll20 Marketplace.
 
 _Note: Currently it is not possible to create effects from graphics purchased
 from the market place due to certain restrictions specified here:
 https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions
 
-If you would like to in the future be able to use marketplace graphics for
-effects, please share your support to lift the restriction at this suggestion
-thread: https://app.roll20.net/forum/post/1749220/api-tags-api-access-to-image-tags ._
+However, you can download them from your Roll20 purchased assets library and 
+then upload them to your game in order to make use of them with this script ._
