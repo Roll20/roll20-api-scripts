@@ -231,3 +231,7 @@ observer:
 tagmar:
 - "Tagmar"
 - "System Toolbox"
+
+walls:
+- "Walls"
+- "Dynamic Lighting"
