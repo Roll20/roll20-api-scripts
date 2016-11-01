@@ -227,3 +227,7 @@ areasofeffect:
 observer:
 - "Observer"
 - "Character"
+
+tagmar:
+- "Tagmar"
+- "System Toolbox"
