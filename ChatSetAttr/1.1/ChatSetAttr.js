@@ -1,5 +1,5 @@
 // ChatSetAttr version 1.1
-// Last Updated: 2016-11-2
+// Last Updated: 2016-11-3
 // A script to create, modify, or delete character attributes from the chat area or macros.
 // If you don't like my choices for --replace, you can edit the replacers variable at your own peril to change them.
 
@@ -8,7 +8,6 @@ var chatSetAttr = chatSetAttr || (function() {
 
 	const version = '1.1',
 	feedback = true,
-	caseSensitive = false,
 	replacers = [ ['<', '[', /</g, /\[/g],
 				['>',']' , />/g, /\]/g],
 				['#','|', /#/g, /\|/g],
@@ -62,35 +61,43 @@ var chatSetAttr = chatSetAttr || (function() {
 		});
 	},
 
+	getCIKey = function (obj, name) {
+		let nameLower = name.toLowerCase(), result = false;
+		_.each(obj, function (v,k) {
+			if (k.toLowerCase() === nameLower) {
+				result = k;
+			}
+		});
+		return result;
+	},
+
 	// Getting attributes from parsed options. Repeating attributes need special treatment
 	// in order to parse row index and not create defective repeating rows.
 	getRepeatingAttributes = function(who, list, setting, createMissing, failSilently) {
 		let allAttrs = {}, allKeys = _.keys(setting), indexMatch, attrNameSplit, id, name,
-			attrNameSplitRE, allSectionAttrs, repSectionIds, rowNum, rowId, idMatch;
+			repeatingTypeStart, allSectionAttrs, repSectionIds, rowNum, rowId, idMatch;
 
 		list.forEach(function(charid) {
 			allAttrs[charid] = {};
 		});
 
-		allKeys.forEach(function(attrName) {
+		_.each(allKeys, function(attrName) {
 			indexMatch = attrName.match(/_\$(\d+)_/);
 			allSectionAttrs = {}, repSectionIds = {};
 
-			list.forEach(function(charid) {
+			_.each(list, function(charid) {
 				allSectionAttrs[charid] = {};
 			});
 
 			if (indexMatch) {
 				rowNum = parseInt(indexMatch[1]);
 				attrNameSplit = attrName.split(indexMatch[0]);
-				attrNameSplitRE = _.map(attrNameSplit, escapeRegExp);
 			}
 			else {
 				idMatch = attrName.match(/_(-[-A-Za-z0-9]+?|\d+)_/);
 				if (idMatch) {
 					rowId = idMatch[1];
 					attrNameSplit = attrName.split(idMatch[0]);
-					attrNameSplitRE = _.map(attrNameSplit, escapeRegExp);
 				}
 				else {
 					handleError(who, 'Could not understand repeating attribute name '
@@ -99,32 +106,38 @@ var chatSetAttr = chatSetAttr || (function() {
 				}
 			}
 
+			repeatingTypeStart = new RegExp('^' + escapeRegExp(attrNameSplit[0])
+				+ '_(-[-A-Za-z0-9]+?|\\d+)_','i');
+
 			filterObjs(function(o) {
 				if (o.get('_type') === 'attribute') {
 					id = o.get('_characterid');
 					name = o.get('name');
-					if (_.contains(list,id) && name.search('^' + attrNameSplitRE[0] + '_(-[-A-Za-z0-9]+?|\\d+)_') !== -1) {
+					if (_.contains(list,id) && name.search(repeatingTypeStart) !== -1) {
 						allSectionAttrs[id][name] = o;
 						return true;
 					}
 				}
 			});
 
-			list.forEach(function(charid) {
+			// repSectionIds stores all repeating row IDs of a given type, indexed
+			// by character id. Reprowids are stored in lower case.
+			_.each(list, function(charid) {
 				repSectionIds[charid] = _.chain(allSectionAttrs[charid])
-					.map((o,n) => n.match('^' + attrNameSplitRE[0] + '_(-[-A-Za-z0-9]+?|\\d+)_'))
+					.map((o,n) => n.match(repeatingTypeStart))
 					.compact()
-					.map(a => a[1])
+					.map(a => a[1].toLowerCase())
 					.uniq()
 					.value();
 			});
 
-			list.forEach(function(charid) {
+			_.each(list, function(charid) {
 				if (indexMatch && !_.isUndefined(repSectionIds[charid][rowNum])) {
 					let realRepName = attrNameSplit[0] + '_'
 						+ repSectionIds[charid][rowNum] + '_' + attrNameSplit[1];
-					if (_.has(allSectionAttrs[charid], realRepName)) {
-						allAttrs[charid][attrName] = allSectionAttrs[charid][realRepName];
+					let nameCI = getCIKey(allSectionAttrs[charid], realRepName);
+					if (nameCI) {
+						allAttrs[charid][attrName] = allSectionAttrs[charid][nameCI];
 					}
 					else if (createMissing) {
 						allAttrs[charid][attrName] = createObj('attribute',
@@ -141,10 +154,11 @@ var chatSetAttr = chatSetAttr || (function() {
 						+ getAttrByName(charid,'character_name')
 						+ ' and repeating section ' + attrNameSplit[0] + '.');
 				}
-				else if (_.contains(repSectionIds[charid], rowId)) {
+				else if (_.contains(repSectionIds[charid], rowId.toLowerCase())) {
 					let realRepName = attrNameSplit[0] + '_' + rowId + '_' + attrNameSplit[1];
-					if (_.has(allSectionAttrs[charid], realRepName)) {
-						allAttrs[charid][attrName] = allSectionAttrs[charid][realRepName];
+					let nameCI = getCIKey(allSectionAttrs[charid], realRepName);
+					if (nameCI) {
+						allAttrs[charid][attrName] = allSectionAttrs[charid][nameCI];
 					}
 					else if (createMissing) {
 						allAttrs[charid][attrName] = createObj('attribute',
@@ -169,9 +183,7 @@ var chatSetAttr = chatSetAttr || (function() {
 	getStandardAttributes = function(who, list, setting, createMissing, failSilently) {
 		let allAttrs = {}, allKeys = _.keys(setting), allKeysUpper, id, name;
 
-		if (!caseSensitive) {
-			allKeysUpper = allKeys.map(x => x.toUpperCase());
-		}
+		allKeysUpper = allKeys.map(x => x.toUpperCase());
 
 		list.forEach(function(charid) {
 			allAttrs[charid] = {};
@@ -181,11 +193,7 @@ var chatSetAttr = chatSetAttr || (function() {
 			if (o.get('_type') === 'attribute') {
 				id = o.get('_characterid');
 				name = o.get('name');
-				if (caseSensitive && _.contains(list,id) && _.contains(allKeys,name)) {
-					allAttrs[id][name] = o;
-					return true;
-				}
-				else if (_.contains(list,id) && _.contains(allKeysUpper,name.toUpperCase())) {
+				if (_.contains(list,id) && _.contains(allKeysUpper,name.toUpperCase())) {
 					allAttrs[id][allKeys[_.indexOf(allKeysUpper, name.toUpperCase())]] = o;
 					return true;
 				}
