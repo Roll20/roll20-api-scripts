@@ -32,6 +32,10 @@ var chatSetAttr = chatSetAttr || (function() {
 		return (match) ? (match[1] || 'GM') : who;
 	},
 
+	escapeRegExp = function (str) {
+		return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+	},
+
 	processInlinerolls = function (msg) {
 		// Input:	msg - chat message
 		// Output:	msg.content, with all inline rolls evaluated
@@ -61,8 +65,8 @@ var chatSetAttr = chatSetAttr || (function() {
 	// Getting attributes from parsed options. Repeating attributes need special treatment
 	// in order to parse row index and not create defective repeating rows.
 	getRepeatingAttributes = function(who, list, setting, createMissing, failSilently) {
-		let allAttrs = {}, allKeys = _.keys(setting), indexMatch, attrNameSplit,
-			allSectionAttrs, id, name, repSectionIds, rowNum, rowId, idMatch;
+		let allAttrs = {}, allKeys = _.keys(setting), indexMatch, attrNameSplit, id, name,
+			attrNameSplitRE, allSectionAttrs, repSectionIds, rowNum, rowId, idMatch;
 
 		list.forEach(function(charid) {
 			allAttrs[charid] = {};
@@ -79,12 +83,14 @@ var chatSetAttr = chatSetAttr || (function() {
 			if (indexMatch) {
 				rowNum = parseInt(indexMatch[1]);
 				attrNameSplit = attrName.split(indexMatch[0]);
+				attrNameSplitRE = _.map(attrNameSplit, escapeRegExp);
 			}
 			else {
 				idMatch = attrName.match(/_(-[-A-Za-z0-9]+?|\d+)_/);
 				if (idMatch) {
 					rowId = idMatch[1];
-					attrNameSplit = attrName.split(idMatch);
+					attrNameSplit = attrName.split(idMatch[0]);
+					attrNameSplitRE = _.map(attrNameSplit, escapeRegExp);
 				}
 				else {
 					handleError(who, 'Could not understand repeating attribute name '
@@ -97,7 +103,7 @@ var chatSetAttr = chatSetAttr || (function() {
 				if (o.get('_type') === 'attribute') {
 					id = o.get('_characterid');
 					name = o.get('name');
-					if (_.contains(list,id) && name.search('^' + attrNameSplit[0] + '_(-[-A-Za-z0-9]+?|\\d+)_') !== -1) {
+					if (_.contains(list,id) && name.search('^' + attrNameSplitRE[0] + '_(-[-A-Za-z0-9]+?|\\d+)_') !== -1) {
 						allSectionAttrs[id][name] = o;
 						return true;
 					}
@@ -106,7 +112,7 @@ var chatSetAttr = chatSetAttr || (function() {
 
 			list.forEach(function(charid) {
 				repSectionIds[charid] = _.chain(allSectionAttrs[charid])
-					.map((o,n) => n.match('^' + attrNameSplit[0] + '_(-[-A-Za-z0-9]+?|\\d+)_'))
+					.map((o,n) => n.match('^' + attrNameSplitRE[0] + '_(-[-A-Za-z0-9]+?|\\d+)_'))
 					.compact()
 					.map(a => a[1])
 					.uniq()
@@ -115,37 +121,46 @@ var chatSetAttr = chatSetAttr || (function() {
 
 			list.forEach(function(charid) {
 				if (indexMatch && !_.isUndefined(repSectionIds[charid][rowNum])) {
-					let realRepName = attrNameSplit[0] + '_' + repSectionIds[charid][rowNum] + '_' + attrNameSplit[1];
+					let realRepName = attrNameSplit[0] + '_'
+						+ repSectionIds[charid][rowNum] + '_' + attrNameSplit[1];
 					if (_.has(allSectionAttrs[charid], realRepName)) {
-						allAttrs[charid][attrName] = allSectionAttrs[charid][realRepName]
+						allAttrs[charid][attrName] = allSectionAttrs[charid][realRepName];
 					}
 					else if (createMissing) {
-						allAttrs[charid][attrName] = createObj('attribute', {characterid: charid , name: realRepName});
+						allAttrs[charid][attrName] = createObj('attribute',
+							{characterid: charid , name: realRepName});
 					}
 					else if (!failSilently) {
-						handleError(who, 'Missing attribute '+realRepName+' not created for character '+getAttrByName(charid,'character_name')+'.');
+						handleError(who, 'Missing attribute '+ realRepName
+						+ ' not created for character '
+						+ getAttrByName(charid,'character_name') + '.');
 					}
 				}
-
 				else if (indexMatch) {
-					handleError(who, 'Row number '+rowNum+' invalid for character '+getAttrByName(charid,'character_name')+' and repeating section '+attrNameSplit[0]+'.');
+					handleError(who, 'Row number ' + rowNum + ' invalid for character '
+						+ getAttrByName(charid,'character_name')
+						+ ' and repeating section ' + attrNameSplit[0] + '.');
 				}
 				else if (_.contains(repSectionIds[charid], rowId)) {
 					let realRepName = attrNameSplit[0] + '_' + rowId + '_' + attrNameSplit[1];
 					if (_.has(allSectionAttrs[charid], realRepName)) {
-						allAttrs[charid][attrName] = allSectionAttrs[charid][realRepName]
+						allAttrs[charid][attrName] = allSectionAttrs[charid][realRepName];
 					}
 					else if (createMissing) {
-						allAttrs[charid][attrName] = createObj('attribute', {characterid: charid , name: realRepName});
+						allAttrs[charid][attrName] = createObj('attribute',
+							{characterid: charid , name: realRepName});
 					}
 					else if (!failSilently) {
-						handleError(who, 'Missing attribute '+realRepName+' not created for character '+getAttrByName(charid,'character_name')+'.');
+						handleError(who, 'Missing attribute  '+ realRepName
+							+ ' not created for character '
+							+ getAttrByName(charid,'character_name') + '.');
 					}
 				}
 				else if (!failSilently) {
-					handleError(who, 'Repeating section id '+rowId+' invalid for character '+getAttrByName(charid,'character_name')+' and repeating section '+attrNameSplit[0]+'.');
+					handleError(who, 'Repeating section id ' + rowId
+					+ ' invalid for character ' + getAttrByName(charid,'character_name')
+					+ ' and repeating section ' + attrNameSplit[0] + '.');
 				}
-
 			});
 		});
 		return allAttrs;
