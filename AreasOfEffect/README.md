@@ -1,5 +1,8 @@
 # Areas of Effect
 
+_v1.2 Updates_
+* Bug fix: Delete button wasn't working after previous update.
+
 _v1.1 Updates_
 * The menu now includes an arrow button for each effect that allows you to spawn the effect between two tokens.
 * Implemented tooltips for the menu buttons.
@@ -60,5 +63,5 @@ _Note: Currently it is not possible to create effects from graphics purchased
 from the market place due to certain restrictions specified here:
 https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions
 
-However, you can download them from your Roll20 purchased assets library and 
+However, you can download them from your Roll20 purchased assets library and
 then upload them to your game in order to make use of them with this script ._
