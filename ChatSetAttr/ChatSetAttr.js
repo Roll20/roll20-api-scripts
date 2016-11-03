@@ -75,7 +75,8 @@ var chatSetAttr = chatSetAttr || (function() {
 	// in order to parse row index and not create defective repeating rows.
 	getRepeatingAttributes = function(who, list, setting, createMissing, failSilently) {
 		let allAttrs = {}, allKeys = _.keys(setting), indexMatch, attrNameSplit, id, name,
-			repeatingTypeStart, allSectionAttrs, repSectionIds, rowNum, rowId, idMatch;
+			repeatingTypeStart, allSectionAttrs, repSectionIds, rowNum, rowId, idMatch,
+			repSectionIdsLower;
 
 		list.forEach(function(charid) {
 			allAttrs[charid] = {};
@@ -83,7 +84,7 @@ var chatSetAttr = chatSetAttr || (function() {
 
 		_.each(allKeys, function(attrName) {
 			indexMatch = attrName.match(/_\$(\d+)_/);
-			allSectionAttrs = {}, repSectionIds = {};
+			allSectionAttrs = {}, repSectionIds = {}, repSectionIdsLower = {};
 
 			_.each(list, function(charid) {
 				allSectionAttrs[charid] = {};
@@ -96,7 +97,7 @@ var chatSetAttr = chatSetAttr || (function() {
 			else {
 				idMatch = attrName.match(/_(-[-A-Za-z0-9]+?|\d+)_/);
 				if (idMatch) {
-					rowId = idMatch[1];
+					rowId = idMatch[1].toLowerCase();
 					attrNameSplit = attrName.split(idMatch[0]);
 				}
 				else {
@@ -120,16 +121,20 @@ var chatSetAttr = chatSetAttr || (function() {
 				}
 			});
 
-			// repSectionIds stores all repeating row IDs of a given type, indexed
-			// by character id. Reprowids are stored in lower case.
 			_.each(list, function(charid) {
 				repSectionIds[charid] = _.chain(allSectionAttrs[charid])
 					.map((o,n) => n.match(repeatingTypeStart))
 					.compact()
-					.map(a => a[1].toLowerCase())
+					.map(a => a[1])
 					.uniq()
 					.value();
 			});
+			if (!indexMatch) {
+				 _.each(list, function(charid) {
+					 repSectionIdsLower[charid] = _.map(repSectionIds[charid],
+						 n => n.toLowerCase());
+				 });
+			}
 
 			_.each(list, function(charid) {
 				if (indexMatch && !_.isUndefined(repSectionIds[charid][rowNum])) {
@@ -154,8 +159,10 @@ var chatSetAttr = chatSetAttr || (function() {
 						+ getAttrByName(charid,'character_name')
 						+ ' and repeating section ' + attrNameSplit[0] + '.');
 				}
-				else if (_.contains(repSectionIds[charid], rowId.toLowerCase())) {
-					let realRepName = attrNameSplit[0] + '_' + rowId + '_' + attrNameSplit[1];
+				else if (_.contains(repSectionIdsLower[charid], rowId)) {
+					let realRepName = attrNameSplit[0] + '_'
+						+ repSectionIds[charid][_.indexOf(repSectionIdsLower[charid], rowId)]
+						+ '_' + attrNameSplit[1];
 					let nameCI = getCIKey(allSectionAttrs[charid], realRepName);
 					if (nameCI) {
 						allAttrs[charid][attrName] = allSectionAttrs[charid][nameCI];
