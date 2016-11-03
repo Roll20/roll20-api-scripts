@@ -171,7 +171,7 @@ var handledeathsave = function(msg,character) {
         }
         if(succ2.get("current") === "on") {
             succ3.set({current:"on"});
-            resultoutput = "STABALIZED";
+            resultoutput = "STABILIZED";
             cleardeathsaves(character);
         }
         else if(succ1.get("current") === "on") {

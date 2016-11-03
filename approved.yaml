@@ -227,3 +227,11 @@ areasofeffect:
 observer:
 - "Observer"
 - "Character"
+
+tagmar:
+- "Tagmar"
+- "System Toolbox"
+
+walls:
+- "Walls"
+- "Dynamic Lighting"
