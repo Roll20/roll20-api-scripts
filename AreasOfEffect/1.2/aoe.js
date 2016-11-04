@@ -3,19 +3,26 @@ var AreasOfEffect = (() => {
 
   let MENU_CMD = '!areasOfEffectShowMenu';
   let ADD_EFFECT_CMD = '!areasOfEffectAddEffect';
-  let APPLY_EFFECT_CMD = '!areasOfEffectApplyEffet';
+  let APPLY_EFFECT_AT_PATH_CMD = '!areasOfEffectApplyEffectAtPath';
+  let APPLY_EFFECT_AT_TOKEN_CMD = '!areasOfEffectApplyEffectAtToken';
   let APPLY_EFFECT_BETWEEN_TOKENS_CMD = '!areasOfEffectApplyEffectBetweenTokens';
   let DEL_EFFECT_CMD = '!areasOfEffectDeleteEffect';
   let SHOW_EFFECTS_CMD = '!areasOfEffectShowEffects';
-  let VERSION = '1.0';
+  let VERSION = '1.2';
+
+  let MACRO_SHORTCUTS = {
+    'AoeShortcut_✎': `${APPLY_EFFECT_AT_PATH_CMD} EFFECT_NAME`,
+    'AoeShortcut_➙': `${APPLY_EFFECT_BETWEEN_TOKENS_CMD} @{selected|token_id} @{target|token_id} EFFECT_NAME`,
+    'AoeShortcut_✸': `${APPLY_EFFECT_AT_TOKEN_CMD} @{target|token_id} ?{Specify radius:} EFFECT_NAME`
+  };
 
   let MENU_CSS = {
     'effectsTable': {
       'width': '100%'
     },
     'effectThumbnail': {
-      'height': '50px',
-      'width': '50px'
+      'max-height': '50px',
+      'max-width': '50px'
     },
     'menu': {
       'background': '#fff',
@@ -110,6 +117,35 @@ var AreasOfEffect = (() => {
    }
 
    /**
+    * Creates a line segment path from some token out to some radius from
+    * the token's edge.
+    * @private
+    * @param {Graphic} token1
+    * @param {Graphic} token2
+    * @return {Path}
+    */
+   function _createRadiusPathAtToken(token, radiusUnits) {
+     let page = getObj('page', token.get('_pageid'));
+     let radiusPixels = radiusUnits / page.get('scale_number') * 70;
+     radiusPixels += token.get('width') / 2;
+     log(radiusPixels);
+
+     let p1 = [
+       token.get('left'),
+       token.get('top')
+     ];
+     let p2 = VecMath.add(p1, [radiusPixels, 0]);
+
+     let segment = [ p1, p2 ];
+     let pathJson = PathMath.segmentsToPath([segment]);
+     return createObj('path', _.extend(pathJson, {
+       _pageid: token.get('_pageid'),
+       layer: 'objects',
+       stroke: '#ff0000'
+     }));
+   }
+
+   /**
     * Deletes a saved area of effect.
     * @param {string} who
     * @param {string} playerid
@@ -117,7 +153,8 @@ var AreasOfEffect = (() => {
     */
    function deleteEffect(who, playerid, name) {
      delete state.AreasOfEffect.saved[name];
-     _showEffectsListMenu(who, playerid);
+     _updateShortcutMacros();
+     _showMenu(who, playerid);
    }
 
    /**
@@ -140,6 +177,17 @@ var AreasOfEffect = (() => {
      throw new Error('Only images that you have uploaded to your library ' +
        'can be used as custom status markers. ' +
        'See https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions for more information.');
+   }
+
+   /**
+    * Gets a macro prompt for the user to choose from the list of saved effect
+    * names.
+    * @return {string}
+    */
+   function getEffectNamePrompt() {
+     let names = _.keys(state.AreasOfEffect.saved);
+     names.sort();
+     return `?{Which effect?|${names.join('|')}}`;
    }
 
   /**
@@ -194,8 +242,9 @@ var AreasOfEffect = (() => {
     effect.remove();
     path.remove();
 
+    _updateShortcutMacros();
     _whisper(who, 'Created Area of Effect: ' + name);
-    _showMainMenu(who, playerid);
+    _showMenu(who, playerid);
   }
 
   /**
@@ -203,7 +252,7 @@ var AreasOfEffect = (() => {
    * @param {string} who
    * @param {string} playerid
    */
-  function _showEffectsListMenu(who, playerid) {
+  function _showMenu(who, playerid) {
     let content = new HtmlBuilder('div');
     let effects = _.values(state.AreasOfEffect.saved).sort(function(a,b) {
       if(a.name < b.name)
@@ -217,21 +266,30 @@ var AreasOfEffect = (() => {
     let table = content.append('table.effectsTable');
     _.each(effects, effect => {
       let row = table.append('tr');
-      row.append('td.effectThumbnail', new HtmlBuilder('img', '', {
+      var thumbnail = row.append('td');
+      thumbnail.append('img.effectThumbnail', '', {
         src: effect.imgsrc
-      }));
+      });
+      thumbnail.append('div', effect.name);
+
       row.append('td',
-        new HtmlBuilder('a', effect.name, {
-          href: `${APPLY_EFFECT_CMD} ${effect.name}`,
-          title: 'Apply effect to selected path.'
+        new HtmlBuilder('a', '✎', {
+          href: `${APPLY_EFFECT_AT_PATH_CMD} ${effect.name}`,
+          title: 'Path: Apply effect to selected path.'
         })
       );
 
-      let AT = encodeURIComponent('@');
       row.append('td',
         new HtmlBuilder('a', '➙', {
           href: `${APPLY_EFFECT_BETWEEN_TOKENS_CMD} &#64;{selected|token_id} &#64;{target|token_id} ${effect.name}`,
-          title: 'Create the effect from selected token to target token.'
+          title: 'Ray: Create the effect from selected token to target token.'
+        })
+      );
+
+      row.append('td',
+        new HtmlBuilder('a', '✸', {
+          href: `${APPLY_EFFECT_AT_TOKEN_CMD} &#64;{target|token_id} ?{Specify radius:} ${effect.name}`,
+          title: 'Burst: Create effect centered on target token.'
         })
       );
 
@@ -244,24 +302,10 @@ var AreasOfEffect = (() => {
           })
         );
     });
-    content.append('div', '[Back](' + MENU_CMD + ')');
+    if(playerIsGM(playerid))
+      content.append('div', '[Save New Effect](' + ADD_EFFECT_CMD + ' ?{Save Area of Effect: name})');
 
     let menu = _showMenuPanel('Choose effect', content);
-    _whisper(who, menu.toString(MENU_CSS));
-  }
-
-  /**
-   * Shows the main menu for script.
-   * @param {string} who
-   * @param {string} playerid
-   */
-  function _showMainMenu(who, playerId) {
-    let content = new HtmlBuilder('div');
-    content.append('div', '[Apply an effect](' + SHOW_EFFECTS_CMD + ')');
-    if(playerIsGM(playerId))
-      content.append('div', '[Save effect](' + ADD_EFFECT_CMD + ' ?{Save Area of Effect: name})');
-
-    let menu = _showMenuPanel('Main Menu', content);
     _whisper(who, menu.toString(MENU_CSS));
   }
 
@@ -279,6 +323,39 @@ var AreasOfEffect = (() => {
   }
 
   /**
+   * Updates the shortcut macros, creating them if they don't already exist.
+   * @private
+   */
+  function _updateShortcutMacros() {
+    let players = findObjs({
+      _type: 'player'
+    });
+    let gms = _.filter(players, player => {
+      return playerIsGM(player.get('_id'));
+    });
+
+    let macrosNames = _.keys(MACRO_SHORTCUTS);
+    _.each(macrosNames, name => {
+      let macro = findObjs({
+        _type: 'macro',
+        name
+      })[0];
+
+      let action = MACRO_SHORTCUTS[name].replace('EFFECT_NAME', getEffectNamePrompt());
+
+      if(macro)
+        macro.set('action', action);
+      else
+        createObj('macro', {
+          _playerid: gms[0].get('_id'),
+          name,
+          action,
+          visibleto: 'all'
+        });
+    });
+  }
+
+  /**
    * @private
    * Whispers a Marching Order message to someone.
    */
@@ -291,19 +368,19 @@ var AreasOfEffect = (() => {
    * Check that the menu macro for this script is installed.
    */
   on('ready', () => {
+    let players = findObjs({
+      _type: 'player'
+    });
+    let gms = _.filter(players, player => {
+      return playerIsGM(player.get('_id'));
+    });
+
+    // Create the menu macro.
     let menuMacro = findObjs({
       _type: 'macro',
       name: 'AreasOfEffectMenu'
     })[0];
-
     if(!menuMacro) {
-      let players = findObjs({
-        _type: 'player'
-      });
-      let gms = _.filter(players, player => {
-        return playerIsGM(player.get('_id'));
-      });
-
       _.each(gms, gm => {
         createObj('macro', {
           _playerid: gm.get('_id'),
@@ -311,8 +388,11 @@ var AreasOfEffect = (() => {
           action: MENU_CMD,
           visibleto: 'all'
         });
-      })
+      });
     }
+
+    // Create/update the shortcut macros.
+    _updateShortcutMacros();
 
     _initState();
     log('--- Initialized Areas Of Effect v' + VERSION + ' ---');
@@ -343,7 +423,7 @@ var AreasOfEffect = (() => {
         else
           _whisper(msg.who, 'ERROR: You must select a graphic and a path to save an effect.');
       }
-      else if(argv[0] === APPLY_EFFECT_CMD) {
+      else if(argv[0] === APPLY_EFFECT_AT_PATH_CMD) {
         let name = argv.slice(1).join('_');
 
         let path;
@@ -356,6 +436,14 @@ var AreasOfEffect = (() => {
           applyEffect(msg.who, msg.playerid, name, path);
         else
           _whisper(msg.who, 'ERROR: You must select a path to apply the effect to.');
+      }
+      else if(argv[0] === APPLY_EFFECT_AT_TOKEN_CMD) {
+        let target = getObj('graphic', argv[1]);
+        let radiusUnits = argv[2];
+        let name = argv.slice(3).join('_');
+
+        let path = _createRadiusPathAtToken(target, radiusUnits);
+        applyEffect(msg.who, msg.playerid, name, path);
       }
       else if(argv[0] === APPLY_EFFECT_BETWEEN_TOKENS_CMD) {
         let selected = getObj('graphic', argv[1]);
@@ -372,11 +460,8 @@ var AreasOfEffect = (() => {
         if(confirm === 'yes')
           deleteEffect(msg.who, msg.playerid, name);
       }
-      else if(argv[0] === SHOW_EFFECTS_CMD) {
-        _showEffectsListMenu(msg.who, msg.playerid)
-      }
       else if(argv[0] === MENU_CMD) {
-        _showMainMenu(msg.who, msg.playerid);
+        _showMenu(msg.who, msg.playerid);
       }
     }
     catch(err) {

@@ -1,6 +1,9 @@
 # Areas of Effect
 
 _v1.2 Updates_
+* The menu now includes a burst button for each effect that allows you to spawn the effect as a burst radiating out from a single token.
+* Updates to existing menu UI.
+* Created shortcut macros for spawning effects.
 * Bug fix: Delete button wasn't working after previous update.
 
 _v1.1 Updates_
