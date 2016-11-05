@@ -211,7 +211,7 @@ var chatSetAttr = chatSetAttr || (function() {
 	// Setting attributes happens in a delayed recursive way to prevent the sandbox
 	// from overheating.
 	delayedSetAttributes = function(who, list, setting, errors, allAttrs, fillInAttrs, opts) {
-		let cList = _.clone(list), feedback = {},
+		let cList = _.clone(list), feedback = [],
 			dWork = function(charid) {
 				setCharAttributes(charid, setting, errors, feedback, allAttrs[charid],
 					fillInAttrs, opts);
@@ -228,7 +228,7 @@ var chatSetAttr = chatSetAttr || (function() {
 	},
 
 	setCharAttributes = function(charid, setting, errors, feedback, attrs, fillInAttrs, opts) {
-		feedback[charid] = {};
+		let charFeedback = {};
 		_.chain(setting)
 		.pick(_.keys(attrs))
 		.each(function (attrValue,attrName) {
@@ -273,10 +273,35 @@ var chatSetAttr = chatSetAttr || (function() {
 				});
 			}
 
-			feedback[charid][attrName] = attrNew;
+			charFeedback[attrName] = attrNew;
 			attr.set(attrNew);
 // 			attr.setWithWorker(attrNew);
 		});
+		// Feedback
+		charFeedback = _.chain(charFeedback)
+			.mapObject(function (o,k,l) {
+				if (!_.isUndefined(o.max) && !_.isUndefined(o.current))
+					return `${o.current || '<i>(empty)</i>'} / ${o.max || '<i>(empty)</i>'}`;
+				else if (!_.isUndefined(o.current)) return o.current || '<i>(empty)</i>';
+				else if (!_.isUndefined(o.max)) return `${o.max || '<i>(empty)</i>'} (max)`;
+				else return null;
+			})
+			.omit(_.isNull)
+			.mapObject(function(str) {
+				if (opts.replace) {
+					_.each(replacers, function (rep) {str = str.replace(rep[3],rep[0]);});
+				}
+				return str;
+			})
+			.value();
+		if (!_.isEmpty(charFeedback)) {
+			feedback.push(`Setting ${_.keys(charFeedback).join(', ')} to`
+				+ ` ${_.values(charFeedback).join(', ')} for character`
+				+ ` ${getAttrByName(charid, 'character_name')}.`);
+		} else {
+			feedback.push(`Nothing to do for character`
+				+ ` ${getAttrByName(charid, 'character_name')}.`);
+		}
 		return;
 	},
 
@@ -427,31 +452,7 @@ var chatSetAttr = chatSetAttr || (function() {
 	sendFeedback = function(who, feedback, opts) {
 		let output = `/w "${who}" <div style="border: 1px solid black; background-color:`
 		 	+ ' #FFFFFF; padding: 3px 3px;"><h3>Setting attributes</h3><p>';
-		output += _.chain(feedback)
-			.omit(obj => _.isEmpty(obj))
-			.mapObject(function(obj) {
-				return _.mapObject(obj, function (o) {
-					if (o.max !== undefined && o.current !== undefined)
-						return `${o.current || '(empty)'} / ${o.max || '(empty)'}`;
-					if (o.max === undefined) return o.current || '(empty)';
-					if (o.current === undefined) return `${o.max || '(empty)'} (max)`;
-				});
-			})
-			.each(function(obj) {
-				if (opts.replace) {
-					_.each(obj, function (v,k) {
-						_.each(replacers, function (rep) {
-							obj[k] = obj[k].replace(rep[3],rep[0]);
-						});
-					});
-				}
-			})
-			.map(function (obj, id) {
-				return `Setting ${_.keys(obj).join(', ')} to ${_.values(obj).join(', ')}`
-					+ ` for character ${getAttrByName(id, 'character_name')}.`;
-			})
-			.value()
-			.join('</p><p>') || 'Nothing to do.';
+		output += feedback.join('<br>') || 'Nothing to do.';
 		if (opts.replace) {
 			output += `</p><p>(replacing ${_.map(replacers, arr => arr[0]).join()} by`
 				+ ` ${_.map(replacers, arr => arr[1]).join()})`;
