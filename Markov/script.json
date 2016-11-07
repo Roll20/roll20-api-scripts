@@ -1,15 +1,21 @@
 {
     "name": "Markov",
     "script": "Markov.js",
-    "version": "0.1.0",
-    "previousversions": [],
-    "description": "A simple name generator that uses markov chains\r\rTo use enter !markov in the chat and a new name will be generated using a markov chain.",
-    "authors": "Ryan Jentzsch (retooled into Roll20 based on works created by drow <drow@bin.sh> and released into the public domain)",
+    "version": "0.1.1",
+    "previousversions": ["0.1.0"],
+    "description": "A simple name generator that uses markov chains\r\rTo use enter !markov in the chat and a new name will be generated using a markov chain. See the READ.me for more details.",
+    "authors": "Ryan Jentzsch (retooled into Roll20 -- based on works created by drow <drow@bin.sh> and released into the public domain)",
     "roll20userid": "1638601",
     "patreon": "https://patreon.com/user?u=3985594",
-    "modifies": {
-        "state.marokov": "read,write"
-    },
+    "modifies": {},
     "conflicts": [],
-    "useroptions": []
+    "useroptions":
+	[
+		{
+			"name": "Search Handouts",
+			"type": "checkbox",
+			"description": "Clear this checkbox if you DON'T have handouts to be included as Markov language sets.",
+			"value": "searchHandouts"
+		}
+	]
 }

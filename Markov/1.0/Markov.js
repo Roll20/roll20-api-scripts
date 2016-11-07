@@ -1,29 +1,25 @@
-/*
- Markov a simple name generator that uses Markov chains.
- Usage: In the chat enter !markov [language set name]
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// name_generator.js
+// written and released to the public domain by drow <drow@bin.sh>
+// http://creativecommons.org/publicdomain/zero/1.0/
 
-  This script is derived from name_generator.js
-  Re-formatted and implemented in Roll20 by Ryan Jentzsch
-  name_generator.js was written and released to the public domain by drow <drow@bin.sh>
-  http://creativecommons.org/publicdomain/zero/1.0/
-  original source from https://donjon.bin.sh/code/name/
-  Many thanks to the original author
+/*
+ re-formatted and implemented in Roll20 by ryan jentzsch
+ original source from https://donjon.bin.sh/code/name/
+ 2016-09-13 name_generator.js
+
+ Usage: In the chat enter !marov
  */
 
 /* jshint undef: true */
 /* globals
- globalconfig,
- useroptions,
- findObjs,
- sendChat,
  state,
- log,
- on,
- _
+ sendChat,
+ on
  */
 
 /**
- * Default names seed for markov to generate new names from
+ * Names seed for markov to generate new names from
  *
  * @type {string[]}
  */
@@ -5525,94 +5521,27 @@ var defaultNames =
 		"Zulma"
 	];
 
-/**
- * Helper function to transform a string into an array with a given separator
- *
- * @param fullString - the string to convert
- * @param separator - what separates each word or element (e.g. "," to use the comma as a deliminator)
- * @return {Array}
- */
-function listToArray(fullString, separator)
-{
-	'use strict';
-
-	var fullArray = [];
-	if (fullString !== undefined)
-	{
-		if (fullString.indexOf(separator) == -1)
-		{
-			fullArray.push(fullString);
-		}
-		else
-		{
-			fullArray = fullString.split(separator);
-		}
-	}
-	return fullArray;
-}
-
-/**
- * Markov pseudo-class
- *
- * @type {{chain_cache: {}, namesets: {default: string[]}, init: markov.init, handleChatMessage: markov.handleChatMessage, generateName: markov.generateName, markov_chain: markov.markov_chain, construct_chain: markov.construct_chain, incr_chain: markov.incr_chain, scale_chain: markov.scale_chain, markov_name: markov.markov_name, select_link: markov.select_link}}
- */
 var markov =
 {
+
 	chain_cache: {},
-	namesets: {default: defaultNames},
 
 	/**
-	 * Called from the page ready event
+	 * Called once the page has loaded and is ready
 	 */
 	init: function()
 	{
 		'use strict';
 
-		// Display banner and log activity to the API console
-		log(' _____             _____           _ ');
-		log('| __  |_ _ ___ ___|   | |___ ___ _| |');
-		log("|    -| | | .'|   | | | | -_|  _| . |");
-		log('|__|__|_  |__,|_|_|_|___|___|_| |___|');
-		log('      |___|                          ');
-		log('-------------------------------------');
-		log(' https://patreon.com/user?u=3985594  ');
-		log('        Markov Name Generator        ');
-		log('-------------------------------------');
-		log('Markov default nameset loaded.');
-
-		// Get any the user options
-		var useroptions = (globalconfig && (globalconfig.Markov || globalconfig.markov)) || {searchHandouts: true};
-
-		// Because searching though handouts is an expensive process see if the user has opted out.
-		if (useroptions.searchHandouts)
+		// Register markov in the state object if not already there
+		if (!state.hasOwnProperty('markov'))
 		{
-			// Not the most efficient method, but due to asynchronous nature of handouts this is the only way
-			var handouts = findObjs(
-				{
-					_type:    "handout",
-					archived: false
-				});
+			state.markov = {};
+		}
 
-			// Iterate through every single un-archived handout
-			var handoutName;
-			_.each(handouts, function (obj)
-			{
-				handoutName = obj.get('name');
-				// Asynchronously get the gmnotes
-				obj.get("gmnotes", function (gmnote)
-				{
-					// Does the gmnotes have 'markov' in them?
-					if (gmnote === 'markov')
-					{
-						// Asynchronously get the notes which should have a comma separated list of names
-						obj.get("notes", function (note)
-						{
-							markov.namesets[handoutName] = listToArray(note, ',');
-							log('Markov ' + handoutName + ' nameset loaded.');
-						});
-					}
-				});
-			});
+		if (!state.markov.hasOwnProperty('nameSet'))
+		{
+			state.markov.nameSet = {default: defaultNames};
 		}
 
 		// Hook into the chat events
@@ -5620,7 +5549,7 @@ var markov =
 	},
 
 	/**
-	 * Look to see if the chat message is a markov request, and if so generate a new name
+	 * Look to see if the chat message is a markov request and if so generate a new name
 	 *
 	 * @param msg
 	 */
@@ -5628,41 +5557,24 @@ var markov =
 	{
 		'use strict';
 
-		// This an api directive?
-		if (msg.type === "api")
+		if ((msg.type === "api") && (msg.content.indexOf("!markov") !== -1))
 		{
-			// convert each word to an element into the words array.
-			var words = listToArray(msg.content, " ");
-
-			// Is this the !markov request?
-			if (words[0] === '!markov')
-			{
-				// If only the command '!markov' is used then use the default language set.
-				if (words.length === 1)
-				{
-					sendChat("", markov.generateName('default'));
-				}
-				else
-				{
-					// Tell the name generator what nameset to use.
-					sendChat("", markov.generateName(words[1]).replace(/\s/g, ''));
-				}
-			}
+			sendChat("", markov.generateName('default'));
 		}
 	},
 
 	/**
-	 * Create a new name using Markov's logic
+	 * Currently there is support for only one name set (language) 'default'
 	 *
-	 * @param languageName - will either be 'default', or the name of the handout that contains the nameset
-	 * @return string - the new name, or a message indicating failure.
+	 * @param languageName
+	 * @return {*}
 	 */
 	generateName: function(languageName)
 	{
 		'use strict';
-		if (!markov.namesets[languageName])
+		if (!state.markov.nameSet[languageName])
 		{
-			return 'Unknown Language (name-set) or handout notes are not valid: ' + languageName;
+			return 'Unknown Language (name-set): ' + languageName;
 		}
 
 		// Use markov's logic to generate a name using the names in languageName as a seed
@@ -5692,7 +5604,7 @@ var markov =
 		}
 		else
 		{
-			var list = markov.namesets[type];
+			var list = state.markov.nameSet[type];
 			if (list)
 			{
 				chain = markov.construct_chain(list);
