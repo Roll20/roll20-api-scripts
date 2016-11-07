@@ -303,13 +303,12 @@ var chatSetAttr = chatSetAttr || (function() {
 		charFeedback = _.chain(charFeedback)
 			.mapObject(function (o,k,l) {
 				if (!_.isUndefined(o.max) && !_.isUndefined(o.current))
-					return `${o.current || '<i>(empty)</i>'} / ${o.max || '<i>(empty)</i>'}`;
-				else if (!_.isUndefined(o.current)) return o.current || '<i>(empty)</i>';
-				else if (!_.isUndefined(o.max)) return `${o.max || '<i>(empty)</i>'} (max)`;
+					return `${htmlReplace(o.current) || '<i>(empty)</i>'} / ${htmlReplace(o.max) || '<i>(empty)</i>'}`;
+				else if (!_.isUndefined(o.current)) return htmlReplace(o.current) || '<i>(empty)</i>';
+				else if (!_.isUndefined(o.max)) return `${htmlReplace(o.max) || '<i>(empty)</i>'} (max)`;
 				else return null;
 			})
 			.omit(_.isNull)
-			.mapObject(htmlReplace)
 			.value();
 		if (!_.isEmpty(charFeedback)) {
 			feedback.push(`Setting ${_.keys(charFeedback).join(', ')} to`
@@ -373,7 +372,9 @@ var chatSetAttr = chatSetAttr || (function() {
 		//			replace - true if characters from the replacers array should be replaced
 		// Output:	Object containing key|value for all expressions.
 		let setting =  _.chain(args)
-						.map(str => str.split(/\s*\|\s*/))
+						.map(str => str.split('').reverse().join('')
+							.split(/\s*\|(?!\\)\s*/).reverse()
+							.map(str => str.split('').reverse().join('')))
 						.reject(a => a.length === 0)
 						.map(sanitizeAttributeArray)
 						.reduce(function (p,c) {
