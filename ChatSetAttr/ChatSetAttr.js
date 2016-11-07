@@ -37,6 +37,28 @@ var chatSetAttr = chatSetAttr || (function() {
 		return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 	},
 
+	htmlReplace = function (str) {
+		let entities = {
+			'<' : 'lt',
+			'>' : 'gt',
+			"'" : '#39',
+			'@' : '#64',
+			'{' : '#123',
+			'|' : '#124',
+			'}' : '#125',
+			'[' : '#91',
+			']' : '#93',
+			'"' : 'quot',
+			'-' : 'mdash',
+			' ' : 'nbsp'
+		};
+
+		return _.chain(str.split(''))
+			.map(c => (_.has(entities,c)) ? ('&'+entities[c]+';') : c)
+			.value()
+			.join('');
+	},
+
 	processInlinerolls = function (msg) {
 		// Input:	msg - chat message
 		// Output:	msg.content, with all inline rolls evaluated
@@ -220,7 +242,7 @@ var chatSetAttr = chatSetAttr || (function() {
 				} else {
 					handleErrors(who, errors);
 					if (!opts.silent) {
-						sendFeedback(who, feedback, opts);
+						sendFeedback(who, feedback);
 					}
 				}
 			}
@@ -287,12 +309,7 @@ var chatSetAttr = chatSetAttr || (function() {
 				else return null;
 			})
 			.omit(_.isNull)
-			.mapObject(function(str) {
-				if (opts.replace) {
-					_.each(replacers, function (rep) {str = str.replace(rep[3],rep[0]);});
-				}
-				return str;
-			})
+			.mapObject(htmlReplace)
 			.value();
 		if (!_.isEmpty(charFeedback)) {
 			feedback.push(`Setting ${_.keys(charFeedback).join(', ')} to`
@@ -449,14 +466,10 @@ var chatSetAttr = chatSetAttr || (function() {
 		return checkPermissions(_.uniq(charid.split(/\s*,\s*/)), errors, playerid);
 	},
 
-	sendFeedback = function(who, feedback, opts) {
+	sendFeedback = function(who, feedback) {
 		let output = `/w "${who}" <div style="border: 1px solid black; background-color:`
 		 	+ ' #FFFFFF; padding: 3px 3px;"><h3>Setting attributes</h3><p>';
 		output += feedback.join('<br>') || 'Nothing to do.';
-		if (opts.replace) {
-			output += `</p><p>(replacing ${_.map(replacers, arr => arr[0]).join()} by`
-				+ ` ${_.map(replacers, arr => arr[1]).join()})`;
-		}
 		output += '</p></div>';
 		sendChat('ChatSetAttr', output);
 	},
@@ -495,8 +508,8 @@ var chatSetAttr = chatSetAttr || (function() {
 				deleteMode = (mode[1] === 'del');
 
 			if (opts.evaluate && !playerIsGM(msg.playerid)) {
-				handleErrors(who, ['The --evaluate option is only available to the GM.']);
-				return;
+				errors.push('The --evaluate option is only available to the GM.');
+				delete opts.evaluate;
 			}
 
 			// Get list of character IDs
