@@ -20,7 +20,9 @@ var chatSetAttr = chatSetAttr || (function () {
 				log(` > Updating ChatSetAttr Schema to v${schemaVersion} <`);
 				state.ChatSetAttr = {
 					version: schemaVersion,
-					globalconfigCache: { lastsaved: 0 },
+					globalconfigCache: {
+						lastsaved: 0
+					},
 					playersCanModify: false
 				};
 			}
@@ -378,10 +380,11 @@ var chatSetAttr = chatSetAttr || (function () {
 			// Output:	Object containing key|value for all expressions.
 			let setting = _.chain(args)
 				.map(str => str.split('').reverse().join('')
-					.split(/\s*\|(?!\\)\s*/).reverse()
+					.split(/\s*\|(?!\\)\s*/g).reverse()
 					.map(str => str.split('').reverse().join('')))
 				.reject(a => a.length === 0)
-				.map(sanitizeAttributeArray)
+				.map(arr => _.map(arr, str => str.replace(/\\\|/g, '|')))
+				.map(readAttribute)
 				.reduce(function (p, c) {
 					p[c[0]] = _.extend(p[c[0]] || {}, c[1])
 					return p;
@@ -403,30 +406,15 @@ var chatSetAttr = chatSetAttr || (function () {
 			));
 			return setting;
 		},
-		sanitizeAttributeArray = function (arr) {
-			if (arr.length === 1)
-				return [arr[0], {
-					current: ''
-				}];
-			if (arr.length === 2)
-				return [arr[0], {
-					current: arr[1].replace(/^'(.*)'$/, '$1')
-				}];
-			if (arr.length === 3 && arr[1] === '')
-				return [arr[0], {
-					max: arr[2].replace(/^'(.*)'$/, '$1')
-				}];
-			if (arr.length === 3 && arr[1] === "''")
-				return [arr[0], {
-					current: '',
-					max: arr[2].replace(/^'(.*)'$/, '$1')
-				}];
-			else if (arr.length === 3)
-				return [arr[0], {
-					current: arr[1].replace(/^'(.*)'$/, '$1'),
-					max: arr[2].replace(/^'(.*)'$/, '$1')
-				}];
-			if (arr.length > 3) return sanitizeAttributeArray(_.first(arr, 3));
+		readAttribute = function (arr) {
+			let value = {};
+			if (arr.length < 3 || arr[1] !== '') {
+				value.current = arr[1] || '';
+			}
+			if (arr.length > 2) {
+				value.max = arr[2];
+			}
+			return [arr[0], _.mapObject(value, str => str.replace(/^'(.*)'$/, '$1'))];
 		},
 		// These functions are used to get a list of character ids from the input,
 		// and check for permissions.
