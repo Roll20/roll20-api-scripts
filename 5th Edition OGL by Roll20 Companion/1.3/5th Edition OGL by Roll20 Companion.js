@@ -171,7 +171,7 @@ var handledeathsave = function(msg,character) {
         }
         if(succ2.get("current") === "on") {
             succ3.set({current:"on"});
-            resultoutput = "STABALIZED";
+            resultoutput = "STABILIZED";
             cleardeathsaves(character);
         }
         else if(succ1.get("current") === "on") {
@@ -325,8 +325,6 @@ var longrest = function(msg) {
         });
         var maxhp = getAttrByName(character.id, "hp", "max");
         var hp = findObjs({type: 'attribute', characterid: character.id, name: "hp"}, {caseInsensitive: true})[0];
-        log(maxhp);
-        log(hp);
         if(hp && maxhp) {
             hp.set({current: maxhp});
         }
@@ -400,10 +398,14 @@ var handleammo = function (msg,character,player) {
         ammoitemid = getAttrByName(character.id, ammoresource.get("name") + "_itemid");
         if(ammoitemid) {
             ammoitem = findObjs({type: 'attribute', characterid: character.id, name: "repeating_inventory_" + ammoitemid + "_itemcount"}, {caseInsensitive: true})[0];
-            ammoitem.set({current: ammoitem.get("current") - 1});
+            if(ammoitem) {
+                ammoitem.set({current: ammoitem.get("current") - 1});
+            }
             ammoweight = findObjs({type: 'attribute', characterid: character.id, name: "repeating_inventory_" + ammoitemid + "_itemweight"}, {caseInsensitive: true})[0];
             totalweight = findObjs({type: 'attribute', characterid: character.id, name: "weighttotal"}, {caseInsensitive: true})[0];
-            totalweight.set({current: totalweight.get("current") - ammoweight.get("current")});
+            if(ammoweight && totalweight) {
+                totalweight.set({current: totalweight.get("current") - ammoweight.get("current")});
+            }
         }
         if(ammoresource.get("current") < 0) {
             if(getAttrByName(character.id, "wtype") === "") {

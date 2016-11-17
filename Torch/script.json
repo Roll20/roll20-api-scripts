@@ -1,6 +1,6 @@
 {
   "name": "Torch",
-  "version": "0.8.7",
+  "version": "0.8.9",
   "description": "Torch provides commands for managing dynamic lighting. Supplying a first argument of **help** to any of the commands displays this help message, as will calling `!torch` or `!snuff` with nothing supplied or selected.\r\rTorch now supports **_Jack Taylor_** inspired flickering lights. Flicker lights are only active on pages where a player is (GMs, drag yourself to other pages if you don't want to move the party.) and are persisted in the state. Flicker lights can be used in addition to regular lights as they are implemented on a separate invisible token that follows the nomal token.\r\r## Commands\r\r```!torch [<Radius> [<Dim Start> [<All Players> [<Token ID>|<--Angle> ... ]]]]```\r\rSets the light for the selected/supplied tokens. Only GMs can supply token ids to adjust.\r\r**Note:** If you are using multiple `@{target|token_id}` calls in a macro, and need to adjust light on fewer than the supplied number of arguments, simply select the same token several times. The duplicates will be removed.\r\r* `<Radius>` -- The radius that the light extends to. (Default: `40`)\r* `<Dim Start>` -- The radius at which the light begins to dim. (Default: Half of Radius )\r* `<All Players>` -- Should all players see the light, or only the controlling players (Darkvision, etc). Specify one of `1`, `on`, `yes`, `true`, `sure`, `yup`, or `-` for yes, anything else for no. (Default: `yes`)\r* `<Token ID>` -- A Token ID, usually supplied with something like `@{target|Target 1|token_id}`.\r* `<--Angle>` -- The angle of the light arc of the light. (Default: `360`)\r\r```!snuff [<Token ID> ... ]```\r\rTurns off light for the selected/supplied tokens. Only GMs can supply token ids to adjust.\r\r**Note:** If you are using multiple `@{target|token_id}` calls in a macro, and need to adjust light on fewer than the supplied number of arguments, simply select the same token several times. The duplicates will be removed.\r\r* `<Token ID>` -- A Token ID, usually supplied with something like `@{target|Target 1|token_id}`.\r\r```!flicker-on [<Radius> [<Dim Start> [<All Players> [<Token ID>|<--Angle> ... ]]]]```\r\rBehaves identically to `!torch`, save that it creates a flickering light.\r\r```!flicker-off [<Token ID> ... ]```\r\rBehaves identically to `!snuff`, save that it affects the flickering light.\r\r\r```!daytime [<Token ID>]```\r\rTurns off dynamic lighting for the current player page, or the page of the selected/supplied token.\r\r* `<Token ID>` -- A Token ID, usually supplied with something like `@{target|Target 1|token_id}`.\r\r```!nighttime [<Token ID>]```\r\rTurns on dynamic lighting for the current player page, or the page of the selected/supplied token.\r\r* `<Token ID>` -- A Token ID, usually supplied with something like `@{target|Target 1|token_id}`.\r\r```!global-light [<Token ID>]```\r\rToggles Global Illumination for the current player page, or the page of the selected/supplied token.\r\r* `<Token ID>` -- A Token ID, usually supplied with something like `@{target|Target 1|token_id}`.",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -30,6 +30,8 @@
   "script": "Torch.js",
   "useroptions": [],
   "previousversions": [
-    "0.8.6"
+    "0.8.6",
+    "0.8.7",
+    "0.8.8"
   ]
 }
