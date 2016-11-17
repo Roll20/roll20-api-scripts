@@ -54,18 +54,17 @@ var chatSetAttr = chatSetAttr || (function () {
 		},
 		showConfig = function (who) {
 			let optionsText = _.map([{
-					name: 'playersCanModify',
-					command: 'players-can-modify',
-					desc: 'Determines if players can use <i>--name</i> and <i>--charid</i> to ' +
-						'change attributes of characters they do not control.'
-				},
-				{
-					name: 'playersCanEvaluate',
-					command: 'players-can-evaluate',
-					desc: 'Determines if players can use the <i>--evaluate</i> option. <b>' +
-						'Be careful</b> in giving players access to this option, because ' +
-						'it potentially gives players access to your full API sandbox.'
-				}], getConfigOptionText).join('');
+				name: 'playersCanModify',
+				command: 'players-can-modify',
+				desc: 'Determines if players can use <i>--name</i> and <i>--charid</i> to ' +
+					'change attributes of characters they do not control.'
+			}, {
+				name: 'playersCanEvaluate',
+				command: 'players-can-evaluate',
+				desc: 'Determines if players can use the <i>--evaluate</i> option. <b>' +
+					'Be careful</b> in giving players access to this option, because ' +
+					'it potentially gives players access to your full API sandbox.'
+			}], getConfigOptionText).join('');
 			let output = `/w "${who}" <div style="border: 1px solid black; background-color: #FFFFFF;` +
 				' padding: 3px 3px;"><b>ChatSetAttr Configuration</b><div style="padding-left:10px;">' +
 				'<p><i>!setattr-config</i> can be invoked in the following format: </p><pre style="' +
@@ -150,14 +149,38 @@ var chatSetAttr = chatSetAttr || (function () {
 			});
 			return result;
 		},
-		generateRowId = function (minimum) {
-			minimum = minimum || '-A000000000000000000';
-			minimum = (minimum.search(/-/) !== 0) ? '-A000000000000000000' : minimum;
-			let pool = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
-				end = minimum.match(/z*$/)[0];
-			return minimum.slice(0, minimum.length - 1 - end.length) +
-				pool[pool.indexOf(minimum[minimum.length - 1 - end.length]) + 1] +
-				'1'.repeat(end.length);
+		generateUUID = function () {
+			"use strict";
+			var a = 0,
+				b = [];
+			return function () {
+				var c = (new Date()).getTime() + 0,
+					d = c === a;
+				a = c;
+				for (var e = new Array(8), f = 7; 0 <= f; f--) {
+					e[f] = "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz".charAt(c % 64);
+					c = Math.floor(c / 64);
+				}
+				c = e.join("");
+				if (d) {
+					for (f = 11; 0 <= f && 63 === b[f]; f--) {
+						b[f] = 0;
+					}
+					b[f]++;
+				} else {
+					for (f = 0; 12 > f; f++) {
+						b[f] = Math.floor(64 * Math.random());
+					}
+				}
+				for (f = 0; 12 > f; f++) {
+					c += "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz".charAt(b[f]);
+				}
+				return c;
+			};
+		}(),
+		generateRowID = function () {
+			"use strict";
+			return generateUUID().replace(/_/g, "Z");
 		},
 		// Getting attributes from parsed options. Repeating attributes need special treatment
 		// in order to parse row index and not create defective repeating rows.
@@ -169,30 +192,30 @@ var chatSetAttr = chatSetAttr || (function () {
 				repSections = [];
 			// Read attribute names, determine row number or id or creation of new row.
 			let attrNamesRead = _.reduce(attrNames, function (prev, attrName) {
-					let match = attrName.match(/_(\$\d+|-[-A-Za-z0-9]+?|\d+)_/);
-					if (match && match[1][0] === '$') {
-						prev[attrName] = {
-							rowNum : parseInt(match[1].slice(1))
-						};
-					} else if (match) {
-						prev[attrName] = {
-							rowIdLo : match[1].toLowerCase()
-						};
-					} else {
-						errors.push(`Could not understand repeating attribute` +
-							` name ${attrName}.`);
-						return;
-					}
-					prev[attrName]['sName'] = attrName.split(match[0]);
-					repSections.push(prev[attrName]['sName'][0]);
-					if (prev[attrName].rowIdLo === '-create') {
-						rowsToCreate.push(prev[attrName]['sName'][0]);
-					}
-					return prev;
-				}, {});
+				let match = attrName.match(/_(\$\d+|-[-A-Za-z0-9]+?|\d+)_/);
+				if (match && match[1][0] === '$') {
+					prev[attrName] = {
+						rowNum: parseInt(match[1].slice(1))
+					};
+				} else if (match) {
+					prev[attrName] = {
+						rowIdLo: match[1].toLowerCase()
+					};
+				} else {
+					errors.push(`Could not understand repeating attribute` +
+						` name ${attrName}.`);
+					return;
+				}
+				prev[attrName]['sName'] = attrName.split(match[0]);
+				repSections.push(prev[attrName]['sName'][0]);
+				if (prev[attrName].rowIdLo === '-create') {
+					rowsToCreate.push(prev[attrName]['sName'][0]);
+				}
+				return prev;
+			}, {});
 			repSections = _.uniq(repSections);
 			let repSectionsRegex = _.map(repSections, function (s) {
-					return new RegExp('^' + escapeRegExp(s) + '_(-[-A-Za-z0-9]+?|\\d+)_', 'i');
+				return new RegExp('^' + escapeRegExp(s) + '_(-[-A-Za-z0-9]+?|\\d+)_', 'i');
 			});
 			// Get attributes
 			_.each(list, function (charid) {
@@ -228,7 +251,7 @@ var chatSetAttr = chatSetAttr || (function () {
 				repRowIdsLo[charid] = _.mapObject(repRowIds[charid],
 					l => _.map(l, n => n.toLowerCase()));
 				_.each(_.uniq(rowsToCreate), function (prefix) {
-					repRowIds[charid][prefix].push(generateRowId(_.last(repRowIds[charid][prefix])));
+					repRowIds[charid][prefix].push(generateRowID());
 				});
 			});
 			// Get correct attribute names and store attributes in allAttrs
@@ -552,7 +575,8 @@ var chatSetAttr = chatSetAttr || (function () {
 			}
 			let mode = msg.content.match(/^!(set|del|mod)attr\b(?:-|\s|$)(config)?/);
 			if (mode && mode[2]) {
-				if (playerIsGM(msg.playerid)) {
+				let playerid = msg.playerid || 'API';
+				if (playerIsGM(playerid)) {
 					let opts = parseOpts(msg.content, []);
 					if (opts['players-can-modify']) {
 						state.ChatSetAttr.playersCanModify = !state.ChatSetAttr.playersCanModify;
@@ -568,40 +592,48 @@ var chatSetAttr = chatSetAttr || (function () {
 					fillInAttrs = {},
 					errors = [];
 				const hasValue = ['charid', 'name'],
-					optsArray = ['all', 'allgm', 'charid', 'name', 'silent', 'sel',
-						'replace', 'nocreate', 'mod', 'modb', 'evaluate'
+					optsArray = ['all', 'allgm', 'charid', 'name', 'allplayers', 'sel',
+						'replace', 'nocreate', 'mod', 'modb', 'evaluate', 'silent'
 					],
 					who = getPlayerName(msg.who),
+					playerid = msg.playerid || 'API',
 					opts = parseOpts(processInlinerolls(msg), hasValue),
 					setting = parseAttributes(_.chain(opts).omit(optsArray).keys().value(),
 						opts.replace, fillInAttrs),
 					deleteMode = (mode[1] === 'del');
-					opts.mod = (mode[1] === 'mod');
-				if (opts.evaluate && !playerIsGM(msg.playerid) && !state.ChatSetAttr.playersCanEvaluate) {
+				opts.mod = (mode[1] === 'mod');
+				if (opts.evaluate && !playerIsGM(playerid) && !state.ChatSetAttr.playersCanEvaluate) {
 					handleErrors(who, ['The --evaluate option is only available to the GM.']);
 					return;
 				}
 				// Get list of character IDs
-				if (opts.all && playerIsGM(msg.playerid)) {
+				if (opts.all && playerIsGM(playerid)) {
 					charIDList = _.map(findObjs({
 						_type: 'character'
 					}), c => c.id);
-				} else if (opts.allgm && playerIsGM(msg.playerid)) {
+				} else if (opts.allgm && playerIsGM(playerid)) {
 					charIDList = _.chain(findObjs({
 							_type: 'character'
 						}))
 						.filter(c => c.get('controlledby') === '')
 						.map(c => c.id)
 						.value();
+				} else if (opts.allplayers && playerIsGM(playerid)) {
+					charIDList = _.chain(findObjs({
+							_type: 'character'
+						}))
+						.filter(c => c.get('controlledby') !== '')
+						.map(c => c.id)
+						.value();
 				} else if (opts.charid) {
-					charIDList = getIDsFromList(opts.charid, errors, msg.playerid);
+					charIDList = getIDsFromList(opts.charid, errors, playerid);
 				} else if (opts.name) {
-					charIDList = getIDsFromNames(opts.name, errors, msg.playerid);
+					charIDList = getIDsFromNames(opts.name, errors, playerid);
 				} else if (opts.sel) {
 					charIDList = getIDsFromTokens(msg.selected);
 				} else {
 					errors.push('You need to supply one of --all, --allgm, --sel,' +
-						' --charid, or --name.');
+						' --allplayers, --charid, or --name.');
 				}
 				if (_.isEmpty(charIDList)) {
 					errors.push('No target characters.');
@@ -610,8 +642,7 @@ var chatSetAttr = chatSetAttr || (function () {
 					errors.push('No attributes supplied.');
 				}
 				// Get attributes
-				let allAttrs = getAllAttributes(charIDList, _.keys(setting), errors,
-					!opts.nocreate && !deleteMode, deleteMode);
+				let allAttrs = getAllAttributes(charIDList, _.keys(setting), errors, !opts.nocreate && !deleteMode, deleteMode);
 				handleErrors(who, errors);
 				// Set or delete attributes
 				if (!_.isEmpty(charIDList) && !_.isEmpty(setting)) {

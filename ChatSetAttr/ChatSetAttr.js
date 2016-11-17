@@ -575,7 +575,8 @@ var chatSetAttr = chatSetAttr || (function () {
 			}
 			let mode = msg.content.match(/^!(set|del|mod)attr\b(?:-|\s|$)(config)?/);
 			if (mode && mode[2]) {
-				if (playerIsGM(msg.playerid)) {
+				let playerid = msg.playerid || 'API';
+				if (playerIsGM(playerid)) {
 					let opts = parseOpts(msg.content, []);
 					if (opts['players-can-modify']) {
 						state.ChatSetAttr.playersCanModify = !state.ChatSetAttr.playersCanModify;
@@ -595,28 +596,29 @@ var chatSetAttr = chatSetAttr || (function () {
 						'replace', 'nocreate', 'mod', 'modb', 'evaluate', 'silent'
 					],
 					who = getPlayerName(msg.who),
+					playerid = msg.playerid || 'API',
 					opts = parseOpts(processInlinerolls(msg), hasValue),
 					setting = parseAttributes(_.chain(opts).omit(optsArray).keys().value(),
 						opts.replace, fillInAttrs),
 					deleteMode = (mode[1] === 'del');
 				opts.mod = (mode[1] === 'mod');
-				if (opts.evaluate && !playerIsGM(msg.playerid) && !state.ChatSetAttr.playersCanEvaluate) {
+				if (opts.evaluate && !playerIsGM(playerid) && !state.ChatSetAttr.playersCanEvaluate) {
 					handleErrors(who, ['The --evaluate option is only available to the GM.']);
 					return;
 				}
 				// Get list of character IDs
-				if (opts.all && playerIsGM(msg.playerid)) {
+				if (opts.all && playerIsGM(playerid)) {
 					charIDList = _.map(findObjs({
 						_type: 'character'
 					}), c => c.id);
-				} else if (opts.allgm && playerIsGM(msg.playerid)) {
+				} else if (opts.allgm && playerIsGM(playerid)) {
 					charIDList = _.chain(findObjs({
 							_type: 'character'
 						}))
 						.filter(c => c.get('controlledby') === '')
 						.map(c => c.id)
 						.value();
-				} else if (opts.allplayers && playerIsGM(msg.playerid)) {
+				} else if (opts.allplayers && playerIsGM(playerid)) {
 					charIDList = _.chain(findObjs({
 							_type: 'character'
 						}))
@@ -624,9 +626,9 @@ var chatSetAttr = chatSetAttr || (function () {
 						.map(c => c.id)
 						.value();
 				} else if (opts.charid) {
-					charIDList = getIDsFromList(opts.charid, errors, msg.playerid);
+					charIDList = getIDsFromList(opts.charid, errors, playerid);
 				} else if (opts.name) {
-					charIDList = getIDsFromNames(opts.name, errors, msg.playerid);
+					charIDList = getIDsFromNames(opts.name, errors, playerid);
 				} else if (opts.sel) {
 					charIDList = getIDsFromTokens(msg.selected);
 				} else {
