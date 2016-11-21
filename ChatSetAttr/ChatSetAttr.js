@@ -349,9 +349,16 @@ var chatSetAttr = chatSetAttr || (function () {
 		setCharAttributes = function (charid, setting, errors, feedback, attrs, fillInAttrs, opts) {
 			let charFeedback = {};
 			_.each(attrs, function (attr, attrName) {
-				let attrNew = (fillInAttrs[attrName]) ?
-					_.mapObject(setting[attrName], v => fillInAttrValues(charid, v)) :
-					_.clone(setting[attrName]);
+				let attrNew;
+				if (opts.reset) {
+					attrNew = {
+						current : attr.get('max')
+					};
+				} else {
+					attrNew = (fillInAttrs[attrName]) ?
+						_.mapObject(setting[attrName], v => fillInAttrValues(charid, v)) :
+						_.clone(setting[attrName]);
+				}
 				if (opts.evaluate) {
 					try {
 						attrNew = _.mapObject(attrNew, function (v) {
@@ -573,7 +580,7 @@ var chatSetAttr = chatSetAttr || (function () {
 			if (msg.type !== 'api') {
 				return;
 			}
-			let mode = msg.content.match(/^!(set|del|mod)attr\b(?:-|\s|$)(config)?/);
+			let mode = msg.content.match(/^!(reset|set|del|mod)attr\b(?:-|\s|$)(config)?/);
 			if (mode && mode[2]) {
 				let playerid = msg.playerid || 'API';
 				if (playerIsGM(playerid)) {
@@ -593,7 +600,7 @@ var chatSetAttr = chatSetAttr || (function () {
 					errors = [];
 				const hasValue = ['charid', 'name'],
 					optsArray = ['all', 'allgm', 'charid', 'name', 'allplayers', 'sel',
-						'replace', 'nocreate', 'mod', 'modb', 'evaluate', 'silent'
+						'replace', 'nocreate', 'mod', 'modb', 'evaluate', 'silent', 'reset'
 					],
 					who = getPlayerName(msg.who),
 					playerid = msg.playerid || 'API',
@@ -602,6 +609,7 @@ var chatSetAttr = chatSetAttr || (function () {
 						opts.replace, fillInAttrs),
 					deleteMode = (mode[1] === 'del');
 				opts.mod = (mode[1] === 'mod');
+				opts.reset = (mode[1] === 'reset');
 				if (opts.evaluate && !playerIsGM(playerid) && !state.ChatSetAttr.playersCanEvaluate) {
 					handleErrors(who, ['The --evaluate option is only available to the GM.']);
 					return;
