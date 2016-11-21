@@ -69,21 +69,28 @@ var groupCheck = groupCheck || (function() {
 			return forReal ? '[['+str+']]' : str;
 		},
 		formExpression = function(roll) {
-			return 'Rolling ' + roll.expression + ' = ' +
-				_.map(roll.results.rolls, function (r) {
-					switch (r.type) {
-						case 'R' :
-							return '(' + _.map(r.results, function (r) {
-								return '<span class=\'basicdiceroll\'>'+r.v+'</span>';
-							}).join('+') + ')';
-							break;
-						case 'M' :
-							return r.expr.toString().replace(/(\+|-)/g,'$1 ');
-							break;
-						default :
-							return '';
-					}
-				}).join(' ');
+			let rollToText = function(r) {
+				switch (r.type) {
+					case 'R' :
+						return '(' + _.map(r.results, function (r) {
+							return '<span class=\'basicdiceroll\'>'+r.v+'</span>';
+						}).join('+') + ')';
+						break;
+					case 'M' :
+						return r.expr.toString().replace(/(\+|-)/g,'$1 ');
+						break;
+					case 'V' :
+						return _.map(r.rolls, rollToText).join(' ');
+						break;
+					case 'G' :
+						return _.map(r.rolls, a => _.map(a, rollToText).join(' ')).join(' ');
+						break;
+					case 'L' :
+					default :
+						return '';
+				}
+			};
+			return 'Rolling ' + roll.expression + ' = ' + rollToText(roll.results);
 		};
 		return {
 			makeBox: makeBox,
