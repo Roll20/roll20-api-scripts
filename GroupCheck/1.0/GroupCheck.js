@@ -78,7 +78,7 @@ var groupCheck = groupCheck || (function() {
 							}).join('+') + ')';
 							break;
 						case 'M' :
-							return r.expr.replace(/(\+|-)/g,'$1 ');
+							return r.expr.toString().replace(/(\+|-)/g,'$1 ');
 							break;
 						default :
 							return '';
