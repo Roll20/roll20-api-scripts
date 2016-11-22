@@ -1,5 +1,5 @@
 // GroupCheck version 1.0
-// Last Updated: 2016-11-21
+// Last Updated: 2016-11-22
 // A script to roll checks for many tokens at once with one command.
 
 var groupCheck = groupCheck || (function() {
@@ -27,18 +27,17 @@ var groupCheck = groupCheck || (function() {
 		makeFreetext = function (text) {
 			return text ? '<p style="text-align:center">' + text + '</p>' : '';
 		},
-		makeRow = function (pic, name, roll2, r0, r1, hideformula, appendix) {
+		makeRow = function (pic, name, roll2, r0, r1, appendix) {
 			return '<tr style="padding:3px;border-bottom:1px solid #ddd;width:90%;' +
-				'height:30px;margin-left:5%">'+ makeName(pic,name) +  (roll2 ?
-				makeRoll2(addBoundary(r0, hideformula), addBoundary(r1, hideformula)) :
-				makeRoll(addBoundary(r0, hideformula), appendix)) + '</tr>';
+				'height:30px;margin-left:5%">' + makeName(pic,name) +
+				(roll2 ? makeRoll2(r0, r1) : makeRoll(r0, appendix)) + '</tr>';
 		},
 		makeName = function (pic, name) {
 			return '<td style="vertical-align:middle;padding:2px;border-bottom:' +
 				'1px solid #ddd"><table><tr><td>' +
 				(pic ? '<img style="display:inline-block;width:25px"' +
-					'src="'+pic+'">' : '') +
-				`</td><td><b>${name}</b></td></tr></table></td>`;
+					'src="' + pic + '">' : '') + '</td><td><b>' +
+				name + '</b></td></tr></table></td>';
 		},
 		makeRoll = function (text, appendix) {
 			return '<td style="text-align:center;padding:2px;border-bottom:1px' +
@@ -60,37 +59,41 @@ var groupCheck = groupCheck || (function() {
 					boundary = ';border:2px solid #B31515';
 			}
 			return '<div class="showtip tipsy" title="' +
-				(hideformula ? '' : formExpression(roll)) +
+				(hideformula ? '' : 'Rolling ' + roll.expression + ' = ' +
+					rollToText(roll.results)) +
 				'"style="display:inline-block;min-width:1em;font-size:1.2em;' +
 				'font-weight:bold;padding:0px 3px;cursor:help' + boundary + '">' +
 				(roll.results.total || 0) + '</div>';
 		},
-		addBoundary = function (str, forReal) {
-			return forReal ? '[['+str+']]' : str;
-		},
-		formExpression = function(roll) {
-			let rollToText = function(r) {
-				switch (r.type) {
-					case 'R' :
-						return '(' + _.map(r.results, function (r) {
-							return '<span class=\'basicdiceroll\'>'+r.v+'</span>';
-						}).join('+') + ')';
-						break;
-					case 'M' :
-						return r.expr.toString().replace(/(\+|-)/g,'$1 ');
-						break;
-					case 'V' :
-						return _.map(r.rolls, rollToText).join(' ');
-						break;
-					case 'G' :
-						return _.map(r.rolls, a => _.map(a, rollToText).join(' ')).join(' ');
-						break;
-					case 'L' :
-					default :
-						return '';
-				}
-			};
-			return 'Rolling ' + roll.expression + ' = ' + rollToText(roll.results);
+		rollToText = function(roll) {
+			switch (roll.type) {
+				case 'R' :
+					let c = (roll.mods && roll.mods.customCrit) ||
+						[{ comp : '==', point : roll.sides}],
+						f = (roll.mods && roll.mods.customFumble) ||
+						[{ comp : '==', point : 1}],
+						styledRolls = _.map(roll.results, function (r) {
+							let style = rollIsCrit(r.v, c[0].comp, c[0].point) ?
+								' critsuccess' :
+								(rollIsCrit(r.v, f[0].comp, f[0].point) ?
+								' critfail'  : '')
+							return `<span class='basicdiceroll${style}'>${r.v}</span>`;
+						});
+					return `(${styledRolls.join('+')})`;
+					break;
+				case 'M' :
+					return roll.expr.toString().replace(/(\+|-)/g,'$1 ');
+					break;
+				case 'V' :
+					return _.map(roll.rolls, rollToText).join(' ');
+					break;
+				case 'G' :
+					return '(' + _.map(roll.rolls, a => _.map(a, rollToText).join(' '))
+						.join(' ') + ')';
+					break;
+				default :
+					return '';
+			}
 		};
 		return {
 			makeBox: makeBox,
@@ -210,6 +213,7 @@ var groupCheck = groupCheck || (function() {
 			globalmod : {type: 'string'},
 			subheader : {type: 'string', local: true},
 			custom : {type: 'string', local: true},
+			'apply-change' : {type: 'string', local: true},
 			whisper : {type: 'bool', def: false, negate : 'public'},
 			hideformula : {type: 'bool', def: false, negate : 'showformula'},
 			usetokenname : {type: 'bool', def: true, negate : 'usecharname'},
@@ -403,63 +407,55 @@ var groupCheck = groupCheck || (function() {
 		return 'roll2';
 	},
 	parseOpts = function (content, hasValue) {
-		return _.chain(content.trim()
-				.replace(/<br\/>\n/g, ' ')
-				.replace(/({{(.*?)\s*}}$)/g, '$2')
+		return _.chain(content.replace(/<br\/>\n/g, ' ')
+				.replace(/({{(.*?)\s*}}\s*$)/g, '$2')
 				.split(/\s+--/))
 			.rest()
 			.reduce(function (opts, arg) {
 				let kv = arg.split(/\s(.+)/);
-				(_.contains(hasValue, kv[0])) ? (opts[kv[0]] = kv[1]) : (opts[arg] = true);
+				(_.contains(hasValue, kv[0])) ? (opts[kv[0]] = (kv[1] || '')) :
+					(opts[arg] = true);
 				return opts;
 			}, {})
 			.value();
 	},
-	detectCritical = function(results) {
-		let crit = false, fumble = false;
-		if (!_.has(results, 'rolls')) {
-			return false;;
+	detectCritical = function(roll) {
+		let s = [];
+		if (roll.type === 'V' && _.has(roll, 'rolls')) {
+			s = _.map(roll.rolls, detectCritical);
+		} else if (roll.type === 'G' && _.has(roll, 'rolls')) {
+			s = _.chain(roll.rolls)
+				.map(a => _.map(a, detectCritical))
+				.flatten()
+				.value();
+		} else if (roll.type === 'R' && _.has(roll,'sides')) {
+			let crit = (roll.mods && roll.mods.customCrit) ||
+				[{ comp : '==', point : roll.sides}];
+			let fumble = (roll.mods && roll.mods.customFumble) ||
+				[{ comp : '==', point : 1}];
+			if (_.some(roll.results, r => rollIsCrit(r.v, crit[0].comp, crit[0].point))) {
+				s.push('crit');
+			}
+			if (_.some(roll.results, r => rollIsCrit(r.v, fumble[0].comp, fumble[0].point))) {
+				s.push('fumble');
+			}
 		}
-		_.chain(results.rolls)
-			.filter(r => (r.type === 'R' && _.has(r,'sides')))
-			.each(function(roll) {
-				roll.mods = _.extend({
-					'CustomCrit' : [{
-						comp : '==',
-						point : roll.sides
-					}],
-					'CustomFumble' : [{
-						comp : '==',
-						point : 1
-					}]
-				}, roll.mods || {});
-				_.each(_.map(roll.results, r => r.v), function(v) {
-					switch (roll.mods.CustomCrit[0].comp) {
-						case '==' :
-							(v == roll.mods.CustomCrit[0].point) ? (crit = true) : null;
-							break;
-						case '<=' :
-							(v <= roll.mods.CustomCrit[0].point) ? (crit = true) : null;
-							break;
-						case '>=' :
-							(v >= roll.mods.CustomCrit[0].point) ? (crit = true) : null;
-					}
-					switch (roll.mods.CustomFumble[0].comp) {
-						case '==' :
-							(v == roll.mods.CustomFumble[0].point) ? (fumble = true) : null;
-							break;
-						case '<=' :
-							(v <= roll.mods.CustomFumble[0].point) ? (fumble = true) : null;
-							break;
-						case '>=' :
-							(v >= roll.mods.CustomFumble[0].point) ? (fumble = true) : null;
-					}
-				});
-			});
-		if (crit && fumble) return 'mixed';
-		else if (crit) return 'crit';
-		else if (fumble) return 'fumble';
-		else return false;
+		let c = _.contains(s, 'crit');
+		let f = _.contains(s, 'fumble');
+		let m = _.contains(s, 'mixed') || (c && f);
+		return (m ? 'mixed' : (c ? 'crit' : (f ? 'fumble' : (false))));
+	},
+	rollIsCrit = function(value, comp, point) {
+		switch (comp) {
+			case '==' :
+				return value == point;
+				break;
+			case '<=' :
+				return value <= point;
+				break;
+			case '>=' :
+				return value >= point;
+		}
 	},
 	//Main functions
 	processTokenRollData = function(token, checkFormula, opts) {
@@ -525,14 +521,25 @@ var groupCheck = groupCheck || (function() {
 		});
 		let rolls = _.map(rollData, function (o) {
 			return outputStyle.makeRow(o.pic, o.name, o.roll2, o['styled_0'],
-				o['styled_1'], false, o.appendix);
+				o['styled_1'], o.appendix);
 		});
 		if (opts.showaverage) {
-			let average = Math.round(10 * (_.chain(rollData)
-				.map(o => o['result_0'][0]).reduce((p,c) => p + c, 0)).value() /
-				rollData.length) / 10;
+			let fakeRoll = {results :
+				{
+					total : (Math.round(10 * (_.chain(rollData)
+						.map(o => o['result_0'][0]).reduce((p,c) => p + c, 0)).value() /
+						rollData.length) / 10)
+				}
+			};
 			rolls.push(outputStyle.makeRow('', 'Average of rolls', false,
-				outputStyle.makeInlineroll('', average, false, true), '', false, ''));
+				outputStyle.makeInlineroll(fakeRoll, true), '', ''));
+		}
+		if (_.has(opts, 'apply-change')) {
+			let applyChangeOpts = (opts['apply-change'] || '')
+				.replace(/~/g, '--')
+				.replace(/RESULTS/, _.map(rollData, o => o['result_0'][0]).join(',')) +
+				' --ids ' + _.map(rollData, o => o.id).join(' ');
+			let button = `[stuff](apply-change ${applyChangeOpts} --ids ${ids})`;
 		}
 		let output = (opts.whisper ? '/w GM ' : '') +
 			outputStyle.makeBox(checkName, opts.subheader, freetext, rolls.join(''));
@@ -688,8 +695,9 @@ var groupCheck = groupCheck || (function() {
 			if (!opts.process) {
 				opts.multi = (opts.multi > 1 ) ? parseInt(opts.multi) : 1;
 				let rolls = _.map(rollData, function(o) {
-					return outputStyle.makeRow(o.pic, o.name, o.roll2, o.formula,
-						o.formula, opts.hideformula, o.appendix).repeat(opts.multi);
+					let f = opts.hideformula ? `[[${o.formula}]]` : o.formula;
+					return outputStyle.makeRow(o.pic, o.name, o.roll2, f, f, o.appendix)
+						.repeat(opts.multi);
 				}).join('');
 				let output = (opts.whisper ? '/w GM ' : '') +
 					outputStyle.makeBox(checkName, opts.subheader, '', rolls);
