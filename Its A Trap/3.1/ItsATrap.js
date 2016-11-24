@@ -388,13 +388,6 @@ var ItsATrap = (() => {
       layer: 'objects',
       left: x,
       _pageid: pageId,
-      stroke_width: 10,
-      top: y
-    }));
-    createObj('path', _.extend(circle, {
-      layer: 'objects',
-      left: x,
-      _pageid: pageId,
       stroke: '#ffff00', // yellow
       stroke_width: 5,
       top: y
@@ -463,14 +456,17 @@ var ItsATrap = (() => {
    *        bleeding-eye status.
    */
   function revealTrap(trap, force) {
-    if(_getUserOption('revealTrapsToMap')) {
-      trap.set('layer', 'map');
-      toFront(trap);
-    }
-    else {
+    let effect = new TrapEffect(trap);
+
+    if(effect.revealLayer === 'objects') {
       trap.set('layer', 'objects');
       toBack(trap);
     }
+    else {
+      trap.set('layer', 'map');
+      toFront(trap);
+    }
+    sendPing(trap.get('left'), trap.get('top'), trap.get('_pageid'));
   }
 
   // Create macro for the remote activation command.
@@ -635,6 +631,22 @@ var TrapEffect = (() => {
      */
     get notes() {
       return this._effect.notes;
+    }
+
+    /**
+     * The layer that the trap gets revealed to.
+     * @type {string}
+     */
+    get revealLayer() {
+      return this._effect.revealLayer;
+    }
+
+    /**
+     * Whether the trap is revealed when it is spotted.
+     * @type {boolean}
+     */
+    get revealWhenSpotted() {
+      return this._effect.revealWhenSpotted;
     }
 
     /**
@@ -1003,7 +1015,9 @@ var ItsATrapCreationWizard = (() => {
   function _displayWizardProperties(modificationCommand, properties) {
     let table = new HtmlBuilder('table');
     _.each(properties, prop => {
-      let row = table.append('tr');
+      let row = table.append('tr', undefined, {
+        title: prop.desc
+      });
 
       // Construct the list of parameter prompts.
       let params = [];
@@ -1165,6 +1179,13 @@ var ItsATrapCreationWizard = (() => {
         options: ['yes', 'no']
       },
       {
+        id: 'revealLayer',
+        name: 'Reveal Layer',
+        desc: 'When this trap is revealed, which layer is it revealed on?',
+        value: trapEffect.revealLayer || 'map',
+        options: ['map', 'objects']
+      },
+      {
         id: 'searchDist',
         name: 'Passive Search Distance',
         desc: 'How far away can characters passively search for this trap?',
@@ -1248,6 +1269,8 @@ var ItsATrapCreationWizard = (() => {
       trapEffect.message = params[0];
     if(prop === 'notes')
       trapEffect.notes = params[0];
+    if(prop === 'revealLayer')
+      trapEffect.revealLayer = params[0];
     if(prop === 'revealToPlayers')
       trapToken.set('status_bleeding-eye', params[0] === 'yes');
     if(prop === 'revealWhenSpotted')
@@ -1734,6 +1757,10 @@ var D20TrapTheme = (() => {
 
       if(effectResults.character) {
 
+        var row = content.append('.paddedRow');
+        row.append('span.bold', 'Target:');
+        row.append('span', effectResults.character.get('name'));
+
         // Add the attack roll message.
         if(effectResults.attack) {
           let rollResult = D20TrapTheme.htmlRollResult(effectResults.roll, '1d20 + ' + effectResults.attack);
@@ -1770,7 +1797,7 @@ var D20TrapTheme = (() => {
           if(effectResults.damage)
             row.append('span', 'Damage: [[' + effectResults.damage + ']]');
           else
-            row.append('span', effectResults.character.get('name') + ' falls prey to the ' + effectResults.type + '\'s effects!');
+            row.append('span', 'You fall prey to the ' + effectResults.type + '\'s effects!');
         }
         else {
           let row = content.append('.paddedRow');
