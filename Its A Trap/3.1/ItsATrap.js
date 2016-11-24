@@ -1006,6 +1006,7 @@ var ItsATrapCreationWizard = (() => {
 
     let menu = _showMenuPanel('Trap Configuration', content);
     _whisper(who, menu.toString(MENU_CSS));
+    trapToken.set('status_cobweb', true);
   }
 
   /**
