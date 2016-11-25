@@ -608,8 +608,8 @@ var chatSetAttr = chatSetAttr || (function () {
 					setting = parseAttributes(_.chain(opts).omit(optsArray).keys().value(),
 						opts.replace, fillInAttrs),
 					deleteMode = (mode[1] === 'del');
-				opts.mod = (mode[1] === 'mod');
-				opts.reset = (mode[1] === 'reset');
+				opts.mod = opts.mod || (mode[1] === 'mod');
+				opts.reset = opts.reset || (mode[1] === 'reset');
 				if (opts.evaluate && !playerIsGM(playerid) && !state.ChatSetAttr.playersCanEvaluate) {
 					handleErrors(who, ['The --evaluate option is only available to the GM.']);
 					return;
