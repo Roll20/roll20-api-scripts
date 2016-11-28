@@ -1,0 +1,13 @@
+{
+    "name": "It's a Trap! - D&D 3.5E theme",
+    "script": "TrapTheme.js",
+    "version": "3.0",
+    "previousversions": ["1.0", "1.1", "1.2"],
+    "description": "# It's A Trap! - D&D 3.5 theme\r\r_v3.0 updates:_\r* Updated the trap theme to be compatible with Its A Trap v3.0.\r\rThis is a D&D 3.5 trap theme built to support Diana P.'s 3.5 Edition character sheet.\r\rTo use this theme for the It's A Trap! script, enter 'DnD-3.5' for the ```theme``` user option.\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [],
+    "dependencies": ["It's a Trap!"],
+    "modifies": {},
+    "conflicts": []
+}

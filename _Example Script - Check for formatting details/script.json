@@ -1,0 +1,47 @@
+{
+    "name": "Example",
+    "script": "example.js",
+    "version": "1.1",
+    "previousversions": ["1.0","0.5"],
+    "description": "This is an example package.json file in order to show the formatting and syntax required for the script to be deployed in Roll20. It is important for this section to be filled out in detail, as it's the primary way users will get information about the purpose and use of the script. Included in the description section needs to be an example use or purpose, list and explanation of API Commands, and any other information necessary to operating the script.",
+    "authors": "Steve K.",
+    "roll20userid": "5047",
+    "useroptions": [
+        {
+            "name": "variable1", 
+            "type": "text",
+            "default": "Default Text",
+            "description": "This is the first user option. Options will appear in the order they are placed inside the useroptions hash on their API page. This option is a text input that will accept any string."
+        },
+        {
+            "name": "variable2", 
+            "type": "number",
+            "default": "1",
+            "description": "The second user option is a number input and will only accept valid numbers."
+        },
+        {
+            "name": "selectoption",
+            "type": "select", 
+            "options": ["one", "two", "three"],
+            "default": "three",
+            "description": "The third user option is a select, with both set options and a default option."
+        },
+        {
+            "name": "variable3", 
+            "type": "checkbox",
+            "value": "borkborkbork",
+            "checked" : "checked",
+            "description": "The fourth user option is a checkbox with a value for the checked box as well as whether or not the box is checked by default."
+        }
+    ],
+    "dependencies": ["Red","Flight"],
+    "modifies": {
+        "state.autoStaggered": "read,write",
+        "state.autoRecovery": "read,write",
+        "token.bar1_link": "read,write",
+        "token.bar2_link": "read,write",
+        "token.bar3_link": "read,write",
+        "attribute.id": "read,write"
+    },
+    "conflicts": ["TokenMod", "Blue"]
+}

@@ -1,0 +1,13 @@
+{
+    "name": "It's a Trap! - Gamma World 7E theme",
+    "script": "TrapTheme.js",
+    "version": "3.0",
+    "previousversions": ["1.0", "1.1", "1.2"],
+    "description": "# It's A Trap! - Gamma World 7E theme\r\r_v3.0 updates:_\r* Updated the trap theme to be compatible with It's A Trap v3.0.\r\rThis is a trap theme to support the Gamma World 7E character sheet.\r\rTo use this theme for the It's A Trap! script, enter 'GammaWorld7' for the ```theme``` user option.\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [],
+    "dependencies": ["It's a Trap!"],
+    "modifies": {},
+    "conflicts": []
+}

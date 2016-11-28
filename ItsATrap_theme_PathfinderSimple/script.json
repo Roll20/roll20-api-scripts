@@ -1,0 +1,13 @@
+{
+    "name": "It's a Trap! - Pathfinder (Simple) theme",
+    "script": "theme.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "# It's A Trap! - Pathfinder (Simple) theme\r\rThis is a Pathfinder trap theme built to support the Pathfinder (Simple)\rcharacter sheet by Stephen Lindberg.\r\rTo use this theme for the It's A Trap! script, enter 'PF-Simple' for the ```theme``` user option.\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [],
+    "dependencies": ["It's a Trap!"],
+    "modifies": {},
+    "conflicts": []
+}

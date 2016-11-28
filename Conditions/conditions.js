@@ -180,6 +180,50 @@ var Conditions = Conditions || {
 	}
     },
 
+    handleTokenCreate: function(tok){
+	if (!state.Conditions.characters[tok.get('represents')]){
+	    return;
+	}
+	var properties = {}, propsChanged = false;;
+	for (var cond in state.Conditions.characters[tok.get('represents')].conditions){
+	    if (!state.Conditions.characters[tok.get('represents')].conditions.hasOwnProperty(cond)){ continue; }
+	    if (!state.Conditions.characters[tok.get('represents')].conditions[cond].icon){ continue; }
+	    properties["status_" + state.Conditions.characters[tok.get('represents')].conditions[cond].icon] = true;
+	    propsChanged = true;
+	}
+	if (propsChanged){
+	    tok.set(properties);
+	}
+    },
+
+    handleTokenChange: function(tok, prev){
+	if (tok.get('represents') == prev.represents){
+	    return;
+	}
+	var properties = {}, propsChanged = false;;
+	if (state.Conditions.characters[prev.represents]){
+	    // remove status icons for previous character
+	    for (var cond in state.Conditions.characters[prev.represents].conditions){
+		if (!state.Conditions.characters[prev.represents].conditions.hasOwnProperty(cond)){ continue; }
+		if (!state.Conditions.characters[prev.represents].conditions[cond].icon){ continue; }
+		properties["status_" + state.Conditions.characters[prev.represents].conditions[cond].icon] = false;
+		propsChanged = true;
+	    }
+	}
+	if (state.Conditions.characters[tok.get('represents')]){
+	    // add status icons for new character
+	    for (var cond in state.Conditions.characters[tok.get('represents')].conditions){
+		if (!state.Conditions.characters[tok.get('represents')].conditions.hasOwnProperty(cond)){ continue; }
+		if (!state.Conditions.characters[tok.get('represents')].conditions[cond].icon){ continue; }
+		properties["status_" + state.Conditions.characters[tok.get('represents')].conditions[cond].icon] = true;
+		propsChanged = true;
+	    }
+	}
+	if (propsChanged){
+	    tok.set(properties);
+	}
+    },
+
     handleAttrChange: function(attrObj, prev){
 	if (attrObj.get('id') == Conditions.ignoreAttr){ return; }
 	if (attrObj.get('characterid') != prev._characterid){ return; }
@@ -1185,6 +1229,8 @@ var Conditions = Conditions || {
 	else{
 	    on("chat:message", Conditions.handleChatMessage);
 	}
+	on("add:graphic", Conditions.handleTokenCreate);
+	on("change:graphic:represents", Conditions.handleTokenChange);
 	on("change:attribute", Conditions.handleAttrChange);
     }
 };

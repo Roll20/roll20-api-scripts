@@ -1,0 +1,19 @@
+{
+  "name": "Cypher System Sheet",
+  "script": "cyphersystemsheet.js",
+  "previousversions" : [],
+  "version": "1.2",
+  "description": "Enables the applying of stat cost, recovery roll advance, auto calculation of PC state and damage track in the Cypher System Sheet, from the roll template, sheet buttons and/or macros. Read the [Wiki page](https://wiki.roll20.net/Script:Cypher_System_Sheet) for help about chat commands and macros.",
+  "authors": "Natha",
+  "roll20userid": "75857",
+  "useroptions": [],
+  "dependencies": {},
+  "modifies": {
+    "token": "write",
+    "bar1_value": "write",
+    "bar2_value": "write",
+    "bar3_value": "write",
+    "character": "write"
+  },
+  "conflicts": ["Natha's Numenera"]
+}

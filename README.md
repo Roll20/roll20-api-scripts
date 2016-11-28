@@ -6,24 +6,27 @@ This repository is the collection of all the community-contributed API scripts t
 Contributing
 ============
 
-If you want to help improve an existing API script, just clone this repository, make your changes, and submit a pull request. If you would like to contribute a new script for the community to use, just clone this repository and create a new folder with the name of the script which matches the name in your package.json file. Optionally you can add a help.txt file with any instructions you want to include as well as any other files you feel will be helpful to the end user. Once everything is in the new folder send a pull request. If you have any questions or aren't familiar with Github or git in general, see [Beginner's Guide to GitHub](https://wiki.roll20.net/Beginner%27s_Guide_to_GitHub) on the wiki. If you still need help, feel free to drop us a line at team@roll20.net or post a question on the forums and we can help you get set up.
+If you want to help improve an existing API script, just clone this repository, make your changes, and submit a pull request. If you would like to contribute a new script for the community to use, just clone this repository and create a new folder with the name of the script which matches the name in your script.json file. Optionally you can add a help.txt file with any instructions you want to include as well as any other files you feel will be helpful to the end user. Once everything is in the new folder send a pull request. If you have any questions or aren't familiar with Github or git in general, see [Beginner's Guide to GitHub](https://wiki.roll20.net/Beginner%27s_Guide_to_GitHub) on the wiki. If you still need help, feel free to drop us a line at team@roll20.net or post a question on the forums and we can help you get set up.
 
-**Creating a package.json File**
+**Creating a script.json File**
 
-When you are ready to submit your script for **public use**, create a `package.json` file in your script's folder (see the "Example_package.json" in the root folder for an example). The file has the following fields:
+When you are ready to submit your script for **public use**, create a `script.json` file in your script's folder (see the "_Example Script" folder in the root folder for an example). The file has the following fields:
 
-* `name`: The name of the API script (e.g. `Cookbook`)
-* `version`: The version number of the API script (e.g. `12.3`)
-* `description`: A short, less than 100 character, explanation of the script and it's use.
+* `name`: The name of the API script as it will appear on Roll20
+* `script`: The name of the javascript file, which must remain uniform throughout versions
+* `version`: The current version number of the API script (e.g. `12.3`)
+* `previousversions`: All previous versions of the script in an array format (e.g. `["0.5","0.1"]`)
+* `description`: A short explanation of the script and it's use that will appear along side the script on Roll20. It is important for this section to be filled out in detail, as it's the primary way users will get information about the purpose and use of the script. Included in the description section needs to be an example use or purpose, list and explanation of API Commands, and any other information necessary to operating the script.
 * `authors`: A simple string telling who contributed toward the script (e.g. `Riley Dutton,Steve Koontz`)
-* `roll20userid`: A simple string telling the Roll20 User ID's of the authors (e.g. `1` or `45672,145678`). Just used so we know who to credit internally, won't be shown publicly on the site.
-* `dependencies`: A list of other API scripts and their version numbers this script requires to function (e.g. `My Kitchen: 1.0`) 
+* `roll20userid`: A simple string telling the Roll20 User ID's of the authors (e.g. `1` or `45672,145678`). Used internally and won't be shown publicly on the site.
+* `useroptions`: An array of hashes that allow script authors to set pre-determined options for users to customize the functionality of the script. For more information check out the _Example folder's script.json for an example or see the Roll20 Wiki for more documentation.
+* `dependencies`: A list of other API scripts this script requires to function (e.g. `My Kitchen`) 
 * `modifies`: A list of the common Roll20 objects and properties the script reads and writes to. Custom objects and properties inside a namespace don't need to be included. (e.g. `bar1_value: write`)
 * `conflicts`: A list of other API scripts this script is known to conflict with (e.g. `Recipes`) 
 
-**PLEASE VERIFY YOUR PACKAGE.JSON IS VALID JSON at http://jsonlint.com before you submit it!**
+**PLEASE VERIFY YOUR SCRIPT.JSON IS VALID JSON at http://jsonlint.com before you submit it!**
 
-After we have reviewed your package and approve it, we will merge in your changes which will make them available to everyone. If we reject your package, we will comment on your Github commit and let you know what changes need to be made before it can be accepted. 
+After we have reviewed your script and approve it, we will merge in your changes which will make them available to everyone. If we reject your script, we will comment on your Github commit and let you know what changes need to be made before it can be accepted. 
 
 Update the Wiki
 ===============
@@ -62,7 +65,7 @@ Near the top of your script should be a comment providing the script's name, ver
 
 Include namespaces for your functions and variables, to avoid potential conflicts with other authors. Placing your functions and variables inside a unique namespace to your script protects both it, the user, and other community scripts.
 
-Do your best to limit what your script is manipulating at any given moment to achieve it's desired result. Add API "!" triggers to turn on and off your script's functionality. It is a safe practice to have your script disabled by default. Avoid functions that keep aggresive control and manipulation of objects whenever possible.
+Do your best to limit what your script is manipulating at any given moment to achieve it's desired result. Add API "!" triggers to turn on and off your script's functionality. It is a safe practice to have your script disabled by default. Avoid functions that keep aggressive control and manipulation of objects whenever possible.
 
 License
 =======

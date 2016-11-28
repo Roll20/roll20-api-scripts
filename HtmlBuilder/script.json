@@ -1,0 +1,13 @@
+{
+    "name": "HTML Builder",
+    "script": "script.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "# HtmlBuilder\r\rThis is a utility script that provides a library for constructing stylized\rHTML strings. It has no functionality of its own, but it can be used by other\rscripts to create HTML-formatted content to display in the chat.\r\rView the script's source file at\rhttps://github.com/Roll20/roll20-api-scripts/tree/master/HtmlBuilder\rfor documentation.\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {},
+    "conflicts": []
+}

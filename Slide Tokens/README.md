@@ -2,8 +2,6 @@
 
 Emulate the results of moving a token through waypoints manually by using an API command.
 
-Version 1.0 of this script will clear up the path displayed for the token movement by shrinking the path to a small, manageable size (70 pixels square, or 1 grid square with default page settings) and moving it to the top-left corner of the GM layer, hiding it from players and making it easy to find and delete. A future version will be able to delete the paths automatically, but that functionality is currently only available on the development server.
-
 ### Commands
 * !movetok _args_
 * !mode _mode_
@@ -32,4 +30,4 @@ The directions top, right, bottom, and left will all ignore the second coordinat
 
 A positive coordinate given for left (the x-coordinate) will move the token to the right, and a positive coordinate given for top (the y-coordinate) will move the token down; this may be unintuitive for some users. The directions right and bottom will move the token in the opposite direction to left and top if given the same coordinate.
 
-Coordinates are in terms of grid squares if the mode is SQUARES, in terms of the map measurement units if the mode is UNITS, or in pixels if the mode is ABSOLUTE. (If the page's grid size is set to 1 unit, then each grid square is equal to 70 pixels.)
+Coordinates are in terms of grid squares if the mode is SQUARES, in terms of the map measurement units if the mode is UNITS, or in pixels if the mode is ABSOLUTE. (If the page's grid size is set to 1 unit, then each grid square is equal to 70 pixels.) Note that if the map's grid size is 0 units (for example, if the grid is turned off), movement using SQUARES will not function.

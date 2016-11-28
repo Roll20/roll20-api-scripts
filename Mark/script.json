@@ -1,0 +1,29 @@
+{
+  "name": "Mark",
+  "version": "0.3.3",
+  "description": "Mark places a numbered marker under each token whose id is supplied to it. Markers are cleared when the Turn Order changes, is closed, or when the player page changes. This script is intended to allow players to mark their targets for discussion with the GM, usually as part of an attack.\r\r## Commands\r\r```!mark <Token ID> [<Token ID> ... ]```\r\rThis command requires a minimum of `1` parameter. For each supplied Token ID, a marker is placed beneath it with a numbered status. The status number starts at `1`, increases with each marker placed, and resets the when markers are cleared.\r\r**Note:** If you are using multiple `@{target|token_id}` calls in a macro, and need to mark fewer than the suppled number of arguments, simply select the same token several times. The duplicates will be removed.\r\r* `<Token ID>` -- A Token ID, usually supplied with something like `@{target|Target 1|token_id}`.\r\r```!mark-clear ```\r\rClears all the markers. (GM Only)",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": [],
+  "modifies": {
+    "state.Mark": "read,write",
+    "campaign.initiativepage": "read",
+    "campaign.playerpageid": "read",
+    "campaign.playherspecificpages": "read",
+    "campaign.turnorder": "read",
+    "player.displayname": "read",
+    "graphic.height": "read,write",
+    "graphic.layer": "read,write",
+    "graphic.left": "read,write",
+    "graphic.statusmarkers": "read,write",
+    "graphic.top": "read,write",
+    "graphic.width": "read,write"
+  },
+  "conflicts": [],
+  "script": "Mark.js",
+  "useroptions": [],
+  "previousversions": [
+    "0.3.2"
+  ]
+}

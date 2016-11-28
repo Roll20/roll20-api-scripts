@@ -1,0 +1,13 @@
+{
+    "name": "It's a Trap! - Roleplaying is Magic 4E theme",
+    "script": "TrapTheme.js",
+    "version": "3.0",
+    "previousversions": ["1.0", "1.1", "1.2"],
+    "description": "# It's A Trap! - Roleplaying is Magic 4E theme\r\r_v3.0 updates:_\r* Updated the trap theme to be compatible with It's A Trap v3.0.\r\rThis is a My Little Pony: Roleplaying is Magic 4th edition theme for the It's A Trap! script,\rbuilt for use with the Roleplaying is Magic 4E character sheet.\r\rTo use this theme for the It's A Trap! script, enter 'MLP-RIM-4' for the ```theme``` user option.\r\r### Note about passive Perception\r\rThe Roleplaying is Magic 4E system doesn't actually have any defined rolls for\rpassive skill checks. For the purpose of this script, a character's passive Perception is\rcalculated as follows:\r\r```\r4 + (total Advantage/Disadvantage modifier) + Mind + (3 if trained) + (2 if improved) + (1 if greater) + (total Misc modifiers)\r```\r\rSo for example, a character not trained in Perception with a Mind of 2 would\rhave a passive Perception of 6. A character trained in Perception with a Mind\rof 4 would have a passive Perception of 11.\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [],
+    "dependencies": ["HTML Builder", "It's a Trap!", "Roleplaying is Magic 4E Dice"],
+    "modifies": {},
+    "conflicts": []
+}

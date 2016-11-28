@@ -1,0 +1,17 @@
+{
+    "name": "Token Collisions",
+    "script": "TokenCollisions.js",
+    "version": "1.4",
+    "previousversions": ["1.1", "1.2", "1.3"],
+    "description": "# Token Collisions\r\r_v1.4 Updates:_\r* getCollisions and getFirstCollision now accept an options object parameter. See the CollisionOptions typedef jsdoc for supported properties.\r\r_v1.3 Updates:_\r* Supports circle-to-rectangle token collisions.\r* Added isOverlapping() function.\r\rThis script provides a small library for checking for collisions between\rtokens. It provides no functionality by itself, but it is used by other\rscripts such as ```It's A Trap``` and ```World Map Discovery```.\r\r## Rectangular tokens\r\rBy default, all tokens are assumed to be circular with a diameter equal to their\rwidth. You can set a token to be rectangular for this script by setting its\rAura1 to a square.\r\r## API Documentation:\r\rThe following functions are exposed by the ```TokenCollisions``` object:\r\r```\r/**\r * Returns the list of other tokens that some token collided with during\r * its last movement.\r * The tokens are sorted in the order they are collided with.\r * @param {Graphic} token\r * @param {Graphic[]} others\r * @return {Graphic[]}\r */\rfunction getCollisions(token, others)\r```\r\r```\r/**\r * Returns the first token, from some list of tokens, that a token has\r * collided with during its last movement, or undfined if there was\r * no collision.\r * @param {Graphic} token\r * @param {Graphic[]} others\r * @return {Graphic}\r */\rfunction getFirstCollision(token, others)\r```\r\r```\r/**\r * Checks if a non-moving token is currently overlapping another token.\r * This supports circular and rectangular tokens.\r * Tokens are considered to be rectangular if their aura1 is a square.\r * @param  {Graphic}  token\r * @param  {Graphic}  other\r * @param {boolean} [collideOnEdge=false]\r *        Whether tokens should count as overlapping even if they are only\r *        touching on the very edge.\r * @return {Boolean}\r */\rfunction isOverlapping(token, other, collideOnEdge)\r```\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [],
+    "dependencies": ["Matrix Math", "Path Math", "Vector Math"],
+    "modifies": {
+        "lastmove": "read",
+        "left": "read",
+        "top": "read"
+    },
+    "conflicts": []
+}

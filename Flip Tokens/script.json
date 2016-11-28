@@ -1,0 +1,17 @@
+{
+  "name": "Flip Tokens",
+  "script": "Flip Tokens.js",
+  "version": "2.3",
+  "previousversions": ["2.2","2.1","2.0","1.0"],
+  "description": "Flips selected graphics horizontally and/or vertically. Especially useful for games with side-view tokens, and for players who do not have access to the same context menu as GMs.",
+  "authors": "Brian Shields",
+  "roll20userid": "235259",
+  "patreon": "https://www.patreon.com/bshields",
+  "useroptions": [],
+  "dependencies": ["splitArgs"],
+  "modifies": {
+    "token.fliph": "read,write",
+    "token.flipv": "read,write"
+  },
+  "conflicts": []
+}

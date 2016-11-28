@@ -1,0 +1,22 @@
+{
+  "name": "Measure",
+  "version": "0.3.1",
+  "description": "Measure distances between multiple tokens, both from the corners and the center.",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "dependencies": [],
+  "modifies": {
+    "graphic.height": "read",
+    "graphic.left": "read",
+    "graphic.name": "read",
+    "graphic.top": "read",
+    "graphic.width": "read",
+    "page.scale_number": "read",
+    "page.scale_units": "read"
+  },
+  "conflicts": [],
+  "script": "Measure.js",
+  "useroptions": {},
+  "previousversions": []
+}

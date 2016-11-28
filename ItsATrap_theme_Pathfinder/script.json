@@ -1,0 +1,13 @@
+{
+    "name": "It's a Trap! - Pathfinder theme",
+    "script": "TrapTheme.js",
+    "version": "3.0",
+    "previousversions": ["1.0", "1.1"],
+    "description": "# It's A Trap! - Pathfinder theme\r\r_v3.0 Updates_\r* Updated to be compatible with It's A Trap v3.0.\r\r_v1.1 Updates_\r* This update doesn't include any new features, but it has been refactored to use ES6 Javascript stuff. If you have any problems with this new version, just switch back to v1.0.\r\rThis is a Pathfinder trap theme built to support Samuel Marino, Nibrodooh,\rVince, Samuel Terrazas, chris-b, Magik, and James W.'s Pathfinder character sheet.\r\rTo use this theme for the It's A Trap! script, enter 'Pathfinder' for the ```theme``` user option.\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [],
+    "dependencies": ["HTML Builder", "It's a Trap!"],
+    "modifies": {},
+    "conflicts": []
+}

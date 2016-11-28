@@ -1,0 +1,15 @@
+{
+  "name": "Portes Monstres Tresors",
+  "script": "pmt.js",
+  "version": "1.4",
+  "previousversions" : [],
+  "description": "Character creation helper for the Portes Monstres Tresors character sheet (french free OGL retroclone of DnD B/X). Chat command is !pmt-rollchar 0 or 1 to roll a character. Option 0 is 3d6 in order, 1 is 4d6 keeps the 3 best dice in order. The rest of the commands are handled through roll template buttons.",
+  "authors": "Natha",
+  "roll20userid": "75857",
+  "useroptions": [],
+  "dependencies": {},
+  "modifies": {
+    "character": "write"
+  },
+  "conflicts": []
+}

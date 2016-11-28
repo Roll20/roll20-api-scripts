@@ -1,0 +1,18 @@
+{
+    "name": "Marching Order",
+    "script": "marchingOrder.js",
+    "version": "2.1",
+    "previousversions": ["2.0"],
+    "description": "# Marching Order\r\r_v2.1 Updates_\r* The script now has a chat menu interface accessible through the 'showMarchingOrderMenu' macro.\r\rThis script allows you to select tokens and tell them to follow each other\rin some specified marching order.\r\r### To set one token to follow another\r\rSelect the token that will be the follower.\rFrom the menu, click the 'Follow' button. In the prompt, enter the name of\rthe token you want to follow.\r\rYou can use this method consecutively for pairs of leader/follower\rtokens to specify a chain of tokens to be in some marching order.\r\r### To specify several tokens making up a marching order\r\rArrange the tokens in order from west to east, east to west, south to north,\ror north to south.\r\rSelect all the tokens that will be in the marching order.\r\rIn the menu, click 'North', 'East', South', or 'West'.\r\rFor 'North', the northmost token will be the leader in the marching order\rand the southmost token will be the caboose. The same pattern follows for\rthe other cardinal directions.\r\r### To make tokens stop following each other\r\rJust manually drag-and-drop the token out of the marching order.\rThey will step out of line in the marching order, but the rest of the\rmarching order will be unaffected. If a token was following the token\rthat stepped out of line, they will instead follow the token that the token\rwhich stepped out of line was following.\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [],
+    "dependencies": {},
+    "modifies": {
+        "left": "read, write",
+        "rotation": "read, write",
+        "token": "read",
+        "top": "read, write"
+    },
+    "conflicts": []
+}

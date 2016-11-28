@@ -1,0 +1,13 @@
+{
+    "name": "CharacterSheet",
+    "script": "charsheet.js",
+    "version": "1.2",
+    "previousversions": [""],
+    "description": "A simple script to allow players to create their own character sheets. Using the command '!charsheet' will generate a character sheet controlled by the user that runs the command and visible in the journal to all players named 'Blank_Character'.",
+    "authors": "Base code by: GitHub user 'kevinsearle', Minor feature improvement and 1-click compatibility by: TECH",
+    "roll20userid": "446206",
+	"useroptions": [],
+	"dependencies": [],
+	"modifies": {},
+	"conflicts": []
+}

@@ -1,0 +1,13 @@
+{
+    "name": "It's a Trap! - D&D 5E OGL theme",
+    "script": "TrapTheme.js",
+    "version": "3.0",
+    "previousversions": ["1.0", "1.1", "1.2"],
+    "description": "# It's A Trap! - 5th Edition OGL theme\r\r_v3.0 Updates_\r* The theme has been updated to be compatible with ItsATrap v3.0.\r\rThis is a D&D 5th edition trap theme for the It's A Trap! script, compatible with\rthe 5th Edition (OGL by Roll20) character sheet.\r\rTo use this theme for the It's A Trap! script, enter '5E-OGL' for the ```theme``` user option.\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [],
+    "dependencies": ["It's a Trap!"],
+    "modifies": {},
+    "conflicts": []
+}
