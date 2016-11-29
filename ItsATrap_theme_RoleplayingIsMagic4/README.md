@@ -1,5 +1,8 @@
 # It's A Trap! - Roleplaying is Magic 4E theme
 
+_3.1 updates:_
+* Just bug fixes.
+
 _v3.0 updates:_
 * Updated the trap theme to be compatible with It's A Trap v3.0.
 
