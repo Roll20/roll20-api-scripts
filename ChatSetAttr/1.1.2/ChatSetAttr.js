@@ -1,11 +1,11 @@
-// ChatSetAttr version 1.1.4
-// Last Updated: 2016-11-17
+// ChatSetAttr version 1.1.2
+// Last Updated: 2016-11-8
 // A script to create, modify, or delete character attributes from the chat area or macros.
 // If you don't like my choices for --replace, you can edit the replacers variable at your own peril to change them.
 var chatSetAttr = chatSetAttr || (function () {
 	'use strict';
-	const version = '1.1.4',
-		schemaVersion = 2,
+	const version = '1.1.2',
+		schemaVersion = 1,
 		replacers = [
 			['<', '[', /</g, /\[/g],
 			['>', ']', />/g, /\]/g],
@@ -23,14 +23,10 @@ var chatSetAttr = chatSetAttr || (function () {
 					globalconfigCache: {
 						lastsaved: 0
 					},
-					playersCanModify: false,
-					playersCanEvaluate: false
+					playersCanModify: false
 				};
 			}
 			checkGlobalConfig();
-		},
-		isDef = function (value) {
-			return !_.isUndefined(value);
 		},
 		checkGlobalConfig = function () {
 			let s = state.ChatSetAttr,
@@ -39,7 +35,6 @@ var chatSetAttr = chatSetAttr || (function () {
 				log(' > Updating ChatSetAttr from Global Config < [' +
 					(new Date(g.lastsaved * 1000)) + ']');
 				s.playersCanModify = 'playersCanModify' === g['Players can modify all characters'];
-				s.playersCanEvaluate = 'playersCanEvaluate' === g['Players can use --evaluate'];
 				s.globalconfigCache = globalconfig.chatsetattr;
 			}
 		},
@@ -47,44 +42,38 @@ var chatSetAttr = chatSetAttr || (function () {
 			if (errors.length) {
 				let output = `/w "${who}" <div style="border: 1px solid black;` +
 					`background-color: #FFBABA; padding: 3px 3px;">` +
-					`<h4>Errors</h4><p>${errors.join('<br>')}</p></div>`;
+					`<h4>Errors</h4><p>${errors.join('</p><p>')}</p></div>`;
 				sendChat('ChatSetAttr', output);
 				errors.splice(0, errors.length);
 			}
 		},
 		showConfig = function (who) {
-			let optionsText = _.map([{
-				name: 'playersCanModify',
-				command: 'players-can-modify',
-				desc: 'Determines if players can use <i>--name</i> and <i>--charid</i> to ' +
-					'change attributes of characters they do not control.'
-			}, {
-				name: 'playersCanEvaluate',
-				command: 'players-can-evaluate',
-				desc: 'Determines if players can use the <i>--evaluate</i> option. <b>' +
-					'Be careful</b> in giving players access to this option, because ' +
-					'it potentially gives players access to your full API sandbox.'
-			}], getConfigOptionText).join('');
-			let output = `/w "${who}" <div style="border: 1px solid black; background-color: #FFFFFF;` +
-				' padding: 3px 3px;"><b>ChatSetAttr Configuration</b><div style="padding-left:10px;">' +
-				'<p><i>!setattr-config</i> can be invoked in the following format: </p><pre style="' +
-				'white-space:normal;word-break:normal;word-wrap:normal;">!setattr-config --option</pre>' +
-				'<p>Specifying an option toggles the current setting. There are currently two' +
-				' configuration options:</p>' + optionsText + '</div></div>';
-			sendChat('ChatSetAttr', output);
+			let output = `/w "${who}" <div style="border: 1px solid black;` +
+				'background-color: #FFFFFF; padding: 3px 3px;">' +
+				'<b>ChatSetAttr Configuration</b><div style="padding-left:10px;">' +
+				'<p><i>!setattr-config</i> can be invoked in the following format: </p>' +
+				'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">' +
+				'!setattr-config --option</pre>' +
+				'<p>There is currently one configuration option:</p>' +
+				'<div style="padding-left: 10px;padding-right:20px"><ul>' +
+				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">' +
+				'<div style="float:right;width:40px;border:1px solid' +
+				' black;background-color:#ffc;text-align:center;">' +
+				(state.ChatSetAttr.playersCanModify ? '<span style="color: red; font-weight:bold; padding: 0px 4px;">ON</span>' : '<span style="color: #999999; font-weight:bold; padding: 0px 4px;">OFF</span>') +
+				'</div><b><span style="font-family: serif;">players-can-modify</span></b> ' +
+				htmlReplace('-') + ' Determines if players can use <i>--name</i> and ' +
+				'<i>--charid</i> to change attributes of characters they do not control.' +
+				' Specifying this option toggles the current setting</li></ul> </div>' +
+				getConfigOption_playersCanModify() + '</div></div>';
+			sendChat('ChatSetAttr', output)
 		},
-		getConfigOptionText = function (o) {
-			let button = (state.ChatSetAttr[o.name] ?
+		getConfigOption_playersCanModify = function () {
+			let text = (state.ChatSetAttr.playersCanModify ?
 				'<span style="color: red; font-weight:bold; padding: 0px 4px;">ON</span>' :
 				'<span style="color: #999999; font-weight:bold; padding: 0px 4px;">OFF</span>'
 			);
-			return '<div style="padding-left: 10px; padding-right:20px"><ul>' +
-				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">' +
-				'<div style="float:right;width:40px;border:1px solid black;' +
-				`background-color:#ffc;text-align:center;">${button}</div><b>` +
-				`<span style="font-family: serif;">${o.command}</span></b>${htmlReplace('-')}` +
-				`${o.desc}</li></ul></div><div><b>${o.name}</b> is currently ${button}` +
-				`<a href="!setattr-config --${o.command}">Toggle</a></div>`;
+			return '<div>playersCanModify is currently ' + text +
+				'<a href="!setattr-config --players-can-modify">Toggle</a></div>';
 		},
 		getPlayerName = function (who) {
 			let match = who.match(/(.*) \(GM\)/);
@@ -118,22 +107,17 @@ var chatSetAttr = chatSetAttr || (function () {
 				.join('');
 		},
 		processInlinerolls = function (msg) {
+			// Input:	msg - chat message
+			// Output:	msg.content, with all inline rolls evaluated
 			if (_.has(msg, 'inlinerolls')) {
 				return _.chain(msg.inlinerolls)
-					.reduce(function (m, v, k) {
-						let ti = _.reduce(v.results.rolls, function (m2, v2) {
-							if (_.has(v2, 'table')) {
-								m2.push(_.reduce(v2.results, function (m3, v3) {
-									m3.push(v3.tableItem.name);
-									return m3;
-								}, []).join(', '));
-							}
-							return m2;
-						}, []).join(', ');
-						m['$[[' + k + ']]'] = (ti.length && ti) || v.results.total || 0;
-						return m;
+					.reduce(function (previous, current, index) {
+						previous['$[[' + index + ']]'] = current.results.total || 0;
+						return previous;
 					}, {})
-					.reduce((m, v, k) => m.replace(k, v), msg.content)
+					.reduce(function (previous, current, index) {
+						return previous.replace(index, current);
+					}, msg.content)
 					.value();
 			} else {
 				return msg.content;
@@ -149,149 +133,87 @@ var chatSetAttr = chatSetAttr || (function () {
 			});
 			return result;
 		},
-		generateUUID = function () {
-			"use strict";
-			var a = 0,
-				b = [];
-			return function () {
-				var c = (new Date()).getTime() + 0,
-					d = c === a;
-				a = c;
-				for (var e = new Array(8), f = 7; 0 <= f; f--) {
-					e[f] = "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz".charAt(c % 64);
-					c = Math.floor(c / 64);
-				}
-				c = e.join("");
-				if (d) {
-					for (f = 11; 0 <= f && 63 === b[f]; f--) {
-						b[f] = 0;
-					}
-					b[f]++;
-				} else {
-					for (f = 0; 12 > f; f++) {
-						b[f] = Math.floor(64 * Math.random());
-					}
-				}
-				for (f = 0; 12 > f; f++) {
-					c += "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz".charAt(b[f]);
-				}
-				return c;
-			};
-		}(),
-		generateRowID = function () {
-			"use strict";
-			return generateUUID().replace(/_/g, "Z");
-		},
 		// Getting attributes from parsed options. Repeating attributes need special treatment
 		// in order to parse row index and not create defective repeating rows.
 		addRepeatingAttributes = function (list, attrNames, allAttrs, errors, createMissing, failSilently) {
-			let allRepAttrs = {},
-				repRowIds = {},
-				repRowIdsLo = {},
-				rowsToCreate = [],
-				repSections = [];
-			// Read attribute names, determine row number or id or creation of new row.
-			let attrNamesRead = _.reduce(attrNames, function (prev, attrName) {
-				let match = attrName.match(/_(\$\d+|-[-A-Za-z0-9]+?|\d+)_/);
-				if (match && match[1][0] === '$') {
-					prev[attrName] = {
-						rowNum: parseInt(match[1].slice(1))
-					};
-				} else if (match) {
-					prev[attrName] = {
-						rowIdLo: match[1].toLowerCase()
-					};
+			let indexMatch, attrNameSplit, id, name, repSectionIdsLower, realRepName,
+				repeatingTypeStart, allSectionAttrs, repSectionIds, rowNum, rowId, idMatch;
+			_.each(attrNames, function (attrName) {
+				indexMatch = attrName.match(/_\$(\d+)_/);
+				allSectionAttrs = {}, repSectionIds = {}, repSectionIdsLower = {};
+				_.each(list, charid => allSectionAttrs[charid] = {});
+				if (indexMatch) {
+					rowNum = parseInt(indexMatch[1]);
+					attrNameSplit = attrName.split(indexMatch[0]);
 				} else {
-					errors.push(`Could not understand repeating attribute` +
-						` name ${attrName}.`);
-					return;
-				}
-				prev[attrName]['sName'] = attrName.split(match[0]);
-				repSections.push(prev[attrName]['sName'][0]);
-				if (prev[attrName].rowIdLo === '-create') {
-					rowsToCreate.push(prev[attrName]['sName'][0]);
-				}
-				return prev;
-			}, {});
-			repSections = _.uniq(repSections);
-			let repSectionsRegex = _.map(repSections, function (s) {
-				return new RegExp('^' + escapeRegExp(s) + '_(-[-A-Za-z0-9]+?|\\d+)_', 'i');
-			});
-			// Get attributes
-			_.each(list, function (charid) {
-				allRepAttrs[charid] = {};
-				_.each(repSections, prefix => allRepAttrs[charid][prefix] = {});
-			});
-			filterObjs(function (o) {
-				let charid, attrName;
-				if (o.get('_type') === 'attribute') {
-					charid = o.get('_characterid');
-					attrName = o.get('name');
-					if (_.contains(list, charid)) {
-						_.each(repSections, function (prefix, k) {
-							if (attrName.search(repSectionsRegex[k]) !== -1) {
-								allRepAttrs[charid][prefix][attrName] = o;
-							}
-						});
+					idMatch = attrName.match(/_(-[-A-Za-z0-9]+?|\d+)_/);
+					if (idMatch) {
+						rowId = idMatch[1].toLowerCase();
+						attrNameSplit = attrName.split(idMatch[0]);
+					} else {
+						errors.push(`Could not understand repeating attribute` +
+							` name ${attrName}.`);
+						return;
 					}
 				}
-			});
-			// Get list of repeating row ids by charid and prefix from allRepAttrs
-			_.each(list, function (charid) {
-				repRowIds[charid] = {};
-				_.each(repSections, function (prefix, k) {
-					repRowIds[charid][prefix] = _.chain(allRepAttrs[charid][prefix])
-						.keys()
-						.map(n => n.match(repSectionsRegex[k]))
+				repeatingTypeStart = new RegExp('^' + escapeRegExp(attrNameSplit[0]) +
+					'_(-[-A-Za-z0-9]+?|\\d+)_', 'i');
+				filterObjs(function (o) {
+					if (o.get('_type') === 'attribute') {
+						id = o.get('_characterid');
+						name = o.get('name');
+						if (_.contains(list, id) && name.search(repeatingTypeStart) !== -1) {
+							allSectionAttrs[id][name] = o;
+							return true;
+						}
+					}
+				});
+				_.each(list, function (charid) {
+					repSectionIds[charid] = _.chain(allSectionAttrs[charid])
+						.map((o, n) => n.match(repeatingTypeStart))
 						.compact()
 						.map(a => a[1])
 						.uniq()
 						.value();
+					if (!indexMatch) {
+						repSectionIdsLower[charid] = _.map(repSectionIds[charid],
+							n => n.toLowerCase());
+					}
 				});
-				repRowIdsLo[charid] = _.mapObject(repRowIds[charid],
-					l => _.map(l, n => n.toLowerCase()));
-				_.each(_.uniq(rowsToCreate), function (prefix) {
-					repRowIds[charid][prefix].push(generateRowID());
-				});
-			});
-			// Get correct attribute names and store attributes in allAttrs
-			_.each(list, function (charid) {
-				_.each(attrNamesRead, function (p, attrName) {
-					let finalId;
-					if (isDef(p.rowNum) && isDef(repRowIds[charid][p.sName[0]][p.rowNum])) {
-						finalId = repRowIds[charid][p.sName[0]][p.rowNum];
-					} else if (p.rowIdLo === '-create') {
-						finalId = _.last(repRowIds[charid][p.sName[0]]);
-					} else if (isDef(p.rowIdLo) && _.contains(repRowIdsLo[charid][p.sName[0]], p.rowIdLo)) {
-						let index = _.indexOf(repRowIdsLo[charid][p.sName[0]], p.rowIdLo);
-						finalId = repRowIds[charid][p.sName[0]][index];
-					} else if (isDef(p.rowNum)) {
-						errors.push(`Repeating row number ${p.rowNum} invalid for` +
+				_.each(list, function (charid) {
+					if (indexMatch && !_.isUndefined(repSectionIds[charid][rowNum])) {
+						realRepName = attrNameSplit[0] + '_' + repSectionIds[charid][rowNum] +
+							'_' + attrNameSplit[1];
+					} else if (!indexMatch && _.contains(repSectionIdsLower[charid], rowId)) {
+						realRepName = attrNameSplit[0] + '_' +
+							repSectionIds[charid][_.indexOf(repSectionIdsLower[charid], rowId)] +
+							'_' + attrNameSplit[1];
+					} else if (indexMatch) {
+						errors.push(`Row number ${rowNum} invalid for` +
 							` character ${getCharNameById(charid)}` +
-							` and repeating section ${p.sName[0]}.`);
+							` and repeating section ${attrNameSplit[0]}.`);
+						return;
 					} else {
-						errors.push(`Repeating row id ${p.rowIdLo} invalid for` +
+						errors.push(`Repeating section id ${rowId} invalid for` +
 							` character ${getCharNameById(charid)}` +
-							` and repeating section ${p.sName[0]}.`);
+							` and repeating section ${attrNameSplit[0]}.`);
+						return;
 					}
-					if (finalId) {
-						let finalName = p.sName[0] + '_' + finalId + '_' + p.sName[1];
-						let attrNameCased = getCIKey(allRepAttrs[charid][p.sName[0]], finalName);
-						if (attrNameCased) {
-							allAttrs[charid][attrName] = allRepAttrs[charid][p.sName[0]][attrNameCased];
-						} else if (createMissing) {
-							allAttrs[charid][attrName] = createObj('attribute', {
-								characterid: charid,
-								name: finalName
-							});
-						} else if (!failSilently) {
-							errors.push(`Missing attribute ${finalName} not created` +
-								` for character ${getCharNameById(charid)}.`);
-						}
+					let nameCI = getCIKey(allSectionAttrs[charid], realRepName);
+					if (nameCI) {
+						allAttrs[charid][attrName] = allSectionAttrs[charid][nameCI];
+					} else if (createMissing) {
+						allAttrs[charid][attrName] = createObj('attribute', {
+							characterid: charid,
+							name: realRepName
+						});
+					} else if (!failSilently) {
+						errors.push(`Missing attribute ${realRepName} not created` +
+							` for character ${getCharNameById(charid)}.`);
 					}
 				});
 			});
-			return;
+			return allAttrs;
 		},
 		addStandardAttributes = function (list, attrNames, allAttrs, errors, createMissing, failSilently) {
 			let attrNamesUpper = attrNames.map(x => x.toUpperCase()),
@@ -349,30 +271,20 @@ var chatSetAttr = chatSetAttr || (function () {
 		setCharAttributes = function (charid, setting, errors, feedback, attrs, fillInAttrs, opts) {
 			let charFeedback = {};
 			_.each(attrs, function (attr, attrName) {
-				let attrNew;
-				if (opts.reset) {
-					attrNew = {
-						current : attr.get('max')
-					};
-				} else {
-					attrNew = (fillInAttrs[attrName]) ?
-						_.mapObject(setting[attrName], v => fillInAttrValues(charid, v)) :
-						_.clone(setting[attrName]);
-				}
+				let attrNew = (fillInAttrs[attrName]) ?
+					_.mapObject(setting[attrName], v => fillInAttrValues(charid, v)) : _.clone(setting[attrName]);
 				if (opts.evaluate) {
 					try {
 						attrNew = _.mapObject(attrNew, function (v) {
 							let parsed = eval(v);
-							if (_.isString(parsed) || _.isFinite(parsed) || _.isBoolean(parsed)) {
+							if (!_.isNaN(parsed) && !_.isUndefined(parsed)) {
 								return parsed.toString();
 							} else return v;
 						});
 					} catch (err) {
 						errors.push(`Something went wrong with --evaluate` +
 							` for the character ${getCharNameById(charid)}.` +
-							` You were warned. The error message was: ${err}.` +
-							` Attribute ${attrName} left unchanged.`);
-						return;
+							` You were warned. The error message was: ${err}.`);
 					}
 				}
 				if (opts.mod || opts.modb) {
@@ -400,10 +312,10 @@ var chatSetAttr = chatSetAttr || (function () {
 			if (!opts.silent) {
 				charFeedback = _.chain(charFeedback)
 					.map(function (o, k) {
-						if (isDef(o.max) && isDef(o.current))
+						if (!_.isUndefined(o.max) && !_.isUndefined(o.current))
 							return `${k} to ${htmlReplace(o.current) || '<i>(empty)</i>'} / ${htmlReplace(o.max) || '<i>(empty)</i>'}`;
-						else if (isDef(o.current)) return `${k} to ${htmlReplace(o.current) || '<i>(empty)</i>'}`;
-						else if (isDef(o.max)) return `${k} to ${htmlReplace(o.max) || '<i>(empty)</i>'} (max)`;
+						else if (!_.isUndefined(o.current)) return `${k} to ${htmlReplace(o.current) || '<i>(empty)</i>'}`;
+						else if (!_.isUndefined(o.max)) return `${k} to ${htmlReplace(o.max) || '<i>(empty)</i>'} (max)`;
 						else return null;
 					})
 					.compact()
@@ -580,16 +492,12 @@ var chatSetAttr = chatSetAttr || (function () {
 			if (msg.type !== 'api') {
 				return;
 			}
-			let mode = msg.content.match(/^!(reset|set|del|mod)attr\b(?:-|\s|$)(config)?/);
+			let mode = msg.content.match(/^!(set|del)attr\b(?:-|\s|$)(config)?/);
 			if (mode && mode[2]) {
-				let playerid = msg.playerid || 'API';
-				if (playerIsGM(playerid)) {
+				if (playerIsGM(msg.playerid)) {
 					let opts = parseOpts(msg.content, []);
 					if (opts['players-can-modify']) {
 						state.ChatSetAttr.playersCanModify = !state.ChatSetAttr.playersCanModify;
-					}
-					if (opts['players-can-evaluate']) {
-						state.ChatSetAttr.playersCanEvaluate = !state.ChatSetAttr.playersCanEvaluate;
 					}
 					showConfig(getPlayerName(msg.who));
 				}
@@ -599,49 +507,39 @@ var chatSetAttr = chatSetAttr || (function () {
 					fillInAttrs = {},
 					errors = [];
 				const hasValue = ['charid', 'name'],
-					optsArray = ['all', 'allgm', 'charid', 'name', 'allplayers', 'sel',
-						'replace', 'nocreate', 'mod', 'modb', 'evaluate', 'silent', 'reset'
+					optsArray = ['all', 'allgm', 'charid', 'name', 'silent', 'sel',
+						'replace', 'nocreate', 'mod', 'modb', 'evaluate'
 					],
 					who = getPlayerName(msg.who),
-					playerid = msg.playerid || 'API',
 					opts = parseOpts(processInlinerolls(msg), hasValue),
 					setting = parseAttributes(_.chain(opts).omit(optsArray).keys().value(),
 						opts.replace, fillInAttrs),
 					deleteMode = (mode[1] === 'del');
-				opts.mod = opts.mod || (mode[1] === 'mod');
-				opts.reset = opts.reset || (mode[1] === 'reset');
-				if (opts.evaluate && !playerIsGM(playerid) && !state.ChatSetAttr.playersCanEvaluate) {
-					handleErrors(who, ['The --evaluate option is only available to the GM.']);
-					return;
+				if (opts.evaluate && !playerIsGM(msg.playerid)) {
+					errors.push('The --evaluate option is only available to the GM.');
+					delete opts.evaluate;
 				}
 				// Get list of character IDs
-				if (opts.all && playerIsGM(playerid)) {
+				if (opts.all && playerIsGM(msg.playerid)) {
 					charIDList = _.map(findObjs({
 						_type: 'character'
 					}), c => c.id);
-				} else if (opts.allgm && playerIsGM(playerid)) {
+				} else if (opts.allgm && playerIsGM(msg.playerid)) {
 					charIDList = _.chain(findObjs({
 							_type: 'character'
 						}))
 						.filter(c => c.get('controlledby') === '')
 						.map(c => c.id)
 						.value();
-				} else if (opts.allplayers && playerIsGM(playerid)) {
-					charIDList = _.chain(findObjs({
-							_type: 'character'
-						}))
-						.filter(c => c.get('controlledby') !== '')
-						.map(c => c.id)
-						.value();
 				} else if (opts.charid) {
-					charIDList = getIDsFromList(opts.charid, errors, playerid);
+					charIDList = getIDsFromList(opts.charid, errors, msg.playerid);
 				} else if (opts.name) {
-					charIDList = getIDsFromNames(opts.name, errors, playerid);
+					charIDList = getIDsFromNames(opts.name, errors, msg.playerid);
 				} else if (opts.sel) {
 					charIDList = getIDsFromTokens(msg.selected);
 				} else {
 					errors.push('You need to supply one of --all, --allgm, --sel,' +
-						' --allplayers, --charid, or --name.');
+						' --charid, or --name.');
 				}
 				if (_.isEmpty(charIDList)) {
 					errors.push('No target characters.');

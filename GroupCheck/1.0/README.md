@@ -35,8 +35,8 @@ The script is designed to be easily configured to your specific system's needs. 
 
 * **!group-check-config --add [JSON]**  adds a check, or several checks, to the list of checks in the database. **[JSON]** must be valid JSON in the following format: 
 
-		{ "Check Command" : { "name" : "Check Name", "formula" : "FORMULA"}}
-Here, the command will be called by **!group-check --Check Command**, the title of the box appearing in chat will be Check Name, and FORMULA is the formula used to calculate the roll result. Attributes to be filled in in FORMULA need to be specified as %name%. Note that you may use double curly brackets ('{{') instead of double square brackets ('[[') to bound your roll. This can become necessary if you have a complicated expression containing multiple nested inline rolls. For example, to add a check with command Strength that roll a d20 + the character's Strength attribute, you would type
+		{ "Check Command" : { "name" : "Check Name", "formula" : "FORMULA"} }
+Here, the command will be called by **!group-check --Check Command**, the title of the box appearing in chat will be Check Name, and FORMULA is the formula used to calculate the roll result. Attributes to be filled in in FORMULA need to be specified as %name%. For example, to add a check with command Strength that roll a d20 + the character's Strength attribute, you would type
 
 		!group-check-config --add { "Strength" : { "name" : "Strength Test", "formula" : "[[d20 + %Strength%]]"} }
 
@@ -48,7 +48,7 @@ Here, the command will be called by **!group-check --Check Command**, the title 
 
 * **!group-check-config --set option value** will set **option** to **value**. The following options are available: **ro**, **die_adv**, **die_dis**, **fallback**, and **globalmod**. To find out more about what these options do, consult the Options sections.
 
-* **!group-check-config --set option** will set **option** (this is the variant for options which can be either true or false). The following options are available: **showformula**, **hideformula**, **whisper**, **public**, **usecharname**, **usetokenname**, **showpicture**, and **hidepicture**. To find out more about what these options do, consult the Options section.
+* **!group-check-config --set option** will set **option** (this is the variant for options which can be either true or false). The following options are available: **showformula**, **hideformula**, **whisper**, **public**, **usecharname**, **usetokenname**, **showpicture**, and **hidepicture**, **direct** and **process**. To find out more about what these options do, consult the Options section.
 
 * **!group-check-config --defaults** will reset all options to the factory defaults.
 
@@ -63,13 +63,19 @@ Most of the following options can be supplied in two ways: you can either supply
 
 * The options **whisper**, resp. **public**, control if rolls are whispered to the GM or output publicly.
 
-* The option **usecharname**, resp. **usetokenname**, control if the name of the token or the name of the character is displayed in front of the roll result. You can use e.g. the TokenNameNumber script to give different tokens for the same character different (numbered) names, allowing you to discern which of the tokens rolled which roll, even if there are several tokens representing the same character. This is active by default.
+* You can use the option **--subheader [text]** to display **[text]** below the title of your roll.
+
+* The options **--direct** and **--process** let GroupCheck use the rolls in two very different ways (you probably want to set this option via !group-check-config permanently instead of specifying it for every roll). **--direct** is the default, and equals the behaviour of GroupCheck prior to version 1.0, in that it simply outputs inline rolls to chat. On the other hand, **--process** lets GroupCheck process the results first to change their appearance and pass on the results to other scripts. Since **--process** has not been tested for many cases yet, this could lead to strange results. So far, the only effect of **--process** is to change the appearance of rolls, removing the yellow background, and enabling the **--showaverage** option.
+
+* The option **--showaverage** (only available when you also use **--process**) will add an extra line at the end showing an average of all rolls.
+
+* The option **--usecharname**, resp. **--usetokenname**, control if the name of the token or the name of the character is displayed in front of the roll result. You can use e.g. the TokenNameNumber script to give different tokens for the same character different (numbered) names, allowing you to discern which of the tokens rolled which roll, even if there are several tokens representing the same character. This is active by default.
 
 * It is possible to alter the specific way rolls are made. There are 5 options: roll normally, roll with advantage, roll with disadvantage, always roll 2 times for every token, or (for the 5E shaped sheet only) respect the roll setting on the sheet for selected tokens. You can control this via the option **--ro [Setting]**, where **[Setting]** can be one of roll1, roll2, adv, dis, rollsetting, respectively. If you are not using D&D 5th Edition, you probably want to leave this option on roll1 constantly.
 
 * The option **--globalmod [mod]** will add **[mod]** as a modifier to all rolls made. Here **[mod]** can be any expression that the roll20 dice roller can interpret, such as a number, a die roll, a specific character's attribute, or a sum of these things.
 
-* You can use **--multi [n]** to run every check **[n]** times instead of once, with a minimum of 1 time.
+* You can use **--multi [n]** to run every check **[n]** times instead of once, with a minimum of 1 time. This only works if you do not use **--process**.
 
 * It is possible to hide the formula for checks and only show the final result of the roll. This is controlled via the options **--showformula** and **--hideformula**.
 
@@ -77,4 +83,4 @@ Most of the following options can be supplied in two ways: you can either supply
 
 * You can supply a fallback value. When the option **--fallback [value]** is given, a roll will be made even for tokens not linked to a character; for these tokens, **[value]** will be used instead of the FIRST attribute in a roll, and all other attributes are treated as if they were 0. **[value]** may be any expression that the roll20 dice roller can interpret, such as a number, a die roll, a specific character's attribute, or a sum of these things. If also using **--globalmod**, the global modifier is applied in addition to the fallback mod.
 
-* It is possible to supply a custom roll not present in the checks database. The syntax to do this is **--custom CheckName, formula**. This will roll a check with title **CheckName** and formula **formula** for the roll. Note that you may also use double curly brackets ('{{') instead of double square brackets ('[[') to bound your roll. This can become necessary if you have a complicated expression containing multiple nested inline rolls.
+* It is possible to supply a custom roll not present in the checks database. The syntax to do this is **--custom CheckName, formula**. This will roll a check with title **CheckName** and formula **formula** for the roll.
