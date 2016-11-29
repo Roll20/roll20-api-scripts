@@ -1,5 +1,8 @@
 # Fallout Terminal
 
+_v1.1 Updates:_
+* There are now useroptions to specify the colors for the terminal screens.
+
 With this script, you can set up a token to display an interactive
 Fallout-like terminal in the chat.
 
@@ -37,88 +40,5 @@ The JSON for defining a terminal's content has the following structure:
 
 ### Terminal JSON Example
 
-```
-{
-  "name": "Overseer's terminal",
-  "locked": false,
-  "content": "Welcome to ROBCO Industries (TM) Termlink\nClearance: Overseer Eyes Only",
-  "screens": [
-    {
-      "name": "VAULT 111 OVERSEER INSTRUCTIONS",
-      "content": "CONFIDENTIAL CONFIDENTIAL CONFIDENTIAL\nOVERSEER EYES ONLY | VIOLATION VTP-01011\n\nVault 111 is designed to test the long-term effects of suspended animation on unaware, human subjects. Your staff will be on short-term assignment to monitor basic cardiopulmonary and cognitive functions. Long-term monitoring will be handled remotely by Vault-Tec technicians.\n\nUnder no circumstance is suspension to be disrupted. This includes the administration of live-saving measures. Your staff is also considered expendable. Insubordination or attempts to evacuate prematurely are capital violations. Unused cryogenic pods are the preferred method for cadaver disposal."
-    },
-    {
-      "name": "Cryolator",
-      "content": "I've long dreamed of making cryogenic freezing available in a portable, on-demand form. The Cryolator is my latest attempt. Thankfully, we're in no short supply of the chemicals and components I need to tinker with the prototype. It's a nice way to occupy the time as we wait for the All-Clear Signal."
-    },
-    {
-      "name": "Operations Protocol Manual",
-      "screens": [
-        {
-          "name": "Resident Admittance",
-          "content": "Upon Activation Notice from Vault-Tec, all personnel are required to report to the Entry Area and assist with admittance of Vault Residents. Security Personnel will maintain order and ensure that no personnel or residents attempt to evacuate the Vault.\n\nResearch staff will be responsible for resident intake and escort each to the designated cryogenic pod. Residents not accounted for in the manifest should be asked to step aside and detained forcefully by security if necessary.\n\nOnce all residents have been sealed into their preservation chambers dispose of any detainees. Vault entryway must remain sealed under any circumstances."
-        },
-        {
-          "name": "Staff Duties",
-          "screens": [
-            {
-              "name": "Science Staff",
-              "content": "Members of the research team must daily monitor the vital signs of cryogenically preserved residents. Cardiopulmonary and cognitive activity in particular must be recorded hourly.\n\nLife-saving intervention is only permitted if greater than 80% of the resident population has perished while in cryogenic suspension, and must not interrupt suspension.\n\nIndependent research is encouraged, and left to Overseer discretion."
-            },
-            {
-              "name": "Security Personnel",
-              "content": "Security patrols are to be carried out on a constant eight-hour rotation. Security priorities include:\n\n- Monitoring for signs of intrusion\n- Checking for atmosphere leaks\n- Settling disputes among personnel\n- Enforcement of regulations set forth by the Overseer\n- Enforcement of regulations set forth by Vault-Tec"
-            },
-            {
-              "name": "Facility Services & Maintenance",
-              "content": "Due to the nature of Vault 111, personnel will be expected to perform duties outside of their normal qualifications, such as janitorial duties and food preparation.\n\nThe exact distribution of these roles is left to Overseer discretion."
-            }
-          ]
-        },
-        {
-          "name": "All Clear & Evacuation",
-          "screens": [
-            {
-              "name": "All-Clear Message",
-              "content": "Following a nuclear event, Vault-Tec will monitor hazards such as radiation levels, enemy invasion, subsequent attacks, and other factors. Once conditions are deemed safe, this terminal will receive an all-clear notice.\n\nUpon receiving the all-clear notice, Vault-Tec personnel may be evacuated at Overseer discretion. Disregard any notices from organizations or individuals not associated with Vault-Tec, including government and military. Residents are not to be disrupted or evacuated. Vault-Tec will attend to their needs remotely once Vault 111 staff has been evacuated."
-            },
-            {
-              "name": "Mandatory Shelter Period",
-              "content": "Vault 111 is classified as a short-term assignment. Non-resident personnel are expected to carry out research duties and basic maintenance of the Vault while awaiting the All-Clear signal to evacuate.\n\nIn the absence of an All-Clear message from Vault-Tec, the Overseer may elect to evacuate staff after a mandatory shelter period of 180 days of containment. Under no cirumstance may Vault 111 staff evacuate during this shelter period, unless receiving the All-Clear message from Vault-Tec."
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Overseer's Log",
-      "screens": [
-        {
-          "name": "Preparations",
-          "content": "The final staff orientation is complete, all but a few of the residents down in Sanctuary Hills have been enrolled, and several from Concord as well. Vault-Tec supervisors came up this week to do a technical review with me. This Vault is ready to open.\n\nI can only imagine what wonders our residents will get to witness. The notion of leaping forward in time - I almost wish I could join them and see the promise of our future realized."
-        },
-        {
-          "name": "October 23",
-          "content": "It's happened. We were lucky that most of the staff was nearby when the early warning came through. We had less notice than expected, but only Nordhagen was missing when we sealed the entrance.\n\nResident Admittance went smoothly. Everyone made it, even the family that waited till the last minute. I was worried there would be more suspicion, but things happened so fast for these people. They must have been too overwhelmed to question the cryogenic pods."
-        },
-        {
-          "name": "System Malfunction",
-          "content": "Strange issue today with pod C3. Subject appeared to be having heart palpations. Nothing life-threatening, but unusual. We realized almost too late that the pod was malfunctioning. The cryogenic array almost started thawing her out.\n\nWe're not sure, but I suspect a hiccup in Vault-Tec's remote override systems may have sent an errant signal. We'll have to keep an eye out. I only hope their systems are reliable once we evacuate the staff."
-        },
-        {
-          "name": "Supplies Running Low",
-          "content": "There's been no All-Clear Signal yet, even though we're nearing the end of the 180 day Mandatory Shelter Period. Supplies were never intended to last much more than that, and despite my best efforts, people are beginning to question what we're doing down here.\n\nIf people think we can just leave when the 180 days are up, they're insane. The radioactive exposure would still be potent enough to fry everyone if the Vault seals are breached that early. The whole point of the All-Clear was to receive additional instructions from the main office.\n\nI don't know what to do. I can't open the Vault. I can't expect our supplies to last forever. I just have to keep everything under control until the All-Clear..."
-        },
-        {
-          "name": "Mutiny",
-          "content": "A faction led by the security personnel have turned on me, demanding they be allowed to leave the Vault. Idiots. I will not open the door to be irradiated to death out there.\n\nI'm consolidating the remaining supplies, putting the staff on lockdown. We're going to have to start prioritizing who deserves what little food we have left. I've been too damn generous with the rations.\n\nIf people don't like it, well, that's fewer mouths to feed..."
-        }
-      ]
-    },
-    {
-      "name": "Open Evacuation Tunnel",
-      "content": "The personnel evacuation tunnel is now open. Remind all staff to be orderly and follow shutdown protocols before exiting and re-sealing Vault 111.\n\nPlease maintain all staff records and research. Report to your local Vault-Tec superiors for debriefing and further instruction."
-    }
-  ]
-}
-```
+For an example of JSON used to display a terminal, see the example here:
+https://raw.githubusercontent.com/Roll20/roll20-api-scripts/master/FalloutTerminal/example.json
