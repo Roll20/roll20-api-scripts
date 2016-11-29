@@ -235,3 +235,11 @@ tagmar:
 walls:
 - "Walls"
 - "Dynamic Lighting"
+
+customizablerolllistener:
+- "Customizable-Roll-Listener"
+- "Chat"
+
+roll20audiomaster:
+- "Roll20-Audio-Master"
+- "Jukebox"
