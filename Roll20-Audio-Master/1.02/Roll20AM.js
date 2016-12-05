@@ -89,9 +89,9 @@ var Roll20AM = Roll20AM || (function() {
     }()),
     
     checkInstall = function() {
-        state.Roll20AM=state.Roll20AM || {};
         log('-=> Roll20AM v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
         if( ! _.has(state,'Roll20AM') || state.Roll20AM.version !== schemaVersion) {
+            state.Roll20AM=state.Roll20AM || {};
             log('  > Updating Schema to v'+schemaVersion+' <');
             state.Roll20AM.version = schemaVersion;
 		}
