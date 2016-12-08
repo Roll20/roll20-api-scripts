@@ -98,9 +98,6 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
         log('-=> Page Navigator v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
         if( ! _.has(state,'PAGENAVIGATOR') || state.PAGENAVIGATOR.version !== schemaVersion) {
             state.PAGENAVIGATOR = state.PAGENAVIGATOR || {};
-            if(_.some(state.PAGENAVIGATOR.players,(c)=>{return _.has(c,'represents');}){
-                state.PAGENAVIGATOR.players={};
-            }
             log('  > Updating Schema to v'+schemaVersion+' <');
             state.PAGENAVIGATOR.version = schemaVersion;
 		};
@@ -736,6 +733,8 @@ var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
                 characters.push(c);
             });
         });
+        log(playerTokens);
+        log(characters);
         var start = _.now(),
         surr = 'initialized',
         i=0;
