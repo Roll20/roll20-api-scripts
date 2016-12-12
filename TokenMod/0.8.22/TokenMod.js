@@ -5,8 +5,8 @@
 var TokenMod = TokenMod || (function() {
     'use strict';
 
-    var version = '0.8.23',
-        lastUpdate = 1478805717,
+    var version = '0.8.22',
+        lastUpdate = 1478725753,
         schemaVersion = 0.3,
 
         observers = {
@@ -213,21 +213,12 @@ var TokenMod = TokenMod || (function() {
         },
         findPlayer = function(data){
             checkCache();
-            let pids=_.reduce(cache,(m,p)=>{
+            return _.reduce(cache,(m,p)=>{
                 if(p.id===data || p.userid===data || (-1 !== p.keyHash.indexOf(transforms.keyHash(data)))){
                     m.push(p.id);
                 }
                 return m;
             },[]);
-            if(!pids.length){
-                let obj=filterObjs((o)=>(o.id===data && _.contains(['character','graphic'],o.get('type'))))[0];
-                if(obj){
-                    let charObj = ('graphic'===obj.get('type') && getObj('character',obj.get('represents'))),
-                        cb = (charObj ? charObj : obj).get('controlledby');
-                    pids = (cb.length ? cb.split(/,/) : []);
-                }
-            }
-            return pids;
         };
 
         return function(datum){
@@ -741,13 +732,11 @@ var TokenMod = TokenMod || (function() {
 
 		'<div style="padding-left: 10px;padding-right:20px">'+
 			'<b>Player</b>'+
-			'<p>You can specify Players using one of five methods: Player ID, Roll20 ID Number, Player Name Matching, Token ID, Character ID</p>'+
+			'<p>You can specify Players using one of three methods: Player ID, Roll20 ID Number, Player Name Matching</p>'+
 			'<ul>'+
 				'<li>Player ID is a unique identifier assigned that player in a specific game.  You can only find this id from the API, so this is likely the least useful method.</li>'+
 				'<li>Roll20 ID Number is a unique identifier assigned to a specific player.  You can find it in the URL of their profile page as the number preceeding their name.  This is really useful if you play with the same people all the time, or are cloning the same game with the same players, etc.</li>'+
 				'<li>Player Name Matching is a string that will be matched to the current name of the player in game.  Just like with Characters above, it can be quoted if it has spaces and is case insensitive.  All players that match a given string will be used.</li>'+
-				'<li>Token ID will be used to collect the controlledby entries for a token or the associated character if the token represetns one.</li>'+
-				'<li>Character ID will be used to collect the controlledby entries for a character.</li>'+
 			'</ul>'+
 			'<p>Note that you can use the special string all to denote the All Players special player.</p>'+
 
@@ -807,14 +796,6 @@ var TokenMod = TokenMod || (function() {
 			'<div style="padding-left: 10px;padding-right:20px">'+
 				'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'+
 					'!token-mod --set controlledby|"-JsABCabc123-12"'+
-				'</pre>'+
-			'</div>'+
-
-			'<p>When using Token ID or Characte ID methods, it'+ch("'")+'s a good idea to use an explicit operation:</p>'+
-
-			'<div style="padding-left: 10px;padding-right:20px">'+
-				'<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'+
-                    '!token-mod --set controlledby|=@{target|token_id}'+
 				'</pre>'+
 			'</div>'+
 
@@ -1620,3 +1601,6 @@ on("ready",function(){
 	TokenMod.CheckInstall();
 	TokenMod.RegisterEventHandlers();
 });
+
+
+
