@@ -1,0 +1,13 @@
+{
+  "name": "MythicGM ",
+  "version": "1.0.0",
+  "description": "MythicGM Brings the rules from the Mythic game system to ANY preexisting system. Making your game not require a GM to run the story. For more informaiton head over to Word Mill Games to learn about that system and these rules.\r\rWith MythicGM you can use a simple command to ask questions and generate a response based from the the fate charts. You can even generate Random Events with it.\r\r## Commands\r\r```!MythicGM [<Odds> <Chaos Factor> [<Your Question>]]```\r\rBy running the command with the arguments of Odds, Chaos Factor, and your question. The emulator with give you a response of Exceptional No, No, Yes, Exceptional Yes. As well generate random events.\r\r**Note:** By supplying no arguments you get this help file\r\r* `<Odds>` --  are the likly odds of your question. The odds are the following: Impossible, No Way, Very Unlikely, Unlikely, 50/50, Somewhat Likely, Likely, Very Likely, Near Sure Thing, A Sure Thing, Has To Be (**these values are not case sensitive.**)\r* `<Chaos Factor>` -- A chaos factor ranging from 1 to 9. The higher the number, the more likely a “yes” answer is and more unexpected events occur.\r* `<Your Question>` -- It's the question you would ask your normal GM like \"Is that chest Trapped?\" or \"Is that NPC Hostile?\". You can asked any question\r\r```!MythicEvent```\r\rBy running the command it will generate a random event.\r\r```!MythicFocus```\r\rBy running the command it will generate a random event focus.\r\r```!MythicAction```\r\rBy running the command it will generate a random event action.\r\r```!MythicSubject```\r\rBy running the command it will generate a random event subject.\r",
+  "authors": "Pyromanci",
+  "roll20userid": "243340",
+  "dependencies": [],
+  "modifies": [],
+  "conflicts": [],
+  "script": "MythicGM.js",
+  "useroptions": [],
+  "previousversions": [ ]
+}
