@@ -55,13 +55,6 @@ OR
 
 Both GMs and players can spawn areas of effect!
 
-## Sample graphics
-
-In the Roll20 API Scripts repository, this script includes a small collection of
-sample AoE graphics you are free to use in your own games to try out this script.
-Additional effects graphics created by various artists are available from the
-Roll20 Marketplace.
-
 _Note: Currently it is not possible to create effects from graphics purchased
 from the market place due to certain restrictions specified here:
 https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions
