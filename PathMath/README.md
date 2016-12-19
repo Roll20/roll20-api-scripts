@@ -9,6 +9,17 @@ This script's documentation uses the following typedefs:
 
 ```
 /**
+ * A closed shape defined by a path.
+ * @class Polygon
+ */
+
+/**
+ * A polygon primitive consisting of 3 vertices. Great for tessellation!
+ * @class Triangle
+ * @extends Polygon
+ */
+
+/**
  * A rectangle defining a path's bounding box.
  * @typedef {Object} BoundingBox
  * @property {number} left
