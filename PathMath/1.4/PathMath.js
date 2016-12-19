@@ -145,9 +145,7 @@ var PathMath = (() => {
                   if(v2 === v || v2 === vPrev || v2 === vNext)
                     return false;
                   else {
-                    let flag = triangle.containsPt(v2);
-                    log('containsPt: ' + flag);
-                    return flag;
+                    return triangle.containsPt(v2);
                   }
                 });
               }
