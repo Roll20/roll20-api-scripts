@@ -763,7 +763,6 @@ var TrapEffect = (() => {
           return triggers.indexOf(trap.get('name')) !== -1 ||
                  triggers.indexOf(trap.get('_id')) !== -1;
         });
-        log(triggeredTraps);
 
         _.each(triggeredTraps, trap => {
           ItsATrap.activateTrapManually(trap);
@@ -1075,8 +1074,7 @@ var ItsATrapCreationWizard = (() => {
         id: 'type',
         name: 'Type',
         desc: 'Is this a trap, or some other hidden secret?',
-        value: trapEffect.type || 'trap',
-        options: [ 'trap', 'hazard', 'secret door', 'hidden compartment', 'hiding character', 'concealed item', 'secret' ]
+        value: trapEffect.type || 'trap'
       },
       {
         id: 'api',
