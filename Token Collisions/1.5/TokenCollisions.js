@@ -231,8 +231,6 @@ var TokenCollisions = (() => {
    *         or undefined if there is no collision.
    */
   function _testCirclesCollision(token, other, waypoint) {
-    log('_testCirclesCollision');
-
     let start = waypoint[0];
     start[2] = 1;
     let end = waypoint[1];
@@ -286,8 +284,6 @@ var TokenCollisions = (() => {
    * @return {number} The minimum distance.
    */
   function _testCirclePolyCollision(token, poly, waypoint, _isPath) {
-    log('_testCirclePolyCollision');
-
     let start = _.clone(waypoint[0]);
     start[2] = 1;
     let end = _.clone(waypoint[1]);
@@ -538,8 +534,6 @@ var TokenCollisions = (() => {
    *         or undefined if there is no collision.
    */
   function _testRectCircleCollision(token, other, waypoint) {
-    log('_testRectCircleCollision');
-
     // Reduce the problem to a circle-rect test in the opposite direction.
     let start = waypoint[0];
     start[2] = 1;
@@ -586,8 +580,6 @@ var TokenCollisions = (() => {
    * @return {number}
    */
   function _testRectPolyCollision(token, poly, waypoint, _isPath) {
-    log('_testRectPolyCollision');
-
     let start = waypoint[0];
     start[2] = 1;
     let end = waypoint[1];
@@ -731,8 +723,6 @@ var TokenCollisions = (() => {
   // Using the power of linear algebra, find the minimum distance to any of the
   // polygon's segments.
   function _testRectPolyCollision_getMinDist(mPolySegs, mRectSegs) {
-    log(mRectSegs);
-
     return _.chain(mPolySegs)
     .map(polySeg => {
       return _.chain(mRectSegs)
@@ -849,7 +839,6 @@ var TokenCollisions = (() => {
      * @return {(Graphic[]|Collisions[])}
      */
     static getCollisions(token, others, options) {
-      log('getCollisions');
       return _.chain(_getWaypoints(token))
       .map(waypoint => {
         return _getCollisionsInWaypoint(token, others, waypoint, options);
@@ -868,7 +857,6 @@ var TokenCollisions = (() => {
      * @return {(Graphic|Collision)}
      */
     static getFirstCollision(token, others, options) {
-      log('getFirstCollision');
       return getCollisions(token, others, options)[0];
     }
 
