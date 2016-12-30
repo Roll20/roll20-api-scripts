@@ -39,7 +39,16 @@ var PathMath = (() => {
      */
 
     /**
-     * A polygon defined by a path or a list of vertices.
+     * Rendering information for shapes.
+     * @typedef {Object} RenderInfo
+     * @property {string} [controlledby]
+     * @property {string} [fill]
+     * @property {string} [stroke]
+     * @property {string} [strokeWidth]
+     */
+
+    /**
+     * A closed polygon defined by a path or a list of vertices.
      */
     class Polygon {
 
@@ -49,14 +58,87 @@ var PathMath = (() => {
       constructor(path) {
         if(_.isArray(path))
           this.vertices = path;
-        else
-          this.vertices = _.map(toSegments(path), segment => {
-            return segment[0];
+        else {
+          this._segments = toSegments(path);
+          this.vertices = _.map(this._segments, seg => {
+            return seg[0];
           });
+        }
 
         this.numVerts = this.vertices.length;
         if(this.numVerts < 3)
           throw new Error('A polygon must have at least 3 vertices.');
+      }
+
+      /**
+       * Determines whether a point lies inside the polygon using the
+       * winding algorithm.
+       * See: http://geomalgorithms.com/a03-_inclusion.html
+       * @param {vec3} p
+       * @return {boolean}
+       */
+      containsPt(p) {
+        // A helper function that tests if a point is "left" of a line segment.
+        let _isLeft = (p0, p1, p2) => {
+          return (p1[0] - p0[0])*(p2[1] - p0[1]) - (p2[0]-p0[0])*(p1[1]-p0[1]);
+        };
+
+        let total = 0;
+        _.each(this.vertices, (v1, i) => {
+          let v2 = this.vertices[(i+1) % this.numVerts];
+
+          // Check for valid up intersect.
+          if(v1[1] <= p[1] && v2[1] > p[1]) {
+            if(_isLeft(v1, v2, p) > 0)
+              total++;
+          }
+
+          // Check for valid down intersect.
+          else if(v1[1] > p[1] && v2[1] <= p[1]) {
+            if(_isLeft(v1, v2, p) < 0)
+              total--;
+          }
+        });
+        return !!total; // We are inside if our total windings are non-zero.
+      }
+
+      /**
+       * Gets the area of this polygon.
+       * @return {number}
+       */
+      getArea() {
+        let triangles = this.tessellate();
+        return _.reduce(triangles, (area, tri) => {
+          return area + tri.getArea();
+        }, 0);
+      }
+
+      /**
+       * Gets the bounding box of this polygon.
+       * @return {BoundingBox}
+       */
+      getBoundingBox() {
+        if(!this._bbox) {
+          let left, right, top, bottom;
+          _.each(this.vertices, (v, i) => {
+            if(i === 0) {
+              left = v[0];
+              right = v[0];
+              top = v[1];
+              bottom = v[1];
+            }
+            else {
+              left = Math.min(left, v[0]);
+              right = Math.max(right, v[0]);
+              top = Math.min(top, v[1]);
+              bottom = Math.max(bottom, v[1]);
+            }
+          });
+          let width = right - left;
+          let height = bottom - top;
+          this._bbox = new BoundingBox(left, top, width, height);
+        }
+        return this._bbox;
       }
 
       /**
@@ -103,6 +185,72 @@ var PathMath = (() => {
           });
         else
           return vertexCurves;
+      }
+
+      /**
+       * Checks if this polygon intersects with another polygon.
+       * @param {Polygon} other
+       * @return {boolean}
+       */
+      intersects(other) {
+        let thisBox = this.getBoundingBox();
+        let otherBox = other.getBoundingBox();
+
+        // If the bounding boxes don't intersect, then the polygons won't
+        // intersect.
+        if(!thisBox.intersects(otherBox))
+          return false;
+
+        // If either polygon contains the first point of the other, then
+        // they intersect.
+        if(this.containsPt(other.vertices[0]) || other.containsPt(this.vertices[0]))
+          return true;
+
+        // Naive approach: Since our shortcuts didn't return, check each
+        // polygon's segments for intersections with each of the other
+        // polygon's segments. This takes O(n^2) time.
+        return !!_.find(this.toSegments(), seg1 => {
+          return !!_.find(other.toSegments(), seg2 => {
+            return !!segmentIntersection(seg1, seg2);
+          });
+        });
+      }
+
+      /**
+       * Checks if this polygon intersects a Path.
+       * @param {Path} path
+       * @return {boolean}
+       */
+      intersectsPath(path) {
+        let segments1 = this.toSegments();
+        let segments2 = PathMath.toSegments(path);
+
+        // The path intersects if any point is inside this polygon.
+        if(this.containsPt(segments2[0][0]))
+          return true;
+
+        // Check if any of the segments intersect.
+        return !!_.find(segments1, seg1 => {
+          return _.find(segments2, seg2 => {
+            return PathMath.segmentIntersection(seg1, seg2);
+          });
+        });
+      }
+
+      /**
+       * Renders this polygon.
+       * @param {string} pageId
+       * @param {string} layer
+       * @param {RenderInfo} renderInfo
+       */
+      render(pageId, layer, renderInfo) {
+        let segments = this.toSegments();
+        let pathData = segmentsToPath(segments);
+        _.extend(pathData, renderInfo, {
+          _pageid: pageId,
+          layer
+        });
+        createObj('path', pathData);
       }
 
       /**
@@ -166,14 +314,26 @@ var PathMath = (() => {
        * @return {Segment[]}
        */
       toSegments() {
-        return _.map(this.vertices, (v, i) => {
-          let vNext = this.vertices[(i + 1) % this.numVerts];
-          return [v, vNext];
-        });
+        if(!this._segments) {
+          this._segments = _.map(this.vertices, (v, i) => {
+            let vNext = this.vertices[(i + 1) % this.numVerts];
+            return [v, vNext];
+          });
+        }
+        return this._segments;
       }
 
-      toString() {
-        return this.vertices.toString();
+      /**
+       * Produces a copy of this polygon, transformed by an affine
+       * transformation matrix.
+       * @param {MatrixMath.Matrix} matrix
+       * @return {Polygon}
+       */
+      transform(matrix) {
+        let vertices = _.map(this.vertices, v => {
+          return MatrixMath.multiply(matrix, v);
+        });
+        return new Polygon(vertices);
       }
     }
 
@@ -194,31 +354,152 @@ var PathMath = (() => {
       }
 
       /**
-       * Checks if this triangle contains a point.
+       * @inheritdoc
+       */
+      getArea() {
+        let base = VecMath.sub(this.p2, this.p1);
+        let width = VecMath.length(base);
+        let height = VecMath.ptLineDist(this.p3, this.p1, this.p2);
+
+        return width*height/2;
+      }
+    }
+
+    /**
+     * A circle defined by its center point and radius.
+     */
+    class Circle {
+
+      /**
+       * @param {vec3} pt
+       * @param {number} r
+       */
+      constructor(pt, r) {
+        this.center = pt;
+        this.radius = r;
+        this.diameter = 2*r;
+      }
+
+      /**
+       * Checks if a point is contained within this circle.
        * @param {vec3} pt
        * @return {boolean}
        */
       containsPt(pt) {
-        // Check the point using barycentric coordinates.
-        let u = VecMath.sub(this.p3, this.p1);
-        let v = VecMath.sub(this.p2, this.p1);
-        let p = VecMath.sub(pt, this.p1);
-
-        let dotUU = VecMath.dot(u, u);
-        let dotUV = VecMath.dot(u, v);
-        let dotUP = VecMath.dot(u, p);
-        let dotVV = VecMath.dot(v, v);
-        let dotVP = VecMath.dot(v, p);
-
-        let invDenom = 1/(dotUU*dotVV - dotUV*dotUV);
-        let s = (dotVV * dotUP - dotUV * dotVP) * invDenom;
-        let t = (dotUU * dotVP - dotUV * dotUP) * invDenom;
-
-        return s >= 0 && t >= 0 && s + t <= 1;
+        let dist = VecMath.dist(this.center, pt);
+        return dist <= this.radius;
       }
 
-      toString() {
-        return 'Triangle(' + this.vertices.toString() + ')';
+      /**
+       * Gets this circle's area.
+       * @return {number}
+       */
+      getArea() {
+        return Math.PI*this.radius*this.radius;
+      }
+
+      /**
+       * Gets the circle's bounding box.
+       * @return {BoundingBox}
+       */
+      getBoundingBox() {
+        let left = this.center[0] - this.radius;
+        let top = this.center[1] - this.radius;
+        let dia = this.radius*2;
+        return new BoundingBox(left, top, dia, dia);
+      }
+
+      /**
+       * Gets this circle's circumference.
+       * @return {number}
+       */
+      getCircumference() {
+        return Math.PI*this.diameter;
+      }
+
+      /**
+       * Checks if this circle intersects another circle.
+       * @param {Circle} other
+       * @return {boolean}
+       */
+      intersects(other) {
+        let dist = VecMath.dist(this.center, other.center);
+        return dist <= this.radius + other.radius;
+      }
+
+      /**
+       * Checks if this circle intersects a polygon.
+       * @param {Polygon} poly
+       * @return {boolean}
+       */
+      intersectsPolygon(poly) {
+
+        // Quit early if the bounding boxes don't overlap.
+        let thisBox = this.getBoundingBox();
+        let polyBox = poly.getBoundingBox();
+        if(!thisBox.intersects(polyBox))
+          return false;
+
+        if(poly.containsPt(this.center))
+          return true;
+        return !!_.find(poly.toSegments(), seg => {
+          return this.segmentIntersection(seg);
+        });
+      }
+
+      /**
+       * Renders this circle.
+       * @param {string} pageId
+       * @param {string} layer
+       * @param {RenderInfo} renderInfo
+       */
+      render(pageId, layer, renderInfo) {
+        let data = createCircleData(this.radius)
+        _.extend(data, renderInfo, {
+          _pageid: pageId,
+          layer,
+          left: this.center[0],
+          top: this.center[1]
+        });
+        createObj('path', data);
+      }
+
+      /**
+       * Gets the intersection coefficient between this circle and a Segment,
+       * if such an intersection exists. Otherwise, undefined is returned.
+       * @param {Segment} segment
+       * @return {Intersection}
+       */
+      segmentIntersection(segment) {
+        if(this.containsPt(segment[0])) {
+          let pt = segment[0];
+          let s = 0;
+          let t = VecMath.dist(this.center, segment[0])/this.radius;
+          return [pt, s, t];
+        }
+        else {
+          let u = VecMath.sub(segment[1], segment[0]);
+          let uHat = VecMath.normalize(u);
+          let uLen = VecMath.length(u);
+          let v = VecMath.sub(this.center, segment[0]);
+
+          let height = VecMath.ptLineDist(this.center, segment[0], segment[1]);
+          let base = Math.sqrt(this.radius*this.radius - height*height);
+
+          if(isNaN(base))
+            return undefined;
+
+          let scalar = VecMath.scalarProjection(u, v)-base;
+          let s = scalar/uLen;
+
+          if(s <= 1) {
+            let t = 1;
+            let pt = VecMath.add(segment[0], VecMath.scale(uHat, scalar));
+            return [pt, s, t];
+          }
+          else
+            return undefined;
+        }
       }
     }
 
@@ -237,6 +518,8 @@ var PathMath = (() => {
         this.top = top;
         this.width = width;
         this.height = height;
+        this.right = left + width;
+        this.bottom = top + height;
       }
 
       /**
@@ -252,6 +535,26 @@ var PathMath = (() => {
         var bottom = Math.max(a.top + a.height, b.top + b.height);
 
         return new BoundingBox(left, top, right - left, bottom - top);
+      }
+
+      /**
+       * Gets the area of this bounding box.
+       * @return {number}
+       */
+      getArea() {
+        return this.width * this.height;
+      }
+
+      /**
+       * Checks if this bounding box intersects another bounding box.
+       * @param {BoundingBox} other
+       * @return {boolean}
+       */
+      intersects(other) {
+        return !( this.left > other.right ||
+                  this.right < other.left ||
+                  this.top > other.bottom ||
+                  this.bottom < other.top);
       }
     }
 
@@ -586,69 +889,6 @@ var PathMath = (() => {
     }
 
     /**
-     * Tessellates a closed path representing a simple polygon
-     * into a bunch of triangles.
-     * @param {Path} path
-     */
-    function tessellate(path) {
-      let segments = toSegments(path);
-      if(isClosed(segments)) {
-        let triangles = [];
-        let vertices = _.map(segments, s => {
-          return s[0];
-        });
-
-        // Tessellate using ear-clipping algorithm.
-        while(vertices.length > 0) {
-          if(vertices.length === 3) {
-            triangles.push(new Triangle(vertices[0], vertices[1], vertices[2]));
-            vertices = [];
-          }
-          else {
-            // Determine whether each vertex is convex, concave, or linear.
-            let convexness = _getConvexnessVertices(vertices);
-            let numVerts = vertices.length;
-
-            // Find the next ear to clip from the polygon.
-            let earIndex = _.find(_.range(numVerts), i => {
-              let v = vertices[i];
-              let vPrev = vertices[(numVerts + i -1) % numVerts];
-              let vNext = vertices[(numVerts + i + 1) % numVerts];
-
-              let vConvexness = convexness[i];
-              if(vConvexness === 0) // The vertex lies on a straight line. Clip it.
-                return true;
-              else if(vConvexness < 0) // The vertex is concave.
-                return false;
-              else { // The vertex is convex and might be an ear.
-                let triangle = new Triangle(vPrev, v, vNext);
-
-                // The vertex is not an ear if there is at least one other
-                // vertex inside its triangle.
-                return !_.find(vertices, (v2, j) => {
-                  if(v2 === v || v2 === vPrev || v2 === vNext)
-                    return false;
-                  else
-                    return triangle.containsPt(v2);
-                });
-              }
-            });
-
-            let v = vertices[earIndex];
-            let vPrev = vertices[(numVerts + earIndex -1) % numVerts];
-            let vNext = vertices[(numVerts + earIndex + 1) % numVerts];
-            triangles.push(new Triangle(vPrev, v, vNext));
-            vertices.splice(earIndex, 1);
-          }
-        }
-
-        return triangles;
-      }
-      else
-        return [];
-    }
-
-    /**
      * Converts a path into a list of line segments.
      * This supports freehand paths, but not elliptical paths.
      * @param {(Path|Path[])} path
@@ -776,6 +1016,7 @@ var PathMath = (() => {
 
     return {
         BoundingBox,
+        Circle,
         Polygon,
         Triangle,
 

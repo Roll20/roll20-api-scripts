@@ -5,7 +5,7 @@ It has no stand-alone functionality of its own.
 
 ## API Documentation:
 
-This script's documentation uses the following typedefs:
+This script's documentation uses the following typedefs and classes:
 
 ```
 /**
@@ -17,6 +17,11 @@ This script's documentation uses the following typedefs:
  * A polygon primitive consisting of 3 vertices. Great for tessellation!
  * @class Triangle
  * @extends Polygon
+ */
+
+/**
+ * A circle defined by a center point and radius.
+ * @class Circle
  */
 
 /**
