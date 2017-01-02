@@ -29,7 +29,7 @@ Notes: Neque,porro,quisquam,est,qui,dolorem,ipsum,quia,dolor,sit,amet,consectetu
 GM Notes: markov
 ```
 
-![Alt text](/Markov/handout_example.jpg?raw=true)
+![Alt text](https://github.com/Roll20/roll20-api-scripts/blob/master/Markov/handout_example.png?raw=true)
 
 To use this above example you would need to restart the API sandbox after saving the handout and then you can use the latin nameset with this command:
 
