@@ -275,6 +275,8 @@ var TokenCollisions = (() => {
       shape = new PathMath.Path(path);
     else
       shape = new PathMath.Polygon(path);
+
+    log(shape);
     return _testCirclePolyCollision(token, shape, waypoint);
   }
 
@@ -287,6 +289,8 @@ var TokenCollisions = (() => {
    * @return {number} The minimum distance.
    */
   function _testCirclePolyCollision(token, poly, waypoint) {
+    log('adsfladf ' + poly);
+
     let start = _.clone(waypoint[0]);
     start[2] = 1;
     let end = _.clone(waypoint[1]);
@@ -312,6 +316,8 @@ var TokenCollisions = (() => {
     // Quit early if the polygon contains the start circle's center.
     if(poly instanceof PathMath.Polygon && poly.containsPt(startCircle.center))
       return undefined;
+
+    log('sdfasdf ' + poly);
 
     // Produce a system transformation such that our circle is centered at
     // the origin and u points up. Then transform the polygon to this system.

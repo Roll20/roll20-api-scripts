@@ -60,8 +60,11 @@ var PathMath = (() => {
           this.vertices = path;
         else {
           this._segments = toSegments(path);
-          this.vertices = _.map(this._segments, seg => {
-            return seg[0];
+          this.vertices = [];
+          _.each(this._segments, (seg, i) => {
+            if(i === 0)
+              this.vertices.push(seg[0]);
+            this.vertices.push(seg[1]);
           });
         }
 
@@ -673,6 +676,23 @@ var PathMath = (() => {
                   this.right < other.left ||
                   this.top > other.bottom ||
                   this.bottom < other.top);
+      }
+
+      /**
+       * Renders the bounding box.
+       * @param {string} pageId
+       * @param {string} layer
+       * @param {RenderInfo} renderInfo
+       */
+      render(pageId, layer, renderInfo) {
+        let verts = [
+          [this.left, this.top, 1],
+          [this.right, this.top, 1],
+          [this.right, this.bottom, 1],
+          [this.left, this.bottom, 1]
+        ];
+        let poly = new Polygon(verts);
+        poly.render(pageId, layer, renderInfo);
       }
     }
 
