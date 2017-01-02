@@ -349,7 +349,7 @@ var TokenCollisions = (() => {
 
       // Let p be the leftmost point.
       if(p[0] > q[0]) {
-        let swap = q[0];
+        let swap = q;
         q = p;
         p = swap;
       }
@@ -383,6 +383,7 @@ var TokenCollisions = (() => {
       }
 
       let clippedSeg = [p, q];
+      log(clippedSeg);
       clippedSeg.m = m;
       clippedSeg.b = b;
       return clippedSeg;
@@ -394,6 +395,9 @@ var TokenCollisions = (() => {
   // Using the power of calculus, find the closest segment that
   // wasn't clipped.
   function _testCirclePolyCollision_minDistance(segments, radius) {
+    log(segments);
+    log(radius);
+
     return _.chain(segments)
     .map(seg => {
       let fofX = x => { // The line equation for the segment in y=mx + b form.

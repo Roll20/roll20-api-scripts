@@ -1,23 +1,8 @@
 /**
- * A script that checks the interpolation of a token's movement to detect
- * whether they have passed through a square containing a trap.
- *
- * A trap can be any token on the GM layer for which the cobweb status is
- * active. Flying tokens (ones with the fluffy-wing status or angel-outfit
- * status active) will not set off traps unless the traps are also flying.
- *
- * This script works best for square traps equal or less than 2x2 squares or
- * circular traps of any size.
+ * Initialize the state for the It's A Trap script.
  */
-var ItsATrap = (() => {
+(() => {
   'use strict';
-
-  const REMOTE_ACTIVATE_CMD = '!itsATrapRemoteActivate';
-
-  /**
-   * A degree-2 vector, which is used to represent a point or direction.
-   * @typedef {Number[]} vec2
-   */
 
   /**
    * The ItsATrap state data.
@@ -41,12 +26,21 @@ var ItsATrap = (() => {
   // Set the theme from the useroptions.
   let useroptions = globalconfig && globalconfig.itsatrap;
   if(useroptions) {
-    state.ItsATrap.theme = useroptions['theme'] || 'default';
+    state.ItsATrap.theme = useroptions.theme || 'default';
     state.ItsATrap.userOptions = {
-      revealTrapsToMap: useroptions['revealTrapsToMap'] === 'true' || false,
+      revealTrapsToMap: useroptions.revealTrapsToMap === 'true' || false,
       announcer: useroptions.announcer || 'Admiral Ackbar'
     };
   }
+})();
+
+/**
+ * The main interface and bootstrap script for It's A Trap.
+ */
+var ItsATrap = (() => {
+  'use strict';
+
+  const REMOTE_ACTIVATE_CMD = '!itsATrapRemoteActivate';
 
   // The collection of registered TrapThemes keyed by name.
   let trapThemes = {};
@@ -55,7 +49,7 @@ var ItsATrap = (() => {
    * Activates a trap.
    * @param {Graphic} trap
    * @param {Graphic} [activatingVictim]
-   *        The primary victim who set off the trap.
+   *        The victim that triggered the trap.
    */
   function activateTrap(trap, activatingVictim) {
     let theme = getTheme();
@@ -63,26 +57,18 @@ var ItsATrap = (() => {
     // Apply the trap's effects to any victims in its area and to the
     // activating victim, using the configured trap theme.
     let victims = getTrapVictims(trap, activatingVictim);
-    _.each(victims, victim => {
-      let effect = new TrapEffect(trap, victim);
-      theme.activateEffect(effect);
-    });
-  }
-
-  /**
-   * Activates a trap without any primary victim.
-   * @param {Graphic} trap
-   */
-  function activateTrapManually(trap) {
-    // Activate the trap with the default theme, which will only display
-    // the trap's message.
-    let defaultTheme = trapThemes['default'];
-    let effect = new TrapEffect(trap);
-    defaultTheme.activateEffect(effect);
-
-    // Activate the trap upon any characters who happen to be in its area
-    // of effect.
-    activateTrap(trap);
+    if(victims.length > 0)
+      _.each(victims, victim => {
+        let effect = new TrapEffect(trap, victim);
+        theme.activateEffect(effect);
+      });
+    else {
+      // In the absence of any victims, activate the trap with the default
+      // theme, which will only display the trap's message.
+      let defaultTheme = trapThemes['default'];
+      let effect = new TrapEffect(trap);
+      defaultTheme.activateEffect(effect);
+    }
   }
 
   /**
@@ -95,16 +81,16 @@ var ItsATrap = (() => {
   function _checkPassiveSearch(theme, token) {
     if(theme.passiveSearch && theme.passiveSearch !== _.noop) {
       _.chain(getSearchableTraps(token))
-        .filter(trap => {
-          // Only search for traps that are close enough to be spotted.
-          let effect = new TrapEffect(trap, token);
-          let dist = _getPassiveSearchDistance(token, trap);
-          let searchDist = trap.get('aura2_radius') || effect.searchDist;
-          return (!searchDist || dist < searchDist);
-        })
-        .each(trap => {
-          theme.passiveSearch(trap, token);
-        });
+      .filter(trap => {
+        // Only search for traps that are close enough to be spotted.
+        let effect = new TrapEffect(trap, token);
+        let dist = _getPassiveSearchDistance(token, trap);
+        let searchDist = trap.get('aura2_radius') || effect.searchDist;
+        return (!searchDist || dist < searchDist);
+      })
+      .each(trap => {
+        theme.passiveSearch(trap, token);
+      });
     }
   }
 
@@ -114,7 +100,7 @@ var ItsATrap = (() => {
    * @private
    * @param {Graphic} token
    */
-  function _checkToken(token) {
+  function _checkTrapInteractions(token) {
     // Objects on the GM layer don't set off traps.
     if(token.get("layer") === "objects") {
       try {
@@ -146,26 +132,32 @@ var ItsATrap = (() => {
   function _checkTrapActivations(theme, token) {
     let collisions = getTrapCollisions(token);
     _.find(collisions, collision => {
-      var trap = collision.other;
+      let trap = collision.other;
 
       // Skip if the trap is disabled.
       if(trap.get('status_interdiction'))
         return false;
 
-      var trapEffect = (new TrapEffect(trap, token)).json;
+      let trapEffect = (new TrapEffect(trap, token)).json;
       trapEffect.stopAt = trapEffect.stopAt || 'center';
 
       // Figure out where to stop the token.
       if(trapEffect.stopAt === 'edge' && !trapEffect.gmOnly) {
-        var x = collision.pt[0];
-        var y = collision.pt[1];
+        let x = collision.pt[0];
+        let y = collision.pt[1];
 
         token.set("lastmove","");
         token.set("left", x);
         token.set("top", y);
       }
-      else if(trapEffect.stopAt === 'center' && !trapEffect.gmOnly)
-        moveTokenToTrap(token, trap);
+      else if(trapEffect.stopAt === 'center' && !trapEffect.gmOnly) {
+        let x = trap.get("left");
+        let y = trap.get("top");
+
+        token.set("lastmove","");
+        token.set("left", x);
+        token.set("top", y);
+      }
 
       // Apply the trap's effects to any victims in its area.
       activateTrap(trap, token);
@@ -182,14 +174,8 @@ var ItsATrap = (() => {
    * @return {number}
    */
   function _getPassiveSearchDistance(token1, token2) {
-    let p1 = [
-      token1.get('left'),
-      token1.get('top')
-    ];
-    let p2 = [
-      token2.get('left'),
-      token2.get('top')
-    ];
+    let p1 = _getPt(token1);
+    let p2 = _getPt(token2);
     let r1 = token1.get('width')/2;
     let r2 = token2.get('width')/2;
 
@@ -200,57 +186,13 @@ var ItsATrap = (() => {
   }
 
   /**
-   * Gets the tokens that a token has line of sight to.
+   * Gets the point for a token.
    * @private
-   * @param  {Graphic} token
-   * @param  {Graphic[]} otherTokens
-   * @param  {number} [range=Infinity]
-   *         The line-of-sight range in pixels.
-   * @param {boolean} [isSquareRange=false]
-   * @return {Graphic[]}
+   * @param {Graphic} token
+   * @return {vec3}
    */
-  function _getTokensInLineOfSight(token, otherTokens, range, isSquareRange) {
-    if(_.isUndefined(range))
-      range = Infinity;
-
-    var pageId = token.get('_pageid');
-    var tokenPt = [
-      token.get('left'),
-      token.get('top'),
-      1
-    ];
-    var tokenRW = token.get('width')/2-1;
-    var tokenRH = token.get('height')/2-1;
-
-    var wallPaths = findObjs({
-      _type: 'path',
-      _pageid: pageId,
-      layer: 'walls'
-    });
-    var wallSegments = PathMath.toSegments(wallPaths);
-
-    return _.filter(otherTokens, other => {
-      var otherPt = [
-        other.get('left'),
-        other.get('top'),
-        1
-      ];
-      var otherRW = other.get('width')/2;
-      var otherRH = other.get('height')/2;
-
-      // Skip tokens that are out of range.
-      if(isSquareRange && (
-        Math.abs(tokenPt[0]-otherPt[0]) >= range + otherRW + tokenRW ||
-        Math.abs(tokenPt[1]-otherPt[1]) >= range + otherRH + tokenRH))
-        return false
-      else if(!isSquareRange && VecMath.dist(tokenPt, otherPt) >= range + tokenRW + otherRW)
-        return false;
-
-      var segToOther = [tokenPt, otherPt];
-      return !_.find(wallSegments, wallSeg => {
-        return PathMath.segmentIntersection(segToOther, wallSeg);
-      });
-    });
+  function _getPt(token) {
+    return [token.get('left'), token.get('top'), 1];
   }
 
   /**
@@ -261,9 +203,9 @@ var ItsATrap = (() => {
    *         The list of traps that charToken has line-of-sight to.
    */
   function getSearchableTraps(charToken) {
-    var pageId = charToken.get('_pageid');
-    var traps = getTrapsOnPage(pageId);
-    return _getTokensInLineOfSight(charToken, traps);
+    let pageId = charToken.get('_pageid');
+    let traps = getTrapsOnPage(pageId);
+    return LineOfSight.filterTokens(charToken, traps);
   }
 
   /**
@@ -273,24 +215,6 @@ var ItsATrap = (() => {
    */
   function getTheme() {
     return trapThemes[state.ItsATrap.theme];
-  }
-
-  /**
-   * Returns the first trap a token collided with during its last movement.
-   * If it didn't collide with any traps, return false.
-   * @deprecated
-   * @param {Graphic} token
-   * @return {Graphic || false}
-   */
-  function getTrapCollision(token) {
-    var pageId = token.get('_pageid');
-    var traps = getTrapsOnPage(pageId);
-
-    // Some traps don't affect flying tokens.
-    traps = _.filter(traps, trap => {
-      return !isTokenFlying(token) || isTokenFlying(trap);
-    });
-    return TokenCollisions.getFirstCollision(token, traps);
   }
 
   /**
@@ -304,11 +228,59 @@ var ItsATrap = (() => {
     let pageId = token.get('_pageid');
     let traps = getTrapsOnPage(pageId);
 
+    // A llambda to test if a token is flying.
+    let isFlying = x => {
+      return token.get("status_fluffy-wing");
+    };
+
+    let pathsToTraps = {};
+
     // Some traps don't affect flying tokens.
-    traps = _.filter(traps, trap => {
-      return !isTokenFlying(token) || isTokenFlying(trap);
-    });
-    return TokenCollisions.getCollisions(token, traps, {detailed: true});
+    traps = _.chain(traps)
+    .filter(trap => {
+      return !isFlying(token) || isFlying(trap);
+    })
+
+    // Use paths for collisions if trigger paths are set.
+    .map(trap => {
+      let effect = new TrapEffect(trap);
+      if(effect.triggerPaths) {
+        return _.map(effect.triggerPaths, id => {
+          if(pathsToTraps[id])
+            pathsToTraps[id].push(trap);
+          else
+            pathsToTraps[id] = [trap];
+
+          return getObj('path', id) || trap;
+        });
+      }
+      else
+        return trap;
+    })
+    .flatten()
+    .value();
+
+    // Get the collisions.
+    return _.chain(TokenCollisions.getCollisions(token, traps, {detailed: true}))
+    .map(collision => {
+
+      // Convert path collisions back into trap token collisions.
+      if(collision.other.get('_type') === 'path') {
+        let pathId = collision.other.get('_id');
+        return _.map(pathsToTraps[pathId], trap => {
+          return {
+            token: collision.token,
+            other: trap,
+            pt: collision.pt,
+            dist: collision.dist
+          };
+        });
+      }
+      else
+        return collision;
+    })
+    .flatten()
+    .value();
   }
 
   /**
@@ -347,28 +319,12 @@ var ItsATrap = (() => {
       range *= 70/pageScale;
       let squareArea = trap.get('aura1_square');
 
-      victims = victims.concat(_getTokensInLineOfSight(trap, otherTokens, range, squareArea));
+      victims = victims.concat(LineOfSight.filterTokens(trap, otherTokens, range, squareArea));
     }
     return _.chain(victims)
-      .unique()
-      .compact()
-      .value();
-  }
-
-  /**
-   * @private
-   */
-  function _getUserOption(opName) {
-    return state.ItsATrap.userOptions[opName];
-  }
-
-  /**
-   * Determines whether a token is currently flying.
-   * @param {Graphic} token
-   * @return {Boolean}
-   */
-  function isTokenFlying(token) {
-    return token.get("status_fluffy-wing");
+    .unique()
+    .compact()
+    .value();
   }
 
   /**
@@ -383,48 +339,31 @@ var ItsATrap = (() => {
     let pageId = trap.get('_pageid');
 
     // Circle the trap's trigger area.
-    let circle = PathMath.createCircleData(radius);
-    createObj('path', _.extend(circle, {
-      layer: 'objects',
-      left: x,
-      _pageid: pageId,
+    let circle = new PathMath.Circle([x, y, 1], radius);
+    circle.render(pageId, 'objects', {
       stroke: '#ffff00', // yellow
-      stroke_width: 5,
-      top: y
-    }));
+      stroke_width: 5
+    });
 
     sendPing(x, y, pageId);
   }
 
   /**
-   * Moves the specified token to the same position as the trap.
-   * @param {Graphic} token
-   * @param {Graphic} trap
-   */
-  function moveTokenToTrap(token, trap) {
-    let x = trap.get("left");
-    let y = trap.get("top");
-
-    token.set("lastmove","");
-    token.set("left", x);
-    token.set("top", y);
-  }
-
-  /**
    * Marks a trap as being noticed by a character's passive search.
-   * Does nothing if the trap has already been noticed.
-   * @param  {Graphic} trap
-   * @param {string} A message to display when the trap is noticed.
+   * @param {Graphic} trap
+   * @param {string} noticeMessage A message to display when the trap is noticed.
    * @return {boolean}
    *         true if the trap has not been noticed yet.
    */
   function noticeTrap(trap, noticeMessage) {
     let id = trap.get('_id');
     let effect = new TrapEffect(trap);
+    let announcer = state.ItsATrap.userOptions.announcer;
 
     if(!state.ItsATrap.noticedTraps[id]) {
       state.ItsATrap.noticedTraps[id] = true;
-      sendChat('Admiral Ackbar', noticeMessage);
+      sendChat(announcer, noticeMessage);
+
       if(effect.revealWhenSpotted)
         revealTrap(trap);
       else
@@ -434,8 +373,6 @@ var ItsATrap = (() => {
     else
       return false;
   }
-
-
 
   /**
    * Registers a TrapTheme.
@@ -447,15 +384,10 @@ var ItsATrap = (() => {
   }
 
   /**
-   * Reveals a trap with the bleeding-eye status to either the back of the
-   * objects layer, or the front of the map layer, depending on the user
-   * configurations.
+   * Reveals a trap to the objects or map layer.
    * @param  {Graphic} trap
-   * @param {boolean} [force]
-   *        If true, the trap is revealed even if it doesn't have the
-   *        bleeding-eye status.
    */
-  function revealTrap(trap, force) {
+  function revealTrap(trap) {
     let effect = new TrapEffect(trap);
 
     if(effect.revealLayer === 'objects') {
@@ -467,6 +399,17 @@ var ItsATrap = (() => {
       toFront(trap);
     }
     sendPing(trap.get('left'), trap.get('top'), trap.get('_pageid'));
+  }
+
+  /**
+   * Removes a trap from the state's collection of noticed traps.
+   * @private
+   * @param {Graphic} trap
+   */
+  function _unNoticeTrap(trap) {
+    let id = trap.get('_id');
+    if(state.ItsATrap.noticedTraps[id])
+      delete state.ItsATrap.noticedTraps[id];
   }
 
   // Create macro for the remote activation command.
@@ -487,12 +430,18 @@ var ItsATrap = (() => {
 
   // Handle macro commands.
   on('chat:message', msg => {
-    if(msg.content === REMOTE_ACTIVATE_CMD) {
-      let theme = getTheme();
-      _.each(msg.selected, item => {
-        let trap = getObj('graphic', item._id);
-        activateTrapManually(trap);
-      });
+    try {
+      if(msg.content === REMOTE_ACTIVATE_CMD) {
+        let theme = getTheme();
+        _.each(msg.selected, item => {
+          let trap = getObj('graphic', item._id);
+          activateTrap(trap);
+        });
+      }
+    }
+    catch(err) {
+      log(`It's A Trap ERROR: ${err.msg}`);
+      log(err.stack);
     }
   });
 
@@ -502,7 +451,7 @@ var ItsATrap = (() => {
    */
   on("change:graphic:lastmove", function(token) {
     try {
-      _checkToken(token);
+      _checkTrapInteractions(token);
     }
     catch(err) {
       log(`It's A Trap ERROR: ${err.msg}`);
@@ -510,29 +459,28 @@ var ItsATrap = (() => {
     }
   });
 
+  // If a trap is moved back to the GM layer, remove it from the set of noticed traps.
+  on('change:graphic:layer', token => {
+    if(token.get('layer') === 'gmlayer')
+      _unNoticeTrap(token);
+  });
+
   // When a trap's token is destroyed, remove it from the set of noticed traps.
   on('destroy:graphic', function(token) {
-    let id = token.get('_id');
-    if(state.ItsATrap.noticedTraps[id])
-      delete state.ItsATrap.noticedTraps[id];
+    _unNoticeTrap(token);
   });
 
   return {
     activateTrap,
-    activateTrapManually,
     getTheme,
-    getTrapCollision,
     getTrapCollisions,
     getTrapsOnPage,
-    isTokenFlying,
-    moveTokenToTrap,
     noticeTrap,
     registerTheme,
     revealTrap,
     REMOTE_ACTIVATE_CMD
   };
 })();
-
 
 /**
  * The configured JSON properties of a trap. This can be extended to add
@@ -634,14 +582,6 @@ var TrapEffect = (() => {
     }
 
     /**
-     * A list of path IDs defining an area that triggers this trap.
-     * @type {string[]}
-     */
-    get pathTriggers() {
-      return this._effect.pathTriggers;
-    }
-
-    /**
      * The layer that the trap gets revealed to.
      * @type {string}
      */
@@ -690,6 +630,14 @@ var TrapEffect = (() => {
      */
     get trapId() {
       return this._trap.get('_id');
+    }
+
+    /**
+     * A list of path IDs defining an area that triggers this trap.
+     * @type {string[]}
+     */
+    get triggerPaths() {
+      return this._effect.triggerPaths;
     }
 
     /**
@@ -773,7 +721,7 @@ var TrapEffect = (() => {
         });
 
         _.each(triggeredTraps, trap => {
-          ItsATrap.activateTrapManually(trap);
+          ItsATrap.activateTrap(trap);
         });
       }
     }
@@ -945,9 +893,74 @@ var TrapEffect = (() => {
           throw new Error('Could not find sound "' + this.sound + '".');
       }
     }
-  }
+  };
 })();
 
+/**
+ * A small library for checking if a token has line of sight to other tokens.
+ */
+var LineOfSight = (() => {
+  'use strict';
+
+  /**
+   * Gets the point for a token.
+   * @private
+   * @param {Graphic} token
+   * @return {vec3}
+   */
+  function _getPt(token) {
+    return [token.get('left'), token.get('top'), 1];
+  }
+
+  return class LineOfSight {
+
+    /**
+     * Gets the tokens that a token has line of sight to.
+     * @private
+     * @param  {Graphic} token
+     * @param  {Graphic[]} otherTokens
+     * @param  {number} [range=Infinity]
+     *         The line-of-sight range in pixels.
+     * @param {boolean} [isSquareRange=false]
+     * @return {Graphic[]}
+     */
+    static filterTokens(token, otherTokens, range, isSquareRange) {
+      if(_.isUndefined(range))
+        range = Infinity;
+
+      let pageId = token.get('_pageid');
+      let tokenPt = _getPt(token);
+      let tokenRW = token.get('width')/2-1;
+      let tokenRH = token.get('height')/2-1;
+
+      let wallPaths = findObjs({
+        _type: 'path',
+        _pageid: pageId,
+        layer: 'walls'
+      });
+      let wallSegments = PathMath.toSegments(wallPaths);
+
+      return _.filter(otherTokens, other => {
+        let otherPt = _getPt(other);
+        let otherRW = other.get('width')/2;
+        let otherRH = other.get('height')/2;
+
+        // Skip tokens that are out of range.
+        if(isSquareRange && (
+          Math.abs(tokenPt[0]-otherPt[0]) >= range + otherRW + tokenRW ||
+          Math.abs(tokenPt[1]-otherPt[1]) >= range + otherRH + tokenRH))
+          return false;
+        else if(!isSquareRange && VecMath.dist(tokenPt, otherPt) >= range + tokenRW + otherRW)
+          return false;
+
+        let segToOther = [tokenPt, otherPt];
+        return !_.find(wallSegments, wallSeg => {
+          return PathMath.segmentIntersection(segToOther, wallSeg);
+        });
+      });
+    }
+  };
+})();
 
 /**
  * A module that presents a wizard for setting up traps instead of
@@ -982,6 +995,9 @@ var ItsATrapCreationWizard = (() => {
     }
   };
 
+  // The last trap that was edited in the wizard.
+  let curTrap;
+
   /**
    * Displays the menu for setting up a trap.
    * @param {string} who
@@ -989,6 +1005,7 @@ var ItsATrapCreationWizard = (() => {
    * @param {Graphic} trapToken
    */
   function displayWizard(who, playerId, trapToken) {
+    curTrap = trapToken;
     let content = new HtmlBuilder('div');
 
     // Core properties
@@ -1002,6 +1019,13 @@ var ItsATrapCreationWizard = (() => {
     });
     let shapeProperties = getShapeProperties(trapToken);
     content.append(_displayWizardProperties(MODIFY_CORE_PROPERTY_CMD, shapeProperties));
+
+    // Trigger properties
+    content.append('h4', 'Trigger properties', {
+      style: { 'margin-top' : '2em' }
+    });
+    let triggerProperties = getTriggerProperties(trapToken);
+    content.append(_displayWizardProperties(MODIFY_CORE_PROPERTY_CMD, triggerProperties));
 
     // Reveal properties
     content.append('h4', 'Reveal properties', {
@@ -1263,7 +1287,7 @@ var ItsATrapCreationWizard = (() => {
             return result;
           }
           else
-            return 'None'
+            return 'None';
         })(),
         properties: [
           {
@@ -1293,11 +1317,52 @@ var ItsATrapCreationWizard = (() => {
   }
 
   /**
+   * Gets a list of the core trap properties for a trap token.
+   * @param {Graphic} token
+   * @return {object[]}
+   */
+  function getTriggerProperties(trapToken) {
+    let trapEffect = (new TrapEffect(trapToken)).json;
+
+    let LPAREN = '&#40;';
+    let RPAREN = '&#41;';
+
+    let LBRACE = '&#91;';
+    let RBRACE = '&#93;';
+
+    return [
+      {
+        id: 'triggerPaths',
+        name: 'Set Trigger',
+        desc: 'To set paths, you must also select the paths that trigger the trap.',
+        value: trapEffect.triggerPaths || 'self',
+        options: ['self', 'paths']
+      },
+      {
+        id: 'triggers',
+        name: 'Other Traps Triggered',
+        desc: 'A list of the names or token IDs for other traps that are triggered when this trap is activated.',
+        value: (() => {
+          let triggers = trapEffect.triggers;
+          if(_.isString(triggers))
+            triggers = [triggers];
+
+          if(triggers)
+            return triggers.join(', ');
+          else
+            return undefined;
+        })()
+      }
+    ];
+  }
+
+  /**
    * Changes a property for a trap.
    * @param {Graphic} trapToken
-   * @param {Array} params
+   * @param {Array} argv
+   * @param {(Graphic|Path)[]} selected
    */
-  function modifyTrapProperty(trapToken, argv) {
+  function modifyTrapProperty(trapToken, argv, selected) {
     let trapEffect = (new TrapEffect(trapToken)).json;
 
     let prop = argv[0];
@@ -1351,6 +1416,17 @@ var ItsATrapCreationWizard = (() => {
       trapEffect.sound = params[0];
     if(prop === 'stopAt')
       trapEffect.stopAt = params[0];
+    if(prop === 'triggers')
+      trapEffect.triggers = _.map(params[0].split(','), trigger => {
+        return trigger.trim();
+      });
+    if(prop === 'triggerPaths')
+      if(params[0] === 'paths' && selected)
+        trapEffect.triggerPaths = _.map(selected, path => {
+          return path.get('_id');
+        });
+      else
+        trapEffect.triggerPaths = undefined;
 
     trapToken.set('gmnotes', JSON.stringify(trapEffect));
   }
@@ -1364,7 +1440,7 @@ var ItsATrapCreationWizard = (() => {
   function _showMenuPanel(header, content) {
     let menu = new HtmlBuilder('.menu');
     menu.append('.menuHeader', header);
-    menu.append('.menuBody', content)
+    menu.append('.menuBody', content);
     return menu;
   }
 
@@ -1403,22 +1479,28 @@ var ItsATrapCreationWizard = (() => {
 
   on('chat:message', msg => {
     try {
+      // Get the selected tokens/paths if any.
+      let selected;
+      if(msg.selected) {
+        selected = _.map(msg.selected, sel => {
+          return getObj(sel._type, sel._id);
+        });
+      }
+
       if(msg.content.startsWith(DISPLAY_WIZARD_CMD)) {
         let trapToken = getObj('graphic', msg.selected[0]._id);
         displayWizard(msg.who, msg.playerId, trapToken);
       }
       if(msg.content.startsWith(MODIFY_CORE_PROPERTY_CMD)) {
-        let trapToken = getObj('graphic', msg.selected[0]._id);
         let params = msg.content.replace(MODIFY_CORE_PROPERTY_CMD + ' ', '').split('&&');
-        modifyTrapProperty(trapToken, params);
-        displayWizard(msg.who, msg.playerId, trapToken);
+        modifyTrapProperty(curTrap, params, selected);
+        displayWizard(msg.who, msg.playerId, curTrap);
       }
       if(msg.content.startsWith(MODIFY_THEME_PROPERTY_CMD)) {
-        let trapToken = getObj('graphic', msg.selected[0]._id);
         let params = msg.content.replace(MODIFY_THEME_PROPERTY_CMD + ' ', '').split('&&');
         let theme = ItsATrap.getTheme();
-        theme.modifyTrapProperty(trapToken, params);
-        displayWizard(msg.who, msg.playerId, trapToken);
+        theme.modifyTrapProperty(curTrap, params, selected);
+        displayWizard(msg.who, msg.playerId, curTrap);
       }
     }
     catch(err) {
@@ -1434,7 +1516,6 @@ var ItsATrapCreationWizard = (() => {
     MODIFY_THEME_PROPERTY_CMD
   };
 })();
-
 
 /**
  * Base class for trap themes: System-specific strategies for handling
@@ -1858,7 +1939,7 @@ var D20TrapTheme = (() => {
             content.append('.paddedRow', 'Damage: [[' + effectResults.damage + ']]');
         }
         else if(effectResults.trapHit) {
-          let row = content.append('.paddedRow')
+          let row = content.append('.paddedRow');
           row.append('span.hit', 'HIT! ');
           if(effectResults.damage)
             row.append('span', 'Damage: [[' + effectResults.damage + ']]');
@@ -1931,7 +2012,7 @@ var D20TrapTheme = (() => {
         });
       }
     }
-  }
+  };
 })();
 
 /**
@@ -2011,7 +2092,7 @@ var D20TrapTheme4E = (() => {
           let rollHtml = D20TrapTheme.htmlRollResult(effectResult.roll, '1d20 + ' + effectResult.attack);
           let row = content.append('.paddedRow');
           row.append('span.bold', 'Attack roll: ');
-          row.append('span', rollHtml + ' vs ' + effectResult.defense + ' ' + effectResult.defenseValue)
+          row.append('span', rollHtml + ' vs ' + effectResult.defense + ' ' + effectResult.defenseValue);
         }
 
         // Add the hit/miss message.
@@ -2035,8 +2116,6 @@ var D20TrapTheme4E = (() => {
     }
   };
 })();
-
-
 
 /**
  * The default system-agnostic Admiral Ackbar theme.
