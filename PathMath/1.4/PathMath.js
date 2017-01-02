@@ -48,7 +48,125 @@ var PathMath = (() => {
      */
 
     /**
-     * A closed polygon defined by a path or a list of vertices.
+     * An open shape defined by a path or list of vertices.
+     */
+    class Path {
+
+      /**
+       * @param {(Path|vec3[])} path
+       */
+      constructor(path) {
+        if(_.isArray(path))
+          this.vertices = path;
+        else {
+          this._segments = toSegments(path);
+          this.vertices = _.map(this._segments, seg => {
+            return seg[0];
+          });
+        }
+
+        this.numVerts = this.vertices.length;
+      }
+
+      /**
+       * Gets the bounding box of this path.
+       * @return {BoundingBox}
+       */
+      getBoundingBox() {
+        if(!this._bbox) {
+          let left, right, top, bottom;
+          _.each(this.vertices, (v, i) => {
+            if(i === 0) {
+              left = v[0];
+              right = v[0];
+              top = v[1];
+              bottom = v[1];
+            }
+            else {
+              left = Math.min(left, v[0]);
+              right = Math.max(right, v[0]);
+              top = Math.min(top, v[1]);
+              bottom = Math.max(bottom, v[1]);
+            }
+          });
+          let width = right - left;
+          let height = bottom - top;
+          this._bbox = new BoundingBox(left, top, width, height);
+        }
+        return this._bbox;
+      }
+
+      /**
+       * Checks if this path intersects with another path.
+       * @param {Polygon} other
+       * @return {boolean}
+       */
+      intersects(other) {
+        let thisBox = this.getBoundingBox();
+        let otherBox = other.getBoundingBox();
+
+        // If the bounding boxes don't intersect, then the paths won't
+        // intersect.
+        if(!thisBox.intersects(otherBox))
+          return false;
+
+        // Naive approach: Since our shortcuts didn't return, check each
+        // path's segments for intersections with each of the other
+        // path's segments. This takes O(n^2) time.
+        return !!_.find(this.toSegments(), seg1 => {
+          return !!_.find(other.toSegments(), seg2 => {
+            return !!segmentIntersection(seg1, seg2);
+          });
+        });
+      }
+
+      /**
+       * Renders this path.
+       * @param {string} pageId
+       * @param {string} layer
+       * @param {RenderInfo} renderInfo
+       */
+      render(pageId, layer, renderInfo) {
+        let segments = this.toSegments();
+        let pathData = segmentsToPath(segments);
+        _.extend(pathData, renderInfo, {
+          _pageid: pageId,
+          layer
+        });
+        createObj('path', pathData);
+      }
+
+      /**
+       * Produces a list of segments defining this path.
+       * @return {Segment[]}
+       */
+      toSegments() {
+        if(!this._segments) {
+          this._segments = _.map(_.range(this.numVerts - 1), i => {
+            let v = this.vertices[i];
+            let vNext = this.vertices[i + 1];
+            return [v, vNext];
+          });
+        }
+        return this._segments;
+      }
+
+      /**
+       * Produces a copy of this path, transformed by an affine
+       * transformation matrix.
+       * @param {MatrixMath.Matrix} matrix
+       * @return {Polygon}
+       */
+      transform(matrix) {
+        let vertices = _.map(this.vertices, v => {
+          return MatrixMath.multiply(matrix, v);
+        });
+        return new Path(vertices);
+      }
+    }
+
+    /**
+     * A closed shape defined by a path or a list of vertices.
      */
     class Polygon {
 
@@ -492,7 +610,7 @@ var PathMath = (() => {
           let scalar = VecMath.scalarProjection(u, v)-base;
           let s = scalar/uLen;
 
-          if(s <= 1) {
+          if(s >= 0 && s <= 1) {
             let t = 1;
             let pt = VecMath.add(segment[0], VecMath.scale(uHat, scalar));
             return [pt, s, t];
@@ -1017,6 +1135,7 @@ var PathMath = (() => {
     return {
         BoundingBox,
         Circle,
+        Path,
         Polygon,
         Triangle,
 

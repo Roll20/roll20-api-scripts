@@ -270,20 +270,23 @@ var TokenCollisions = (() => {
    * @param {Waypoint} waypoint
    */
   function _testCirclePathCollision(token, path, waypoint) {
-    let _isPath = (path.get('fill') === 'transparent');
-    let poly = new PathMath.Polygon(path);
-    return _testCirclePolyCollision(token, poly, waypoint, _isPath);
+    let shape;
+    if(path.get('fill') === 'transparent')
+      shape = new PathMath.Path(path);
+    else
+      shape = new PathMath.Polygon(path);
+    return _testCirclePolyCollision(token, shape, waypoint);
   }
 
   /**
    * Tests for a collision between a circle and a Polygon.
    * @private
    * @param {graphic} token
-   * @param {PathMath.Polygon} poly
+   * @param {(PathMath.Polygon|PathMath.Path)} poly
    * @param {Waypoint} waypoint
    * @return {number} The minimum distance.
    */
-  function _testCirclePolyCollision(token, poly, waypoint, _isPath) {
+  function _testCirclePolyCollision(token, poly, waypoint) {
     let start = _.clone(waypoint[0]);
     start[2] = 1;
     let end = _.clone(waypoint[1]);
@@ -307,7 +310,7 @@ var TokenCollisions = (() => {
       return undefined;
 
     // Quit early if the polygon contains the start circle's center.
-    if(!_isPath && poly.containsPt(startCircle.center))
+    if(poly instanceof PathMath.Polygon && poly.containsPt(startCircle.center))
       return undefined;
 
     // Produce a system transformation such that our circle is centered at
@@ -323,6 +326,7 @@ var TokenCollisions = (() => {
     // Return the minimum collision distance to a transformed segment.
     let segments = mPoly.toSegments();
     let keptSegs = _testCirclePolyCollision_clipSegments(segments, mCircle);
+
     let minDist = _testCirclePolyCollision_minDistance(keptSegs, radius);
     if(minDist === Infinity || minDist > uLen)
       return undefined;
@@ -383,7 +387,6 @@ var TokenCollisions = (() => {
       }
 
       let clippedSeg = [p, q];
-      log(clippedSeg);
       clippedSeg.m = m;
       clippedSeg.b = b;
       return clippedSeg;
@@ -395,11 +398,11 @@ var TokenCollisions = (() => {
   // Using the power of calculus, find the closest segment that
   // wasn't clipped.
   function _testCirclePolyCollision_minDistance(segments, radius) {
-    log(segments);
-    log(radius);
-
     return _.chain(segments)
     .map(seg => {
+      let p = seg[0];
+      let q = seg[1];
+
       let fofX = x => { // The line equation for the segment in y=mx + b form.
         return seg.m*x + seg.b;
       };
@@ -425,22 +428,21 @@ var TokenCollisions = (() => {
         // Clip roots outside of the segment, on the edge of the
         // circle's movement, or whose slopes aren't valleys.
         // Then get the collision distance to the closest root.
-        let minDist = _.chain([root1, root2])
+        let minDist = _.chain([root1, root2, p[0], q[0]])
         .filter(root => {
-          let isInRadius = root >= -radius && root <= radius;
-          let isInSegment = root >= seg[0][0] && root <= seg[1][0];
-          let isValley = hofXddx(root) > 0;
+          let isInRadius = (root >= -radius && root <= radius);
+          let isInSegment = (root >= p[0] && root <= q[0]);
+          let isValley = (hofXddx(root) > 0);
 
           return isInRadius && isInSegment && isValley;
         })
         .map(root => {
+          let result = hofX(root);
           return hofX(root);
         })
         .min() // Infinity if no valid roots.
         .value();
 
-        if(minDist === Infinity)
-          minDist = Math.min(hofX(seg[0][0]), hofX(seg[1][0]));
         if(minDist > 0)
           return minDist;
         return undefined;
@@ -569,21 +571,23 @@ var TokenCollisions = (() => {
    * @return {number} The minimum collision distance.
    */
   function _testRectPathCollision(token, path, waypoint) {
-    let isPath = path.get('fill') === 'transparent';
-    let poly = new PathMath.Polygon(path);
-    return _testRectPolyCollision(token, poly, waypoint, isPath);
+    let shape;
+    if(path.get('fill') === 'transparent')
+      shape = new PathMath.Path(path);
+    else
+      shape = new PathMath.Polygon(path);
+    return _testRectPolyCollision(token, shape, waypoint);
   }
 
   /**
    * Tests for an in-movement collision between two polygons.
    * @private
    * @param {graphic} token
-   * @param {PathMath.Polygon} poly
+   * @param {(PathMath.Polygon|PathMath.Path)} poly
    * @param {waypoint} waypoint
-   * @param {boolean} [_isPath] private
    * @return {number}
    */
-  function _testRectPolyCollision(token, poly, waypoint, _isPath) {
+  function _testRectPolyCollision(token, poly, waypoint) {
     let start = waypoint[0];
     start[2] = 1;
     let end = waypoint[1];
@@ -614,7 +618,7 @@ var TokenCollisions = (() => {
       return undefined;
 
     // Quit early if the polygons intersect.
-    if(!_isPath && startRect.intersects(poly))
+    if(startRect.intersects(poly))
       return undefined;
 
     // Transform the system so that the token's start rect is at the origin and
@@ -627,6 +631,7 @@ var TokenCollisions = (() => {
     let mPoly = poly.transform(m);
     let mRect = startRect.transform(m);
 
+    // Get the sets of clipped segments to test collisions between.
     let mRectSegs = _testRectPolyCollision_clipRectSegs(mRect, moveBox);
     let mPolySegs = _testRectPolyCollision_clipPolySegs(mPoly, mRect);
     let minDist = _testRectPolyCollision_getMinDist(mPolySegs, mRectSegs);

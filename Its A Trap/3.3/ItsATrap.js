@@ -160,7 +160,10 @@ var ItsATrap = (() => {
       }
 
       // Apply the trap's effects to any victims in its area.
-      activateTrap(trap, token);
+      if(collision.triggeredByPath)
+        activateTrap(trap);
+      else
+        activateTrap(trap, token);
 
       // Stop activating traps if this trap stopped the token.
       return (trapEffect.stopAt !== 'none');
@@ -272,7 +275,8 @@ var ItsATrap = (() => {
             token: collision.token,
             other: trap,
             pt: collision.pt,
-            dist: collision.dist
+            dist: collision.dist,
+            triggeredByPath: true
           };
         });
       }

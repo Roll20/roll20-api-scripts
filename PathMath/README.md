@@ -9,6 +9,11 @@ This script's documentation uses the following typedefs and classes:
 
 ```
 /**
+ * An open shape defined by a path.
+ * @class Path
+ */
+
+/**
  * A closed shape defined by a path.
  * @class Polygon
  */

@@ -2,6 +2,10 @@
 
 ###### Updates
 
+_3.3_
+* The trap creation wizard has been reorganized into groups of related properties. Some properties have been renamed.
+* There is a new Set Trigger property that allows you to set the trap's trigger either to the trap's token itself, or a set of closed polygonal paths on the GM layer.
+
 _3.2_
 * Fixed 'noticed undefined' bug in passive perception.
 * Traps' type property is now a text input instead of a predefined list.
@@ -21,10 +25,23 @@ Place the token for your trap on the ```GM layer```. Give it the ```cobweb```
 Then, select the trap token and activate its 'ItsATrap_trapCreationWizard' token macro.
 This will present a menu for setting up the trap's configurations.
 
+### Setting trap triggers:
+
+As of version 3.3, traps can be set to be triggered either by their own token or
+by a set of paths on the GM layer. By default, the trap's token is used as
+its trigger. The trap's ```Trap Shape``` property determines the token shape
+(circle or rectangle) used for the collision.
+
+You can change this by opening the trap's creation wizard in the chat,
+selecting a set of polygonal or freehand paths from the GM layer, and then setting
+the ```Set Trigger property``` for the trap to ```Paths```.
+
+Note: Elliptical token shapes are not currently supported (unless they are circles).
+
 ### Activating traps:
 
-If a token moves across a trap at ANY point during its movement, the trap will
-be activated!
+If a token moves across a trap or its trigger paths at ANY point during its
+movement, the trap will be activated!
 
 A trap can also be manually activated by clicking the 'Activate Trap' button
 in the trap's configuration menu.
@@ -47,6 +64,12 @@ the ```default``` or ```5E-OGL``` TrapThemes as an example to get you started.
 
 ### Support
 
-If you experience any issues while using this script or the trap themes, or if
-you have a neat suggestion for a new feature, please reply to this thread:
+If you experience any issues while using this script or the trap themes,
+need help using it, or if you have a neat suggestion for a new feature, please reply to this thread:
 https://app.roll20.net/forum/post/3280344/script-its-a-trap-v2-dot-3
+
+If you would like to show your appreciation for the work I do in writing,
+updating, and supporting my API scripts, consider buying one of my art asset
+packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)
+or, simply leave a thank you note in the script's thread on the Roll20 forums.
+Either is greatly appreciated! Happy gaming!
