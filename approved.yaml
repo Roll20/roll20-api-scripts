@@ -247,3 +247,20 @@ roll20audiomaster:
 groupcheck:
 - "GroupCheck"
 - "Character"
+
+mythicgm:
+- "MythicGM"
+- "System Toolbox"
+
+markov:
+- "Markov"
+- "Character"
+
+fumbler:
+- "Fumbler"
+- "Character"
+
+critical:
+- "Critical"
+- "Character"
+
