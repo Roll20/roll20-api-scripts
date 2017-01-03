@@ -25,12 +25,7 @@ Hit friend, normal damage. Friend stunned for 1 round.
 Hit self. Double damage. Stunned for 1 round.
 
 
+---
 
-More cool stuff
----------------
-
-Check out other scripts I've written for Roll20 and other frameworks: https://github.com/RyanNerd?tab=repositories
-
-
-> **If you find these scripts useful consider contributing (or just stop by to say 'Hi')**
+If you find this script useful consider contributing (or just stop by to say 'Hi')
 https://www.patreon.com/user?u=3985594

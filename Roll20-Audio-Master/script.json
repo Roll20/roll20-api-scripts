@@ -1,0 +1,17 @@
+{
+	"name": "Roll20 Audio Master",
+	"script": "Roll20AM.js",
+	"version": "1.03",
+	"previousversions": ["1.02","1.01","1.0"],
+	"description": "# Roll20 Audio Master\r\r###### Hear the dice, hear the action!\r###### The script allows control of the jukebox via the chat interface and expands upon the standard jukebox functionality with some additional commands.\r\r### Basic Command Syntax\r###### Optional arguments are encased in square brackets, mutually exclusive options are separated by a forward slash\r!roll20AM --action,action settings, or options|track name to act on|or playlist name to act on\r\r### Specific Commands\r###### See the in game help handout for details on listed keywords\r --play,[swap],[loop],[mode:shuffle/trueRandom/together/single],[delay:seconds]|track/list to play|track/list to play|...\r --stop,[soft],[ignore],[delay:seconds]|track/list to stop|track/list to stop|...\r --vcontrol,volume:value,[ignore],[fade/mute/unmute,[tickTime:seconds],[volTick:number],[stop]],[delay:seconds]|track to change|track to change|...\r --listCreate,listName:name,[access:gm/player][mode:shuffle/trueRandom/together/single]|track to add|track to add|...\r --listEdit,listName:name,[add/remove],[mode:shuffle/trueRandom/single/together],[access:gm/player]|track to add|track to add|...\r --cancelDelay\r --config,[menu:Which Menu]",
+	"authors": "Scott C.",
+	"roll20userid": "459831",
+	"useroptions": [],
+	"dependencies": [],
+	"modifies": {
+		"state.Roll20AM": "read,write",
+		"handout": "read,write",
+		"jukeboxtrack": "read,write"
+	},
+	"conflicts": []
+}

@@ -2,6 +2,13 @@
 
 ###### Updates
 
+_3.1_
+* When you open the trap creation wizard for a token, that token is automatically set to be a trap.
+* You can now specify whether a trap is actually a trap, a secret door, or some other hidden secret.
+* You can now specify which layer individual traps are revealed to (default is map layer). This deprecates the revealTrapsToMap user option.
+* Trap activation messages now tell you who is being targeted by the trap.
+* Trap properties in the menu now have tooltips to explain them.
+
 _3.0_
 * Traps are now modified through a chat menu instead of editing the JSON by hand.
 * Traps can now be disabled so that they won't activate but can still be spotted.
@@ -12,9 +19,13 @@ _3.0_
 * Fixed 'GM Only' output bug.
 * Note: Some things have been deprecated and some interfaces have been changed in this version, which is why I decided to bump up its major version. On that note, TrapThemes created for v2.X are no longer compatible. Please use v3.X TrapThemes with this new version.
 
-This is a script that allows GMs to quickly and very easily set up traps on
-the GM layer, and detect when tokens on the objects layer move over them. This
-trap detection even works for tokens moving by waypoints.
+This is a script that allows GMs to quickly and very easily set up traps,
+secret doors, and other hidden things on the GM layer, and detect when tokens
+on the objects layer move over them. This trap detection even works for tokens
+moving by waypoints.
+
+Combined with modules called Trap Themes, this script also allows system-specific
+automation of trap effects and passive perception used to spot them.
 
 ### Creating traps:
 
