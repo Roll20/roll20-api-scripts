@@ -310,7 +310,7 @@ var PathMath = (() => {
 
       /**
        * Checks if this polygon intersects with another polygon.
-       * @param {Polygon} other
+       * @param {(Polygon|Path)} other
        * @return {boolean}
        */
       intersects(other) {
@@ -324,7 +324,8 @@ var PathMath = (() => {
 
         // If either polygon contains the first point of the other, then
         // they intersect.
-        if(this.containsPt(other.vertices[0]) || other.containsPt(this.vertices[0]))
+        if(this.containsPt(other.vertices[0]) ||
+          (other instanceof Polygon && other.containsPt(this.vertices[0])))
           return true;
 
         // Naive approach: Since our shortcuts didn't return, check each
@@ -878,9 +879,10 @@ var PathMath = (() => {
         return segmentsToPath(segments);
     }
 
+
     /**
-     * Computes the intersection between two homogenous 2D line segments,
-     * if it exists.
+     * Computes the intersection between the projected lines of
+     * two homogenous 2D line segments.
      *
      * Explanation of the fancy mathemagics:
      * Let A be the first point in seg1 and B be the second point in seg1.
@@ -920,50 +922,70 @@ var PathMath = (() => {
      *
      * We can now get the point of intersection on the projected lines of seg1
      * and seg2 by substituting S in P = A + SU or T in Q = C + TV.
-     * Seg1 and seg2 also intersect at that point if and only if 0 <= S, T <= 1.
      *
      * @param {Segment} seg1
      * @param {Segment} seg2
      * @return {Intersection}
      *      The point of intersection in homogenous 2D coordiantes and its
-     *      parametric coefficients along seg1 and seg2,
+     *      scalar coefficients along seg1 and seg2,
      *      or undefined if the segments are parallel.
      */
+    function raycast(seg1, seg2) {
+      var u = VecMath.sub(seg1[1], seg1[0]);
+      var v = VecMath.sub(seg2[1], seg2[0]);
+      var w = VecMath.sub(seg2[0], seg1[0]);
+
+      // Can't use 0-length vectors.
+      if(VecMath.length(u) === 0 || VecMath.length(v) === 0)
+          return undefined;
+
+      // If the two segments are parallel, then either they never intersect
+      // or they overlap. Either way, return undefined in this case.
+      var uHat = VecMath.normalize(u);
+      var vHat = VecMath.normalize(v);
+      var uvDot = VecMath.dot(uHat,vHat);
+      if(Math.abs(uvDot) > 0.9999)
+          return undefined;
+
+      // Build the inverse matrix for getting the intersection point's
+      // parametric coefficients along the projected segments.
+      var m = [[u[0], u[1], 0], [-v[0], -v[1], 0], [0, 0, 1]];
+      var mInv = MatrixMath.inverse(m);
+
+      // Get the parametric coefficients for getting the point of intersection
+      // on the projected semgents.
+      var coeffs = MatrixMath.multiply(mInv, w);
+      var s = coeffs[0];
+      var t = coeffs[1];
+
+      var uPrime = VecMath.scale(u, s);
+      return [VecMath.add(seg1[0], uPrime), s, t];
+    }
+
+    /**
+     * Computes the intersection between two homogenous 2D line segments,
+     * if it exists. To figure out the intersection, a raycast is performed
+     * between the two segments.
+     * Seg1 and seg2 also intersect at that point if and only if 0 <= S, T <= 1.
+     * @param {Segment} seg1
+     * @param {Segment} seg2
+     * @return {Intersection}
+     *      The point of intersection in homogenous 2D coordiantes and its
+     *      parametric coefficients along seg1 and seg2,
+     *      or undefined if the segments don't intersect.
+     */
     function segmentIntersection(seg1, seg2) {
-        var u = VecMath.sub(seg1[1], seg1[0]);
-        var v = VecMath.sub(seg2[1], seg2[0]);
-        var w = VecMath.sub(seg2[0], seg1[0]);
+      let intersection = raycast(seg1, seg2);
+      if(!intersection)
+        return undefined;
 
-        // Can't use 0-length vectors.
-        if(VecMath.length(u) === 0 || VecMath.length(v) === 0)
-            return undefined;
-
-        // If the two segments are parallel, then either they never intersect
-        // or they overlap. Either way, return undefined in this case.
-        var uHat = VecMath.normalize(u);
-        var vHat = VecMath.normalize(v);
-        var uvDot = VecMath.dot(uHat,vHat);
-        if(Math.abs(uvDot) > 0.9999)
-            return undefined;
-
-        // Build the inverse matrix for getting the intersection point's
-        // parametric coefficients along the projected segments.
-        var m = [[u[0], u[1], 0], [-v[0], -v[1], 0], [0, 0, 1]];
-        var mInv = MatrixMath.inverse(m);
-
-        // Get the parametric coefficients for getting the point of intersection
-        // on the projected semgents.
-        var coeffs = MatrixMath.multiply(mInv, w);
-        var s = coeffs[0];
-        var t = coeffs[1];
-
-        // Return the intersection only if it lies on both the segments.
-        if(s >= 0 && s <= 1 && t >= 0 && t <= 1) {
-            var uPrime = VecMath.scale(u, s);
-            return [VecMath.add(seg1[0], uPrime), s, t];
-        }
-        else
-            return undefined;
+      // Return the intersection only if it lies on both the segments.
+      let s = intersection[1];
+      let t = intersection[2];
+      if(s >= 0 && s <= 1 && t >= 0 && t <= 1)
+        return intersection;
+      else
+        return undefined;
     }
 
 
@@ -1165,6 +1187,7 @@ var PathMath = (() => {
         getTransformInfo,
         mergePathStr,
         normalizePath,
+        raycast,
         segmentIntersection,
         segmentsToPath,
         toSegments,

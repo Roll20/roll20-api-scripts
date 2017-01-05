@@ -143,6 +143,19 @@ function normalizePath(path)
 
 ```
 /**
+ * Computes the intersection between the projected lines of two homogeneous
+ * 2D line segments.
+ * @param {Segment} seg1
+ * @param {Segment} seg2
+ * @return {Array<Vector, number, number>}
+ *      The point of intersection in homogenous 2D coordinates and its
+ *      parametric coefficients along seg1 and seg2,
+ *      or undefined if the segments are parallel.
+ */
+```
+
+```
+/**
  * Computes the intersection between two homogenous 2D line segments,
  * if it exists.
  * @param {Segment} seg1
@@ -150,7 +163,7 @@ function normalizePath(path)
  * @return {Array<Vector, number, number>}
  *      The point of intersection in homogenous 2D coordinates and its
  *      parametric coefficients along seg1 and seg2,
- *      or undefined if the segments are parallel.
+ *      or undefined if the segments don't intersect.
  */
 function segmentIntersection(seg1, seg2)
 ```
