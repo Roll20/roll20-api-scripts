@@ -604,15 +604,15 @@ var Roll20AM = Roll20AM || (function() {
 	        if(trackNames.length>0){
 	            if(ignore){
 	                if(restrict){
-	                    return(o.get('type')==='jukeboxtrack' && _.every(trackNames,(i)=>{return o.get('title').replace(state.Roll20AM.tag,'')!==i && o.get('title').indexOf(state.Roll20AM.tag)>-1;}));
+	                    return(o.get('type')==='jukeboxtrack' && _.every(trackNames,(i)=>{return o.get('title').replace(state.Roll20AM.tag,'').trim()!==i && o.get('title').indexOf(state.Roll20AM.tag)>-1;}));
 	                }else{
-	                    return(o.get('type')==='jukeboxtrack' && _.every(trackNames,(i)=>{return o.get('title').replace(state.Roll20AM.tag,'')!==i;}));
+	                    return(o.get('type')==='jukeboxtrack' && _.every(trackNames,(i)=>{return o.get('title').replace(state.Roll20AM.tag,'').trim()!==i;}));
 	                }
 	            }else{
 	                if(restrict){
-	                    return(o.get('type')==='jukeboxtrack' && _.some(trackNames,(i)=>{return o.get('title').replace(state.Roll20AM.tag,'')===i && o.get('title').indexOf(state.Roll20AM.tag)>-1;}));
+	                    return(o.get('type')==='jukeboxtrack' && _.some(trackNames,(i)=>{return o.get('title').replace(state.Roll20AM.tag,'').trim()===i && o.get('title').indexOf(state.Roll20AM.tag)>-1;}));
 	                }else{
-	                    return(o.get('type')==='jukeboxtrack' && _.some(trackNames,(i)=>{return o.get('title').replace(state.Roll20AM.tag,'')===i;}));
+	                    return(o.get('type')==='jukeboxtrack' && _.some(trackNames,(i)=>{return o.get('title').replace(state.Roll20AM.tag,'').trim()===i;}));
 	                }
 	            }
 	        }else{return false;}
@@ -1090,7 +1090,7 @@ var Roll20AM = Roll20AM || (function() {
 	
     destroyHandler = function(obj){
         delete state.Roll20AM.trackDetails[obj.id];
-        _.each(_state.Roll20AM.playLists,(L)=>{
+        _.each(state.Roll20AM.playLists,(L)=>{
             L.trackids.splice(L.trackids.indexOf(obj.id),1);
         });
     },
