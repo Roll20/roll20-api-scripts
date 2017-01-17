@@ -737,6 +737,40 @@ var PathMath = (() => {
       };
     }
 
+    /**
+     * Gets a point along some Bezier curve of arbitrary degree.
+     * @param {vec3[]} points
+     *        The points of the Bezier curve. The points between the first and
+     *        last point are the control points.
+     * @param {number} scalar
+     *        The parametric value for the point we want along the curve.
+     *        This value is expected to be in the range [0, 1].
+     * @return {vec3}
+     */
+    function getBezierPoint(points, scalar) {
+      if(points.length < 2)
+        throw new Error('Bezier curve cannot have less than 2 points.');
+      else if(points.length === 2) {
+        let u = VecMath.sub(points[1], points[0]);
+        u = VecMath.scale(u, scalar);
+        return VecMath.add(points[0], u);
+      }
+      else {
+        let newPts = _.chain(points)
+        .map((cur, i) => {
+          if(i === 0)
+            return undefined;
+
+          let prev = points[i-1];
+          return getBezierPoint([prev, cur], scalar);
+        })
+        .compact()
+        .value();
+
+        return getBezierPoint(newPts, scalar);
+      }
+    }
+
 
     /**
      * Calculates the bounding box for a list of paths.
@@ -1064,30 +1098,115 @@ var PathMath = (() => {
         var segments = [];
         var prevPt;
 
-        _.each(_path, function(tuple) {
-            var type = tuple[0];
+        _.each(_path, tuple => {
+            let type = tuple[0];
 
-            // In freehand paths, approximate the quadratic curve by just
-            // using the endpoint of the curve. The curves are so short that
-            // they may as well be tiny segments anyways.
-            if(type === 'Q') {
-              tuple[1] = tuple[3];
-              tuple[2] = tuple[4];
-              type = 'L';
+            // Convert the previous point and tuple into segments.
+            let newSegs = [];
+            if(type === 'C') { // Cubic Bezier
+              newSegs = _toSegmentsC(prevPt, tuple, transformInfo);
+              prevPt = newSegs[newSegs.length - 1][1];
+            }
+            if(type === 'L') { // Line
+              newSegs = _toSegmentsL(prevPt, tuple, transformInfo);
+              prevPt = newSegs[0][1];
+            }
+            if(type === 'M') { // Move
+              prevPt = tupleToPoint(tuple, transformInfo);
+            }
+            if(type === 'Q') { // Freehand (tiny Quadratic Bezier)
+              newSegs = _toSegmentsQ(prevPt, tuple, transformInfo);
+              prevPt = newSegs[0][1];
             }
 
-            // Transform the point to 2D homogeneous map coordinates.
-            let pt = tupleToPoint(tuple, transformInfo);
-
-            // If we have an 'L' type point, then add the segment.
-            // Either way, keep track of the point we've moved to.
-            if(type === 'L' && !(prevPt[0] == pt[0] && prevPt[1] == pt[1]))
-                segments.push([prevPt, pt]);
-
-            prevPt = pt;
+            _.each(newSegs, s => {
+              segments.push(s);
+            });
         });
 
         return segments;
+    }
+
+    /**
+     * Converts a 'C' type path point to a list of segments approximating the
+     * curve.
+     * @private
+     * @param {vec3} prevPt
+     * @param {PathTuple} tuple
+     * @param {PathTransformInfo} transformInfo
+     * @return {Segment[]}
+     */
+    function _toSegmentsC(prevPt, tuple, transformInfo) {
+      let cPt1 = tupleToPoint(['L', tuple[1], tuple[2]], transformInfo);
+      let cPt2 = tupleToPoint(['L', tuple[3], tuple[4]], transformInfo);
+      let pt = tupleToPoint(['L', tuple[5], tuple[6]], transformInfo);
+      let points = [prevPt, cPt1, cPt2, pt];
+
+      // Choose the number of segments based on the rough approximate arc length.
+      // Each segment should be <= 10 pixels.
+      let approxArcLength = VecMath.dist(prevPt, cPt1) + VecMath.dist(cPt1, cPt2) + VecMath.dist(cPt2, pt);
+      let numSegs = Math.max(Math.ceil(approxArcLength/10), 1);
+
+      let bezierPts = [prevPt];
+      _.each(_.range(1, numSegs), i => {
+        let scalar = i/numSegs;
+        let bPt = getBezierPoint(points, scalar);
+        bezierPts.push(bPt);
+      });
+      bezierPts.push(pt);
+
+      return _.chain(bezierPts)
+      .map((cur, i) => {
+        if(i === 0)
+          return undefined;
+
+        let prev = bezierPts[i-1];
+        return [prev, cur];
+      })
+      .compact()
+      .value();
+    }
+
+    /**
+     * Converts an 'L' type path point to a segment.
+     * @private
+     * @param {vec3} prevPt
+     * @param {PathTuple} tuple
+     * @param {PathTransformInfo} transformInfo
+     * @return {Segment[]}
+     */
+    function _toSegmentsL(prevPt, tuple, transformInfo) {
+      // Transform the point to 2D homogeneous map coordinates.
+      let pt = tupleToPoint(tuple, transformInfo);
+
+      let segments = [];
+      if(!(prevPt[0] == pt[0] && prevPt[1] == pt[1]))
+        segments.push([prevPt, pt]);
+      return segments;
+    }
+
+    /**
+     * Converts a 'Q' type path point to a segment approximating
+     * the freehand curve.
+     * @private
+     * @param {vec3} prevPt
+     * @param {PathTuple} tuple
+     * @param {PathTransformInfo} transformInfo
+     * @return {Segment[]}
+     */
+    function _toSegmentsQ(prevPt, tuple, transformInfo) {
+      // Freehand Bezier paths are very small, so let's just
+      // ignore the control point for it entirely.
+      tuple[1] = tuple[3];
+      tuple[2] = tuple[4];
+
+      // Transform the point to 2D homogeneous map coordinates.
+      let pt = tupleToPoint(tuple, transformInfo);
+
+      let segments = [];
+      if(!(prevPt[0] == pt[0] && prevPt[1] == pt[1]))
+        segments.push([prevPt, pt]);
+      return segments;
     }
 
     /**
@@ -1182,6 +1301,7 @@ var PathMath = (() => {
         Triangle,
 
         createCircleData,
+        getBezierPoint,
         getBoundingBox,
         getCenter,
         getTransformInfo,

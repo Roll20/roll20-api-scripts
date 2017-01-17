@@ -40,7 +40,7 @@
 
   /**
    * A line segment defined by two homogenous 2D points.
-   * @typdef {Vector[]} Segment
+   * @typedef {Vector[]} Segment
    */
 
 
