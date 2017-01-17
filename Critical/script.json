@@ -1,0 +1,13 @@
+{
+  "name": "Critical",
+  "script": "Critical.js",
+  "version": "0.1.0",
+  "previousversions": [],
+  "description": "Critical hit generator. Use !critical [percent] to use.",
+  "authors": "Ryan Jentzsch",
+  "roll20userid": "1638601",
+  "patreon": "https://patreon.com/user?u=3985594",
+  "modifies": {},
+  "conflicts": [],
+  "useroptions": []
+}
