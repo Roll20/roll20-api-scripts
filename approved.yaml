@@ -243,3 +243,7 @@ customizablerolllistener:
 roll20audiomaster:
 - "Roll20-Audio-Master"
 - "Jukebox"
+
+groupcheck:
+- "GroupCheck"
+- "Character"

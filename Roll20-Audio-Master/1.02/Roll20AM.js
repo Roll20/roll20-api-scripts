@@ -8,9 +8,9 @@ Thanks to: The Aaron, Arcane Scriptomancer and Stephen S. for their help Alpha a
 var Roll20AM = Roll20AM || (function() {
     'use strict';
 
-    var version = '1.01',
-        lastUpdate = 1479845755,
-        schemaVersion = 1.01,
+    var version = '1.02',
+        lastUpdate = 1480777688,
+        schemaVersion = 1.02,
         helpLink,
         delays = [],
         defaults = {
@@ -89,9 +89,9 @@ var Roll20AM = Roll20AM || (function() {
     }()),
     
     checkInstall = function() {
-        //state.Roll20AM={};
         log('-=> Roll20AM v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
         if( ! _.has(state,'Roll20AM') || state.Roll20AM.version !== schemaVersion) {
+            state.Roll20AM=state.Roll20AM || {};
             log('  > Updating Schema to v'+schemaVersion+' <');
             state.Roll20AM.version = schemaVersion;
 		}
@@ -885,13 +885,14 @@ var Roll20AM = Roll20AM || (function() {
             //import existing playlists from jukebox
             //syntax: !roll20AM --listImport,[listName:name]
             case 'listImport':
-                if(playerIsGM(playerid)){
+                if(!restrict){
                     importList(cmdDetails.details.listName);
                 }
+                break;
             //create playlist
             //syntax: !roll20AM --listCreate,listName:name|track to add|track to add|...
             case 'listCreate':
-                if(playerIsGM(playerid)){
+                if(!restrict){
                     if(cmdDetails.details.listName && tracks){
                         createList(cmdDetails.details,tracks);
                     }else{
@@ -900,7 +901,7 @@ var Roll20AM = Roll20AM || (function() {
                 }
                 break;
             case 'listEdit':
-                if(playerIsGM(playerid)){
+                if(!restrict){
                     if(cmdDetails.details.listName){
                         editList(cmdDetails.details.listName,cmdDetails.details.add || cmdDetails.details.remove,tracks,cmdDetails.details);
                     }
@@ -930,7 +931,7 @@ var Roll20AM = Roll20AM || (function() {
                         showHelp(playerid);
                     }
                 }else{
-                    sendChat('roll20AM','/w "'+getObj('player',msg.playerid).get('displayname')+'" Script control of track volume is GM only. If audio is '
+                    sendChat('roll20AM','/w "'+getObj('player',playerid).get('displayname')+'" Script control of track volume is GM only. If audio is '
                     +'too loud/soft please adjust your master music volume under the settings tab. This setting is not accessible by the API.')
                 }
                 break;
@@ -950,12 +951,12 @@ var Roll20AM = Roll20AM || (function() {
                 }
                 break;
             case 'config':
-                if(playerIsGM(playerid)){
+                if(!restrict){
                     outputConfig(cmdDetails.details.menu);
                 }
                 break;
             case 'set':
-                if(playerIsGM(playerid)){
+                if(!restrict){
                     setPref(cmdDetails.details);
                 }
                 break;
@@ -1045,7 +1046,6 @@ var Roll20AM = Roll20AM || (function() {
 	    cmdSep.tracks = cmd.split('|');
 	    details = cmdSep.tracks.shift();
 	    cmdSep.action = details.match(/play|stop|vcontrol|config|listCreate|listEdit|cancelDelay|set|listImport/);
-	    log(cmdSep.action);
 	    if(cmdSep.action){
 	        cmdSep.action = cmdSep.action[0];
 	    }
@@ -1107,6 +1107,7 @@ var Roll20AM = Roll20AM || (function() {
 		            inplayerjournals:'all',
 		            archived:true
 		        }).id;
+		        generateHelp();
             }
         });
     };
