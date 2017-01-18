@@ -22,6 +22,9 @@
 (() => {
   'use strict';
 
+  const PATHSPLIT_CMD = '!pathSplit';
+  const PATHSPLIT_COLOR_CMD = '!pathSplitColor';
+
   /**
    * A 3-tuple representing a point of intersection between two line segments.
    * The first element is a Vector representing the point of intersection in
@@ -133,8 +136,32 @@
     return results;
   }
 
+  on('ready', () => {
+    let macro = findObjs({
+      _type: 'macro',
+      name: 'Pathsplitter'
+    })[0];
+
+    if(!macro) {
+      let players = findObjs({
+        _type: 'player'
+      });
+      let gms = _.filter(players, player => {
+        return playerIsGM(player.get('_id'));
+      });
+
+      _.each(gms, gm => {
+        createObj('macro', {
+          _playerid: gm.get('_id'),
+          name: 'Pathsplitter',
+          action: PATHSPLIT_CMD
+        });
+      });
+    }
+  });
+
   on('chat:message', msg => {
-    if(msg.type === 'api' && msg.content.startsWith('!pathSplitColor')) {
+    if(msg.type === 'api' && msg.content === PATHSPLIT_COLOR_CMD) {
       try {
         let selected = msg.selected;
         let path = findObjs({
@@ -150,7 +177,7 @@
         log(err.stack);
       }
     }
-    else if(msg.type === 'api' && msg.content.startsWith('!pathSplit')) {
+    else if(msg.type === 'api' && msg.content === PATHSPLIT_CMD) {
       try {
         let selected = msg.selected;
         let path1 = findObjs({
@@ -174,6 +201,10 @@
           splitPath = path2;
         }
         else {
+          let msg = 'No splitting path selected. ';
+          msg += `Current split color: <span style="background: ${state.PathSplitter.splitPathColor}; width: 16px; height: 16px; padding: 0.2em; font-weight: bold;">${state.PathSplitter.splitPathColor}</span>`
+          sendChat('Pathsplitter', msg);
+
           throw new Error('No splitting path selected.');
         }
         splitPathAtIntersections(mainPath, splitPath);
