@@ -1,5 +1,5 @@
 // ChatSetAttr version 1.2
-// Last Updated: 2016-12-15
+// Last Updated: 2017-01-18
 // A script to create, modify, or delete character attributes from the chat area or macros.
 // If you don't like my choices for --replace, you can edit the replacers variable at your own peril to change them.
 var chatSetAttr = chatSetAttr || (function () {
