@@ -121,8 +121,6 @@ var chatSetAttr = chatSetAttr || (function () {
 				'[': '#91',
 				']': '#93',
 				'"': 'quot',
-				'-': 'mdash',
-				' ': 'nbsp'
 			};
 			return _.chain(str.split(''))
 				.map(c => (_.has(entities, c)) ? ('&' + entities[c] + ';') : c)
@@ -201,7 +199,8 @@ var chatSetAttr = chatSetAttr || (function () {
 				repRowIds = {},
 				repRowIdsLo = {},
 				rowsToCreate = [],
-				repSections = [];
+				repSections = [],
+				repOrders = {};
 			// Read attribute names, determine row number or id or creation of new row.
 			let attrNamesRead = _.reduce(attrNames, function (prev, attrName) {
 				let match = attrName.match(/_(\$\d+|-[-A-Za-z0-9]+?|\d+)_/);
@@ -232,6 +231,7 @@ var chatSetAttr = chatSetAttr || (function () {
 			// Get attributes
 			_.each(list, function (charid) {
 				allRepAttrs[charid] = {};
+				repOrders[charid] = {};
 				_.each(repSections, prefix => allRepAttrs[charid][prefix] = {});
 			});
 			filterObjs(function (o) {
@@ -243,6 +243,8 @@ var chatSetAttr = chatSetAttr || (function () {
 						_.each(repSections, function (prefix, k) {
 							if (attrName.search(repSectionsRegex[k]) !== -1) {
 								allRepAttrs[charid][prefix][attrName] = o;
+							} else if (attrName === '_reporder_' + prefix) {
+								repOrders[charid][prefix] = o.get('current').split(',');
 							}
 						});
 					}
@@ -259,6 +261,12 @@ var chatSetAttr = chatSetAttr || (function () {
 						.map(a => a[1])
 						.uniq()
 						.value();
+					if (repOrders[charid][prefix]) {
+						repRowIds[charid][prefix] = _.chain(repOrders[charid][prefix])
+							.intersection(repRowIds[charid][prefix])
+							.union(repRowIds[charid][prefix])
+							.value();
+					}
 				});
 				repRowIdsLo[charid] = _.mapObject(repRowIds[charid],
 					l => _.map(l, n => n.toLowerCase()));
