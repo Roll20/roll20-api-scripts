@@ -215,9 +215,10 @@ function tupleToPoint(tuple, transformInfo)
 
 ### Help
 
-If you experience any issues while using this script or the trap themes,
-need help using it, or if you have a neat suggestion for a new feature, please reply to this thread:
-https://app.roll20.net/forum/post/3280344/script-its-a-trap-v2-dot-3
+If you experience any issues while using this script,
+need help using it, or if you have a neat suggestion for a new feature, please
+post to the script's thread in the API forums or shoot me a PM:
+https://app.roll20.net/users/46544/stephen-l
 
 ### Show Support
 
