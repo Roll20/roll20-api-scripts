@@ -148,7 +148,8 @@ var LightCrumb = LightCrumb || (function LightCrumbTrailMaker() {
 		SHOW_AURA: true,
 		AURA_RADIUS: 1,
 		SHOW_NAMES: true,
-		INHERIT_CHARACTER_LIGHTING: true
+		INHERIT_CHARACTER_LIGHTING: true,
+		SHARED_AURA_COLOR: "#FAF0E6"
 	};
 
 	var config = _.clone(defaultConfig); // this'll get updated from state.LightCrumb.config
@@ -892,6 +893,10 @@ d888b    `Y8bod8P' 8""888P' `Y8bod8P'   "888"
 			// log("==> Error in getAuraColor. No token provided")
 			return "#ffffff";
 		}
+		
+		if (config.SHARED_VISION === true) {
+			return config.SHARED_AURA_COLOR;
+		}
 	
 		// log("entering getAuraColor with " + parentTokenID);
 		var colors = ["#ff0000", "#ff9900", "#ffcc66", "#ff3300", "#ff6600", "#cc9900", "#ffff99"];
@@ -980,7 +985,12 @@ d88' `"Y8 d88' `88b `888P"Y88b   `88.  .8'  d88' `88b `888""8P   888
 					
 					requestedOptions.controlledby = controlledByString;						
 					
-					requestedOptions.aura1_color = getAuraColor(currentCrumb.get("gmnotes"));
+					if (config.SHARED_VISION === false) { // modify the aura so it's obvious who can see the torch
+						requestedOptions.aura1_color = getAuraColor(currentCrumb.get("gmnotes"));						
+					} else {
+						requestedOptions.aura1_color = config.SHARED_AURA_COLOR;
+					}
+
 					
 					if (!_.has(requestedOptions, "showplayers_aura1") ) {
 						requestedOptions.showplayers_aura1 = config.SHOW_AURA;
@@ -1283,10 +1293,18 @@ o888ooo88   o888o         88ooo88   888ooo88
 			// **** ! Clean this section up. It's a mess. 
 				// Move it into or before the customLightCrumbSettings object gets built.
 			if (customLightCrumbSettings.controlledby.indexOf('all')) {
+				
 				if (config.SHOW_AURA ) {
+					var auraColor;
+
+					if (config.SHARED_VISION === false) {
+						auraColor = getAuraColor(currentLightCrumb.get("gmnotes"));
+					} else {
+						auraColor = config.SHARED_AURA_COLOR;
+					}
 					currentLightCrumb.set({
 						aura1_radius: config.AURA_RADIUS,
-						aura1_color: getAuraColor(currentLightCrumb.get("gmnotes")),
+						aura1_color: auraColor,
 						showplayers_aura1: true
 					});
 				} else {
@@ -1321,6 +1339,7 @@ o888ooo88   o888o         88ooo88   888ooo88
 				}
 
 				if (config.SHOW_AURA) {
+					
 					currentLightCrumb.set({
 						aura1_radius: config.AURA_RADIUS,
 						aura1_color: getAuraColor(currentLightCrumb.get("gmnotes")),
