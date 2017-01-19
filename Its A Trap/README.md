@@ -62,14 +62,17 @@ Additional system-specific themes will be made available as their own API script
 If you would like to implement a TrapTheme for your system, take a look at
 the ```default``` or ```5E-OGL``` TrapThemes as an example to get you started.
 
-### Support
+## Help
 
 If you experience any issues while using this script or the trap themes,
 need help using it, or if you have a neat suggestion for a new feature, please reply to this thread:
 https://app.roll20.net/forum/post/3280344/script-its-a-trap-v2-dot-3
+or shoot me a PM:
+https://app.roll20.net/users/46544/stephen-l
 
-If you would like to show your appreciation for the work I do in writing,
-updating, and supporting my API scripts, consider buying one of my art asset
-packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)
+## Show Support
+
+If you would like to show your appreciation and support for the work I do in writing,
+updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)
 or, simply leave a thank you note in the script's thread on the Roll20 forums.
 Either is greatly appreciated! Happy gaming!
