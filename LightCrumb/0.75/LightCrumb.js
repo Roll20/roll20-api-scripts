@@ -56,8 +56,9 @@ Great for dungeon crawls and hex crawls.
 
 	Broken:
 	- colors aren't permanent.. if the list of active mappers changes, the aura colors change.
-
+	
 	Need:
+	- set light_otherplayers for shared-vision mode and unique-vision mode
 	- change what's stored in gmnotes. right now it's the parent token_id, but it could be a JSON string with more options.
 	- test with a group of 3 or 4
 	- implement 1-click installation
@@ -101,6 +102,7 @@ Great for dungeon crawls and hex crawls.
 	- add a superClear function to remove the tokens from the GM Layer
 	- change Help to handout instead of chat.
 	- rewrite the help text -- see if you can make a popout handout
+	- when shared-vision is true, all the auras should be the same color
 	
 	
 	NOTES:
@@ -116,7 +118,7 @@ var LightCrumb = LightCrumb || (function LightCrumbTrailMaker() {
 	var debugDEFCON = 5; // 	DEFCON 1 = FUBAR: LOG EVERYTHING. DEFCON 5 = AOK: LOG NOTHING
 
 	var version = "0.75";
-	var lastUpdate = 1484612913256;
+	var lastUpdate = 1484861080933;
 	var schemaVersion = "0.75";
 
 	var ICONS = { // note: Roll20 has particular rules about imgsrc. See https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions
@@ -966,7 +968,9 @@ d88' `"Y8 d88' `88b `888P"Y88b   `88.  .8'  d88' `88b `888""8P   888
 					// then add it back if it's needed.
 					if (config.SHARED_VISION === true) { // add "all" to controlledby 
 						controlledByString += ",all";
-						
+						requestedOptions.light_otherplayers = true;
+					} else {
+						requestedOptions.light.otherplayers = false;
 					}
 					
 					requestedOptions.controlledby = controlledByString;						
@@ -1144,10 +1148,13 @@ d88' `"Y8 d88' `88b `888P"Y88b   `88.  .8'  d88' `88b `888""8P   888
 			whisper(playerName, statusMessage);
 			
 			
+			/* Removed: not needed because we don't drop a crumb on register anymore
 			var controllingPlayerID = tokenOwner;
 			if ( config.SHARED_VISION === true ) {
 				controllingPlayerID += ",all";
+				
 			}
+			*/
 			
 			var displayName = getDisplayName(tokenName);
 
@@ -1619,6 +1626,13 @@ o88o  8  o88o  88ooo88      888      88oooo888
 					name: displayName,
 					aura1_color: getAuraColor(parentTokenID)
 				};
+				
+				if (config.SHARED_VISION) {
+					customLightCrumbSettings.light_otherplayers = true;
+				} else {
+					customLightCrumbSettings.light_otherplayers = false;
+				}
+				
 				
 				if (config.INHERIT_CHARACTER_LIGHTING) {
 					customLightCrumbSettings.light_radius = tokenMoved.get("light_radius");
