@@ -1295,7 +1295,6 @@ o888ooo88   o888o         88ooo88   888ooo88
 			if (customLightCrumbSettings.controlledby.indexOf('all')) {
 				
 				if (config.SHOW_AURA ) {
-					var auraColor;
 
 					if (config.SHARED_VISION === false) {
 						auraColor = getAuraColor(currentLightCrumb.get("gmnotes"));
@@ -1781,9 +1780,9 @@ o888o o888o o888o 8""888P'   "888" `Y888""8o o888o o888o
 		// Set the theme from the useroptions.
 		var useroptions = globalconfig && globalconfig.LightCrumb;
 		if(useroptions) {
-			state.LightCrumb.config.SHOW_HELP_ON_READY = useroptions['SHOW_HELP_ON_READY'];
+			state.LightCrumb.config.SHOW_HELP_ON_READY = useroptions.SHOW_HELP_ON_READY;
 			state.LightCrumb.userOptions = {
-				SHOW_HELP_ON_READY: useroptions['SHOW_HELP_ON_READY']
+				SHOW_HELP_ON_READY: useroptions.SHOW_HELP_ON_READY
 			};
 		}
 	
