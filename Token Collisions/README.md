@@ -63,3 +63,17 @@ function getFirstCollision(token, others)
  */
 function isOverlapping(token, other, collideOnEdge)
 ```
+
+## Help
+
+If you experience any issues while using this script,
+need help using it, or if you have a neat suggestion for a new feature, please
+post to the script's thread in the API forums or shoot me a PM:
+https://app.roll20.net/users/46544/stephen-l
+
+## Show Support
+
+If you would like to show your appreciation and support for the work I do in writing,
+updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)
+or, simply leave a thank you note in the script's thread on the Roll20 forums.
+Either is greatly appreciated! Happy gaming!
