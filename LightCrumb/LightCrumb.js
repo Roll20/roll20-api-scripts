@@ -975,7 +975,7 @@ d88' `"Y8 d88' `88b `888P"Y88b   `88.  .8'  d88' `88b `888""8P   888
 						controlledByString += ",all";
 						requestedOptions.light_otherplayers = true;
 					} else {
-						requestedOptions.light.otherplayers = false;
+						requestedOptions.light_otherplayers = false;
 					}
 					
 					requestedOptions.controlledby = controlledByString;						
