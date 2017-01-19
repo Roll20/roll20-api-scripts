@@ -91,6 +91,20 @@ function createCircleData(radius, sides)
 
 ```
 /**
+ * Gets a point along some Bezier curve of arbitrary degree.
+ * @param {vec3[]} points
+ *        The points of the Bezier curve. The points between the first and
+ *        last point are the control points.
+ * @param {number} scalar
+ *        The parametric value for the point we want along the curve.
+ *        This value is expected to be in the range [0, 1].
+ * @return {vec3}
+ */
+function getBezierPoint(points, scalar)
+```
+
+```
+/**
  * Calculates the bounding box for a list of paths.
  * @param {(Path | Path[])} paths
  * @return {BoundingBox}
@@ -198,3 +212,16 @@ function toSegments(path)
  */
 function tupleToPoint(tuple, transformInfo)
 ```
+
+### Help
+
+If you experience any issues while using this script or the trap themes,
+need help using it, or if you have a neat suggestion for a new feature, please reply to this thread:
+https://app.roll20.net/forum/post/3280344/script-its-a-trap-v2-dot-3
+
+### Show Support
+
+If you would like to show your appreciation and support for the work I do in writing,
+updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)
+or, simply leave a thank you note in the script's thread on the Roll20 forums.
+Either is greatly appreciated! Happy gaming!
