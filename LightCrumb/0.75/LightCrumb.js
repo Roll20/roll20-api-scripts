@@ -266,7 +266,7 @@ var LightCrumb = LightCrumb || (function LightCrumbTrailMaker() {
 		chatMessage += '<div style="background-color: OrangeRed"><span><img style="float: left;" width="28px" height="28px" src="'+ICONS.torch+'"></span><span>!LightCrumb</span><span><img style="float:right;" width="28px" height="28px" src="'+ICONS.scifi+'"></span></div>';
 		chatMessage += '<div style="text-align: center; background-color: black; color: OldLace;">';
 		chatMessage += 		'<span>';
-		chatMessage += 			"Mapper: "
+		chatMessage += 			"Mapper: ";
 		chatMessage += 		'</span>';
 		chatMessage += 		'<span>';
 		chatMessage += 			makeButton("Add", '!LightCrumb-register '+ch('@') +ch('{') + 'target' + ch('|') + 'token_id' + ch('}') );
@@ -321,9 +321,9 @@ var LightCrumb = LightCrumb || (function LightCrumbTrailMaker() {
 		
 		chatMessage += '</div>';
 
-		chatMessage += showDetailedHelp(playerName)
+		chatMessage += showDetailedHelp(playerName);
 		
-		chatMessage += "</div>"
+		chatMessage += "</div>";
 		
 		whisper(playerName, chatMessage);
 		
@@ -333,7 +333,7 @@ var LightCrumb = LightCrumb || (function LightCrumbTrailMaker() {
 	var getLightConfigButtons = function lightConfigForChat (playerName) {
 		if (!playerName) { playerName = "gm";}
 
-		var chatMessage = ""
+		var chatMessage = "";
 		
 		chatMessage += '<div style="border: 2px solid red; text-align: center; margin: 5px;">';
 		chatMessage += '<div style="background-color: OrangeRed"><span><img style="float: left;" width="28px" height="28px" src="'+ICONS.torch+'"></span><span>!LightCrumb-config</span><span><img style="float:right;" width="28px" height="28px" src="'+ICONS.scifi+'"></span></div>';
@@ -474,8 +474,8 @@ o888o o888o  88oooo888 o888o 888ooo88
 		var chatMessage = "";
 		var buttonStyle = "'background-color: OrangeRed;'";
 		
-		chatMessage += "<div style="+buttonStyle+"><a href='http://journal.roll20.net/handout/" + handoutID + "'>Additional Information</a></div>"
-		return(chatMessage);
+		chatMessage += "<div style="+buttonStyle+"><a href='http://journal.roll20.net/handout/" + handoutID + "'>Additional Information</a></div>";
+		
 
 		
 		// getClickyButtons(playerName);
@@ -483,7 +483,7 @@ o888o o888o  88oooo888 o888o 888ooo88
 		if (debugDEFCON < 2) { log("exiting showDetailedHelp. Whispered message to chat. No return value."); }
 
 		
-		return;
+		return(chatMessage);
 	};
 
 
@@ -931,6 +931,11 @@ d88' `"Y8 d88' `88b `888P"Y88b   `88.  .8'  d88' `88b `888""8P   888
 */
 	
 	var convertCrumbsToNewSettings = function crumbsResetter(pageID, requestedOptions) {
+		
+		if (requestedOptions === undefined) {
+			requestedOptions = {light_otherplayers: config.SHARED_VISION};			
+		}
+		
 		if (debugDEFCON < 5) {log("entering convertCrumbsToNewSettings with " + JSON.stringify(requestedOptions) ); }
 
 		if (pageID === undefined ) {
@@ -1755,7 +1760,7 @@ o888o o888o o888o 8""888P'   "888" `Y888""8o o888o o888o
 	var checkGlobalConfig = function globalConfigChecker() {
 
 		// Set the theme from the useroptions.
-		let useroptions = globalconfig && globalconfig.LightCrumb;
+		var useroptions = globalconfig && globalconfig.LightCrumb;
 		if(useroptions) {
 			state.LightCrumb.config.SHOW_HELP_ON_READY = useroptions['SHOW_HELP_ON_READY'];
 			state.LightCrumb.userOptions = {
@@ -1978,3 +1983,5 @@ on("ready",function(){
 
 
 });
+
+
