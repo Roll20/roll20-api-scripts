@@ -234,21 +234,17 @@ var chatSetAttr = chatSetAttr || (function () {
 				repOrders[charid] = {};
 				_.each(repSections, prefix => allRepAttrs[charid][prefix] = {});
 			});
-			filterObjs(function (o) {
-				let charid, attrName;
-				if (o.get('_type') === 'attribute') {
-					charid = o.get('_characterid');
-					attrName = o.get('name');
-					if (_.contains(list, charid)) {
-						_.each(repSections, function (prefix, k) {
-							if (attrName.search(repSectionsRegex[k]) !== -1) {
-								allRepAttrs[charid][prefix][attrName] = o;
-							} else if (attrName === '_reporder_' + prefix) {
-								repOrders[charid][prefix] = o.get('current').split(',');
-							}
-						});
-					}
-				}
+			_.each(list, function (charid) {
+				_.each(findObjs({_type: 'attribute', _characterid: charid}), function (o) {
+					let attrName = o.get('name');
+					_.each(repSections, function (prefix, k) {
+						if (attrName.search(repSectionsRegex[k]) === 0) {
+							allRepAttrs[charid][prefix][attrName] = o;
+						} else if (attrName === '_reporder_' + prefix) {
+							repOrders[charid][prefix] = o.get('current').split(',');
+						}
+					});
+				});
 			});
 			// Get list of repeating row ids by charid and prefix from allRepAttrs
 			_.each(list, function (charid) {
@@ -315,18 +311,14 @@ var chatSetAttr = chatSetAttr || (function () {
 		},
 		addStandardAttributes = function (list, attrNames, allAttrs, errors, createMissing, failSilently) {
 			let attrNamesUpper = attrNames.map(x => x.toUpperCase()),
-				name, id;
-			filterObjs(function (o) {
-				if (o.get('_type') === 'attribute') {
-					id = o.get('_characterid');
-					name = o.get('name');
-					if (_.contains(list, id) && _.contains(attrNamesUpper, name.toUpperCase())) {
-						allAttrs[id][attrNames[_.indexOf(attrNamesUpper, name.toUpperCase())]] = o;
-						return true;
-					}
-				}
-			});
+				nameIndex;
 			_.each(list, function (charid) {
+				_.each(findObjs({_type: 'attribute', _characterid: charid}), function (o) {
+					nameIndex = _.indexOf(attrNamesUpper, o.get('name').toUpperCase());
+					if (nameIndex !== -1) {
+						allAttrs[charid][attrNames[nameIndex]] = o;
+					}
+				});
 				_.each(_.difference(attrNames, _.keys(allAttrs[charid])), function (key) {
 					if (createMissing) {
 						allAttrs[charid][key] = createObj('attribute', {
@@ -342,7 +334,7 @@ var chatSetAttr = chatSetAttr || (function () {
 		},
 		getAllAttributes = function (list, attrNames, errors, createMissing, failSilently) {
 			let allAttrs = {},
-				attrNamesRepeating = _.filter(attrNames, str => (str.search(/^repeating_/) !== -1));
+				attrNamesRepeating = _.filter(attrNames, str => (str.search(/^repeating_/) === 0));
 			_.each(list, charid => allAttrs[charid] = {});
 			addStandardAttributes(list, _.difference(attrNames, attrNamesRepeating), allAttrs,
 				errors, createMissing, failSilently);
@@ -565,8 +557,8 @@ var chatSetAttr = chatSetAttr || (function () {
 			return _.chain(charNames.split(/\s*,\s*/))
 				.map(function (name) {
 					let character = findObjs({
-						'type': 'character',
-						'name': name
+						_type: 'character',
+						name: name
 					}, {
 						caseInsensitive: true
 					})[0];
