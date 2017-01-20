@@ -118,7 +118,7 @@ var LightCrumb = LightCrumb || (function LightCrumbTrailMaker() {
 	var debugDEFCON = 5; // 	DEFCON 1 = FUBAR: LOG EVERYTHING. DEFCON 5 = AOK: LOG NOTHING
 
 	var version = "0.75";
-	var lastUpdate = 1484861080933;
+	var lastUpdate = 1484950532404;
 	var schemaVersion = "0.75";
 
 	var ICONS = { // note: Roll20 has particular rules about imgsrc. See https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions
@@ -974,6 +974,7 @@ d88' `"Y8 d88' `88b `888P"Y88b   `88.  .8'  d88' `88b `888""8P   888
 					var controlledByArray = currentCrumb.get("controlledby").split(",");
 					controlledByArray = _.without(controlledByArray, "all");
 					var controlledByString = controlledByArray.join(",");
+					log("==> controlledByString: " + controlledByString);
 					if (debugDEFCON < 4) { log("in convertCrumbToNewSettings: controlledByString = " + controlledByString); }
 					// then add it back if it's needed.
 					if (config.SHARED_VISION === true) { // add "all" to controlledby 
@@ -981,12 +982,20 @@ d88' `"Y8 d88' `88b `888P"Y88b   `88.  .8'  d88' `88b `888""8P   888
 						requestedOptions.light_otherplayers = true;
 					} else {
 						requestedOptions.light_otherplayers = false;
+						if (controlledByString == "") { // looks like a character is set to all players instead of a specific character
+							controlledByString = "all";
+						}
 					}
 					
 					requestedOptions.controlledby = controlledByString;						
 					
 					if (config.SHARED_VISION === false) { // modify the aura so it's obvious who can see the torch
-						requestedOptions.aura1_color = getAuraColor(currentCrumb.get("gmnotes"));						
+						if (controlledByString !== "all") {
+							requestedOptions.aura1_color = getAuraColor(currentCrumb.get("gmnotes"));							
+						} else { // this character is set to be controlled by all players. 
+							requestedOptions.aura1_color = config.SHARED_AURA_COLOR;
+							
+						}
 					} else {
 						requestedOptions.aura1_color = config.SHARED_AURA_COLOR;
 					}
@@ -1496,7 +1505,7 @@ o888                     888ooo888
 
 	var findShortestDistance = function shortestDistancetoTokenFinder(listOfGraphicObjectsToCompare, referenceLocation, tokenMoved ) {
 		
-		if (debugDEFCON < 5) { log("entering findShortestDistance: referenceObject = " + referenceObject); }
+		if (debugDEFCON < 5) { log("entering findShortestDistance with: " + listOfGraphicObjectsToCompare + ", " + referenceLocation + ", " + tokenMoved); }
 
 		var shortestDistance = -1;
 
@@ -1634,8 +1643,21 @@ o88o  8  o88o  88ooo88      888      88oooo888
 				var activeCharacter = getObj("character", tokenMoved.get("represents"));
 				var controllingPlayerID
 
-				if (activeCharacter) {
-					controllingPlayerID = activeCharacter.get("controlledby");
+				if (activeCharacter !== undefined) {
+
+					var controllingPlayersList = activeCharacter.get("controlledby");					
+					var controllingPlayersArray = controllingPlayersList.split(",");
+					var actualPlayersArray = _.without(controllingPlayersArray, "all");
+					var firstPlayerListed = actualPlayersArray[0];
+					controllingPlayerID = firstPlayerListed;
+					
+					if (controllingPlayerID === undefined) {
+						controllingPlayerID = "all";
+					}
+					// figure out the first one that's not "all players"
+					
+					
+					
 				} else { // there's no one assigned to the token
 					controllingPlayerID = "all";
 					whisper("gm", "Be aware: There's no player assigned to that token. Things might get weird.");

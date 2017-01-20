@@ -115,10 +115,10 @@ Great for dungeon crawls and hex crawls.
 var LightCrumb = LightCrumb || (function LightCrumbTrailMaker() {
 	"use strict";
 
-	var debugDEFCON = 1; // 	DEFCON 1 = FUBAR: LOG EVERYTHING. DEFCON 5 = AOK: LOG NOTHING
+	var debugDEFCON = 5; // 	DEFCON 1 = FUBAR: LOG EVERYTHING. DEFCON 5 = AOK: LOG NOTHING
 
 	var version = "0.75";
-	var lastUpdate = 1484861080933;
+	var lastUpdate = 1484950532404;
 	var schemaVersion = "0.75";
 
 	var ICONS = { // note: Roll20 has particular rules about imgsrc. See https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions
