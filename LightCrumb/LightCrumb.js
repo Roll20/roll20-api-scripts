@@ -1449,7 +1449,9 @@ o888                     888ooo888
 				}
 				
 				currentPage = playerObj.get("lastpage"); // NOTE: there's no lastpage unless the GM has been on another page
-				
+				if (!currentPage) {
+					currentPage = Campaign().get("playerpageid");
+				}
 			} else if ( Campaign().get("playerspecificpages")[playerID] ) {
 				if ( debugDEFCON < 4 ) { 
 					log("    player_id is not a GM, and the players are seperated onto different pages"); 
@@ -1630,7 +1632,14 @@ o88o  8  o88o  88ooo88      888      88oooo888
 				// var controllingPlayerID = tokenMoved.get("controlledby"); // fails
 				
 				var activeCharacter = getObj("character", tokenMoved.get("represents"));
-				var controllingPlayerID = activeCharacter.get("controlledby");
+				var controllingPlayerID
+
+				if (activeCharacter) {
+					controllingPlayerID = activeCharacter.get("controlledby");
+				} else { // there's no one assigned to the token
+					controllingPlayerID = "all";
+					whisper("gm", "Be aware: There's no player assigned to that token. Things might get weird.");
+				}
 				// **** NOTE: you might have problems if characters have multiple owners
 				
 				if (debugDEFCON < 4) { log("    in handleTokenMove: controllingPlayerID = " + controllingPlayerID ); }
@@ -1764,7 +1773,7 @@ o888o o888o o888o 8""888P'   "888" `Y888""8o o888o o888o
 
 		}
 		
-		if (state.LightCrumb.config.SHOW_HELP_ON_READY == 1) {
+		if (_.has(state.LightCrumb.config) && state.LightCrumb.config.SHOW_HELP_ON_READY == 1) {
 			LightCrumb.ShowDetailedHelp('gm');
 		}
 	};
