@@ -1,4 +1,4 @@
-ImperialCalendar provides a fully featured calendar as used in Traveller, Starts without Number, and other scifi games.  It supports notes (public, private, and player specific) and various display formats.
+ImperialCalendar provides a fully featured calendar as used in Traveller, Stars without Number, and other scifi games.  It supports notes (public, private, and player specific) and various display formats.
 
 ## Commands
 
