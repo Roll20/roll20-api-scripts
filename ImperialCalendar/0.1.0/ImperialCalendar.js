@@ -6,7 +6,7 @@ var ImperialCalendar = ImperialCalendar || (function() {
     'use strict';
 
     var version = '0.1.0',
-        lastUpdate = 1484988513,
+        lastUpdate = 1485017292,
         schemaVersion = 0.2,
         Uw = (w)=>`&${w};`,
         Un = (n)=>`&#${n};`,
@@ -253,7 +253,7 @@ var ImperialCalendar = ImperialCalendar || (function() {
         return _.chain(range)
             .reduce((m,d)=>{
                 if(_.has(state.ImperialCalendar.notes,d)){
-                    m[d]= _.filter(state.ImperialCalendar.notes[d],(n)=>(opts.whisper && (opts.isGM || _.contains(n.permissions,opts.whoID))) || _.contains(n.permissions,'all') );
+                    m[d]= _.filter(state.ImperialCalendar.notes[d],(n)=>(opts.whisper && (opts.isGM || _.contains(n.permissions,opts.whoID) || n.owner===opts.whoID)) || _.contains(n.permissions,'all') );
                     if(!m[d].length){
                         delete m[d];
                     }
@@ -666,7 +666,6 @@ var ImperialCalendar = ImperialCalendar || (function() {
                                 state.ImperialCalendar.config.holidayName=opt[1];
                             } else {
                                 let key=parseInt(opt[0],10);
-                                $d({key,keys:_.keys(state.ImperialCalendar.config.dayNames)});
                                 if(_.contains(_.keys(state.ImperialCalendar.config.dayNames),key)){
                                     state.ImperialCalendar.config.dayNames[key]=opt[1];
                                 }
