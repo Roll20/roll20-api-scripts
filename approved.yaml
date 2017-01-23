@@ -264,3 +264,18 @@ critical:
 - "Critical"
 - "Character"
 
+impericalcalendar:
+- "ImperialCalendar"
+- "System Toolbox"
+
+dynamiclighthelper:
+- "DynamicLightHelper"
+- "Dynamic Lighting"
+
+lightcrumb:
+- "LightCrumb"
+- "Dynamic Lighting"
+
+aborea:
+- "Aborea"
+- "System Toolbox"
