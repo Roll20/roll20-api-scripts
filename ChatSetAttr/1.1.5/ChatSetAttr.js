@@ -1,11 +1,11 @@
-// ChatSetAttr version 1.2
-// Last Updated: 2017-01-18
+// ChatSetAttr version 1.1.5
+// Last Updated: 2016-12-15
 // A script to create, modify, or delete character attributes from the chat area or macros.
 // If you don't like my choices for --replace, you can edit the replacers variable at your own peril to change them.
 var chatSetAttr = chatSetAttr || (function () {
 	'use strict';
-	const version = '1.2',
-		schemaVersion = 3,
+	const version = '1.1.5',
+		schemaVersion = 2,
 		replacers = [
 			['<', '[', /</g, /\[/g],
 			['>', ']', />/g, /\]/g],
@@ -23,8 +23,7 @@ var chatSetAttr = chatSetAttr || (function () {
 						lastsaved: 0
 					},
 					playersCanModify: false,
-					playersCanEvaluate: false,
-					useWorkers: true
+					playersCanEvaluate: false
 				};
 			}
 			checkGlobalConfig();
@@ -40,9 +39,6 @@ var chatSetAttr = chatSetAttr || (function () {
 				return '/w GM ';
 			}
 		},
-		setAttribute = function (attr, value) {
-			state.ChatSetAttr.useWorkers ? attr.setWithWorker(value) : attr.set(value);
-		},
 		checkGlobalConfig = function () {
 			let s = state.ChatSetAttr,
 				g = globalconfig && globalconfig.chatsetattr;
@@ -51,7 +47,6 @@ var chatSetAttr = chatSetAttr || (function () {
 					(new Date(g.lastsaved * 1000)) + ']');
 				s.playersCanModify = 'playersCanModify' === g['Players can modify all characters'];
 				s.playersCanEvaluate = 'playersCanEvaluate' === g['Players can use --evaluate'];
-				s.useWorkers = 'useWorkers' === g['Trigger sheet workers when setting attributes'];
 				s.globalconfigCache = globalconfig.chatsetattr;
 			}
 		},
@@ -76,10 +71,6 @@ var chatSetAttr = chatSetAttr || (function () {
 				desc: 'Determines if players can use the <i>--evaluate</i> option. <b>' +
 					'Be careful</b> in giving players access to this option, because ' +
 					'it potentially gives players access to your full API sandbox.'
-			}, {
-				name: 'useWorkers',
-				command: 'use-workers',
-				desc: 'Determines if setting attributes should trigger sheet worker operations.'
 			}], getConfigOptionText).join('');
 			let output = whisper + '<div style="border: 1px solid black; background-color: #FFFFFF;' +
 				'padding:3px;"><b>ChatSetAttr Configuration</b><div style="padding-left:10px;">' +
@@ -121,6 +112,8 @@ var chatSetAttr = chatSetAttr || (function () {
 				'[': '#91',
 				']': '#93',
 				'"': 'quot',
+				'-': 'mdash',
+				' ': 'nbsp'
 			};
 			return _.chain(str.split(''))
 				.map(c => (_.has(entities, c)) ? ('&' + entities[c] + ';') : c)
@@ -199,8 +192,7 @@ var chatSetAttr = chatSetAttr || (function () {
 				repRowIds = {},
 				repRowIdsLo = {},
 				rowsToCreate = [],
-				repSections = [],
-				repOrders = {};
+				repSections = [];
 			// Read attribute names, determine row number or id or creation of new row.
 			let attrNamesRead = _.reduce(attrNames, function (prev, attrName) {
 				let match = attrName.match(/_(\$\d+|-[-A-Za-z0-9]+?|\d+)_/);
@@ -231,20 +223,21 @@ var chatSetAttr = chatSetAttr || (function () {
 			// Get attributes
 			_.each(list, function (charid) {
 				allRepAttrs[charid] = {};
-				repOrders[charid] = {};
 				_.each(repSections, prefix => allRepAttrs[charid][prefix] = {});
 			});
-			_.each(list, function (charid) {
-				_.each(findObjs({_type: 'attribute', _characterid: charid}), function (o) {
-					let attrName = o.get('name');
-					_.each(repSections, function (prefix, k) {
-						if (attrName.search(repSectionsRegex[k]) === 0) {
-							allRepAttrs[charid][prefix][attrName] = o;
-						} else if (attrName === '_reporder_' + prefix) {
-							repOrders[charid][prefix] = o.get('current').split(',');
-						}
-					});
-				});
+			filterObjs(function (o) {
+				let charid, attrName;
+				if (o.get('_type') === 'attribute') {
+					charid = o.get('_characterid');
+					attrName = o.get('name');
+					if (_.contains(list, charid)) {
+						_.each(repSections, function (prefix, k) {
+							if (attrName.search(repSectionsRegex[k]) !== -1) {
+								allRepAttrs[charid][prefix][attrName] = o;
+							}
+						});
+					}
+				}
 			});
 			// Get list of repeating row ids by charid and prefix from allRepAttrs
 			_.each(list, function (charid) {
@@ -257,12 +250,6 @@ var chatSetAttr = chatSetAttr || (function () {
 						.map(a => a[1])
 						.uniq()
 						.value();
-					if (repOrders[charid][prefix]) {
-						repRowIds[charid][prefix] = _.chain(repOrders[charid][prefix])
-							.intersection(repRowIds[charid][prefix])
-							.union(repRowIds[charid][prefix])
-							.value();
-					}
 				});
 				repRowIdsLo[charid] = _.mapObject(repRowIds[charid],
 					l => _.map(l, n => n.toLowerCase()));
@@ -311,14 +298,18 @@ var chatSetAttr = chatSetAttr || (function () {
 		},
 		addStandardAttributes = function (list, attrNames, allAttrs, errors, createMissing, failSilently) {
 			let attrNamesUpper = attrNames.map(x => x.toUpperCase()),
-				nameIndex;
-			_.each(list, function (charid) {
-				_.each(findObjs({_type: 'attribute', _characterid: charid}), function (o) {
-					nameIndex = _.indexOf(attrNamesUpper, o.get('name').toUpperCase());
-					if (nameIndex !== -1) {
-						allAttrs[charid][attrNames[nameIndex]] = o;
+				name, id;
+			filterObjs(function (o) {
+				if (o.get('_type') === 'attribute') {
+					id = o.get('_characterid');
+					name = o.get('name');
+					if (_.contains(list, id) && _.contains(attrNamesUpper, name.toUpperCase())) {
+						allAttrs[id][attrNames[_.indexOf(attrNamesUpper, name.toUpperCase())]] = o;
+						return true;
 					}
-				});
+				}
+			});
+			_.each(list, function (charid) {
 				_.each(_.difference(attrNames, _.keys(allAttrs[charid])), function (key) {
 					if (createMissing) {
 						allAttrs[charid][key] = createObj('attribute', {
@@ -334,7 +325,7 @@ var chatSetAttr = chatSetAttr || (function () {
 		},
 		getAllAttributes = function (list, attrNames, errors, createMissing, failSilently) {
 			let allAttrs = {},
-				attrNamesRepeating = _.filter(attrNames, str => (str.search(/^repeating_/) === 0));
+				attrNamesRepeating = _.filter(attrNames, str => (str.search(/^repeating_/) !== -1));
 			_.each(list, charid => allAttrs[charid] = {});
 			addStandardAttributes(list, _.difference(attrNames, attrNamesRepeating), allAttrs,
 				errors, createMissing, failSilently);
@@ -361,19 +352,19 @@ var chatSetAttr = chatSetAttr || (function () {
 		setCharAttributes = function (charid, setting, errors, feedback, attrs, fillInAttrs, opts) {
 			let charFeedback = {};
 			_.each(attrs, function (attr, attrName) {
-				let newValue;
+				let attrNew;
 				if (opts.reset) {
-					newValue = {
+					attrNew = {
 						current: attr.get('max')
 					};
 				} else {
-					newValue = (fillInAttrs[attrName]) ?
+					attrNew = (fillInAttrs[attrName]) ?
 						_.mapObject(setting[attrName], v => fillInAttrValues(charid, v)) :
 						_.clone(setting[attrName]);
 				}
 				if (opts.evaluate) {
 					try {
-						newValue = _.mapObject(newValue, function (v) {
+						attrNew = _.mapObject(attrNew, function (v) {
 							let parsed = eval(v);
 							if (_.isString(parsed) || _.isFinite(parsed) || _.isBoolean(parsed)) {
 								return parsed.toString();
@@ -388,16 +379,16 @@ var chatSetAttr = chatSetAttr || (function () {
 					}
 				}
 				if (opts.mod || opts.modb) {
-					_.each(newValue, function (v, k) {
+					_.each(attrNew, function (v, k) {
 						let moddedValue = parseFloat(v) + parseFloat(attr.get(k) || '0');
 						if (!_.isNaN(moddedValue)) {
 							if (opts.modb && k === 'current') {
 								moddedValue = Math.min(Math.max(moddedValue, 0),
 									parseFloat(attr.get('max') || Infinity));
 							}
-							newValue[k] = moddedValue.toString();
+							attrNew[k] = moddedValue.toString();
 						} else {
-							delete newValue[k];
+							delete attrNew[k];
 							let type = (k === 'max') ? 'maximum ' : '';
 							errors.push(`Attribute ${type}${attrName} is not number-valued` +
 								` for character ${getCharNameById(charid)}.` +
@@ -405,8 +396,8 @@ var chatSetAttr = chatSetAttr || (function () {
 						}
 					});
 				}
-				charFeedback[attrName] = newValue;
-				setAttribute(attr, newValue);
+				charFeedback[attrName] = attrNew;
+				attr.set(attrNew);
 			});
 			// Feedback
 			if (!opts.silent) {
@@ -557,8 +548,8 @@ var chatSetAttr = chatSetAttr || (function () {
 			return _.chain(charNames.split(/\s*,\s*/))
 				.map(function (name) {
 					let character = findObjs({
-						_type: 'character',
-						name: name
+						'type': 'character',
+						'name': name
 					}, {
 						caseInsensitive: true
 					})[0];
@@ -607,9 +598,6 @@ var chatSetAttr = chatSetAttr || (function () {
 					}
 					if (opts['players-can-evaluate']) {
 						state.ChatSetAttr.playersCanEvaluate = !state.ChatSetAttr.playersCanEvaluate;
-					}
-					if (opts['use-workers']) {
-						state.ChatSetAttr.useWorkers = !state.ChatSetAttr.useWorkers;
 					}
 					showConfig(whisper);
 				}
