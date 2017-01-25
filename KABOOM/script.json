@@ -18,7 +18,7 @@
             "default": "objects",
             "description": "By default, the script only affects things on one layer. If an object isn't specified when calling KABOOM (like during a position based explosion), then this layer will be used."
         }
-    ]
+    ],
     "roll20userid": "558646",
     "dependencies": [],
     "modifies": {},
