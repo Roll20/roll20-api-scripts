@@ -6,7 +6,7 @@ var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
     var version = '0.9.21',
-        lastUpdate = 1485154866,
+        lastUpdate = 1485326513,
         schemaVersion = 1.1,
         bonusCache = {},
         observers = {
@@ -735,7 +735,7 @@ var GroupInitiative = GroupInitiative || (function() {
                                 '<b><span style="font-family: serif;">clear</span></b> -- Clears the stack of saved turn orders.'+
                             '</li> '+
                             '<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
-                                '<b><span style="font-family: serif;">copy'+ch('|')+'dup</span></b> -- Adds a copy of the current turn order to the stack.'+
+                                '<b><span style="font-family: serif;">copy'+ch('|')+'dup '+ch('[')+'label'+ch(']')+'</span></b> -- Adds a copy of the current turn order to the stack.'+
                             '</li> '+
                             '<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
                                 '<b><span style="font-family: serif;">push '+ch('[')+'label'+ch(']')+'</span></b> -- Adds a copy of the current turn order to the stack and clears the turn order.  Anything after the command will be used as a label for the entry.'+
