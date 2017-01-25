@@ -52,8 +52,8 @@ KABOOM.NOW() takes two parameters with fairly strict requirements.
 
 The first parameter must be in one of two forms.
 
-1. An object that contains the ranges and type information about the explosion -or-
-2. A number that will be used as the minimum range.
+1. __An object that contains the ranges and type information about the explosion__
+2. __A number that will be used as the minimum range__
 
 If you decide to go with the first option, the object must be formatted as such:
 ```
@@ -68,9 +68,9 @@ object = {
 
 The second parameter must be in one of the following three forms.
 
-1. A Roll20 graphic object received from getObj()
-2. An array of coordinates which will be used to determine the position of the explosion
-3. An object that contains a position property with an array as its value.
+1. __A Roll20 graphic object received from getObj()__
+2. __An array of coordinates which will be used to determine the position of the explosion__
+3. __An object that contains a position property with an array as its value__
 
 If you decide to use the third option, the object must be formatted as such:
 ```
