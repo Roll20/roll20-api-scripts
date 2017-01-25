@@ -1,0 +1,47 @@
+{
+    "name": "KABOOM",
+    "script": "KABOOM.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "A script to create explosions that move objects",
+    "authors": "Bodin Punyaprateep (PaprikaCC)",
+    "useroptions": [
+        {
+            "name": "GM only",
+            "type": "checkbox",
+            "value": "true",
+            "description": "Select this box if you want your script to be enabled for GMs only."
+        },
+        {
+            "name": "Explosion ratio",
+            "type": "number",
+            "default": "2",
+            "description": "The explosion ratio is used to determine the area of effect of each explosion if a maximum range isn't specified. The script multiplies the minimum range by this number (I suggest keeping it close to 2)."
+        },
+        {
+            "name": "Default layer to affect",
+            "type": "select",
+            "options": ["objects","map"],
+            "default": "objects",
+            "description": "By default, the script only affects things on one layer. If an object isn't specified when calling KABOOM (like during a position based explosion), then this layer will be used."
+        },
+        {
+            "name": "Affect drawings only",
+            "type": "checkbox",
+            "value": "true",
+            "description": "Select this box if you want to only move graphics designated as drawings."
+        }
+    ],
+    "roll20userid": "558646",
+    "dependencies": [],
+    "modifies": {
+        "graphic.left": "read, write",
+        "graphic.top": "read, write",
+        "graphic.width": "read",
+        "graphic.height": "read",
+        "page.width": "read",
+        "page.height": "read",
+        "page.scale_number": "read",
+    },
+    "conflicts": []
+}
