@@ -51,6 +51,7 @@ on('change:token', function(obj) {
 KABOOM.NOW() takes two parameters with fairly strict requirements.
 
 The first parameter must be in one of two forms.
+
 1. An object that contains the ranges and type information about the explosion -or-
 2. A number that will be used as the minimum range.
 
@@ -66,6 +67,7 @@ object = {
 ```
 
 The second parameter must be in one of the following three forms.
+
 1. A Roll20 graphic object received from getObj()
 2. An array of coordinates which will be used to determine the position of the explosion
 3. An object that contains a position property with an array as its value.
