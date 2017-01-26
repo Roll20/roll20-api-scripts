@@ -1,9 +1,9 @@
 {
     "name": "KABOOM",
     "script": "KABOOM.js",
-    "version": "1.0",
-    "previousversions": [],
-    "description": "A script to create explosions that move objects",
+    "version": "1.1",
+    "previousversions": ["1.0"],
+    "description": "A script to create explosions that move objects! Operated through chat commands or through API calls from other scripts.",
     "authors": "Bodin Punyaprateep (PaprikaCC)",
     "useroptions": [
         {
@@ -30,10 +30,16 @@
             "type": "checkbox",
             "value": "true",
             "description": "Select this box if you want to only move graphics designated as drawings."
+        },
+        {
+            "name": "Dynamic Lighting walls stop movement",
+            "type": "checkbox",
+            "value": "true",
+            "description": "Select this box if you want the script to obey walls on the dynamic lighting layer (and stop movement at them)."
         }
     ],
     "roll20userid": "558646",
-    "dependencies": [],
+    "dependencies": ["PathMath", "MatrixMath", "Vector Math"],
     "modifies": {
         "graphic.left": "read, write",
         "graphic.top": "read, write",
