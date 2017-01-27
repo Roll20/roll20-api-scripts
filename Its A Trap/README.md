@@ -2,13 +2,10 @@
 
 ###### Updates
 
-_3.3_
-* The trap creation wizard has been reorganized into groups of related properties. Some properties have been renamed.
-* There is a new Set Trigger property that allows you to set the trap's trigger either to the trap's token itself, or a set of closed polygonal paths on the GM layer.
-
-_3.2_
-* Fixed 'noticed undefined' bug in passive perception.
-* Traps' type property is now a text input instead of a predefined list.
+_3.4_
+* Integration with Areas Of Effect script.
+* Traps on the objects layer will no longer trigger other traps.
+* Fixed soft-crash bug for sounds.
 
 This is a script that allows GMs to quickly and very easily set up traps,
 secret doors, and other hidden things on the GM layer, and detect when tokens

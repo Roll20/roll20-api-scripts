@@ -121,6 +121,7 @@ var ItsATrapCreationWizard = (() => {
       row.append('td', `[${prop.name}](${modificationCommand} ${prop.id}&&${params.join('&&')})`, {
         style: { 'font-size': '0.8em' }
       });
+
       row.append('td', `${prop.value || ''}`, {
         style: { 'font-size': '0.8em' }
       });
@@ -311,15 +312,14 @@ var ItsATrapCreationWizard = (() => {
       {
         id: 'areaOfEffect',
         name: 'Area of Effect',
-        desc: 'Requires AreasOfEffect script to be installed. Specifies an AoE graphic to be spawned by the trap.',
+        desc: 'Requires AreasOfEffect script. Specifies an AoE graphic to be spawned by the trap.',
         value: (() => {
           let aoe = trapEffect.areaOfEffect;
           if(aoe) {
-            let result = aoe.name + LPAREN + aoe.type + RPAREN;
-            if(!_.isUndefined(aoe.range))
-              result += '; Range: ' + aoe.range;
-            if(!_.isUndefined(aoe.direction))
+            let result = aoe.name;
+            if(aoe.direction)
               result += '; Direction: ' + aoe.direction;
+            return result;
           }
           else
             return 'None';
@@ -329,17 +329,6 @@ var ItsATrapCreationWizard = (() => {
             id: 'name',
             name: 'AoE Name',
             desc: 'The name of the saved AreasOfEffect effect.',
-          },
-          {
-            id: 'type',
-            name: 'AoE Type',
-            desc: 'The type of shape for the AoE.',
-            options: ['ray', 'cone', 'burst']
-          },
-          {
-            id: 'range',
-            name: 'AoE Range',
-            desc: 'The range of the AoE effect. Required for cones and bursts. Required for rays only if direction is specified.'
           },
           {
             id: 'direction',
@@ -454,12 +443,8 @@ var ItsATrapCreationWizard = (() => {
       if(params[0]) {
         trapEffect.areaOfEffect = {};
         trapEffect.areaOfEffect.name = params[0];
-        trapEffect.areaOfEffect.type = params[1];
         try {
-          trapEffect.areaOfEffect.range = JSON.parse(params[2]);
-        } catch(err) {}
-        try {
-          trapEffect.areaOfEffect.direction = JSON.parse(params[3]);
+          trapEffect.areaOfEffect.direction = JSON.parse(params[1]);
         } catch(err) {}
       }
       else

@@ -41,13 +41,9 @@ var TrapEffect = (() => {
      * Specifications for an AreasOfEffect script graphic that is spawned
      * when a trap is triggered.
      * @typedef {object} TrapEffect.AreaOfEffect
-     * @property {String} name  The name of the AoE effect.
-     * @property {String} type  The type of shape the AoE effect uses.
-     *                          This can be one of 'ray', 'cone', or 'burst'.
-     * @property {number} [range] Required for cone and burst type AoEs.
-     *                             This defines the range/radius of the AoE.
+     * @property {String} name      The name of the AoE effect.
      * @property {vec2} [direction] The direction of the effect. If omitted,
-     *                              it will be oriented to the triggering token.
+     *                              it will be extended toward the triggering token.
      */
 
     /**
@@ -354,10 +350,33 @@ var TrapEffect = (() => {
      * not installed, then this has no effect.
      */
     playAreaOfEffect() {
-      if(AreasOfEffect) {
-        // TODO
+      if(AreasOfEffect && this.areaOfEffect) {
         log('Spawn AoE:');
-        log(this.areaOfEffect);
+        let direction = (this.areaOfEffect.direction && VecMath.scale(this.areaOfEffect.direction, 70)) ||
+        (() => {
+          if(this._victim)
+            return [
+              this._victim.get('left') - this._trap.get('left'),
+              this._victim.get('top') - this._trap.get('top')
+            ];
+          else
+            return [0, 0];
+        })();
+        direction[2] = 0;
+
+        let p1 = [this._trap.get('left'), this._trap.get('top'), 1];
+        let p2 = VecMath.add(p1, direction);
+        if(VecMath.dist(p1, p2) > 0) {
+          let segments = [[p1, p2]];
+          let pathJson = PathMath.segmentsToPath(segments);
+          let path = createObj('path', _.extend(pathJson, {
+            _pageid: this._trap.get('_pageid'),
+            layer: 'objects',
+            stroke: '#ff0000'
+          }));
+
+          AreasOfEffect.applyEffect('', this.areaOfEffect.name, path);
+        }
       }
     }
 

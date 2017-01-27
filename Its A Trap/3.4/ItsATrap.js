@@ -528,6 +528,24 @@ var TrapEffect = (() => {
     }
 
     /**
+     * Specifications for an AreasOfEffect script graphic that is spawned
+     * when a trap is triggered.
+     * @typedef {object} TrapEffect.AreaOfEffect
+     * @property {String} name      The name of the AoE effect.
+     * @property {vec2} [direction] The direction of the effect. If omitted,
+     *                              it will be extended toward the triggering token.
+     */
+
+    /**
+     * JSON defining a graphic to spawn with the AreasOfEffect script if
+     * it is installed and the trap is triggered.
+     * @type {TrapEffect.AreaOfEffect}
+     */
+    get areaOfEffect() {
+      return this._effect.areaOfEffect;
+    }
+
+    /**
      * Configuration for special FX that are created when the trap activates.
      * @type {object}
      * @property {(string | FxJsonDefinition)} name
@@ -774,6 +792,9 @@ var TrapEffect = (() => {
         // If the effect has fx, play them.
         this.playFX();
 
+        // If the trap has an AreasOfEffect effect, spawn it.
+        this.playAreaOfEffect();
+
         // If the effect has an api command, execute it.
         this.playApi();
 
@@ -811,6 +832,41 @@ var TrapEffect = (() => {
         api = api.split('TRAP_ID').join(this.trapId);
         api = api.split('VICTIM_ID').join(this.victimId);
         sendChat('ItsATrap-api', api);
+      }
+    }
+
+    /**
+     * Spawns the AreasOfEffect graphic for this trap. If AreasOfEffect is
+     * not installed, then this has no effect.
+     */
+    playAreaOfEffect() {
+      if(AreasOfEffect && this.areaOfEffect) {
+        log('Spawn AoE:');
+        let direction = (this.areaOfEffect.direction && VecMath.scale(this.areaOfEffect.direction, 70)) ||
+        (() => {
+          if(this._victim)
+            return [
+              this._victim.get('left') - this._trap.get('left'),
+              this._victim.get('top') - this._trap.get('top')
+            ];
+          else
+            return [0, 0];
+        })();
+        direction[2] = 0;
+
+        let p1 = [this._trap.get('left'), this._trap.get('top'), 1];
+        let p2 = VecMath.add(p1, direction);
+        if(VecMath.dist(p1, p2) > 0) {
+          let segments = [[p1, p2]];
+          let pathJson = PathMath.segmentsToPath(segments);
+          let path = createObj('path', _.extend(pathJson, {
+            _pageid: this._trap.get('_pageid'),
+            layer: 'objects',
+            stroke: '#ff0000'
+          }));
+
+          AreasOfEffect.applyEffect('', this.areaOfEffect.name, path);
+        }
       }
     }
 
@@ -1093,6 +1149,7 @@ var ItsATrapCreationWizard = (() => {
       row.append('td', `[${prop.name}](${modificationCommand} ${prop.id}&&${params.join('&&')})`, {
         style: { 'font-size': '0.8em' }
       });
+
       row.append('td', `${prop.value || ''}`, {
         style: { 'font-size': '0.8em' }
       });
@@ -1281,6 +1338,34 @@ var ItsATrapCreationWizard = (() => {
         value: trapEffect.api
       },
       {
+        id: 'areaOfEffect',
+        name: 'Area of Effect',
+        desc: 'Requires AreasOfEffect script. Specifies an AoE graphic to be spawned by the trap.',
+        value: (() => {
+          let aoe = trapEffect.areaOfEffect;
+          if(aoe) {
+            let result = aoe.name;
+            if(aoe.direction)
+              result += '; Direction: ' + aoe.direction;
+            return result;
+          }
+          else
+            return 'None';
+        })(),
+        properties: [
+          {
+            id: 'name',
+            name: 'AoE Name',
+            desc: 'The name of the saved AreasOfEffect effect.',
+          },
+          {
+            id: 'direction',
+            name: 'AoE Direction',
+            desc: 'The direction of the AoE effect. Optional. If omitted, then the effect will be directed toward affected tokens. Format: ' + LBRACE + 'X,Y' + RBRACE
+          }
+        ]
+      },
+      {
         id: 'fx',
         name: 'Special FX',
         desc: 'What special FX are displayed when the trap is activated?',
@@ -1382,6 +1467,17 @@ var ItsATrapCreationWizard = (() => {
       trapEffect.type = params[0];
     if(prop === 'api')
       trapEffect.api = params[0];
+    if(prop === 'areaOfEffect')
+      if(params[0]) {
+        trapEffect.areaOfEffect = {};
+        trapEffect.areaOfEffect.name = params[0];
+        try {
+          trapEffect.areaOfEffect.direction = JSON.parse(params[1]);
+        } catch(err) {}
+      }
+      else
+        trapEffect.areaOfEffect = undefined;
+
     if(prop === 'disabled')
       trapToken.set('status_interdiction', params[0] === 'yes');
     if(prop === 'effectDistance')
