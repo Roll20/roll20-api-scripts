@@ -653,7 +653,7 @@ var chatSetAttr = chatSetAttr || (function () {
 						.map(c => c.id)
 						.value();
 				} else {
-					(opts.charid) ? charIDList.push(...charid.split(/\s*,\s*/)): null;
+					(opts.charid) ? charIDList.push(...opts.charid.split(/\s*,\s*/)): null;
 					(opts.name) ? charIDList.push(...getIDsFromNames(opts.name, errors)): null;
 					(opts.sel) ? charIDList.push(...getIDsFromTokens(msg.selected)): null;
 					charIDList = checkPermissions(_.uniq(charIDList), errors, msg.playerid, isGM);
