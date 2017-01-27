@@ -82,3 +82,69 @@ object = {
     layer: <objects or map>
 }
 ```
+
+
+# KABOOM options
+The following is a list of all stored settings that KABOOM uses.
+
+###--vfx
+This option determines if a Roll20 VFX effect will be created at the center of the effect.
+It's mostly cool and you can choose to turn this off to make invisible explosions.
+
+###--ignore-size
+By default, the script values object sizes when determining if they should be moved.
+If this is false, then weight will not be considered when calculating distances thrown.
+Make sure that same-layer-only is true if this is false, or you may move your background tiles.
+
+###--default_type
+This option determines the colour of the VFX explosion if none is specified. The colours available are:
+
+###-same_layer_only
+By default, this script does not affect objects on other layers. If this is false
+then KABOOM will move graphics on all layers. Make sure that your background graphics
+are larger than the max-size if this is false and that ignore-size is not true.
+
+###--min-size
+The value stored as min-size determines the size that objects must be if they
+want to move the maximum distance (barring their distance from the explosion center).
+It is measured in sq. units.
+
+###--max-size
+The value stored as max-size determines the maximum size that objects may be
+before they are considered too heavy to move. It is measured in sq. units.
+
+###--scattering
+This option increases the randomness of movement done by the script. If this is
+off, then KABOOM will always throw two objects in the same spot towards the same
+location. If this is on, then it is randomized slightly.
+
+###--default-layer
+This determines the default layer that KABOOM will affect if you are using it
+in another script. This option only affects calls of KABOOM.NOW() that do not
+give the script a layer to use.
+_Can be changed at the Globalconfig panel as well._
+
+###--drawings-only
+If this is on, then the script will only search for drawings to manipulate and
+will ignore all other tokens.
+_Can be changed at the Globalconfig panel as well._
+
+###--walls
+Turn walls on to force the script to obey walls on the dynamic lighting layer.
+If it is off, then walls will be ignored when calculating distances thrown.
+_Can be changed at the Globalconfig panel as well._
+
+
+#Globalconfig options
+These options can only be changed through the Script library panel at the API page.
+
+###GM only
+This setting changes whether you want to restrict the use of this command to GMs only or allow
+access to players as well. KABOOM will still require that players select a token before using the
+command, but this may be changed in the future to accept @{target1|token_id} macros.
+
+###Explosion ratio
+This ratio determines what the area of effect for KABOOM explosions will be if one is
+not specified. By default, the script multiplies the effect power by this number to
+use as the maximum range. It is suggested to keep close to 2, but we won't complain
+if you go crazy.

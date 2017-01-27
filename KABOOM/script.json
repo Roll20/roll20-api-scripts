@@ -28,7 +28,7 @@
         {
             "name": "Affect drawings only",
             "type": "checkbox",
-            "value": "true",
+            "value": "false",
             "description": "Select this box if you want to only move graphics designated as drawings."
         },
         {
