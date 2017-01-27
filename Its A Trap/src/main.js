@@ -419,7 +419,9 @@ var ItsATrap = (() => {
    */
   on("change:graphic:lastmove", function(token) {
     try {
-      _checkTrapInteractions(token);
+      // Check for trap interactions if the token isn't also a trap.
+      if(!token.get('status_cobweb'))
+        _checkTrapInteractions(token);
     }
     catch(err) {
       log(`It's A Trap ERROR: ${err.msg}`);

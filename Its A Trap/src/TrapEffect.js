@@ -38,6 +38,28 @@ var TrapEffect = (() => {
     }
 
     /**
+     * Specifications for an AreasOfEffect script graphic that is spawned
+     * when a trap is triggered.
+     * @typedef {object} TrapEffect.AreaOfEffect
+     * @property {String} name  The name of the AoE effect.
+     * @property {String} type  The type of shape the AoE effect uses.
+     *                          This can be one of 'ray', 'cone', or 'burst'.
+     * @property {number} [range] Required for cone and burst type AoEs.
+     *                             This defines the range/radius of the AoE.
+     * @property {vec2} [direction] The direction of the effect. If omitted,
+     *                              it will be oriented to the triggering token.
+     */
+
+    /**
+     * JSON defining a graphic to spawn with the AreasOfEffect script if
+     * it is installed and the trap is triggered.
+     * @type {TrapEffect.AreaOfEffect}
+     */
+    get areaOfEffect() {
+      return this._effect.areaOfEffect;
+    }
+
+    /**
      * Configuration for special FX that are created when the trap activates.
      * @type {object}
      * @property {(string | FxJsonDefinition)} name
@@ -284,6 +306,9 @@ var TrapEffect = (() => {
         // If the effect has fx, play them.
         this.playFX();
 
+        // If the trap has an AreasOfEffect effect, spawn it.
+        this.playAreaOfEffect();
+
         // If the effect has an api command, execute it.
         this.playApi();
 
@@ -321,6 +346,18 @@ var TrapEffect = (() => {
         api = api.split('TRAP_ID').join(this.trapId);
         api = api.split('VICTIM_ID').join(this.victimId);
         sendChat('ItsATrap-api', api);
+      }
+    }
+
+    /**
+     * Spawns the AreasOfEffect graphic for this trap. If AreasOfEffect is
+     * not installed, then this has no effect.
+     */
+    playAreaOfEffect() {
+      if(AreasOfEffect) {
+        // TODO
+        log('Spawn AoE:');
+        log(this.areaOfEffect);
       }
     }
 
@@ -405,8 +442,10 @@ var TrapEffect = (() => {
           sound.set('playing', true);
           sound.set('softstop', false);
         }
-        else
-          throw new Error('Could not find sound "' + this.sound + '".');
+        else {
+          let msg = 'Could not find sound "' + this.sound + '".';
+          sendChat('ItsATrap-api', msg);
+        }
       }
     }
   };
