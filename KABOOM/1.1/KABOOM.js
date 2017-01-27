@@ -27,7 +27,7 @@ var KABOOM = KABOOM || (function () {
       'explosion_ratio': 2,
       'default_layer': 'objects',
       'gm_only': true,
-      'drawings_only': true,
+      'drawings_only': false,
       'walls_stop_movement': true,
       'lastupdated': 0
     }
@@ -226,7 +226,7 @@ var KABOOM = KABOOM || (function () {
     // Calculate new distance
     item_weight = getWeight(flying_object.get('width') * flying_object.get('height') / 4900, state.KABOOM.min_size, state.KABOOM.max_size)
     distance_weight = getWeight(distance, Math.abs(options.effectPower * page.scale), options.effectRadius * page.scale)
-    if (!distance_weight || !item_weight) return
+    if (!distance_weight || (!item_weight && state.KABOOM.ignore_size)) return
     d_distance = options.effectPower * page.scale
                 * (distance_weight + 0.2 - 0.2 * distance_weight)
                 * (state.KABOOM.ignore_size ? 1 : item_weight)

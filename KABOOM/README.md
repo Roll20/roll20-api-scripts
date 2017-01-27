@@ -11,21 +11,27 @@ Ever wonder why the tokens inside of your flimsy straw houses never budge when y
 
 ##How do I use it?
 You can call KABOOM through chat with a simple message, or you can use it with other scripts by calling KABOOM.NOW()!
+You may only pass integers to KABOOM, otherwise the script will reject inputs. This is the case for both chat commands and API calls.
+
+###Example chat message:
+!kaboom -15 50 no scatter --blood
+This explosion would draw things 15 units closer to the center, with an effect radius of 50 units. It would not
+use scattering and the colour of the VFX would be a blood nova.
 
 ###Chat Command:
 The basic chat command follows this format:
 `!KABOOM effect-power [ effect-radius [ options [ --default-options]]]`
 
 
-When you use KABOOM as a chat command, you need to have a token selected. ONLY minimum range is required.
+When you use KABOOM as a chat command, you need to have a token selected. ONLY effect-power is required.
 Everything else is optional.
 
 **effect-power** is the strength of the force moving tokens away or towards from the explosion point. It is measured
-                in the same units listed on the page. Effect power can be negative if you want to pull things towards the
+                in the same units listed on the page. Effect-power can be negative if you want to pull things towards the
                 object instead of pushing away.
 
 **effect-radius** is the maximum distance that the script search for objects to manipulate. If something is
-                beyond this point, it will not move. Defaults to **minimum range * explosion_ratio**. This
+                beyond this point, it will not move. Defaults to **effect-power * explosion_ratio**. This
                 is always parsed as positive.
 
 **options** are either 'vfx', 'no vfx', 'no-vfx', 'invisible', 'invis' to change whether an explosion effect appears,
@@ -146,5 +152,5 @@ command, but this may be changed in the future to accept @{target1|token_id} mac
 ###Explosion ratio
 This ratio determines what the area of effect for KABOOM explosions will be if one is
 not specified. By default, the script multiplies the effect power by this number to
-use as the maximum range. It is suggested to keep close to 2, but we won't complain
+use as the effect radius. It is suggested to keep close to 2, but we won't complain
 if you go crazy.
