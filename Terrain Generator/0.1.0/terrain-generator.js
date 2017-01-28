@@ -110,7 +110,7 @@ var TerrainGenerator = TerrainGenerator || (function () {
             if (msg.type !== 'api') {
 
             }
-            else if (!playerIsGM(msg.playerid)) {
+            else if ( msg.content.startsWith('!TG') && !playerIsGM(msg.playerid)) {
                 log('TerrainGenerator: Only GM can use this script');
                 sendChat('TerrainGenerator', getWhisperTarget(msg.playerid) + 'Only GM can use this script');
             }
