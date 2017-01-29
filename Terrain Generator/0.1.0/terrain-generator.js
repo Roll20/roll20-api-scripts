@@ -42,13 +42,19 @@ var TerrainGenerator = TerrainGenerator || (function () {
                 return null
             }
             rollTable = _.first(rollTables);
-            let image = _.chain(itemNames.split(','))
-                .map(function (name) {
-                    return findObjs({type: 'tableitem', rollabletableid: rollTable.get('id'), name: name})
-                })
-                .flatten()
-                .sample()
-                .value();
+            let image;
+            if(itemNames === '*') {
+                image = _.sample(findObjs({type: 'tableitem', rollabletableid: rollTable.get('id')}))
+            }
+            else {
+                image = _.chain(itemNames.split(','))
+                    .map(function (name) {
+                        return findObjs({type: 'tableitem', rollabletableid: rollTable.get('id'), name: name})
+                    })
+                    .flatten()
+                    .sample()
+                    .value();
+            }
             if (image === undefined) {
                 return null
             }
