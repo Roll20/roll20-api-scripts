@@ -25,7 +25,7 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 	};
 
     var info = {
-        version: 0.10,
+        version: 0.11,
         authorName: "plexsoup"
     };
 
@@ -38,53 +38,68 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 		scifi: "https://s3.amazonaws.com/files.d20.io/images/27025190/VrSyw_oHrsM8cfdBPcfLHw/thumb.png?1483690176"
 	};	
 	
-	var travellerObj = function travellerClass(tokenID) {
+	var travellerObj = function travellerClass(tokenID) { // note: roll20 state variable can only store simple properties. No functions
 		this.direction = 1; // right is 1, left is -1
 		this.tokenID = tokenID;
-		
-		//this.changeDirection = function() {
-		this.changeDirection = ()=>{ // new JS-ES6 arrow functions retain scope of parent. "this" refers to the parent object.		
-			this.direction *= -1;
-			var token = getObj("graphic", this.tokenID);
-			if (token !== undefined ) {
-				token.set("fliph", !token.get("fliph") );
-			}
-		};	
-
-		this.remove = function() {
-			delete travellers[tokenID]; // take myself out of the dictionary
-			// Note: there's no js mechanism to destroy myself, so we'll assume that chrome will manage memory when the reference is gone.						
-		};
 	};
 
-	var flashlightObj = function flashlightClass(tokenID) {
+	var instantiateTravellerMethods = function() {
+		// note: we store travellerObj's in state, but state can only handle simple objects with simple datatypes: ie: no methods.
+		// let's use the prototype property to add methods back to all travellerObj's once we rebuild travellers from state.
+		
+		_.each(travellers, function(traveller) {
+			traveller.changeDirection = function() { // new JS-ES6 arrow functions retain scope of parent. "this" refers to the parent object.		
+				traveller.direction *= -1;
+				var token = getObj("graphic", traveller.tokenID);
+				if (token !== undefined ) {
+					token.set("fliph", !token.get("fliph") );
+				}
+			};
+			
+			traveller.remove = function() {
+			// Note: there's no js mechanism to destroy myself, so we'll assume that chrome will manage memory when the reference is gone.										
+				// delete traveller; // take myself out of the dictionary
+			};			
+		});
+	};	
+
+
+	
+
+	var flashlightObj = function flashlightClass(tokenID) { // note: roll20 state variable can only store simple properties. No functions
 		this.unitVector = [0,1];
 		this.parentID = tokenID;
-				
-		this.initialize = ()=>{ // new JS-ES6 arrow functions retain scope of parent. "this" refers to the parent object.	
-			this.tokenID = createObj("graphic", {
-				imgsrc: ICONS.transparent,
-				light_radius: config.light_radius,
-				light_dimradius: config.light_dimradius,
-				light_otherplayers: true,
-				light_hassight: false,
-				light_angle: config.light_angle			
-			});
-		};
+	};
+
+	// **** IN Construction ****
+	var instantiateFlashlightMethods = function() {
 		
-		this.changeOrientation = function() {
+
+		flashlightObj.prototype.changeOrientation = function() {
 			//log("changeOrientation");
 		};
 		
-		this.remove = function() {
+		flashlightObj.prototype.remove = function() {
 			//log("remove");
 		};
 		
-		this.follow = function(parentTokenObj) {
+		flashlightObj.prototype.follow = function(parentTokenObj) {
 			//log("follow");
-		};
+		};	
+		
+		
 	};
 	
+	var initializeFlashlight = function() { // new JS-ES6 arrow functions retain scope of parent. "this" refers to the parent object.	
+		var tokenID = createObj("graphic", {
+			imgsrc: ICONS.transparent,
+			light_radius: config.light_radius,
+			light_dimradius: config.light_dimradius,
+			light_otherplayers: true,
+			light_hassight: false,
+			light_angle: config.light_angle			
+		});
+	};
 	
 	var whisper = function chatMessageSender(playerName, message) {
 		// sends a chat message to a specific player. Can use gm as playerName
@@ -235,7 +250,7 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 		helpText += makeButton("Register token for Travelling", "!psIsoFacing --register " + tokenTarget );
 		helpText += makeButton("De-Register token for Travelling", "!psIsoFacing --deregister " + tokenTarget );
 		helpText += makeButton("Toggle Use Tread Status Indicator", "!psIsoFacing --toggle tread");
-		helpText += makeButton("Flip Horizontal", "!psIsoFacing --fliph" + tokenTarget);
+		helpText += makeButton("Flip Horizontal", "!psIsoFacing --fliph " + tokenTarget);
 		//helpText += makeButton("!psResize --getMarketplaceID", "!psResize --getMarketplaceID " + tokenSelect );
 
 		helpText += "</div>";
@@ -324,12 +339,19 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 				
 				case '--fliph':
 					var tokenObj = getObj("graphic", tokenID);
+					log("fliph: tokenObj = " + tokenObj);
 					var represents = tokenObj.get("represents");
-					var controlledBy = represents.get("controlledby");
+					log("\t represents = " + represents);
+					var character = getObj("character", represents);
+					log("\t character = " + character);
+					var controlledBy = character.get("controlledby");
+					log("\t controlledBy = " + controlledBy)
+					
 					log("--fliph token is controlleBy: " + controlledBy);
-					log("--fliph playerid is " + msg.get("playerid"));
-					if (inString( controlledBy,  msg.get("playerid"))) { // make sure players can't flip someone else's token
-						getObj("graphic", tokenID).set("fliph");
+					log("--fliph playerid is " + playerID);
+					
+					if (inString( controlledBy,  playerID)) { // make sure players can't flip someone else's token						
+						tokenObj.set("fliph",!tokenObj.get("fliph"));
 					}
 				break;
 				
@@ -503,7 +525,11 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 			
 			if ( currentDirection !== previousDirection ) {
 				log("thisTraveller = " + JSON.stringify(thisTraveller)); 
-				thisTraveller.changeDirection();
+				if (_.has(thisTraveller, "changeDirection") ) {
+					thisTraveller.changeDirection();
+				} else {
+					log("thisTraveller has no changeDirection. " + JSON.stringify(thisTraveller) );
+				}
 			}		
 		}
 	};
@@ -574,11 +600,14 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 				flashlights: flashlights
 			};
         } else { // use values from roll20 persistent state object for the campaign.
-			travellers = state.psIsoFacing.travellers;
+			travellers = state.psIsoFacing.travellers; // state simplifies objects and strips out methods. Hopefully they're still instances of travellerObj
 			flashlights = state.psIsoFacing.flashlights;
 			config = state.psIsoFacing.config;
 			info = state.psIsoFacing.info;			
 		}
+		instantiateTravellerMethods();
+		instantiateFlashlightMethods();
+		log("psIsoFacing is ready.");
     };
 
 
