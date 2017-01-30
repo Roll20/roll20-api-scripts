@@ -11,7 +11,6 @@ Ever wonder why the tokens inside of your flimsy straw houses never budge when y
 
 ##How do I use it?
 You can call KABOOM through chat with a simple message, or you can use it with other scripts by calling KABOOM.NOW()!
-You may only pass integers to KABOOM, otherwise the script will reject inputs. This is the case for both chat commands and API calls.
 
 ###Example chat message:
 !kaboom -15 50 no scatter --blood
@@ -104,6 +103,7 @@ Make sure that same-layer-only is true if this is false, or you may move your ba
 
 ###--default_type
 This option determines the colour of the VFX explosion if none is specified. The colours available are:
+'acid', 'blood', 'charm', 'death', 'fire', 'frost', 'holy', 'magic', 'slime', 'smoke', and 'water'
 
 ###-same_layer_only
 By default, this script does not affect objects on other layers. If this is false

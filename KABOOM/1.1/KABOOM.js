@@ -296,8 +296,8 @@ var KABOOM = KABOOM || (function () {
   var parseOptions = function (input) {
     var settingsUnchanged = true
     var options = {
-      effectPower: parseInt(input[0], 10).toString() === input[0] ? parseInt(input[0], 10) : undefined,
-      effectRadius: parseInt(input[1], 10).toString() === input[1] ? parseInt(input[1], 10) : undefined
+      effectPower: parseFloat(input[0]).toString() === input[0] ? parseFloat(input[0]) : undefined,
+      effectRadius: parseFloat(input[1]).toString() === input[1] ? parseFloat(input[1]) : undefined
     }
     for (var i = 0; i < input.length; i++) {
       // This switch is for explosion specific things
@@ -370,12 +370,12 @@ var KABOOM = KABOOM || (function () {
           break
 
         case 'min-size':
-          if (parseInt(input[i + 1], 10).toString() === input[i + 1]) state.KABOOM.min_size = parseInt(input[i + 1], 10)
+          if (parseFloat(input[i + 1]).toString() === input[i + 1]) state.KABOOM.min_size = parseFloat(input[i + 1])
           printToChat('gm', `All objects smaller than ${state.KABOOM.min_size} square(s) are now considered light.`)
           break
 
         case 'max-size':
-          if (parseInt(input[i + 1], 10).toString() === input[i + 1]) state.KABOOM.max_size = parseInt(input[i + 1], 10)
+          if (parseFloat(input[i + 1]).toString() === input[i + 1]) state.KABOOM.max_size = parseFloat(input[i + 1])
           printToChat('gm', `All objects larger than ${state.KABOOM.max_size} square(s) are now considered too heavy to move.`)
           break
 
@@ -452,7 +452,7 @@ var KABOOM = KABOOM || (function () {
   // The rest of the properties are not required.
 
   var verifyOptions = function (options) {
-    if (parseInt(options, 10) === options) {
+    if (parseFloat(options) === options) {
       return {
         effectPower: options,
         effectRadius: Math.abs(options * state.KABOOM.explosion_ratio),
@@ -462,9 +462,9 @@ var KABOOM = KABOOM || (function () {
       }
     } else {
       return {
-        effectPower: (parseInt(options.effectPower, 10) === options.effectPower)
+        effectPower: (parseFloat(options.effectPower) === options.effectPower)
           ? options.effectPower : false,
-        effectRadius: (parseInt(options.effectRadius, 10) === options.effectRadius)
+        effectRadius: (parseFloat(options.effectRadius) === options.effectRadius)
           ? Math.abs(options.effectRadius) : Math.abs(options.effectPower * state.KABOOM.explosion_ratio),
         type: (_.contains(VFXtypes, options.type))
           ? options.type : state.KABOOM.default_type,
