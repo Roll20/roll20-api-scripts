@@ -1,8 +1,8 @@
 {
 	"name": "GroupCheck",
 	"script": "GroupCheck.js",
-	"version": "1.2.1",
-	"description": "\n GroupCheck is a script meant to help you make rolls for whole groups of creatures at once. For setup and usage, please see the [documentation](https://github.com/Roll20/roll20-api-scripts/tree/master/GroupCheck/1.2.1/README.md).",
+	"version": "1.2.2",
+	"description": "\n GroupCheck is a script meant to help you make rolls for whole groups of creatures at once. For setup and usage, please see the [documentation](https://github.com/Roll20/roll20-api-scripts/tree/master/GroupCheck/1.2.2/README.md).",
 	"authors": "Jakob",
 	"roll20userid": "726129",
 	"useroptions": [],
@@ -15,5 +15,5 @@
 		"graphic.imgsrc": "read"
 	},
 	"conflicts": [],
-	"previousversions": ["1.2","1.1","1.0"]
+	"previousversions": ["1.2.1","1.2","1.1","1.0"]
 }
