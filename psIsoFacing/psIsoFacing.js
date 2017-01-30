@@ -13,19 +13,24 @@
 
 var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 	"use strict";
-	var debug = false;
-	
-	var config = {
+	var debug = true;
+
+
+	var defaultConfig = {
 		scriptIsActive: true,
-		useTreadStatus: true, // true: tokens are active when they have a yellow status; false: tokens have to be registered through the gui.
+		whisperErrors: true,
+		useTreadStatusForFacing: true, // true: tokens are active when they have a yellow status; false: tokens have to be registered through the gui.
+		useYellowStatusForLight: true,
 		light_radius: 40,
 		light_dimradius: 20,
-		light_angle: 90
-		
+		light_angle: 90		
 	};
 
+	var config = _.clone(defaultConfig);
+	
     var info = {
-        version: 0.11,
+		scriptName: "psIsoFacing",
+		version: 0.13,
         authorName: "plexsoup"
     };
 
@@ -43,24 +48,42 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 		this.tokenID = tokenID;
 	};
 
-	var instantiateTravellerMethods = function() {
+	
+	
+	
+	
+/*
+
+     _/_/_/    _/_/    _/      _/    _/_/_/  _/_/_/_/_/  _/_/_/    _/    _/    _/_/_/  _/_/_/_/_/   
+  _/        _/    _/  _/_/    _/  _/            _/      _/    _/  _/    _/  _/            _/        
+ _/        _/    _/  _/  _/  _/    _/_/        _/      _/_/_/    _/    _/  _/            _/         
+_/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/            _/          
+ _/_/_/    _/_/    _/      _/  _/_/_/        _/      _/    _/    _/_/      _/_/_/      _/           
+
+*/	
+	
+	
+	
+	
+	var instantiateTravellerMethods = function(traveller) { // note: only operates on a single instance at a time. Call with _.each(travellers) if you need them all.
+		
+		traveller.changeDirection = function() { 
+			traveller.direction *= -1;
+			var token = getObj("graphic", traveller.tokenID);
+			if (token !== undefined ) {
+				token.set("fliph", !token.get("fliph") );
+			}
+		};
+	
+		traveller.remove = function() {
+		// Note: there's no js mechanism to destroy myself, so we'll assume that chrome will manage memory when the reference is gone.										
+			// delete traveller; // take myself out of the dictionary
+		};			
+	
+		
 		// note: we store travellerObj's in state, but state can only handle simple objects with simple datatypes: ie: no methods.
 		// let's use the prototype property to add methods back to all travellerObj's once we rebuild travellers from state.
 		
-		_.each(travellers, function(traveller) {
-			traveller.changeDirection = function() { // new JS-ES6 arrow functions retain scope of parent. "this" refers to the parent object.		
-				traveller.direction *= -1;
-				var token = getObj("graphic", traveller.tokenID);
-				if (token !== undefined ) {
-					token.set("fliph", !token.get("fliph") );
-				}
-			};
-			
-			traveller.remove = function() {
-			// Note: there's no js mechanism to destroy myself, so we'll assume that chrome will manage memory when the reference is gone.										
-				// delete traveller; // take myself out of the dictionary
-			};			
-		});
 	};	
 
 
@@ -69,36 +92,107 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 	var flashlightObj = function flashlightClass(tokenID) { // note: roll20 state variable can only store simple properties. No functions
 		this.unitVector = [0,1];
 		this.parentID = tokenID;
+		this.turnedOn = false;
+		this.lightID = "";
+		
 	};
 
 	// **** IN Construction ****
-	var instantiateFlashlightMethods = function() {
-		
-
-		flashlightObj.prototype.changeOrientation = function() {
-			//log("changeOrientation");
-		};
-		
-		flashlightObj.prototype.remove = function() {
-			//log("remove");
-		};
-		
-		flashlightObj.prototype.follow = function(parentTokenObj) {
-			//log("follow");
-		};	
-		
-		
-	};
+	var instantiateFlashlightMethods = function(flashlight) { // note: only operates on a single instance at a time. Call with _.each if you need more.
 	
-	var initializeFlashlight = function() { // new JS-ES6 arrow functions retain scope of parent. "this" refers to the parent object.	
-		var tokenID = createObj("graphic", {
-			imgsrc: ICONS.transparent,
+		flashlight.changeOrientation = function() {
+			
+		}; 
+		
+		flashlight.turnOn = function() {
+			psLog("someone called flashlight.turnOn() ");
+			
+			if (flashlight.lightID === "" ) { // token still needs a light
+				var myLightID = createFlashlightToken(flashlight.parentID);
+				psLog("myLightID = " + myLightID, "red");
+				flashlight.lightID = myLightID;
+				psLog("flashlight.lightID = " + flashlight.lightID, "red");
+			}
+			
+			flashlight.turnedOn = true;
+			psLog("flashlight = " + JSON.stringify(flashlight) );
+		};
+
+		flashlight.turnOff = function() {
+			
+			var lightObj = getObj("graphic", flashlight.parentID);
+			if (lightObj) {
+				lightObj.remove();
+				//delete flashlights[flashlight.parentID];				
+			}
+		};
+
+		flashlight.remove = function() {
+			flashlight.turnoff();
+		};
+
+		flashlight.follow = function() {
+			var lightObj = getObj("graphic", flashlight.lightID);
+			var parentObj = getObj("graphic", flashlight.parentID);
+			
+			if (lightObj && parentObj) { // error checking in case someone deleted either of those tokens
+				lightObj.set("layer", "gmlayer"); // hide the movement from players
+				lightObj.set("light_radius", 0);
+				lightObj.set("left", parentObj.get("left") );
+				lightObj.set("top", parentObj.get("top") );				
+				lightObj.set("layer", "objects");
+				lightObj.set("light_radius", config.light_radius);
+			} else {
+				psLog("==> Error: flashlight.follow cannot execute because one of the tokens no longer exists.");
+				psLog("light token: " + lightObj);
+				psLog("parent token: " + parentObj);
+			}
+
+		};
+	};
+
+
+
+	
+	
+	var createFlashlightToken = function flashlightTokenCreator(parentTokenID) { // returns tokenID of new flashlight graphic object
+		var parentToken = getObj("graphic", parentTokenID);
+		var parentTokenName = parentToken.get("name");
+		psLog("entered createFlashlightToken for "+ parentTokenName + " - " + parentTokenID);
+
+		var token = createObj("graphic", {
+			imgsrc: ICONS.torch,
 			light_radius: config.light_radius,
 			light_dimradius: config.light_dimradius,
 			light_otherplayers: true,
 			light_hassight: false,
-			light_angle: config.light_angle			
-		});
+			light_angle: config.light_angle,
+			pageid: parentToken.get("pageid"),
+			layer: parentToken.get("layer"),
+			left: parentToken.get("left"),
+			top: parentToken.get("top"),
+			name: "flashlight",
+			showname: true,
+			aura1_radius: 5,
+			showplayers_aura1: true,
+			width: parentToken.get("width")/2,
+			height: parentToken.get("height")/2
+			
+		});	
+
+		if (token) {
+			psLog("createFlashlightToken Just created a token: " + token.get("_id") + " for " + parentTokenName);	
+			psLog("Flashlight Token: " + token.get("_id") );
+		}
+		
+		if (parentToken === undefined) {
+			psLog("==> Error in createFlashlightToken. parentTokenID = " + parentTokenID);
+		}
+		//toBack(token);
+		
+		var tokenID = token.get("_id");
+		if (debug) psLog("leaving createFlashlightToken. Returning " + tokenID);
+		return tokenID;
 	};
 	
 	var whisper = function chatMessageSender(playerName, message) {
@@ -153,7 +247,16 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 		return output;
 	};	
 
-
+	var psLog = function ErrorLogger(message, backgroundColor) {
+		if (!backgroundColor) { 
+			backgroundColor = "Gainsboro"; 
+		}
+		var simpleOutputStr = info.scriptName + ": " + message;
+		log(simpleOutputStr);
+		var styledOutputStr = "<div style='font-size: smaller; background-color: " + backgroundColor + ";'>" + info.scriptName + ": " + message + "</div>";
+		if (config.whisperErrors) 
+			whisper("gm", styledOutputStr );
+	};
 
 /*
 
@@ -173,7 +276,7 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 		
 		if (!playerName) { playerName = "gm";}
 
-		var exampleStyle = '"background-color: #eee; font-size: smaller; margin-left: 40px;"';
+		var exampleStyle = '"background-color: #eee; font-size: smaller; margin-left: 40px; margin-bottom: 3px; "';
 		var warningStyle = '"background-color: AntiqueWhite; font-size: smaller;"';
 		var exampleTokenSelect = ch('@') + ch('{') + 'selected' + ch('|') + 'token_id' + ch('}');
 
@@ -181,7 +284,7 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 
 		helpText += '<div style="font-size: smaller;">';
 		helpText += 'psIsoFacing is a script to automatically change facing (flip horizontal) for tokens on isometric maps.';
-		helpText += "This makes movement look more realistic. Otherwise, players don't have access to flipH.";
+		helpText += "This makes movement look more realistic. Otherwise, players wouldn't have access to flipH.";
 		helpText += "</div>";
 
 		helpText += '<div style="font-size: smaller;">';		
@@ -191,7 +294,9 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 		helpText += '<div style="font-size: smaller;">';		
 		helpText += "Configuration options to be aware of: ";
 		helpText += "<ul>";
-		helpText += 		"<li>Tokens only change facing if they represent a character and they're controlled by someone AND their yellow status indicator is on.</li>";
+		helpText += 	"<li>Tokens only change facing if they represent a character and they're controlled by someone.</li>";
+		helpText += 	"<li>By default, they won't change facing unless their 'tread' status indicator is on (it looks like a boot).</li>";
+		helpText +=		"<li>If you prefer not to use the tread status indicator, you can 'Toggle Use Tread Status Indicator'. Then, you'll have to 'Register token for Travelling'</li>";
 		helpText += "</ul>";
 		helpText += "</div>";
 		
@@ -200,8 +305,10 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 		helpText += "<div style='font-size: smaller'>";
 		helpText += "In addition to the gui buttons, you can make macros to activate the features. Here are some commands to play with.";
 		helpText += 		'<div style='+ exampleStyle +'> !psIsoFacing</div>';
-		helpText += 		'<div style='+ exampleStyle +'> !psIsoFacing ' + exampleTokenSelect + '</div>';		
-		
+		helpText += 		'<div style='+ exampleStyle +'> !psIsoFacing --register ' + exampleTokenSelect + '</div>';		
+		helpText += 		'<div style='+ exampleStyle +'> !psIsoFacing --deregister ' + exampleTokenSelect + '</div>';
+		helpText += 		'<div style='+ exampleStyle +'> !psIsoFacing --fliph ' + exampleTokenSelect + '</div>';
+		helpText += 		'<div style='+ exampleStyle +'> !psIsoFacing --reset</div>';
 
 		
 		//whisper(playerName, helpText );
@@ -251,7 +358,7 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 		helpText += makeButton("De-Register token for Travelling", "!psIsoFacing --deregister " + tokenTarget );
 		helpText += makeButton("Toggle Use Tread Status Indicator", "!psIsoFacing --toggle tread");
 		helpText += makeButton("Flip Horizontal", "!psIsoFacing --fliph " + tokenTarget);
-		//helpText += makeButton("!psResize --getMarketplaceID", "!psResize --getMarketplaceID " + tokenSelect );
+		helpText += makeButton("Reset", "!psIsoFacing --reset ");
 
 		helpText += "</div>";
 		helpText += showDetailedHelp("gm");
@@ -260,12 +367,26 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 	};
 
 	
-	var getStatus = function statusGetter() {
-		whisper("gm", "Info: " + JSON.stringify(info) );
-		whisper("gm", "Config: " + JSON.stringify(config) );		
-		whisper("gm", "Active Travellers: " + _.keys(travellers) );
-	};
 
+
+	var flipTokenIfPermitted = function tokenFlipper(tokenID, playerID) {
+		var tokenObj = getObj("graphic", tokenID);
+		log("fliph: tokenObj = " + tokenObj);
+		var represents = tokenObj.get("represents");
+		log("\t represents = " + represents);
+		var character = getObj("character", represents);
+		log("\t character = " + character);
+		var controlledBy = character.get("controlledby");
+		log("\t controlledBy = " + controlledBy);
+		
+		log("--fliph token is controlleBy: " + controlledBy);
+		log("--fliph playerid is " + playerID);
+		
+		if (inString( controlledBy,  playerID)) { // make sure players can't flip someone else's token						
+			tokenObj.set("fliph",!tokenObj.get("fliph"));
+		}	
+	};
+	
 /*
 															 
 		_/_/_/  _/      _/  _/_/_/    _/    _/  _/_/_/_/_/   
@@ -323,49 +444,41 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 						whisper("gm", "config.scriptIsActive = " + config.scriptIsActive);
 
 					} else if (requestedToggle == "tread") {
-						config.useTreadStatus = !config.useTreadStatus;
-						whisper("gm", "config.useTreadStatus = " + config.useTreadStatus);
+						config.useTreadStatusForFacing = !config.useTreadStatusForFacing;
+						whisper("gm", "config.useTreadStatusForFacing = " + config.useTreadStatusForFacing);
 					
 					
 					} else { // assume requested toggle is tokenID
 						if (_.has(travellers, tokenID) ) {
 							travellers[tokenID].remove();
 						} else {
-							registerToken(tokenID);
+							registerTokenForFacing(tokenID);
 						}
 					}
 				
 				break;
 				
 				case '--fliph':
-					var tokenObj = getObj("graphic", tokenID);
-					log("fliph: tokenObj = " + tokenObj);
-					var represents = tokenObj.get("represents");
-					log("\t represents = " + represents);
-					var character = getObj("character", represents);
-					log("\t character = " + character);
-					var controlledBy = character.get("controlledby");
-					log("\t controlledBy = " + controlledBy)
-					
-					log("--fliph token is controlleBy: " + controlledBy);
-					log("--fliph playerid is " + playerID);
-					
-					if (inString( controlledBy,  playerID)) { // make sure players can't flip someone else's token						
-						tokenObj.set("fliph",!tokenObj.get("fliph"));
-					}
+					flipTokenIfPermitted(tokenID, playerID);
+				
+
 				break;
 				
 				case '--register':
-					registerToken(tokenID);
+					registerTokenForFacing(tokenID);
 				break;
 				
 				case '--deregister':
-					deregisterToken(tokenID);
+					deregisterTokenForFacing(tokenID);
 				break;
 					
 				
 				case '--help':
 					getHelp();
+				break;
+				
+				case '--reset':
+					reset();
 				break;
 				
 				case undefined:
@@ -391,14 +504,15 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 	// **** What are you trying to achieve here? Is this supposed to be an on/off toggle, or what?
 		// If you rely on the tread or yellow status indicator, then you don't need a register routine.
 		// But, too many status indicators makes the token look ugly.
-	var registerToken = function tokenRegistrar(tokenID) {
-		if (debug) log("in registerToken with " + tokenID);
+	var registerTokenForFacing = function tokenFacingRegistrar(tokenID) {
+		if (debug) psLog("in registerTokenForFacing with " + tokenID);
 		
 		if (tokenID === undefined || getObj("graphic", tokenID) === undefined ) {
-			log("Error: registerToken called without a tokenID parameter.");
+			log("Error: registerTokenForFacing called without a tokenID parameter.");
 			return false;
 		} else if ( _.has(travellers, tokenID) === false ) { // this token is not yet registered
 			travellers[tokenID] = new travellerObj(tokenID);
+			instantiateTravellerMethods(travellers[tokenID]);
 			whisper("gm", "registered " + tokenID);
 			whisper("gm", "travellers = " + _.keys(travellers) );
 			return travellers[tokenID]; // travellerObj
@@ -408,23 +522,48 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 		}
 		
 	};
+
+	var registerTokenForFlashlight = function flashlightRegistrar(tokenID) {
+		if (debug) psLog("in registerTokenForFlashlight with " + tokenID);
+		
+		if (tokenID === undefined || getObj("graphic", tokenID) === undefined ) {
+			log("Error: registerTokenForFlashlight called without a tokenID parameter.");
+			return false;
+		} else if ( _.has(flashlights, tokenID) === false ) { // this token is not yet registered
+			flashlights[tokenID] = new flashlightObj(tokenID);
+			whisper("gm", "registered flashlight: " + tokenID);
+			whisper("gm", "flashlights = " + _.keys(flashlights) );
+			return flashlights[tokenID]; // travellerObj
+		} else { // this token is already registered.
+			whisper("gm", "token: " + tokenID + " is already registered");
+			return flashlights[tokenID]; // returning a travellerObj			
+		}
+	};
 	
-	var deregisterToken = function tokenDeRegistrar(tokenID){
-		log("in deregisterToken with " + tokenID);
+	var deregisterTokenForFacing = function tokenDeRegistrar(tokenID){
+		log("in deregisterTokenForFacing with " + tokenID);
 		
 		if (_.has(travellers, tokenID) ) {
-			var thisTraveller = travellers[tokenID];
-			
+			var thisTraveller = travellers[tokenID];			
 			thisTraveller.remove();
 		}
-			
-		
 	};
+
+	var deregisterTokenForFlashlight = function flashlightDeRegistrar(tokenID){
+		if (debug) psLog("in deregisterTokenForFlashlight with " + tokenID);
+		
+		if (_.has(flashlights, tokenID) ) {
+			var thisFlashlight = flashlights[tokenID];			
+			thisTraveller.remove();
+		}
+	};
+	
+
 	
 	
 	var getLastLocation = function lastLocationGetter(token) {
 		
-		if (debug) log("lastmove for " + token.get("name") + ", " + token.get("_id") + " = " + token.get("lastmove") );
+		//if (debug) psLog("lastmove for " + token.get("name") + ", " + token.get("_id") + " = " + token.get("lastmove") );
 		var movementPath = token.get("lastmove").split(",");
 		
 		var lastLocation = [];
@@ -444,6 +583,25 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 			return true;
 		}	
 	};
+
+/*
+
+		_/_/_/  _/      _/    _/_/_/  _/_/_/    _/_/_/_/    _/_/_/  _/_/_/_/_/   
+		 _/    _/_/    _/  _/        _/    _/  _/        _/            _/        
+		_/    _/  _/  _/    _/_/    _/_/_/    _/_/_/    _/            _/         
+	   _/    _/    _/_/        _/  _/        _/        _/            _/          
+	_/_/_/  _/      _/  _/_/_/    _/        _/_/_/_/    _/_/_/      _/           
+																				
+
+*/
+
+	var getStatus = function statusGetter() {
+		whisper("gm", "Info: " + JSON.stringify(info) );
+		whisper("gm", "Config: " + JSON.stringify(config) );		
+		whisper("gm", "Active Travellers: " + _.keys(travellers) );
+		whisper("gm", "Active Flashlights: " + _.keys(flashlights) );
+	};
+
 	
 	var isTokenMarching = function activeChecker(tokenObj) {
 		//log("entered function isTokenMarching with " + JSON.stringify(tokenObj));
@@ -455,7 +613,7 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 		} else if (isTokenOwned(tokenObj) === false ) { 	
 			result = false;
 
-		} else if (config.useTreadStatus === true) { // see if the token has a tread (boot) status marker
+		} else if (config.useTreadStatusForFacing === true) { // see if the token has a tread (boot) status marker
 			var currentTreadStatus = inString(tokenObj.get("statusmarkers"), "tread");
 			
 			result = currentTreadStatus;			
@@ -470,16 +628,32 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 		return result;
 	};
 	
-	var isTokenLit = function flashlightChecker(tokenObj) {
+	var shouldTokenBeLit = function flashlightChecker(tokenObj) {
 		var result = false;
+		var tokenID = tokenObj.get("_id");
 		
-		if (config.scriptIsActive && isTokenOwned(tokenObj) ) {
-			if (config.useYellowStatus && inString(tokenObj.get("statusmarkers"), "yellow") ) { 
-				result = true;			
-			} else if ( _.has(flashlights, tokenObj.get("_id")) ) {
+		if (config.scriptIsActive && isTokenOwned(tokenObj) ) { // has owner
+			if (config.useYellowStatusForLight && inString(tokenObj.get("statusmarkers"), "yellow") ) { // user wants it on
+				result = true;
+			} else if ( _.has(flashlights, tokenObj.get("_id")) ) { // user wants it on but they don't like the yellow status indicators
 				result = true;
 			}
 		}
+		
+		psLog("shouldTokenBeLit: " + tokenObj.get("name") + " = " + result, "yellow");
+		return result;
+	};
+
+	var isTokenLit = function tokenLightChecker(tokenObj) {
+		var result = false;
+		var tokenID = tokenObj.get("_id");
+		
+		if ( _.has(flashlights, tokenID) && flashlights[tokenID].lightID !== "" ) { // token is lit
+			result = true;
+		} else {
+			result = false;
+		}
+		if (debug) psLog("isTokenLit: " + tokenObj.get("name") + " = " + result, "yellow");
 	};
 	
 /*
@@ -501,7 +675,7 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 		if (thisTraveller === undefined) {
 			log("==> Error: currentTraveller is undefined: " + tokenID);
 			if (isTokenMarching(tokenMoved) ) {
-				thisTraveller = registerToken(tokenID);
+				thisTraveller = registerTokenForFacing(tokenID);
 			}
 			return false;
 		}
@@ -524,7 +698,7 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 			}				
 			
 			if ( currentDirection !== previousDirection ) {
-				log("thisTraveller = " + JSON.stringify(thisTraveller)); 
+				// log("thisTraveller = " + JSON.stringify(thisTraveller)); 
 				if (_.has(thisTraveller, "changeDirection") ) {
 					thisTraveller.changeDirection();
 				} else {
@@ -534,8 +708,33 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 		}
 	};
 	
+	var considerLightingLight = function lightLighter(tokenMoved) {
+		var tokenID = tokenMoved.get("_id");
+		if (debug) psLog("considerLightingLight: " + tokenMoved.get("name") , "LightGrey");
+		if (shouldTokenBeLit(tokenMoved) === true && isTokenLit(tokenMoved) === false ) { // light this token
+			flashlights[tokenID] = new flashlightObj(tokenID);
+			instantiateFlashlightMethods(flashlights[tokenID]);
+			flashlights[tokenID].lightID = createFlashlightToken(tokenID); // NOTE: This should be the only place this happens
+			psLog("turn it on", "LightGrey");
+		} else if ( shouldTokenBeLit(tokenMoved) === false && isTokenLit(tokenMoved) === true) { // turn it off
+			flashlights[tokenID].turnOff();
+			psLog("turn it off", "LightGrey");
+		} else { // it's fine the way it is.
+			
+		}
+		
+	};
 	var considerMovingLight = function lightMover(tokenMoved) {
-		log("considerMovingLight");
+		var tokenID = tokenMoved.get("_id");
+		if ( shouldTokenBeLit(tokenMoved) ) { // that character doesn't have a flashlightObj yet
+			
+			flashlights[tokenID].follow();
+			psLog("Trying to follow: " + JSON.stringify(flashlights[tokenID]));
+			
+		} else { // the token shouldn't be lit.
+			//flashlights[tokenID].follow();
+			psLog("considerMovingLight says this token shouldn't be lit");
+		}
 		
 	};
 	
@@ -552,7 +751,7 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 	
 	
 	var handleTokenMove = function tokenMoveHandler(tokenMoved) {
-		if (debug) log("entering handleTokenMoved with: " + tokenMoved); 
+		if (debug) psLog("entering handleTokenMoved with: tokenObj for " + tokenMoved.get("name")); 
 		
 		
 		// see if it's controlledby someone
@@ -562,17 +761,16 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 		
 		
 		if ( isTokenMarching(tokenMoved) === true ) { // this token wants to change facing when moved
-			if (debug) log("in handleTokenMove: a controlled token is active");			
+			if (debug) psLog("In handleTokenMove: a controlled token is active: " + tokenMoved.get("name"));			
 			considerChangingDirection(tokenMoved);
 		}
 		
-		if (isTokenLit(tokenMoved) === true) {
+		if (shouldTokenBeLit(tokenMoved) === true) {
+			considerLightingLight(tokenMoved);
+			if (debug) psLog("In handleTokenMove: a lit token is active: " + tokenMoved.get("name"));
 			considerMovingLight(tokenMoved);
-		}
-	};
 
-	var reset = function resetter() {
-		travellers = {};
+		}
 	};
 
 
@@ -590,6 +788,12 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 
 */
 
+	var reset = function resetter() {
+		config = _.clone(defaultConfig);
+		travellers = {};
+		flashlights = {};
+		psLog("reset to defaults");
+	};
 	
     var checkInstall = function installChecker() {
         if ( !_.has(state, "psIsoFacing") || state.psIsoFacing.info.version !== info.version ) { // populate state from default values
@@ -605,14 +809,20 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 			config = state.psIsoFacing.config;
 			info = state.psIsoFacing.info;			
 		}
-		instantiateTravellerMethods();
-		instantiateFlashlightMethods();
+		_.each(travellers, function(traveller) {
+			instantiateTravellerMethods(traveller);
+		});
+
+		_.each(flashlights, function(flashlight) {
+			instantiateFlashlightMethods(flashlight);
+		});
+		
 		log("psIsoFacing is ready.");
     };
 
 
 	var registerEventHandlers = function eventHandlerRegistrar() {
-		if (debug) log("psIsoFacing registered event handlers");
+		if (debug) psLog("psIsoFacing registered event handlers");
 		
 		on('chat:message', handleInput );
 		on('change:graphic', handleTokenMove );
