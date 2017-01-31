@@ -6,8 +6,8 @@
 // Planned: add a hidden Navi attached to the token which provides a rotating light without rotating the parent token.
 
 // **** TODO
-	// Something's really wrong with the way state holds travellers and travellerObj's.
-	// I may need to remove the methods from the travellerObjs. Or figure out how to JSON stringify everything.
+	// it's weird to see torches floating around..  delete and recreate them instead of moving them.
+	
 	
 
 
@@ -94,6 +94,7 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 		this.parentID = tokenID;
 		this.turnedOn = false;
 		this.lightID = "";
+		this.deleteMe = false;
 		
 	};
 
@@ -104,55 +105,93 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 			
 		}; 
 		
-		flashlight.turnOn = function() {
-			psLog("someone called flashlight.turnOn() ");
-			
-			if (flashlight.lightID === "" ) { // token still needs a light
-				var myLightID = createFlashlightToken(flashlight.parentID);
-				psLog("myLightID = " + myLightID, "red");
-				flashlight.lightID = myLightID;
-				psLog("flashlight.lightID = " + flashlight.lightID, "red");
-			}
-			
-			flashlight.turnedOn = true;
-			psLog("flashlight = " + JSON.stringify(flashlight) );
-		};
-
+		
 		flashlight.turnOff = function() {
 			
 			var lightObj = getObj("graphic", flashlight.parentID);
 			if (lightObj) {
 				lightObj.remove();
-				//delete flashlights[flashlight.parentID];				
+				
+				flashlight.deleteMe = true;
+
+				//mark for deletion and then do cleanup / garbage collection from outside the object.
+				//delete flashlights[flashlight.parentID]; // doesn't work from inside the object
+				
 			}
 		};
 
-		flashlight.remove = function() {
-			flashlight.turnoff();
-		};
+		flashlight.remove = flashlight.turnOff;
 
 		flashlight.follow = function() {
 			var lightObj = getObj("graphic", flashlight.lightID);
 			var parentObj = getObj("graphic", flashlight.parentID);
 			
 			if (lightObj && parentObj) { // error checking in case someone deleted either of those tokens
-				lightObj.set("layer", "gmlayer"); // hide the movement from players
-				lightObj.set("light_radius", 0);
-				lightObj.set("left", parentObj.get("left") );
-				lightObj.set("top", parentObj.get("top") );				
-				lightObj.set("layer", "objects");
-				lightObj.set("light_radius", config.light_radius);
+
+
+				// lights don't follow tokens in realtime, they kind of float after them like ghosts.
+				// instead of moving them, we're going to destroy the old one and create a new one.
+				
+				lightObj.remove(); // remove the old graphic object
+				
+				flashlight.lightID = createFlashlightToken(flashlight.parentID);
+				var desiredRotation = flashlight.getRotation();
+				psLog("desiredRotation = " + desiredRotation);
+
+				var newLightObj = getObj("graphic" , flashlight.lightID);
+				if (newLightObj) {
+					newLightObj.set("rotation", desiredRotation );					
+				}
+
+			
 			} else {
 				psLog("==> Error: flashlight.follow cannot execute because one of the tokens no longer exists.");
 				psLog("light token: " + lightObj);
 				psLog("parent token: " + parentObj);
+				reset(); // **** TODO **** This is a little heavy handed, don't you think?
 			}
 
+		};
+		
+		flashlight.getRotation = function() {
+			var lightObj = getObj("graphic", flashlight.lightID);
+			var parentObj = getObj("graphic", flashlight.parentID);
+			var lastMoveStr = parentObj.get("lastmove");
+			var rotation = 0; // straight up
+			
+			if (lastMoveStr !== "") {
+				var lastLocationArr = lastMoveStr.split(","); // Note: these are strings.
+				psLog("lastLocationArr = " + lastLocationArr);
+				psLog("currentLocation = " + [parentObj.get("left"), parentObj.get("top")]);
+				
+				var lastLocation = new psPoint( Number(lastLocationArr[0]), Number(lastLocationArr[1]) );
+				var point1 = new psPoint(lastLocation.x, lastLocation.y);
+				var point2 = new psPoint(parentObj.get("left"), parentObj.get("top"));
+
+				psLog("point1 = " + JSON.stringify(point1) + ", point2 = " + JSON.stringify(point2));
+				var directionVector = makeVector(point1, point2);
+				psLog("directionVector == " + JSON.stringify(directionVector), "turquoise");				
+				var degrees = vectorToRoll20Rotation(directionVector);
+				psLog("flashlight.getRotation("+ JSON.stringify(point1) + ", "  + JSON.stringify(point2) + ") says degrees = " + degrees, "LightBlue");
+				
+				rotation = degrees;
+			}
+			
+			return rotation;
+			
 		};
 	};
 
 
-
+	var lightFlashlight = function(tokenID) {
+		flashlights[tokenID] = new flashlightObj(tokenID);
+		instantiateFlashlightMethods(flashlights[tokenID]);
+		flashlights[tokenID].lightID = createFlashlightToken(tokenID);	
+		flashlights[tokenID].turnedOn = true;
+		return flashlights[tokenID].lightID;
+		
+		
+	};
 	
 	
 	var createFlashlightToken = function flashlightTokenCreator(parentTokenID) { // returns tokenID of new flashlight graphic object
@@ -173,7 +212,7 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 			top: parentToken.get("top"),
 			name: "flashlight",
 			showname: true,
-			aura1_radius: 5,
+			aura1_radius: "5",
 			showplayers_aura1: true,
 			width: parentToken.get("width")/2,
 			height: parentToken.get("height")/2
@@ -484,6 +523,13 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 				case undefined:
 					getHelp();
 				break;
+				
+				case '--inspect':
+					if (getObj("graphic", tokenID) !== undefined) {
+						psLog("properties of " + JSON.stringify(getObj("graphic", tokenID)), "DarkKhaki");						
+					}
+
+				break;
 			}
 			
 			
@@ -523,6 +569,7 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 		
 	};
 
+	/* This never gets called?
 	var registerTokenForFlashlight = function flashlightRegistrar(tokenID) {
 		if (debug) psLog("in registerTokenForFlashlight with " + tokenID);
 		
@@ -530,15 +577,16 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 			log("Error: registerTokenForFlashlight called without a tokenID parameter.");
 			return false;
 		} else if ( _.has(flashlights, tokenID) === false ) { // this token is not yet registered
-			flashlights[tokenID] = new flashlightObj(tokenID);
-			whisper("gm", "registered flashlight: " + tokenID);
-			whisper("gm", "flashlights = " + _.keys(flashlights) );
+			//flashlights[tokenID] = new flashlightObj(tokenID);
+			lightFlashlight(tokenID);
+			
 			return flashlights[tokenID]; // travellerObj
 		} else { // this token is already registered.
 			whisper("gm", "token: " + tokenID + " is already registered");
 			return flashlights[tokenID]; // returning a travellerObj			
 		}
 	};
+	*/
 	
 	var deregisterTokenForFacing = function tokenDeRegistrar(tokenID){
 		log("in deregisterTokenForFacing with " + tokenID);
@@ -648,12 +696,14 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 		var result = false;
 		var tokenID = tokenObj.get("_id");
 		
-		if ( _.has(flashlights, tokenID) && flashlights[tokenID].lightID !== "" ) { // token is lit
+		if ( _.has(flashlights, tokenID) === true && flashlights[tokenID].lightID !== "" ) { // token is lit
 			result = true;
 		} else {
 			result = false;
 		}
 		if (debug) psLog("isTokenLit: " + tokenObj.get("name") + " = " + result, "yellow");
+		
+		return result;
 	};
 	
 /*
@@ -667,74 +717,82 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 */	
 	
 	var considerChangingDirection = function directionChangeDeterminator(tokenMoved) {
-		//log("entered considerChangingDirection with " + JSON.stringify(tokenMoved) );
-		var lastLocation = getLastLocation(tokenMoved);		
-		var currentLocation = [tokenMoved.get("left"), tokenMoved.get("top")];
-		var tokenID = tokenMoved.get("_id");
-		var thisTraveller = travellers[tokenID];
-		if (thisTraveller === undefined) {
-			log("==> Error: currentTraveller is undefined: " + tokenID);
-			if (isTokenMarching(tokenMoved) ) {
-				thisTraveller = registerTokenForFacing(tokenID);
-			}
-			return false;
-		}
+		if (isTokenMarching(tokenMoved) === true) {
 		
-		if (!lastLocation) { // this token hasn't ever moved.. just use the current location.
-			lastLocation = [tokenMoved.get("left"), tokenMoved.get("top")];
-		} else { // Hey, we're moving! Check the direction and change facing.
-
-			var previousDirection;
-			var currentDirection;
-			
-			previousDirection = thisTraveller.direction;
-			
-			if ( lastLocation[0] > currentLocation[0] ) { // face right?
-				currentDirection = 1;
-			} else if ( lastLocation[0] < currentLocation[0] ) { //face left?
-				currentDirection = -1;				
-			} else { // token graphic changed, but it hasn't moved on the x axis. Maybe someone updated the status markers or something. 
-				return;
-			}				
-			
-			if ( currentDirection !== previousDirection ) {
-				// log("thisTraveller = " + JSON.stringify(thisTraveller)); 
-				if (_.has(thisTraveller, "changeDirection") ) {
-					thisTraveller.changeDirection();
-				} else {
-					log("thisTraveller has no changeDirection. " + JSON.stringify(thisTraveller) );
+			//log("entered considerChangingDirection with " + JSON.stringify(tokenMoved) );
+			var lastLocation = getLastLocation(tokenMoved);		
+			var currentLocation = [tokenMoved.get("left"), tokenMoved.get("top")];
+			var tokenID = tokenMoved.get("_id");
+			var thisTraveller = travellers[tokenID];
+			if (thisTraveller === undefined) {
+				log("==> Error: currentTraveller is undefined: " + tokenID);
+				if (isTokenMarching(tokenMoved) ) {
+					thisTraveller = registerTokenForFacing(tokenID);
 				}
-			}		
+				return false;
+			}
+			
+			if (!lastLocation) { // this token hasn't ever moved.. just use the current location.
+				lastLocation = [tokenMoved.get("left"), tokenMoved.get("top")];
+			} else { // Hey, we're moving! Check the direction and change facing.
+
+				var previousDirection;
+				var currentDirection;
+				
+				previousDirection = thisTraveller.direction;
+				
+				if ( lastLocation[0] > currentLocation[0] ) { // face right?
+					currentDirection = 1;
+				} else if ( lastLocation[0] < currentLocation[0] ) { //face left?
+					currentDirection = -1;				
+				} else { // token graphic changed, but it hasn't moved on the x axis. Maybe someone updated the status markers or something. 
+					return;
+				}				
+				
+				if ( currentDirection !== previousDirection ) {
+					// log("thisTraveller = " + JSON.stringify(thisTraveller)); 
+					if (_.has(thisTraveller, "changeDirection") ) {
+						thisTraveller.changeDirection();
+					} else {
+						log("thisTraveller has no changeDirection. " + JSON.stringify(thisTraveller) );
+					}
+				}
+			}				
 		}
 	};
 	
 	var considerLightingLight = function lightLighter(tokenMoved) {
 		var tokenID = tokenMoved.get("_id");
+		var shouldBeLit = shouldTokenBeLit(tokenMoved);
+		var isLit = isTokenLit(tokenMoved);
+		
 		if (debug) psLog("considerLightingLight: " + tokenMoved.get("name") , "LightGrey");
 		if (shouldTokenBeLit(tokenMoved) === true && isTokenLit(tokenMoved) === false ) { // light this token
-			flashlights[tokenID] = new flashlightObj(tokenID);
-			instantiateFlashlightMethods(flashlights[tokenID]);
-			flashlights[tokenID].lightID = createFlashlightToken(tokenID); // NOTE: This should be the only place this happens
-			psLog("turn it on", "LightGrey");
+			psLog("tokenID needs flashlight: " + tokenID, "DarkGoldenRod");
+			psLog("flashlights: " + JSON.stringify(_.keys(flashlights)), "DarkGoldenRod");
+			psLog("considerLightingLight says: turn it on", "LightGrey");
+			
+			lightFlashlight(tokenID);				
+			
 		} else if ( shouldTokenBeLit(tokenMoved) === false && isTokenLit(tokenMoved) === true) { // turn it off
 			flashlights[tokenID].turnOff();
 			psLog("turn it off", "LightGrey");
-		} else { // it's fine the way it is.
-			
-		}
-		
+		}		
 	};
+	
 	var considerMovingLight = function lightMover(tokenMoved) {
 		var tokenID = tokenMoved.get("_id");
-		if ( shouldTokenBeLit(tokenMoved) ) { // that character doesn't have a flashlightObj yet
+		if ( shouldTokenBeLit(tokenMoved) === true && isTokenLit(tokenMoved) === true ) { // that character doesn't have a flashlightObj yet
+			
 			
 			flashlights[tokenID].follow();
-			psLog("Trying to follow: " + JSON.stringify(flashlights[tokenID]));
 			
-		} else { // the token shouldn't be lit.
-			//flashlights[tokenID].follow();
-			psLog("considerMovingLight says this token shouldn't be lit");
-		}
+		} 
+		
+		/* else { // the token shouldn't be lit.
+			if (debug) psLog("considerMovingLight says this token either isn't lit, or shouldn't be lit");
+			considerLightingLight(tokenMoved);
+		} */
 		
 	};
 	
@@ -753,28 +811,68 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 	var handleTokenMove = function tokenMoveHandler(tokenMoved) {
 		if (debug) psLog("entering handleTokenMoved with: tokenObj for " + tokenMoved.get("name")); 
 		
-		
-		// see if it's controlledby someone
-			// see if it's active
-				// compare current direction with traveller object direction
-					// change facing if you need to
-		
-		
-		if ( isTokenMarching(tokenMoved) === true ) { // this token wants to change facing when moved
-			if (debug) psLog("In handleTokenMove: a controlled token is active: " + tokenMoved.get("name"));			
-			considerChangingDirection(tokenMoved);
-		}
-		
-		if (shouldTokenBeLit(tokenMoved) === true) {
-			considerLightingLight(tokenMoved);
-			if (debug) psLog("In handleTokenMove: a lit token is active: " + tokenMoved.get("name"));
-			considerMovingLight(tokenMoved);
-
-		}
+		considerLightingLight(tokenMoved);
+		considerMovingLight(tokenMoved);
+		considerChangingDirection(tokenMoved);		
 	};
 
 
+	
+	
+/*
+                                                     
+	   _/    _/  _/_/_/_/_/  _/_/_/  _/          _/_/_/   
+	  _/    _/      _/        _/    _/        _/          
+	 _/    _/      _/        _/    _/          _/_/       
+	_/    _/      _/        _/    _/              _/      
+	 _/_/        _/      _/_/_/  _/_/_/_/  _/_/_/         
+ 
+*/	
 
+
+	var psPoint = function(x, y) {
+		this.x = x;
+		this.y = y;		
+	};
+
+	var makeVector = function(point1, point2) {
+		psLog("makeVector received: " + JSON.stringify(point1) + ", " + JSON.stringify(point2) , "pink");
+		var resultVector = new psPoint( (point2.x - point1.x) , (point2.y - point1.y) );		
+		psLog("makeVector returning: " + JSON.stringify(resultVector) , "pink");
+		return resultVector;
+	};
+	
+	var vectorLength = function(point) {		
+		var distance = Math.sqrt( Math.pow(point.x, 2) + Math.pow(point.y, 2) );		
+		return distance;
+	};
+	
+	var makeUnitVector = function(point) {
+		psLog("makeUnitVector received " + JSON.stringify(point) );
+		var distance = vectorLength(point);
+		if (distance !== 0) {
+			return new psPoint( (point.x/distance), (point.y/distance) );
+		} else {
+			return NaN;
+		}
+	};
+	
+	var vectorToRoll20Rotation = function(point) {
+		psLog("vectorToRoll20Rotation received " + JSON.stringify(point), "yellow");
+		var theta = Math.atan2(point.y, point.x);
+		
+		var roll20rotation = (theta * 180/3.1415) + 90;
+		psLog("vectorToRoll20Rotation returning: " + roll20rotation);
+		return roll20rotation;
+	
+	};
+	
+	var radiansToRoll20Degrees = function(rads) {
+		return 360 - (rads * 180/3.1415);
+		
+	};
+	
+	
 /*
 
 
