@@ -13,7 +13,7 @@
 
 var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 	"use strict";
-	var debug = true;
+	var debug = false;
 
 
 	var defaultConfig = {
@@ -136,7 +136,7 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 				
 				flashlight.lightID = createFlashlightToken(flashlight.parentID);
 				var desiredRotation = flashlight.getRotation();
-				psLog("desiredRotation = " + desiredRotation);
+				if (debug) psLog("desiredRotation = " + desiredRotation);
 
 				var newLightObj = getObj("graphic" , flashlight.lightID);
 				if (newLightObj) {
@@ -145,9 +145,9 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 
 			
 			} else {
-				psLog("==> Error: flashlight.follow cannot execute because one of the tokens no longer exists.");
-				psLog("light token: " + lightObj);
-				psLog("parent token: " + parentObj);
+				if (debug) psLog("==> Error: flashlight.follow cannot execute because one of the tokens no longer exists.");
+				if (debug) psLog("light token: " + lightObj);
+				if (debug) psLog("parent token: " + parentObj);
 				reset(); // **** TODO **** This is a little heavy handed, don't you think?
 			}
 
@@ -161,18 +161,18 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 			
 			if (lastMoveStr !== "") {
 				var lastLocationArr = lastMoveStr.split(","); // Note: these are strings.
-				psLog("lastLocationArr = " + lastLocationArr);
-				psLog("currentLocation = " + [parentObj.get("left"), parentObj.get("top")]);
+				if (debug) psLog("lastLocationArr = " + lastLocationArr);
+				if (debug) psLog("currentLocation = " + [parentObj.get("left"), parentObj.get("top")]);
 				
 				var lastLocation = new psPoint( Number(lastLocationArr[0]), Number(lastLocationArr[1]) );
 				var point1 = new psPoint(lastLocation.x, lastLocation.y);
 				var point2 = new psPoint(parentObj.get("left"), parentObj.get("top"));
 
-				psLog("point1 = " + JSON.stringify(point1) + ", point2 = " + JSON.stringify(point2));
+				if (debug) psLog("point1 = " + JSON.stringify(point1) + ", point2 = " + JSON.stringify(point2));
 				var directionVector = makeVector(point1, point2);
-				psLog("directionVector == " + JSON.stringify(directionVector), "turquoise");				
+				if (debug) psLog("directionVector == " + JSON.stringify(directionVector), "turquoise");				
 				var degrees = vectorToRoll20Rotation(directionVector);
-				psLog("flashlight.getRotation("+ JSON.stringify(point1) + ", "  + JSON.stringify(point2) + ") says degrees = " + degrees, "LightBlue");
+				if (debug) psLog("flashlight.getRotation("+ JSON.stringify(point1) + ", "  + JSON.stringify(point2) + ") says degrees = " + degrees, "LightBlue");
 				
 				rotation = degrees;
 			}
@@ -197,10 +197,10 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 	var createFlashlightToken = function flashlightTokenCreator(parentTokenID) { // returns tokenID of new flashlight graphic object
 		var parentToken = getObj("graphic", parentTokenID);
 		var parentTokenName = parentToken.get("name");
-		psLog("entered createFlashlightToken for "+ parentTokenName + " - " + parentTokenID);
+		if (debug) psLog("entered createFlashlightToken for "+ parentTokenName + " - " + parentTokenID);
 
 		var token = createObj("graphic", {
-			imgsrc: ICONS.torch,
+			imgsrc: ICONS.transparent,
 			light_radius: config.light_radius,
 			light_dimradius: config.light_dimradius,
 			light_otherplayers: true,
@@ -212,20 +212,20 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 			top: parentToken.get("top"),
 			name: "flashlight",
 			showname: true,
-			aura1_radius: "5",
+			aura1_radius: "",
 			showplayers_aura1: true,
-			width: parentToken.get("width")/2,
-			height: parentToken.get("height")/2
+			width: parentToken.get("width")/4,
+			height: parentToken.get("height")/4
 			
 		});	
 
 		if (token) {
-			psLog("createFlashlightToken Just created a token: " + token.get("_id") + " for " + parentTokenName);	
-			psLog("Flashlight Token: " + token.get("_id") );
+			if (debug) psLog("createFlashlightToken Just created a token: " + token.get("_id") + " for " + parentTokenName);	
+			if (debug) psLog("Flashlight Token: " + token.get("_id") );
 		}
 		
 		if (parentToken === undefined) {
-			psLog("==> Error in createFlashlightToken. parentTokenID = " + parentTokenID);
+			if (debug) psLog("==> Error in createFlashlightToken. parentTokenID = " + parentTokenID);
 		}
 		//toBack(token);
 		
@@ -526,7 +526,7 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 				
 				case '--inspect':
 					if (getObj("graphic", tokenID) !== undefined) {
-						psLog("properties of " + JSON.stringify(getObj("graphic", tokenID)), "DarkKhaki");						
+						if (debug) psLog("properties of " + JSON.stringify(getObj("graphic", tokenID)), "DarkKhaki");						
 					}
 
 				break;
@@ -688,7 +688,7 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 			}
 		}
 		
-		psLog("shouldTokenBeLit: " + tokenObj.get("name") + " = " + result, "yellow");
+		if (debug) psLog("shouldTokenBeLit: " + tokenObj.get("name") + " = " + result, "yellow");
 		return result;
 	};
 
@@ -768,15 +768,15 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 		
 		if (debug) psLog("considerLightingLight: " + tokenMoved.get("name") , "LightGrey");
 		if (shouldTokenBeLit(tokenMoved) === true && isTokenLit(tokenMoved) === false ) { // light this token
-			psLog("tokenID needs flashlight: " + tokenID, "DarkGoldenRod");
-			psLog("flashlights: " + JSON.stringify(_.keys(flashlights)), "DarkGoldenRod");
-			psLog("considerLightingLight says: turn it on", "LightGrey");
+			if (debug) psLog("tokenID needs flashlight: " + tokenID, "DarkGoldenRod");
+			if (debug) psLog("flashlights: " + JSON.stringify(_.keys(flashlights)), "DarkGoldenRod");
+			if (debug) psLog("considerLightingLight says: turn it on", "LightGrey");
 			
 			lightFlashlight(tokenID);				
 			
 		} else if ( shouldTokenBeLit(tokenMoved) === false && isTokenLit(tokenMoved) === true) { // turn it off
 			flashlights[tokenID].turnOff();
-			psLog("turn it off", "LightGrey");
+			if (debug) psLog("turn it off", "LightGrey");
 		}		
 	};
 	
@@ -836,9 +836,9 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 	};
 
 	var makeVector = function(point1, point2) {
-		psLog("makeVector received: " + JSON.stringify(point1) + ", " + JSON.stringify(point2) , "pink");
+		if (debug) psLog("makeVector received: " + JSON.stringify(point1) + ", " + JSON.stringify(point2) , "pink");
 		var resultVector = new psPoint( (point2.x - point1.x) , (point2.y - point1.y) );		
-		psLog("makeVector returning: " + JSON.stringify(resultVector) , "pink");
+		if (debug) psLog("makeVector returning: " + JSON.stringify(resultVector) , "pink");
 		return resultVector;
 	};
 	
@@ -848,7 +848,7 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 	};
 	
 	var makeUnitVector = function(point) {
-		psLog("makeUnitVector received " + JSON.stringify(point) );
+		if (debug) psLog("makeUnitVector received " + JSON.stringify(point) );
 		var distance = vectorLength(point);
 		if (distance !== 0) {
 			return new psPoint( (point.x/distance), (point.y/distance) );
@@ -858,11 +858,11 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 	};
 	
 	var vectorToRoll20Rotation = function(point) {
-		psLog("vectorToRoll20Rotation received " + JSON.stringify(point), "yellow");
+		if (debug) psLog("vectorToRoll20Rotation received " + JSON.stringify(point), "yellow");
 		var theta = Math.atan2(point.y, point.x);
 		
 		var roll20rotation = (theta * 180/3.1415) + 90;
-		psLog("vectorToRoll20Rotation returning: " + roll20rotation);
+		if (debug) psLog("vectorToRoll20Rotation returning: " + roll20rotation);
 		return roll20rotation;
 	
 	};
@@ -890,7 +890,7 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 		config = _.clone(defaultConfig);
 		travellers = {};
 		flashlights = {};
-		psLog("reset to defaults");
+		if (debug) psLog("reset to defaults");
 	};
 	
     var checkInstall = function installChecker() {
