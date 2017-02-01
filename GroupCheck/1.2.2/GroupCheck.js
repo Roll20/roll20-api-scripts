@@ -1,5 +1,5 @@
 // GroupCheck version 1.2.2
-// Last Updated: 2017-01-24
+// Last Updated: 2017-02-01
 // A script to roll checks for many tokens at once with one command.
 
 var groupCheck = groupCheck || (function() {
@@ -10,9 +10,9 @@ var groupCheck = groupCheck || (function() {
 	outputStyle = function () {
 		const makeBox = function (header, subheader, freetext, content) {
 			return '<div style="border:1px solid #888;background-color:#FFFFFF;' +
-				'border-radius:5px;padding:1px 3px"><div style="margin-bottom:1em">' +
-				makeHeader(header) + makeSubheader(subheader) + '</div>' +
-				makeContent(content) + makeFreetext(freetext) +	'</div>';
+				'border-radius:5px;padding:1px 3px;margin-left:-42px;"><div style' +
+				'="margin-bottom:1em">' +	makeHeader(header) + makeSubheader(subheader) +
+				'</div>' + makeContent(content) + makeFreetext(freetext) +'</div>';
 		},
 		makeContent = function (text) {
 			return '<table style="border-collapse:separate;width:100%">' +
