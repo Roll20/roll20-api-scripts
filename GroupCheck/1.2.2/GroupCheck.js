@@ -1,17 +1,18 @@
 // GroupCheck version 1.2.2
-// Last Updated: 2017-02-01
+// Last Updated: 2017-02-02
 // A script to roll checks for many tokens at once with one command.
 
 var groupCheck = groupCheck || (function() {
 	'use strict';
 	const version = '1.2.2',
-	stateVersion = 5,
+	stateVersion = 6,
+	dataVersion = 1,
 	// Roll appearance
 	outputStyle = function () {
 		const makeBox = function (header, subheader, freetext, content) {
 			return '<div style="border:1px solid #888;background-color:#FFFFFF;' +
 				'border-radius:5px;padding:1px 3px;margin-left:-42px;"><div style' +
-				'="margin-bottom:1em">' +	makeHeader(header) + makeSubheader(subheader) +
+				'="margin-bottom:1em">' + makeHeader(header) + makeSubheader(subheader) +
 				'</div>' + makeContent(content) + makeFreetext(freetext) +'</div>';
 		},
 		makeContent = function (text) {
@@ -82,7 +83,7 @@ var groupCheck = groupCheck || (function() {
 							let style = rollIsCrit(r.v, c[0].comp, c[0].point) ?
 								' critsuccess' :
 								(rollIsCrit(r.v, f[0].comp, f[0].point) ?
-								' critfail'  : '')
+								' critfail'	 : '')
 							return `<span class='basicdiceroll${style}'>${r.v}</span>`;
 						});
 					return `(${styledRolls.join('+')})`;
@@ -240,6 +241,9 @@ var groupCheck = groupCheck || (function() {
 		else if (state.groupCheck.version < stateVersion) {
 			updateState();
 		}
+		if (state.groupCheck.dataVersion < dataVersion) {
+			updateCheckList();
+		}
 		// Build metadata for available options
 		optsData.meta = {
 			allopts : _.keys(optsData.list),
@@ -247,7 +251,7 @@ var groupCheck = groupCheck || (function() {
 				.pick(v => v.type === 'string')
 				.keys()
 				.value(),
-			glob :  _.chain(optsData.list)
+			glob :	_.chain(optsData.list)
 				.omit(v => v.local)
 				.keys()
 				.value(),
@@ -269,7 +273,8 @@ var groupCheck = groupCheck || (function() {
 				.pick(v => _.has(v,'def'))
 				.mapObject(v => v.def)
 				.value(),
-			'version' : stateVersion
+			'version' : stateVersion,
+			'dataVersion' : 1
 		};
 		log('-=> GroupCheck initialized with default settings!<=-');
 	},
@@ -285,20 +290,59 @@ var groupCheck = groupCheck || (function() {
 				delete state.groupCheck.options.die;
 				state.groupCheck.options.hideformula = state.groupCheck.options.hidebonus;
 				delete state.groupCheck.options.hidebonus;
-				log('-=> groupCheck has updated to a new data format (1=>2). Please ' +
+				log('-=> GroupCheck has updated to a new data format (1=>2). Please ' +
 					'make sure your list of checks has converted correctly.<=-');
 			case 2:
 				_.each(state.groupCheck.checkList, function(check) {
 					check.formula = '[[' + check.formula+ ']]';
 				});
-				log('-=> groupCheck has updated to a new data format (2=>3). Please ' +
+				log('-=> GroupCheck has updated to a new data format (2=>3). Please ' +
 					'make sure your list of checks has converted correctly.<=-');
 			case 3:
 				state.groupCheck.options.showpicture = true;
 			case 4:
 				state.groupCheck.options.process = false;
-				state.groupCheck.version = 5;
+			case 5:
+				state.groupCheck.dataVersion = 0;
+				state.groupCheck.version = 6;
 		}
+	},
+	updateCheckList = function() {
+		switch (state.groupCheck.dataVersion) {
+			case 0:
+				// Detect 5E-Shaped
+				if (_.has(state.groupCheck.checkList, 'Strength Save') &&
+					state.groupCheck.checkList['Strength Save'].formula ===
+					'[[d20 + %strength_saving_throw_mod%]]') {
+					state.groupCheck.importInfo = '5E-Shaped';
+				}
+				// Detect 5E-OGL
+				if (_.has(state.groupCheck.checkList, 'Strength Save') &&
+					state.groupCheck.checkList['Strength Save'].formula ===
+					'[[d20 + %strength_save_bonus% * {1%npc_str_save%0, 0}=10 +' +
+					' 0%npc_str_save% + %globalsavemod% ]]') {
+					state.groupCheck.importInfo = '5E-OGL';
+				}
+				// Detect Pathfinder
+				if (_.has(state.groupCheck.checkList, 'Fortitude Save') &&
+					state.groupCheck.checkList['Fortitude Save'].formula ===
+					'[[d20 + %Fort%]]') {
+					state.groupCheck.importInfo = 'Pathfinder';
+				}
+				// Detect 3.5
+				if (_.has(state.groupCheck.checkList, 'Move Silently') &&
+					state.groupCheck.checkList['Move Silently'].formula ===
+					'[[d20 + %movesilent%]]') {
+					state.groupCheck.importInfo = '3.5';
+				}
+		}
+		if (state.groupCheck.importInfo) {
+			_.extend(state.groupCheck.checkList, importData[state.groupCheck.importInfo]);
+			log('-=> GroupCheck has detected that you are using the ' +
+				state.groupCheck.importInfo + ' data set and has updated your checks ' +
+				'database automatically. Sorry for any inconvenience caused. <=-');
+		}
+		state.groupCheck.dataVersion = dataVersion;
 	},
 	// Utility functions
 	safeReadJSON = function (string) {
@@ -510,7 +554,7 @@ var groupCheck = groupCheck || (function() {
 		}
 	},
 	sendFinalMessage = function (opts, checkName, rollData, msg) {
-		let	freetext = '', match, inlinerollData = {};
+		let freetext = '', match, inlinerollData = {};
 		// Format inline rolls
 		if (_.has(msg[0], 'inlinerolls')) {
 			inlinerollData = _.reduce(msg[0].inlinerolls, function(r, c, i) {
@@ -575,6 +619,7 @@ var groupCheck = groupCheck || (function() {
 		if (opts.import) {
 			if (_.has(importData,opts.import)) {
 				_.extend(state.groupCheck.checkList, importData[opts.import]);
+				state.groupCheck.importInfo = opts.import;
 				output = `Data set ${opts.import} imported.`;
 			} else {
 				handleError(whisper, `Data set ${opts.import} not found.`);
@@ -665,7 +710,7 @@ var groupCheck = groupCheck || (function() {
 			checkName = state.groupCheck.checkList[checkCmd].name;
 		}
 		_.each(optsData.meta.boolNeg, function (name,index) {
-			_.has(opts, name) ?	opts[optsData.meta.bool[index]] = false : null;
+			_.has(opts, name) ? opts[optsData.meta.bool[index]] = false : null;
 		});
 		// Handle --custom
 		if (opts.custom) {
@@ -731,7 +776,7 @@ var groupCheck = groupCheck || (function() {
 				sendChat(opts.speaking, output);
 			} else {
 				let sentFormula = _.map(rollData, function(o) {
-						return (o.formula +	'####' + (o.roll2 ? (o.formula) : ''));
+						return (o.formula + '####' + (o.roll2 ? (o.formula) : ''));
 					}).join('<br>'),
 					callback = _.partial(sendFinalMessage, opts, checkName, rollData);
 				sendChat('', sentFormula, callback);
