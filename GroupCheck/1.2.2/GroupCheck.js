@@ -274,6 +274,7 @@ var groupCheck = groupCheck || (function() {
 				.mapObject(v => v.def)
 				.value(),
 			'version' : stateVersion,
+			'importInfo' : '',
 			'dataVersion' : 1
 		};
 		log('-=> GroupCheck initialized with default settings!<=-');
@@ -304,10 +305,12 @@ var groupCheck = groupCheck || (function() {
 				state.groupCheck.options.process = false;
 			case 5:
 				state.groupCheck.dataVersion = 0;
+				state.groupCheck.importInfo = '';
 				state.groupCheck.version = 6;
 		}
 	},
 	updateCheckList = function() {
+		let changedData = false;
 		switch (state.groupCheck.dataVersion) {
 			case 0:
 				// Detect 5E-Shaped
@@ -335,8 +338,12 @@ var groupCheck = groupCheck || (function() {
 					'[[d20 + %movesilent%]]') {
 					state.groupCheck.importInfo = '3.5';
 				}
+				if (state.groupCheck.importInfo === '5E-OGL' ||
+					state.groupCheck.importInfo === '5E-Shaped') {
+					changedData = true;
+				}
 		}
-		if (state.groupCheck.importInfo) {
+		if (state.groupCheck.importInfo && changedData) {
 			_.extend(state.groupCheck.checkList, importData[state.groupCheck.importInfo]);
 			log('-=> GroupCheck has detected that you are using the ' +
 				state.groupCheck.importInfo + ' data set and has updated your checks ' +
@@ -669,6 +676,7 @@ var groupCheck = groupCheck || (function() {
 			output = `Option ${kv[0]} set to ${state.groupCheck.options[kv[0]]}.`;
 		} else if (opts.clear) {
 			state.groupCheck.checkList = {};
+			state.groupCheck.importInfo = '';
 			output = 'All checks cleared.';
 		} else if (opts.defaults) {
 			state.groupCheck.options = _.chain(optsData.list)
