@@ -13,6 +13,15 @@
 														 
 */
 
+// purpose: To turn top down drawings into isometric drawings (rotate 45degrees and scale 50% on the y axis.)
+
+
+// usage: type !IsoMap or !psIsoMap in chat.
+
+
+
+
+
 
 var IsoMap = IsoMap || (function IsoMapMaker() {
 	"use strict";
@@ -33,7 +42,7 @@ var IsoMap = IsoMap || (function IsoMapMaker() {
 
 	
 	
-	var debugDEFCON = 1; // 	DEFCON 1 = FUBAR: LOG EVERYTHING. DEFCON 5 = AOK: LOG NOTHING
+	var debugDEFCON = 5; // 	DEFCON 1 = FUBAR: LOG EVERYTHING. DEFCON 5 = AOK: LOG NOTHING
 
 	var version = "0.01";
 	var lastUpdate = 1484861080933;
@@ -372,7 +381,7 @@ o888o o888o o888o 888ooo88    888o88 8o  888o
 			// where content is: !IsoMap token_id
 			// {"content":"!IsoMap -K_D89bE8mmN0VEBmdjt","playerid":"-K_D5Ng6YOcQ3VnAEsNh","selected":[{"_id":"-K_D89bE8mmN0VEBmdjt","_type":"graphic"}],"type":"api","who":"plexsoup (GM)"}
 			
-		if (msg.type == "api" && msg.content.indexOf("!IsoMap") !== -1 ) {
+		if (msg.type == "api" && ( msg.content.indexOf("!IsoMap") !== -1 || msg.content.indexOf("!psIsoMap") !== -1 ) )  {
 
 			var argsFromUser,
 				who,

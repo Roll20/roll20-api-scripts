@@ -1,3 +1,11 @@
+// Purpose: To automatically resize plexsoup marketplace assets, to their intended native dimensions
+	// This makes creating dungeons dramatically easier. See youtube.com/user/plexsoup
+
+// Usage: enter !psResize or !psTileResizer in chat
+
+
+
+
 var psTileResizer = psTileResizer || (function psMarketplaceResizer() {
 	"use strict";
 
@@ -483,7 +491,7 @@ var psTileResizer = psTileResizer || (function psMarketplaceResizer() {
 	
 	var handleInput = function inputHandler(msg) {
 			
-		if (msg.type == "api" && msg.content.indexOf("!psResize") !== -1 ) {
+		if (msg.type == "api" && ( msg.content.indexOf("!psResize") !== -1 || msg.content.indexOf("!psTileResizer") !== -1 ) ) {
 
 			var argsFromUser,
 				who,
@@ -510,7 +518,7 @@ var psTileResizer = psTileResizer || (function psMarketplaceResizer() {
 			
 			
 			switch(userCommand) {
-				case '--resize':
+				case '--resize' :
 					// resize marketplace tiles
 						// if you get a token id, resize that one.
 						// otherwise, resize everything? any way to get a confirmation first?

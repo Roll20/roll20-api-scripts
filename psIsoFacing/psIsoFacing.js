@@ -6,8 +6,15 @@
 // Planned: add a hidden Navi attached to the token which provides a rotating light without rotating the parent token.
 
 // **** TODO
-	// it's weird to see torches floating around..  delete and recreate them instead of moving them.
+
+	// 
+
+// BUGS
+	// something's weird about the install routine.. sometime's a character doesn't switch direction until the second move.
+		// maybe I should have an on:change:statusmarkers or something.
+	// if you turn off the yellow status marker, then turn it back on again, light doesn't come on.
 	
+
 	
 
 
@@ -30,7 +37,7 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 	
     var info = {
 		scriptName: "psIsoFacing",
-		version: 0.13,
+		version: 0.15,
         authorName: "plexsoup"
     };
 
@@ -43,13 +50,7 @@ var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 		scifi: "https://s3.amazonaws.com/files.d20.io/images/27025190/VrSyw_oHrsM8cfdBPcfLHw/thumb.png?1483690176"
 	};	
 	
-	var travellerObj = function travellerClass(tokenID) { // note: roll20 state variable can only store simple properties. No functions
-		this.direction = 1; // right is 1, left is -1
-		this.tokenID = tokenID;
-	};
 
-	
-	
 	
 	
 /*
@@ -62,8 +63,13 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 
 */	
 	
+
+
 	
-	
+	var travellerObj = function travellerClass(tokenID) { // note: roll20 state variable can only store simple properties. No functions
+		this.direction = 1; // right is 1, left is -1
+		this.tokenID = tokenID;
+	};	
 	
 	var instantiateTravellerMethods = function(traveller) { // note: only operates on a single instance at a time. Call with _.each(travellers) if you need them all.
 		
@@ -98,57 +104,58 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 		
 	};
 
-	// **** IN Construction ****
 	var instantiateFlashlightMethods = function(flashlight) { // note: only operates on a single instance at a time. Call with _.each if you need more.
 	
 		flashlight.changeOrientation = function() {
 			
 		}; 
 		
-		
+		/*
 		flashlight.turnOff = function() {
 			
-			var lightObj = getObj("graphic", flashlight.parentID);
-			if (lightObj) {
-				lightObj.remove();
+			var lightGraphic = getObj("graphic", flashlight.lightID);
+			if (lightGraphic) {
 				
-				flashlight.deleteMe = true;
-
+				flashlight.deleteMe = true; // **** TODO **** Needs work.. when are you actually going to do this cleanup?				
+				
+				lightGraphic.remove();
+				
 				//mark for deletion and then do cleanup / garbage collection from outside the object.
 				//delete flashlights[flashlight.parentID]; // doesn't work from inside the object
 				
 			}
 		};
-
-		flashlight.remove = flashlight.turnOff;
+		*/
+		
+		// flashlight.remove = flashlight.turnOff;
 
 		flashlight.follow = function() {
-			var lightObj = getObj("graphic", flashlight.lightID);
-			var parentObj = getObj("graphic", flashlight.parentID);
+			var lightGraphic = getObj("graphic", flashlight.lightID);
+			var parentGraphic = getObj("graphic", flashlight.parentID);
 			
-			if (lightObj && parentObj) { // error checking in case someone deleted either of those tokens
+			if (lightGraphic && parentGraphic) { // error checking in case someone deleted either of those tokens
 
 
 				// lights don't follow tokens in realtime, they kind of float after them like ghosts.
 				// instead of moving them, we're going to destroy the old one and create a new one.
 				
-				lightObj.remove(); // remove the old graphic object
+				lightGraphic.remove(); // remove the old graphic object
 				
 				flashlight.lightID = createFlashlightToken(flashlight.parentID);
 				var desiredRotation = flashlight.getRotation();
 				if (debug) psLog("desiredRotation = " + desiredRotation);
 
-				var newLightObj = getObj("graphic" , flashlight.lightID);
-				if (newLightObj) {
-					newLightObj.set("rotation", desiredRotation );					
+				var newLightGraphic = getObj("graphic" , flashlight.lightID);
+				if (newLightGraphic) {
+					newLightGraphic.set("rotation", desiredRotation );					
 				}
 
 			
 			} else {
-				if (debug) psLog("==> Error: flashlight.follow cannot execute because one of the tokens no longer exists.");
-				if (debug) psLog("light token: " + lightObj);
-				if (debug) psLog("parent token: " + parentObj);
-				reset(); // **** TODO **** This is a little heavy handed, don't you think?
+				psLog("==> Error: flashlight.follow cannot execute because one of the tokens no longer exists.");
+				psLog("light token: " + lightGraphic);
+				psLog("parent token: " + parentGraphic);
+				// reset(); // **** TODO **** This is a little heavy handed, don't you think?
 			}
 
 		};
@@ -193,6 +200,17 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 		
 	};
 	
+	var extinguishFlashlight = function(tokenID) {
+		// this removes the token and removes the flashlightObj from the list of "flashlights"
+		
+		if (flashlights[tokenID]) {
+			var flashlightGraphic = getObj("graphic", flashlights[tokenID].lightID);
+			if (flashlightGraphic !== undefined && flashlightGraphic.get("gmnotes").indexOf(tokenID) !== -1 ) {
+				flashlightGraphic.remove();
+				delete flashlights[tokenID];
+			}
+		}
+	};
 	
 	var createFlashlightToken = function flashlightTokenCreator(parentTokenID) { // returns tokenID of new flashlight graphic object
 		var parentToken = getObj("graphic", parentTokenID);
@@ -211,15 +229,16 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 			left: parentToken.get("left"),
 			top: parentToken.get("top"),
 			name: "flashlight",
-			showname: true,
+			showname: false,
 			aura1_radius: "",
-			showplayers_aura1: true,
+			showplayers_aura1: false,
 			width: parentToken.get("width")/4,
 			height: parentToken.get("height")/4
 			
 		});	
 
 		if (token) {
+			token.set("gmnotes", parentTokenID);
 			if (debug) psLog("createFlashlightToken Just created a token: " + token.get("_id") + " for " + parentTokenName);	
 			if (debug) psLog("Flashlight Token: " + token.get("_id") );
 		}
@@ -233,6 +252,22 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 		if (debug) psLog("leaving createFlashlightToken. Returning " + tokenID);
 		return tokenID;
 	};
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	var whisper = function chatMessageSender(playerName, message) {
 		// sends a chat message to a specific player. Can use gm as playerName
@@ -268,7 +303,7 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 		// I use this instead of indexof because I hate type converting indexOf, which produces -1 instead of false.
 		
 		if (!stringToSearch || !textToLookFor) {
-			log("==> Error: inString() missing params" + stringToSearch + ", " + textToLookFor);
+			// log("==> Error: inString() missing params" + stringToSearch + ", " + textToLookFor);
 			return undefined;
 		}
 		if ( stringToSearch.indexOf(textToLookFor) == -1 ) {
@@ -405,23 +440,33 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 		
 	};
 
-	
+	var hasPermissions = function permissionIdentifier(tokenID, playerID) {
+		var tokenObj = getObj("graphic", tokenID);
+		var characterID = tokenObj.get("represents");
+		var playerHasPermission = false;
+		
+		if (playerIsGM(playerID)) {
+			playerHasPermission = true;
+		} else if (tokenObj.get("controlledby").indexOf(playerID) !== -1) {
+			playerHasPermission = true;
+		} else if ( characterID !== undefined ) {
+			var character = getObjs("character", characterID);
+			if (character.get("controlledby").indexOf(playerID) !== -1 ) {
+				playerHasPermission = true;
+			}
+		} else {
+			playerHasPermission = false;
+		}
+
+		if (debug) log("hasPermissions("+tokenID+", "+ playerID + ") is returning: " + playerHasPermission);
+		return playerHasPermission;
+		
+	};
 
 
 	var flipTokenIfPermitted = function tokenFlipper(tokenID, playerID) {
-		var tokenObj = getObj("graphic", tokenID);
-		log("fliph: tokenObj = " + tokenObj);
-		var represents = tokenObj.get("represents");
-		log("\t represents = " + represents);
-		var character = getObj("character", represents);
-		log("\t character = " + character);
-		var controlledBy = character.get("controlledby");
-		log("\t controlledBy = " + controlledBy);
-		
-		log("--fliph token is controlleBy: " + controlledBy);
-		log("--fliph playerid is " + playerID);
-		
-		if (inString( controlledBy,  playerID)) { // make sure players can't flip someone else's token						
+		if (hasPermissions( tokenID,  playerID)) { // make sure players can't flip someone else's token						
+			var tokenObj = getObj("graphic", tokenID);
 			tokenObj.set("fliph",!tokenObj.get("fliph"));
 		}	
 	};
@@ -517,7 +562,13 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 				break;
 				
 				case '--reset':
-					reset();
+					reset(getCurrentPage(playerID));
+				break;
+
+				case '--resetall':
+					_.each(allActivePages(), function(pageID) {
+						reset(pageID);	
+					});
 				break;
 				
 				case undefined:
@@ -602,7 +653,8 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 		
 		if (_.has(flashlights, tokenID) ) {
 			var thisFlashlight = flashlights[tokenID];			
-			thisTraveller.remove();
+			//thisFlashlight.remove();
+			extinguishFlashlight(tokenID);
 		}
 	};
 	
@@ -625,9 +677,14 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 	
 
 	var isTokenOwned = function ownerChecker(tokenObj) {
-		if (tokenObj.get("controlledby") === "" && tokenObj.get("represents") === undefined ) {
+		var controlledby = tokenObj.get("controlledby");
+		var represents = tokenObj.get("represents");
+		// log("name: " + tokenObj.get("name") + ", controlledby: " + controlledby + ", represents: " + represents);
+		if ( !controlledby && !represents ) {
+			// log("tokenIsOwned === false"); 
 			return false;
 		} else {
+			// log("tokenIsOwned === true");
 			return true;
 		}	
 	};
@@ -681,9 +738,9 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 		var tokenID = tokenObj.get("_id");
 		
 		if (config.scriptIsActive && isTokenOwned(tokenObj) ) { // has owner
-			if (config.useYellowStatusForLight && inString(tokenObj.get("statusmarkers"), "yellow") ) { // user wants it on
+			if (config.useYellowStatusForLight === true && inString(tokenObj.get("statusmarkers"), "yellow") === true ) { // user wants it on
 				result = true;
-			} else if ( _.has(flashlights, tokenObj.get("_id")) ) { // user wants it on but they don't like the yellow status indicators
+			} else if ( _.has(flashlights, tokenObj.get("_id")) === true && config.useYellowStatusForLight === false ) { // user wants it on but they don't like the yellow status indicators
 				result = true;
 			}
 		}
@@ -775,7 +832,8 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 			lightFlashlight(tokenID);				
 			
 		} else if ( shouldTokenBeLit(tokenMoved) === false && isTokenLit(tokenMoved) === true) { // turn it off
-			flashlights[tokenID].turnOff();
+			//flashlights[tokenID].turnOff(); // can't delete the object from inside the object.
+			extinguishFlashlight(tokenID);
 			if (debug) psLog("turn it off", "LightGrey");
 		}		
 	};
@@ -816,7 +874,9 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 		considerChangingDirection(tokenMoved);		
 	};
 
-
+	var handleTokenStatusMarkersChange = function tokenStatusMarkerChangeHandler(tokenChanged) {
+		considerLightingLight(tokenChanged);		
+	};
 	
 	
 /*
@@ -872,7 +932,58 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 		
 	};
 	
+	var getCurrentPage = function currentPageGetter(playerID) {
+		var currentPage;
+		var playerSpecificPages = Campaign().get("playerspecificpages");
+		var playerRibbon = Campaign().get("playerpageid");
+		
+		if (playerID === undefined || getObj("player", playerID) === undefined) {
+			currentPage = false;
+		} else {
+			if (playerIsGM(playerID)) {
+				var lastPage = getObj("player", playerID).get("_lastpage");
+				if ( lastPage !== "" ) {
+					currentPage = lastPage;
+				} else {
+					currentPage = playerRibbon;
+				}
+					 
+			} else { // non-gm player
+				if (playerSpecificPages !== false && playerSpecificPages[playerID] !== undefined ) {
+					currentPage = playerSpecificPages[playerID];
+				} else {
+					currentPage = playerRibbon;
+				}
+			}
+		}
+		if (debug) log("getCurrentPage is returning "+ currentPage);
+		return currentPage;		
+	};
 	
+	var allActivePages = function activePagesGetter() {
+		var allPages = [];
+		
+		var playerRibbon = Campaign().get("playerpageid"); // pageid
+		allPages.push(playerRibbon);
+
+		var playerSpecificPages = _.values(Campaign().get("playerspecificpages")); // pageids
+		_.each(_.uniq(playerSpecificPages), function(pageID) {
+			allPages.push(pageID);
+		});
+		
+		var players = findObjs({type: "player"});		
+		_.each(players, function(player) {
+			if (playerIsGM(player.get("_id"))) {
+				var gmPlayer = player;
+				var gmPage = gmPlayer.get("_lastpage"); // pageid
+				if (gmPage !== "") {
+					allPages.push(gmPage);
+				}
+			}			
+		});
+		
+		return allPages;
+	};
 /*
 
 
@@ -886,27 +997,82 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 
 */
 
-	var reset = function resetter() {
+	var reconnectOldFlashlights = function flashlightReconnector(pageID) {
+		if (pageID === undefined) {
+			pageID = Campaign().get("playerpageid");
+		}
+
+		var activeFlashlights = findObjs({ 
+			_pageid: pageID,
+			name: "flashlight",
+		});
+
+		_.each( activeFlashlights, function(flashlightGraphic) {
+			var parentTokenID = flashlightGraphic.get("gmnotes");
+			if (getObj("graphic", parentTokenID) !== undefined ) {
+				var reconnectedFlashlight = new flashlightObj(parentTokenID);
+				reconnectedFlashlight.lightID = flashlightGraphic.get("_id");
+				flashlights[parentTokenID] = reconnectedFlashlight;
+			}
+		});
+	};
+
+	var reset = function resetter(pageID) { // remove all flashlights
+		if (pageID === undefined) { // screw it, we'll reset every page that has a player on it.
+			log("==> Error: reset function received no pageID");
+		}
+		
 		config = _.clone(defaultConfig);
 		travellers = {};
 		flashlights = {};
+		
+		var activeFlashlights = findObjs({ 
+			_pageid: pageID,
+			name: "flashlight",
+		});
+
+		_.each( activeFlashlights, function(flashlightGraphic) {
+			flashlightGraphic.remove();
+		});
+		
 		if (debug) psLog("reset to defaults");
+		
 	};
 	
     var checkInstall = function installChecker() {
         if ( !_.has(state, "psIsoFacing") || state.psIsoFacing.info.version !== info.version ) { // populate state from default values
             state.psIsoFacing = { 
 				info: info,
-				config: config,
-				travellers: travellers,
-				flashlights: flashlights
-			};
+				config: config,				
+				travellers: _.keys(travellers), // state will hold a simple list of traveller IDs. It can't hold complex objects
+				flashlights: _.keys(flashlights)
+			};			
+			
         } else { // use values from roll20 persistent state object for the campaign.
-			travellers = state.psIsoFacing.travellers; // state simplifies objects and strips out methods. Hopefully they're still instances of travellerObj
-			flashlights = state.psIsoFacing.flashlights;
-			config = state.psIsoFacing.config;
-			info = state.psIsoFacing.info;			
+
+			travellers = {};
+			_.each(state.psIsoFacing.travellers, function(travellerID) {
+				travellers[travellerID] = new travellerObj();
+				instantiateTravellerMethods(travellers[travellerID]);
+			} );
+			
+			//travellers = state.psIsoFacing.travellers; // state simplifies objects and strips out methods. Hopefully they're still instances of travellerObj
+
+			flashlights = {};
+			_.each(state.psIsoFacing.flashlights, function(flashlightID) {
+				flashlights[flashlightID] = new flashlightObj();
+				instantiateFlashlightMethods(flashlights[flashlightID]);				
+			});
+			
+			
+			reconnectOldFlashlights();
+			//flashlights = state.psIsoFacing.flashlights;
+
+
+			config = _.clone(state.psIsoFacing.config);
+			info = _.clone(state.psIsoFacing.info);			
 		}
+		
 		_.each(travellers, function(traveller) {
 			instantiateTravellerMethods(traveller);
 		});
@@ -924,13 +1090,15 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 		
 		on('chat:message', handleInput );
 		on('change:graphic', handleTokenMove );
+		on("change:graphic:statusmarkers", handleTokenStatusMarkersChange);
 	};
 
-	return {
+	return { // expose functions for outside calls
 		RegisterEventHandlers: registerEventHandlers,
 		CheckInstall: checkInstall,
 		Reset: reset,
-		ShowDetailedHelp: showDetailedHelp
+		ShowDetailedHelp: showDetailedHelp,
+		psLog: psLog
 	};
 
 
@@ -939,7 +1107,9 @@ _/        _/    _/  _/    _/_/        _/      _/      _/    _/  _/    _/  _/    
 
 
 on("ready",function(){
+	psIsoFacing.psLog("on('ready') just fired.", "burlywood");
 	psIsoFacing.CheckInstall(); // instantiate all the function expressions
+	
 	psIsoFacing.RegisterEventHandlers(); // instantiate all the listeners
 
 });

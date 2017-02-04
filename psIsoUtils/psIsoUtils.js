@@ -183,12 +183,80 @@ var psUtils = function plexsoupUtils() {
 		return distance;
 	};
 
+	var getCurrentPage = function currentPageGetter(tokenObjOrPlayerID) { // expects token, playerID, or string=="gm"
+	// **** TODO **** This isn't working as expected. Go through it and check assertions.
+	
+		if ( debugDEFCON < 5) { log( "entering getCurrentPage with " + tokenObjOrPlayerID ); }
+		var currentPage;
+		var playerID;
+		var playerObj;
+		var gmID = getGameMasterID();
+		if ( debugDEFCON < 5) {
+			log("   gmID = " + gmID);
+		}
 
+		if (tokenObjOrPlayerID === undefined ) { // getCurrentPage received bad parameters, but we'll take care of it.
+			log("==> Error in getCurrentPage. tokenObjOrPlayerID == undefined"); 
+			return Campaign().get("playerpageid");
+			
+		} else if ( tokenObjOrPlayerID == "gm") {
+			tokenObjOrPlayerID = gmID;
+			if (gmID) {
+				// currentPage = getObj("player", gmID).get("lastpage");			
+				return Campaign().get("playerpageid");
+			} else {
+				return Campaign().get("playerpageid");				
+			}			
+		
+			
+			
+		} else if ( _.isString(tokenObjOrPlayerID) ) { // it's a player ID
+			if (debugDEFCON < 4) { log("    tokenObjOrPlayerID was a string. Assume player_id: " + tokenObjOrPlayerID); }
+			playerID = tokenObjOrPlayerID;
+			playerObj = getObj("player", playerID);
+			
+			if (playerIsGM(playerID)) { // it's the GM, use the lastpage property to find their page
+				if (debugDEFCON < 4) { 
+					log("    player_id is a GM");
+					log("    playerObj.get('lastpage') returns " + playerObj.get("lastpage") );
+					//log("    Campaign().get('playerpageid') returns " + Campaign().get("playerpageid") );
+				}
+				
+				currentPage = playerObj.get("lastpage"); // NOTE: there's no lastpage unless the GM has been on another page
+				
+			} else if ( Campaign().get("playerspecificpages")[playerID] ) {
+				if ( debugDEFCON < 4 ) { 
+					log("    player_id is not a GM, and the players are seperated onto different pages"); 
+					log("    playerspecificpages = " + Campaign().get("playerspecificpages") );
+				}
+				
+				
+				// Note: there's no playerspecificpages unless a single player name is dragged onto another map
+				currentPage = Campaign().get("playerspecificpages")[playerID];
+
+			} else { // it's a player and the players are all on one page.
+				if (debugDEFCON < 4) { log("    player_id is not a GM, but there's only one page"); }
+				currentPage = Campaign().get("playerpageid");				
+			}
+		} else if ( _.isObject(tokenObjOrPlayerID) ) { // it's a token
+			if (debugDEFCON < 4) { log("    tokenObjOrPlayerID was an object. Assume token: " + JSON.stringify(tokenObjOrPlayerID) ); }
+			var token = tokenObjOrPlayerID;
+			currentPage = token.get("page_id");
+		}
+		
+		if (debugDEFCON < 4) { log("exiting getCurrentPage. Returning " + currentPage ); } 
+		
+		return currentPage;
+	};
+
+	
+	
 	return {
 		AddVectors: addVectors,
 		ScaleVector: scaleVector,
 		GetDistance: getDistance,
-		NormalizeVector: normalizeVector
+		NormalizeVector: normalizeVector,
+		GetCurrentPage: getCurrentPage
 
 	};
 	
