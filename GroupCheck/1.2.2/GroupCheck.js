@@ -541,7 +541,8 @@ var groupCheck = groupCheck || (function() {
 		} else {
 			return null;
 		}
-		tokenPic = (opts.showpicture || !displayName) ? token.get('imgsrc') : false;
+		tokenPic = (opts.showpicture || !displayName) ?
+			token.get('imgsrc').replace('max', 'thumb') : false;
 		switch (ro) {
 			case 'adv' :
 				computedFormula += ' (Advantage)';
