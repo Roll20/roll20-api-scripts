@@ -40,7 +40,7 @@ var chatSetAttr = chatSetAttr || (function () {
 				return '/w GM ';
 			}
 		},
-		sendChatMesssage = function (msg) {
+		sendChatMessage = function (msg) {
 			sendChat('ChatSetAttr', msg, null, {
 				noarchive: true
 			});
