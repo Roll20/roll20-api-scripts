@@ -75,7 +75,8 @@ var psGUI = psGUI || (function psGUI() { // Module
         "string": function(string) { 
             return _.isString(string);
         },
-        "token_id": function(token_id) { if (token_id !== undefined && token_id !== "" && getObj("graphic", token_id) !== undefined) {
+        "token_id": function(token_id) { 
+		    if (token_id !== undefined && token_id !== "" && getObj("graphic", token_id) !== undefined) {
                 return true;
             } else {
                 return false;
