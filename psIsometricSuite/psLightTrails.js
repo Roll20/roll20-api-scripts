@@ -985,7 +985,6 @@ d88' `"Y8 d88' `88b `888P"Y88b   `88.  .8'  d88' `88b `888""8P   888
 					var controlledByArray = currentCrumb.get("controlledby").split(",");
 					controlledByArray = _.without(controlledByArray, "all");
 					var controlledByString = controlledByArray.join(",");
-					log("==> controlledByString: " + controlledByString);
 					if (debugDEFCON < 4) { log("in convertCrumbToNewSettings: controlledByString = " + controlledByString); }
 					// then add it back if it's needed.
 					if (config.SHARED_VISION === true) { // add "all" to controlledby 
