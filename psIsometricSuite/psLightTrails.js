@@ -9,43 +9,36 @@
 /*
 
 
-               ooooo         o8o             oooo            .   
-               `888'         `"'             `888          .o8   
-                888         oooo   .oooooooo  888 .oo.   .o888oo 
-                888         `888  888' `88b   888P"Y88b    888   
-                888          888  888   888   888   888    888   
-                888       o  888  `88bod8P'   888   888    888 . 
-               o888ooooood8 o888o `8oooooo.  o888o o888o   "888" 
-                                  d"     YD                      
-                                  "Y88888P'                      
-                                                                 
-          .oooooo.                                           .o8       
-         d8P'  `Y8b                                         "888       
-        888          oooo d8b oooo  oooo  ooo. .oo.  .oo.    888oooo.  
-        888          `888""8P `888  `888  `888P"Y88bP"Y88b   d88' `88b 
-        888           888      888   888   888   888   888   888   888 
-        `88b    ooo   888      888   888   888   888   888   888   888 
-         `Y8bood8P'  d888b     `V88V"V8P' o888o o888o o888o  `Y8bod8P' 
-                                                                       
-                                                                       
-                                                                       
-             ooooooooooooo                     o8o  oooo           
-             8'   888   `8                     `"'  `888           
-                  888      oooo d8b  .oooo.   oooo   888   .oooo.o 
-                  888      `888""8P `P  )88b  `888   888  d88(  "8 
-                  888       888      .oP"888   888   888  `"Y88b.  
-                  888       888     d8(  888   888   888  o.  )88b 
-                 o888o     d888b    `Y888""8o o888o o888o 8""888P' 
+                                                                                                   
+				_/_/_/      _/_/_/      _/        _/_/_/    _/_/_/  _/    _/  _/_/_/_/_/   
+			   _/    _/  _/            _/          _/    _/        _/    _/      _/        
+			  _/_/_/      _/_/        _/          _/    _/  _/_/  _/_/_/_/      _/         
+			 _/              _/      _/          _/    _/    _/  _/    _/      _/          
+			_/        _/_/_/        _/_/_/_/  _/_/_/    _/_/_/  _/    _/      _/           
+																						   
+																						   
+																				  
+					 _/_/_/_/_/  _/_/_/      _/_/    _/_/_/  _/          _/_/_/   
+						_/      _/    _/  _/    _/    _/    _/        _/          
+					   _/      _/_/_/    _/_/_/_/    _/    _/          _/_/       
+					  _/      _/    _/  _/    _/    _/    _/              _/      
+					 _/      _/    _/  _/    _/  _/_/_/  _/_/_/_/  _/_/_/         
+                                                                                          
 
 
 */
 
 /* 
 
-Leaves a trail of lit, shared-vision torches behind characters.
-Intended to help players see where they've been on maps with dynamic lighting enabled.
-Great for dungeon crawls and hex crawls.
+	Purpose:
+		Leaves a trail of lit, shared-vision torches behind characters.
+		Intended to help players see where they've been on maps with dynamic lighting enabled.
+		Great for dungeon crawls and hex crawls.
 
+		
+	Usage:
+		enter !LightCrumb in chat
+		
 */
 
 
@@ -58,6 +51,7 @@ Great for dungeon crawls and hex crawls.
 	- colors aren't permanent.. if the list of active mappers changes, the aura colors change.
 	
 	Need:
+	- refactor to use psGUI and psUtils
 	- set light_otherplayers for shared-vision mode and unique-vision mode
 	- change what's stored in gmnotes. right now it's the parent token_id, but it could be a JSON string with more options.
 	- test with a group of 3 or 4

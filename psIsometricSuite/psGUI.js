@@ -1,8 +1,39 @@
+/*                                                         
+		_/_/_/      _/_/_/        _/_/_/  _/    _/  _/_/_/   
+	   _/    _/  _/            _/        _/    _/    _/      
+	  _/_/_/      _/_/        _/  _/_/  _/    _/    _/       
+	 _/              _/      _/    _/  _/    _/    _/        
+	_/        _/_/_/          _/_/_/    _/_/    _/_/_/       
+
+*/
+
+/*
+	Purpose: 
+		Provide standardized, reusable functions for creating GUIs in Roll20 API scripts.
+	
+	Usage: 
+		push all userCommand objects into a userCommands list.
+		
+		userCommand parameters: [listener, commandName, functionToCall, parameters, shortDesc, longDesc, defaultParams]
+		
+	For Example:
+		var initializeUserCommands = function() {
+			userCommands.push(new userCommand("!psGUI","--name", psGUITest, ["token_id", "character_id"], "Get Token Name", "Returns the name of the graphic object or token"));
+		};
+
+		var psGUITest = function guiTester(token_id, character_id) {		
+			var tokenName = getObj("graphic", token_id).get("name");
+			var characterName = getObj("character", character_id).get("name");
+			psLog("Token: " + tokenName + ", Character: " + characterName, "lightgreen");
+		};
+	
+
+
+*/
+
 var psGUI = psGUI || (function psGUI() { // Module
 	"use strict";
 
-	// make a general purpose object container for user commands.
-		// then, from that object, build out the help file, the gui, and listeners automatically.
 	
 	var info = {
 		version: 0.1,
@@ -23,6 +54,8 @@ var psGUI = psGUI || (function psGUI() { // Module
 
 */
 
+	//make a general purpose object container for user commands.
+		// then, from that object, build out the help file, the gui, and listeners automatically.
 		
 	var userCommands = []; // list of userCommand objects
 	

@@ -1,8 +1,31 @@
-// Purpose: To automatically resize plexsoup marketplace assets, to their intended native dimensions
-	// This makes creating dungeons dramatically easier. See youtube.com/user/plexsoup
+/*
 
-// Usage: enter !psResize or !psTileResizer in chat
+					 _/_/_/      _/_/_/      _/_/_/_/_/  _/_/_/  _/        _/_/_/_/   
+					_/    _/  _/                _/        _/    _/        _/          
+				   _/_/_/      _/_/            _/        _/    _/        _/_/_/       
+				  _/              _/          _/        _/    _/        _/            
+				 _/        _/_/_/            _/      _/_/_/  _/_/_/_/  _/_/_/_/       
+																					  
+																					  
+																						 
+				   _/_/_/    _/_/_/_/    _/_/_/  _/_/_/  _/_/_/_/_/  _/_/_/_/  _/_/_/    
+				  _/    _/  _/        _/          _/          _/    _/        _/    _/   
+				 _/_/_/    _/_/_/      _/_/      _/        _/      _/_/_/    _/_/_/      
+				_/    _/  _/              _/    _/      _/        _/        _/    _/     
+			   _/    _/  _/_/_/_/  _/_/_/    _/_/_/  _/_/_/_/_/  _/_/_/_/  _/    _/    
 
+*/
+
+/*
+
+	Purpose:
+		To automatically resize plexsoup marketplace assets, to their intended native dimensions
+		This makes creating dungeons dramatically easier. See youtube.com/user/plexsoup
+
+	Usage:
+		enter !psResize or !psTileResizer in chat
+
+*/
 
 
 

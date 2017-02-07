@@ -1,19 +1,14 @@
 /*
 
-
-														 
-																																
-			_/_/_/                      _/      _/                     
-			 _/      _/_/_/    _/_/    _/_/  _/_/    _/_/_/  _/_/_/    
-			_/    _/_/      _/    _/  _/  _/  _/  _/    _/  _/    _/   
-		   _/        _/_/  _/    _/  _/      _/  _/    _/  _/    _/    
-		_/_/_/  _/_/_/      _/_/    _/      _/    _/_/_/  _/_/_/       
-														 _/            
-														_/             
+		_/_/_/      _/_/_/      _/_/_/    _/_/_/    _/_/        _/      _/    _/_/    _/_/_/    
+	   _/    _/  _/              _/    _/        _/    _/      _/_/  _/_/  _/    _/  _/    _/   
+	  _/_/_/      _/_/          _/      _/_/    _/    _/      _/  _/  _/  _/_/_/_/  _/_/_/      
+	 _/              _/        _/          _/  _/    _/      _/      _/  _/    _/  _/           
+	_/        _/_/_/        _/_/_/  _/_/_/      _/_/        _/      _/  _/    _/  _/          
 														 
 */
 
-// purpose: To turn top down drawings into isometric drawings (rotate 45degrees and scale 50% on the y axis.)
+// purpose: To turn top down drawings into isometric drawings (ie: rotate 45degrees and scale 50% on the y axis.)
 
 
 // usage: type !IsoMap or !psIsoMap in chat.

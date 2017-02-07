@@ -1,22 +1,42 @@
 // psIsoFacingAndView
 
-// Purpose: provide a directional flashlight which rotates independently of the parent token.
-// Also: flip the parent token on the horizontal axis because players can't fliph themselves.
-// Designed for side-view tokens on isometric or 8bit maps, but should work for top-down as well.
-// Once installed, turn on the yellow status marker for your token to turn on the flashlight.
-// turn on the boot (tread) status marker to turn on auto-facing.
-// For menu: type !psIsoFacing in chat.
+/*
+                                                                                        
+							_/_/_/      _/_/_/      _/_/_/    _/_/_/    _/_/    
+						   _/    _/  _/              _/    _/        _/    _/   
+						  _/_/_/      _/_/          _/      _/_/    _/    _/    
+						 _/              _/        _/          _/  _/    _/     
+						_/        _/_/_/        _/_/_/  _/_/_/      _/_/        
+																				
+																				
+																					
+					   _/_/_/_/    _/_/      _/_/_/  _/_/_/  _/      _/    _/_/_/   
+					  _/        _/    _/  _/          _/    _/_/    _/  _/          
+					 _/_/_/    _/_/_/_/  _/          _/    _/  _/  _/  _/  _/_/     
+					_/        _/    _/  _/          _/    _/    _/_/  _/    _/      
+				   _/        _/    _/    _/_/_/  _/_/_/  _/      _/    _/_/_/     
 
+*/
+
+/*
+	Purpose:
+		1. Provide a directional flashlight which rotates independently of the parent token.
+		2. Flip the parent token on the horizontal axis because players can't fliph themselves.
+
+		Designed for side-view tokens on isometric or 8bit maps, but should work for top-down as well.
+
+	Usage:
+		Once installed, turn on the yellow status marker for your token to turn on the flashlight.
+		Turn on the boot (tread) status marker to turn on auto-facing.
+		For menu: type !psIsoFacing in chat.
+*/
 
 // **** TODO
+	// should probably separate facing and flashlight functionality, so people can use flashlight without facing.
+		// alternatively, allow 360 degree rotation for facing, instead of flipH, to top-down maps
 
 // BUGS
 	// something's weird about the install routine.. sometime's a character doesn't switch direction until the second move.
-
-	
-
-	
-
 
 var psIsoFacing = psIsoFacing || (function plexsoupIsoFacing() {
 	"use strict";
