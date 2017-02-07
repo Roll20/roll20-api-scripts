@@ -1,7 +1,38 @@
+/*
 
+		_/_/_/      _/_/_/      _/    _/  _/_/_/_/_/  _/_/_/  _/          _/_/_/   
+	   _/    _/  _/            _/    _/      _/        _/    _/        _/          
+	  _/_/_/      _/_/        _/    _/      _/        _/    _/          _/_/       
+	 _/              _/      _/    _/      _/        _/    _/              _/      
+	_/        _/_/_/          _/_/        _/      _/_/_/  _/_/_/_/  _/_/_/       
+
+*/
+
+/*
+	Purpose:
+		Provide standardized, reusable utility functions to other plexsoup scripts.
+		Not intended for standalone use.
+
+		eg: Math, Chat, htmlEncoding
+		
+	Todo:
+		- Go through other scripts and figure out what's duplicated and should be migrated here.
+
+*/
 
 
 var psUtils = function plexsoupUtils() {
+	"use strict";
+	
+	var info = {
+		version: 0.1,
+		author: "plexsoup"
+	};
+	
+	var config = {};
+	var defaultConfig = {
+		debug: true
+	};
 
 
 	var whisper = function chatMessageSender(playerName, message) {

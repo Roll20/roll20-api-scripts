@@ -1,0 +1,94 @@
+{
+    "name": "LightCrumbTrails",
+    "script": "LightCrumb.js",
+    "version": "0.76",
+    "previousversions": [],
+    "description": "LightCrumbTrails is a script to produce lit, shared-vision breadcrumbs behind character tokens. This allows them to see where they've been on maps with dynamic lighting. Great for dungeon-crawls and hex-crawls. Enter !LightCrumb in chat to get started.",
+    "authors": "Plexsoup, The Aaron, Tritlo",
+    "roll20userid": "258125",
+    "useroptions": [
+        {
+            "name": "SHOW_HELP_ON_LOAD", 
+            "type": "checkbox",
+            "value": "true",
+            "checked" : "checked",
+            "description": "LightCrumb can be quite chatty. If you run text-only games, you may want to turn this off. SHOW_HELP_ON_LOAD"
+        }
+    ],
+    "dependencies": [],
+    "modifies": {
+		"state.LightCrumb": "read,write",
+        "state.LightCrumb.config": "read,write"
+    },
+    "conflicts": []
+}
+
+{
+    "name": "psTileResizer",
+    "script": "psTileResizer.js",
+    "version": "0.2",
+    "previousversions": [],
+    "description": "",
+    "authors": "plexsoup",
+    "roll20userid": "258125",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": { "state.psTileResizer": "read,write" },
+    "conflicts": []
+}
+
+{
+    "name": "psIsoFacing",
+    "script": "psIsoFacing.js",
+    "version": "0.15",
+    "previousversions": [],
+    "description": "",
+    "authors": "plexsoup",
+    "roll20userid": "258125",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": { "state.psIsoFacing": "read,write" },
+    "conflicts": []
+}
+
+{
+    "name": "psGUI",
+    "script": "psGUI.js",
+    "version": "0.1",
+    "previousversions": [],
+    "description": "",
+    "authors": "plexsoup",
+    "roll20userid": "258125",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": { "state.psGUI": "read,write" },
+    "conflicts": []
+}
+
+{
+    "name": "psIsoMap",
+    "script": "psIsoMap.js",
+    "version": "0.02",
+    "previousversions": [],
+    "description": "",
+    "authors": "plexsoup",
+    "roll20userid": "258125",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": { "state.psIsoMap": "read,write" },
+    "conflicts": []
+}
+
+{
+    "name": "psUtils",
+    "script": "psUtils.js",
+    "version": "0.1",
+    "previousversions": [],
+    "description": "",
+    "authors": "plexsoup",
+    "roll20userid": "258125",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": { "state.psUtils": "read,write" },
+    "conflicts": []
+}
