@@ -73,7 +73,7 @@ var ItsATrap = (() => {
       try {
         let theme = getTheme();
         if(!theme) {
-          log('ERROR - It\'s A Trap!: TrapTheme does not exist - ' + state.ItsATrap.theme + '. Using default TrapTheme.');
+          log('ERROR - It\'s A Trap!: TrapTheme does not exist - ' + curTheme + '. Using default TrapTheme.');
           theme = trapThemes['default'];
         }
 

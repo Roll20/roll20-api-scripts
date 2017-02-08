@@ -15,7 +15,6 @@
   state.ItsATrap = state.ItsATrap || {};
   _.defaults(state.ItsATrap, {
     noticedTraps: {},
-    theme: 'default',
     userOptions: {}
   });
   _.defaults(state.ItsATrap.userOptions, {
@@ -26,7 +25,6 @@
   // Set the theme from the useroptions.
   let useroptions = globalconfig && globalconfig.itsatrap;
   if(useroptions) {
-    state.ItsATrap.theme = useroptions.theme || 'default';
     state.ItsATrap.userOptions = {
       revealTrapsToMap: useroptions.revealTrapsToMap === 'true' || false,
       announcer: useroptions.announcer || 'Admiral Ackbar'
@@ -109,7 +107,7 @@ var ItsATrap = (() => {
       try {
         let theme = getTheme();
         if(!theme) {
-          log('ERROR - It\'s A Trap!: TrapTheme does not exist - ' + state.ItsATrap.theme + '. Using default TrapTheme.');
+          log('ERROR - It\'s A Trap!: TrapTheme does not exist - ' + curTheme + '. Using default TrapTheme.');
           theme = trapThemes['default'];
         }
 
