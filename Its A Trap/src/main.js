@@ -197,7 +197,7 @@ var ItsATrap = (() => {
 
     // A llambda to test if a token is flying.
     let isFlying = x => {
-      return token.get("status_fluffy-wing");
+      return x.get("status_fluffy-wing");
     };
 
     let pathsToTraps = {};

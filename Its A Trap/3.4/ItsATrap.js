@@ -233,7 +233,7 @@ var ItsATrap = (() => {
 
     // A llambda to test if a token is flying.
     let isFlying = x => {
-      return token.get("status_fluffy-wing");
+      return x.get("status_fluffy-wing");
     };
 
     let pathsToTraps = {};
@@ -1709,7 +1709,6 @@ var TrapTheme = (() => {
      *         Contains the value of the attribute.
      */
     static getSheetAttr(character, attr) {
-      /*
       let rollExpr = '@{' + character.get('name') + '|' + attr + '}';
       return TrapTheme.rollAsync(rollExpr)
       .then((roll) => {
@@ -1718,12 +1717,6 @@ var TrapTheme = (() => {
         else
           throw new Error('Could not resolve roll expression: ' + rollExpr);
       });
-      */
-
-      let value = getAttrByName(character.get('_id'), attr);
-      log(attr);
-      log(value);
-      return Promise.resolve(value);
     }
 
     /**

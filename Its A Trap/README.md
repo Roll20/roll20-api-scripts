@@ -6,6 +6,7 @@ _3.4_
 * Integration with Areas Of Effect script.
 * Traps on the objects layer will no longer trigger other traps.
 * Fixed soft-crash bug for sounds.
+* Fixed flying tokens bug.
 
 This is a script that allows GMs to quickly and very easily set up traps,
 secret doors, and other hidden things on the GM layer, and detect when tokens

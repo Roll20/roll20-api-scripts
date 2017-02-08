@@ -86,7 +86,6 @@ var TrapTheme = (() => {
      *         Contains the value of the attribute.
      */
     static getSheetAttr(character, attr) {
-      /*
       let rollExpr = '@{' + character.get('name') + '|' + attr + '}';
       return TrapTheme.rollAsync(rollExpr)
       .then((roll) => {
@@ -95,12 +94,6 @@ var TrapTheme = (() => {
         else
           throw new Error('Could not resolve roll expression: ' + rollExpr);
       });
-      */
-
-      let value = getAttrByName(character.get('_id'), attr);
-      log(attr);
-      log(value);
-      return Promise.resolve(value);
     }
 
     /**
