@@ -9,6 +9,9 @@ var ItsATrap = (() => {
   // The collection of registered TrapThemes keyed by name.
   let trapThemes = {};
 
+  // The installed trap theme that is being used.
+  let curTheme = 'default';
+
   /**
    * Activates a trap.
    * @param {Graphic} trap
@@ -181,7 +184,7 @@ var ItsATrap = (() => {
    * @return {TrapTheme}
    */
   function getTheme() {
-    return trapThemes[state.ItsATrap.theme];
+    return trapThemes[curTheme];
   }
 
   /**
@@ -349,6 +352,7 @@ var ItsATrap = (() => {
   function registerTheme(theme) {
     log('It\'s A Trap!: Registered TrapTheme - ' + theme.name + '.');
     trapThemes[theme.name] = theme;
+    curTheme = theme.name;
   }
 
   /**

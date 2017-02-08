@@ -3,6 +3,7 @@
 ###### Updates
 
 _3.4_
+* It's A Trap automatically uses whichever Trap Theme is currently installed now instead of having to specify it through One-Click options.
 * Integration with Areas Of Effect script.
 * Traps on the objects layer will no longer trigger other traps.
 * Fixed soft-crash bug for sounds.
