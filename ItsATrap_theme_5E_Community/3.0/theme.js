@@ -67,8 +67,6 @@
       getSaveBonus(character, saveName) {
         return TrapTheme.getSheetAttr(character, SAVE_NAMES[saveName])
         .then(result => {
-          log(result);
-
           if(_.isNumber(result))
             return result;
           else
