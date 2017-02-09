@@ -869,6 +869,7 @@ var TrapEffect = (() => {
 
           let aoeGraphic = AreasOfEffect.applyEffect('', this.areaOfEffect.name, path);
           aoeGraphic.set('layer', 'map');
+          toFront(aoeGraphic);
         }
       }
     }
@@ -1804,7 +1805,14 @@ var TrapTheme = (() => {
       table.append('thead.trapTableHead', '', {
         style: { 'background-color': borderColor }
       }).append('th', 'IT\'S A ' + type.toUpperCase() + '!!!');
-      table.append('tbody').append('tr').append('td', content, {
+
+      let contentArea = table.append('tbody').append('tr').append('td');
+
+      var row = contentArea.append('.paddedRow');
+      row.append('span.bold', 'Target:');
+      row.append('span', effect.victim.get('name'));
+
+      row = contentArea.append('.paddedRow', content, {
         style: { 'padding': '0' }
       });
       return table;

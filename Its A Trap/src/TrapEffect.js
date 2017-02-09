@@ -376,6 +376,7 @@ var TrapEffect = (() => {
 
           let aoeGraphic = AreasOfEffect.applyEffect('', this.areaOfEffect.name, path);
           aoeGraphic.set('layer', 'map');
+          toFront(aoeGraphic);
         }
       }
     }
