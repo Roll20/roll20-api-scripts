@@ -85,7 +85,7 @@ var ItsATrap = (() => {
       .filter(trap => {
         // Only search for traps that are close enough to be spotted.
         let effect = new TrapEffect(trap, token);
-        let dist = _getPassiveSearchDistance(token, trap);
+        let dist = getSearchDistance(token, trap);
         let searchDist = trap.get('aura2_radius') || effect.searchDist;
         return (!searchDist || dist < searchDist);
       })
@@ -172,24 +172,6 @@ var ItsATrap = (() => {
   }
 
   /**
-   * Gets the distance between two tokens in their page's units.
-   * @param {Graphic} token1
-   * @param {Graphic} token2
-   * @return {number}
-   */
-  function _getPassiveSearchDistance(token1, token2) {
-    let p1 = _getPt(token1);
-    let p2 = _getPt(token2);
-    let r1 = token1.get('width')/2;
-    let r2 = token2.get('width')/2;
-
-    let page = getObj('page', token1.get('_pageid'));
-    let scale = page.get('scale_number');
-    let pixelDist = Math.max(0, VecMath.dist(p1, p2) - r1 - r2);
-    return pixelDist/70*scale;
-  }
-
-  /**
    * Gets the point for a token.
    * @private
    * @param {Graphic} token
@@ -210,6 +192,24 @@ var ItsATrap = (() => {
     let pageId = charToken.get('_pageid');
     let traps = getTrapsOnPage(pageId);
     return LineOfSight.filterTokens(charToken, traps);
+  }
+
+  /**
+   * Gets the distance between two tokens in their page's units.
+   * @param {Graphic} token1
+   * @param {Graphic} token2
+   * @return {number}
+   */
+  function getSearchDistance(token1, token2) {
+    let p1 = _getPt(token1);
+    let p2 = _getPt(token2);
+    let r1 = token1.get('width')/2;
+    let r2 = token2.get('width')/2;
+
+    let page = getObj('page', token1.get('_pageid'));
+    let scale = page.get('scale_number');
+    let pixelDist = Math.max(0, VecMath.dist(p1, p2) - r1 - r2);
+    return pixelDist/70*scale;
   }
 
   /**
@@ -480,6 +480,7 @@ var ItsATrap = (() => {
 
   return {
     activateTrap,
+    getSearchDistance,
     getTheme,
     getTrapCollisions,
     getTrapsOnPage,
@@ -1719,6 +1720,48 @@ var TrapTheme = (() => {
         else
           throw new Error('Could not resolve roll expression: ' + rollExpr);
       });
+    }
+
+    /**
+     * Gets the map of attributes inside of a repeating section row.
+     * @param {Character} character
+     * @param {string} section
+     *        The name of the repeating section.
+     * @param {func} rowFilter
+     *        A filter function to find the correct row. The argument passed to it is a
+     *        map of attribute names (without the repeating section ID part - e.g. "name"
+     *        instead of "repeating_skills_-123abc_name") to their actual attributes in
+     *        the current row being filtered. The function should return true iff it is
+     *        the correct row we're looking for.
+     * @return {Promise<any>}
+     *         Contains the map of attributes.
+     */
+    static getSheetRepeatingRow(character, section, rowFilter) {
+      // Get all attributes in this section and group them by row.
+      let attrs = findObjs({
+        _type: 'attribute',
+        _characterid: character.get('_id')
+      });
+
+      // Group the attributes by row.
+      let rows = {};
+      _.each(attrs, attr => {
+        let regex = new RegExp(`repeating_${section}_(-([0-9a-zA-Z\-_](?!_storage))+?|\$\d+?)_([0-9a-zA-Z\-_]+)`);
+        let match = attr.get('name').match(regex);
+        if(match) {
+          let rowId = match[1];
+          let attrName = match[3];
+          if(!rows[rowId])
+            rows[rowId] = {};
+
+          rows[rowId][attrName] = attr;
+        }
+      });
+
+      // Find the row that matches our filter.
+      return Promise.resolve(_.find(rows, rowAttrs => {
+        return rowFilter(rowAttrs);
+      }));
     }
 
     /**
