@@ -844,7 +844,6 @@ var TrapEffect = (() => {
      */
     playAreaOfEffect() {
       if(AreasOfEffect && this.areaOfEffect) {
-        log('Spawn AoE:');
         let direction = (this.areaOfEffect.direction && VecMath.scale(this.areaOfEffect.direction, 70)) ||
         (() => {
           if(this._victim)
@@ -868,7 +867,8 @@ var TrapEffect = (() => {
             stroke: '#ff0000'
           }));
 
-          AreasOfEffect.applyEffect('', this.areaOfEffect.name, path);
+          let aoeGraphic = AreasOfEffect.applyEffect('', this.areaOfEffect.name, path);
+          aoeGraphic.set('layer', 'map');
         }
       }
     }
