@@ -1,47 +1,48 @@
 (() => {
   'use strict';
 
+  // The name used by this script to send alerts to the GM in the chat.
+  const CHAT_NAME = 'ItsATrap-PF-Simple';
+
   // A mapping of saving throw short names to their attribute names.
   const SAVE_NAMES = {
-    fort: 'Fort',
-    ref: 'Ref',
-    will: 'Will'
+    'fort': 'fort',
+    'ref': 'ref',
+    'will': 'will'
   };
 
   // Register the theme with ItsATrap.
   on('ready', () => {
 
     // Initialize state
-    if(!state.TrapThemePathfinder)
-      state.TrapThemePathfinder = {
+    if(!state.TrapThemePFSimple)
+      state.TrapThemePFSimple = {
         trapSpotterAttempts: {}
       };
 
     /**
-     * A theme for the Pathfinder character sheet by Samuel Marino, Nibrodooh,
-     * Vince, Samuel Terrazas, chris-b, Magik, and James W..
+     * A theme for the Pathfinder (Simple) OGL character sheet by Stephen L..
      */
-    class TrapThemePF extends D20TrapTheme {
-
+    class TrapThemePFSimple extends D20TrapTheme {
       /**
        * @inheritdoc
        */
       get name() {
-        return 'Pathfinder';
+        return 'PF-Simple';
       }
 
       /**
        * @inheritdoc
        */
       getAC(character) {
-        return TrapTheme.getSheetAttr(character, 'AC');
+        return TrapTheme.getSheetAttr(character, 'ac');
       }
 
       /**
        * @inheritdoc
        */
       getPassivePerception(character) {
-        return TrapTheme.getSheetAttr(character, 'Perception')
+        return TrapTheme.getSheetAttr(character, 'perception')
         .then(perception => {
           return perception + 10;
         });
@@ -66,6 +67,7 @@
         return result;
       }
 
+
       /**
        * @inheritdoc
        * Also supports the Trap Spotter ability.
@@ -78,7 +80,7 @@
 
         // Perform automated behavior for Trap Spotter.
         if((effect.type === 'trap' || _.isUndefined(effect.type)) && effect.spotDC && character) {
-          TrapTheme.getSheetRepeatingRow(character, 'class-ability', rowAttrs => {
+          TrapTheme.getSheetRepeatingRow(character, 'classabilities', rowAttrs => {
             if(!rowAttrs.name)
               return false;
 
@@ -106,18 +108,18 @@
         // this trap.
         let trapId = trap.get('_id');
         let charId = trap.get('_id');
-        if(!state.TrapThemePathfinder.trapSpotterAttempts[trapId])
-          state.TrapThemePathfinder.trapSpotterAttempts[trapId] = {};
-        if(state.TrapThemePathfinder.trapSpotterAttempts[trapId][charId])
+        if(!state.TrapThemePFSimple.trapSpotterAttempts[trapId])
+          state.TrapThemePFSimple.trapSpotterAttempts[trapId] = {};
+        if(state.TrapThemePFSimple.trapSpotterAttempts[trapId][charId])
           return;
         else
-          state.TrapThemePathfinder.trapSpotterAttempts[trapId][charId] = true;
+          state.TrapThemePFSimple.trapSpotterAttempts[trapId][charId] = true;
 
         // Make a hidden Perception check to try to notice the trap.
-        TrapTheme.getSheetAttr(character, 'Perception')
+        TrapTheme.getSheetAttr(character, 'perception')
         .then(perception => {
           if(_.isNumber(perception)) {
-            return TrapTheme.rollAsync('1d20 + perception');
+            return TrapTheme.rollAsync(`1d20 + ${perception}`);
           }
           else
             throw new Error('Trap Spotter: Could not get Perception value for Character ' + charToken.get('_id') + '.');
@@ -138,13 +140,7 @@
         });
       }
     }
-    ItsATrap.registerTheme(new TrapThemePF());
-  });
 
-  // When a trap is deleted, remove it from the Trap Theme's persisted state.
-  on('destroy:graphic', token => {
-    let id = token.get('_id');
-    if(state.TrapThemePathfinder.trapSpotterAttempts[id])
-      delete state.TrapThemePathfinder.trapSpotterAttempts[id];
+    ItsATrap.registerTheme(new TrapThemePFSimple());
   });
 })();
