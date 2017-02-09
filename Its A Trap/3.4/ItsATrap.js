@@ -1706,6 +1706,30 @@ var TrapTheme = (() => {
     }
 
     /**
+     * Attempts to force a calculated attribute to be corrected by
+     * setting it.
+     * @param {Character} character
+     * @param {string} attr
+     */
+    static forceAttrCalculation(character, attr) {
+      // Attempt to force the calculation of the save modifier by setting it.
+      createObj('attribute', {
+        _characterid: character.get('_id'),
+        name: attr,
+        current: -9999
+      });
+
+      // Then try again.
+      return TrapTheme.getSheetAttr(character, attr)
+      .then(result => {
+        if(_.isNumber(result))
+          return result;
+        else
+          log('Could not calculate attribute: ' + attr + ' - ' + result);
+      });
+    }
+
+    /**
      * Asynchronously gets the value of a character sheet attribute.
      * @param  {Character}   character
      * @param  {string}   attr
@@ -1807,12 +1831,7 @@ var TrapTheme = (() => {
       }).append('th', 'IT\'S A ' + type.toUpperCase() + '!!!');
 
       let contentArea = table.append('tbody').append('tr').append('td');
-
-      var row = contentArea.append('.paddedRow');
-      row.append('span.bold', 'Target:');
-      row.append('span', effect.victim.get('name'));
-
-      row = contentArea.append('.paddedRow', content, {
+      contentArea.append('.paddedRow', content, {
         style: { 'padding': '0' }
       });
       return table;
@@ -2101,7 +2120,7 @@ var D20TrapTheme = (() => {
           if(effectResults.damage)
             row.append('span', 'Damage: [[' + effectResults.damage + ']]');
           else
-            row.append('span', 'You fall prey to the ' + effectResults.type + '\'s effects!');
+            row.append('span', 'You fall prey to the ' + (effectResults.type || 'trap') + '\'s effects!');
         }
         else {
           let row = content.append('.paddedRow');
@@ -2294,7 +2313,14 @@ var D20TrapTheme4E = (() => {
      * @inheritdoc
      */
     activateEffect(effect) {
-      let content = new HtmlBuilder('.paddedRow', effect.message);
+      let content = new HtmlBuilder('div');
+
+      var row = content.append('.paddedRow');
+      row.append('span.bold', 'Target:');
+      row.append('span', effect.victim.get('name'));
+
+      content.append('.paddedRow', effect.message);
+
       let table = TrapTheme.htmlTable(content, '#a22', effect);
       let tableView = table.toString(TrapTheme.css);
       effect.announce(tableView);
