@@ -203,8 +203,7 @@ var TrapTheme = (() => {
         style: { 'background-color': borderColor }
       }).append('th', 'IT\'S A ' + type.toUpperCase() + '!!!');
 
-      let contentArea = table.append('tbody').append('tr').append('td');
-      contentArea.append('.paddedRow', content, {
+      table.append('tbody').append('tr').append('td', content, {
         style: { 'padding': '0' }
       });
       return table;
