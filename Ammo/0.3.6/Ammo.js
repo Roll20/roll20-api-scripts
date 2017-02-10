@@ -6,7 +6,7 @@ var Ammo = Ammo || (function() {
     'use strict';
 
     var version = '0.3.6',
-        lastUpdate = 1486753989,
+        lastUpdate = 1486754991,
 		schemaVersion = 0.1,
 
 	ch = function (c) {
@@ -154,7 +154,7 @@ var Ammo = Ammo || (function() {
             }
             return;
         } 
-        return findObjs({ type:'attribute', characterid:character.id, name: name})[0];
+        return findObjs({ type:'attribute', characterid:character.id, name: name}, {caseInsensitive: !caseSensitive})[0];
     },
 
 	HandleInput = function(msg_orig) {
