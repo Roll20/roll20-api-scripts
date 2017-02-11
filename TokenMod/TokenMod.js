@@ -6,7 +6,7 @@ var TokenMod = TokenMod || (function() {
     'use strict';
 
     var version = '0.8.25',
-        lastUpdate = 1486786944,
+        lastUpdate = 1486789391,
         schemaVersion = 0.3,
 
         observers = {
@@ -1265,7 +1265,7 @@ var TokenMod = TokenMod || (function() {
     
 	applyModListToToken = function(modlist, token) {
 		var mods={},
-			delta, cid,prev,
+			delta, cid, prev=JSON.parse(JSON.stringify(token)),
             repChar, 
             controlList = (modlist.set && (modlist.set.controlledby || modlist.set.defaulttoken)) ? (function(){
                 let list;
@@ -1315,9 +1315,9 @@ var TokenMod = TokenMod || (function() {
                     break;
                 case 'defaulttoken':
                     if(repChar){
-                        _.defer(()=>{
-                            setDefaultTokenForCharacter(repChar,token);
-                        });
+                        mods.statusmarkers=composeStatuses(current);
+                        token.set(mods);
+                        setDefaultTokenForCharacter(repChar,token);
                     }
                     break;
 				case 'statusmarkers':
@@ -1474,7 +1474,6 @@ var TokenMod = TokenMod || (function() {
 			}
 		});
 		mods.statusmarkers=composeStatuses(current);
-        prev=JSON.parse(JSON.stringify(token));
 		token.set(mods);
         notifyObservers('tokenChange',token,prev);
 	},
