@@ -212,6 +212,7 @@ htmlbuilder:
 - "HtmlBuilder"
 - "Utility"
 
+<<<<<<< Updated upstream
 itsatraptheme5eogl:
 - "ItsATrap_theme_5E_OGL"
 - "System Toolbox"
@@ -275,3 +276,16 @@ lightcrumb:
 aborea:
 - "Aborea"
 - "System Toolbox"
+=======
+kaboom:
+- "KABOOM"
+- "Tokens"
+
+terraingenerator:
+- "Terrain Generator"
+- "Maps & Drawing"
+
+totalrolled:
+- "TotalRolled"
+- "System Toolbox"
+>>>>>>> Stashed changes
