@@ -1,10 +1,10 @@
 {
     "name": "LightCrumbTrails",
-    "script": "LightCrumbTrails.js",
-    "version": "0.75",
+    "script": "LightCrumb.js",
+    "version": "0.76",
     "previousversions": [],
     "description": "LightCrumbTrails is a script to produce lit, shared-vision breadcrumbs behind character tokens. This allows them to see where they've been on maps with dynamic lighting. Great for dungeon-crawls and hex-crawls. Enter !LightCrumb in chat to get started.",
-    "authors": "Plexsoup, The Aaron",
+    "authors": "Plexsoup, The Aaron, Tritlo",
     "roll20userid": "258125",
     "useroptions": [
         {
