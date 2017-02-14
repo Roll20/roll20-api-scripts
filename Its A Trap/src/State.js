@@ -15,7 +15,6 @@
   state.ItsATrap = state.ItsATrap || {};
   _.defaults(state.ItsATrap, {
     noticedTraps: {},
-    theme: 'default',
     userOptions: {}
   });
   _.defaults(state.ItsATrap.userOptions, {
@@ -26,7 +25,6 @@
   // Set the theme from the useroptions.
   let useroptions = globalconfig && globalconfig.itsatrap;
   if(useroptions) {
-    state.ItsATrap.theme = useroptions.theme || 'default';
     state.ItsATrap.userOptions = {
       revealTrapsToMap: useroptions.revealTrapsToMap === 'true' || false,
       announcer: useroptions.announcer || 'Admiral Ackbar'

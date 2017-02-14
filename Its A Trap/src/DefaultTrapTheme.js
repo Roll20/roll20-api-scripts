@@ -18,7 +18,14 @@
      * @inheritdoc
      */
     activateEffect(effect) {
-      let content = new HtmlBuilder('.paddedRow', effect.message);
+      let content = new HtmlBuilder('div');
+
+      var row = content.append('.paddedRow');
+      row.append('span.bold', 'Target:');
+      row.append('span', effect.victim.get('name'));
+
+      content.append('.paddedRow', effect.message);
+
       let table = TrapTheme.htmlTable(content, '#a22', effect);
       let tableView = table.toString(TrapTheme.css);
       effect.announce(tableView);

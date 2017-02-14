@@ -79,6 +79,30 @@ var TrapTheme = (() => {
     }
 
     /**
+     * Attempts to force a calculated attribute to be corrected by
+     * setting it.
+     * @param {Character} character
+     * @param {string} attr
+     */
+    static forceAttrCalculation(character, attr) {
+      // Attempt to force the calculation of the save modifier by setting it.
+      createObj('attribute', {
+        _characterid: character.get('_id'),
+        name: attr,
+        current: -9999
+      });
+
+      // Then try again.
+      return TrapTheme.getSheetAttr(character, attr)
+      .then(result => {
+        if(_.isNumber(result))
+          return result;
+        else
+          log('Could not calculate attribute: ' + attr + ' - ' + result);
+      });
+    }
+
+    /**
      * Asynchronously gets the value of a character sheet attribute.
      * @param  {Character}   character
      * @param  {string}   attr
@@ -94,6 +118,48 @@ var TrapTheme = (() => {
         else
           throw new Error('Could not resolve roll expression: ' + rollExpr);
       });
+    }
+
+    /**
+     * Gets the map of attributes inside of a repeating section row.
+     * @param {Character} character
+     * @param {string} section
+     *        The name of the repeating section.
+     * @param {func} rowFilter
+     *        A filter function to find the correct row. The argument passed to it is a
+     *        map of attribute names (without the repeating section ID part - e.g. "name"
+     *        instead of "repeating_skills_-123abc_name") to their actual attributes in
+     *        the current row being filtered. The function should return true iff it is
+     *        the correct row we're looking for.
+     * @return {Promise<any>}
+     *         Contains the map of attributes.
+     */
+    static getSheetRepeatingRow(character, section, rowFilter) {
+      // Get all attributes in this section and group them by row.
+      let attrs = findObjs({
+        _type: 'attribute',
+        _characterid: character.get('_id')
+      });
+
+      // Group the attributes by row.
+      let rows = {};
+      _.each(attrs, attr => {
+        let regex = new RegExp(`repeating_${section}_(-([0-9a-zA-Z\-_](?!_storage))+?|\$\d+?)_([0-9a-zA-Z\-_]+)`);
+        let match = attr.get('name').match(regex);
+        if(match) {
+          let rowId = match[1];
+          let attrName = match[3];
+          if(!rows[rowId])
+            rows[rowId] = {};
+
+          rows[rowId][attrName] = attr;
+        }
+      });
+
+      // Find the row that matches our filter.
+      return Promise.resolve(_.find(rows, rowAttrs => {
+        return rowFilter(rowAttrs);
+      }));
     }
 
     /**
@@ -136,6 +202,7 @@ var TrapTheme = (() => {
       table.append('thead.trapTableHead', '', {
         style: { 'background-color': borderColor }
       }).append('th', 'IT\'S A ' + type.toUpperCase() + '!!!');
+
       table.append('tbody').append('tr').append('td', content, {
         style: { 'padding': '0' }
       });

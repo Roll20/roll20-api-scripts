@@ -56,7 +56,7 @@
           return TrapTheme.getSheetAttr(character, 'repeating_skill_' + rowId + '_passive');
         }
         else {
-          return TrapTheme.resolve();
+          return Promise.resolve();
         }
       }
 

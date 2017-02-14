@@ -1,6 +1,7 @@
-# It's A Trap! - Gamma World 7E theme
+# It's A Trap! - D&D 4th Edition
 
-This is a trap theme to support the Gamma World 7E character sheet.
+This is a trap theme to support the D&D 4th Edition character sheet by
+Alex L., Ville S., and Wesley L..
 
 ## Help
 

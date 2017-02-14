@@ -1,6 +1,7 @@
-# It's A Trap! - Gamma World 7E theme
+# It's A Trap! - 5th Edition (Community) theme
 
-This is a trap theme to support the Gamma World 7E character sheet.
+This is a D&D 5th edition trap theme for the It's A Trap! script, compatible with
+the 5th Edition (Community) character sheet by John Myles (Actoba).
 
 ## Help
 

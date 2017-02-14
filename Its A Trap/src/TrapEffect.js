@@ -38,6 +38,24 @@ var TrapEffect = (() => {
     }
 
     /**
+     * Specifications for an AreasOfEffect script graphic that is spawned
+     * when a trap is triggered.
+     * @typedef {object} TrapEffect.AreaOfEffect
+     * @property {String} name      The name of the AoE effect.
+     * @property {vec2} [direction] The direction of the effect. If omitted,
+     *                              it will be extended toward the triggering token.
+     */
+
+    /**
+     * JSON defining a graphic to spawn with the AreasOfEffect script if
+     * it is installed and the trap is triggered.
+     * @type {TrapEffect.AreaOfEffect}
+     */
+    get areaOfEffect() {
+      return this._effect.areaOfEffect;
+    }
+
+    /**
      * Configuration for special FX that are created when the trap activates.
      * @type {object}
      * @property {(string | FxJsonDefinition)} name
@@ -284,6 +302,9 @@ var TrapEffect = (() => {
         // If the effect has fx, play them.
         this.playFX();
 
+        // If the trap has an AreasOfEffect effect, spawn it.
+        this.playAreaOfEffect();
+
         // If the effect has an api command, execute it.
         this.playApi();
 
@@ -321,6 +342,42 @@ var TrapEffect = (() => {
         api = api.split('TRAP_ID').join(this.trapId);
         api = api.split('VICTIM_ID').join(this.victimId);
         sendChat('ItsATrap-api', api);
+      }
+    }
+
+    /**
+     * Spawns the AreasOfEffect graphic for this trap. If AreasOfEffect is
+     * not installed, then this has no effect.
+     */
+    playAreaOfEffect() {
+      if(AreasOfEffect && this.areaOfEffect) {
+        let direction = (this.areaOfEffect.direction && VecMath.scale(this.areaOfEffect.direction, 70)) ||
+        (() => {
+          if(this._victim)
+            return [
+              this._victim.get('left') - this._trap.get('left'),
+              this._victim.get('top') - this._trap.get('top')
+            ];
+          else
+            return [0, 0];
+        })();
+        direction[2] = 0;
+
+        let p1 = [this._trap.get('left'), this._trap.get('top'), 1];
+        let p2 = VecMath.add(p1, direction);
+        if(VecMath.dist(p1, p2) > 0) {
+          let segments = [[p1, p2]];
+          let pathJson = PathMath.segmentsToPath(segments);
+          let path = createObj('path', _.extend(pathJson, {
+            _pageid: this._trap.get('_pageid'),
+            layer: 'objects',
+            stroke: '#ff0000'
+          }));
+
+          let aoeGraphic = AreasOfEffect.applyEffect('', this.areaOfEffect.name, path);
+          aoeGraphic.set('layer', 'map');
+          toFront(aoeGraphic);
+        }
       }
     }
 
@@ -405,8 +462,10 @@ var TrapEffect = (() => {
           sound.set('playing', true);
           sound.set('softstop', false);
         }
-        else
-          throw new Error('Could not find sound "' + this.sound + '".');
+        else {
+          let msg = 'Could not find sound "' + this.sound + '".';
+          sendChat('ItsATrap-api', msg);
+        }
       }
     }
   };

@@ -121,6 +121,7 @@ var ItsATrapCreationWizard = (() => {
       row.append('td', `[${prop.name}](${modificationCommand} ${prop.id}&&${params.join('&&')})`, {
         style: { 'font-size': '0.8em' }
       });
+
       row.append('td', `${prop.value || ''}`, {
         style: { 'font-size': '0.8em' }
       });
@@ -309,6 +310,34 @@ var ItsATrapCreationWizard = (() => {
         value: trapEffect.api
       },
       {
+        id: 'areaOfEffect',
+        name: 'Area of Effect',
+        desc: 'Requires AreasOfEffect script. Specifies an AoE graphic to be spawned by the trap.',
+        value: (() => {
+          let aoe = trapEffect.areaOfEffect;
+          if(aoe) {
+            let result = aoe.name;
+            if(aoe.direction)
+              result += '; Direction: ' + aoe.direction;
+            return result;
+          }
+          else
+            return 'None';
+        })(),
+        properties: [
+          {
+            id: 'name',
+            name: 'AoE Name',
+            desc: 'The name of the saved AreasOfEffect effect.',
+          },
+          {
+            id: 'direction',
+            name: 'AoE Direction',
+            desc: 'The direction of the AoE effect. Optional. If omitted, then the effect will be directed toward affected tokens. Format: ' + LBRACE + 'X,Y' + RBRACE
+          }
+        ]
+      },
+      {
         id: 'fx',
         name: 'Special FX',
         desc: 'What special FX are displayed when the trap is activated?',
@@ -410,6 +439,17 @@ var ItsATrapCreationWizard = (() => {
       trapEffect.type = params[0];
     if(prop === 'api')
       trapEffect.api = params[0];
+    if(prop === 'areaOfEffect')
+      if(params[0]) {
+        trapEffect.areaOfEffect = {};
+        trapEffect.areaOfEffect.name = params[0];
+        try {
+          trapEffect.areaOfEffect.direction = JSON.parse(params[1]);
+        } catch(err) {}
+      }
+      else
+        trapEffect.areaOfEffect = undefined;
+
     if(prop === 'disabled')
       trapToken.set('status_interdiction', params[0] === 'yes');
     if(prop === 'effectDistance')
