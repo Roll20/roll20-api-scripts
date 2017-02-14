@@ -1,11 +1,36 @@
-// Gist:  https://gist.github.com/plexsoup/64852540504101b520b25f7c3fa84e5f
-// By:       Plexsoup - copied from Mark by The Aaron. With help from Scott C, Stephen L and Tritlo
-// Thanks: Testers and Feedback: al e., DM Robzer, Vince, Pat S, Gold, Anthony,  Kryx, Sudain
-// Contact:  https://app.roll20.net/users/258125/plexsoup
-
-// Roll20 API Script to leave a breadcrumb trail of torches. Based on "Mark" from The Aaron //
+/*
 
 
+                                                                                                  
+                         _/_/_/    _/                                                             
+                        _/    _/  _/    _/_/    _/    _/    _/_/_/    _/_/    _/    _/  _/_/_/    
+                       _/_/_/    _/  _/_/_/_/    _/_/    _/_/      _/    _/  _/    _/  _/    _/   
+                      _/        _/  _/        _/    _/      _/_/  _/    _/  _/    _/  _/    _/    
+                     _/        _/    _/_/_/  _/    _/  _/_/_/      _/_/      _/_/_/  _/_/_/       
+                                                                                    _/            
+                                                                                   _/             
+                                                                                                          
+                  _/_/_/                                                  _/                _/            
+                   _/      _/_/_/    _/_/    _/_/_/  _/_/      _/_/    _/_/_/_/  _/  _/_/        _/_/_/   
+                  _/    _/_/      _/    _/  _/    _/    _/  _/_/_/_/    _/      _/_/      _/  _/          
+                 _/        _/_/  _/    _/  _/    _/    _/  _/          _/      _/        _/  _/           
+              _/_/_/  _/_/_/      _/_/    _/    _/    _/    _/_/_/      _/_/  _/        _/    _/_/_/      
+                                                                                                          
+                                                                                                          
+                                                                                   
+                                          _/_/_/            _/    _/               
+                                       _/        _/    _/      _/_/_/_/    _/_/    
+                                        _/_/    _/    _/  _/    _/      _/_/_/_/   
+                                           _/  _/    _/  _/    _/      _/          
+                                    _/_/_/      _/_/_/  _/      _/_/    _/_/_/     
+                                                                                   
+																				   
+
+Many thanks to The Aaron, Scott C, Stephen L, Tritlo, al e., DM Robzer, Vince, Pat S, Gold, Anthony,  Kryx, Sudain, Ziechael																		
+
+
+
+*/
 /*
 
 
@@ -29,7 +54,6 @@
 */
 
 /* 
-
     Purpose:
         Leaves a trail of lit, shared-vision torches behind characters.
         Intended to help players see where they've been on maps with dynamic lighting enabled.
@@ -37,84 +61,32 @@
 
         
     Usage:
-        enter !LightCrumb in chat
-        
+        enter !LightTrails in chat      
 */
 
 
-/* Major TODO List:
+/*
+    Notes for reviewing this code: 
+        Through various rewrites, we've called the Torch Tokens: Crumbs, LightCrumbs, TokenObj, TokenGraphic, Torch, TorchIcon
+*/
 
-    Working On:
-    - testing
-
-    Broken:
-    - colors aren't permanent.. if the list of active mappers changes, the aura colors change.
-    
-    Need:
-    - refactor to use psGUI and psUtils
-    - set light_otherplayers for shared-vision mode and unique-vision mode
-    - change what's stored in gmnotes. right now it's the parent token_id, but it could be a JSON string with more options.
-    - test with a group of 3 or 4
-    - implement 1-click installation
-    - add more gui buttons: for when a token is selected already. Toggles seem to work well too.
-    - reorganize gui
-    - test inherited DROP_DISTANCE on maps with different grid settings. It's currently assuming 70 pixels per unit.
-    - write a test plan, for bugchecking
-    
-    Nice To Have:
-    - add an option to limit the number of lightcrumbs and reuse the oldest ones
-    - offload math to Stephen L's VectorMath and PathMath libraries
-    - implement occlusion testing - can you see the last lightcrumb, or is it blocked by a dynamic lighting wall?
-        - see Stephen L's "It's a Trap" script
-    - consider making the torches burn out over time.
-        - see The Aaron's "Torch" script
-
-    Consider:
-    - Maybe players shouldn't have access to config options. Check for GM.
-
-
-    DONE:
-    - add option to change the radius of the displayed aura.
-    - add option to change the graphic: invisible token would be nice.
-    - update register case to drop a lightcrumb right away
-    - add dynamic configuration options for the radius and dimness of the light
-    - offset the lightcrumbs so they fall 1 unit behind the targetToken, along the vector of [lastMove, currentLocation]
-    - set the default offset to 0 and change behaviour such that lightcrumbs drop at lastlocation instead of current.
-    - something's wrong with dropping tokens. they're invisible until you change the icon. Fixed: lastmove.split was producing strings, not numbers
-    - make an option to use offsets instead of lastlocation (offsets look better, but might penetrate walls)
-    - consider an option so each light crumb is only controlled by the player that dropped it.  
-    - add a deregister command, to remove a token from the list of activeMappers
-    - option to use token's original visual properties to set the lightCrumb's properties.
-    - Some tokens don't have owners, but we rely on that for controlleby and getAuraColor... come up with a workaround
-    - change aura color for each specific player.
-    - modify the reset function, so it only clears the current page and torches from the current token
-    - modify handleTokenMove, such that crumbs are dropped based on light settings rather than drop distance
-    - modify handleTokenMove or getLightCrumbsFromLayer such that only those owned by the token are considered for purposes of calculating shortest distances.
-    - remove one trail should work if you click on a torch instead of a character.
-    - set defaults to inherit lighting, unique vision mode with drop distance based on light_radius
-    - In Unique vision mode, findNearest Lightcrumb should check the parentToken
-    - In Inherited Light Settings mode, drop distance should depend on light radius // this doesn't work for very large radii, unless you also implment occlusion testing
-    - add a superClear function to remove the tokens from the GM Layer
-    - change Help to handout instead of chat.
-    - rewrite the help text -- see if you can make a popout handout
-    - when shared-vision is true, all the auras should be the same color
-    
-    
-    NOTES:
-    - we use the gmnotes field to store the tokenID of the parent mapper. If you modify the gmnotes, things might break
-    - we don't do rigorous error checking, so if you pass values to !LightCrumb through macros or the chat interface, things might break
-    
+/* 
+    TODO List and Bugs:
+        Change the aura colors to represent the players who control the torch token, not the name or the parent tokenid. Players is more relevant.
 */
 
 
-var LightCrumb = LightCrumb || (function LightCrumbTrailMaker() {
+var psLightTrails = psLightTrails || (function plexsoupLightTrailMaker() {
     "use strict";
 
-    var debugDEFCON = 5; //     DEFCON 1 = FUBAR: LOG EVERYTHING. DEFCON 5 = AOK: LOG NOTHING
+    // var debug = config.debug; // set to true if you want to see logs
 
-    var version = "0.76";
-    var lastUpdate = 1486466920154;
-    var schemaVersion = "0.76";
+    var info = {
+        name: "psLightTrails",
+        module: psLightTrails,
+        version: "0.77",
+        author: "plexsoup"
+    };
 
     var ICONS = { // note: Roll20 has particular rules about imgsrc. See https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions
         torch: "https://s3.amazonaws.com/files.d20.io/images/17247606/Wbr841_bq9ka1FmamWo38w/thumb.png?1458169656",
@@ -144,61 +116,18 @@ var LightCrumb = LightCrumb || (function LightCrumbTrailMaker() {
         AURA_RADIUS: 1,
         SHOW_NAMES: true,
         INHERIT_CHARACTER_LIGHTING: true,
-        SHARED_AURA_COLOR: "#FAF0E6"
+        SHARED_AURA_COLOR: "#FAF0E6",
+        debug: false,
     };
 
-    var config = _.clone(defaultConfig); // this'll get updated from state.LightCrumb.config
+    //var userCommands;
+    var config = _.clone(defaultConfig); // this'll get updated from state.psLightTrails.config
     
     
         
-    var LightCrumbImageURL = ICONS.torch;
+    var LightTrailsImageURL = ICONS.torch;
 
-    var activeLightCrumbMappers = []; // so we can register token._id for characters who are set as mappers.
-
-    
-    
-
-    
-    var whisperSmall = function chatMessageSender(playerName, message) {
-        // sends a chat message to a specific player. Can use gm as playerName
-        //sendChat(playerName, '/w ' + playerName + " " + message);
-        var msgStr = "<div style='font-size: smaller;'>";
-        msgStr += message;
-        msgStr += "</div>";
-        
-        sendChat("LightCrumb Script", '/w ' + playerName + " " + msgStr);
-    };
-    
-    
-    var whisper = function chatMessageSender(playerName, message) {
-        // sends a chat message to a specific player. Can use gm as playerName
-        //sendChat(playerName, '/w ' + playerName + " " + message);
-        sendChat("LightCrumb Script", '/w ' + playerName + " " + message);
-    };
-
-    var ch = function (c) {
-    // This function will take a single character and change it to it's equivalent html encoded value.
-        // psNote: I tried alternate methods of regexps to encode the entire string, but I always ran into problems with | and [] characters.
-        var entities = {
-            '<' : 'lt',
-            '>' : 'gt',
-            "'" : '#39',
-            '@' : '#64',
-            '{' : '#123',
-            '|' : '#124',
-            '}' : '#125',
-            '[' : '#91',
-            ']' : '#93',
-            '"' : 'quot',
-            '-' : 'mdash',
-            ' ' : 'nbsp'
-        };
-
-        if(_.has(entities,c) ){
-            return ('&'+entities[c]+';');
-        }
-        return '';
-    };
+    var activeLightTrailsMappers = []; // so we can register token._id for characters who are set as mappers.
 
 
 
@@ -213,599 +142,359 @@ var LightCrumb = LightCrumb || (function LightCrumbTrailMaker() {
 
 */
 
-
-    var makeButton = function buttonMakerForChat(title, command) { // expects two strings. Returns encoded html for the chat stream
-        var output="";
-
-            output += '['+title+']('+command+')';
-
-        return output;
-    };
-
-    var beautifyButtons = function buttonBeautifier (buttonArray) {
-        // take a 2D array, consisting of [[title1, command1], [title2, command2], ... [titleN, commandN]]
-            // return pretty html for the buttons to go on the chat window.
-
-        // **** TODO ****
-
-        outputMessage = "";
-        return outputMessage;
-
-    };
-
-    var getImgSrcChooserButtons = function ImcSrcChooserForChat (playerName) {
-        if (!playerName) { playerName = "gm";}
-        var chatMessage = "";
+// [listener, commandName, functionToCall, parameters, shortDesc, longDesc, defaultParams]
         
-        chatMessage += '<div style="text-align: center">';
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton('<img width="28px" height="28px" src="'+ICONS.torch+'">', '!LightCrumb-image torch');
-        chatMessage +=      '</span>';
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton('<img width="28px" height="28px" src="'+ICONS.transparent+'">', "!LightCrumb-image transparent");
-        chatMessage +=      '</span>';
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton('<img width="28px" height="28px" src="'+ICONS.scifi+'">', "!LightCrumb-image scifi");
-        chatMessage +=      '</span>';
-        chatMessage += '</div>';        
-        
-        
-        return chatMessage;
-    };
-
-
-
-    var getClickyButtons = function guiMakerForChat (playerName) {
-        if (!playerName) { playerName = "gm";}
-        var chatMessage = "";
-        chatMessage += '<div style="border: 2px solid red; text-align: center; margin: 5px;">';
-        chatMessage += '<div style="background-color: OrangeRed"><span><img style="float: left;" width="28px" height="28px" src="'+ICONS.torch+'"></span><span>!LightCrumb</span><span><img style="float:right;" width="28px" height="28px" src="'+ICONS.scifi+'"></span></div>';
-        chatMessage += '<div style="text-align: center; background-color: black; color: OldLace;">';
-        chatMessage +=      '<span>';
-        chatMessage +=          "Mapper: ";
-        chatMessage +=      '</span>';
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton("Add", '!LightCrumb-register '+ch('@') +ch('{') + 'target' + ch('|') + 'token_id' + ch('}') );
-        chatMessage +=      '</span>';
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton("Remove", '!LightCrumb-deregister '+ch('@') +ch('{') + 'target' + ch('|') + 'token_id' + ch('}') );
-        chatMessage +=      '</span>';
-
-        chatMessage += '</div><div style="text-align: center; background-color: black; color: OldLace;">';      
-        
-        chatMessage +=          '<span>';
-        chatMessage +=              "Remove Trail: ";
-        chatMessage +=          '</span>';
-
-        chatMessage +=          '<span>';
-        chatMessage +=              makeButton("One", "!LightCrumb-clear " +ch('@') +ch('{') + 'target' + ch('|') + 'token_id' + ch('}') );
-        chatMessage +=          '</span>';
-
-        chatMessage +=          '<span>';
-        chatMessage +=              makeButton("All", "!LightCrumb-clear all");
-        chatMessage +=          '</span>';
-
-        chatMessage += '</div><div style="text-align: center; background-color: black;">';      
-        
-        
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton("Clear Mappers", "!LightCrumb-deregister all");
-        chatMessage +=      '</span>';
-        
-/*      
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton("Drop", "!LightCrumb-drop " +ch('@') +ch('{') + 'target' + ch('|') + 'token_id' + ch('}') );
-        chatMessage +=      '</span>';
-*/
-
-
-        chatMessage +=          '<span>';
-        chatMessage +=              makeButton("Destroy Crumbs", "!LightCrumb-destroy all");
-        chatMessage +=          '</span>';
-        
-        chatMessage += '</div><div style="text-align: center; background-color: black;">';      
-
-        
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton("Status", "!LightCrumb-status");
-        chatMessage +=      '</span>';
-        
-        chatMessage +=      '<span>';
-        chatMessage +=      makeButton("Config", "!LightCrumb-gui getLightConfig");
-        chatMessage +=      '</span>';
-
-        
-        chatMessage += '</div>';
-
-        chatMessage += showDetailedHelp(playerName);
-        
-        chatMessage += "</div>";
-        
-        whisper(playerName, chatMessage);
-        
-    };
-
-    
-    var getLightConfigButtons = function lightConfigForChat (playerName) {
-        if (!playerName) { playerName = "gm";}
-
-        var gridUnits = getObj("page", getCurrentPage("gm")).get("scale_units"); // **** What if the gm is on a different page than the players, but a player invoked lightcrumb?
-        var chatMessage = "";
-        
-        chatMessage += '<div style="border: 2px solid red; text-align: center; margin: 5px;">';
-        chatMessage += '<div style="background-color: OrangeRed"><span><img style="float: left;" width="28px" height="28px" src="'+ICONS.torch+'"></span><span>!LightCrumb-config</span><span><img style="float:right;" width="28px" height="28px" src="'+ICONS.scifi+'"></span></div>';
-        chatMessage += '<div style="text-align: center; background-color: black;">';
-
-        chatMessage +=      getImgSrcChooserButtons(playerName);
-        
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton("Toggle Inherit Light Settings", '!LightCrumb-config INHERIT_CHARACTER_LIGHTING 1');
-        chatMessage +=      '</span>';
-        
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton("Light Radius", '!LightCrumb-config LIGHT_RADIUS ?'+ch('{')+ 'LIGHT_RADIUS?' +ch('|')+ config.LIGHT_RADIUS +ch('}'));
-        chatMessage +=      '</span>';
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton("Dim Start", '!LightCrumb-config DIM_RADIUS ?'+ch('{')+ 'DIM_RADIUS?' +ch('|')+ config.DIM_RADIUS +ch('}'));
-        chatMessage +=      '</span>';
-    
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton("Crumb Seperation", '!LightCrumb-config DROP_DISTANCE ?'+ch('{')+ 'DROP_DISTANCE In ' + gridUnits +ch('|')+ config.DROP_DISTANCE +ch('}'));
-        chatMessage +=      '</span>';
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton("Toggle Drop Location", '!LightCrumb-config DROP_AT_PREVIOUS_LOCATION 1');
-        chatMessage +=      '</span>';      
-
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton("Offset Distance", '!LightCrumb-config OFFSET_DISTANCE ?'+ch('{')+ 'OFFSET_DISTANCE In pixels' +ch('|')+ config.OFFSET +ch('}'));
-        chatMessage +=      '</span>';
-
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton("Aura Radius", '!LightCrumb-config AURA_RADIUS ?'+ch('{')+ 'AURA_RADIUS in ' + gridUnits + ch('|')+ config.AURA_RADIUS +ch('}'));
-        chatMessage +=      '</span>';      
-        
-        
-        /*
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton("Show Help on Load", '!LightCrumb-config SHOW_HELP_ON_READY ?'+ch('{')+ 'SHOW_HELP_ON_READY: 0 or 1' +ch('|')+ config.SHOW_HELP_ON_READY +ch('}'));
-        chatMessage +=      '</span>';
-        */
-        
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton("Toggle Shared Vision", '!LightCrumb-config SHARED_VISION 1');
-        chatMessage +=      '</span>';
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton("Toggle Aura", '!LightCrumb-config SHOW_AURA 1');
-        chatMessage +=      '</span>';      
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton("Toggle Names", '!LightCrumb-config SHOW_NAMES 1');
-        chatMessage +=      '</span>';
-        chatMessage +=      '<span>';
-        chatMessage +=          makeButton("Reload Default Config", '!LightCrumb-config LOAD_DEFAULT 1');
-        chatMessage +=      '</span>';      
-        
-        chatMessage += '</div>';
-
-        // log("===> LightConfigButtons are whispering to playerName: " + playerName);
-        whisper(playerName, chatMessage);
-    };
-    
-    
 /*
+    --clear token_id --> reset(pageID, token_id, "hard" || "soft")
+    --destroy token_id --> reset(pageID, "all", "hard")
+    --register token_id --> registerMapper(token_id, playername)
+    --deregister token_id --> deregisterMapper(tokenID, playername)
+    --status --> getLightTrailsStatus(pageID)
+    --drop --> token_id --> 
+    
+*/
+        
+        
+        
+    var initializeUserCommands = function() {
+        var newUserCommands = [];
+        
+        var registerCMD = new psGUI.userCommand();
+            registerCMD.commandName = "--register";
+            registerCMD.functionToCall = registerMapper;
+            registerCMD.parameters = ["token_id"];
+            registerCMD.shortDesc = "Register Mapper";
+            registerCMD.longDesc = "Turn on LightTrails for this Token";
+            registerCMD.inputOverrides = _.noop;
+            registerCMD.group = "Mappers";
+        newUserCommands.push(registerCMD);
+        
+        var deregisterCMD = new psGUI.userCommand();
+            deregisterCMD.commandName = "--deregister";
+            deregisterCMD.functionToCall = deregisterMapper;
+            deregisterCMD.parameters = ["token_id"];
+            deregisterCMD.shortDesc = "Deregister Mapper";
+            deregisterCMD.longDesc = "Turn off LightTrails for this Token.";
+            deregisterCMD.inputOverrides = _.noop;
+            deregisterCMD.group = "Mappers";
+        newUserCommands.push(deregisterCMD);
+        
+        newUserCommands.push( new psGUI.userCommand(
+            "!psLightTrails",
+            "--deregisterAll",
+            deregisterAllMappers,
+            [],
+            "Deregister All Mappers",
+            "Clear the entire registry of mappers so no one leaves light trails. Note, this does not remove active trails or torch icons.",
+            _.noop,
+            "Mappers"
+        ));     
+        newUserCommands.push(new psGUI.userCommand(
+            "!psLightTrails",
+            "--clear",
+            softReset,
+            ["current_page_id"],
+            "Hide Light Trails",
+            "Move all the Torch Tokens To the GM Layer for later reuse.",
+            _.noop,
+            "Trails"
+        ));
+        newUserCommands.push(new psGUI.userCommand(
+            "!psLightTrails",
+            "--reveal",
+            function (pageID) {
+				var hiddenLightCrumbs = getTorchTokensFromLayer("gmlayer", pageID);
+				_.each(hiddenLightCrumbs, function (currentTorchToken){			
+					currentTorchToken.set({ layer: 'objects' });                         
+				});
+			},
+            ["current_page_id"],
+            "Reveal Light Trails",
+            "Move all the Torch Tokens Back To the Objects Layer so players can see them again.",
+            _.noop,
+            "Trails"
+        ));
+		
+		
+		
+		
+		
+		
+        newUserCommands.push(new psGUI.userCommand(
+            "!psLightTrails",
+            "--destroy",
+            hardReset,
+            ["current_page_id"],
+            "Remove Light Trails",
+            "Remove all the torch tokens altogether.",
+            _.noop,
+            "Trails"
+        ));
+        newUserCommands.push(new psGUI.userCommand(
+            "!psLightTrails",
+            "--chooseTorchIcon",
+            chooseIcon,
+            ["string", "current_page_id"],
+            "Torch",
+            "The torch icon is suitable for fantasy maps and horror.",
+            ["torch", undefined],
+            "Graphic"
+        ));
+        newUserCommands.push(new psGUI.userCommand(
+            "!psLightTrails",
+            "--chooseTorchIcon",
+            chooseIcon,
+            ["string", "current_page_id"],
+            "Transparent",
+            "The transparent icon works well if you don't want visible torches on the map.",
+            ["transparent", undefined],
+            "Graphic"
+        ));
+        newUserCommands.push(new psGUI.userCommand(
+            "!psLightTrails",
+            "--chooseTorchIcon",
+            chooseIcon,
+            ["string", "current_page_id"],
+            "Beacon",
+            "The beacon icon works well on Science Fiction maps and modern settings.",
+            ["scifi", undefined],
+            "Graphic"
+        ));
+        
+        var setAuraRadiusCMD = new psGUI.userCommand();
+        var AuraCMD = setAuraRadiusCMD; 
+        AuraCMD.commandName = "--setAuraRadius";
+        AuraCMD.functionToCall = setAuraRadius;
+        AuraCMD.parameters = ["num", "current_page_id"];
+        AuraCMD.shortDesc = "Radius";
+        AuraCMD.longDesc = "Set the radius of the Auras";
+        AuraCMD.inputOverrides = _.noop;
+        AuraCMD.group = "Auras";
+        newUserCommands.push(AuraCMD);
+
+        var setLightRadiusCMD = new psGUI.userCommand();
+        var slrCMD = setLightRadiusCMD;
+        slrCMD.commandName = "--setLightRadius";
+        slrCMD.functionToCall = setLightRadius;
+        slrCMD.parameters = ["num", "current_page_id"];
+        slrCMD.shortDesc = "Light Radius";
+        slrCMD.longDesc = "Set the radius of the light emitted by dropped torches. (Only in effect if 'Inherit Light Settings' is off.)";
+        slrCMD.inputOverrides = _.noop;
+        slrCMD.group = "Light Settings";
+        newUserCommands.push(slrCMD);
+
+        var setDimRadiusCMD = new psGUI.userCommand();
+        var sdrCMD = setDimRadiusCMD;
+        sdrCMD.commandName = "--setDimRadius";
+        sdrCMD.functionToCall = setDimRadius;
+        sdrCMD.parameters = ["num", "current_page_id"];
+        sdrCMD.shortDesc = "Dim Radius";
+        sdrCMD.longDesc = "Set the radius where dim light starts. (Only in effect if 'Inherit Light Settings' is off.)";
+        sdrCMD.inputOverrides = _.noop;
+        sdrCMD.group = "Light Settings";
+        newUserCommands.push(sdrCMD);
+        
+        var setCrumbSeparation = new psGUI.userCommand();
+        var scsCMD = setCrumbSeparation;
+        scsCMD.commandName = "--setCrumbSeparation";
+        scsCMD.functionToCall = setCrumbSeparation;
+        scsCMD.parameters = ["num", "current_page_id"];
+        scsCMD.shortDesc = "Torch Separation";
+        scsCMD.longDesc = "Distance between 'Light Crumbs' aka Dropped Torches. It's reasonable to set this to the same distance a character can move in one turn.";
+        scsCMD.inputOverrides = _.noop;
+        scsCMD.group = "Light Settings";
+        newUserCommands.push(scsCMD);
+        
+        var toggleDropLocationCMD = new psGUI.userCommand();
+        var tdlCMD = toggleDropLocationCMD;
+        tdlCMD.commandName = "--toggleDropLocation";
+        tdlCMD.functionToCall = toggleDropLocation;
+        tdlCMD.parameters = ["current_player_name"];
+        tdlCMD.shortDesc = "Drop Location";
+        tdlCMD.longDesc = "Toggle whether dropped torches appear at your characters' last known location or at the current location with a small offset. Offset looks cooler, but may sometimes put a torch on the wrong side of a wall.";
+        tdlCMD.inputOverrides = _.noop;
+        tdlCMD.group = "Toggles";
+        newUserCommands.push(tdlCMD);
+        
+        
+        
+        newUserCommands.push(new psGUI.userCommand(
+            "!psLightTrails",
+            "--toggleShowAura",
+            toggleShowAura,
+            ["current_page_id"],
+            "Toggle Show_Aura",
+            "Turn visible Auras on or off.",
+            _.noop,
+            "Auras"
+        ));
+        
+        var toggleInheritLightSettingsCMD = new psGUI.userCommand();
+        var ILScmd = toggleInheritLightSettingsCMD;
+        ILScmd.commandName = "--toggleInheritLight";
+        ILScmd.functionToCall = function(pageID, playerName) {
+                config.INHERIT_CHARACTER_LIGHTING = !config.INHERIT_CHARACTER_LIGHTING;
+                convertCrumbsToNewSettings(pageID, {light_radius: 0, light_dimradius: 0}, true);
+                sendChat(info.name, "/w " + playerName + " config.INHERIT_CHARACTER_LIGHTING == " + config.INHERIT_CHARACTER_LIGHTING);
+        };
+        ILScmd.parameters = ["current_page_id", "current_player_name"];
+        ILScmd.shortDesc = "Inherit Light Settings";
+        ILScmd.longDesc = "Inheriting light settings sets all light trails (composed of dropped torches) to use the same light_radius and dim_radius values as the character token which dropped them.";
+        ILScmd.inputOverrides = {};
+        ILScmd.group = "Toggles";
+        newUserCommands.push(ILScmd);
+        
+        var statusCMD = new psGUI.userCommand();
+        statusCMD.commandName = "--status";
+        statusCMD.functionToCall = getLightTrailsStatus;
+        statusCMD.parameters = ["current_page_id", "current_player_name"];
+        statusCMD.shortDesc = "Status";
+        statusCMD.longDesc = "Provides detailed information about state of " + info.name + " script.";
+        statusCMD.inputOverrides = {};
+        statusCMD.group = "Info";
+        newUserCommands.push(statusCMD);
+        
+        
+        var toggleDebugCMD = new psGUI.userCommand();
+        var tbCMD = toggleDebugCMD;
+        tbCMD.commandName = "--toggleDebug";
+        tbCMD.functionToCall = function(playerName) {
+            config.debug = !config.debug;
+            sendChat(info.name, "/w " + playerName + " config.debug == " + config.debug );
+        };
+		tbCMD.parameters = ["current_player_name"];
+        tbCMD.shortDesc = "Debug";
+		tbCMD.longDesc = "Toggle Debug messages sent to log.";
+		tbCMD.inputOverrides = {};
+		tbCMD.group = "Toggles";
+		newUserCommands.push(tbCMD);
+        
+        _.each(newUserCommands, function(userCommand) {
+            userCommand.listener = "!"+info.name;
+            userCommand.module = info.module;
+            userCommand.restrictedToGM = true;
+        });
+        
+        return newUserCommands;
+    };
 
 
-ooooo ooooo            o888
- 888   888  ooooooooo8  888 ooooooooo
- 888ooo888 888oooooo8   888  888    888
- 888   888 888          888  888    888
-o888o o888o  88oooo888 o888o 888ooo88
-                            o888
 
+
+    
+/*                                                        
+        _/_/_/  _/      _/  _/_/_/    _/    _/  _/_/_/_/_/   
+         _/    _/_/    _/  _/    _/  _/    _/      _/        
+        _/    _/  _/  _/  _/_/_/    _/    _/      _/         
+       _/    _/    _/_/  _/        _/    _/      _/          
+    _/_/_/  _/      _/  _/          _/_/        _/          
 */
 
 
 
-    var showDetailedHelp = function showDetailedHelpTextInChat(playerName) {
-        if (debugDEFCON < 2) { log("entering showDetailedHelp("+playerName+")"); }
 
-        if (!playerName) { playerName = "gm";}
+    var setAuraRadius = function auraRadiusSetter(radius, pageID) {
+        config.AURA_RADIUS = radius;
+        simpleConvertCrumbs(undefined, {aura1_radius: radius} );
+    };
 
+    var toggleShowAura = function showAuraToggler(pageID) {
+        config.SHOW_AURA = !config.SHOW_AURA;
+        if (config.SHOW_AURA === false ) { 
+            simpleConvertCrumbs(pageID, {aura1_radius: ""} );
+        } else {
+            simpleConvertCrumbs(pageID, {aura1_radius: config.AURA_RADIUS});
+        }
+    }; 
+    
+    var setLightRadius = function lightRadiusSetter(radius, pageID) {
+        config.LIGHT_RADIUS = radius;
+        simpleConvertCrumbs(pageID, {light_radius: radius} );
+    };
+    
+    var setDimRadius = function dimRadiusSetter(radius, pageID) {
+        config.DIM_RADIUS = radius;
+        simpleConvertCrumbs(pageID, {light_dimradius: radius});
+    };
+    
+    var setCrumbSeparation = function crumbSeperationSetter(distance, pageID) {
+        config.DROP_DISTANCE = distance;
+        // no point converting the existing crumbs.
+    };
 
+    var toggleDropLocation = function dropLocationToggler(playerName) {
+        config.DROP_AT_PREVIOUS_LOCATION = !config.DROP_AT_PREVIOUS_LOCATION;
+        var msgStr = "/w " + playerName + " ";
+        msgStr += "DROP_AT_PREVIOUS_LOCATION == " + config.DROP_AT_PREVIOUS_LOCATION + ". ";
+        if (config.DROP_AT_PREVIOUS_LOCATION === false) {
+            msgStr += "Torches will drop beside the token, with an offset of " + config.OFFSET;
+        } else {
+            msgStr += "Torches will drop at the token's previous location.";
+        }
+        sendChat(info.name, msgStr);
+    };
+    
+    var chooseIcon = function iconChooser(iconName, pageID) {
+        if (pageID === undefined || pageID === "") {
+            pageID = psUtils.GetPlayerPage("gm");
+        }
+        if ( _.has(ICONS, iconName) ) {
+            config.IMAGE = ICONS[iconName];
+            simpleConvertCrumbs(pageID, {imgsrc: ICONS[iconName]} );            
+        } else {
+            log("==> Error: requested icon isn't in the list of available icons. Modify ICONS if you need more.");
+        }
+    };
 
-        var exampleStyle = '"background-color: #eee; font-size: smaller; margin-left: 40px;"';
-        var warningStyle = '"background-color: AntiqueWhite; font-size: smaller;"';
-        var exampleTokenSelect = ch('@') + ch('{') + 'selected' + ch('|') + 'token_id' + ch('}');
-
-        var helpText = '';
-
-        helpText += '<div style="font-size: smaller;">';
-        helpText += 'LightCrumb is a script to leave lit torches in a trail behind characters.';
-        helpText += "This lets them see where they've been on maps with dynamic lighting enabled.";
-        helpText += "Useful for hex-crawls and dungeon-crawls.";
-        helpText += "</div>";
-
-        helpText += '<div style="font-size: smaller;">';        
-        helpText += "To start, enter !LightCrumb in the chat window.";
-        helpText += "</div>";
+    
+/*    
+    var displayTorchGUI = function torchGUIDisplay() {
+        var buttonStr = "";
+        _.each (ICONS, function(icon) {
+            psGUI.makeButton("torch", "");
+            
+        });
+    };
+*/
         
-        helpText += '<div style="font-size: smaller;">';        
-        helpText += "A few configuration options to be aware of: ";
-        helpText += "<ul>";
-        helpText +=         "<li>Toggle Shared Vision - determines whether players 'see through' only their own trails, or, everyone's trails. Useful if the party splits up and you want everyone to have a different view.</li>";
-        helpText +=         "<li>Toggle Inherit Light Settings - determines whether torches emit the same light as their parent token, or if they all use the same values. Useful if someone has poor vision and you want their trails to reflect that.</li>";
-        helpText +=         "<li>Min Seperation - sets the distance between automatic torch placement. Measured in whatever units you've set for the page. Usually feet.</li>";
-        helpText +=         "<li>Light Radius and Dim Start - same as for characters. Only used when 'inherit light settings' is off. Set Dim Start to 0 if you want the trails to be dimly lit.</li>";
-        helpText +=         "<li>Drop Behaviour - Drop crumbs either at each token's current location or previous location. Dropping torches at your current location looks cooler, but it can make it hard to grab your own token afterward. Also, when you use an offset value, torches might appear on the other side of walls, ruining the effect.</li>";
-        helpText +=         "<li>Offset Distance - Only used when Drop Behaviour is set to 'current location'. Determines how far behind your token to place the torch. If you use this, set it to a value of 35 or 40 to start.</li>";
-        helpText += "</ul>";
-        helpText += "</div>";
-        
+    var getLightTrailsStatus = function (pageID, playerName) {
+        if (config.debug) log("entering getLightTrailsStatus with " + pageID + ", " + playerName);
+
+        var statusMessage = "";
+        statusMessage = "<h4>"+activeLightTrailsMappers.length + " Active Mappers</h4>";
 
         
-        helpText += "<div style='font-size: smaller'>";
-        helpText += "In addition to the gui buttons, you can make macros to activate the features. Here are some commands to play with.";
-        helpText +=         '<div style='+ exampleStyle +'> !LightCrumb-drop ' + exampleTokenSelect + '</div>';
-        helpText +=         '<div style='+ exampleStyle +'> !LightCrumb-register ' + exampleTokenSelect + '</div>';
-        helpText +=         '<div style='+ exampleStyle +'> !LightCrumb-deregister ' + exampleTokenSelect + '</div>';       
-        helpText +=         '<div style='+ exampleStyle +'> !LightCrumb-clear parentTokenID' + '</div>';
-        helpText +=         '<div style=' +exampleStyle+ '> !LightCrumb-gui</div>';
+        statusMessage += "<ul>";
+        var currentMapperName;
+        _.each(activeLightTrailsMappers, function loopToListMappers(currentMapperID) {
+            statusMessage += "<li>";
+            currentMapperName = getObj('graphic', currentMapperID).get("name");
+            if (currentMapperName !== "" ) {
+                statusMessage += currentMapperName;
+            } else {
+                statusMessage += currentMapperID;
+            }
+            statusMessage += "</li>";
+        });
+        statusMessage += "</ul>";
 
+        statusMessage += "<h4>"+getTorchTokensFromLayer("objects", pageID).length + " Active LightTrails</h4>";
         
-        //whisper(playerName, helpText );
-        var helpHandouts;
-        helpHandouts = findObjs({
-            _type: "handout",
-            name: "LightCrumb Help"
+        statusMessage += "<h4>Config Options</h4>";
+
+        var configMessage = JSON.stringify(config);
+        var prettyConfigMessage = "";
+
+        _.each(configMessage.split(","), function loopToBuildMessage(currentOption) {
+            prettyConfigMessage += "<div style='font-size: smaller'>" + currentOption + "</div>";
         });
 
-        var helpHandout = helpHandouts[0];
-        //log("helpHandout = " + helpHandout);
+        statusMessage += prettyConfigMessage;   
         
-        if (!helpHandout) { // create it
-            helpHandout = createObj('handout', {
-                name: 'LightCrumb Help',
-                inplayerjournals: 'all'
-            });
-            helpHandout.set("notes", helpText);
-
-        } else { // it exists, set it's contents to match the latest version of the script
-            helpHandout.set("notes", helpText);
-        }
-        var handoutID = helpHandout.get("_id");
-
-        var chatMessage = "";
-        var buttonStyle = "'background-color: OrangeRed;'";
+        sendChat(info.name, "/w " + playerName + " " + statusMessage);
         
-        chatMessage += "<div style="+buttonStyle+"><a href='http://journal.roll20.net/handout/" + handoutID + "'>Additional Information</a></div>";
-        
-
-        
-        // getClickyButtons(playerName);
-
-        if (debugDEFCON < 2) { log("exiting showDetailedHelp. Whispered message to chat. No return value."); }
-
-        
-        return(chatMessage);
+        return statusMessage;
     };
-
-
-/*
-
-
-ooooo                                    o8
- 888  oo oooooo  ooooooooo  oooo  oooo o888oo
- 888   888   888  888    888 888   888  888
- 888   888   888  888    888 888   888  888
-o888o o888o o888o 888ooo88    888o88 8o  888o
-                 o888
-
-*/
-
-
-    var handleInput = function inputHandler(msg) {
-        // FYI: Expected msg looks like this:
-            // content, playerid, selected, type, who
-            // where content is: !LightCrumb token_id
-            // {"content":"!LightCrumb -K_D89bE8mmN0VEBmdjt","playerid":"-K_D5Ng6YOcQ3VnAEsNh","selected":[{"_id":"-K_D89bE8mmN0VEBmdjt","_type":"graphic"}],"type":"api","who":"plexsoup (GM)"}
-            
-        if (msg.type == "api" && msg.content.indexOf("!LightCrumb") !== -1 ) {
-
-            var argsFromUser,
-                who,
-                errors=[],
-                // playerPage, // useful for status message where no token is selected
-                tokenPage, // used for dropping new lightCrumbs
-                LightCrumbMakerSupply,
-                token,
-                tokenCoords,
-                tokenID,
-                playerID,
-                playerName,
-                pageID,
-                statusMessage,
-                parentTokenID,
-                lastPage;
-
-
-            playerName = msg.who;
-            playerID = msg.playerid;
-            
-            pageID = getCurrentPage(playerID);
-            
-            if (debugDEFCON < 5) {
-                log("PlayerName = " + playerName);
-                // log("PlayerID = " + playerID);
-                log("msg.content = " + msg.content);
-            }
-
-            argsFromUser = msg.content.split(/ +/);
-            if (debugDEFCON < 2) {log("handleInput got a message: " + argsFromUser);}
-
-            switch(argsFromUser[0]) {
-                case '!LightCrumb-clear':
-                    // remove all the light-crumbs
-
-                    parentTokenID = argsFromUser[1];
-                    if (parentTokenID == "all") {
-                            reset(pageID, "all", "soft");
-                    } else {
-                        reset(pageID, parentTokenID, "soft");
-                    }
-                    
-                    break;
-
-                case '!LightCrumb-destroy':
-                    // destroy the LightCrumbs permanently. Nothing left on GM Layer.
-                    
-                    parentTokenID = argsFromUser[1];
-                    if (parentTokenID == "all") {
-                        reset(pageID, "all", "hard");
-                    } else {
-                        reset(pageID, parentTokenID, "hard");
-                    }
-                    
-                    break;
-                    
-                case '!LightCrumb-register':
-                    if (debugDEFCON < 2) { log("Trying to register a new token"); }
-                    // Add tokenIDs to the list of tokens registered to produce light-trails automatically
-                    tokenID = argsFromUser[1];
-                    registerMapper(tokenID, playerName);
-                    break;
-                    
-                case '!LightCrumb-deregister':
-                    if (debugDEFCON < 5 ) { log("==> !LightCrumb-deregister " + argsFromUser[1]); }
-                    tokenID = argsFromUser[1];
-                    deregisterMapper(tokenID, playerName);
-                
-                    break;
-
-                case '!LightCrumb-status':
-                    // print out some variables to get more info and help with debugging
-
-                    statusMessage += getLightCrumbStatus(pageID);
-
-                    whisper(playerName, statusMessage);
-
-                    break;
-
-                case '!LightCrumb-drop': // drop a single LightCrumb torch
-                        token = getTokenObjectFromID(argsFromUser[1]);
-                        if (token === undefined) {
-                            whisper(playerName, "Error: undefined token");
-                        } else {
-                            if(debugDEFCON < 5) {
-                                log("Token ID: " + token.get("_id"));
-                                log("Page ID: " + token.get("_pageid"));
-                                log("Coords: [" + token.get("left") + "," + token.get("top") + "]");
-                            }
-
-                            tokenPage = token.get("_pageid");
-                            tokenCoords = [token.get("left"), token.get("top")];
-
-                            var controllingPlayerID = playerID;
-                            if ( config.SHARED_VISION === true ) {
-                                controllingPlayerID += ",all";
-                            }
-
-                            var displayName = getDisplayName(token.get("name"));
-                            
-                            var customLightCrumbSettings = {
-                                left: tokenCoords[0],
-                                top: tokenCoords[1],
-                                pageid: tokenPage,
-                                controlledby: controllingPlayerID,
-                                name: displayName
-                            };
-                            
-                            if (config.INHERIT_CHARACTER_LIGHTING) {
-                                customLightCrumbSettings[light_radius] = token.get("light_radius");
-                                customLightCrumbSettings[light_dimradius] = token.get("light_dimradius");
-                            }
-                
-                            var currentLightCrumb = dropLightCrumb(customLightCrumbSettings, token.get("_id")); //manual drop
-                            if (debugDEFCON < 4) {log("dropped LightCrumb from !LightCrumb-drop: [" + tokenCoords + "], " + tokenPage);}
-                        }
-                    break;
-                case '!LightCrumb-gui': // show some clicky buttons in the chat window
-                        if (debugDEFCON <3) {log("received !LightCrumb-gui: "+argsFromUser);}
-                        var requestedCommand = argsFromUser[1];
-                        if (requestedCommand !== undefined) {
-                            if (requestedCommand == "chooseImage") {
-                                getImgSrcChooserButtons(playerName);
-                            } else if (requestedCommand == "getLightConfig" || requestedCommand == "config") {
-                                getLightConfigButtons(playerName);
-                            }
-
-                        } else {
-                            getClickyButtons(playerName);
-                        }
-
-                    break;
-
-                case '!LightCrumb-image': // change the appearance of the token that drops
-                        var requestedIcon = argsFromUser[1];
-                        if (requestedIcon !== undefined) {
-                            if (requestedIcon == "torch") {
-                                config.IMAGE = ICONS.torch;
-                            } else if (requestedIcon == "transparent") {
-                                config.IMAGE = ICONS.transparent;
-                            } else if (requestedIcon == "scifi") {
-                                config.IMAGE = ICONS.scifi;
-                            }
-
-                            state.LightCrumb.config = _.clone(config);
-
-                            var requestedSettings = {imgsrc: config.IMAGE};
-                            convertCrumbsToNewSettings(pageID, requestedSettings);
-                        }
-
-                    break;
-
-                case '!LightCrumb-config': // set any the configurable values.
-                        if (debugDEFCON < 4) { log('!LightCrumb-config received: ' + argsFromUser); }
-                        var requestedParameter = argsFromUser[1];
-                        var requestedValue = argsFromUser[2];
-                        var requestedLightCrumbSettings = { layer:"objects" } ;
-                        var needBatchConversion = false;
-                        
-                        if (requestedParameter === undefined || requestedValue === undefined) {
-                            // abort.. something went wrong
-                            whisper(playerName, "Error: didn't receive proper values for !LightCrumb-config.");
-                        } else {
-                            if (requestedParameter == "LIGHT_RADIUS" ) {
-                                config.LIGHT_RADIUS = requestedValue;
-                                requestedLightCrumbSettings.light_radius = requestedValue;
-                                needBatchConversion = true;
-                                whisperSmall(playerName, "LIGHT_RADIUS set to: " + config.LIGHT_RADIUS);
-                            } else if (requestedParameter == "DIM_RADIUS") {
-                                config.DIM_RADIUS = requestedValue;
-                                whisperSmall(playerName, "DIM_RADIUS set to: " + config.DIM_RADIUS);
-                                needBatchConversion = true;
-                                requestedLightCrumbSettings.light_dimradius = requestedValue;
-                            } else if (requestedParameter == "DROP_DISTANCE") {
-                                config.DROP_DISTANCE = requestedValue;
-                                whisperSmall(playerName, "DROP_DISTANCE set to: " + config.DROP_DISTANCE);
-                            } else if (requestedParameter == "OFFSET_DISTANCE") {
-                                config.OFFSET = requestedValue;
-                                whisperSmall(playerName, "OFFSET set to: " + config.OFFSET);
-                            } else if (requestedParameter == "SHOW_HELP_ON_READY") {
-                                config.SHOW_HELP_ON_READY = requestedValue;
-                                whisperSmall(playerName, "SHOW_HELP_ON_READY set to: " + config.SHOW_HELP_ON_READY);
-                            } else if (requestedParameter == "DROP_AT_PREVIOUS_LOCATION") {
-                                config.DROP_AT_PREVIOUS_LOCATION = !config.DROP_AT_PREVIOUS_LOCATION;
-                                whisperSmall(playerName, "DROP_AT_PREVIOUS_LOCATION set to: " + config.DROP_AT_PREVIOUS_LOCATION);
-                            } else if (requestedParameter == "SHARED_VISION") {
-                                config.SHARED_VISION = !config.SHARED_VISION; // toggle
-                                whisperSmall(playerName, "Shared Vision set to " + config.SHARED_VISION);
-                                needBatchConversion = true;
-                            } else if (requestedParameter == "SHOW_AURA") {
-                                config.SHOW_AURA = !config.SHOW_AURA; // toggle true false
-                                // whisper(playerName, "SHOW_AURA set to " + config.SHOW_AURA);
-                                requestedLightCrumbSettings.showplayers_aura1 = config.SHOW_AURA;
-                                if (config.SHOW_AURA === false) {
-                                    requestedLightCrumbSettings.aura1_radius = "";
-                                } else {
-                                    requestedLightCrumbSettings.aura1_radius = config.AURA_RADIUS;
-                                }
-                                needBatchConversion = true;
-                                
-                            } else if (requestedParameter == "AURA_RADIUS") {
-                                config.AURA_RADIUS = requestedValue;
-                                needBatchConversion = true;
-                                whisperSmall(playerName, "AURA_RADIUS set to " + config.AURA_RADIUS);                           
-                            } else if (requestedParameter == "SHOW_NAMES") {
-                                config.SHOW_NAMES = !config.SHOW_NAMES; // toggle true false
-                                requestedLightCrumbSettings.showname = config.SHOW_NAMES;
-                                requestedLightCrumbSettings.showplayers_name = config.SHOW_NAMES;
-                                needBatchConversion = true;
-                                // whisper(playerName, "SHOW_NAMES set to " + config.SHOW_NAMES);
-                            } else if (requestedParameter == "INHERIT_CHARACTER_LIGHTING") {
-                                config.INHERIT_CHARACTER_LIGHTING = !config.INHERIT_CHARACTER_LIGHTING;
-                                needBatchConversion = true;
-                                whisperSmall(playerName, "INHERIT_CHARACTER_LIGHTING set to " + config.INHERIT_CHARACTER_LIGHTING);
-                            } else if (requestedParameter == "LOAD_DEFAULT") {
-                                config = _.clone(defaultConfig);
-                                state.LightCrumb.config = _.clone(defaultConfig);
-                                requestedLightCrumbSettings = {
-                                    imgsrc: config.IMAGE,
-                                    showname: config.SHOW_NAMES,
-                                    showplayers_name: config.SHOW_NAMES
-                                };
-                                
-                                whisperSmall(playerName, getLightCrumbStatus(pageID) );
-                                
-                                if (config.SHOW_AURA === false) {
-                                    requestedLightCrumbSettings.aura1_radius = "";
-                                } else {
-                                    requestedLightCrumbSettings.aura1_radius = config.AURA_RADIUS;
-                                }
-                                
-                                needBatchConversion = true;
-                            }
-                        }
-
-                        if( debugDEFCON < 2 ) { log("trying to clone config into state.LightCrumb.config.. here's what I have in config" + config ); }
-                        
-                        // **** TODO **** Fix this.. it converts a lot of settings which the user didn't ask for.
-
-                        state.LightCrumb.config = _.clone(config);
-
-                        if (needBatchConversion) {
-                            convertCrumbsToNewSettings(pageID, requestedLightCrumbSettings);                            
-                        }
-
-                        // still need to go through all the old lightCrumbs and set their token values.
-
-                    break;
-
-                case '!LightCrumb-help': // explain script and pop up a few buttons in the chat for player to click on.
-                    showDetailedHelp(playerName);
-                    break;
-                case '!LightCrumb': // explain script and pop up a few buttons in the chat for player to click on.
-                    getClickyButtons(playerName);
-                    break;
-            }
-        }
-    };  
-    
-    
-    
-var getLightCrumbStatus = function (pageID) {
-
-    var statusMessage = "";
-    statusMessage = "<h4>"+activeLightCrumbMappers.length + " Active Mappers</h4>";
-
-    
-    statusMessage += "<ul>";
-    var currentMapperName;
-    _.each(activeLightCrumbMappers, function loopToListMappers(currentMapperID) {
-        statusMessage += "<li>";
-        currentMapperName = getObj('graphic', currentMapperID).get("name");
-        if (currentMapperName !== "" ) {
-            statusMessage += currentMapperName;
-        } else {
-            statusMessage += currentMapperID;
-        }
-        statusMessage += "</li>";
-    });
-    statusMessage += "</ul>";
-
-    statusMessage += "<h4>"+getLightCrumbsFromLayer("objects", pageID).length + " Active LightCrumbs</h4>";
-    
-    statusMessage += "<h4>Config Options</h4>";
-
-    var configMessage = JSON.stringify(config);
-    var prettyConfigMessage = "";
-
-    _.each(configMessage.split(","), function loopToBuildMessage(currentOption) {
-        prettyConfigMessage += "<div style='font-size: smaller'>" + currentOption + "</div>";
-    });
-
-    statusMessage += prettyConfigMessage;   
-
-    return statusMessage;
-};
     
 /*
 
@@ -819,40 +508,52 @@ d888b    `Y8bod8P' 8""888P' `Y8bod8P'   "888"
 
 */
     
-    
+    var getCurrentPage = function(playerID) {
+        return psUtils.GetPlayerPage(playerID);
+    };
 
+    var hardReset = function hardResetter(pageID) {
+        reset(pageID, "all", "hard");
+    };
     
+    var softReset = function softResetter(pageID) {
+        reset(pageID, "all", "soft");       
+    };
+
+
     var reset = function resetter(pageID, parentTokenID, resetMode) {
         
         if (resetMode === undefined ) {
             resetMode = "soft";
         }
         
-        if (debugDEFCON < 4) { log("entering reset with " + pageID); }
-        //state.LightCrumb.count=0;
+        if (config.debug) { log("entering reset with " + pageID); }
+        //state.psLightTrails.count=0;
         
         // test pageID.
         if (!getObj("page", pageID)  ) { // this pageID is not valid.
             log("==> Error: This pageID is not valid: " + pageID);
             return -1;
         } else {
-            if (debugDEFCON < 2 ) { log("    in reset: pageID is valid: " + pageID); }
+            if (config.debug) { log("    in reset: pageID is valid: " + pageID); }
         }
         
         
         if (pageID === undefined) {
             log("==> Error: reset(pageID, parentTokenID, resetMode) didn't receive a pageID");
-            pageID = getCurrentPage("gm");  
+            //pageID = psUtils.GetPlayerPage("gm");  
+            pageID = Campaign().get("playerpageid");
+            
         }
         
         if (parentTokenID !== "all") {
             // Check to see if you grabbed a torch or a character
             var gmNotesOnToken = getObj("graphic", parentTokenID).get("gmnotes");
             if (getObj("graphic", gmNotesOnToken) ) { // for some reason the gmnotes contains the _id of a token... maybe it's a torch
-                var foundInActiveList = activeLightCrumbMappers.indexOf(gmNotesOnToken);
+                var foundInActiveList = activeLightTrailsMappers.indexOf(gmNotesOnToken);
                 parentTokenID = gmNotesOnToken;
             }       
-            whisperSmall("gm", "Removing trail belonging to " + getObj("graphic", parentTokenID).get("name"));
+            psGUI.whisper("gm", "Removing trail belonging to " + getObj("graphic", parentTokenID).get("name"));
         }
 
 
@@ -866,34 +567,30 @@ d888b    `Y8bod8P' 8""888P' `Y8bod8P'   "888"
                     imgsrc: imageUrl,
                     
                     
-                }), function loopToHideLightCrumbs(currentLightCrumbToken){
+                }), function loopToHideLightTrails(currentTorchToken){
                     
-                    if ( parentTokenID == currentLightCrumbToken.get("gmnotes") || parentTokenID == "all") {
+                    if ( parentTokenID == currentTorchToken.get("gmnotes") || parentTokenID == "all") {
                         if (resetMode == "soft") {
-                            currentLightCrumbToken.set({ // hide the lightcrumb token, but keep it available for later reuse - saves html lookups
+                            currentTorchToken.set({ // hide the lightcrumb token, but keep it available for later reuse - saves html lookups
                                 layer: 'gmlayer',
-                                width: 70,
-                                height: 70,
-                                top: 35,
-                                left: 35,
-                                imgsrc: config.IMAGE,
-                                gmnotes: "",
-                                aura1_color: "#ffffff",
-                                name: "LightCrumb"
+                                //top: 35,
+                                //left: 35,
+                                //imgsrc: config.IMAGE,
+                                //gmnotes: "",
+                                //aura1_color: "#ffffff",
+                                //name: "LightTrails"
                             });                         
                         } else { // resetMode == "hard"
-                            currentLightCrumbToken.remove(); // destroy it!
+                            currentTorchToken.remove(); // destroy it!
                         }
-
                     }
                 }
             );
-
         });
-
     };
 
     var getAuraColor = function auraColorGetter(parentTokenID) {
+        // **** TODO **** Change this to controlledby instead of parentToken
         if (parentTokenID === undefined || parentTokenID === "" ) {
             // log("==> Error in getAuraColor. No token provided")
             return "#ffffff";
@@ -905,8 +602,8 @@ d888b    `Y8bod8P' 8""888P' `Y8bod8P'   "888"
     
         // log("entering getAuraColor with " + parentTokenID);
         var colors = ["#ff0000", "#ff9900", "#ffcc66", "#ff3300", "#ff6600", "#cc9900", "#ffff99"];
-        var mappers = activeLightCrumbMappers;
-        // log("activeLightCrumbMappers = " + JSON.stringify(activeLightCrumbMappers) );
+        var mappers = activeLightTrailsMappers;
+        // log("activeLightTrailsMappers = " + JSON.stringify(activeLightTrailsMappers) );
         
         var mapperNum;  
         var counter = 0;
@@ -928,6 +625,15 @@ d888b    `Y8bod8P' 8""888P' `Y8bod8P'   "888"
         return color;
     };
     
+
+
+
+
+
+
+
+
+
     
 /*
 
@@ -938,19 +644,48 @@ d88' `"Y8 d88' `88b `888P"Y88b   `88.  .8'  d88' `88b `888""8P   888
 888       888   888  888   888    `88..8'   888ooo888  888       888   
 888   .o8 888   888  888   888     `888'    888    .o  888       888 . 
 `Y8bod8P' `Y8bod8P' o888o o888o     `8'     `Y8bod8P' d888b      "888" 
+
 */
     
-    var convertCrumbsToNewSettings = function crumbsResetter(pageID, requestedOptions) {
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    var simpleConvertCrumbs = function crumbConverter(pageID, requestedOptions) {
+        if (config.debug) log("entering simpleConvertCrumbs with " + pageID + ", " + requestedOptions);
+        if (pageID === undefined) {
+            pageID = psUtils.GetPlayerPage("gm");
+        }
+        var crumbsToConvert = getTorchTokensFromLayer("objects", pageID);
+        
+        _.each(crumbsToConvert, function loopToChangeCrumbs(torchToken) {
+            _.each(requestedOptions, function(propertyValue, propertyName) {
+                //if (config.debug) psGUI.psLog(info.name + ": setting " + propertyValue + " to " + propertyName, "orange");
+                torchToken.set(propertyName, propertyValue);
+            });
+        });
+    };
+    
+    var convertCrumbsToNewSettings = function crumbsResetter(pageID, requestedOptions, resetRequired) { // requestedOptions are an object with typical roll20 graphic object properties
         
         if (requestedOptions === undefined) {
             requestedOptions = {light_otherplayers: config.SHARED_VISION};          
         }
         
-        if (debugDEFCON < 5) {log("entering convertCrumbsToNewSettings with " + JSON.stringify(requestedOptions) ); }
+        if (config.debug) {log("entering convertCrumbsToNewSettings with " + JSON.stringify(arguments) ); }
 
         if (pageID === undefined ) {
             log("==> Error: convertCrumbsToNewSettings didn't receive a pageID");
-            pageID = getCurrentPage("gm");
+            pageID = psUtils.GetPlayerPage("gm");
         }
         
         if (!requestedOptions || requestedOptions.size === 0 ) { // figure out what needs resetting, exactly.
@@ -958,35 +693,35 @@ d88' `"Y8 d88' `88b `888P"Y88b   `88.  .8'  d88' `88b `888""8P   888
         }
         
         
-        _.each(ICONS, function(imageUrl) { // note: this won't find anything where the user passed their own url to !LightCrumb-image
-            if (debugDEFCON < 4) {log("checking for: " + imageUrl);}
+        _.each(ICONS, function(imageUrl) { // note: this won't find anything where the user passed their own url to !LightTrails-image
+            if (config.debug) {log("checking for: " + imageUrl);}
             _.each(findObjs({
                     _pageid: pageID,
                     _type: 'graphic',
                     _subtype: 'token',
                     imgsrc: imageUrl
                 }), function convertCrumbToNewSettings(currentCrumb){ // do this stuff once for every torch icon
-                    if (debugDEFCON < 2 ) { log("converting lightcrumb token: " + currentCrumb.get("_id")); }
+                    if (config.debug) { log("converting lightcrumb token: " + currentCrumb.get("_id")); }
                     
                     // figure out who owns it.
                     
                     var currentCrumbID = currentCrumb.get("_id");
-                    if (debugDEFCON < 4) { log("currentCrumbID = " + currentCrumbID); }
+                    if (config.debug) { log("currentCrumbID = " + currentCrumbID); }
                     var parentTokenID = getParentTokenID(currentCrumbID);
-                    if (debugDEFCON < 4) { log("in convertCrumbsToNewSettings: parentTokenID = " + parentTokenID); }
+                    if (config.debug) { log("in convertCrumbsToNewSettings: parentTokenID = " + parentTokenID); }
                     
                     // remove "all" from the list of controlling tokens                 
                     var controlledByArray = currentCrumb.get("controlledby").split(",");
                     controlledByArray = _.without(controlledByArray, "all");
                     var controlledByString = controlledByArray.join(",");
-                    if (debugDEFCON < 4) { log("in convertCrumbToNewSettings: controlledByString = " + controlledByString); }
+                    if (config.debug) { log("in convertCrumbToNewSettings: controlledByString = " + controlledByString); }
                     // then add it back if it's needed.
                     if (config.SHARED_VISION === true) { // add "all" to controlledby 
                         controlledByString += ",all";
                         requestedOptions.light_otherplayers = true;
                     } else {
                         requestedOptions.light_otherplayers = false;
-                        if (controlledByString == "") { // looks like a character is set to all players instead of a specific character
+                        if (controlledByString === "") { // looks like a character is set to all players instead of a specific character
                             controlledByString = "all";
                         }
                     }
@@ -1028,35 +763,24 @@ d88' `"Y8 d88' `88b `888P"Y88b   `88.  .8'  d88' `88b `888""8P   888
                         var parentToken = getObj("graphic", parentTokenID);
                         if (!parentToken) { 
                             log("==> Error. no parent token matching: " + parentTokenID);
-                            log("here's the list of mappers" + JSON.stringify(activeLightCrumbMappers));
+                            log("here's the list of mappers" + JSON.stringify(activeLightTrailsMappers));
                         } else {
-                            
+                            if (config.debug) log("setting light_radius same as token " + parentToken.get("name"));
+                            if (config.debug) log("light_radius: " + parentToken.get("light_radius") + " , light_dimradius: " + parentToken.get("light_dimradius") );
                             requestedOptions.light_radius = parentToken.get("light_radius");
                             requestedOptions.light_dimradius = parentToken.get("light_dimradius");                          
                         }
                     }
 
-
-
-
                     
-                    // **** TODO **** fix this: if a player requests a new image, it shouldn't change all the light_radii.
-                    if (_.size(requestedOptions) > 0 ) {
-                        for (var propertyName in requestedOptions) {
-                            // log("setting property: " + propertyName + ", value: " + requestedOptions[propertyName]);
-                            currentCrumb.set(propertyName, requestedOptions[propertyName]);
-                        }
-                    }
-                    
+                    _.each(requestedOptions, function(propertyName) {
+                        currentCrumb.set(propertyName, requestedOptions[propertyName]);
+                    });
             });
         });
 
-        if (debugDEFCON < 5) {log("leaving convertCrumbToNewImage. Nothing to return."); }
+        if (config.debug) {log("leaving convertCrumbToNewSettings. Nothing to return."); }
     };
-
-    
-    
-
 
     
     
@@ -1066,7 +790,7 @@ d88' `"Y8 d88' `88b `888P"Y88b   `88.  .8'  d88' `88b `888""8P   888
         var targetToken;
 
         // **** TODO **** What happens if you get/need more than one token id?
-        if (debugDEFCON < 5) {
+        if (config.debug) {
             log("function getTokenObjectsFromIDList(" + requestedTokenID + ")");
         }
 
@@ -1078,8 +802,11 @@ d88' `"Y8 d88' `88b `888P"Y88b   `88.  .8'  d88' `88b `888""8P   888
         }
     };
 
+    
+    
+    
     var getParentTokenID = function parentIDGetter(lightCrumbID) {  
-        if (debugDEFCON < 4 ) { log("entering getParentTokenID with " + lightCrumbID); }
+        if (config.debug) { log("entering getParentTokenID with " + lightCrumbID); }
         
         var lightCrumbObj = getObj("graphic", lightCrumbID );
         if (!lightCrumbObj) {
@@ -1088,7 +815,7 @@ d88' `"Y8 d88' `88b `888P"Y88b   `88.  .8'  d88' `88b `888""8P   888
         } else {
             var parentTokenID = lightCrumbObj.get("gmnotes");
 
-            if (debugDEFCON < 4) { log("exiting getParentTokenID: returning " + parentTokenID); }
+            if (config.debug) { log("exiting getParentTokenID: returning " + parentTokenID); }
             
             return parentTokenID;           
         }
@@ -1099,65 +826,83 @@ d88' `"Y8 d88' `88b `888P"Y88b   `88.  .8'  d88' `88b `888""8P   888
 
     
     
-    var getLightCrumbsFromLayer = function lightCrumbFinder(layer, pageID) {
+    var getTorchTokensFromLayer = function lightCrumbFinder(layer, pageID) {
         // expects "objects" or "gmlayer" and a valid page_id
 
         if (!pageID) {
-            log("==> Error: getLightCrumbsFromLayer expected a pageID but didn't receive one");
-            pageID = getCurrentPage("gm");
+            log("==> Error: getTorchTokensFromLayer expected a pageID but didn't receive one");
+            pageID = psUtils.GetPlayerPage("gm");
         }
 
-        if (debugDEFCON < 5) {
-            log("entered getLightCrumbsFromLayer(" + layer + ", " + pageID + ")");
+        if (config.debug) {
+            log("entered getTorchTokensFromLayer(" + layer + ", " + pageID + ")");
         }
-        var LightCrumbMakerSupply;
 
-
-        LightCrumbMakerSupply = findObjs({
-            type: 'graphic',
-            subtype: 'token',
-            imgsrc: config.IMAGE,
-            layer: layer,
-            pageid: pageID
+        var torchTokens = [];
+        _.each( ICONS, function(imgsrc, iconName) {
+            var specificTorchTokens = findObjs({
+                type: 'graphic',
+                subtype: 'token',
+                imgsrc: imgsrc,
+                layer: layer,
+                pageid: pageID
+            });
+            torchTokens = torchTokens.concat(specificTorchTokens);
         });
 
-        if (debugDEFCON < 5) {
-            log("leaving getLightCrumbsFromLayer: returning LightCrumbMakerSupply = " + LightCrumbMakerSupply);
+        if (config.debug) {
+            log("leaving getTorchTokensFromLayer: returning LightTrailsMakerSupply = " + torchTokens);
         }
-        return(LightCrumbMakerSupply);
+        return(torchTokens);
     };
 
 
-    var deregisterMapper = function mapperDeregistrar(tokenID, playerName) {
-        if (debugDEFCON < 5) { log("entering deregisterMapper with " + tokenID + "," + playerName );}
-        
-        if (playerName === undefined || tokenID == "all") { // clear all mappers
-            activeLightCrumbMappers = [];
-            state.LightCrumb.activeMappers = [];
+    
+    
+    
+    var deregisterAllMappers = function allMappersDeregistrar() {
+        activeLightTrailsMappers = [];
+        state.psLightTrails.activeMappers = [];
+        psGUI.whisper("gm", info.name + ": All mappers deregistered.");
+    };
 
-        } else { // We got a tokenID. Remove it from the list of active mappers
+
+
+
+    
+    var deregisterMapper = function mapperDeregistrar(tokenID, playerName) {
+        if (playerName === undefined || playerName === "") {
+            playerName = "gm";
+        }
+        
+        if (config.debug) { log("entering deregisterMapper with " + tokenID + "," + playerName );}
+        
+        var tokenObj = getObj("graphic", tokenID);
+        if (tokenObj !== undefined) { // We got a tokenID. Remove it from the list of active mappers
         
             // rearrange the colors list so other mappers can keep their existing color         
-            var mapperNum = activeLightCrumbMappers.indexOf(tokenID);
+            var mapperNum = activeLightTrailsMappers.indexOf(tokenID);
             var mapperColor = COLORS[mapperNum];
             // log("COLORS before: " + COLORS);
             COLORS = _.without(COLORS, mapperColor);
             COLORS.push(mapperColor);
             // log("COLORS after: " + COLORS);
-            state.LightCrumb.colors = _.clone(COLORS);
+            state.psLightTrails.colors = _.clone(COLORS);
             
             // remove the mapper from the list
-            // log("activeLightCrumbMappers before: " + activeLightCrumbMappers);
-            activeLightCrumbMappers = _.without(activeLightCrumbMappers, tokenID);
-            state.LightCrumb.activeMappers = _.clone(activeLightCrumbMappers);
-            // log("activeLightCrumbMappers after: " + activeLightCrumbMappers);
+            // log("activeLightTrailsMappers before: " + activeLightTrailsMappers);
+            activeLightTrailsMappers = _.without(activeLightTrailsMappers, tokenID);
+            state.psLightTrails.activeMappers = _.clone(activeLightTrailsMappers);
+            // log("activeLightTrailsMappers after: " + activeLightTrailsMappers);
+            psGUI.whisper(playerName, "Removed " + tokenObj.get("name") + " from the list of active mappers." );
         }
-        
-        
     };
+
+
+
     
     var registerMapper = function mapperRegistrar(tokenID, playerName) {
-        if (debugDEFCON < 2) { log("entered registerMapper with: " + tokenID + ", " + playerName); }
+        if (config.debug) { log("entered registerMapper with: " + tokenID + ", " + playerName); }
         if (playerName === undefined) { playerName = "gm"; }
 
         var statusMessage = "";
@@ -1168,27 +913,18 @@ d88' `"Y8 d88' `88b `888P"Y88b   `88.  .8'  d88' `88b `888""8P   888
         var currentPage = targetToken.get("_pageid");
         if (!tokenName) { tokenName = ""; }
 
-        if ( activeLightCrumbMappers.indexOf(tokenID) == -1 ) { // you're not yet registered
-            activeLightCrumbMappers.push(tokenID);
-            state.LightCrumb.activeMappers.push(tokenID); // save this in the Roll20 state object so it's persistent between sessions.
+        if ( activeLightTrailsMappers.indexOf(tokenID) == -1 ) { // you're not yet registered
+            activeLightTrailsMappers.push(tokenID);
+            state.psLightTrails.activeMappers.push(tokenID); // save this in the Roll20 state object so it's persistent between sessions.
             statusMessage = 'Added ' + tokenName + ' to the list of active mappers.';
             statusMessage += '<div style="font-size: smaller; text-align: center;">(ID: '+ tokenID + ')</div>';
-            whisper(playerName, statusMessage);
-            
-            
-            /* Removed: not needed because we don't drop a crumb on register anymore
-            var controllingPlayerID = tokenOwner;
-            if ( config.SHARED_VISION === true ) {
-                controllingPlayerID += ",all";
-                
-            }
-            */
+            psGUI.whisper(playerName, statusMessage);
             
             var displayName = getDisplayName(tokenName);
 
-            if (debugDEFCON < 4) {
-                log("In registerMapper: added " + tokenID + " to list of Active mappers" + activeLightCrumbMappers);
-                log("in registerMapper: dropped LightCrumb: [" + tokenCoords + "], " + currentPage);
+            if (config.debug) {
+                log("In registerMapper: added " + tokenID + " to list of Active mappers" + activeLightTrailsMappers);
+                log("in registerMapper: dropped LightTrails: [" + tokenCoords + "], " + currentPage);
             }
         }
 
@@ -1199,26 +935,23 @@ d88' `"Y8 d88' `88b `888P"Y88b   `88.  .8'  d88' `88b `888""8P   888
 
     var getOffsetLocation = function offsetLocationGetter(currentLocation, lastLocation) { // expect two points [x,y], [x1,y1]
 
-
-        var offsetUnitVector = plexUtils.NormalizeVector(currentLocation, lastLocation);
-        if (debugDEFCON < 2) {log("offsetUnitVector = " + offsetUnitVector);}
-        var offsetScaledVector = plexUtils.ScaleVector(offsetUnitVector, config.OFFSET);
-        if (debugDEFCON < 2) {log("offsetScaledVector = " + offsetScaledVector);}
-        var offsetLocation = plexUtils.AddVectors([currentLocation, offsetScaledVector]);
-        if (debugDEFCON < 2) {log("offsetLocation = " + offsetLocation);}
+        var offsetUnitVector = psMath.NormalizeVector(currentLocation, lastLocation);
+        if (config.debug) {log("offsetUnitVector = " + offsetUnitVector);}
+        var offsetScaledVector = psMath.ScaleVector(offsetUnitVector, config.OFFSET);
+        if (config.debug) {log("offsetScaledVector = " + offsetScaledVector);}
+        var offsetLocation = psMath.AddVectors([currentLocation, offsetScaledVector]);
+        if (config.debug) {log("offsetLocation = " + offsetLocation);}
 
         if (offsetLocation == []) {
             log("Couldn't find an offset location. Setting it to currentLocation");
             offsetLocation = currentLocation;
         }
 
-        if (debugDEFCON < 2 ) { log("offsetVector = " + offsetUnitVector); }
-        if (debugDEFCON < 2 ) { log("offsetLocation = " + offsetLocation); }
+        if (config.debug) { log("offsetVector = " + offsetUnitVector); }
+        if (config.debug) { log("offsetLocation = " + offsetLocation); }
         // normalizeVector is expecting two points
 
         return offsetLocation;
-
-
     };
 
 
@@ -1235,14 +968,14 @@ o888ooo88   o888o         88ooo88   888ooo88
 */
 
 
-    var dropLightCrumb = function lightCrumbDropper(customLightCrumbSettings, parentToken) { // expects an object with properties matching roll20 graphic objects
+    var dropSingleTorch = function lightCrumbDropper(customLightTrailsSettings, parentToken) { // expects an object with properties matching roll20 graphic objects
 
-        if (debugDEFCON < 5) { log("entered dropLightCrumb with " + JSON.stringify(customLightCrumbSettings)); }
+        if (config.debug) { log("entered dropSingleTorch with " + JSON.stringify(customLightTrailsSettings)); }
 
         // **** TODO: go through this list of variables and clear unused ones out
 
-        var LightCrumbMakerSupply,
-            currentLightCrumb,
+        var LightTrailsMakerSupply,
+            currentTorchToken,
             size,
             auraRadius,
             auraColor,
@@ -1256,10 +989,10 @@ o888ooo88   o888o         88ooo88   888ooo88
 
             
             
-        var defaultLightCrumbSettings = {
+        var defaultLightTrailsSettings = {
             imgsrc: config.IMAGE,
             subtype: 'token',
-            pageid: getCurrentPage("gm"),
+            pageid: psUtils.GetPlayerPage("gm"),
             width: 70 * config.ICON_RELATIVE_SIZE,
             height: 70 * config.ICON_RELATIVE_SIZE,
             left: 70,
@@ -1271,66 +1004,66 @@ o888ooo88   o888o         88ooo88   888ooo88
             light_otherplayers: true,
             controlledby: "all",
             isdrawing: true,
-            name: "Default LightCrumb",
+            name: "Default LightTrails",
             gmnotes: parentToken
         };
 
         
         
-        for (var propertyName in defaultLightCrumbSettings) { // compare custom settings with default and fill them out where needed.
-            if ( customLightCrumbSettings.hasOwnProperty(propertyName) === false ) {
-                customLightCrumbSettings[propertyName] = defaultLightCrumbSettings[propertyName];
+        for (var propertyName in defaultLightTrailsSettings) { // compare custom settings with default and fill them out where needed.
+            if ( customLightTrailsSettings.hasOwnProperty(propertyName) === false ) {
+                customLightTrailsSettings[propertyName] = defaultLightTrailsSettings[propertyName];
             }
         }       
 
-        currentPageID = customLightCrumbSettings.pageid;
+        currentPageID = customLightTrailsSettings.pageid;
 
-        LightCrumbMakerSupply = getLightCrumbsFromLayer("gmlayer", currentPageID);
-        currentLightCrumb = LightCrumbMakerSupply.pop();
+        LightTrailsMakerSupply = getTorchTokensFromLayer("gmlayer", currentPageID);
+        currentTorchToken = LightTrailsMakerSupply.pop();
 
-        if(currentLightCrumb) {
+        if(currentTorchToken) {
             
-            if (debugDEFCON < 2) { log("Found existing lightCrumb on GM Layer" + currentLightCrumb); }
+            if (config.debug) { log("Found existing lightCrumb on GM Layer" + currentTorchToken); }
             
-            currentLightCrumb.set(customLightCrumbSettings);
-            // log( "dropped old, salvaged currentLightCrumb: " + JSON.stringify(currentLightCrumb) );          
+            currentTorchToken.set(customLightTrailsSettings);
+            // log( "dropped old, salvaged currentTorchToken: " + JSON.stringify(currentTorchToken) );          
             
         } else { // no existing lightcrumb found. Make a new one.
-            if (debugDEFCON < 5) { log("No existing lightcrumb. About to make one."); }
-            currentLightCrumb = createObj('graphic',customLightCrumbSettings);
+            if (config.debug) { log("No existing lightcrumb. About to make one."); }
+            currentTorchToken = createObj('graphic',customLightTrailsSettings);
             
-            if (debugDEFCON < 4) {log( "dropped brand new currentLightCrumb: " + JSON.stringify(currentLightCrumb) );}
+            if (config.debug) {log( "dropped brand new currentTorchToken: " + JSON.stringify(currentTorchToken) );}
         }
 
-        if (currentLightCrumb) {
+        if (currentTorchToken) {
             // **** ! Clean this section up. It's a mess. 
-                // Move it into or before the customLightCrumbSettings object gets built.
-            if (customLightCrumbSettings.controlledby.indexOf('all')) {
+                // Move it into or before the customLightTrailsSettings object gets built.
+            if (customLightTrailsSettings.controlledby.indexOf('all')) {
                 
                 if (config.SHOW_AURA ) {
 
                     if (config.SHARED_VISION === false) {
-                        auraColor = getAuraColor(currentLightCrumb.get("gmnotes"));
+                        auraColor = getAuraColor(currentTorchToken.get("gmnotes"));
                     } else {
                         auraColor = config.SHARED_AURA_COLOR;
                     }
-                    currentLightCrumb.set({
+                    currentTorchToken.set({
                         aura1_radius: config.AURA_RADIUS,
                         aura1_color: auraColor,
                         showplayers_aura1: true
                     });
                 } else {
-                    currentLightCrumb.set("showplayers_aura1", false);
+                    currentTorchToken.set("showplayers_aura1", false);
                 }
                 
                 if (config.SHOW_NAMES) {
-                    currentLightCrumb.set({
+                    currentTorchToken.set({
                         // name: "all",
                         showname: true,
                         showplayers_name: true
                     });                 
                 } else { // hide the name
-                    currentLightCrumb.set({
+                    currentTorchToken.set({
                         // name: "all",
                         showname: false,
                         showplayers_name: false
@@ -1339,12 +1072,12 @@ o888ooo88   o888o         88ooo88   888ooo88
             } else { // "all" does not appear in the list: controlledby for the token.
                 
                 if (config.SHOW_NAMES ) {
-                    currentLightCrumb.set({
+                    currentTorchToken.set({
                         showname: true,
                         showplayers_name: true                  
                     });
                 } else { // hide the name
-                    currentLightCrumb.set({             
+                    currentTorchToken.set({             
                         showname: false,
                         showplayers_name: false                 
                     });
@@ -1352,13 +1085,13 @@ o888ooo88   o888o         88ooo88   888ooo88
 
                 if (config.SHOW_AURA) {
                     
-                    currentLightCrumb.set({
+                    currentTorchToken.set({
                         aura1_radius: config.AURA_RADIUS,
-                        aura1_color: getAuraColor(currentLightCrumb.get("gmnotes")),
+                        aura1_color: getAuraColor(currentTorchToken.get("gmnotes")),
                         showplayers_aura1: true
                     });                 
                 } else { // hide the aura
-                    currentLightCrumb.set({
+                    currentTorchToken.set({
                         showplayers_aura1: false
                     });                 
                 }
@@ -1366,135 +1099,23 @@ o888ooo88   o888o         88ooo88   888ooo88
             }           
             
             
-            toBack(currentLightCrumb);
+            toBack(currentTorchToken);
         } else {
-            log("==> Something seems wrong. dropLightCrumb Tried to set the Z-order to back, but there was no LightCrumb object to move.");
+            log("==> Something seems wrong. dropSingleTorch Tried to set the Z-order to back, but there was no LightTrails object to move.");
         }
 
-        if (debugDEFCON < 2) {
-            log( "Dropped a LightCrumb with the following properties: " + JSON.stringify(currentLightCrumb) );
-            var allLightCrumbsOnPlayerLayer = getLightCrumbsFromLayer("objects", currentPageID);
-            log("There are " + allLightCrumbsOnPlayerLayer.length + " known torch tokens on object layer: ");
+        if (config.debug) {
+            log( "Dropped a LightTrails with the following properties: " + JSON.stringify(currentTorchToken) );
+            var allLightTrailsOnPlayerLayer = getTorchTokensFromLayer("objects", currentPageID);
+            log("There are " + allLightTrailsOnPlayerLayer.length + " known torch tokens on object layer: ");
         }
 
-        if ( debugDEFCON < 5 ) { log("leaving dropLightCrumb. Returning currentLightCrumb." + JSON.stringify(currentLightCrumb)); }
+        if (config.debug) { log("leaving dropSingleTorch. Returning currentTorchToken." + JSON.stringify(currentTorchToken)); }
         
-        return currentLightCrumb;
+        return currentTorchToken;
         
     };
 
-
-    var getGameMasterID = function gmIDGetter() {
-        if (debugDEFCON < 4) { log("entering getGameMasterID with no parameters"); }
-        
-        var players = findObjs({
-            _type: "player",
-        });
-        
-        var gmID;
-        var gmObj;
-        var currentPlayerID;
-        
-        _.each(players, function loopToFindGM(player) { 
-            if (debugDEFCON < 4) { log("evaluating player: " + JSON.stringify(player) ); }
-            currentPlayerID = player.get("_id");
-            if ( playerIsGM(currentPlayerID) ) {
-                gmID = currentPlayerID;
-                // ??? what happens if there's 2 GMs? We're only delivering up the last one found.
-                if (debugDEFCON < 2) {log("found a GM: " + gmID);}
-            }
-        
-        });
-
-        if (debugDEFCON < 4) { log("exiting getGameMasterID. Returning " + gmID); }
-        return gmID;
-    };
-    
-    
-/*
-
-                                               
-ooooooooo     ooooooo     oooooooo8 ooooooooo8 
- 888    888   ooooo888  888    88o 888oooooo8  
- 888    888 888    888   888oo888o 888         
- 888ooo88    88ooo88 8o 888     888  88oooo888 
-o888                     888ooo888             
-
-*/  
-    
-    var getCurrentPage = function currentPageGetter(tokenObjOrPlayerID) { // expects token, playerID, or string=="gm"
-    // **** TODO **** This isn't working as expected. Go through it and check assertions.
-    
-        if ( debugDEFCON < 5) { log( "entering getCurrentPage with " + tokenObjOrPlayerID ); }
-        var currentPage;
-        var playerID;
-        var playerObj;
-        var gmID = getGameMasterID();
-        if ( debugDEFCON < 5) {
-            log("   gmID = " + gmID);
-        }
-
-        if (tokenObjOrPlayerID === undefined ) { // getCurrentPage received bad parameters, but we'll take care of it.
-            log("==> Error in getCurrentPage. tokenObjOrPlayerID == undefined"); 
-            return Campaign().get("playerpageid");
-            
-        } else if ( tokenObjOrPlayerID == "gm") {
-            tokenObjOrPlayerID = gmID;
-            if (gmID) {
-                // currentPage = getObj("player", gmID).get("lastpage");            
-                return Campaign().get("playerpageid");
-            } else {
-                return Campaign().get("playerpageid");              
-            }           
-        
-            
-            
-        } else if ( _.isString(tokenObjOrPlayerID) ) { // it's a player ID
-            if (debugDEFCON < 4) { log("    tokenObjOrPlayerID was a string. Assume player_id: " + tokenObjOrPlayerID); }
-            playerID = tokenObjOrPlayerID;
-            playerObj = getObj("player", playerID);
-            
-            if (playerIsGM(playerID)) { // it's the GM, use the lastpage property to find their page
-                if (debugDEFCON < 4) { 
-                    log("    player_id is a GM");
-                    log("    playerObj.get('lastpage') returns " + playerObj.get("lastpage") );
-                    //log("    Campaign().get('playerpageid') returns " + Campaign().get("playerpageid") );
-                }
-                
-                currentPage = playerObj.get("lastpage"); // NOTE: there's no lastpage unless the GM has been on another page
-                if (!currentPage) {
-                    currentPage = Campaign().get("playerpageid");
-                }
-            } else if ( Campaign().get("playerspecificpages")[playerID] ) {
-                if ( debugDEFCON < 4 ) { 
-                    log("    player_id is not a GM, and the players are seperated onto different pages"); 
-                    log("    playerspecificpages = " + Campaign().get("playerspecificpages") );
-                }
-                
-                
-                // Note: there's no playerspecificpages unless a single player name is dragged onto another map
-                currentPage = Campaign().get("playerspecificpages")[playerID];
-
-            } else { // it's a player and the players are all on one page.
-                if (debugDEFCON < 4) { log("    player_id is not a GM, but there's only one page"); }
-                currentPage = Campaign().get("playerpageid");               
-            }
-        } else if ( _.isObject(tokenObjOrPlayerID) ) { // it's a token
-            if (debugDEFCON < 4) { log("    tokenObjOrPlayerID was an object. Assume token: " + JSON.stringify(tokenObjOrPlayerID) ); }
-            var token = tokenObjOrPlayerID;
-            currentPage = token.get("page_id");
-        }
-        
-        if (debugDEFCON < 4) { log("exiting getCurrentPage. Returning " + currentPage ); } 
-        
-        return currentPage;
-    };
-
-    var handlePlayerPageChange = function pageChangeHandler() {
-        // Nothing to be done. I'm not exactly sure why I have this yet.
-
-        return;
-    };
 
     var getDisplayName = function displayNameGetter(tokenName) {
         var words = tokenName.split(" ");
@@ -1509,7 +1130,7 @@ o888                     888ooo888
 
     var findShortestDistance = function shortestDistancetoTokenFinder(listOfGraphicObjectsToCompare, referenceLocation, tokenMoved ) {
         
-        if (debugDEFCON < 5) { log("entering findShortestDistance with: " + listOfGraphicObjectsToCompare + ", " + referenceLocation + ", " + tokenMoved); }
+        if (config.debug) { log("entering findShortestDistance with: " + listOfGraphicObjectsToCompare + ", " + referenceLocation + ", " + tokenMoved); }
 
         var shortestDistance = -1;
 
@@ -1526,14 +1147,14 @@ o888                     888ooo888
 
         _.each(listOfGraphicObjectsToCompare, function loopToFindClosest(specificObjectToConsider) {
             var targetLocation = [specificObjectToConsider.get("left"), specificObjectToConsider.get("top")];
-            var currentDistance = plexUtils.GetDistance(targetLocation, referenceLocation);
+            var currentDistance = psMath.GetDistance(targetLocation, referenceLocation);
             if ( shortestDistance == -1 || currentDistance < shortestDistance ) {
                 shortestDistance = currentDistance;
             }
 
         });
 
-        if (debugDEFCON < 5) { log("leaving findShortestDistance: returning shortestDistance = " + shortestDistance); }
+        if (config.debug) { log("leaving findShortestDistance: returning shortestDistance = " + shortestDistance); }
         return shortestDistance;
     };
 
@@ -1552,18 +1173,10 @@ o88o  8  o88o  88ooo88      888      88oooo888
 
     var getLastLocation = function lastLocationGetter(token) {
         
-        if (debugDEFCON < 3) { log("lastmove for " + token.get("name") + ", " + token.get("_id") + " = " + token.get("lastmove") ); }
+        if (config.debug) { log("lastmove for " + token.get("name") + ", " + token.get("_id") + " = " + token.get("lastmove") ); }
         var movementPath = token.get("lastmove").split(",");
         
         var lastLocation = [];
-
-        /*
-        if (_.isString(movementPath[0]) ) {
-            log("might have found your bug. token.get('lastmove').split(',') produces an array of strings. You need to convert them to numbers.");
-        } else if (_.isNumber(movementPath[0]) ) {
-            log("token.get('lastmove').split(',') seems to produce an array of numbers");
-        }
-        */
         
         lastLocation[0] = Number(movementPath[0]); // important to type convert them into numbers
         lastLocation[1] = Number(movementPath[1]);
@@ -1574,7 +1187,7 @@ o88o  8  o88o  88ooo88      888      88oooo888
 
 
     var handleTokenMove = function tokenMoveHandler(tokenMoved) {
-        if (debugDEFCON < 4 ) { log("entering handleTokenMoved with: " + tokenMoved); }
+        if (config.debug) { log("entering handleTokenMoved with: " + tokenMoved); }
         var tokenLocation = [],
             tokenID = tokenMoved.get("_id"),
             tokenPageID = tokenMoved.get("_pageid"),
@@ -1602,14 +1215,14 @@ o88o  8  o88o  88ooo88      888      88oooo888
         }       
         
 
-        if (activeLightCrumbMappers.indexOf(tokenID) !== -1) { // you're authorized to leave a trail of light.. continue
-            if(debugDEFCON < 4) {log("in handleTokenMove. About to get tokenLocation");}
+        if (activeLightTrailsMappers.indexOf(tokenID) !== -1) { // you're authorized to leave a trail of light.. continue
+            if(config.debug) {log("in handleTokenMove. About to get tokenLocation");}
             // tokenLocation = [tokenMoved.get("left"), tokenMoved.get("top")];
 
             
             // figure out which lightcrumbs you own.
-            var crumbsToConsider = getLightCrumbsFromLayer("objects", tokenPageID);
-            if (debugDEFCON < 4 ) { log("crumbsToConsider before SHARED_VISION test: " + _.size(crumbsToConsider) ); }
+            var crumbsToConsider = getTorchTokensFromLayer("objects", tokenPageID);
+            if (config.debug) { log("crumbsToConsider before SHARED_VISION test: " + _.size(crumbsToConsider) ); }
             if ( config.SHARED_VISION === false || config.INHERIT_CHARACTER_LIGHTING === true ) { // filter the list of crumbsToConsider for crumbs owned by the token
                 var allCrumbsInConsideration = crumbsToConsider;
                 crumbsToConsider = _.filter( allCrumbsInConsideration, function removeOtherPlayersCrumbs(crumbInQuestion) {                 
@@ -1622,11 +1235,11 @@ o88o  8  o88o  88ooo88      888      88oooo888
                     
                 });
             }
-            if (debugDEFCON < 4 ) { log("crumbsToConsider after SHARED_VISION test: " + _.size(crumbsToConsider + ", " + JSON.stringify(crumbsToConsider)) ); }
+            if (config.debug) { log("crumbsToConsider after SHARED_VISION test: " + _.size(crumbsToConsider + ", " + JSON.stringify(crumbsToConsider)) ); }
                         
             shortestDistanceToExistingCrumb = findShortestDistance(crumbsToConsider, referenceLocation, tokenMoved);            
 
-            if (debugDEFCON < 4) { log("config.DROP_DISTANCE: " + config.DROP_DISTANCE + ", Current Distance: " + shortestDistanceToExistingCrumb); }
+            if (config.debug) { log("config.DROP_DISTANCE: " + config.DROP_DISTANCE + ", Current Distance: " + shortestDistanceToExistingCrumb); }
 
             // figure out how far between crumbs is ok, so you can drop another one.
             var minSeperation = config.DROP_DISTANCE;
@@ -1640,14 +1253,16 @@ o88o  8  o88o  88ooo88      888      88oooo888
             }
             
             if ( shortestDistanceToExistingCrumb == -1 || shortestDistanceToExistingCrumb > minSeperation ) {
-                if (debugDEFCON < 4) { log("LightCrumb.handleTokenMove: registered token, "+ tokenID +", moved. dropping light token"); }
+                if (config.debug) { log("LightTrails.handleTokenMove: registered token, "+ tokenID +", moved. dropping light token"); }
                 
                 // var controllingPlayerID = tokenMoved.get("controlledby"); // fails
                 
                 var activeCharacter = getObj("character", tokenMoved.get("represents"));
+                var tokenController = tokenMoved.get("controlledby");
+                
                 var controllingPlayerID;
 
-                if (activeCharacter !== undefined) {
+                if (activeCharacter !== undefined) { // this token represents an actual character, use the character.controlledby settings for the torches
 
                     var controllingPlayersList = activeCharacter.get("controlledby");                   
                     var controllingPlayersArray = controllingPlayersList.split(",");
@@ -1659,16 +1274,17 @@ o88o  8  o88o  88ooo88      888      88oooo888
                         controllingPlayerID = "all";
                     }
                     // figure out the first one that's not "all players"
-                    
-                    
+                
+                } else if ( tokenController !== "") { // this token is controlled by a player, use that setting for the torches
+                    controllingPlayerID = tokenController;
                     
                 } else { // there's no one assigned to the token
-                    controllingPlayerID = "all";
-                    whisper("gm", "Be aware: There's no player assigned to that token. Things might get weird.");
+                    controllingPlayerID = "";
+                    psGUI.whisper("gm", info.name + ": Be aware: There's no player assigned to that token (" + tokenMoved.get("name") + "). No one can 'see through' its dropped torches since no players control them.");
                 }
                 // **** NOTE: you might have problems if characters have multiple owners
                 
-                if (debugDEFCON < 4) { log("    in handleTokenMove: controllingPlayerID = " + controllingPlayerID ); }
+                if (config.debug) { log("    in handleTokenMove: controllingPlayerID = " + controllingPlayerID ); }
                 if ( config.SHARED_VISION === true ) {
                     controllingPlayerID += ",all";
                 }
@@ -1676,7 +1292,7 @@ o88o  8  o88o  88ooo88      888      88oooo888
                 var displayName = getDisplayName(tokenName);
 
                 
-                var customLightCrumbSettings = {
+                var customLightTrailsSettings = {
                     left: referenceLocation[0],
                     top: referenceLocation[1],
                     pageid: tokenPageID,
@@ -1686,26 +1302,26 @@ o88o  8  o88o  88ooo88      888      88oooo888
                 };
                 
                 if (config.SHARED_VISION) {
-                    customLightCrumbSettings.light_otherplayers = true;
+                    customLightTrailsSettings.light_otherplayers = true;
                 } else {
-                    customLightCrumbSettings.light_otherplayers = false;
+                    customLightTrailsSettings.light_otherplayers = false;
                 }
                 
                 
                 if (config.INHERIT_CHARACTER_LIGHTING) {
-                    customLightCrumbSettings.light_radius = tokenMoved.get("light_radius");
-                    customLightCrumbSettings.light_dimradius = tokenMoved.get("light_dimradius");
+                    customLightTrailsSettings.light_radius = tokenMoved.get("light_radius");
+                    customLightTrailsSettings.light_dimradius = tokenMoved.get("light_dimradius");
                     
                 }
 
-                var currentLightCrumb = dropLightCrumb(customLightCrumbSettings, tokenMoved.get("_id")); //movementDrop
+                var currentTorchToken = dropSingleTorch(customLightTrailsSettings, tokenMoved.get("_id")); //movementDrop
 
-                if (debugDEFCON < 4) { log("    in handleTokenMove: dropped LightCrumb [" + lastLocation + "], "+ tokenPageID); }
+                if (config.debug) { log("    in handleTokenMove: dropped LightTrails [" + lastLocation + "], "+ tokenPageID); }
 
             }
 
         }
-        if (debugDEFCON < 4) { log("leaving handleTokenMove. Nothing to return."); }
+        if (config.debug) { log("leaving handleTokenMove. Nothing to return."); }
         return;
     };
 
@@ -1726,1050 +1342,93 @@ o888o o888o o888o 8""888P'   "888" `Y888""8o o888o o888o
     
     
     var checkInstall = function () {
-        log("/===-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-===/");
-        log("           Starting LightCrumb Script              ");
-        log("         current time is: " + Date.now() + "            ");        
-        log("                                                   ");
-        log("       To use, enter !LightCrumb in chat.          ");
-        log("/===-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-===/");
-
-
+        log(info.name + " installed" );
+        
+        var userCommands = initializeUserCommands();
+        psGUI.RegisterUserCommands(userCommands);
+        psGUI.BuildHelpFiles(userCommands, info.name);
+        
+        
         // Roll20 allows scripters to store persistent data in their "state" object.
-        // We'll use the LightCrumb property in state to store persistent info about this script for each campaign.
-        // Notably: who's registered to leave automatic LightCrumb trails.
+        // We'll use the LightTrails property in state to store persistent info about this script for each campaign.
+        // Notably: who's registered to leave automatic LightTrails trails.
 
-        if( ! _.has(state,'LightCrumb') ) { // first time running the LightCrumb script for this Roll20 campaign. It needs a state.
-            log('-=> LightCrumb v'+version+' <=-  ['+(new Date(lastUpdate))+']');
-            state.LightCrumb = {
-                version: schemaVersion,
+        if( ! _.has(state,'psLightTrails') ) { // first time running the LightTrails script for this Roll20 campaign. It needs a state.
+            log(info.name + " v" + info.version + " installed");
+            state.psLightTrails = {
+                version: info.version,
                 activeMappers: [],
                 colors: COLORS,
                 config: config
 
             };
-        } else { // a LightCrumb object already exists in the Roll20 persistent "state" object.
+        } else { // a LightTrails object already exists in the Roll20 persistent "state" object.
 
-            var lengthOfStateConfig = _.size(state.LightCrumb.config);
-            var lengthOfLightCrumbConfig = _.size(config);
+            var lengthOfStateConfig = _.size(state.psLightTrails.config);
+            var lengthOfLightTrailsConfig = _.size(config);
             
-            if (debugDEFCON < 2) { log("state.LightCrumb.config = " + JSON.stringify(state.LightCrumb.config) ); }
-            if (debugDEFCON < 2) { log("config = " + JSON.stringify(config) ); }
+            if (config.debug) { log("state.psLightTrails.config = " + JSON.stringify(state.psLightTrails.config) ); }
+            if (config.debug) { log("config = " + JSON.stringify(config) ); }
             
-            if ( state.LightCrumb.version !== schemaVersion || lengthOfLightCrumbConfig !== lengthOfStateConfig ) {
-                log("Seems like the script got updated: " + state.LightCrumb.version);
-                log("Updating state.LightCrumb.version to reflect current script: "+schemaVersion);
-
-                state.LightCrumb.version = schemaVersion;
-                
-                /*
-                for (var propertyName in config) {
-                    if (state.LightCrumb.config.hasOwnProperty(propertyName)) {
-                        log("found property: " + propertyName + ": " + state.LightCrumb.config[propertyName]);
-                    } else {
-                        log("missing property: " + propertyName + ": " + config[propertyName]);
-                        state.LightCrumb.config[propertyName] = config[propertyName];
-                    }
-                }
-                */
+            if ( state.psLightTrails.version !== info.version || lengthOfLightTrailsConfig !== lengthOfStateConfig ) {
+                state.psLightTrails.version = info.version;             
 
                 /* Reset to Default Settings for this campaign? */
-                state.LightCrumb.config = _.clone(config);
-                
+                state.psLightTrails.config = _.clone(config);
             }
 
             
-            if (_.has(state.LightCrumb, 'activeMappers')) {
-                activeLightCrumbMappers = _.clone(state.LightCrumb.activeMappers);
+            if (_.has(state.psLightTrails, 'activeMappers')) {
+                activeLightTrailsMappers = _.clone(state.psLightTrails.activeMappers);
             } else {
-                state.LightCrumb.activeMappers = _.clone(activeLightCrumbMappers);
+                state.psLightTrails.activeMappers = _.clone(activeLightTrailsMappers);
             }
 
-            if (_.has(state.LightCrumb, 'config')) {
-                config = _.clone(state.LightCrumb.config);
+            if (_.has(state.psLightTrails, 'config')) {
+                config = _.clone(state.psLightTrails.config);
             } else {
-                state.LightCrumb.config = _.clone(config);
+                state.psLightTrails.config = _.clone(config);
             }
 
-            if (_.has(state.LightCrumb, 'colors')) {
-                COLORS = _.clone(state.LightCrumb.colors);
+            if (_.has(state.psLightTrails, 'colors')) {
+                COLORS = _.clone(state.psLightTrails.colors);
             } else {
-                state.LightCrumb.colors = _.clone(COLORS);
+                state.psLightTrails.colors = _.clone(COLORS);
             }
 
 
         }
         
-        if (_.has(state.LightCrumb.config) && state.LightCrumb.config.SHOW_HELP_ON_READY == 1) {
-            LightCrumb.ShowDetailedHelp('gm');
-        }
-    };
-
-    
-/* ---------------------------------------------------------------------------- */
-    
-                        /* --------------------- */
-                        //    IN CONSTRUCTION    //
-                        /* --------------------- */ 
-    var checkGlobalConfig = function globalConfigChecker() {
-
-        // Set the theme from the useroptions.
-        var useroptions = globalconfig && globalconfig.LightCrumb;
-        if(useroptions) {
-            state.LightCrumb.config.SHOW_HELP_ON_READY = useroptions.SHOW_HELP_ON_READY;
-            state.LightCrumb.userOptions = {
-                SHOW_HELP_ON_READY: useroptions.SHOW_HELP_ON_READY
-            };
-        }
-    
         
     };
-    
-/* ---------------------------------------------------------------------------- */
 
-    
-    
-    
     var registerEventHandlers = function() {
-        if (debugDEFCON < 5) {
-            log("LightCrumb registered event handlers");
-        }
-        on('chat:message', handleInput );
+        log(info.name + " listening.");
+        
+        //on('chat:message', handleInput ); // let psGUI handle this.
         on('change:graphic', handleTokenMove );
+        
     };
 
     return {
         RegisterEventHandlers: registerEventHandlers,
         CheckInstall: checkInstall,
-        Reset: reset,
-        ShowDetailedHelp: showDetailedHelp
-    };
-
-
-
-}());
-
-
-/*
-
-    ooo        ooooo               .   oooo        .o.
-    `88.       .888'             .o8   `888        888
-     888b     d'888   .oooo.   .o888oo  888 .oo.   888
-     8 Y88. .P  888  `P  )88b    888    888P"Y88b  Y8P
-     8  `888'   888   .oP"888    888    888   888  `8'
-     8    Y     888  d8(  888    888 .  888   888  .o.
-    o8o        o888o `Y888""8o   "888" o888o o888o Y8P
-
-
-*/
-
-
-
-var plexUtils = plexUtils || (function plexsoupAwesomeMaths() {
-    // Another module. This one for fun math. Adding and subtracting vectors, Distance, etc.
-    var debugDEFCON = 5; // 5 = AOK: log nothing. 1 = FUBAR: log everything
-
-    var getLongestVectorLength = function longestVectorGetter(vectorList) {
-        // **** why is this returning a length of 3 for two dimensional vectors?
-
-        if (debugDEFCON < 2) { log("entering getLongestVectorLength with: " + vectorList); }
-
-        if (vectorList.length == 2) {
-            if ( _.isNumber(vectorList[0]) ) {
-                log("aborting getLongestVectorLength(" + vectorList + "). I think we got one vector (a single x,y location) instead of a list of vectors.");
-                return(2);
-            }
-        } else {
-            if (debugDEFCON<2) {log("vectorList.length = " + vectorList);}
-        }
-
-        var longestVectorLength = 0;
-
-
-        _.each(vectorList, function loopToFindLongest(vector) {
-            if (vector.length > longestVectorLength) {
-                longestVectorLength = vector.length;
-            }
-        });
-
-        if (debugDEFCON < 3) {
-            log("getLongestVectorLength returning with: " + longestVectorLength);
-        }
-
-        return longestVectorLength;
-
-    };
-
-    var initializeVector = function vectorInitialiser(lengthRequired) {
-        if (debugDEFCON < 2) { log("initializeVector called with " + lengthRequired); }
-        var newVector = [];
-        var elementID;
-        for(elementID = 0; elementID < lengthRequired; elementID++) {
-            newVector.push(0);
-        }
-        if (debugDEFCON < 2) { log("initializeVector returning with " + newVector); }
-        return newVector;
-    };
-
-    var addVectors = function vectorAdder(listOfVectors) { // expects a 2d array.. [[point1, point2, ... pointN], ..., [pn1, pn2, ... pnN]]
-        // assumes the input vectors are the same length: eg 2 coordinates each: X and Y
-
-        if (listOfVectors.length == 2 ) { // make sure you're adding 2 vectors and not 2 points
-            if (_.isNumber(listOfVectors[0])) {
-                log("Aborting addVectors(" + listOfVectors + "). I think it contains one vector instead of two or more.");
-                return listOfVectors; // bail out.. something went wrong. You got a point instead of 2 vectors
-            }
-        }
-
-        if ( debugDEFCON < 2 ) { log("addVectors called with: " + listOfVectors); }
-
-        var longestVectorLength = getLongestVectorLength(listOfVectors);
-        var sumVector = initializeVector(longestVectorLength);
-
-
-
-
-        var elementID = 0;
-        var vectorNumber = 0;
-        for(elementID=0; elementID<longestVectorLength; elementID++) {
-            for(vectorNumber=0; vectorNumber<listOfVectors.length; vectorNumber++ ) {
-                sumVector[elementID] += Number(listOfVectors[vectorNumber][elementID]);
-
-            }
-        }
-
-        if (debugDEFCON < 3) {
-            log("addVectors returning with: " + sumVector);
-        }
-
-        if ( debugDEFCON < 2 ) { log("addVectors returning " + sumVector); }
-        return sumVector;
-
-    };
-
-    var scaleVector = function vectorExpander(vector, scalar) {
-        if (debugDEFCON < 2) {
-            log("scaleVector called with " + vector + ", " + scalar );
-        }
-        var newVector = _.map(vector, function scaleElement(elementValue) {
-            return elementValue * scalar;
-        });
-        if (debugDEFCON < 2) {
-            log("scaleVector returning with " + newVector );
-        }
-        return newVector;
-    };
-
-    var normalizeVector = function vectorNormalizer(point1, point2) { // expecting a list of 2 points [x1,y2], [x2,y2]
-        if (debugDEFCON < 2) { log("entering normalizeVector with: " + point1 + ", " + point2); }
-
-        var unitVector;
-        var translatedVector = addVectors( [point2, scaleVector(point1, -1)] );
-
-        var distance = getDistance(point1, point2);
-        if (distance > 0) {
-            unitVector = scaleVector(translatedVector, 1/distance );
-        } else { // abort. can't divide by 0. Make something up instead.
-            unitVector = translatedVector;
-            if ( debugDEFCON<2) {log("trying to normalize a vector where the distance is zero. Can't divide by zero.");}
-        }
-
-
-
-        if (debugDEFCON < 2) { log("unitVector is: " + unitVector); }
-
-        if (debugDEFCON < 2) { log("leaving normalizeVector with: " + unitVector); }
-        return unitVector;
-
-    };
-
-    var getDistance = function distanceGetter(point1, point2) {
-        // distance is squareroot of the squared sum of each side
-        //if (debugDEFCON < 2) { log("entering getDistance with " + point1 + ", " + point2); }
-        var xDist = Math.abs(point2[0] - point1[0]);
-        var xDistSquared = Math.pow(xDist, 2);
-        var yDist = Math.abs(point2[1] - point1[1]);
-        var yDistSquared = Math.pow(yDist, 2);
-        var distance = Math.sqrt(xDistSquared + yDistSquared);
-        //if (debugDEFCON < 2) { log("returning from getDistance with " + distance); }
-        return distance;
-    };
-
-
-    return {
-        AddVectors: addVectors,
-        ScaleVector: scaleVector,
-        GetDistance: getDistance,
-        NormalizeVector: normalizeVector
-
-    };
-
-
-}()); // End of Module: plexUtils
-
-
-
-/*
-
-    ooo        ooooo            o8o
-    `88.       .888'            `"'
-     888b     d'888   .oooo.   oooo  ooo. .oo.
-     8 Y88. .P  888  `P  )88b  `888  `888P"Y88b
-     8  `888'   888   .oP"888   888   888   888
-     8    Y     888  d8(  888   888   888   888
-    o8o        o888o `Y888""8o o888o o888o o888o
-
-
-*/
-
-
-
-
-
-
-on("ready",function(){
-    // this stuff happens when the script loads.
-    // Note: you have to use Caps to refer to the left side of the function declarations in "return"
-    LightCrumb.CheckInstall(); // instantiate all the function expressions
-    LightCrumb.RegisterEventHandlers(); // instantiate all the listeners
-    
-    
-
-
-});
-
-
-*******************************************************************************
-/*
-
-                     _/_/_/      _/_/_/      _/_/_/_/_/  _/_/_/  _/        _/_/_/_/   
-                    _/    _/  _/                _/        _/    _/        _/          
-                   _/_/_/      _/_/            _/        _/    _/        _/_/_/       
-                  _/              _/          _/        _/    _/        _/            
-                 _/        _/_/_/            _/      _/_/_/  _/_/_/_/  _/_/_/_/       
-                                                                                      
-                                                                                      
-                                                                                         
-                   _/_/_/    _/_/_/_/    _/_/_/  _/_/_/  _/_/_/_/_/  _/_/_/_/  _/_/_/    
-                  _/    _/  _/        _/          _/          _/    _/        _/    _/   
-                 _/_/_/    _/_/_/      _/_/      _/        _/      _/_/_/    _/_/_/      
-                _/    _/  _/              _/    _/      _/        _/        _/    _/     
-               _/    _/  _/_/_/_/  _/_/_/    _/_/_/  _/_/_/_/_/  _/_/_/_/  _/    _/    
-
-*/
-
-/*
-
-    Purpose:
-        To automatically resize plexsoup marketplace assets, to their intended native dimensions
-        This makes creating dungeons dramatically easier. See youtube.com/user/plexsoup
-
-    Usage:
-        enter !psResize or !psTileResizer in chat
-
-*/
-
-
-
-var psTileResizer = psTileResizer || (function psMarketplaceResizer() {
-    "use strict";
-
-    var info = {
-        version: 0.2,
-        authorName: "plexsoup"
-    };
-
-    var config = {
-        debugDEFCON: 5,
-        resizeOnAdd: true
-    };
-
-    
-    
-    var temp = {
-        //campaignLoaded: false,
-        GMPlayer: Campaign
-    };
-
-    var marketplaceTiles = [];
-    
-    
-/*
-
-    TODO:
-
-        turn off automatic renaming tiles
-        verify that tile is on map layer before messing with it.
-    
-*/
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    var tile = function( marketplaceID, width, height, name, connectors ) { // constructor to make a new tile
-        this.marketplaceID = marketplaceID;
-        this.width = width;
-        this.height = height;       
-        this.name = name;
-        this.connectors = connectors;
-
-        
-        // **** add a function to get the best connection point for lining things updateCommands
-        
-        // **** add a function to get dynamic lighting lines - consider using the lightrecorder script
+        registerMapper: registerMapper,
+        deregisterMapper: deregisterMapper,     
+        deregisterAllMappers: deregisterAllMappers,
+        reset: reset,
+        softReset: softReset,
+        hardReset: hardReset,
+        setAuraRadius: setAuraRadius,
+        toggleShowAura: toggleShowAura,
+        setLightRadius: setLightRadius,
+        setDimRadius: setDimRadius,
+        setCrumbSeparation: setCrumbSeparation,
+        toggleDropLocation: toggleDropLocation,
+        getLightTrailsStatus: getLightTrailsStatus
         
     };
 
-
-
-
-// *******************************************************************************
-
-    var populateDatabase = function databasePopulator() {
-
-        // new tile (marketplaceID, width, height, name, connectors)
-        var psCaves = [
-            ["50279", 720, 720, "0002 Room", { ne: "", se: "", sw: "", nw: ""}],
-            ["50281", 643, 643, "0003 Passage", { ne: "", se: "", sw: "", nw: ""}],
-            ["50283", 748, 748, "0004 Passage Descent", { ne: "", se: "", sw: "", nw: ""}],
-            ["50285", 622, 622, "0005 Passage Descent", { ne: "", se: "", sw: "", nw: ""}],
-            ["50287", 696, 696, "0006 Passage Corner Gallery", { ne: "", se: "", sw: "", nw: ""}],
-            ["50289", 752, 752, "0007 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
-            ["50291", 411, 411, "0008 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
-            ["50293", 618, 618, "0009 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
-            ["50295", 620, 620, "0010 Passage Straight", { ne: "", se: "", sw: "", nw: ""}],
-            ["50297", 634, 634, "0011 Passage Twisty", { ne: "", se: "", sw: "", nw: ""}],
-            ["50299", 585, 585, "0012 Passage Twisty 2", { ne: "", se: "", sw: "", nw: ""}],
-            ["50301", 596, 596, "0013 Passage Twisty 3", { ne: "", se: "", sw: "", nw: ""}],
-            ["50303", 604, 604, "0014 Intersection X", { ne: "", se: "", sw: "", nw: ""}],
-            ["50305", 606, 606, "0015 Intersection T 1", { ne: "", se: "", sw: "", nw: ""}],
-            ["50307", 633, 633, "0016 Intersection T 2", { ne: "", se: "", sw: "", nw: ""}],
-            ["50309", 606, 606, "0017 Intersection Lava X", { ne: "", se: "", sw: "", nw: ""}],
-            ["50311", 678, 678, "0018 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
-            ["50313", 700, 700, "0019 Room Med", { ne: "", se: "", sw: "", nw: ""}],
-            ["50315", 650, 486, "0020 Room Med", { ne: "", se: "", sw: "", nw: ""}],
-            ["50317", 1093, 1093, "0021 Room Large", { ne: "", se: "", sw: "", nw: ""}],
-            ["50319", 1172, 1172, "0022 Room Large", { ne: "", se: "", sw: "", nw: ""}],
-            ["50321", 1043, 1043, "0023 Room Large", { ne: "", se: "", sw: "", nw: ""}],
-            ["50323", 1365, 1365, "0024 Room Very Large", { ne: "", se: "", sw: "", nw: ""}],
-            ["50325", 475, 475, "0025 Room Terminus 1", { ne: "", se: "", sw: "", nw: ""}],
-            ["50327", 462, 462, "0026 Room Terminus 2", { ne: "", se: "", sw: "", nw: ""}],
-
-            ["50329", 216, 216, "2-connecto", { ne: "", se: "", sw: "", nw: ""}],
-
-            ["50359", 643, 547, "a0003 Passage", { ne: "", se: "", sw: "", nw: ""}],
-            ["50361", 747, 747, "a0004 Passage Descent", { ne: "", se: "", sw: "", nw: ""}],
-            ["50363", 621, 621, "a0005 Passage Descent", { ne: "", se: "", sw: "", nw: ""}],
-            ["50365", 696, 696, "a0006 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
-            ["50367", 752, 752, "a0007 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
-            ["50369", 408, 408, "a0008 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
-            ["50371", 628, 628, "a0009 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
-            ["50373", 620, 620, "a0010 Passage Straight", { ne: "", se: "", sw: "", nw: ""}],
-            ["50375", 634, 634, "a0011 Passage Twisty", { ne: "", se: "", sw: "", nw: ""}],
-            ["50377", 585, 585, "a0012 Passage Twisty", { ne: "", se: "", sw: "", nw: ""}],
-            ["50379", 596, 596, "a0013 Passage Twisty", { ne: "", se: "", sw: "", nw: ""}],
-            ["50381", 1043, 1043, "a0014 Room Large", { ne: "", se: "", sw: "", nw: ""}],
-            ["50383", 1025, 1025, "a0015 flat grid", { ne: "", se: "", sw: "", nw: ""}],
-            ["50385", 1365, 1365, "a0016 Room Very Large Green", { ne: "", se: "", sw: "", nw: ""}],
-            ["50387", 604, 604, "a0017 Intersection Lava", { ne: "", se: "", sw: "", nw: ""}],
-            ["50389", 604, 604, "a0018 Intersection X ", { ne: "", se: "", sw: "", nw: ""}],
-            ["50391", 606, 606, "a0019 Intersection T", { ne: "", se: "", sw: "", nw: ""}],
-            ["50393", 720, 720, "a002 Room", { ne: "", se: "", sw: "", nw: ""}],
-            ["50395", 633, 633, "a0020 Intersection T", { ne: "", se: "", sw: "", nw: ""}],
-            ["50397", 753, 753, "a0021 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
-            ["50399", 700, 700, "a0022 Room Med", { ne: "", se: "", sw: "", nw: ""}],
-            ["50401", 652, 486, "a0023 Room Med", { ne: "", se: "", sw: "", nw: ""}],
-            ["50403", 1093, 1093, "a0024 Room Large", { ne: "", se: "", sw: "", nw: ""}],
-            ["50405", 1172, 1172, "a0025 Room Large", { ne: "", se: "", sw: "", nw: ""}],
-            ["50407", 720, 720, "b0002 Room Dark", { ne: "", se: "", sw: "", nw: ""}],
-            ["50409", 643, 643, "b0003 Passage Dark Ascent", { ne: "", se: "", sw: "", nw: ""}],
-            ["50411", 747, 747, "b0004 Passage Dark Descent", { ne: "", se: "", sw: "", nw: ""}],
-            ["50413", 621, 621, "b0005 Passage Descent", { ne: "", se: "", sw: "", nw: ""}],
-            ["50415", 696, 696, "b0006 Corner Gallery", { ne: "", se: "", sw: "", nw: ""}],
-            ["50417", 752, 752, "b0007 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
-            ["50419", 408, 408, "b0008 Dark Corner", { ne: "", se: "", sw: "", nw: ""}],
-            ["50421", 617, 617, "b0009 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
-            ["50423", 620, 620, "b0010 Passage Straight", { ne: "", se: "", sw: "", nw: ""}],
-            ["50425", 634, 634, "b0011 Passage Twisty", { ne: "", se: "", sw: "", nw: ""}],
-            ["50427", 585, 585, "b0012 Passage Twisty", { ne: "", se: "", sw: "", nw: ""}],
-            ["50429", 596, 596, "b0013 Passage Twisty", { ne: "", se: "", sw: "", nw: ""}],
-            ["50431", 1043, 1043, "b0014 Room Large Round", { ne: "", se: "", sw: "", nw: ""}],
-            ["50433", 1016, 516, "b0015 Large Flat Room Grayscale BW", { ne: "", se: "", sw: "", nw: ""}],
-            ["50435", 1357, 1357, "b0016 Very Large Room", { ne: "", se: "", sw: "", nw: ""}],
-            ["50437", 608, 608, "b0018 X-Intersection", { ne: "", se: "", sw: "", nw: ""}],
-            ["50439", 607, 607, "b0019 T-Intersection", { ne: "", se: "", sw: "", nw: ""}],
-            ["50441", 633, 633, "b0020 T-Intersection", { ne: "", se: "", sw: "", nw: ""}],
-            ["50443", 678, 678, "b0021 Passage Corner Dark", { ne: "", se: "", sw: "", nw: ""}],
-            ["50445", 700, 700, "b0022 Room Med Round", { ne: "", se: "", sw: "", nw: ""}],
-            ["50447", 648, 648, "b0023 Room Med", { ne: "", se: "", sw: "", nw: ""}],
-            ["50449", 1093, 1093, "b0024 Complex Large Room", { ne: "", se: "", sw: "", nw: ""}],
-            ["50451", 1172, 1172, "b0025 Room Large Gallery", { ne: "", se: "", sw: "", nw: ""}],
-
-            ["50331", 356, 356, "NPC Gelatinous Cube", { ne: "", se: "", sw: "", nw: ""}],
-            ["50333", 280, 280, "NPC Spider", { ne: "", se: "", sw: "", nw: ""}],
-            ["50335", 204, 204, "Prop Arch Light", { ne: "", se: "", sw: "", nw: ""}],
-            ["50337", 204, 204, "Prop Arch", { ne: "", se: "", sw: "", nw: ""}],
-            ["50339", 424, 437, "Prop Lava 2", { ne: "", se: "", sw: "", nw: ""}],
-            ["50341", 194, 194, "Prop Lava", { ne: "", se: "", sw: "", nw: ""}],
-            ["50343", 204, 204, "Prop Mushrooms", { ne: "", se: "", sw: "", nw: ""}],
-
-            ["50349", 342, 342, "Prop rocks3", { ne: "", se: "", sw: "", nw: ""}],
-            ["50345", 454, 454, "Prop Spiderweb2", { ne: "", se: "", sw: "", nw: ""}],
-            ["50347", 379, 379, "Prop Spiderweb", { ne: "", se: "", sw: "", nw: ""}],
-
-            ["50351", 409, 409, "Prop stalagtite 1", { ne: "", se: "", sw: "", nw: ""}],
-            ["50353", 408, 408, "Prop stalagtite 2", { ne: "", se: "", sw: "", nw: ""}],
-            ["50355", 292, 292, "Prop stalagtite 3", { ne: "", se: "", sw: "", nw: ""}],
-            ["50357", 185, 185, "Prop stone 1", { ne: "", se: "", sw: "", nw: ""}],
-
-            ["50867", 280, 256, "Prop Gems", { ne: "", se: "", sw: "", nw: ""}]
-
-        ];
-
-        var psDungeon = [
-            
-            ["46732", 194, 158, "Connector 2x2 Block", { ne: "", se: "", sw: "", nw: ""}],
-            ["46734", 192, 99, "Connector 2x2 Flat", { ne: "", se: "", sw: "", nw: ""}],
-            ["46736", 345, 194, "Connector Hall 4x2 L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46738", 345, 194, "Connector Hall 4x2 R", { ne: "", se: "", sw: "", nw: ""}],
-
-            ["46744", 1024, 512, "Hall corner bottom", { ne: "", se: "", sw: "", nw: ""}],
-            ["46740", 640, 640, "Hall Corner side L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46746", 640, 640, "Hall corner side R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46748", 1024, 512, "Hall corner top", { ne: "", se: "", sw: "", nw: ""}],
-            ["46750", 1024, 640, "Hall straight L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46752", 1024, 640, "Hall straight R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46754", 1024, 640, "Hall t-intersection bottom L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46756", 1024, 640, "Hall t-intersection bottom R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46758", 1024, 640, "Hall t-intersection top L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46760", 1024, 640, "Hall t-intersection top R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46742", 1024, 640, "Hall X-intersection", { ne: "", se: "", sw: "", nw: ""}],
-            ["46846", 144, 281, "plex.Dungeon.Torchlit.Prop.Gate.Tall.Closed.2x1.1", { ne: "", se: "", sw: "", nw: ""}],
-            ["46848", 142, 281, "plex.Dungeon.Torchlit.Prop.Gate.Tall.Open.2x1.1", { ne: "", se: "", sw: "", nw: ""}],
-            ["46850", 142, 281, "plex.Dungeon.Torchlit.Prop.Gate.Tall.Open.2x1.2", { ne: "", se: "", sw: "", nw: ""}],
-            ["46852", 432, 394, "plex.Dungeon.Torchlit.Prop.Stairs.Bottom.1", { ne: "", se: "", sw: "", nw: ""}],
-            ["46854", 432, 394, "plex.Dungeon.Torchlit.Prop.Stairs.Bottom.2", { ne: "", se: "", sw: "", nw: ""}],
-            ["46856", 416, 210, "plex.Dungeon.Torchlit.Prop.Stairs.Curved.Up.1", { ne: "", se: "", sw: "", nw: ""}],
-            ["46858", 416, 210, "plex.Dungeon.Torchlit.Prop.Stairs.Curved.Up.2", { ne: "", se: "", sw: "", nw: ""}],
-            ["46762", 144, 170, "Prop Door Closed Double L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46764", 144, 170, "Prop Door Closed Double R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46766", 144, 185, "Prop Door Open Double L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46768", 144, 185, "Prop Door Open Double R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46770", 144, 281, "Prop Gate Tall Closed 2x1 R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46772", 438, 400, "Prop Stairs Top L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46774", 438, 400, "Prop Stairs Top R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46776", 205, 111, "Prop Trap SpikedPit", { ne: "", se: "", sw: "", nw: ""}],
-            ["46778", 174, 222, "Prop Wall 2x1 L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46780", 174, 222, "Prop Wall 2x1 R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46782", 1024, 640, "Room 10x10 1Exit L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46784", 1024, 640, "Room 10x10 1Exit R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46786", 1024, 640, "Room 10x10 1Exit Top L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46788", 1024, 640, "Room 10x10 1Exit Top R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46790", 1024, 640, "Room 10x10 2Exits 180 L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46792", 1024, 640, "Room 10x10 2exits 180 R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46794", 1024, 640, "Room 10x10 3Exits L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46796", 1024, 640, "Room 10x10 3Exits R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46798", 1024, 640, "Room 10x10 4Exits", { ne: "", se: "", sw: "", nw: ""}],
-            ["46800", 734, 504, "Room 10x10 Round 0Exits Stairs", { ne: "", se: "", sw: "", nw: ""}],
-            ["46802", 734, 504, "Room 10x10 Round 0Exits", { ne: "", se: "", sw: "", nw: ""}],
-            ["46804", 870, 568, "Room 10x10 Round 1Exit Bottom L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46806", 870, 568, "Room 10x10 Round 1Exit Bottom R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46808", 869, 571, "Room 10x10 Round 1Exit Top L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46810", 869, 571, "Room 10x10 Round 1Exit Top R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46812", 1008, 573, "Room 10x10 Round 2Exits Bottom", { ne: "", se: "", sw: "", nw: ""}],
-            ["46814", 1024, 640, "Room 10x10 Round 2Exits Opposite L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46816", 1024, 640, "Room 10x10 Round 2Exits Opposite R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46818", 869, 625, "Room 10x10 Round 2Exits Side L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46820", 869, 625, "Room 10x10 Round 2Exits Side R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46822", 1005, 573, "Room 10x10 Round 2Exits Top", { ne: "", se: "", sw: "", nw: ""}],
-            ["46824", 848, 568, "Room 6x6 1Exit bottom L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46826", 848, 568, "Room 6x6 1Exit bottom R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46828", 846, 560, "Room 6x6 1Exit top L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46830", 846, 560, "Room 6x6 1Exit top R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46836", 1010, 557, "Room 6x6 2Exits Adjacent bottom", { ne: "", se: "", sw: "", nw: ""}],
-            ["46832", 848, 632, "Room 6x6 2Exits Adjacent Side L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46834", 848, 632, "Room 6x6 2Exits Adjacent Side R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46838", 1010, 553, "Room 6x6 2Exits Adjacent top", { ne: "", se: "", sw: "", nw: ""}],
-            ["46840", 1024, 639, "Room 6x6 2Exits Opposite L", { ne: "", se: "", sw: "", nw: ""}],
-            ["46842", 1024, 639, "Room 6x6 2Exits Opposite R", { ne: "", se: "", sw: "", nw: ""}],
-            ["46844", 512, 384, "Room Block Connector 4x4", { ne: "", se: "", sw: "", nw: ""}]      
-            
-        ];
-        
-        var psSewer = [
-            ["47777", 176, 206, "Prop Wall Door Interface to Dungeon L", { ne: "", se: "", sw: "", nw: ""}],
-            ["47779", 176, 206, "Prop Wall Door Interface to Dungeon", { ne: "", se: "", sw: "", nw: ""}],
-            ["47781", 1109, 633, "Room Large 0 exits no walls", { ne: "", se: "", sw: "", nw: ""}],
-            ["47783", 1110, 766, "Room Large 0 exits", { ne: "", se: "", sw: "", nw: ""}],
-            ["47785", 623, 526, "Room Medium 6x6 0 exits", { ne: "", se: "", sw: "", nw: ""}],
-            ["47787", 526, 343, "Room Small 5x5 2", { ne: "", se: "", sw: "", nw: ""}],
-            ["47789", 525, 445, "Room Small 5x5", { ne: "", se: "", sw: "", nw: ""}],
-            ["47791", 291, 205, "Sewer Connector 3x3 no sludge", { ne: "", se: "", sw: "", nw: ""}],
-            ["47793", 291, 205, "Sewer Connector 3x3 sludge", { ne: "", se: "", sw: "", nw: ""}],
-            ["47795", 371, 274, "Sewer Connector Short Tunnel  Straight No-Walls L", { ne: "", se: "", sw: "", nw: ""}],
-            ["47797", 364, 407, "Sewer Connector Short Tunnel Straight L", { ne: "", se: "", sw: "", nw: ""}],
-            ["47799", 371, 274, "Sewer Connector Short Tunnel Straight No-Walls", { ne: "", se: "", sw: "", nw: ""}],
-            ["47801", 364, 407, "Sewer Connector Tunnel Short  Straight", { ne: "", se: "", sw: "", nw: ""}],
-            //["47803", 384, 760, "Sewer Effect flameJet R", { ne: "", se: "", sw: "", nw: ""}],
-            //["47805", 760, 384, "Sewer Effect flameJet", { ne: "", se: "", sw: "", nw: ""}],
-            ["47807", 1088, 769, "Sewer Interface to Dungeon L", { ne: "", se: "", sw: "", nw: ""}],
-            ["47809", 1088, 769, "Sewer Interface to Dungeon", { ne: "", se: "", sw: "", nw: ""}],
-            //["47811", 459, 237, "Sewer NPC Croc", { ne: "", se: "", sw: "", nw: ""}],
-            //["47813", 512, 238, "Sewer NPC Rat", { ne: "", se: "", sw: "", nw: ""}],
-            ["47815", 473, 316, "Sewer Prop Bridge 1L", { ne: "", se: "", sw: "", nw: ""}],
-            ["47817", 473, 316, "Sewer Prop Bridge 1", { ne: "", se: "", sw: "", nw: ""}],
-            ["47819", 446, 306, "Sewer Prop Bridge 2 L", { ne: "", se: "", sw: "", nw: ""}],
-            ["47821", 446, 306, "Sewer Prop Bridge 2", { ne: "", se: "", sw: "", nw: ""}],
-            //["47823", 482, 592, "Sewer Prop Fat Pipe L", { ne: "", se: "", sw: "", nw: ""}],
-            //["47825", 482, 592, "Sewer Prop Fat Pipe", { ne: "", se: "", sw: "", nw: ""}],
-
-            //["47875", 238, 280, "Sewer Prop flame jet trap 2 inactive L", { ne: "", se: "", sw: "", nw: ""}],
-            //["47877", 238, 280, "Sewer Prop flame jet trap 2 inactive", { ne: "", se: "", sw: "", nw: ""}],
-            //["47873", 431, 280, "Sewer Prop flame jet trap 2 L", { ne: "", se: "", sw: "", nw: ""}],
-            //["47879", 431, 280, "Sewer Prop flame jet trap 2", { ne: "", se: "", sw: "", nw: ""}],
-            //["47881", 437, 497, "Sewer Prop flame jet trap active 2", { ne: "", se: "", sw: "", nw: ""}],
-            //["47883", 437, 497, "Sewer Prop flame jet trap active", { ne: "", se: "", sw: "", nw: ""}],
-            //["47885", 232, 384, "Sewer Prop flame jet trap inactive L", { ne: "", se: "", sw: "", nw: ""}],
-            //["47887", 232, 384, "Sewer Prop flame jet trap inactive", { ne: "", se: "", sw: "", nw: ""}],
-
-            //["47827", 145, 260, "Sewer Prop Ladder L", { ne: "", se: "", sw: "", nw: ""}],
-            //["47829", 145, 260, "Sewer Prop Ladder", { ne: "", se: "", sw: "", nw: ""}],
-            ["47831", 240, 180, "Sewer Prop Ledge Blocks 2x3", { ne: "", se: "", sw: "", nw: ""}],
-            ["47833", 531, 324, "Sewer Prop Ledge Blocks", { ne: "", se: "", sw: "", nw: ""}],
-            ["47835", 226, 226, "Sewer Prop Pipe Short Outflow", { ne: "", se: "", sw: "", nw: ""}],
-
-            //["47889", 539, 484, "Sewer Prop pipes L", { ne: "", se: "", sw: "", nw: ""}],
-            //["47891", 539, 484, "Sewer Prop pipes", { ne: "", se: "", sw: "", nw: ""}],
-
-            ["47837", 195, 106, "Sewer Prop Pit Trap 2", { ne: "", se: "", sw: "", nw: ""}],
-            ["47839", 193, 104, "Sewer Prop Pit Trap 3", { ne: "", se: "", sw: "", nw: ""}],
-            ["47841", 195, 106, "Sewer Prop Pit Trap", { ne: "", se: "", sw: "", nw: ""}],
-            ["47843", 400, 201, "Sewer Prop Pool Round Sludge", { ne: "", se: "", sw: "", nw: ""}],
-            ["47845", 99, 92, "Sewer Prop Railing Construction", { ne: "", se: "", sw: "", nw: ""}],
-            ["47847", 99, 92, "Sewer Prop Railing Rust", { ne: "", se: "", sw: "", nw: ""}],
-            ["47849", 258, 226, "Sewer Prop Sludge Stream Fall 2", { ne: "", se: "", sw: "", nw: ""}],
-            ["47851", 258, 226, "Sewer Prop Sludge Stream Fall", { ne: "", se: "", sw: "", nw: ""}],
-            ["47853", 333, 168, "Sewer Prop Sludge Stream Flat 2 L", { ne: "", se: "", sw: "", nw: ""}],
-            ["47855", 333, 168, "Sewer Prop Sludge Stream Flat 2", { ne: "", se: "", sw: "", nw: ""}],
-            ["47857", 401, 289, "Sewer Prop Vat Round", { ne: "", se: "", sw: "", nw: ""}],
-            ["47859", 621, 338, "Sewer Prop Vat ", { ne: "", se: "", sw: "", nw: ""}],
-            ["47861", 159, 243, "Sewer Prop Wall Door L", { ne: "", se: "", sw: "", nw: ""}],
-            ["47863", 159, 243, "Sewer Prop Wall Door", { ne: "", se: "", sw: "", nw: ""}],
-            ["47865", 159, 243, "Sewer Prop Wall Open L", { ne: "", se: "", sw: "", nw: ""}],
-            ["47867", 159, 243, "Sewer Prop Wall Open", { ne: "", se: "", sw: "", nw: ""}],
-            ["47869", 164, 244, "Sewer Prop Wall Solid L", { ne: "", se: "", sw: "", nw: ""}],
-            ["47871", 164, 244, "Sewer Prop Wall Solid", { ne: "", se: "", sw: "", nw: ""}],
-
-            ["47893", 1095, 795, "Sewer Room Dark 2exits adjacent side", { ne: "", se: "", sw: "", nw: ""}],
-            ["47895", 1098, 765, "Sewer Room Dark Large 2exits adjacent bottom", { ne: "", se: "", sw: "", nw: ""}],
-            ["47897", 1104, 796, "Sewer Room Dark Large 2exits adjacent top", { ne: "", se: "", sw: "", nw: ""}],
-            ["47899", 1095, 795, "Sewer Room Dark Large 2exits opposite", { ne: "", se: "", sw: "", nw: ""}],
-            ["47901", 1095, 793, "Sewer Room Dark Large 3exits bottom", { ne: "", se: "", sw: "", nw: ""}],
-            ["47903", 1100, 796, "Sewer Room Dark Large 3exits top", { ne: "", se: "", sw: "", nw: ""}],
-            ["47905", 1100, 794, "Sewer Room Dark Large 4 exits", { ne: "", se: "", sw: "", nw: ""}],
-            ["47907", 1117, 778, "Sewer Room Lit Large 2Exits Adjacent Bottom", { ne: "", se: "", sw: "", nw: ""}],
-            ["47909", 1116, 775, "Sewer Room Lit Large 2Exits Adjacent Side L", { ne: "", se: "", sw: "", nw: ""}],
-            ["47911", 1116, 775, "Sewer Room Lit Large 2Exits Adjacent Side", { ne: "", se: "", sw: "", nw: ""}],
-            ["47913", 1115, 771, "Sewer Room Lit Large 2Exits Adjacent Top", { ne: "", se: "", sw: "", nw: ""}],
-            ["47915", 1116, 771, "Sewer Room Lit Large 2Exits Opposite L", { ne: "", se: "", sw: "", nw: ""}],
-            ["47917", 1116, 771, "Sewer Room Lit Large 2Exits Opposite", { ne: "", se: "", sw: "", nw: ""}],
-            ["47923", 1116, 777, "Sewer Room Lit Large 3Exits bottom L ", { ne: "", se: "", sw: "", nw: ""}],
-            ["47925", 1116, 777, "Sewer Room Lit Large 3Exits bottom ", { ne: "", se: "", sw: "", nw: ""}],
-            ["47919", 1113, 783, "Sewer Room Lit Large 3Exits Top L", { ne: "", se: "", sw: "", nw: ""}],
-            ["47921", 1113, 783, "Sewer Room Lit Large 3Exits Top", { ne: "", se: "", sw: "", nw: ""}],
-            ["47927", 1113, 777, "Sewer Room Lit Large Vat", { ne: "", se: "", sw: "", nw: ""}],
-            ["47929", 1097, 537, "Sewer Tunnel Dark Corner Bottom ", { ne: "", se: "", sw: "", nw: ""}],
-            ["47931", 620, 728, "Sewer Tunnel Dark Corner Side L", { ne: "", se: "", sw: "", nw: ""}],
-            ["47933", 620, 728, "Sewer Tunnel Dark Corner Side", { ne: "", se: "", sw: "", nw: ""}],
-            ["47935", 1084, 553, "Sewer Tunnel Dark Corner Top", { ne: "", se: "", sw: "", nw: ""}],
-            ["47937", 1088, 769, "Sewer Tunnel Dark Straight", { ne: "", se: "", sw: "", nw: ""}],
-            ["47939", 1088, 795, "Sewer Tunnel Dark T-Intersection Bottom L Dark", { ne: "", se: "", sw: "", nw: ""}],
-            ["47941", 1088, 795, "Sewer Tunnel Dark T-Intersection Bottom ", { ne: "", se: "", sw: "", nw: ""}],
-            ["47943", 1100, 771, "Sewer Tunnel Dark T-Intersection Top L", { ne: "", se: "", sw: "", nw: ""}],
-            ["47945", 1100, 771, "Sewer Tunnel Dark T-Intersection Top", { ne: "", se: "", sw: "", nw: ""}],
-            ["47947", 1098, 770, "Sewer Tunnel Dark X-Intersection", { ne: "", se: "", sw: "", nw: ""}],
-            ["47949", 1097, 537, "Sewer Tunnel Lit Bottom", { ne: "", se: "", sw: "", nw: ""}],
-            ["47951", 1084, 553, "Sewer Tunnel Lit Corner Top", { ne: "", se: "", sw: "", nw: ""}],
-            ["47953", 620, 770, "Sewer Tunnel Lit Side L", { ne: "", se: "", sw: "", nw: ""}],
-            ["47955", 620, 770, "Sewer Tunnel Lit Side", { ne: "", se: "", sw: "", nw: ""}],
-            ["47957", 1088, 769, "Sewer Tunnel Lit Straight", { ne: "", se: "", sw: "", nw: ""}],
-            ["47959", 1098, 770, "Sewer Tunnel Lit X-Intersection", { ne: "", se: "", sw: "", nw: ""}]
-        ];      
-        
-        
-        var tileDefs = psCaves.concat(psDungeon).concat(psSewer);
-        
-        _.each(tileDefs, function(tileDef) { 
-            marketplaceTiles.push(new tile(tileDef[0], tileDef[1], tileDef[2], tileDef[3], tileDef[4]));
-        });
-
-    
-    };  
-    
-    
-// ******************************************************************************** 
-    
-    
-
-    var whisper = function chatMessageSender(playerName, message) {
-        // sends a chat message to a specific player. Can use gm as playerName
-        sendChat("psTileResizer Script", '/w ' + playerName + " " + message);
-    };
-
-    var makeButton = function buttonMakerForChat(title, command) { // expects two strings. Returns encoded html for the chat stream
-        var output = '['+title+']('+command+')';
-        return output;
-    };
-
-    var ch = function (c) {
-    // This function will take a single character and change it to it's equivalent html encoded value.
-        // psNote: I tried alternate methods of regexps to encode the entire string, but I always ran into problems with | and [] characters.
-        var entities = {
-            '<' : 'lt',
-            '>' : 'gt',
-            "'" : '#39',
-            '@' : '#64',
-            '{' : '#123',
-            '|' : '#124',
-            '}' : '#125',
-            '[' : '#91',
-            ']' : '#93',
-            '"' : 'quot',
-            '-' : 'mdash',
-            ' ' : 'nbsp'
-        };
-
-        if(_.has(entities,c) ){
-            return ('&'+entities[c]+';');
-        }
-        return '';
-    };
-    
-
-    
-    var getCurrentPage = function pageGetter(playerID) {
-        // this should check Campaign.get and GM.lastpage
-
-        var playerObj = getObj("player", playerID);
-        var playerspecificpages = Campaign().get("playerspecificpages");
-        
-        if (playerIsGM(playerID) && _.has(playerObj, "lastpage" )) {
-            return playerObj.lastpage;          
-        } else if ( Boolean(playerspecificpages) && _.has(playerspecificpages, playerID) ) {
-            return Campaign().get("playerspecificpages")[playerID];
-        } else {
-            return Campaign().get("playerpageid");  // the player ribbon. most common       
-        }
-    };
-    
-    var findGM = function GMFinder() {
-        var players = findObjs({type: "player"});
-        var GM = _.find(players, function(player) { 
-            return playerIsGM(player.get("id"));
-        });
-        return GM;
-    };
-
-
-    
-    var getMarketplaceID = function marketplaceIDGetter(tileID) {
-        if( tileID !== undefined ) {
-            var tileObj = getObj("graphic", tileID);
-            var tileImgSrc = tileObj.get("imgsrc");
-            
-            var pathChunks = tileImgSrc.split("/");
-            var tileMarketplaceID = pathChunks[5];
-            
-            //whisper("gm", "tileMarketplaceID: " + tileMarketplaceID );
-            
-            //tileObj.set("showname", true);
-            //tileObj.set("name", tileMarketplaceID);
-            //tileObj.set("layer", "objects");
-                
-            return tileMarketplaceID;           
-        }
-    };
-    
-    
-    var resizeTiles = function tileResizer(pageID, tileID, playerID) {
-        // resize all the map tiles with known id and size in our wee database
-        
-        // parameters verification
-        if (Boolean(playerID) === false) {
-            playerID = findGM();
-        }
-        
-        if (Boolean(tileID) === false) {
-            tileID = "all";
-        }
-        
-        if (Boolean(pageID) === false) {            
-            var page = getCurrentPage(); 
-        }
-        
-        if (tileID !== "all") {
-            
-            
-            var tileMarketplaceID = getMarketplaceID(tileID);
-            var template = _.findWhere(marketplaceTiles, {marketplaceID: tileMarketplaceID} );
-            
-            if (template !== undefined ) {
-
-                var tileObj = getObj("graphic", tileID);
-                // resize it
-                
-                tileObj.set({
-                    width: template.width,
-                    height: template.height             
-                });                                     
-            
-
-            } else {
-                // whisper("gm", "couldn't find the right template");
-            }
-
-        } else { // resize everything you can find
-            var possibleMapTiles = findObjs({ type: "graphic", layer: "map" });
-            
-            _.each(possibleMapTiles, function(tile) {
-                _.each(marketplaceTiles, function(template) {
-                    if ( template.marketplaceID !== "" && tile.get("imgsrc").indexOf(template.marketplaceID) !== -1 ) { // found one 
-                        
-                        tile.set({ width: template.width, height: template.height });                           
-                        
-                    }
-                });
-            
-            });
-            
-            
-        }
-        
-        //whisper("gm", "received a request to resize tile " + tileID);
-        
-    };
-    
-    var handleInput = function inputHandler(msg) {
-            
-        if (msg.type == "api" && ( msg.content.indexOf("!psResize") !== -1 || msg.content.indexOf("!psTileResizer") !== -1 ) ) {
-
-            var argsFromUser,
-                who,
-                errors=[],
-                playerID,
-                playerName,
-                pageID,
-                tileID,
-                requestedToggle,
-                userCommand;
-
-
-            playerName = msg.who;
-            playerID = msg.playerid;
-
-            argsFromUser = msg.content.split(/ +/);
-            userCommand = argsFromUser[1];
-            tileID = argsFromUser[2];           
-            requestedToggle = argsFromUser[2];
-
-            //whisper("gm", "heard: " + userCommand);
-            //whisper("gm", "heard: " + tileID);
-            
-            
-            
-            switch(userCommand) {
-                case '--resize' :
-                    // resize marketplace tiles
-                        // if you get a token id, resize that one.
-                        // otherwise, resize everything? any way to get a confirmation first?
-                    
-                    if (Boolean(tileID) === false || tileID == "all") {
-                            resizeTiles(pageID, "all", playerID);
-                    } else {
-                        resizeTiles(pageID, tileID, playerID);
-                    }
-                    
-                break;
-                case '--getMarketplaceID':
-                    
-                    getMarketplaceID(tileID);
-                    
-                
-                break;
-                
-                case "--on":
-                    config.resizeOnAdd = true;
-                break;
-                
-                case "--off":
-                    config.resizeOnAdd = false;
-                break;
-                
-                case "--toggle":
-                    if ( requestedToggle == "resizeOnAdd") { 
-                        config.resizeOnAdd = !config.resizeOnAdd;
-                        if (config.resizeOnAdd) {
-                            whisper("gm", "Plexsoup isometric assets will now resize automatically when you drop them on the map");                         
-                        } else {
-                            whisper("gm", "Plexsoup isometric assets will not resize automatically anymore. See help for more options.");
-                        }
-
-                    }
-                
-                break;
-                
-                case '--help':
-                    getHelp();
-                break;
-                
-                case undefined:
-                    getHelp();
-                break;
-            }
-            //getHelp();
-        }
-    };
-
-    
-    var showDetailedHelp = function showDetailedHelpTextInChat(playerName) {
-        
-        if (!playerName) { playerName = "gm";}
-
-
-
-        var exampleStyle = '"background-color: #eee; font-size: smaller; margin-left: 40px;"';
-        var warningStyle = '"background-color: AntiqueWhite; font-size: smaller;"';
-        var exampleTokenSelect = ch('@') + ch('{') + 'selected' + ch('|') + 'token_id' + ch('}');
-
-        var helpText = '';
-
-        helpText += '<div style="font-size: smaller;">';
-        helpText += 'psTileResizer is a script to resize isometric marketplace tiles to their original, intended dimensions.';
-        helpText += "This dramatically helps lining up tiles for setting up dungeon-crawls.";
-        helpText += "</div>";
-
-        helpText += '<div style="font-size: smaller;">';        
-        helpText += "To start, enter !psResizer in the chat window.";
-        helpText += "</div>";
-        
-        helpText += '<div style="font-size: smaller;">';        
-        helpText += "Configuration options to be aware of: ";
-        helpText += "<ul>";
-        helpText +=         "<li>Toggle On/Off - turns on automatic resizing, triggered whenever a plexsoup marketplace tile is added to the map.</li>";
-        helpText += "</ul>";
-        helpText += "</div>";
-        
-
-        
-        helpText += "<div style='font-size: smaller'>";
-        helpText += "In addition to the gui buttons, you can make macros to activate the features. Here are some commands to play with.";
-        helpText +=         '<div style='+ exampleStyle +'> !psResize</div>';
-        helpText +=         '<div style='+ exampleStyle +'> !psResize --resize all</div>';
-        helpText +=         '<div style='+ exampleStyle +'> !psResize --resize ' + exampleTokenSelect + '</div>';       
-        helpText +=         '<div style='+ exampleStyle +'> !psResize --toggle resizeOnLoad</div>';
-        
-
-        
-        //whisper(playerName, helpText );
-        var helpHandouts;
-        helpHandouts = findObjs({
-            _type: "handout",
-            name: "psResize Help"
-        });
-
-        var helpHandout = helpHandouts[0];
-        //log("helpHandout = " + helpHandout);
-        
-        if (!helpHandout) { // create it
-            helpHandout = createObj('handout', {
-                name: 'psResize Help',
-                inplayerjournals: 'all'
-            });
-            helpHandout.set("notes", helpText);
-
-        } else { // it exists, set it's contents to match the latest version of the script
-            helpHandout.set("notes", helpText);
-        }
-        var handoutID = helpHandout.get("_id");
-
-        var chatMessage = "";
-        var buttonStyle = "'background-color: AntiqueWhite; text-align: center'";
-        
-        chatMessage += "<div style="+buttonStyle+"><a href='http://journal.roll20.net/handout/" + handoutID + "'>Additional Information</a></div>";
-        
-        return(chatMessage);
-    };
-
-    
-    var getHelp = function helpGetter() {
-        
-        var helpText = "";
-        
-        helpText += "<div style='text-align: center;'>";
-        
-        helpText += makeButton("Toggle On/Off", "!psResize --toggle resizeOnAdd");
-        helpText += makeButton("Resize all", "!psResize --resize all");
-        
-        var tokenSelect = ch('@') + ch('{') + 'selected' + ch('|') + 'token_id' + ch('}');
-        helpText += makeButton("Resize Selected", "!psResize --resize " + tokenSelect );
-        
-        //helpText += makeButton("!psResize --getMarketplaceID", "!psResize --getMarketplaceID " + tokenSelect );
-
-        helpText += "</div>";
-        helpText += showDetailedHelp("gm");
-        whisper("gm", helpText);
-        
-    };
-
-    var getStatus = function statusGetter() {
-        whisper("gm", "config: " + JSON.stringify(config) );
-        whisper("gm", "tiles: " + JSON.stringify(marketplaceTiles) );
-        
-    };
-    
-    var registerEventHandlers = function() {
-        on('chat:message', handleInput );
-        
-
-        
-        on("add:graphic", function(obj) {
-            if ( temp.campaignLoaded && config.resizeOnAdd ) { // don't futz with the graphics already in the campaign.
-                // only after the campaign is loaded, for all new tiles, check to see if they need resizing.
-                resizeTiles( getCurrentPage(), obj.get("id"), findGM() );               
-            } else {
-                log("temp.campaignLoaded: " + temp.campaignLoaded + ", config.resizeOnAdd: " + config.resizeOnAdd );
-            }
-
-        });
-        
-    };
-
-    var checkInstall = function() {
-        if ( Boolean(state.psMarketplaceResizer) === false ) {
-            state.psMarketplaceResizer = { 
-                info: info,
-                config: config
-            };
-        }
-    };
-
-    var initialize = function() {
-        temp.campaignLoaded = true; // help on(add:graphic) know not to mess with all the graphics already in the campaign
-        //log("temp.campaignLoaded: " + temp.campaignLoaded);       
-    };
-    
-    return { // make these functions available outside the local namespace
-        CheckInstall: checkInstall,
-        RegisterEventHandlers: registerEventHandlers,
-        PopulateDatabase: populateDatabase,
-        GetHelp: getHelp,
-        GetStatus: getStatus,
-        Initialize: initialize
-    };
 
 
 }());
@@ -2778,22 +1437,6 @@ var psTileResizer = psTileResizer || (function psMarketplaceResizer() {
 
 
 
-
-
-on("ready", function() {
-         
-    //init();
-    psTileResizer.CheckInstall();
-    psTileResizer.Initialize();
-    psTileResizer.RegisterEventHandlers();
-    psTileResizer.PopulateDatabase();
-    psTileResizer.GetHelp();
-    //psTileResizer.GetStatus();
-    
-
-});
-
-*******************************************************************************
 // psIsoFacingAndView
 
 /*
@@ -3928,436 +2571,7 @@ on("ready",function(){
     
     psIsoFacing.RegisterEventHandlers(); // instantiate all the listeners
 
-});*******************************************************************************
-/*                                                         
-        _/_/_/      _/_/_/        _/_/_/  _/    _/  _/_/_/   
-       _/    _/  _/            _/        _/    _/    _/      
-      _/_/_/      _/_/        _/  _/_/  _/    _/    _/       
-     _/              _/      _/    _/  _/    _/    _/        
-    _/        _/_/_/          _/_/_/    _/_/    _/_/_/       
-
-*/
-
-/*
-    Purpose: 
-        Provide standardized, reusable functions for creating GUIs in Roll20 API scripts.
-    
-    Usage: 
-        push all userCommand objects into a userCommands list.
-        
-        userCommand parameters: [listener, commandName, functionToCall, parameters, shortDesc, longDesc, defaultParams]
-        
-    For Example:
-        var initializeUserCommands = function() {
-            userCommands.push(new userCommand("!psGUI","--name", psGUITest, ["token_id", "character_id"], "Get Token Name", "Returns the name of the graphic object or token"));
-        };
-
-        var psGUITest = function guiTester(token_id, character_id) {        
-            var tokenName = getObj("graphic", token_id).get("name");
-            var characterName = getObj("character", character_id).get("name");
-            psLog("Token: " + tokenName + ", Character: " + characterName, "lightgreen");
-        };
-    
-
-
-*/
-
-var psGUI = psGUI || (function psGUI() { // Module
-    "use strict";
-
-    
-    var info = {
-        version: 0.1,
-        author: "plexsoup"
-    };
-    
-    var config = {};
-    var defaultConfig = {
-        debug: true
-    };
-        
-/*
-        _/_/_/    _/_/    _/      _/  _/      _/    _/_/    _/      _/  _/_/_/      _/_/_/   
-     _/        _/    _/  _/_/  _/_/  _/_/  _/_/  _/    _/  _/_/    _/  _/    _/  _/          
-    _/        _/    _/  _/  _/  _/  _/  _/  _/  _/_/_/_/  _/  _/  _/  _/    _/    _/_/       
-   _/        _/    _/  _/      _/  _/      _/  _/    _/  _/    _/_/  _/    _/        _/      
-    _/_/_/    _/_/    _/      _/  _/      _/  _/    _/  _/      _/  _/_/_/    _/_/_/        
-
-*/
-
-    //make a general purpose object container for user commands.
-        // then, from that object, build out the help file, the gui, and listeners automatically.
-        
-    var userCommands = []; // list of userCommand objects
-    
-    var userCommand = function(listener, commandName, functionToCall, parameters, shortDesc, longDesc, defaultParams) { // defaultParams is optional
-        this.listener = listener; // string (eg: "!psIsoFacing")
-        this.commandName = commandName; // string (eg: "--reset")
-        this.functionToCall = functionToCall; // function (eg: scaleVector)
-        this.parameters = parameters;   // array/list of predefined variable types (eg: ["page_id", "string", "token_id", "number"])
-        this.shortDesc = shortDesc;     // string (eg: "Reset the map")
-        this.longDesc = longDesc;       // string (eg: "<div>Enter !psIsoFacing --reset in chat to reset the map and remove all flashlights</div>")
-        this.defaultParams = defaultParams; // what to put in the GUI buttons.. eg: @{selected|token_id}, ?{Parameter Value?} // note: pass these through ch()
-    };
-
-    
-    
-    var parameterTypes = { // intended for parameter checking and soft error handling
-        "string": function(string) { 
-            return _.isString(string);
-        },
-        "token_id": function(token_id) { 
-		    if (token_id !== undefined && token_id !== "" && getObj("graphic", token_id) !== undefined) {
-                return true;
-            } else {
-                return false;
-            }
-        },
-        "character_id": function(character_id) { 
-            return Boolean(character_id !== undefined && getObj("character", character_id) !== undefined); 
-        },
-        "page_id": function(page_id) { 
-            return Boolean(page_id !== undefined && getObj("page", page_id) !== undefined); 
-        },
-        "num": function(num) { // r20 chat messages come in as strings.. we need to convert to numbers, then test somehow.
-            //psLog("isNumber: " + num + " == " + Boolean(!isNaN(num))); // attempting some type coercion
-            return Boolean( !isNaN(num) ); 
-        }
-    };
-
-    var ch = function (c) {
-        // This function will take a single character and change it to it's equivalent html encoded value.
-        // psNote: I tried alternate methods of regexps to encode the entire string, but I always ran into problems with | and [] characters.
-        var entities = {
-            '<' : 'lt',
-            '>' : 'gt',
-            "'" : '#39',
-            '@' : '#64',
-            '{' : '#123',
-            '|' : '#124',
-            '}' : '#125',
-            '[' : '#91',
-            ']' : '#93',
-            '"' : 'quot',
-            '-' : 'mdash',
-            ' ' : 'nbsp'
-        };
-
-        if(_.has(entities,c) ){
-            return ('&'+entities[c]+';');
-        }
-        return '';
-    };
-
-/*
-
-        _/_/_/      _/_/    _/_/_/      _/_/    _/      _/    _/_/_/   
-       _/    _/  _/    _/  _/    _/  _/    _/  _/_/  _/_/  _/          
-      _/_/_/    _/_/_/_/  _/_/_/    _/_/_/_/  _/  _/  _/    _/_/       
-     _/        _/    _/  _/    _/  _/    _/  _/      _/        _/      
-    _/        _/    _/  _/    _/  _/    _/  _/      _/  _/_/_/         
-
-*/
-    
-    var defaultParamInputPrompts = { // for building GUI
-        "string": '?' + ch('{') + "String?" + ch('}'),
-        "token_id": ch('@') + ch('{') + "target" +ch('|') + "token_id" + ch('}'),
-        "character_id": function characterLocator() {
-            var characters = findObjs({
-                _type: "character"
-            });
-            
-            var outputStr = '?' + ch('{') + "Character ID?";
-            var indexNum = 1;
-            _.each(characters, function(character) {
-                var characterName = String(indexNum) + ": " + character.get("name");
-                outputStr += ch('|')+ "'" + characterName + "',"+ character.get("_id");
-                indexNum++;
-            });
-            outputStr += ch('}');
-            return outputStr;
-        },
-        
-        "page_id": function pageLocator() {
-            var pages = findObjs({
-                _type: "page"
-            });
-            
-            var outputStr = '?' + ch('{') + "Page ID?";
-            var indexNum = 1;
-            _.each(pages, function(page) {
-                var pageName = String(indexNum) + ": " + page.get("name");
-                outputStr += ch('|')+ "'" + pageName + "',"+ page.get("_id");
-                indexNum++;
-            });
-            outputStr += ch('}');
-            return outputStr;
-        },
-        "num": '?' + ch('{') + "Number?" + ch('}')
-        
-    };
-    
-    var isParameterValid = function parameterTester(paramName, paramValue) {
-        // psLog("isParameterValid testing: " + paramName + ", " + paramValue, "orange"); 
-        var passed = false;
-        var color;
-        if ( _.has(parameterTypes, paramName) ) {
-            passed = parameterTypes[paramName](paramValue);
-            if (!passed) { 
-                color = "red";
-                psLog("==> Error: " + paramValue + " doesn't match expected type "+ paramName, color ); 
-
-            } else {
-                color = "green";                
-            }
-        }
-        
-        // psLog("paramValue: " + paramValue + " is " + paramName + " === " + passed, color);
-        return passed;
-    };
-
-    
-    var psLog = function psLogger(string, color) {
-        log("psGUI: " + string);
-        sendChat("psGui", "/w gm " + "<div style = 'background-color: "+color+"'>"+string+"</div>");
-    };
-
-    
-/*
-        _/_/_/  _/    _/  _/_/_/   
-      _/        _/    _/    _/      
-     _/  _/_/  _/    _/    _/       
-    _/    _/  _/    _/    _/        
-     _/_/_/    _/_/    _/_/_/     
-
-*/  
-
-
-        
-    var whisper = function whisperer(chatString, playerID) {
-        log("whisper received: '" + chatString + "', " + playerID);
-        var playerName;
-        if (playerID === undefined) {
-            playerName = "gm";
-        } else {
-            playerName = getObj("player", playerID).get("displayname");
-        }
-        sendChat("psGui", "/w " + playerName + " " + chatString);
-    };
-
-    var makeButton = function buttonMakerForChat(title, command) { // expects two strings. Returns encoded html for the chat stream
-        var output="";
-
-            output += '['+title+']('+command+')';
-
-        return output;
-    };
-
-    var displayGUI = function guiBuilder(playerID) {
-        _.each(userCommands, function(userCommand) {
-            var inputText = userCommand.listener + " " + userCommand.commandName;
-            
-            _.each(userCommand.parameters, function(paramName) {
-                inputText += " " + _.result(defaultParamInputPrompts, paramName);
-            });
-
-            var button = makeButton(userCommand.shortDesc, inputText );
-            whisper(button, playerID);
-        });
-    };
-    
-
-    
-/*
-
-        _/    _/  _/_/_/_/  _/        _/_/_/    
-       _/    _/  _/        _/        _/    _/   
-      _/_/_/_/  _/_/_/    _/        _/_/_/      
-     _/    _/  _/        _/        _/           
-    _/    _/  _/_/_/_/  _/_/_/_/  _/            
-
-*/
-    var buildHelpFiles = function() {
-        
-        var helpFileData = _.groupBy(userCommands, function(commandObj) { return commandObj.listener; }); // one object per listener, containing lists of usercommands
-        var helpFileNames = _.keys(helpFileData);
-        
-        _.each(helpFileNames, function buildEachHelpFile(helpFileName) {
-
-            var helpHandouts;
-            helpHandouts = findObjs({
-                _type: "handout",
-                name: helpFileName + " Help"
-            });
-
-            var helpHandout = helpHandouts[0];
-
-            var helpText = "<h3><a href='" + helpFileName + "'>" + helpFileName + "</h3>";
-            _.each(helpFileData[helpFileName], function(commandObj) {
-                helpText += "<div style='font-weight: bold;'>" + commandObj.shortDesc + "</div>";
-                helpText += "<div style='margin-left:20px;'>" + helpFileName + " " + commandObj.commandName + " " + ch("[")+ commandObj.parameters +ch("]") + "</div>";
-                helpText += "<div style='margin-left:30px; font-style: italic;'>" + commandObj.longDesc + "</div>";
-                
-            });
-            
-            if (!helpHandout) { // create it
-                helpHandout = createObj('handout', {
-                    name: helpFileName + ' Help',
-                    inplayerjournals: ''
-                });
-                helpHandout.set("notes", helpText);
-
-            } else { // it exists, set it's contents to match the latest version of the script
-                helpHandout.set("notes", helpText);
-            }
-
-            log("helpHandout = " + helpHandout);
-            
-            var handoutID = helpHandout.get("_id");
-
-            var chatMessage = "";
-            var buttonStyle = "'background-color: OrangeRed;'";
-            
-            chatMessage += "<div style="+buttonStyle+"><a href='http://journal.roll20.net/handout/" + handoutID + "'>"+ helpFileName +" Additional Information</a></div>";
-            psLog(chatMessage, "beige");
-        });
-    };
-    
-    
-
-/*
-
-    _/_/_/_/_/  _/_/_/_/    _/_/_/  _/_/_/_/_/   
-       _/      _/        _/            _/        
-      _/      _/_/_/      _/_/        _/         
-     _/      _/              _/      _/          
-    _/      _/_/_/_/  _/_/_/        _/           
-
-*/  
-    
-    
-    
-    var initializeUserCommands = function() {
-        userCommands.push(new userCommand("!psGUI","--name", psGUITest, ["token_id", "character_id"], "Get Token Name", "Returns the name of the graphic object or token"));
-    };
-
-    var psGUITest = function guiTester(token_id, character_id) {        
-        var tokenName = getObj("graphic", token_id).get("name");
-        var characterName = getObj("character", character_id).get("name");
-        psLog("Token: " + tokenName + ", Character: " + characterName, "lightgreen");
-    };
-
-
-/*
-                                                         
-        _/_/_/  _/      _/  _/_/_/    _/    _/  _/_/_/_/_/   
-         _/    _/_/    _/  _/    _/  _/    _/      _/        
-        _/    _/  _/  _/  _/_/_/    _/    _/      _/         
-       _/    _/    _/_/  _/        _/    _/      _/          
-    _/_/_/  _/      _/  _/          _/_/        _/           
-                                                         
-
-*/  
-
-    
-    // **** NOTE **** this should be in the module requesting stuff from psUtils.
-    var registerEventHandlers = function eventHandlerRegistrar() {
-        on('chat:message', function(msg) {
-            handleInput(this, msg);
-        } ); // **** Not sure if this will work.
-    };
-
-
-    var handleInput = function inputHandler(thisArg, msg) {
-        _.each(userCommands, function (userCommand) {
-            //var args = msg.content.split(/ +/); // split on spaces alone
-            var args = msg.content.split(/[ ,]+/); // split on commas or spaces
-            var anyTestFailed = false;
-            if (args[0] == userCommand.listener) {
-                if (args.length == 1) {
-                    displayGUI(msg.playerid);
-                }
-                if (args[1] == userCommand.commandName) { // test the parameters and execute the user request
-                    var params = _.rest(args, 2);
-                    var paramTypes = userCommand.parameters;
-                    var keyPairs = _.zip(paramTypes, params);
-                    if (params.length == paramTypes.length) {
-                        // make sure the parameters match the expected types before you run the function
-                        _.each(keyPairs, function(keyPair) {
-                            var thisTestPassed = isParameterValid(keyPair[0], keyPair[1]); 
-                            if (thisTestPassed === false) {
-                                anyTestFailed = true;
-                            }
-                        });                     
-                    } else { // number of inputs doesn't match expected parameters.
-                        anyTestFailed = true;
-                    }
-                    
-                    if (!anyTestFailed) { // therefore all tests passed
-                        userCommand.functionToCall.apply(thisArg, params); // **** TODO Figure out how to get "thisarg" for apply to work from other modules
-                    } else {
-                        psLog("==> Error: "+ userCommand.listener + " " + userCommand.commandName+ " expects these ("+paramTypes.length+") parameters : [" + paramTypes + "]. You provided ("+params.length+"): [" + params + "]", "orange");
-                    }
-                } 
-            }
-        });
-    };
-
-
-    
-
-
-
-/*
-                                                                         
-        _/_/_/  _/      _/    _/_/_/  _/_/_/_/_/    _/_/    _/        _/     
-         _/    _/_/    _/  _/            _/      _/    _/  _/        _/      
-        _/    _/  _/  _/    _/_/        _/      _/_/_/_/  _/        _/       
-       _/    _/    _/_/        _/      _/      _/    _/  _/        _/        
-    _/_/_/  _/      _/  _/_/_/        _/      _/    _/  _/_/_/_/  _/_/_/_/  
-
-*/
-
-
-    
-    var checkInstall = function installChecker() {
-        // construct help file, gui, event handlers
-        
-        initializeUserCommands();
-        buildHelpFiles();
-        
-        // grab config options from Roll20 persistent state object so they persist across instances and sessions
-        if (!_.has(state, psGUI) && _.size(state.psGUI) > 0 ) {
-            if (_.size(config) === 0) {
-                config = _.clone(defaultConfig);
-            }
-            state.psGUI = _.clone(config);
-        } else {
-            config = _.clone(state.psGUI);
-        }
-    };
-
-    var reset = function resetter() {
-        log("entering reset");
-    };
-
-    
-    return { // expose functions for outside calls
-        RegisterEventHandlers: registerEventHandlers,
-        CheckInstall: checkInstall,
-        Reset: reset,
-    };
-    
-}()); // end module
-
-
-on("ready", function() {
-    psGUI.CheckInstall();
-    psGUI.RegisterEventHandlers();
-    
-});
-*******************************************************************************
-/*
+});/*
 
         _/_/_/      _/_/_/      _/_/_/    _/_/_/    _/_/        _/      _/    _/_/    _/_/_/    
        _/    _/  _/              _/    _/        _/    _/      _/_/  _/_/  _/    _/  _/    _/   
@@ -5354,7 +3568,928 @@ on("ready",function(){
 
 });
 
-*******************************************************************************
+/*
+
+                     _/_/_/      _/_/_/      _/_/_/_/_/  _/_/_/  _/        _/_/_/_/   
+                    _/    _/  _/                _/        _/    _/        _/          
+                   _/_/_/      _/_/            _/        _/    _/        _/_/_/       
+                  _/              _/          _/        _/    _/        _/            
+                 _/        _/_/_/            _/      _/_/_/  _/_/_/_/  _/_/_/_/       
+                                                                                      
+                                                                                      
+                                                                                         
+                   _/_/_/    _/_/_/_/    _/_/_/  _/_/_/  _/_/_/_/_/  _/_/_/_/  _/_/_/    
+                  _/    _/  _/        _/          _/          _/    _/        _/    _/   
+                 _/_/_/    _/_/_/      _/_/      _/        _/      _/_/_/    _/_/_/      
+                _/    _/  _/              _/    _/      _/        _/        _/    _/     
+               _/    _/  _/_/_/_/  _/_/_/    _/_/_/  _/_/_/_/_/  _/_/_/_/  _/    _/    
+
+*/
+
+/*
+
+    Purpose:
+        To automatically resize plexsoup marketplace assets, to their intended native dimensions
+        This makes creating dungeons dramatically easier. See youtube.com/user/plexsoup
+
+    Usage:
+        enter !psResize or !psTileResizer in chat
+
+*/
+
+
+
+var psTileResizer = psTileResizer || (function psMarketplaceResizer() {
+    "use strict";
+
+    var info = {
+        version: 0.2,
+        authorName: "plexsoup"
+    };
+
+    var config = {
+        debugDEFCON: 5,
+        resizeOnAdd: true
+    };
+
+    
+    
+    var temp = {
+        //campaignLoaded: false,
+        GMPlayer: Campaign
+    };
+
+    var marketplaceTiles = [];
+    
+    
+/*
+
+    TODO:
+
+        turn off automatic renaming tiles
+        verify that tile is on map layer before messing with it.
+    
+*/
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    var tile = function( marketplaceID, width, height, name, connectors ) { // constructor to make a new tile
+        this.marketplaceID = marketplaceID;
+        this.width = width;
+        this.height = height;       
+        this.name = name;
+        this.connectors = connectors;
+
+        
+        // **** add a function to get the best connection point for lining things updateCommands
+        
+        // **** add a function to get dynamic lighting lines - consider using the lightrecorder script
+        
+    };
+
+
+
+
+// *******************************************************************************
+
+    var populateDatabase = function databasePopulator() {
+
+        // new tile (marketplaceID, width, height, name, connectors)
+        var psCaves = [
+            ["50279", 720, 720, "0002 Room", { ne: "", se: "", sw: "", nw: ""}],
+            ["50281", 643, 643, "0003 Passage", { ne: "", se: "", sw: "", nw: ""}],
+            ["50283", 748, 748, "0004 Passage Descent", { ne: "", se: "", sw: "", nw: ""}],
+            ["50285", 622, 622, "0005 Passage Descent", { ne: "", se: "", sw: "", nw: ""}],
+            ["50287", 696, 696, "0006 Passage Corner Gallery", { ne: "", se: "", sw: "", nw: ""}],
+            ["50289", 752, 752, "0007 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
+            ["50291", 411, 411, "0008 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
+            ["50293", 618, 618, "0009 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
+            ["50295", 620, 620, "0010 Passage Straight", { ne: "", se: "", sw: "", nw: ""}],
+            ["50297", 634, 634, "0011 Passage Twisty", { ne: "", se: "", sw: "", nw: ""}],
+            ["50299", 585, 585, "0012 Passage Twisty 2", { ne: "", se: "", sw: "", nw: ""}],
+            ["50301", 596, 596, "0013 Passage Twisty 3", { ne: "", se: "", sw: "", nw: ""}],
+            ["50303", 604, 604, "0014 Intersection X", { ne: "", se: "", sw: "", nw: ""}],
+            ["50305", 606, 606, "0015 Intersection T 1", { ne: "", se: "", sw: "", nw: ""}],
+            ["50307", 633, 633, "0016 Intersection T 2", { ne: "", se: "", sw: "", nw: ""}],
+            ["50309", 606, 606, "0017 Intersection Lava X", { ne: "", se: "", sw: "", nw: ""}],
+            ["50311", 678, 678, "0018 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
+            ["50313", 700, 700, "0019 Room Med", { ne: "", se: "", sw: "", nw: ""}],
+            ["50315", 650, 486, "0020 Room Med", { ne: "", se: "", sw: "", nw: ""}],
+            ["50317", 1093, 1093, "0021 Room Large", { ne: "", se: "", sw: "", nw: ""}],
+            ["50319", 1172, 1172, "0022 Room Large", { ne: "", se: "", sw: "", nw: ""}],
+            ["50321", 1043, 1043, "0023 Room Large", { ne: "", se: "", sw: "", nw: ""}],
+            ["50323", 1365, 1365, "0024 Room Very Large", { ne: "", se: "", sw: "", nw: ""}],
+            ["50325", 475, 475, "0025 Room Terminus 1", { ne: "", se: "", sw: "", nw: ""}],
+            ["50327", 462, 462, "0026 Room Terminus 2", { ne: "", se: "", sw: "", nw: ""}],
+
+            ["50329", 216, 216, "2-connecto", { ne: "", se: "", sw: "", nw: ""}],
+
+            ["50359", 643, 547, "a0003 Passage", { ne: "", se: "", sw: "", nw: ""}],
+            ["50361", 747, 747, "a0004 Passage Descent", { ne: "", se: "", sw: "", nw: ""}],
+            ["50363", 621, 621, "a0005 Passage Descent", { ne: "", se: "", sw: "", nw: ""}],
+            ["50365", 696, 696, "a0006 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
+            ["50367", 752, 752, "a0007 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
+            ["50369", 408, 408, "a0008 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
+            ["50371", 628, 628, "a0009 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
+            ["50373", 620, 620, "a0010 Passage Straight", { ne: "", se: "", sw: "", nw: ""}],
+            ["50375", 634, 634, "a0011 Passage Twisty", { ne: "", se: "", sw: "", nw: ""}],
+            ["50377", 585, 585, "a0012 Passage Twisty", { ne: "", se: "", sw: "", nw: ""}],
+            ["50379", 596, 596, "a0013 Passage Twisty", { ne: "", se: "", sw: "", nw: ""}],
+            ["50381", 1043, 1043, "a0014 Room Large", { ne: "", se: "", sw: "", nw: ""}],
+            ["50383", 1025, 1025, "a0015 flat grid", { ne: "", se: "", sw: "", nw: ""}],
+            ["50385", 1365, 1365, "a0016 Room Very Large Green", { ne: "", se: "", sw: "", nw: ""}],
+            ["50387", 604, 604, "a0017 Intersection Lava", { ne: "", se: "", sw: "", nw: ""}],
+            ["50389", 604, 604, "a0018 Intersection X ", { ne: "", se: "", sw: "", nw: ""}],
+            ["50391", 606, 606, "a0019 Intersection T", { ne: "", se: "", sw: "", nw: ""}],
+            ["50393", 720, 720, "a002 Room", { ne: "", se: "", sw: "", nw: ""}],
+            ["50395", 633, 633, "a0020 Intersection T", { ne: "", se: "", sw: "", nw: ""}],
+            ["50397", 753, 753, "a0021 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
+            ["50399", 700, 700, "a0022 Room Med", { ne: "", se: "", sw: "", nw: ""}],
+            ["50401", 652, 486, "a0023 Room Med", { ne: "", se: "", sw: "", nw: ""}],
+            ["50403", 1093, 1093, "a0024 Room Large", { ne: "", se: "", sw: "", nw: ""}],
+            ["50405", 1172, 1172, "a0025 Room Large", { ne: "", se: "", sw: "", nw: ""}],
+            ["50407", 720, 720, "b0002 Room Dark", { ne: "", se: "", sw: "", nw: ""}],
+            ["50409", 643, 643, "b0003 Passage Dark Ascent", { ne: "", se: "", sw: "", nw: ""}],
+            ["50411", 747, 747, "b0004 Passage Dark Descent", { ne: "", se: "", sw: "", nw: ""}],
+            ["50413", 621, 621, "b0005 Passage Descent", { ne: "", se: "", sw: "", nw: ""}],
+            ["50415", 696, 696, "b0006 Corner Gallery", { ne: "", se: "", sw: "", nw: ""}],
+            ["50417", 752, 752, "b0007 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
+            ["50419", 408, 408, "b0008 Dark Corner", { ne: "", se: "", sw: "", nw: ""}],
+            ["50421", 617, 617, "b0009 Passage Corner", { ne: "", se: "", sw: "", nw: ""}],
+            ["50423", 620, 620, "b0010 Passage Straight", { ne: "", se: "", sw: "", nw: ""}],
+            ["50425", 634, 634, "b0011 Passage Twisty", { ne: "", se: "", sw: "", nw: ""}],
+            ["50427", 585, 585, "b0012 Passage Twisty", { ne: "", se: "", sw: "", nw: ""}],
+            ["50429", 596, 596, "b0013 Passage Twisty", { ne: "", se: "", sw: "", nw: ""}],
+            ["50431", 1043, 1043, "b0014 Room Large Round", { ne: "", se: "", sw: "", nw: ""}],
+            ["50433", 1016, 516, "b0015 Large Flat Room Grayscale BW", { ne: "", se: "", sw: "", nw: ""}],
+            ["50435", 1357, 1357, "b0016 Very Large Room", { ne: "", se: "", sw: "", nw: ""}],
+            ["50437", 608, 608, "b0018 X-Intersection", { ne: "", se: "", sw: "", nw: ""}],
+            ["50439", 607, 607, "b0019 T-Intersection", { ne: "", se: "", sw: "", nw: ""}],
+            ["50441", 633, 633, "b0020 T-Intersection", { ne: "", se: "", sw: "", nw: ""}],
+            ["50443", 678, 678, "b0021 Passage Corner Dark", { ne: "", se: "", sw: "", nw: ""}],
+            ["50445", 700, 700, "b0022 Room Med Round", { ne: "", se: "", sw: "", nw: ""}],
+            ["50447", 648, 648, "b0023 Room Med", { ne: "", se: "", sw: "", nw: ""}],
+            ["50449", 1093, 1093, "b0024 Complex Large Room", { ne: "", se: "", sw: "", nw: ""}],
+            ["50451", 1172, 1172, "b0025 Room Large Gallery", { ne: "", se: "", sw: "", nw: ""}],
+
+            ["50331", 356, 356, "NPC Gelatinous Cube", { ne: "", se: "", sw: "", nw: ""}],
+            ["50333", 280, 280, "NPC Spider", { ne: "", se: "", sw: "", nw: ""}],
+            ["50335", 204, 204, "Prop Arch Light", { ne: "", se: "", sw: "", nw: ""}],
+            ["50337", 204, 204, "Prop Arch", { ne: "", se: "", sw: "", nw: ""}],
+            ["50339", 424, 437, "Prop Lava 2", { ne: "", se: "", sw: "", nw: ""}],
+            ["50341", 194, 194, "Prop Lava", { ne: "", se: "", sw: "", nw: ""}],
+            ["50343", 204, 204, "Prop Mushrooms", { ne: "", se: "", sw: "", nw: ""}],
+
+            ["50349", 342, 342, "Prop rocks3", { ne: "", se: "", sw: "", nw: ""}],
+            ["50345", 454, 454, "Prop Spiderweb2", { ne: "", se: "", sw: "", nw: ""}],
+            ["50347", 379, 379, "Prop Spiderweb", { ne: "", se: "", sw: "", nw: ""}],
+
+            ["50351", 409, 409, "Prop stalagtite 1", { ne: "", se: "", sw: "", nw: ""}],
+            ["50353", 408, 408, "Prop stalagtite 2", { ne: "", se: "", sw: "", nw: ""}],
+            ["50355", 292, 292, "Prop stalagtite 3", { ne: "", se: "", sw: "", nw: ""}],
+            ["50357", 185, 185, "Prop stone 1", { ne: "", se: "", sw: "", nw: ""}],
+
+            ["50867", 280, 256, "Prop Gems", { ne: "", se: "", sw: "", nw: ""}]
+
+        ];
+
+        var psDungeon = [
+            
+            ["46732", 194, 158, "Connector 2x2 Block", { ne: "", se: "", sw: "", nw: ""}],
+            ["46734", 192, 99, "Connector 2x2 Flat", { ne: "", se: "", sw: "", nw: ""}],
+            ["46736", 345, 194, "Connector Hall 4x2 L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46738", 345, 194, "Connector Hall 4x2 R", { ne: "", se: "", sw: "", nw: ""}],
+
+            ["46744", 1024, 512, "Hall corner bottom", { ne: "", se: "", sw: "", nw: ""}],
+            ["46740", 640, 640, "Hall Corner side L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46746", 640, 640, "Hall corner side R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46748", 1024, 512, "Hall corner top", { ne: "", se: "", sw: "", nw: ""}],
+            ["46750", 1024, 640, "Hall straight L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46752", 1024, 640, "Hall straight R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46754", 1024, 640, "Hall t-intersection bottom L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46756", 1024, 640, "Hall t-intersection bottom R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46758", 1024, 640, "Hall t-intersection top L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46760", 1024, 640, "Hall t-intersection top R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46742", 1024, 640, "Hall X-intersection", { ne: "", se: "", sw: "", nw: ""}],
+            ["46846", 144, 281, "plex.Dungeon.Torchlit.Prop.Gate.Tall.Closed.2x1.1", { ne: "", se: "", sw: "", nw: ""}],
+            ["46848", 142, 281, "plex.Dungeon.Torchlit.Prop.Gate.Tall.Open.2x1.1", { ne: "", se: "", sw: "", nw: ""}],
+            ["46850", 142, 281, "plex.Dungeon.Torchlit.Prop.Gate.Tall.Open.2x1.2", { ne: "", se: "", sw: "", nw: ""}],
+            ["46852", 432, 394, "plex.Dungeon.Torchlit.Prop.Stairs.Bottom.1", { ne: "", se: "", sw: "", nw: ""}],
+            ["46854", 432, 394, "plex.Dungeon.Torchlit.Prop.Stairs.Bottom.2", { ne: "", se: "", sw: "", nw: ""}],
+            ["46856", 416, 210, "plex.Dungeon.Torchlit.Prop.Stairs.Curved.Up.1", { ne: "", se: "", sw: "", nw: ""}],
+            ["46858", 416, 210, "plex.Dungeon.Torchlit.Prop.Stairs.Curved.Up.2", { ne: "", se: "", sw: "", nw: ""}],
+            ["46762", 144, 170, "Prop Door Closed Double L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46764", 144, 170, "Prop Door Closed Double R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46766", 144, 185, "Prop Door Open Double L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46768", 144, 185, "Prop Door Open Double R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46770", 144, 281, "Prop Gate Tall Closed 2x1 R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46772", 438, 400, "Prop Stairs Top L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46774", 438, 400, "Prop Stairs Top R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46776", 205, 111, "Prop Trap SpikedPit", { ne: "", se: "", sw: "", nw: ""}],
+            ["46778", 174, 222, "Prop Wall 2x1 L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46780", 174, 222, "Prop Wall 2x1 R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46782", 1024, 640, "Room 10x10 1Exit L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46784", 1024, 640, "Room 10x10 1Exit R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46786", 1024, 640, "Room 10x10 1Exit Top L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46788", 1024, 640, "Room 10x10 1Exit Top R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46790", 1024, 640, "Room 10x10 2Exits 180 L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46792", 1024, 640, "Room 10x10 2exits 180 R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46794", 1024, 640, "Room 10x10 3Exits L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46796", 1024, 640, "Room 10x10 3Exits R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46798", 1024, 640, "Room 10x10 4Exits", { ne: "", se: "", sw: "", nw: ""}],
+            ["46800", 734, 504, "Room 10x10 Round 0Exits Stairs", { ne: "", se: "", sw: "", nw: ""}],
+            ["46802", 734, 504, "Room 10x10 Round 0Exits", { ne: "", se: "", sw: "", nw: ""}],
+            ["46804", 870, 568, "Room 10x10 Round 1Exit Bottom L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46806", 870, 568, "Room 10x10 Round 1Exit Bottom R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46808", 869, 571, "Room 10x10 Round 1Exit Top L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46810", 869, 571, "Room 10x10 Round 1Exit Top R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46812", 1008, 573, "Room 10x10 Round 2Exits Bottom", { ne: "", se: "", sw: "", nw: ""}],
+            ["46814", 1024, 640, "Room 10x10 Round 2Exits Opposite L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46816", 1024, 640, "Room 10x10 Round 2Exits Opposite R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46818", 869, 625, "Room 10x10 Round 2Exits Side L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46820", 869, 625, "Room 10x10 Round 2Exits Side R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46822", 1005, 573, "Room 10x10 Round 2Exits Top", { ne: "", se: "", sw: "", nw: ""}],
+            ["46824", 848, 568, "Room 6x6 1Exit bottom L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46826", 848, 568, "Room 6x6 1Exit bottom R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46828", 846, 560, "Room 6x6 1Exit top L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46830", 846, 560, "Room 6x6 1Exit top R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46836", 1010, 557, "Room 6x6 2Exits Adjacent bottom", { ne: "", se: "", sw: "", nw: ""}],
+            ["46832", 848, 632, "Room 6x6 2Exits Adjacent Side L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46834", 848, 632, "Room 6x6 2Exits Adjacent Side R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46838", 1010, 553, "Room 6x6 2Exits Adjacent top", { ne: "", se: "", sw: "", nw: ""}],
+            ["46840", 1024, 639, "Room 6x6 2Exits Opposite L", { ne: "", se: "", sw: "", nw: ""}],
+            ["46842", 1024, 639, "Room 6x6 2Exits Opposite R", { ne: "", se: "", sw: "", nw: ""}],
+            ["46844", 512, 384, "Room Block Connector 4x4", { ne: "", se: "", sw: "", nw: ""}]      
+            
+        ];
+        
+        var psSewer = [
+            ["47777", 176, 206, "Prop Wall Door Interface to Dungeon L", { ne: "", se: "", sw: "", nw: ""}],
+            ["47779", 176, 206, "Prop Wall Door Interface to Dungeon", { ne: "", se: "", sw: "", nw: ""}],
+            ["47781", 1109, 633, "Room Large 0 exits no walls", { ne: "", se: "", sw: "", nw: ""}],
+            ["47783", 1110, 766, "Room Large 0 exits", { ne: "", se: "", sw: "", nw: ""}],
+            ["47785", 623, 526, "Room Medium 6x6 0 exits", { ne: "", se: "", sw: "", nw: ""}],
+            ["47787", 526, 343, "Room Small 5x5 2", { ne: "", se: "", sw: "", nw: ""}],
+            ["47789", 525, 445, "Room Small 5x5", { ne: "", se: "", sw: "", nw: ""}],
+            ["47791", 291, 205, "Sewer Connector 3x3 no sludge", { ne: "", se: "", sw: "", nw: ""}],
+            ["47793", 291, 205, "Sewer Connector 3x3 sludge", { ne: "", se: "", sw: "", nw: ""}],
+            ["47795", 371, 274, "Sewer Connector Short Tunnel  Straight No-Walls L", { ne: "", se: "", sw: "", nw: ""}],
+            ["47797", 364, 407, "Sewer Connector Short Tunnel Straight L", { ne: "", se: "", sw: "", nw: ""}],
+            ["47799", 371, 274, "Sewer Connector Short Tunnel Straight No-Walls", { ne: "", se: "", sw: "", nw: ""}],
+            ["47801", 364, 407, "Sewer Connector Tunnel Short  Straight", { ne: "", se: "", sw: "", nw: ""}],
+            //["47803", 384, 760, "Sewer Effect flameJet R", { ne: "", se: "", sw: "", nw: ""}],
+            //["47805", 760, 384, "Sewer Effect flameJet", { ne: "", se: "", sw: "", nw: ""}],
+            ["47807", 1088, 769, "Sewer Interface to Dungeon L", { ne: "", se: "", sw: "", nw: ""}],
+            ["47809", 1088, 769, "Sewer Interface to Dungeon", { ne: "", se: "", sw: "", nw: ""}],
+            //["47811", 459, 237, "Sewer NPC Croc", { ne: "", se: "", sw: "", nw: ""}],
+            //["47813", 512, 238, "Sewer NPC Rat", { ne: "", se: "", sw: "", nw: ""}],
+            ["47815", 473, 316, "Sewer Prop Bridge 1L", { ne: "", se: "", sw: "", nw: ""}],
+            ["47817", 473, 316, "Sewer Prop Bridge 1", { ne: "", se: "", sw: "", nw: ""}],
+            ["47819", 446, 306, "Sewer Prop Bridge 2 L", { ne: "", se: "", sw: "", nw: ""}],
+            ["47821", 446, 306, "Sewer Prop Bridge 2", { ne: "", se: "", sw: "", nw: ""}],
+            //["47823", 482, 592, "Sewer Prop Fat Pipe L", { ne: "", se: "", sw: "", nw: ""}],
+            //["47825", 482, 592, "Sewer Prop Fat Pipe", { ne: "", se: "", sw: "", nw: ""}],
+
+            //["47875", 238, 280, "Sewer Prop flame jet trap 2 inactive L", { ne: "", se: "", sw: "", nw: ""}],
+            //["47877", 238, 280, "Sewer Prop flame jet trap 2 inactive", { ne: "", se: "", sw: "", nw: ""}],
+            //["47873", 431, 280, "Sewer Prop flame jet trap 2 L", { ne: "", se: "", sw: "", nw: ""}],
+            //["47879", 431, 280, "Sewer Prop flame jet trap 2", { ne: "", se: "", sw: "", nw: ""}],
+            //["47881", 437, 497, "Sewer Prop flame jet trap active 2", { ne: "", se: "", sw: "", nw: ""}],
+            //["47883", 437, 497, "Sewer Prop flame jet trap active", { ne: "", se: "", sw: "", nw: ""}],
+            //["47885", 232, 384, "Sewer Prop flame jet trap inactive L", { ne: "", se: "", sw: "", nw: ""}],
+            //["47887", 232, 384, "Sewer Prop flame jet trap inactive", { ne: "", se: "", sw: "", nw: ""}],
+
+            //["47827", 145, 260, "Sewer Prop Ladder L", { ne: "", se: "", sw: "", nw: ""}],
+            //["47829", 145, 260, "Sewer Prop Ladder", { ne: "", se: "", sw: "", nw: ""}],
+            ["47831", 240, 180, "Sewer Prop Ledge Blocks 2x3", { ne: "", se: "", sw: "", nw: ""}],
+            ["47833", 531, 324, "Sewer Prop Ledge Blocks", { ne: "", se: "", sw: "", nw: ""}],
+            ["47835", 226, 226, "Sewer Prop Pipe Short Outflow", { ne: "", se: "", sw: "", nw: ""}],
+
+            //["47889", 539, 484, "Sewer Prop pipes L", { ne: "", se: "", sw: "", nw: ""}],
+            //["47891", 539, 484, "Sewer Prop pipes", { ne: "", se: "", sw: "", nw: ""}],
+
+            ["47837", 195, 106, "Sewer Prop Pit Trap 2", { ne: "", se: "", sw: "", nw: ""}],
+            ["47839", 193, 104, "Sewer Prop Pit Trap 3", { ne: "", se: "", sw: "", nw: ""}],
+            ["47841", 195, 106, "Sewer Prop Pit Trap", { ne: "", se: "", sw: "", nw: ""}],
+            ["47843", 400, 201, "Sewer Prop Pool Round Sludge", { ne: "", se: "", sw: "", nw: ""}],
+            ["47845", 99, 92, "Sewer Prop Railing Construction", { ne: "", se: "", sw: "", nw: ""}],
+            ["47847", 99, 92, "Sewer Prop Railing Rust", { ne: "", se: "", sw: "", nw: ""}],
+            ["47849", 258, 226, "Sewer Prop Sludge Stream Fall 2", { ne: "", se: "", sw: "", nw: ""}],
+            ["47851", 258, 226, "Sewer Prop Sludge Stream Fall", { ne: "", se: "", sw: "", nw: ""}],
+            ["47853", 333, 168, "Sewer Prop Sludge Stream Flat 2 L", { ne: "", se: "", sw: "", nw: ""}],
+            ["47855", 333, 168, "Sewer Prop Sludge Stream Flat 2", { ne: "", se: "", sw: "", nw: ""}],
+            ["47857", 401, 289, "Sewer Prop Vat Round", { ne: "", se: "", sw: "", nw: ""}],
+            ["47859", 621, 338, "Sewer Prop Vat ", { ne: "", se: "", sw: "", nw: ""}],
+            ["47861", 159, 243, "Sewer Prop Wall Door L", { ne: "", se: "", sw: "", nw: ""}],
+            ["47863", 159, 243, "Sewer Prop Wall Door", { ne: "", se: "", sw: "", nw: ""}],
+            ["47865", 159, 243, "Sewer Prop Wall Open L", { ne: "", se: "", sw: "", nw: ""}],
+            ["47867", 159, 243, "Sewer Prop Wall Open", { ne: "", se: "", sw: "", nw: ""}],
+            ["47869", 164, 244, "Sewer Prop Wall Solid L", { ne: "", se: "", sw: "", nw: ""}],
+            ["47871", 164, 244, "Sewer Prop Wall Solid", { ne: "", se: "", sw: "", nw: ""}],
+
+            ["47893", 1095, 795, "Sewer Room Dark 2exits adjacent side", { ne: "", se: "", sw: "", nw: ""}],
+            ["47895", 1098, 765, "Sewer Room Dark Large 2exits adjacent bottom", { ne: "", se: "", sw: "", nw: ""}],
+            ["47897", 1104, 796, "Sewer Room Dark Large 2exits adjacent top", { ne: "", se: "", sw: "", nw: ""}],
+            ["47899", 1095, 795, "Sewer Room Dark Large 2exits opposite", { ne: "", se: "", sw: "", nw: ""}],
+            ["47901", 1095, 793, "Sewer Room Dark Large 3exits bottom", { ne: "", se: "", sw: "", nw: ""}],
+            ["47903", 1100, 796, "Sewer Room Dark Large 3exits top", { ne: "", se: "", sw: "", nw: ""}],
+            ["47905", 1100, 794, "Sewer Room Dark Large 4 exits", { ne: "", se: "", sw: "", nw: ""}],
+            ["47907", 1117, 778, "Sewer Room Lit Large 2Exits Adjacent Bottom", { ne: "", se: "", sw: "", nw: ""}],
+            ["47909", 1116, 775, "Sewer Room Lit Large 2Exits Adjacent Side L", { ne: "", se: "", sw: "", nw: ""}],
+            ["47911", 1116, 775, "Sewer Room Lit Large 2Exits Adjacent Side", { ne: "", se: "", sw: "", nw: ""}],
+            ["47913", 1115, 771, "Sewer Room Lit Large 2Exits Adjacent Top", { ne: "", se: "", sw: "", nw: ""}],
+            ["47915", 1116, 771, "Sewer Room Lit Large 2Exits Opposite L", { ne: "", se: "", sw: "", nw: ""}],
+            ["47917", 1116, 771, "Sewer Room Lit Large 2Exits Opposite", { ne: "", se: "", sw: "", nw: ""}],
+            ["47923", 1116, 777, "Sewer Room Lit Large 3Exits bottom L ", { ne: "", se: "", sw: "", nw: ""}],
+            ["47925", 1116, 777, "Sewer Room Lit Large 3Exits bottom ", { ne: "", se: "", sw: "", nw: ""}],
+            ["47919", 1113, 783, "Sewer Room Lit Large 3Exits Top L", { ne: "", se: "", sw: "", nw: ""}],
+            ["47921", 1113, 783, "Sewer Room Lit Large 3Exits Top", { ne: "", se: "", sw: "", nw: ""}],
+            ["47927", 1113, 777, "Sewer Room Lit Large Vat", { ne: "", se: "", sw: "", nw: ""}],
+            ["47929", 1097, 537, "Sewer Tunnel Dark Corner Bottom ", { ne: "", se: "", sw: "", nw: ""}],
+            ["47931", 620, 728, "Sewer Tunnel Dark Corner Side L", { ne: "", se: "", sw: "", nw: ""}],
+            ["47933", 620, 728, "Sewer Tunnel Dark Corner Side", { ne: "", se: "", sw: "", nw: ""}],
+            ["47935", 1084, 553, "Sewer Tunnel Dark Corner Top", { ne: "", se: "", sw: "", nw: ""}],
+            ["47937", 1088, 769, "Sewer Tunnel Dark Straight", { ne: "", se: "", sw: "", nw: ""}],
+            ["47939", 1088, 795, "Sewer Tunnel Dark T-Intersection Bottom L Dark", { ne: "", se: "", sw: "", nw: ""}],
+            ["47941", 1088, 795, "Sewer Tunnel Dark T-Intersection Bottom ", { ne: "", se: "", sw: "", nw: ""}],
+            ["47943", 1100, 771, "Sewer Tunnel Dark T-Intersection Top L", { ne: "", se: "", sw: "", nw: ""}],
+            ["47945", 1100, 771, "Sewer Tunnel Dark T-Intersection Top", { ne: "", se: "", sw: "", nw: ""}],
+            ["47947", 1098, 770, "Sewer Tunnel Dark X-Intersection", { ne: "", se: "", sw: "", nw: ""}],
+            ["47949", 1097, 537, "Sewer Tunnel Lit Bottom", { ne: "", se: "", sw: "", nw: ""}],
+            ["47951", 1084, 553, "Sewer Tunnel Lit Corner Top", { ne: "", se: "", sw: "", nw: ""}],
+            ["47953", 620, 770, "Sewer Tunnel Lit Side L", { ne: "", se: "", sw: "", nw: ""}],
+            ["47955", 620, 770, "Sewer Tunnel Lit Side", { ne: "", se: "", sw: "", nw: ""}],
+            ["47957", 1088, 769, "Sewer Tunnel Lit Straight", { ne: "", se: "", sw: "", nw: ""}],
+            ["47959", 1098, 770, "Sewer Tunnel Lit X-Intersection", { ne: "", se: "", sw: "", nw: ""}]
+        ];      
+        
+        
+        var tileDefs = psCaves.concat(psDungeon).concat(psSewer);
+        
+        _.each(tileDefs, function(tileDef) { 
+            marketplaceTiles.push(new tile(tileDef[0], tileDef[1], tileDef[2], tileDef[3], tileDef[4]));
+        });
+
+    
+    };  
+    
+    
+// ******************************************************************************** 
+    
+    
+
+    var whisper = function chatMessageSender(playerName, message) {
+        // sends a chat message to a specific player. Can use gm as playerName
+        sendChat("psTileResizer Script", '/w ' + playerName + " " + message);
+    };
+
+    var makeButton = function buttonMakerForChat(title, command) { // expects two strings. Returns encoded html for the chat stream
+        var output = '['+title+']('+command+')';
+        return output;
+    };
+
+    var ch = function (c) {
+    // This function will take a single character and change it to it's equivalent html encoded value.
+        // psNote: I tried alternate methods of regexps to encode the entire string, but I always ran into problems with | and [] characters.
+        var entities = {
+            '<' : 'lt',
+            '>' : 'gt',
+            "'" : '#39',
+            '@' : '#64',
+            '{' : '#123',
+            '|' : '#124',
+            '}' : '#125',
+            '[' : '#91',
+            ']' : '#93',
+            '"' : 'quot',
+            '-' : 'mdash',
+            ' ' : 'nbsp'
+        };
+
+        if(_.has(entities,c) ){
+            return ('&'+entities[c]+';');
+        }
+        return '';
+    };
+    
+
+    
+    var getCurrentPage = function pageGetter(playerID) {
+        // this should check Campaign.get and GM.lastpage
+
+        var playerObj = getObj("player", playerID);
+        var playerspecificpages = Campaign().get("playerspecificpages");
+        
+        if (playerIsGM(playerID) && _.has(playerObj, "lastpage" )) {
+            return playerObj.lastpage;          
+        } else if ( Boolean(playerspecificpages) && _.has(playerspecificpages, playerID) ) {
+            return Campaign().get("playerspecificpages")[playerID];
+        } else {
+            return Campaign().get("playerpageid");  // the player ribbon. most common       
+        }
+    };
+    
+    var findGM = function GMFinder() {
+        var players = findObjs({type: "player"});
+        var GM = _.find(players, function(player) { 
+            return playerIsGM(player.get("id"));
+        });
+        return GM;
+    };
+
+
+    
+    var getMarketplaceID = function marketplaceIDGetter(tileID) {
+        if( tileID !== undefined ) {
+            var tileObj = getObj("graphic", tileID);
+            var tileImgSrc = tileObj.get("imgsrc");
+            
+            var pathChunks = tileImgSrc.split("/");
+            var tileMarketplaceID = pathChunks[5];
+            
+            //whisper("gm", "tileMarketplaceID: " + tileMarketplaceID );
+            
+            //tileObj.set("showname", true);
+            //tileObj.set("name", tileMarketplaceID);
+            //tileObj.set("layer", "objects");
+                
+            return tileMarketplaceID;           
+        }
+    };
+    
+    
+    var resizeTiles = function tileResizer(pageID, tileID, playerID) {
+        // resize all the map tiles with known id and size in our wee database
+        
+        // parameters verification
+        if (Boolean(playerID) === false) {
+            playerID = findGM();
+        }
+        
+        if (Boolean(tileID) === false) {
+            tileID = "all";
+        }
+        
+        if (Boolean(pageID) === false) {            
+            var page = getCurrentPage(); 
+        }
+        
+        if (tileID !== "all") {
+            
+            
+            var tileMarketplaceID = getMarketplaceID(tileID);
+            var template = _.findWhere(marketplaceTiles, {marketplaceID: tileMarketplaceID} );
+            
+            if (template !== undefined ) {
+
+                var tileObj = getObj("graphic", tileID);
+                // resize it
+                
+                tileObj.set({
+                    width: template.width,
+                    height: template.height             
+                });                                     
+            
+
+            } else {
+                // whisper("gm", "couldn't find the right template");
+            }
+
+        } else { // resize everything you can find
+            var possibleMapTiles = findObjs({ type: "graphic", layer: "map" });
+            
+            _.each(possibleMapTiles, function(tile) {
+                _.each(marketplaceTiles, function(template) {
+                    if ( template.marketplaceID !== "" && tile.get("imgsrc").indexOf(template.marketplaceID) !== -1 ) { // found one 
+                        
+                        tile.set({ width: template.width, height: template.height });                           
+                        
+                    }
+                });
+            
+            });
+            
+            
+        }
+        
+        //whisper("gm", "received a request to resize tile " + tileID);
+        
+    };
+    
+    var handleInput = function inputHandler(msg) {
+            
+        if (msg.type == "api" && ( msg.content.indexOf("!psResize") !== -1 || msg.content.indexOf("!psTileResizer") !== -1 ) ) {
+
+            var argsFromUser,
+                who,
+                errors=[],
+                playerID,
+                playerName,
+                pageID,
+                tileID,
+                requestedToggle,
+                userCommand;
+
+
+            playerName = msg.who;
+            playerID = msg.playerid;
+
+            argsFromUser = msg.content.split(/ +/);
+            userCommand = argsFromUser[1];
+            tileID = argsFromUser[2];           
+            requestedToggle = argsFromUser[2];
+
+            //whisper("gm", "heard: " + userCommand);
+            //whisper("gm", "heard: " + tileID);
+            
+            
+            
+            switch(userCommand) {
+                case '--resize' :
+                    // resize marketplace tiles
+                        // if you get a token id, resize that one.
+                        // otherwise, resize everything? any way to get a confirmation first?
+                    
+                    if (Boolean(tileID) === false || tileID == "all") {
+                            resizeTiles(pageID, "all", playerID);
+                    } else {
+                        resizeTiles(pageID, tileID, playerID);
+                    }
+                    
+                break;
+                case '--getMarketplaceID':
+                    
+                    getMarketplaceID(tileID);
+                    
+                
+                break;
+                
+                case "--on":
+                    config.resizeOnAdd = true;
+                break;
+                
+                case "--off":
+                    config.resizeOnAdd = false;
+                break;
+                
+                case "--toggle":
+                    if ( requestedToggle == "resizeOnAdd") { 
+                        config.resizeOnAdd = !config.resizeOnAdd;
+                        if (config.resizeOnAdd) {
+                            whisper("gm", "Plexsoup isometric assets will now resize automatically when you drop them on the map");                         
+                        } else {
+                            whisper("gm", "Plexsoup isometric assets will not resize automatically anymore. See help for more options.");
+                        }
+
+                    }
+                
+                break;
+                
+                case '--help':
+                    getHelp();
+                break;
+                
+                case undefined:
+                    getHelp();
+                break;
+            }
+            //getHelp();
+        }
+    };
+
+    
+    var showDetailedHelp = function showDetailedHelpTextInChat(playerName) {
+        
+        if (!playerName) { playerName = "gm";}
+
+
+
+        var exampleStyle = '"background-color: #eee; font-size: smaller; margin-left: 40px;"';
+        var warningStyle = '"background-color: AntiqueWhite; font-size: smaller;"';
+        var exampleTokenSelect = ch('@') + ch('{') + 'selected' + ch('|') + 'token_id' + ch('}');
+
+        var helpText = '';
+
+        helpText += '<div style="font-size: smaller;">';
+        helpText += 'psTileResizer is a script to resize isometric marketplace tiles to their original, intended dimensions.';
+        helpText += "This dramatically helps lining up tiles for setting up dungeon-crawls.";
+        helpText += "</div>";
+
+        helpText += '<div style="font-size: smaller;">';        
+        helpText += "To start, enter !psResizer in the chat window.";
+        helpText += "</div>";
+        
+        helpText += '<div style="font-size: smaller;">';        
+        helpText += "Configuration options to be aware of: ";
+        helpText += "<ul>";
+        helpText +=         "<li>Toggle On/Off - turns on automatic resizing, triggered whenever a plexsoup marketplace tile is added to the map.</li>";
+        helpText += "</ul>";
+        helpText += "</div>";
+        
+
+        
+        helpText += "<div style='font-size: smaller'>";
+        helpText += "In addition to the gui buttons, you can make macros to activate the features. Here are some commands to play with.";
+        helpText +=         '<div style='+ exampleStyle +'> !psResize</div>';
+        helpText +=         '<div style='+ exampleStyle +'> !psResize --resize all</div>';
+        helpText +=         '<div style='+ exampleStyle +'> !psResize --resize ' + exampleTokenSelect + '</div>';       
+        helpText +=         '<div style='+ exampleStyle +'> !psResize --toggle resizeOnLoad</div>';
+        
+
+        
+        //whisper(playerName, helpText );
+        var helpHandouts;
+        helpHandouts = findObjs({
+            _type: "handout",
+            name: "psResize Help"
+        });
+
+        var helpHandout = helpHandouts[0];
+        //log("helpHandout = " + helpHandout);
+        
+        if (!helpHandout) { // create it
+            helpHandout = createObj('handout', {
+                name: 'psResize Help',
+                inplayerjournals: 'all'
+            });
+            helpHandout.set("notes", helpText);
+
+        } else { // it exists, set it's contents to match the latest version of the script
+            helpHandout.set("notes", helpText);
+        }
+        var handoutID = helpHandout.get("_id");
+
+        var chatMessage = "";
+        var buttonStyle = "'background-color: AntiqueWhite; text-align: center'";
+        
+        chatMessage += "<div style="+buttonStyle+"><a href='http://journal.roll20.net/handout/" + handoutID + "'>Additional Information</a></div>";
+        
+        return(chatMessage);
+    };
+
+    
+    var getHelp = function helpGetter() {
+        
+        var helpText = "";
+        
+        helpText += "<div style='text-align: center;'>";
+        
+        helpText += makeButton("Toggle On/Off", "!psResize --toggle resizeOnAdd");
+        helpText += makeButton("Resize all", "!psResize --resize all");
+        
+        var tokenSelect = ch('@') + ch('{') + 'selected' + ch('|') + 'token_id' + ch('}');
+        helpText += makeButton("Resize Selected", "!psResize --resize " + tokenSelect );
+        
+        //helpText += makeButton("!psResize --getMarketplaceID", "!psResize --getMarketplaceID " + tokenSelect );
+
+        helpText += "</div>";
+        helpText += showDetailedHelp("gm");
+        whisper("gm", helpText);
+        
+    };
+
+    var getStatus = function statusGetter() {
+        whisper("gm", "config: " + JSON.stringify(config) );
+        whisper("gm", "tiles: " + JSON.stringify(marketplaceTiles) );
+        
+    };
+    
+    var registerEventHandlers = function() {
+        on('chat:message', handleInput );
+        
+
+        
+        on("add:graphic", function(obj) {
+            if ( temp.campaignLoaded && config.resizeOnAdd ) { // don't futz with the graphics already in the campaign.
+                // only after the campaign is loaded, for all new tiles, check to see if they need resizing.
+                resizeTiles( getCurrentPage(), obj.get("id"), findGM() );               
+            } else {
+                log("temp.campaignLoaded: " + temp.campaignLoaded + ", config.resizeOnAdd: " + config.resizeOnAdd );
+            }
+
+        });
+        
+    };
+
+    var checkInstall = function() {
+        if ( Boolean(state.psMarketplaceResizer) === false ) {
+            state.psMarketplaceResizer = { 
+                info: info,
+                config: config
+            };
+        }
+    };
+
+    var initialize = function() {
+        temp.campaignLoaded = true; // help on(add:graphic) know not to mess with all the graphics already in the campaign
+        //log("temp.campaignLoaded: " + temp.campaignLoaded);       
+    };
+    
+    return { // make these functions available outside the local namespace
+        CheckInstall: checkInstall,
+        RegisterEventHandlers: registerEventHandlers,
+        PopulateDatabase: populateDatabase,
+        GetHelp: getHelp,
+        GetStatus: getStatus,
+        Initialize: initialize
+    };
+
+
+}());
+
+
+
+
+
+
+
+on("ready", function() {
+         
+    //init();
+    psTileResizer.CheckInstall();
+    psTileResizer.Initialize();
+    psTileResizer.RegisterEventHandlers();
+    psTileResizer.PopulateDatabase();
+    psTileResizer.GetHelp();
+    //psTileResizer.GetStatus();
+    
+
+});
+
+/*
+
+		_/_/_/      _/_/_/      _/      _/    _/_/    _/_/_/_/_/  _/    _/   
+	   _/    _/  _/            _/_/  _/_/  _/    _/      _/      _/    _/    
+	  _/_/_/      _/_/        _/  _/  _/  _/_/_/_/      _/      _/_/_/_/     
+	 _/              _/      _/      _/  _/    _/      _/      _/    _/      
+	_/        _/_/_/        _/      _/  _/    _/      _/      _/    _/      
+
+*/
+
+var psMath = psMath || (function plexsoupAwesomeMaths() {
+    // Another module. This one for fun math. Adding and subtracting vectors, Distance, etc.
+    var debug = false; // set to true to enable verbose logging.
+
+	var info = {
+		name: "psMath.js",
+		version: 0.1,
+		author: "plexsoup"
+	};
+	
+	var config = {};
+	
+    var getLongestVectorLength = function longestVectorGetter(vectorList) {
+        // **** why is this returning a length of 3 for two dimensional vectors?
+
+        if (debug) { log("entering getLongestVectorLength with: " + vectorList); }
+
+        if (vectorList.length == 2) {
+            if ( _.isNumber(vectorList[0]) ) {
+                log("aborting getLongestVectorLength(" + vectorList + "). I think we got one vector (a single x,y location) instead of a list of vectors.");
+                return(2);
+            }
+        } else {
+            if (debug) {log("vectorList.length = " + vectorList);}
+        }
+
+        var longestVectorLength = 0;
+
+
+        _.each(vectorList, function loopToFindLongest(vector) {
+            if (vector.length > longestVectorLength) {
+                longestVectorLength = vector.length;
+            }
+        });
+
+        if (debug) {
+            log("getLongestVectorLength returning with: " + longestVectorLength);
+        }
+
+        return longestVectorLength;
+
+    };
+
+    var initializeVector = function vectorInitialiser(lengthRequired) {
+        if (debug) { log("initializeVector called with " + lengthRequired); }
+        var newVector = [];
+        var elementID;
+        for(elementID = 0; elementID < lengthRequired; elementID++) {
+            newVector.push(0);
+        }
+        if (debug) { log("initializeVector returning with " + newVector); }
+        return newVector;
+    };
+
+    var addVectors = function vectorAdder(listOfVectors) { // expects a 2d array.. [[point1, point2, ... pointN], ..., [pn1, pn2, ... pnN]]
+        // assumes the input vectors are the same length: eg 2 coordinates each: X and Y
+
+        if (listOfVectors.length == 2 ) { // make sure you're adding 2 vectors and not 2 points
+            if (_.isNumber(listOfVectors[0])) {
+                log("Aborting addVectors(" + listOfVectors + "). I think it contains one vector instead of two or more.");
+                return listOfVectors; // bail out.. something went wrong. You got a point instead of 2 vectors
+            }
+        }
+
+        if ( debug ) { log("addVectors called with: " + listOfVectors); }
+
+        var longestVectorLength = getLongestVectorLength(listOfVectors);
+        var sumVector = initializeVector(longestVectorLength);
+
+
+
+
+        var elementID = 0;
+        var vectorNumber = 0;
+        for(elementID=0; elementID<longestVectorLength; elementID++) {
+            for(vectorNumber=0; vectorNumber<listOfVectors.length; vectorNumber++ ) {
+                sumVector[elementID] += Number(listOfVectors[vectorNumber][elementID]);
+
+            }
+        }
+
+        if (debug) {
+            log("addVectors returning with: " + sumVector);
+        }
+
+        if ( debug ) { log("addVectors returning " + sumVector); }
+        return sumVector;
+
+    };
+
+    var scaleVector = function vectorExpander(vector, scalar) {
+        if (debug) {
+            log("scaleVector called with " + vector + ", " + scalar );
+        }
+        var newVector = _.map(vector, function scaleElement(elementValue) {
+            return elementValue * scalar;
+        });
+        if (debug) {
+            log("scaleVector returning with " + newVector );
+        }
+        return newVector;
+    };
+
+    var normalizeVector = function vectorNormalizer(point1, point2) { // expecting a list of 2 points [x1,y2], [x2,y2]
+        if (debug) { log("entering normalizeVector with: " + point1 + ", " + point2); }
+
+        var unitVector;
+        var translatedVector = addVectors( [point2, scaleVector(point1, -1)] );
+
+        var distance = getDistance(point1, point2);
+        if (distance > 0) {
+            unitVector = scaleVector(translatedVector, 1/distance );
+        } else { // abort. can't divide by 0. Make something up instead.
+            unitVector = translatedVector;
+            if ( debug) {log("trying to normalize a vector where the distance is zero. Can't divide by zero.");}
+        }
+
+
+
+        if (debug) { log("unitVector is: " + unitVector); }
+
+        if (debug) { log("leaving normalizeVector with: " + unitVector); }
+        return unitVector;
+
+    };
+
+    var getDistance = function distanceGetter(point1, point2) {
+        // distance is squareroot of the squared sum of each side
+        //if (debug) { log("entering getDistance with " + point1 + ", " + point2); }
+        var xDist = Math.abs(point2[0] - point1[0]);
+        var xDistSquared = Math.pow(xDist, 2);
+        var yDist = Math.abs(point2[1] - point1[1]);
+        var yDistSquared = Math.pow(yDist, 2);
+        var distance = Math.sqrt(xDistSquared + yDistSquared);
+        //if (debug) { log("returning from getDistance with " + distance); }
+        return distance;
+    };
+
+	var checkInstall = function() {
+		log(info.name + " v" + info.version + " installed.");
+	};
+	
+	var registerEventHandlers = function() {
+		log(info.name + " listening."); 
+	};
+	
+    return {
+		CheckInstall: checkInstall,
+		RegisterEventHandlers: registerEventHandlers,
+        AddVectors: addVectors,
+        ScaleVector: scaleVector,
+        GetDistance: getDistance,
+        NormalizeVector: normalizeVector
+
+    };
+
+
+}()); // End of Module: psMath
 /*
 
         _/_/_/      _/_/_/      _/    _/  _/_/_/_/_/  _/_/_/  _/          _/_/_/   
@@ -5378,18 +4513,19 @@ on("ready",function(){
 */
 
 
-var psUtils = function plexsoupUtils() {
+var psUtils = psUtils || (function plexsoupUtils() {
     "use strict";
+    var debug = false; // set this to true to log everything
     
     var info = {
+		name: "psUtils",
+		module: psUtils,
         version: 0.1,
         author: "plexsoup"
     };
     
     var config = {};
-    var defaultConfig = {
-        debug: true
-    };
+    var defaultConfig = {};
 
 
     var whisper = function chatMessageSender(playerName, message) {
@@ -5398,7 +4534,7 @@ var psUtils = function plexsoupUtils() {
         sendChat("psIsoTravellers", '/w ' + playerName + " " + message);
     };
 
-    var ch = function (c) {
+    var ch = function (character) {
         // This function will take a single character and change it to it's equivalent html encoded value.
         // psNote: I tried alternate methods of regexps to encode the entire string, but I always ran into problems with | and [] characters.
         var entities = {
@@ -5416,8 +4552,8 @@ var psUtils = function plexsoupUtils() {
             ' ' : 'nbsp'
         };
 
-        if(_.has(entities,c) ){
-            return ('&'+entities[c]+';');
+        if(_.has(entities,character) ){
+            return ('&'+entities[character]+';');
         }
         return '';
     };
@@ -5441,211 +4577,91 @@ var psUtils = function plexsoupUtils() {
 
         return output;
     };  
+ 
+	var getGameMasterID = function gmIDGetter() {
+		if (debug) log("entering getGameMasterID with no parameters");
+		var activePlayers = findObjs({
+			_type: "player"
+		});
+		
+		if (debug) log("activePlayers: " + JSON.stringify(activePlayers));
+		
+		var gameMasters = _.filter(activePlayers, function(currentPlayer) { 
+			return playerIsGM(currentPlayer.get("_id"));
+		});
 
-    // Another module. This one for fun math. Adding and subtracting vectors, Distance, etc.
-    var debugDEFCON = 5; // 5 = AOK: log nothing. 1 = FUBAR: log everything
+		if (debug) log("gameMasters: " + JSON.stringify(gameMasters) );
+		
+		if ( gameMasters.length > 0 ) {
+			return gameMasters[0].get("_id"); // **** what happens if there's more than one?
+		} else {
+			return false;
+		}
+	};
+	
+	
+	var getTokenPage = function tokenPageGetter(tokenID) {
+		var tokenObj = getObj("graphic", tokenID);
+		if ( tokenObj === undefined ) {
+			return false;
+		} else {
+			return tokenObj.get(_pageid);
+		}
+	};
+	
+	var getPlayerPage = function playerPageGetter(playerID) {
+		if (debug) log("entering " + info.name + ".getPlayerPage received " + playerID);
+		var ribbonPageID = Campaign().get("playerpageid");
+		var playerSpecificPages = Campaign().get("playerspecificpages");
+		
+		// also accepts "gm"
+		if (playerID === "gm") {
+			playerID = getGameMasterID();
+		}
+		
+		var resultPage; 
+		if ( playerIsGM(playerID) ) {			
+			var gmObj = getObj("player", playerID );			
+			var gmLastPage = gmObj.get("_lastpage");
+			if (gmLastPage !== undefined && gmLastPage !== "") {
+				resultPage = gmLastPage;
+			} else {
+				resultPage = ribbonPageID;
+			}			
+		} else { // it's a regular player: check the ribbon and playerspecificpages
+			
+			var playerPages = playerSpecificPages; // OBJECT, not JSON string
+			if (playerPages !== false && _.has(playerPages, playerID) )  {
+				resultPage = playerPages[playerID];
+			} else { // all players are on same page
+				resultPage = ribbonPageID;
+			}
+		}
+		
+		if (debug) log("Leaving getPlayerPage. Returning " + resultPage);
+		return resultPage;
+	}; 
+	
+	
+	
 
-    var getLongestVectorLength = function longestVectorGetter(vectorList) {
-        // **** why is this returning a length of 3 for two dimensional vectors?
-
-        if (debugDEFCON < 2) { log("entering getLongestVectorLength with: " + vectorList); }
-
-        if (vectorList.length == 2) {
-            if ( _.isNumber(vectorList[0]) ) {
-                log("aborting getLongestVectorLength(" + vectorList + "). I think we got one vector (a single x,y location) instead of a list of vectors.");
-                return(2);
-            }
-        } else {
-            if (debugDEFCON<2) {log("vectorList.length = " + vectorList);}
-        }
-
-        var longestVectorLength = 0;
-
-
-        _.each(vectorList, function loopToFindLongest(vector) {
-            if (vector.length > longestVectorLength) {
-                longestVectorLength = vector.length;
-            }
-        });
-
-        if (debugDEFCON < 3) {
-            log("getLongestVectorLength returning with: " + longestVectorLength);
-        }
-
-        return longestVectorLength;
-
-    };
-
-    var initializeVector = function vectorInitialiser(lengthRequired) {
-        if (debugDEFCON < 2) { log("initializeVector called with " + lengthRequired); }
-        var newVector = [];
-        var elementID;
-        for(elementID = 0; elementID < lengthRequired; elementID++) {
-            newVector.push(0);
-        }
-        if (debugDEFCON < 2) { log("initializeVector returning with " + newVector); }
-        return newVector;
-    };
-
-    var addVectors = function vectorAdder(listOfVectors) { // expects a 2d array.. [[point1, point2, ... pointN], ..., [pn1, pn2, ... pnN]]
-        // assumes the input vectors are the same length: eg 2 coordinates each: X and Y
-
-        if (listOfVectors.length == 2 ) { // make sure you're adding 2 vectors and not 2 points
-            if (_.isNumber(listOfVectors[0])) {
-                log("Aborting addVectors(" + listOfVectors + "). I think it contains one vector instead of two or more.");
-                return listOfVectors; // bail out.. something went wrong. You got a point instead of 2 vectors
-            }
-        }
-
-        if ( debugDEFCON < 2 ) { log("addVectors called with: " + listOfVectors); }
-
-        var longestVectorLength = getLongestVectorLength(listOfVectors);
-        var sumVector = initializeVector(longestVectorLength);
-
-
-
-
-        var elementID = 0;
-        var vectorNumber = 0;
-        for(elementID=0; elementID<longestVectorLength; elementID++) {
-            for(vectorNumber=0; vectorNumber<listOfVectors.length; vectorNumber++ ) {
-                sumVector[elementID] += Number(listOfVectors[vectorNumber][elementID]);
-
-            }
-        }
-
-        if (debugDEFCON < 3) {
-            log("addVectors returning with: " + sumVector);
-        }
-
-        if ( debugDEFCON < 2 ) { log("addVectors returning " + sumVector); }
-        return sumVector;
-
-    };
-
-    var scaleVector = function vectorExpander(vector, scalar) {
-        if (debugDEFCON < 2) {
-            log("scaleVector called with " + vector + ", " + scalar );
-        }
-        var newVector = _.map(vector, function scaleElement(elementValue) {
-            return elementValue * scalar;
-        });
-        if (debugDEFCON < 2) {
-            log("scaleVector returning with " + newVector );
-        }
-        return newVector;
-    };
-
-    var normalizeVector = function vectorNormalizer(point1, point2) { // expecting a list of 2 points [x1,y2], [x2,y2]
-        if (debugDEFCON < 2) { log("entering normalizeVector with: " + point1 + ", " + point2); }
-
-        var unitVector;
-        var translatedVector = addVectors( [point2, scaleVector(point1, -1)] );
-
-        var distance = getDistance(point1, point2);
-        if (distance > 0) {
-            unitVector = scaleVector(translatedVector, 1/distance );
-        } else { // abort. can't divide by 0. Make something up instead.
-            unitVector = translatedVector;
-            if ( debugDEFCON<2) {log("trying to normalize a vector where the distance is zero. Can't divide by zero.");}
-        }
-
-
-
-        if (debugDEFCON < 2) { log("unitVector is: " + unitVector); }
-
-        if (debugDEFCON < 2) { log("leaving normalizeVector with: " + unitVector); }
-        return unitVector;
-
-    };
-
-    var getDistance = function distanceGetter(point1, point2) {
-        // distance is squareroot of the squared sum of each side
-        //if (debugDEFCON < 2) { log("entering getDistance with " + point1 + ", " + point2); }
-        var xDist = Math.abs(point2[0] - point1[0]);
-        var xDistSquared = Math.pow(xDist, 2);
-        var yDist = Math.abs(point2[1] - point1[1]);
-        var yDistSquared = Math.pow(yDist, 2);
-        var distance = Math.sqrt(xDistSquared + yDistSquared);
-        //if (debugDEFCON < 2) { log("returning from getDistance with " + distance); }
-        return distance;
-    };
-
-    var getCurrentPage = function currentPageGetter(tokenObjOrPlayerID) { // expects token, playerID, or string=="gm"
-    // **** TODO **** This isn't working as expected. Go through it and check assertions.
+	var checkInstall = function checkInstall() {
+		log(info.name + " v" + info.version + " installed");
+	};
     
-        if ( debugDEFCON < 5) { log( "entering getCurrentPage with " + tokenObjOrPlayerID ); }
-        var currentPage;
-        var playerID;
-        var playerObj;
-        var gmID = getGameMasterID();
-        if ( debugDEFCON < 5) {
-            log("   gmID = " + gmID);
-        }
-
-        if (tokenObjOrPlayerID === undefined ) { // getCurrentPage received bad parameters, but we'll take care of it.
-            log("==> Error in getCurrentPage. tokenObjOrPlayerID == undefined"); 
-            return Campaign().get("playerpageid");
-            
-        } else if ( tokenObjOrPlayerID == "gm") {
-            tokenObjOrPlayerID = gmID;
-            if (gmID) {
-                // currentPage = getObj("player", gmID).get("lastpage");            
-                return Campaign().get("playerpageid");
-            } else {
-                return Campaign().get("playerpageid");              
-            }           
-        
-            
-            
-        } else if ( _.isString(tokenObjOrPlayerID) ) { // it's a player ID
-            if (debugDEFCON < 4) { log("    tokenObjOrPlayerID was a string. Assume player_id: " + tokenObjOrPlayerID); }
-            playerID = tokenObjOrPlayerID;
-            playerObj = getObj("player", playerID);
-            
-            if (playerIsGM(playerID)) { // it's the GM, use the lastpage property to find their page
-                if (debugDEFCON < 4) { 
-                    log("    player_id is a GM");
-                    log("    playerObj.get('lastpage') returns " + playerObj.get("lastpage") );
-                    //log("    Campaign().get('playerpageid') returns " + Campaign().get("playerpageid") );
-                }
-                
-                currentPage = playerObj.get("lastpage"); // NOTE: there's no lastpage unless the GM has been on another page
-                
-            } else if ( Campaign().get("playerspecificpages")[playerID] ) {
-                if ( debugDEFCON < 4 ) { 
-                    log("    player_id is not a GM, and the players are seperated onto different pages"); 
-                    log("    playerspecificpages = " + Campaign().get("playerspecificpages") );
-                }
-                
-                
-                // Note: there's no playerspecificpages unless a single player name is dragged onto another map
-                currentPage = Campaign().get("playerspecificpages")[playerID];
-
-            } else { // it's a player and the players are all on one page.
-                if (debugDEFCON < 4) { log("    player_id is not a GM, but there's only one page"); }
-                currentPage = Campaign().get("playerpageid");               
-            }
-        } else if ( _.isObject(tokenObjOrPlayerID) ) { // it's a token
-            if (debugDEFCON < 4) { log("    tokenObjOrPlayerID was an object. Assume token: " + JSON.stringify(tokenObjOrPlayerID) ); }
-            var token = tokenObjOrPlayerID;
-            currentPage = token.get("page_id");
-        }
-        
-        if (debugDEFCON < 4) { log("exiting getCurrentPage. Returning " + currentPage ); } 
-        
-        return currentPage;
-    };
-
-    
+	var registerEventHandlers = function () {
+		log( info.name + " listening"); 
+		
+	};
     
     return {
-        AddVectors: addVectors,
-        ScaleVector: scaleVector,
-        GetDistance: getDistance,
-        NormalizeVector: normalizeVector,
-        GetCurrentPage: getCurrentPage
-
+		GetPlayerPage: getPlayerPage,
+		getCurrentPage: getPlayerPage,
+		GetTokenPage: getTokenPage,
+		GetGameMasterID: getGameMasterID,
+		ch: ch,
+		CheckInstall: checkInstall,
+		RegisterEventHandlers: registerEventHandlers
     };
     
 
@@ -5653,3 +4669,855 @@ var psUtils = function plexsoupUtils() {
 }()); // end module
 
 
+/*                                                         
+        _/_/_/      _/_/_/        _/_/_/  _/    _/  _/_/_/   
+       _/    _/  _/            _/        _/    _/    _/      
+      _/_/_/      _/_/        _/  _/_/  _/    _/    _/       
+     _/              _/      _/    _/  _/    _/    _/        
+    _/        _/_/_/          _/_/_/    _/_/    _/_/_/       
+
+*/
+
+/*
+    Purpose: 
+        Provide standardized, reusable functions for creating GUIs in Roll20 API scripts.
+    
+    Module Usage: 
+		
+		First, make some functions you want to be callable.
+		Make sure you expose those functions in the returned object for your module, so they're available to the psGUI module.
+			eg:
+				return {
+					myFunction: myFunction,
+					myOtherFunction: myOtherFunction
+				}
+
+		Then... Create a list of new (psGUI.userCommand)'s as follows:
+		
+			var userCommands = [];
+			
+			var myCommand = new psGUI.userCommand;
+				myCommand.listener = "!moduleName";
+				myCommand.commandName = "--commandName";
+				myCommand.functionToCall = referenceToFunction;
+				myCommand.parameters = ["paramType1", "paramType2", ..."paramTypeN"]; // "string", "num", "token_id", "page_id", "character_id", "imgsrc", "current_page_id"
+				myCommand.shortDesc = "Button Name";
+				myCommand.longDesc = "This is the Helpfile blurb for the command.";
+				myCommand.inputOverrides = ["foo", "bar"] // eg: normally a parameter of type "string" will present the player with an input window. If you don't want that dialog, put values in inputOverrides.
+			userCommands.push(myCommand);
+		
+		Then: supply that list of commands to psGUI like this:  
+			psGUI.RegisterUserCommands(userCommands);
+		
+        Push all userCommand objects into a userCommands list.
+        
+        userCommand parameters: [listener, commandName, functionToCall, parameters, shortDesc, longDesc, inputOverrides]
+
+
+*/
+
+
+/*
+
+	TODO: Configure installer to update state when version changes.
+
+*/
+
+var psGUI = psGUI || (function plexsoupAwesomeGUI() { // Module
+    "use strict";
+	var debug = false;
+    
+    var info = {
+		name: "psGUI.js",
+        version: 0.3,
+        author: "plexsoup"
+    };
+    
+    var config = {};
+
+    var defaultConfig = {
+		buttonStyle: "fantasy"
+	};
+
+	var buttonStyles = {
+		"neon": {name: "neon"},
+		"aqua": {name: "aqua"},
+		"material": {name: "material"},
+		"default": {name: "default"},
+		"fantasy": {name: "fantasy"}
+	};
+	
+    var userCommands = []; // list of userCommand objects
+
+	var ch = psUtils.ch; // for encoding html characters (one at a time)
+
+	
+/*
+        _/_/_/    _/_/    _/      _/  _/      _/    _/_/    _/      _/  _/_/_/      _/_/_/   
+     _/        _/    _/  _/_/  _/_/  _/_/  _/_/  _/    _/  _/_/    _/  _/    _/  _/          
+    _/        _/    _/  _/  _/  _/  _/  _/  _/  _/_/_/_/  _/  _/  _/  _/    _/    _/_/       
+   _/        _/    _/  _/      _/  _/      _/  _/    _/  _/    _/_/  _/    _/        _/      
+    _/_/_/    _/_/    _/      _/  _/      _/  _/    _/  _/      _/  _/_/_/    _/_/_/        
+
+*/
+
+    //make a general purpose object container for user commands.
+        // then, from that object, build out the help file, the gui, and listeners automatically.
+        
+    
+	var registerUserCommands = function userCommandRegistrar(newCommandsList, style, listener, group) {
+		if (debug) log(info.name + ": entering registerUserCommands with " + newCommandsList);
+		var oldUserCommands = _.clone(userCommands);
+		
+		_.each(newCommandsList, function(userCommand) {
+			if (style !== undefined && style !== "") {
+				userCommand.style = style;
+			} else {
+				if(_.has(config, "buttonStyle")) {
+					userCommand.style = config.buttonStyle;
+				} else if (_.has(state, 'psGUI')) {
+					userCommand.style = state.psGUI.buttonStyle;
+				} else {
+					userCommand.style = "default";
+				}
+
+			}
+			
+			if (listener !== undefined && listener !== "") {
+				userCommand.listener = listener;
+			}
+			if (group !== undefined && group !== "") {
+				userCommand.group = group;
+			}
+		});
+
+		userCommands = oldUserCommands.concat(newCommandsList);
+
+		
+		
+	};
+	
+    var userCommand = function(listener, commandName, functionToCall, parameters, shortDesc, longDesc, inputOverrides, group, restrictedToGM, style) { // inputOverrides is optional
+        this.listener = listener; // string (eg: "!psIsoFacing")
+        this.commandName = commandName; // string (eg: "--reset")
+        this.functionToCall = functionToCall; // function (eg: scaleVector)
+        this.parameters = parameters;   // array/list of predefined variable types (eg: ["page_id", "string", "token_id", "number"])
+        this.shortDesc = shortDesc;     // string (eg: "Reset the map")
+        this.longDesc = longDesc;       // string (eg: "<div>Enter !psIsoFacing --reset in chat to reset the map and remove all flashlights</div>")
+        this.inputOverrides = inputOverrides; // what to put in the GUI buttons.. eg: @{selected|token_id}, ?{Parameter Value?} // note: pass these through ch()
+		this.group = group;				// organize these buttons together on the menu
+		this.restrictedToGM = restrictedToGM;
+		this.style = style;
+    };
+
+    
+
+    
+    var parameterTypes = { // intended for parameter checking: validate inputs and handle errors gracefully
+        "string": function(string) { 
+            return _.isString(string);
+        },
+        "token_id": function(token_id) { 
+		    if (token_id !== undefined && token_id !== "" && getObj("graphic", token_id) !== undefined) {
+                return true;
+            } else {
+                return false;
+            }
+        },
+        "character_id": function(character_id) { 
+            return Boolean(character_id !== undefined && getObj("character", character_id) !== undefined); 
+        },
+        "page_id": function(page_id) { 
+            return Boolean(page_id !== undefined && getObj("page", page_id) !== undefined); 
+        },
+        "num": function(num) { // r20 chat messages come in as strings.. we need to convert to numbers, then test somehow.
+            //psLog("isNumber: " + num + " == " + Boolean(!isNaN(num))); // attempting some type coercion
+            return Boolean( !isNaN(num) ); 
+        },
+		"current_page_id": function(page_id) {
+			return Boolean( page_id !== undefined && getObj("page", page_id) !== undefined);
+		},
+		"imgsrc": function(imgsrc) {
+			if (_.isString(imgsrc) && indexOf(imgsrc, "https://s3.amazonaws.com/files.d20.io/images") !== 1 && indexOf(imgsrc, "thumb") !== -1) {
+				return true;
+			} else {
+				log("imgsrc must come from https://s3.amazonaws.com/files.d20.io/images and use the 'thumb' version of the graphic");
+				return false;
+			}
+		},
+		"current_player_id": function(playerID) {
+			if ( getObj("player", playerID) !== undefined ) {
+				return true;
+			} else {
+				return false;
+			}
+		},
+		"current_player_name": function(string) {
+			return (_.isString(string));
+		}
+    };
+
+
+/*
+
+        _/_/_/      _/_/    _/_/_/      _/_/    _/      _/    _/_/_/   
+       _/    _/  _/    _/  _/    _/  _/    _/  _/_/  _/_/  _/          
+      _/_/_/    _/_/_/_/  _/_/_/    _/_/_/_/  _/  _/  _/    _/_/       
+     _/        _/    _/  _/    _/  _/    _/  _/      _/        _/      
+    _/        _/    _/  _/    _/  _/    _/  _/      _/  _/_/_/         
+
+*/
+    
+	
+	
+	var getParameterInputPrompt = function(paramType, playerID) {
+		
+		switch(paramType) {			
+			case "string": return '?' + ch('{') + "String?" + ch('}');
+			case "token_id": return ch('@') + ch('{') + "target" +ch('|') + "token_id" + ch('}');
+			case "character_id": return getCharacterChooser(playerID);
+			case "page_id": return getPageChooser(playerID);
+			case "current_page_id": return psUtils.GetPlayerPage(playerID);
+			case "number": return '?' + ch('{') + "Number?" + ch('}');
+			case "num": return '?' + ch('{') + "Number?" + ch('}');
+			case "current_player_id": return playerID;
+			case "current_player_name": return getObj("player", playerID).get("displayname");
+		}
+	};
+
+	var getCharacterChooser = function charChooser(playerID) {
+		var characters = findObjs({
+			_type: "character"
+		});
+		
+		var characterSelectorStr;
+		var indexNum = 1;
+		
+		if (characters.length > 1) {
+			characterSelectorStr += '?' + ch('{') + "Character ID?";
+			_.each(characters, function(character) {
+				var characterName = String(indexNum) + ": " + character.get("name");
+				characterSelectorStr += ch('|')+ "'" + characterName + "',"+ character.get("_id");
+				indexNum++;
+			});
+		} else if (characters.length == 1) {
+			characterSelectorStr += characters[0].get("_id");
+		} else { // characters.length == 0
+			psLog("==> Error: there are no characters in the campaign to select from.", "orange");
+		}
+		characterSelectorStr += ch('}');
+		return characterSelectorStr;		
+	};
+
+	var getPageChooser = function pageChooser(playerID) {
+		var pages = findObjs({
+			_type: "page"
+		});
+		
+		var outputStr = '?' + ch('{') + "Page ID?";
+		var indexNum = 1;
+		_.each(pages, function(page) {
+			var pageName = String(indexNum) + ": " + page.get("name");
+			outputStr += ch('|')+ "'" + pageName + "',"+ page.get("_id");
+			indexNum++;
+		});
+		outputStr += ch('}');
+		return outputStr;
+	};
+	
+/*	
+    var defaultParamInputPrompts = { // for building GUI
+        "string": '?' + ch('{') + "String?" + ch('}'),
+        "token_id": ch('@') + ch('{') + "target" +ch('|') + "token_id" + ch('}'),
+		"playername": function playerNameGetter() {
+			return '?' + ch('{') + "Player?" + ch('}');
+		},
+        "character_id": function characterLocator() {
+            var characters = findObjs({
+                _type: "character"
+            });
+            
+            var characterSelectorStr;
+            var indexNum = 1;
+			
+			if (characters.length > 1) {
+				characterSelectorStr += '?' + ch('{') + "Character ID?";
+				_.each(characters, function(character) {
+					var characterName = String(indexNum) + ": " + character.get("name");
+					characterSelectorStr += ch('|')+ "'" + characterName + "',"+ character.get("_id");
+					indexNum++;
+				});
+			} else if (characters.length == 1) {
+				characterSelectorStr += characters[0].get("_id");
+			} else { // characters.length == 0
+				psLog("==> Error: there are no characters in the campaign to select from.", "orange");
+			}
+            characterSelectorStr += ch('}');
+            return characterSelectorStr;
+        },
+        
+        "page_id": function pageLocator() {
+            var pages = findObjs({
+                _type: "page"
+            });
+            
+            var outputStr = '?' + ch('{') + "Page ID?";
+            var indexNum = 1;
+            _.each(pages, function(page) {
+                var pageName = String(indexNum) + ": " + page.get("name");
+                outputStr += ch('|')+ "'" + pageName + "',"+ page.get("_id");
+                indexNum++;
+            });
+            outputStr += ch('}');
+            return outputStr;
+        },
+		"current_page_id": function currentPageGetter() {
+			return Campaign().get("playerpageid"); // **** this needs work. right now, it only provides the roll20 page bookmark ribbon.
+		},
+        "num": '?' + ch('{') + "Number?" + ch('}')
+        
+    };
+*/
+
+    
+    var isParameterValid = function parameterTester(paramName, paramValue) {
+        if (debug) log("isParameterValid testing: " + paramName + ", " + paramValue); 
+        var passed = false;
+        var color;
+        
+		if (_.has(parameterTypes, paramName)) {
+			passed = parameterTypes[paramName](paramValue);
+			if (!passed) { 
+				color = "red";
+				psLog("==> Error: " + paramValue + " doesn't match expected type "+ paramName, color ); 
+
+			} else {
+				color = "green";                
+			}
+		
+			if (debug) log("paramValue: " + paramValue + " is " + paramName + " === " + passed);
+			return passed;			
+		} else {
+			psLog("==> Error: " + paramName + " is not a registered parameterType. Use: " + _.keys(parameterTypes) + " instead.");
+		}
+
+    };
+
+    
+    var psLog = function psLogger(string, color) {
+        log("psGUI: " + string);
+        sendChat("psGui", "/w gm " + "<div style = 'background-color: "+color+"'>"+string+"</div>");
+    };
+
+    
+/*
+        _/_/_/  _/    _/  _/_/_/   
+      _/        _/    _/    _/      
+     _/  _/_/  _/    _/    _/       
+    _/    _/  _/    _/    _/        
+     _/_/_/    _/_/    _/_/_/     
+
+*/  
+
+
+        
+    var whisper = function whisperer(playerID, chatString) {
+        if (debug) log("whisper received: '" + chatString + "', " + playerID);
+        var playerName;
+        if (playerID === undefined || playerID == "gm") {
+            playerName = "gm";
+        } else {
+            playerName = getObj("player", playerID).get("displayname");
+        }
+        sendChat("psGui", "/w " + playerName + " " + chatString);
+    };
+
+    var makeButton = function buttonMakerForChat(commandStr, userCommandObj) {		
+        var output="";
+
+		var label;
+		if (userCommandObj !== undefined && _.has(userCommandObj, 'shortDesc') && userCommandObj.shortDesc !== undefined) {
+			label = userCommandObj.shortDesc;
+		} else {
+			label = commandStr;
+		}	
+		
+		//Styling
+		if ( userCommandObj !== undefined && _.has(userCommandObj, 'style')) {
+			var buttonStyle =  ""; 
+			var colour1, colour2, colour3, colour4;
+			var gradientStr;
+			
+			switch (userCommandObj.style) {
+				case "aqua":
+					colour1 = "aqua";
+					colour2 = "cadetblue";
+					colour3 = "aquamarine";
+					colour4 = "darkblue";
+					gradientStr = "bottom, "+colour1+" 18%, "+colour2+" 45%, "+colour3+" 85%";
+					buttonStyle +=  "border-radius: 1em; border: 0px;"; 					
+					buttonStyle += "padding-left: 8px; padding-right: 8px; padding-top: 3px; padding-bottom: 3px; margin: 2px; ";
+					//buttonStyle += "background-image: -webkit-gradient( linear, left top, left bottom, color-stop(0.25, #4BCFD6), color-stop(0.55, #1C21C4), color-stop(0.82, #48CDD4) ); ";
+						
+					buttonStyle += "background-image: -o-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: -moz-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: -webkit-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: -ms-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: linear-gradient("+gradientStr+"); ";
+					
+					buttonStyle += "-webkit-box-shadow: "+colour2+" 0px 10px 16px; ";
+					buttonStyle += "-moz-box-shadow: "+colour2+" 0px 10px 16px; ";
+					
+					output += "<a href = '"+commandStr+"' style='"+buttonStyle+"'>";
+					output += label;			
+					output += "</a>";  
+						
+				break;
+				
+				case "material":
+					buttonStyle += " margin: 2px; border-radius: 3px; border: 0px; box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);";
+					
+					output += "<a href = '"+commandStr+"' style='"+buttonStyle+"'>";
+					output += label;			
+					output += "</a>";  
+					
+				break;
+				
+				case "neon":
+					colour1 = "mediumseagreen";
+					colour2 = "greenyellow";
+					colour3 = "black";
+					colour4 = "palegreen";
+					gradientStr = "bottom, "+colour1+" 5%, "+colour3+" 10%, "+colour3+" 90%, "+colour1+" 95%";
+					
+					buttonStyle +=  "border-radius: 0px; border: 1px solid " + colour4 +";"; 					
+					buttonStyle += "padding-left: 8px; padding-right: 8px; padding-top: 3px; padding-bottom: 3px; margin: 2px; ";
+					//buttonStyle += "background-image: -webkit-gradient( linear, left top, left bottom, color-stop(0.25, #4BCFD6), color-stop(0.55, #1C21C4), color-stop(0.82, #48CDD4) ); ";
+					
+										
+					buttonStyle += "background-image: -o-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: -moz-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: -webkit-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: -ms-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: linear-gradient("+gradientStr+"); ";
+					
+					
+					buttonStyle += "-webkit-box-shadow: inset 0 0 1em "+colour4+", 0 0 1em "+colour2+";";
+					buttonStyle += "-moz-box-shadow: inset 0 0 1em "+colour4+", 0 0 1em "+colour2+";";
+					
+					buttonStyle += "color: " + colour2 + ";";
+					
+					output += "<a href = '"+commandStr+"' style='"+buttonStyle+"'>";
+					output += label;			
+					output += "</a>";  
+				
+				break;
+				
+				case "fantasy":
+					colour1 = "white";
+					colour2 = "black";
+					colour3 = "darkred";
+					colour4 = "gold";
+					gradientStr = "bottom, "+colour2+" 10%, "+colour3+" 30%, "+colour3+" 70%, "+colour2+" 90%";
+					
+					buttonStyle +=  "border-radius: 5px; border: 1px solid "+colour1+";"; 					
+					buttonStyle += "padding-left: 8px; padding-right: 8px; padding-top: 3px; padding-bottom: 3px; margin: 2px; ";
+					//buttonStyle += "background-image: -webkit-gradient( linear, left top, left bottom, color-stop(0.25, #4BCFD6), color-stop(0.55, #1C21C4), color-stop(0.82, #48CDD4) ); ";
+										
+					buttonStyle += "background-image: -o-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: -moz-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: -webkit-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: -ms-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: linear-gradient("+gradientStr+"); ";
+					
+					
+					buttonStyle += "-webkit-box-shadow: inset 0 0 0.5em "+colour1+", 0 0 1em "+colour4+"; ";
+					buttonStyle += "-moz-box-shadow: inset 0 0 0.5em "+colour1+", 0 0 1em "+colour4+"; ";
+
+					buttonStyle += "color: "+ colour4 + "; text-shadow: -1px -1px 1px "+colour2+ "; ";
+					
+					output += "<a href = '"+commandStr+"' style='"+buttonStyle+"'>";
+					output += label;			
+					output += "</a>";  				
+				
+				
+				break;
+				
+				default:
+					output += '['+label+']('+commandStr+')';				
+				break;
+			}
+		} else {
+			output += '['+label+']('+commandStr+')';
+		}
+        return output;
+    };
+
+    var displayGUI = function guiBuilder(playerID, requestedCommand) {
+		// Make a bunch of buttons on the roll20 chat pane.
+		// Those buttons let users call registered userCommands from other modules.
+				
+		var GUIText = "";
+		var style = "'font-size: smaller;'";
+		GUIText += "<div style="+style+"><h3>" + requestedCommand + "</h3>";
+		var relevantCommands = _.filter(userCommands, {listener: requestedCommand});
+		var sortedCommands = _.groupBy(relevantCommands, "group");
+		
+
+		_.each( sortedCommands, function(commandGroup, groupName) { 
+			GUIText += "<h4>" + groupName + ": </h4>"; 
+			_.each( commandGroup, function(userCommand) {
+				//psLog("userCommand: " + userCommand, "green");
+				var inputText = userCommand.listener + " " + userCommand.commandName;
+				
+				
+				// typeCorrection: string to array 
+				if (_.isString(userCommand.parameters) ) {
+					userCommand.parameters = [userCommand.parameters];
+				}
+				if (_.isString(userCommand.inputOverrides)) {
+					userCommand.inputOverrides = [ userCommand.inputOverrides ];
+				}
+				
+				// NOTE: This assumes that userCommands follow the correct typedefs: 
+					// parameters = array, inputOverrides = array.
+					// This will break if either are strings, because javascript treats a string as an array of letters.
+				var keyPairs = _.zip(userCommand.parameters, userCommand.inputOverrides);
+				
+				_.each(keyPairs, function(keyPair) {
+					
+					var paramName = keyPair[0];
+					var inputOverride = keyPair[1];
+					if (inputOverride !== undefined && inputOverride !== "") {
+						// **** TODO: Make sure the inputOverride matches the typedef?
+						inputText += " " + inputOverride;
+					} else {
+						// produce an API button which allows the user to select or enter needed values.
+						//OLD: inputText += " " + _.result(defaultParamInputPrompts, paramName);
+						var promptStr = getParameterInputPrompt(paramName, playerID);
+						inputText += " " + promptStr;
+						
+					}
+				});
+				
+				/*
+				_.each(userCommand.parameters, function(paramName) {
+					// **** TODO **** check for overrides from userCommand.inputOverrides
+					inputText += " " + _.result(defaultParamInputPrompts, paramName);
+				});
+				*/
+
+				var buttonStr = makeButton(inputText, userCommand );
+				GUIText += buttonStr;
+			});
+		});
+		GUIText += "</div>";
+		
+		whisper(playerID, GUIText);
+    };
+    
+
+    
+/*
+
+        _/    _/  _/_/_/_/  _/        _/_/_/    
+       _/    _/  _/        _/        _/    _/   
+      _/_/_/_/  _/_/_/    _/        _/_/_/      
+     _/    _/  _/        _/        _/           
+    _/    _/  _/_/_/_/  _/_/_/_/  _/            
+
+*/
+    var buildHelpFiles = function(userCommands, scriptName) {
+        
+		if (debug) log("building help file for " + scriptName);
+		
+        var helpFileData = _.groupBy(userCommands, function(commandObj) { return commandObj.listener; }); // one object per listener, containing lists of usercommands
+        var helpFileNames = _.keys(helpFileData);
+        
+        _.each(helpFileNames, function buildEachHelpFile(helpFileName) {
+
+            var helpHandouts;
+            helpHandouts = findObjs({
+                _type: "handout",
+                name: helpFileName + " Help"
+            });
+
+            var helpHandout = helpHandouts[0];
+
+            var helpText = "<h3><a href='" + helpFileName + "'>" + helpFileName + "</h3>";
+            _.each(helpFileData[helpFileName], function(commandObj) {
+                helpText += "<div style='font-weight: bold;'>" + commandObj.shortDesc + "</div>";
+                helpText += "<div style='margin-left:20px;'>" + helpFileName + " " + commandObj.commandName + " ";
+				if (commandObj.parameters.length > 0 ) {
+					helpText += ch("[")+ commandObj.parameters +ch("]");
+				}  
+				helpText += "</div>";
+                helpText += "<div style='margin-left:30px; font-style: italic;'>" + commandObj.longDesc + "</div>";
+                
+            });
+            
+            if (!helpHandout) { // create it
+                helpHandout = createObj('handout', {
+                    name: helpFileName + ' Help',
+                    inplayerjournals: ''
+                });
+                helpHandout.set("notes", helpText);
+
+            } else { // it exists, set it's contents to match the latest version of the script
+                helpHandout.set("notes", helpText);
+            }
+
+            log("helpHandout = " + helpHandout);
+            
+            var handoutID = helpHandout.get("_id");
+
+            var chatMessage = "";
+            var buttonStyle = "'background-color: beige;'";
+
+			//chatMessage += makeButton(helpFileName);
+            chatMessage += "<div style="+buttonStyle+"><a href='http://journal.roll20.net/handout/" + handoutID + "'>"+ helpFileName +" Information</a></div>";
+            psLog(chatMessage, "beige");
+        });
+		
+		if (debug) log("leaving" + info.name + " buildHelpFiles. Nothing to return.");
+    };
+    
+    
+
+
+
+
+/*
+                                                         
+        _/_/_/  _/      _/  _/_/_/    _/    _/  _/_/_/_/_/   
+         _/    _/_/    _/  _/    _/  _/    _/      _/        
+        _/    _/  _/  _/  _/_/_/    _/    _/      _/         
+       _/    _/    _/_/  _/        _/    _/      _/          
+    _/_/_/  _/      _/  _/          _/_/        _/           
+                                                         
+
+*/  
+
+
+    var handleInput = function inputHandler(msg) {
+
+		var args = msg.content.split(/[ ,]+/); // split on commas or spaces
+		if (args[0].indexOf("!ps") !== -1) {
+			if (debug) log("psGUI heard command: " + JSON.stringify(msg), "orange");
+		}
+		
+		if (args.length == 1 && args[0].indexOf("!ps") !== -1 && _.findWhere(userCommands, {listener: args[0]}) !== undefined ) {
+			displayGUI(msg.playerid, args[0]);
+        } else {
+
+			_.each(userCommands, function (userCommand) {
+				//var args = msg.content.split(/ +/); // split on spaces alone
+				
+				var anyTestFailed = false;
+				if (args[0] == userCommand.listener) {
+					if (args[1] == userCommand.commandName) { // test the parameters and execute the user request
+						var paramsProvided = _.rest(args, 2);
+						var paramTypesRequired = userCommand.parameters;
+						var keyPairs = _.zip(paramTypesRequired, paramsProvided);
+						if (debug) log("paramTypesRequired: " + paramTypesRequired + ", paramsProvided: " + paramsProvided);
+						if (paramsProvided.length == paramTypesRequired.length) {
+							// make sure the parameters match the expected types before you run the function
+							_.each(keyPairs, function(keyPair) {
+								if(debug) log("testing inputs: ");
+								if(debug) log("keyPair[0]: " + keyPair[0] + ", keyPair[1]: " + keyPair[1] );
+								var thisTestPassed = isParameterValid(keyPair[0], keyPair[1]); 
+								if (thisTestPassed === false) {
+									
+									anyTestFailed = true;
+								}
+							});                     
+						} else { // number of inputs doesn't match expected parameters.
+							anyTestFailed = true;
+						}
+						
+						if (!anyTestFailed) { // therefore all tests passed
+							//log( userCommand.commandName + ": calling: " + String(userCommand.functionToCall)+ ".apply(" + paramsProvided + ")");
+							
+							if ( userCommand === undefined ) {
+								psLog("==>Error: Can't find function for " + userCommand.commandName + ", make sure it's 'exposed' to other modules in the return statement for your module." );
+								
+							} else {
+								if (_.has(userCommand, 'functionToCall') && userCommand.functionToCall !== undefined && _.isFunction(userCommand.functionToCall) ) {
+									userCommand.functionToCall.apply(undefined, paramsProvided);
+								} else {
+									psLog("==>Error: can't find functionToCall for command: " + userCommand.commandName); 									
+								}
+							}
+						} else {
+							var errorText = "==> Error: ";
+							errorText += userCommand.listener + " " + userCommand.commandName + " expects these ("+paramTypesRequired.length+") parameters : [" + paramTypesRequired + "].";
+							errorText += "We received ("+paramsProvided.length+"): [" + paramsProvided + "]";
+							psLog(errorText, "orange");
+						}
+					} 
+				}
+			});
+        }
+    };
+
+
+/*
+		_/_/_/_/  _/      _/    _/_/    _/      _/  _/_/_/    _/        _/_/_/_/   
+	   _/          _/  _/    _/    _/  _/_/  _/_/  _/    _/  _/        _/          
+	  _/_/_/        _/      _/_/_/_/  _/  _/  _/  _/_/_/    _/        _/_/_/       
+	 _/          _/  _/    _/    _/  _/      _/  _/        _/        _/            
+	_/_/_/_/  _/      _/  _/    _/  _/      _/  _/        _/_/_/_/  _/_/_/_/          
+
+*/  
+    
+    
+    
+    var initializeUserCommands = function() {
+		// example of how to create a user command.
+		
+		var newUserCommands = [];
+        
+		var buttonStyleChooserCMD = new psGUI.userCommand();
+		var bscCMD = buttonStyleChooserCMD;
+		
+		bscCMD.listener = "!psGUI";
+		bscCMD.commandName = "--chooseButtonStyle";
+		bscCMD.functionToCall = function(style, playerName) {
+			updateButtonsToStyle(style);
+			sendChat(info.name, "/w " + playerName + " Buttons updated to style: " + style );
+		};
+		bscCMD.parameters = ["string", "current_player_name"];
+		bscCMD.shortDesc = "Button Style";
+		bscCMD.longDesc = "Choose default style for GUI buttons.";
+
+		var styleSelectorInputString = "?"+psUtils.ch("{")+"Button Style";
+		_.each(buttonStyles, function(buttonStyle) {
+			styleSelectorInputString += psUtils.ch("|")+buttonStyle.name;			
+		});
+		styleSelectorInputString += psUtils.ch("}");
+
+		bscCMD.inputOverrides = [styleSelectorInputString, ""];
+		bscCMD.group = "Misc";
+		newUserCommands.push(bscCMD);
+		
+		var statusCMD = new psGUI.userCommand();
+		statusCMD.listener = "!psGUI";
+		statusCMD.commandName = "--status";
+		statusCMD.functionToCall = function(playerName) {
+			var outputMessage = "";
+			outputMessage += "<div>config: " + JSON.stringify(config) + "</div>";
+			outputMessage += "state.psGUI: " + JSON.stringify(state.psGUI) + "</div>";
+			sendChat(info.name, "/w " + playerName + " " + outputMessage);
+		};
+		statusCMD.parameters = ["current_player_name"];
+		statusCMD.shortDesc = "Status";
+		statusCMD.longDesc = "Get information about state.psGUI and psGUI.config";
+		statusCMD.group = "Misc"
+		newUserCommands.push(statusCMD);
+		
+		return newUserCommands;
+    };
+
+    var updateButtonsToStyle = function buttonStyleChooser(buttonStyle) {        
+		config.buttonStyle = buttonStyle;
+		state.psGUI.buttonStyle = buttonStyle;
+
+		// **** This might be too heavy handed. Maybe button collections should decide their own styles.
+        _.each(userCommands, function(userCommand) {
+			userCommand.style = buttonStyle;
+		});
+
+	};
+
+	
+
+/*
+                                                                         
+        _/_/_/  _/      _/    _/_/_/  _/_/_/_/_/    _/_/    _/        _/     
+         _/    _/_/    _/  _/            _/      _/    _/  _/        _/      
+        _/    _/  _/  _/    _/_/        _/      _/_/_/_/  _/        _/       
+       _/    _/    _/_/        _/      _/      _/    _/  _/        _/        
+    _/_/_/  _/      _/  _/_/_/        _/      _/    _/  _/_/_/_/  _/_/_/_/  
+
+*/
+
+    var registerEventHandlers = function eventHandlerRegistrar() {
+        on('chat:message', function(msg) {
+            handleInput(msg);
+        } );
+    };
+    
+    var checkInstall = function installChecker() {
+        // construct help file, gui, event handlers
+        
+        var newCommands = initializeUserCommands();
+		registerUserCommands(newCommands);
+        buildHelpFiles(newCommands, info.name);
+        
+        // grab config options from Roll20 persistent state object so they persist across instances and sessions
+        if (!_.has(state, 'psGUI')) { // first time running the script
+            config = _.clone(defaultConfig);
+            state.psGUI = _.clone(config);
+			state.psGUI.version = info.version;
+  
+		} else if (state.psGUI.version !== info.version) { // old version in "memory" (ie: in the roll20 persistent "state" object)
+            state.psGUI = _.clone(config);
+			state.psGUI.version = info.version;
+			log("===---- Updated psGUI State settings ----===");
+        } else { // everything looks good. Use the info from state.
+			config = _.clone(state.psGUI);
+		}
+		
+		log(info.name + " v" + info.version + " installed.");
+    };
+
+    return { // expose functions for outside calls
+        RegisterEventHandlers: registerEventHandlers,
+        CheckInstall: checkInstall,
+		BuildHelpFiles: buildHelpFiles,
+		RegisterUserCommands: registerUserCommands,
+		userCommand: userCommand,
+		ch: ch,
+		psLog: psLog,
+		whisper: whisper,
+    };
+    
+}()); // end module
+
+
+
+
+var psInstaller = psInstaller || (function plexsoupScriptInstaller() {
+
+}());
+
+
+on("ready",function(){
+    // this stuff happens when the script loads.
+    // Note: you have to use Caps to refer to the left side of the function declarations in "return"
+	
+	var Modules = {
+
+		//psTileResizer: psTileResizer,
+		//psIsoFacing: psIsoFacing,
+		//psIsoMap: psIsoMap,
+		psMath: psMath,
+		psGUI: psGUI,
+		psUtils: psUtils,
+		psLightTrails: psLightTrails
+	};
+
+	log("_.values(Modules) = " + _.values(Modules));
+	
+	_.each(Modules, function(moduleObj) {
+		if (_.has(moduleObj, "CheckInstall") && moduleObj.CheckInstall !== undefined ) {
+			log("checking install for " + moduleObj);
+			moduleObj.CheckInstall();			
+		}
+
+		if (_.has(moduleObj, "RegisterEventHandlers") && moduleObj.RegisterEventHandlers !== undefined) {
+			moduleObj.RegisterEventHandlers();			
+		}		
+		
+	});
+});

@@ -78,7 +78,7 @@ var psGUI = psGUI || (function plexsoupAwesomeGUI() { // Module
 	
     var userCommands = []; // list of userCommand objects
 
-	var ch = psUtils.ch; // for encoding html characters (one at a time)
+	var ch = ch; // for encoding html characters (one at a time)
 
 	
 /*
@@ -206,7 +206,7 @@ var psGUI = psGUI || (function plexsoupAwesomeGUI() { // Module
 			case "token_id": return ch('@') + ch('{') + "target" +ch('|') + "token_id" + ch('}');
 			case "character_id": return getCharacterChooser(playerID);
 			case "page_id": return getPageChooser(playerID);
-			case "current_page_id": return psUtils.GetPlayerPage(playerID);
+			case "current_page_id": return getPlayerPage(playerID);
 			case "number": return '?' + ch('{') + "Number?" + ch('}');
 			case "num": return '?' + ch('{') + "Number?" + ch('}');
 			case "current_player_id": return playerID;
@@ -254,59 +254,7 @@ var psGUI = psGUI || (function plexsoupAwesomeGUI() { // Module
 		return outputStr;
 	};
 	
-/*	
-    var defaultParamInputPrompts = { // for building GUI
-        "string": '?' + ch('{') + "String?" + ch('}'),
-        "token_id": ch('@') + ch('{') + "target" +ch('|') + "token_id" + ch('}'),
-		"playername": function playerNameGetter() {
-			return '?' + ch('{') + "Player?" + ch('}');
-		},
-        "character_id": function characterLocator() {
-            var characters = findObjs({
-                _type: "character"
-            });
-            
-            var characterSelectorStr;
-            var indexNum = 1;
-			
-			if (characters.length > 1) {
-				characterSelectorStr += '?' + ch('{') + "Character ID?";
-				_.each(characters, function(character) {
-					var characterName = String(indexNum) + ": " + character.get("name");
-					characterSelectorStr += ch('|')+ "'" + characterName + "',"+ character.get("_id");
-					indexNum++;
-				});
-			} else if (characters.length == 1) {
-				characterSelectorStr += characters[0].get("_id");
-			} else { // characters.length == 0
-				psLog("==> Error: there are no characters in the campaign to select from.", "orange");
-			}
-            characterSelectorStr += ch('}');
-            return characterSelectorStr;
-        },
-        
-        "page_id": function pageLocator() {
-            var pages = findObjs({
-                _type: "page"
-            });
-            
-            var outputStr = '?' + ch('{') + "Page ID?";
-            var indexNum = 1;
-            _.each(pages, function(page) {
-                var pageName = String(indexNum) + ": " + page.get("name");
-                outputStr += ch('|')+ "'" + pageName + "',"+ page.get("_id");
-                indexNum++;
-            });
-            outputStr += ch('}');
-            return outputStr;
-        },
-		"current_page_id": function currentPageGetter() {
-			return Campaign().get("playerpageid"); // **** this needs work. right now, it only provides the roll20 page bookmark ribbon.
-		},
-        "num": '?' + ch('{') + "Number?" + ch('}')
-        
-    };
-*/
+
 
     
     var isParameterValid = function parameterTester(paramName, paramValue) {
@@ -338,7 +286,64 @@ var psGUI = psGUI || (function plexsoupAwesomeGUI() { // Module
         sendChat("psGui", "/w gm " + "<div style = 'background-color: "+color+"'>"+string+"</div>");
     };
 
-    
+    var ch = function (character) {
+        // This function will take a single character and change it to it's equivalent html encoded value.
+        // psNote: I tried alternate methods of regexps to encode the entire string, but I always ran into problems with | and [] characters.
+        var entities = {
+            '<' : 'lt',
+            '>' : 'gt',
+            "'" : '#39',
+            '@' : '#64',
+            '{' : '#123',
+            '|' : '#124',
+            '}' : '#125',
+            '[' : '#91',
+            ']' : '#93',
+            '"' : 'quot',
+            '-' : 'mdash',
+            ' ' : 'nbsp'
+        };
+
+        if(_.has(entities,character) ){
+            return ('&'+entities[character]+';');
+        }
+        return '';
+    };   
+	
+	var getPlayerPage = function playerPageGetter(playerID) {
+		if (debug) log("entering " + info.name + ".getPlayerPage received " + playerID);
+		var ribbonPageID = Campaign().get("playerpageid");
+		var playerSpecificPages = Campaign().get("playerspecificpages");
+		
+		// also accepts "gm"
+		if (playerID === "gm") {
+			playerID = getGameMasterID();
+		}
+		
+		var resultPage; 
+		if ( playerIsGM(playerID) ) {			
+			var gmObj = getObj("player", playerID );			
+			var gmLastPage = gmObj.get("_lastpage");
+			if (gmLastPage !== undefined && gmLastPage !== "") {
+				resultPage = gmLastPage;
+			} else {
+				resultPage = ribbonPageID;
+			}			
+		} else { // it's a regular player: check the ribbon and playerspecificpages
+			
+			var playerPages = playerSpecificPages; // OBJECT, not JSON string
+			if (playerPages !== false && _.has(playerPages, playerID) )  {
+				resultPage = playerPages[playerID];
+			} else { // all players are on same page
+				resultPage = ribbonPageID;
+			}
+		}
+		
+		if (debug) log("Leaving getPlayerPage. Returning " + resultPage);
+		return resultPage;
+	};
+
+	
 /*
         _/_/_/  _/    _/  _/_/_/   
       _/        _/    _/    _/      
@@ -719,11 +724,11 @@ var psGUI = psGUI || (function plexsoupAwesomeGUI() { // Module
 		bscCMD.shortDesc = "Button Style";
 		bscCMD.longDesc = "Choose default style for GUI buttons.";
 
-		var styleSelectorInputString = "?"+psUtils.ch("{")+"Button Style";
+		var styleSelectorInputString = "?"+ch("{")+"Button Style";
 		_.each(buttonStyles, function(buttonStyle) {
-			styleSelectorInputString += psUtils.ch("|")+buttonStyle.name;			
+			styleSelectorInputString += ch("|")+buttonStyle.name;			
 		});
-		styleSelectorInputString += psUtils.ch("}");
+		styleSelectorInputString += ch("}");
 
 		bscCMD.inputOverrides = [styleSelectorInputString, ""];
 		bscCMD.group = "Misc";
