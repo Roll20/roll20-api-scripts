@@ -23,7 +23,7 @@
 
 var psUtils = psUtils || (function plexsoupUtils() {
     "use strict";
-    var debug = true; // set this to true to log everything
+    var debug = false; // set this to true to log everything
     
     var info = {
 		name: "psUtils",
@@ -87,18 +87,18 @@ var psUtils = psUtils || (function plexsoupUtils() {
     };  
  
 	var getGameMasterID = function gmIDGetter() {
-		log("entering getGameMasterID with no parameters");
+		if (debug) log("entering getGameMasterID with no parameters");
 		var activePlayers = findObjs({
 			_type: "player"
 		});
 		
-		log(JSON.stringify(activePlayers));
+		if (debug) log("activePlayers: " + JSON.stringify(activePlayers));
 		
 		var gameMasters = _.filter(activePlayers, function(currentPlayer) { 
 			return playerIsGM(currentPlayer.get("_id"));
 		});
 
-		log(JSON.stringify(gameMasters) );
+		if (debug) log("gameMasters: " + JSON.stringify(gameMasters) );
 		
 		if ( gameMasters.length > 0 ) {
 			return gameMasters[0].get("_id"); // **** what happens if there's more than one?

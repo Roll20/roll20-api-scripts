@@ -10,7 +10,7 @@
 
 var psMath = psMath || (function plexsoupAwesomeMaths() {
     // Another module. This one for fun math. Adding and subtracting vectors, Distance, etc.
-    var debug = true; // set to true to enable verbose logging.
+    var debug = false; // set to true to enable verbose logging.
 
 	var info = {
 		name: "psMath.js",

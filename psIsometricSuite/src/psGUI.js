@@ -45,19 +45,37 @@
 
 */
 
+
+/*
+
+	TODO: Configure installer to update state when version changes.
+
+*/
+
 var psGUI = psGUI || (function plexsoupAwesomeGUI() { // Module
     "use strict";
-	var debug = true;
+	var debug = false;
     
     var info = {
 		name: "psGUI.js",
-        version: 0.1,
+        version: 0.3,
         author: "plexsoup"
     };
     
     var config = {};
-    var defaultConfig = {};
 
+    var defaultConfig = {
+		buttonStyle: "fantasy"
+	};
+
+	var buttonStyles = {
+		"neon": {name: "neon"},
+		"aqua": {name: "aqua"},
+		"material": {name: "material"},
+		"default": {name: "default"},
+		"fantasy": {name: "fantasy"}
+	};
+	
     var userCommands = []; // list of userCommand objects
 
 	var ch = psUtils.ch; // for encoding html characters (one at a time)
@@ -76,15 +94,39 @@ var psGUI = psGUI || (function plexsoupAwesomeGUI() { // Module
         // then, from that object, build out the help file, the gui, and listeners automatically.
         
     
-	var registerUserCommands = function(newCommandsList) {
+	var registerUserCommands = function userCommandRegistrar(newCommandsList, style, listener, group) {
 		if (debug) log(info.name + ": entering registerUserCommands with " + newCommandsList);
 		var oldUserCommands = _.clone(userCommands);
+		
+		_.each(newCommandsList, function(userCommand) {
+			if (style !== undefined && style !== "") {
+				userCommand.style = style;
+			} else {
+				if(_.has(config, "buttonStyle")) {
+					userCommand.style = config.buttonStyle;
+				} else if (_.has(state, 'psGUI')) {
+					userCommand.style = state.psGUI.buttonStyle;
+				} else {
+					userCommand.style = "default";
+				}
+
+			}
+			
+			if (listener !== undefined && listener !== "") {
+				userCommand.listener = listener;
+			}
+			if (group !== undefined && group !== "") {
+				userCommand.group = group;
+			}
+		});
+
 		userCommands = oldUserCommands.concat(newCommandsList);
+
 		
 		
 	};
 	
-    var userCommand = function(listener, commandName, functionToCall, parameters, shortDesc, longDesc, inputOverrides, group, restrictedToGM) { // inputOverrides is optional
+    var userCommand = function(listener, commandName, functionToCall, parameters, shortDesc, longDesc, inputOverrides, group, restrictedToGM, style) { // inputOverrides is optional
         this.listener = listener; // string (eg: "!psIsoFacing")
         this.commandName = commandName; // string (eg: "--reset")
         this.functionToCall = functionToCall; // function (eg: scaleVector)
@@ -94,6 +136,7 @@ var psGUI = psGUI || (function plexsoupAwesomeGUI() { // Module
         this.inputOverrides = inputOverrides; // what to put in the GUI buttons.. eg: @{selected|token_id}, ?{Parameter Value?} // note: pass these through ch()
 		this.group = group;				// organize these buttons together on the menu
 		this.restrictedToGM = restrictedToGM;
+		this.style = style;
     };
 
     
@@ -130,6 +173,16 @@ var psGUI = psGUI || (function plexsoupAwesomeGUI() { // Module
 				log("imgsrc must come from https://s3.amazonaws.com/files.d20.io/images and use the 'thumb' version of the graphic");
 				return false;
 			}
+		},
+		"current_player_id": function(playerID) {
+			if ( getObj("player", playerID) !== undefined ) {
+				return true;
+			} else {
+				return false;
+			}
+		},
+		"current_player_name": function(string) {
+			return (_.isString(string));
 		}
     };
 
@@ -156,6 +209,8 @@ var psGUI = psGUI || (function plexsoupAwesomeGUI() { // Module
 			case "current_page_id": return psUtils.GetPlayerPage(playerID);
 			case "number": return '?' + ch('{') + "Number?" + ch('}');
 			case "num": return '?' + ch('{') + "Number?" + ch('}');
+			case "current_player_id": return playerID;
+			case "current_player_name": return getObj("player", playerID).get("displayname");
 		}
 	};
 
@@ -259,17 +314,22 @@ var psGUI = psGUI || (function plexsoupAwesomeGUI() { // Module
         var passed = false;
         var color;
         
-		passed = parameterTypes[paramName](paramValue);
-		if (!passed) { 
-			color = "red";
-			psLog("==> Error: " + paramValue + " doesn't match expected type "+ paramName, color ); 
+		if (_.has(parameterTypes, paramName)) {
+			passed = parameterTypes[paramName](paramValue);
+			if (!passed) { 
+				color = "red";
+				psLog("==> Error: " + paramValue + " doesn't match expected type "+ paramName, color ); 
 
+			} else {
+				color = "green";                
+			}
+		
+			if (debug) log("paramValue: " + paramValue + " is " + paramName + " === " + passed);
+			return passed;			
 		} else {
-			color = "green";                
+			psLog("==> Error: " + paramName + " is not a registered parameterType. Use: " + _.keys(parameterTypes) + " instead.");
 		}
-	
-        if (debug) log("paramValue: " + paramValue + " is " + paramName + " === " + passed);
-        return passed;
+
     };
 
     
@@ -291,7 +351,7 @@ var psGUI = psGUI || (function plexsoupAwesomeGUI() { // Module
 
         
     var whisper = function whisperer(playerID, chatString) {
-        log("whisper received: '" + chatString + "', " + playerID);
+        if (debug) log("whisper received: '" + chatString + "', " + playerID);
         var playerName;
         if (playerID === undefined || playerID == "gm") {
             playerName = "gm";
@@ -301,11 +361,124 @@ var psGUI = psGUI || (function plexsoupAwesomeGUI() { // Module
         sendChat("psGui", "/w " + playerName + " " + chatString);
     };
 
-    var makeButton = function buttonMakerForChat(title, command) { // expects two strings. Returns encoded html for the chat stream
+    var makeButton = function buttonMakerForChat(commandStr, userCommandObj) {		
         var output="";
 
-            output += '['+title+']('+command+')';
+		var label;
+		if (userCommandObj !== undefined && _.has(userCommandObj, 'shortDesc') && userCommandObj.shortDesc !== undefined) {
+			label = userCommandObj.shortDesc;
+		} else {
+			label = commandStr;
+		}	
+		
+		//Styling
+		if ( userCommandObj !== undefined && _.has(userCommandObj, 'style')) {
+			var buttonStyle =  ""; 
+			var colour1, colour2, colour3, colour4;
+			var gradientStr;
+			
+			switch (userCommandObj.style) {
+				case "aqua":
+					colour1 = "aqua";
+					colour2 = "cadetblue";
+					colour3 = "aquamarine";
+					colour4 = "darkblue";
+					gradientStr = "bottom, "+colour1+" 18%, "+colour2+" 45%, "+colour3+" 85%";
+					buttonStyle +=  "border-radius: 1em; border: 0px;"; 					
+					buttonStyle += "padding-left: 8px; padding-right: 8px; padding-top: 3px; padding-bottom: 3px; margin: 2px; ";
+					//buttonStyle += "background-image: -webkit-gradient( linear, left top, left bottom, color-stop(0.25, #4BCFD6), color-stop(0.55, #1C21C4), color-stop(0.82, #48CDD4) ); ";
+						
+					buttonStyle += "background-image: -o-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: -moz-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: -webkit-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: -ms-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: linear-gradient("+gradientStr+"); ";
+					
+					buttonStyle += "-webkit-box-shadow: "+colour2+" 0px 10px 16px; ";
+					buttonStyle += "-moz-box-shadow: "+colour2+" 0px 10px 16px; ";
+					
+					output += "<a href = '"+commandStr+"' style='"+buttonStyle+"'>";
+					output += label;			
+					output += "</a>";  
+						
+				break;
+				
+				case "material":
+					buttonStyle += " margin: 2px; border-radius: 3px; border: 0px; box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);";
+					
+					output += "<a href = '"+commandStr+"' style='"+buttonStyle+"'>";
+					output += label;			
+					output += "</a>";  
+					
+				break;
+				
+				case "neon":
+					colour1 = "mediumseagreen";
+					colour2 = "greenyellow";
+					colour3 = "black";
+					colour4 = "palegreen";
+					gradientStr = "bottom, "+colour1+" 5%, "+colour3+" 10%, "+colour3+" 90%, "+colour1+" 95%";
+					
+					buttonStyle +=  "border-radius: 0px; border: 1px solid " + colour4 +";"; 					
+					buttonStyle += "padding-left: 8px; padding-right: 8px; padding-top: 3px; padding-bottom: 3px; margin: 2px; ";
+					//buttonStyle += "background-image: -webkit-gradient( linear, left top, left bottom, color-stop(0.25, #4BCFD6), color-stop(0.55, #1C21C4), color-stop(0.82, #48CDD4) ); ";
+					
+										
+					buttonStyle += "background-image: -o-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: -moz-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: -webkit-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: -ms-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: linear-gradient("+gradientStr+"); ";
+					
+					
+					buttonStyle += "-webkit-box-shadow: inset 0 0 1em "+colour4+", 0 0 1em "+colour2+";";
+					buttonStyle += "-moz-box-shadow: inset 0 0 1em "+colour4+", 0 0 1em "+colour2+";";
+					
+					buttonStyle += "color: " + colour2 + ";";
+					
+					output += "<a href = '"+commandStr+"' style='"+buttonStyle+"'>";
+					output += label;			
+					output += "</a>";  
+				
+				break;
+				
+				case "fantasy":
+					colour1 = "white";
+					colour2 = "black";
+					colour3 = "darkred";
+					colour4 = "gold";
+					gradientStr = "bottom, "+colour2+" 10%, "+colour3+" 30%, "+colour3+" 70%, "+colour2+" 90%";
+					
+					buttonStyle +=  "border-radius: 5px; border: 1px solid "+colour1+";"; 					
+					buttonStyle += "padding-left: 8px; padding-right: 8px; padding-top: 3px; padding-bottom: 3px; margin: 2px; ";
+					//buttonStyle += "background-image: -webkit-gradient( linear, left top, left bottom, color-stop(0.25, #4BCFD6), color-stop(0.55, #1C21C4), color-stop(0.82, #48CDD4) ); ";
+										
+					buttonStyle += "background-image: -o-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: -moz-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: -webkit-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: -ms-linear-gradient("+gradientStr+"); ";
+					buttonStyle += "background-image: linear-gradient("+gradientStr+"); ";
+					
+					
+					buttonStyle += "-webkit-box-shadow: inset 0 0 0.5em "+colour1+", 0 0 1em "+colour4+"; ";
+					buttonStyle += "-moz-box-shadow: inset 0 0 0.5em "+colour1+", 0 0 1em "+colour4+"; ";
 
+					buttonStyle += "color: "+ colour4 + "; text-shadow: -1px -1px 1px "+colour2+ "; ";
+					
+					output += "<a href = '"+commandStr+"' style='"+buttonStyle+"'>";
+					output += label;			
+					output += "</a>";  				
+				
+				
+				break;
+				
+				default:
+					output += '['+label+']('+commandStr+')';				
+				break;
+			}
+		} else {
+			output += '['+label+']('+commandStr+')';
+		}
         return output;
     };
 
@@ -363,7 +536,7 @@ var psGUI = psGUI || (function plexsoupAwesomeGUI() { // Module
 				});
 				*/
 
-				var buttonStr = makeButton(userCommand.shortDesc, inputText );
+				var buttonStr = makeButton(inputText, userCommand );
 				GUIText += buttonStr;
 			});
 		});
@@ -430,7 +603,7 @@ var psGUI = psGUI || (function plexsoupAwesomeGUI() { // Module
             var chatMessage = "";
             var buttonStyle = "'background-color: beige;'";
 
-			chatMessage += makeButton(helpFileName, helpFileName);
+			//chatMessage += makeButton(helpFileName);
             chatMessage += "<div style="+buttonStyle+"><a href='http://journal.roll20.net/handout/" + handoutID + "'>"+ helpFileName +" Information</a></div>";
             psLog(chatMessage, "beige");
         });
@@ -492,15 +665,18 @@ var psGUI = psGUI || (function plexsoupAwesomeGUI() { // Module
 						}
 						
 						if (!anyTestFailed) { // therefore all tests passed
-							log( userCommand.commandName + ": calling: " + String(userCommand.functionToCall)+ ".apply(" + paramsProvided + ")");
+							//log( userCommand.commandName + ": calling: " + String(userCommand.functionToCall)+ ".apply(" + paramsProvided + ")");
 							
 							if ( userCommand === undefined ) {
-								log("==>Error: Can't find function for " + userCommand.commandName + ", make sure it's 'exposed' to other modules in the return statement for your module." );
-								return false;
+								psLog("==>Error: Can't find function for " + userCommand.commandName + ", make sure it's 'exposed' to other modules in the return statement for your module." );
+								
 							} else {
-								userCommand.functionToCall.apply(undefined, paramsProvided);
+								if (_.has(userCommand, 'functionToCall') && userCommand.functionToCall !== undefined && _.isFunction(userCommand.functionToCall) ) {
+									userCommand.functionToCall.apply(undefined, paramsProvided);
+								} else {
+									psLog("==>Error: can't find functionToCall for command: " + userCommand.commandName); 									
+								}
 							}
-							
 						} else {
 							var errorText = "==> Error: ";
 							errorText += userCommand.listener + " " + userCommand.commandName + " expects these ("+paramTypesRequired.length+") parameters : [" + paramTypesRequired + "].";
@@ -515,30 +691,74 @@ var psGUI = psGUI || (function plexsoupAwesomeGUI() { // Module
 
 
 /*
-
-    _/_/_/_/_/  _/_/_/_/    _/_/_/  _/_/_/_/_/   
-       _/      _/        _/            _/        
-      _/      _/_/_/      _/_/        _/         
-     _/      _/              _/      _/          
-    _/      _/_/_/_/  _/_/_/        _/           
+		_/_/_/_/  _/      _/    _/_/    _/      _/  _/_/_/    _/        _/_/_/_/   
+	   _/          _/  _/    _/    _/  _/_/  _/_/  _/    _/  _/        _/          
+	  _/_/_/        _/      _/_/_/_/  _/  _/  _/  _/_/_/    _/        _/_/_/       
+	 _/          _/  _/    _/    _/  _/      _/  _/        _/        _/            
+	_/_/_/_/  _/      _/  _/    _/  _/      _/  _/        _/_/_/_/  _/_/_/_/          
 
 */  
     
     
     
     var initializeUserCommands = function() {
+		// example of how to create a user command.
+		
 		var newUserCommands = [];
-        newUserCommands.push(new userCommand("!psGUI","--name", psGUITest, ["token_id", "character_id"], "Get Token Name", "Returns the name of the graphic object or token"));
+        
+		var buttonStyleChooserCMD = new psGUI.userCommand();
+		var bscCMD = buttonStyleChooserCMD;
+		
+		bscCMD.listener = "!psGUI";
+		bscCMD.commandName = "--chooseButtonStyle";
+		bscCMD.functionToCall = function(style, playerName) {
+			updateButtonsToStyle(style);
+			sendChat(info.name, "/w " + playerName + " Buttons updated to style: " + style );
+		};
+		bscCMD.parameters = ["string", "current_player_name"];
+		bscCMD.shortDesc = "Button Style";
+		bscCMD.longDesc = "Choose default style for GUI buttons.";
+
+		var styleSelectorInputString = "?"+psUtils.ch("{")+"Button Style";
+		_.each(buttonStyles, function(buttonStyle) {
+			styleSelectorInputString += psUtils.ch("|")+buttonStyle.name;			
+		});
+		styleSelectorInputString += psUtils.ch("}");
+
+		bscCMD.inputOverrides = [styleSelectorInputString, ""];
+		bscCMD.group = "Misc";
+		newUserCommands.push(bscCMD);
+		
+		var statusCMD = new psGUI.userCommand();
+		statusCMD.listener = "!psGUI";
+		statusCMD.commandName = "--status";
+		statusCMD.functionToCall = function(playerName) {
+			var outputMessage = "";
+			outputMessage += "<div>config: " + JSON.stringify(config) + "</div>";
+			outputMessage += "state.psGUI: " + JSON.stringify(state.psGUI) + "</div>";
+			sendChat(info.name, "/w " + playerName + " " + outputMessage);
+		};
+		statusCMD.parameters = ["current_player_name"];
+		statusCMD.shortDesc = "Status";
+		statusCMD.longDesc = "Get information about state.psGUI and psGUI.config";
+		statusCMD.group = "Misc"
+		newUserCommands.push(statusCMD);
+		
 		return newUserCommands;
     };
 
-    var psGUITest = function guiTester(token_id, character_id) {        
-        var tokenName = getObj("graphic", token_id).get("name");
-        var characterName = getObj("character", character_id).get("name");
-        psLog("Token: " + tokenName + ", Character: " + characterName, "lightgreen");
-    };
+    var updateButtonsToStyle = function buttonStyleChooser(buttonStyle) {        
+		config.buttonStyle = buttonStyle;
+		state.psGUI.buttonStyle = buttonStyle;
 
+		// **** This might be too heavy handed. Maybe button collections should decide their own styles.
+        _.each(userCommands, function(userCommand) {
+			userCommand.style = buttonStyle;
+		});
 
+	};
+
+	
 
 /*
                                                                          
@@ -564,14 +784,18 @@ var psGUI = psGUI || (function plexsoupAwesomeGUI() { // Module
         buildHelpFiles(newCommands, info.name);
         
         // grab config options from Roll20 persistent state object so they persist across instances and sessions
-        if (!_.has(state, psGUI) && _.size(state.psGUI) > 0 ) {
-            if (_.size(config) === 0) {
-                config = _.clone(defaultConfig);
-            }
+        if (!_.has(state, 'psGUI')) { // first time running the script
+            config = _.clone(defaultConfig);
             state.psGUI = _.clone(config);
-        } else {
-            config = _.clone(state.psGUI);
-        }
+			state.psGUI.version = info.version;
+  
+		} else if (state.psGUI.version !== info.version) { // old version in "memory" (ie: in the roll20 persistent "state" object)
+            state.psGUI = _.clone(config);
+			state.psGUI.version = info.version;
+			log("===---- Updated psGUI State settings ----===");
+        } else { // everything looks good. Use the info from state.
+			config = _.clone(state.psGUI);
+		}
 		
 		log(info.name + " v" + info.version + " installed.");
     };
