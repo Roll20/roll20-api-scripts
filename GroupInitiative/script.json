@@ -1,6 +1,6 @@
 {
   "name": "GroupInitiative",
-  "version": "0.9.20",
+  "version": "0.9.22",
   "description": "Rolls initiative for the selected tokens and adds them to the turn order if they don't have a turn yet.\r\rThe calculation of initiative is handled by the combination of Roller (See **Roller Options** below) and a Bonus. The Bonus is determined based on an ordered list of Stat Groups (See **Bonus Stat Groups** below). Stat Groups are evaluated in order. The bonus computed by the first Stat Group for which all attributes exist and have a numeric value is used. This allows you to have several Stat Groups that apply to different types of characters. In practice you will probably only have one, but more are there if you need them.\r\r\r## Commands\r\r```!group-init ```\r\rThis command uses the configured Roller to determine the initiative order for all selected tokens.\r\r```!group-init --help```\r\rThis command displays the help and configuration options, as well as the currently configured groups.\r\r```!group-init --promote <index>```\r\rIncreases the importance the specified Bonus Stat Group.\r\rThis command requires 1 parameter:\r\r* `index` -- The numeric index of the Bonus Stat Group to promote.\r\r`!group-init --del-group <index>`\r\rDeletes the specified Bonus Stat Group.\r\rThis command requires 1 parameter:\r\r* `index` -- The numeric index of the Bonus Stat Group to delete.\r\r```!group-init --add-group --<adjustment> [--<adjustment>] <attribute name[|<max|current>]> [--<adjustment> [--<adjustment>] <attribute name[|<max|current>]> ...]```\r\rAdds a new Bonus Stat Group to the end of the list. Each adjustment operation can be followed by another adjustment operation, but eventually must end in an attriute name. Adjustment operations are applied to the result of the adjustment operations that follow them.\r\rFor example: `--Bounded:-2:2 --Stat-DnD wisdom|max` would first computer the DnD Stat bonus for the max field of the wisdom attribute, then bound it between `-2` and `+2`.\r\rThis command takes multiple parameters:\r\r* `adjustment` -- One of the Stat Adjustment Options.\r* `attribute name` -- The name of an attribute. You can specify `|max` or `|current` on the end to target those specific fields (defaults to `|current`).\r\r```!group-init --reroll```\r\rRerolls all the tokens in the turn order as if they were selected when you executed the bare `!group-init` command.\r\r```!group-init --clear```\r\rRemoves all tokens from the turn order. If Auto Open Init is enabled it will also close the turn order box.\r\r## Roller Options\r\r* `Least-All-Roll` -- Sets the initiative to the lowest of all initiatives rolled for the group.\r* `Mean-All-Roll` -- Sets the initiative to the mean (average) of all initiatives rolled for the group.\r* `Individual-Roll` -- Sets the initiative individually for each member of the group.\r* `Constant-By-Stat` -- Sets the initiative individually for each member of the group to their bonus with no roll.\r\r## Stat Adjustment Options\r\r* `Stat-DnD` -- Calculates the bonus as if the value were a DnD Stat.\r* `Bare` -- No Adjustment.\r* `Floor` -- Rounds down to the nearest integer.\r* `Tie-Breaker` -- Adds the accompanying attribute as a decimal (`0.01`)\r* `Ceiling` -- Rounds up to the nearest integer.\r* `Bounded` -- **DEPREICATED** - will not work with expresions.",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -19,6 +19,8 @@
   "previousversions": [
     "0.9.17",
     "0.9.18",
-    "0.9.19"
+    "0.9.19",
+    "0.9.20",
+    "0.9.21"
   ]
 }

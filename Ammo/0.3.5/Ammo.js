@@ -5,8 +5,8 @@
 var Ammo = Ammo || (function() {
     'use strict';
 
-    var version = '0.3.6',
-        lastUpdate = 1486754991,
+    var version = '0.3.5',
+        lastUpdate = 1485388225,
 		schemaVersion = 0.1,
 
 	ch = function (c) {
@@ -154,7 +154,7 @@ var Ammo = Ammo || (function() {
             }
             return;
         } 
-        return findObjs({ type:'attribute', characterid:character.id, name: name}, {caseInsensitive: !caseSensitive})[0];
+        return findObjs({ type:'attribute', characterid:character.id, name: name})[0];
     },
 
 	HandleInput = function(msg_orig) {
@@ -233,7 +233,7 @@ var Ammo = Ammo || (function() {
 							return;
 						}
 
-						attr = attrLookup(chr,args[2],false);
+						attr = attrLookup(chr,args[2],true);
 					}
 					amount=parseInt(args[3],10);
                     label=_.rest(args,4).join(' ');

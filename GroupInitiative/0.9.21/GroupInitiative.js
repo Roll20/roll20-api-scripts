@@ -5,8 +5,8 @@
 var GroupInitiative = GroupInitiative || (function() {
     'use strict';
 
-    var version = '0.9.22',
-        lastUpdate = 1486850785,
+    var version = '0.9.21',
+        lastUpdate = 1485326513,
         schemaVersion = 1.1,
         bonusCache = {},
         observers = {
@@ -152,51 +152,41 @@ var GroupInitiative = GroupInitiative || (function() {
             },
             'Hidden': function(l) {
                 var groups=buildAnnounceGroups(l);
-                if(groups.npc.length || groups.character.length || groups.gmlayer.length){
-                    sendChat('GroupInit','/w gm '+
-                        '<div>'+
-                            groups.character.join('')+
-                            groups.npc.join('')+
-                            groups.gmlayer.join('')+
-                            '<div style="clear:both;"></div>'+
-                        '</div>');
-                }
+                sendChat('GroupInit','/w gm '+
+                    '<div>'+
+                        groups.character.join('')+
+                        groups.npc.join('')+
+                        groups.gmlayer.join('')+
+                        '<div style="clear:both;"></div>'+
+                    '</div>');
             },
             'Partial': function(l) {
                 var groups=buildAnnounceGroups(l);
-                if(groups.character.length){
-                    sendChat('GroupInit','/direct '+
-                        '<div>'+
-                            groups.character.join('')+
-                            '<div style="clear:both;"></div>'+
-                        '</div>');
-                }
-                if(groups.npc.length || groups.gmlayer.length){
-                    sendChat('GroupInit','/w gm '+
-                        '<div>'+
-                            groups.npc.join('')+
-                            groups.gmlayer.join('')+
-                            '<div style="clear:both;"></div>'+
-                        '</div>');
-                }
+                sendChat('GroupInit','/direct '+
+                    '<div>'+
+                        groups.character.join('')+
+                        '<div style="clear:both;"></div>'+
+                    '</div>');
+                sendChat('GroupInit','/w gm '+
+                    '<div>'+
+                        groups.npc.join('')+
+                        groups.gmlayer.join('')+
+                        '<div style="clear:both;"></div>'+
+                    '</div>');
             },
             'Visible': function(l) {
                 var groups=buildAnnounceGroups(l);
-                if(groups.npc.length || groups.character.length){
-                    sendChat('GroupInit','/direct '+
-                        '<div>'+
-                            groups.character.join('')+
-                            groups.npc.join('')+
-                            '<div style="clear:both;"></div>'+
-                        '</div>');
-                }
-                if(groups.gmlayer.length){
-                    sendChat('GroupInit','/w gm '+
-                        '<div>'+
-                            groups.gmlayer.join('')+
-                            '<div style="clear:both;"></div>'+
-                        '</div>');
-                }
+                sendChat('GroupInit','/direct '+
+                    '<div>'+
+                        groups.character.join('')+
+                        groups.npc.join('')+
+                        '<div style="clear:both;"></div>'+
+                    '</div>');
+                sendChat('GroupInit','/w gm '+
+                    '<div>'+
+                        groups.gmlayer.join('')+
+                        '<div style="clear:both;"></div>'+
+                    '</div>');
             }
         },
 
@@ -818,9 +808,7 @@ var GroupInitiative = GroupInitiative || (function() {
                 .map(function(details){
                     
                     var stat=getAttrByName(charObj.id,details.attribute, details.type||'current');
-                    if( ! _.isUndefined(stat) && !_.isNull(stat) && 
-                        _.isNumber(stat) || (_.isString(stat) && stat.length)
-                    ) {
+                    if( ! _.isUndefined(stat) && !_.isNull(stat) ) {
                         stat = (stat+'').replace(/@\{([^\|]*?|[^\|]*?\|max|[^\|]*?\|current)\}/g, '@{'+(charObj.get('name'))+'|$1}');
                         stat = _.reduce(details.adjustments || [],function(memo,a){
                             var args,adjustment,func;
@@ -1365,9 +1353,7 @@ var GroupInitiative = GroupInitiative || (function() {
                             .map(function(s){
                                 s.roll=[];
                                 if(s.character) {
-                                    let bonus=findInitiativeBonus(s.character,s.token);
-                                    bonus = (_.isString(bonus) ? (bonus.trim().length ? bonus : '0') : bonus);
-                                    s.roll.push( bonus );
+                                    s.roll.push( findInitiativeBonus(s.character,s.token) );
                                 }
                                 if(manualBonus) {
                                     s.roll.push( manualBonus );
