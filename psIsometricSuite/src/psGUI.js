@@ -33,12 +33,16 @@
 				myCommand.shortDesc = "Button Name";
 				myCommand.longDesc = "This is the Helpfile blurb for the command.";
 				myCommand.inputOverrides = ["foo", "bar"] // eg: normally a parameter of type "string" will present the player with an input window. If you don't want that dialog, put values in inputOverrides.
-			userCommands.push(myCommand);
 		
+		Push all userCommand objects into a userCommands list.
+			userCommands.push(myCommand);
+			
 		Then: supply that list of commands to psGUI like this:  
 			psGUI.RegisterUserCommands(userCommands);
+			
+		And Finally: build your help files with:
+			psGUI.BuildHelpFiles(userCommands);
 		
-        Push all userCommand objects into a userCommands list.
         
         userCommand parameters: [listener, commandName, functionToCall, parameters, shortDesc, longDesc, inputOverrides]
 
