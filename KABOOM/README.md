@@ -58,6 +58,7 @@ on('change:token', function(obj) {
 ## API calls to KABOOM.NOW()
 
 @param1 accepts two formats:
+
 1. __An object that contains the ranges and type information about the explosion__
 2. __A number that will be used as the effect power__
 
@@ -72,6 +73,7 @@ on('change:token', function(obj) {
 ```
 
 @param2 accepts three formats:
+
 1. __A Roll20 graphic object received from getObj()__
 2. __A coordinate array which will be used to determine the position of the explosion__
 3. __An object that contains a position property with an array as its value__
