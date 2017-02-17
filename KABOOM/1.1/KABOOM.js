@@ -9,7 +9,7 @@ var KABOOM = KABOOM || (function () {
   // Please read the README.md found in the Roll20-api-scripts repository
 
   var version = '1.1',
-    lastUpdate = 1485407263,
+    lastUpdate = 1487311392,
     Chat_Formatting_START = '<div style="background-color:#ffffff; padding:5px; border-width:2px; border-style:solid;">' +
                             '<div style="border-width:2px; border-style:dotted; padding:5px">',
     Chat_Formatting_END = '</div>' +
@@ -45,9 +45,9 @@ var KABOOM = KABOOM || (function () {
       state.KABOOM.lastupdated = g.lastsaved
       state.KABOOM.default_layer = g['Default layer to affect']
       state.KABOOM.explosion_ratio = Math.abs(g['Explosion ratio'])
-      state.KABOOM.gm_only = g['GM only']
-      state.KABOOM.drawings_only = g['Affect drawings only']
-      state.KABOOM.walls_stop_movement = g['Dynamic Lighting walls stop movement']
+      state.KABOOM.gm_only = g['GM only'] === 'true' ? true : false
+      state.KABOOM.drawings_only = g['Affect drawings only'] === 'true' ? true : false
+      state.KABOOM.walls_stop_movement = g['Dynamic Lighting walls stop movement'] === 'true' ? true : false
     }
   }
 
@@ -56,11 +56,13 @@ var KABOOM = KABOOM || (function () {
     var intersect = getCollisionPoint(pathToMove, walls)
     if (intersect) {
       var obj1, obj2, d_x, d_y, theta, distance, new_d_x, new_d_y, new_x, new_y
-      obj1 = [pathToMove[0][0], pathToMove[0][1]]
-      obj2 = [intersect[0][0], intersect[0][1]]
+      obj1 = pathToMove[0]
+      obj2 = intersect[0]
       d_x = obj2[0] - obj1[0]
       d_y = obj2[1] - obj1[1]
-      distance = Math.sqrt((d_x * d_x) + (d_y * d_y)) - 30
+      distance = Math.sqrt((d_x * d_x) + (d_y * d_y))
+      if (distance <= 30) return pathToMove[0]
+      else distance -= 30
       theta = Math.atan2(d_y, d_x)
       new_d_x = Math.cos(theta) * distance
       new_d_y = Math.sin(theta) * distance
@@ -101,37 +103,36 @@ var KABOOM = KABOOM || (function () {
 
   // Returns an array of all paths on the dynamic lighting layer
   var findWalls = function (pageid) {
-    var pathTuple, transformInfo,
-    pointArray = [],
-    completePointArray = [],
     wallArray = findObjs({
       'layer': 'walls',
       '_type': 'path',
       '_pageid': pageid
     })
     // This is to make the array nice and find out where the points actually are
-    for (var a = 0; a < wallArray.length; a++) {
-      pathTuple = JSON.parse(wallArray[a].get('path'))
-      transformInfo = PathMath.getTransformInfo(wallArray[a])
-      for (var b = 0; b < pathTuple.length; b++) {
-        pointArray.push(PathMath.tupleToPoint(pathTuple[b], transformInfo))
-      }
-      completePointArray.push(pointArray)
-    }
+    var completePointArray = _.map(wallArray, function(wall) {
+      var pathTuple = JSON.parse(wall.get('path')),
+      transformInfo = PathMath.getTransformInfo(wall),
+      pointArray = _.map(pathTuple, (tuple => PathMath.tupleToPoint(tuple, transformInfo)))
+      return pointArray
+    })
     return completePointArray
   }
 
   var getCollisionPoint = function (pathToMove, walls) {
-    var intersect
+    var intersect, closestIntersect, intersectArray = []
     // For each object in the walls array...
     for (var a = 0; a < walls.length; a++) {
       // For each path segment of each object...
       for (var b = 0; b < walls[a].length - 1; b++) {
         intersect = PathMath.segmentIntersection(pathToMove, [walls[a][b], walls[a][b + 1]])
-        if (intersect) break
+        if (intersect) intersectArray.push(intersect)
       }
     }
-    return intersect
+    closestIntersect = _.chain(intersectArray)
+      .sortBy(value => value[1])
+      .first()
+      .value()
+    return closestIntersect
   }
 
   // Returns an array of the input object's coordinates
@@ -179,9 +180,8 @@ var KABOOM = KABOOM || (function () {
         } else if (!msg.selected) {
           printToChat(msg.who, 'Please select one token to designate the center of the explosion.')
           return
-        } else {
-          prepareExplosion(options, getObj('graphic', msg.selected[0]._id))
         }
+        prepareExplosion(options, getObj('graphic', msg.selected[0]._id))
     }
   }
 
@@ -226,11 +226,11 @@ var KABOOM = KABOOM || (function () {
     // Calculate new distance
     item_weight = getWeight(flying_object.get('width') * flying_object.get('height') / 4900, state.KABOOM.min_size, state.KABOOM.max_size)
     distance_weight = getWeight(distance, Math.abs(options.effectPower * page.scale), options.effectRadius * page.scale)
-    if (!distance_weight || (!item_weight && state.KABOOM.ignore_size)) return
     d_distance = options.effectPower * page.scale
                 * (distance_weight + 0.2 - 0.2 * distance_weight)
                 * (state.KABOOM.ignore_size ? 1 : item_weight)
                 * (options.scatter ? getRandomInt(50, 100) / 100 : 1)
+    if (d_distance === 0) return
 
     // If moving towards a point, don't overshoot it
     if (options.effectPower < 0 && Math.abs(d_distance) > distance) {
@@ -284,6 +284,7 @@ var KABOOM = KABOOM || (function () {
     var walls = state.KABOOM.walls_stop_movement
       ? findWalls(explosion_center.pageid)
       : false
+
     for (var i = 0; i < affectedObjects.length; i++) {
       if (moveGraphic(affectedObjects[i], explosion_center, options, pageInfo, walls) === 'failed') break
     }

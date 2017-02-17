@@ -1,4 +1,5 @@
-// Github: https://github.com/bpunya/roll20-api/blob/master/KABOOM/KABOOM.js
+// Github: https://github.com/bpunya/roll20-api/blob/master/KABOOM/1.0/KABOOM.js
+// README: https://github.com/bpunya/roll20-api/blob/master/KABOOM/README.md
 // Author: PaprikaCC (Bodin Punyaprateep)
 /* ************************************************************************** */
 
