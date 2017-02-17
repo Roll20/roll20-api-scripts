@@ -45,8 +45,8 @@ var KABOOM = KABOOM || (function () {
       s.lastupdated = g.lastsaved
       s.default_layer = g['Default layer to affect']
       s.explosion_ratio = Math.abs(g['Explosion ratio'])
-      s.gm_only = g['GM only']
-      s.drawings_only = g['Affect drawings only']
+      s.gm_only = g['GM only'] === 'true' ? true : false
+      s.drawings_only = g['Affect drawings only'] === 'true' ? true : false
     }
   }
 
