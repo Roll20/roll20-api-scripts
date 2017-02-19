@@ -16,7 +16,7 @@ for everything else there is KABOOM!
 You can call KABOOM through chat with a simple message, or you can use it with
 other scripts by calling KABOOM.NOW(@param1, @param2)
 
-### Chat Command:
+### Using KABOOM - Chat Commands:
 The basic chat command follows this format:
 `!KABOOM effect-power [ effect-radius [ options [ --default-options]]]`
 `!KABOOM -15 50 no scatter --blood`
@@ -42,7 +42,7 @@ ONLY effect-power is required. Everything else is optional.
 **--default-options** can be found in the help menu, which is reached by typing
                     `!KABOOM` or `!KABOOM --help` into chat.
 
-### Through the API:
+### Using KABOOM - API calls:
 The simplest function call looks something like this:
 `KABOOM.NOW(15, [500,300])`
 
@@ -100,7 +100,7 @@ By default, the script values object sizes when determining if they should be mo
 If this is false, then weight will not be considered when calculating distances thrown.
 Make sure that same-layer-only is true if this is false, or you may move your background tiles.
 
-### --default_type
+### --default-type
 This option determines the colour of the VFX explosion if none is specified. The colours available are:
 'acid', 'blood', 'charm', 'death', 'fire', 'frost', 'holy', 'magic', 'slime', 'smoke', and 'water'
 
