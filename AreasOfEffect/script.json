@@ -9,9 +9,9 @@
     "useroptions": [],
     "dependencies": ["HTML Builder", "MatrixMath", "Path Math", "Vector Math"],
     "modifies": {
-      "tokens": true,
-      "paths": true,
-      "macros": true
+      "tokens": "read, write",
+      "paths": "read, write",
+      "macros": "read, write"
     },
     "conflicts": []
 }
