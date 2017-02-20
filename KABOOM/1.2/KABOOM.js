@@ -9,12 +9,75 @@ var KABOOM = KABOOM || (function () {
   // Please read the README.md found in the Roll20-api-scripts repository
 
   var version = '1.2',
-    lastUpdate = 1487399205,
-    Chat_Formatting_START = '<div style="background-color:#ffffff; padding:5px; border-width:2px; border-style:solid;">' +
-                            '<div style="border-width:2px; border-style:dotted; padding:5px">',
-    Chat_Formatting_END = '</div>' +
-                          '</div>',
-    VFXtypes = ['acid', 'blood', 'charm', 'death', 'fire', 'frost', 'holy', 'magic', 'slime', 'smoke', 'water'],
+
+    VFXtypes = {
+      'acid': {
+        "startColour":		[50, 50, 50, 1],
+        "startColourRandom":[0, 10, 10, 0.25],
+        "endColour":		[0, 75, 30, 0],
+        "endColourRandom":	[0, 20, 20, 0]
+      },
+      'blood': {
+        "startColour":		[175, 0, 0, 1],
+        "startColourRandom":[20, 0, 0, 0],
+        "endColour":		[175, 0, 0, 0],
+        "endColourRandom":	[20, 0, 0, 0]
+      },
+      'charm': {
+        "startColour":		[200, 40, 150, 1],
+        "startColourRandom":[25, 5, 20, 0.25],
+        "endColour":		[200, 40, 150, 0],
+        "endColourRandom":	[50, 10, 40, 0]
+      },
+      'death': {
+        "startColour":		[10, 0, 0, 1],
+        "startColourRandom":[5, 0, 0, 0.25],
+        "endColour":		[20, 0, 0, 0],
+        "endColourRandom":	[10, 0, 0, 0]
+      },
+      'fire': {
+        "startColour":		[220, 35, 0, 1],
+        "startColourRandom":[62, 0, 0, 0.25],
+        "endColour":		[220, 35, 0, 0],
+        "endColourRandom":	[60, 60, 60, 0]
+      },
+      'frost': {
+        "startColour":		[90, 90, 175, 1],
+        "startColourRandom":[0, 0, 0, 0.25],
+        "endColour":		[125, 125, 255, 0],
+        "endColourRandom":	[0, 0, 0, 0]
+      },
+      'holy': {
+        "startColour":		[175, 130, 25, 1],
+        "startColourRandom":[20, 10, 0, 0.25],
+        "endColour":		[175, 130, 50, 0],
+        "endColourRandom":	[20, 20, 20, 0]
+      },
+      'magic': {
+        "startColour":		[50, 50, 50, 0.5],
+        "startColourRandom":[150, 150, 150, 0.25],
+        "endColour":		[128, 128, 128, 0],
+        "endColourRandom":	[125, 125, 125, 0]
+      },
+      'slime': {
+        "startColour":		[0, 250, 50, 1],
+        "startColourRandom":[0, 20, 10, 0.25],
+        "endColour":		[0, 250, 50, 0],
+        "endColourRandom":	[20, 20, 20, 0]
+      },
+      'smoke': {
+        "startColour":		[150, 150, 150, 1],
+        "startColourRandom":[10, 10, 10, 0.5],
+        "endColour":		[200, 200, 200, 0],
+        "endColourRandom":	[10, 10, 10, 0]
+
+      },
+      'water': {
+        "startColour":		[15, 15, 150, 1],
+        "startColourRandom":[5, 5, 25, 0.25],
+        "endColour":		[10, 10, 100, 0],
+        "endColourRandom":	[10, 10, 25, 0]
+      }
     Layers = ['objects', 'map'],
     defaultState = {
       'vfx': true,
@@ -30,7 +93,12 @@ var KABOOM = KABOOM || (function () {
       'drawings_only': false,
       'walls_stop_movement': true,
       'lastupdated': 0
-    }
+    },
+
+    Chat_Formatting_START = '<div style="background-color:#ffffff; padding:5px; border-width:2px; border-style:solid;">' +
+                            '<div style="border-width:2px; border-style:dotted; padding:5px">',
+    Chat_Formatting_END = '</div>' +
+                          '</div>'
 
   // checkVersion and checkGlobalConfig are run on startup
   var checkVersion = function () {
@@ -74,13 +142,25 @@ var KABOOM = KABOOM || (function () {
     }
   }
 
-  // Creates the explosion VFX
-  var createExplosion = function (explosion, options) {
-    if (options.effectPower < 0) {
-      spawnFx(explosion.position[0], explosion.position[1], `nova-${options.type}`, explosion.pageid)
-    } else {
-      spawnFx(explosion.position[0], explosion.position[1], `explode-${options.type}`, explosion.pageid)
-    }
+  // Handles VFX and prepares movement
+  var createExplosion = function (explosion, options, pageInfo) {
+    var scale = pageInfo.scale * Math.abs(options.effectPower) / 140 > 0.5
+      ? pageInfo.scale * Math.abs(options.effectPower) / 140 : 0.5
+    base = {
+      "maxParticles": 300,
+      "duration": 1,
+	  "lifeSpan": 15,
+	  "lifeSpanRandom": 3.5,
+	  "angle": 0,
+	  "angleRandom": 360,
+	  "emissionRate": 300,
+      "size": 35 * scale,
+      "sizeRandom": 10 * scale,
+      "speed": 10 * scale,
+      "speedRandom": 2 * scale
+    },
+    VFXdata = Object.assign(base, VFXtypes[options.type])
+    spawnFxWithDefinition(explosion.position[0], explosion.position[1], VFXdata, explosion.pageid)
   }
 
   // Returns an array of all valid drawings to move
@@ -170,9 +250,13 @@ var KABOOM = KABOOM || (function () {
       case '!KABOOM':
         if (args.length === 1) { showHelp(msg.who); return }
         var options = parseOptions(args, playerIsGM(msg.playerid))
-        var graphic = msg.selected
-          ? msg.selected[0]._id
-          : getObj('graphic', _.find(args, id => getObj('graphic', id)))
+        var graphic = false
+        // Find out where the graphic is specified
+        if (msg.selected) {
+          graphic = getObj('graphic', msg.selected[0]._id)
+        } else {
+          graphic = getObj('graphic', _.find(args, id => getObj('graphic', id)))
+        }
         // Error checking!
         if (!options.effectPower) {
           return
@@ -230,7 +314,7 @@ var KABOOM = KABOOM || (function () {
     distance_weight = getWeight(distance, Math.abs(options.effectPower * page.scale), options.effectRadius * page.scale)
     d_distance = options.effectPower * page.scale * distance_weight *
                 (state.KABOOM.ignore_size ? 1 : item_weight) *
-                (options.scatter ? getRandomInt(50, 150) / 100 : 1)
+                (options.scatter ? getRandomInt(75, 125) / 100 : 1)
     if (d_distance === 0) return
 
     // If moving towards a point, don't overshoot it
@@ -258,44 +342,6 @@ var KABOOM = KABOOM || (function () {
 
     flying_object.set({'left': new_x, 'top': new_y})
   }
-
-// This is the function that is exposed externally. You can call it in other
-// scripts (as long as this is installed) with "KABOOM.NOW(param1, param2)"
-
-  var prepareExplosion = function (rawOptions, rawCenter) {
-    // Check if our inputs are valid
-    var options = verifyOptions(rawOptions)
-    var explosion_center = verifyObject(rawCenter)
-    var pageInfo = getPageInfo(explosion_center.pageid)
-
-    // Error checking for API users
-    if (!options.effectPower) {
-      log('KABOOM - Effect power missing.')
-      return
-    } else if (!explosion_center.position) {
-      log('KABOOM - Explosion center missing.')
-      return
-    } else if (options.effectPower > options.effectRadius) {
-      log('KABOOM - Effect radius must always be higher than effect power.')
-      return
-    } else if (!pageInfo) {
-      log('KABOOM - Pageid supplied does not exist.')
-      return
-    }
-
-    // findObjs arrays here
-    var affectedObjects = findGraphics(explosion_center)
-    var walls = state.KABOOM.walls_stop_movement
-      ? findWalls(explosion_center.pageid)
-      : false
-
-    for (var i = 0; i < affectedObjects.length; i++) {
-      if (moveGraphic(affectedObjects[i], explosion_center, options, pageInfo, walls) === 'failed') break
-    }
-    if (options.vfx) createExplosion(explosion_center, options)
-  }
-
-  /*********************** END OF EXPOSED FUNCTION ****************************/
 
   // Returns an object with options parsed from chat messages.
   // @input should be msg.content
@@ -336,7 +382,7 @@ var KABOOM = KABOOM || (function () {
 
       // Settings saved in state are changed below.
       if (input[i].slice(0, 2) !== '--') continue
-      if (_.contains(VFXtypes, input[i].slice(2))) options['type'] = input[i].slice(2)
+      if (_.contains(Object.keys(VFXtypes), input[i].slice(2))) options['type'] = input[i].slice(2)
 
       // Players should not be allowed past this point.
       if (!stateAccess) continue
@@ -349,7 +395,7 @@ var KABOOM = KABOOM || (function () {
           break
 
         case 'type':
-          if (_.contains(VFXtypes, input[i + 1])) state.KABOOM.default_type = input[i + 1]
+          if (_.contains(Object.keys(VFXtypes), input[i + 1])) state.KABOOM.default_type = input[i + 1]
           printToChat('gm', `The default explosion type is now ${state.KABOOM.default_type}.`)
           break
 
@@ -406,6 +452,53 @@ var KABOOM = KABOOM || (function () {
     } // End Input Check Loop!
     return options
   }
+
+// This is the function that is exposed externally. You can call it in other
+// scripts (as long as this is installed) with "KABOOM.NOW(param1, param2)"
+
+  var prepareExplosion = function (rawOptions, rawCenter) {
+    // Check if our inputs are valid
+    var options = verifyOptions(rawOptions)
+    var explosion_center = verifyObject(rawCenter)
+    var pageInfo = getPageInfo(explosion_center.pageid)
+
+    // Error checking for API users
+    if (!options.effectPower) {
+      log('KABOOM - Effect power missing.')
+      return
+    } else if (!explosion_center.position) {
+      log('KABOOM - Explosion center missing.')
+      return
+    } else if (options.effectPower > options.effectRadius) {
+      log('KABOOM - Effect radius must always be higher than effect power.')
+      return
+    } else if (!pageInfo) {
+      log('KABOOM - Pageid supplied does not exist.')
+      return
+    }
+
+    // findObjs arrays here
+    var affectedObjects = findGraphics(explosion_center)
+    var walls = state.KABOOM.walls_stop_movement
+      ? findWalls(explosion_center.pageid)
+      : false
+
+    if (options.vfx) {
+      if (options.effectPower > 0) {
+        createExplosion(explosion_center, options, pageInfo)
+        _.each(affectedObjects, object => moveGraphic(object, explosion_center, options, pageInfo, walls))
+      } else {
+        createExplosion(explosion_center, options, pageInfo)
+        setTimeout(function() {
+          _.each(affectedObjects, object => moveGraphic(object, explosion_center, options, pageInfo, walls))
+        }, 500)
+      }
+    } else {
+      _.each(affectedObjects, object => moveGraphic(object, explosion_center, options, pageInfo, walls))
+    }
+  }
+
+  /*********************** END OF EXPOSED FUNCTION ****************************/
 
   // Help HTML hosted here.
   var showHelp = function (target) {
@@ -475,7 +568,7 @@ var KABOOM = KABOOM || (function () {
           ? options.effectPower : false,
         effectRadius: (parseFloat(options.effectRadius) === options.effectRadius)
           ? Math.abs(options.effectRadius) : Math.abs(options.effectPower * state.KABOOM.explosion_ratio),
-        type: (_.contains(VFXtypes, options.type))
+        type: (_.contains(Object.keys(VFXtypes), options.type))
           ? options.type : state.KABOOM.default_type,
         scatter: (typeof options.scatter === 'boolean')
           ? options.scatter : state.KABOOM.scattering,
