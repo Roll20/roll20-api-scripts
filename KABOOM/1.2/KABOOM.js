@@ -9,6 +9,7 @@ var KABOOM = KABOOM || (function () {
   // Please read the README.md found in the Roll20-api-scripts repository
 
   var version = '1.2',
+    lastUpdate = 1487571289,
 
     VFXtypes = {
       'acid': {
@@ -78,6 +79,7 @@ var KABOOM = KABOOM || (function () {
         "endColour":		[10, 10, 100, 0],
         "endColourRandom":	[10, 10, 25, 0]
       }
+    },
     Layers = ['objects', 'map'],
     defaultState = {
       'vfx': true,
