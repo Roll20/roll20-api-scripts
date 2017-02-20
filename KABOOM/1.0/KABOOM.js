@@ -1,4 +1,5 @@
-// Github: https://github.com/bpunya/roll20-api/blob/master/KABOOM/KABOOM.js
+// Github: https://github.com/bpunya/roll20-api/blob/master/KABOOM/1.0/KABOOM.js
+// README: https://github.com/bpunya/roll20-api/blob/master/KABOOM/README.md
 // Author: PaprikaCC (Bodin Punyaprateep)
 /* ************************************************************************** */
 
@@ -44,8 +45,8 @@ var KABOOM = KABOOM || (function () {
       s.lastupdated = g.lastsaved
       s.default_layer = g['Default layer to affect']
       s.explosion_ratio = Math.abs(g['Explosion ratio'])
-      s.gm_only = g['GM only']
-      s.drawings_only = g['Affect drawings only']
+      s.gm_only = g['GM only'] === 'true' ? true : false
+      s.drawings_only = g['Affect drawings only'] === 'true' ? true : false
     }
   }
 
