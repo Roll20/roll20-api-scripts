@@ -21,8 +21,10 @@
       let content = new HtmlBuilder('div');
 
       var row = content.append('.paddedRow');
-      row.append('span.bold', 'Target:');
-      row.append('span', effect.victim.get('name'));
+      if(effect.victim) {
+        row.append('span.bold', 'Target:');
+        row.append('span', effect.victim.get('name'));
+      }
 
       content.append('.paddedRow', effect.message);
 
