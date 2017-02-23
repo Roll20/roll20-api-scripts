@@ -71,7 +71,6 @@ var KABOOM = KABOOM || (function () {
         "startColourRandom":[10, 10, 10, 0.5],
         "endColour":		[200, 200, 200, 0],
         "endColourRandom":	[10, 10, 10, 0]
-
       },
       'water': {
         "startColour":		[15, 15, 150, 1],
@@ -577,7 +576,7 @@ var KABOOM = KABOOM || (function () {
           ? options.effectPower : false,
         effectRadius: (parseFloat(options.effectRadius) === options.effectRadius)
           ? Math.abs(options.effectRadius) : Math.abs(options.effectPower * state.KABOOM.explosion_ratio),
-        type: (_.contains(Object.keys(VFXtypes), options.type))
+        type: (_.contains(Object.keys(VFXtypes), options.type) || (options.type.startColour && options.type.startColour.length === 4))
           ? options.type : state.KABOOM.default_type,
         scatter: (typeof options.scatter === 'boolean')
           ? options.scatter : state.KABOOM.scattering,
