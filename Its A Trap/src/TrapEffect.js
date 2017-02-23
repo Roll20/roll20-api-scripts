@@ -350,7 +350,7 @@ var TrapEffect = (() => {
      * not installed, then this has no effect.
      */
     playAreaOfEffect() {
-      if(AreasOfEffect && this.areaOfEffect) {
+      if(typeof AreasOfEffect !== 'undefined' && this.areaOfEffect) {
         let direction = (this.areaOfEffect.direction && VecMath.scale(this.areaOfEffect.direction, 70)) ||
         (() => {
           if(this._victim)
