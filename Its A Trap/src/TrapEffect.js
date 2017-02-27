@@ -160,6 +160,14 @@ var TrapEffect = (() => {
     }
 
     /**
+     * Command arguments for integration with the TokenMod script by The Aaron.
+     * @type {string}
+     */
+    get tokenMod() {
+      return this._effect.tokenMod;
+    }
+
+    /**
      * The trap this TrapEffect represents.
      * @type {Graphic}
      */
@@ -310,6 +318,7 @@ var TrapEffect = (() => {
         this.playFX();
         this.playAreaOfEffect();
         this.playKaboom();
+        this.playTokenMod();
         this.playApi();
 
         // Allow traps to trigger each other using the 'triggers' property.
@@ -487,6 +496,31 @@ var TrapEffect = (() => {
           let msg = 'Could not find sound "' + this.sound + '".';
           sendChat('ItsATrap-api', msg);
         }
+      }
+    }
+
+    /**
+     * Invokes TokenMod on the victim's token.
+     */
+    playTokenMod() {
+      if(typeof TokenMod !== 'undefined' && this.tokenMod && this._victim) {
+        let victimId = this._victim.get('id');
+        let command = '!token-mod ' + this.tokenMod + ' --ids ' + victimId;
+
+        // Since playerIsGM fails for the player ID "API", we'll need to
+        // temporarily switch TokenMod's playersCanUse_ids option to true.
+        if(!TrapEffect.tokenModTimeout) {
+          let temp = state.TokenMod.playersCanUse_ids;
+          log('playersCanUse_ids');
+          log(temp);
+          TrapEffect.tokenModTimeout = setTimeout(() => {
+            state.TokenMod.playersCanUse_ids = temp;
+            TrapEffect.tokenModTimeout = undefined;
+          }, 1000);
+        }
+
+        state.TokenMod.playersCanUse_ids = true;
+        sendChat('It\'s A Trap', command);
       }
     }
   };
