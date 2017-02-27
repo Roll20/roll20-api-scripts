@@ -228,7 +228,7 @@ var handlenpctoken = function(msg,character,player) {
                 height: t.height,
                 imgsrc: img,
                 pageid: page,
-                layer: t.layer,
+                layer: (_.contains(["gmlayer", "objects", "map"], t.layer) ? t.layer : 'gmlayer'),
                 name: tokenname,
                 represents: represents,
                 bar3_value: hp,
@@ -239,14 +239,11 @@ var handlenpctoken = function(msg,character,player) {
 };
 
 var getCleanImgsrc = function (imgsrc) {
-    var parts = imgsrc.match(/(.*\/images\/.*)(thumb|med|original|max)(.*)$/);
-    if(parts) {
-        return parts[1]+'thumb'+parts[3];
-    }
-    else {
-        parts = imgsrc.match(/(.*\/marketplace\/.*)(thumb|med|original|max)(.*)$/);
-        return parts[1]+'thumb'+parts[3];
-    }
+   var parts = imgsrc.match(/(.*\/(?:images|marketplace)\/.*)(thumb|med|original|max)([^\?]*)(\?[^?]+)?$/);
+   if(parts) {
+      return parts[1]+'thumb'+parts[3]+(parts[4]?parts[4]:`?${Math.round(Math.random()*9999999)}`);
+   }
+   return;
 };
 
 var handleslotattack = function (msg,character,player) {
