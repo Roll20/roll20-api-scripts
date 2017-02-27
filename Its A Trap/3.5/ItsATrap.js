@@ -1004,8 +1004,6 @@ var TrapEffect = (() => {
         // temporarily switch TokenMod's playersCanUse_ids option to true.
         if(!TrapEffect.tokenModTimeout) {
           let temp = state.TokenMod.playersCanUse_ids;
-          log('playersCanUse_ids');
-          log(temp);
           TrapEffect.tokenModTimeout = setTimeout(() => {
             state.TokenMod.playersCanUse_ids = temp;
             TrapEffect.tokenModTimeout = undefined;
