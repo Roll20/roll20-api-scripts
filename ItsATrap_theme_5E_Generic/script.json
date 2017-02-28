@@ -1,0 +1,66 @@
+{
+    "name": "It's a Trap! - D&D 5E Generic",
+    "script": "TrapTheme.js",
+    "version": "3.0",
+    "previousversions": [],
+    "description": "# It's A Trap! - D&D 5E Generic\r\rThis is a trap theme to support any campaign using D&D 5th Edition rules. To\ruse this, you will need to enter in the names of some character attributes into\rthe script's One-Click options as they appear in the character sheet data or\rattributes/abilities tab. These attribute names include:\r* AC\r* Strength save modifier\r* Dexterity save modifier\r* Constitution save modifier\r* Intelligence save modifier\r* Wisdom save modifier\r* Charisma save modifier\r* Perception Modifier\r* Passive Perception (If it is available on the sheet you are using)\r\r## Help\r\rDue to complications with the API reading attributes from certain character sheets,\rthere have been issues in the past with things such as saving throws or passive perception\rnot being correct. If this happens, first try adjusting the values for these on\ryour character sheet or try re-creating the character sheet from scratch to see\rif that resolves the problem.\r\rIf you continue to experience any issues while using this script,\rneed help using it, or if you have a neat suggestion for a new feature, please reply to this thread:\rhttps://app.roll20.net/forum/post/3280344/script-its-a-trap-v2-dot-3\ror shoot me a PM:\rhttps://app.roll20.net/users/46544/stephen-l\r\r## Show Support\r\rIf you would like to show your appreciation and support for the work I do in writing,\rupdating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)\ror, simply leave a thank you note in the script's thread on the Roll20 forums.\rEither is greatly appreciated! Happy gaming!\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [
+      {
+        "name": "sheet",
+        "type": "select",
+        "options": ["custom/none", "ogl", "community", "shaped"],
+        "default": "custom/none",
+        "description": "For some supported character sheets the attribute names are already known. For custom/none, you'll need to fill in the attribute names in the fields below."
+      },
+      {
+        "name": "ac",
+        "type": "text",
+        "description": "The name of the AC attribute."
+      },
+      {
+        "name": "strSaveModifer",
+        "type": "text",
+        "description": "The name of the Strength save modifier attribute."
+      },
+      {
+        "name": "dexSaveModifier",
+        "type": "text",
+        "description": "The name of the Dexterity save modifier attribute."
+      },
+      {
+        "name": "conSaveModifier",
+        "type": "text",
+        "description": "The name of the Constitution save modifier attribute."
+      },
+      {
+        "name": "intSaveModifier",
+        "type": "text",
+        "description": "The name of the Intelligence save modifier attribute."
+      },
+      {
+        "name": "wisSaveModifier",
+        "type": "text",
+        "description": "The name of the Wisdom save modifier attribute."
+      },
+      {
+        "name": "chaSaveModifier",
+        "type": "text",
+        "description": "The name of the Charisma save modifier attribute."
+      },
+      {
+        "name": "perceptionModifier",
+        "type": "text",
+        "description": "The name of the Perception skill modifier attribute."
+      },
+      {
+        "name": "passivePerception",
+        "type": "text",
+        "description": "The name of the Passive Perception attribute, if it is available on the character sheet you are using."
+      }
+    ],
+    "dependencies": ["It's a Trap!"],
+    "modifies": {},
+    "conflicts": []
+}
