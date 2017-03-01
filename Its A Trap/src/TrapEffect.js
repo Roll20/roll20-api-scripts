@@ -90,6 +90,15 @@ var TrapEffect = (() => {
     }
 
     /**
+     * JSON defining options to produce an explosion/implosion effect with
+     * the KABOOM script.
+     * @type {object}
+     */
+    get kaboom() {
+      return this._effect.kaboom;
+    }
+
+    /**
      * The flavor message displayed when the trap is activated. If left
      * blank, a default message will be generated based on the name of the
      * trap's token.
@@ -148,6 +157,14 @@ var TrapEffect = (() => {
      */
     get stopAt() {
       return this._effect.stopAt;
+    }
+
+    /**
+     * Command arguments for integration with the TokenMod script by The Aaron.
+     * @type {string}
+     */
+    get tokenMod() {
+      return this._effect.tokenMod;
     }
 
     /**
@@ -296,16 +313,12 @@ var TrapEffect = (() => {
         if(this.trap.get('status_bleeding-eye'))
           ItsATrap.revealTrap(this.trap);
 
-        // If the effect has a sound, try to play it.
+        // Produce special outputs if it has any.
         this.playSound();
-
-        // If the effect has fx, play them.
         this.playFX();
-
-        // If the trap has an AreasOfEffect effect, spawn it.
         this.playAreaOfEffect();
-
-        // If the effect has an api command, execute it.
+        this.playKaboom();
+        this.playTokenMod();
         this.playApi();
 
         // Allow traps to trigger each other using the 'triggers' property.
@@ -350,7 +363,7 @@ var TrapEffect = (() => {
      * not installed, then this has no effect.
      */
     playAreaOfEffect() {
-      if(AreasOfEffect && this.areaOfEffect) {
+      if(typeof AreasOfEffect !== 'undefined' && this.areaOfEffect) {
         let direction = (this.areaOfEffect.direction && VecMath.scale(this.areaOfEffect.direction, 70)) ||
         (() => {
           if(this._victim)
@@ -450,6 +463,23 @@ var TrapEffect = (() => {
     }
 
     /**
+     * Produces an explosion/implosion effect with the KABOOM script.
+     */
+    playKaboom() {
+      if(typeof KABOOM !== 'undefined' && this.kaboom) {
+        let center = [this.trap.get('left'), this.trap.get('top')];
+        let options = {
+          effectPower: this.kaboom.power,
+          effectRadius: this.kaboom.radius,
+          type: this.kaboom.type,
+          scatter: this.kaboom.scatter
+        };
+
+        KABOOM.NOW(options, center);
+      }
+    }
+
+    /**
      * Plays a TrapEffect's sound, if it has one.
      */
     playSound() {
@@ -466,6 +496,29 @@ var TrapEffect = (() => {
           let msg = 'Could not find sound "' + this.sound + '".';
           sendChat('ItsATrap-api', msg);
         }
+      }
+    }
+
+    /**
+     * Invokes TokenMod on the victim's token.
+     */
+    playTokenMod() {
+      if(typeof TokenMod !== 'undefined' && this.tokenMod && this._victim) {
+        let victimId = this._victim.get('id');
+        let command = '!token-mod ' + this.tokenMod + ' --ids ' + victimId;
+
+        // Since playerIsGM fails for the player ID "API", we'll need to
+        // temporarily switch TokenMod's playersCanUse_ids option to true.
+        if(!TrapEffect.tokenModTimeout) {
+          let temp = state.TokenMod.playersCanUse_ids;
+          TrapEffect.tokenModTimeout = setTimeout(() => {
+            state.TokenMod.playersCanUse_ids = temp;
+            TrapEffect.tokenModTimeout = undefined;
+          }, 1000);
+        }
+
+        state.TokenMod.playersCanUse_ids = true;
+        sendChat('It\'s A Trap', command);
       }
     }
   };
