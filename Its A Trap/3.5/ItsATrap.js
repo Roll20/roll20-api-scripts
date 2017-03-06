@@ -1855,19 +1855,65 @@ var TrapTheme = (() => {
 
     /**
      * Asynchronously gets the value of a character sheet attribute.
-     * @param  {Character}   character
-     * @param  {string}   attr
-     * @return {Promise<any>}
+     * @param  {Character} character
+     * @param  {string} attr
+     * @return {Promise<number>}
      *         Contains the value of the attribute.
      */
     static getSheetAttr(character, attr) {
-      let rollExpr = '@{' + character.get('name') + '|' + attr + '}';
-      return TrapTheme.rollAsync(rollExpr)
-      .then((roll) => {
-        if(roll)
-          return roll.total;
-        else
-          throw new Error('Could not resolve roll expression: ' + rollExpr);
+      if(attr.includes('/'))
+        return TrapTheme.getSheetRepeatingAttr(character, attr);
+      else {
+        let rollExpr = '@{' + character.get('name') + '|' + attr + '}';
+        return TrapTheme.rollAsync(rollExpr)
+        .then((roll) => {
+          if(roll)
+            return roll.total;
+          else
+            throw new Error('Could not resolve roll expression: ' + rollExpr);
+        })
+        .then(value => {
+          if(_.isNumber(value))
+            return value;
+
+          // If the attribute is autocalculated, but could its current value
+          // could not be resolved, try to force it to calculate its value as a
+          // last-ditch effort.
+          else
+            return TrapTheme.forceAttrCalculation(character, attr);
+        });
+      }
+    }
+
+    /**
+     * Asynchronously gets the value of a character sheet attribute from a
+     * repeating row.
+     * @param {Character} character
+     * @param {string} attr
+     *        Here, attr has the format "sectionName/nameFieldName/nameFieldValue/valueFieldName".
+     *        For example: "skills/name/perception/total"
+     * @return {Promise<number>}
+     *         Contains the value of the attribute.
+     */
+    static getSheetRepeatingAttr(character, attr) {
+      let parts = attr.split('/');
+      let sectionName = parts[0];
+      let nameFieldName = parts[1];
+      let nameFieldValue = parts[2].toLowerCase();
+      let valueFieldName = parts[3];
+
+      log(parts);
+
+      // Find the row with the given name.
+      return TrapTheme.getSheetRepeatingRow(character, sectionName, rowAttrs => {
+        let nameField = rowAttrs[nameFieldName];
+        return nameField.get('current').toLowerCase().trim() === nameFieldValue;
+      })
+
+      // Get the current value of that row.
+      .then(rowAttrs => {
+        let valueField = rowAttrs[valueFieldName];
+        return valueField.get('current');
       });
     }
 

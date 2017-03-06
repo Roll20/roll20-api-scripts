@@ -151,6 +151,8 @@ var TrapTheme = (() => {
       let nameFieldValue = parts[2].toLowerCase();
       let valueFieldName = parts[3];
 
+      log(parts);
+
       // Find the row with the given name.
       return TrapTheme.getSheetRepeatingRow(character, sectionName, rowAttrs => {
         let nameField = rowAttrs[nameFieldName];
