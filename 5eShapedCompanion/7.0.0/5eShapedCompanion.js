@@ -110,7 +110,7 @@ var ShapedScripts =
 	el.configureEntity('spells', [], EntityLookup.getVersionChecker('1.0.0', 'spells'));
 
 	roll20.on('ready', () => {
-	  logger.info('-=> ShapedScripts v7.2.0 <=-');
+	  logger.info('-=> ShapedScripts v7.0.0 <=-');
 	  const character = roll20.createObj('character', { name: 'SHAPED_VERSION_TESTER' });
 	  const campaignSize = roll20.findObjs({}).length;
 	  const delay = Math.max(2000, Math.floor(campaignSize / 20));
@@ -119,36 +119,24 @@ var ShapedScripts =
 	    setTimeout(() => {
 	      const version = roll20.getAttrByName(character.id, 'version');
 	      logger.info('Detected sheet version as : $$$', version);
-
+	      if (utils.versionCompare(version, MINIMUM_SHEET_VERSION) < 0) {
+	        reporter.reportError(
+	          `Incompatible sheet version ${version}. You need at least version ${MINIMUM_SHEET_VERSION} to use ` +
+	          'this script.');
+	        return;
+	      }
+	      const supportedMajorVersion = MINIMUM_SHEET_VERSION.split('.')[0];
+	      if (supportedMajorVersion !== version.split('.')[0]) {
+	        reporter.reportError(
+	          `Incompatible sheet version ${version}. This script only supports ${supportedMajorVersion}.x sheets.`);
+	        return;
+	      }
 	      const ed = new EventDispatcher(roll20, errorHandler, logger, reporter);
 	      const cw = new ChatWatcher(roll20, logger, ed);
 	      const commandProc = makeCommandProc('shaped', roll20, errorHandler, ed, version);
-
-	      if (utils.versionCompare(version, MINIMUM_SHEET_VERSION) < 0) {
-	        const error = `Incompatible sheet version ${version}. You need at least version ${MINIMUM_SHEET_VERSION} to ` +
-	          'use this script. Please install an updated sheet.';
-	        reporter.reportError(error);
-	        logger.error(error);
-	        commandProc.setDefaultCommandHandler(() => reporter.reportError(error));
-	        return;
-	      }
-
-
-	      const supportedMajorVersion = MINIMUM_SHEET_VERSION.split('.')[0];
-	      if (supportedMajorVersion !== version.split('.')[0]) {
-	        const error = `Incompatible sheet version ${version}. This script only supports ${supportedMajorVersion}.x ` +
-	          'sheets. You either need to downgrade your character sheet or find a newer version of the script.';
-	        reporter.reportError(error);
-	        logger.error(error);
-	        commandProc.setDefaultCommandHandler(() => reporter.reportError(error));
-	        return;
-	      }
-
 	      const sc = new ShapedConfig();
 	      sc.configure(roll20, reporter, logger, myState, commandProc, cw, ed);
-	      sc.runStartupSequence(commandProc, () => {
-	        commandProc.setDefaultCommandHandler(cmd =>
-	          reporter.reportError(`Unknown command ${cmd}`));
+	      sc.runStartupSequence(() => {
 	        getModuleList().forEach(module => module.configure(roll20, reporter, logger, myState, commandProc, cw, ed));
 	        _.invoke(roll20.findObjs({ type: 'character', name: 'SHAPED_VERSION_TESTER' }), 'remove');
 	      });
@@ -2436,18 +2424,13 @@ var ShapedScripts =
 	  }
 
 	  reportPlayer(heading, text, playerId) {
-	    this.sendToPlayerAndGm(`${makeNormalMessage(heading, text)}`, playerId);
-	  }
-
-	  sendToPlayerAndGm(text, playerId) {
-	    this.roll20.sendChat('', `/w GM ${text}`, null, { noarchive: true });
-	    if (playerId && !this.roll20.playerIsGM(playerId)) {
-	      this.roll20.sendChat('', `/w ${this.getPlayerName(playerId)} ${text}`, null, { noarchive: true });
-	    }
+	    this.roll20.sendChat('', `/w ${this.getPlayerName(playerId)} ${makeNormalMessage(heading, text)}`, null,
+	      { noarchive: true });
 	  }
 
 	  reportError(text, playerId) {
-	    this.sendToPlayerAndGm(`${makeErrorMessage(this.scriptName, text)}`, playerId);
+	    this.roll20.sendChat('', `/w ${this.getPlayerName(playerId)} ${makeErrorMessage(this.scriptName, text)}`, null,
+	      { noarchive: true });
 	  }
 
 	  getPlayerName(playerId) {
@@ -2767,11 +2750,9 @@ var ShapedScripts =
 	  }, {});
 	}
 
-
 	module.exports = function commandParser(rootCommand, roll20, errorHandler, eventDispatcher,
 	  requiredCharVersion) {
 	  const commands = {};
-	  let defaultHandler = null;
 
 	  const cp = {
 	    processCommand(msg) {
@@ -2782,10 +2763,7 @@ var ShapedScripts =
 	        const cmdName = parts.shift();
 	        const cmd = commands[cmdName];
 	        if (!cmd) {
-	          if (defaultHandler) {
-	            defaultHandler(`${prefix}${cmdName}`);
-	          }
-	          return;
+	          throw new UserError(`Unrecognised command ${prefix}${cmdName}`);
 	        }
 	        const returnVal = cmd.handle(parts, msg.selected, `${prefix}${cmdName}`,
 	          roll20.playerIsGM(msg.playerid), msg.playerid, requiredCharVersion);
@@ -2793,10 +2771,6 @@ var ShapedScripts =
 	          returnVal.catch(errorHandler);
 	        }
 	      }
-	    },
-
-	    setDefaultCommandHandler(handler) {
-	      defaultHandler = handler;
 	    },
 
 	    addCommand(cmds, handler, gmOnly) {
@@ -3179,11 +3153,6 @@ var ShapedScripts =
 
 	  reportPlayer(heading, text, playerId) {
 	    this.reporter.reportPlayer(heading, text, playerId);
-	  }
-
-	  reportResult(title, text, options) {
-	    const reporterName = options.whisper ? 'reportPlayer' : 'reportPublic';
-	    this[reporterName](title, text, options.playerId);
 	  }
 
 	  reportError(text, playerId) {
@@ -3621,10 +3590,7 @@ var ShapedScripts =
 	  // 4.1 rename racial features
 	  .nextVersion()
 	  .moveProperty('config.newCharSettings.tokenActions.racialFeatures',
-	    'config.newCharSettings.tokenActions.racialTraits')
-	  // 4.2 add switch for auto turn recharge
-	  .nextVersion()
-	  .addProperty('config.sheetEnhancements.turnRecharges', false);
+	    'config.newCharSettings.tokenActions.racialTraits');
 
 	module.exports = class ShapedConfig extends ShapedModule {
 
@@ -3634,26 +3600,20 @@ var ShapedScripts =
 	      .addCommand('upgrade-config', this.upgradeConfig.bind(this), true);
 	  }
 
-	  runStartupSequence(commandProc, cb) {
+	  runStartupSequence(cb) {
 	    this.logger.info('Configuration state: $$$', this.myState);
 	    if (!migrator.isValid(this.myState)) {
-	      const error = '5e Shaped Companion configuration is invalid. This is most likely because you have tried' +
+	      this.reporter.reportError(
+	        '5e Shaped Companion configuration is invalid. This is most likely because you have tried' +
 	        ' to downgrade from a later version. You can either reinstall a later version or ' +
-	        '<a href="!shaped-reset-config">Reset Configuration</a> to defaults.';
-	      this.reporter.reportError(error);
-	      this.logger.error('Invalid configuration!');
-	      commandProc.setDefaultCommandHandler(() => this.reportError(error));
+	        '<a href="!shaped-reset-config">Reset Configuration</a> to defaults.');
 	      this.configUpgradedCallback = cb;
 	      return;
 	    }
 	    if (migrator.needsUpdate(this.myState)) {
-	      this.logger.warn('Configuration requires updating');
-	      const title = '5eShaped Companion Updates';
-	      const msg = '5e Shaped Companion has been updated and needs to ' +
+	      this.reporter.reportPlayer('5eShaped Companion Updates', '5e Shaped Companion has been updated and needs to ' +
 	        'upgrade its configuration. Please note that this is a one-way process, if you do not wish to proceed, ' +
-	        'please revert to a previous version of the script. <a href="!shaped-upgrade-config">Upgrade</a>';
-	      this.reporter.reportPlayer(title, msg);
-	      commandProc.setDefaultCommandHandler(() => this.reportPlayer(title, msg));
+	        'please revert to a previous version of the script. <a href="!shaped-upgrade-config">Upgrade</a>');
 	      this.configUpgradedCallback = cb;
 	      return;
 	    }
@@ -4154,7 +4114,6 @@ var ShapedScripts =
 	        rollHPOnDrop: this.booleanValidator,
 	        autoHD: this.booleanValidator,
 	        autoTraits: this.booleanValidator,
-	        turnRecharges: this.booleanValidator,
 	      },
 	      genderPronouns: [
 	        {
@@ -4374,7 +4333,7 @@ var ShapedScripts =
 	    if (options.menu) {
 	      this.reportPlayer('Configuration', options.menu[0].getMenu(), options.playerId);
 	    }
-	    else if (_.isEmpty(_.omit(options, 'menu', 'playerId'))) {
+	    else {
 	      const menu = new MainMenu(this.myState.config, ShapedConfig.configOptionsSpec);
 	      this.reportPlayer('Configuration', menu.getMenu(), options.playerId);
 	    }
@@ -5249,9 +5208,6 @@ var ShapedScripts =
 	      }) +
 	      this.makeToggleSetting({
 	        path: `${root}.autoTraits`, title: 'Process Uses automatically', menuCmd: menu,
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${root}.turnRecharges`, title: 'Recharge uses on new turns', menuCmd: menu,
 	      });
 
 	    const th = utils.buildHTML('th', 'Character Sheet Enhancements', { colspan: '2' });
@@ -5581,42 +5537,26 @@ var ShapedScripts =
 	const ShapedConfig = __webpack_require__(15);
 	const utils = __webpack_require__(7);
 
-	function getStringRechargeTester(targetRechargeValue) {
-	  return rechargeValue => ({ recharge: rechargeValue === targetRechargeValue });
-	}
-
-	function getDieRollRechargeTester(restType, roll20) {
-	  if (restType !== 'turn') {
-	    return rechargeValue => ({ recharge: rechargeValue === 'TURN' || rechargeValue.indexOf('RECHARGE_') === 0 });
-	  }
-	  return (rechargeValue) => {
-	    if (rechargeValue === 'TURN') {
-	      return { recharge: true };
-	    }
-
-	    const match = rechargeValue.match(/RECHARGE_(\d)(?:_\d)?/);
-	    if (match) {
-	      const result = roll20.randomInteger(6);
-	      return {
-	        recharge: result >= parseInt(match[1], 10),
-	        dieRoll: result,
-	      };
-	    }
-	    return { recharge: false };
-	  };
-	}
 
 	class RestManager extends ShapedModule {
 
 	  addCommands(commandProcessor) {
 	    this.rests = [
 	      {
+	        name: 'dieRollRecharge',
+	        operations: [
+	          this.recoverUses.bind(this),
+	        ],
+	        rechargeValue: 'RECHARGE_',
+	        displayName: 'Dice Roll Recharge',
+	      },
+	      {
 	        name: 'turn',
 	        operations: [
 	          this.recoverUses.bind(this),
 	          this.recoverLegendaryPoints.bind(this),
 	        ],
-	        getRechargeTester: restType => getDieRollRechargeTester(restType, this.roll20),
+	        rechargeValue: 'TURN',
 	        displayName: 'Turn Recharge',
 	      },
 	      {
@@ -5625,7 +5565,7 @@ var ShapedScripts =
 	          this.recoverUses.bind(this),
 	          this.recoverWarlockSpellSlots.bind(this),
 	        ],
-	        getRechargeTester: () => getStringRechargeTester('SHORT_OR_LONG_REST'),
+	        rechargeValue: 'SHORT_OR_LONG_REST',
 	        displayName: 'Short Rest',
 	      },
 	      {
@@ -5638,7 +5578,7 @@ var ShapedScripts =
 	          this.recoverSpellPoints.bind(this),
 	          this.reduceExhaustion.bind(this),
 	        ],
-	        getRechargeTester: () => getStringRechargeTester('LONG_REST'),
+	        rechargeValue: 'LONG_REST',
 	        displayName: 'Long Rest',
 	      },
 	    ];
@@ -5647,7 +5587,6 @@ var ShapedScripts =
 	      hp: values => (values.hp > 0 ? `{{heal=[[${values.hp}]]}}` : ''),
 	      hd: values => values.hd.map(hd => `{{Hit Die Regained (${hd.die})=${hd.quant}}}`).join(''),
 	      uses: values => `{{Uses Recharged=${values.uses.join(', ')}}}`,
-	      usesNotRecharged: values => `{{Uses Not Recharged=${values.usesNotRecharged.join(', ')}}}`,
 	      slots: values => (values.slots ? '{{Spell Slots Regained=&nbsp;}}' : ''),
 	      exhaustion: values => `{{text_top=Removed 1 Level Of Exhaustion, now at level: [[${values.exhaustion}]]}}`,
 	      warlockSlots: values => (values.warlockSlots ? '{{Warlock Spell Slots Regained=&nbsp;}}' : ''),
@@ -5672,114 +5611,89 @@ var ShapedScripts =
 	      });
 	  }
 
-	  registerEventListeners(eventDispatcher) {
-	    eventDispatcher.registerEventHandler('change:campaign:turnorder', (turnOrder) => {
-	      if (!_.isEmpty(turnOrder) && turnOrder[0].id !== '-1' && this.myState.config.sheetEnhancements.turnRecharges) {
-	        const graphic = this.roll20.getObj('graphic', turnOrder[0].id);
-	        const char = this.roll20.getObj('character', graphic.get('represents'));
-	        if (char) {
-	          const results = this.doRest(char, 'turn');
-	          if (this.buildRestMessageBody(results) !== '') {
-	            this.roll20.sendChat(`character|${char.id}`, this.buildMessage(char, 'turn', results, true));
-	          }
-	        }
-	      }
-	    });
-	  }
-
 	  handleRest(options) {
 	    let chars = options.selected.character;
 	    if (!_.isUndefined(options.character)) {
 	      chars = [options.character];
 	    }
-	    if (_.isEmpty(chars)) {
-	      this.reportError('Invalid options/selection', 'You must select at least one character or include --character ' +
-	        'when calling !shaped-rest', options.playerId);
-	    }
 	    chars.forEach((char) => {
-	      const results = this.doRest(char, options.type);
-	      const whisper = this.roll20.getAttrByName(char.id, 'output_option') === '/w GM';
-	      this.roll20.sendChat(`character|${char.id}`, this.buildMessage(char, options.type, results, whisper));
+	      const results = this.doRest(char, options.type, options.playerId);
+	      this.roll20.sendChat(`character|${char.id}`, this.buildMessage(char, options.type, results));
 	    });
 	  }
 
-	  doRest(char, type) {
+	  doRest(char, type, playerId) {
 	    const restIndex = this.rests.findIndex(rest => rest.name === type);
 	    const restsToProcess = this.rests.slice(0, restIndex + 1);
 	    return restsToProcess.reduce((results, rest) =>
 	        rest.operations
-	          .map(op => op(char, rest.name, type))
+	          .map(op => op(char, rest.name, playerId))
 	          .reduce((restResults, opResult) =>
 	            utils.extendWithArrayValues(restResults, opResult), results),
 	      {});
 	  }
 
 
-	  buildMessage(character, restType, results, whisper) {
+	  buildMessage(character, restType, results) {
 	    const charName = character.get('name');
 	    const charId = character.id;
 	    const displayName = _.findWhere(this.rests, { name: restType }).displayName;
 
-	    let msg = whisper ? `/w "${charName}" ` : '';
-
-	    msg += `&{template:5e-shaped} {{title=${displayName}}} {{character_name=${charName}}}`;
+	    let msg = `&{template:5e-shaped} {{title=${displayName}}} {{character_name=${charName}}}`;
 
 	    if (this.roll20.getAttrByName(charId, 'show_character_name') === '@{show_character_name_yes}') {
 	      msg += '{{show_character_name=1}}';
 	    }
 
-	    msg += this.buildRestMessageBody(results);
-
-	    return msg;
-	  }
-
-	  buildRestMessageBody(results) {
-	    return _.chain(this.displayTemplates)
+	    msg += _.chain(this.displayTemplates)
 	      .pick(_.keys(results))
 	      .map(template => template(results))
 	      .value()
 	      .join('');
+
+	    return msg;
 	  }
 
-	  recoverUses(character, restType, originalRestType) {
+	  recoverUses(character, restType) {
 	    const charId = character.id;
-	    const rechargeTester = _.findWhere(this.rests, { name: restType }).getRechargeTester(originalRestType);
+	    const rechargeValue = _.findWhere(this.rests, { name: restType }).rechargeValue;
+	    this.logger.debug('Searching for recharge value $$$', rechargeValue);
 
-	    const result = {
-	      uses: [],
-	      usesNotRecharged: [],
-	    };
-
-	    _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
-	      .filter(attribute => attribute.get('name').match(/^repeating_(?!armor|equipment|lairaction|regionaleffect).*$/))
-	      .groupBy(attribute => attribute.get('name').match(/^(repeating_[^_]+_[^_]+)_.*$/)[1])
-	      .pick((attributeGroup, prefix) => attributeGroup.some(attr => attr.get('name') === `${prefix}_recharge`))
-	      .each((attributeGroup) => {
-	        const attributesByName = _.object(attributeGroup
-	          .map(attr => [attr.get('name').match(/repeating_[^_]+_[^_]+_(.*)$/)[1], attr]));
-	        const name = attributesByName.name.get('current');
-	        const recharge = attributesByName.recharge.get('current');
-	        const usesAttr = attributesByName.uses;
+	    const traitNames = _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
+	      .map((attribute) => {
+	        const match = attribute.get('name').match(/^(repeating_[^_]+_[^_]+)_recharge$/);
+	        const attVal = attribute.get('current');
+	        if (match && attVal.indexOf(rechargeValue) === 0) {
+	          this.logger.debug('Matching against rechargeValue $$$', attribute);
+	          return match[1];
+	        }
+	        return undefined;
+	      })
+	      .reject(_.isUndefined)
+	      .reject(traitPre => traitPre.match(/repeating_(armor|equipment|lairaction|regionaleffect)/))
+	      .uniq()
+	      .map((traitPre) => {
+	        const attName = this.roll20.getAttrByName(charId, `${traitPre}_name`);
+	        this.logger.debug(`Recharging '${attName}'`);
+	        const usesAttr = this.roll20.getAttrObjectByName(charId, `${traitPre}_uses`);
 	        if (!usesAttr || !usesAttr.get('max')) {
-	          this.logger.error(`Tried to recharge the uses for '${name}' for character with id ${charId}, ` +
+	          this.logger.error(`Tried to recharge the uses for '${attName}' for character with id ${charId}, ` +
 	            'but there were no uses defined.');
-	          return;
+	          return undefined;
 	        }
 
 	        if (usesAttr.get('current') < usesAttr.get('max')) {
-	          const rechargeTesterResult = rechargeTester(recharge);
-	          const traitTextForResults = rechargeTesterResult.dieRoll ?
-	            `${name} (Rolled a ${rechargeTesterResult.dieRoll})` : name;
-	          if (rechargeTesterResult.recharge) {
-	            usesAttr.setWithWorker({ current: usesAttr.get('max') });
-	            result.uses.push(traitTextForResults);
-	          }
-	          else if (rechargeTesterResult.dieRoll) {
-	            result.usesNotRecharged.push(traitTextForResults);
-	          }
+	          usesAttr.setWithWorker({ current: usesAttr.get('max') });
+	          return attName;
 	        }
-	      });
-	    return result;
+	        return undefined;
+	      })
+	      .compact()
+	      .value();
+
+	    return {
+	      uses: traitNames,
+	    };
 	  }
 
 	  recoverLegendaryPoints(character) {
@@ -5798,19 +5712,19 @@ var ShapedScripts =
 	    return null;
 	  }
 
-	  recoverHP(character) {
+	  recoverHP(character, playerId) {
 	    const charId = character.id;
 	    const hpAttr = this.roll20.getAttrObjectByName(charId, 'HP');
 	    const maxReduction = parseInt(this.roll20.getAttrByName(character.id, 'hp_max_reduced'), 10);
 	    const regained = this.recoverAttribute(hpAttr, this.myState.config.variants.rests.longRestHPRecovery,
-	      character, true, maxReduction);
+	      character, true, maxReduction, playerId);
 
 	    return {
 	      hp: regained,
 	    };
 	  }
 
-	  recoverAttribute(attribute, multiplier, character, errorIfNoMax, maxReduction) {
+	  recoverAttribute(attribute, multiplier, character, errorIfNoMax, maxReduction, playerId) {
 	    if (multiplier === 0 || !attribute) {
 	      return 0;
 	    }
@@ -5819,8 +5733,8 @@ var ShapedScripts =
 	    const reducedMax = maxReduction ? fullMax - maxReduction : fullMax;
 	    if (!reducedMax) {
 	      if (errorIfNoMax) {
-	        this.logger.error(`Can't recharge ${attribute.get('name')} for character ${character.get('name')} ` +
-	          'because max value is not set');
+	        this.reportError(`Can't recharge ${attribute.get('name')} for character ${character.get('name')} ` +
+	          'because max value is not set', playerId);
 	      }
 	      return null;
 	    }
@@ -5831,7 +5745,7 @@ var ShapedScripts =
 	    return regained;
 	  }
 
-	  recoverHD(character) {
+	  recoverHD(character, playerId) {
 	    const charId = character.id;
 	    this.logger.debug('Regaining Hit Dice');
 	    const hitDieRegained = _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
@@ -5839,7 +5753,7 @@ var ShapedScripts =
 	      .uniq()
 	      .map((hdAttr) => {
 	        const regained = this.recoverAttribute(hdAttr, this.myState.config.variants.rests.longRestHDRecovery,
-	          character, false, 0);
+	          character, false, 0, playerId);
 	        if (regained) {
 	          return {
 	            die: hdAttr.get('name').replace(/hd_/, ''),
@@ -5973,8 +5887,8 @@ var ShapedScripts =
 	        usesAttr.setWithWorker({ current: currentVal - perUse });
 	      }
 	      else {
-	        this.reportResult('Uses Police', `${options.characterName} can't use ${options.title} because ` +
-	          'they don\'t have sufficient uses left.', options);
+	        this.reportPublic('Uses Police', `${options.characterName} can't use ${options.title} because ` +
+	          'they don\'t have sufficient uses left.');
 	      }
 	    }
 	  }
@@ -6006,8 +5920,8 @@ var ShapedScripts =
 
 	    const current = legendaryAmountAttr.get('current');
 	    if (cost > current) {
-	      this.reportResult('Uses Police', `${options.characterName} can't use ${options.title} because ` +
-	        'they don\'t have sufficient legendary points left.', options);
+	      this.reportPublic('Uses Police', `${options.characterName} can't use ${options.title} because ` +
+	        'they don\'t have sufficient legendary points left.');
 	      return;
 	    }
 
@@ -6032,7 +5946,7 @@ var ShapedScripts =
 	    chatWatcher.registerChatListener(['ammoName', 'character'], this.consumeAmmo.bind(this));
 	  }
 
-	  consumeAmmo(options) {
+	  consumeAmmo(options, msg) {
 	    if (!this.roll20.checkCharacterFlag(options.character.id, 'ammo_auto_use')) {
 	      return;
 	    }
@@ -6052,16 +5966,20 @@ var ShapedScripts =
 	      return;
 	    }
 
+	    let ammoUsed = 1;
 	    if (options.ammo) {
-	      const ammoRemaining = parseInt(options.ammo, 10);
-	      if (ammoRemaining >= 0) {
-	        ammoAttr.setWithWorker('current', ammoRemaining);
-	      }
-	      else {
-	        this.reportResult('Ammo Police', `${options.characterName} can't use ${options.title} because ` +
-	          `they don't have enough ${options.ammoName} left`, options);
+	      const rollRef = options.ammo.match(/\$\[\[(\d+)\]\]/);
+	      if (rollRef) {
+	        const rollExpr = msg.inlinerolls[rollRef[1]].expression;
+	        const match = rollExpr.match(/\d+-(\d+)/);
+	        if (match) {
+	          ammoUsed = match[1];
+	        }
 	      }
 	    }
+
+	    const val = parseInt(ammoAttr.get('current'), 10) || 0;
+	    ammoAttr.setWithWorker('current', Math.max(0, val - ammoUsed));
 	  }
 	}
 
@@ -6466,7 +6384,7 @@ var ShapedScripts =
 	  importData(character, data, overwriteSpells) {
 	    this.logger.debug('Importing new character data $$$', data);
 	    const pronounInfo = this.getPronounInfo(character);
-	    const coreAttrsNames = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma', 'challenge'];
+	    const coreAttrsNames = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
 	    const coreAttributes = _.pick(data, coreAttrsNames);
 	    const secondaryAttributes = _.omit(data, coreAttrsNames, 'spells', 'content_srd');
 	    const contentSrd = _.pick(data, 'content_srd');
@@ -7056,8 +6974,8 @@ var ShapedScripts =
 	    }
 	    const currentHP = this.roll20.getAttrByName(options.character.id, 'HP');
 	    if (currentHP !== 0 && currentHP !== '0') {
-	      this.reportResult('Death Saves', `${options.character.get('name')} has more than 0 HP and shouldn't be rolling ` +
-	        'death saves', options);
+	      this.reportPublic('Death Saves', `${options.character.get('name')} has more than 0 HP and shouldn't be rolling ` +
+	        'death saves');
 	      return;
 	    }
 
@@ -7076,7 +6994,7 @@ var ShapedScripts =
 	        successCount = 0;
 
 	        this.roll20.setAttrWithWorker(options.character.id, 'HP', 1);
-	        this.reportResult('Death Saves', `${options.character.get('name')} has recovered to 1 HP`, options);
+	        this.reportPublic('Death Saves', `${options.character.get('name')} has recovered to 1 HP`);
 	        break;
 	      default:
 	        if (result >= 10) {
@@ -7089,12 +7007,12 @@ var ShapedScripts =
 
 	    if (failureCount >= 3) {
 	      failureCount = 3;
-	      this.reportResult('Death Saves', `${options.character.get('name')} has failed 3` +
-	        ' death saves and is now dead', options);
+	      this.reportPublic('Death Saves', `${options.character.get('name')} has failed 3` +
+	        ' death saves and is now dead');
 	    }
 	    else if (successCount >= 3) {
-	      this.reportResult('Death Saves', `${options.character.get('name')} has succeeded 3` +
-	        ' death saves and is now stable', options);
+	      this.reportPublic('Death Saves', `${options.character.get('name')} has succeeded 3` +
+	        ' death saves and is now stable');
 	      failureCount = 0;
 	      successCount = 0;
 	    }
@@ -7140,9 +7058,9 @@ var ShapedScripts =
 	          }
 	        }
 	        else {
-	          this.reportResult('HD Police',
+	          this.reportPublic('HD Police',
 	            `${options.characterName} can't use ${hdCount}d${hdSize} hit dice because they ` +
-	            `only have ${hdAttr.get('current')} left`, options);
+	            `only have ${hdAttr.get('current')} left`);
 	        }
 	      }
 	    }
@@ -7165,7 +7083,7 @@ var ShapedScripts =
 	    chatWatcher.registerChatListener(['fx', 'character'], this.handleFX.bind(this));
 	  }
 
-	  handleFX(options) {
+	  handleFX(options, msg) {
 	    const parts = options.fx.split(' ');
 	    if (parts.length < 2 || _.some(parts.slice(0, 2), _.isEmpty)) {
 	      this.logger.warn('FX roll template variable is not formated correctly: [$$$]', options.fx);
@@ -7204,7 +7122,7 @@ var ShapedScripts =
 	      targetCoords.y = targetToken.get('top');
 	    }
 	    else {
-	      pageId = this.roll20.getCurrentPage(options.playerId).id;
+	      pageId = this.roll20.getCurrentPage(msg.playerid).id;
 	    }
 
 
@@ -7293,8 +7211,8 @@ var ShapedScripts =
 	      spellSlotAttr.setWithWorker({ current: spellSlotAttr.get('current') - 1 });
 	    }
 	    else {
-	      this.reportResult('Slots Police', `${options.characterName} cannot cast ${options.title} at level ` +
-	        `${options.castAsLevel} because they don't have enough spell slots/points.`, options);
+	      this.reportPublic('Slots Police', `${options.characterName} cannot cast ${options.title} at level ` +
+	        `${options.castAsLevel} because they don't have enough spell slots/points.`);
 	    }
 	  }
 	};
@@ -7397,7 +7315,6 @@ var ShapedScripts =
 	    logger.wrapModule(this);
 	    eventDispatcher.registerEventHandler('chat:message', (msg) => {
 	      if (msg.type !== 'api') {
-	        this.logger.debug('Processing message $$$', msg);
 	        this.triggerChatListeners(msg);
 	      }
 	    });
@@ -7418,10 +7335,9 @@ var ShapedScripts =
 	    const options = this.getRollTemplateOptions(msg);
 	    this.logger.debug('Roll template options: $$$', options);
 	    options.playerId = msg.playerid;
-	    options.whisper = msg.type === 'whisper';
 	    _.each(this.chatListeners, (listener) => {
 	      if (_.every(listener.matchers, matcher => matcher(msg, options))) {
-	        listener.handler(options);
+	        listener.handler(options, msg);
 	      }
 	    });
 	  }
@@ -7833,7 +7749,6 @@ var ShapedScripts =
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	/* globals GroupInitiative: false */
 	const _ = __webpack_require__(2);
 
 	module.exports = class EventDispatcher {
@@ -7845,27 +7760,9 @@ var ShapedScripts =
 	    this.logger = logger;
 	    this.addTokenListeners = [];
 	    this.attributeChangeHandlers = {};
-	    this.turnOrderChangeListeners = [];
 	    logger.wrapModule(this);
 	    roll20.on('add:token', this.handleAddToken.bind(this));
 	    roll20.on('change:token', this.handleChangeTokenForAdd.bind(this));
-	    roll20.on('change:campaign:turnorder', (obj, prev) => {
-	      this.handleTurnOrderChange(obj.get('turnorder'), prev.turnorder);
-	    });
-	    if (typeof GroupInitiative !== 'undefined' && GroupInitiative.ObserveTurnOrderChange) {
-	      /* eslint-disable new-cap */
-	      // noinspection JSUnresolvedFunction
-	      GroupInitiative.ObserveTurnOrderChange(this.handleTurnOrderChange.bind(this));
-	      /* eslint-enable new-cap */
-	    }
-	    if (typeof TurnMarker !== 'undefined') {
-	      roll20.on('chat:message', (msg) => {
-	        if (msg.type === 'api' && msg.content === '!eot') {
-	          const turnOrder = roll20.getCampaign().get('turnorder');
-	          _.defer(this.handleTurnOrderChange.bind(this, turnOrder));
-	        }
-	      });
-	    }
 	    roll20.on('change:attribute', (curr, prev) => {
 	      (this.attributeChangeHandlers[curr.get('name')] || []).forEach(handler => handler(curr, prev));
 	    });
@@ -7901,26 +7798,12 @@ var ShapedScripts =
 	    }
 	  }
 
-	  handleTurnOrderChange(current, prev) {
-	    const prevOrder = prev ? JSON.parse(prev) : [];
-	    const currentOrder = current ? JSON.parse(current) : [];
-
-	    if (currentOrder.length >= prevOrder.length &&
-	      (prevOrder.length === 0 || currentOrder[0].id !== prevOrder[0].id)) {
-	      this.turnOrderChangeListeners.forEach(listener => listener(currentOrder));
-	    }
-	  }
-
 	  registerEventHandler(eventType, handler) {
-	    switch (eventType) {
-	      case 'add:token':
-	        this.addTokenListeners.push(this.wrapHandler(handler));
-	        break;
-	      case 'change:campaign:turnorder':
-	        this.turnOrderChangeListeners.push(this.wrapHandler(handler));
-	        break;
-	      default:
-	        this.roll20.on(eventType, this.wrapHandler(handler));
+	    if (eventType === 'add:token') {
+	      this.addTokenListeners.push(this.wrapHandler(handler));
+	    }
+	    else {
+	      this.roll20.on(eventType, this.wrapHandler(handler));
 	    }
 	  }
 

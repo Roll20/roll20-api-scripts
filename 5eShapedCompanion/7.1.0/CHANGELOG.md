@@ -1,19 +1,3 @@
-<a name="7.2.0"></a>
-# [7.2.0](https://github.com/symposion/roll20-shaped-scripts/compare/7.1.0...7.2.0) (2017-03-03)
-
-
-### Bug Fixes
-
-* **output:** Prevent duplicate messages when whispering to GM ([75aae55](https://github.com/symposion/roll20-shaped-scripts/commit/75aae55))
-* **turn-recharge:** Tweaks to make it work better with GroupInit ([306b05a](https://github.com/symposion/roll20-shaped-scripts/commit/306b05a))
-
-
-### Features
-
-* **turn-recharge:** Add config option to turn turn recharges on/off ([5e2b355](https://github.com/symposion/roll20-shaped-scripts/commit/5e2b355))
-
-
-
 <a name="7.1.0"></a>
 # [7.1.0](https://github.com/symposion/roll20-shaped-scripts/compare/7.0.0...7.1.0) (2017-03-01)
 

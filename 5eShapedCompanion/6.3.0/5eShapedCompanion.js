@@ -56,24 +56,23 @@ var ShapedScripts =
 	const Reporter = __webpack_require__(10);
 	const makeCommandProc = __webpack_require__(11);
 	const AbilityMaker = __webpack_require__(13);
-	const ConfigUI = __webpack_require__(17);
-	const AdvantageTracker = __webpack_require__(18);
-	const RestManager = __webpack_require__(19);
-	const UsesManager = __webpack_require__(20);
-	const AmmoManager = __webpack_require__(21);
-	const Importer = __webpack_require__(22);
-	const DeathSaveManager = __webpack_require__(24);
-	const HDManager = __webpack_require__(25);
-	const FXManager = __webpack_require__(26);
-	const SpellManager = __webpack_require__(27);
-	const TokenBarConfigurer = __webpack_require__(28);
-	const srdConverter = __webpack_require__(30);
+	const ConfigUI = __webpack_require__(16);
+	const AdvantageTracker = __webpack_require__(17);
+	const RestManager = __webpack_require__(18);
+	const UsesManager = __webpack_require__(19);
+	const AmmoManager = __webpack_require__(20);
+	const Importer = __webpack_require__(21);
+	const DeathSaveManager = __webpack_require__(23);
+	const HDManager = __webpack_require__(24);
+	const FXManager = __webpack_require__(25);
+	const SpellManager = __webpack_require__(26);
+	const TokenBarConfigurer = __webpack_require__(27);
+	const srdConverter = __webpack_require__(29);
 	const UserError = __webpack_require__(12);
+	const Migrator = __webpack_require__(30);
 	const EventDispatcher = __webpack_require__(31);
-	const ChatWatcher = __webpack_require__(29);
+	const ChatWatcher = __webpack_require__(28);
 	const utils = __webpack_require__(7);
-	const _ = __webpack_require__(2);
-	const ShapedConfig = __webpack_require__(15);
 
 
 	const roll20 = new Roll20();
@@ -83,7 +82,6 @@ var ShapedScripts =
 	const reporter = new Reporter(roll20, 'Shaped Scripts');
 
 	const errorHandler = function errorHandler(e) {
-	  logger.prefixString = '';
 	  if (typeof e === 'string' || e instanceof parseModule.ParserError || e instanceof UserError) {
 	    reporter.reportError(e);
 	    logger.error('Error: $$$', e.toString());
@@ -97,7 +95,7 @@ var ShapedScripts =
 
 	const elrr = new EntityLookupResultReporter(logger, reporter);
 
-	const MINIMUM_SHEET_VERSION = '10.0.0';
+	const MINIMUM_SHEET_VERSION = '9.2.2';
 
 
 	roll20.logWrap = 'roll20';
@@ -110,50 +108,27 @@ var ShapedScripts =
 	el.configureEntity('spells', [], EntityLookup.getVersionChecker('1.0.0', 'spells'));
 
 	roll20.on('ready', () => {
-	  logger.info('-=> ShapedScripts v7.2.0 <=-');
+	  logger.info('-=> ShapedScripts v6.3.0 <=-');
+	  Migrator.migrateShapedConfig(myState, logger);
 	  const character = roll20.createObj('character', { name: 'SHAPED_VERSION_TESTER' });
-	  const campaignSize = roll20.findObjs({}).length;
-	  const delay = Math.max(2000, Math.floor(campaignSize / 20));
-	  logger.debug('Campaign size: $$$', campaignSize);
-	  roll20.createAttrWithWorker(character.id, 'sheet_opened', 1, () => {
-	    setTimeout(() => {
+	  setTimeout(() => {
+	    roll20.createAttrWithWorker(character.id, 'sheet_opened', 1, () => {
 	      const version = roll20.getAttrByName(character.id, 'version');
+	      setTimeout(() => {
+	        character.remove();
+	      }, 1000);
 	      logger.info('Detected sheet version as : $$$', version);
-
+	      if (utils.versionCompare(version, MINIMUM_SHEET_VERSION) < 0) {
+	        reporter.reportError(`Incompatible sheet version. You need at least version ${MINIMUM_SHEET_VERSION} to use ` +
+	          'this script.');
+	        return;
+	      }
 	      const ed = new EventDispatcher(roll20, errorHandler, logger, reporter);
 	      const cw = new ChatWatcher(roll20, logger, ed);
 	      const commandProc = makeCommandProc('shaped', roll20, errorHandler, ed, version);
-
-	      if (utils.versionCompare(version, MINIMUM_SHEET_VERSION) < 0) {
-	        const error = `Incompatible sheet version ${version}. You need at least version ${MINIMUM_SHEET_VERSION} to ` +
-	          'use this script. Please install an updated sheet.';
-	        reporter.reportError(error);
-	        logger.error(error);
-	        commandProc.setDefaultCommandHandler(() => reporter.reportError(error));
-	        return;
-	      }
-
-
-	      const supportedMajorVersion = MINIMUM_SHEET_VERSION.split('.')[0];
-	      if (supportedMajorVersion !== version.split('.')[0]) {
-	        const error = `Incompatible sheet version ${version}. This script only supports ${supportedMajorVersion}.x ` +
-	          'sheets. You either need to downgrade your character sheet or find a newer version of the script.';
-	        reporter.reportError(error);
-	        logger.error(error);
-	        commandProc.setDefaultCommandHandler(() => reporter.reportError(error));
-	        return;
-	      }
-
-	      const sc = new ShapedConfig();
-	      sc.configure(roll20, reporter, logger, myState, commandProc, cw, ed);
-	      sc.runStartupSequence(commandProc, () => {
-	        commandProc.setDefaultCommandHandler(cmd =>
-	          reporter.reportError(`Unknown command ${cmd}`));
-	        getModuleList().forEach(module => module.configure(roll20, reporter, logger, myState, commandProc, cw, ed));
-	        _.invoke(roll20.findObjs({ type: 'character', name: 'SHAPED_VERSION_TESTER' }), 'remove');
-	      });
-	    }, delay);
-	  });
+	      getModuleList().forEach(module => module.configure(roll20, reporter, logger, myState, commandProc, cw, ed));
+	    });
+	  }, 400);
 	});
 
 	module.exports = {
@@ -205,7 +180,7 @@ var ShapedScripts =
 	const _ = __webpack_require__(2);
 
 	// noinspection JSUnusedLocalSymbols
-	module.exports = class Roll20 {
+	module.exports = class Roll20Wrapper {
 
 	  getState(module) {
 	    if (!state[module]) {
@@ -2072,12 +2047,6 @@ var ShapedScripts =
 	  },
 
 	  versionCompare(v1, v2) {
-	    if (!v1 || !v2) {
-	      if (!v1) {
-	        return v2 ? -1 : 0;
-	      }
-	      return 1;
-	    }
 	    return _.zip(v1.split('.'), v2.split('.'))
 	      .reduce((result, versionPart) => result || (parseInt(versionPart[0], 10) - parseInt(versionPart[1], 10)), 0);
 	  },
@@ -2431,30 +2400,29 @@ var ShapedScripts =
 	    this.scriptName = scriptName;
 	  }
 
+	  setPlayer(playerId) {
+	    this.playerId = playerId;
+	  }
+
 	  reportPublic(heading, text) {
 	    this.roll20.sendChat('', `${makeNormalMessage(heading, text)}`);
 	  }
 
-	  reportPlayer(heading, text, playerId) {
-	    this.sendToPlayerAndGm(`${makeNormalMessage(heading, text)}`, playerId);
+	  reportPlayer(heading, text) {
+	    this.roll20.sendChat('', `/w ${this.getPlayerName()} ${makeNormalMessage(heading, text)}`, null,
+	      { noarchive: true });
 	  }
 
-	  sendToPlayerAndGm(text, playerId) {
-	    this.roll20.sendChat('', `/w GM ${text}`, null, { noarchive: true });
-	    if (playerId && !this.roll20.playerIsGM(playerId)) {
-	      this.roll20.sendChat('', `/w ${this.getPlayerName(playerId)} ${text}`, null, { noarchive: true });
-	    }
+	  reportError(text) {
+	    this.roll20.sendChat('', `/w ${this.getPlayerName()} ${makeErrorMessage(this.scriptName, text)}`, null,
+	      { noarchive: true });
 	  }
 
-	  reportError(text, playerId) {
-	    this.sendToPlayerAndGm(`${makeErrorMessage(this.scriptName, text)}`, playerId);
+	  getPlayerName() {
+	    return this.playerId ? `"${this.roll20.getObj('player', this.playerId).get('displayname')}"` : 'gm';
 	  }
 
-	  getPlayerName(playerId) {
-	    return playerId ? `"${this.roll20.getObj('player', playerId).get('displayname')}"` : 'gm';
-	  }
-
-	  getMessageBuilder(heading, isPublic, playerId) {
+	  getMessageBuilder(heading, isPublic) {
 	    const fields = {};
 	    const reporter = this;
 	    return {
@@ -2463,14 +2431,14 @@ var ShapedScripts =
 	      },
 	      display() {
 	        const displayer = (isPublic ? reporter.reportPublic : reporter.reportPlayer).bind(reporter);
-	        displayer(playerId, _.reduce(fields, (text, content, name) => `${text}{{${name}=${content}}}`, ''));
+	        displayer(heading, _.reduce(fields, (text, content, name) => `${text}{{${name}=${content}}}`, ''));
 	      },
 	    };
 	  }
 
-	  getMessageStreamer(heading, playerId) {
+	  getMessageStreamer(heading) {
 	    const sendChat = (text) => {
-	      this.roll20.sendChat('', `/w ${this.getPlayerName(playerId)} ${text}`, null, { noarchive: true });
+	      this.roll20.sendChat('', `/w ${this.getPlayerName()} ${text}`, null, { noarchive: true });
 	    };
 
 	    sendChat(makeStreamHeader(heading));
@@ -2685,17 +2653,14 @@ var ShapedScripts =
 	      throw new UserError(`Command ${cmdString} was missing options: [${missingOpts.join(',')}]`);
 	    }
 
-	    if (!playerIsGM) {
-	      const characters = _.compact([].concat(finalOptions.selected && finalOptions.selected.character)
-	        .concat(finalOptions.character));
-	      characters.forEach((character) => {
-	        const controlledby = character.get('controlledby');
-	        if (!controlledby || (controlledby.indexOf(playerId) === -1 && controlledby.indexOf('all') === -1)) {
+	    if (finalOptions.character && !playerIsGM) {
+	      finalOptions.character.forEach((character) => {
+	        if (!character.controlledby.contains(playerId) && !character.controlledby.contains('all')) {
 	          throw new UserError(`You do not have permission to make changes to character ${character.get('name')}`);
 	        }
 	      });
 	    }
-	    finalOptions.playerId = playerId;
+
 	    return this.handler(finalOptions);
 	  }
 
@@ -2767,11 +2732,8 @@ var ShapedScripts =
 	  }, {});
 	}
 
-
-	module.exports = function commandParser(rootCommand, roll20, errorHandler, eventDispatcher,
-	  requiredCharVersion) {
+	module.exports = function commandParser(rootCommand, roll20, errorHandler, eventDispatcher, requiredCharVersion) {
 	  const commands = {};
-	  let defaultHandler = null;
 
 	  const cp = {
 	    processCommand(msg) {
@@ -2782,10 +2744,7 @@ var ShapedScripts =
 	        const cmdName = parts.shift();
 	        const cmd = commands[cmdName];
 	        if (!cmd) {
-	          if (defaultHandler) {
-	            defaultHandler(`${prefix}${cmdName}`);
-	          }
-	          return;
+	          throw new UserError(`Unrecognised command ${prefix}${cmdName}`);
 	        }
 	        const returnVal = cmd.handle(parts, msg.selected, `${prefix}${cmdName}`,
 	          roll20.playerIsGM(msg.playerid), msg.playerid, requiredCharVersion);
@@ -2795,13 +2754,8 @@ var ShapedScripts =
 	      }
 	    },
 
-	    setDefaultCommandHandler(handler) {
-	      defaultHandler = handler;
-	    },
-
 	    addCommand(cmds, handler, gmOnly) {
-	      const command = new Command(this, handler, roll20, _.isArray(cmds) ? cmds.join(',') : cmds,
-	        gmOnly);
+	      const command = new Command(this, handler, roll20, _.isArray(cmds) ? cmds.join(',') : cmds, gmOnly);
 	      (_.isArray(cmds) ? cmds : [cmds]).forEach(cmdString => (commands[cmdString] = command));
 	      return command;
 	    },
@@ -3051,8 +3005,8 @@ var ShapedScripts =
 	      statblock: new RollAbilityMaker('shaped_statblock', 'Statblock', roll20),
 	      traits: new RepeatingAbilityMaker('trait', 'trait', 'Traits', false, roll20),
 	      traitsMacro: new RepeatingSectionMacroMaker('shaped_traits', 'trait', 'Traits', roll20),
-	      racialTraits: new RepeatingAbilityMaker('racialtrait', 'action', 'Racial Traits', false, roll20),
-	      racialTraitsMacro: new RepeatingSectionMacroMaker('shaped_racialtraits', 'racialtrait', 'Racial Traits',
+	      racialFeatures: new RepeatingAbilityMaker('racialfeature', 'action', 'Racial Features', false, roll20),
+	      racialFeaturesMacro: new RepeatingSectionMacroMaker('shaped_racialfeatures', 'racialfeature', 'Racial Features',
 	        roll20),
 	      classFeatures: new RepeatingAbilityMaker('classfeature', 'action', 'Class Features', false, roll20),
 	      classFeaturesMacro: new RepeatingSectionMacroMaker('shaped_classfeatures', 'classfeature', 'Class Features',
@@ -3118,7 +3072,7 @@ var ShapedScripts =
 	  addAbility(options) {
 	    if (_.isEmpty(options.abilities)) {
 	      this.reportError('No abilities specified. ' +
-	        'Take a look at the documentation for a list of ability options.', options.playerId);
+	        'Take a look at the documentation for a list of ability options.');
 	      return;
 	    }
 	    const messages = _.map(options.selected.character, (character) => {
@@ -3140,7 +3094,7 @@ var ShapedScripts =
 	      return message;
 	    });
 
-	    this.reportPlayer('Ability Creation', `<ul>${messages.join('')}</ul>`, options.playerId);
+	    this.reportPlayer('Ability Creation', `<ul>${messages.join('')}</ul>`);
 	  }
 	};
 
@@ -3165,29 +3119,27 @@ var ShapedScripts =
 	  }
 
 	  addCommands(/* commandProcessor */) {
+	    this.logger.debug('$$$ has no commands', this.constructor.name);
 	  }
 
 	  registerChatListeners(/* chatWatcher */) {
+	    this.logger.debug('$$$ has no chat watchers', this.constructor.name);
 	  }
 
 	  registerEventListeners(/* eventDispatcher */) {
+	    this.logger.debug('$$$ has no event listeners', this.constructor.name);
 	  }
 
 	  reportPublic(heading, text) {
 	    this.reporter.reportPublic(heading, text);
 	  }
 
-	  reportPlayer(heading, text, playerId) {
-	    this.reporter.reportPlayer(heading, text, playerId);
+	  reportPlayer(heading, text) {
+	    this.reporter.reportPlayer(heading, text);
 	  }
 
-	  reportResult(title, text, options) {
-	    const reporterName = options.whisper ? 'reportPlayer' : 'reportPublic';
-	    this[reporterName](title, text, options.playerId);
-	  }
-
-	  reportError(text, playerId) {
-	    this.reporter.reportError(text, playerId);
+	  reportError(text) {
+	    this.reporter.reportError(text);
 	  }
 
 	  get logWrap() {
@@ -3202,478 +3154,8 @@ var ShapedScripts =
 
 	'use strict';
 	const _ = __webpack_require__(2);
-	const Migrator = __webpack_require__(16);
-	const utils = __webpack_require__(7);
-	const ShapedModule = __webpack_require__(14);
 
-	const oneSixConfig = {
-	  logLevel: 'INFO',
-	  tokenSettings: {
-	    number: false,
-	    bar1: {
-	      attribute: 'HP',
-	      max: true,
-	      link: false,
-	      showPlayers: false,
-	    },
-	    bar2: {
-	      attribute: 'speed',
-	      max: false,
-	      link: true,
-	      showPlayers: false,
-	    },
-	    bar3: {
-	      attribute: '',
-	      max: false,
-	      link: false,
-	      showPlayers: false,
-	    },
-	    aura1: {
-	      radius: '',
-	      color: '#FFFF99',
-	      square: false,
-	    },
-	    aura2: {
-	      radius: '',
-	      color: '#59e594',
-	      square: false,
-	    },
-	    light: {
-	      radius: '',
-	      dimRadius: '',
-	      otherPlayers: false,
-	      hasSight: false,
-	      angle: 360,
-	      losAngle: 360,
-	      multiplier: 1,
-	    },
-	    showName: true,
-	    showNameToPlayers: false,
-	    showAura1ToPlayers: true,
-	    showAura2ToPlayers: true,
-	  },
-	  newCharSettings: {
-	    sheetOutput: '@{output_to_all}',
-	    deathSaveOutput: '@{output_to_all}',
-	    initiativeOutput: '@{output_to_all}',
-	    showNameOnRollTemplate: '@{show_character_name_yes}',
-	    rollOptions: '@{normal}',
-	    initiativeRoll: '@{normal_initiative}',
-	    initiativeToTracker: '@{initiative_to_tracker_yes}',
-	    breakInitiativeTies: '@{initiative_tie_breaker_var}',
-	    showTargetAC: '@{attacks_vs_target_ac_no}',
-	    showTargetName: '@{attacks_vs_target_name_no}',
-	    autoAmmo: '@{ammo_auto_use_var}',
-	    autoRevertAdvantage: false,
-	    houserules: {
-	      savingThrowsHalfProf: false,
-	      mediumArmorMaxDex: 2,
-	    },
-	  },
-	  advTrackerSettings: {
-	    showMarkers: false,
-	    ignoreNpcs: false,
-	    advantageMarker: 'green',
-	    disadvantageMarker: 'red',
-	    output: 'silent',
-	  },
-	  sheetEnhancements: {
-	    rollHPOnDrop: true,
-	    autoHD: true,
-	    autoSpellSlots: true,
-	  },
-	  genderPronouns: [
-	    {
-	      matchPattern: '^f$|female|girl|woman|feminine',
-	      nominative: 'she',
-	      accusative: 'her',
-	      possessive: 'her',
-	      reflexive: 'herself',
-	    },
-	    {
-	      matchPattern: '^m$|male|boy|man|masculine',
-	      nominative: 'he',
-	      accusative: 'him',
-	      possessive: 'his',
-	      reflexive: 'himself',
-	    },
-	    {
-	      matchPattern: '^n$|neuter|none|construct|thing|object',
-	      nominative: 'it',
-	      accusative: 'it',
-	      possessive: 'its',
-	      reflexive: 'itself',
-	    },
-	  ],
-	  defaultGenderIndex: 2,
-
-	};
-
-	const migrator = new Migrator()
-	  .addProperty('config', {})
-	  .skipToVersion(0.4)
-	  .overwriteProperty('config.genderPronouns', utils.deepClone(oneSixConfig).genderPronouns)
-	  .skipToVersion(1.2)
-	  .moveProperty('config.autoHD', 'config.sheetEnhancements.autoHD')
-	  .moveProperty('config.rollHPOnDrop', 'config.sheetEnhancements.rollHPOnDrop')
-	  .skipToVersion(1.4)
-	  .moveProperty('config.newCharSettings.savingThrowsHalfProf',
-	    'config.newCharSettings.houserules.savingThrowsHalfProf')
-	  .moveProperty('config.newCharSettings.mediumArmorMaxDex', 'config.newCharSettings.houserules.mediumArmorMaxDex')
-	  .skipToVersion(1.6)
-	  .transformConfig((state) => {
-	    _.defaults(state.config, oneSixConfig);
-	    _.defaults(state.config.tokenSettings, oneSixConfig.tokenSettings);
-	    _.defaults(state.config.newCharSettings, oneSixConfig.newCharSettings);
-	    _.defaults(state.config.advTrackerSettings, oneSixConfig.advTrackerSettings);
-	    _.defaults(state.config.sheetEnhancements, oneSixConfig.sheetEnhancements);
-	    return state;
-	  }, 'Applying defaults as at schema version 1.6')
-	  // 1.7
-	  // add base houserules and variants section
-	  // add sheetEnhancements.autoTraits
-	  .nextVersion()
-	  .addProperty('config.variants', {
-	    rests: {
-	      longNoHpFullHd: false,
-	    },
-	  })
-	  .addProperty('config.sheetEnhancements.autoTraits', true)
-	  // 1.8
-	  // Set tokens to have vision by default so that people see the auto-generated stuff based on senses
-	  .nextVersion()
-	  .overwriteProperty('config.tokenSettings.light.hasSight', true)
-	  // 1.9 Add default tab setting
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.tab', 'core')
-	  // 2.0 Add default token actions
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.tokenActions', {
-	    initiative: false,
-	    abilityChecks: null,
-	    advantageTracker: null,
-	    savingThrows: null,
-	    attacks: null,
-	    statblock: false,
-	    traits: null,
-	    actions: null,
-	    reactions: null,
-	    legendaryActions: null,
-	    lairActions: null,
-	    regionalEffects: null,
-	    rests: false,
-	  })
-	  // 2.1 Add spells token action
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.tokenActions.spells', false)
-	  // 2.2 Changes to support new roll behaviour in sheet 4.2.1
-	  .nextVersion()
-	  .overwriteProperty('config.newCharSettings.sheetOutput', '')
-	  .overwriteProperty('config.newCharSettings.deathSaveOutput', '')
-	  .overwriteProperty('config.newCharSettings.initiativeOutput', '')
-	  .overwriteProperty('config.newCharSettings.showNameOnRollTemplate', '')
-	  .overwriteProperty('config.newCharSettings.rollOptions', '')
-	  .overwriteProperty('config.newCharSettings.initiativeRoll', '')
-	  .overwriteProperty('config.newCharSettings.initiativeToTracker', '')
-	  .overwriteProperty('config.newCharSettings.breakInitiativeTies', '')
-	  .overwriteProperty('config.newCharSettings.showTargetAC', '')
-	  .overwriteProperty('config.newCharSettings.showTargetName', '')
-	  .overwriteProperty('config.newCharSettings.autoAmmo', '1')
-	  // 2.3 Remove "small" macros
-	  .nextVersion()
-	  .transformConfig((config) => {
-	    _.each(config.config.newCharSettings.tokenActions, (value, key) => {
-	      if (typeof value === 'string' && value.match('.*Small$')) {
-	        config.config.newCharSettings.tokenActions[key] = value.replace(/Small$/, '');
-	      }
-	    });
-	    return config;
-	  }, 'Removing "small" macros')
-	  .addProperty('config.newCharSettings.textSizes', {
-	    spellsTextSize: 'text',
-	    abilityChecksTextSize: 'text',
-	    savingThrowsTextSize: 'text',
-	  })
-	  // 2.4 Don't set default values for sheet options to save on attribute bloat
-	  .nextVersion()
-	  .transformConfig((config) => {
-	    const ncs = config.config.newCharSettings;
-	    const defaults = {
-	      sheetOutput: '',
-	      deathSaveOutput: '',
-	      initiativeOutput: '',
-	      showNameOnRollTemplate: '',
-	      rollOptions: '{{ignore=[[0',
-	      initiativeRoll: '@{shaped_d20}',
-	      initiativeToTracker: '@{selected|initiative_formula} &{tracker}',
-	      breakInitiativeTies: '',
-	      showTargetAC: '',
-	      showTargetName: '',
-	      autoAmmo: '',
-	      tab: 'core',
-	    };
-	    _.each(defaults, (defaultVal, key) => {
-	      if (ncs[key] === defaultVal) {
-	        ncs[key] = '***default***';
-	      }
-	    });
-
-	    if (ncs.houserules.mediumArmorMaxDex === '2') {
-	      ncs.houserules.mediumArmorMaxDex = '***default***';
-	    }
-
-	    ['spellsTextSize', 'abilityChecksTextSize', 'savingThrowsTextSize'].forEach((prop) => {
-	      if (ncs.textSizes[prop] === 'text_big') {
-	        ncs.textSizes[prop] = '***default***';
-	      }
-	    });
-
-	    return config;
-	  }, 'Removing default values')
-	  // 2.5 Custom saving throws
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.houserules.saves', {
-	    useCustomSaves: '***default***',
-	    useAverageOfAbilities: '***default***',
-	    fortitude: {
-	      fortitudeStrength: '***default***',
-	      fortitudeDexterity: '***default***',
-	      fortitudeConstitution: '***default***',
-	      fortitudeIntelligence: '***default***',
-	      fortitudeWisdom: '***default***',
-	      fortitudeCharisma: '***default***',
-	    },
-	    reflex: {
-	      reflexStrength: '***default***',
-	      reflexDexterity: '***default***',
-	      reflexConstitution: '***default***',
-	      reflexIntelligence: '***default***',
-	      reflexWisdom: '***default***',
-	      reflexCharisma: '***default***',
-	    },
-	    will: {
-	      willStrength: '***default***',
-	      willDexterity: '***default***',
-	      willConstitution: '***default***',
-	      willIntelligence: '***default***',
-	      willWisdom: '***default***',
-	      willCharisma: '***default***',
-	    },
-	  })
-	  .moveProperty('config.newCharSettings.houserules.savingThrowsHalfProf',
-	    'config.newCharSettings.houserules.saves.savingThrowsHalfProf')
-	  .addProperty('config.newCharSettings.houserules.baseDC', '***default***')
-	  // 2.6 expertise_as_advantage
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.houserules.expertiseAsAdvantage', '***default***')
-	  // 2.7 add hide options
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.hide', {
-	    hideAttack: '***default***',
-	    hideDamage: '***default***',
-	    hideAbilityChecks: '***default***',
-	    hideSavingThrows: '***default***',
-	    hideSavingThrowDC: '***default***',
-	    hideSpellContent: '***default***',
-	    hideActionFreetext: '***default***',
-	    hideSavingThrowFailure: '***default***',
-	    hideSavingThrowSuccess: '***default***',
-	    hideRecharge: '***default***',
-	  })
-	  // 2.8 rename hideActionFreetext
-	  .nextVersion()
-	  .moveProperty('config.newCharSettings.hide.hideActionFreetext', 'config.newCharSettings.hide.hideFreetext')
-	  // 2.9 make auto-applying new character settings optional (and switched off by default)
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.applyToAll', false)
-	  // 3.0 add hit dice output option + show rests option
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.hitDiceOutput', '***default***')
-	  .addProperty('config.newCharSettings.showRests', '***default***')
-	  // 3.1 add hideCost
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.hide.hideCost', '***default***')
-	  // 3.2 update roll settings;
-	  .nextVersion()
-	  .transformConfig((config) => {
-	    const ncs = config.config.newCharSettings;
-	    const oldVals = {
-	      advantage: 'adv {{ignore=[[0',
-	      disadvantage: 'dis {{ignore=[[0',
-	      two: '{{roll2=[[d20@{d20_mod}',
-	    };
-	    const newVals = {
-	      advantage: '2d20kh1',
-	      disadvantage: '2d20kl1',
-	      two: '1d20',
-	    };
-	    const key = _.invert(oldVals)[ncs.rollOptions];
-	    ncs.rollOptions = key ? newVals[key] : '***default***';
-	    return config;
-	  }, 'Upgrading Roll options settings to new format')
-	  // 3.3 make boolean switches consistent for 9.x sheet
-	  .nextVersion()
-	  .transformConfig((config) => {
-	    const ncs = config.config.newCharSettings;
-	    [
-	      'showTargetAC',
-	      'showTargetName',
-	      'autoAmmo',
-	      'houserules.expertiseAsAdvantage',
-	      'houserules.saves.useCustomSaves',
-	      'houserules.saves.useAverageOfAbilities',
-	      'houserules.saves.fortitude.fortitudeStrength',
-	      'houserules.saves.fortitude.fortitudeDexterity',
-	      'houserules.saves.fortitude.fortitudeConstitution',
-	      'houserules.saves.fortitude.fortitudeIntelligence',
-	      'houserules.saves.fortitude.fortitudeWisdom',
-	      'houserules.saves.fortitude.fortitudeCharisma',
-	      'houserules.saves.reflex.reflexStrength',
-	      'houserules.saves.reflex.reflexDexterity',
-	      'houserules.saves.reflex.reflexConstitution',
-	      'houserules.saves.reflex.reflexIntelligence',
-	      'houserules.saves.reflex.reflexWisdom',
-	      'houserules.saves.reflex.reflexCharisma',
-	      'houserules.saves.will.willStrength',
-	      'houserules.saves.will.willDexterity',
-	      'houserules.saves.will.willConstitution',
-	      'houserules.saves.will.willIntelligence',
-	      'houserules.saves.will.willWisdom',
-	      'houserules.saves.will.willCharisma',
-	    ].forEach((propPath) => {
-	      const propVal = utils.getObjectFromPath(ncs, propPath);
-	      const newVal = (propVal !== '***default***');
-	      utils.deepExtend(ncs, utils.createObjectFromPath(propPath, newVal));
-	    });
-	    return config;
-	  }, 'Upgrade config for 9.x character sheet')
-	  // 3.4 Fix initiative settings for 9.1.0 sheet
-	  .nextVersion()
-	  .transformConfig((config) => {
-	    const ncs = config.config.newCharSettings;
-	    ncs.breakInitiativeTies = ncs.breakInitiativeTies !== '***default***';
-	    if (ncs.initiativeToTracker !== '***default***') {
-	      ncs.initiativeToTracker = 0;
-	    }
-	    return config;
-	  }, 'Upgrade initiative settings')
-	  // 3.5 Add option to put recharges on token actions
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.tokenActions.showRecharges', false)
-	  // 3.6 Add new props for latest sheet
-	  .nextVersion()
-	  .transformConfig((config) => {
-	    const ncs = config.config.newCharSettings;
-	    ncs.display = {
-	      showPassiveSkills: false,
-	      showWeight: '***default***',
-	      showEmote: false,
-	      showFreetext: false,
-	      showFreeform: false,
-	      showDiceModifiers: false,
-	      showCritRange: false,
-	      extraOnACrit: false,
-	    };
-	    ncs.measurementSystems = {
-	      distanceSystem: '***default***',
-	      weightSystem: '***default***',
-	      encumbranceMultiplier: 1,
-	    };
-	    _.extend(ncs.houserules, {
-	      inspirationMultiple: false,
-	      criticalDamageHouserule: '***default***',
-	      proficiencyDice: false,
-	      psionics: false,
-	      customClasses: false,
-	      honorToggle: false,
-	      sanityToggle: false,
-	    });
-	    ncs.tokenActions.racialFeatures = null;
-	    ncs.tokenActions.classFeatures = null;
-	    ncs.tokenActions.feats = null;
-	    ncs.automaticHigherLevelQueries = '***default***';
-	    return config;
-	  }, 'Adding new properties for 9.x sheet settings')
-	  .moveProperty('config.newCharSettings.showRests', 'config.newCharSettings.display.showRests')
-	  // 3.7 Add monsterTokenName
-	  .nextVersion()
-	  .addProperty('config.tokenSettings.monsterTokenName', '')
-	  // 3.8 Rename hide settings
-	  .nextVersion()
-	  .deleteProperty('config.newCharSettings.hide.hideSpellContent')
-	  .addProperty('config.newCharSettings.hide.hideContent', '***default***')
-	  // 3.9 Move spell slots under new character settings
-	  .nextVersion()
-	  .moveProperty('config.sheetEnhancements.autoSpellSlots', 'config.newCharSettings.automaticallyExpendSpellResources')
-	  // 4.0 More flexible options for HP/HD recovery
-	  .nextVersion()
-	  .transformConfig((config) => {
-	    const restSettings = config.config.variants.rests;
-	    restSettings.longRestHDRecovery = 0.5;
-	    restSettings.longRestHPRecovery = 1;
-	    if (restSettings.longNoHpFullHd) {
-	      restSettings.longRestHDRecovery = 1;
-	      restSettings.longRestHPRecovery = 0;
-	    }
-	    delete restSettings.longNoHpFullHd;
-	    return config;
-	  }, 'Making more flexible options for HP/HD recovery')
-	  // 4.1 rename racial features
-	  .nextVersion()
-	  .moveProperty('config.newCharSettings.tokenActions.racialFeatures',
-	    'config.newCharSettings.tokenActions.racialTraits')
-	  // 4.2 add switch for auto turn recharge
-	  .nextVersion()
-	  .addProperty('config.sheetEnhancements.turnRecharges', false);
-
-	module.exports = class ShapedConfig extends ShapedModule {
-
-	  addCommands(commandProcessor) {
-	    commandProcessor
-	      .addCommand('reset-config', this.resetConfig.bind(this), true)
-	      .addCommand('upgrade-config', this.upgradeConfig.bind(this), true);
-	  }
-
-	  runStartupSequence(commandProc, cb) {
-	    this.logger.info('Configuration state: $$$', this.myState);
-	    if (!migrator.isValid(this.myState)) {
-	      const error = '5e Shaped Companion configuration is invalid. This is most likely because you have tried' +
-	        ' to downgrade from a later version. You can either reinstall a later version or ' +
-	        '<a href="!shaped-reset-config">Reset Configuration</a> to defaults.';
-	      this.reporter.reportError(error);
-	      this.logger.error('Invalid configuration!');
-	      commandProc.setDefaultCommandHandler(() => this.reportError(error));
-	      this.configUpgradedCallback = cb;
-	      return;
-	    }
-	    if (migrator.needsUpdate(this.myState)) {
-	      this.logger.warn('Configuration requires updating');
-	      const title = '5eShaped Companion Updates';
-	      const msg = '5e Shaped Companion has been updated and needs to ' +
-	        'upgrade its configuration. Please note that this is a one-way process, if you do not wish to proceed, ' +
-	        'please revert to a previous version of the script. <a href="!shaped-upgrade-config">Upgrade</a>';
-	      this.reporter.reportPlayer(title, msg);
-	      commandProc.setDefaultCommandHandler(() => this.reportPlayer(title, msg));
-	      this.configUpgradedCallback = cb;
-	      return;
-	    }
-	    cb();
-	  }
-
-	  resetConfig() {
-	    this.myState = {};
-	    this.reportPlayer('5e Shaped Companion Config', 'Configuration has been reset to defaults.');
-	    this.upgradeConfig();
-	  }
-
-	  upgradeConfig() {
-	    migrator.migrateConfig(this.myState, this.logger);
-	    this.reportPlayer('5e Shaped Companion Config', 'Configuration has been upgraded to latest version');
-	    if (this.configUpgradedCallback) {
-	      this.configUpgradedCallback();
-	      this.configUpgradedCallback = null;
-	    }
-	  }
+	module.exports = class ShapedConfig {
 
 	  static get configToAttributeLookup() {
 	    const lookup = {
@@ -3706,7 +3188,7 @@ var ShapedScripts =
 	      hideAbilityChecks: 'hide_ability_checks',
 	      hideSavingThrows: 'hide_saving_throws',
 	      hideSavingThrowDC: 'hide_saving_throw_dc',
-	      hideContent: 'hide_content',
+	      hideSpellContent: 'hide_spell_content',
 	      hideFreetext: 'hide_freetext',
 	      hideSavingThrowFailure: 'hide_saving_throw_failure',
 	      hideSavingThrowSuccess: 'hide_saving_throw_success',
@@ -3732,7 +3214,6 @@ var ShapedScripts =
 	      weightSystem: 'weight_system',
 	      encumbranceMultiplier: 'encumbrance_multiplier',
 	      automaticHigherLevelQueries: 'automatic_higher_level_queries',
-	      automaticallyExpendSpellResources: 'automatically_expend_spell_resources',
 	    };
 
 	    ['fortitude', 'reflex', 'will'].forEach((save) => {
@@ -3952,7 +3433,6 @@ var ShapedScripts =
 	          true: '***default***',
 	          false: 0,
 	        }),
-	        automaticallyExpendSpellResources: this.booleanValidator,
 	        display: {
 	          showRests: this.booleanValidator,
 	          showPassiveSkills: this.booleanValidator,
@@ -4069,10 +3549,10 @@ var ShapedScripts =
 	            individualActions: 'traits',
 	            chatWindow: 'traitsMacro',
 	          }),
-	          racialTraits: this.getOptionList({
+	          racialFeatures: this.getOptionList({
 	            none: null,
-	            individualActions: 'racialTraits',
-	            chatWindow: 'racialTraitsMacro',
+	            individualActions: 'racialFeatures',
+	            chatWindow: 'racialFeaturesMacro',
 	          }),
 	          classFeatures: this.getOptionList({
 	            none: null,
@@ -4139,7 +3619,7 @@ var ShapedScripts =
 	          hideSavingThrowDC: this.getHideOption('hide_saving_throw_dc'),
 	          hideSavingThrowFailure: this.getHideOption('hide_saving_throw_failure'),
 	          hideSavingThrowSuccess: this.getHideOption('hide_saving_throw_success'),
-	          hideContent: this.getHideOption('hide_content'),
+	          hideSpellContent: this.getHideOption('hide_spell_content'),
 	        },
 	        customSkills: this.stringValidator,
 	      },
@@ -4153,8 +3633,8 @@ var ShapedScripts =
 	      sheetEnhancements: {
 	        rollHPOnDrop: this.booleanValidator,
 	        autoHD: this.booleanValidator,
+	        autoSpellSlots: this.booleanValidator,
 	        autoTraits: this.booleanValidator,
-	        turnRecharges: this.booleanValidator,
 	      },
 	      genderPronouns: [
 	        {
@@ -4168,16 +3648,7 @@ var ShapedScripts =
 	      defaultGenderIndex: this.integerValidator,
 	      variants: {
 	        rests: {
-	          longRestHPRecovery: this.getOptionList({
-	            all: 1,
-	            half: 0.5,
-	            none: 0,
-	          }),
-	          longRestHDRecovery: this.getOptionList({
-	            all: 1,
-	            half: 0.5,
-	            none: 0,
-	          }),
+	          longNoHpFullHd: this.booleanValidator,
 	        },
 	      },
 	    };
@@ -4207,127 +3678,6 @@ var ShapedScripts =
 
 /***/ },
 /* 16 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	const _ = __webpack_require__(2);
-	const utils = __webpack_require__(7);
-
-
-	class Migrator {
-
-	  constructor(startVersion) {
-	    this._versions = [{ version: startVersion || 0.1, migrations: [] }];
-	  }
-
-	  skipToVersion(version) {
-	    this._versions.push({ version, migrations: [] });
-	    return this;
-	  }
-
-	  nextVersion() {
-	    const currentVersion = this._versions.slice(-1)[0].version;
-	    const nextVersion = (currentVersion * 10 + 1) / 10; // Avoid FP errors
-	    this._versions.push({ version: nextVersion, migrations: [] });
-	    return this;
-	  }
-
-	  addProperty(path, value) {
-	    const expandedProperty = utils.createObjectFromPath(path, value);
-	    return this.transformConfig(config => utils.deepExtend(config, expandedProperty),
-	      `Adding property ${path} with value ${value}`);
-	  }
-
-	  overwriteProperty(path, value) {
-	    return this.transformConfig((config) => {
-	      const parts = path.split('.');
-	      const obj = parts.length > 1 ? utils.getObjectFromPath(config, parts.slice(0, -1).join('.')) : config;
-	      obj[parts.slice(-1)[0]] = value;
-	      return config;
-	    }, `Overwriting property ${path} with value ${JSON.stringify(value)}`);
-	  }
-
-	  copyProperty(oldPath, newPath) {
-	    return this.transformConfig(Migrator.propertyCopy.bind(null, oldPath, newPath),
-	      `Copying property from ${oldPath} to ${newPath}`);
-	  }
-
-
-	  static propertyCopy(oldPath, newPath, config) {
-	    const oldVal = utils.getObjectFromPath(config, oldPath);
-	    if (!_.isUndefined(oldVal)) {
-	      const expandedProperty = utils.createObjectFromPath(newPath, oldVal);
-	      utils.deepExtend(config, expandedProperty);
-	    }
-	    return config;
-	  }
-
-	  static propertyDelete(path, config) {
-	    const parts = path.split('.');
-	    const obj = parts.length > 1 ? utils.getObjectFromPath(config, parts.slice(0, -1).join('.')) : config;
-	    if (obj && !_.isUndefined(obj[parts.slice(-1)[0]])) {
-	      delete obj[parts.slice(-1)[0]];
-	    }
-	    return config;
-	  }
-
-	  deleteProperty(propertyPath) {
-	    return this.transformConfig(Migrator.propertyDelete.bind(null, propertyPath),
-	      `Deleting property ${propertyPath} from config`);
-	  }
-
-	  moveProperty(oldPath, newPath) {
-	    return this.transformConfig((config) => {
-	      config = Migrator.propertyCopy(oldPath, newPath, config);
-	      return Migrator.propertyDelete(oldPath, config);
-	    }, `Moving property from ${oldPath} to ${newPath}`);
-	  }
-
-	  transformConfig(transformer, message) {
-	    const lastVersion = this._versions.slice(-1)[0];
-	    lastVersion.migrations.push({ transformer, message });
-	    return this;
-	  }
-
-	  needsUpdate(state) {
-	    return !state.version || state.version < _.last(this._versions).version;
-	  }
-
-	  isValid(state) {
-	    return _.isEmpty(state) || state.version <= _.last(this._versions).version;
-	  }
-
-	  migrateConfig(state, logger) {
-	    logger.info('Checking config for upgrade, starting state: $$$', state);
-	    if (_.isEmpty(state)) {
-	      // working with a fresh install here
-	      state.version = 0;
-	    }
-	    if (!this._versions.find(version => version.version >= state.version)) {
-	      throw new Error(`Unrecognised schema state ${state.version} - cannot upgrade.`);
-	    }
-
-	    return this._versions
-	      .filter(version => version.version > state.version)
-	      .reduce((versionResult, version) => {
-	        logger.info('Upgrading schema to version $$$', version.version);
-
-	        versionResult = version.migrations.reduce((result, migration) => {
-	          logger.info(migration.message);
-	          return migration.transformer(result);
-	        }, versionResult);
-	        versionResult.version = version.version;
-	        logger.info('Post-upgrade state: $$$', versionResult);
-	        return versionResult;
-	      }, state);
-	  }
-	}
-
-	module.exports = Migrator;
-
-
-/***/ },
-/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4372,11 +3722,11 @@ var ShapedScripts =
 	    utils.deepExtend(this.myState.config, _.omit(options, 'menu'));
 
 	    if (options.menu) {
-	      this.reportPlayer('Configuration', options.menu[0].getMenu(), options.playerId);
+	      this.reportPlayer('Configuration', options.menu[0].getMenu());
 	    }
-	    else if (_.isEmpty(_.omit(options, 'menu', 'playerId'))) {
+	    else {
 	      const menu = new MainMenu(this.myState.config, ShapedConfig.configOptionsSpec);
-	      this.reportPlayer('Configuration', menu.getMenu(), options.playerId);
+	      this.reportPlayer('Configuration', menu.getMenu());
 	    }
 	  }
 	}
@@ -4909,9 +4259,6 @@ var ShapedScripts =
 	        path: `${ncs}.automaticHigherLevelQueries`, title: 'Automatic Higher Level Queries', menuCmd: menu,
 	        spec: spec.automaticHigherLevelQueries(),
 	      }) +
-	      this.makeToggleSetting({
-	        path: `${ncs}.automaticallyExpendSpellResources`, title: 'Auto spell slots/points', menuCmd: menu,
-	      }) +
 	      this.makeQuerySetting({
 	        path: `${ncs}.tab`, title: 'Default tab', menuCmd: menu, spec: spec.tab(),
 	      }) +
@@ -5102,7 +4449,7 @@ var ShapedScripts =
 
 	    const optionRows = [
 	      'hideAbilityChecks', 'hideSavingThrows', 'hideAttack', 'hideDamage', 'hideFreetext', 'hideRecharge', 'hideCost',
-	      'hideSavingThrowDC', 'hideSavingThrowFailure', 'hideSavingThrowSuccess', 'hideContent',
+	      'hideSavingThrowDC', 'hideSavingThrowFailure', 'hideSavingThrowSuccess', 'hideSpellContent',
 	    ].reduce((result, functionName) => {
 	      const title = utils.toTitleCase(
 	        functionName.replace(/([a-z])([A-Z]+)/g, (match, lower, upper) => `${lower} ${upper.toLowerCase()}`));
@@ -5215,17 +4562,10 @@ var ShapedScripts =
 	  getMenu() {
 	    const root = 'variants';
 	    const menu = 'varsMenu';
-	    const spec = this.specRoot.variants;
 
-	    const optionRows =
-	      this.makeQuerySetting({
-	        path: `${root}.rests.longRestHPRecovery`, title: 'Long Rest HP Recovery', menuCmd: menu,
-	        spec: spec.rests.longRestHPRecovery(),
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${root}.rests.longRestHDRecovery`, title: 'Long Rest HD Recovery', menuCmd: menu,
-	        spec: spec.rests.longRestHDRecovery(),
-	      });
+	    const optionRows = this.makeToggleSetting({
+	      path: `${root}.rests.longNoHpFullHd`, title: 'Long Rest: No HP, full HD', menuCmd: menu,
+	    });
 
 	    const th = utils.buildHTML('th', 'Houserules & Variants', { colspan: '2' });
 	    const tr = utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
@@ -5248,10 +4588,10 @@ var ShapedScripts =
 	        path: `${root}.autoHD`, title: 'Process HD Automatically', menuCmd: menu,
 	      }) +
 	      this.makeToggleSetting({
-	        path: `${root}.autoTraits`, title: 'Process Uses automatically', menuCmd: menu,
+	        path: `${root}.autoSpellSlots`, title: 'Process Spell Slots Automatically', menuCmd: menu,
 	      }) +
 	      this.makeToggleSetting({
-	        path: `${root}.turnRecharges`, title: 'Recharge uses on new turns', menuCmd: menu,
+	        path: `${root}.autoTraits`, title: 'Process Uses automatically', menuCmd: menu,
 	      });
 
 	    const th = utils.buildHTML('th', 'Character Sheet Enhancements', { colspan: '2' });
@@ -5299,7 +4639,7 @@ var ShapedScripts =
 	        path: `${root}.traits`, title: 'Traits', menuCmd: menu, spec: spec.traits(),
 	      }) +
 	      this.makeQuerySetting({
-	        path: `${root}.racialTraits`, title: 'Racial Traits', menuCmd: menu, spec: spec.racialTraits(),
+	        path: `${root}.racialFeatures`, title: 'Racial Features', menuCmd: menu, spec: spec.racialFeatures(),
 	      }) +
 	      this.makeQuerySetting({
 	        path: `${root}.classFeatures`, title: 'Class Features', menuCmd: menu, spec: spec.classFeatures(),
@@ -5334,7 +4674,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 18 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5408,8 +4748,7 @@ var ShapedScripts =
 	    }
 
 	    if (_.isEmpty(options.selected.character)) {
-	      this.reportError('Advantage Tracker was called, but no token was selected, and no character id was passed.',
-	        options.playerId);
+	      this.reportError('Advantage Tracker was called, but no token was selected, and no character id was passed.');
 	    }
 	    else {
 	      if (options.normal) {
@@ -5572,7 +4911,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 19 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5581,64 +4920,48 @@ var ShapedScripts =
 	const ShapedConfig = __webpack_require__(15);
 	const utils = __webpack_require__(7);
 
-	function getStringRechargeTester(targetRechargeValue) {
-	  return rechargeValue => ({ recharge: rechargeValue === targetRechargeValue });
-	}
-
-	function getDieRollRechargeTester(restType, roll20) {
-	  if (restType !== 'turn') {
-	    return rechargeValue => ({ recharge: rechargeValue === 'TURN' || rechargeValue.indexOf('RECHARGE_') === 0 });
-	  }
-	  return (rechargeValue) => {
-	    if (rechargeValue === 'TURN') {
-	      return { recharge: true };
-	    }
-
-	    const match = rechargeValue.match(/RECHARGE_(\d)(?:_\d)?/);
-	    if (match) {
-	      const result = roll20.randomInteger(6);
-	      return {
-	        recharge: result >= parseInt(match[1], 10),
-	        dieRoll: result,
-	      };
-	    }
-	    return { recharge: false };
-	  };
-	}
 
 	class RestManager extends ShapedModule {
 
 	  addCommands(commandProcessor) {
 	    this.rests = [
 	      {
+	        name: 'dieRollRecharge',
+	        operations: [
+	          this.restoreUses.bind(this),
+	        ],
+	        rechargeValue: 'RECHARGE_',
+	        displayName: 'Dice Roll Recharge',
+	      },
+	      {
 	        name: 'turn',
 	        operations: [
-	          this.recoverUses.bind(this),
-	          this.recoverLegendaryPoints.bind(this),
+	          this.restoreUses.bind(this),
+	          this.rechargeLegendaries.bind(this),
 	        ],
-	        getRechargeTester: restType => getDieRollRechargeTester(restType, this.roll20),
+	        rechargeValue: 'TURN',
 	        displayName: 'Turn Recharge',
 	      },
 	      {
 	        name: 'short',
 	        operations: [
-	          this.recoverUses.bind(this),
-	          this.recoverWarlockSpellSlots.bind(this),
+	          this.restoreUses.bind(this),
+	          this.regainWarlockSpellSlots.bind(this),
 	        ],
-	        getRechargeTester: () => getStringRechargeTester('SHORT_OR_LONG_REST'),
+	        rechargeValue: 'SHORT_OR_LONG_REST',
 	        displayName: 'Short Rest',
 	      },
 	      {
 	        name: 'long',
 	        operations: [
-	          this.recoverUses.bind(this),
-	          this.recoverHP.bind(this),
-	          this.recoverHD.bind(this),
-	          this.recoverSpellSlots.bind(this),
-	          this.recoverSpellPoints.bind(this),
+	          this.restoreUses.bind(this),
+	          this.resetHP.bind(this),
+	          this.regainHitDie.bind(this),
+	          this.regainSpellSlots.bind(this),
+	          this.regainSpellPoints.bind(this),
 	          this.reduceExhaustion.bind(this),
 	        ],
-	        getRechargeTester: () => getStringRechargeTester('LONG_REST'),
+	        rechargeValue: 'LONG_REST',
 	        displayName: 'Long Rest',
 	      },
 	    ];
@@ -5647,7 +4970,6 @@ var ShapedScripts =
 	      hp: values => (values.hp > 0 ? `{{heal=[[${values.hp}]]}}` : ''),
 	      hd: values => values.hd.map(hd => `{{Hit Die Regained (${hd.die})=${hd.quant}}}`).join(''),
 	      uses: values => `{{Uses Recharged=${values.uses.join(', ')}}}`,
-	      usesNotRecharged: values => `{{Uses Not Recharged=${values.usesNotRecharged.join(', ')}}}`,
 	      slots: values => (values.slots ? '{{Spell Slots Regained=&nbsp;}}' : ''),
 	      exhaustion: values => `{{text_top=Removed 1 Level Of Exhaustion, now at level: [[${values.exhaustion}]]}}`,
 	      warlockSlots: values => (values.warlockSlots ? '{{Warlock Spell Slots Regained=&nbsp;}}' : ''),
@@ -5672,34 +4994,15 @@ var ShapedScripts =
 	      });
 	  }
 
-	  registerEventListeners(eventDispatcher) {
-	    eventDispatcher.registerEventHandler('change:campaign:turnorder', (turnOrder) => {
-	      if (!_.isEmpty(turnOrder) && turnOrder[0].id !== '-1' && this.myState.config.sheetEnhancements.turnRecharges) {
-	        const graphic = this.roll20.getObj('graphic', turnOrder[0].id);
-	        const char = this.roll20.getObj('character', graphic.get('represents'));
-	        if (char) {
-	          const results = this.doRest(char, 'turn');
-	          if (this.buildRestMessageBody(results) !== '') {
-	            this.roll20.sendChat(`character|${char.id}`, this.buildMessage(char, 'turn', results, true));
-	          }
-	        }
-	      }
-	    });
-	  }
-
 	  handleRest(options) {
 	    let chars = options.selected.character;
 	    if (!_.isUndefined(options.character)) {
 	      chars = [options.character];
 	    }
-	    if (_.isEmpty(chars)) {
-	      this.reportError('Invalid options/selection', 'You must select at least one character or include --character ' +
-	        'when calling !shaped-rest', options.playerId);
-	    }
 	    chars.forEach((char) => {
 	      const results = this.doRest(char, options.type);
-	      const whisper = this.roll20.getAttrByName(char.id, 'output_option') === '/w GM';
-	      this.roll20.sendChat(`character|${char.id}`, this.buildMessage(char, options.type, results, whisper));
+	      this.roll20.sendChat(`character|${char.id}`, this.buildMessage(char, options.type, results), null,
+	        { noarchive: true });
 	    });
 	  }
 
@@ -5708,81 +5011,76 @@ var ShapedScripts =
 	    const restsToProcess = this.rests.slice(0, restIndex + 1);
 	    return restsToProcess.reduce((results, rest) =>
 	        rest.operations
-	          .map(op => op(char, rest.name, type))
+	          .map(op => op(char, rest.name))
 	          .reduce((restResults, opResult) =>
 	            utils.extendWithArrayValues(restResults, opResult), results),
 	      {});
 	  }
 
 
-	  buildMessage(character, restType, results, whisper) {
+	  buildMessage(character, restType, results) {
 	    const charName = character.get('name');
 	    const charId = character.id;
 	    const displayName = _.findWhere(this.rests, { name: restType }).displayName;
 
-	    let msg = whisper ? `/w "${charName}" ` : '';
-
-	    msg += `&{template:5e-shaped} {{title=${displayName}}} {{character_name=${charName}}}`;
+	    let msg = `&{template:5e-shaped} {{title=${displayName}}} {{character_name=${charName}}}`;
 
 	    if (this.roll20.getAttrByName(charId, 'show_character_name') === '@{show_character_name_yes}') {
 	      msg += '{{show_character_name=1}}';
 	    }
 
-	    msg += this.buildRestMessageBody(results);
-
-	    return msg;
-	  }
-
-	  buildRestMessageBody(results) {
-	    return _.chain(this.displayTemplates)
+	    msg += _.chain(this.displayTemplates)
 	      .pick(_.keys(results))
 	      .map(template => template(results))
 	      .value()
 	      .join('');
+
+	    return msg;
 	  }
 
-	  recoverUses(character, restType, originalRestType) {
+	  restoreUses(character, restType) {
 	    const charId = character.id;
-	    const rechargeTester = _.findWhere(this.rests, { name: restType }).getRechargeTester(originalRestType);
+	    const rechargeValue = _.findWhere(this.rests, { name: restType }).rechargeValue;
+	    this.logger.debug('Searching for recharge value $$$', rechargeValue);
 
-	    const result = {
-	      uses: [],
-	      usesNotRecharged: [],
-	    };
-
-	    _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
-	      .filter(attribute => attribute.get('name').match(/^repeating_(?!armor|equipment|lairaction|regionaleffect).*$/))
-	      .groupBy(attribute => attribute.get('name').match(/^(repeating_[^_]+_[^_]+)_.*$/)[1])
-	      .pick((attributeGroup, prefix) => attributeGroup.some(attr => attr.get('name') === `${prefix}_recharge`))
-	      .each((attributeGroup) => {
-	        const attributesByName = _.object(attributeGroup
-	          .map(attr => [attr.get('name').match(/repeating_[^_]+_[^_]+_(.*)$/)[1], attr]));
-	        const name = attributesByName.name.get('current');
-	        const recharge = attributesByName.recharge.get('current');
-	        const usesAttr = attributesByName.uses;
+	    const traitNames = _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
+	      .map((attribute) => {
+	        const match = attribute.get('name').match(/^(repeating_[^_]+_[^_]+)_recharge$/);
+	        const attVal = attribute.get('current');
+	        if (match && attVal.indexOf(rechargeValue) === 0) {
+	          this.logger.debug('Matching against rechargeValue $$$', attribute);
+	          return match[1];
+	        }
+	        return undefined;
+	      })
+	      .reject(_.isUndefined)
+	      .reject(traitPre => traitPre.match(/repeating_(armor|equipment|lairaction|regionaleffect)/))
+	      .uniq()
+	      .map((traitPre) => {
+	        const attName = this.roll20.getAttrByName(charId, `${traitPre}_name`);
+	        this.logger.debug(`Recharging '${attName}'`);
+	        const usesAttr = this.roll20.getAttrObjectByName(charId, `${traitPre}_uses`);
 	        if (!usesAttr || !usesAttr.get('max')) {
-	          this.logger.error(`Tried to recharge the uses for '${name}' for character with id ${charId}, ` +
+	          this.logger.error(`Tried to recharge the uses for '${attName}' for character with id ${charId}, ` +
 	            'but there were no uses defined.');
-	          return;
+	          return undefined;
 	        }
 
 	        if (usesAttr.get('current') < usesAttr.get('max')) {
-	          const rechargeTesterResult = rechargeTester(recharge);
-	          const traitTextForResults = rechargeTesterResult.dieRoll ?
-	            `${name} (Rolled a ${rechargeTesterResult.dieRoll})` : name;
-	          if (rechargeTesterResult.recharge) {
-	            usesAttr.setWithWorker({ current: usesAttr.get('max') });
-	            result.uses.push(traitTextForResults);
-	          }
-	          else if (rechargeTesterResult.dieRoll) {
-	            result.usesNotRecharged.push(traitTextForResults);
-	          }
+	          usesAttr.setWithWorker({ current: usesAttr.get('max') });
+	          return attName;
 	        }
-	      });
-	    return result;
+	        return undefined;
+	      })
+	      .compact()
+	      .value();
+
+	    return {
+	      uses: traitNames,
+	    };
 	  }
 
-	  recoverLegendaryPoints(character) {
+	  rechargeLegendaries(character) {
 	    const legendaryAmountAttr = this.roll20.getAttrObjectByName(character.id, 'legendary_action_amount');
 	    if (legendaryAmountAttr) {
 	      const max = legendaryAmountAttr.get('max');
@@ -5798,55 +5096,51 @@ var ShapedScripts =
 	    return null;
 	  }
 
-	  recoverHP(character) {
-	    const charId = character.id;
-	    const hpAttr = this.roll20.getAttrObjectByName(charId, 'HP');
-	    const maxReduction = parseInt(this.roll20.getAttrByName(character.id, 'hp_max_reduced'), 10);
-	    const regained = this.recoverAttribute(hpAttr, this.myState.config.variants.rests.longRestHPRecovery,
-	      character, true, maxReduction);
-
-	    return {
-	      hp: regained,
-	    };
-	  }
-
-	  recoverAttribute(attribute, multiplier, character, errorIfNoMax, maxReduction) {
-	    if (multiplier === 0 || !attribute) {
-	      return 0;
-	    }
-
-	    const fullMax = parseInt(attribute.get('max'), 10);
-	    const reducedMax = maxReduction ? fullMax - maxReduction : fullMax;
-	    if (!reducedMax) {
-	      if (errorIfNoMax) {
-	        this.logger.error(`Can't recharge ${attribute.get('name')} for character ${character.get('name')} ` +
-	          'because max value is not set');
-	      }
+	  resetHP(character) {
+	    if (this.myState.config.variants.rests.longNoHpFullHd) {
 	      return null;
 	    }
 
-	    const current = parseInt(attribute.get('current') || 0, 10);
-	    const regained = Math.min(reducedMax - current, Math.max(1, Math.floor(reducedMax * multiplier)));
-	    attribute.setWithWorker({ current: current + regained });
-	    return regained;
+	    const charId = character.id;
+	    this.logger.debug('Resetting HP to max');
+	    const max = parseInt(this.roll20.getAttrByName(charId, 'HP', 'max'), 10);
+	    if (_.isNaN(max)) {
+	      this.reportError(`Can't recharge HP for character ${character.get('name')} because max HP is not set`);
+	      return null;
+	    }
+	    const current = parseInt(this.roll20.getAttrByName(charId, 'HP', 'current') || 0, 10);
+
+	    this.roll20.setAttrWithWorker(charId, 'HP', max);
+
+	    return {
+	      hp: max - current,
+	    };
 	  }
 
-	  recoverHD(character) {
+	  regainHitDie(character) {
 	    const charId = character.id;
-	    this.logger.debug('Regaining Hit Dice');
+	    this.logger.debug('Regaining Hit Die');
 	    const hitDieRegained = _.chain(this.roll20.findObjs({ type: 'attribute', characterid: charId }))
 	      .filter(attribute => (attribute.get('name').match(/^hd_d\d{1,2}$/)))
 	      .uniq()
 	      .map((hdAttr) => {
-	        const regained = this.recoverAttribute(hdAttr, this.myState.config.variants.rests.longRestHDRecovery,
-	          character, false, 0);
-	        if (regained) {
-	          return {
-	            die: hdAttr.get('name').replace(/hd_/, ''),
-	            quant: regained,
-	          };
-	        }
+	        const max = parseInt(hdAttr.get('max'), 10);
+	        if (max > 0) {
+	          const current = parseInt(hdAttr.get('current') || 0, 10);
 
+	          let regained = Math.min(max - current, Math.max(1, Math.floor(max / 2)));
+	          if (this.myState.config.variants.rests.longNoHpFullHd) {
+	            regained = max - current;
+	          }
+
+	          if (regained) {
+	            this.roll20.setAttrWithWorker(charId, hdAttr.get('name'), current + regained);
+	            return {
+	              die: hdAttr.get('name').replace(/hd_/, ''),
+	              quant: regained,
+	            };
+	          }
+	        }
 	        return null;
 	      })
 	      .compact()
@@ -5857,7 +5151,7 @@ var ShapedScripts =
 	    };
 	  }
 
-	  recoverSpellSlots(character) {
+	  regainSpellSlots(character) {
 	    const charId = character.id;
 	    let slotsFound = false;
 
@@ -5878,7 +5172,7 @@ var ShapedScripts =
 	    };
 	  }
 
-	  recoverSpellPoints(character) {
+	  regainSpellPoints(character) {
 	    const charId = character.id;
 	    this.logger.debug('Regaining Spell Points');
 	    let spellPointsFound = false;
@@ -5894,7 +5188,7 @@ var ShapedScripts =
 	    };
 	  }
 
-	  recoverWarlockSpellSlots(character) {
+	  regainWarlockSpellSlots(character) {
 	    const charId = character.id;
 	    this.logger.debug('Regaining Warlock Spell slots');
 	    let warlockSlotsFound = false;
@@ -5931,7 +5225,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 20 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5958,7 +5252,7 @@ var ShapedScripts =
 	    let perUse = parseInt(options.perUse || 1, 10);
 	    if (_.isNaN(perUse)) {
 	      this.reportError(`Character ${options.characterName} has an invalid 'Per Use" value [${options.perUse}] for ` +
-	        `${options.title} so uses could not be decremented.`, options.playerId);
+	        `${options.title} so uses could not be decremented.`);
 	      return;
 	    }
 
@@ -5973,8 +5267,8 @@ var ShapedScripts =
 	        usesAttr.setWithWorker({ current: currentVal - perUse });
 	      }
 	      else {
-	        this.reportResult('Uses Police', `${options.characterName} can't use ${options.title} because ` +
-	          'they don\'t have sufficient uses left.', options);
+	        this.reportPublic('Uses Police', `${options.characterName} can't use ${options.title} because ` +
+	          'they don\'t have sufficient uses left.');
 	      }
 	    }
 	  }
@@ -6006,8 +5300,8 @@ var ShapedScripts =
 
 	    const current = legendaryAmountAttr.get('current');
 	    if (cost > current) {
-	      this.reportResult('Uses Police', `${options.characterName} can't use ${options.title} because ` +
-	        'they don\'t have sufficient legendary points left.', options);
+	      this.reportPublic('Uses Police', `${options.characterName} can't use ${options.title} because ` +
+	        'they don\'t have sufficient legendary points left.');
 	      return;
 	    }
 
@@ -6019,7 +5313,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 21 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -6032,7 +5326,7 @@ var ShapedScripts =
 	    chatWatcher.registerChatListener(['ammoName', 'character'], this.consumeAmmo.bind(this));
 	  }
 
-	  consumeAmmo(options) {
+	  consumeAmmo(options, msg) {
 	    if (!this.roll20.checkCharacterFlag(options.character.id, 'ammo_auto_use')) {
 	      return;
 	    }
@@ -6052,16 +5346,20 @@ var ShapedScripts =
 	      return;
 	    }
 
+	    let ammoUsed = 1;
 	    if (options.ammo) {
-	      const ammoRemaining = parseInt(options.ammo, 10);
-	      if (ammoRemaining >= 0) {
-	        ammoAttr.setWithWorker('current', ammoRemaining);
-	      }
-	      else {
-	        this.reportResult('Ammo Police', `${options.characterName} can't use ${options.title} because ` +
-	          `they don't have enough ${options.ammoName} left`, options);
+	      const rollRef = options.ammo.match(/\$\[\[(\d+)\]\]/);
+	      if (rollRef) {
+	        const rollExpr = msg.inlinerolls[rollRef[1]].expression;
+	        const match = rollExpr.match(/\d+-(\d+)/);
+	        if (match) {
+	          ammoUsed = match[1];
+	        }
 	      }
 	    }
+
+	    const val = parseInt(ammoAttr.get('current'), 10) || 0;
+	    ammoAttr.setWithWorker('current', Math.max(0, val - ammoUsed));
 	  }
 	}
 
@@ -6069,7 +5367,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 22 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* globals unescape */
@@ -6077,7 +5375,7 @@ var ShapedScripts =
 	const ShapedModule = __webpack_require__(14);
 	const ShapedConfig = __webpack_require__(15);
 	const _ = __webpack_require__(2);
-	const sanitise = __webpack_require__(23);
+	const sanitise = __webpack_require__(22);
 	const utils = __webpack_require__(7);
 	const Logger = __webpack_require__(5);
 
@@ -6127,7 +5425,6 @@ var ShapedScripts =
 	      // !shaped-import-spell, !shaped-spell
 	      .addCommand(['import-spell', 'spell'], this.importSpellsFromJson.bind(this), false)
 	      .optionLookup('spells', _.partial(this.entityLookup.findEntity.bind(this.entityLookup), 'spells', _, false))
-	      .option('overwrite', ShapedConfig.booleanValidator)
 	      .withSelection({
 	        character: {
 	          min: 1,
@@ -6136,7 +5433,6 @@ var ShapedScripts =
 	      })
 	      // !shaped-import-spell-list
 	      .addCommand('import-spell-list', this.importSpellListFromJson.bind(this), false)
-	      .option('overwrite', ShapedConfig.booleanValidator)
 	      .options(ShapedConfig.spellSearchOptions)
 	      .withSelection({
 	        character: {
@@ -6209,8 +5505,7 @@ var ShapedScripts =
 	      .value()
 	      .join('</li><li>');
 
-	    this.reportPlayer('Apply Defaults', `Character and token defaults applied for:<ul><li>${messageBody}</li></ul>`,
-	      options.playerId);
+	    this.reportPlayer('Apply Defaults', `Character and token defaults applied for:<ul><li>${messageBody}</li></ul>`);
 	  }
 
 	  importStatblock(options) {
@@ -6226,11 +5521,11 @@ var ShapedScripts =
 	            if (notes) {
 	              return this.processGMNotes(options, token, notes);
 	            }
-	            return this.reportError(error, options.playerId);
+	            return this.reportError(error);
 	          });
 	        }
 	        else {
-	          return this.reportError(error, options.playerId);
+	          return this.reportError(error);
 	        }
 	      }
 
@@ -6241,23 +5536,11 @@ var ShapedScripts =
 	  processGMNotes(options, token, text) {
 	    text = sanitise(unescape(text), this.logger);
 	    const monsters = this.parser.parse(text).monsters;
-	    return this.importMonsters(monsters, options, token, [
+	    this.importMonsters(monsters, options, token, [
 	      function gmNotesSetter(character) {
 	        character.set('gmnotes', text.replace(/\n/g, '<br>'));
-	        return character;
 	      },
-	    ]).then(this.displayImportResults.bind(this, options.playerId));
-	  }
-
-	  displayImportResults(playerId, results) {
-	    if (!_.isEmpty(results.importedList)) {
-	      const monsterList = results.importedList.map(char => char.get('name')).join('</li><li>');
-	      this.reportPlayer('Import Success', `Added the following monsters: <ul><li>${monsterList}</li></ul>`, playerId);
-	    }
-	    if (!_.isEmpty(results.errors)) {
-	      const errorList = results.errors.join('</li><li>');
-	      this.reportError(`The following errors occurred on import:  <ul><li>${errorList}</li></ul>`, playerId);
-	    }
+	    ]);
 	  }
 
 	  importMonstersFromJson(options) {
@@ -6267,11 +5550,20 @@ var ShapedScripts =
 	    }
 
 	    if (_.isEmpty(options.monsters)) {
-	      this.showEntityPicker('monster', 'monsters', options.playerId);
+	      this.showEntityPicker('monster', 'monsters');
 	      return null;
 	    }
 	    return this.importMonsters(options.monsters, options, options.selected.graphic, [])
-	      .then(this.displayImportResults.bind(this, options.playerId));
+	      .then((results) => {
+	        if (!_.isEmpty(results.importedList)) {
+	          const monsterList = results.importedList.map(char => char.get('name')).join('</li><li>');
+	          this.reportPlayer('Import Success', `Added the following monsters: <ul><li>${monsterList}</li></ul>`);
+	        }
+	        if (!_.isEmpty(results.errors)) {
+	          const errorList = results.errors.join('</li><li>');
+	          this.reportError(`The following errors occurred on import:  <ul><li>${errorList}</li></ul>`);
+	        }
+	      });
 	  }
 
 	  importByToken(options) {
@@ -6312,7 +5604,7 @@ var ShapedScripts =
 	          message += 'The following errors were reported: <ul><li>  ' +
 	            `${errors.join('</li><li>')}</li></ul>`;
 	        }
-	        this.reportPlayer('Monster Import Complete', message, options.playerId);
+	        this.reportPlayer('Monster Import Complete', message);
 	      });
 	  }
 
@@ -6378,24 +5670,14 @@ var ShapedScripts =
 
 	  importSpellsFromJson(options) {
 	    if (_.isEmpty(options.spells)) {
-	      this.showEntityPicker('spell', 'spells', options.playerId);
+	      this.showEntityPicker('spell', 'spells');
 	      return null;
 	    }
 
-	    return this.importData(options.selected.character, _.pick(options, 'spells'), options.overwrite)
+	    return this.importData(options.selected.character, _.pick(options, 'spells'))
 	      .then(() => {
-	        const imported = options.spells.filter(spell => !spell.noImport);
-	        const skipped = options.spells.filter(spell => spell.noImport);
-	        let message = '';
-	        if (!_.isEmpty(imported)) {
-	          message += 'Added the following spells:  <ul><li>' +
-	            `${_.map(imported, spell => spell.name).join('</li><li>')}</li></ul>`;
-	        }
-	        if (!_.isEmpty(skipped)) {
-	          message += 'Skipped the following spells which were already present (use --overwrite to replace): <ul><li>' +
-	            `${_.map(skipped, spell => spell.name).join('</li><li>')}</li></ul>`;
-	        }
-	        this.reportPlayer('Import Complete', message, options.playerId);
+	        this.reportPlayer('Import Success', 'Added the following spells:  <ul><li>' +
+	          `${_.map(options.spells, spell => spell.name).join('</li><li>')}</li></ul>`);
 	      });
 	  }
 
@@ -6438,7 +5720,7 @@ var ShapedScripts =
 	    };
 	  }
 
-	  showEntityPicker(entityName, entityNamePlural, playerId) {
+	  showEntityPicker(entityName, entityNamePlural) {
 	    const list = this.entityLookup.getKeys(entityNamePlural, true);
 
 	    if (!_.isEmpty(list)) {
@@ -6448,11 +5730,11 @@ var ShapedScripts =
 	      // create a clickable button with a roll query to select an entity from the loaded json
 	      this.reportPlayer(`${utils.toTitleCase(entityName)} Importer`,
 	        `<a href="!shaped-import-${entityName} --?{Pick a ${entityName}|${list.join('|')}}">Click to select a ` +
-	        `${entityName}</a>`, playerId);
+	        `${entityName}</a>`);
 	    }
 	    else {
 	      this.reportError(`Could not find any ${entityNamePlural}.<br/>Please ensure you have a properly formatted ` +
-	        `${entityNamePlural} json file.`, playerId);
+	        `${entityNamePlural} json file.`);
 	    }
 	  }
 
@@ -6463,10 +5745,10 @@ var ShapedScripts =
 	    return this.importData(character, converted);
 	  }
 
-	  importData(character, data, overwriteSpells) {
+	  importData(character, data) {
 	    this.logger.debug('Importing new character data $$$', data);
 	    const pronounInfo = this.getPronounInfo(character);
-	    const coreAttrsNames = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma', 'challenge'];
+	    const coreAttrsNames = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
 	    const coreAttributes = _.pick(data, coreAttrsNames);
 	    const secondaryAttributes = _.omit(data, coreAttrsNames, 'spells', 'content_srd');
 	    const contentSrd = _.pick(data, 'content_srd');
@@ -6482,8 +5764,8 @@ var ShapedScripts =
 	      .then(newChar => this.runImportStage(newChar, secondaryAttributes, 'Importing secondary attributes', msg))
 	      .then(newChar => this.runImportStage(newChar, contentSrd, 'Importing srd content', msg))
 	      .then(newChar =>
-	        this.runImportStage(newChar,
-	          this.getSpellAttributesForImport(newChar, pronounInfo, jsonSpells, overwriteSpells), 'Importing spells', msg))
+	        this.runImportStage(newChar, this.getSpellAttributesForImport(newChar, pronounInfo, jsonSpells, false),
+	          'Importing spells', msg))
 	      .then(newChar => this.runImportStage(newChar, { processing: '' }, 'Importing complete', msg))
 	      .then((newChar) => {
 	        msg.finish();
@@ -6549,7 +5831,7 @@ var ShapedScripts =
 	            newData = spell;
 	          }
 	          else if (!overwrite) {
-	            newSpells[index].noImport = true;
+	            delete newSpells[index];
 	          }
 	          return newData;
 	        }
@@ -6823,8 +6105,7 @@ var ShapedScripts =
 	    }
 
 	    if (_.isEmpty(options.selected.character)) {
-	      this.reportError('You have no tokens selected that represent characters, and you did not specify --all',
-	        options.playerId);
+	      this.reportError('You have no tokens selected that represent characters, and you did not specify --all');
 	      return null;
 	    }
 	    const count = options.selected.character.length;
@@ -6840,7 +6121,7 @@ var ShapedScripts =
 	      Promise.resolve())
 	      .then(() => {
 	        msg.finish();
-	        this.reportPlayer('Update Complete', `${count} characters checked/updated`, options.playerId);
+	        this.reportPlayer('Update Complete', `${count} characters checked/updated`);
 	      });
 	  }
 
@@ -6851,7 +6132,7 @@ var ShapedScripts =
 	      .then(() => {
 	        const msg = ' Spell expanded for characters: <ul><li>' +
 	          `${options.selected.character.map(char => char.get('name')).join('</li><li>')}</li></ul>`;
-	        this.reporter.reportPlayer('Spell Expansion Complete', msg, options.playerId);
+	        this.reporter.reportPlayer('Spell Expansion Complete', msg);
 	      });
 	  }
 	}
@@ -6860,7 +6141,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 23 */
+/* 22 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7038,7 +6319,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 24 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -7056,8 +6337,8 @@ var ShapedScripts =
 	    }
 	    const currentHP = this.roll20.getAttrByName(options.character.id, 'HP');
 	    if (currentHP !== 0 && currentHP !== '0') {
-	      this.reportResult('Death Saves', `${options.character.get('name')} has more than 0 HP and shouldn't be rolling ` +
-	        'death saves', options);
+	      this.reportPublic('Death Saves', `${options.character.get('name')} has more than 0 HP and shouldn't be rolling ` +
+	        'death saves');
 	      return;
 	    }
 
@@ -7076,7 +6357,7 @@ var ShapedScripts =
 	        successCount = 0;
 
 	        this.roll20.setAttrWithWorker(options.character.id, 'HP', 1);
-	        this.reportResult('Death Saves', `${options.character.get('name')} has recovered to 1 HP`, options);
+	        this.reportPublic('Death Saves', `${options.character.get('name')} has recovered to 1 HP`);
 	        break;
 	      default:
 	        if (result >= 10) {
@@ -7089,12 +6370,12 @@ var ShapedScripts =
 
 	    if (failureCount >= 3) {
 	      failureCount = 3;
-	      this.reportResult('Death Saves', `${options.character.get('name')} has failed 3` +
-	        ' death saves and is now dead', options);
+	      this.reportPublic('Death Saves', `${options.character.get('name')} has failed 3` +
+	        ' death saves and is now dead');
 	    }
 	    else if (successCount >= 3) {
-	      this.reportResult('Death Saves', `${options.character.get('name')} has succeeded 3` +
-	        ' death saves and is now stable', options);
+	      this.reportPublic('Death Saves', `${options.character.get('name')} has succeeded 3` +
+	        ' death saves and is now stable');
 	      failureCount = 0;
 	      successCount = 0;
 	    }
@@ -7106,7 +6387,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 25 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -7125,11 +6406,8 @@ var ShapedScripts =
 	      const hdSize = match[2];
 	      const hdAttr = this.roll20.getAttrObjectByName(options.character.id, `hd_d${hdSize}`);
 	      const hpAttr = this.roll20.getOrCreateAttr(options.character.id, 'HP');
-	      const maxReduction = parseInt(this.roll20.getAttrByName(options.character.id, 'hp_max_reduced'), 10);
 	      const regained = Math.max(0, parseInt(options.roll1, 10));
-	      const fullMax = hpAttr.get('max') || Infinity;
-	      const reducedMax = maxReduction ? fullMax - maxReduction : fullMax;
-	      const newHp = Math.min(parseInt(hpAttr.get('current') || 0, 10) + regained, reducedMax);
+	      const newHp = Math.min(parseInt(hpAttr.get('current') || 0, 10) + regained, hpAttr.get('max') || Infinity);
 
 	      if (hdAttr) {
 	        if (hdCount <= hdAttr.get('current')) {
@@ -7140,9 +6418,9 @@ var ShapedScripts =
 	          }
 	        }
 	        else {
-	          this.reportResult('HD Police',
+	          this.reportPublic('HD Police',
 	            `${options.characterName} can't use ${hdCount}d${hdSize} hit dice because they ` +
-	            `only have ${hdAttr.get('current')} left`, options);
+	            `only have ${hdAttr.get('current')} left`);
 	        }
 	      }
 	    }
@@ -7152,7 +6430,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 26 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -7165,7 +6443,7 @@ var ShapedScripts =
 	    chatWatcher.registerChatListener(['fx', 'character'], this.handleFX.bind(this));
 	  }
 
-	  handleFX(options) {
+	  handleFX(options, msg) {
 	    const parts = options.fx.split(' ');
 	    if (parts.length < 2 || _.some(parts.slice(0, 2), _.isEmpty)) {
 	      this.logger.warn('FX roll template variable is not formated correctly: [$$$]', options.fx);
@@ -7204,7 +6482,7 @@ var ShapedScripts =
 	      targetCoords.y = targetToken.get('top');
 	    }
 	    else {
-	      pageId = this.roll20.getCurrentPage(options.playerId).id;
+	      pageId = this.roll20.getCurrentPage(msg.playerid).id;
 	    }
 
 
@@ -7236,7 +6514,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 27 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -7250,16 +6528,15 @@ var ShapedScripts =
 	  }
 
 	  handleSpellCast(options) {
-	    const autoSlots = parseInt(this.roll20.getAttrByName(options.character.id,
-	      'automatically_expend_spell_resources'), 10);
-	    if (options.ritual || !autoSlots || options.spellLevel === 'CANTRIP' || options.spellRepeat) {
+	    if (options.ritual || !this.myState.config.sheetEnhancements.autoSpellSlots ||
+	      options.spellLevel === 'CANTRIP' || options.spellRepeat) {
 	      return;
 	    }
 
 	    const castingLevel = parseInt(options.castAsLevel, 10);
 	    if (_.isNaN(castingLevel)) {
 	      this.logger.error('Bad casting level [$$$]', options.castAsLevel);
-	      this.reportError('An error occured with spell slots, see the log for more details', options.playerId);
+	      this.reportError('An error occured with spell slots, see the log for more details');
 	      return;
 	    }
 
@@ -7293,8 +6570,8 @@ var ShapedScripts =
 	      spellSlotAttr.setWithWorker({ current: spellSlotAttr.get('current') - 1 });
 	    }
 	    else {
-	      this.reportResult('Slots Police', `${options.characterName} cannot cast ${options.title} at level ` +
-	        `${options.castAsLevel} because they don't have enough spell slots/points.`, options);
+	      this.reportPublic('Slots Police', `${options.characterName} cannot cast ${options.title} at level ` +
+	        `${options.castAsLevel} because they don't have enough spell slots/points.`);
 	    }
 	  }
 	};
@@ -7302,13 +6579,13 @@ var ShapedScripts =
 
 
 /***/ },
-/* 28 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	const _ = __webpack_require__(2);
 	const ShapedModule = __webpack_require__(14);
-	const ChatWatcher = __webpack_require__(29);
+	const ChatWatcher = __webpack_require__(28);
 
 	module.exports = class TokenBarConfigurer extends ShapedModule {
 
@@ -7381,7 +6658,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 29 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -7397,7 +6674,6 @@ var ShapedScripts =
 	    logger.wrapModule(this);
 	    eventDispatcher.registerEventHandler('chat:message', (msg) => {
 	      if (msg.type !== 'api') {
-	        this.logger.debug('Processing message $$$', msg);
 	        this.triggerChatListeners(msg);
 	      }
 	    });
@@ -7417,11 +6693,9 @@ var ShapedScripts =
 	  triggerChatListeners(msg) {
 	    const options = this.getRollTemplateOptions(msg);
 	    this.logger.debug('Roll template options: $$$', options);
-	    options.playerId = msg.playerid;
-	    options.whisper = msg.type === 'whisper';
 	    _.each(this.chatListeners, (listener) => {
 	      if (_.every(listener.matchers, matcher => matcher(msg, options))) {
-	        listener.handler(options);
+	        listener.handler(options, msg);
 	      }
 	    });
 	  }
@@ -7474,7 +6748,7 @@ var ShapedScripts =
 
 
 /***/ },
-/* 30 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -7829,43 +7103,540 @@ var ShapedScripts =
 
 
 /***/ },
+/* 30 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	const _ = __webpack_require__(2);
+	const utils = __webpack_require__(7);
+
+	const oneSixConfig = {
+	  logLevel: 'INFO',
+	  tokenSettings: {
+	    number: false,
+	    bar1: {
+	      attribute: 'HP',
+	      max: true,
+	      link: false,
+	      showPlayers: false,
+	    },
+	    bar2: {
+	      attribute: 'speed',
+	      max: false,
+	      link: true,
+	      showPlayers: false,
+	    },
+	    bar3: {
+	      attribute: '',
+	      max: false,
+	      link: false,
+	      showPlayers: false,
+	    },
+	    aura1: {
+	      radius: '',
+	      color: '#FFFF99',
+	      square: false,
+	    },
+	    aura2: {
+	      radius: '',
+	      color: '#59e594',
+	      square: false,
+	    },
+	    light: {
+	      radius: '',
+	      dimRadius: '',
+	      otherPlayers: false,
+	      hasSight: false,
+	      angle: 360,
+	      losAngle: 360,
+	      multiplier: 1,
+	    },
+	    showName: true,
+	    showNameToPlayers: false,
+	    showAura1ToPlayers: true,
+	    showAura2ToPlayers: true,
+	  },
+	  newCharSettings: {
+	    sheetOutput: '@{output_to_all}',
+	    deathSaveOutput: '@{output_to_all}',
+	    initiativeOutput: '@{output_to_all}',
+	    showNameOnRollTemplate: '@{show_character_name_yes}',
+	    rollOptions: '@{normal}',
+	    initiativeRoll: '@{normal_initiative}',
+	    initiativeToTracker: '@{initiative_to_tracker_yes}',
+	    breakInitiativeTies: '@{initiative_tie_breaker_var}',
+	    showTargetAC: '@{attacks_vs_target_ac_no}',
+	    showTargetName: '@{attacks_vs_target_name_no}',
+	    autoAmmo: '@{ammo_auto_use_var}',
+	    autoRevertAdvantage: false,
+	    houserules: {
+	      savingThrowsHalfProf: false,
+	      mediumArmorMaxDex: 2,
+	    },
+	  },
+	  advTrackerSettings: {
+	    showMarkers: false,
+	    ignoreNpcs: false,
+	    advantageMarker: 'green',
+	    disadvantageMarker: 'red',
+	    output: 'silent',
+	  },
+	  sheetEnhancements: {
+	    rollHPOnDrop: true,
+	    autoHD: true,
+	    autoSpellSlots: true,
+	  },
+	  genderPronouns: [
+	    {
+	      matchPattern: '^f$|female|girl|woman|feminine',
+	      nominative: 'she',
+	      accusative: 'her',
+	      possessive: 'her',
+	      reflexive: 'herself',
+	    },
+	    {
+	      matchPattern: '^m$|male|boy|man|masculine',
+	      nominative: 'he',
+	      accusative: 'him',
+	      possessive: 'his',
+	      reflexive: 'himself',
+	    },
+	    {
+	      matchPattern: '^n$|neuter|none|construct|thing|object',
+	      nominative: 'it',
+	      accusative: 'it',
+	      possessive: 'its',
+	      reflexive: 'itself',
+	    },
+	  ],
+	  defaultGenderIndex: 2,
+
+	};
+
+
+	class Migrator {
+
+	  constructor(startVersion) {
+	    this._versions = [{ version: startVersion || 0.1, migrations: [] }];
+	  }
+
+	  skipToVersion(version) {
+	    this._versions.push({ version, migrations: [] });
+	    return this;
+	  }
+
+	  nextVersion() {
+	    const currentVersion = this._versions.slice(-1)[0].version;
+	    const nextVersion = (currentVersion * 10 + 1) / 10; // Avoid FP errors
+	    this._versions.push({ version: nextVersion, migrations: [] });
+	    return this;
+	  }
+
+	  addProperty(path, value) {
+	    const expandedProperty = utils.createObjectFromPath(path, value);
+	    return this.transformConfig(config => utils.deepExtend(config, expandedProperty),
+	      `Adding property ${path} with value ${value}`);
+	  }
+
+	  overwriteProperty(path, value) {
+	    return this.transformConfig((config) => {
+	      const parts = path.split('.');
+	      const obj = parts.length > 1 ? utils.getObjectFromPath(config, parts.slice(0, -1).join('.')) : config;
+	      obj[parts.slice(-1)[0]] = value;
+	      return config;
+	    }, `Overwriting property ${path} with value ${JSON.stringify(value)}`);
+	  }
+
+	  copyProperty(oldPath, newPath) {
+	    return this.transformConfig(Migrator.propertyCopy.bind(null, oldPath, newPath),
+	      `Copying property from ${oldPath} to ${newPath}`);
+	  }
+
+
+	  static propertyCopy(oldPath, newPath, config) {
+	    const oldVal = utils.getObjectFromPath(config, oldPath);
+	    if (!_.isUndefined(oldVal)) {
+	      const expandedProperty = utils.createObjectFromPath(newPath, oldVal);
+	      utils.deepExtend(config, expandedProperty);
+	    }
+	    return config;
+	  }
+
+	  static propertyDelete(path, config) {
+	    const parts = path.split('.');
+	    const obj = parts.length > 1 ? utils.getObjectFromPath(config, parts.slice(0, -1).join('.')) : config;
+	    if (obj && !_.isUndefined(obj[parts.slice(-1)[0]])) {
+	      delete obj[parts.slice(-1)[0]];
+	    }
+	    return config;
+	  }
+
+	  deleteProperty(propertyPath) {
+	    return this.transformConfig(Migrator.propertyDelete.bind(null, propertyPath),
+	      `Deleting property ${propertyPath} from config`);
+	  }
+
+	  moveProperty(oldPath, newPath) {
+	    return this.transformConfig((config) => {
+	      config = Migrator.propertyCopy(oldPath, newPath, config);
+	      return Migrator.propertyDelete(oldPath, config);
+	    }, `Moving property from ${oldPath} to ${newPath}`);
+	  }
+
+	  transformConfig(transformer, message) {
+	    const lastVersion = this._versions.slice(-1)[0];
+	    lastVersion.migrations.push({ transformer, message });
+	    return this;
+	  }
+
+	  migrateConfig(state, logger) {
+	    logger.info('Checking config for upgrade, starting state: $$$', state);
+	    if (_.isEmpty(state)) {
+	      // working with a fresh install here
+	      state.version = 0;
+	    }
+	    if (!this._versions.find(version => version.version >= state.version)) {
+	      throw new Error(`Unrecognised schema state ${state.version} - cannot upgrade.`);
+	    }
+
+	    return this._versions
+	      .filter(version => version.version > state.version)
+	      .reduce((versionResult, version) => {
+	        logger.info('Upgrading schema to version $$$', version.version);
+
+	        versionResult = version.migrations.reduce((result, migration) => {
+	          logger.info(migration.message);
+	          return migration.transformer(result);
+	        }, versionResult);
+	        versionResult.version = version.version;
+	        logger.info('Post-upgrade state: $$$', versionResult);
+	        return versionResult;
+	      }, state);
+	  }
+	}
+
+
+	const migrator = new Migrator()
+	  .addProperty('config', {})
+	  .skipToVersion(0.4)
+	  .overwriteProperty('config.genderPronouns', utils.deepClone(oneSixConfig).genderPronouns)
+	  .skipToVersion(1.2)
+	  .moveProperty('config.autoHD', 'config.sheetEnhancements.autoHD')
+	  .moveProperty('config.rollHPOnDrop', 'config.sheetEnhancements.rollHPOnDrop')
+	  .skipToVersion(1.4)
+	  .moveProperty('config.newCharSettings.savingThrowsHalfProf',
+	    'config.newCharSettings.houserules.savingThrowsHalfProf')
+	  .moveProperty('config.newCharSettings.mediumArmorMaxDex', 'config.newCharSettings.houserules.mediumArmorMaxDex')
+	  .skipToVersion(1.6)
+	  .transformConfig((state) => {
+	    _.defaults(state.config, oneSixConfig);
+	    _.defaults(state.config.tokenSettings, oneSixConfig.tokenSettings);
+	    _.defaults(state.config.newCharSettings, oneSixConfig.newCharSettings);
+	    _.defaults(state.config.advTrackerSettings, oneSixConfig.advTrackerSettings);
+	    _.defaults(state.config.sheetEnhancements, oneSixConfig.sheetEnhancements);
+	    return state;
+	  }, 'Applying defaults as at schema version 1.6')
+	  // 1.7
+	  // add base houserules and variants section
+	  // add sheetEnhancements.autoTraits
+	  .nextVersion()
+	  .addProperty('config.variants', {
+	    rests: {
+	      longNoHpFullHd: false,
+	    },
+	  })
+	  .addProperty('config.sheetEnhancements.autoTraits', true)
+	  // 1.8
+	  // Set tokens to have vision by default so that people see the auto-generated stuff based on senses
+	  .nextVersion()
+	  .overwriteProperty('config.tokenSettings.light.hasSight', true)
+	  // 1.9 Add default tab setting
+	  .nextVersion()
+	  .addProperty('config.newCharSettings.tab', 'core')
+	  // 2.0 Add default token actions
+	  .nextVersion()
+	  .addProperty('config.newCharSettings.tokenActions', {
+	    initiative: false,
+	    abilityChecks: null,
+	    advantageTracker: null,
+	    savingThrows: null,
+	    attacks: null,
+	    statblock: false,
+	    traits: null,
+	    actions: null,
+	    reactions: null,
+	    legendaryActions: null,
+	    lairActions: null,
+	    regionalEffects: null,
+	    rests: false,
+	  })
+	  // 2.1 Add spells token action
+	  .nextVersion()
+	  .addProperty('config.newCharSettings.tokenActions.spells', false)
+	  // 2.2 Changes to support new roll behaviour in sheet 4.2.1
+	  .nextVersion()
+	  .overwriteProperty('config.newCharSettings.sheetOutput', '')
+	  .overwriteProperty('config.newCharSettings.deathSaveOutput', '')
+	  .overwriteProperty('config.newCharSettings.initiativeOutput', '')
+	  .overwriteProperty('config.newCharSettings.showNameOnRollTemplate', '')
+	  .overwriteProperty('config.newCharSettings.rollOptions', '')
+	  .overwriteProperty('config.newCharSettings.initiativeRoll', '')
+	  .overwriteProperty('config.newCharSettings.initiativeToTracker', '')
+	  .overwriteProperty('config.newCharSettings.breakInitiativeTies', '')
+	  .overwriteProperty('config.newCharSettings.showTargetAC', '')
+	  .overwriteProperty('config.newCharSettings.showTargetName', '')
+	  .overwriteProperty('config.newCharSettings.autoAmmo', '1')
+	  // 2.3 Remove "small" macros
+	  .nextVersion()
+	  .transformConfig((config) => {
+	    _.each(config.config.newCharSettings.tokenActions, (value, key) => {
+	      if (typeof value === 'string' && value.match('.*Small$')) {
+	        config.config.newCharSettings.tokenActions[key] = value.replace(/Small$/, '');
+	      }
+	    });
+	    return config;
+	  }, 'Removing "small" macros')
+	  .addProperty('config.newCharSettings.textSizes', {
+	    spellsTextSize: 'text',
+	    abilityChecksTextSize: 'text',
+	    savingThrowsTextSize: 'text',
+	  })
+	  // 2.4 Don't set default values for sheet options to save on attribute bloat
+	  .nextVersion()
+	  .transformConfig((config) => {
+	    const ncs = config.config.newCharSettings;
+	    const defaults = {
+	      sheetOutput: '',
+	      deathSaveOutput: '',
+	      initiativeOutput: '',
+	      showNameOnRollTemplate: '',
+	      rollOptions: '{{ignore=[[0',
+	      initiativeRoll: '@{shaped_d20}',
+	      initiativeToTracker: '@{selected|initiative_formula} &{tracker}',
+	      breakInitiativeTies: '',
+	      showTargetAC: '',
+	      showTargetName: '',
+	      autoAmmo: '',
+	      tab: 'core',
+	    };
+	    _.each(defaults, (defaultVal, key) => {
+	      if (ncs[key] === defaultVal) {
+	        ncs[key] = '***default***';
+	      }
+	    });
+
+	    if (ncs.houserules.mediumArmorMaxDex === '2') {
+	      ncs.houserules.mediumArmorMaxDex = '***default***';
+	    }
+
+	    ['spellsTextSize', 'abilityChecksTextSize', 'savingThrowsTextSize'].forEach((prop) => {
+	      if (ncs.textSizes[prop] === 'text_big') {
+	        ncs.textSizes[prop] = '***default***';
+	      }
+	    });
+
+	    return config;
+	  }, 'Removing default values')
+	  // 2.5 Custom saving throws
+	  .nextVersion()
+	  .addProperty('config.newCharSettings.houserules.saves', {
+	    useCustomSaves: '***default***',
+	    useAverageOfAbilities: '***default***',
+	    fortitude: {
+	      fortitudeStrength: '***default***',
+	      fortitudeDexterity: '***default***',
+	      fortitudeConstitution: '***default***',
+	      fortitudeIntelligence: '***default***',
+	      fortitudeWisdom: '***default***',
+	      fortitudeCharisma: '***default***',
+	    },
+	    reflex: {
+	      reflexStrength: '***default***',
+	      reflexDexterity: '***default***',
+	      reflexConstitution: '***default***',
+	      reflexIntelligence: '***default***',
+	      reflexWisdom: '***default***',
+	      reflexCharisma: '***default***',
+	    },
+	    will: {
+	      willStrength: '***default***',
+	      willDexterity: '***default***',
+	      willConstitution: '***default***',
+	      willIntelligence: '***default***',
+	      willWisdom: '***default***',
+	      willCharisma: '***default***',
+	    },
+	  })
+	  .moveProperty('config.newCharSettings.houserules.savingThrowsHalfProf',
+	    'config.newCharSettings.houserules.saves.savingThrowsHalfProf')
+	  .addProperty('config.newCharSettings.houserules.baseDC', '***default***')
+	  // 2.6 expertise_as_advantage
+	  .nextVersion()
+	  .addProperty('config.newCharSettings.houserules.expertiseAsAdvantage', '***default***')
+	  // 2.7 add hide options
+	  .nextVersion()
+	  .addProperty('config.newCharSettings.hide', {
+	    hideAttack: '***default***',
+	    hideDamage: '***default***',
+	    hideAbilityChecks: '***default***',
+	    hideSavingThrows: '***default***',
+	    hideSavingThrowDC: '***default***',
+	    hideSpellContent: '***default***',
+	    hideActionFreetext: '***default***',
+	    hideSavingThrowFailure: '***default***',
+	    hideSavingThrowSuccess: '***default***',
+	    hideRecharge: '***default***',
+	  })
+	  // 2.8 rename hideActionFreetext
+	  .nextVersion()
+	  .moveProperty('config.newCharSettings.hide.hideActionFreetext', 'config.newCharSettings.hide.hideFreetext')
+	  // 2.9 make auto-applying new character settings optional (and switched off by default)
+	  .nextVersion()
+	  .addProperty('config.newCharSettings.applyToAll', false)
+	  // 3.0 add hit dice output option + show rests option
+	  .nextVersion()
+	  .addProperty('config.newCharSettings.hitDiceOutput', '***default***')
+	  .addProperty('config.newCharSettings.showRests', '***default***')
+	  // 3.1 add hideCost
+	  .nextVersion()
+	  .addProperty('config.newCharSettings.hide.hideCost', '***default***')
+	  // 3.2 update roll settings;
+	  .nextVersion()
+	  .transformConfig((config) => {
+	    const ncs = config.config.newCharSettings;
+	    const oldVals = {
+	      advantage: 'adv {{ignore=[[0',
+	      disadvantage: 'dis {{ignore=[[0',
+	      two: '{{roll2=[[d20@{d20_mod}',
+	    };
+	    const newVals = {
+	      advantage: '2d20kh1',
+	      disadvantage: '2d20kl1',
+	      two: '1d20',
+	    };
+	    const key = _.invert(oldVals)[ncs.rollOptions];
+	    ncs.rollOptions = key ? newVals[key] : '***default***';
+	    return config;
+	  }, 'Upgrading Roll options settings to new format')
+	  // 3.3 make boolean switches consistent for 9.x sheet
+	  .nextVersion()
+	  .transformConfig((config) => {
+	    const ncs = config.config.newCharSettings;
+	    [
+	      'showTargetAC',
+	      'showTargetName',
+	      'autoAmmo',
+	      'houserules.expertiseAsAdvantage',
+	      'houserules.saves.useCustomSaves',
+	      'houserules.saves.useAverageOfAbilities',
+	      'houserules.saves.fortitude.fortitudeStrength',
+	      'houserules.saves.fortitude.fortitudeDexterity',
+	      'houserules.saves.fortitude.fortitudeConstitution',
+	      'houserules.saves.fortitude.fortitudeIntelligence',
+	      'houserules.saves.fortitude.fortitudeWisdom',
+	      'houserules.saves.fortitude.fortitudeCharisma',
+	      'houserules.saves.reflex.reflexStrength',
+	      'houserules.saves.reflex.reflexDexterity',
+	      'houserules.saves.reflex.reflexConstitution',
+	      'houserules.saves.reflex.reflexIntelligence',
+	      'houserules.saves.reflex.reflexWisdom',
+	      'houserules.saves.reflex.reflexCharisma',
+	      'houserules.saves.will.willStrength',
+	      'houserules.saves.will.willDexterity',
+	      'houserules.saves.will.willConstitution',
+	      'houserules.saves.will.willIntelligence',
+	      'houserules.saves.will.willWisdom',
+	      'houserules.saves.will.willCharisma',
+	    ].forEach((propPath) => {
+	      const propVal = utils.getObjectFromPath(ncs, propPath);
+	      const newVal = (propVal !== '***default***');
+	      utils.deepExtend(ncs, utils.createObjectFromPath(propPath, newVal));
+	    });
+	    return config;
+	  }, 'Upgrade config for 9.x character sheet')
+	  // 3.4 Fix initiative settings for 9.1.0 sheet
+	  .nextVersion()
+	  .transformConfig((config) => {
+	    const ncs = config.config.newCharSettings;
+	    ncs.breakInitiativeTies = ncs.breakInitiativeTies !== '***default***';
+	    if (ncs.initiativeToTracker !== '***default***') {
+	      ncs.initiativeToTracker = 0;
+	    }
+	    return config;
+	  }, 'Upgrade initiative settings')
+	  // 3.5 Add option to put recharges on token actions
+	  .nextVersion()
+	  .addProperty('config.newCharSettings.tokenActions.showRecharges', false)
+	  // 3.6 Add new props for latest sheet
+	  .nextVersion()
+	  .transformConfig((config) => {
+	    const ncs = config.config.newCharSettings;
+	    ncs.display = {
+	      showPassiveSkills: false,
+	      showWeight: '***default***',
+	      showEmote: false,
+	      showFreetext: false,
+	      showFreeform: false,
+	      showDiceModifiers: false,
+	      showCritRange: false,
+	      extraOnACrit: false,
+	    };
+	    ncs.measurementSystems = {
+	      distanceSystem: '***default***',
+	      weightSystem: '***default***',
+	      encumbranceMultiplier: 1,
+	    };
+	    _.extend(ncs.houserules, {
+	      inspirationMultiple: false,
+	      criticalDamageHouserule: '***default***',
+	      proficiencyDice: false,
+	      psionics: false,
+	      customClasses: false,
+	      honorToggle: false,
+	      sanityToggle: false,
+	    });
+	    ncs.tokenActions.racialFeatures = null;
+	    ncs.tokenActions.classFeatures = null;
+	    ncs.tokenActions.feats = null;
+	    ncs.automaticHigherLevelQueries = '***default***';
+	    return config;
+	  }, 'Adding new properties for 9.x sheet settings')
+	  .moveProperty('config.newCharSettings.showRests', 'config.newCharSettings.display.showRests')
+	  // 3.7 Add monsterTokenName
+	  .nextVersion()
+	  .addProperty('config.tokenSettings.monsterTokenName', '');
+
+
+	Migrator.migrateShapedConfig = migrator.migrateConfig.bind(migrator);
+
+	module.exports = Migrator;
+
+
+/***/ },
 /* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	/* globals GroupInitiative: false */
 	const _ = __webpack_require__(2);
 
 	module.exports = class EventDispatcher {
 
-	  constructor(roll20, errorHandler, logger) {
+	  constructor(roll20, errorHandler, logger, reporter) {
 	    this.roll20 = roll20;
 	    this.addedTokenIds = [];
 	    this.errorHandler = errorHandler;
 	    this.logger = logger;
+	    this.reporter = reporter;
 	    this.addTokenListeners = [];
 	    this.attributeChangeHandlers = {};
-	    this.turnOrderChangeListeners = [];
 	    logger.wrapModule(this);
 	    roll20.on('add:token', this.handleAddToken.bind(this));
 	    roll20.on('change:token', this.handleChangeTokenForAdd.bind(this));
-	    roll20.on('change:campaign:turnorder', (obj, prev) => {
-	      this.handleTurnOrderChange(obj.get('turnorder'), prev.turnorder);
+	    roll20.on('chat:message', (msg) => {
+	      if (msg.playerid !== 'API') {
+	        reporter.setPlayer(msg.playerid);
+	      }
 	    });
-	    if (typeof GroupInitiative !== 'undefined' && GroupInitiative.ObserveTurnOrderChange) {
-	      /* eslint-disable new-cap */
-	      // noinspection JSUnresolvedFunction
-	      GroupInitiative.ObserveTurnOrderChange(this.handleTurnOrderChange.bind(this));
-	      /* eslint-enable new-cap */
-	    }
-	    if (typeof TurnMarker !== 'undefined') {
-	      roll20.on('chat:message', (msg) => {
-	        if (msg.type === 'api' && msg.content === '!eot') {
-	          const turnOrder = roll20.getCampaign().get('turnorder');
-	          _.defer(this.handleTurnOrderChange.bind(this, turnOrder));
-	        }
-	      });
-	    }
 	    roll20.on('change:attribute', (curr, prev) => {
 	      (this.attributeChangeHandlers[curr.get('name')] || []).forEach(handler => handler(curr, prev));
 	    });
@@ -7898,29 +7669,16 @@ var ShapedScripts =
 	    if (_.contains(this.addedTokenIds, token.id)) {
 	      this.addedTokenIds = _.without(this.addedTokenIds, token.id);
 	      this.addTokenListeners.forEach(listener => listener(token));
-	    }
-	  }
-
-	  handleTurnOrderChange(current, prev) {
-	    const prevOrder = prev ? JSON.parse(prev) : [];
-	    const currentOrder = current ? JSON.parse(current) : [];
-
-	    if (currentOrder.length >= prevOrder.length &&
-	      (prevOrder.length === 0 || currentOrder[0].id !== prevOrder[0].id)) {
-	      this.turnOrderChangeListeners.forEach(listener => listener(currentOrder));
+	      // this.setTokenBarsOnDrop(token, true);
 	    }
 	  }
 
 	  registerEventHandler(eventType, handler) {
-	    switch (eventType) {
-	      case 'add:token':
-	        this.addTokenListeners.push(this.wrapHandler(handler));
-	        break;
-	      case 'change:campaign:turnorder':
-	        this.turnOrderChangeListeners.push(this.wrapHandler(handler));
-	        break;
-	      default:
-	        this.roll20.on(eventType, this.wrapHandler(handler));
+	    if (eventType === 'add:token') {
+	      this.addTokenListeners.push(this.wrapHandler(handler));
+	    }
+	    else {
+	      this.roll20.on(eventType, this.wrapHandler(handler));
 	    }
 	  }
 

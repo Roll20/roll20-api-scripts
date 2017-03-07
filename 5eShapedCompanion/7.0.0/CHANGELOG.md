@@ -1,37 +1,3 @@
-<a name="7.2.0"></a>
-# [7.2.0](https://github.com/symposion/roll20-shaped-scripts/compare/7.1.0...7.2.0) (2017-03-03)
-
-
-### Bug Fixes
-
-* **output:** Prevent duplicate messages when whispering to GM ([75aae55](https://github.com/symposion/roll20-shaped-scripts/commit/75aae55))
-* **turn-recharge:** Tweaks to make it work better with GroupInit ([306b05a](https://github.com/symposion/roll20-shaped-scripts/commit/306b05a))
-
-
-### Features
-
-* **turn-recharge:** Add config option to turn turn recharges on/off ([5e2b355](https://github.com/symposion/roll20-shaped-scripts/commit/5e2b355))
-
-
-
-<a name="7.1.0"></a>
-# [7.1.0](https://github.com/symposion/roll20-shaped-scripts/compare/7.0.0...7.1.0) (2017-03-01)
-
-
-### Bug Fixes
-
-* **config:** All commands warn when config is not upgraded ([27384c1](https://github.com/symposion/roll20-shaped-scripts/commit/27384c1)), closes [#370](https://github.com/symposion/roll20-shaped-scripts/issues/370)
-* **import:** Ensure saves/skills always include PB ([8e53615](https://github.com/symposion/roll20-shaped-scripts/commit/8e53615)), closes [#366](https://github.com/symposion/roll20-shaped-scripts/issues/366)
-* **output:** Ensure GM sees whispered output as well ([85009cb](https://github.com/symposion/roll20-shaped-scripts/commit/85009cb))
-
-
-### Features
-
-* **output:** Whisper results if original command/trigger was whispered ([12eb86c](https://github.com/symposion/roll20-shaped-scripts/commit/12eb86c)), closes [#367](https://github.com/symposion/roll20-shaped-scripts/issues/367)
-* **rests:** Implement recharge 5-6 style recharges ([46bb64b](https://github.com/symposion/roll20-shaped-scripts/commit/46bb64b)), closes [#374](https://github.com/symposion/roll20-shaped-scripts/issues/374)
-
-
-
 <a name="7.0.0"></a>
 # [7.0.0](https://github.com/symposion/roll20-shaped-scripts/compare/6.4.6...7.0.0) (2017-02-27)
 

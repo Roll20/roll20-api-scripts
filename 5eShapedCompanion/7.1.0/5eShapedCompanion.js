@@ -110,7 +110,7 @@ var ShapedScripts =
 	el.configureEntity('spells', [], EntityLookup.getVersionChecker('1.0.0', 'spells'));
 
 	roll20.on('ready', () => {
-	  logger.info('-=> ShapedScripts v7.2.0 <=-');
+	  logger.info('-=> ShapedScripts v7.1.0 <=-');
 	  const character = roll20.createObj('character', { name: 'SHAPED_VERSION_TESTER' });
 	  const campaignSize = roll20.findObjs({}).length;
 	  const delay = Math.max(2000, Math.floor(campaignSize / 20));
@@ -2441,7 +2441,7 @@ var ShapedScripts =
 
 	  sendToPlayerAndGm(text, playerId) {
 	    this.roll20.sendChat('', `/w GM ${text}`, null, { noarchive: true });
-	    if (playerId && !this.roll20.playerIsGM(playerId)) {
+	    if (!this.roll20.playerIsGM(playerId)) {
 	      this.roll20.sendChat('', `/w ${this.getPlayerName(playerId)} ${text}`, null, { noarchive: true });
 	    }
 	  }
@@ -3621,10 +3621,7 @@ var ShapedScripts =
 	  // 4.1 rename racial features
 	  .nextVersion()
 	  .moveProperty('config.newCharSettings.tokenActions.racialFeatures',
-	    'config.newCharSettings.tokenActions.racialTraits')
-	  // 4.2 add switch for auto turn recharge
-	  .nextVersion()
-	  .addProperty('config.sheetEnhancements.turnRecharges', false);
+	    'config.newCharSettings.tokenActions.racialTraits');
 
 	module.exports = class ShapedConfig extends ShapedModule {
 
@@ -4154,7 +4151,6 @@ var ShapedScripts =
 	        rollHPOnDrop: this.booleanValidator,
 	        autoHD: this.booleanValidator,
 	        autoTraits: this.booleanValidator,
-	        turnRecharges: this.booleanValidator,
 	      },
 	      genderPronouns: [
 	        {
@@ -4374,7 +4370,7 @@ var ShapedScripts =
 	    if (options.menu) {
 	      this.reportPlayer('Configuration', options.menu[0].getMenu(), options.playerId);
 	    }
-	    else if (_.isEmpty(_.omit(options, 'menu', 'playerId'))) {
+	    else {
 	      const menu = new MainMenu(this.myState.config, ShapedConfig.configOptionsSpec);
 	      this.reportPlayer('Configuration', menu.getMenu(), options.playerId);
 	    }
@@ -5249,9 +5245,6 @@ var ShapedScripts =
 	      }) +
 	      this.makeToggleSetting({
 	        path: `${root}.autoTraits`, title: 'Process Uses automatically', menuCmd: menu,
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${root}.turnRecharges`, title: 'Recharge uses on new turns', menuCmd: menu,
 	      });
 
 	    const th = utils.buildHTML('th', 'Character Sheet Enhancements', { colspan: '2' });
@@ -5674,15 +5667,10 @@ var ShapedScripts =
 
 	  registerEventListeners(eventDispatcher) {
 	    eventDispatcher.registerEventHandler('change:campaign:turnorder', (turnOrder) => {
-	      if (!_.isEmpty(turnOrder) && turnOrder[0].id !== '-1' && this.myState.config.sheetEnhancements.turnRecharges) {
+	      if (!_.isEmpty(turnOrder) && turnOrder[0].id !== '-1') {
 	        const graphic = this.roll20.getObj('graphic', turnOrder[0].id);
 	        const char = this.roll20.getObj('character', graphic.get('represents'));
-	        if (char) {
-	          const results = this.doRest(char, 'turn');
-	          if (this.buildRestMessageBody(results) !== '') {
-	            this.roll20.sendChat(`character|${char.id}`, this.buildMessage(char, 'turn', results, true));
-	          }
-	        }
+	        this.handleRest({ selected: {}, character: char, type: 'turn' });
 	      }
 	    });
 	  }
@@ -5691,10 +5679,6 @@ var ShapedScripts =
 	    let chars = options.selected.character;
 	    if (!_.isUndefined(options.character)) {
 	      chars = [options.character];
-	    }
-	    if (_.isEmpty(chars)) {
-	      this.reportError('Invalid options/selection', 'You must select at least one character or include --character ' +
-	        'when calling !shaped-rest', options.playerId);
 	    }
 	    chars.forEach((char) => {
 	      const results = this.doRest(char, options.type);
@@ -5728,17 +5712,13 @@ var ShapedScripts =
 	      msg += '{{show_character_name=1}}';
 	    }
 
-	    msg += this.buildRestMessageBody(results);
-
-	    return msg;
-	  }
-
-	  buildRestMessageBody(results) {
-	    return _.chain(this.displayTemplates)
+	    msg += _.chain(this.displayTemplates)
 	      .pick(_.keys(results))
 	      .map(template => template(results))
 	      .value()
 	      .join('');
+
+	    return msg;
 	  }
 
 	  recoverUses(character, restType, originalRestType) {
@@ -7850,7 +7830,13 @@ var ShapedScripts =
 	    roll20.on('add:token', this.handleAddToken.bind(this));
 	    roll20.on('change:token', this.handleChangeTokenForAdd.bind(this));
 	    roll20.on('change:campaign:turnorder', (obj, prev) => {
-	      this.handleTurnOrderChange(obj.get('turnorder'), prev.turnorder);
+	      const prevOrder = JSON.parse(prev.turnorder);
+	      const objOrder = JSON.parse(obj.get('turnorder'));
+
+	      if (_.isArray(prevOrder) && _.isArray(objOrder) && prevOrder.length && objOrder.length &&
+	        objOrder[0].id !== prevOrder[0].id) {
+	        this.handleTurnOrderChange();
+	      }
 	    });
 	    if (typeof GroupInitiative !== 'undefined' && GroupInitiative.ObserveTurnOrderChange) {
 	      /* eslint-disable new-cap */
@@ -7858,14 +7844,11 @@ var ShapedScripts =
 	      GroupInitiative.ObserveTurnOrderChange(this.handleTurnOrderChange.bind(this));
 	      /* eslint-enable new-cap */
 	    }
-	    if (typeof TurnMarker !== 'undefined') {
-	      roll20.on('chat:message', (msg) => {
-	        if (msg.type === 'api' && msg.content === '!eot') {
-	          const turnOrder = roll20.getCampaign().get('turnorder');
-	          _.defer(this.handleTurnOrderChange.bind(this, turnOrder));
-	        }
-	      });
-	    }
+	    roll20.on('chat:message', (msg) => {
+	      if (msg.type === 'api' && msg.content === '!eot') {
+	        _.defer(this.handleTurnOrderChange.bind(this));
+	      }
+	    });
 	    roll20.on('change:attribute', (curr, prev) => {
 	      (this.attributeChangeHandlers[curr.get('name')] || []).forEach(handler => handler(curr, prev));
 	    });
@@ -7901,14 +7884,10 @@ var ShapedScripts =
 	    }
 	  }
 
-	  handleTurnOrderChange(current, prev) {
-	    const prevOrder = prev ? JSON.parse(prev) : [];
-	    const currentOrder = current ? JSON.parse(current) : [];
-
-	    if (currentOrder.length >= prevOrder.length &&
-	      (prevOrder.length === 0 || currentOrder[0].id !== prevOrder[0].id)) {
-	      this.turnOrderChangeListeners.forEach(listener => listener(currentOrder));
-	    }
+	  handleTurnOrderChange() {
+	    const turnOrderString = this.roll20.getCampaign().get('turnorder');
+	    const turnOrder = _.isEmpty(turnOrderString) ? [] : JSON.parse(turnOrderString);
+	    this.turnOrderChangeListeners.forEach(listener => listener(turnOrder));
 	  }
 
 	  registerEventHandler(eventType, handler) {

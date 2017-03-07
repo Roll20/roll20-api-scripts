@@ -3,9 +3,6 @@
 # Roll20 Shaped Character Sheet Companion Script
 This is a script designed for use with the API on the [Roll20 Virtual Table Top](http://roll20.net). This script is specifically designed to provide services and enhancements for the [5e Shaped Character Sheet](http://github.com/mlenser/roll20-character-sheets/tree/master/D%26D_5e_Reshaped) by Roll20 user Kryx. It **will not work** with any other character sheet such as the Roll20 5e OGL character sheet. If you report bugs/ask for help while trying to use the script with a different character sheet you will be ignored with extreme prejudice!
 
-**NOTE FOR 1-CLICK USERS**: I recommend that you do not install this script via the 1-Click interface. Both the script and the sheet it supports are under very active development with frequent updates. If you install them from the Roll20 sheet list/1-click script page, they will update automatically without asking you when a new version is released. If something goes wrong, this can leave your campaign in a mess just before you're due to start a game session. Even when upgrades go smoothly, you may decide that you don't like changes that have been made and prefer the old version. Unless you install a specific version of the sheet and the script, you will have no control over this process, and downgrades after the fact are hard-to-impossible. 
-
-
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
@@ -26,12 +23,11 @@ This is a script designed for use with the API on the [Roll20 Virtual Table Top]
   - [Death saves, Hit Dice](#death-saves-hit-dice)
   - [Roll HP for monsters](#roll-hp-for-monsters)
   - [Process HD rolls](#process-hd-rolls)
-  - [Decrement uses](#decrement-uses)
+  - [Decrement trait uses](#decrement-trait-uses)
   - [Short/Long rest](#shortlong-rest)
 - [Full command list](#full-command-list)
   - [!shaped-import-statblock](#shaped-import-statblock)
   - [!shaped-import-monster](#shaped-import-monster)
-  - [!shaped-import-by-token](#shaped-import-by-token)
   - [!shaped-import-spell](#shaped-import-spell)
   - [!shaped-import-spell-list](#shaped-import-spell-list)
   - [!shaped-at](#shaped-at)
@@ -39,8 +35,6 @@ This is a script designed for use with the API on the [Roll20 Virtual Table Top]
   - [!shaped-config](#shaped-config)
   - [!shaped-apply-defaults](#shaped-apply-defaults)
   - [!shaped-rest](#shaped-rest)
-  - [!shaped-update-character](#shaped-update-character)
-  - [!shaped-expand-spells](#shaped-expand-spells)
 - [Configuration](#configuration)
   - [Advantage Tracker](#advantage-tracker)
   - [Token Defaults](#token-defaults)
@@ -74,7 +68,7 @@ This is a script designed for use with the API on the [Roll20 Virtual Table Top]
 ## Prerequisites:
 * You, or the person who created your game, must be a **Pro** subscriber to Roll20 to use this script.
 * You should be familiar with [how to use roll20](https://app.roll20.net/editor/tutorial), have a basic understanding of how to [configure a game](https://wiki.roll20.net/Game_Management) on Roll20, including setting up [character sheets](https://wiki.roll20.net/Character_Sheets) and installing API scripts. If you've only just started using Roll20 and haven't found your feet yet, setting this script up and using it is probably a bad place to start - it's an advanced tool, many of whose features presume a good working understanding of standard Roll20 capabilities. Play around with a simple campaign first, get used to making characters, working with tokens, and using the 5e Shaped Character Sheet manually; and then come back here for power-user goodness.
-* You should have a recent version of the 5e Shaped Character Sheet. Due to the lack of versioning support with Roll20 character sheets, we **strongly** recommend that you install a specific version from [Kryx's Github](https://github.com/mlenser/roll20-character-sheets/tree/master/5eShaped). Instructions for how to do this can be found on the thread on the [character sheets forum](https://app.roll20.net/forum/category/277980) - the threads change frequently but at the time of writing the latest one was [here](https://app.roll20.net/forum/post/4450188/5e-shaped-version-8-plus). Although it is possible to install the character sheet from the list in game settings, we recommend that you don't do this for the reasons outlined at the beginning of this document.
+* You should have a recent version of the 5e Shaped Character Sheet. If you are installing it from the list on the game settings page, it's under Dungeons & Dragons, and at the time of writing it's called 5th Edition (Shaped). If you want the version of the sheet with all the very latest fixes and features, you can install it directly from [Kryx's Github](https://github.com/mlenser/roll20-character-sheets/tree/master/5eShaped). Instructions for how to do this can be found on the thread on the [character sheets forum](https://app.roll20.net/forum/category/277980) - the threads change frequently but at the time of writing the latest one was [here](https://app.roll20.net/forum/post/4098617/5e-shaped-6-dot-5-1-plus)
 
 ## Installation
 1. Open the [raw text of the script](https://raw.githubusercontent.com/symposion/roll20-api-scripts/master/5eShapedCompanion/latest/5eShapedCompanion.js)
@@ -95,7 +89,7 @@ Some of the script commands allow you to import spells or monsters from custom d
 ```
 "ShapedScripts 1460893071585 INFO : Summary of adding entities to the lookup: {\"errors\":0,\"monsters\":{\"withErrors\":0,\"skipped\":0,\"deleted\":0,\"patched\":0,\"added\":558}}"
 ```
-You might want to try searching for something like 'roll20 5eShapedScripts data 5e-spells.js 5e-monsters.js' on Google.
+Send me a private message [here](https://app.roll20.net/users/791452/lucian) containing your email address if you want some more guidance on finding and installing useful extras.
 
 # Usage
 ## Import a Monster from Monster Manual Statblock text
@@ -108,6 +102,12 @@ You first of all need a statblock from somewhere - generally speaking people get
 1. Type **!shaped-import-statblock** into the chat window and hit enter.
 1. You should see a message in the chat window, and end up with a new character in the journal. If you see an error
 message at this point you may need to fix up some problems with the text of the statblock
+1. Open the new character; you will be presented with the option to cancel or import, click import (this stage seems
+redundant, but it's working around a Roll20 limitation unfortunately)
+1. After a few seconds (be patient) all the attributes of your new character should be populated.
+1. Click the edit button at the top right of the character sheet dialog, and then click 'Use selected token" in the
+"Default token"  box (Unfortunately it is not possible to automate this step either as things stand)
+1. Save
 
 Your new monster is now ready for use!
 
@@ -127,6 +127,10 @@ _Please see above for details about installing a custom database_
 1. Select the token
 1. Type **!shaped-import-monster --Lich** into the chat window and hit enter, replacing 'Lich' with the name of the monster you want to import. Obviously the monster name must match something in your custom database. If you're not sure what names are present in the database, or exactly what spelling is being used, you can run **!shaped-import-monster** on its own and it will show a button that will launch a select list of all the available monsters.
 1. You should see a message in the chat window, and end up with a new character in the journal.
+1. Open the new character; you will be presented with the option to cancel or import, click import (this stage seems redundant, but it's working around a Roll20 limitation unfortunately)
+1. After a few seconds (be patient) all the attributes of your new character should be populated.
+1. Click the edit button at the top right of the character sheet dialog, and then click 'Use selected token" in the "Default token"  box (Unfortunately it is not possible to automate this step either as things stand)
+1. Save
 
 Your new monster is now ready for use!
 
@@ -136,6 +140,8 @@ _Please see above for details about installing a custom database_
 1. Select a token that represents a character
 1. Type **!shaped-import-spell --Fireball, Cure Wounds** into the chat window and hit enter, replacing the spell names with whatever spells you want to import. If you're not sure what spells are available, run **!shaped-import-spell** on its own to see a list.
 1. You should see a confirmation message in the chat window
+1. Open the character sheet for the character in question
+1. Click "Import" to complete the import
 
 Your new spells are now ready for use!
 
@@ -165,11 +171,11 @@ You can configure one of your token bars to represent HP by default in the scrip
 ## Process HD rolls
 If enabled in the configuration (see below), the script will automatically apply hit dice rolled by clicking on the relevant HD line on the character sheet to the character's HP total. It will also decrement the number of HD remaining. It will issue a warning if no HD of the relevant size remain and won't add the amount to the HP total.
 
-## Decrement uses
-If enabled in the configuration (see below), the script will automatically decrement the number of uses remaining for traits, actions, attacks, features, etc each time they are used. It will also issue a warning if something is used when no uses remain.
+## Decrement trait uses
+If enabled in the configuration (see below), the script will automatically decrement the number of uses remaining for traits and features each time they are used. It will also issue a warning if a trait is used when no uses remain.
 
 ## Short/Long rest
-The script will apply the effects of a short/long rest if you run the command **!shaped-rest --type long** or **!shaped-rest --type short** with a character token selected. There are also buttons that link to this functionality on the character sheet itself. You can show these by entering "edit mode" on the sheet and ticking the checkbox on the Settings page for "Show Rests".
+The script will apply the effects of a short/long rest if you run the command **!shaped-rest --long** or **!shaped-rest --short** with a character token selected. There are also buttons that link to this functionality on the character sheet itself. You can show these by entering "edit mode" on the sheet and ticking the checkbox on the Core page for "Show Rests".
 
 
 # Full command list
@@ -201,23 +207,12 @@ You may no or 1 tokens selected when running this command:
 
 <a name="avatar-note"/><sup>1</sup> Note that avatars will ony successfully be set for token images from your library, not marketplace or web content. This is due to security restrictions within the Roll20 platform. If you really want an image as a character avatar, please unpload it to your library and then create a token from it before doing your import.
 
-## !shaped-import-by-token
-This basically does the same thing as [!shaped-import-monster](#shaped-import-monster), except that instead of passing it a list of monsters as parameters to the chat command, it infers the names of the monster to import from the names of the selected tokens. This is a quick way to configure and import a whole bunch of monsters all at once. Find the tokens you want for all your monster and drag them to the tabletop; name the tokens according to the monsters they represent, select them all, and run this command. It will find monsters by name from your custom JSON database, and configure each token to represent the new characters it creates.
-
-### Options
-* **--overwrite** as for [!shaped-import-monster](#shaped-import-monster)
-* **--replace** as for [!shaped-import-monster](#shaped-import-monster)
-
-### Selection
-You must have at least one token selected for this command. As described above, it will use the name assigned to each token to lookup the monster it will represent from your JSON database.
-
 ## !shaped-import-spell
 * Alias !shaped-spell *
 Imports details of named spells from a database of customer spells loaded as a separate script. All spells will be added to the currently selected character. If run with no options, this command will display a chat window button that allows you to launch a select list of all available spells to choose from.
 
 ### Options
 * **--<spell name>** (e.g. **--Fireball**) specifies a spell to import. You may supply multiple spells as separate options, or you may supply multiple in one option separate by commas (**--Fireball, Lightning Bolt, Wish**)
-* **--overwrite** If this option is included, the script will ovewrite existing spells with the same name with the new spells requested, otherwise they will be skipped
 
 ### Selection
 You must have exactly one token that represents a character selected when running this command.
@@ -232,7 +227,6 @@ Imports a complete list of spells according to specified criteria into the curre
 * **--oaths <oaths>** (e.g. **--oaths Ancients) Restrict the list the specified paladin oath or oaths. If multiple, comma-separated oaths are given, it will match any of spell that falls under any of the supplied oaths. Valid values are Ancients, Vengeance and Devotion
 * **--domains <domains>** (e.g. **--domains War, Light**) Restrict the list to the specified cleric domain or domains. If multiple, comma-separated domains are given, it will match any spell that has any of the supplied domains
 * **--patrons <patrons>** (e.g. **--patrons Archfey**) Restrict the list to the specified warlock patron or patrons. If multiple, comma-separated patrons are given, it will match any spell that has any of the supplied patrons. Valid values are Archfey, Fiend and Great Old One
-* **--overwrite** If this option is included, the script will ovewrite existing spells with the same name with the new spells requested, otherwise they will be skipped
 
 ### Selection
 You must have exactly one token that represents a character selected when running this command.
@@ -292,33 +286,16 @@ Display configuration UI to change default behaviours. The significance of all t
 * Alias !shaped-token-defaults *
 Apply the same defaults that are used when setting up tokens on import to whatever tokens are currently selected. Useful for mass-configuring manually created tokens. See [below](#config-token-settings) for more details on what these options are.
 
-### Selection
-You must have at least one token that represents a character selected for this command to work. 
-
 ## !shaped-rest
-Applies the effects of a long or short rest, or a turn recharge
+Applies the effects of a long or short rest.
 
 ### Options
-* **--type [long|short|turn] (required)** Specify what type of rest to perform. If this is 'turn', it will perform a 'turn recharge' - resetting uses for all actions/traits/etc that have X/turn usages. 
-* **--character** Apply the rest to the supplied character id instead of the selected tokens
+* **--long** do a long rest
+* **--short** do a short rest
+* **--id** Apply the rest to the supplied character id instead of the selected tokens
 
 ### Selection
-You must select at least one token that represents a character unless you supply the --character option. The selected character(s) will have the effects of the specified type of rest applied to them.
-
-## !shaped-update-character
-Triggers any pending character sheet upgrades for the selected characters. When a new version of the character sheet is released, there are often upgrade scripts that must run before previously created characters can be used with it. Normally these are run the first time you open each character sheet. For convenience, you can use this command to trigger these updates on batches of characters without having to open their sheets.
-
-### Options
-* **--all** Apply any pending character sheet upgrades for all characters in the current campaign. Note that this might take a *long* time in a large campaign - use with caution!
-
-## !shaped-expand-spells
-When you drag characters from the SRD/Compendium, they are imported with a spell list, but none of the spells have any content. This command will expand these "stub spells" using data from a custom spells database, if one is present.
-
-### Selection
-You must select at least one token that represents a character. The selected character(s) will be checked for empty spells and these will be expanded from the custom JSON database.
-
-### Selection
-Unless you specify **--all** you must have at least one token that represents a character selected for this command to work.
+You must select at least one token that represents a character unless you supply the --id option. The selected character(s) will have the effects of the specified type of rest applied to them.
 
 # Configuration
 ## Advantage Tracker
@@ -332,7 +309,6 @@ Unless you specify **--all** you must have at least one token that represents a 
 Note that all of the settings under Token Defaults are applied to tokens only when **!shaped-import-monster**, **!shaped-import-statblock** or **!shaped-apply-defaults** are run.
 
 * **Numbered Tokens** If this is 'on', new tokens will have %%NUMBERED%% appended to their name to work with Aaron's TokenNameNumbered script. Please search for this on the API forum for more details.
-* **Token Name Override** If this is not empty, all new tokens will have their name tag set to this value. This is most useful in combination with Numbered Tokens, which allows you to have all your monsters labelled something like 'Monster 1', 'Monster 2', so your players can reference them but don't get any clues about what they are from the name.
 * **Show Name Tag** If this is 'on', the token will show its name tag to anyone who has permission to see it
 * **Show Name to Players** If this is 'on', and **Show Name Tag** is also 'on', players will be able to see the token's name.
 * **Light Radius** Default light radius emitted from token (Note that this value will be overriden by a value derived from a monster's senses attribute where available)
@@ -377,7 +353,7 @@ for new characters.
 * **Show Target Name** If 'on', all attacks and spells with a target will require a target to be clicked and will display the target's character name on the Roll output
 * **Auto Use Ammo** If 'on', new characters will be set to automatically decrement ammo when launching attacks that are configured with ammo.
 * **Default tab** Sets the default tab which will be open when you first go to the new character sheet.
-* **Default token actions** Configures which token actions will be created automatically for the character. For details of what each of these actions are, please see the documentation for [!shaped-abilities](#roll-hp-for-monsters). 
+* **Default token actions** Configures which token actions will be created automatically for the character. For details of what each of these actions are, please see the documentation for [!shaped-abilities](#roll-hp-for-monsters). **PLEASE NOTE:** There is currently a bug for which we have no sensible resolution that prevents this functionality working for attacks, actions, spells, reactions, lair actions, legendary actions, regional effects and traits when using **!shaped-import-monster** or **!shaped-import-statblock**. For the time being the workaround is to run **!shaped-apply-defaults** after you have run the import and clicked the "Import" button on the character sheet.
 * **Hiding Settings** This submenu configures the default settings for the various "hide" options from the settings page of the character sheet. These settings are designed for use with a browser extension to help mask parts of the sheet output (see character sheet documentation for more details).
 * **Text sizes** This submenu configures the default text sizes for the output of various macros in the character sheet.
 
