@@ -1,5 +1,14 @@
 # Markov
 
+_v0.1.2 Updates:_
+
+* Added a feature which allows user to have names whispered to them
+* Added capability to generate multiple names from an arbitrary number of namesets.
+  * e.g. `!markov setA setB setC`, etc.
+* Added help flag to command ( `!markov -h` or `!markov help` )
+* Renamed this file to play nicely with GitHub.
+
+
 _v0.1.1 Updates:_
 
 * Added a feature that allows user created namesets to be used via handouts.
