@@ -37,12 +37,12 @@ on('chat:message', function(msg) {
         var character = cname ? findObjs({name: cname, type: 'character'})[0] : undefined;
         var player = getObj("player", msg.playerid);
         if(["simple","npc"].indexOf(msg.rolltemplate) > -1) {
-            if(_.has(msg,'inlinerolls') && msg.content.indexOf("DEATH SAVE") > -1 && character && state.FifthEditionOGLbyRoll20.deathsavetracking != "off") {
+            if(_.has(msg,'inlinerolls') && msg.content.indexOf("^{death-save-u}") > -1 && character && state.FifthEditionOGLbyRoll20.deathsavetracking != "off") {
                 handledeathsave(msg,character);
-            }  
-            if(_.has(msg,'inlinerolls') && msg.content.indexOf("Hit Points") > -1 && character && msg.rolltemplate && msg.rolltemplate === "npc" && state.FifthEditionOGLbyRoll20.autonpctoken != "off") {
+            }
+            if(_.has(msg,'inlinerolls') && msg.content.indexOf("^{hp}") > -1 && character && msg.rolltemplate && msg.rolltemplate === "npc" && state.FifthEditionOGLbyRoll20.autonpctoken != "off") {
                 handlenpctoken(msg,character,player);
-            }  
+            }
         }
         if(["dmg","atkdmg"].indexOf(msg.rolltemplate) > -1) {
             if(_.has(msg,'inlinerolls') && msg.content.indexOf("{{spelllevel=") > -1 && character && state.FifthEditionOGLbyRoll20.spelltracking != "off") {
@@ -98,11 +98,11 @@ var outputstatus = function(msg) {
     var deathsavetrackingstatus = !state.FifthEditionOGLbyRoll20.deathsavetracking || state.FifthEditionOGLbyRoll20.deathsavetracking === "on" ? "on" : state.FifthEditionOGLbyRoll20.deathsavetracking;
     var spelltrackingstatus = !state.FifthEditionOGLbyRoll20.spelltracking || state.FifthEditionOGLbyRoll20.spelltracking === "on" ? "on" : state.FifthEditionOGLbyRoll20.spelltracking;
     sendChat(msg.who, "<div class='sheet-rolltemplate-desc'><div class='sheet-desc'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>ammotracking: " + ammotrackingstatus + "</span><span style='display:block;'>autonpctoken: " + autonpctokenstatus + "</span><span style='display:block;'>deathsavetracking: " + deathsavetrackingstatus + "</span><span style='display:block;'>spelltracking: " + spelltrackingstatus + "</span><span style='display:block; margin-top:5px;'>5th Edition OGL by Roll20</span></div></div></div>");
-}
+};
 
 var outputhelp = function(msg) {
     sendChat(msg.who, "<div class='sheet-rolltemplate-desc'><div class='sheet-desc'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>!5estatus</span><span style='display:block;'>!ammotracking on/off/quiet</span><span style='display:block;'>!autonpctoken on/off</span><span style='display:block;'>!deathsavetracking on/off/quiet</span><span style='display:block;'>!spelltracking on/off/quiet</span><span style='display:block;'>!longrest \<character name\></span><span style='display:block; margin-top:5px;'>5th Edition OGL by Roll20</span></div></div></div>");    
-}
+};
 
 // AUTOMATICALLY APPLY DEATH SAVE RESULTS
 var handledeathsave = function(msg,character) {
@@ -300,7 +300,7 @@ var resolveslot = function(msg,character,player,spellslot) {
             sendChat(msg.who, "/w gm <div class='sheet-rolltemplate-desc'><div class='sheet-desc'><div class='sheet-label' style='margin-top:5px;'><span>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block; color:red;'>ALL SLOTS EXPENDED</span></div></div></div>");
         }
     }
-}
+};
 
 var longrest = function(msg) {
     charname = msg.content.substring(msg.content.indexOf(" ") + 1);
@@ -326,7 +326,7 @@ var longrest = function(msg) {
             hp.set({current: maxhp});
         }
     }
-}
+};
 
 var handleammo = function (msg,character,player) {
     if(msg.content.indexOf("ammo=") === -1) {
