@@ -5,8 +5,8 @@
 var Observer = Observer || (function() {
     'use strict';
 
-    var version = '0.1.4',
-        lastUpdate = 1489521840,
+    var version = '0.1.3',
+        lastUpdate = 1488988761,
         schemaVersion = 0.1,
         clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
         updateTokenName = 'Observer Update Token',
@@ -172,7 +172,7 @@ var Observer = Observer || (function() {
 	'</div>'+
 	'<b>Commands</b>'+
 	'<div style="padding-left:10px;">'+
-		'<b><span style="font-family: serif;">!observer '+ch('[')+'--help'+ch('|')+'--add'+ch('|')+'--del'+ch(']')+'</span></b>'+
+		'<b><span style="font-family: serif;">!observe '+ch('[')+'--help'+ch('|')+'--add'+ch('|')+'--del'+ch(']')+'</span></b>'+
 		'<div style="padding-left: 10px;padding-right:20px">'+
 			'<ul>'+
 				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
@@ -240,18 +240,13 @@ var Observer = Observer || (function() {
 
                             _.each(cmds,function(datum){
                                 let key=keyFormat(datum),
-                                    pobjs=_.chain(findObjs({
-                                        type: 'player'
-                                    }))
-                                    .filter((o)=>{
+                                    pobjs=filterObjs((o)=>{
                                         return o.get('type')==='player' &&
                                             (
                                                 (-1 !== keyFormat(o.get('displayname')).indexOf(key)) ||
                                                 (o.id === datum)
                                             );
-                                    })
-                                    .value()
-                                    ;
+                                        });
                                     players=_.union(players,_.pluck(pobjs,'id'));
                                     playerNames=_.union(playerNames,_.map(pobjs,p=>p.get('displayname')));
                             });
@@ -353,13 +348,10 @@ var Observer = Observer || (function() {
     },
 
     removeObservers = function(){
-        _.each(['graphic','character'],(type)=>{
-            _.chain(findObjs({
-                type: type
-            }))
-            .filter((o)=>o.get('controlledby')!=='')
-            .each( (o)=>o.set('controlledby', _.difference(o.get('controlledby').split(/,/),state.Observer.observers).join())); 
-        });
+        _.each(
+            filterObjs((o)=>(_.contains(['character','graphic'],o.get('type')) && o.get('controlledby')!=='') ),
+            (character)=>character.set('controlledby', _.difference(character.get('controlledby').split(/,/),state.Observer.observers).join())
+        );
     },
 
     forceUpdateOfVision = function(){
@@ -372,11 +364,10 @@ var Observer = Observer || (function() {
     },
     
     assureObservers = function(){
-        _.chain(findObjs({
-            type: 'character'
-        }))
-        .filter((o)=>o.get('controlledby')!=='')
-        .each( (o)=>o.set('controlledby', _.difference(o.get('controlledby').split(/,/),state.Observer.observers).join())); 
+        _.each(
+            filterObjs((o)=>(o.get('type')==='character' && o.get('controlledby')!=='') ),
+            (character)=>{character.set('controlledby', _.union(character.get('controlledby').split(/,/),state.Observer.observers).join());}
+        );
         forceUpdateOfVision();
     },
 
