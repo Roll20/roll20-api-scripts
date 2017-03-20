@@ -1,9 +1,9 @@
 // Github: https://github.com/bpunya/roll20-api/blob/master/TruePageCopy/TruePageCopy.js
 // Author: PaprikaCC (Bodin Punyaprateep)
 
-const TruePageCopy = TruePageCopy || (function () {
+var TruePageCopy = TruePageCopy || (function () {
   const version = '1.0';
-  const lastUpdate = 1489728639;
+  const lastUpdate = 1490028625;
 
   const checkVersion = function () {
     if (!state.PageCopy) clearState();
@@ -14,7 +14,7 @@ const TruePageCopy = TruePageCopy || (function () {
     if (state.PageCopy.workQueue.length) {
       printToChat('gm', `Continuing interrupted copying of ${getObj('page', state.PageCopy.sourcePage).get('name')}`);
       copyObjectsToDestination(clearState);
-    } else if (state.PageCopy.active) {
+    } else {
       clearState();
     }
   };
@@ -27,6 +27,7 @@ const TruePageCopy = TruePageCopy || (function () {
       destinationPage: false,
       deletedPages: state.PageCopy.deletedPages || [],
       workQueue: [],
+      completedWork: [],
     };
   };
 
@@ -45,7 +46,7 @@ const TruePageCopy = TruePageCopy || (function () {
     const workQueue = () => {
       if (state.PageCopy.workQueue.length) {
         const part = state.PageCopy.workQueue.shift();
-        createObj(part.type, part.data);
+        state.PageCopy.completedWork.push(createObj(part.type, part.data));
         _.defer(workQueue);
       } else {
         printToChat('gm', `Finished copying the ${getObj('page', state.PageCopy.sourcePage).get('name')} page.`);
@@ -57,14 +58,15 @@ const TruePageCopy = TruePageCopy || (function () {
   };
 
   const findGraphics = function (source) {
+    const zOrder = source.get('_zorder');
     const objsToCopy = findObjs({ _pageid: source.id });
-    const objsToCopyIds = _.map(objsToCopy, obj => obj.id);
-    const orderedObjs = source.get('_zorder').split(',');
-    const rawSortedObjs = [];
-    _.each(orderedObjs, id => rawSortedObjs.push(objsToCopy[_.indexOf(objsToCopyIds, id)]));
-    const sortedObjs = orderedObjs === [''] ? rawSortedObjs.filter(o => o) : objsToCopy;
-    const preparedObjs = prepareObjects(sortedObjs);
-    return preparedObjs;
+    return zOrder
+           ? _.chain(zOrder.split(','))
+              .map(position => _.find(objsToCopy, obj => obj.id === position))
+              .filter(o => o)
+              .map(obj => prepareObjects(obj))
+              .value()
+           : prepareObjects(objsToCopy);
   };
 
   const getGmPage = function (playerName) {
@@ -201,15 +203,20 @@ const TruePageCopy = TruePageCopy || (function () {
     const target = msg.who.slice(0, -5);
     switch (args[0]) {
       case '!pagecopy':
+        // I wanted most of the functionality to be in !pagecopy without special commands.
         if (!args[1]) {
           if (state.PageCopy.active) {
+            // If it's currently active.
             printToChat(target, 'Script is currently active. Please use !pagecopy reset if you want to stop.');
           } else if (!state.PageCopy.sourcePage) {
+            // If the source hasn't been selected yet.
             state.PageCopy.sourcePage = getGmPage(target);
             printToChat(target, `Setting the source page to ${getObj('page', getGmPage(target)).get('name')}.`);
           } else if (state.PageCopy.sourcePage === getGmPage(target) && !state.PageCopy.secureStr) {
+            // If it's the same as the source and we're not waiting on a yes button press.
             printToChat(target, 'You must select a different source and destination page.');
           } else if (!state.PageCopy.secureStr) {
+            // If we're not waiting on a yes button press.
             state.PageCopy.destinationPage = getGmPage(target);
             createSecureButton(target);
           }
@@ -219,7 +226,7 @@ const TruePageCopy = TruePageCopy || (function () {
               if (!state.PageCopy.active) {
                 preparePageCopy(state.PageCopy.sourcePage, state.PageCopy.destinationPage);
               } else {
-                printToChat('target', 'Script is currently active. Please use !pagecopy reset if you want to stop.');
+                printToChat(target, 'Script is currently active. Please use !pagecopy reset if you want to stop.');
               }
               break;
             }
@@ -238,7 +245,7 @@ const TruePageCopy = TruePageCopy || (function () {
               break;
             }
             case 'help': {
-              showHelp();
+              showHelp(target);
               break;
             }
             case 'reset': {
@@ -251,7 +258,7 @@ const TruePageCopy = TruePageCopy || (function () {
               break;
             }
             default: {
-              if (args[1].length !== 32) showHelp();
+              if (args[1].length !== 32) showHelp(target);
               break;
             }
           }
@@ -259,36 +266,38 @@ const TruePageCopy = TruePageCopy || (function () {
     }
   };
 
-  const handlePageCreation = function (obj) {
-    if (!_.contains(state.PageCopy.deletedPages, obj.id)) {
+  const handlePageCreation = function (newPage) {
+    if (!_.contains(state.PageCopy.deletedPages, newPage.id)) {
       const sourcePage = _.chain(findObjs({ type: 'page' }))
-                        .filter(page => `${page.get('name')} (Copy)` === obj.get('name'))
-                        .filter(page => page.get('_zorder') === obj.get('_zorder'))
-                        .filter(page => _.isEqual(getPageInfo(page), getPageInfo(obj)))
-                        .first()
-                        .value();
-      if (sourcePage && findGraphics(sourcePage)) preparePageCopy(sourcePage.id, obj.id);
+                          .filter(page => `${page.get('name')} (Copy)` === newPage.get('name'))
+                          .filter(page => page.get('_zorder') === newPage.get('_zorder'))
+                          .filter(page => _.isEqual(getPageInfo(page), getPageInfo(newPage)))
+                          .first()
+                          .value();
+      if (sourcePage && findGraphics(sourcePage)) {
+        preparePageCopy(sourcePage.id, newPage.id);
+      }
     }
   };
 
   const handlePageDestruction = function (obj) {
-    if (state.PageCopy.deletedPages.length >= 10) {
-      state.PageCopy.deletedPages.shift();
-    }
     if (!_.contains(state.PageCopy.deletedPages, obj.id)) {
+      if (state.PageCopy.deletedPages.length >= 10) {
+        state.PageCopy.deletedPages.shift();
+      }
       state.PageCopy.deletedPages.push(obj.id);
     }
   };
 
-  const prepareObjects = function (objArr) {
-    const preparedObjs = _.map(objArr, (obj) => {
+  const prepareObjects = function (objs) {
+    const getData = (obj) => {
       const type = obj.get('_type');
       if (type === 'graphic') return { type: 'graphic', data: getGraphicData(obj) };
       else if (type === 'path') return { type: 'path', data: getPathData(obj) };
       else if (type === 'text') return { type: 'text', data: getTextData(obj) };
       return undefined;
-    });
-    return preparedObjs;
+    };
+    return _.isArray(objs) ? _.map(objs, obj => getData(obj)) : getData(objs);
   };
 
 // This is the exposed function
@@ -324,12 +333,12 @@ const TruePageCopy = TruePageCopy || (function () {
     }
   };
 
-  const showHelp = function () {
+  const showHelp = function (target) {
     const content = 'If you wish to use True Page Copy, enter \'!pagecopy or\' \'!pagecopy source\' ' +
                     'when you are looking at the page you want to copy from. Then move to the map ' +
                     'that you want to copy to and enter \'!pagecopy\' again. A button prompt will ' +
                     'appear asking if you want to copy the pages.';
-    printToChat('gm', content);
+    printToChat(target, content);
   };
 
   const printToChat = function (target, content) {
