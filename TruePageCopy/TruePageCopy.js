@@ -13,6 +13,7 @@ var TruePageCopy = TruePageCopy || (function () {
   const checkExistingWork = function () {
     if (state.PageCopy.workQueue.length) {
       printToChat('gm', `Continuing interrupted copying of ${getObj('page', state.PageCopy.sourcePage).get('name')}`);
+      state.PageCopy.active = true;
       copyObjectsToDestination(clearState);
     } else {
       clearState();
