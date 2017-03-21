@@ -295,3 +295,11 @@ itsatrapdnd5e:
 healthcolors:
 - "HealthColors"
 - "Tokens"
+
+truepagecopy:
+- "TruePageCopy"
+- "Character"
+
+srrollextender:
+- "SR-RollExtender"
+- "System Toolbox"
