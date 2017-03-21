@@ -1,0 +1,17 @@
+{
+    "name": "True Page Copy",
+    "script": "TruePageCopy.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "A script to properly duplicate graphics from one page to another.",
+    "authors": "Bodin Punyaprateep (PaprikaCC)",
+    "useroptions": [],
+    "roll20userid": "558646",
+    "dependencies": [],
+    "modifies": {
+        "graphic.*": "read, write",
+        "text.*": "read, write",
+        "path.*": "read, write"
+    },
+    "conflicts": []
+}

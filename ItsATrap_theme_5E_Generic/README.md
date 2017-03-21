@@ -1,5 +1,8 @@
 # It's A Trap! - D&D 5E Generic
 
+_v3.0.1 Updates:_
+* Fixed One-Click options accessor.
+
 This is a trap theme to support any campaign using D&D 5th Edition rules. To
 use this, you will need to enter in the names of some character attributes into
 the script's One-Click options as they appear in the character sheet data or
