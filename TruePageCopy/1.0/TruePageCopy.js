@@ -12,9 +12,13 @@ var TruePageCopy = TruePageCopy || (function () {
 
   const checkExistingWork = function () {
     if (state.PageCopy.workQueue.length) {
-      printToChat('gm', `Continuing interrupted copying of ${getObj('page', state.PageCopy.sourcePage).get('name')}`);
+      printToChat('gm', `Continuing interrupted copying of the ${getObj('page', state.PageCopy.sourcePage).get('name')}`);
       state.PageCopy.active = true;
-      copyObjectsToDestination(clearState);
+      copyObjectsToDestination(reorderGraphics);
+    } else if (state.PageCopy.completedWork.length) {
+      printToChat('gm', `Continuing interrupted normalizing of the ${getObj('page', state.PageCopy.destinationPage).get('name')}`);
+      state.PageCopy.active = true;
+      reorderGraphics(clearState);
     } else {
       clearState();
     }
@@ -26,9 +30,9 @@ var TruePageCopy = TruePageCopy || (function () {
       secureStr: false,
       sourcePage: false,
       destinationPage: false,
-      deletedPages: state.PageCopy ? state.PageCopy.deletedPages : [],
-      workQueue: [],
+      deletedPage: state.PageCopy ? state.PageCopy.deletedPage : false,
       completedWork: [],
+      workQueue: [],
     };
   };
 
@@ -50,24 +54,41 @@ var TruePageCopy = TruePageCopy || (function () {
         state.PageCopy.completedWork.push(createObj(part.type, part.data));
         _.defer(workQueue);
       } else {
-        printToChat('gm', `Finished copying the ${getObj('page', state.PageCopy.sourcePage).get('name')} page.`);
-        callback();
+        printToChat('gm', `Normalizing z-order on the ${getObj('page', state.PageCopy.destinationPage).get('name')} page.`);
+        callback(clearState);
       }
     };
 
     workQueue();
   };
 
+  const reorderGraphics = function (callback) {
+    const reorderFunction = () => {
+      if (state.PageCopy.completedWork.length) {
+        const part = state.PageCopy.completedWork.pop();
+        toBack(part);
+        _.delay(reorderFunction, 50)
+      } else {
+        printToChat('gm', `Finished copying the ${getObj('page', state.PageCopy.sourcePage).get('name')} page!`);
+        callback();
+      }
+    };
+
+    reorderFunction();
+  };
+
   const findGraphics = function (source) {
     const zOrder = source.get('_zorder');
     const objsToCopy = findObjs({ _pageid: source.id });
-    return zOrder
-           ? _.chain(zOrder.split(','))
+    if (zOrder) {
+      return _.chain(zOrder.split(','))
               .map(position => _.find(objsToCopy, obj => obj.id === position))
               .filter(o => o)
               .map(obj => prepareObjects(obj))
               .value()
-           : prepareObjects(objsToCopy);
+    }
+
+    return prepareObjects(objsToCopy);
   };
 
   const getGmPage = function (playerName) {
@@ -195,8 +216,9 @@ var TruePageCopy = TruePageCopy || (function () {
   };
 
   const getRandomString = function (length) {
-    return Math.round((Math.pow(36, length + 1) - (Math.random() * Math.pow(36, length + 1)))).toString(36).slice(1);
+    return Math.round((36 ** (length + 1)) - (Math.random() * (36 ** (length + 1)))).toString(36).slice(1);
   };
+
 
   const handleChatInput = function (msg) {
     if (msg.type !== 'api' || !playerIsGM(msg.playerid)) return;
@@ -231,17 +253,14 @@ var TruePageCopy = TruePageCopy || (function () {
               }
               break;
             }
+            case 'debug': {
+              log(state.PageCopy);
+              break;
+            }
             case 'decline': {
               if (state.PageCopy.secureStr) {
                 clearState();
                 printToChat(target, 'Copying declined.');
-              }
-              break;
-            }
-            case 'source': {
-              if (!state.PageCopy.secureStr) {
-                state.PageCopy.sourcePage = getGmPage(target);
-                printToChat(target, `Setting the source page to ${getObj('page', getGmPage(target)).get('name')}`);
               }
               break;
             }
@@ -250,12 +269,15 @@ var TruePageCopy = TruePageCopy || (function () {
               break;
             }
             case 'reset': {
-              printToChat(target, 'Resetting internal state.');
               clearState();
+              printToChat(target, 'Resetting internal state.');
               break;
             }
-            case 'debug': {
-              log(state.PageCopy);
+            case 'source': {
+              if (!state.PageCopy.secureStr) {
+                state.PageCopy.sourcePage = getGmPage(target);
+                printToChat(target, `Setting the source page to ${getObj('page', getGmPage(target)).get('name')}`);
+              }
               break;
             }
             default: {
@@ -268,7 +290,7 @@ var TruePageCopy = TruePageCopy || (function () {
   };
 
   const handlePageCreation = function (newPage) {
-    if (!_.contains(state.PageCopy.deletedPages, newPage.id)) {
+    if (state.PageCopy.deletedPage !== newPage.id) {
       const sourcePage = _.chain(findObjs({ type: 'page' }))
                           .filter(page => `${page.get('name')} (Copy)` === newPage.get('name'))
                           .filter(page => page.get('_zorder') === newPage.get('_zorder'))
@@ -281,13 +303,8 @@ var TruePageCopy = TruePageCopy || (function () {
     }
   };
 
-  const handlePageDestruction = function (obj) {
-    if (!_.contains(state.PageCopy.deletedPages, obj.id)) {
-      if (state.PageCopy.deletedPages.length >= 10) {
-        state.PageCopy.deletedPages.shift();
-      }
-      state.PageCopy.deletedPages.push(obj.id);
-    }
+  const handlePageDestruction = function (page) {
+    state.PageCopy.deletedPage = page.id;
   };
 
   const prepareObjects = function (objs) {
@@ -298,39 +315,47 @@ var TruePageCopy = TruePageCopy || (function () {
       else if (type === 'text') return { type: 'text', data: getTextData(obj) };
       return undefined;
     };
+
     return _.isArray(objs) ? _.map(objs, obj => getData(obj)) : getData(objs);
   };
 
 // This is the exposed function
 // @param1 is the id of the page to be copied
 // @param2 is the id of the destination page
-  const preparePageCopy = function (pageid1, pageid2) {
-    const originalPage = getObj('page', pageid1);
-    const destinationPage = getObj('page', pageid2);
-    state.PageCopy.secureStr = false;
-
-    if (!state.PageCopy.sourcePage || !state.PageCopy.destinationPage) {
-      state.PageCopy.sourcePage = pageid1;
-      state.PageCopy.destinationPage = pageid2;
+  const preparePageCopy = function (originalId, destinationId) {
+    if (state.PageCopy.active) {
+      log(`True Page Copy - Script is currently copying the ${getObj('page', state.PageCopy.sourcePage).get('name')} page.`);
+      return;
     }
 
-    if (state.PageCopy.active) {
-      log(`True Page Copy - Script is currently copying the ${originalPage.get('name')} page.`);
-    } else if (!originalPage || !destinationPage) {
+    const originalPage = getObj('page', originalId);
+    const destinationPage = getObj('page', destinationId);
+    state.PageCopy.secureStr = false;
+    state.PageCopy.sourcePage = originalId;
+    state.PageCopy.destinationPage = destinationId;
+
+    if (!originalPage || !destinationPage) {
       log('True Page Copy - One or both of the supplied page ids do not exist.');
       clearState();
-    } else if (originalPage.id === destinationPage.id) {
+    } else if (originalId === destinationId) {
       log('True Page Copy - You cannot copy a page to itself.');
       clearState();
     } else {
       state.PageCopy.active = true;
-      printToChat('gm', `Script is now copying the ${originalPage.get('name')} page.`);
-      destinationPage.set(Object.assign(
-        getPageInfo(originalPage),
-        { name: `${originalPage.get('name')} (Copy)` }
-      ));
+      state.PageCopy.completedWork = [];
       state.PageCopy.workQueue = findGraphics(originalPage);
-      copyObjectsToDestination(clearState);
+
+      if (!state.PageCopy.workQueue.length) {
+        log('True Page Copy - Nothing needed to be copied.')
+        clearState();
+      } else {
+        printToChat('gm', `Script is now copying the ${originalPage.get('name')} page.`);
+        destinationPage.set(Object.assign(
+          getPageInfo(originalPage),
+          { name: `${originalPage.get('name')} (Copy)` }
+        ));
+        copyObjectsToDestination(reorderGraphics);
+      }
     }
   };
 
