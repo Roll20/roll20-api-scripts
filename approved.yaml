@@ -299,6 +299,7 @@ healthcolors:
 truepagecopy:
 - "TruePageCopy"
 - "Character"
+- "hidden"
 
 srrollextender:
 - "SR-RollExtender"
