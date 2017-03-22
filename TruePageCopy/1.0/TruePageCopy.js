@@ -26,7 +26,7 @@ var TruePageCopy = TruePageCopy || (function () {
       secureStr: false,
       sourcePage: false,
       destinationPage: false,
-      deletedPages: state.PageCopy.deletedPages || [],
+      deletedPages: state.PageCopy ? state.PageCopy.deletedPages : [],
       workQueue: [],
       completedWork: [],
     };
