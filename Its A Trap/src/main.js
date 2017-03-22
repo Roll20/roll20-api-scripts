@@ -9,6 +9,9 @@ var ItsATrap = (() => {
   // The collection of registered TrapThemes keyed by name.
   let trapThemes = {};
 
+  // The installed trap theme that is being used.
+  let curTheme = 'default';
+
   /**
    * Activates a trap.
    * @param {Graphic} trap
@@ -48,7 +51,7 @@ var ItsATrap = (() => {
       .filter(trap => {
         // Only search for traps that are close enough to be spotted.
         let effect = new TrapEffect(trap, token);
-        let dist = _getPassiveSearchDistance(token, trap);
+        let dist = getSearchDistance(token, trap);
         let searchDist = trap.get('aura2_radius') || effect.searchDist;
         return (!searchDist || dist < searchDist);
       })
@@ -70,7 +73,7 @@ var ItsATrap = (() => {
       try {
         let theme = getTheme();
         if(!theme) {
-          log('ERROR - It\'s A Trap!: TrapTheme does not exist - ' + state.ItsATrap.theme + '. Using default TrapTheme.');
+          log('ERROR - It\'s A Trap!: TrapTheme does not exist - ' + curTheme + '. Using default TrapTheme.');
           theme = trapThemes['default'];
         }
 
@@ -135,24 +138,6 @@ var ItsATrap = (() => {
   }
 
   /**
-   * Gets the distance between two tokens in their page's units.
-   * @param {Graphic} token1
-   * @param {Graphic} token2
-   * @return {number}
-   */
-  function _getPassiveSearchDistance(token1, token2) {
-    let p1 = _getPt(token1);
-    let p2 = _getPt(token2);
-    let r1 = token1.get('width')/2;
-    let r2 = token2.get('width')/2;
-
-    let page = getObj('page', token1.get('_pageid'));
-    let scale = page.get('scale_number');
-    let pixelDist = Math.max(0, VecMath.dist(p1, p2) - r1 - r2);
-    return pixelDist/70*scale;
-  }
-
-  /**
    * Gets the point for a token.
    * @private
    * @param {Graphic} token
@@ -176,12 +161,30 @@ var ItsATrap = (() => {
   }
 
   /**
+   * Gets the distance between two tokens in their page's units.
+   * @param {Graphic} token1
+   * @param {Graphic} token2
+   * @return {number}
+   */
+  function getSearchDistance(token1, token2) {
+    let p1 = _getPt(token1);
+    let p2 = _getPt(token2);
+    let r1 = token1.get('width')/2;
+    let r2 = token2.get('width')/2;
+
+    let page = getObj('page', token1.get('_pageid'));
+    let scale = page.get('scale_number');
+    let pixelDist = Math.max(0, VecMath.dist(p1, p2) - r1 - r2);
+    return pixelDist/70*scale;
+  }
+
+  /**
    * Gets the theme currently being used to interpret TrapEffects spawned
    * when a character activates a trap.
    * @return {TrapTheme}
    */
   function getTheme() {
-    return trapThemes[state.ItsATrap.theme];
+    return trapThemes[curTheme];
   }
 
   /**
@@ -197,7 +200,7 @@ var ItsATrap = (() => {
 
     // A llambda to test if a token is flying.
     let isFlying = x => {
-      return token.get("status_fluffy-wing");
+      return x.get("status_fluffy-wing");
     };
 
     let pathsToTraps = {};
@@ -349,6 +352,7 @@ var ItsATrap = (() => {
   function registerTheme(theme) {
     log('It\'s A Trap!: Registered TrapTheme - ' + theme.name + '.');
     trapThemes[theme.name] = theme;
+    curTheme = theme.name;
   }
 
   /**
@@ -419,7 +423,9 @@ var ItsATrap = (() => {
    */
   on("change:graphic:lastmove", function(token) {
     try {
-      _checkTrapInteractions(token);
+      // Check for trap interactions if the token isn't also a trap.
+      if(!token.get('status_cobweb'))
+        _checkTrapInteractions(token);
     }
     catch(err) {
       log(`It's A Trap ERROR: ${err.msg}`);
@@ -440,6 +446,7 @@ var ItsATrap = (() => {
 
   return {
     activateTrap,
+    getSearchDistance,
     getTheme,
     getTrapCollisions,
     getTrapsOnPage,

@@ -238,7 +238,7 @@ var D20TrapTheme = (() => {
           if(effectResults.damage)
             row.append('span', 'Damage: [[' + effectResults.damage + ']]');
           else
-            row.append('span', 'You fall prey to the ' + effectResults.type + '\'s effects!');
+            row.append('span', 'You fall prey to the ' + (effectResults.type || 'trap') + '\'s effects!');
         }
         else {
           let row = content.append('.paddedRow');

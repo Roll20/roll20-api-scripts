@@ -2,7 +2,7 @@ function MythicGM(_odds, _chaos) {
 	this.odds = _odds;
 	this.chaos = _chaos;
 	this.version = 1.0;
-	this.lastUpdate = 1480514000;
+	this.lastUpdate = 1486567326;
 }
 
 MythicGM.prototype.FateChart = {
@@ -232,7 +232,7 @@ MythicGM.prototype.GM = function () {
 
 var MyGM = MyGM || (function() {
     var version = 1.0, 
-    lastUpdate = 1480514000,
+    lastUpdate = 1486567326,
     responseHeader = '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
                             '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'+
                                 '-=> MythicGM v'+version+' <=-' +
@@ -298,7 +298,7 @@ var MyGM = MyGM || (function() {
     						'<p><b>Note:</b> this value is not case sensitive.</p>' +
     					'</li> '+
     					'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
-    						'<b><span style="font-family: serif;">'+ch('<')+'Chaos Factor'+ch('>')+'</span></b> '+ch('-')+' A chaos factor ranging from 1 to 9. The higher the number, the more likely a “yes” answer is and more unexpected events occur.'+
+    						'<b><span style="font-family: serif;">'+ch('<')+'Chaos Factor'+ch('>')+'</span></b> '+ch('-')+' A chaos factor ranging from 1 to 9. The higher the number, the more likely a <b>yes</b> answer is and more unexpected events occur.'+
     					'</li> '+
     					'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
     						'<b><span style="font-family: serif;">'+ch('<')+'Your Question'+ch('>')+'</span></b> '+ch('-')+' It\'s the question you would ask your normal GM like "Is that chest Trapped?" or "Is that NPC Hostile?". You can asked any question. '+

@@ -2,13 +2,12 @@
 
 ###### Updates
 
-_3.3_
-* The trap creation wizard has been reorganized into groups of related properties. Some properties have been renamed.
-* There is a new Set Trigger property that allows you to set the trap's trigger either to the trap's token itself, or a set of closed polygonal paths on the GM layer.
-
-_3.2_
-* Fixed 'noticed undefined' bug in passive perception.
-* Traps' type property is now a text input instead of a predefined list.
+_3.4_
+* It's A Trap automatically uses whichever Trap Theme is currently installed now instead of having to specify it through One-Click options.
+* Integration with Areas Of Effect script.
+* Traps on the objects layer will no longer trigger other traps.
+* Fixed soft-crash bug for sounds.
+* Fixed flying tokens bug.
 
 This is a script that allows GMs to quickly and very easily set up traps,
 secret doors, and other hidden things on the GM layer, and detect when tokens
@@ -20,8 +19,7 @@ automation of trap effects and passive perception used to spot them.
 
 ### Creating traps:
 
-Place the token for your trap on the ```GM layer```. Give it the ```cobweb```
-<img src="http://game-icons.net/icons/lorc/originals/png/cobweb.png" width="32"> status marker.
+Place the token for your trap on the ```GM layer```.
 Then, select the trap token and activate its 'ItsATrap_trapCreationWizard' token macro.
 This will present a menu for setting up the trap's configurations.
 
@@ -51,14 +49,14 @@ in the trap's configuration menu.
 TrapThemes are used to provide support for formatting messages for traps and
 automating system-specific trap activation and passive search mechanics.
 
-If you are using the One-Click API Library, you can specify which theme to use
-in the ```theme``` user option.
-
 By default the ```default``` theme will be used. This is a very basic,
 system-agnostic TrapTheme which provides support for the basic TrapEffect properties
 and has no passive search mechanics.
 
-Additional system-specific themes will be made available as their own API scripts.
+If you install a system-specific trap theme, then It's A Trap will automatically use
+that theme instead.
+
+Additional system-specific themes are available as their own API scripts.
 If you would like to implement a TrapTheme for your system, take a look at
 the ```default``` or ```5E-OGL``` TrapThemes as an example to get you started.
 
