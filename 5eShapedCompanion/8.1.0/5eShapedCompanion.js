@@ -109,7 +109,7 @@ var ShapedScripts =
 	const moduleList = getModuleList();
 
 	roll20.on('ready', () => {
-	  logger.info('-=> ShapedScripts v8.2.0 <=-');
+	  logger.info('-=> ShapedScripts v8.1.0 <=-');
 	  const character = roll20.createObj('character', { name: 'SHAPED_VERSION_TESTER' });
 	  const campaignSize = roll20.findObjs({}).length;
 	  const delay = Math.max(2000, Math.floor(campaignSize / 20));
@@ -1293,12 +1293,10 @@ var ShapedScripts =
 	        this.deferredEntityGroups.forEach((deferred) => {
 	          const missingDeps = _.difference(deferred.dependencies, this.processedEntityGroupNames);
 	          resultReporter.report({
-	            errors: [
-	              {
-	                entity: 'Missing dependencies',
-	                errors: [`Entity group is missing dependencies [${missingDeps.join(', ')}]`],
-	              },
-	            ],
+	            errors: [{
+	              entity: 'Missing dependencies',
+	              errors: [`Entity group is missing dependencies [${missingDeps.join(', ')}]`],
+	            }],
 	            entityGroupName: deferred.name,
 	          });
 	        });
@@ -1350,9 +1348,6 @@ var ShapedScripts =
 	            return _.isArray(criterionValue) ? _.contains(criterionValue, value) : value === criterionValue;
 	          case 'object':
 	            return _.isArray(value) && containsSomeIgnoreCase(value, criterionValue);
-	          case 'undefined':
-	            return _.isArray(criterionValue) ? _.contains(criterionValue, false) :
-	              _.isBoolean(criterionValue) && !criterionValue;
 	          default:
 	            return false;
 	        }
@@ -1425,11 +1420,9 @@ var ShapedScripts =
 	      if (!valid) {
 	        errorsArray.push({
 	          entity: 'general',
-	          errors: [
-	            `Incorrect ${entityType} data format version: [${version}]. Required is: ${requiredVersion}.` +
-	            'This probably means you need to download an updated version to be compatible with the latest version of' +
-	            ' the Companion Script.',
-	          ],
+	          errors: [`Incorrect ${entityType} data format version: [${version}]. Required is: ${requiredVersion}.` +
+	          'This probably means you need to download an updated version to be compatible with the latest version of' +
+	          ' the Companion Script.'],
 	        });
 	      }
 	      return valid;
@@ -1795,15 +1788,15 @@ var ShapedScripts =
 	}
 
 	function makeStreamHeader(heading) {
-	  return `&{template:5e-shaped} {{continuous_header=1}} {{title=${heading}}}`;
+	  return `<div class="stream-header">${heading}</div>`;
 	}
 
 	function makeStreamBody(text) {
-	  return `&{template:5e-shaped} {{content=${text}}} {{continuous=1}}`;
+	  return `<div class="stream-body">${text}</div>`;
 	}
 
-	function makeStreamFooter(finalText) {
-	  return `&{template:5e-shaped} {{content=${finalText}}}{{continuous_footer=1}}`;
+	function makeStreamFooter() {
+	  return '<div class="stream-footer"></div>';
 	}
 
 
@@ -1881,8 +1874,8 @@ var ShapedScripts =
 	      stream(message) {
 	        sendChat(makeStreamBody(message));
 	      },
-	      finish(finalMessage) {
-	        sendChat(makeStreamFooter(finalMessage));
+	      finish() {
+	        sendChat(makeStreamFooter());
 	      },
 	    };
 	  }
@@ -3073,19 +3066,7 @@ var ShapedScripts =
 	  .addProperty('config.sheetEnhancements.ammoRecovery', false)
 	  // 4.4 remove hideCost as it isn't used any more
 	  .nextVersion()
-	  .deleteProperty('config.newCharSettings.hide.hideCost')
-	  // 4.5 add automatically roll damage settings;
-	  .nextVersion()
-	  .addProperty('config.newCharSettings.automaticallyRollDamageForAttacks', '***default***')
-	  .addProperty('config.newCharSettings.automaticallyRollDamageForSavingThrows', '***default***')
-	  // 4.6 latest sheet changes;
-	  .nextVersion()
-	  .deleteProperty('config.newCharSettings.measurementSystems.encumbranceMultiplier')
-	  .addProperty('config.newCharSettings.houserules.hitPointsRecoveredOnALongRest', '***default***')
-	  .addProperty('config.newCharSettings.houserules.hitDiceRecoveredOnALongRest', '***default***')
-	  .deleteProperty('config.newCharSettings.hide.hideSavingThrowSuccess')
-	  .addProperty('config.newCharSettings.hide.hideTargetAC')
-	  .deleteProperty('config.newCharSettings.display.showRests');
+	  .deleteProperty('config.newCharSettings.hide.hideCost');
 
 	module.exports = class ShapedConfig extends ShapedModule {
 
@@ -3151,6 +3132,7 @@ var ShapedScripts =
 	      showTargetName: 'attacks_vs_target_name',
 	      autoAmmo: 'ammo_auto_use',
 	      autoRevertAdvantage: 'auto_revert_advantage',
+	      showRests: 'show_rests',
 	      savingThrowsHalfProf: 'saving_throws_half_proficiency',
 	      mediumArmorMaxDex: 'medium_armor_max_dex',
 	      spellsTextSize: 'spells_text_size',
@@ -3169,8 +3151,8 @@ var ShapedScripts =
 	      hideContent: 'hide_content',
 	      hideFreetext: 'hide_freetext',
 	      hideSavingThrowFailure: 'hide_saving_throw_failure',
+	      hideSavingThrowSuccess: 'hide_saving_throw_success',
 	      hideRecharge: 'hide_recharge',
-	      hideTargetAC: 'hide_target_ac',
 	      customSkills: 'custom_skills',
 	      showPassiveSkills: 'show_passive_skills',
 	      showWeight: 'show_weight',
@@ -3189,12 +3171,9 @@ var ShapedScripts =
 	      sanityToggle: 'sanity_toggle',
 	      distanceSystem: 'distance_system',
 	      weightSystem: 'weight_system',
+	      encumbranceMultiplier: 'encumbrance_multiplier',
 	      automaticHigherLevelQueries: 'automatic_higher_level_queries',
 	      automaticallyExpendSpellResources: 'automatically_expend_spell_resources',
-	      automaticallyRollDamageForAttacks: 'automatically_roll_damage_for_attacks',
-	      automaticallyRollDamageForSavingThrows: 'automatically_roll_damage_for_saving_throws',
-	      hitPointsRecoveredOnALongRest: 'hit_points_recovered_on_a_long_rest',
-	      hitDiceRecoveredOnALongRest: 'hit_dice_recovered_on_a_long_rest',
 	    };
 
 	    ['fortitude', 'reflex', 'will'].forEach((save) => {
@@ -3298,16 +3277,14 @@ var ShapedScripts =
 	    return this.getOptionList({
 	      public: '***default***',
 	      whisper: '/w GM',
-	      choose: '?{Output|Public,|Whisper,/w GM }',
 	    });
 	  }
 
 	  static get rollOutputValidator() {
 	    return this.getOptionList({
-	      sheetOutput: '***default***',
+	      sheetStandard: '***default***',
 	      public: '',
 	      whisper: '/w GM',
-	      choose: '?{Output|Public,|Whisper,/w GM }',
 	    });
 	  }
 
@@ -3441,14 +3418,6 @@ var ShapedScripts =
 	        breakInitiativeTies: this.booleanValidator,
 	        showTargetAC: this.booleanValidator,
 	        showTargetName: this.booleanValidator,
-	        automaticallyRollDamageForAttacks: this.getOptionList({
-	          true: '***default***',
-	          false: 0,
-	        }),
-	        automaticallyRollDamageForSavingThrows: this.getOptionList({
-	          true: '***default***',
-	          false: 0,
-	        }),
 	        autoAmmo: this.booleanValidator,
 	        autoRevertAdvantage: this.booleanValidator,
 	        automaticHigherLevelQueries: this.getOptionList({
@@ -3457,6 +3426,7 @@ var ShapedScripts =
 	        }),
 	        automaticallyExpendSpellResources: this.booleanValidator,
 	        display: {
+	          showRests: this.booleanValidator,
 	          showPassiveSkills: this.booleanValidator,
 	          showWeight: this.getOptionList({
 	            true: '***default***',
@@ -3478,18 +3448,9 @@ var ShapedScripts =
 	            pounds: '***default***',
 	            kilograms: 'KILOGRAMS',
 	          }),
+	          encumbranceMultiplier: this.floatValidator,
 	        },
 	        houserules: {
-	          hitPointsRecoveredOnALongRest: this.getOptionList({
-	            None: '',
-	            Half: 'HALF',
-	            All: '***default***',
-	          }),
-	          hitDiceRecoveredOnALongRest: this.getOptionList({
-	            None: '',
-	            Half: '***default***',
-	            All: 'ALL',
-	          }),
 	          inspirationMultiple: this.booleanValidator,
 	          criticalDamageHouserule: this.getOptionList({
 	            normal: '***default***',
@@ -3646,9 +3607,9 @@ var ShapedScripts =
 	          hideDamage: this.getHideOption('hide_damage'),
 	          hideFreetext: this.getHideOption('hide_freetext'),
 	          hideRecharge: this.getHideOption('hide_recharge'),
-	          hideTargetAC: this.getHideOption('hide_target_ac'),
 	          hideSavingThrowDC: this.getHideOption('hide_saving_throw_dc'),
 	          hideSavingThrowFailure: this.getHideOption('hide_saving_throw_failure'),
+	          hideSavingThrowSuccess: this.getHideOption('hide_saving_throw_success'),
 	          hideContent: this.getHideOption('hide_content'),
 	        },
 	        customSkills: this.stringValidator,
@@ -3696,61 +3657,13 @@ var ShapedScripts =
 
 	  static validStatusMarkers() {
 	    const markers = [
-	      'blue',
-	      'brown',
-	      'green',
-	      'pink',
-	      'purple',
-	      'red',
-	      'yellow',
-	      'arrowed',
-	      'all-for-one',
-	      'angel-outfit',
-	      'archery-target',
-	      'aura',
-	      'back-pain',
-	      'black-flag',
-	      'bleeding-eye',
-	      'bolt-shield',
-	      'broken-heart',
-	      'broken-shield',
-	      'broken-skull',
-	      'chained-heart',
-	      'chemical-bolt',
-	      'cobweb',
-	      'dead',
-	      'death-zone',
-	      'drink-me',
-	      'edge-crack',
-	      'fishing-net',
-	      'fist',
-	      'fluffy-wing',
-	      'flying-flag',
-	      'frozen-orb',
-	      'grab',
-	      'grenade',
-	      'half-haze',
-	      'half-heart',
-	      'interdiction',
-	      'lightning-helix',
-	      'ninja-mask',
-	      'overdrive',
-	      'padlock',
-	      'pummeled',
-	      'radioactive',
-	      'rolling-bomb',
-	      'sentry-gun',
-	      'screaming',
-	      'skull',
-	      'sleepy',
-	      'snail',
-	      'spanner',
-	      'stopwatch',
-	      'strong',
-	      'three-leaves',
-	      'tread',
-	      'trophy',
-	      'white-tower',
+	      'red', 'blue', 'green', 'brown', 'purple', 'pink', 'yellow', 'dead', 'skull', 'sleepy',
+	      'half-heart', 'half-haze', 'interdiction', 'snail', 'lightning-helix', 'spanner', 'chained-heart',
+	      'chemical-bolt', 'death-zone', 'drink-me', 'edge-crack', 'ninja-mask', 'stopwatch', 'fishing-net', 'overdrive',
+	      'strong', 'fist', 'padlock', 'three-leaves', 'fluffy-wing', 'pummeled', 'tread', 'arrowed', 'aura',
+	      'back-pain', 'black-flag', 'bleeding-eye', 'bolt-shield', 'broken-heart', 'cobweb', 'broken-shield',
+	      'flying-flag', 'radioactive', 'trophy', 'broken-skull', 'frozen-orb', 'rolling-bomb', 'white-tower',
+	      'grab', 'screaming', 'grenade', 'sentry-gun', 'all-for-one', 'angel-outfit', 'archery-target',
 	    ];
 
 	    const obj = {};
@@ -3930,15 +3843,13 @@ var ShapedScripts =
 	    // drop "menu" options
 	    Utils.deepExtend(this.myState.config, _.omit(options, 'menu'));
 
-	    const msg = this.reporter.getMessageBuilder('Configuration', false, options.playerId);
 	    if (options.menu) {
-	      options.menu[0].writeMenu(msg);
+	      this.reportPlayer('Configuration', options.menu[0].getMenu(), options.playerId);
 	    }
 	    else if (_.isEmpty(_.omit(options, 'menu', 'playerId'))) {
 	      const menu = new MainMenu(this.myState.config, ShapedConfig.configOptionsSpec);
-	      menu.writeMenu(msg);
+	      this.reportPlayer('Configuration', menu.getMenu(), options.playerId);
 	    }
-	    msg.display();
 	  }
 	}
 
@@ -3962,7 +3873,7 @@ var ShapedScripts =
 	    params.command = `${!currentVal}${!_.isUndefined(params.menuCmd) ? ` --${params.menuCmd}` : ''}`;
 	    params.linkText = this.makeBoolText(currentVal);
 	    params.tooltip = 'click to toggle';
-	    params.buttonClass = currentVal ? '' : 'notselected';
+	    params.buttonColor = currentVal ? '#65c4bd' : '#f84545';
 
 	    return this.makeOptionRow(params);
 	  }
@@ -3974,6 +3885,7 @@ var ShapedScripts =
 	    params.command = `${cmd}${!_.isUndefined(params.menuCmd) ? ` --${params.menuCmd}` : ''}`;
 	    params.linkText = this.makeText(currentVal);
 	    params.tooltip = 'click to change';
+	    params.buttonColor = '#02baf2';
 
 	    return this.makeOptionRow(params);
 	  }
@@ -3984,37 +3896,62 @@ var ShapedScripts =
 	    params.command = `?{${params.prompt}|${currentVal}}${!_.isUndefined(params.menuCmd) ? ` --${params.menuCmd}` : ''}`;
 	    params.linkText = currentVal || '[not set]';
 	    params.tooltip = 'click to edit';
-	    params.buttonClass = params.linkText === '[not set]' ? 'notselected' : '';
+	    params.buttonColor = params.linkText === '[not set]' ? '#f84545' : '#02baf2';
 
 	    return this.makeOptionRow(params);
 	  }
 
+	  // noinspection JSUnusedGlobalSymbols
+	  makeColorSetting(params) {
+	    const currentVal = Utils.getObjectFromPath(this.config, params.path);
 
-	  backToMainMenuButton() {
-	    return this.makeBackButton('Main Menu');
+	    params.command = `?{${params.prompt}|${currentVal}}${!_.isUndefined(params.menuCmd) ? ` --${params.menuCmd}` : ''}`;
+	    params.linkText = currentVal || '[not set]';
+	    params.tooltip = 'click to edit';
+	    params.buttonColor = params.linkText === '[not set]' ? '#02baf2' : currentVal;
+	    params.buttonTextColor = Utils.getContrastYIQ(params.buttonColor);
+
+	    return this.makeOptionRow(params);
 	  }
 
-	  makeBackButton(text, targetMenu) {
-	    const menuOption = targetMenu ? `--${targetMenu}` : '';
-	    return Utils.buildHTML('a', `&lt;-- ${text}`, {
-	      href: `!shaped-config ${menuOption}`,
+	  backToMainMenuButton() {
+	    return Utils.buildHTML('a', '&lt;-- Main Menu', {
+	      href: '!shaped-config',
+	      style: 'text-align: center; margin: 5px 0 0 0; padding: 2px 2px ; border-radius: 10px; white-space: nowrap; ' +
+	      'overflow: hidden; text-overflow: ellipsis; background-color: #02baf2; border-color: #c0c0c0;',
 	    });
 	  }
 
 	  backToTokenOptions() {
-	    return this.makeBackButton('Token Options', 'tsMenu');
+	    return Utils.buildHTML('a', '&lt;-- Token Options', {
+	      href: '!shaped-config --tsMenu',
+	      style: 'text-align: center; margin: 5px 0 0 0; padding: 2px 2px ; border-radius: 10px; white-space: nowrap; ' +
+	      'overflow: hidden; text-overflow: ellipsis; background-color: #02baf2; border-color: #c0c0c0;',
+	    });
 	  }
 
 	  backToNewCharOptions() {
-	    return this.makeBackButton('New Character Options', 'ncMenu');
+	    return Utils.buildHTML('a', '&lt;-- New Character Options', {
+	      href: '!shaped-config --ncMenu',
+	      style: 'text-align: center; margin: 5px 0 0 0; padding: 2px 2px ; border-radius: 10px; white-space: nowrap; ' +
+	      'overflow: hidden; text-overflow: ellipsis; background-color: #02baf2; border-color: #c0c0c0;',
+	    });
 	  }
 
 	  backToHouseRuleOptions() {
-	    return this.makeBackButton('Houserule Options', 'hrMenu');
+	    return Utils.buildHTML('a', '&lt;-- Houserule Options', {
+	      href: '!shaped-config --hrMenu',
+	      style: 'text-align: center; margin: 5px 0 0 0; padding: 2px 2px ; border-radius: 10px; white-space: nowrap; ' +
+	      'overflow: hidden; text-overflow: ellipsis; background-color: #02baf2; border-color: #c0c0c0;',
+	    });
 	  }
 
 	  backToSavesOptions() {
-	    return this.makeBackButton('Saves Options', 'saveMenu');
+	    return Utils.buildHTML('a', '&lt;-- Saves Options', {
+	      href: '!shaped-config --savesMenu',
+	      style: 'text-align: center; margin: 5px 0 0 0; padding: 2px 2px ; border-radius: 10px; white-space: nowrap; ' +
+	      'overflow: hidden; text-overflow: ellipsis; background-color: #02baf2; border-color: #c0c0c0;',
+	    });
 	  }
 
 	  getQueryCommand(path, title, optionsSpec) {
@@ -4048,29 +3985,25 @@ var ShapedScripts =
 
 	    let css = `text-align: center; width: ${params.width}px; margin: 2px 0 -3px 0; ` +
 	      'padding: 2px 2px ; border-radius: 10px; border-color: #c0c0c0;' +
-	      'white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+	      `white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background-color: ${params.buttonColor};`;
 	    if (params.buttonTextColor) {
-	      css += `color: ${params.buttonTextColor};`;
-	    }
-	    if (params.buttonColor) {
-	      css += `background-color: ${params.buttonColor};`;
+	      css += `color: ${params.buttonTextColor}`;
 	    }
 
 	    return Utils.buildHTML('a', params.linkText, {
 	      style: css,
-	      class: params.buttonClass,
 	      href: `!shaped-config --${params.path} ${params.command}`,
 	    });
 	  }
 
 	  makeText(value) {
-	    return Utils.buildHTML('span', value);
+	    return Utils.buildHTML('span', value, { style: 'padding: 0 2px;' });
 	  }
 
 	  makeBoolText(value) {
 	    return value === true ?
-	      Utils.buildHTML('span', 'on') :
-	      Utils.buildHTML('span', 'off');
+	      Utils.buildHTML('span', 'on', { style: 'padding: 0 2px;' }) :
+	      Utils.buildHTML('span', 'off', { style: 'padding: 0 2px;' });
 	  }
 
 	  /* eslint-disable object-property-newline */
@@ -4149,21 +4082,6 @@ var ShapedScripts =
 	      ], { style: 'border: 1px solid gray;' });
 	  }
 
-	  writeMenu(msg) {
-	    const parts = this.getMenuParts();
-	    const content = Utils.buildHTML('table', parts.optionRows, {
-	      style: 'width: 100%; font-size: 0.9em;',
-	      class: 'shaped-config',
-	    });
-	    msg.addField('subheader', parts.title);
-	    msg.addField('content', content);
-	    msg.addField('text', parts.footerText);
-	  }
-
-	  getMenuParts() {
-	    return null;
-	  }
-
 	  get logWrap() {
 	    return this.constructor.name;
 	  }
@@ -4177,34 +4095,35 @@ var ShapedScripts =
 	// Menus
 	/////////////////////////////////////////////////
 	class MainMenu extends ConfigMenu {
-	  getMenuParts() {
+	  getMenu() {
 	    const optionRows =
 	      this.makeOptionRow({
-	        title: 'Advantage Tracker', path: 'atMenu', command: '', linkText: 'view --&gt;',
+	        title: 'Advantage Tracker', path: 'atMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      }) +
 	      this.makeOptionRow({
-	        title: 'Token Defaults', path: 'tsMenu', command: '', linkText: 'view --&gt;',
+	        title: 'Token Defaults', path: 'tsMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      }) +
 	      this.makeOptionRow({
-	        title: 'New Characters', path: 'ncMenu', command: '', linkText: 'view --&gt;',
+	        title: 'New Characters', path: 'ncMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      }) +
 	      this.makeOptionRow({
-	        title: 'Char. Sheet Enhancements', path: 'seMenu', command: '', linkText: 'view --&gt;',
+	        title: 'Char. Sheet Enhancements', path: 'seMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      }) +
 	      this.makeOptionRow({
-	        title: 'Houserules & Variants', path: 'varsMenu', command: '', linkText: 'view --&gt;',
+	        title: 'Houserules & Variants', path: 'varsMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      });
 
-	    return {
-	      title: 'Main Menu',
-	      footerText: 'Shaped Companion Version v8.2.0',
-	      optionRows,
-	    };
+	    const th = Utils.buildHTML('th', 'Main Menu', { colspan: '2' });
+	    const tr = Utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const footer = Utils.buildHTML('tr', Utils.buildHTML('td', 'Shaped Companion Version v8.1.0',
+	      { colspan: '2' }));
+
+	    return Utils.buildHTML('table', tr + optionRows + footer, { style: 'width: 100%; font-size: 0.9em;' });
 	  }
 	}
 
 	class AdvantageTrackerMenu extends ConfigMenu {
-	  getMenuParts() {
+	  getMenu() {
 	    const ats = 'advTrackerSettings';
 	    const menu = 'atMenu';
 
@@ -4228,16 +4147,17 @@ var ShapedScripts =
 	        spec: this.specRoot.advTrackerSettings.disadvantageMarker(),
 	      });
 
-	    return {
-	      title: 'Advantage Tracker Options',
-	      footerText: this.backToMainMenuButton(),
-	      optionRows,
-	    };
+
+	    const th = Utils.buildHTML('th', 'Advantage Tracker Options', { colspan: '2' });
+	    const tr = Utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = Utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToMainMenuButton();
 	  }
 	}
 
 	class TokensMenu extends ConfigMenu {
-	  getMenuParts() { // config) {
+	  getMenu() { // config) {
 	    // this.config = config;
 	    const ts = 'tokenSettings';
 	    const menu = 'tsMenu';
@@ -4278,22 +4198,22 @@ var ShapedScripts =
 	        path: `${ts}.light.multiplier`, title: 'Light Muliplier', prompt: 'Light Muliplier', menuCmd: menu,
 	      }) +
 	      this.makeOptionRow({
-	        title: 'Token Bar Options', path: 'barMenu', command: '', linkText: 'view --&gt;',
+	        title: 'Token Bar Options', path: 'barMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      }) +
 	      this.makeOptionRow({
-	        title: 'Token Aura Options', path: 'auraMenu', command: '', linkText: 'view --&gt;',
+	        title: 'Token Aura Options', path: 'auraMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      });
 
-	    return {
-	      title: 'Token Options',
-	      footerText: this.backToMainMenuButton(),
-	      optionRows,
-	    };
+	    const th = Utils.buildHTML('th', 'Token Options', { colspan: '2' });
+	    const tr = Utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = Utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToMainMenuButton();
 	  }
 	}
 
 	class TokenBarsMenu extends ConfigMenu {
-	  getMenuParts() {
+	  getMenu() {
 	    const ts = 'tokenSettings';
 	    const menu = 'barMenu';
 
@@ -4307,17 +4227,17 @@ var ShapedScripts =
 
 	      const attBtn = this.makeOptionButton({
 	        path: `${ts}.bar${i}.attribute`, linkText: this.makeText(currAttrEmptyHint), tooltip: 'click to edit',
-	        buttonClass: currAttrEmptyHint === '[not set]' ? 'notselected' : '', width: 60,
+	        buttonColor: currAttrEmptyHint === '[not set]' ? '#f84545' : '#02baf2', width: 60,
 	        command: `?{Bar ${i} Attribute (empty to unset)|${currAttr}} --${menu}`,
 	      });
 	      const maxBtn = this.makeOptionButton({
 	        path: `${ts}.bar${i}.max`, linkText: this.makeBoolText(currMax), tooltip: 'click to toggle',
-	        buttonClass: currMax ? '' : 'notselected', width: 60,
+	        buttonColor: currMax ? '#65c4bd' : '#f84545', width: 60,
 	        command: `${!currMax} --${menu}`,
 	      });
 	      const linkBtn = this.makeOptionButton({
 	        path: `${ts}.bar${i}.link`, linkText: this.makeBoolText(currLink), tooltip: 'click to togle',
-	        buttonClass: currLink ? '' : 'notselected', width: 60,
+	        buttonColor: currLink ? '#65c4bd' : '#f84545', width: 60,
 	        command: `${!currLink} --${menu}`,
 	      });
 
@@ -4334,16 +4254,16 @@ var ShapedScripts =
 	      });
 	    }
 
-	    return {
-	      title: 'Token Bar Options',
-	      footerText: this.backToTokenOptions(),
-	      optionRows,
-	    };
+	    const th = Utils.buildHTML('th', 'Token Bar Options', { colspan: '2' });
+	    const tr = Utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = Utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToTokenOptions();
 	  }
 	}
 
 	class TokenAurasMenu extends ConfigMenu {
-	  getMenuParts() {
+	  getMenu() {
 	    const ts = 'tokenSettings';
 	    const menu = 'auraMenu';
 
@@ -4357,7 +4277,7 @@ var ShapedScripts =
 
 	      const radBtn = this.makeOptionButton({
 	        path: `${ts}.aura${i}.radius`, linkText: this.makeText(currRadEmptyHint), tooltip: 'click to edit',
-	        buttonClass: currRadEmptyHint === '[not set]' ? 'notselected' : '', width: 60,
+	        buttonColor: currRadEmptyHint === '[not set]' ? '#f84545' : '#02baf2', width: 60,
 	        command: `?{Aura ${i} Radius (empty to unset)|${currRad}} --${menu}`,
 	      });
 	      const colorBtn = this.makeOptionButton({
@@ -4367,7 +4287,7 @@ var ShapedScripts =
 	      });
 	      const squareBtn = this.makeOptionButton({
 	        path: `tokenSettings.aura${i}.square`, linkText: this.makeBoolText(currSquare), tooltip: 'click to toggle',
-	        buttonClass: currSquare ? '' : 'notselected', width: 60,
+	        buttonColor: currSquare ? '#65c4bd' : '#f84545', width: 60,
 	        command: `${!currSquare} --${menu}`,
 
 	      });
@@ -4385,16 +4305,16 @@ var ShapedScripts =
 	      });
 	    }
 
-	    return {
-	      title: 'Token Aura Options',
-	      footerText: this.backToTokenOptions(),
-	      optionRows,
-	    };
+	    const th = Utils.buildHTML('th', 'Token Aura Options', { colspan: '2' });
+	    const tr = Utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = Utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToTokenOptions();
 	  }
 	}
 
 	class NewCharacterMenu extends ConfigMenu {
-	  getMenuParts() {
+	  getMenu() {
 	    const menu = 'ncMenu';
 	    const ncs = 'newCharSettings';
 	    let optionRows =
@@ -4412,19 +4332,19 @@ var ShapedScripts =
 
 	    const sheetBtn = this.makeOptionButton({
 	      path: `${ncs}.sheetOutput`, linkText: this.makeText(currSheetOut), tooltip: 'click to change',
-	      width: 60,
+	      buttonColor: '#02baf2', width: 60,
 	      command: `${this.getQueryCommand(`${ncs}.sheetOutput`, 'Sheet Output', spec.sheetOutput())}`
 	      + ` --${menu}`,
 	    });
 	    const dSaveBtn = this.makeOptionButton({
 	      path: `${ncs}.deathSaveOutput`, linkText: this.makeText(currDSaveOut), tooltip: 'click to change',
-	      width: 60,
+	      buttonColor: '#02baf2', width: 60,
 	      command: `${this.getQueryCommand(`${ncs}.deathSaveOutput`, 'Death Save Output', spec.deathSaveOutput())}`
 	      + ` --${menu}`,
 	    });
 	    const hdBtn = this.makeOptionButton({
 	      path: `${ncs}.hitDiceOutput`, linkText: this.makeText(currHDOut), tooltip: 'click to change',
-	      width: 60,
+	      buttonColor: '#02baf2', width: 60,
 	      command: `${this.getQueryCommand(`${ncs}.hitDiceOutput`, 'Death Save Output', spec.hitDiceOutput())}`
 	      + ` --${menu}`,
 	    });
@@ -4437,15 +4357,18 @@ var ShapedScripts =
 	    });
 
 	    optionRows +=
-	      this.makeQuerySetting({
-	        path: `${ncs}.rollOptions`, title: 'Roll Options', menuCmd: menu, spec: spec.rollOptions(),
-	      }) +
 	      this.makeOptionRow({
-	        title: 'Initiative Settings', path: 'initMenu', command: '', linkText: 'view --&gt;',
+	        title: 'Initiative Settings', path: 'initMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      }) +
 	      this.makeToggleSetting({
 	        path: `${ncs}.showNameOnRollTemplate`, title: 'Show Name on Roll Template', menuCmd: menu,
 	        spec: spec.showNameOnRollTemplate(),
+	      }) +
+	      this.makeQuerySetting({
+	        path: `${ncs}.rollOptions`, title: 'Roll Options', menuCmd: menu, spec: spec.rollOptions(),
+	      }) +
+	      this.makeToggleSetting({
+	        path: `${ncs}.autoRevertAdvantage`, title: 'Revert Advantage', menuCmd: menu,
 	      }) +
 	      this.makeToggleSetting({
 	        path: `${ncs}.showTargetAC`, title: 'Show Target AC', menuCmd: menu,
@@ -4454,56 +4377,47 @@ var ShapedScripts =
 	        path: `${ncs}.showTargetName`, title: 'Show Target Name', menuCmd: menu,
 	      }) +
 	      this.makeToggleSetting({
-	        path: `${ncs}.automaticallyRollDamageForAttacks`, title: 'Auto Roll Dmg Attacks', menuCmd: menu,
-	        spec: spec.automaticallyRollDamageForAttacks(),
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${ncs}.automaticallyRollDamageForSavingThrows`, title: 'Auto Roll Dmg Saves', menuCmd: menu,
-	        spec: spec.automaticallyRollDamageForSavingThrows(),
-	      }) +
-	      this.makeOptionRow({
-	        title: 'Display Settings', path: 'displayMenu', command: '', linkText: 'view --&gt;',
+	        path: `${ncs}.autoAmmo`, title: 'Auto Use Ammo', menuCmd: menu,
 	      }) +
 	      this.makeToggleSetting({
 	        path: `${ncs}.automaticHigherLevelQueries`, title: 'Automatic Higher Level Queries', menuCmd: menu,
 	        spec: spec.automaticHigherLevelQueries(),
 	      }) +
 	      this.makeToggleSetting({
-	        path: `${ncs}.autoAmmo`, title: 'Auto Use Ammo', menuCmd: menu,
-	      }) +
-	      this.makeToggleSetting({
-	        path: `${ncs}.autoRevertAdvantage`, title: 'Revert Advantage', menuCmd: menu,
-	      }) +
-	      this.makeToggleSetting({
 	        path: `${ncs}.automaticallyExpendSpellResources`, title: 'Auto spell slots/points', menuCmd: menu,
 	      }) +
-	      this.makeOptionRow({
-	        title: 'Houserule Settings', path: 'hrMenu', command: '', linkText: 'view --&gt;',
+	      this.makeQuerySetting({
+	        path: `${ncs}.tab`, title: 'Default tab', menuCmd: menu, spec: spec.tab(),
 	      }) +
 	      this.makeOptionRow({
-	        title: 'Measurement Systems', path: 'msMenu', command: '', linkText: 'view --&gt;',
+	        title: 'Default Token Actions', path: 'taMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      }) +
 	      this.makeOptionRow({
-	        title: 'Hide Settings', path: 'hideMenu', command: '', linkText: 'view --&gt;',
+	        title: 'Display Settings', path: 'displayMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      }) +
 	      this.makeOptionRow({
-	        title: 'Default Token Actions', path: 'taMenu', command: '', linkText: 'view --&gt;',
+	        title: 'Houserule Settings', path: 'hrMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
+	      }) +
+	      this.makeOptionRow({
+	        title: 'Hide Settings', path: 'hideMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
+	      }) +
+	      this.makeOptionRow({
+	        title: 'Measurement Systems', path: 'msMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
+	      }) +
+	      this.makeOptionRow({
+	        title: 'Text sizes', path: 'textMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      });
-	    // +
-	    // this.makeOptionRow({
-	    //   title: 'Text sizes', path: 'textMenu', command: '', linkText: 'view --&gt;',
-	    // });
 
-	    return {
-	      title: 'New Character Settings',
-	      footerText: this.backToMainMenuButton(),
-	      optionRows,
-	    };
+	    const th = Utils.buildHTML('th', 'New Character Sheets', { colspan: '2' });
+	    const tr = Utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = Utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToMainMenuButton();
 	  }
 	}
 
 	class InitiativeMenu extends ConfigMenu {
-	  getMenuParts() {
+	  getMenu() {
 	    const ncs = 'newCharSettings';
 	    const menu = 'initMenu';
 	    const spec = this.specRoot.newCharSettings;
@@ -4522,22 +4436,26 @@ var ShapedScripts =
 	        path: `${ncs}.breakInitiativeTies`, title: 'Break Init Ties', menuCmd: menu,
 	      });
 
-	    return {
-	      title: 'Initiative Settings',
-	      footerText: this.backToNewCharOptions(),
-	      optionRows,
-	    };
+
+	    const th = Utils.buildHTML('th', 'Initiative Settings', { colspan: '2' });
+	    const tr = Utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = Utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToNewCharOptions();
 	  }
 	}
 
 
 	class DisplayMenu extends ConfigMenu {
-	  getMenuParts() {
+	  getMenu() {
 	    const display = 'newCharSettings.display';
 	    const menu = 'displayMenu';
 	    const spec = this.specRoot.newCharSettings.display;
 
 	    const optionRows =
+	      this.makeToggleSetting({
+	        path: `${display}.showRests`, title: 'Show Rests', menuCmd: menu,
+	      }) +
 	      this.makeToggleSetting({
 	        path: `${display}.showPassiveSkills`, title: 'Show Passive Skills', menuCmd: menu,
 	      }) +
@@ -4563,16 +4481,17 @@ var ShapedScripts =
 	        path: `${display}.extraOnACrit`, title: 'Extra on a Crit', menuCmd: menu,
 	      });
 
-	    return {
-	      title: 'Display Settings',
-	      footerText: this.backToNewCharOptions(),
-	      optionRows,
-	    };
+
+	    const th = Utils.buildHTML('th', 'Display Settings', { colspan: '2' });
+	    const tr = Utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = Utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToNewCharOptions();
 	  }
 	}
 
 	class MeasurementSystemsMenu extends ConfigMenu {
-	  getMenuParts() {
+	  getMenu() {
 	    const ms = 'newCharSettings.measurementSystems';
 	    const menu = 'msMenu';
 	    const spec = this.specRoot.newCharSettings.measurementSystems;
@@ -4585,29 +4504,28 @@ var ShapedScripts =
 	      this.makeQuerySetting({
 	        path: `${ms}.weightSystem`, title: 'Weight System', prompt: 'Weight System', menuCmd: menu,
 	        spec: spec.weightSystem(),
+	      }) +
+	      this.makeInputSetting({
+	        path: `${ms}.encumbranceMultiplier`, title: 'Encumbrance Multiplier', prompt: 'Encumbrance Multiplier',
+	        menuCmd: menu,
 	      });
 
-	    return {
-	      title: 'Measurement Systems',
-	      footerText: this.backToNewCharOptions(),
-	      optionRows,
-	    };
+	    const th = Utils.buildHTML('th', 'Measurement Systems', { colspan: '2' });
+	    const tr = Utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = Utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToNewCharOptions();
 	  }
 	}
 
 	class NewCharacterHouseruleMenu extends ConfigMenu {
-	  getMenuParts() {
+	  getMenu() {
 	    const hr = 'newCharSettings.houserules';
 	    const menu = 'hrMenu';
 
 	    const optionRows =
-	      this.makeQuerySetting({
-	        path: `${hr}.hitPointsRecoveredOnALongRest`, title: 'HP Recovered Long Rest', prompt: 'HP Recovered Long Rest',
-	        menuCmd: menu, spec: this.specRoot.newCharSettings.houserules.hitPointsRecoveredOnALongRest(),
-	      }) +
-	      this.makeQuerySetting({
-	        path: `${hr}.hitDiceRecoveredOnALongRest`, title: 'HD Recovered Long Rest', prompt: 'HD Recovered Long Rest',
-	        menuCmd: menu, spec: this.specRoot.newCharSettings.houserules.hitDiceRecoveredOnALongRest(),
+	      this.makeToggleSetting({
+	        path: `${hr}.inspirationMultiple`, title: 'Multiple Inspiration', menuCmd: menu,
 	      }) +
 	      this.makeQuerySetting({
 	        path: `${hr}.criticalDamageHouserule`, title: 'Critical Damage', prompt: 'Critical Damage', menuCmd: menu,
@@ -4626,12 +4544,12 @@ var ShapedScripts =
 	        path: `${hr}.expertiseAsAdvantage`, title: 'Expertise as advantage', menuCmd: menu,
 	      }) +
 	      this.makeQuerySetting({
-	        path: `${hr}.mediumArmorMaxDex`, title: 'Medium Armor Max Dex', menuCmd: menu,
-	        spec: this.specRoot.newCharSettings.houserules.mediumArmorMaxDex(),
-	      }) +
-	      this.makeQuerySetting({
 	        path: `${hr}.baseDC`, title: 'Base DC', prompt: 'Base DC', menuCmd: menu,
 	        spec: this.specRoot.newCharSettings.houserules.baseDC(),
+	      }) +
+	      this.makeQuerySetting({
+	        path: `${hr}.mediumArmorMaxDex`, title: 'Medium Armor Max Dex', menuCmd: menu,
+	        spec: this.specRoot.newCharSettings.houserules.mediumArmorMaxDex(),
 	      }) +
 	      this.makeToggleSetting({
 	        path: `${hr}.honorToggle`, title: 'Honor', menuCmd: menu,
@@ -4639,29 +4557,26 @@ var ShapedScripts =
 	      this.makeToggleSetting({
 	        path: `${hr}.sanityToggle`, title: 'Sanity', menuCmd: menu,
 	      }) +
-	      this.makeToggleSetting({
-	        path: `${hr}.inspirationMultiple`, title: 'Multiple Inspiration', menuCmd: menu,
-	      }) +
 	      this.makeOptionRow({
-	        title: 'Saving Throws', path: 'savesMenu', command: '', linkText: 'view --&gt;',
+	        title: 'Saving Throws', path: 'savesMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      });
 
-	    return {
-	      title: 'Houserule Settings',
-	      footerText: this.backToNewCharOptions(),
-	      optionRows,
-	    };
+	    const th = Utils.buildHTML('th', 'Houserule Settings', { colspan: '2' });
+	    const tr = Utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = Utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToNewCharOptions();
 	  }
 	}
 
 	class HideMenu extends ConfigMenu {
-	  getMenuParts() {
+	  getMenu() {
 	    const hide = 'newCharSettings.hide';
 	    const menu = 'hideMenu';
 
 	    const optionRows = [
 	      'hideAbilityChecks', 'hideSavingThrows', 'hideAttack', 'hideDamage', 'hideFreetext', 'hideRecharge',
-	      'hideTargetAC', 'hideSavingThrowDC', 'hideSavingThrowFailure', 'hideContent',
+	      'hideSavingThrowDC', 'hideSavingThrowFailure', 'hideSavingThrowSuccess', 'hideContent',
 	    ].reduce((result, functionName) => {
 	      const title = Utils.toTitleCase(
 	        functionName.replace(/([a-z])([A-Z]+)/g, (match, lower, upper) => `${lower} ${upper.toLowerCase()}`));
@@ -4672,16 +4587,16 @@ var ShapedScripts =
 	      return result;
 	    }, '');
 
-	    return {
-	      title: 'Hide Settings',
-	      footerText: this.backToNewCharOptions(),
-	      optionRows,
-	    };
+	    const th = Utils.buildHTML('th', 'Hide Settings', { colspan: '2' });
+	    const tr = Utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = Utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToNewCharOptions();
 	  }
 	}
 
 	class SavesMenu extends ConfigMenu {
-	  getMenuParts() {
+	  getMenu() {
 	    const saves = 'newCharSettings.houserules.saves';
 	    const menu = 'savesMenu';
 
@@ -4696,20 +4611,20 @@ var ShapedScripts =
 	        path: `${saves}.useAverageOfAbilities`, title: 'Use Average of Highest Abils', menuCmd: menu,
 	      }) +
 	      this.makeOptionRow({
-	        title: 'Fortitude', path: 'fortitudeMenu', command: '', linkText: 'view --&gt;',
+	        title: 'Fortitude', path: 'fortitudeMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      }) +
 	      this.makeOptionRow({
-	        title: 'Reflex', path: 'reflexMenu', command: '', linkText: 'view --&gt;',
+	        title: 'Reflex', path: 'reflexMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      }) +
 	      this.makeOptionRow({
-	        title: 'Will', path: 'willMenu', command: '', linkText: 'view --&gt;',
+	        title: 'Will', path: 'willMenu', command: '', linkText: 'view --&gt;', buttonColor: '#02baf2',
 	      });
 
-	    return {
-	      title: 'Custom Saves Settings',
-	      footerText: this.backToHouseRuleOptions(),
-	      optionRows,
-	    };
+	    const th = Utils.buildHTML('th', 'Houserule Settings', { colspan: '2' });
+	    const tr = Utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = Utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToHouseRuleOptions();
 	  }
 	}
 
@@ -4720,7 +4635,7 @@ var ShapedScripts =
 	    this.saveName = saveName;
 	  }
 
-	  getMenuParts() {
+	  getMenu() {
 	    const saves = `newCharSettings.houserules.saves.${this.saveName}`;
 	    const menu = `${this.saveName}Menu`;
 
@@ -4733,17 +4648,17 @@ var ShapedScripts =
 	        return result;
 	      }, '');
 
-	    return {
-	      title: `${this.saveName} Saves`,
-	      footerText: this.backToSavesOptions(),
-	      optionRows,
-	    };
+	    const th = Utils.buildHTML('th', `${this.saveName} Saves`, { colspan: '2' });
+	    const tr = Utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = Utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToSavesOptions();
 	  }
 	}
 
 
 	class NewCharacterTextSizeMenu extends ConfigMenu {
-	  getMenuParts() {
+	  getMenu() {
 	    const textSizes = 'newCharSettings.textSizes';
 	    const menu = 'textMenu';
 
@@ -4761,17 +4676,17 @@ var ShapedScripts =
 	        spec: this.specRoot.newCharSettings.textSizes.savingThrowsTextSize(),
 	      });
 
-	    return {
-	      title: 'Text sizes',
-	      footerText: this.backToNewCharOptions(),
-	      optionRows,
-	    };
+	    const th = Utils.buildHTML('th', 'Text sizes', { colspan: '2' });
+	    const tr = Utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = Utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToNewCharOptions();
 	  }
 	}
 
 
 	class VariantsMenu extends ConfigMenu {
-	  getMenuParts() {
+	  getMenu() {
 	    const root = 'variants';
 	    const menu = 'varsMenu';
 	    const spec = this.specRoot.variants;
@@ -4786,16 +4701,16 @@ var ShapedScripts =
 	        spec: spec.rests.longRestHDRecovery(),
 	      });
 
-	    return {
-	      title: 'Houserules & Variants',
-	      footerText: this.backToMainMenuButton(),
-	      optionRows,
-	    };
+	    const th = Utils.buildHTML('th', 'Houserules & Variants', { colspan: '2' });
+	    const tr = Utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = Utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+
+	    return table + this.backToMainMenuButton();
 	  }
 	}
 
 	class SheetEnhancementsMenu extends ConfigMenu {
-	  getMenuParts() {
+	  getMenu() {
 	    const root = 'sheetEnhancements';
 	    const menu = 'seMenu';
 
@@ -4816,17 +4731,15 @@ var ShapedScripts =
 	        path: `${root}.ammoRecovery`, title: 'Show ammo recovery buttons', menuCmd: menu,
 	      });
 
-
-	    return {
-	      title: 'Character Sheet Enhancements',
-	      footerText: this.backToMainMenuButton(),
-	      optionRows,
-	    };
+	    const th = Utils.buildHTML('th', 'Character Sheet Enhancements', { colspan: '2' });
+	    const tr = Utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = Utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+	    return table + this.backToMainMenuButton();
 	  }
 	}
 
 	class TokenActionsMenu extends ConfigMenu {
-	  getMenuParts() {
+	  getMenu() {
 	    const root = 'newCharSettings.tokenActions';
 	    const menu = 'taMenu';
 	    const spec = this.specRoot.newCharSettings.tokenActions;
@@ -4887,11 +4800,10 @@ var ShapedScripts =
 	        path: `${root}.regionalEffects`, title: 'Regional Effects', menuCmd: menu, spec: spec.regionalEffects(),
 	      });
 
-	    return {
-	      title: 'Default Token Actions',
-	      footerText: this.backToNewCharOptions(),
-	      optionRows,
-	    };
+	    const th = Utils.buildHTML('th', 'Default Token Actions', { colspan: '2' });
+	    const tr = Utils.buildHTML('tr', th, { style: 'margin-top: 5px;' });
+	    const table = Utils.buildHTML('table', tr + optionRows, { style: 'width: 100%; font-size: 0.9em;' });
+	    return table + this.backToNewCharOptions();
 	  }
 	}
 
@@ -5713,6 +5625,27 @@ var ShapedScripts =
 
 	class Importer extends ShapedModule {
 
+	  fixRoll20Brokenness(character) {
+	    _.chain(this.roll20.findObjs({ characterid: character.id, type: 'attribute' }))
+	      .groupBy(attr => attr.get('name'))
+	      .pick(attrGroup => attrGroup.length > 1)
+	      .each((attrGroup) => {
+	        this.logger.warn('Found duplicate attributes from character $$$: $$$', character.get('name'),
+	          attrGroup.map(attr => [attr.get('name'), attr.get('current'), attr.get('max'), attr.id]));
+	        attrGroup.reduce((previous, attr) => {
+	          if (attr.get('current')) {
+	            previous.setWithWorker({ current: attr.get('current') });
+	          }
+	          else if (attr.get('max')) {
+	            previous.setWithWorker({ max: attr.get('max') });
+	          }
+	          attr.remove();
+	          return previous;
+	        });
+	      });
+	    return character;
+	  }
+
 	  runImportStage(character, attributes, name, msgStreamer) {
 	    const initialPromise = Promise.resolve(character);
 	    if (!_.isEmpty(attributes)) {
@@ -5732,7 +5665,7 @@ var ShapedScripts =
 	        this.roll20.setAttrWithWorker(character.id, attrName, attrVal);
 	      });
 
-	      return newPromise;
+	      return newPromise.then(newChar => this.fixRoll20Brokenness(newChar));
 	    }
 	    return initialPromise;
 	  }
@@ -5955,17 +5888,6 @@ var ShapedScripts =
 	  return name.toLowerCase().replace(/\s+/g, '');
 	}
 
-	function getBooleanCriterion(name) {
-	  return {
-	    name,
-	    transformer: val => !!val,
-	    validator: ShapedConfig.booleanValidator,
-	    compare(b1, b2) {
-	      return b1 === b2 ? 0 : (b1 ? -1 : 1);
-	    },
-	  };
-	}
-
 	module.exports = class SpellManager extends ShapedModule {
 
 	  constructor(dependencies) {
@@ -5979,8 +5901,6 @@ var ShapedScripts =
 	      { name: 'lists', buildListEntry: spellListGrouper.buildListEntry },
 	      { name: 'school' },
 	      { name: 'level', validator: ShapedConfig.integerValidator },
-	      getBooleanCriterion('concentration'),
-	      getBooleanCriterion('ritual'),
 	    ], this.logger, this.entityLookup, 'spells');
 
 	    this.entityLookup.configureEntity('spells',
@@ -6124,12 +6044,11 @@ var ShapedScripts =
 	        'and your campaign more generally. ');
 	    }
 
-	    const msg = this.reporter.getMessageStreamer('Import Spells', options.playerId);
-	    return this.importData(options.selected.character, options.spells, options.overwrite, msg)
+	    return this.importData(options.selected.character, options.spells, options.overwrite)
 	      .then(() => {
 	        const imported = options.spells.filter(spell => !spell.noImport);
 	        const skipped = options.spells.filter(spell => spell.noImport);
-	        let message = 'Import Complete<br>';
+	        let message = '';
 	        if (!_.isEmpty(imported)) {
 	          message += 'Added the following spells:  <ul><li>' +
 	            `${_.map(imported, spell => spell.name).join('</li><li>')}</li></ul>`;
@@ -6138,7 +6057,7 @@ var ShapedScripts =
 	          message += 'Skipped the following spells which were already present (use --overwrite to replace): <ul><li>' +
 	            `${_.map(skipped, spell => spell.name).join('</li><li>')}</li></ul>`;
 	        }
-	        msg.finish(message);
+	        this.reportPlayer('Import Complete', message, options.playerId);
 	        if (options.relist) {
 	          _.extend(options, options.relist);
 	          options.clearCache('characterSpells');
@@ -6150,9 +6069,18 @@ var ShapedScripts =
 	  importData(character, spells, overwrite, msg) {
 	    this.logger.debug('Importing new character spells $$$', spells);
 	    const pronounInfo = this.getPronounInfo(character);
+	    const closeMessage = !msg;
+	    msg = msg || this.reporter.getMessageStreamer(`${character.get('name')} Spell Import`);
 	    const spellAttrs = this.getSpellAttributesForImport(character, pronounInfo, spells, overwrite);
-	    return _.isEmpty(spellAttrs) ? Promise.resolve(character) :
+	    const promise = _.isEmpty(spellAttrs) ? Promise.resolve(character) :
 	      this.importer.runImportStage(character, spellAttrs, 'Importing spells', msg);
+
+	    return promise.then((newChar) => {
+	      if (closeMessage) {
+	        msg.finish();
+	      }
+	      return newChar;
+	    });
 	  }
 
 	  removeSpell(options) {
@@ -6313,14 +6241,13 @@ var ShapedScripts =
 	      options.selected.character = this.roll20.findObjs({ type: 'character' });
 	    }
 
-	    const msg = this.reporter.getMessageStreamer('Expand Spells', options.playerId);
 	    return options.selected.character.reduce((promise, character) =>
-	        promise.then(() => this.importData(character, [], false, msg)),
+	        promise.then(() => this.importData(character, [])),
 	      Promise.resolve())
 	      .then(() => {
-	        const finalMessage = ' Spells expanded for characters: <ul><li>' +
+	        const msg = ' Spells expanded for characters: <ul><li>' +
 	          `${options.selected.character.map(char => char.get('name')).join('</li><li>')}</li></ul>`;
-	        msg.finish(finalMessage);
+	        this.reporter.reportPlayer('Spell Expansion Complete', msg, options.playerId);
 	      });
 	  }
 
@@ -6559,18 +6486,18 @@ var ShapedScripts =
 	      const criteriaKeys = [];
 	      _.each(this._criteria, (criterion) => {
 	        const value = entity[criterion.name];
-	        (_.isArray(value) ? value : [value]).forEach((innerValue) => {
-	          innerValue = (criterion.transformer || _.identity)(innerValue);
-	          if (!_.isUndefined(innerValue)) {
+	        if (!_.isUndefined(value)) {
+	          (_.isArray(value) ? value : [value]).forEach((innerValue) => {
+	            innerValue = (criterion.transformer || _.identity)(innerValue);
 	            const criterionKey = makeKey(criterion.name, innerValue);
 	            criteriaKeys.push(criterionKey);
 
 	            if (!_.contains(criterion.values, innerValue)) {
 	              criterion.values.push(innerValue);
 	            }
-	          }
-	        });
-	        criterion.values.sort(criterion.compare);
+	          });
+	          criterion.values.sort(criterion.compare);
+	        }
 	      });
 
 	      criteriaKeys.sort();
@@ -7342,9 +7269,8 @@ var ShapedScripts =
 	        const selected = _.contains(suppliedCriteria[criterion.name], value);
 	        const className = selected ? 'selected' : '';
 	        const newOpts = buildNewOptionsString(suppliedCriteria, criterion.name, value);
-	        const valueText = _.isBoolean(value) ? (value ? 'Yes' : 'No') : value;
 	        return `<a href="!shaped-list-${entityName} ${newOpts} ${entitySpecificOptions}" class="${className}">` +
-	          `${valueText}</a>`;
+	          `${value}</a>`;
 	      }).join(', ');
 	      const name = Utils.toTitleCase(criterion.name);
 	      return `<div class="criterion"><span class="criterion-name">${name}. </span>${valueList}</div>`;
@@ -7573,7 +7499,7 @@ var ShapedScripts =
 	        character.set('gmnotes', text.replace(/\n/g, '<br>'));
 	        return character;
 	      },
-	    ]);
+	    ]).then(this.displayImportResults.bind(this, options.playerId));
 	  }
 
 	  displayImportResults(playerId, results) {
@@ -7589,11 +7515,7 @@ var ShapedScripts =
 
 	  importMonstersFromJson(options) {
 	    return this.importMonsters(options.monsters, options, options.selected.graphic, [])
-	      .then((results) => {
-	        if (options.monsters.length > 1) {
-	          this.displayImportResults(options.playerId, results);
-	        }
-	      });
+	      .then(this.displayImportResults.bind(this, options.playerId));
 	  }
 
 	  importByToken(options) {
@@ -7722,7 +7644,7 @@ var ShapedScripts =
 	        'Importing character data', msg))
 	      .then(newChar => this.spellManager.importData(newChar, [], false, msg))
 	      .then((newChar) => {
-	        msg.finish(`${character.get('name')} import complete`);
+	        msg.finish();
 	        return newChar;
 	      });
 	  }

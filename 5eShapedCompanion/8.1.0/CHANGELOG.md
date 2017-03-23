@@ -1,15 +1,3 @@
-<a name="8.2.0"></a>
-# [8.2.0](https://github.com/symposion/roll20-shaped-scripts/compare/8.1.0...8.2.0) (2017-03-23)
-
-
-### Features
-
-* **config:** Add settings for Automatically roll damage ([e7b0afc](https://github.com/symposion/roll20-shaped-scripts/commit/e7b0afc)), closes [#395](https://github.com/symposion/roll20-shaped-scripts/issues/395)
-* **config:** Tidy up config display + align with latest sheet ([68e7146](https://github.com/symposion/roll20-shaped-scripts/commit/68e7146)), closes [#409](https://github.com/symposion/roll20-shaped-scripts/issues/409)
-* **entity-lister:** Add filters for ritual and concentration ([b1cca99](https://github.com/symposion/roll20-shaped-scripts/commit/b1cca99)), closes [#403](https://github.com/symposion/roll20-shaped-scripts/issues/403)
-
-
-
 <a name="8.1.0"></a>
 # [8.1.0](https://github.com/symposion/roll20-shaped-scripts/compare/8.0.0...8.1.0) (2017-03-21)
 
