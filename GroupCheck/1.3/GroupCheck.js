@@ -451,14 +451,16 @@ var groupCheck = groupCheck || (function() {
 	},
 	getRollOption = function(charid) {
 		if (charid) {
-			switch(getAttrByName(charid,"roll_setting")) {
-				case "{{ignore=[[0" :
+			switch(getAttrByName(charid,"shaped_d20")) {
+				case "d20":
 					return 'roll1';
 					break;
-				case "adv {{ignore=[[0":
+				case "2d20kh1":
+				case "?{Disadvantaged|No,2d20kh1|Yes,d20}":
 					return 'adv';
 					break;
-				case "dis {{ignore=[[0" :
+				case "2d20kl1":
+				case "?{Advantaged|No,2d20kl1|Yes,d20}":
 					return 'dis';
 					break;
 			}
