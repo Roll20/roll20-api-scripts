@@ -1,5 +1,4 @@
 # namegen
-namegen
 This script allows users to randomly generate a name based on gender and nationality
 To execute, use !namegen
 The options are:
