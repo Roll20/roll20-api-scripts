@@ -1,0 +1,13 @@
+{
+  "name": "namegen",
+  "version": "0.0.1",
+  "description": "Script to randomly generate names based on gender and nationality",
+  "authors": "Paul S.",
+  "roll20userid": "297250",
+  "dependencies": [],
+  "modifies": [],
+  "conflicts": [],
+  "script": "namegen.js",
+  "useroptions": {},
+  "previousversions": []
+}
