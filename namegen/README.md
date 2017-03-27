@@ -7,7 +7,7 @@ To generate a <b>Name</b>, use <b>!namegen</b>
 <br>The options are:
 <br>!namegen [language] [gender]
 <br>Available Languages are shown if you just type !namegen
-<b>You don't have to specify a gender</b>
+<br><b>You don't have to specify a gender</b>
 
 The macro to make this even better is: 
 <br>!namegen ?{Language|african|arabic|asian|english|germanic|hindi|medieval|sanskrit|thai} ?{Gender|boy|girl}
