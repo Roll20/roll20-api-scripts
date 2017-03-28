@@ -82,11 +82,11 @@ srre.ShowResults=function(values){
                 showing+='Rolling '+values.numb[i].rolls.length+'d6cs>5>5sd = ('
                 for(var j=0;j<values.numb[i].rolls.length;j++){
                     if(values.numb[i].rolls[j].v>=5){
-                        showing+='<span style="font-size:1.1em;color:#00ff00;">'
+                        showing+='<span style='+'&'+'quot'+';'+'font-size:1.1em;color:#00ff00;'+'&'+'quot'+';'+'>'
                     }else if(values.numb[i].rolls[j].v==1){
-                        showing+='<span style="font-size:1.1em;color:#ff4444;">'
+                        showing+='<span style='+'&'+'quot'+';'+'font-size:1.1em;color:#ff4444;'+'&'+'quot'+';'+'>'
                     }else{
-                        showing+='<span style="font-size:1.1em;color:#ffffff;">'
+                        showing+='<span style='+'&'+'quot'+';'+'font-size:1.1em;color:#ffffff;'+'&'+'quot'+';'+'>'
                     }
                     showing+=values.numb[i].rolls[j].v+'</span>'
                     if(j<values.numb[i].rolls.length-1){
@@ -151,6 +151,38 @@ srre.ShowHelp=function(){
 
 
 
+
+srre.Rollextender=function(msg){
+    if(msg.content.match(/RollEx/i)!=null){
+        var temp=msg.content.match(/RollEx\s*\d+/i)
+        if(temp){
+            var maxSuc=msg.content.match(/s\d+/i)
+            var maxDice=msg.content.match(/d\d+/i)
+            var arg={}
+            arg.nDice=temp[0].match(/\d+/)[0];
+            if(maxDice){
+                arg.maxDice=maxDice[0].match(/\d+/)[0]
+            }else{
+                arg.maxDice=1;
+            }
+            if(maxSuc){
+                arg.maxSuccesses=maxSuc[0].match(/\d+/)[0]
+            }else{
+                arg.maxSuccesses=1000;
+            }
+            arg.nSuccesses=0;
+            arg.nGlitches=0;
+            arg.numb=[];
+            arg.player=msg.who
+            srre.Exroll(arg)
+        }else{
+            srre.ShowHelp()
+        }
+    }
+}
+
+
+
 srre.Glitchdetection=function(msg){
     if(((msg.type == 'general' || msg.type == 'whisper') && (msg.rolltemplate != null)) || (msg.type == 'rollresult' || msg.type == 'gmrollresult')) {
         if(msg.type == 'rollresult' || msg.type == 'gmrollresult'){
@@ -211,37 +243,6 @@ srre.Glitchdetection=function(msg){
         }
     }
 }
-
-
-srre.Rollextender=function(msg){
-    if(msg.content.match(/RollEx/i)!=null){
-        var temp=msg.content.match(/RollEx\s*\d+/i)
-        if(temp){
-            var maxSuc=msg.content.match(/s\d+/i)
-            var maxDice=msg.content.match(/d\d+/i)
-            var arg={}
-            arg.nDice=temp[0].match(/\d+/)[0];
-            if(maxDice){
-                arg.maxDice=maxDice[0].match(/\d+/)[0]
-            }else{
-                arg.maxDice=1;
-            }
-            if(maxSuc){
-                arg.muaxSuccesses=maxSuc[0].match(/\d+/)[0]
-            }else{
-                arg.maxSuccesses=1000;
-            }
-            arg.nSuccesses=0;
-            arg.nGlitches=0;
-            arg.numb=[];
-            arg.player=msg.who
-            srre.Exroll(arg)
-        }else{
-            srre.ShowHelp()
-        }
-    }
-}
-
 
 on('chat:message', function (msg) {
     srre.Glitchdetection(msg)
