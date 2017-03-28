@@ -244,7 +244,6 @@ srre.Rollextender=function(msg){
 
 
 on('chat:message', function (msg) {
-    log(msg)
     srre.Glitchdetection(msg)
     if(msg.type == 'api'){
         srre.Rollextender(msg)
