@@ -1,9 +1,9 @@
-// Github: https://github.com/bpunya/roll20-api/blob/master/TruePageCopy/TruePageCopy.js
+// Github: https://github.com/bpunya/roll20-api/blob/master/TruePageCopy/1.0/TruePageCopy.js
 // Author: PaprikaCC (Bodin Punyaprateep)
 
 var TruePageCopy = TruePageCopy || (function () {
   const version = '1.0';
-  const lastUpdate = 1490028625;
+  const lastUpdate = 1490813681;
 
   const checkVersion = function () {
     if (!state.PageCopy) clearState();
@@ -54,7 +54,7 @@ var TruePageCopy = TruePageCopy || (function () {
         state.PageCopy.completedWork.push(createObj(part.type, part.data));
         _.defer(workQueue);
       } else {
-        printToChat('gm', `Normalizing z-order on the ${getObj('page', state.PageCopy.destinationPage).get('name')} page.`);
+        printToChat('gm', `Normalizing z-order on the ${getObj('page', state.PageCopy.destinationPage).get('name')} page. Estimated time left is ${Math.ceil(state.PageCopy.completedWork.length / 20)} seconds.`);
         callback(clearState);
       }
     };
@@ -66,8 +66,8 @@ var TruePageCopy = TruePageCopy || (function () {
     const reorderFunction = () => {
       if (state.PageCopy.completedWork.length) {
         const part = state.PageCopy.completedWork.pop();
-        toBack(part);
-        _.delay(reorderFunction, 50)
+        if (part) toBack(part);
+        _.delay(reorderFunction, 50);
       } else {
         printToChat('gm', `Finished copying the ${getObj('page', state.PageCopy.sourcePage).get('name')} page!`);
         callback();
@@ -83,9 +83,9 @@ var TruePageCopy = TruePageCopy || (function () {
     if (zOrder) {
       return _.chain(zOrder.split(','))
               .map(position => _.find(objsToCopy, obj => obj.id === position))
-              .filter(o => o)
+              .reject(_.isUndefined)
               .map(obj => prepareObjects(obj))
-              .value()
+              .value();
     }
 
     return prepareObjects(objsToCopy);
@@ -344,18 +344,12 @@ var TruePageCopy = TruePageCopy || (function () {
       state.PageCopy.active = true;
       state.PageCopy.completedWork = [];
       state.PageCopy.workQueue = findGraphics(originalPage);
-
-      if (!state.PageCopy.workQueue.length) {
-        log('True Page Copy - Nothing needed to be copied.')
-        clearState();
-      } else {
-        printToChat('gm', `Script is now copying the ${originalPage.get('name')} page.`);
-        destinationPage.set(Object.assign(
-          getPageInfo(originalPage),
-          { name: `${originalPage.get('name')} (Copy)` }
-        ));
-        copyObjectsToDestination(reorderGraphics);
-      }
+      printToChat('gm', `Script is now copying the ${originalPage.get('name')} page.`);
+      destinationPage.set(Object.assign(
+        getPageInfo(originalPage),
+        { name: `(Copy) ${originalPage.get('name')}` }
+      ));
+      copyObjectsToDestination(reorderGraphics);
     }
   };
 
