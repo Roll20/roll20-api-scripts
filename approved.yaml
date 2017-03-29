@@ -304,3 +304,7 @@ truepagecopy:
 srrollextender:
 - "SR-RollExtender"
 - "System Toolbox"
+
+namegen:
+- "namegen"
+- "Character"
