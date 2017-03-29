@@ -51,7 +51,8 @@ var TruePageCopy = TruePageCopy || (function () {
     const workQueue = () => {
       if (state.PageCopy.workQueue.length) {
         const part = state.PageCopy.workQueue.shift();
-        state.PageCopy.completedWork.push(createObj(part.type, part.data));
+        const graphic = createObj(part.type, part.data);
+        if (graphic) state.PageCopy.completedWork.push(graphic);
         _.defer(workQueue);
       } else {
         printToChat('gm', `Normalizing z-order on the ${getObj('page', state.PageCopy.destinationPage).get('name')} page. Estimated time left is ${Math.ceil(state.PageCopy.completedWork.length / 20)} seconds.`);
@@ -218,7 +219,6 @@ var TruePageCopy = TruePageCopy || (function () {
   const getRandomString = function (length) {
     return Math.round((36 ** (length + 1)) - (Math.random() * (36 ** (length + 1)))).toString(36).slice(1);
   };
-
 
   const handleChatInput = function (msg) {
     if (msg.type !== 'api' || !playerIsGM(msg.playerid)) return;
