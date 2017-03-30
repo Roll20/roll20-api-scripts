@@ -51,11 +51,13 @@ var TruePageCopy = TruePageCopy || (function () {
     const workQueue = () => {
       if (state.PageCopy.workQueue.length) {
         const part = state.PageCopy.workQueue.shift();
-        const graphic = createObj(part.type, part.data);
-        if (graphic) state.PageCopy.completedWork.push(graphic);
+        if (part.type !== 'graphic' || part.data.imgsrc) {
+          const graphic = createObj(part.type, part.data);
+          if (graphic) state.PageCopy.completedWork.push(graphic);
+        }
         _.defer(workQueue);
       } else {
-        printToChat('gm', `Normalizing z-order on the ${getObj('page', state.PageCopy.destinationPage).get('name')} page. Estimated time left is ${Math.ceil(state.PageCopy.completedWork.length / 20)} seconds.`);
+        printToChat('gm', `Normalizing z-order on the ${getObj('page', state.PageCopy.destinationPage).get('name')} page.`);
         callback(clearState);
       }
     };
@@ -68,7 +70,7 @@ var TruePageCopy = TruePageCopy || (function () {
       if (state.PageCopy.completedWork.length) {
         const part = state.PageCopy.completedWork.pop();
         if (part) toBack(part);
-        _.delay(reorderFunction, 50);
+        _.defer(reorderFunction);
       } else {
         printToChat('gm', `Finished copying the ${getObj('page', state.PageCopy.sourcePage).get('name')} page!`);
         callback();
@@ -92,6 +94,14 @@ var TruePageCopy = TruePageCopy || (function () {
     return prepareObjects(objsToCopy);
   };
 
+  const getCleanImgsrc = function (imgsrc) {
+    const parts = imgsrc.match(/(.*\/images\/.*)(thumb|med|original|max)([^\?]*)(\?[^?]+)?$/);
+    if (parts) {
+      return parts[1] + 'thumb' + parts[3] + (parts[4] ? parts[4] : `?${Math.round(Math.random() * 9999999)}`);
+    }
+    return;
+  };
+
   const getGmPage = function (playerName) {
     return findObjs({
       _type: 'player',
@@ -100,96 +110,30 @@ var TruePageCopy = TruePageCopy || (function () {
   };
 
   const getGraphicData = function (obj) {
-    return {
-      _pageid: state.PageCopy.destinationPage,
-      imgsrc: obj.get('imgsrc').replace(/\/max\./g, '/thumb.').replace(/\/med\./g, '/thumb.'),
-      bar1_link: obj.get('bar1_link'),
-      bar2_link: obj.get('bar2_link'),
-      bar3_link: obj.get('bar3_link'),
-      represents: obj.get('represents'),
-      left: obj.get('left'),
-      top: obj.get('top'),
-      width: obj.get('width'),
-      height: obj.get('height'),
-      rotation: obj.get('rotation'),
-      layer: obj.get('layer'),
-      isdrawing: obj.get('isdrawing'),
-      flipv: obj.get('flipv'),
-      fliph: obj.get('fliph'),
-      name: obj.get('name'),
-      gmnotes: obj.get('gmnotes'),
-      controlledby: obj.get('controlledby'),
-      bar1_value: obj.get('bar1_value'),
-      bar2_value: obj.get('bar2_value'),
-      bar3_value: obj.get('bar3_value'),
-      bar1_max: obj.get('bar1_max'),
-      bar2_max: obj.get('bar2_max'),
-      bar3_max: obj.get('bar3_max'),
-      aura1_radius: obj.get('aura1_radius'),
-      aura2_radius: obj.get('aura2_radius'),
-      aura1_color: obj.get('aura1_color'),
-      aura2_color: obj.get('aura2_color'),
-      aura1_square: obj.get('aura1_square'),
-      aura2_square: obj.get('aura2_square'),
-      tint_color: obj.get('tint_color'),
-      statusmarkers: obj.get('statusmarkers'),
-      showname: obj.get('showname'),
-      showplayers_name: obj.get('showplayers_name'),
-      showplayers_bar1: obj.get('showplayers_bar1'),
-      showplayers_bar2: obj.get('showplayers_bar2'),
-      showplayers_bar3: obj.get('showplayers_bar3'),
-      showplayers_aura1: obj.get('showplayers_aura1'),
-      showplayers_aura2: obj.get('showplayers_aura2'),
-      playersedit_name: obj.get('playersedit_name'),
-      playersedit_bar1: obj.get('playersedit_bar1'),
-      playersedit_bar2: obj.get('playersedit_bar2'),
-      playersedit_bar3: obj.get('playersedit_bar3'),
-      playersedit_aura1: obj.get('playersedit_aura1'),
-      playersedit_aura2: obj.get('playersedit_aura2'),
-      light_radius: obj.get('light_radius'),
-      light_dimradius: obj.get('light_dimradius'),
-      light_otherplayers: obj.get('light_otherplayers'),
-      light_hassight: obj.get('light_hassight'),
-      light_angle: obj.get('light_angle'),
-      light_losangle: obj.get('light_losangle'),
-      light_multiplier: obj.get('light_multiplier'),
-    };
+    const props = ['bar1_link', 'bar2_link', 'bar3_link', 'represents', 'left', 'top', 'width',
+      'height', 'rotation', 'layer', 'isdrawing', 'flipv', 'fliph', 'name', 'gmnotes', 'controlledby',
+      'bar1_value', 'bar2_value', 'bar3_value', 'bar1_max', 'bar2_max', 'bar3_max', 'aura1_radius',
+      'aura2_radius', 'aura1_color', 'aura2_color', 'aura1_square', 'aura2_square', 'tint_color',
+      'statusmarkers', 'showname', 'showplayers_name', 'showplayers_bar1', 'showplayers_bar2',
+      'showplayers_bar3', 'showplayers_aura1', 'showplayers_aura2', 'playersedit_name', 'playersedit_bar1',
+      'playersedit_bar2', 'playersedit_bar3', 'playersedit_aura1', 'playersedit_aura2', 'light_radius',
+      'light_dimradius', 'light_otherplayers', 'light_hassight', 'light_angle', 'light_losangle', 'light_multiplier'
+    ];
+    const objData = _.reduce(props, (m, p) => { m[p] = obj.get(p); return m; }, { _pageid: state.PageCopy.destinationPage });
+    objData.imgsrc = getCleanImgsrc(obj.get('imgsrc'));
+    return objData;
   };
 
   const getPathData = function (obj) {
-    return {
-      _pageid: state.PageCopy.destinationPage,
-      path: obj.get('path'),
-      fill: obj.get('fill'),
-      stroke: obj.get('stroke'),
-      rotation: obj.get('rotation'),
-      layer: obj.get('layer'),
-      stroke_width: obj.get('stroke_width'),
-      width: obj.get('width'),
-      height: obj.get('height'),
-      top: obj.get('top'),
-      left: obj.get('left'),
-      scaleX: obj.get('scaleX'),
-      scaleY: obj.get('scaleY'),
-      controlledby: obj.get('controlledby'),
-    };
+    const props = ['path', 'fill', 'stroke', 'rotation', 'layer', 'stroke_width', 'width', 'height', 'top', 'left', 'scaleX', 'scaleY', 'controlledby'];
+    const objData = _.reduce(props, (m, p) => { m[p] = obj.get(p); return m; }, { _pageid: state.PageCopy.destinationPage });
+    return objData;
   };
 
   const getTextData = function (obj) {
-    return {
-      _pageid: state.PageCopy.destinationPage,
-      top: obj.get('top'),
-      left: obj.get('left'),
-      width: obj.get('width'),
-      height: obj.get('height'),
-      text: obj.get('text'),
-      font_size: obj.get('font_size'),
-      rotation: obj.get('rotation'),
-      color: obj.get('color'),
-      font_family: obj.get('font_family'),
-      layer: obj.get('layer'),
-      controlledby: obj.get('controlledby'),
-    };
+    const props = ['top', 'left', 'width', 'height', 'text', 'font_size', 'rotation', 'color', 'font_family', 'layer', 'controlledby']
+    const objData = _.reduce(props, (m, p) => { m[p] = obj.get(p); return m; }, { _pageid: state.PageCopy.destinationPage });
+    return objData;
   };
 
   const getPageInfo = function (source) {
