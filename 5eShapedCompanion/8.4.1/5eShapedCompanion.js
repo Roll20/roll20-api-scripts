@@ -86,7 +86,7 @@ var ShapedScripts =
 	const entityLookup = new EntityLookup(logger);
 	const reporter = new Reporter(roll20, 'Shaped Scripts');
 
-	const MINIMUM_SHEET_VERSION = '11.2.0';
+	const MINIMUM_SHEET_VERSION = '11.0.0';
 	const SHEET_API_VERSION = '1';
 
 	const errorHandler = function errorHandler(e) {
@@ -109,7 +109,7 @@ var ShapedScripts =
 	const moduleList = getModuleList();
 
 	roll20.on('ready', () => {
-	  logger.info('-=> ShapedScripts v8.4.2 <=-');
+	  logger.info('-=> ShapedScripts v8.4.1 <=-');
 	  const character = roll20.createObj('character', { name: 'SHAPED_VERSION_TESTER' });
 	  const campaignSize = roll20.findObjs({}).length;
 	  logger.debug('Campaign size: $$$', campaignSize);
@@ -4218,7 +4218,7 @@ var ShapedScripts =
 
 	    return {
 	      title: 'Main Menu',
-	      footerText: 'Shaped Companion Version v8.4.2',
+	      footerText: 'Shaped Companion Version v8.4.1',
 	      optionRows,
 	    };
 	  }

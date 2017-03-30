@@ -1,8 +1,3 @@
-<a name="8.4.2"></a>
-## [8.4.2](https://github.com/symposion/roll20-shaped-scripts/compare/8.4.1...8.4.2) (2017-03-30)
-
-
-
 <a name="8.4.1"></a>
 ## [8.4.1](https://github.com/symposion/roll20-shaped-scripts/compare/8.4.0...8.4.1) (2017-03-30)
 
