@@ -1,6 +1,6 @@
 {
   "name": "MutantYearZero",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "!myz and !wmyz provide the Mutant Year Zero dice mechanics.",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -11,6 +11,8 @@
   },
   "conflicts": [],
   "script": "MutantYearZero.js",
-  "useroptions": {},
-  "previousversions": []
+  "useroptions": [],
+  "previousversions": [
+    "0.1.8"
+  ]
 }
