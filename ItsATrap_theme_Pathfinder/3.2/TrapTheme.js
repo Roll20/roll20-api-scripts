@@ -11,7 +11,7 @@
       cmd: 'CMD',
       perceptionModifier: 'Perception',
       fnHasTrapSpotter: character => {
-        TrapTheme.getSheetRepeatingRow(character, 'class-ability', rowAttrs => {
+        return TrapTheme.getSheetRepeatingRow(character, 'class-ability', rowAttrs => {
           if(!rowAttrs.name)
             return false;
 
@@ -31,7 +31,7 @@
       cmd: 'cmd',
       perceptionModifier: 'perception',
       fnHasTrapSpotter: character => {
-        TrapTheme.getSheetRepeatingRow(character, 'classabilities', rowAttrs => {
+        return TrapTheme.getSheetRepeatingRow(character, 'classabilities', rowAttrs => {
           if(!rowAttrs.name)
             return false;
 
@@ -106,7 +106,7 @@
       getAC(character) {
         let sheet = getOption('sheet');
         let attrName = getOption('ac');
-        if(sheet)
+        if(sheet && SHEET_ATTRS[sheet])
           attrName = SHEET_ATTRS[sheet].ac
 
         if(attrName)
@@ -123,7 +123,7 @@
       getCMD(character) {
         let sheet = getOption('sheet');
         let attrName = getOption('cmd');
-        if(sheet)
+        if(sheet && SHEET_ATTRS[sheet])
           attrName = SHEET_ATTRS[sheet].cmd
 
         if(attrName)
@@ -151,7 +151,7 @@
         let sheet = getOption('sheet');
 
         let attrName = getOption('perceptionModifier');
-        if(sheet)
+        if(sheet && SHEET_ATTRS[sheet])
           attrName = SHEET_ATTRS[sheet].perceptionModifier;
 
         if(attrName)
@@ -168,7 +168,7 @@
         let sheet = getOption('sheet');
         let key = saveName + 'SaveModifier';
         let attrName = getOption(key);
-        if(sheet)
+        if(sheet && SHEET_ATTRS[sheet])
           attrName = SHEET_ATTRS[sheet][key];
 
         if(attrName)
@@ -215,11 +215,11 @@
       _trapSpotter(character, trap, effect) {
         // Trap spotter only works with supported character sheets.
         let sheet = getOption('sheet');
-        if(!sheet)
+        if(!(sheet && SHEET_ATTRS[sheet]))
           return;
 
         // Use an implementation appropriate for the current character sheet.
-        let hasTrapSpotter = getOption('fnHasTrapSpotter');
+        let hasTrapSpotter = SHEET_ATTRS[sheet].fnHasTrapSpotter;
 
         // Check if the character has the Trap Spotter ability.
         if(hasTrapSpotter) {
