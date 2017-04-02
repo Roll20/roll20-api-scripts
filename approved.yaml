@@ -264,3 +264,47 @@ critical:
 - "Critical"
 - "Character"
 
+dynamiclighthelper:
+- "DynamicLightHelper"
+- "Dynamic Lighting"
+
+lightcrumb:
+- "LightCrumb"
+- "Dynamic Lighting"
+
+aborea:
+- "Aborea"
+- "System Toolbox"
+
+kaboom:
+- "KABOOM"
+- "Tokens"
+
+terraingenerator:
+- "Terrain Generator"
+- "Maps & Drawing"
+
+totalrolled:
+- "TotalRolled"
+- "System Toolbox"
+
+itsatrapdnd5e:
+- "ItsATrap_theme_5E_Generic"
+- "System Toolbox"
+
+healthcolors:
+- "HealthColors"
+- "Tokens"
+
+truepagecopy:
+- "TruePageCopy"
+- "Character"
+- "hidden"
+
+srrollextender:
+- "SR-RollExtender"
+- "System Toolbox"
+
+namegen:
+- "namegen"
+- "Character"

@@ -1,8 +1,8 @@
 {
     "name": "Page Navigator",
     "script": "PageNavigator.js",
-    "version": "1.45",
-    "previousversions": ["1.44","1.42","1.4","1.3","1.031"],
+    "version": "1.47",
+    "previousversions": ["1.46","1.45","1.44","1.42","1.4","1.3","1.031"],
     "description": "Page Navigator allows you to more easily move your players from page to page. You can utilize the script through API commands or by relying on token collisions to provide a more interactive map for your players. Use <b>!nav help</b> in game to bring up a help dialog with details on using all the scripts features. Use !nav config to setup Page Navigator according to your preferences. If you were using a previous version of Page Navigator, the player page tag has changed to <b>.players</b> due to how variables interact with strings.",
     "authors": "Scott C.",
     "roll20userid": "459831",

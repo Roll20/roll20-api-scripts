@@ -1,8 +1,8 @@
 {
   "name": "Ammo",
   "script": "Ammo.js",
-  "version": "0.3.3",
-  "description": "Ammo provides inventory management for ammunition stored in a character attribute. If the adjustment would change the attribute to be below 0 or above it's maximum value, a warning will be issued and the attribute will not be changed.\r\r**Note:** As the GM, bounds will not be enforced for you. You will be whispered the warnings, but the operation will succeed. You will also be told the previous and current state in case you want to revert the change.\r\r## Commands\r\r```!ammo <id> <attribute> <amount>```\r\rThis command requires 3 parameters:\r\r*   `id` -- The id of the character which has the attribute. You can pass this as `@{character_id}` or  `@{selected|token_id}` and the character id will be pulled from represents field of the token.\r*   `attribute` -- The name of the attribute representing ammunition.\r    **Note:** this is the name without `@{ }` around it.  This works with repeating sections as well, but you will need to find the repeating row id to build the attribute name.\r*   `amount` -- The change to apply to the current quantity of ammo. Use negative numbers to decrease the amount, and positive numbers to increase it.  You can use inline rolls to determine the number.\r\r### Examples:\rShoot 1 arrow:\r\r```!ammo @{character_id} arrows -1```\r\rShoot 3 arrows:\r\r```!ammo @{character_id} arrows -3```\r\rRecover 1d6 arrows:\r\r```!ammo @{character_id} arrows [[1d6]]```\r\r\rRefill all arrows (by picking up the difference between the current and max value).\r\r```!ammo @{character_id} arrows [[@{selected|arrows|max}-@{selected|arrows}]]```\r\rUsing a repeating group's field:\r\r```!ammo @{character_id} repeating_weapons_-J1as31234_weapon_arrows -1```",
+  "version": "0.3.6",
+  "description": "Ammo provides inventory management for ammunition stored in a character attribute. If the adjustment would change the attribute to be below 0 or above it's maximum value, a warning will be issued and the attribute will not be changed.\r\r**Note:** As the GM, bounds will not be enforced for you. You will be whispered the warnings, but the operation will succeed. You will also be told the previous and current state in case you want to revert the change.\r\r## Commands\r\r```!ammo <id> <attribute> <amount> [resource name]```\r\rThis command requires 3 parameters:\r\r*   `id` -- The id of the character which has the attribute. You can pass this as `@{character_id}` or  `@{selected|token_id}` and the character id will be pulled from represents field of the token.\r*   `attribute` -- The name of the attribute representing ammunition.\r    **Note:** this is the name without `@{ }` around it.  This works with repeating sections as well, but you will need to find the repeating row id to build the attribute name.\r*   `amount` -- The change to apply to the current quantity of ammo. Use negative numbers to decrease the amount, and positive numbers to increase it.  You can use inline rolls to determine the number.\r*   `resource name` -- Anything you put after the amount to adjust by will be used as the resource name (default: \"ammo\").\r\r```!wammo <id> <attribute> <amount> [resource name]```\r\rThis command is identical to !ammo but will whisper all output.\r\r\r### Examples:\rShoot 1 arrow:\r\r```!ammo @{character_id} arrows -1 arrow```\r\rShoot 3 arrows:\r\r```!ammo @{character_id} arrows -3 arrow```\r\rRecover 1d6 arrows:\r\r```!ammo @{character_id} arrows [[1d6]] arrow```\r\r\rRefill all arrows (by picking up the difference between the current and max value).\r\r```!ammo @{character_id} arrows [[@{selected|arrows|max}-@{selected|arrows}]]```\r\rUsing a repeating group's field with rowid:\r\r```!ammo @{character_id} repeating_weapons_-J1as31234_weapon_arrows -1 arrows```\r\rUsing a repeating group's field with index:\r\r```!ammo @{character_id} repeating_weapons_$2_weapon_arrows -1 arrows```\r\rWhisper ammo changes to yourself:\r\r```!wammo @{character_id} arrows -1 arrow```\r",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -21,6 +21,9 @@
   "conflicts": [],
   "previousversions": [
     "0.3.1",
-    "0.3.2"
+    "0.3.2",
+    "0.3.3",
+    "0.3.4",
+    "0.3.5"
   ]
 }
