@@ -1,7 +1,7 @@
 {
   "name": "TokenNameNumber",
   "script": "TokenNameNumber.js",
-  "version": "0.5.9",
+  "version": "0.5.10",
   "description": "Provides automatic numbering of tokens dragged onto the tabletop.  Token names need to have the special word `%%NUMBERED%%` somewhere in them.\n\n`!tnn --help` displays the help and configuration options.",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -17,7 +17,7 @@
       "name": "Use Dots",
       "type": "checkbox",
       "description": "Select this option to add a distribution of status markers to newly added tokens which can be used to verbally identify a creature without knowing it's name, or the number of other creatures of it's kind.",
-      "value": "useDots"
+      "value": "false"
     },
     {
       "name": "Dots",
@@ -40,6 +40,7 @@
   "previousversions": [
     "0.5.6",
     "0.5.7",
-    "0.5.8"
+    "0.5.8",
+    "0.5.9"
   ]
 }
