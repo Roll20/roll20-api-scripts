@@ -348,7 +348,7 @@ var Roll20AM = Roll20AM || (function() {
         }
         //ends the first div
         output += '</div>';
-        sendChat('',output);
+        sendChat('',output,null,{noarchive:true});
     },
     
     //sets the indicated preference
@@ -551,11 +551,11 @@ var Roll20AM = Roll20AM || (function() {
     //Creates the user defined playlists and stores them to the state
     createList = function(details, tracks,who){
         if(state.Roll20AM.playLists[details.listName]){
-            sendChat('Roll20AM','/w "'+who+'" The playlist '+details.listName+' already exists. If you would like to edit this list, please use the editList command. See the **[help handout]('+helplink+')** for full command syntax.')
+            sendChat('Roll20AM','/w "'+who+'" The playlist '+details.listName+' already exists. If you would like to edit this list, please use the editList command. See the **[help handout]('+helplink+')** for full command syntax.',null,{noarchive:true})
             return;
         }
         if(_.some(findObjs({type:'jukeboxtrack'}),(t)=>{return t.get('title').replace(state.Roll20AM.tag,'') === details.listName;})){
-            sendChat('Roll20AM','/w "'+who+'" There is already a track named '+details.listName+'. Playlist names must be unique.')
+            sendChat('Roll20AM','/w "'+who+'" There is already a track named '+details.listName+'. Playlist names must be unique.',null,{noarchive:true})
             return;
         }
         state.Roll20AM.playLists[details.listName] = {
@@ -574,7 +574,7 @@ var Roll20AM = Roll20AM || (function() {
     
     editList = function(listname,action,tracks,det,who){
         if(!state.Roll20AM.playLists[listname]){
-            sendChat('Roll20AM','/w "'+who+'" In order to edit a list, you must provide a list name.')
+            sendChat('Roll20AM','/w "'+who+'" In order to edit a list, you must provide a list name.',null,{noarchive:true})
             return;
         }
         state.Roll20AM.playLists[listname].mode=det.mode || state.Roll20AM.playLists[listname].mode;
@@ -663,7 +663,7 @@ var Roll20AM = Roll20AM || (function() {
             error=true;
         }
         if(error){
-            sendChat('Roll20AM','/w "'+who+'" The volume change command you sent was invalid. Volume to change to can be a number or basic arithmetic (e.g. 5,+5,-5,*2,/2).');
+            sendChat('Roll20AM','/w "'+who+'" The volume change command you sent was invalid. Volume to change to can be a number or basic arithmetic (e.g. 5,+5,-5,*2,/2).',null,{noarchive:true});
         }
 	},
 	
@@ -727,7 +727,7 @@ var Roll20AM = Roll20AM || (function() {
                 });
             }
         }else{
-            sendChat('Roll20AM','/w "'+who+'" The volume change command you sent was invalid. Volume to change to can be a number or basic arithmetic (e.g. 5,+5,-5,*2,/2).')
+            sendChat('Roll20AM','/w "'+who+'" The volume change command you sent was invalid. Volume to change to can be a number or basic arithmetic (e.g. 5,+5,-5,*2,/2).',null,{noarchive:true})
             return;
         }
 	},
@@ -866,7 +866,7 @@ var Roll20AM = Roll20AM || (function() {
             +'<div style="font-weight: bold;font-size: 130%;">'
             +'Roll20AM v'+version+' -- Hear the dice, hear the action!'
             +'</div></div>'
-            +'For all the details on Roll20AM, please see the <u><b>[Roll20AM handout]('+helpLink+')</b></u>.'
+            +'For all the details on Roll20AM, please see the <u><b>[Roll20AM handout]('+helpLink+')</b></u>.',null,{noarchive:true}
 	        );
 	},
 	
@@ -942,7 +942,7 @@ var Roll20AM = Roll20AM || (function() {
                     }
                 }else{
                     sendChat('roll20AM','/w "'+who+'" Script control of track volume is GM only. If audio is '
-                    +'too loud/soft please adjust your master music volume under the settings tab. This setting is not accessible by the API.')
+                    +'too loud/soft please adjust your master music volume under the settings tab. This setting is not accessible by the API.',null,{noarchive:true})
                 }
                 break;
             //Stop playing
@@ -976,7 +976,7 @@ var Roll20AM = Roll20AM || (function() {
                         clearTimeout(d);
                     });
                     delays = [];
-                    sendChat('Roll20AM','/w gm Delays cleared');
+                    sendChat('Roll20AM','/w gm Delays cleared',null,{noarchive:true});
                 }
                 break;
             default:
@@ -1124,7 +1124,7 @@ var Roll20AM = Roll20AM || (function() {
             if(obj.id === state.Roll20AM.help){
                 log('-=> Roll20AM re-initializing; Roll20AM journal entry deleted.');
                 sendChat('Roll20AM',"/w gm It looks like you have deleted the help document for the Roll20AM script. We're regenerating it so that you can easily "
-                +"access all the information you need to utilize the script. It will be stored in your archived folder and won't clutter up your journal.");
+                +"access all the information you need to utilize the script. It will be stored in your archived folder and won't clutter up your journal.",null,{noarchive:true});
                 state.Roll20AM.help = createObj('handout',{
 		            name:'Roll20AM',
 		            inplayerjournals:'all',
