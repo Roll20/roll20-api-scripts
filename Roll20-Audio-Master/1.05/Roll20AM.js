@@ -551,7 +551,7 @@ var Roll20AM = Roll20AM || (function() {
     //Creates the user defined playlists and stores them to the state
     createList = function(details, tracks,who){
         if(state.Roll20AM.playLists[details.listName]){
-            sendChat('Roll20AM','/w "'+who+'" The playlist '+details.listName+' already exists. If you would like to edit this list, please use the editList command. See the **[help handout]('+helplink+')** for full command syntax.',null,{noarchive:true})
+            sendChat('Roll20AM','/w "'+who+'" The playlist '+details.listName+' already exists. If you would like to edit this list, please use the editList command. See the **[help handout]('+helpLink+')** for full command syntax.',null,{noarchive:true})
             return;
         }
         if(_.some(findObjs({type:'jukeboxtrack'}),(t)=>{return t.get('title').replace(state.Roll20AM.tag,'') === details.listName;})){
