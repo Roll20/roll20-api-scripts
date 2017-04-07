@@ -256,13 +256,13 @@
             let row = content.append('.paddedRow')
 
             if(effectResults.attackVs === 'CMD') {
-              row.append('span.bold', 'Maneuver roll:')
-              row.append('span', rollResult)
+              row.append('span.bold', 'Maneuver roll:');
+              row.append('span', rollResult);
               row.append('span', ' vs CMD ' + effectResults.cmd);
             }
             else {
-              row.append('span.bold', 'Attack roll:')
-              row.append('span', rollResult)
+              row.append('span.bold', 'Attack roll:');
+              row.append('span', rollResult);
               row.append('span', ' vs AC ' + effectResults.ac);
             }
           }
