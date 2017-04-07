@@ -260,9 +260,6 @@ var D20TrapTheme = (() => {
       let prop = argv[0];
       let params = argv.slice(1);
 
-      log(prop);
-      log(params);
-
       if(prop === 'attack')
         trapEffect.attack = parseInt(params[0]);
       if(prop === 'damage')
