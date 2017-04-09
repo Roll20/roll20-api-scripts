@@ -1,6 +1,6 @@
 {
   "name": "DryErase",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -22,6 +22,8 @@
   },
   "conflicts": [],
   "script": "DryErase.js",
-  "useroptions": {},
-  "previousversions": []
+  "useroptions": [],
+  "previousversions": [
+    "0.1.6"
+  ]
 }
