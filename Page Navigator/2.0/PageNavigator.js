@@ -1600,10 +1600,6 @@
             //player handling
             on('add:player',addHandler);
             on('destroy:player',destroyHandler);
-            
-            //path handling
-            on('change:path',changeHandler);
-            on('destroy:path',destroyHandler);
         };
           
         return {
