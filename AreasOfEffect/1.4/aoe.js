@@ -141,8 +141,6 @@ var AreasOfEffect = (() => {
    function _createRadiusPathAtToken(token, radiusUnits) {
      let page = getObj('page', token.get('_pageid'));
      let radiusPixels = radiusUnits / page.get('scale_number') * 70;
-     radiusPixels += token.get('width') / 2;
-     log(radiusPixels);
 
      let p1 = [
        token.get('left'),
