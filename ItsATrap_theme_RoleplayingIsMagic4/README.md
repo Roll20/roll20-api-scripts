@@ -1,15 +1,7 @@
 # It's A Trap! - Roleplaying is Magic 4E theme
 
-_3.1 updates:_
-* Just bug fixes.
-
-_v3.0 updates:_
-* Updated the trap theme to be compatible with It's A Trap v3.0.
-
 This is a My Little Pony: Roleplaying is Magic 4th edition theme for the It's A Trap! script,
 built for use with the Roleplaying is Magic 4E character sheet.
-
-To use this theme for the It's A Trap! script, enter 'MLP-RIM-4' for the ```theme``` user option.
 
 ### Note about passive Perception
 
@@ -24,3 +16,24 @@ calculated as follows:
 So for example, a character not trained in Perception with a Mind of 2 would
 have a passive Perception of 6. A character trained in Perception with a Mind
 of 4 would have a passive Perception of 11.
+
+## Help
+
+Due to complications with the API reading attributes from certain character sheets,
+there have been issues in the past with things such as saving throws or passive perception
+not being correct. If this happens, first try adjusting the values for these on
+your character sheet or try re-creating the character sheet from scratch to see
+if that resolves the problem.
+
+If you continue to experience any issues while using this script,
+need help using it, or if you have a neat suggestion for a new feature, please reply to this thread:
+https://app.roll20.net/forum/post/3280344/script-its-a-trap-v2-dot-3
+or shoot me a PM:
+https://app.roll20.net/users/46544/stephen-l
+
+## Show Support
+
+If you would like to show your appreciation and support for the work I do in writing,
+updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)
+or, simply leave a thank you note in the script's thread on the Roll20 forums.
+Either is greatly appreciated! Happy gaming!

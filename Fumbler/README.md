@@ -24,8 +24,25 @@ Hit friend, normal damage. Friend stunned for 1 round.
 > **Fumbler**: 90% **Useless Moron**
 Hit self. Double damage. Stunned for 1 round.
 
+New in version 0.2.0
+--------------------
+You can create your own fumbler charts in your handouts.
+Create a handout with the name fumbler-name_of_chart
 
----
+In the notes place JSON code in the format:
 
-If you find this script useful consider contributing (or just stop by to say 'Hi')
-https://www.patreon.com/user?u=3985594
+```
+[
+    {low: 1,  high: 10, result: "Distracted", effect: "Roll DEX or fall down."},
+    {low: 11, high: 14, result: "Negligent", effect: "Fall down."},
+    ...
+]
+```
+
+To use your fumbler handout chart set the first parameter as your chart name. For example if you created a handout named fumbler-disaster then you can tell fumbler to use it like so:
+
+`!fumble disaster`
+
+or 
+
+`fumble disaster 91`

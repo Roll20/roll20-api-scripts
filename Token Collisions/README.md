@@ -1,5 +1,9 @@
 # Token Collisions
 
+_v1.5 Updates:_
+* Collisions with Paths and arbitrary polygons are now supported. Paths with non-transparent fills are treated as polygons.
+* All collisions are now entirely pixel-perfect.
+
 _v1.4 Updates:_
 * getCollisions and getFirstCollision now accept an options object parameter. See the CollisionOptions typedef jsdoc for supported properties.
 
@@ -27,7 +31,7 @@ The following functions are exposed by the ```TokenCollisions``` object:
  * its last movement.
  * The tokens are sorted in the order they are collided with.
  * @param {Graphic} token
- * @param {Graphic[]} others
+ * @param {(Graphic|Path|PathMath.Polygon)[]} others
  * @return {Graphic[]}
  */
 function getCollisions(token, others)
@@ -39,7 +43,7 @@ function getCollisions(token, others)
  * collided with during its last movement, or undfined if there was
  * no collision.
  * @param {Graphic} token
- * @param {Graphic[]} others
+ * @param {(Graphic|Path|PathMath.Polygon)[]} others
  * @return {Graphic}
  */
 function getFirstCollision(token, others)
@@ -59,3 +63,17 @@ function getFirstCollision(token, others)
  */
 function isOverlapping(token, other, collideOnEdge)
 ```
+
+## Help
+
+If you experience any issues while using this script,
+need help using it, or if you have a neat suggestion for a new feature, please
+post to the script's thread in the API forums or shoot me a PM:
+https://app.roll20.net/users/46544/stephen-l
+
+## Show Support
+
+If you would like to show your appreciation and support for the work I do in writing,
+updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)
+or, simply leave a thank you note in the script's thread on the Roll20 forums.
+Either is greatly appreciated! Happy gaming!

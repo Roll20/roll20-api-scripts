@@ -654,6 +654,7 @@ var NathaNumenera = NathaNumenera || (function () {
 	    };
 
 	    // beginning output calculation
+	skillLevel = parseInt(0 || skillLevel);	
 	    var tmplt="&{template:nathaNumRoll} {{"+attributeName+"="+attributeName+"}} {{attrEdge="+attrEdge+"}} {{finalRoll="+finalRoll+"}} {{diceRoll="+diceRoll+"}} {{skilled="+ skillLevel +"}}";
 	    if (bonusToRoll>0) tmplt += " {{bonusToRoll="+bonusToRoll+"}}";
 	    var assetsUsed = parseInt(0 || assets);
