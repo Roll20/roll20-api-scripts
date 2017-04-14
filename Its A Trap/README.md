@@ -1,5 +1,9 @@
 # It's A Trap!
 
+_v3.6 Updates:_
+* Passive search distance now also applies to any trigger paths set for the trap.
+* When a trap is noticed with passive searching, its trigger paths are also revealed.
+
 This is a script that allows GMs to quickly and very easily set up traps,
 secret doors, and other hidden things on the GM layer, and detect when tokens
 on the objects layer move over them. This trap detection even works for tokens
