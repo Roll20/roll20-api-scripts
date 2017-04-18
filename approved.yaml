@@ -308,3 +308,7 @@ srrollextender:
 namegen:
 - "namegen"
 - "Character"
+
+onewaydynamiclighting:
+- "OneWayDynamicLighting"
+- "Token"
