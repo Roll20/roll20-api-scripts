@@ -1,7 +1,8 @@
 # Areas of Effect
 
-_v1.3 Updates_
-* The script now exposes an interface to its public functions.
+_v1.4 Updates_
+* The radii of burst effects no longer include the radius of the target token. Their radius will be exactly what you enter.
+* Fixed a NaN transform bug involving saving effects with the origin exactly at the effect graphic's center.
 
 GMs, your spellcasting players will love you for this script! It lets you
 create graphical areas of effect for various spells and other powers, and then
@@ -60,7 +61,7 @@ then upload them to your game in order to make use of them with this script ._
 If you experience any issues while using this script or the trap themes,
 need help using it, or if you have a neat suggestion for a new feature,
 please shoot me a PM:
-https://app.roll20.net/users/46544/stephen-l 
+https://app.roll20.net/users/46544/stephen-l
 or create a help thread on the Roll20 API forum
 
 ## Show Support
