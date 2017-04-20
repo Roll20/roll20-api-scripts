@@ -123,6 +123,7 @@ pagefx:
 5theShapedCompanion:
 - "5eShapedCompanion"
 - "System Toolbox"
+- "hidden"
 
 splitargs:
 - "splitArgs"
