@@ -51,9 +51,25 @@ var ItsATrap = (() => {
       .filter(trap => {
         // Only search for traps that are close enough to be spotted.
         let effect = new TrapEffect(trap, token);
+
+        // Check the distance to the trap itself.
         let dist = getSearchDistance(token, trap);
+
+        // Also check the distance to any path triggers.
+        let triggerDist = Number.POSITIVE_INFINITY;
+        if(effect.triggerPaths) {
+          triggerDist = _.chain(effect.triggerPaths)
+          .map(pathId => {
+            let path = getObj('path', pathId);
+            return getSearchDistance(token, path);
+          })
+          .min()
+          .value();
+          log(triggerDist);
+        }
+
         let searchDist = trap.get('aura2_radius') || effect.searchDist;
-        return (!searchDist || dist < searchDist);
+        return (!searchDist || Math.min(dist, triggerDist) < searchDist);
       })
       .each(trap => {
         theme.passiveSearch(trap, token);
@@ -163,18 +179,27 @@ var ItsATrap = (() => {
   /**
    * Gets the distance between two tokens in their page's units.
    * @param {Graphic} token1
-   * @param {Graphic} token2
+   * @param {(Graphic|Path)} token2
    * @return {number}
    */
   function getSearchDistance(token1, token2) {
     let p1 = _getPt(token1);
-    let p2 = _getPt(token2);
-    let r1 = token1.get('width')/2;
-    let r2 = token2.get('width')/2;
-
     let page = getObj('page', token1.get('_pageid'));
     let scale = page.get('scale_number');
-    let pixelDist = Math.max(0, VecMath.dist(p1, p2) - r1 - r2);
+    let pixelDist;
+
+    if(token2.get('_type') === 'path') {
+      let path = token2;
+      pixelDist = PathMath.distanceToPoint(p1, path);
+      log('getSearchDistance path');
+      log(path);
+    }
+    else {
+      let p2 = _getPt(token2);
+      let r1 = token1.get('width')/2;
+      let r2 = token2.get('width')/2;
+      pixelDist = Math.max(0, VecMath.dist(p1, p2) - r1 - r2);
+    }
     return pixelDist/70*scale;
   }
 
@@ -316,6 +341,24 @@ var ItsATrap = (() => {
       stroke_width: 5
     });
 
+    let effect = new TrapEffect(trap);
+
+    let toOrder = toFront;
+    let layer = 'map';
+    if(effect.revealLayer === 'objects') {
+      toOrder = toBack;
+      layer = 'objects';
+    }
+
+    // Also, reveal the trigger paths if the trap has any.
+    if(effect.triggerPaths) {
+      _.each(effect.triggerPaths, pathId => {
+        let path = getObj('path', pathId);
+        path.set('layer', layer);
+        toOrder(path);
+      });
+    }
+
     sendPing(x, y, pageId);
   }
 
@@ -362,14 +405,16 @@ var ItsATrap = (() => {
   function revealTrap(trap) {
     let effect = new TrapEffect(trap);
 
+    let toOrder = toFront;
+    let layer = 'map';
     if(effect.revealLayer === 'objects') {
-      trap.set('layer', 'objects');
-      toBack(trap);
+      toOrder = toBack;
+      layer = 'objects';
     }
-    else {
-      trap.set('layer', 'map');
-      toFront(trap);
-    }
+
+    trap.set('layer', layer);
+    toOrder(trap);
+
     sendPing(trap.get('left'), trap.get('top'), trap.get('_pageid'));
   }
 

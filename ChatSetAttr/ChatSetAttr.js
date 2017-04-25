@@ -1,11 +1,11 @@
-// ChatSetAttr version 1.2.2
-// Last Updated: 2017-03-28
+// ChatSetAttr version 1.3
+// Last Updated: 2017-04-14
 // A script to create, modify, or delete character attributes from the chat area or macros.
 // If you don't like my choices for --replace, you can edit the replacers variable at your own peril to change them.
 
 var chatSetAttr = chatSetAttr || (function () {
 	'use strict';
-	const version = '1.2.2',
+	const version = '1.3',
 		schemaVersion = 3,
 		replacers = [
 			['<', '[', /</g, /\[/g],
@@ -361,8 +361,8 @@ var chatSetAttr = chatSetAttr || (function () {
 					if (cList.length) {
 						_.delay(dWork, 50, cList.shift());
 					} else {
-						handleErrors(whisper, errors);
-						(opts.silent) ? null: sendFeedback(whisper, feedback);
+						if (!opts.mute) handleErrors(whisper, errors);
+						if (!opts.silent) sendFeedback(whisper, feedback);
 					}
 				}
 			dWork(cList.shift());
@@ -458,9 +458,9 @@ var chatSetAttr = chatSetAttr || (function () {
 					feedback[charid].push(name);
 				});
 			});
-			silent ? null : sendDeleteFeedback(whisper, feedback);
+			if (!silent) sendDeleteFeedback(whisper, feedback);
 		},
-		//  These functions parse the chat input.
+		// These functions parse the chat input.
 		parseOpts = function (content, hasValue) {
 			// Input:	content - string of the form command --opts1 --opts2  value --opts3.
 			//					values come separated by whitespace.
@@ -600,7 +600,7 @@ var chatSetAttr = chatSetAttr || (function () {
 			if (msg.type !== 'api') {
 				return;
 			}
-			const mode = msg.content.match(/^!(reset|set|del|mod)attr\b(?:-|\s|$)(config)?/),
+			const mode = msg.content.match(/^!(reset|set|del|mod|modb)attr\b(?:-|\s|$)(config)?/),
 				whisper = getWhisperPrefix(msg.playerid);
 			if (mode && mode[2]) {
 				if (playerIsGM(msg.playerid)) {
@@ -623,7 +623,7 @@ var chatSetAttr = chatSetAttr || (function () {
 					errors = [];
 				const hasValue = ['charid', 'name'],
 					optsArray = ['all', 'allgm', 'charid', 'name', 'allplayers', 'sel',
-						'replace', 'nocreate', 'mod', 'modb', 'evaluate', 'silent', 'reset'
+						'replace', 'nocreate', 'mod', 'modb', 'evaluate', 'silent', 'reset', 'mute'
 					],
 					opts = parseOpts(processInlinerolls(msg), hasValue),
 					setting = parseAttributes(_.chain(opts).omit(optsArray).keys().value(),
@@ -631,9 +631,11 @@ var chatSetAttr = chatSetAttr || (function () {
 					deleteMode = (mode[1] === 'del'),
 					isGM = msg.playerid === 'API' || playerIsGM(msg.playerid);
 				opts.mod = opts.mod || (mode[1] === 'mod');
+				opts.modb = opts.modb || (mode[1] === 'modb');
 				opts.reset = opts.reset || (mode[1] === 'reset');
+				opts.silent = opts.silent || opts.mute;
 				if (opts.evaluate && !isGM && !state.ChatSetAttr.playersCanEvaluate) {
-					handleErrors(whisper, ['The --evaluate option is only available to the GM.']);
+					if (!opts.mute) handleErrors(whisper, ['The --evaluate option is only available to the GM.']);
 					return;
 				}
 				// Get list of character IDs
@@ -670,7 +672,7 @@ var chatSetAttr = chatSetAttr || (function () {
 				}
 				// Get attributes
 				let allAttrs = getAllAttributes(charIDList, _.keys(setting), errors, !opts.nocreate && !deleteMode, deleteMode);
-				handleErrors(whisper, errors);
+				if (!opts.mute) handleErrors(whisper, errors);
 				// Set or delete attributes
 				if (!_.isEmpty(charIDList) && !_.isEmpty(setting)) {
 					if (deleteMode) {

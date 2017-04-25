@@ -123,6 +123,7 @@ pagefx:
 5theShapedCompanion:
 - "5eShapedCompanion"
 - "System Toolbox"
+- "hidden"
 
 splitargs:
 - "splitArgs"
@@ -308,3 +309,7 @@ srrollextender:
 namegen:
 - "namegen"
 - "Character"
+
+onewaydynamiclighting:
+- "OneWayDynamicLighting"
+- "Dynamic Lighting"
