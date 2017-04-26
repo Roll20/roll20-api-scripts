@@ -1,0 +1,13 @@
+{
+  "name": "Rollable Table Macros",
+	"script": "RollableTableMacros.js",
+	"version": "1.0",
+	"previousversions": [],
+	"description": "",
+	"authors": "Nathanael W.",
+	"roll20userid": "880239",
+	"useroptions": [],
+	"dependencies": [],
+	"modifies": {},
+	"conflicts": []
+}
