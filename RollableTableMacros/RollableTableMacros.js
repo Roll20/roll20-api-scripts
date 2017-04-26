@@ -2,7 +2,7 @@
 // API Commands:
 // !rtm table-name(required) myself/from-name(optional)
 
-var RollableTableMacros = RollableTableMacros || function() {
+var RollableTableMacros = RollableTableMacros || ( function() {
     'use strict';
     
     var commandListener = function() {
@@ -91,10 +91,14 @@ var RollableTableMacros = RollableTableMacros || function() {
         });
     };
     
-};
+    return {
+        CommandListener: commandListener
+    };
+    
+}());
 
 on( 'ready', function(){
    'use strict';
    
-   RollableTableMacros.commandListener();
+   RollableTableMacros.CommandListener();
 });
