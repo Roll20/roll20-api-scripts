@@ -36,7 +36,7 @@ var RollableTableMacros = RollableTableMacros || ( function() {
     
     findTable = function( msgFrom, tableName ) {
         // Finds the corresponding table, outputs error message to chat if not found
-        var tables = findObjs({ type: 'rollabletable', name: tableName });
+        var tables = findObjs({ type: 'rollabletable', name: tableName }, { caseInsensitive: true });
         
         if( tables.length < 1 ) {
             sendChat( msgFrom, 'No such table exists.' );
@@ -50,17 +50,21 @@ var RollableTableMacros = RollableTableMacros || ( function() {
         var items = findObjs({ type: 'tableitem', rollabletableid: tableId }),
             weightedList = [];
         
-        _.each( items, function( item ){
-            // Build a weighted list to draw from
-            let weight = item.get( 'weight' );
-            _( weight ).times(function( x ){
-                weightedList.push( item.id );
+        if( items.length > 0 ) {
+            _.each( items, function( item ){
+                // Build a weighted list to draw from
+                let weight = item.get( 'weight' );
+                _( weight ).times(function( x ){
+                    weightedList.push( item.id );
+                });
             });
-        });
-    
-        var chosenItem = getObj( 'tableitem', weightedList[ randomInteger( weightedList.length ) - 1 ] );
-    
-        sendChat( msgFrom, handleMacro( chosenItem.get( 'name' ) ) );
+        
+            var chosenItem = getObj( 'tableitem', weightedList[ randomInteger( weightedList.length ) - 1 ] );
+        
+            sendChat( msgFrom, handleMacro( chosenItem.get( 'name' ) ) );
+        } else {
+            sendChat( msgFrom, 'No items on this table.' );
+        }
     },
     
     handleMacro = function( resultText ) {
