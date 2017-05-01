@@ -1,14 +1,22 @@
-# It's A Trap! - Pathfinder theme
+# It's A Trap! - Pathfinder Generic theme
 
-_3.1 Updates_
-* The trap theme now supports the Rogue Trap Spotter ability.
+_3.2 Updates_
+* The script has been made generic to handle all Pathfinder character sheets.
 
-This is a Pathfinder trap theme built to support Samuel Marino, Nibrodooh,
-Vince, Samuel Terrazas, chris-b, Magik, and James W.'s Pathfinder character sheet.
+This is a Pathfinder trap theme built to support all Pathfinder character sheets and Pathfinder characters
+who use plain attributes instead of character sheets.
+
+This trap theme provides built-in support for support Samuel Marino, Nibrodooh,
+Vince, Samuel Terrazas, chris-b, Magik, and James W.'s Pathfinder character sheet and for
+my own Pathfinder (Simple) character sheet.
+
+Other sheets, custom sheets, and characters based upon plain attributes are also supported.
+For those, just fill in the names for the character attributes in the user options for
+this script.
 
 ## Trap Spotter ability
 
-This Trap Theme supports the Rogue's Trap Spotter talent. It works for any
+For built-in sheets, This Trap Theme supports the Rogue's Trap Spotter talent. It works for any
 character that has Trap Spotter in the Class Abilities section of their
 character sheet.
 

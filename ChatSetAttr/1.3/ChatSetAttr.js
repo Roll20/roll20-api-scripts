@@ -362,7 +362,7 @@ var chatSetAttr = chatSetAttr || (function () {
 						_.delay(dWork, 50, cList.shift());
 					} else {
 						if (!opts.mute) handleErrors(whisper, errors);
-						if (!opts.silent) sendFeedback(whisper, feedback);
+						(opts.silent) ? null: sendFeedback(whisper, feedback);
 					}
 				}
 			dWork(cList.shift());
@@ -458,9 +458,9 @@ var chatSetAttr = chatSetAttr || (function () {
 					feedback[charid].push(name);
 				});
 			});
-			if (!silent) sendDeleteFeedback(whisper, feedback);
+			silent ? null : sendDeleteFeedback(whisper, feedback);
 		},
-		// These functions parse the chat input.
+		//  These functions parse the chat input.
 		parseOpts = function (content, hasValue) {
 			// Input:	content - string of the form command --opts1 --opts2  value --opts3.
 			//					values come separated by whitespace.
