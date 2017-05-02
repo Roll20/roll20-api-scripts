@@ -17,7 +17,8 @@ your dynamic lighting is set to require line-of-sight. This is because it works 
 moving the one-way walls back and forth from the GM layer and the Dynamic Lighting layer,
 which at any point in time is the same for everyone.
 
-Alas, there are some paradigms I've considered when implementing this script that
+__Author's Rambling:__
+There are some paradigms I've considered when implementing this script that
 would allow each character to have their own perspective of the dynamic lighting.
 Unfortunately, this would only be possible if it were implemented in Roll20's
 dynamic lighting system itself using some WebGL magic involving stencil buffers
