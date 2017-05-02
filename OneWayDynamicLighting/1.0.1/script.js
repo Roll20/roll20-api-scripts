@@ -82,7 +82,7 @@ var OneWayDynamicLighting = (() => {
    */
   function _whisper(who, msg) {
     who = who.replace(/\(GM\)/, '').trim();
-    sendChat('One Way Dynamic Lighting script', '/w "' + _fixWho(who) + '" ' + msg);
+    sendChat('One Way Dynamic Lighting script', '/w "' + who + '" ' + msg);
   }
 
   on('ready', () => {
