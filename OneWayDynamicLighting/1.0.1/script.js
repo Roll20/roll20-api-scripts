@@ -115,17 +115,29 @@ var OneWayDynamicLighting = (() => {
 
   // Update the walls when a token is moved.
   on('change:graphic:lastmove', token => {
-    let pageId = token.get('_pageid');
-    let page = getObj('page', pageId);
-    updateWalls(page);
+    try {
+      let pageId = token.get('_pageid');
+      let page = getObj('page', pageId);
+      updateWalls(page);
+    }
+    catch(err) {
+      log('OneWayDynamicLighting: ' + err.message);
+      log(err.stack);
+    }
   });
 
   // If a wall is deleted, remove it from the state.
   on('destroy:path', path => {
-    let pageId = path.get('_pageid');
-    let pathId = path.get('_id');
-    if(state.OneWayDynamicLighting[pageId] && state.OneWayDynamicLighting[pageId][pathId])
-      delete state.OneWayDynamicLighting[pageId][pathId];
+    try {
+      let pageId = path.get('_pageid');
+      let pathId = path.get('_id');
+      if(state.OneWayDynamicLighting[pageId] && state.OneWayDynamicLighting[pageId][pathId])
+        delete state.OneWayDynamicLighting[pageId][pathId];
+    }
+    catch(err) {
+      log('OneWayDynamicLighting: ' + err.message);
+      log(err.stack);
+    }
   });
 
   on('chat:message', msg => {
