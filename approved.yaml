@@ -313,3 +313,7 @@ namegen:
 onewaydynamiclighting:
 - "OneWayDynamicLighting"
 - "Dynamic Lighting"
+
+rollabletablemacros:
+- "RollableTableMacros"
+- "Chat"
