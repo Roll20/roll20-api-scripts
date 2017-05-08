@@ -317,3 +317,15 @@ onewaydynamiclighting:
 rollabletablemacros:
 - "RollableTableMacros"
 - "Chat"
+
+dlellipsedrawer:
+- "DLEllipseDrawer"
+- "Dynamic Lighting"
+
+wfrp2eapi:
+- "wfrp2e-api"
+- "System Toolbox"
+
+agonedice:
+- "AgoneDice"
+- "System Toolbox"
