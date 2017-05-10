@@ -7,7 +7,8 @@ default number of sides is 20; this can be adjusted using the command
 !treehugger 10 would generate 10-sided polygons instead of 20.*/
 
 on("ready",function(){
-var n = globalconfig.dlellipsedrawer.N;
+var gc = globalconfig && globalconfig.dlellipsedrawer;
+var n = gc.N;
 log("Treehugger is up and running!")
 on("add:path",function(obj){
     //Check if new path is on path layer and if the path is elliptical
@@ -26,8 +27,10 @@ on("add:path",function(obj){
             if(obj.get("height")==obj.get("width")){
                 var radius = obj.get("height")/2;
                 log("Starting coordinates: "+mypath[0][1]+" "+mypath[0][2]);
+                var newpath = [];
                 //Iterate around circle, creating n vertices and drawing path
                 for(var i = 0; i<n; i++){
+                    log("i= "+i);
                     if(i==0){
                         log("i==0");
                         //Compute the first angular coordinates; 
@@ -35,7 +38,6 @@ on("add:path",function(obj){
                         xcurr = radius+Math.sin(anglecurr);
                         xfirst = xcurr;
                         yfirst = ycurr;
-                        var newpath = [];
                         var matadd = ['M',xcurr,ycurr];
                         newpath.push(matadd);
                         log(newpath[i][0]+" "+newpath[i][1]+" "+newpath[i][2]);
@@ -55,6 +57,7 @@ on("add:path",function(obj){
                 //Calculate semimajor and semiminor axes
                 a = obj.get("width")/2;
                 b = obj.get("height")/2;
+                var newpath = [];
                 for(var i = 0; i<n; i++){
                     if(i==0){
                         var coeff = Math.pow(Math.sin(anglecurr)/a,2)+Math.pow(Math.cos(anglecurr)/b,2);
@@ -64,7 +67,6 @@ on("add:path",function(obj){
                         ycurr = b + radius*Math.cos(anglecurr);
                         xfirst = xcurr;
                         yfirst = ycurr;
-                        var newpath = [];
                         var matadd = ['M',xcurr,ycurr];
                         newpath.push(matadd);
                         log(newpath[i][0]+" "+newpath[i][1]+" "+newpath[i][2]);
@@ -109,7 +111,7 @@ on("chat:message",function(msg){
         var newn = msg.content.replace("!treehugger ","");
         //Set the number of vertices to equal the integer value n
         if(isNaN(newn)!=1){
-            n = floor(newn);
+            n = Math.ceil(newn);
         }
         else{
             var caller = msg.who.split(' ')[0];
