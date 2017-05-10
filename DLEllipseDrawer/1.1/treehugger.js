@@ -8,7 +8,13 @@ default number of sides is 20; this can be adjusted using the command
 
 on("ready",function(){
 var gc = globalconfig && globalconfig.dlellipsedrawer;
-var n = gc.N;
+    if(isNaN(gc.N) != 1){
+        var n = Math.ceil(gc.N);
+    }
+    else{
+        var n = 20;
+        log("Invalid input from globalconfig! Using n = 20")
+    }
 log("Treehugger is up and running!")
 on("add:path",function(obj){
     //Check if new path is on path layer and if the path is elliptical
