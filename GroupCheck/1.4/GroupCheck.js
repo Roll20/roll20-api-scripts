@@ -533,7 +533,7 @@ var groupCheck = groupCheck || (function() {
 				formula = formula.replace(/%(\S.*?)%/, getAttrByName(charID, match[1]) || '');
 				match = formula.match(/%(\S.*?)%/);
 			}
-			return formula.replace(/{{@{shaped_d20}=1}} {{roll1=\[\[@{shaped_d20}@{d20_mod} \+ (.*?)\]\]}}(?: {{roll2=\[\[@{shaped_d20}@{d20_mod}.*?\]\]}})?/, '$1') || '0';
+			return formula.replace(/{{@{(?:[a-zA-Z0-9-_])+}=1}} {{roll1=\[\[@{(?:[a-zA-Z0-9-_])+}(?:@{d20_mod})? \+ (.*?)\]\]}}(?: {{roll2=\[\[.*?\]\]}})?/, '$1') || '0';
 		} else {
 			return formula.replace(/%(\S.*?)%/g, `@{${charName}|$1}`);
 		}
