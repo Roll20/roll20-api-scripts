@@ -1,7 +1,7 @@
 {
 	"name": "DLEllipseDrawer",
 	"script": "treehugger.js",
-	"version": "1.0",
+	"version": "1.1",
 	"description": "This script allows ellipses to be drawn on the Dynamic Lighting layer and have them automatically convert to polygon approximations. To use, just activate the script and draw a circle or ellipse using the draw tool on the dynamic lighting layer. The script will replace the drawn ellipse with a N-sided polygonal approximation of the ellipse instead. To change the value of N in-game, simply type '!treehugger <integer>' to set N=<integer>. Otherwise, the default value can be modified from the API script menu.",
 	"authors": "Tim M.",
 	"roll20userid": "1625710",
