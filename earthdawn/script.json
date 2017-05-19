@@ -22,11 +22,17 @@
 		{
             "name": "GMROLL", 
             "type": "text (as char)",
-            "default": "",
+            "default": "N",
             "description": "This optional argument, when Y  (1, on , y, yes, whisper) will do a GMROLL as opposed to a ROLL. GMROLL means only the player making the roll and the DM/GM will see the roll. Else everyone will see it."
         }
+		{
+            "name": "edition", 
+            "type": "nonnegative integer (as char)",
+            "default": "1",
+            "description": "This optional argument, decides which version of Earthdawn's step number table to use. Version 1, 2 and classic are basically similar (the 1 or 2 small differences can be ignored), version 3 & 4 are different so we set default to use 1st edition Step/Action Dice table."
+        }
     ],
-    "dependencies": [""],
+    "dependencies": ["Math"],
     "modifies": {
         "": ""
     },
