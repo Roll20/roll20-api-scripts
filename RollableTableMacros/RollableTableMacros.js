@@ -10,11 +10,11 @@ var RollableTableMacros = RollableTableMacros || ( function() {
         on( 'chat:message', function( msg ) {
             if( msg.type === 'api' && !msg.rolltemplate ) {
                 var params = msg.content.substring( 1 ).split( ' ' ),
-                    command = params[0].toLowerCase(),
-                    tableName = params[1] ? params[1].toLowerCase() : '',
-                    msgFrom = getFrom( params, msg.playerid );
+                    command = params[0].toLowerCase();
                 
                 if( command === 'rtm' ) {
+                    var tableName = params[1] ? params[1].toLowerCase() : '',
+                        msgFrom = getFrom( params, msg.playerid );
                     findTable( msgFrom, tableName );
                 }
             }
