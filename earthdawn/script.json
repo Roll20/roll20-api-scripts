@@ -8,7 +8,7 @@
     "roll20userid": "1048758",
     "useroptions": [
         {
-			"name": "ActionStepNumber", 
+            "name": "ActionStepNumber",
             "type": "nonnegative integer (as char)",
             "default": "",
             "description": "This is the total attribute, damage, skill, talent step number and is REQUIRED"
@@ -24,7 +24,7 @@
             "type": "text (as char)",
             "default": "N",
             "description": "This optional argument, when Y  (1, on , y, yes, whisper) will do a GMROLL as opposed to a ROLL. GMROLL means only the player making the roll and the DM/GM will see the roll. Else everyone will see it."
-        }
+        },
 		{
             "name": "edition", 
             "type": "nonnegative integer (as char)",
