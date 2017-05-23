@@ -1,6 +1,6 @@
 {
   "name": "CthulhuTechDice",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -11,6 +11,8 @@
   },
   "conflicts": [],
   "script": "CthulhuTechDice.js",
-  "useroptions": {},
-  "previousversions": []
+  "useroptions": [],
+  "previousversions": [
+    "0.1.12"
+  ]
 }

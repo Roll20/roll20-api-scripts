@@ -4,11 +4,11 @@
     "version": "1.0",
     "previousversions": [],
     "description": "This allows players to enter '!ed <ActionStepNumber>, <KarmaStepNumber>' or '!ed <ActionStepNumber>, <KarmaStepNumber>, <GMROLL>' to roll action dice for given step number. <ActionStepNumber> is the action step number and <KarmaStepNumber> is the karma step number (0 if no karma used) and optional <GMROLL> is Y (1, on , y, yes, whisper) if roll must be whispered to GM/DM only. A macro can be easily made with syntax similar to !ed ?{StepNumber|0}, ?{KarmaStep|0}",
-    "authors": "Aqua Alex"
+    "authors": "Aqua Alex",
     "roll20userid": "1048758",
     "useroptions": [
         {
-			"name": "ActionStepNumber", 
+            "name": "ActionStepNumber",
             "type": "nonnegative integer (as char)",
             "default": "",
             "description": "This is the total attribute, damage, skill, talent step number and is REQUIRED"
@@ -24,7 +24,7 @@
             "type": "text (as char)",
             "default": "N",
             "description": "This optional argument, when Y  (1, on , y, yes, whisper) will do a GMROLL as opposed to a ROLL. GMROLL means only the player making the roll and the DM/GM will see the roll. Else everyone will see it."
-        }
+        },
 		{
             "name": "edition", 
             "type": "nonnegative integer (as char)",

@@ -329,3 +329,7 @@ wfrp2eapi:
 agonedice:
 - "AgoneDice"
 - "System Toolbox"
+
+earthdawn:
+- "earthdawn"
+- "System Toolbox"
