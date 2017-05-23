@@ -4,7 +4,7 @@
     "version": "1.0",
     "previousversions": [],
     "description": "This allows players to enter '!ed <ActionStepNumber>, <KarmaStepNumber>' or '!ed <ActionStepNumber>, <KarmaStepNumber>, <GMROLL>' to roll action dice for given step number. <ActionStepNumber> is the action step number and <KarmaStepNumber> is the karma step number (0 if no karma used) and optional <GMROLL> is Y (1, on , y, yes, whisper) if roll must be whispered to GM/DM only. A macro can be easily made with syntax similar to !ed ?{StepNumber|0}, ?{KarmaStep|0}",
-    "authors": "Aqua Alex"
+    "authors": "Aqua Alex",
     "roll20userid": "1048758",
     "useroptions": [
         {
