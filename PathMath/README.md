@@ -5,9 +5,30 @@ It has no stand-alone functionality of its own.
 
 ## API Documentation:
 
-This script's documentation uses the following typedefs:
+This script's documentation uses the following typedefs and classes:
 
 ```
+/**
+ * An open shape defined by a path.
+ * @class Path
+ */
+
+/**
+ * A closed shape defined by a path.
+ * @class Polygon
+ */
+
+/**
+ * A polygon primitive consisting of 3 vertices. Great for tessellation!
+ * @class Triangle
+ * @extends Polygon
+ */
+
+/**
+ * A circle defined by a center point and radius.
+ * @class Circle
+ */
+
 /**
  * A rectangle defining a path's bounding box.
  * @typedef {Object} BoundingBox
@@ -70,6 +91,20 @@ function createCircleData(radius, sides)
 
 ```
 /**
+ * Gets a point along some Bezier curve of arbitrary degree.
+ * @param {vec3[]} points
+ *        The points of the Bezier curve. The points between the first and
+ *        last point are the control points.
+ * @param {number} scalar
+ *        The parametric value for the point we want along the curve.
+ *        This value is expected to be in the range [0, 1].
+ * @return {vec3}
+ */
+function getBezierPoint(points, scalar)
+```
+
+```
+/**
  * Calculates the bounding box for a list of paths.
  * @param {(Path | Path[])} paths
  * @return {BoundingBox}
@@ -122,6 +157,19 @@ function normalizePath(path)
 
 ```
 /**
+ * Computes the intersection between the projected lines of two homogeneous
+ * 2D line segments.
+ * @param {Segment} seg1
+ * @param {Segment} seg2
+ * @return {Array<Vector, number, number>}
+ *      The point of intersection in homogenous 2D coordinates and its
+ *      parametric coefficients along seg1 and seg2,
+ *      or undefined if the segments are parallel.
+ */
+```
+
+```
+/**
  * Computes the intersection between two homogenous 2D line segments,
  * if it exists.
  * @param {Segment} seg1
@@ -129,7 +177,7 @@ function normalizePath(path)
  * @return {Array<Vector, number, number>}
  *      The point of intersection in homogenous 2D coordinates and its
  *      parametric coefficients along seg1 and seg2,
- *      or undefined if the segments are parallel.
+ *      or undefined if the segments don't intersect.
  */
 function segmentIntersection(seg1, seg2)
 ```
@@ -164,3 +212,17 @@ function toSegments(path)
  */
 function tupleToPoint(tuple, transformInfo)
 ```
+
+### Help
+
+If you experience any issues while using this script,
+need help using it, or if you have a neat suggestion for a new feature, please
+post to the script's thread in the API forums or shoot me a PM:
+https://app.roll20.net/users/46544/stephen-l
+
+### Show Support
+
+If you would like to show your appreciation and support for the work I do in writing,
+updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)
+or, simply leave a thank you note in the script's thread on the Roll20 forums.
+Either is greatly appreciated! Happy gaming!

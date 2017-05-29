@@ -1,0 +1,18 @@
+{
+    "name": "Plexsoup Isometric Suite",
+    "script": "psIsometricSuite.js",
+    "version": "0.1",
+    "previousversions": [],
+    "description": Isometric Suite is a suite of tools for enhancing play on isometric maps.",
+    "authors": "Plexsoup",
+    "roll20userid": "258125",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {
+		"state.LightCrumb": "read,write",
+        "state.LightCrumb.config": "read,write"
+
+    },
+    "conflicts": []
+}
+

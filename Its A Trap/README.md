@@ -1,111 +1,71 @@
 # It's A Trap!
 
-###### Updates
+_v3.6 Updates:_
+* Passive search distance now also applies to any trigger paths set for the trap.
+* When a trap is noticed with passive searching, its trigger paths are also revealed.
 
-_2.7_
-* Passive searching now supports a maximum search distance for traps using the 'searchDist' JSON option.
-* Trap JSON now supports a "triggers" property which contains a list of names or IDs of other traps that this trap will trigger.
-* The script now installs a token action macro to manually select and activate traps.
-* Fixed "accouncer" bug.
+This is a script that allows GMs to quickly and very easily set up traps,
+secret doors, and other hidden things on the GM layer, and detect when tokens
+on the objects layer move over them. This trap detection even works for tokens
+moving by waypoints.
 
-_2.6_
-* The script now exposes a TrapThemeHelper object that provides common functions used for creating trap themes.
-* The announcer for the script can be changed as a user option.
-
-_2.5_
-* The script's API now exposes a announceTrap method for handling all universally supported trap output (messages, sounds, FX, etc.).
-* Trap JSON now supports a "gmOnly" property that displays the trap's message only to the GM.
-* Trap JSON now supports a "stopAt" property to make traps stop tokens at their center, edge, or not at all.
-
-_2.4_
-* Offsets and directions can be specified for beam-like special FX in the trap JSON.
-* A user option is provided for revealed traps to be sent to the map layer instead of the objects layer.
-* Traps can now have areas of effect beyond their trigger.
-
-_2.3_
-* Trap JSON now supports special FX. This is specified through the 'fx' property.
-
-_2.2_
-* TrapThemes now supported for system-specific trap automation via trap themes.
-
-_2.1_
-* Refactored code.
-* ItsATrap now exposes an API for its functions.
-* Customizable trap messages via GM notes.
-
-This is a script that allows GMs to quickly and very easily set up traps on
-the GM layer, and detect when tokens on the objects layer move over them. This
-trap detection even works for tokens moving by waypoints.
+Combined with modules called Trap Themes, this script also allows system-specific
+automation of trap effects and passive perception used to spot them.
 
 ### Creating traps:
 
-Place the token for your trap on the ```GM layer```. Give it the ```cobweb``` <img src="http://game-icons.net/icons/lorc/originals/png/cobweb.png" width="32"> status marker.
+Place the token for your trap on the ```GM layer```.
+Then, select the trap token and activate its 'ItsATrap_trapCreationWizard' token macro.
+This will present a menu for setting up the trap's configurations.
 
-#### Flying tokens
-By default, traps will only affect characters on the ground (ones that don't
-have a ```wing``` <img src="http://game-icons.net/icons/lorc/originals/png/fluffy-wing.png" width="32"> or ```angel``` <img src="http://game-icons.net/icons/lorc/originals/png/angel-outfit.png" width="32"> status marker). To have a trap also affect flying
-characters, give it the ```wing``` <img src="http://game-icons.net/icons/lorc/originals/png/fluffy-wing.png" width="32"> or ```angel``` <img src="http://game-icons.net/icons/lorc/originals/png/angel-outfit.png" width="32"> status marker.
+### Setting trap triggers:
 
-#### Revealing traps
-If you would like the trap to become visible to the players when it is activated, give it
-the ```bleeding eye``` <img src="http://game-icons.net/icons/lorc/originals/png/bleeding-eye.png" width="32"> status marker.
-If you checked the ```revealTrapsToMap``` option for this script, then the trap will be moved to the ```Map layer```.
-Otherwise, it will be moved to the ```Objects layer```.
+As of version 3.3, traps can be set to be triggered either by their own token or
+by a set of paths on the GM layer. By default, the trap's token is used as
+its trigger. The trap's ```Trap Shape``` property determines the token shape
+(circle or rectangle) used for the collision.
 
-#### Area of effect
-You can specify an area of effect for a trap by setting its ```Aura 1``` property.
-When the trap is activated, all tokens within that area will be affected by the
-trap. Trap areas can be square or circular.
+You can change this by opening the trap's creation wizard in the chat,
+selecting a set of polygonal or freehand paths from the GM layer, and then setting
+the ```Set Trigger property``` for the trap to ```Paths```.
 
-#### Customizing trap messages:
-
-When a character activates a trap, it will display a
-generic message to tell everyone that the character activated the trap.
-
-You can specify a custom message in the GM notes for the trap. This message
-can include inline rolls.
+Note: Elliptical token shapes are not currently supported (unless they are circles).
 
 ### Activating traps:
 
-If a token moves across a trap at ANY point during its movement, the trap will
-be activated!
+If a token moves across a trap or its trigger paths at ANY point during its
+movement, the trap will be activated!
+
+A trap can also be manually activated by clicking the 'Activate Trap' button
+in the trap's configuration menu.
 
 ### TrapThemes:
 
-TrapThemes are used to provide support for displaying messages for traps and
+TrapThemes are used to provide support for formatting messages for traps and
 automating system-specific trap activation and passive search mechanics.
 
-If you are using the One-Click API Library, you can specify which theme to use
-in the 'theme' user option.
-
-By default the 'default' theme will be used. This is a very basic,
+By default the ```default``` theme will be used. This is a very basic,
 system-agnostic TrapTheme which provides support for the basic TrapEffect properties
 and has no passive search mechanics.
 
-Additional system-specific themes will be made available as their own API scripts.
-If you would like to implement a TrapTheme for your system, take a look at the
-"default" or "5E-OGL" TrapThemes as an example to get you started.
+If you install a system-specific trap theme, then It's A Trap will automatically use
+that theme instead.
 
-### TrapEffects JSON:
+Additional system-specific themes are available as their own API scripts.
+If you would like to implement a TrapTheme for your system, take a look at
+the ```default``` or ```5E-OGL``` TrapThemes as an example to get you started.
 
-In addition to being able to specify custom messages for traps, you can also define
-the effects of a trap using JSON. This allows you to do things with traps beyond
-just displaying simple messages such as playing sounds, providing attributes
-for use in trap automation with TrapThemes, and even executing API chat commands.
+## Help
 
-Just enter the JSON definition in for the trap in its GM notes.
+If you experience any issues while using this script or the trap themes,
+need help using it, or if you have a neat suggestion for a new feature, please reply to this thread:
+https://app.roll20.net/forum/post/3280344/script-its-a-trap-v2-dot-3
+or shoot me a PM:
+https://app.roll20.net/users/46544/stephen-l
 
-The following basic TrapEffect properties are supported:
-* api (string): An API chat command that will be executed when the trap is activated. If the constants TRAP_ID and VICTIM_ID are provided, they will be replaced by the IDs for the trap token and the token for the trap's victim, respectively in the API chat command message.
-* fx (string, FX definition JSON, or object): The name of a special FX object or a definition for custom special FX.
- * fx.name (string or FX definition JSON): The name of a special FX object or a definition for custom special FX.
- * fx.offset (2-number array): The offset of the trap's FX, relative to the trap's token.
- * fx.direction (2-number array): For beam-like FX, this is the vector for the FX's direction.
-* gmOnly (boolean): If true, then the trap's message is only displayed to the GM.
-* message (string): This is the message that will be displayed when the trap activates.
-* searchDist (number): A character must be no further than this many units away to passively search for the trap.
-* sound (string): The name of a sound that will be played when the trap activates.
-* stopAt (string): This is where the trap stops the token. If "edge", then the token is stopped at the trap's edge. If "center", then the token is stopped at the trap's center. If "none", the token is not stopped by the trap. Default: "center".
-* trapId (string): The ID of the trap token. This is set automatically by the script.
-* triggers {(string|string[])}:  A list of names or IDs for other traps that this trap sets off. This is useful for setting up a trap that is merely the trigger area for another trap.
-* victimId (string): The I of the victim token. This is set automatically by the script.
+## Show Support
+
+If you would like to show your appreciation and support for the work I do in writing,
+updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)
+or, simply leave a thank you note in the script's thread on the Roll20 forums.
+Either is greatly appreciated! Happy gaming!

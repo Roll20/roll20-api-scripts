@@ -1,5 +1,9 @@
 # Areas of Effect
 
+_v1.4 Updates_
+* The radii of burst effects no longer include the radius of the target token. Their radius will be exactly what you enter.
+* Fixed a NaN transform bug involving saving effects with the origin exactly at the effect graphic's center.
+
 GMs, your spellcasting players will love you for this script! It lets you
 create graphical areas of effect for various spells and other powers, and then
 your players can create these effects by drawing lines specifying their
@@ -37,17 +41,32 @@ To spawn an area of effect from this list, follow these steps:
 2. Select the line.
 3. Click the effect to apply to the line from the list of saved areas of effect.
 
+OR
+
+1. Select the token the effect originates from.
+2. Click the arrow button for the effect.
+3. Click the target token for the effect's endpoint.
+
 Both GMs and players can spawn areas of effect!
-
-## Sample graphics
-
-In the Roll20 API Scripts repository, this script includes a small collection of
-sample AoE graphics you are free to use in your own games to try out this script.
 
 _Note: Currently it is not possible to create effects from graphics purchased
 from the market place due to certain restrictions specified here:
 https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions
 
-If you would like to in the future be able to use marketplace graphics for
-effects, please share your support to lift the restriction at this suggestion
-thread: https://app.roll20.net/forum/post/1749220/api-tags-api-access-to-image-tags ._
+However, you can download them from your Roll20 purchased assets library and
+then upload them to your game in order to make use of them with this script ._
+
+## Help
+
+If you experience any issues while using this script or the trap themes,
+need help using it, or if you have a neat suggestion for a new feature,
+please shoot me a PM:
+https://app.roll20.net/users/46544/stephen-l
+or create a help thread on the Roll20 API forum
+
+## Show Support
+
+If you would like to show your appreciation and support for the work I do in writing,
+updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)
+or, simply leave a thank you note in the script's thread on the Roll20 forums.
+Either is greatly appreciated! Happy gaming!

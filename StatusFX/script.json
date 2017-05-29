@@ -1,8 +1,8 @@
 {
     "name": "Status FX",
     "script": "statusFx.js",
-    "version": "1.2",
-    "previousversions": ["1.0", "1.1"],
+    "version": "1.2.1",
+    "previousversions": ["1.0", "1.1", "1.2"],
     "description": "# Status FX\r\r_v1.2 Updates:_\r* Added a user option to set the interval that it cycles through effects.\r* Improved the script's ability to detect when status markers change.\r\rThis script allows you to assign special FX to appear on a token when status\rmarkers are turned on. When multiple status FX are assigned to a token, it\rwill cycle through each one. Built-in and Custom FX are supported.\r\rFX are assigned to status markers through the One-Click user options for the\rscript. For each status marker that you want to assign a special FX to, just\renter the name of the special FX. If it is a beam-like effect (such as beam,\rbreath, splatter, or a custom effect whose definition has an angle of -1),\ralso enter the vector for the effect's direction in the form ```[X, Y]```.\rBeam-like effects can also be given a random vector with ```[random]```.\r\rNote: For most statuses, this script looks best using custom special FX with a\rshort range and fewer,smaller particles.\r\r### Examples:\r\r*green* ```bubbling-acid```\rCreates green bubbles on the token when the 'green' status marker is on.\r\r*red* ```splatter-blood [1, -2]```\rCreates a bleeding effect with blood spurting up and slightly to the right\rwhen the 'red' status marker is on.\r\r*death-zone* ```MyCustomEffect```\rCreates some sort of custom effect when the 'death-zone' status marker is on.\r\r*chemical-bolt* ```splatter-holy [random]```\rCreates a spark effect fired in a random direction when the 'chemical-bolt'\rstatus marker is on.\r\r*custom* ```sleep: glow-holy|stars: beam-fire [2,3]```\rExample of FX for CustomStatusMarkers.\rCreates FX for the custom status markers 'sleep' and 'stars'.\r",
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,

@@ -1,0 +1,52 @@
+{
+    "name": "KABOOM",
+    "script": "KABOOM.js",
+    "version": "1.2",
+    "previousversions": ["1.1","1.0"],
+    "description": "# KABOOM.js\r\rEver wonder why the tokens inside of your flimsy straw houses never budge when\ryour players decide that fireball is the easiest solution to their troubles? It\rmight have to do with the copious amounts of Sovereign Glue you keep around, but\rfor everything else there is KABOOM!\r\r## What can you use KABOOM for?\r* Creating explosions that force tokens to move away\r* Creating whirlpools that drag things towards their centers\r* Creating explosions that suck things towards themselves?\r* Creating whirlpools that spit things out?\r* **Any area of effect that requires tokens to move a towards or away from a point**\r\r## How do I use it?\rYou can call KABOOM through chat with a simple message, or you can use it with\rother scripts by calling KABOOM.NOW(@param1, @param2)\r\r### Using KABOOM - Chat Commands:\rThe basic chat command follows this format:\r`!KABOOM effect-power [ effect-radius [ options [ --default-options]]]`\r`!KABOOM -15 50 no scatter --blood`\r\rWhen you use KABOOM as a chat command, you need to have a token selected.\rONLY effect-power is required. Everything else is optional.\r\r**effect-power** is the strength of the force moving tokens away or towards from\r                the explosion point. It is measured in the same units listed on\r                the page. Effect-power can be negative if you want to pull things\r                towards the object instead of pushing away.\r\r**effect-radius** is the maximum distance that the script search for objects to\r                manipulate. If something is beyond this point, it will not move.\r                Defaults to **effect-power * explosion_ratio**. This is always\r                parsed as positive.\r\r**options** are either 'vfx', 'no vfx', 'no-vfx', 'invisible', 'invis' to change\r            whether an explosion effect appears, or 'scatter' and 'no scatter'\r            if you want to scatter tokens away from the explosion/implosion point\r            more randomly.\r\r**--default-options** can be found in the help menu, which is reached by typing\r                    `!KABOOM` or `!KABOOM --help` into chat.\r\r### Using KABOOM - API calls:\rThe simplest function call looks something like this:\r`KABOOM.NOW(15, [500,300])`\r\rSomething more complicated may look like this:\r```\ron('change:token', function(obj) {\r    if (obj.id === bigBaddie.id) {\r        KABOOM.NOW({effectPower: 5, effectRadius: 15, type: 'death'}, obj)\r    }\r}\r```\r\r## API calls to KABOOM.NOW()\r\r@param1 accepts two formats:\r\r1. __An object that contains the ranges and type information about the explosion__\r2. __A number that will be used as the effect power__\r\r```\r@param1 = {\r    effectPower: <any number>               // Required at all times\r    effectRadius: <any positive number>     // Must be absolutely higher than effectPower\r    type: <any Roll20 VFX type>\r    vfx: <true or false>\r    scatter: <true or false>\r}\r```\r\r@param2 accepts three formats:\r\r1. __A Roll20 graphic object received from getObj()__\r2. __A coordinate array which will be used to determine the position of the explosion__\r3. __An object that contains a position property with an array as its value__\r\r```\r@param2 = {\r    position: [X_coordinate, Y_coordinate]  // Required at all times\r    pageid: <a valid pageid>\r    layer: <objects or map>\r}\r```\r\r\r# KABOOM options\rThe following is a list of all stored settings that KABOOM uses. You can change these through chat commands\rin the\r\r### --vfx\rThis option determines if a Roll20 VFX effect will be created at the center of the effect.\rIt's mostly cool and you can choose to turn this off to make invisible explosions.\r\r### --ignore-size\rBy default, the script values object sizes when determining if they should be moved.\rIf this is false, then weight will not be considered when calculating distances thrown.\rMake sure that same-layer-only is true if this is false, or you may move your background tiles.\r\r### --default-type\rThis option determines the colour of the VFX explosion if none is specified. The colours available are:\r'acid', 'blood', 'charm', 'death', 'fire', 'frost', 'holy', 'magic', 'slime', 'smoke', and 'water'\r\r### --same-layer-only\rBy default, this script does not affect objects on other layers. If this is false\rthen KABOOM will move graphics on all layers. Make sure that your background graphics\rare larger than the max-size if this is false and that ignore-size is not true.\r\r### --min-size\rThe value stored as min-size determines the size that objects must be if they\rwant to move the maximum distance (barring their distance from the explosion center).\rIt is measured in sq. units.\r\r### --max-size\rThe value stored as max-size determines the maximum size that objects may be\rbefore they are considered too heavy to move. It is measured in sq. units.\r\r### --scattering\rThis option increases the randomness of movement done by the script. If this is\roff, then KABOOM will always throw two objects in the same spot towards the same\rlocation. If this is on, then it is randomized slightly.\r\r### --default-layer\rThis determines the default layer that KABOOM will affect if you are using it\rin another script. This option only affects calls of KABOOM.NOW() that do not\rgive the script a layer to use.\r\r### --drawings-only\rIf this is on, then the script will only search for drawings to manipulate and\rwill ignore all other tokens.\r\r### --walls\rTurn walls on to force the script to obey walls on the dynamic lighting layer.\rIf it is off, then walls will be ignored when calculating distances thrown.\r\r\r# Globalconfig options\rThese options can only be changed through the Script library panel at the API page.\r\r### GM only\rThis setting changes whether you want to restrict the use of this command to GMs only or allow\raccess to players as well. KABOOM will still require that players select a token before using the\rcommand, but this may be changed in the future to accept @{target1|token_id} macros.\r\r### Explosion ratio\rThis ratio determines what the area of effect for KABOOM explosions will be if one is\rnot specified. By default, the script multiplies the effect power by this number to\ruse as the effect radius. It is suggested to keep close to 2, but we won't complain\rif you go crazy.",
+    "authors": "Bodin Punyaprateep (PaprikaCC)",
+    "useroptions": [
+        {
+            "name": "Affect drawings only",
+            "type": "checkbox",
+            "value": "true",
+            "description": "Select this box if you want to only move graphics designated as drawings."
+        },
+        {
+            "name": "Default layer to affect",
+            "type": "select",
+            "options": ["objects","map"],
+            "default": "objects",
+            "description": "By default, the script only affects things on one layer. If an object isn't specified when calling KABOOM (like during a position based explosion), then this layer will be used."
+        },
+        {
+            "name": "Dynamic Lighting walls stop movement",
+            "type": "checkbox",
+            "value": "true",
+            "checked":"checked",
+            "description": "Select this box if you want the script to obey walls on the dynamic lighting layer (and stop movement at them)."
+        },
+        {
+            "name": "Explosion ratio",
+            "type": "number",
+            "default": "2",
+            "description": "The explosion ratio is used to determine the area of effect of each explosion if a maximum range isn't specified. The script multiplies the minimum range by this number (I suggest keeping it close to 2)."
+        },
+        {
+            "name": "GM only",
+            "type": "checkbox",
+            "value": "true",
+            "checked":"checked",
+            "description": "Select this box if you want your script to be enabled for GMs only."
+        }
+    ],
+    "roll20userid": "558646",
+    "dependencies": ["Path Math", "MatrixMath", "Vector Math"],
+    "modifies": {
+        "graphic.left": "read, write",
+        "graphic.top": "read, write",
+        "graphic.width": "read",
+        "graphic.height": "read"
+    },
+    "conflicts": []
+}

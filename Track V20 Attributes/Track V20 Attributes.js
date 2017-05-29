@@ -61,7 +61,9 @@ var TrackV20Attributes = TrackV20Attributes || (function () {
             "Temporis": "Temporis",
             "Thanatosis": "Thanatosis",
             "Valeren": "Valeren",
-            "Visceratika": "Visceratika"
+            "Visceratika": "Visceratika",
+			"Abombwe": "Abombwe",
+			"Abyss Mysticism": "AbyssMysticism"
         },
 
         // Paths
@@ -73,7 +75,8 @@ var TrackV20Attributes = TrackV20Attributes || (function () {
             "The Corpse in the Monster": "TheCorpseInTheMonster",
             "The Grave's Decay": "TheGravesDecay",
             "Path of the Four Humors": "PathOfTheFourHumors",
-            "VitreousPath": "VitreousPath",
+			"The Path of the Twilight Garden": "ThePathoftheTwilightGarden",
+            "The Vitreous Path": "VitreousPath",
             "The Path of Blood": "ThePathOfBlood",
             "Elemental Mastery": "ElementalMastery",
             "The Green Path": "TheGreenPath",
@@ -83,7 +86,7 @@ var TrackV20Attributes = TrackV20Attributes || (function () {
             "Movement of the Mind": "MovementOfTheMind",
             "The Path of Conjuring": "ThePathOfConjuring",
             "The Path of Corruption": "ThePathOfCorruption",
-            "The Path pf Mars": "ThePathOfMars",
+            "The Path of Mars": "ThePathOfMars",
             "The Path of Technomancy": "ThePathOfTechnomancy",
             "The Path of the Father's Vengeance": "ThePathOfTheFathersVengeance",
             "Weather Control": "WeatherControl",
@@ -91,7 +94,23 @@ var TrackV20Attributes = TrackV20Attributes || (function () {
             "The Way of Earth": "TheWayOfEarth",
             "The Way of Wind": "TheWayOfWind",
             "The Way of Water": "TheWayOfWater",
-            "The Way of Fire": "TheWayOfFire"
+            "The Way of Fire": "TheWayOfFire",
+			"The Keepers Way": "TheKeepersWay",
+			"The Path of Skulls": "ThePathofSkulls",
+			"The Path of Woe": "ThePathofWoe",
+			"The Revelations of Duat": "TheRevelationsofDuat",
+			"The Revelations of Midgard": "TheRevelationsofMidgard",
+			"The Bialowieza Kraina": "TheBialowiezaKraina",
+			"The Black Sea Kraina": "TheBlackSeaKraina",
+			"The Transylvanian Kraina": "TheTransylvanianKraina",
+			"Genius Loci": "GeniusLoci",
+			"Creatio Ignis": "CreatioIgnis",
+			"Iter Pernix": "IterPernix",
+			"Potestas Motus": "PotestasMotus",
+			"Potestas Tempestatum": "PotestasTempestatum",
+			"Potestas Exsecrabilis": "PotestasExsecrabilis",
+			"Potestas Elementorum": "PotestasElementorum",
+			"Potestas Vitae": "PotestasVitae"
         },
 
         // Backgrounds
@@ -126,10 +145,10 @@ var TrackV20Attributes = TrackV20Attributes || (function () {
         // Function which changes values for tracked attributes
         trackValue = function(changedName, scoreValue, scoreName, characterID, newValue, trackHash) {
             if (changedName === scoreValue) {
-                // If Discipline1Name's value is one of our tracked attributes...
+                // If Dicipline1Name's value is one of our tracked attributes...
                 var changedAttribute = getAttrByName(characterID, scoreName);
                 if (trackHash.hasOwnProperty(changedAttribute)) {
-                    // Set the corresponding attribute to the value of Discipline1 (whew!)
+                    // Set the corresponding attribute to the value of Dicipline1 (whew!)
                     var trackedAttributeName = trackHash[changedAttribute];
                     setCharAttribute(characterID, trackedAttributeName, newValue);
                 }
@@ -172,7 +191,7 @@ var TrackV20Attributes = TrackV20Attributes || (function () {
             var changedName = attr.get("name");
 
             for (var i = 1; i < 7; i++) {
-                trackValue(changedName, "Discipline" + i, "Discipline" + i + "Name", characterID, changedValue, disciplineHash);
+                trackValue(changedName, "Dicipline" + i, "Dicipline" + i + "Name", characterID, changedValue, disciplineHash);
                 trackValue(changedName, "Path" + i, "Path" + i + "Name", characterID, changedValue, pathHash);
                 trackValue(changedName, "Back" + i, "Back" + i + "Name", characterID, changedValue, backgroundHash);
             }
@@ -185,7 +204,7 @@ var TrackV20Attributes = TrackV20Attributes || (function () {
             var changedName = attr.get("name");
 
             for (var i = 1; i < 7; i++) {
-                trackValue(changedName, "Discipline" + i, "Discipline" + i + "Name", characterID, changedValue, disciplineHash);
+                trackValue(changedName, "Dicipline" + i, "Dicipline" + i + "Name", characterID, changedValue, disciplineHash);
                 trackValue(changedName, "Path" + i, "Path" + i + "Name", characterID, changedValue, pathHash);
                 trackValue(changedName, "Back" + i, "Back" + i + "Name", characterID, changedValue, backgroundHash);
             }
