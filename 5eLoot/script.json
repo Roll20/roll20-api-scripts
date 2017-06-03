@@ -1,0 +1,15 @@
+{
+  "name": "5eLoot",
+  "version": "0.0.0",
+  "description": "Adds a function, MinorLoot() MediumLoot(), which generates random minor or medium loot",
+  "authors": "Bast",
+  "roll20userid": "115549",
+  "dependencies": [],
+  "modifies": {
+  },
+  "conflicts": [],
+  "script": "loot.js",
+  "useroptions": [],
+  "previousversions": [
+  ]
+}
