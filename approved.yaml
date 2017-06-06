@@ -337,3 +337,11 @@ earthdawn:
 itsatrapthemewodc:
 - "ItsATrap_theme_WoDClassic"
 - "System Toolbox"
+
+srnextpass:
+- "SR-NextPass"
+- "System Toolbox"
+
+turnclock:
+- "TurnClock"
+- "Utility"
