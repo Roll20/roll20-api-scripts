@@ -1,0 +1,11 @@
+{
+  "name": "SR-NextPass",
+  "script": "SR-NextPass.js",
+  "version": "0.1",
+  "description": "Implements a **!nextpass** command which can be used by the GM to adjust initiative between combat passes. Typically bound to a macro button.",
+  "authors": "jflo",
+  "roll20userid": "742034",
+  "modifies": {
+    "Campaign.turnorder": "write"
+  }
+}
