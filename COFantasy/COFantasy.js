@@ -1043,6 +1043,7 @@ var COFantasy = COFantasy || function() {
     return init;
   }
 
+  //fonction avec callback, mais synchrone
   function soigneToken(token, soins, evt, callTrue, callMax) {
     var bar1 = parseInt(token.get("bar1_value"));
     var pvmax = parseInt(token.get("bar1_max"));
@@ -1176,7 +1177,7 @@ var COFantasy = COFantasy || function() {
     if (options.bonusAttaque) attBonus += options.bonusAttaque;
     attBonus += bonusDAttaque(attaquant, explications, evt);
     if (getState(attaquant, 'aveugle')) {
-      if (options.distance > 0) {
+      if (options.distance) {
         attBonus -= 10;
         explications.push("Attaquant aveuglé -> -10 à l'attaque à distance");
       } else {
@@ -1206,11 +1207,16 @@ var COFantasy = COFantasy || function() {
       attBonus -= 2;
       explications.push("L'impossibilité de faire un son rend le lancement de sorts difficile");
     }
+    if (!options.distance && attributeAsBool(attaquant, 'aCheval')) {
+      attBonus += charAttributeAsInt(attaquant, 'cavalierEmerite');
+      explications.push(name + " gagne +2 en attaque à cheval");
+    }
     return attBonus;
   }
 
   //Bonus d'attaque qui dépendent de la cible
-  function bonusAttaqueD(attackingToken, attackingCharId, attackerTokName, target, portee, pageId, evt, explications, options) {
+  function bonusAttaqueD(attaquant, attackerTokName, target, portee, pageId, evt, explications, options) {
+    var attackingCharId = attaquant.charId;
     var attBonus = 0;
     if (options.mainsDEnergie) {
       if (options.aoe) error("Mains d'énergie n'est pas compatible avec les AOE", options.aoe);
@@ -1227,9 +1233,8 @@ var COFantasy = COFantasy || function() {
     }
     if (options.aoe === undefined && options.auto === undefined && portee > 0) {
       attBonus -=
-        malusDistance(attackingToken, attackingCharId, target.token,
-          target.distance, portee, pageId, explications,
-          options.ignoreObstacles);
+        malusDistance(attaquant, target.token, target.distance, portee, pageId,
+          explications, options.ignoreObstacles);
     }
     var chasseurEmerite =
       charAttributeAsBool(attackingCharId, 'chasseurEmerite') &&
@@ -1261,7 +1266,7 @@ var COFantasy = COFantasy || function() {
     if (options.contact) {
       if (attributeAsBool(target, 'cri_de_guerre') &&
         charAttributeAsInt(attackingCharId, 'FORCE', 10) <= charAttributeAsInt(target.charId, 'FORCE', 10) &&
-        parseInt(attackingToken.get("bar1_max")) <= parseInt(target.token.get("bar1_max"))) {
+        parseInt(attaquant.token.get("bar1_max")) <= parseInt(target.token.get("bar1_max"))) {
         attBonus -= 2;
         explications.push(attackerTokName + " a un peu peur de s'attaquer à " + target.tokName);
       }
@@ -1309,18 +1314,19 @@ var COFantasy = COFantasy || function() {
     }
   }
 
+  //targetToken est soit un token, soit une structure avec nu champs cibles qui contient toutes les cibles
   function attack(playerId, attaquant, targetToken, attackLabel, options) {
     // Attacker and target infos
     var attackingToken = attaquant.token;
     var attackingCharId = attaquant.charId;
-    var attackerTokName = attackingToken.get("name");
+    var attackerTokName = attaquant.token.get("name");
     var attacker = getObj("character", attackingCharId);
     if (attacker === undefined) {
       error("Unexpected undefined 1", attacker);
       return;
     }
     var attackerName = attacker.get("name");
-    var pageId = attackingToken.get('pageid');
+    var pageId = attaquant.token.get('pageid');
     //Options automatically set by some attributes
     if (charAttributeAsBool(attackingCharId, 'fauchage')) {
       var seuilFauchage = 10 + modCarac(attackingCharId, 'FORCE');
@@ -1349,10 +1355,15 @@ var COFantasy = COFantasy || function() {
     else options.contact = true;
 
     //Détermination de la (ou des) cible(s)
-    var nomCiblePrincipale; //Utilie pour le cas mono-cible
+    var nomCiblePrincipale; //Utilise pour le cas mono-cible
     var cibles = [];
     if (targetToken.cibles) { //Dans ce cas les cibles sont précisées dans targetToken
       cibles = targetToken.cibles;
+      if (cibles.length === 0) {
+        error("Attaque sans cible", targetToken);
+        return;
+      }
+      nomCiblePrincipale = cibles[0].tokName;
     } else {
       nomCiblePrincipale = targetToken.get('name');
       if (options.aoe) {
@@ -1735,8 +1746,7 @@ var COFantasy = COFantasy || function() {
       evt.succes = true;
       evt.action = {
         player_id: playerId,
-        token_id: attackingToken.id,
-        attacking_token: attackingToken,
+        attaquant: attaquant,
         cibles: cibles,
         attack_label: attackLabel,
         rollsAttack: rollsAttack,
@@ -1849,7 +1859,8 @@ var COFantasy = COFantasy || function() {
         target.additionalDmg = [];
         target.messages = [];
         //Les bonus d'attaque qui dépendent de la cible
-        var attBonus = attBonusCommun + bonusAttaqueD(attackingToken, attackingCharId, attackerTokName, target, portee, pageId, evt, target.messages, options);
+        var attBonus = attBonusCommun +
+          bonusAttaqueD(attaquant, attackerTokName, target, portee, pageId, evt, target.messages, options);
         if (traquenard) {
           var initTarg = tokenInit(target, evt);
           if (traquenard >= initTarg) {
@@ -2914,6 +2925,10 @@ var COFantasy = COFantasy || function() {
         if (options.contondant) rd += charAttributeAsInt(charId, 'RD_contondant', 0);
         if (target.defautCuirasse) rd = 0;
         if (options.intercepter) rd += options.intercepter;
+        if (target.extraRD) {
+          rd += target.extraRD;
+          expliquer(target.tokName + " dévie le coup sur son armure");
+        }
         if (rd > 0) {
           dmgDisplay += "-" + rd;
           showTotal = true;
@@ -3343,13 +3358,14 @@ var COFantasy = COFantasy || function() {
   }
 
 
-  function malusDistance(tok1, charId1, tok2, distance, portee, pageId, explications, ignoreObstacles) {
+  function malusDistance(perso1, tok2, distance, portee, pageId, explications, ignoreObstacles) {
     if (distance === 0) return 0;
+    var tok1 = perso1.token;
     var mPortee = (distance <= portee) ? 0 : (Math.ceil(5 * (distance - portee) / portee));
     if (mPortee > 0) {
       explications.push("Distance > " + portee + " m => malus -" + mPortee);
     }
-    if (ignoreObstacles || charAttributeAsBool(charId1, 'joliCoup'))
+    if (ignoreObstacles || charAttributeAsBool(perso1.charId, 'joliCoup'))
       return mPortee;
     // Now determine if any token is between tok1 and tok2
     var allToks =
@@ -4141,16 +4157,13 @@ var COFantasy = COFantasy || function() {
       return;
     }
     var tokenId = msg.selected[0]._id;
+    var perso = tokenOfId(tokenId);
     var token = getObj('graphic', tokenId);
-    if (token === undefined) return;
-    var charId = token.get('represents');
-    if (charId === undefined || charId === "") {
-      sendChat("COF", "/w " + msg.who + " !cof-chance ne fonctionne qu'avec des tokens qui représentent des personnages");
-      log("!cof-chance d'un token ne représentant pas un personnage");
-      log(token);
+    if (perso === undefined) {
+      error(" !cof-chance ne fonctionne qu'avec des tokens qui représentent des personnages", perso);
       return;
     }
-    var name = token.get('name');
+    var name = perso.token.get('name');
     var attaque;
     if (cmd[1] == 'combat') { //further checks
       var lastAct = lastEvent();
@@ -4160,43 +4173,28 @@ var COFantasy = COFantasy || function() {
         }
       }
       if (attaque === undefined ||
-        attaque.token_id != tokenId) {
+        attaque.attaquant.token.id != tokenId) {
         error("Pas de dernière action de combat ratée trouvée pour " + name, attaque);
         return;
       }
     }
-    var chanceAttr = findObjs({
-      _type: 'attribute',
-      _characterid: charId,
-      name: 'PC'
-    });
-    if (chanceAttr.length != 1) {
-      error("Pas d'attribut de chance", chanceAttr);
-      return;
-    }
-    chanceAttr = chanceAttr[0];
-    var chance = chanceAttr.get('current');
-    chance = parseInt(chance);
-    if (isNaN(chance) || chance <= 0) {
+    var chance = attributeAsInt(perso, 'PC', 0);
+    if (chance <= 0) {
       sendChat("", name + " n'a plus de point de chance à dépenser...");
       return;
     }
     var evt = {
-      type: 'chance',
-      attributes: [{
-        attribute: chanceAttr,
-        current: chance
-      }]
+      type: 'chance'
     };
-    chance = chance - 1;
-    chanceAttr.set('current', chance);
-    sendChat("", name + " a dépensé un point de chance. Il lui en reste " + chance);
+    chance--;
+    setTokenAttr(perso, 'PC', chance, evt,
+      " a dépensé un point de chance. Il lui en reste " + chance);
     switch (cmd[1]) {
       case 'autre':
         addEvent(evt);
         return;
       case 'combat':
-        chanceCombat(token, attaque, evt);
+        chanceCombat(perso, attaque, evt);
         return;
       default:
         error("argument de chance inconnu", cmd);
@@ -4205,7 +4203,7 @@ var COFantasy = COFantasy || function() {
     }
   }
 
-  function chanceCombat(token, a, evt) {
+  function chanceCombat(perso, a, evt) {
     // first undo the failure
     undoEvent();
     // then re-attack with bonus
@@ -4213,7 +4211,7 @@ var COFantasy = COFantasy || function() {
     options.chance = (options.chance + 10) || 10;
     options.rollsAttack = a.rollsAttack;
     options.evt = evt;
-    attack(a.player_id, token, a, a.attack_label, options);
+    attack(a.player_id, perso, a, a.attack_label, options);
   }
 
   function intercepter(msg) {
@@ -4283,8 +4281,10 @@ var COFantasy = COFantasy || function() {
     options.rollsAttack = attaque.rollsAttack;
     options.rollsDmg = attaque.rollsDmg;
     options.evt = evt;
-    cible.rollsDmg = attaque.cibles[0].rollsDmg;
-    attack(attaque.player_id, attaque.attacking_token, cible, attaque.attack_label, options);
+    cible.rollsDamg = attaque.cibles[0].rollsDmg;
+    attack(attaque.player_id, attaque.attaquant, {
+      cibles: [cible]
+    }, attaque.attack_label, options);
   }
 
   function exemplaire(msg) {
@@ -4314,7 +4314,7 @@ var COFantasy = COFantasy || function() {
       sendChar(charId, "la dernière action trouvée n'est pas une attaque ratée, impossible de montrer l'exemple");
       return;
     }
-    var attackerName = attaque.attacking_token.get('name');
+    var attackerName = attaque.attaquant.token.get('name');
     if (attackerName === undefined) {
       error("Le token de la dernière attaque est indéfini", attaque);
       return;
@@ -4329,7 +4329,7 @@ var COFantasy = COFantasy || function() {
     // Puis on refait 
     var options = attaque.options;
     options.evt = evt;
-    attack(attaque.player_id, attaque.attacking_token, attaque, attaque.attack_label, options);
+    attack(attaque.player_id, attaque.attaquant, attaque, attaque.attack_label, options);
   }
 
   function surprise(msg) {
@@ -5105,9 +5105,11 @@ var COFantasy = COFantasy || function() {
   }
 
   function charAttributeAsInt(charId, name, def) {
-    return attributeAsInt({
+    var perso = charId;
+    if (perso.charId === undefined) perso = {
       charId: charId
-    }, name, def);
+    };
+    return attributeAsInt(perso, name, def);
   }
 
   function attributeAsBool(personnage, name) {
@@ -5501,6 +5503,41 @@ var COFantasy = COFantasy || function() {
       });
     });
     if (evt.attributes.length > 0) addEvent(evt);
+  }
+
+  function aCheval(msg) {
+    if (msg.selected === undefined || msg.selected.length === 0) {
+      error("Qui doit monter à cheval ?", msg);
+      return;
+    }
+    var cmd = msg.content.split(' ');
+    if (cmd.length < 2) {
+      error("Pas assez d'arguments pour !cof-a-cheval", msg.content);
+      return;
+    }
+    var monter;
+    switch (cmd[1]) {
+      case 'oui':
+      case 'true':
+        monter = true;
+        break;
+      case 'non':
+      case 'false':
+        monter = false;
+        break;
+      default:
+        error("Option de !cof-a-cheval inconnue", cmd);
+        return;
+    }
+    var evt = {
+      type: "À cheval"
+    };
+    var message = "descend de cheval";
+    if (monter) message = "monte à cheval";
+    iterSelected(msg.selected, function(perso) {
+      setTokenAttr(perso, 'aCheval', monter, evt, message);
+    });
+    addEvent(evt);
   }
 
   function echangeInit(msg) {
@@ -7502,6 +7539,59 @@ var COFantasy = COFantasy || function() {
       });
   }
 
+  function encaisserUnCoup(msg) {
+    getSelected(msg, function(selected) {
+      if (selected.length === 0) {
+        error("Personne n'est sélectionné pour encaisser un coup", msg);
+        return;
+      }
+      var lastAct = lastEvent();
+      if (lastAct === undefined) {
+        sendChat('', "Historique d'actions vide, pas d'action trouvée pour encaisser un coup");
+        return;
+      }
+      if (lastAct.type != 'Attaque' || lastAct.succes === false) {
+        sendChat('', "la dernière action n'est pas une attaque réussie, trop tard pour encaisser le coup d'une action précédente");
+        return;
+      }
+      var attaque = lastAct.action;
+      if (attaque.options.distance) {
+        sendChat('', "Impossible d'encaisser le dernier coup, ce n'était pas une attaque au contact");
+        return;
+      }
+      var nbOK = 0;
+      var evt = {
+        type: "Encaisser un coup"
+      };
+      iterSelected(selected, function(chevalier) {
+        if (!attributeAsBool(chevalier, 'encaisserUnCoup')) {
+          sendChar(chevalier.charId, "n'est pas placé pour encaisser un coup");
+          return;
+        }
+        var cible = attaque.cibles.find(function(target) {
+          return (target.token.id === chevalier.token.id);
+        });
+        if (cible === undefined) {
+          sendChar(chevalier.charId, "n'est pas la cible de la dernière attaque");
+          return;
+        }
+        removeTokenAttr(chevalier, 'encaisserUnCoup', evt);
+        cible.extraRD =
+          charAttributeAsInt(chevalier, 'DEFARMURE', 0) *
+          charAttributeAsInt(chevalier, 'DEFARMUREON', 1) +
+          charAttributeAsInt(chevalier, 'DEFBOUCLIER', 0) *
+          charAttributeAsInt(chevalier, 'DEFBOUCLIERON', 1);
+        nbOK++;
+      }); //fin iterSelected
+      if (nbOK > 0) {
+        undoEvent();
+        var options = attaque.options;
+        options.rollsAttack = attaque.rollsAttack;
+        options.evt = evt;
+        attack(attaque.player_id, attaque.attaquant, attaque, attaque.attack_label, options);
+      }
+    }); //fin getSelected
+  }
 
   function apiCommand(msg) {
     msg.content = msg.content.replace(/\s+/g, ' '); //remove duplicate whites
@@ -7575,6 +7665,9 @@ var COFantasy = COFantasy || function() {
         return;
       case "!cof-degainer":
         degainer(msg);
+        return;
+      case "!cof-a-cheval":
+        aCheval(msg);
         return;
       case "!cof-echange-init":
         echangeInit(msg);
@@ -7659,6 +7752,9 @@ var COFantasy = COFantasy || function() {
         return;
       case "!cof-tour-de-force":
         tourDeForce(msg);
+        return;
+      case "!cof-encaisser-un-coup":
+        encaisserUnCoup(msg);
         return;
       default:
         return;
@@ -7810,6 +7906,11 @@ var COFantasy = COFantasy || function() {
       activation: "commence à saigner du nez, des oreilles et des yeux",
       actif: "saigne de tous les orifices du visage",
       fin: "ne saigne plus"
+    },
+    encaisserUnCoup: {
+      activation: "se place de façon à dévier un coup sur son armure",
+      actif: "est placé de façon à dévier un coup",
+      fin: "n'est plus en position pour encaisser un coup"
     }
   };
 

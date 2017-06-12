@@ -402,7 +402,7 @@ p  {margin-left: inherit}
     </ol>
     <h4>Voie du pagne</h4>
     <ol>
-      <li>Vigueur : ok</li>
+      <li>Vigueur : ajouter les capacités avec leurs bonus sur la fiche</li>
       <li>Peau de pierre : augmenter la DEF sur la fiche</li>
     </ol>
     <h4>Voie du pourfendeur</h4>
@@ -425,16 +425,27 @@ p  {margin-left: inherit}
     <h3>Chevalier</h3>
     <h4>Voie du cavalier</h4>
     <ol>
-      <li>Fidèle monture : ok</li>
+      <li>Fidèle monture : pas de support [articulie</li>
+      <li>Cavalier émérite : ajuster la DEF de la monture. 
+        <ul>
+          <li> Ajouter un attribute <tt>cavalierEmerite</tt> avec comme valeur 2 </li>
+          <li> Pour monter ou descendre de cheval, utiliser <tt>!cof-a-cheval</tt> avec comme argument <tt>oui</tt>, <tt>true</tt>, <tt>non</tt> ou <tt>false</tt></li>
+        </ul>
+      </li>
     </ol>
     <h4>Voie de la guerre</h4>
     <ol>
-      <li>Armure sur mesure : ok</li>
+      <li>Armure sur mesure : simplement reporter sur la fiche le bon malus d'armure</li>
+      <li>Encaisser un coup :
+        <ul>
+          <li> utiliser <tt>!cof-effet-temp encaisserUnCoup 1</tt> pour se mettre en position</li>
+          <li> juste après l'attaque que l'on veut amortir, utiliser <tt>!cof-encaisser-un-coup</tt></li>
+        </ul>
+      </li>
     </ol>
     <h4>Voie du héro</h4>
     <ol>
-      <li>Ignorer la douleur : <tt>!cof-ignorer-la-douleur @{selected|token_id}</tt>. À
-        faire juste après le coup.</li>
+      <li>Ignorer la douleur : <tt>!cof-ignorer-la-douleur @{selected|token_id}</tt>. À faire juste après le coup.</li>
     </ol>
     <h4>Voie du meneur d'hommes</h4>
     <ol>
