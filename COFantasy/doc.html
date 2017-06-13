@@ -53,6 +53,7 @@ p  {margin-left: inherit}
         Le personnage qui agit est celui qui est sélectionné</li>
       <li> option <tt>--disque</tt> :
         le premier argument doit être l'id ou le nom d'un token qui représente un personnage, le deuxième argument un rayon. Cela sélectionne tous les tokens à une distamce de moins que le rayon du premier argument. Si un troisième argument est donné, il est interprété comme la portée maximum entre le centre du disque et le token actif (qui est supposé être celui sélectionné). Si le premier argument représente un personnage avec un max de PV à 0, il est compris comme un personnage fictif créé juste pour définir le disque, et il sera supprimé après la sélection.</li>
+      <li>option <tt>--saufAllies</tt> permet d'exclure les alliés de la sélection (voir plus haut pour la définition des alliés)</li>
     </ul>
 
     <h3>1.4 Règles optionelles utilisées</h3>
@@ -278,7 +279,7 @@ p  {margin-left: inherit}
     <p>
     <tt>!cof-remove-buf-def</tt> : enlève tout buf ou debuf de la def.
     <p>
-    <tt>!cof-effet-temp</tt> <i>effet duree</i> : ajoute l'effet <i>effet</i> à la cible pour la durée. 
+    <tt>!cof-effet-temp</tt> <i>effet duree</i> : ajoute l'effet <i>effet</i> à la cible pour la durée, <tt>!cof-effet-combat</tt> <i>effet</i> ajoute l'effet pour le combat, et <tt>!cof-effet</tt> <i>effet</i> ajoute ou enlève un effet à durée indéterminée.
     <ul>
       <li><tt>--lanceur</tt> <i>id</i> : indique quel est le lanceur. Utile pour un certain nombre d'autres options.
         <li><tt>--mana</tt> <i>id cout</i> : impose au token <i>id</i> de dépenser <i>cout</i> mana. Si <tt>--lanceur</tt> est donné, <i>id</i> est inutile.</li>
@@ -288,6 +289,7 @@ p  {margin-left: inherit}
       <li><tt>--puissant oui</tt> : idem</li>
       <li><tt>--puissant non</tt> : lance la version non puissante (efface le dernier effet
         puissant)</li>
+      <li><tt>--saveParTour</tt> <i>carac seuil</i> : la cible peut se sortir de l'effet chaque tour grâce à un test de <i>carac</i> de difficulte <i>seuil</i>.</li>
     </ul>
 
     <h3>2.8 Sorts</h3>
@@ -309,6 +311,9 @@ p  {margin-left: inherit}
       <li><tt>--effroi</tt> : la peur est passive (pas un sort)</li>
       <li><tt>--portee</tt> <i>n</i> : limite la portée du sort à <i>n</i> metres.</li>
     </ul>
+
+    <h3>2.9 Escaliers</h3>
+    Pour gérer les escaliers sur les cartes, vous pouvez utiliser la méthode suivante, inspirée du script Teleport : placez dans le layer "GM Info Overlay", au nivea des escaliers, des tokens qui prennent exactement la place des escaliers. Nommez ces escaliers avec un nom suivi du nombre d'étages (entre 2 et 9), suivi d'une lettre majuscule. Par exemple <tt>Escalier2A</tt>. Chaque escalier de la même colonne doit avoir le même nom et même nombre d'étage, et différer seulement par la lettre finale. Ensuite, si un ensemble de tokens est sur un escalier, utilisez <tt>!cof-escalier</tt> pour téléporter les tokens à l'emplacement de l'escalier suivant dans l'ordre des lettres. Dans l'exemple précédent, il serait téléporté à l'emplacement du token nommé <tt>Escalier2B</tt>. Cela ne fonctionne que si les bouts de l'escalier sont sur la même carte. À vous de choisir sir vous préférez révéler cette fonctionalité à vos joueurs, ou si vous le faites vous-même.
 
     <h2>3. Implémentation des capacités</h2>
     <h3>Arquebusier</h3>
@@ -418,7 +423,7 @@ p  {margin-left: inherit}
     </ol>
     <h4>Voie de la rage</h4>
     <ol>
-      <li>Cri de guerre : <tt>!cof-effet-temp cri_de_guerre 20</tt></li>
+      <li>Cri de guerre : <tt>!cof-effet-combat criDeGuerre</tt></li>
       <li>Défier la mort : ajouter un attribut <tt>defierLaMort</tt> de valeur 10 et de maximum 10. (pour l'instant ne prend pas la rage en compte)</li>
     </ol>
 
@@ -429,7 +434,7 @@ p  {margin-left: inherit}
       <li>Cavalier émérite : ajuster la DEF de la monture. 
         <ul>
           <li> Ajouter un attribute <tt>cavalierEmerite</tt> avec comme valeur 2 </li>
-          <li> Pour monter ou descendre de cheval, utiliser <tt>!cof-a-cheval</tt> avec comme argument <tt>oui</tt>, <tt>true</tt>, <tt>non</tt> ou <tt>false</tt></li>
+          <li> Pour monter ou descendre de cheval, utiliser <tt>!cof-effet aCheval</tt> avec comme argument <tt>oui</tt>, <tt>true</tt>, <tt>non</tt> ou <tt>false</tt></li>
         </ul>
       </li>
     </ol>
@@ -446,6 +451,7 @@ p  {margin-left: inherit}
     <h4>Voie du héro</h4>
     <ol>
       <li>Ignorer la douleur : <tt>!cof-ignorer-la-douleur @{selected|token_id}</tt>. À faire juste après le coup.</li>
+      <li>Piqures d'insectes : ajouter un attribut <tt>piquresDInsectes</tt>, avec comme valeur le rang dans la voie</li>
     </ol>
     <h4>Voie du meneur d'hommes</h4>
     <ol>
@@ -459,31 +465,37 @@ p  {margin-left: inherit}
     </ol>
     <h4>Voie de la noblesse</h4>
     <ol>
-      <li>Éduqué : ok</li>
+      <li>Éduqué : pas de support particulier, juste reporter les bonus sur la fiche.</li>
+      <li>Autorité naturelle : simplement reporter sur la fiche les bonus d'init et de DEF, et ajouter la capacité intimider.</li>
     </ol>
 
     <h3>Druide</h3>
     <h4>Voie des animaux</h4>
     <ol>
-      <li>Langage des animaux : ok</li>
+      <li>Langage des animaux : pas de support particulier</li>
+      <li>Nuée d'insectes : ajouter une attaque magique, de portée 20 m et sans dégâts. Puis appeler cette attaque (avec <tt>!cof-attack</tt>) avec les arguments <tt>--sortilege --effet nueeDInsectes [[5+@{selected|token_id}]]</tt>. Pas de support particulier pour les DM de zone qui détruisent la nuée (enlever l'attribut <tt>nueeDInsecte</tt> sur la cible dans ce cas).</li>
     </ol>
     <h4>Voie du fauve</h4>
     <ol>
-      <li>Vitesse du félin : ok</li>
+      <li>Vitesse du félin : simplement ajouter les bonus sur la fiche, ainsi que les competences course, escalade et saut.</li>
+      <li>Panthère : ajouter un personnage pour la panthère, qui sera contrôlé par le joueur.</li>
     </ol>
     <h4>Voie de la nature</h4>
     <ol>
       <li>Maître de la survie : Ajouter +2 à un attribut <tt>vigilance</tt></li>
+      <li>Marche sylvestre : quand le druide est en terrain difficile, faire <tt>!cof-effet marcheSylvestre oui</tt>. Faire <tt>!cof-effet marcheSylvestre non</tt> quand il en sort.</li>
     </ol>
     <h4>Voie du protecteur</h4>
     <ol>
       <li>Baies magiques : Utiliser <tt>!cof-distribuer-baies</tt> avec option <tt>--allies --self</tt> ou <tt>--target</tt> pour donner des baies (en ayant sélectionné le druide, le mieux est d'utiliser une ability). Pour consommer ensuite une baie, il faut utiliser <tt>!cof-consommer-baie</tt>.</li>
+      <li>Forêt vivante : pas vraiment de support. On peut baisser temporairement l'init des adversaires sur la fiche.</li>
     </ol>
     <h4>Voie des végétaux</h4>
     <ol>
       <li>Peau d'écorce : <tt>!cof-effet-temp peau_d_ecorce [[5+@{selected|SAG}]]</tt>.
         Il faut un attribut <tt>voieDesVegetaux</tt> avec comme valeur le rang dans la
         voie.</li>
+      <li>Prison végétale : <tt>!cof-effet-temp prisonVegetale [[5+@{selected|SAG}]] --saveParTour FOR [[10+@{selected|SAG}]] --lanceur @{selected|token_id} --disque @{target|token_id} 10 20 --saufAllies</tt></li>
     </ol>
 
     <h3>Ensorceleur</h3>
@@ -610,7 +622,7 @@ p  {margin-left: inherit}
     <h4>Voie de la magie protectrice</h4>
     <ol>
       <li>Armure du mage : 
-        <tt>!cof-effet-temp armureDuMage 20</tt> </li>
+        <tt>!cof-effet-combat armureDuMage</tt> </li>
     </ol>
     <h4>Voie de la magie universelle</h4>
     <ol>
@@ -847,7 +859,7 @@ p  {margin-left: inherit}
     <h4>Voie de la magie de combat</h4>
     <ol>
       <li>Attaque magique : simplement une attaque, avec les options <tt>--sortilege --magique --fx beam-magic</tt>. Pour la version de zone, utiliser les options <tt>--disque 5 --auto --psave DEX 10</tt>.</li>
-      <li>Armure magique : utiliser <tt>!cof-armure-magique</tt></li>
+      <li>Armure magique : utiliser <tt>!cof-effet-combat armureMagique</tt></li>
     </ol>
     <h4>Voie de la magie de guérison</h4>
     <h4>Voie de la magie maléfique</h4>
