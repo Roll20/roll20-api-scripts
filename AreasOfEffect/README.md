@@ -1,8 +1,7 @@
 # Areas of Effect
 
-_v1.4 Updates_
-* The radii of burst effects no longer include the radius of the target token. Their radius will be exactly what you enter.
-* Fixed a NaN transform bug involving saving effects with the origin exactly at the effect graphic's center.
+_v1.5 Updates_
+* Added blast and line/cone effect buttons.
 
 GMs, your spellcasting players will love you for this script! It lets you
 create graphical areas of effect for various spells and other powers, and then
