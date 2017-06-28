@@ -1,0 +1,16 @@
+{
+  "name": "Star Wars: Fantasy Flight Games - Destiny Tracker",
+  "script": "FFG-SWRPG-DestinyTracker.js",
+  "version": "0.1.0",
+  "description": "SW FFG Destiny Tracker provides a way to prompt, set and track destiny points for Star Wars: Edge of the Empire (Fantasy Flight Games) rpg system. The script creates a handout when a command is run which can be used to keep a visual reminder for players during a session. It also outputs to chat changes made for in play reminders and chat archive reference.\r\r**Note:** The handout automatically updates as the pools change and has been set up to be made as small as possible rather than waste screen real estate.\r\r## Commands\r\r```!destiny <command> [value]```\r\rThis command requires 2 parameters and accepts a third optional one:\r\r*   `command` - The command to pass to the Destiny Tracker (see example for full list).\r*   `value` - The number of points to affect (defaults to 1 with no value present).\r\r\r### Examples:\r*Start a session:*\r\r```!destiny startsession OR !destiny ss```\r\rResets the destiny pool and sends buttons to chat for players to use to roll destiny and open the tracking handout.\r\r*Reset the pool:*\r\r```!destiny reset OR !destiny r```\r\rReset the pool without the buttons being sent to chat.\r\r*Status:*\r\r```!destiny status OR !destiny s```\r\rOutputs the current state of the pools to chat.\r\r*Add Light Destiny:*\r\r```!destiny addlight 3 OR !destiny al 3```\r\rAdds destiny points to the light side of the pool to the value given (or 1 by default). Accepts inline rolls as well as queries as well as negative values.\r\r*Add Dark Destiny:*\r\r```!destiny adddark 3 OR !destiny ad 3```\r\rAdds destiny points to the dark side of the pool to the value given (or 1 by default). Accepts inline rolls as well as queries as well as negative values.\r\r*Use light destiny:*\r\r```!destiny uselight 2 OR !destiny spendlight 2 OR !destiny ul 2```\r\rReduces the destiny in the light pool by the given value (1 by default) and adds the same amount to the dark side. Accepts inline rolls as well as queries as well as negative values.\r\r*Use dark destiny:*\r\r```!destiny usedark 2 OR !destiny spenddark 2 OR !destiny ud 2```\r\rReduces the destiny in the dark pool by the given value (1 by default) and adds the same amount to the light side. Accepts inline rolls as well as queries as well as negative values.\r",
+  "authors": "Ziechael",
+  "roll20userid": "573391",
+  "useroptions": [],
+  "dependencies": {},
+  "modifies": {
+    "state.destiny": "read,write",
+    "handout.destiny pools": "write"
+  },
+  "conflicts": [],
+  "previousversions": []
+}
