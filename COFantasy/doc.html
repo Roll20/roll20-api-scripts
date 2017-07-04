@@ -119,6 +119,7 @@ p  {margin-left: inherit}
       <li> <tt>--peur</tt> <i>seuil duree</i> : fait un effet de peur si l'attaque touche. Le <i>seuil</i> sert pour le test de sagesse de résitance à la peur (tient compte de la capacité <b>sans peur</b> du chevalier).</li>
       <li> <tt>--plus</tt> <i>dmg</i> : ajoute <i>dmg</i> dégâts. Attention, si <i>dmg</i> est un simple nombre, ces dégâts sont multipliés par les
         critiques (sauf si de type différent de l'attaque principale). Ainsi, <tt>--plus [[1d6]]</tt> donnera des dégâts multipliés par les critiques (car la fonction ne voit que le résultat du jet), alors que <tt>--plus 1d6</tt> ne le sera pas.</li>
+      <li><tt>--test</tt> pour voir le résultat du jet d'attaque. On n'applique pas les résultats d'un touché.</li>
       <li><tt>--de6Plus</tt> <i>n</i> (ou <tt>--sournoise</tt> <i>n</i>): ajoute <i>n</i>d6 aux dégâts (non multipliés en cas de critique), de même
         type que les dégâts principaux</li>
       <li> <tt>--magique</tt> : les dégâts sont magiques. On peut passer en argument le niveau de magie. Il est utilisé contre les créatures immunisées aux armes. Le niveau par défaut est 1.</li>
@@ -138,7 +139,7 @@ p  {margin-left: inherit}
       <li><tt>--ignoreObstacles</tt> : ignore les tokens sur le trajet. Ça semble nécessaire pour les attaques magiques d'après Kegron.</li>
       <li><tt>--puissant</tt> : augmente la valeur max des dés de dégâts de 2. Si <tt>--puissant</tt> est
         suivi d'un argument <i>effet</i>, on teste la présence d'un attribut <i>effet</i><tt>Puissant</tt> pour
-        décider si l'attaque est puissante ou non.</li>
+        décider si l'attaque est puissante ou non. Il est aussi possible de donner <tt>oui</tt> ou <tt>non</tt> en argument (ce n'est alors pas considéré comme un effet).</li>
       <li> <tt>--strigeSuce</tt> : option spécifique aux striges. Donne le malus de -3 en DEF et
         compte la quantite sucée. Quand cette quantité arrive à 6, enlève le malus de
         DEF et rend la cible affaiblie.</li>
@@ -583,10 +584,23 @@ p  {margin-left: inherit}
     <h4>Voie du bouclier</h4>
     <ol>
       <li>Protéger un allié : <tt>!cof-proteger-un-allie @{selected|token_id} @{target|token_id}</tt>. Fonctionne aussi si on remplace le target par un nom de token. Le script ne vérifie pas que le guerrier ne change pas d'allié plus d'une fois par tour.</li>
+      <li>Absorber un coup :
+        <ul>
+          <li> utiliser <tt>!cof-effet-temp absorberUnCoup 1</tt> pour se mettre en position. Attention, ça ne vérifie pas si le guerrier porte son bouclier.</li>
+          <li> juste après l'attaque que l'on veut absorber, utiliser <tt>!cof-absorber-au-bouclier</tt></li>
+        </ul>
+      </li>
+      <li>Absorber un sort :
+        <ul>
+          <li> utiliser <tt>!cof-effet-temp absorberUnSort 1</tt> pour se mettre en position. Attention, ça ne vérifie pas si le guerrier porte son bouclier.</li>
+          <li> juste après l'attaque que l'on veut absorber, utiliser <tt>!cof-absorber-au-bouclier</tt></li>
+        </ul>
+      </li>
     </ol>
     <h4>Voie du combat</h4>
     <ol>
       <li>Vivacité : simplement augmenter l'init sur la fiche.</li>
+      <li>Désarmer : faire l'attaque avec l'option <tt>--test</tt>. Pour le jet de l'opposant, choisir une attaque adaptée (correspondant à l'arme portée, et l'appeler avec l'option <tt>--test</tt> (si l'attaque s'appelle <i>attaque</i>, on peut simplement utiliser <tt>%{selected|</tt><i>attaque</i><tt>}</tt>). Le MJ doit ensuite intégrer les modificateurs comme le fait de porter une arme à 2 mains, décider si le désarmement porte, et finalement gérer l'absence d'arme.</li>
     </ol>
     <h4>Voie du maître d'armes</h4>
     <ol>
@@ -714,7 +728,7 @@ p  {margin-left: inherit}
     <ol>
       <li>Arme bénie : utiliser l'option <tt>--reroll1</tt> et <tt>--magique</tt> à l'attaque</li>
         <li>Bouclier de la foi : ajuster le bonus de DEF du bouclier</li>
-        <li>Marteau sprirituel : utiliser une attaque, avec les options <tt>--magique</tt>, <tt>--sortilege</tt>, <tt>--mana 1</tt> et <tt>--puissant ?{Y passer tout le tour ?|oui|non}</tt></li>
+        <li>Marteau sprirituel : utiliser une attaque, avec les options <tt>--magique</tt>, <tt>--sortilege</tt>, <tt>--mana 1</tt> et <tt>?{Y passer tout le tour ?|oui,--puissant|non,}</tt></li>
     </ol>
     <h4>Voie de la prière</h4>
     <ol>
