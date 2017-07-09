@@ -1,3 +1,12 @@
+<a name="11.0.1"></a>
+# [11.0.1](https://github.com/mlenser/roll20-shaped-scripts/compare/11.0.0...11.0.1) (2017-07-09)
+
+### Bug Fixes
+* Spells now use "uses" if they exist and will not use slots if they don't.
+
+### Chores
+* Various code cleanup, linting, and other refactorings
+
 <a name="11.0.0"></a>
 # [11.0.0](https://github.com/mlenser/roll20-shaped-scripts/compare/10.0.1...11.0.0) (2017-06-27)
 
@@ -18,7 +27,6 @@
 ### BREAKING CHANGES
 
 * config: Will not work with earlier versions of the Shaped Sheet
-
 
 
 <a name="10.0.1"></a>
