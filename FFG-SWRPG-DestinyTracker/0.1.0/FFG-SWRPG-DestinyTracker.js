@@ -2,6 +2,8 @@
 The inspiration for this (and base code!) came from: https://gist.github.com/dyent/6b25dbf9d52843b5bb83
 Many, many, many thanks to The Aaron for his ever patient help with making some updates and quality of life changes to the code.
 Also more kudos to The Aaron for enabling the handout tracking aspect
+
+Optimum use requires a character to have an ability called 'destiny' with the contents of: !eed characterID(@{character_id}) label(skill:Destiny) 1w (gmdice)
 **/
 
 // Provides a way to track and manage light and dark side destiny points.
@@ -12,10 +14,25 @@ Also more kudos to The Aaron for enabling the handout tracking aspect
 // !destiny addlight [optional value] (adds light side points or 1 by default)
 // !destiny usedark [optional value] (spends dark side points and adds them to light side, 1 by default)
 // !destiny uselight [optional value] (spends light side points and adds them to dark side, 1 by default)
-
 on("ready",function(){
-   var version = '0.1.0',
-    const schemaVersion = 0.1,
+   var version = '0.1.0';
+    const schemaVersion = 0.1;
+    const    esRE = function (s) {
+        var escapeForRegexp = /(\\|\/|\[|\]|\(|\)|\{|\}|\?|\+|\*|\||\.|\^|\$)/g;
+        return s.replace(escapeForRegexp,"\\$1");
+    },
+
+    HE = (function(){
+        var entities={
+            //' ' : '&'+'nbsp'+';',
+            ')' : '&'+'#41'+';',
+            '@' : '&'+'#64'+';'
+        },
+        re=new RegExp('('+_.map(_.keys(entities),esRE).join('|')+')','g');
+        return function(s){
+            return s.replace(re, function(c){ return entities[c] || c; });
+        };
+    }());
         writeHandout = function(handout){
             handout.set({
                 notes: `<div style="width:70px;height:175px;align-text:center;font-size:40px;">`+
@@ -182,8 +199,8 @@ on("ready",function(){
                       + '<div style="padding-bottom:5px">'
                       + '<span style="font-size:130%;border-bottom:1px; color: black; font-weight:bold">May the Force be with you!</span>'
                       + '</div><div style="padding-left:10px; text-align: center; padding-right:10px; padding-bottom:5px">'
-                      + "Select your token and:"
-                      + "[Roll Destiny](!eed characterID(@{selected|character_id}) label(skill:Destiny) 1w (gmdice))"
+                      + "Select your token and: "
+                      + '[Roll Destiny](~selected|destiny)'
                       + '</div>'
                       );
                 sendChat("Master Yoda",'<div style="border: 1px solid black; text-align: center; color: black; background-color: #58C3EF; padding: 3px 3px">'
