@@ -12,9 +12,9 @@
     var PAGENAVIGATOR= PAGENAVIGATOR|| (function(){
         'use strict';
           
-        var version = '2.0',
-            lastUpdate = 1492030338,
-            schemaVersion = 2.0,
+        var version = '2.1',
+            lastUpdate = 1499703183,
+            schemaVersion = 2.1,
             defaults = {
                 css: {
                     button: {
@@ -794,11 +794,12 @@
             var controlList,tokenControl,button,msg, msgTarget,
                 character = getObj('character',token.get('represents')) || token,
                 command = '!nav --move,pageID='+page.id,
-                playerQuery = '?{Who is moving?|All Players,whole|Current Party,current|'+token.get('name')+' only,',
+                playerQuery = '?{Who is moving?|All Players,whole|Current Party,current|',
                 destQuery='?{Where should tokens be created|-|',
-                pageFolders=page.get('name').match(/(?:\[([^\[\]]+)\])/g);
+                pageFolders=page.get('name').match(/(?:\[[^\[\]]+\])/g);
                 
-            if(_.some(pageFolders,(f)=>{return folderAccess[f]==='players'})){
+            playerQuery+=character.get('name')+' only,';
+            if(_.some(pageFolders,(f)=>{return folderAccess[f.replace(/\[|\]/g,'')]==='players'})){
                 msgTarget = character.get('name');
             }else{
                 msgTarget = 'gm';
@@ -820,9 +821,10 @@
                         command,
                         'Approve', '#009900', '#000000'
                     );
+            log(msgTarget);
             msg = ' <div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
                 + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 110%;">'
-                + token.get('name')+' would like to move to '+destNotes+' on '+page.get('name').replace(/\[[^\[\]]*\]/g,'').trim()+'. If this move is correct, please approve the move.'
+                + character.get('name')+' would like to move to '+destNotes+' on '+page.get('name').replace(/\[[^\[\]]*\]/g,'').trim()+'. If this move is correct, please approve the move.'
                 + '<p>' + button + '</p>'
                 + '</div>';
             sendChat('Page Navigator','/w "'+msgTarget+'"'+msg,null,{noarchive:true});
@@ -1427,9 +1429,6 @@
                     case 'move' || 'teleport':
                         moveHandler(cmdDetails,msg.playerid,msg.selected,access);
                         break;
-                    /*case 'teleport':
-                        moveHandler(cmdDetails,who,msg.selected,access);
-                        break;*/
                     case 'config':
                         if(access==='gm'){
                             configHandler(msg.playerid,cmdDetails);
@@ -1527,7 +1526,6 @@
       	},
       	
       	changeHandler = function(obj,prev){
-      	    //6291
             var oldpIDs,newpIDs,index;
             switch(obj.get('type')){
                 case 'graphic':
