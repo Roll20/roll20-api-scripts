@@ -353,3 +353,7 @@ cofantasy:
 ffgstarwarsdestiny:
 - "FFG-SWRPG-DestinyTracker"
 - "System Toolbox"
+
+search:
+- "Search"
+- "Utility"
