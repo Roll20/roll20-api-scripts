@@ -19,6 +19,7 @@ var exaltScript = exaltScript || {
     version: "0.6",
     lastUpdated: "13/07/2017",
     authors: "Pinmissile",
+    gmOnly: true,               //Change to false if you want players to be able to run the script
 
     CheckInstall: function() {    
         
