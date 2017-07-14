@@ -1,5 +1,16 @@
+<a name="11.1.0"></a>
+# 11.1.0
+
+### Features
+* Added a command list which can be spawned with `!shaped`
+
+![alt text](http://i.imgur.com/0fk89Wc.png "Command list")
+
+### Chores
+* Updated to the latest webpack, used yarn, and a myriad of other coding fixes
+
 <a name="11.0.1"></a>
-# [11.0.1](https://github.com/mlenser/roll20-shaped-scripts/compare/11.0.0...11.0.1) (2017-07-09)
+# 11.0.1
 
 ### Bug Fixes
 * Spells now use "uses" if they exist and will not use slots if they don't.
@@ -8,7 +19,7 @@
 * Various code cleanup, linting, and other refactorings
 
 <a name="11.0.0"></a>
-# [11.0.0](https://github.com/mlenser/roll20-shaped-scripts/compare/10.0.1...11.0.0) (2017-06-27)
+# 11.0.0
 
 ### Features
 
