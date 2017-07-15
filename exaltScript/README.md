@@ -1,6 +1,6 @@
 # exaltScript
 
-exaltScript is the first Roll20 API script that I made from scratch. Its main function is to automate many tedious aspects of Exalted 3rd edition, especially when it comes to combat. 
+exaltScript's function is to automate many tedious aspects of Exalted 3rd edition, especially when it comes to combat. 
 It's a kind of general use script for anything Exalted 3e related, where you can pick and choose what functions you want to use.
 
 ## Features
@@ -14,6 +14,7 @@ It's a kind of general use script for anything Exalted 3e related, where you can
 * Automatically increase token Anima if 5 or more Peripheral Motes are spent in one instance 
 (This can be disabled for individual tokens by adding the "ninja-mask" status marker on it.)
 * Quickly add five motes or fill all mote pools to capacity with the use of chat commands (Detailed below) 
+* Quickly clear Onslaught and Anima status from all tokens on the current player page.
 
 ### exaltScript can **NOT** do the following rad stuff:
 
@@ -24,14 +25,20 @@ It's a kind of general use script for anything Exalted 3e related, where you can
 ## Chat Commands
 
 * !exaltScript : Main command preamble
-* addMotes : Adds 5 motes to every character on player page with mote pools (i.e. the ones that have the "personal-essence" and "peripheral-essence" attributes)
-* maxMotes : Fills all mote pools to capacity on the page that the players are on the current page.
-* initiativeToggle : Toggles initiative functions, such as automatic sorting, onslaught removal and automatic mote increase
-* animaToggle : Toggles automatic anima increase on removing motes  
+* UI : Displays the exaltScript UI to the user. I HIGHLY recommend you make a macro for this command.
+* !exaltScript addMotes : Adds 5 motes to every character on player page with mote pools (i.e. the ones that have the "personal-essence" and "peripheral-essence" attributes)
+* !exaltScript maxMotes : Fills all mote pools to capacity on the page that the players are on the current page.
+* !exaltScript customMotes X: Lets you specify a number of motes to give to the tokens on the current player board. Switch out X for a valid integer.
+* !exaltScript settings : Allows you to toggle the followed setting,
+	* initiative : Toggles initiative functions, such as automatic sorting, onslaught removal and automatic mote increase
+	* anima : Toggles automatic anima increase on removing motes  
+	* notifications: Toggles the command notifications display.
+* !exaltScript clear : Clears the followed status from all tokens on the current player page.
+	* onslaught : Clears onslaught status
+	* anima : Clears anima status
 
-As a sidenote, these chat commands are restricted to GM only. I highly recommend running this "toolbox" macro for ease of use. 
 
-`/w gm &{template:default}{{name=exaltScript}}{{Add Motes=[5 motes](!exaltScript addMotes) [Max Motes](!exaltScript maxMotes)}}{{Toggle Functions=[Initiative](!exaltScript initiativeToggle) [Anima](!exaltScript animaToggle)}}`
+As a sidenote, these chat commands are by default restricted to GM only, and can only be changed by modifying the variable "gmOnly" in the code.
 
 ## Known issues
 

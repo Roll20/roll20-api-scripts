@@ -16,7 +16,7 @@ If you want to suggest features, please send me a PM
 */
 
 var exaltScript = exaltScript || {
-    version: "0.6",
+    version: "0.7",
     lastUpdated: "13/07/2017",
     authors: "Pinmissile",
     gmOnly: true,               //Change to false if you want players to be able to run the script
@@ -29,6 +29,7 @@ var exaltScript = exaltScript || {
                 setting: {
                     doInitiative: true,
                     doAnima: true,
+                    doNotifications: true,
                 }
             }
         }
@@ -91,10 +92,10 @@ var exaltScript = exaltScript || {
             _type: "graphic",
             layer: "objects",
         });
-        var maxValue = 0
-        var spillOver = 0
 
         _.each(graphic, function (graphic) {
+            var maxValue = 0
+            var spillOver = 0
             var character = getObj("character", graphic.get("represents"));
             if (character != undefined){
                 if (getAttrByName(character.id, "personal-essence") == "undefined")
@@ -103,7 +104,7 @@ var exaltScript = exaltScript || {
                     exaltScript.setAttribute("peripheral-essence",character.id, "0");
 
                 if (getAttrByName(character.id, "peripheral-essence", "max") == "@{essence} * 7 + 26"){
-                    if (1*getAttrByName(character.id, "committedesstotal") > getAttrByName(character.id, "essence")*7 + 26){
+                    if (1*getAttrByName(character.id, "committedesstotal") > (getAttrByName(character.id, "essence")*7 + 26)){
                         maxValue = 0;
                         spillOver = -getAttrByName(character.id, "essence")*7 - 26 + 1*getAttrByName(character.id, "committedesstotal");
                     }else maxValue = getAttrByName(character.id, "essence")*7 + 26 - 1*getAttrByName(character.id, "committedesstotal");             
@@ -118,48 +119,22 @@ var exaltScript = exaltScript || {
                 
             }
         });
+        exaltScript.NotifyChange("Motes maxed","none");
     },
 
-    addFiveMotes: function(){                                       //Does what it says on the tin
+    addMotesToCharacters: function(motes){
         var graphic = findObjs({                              
-            _pageid: Campaign().get("playerpageid"),                              
-            _type: "graphic",
-            layer: "objects",
+        _pageid: Campaign().get("playerpageid"),                              
+        _type: "graphic",
+        layer: "objects",
         });
         _.each(graphic, function (graphic) {
             var character = getObj("character", graphic.get("represents"));
             if(character != undefined){
-                exaltScript.addMotes(5,character.id);
+                exaltScript.addMotes(motes,character.id);
             }
         });
-    },
-
-    increaseAnima: function(object, previous){                         //Spend five or more peripheral motes, get more anima.
-        var graphic = findObjs({                              
-            _represents: object.get("characterid"),                              
-            _type: "graphic",
-            _pageid: Campaign().get("playerpageid"),
-            layer: "objects"
-        });
-        var graphic = graphic[0];
-        if(previous["current"]-object.get("current") > 4 && graphic.get("status_ninja-mask") == false){
-            switch(graphic.get("status_aura")) {
-                case false:
-                    graphic.set("status_aura",true);
-                    break;
-                case true:
-                    graphic.set("status_aura","2");
-                    break;
-                case "2":
-                    graphic.set("status_aura","3");
-                    break;
-                case "3":
-                    graphic.set("status_aura","4");
-                    break;
-                default:
-                    return;
-            }
-        }
+        exaltScript.NotifyChange(motes+" motes added","none");
     },
 
     addMotes: function (motes, characterID){                                                //Generic algorithm for adding motes.
@@ -192,12 +167,11 @@ var exaltScript = exaltScript || {
             } else maxValue = getAttrByName(characterID, "personal-essence", "max"); 
             curValue = getAttrByName(characterID, "personal-essence");    
             diff = maxValue - curValue;
-
-            if (diff < 5){
+            if (diff < 5 || motes > maxValue){
                 maxValue = +maxValue;
                 maxValue = maxValue.toString();
                 exaltScript.setAttribute("personal-essence",characterID, maxValue);  
-            } else {
+            } else  {
                 motes = +motes;
                 curValue = +curValue+motes;
                 curValue = curValue.toString();
@@ -225,36 +199,176 @@ var exaltScript = exaltScript || {
         } 
     },
 
-    NotifyChange: function(func,toggled){               //Function for use of notifying when a setting has been toggled
-        if (toggled == false){
-            toggled = "Disabled";
-            color = "#FF0000"
-        } 
-        else {
-            toggled = "Enabled";
-            color = "#6B8E23"
+
+    increaseAnima: function(object, previous){                         //Spend five or more peripheral motes, get more anima.
+        var graphic = findObjs({                              
+            _represents: object.get("characterid"),                              
+            _type: "graphic",
+            _pageid: Campaign().get("playerpageid"),
+            layer: "objects"
+        });
+        var graphic = graphic[0];
+        if(previous["current"]-object.get("current") > 4 && graphic.get("status_ninja-mask") == false){
+            switch(graphic.get("status_aura")) {
+                case false:
+                    graphic.set("status_aura",true);
+                    break;
+                case true:
+                    graphic.set("status_aura","2");
+                    break;
+                case "2":
+                    graphic.set("status_aura","3");
+                    break;
+                case "3":
+                    graphic.set("status_aura","4");
+                    break;
+                default:
+                    return;
+            }
         }
-        sendChat('','/direct '
-                        +'<div style=\''
+    },
+
+    ClearStatus: function(status){
+        var graphic = findObjs({                              
+        _pageid: Campaign().get("playerpageid"),                              
+        _type: "graphic",
+        layer: "objects",
+        });
+        switch (status)
+        {
+
+            case "onslaught":
+                _.each(graphic, function (graphic){ 
+                    graphic.set("status_purplemarker",false);
+                });
+                exaltScript.NotifyChange("Onslaught cleared","none");
+                break;
+
+            case "anima":
+                _.each(graphic, function (graphic){ 
+                    graphic.set("status_aura",false);
+                });
+                exaltScript.NotifyChange("Anima cleared","none");
+                break;
+        }
+    },
+
+    ToggleAnima: function(){
+        if(state.doAnima == false) state.doAnima = true; 
+        else state.doAnima = false;
+        exaltScript.NotifyChange("Anima Increaser",state.doAnima);
+    },
+
+    ToggleInitiative: function(){
+        if(state.doInitiative == false) state.doInitiative = true;
+        else state.doInitiative = false;
+        exaltScript.NotifyChange("Initiative Tracker",state.doInitiative);
+    },
+
+    ToggleNotifications: function(){
+        if(state.doNotifications == false) state.doNotifications = true;
+        else state.doNotifications = false;
+        exaltScript.NotifyChange("Notifications",state.doNotifications);
+    },
+
+    DisplayInterface: function(target){
+        if (state.doAnima == false){
+            animaColor = "#FF0000";
+        } else animaColor = "#6B8E23";
+        if (state.doInitiative == false){
+            initiativeColor = "#FF0000";
+        } else initiativeColor = "#6B8E23";
+        if (state.doNotifications == false){
+            notificationColor = "#FF0000";
+        } else notificationColor = "#6B8E23";
+        sendChat('exaltScript','/w '
+                        +target
+                        +' <div style=\''
                         +'color: black;'
                         +'padding: 5px 5px;'
                         +'background-color: #FFD700;'
                         +'font-family:"Palatino Linotype", "Book Antiqua", Palatino, serif;'
                         +'border: 3px solid #708090;'
+                        +'align: center;'
                         +'text-align: center;'
                         +'\'>'
-                        +"<h1>exaltScript</h1>"
+                        +'<h1 style="margin-bottom: -10px;"">exaltScript</h1>'
+                        +'<img src="http://i.imgur.com/AbeJaSI.png" style="width 150px; height: 30px">'
+                        +'<h2>Settings</h2>'
+                        +'<a href="!exaltScript settings anima" style="background-color:' 
+                        +animaColor
+                        +'; margin: 2px;">Anima Increaser</a>'
+                        +'<a href="!exaltScript settings initiative" style="background-color:' 
+                        +initiativeColor
+                        +'; margin: 2px;">Initiative Tracker</a>'
+                        +'<a href="!exaltScript settings notifications" style="background-color:' 
+                        +notificationColor
+                        +'; margin: 2px;">Notifications</a>'
+                        +'<h2>Add Motes</h2>'
+                        +'<a href="!exaltScript maxMotes" style="background-color:#2A5B84; margin: 2px;">Max</a>'
+                        +'<a href="!exaltScript addMotes" style="background-color:#2A5B84; margin: 2px;">Five</a>'
+                        +'<a href="!exaltScript customMotes ?{How many?}" style="background-color:#2A5B84; margin: 2px;">Custom</a>'
+                        +'<h2>Clear Statuses</h2>'
+                        +'<a href="!exaltScript clear anima" style="background-color:#2A5B84; margin: 2px;">Anima</a>'
+                        +'<a href="!exaltScript clear onslaught" style="background-color:#2A5B84; margin: 2px;">Onslaught</a>'
+                +'</div>'
+        ); 
+    },
+
+
+    NotifyChange: function(func,toggled){               //Function for use of notifying when a setting has been toggled
+        if(state.doNotifications == false) return;
+        if (toggled == false){
+            toggled = "Disabled";
+            color = "#FF0000";
+        } 
+        else if (toggled == true){
+            toggled = "Enabled";
+            color = "#6B8E23";
+        }
+        else if (toggled == "none"){
+            toggled = "";
+            color = "";
+        }
+        sendChat('exaltScript','/direct '
+                        +'<div style=\''
+                        +'color: black;'
+                        +'padding: 5px 5px;'
+                        +'background-color: #FFD700;'
+                        +'font-family:"Palatino Linotype", "Book Antiqua", Palatino, serif;'
+                        +'font-size: 17px;'
+                        +'border: 3px solid #708090;'
+                        +'text-align: center;'
+                        +'\'>'
+                        +'<b>'
                         +func
                         +' <span style="color:'
                         +color
-                        +'; font-weight:bold;">'
+                        +';">'
                         +toggled
+                        +"</b>"
                         +'</span>'
                 +'</div>'
             );
     },
+    ChangeSettings: function(msg){
+        switch(msg){
+            case "initiative":
+                exaltScript.ToggleInitiative();
+                break;
 
-    HandleInput: function(tokens){      
+            case "anima":
+                exaltScript.ToggleAnima();
+                break;
+
+            case "notifications":
+                exaltScript.ToggleNotifications();
+                break;
+
+        }
+    },
+
+    HandleInput: function(tokens, player){      
         tokens=_.filter(tokens, function(tok){
             return null == tok.match(/^--/);
         });
@@ -262,26 +376,29 @@ var exaltScript = exaltScript || {
         switch (command)
         {
             case 'addMotes': 
-                exaltScript.addFiveMotes();
+                exaltScript.addMotesToCharacters(5);
                 break;
             
             case 'maxMotes':
                 exaltScript.maxMotes();
                 break;
-                
-            case 'animaToggle':
-                if(state.doAnima == false) state.doAnima = true; 
-                else state.doAnima = false;
-                exaltScript.NotifyChange("Anima Increaser",state.doAnima);
 
+            case 'customMotes':
+                motesToAdd = +tokens[1];
+                exaltScript.addMotesToCharacters(motesToAdd);
                 break;
-                
-            case 'initiativeToggle':
-                if(state.doInitiative == false) state.doInitiative = true;
-                else state.doInitiative = false;
-                exaltScript.NotifyChange("Initiative Tracker",state.doInitiative);
+
+            case 'settings':
+                exaltScript.ChangeSettings(tokens[1]);
                 break;
-            
+
+            case 'clear':
+                exaltScript.ClearStatus(tokens[1]);
+                break;
+
+            case 'UI':
+                exaltScript.DisplayInterface(player);
+                break;
         }
     },
 
@@ -314,15 +431,11 @@ var exaltScript = exaltScript || {
         });
 
         on('chat:message', function(msg){
-            if (msg.type !== 'api' ) return;
+            if (msg.type !== 'api' | "!exaltScript") return;
             if( !playerIsGM(msg.playerid) && exaltScript.gmOnly == true) return;
             var tokenized = msg.content.split(/\s+/);
-
-            switch(tokenized[0]){
-                case "!exaltScript":
-                    exaltScript.HandleInput(_.rest(tokenized));
-                    break;
-            }
+            exaltScript.HandleInput(_.rest(tokenized), msg.who);
+                 
         });
 
         on("change:attribute:current", function(obj, prev){   
