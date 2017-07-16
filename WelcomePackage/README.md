@@ -11,6 +11,10 @@ Normally, this would be a back and forth process with various steps depending th
 With this script there is only one step:
 * Player joins your campaign and can immediately start building their character.
 
+The script also installs a macro for each player named "CreateACharacter"
+which allows the players to create additional new characters with a
+specified name.
+
 ## Help
 
 If you experience any issues while using this script,

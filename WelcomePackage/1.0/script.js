@@ -1,6 +1,8 @@
 (() => {
   'use strict';
 
+  const CREATE_CHARACTER_CMD = '!welcomePackageCreateCharacter';
+
   const CSS = {
     'menu': {
       'background': '#fff',
@@ -24,16 +26,35 @@
   /**
    * Creates a character creation macro for a player if they don't already
    * have the macro.
+   * @param {Player} player
    */
-  function addCharacterCreateMacro(player) {
-    
+  function addCharacterCreateMacro(player, name) {
+    let playerId = player.get('_id');
+    let macroName = 'CreateACharacter';
+
+    let macro = findObjs({
+      _type: 'macro',
+      _playerid: playerId,
+      name: macroName
+    })[0];
+
+    if(!macro) {
+      createObj('macro', {
+        _playerid: playerId,
+        name: macroName,
+        action: '!welcomePackageCreateCharacter ?{Character Name:}'
+      });
+    }
   }
 
   /**
    * Creates a character for a player if they don't already have any characters.
    * @param {Player} player
+   * @param {string} [name] The name of the character. If this is provided,
+   *                        the character will be created regardless of whether
+   *                        the player has a character already.
    */
-  function createPlayerCharacter(player) {
+  function createPlayerCharacter(player, name) {
     let playerId = player.get('_id');
     let who = player.get('_displayname');
 
@@ -41,11 +62,14 @@
       _type: 'character',
       controlledby: playerId
     });
-    if(characters.length === 0) {
+    if(characters.length === 0 || name) {
+      if(!name)
+        name = `${who}'s character`;
+
       let character = createObj('character', {
         controlledby: playerId,
         inplayerjournals: 'all',
-        name: `${who}'s character`
+        name
       });
 
       setTimeout(() => {
@@ -84,5 +108,19 @@
 
   on('ready', () => {
     log('🎁🎁🎁 Initialized Welcome Package 🎁🎁🎁');
+  });
+
+  /**
+   * Process chat commands.
+   */
+  on('chat:message', msg => {
+    let playerId = msg.playerid;
+
+    if(msg.content.startsWith(CREATE_CHARACTER_CMD)) {
+      let player = getObj('player', playerId);
+      let argv = msg.content.split(' ');
+      let name = argv.slice(1).join(' ');
+      createPlayerCharacter(player, name);
+    }
   });
 })();
