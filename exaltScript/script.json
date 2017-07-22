@@ -1,0 +1,26 @@
+{
+  "name": "exaltScript",
+  "script": "exaltScript.js",
+  "version": "0.6",
+  "previousversions": [""],
+  "description": "This script adds general utility and automation to Exalted 3rd Edition campaigns.",
+  "authors": "Pinmissile",
+  "roll20userid": "2709",
+  "useroptions": [],
+  "dependencies": {},
+  "modifies": {
+    "state.exaltScript": "read,write",
+    "status_purplemarker": "read,write",
+    "status_ninja-mask": "read,write",
+    "status_aura": "read,write",
+    "Campaign.turnorder": "read,write",
+    "Campaign.initiativepage": "read",
+    "Campaign.playerpageid": "read",
+    "attribute.name": "read",
+    "attribute.current": "read,write",
+    "attribute.max": "read",
+    "graphic.represents": "read",
+    "character.id": "read"
+  },
+  "conflicts": []
+}

@@ -1,4 +1,4 @@
-<html>
+﻿<html>
   <head>
     <title>
       Scripts pour Chroniques Oubliées Fantasy sous Roll20
@@ -25,7 +25,7 @@ p  {margin-left: inherit}
     <p>
     Les statuts des tokens sont en partie utilisés pour représenter des états. Voir plus loin pour la <a href="#etats">liste des statuts</a> utilisés par les scripts.
     <p>
-    Pour tenir compte d'autre états non visibles sur les tokens, les scripts utilisent des attributs supplémentaires (hors fiche). Parfois, le MJ devra créer et remplir lui-même certains attributs, d'autres fois cela sera géré par les scripts. Il est important de noter la différence entre les tokens liés à un personnage (la barre 1 est liée aux points de vie du personnage, tout changement sur la fiche se répercute sur le token), et les tokens non liés (dans ce cas, la fiche de personnage est générique, et chaque token est une instance différente, avec des PV indépendants). Pour gérer les états spécifiques à un token non lié, les scripts utilisent des conventions de nom d'attribut utilisant le nom du token. Pour que cela fonctionne correctement, <b>il est important que deux tokens indépendants ne portent pas le même nom</b>, même si ils représentent le même personnage. Je suggère d'utiliser le script <a href="https://wiki.roll20.net/Script:Token_Name_Number">Token Name Number</a> (<a href="https://app.roll20.net/forum/post/1273423/script-tokennamenumber-automatic-numbering-of-qualifying-tokens/?pageforid=1273423#post-1273423" target="_blank">comment l'utiliser</a>) qui permet de faire une numérotation automatique des tokens.
+    Pour tenir compte d'autre états non visibles sur les tokens, les scripts utilisent des attributs supplémentaires (hors fiche). Parfois, le MJ devra créer et remplir lui-même certains attributs, d'autres fois cela sera géré par les scripts. Il est important de noter la différence entre les tokens liés à un personnage (la barre 1 est liée aux points de vie du personnage, tout changement sur la fiche se répercute sur le token), et les tokens non liés (dans ce cas, la fiche de personnage est générique, et chaque token est une instance différente, avec des PV indépendants). Pour gérer les états spécifiques à un token non lié, les scripts utilisent des conventions de nom d'attribut utilisant le nom du token. Pour que cela fonctionne correctement, <b>il est important que deux tokens indépendants ne portent pas le même nom</b>, même si ils représentent le même personnage. Je suggère d'utiliser le script <a href="https://wiki.roll20.net/Script:Token_Name_Number">Token Name Number</a> qui permet de faire une numérotation automatique des tokens.
     <p>
     Certains messages tiennent compte du genre (masculin ou féminin) des personnages. Ils utilisent le champ <tt>Sexe</tt> de la fiche de personnage. Un personnage est reconnu comme féminin si ce champ commence par la lettre <tt>F</tt>.
 
@@ -134,7 +134,6 @@ p  {margin-left: inherit}
       <li><tt>--reroll1</tt> : relance les 1 aux dés de dégats (le 1 est ignoré)</li>
       <li><tt>--mana</tt> <i>n</i> : l'attaque coûte <i>n</i> points de mana.</li>
       <li><tt>--limiteParJour</tt> <i>l</i> : limite le nombre d'utilisations de cette attaque à <i>l</i> fois par jour. On peut préciser un nom après <i>l</i>, qui va correspondre à une ressource pouvant être partagée avec d'autres attaques ou d'autres effets (voir <tt>!cof-effet-temp</tt>. Par défaut, le nom de cette ressource est le label de l'attaque.</li>
-      <li><tt>--limiteParCombat</tt> : même effet que la limite par jour. Si aucun argument n'est donné, la limite est de une fois par combat.</li>
       <li><tt>--munition</tt> <i>nom</i> <i>taux</i> : l'attaque utilise des munitions dont on garde le compte. Le nombre de munitions doit être inscrit dans un attribut <tt>munition_</tt><i>nom</i>. <i>nom</i> ne doit pas contenir de blanc, mais à l'affichage les <tt>_</tt> seront remplacés par des blancs. La valeur courante de l'attribut est le nombre qu'il reste sur le personnage, alors que le maximum contient ce qu'il a plus ce qu'il peut récupérer après le combat. À chaque attaque portée, une munition est utilisée, et il y a <i>taux</i> chances (sur 100) que la munition ne soit pas récupérable. En fin de combat, on considère que le personnage récupère toutes les munitions récupérables.</li>
       <li><tt>--vampirise</tt> : soigne de tous les DM infligés</li>
       <li><tt>--ignoreObstacles</tt> : ignore les tokens sur le trajet. Ça semble nécessaire pour les attaques magiques d'après Kegron.</li>
@@ -286,7 +285,6 @@ p  {margin-left: inherit}
       <li><tt>--lanceur</tt> <i>id</i> : indique quel est le lanceur. Utile pour un certain nombre d'autres options.
         <li><tt>--mana</tt> <i>id cout</i> : impose au token <i>id</i> de dépenser <i>cout</i> mana. Si <tt>--lanceur</tt> est donné, <i>id</i> est inutile.</li>
       <li><tt>--limiteParJour</tt> <i>l</i> : limite le nombre d'utilisations de cette effet à <i>l</i> fois par jour. On peut préciser un nom après <i>l</i>, qui va correspondre à une ressource pouvant être partagée avec d'autres attaques ou d'autres effets (voir <tt>!cof-attack</tt>. Par défaut, le nom de cette ressource est <i>id</i>.</li>
-      <li><tt>--limiteParCombat</tt> : même effet que la limite par jour. Si aucun argument n'est donné, la limite est de une fois par combat.</li>
       <li><tt>--portee</tt> <i>id d</i> : impose aux cibles de l'effet d'être à moins de <i>d</i> mètres du token <i>id</i>. Si <tt>--lanceur</tt> est précisé, inutile de donner <i>id</i>.</li>
       <li><tt>--puissant</tt> : lance la version puissante de l'effet</li>
       <li><tt>--puissant oui</tt> : idem</li>
@@ -317,11 +315,6 @@ p  {margin-left: inherit}
 
     <h3>2.9 Escaliers</h3>
     Pour gérer les escaliers sur les cartes, vous pouvez utiliser la méthode suivante, inspirée du script Teleport : placez dans le layer "GM Info Overlay", au nivea des escaliers, des tokens qui prennent exactement la place des escaliers. Nommez ces escaliers avec un nom suivi du nombre d'étages (entre 2 et 9), suivi d'une lettre majuscule. Par exemple <tt>Escalier2A</tt>. Chaque escalier de la même colonne doit avoir le même nom et même nombre d'étage, et différer seulement par la lettre finale. Ensuite, si un ensemble de tokens est sur un escalier, utilisez <tt>!cof-escalier</tt> pour téléporter les tokens à l'emplacement de l'escalier suivant dans l'ordre des lettres. Dans l'exemple précédent, il serait téléporté à l'emplacement du token nommé <tt>Escalier2B</tt>. Cela ne fonctionne que si les bouts de l'escalier sont sur la même carte. À vous de choisir sir vous préférez révéler cette fonctionalité à vos joueurs, ou si vous le faites vous-même.
-    
-    <h3>2.10 Jet de Caracteristiques</h3>
-    <p>
-    <tt>!cof-jet @{selected|token_id} ?{Faire un jet de |Charisme, CHA|Constitution, CON|Dextérité, DEX|Force, FOR|Intelligence, INT|Sagesse, SAG}</tt> : fait un simple jet pour la caractérisique sélectionnée.
-    <p>
 
     <h2>3. Implémentation des capacités</h2>
     <h3>Arquebusier</h3>
@@ -334,7 +327,6 @@ p  {margin-left: inherit}
       <li>Tir de barrage : Utiliser l'option <tt>--tirDeBarrage</tt>. Ça multiplie les
         dégâts par 2, ignore la charge, et laisse un message demandant le undo
         si la cible décide de ne pas bouger.</li>
-      <li>Couleuvrine : ajouter une attaque à distance, avec l'option <tt>--limiteParCombat</tt></li>
     </ol>
     <h4>Voie des explosifs</h4>
     <ol>
@@ -613,17 +605,14 @@ p  {margin-left: inherit}
     <h4>Voie du maître d'armes</h4>
     <ol>
       <li>Arme de prédilection : le mieux est de refléter ça sur l'attaque dans la fiche.</li>
-      <li>Science du critique : pour ne pas avoir à modifier les chances de critique pour toutes les attaques, utiliser un attribut <tt>scienceDuCritique</tt> (valeur <tt>true</tt>). Attention à ne pas faire ça ET modifier les chances de critiques de l'attaque, car ça s'additionne.</li>
     </ol>
     <h4>Voie de la résistance</h4>
     <ol>
       <li>Robustesse : rajouter les PV sur la fiche.</li>
-      <li>Armure naturelle : rajouter la DEF sur la fiche.</li>
     </ol>
     <h4>Voie du soldat</h4>
     <ol>
       <li>Posture de combat : <tt>!cof-posture-de-combat @{selected|token_id}</tt> <i>bonus attr1 attr2</i>, ou les deux <i>attr</i> peuvent être soit <tt>DEF</tt> soit <tt>ATT</tt> soit <tt>DM</tt>, et le <i>bonus</i> est retiré au premier attribut pour être ajouté au second. Le bonus peut être limité si le guerrier a un attribut <tt>voieDuSoldat</tt> qu iindique son rang dans la voie. Exemple d'utilisation&nbsp;: <tt>!cof-posture-de-combat @{selected|token_id} ?{Bonus} ?{Baisser|Défense,DEF|Attaque,ATT|Dégâts,DM} ?{Augmenter|Défense,DEF|Attaque,ATT|Dégâts,DM}</tt>. Normalement, la règle fait décider de sa posture au guerrier à chaque tour, mais en pratique, il en change assez rarement. Une posture de combat reste donc active jusqu'à la fin du combat ou jusqu'à ce qu'on en change (elle est neutre si on a le même attribut à buffer et débuffer). </li>
-      <li>Combat en phalange : ajouter un attribut <tt>combatEnPhalange</tt>, valeur <tt>true</tt>. Les bonus seront ajoutés automatiquement en fonctions des alliés définis selon <a href="#allie">cette méthode</a>.</li>
     </ol>
 
     <h3>Magicien</h3>
@@ -674,7 +663,7 @@ p  {margin-left: inherit}
     <h4>Voie de la maîtrise</h4>
     <ol>
       <li>Esquive du singe : ok</li>
-      <li>Morsure du serpent : pour ne pas avoir à modifier les chances de critique pour toutes les attaques au contact, utiliser un attribut <tt>morsureDuSerpent</tt> (valeur <tt>true</tt>). Attention à ne pas faire ça ET modifier les chances de critiques de l'attaque, car ça s'additionne. (En revanche, pas de soucis avec la science du critique).</li>
+      <li>Morsure du serpent : ok</li>
     </ol>
     <h4>Voie de la méditation</h4>
     <ol>
@@ -688,7 +677,6 @@ p  {margin-left: inherit}
       <li>Transe de guérison : <tt>!cof-transe-guerison</tt></li>
       <li>Maîtrise du ki : adapter les valeurs de DEF et init</li>
       <li>Projection mentale : aucun support</li>
-      <li>Sagesse héroïque : reporter sur la fiche</li>
     </ol>
     <h4>Voie du poing</h4>
     <ol>
@@ -764,9 +752,8 @@ p  {margin-left: inherit}
     <h3>Rôdeur</h3>
     <h4>Voie de l'archer</h4>
     <ol>
-      <li>Sens affutés : ajouter le bonus à un attribut <tt>perception</tt></li>
-      <li>Tir aveugle : ajouter un attribut <tt>tirAveugle</tt>, avec comme valeur <tt>true</tt>.</li>
-      <li>Tir rapide : faire simplement deux attaques dans le tour</li>
+      <li>Sens affutés: ajouter le bonus à un attribut <tt>perception</tt></li>
+      <li>Tir aveugle: pas de support</li>
     </ol>
     <h4>Voie du compagnon animal</h4>
     <ol>
@@ -780,7 +767,7 @@ p  {margin-left: inherit}
     </ol>
     <h4>Voie de l'escarmouche</h4>
     <ol>
-      <li>Chasseur émérite : ajouter un attribut <tt>chasseurEmerite</tt> (valeur true).
+      <li>Chasseur émérite: ajouter un attribut <tt>chasseurEmerite</tt> (valeur true).
         Puis, si dans le profil (attribut PROFIL) de la cible, il y a <tt>animal</tt>, le bonus
         s'applique.</li>
       <li>Traquenard : ajouter un attribut <tt>traquenard</tt> (valeur 1/1), puis option
@@ -858,12 +845,10 @@ p  {margin-left: inherit}
 
     <h3>Voies de créatures</h3>
     <h4>Voie du champion</h4>
+    <p style="margin-top:0px; margin-bottom:0px">
+    Utiliser un attribut <tt>champion</tt> avec comme valeur le rang dans la voie.
     <ol>
-      <li>Imparable: 
-        <ul>
-          <li>Utiliser l'option <tt>--imparable</tt> pour l'action limitée. </li>
-          <li> Pour l'effet permanent, utiliser un attribut <tt>champion</tt>, avec une valeur <tt>true</tt></li>
-        </ul>
+      <li>Imparable: utiliser l'option <tt>--imparable</tt> pour l'action limitée. Pour l'effet permanent, ne pas oublier l'attribut <tt>champion</tt></li>
     </ol>
     <h4>Voie du chef d'armée</h4>
     <ol>

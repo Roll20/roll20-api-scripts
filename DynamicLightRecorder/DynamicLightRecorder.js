@@ -4,15 +4,15 @@
 //Who the hell thought that it was a good idea to use  % as "remainder" 
 //instead of modulus like every other sensible programming language? That's
 //two hours of my life I'll never get back.
-mod = function(n, m) {
+var mod = function(n, m) {
     return ((n%m)+m)%m;
 };
 
 var DynamicLightRecorder = DynamicLightRecorder || (function() {
     'use strict';
     
-    var version = '1.0.1',
-    schemaVersion = 0.7,
+    var version = '1.0.2',
+    schemaVersion = 0.8,
     clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
     myState = state.DynamicLightRecorder,
     booleanValidator = function(value) {
@@ -22,6 +22,10 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 converted:converted
         };
     },
+    imageKey = function(imgsrc){
+        return (`${imgsrc}`.match(/^.*\/((?:images|marketplace)\/[^/]*\/[^/]*)\/.*$/)||[])[1];
+    },
+    newAdds={},
     
     //All the main functions sit inside a module object so that I can 
     //wrap them for log tracing purposes
@@ -85,12 +89,25 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                         this.redraw(this.processSelection(msg, {
                             graphic: {min:0, max:Infinity}
                         }).graphic);
-                		break;
+                        break;
                     case '!dl-config':
                         this.configure(this.makeOpts(args, this.configOptionsSpec));
                         break;
                     case '!dl-tmFixup':
                         this.transmogrifierFixup();
+                        break;
+                    case '!dl-loglevel':
+                        if(args.length){
+                            let level=`${args[0]}`.toUpperCase(),
+                                logLevels=['OFF','ERROR','WARN','INFO','DEBUG','TRACE'];
+
+                            if(_.contains(logLevels,level)){
+                                myState.config.logLevel= level;
+                            } else {
+                                report(`Valid log levels are: ${logLevels.join(', ')}`);
+                            }
+                        }
+                        report(`loglevel at ${myState.config.logLevel}`);
                         break;
                     default:
                         if(command.indexOf('!dl') === 0) {
@@ -104,7 +121,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             catch(e) {
                 if (typeof e === 'string') {
                     report('An error occurred: ' + e);
-                    logger.error("Error: $$$", e)
+                    logger.error("Error: $$$", e);
                 }
                 else {
                     logger.error('Error: ' +  e.toString());
@@ -221,7 +238,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         },
         
         export: function(graphics) {
-            var module = this;
+            /* var module = this;*/
             var exportObject = {
                 version: schemaVersion,
                 templates: this.globalTemplateStorage().load(graphics)
@@ -234,25 +251,25 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         redraw: function(objects) {
             var module = this;
             if (!_.isEmpty(objects)) {
-    		    _.chain(objects)
-    				.filter(function(object) {
-    					return module.tokenStorage(object).get('template');
-    				})
-    				.each(function(tile) {
-    					module.handleTokenChange(tile);
-    				});
-    		}
-    		else {
-    			_.chain(module.globalTemplateStorage().load())
-    	                .map(function(template) {
-    	                    return findObjs({_type: 'graphic', imgsrc:template.imgsrc, _subtype:'token'});
-    	                })
-    	                .flatten()
-    	                .each(function(graphic) {
-    				    	module.handleTokenChange(graphic);	
-    				    });
-    		}
-    	},
+                _.chain(objects)
+                    .filter(function(object) {
+                        return module.tokenStorage(object).get('template');
+                    })
+                    .each(function(tile) {
+                        module.handleTokenChange(tile);
+                    });
+            }
+            else {
+                _.chain(module.globalTemplateStorage().load())
+                        .map(function(template) {
+                            return findObjs({_type: 'graphic', imgsrc:template.imgsrc, _subtype:'token'});
+                        })
+                        .flatten()
+                        .each(function(graphic) {
+                            module.handleTokenChange(graphic);    
+                        });
+            }
+        },
     
         importTileTemplates: function(jsonString, overwrite) {
             try {
@@ -267,7 +284,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 var importCount = this.globalTemplateStorage().importTemplates(importObject.templates);
                 var message = '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
                                 +'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">Import completed</div>' +
-                                '<p>Total templates in import: <b>' + _.size(importObject.templates) + '</b></p>'
+                                '<p>Total templates in import: <b>' + _.size(importObject.templates) + '</b></p>';
                 if (!overwrite) {
                     var skipCount = _.size(importObject.templates) - importCount;
                     message += '<p> Skipped <b>' + skipCount + '</b> templates for tiles which already have templates. '
@@ -376,6 +393,9 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
     /////////////////////////////////////////////////
     
         handleNewToken: function(token) {
+            newAdds[token.id]=true;
+            _.delay(()=>(delete newAdds[token.id]),200);
+
             logger.debug('Got new token $$$', token);
             if(token.get('name') === 'DynamicLightRecorder') {
                 //This can only happen when this token is being added by the transmogrifier, AFAICT
@@ -384,19 +404,23 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             }
             
             
-			if (myState.config.autoLink) {
+            if (myState.config.autoLink) {
                 this.getControlInfoObject(token).onAdded();
             }
         },
 
         handleTokenChange: function(token, previous) {
             logger.debug('Changed token $$$ from $$$', token, previous);            
-            if(_.isEqual(_.omit(token.attributes, '_fbpath'), previous) || token.get('gmnotes') === 'APICREATE') {
+            if(_.isEqual(_.omit(token.attributes, '_fbpath'), previous) || token.get('gmnotes') === 'APICREATE' || newAdds[token.id]) {
                 //this is a spurious change event generated by the API creating an object,
                 //we can safely ignore it.
                 return;
             }
-			if (previous && previous.gmnotes.indexOf('DynamicLightData') === 0 && previous.gmnotes !== token.get('gmnotes')) {
+
+            newAdds[token.id]=true;
+            _.delay(()=>(delete newAdds[token.id]),200);
+
+            if (previous && previous.gmnotes.indexOf('DynamicLightData') === 0 && previous.gmnotes !== token.get('gmnotes')) {
                 logger.debug('Resetting changed gmnotes');
                 token.set('gmnotes', previous.gmnotes);
             }
@@ -405,7 +429,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         },
         
         handleDeleteToken: function(token) {
-            var controlInfo = this.getControlInfoObject(token).onDelete();
+            /* var controlInfo = */ this.getControlInfoObject(token).onDelete();
         },
         
         handlePathChange: function(path, previous) {
@@ -718,7 +742,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                             break;
                     }
                     return;
-                };
+                }
                 var transformations = tw.getTransformations(token);
                 switch(type) {
                     case 'directDoor':
@@ -733,7 +757,9 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                             }, tw.getDLTemplatePaths()));
                         }
                         //Drop through
+                        /*eslint-diable no-fallthrough */
                     case 'doorControl':
+                        /*eslint-enable no-fallthrough */
                         logger.debug('Door control has been moved');
                         if(previous) {
                             undoMove(previous);
@@ -768,8 +794,8 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             },
             
             onDelete = function() {
-                var door = tokenStorage.get('door'),
-                    doorControl = tokenStorage.get('doorControl');
+                var door = tokenStorage.get('door') /*,
+                    doorControl = tokenStorage.get('doorControl') */ ;
                 switch(type) {
                     case 'directDoor':
                         if (token.get('controlledby') === 'APIREMOVE') {
@@ -797,7 +823,9 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     case 'indirectDoor':
                         removeDependentObject('doorControl');
                         //Intentional drop through
+                        /*eslint-diable no-fallthrough */
                     case 'mapTile':
+                        /*eslint-enable no-fallthrough */
                         _.invoke(tokenStorage.get('dlPaths'), 'remove');
                         tokenStorage.remove('dlPaths');
                 }
@@ -825,7 +853,9 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                         var control = module.makeDoorControl(token, tw.getHingeOffset());
                         tokenStorage.set('doorControl', control);
                         //Drop through.
+                        /*eslint-diable no-fallthrough */
                     case 'mapTile':
+                        /*eslint-enable no-fallthrough */
                         onChange();
                 }
             },
@@ -911,7 +941,8 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
             
                 save: function(template) {
                     logger.debug('saving template $$$ to state storage', template);
-                    myState.tileTemplates[template.imgsrc] = template;
+                    let imgkey=imageKey(template.imgsrc);
+                    myState.tileTemplates[imgkey] = template;
                 },
                 
                 load: function(key) {
@@ -925,13 +956,15 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                                 .value();
                     }
                     var imgsrc = (typeof key === 'object') ? module.getControlInfoObject(key).getImageURL() : key;
-                    logger.debug('Retrieving template $$$ from state storage', myState.tileTemplates[imgsrc], imgsrc);
-                    return myState.tileTemplates[imgsrc];
+                    let imgkey=imageKey(imgsrc);
+                    logger.debug('Retrieving template $$$ from state storage', myState.tileTemplates[imgkey], imgsrc);
+                    return myState.tileTemplates[imgkey];
                 },
                 
                 remove: function(imgsrc) {
-                    if (myState.tileTemplates[imgsrc]) {
-                        delete myState.tileTemplates[imgsrc];
+                    let imgkey=imageKey(imgsrc);
+                    if (myState.tileTemplates[imgkey]) {
+                        delete myState.tileTemplates[imgkey];
                         _.each(findObjs({_type:'graphic', imgsrc:imgsrc}), function(graphic) {
                             module.getControlInfoObject(graphic).onChange();
                         });
@@ -954,7 +987,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                                 .intersection(_.keys(myState.tileTemplates))
                                 .value();
                     if (overwrite) {
-                        _extend(myState.tileTemplates, templates);
+                        _.extend(myState.tileTemplates, templates);
                         return _.size(templates);
                     }
                     else {
@@ -1014,7 +1047,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                 
                 logWrap: 'globalTemplateStorage',
                 toJSON: function() { return myState.tileTemplates; }
-            }
+            };
         },
         
         tokenStorage: function(token) {
@@ -1108,7 +1141,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                         }
                     },
                     
-                    detachTemplate: function(callback) {
+                    detachTemplate: function( /* callback */) {
                         if (templateStorage) {
                             templateStorage.detachTemplate(function(template) {
                                 data.template = template;
@@ -1185,12 +1218,12 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                     logger.debug('Transformation result: $$$', result);
                     return result;
                 };
-                func.toJSON = function() { return spec };
+                func.toJSON = function() { return spec; };
                 return func;
             };
             return {
                 getTransformations: function(token) {
-                    var transformations = [];
+                    // var transformations = [];
                     var scaleX = token.get('width') / layout.width;
                     var scaleY = token.get('height') / layout.height;
                     var fliph = (token.get('fliph') !== layout.fliph);
@@ -1360,7 +1393,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                         .map(function(myPoint) {
                             return myPoint.translate(-bounds.xMin, -bounds.yMin);
                         })
-                        .value()
+                        .value();
                             
                     var newWidth = bounds.xMax - bounds.xMin;
                     var newHeight = bounds.yMax - bounds.yMin;
@@ -1412,7 +1445,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                             return point.asPathPoint(index === 0);
                         }))
                     };
-                    logger.debug("Drawing path for token $$$ with properties: $$$", relativeToToken, attributes)
+                    logger.debug("Drawing path for token $$$ with properties: $$$", relativeToToken, attributes);
                     
                     return createObj('path', attributes);
                 },
@@ -1452,7 +1485,9 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                             }
                         });
                         delete myState.tilePaths;
+                        /*eslint-diable no-fallthrough */
                     case 0.2:
+                        /*eslint-enable no-fallthrough */
                         myState.doorControls = {};
                         _.chain(myState.tileTemplates)
                             .keys()
@@ -1472,7 +1507,9 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                                     }
                                 }
                             });
+                        /*eslint-diable no-fallthrough */
                     case 0.3:
+                        /*eslint-enable no-fallthrough */
                         _.each(myState.tileTemplates, function(template) {
                             if (template.isDoor) {
                                 delete template.isDoor;
@@ -1480,9 +1517,13 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                                 template.doorDetails = { type:'indirect', offset:hingeOffset};
                             }
                         });
+                        /*eslint-diable no-fallthrough */
                     case 0.4:
+                        /*eslint-enable no-fallthrough */
                         myState.config.logLevel = 'INFO';
+                        /*eslint-diable no-fallthrough */
                     case 0.5:
+                        /*eslint-enable no-fallthrough */
                         _.each(myState.doorControls, function(doorId, controlId) {
                             var door = getObj('graphic', doorId);
                             var control = getObj('graphic', controlId);
@@ -1515,9 +1556,13 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                                         token.set('controlledby', '');
                                     }
                                 }
+                                /* eslint-disable no-empty */
                                 catch(e) {}
+                                /* eslint-enable no-empty */
                             });
+                        /*eslint-diable no-fallthrough */
                     case 0.6:
+                        /*eslint-enable no-fallthrough */
                         myState.config.autoLink = true;
                         myState.config.logLevel = 'INFO';
                         logger.info('Upgrading existing tokens with transmogrifier-protection');
@@ -1527,18 +1572,28 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
                                 var gmn = graphic.get('gmnotes');
                                 if (gmn.indexOf('DynamicLightData:') === 0) {
                                     graphic.set('name', 'DynamicLightRecorder');
-        							var tokenStorage = module.tokenStorage(graphic)
+                                    var tokenStorage = module.tokenStorage(graphic);
                                     var dlPaths = tokenStorage.get('dlPaths');
                                     _.each(dlPaths, function(dlPath) {
                                         dlPath.set('controlledby', graphic.id);
                                     });
-									var doorControl = tokenStorage.get('doorControl');
-									var door = tokenStorage.get('door');
-									doorControl && doorControl.set('name', 'DynamicLightRecorder');
-									door && door.set('name', 'DynamicLightRecorder');
+                                    var doorControl = tokenStorage.get('doorControl');
+                                    var door = tokenStorage.get('door');
+                                    doorControl && doorControl.set('name', 'DynamicLightRecorder');
+                                    door && door.set('name', 'DynamicLightRecorder');
                                 }
                             });
                         });
+                        /*eslint-diable no-fallthrough */
+                    case 0.7:{
+                        /*eslint-enable no-fallthrough */
+                            let temps={};
+                            _.each(myState.tileTemplates, function(template,key){
+                                temps[imageKey(key)]=template;
+                            });
+                            myState.tileTemplates=temps;
+                        }
+
                         myState.version = schemaVersion;
                         break;
                     default:
@@ -1615,7 +1670,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         var shouldLog = function(level) {
             var logLevel = logger.INFO;
             if (myState && myState.config && myState.config.logLevel !== undefined) {
-                logLevel = logger[myState.config.logLevel]
+                logLevel = logger[myState.config.logLevel];
             }
             
             return level <= logLevel;
@@ -1656,7 +1711,7 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         
         logger.wrapFunction = function(name, func, moduleName) {
             if (shouldLog(logger.TRACE)) {
-                if (name === 'toJSON') { return func };
+                if (name === 'toJSON') { return func; }
                 return function() {
                     logger.trace('$$$.$$$ starting with args $$$', moduleName, name, arguments);
                     logger.prefixString = logger.prefixString + '  ';
@@ -1680,6 +1735,12 @@ var DynamicLightRecorder = DynamicLightRecorder || (function() {
         on('change:path', module.handlePathChange.bind(module));
         on('add:token', module.handleNewToken.bind(module));
         on('destroy:token', module.handleDeleteToken.bind(module));
+
+        /*global ChangeTokenImg */
+        if('undefined' !== typeof ChangeTokenImg && ChangeTokenImg.ObserveTokenChange){
+            ChangeTokenImg.ObserveTokenChange(module.handleTokenChange.bind(module));
+        }
+        /*eslint-disable no-undef */
     };
     logger.wrapModule(module);
     
