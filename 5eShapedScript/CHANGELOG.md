@@ -1,3 +1,15 @@
+<a name="11.2.0"></a>
+# 11.2.0
+
+### Features
+
+* Changed the way that `!shaped-spells` and `!shaped-monsters` sends data to the chat so that it sends less data. This relies more on the character sheer so please have version 15.2.0.
+
+### Bug fixes
+* [#4: Known spells with single quotes not greyed out in spell explorer](https://bitbucket.org/mlenser/5eshapedscript/issues/4/known-spells-with-single-quotes-not-greyed)
+* [#6: !shaped-abilities creates incorrect abilities for new "_roll" type abilities](https://bitbucket.org/mlenser/5eshapedscript/issues/6/shaped-abilities-creates-incorrect)
+* [#5: !shaped-rest not working](https://bitbucket.org/mlenser/5eshapedscript/issues/5/shaped-rest-not-working) rest token actions are now setup correctly. Old ones will have to be manually fixed.
+
 <a name="11.1.0"></a>
 # 11.1.0
 
