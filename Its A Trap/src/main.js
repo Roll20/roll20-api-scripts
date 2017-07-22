@@ -65,7 +65,6 @@ var ItsATrap = (() => {
           })
           .min()
           .value();
-          log(triggerDist);
         }
 
         let searchDist = trap.get('aura2_radius') || effect.searchDist;

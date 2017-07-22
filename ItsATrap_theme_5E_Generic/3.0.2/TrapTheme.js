@@ -46,11 +46,9 @@
    * @return {any}
    */
   function getOption(option) {
-    let name1 = 'itsatrap_theme_5e_generic';
-    let name2 = 'itsatraptheme5egeneric';
-    let options = globalconfig && (globalconfig[name1] || globalconfig[name2]);
+    let options = globalconfig && globalconfig.itsatrapdnd5e;
     if(!options)
-      options = (state.itsatraptheme5egeneric && state.itsatraptheme5egeneric.useroptions) || {};
+      options = (state.itsatrapdnd5e && state.itsatrapdnd5e.useroptions) || {};
 
     return options[option];
   }
@@ -74,9 +72,11 @@
        */
       getAC(character) {
         let sheet = getOption('sheet');
+        sheet = SHEET_ATTRS[sheet];
+
         let attrName = getOption('ac');
         if(sheet)
-          attrName = SHEET_ATTRS[sheet].ac
+          attrName = sheet.ac
 
         if(attrName)
           return TrapTheme.getSheetAttr(character, attrName);
@@ -89,17 +89,18 @@
        */
       getPassivePerception(character) {
         let sheet = getOption('sheet');
+        sheet = SHEET_ATTRS[sheet];
 
         let attrName = getOption('passivePerception');
         if(sheet)
-          attrName = SHEET_ATTRS[sheet].passivePerception;
+          attrName = sheet.passivePerception;
 
         if(attrName)
           return TrapTheme.getSheetAttr(character, attrName);
         else {
           attrName = getOption('perceptionModifier');
           if(sheet)
-            attrName = SHEET_ATTRS[sheet].perceptionModifier;
+            attrName = sheet.perceptionModifier;
 
           if(attrName)
             return TrapTheme.getSheetAttr(character, attrName)
@@ -118,10 +119,12 @@
        */
       getSaveBonus(character, saveName) {
         let sheet = getOption('sheet');
+        sheet = SHEET_ATTRS[sheet];
+
         let key = saveName + 'SaveModifier';
         let attrName = getOption(key);
         if(sheet)
-          attrName = SHEET_ATTRS[sheet][key];
+          attrName = sheet[key];
 
         if(attrName)
           return TrapTheme.getSheetAttr(character, attrName);

@@ -1,6 +1,6 @@
 {
   "name": "Message of the Day",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Greets players that log in with the contents of a particular note.",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -18,6 +18,7 @@
   "script": "MotD.js",
   "useroptions": [],
   "previousversions": [
-    "0.2.1"
+    "0.2.1",
+    "0.2.2"
   ]
 }

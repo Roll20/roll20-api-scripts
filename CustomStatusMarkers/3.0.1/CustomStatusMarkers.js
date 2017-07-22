@@ -77,7 +77,7 @@ var CustomStatusMarkers = (() => {
         return;
 
       delete state.CustomStatusMarkers;
-      Menu.show(msg.who, msg.playerid);
+      Menu.show(msg.playerid);
     }
 
     /**
@@ -101,8 +101,8 @@ var CustomStatusMarkers = (() => {
         return;
 
       Templates.delete(statusName);
-      _whisper(msg.who, 'Deleted status ' + statusName);
-      Menu.show(msg.who, msg.playerid);
+      _whisper(msg.playerid, 'Deleted status ' + statusName);
+      Menu.show(msg.playerid);
     }
 
     /**
@@ -128,7 +128,7 @@ var CustomStatusMarkers = (() => {
      * Processes an API command to display the list of saved custom status markers.
      */
     static menu(msg) {
-      Menu.show(msg.who, msg.playerid);
+      Menu.show(msg.playerid);
     }
 
     /**
@@ -144,8 +144,8 @@ var CustomStatusMarkers = (() => {
       let graphic = Commands._getGraphicsFromMsg(msg)[0];
       Templates.save(statusName, graphic);
 
-      _whisper(msg.who, 'Created status ' + statusName);
-      Menu.show(msg.who, msg.playerid);
+      _whisper(msg.playerid, 'Created status ' + statusName);
+      Menu.show(msg.playerid);
     }
 
     /**
@@ -273,7 +273,7 @@ var CustomStatusMarkers = (() => {
      * Shows the menu for Custom Status Markers in the chat. This includes
      * a listing of the saved status markers
      */
-    static show(who, playerId) {
+    static show(playerId) {
       let csmState = getState();
 
       let markerNames = _.keys(csmState.templates);
@@ -284,7 +284,7 @@ var CustomStatusMarkers = (() => {
       let listHtml = '';
       if(markerNames.length > 0) {
         listHtml = '<table style="width: 100%;">';
-        _.each(markerNames, function(name) {
+        _.each(markerNames, name => {
           listHtml += '<tr style="vertical-align: middle;">';
 
           listHtml += '<td>'
@@ -316,7 +316,7 @@ var CustomStatusMarkers = (() => {
         html += Menu.showPanel('Menu Actions', actionsHtml);
       }
 
-      _whisper(who, html);
+      _whisper(playerId, html);
     }
 
     /**
@@ -535,7 +535,7 @@ var CustomStatusMarkers = (() => {
    * https://wiki.roll20.net/API:Cookbook#getCleanImgsrc
    */
   function _getCleanImgsrc(imgsrc) {
-    var parts = imgsrc.match(/(.*\/images\/.*)(thumb|med|original|max)(.*)$/);
+    let parts = imgsrc.match(/(.*\/images\/.*)(thumb|med|original|max)(.*)$/);
     if(parts)
       return parts[1]+'thumb'+parts[3];
     throw new Error('Only images that you have uploaded to your library ' +
@@ -550,10 +550,10 @@ var CustomStatusMarkers = (() => {
    * @return {PathMath.BoundingBox}
    */
   function _getGraphicBoundingBox(graphic) {
-    var left = graphic.get('left');
-    var top = graphic.get('top');
-    var width = graphic.get('width');
-    var height = graphic.get('height');
+    let left = graphic.get('left');
+    let top = graphic.get('top');
+    let width = graphic.get('width');
+    let height = graphic.get('height');
     return new PathMath.BoundingBox(left, top, width, height);
   }
 
@@ -826,7 +826,7 @@ var CustomStatusMarkers = (() => {
   function toggleStatusMarker(token, statusName, silent) {
     // Don't continue if the token is a status marker.
     if(token.get('name').startsWith('CUSTOM_STATUS_MARKER'))
-       return;
+      return;
 
     if(_getStatusMarker(token, statusName))
       removeStatusMarker(token, statusName, silent);
@@ -838,8 +838,9 @@ var CustomStatusMarkers = (() => {
    * @private
    * Whispers a Custom Status Markers message to someone.
    */
-  function _whisper(who, msg) {
-    var name = who.replace(/\(GM\)/, '').trim();
+  function _whisper(playerId, msg) {
+    // var name = who.replace(/\(GM\)/, '').trim();
+    const name = (getObj('player', playerId)||{get:()=>'API'}).get('_displayname');
     sendChat('Custom Status Markers', '/w "' + name + '" ' + msg);
   }
 
@@ -898,7 +899,7 @@ var CustomStatusMarkers = (() => {
       _type: 'player'
     });
 
-    // Create the macro for each player that doesn't have it.
+    // Create the macro, or update the players' old macro if they already have it.
     _.each(players, player => {
       let macro = findObjs({
         _type: 'macro',
@@ -906,7 +907,9 @@ var CustomStatusMarkers = (() => {
         name: 'CustomStatusMarkersMenu'
       })[0];
 
-      if(!macro) {
+      if(macro)
+        macro.set('action', MENU_CMD);
+      else {
         createObj('macro', {
           _playerid: player.get('_id'),
           name: 'CustomStatusMarkersMenu',
