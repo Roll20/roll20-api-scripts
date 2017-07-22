@@ -1,3 +1,10 @@
+<a name="11.3.0"></a>
+# 11.3.0
+
+### Features
+
+* All `!shaped-abilities` options now use the new `roll` roll name.
+
 <a name="11.2.0"></a>
 # 11.2.0
 
