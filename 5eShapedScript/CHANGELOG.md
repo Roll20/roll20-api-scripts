@@ -1,3 +1,10 @@
+<a name="11.3.1"></a>
+# 11.3.1
+
+### Bug fixes
+
+* [#8: Uses not decrementing without a maximum uses value](https://bitbucket.org/mlenser/5eshapedscript/issues/8/uses-not-decrementing-without-a-maximum)
+
 <a name="11.3.0"></a>
 # 11.3.0
 
