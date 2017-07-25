@@ -373,3 +373,7 @@ onerollengine:
 changetokenimage:
 - "ChangeTokenImage"
 - "Utility"
+
+5ebattlemaster:
+- "5EBattleMaster"
+- "System Toolbox"
