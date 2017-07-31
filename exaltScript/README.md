@@ -37,9 +37,4 @@ It's a kind of general use script for anything Exalted 3e related, where you can
 	* onslaught : Clears onslaught status
 	* anima : Clears anima status
 
-
 As a sidenote, these chat commands are by default restricted to GM only, and can only be changed by modifying the variable "gmOnly" in the code.
-
-## Known issues
-
-Adding several tokens at the same time to the initiative tracker, where one or more are not represented by characters, **WILL** crash the script and require a reload.
