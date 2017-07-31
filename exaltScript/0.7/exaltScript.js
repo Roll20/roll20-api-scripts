@@ -1,19 +1,17 @@
 /*
-
 exaltScript for Exalted 3rd Edition
 Author: Pinmissile
 Contact: https://app.roll20.net/users/2709/pinmissile
 Many thanks to The Aaron, because like most API scripters I referenced his code a lot.
-
 This script adds general utility and automation to Exalted 3rd Edition campaigns.
-
+Known issues: 
+Script has a tendency to crash if you add too many tokens to the turn order at the same time, where some of those tokens are not represented by characters.
 If you want to suggest features, please send me a PM
-
 */
 
 var exaltScript = exaltScript || {
-    version: "0.8",
-    lastUpdated: "31/07/2017",
+    version: "0.7",
+    lastUpdated: "15/07/2017",
     authors: "Pinmissile",
     gmOnly: true,               //Change to false if you want players to be able to run the script
 
@@ -28,9 +26,6 @@ var exaltScript = exaltScript || {
                     doNotifications: true,
                 }
             }
-            sendChat('exaltScript','/w gm New version of exaltScript detected!');
-            exaltScript.DisplayInterface("gm");
-            sendChat('exaltScript','/w gm To access the exaltScript UI again, write !exaltScript UI');
         }
         log("--= exaltScript v"+exaltScript.version+" =--"); 
     },
@@ -218,6 +213,9 @@ var exaltScript = exaltScript || {
                 case "2":
                     graphic.set("status_aura","3");
                     break;
+                case "3":
+                    graphic.set("status_aura","4");
+                    break;
                 default:
                     return;
             }
@@ -307,7 +305,7 @@ var exaltScript = exaltScript || {
                         +'<h2>Clear Statuses</h2>'
                         +'<a href="!exaltScript clear anima" style="background-color:#2A5B84; margin: 2px;">Anima</a>'
                         +'<a href="!exaltScript clear onslaught" style="background-color:#2A5B84; margin: 2px;">Onslaught</a>'
-                        +'</div>'
+                +'</div>'
         ); 
     },
 
@@ -420,6 +418,7 @@ var exaltScript = exaltScript || {
         on("change:campaign:initiativepage", function(){
             if(state.doInitiative == false) return;
             var turn;
+            var debug = true;
             if(Campaign().get("turnorder") == "") turn = [];
             else turn = JSON.parse(Campaign().get("turnorder"));
             if (exaltScript.checkEndTurnMarker(turn) == true) exaltScript.createEndTurnMarker(turn);
