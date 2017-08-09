@@ -1,5 +1,6 @@
 {
     "name": "ChangeTokenImage",
+    "script": "ChangeTokenImage.js",
     "version": "0.1.32",
     "description": "Interface to change token images from a rollable table.",
     "authors": "Chris B, The Aaron",

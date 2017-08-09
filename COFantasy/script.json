@@ -1,8 +1,8 @@
 {
   "name": "COFantasy",
   "script": "COFantasy.js",
-  "version": "0.2",
-  "previousversions": [ 0.1 ],
+  "version": "0.3",
+  "previousversions": [ "0.1", "0.2" ],
   "description": "Provides a set of functionalities for the RPG named Chroniques Oubliées Fantasy. Those functionalities concern mostly the fights, and provide automatic support for initiative tracking, attack tests, damages, munitions, and a wide variety of spells, skills and optional rules. In addition, the script allows to undo most actions. For a more detailed description and usage of the commands, read [the documentation](http://htmlpreview.github.io/?https://github.com/Ulty/roll20-api-scripts/blob/master/COFantasy/doc.html) (in French).",
   "authors": "Ulti",
   "roll20userid": "1794854",

@@ -1,12 +1,8 @@
 # Custom Status Markers
 
-_3.0 Updates_
-* Refactored the script to use ES6, remove dead code, and generally tidy things up.
-* Removed support for path-based status markers. It's easier to just draw custom markers in external art programs anyways.
-* Minor changes to chat menu interface.
-* All players have access to the script's menu macro (only GMs can create and delete markers).
-* You can now add a tint color to status markers on selected tokens.
-* Fixed bugs with accidentally performing operations on status marker tokens themselves.
+_3.1 Updates_
+* Added option to the chat menu to change the size of custom status icons.
+* Custom status markers are now displayed above the built-in markers instead of to the left of the built-in markers.
 
 This script allows users to create custom status markers for tokens.
 When this script is installed, it creates a 'CustomStatusMarkers' macro for
