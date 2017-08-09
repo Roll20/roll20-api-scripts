@@ -1,6 +1,6 @@
 {
   "name": "RecursiveTable",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "RecursiveTable provides a way to expand the results of Rollable Tables which have inline rolls within them. Now with options and support for whispering Roll Templates.\r\rWhen using Rolltemplates, your message must have at least one `{{` that in not coming from a Rollable Table. When using the `PrefaceUniqueSpace` option, be sure your `{{name=something}}` is first.\r\r## Commands\r\r``` !rt[options] [--help| ... ]```\r\rPerforms all inline rolls, then continues to expand inline rolls (to a default maximum depth of around 10).\r\r* `--help` -- Shows the Help screen.\r* `...` -- Anything following !rt will be expanded, then sent to to the chat.\r\r### Options\rThese are inline settings to adjust how the rolls are put together. Options are specified in `[` `]` right after the `!rt`:\r\r```!rt[delimiter:-|maxdepth:20] something```\r\rOptions are separated with the verticle pipe symbol (`|`) and have an optional argument separated by a `:`. Omitting the argument causes `true` to be used for switch options, or the default value. All Options are case insenstive. Options are one of 3 types: Number (any integer), Boolean (true values: `on`, `yes`, `y`, `true`. false values: `off`, `no`, `n`, `false`), or text (any value except `]`, use `\\|` for `|`)\r\r* `MaxDepth` -- Specifies the number of recursions to perform. *Default: 10 (Number)*\r* `Delimiter` -- A string of text to put between table items. The special value `BR` will cause html line breaks to be used. *Default: , (String)*\r* `DropEmpty` -- Causes empty table items to be dropped before joining with the delimiter. *Default: on (Boolean)*\r* `Sort` -- Causes table items to be sorted before being joined by the delimiter. Note that this happens at a single layer of recursion, so if you have table items made of of lists of table items, the sorting will only be at each level. *Default: off (Boolean)*\r* `PrefaceUniqueSpaces` -- Causes the final message to have a unique number of spaces inserted after each `{{`. This is useful if you're building Roll Templates and might have multiple lines with the same label. *Default: off (Boolean)*\r\r### Examples\rBasic usage, whispering treasure to the gm:\r\r```!rt /w gm [[1t[treasure-table]]]```\r\rWhispering a roll template:\r\r```!rt /w gm &{template:default}{{treasure=[[1t[treasure-table]]]}}```\r\rWhispering a roll template, with each item on a separate line:\r\r```!rt[Delimiter:BR] /w gm &{template:default}{{treasure=[[1t[treasure-table]]]}}```\r\rWhispering a roll template, with each item on a separate line, with empty results replaced by Nothing:\r\r```!rt[Delimiter:BR|EmptyDefault:Nothing] /w gm &{template:default}{{treasure=[[1t[treasure-table]]]}}```\r\rWhispering a roll template, with each item on a separate line, with a table that is returning `{{label=values}}`:\r\r```!rt[Delimiter:BR|PrefaceUniqueSpace] &{template:default}{{name=Treasure Bundles}}[[5t[treasure-bundle]]]```",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -14,6 +14,7 @@
   "useroptions": [],
   "previousversions": [
     "0.1.2",
-    "0.1.3"
+    "0.1.3",
+    "0.2.0"
   ]
 }
