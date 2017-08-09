@@ -357,3 +357,19 @@ ffgstarwarsdestiny:
 search:
 - "Search"
 - "Utility"
+
+welcomepackage:
+- "WelcomePackage"
+- "Character"
+
+exaltscript:
+- "exaltScript"
+- "System Toolbox"
+
+onerollengine:
+- "OneRollEngine"
+- "System Toolbox"
+
+changetokenimage:
+- "ChangeTokenImage"
+- "Utility"
