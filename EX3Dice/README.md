@@ -2,6 +2,7 @@ Exalted 3rd Edition Dice Roller
 ===============================
 
 This is a more robust dice rolling script for use with the Exalted Third Edition game system. It is capable of not only counting 10s as two successes (or not, at the user's discretion), but also keeping track of other doubled successes as the result of charms, as well as handling rerolls.
+
 The script's API command is `!exr`. For a complete command reference, type `!exr -help`.
 
 
@@ -26,7 +27,9 @@ Macro
 =====
 
 It's a little clunky, but for my own game I did build a macro, which I released to all players, that simplifies the command entry process somewhat. It's a little long, but the defaults are set such that if one doesn't need anything fancy, you can fill in the number of dice you want to roll and just click through the rest. I've pasted the text of the macro below, for your convenience:
+
 `!exr ?{How many dice?|0}# ?{Double 10s?|Yes, -d|No, -D} ?{Results to double? (e.g. "9,7")|} ?{Rerolls?|No, |Standard, -r|Recursive, -R} ?{Results to reroll? (e.g., "1,3")|}`
+
 I called it "#General_Roll," but you can obviously call it whatever you want.
 
 
