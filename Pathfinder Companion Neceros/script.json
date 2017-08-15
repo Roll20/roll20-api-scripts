@@ -1,0 +1,18 @@
+{
+    "name": "Pathfinder Companion Script",
+    "script": "PFCompanion.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "",
+    "authors": "Scott C.",
+    "roll20userid": "459831",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {
+        "Characters":"read,write",
+        "state.PFCompanion": "read,write",
+        "tokens": "read,write"
+	      "character.defaulttoken":"read,write"
+    },
+    "conflicts": []
+}
