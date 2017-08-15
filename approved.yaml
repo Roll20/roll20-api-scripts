@@ -381,3 +381,11 @@ changetokenimage:
 totalrolledage:
 - "TotalRolled for AGE"
 - "System Toolbox"
+
+hourglass:
+- "Hourglass"
+- "Utility"
+
+exalted3dice:
+- "EX3Dice"
+- "System Toolbox"
