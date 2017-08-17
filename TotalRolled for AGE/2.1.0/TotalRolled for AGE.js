@@ -2,7 +2,7 @@ on('chat:message', function (msg)
 {
     if(msg.inlinerolls)
     {
-        var characterName = msg.who;
+        var senderName = msg.who;
         var hasRoll = (msg.content.search("Roll") > -1);
 
         if(hasRoll){
@@ -39,8 +39,18 @@ on('chat:message', function (msg)
             
             var htmlString = createHtmlTable.apply(this, summaryTable);
             
-            var chatOutput = htmlString;
-            sendChat(characterName, chatOutput);            
+			if(msg.type == "whisper") {
+				var whisperPrefix = "/w " + msg.target + " ";
+				var whisperPrefixToSender = "/w " + msg.who + " ";
+				var chatOutputToSender = whisperPrefixToSender + htmlString;
+				sendChat(senderName, chatOutputToSender); 
+			}
+			else {
+				var whisperPrefix = "";
+			}
+			
+            var chatOutput = whisperPrefix + htmlString;
+			sendChat(senderName, chatOutput);           
 		}
     }
 });
@@ -80,7 +90,7 @@ var createHtmlTable = function(header) {
         
         html += "<tr>";
         html += "<td>" + name + "</td>";
-        html += "<td>"+ value + "</td>";
+        html += "<td>" + value + "</td>";
         html += "</tr>";
     }
     
