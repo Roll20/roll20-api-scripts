@@ -3,7 +3,7 @@
 var MatchSets = MatchSets || (function(){
     'use strict';
 
-    var version = 0.1;
+    var version = 0.2;
 
     var useroptions = (globalconfig && 
       (globalconfig.MatchSets || globalconfig.matchsets)) ||
@@ -29,12 +29,14 @@ var MatchSets = MatchSets || (function(){
         });
         return comment;
     }
-
+    
+    //checks for '!sets' argument in msg.content
     function needsSets(content){
         var requestedSets = ( getComment(content).indexOf('!sets') != -1 || content.rolls[0].sides == useroptions['Die Size'] );
         return requestedSets;
     }
     
+    //checks for 'sh' argument in msg.content
     function needSort(content){
         var requestedSort = ( getComment(content).indexOf('sh') != -1 );
         return requestedSort;
@@ -57,7 +59,7 @@ var MatchSets = MatchSets || (function(){
                     matches.push(0);
                 }
 
-                //get dice reults of first roll
+                //get dice results of first roll
                 var results = content.rolls[0].results;
 
                 //record number of dice for each result
@@ -69,7 +71,7 @@ var MatchSets = MatchSets || (function(){
                 //output results
                 var chat_output = ''
                 var separator = ''
-                
+                //appending 'sh' to a roll sorts set results by height
                 var doSort = needSort(content);
                 if (doSort) {
                     //height desc sorted output
