@@ -11,10 +11,10 @@ var MatchSets = MatchSets || (function(){
 
     on('chat:message', function(msg) {
     //This allows players to append !sets to a roll and find matches
-    if (msg.type == 'api' && msg.content.indexOf ('!sets ') !== -1) {
-        var dice = msg.content.replace('!sets ', '');
-        sendChat(msg.who, '/roll ' + dice +'sa !sets');
-    }
+      if (msg.type == 'api' && msg.content.indexOf ('!sets ') !== -1) {
+          var dice = msg.content.replace('!sets ', '');
+          sendChat(msg.who, '/roll ' + dice +'sa !sets');
+      }
     });
 
     // gets the comments out of all the groups in a set of die rolls
