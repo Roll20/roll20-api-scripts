@@ -19,7 +19,22 @@
           return abilityName.toLowerCase().includes('trap spotter');
         })
         .then(trapSpotter => {
-          return !!trapSpotter;
+          // If it wasn't in the 'class-ability' repeating section, try
+          // getting it from the 'ability' repeating section.
+          if(!trapSpotter) {
+            return TrapTheme.getSheetRepeatingRow(character, 'ability', rowAttrs => {
+              if(!rowAttrs.name)
+                return false;
+
+              let abilityName = rowAttrs.name.get('current');
+              return abilityName.toLowerCase().includes('trap spotter');
+            })
+            .then(trapSpotter => {
+              return !!trapSpotter;
+            })
+          }
+          else
+            return true;
         });
       }
     },
