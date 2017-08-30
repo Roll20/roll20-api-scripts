@@ -644,7 +644,7 @@ var chatSetAttr = chatSetAttr || (function () {
 			}
 			else if (mode) {
 				// Parsing input
-				const charIDList = [],
+				let charIDList = [],
 					errors = [];
 				const hasValue = ['charid', 'name'],
 					optsArray = ['all', 'allgm', 'charid', 'name', 'allplayers', 'sel', 'deletemode',
