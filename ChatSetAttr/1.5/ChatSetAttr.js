@@ -269,15 +269,15 @@ var chatSetAttr = chatSetAttr || (function () {
 			});
 			// Feedback
 			if (!opts.silent) {
-				charFeedback = Object.entries(charFeedback).map(([k, o]) => {
+				const finalFeedback = Object.entries(charFeedback).map(([k, o]) => {
 					if ('max' in o && 'current' in o)
 						return `${k} to ${htmlReplace(o.current) || '<i>(empty)</i>'} / ${htmlReplace(o.max) || '<i>(empty)</i>'}`;
 					else if ('current' in o) return `${k} to ${htmlReplace(o.current) || '<i>(empty)</i>'}`;
 					else if ('max' in o) return `${k} to ${htmlReplace(o.max) || '<i>(empty)</i>'} (max)`;
 					else return null;
 				}).filter(x => !!x);
-				if (charFeedback.length) {
-					feedback.push(`Setting ${charFeedback.join(', ')} for` +
+				if (finalFeedback.length) {
+					feedback.push(`Setting ${finalFeedback.join(', ')} for` +
 						` character ${getCharNameById(charid)}.`);
 				}
 				else {
