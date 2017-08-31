@@ -153,7 +153,7 @@ p  {margin-left: inherit}
       <li><tt>--enflamme</tt> : enflamme la cible, lui infligeant 1d6 DM par tour. Les flammes s'éteindent sur un 1 ou 2. Si l'option <tt>--puissant</tt> est donnée en conjonction, les DM augmentent de 1.</li>
       <li><tt>--malediction</tt> : maudit la cible pour 3 jets.</li>
       <li><tt>--asDeLaGachette</tt> : ajoute 1d6 DM si le jet d'attaque dépasse une DEF de 25.</li>
-      <li><tt>--argent</tt> : bonus de +2 en attaque et 1d6 aux DM si la cible est un mort-vivant ou un démon (utilise le champ <tt>Race</tt> de la fiche).</li>
+      <li><tt>--argent</tt> : bonus de +2 en attaque et 1d6 aux DM si la cible est un mort-vivant ou un démon (utilise le champ <tt>Race</tt> de la fiche ou si présent un attribut <tt>mort-vivant</tt>).</li>
       <li><tt>--rate</tt>, <tt>--touche</tt>, <tt>--critique</tt>, <tt>--echecCritique</tt> : options pour tricher : le résultat des dés donne toujours le résultat voulu.</li>
       <li><tt>--ligne</tt> : l'attaque porte sur toutes les cibles à portée, entre l'attaquant et le token ciblé. Si le token ciblé est plus proche que la portée de l'attaque, les tokens derrière le token ciblé sont aussi visés. Pour permettre de viser un point quelconque, on peut utiliser un personnage dédié avec un maximum de 0 pv. À chaque fois qu'un token représentant ce personnage est utilisé comme cible de <tt>--ligne</tt>, le token est enlevé de la carte.</li>
       <li><tt>--disque</tt> <i>r</i> : l'attaque porte sur toutes les cibles dans le disque de centre le token ciblé et de rayon <i>r</i>. Comme pour <tt>--ligne</tt>, on peut utilisant un token cible qui sera supprimé après l'attaque.</li>
@@ -206,18 +206,15 @@ p  {margin-left: inherit}
     <h3>2.2 Soins</h3>
     <h4><tt>!cof-soin @{selected|token_id} @{target|token_id}</tt> <i>x</i></h4>
     <p>
-    <i>x</i> peut être un nombre, un jet de dé ou <tt>leger</tt> ou <tt>modere</tt> 
+    <i>x</i> peut être un nombre, un jet de dé ou <tt>leger</tt>, <tt>modere</tt> ou <tt>groupe</tt>.
+    <p>
+    Le deuxième argument est optionnel. Si il n'est pas présent, alors la sélection se fait soit en utilisant les tokens sélectionnés, soit avec une option de sélection de groupe.
     <p>
     L'option <tt>--portee</tt> <i>n</i> permet de spécifier une distance maximum entre le soigneur et le soigné (au-delà, le soin échoue).
     <p>
     Avec l'option <tt>--transfer</tt>, le soin est payé avec les PV du soigneur
     <p>
-
-    <h4><tt>!cof-aoe-soin</tt>  <i>x</i></h4>
-    <p>
-    soigne de <i>x</i> les tokens sélectionnés.
-    <i>x</i> peut aussi être <tt>groupe</tt>, auquel cas le lanceur devra être sélectionné et
-    les <a href="#allie">alliés</a> dans la même map seront soignés.
+    L'option <tt>--mana</tt> <i>n</i> demande au lanceur de payer <i>n</i> points de mana.
 
     <h3>2.3 Undo :
       <tt>!cof-undo</tt></h3>
@@ -318,10 +315,17 @@ p  {margin-left: inherit}
       <li><tt>--portee</tt> <i>n</i> : limite la portée du sort à <i>n</i> metres.</li>
     </ul>
 
-    <h3>2.9 Escaliers</h3>
+    <h3>2.9 Consommables <tt>!cof-consommables</tt></h3>
+    La fonction affiche une liste de consommables, avec la possibilité de cliquer sur un élément de la liste pour le consommer (et activer son effet). Pour cela, la fonction regarde tous les attributs qui commencent par <tt>dose_</tt> ou <tt>consommable_</tt>. La valeur courante doit être le nombre d'éléments possédé, et le max peut être une commande à effectuer pour activer l'effet. La fonction est à réserver aux tokens liés à un personnage. Il est aussi possible de simplement écrire un message qui s'affichera (et diminuera la quantité de consommables).
+    <p>
+   Attention, les boutons sont utilisables par tout le monde, ce qui permet de faire utiliser un des concommables d'un personnage par un autre. Le script vérifie juste que le token qui utilise l'objet est au contact.
+   <p> 
+   Pour l'instant, seules les commandes <tt>!cof-effet-temp</tt>, <tt>!cof-effet-combat</tt>, <tt>!cof-effet</tt>, <tt>!cof-enduire-poison</tt> et <tt>!cof-soin</tt> diminuent correctement le nombre de consommables.
+
+    <h3>2.10 Escaliers</h3>
     Pour gérer les escaliers sur les cartes, vous pouvez utiliser la méthode suivante, inspirée du script Teleport : placez dans le layer "GM Info Overlay", au nivea des escaliers, des tokens qui prennent exactement la place des escaliers. Nommez ces escaliers avec un nom suivi du nombre d'étages (entre 2 et 9), suivi d'une lettre majuscule. Par exemple <tt>Escalier2A</tt>. Chaque escalier de la même colonne doit avoir le même nom et même nombre d'étage, et différer seulement par la lettre finale. Ensuite, si un ensemble de tokens est sur un escalier, utilisez <tt>!cof-escalier</tt> pour téléporter les tokens à l'emplacement de l'escalier suivant dans l'ordre des lettres. Dans l'exemple précédent, il serait téléporté à l'emplacement du token nommé <tt>Escalier2B</tt>. Cela ne fonctionne que si les bouts de l'escalier sont sur la même carte. À vous de choisir sir vous préférez révéler cette fonctionalité à vos joueurs, ou si vous le faites vous-même.
     
-    <h3>2.10 Jet de Caracteristiques</h3>
+    <h3>2.11 Jet de Caracteristiques</h3>
     <p>
     <tt>!cof-jet ?{Faire un jet de |Charisme, CHA|Constitution, CON|Dextérité, DEX|Force, FOR|Intelligence, INT|Sagesse, SAG}</tt> : fait un simple jet pour la caractérisique sélectionnée.
     <p>
@@ -569,6 +573,7 @@ p  {margin-left: inherit}
     <h4>Voie des artefacts</h4>
     <ol>
       <li>Bâton de mage : simplement adapter l'attaque, avec aussi <tt>--magique</tt></li>
+      <li>Blocage : pas de support particulier</li>
     </ol>
     <h4>Voie des élixirs</h4>
     <ol>
@@ -761,15 +766,16 @@ p  {margin-left: inherit}
     <p style="margin-top:0px; margin-bottom:0px">
     Utiliser un attribut <tt>voieDesSoins</tt> avec comme valeur le rang dans la voie
     <ol>
-      <li>Soins légers : <tt>!cof-soin @{selected|token_id} @{target|token_id} leger --portee 0</tt></li>
-      <li>Soins modérés : <tt>!cof-soin @{selected|token_id} @{target|token_id} modere --portee 0</tt></li>
-      <li>Soins de groupe : <tt>!cof-aoe-soin groupe</tt> (ne pas oublier de définir des <a href="#allie">alliés</a>).
-    le sort nécessite un point de mana (barre 2 du token), et accepte
-    l'option --puissant pour soigner un peu plus.</li>
+      <li>Soins légers : <tt>!cof-soin @{selected|token_id} @{target|token_id} leger</tt></li>
+      <li>Soins modérés : <tt>!cof-soin @{selected|token_id} @{target|token_id} modere</tt></li>
+      <li>Soins de groupe : <tt>!cof-soin @{selected|token_id} groupe</tt> (ne pas oublier de définir des <a href="#allie">alliés</a>).
+    Le sort nécessite un point de mana (barre 2 du token), et accepte
+    l'option <tt>--puissant</tt> pour soigner un peu plus.</li>
     </ol>
     <h4>Voie de la spiritualité</h4>
     <ol>
       <li>Vêtements sacrés : Ajouter un attribut <tt>vetementsSacres</tt> avec comme valeur le rang dans la voie de la spiritualité. Cela augmente la DEF, mais seulement lorsque le prêtre ne porte pas d'armure (ne se voit pas sur le total de DEF de la fiche)</li>
+      <li>Protection contre le mal : <tt>!cof-effet-combat protectionContreLeMal --lanceur @{selected|token_id} --target @{target|token_id} --portee 0</tt>. Donne le bonus contre toute créature dont l'attribut <tt>RACE</tt> est <tt>squelette</tt>, <tt>zombie</tt>, <tt>démon</tt>, <tt>élémentaire</tt>, ou bien qui possède l'attribut <tt>mauvais</tt> (valeur <tt>true</tt>).</li>
     </ol>
 
     <h3>Rôdeur</h3>
