@@ -217,6 +217,7 @@ var chatSetAttr = chatSetAttr || (function () {
 			const charFeedback = {};
 			Object.entries(attrs).forEach(([attrName, attr]) => {
 				let newValue;
+				charFeedback[attrName]= {};
 				const fillInAttrs = setting[attrName].fillin,
 					settingValue = _.pick(setting[attrName], ['current', 'max']);
 				if (opts.reset) {
