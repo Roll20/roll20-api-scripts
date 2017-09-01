@@ -613,7 +613,7 @@ var chatSetAttr = chatSetAttr || (function () {
 			sendChatMessage(output);
 		},
 		sendDeleteFeedback = function (whisper, feedback) {
-			const output = whisper + '<div style="border:1px solid black;background-color:' +
+			let output = whisper + '<div style="border:1px solid black;background-color:' +
 				'#FFFFFF;padding:3px;"><h3>Deleting attributes</h3><p>';
 			output += Object.entries(feedback)
 				.filter(([charid, arr]) => arr.length)

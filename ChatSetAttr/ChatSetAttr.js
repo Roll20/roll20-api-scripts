@@ -151,6 +151,11 @@ var chatSetAttr = chatSetAttr || (function () {
 				return msg.content;
 			}
 		},
+		notifyAboutDelay = function (whisper) {
+			const chatFunction = () => sendChatMessage(whisper + 'Your command is taking a ' +
+				'long time to execute. Please be patient, the process will finish eventually.');
+			return setTimeout(chatFunction, 8000);
+		},
 		getCIKey = function (obj, name) {
 			const nameLower = name.toLowerCase();
 			let result = false;
@@ -198,7 +203,8 @@ var chatSetAttr = chatSetAttr || (function () {
 		// Setting attributes happens in a delayed recursive way to prevent the sandbox
 		// from overheating.
 		delayedGetAndSetAttributes = function (whisper, list, setting, errors, rData, opts) {
-			const cList = [].concat(list),
+			const timeNotification = notifyAboutDelay(whisper),
+				cList = [].concat(list),
 				feedback = [],
 				dWork = function (charid) {
 					const attrs = getCharAttributes(charid, setting, errors, rData, opts);
@@ -207,6 +213,7 @@ var chatSetAttr = chatSetAttr || (function () {
 						setTimeout(dWork, 50, cList.shift());
 					}
 					else {
+						clearTimeout(timeNotification);
 						if (!opts.mute) handleErrors(whisper, errors);
 						if (!opts.silent) sendFeedback(whisper, feedback, opts);
 					}
@@ -431,7 +438,8 @@ var chatSetAttr = chatSetAttr || (function () {
 		},
 		// Deleting attributes
 		delayedDeleteAttributes = function (whisper, list, setting, errors, rData, opts) {
-			const cList = [].concat(list),
+			const timeNotification = notifyAboutDelay(whisper),
+				cList = [].concat(list),
 				feedback = {},
 				dWork = function (charid) {
 					const attrs = getCharAttributes(charid, setting, errors, rData, opts);
@@ -441,6 +449,7 @@ var chatSetAttr = chatSetAttr || (function () {
 						setTimeout(dWork, 50, cList.shift());
 					}
 					else {
+						clearTimeout(timeNotification);
 						if (!opts.silent) sendDeleteFeedback(whisper, feedback, opts);
 					}
 				}
@@ -625,7 +634,7 @@ var chatSetAttr = chatSetAttr || (function () {
 			sendChatMessage(output, opts['fb-from']);
 		},
 		sendDeleteFeedback = function (whisper, feedback, opts) {
-			const output = (opts['fb-public'] ? '' : whisper) +
+			let output = (opts['fb-public'] ? '' : whisper) +
 				'<div style="border:1px solid black;background-color:#FFFFFF;padding:3px;">' +
 				'<h3>' + (('fb-header' in opts) ? opts['fb-header'] : 'Deleting attributes') + '</h3><p>';
 			output += Object.entries(feedback)
