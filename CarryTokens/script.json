@@ -1,0 +1,21 @@
+{
+    "name": "Carry Tokens",
+    "script": "carry.js",
+    "version": "2.0",
+    "previousversions": [],
+    "description": "# Carry Tokens\r\rThis script allows you to set tokens to carry each other, either as a\rcharacter holding an item, or as a mount carrying a rider. The carried\rtoken will always set its position to that of the carrying token. When you\rmove the carrier around, the carried token will follow.\r\r## To Use\r\rWhen this script is installed, it creates a CarryTokensMenu macro which\rdisplays a menu for this script in the VTT's chat. This menu has the following\rcommands:\r\r### Carry Above\rThis command allows you to have a token carry another above it on the Z-axis.\rThis is most helpful when you need a large token such as a mount to carry\ra smaller token such as a rider.\r\rTo use this, first select the carrier token and then click the Carry Above\rcommand. When prompted, click on the token you want to carry.\r\r### Carry Below\rThis command allows you to have a token carry another below it on the Z-axis.\rThis is most helpful when you need a token to carry a token of the same size or\rsmaller, for example when you want a character to carry an item such as a\rtorch.\r\rTo use this, first select the carrier token and then click the Carry Below\rcommand. When prompted, click on the token you want to carry.\r\r### Drop by Name\rThis command makes a token drop another token it is carrying.\r\rTo use this, select the carrier token and then click the Drop by Name command.\rWhen prompted, enter the name of the token you want to drop.\r\rYou can also cause a token to stop being carried by moving it away from\rthe token carrying it.\r\r### Drop All\rThis command makes a token drop all other tokens it is carrying.\r\rTo use this, select the carrier token and then click the Drop All command.\r\r## Help\r\rIf you experience any issues while using this script or the trap themes,\rneed help using it, or if you have a neat suggestion for a new feature,\rplease shoot me a PM:\rhttps://app.roll20.net/users/46544/stephen-l\ror create a help thread on the Roll20 API forum\r\r## Show Support\r\rIf you would like to show your appreciation and support for the work I do in writing,\rupdating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)\ror, simply leave a thank you note in the script's thread on the Roll20 forums.\rEither is greatly appreciated! Happy gaming!\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [
+      {
+        "name": "allowPlayerUse",
+        "type": "checkbox",
+        "value": "1",
+        "checked": "checked",
+        "description": "Check this if you want to allow your players to access the functionality of this script. Otherwise, only the GM will be allowed to use it."
+      }
+    ],
+    "dependencies": ["HTML Builder"],
+    "modifies": {},
+    "conflicts": []
+}
