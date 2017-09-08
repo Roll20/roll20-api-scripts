@@ -337,7 +337,7 @@ p  {margin-left: inherit}
       <li>Mécanismes : ajouter les bonus sur la fiche</li>
       <li>Tir de semonce : utiliser l'option <tt>--semonce</tt> à <tt>!cof-attack</tt>
         On laisse le MJ vérifier si la dernière attaque du personnage était bien
-        un échec (devrait être facile à voir dans le chat). Exemple de macro d'utilisation, en supposant qu'on ait déjà des abilities Pétoire et Mousquet : <tt>?{Arme?|Mousquet,%{selected|Mousquet}|Pétoire,%{selected|Pétoire}} --semonce</tt></li>
+        un échec (devrait être facile à voir dans le chat). Exemple de macro d'utilisation, en supposant qu'on ait déjà des abilities Pétoire et Mousquet : <tt>?{Arme?|Mousquet,%{selected|Mousquet}|Pétoire,%{selected|Pétoire}} --semonce</tt> (Note: faire attention à ce que les abilities <tt>Mousquet</tt> et <tt>Pétoire</tt> ne contiennent pas de ligne vide)</li>
       <li>Tir de barrage : Utiliser l'option <tt>--tirDeBarrage</tt>. Ça multiplie les
         dégâts par 2, ignore la charge, et laisse un message demandant le undo
         si la cible décide de ne pas bouger.</li>
@@ -802,7 +802,7 @@ p  {margin-left: inherit}
         s'applique.</li>
       <li>Traquenard : ajouter un attribut <tt>traquenard</tt> (valeur 1/1), puis option
         <tt>--traquenard</tt> pour l'attaque.
-        Exemple : <tt>?{Arme?|Épée,%{selected|Attaque}|Arc,%{selected|Arc}} --traquenard</tt></li>
+        Exemple pour un personnage qui aurait une ability <tt>Arme</tt> permettant d'utiliser son épée, et une ability <tt>Arc</tt> permettant d'utiliser son arc : <tt>?{Arme?|Épée,%{selected|Attaque}|Arc,%{selected|Arc}} --traquenard</tt> (Note : bien faire attention à ce que les abilities ne contiennent pas de ligne vide, et que la dernière ligne est bien expansée en <tt>!cof-attack</tt>)</li>
       <li> Attaque éclair : <tt>--plus [[@{selected|DEX}]] --bonusAttaque [[@{selected|DEX}]]</tt></li>
     </ol>
     <h4>Voie de la survie</h4>
@@ -823,10 +823,12 @@ p  {margin-left: inherit}
     <h4>Voie de l'assassin</h4>
     <ol>
       <li>Discrétion : simplement ajouter une compétence discrétion sur la fiche, avec le bon bonus</li>
+      <li>Attaque sournoise : Faire des versions des attaques avec <tt>--de6Plus</tt> <i>n</i>, où <i>n</i> est le rang dans la voie. Au MJ de vérifier que les conditions de l'attaque sournoise sont remplies. (Exemple de macro pour un voleur qui aurait une attaque <tt>Dague</tt> et une attaque <tt>arbalète</tt> : <tt>?{Arme utilisée?|Dague,%{selected|Dague}|Arbalète,%{selected|Arbalète}} --de6Plus 2</tt>)</li>
     </ol>
     <h4>Voie de l'aventurier</h4>
     <ol>
       <li>Sprint : pas de support, au MJ de vérifier que ce n'est utilisé qu'une fois par combat.</li>
+      <li>Provocation : <tt>!cof-provocation @{selected|token_id} @{target|token_id}</tt>. Au joueur ensuite de faire son attaque gratuite si la provocation est réussie et que l'adversaire l'attaque.</li>
     </ol>
     <h4>Voie du déplacement</h4>
     <ol>
