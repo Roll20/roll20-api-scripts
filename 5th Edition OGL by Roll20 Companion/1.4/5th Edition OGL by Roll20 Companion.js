@@ -45,7 +45,7 @@ on('chat:message', function(msg) {
             }
         }
         if(["dmg","atkdmg"].indexOf(msg.rolltemplate) > -1) {
-            if(_.has(msg,'inlinerolls') && msg.content.indexOf("{{spelllevel=") > -1 && character && state.FifthEditionOGLbyRoll20.spelltracking != "off") {
+            if(_.has(msg,'inlinerolls') && msg.content.indexOf("{{spelllevel=") > -1 && msg.content.indexOf("{{spelllevel=}}") === -1 && character && state.FifthEditionOGLbyRoll20.spelltracking != "off") {
                 handleslotattack(msg,character,player);
             }
         }
