@@ -251,6 +251,7 @@ var handleslotattack = function (msg,character,player) {
     if(spelllevel === "cantrip" || spelllevel === "npc") {
         return;
     }
+    log(spelllevel);
     var hlinline = msg.content.split("{{hldmg=$[[")[1] || "";
     hlinline = hlinline.substring(0,1);
     var higherlevel = 0;
@@ -283,21 +284,23 @@ var resolveslot = function(msg,character,player,spellslot) {
     }
     var spent = parseInt(charslot.get("current"), 10) + 1;
     charslot.set({current:spent});
+    var wtype = getAttrByName(character.id, "wtype");
+    var wtoggle = getAttrByName(character.id, "whispertoggle");
     if(spent <= parseInt(charslotmax.get("current"),10)) {
         if(state.FifthEditionOGLbyRoll20.spelltracking != "quiet") {
-            if(getAttrByName(character.id, "wtype") === "") {
+            if(wtype === "" || (wtype === "@{whispertoggle}" && wtoggle === "") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "general")) {
                 sendChat(msg.who, "<div class='sheet-rolltemplate-simple' style='margin-top:-7px;'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block;'>" + spent + " OF " + charslotmax.get("current") + " EXPENDED</span></div></div></div>");
             }
-            else {
+            else if(wtype === "/w gm " || (wtype === "@{whispertoggle}" && wtoggle === "/w gm ") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "whisper")) {
                 sendChat(msg.who, "/w gm <div class='sheet-rolltemplate-desc'><div class='sheet-desc'><div class='sheet-label' style='margin-top:5px;'><span>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block;'>" + spent + " OF " + charslotmax.get("current") + " EXPENDED</span></div></div></div>");
             }
         }
     }
     else {
-        if(getAttrByName(character.id, "wtype") === "") {
+        if(wtype === "" || (wtype === "@{whispertoggle}" && wtoggle === "") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "general")) {
             sendChat(msg.who, "<div class='sheet-rolltemplate-simple' style='margin-top:-7px;'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block; color:red;'>ALL SLOTS EXPENDED</span></div></div></div>");
         }
-        else {
+        else if(wtype === "/w gm " || (wtype === "@{whispertoggle}" && wtoggle === "/w gm ") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "whisper")) {
             sendChat(msg.who, "/w gm <div class='sheet-rolltemplate-desc'><div class='sheet-desc'><div class='sheet-label' style='margin-top:5px;'><span>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block; color:red;'>ALL SLOTS EXPENDED</span></div></div></div>");
         }
     }
