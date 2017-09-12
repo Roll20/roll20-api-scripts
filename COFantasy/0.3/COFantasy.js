@@ -451,7 +451,7 @@ var COFantasy = COFantasy || function() {
               type: "Jet de " + caracteristique
             };
             jetCaracteristique(perso, caracteristique,
-              function(rolltext, d20, roll) {
+              function(rolltext, total, d20, roll) {
 
                 var display = startFramedDisplay(msg.playerid, "Jet de <b>" + caracOfMod(caracteristique) + "</b>", perso);
                 addLineToFramedDisplay(display, "<b>Resultat :</b> " + rolltext);
@@ -1946,7 +1946,7 @@ var COFantasy = COFantasy || function() {
       target.distance = distanceCombat(attackingToken, target.token, pageId);
       if (target.distance > portee) {
         if (options.aoe || options.auto) return false; //distance stricte
-        if (target.distancee > 2 * portee) return false;
+        if (target.distance > 2 * portee) return false;
         // On peut aller jusqu'à 2x portee si unique cible et jet d'attaque
         return true;
       }
@@ -5881,6 +5881,11 @@ var COFantasy = COFantasy || function() {
     return dice;
   }
 
+  //callback peut prendre en argument
+  // - Le texte du jet
+  // - Le résultat total du jet
+  // - La valeur du de20
+  // - le inlineroll (pour les statistiques
   function jetCaracteristique(personnage, carac, callback) {
     var charId = personnage.charId;
     var token = personnage.token;
@@ -5896,10 +5901,11 @@ var COFantasy = COFantasy || function() {
       var rolls = res[0];
       var d20roll = rolls.inlinerolls[0].results.total;
       var rtext = buildinline(rolls.inlinerolls[0]) + bonusText;
+      var total = d20roll + bonusCarac;
       if (d20roll == 1) rtext += " -> échec critique";
       else if (d20roll == 20) rtext += " -> réussite critique";
-      else if (bonusCarac !== 0) rtext += " = " + (d20roll + bonusCarac);
-      callback(rtext, d20roll, rolls.inlinerolls[0]);
+      else if (bonusCarac !== 0) rtext += " = " + total;
+      callback(rtext, total, d20roll, rolls.inlinerolls[0]);
     });
   }
 
@@ -9150,6 +9156,80 @@ var COFantasy = COFantasy || function() {
     addEvent(evt);
   }
 
+  function provocation(msg) {
+    var args = msg.content.split(' --');
+    var cmd = args[0].split(' ');
+    if (cmd.length < 3) {
+      error("La commande !cof-provocation requiert 2 arguments", cmd);
+      return;
+    }
+    var voleur = tokenOfId(cmd[1]);
+    if (voleur === undefined) {
+      error("Le premier argument de !cof-provocation n'est pas un token valide");
+      return;
+    }
+    var cible = tokenOfId(cmd[2]);
+    if (cible === undefined) {
+      error("Le deuxième argument de !cof-provocation n'est pas un token valide");
+      return;
+    }
+    var nomVoleur = voleur.token.get('name');
+    var nomCible = cible.token.get('name');
+    var display =
+      startFramedDisplay(msg.playerid, 'Provocation', voleur, cible);
+    var evt = {
+      type: 'Provocation'
+    };
+    jetCaracteristique(voleur, 'CHA', function(rt, totv, d20v) {
+      addLineToFramedDisplay(display, "Jet de CHA de " + nomVoleur + " :" + rt);
+      jetCaracteristique(cible, 'INT', function(rt, totc, d20c) {
+        addLineToFramedDisplay(display, "Jet d'INT de " + nomCible + " :" + rt);
+        var reussite;
+        if (d20v == 1) {
+          if (d20c == 1) {
+            if (totv >= totc) {
+              reussite = "Sur un malentendu, la provocation réussit...";
+              diminueMalediction(cible, evt);
+            } else {
+              reussite = "Tout le monde cafouille, la provocation échoue.";
+              diminueMalediction(voleur, evt);
+            }
+          } else {
+            reussite = "Échec critique de la provocation !";
+            diminueMalediction(voleur, evt);
+          }
+        } else if (d20c == 1) {
+          reussite = nomCible + " marche complètement, il attaque " + nomVoleur;
+          diminueMalediction(cible, evt);
+        } else if (d20v == 20) {
+          if (d20c == 20) {
+            if (totv >= totc) {
+              reussite = "La provocation réussit.";
+              diminueMalediction(cible, evt);
+            } else {
+              reussite = "La provocation était brillante, mais " + nomCible + "ne se laisse pas avoir.";
+              diminueMalediction(voleur, evt);
+            }
+          } else {
+            reussite = "La provocation est une réussite critique !";
+            diminueMalediction(cible, evt);
+          }
+        } else if (d20c == 20) {
+          reussite = nomCible + " voit clair dans le jeu de " + nomCible + ". La provocation échoue.";
+        } else if (totv < totc) {
+          reussite = "La provocation échoue";
+          diminueMalediction(voleur, evt);
+        } else {
+          reussite = "La provocation réussit.";
+          diminueMalediction(cible, evt);
+        }
+        addLineToFramedDisplay(display, reussite);
+        addEvent(evt);
+        sendChat('', endFramedDisplay(display));
+      }); //Fin du jet d'INT de la cible
+    }); //Fin du jet de CHA du voleur
+  }
+
   function apiCommand(msg) {
     msg.content = msg.content.replace(/\s+/g, ' '); //remove duplicate whites
     var command = msg.content.split(" ", 1);
@@ -9356,6 +9436,9 @@ var COFantasy = COFantasy || function() {
         return;
       case "!cof-utilise-consommable": //Usage interne seulement
         utiliseConsommable(msg);
+        return;
+      case "!cof-provocation":
+        provocation(msg);
         return;
       default:
         return;
