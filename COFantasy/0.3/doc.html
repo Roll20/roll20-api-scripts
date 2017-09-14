@@ -154,6 +154,7 @@ p  {margin-left: inherit}
       <li><tt>--malediction</tt> : maudit la cible pour 3 jets.</li>
       <li><tt>--asDeLaGachette</tt> : ajoute 1d6 DM si le jet d'attaque dépasse une DEF de 25.</li>
       <li><tt>--argent</tt> : bonus de +2 en attaque et 1d6 aux DM si la cible est un mort-vivant ou un démon (utilise le champ <tt>Race</tt> de la fiche ou si présent un attribut <tt>mort-vivant</tt>).</li>
+      <li><tt>--pietine</tt> : si l'attaquant est de taille au moins égale à celle de la cible (ou si la taille de l'un des deux n'est pas connue), fait un test opposé de FOR. En cas d'échec de la cible, elle est renversée et les DM sont doublés.</li>
       <li><tt>--rate</tt>, <tt>--touche</tt>, <tt>--critique</tt>, <tt>--echecCritique</tt> : options pour tricher : le résultat des dés donne toujours le résultat voulu.</li>
       <li><tt>--ligne</tt> : l'attaque porte sur toutes les cibles à portée, entre l'attaquant et le token ciblé. Si le token ciblé est plus proche que la portée de l'attaque, les tokens derrière le token ciblé sont aussi visés. Pour permettre de viser un point quelconque, on peut utiliser un personnage dédié avec un maximum de 0 pv. À chaque fois qu'un token représentant ce personnage est utilisé comme cible de <tt>--ligne</tt>, le token est enlevé de la carte.</li>
       <li><tt>--disque</tt> <i>r</i> : l'attaque porte sur toutes les cibles dans le disque de centre le token ciblé et de rayon <i>r</i>. Comme pour <tt>--ligne</tt>, on peut utilisant un token cible qui sera supprimé après l'attaque.</li>
@@ -324,11 +325,15 @@ p  {margin-left: inherit}
 
     <h3>2.10 Escaliers</h3>
     Pour gérer les escaliers sur les cartes, vous pouvez utiliser la méthode suivante, inspirée du script Teleport : placez dans le layer "GM Info Overlay", au nivea des escaliers, des tokens qui prennent exactement la place des escaliers. Nommez ces escaliers avec un nom suivi du nombre d'étages (entre 2 et 9), suivi d'une lettre majuscule. Par exemple <tt>Escalier2A</tt>. Chaque escalier de la même colonne doit avoir le même nom et même nombre d'étage, et différer seulement par la lettre finale. Ensuite, si un ensemble de tokens est sur un escalier, utilisez <tt>!cof-escalier</tt> pour téléporter les tokens à l'emplacement de l'escalier suivant dans l'ordre des lettres. Dans l'exemple précédent, il serait téléporté à l'emplacement du token nommé <tt>Escalier2B</tt>. Cela ne fonctionne que si les bouts de l'escalier sont sur la même carte. À vous de choisir sir vous préférez révéler cette fonctionalité à vos joueurs, ou si vous le faites vous-même.
+
+    <h3>2.11 Montures</h3>
+    Pour qu'un personnage puisse monter sur une monture, il faut que cette monture soit associée à une fiche de personnage et qu'il possède l'attribute <tt>monture</tt> à <tt>true</tt>. La commande pour monter sur la monture est <tt>!cof-en-selle @{selected|token_id} @{target|token_id}</tt>, à lancer en sélectionnant le cavalier. On peut ensuite bouger la monture, cela déplace le cavalier. Le mieux est de lancer la commander alors que le token du cavalier est sur le token de la monture. Si on déplace le cavalier, cela le fait descendre de sa monture.
     
-    <h3>2.11 Jet de Caracteristiques</h3>
+    <h3>2.12 Jet de Caracteristiques</h3>
     <p>
     <tt>!cof-jet ?{Faire un jet de |Charisme, CHA|Constitution, CON|Dextérité, DEX|Force, FOR|Intelligence, INT|Sagesse, SAG}</tt> : fait un simple jet pour la caractérisique sélectionnée.
     <p>
+    Il est aussi possible de donner en argument une difficulté au jet. Par exemple en faisant <tt>!cof-jet INT ?{difficulté}</tt>.
 
     <h2>3. Implémentation des capacités</h2>
     <h3>Arquebusier</h3>
@@ -446,13 +451,16 @@ p  {margin-left: inherit}
     <h3>Chevalier</h3>
     <h4>Voie du cavalier</h4>
     <ol>
-      <li>Fidèle monture : pas de support [articulie</li>
-      <li>Cavalier émérite : ajuster la DEF de la monture. 
+      <li>Fidèle monture : Faire un personnage pour la monture, avec un attribute <tt>monture</tt> à <tt>true</tt>. Pour monter sur la monture, on peut utiliser <tt>!cof-en-selle @{selected|token_id}</tt> <i>nom_de_la_monture</i>. Pour en descendre, il suffit de bouger le token du chevalier.</li>
+      <li>Cavalier émérite : ajuster la DEF de la monture. Ajouter au chevalier un attribut <tt>cavalierEmerite</tt> avec comme valeur 2.  </li>
+      <li>Monture magique : pas de support particulier.</li>
+      <li>Charge : pas de support pour le déplacement, mais
         <ul>
-          <li> Ajouter un attribute <tt>cavalierEmerite</tt> avec comme valeur 2 </li>
-          <li> Pour monter ou descendre de cheval, utiliser <tt>!cof-effet aCheval</tt> avec comme argument <tt>oui</tt>, <tt>true</tt>, <tt>non</tt> ou <tt>false</tt></li>
+          <li> Pour l'attaque : utiliser <tt>--imparable --plus 1d6</tt></li>
+          <li> Pour les créatures sur la trajectoire, utiliser <tt>!cof-jet FOR 18</tt>, et en cas de succès, infliger les DM.</li>
         </ul>
       </li>
+      <li>Monture fantastique : Faire un personnage pour la monture, avec un attribut <tt>monture</tt> à <tt>true</tt></li>
     </ol>
     <h4>Voie de la guerre</h4>
     <ol>
@@ -489,7 +497,7 @@ p  {margin-left: inherit}
     <h4>Voie des animaux</h4>
     <ol>
       <li>Langage des animaux : pas de support particulier</li>
-      <li>Nuée d'insectes : ajouter une attaque magique, de portée 20 m et sans dégâts. Puis appeler cette attaque (avec <tt>!cof-attack</tt>) avec les arguments <tt>--sortilege --effet nueeDInsectes [[5+@{selected|token_id}]]</tt>. Pas de support particulier pour les DM de zone qui détruisent la nuée (enlever l'attribut <tt>nueeDInsecte</tt> sur la cible dans ce cas).</li>
+      <li>Nuée d'insectes : ajouter une attaque magique, de portée 20 m et sans dégâts. Puis appeler cette attaque (avec <tt>!cof-attack</tt>) avec les arguments <tt>--sortilege --effet nueeDInsectes [[5+@{selected|SAG}]]</tt>. Pas de support particulier pour les DM de zone qui détruisent la nuée (enlever l'attribut <tt>nueeDInsecte</tt> sur la cible dans ce cas).</li>
     </ol>
     <h4>Voie du fauve</h4>
     <ol>
@@ -630,7 +638,7 @@ p  {margin-left: inherit}
     </ol>
     <h4>Voie du soldat</h4>
     <ol>
-      <li>Posture de combat : <tt>!cof-posture-de-combat</tt> <i>bonus attr1 attr2</i>, ou les deux <i>attr</i> peuvent être soit <tt>DEF</tt> soit <tt>ATT</tt> soit <tt>DM</tt>, et le <i>bonus</i> est retiré au premier attribut pour être ajouté au second. Le bonus peut être limité si le guerrier a un attribut <tt>voieDuSoldat</tt> qu iindique son rang dans la voie. Exemple d'utilisation&nbsp;: <tt>!cof-posture-de-combat @{selected|token_id} ?{Bonus} ?{Baisser|Défense,DEF|Attaque,ATT|Dégâts,DM} ?{Augmenter|Défense,DEF|Attaque,ATT|Dégâts,DM}</tt>. Normalement, la règle fait décider de sa posture au guerrier à chaque tour, mais en pratique, il en change assez rarement. Une posture de combat reste donc active jusqu'à la fin du combat ou jusqu'à ce qu'on en change (elle est neutre si on a le même attribut à buffer et débuffer). </li>
+      <li>Posture de combat : <tt>!cof-posture-de-combat</tt> <i>bonus attr1 attr2</i>, ou les deux <i>attr</i> peuvent être soit <tt>DEF</tt> soit <tt>ATT</tt> soit <tt>DM</tt>, et le <i>bonus</i> est retiré au premier attribut pour être ajouté au second. Le bonus peut être limité si le guerrier a un attribut <tt>voieDuSoldat</tt> qu indique son rang dans la voie. Exemple d'utilisation&nbsp;: <tt>!cof-posture-de-combat @{selected|token_id} ?{Bonus} ?{Baisser|Défense,DEF|Attaque,ATT|Dégâts,DM} ?{Augmenter|Défense,DEF|Attaque,ATT|Dégâts,DM}</tt>. Normalement, la règle fait décider de sa posture au guerrier à chaque tour, mais en pratique, il en change assez rarement. Une posture de combat reste donc active jusqu'à la fin du combat ou jusqu'à ce qu'on en change (elle est neutre si on a le même attribut à buffer et débuffer). </li>
       <li>Combat en phalange : ajouter un attribut <tt>combatEnPhalange</tt>, valeur <tt>true</tt>. Les bonus seront ajoutés automatiquement en fonctions des alliés définis selon <a href="#allie">cette méthode</a>.</li>
     </ol>
 
@@ -804,6 +812,7 @@ p  {margin-left: inherit}
         <tt>--traquenard</tt> pour l'attaque.
         Exemple pour un personnage qui aurait une ability <tt>Arme</tt> permettant d'utiliser son épée, et une ability <tt>Arc</tt> permettant d'utiliser son arc : <tt>?{Arme?|Épée,%{selected|Attaque}|Arc,%{selected|Arc}} --traquenard</tt> (Note : bien faire attention à ce que les abilities ne contiennent pas de ligne vide, et que la dernière ligne est bien expansée en <tt>!cof-attack</tt>)</li>
       <li> Attaque éclair : <tt>--plus [[@{selected|DEX}]] --bonusAttaque [[@{selected|DEX}]]</tt></li>
+      <li> Repli : simplement faire un jet en utilisant par exemple <tt>!cof-jet DEX 10</tt>, et décrire le résultat.</li>
     </ol>
     <h4>Voie de la survie</h4>
     <ol>
@@ -817,6 +826,7 @@ p  {margin-left: inherit}
       <li>Pas de loup : ok</li>
       <li>Ennemi juré : ajouter un attribut <tt>ennemiJure</tt> avec comme valeur la race
         des ennemis. Cette race doit se retrouver dans le champ race de l'ennemi.</li>
+      <li>Embuscade : en cas d'attaque sur les ennemis, les mettre tous surpris avec la commande <tt>!cof-set-state surpris true</tt></li>
     </ol>
 
     <h3>Voleur</h3>
@@ -829,10 +839,12 @@ p  {margin-left: inherit}
     <ol>
       <li>Sprint : pas de support, au MJ de vérifier que ce n'est utilisé qu'une fois par combat.</li>
       <li>Provocation : <tt>!cof-provocation @{selected|token_id} @{target|token_id}</tt>. Au joueur ensuite de faire son attaque gratuite si la provocation est réussie et que l'adversaire l'attaque.</li>
+      <li>Grâce féline : ajouter un attribut <tt>graceFeline</tt> avec comme valeur <tt>true</tt>. Cela va affecter l'initiative et la DEF, mais sans se voir sur la fiche. Pour les tests de déplacement, il faut gérer à part.</li>
     </ol>
     <h4>Voie du déplacement</h4>
     <ol>
-      <li>Esquive : pas de support particulier</li>
+      <li>Esquive : pas de support particulier. Augmenter la DEF sur la fiche.</li>
+      <li>Chute : pas de support particulier</li>
     </ol>
     <h4>Voie du roublard</h4>
     <ol>
@@ -870,6 +882,10 @@ p  {margin-left: inherit}
     </ol>
     <h4>Voie de l'humain</h4>
     Instinct de survie : créer un attribut <tt>instinctDeSurvieHumain</tt> avec comme valeur <tt>true</tt>
+    <ol>
+      <li>Adaptable : aucun support</li>
+      <li>Loup parmi les loups : ajouter un attribut <tt>loupParmiLesLoups</tt> avec comme valeur 1 ou 2 selon le rang dans la voie. Une créature sera considérée comme humanoïde si elle a l'attribut <tt>humanoide</tt>, ou si sa race est reconnue comme humanoïde.</li>
+    </ol>
     <h4>Voie du nain</h4>
     <ol>
       <li>Résistance : ajouter les bonus sur la fiche</li>
@@ -891,6 +907,9 @@ p  {margin-left: inherit}
       <li>Capitaine : pour désigner le capitaine d'un ensemble de tokens sélectionné (quelle que soit <a href="#selection">la méthode</a>), on peut utiliser <tt>!cof-capitaine @{selected|token_id}</tt>, en ajoutant les options de sélection (comme <tt>--target @{target|token_id}</tt>. Au lieu de sélectionner une cible, on peut utiliser le nom d'un token. Si le capitaine fait parti de la sélection, il sera automatiquement exclu (on ne peut être son propre capitaine). Si à la place d'une id de token, l'argument est <tt>--aucun</tt>, cela enlève le capitaine. L'attribut généré est lié à un personnage, pas un token spécifique, il suffit donc de cibler un token représentant un personnage pour affecter tous les tokens qui représentent ce personnage. Pas de support particulier pour l'attaque supplémentaire en cas d'action limitée.</li>
     </ol>
     <h4>Voie du cogneur</h4> 
+    <ol>
+      <li>Charge : Faire l'attaque avec les arguments <tt>--imparable --pietine</tt>.</li>
+    </ol>
     <h4>Voie du colosse</h4>
     <ol>
       <li>Fauchage: ajouter la RD, et ajouter un attribut <tt>fauchage</tt>, qui va faire automatiquement le renversement si le dé d'attaque est entre 15 et 20.</li>
