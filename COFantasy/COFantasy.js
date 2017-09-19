@@ -428,55 +428,67 @@ var COFantasy = COFantasy || function() {
     // - Caracteristique (FOR, DEX, CON, INT, SAG, CHA)
     // Les tokens sélectionnés sont ceux qui doivent faire le jet
     var args = msg.content.split(" ");
-    if (args.length < 1) {
+    if (args.length < 2) {
       error("Pas assez d'arguments pour !cof-jet: " + msg.content, args);
       return;
     }
     var caracteristique = args[1];
-    switch (caracteristique) {
-      case "FOR":
-      case "DEX":
-      case "CON":
-      case "INT":
-      case "SAG":
-      case "CHA":
-        getSelected(msg, function(selected) {
-          if (selected.length === 0) {
-            sendChat("COF", "/w " + msg.who + " !cof-jet sans sélection de token");
-            log("!cof-jet requiert de sélectionner des tokens");
-            return;
-          }
-          iterSelected(selected, function(perso) {
-            var evt = {
-              type: "Jet de " + caracteristique
-            };
-            jetCaracteristique(perso, caracteristique,
-              function(rolltext, total, d20, roll) {
-
-                var display = startFramedDisplay(msg.playerid, "Jet de <b>" + caracOfMod(caracteristique) + "</b>", perso);
-                addLineToFramedDisplay(display, "<b>Resultat :</b> " + rolltext);
-                addStatistics(msg.playerid, ["Jet de carac", caracteristique], roll);
-                // Maintenant, on diminue la malédiction si le test est un échec
-                var attrMalediction = tokenAttribute(perso, 'malediction');
-                if (attrMalediction.length > 0) {
-                  if (d20 == 1) diminueMalediction(perso, evt, attrMalediction);
-                  else if (d20 < 20) {
-                    var action = "<a href='!cof-resultat-jet " + state.COFantasy.eventId;
-                    addLineToFramedDisplay(display, "L'action est-elle " + action + " reussi'>réussie</a> ou " + action + " rate'>ratée</a> ?");
-                    evt.personnage = perso;
-                    evt.attenteResultat = true;
-                  }
-                }
-                addEvent(evt);
-                sendChat(perso.token.get('name'), endFramedDisplay(display));
-              });
-          }); //fin de iterSelected
-        }); //fin de getSelected
-
-        return;
-      default:
-        sendChat("COF", "Caracteristique '" + caracteristique + "' non reconnue (FOR, DEX, CON, INT, SAG, CHA).");
+    if (isNotCarac(caracteristique)) {
+      error("Caracteristique '" + caracteristique + "' non reconnue (FOR, DEX, CON, INT, SAG, CHA).", args);
+      return;
     }
+    var difficulte;
+    if (args.length > 2) {
+      difficulte = parseInt(args[2]);
+      if (isNaN(difficulte)) difficulte = undefined;
+    }
+    var titre = "Jet de <b>" + caracOfMod(caracteristique) + "</b>";
+    if (difficulte !== undefined) titre += " difficulté " + difficulte;
+    getSelected(msg, function(selected) {
+      if (selected.length === 0) {
+        sendChat("COF", "/w " + msg.who + " !cof-jet sans sélection de token");
+        log("!cof-jet requiert de sélectionner des tokens");
+        return;
+      }
+      iterSelected(selected, function(perso) {
+        var evt = {
+          type: "Jet de " + caracteristique
+        };
+        var display = startFramedDisplay(msg.playerid, titre, perso);
+        if (difficulte === undefined) {
+          jetCaracteristique(perso, caracteristique,
+            function(rolltext, total, d20, roll) {
+
+              addLineToFramedDisplay(display, "<b>Résultat :</b> " + rolltext);
+              addStatistics(msg.playerid, ["Jet de carac", caracteristique], roll);
+              // Maintenant, on diminue la malédiction si le test est un échec
+              var attrMalediction = tokenAttribute(perso, 'malediction');
+              if (attrMalediction.length > 0) {
+                if (d20 == 1) diminueMalediction(perso, evt, attrMalediction);
+                else if (d20 < 20) {
+                  var action = "<a href='!cof-resultat-jet " + state.COFantasy.eventId;
+                  addLineToFramedDisplay(display, "L'action est-elle " + action + " reussi'>réussie</a> ou " + action + " rate'>ratée</a> ?");
+                  evt.personnage = perso;
+                  evt.attenteResultat = true;
+                }
+              }
+              addEvent(evt);
+              sendChat('', endFramedDisplay(display));
+            });
+        } else {
+          testCaracteristique(perso, caracteristique, [], difficulte, 0, evt, function(reussite, rolltext) {
+            addLineToFramedDisplay(display, "<b>Résultat :</b> " + rolltext);
+            if (reussite) {
+              addLineToFramedDisplay(display, "C'est réussi");
+            } else {
+              addLineToFramedDisplay(display, "C'est raté");
+            }
+            addEvent(evt);
+            sendChat('', endFramedDisplay(display));
+          });
+        }
+      }); //fin de iterSelected
+    }); //fin de getSelected
   }
 
   function resultatJet(msg) {
@@ -599,6 +611,7 @@ var COFantasy = COFantasy || function() {
         case "malediction":
         case "test":
         case "argent":
+        case "pietine":
           options[cmd[0]] = true;
           return;
         case "magique":
@@ -1202,6 +1215,11 @@ var COFantasy = COFantasy || function() {
   }
 
   function tokenInit(perso, evt) {
+    var persoMonte = tokenAttribute(perso, 'estMontePar');
+    if (persoMonte.length > 0) {
+      var cavalier = tokenOfId(persoMonte[0].get('current'), persoMonte[0].get('max'), perso.token.get('pageid'));
+      if (cavalier !== undefined) return tokenInit(cavalier, evt);
+    }
     var charId = perso.charId;
     var init = parseInt(getAttrByName(charId, 'DEXTERITE'));
     init += charAttributeAsInt(charId, 'INIT_DIV', 0);
@@ -1210,6 +1228,9 @@ var COFantasy = COFantasy || function() {
     if (surveillance(perso)) init += 5;
     // Voie du chef d'armée rang 2 (Capitaine)
     if (aUnCapitaine(perso, evt)) init += 2;
+    if (charAttributeAsBool(perso, 'graceFeline')) {
+      init += modCarac(charId, 'CHARISME');
+    }
     // Voie du pistolero rang 1 (plus vite que son ombre)
     attributesInitEnMain(charId).forEach(function(em) {
       var armeL = labelInitEnMain(em);
@@ -1293,6 +1314,9 @@ var COFantasy = COFantasy || function() {
       defense += charAttributeAsInt(charId, 'armureDeVent', 0);
       if (!options.distance)
         defense += charAttributeAsInt(charId, 'dentellesEtRapiere', 0);
+    }
+    if (charAttributeAsBool(target, 'graceFeline')) {
+      defense += modCarac(charId, 'CHARISME');
     }
     var attrsProtegePar = findObjs({
       _type: 'attribute',
@@ -1459,7 +1483,7 @@ var COFantasy = COFantasy || function() {
       attBonus -= 2;
       explications.push("Zone de silence => -2 en Attaque Magique");
     }
-    if (!options.distance && attributeAsBool(attaquant, 'aCheval')) {
+    if (!options.distance && (attributeAsBool(attaquant, 'aCheval') || attributeAsBool(attaquant, 'monteSur'))) {
       attBonus += charAttributeAsInt(attaquant, 'cavalierEmerite');
       explications.push("A cheval => +2 en Attaque");
     }
@@ -2438,7 +2462,17 @@ var COFantasy = COFantasy || function() {
               var n = randomInteger(interchange.targets.length);
               target.token = interchange.targets[n - 1];
             }
-            ciblesTouchees.push(target);
+            if (target.touche &&
+              attributeAsBool(target, 'image_decalee')) {
+              var id = randomInteger(6);
+              if (id > 4) {
+                target.touche = false;
+                target.messages.push("L'attaque passe à travers l'image de " + target.tokName);
+              } else {
+                target.messages.push("Malgré l'image légèrement décalée de " + target.tokName + " l'attaque touche");
+              }
+            }
+            if (target.touche) ciblesTouchees.push(target);
             count--;
             if (count === 0)
               attackDealDmg(attaquant, ciblesTouchees, critSug, attackLabel, attPrefix, d20roll, display, options, evt, explications, pageId);
@@ -2649,6 +2683,11 @@ var COFantasy = COFantasy || function() {
           value: '1d6'
         });
       }
+      var loupParmiLesLoups = charAttributeAsInt(attaquant, 'loupParmiLesLoups', 0);
+      if (loupParmiLesLoups > 0 && estHumanoide(target)) {
+        attDMBonus += "+" + loupParmiLesLoups;
+        target.messages.push("Loup parmi les loups : +" + loupParmiLesLoups + " DM");
+      }
 
       if (attributeAsBool(attaquant, 'ombreMortelle') ||
         attributeAsBool(attaquant, 'dedoublement')) {
@@ -2731,17 +2770,7 @@ var COFantasy = COFantasy || function() {
           dmSpec.display = dmSpec.display || buildinline(rRoll, addDmType, options.magique);
         });
 
-        if (target.touche &&
-          attributeAsBool(target, 'image_decalee')) {
-          var id = randomInteger(6);
-          if (id > 4) {
-            target.touche = false;
-            target.messages.push("L'attaque passe à travers l'image de " + target.tokName);
-          } else {
-            target.messages.push("Malgré l'image légèrement décalée de " + target.tokName + " l'attaque touche");
-          }
-        }
-        if (target.touche) {
+        if (target.touche) { //Devrait être inutile ?
           if (options.tirDeBarrage) target.messages.push("Tir de barrage : undo si la cible décide de ne pas bouger");
           if (options.pointsVitaux) target.messages.push(attackerTokName + " vise des points vitaux mais ne semble pas faire de dégâts");
           if (options.pressionMortelle) {
@@ -2981,13 +3010,29 @@ var COFantasy = COFantasy || function() {
               });
             } else etatsAvecSave();
           };
+          var effetPietinement = function() {
+            if (options.pietine && estAussiGrandQue(attaquant, target)) {
+              testOppose(target, 'FOR', attaquant, 'FOR', target.messages, evt,
+                function(resultat) {
+                  if (resultat == 2) {
+                    target.messages.push(target.tokName + " est piétiné par " + attackerTokName);
+                    setState(target, 'renverse', true, evt);
+                    target.touche++;
+                  } else {
+                    if (resultat === 0) diminueMalediction(attaquant, evt);
+                    target.messages.push(target.tokName + " n'est pas piétiné.");
+                  }
+                  effetsAvecSave();
+                });
+            } else effetsAvecSave();
+          };
           // Peut faire peur à la cible
           if (options.peur) {
             peurOneToken(target, pageId, options.peur.seuil,
               options.peur.duree, {
                 resisteAvecForce: true
-              }, display, evt, effetsAvecSave);
-          } else effetsAvecSave();
+              }, display, evt, effetPietinement);
+          } else effetPietinement();
         } else {
           evt.succes = false;
           finCibles();
@@ -5694,6 +5739,7 @@ var COFantasy = COFantasy || function() {
     });
   }
 
+  // evt et msg peuvent être undefined
   function removeTokenAttr(personnage, attribute, evt, msg) {
     var charId = personnage.charId;
     var token = personnage.token;
@@ -5713,8 +5759,10 @@ var COFantasy = COFantasy || function() {
     });
     if (attr.length === 0) return;
     attr = attr[0];
-    evt.deletedAttributes = evt.deletedAttributes || [];
-    evt.deletedAttributes.push(attr);
+    if (evt) {
+      evt.deletedAttributes = evt.deletedAttributes || [];
+      evt.deletedAttributes.push(attr);
+    }
     attr.remove();
   }
 
@@ -7254,6 +7302,46 @@ var COFantasy = COFantasy || function() {
     }
   }
 
+  function estHumanoide(perso) {
+    if (charAttributeAsBool(perso, 'humanoide')) return true;
+    var attr = findObjs({
+      _type: 'attribute',
+      _characterid: perso.charId,
+      name: 'RACE'
+    });
+    if (attr.length === 0) return false;
+    var charRace = attr[0].get('current').toLowerCase();
+    switch (charRace) {
+      case 'humain':
+      case 'nain':
+      case 'elfe':
+      case 'elfe des bois':
+      case 'elfe noir':
+      case 'drow':
+      case 'halfelin':
+      case 'géant':
+      case 'ange':
+      case 'barghest':
+      case 'démon':
+      case 'doppleganger':
+      case 'dryade':
+      case 'gnoll':
+      case 'gobelin':
+      case 'gobelours':
+      case 'hobegobelin':
+      case 'homme-lézard':
+      case 'kobold':
+      case 'nymphe':
+      case 'ogre':
+      case 'orque':
+      case 'pixie':
+      case 'troll':
+        return true;
+      default:
+        return false;
+    }
+  }
+
   function estMauvais(perso) {
     if (charAttributeAsBool(perso, 'mauvais')) return true;
     var attr = findObjs({
@@ -7273,6 +7361,58 @@ var COFantasy = COFantasy || function() {
       default:
         return false;
     }
+  }
+
+  //Retourne un encodage des tailes :
+  // 1 : minuscule
+  // 2 : très petit
+  // 3 : petit
+  // 4 : moyen
+  // 5 : grand
+  // 6 : énorme
+  // 7 : colossal
+  function taillePersonnage(perso) {
+    var attr = findObjs({
+      _type: 'attribute',
+      _characterid: perso.charId,
+      name: 'TAILLE'
+    });
+    if (attr.length === 0) return undefined;
+    switch (attr[0].get('current').toLowerCase()) {
+      case "minuscule":
+        return 1;
+      case "très petit":
+      case "très petite":
+      case "tres petit":
+        return 2;
+      case "petit":
+      case "petite":
+        return 3;
+      case "moyen":
+      case "moyenne":
+      case "normal":
+      case "normale":
+        return 4;
+      case "grand":
+      case "grande":
+        return 5;
+      case "énorme":
+      case "enorme":
+        return 6;
+      case "colossal":
+      case "colossale":
+        return 7;
+      default:
+        return undefined;
+    }
+  }
+
+  function estAussiGrandQue(perso1, perso2) {
+    var t1 = taillePersonnage(perso1);
+    var t2 = taillePersonnage(perso2);
+    if (t1 === undefined || t2 === undefined) return true;
+    if (t2 > t1) return false;
+    return true;
   }
 
   function soigner(msg) {
@@ -9156,6 +9296,53 @@ var COFantasy = COFantasy || function() {
     addEvent(evt);
   }
 
+  //asynchrone
+  //callback(resultat, crit):
+  // resultat peut être 0, 1 ou 2 : 0 = match null, 1 le perso 1 gagne, 2 le perso 2 gagne.
+  // crit peut être 1 si un des deux perso a fait une réussite critique et pas l'autre, -1 si un des personnage a fait un échec critique et pas l'autre, et 0 sinon
+  function testOppose(perso1, carac1, perso2, carac2, explications, evt, callback) {
+    if (carac2 === undefined) carac2 = carac1;
+    var nom1 = perso1.token.get('name');
+    var nom2 = perso2.token.get('name');
+    jetCaracteristique(perso1, carac1, function(rt1, tot1, d20_1) {
+      jetCaracteristique(perso2, carac2, function(rt2, tot2, d20_2) {
+        explications.push("Jet de " + carac1 + " de " + nom1 + " :" + rt1);
+        explications.push("Jet de " + carac2 + " de " + nom2 + " :" + rt2);
+        var reussite;
+        var crit = 0;
+        if (tot1 > tot2) reussite = 1;
+        else if (tot2 > tot1) reussite = 2;
+        else reussite = 0;
+        if (d20_1 == 1) {
+          if (d20_2 > 1) {
+            reussite = 2;
+            crit = -1;
+          }
+        } else if (d20_2 == 1) {
+          reussite = 1;
+          crit = -1;
+        } else if (d20_1 == 20) {
+          if (d20_2 < 20) {
+            reussite = 1;
+            crit = 1;
+          }
+        } else if (d20_2 == 20) {
+          reussite = 2;
+          crit = 1;
+        }
+        switch (reussite) {
+          case 1:
+            diminueMalediction(perso2, evt);
+            break;
+          case 2:
+            diminueMalediction(perso1, evt);
+            break;
+        }
+        callback(reussite, crit);
+      }); //Fin du jet du deuxième perso
+    }); //Fin du jet du premier perso
+  }
+
   function provocation(msg) {
     var args = msg.content.split(' --');
     var cmd = args[0].split(' ');
@@ -9180,54 +9367,95 @@ var COFantasy = COFantasy || function() {
     var evt = {
       type: 'Provocation'
     };
-    jetCaracteristique(voleur, 'CHA', function(rt, totv, d20v) {
-      addLineToFramedDisplay(display, "Jet de CHA de " + nomVoleur + " :" + rt);
-      jetCaracteristique(cible, 'INT', function(rt, totc, d20c) {
-        addLineToFramedDisplay(display, "Jet d'INT de " + nomCible + " :" + rt);
-        var reussite;
-        if (d20v == 1) {
-          if (d20c == 1) {
-            if (totv >= totc) {
+    var jets = [];
+    testOppose(voleur, 'CHA', cible, 'INT', jets, evt, function(res, crit) {
+      jets.forEach(function(l) {
+        addLineToFramedDisplay(display, l);
+      });
+      var reussite;
+      switch (res) {
+        case 0: //en cas d'égalité, on considère que la provocation est réussie
+          diminueMalediction(cible, evt);
+          switch (crit) {
+            case -1:
               reussite = "Sur un malentendu, la provocation réussit...";
-              diminueMalediction(cible, evt);
-            } else {
-              reussite = "Tout le monde cafouille, la provocation échoue.";
-              diminueMalediction(voleur, evt);
-            }
-          } else {
-            reussite = "Échec critique de la provocation !";
-            diminueMalediction(voleur, evt);
+              break;
+            case 0:
+            case 1:
+              reussite = "La provocation réussit tout juste.";
           }
-        } else if (d20c == 1) {
-          reussite = nomCible + " marche complètement, il attaque " + nomVoleur;
-          diminueMalediction(cible, evt);
-        } else if (d20v == 20) {
-          if (d20c == 20) {
-            if (totv >= totc) {
+          break;
+        case 1:
+          switch (crit) {
+            case -1:
+              reussite = nomCible + " marche complètement, il attaque " + nomVoleur;
+              break;
+            case 0:
               reussite = "La provocation réussit.";
-              diminueMalediction(cible, evt);
-            } else {
-              reussite = "La provocation était brillante, mais " + nomCible + "ne se laisse pas avoir.";
-              diminueMalediction(voleur, evt);
-            }
-          } else {
-            reussite = "La provocation est une réussite critique !";
-            diminueMalediction(cible, evt);
+              break;
+            case 1:
+              reussite = "La provocation est une réussite critique !";
           }
-        } else if (d20c == 20) {
-          reussite = nomCible + " voit clair dans le jeu de " + nomCible + ". La provocation échoue.";
-        } else if (totv < totc) {
-          reussite = "La provocation échoue";
-          diminueMalediction(voleur, evt);
-        } else {
-          reussite = "La provocation réussit.";
-          diminueMalediction(cible, evt);
-        }
-        addLineToFramedDisplay(display, reussite);
-        addEvent(evt);
-        sendChat('', endFramedDisplay(display));
-      }); //Fin du jet d'INT de la cible
-    }); //Fin du jet de CHA du voleur
+          break;
+        case 2:
+          switch (crit) {
+            case -1:
+              reussite = "Échec critique de la provocation !";
+              break;
+            case 0:
+              reussite = "La provocation échoue";
+              break;
+            case 1:
+              reussite = nomCible + " voit clair dans le jeu de " + nomCible + ". La provocation échoue.";
+          }
+      }
+      addLineToFramedDisplay(display, reussite);
+      addEvent(evt);
+      sendChat('', endFramedDisplay(display));
+    }); //Fin du test opposé
+  }
+
+  function enSelle(msg) {
+    var cmd = msg.content.split(' ');
+    if (cmd.length < 3) {
+      error("Il faut 2 arguments pour !cof-en-selle", cmd);
+      return;
+    }
+    var cavalier = tokenOfId(cmd[1]);
+    if (cavalier === undefined) {
+      error("Premier argument de !cof-en-selle incorrect", cmd);
+      return;
+    }
+    if (attributeAsBool(cavalier, 'monteSur')) {
+      sendChar(cavalier.charId, " est déjà en selle");
+      return;
+    }
+    var tokenC = cavalier.token;
+    var pageId = tokenC.get('pageid');
+    var monture = tokenOfId(cmd[2], cmd[2], pageId);
+    if (monture === undefined || !charAttributeAsBool(monture, 'monture')) {
+      sendChar(cavalier.charId, " ne peut pas monter là-dessus");
+      log(cmd);
+      return;
+    }
+    var tokenM = monture.token;
+    var nomMonture = tokenM.get('name');
+    if (attributeAsBool(monture, 'estMontePar')) {
+      sendChar(cavalier.charId, " ne peut monter sur " + nomMonture + " car elle a déjà un cavalier");
+      return;
+    }
+    if (distanceCombat(tokenC, tokenM, pageId) > 0) {
+      sendChar(cavalier.charId, " est trop loin de " + nomMonture);
+      return;
+    }
+    var evt = {
+      type: 'En selle'
+    };
+    setTokenAttr(cavalier, 'monteSur', tokenM.id, evt, " monte sur " + nomMonture, nomMonture);
+    setTokenAttr(monture, 'estMontePar', tokenC.id, evt, undefined, tokenC.get('name'));
+    setTokenAttr(monture, 'positionSurMonture', tokenC.get('left') - tokenM.get('left'), evt, undefined, tokenC.get('top') - tokenM.get('top'));
+    setTokenAttr(monture, 'directionSurMonture', tokenC.get('rotation') - tokenM.get('rotation'), evt);
+    addEvent(evt);
   }
 
   function apiCommand(msg) {
@@ -9439,6 +9667,9 @@ var COFantasy = COFantasy || function() {
         return;
       case "!cof-provocation":
         provocation(msg);
+        return;
+      case "!cof-en-selle":
+        enSelle(msg);
         return;
       default:
         return;
@@ -9696,7 +9927,7 @@ var COFantasy = COFantasy || function() {
   }
 
   var messageEffetIndetermine = {
-    aCheval: {
+    aCheval: { //deprecated, mieux vaut utiliser la commande !cof-en-selle
       activation: "monte sur sa monture",
       actif: "est sur sa monture",
       fin: "descend de sa monture"
@@ -10248,10 +10479,59 @@ var COFantasy = COFantasy || function() {
     }
   }
 
+  function estSurMonture(perso, pageId) {
+    var attr = tokenAttribute(perso, 'monteSur');
+    if (attr.length === 0) return false;
+    if (pageId === undefined) pageId = perso.token.get('pageid');
+    var monture = tokenOfId(attr[0].get('current'), attr[0].get('max'), pageId);
+    attr[0].remove();
+    if (monture === undefined) {
+      sendChar(perso.charId, "descend de sa monture");
+      return true;
+    }
+    sendChar(perso.charId, "descend de " + monture.token.get('name'));
+    removeTokenAttr(monture, 'estMontePar');
+    removeTokenAttr(monture, 'positionSurMonture');
+    return true;
+  }
+
+  function moveToken(token) {
+    var charId = token.get('represents');
+    if (charId === '') return;
+    var monture = {
+      token: token,
+      charId: charId
+    };
+    var pageId = token.get('pageid');
+    if (estSurMonture(monture, pageId)) return;
+    var attr = tokenAttribute(monture, 'estMontePar');
+    if (attr.length === 0) return;
+    var cavalier = tokenOfId(attr[0].get('current'), attr[0].get('max'), pageId);
+    if (cavalier === undefined) {
+      attr[0].remove();
+      return;
+    }
+    var x = token.get('left');
+    var y = token.get('top');
+    var position = tokenAttribute(monture, 'positionSurMonture');
+    if (position.length > 0) {
+      var dx = parseInt(position[0].get('current'));
+      var dy = parseInt(position[0].get('max'));
+      if (!(isNaN(dx) || isNaN(dy))) {
+        x += dx;
+        y += dy;
+      }
+    }
+    cavalier.token.set('left', x);
+    cavalier.token.set('top', y);
+    cavalier.token.set('rotation', monture.token.get('rotation') + attributeAsInt(monture, 'directionSurMonture', 0));
+  }
+
   return {
     apiCommand: apiCommand,
     nextTurn: nextTurn,
-    destroyToken: destroyToken
+    destroyToken: destroyToken,
+    moveToken: moveToken,
   };
 
 }();
@@ -10281,3 +10561,7 @@ on("chat:message", function(msg) {
 on("change:campaign:turnorder", COFantasy.nextTurn);
 
 on("destroy:token", COFantasy.destroyToken);
+
+on("change:token:left", COFantasy.moveToken);
+on("change:token:top", COFantasy.moveToken);
+on("change:token:rotation", COFantasy.moveToken);
