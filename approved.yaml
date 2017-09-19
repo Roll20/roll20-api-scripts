@@ -393,3 +393,7 @@ exalted3dice:
 pathfinderneceros:
 - "Pathfinder Companion Neceros"
 - "System Toolbox"
+
+carrytokens:
+- "CarryTokens"
+- "Tokens"

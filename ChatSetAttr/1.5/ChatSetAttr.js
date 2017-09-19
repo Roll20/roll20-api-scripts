@@ -1,11 +1,11 @@
-// ChatSetAttr version 1.6
-// Last Updated: 2017-08-31
+// ChatSetAttr version 1.5
+// Last Updated: 2017-08-25
 // A script to create, modify, or delete character attributes from the chat area or macros.
 // If you don't like my choices for --replace, you can edit the replacers variable at your own peril to change them.
 
 var chatSetAttr = chatSetAttr || (function () {
 	'use strict';
-	const version = '1.6',
+	const version = '1.5',
 		schemaVersion = 3,
 		replacers = [
 			[/</g, '['],
@@ -56,9 +56,8 @@ var chatSetAttr = chatSetAttr || (function () {
 				return '/w GM ';
 			}
 		},
-		sendChatMessage = function (msg, from) {
-			if (from === undefined) from = 'ChatSetAttr';
-			sendChat(from, msg, null, {
+		sendChatMessage = function (msg) {
+			sendChat('ChatSetAttr', msg, null, {
 				noarchive: true
 			});
 		},
@@ -78,21 +77,21 @@ var chatSetAttr = chatSetAttr || (function () {
 		},
 		showConfig = function (whisper) {
 			const optionsText = [{
-					name: 'playersCanModify',
-					command: 'players-can-modify',
-					desc: 'Determines if players can use <i>--name</i> and <i>--charid</i> to ' +
-						'change attributes of characters they do not control.'
-				}, {
-					name: 'playersCanEvaluate',
-					command: 'players-can-evaluate',
-					desc: 'Determines if players can use the <i>--evaluate</i> option. <b>' +
-						'Be careful</b> in giving players access to this option, because ' +
-						'it potentially gives players access to your full API sandbox.'
-				}, {
-					name: 'useWorkers',
-					command: 'use-workers',
-					desc: 'Determines if setting attributes should trigger sheet worker operations.'
-				}].map(getConfigOptionText).join(''),
+				name: 'playersCanModify',
+				command: 'players-can-modify',
+				desc: 'Determines if players can use <i>--name</i> and <i>--charid</i> to ' +
+					'change attributes of characters they do not control.'
+			}, {
+				name: 'playersCanEvaluate',
+				command: 'players-can-evaluate',
+				desc: 'Determines if players can use the <i>--evaluate</i> option. <b>' +
+					'Be careful</b> in giving players access to this option, because ' +
+					'it potentially gives players access to your full API sandbox.'
+			}, {
+				name: 'useWorkers',
+				command: 'use-workers',
+				desc: 'Determines if setting attributes should trigger sheet worker operations.'
+			}].map(getConfigOptionText).join(''),
 				output = whisper + '<div style="border: 1px solid black; background-color: #FFFFFF;' +
 				'padding:3px;"><b>ChatSetAttr Configuration</b><div style="padding-left:10px;">' +
 				'<p><i>!setattr-config</i> can be invoked in the following format: </p><pre style="' +
@@ -151,11 +150,6 @@ var chatSetAttr = chatSetAttr || (function () {
 				return msg.content;
 			}
 		},
-		notifyAboutDelay = function (whisper) {
-			const chatFunction = () => sendChatMessage(whisper + 'Your command is taking a ' +
-				'long time to execute. Please be patient, the process will finish eventually.');
-			return setTimeout(chatFunction, 8000);
-		},
 		getCIKey = function (obj, name) {
 			const nameLower = name.toLowerCase();
 			let result = false;
@@ -203,8 +197,7 @@ var chatSetAttr = chatSetAttr || (function () {
 		// Setting attributes happens in a delayed recursive way to prevent the sandbox
 		// from overheating.
 		delayedGetAndSetAttributes = function (whisper, list, setting, errors, rData, opts) {
-			const timeNotification = notifyAboutDelay(whisper),
-				cList = [].concat(list),
+			const cList = [].concat(list),
 				feedback = [],
 				dWork = function (charid) {
 					const attrs = getCharAttributes(charid, setting, errors, rData, opts);
@@ -213,9 +206,8 @@ var chatSetAttr = chatSetAttr || (function () {
 						setTimeout(dWork, 50, cList.shift());
 					}
 					else {
-						clearTimeout(timeNotification);
 						if (!opts.mute) handleErrors(whisper, errors);
-						if (!opts.silent) sendFeedback(whisper, feedback, opts);
+						if (!opts.silent) sendFeedback(whisper, feedback);
 					}
 				}
 			dWork(cList.shift());
@@ -224,7 +216,6 @@ var chatSetAttr = chatSetAttr || (function () {
 			const charFeedback = {};
 			Object.entries(attrs).forEach(([attrName, attr]) => {
 				let newValue;
-				charFeedback[attrName]= {};
 				const fillInAttrs = setting[attrName].fillin,
 					settingValue = _.pick(setting[attrName], ['current', 'max']);
 				if (opts.reset) {
@@ -259,15 +250,17 @@ var chatSetAttr = chatSetAttr || (function () {
 						let moddedValue = parseFloat(v) + parseFloat(attr.get(k) || '0');
 						if (!_.isNaN(moddedValue)) {
 							if (opts.modb && k === 'current') {
-								moddedValue = Math.min(Math.max(moddedValue, 0), parseFloat(attr.get('max') || Infinity));
+								moddedValue = Math.min(Math.max(moddedValue, 0),
+									parseFloat(attr.get('max') || Infinity));
 							}
 							newValue[k] = moddedValue.toString();
 						}
 						else {
 							delete newValue[k];
 							const type = (k === 'max') ? 'maximum ' : '';
-							errors.push(`Attribute ${type}${attrName} is not number-valued for ` +
-								`character ${getCharNameById(charid)}. Attribute ${type}left unchanged.`);
+							errors.push(`Attribute ${type}${attrName} is not number-valued` +
+								` for character ${getCharNameById(charid)}.` +
+								` Attribute ${type}left unchanged.`);
 						}
 					});
 				}
@@ -276,31 +269,20 @@ var chatSetAttr = chatSetAttr || (function () {
 			});
 			// Feedback
 			if (!opts.silent) {
-				if ('fb-content' in opts) {
-					const finalFeedback = Object.entries(setting).reduce((m, [attrName, value], k) => {
-							return m.replace(`_NAME${k}_`, attrName)
-								.replace(`_TCUR${k}_`, htmlReplace(value.current || ''))
-								.replace(`_TMAX${k}_`, htmlReplace(value.max || ''))
-								.replace(`_CUR${k}_`, htmlReplace(charFeedback[attrName].current || ''))
-								.replace(`_MAX${k}_`, htmlReplace(charFeedback[attrName].max || ''));
-						}, String(opts['fb-content']).replace('_CHARNAME_', getCharNameById(charid)))
-						.replace(/_(?:TCUR|TMAX|CUR|MAX|NAME)\d*_/g, '');
-					feedback.push(finalFeedback);
+				const finalFeedback = Object.entries(charFeedback).map(([k, o]) => {
+					if ('max' in o && 'current' in o)
+						return `${k} to ${htmlReplace(o.current) || '<i>(empty)</i>'} / ${htmlReplace(o.max) || '<i>(empty)</i>'}`;
+					else if ('current' in o) return `${k} to ${htmlReplace(o.current) || '<i>(empty)</i>'}`;
+					else if ('max' in o) return `${k} to ${htmlReplace(o.max) || '<i>(empty)</i>'} (max)`;
+					else return null;
+				}).filter(x => !!x);
+				if (finalFeedback.length) {
+					feedback.push(`Setting ${finalFeedback.join(', ')} for` +
+						` character ${getCharNameById(charid)}.`);
 				}
 				else {
-					const finalFeedback = Object.entries(charFeedback).map(([k, o]) => {
-						if ('max' in o && 'current' in o)
-							return `${k} to ${htmlReplace(o.current) || '<i>(empty)</i>'} / ${htmlReplace(o.max) || '<i>(empty)</i>'}`;
-						else if ('current' in o) return `${k} to ${htmlReplace(o.current) || '<i>(empty)</i>'}`;
-						else if ('max' in o) return `${k} to ${htmlReplace(o.max) || '<i>(empty)</i>'} (max)`;
-						else return null;
-					}).filter(x => !!x).join(', ');
-					if (finalFeedback.length) {
-						feedback.push(`Setting ${finalFeedback} for character ${getCharNameById(charid)}.`);
-					}
-					else {
-						feedback.push(`Nothing to do for character ${getCharNameById(charid)}.`);
-					}
+					feedback.push(`Nothing to do for character` +
+						` ${getCharNameById(charid)}.`);
 				}
 			}
 			return;
@@ -438,8 +420,7 @@ var chatSetAttr = chatSetAttr || (function () {
 		},
 		// Deleting attributes
 		delayedDeleteAttributes = function (whisper, list, setting, errors, rData, opts) {
-			const timeNotification = notifyAboutDelay(whisper),
-				cList = [].concat(list),
+			const cList = [].concat(list),
 				feedback = {},
 				dWork = function (charid) {
 					const attrs = getCharAttributes(charid, setting, errors, rData, opts);
@@ -449,8 +430,7 @@ var chatSetAttr = chatSetAttr || (function () {
 						setTimeout(dWork, 50, cList.shift());
 					}
 					else {
-						clearTimeout(timeNotification);
-						if (!opts.silent) sendDeleteFeedback(whisper, feedback, opts);
+						if (!opts.silent) sendDeleteFeedback(whisper, feedback);
 					}
 				}
 			dWork(cList.shift());
@@ -476,7 +456,7 @@ var chatSetAttr = chatSetAttr || (function () {
 				.reduce((m, arg) => {
 					const kv = arg.split(/\s(.+)/);
 					if (hasValue.includes(kv[0])) {
-						m[kv[0]] = kv[1] || '';
+						m[kv[0]] = kv[1];
 					}
 					else {
 						m[arg] = true;
@@ -626,23 +606,21 @@ var chatSetAttr = chatSetAttr || (function () {
 				})
 				.filter(x => !!x);
 		},
-		sendFeedback = function (whisper, feedback, opts) {
-			const output = (opts['fb-public'] ? '' : whisper) +
-				'<div style="border:1px solid black;background-color:#FFFFFF;padding:3px;">' +
-				'<h3>' + (('fb-header' in opts) ? opts['fb-header'] : 'Setting attributes') + '</h3><p>' +
-				'<p>' + (feedback.join('<br>') || 'Nothing to do.') + '</p></div>';
-			sendChatMessage(output, opts['fb-from']);
+		sendFeedback = function (whisper, feedback) {
+			const output = whisper + '<div style="border:1px solid black;background-color:' +
+				'#FFFFFF;padding:3px;"><h3>Setting attributes</h3><p>' +
+				(feedback.join('<br>') || 'Nothing to do.') + '</p></div>';
+			sendChatMessage(output);
 		},
-		sendDeleteFeedback = function (whisper, feedback, opts) {
-			let output = (opts['fb-public'] ? '' : whisper) +
-				'<div style="border:1px solid black;background-color:#FFFFFF;padding:3px;">' +
-				'<h3>' + (('fb-header' in opts) ? opts['fb-header'] : 'Deleting attributes') + '</h3><p>';
+		sendDeleteFeedback = function (whisper, feedback) {
+			let output = whisper + '<div style="border:1px solid black;background-color:' +
+				'#FFFFFF;padding:3px;"><h3>Deleting attributes</h3><p>';
 			output += Object.entries(feedback)
 				.filter(([charid, arr]) => arr.length)
 				.map(([charid, arr]) => `Deleting attribute(s) ${arr.join(', ')} for character ${getCharNameById(charid)}.`)
 				.join('<br>') || 'Nothing to do.';
 			output += '</p></div>';
-			sendChatMessage(output, opts['fb-from']);
+			sendChatMessage(output);
 		},
 		// Main function, called after chat message input
 		handleInput = function (msg) {
@@ -668,10 +646,9 @@ var chatSetAttr = chatSetAttr || (function () {
 				// Parsing input
 				let charIDList = [],
 					errors = [];
-				const hasValue = ['charid', 'name', 'fb-header', 'fb-content', 'fb-from'],
+				const hasValue = ['charid', 'name'],
 					optsArray = ['all', 'allgm', 'charid', 'name', 'allplayers', 'sel', 'deletemode',
-						'replace', 'nocreate', 'mod', 'modb', 'evaluate', 'silent', 'reset', 'mute',
-						'fb-header', 'fb-content', 'fb-from', 'fb-public'
+						'replace', 'nocreate', 'mod', 'modb', 'evaluate', 'silent', 'reset', 'mute'
 					],
 					opts = parseOpts(processInlinerolls(msg), hasValue),
 					isGM = msg.playerid === 'API' || playerIsGM(msg.playerid);
@@ -680,18 +657,7 @@ var chatSetAttr = chatSetAttr || (function () {
 				opts.reset = opts.reset || (mode[1] === 'reset');
 				opts.silent = opts.silent || opts.mute;
 				opts.deletemode = (mode[1] === 'del');
-				// Sanitise feedback
-				if ('fb-from' in opts) opts['fb-from'] = String(opts['fb-from']);
-				// Parse desired attribute values
 				const [setting, rData] = parseAttributes(Object.keys(_.omit(opts, optsArray)), opts, errors);
-				// Fill in header info
-				if ('fb-header' in opts) {
-					opts['fb-header'] = Object.entries(setting).reduce((m, [n, v], k) => {
-						return m.replace(`_NAME${k}_`, n)
-							.replace(`_TCUR${k}_`, htmlReplace(v.current || ''))
-							.replace(`_TMAX${k}_`, htmlReplace(v.max || ''));
-					}, String(opts['fb-header'])).replace(/_(?:TCUR|TMAX|NAME)\d*_/g, '');
-				}
 				if (opts.evaluate && !isGM && !state.ChatSetAttr.playersCanEvaluate) {
 					if (!opts.mute) handleErrors(whisper, ['The --evaluate option is only available to the GM.']);
 					return;

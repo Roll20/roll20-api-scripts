@@ -1,7 +1,8 @@
 # It's A Trap! - Pathfinder Generic theme
 
-_3.2 Updates_
-* The script has been made generic to handle all Pathfinder character sheets.
+_3.3 Updates_
+* Added checkbox to One-Click options to enable/disable passive perception.
+* Fixed Trap Spotter to work with both the 'class-ability' and 'ability' repeating sections.
 
 This is a Pathfinder trap theme built to support all Pathfinder character sheets and Pathfinder characters
 who use plain attributes instead of character sheets.

@@ -102,6 +102,7 @@ p  {margin-left: inherit}
       <li> <tt>--auto</tt> : l'attaque réussit automatiquement</li>
       <li><tt>--bonusAttaque</tt> <i>n</i> : ajoute <i>n</i> au jet d'attaque</li>
       <li><tt>--bonusCritique</tt> <i>n</i> : augmente <i>n</i> à la plage de coups critiques</li>
+      <li><tt>--bonusContreBouclier</tt> <i>n</i> : ajoute <i>n</i> au jet d'attaque si le défenseur porte un bouclier. Utile par exemple pour le fléau d'arme.</li>
       <li> <tt>--psave</tt> <i>carac seuil</i> : jet de <i>carac</i>, si le jet est supérieur à <i>seuil</i>, les dégâts sont divisés par 2. <i>carac</i> est l'abbréviation de caractéristiques de 3 lettres standard (FOR, DEX, ...). Si on souhaite que le jet ne permette de réduire qu'une partie des dommages (la dernière ajoutée avec <tt>--plus</tt>), on peut ajouter <tt>local</tt>. La syntaxe complète est alors <tt>--psave</tt> <i>carac seuil</i> <tt>local</tt> </li>
       <li> <tt>--save</tt> <i>carac seuil</i> : même effet que <tt>--psave</tt>, mais pour annuler le dernier <tt>--effet</tt> ou <tt>--etatSi</tt> (aucun effet sur les DM).</li>
       <li> <tt>--saveParTour</tt> <i>carac seuil</i> : même effet que <tt>--save</tt>, mais donne droit à un jet à la fin de chaque tour au lieu d'un jet au moment de l'attaque.</li>
@@ -133,9 +134,9 @@ p  {margin-left: inherit}
       <li> <tt>--sortilege</tt> pour indiquer qu'il s'agit d'un sortilège, de façons à pouvoir appliquer tous les effets spécifiques aux sorts. Cette options devrait être passées pour toutes les capacités suivies d'une étoile dans le livre des règles. En particulier, tout sortilege ignore les malus d'obstacles.</li>
       <li><tt>--reroll1</tt> : relance les 1 aux dés de dégats (le 1 est ignoré)</li>
       <li><tt>--mana</tt> <i>n</i> : l'attaque coûte <i>n</i> points de mana.</li>
-      <li><tt>--limiteParJour</tt> <i>l</i> : limite le nombre d'utilisations de cette attaque à <i>l</i> fois par jour. On peut préciser un nom après <i>l</i>, qui va correspondre à une ressource pouvant être partagée avec d'autres attaques ou d'autres effets (voir <tt>!cof-effet-temp</tt>. Par défaut, le nom de cette ressource est le label de l'attaque.</li>
+      <li><tt>--limiteParJour</tt> <i>l</i> : limite le nombre d'utilisations de cette attaque à <i>l</i> fois par jour. On peut préciser un nom après <i>l</i>, qui va correspondre à une ressource pouvant être partagée avec d'autres attaques ou d'autres effets (voir <tt>!cof-effet-temp</tt>). Par défaut, le nom de cette ressource est le label de l'attaque.</li>
       <li><tt>--limiteParCombat</tt> : même effet que la limite par jour. Si aucun argument n'est donné, la limite est de une fois par combat.</li>
-      <li><tt>--munition</tt> <i>nom</i> <i>taux</i> : l'attaque utilise des munitions dont on garde le compte. Le nombre de munitions doit être inscrit dans un attribut <tt>munition_</tt><i>nom</i>. <i>nom</i> ne doit pas contenir de blanc, mais à l'affichage les <tt>_</tt> seront remplacés par des blancs. La valeur courante de l'attribut est le nombre qu'il reste sur le personnage, alors que le maximum contient ce qu'il a plus ce qu'il peut récupérer après le combat. À chaque attaque portée, une munition est utilisée, et il y a <i>taux</i> chances (sur 100) que la munition ne soit pas récupérable. En fin de combat, on considère que le personnage récupère toutes les munitions récupérables.</li>
+      <li><tt>--munition</tt> <i>nom</i> <i>taux</i> : l'attaque utilise des munitions dont on garde le compte. Le nombre de munitions doit être inscrit dans un attribut <tt>munition_</tt><i>nom</i>. <i>nom</i> ne doit pas contenir de blanc, mais à l'affichage les <tt>_</tt> seront remplacés par des blancs. La valeur courante de l'attribut est le nombre qu'il reste sur le personnage, alors que le maximum contient ce qu'il a plus ce qu'il peut récupérer après le combat. À chaque attaque portée, une munition est utilisée, et il y a <i>taux</i> chances (sur 100) que la munition ne soit pas récupérable. En fin de combat, on considère que le personnage récupère toutes les munitions récupérables. Par défaut, le taux de pertes est de 100&nbsp;%.</li>
       <li><tt>--vampirise</tt> : soigne de tous les DM infligés</li>
       <li><tt>--ignoreObstacles</tt> : ignore les tokens sur le trajet. Ça semble nécessaire pour les attaques magiques d'après Kegron.</li>
       <li><tt>--puissant</tt> : augmente la valeur max des dés de dégâts de 2. Si <tt>--puissant</tt> est
@@ -152,7 +153,8 @@ p  {margin-left: inherit}
       <li><tt>--enflamme</tt> : enflamme la cible, lui infligeant 1d6 DM par tour. Les flammes s'éteindent sur un 1 ou 2. Si l'option <tt>--puissant</tt> est donnée en conjonction, les DM augmentent de 1.</li>
       <li><tt>--malediction</tt> : maudit la cible pour 3 jets.</li>
       <li><tt>--asDeLaGachette</tt> : ajoute 1d6 DM si le jet d'attaque dépasse une DEF de 25.</li>
-      <li><tt>--argent</tt> : bonus de +2 en attaque et 1d6 aux DM si la cible est un mort-vivant ou un démon (utilise le champ <tt>Race</tt> de la fiche).</li>
+      <li><tt>--argent</tt> : bonus de +2 en attaque et 1d6 aux DM si la cible est un mort-vivant ou un démon (utilise le champ <tt>Race</tt> de la fiche ou si présent un attribut <tt>mort-vivant</tt>).</li>
+      <li><tt>--pietine</tt> : si l'attaquant est de taille au moins égale à celle de la cible (ou si la taille de l'un des deux n'est pas connue), fait un test opposé de FOR. En cas d'échec de la cible, elle est renversée et les DM sont doublés.</li>
       <li><tt>--rate</tt>, <tt>--touche</tt>, <tt>--critique</tt>, <tt>--echecCritique</tt> : options pour tricher : le résultat des dés donne toujours le résultat voulu.</li>
       <li><tt>--ligne</tt> : l'attaque porte sur toutes les cibles à portée, entre l'attaquant et le token ciblé. Si le token ciblé est plus proche que la portée de l'attaque, les tokens derrière le token ciblé sont aussi visés. Pour permettre de viser un point quelconque, on peut utiliser un personnage dédié avec un maximum de 0 pv. À chaque fois qu'un token représentant ce personnage est utilisé comme cible de <tt>--ligne</tt>, le token est enlevé de la carte.</li>
       <li><tt>--disque</tt> <i>r</i> : l'attaque porte sur toutes les cibles dans le disque de centre le token ciblé et de rayon <i>r</i>. Comme pour <tt>--ligne</tt>, on peut utilisant un token cible qui sera supprimé après l'attaque.</li>
@@ -205,18 +207,15 @@ p  {margin-left: inherit}
     <h3>2.2 Soins</h3>
     <h4><tt>!cof-soin @{selected|token_id} @{target|token_id}</tt> <i>x</i></h4>
     <p>
-    <i>x</i> peut être un nombre, un jet de dé ou <tt>leger</tt> ou <tt>modere</tt> 
+    <i>x</i> peut être un nombre, un jet de dé ou <tt>leger</tt>, <tt>modere</tt> ou <tt>groupe</tt>.
+    <p>
+    Le deuxième argument est optionnel. Si il n'est pas présent, alors la sélection se fait soit en utilisant les tokens sélectionnés, soit avec une option de sélection de groupe.
     <p>
     L'option <tt>--portee</tt> <i>n</i> permet de spécifier une distance maximum entre le soigneur et le soigné (au-delà, le soin échoue).
     <p>
     Avec l'option <tt>--transfer</tt>, le soin est payé avec les PV du soigneur
     <p>
-
-    <h4><tt>!cof-aoe-soin</tt>  <i>x</i></h4>
-    <p>
-    soigne de <i>x</i> les tokens sélectionnés.
-    <i>x</i> peut aussi être <tt>groupe</tt>, auquel cas le lanceur devra être sélectionné et
-    les <a href="#allie">alliés</a> dans la même map seront soignés.
+    L'option <tt>--mana</tt> <i>n</i> demande au lanceur de payer <i>n</i> points de mana.
 
     <h3>2.3 Undo :
       <tt>!cof-undo</tt></h3>
@@ -286,8 +285,9 @@ p  {margin-left: inherit}
     <ul>
       <li><tt>--lanceur</tt> <i>id</i> : indique quel est le lanceur. Utile pour un certain nombre d'autres options.
         <li><tt>--mana</tt> <i>id cout</i> : impose au token <i>id</i> de dépenser <i>cout</i> mana. Si <tt>--lanceur</tt> est donné, <i>id</i> est inutile.</li>
-      <li><tt>--limiteParJour</tt> <i>l</i> : limite le nombre d'utilisations de cette effet à <i>l</i> fois par jour. On peut préciser un nom après <i>l</i>, qui va correspondre à une ressource pouvant être partagée avec d'autres attaques ou d'autres effets (voir <tt>!cof-attack</tt>. Par défaut, le nom de cette ressource est <i>id</i>.</li>
+      <li><tt>--limiteParJour</tt> <i>l</i> : limite le nombre d'utilisations de cette effet à <i>l</i> fois par jour. On peut préciser un nom après <i>l</i>, qui va correspondre à une ressource pouvant être partagée avec d'autres attaques ou d'autres effets (voir <tt>!cof-attack</tt>). Par défaut, le nom de cette ressource est <i>effet</i>.</li>
       <li><tt>--limiteParCombat</tt> : même effet que la limite par jour. Si aucun argument n'est donné, la limite est de une fois par combat.</li>
+      <li><tt>--dose</tt> <i>nom</i>: définie une ressource nommée <tt>dose_</tt><i>nom</i>, dont la valeur doit être positive (à la manière des munitions). Utile par exemple pour les parchemins, les potions ou les baguettes.</li>
       <li><tt>--portee</tt> <i>id d</i> : impose aux cibles de l'effet d'être à moins de <i>d</i> mètres du token <i>id</i>. Si <tt>--lanceur</tt> est précisé, inutile de donner <i>id</i>.</li>
       <li><tt>--puissant</tt> : lance la version puissante de l'effet</li>
       <li><tt>--puissant oui</tt> : idem</li>
@@ -301,7 +301,7 @@ p  {margin-left: inherit}
     <tt>!cof-attaque-magique @{selected|token_id} @{target|token_id}</tt> : fait un jet d'attaque magique opposé entre le lanceur et sa cible, et dit juste si le
     sort est raté ou réussi. Options disponibles : <tt>--portee</tt> et <tt>--mana</tt>.
     <p>
-    <tt>!cof-lancer-sort</tt> <i>token_id mana texte</i> : <i>token_id</i> lance un sort ayant un coût en
+    <tt>!cof-lancer-sort</tt> <i>mana texte</i>: le token sélectionné lance un sort ayant un coût en
     mana, <i>texte</i> décrit le sort, mais pas d'effet (autre que la dépense de mana) à part /w au joueur et au MJ.
     <p>
     <tt>!cof-peur</tt> <i>token_id difficulté durée</i>: effet de peur (nécromant, dragon, etc). Tant que la peur
@@ -316,13 +316,24 @@ p  {margin-left: inherit}
       <li><tt>--portee</tt> <i>n</i> : limite la portée du sort à <i>n</i> metres.</li>
     </ul>
 
-    <h3>2.9 Escaliers</h3>
+    <h3>2.9 Consommables <tt>!cof-consommables</tt></h3>
+    La fonction affiche une liste de consommables, avec la possibilité de cliquer sur un élément de la liste pour le consommer (et activer son effet). Pour cela, la fonction regarde tous les attributs qui commencent par <tt>dose_</tt> ou <tt>consommable_</tt>. La valeur courante doit être le nombre d'éléments possédé, et le max peut être une commande à effectuer pour activer l'effet. La fonction est à réserver aux tokens liés à un personnage. Il est aussi possible de simplement écrire un message qui s'affichera (et diminuera la quantité de consommables).
+    <p>
+   Attention, les boutons sont utilisables par tout le monde, ce qui permet de faire utiliser un des concommables d'un personnage par un autre. Le script vérifie juste que le token qui utilise l'objet est au contact.
+   <p> 
+   Pour l'instant, seules les commandes <tt>!cof-effet-temp</tt>, <tt>!cof-effet-combat</tt>, <tt>!cof-effet</tt>, <tt>!cof-enduire-poison</tt> et <tt>!cof-soin</tt> diminuent correctement le nombre de consommables.
+
+    <h3>2.10 Escaliers</h3>
     Pour gérer les escaliers sur les cartes, vous pouvez utiliser la méthode suivante, inspirée du script Teleport : placez dans le layer "GM Info Overlay", au nivea des escaliers, des tokens qui prennent exactement la place des escaliers. Nommez ces escaliers avec un nom suivi du nombre d'étages (entre 2 et 9), suivi d'une lettre majuscule. Par exemple <tt>Escalier2A</tt>. Chaque escalier de la même colonne doit avoir le même nom et même nombre d'étage, et différer seulement par la lettre finale. Ensuite, si un ensemble de tokens est sur un escalier, utilisez <tt>!cof-escalier</tt> pour téléporter les tokens à l'emplacement de l'escalier suivant dans l'ordre des lettres. Dans l'exemple précédent, il serait téléporté à l'emplacement du token nommé <tt>Escalier2B</tt>. Cela ne fonctionne que si les bouts de l'escalier sont sur la même carte. À vous de choisir sir vous préférez révéler cette fonctionalité à vos joueurs, ou si vous le faites vous-même.
+
+    <h3>2.11 Montures</h3>
+    Pour qu'un personnage puisse monter sur une monture, il faut que cette monture soit associée à une fiche de personnage et qu'il possède l'attribute <tt>monture</tt> à <tt>true</tt>. La commande pour monter sur la monture est <tt>!cof-en-selle @{selected|token_id} @{target|token_id}</tt>, à lancer en sélectionnant le cavalier. On peut ensuite bouger la monture, cela déplace le cavalier. Le mieux est de lancer la commander alors que le token du cavalier est sur le token de la monture. Si on déplace le cavalier, cela le fait descendre de sa monture.
     
-    <h3>2.10 Jet de Caracteristiques</h3>
+    <h3>2.12 Jet de Caracteristiques</h3>
     <p>
-    <tt>!cof-jet @{selected|token_id} ?{Faire un jet de |Charisme, CHA|Constitution, CON|Dextérité, DEX|Force, FOR|Intelligence, INT|Sagesse, SAG}</tt> : fait un simple jet pour la caractérisique sélectionnée.
+    <tt>!cof-jet ?{Faire un jet de |Charisme, CHA|Constitution, CON|Dextérité, DEX|Force, FOR|Intelligence, INT|Sagesse, SAG}</tt> : fait un simple jet pour la caractérisique sélectionnée.
     <p>
+    Il est aussi possible de donner en argument une difficulté au jet. Par exemple en faisant <tt>!cof-jet INT ?{difficulté}</tt>.
 
     <h2>3. Implémentation des capacités</h2>
     <h3>Arquebusier</h3>
@@ -331,7 +342,7 @@ p  {margin-left: inherit}
       <li>Mécanismes : ajouter les bonus sur la fiche</li>
       <li>Tir de semonce : utiliser l'option <tt>--semonce</tt> à <tt>!cof-attack</tt>
         On laisse le MJ vérifier si la dernière attaque du personnage était bien
-        un échec (devrait être facile à voir dans le chat). Exemple de macro d'utilisation, en supposant qu'on ait déjà des abilities Pétoire et Mousquet : <tt>?{Arme?|Mousquet,%{selected|Mousquet}|Pétoire,%{selected|Pétoire}} --semonce</tt></li>
+        un échec (devrait être facile à voir dans le chat). Exemple de macro d'utilisation, en supposant qu'on ait déjà des abilities Pétoire et Mousquet : <tt>?{Arme?|Mousquet,%{selected|Mousquet}|Pétoire,%{selected|Pétoire}} --semonce</tt> (Note: faire attention à ce que les abilities <tt>Mousquet</tt> et <tt>Pétoire</tt> ne contiennent pas de ligne vide)</li>
       <li>Tir de barrage : Utiliser l'option <tt>--tirDeBarrage</tt>. Ça multiplie les
         dégâts par 2, ignore la charge, et laisse un message demandant le undo
         si la cible décide de ne pas bouger.</li>
@@ -406,14 +417,14 @@ p  {margin-left: inherit}
     <h4>Voie du vagabond</h4>
     <ol>
       <li>Rumeurs et légendes : ajouter les compétences sur la fiche</li>
-      <li> Compréhension des langues : <tt>!cof-lancer-sort @{selected|token_id} 0 compréhension des langues pendant [[1d6+@{selected|CHA}]] minutes</tt></li>
+      <li> Compréhension des langues : <tt>!cof-lancer-sort 0 lance un sort de compréhension des langues qui dure [[1d6+@{selected|CHA}]] minutes</tt></li>
     </ol>
 
     <h3>Barbare</h3>
     <h4>Voie de la brute</h4>
     <ol>
       <li>Argument de taille : ajouter les capacité et le bonus de PV sur la fiche.</li>
-      <li>Tour de force : utiliser <tt>!cof-tour-de-force @{selected|token_id} ?{Difficulté du jet de force ?}</tt></li>
+      <li>Tour de force : utiliser <tt>!cof-tour-de-force ?{Difficulté du jet de force ?}</tt></li>
     </ol>
     <h4>Voie du pagne</h4>
     <ol>
@@ -440,13 +451,16 @@ p  {margin-left: inherit}
     <h3>Chevalier</h3>
     <h4>Voie du cavalier</h4>
     <ol>
-      <li>Fidèle monture : pas de support [articulie</li>
-      <li>Cavalier émérite : ajuster la DEF de la monture. 
+      <li>Fidèle monture : Faire un personnage pour la monture, avec un attribute <tt>monture</tt> à <tt>true</tt>. Pour monter sur la monture, on peut utiliser <tt>!cof-en-selle @{selected|token_id}</tt> <i>nom_de_la_monture</i>. Pour en descendre, il suffit de bouger le token du chevalier.</li>
+      <li>Cavalier émérite : ajuster la DEF de la monture. Ajouter au chevalier un attribut <tt>cavalierEmerite</tt> avec comme valeur 2.  </li>
+      <li>Monture magique : pas de support particulier.</li>
+      <li>Charge : pas de support pour le déplacement, mais
         <ul>
-          <li> Ajouter un attribute <tt>cavalierEmerite</tt> avec comme valeur 2 </li>
-          <li> Pour monter ou descendre de cheval, utiliser <tt>!cof-effet aCheval</tt> avec comme argument <tt>oui</tt>, <tt>true</tt>, <tt>non</tt> ou <tt>false</tt></li>
+          <li> Pour l'attaque : utiliser <tt>--imparable --plus 1d6</tt></li>
+          <li> Pour les créatures sur la trajectoire, utiliser <tt>!cof-jet FOR 18</tt>, et en cas de succès, infliger les DM.</li>
         </ul>
       </li>
+      <li>Monture fantastique : Faire un personnage pour la monture, avec un attribut <tt>monture</tt> à <tt>true</tt></li>
     </ol>
     <h4>Voie de la guerre</h4>
     <ol>
@@ -460,17 +474,17 @@ p  {margin-left: inherit}
     </ol>
     <h4>Voie du héro</h4>
     <ol>
-      <li>Ignorer la douleur : <tt>!cof-ignorer-la-douleur @{selected|token_id}</tt>. À faire juste après le coup.</li>
+      <li>Ignorer la douleur : <tt>!cof-ignorer-la-douleur</tt>. À faire juste après le coup.</li>
       <li>Piqures d'insectes : ajouter un attribut <tt>piquresDInsectes</tt>, avec comme valeur le rang dans la voie</li>
     </ol>
     <h4>Voie du meneur d'hommes</h4>
     <ol>
       <li>Sans peur : Ajouter un attribut <tt>sansPeur</tt>, utilisé quand on
         essaiera de faire peur à un <a href="#allie">allié</a>.</li>
-      <li>Intercepter : Juste après l'attaque réussie, utiliser <tt>!cof-intercepter @{selected|token_id}</tt>.
+      <li>Intercepter : Juste après l'attaque réussie, utiliser <tt>!cof-intercepter</tt>.
         Il faut un attribut <tt>voieDuMeneurDHomme</tt> avec comme valeur le rang dans la
         voie.</li>
-      <li>Exemplaire : <tt>!cof-exemplaire @{selected|token_id}</tt>, juste après l'attaque
+      <li>Exemplaire : <tt>!cof-exemplaire</tt>, juste après l'attaque
         ratée.</li>
     </ol>
     <h4>Voie de la noblesse</h4>
@@ -483,7 +497,7 @@ p  {margin-left: inherit}
     <h4>Voie des animaux</h4>
     <ol>
       <li>Langage des animaux : pas de support particulier</li>
-      <li>Nuée d'insectes : ajouter une attaque magique, de portée 20 m et sans dégâts. Puis appeler cette attaque (avec <tt>!cof-attack</tt>) avec les arguments <tt>--sortilege --effet nueeDInsectes [[5+@{selected|token_id}]]</tt>. Pas de support particulier pour les DM de zone qui détruisent la nuée (enlever l'attribut <tt>nueeDInsecte</tt> sur la cible dans ce cas).</li>
+      <li>Nuée d'insectes : ajouter une attaque magique, de portée 20 m et sans dégâts. Puis appeler cette attaque (avec <tt>!cof-attack</tt>) avec les arguments <tt>--sortilege --effet nueeDInsectes [[5+@{selected|SAG}]]</tt>. Pas de support particulier pour les DM de zone qui détruisent la nuée (enlever l'attribut <tt>nueeDInsecte</tt> sur la cible dans ce cas).</li>
     </ol>
     <h4>Voie du fauve</h4>
     <ol>
@@ -515,7 +529,7 @@ p  {margin-left: inherit}
       <li>Sous tension : <tt>!cof-effet-temp sous_tension [[5+@{selected|CHA}]]</tt>. 
     Pour l'attaque, définir une attaque magique à 1d6+CHA,
     et l'appeler avec les options <tt>--si etat sous_tension --electrique --sortilege --fx beam-holy</tt></li>
-      <li>Télékinésie : Pas de support autre que <tt>!cof-lancer-sort @{selected|token_id} 1 télékinésie</tt></li>
+      <li>Télékinésie : Pas de support autre que <tt>!cof-lancer-sort 1 lance un sort de télékinésie</tt></li>
       <li>Foudre : Faire une attaque de foudre de portée 10 m (attaque magique, dégâts 4d6 + CHA), et faire les attaques avec les options <tt>--psave DEX [[12+@{selected|DEX}]] --mana 2 --electrique --sortilege --ligne --fx beam-holy ?{Y consacrer le tour entier ?|oui,--puissant|non,}</tt>. 
         <li>Forme éthérée : <tt>!cof-effet-temp intangible [[5 + @{selected|CHA}]] --lanceur @{selected|token_id} --mana 3</tt></li>
     </ol>
@@ -533,15 +547,15 @@ p  {margin-left: inherit}
         <tt>!cof-attaque-magique @{selected|token_id} @{target|token_id}</tt></li>
       <li>Sommeil : <tt>!cof-sommeil @{selected|token_id} --disque @{target|token_id} 5 20</tt>. Pour sélectionner le centre de la zone, on peut utiliser un personnage fictif ayant 0 de max de PV.</li>
       <li>Confusion: faire une attaque sans dégâts, de portée 20 m, et pour la macro, utiliser les options <tt>--sortilege --mana 1 --effet confusion ?{Y consacrer tout le tour?|Oui,[[6+2*@{selected|CHA}]]|Non,[[3+@{selected|CHA}]]} --saveParTour SAG [[10+@{selected|CHA}]]</tt>.
-        <li>Amitié: pas de support particulier</li>
+        <li>Amitié: pas de support particulier, sinon <tt>!cof-lancer-sort 2 lance un sort d'amitié</tt></li>
       <li>Domination : utiliser 
-        <tt>!cof-attaque-magique @{selected|token_id} @{target|token_id}</tt></li>
+        <tt>!cof-attaque-magique @{selected|token_id} @{target|token_id} --mana 3 --portee 20</tt></li>
     </ol>
     <h4>Voie des illusions</h4>
     <ol>
       <li>Image décalée : <tt>!cof-effet-temp image_decalee [[5+@{selected|CHA}]] </tt></li>
       <li>Mirage : pas de support particulier</li>
-      <li>Imitation : pas de support autre que <tt>!cof-lancer-sort @{selected|token_id} 1 lance un sort d'imitation ([[5+@{selected|CHA}]] minutes)</tt>. </li>
+      <li>Imitation : pas de support autre que <tt>!cof-lancer-sort 1 lance un sort d'imitation ([[5+@{selected|CHA}]] minutes)</tt>. </li>
       <li>Dédoublement : ajouter une attaque magique, de portée 20 m, et sans dégâts, avec les options <tt>--sortilege --mana 2 --effet dedoublement [[5+@{selected|CHA}]]</tt>. </li>
       <li> Tueur fantasmagorique : <tt>!cof-tueur-fantasmagorique @{selected|token_id} @{target|token_id} --portee 20 --mana 3</tt></li>
     </ol>
@@ -550,7 +564,7 @@ p  {margin-left: inherit}
       <li>Familier : créer un token pour le familier, avec vue et controlé par le
         joueur. Le partage des PV n'est pas géré.</li>
       <li>Serviteur invisible: ok</li>
-      <li>Mur de force : <tt>!cof-mur-de-force @{selected|token_id} ?{Spherique?|Oui,|Non,mur} --mana 1 --image</tt> <i>path</i> où <i>path</i> est l'adresse url d'une image de la librairie Roll20 qui représente un mur de force (sera placé dans le layer map). L'image n'est utilisée qu'en cas de mur sphérique. </li>
+      <li>Mur de force : <tt>!cof-mur-de-force ?{Spherique?|Oui,|Non,mur} --mana 1 --image</tt> <i>path</i> où <i>path</i> est l'adresse url d'une image de la librairie Roll20 qui représente un mur de force (sera placé dans le layer map). L'image n'est utilisée qu'en cas de mur sphérique. </li>
       <li>Épée dansante :
         <ul>
           <li>sort: <tt>!cof-effet-temp epeeDansante [[5+@{selected|CHA}]] --lanceur @{selected|token_id} --mana 2 --puissant ?{Y passer tout le tour ?|oui|non}</tt></li>
@@ -567,6 +581,7 @@ p  {margin-left: inherit}
     <h4>Voie des artefacts</h4>
     <ol>
       <li>Bâton de mage : simplement adapter l'attaque, avec aussi <tt>--magique</tt></li>
+      <li>Blocage : pas de support particulier</li>
     </ol>
     <h4>Voie des élixirs</h4>
     <ol>
@@ -623,7 +638,7 @@ p  {margin-left: inherit}
     </ol>
     <h4>Voie du soldat</h4>
     <ol>
-      <li>Posture de combat : <tt>!cof-posture-de-combat @{selected|token_id}</tt> <i>bonus attr1 attr2</i>, ou les deux <i>attr</i> peuvent être soit <tt>DEF</tt> soit <tt>ATT</tt> soit <tt>DM</tt>, et le <i>bonus</i> est retiré au premier attribut pour être ajouté au second. Le bonus peut être limité si le guerrier a un attribut <tt>voieDuSoldat</tt> qu iindique son rang dans la voie. Exemple d'utilisation&nbsp;: <tt>!cof-posture-de-combat @{selected|token_id} ?{Bonus} ?{Baisser|Défense,DEF|Attaque,ATT|Dégâts,DM} ?{Augmenter|Défense,DEF|Attaque,ATT|Dégâts,DM}</tt>. Normalement, la règle fait décider de sa posture au guerrier à chaque tour, mais en pratique, il en change assez rarement. Une posture de combat reste donc active jusqu'à la fin du combat ou jusqu'à ce qu'on en change (elle est neutre si on a le même attribut à buffer et débuffer). </li>
+      <li>Posture de combat : <tt>!cof-posture-de-combat</tt> <i>bonus attr1 attr2</i>, ou les deux <i>attr</i> peuvent être soit <tt>DEF</tt> soit <tt>ATT</tt> soit <tt>DM</tt>, et le <i>bonus</i> est retiré au premier attribut pour être ajouté au second. Le bonus peut être limité si le guerrier a un attribut <tt>voieDuSoldat</tt> qu indique son rang dans la voie. Exemple d'utilisation&nbsp;: <tt>!cof-posture-de-combat @{selected|token_id} ?{Bonus} ?{Baisser|Défense,DEF|Attaque,ATT|Dégâts,DM} ?{Augmenter|Défense,DEF|Attaque,ATT|Dégâts,DM}</tt>. Normalement, la règle fait décider de sa posture au guerrier à chaque tour, mais en pratique, il en change assez rarement. Une posture de combat reste donc active jusqu'à la fin du combat ou jusqu'à ce qu'on en change (elle est neutre si on a le même attribut à buffer et débuffer). </li>
       <li>Combat en phalange : ajouter un attribut <tt>combatEnPhalange</tt>, valeur <tt>true</tt>. Les bonus seront ajoutés automatiquement en fonctions des alliés définis selon <a href="#allie">cette méthode</a>.</li>
     </ol>
 
@@ -656,8 +671,8 @@ p  {margin-left: inherit}
       <li>Lumière : Le MJ peut donner les caractérisiques de lumières à un token(ou utiliser le script <tt>torch</tt>)</li>
       <li>Détection de la magie : pas de support</li>
       <li>Invisibilité : 
-        pas de support autre que <tt>!cof-lancer-sort @{selected|token_id} 1 invisibilité ([[1d6+@{selected|INT}]] minutes)</tt>. Pour les ennemis, mettre dans le layer gm, pour les joueurs, ne pas les cibler. Reste le problème des AOE...</li>
-      <li>Vol : pas de support autre que <tt>!cof-lancer-sort @{selected|token_id} 2 vol ([[1d6+@{selected|INT}]] minutes)</tt> </li>
+        pas de support autre que <tt>!cof-lancer-sort 1 se rend invisible ([[1d6+@{selected|INT}]] minutes)</tt>. Pour les ennemis, mettre dans le layer gm, pour les joueurs, ne pas les cibler. Reste le problème des AOE...</li>
+      <li>Vol : pas de support autre que <tt>!cof-lancer-sort 2 vole ([[1d6+@{selected|INT}]] minutes)</tt> </li>
       <li>Intelligence héroïque : reporter sur la fiche</li>
     </ol>
 
@@ -753,21 +768,22 @@ p  {margin-left: inherit}
     <h4>Voie de la prière</h4>
     <ol>
       <li>Bénédiction : <tt>!cof-effet-temp benediction [[3+@{selected|SAG}]] --allies --self</tt>. Il faut avoir défini une <a href="#allie">équipe</a> avec le prêtre.</li>
-      <li>Destruction des morts-vivants : <tt>!cof-destruction-des-morts-vivants @{selected|token_id} [[2d6]]</tt>. Au rang 4 dans la voie, ajuster les dégâts.</li>
+      <li>Destruction des morts-vivants : <tt>!cof-destruction-des-morts-vivants 2d6</tt>. Au rang 4 dans la voie, ajuster les dégâts.</li>
     </ol>
     <h4>Voie des soins</h4>
     <p style="margin-top:0px; margin-bottom:0px">
     Utiliser un attribut <tt>voieDesSoins</tt> avec comme valeur le rang dans la voie
     <ol>
-      <li>Soins légers : <tt>!cof-soin @{selected|token_id} @{target|token_id} leger --portee 0</tt></li>
-      <li>Soins modérés : <tt>!cof-soin @{selected|token_id} @{target|token_id} modere --portee 0</tt></li>
-      <li>Soins de groupe : <tt>!cof-aoe-soin groupe</tt> (ne pas oublier de définir des <a href="#allie">alliés</a>).
-    le sort nécessite un point de mana (barre 2 du token), et accepte
-    l'option --puissant pour soigner un peu plus.</li>
+      <li>Soins légers : <tt>!cof-soin @{selected|token_id} @{target|token_id} leger</tt></li>
+      <li>Soins modérés : <tt>!cof-soin @{selected|token_id} @{target|token_id} modere</tt></li>
+      <li>Soins de groupe : <tt>!cof-soin @{selected|token_id} groupe</tt> (ne pas oublier de définir des <a href="#allie">alliés</a>).
+    Le sort nécessite un point de mana (barre 2 du token), et accepte
+    l'option <tt>--puissant</tt> pour soigner un peu plus.</li>
     </ol>
     <h4>Voie de la spiritualité</h4>
     <ol>
       <li>Vêtements sacrés : Ajouter un attribut <tt>vetementsSacres</tt> avec comme valeur le rang dans la voie de la spiritualité. Cela augmente la DEF, mais seulement lorsque le prêtre ne porte pas d'armure (ne se voit pas sur le total de DEF de la fiche)</li>
+      <li>Protection contre le mal : <tt>!cof-effet-combat protectionContreLeMal --lanceur @{selected|token_id} --target @{target|token_id} --portee 0</tt>. Donne le bonus contre toute créature dont l'attribut <tt>RACE</tt> est <tt>squelette</tt>, <tt>zombie</tt>, <tt>démon</tt>, <tt>élémentaire</tt>, ou bien qui possède l'attribut <tt>mauvais</tt> (valeur <tt>true</tt>).</li>
     </ol>
 
     <h3>Rôdeur</h3>
@@ -794,14 +810,15 @@ p  {margin-left: inherit}
         s'applique.</li>
       <li>Traquenard : ajouter un attribut <tt>traquenard</tt> (valeur 1/1), puis option
         <tt>--traquenard</tt> pour l'attaque.
-        Exemple : <tt>?{Arme?|Épée,%{selected|Attaque}|Arc,%{selected|Arc}} --traquenard</tt></li>
+        Exemple pour un personnage qui aurait une ability <tt>Arme</tt> permettant d'utiliser son épée, et une ability <tt>Arc</tt> permettant d'utiliser son arc : <tt>?{Arme?|Épée,%{selected|Attaque}|Arc,%{selected|Arc}} --traquenard</tt> (Note : bien faire attention à ce que les abilities ne contiennent pas de ligne vide, et que la dernière ligne est bien expansée en <tt>!cof-attack</tt>)</li>
       <li> Attaque éclair : <tt>--plus [[@{selected|DEX}]] --bonusAttaque [[@{selected|DEX}]]</tt></li>
+      <li> Repli : simplement faire un jet en utilisant par exemple <tt>!cof-jet DEX 10</tt>, et décrire le résultat.</li>
     </ol>
     <h4>Voie de la survie</h4>
     <ol>
       <li>Endurant : ajouter un jet de capacité "survie", test de CON avec le bonus</li>
       <li>Nature nourricière : pour la recherche d'herbes, on peut utiliser
-        <tt>!cof-nature-nourriciere @{selected|token_id}</tt></li>
+        <tt>!cof-nature-nourriciere</tt></li>
       <li>Grand pas : ajouter les compétences natation et escalade</li>
     </ol>
     <h4>Voie du traqueur</h4>
@@ -809,20 +826,25 @@ p  {margin-left: inherit}
       <li>Pas de loup : ok</li>
       <li>Ennemi juré : ajouter un attribut <tt>ennemiJure</tt> avec comme valeur la race
         des ennemis. Cette race doit se retrouver dans le champ race de l'ennemi.</li>
+      <li>Embuscade : en cas d'attaque sur les ennemis, les mettre tous surpris avec la commande <tt>!cof-set-state surpris true</tt></li>
     </ol>
 
     <h3>Voleur</h3>
     <h4>Voie de l'assassin</h4>
     <ol>
       <li>Discrétion : simplement ajouter une compétence discrétion sur la fiche, avec le bon bonus</li>
+      <li>Attaque sournoise : Faire des versions des attaques avec <tt>--de6Plus</tt> <i>n</i>, où <i>n</i> est le rang dans la voie. Au MJ de vérifier que les conditions de l'attaque sournoise sont remplies. (Exemple de macro pour un voleur qui aurait une attaque <tt>Dague</tt> et une attaque <tt>arbalète</tt> : <tt>?{Arme utilisée?|Dague,%{selected|Dague}|Arbalète,%{selected|Arbalète}} --de6Plus 2</tt>)</li>
     </ol>
     <h4>Voie de l'aventurier</h4>
     <ol>
       <li>Sprint : pas de support, au MJ de vérifier que ce n'est utilisé qu'une fois par combat.</li>
+      <li>Provocation : <tt>!cof-provocation @{selected|token_id} @{target|token_id}</tt>. Au joueur ensuite de faire son attaque gratuite si la provocation est réussie et que l'adversaire l'attaque.</li>
+      <li>Grâce féline : ajouter un attribut <tt>graceFeline</tt> avec comme valeur <tt>true</tt>. Cela va affecter l'initiative et la DEF, mais sans se voir sur la fiche. Pour les tests de déplacement, il faut gérer à part.</li>
     </ol>
     <h4>Voie du déplacement</h4>
     <ol>
-      <li>Esquive : pas de support particulier</li>
+      <li>Esquive : pas de support particulier. Augmenter la DEF sur la fiche.</li>
+      <li>Chute : pas de support particulier</li>
     </ol>
     <h4>Voie du roublard</h4>
     <ol>
@@ -860,6 +882,10 @@ p  {margin-left: inherit}
     </ol>
     <h4>Voie de l'humain</h4>
     Instinct de survie : créer un attribut <tt>instinctDeSurvieHumain</tt> avec comme valeur <tt>true</tt>
+    <ol>
+      <li>Adaptable : aucun support</li>
+      <li>Loup parmi les loups : ajouter un attribut <tt>loupParmiLesLoups</tt> avec comme valeur 1 ou 2 selon le rang dans la voie. Une créature sera considérée comme humanoïde si elle a l'attribut <tt>humanoide</tt>, ou si sa race est reconnue comme humanoïde.</li>
+    </ol>
     <h4>Voie du nain</h4>
     <ol>
       <li>Résistance : ajouter les bonus sur la fiche</li>
@@ -881,6 +907,9 @@ p  {margin-left: inherit}
       <li>Capitaine : pour désigner le capitaine d'un ensemble de tokens sélectionné (quelle que soit <a href="#selection">la méthode</a>), on peut utiliser <tt>!cof-capitaine @{selected|token_id}</tt>, en ajoutant les options de sélection (comme <tt>--target @{target|token_id}</tt>. Au lieu de sélectionner une cible, on peut utiliser le nom d'un token. Si le capitaine fait parti de la sélection, il sera automatiquement exclu (on ne peut être son propre capitaine). Si à la place d'une id de token, l'argument est <tt>--aucun</tt>, cela enlève le capitaine. L'attribut généré est lié à un personnage, pas un token spécifique, il suffit donc de cibler un token représentant un personnage pour affecter tous les tokens qui représentent ce personnage. Pas de support particulier pour l'attaque supplémentaire en cas d'action limitée.</li>
     </ol>
     <h4>Voie du cogneur</h4> 
+    <ol>
+      <li>Charge : Faire l'attaque avec les arguments <tt>--imparable --pietine</tt>.</li>
+    </ol>
     <h4>Voie du colosse</h4>
     <ol>
       <li>Fauchage: ajouter la RD, et ajouter un attribut <tt>fauchage</tt>, qui va faire automatiquement le renversement si le dé d'attaque est entre 15 et 20.</li>
@@ -925,7 +954,14 @@ p  {margin-left: inherit}
       <li>Baroud d'honneur : ajouter un attribut <tt>baroudHonneur</tt> (=true) (Quand le personnage arrive à 0 PV, il ne meurt pas jusqu'à sa prochaine attaque, qui se fait avec un bonus de +5)</li>
       <li>Créature non-vivante : ajouter un attribut <tt>nonVivant</tt></li>
       <li>Force de géant : <tt>!cof-effet-temp forceDeGeant 10</tt></li>
-      <li> Putréfaction : ajouter à l'attaque <tt>--effet putrefaction 5 --save CON 14</tt> (pour les données des momies)</li>
+      <li>Poison : pour enduire une arme de label <i>L</i> de poison, utiliser <tt>!cof-enduire-poison <i>L type force save</i></tt>. Pour l'instant, <i>type</i> ne peut être que <tt>rapide</tt>, et <i>force</i> est une expression pour les dégâts (typiquement, <tt>2d6</tt> pour un poison rapide). <i>save</i> est la difficulté du jet de CON pour résister au poison. On peut rajouter deux arguments optionnels :
+        <ul>
+          <li><tt>--testINT</tt> <i>n</i>: fixe la difficulté du jet d'INT pour réussir à poser le poison. La difficulté par défaut est 14.</li>
+          <li><tt>--dose</tt> <i>nom</i>: indique une ressource dans laquelle on puise pour enduire de poison (à la manière de munitions). Il faudra que le personnage ait une ability de nom <tt>dose_</tt><i>nom</i> avec comme valeur le nombre de doses possédées.</li>
+        </ul>
+      </li> 
+      <li>Putréfaction : ajouter à l'attaque <tt>--effet putrefaction 5 --save CON 14</tt> (pour les données des momies)</li>
+      <li>Huile de fort assaut : <tt>!cof-effet-temp dmgArme1d6_<i>L</i> 10</tt> où <i>L</i> est le label de l'arme qu'on veut enduire d'huile de fort assaut.</li>
       <li>Immunité aux armes : ajouter un attribut <tt>immuniteAuxArmes</tt> avec comme valeur <tt>true</tt></li>
       <li>Sans esprit      : ajouter un attribut <tt>sansEsprit</tt> (=true) permet la réussite
         automatique des jets de résistance basés sur INT, SAG ou CHA.</li>
