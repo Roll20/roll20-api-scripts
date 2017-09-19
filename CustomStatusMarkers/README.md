@@ -1,8 +1,7 @@
 # Custom Status Markers
 
-_3.1 Updates_
-* Added option to the chat menu to change the size of custom status icons.
-* Custom status markers are now displayed above the built-in markers instead of to the left of the built-in markers.
+_3.2 Updates_
+* Added macros for toggling custom status markers on selected tokens.
 
 This script allows users to create custom status markers for tokens.
 When this script is installed, it creates a 'CustomStatusMarkers' macro for
