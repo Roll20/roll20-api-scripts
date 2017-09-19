@@ -2,7 +2,7 @@ on('chat:message', function (msg)
 {
     if(msg.inlinerolls)
     {
-        var characterName = msg.who;
+        var senderName = msg.who;
         var hasRoll = (msg.content.search("Roll") > -1);
 
         if(hasRoll){
@@ -39,8 +39,20 @@ on('chat:message', function (msg)
             
             var htmlString = createHtmlTable.apply(this, summaryTable);
             
-            var chatOutput = htmlString;
-            sendChat(characterName, chatOutput);            
+			if(msg.type == "whisper") {
+				var whisperPrefix = "/w " + msg.target + " ";
+				if(senderName.indexOf("(GM)") === -1) {
+					var whisperPrefixToSender = "/w " + senderName + " ";
+					var chatOutputToSender = whisperPrefixToSender + htmlString;
+					sendChat("Summary", chatOutputToSender);
+				}
+			}
+			else {
+				var whisperPrefix = "";
+			}
+			
+			var chatOutput = whisperPrefix + htmlString;
+			sendChat(senderName, chatOutput);           
 		}
     }
 });
@@ -80,7 +92,7 @@ var createHtmlTable = function(header) {
         
         html += "<tr>";
         html += "<td>" + name + "</td>";
-        html += "<td>"+ value + "</td>";
+        html += "<td>" + value + "</td>";
         html += "</tr>";
     }
     

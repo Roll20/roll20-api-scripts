@@ -1,0 +1,17 @@
+{
+    "name": "Hourglass",
+    "script": "hourglass.js",
+    "version": "1.0",
+    "description": "This script provides a simple hourglass (i.e. countdown timer) that you can set for any duration.\n\nTo use:\n1. Add a token to the tabletop and make sure it's named \"hourglass\" in the nameplate field.\n2. Use an !hg command to start, pause, or stop the timer.\n\n!hg start [seconds] or !hg start [minutes]:[seconds] or !hg start [hours]:[minutes]:[seconds]\n!hg pause\n!hg stop",
+    "authors": "Déja Augustine",
+    "roll20userid": "1068768",
+    "modifies": {
+        "token.bar1_value": "write",
+        "token.bar2_value": "write",
+        "token.bar3_value": "write",
+        "token.bar1_max": "write",
+        "token.bar2_max": "write",
+        "token.bar3_max": "write",
+        "token.rotation": "write"
+    }
+}
