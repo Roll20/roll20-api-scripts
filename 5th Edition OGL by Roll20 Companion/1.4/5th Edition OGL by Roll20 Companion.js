@@ -251,7 +251,6 @@ var handleslotattack = function (msg,character,player) {
     if(spelllevel === "cantrip" || spelllevel === "npc") {
         return;
     }
-    log(spelllevel);
     var hlinline = msg.content.split("{{hldmg=$[[")[1] || "";
     hlinline = hlinline.substring(0,1);
     var higherlevel = 0;
@@ -265,7 +264,7 @@ var handleslotattack = function (msg,character,player) {
 var handleslotspell = function (msg,character,player) {
     var spellslot = ((msg.content.split("{{level=")[1]||'').split("}}")[0]||'').split(" ")[1];
     var ritual = msg.content.indexOf("{{ritual=1}}") > -1 ? true : false;
-    if(spellslot === "0" || ritual) {
+    if(spellslot === "0" || spellslot === "cantrip" || spellslot === "npc" || ritual ) {
         return;
     }
     resolveslot(msg,character,player,spellslot);
@@ -282,17 +281,17 @@ var resolveslot = function(msg,character,player,spellslot) {
         charslotmax = createObj("attribute", {name: "lvl" + spellslot + "_slots_total", current: "0", max: "", characterid: character.id});
         //var charslotmax = findObjs({type: 'attribute', characterid: character.id, name: "lvl" + spellslot + "_slots_total"}, {caseInsensitive: true})[0];
     }
-    var spent = parseInt(charslot.get("current"), 10) + 1;
-    charslot.set({current:spent});
+    var spent = parseInt(charslot.get("current"), 10);
+    charslot.set({current: Math.max(spent - 1, 0)});
     var wtype = getAttrByName(character.id, "wtype");
     var wtoggle = getAttrByName(character.id, "whispertoggle");
-    if(spent <= parseInt(charslotmax.get("current"),10)) {
+    if(spent > 0) {
         if(state.FifthEditionOGLbyRoll20.spelltracking != "quiet") {
             if(wtype === "" || (wtype === "@{whispertoggle}" && wtoggle === "") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "general")) {
-                sendChat(msg.who, "<div class='sheet-rolltemplate-simple' style='margin-top:-7px;'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block;'>" + spent + " OF " + charslotmax.get("current") + " EXPENDED</span></div></div></div>");
+                sendChat(msg.who, "<div class='sheet-rolltemplate-simple' style='margin-top:-7px;'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block;'>" + Math.max(spent - 1, 0) + " OF " + charslotmax.get("current") + " REMAINING</span></div></div></div>");
             }
             else if(wtype === "/w gm " || (wtype === "@{whispertoggle}" && wtoggle === "/w gm ") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "whisper")) {
-                sendChat(msg.who, "/w gm <div class='sheet-rolltemplate-desc'><div class='sheet-desc'><div class='sheet-label' style='margin-top:5px;'><span>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block;'>" + spent + " OF " + charslotmax.get("current") + " EXPENDED</span></div></div></div>");
+                sendChat(msg.who, "/w gm <div class='sheet-rolltemplate-desc'><div class='sheet-desc'><div class='sheet-label' style='margin-top:5px;'><span>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block;'>" + Math.max(spent - 1, 0) + " OF " + charslotmax.get("current") + " REMAINING</span></div></div></div>");
             }
         }
     }
@@ -313,21 +312,33 @@ var longrest = function(msg) {
         log("NO CHARACTER BY THAT NAME FOUND");
     }
     else {
-        var spellslots = filterObjs(function(obj) {
-            if(obj.get("type") && obj.get("type") === "attribute" && obj.get("name") && obj.get("name").indexOf("expended") > -1) {
-                return true;
+        // SPELL SLOTS
+        for (var i = 1; i < 10; i++) {
+            var charslotmax = findObjs({type: 'attribute', characterid: character.id, name: "lvl" + i + "_slots_total"}, {caseInsensitive: true})[0];
+            if(!charslotmax) {
+                charslotmax = createObj("attribute", {name: "lvl" + i + "_slots_total", current: "0", max: "", characterid: character.id});
+            }
+            var charslot = findObjs({type: 'attribute', characterid: character.id, name: "lvl" + i + "_slots_expended"}, {caseInsensitive: true})[0];
+            if(!charslot) {
+                charslot = createObj("attribute", {name: "lvl" + i + "_slots_expended", current: charslotmax.get("current"), max: "", characterid: character.id});
             }
             else {
-                return false;
+                charslot.set({current: charslotmax.get("current")});
             }
-        });
-        _.each(spellslots, function(obj) {    
-            obj.set({current: 0});
-        });
+        };
+        // HP
         var maxhp = getAttrByName(character.id, "hp", "max");
         var hp = findObjs({type: 'attribute', characterid: character.id, name: "hp"}, {caseInsensitive: true})[0];
         if(hp && maxhp) {
             hp.set({current: maxhp});
+        }
+        // HIT DICE
+        var hit_dice = findObjs({type: 'attribute', characterid: character.id, name: "hit_dice"}, {caseInsensitive: true})[0];
+        var max_hd = parseInt(hit_dice.get("max"),10);
+        var cur_hd = parseInt(hit_dice.get("current"),10);
+        if(max_hd != null && cur_hd < max_hd) {
+            cur_hd = Math.min(cur_hd + Math.floor(max_hd/2), max_hd);
+            hit_dice.set({current: cur_hd});
         }
     }
 };
@@ -365,14 +376,11 @@ var handleammo = function (msg,character,player) {
     }
     else {
         ammoname = ammofull;
-        log(ammoname);
         if(ammoname.indexOf(",") > -1) {
             temp = ammoname.split(",");
             ammoname = temp[0];
             ammonum = !isNaN(parseInt(temp[1],10)) ? parseInt(temp[1],10) : 1;
         };
-        log(ammoname);
-        log(ammonum);
         var resources = filterObjs(function(obj) {    
             if(obj.get("type") === "attribute" && obj.get("characterid") === character.id && (obj.get("current") + "").toLowerCase() === ammoname.toLowerCase() && obj.get("name").indexOf("resource") > -1) return true;    
             else return false;
