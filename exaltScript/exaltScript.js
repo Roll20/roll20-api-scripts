@@ -208,6 +208,7 @@ var exaltScript = exaltScript || {
             layer: "objects"
         });
         var graphic = graphic[0];
+        if (graphic == undefined) return;
         if(previous["current"]-object.get("current") > 4 && graphic.get("status_ninja-mask") == false){
             switch(graphic.get("status_aura")) {
                 case false:
