@@ -19,7 +19,7 @@ on('chat:message', function(msg) {
         var params = msg.content.substring(1).split(" ");
         var command = params[0].toLowerCase();
         var option = params[1] ? params[1].toLowerCase() : false;
-        var validcommands = ["ammotracking","autonpctoken","deathsavetracking","spelltracking","longrest"];
+        var validcommands = ["ammotracking","autonpctoken","deathsavetracking","spelltracking","longrest","npchp"];
         if(command === "5ehelp") {
             outputhelp(msg);
         }
@@ -77,6 +77,10 @@ var handleapicommand = function(msg,command,option) {
             log("SPELL TRACKING IS NOT ENABLED");
             return;
         }
+    }
+    else if(command === "npchp") {
+        npchp(msg);
+        return;
     }
     // RESOLVE COMMAND WITH OPTION
     else if(option && (option === "on" || option === "off" || option === "quiet")) {
@@ -342,6 +346,73 @@ var longrest = function(msg) {
         }
     }
 };
+
+var npchp = function(msg) {
+    var qualifier = msg.content.substring(6).trim();
+    var tokens = [];
+    if(qualifier.length > 0) {
+        if ((qualifier.match(/"/g)||[]).length > 1) {  
+            qualifier = qualifier.match( /"(.*?)"/ )[1];
+        }
+        else if ((qualifier.match(/'/g)||[]).length > 1) {  
+            qualifier = qualifier.match( /'(.*?)'/ )[1];
+        }
+        var character = findObjs({type: 'character', name: qualifier}, {caseInsensitive: true})[0] || false;
+        if(!character) {
+            log("NO CHARACTER BY THAT NAME '" + qualifier + "' FOUND");
+            return;
+        }
+        var player = getObj("player", msg.playerid);
+        if(!player) {
+            log("NO PLAYER BY THAT ID:" + qualifier + " FOUND");
+        }
+        tokens = findObjs({type: 'graphic', subtype: 'token', represents: character.id, pageid: player.get("lastpage")});
+    }
+    else {
+        tokens = msg["selected"];
+    }
+    _.each(tokens, function(token) {
+        var t_obj = getObj("graphic", token.id);
+        if(!t_obj) {
+            t_obj = getObj("graphic", token["_id"]);
+        }
+        var rep_id = t_obj.get("represents");
+        if(t_obj && rep_id) {
+            var maxhp = getAttrByName(rep_id, "hp", "max");
+            var formula = getAttrByName(rep_id, "npc_hpformula");
+            var bar1 = t_obj.get("bar1_value");
+            var bar2 = t_obj.get("bar2_value");
+            var bar3 = t_obj.get("bar3_value");
+            if(formula) {
+                var f_array = formula.split(/d|\+/);
+                if(f_array.length > 1) {
+                    var n_dice = parseInt(f_array[0],10);
+                    var d_type = parseInt(f_array[1],10);
+                    var mod = parseInt(f_array[2],10);
+                    var hp = mod ? mod : 0;
+                    for (var i = 0; i < n_dice; i++) {
+                        hp = hp + randomInteger(d_type);
+                    }
+                    log(hp);
+                    if(bar1 === maxhp) {
+                        log("DOING DIS");
+                        t_obj.set({bar1_value: hp});
+                    }
+                    else if(bar2 === maxhp) {
+                        log("DOING DAT");
+                        t_obj.set({bar2_value: hp});
+                    }
+                    else if(bar3 === maxhp) {
+                        log("DOING DISDAT");
+                        t_obj.set({bar3_value: hp});
+                    }                
+                }
+            }
+        }
+    });
+    
+
+}
 
 var handleammo = function (msg,character,player) {
     if(msg.content.indexOf("ammo=") === -1) {
