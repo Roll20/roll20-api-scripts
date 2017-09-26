@@ -7,6 +7,7 @@
 // !deathsavetracking on/off/quiet - Automatically ticks off successes and failures when death saves are rolled, clearing on death, stabilization, or hp recovery
 // !spelltracking on/off/quiet - Automatically expends spell charges as cast, factoring in higher level casting
 // !longrest <character name> - If spelltracking is on, this command will reset all of the character's spell slots to unspent.
+// !npchp <character name> - Rolls randomly NPC hit point totals using their formula. If no character name is provided it will roll the selected tokens.
 //
 // Options:
 // on - Toggles the functionality on (default)
