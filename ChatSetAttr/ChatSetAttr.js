@@ -470,7 +470,8 @@ var chatSetAttr = chatSetAttr || (function () {
 			//			key:value otherwise
 			return content.replace(/<br\/>\n/g, ' ')
 				.replace(/\s*$/g, '')
-				.replace(/({{(.*?)\s*}}$)/g, '$2')
+				.replace(/\s*{{(.*?)\s+}}$/, '$1')
+				.replace(/\\([{}])/g,'$1')
 				.split(/\s+--/)
 				.slice(1)
 				.reduce((m, arg) => {
