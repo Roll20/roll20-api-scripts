@@ -87,12 +87,12 @@ var exaltScript = exaltScript || {
 
     findMaxMotes: function (characterID, attribute){
         var motePool = getAttrByName(characterID, attribute);    //might look something like @{essence} * 7 + 26 OR a flat value
-        if (motePool == undefined) return;
+        if (motePool == undefined) motePool = 0;
         if (typeof motePool == "string" ){
             if (motePool.match("@{essence}") == "@{essence}"){
                 motePool = motePool.replace("@{essence}",getAttrByName(characterID,"essence"));
             }
-        }if (motePool == undefined) motePool = 0;
+        }
         motePool = eval(motePool);
         if (motePool < 0) return 0;
         log(motePool);
