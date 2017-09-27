@@ -1,4 +1,4 @@
-on("change:graphic", function(obj) {
+on("change:graphic:bar1_value", function(obj) {
     if(obj.get("bar1_max") === "") return;
    
     if(obj.get("bar1_value") <= obj.get("bar1_max") / 2) {
