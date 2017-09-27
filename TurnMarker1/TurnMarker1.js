@@ -676,7 +676,7 @@ var TurnMarker = TurnMarker || (function(){
     registerEventHandlers = function(){        
         on("change:campaign:initiativepage", dispatchInitiativePage );
         on("change:campaign:turnorder", handleTurnOrderChange );
-        on("change:graphic", checkForTokenMove );
+        on("change:graphic:lastmove", checkForTokenMove );
         on("destroy:graphic", handleDestroyGraphic );
         on("chat:message", handleInput );
 
