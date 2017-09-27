@@ -55,7 +55,7 @@ on('chat:message', function(msg) {
                 handleslotspell(msg,character,player);
             }
         }
-        if(["atk","atkdmg"].indexOf(msg.rolltemplate) > -1) {
+        if(["atk","atkdmg","dmg"].indexOf(msg.rolltemplate) > -1) {
             if(_.has(msg,'inlinerolls') && msg.content.indexOf("ammo= ") === -1 && character && state.FifthEditionOGLbyRoll20.ammotracking != "off") {
                 handleammo(msg,character,player);
             }
@@ -394,17 +394,13 @@ var npchp = function(msg) {
                     for (var i = 0; i < n_dice; i++) {
                         hp = hp + randomInteger(d_type);
                     }
-                    log(hp);
                     if(bar1 === maxhp) {
-                        log("DOING DIS");
                         t_obj.set({bar1_value: hp});
                     }
                     else if(bar2 === maxhp) {
-                        log("DOING DAT");
                         t_obj.set({bar2_value: hp});
                     }
                     else if(bar3 === maxhp) {
-                        log("DOING DISDAT");
                         t_obj.set({bar3_value: hp});
                     }                
                 }
