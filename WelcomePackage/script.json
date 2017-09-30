@@ -1,0 +1,13 @@
+{
+    "name": "Welcome Package",
+    "script": "script.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "# Welcome Package\r\rThis script welcomes new players to your game and creates a blank new character\rfor them to begin building immediately.\r\rNormally, this would be a back and forth process with various steps depending the schedules of you and your players:\r* Player joins your campaign, can't do anything, and logs off.\r* You login, create a blank character for the player, and then log off.\r* The player eventually gets back on and builds their character.\r\rWith this script there is only one step:\r* Player joins your campaign and can immediately start building their character.\r\rThe script also installs a macro for each player named 'CreateACharacter'\rwhich allows the players to create additional new characters with a\rspecified name.\r\r## Help\r\rIf you experience any issues while using this script,\rneed help using it, or if you have a neat suggestion for a new feature,\rplease shoot me a PM:\rhttps://app.roll20.net/users/46544/stephen-l\ror create a help thread on the Roll20 API forum\r\r## Show Support\r\rIf you would like to show your appreciation and support for the work I do in writing,\rupdating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)\ror, simply leave a thank you note in the script's thread on the Roll20 forums.\rEither is greatly appreciated! Happy gaming!\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [],
+    "dependencies": ["HTML Builder"],
+    "modifies": {},
+    "conflicts": []
+}

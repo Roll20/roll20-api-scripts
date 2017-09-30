@@ -123,6 +123,7 @@ pagefx:
 5theShapedCompanion:
 - "5eShapedCompanion"
 - "System Toolbox"
+- "hidden"
 
 splitargs:
 - "splitArgs"
@@ -235,3 +236,164 @@ tagmar:
 walls:
 - "Walls"
 - "Dynamic Lighting"
+
+customizablerolllistener:
+- "Customizable-Roll-Listener"
+- "Chat"
+
+roll20audiomaster:
+- "Roll20-Audio-Master"
+- "Jukebox"
+
+groupcheck:
+- "GroupCheck"
+- "Character"
+
+mythicgm:
+- "MythicGM"
+- "System Toolbox"
+
+markov:
+- "Markov"
+- "Character"
+
+fumbler:
+- "Fumbler"
+- "Character"
+
+critical:
+- "Critical"
+- "Character"
+
+dynamiclighthelper:
+- "DynamicLightHelper"
+- "Dynamic Lighting"
+
+lightcrumb:
+- "LightCrumb"
+- "Dynamic Lighting"
+
+aborea:
+- "Aborea"
+- "System Toolbox"
+
+kaboom:
+- "KABOOM"
+- "Tokens"
+
+terraingenerator:
+- "Terrain Generator"
+- "Maps & Drawing"
+
+totalrolled:
+- "TotalRolled"
+- "System Toolbox"
+
+itsatrapdnd5e:
+- "ItsATrap_theme_5E_Generic"
+- "System Toolbox"
+
+healthcolors:
+- "HealthColors"
+- "Tokens"
+
+truepagecopy:
+- "TruePageCopy"
+- "Character"
+- "hidden"
+
+srrollextender:
+- "SR-RollExtender"
+- "System Toolbox"
+
+namegen:
+- "namegen"
+- "Character"
+
+onewaydynamiclighting:
+- "OneWayDynamicLighting"
+- "Dynamic Lighting"
+
+rollabletablemacros:
+- "RollableTableMacros"
+- "Chat"
+
+dlellipsedrawer:
+- "DLEllipseDrawer"
+- "Dynamic Lighting"
+
+wfrp2eapi:
+- "wfrp2e-api"
+- "System Toolbox"
+
+agonedice:
+- "AgoneDice"
+- "System Toolbox"
+
+earthdawn:
+- "earthdawn"
+- "System Toolbox"
+
+itsatrapthemewodc:
+- "ItsATrap_theme_WoDClassic"
+- "System Toolbox"
+
+srnextpass:
+- "SR-NextPass"
+- "System Toolbox"
+
+turnclock:
+- "TurnClock"
+- "Utility"
+
+cofantasy:
+- "COFantasy"
+- "System Toolbox"
+
+ffgstarwarsdestiny:
+- "FFG-SWRPG-DestinyTracker"
+- "System Toolbox"
+
+search:
+- "Search"
+- "Utility"
+
+welcomepackage:
+- "WelcomePackage"
+- "Character"
+
+exaltscript:
+- "exaltScript"
+- "System Toolbox"
+
+onerollengine:
+- "OneRollEngine"
+- "System Toolbox"
+
+changetokenimage:
+- "ChangeTokenImage"
+- "Utility"
+
+5ebattlemaster:
+- "5EBattleMaster"
+- "System Toolbox"
+
+totalrolledage:
+- "TotalRolled for AGE"
+- "System Toolbox"
+
+hourglass:
+- "Hourglass"
+- "Utility"
+
+exalted3dice:
+- "EX3Dice"
+- "System Toolbox"
+
+pathfinderneceros:
+- "Pathfinder Companion Neceros"
+- "System Toolbox"
+
+carrytokens:
+- "CarryTokens"
+- "Tokens"

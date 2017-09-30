@@ -1,8 +1,7 @@
 # Areas of Effect
 
-_v1.1 Updates_
-* The menu now includes an arrow button for each effect that allows you to spawn the effect between two tokens.
-* Implemented tooltips for the menu buttons.
+_v1.5 Updates_
+* Added blast and line/cone effect buttons.
 
 GMs, your spellcasting players will love you for this script! It lets you
 create graphical areas of effect for various spells and other powers, and then
@@ -49,16 +48,24 @@ OR
 
 Both GMs and players can spawn areas of effect!
 
-## Sample graphics
-
-In the Roll20 API Scripts repository, this script includes a small collection of
-sample AoE graphics you are free to use in your own games to try out this script.
-Additional effects graphics created by various artists are available from the
-Roll20 Marketplace.
-
 _Note: Currently it is not possible to create effects from graphics purchased
 from the market place due to certain restrictions specified here:
 https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions
 
-However, you can download them from your Roll20 purchased assets library and 
+However, you can download them from your Roll20 purchased assets library and
 then upload them to your game in order to make use of them with this script ._
+
+## Help
+
+If you experience any issues while using this script or the trap themes,
+need help using it, or if you have a neat suggestion for a new feature,
+please shoot me a PM:
+https://app.roll20.net/users/46544/stephen-l
+or create a help thread on the Roll20 API forum
+
+## Show Support
+
+If you would like to show your appreciation and support for the work I do in writing,
+updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)
+or, simply leave a thank you note in the script's thread on the Roll20 forums.
+Either is greatly appreciated! Happy gaming!
