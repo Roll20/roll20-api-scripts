@@ -1,3 +1,10 @@
+<a name="11.3.2"></a>
+# 11.3.2
+
+### Bug fixes
+
+* Large testing and fixing process which resolves [#15: Issues with actions on character import](https://bitbucket.org/mlenser/5eshapedscript/issues/15/issues-with-actions-on-character-import), [#16: NPC - API Import](https://bitbucket.org/mlenser/5eshapedscript/issues/16/npc-api-import), [#17: !shaped-expand-spells --all not working](https://bitbucket.org/mlenser/5eshapedscript/issues/17/shaped-expand-spells-all-not-working), and [#20: OGL Conversion: !shaped-update-character](https://bitbucket.org/mlenser/5eshapedscript/issues/20/ogl-conversion-shaped-update-character). You must use version 15.5.6 of the sheet.
+
 <a name="11.3.1"></a>
 # 11.3.1
 
