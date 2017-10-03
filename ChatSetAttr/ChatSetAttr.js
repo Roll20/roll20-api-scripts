@@ -1,5 +1,5 @@
 // ChatSetAttr version 1.6.2
-// Last Updated: 2017-10-02
+// Last Updated: 2017-10-03
 // A script to create, modify, or delete character attributes from the chat area or macros.
 // If you don't like my choices for --replace, you can edit the replacers variable at your own peril to change them.
 
@@ -259,9 +259,9 @@ var chatSetAttr = chatSetAttr || (function () {
 						let moddedValue = parseFloat(v) + parseFloat(attr.get(k) || '0');
 						if (!_.isNaN(moddedValue)) {
 							if (opts.modb && k === 'current') {
-								moddedValue = Math.min(Math.max(moddedValue, 0), parseFloat(attr.get('max') || Infinity));
+								moddedValue = Math.min(Math.max(moddedValue, 0), parseFloat(attr.get('max')) || Infinity);
 							}
-							newValue[k] = moddedValue.toString();
+							newValue[k] = moddedValue;
 						}
 						else {
 							delete newValue[k];
@@ -271,6 +271,7 @@ var chatSetAttr = chatSetAttr || (function () {
 						}
 					});
 				}
+				newValue = _.mapObject(newValue, v => String(v));
 				charFeedback[attrName] = newValue;
 				setAttribute(attr, newValue);
 			});
