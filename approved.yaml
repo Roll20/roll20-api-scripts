@@ -397,3 +397,7 @@ pathfinderneceros:
 carrytokens:
 - "CarryTokens"
 - "Tokens"
+
+inspirationtracker:
+- "InspirationTracking"
+- "System Toolbox"
