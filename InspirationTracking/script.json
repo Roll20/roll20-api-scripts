@@ -1,0 +1,15 @@
+{
+    "name":"InspirationTracker",
+    "script":"inspirationtracker.js",
+    "version":"0.1",
+    "previousVersions":[],
+    "description":"For use with the 5e OGL character sheet.  Places annoucement in chat log and updates character token for visual reminder.",
+    "authors":"Giger",
+    "roll20userid":"1442670",
+    "useroptions":[],
+    "dependencies":[],
+    "modifies":{
+        "Inspiration":"read"
+    },
+    "conflicts":[]
+}
