@@ -205,9 +205,80 @@
               </div>
               <h4 class="text-dark">Attaquer une (ou plusieurs) cible : <code>!cof-attack @{selected|token_id} @{target|token_id}</code> <i>n</i></h4>
               <div class="decalage">
-                <p>où <i>n</i> est la première partie (avant le premier blanc) du nom de l'attaque sur la fiche.<br />
-                  Avant j'utilisais le rang de l'attaque dans la liste de la feuille de personnage, mais à l'usage ça semble etre instable (ajouter une ligne modifie toute la numérotation). Utiliser des noms d'attaque comme "1 Épée longue". L'attaque tient compte de toutes les informations de l'attaque, y compris chances de critique et portée.
-                </p>
+                <p>où <i>n</i> est soit :</p>
+                <ul>
+                  <li>
+                    <p>
+                      la première partie (avant le premier blanc) du nom de l'attaque sur la fiche.
+                    </p>
+                    <p>
+                        <div class="alert alert-success" role="alert">
+                          Exemple :
+                          <div class="decalage">
+                            <tt>!cof-attack @{selected|token_id} @{target|token_id} 1</tt>
+                          </div>
+                        </div>
+                        
+                        <div class="alert alert-warning" role="alert">
+                          <strong>Attention :</strong> Il faut utiliser des noms d'attaque comme "1 Épée longue". L'attaque tient compte de toutes les informations de l'attaque, y compris chances de critique et portée..
+                        </div>
+                      </p>
+                  </li>
+                </ul>
+                  
+                <p> soit :</p>
+                <ul>
+                  <li>
+                    <p>
+                      un tableau d'arme sous la forme : <code>[ ARME, [ATTAQUE], CRIT, [DM], [PORTÉE] ]</code><br />
+                      <p>
+                        <img src="https://i.imgur.com/3QvxP9e.png" class="img-fluid" />
+                        <figcaption>Le sort "<i>Flèche enflammée</i>"</figcaption>
+                      </p>
+                      
+                      <ul>
+                        <li><code>ARME</code> : Nom de l'Arme/Attaque. Exemple : "Flèche_Enflammée"</li>
+                        <li>
+                          <code>[ATTAQUE]</code> : un tableau des valeur d'attaque de l'arme : <code>[BONUS_ATTAQUE, BONUS]</code><br />
+                          <ul>
+                            <li>
+                              <code>BONUS_ATTAQUE</code> : Valeur de bonus de l'attaque de l'Arme/Attaque.<br />
+                              Exemple pour le token selectionné :<br />
+                              <div class="decalage">
+                                Au contact : <i>"@{selected|ATKCAC}"</i><br />
+                                A distance : <i>"@{selected|ATKTIR}"</i><br />
+                                Magique : "@{selected|ATKMAG}"
+                              </div>
+                            </li>
+                            <li><code>BONUS</code> : Un éventuel bonus de l'Arme/Attaque. Exemple : -1, 0, 1, 2, 3, etc  ...</li>
+                          </ul>
+                        </li>
+                        <li><code>CRIT</code> : La valeur de critique de l'arme. Exemple : 20</li>
+                        <li><code>[DM]</code> : un tableau des valeur d'attaque de l'arme : <code>[NOMBRE_DE_DÉ, VALEUR_DÉ, MOD_DÉGÂTS, AUTRE_BONUS]</code><br />
+                          <ul>
+                            <li><code>NOMBRE_DE_DÉ</code> : Combien de dé à lancer. Exemple : 0, 1, 2, 3, etc ...</li>
+                            <li><code>VALEUR_DÉ</code> : Le nombre de face du dé. Exemple : 4, 6, 8, 10, 12</li>
+                            <li><code>MOD_DÉGÂTS</code> : Le MOD des dégâts à ajouter. Exemple : "@{selected|SAG}", -1, 0, etc...</li>
+                            <li><code>AUTRE_BONUS</code> : D'éventuels autres bonus/malus. Exemple : -1, 0, 1, 2, 3, etc ...</li>
+                          </ul>
+                        </li>
+                        <li><code>[PORTÉE]</code> : La portée en mètre de l'Arme/Attaque. Exemple : 0, 10, 20 , 30</li>
+                      </ul>
+                      <p>
+                        <div class="alert alert-success" role="alert">
+                          Exemple pour le sort "<i>Flèche enflammée</i>" :
+                          <div class="decalage">
+                            <tt>!cof-attack @{selected|token_id} @{target|token_id} ["Flèche_Enflammée",["@{selected|ATKMAG}",0],20,[1,6,"@{selected|INT}",0],30] --fx beam-fire --feu --sortilege --enflamme</tt>
+                          </div>
+                        </div>
+                        
+                        <div class="alert alert-warning" role="alert">
+                          <strong>Attention :</strong> Aucun espace n'est toléré.
+                        </div>
+                      </p>
+                    </p>
+                  </li>
+                </ul>
                 <p>Pour plus de facilité, j'utilise une macro <code>Attaque</code> qui fait <code>!cof-attack @{selected|token_id} @{target|token_id}</code>, comme ça, dans l'exemple précédent, j'ai juste une ability avec comme valeur <code>#Attaque 1</code> (ou mieux, <code>#Attaque 1 --tranchant</code>).</p>
                 <p><a href="https://i.imgur.com/CxX71qp.png"><img src="https://i.imgur.com/CxX71qp.png" class="img-fluid" /></a></p>
                 <figcaption>Ajout de la Macro <i>Attaque</i>.</figcaption>
