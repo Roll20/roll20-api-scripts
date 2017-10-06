@@ -10,65 +10,49 @@ var groupCheck = groupCheck || (function () {
 		// Roll appearance
 		outputStyle = function () {
 			const makeBox = function (header, subheader, freetext, content) {
-					return '<div style="border:1px solid #888;background-color:#FFFFFF;' +
-						'border-radius:5px;padding:1px 3px;margin-left:-42px;"><div style' +
-						'="margin-bottom:1em">' + makeHeader(header) + makeSubheader(subheader) +
-						'</div>' + makeContent(content) + makeFreetext(freetext) + '</div>';
+					return '<div style="border:1px solid #888;background-color:#fff;' +
+						'border-radius:5px;padding:1px 3px;margin-left:-42px;">' +
+						'<div>' + makeHeader(header) + makeSubheader(subheader) + '</div>' +
+						makeContent(content) + makeFreetext(freetext) + '</div>';
 				},
-				makeContent = function (text) {
-					return '<table style="border-collapse:separate;width:100%">' +
-						text + '</table>';
-				},
-				makeHeader = function (text) {
-					return '<h3 style="text-align:center">' + text + '</h3>';
-				},
-				makeSubheader = function (text) {
-					return text ? '<h4 style="text-align:center">' + text + '</h4>' : '';
-				},
-				makeFreetext = function (text) {
-					return text ? '<p style="text-align:center">' + text + '</p>' : '';
-				},
+				makeContent = text => (`<table style="width:100%">${text}</table>`),
+				makeHeader = text => ('<h3 style="text-align:center">' + text + '</h3>'),
+				makeSubheader = text => (text ? '<h4 style="text-align:center">' + text + '</h4>' : ''),
+				makeFreetext = text => (text ? '<p style="text-align:center">' + text + '</p>' : ''),
 				makeRow = function (pic, name, roll2, formula0, formula1) {
-					return '<tr style="padding:3px;width:90%;height:30px;margin-left:5%">' +
-						makeName(pic, name) +
-						(roll2 ? makeRoll2(formula0, formula1) : makeRoll(formula0)) +
+					return '<tr style="border-bottom: 1px solid #ddd">' +
+						makeName(pic, name) +	(roll2 ? makeRoll2(formula0, formula1) : makeRoll(formula0)) +
 						'</tr>';
 				},
-				makeName = function (pic, name) {
-					return '<td style="vertical-align:middle;padding:2px;border-bottom:' +
-						'1px solid #ddd"><table><tr>' +
-						'<td>' + (pic ? '<img style="display:inline-block; width:25px" src="' + pic + '">' : '') +
-						'</td><td style="font-weight:bold;">' + name + '</td>' +
-						'</tr></table></td>';
+				makeName = (pic, name) => {
+					const imgStyle = 'display:inline-block;height:30px;width:30px;vertical-align:middle;margin-right:4px;'
+					return '<td style="padding:3px;height:30px">' +
+						(pic ? `<div style="${imgStyle}background:url('${pic}') 0/contain no-repeat;"></div>` : '') +
+						`<strong style="vertical-align:middle;">${name}</strong>` +
+						'</td>';
 				},
-				makeRoll = function (formula) {
-					return '<td style="text-align:center;padding:2px;border-bottom:1px ' +
-						'solid #ddd">' + formula + '</td>';
-				},
-				makeRoll2 = function (formula0, formula1) {
-					return makeRoll(formula0) + makeRoll(formula1);
-				},
+				makeRoll = formula => ('<td style="text-align:center">' + formula + '</td>'),
+				makeRoll2 = (formula0, formula1) => (makeRoll(formula0) + makeRoll(formula1)),
 				makeCommandButton = function (name, command) {
 					return `<a href="${htmlReplace(command)}"style="font-weight:bold;border:none;` +
-						`color:#000000;background-color:#FFFFFF">${name}</a>`;
+						`color:#000;background-color:#fff">${name}</a>`;
 				},
 				makeInlineroll = function (roll, hideformula) {
 					let boundary = '';
 					switch (detectCritical(roll.results)) {
 					case 'crit':
-						boundary = ';border:2px solid #3FB315';
+						boundary = 'border:2px solid #3FB315';
 						break;
 					case 'mixed':
-						boundary = ';border:2px solid #4A57ED';
+						boundary = 'border:2px solid #4A57ED';
 						break;
 					case 'fumble':
-						boundary = ';border:2px solid #B31515';
+						boundary = 'border:2px solid #B31515';
 					}
-					return '<div class="showtip tipsy" title="' +
-						(hideformula ? '' : 'Rolling ' + htmlReplace(roll.expression) + ' = ' +
-							rollToText(roll.results)) +
-						'"style="display:inline-block;min-width:1em;font-size:1.2em;' +
-						'font-weight:bold;padding:0px 3px;cursor:help' + boundary + '">' +
+					return '<div ' + (hideformula ? '' :
+						`class="showtip tipsy" title="Rolling ${htmlReplace(roll.expression)} = ${rollToText(roll.results)}" `) +
+						'style="display:inline-block;min-width:1em;font-size:1.2em;font-weight:bold;padding:0 3px;vertical-align:middle;' +
+						(hideformula ? 'cursor:default;' : 'cursor:help;') + boundary + '">' +
 						(roll.results.total || 0) + '</div>';
 				},
 				rollToText = function (roll) {
@@ -323,27 +307,27 @@ var groupCheck = groupCheck || (function () {
 			"5E-OGL": {
 				"Strength Save": {
 					"name": "Strength Saving Throw",
-					"formula": "[[d20 + (%strength_save_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_str_save%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%strength_save_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_str_save%*%npc%) [NPC]]]"
 				},
 				"Dexterity Save": {
 					"name": "Dexterity Saving Throw",
-					"formula": "[[d20 + (%dexterity_save_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_dex_save%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%dexterity_save_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_dex_save%*%npc%) [NPC]]]"
 				},
 				"Constitution Save": {
 					"name": "Constitution Saving Throw",
-					"formula": "[[d20 + (%constitution_save_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_con_save%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%constitution_save_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_con_save%*%npc%) [NPC]]]"
 				},
 				"Intelligence Save": {
 					"name": "Intelligence Saving Throw",
-					"formula": "[[d20 + (%intelligence_save_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_int_save%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%intelligence_save_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_int_save%*%npc%) [NPC]]]"
 				},
 				"Wisdom Save": {
 					"name": "Wisdom Saving Throw",
-					"formula": "[[d20 + (%wisdom_save_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_wis_save%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%wisdom_save_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_wis_save%*%npc%) [NPC]]]"
 				},
 				"Charisma Save": {
 					"name": "Charisma Saving Throw",
-					"formula": "[[d20 + (%charisma_save_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_cha_save%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%charisma_save_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_cha_save%*%npc%) [NPC]]]"
 				},
 				"Strength Check": {
 					"name": "Strength Check",
@@ -371,75 +355,75 @@ var groupCheck = groupCheck || (function () {
 				},
 				"Acrobatics": {
 					"name": "Dexterity (Acrobatics) Check",
-					"formula": "[[d20 + (%acrobatics_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_acrobatics%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%acrobatics_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_acrobatics%*%npc%) [NPC]]]"
 				},
 				"Animal Handling": {
 					"name": "Wisdom (Animal Handling) Check",
-					"formula": "[[d20 + (%animal_handling_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_animal_handling%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%animal_handling_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_animal_handling%*%npc%) [NPC]]]"
 				},
 				"Arcana": {
 					"name": "Intelligence (Arcana) Check",
-					"formula": "[[d20 + (%arcana_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_arcana%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%arcana_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_arcana%*%npc%) [NPC]]]"
 				},
 				"Athletics": {
 					"name": "Strength (Athletics) Check",
-					"formula": "[[d20 + (%athletics_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_athletics%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%athletics_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_athletics%*%npc%) [NPC]]]"
 				},
 				"Deception": {
 					"name": "Charisma (Deception) Check",
-					"formula": "[[d20 + (%deception_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_deception%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%deception_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_deception%*%npc%) [NPC]]]"
 				},
 				"History": {
 					"name": "Intelligence (History) Check",
-					"formula": "[[d20 + (%history_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_history%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%history_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_history%*%npc%) [NPC]]]"
 				},
 				"Insight": {
 					"name": "Wisdom (Insight) Check",
-					"formula": "[[d20 + (%insight_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_insight%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%insight_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_insight%*%npc%) [NPC]]]"
 				},
 				"Intimidation": {
 					"name": "Charisma (Intimidation) Check",
-					"formula": "[[d20 + (%intimidation_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_intimidation%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%intimidation_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_intimidation%*%npc%) [NPC]]]"
 				},
 				"Investigation": {
 					"name": "Intelligence (Investigation) Check",
-					"formula": "[[d20 + (%investigation_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_investigation%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%investigation_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_investigation%*%npc%) [NPC]]]"
 				},
 				"Medicine": {
 					"name": "Wisdom (Medicine) Check",
-					"formula": "[[d20 + (%medicine_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_medicine%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%medicine_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_medicine%*%npc%) [NPC]]]"
 				},
 				"Nature": {
 					"name": "Intelligence (Nature) Check",
-					"formula": "[[d20 + (%nature_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_nature%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%nature_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_nature%*%npc%) [NPC]]]"
 				},
 				"Perception": {
 					"name": "Wisdom (Perception) Check",
-					"formula": "[[d20 + (%perception_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_perception%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%perception_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_perception%*%npc%) [NPC]]]"
 				},
 				"Performance": {
 					"name": "Charisma (Performance) Check",
-					"formula": "[[d20 + (%performance_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_performance%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%performance_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_performance%*%npc%) [NPC]]]"
 				},
 				"Persuasion": {
 					"name": "Charisma (Persuasion) Check",
-					"formula": "[[d20 + (%persuasion_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_persuasion%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%persuasion_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_persuasion%*%npc%) [NPC]]]"
 				},
 				"Religion": {
 					"name": "Intelligence (Religion) Check",
-					"formula": "[[d20 + (%religion_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_religion%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%religion_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_religion%*%npc%) [NPC]]]"
 				},
 				"Sleight of Hand": {
 					"name": "Dexterity (Sleight of Hand) Check",
-					"formula": "[[d20 + (%sleight_of_hand_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_sleight_of_hand%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%sleight_of_hand_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_sleight_of_hand%*%npc%) [NPC]]]"
 				},
 				"Stealth": {
 					"name": "Dexterity (Stealth) Check",
-					"formula": "[[d20 + (%stealth_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_stealth%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%stealth_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_stealth%*%npc%) [NPC]]]"
 				},
 				"Survival": {
 					"name": "Wisdom (Survival) Check",
-					"formula": "[[d20 + (%survival_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_survival%*%npc%) [NPC]]]"
+					"formula": "[[d20 + (%survival_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_survival%*%npc%) [NPC]]]"
 				},
 				"AC": {
 					"name": "Armor Class",
