@@ -28,7 +28,9 @@
     "dependencies": {},
     "modifies": {
         "state.ChatSetAttr": "read,write",
-        "attribute.*": "read,write",
+        "attribute.characterid": "read",
+        "attribute.current": "read,write",
+        "attribute.max": "read,write",
         "character.controlledby": "read",
         "character.name": "read",
         "graphic.represents": "read"
