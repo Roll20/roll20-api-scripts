@@ -323,27 +323,27 @@ var groupCheck = groupCheck || (function () {
 			"5E-OGL": {
 				"Strength Save": {
 					"name": "Strength Saving Throw",
-					"formula": "[[d20 + [[(%strength_save_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_str_save%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%strength_save_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_str_save%*%npc%) [NPC]]]"
 				},
 				"Dexterity Save": {
 					"name": "Dexterity Saving Throw",
-					"formula": "[[d20 + [[(%dexterity_save_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_dex_save%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%dexterity_save_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_dex_save%*%npc%) [NPC]]]"
 				},
 				"Constitution Save": {
 					"name": "Constitution Saving Throw",
-					"formula": "[[d20 + [[(%constitution_save_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_con_save%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%constitution_save_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_con_save%*%npc%) [NPC]]]"
 				},
 				"Intelligence Save": {
 					"name": "Intelligence Saving Throw",
-					"formula": "[[d20 + [[(%intelligence_save_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_int_save%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%intelligence_save_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_int_save%*%npc%) [NPC]]]"
 				},
 				"Wisdom Save": {
 					"name": "Wisdom Saving Throw",
-					"formula": "[[d20 + [[(%wisdom_save_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_wis_save%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%wisdom_save_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_wis_save%*%npc%) [NPC]]]"
 				},
 				"Charisma Save": {
 					"name": "Charisma Saving Throw",
-					"formula": "[[d20 + [[(%charisma_save_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_cha_save%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%charisma_save_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_cha_save%*%npc%) [NPC]]]"
 				},
 				"Strength Check": {
 					"name": "Strength Check",
@@ -371,75 +371,75 @@ var groupCheck = groupCheck || (function () {
 				},
 				"Acrobatics": {
 					"name": "Dexterity (Acrobatics) Check",
-					"formula": "[[d20 + [[(%acrobatics_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_acrobatics%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%acrobatics_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_acrobatics%*%npc%) [NPC]]]"
 				},
 				"Animal Handling": {
 					"name": "Wisdom (Animal Handling) Check",
-					"formula": "[[d20 + [[(%animal_handling_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_animal_handling%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%animal_handling_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_animal_handling%*%npc%) [NPC]]]"
 				},
 				"Arcana": {
 					"name": "Intelligence (Arcana) Check",
-					"formula": "[[d20 + [[(%arcana_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_arcana%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%arcana_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_arcana%*%npc%) [NPC]]]"
 				},
 				"Athletics": {
 					"name": "Strength (Athletics) Check",
-					"formula": "[[d20 + [[(%athletics_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_athletics%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%athletics_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_athletics%*%npc%) [NPC]]]"
 				},
 				"Deception": {
 					"name": "Charisma (Deception) Check",
-					"formula": "[[d20 + [[(%deception_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_deception%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%deception_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_deception%*%npc%) [NPC]]]"
 				},
 				"History": {
 					"name": "Intelligence (History) Check",
-					"formula": "[[d20 + [[(%history_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_history%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%history_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_history%*%npc%) [NPC]]]"
 				},
 				"Insight": {
 					"name": "Wisdom (Insight) Check",
-					"formula": "[[d20 + [[(%insight_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_insight%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%insight_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_insight%*%npc%) [NPC]]]"
 				},
 				"Intimidation": {
 					"name": "Charisma (Intimidation) Check",
-					"formula": "[[d20 + [[(%intimidation_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_intimidation%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%intimidation_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_intimidation%*%npc%) [NPC]]]"
 				},
 				"Investigation": {
 					"name": "Intelligence (Investigation) Check",
-					"formula": "[[d20 + [[(%investigation_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_investigation%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%investigation_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_investigation%*%npc%) [NPC]]]"
 				},
 				"Medicine": {
 					"name": "Wisdom (Medicine) Check",
-					"formula": "[[d20 + [[(%medicine_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_medicine%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%medicine_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_medicine%*%npc%) [NPC]]]"
 				},
 				"Nature": {
 					"name": "Intelligence (Nature) Check",
-					"formula": "[[d20 + [[(%nature_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_nature%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%nature_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_nature%*%npc%) [NPC]]]"
 				},
 				"Perception": {
 					"name": "Wisdom (Perception) Check",
-					"formula": "[[d20 + [[(%perception_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_perception%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%perception_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_perception%*%npc%) [NPC]]]"
 				},
 				"Performance": {
 					"name": "Charisma (Performance) Check",
-					"formula": "[[d20 + [[(%performance_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_performance%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%performance_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_performance%*%npc%) [NPC]]]"
 				},
 				"Persuasion": {
 					"name": "Charisma (Persuasion) Check",
-					"formula": "[[d20 + [[(%persuasion_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_persuasion%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%persuasion_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_persuasion%*%npc%) [NPC]]]"
 				},
 				"Religion": {
 					"name": "Intelligence (Religion) Check",
-					"formula": "[[d20 + [[(%religion_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_religion%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%religion_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_religion%*%npc%) [NPC]]]"
 				},
 				"Sleight of Hand": {
 					"name": "Dexterity (Sleight of Hand) Check",
-					"formula": "[[d20 + [[(%sleight_of_hand_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_sleight_of_hand%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%sleight_of_hand_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_sleight_of_hand%*%npc%) [NPC]]]"
 				},
 				"Stealth": {
 					"name": "Dexterity (Stealth) Check",
-					"formula": "[[d20 + [[(%stealth_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_stealth%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%stealth_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_stealth%*%npc%) [NPC]]]"
 				},
 				"Survival": {
 					"name": "Wisdom (Survival) Check",
-					"formula": "[[d20 + [[(%survival_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001)))]] [PC] + [[(%npc_survival%*%npc%)]] [NPC]]]"
+					"formula": "[[d20 + (%survival_bonus%%pbd_safe%*(1-ceil((%npc%)*0.00001))) [PC] + (%npc_survival%*%npc%) [NPC]]]"
 				},
 				"AC": {
 					"name": "Armor Class",
