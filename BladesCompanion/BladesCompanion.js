@@ -155,11 +155,11 @@ var bladesCompanion = bladesCompanion || (function () {
 					width: 100
 				},
 				images: [
-					"https://s3.amazonaws.com/files.d20.io/images/39697149/x-RQwYbr8Cj58cnbmcvq_g/thumb.png?1506325929",
-					"https://s3.amazonaws.com/files.d20.io/images/39697155/crioqNAawXx0pt6vIaqGTQ/thumb.png?1506325929",
-					"https://s3.amazonaws.com/files.d20.io/images/39697154/AHApqecMH2pb8gUXmqjrIw/thumb.png?1506325929",
-					"https://s3.amazonaws.com/files.d20.io/images/39697152/1qKtEnJRxndM2IjV34qC2A/thumb.png?1506325929",
-					"https://s3.amazonaws.com/files.d20.io/images/39697151/DBA8ijkopi6ieKl0F57AfQ/thumb.png?1506325929"
+					"https://s3.amazonaws.com/files.d20.io/images/40383701/JvVojDvqsMD0HOqWbyg0ew/thumb.png?1507479734",
+					"https://s3.amazonaws.com/files.d20.io/images/40383700/LQ7w5c74sMugKTSsPDgzew/thumb.png?1507479734",
+					"https://s3.amazonaws.com/files.d20.io/images/40383699/-p2wzDUZ3kh2HL9FMMYaWQ/thumb.png?1507479734",
+					"https://s3.amazonaws.com/files.d20.io/images/40383703/KR4VZucNliNdE2DLil4x6Q/thumb.png?1507479734",
+					"https://s3.amazonaws.com/files.d20.io/images/40383702/a7MguC5mTXdBaqoOQWyX6A/thumb.png?1507479734"
 				]
 			},
 			trauma5: {
@@ -168,12 +168,12 @@ var bladesCompanion = bladesCompanion || (function () {
 					width: 100
 				},
 				images: [
-					"https://s3.amazonaws.com/files.d20.io/images/39697150/WlLZ29kUBgo1xhHyO2pScQ/thumb.png?1506325929",
-					"https://s3.amazonaws.com/files.d20.io/images/39697159/xpJylxK7jwuErvcEdycYhQ/thumb.png?1506325929",
-					"https://s3.amazonaws.com/files.d20.io/images/39697153/BD-Wdqk4OnfVccSyRMvQ4g/thumb.png?1506325929",
-					"https://s3.amazonaws.com/files.d20.io/images/39697160/9bDdIw7bMm4cMdsS5DIl6w/thumb.png?1506325929",
-					"https://s3.amazonaws.com/files.d20.io/images/39697157/vHAaLbIkEIui3zvQIeDEsQ/thumb.png?1506325929",
-					"https://s3.amazonaws.com/files.d20.io/images/39697158/0zTwPZdzgiwAREUXGuXlDw/thumb.png?1506325929"
+					"https://s3.amazonaws.com/files.d20.io/images/40383716/8A_x8yPvIwdDtEdC_A08zg/thumb.png?1507479742",
+					"https://s3.amazonaws.com/files.d20.io/images/40383711/OnLuSfqpjLk-HYUZ-dFI5A/thumb.png?1507479742",
+					"https://s3.amazonaws.com/files.d20.io/images/40383713/CE4ATJw4f8pq8NzWVz6pYQ/thumb.png?1507479742",
+					"https://s3.amazonaws.com/files.d20.io/images/40383714/pUU6h0WVM_XJhvZT8_d8kQ/thumb.png?1507479742",
+					"https://s3.amazonaws.com/files.d20.io/images/40383712/RiCp5z2qZh4J_tHLfsB19g/thumb.png?1507479742",
+					"https://s3.amazonaws.com/files.d20.io/images/40383715/o309NTNHyrW1gak7SBkdEQ/thumb.png?1507479742"
 				]
 			}
 		},
@@ -506,6 +506,7 @@ var bladesCompanion = bladesCompanion || (function () {
 				getOrCreateAttribute(charID, `${match[1]}_progress`, progress);
 				if (clockData[size]) {
 					const token = createObj('graphic', getClockTokenData(size, attribute.get('current'), charID, 0, progress));
+					toFront(token);
 					myState.data.push({
 						character: charID,
 						token: token.id,
@@ -529,6 +530,7 @@ var bladesCompanion = bladesCompanion || (function () {
 				if (checkPermission(playerid, character)) {
 					const currentValue = parseInt(getAttrByName(charid, attrName)) || 0,
 						token = createObj('graphic', getBarTokenData(type, charid, currentValue, playerid));
+					toFront(token);
 					getOrCreateAttribute(charid, attrName, currentValue);
 					myState.data.push({
 						character: charid,
@@ -548,6 +550,7 @@ var bladesCompanion = bladesCompanion || (function () {
 			if (size in clockData && (!charID || getObj('character', charID))) {
 				if (charID && !checkPermission(playerid, getObj('character', charID))) return;
 				const token = createObj('graphic', getClockTokenData(size, label, charID, playerid));
+				toFront(token);
 				if (charID) {
 					const rowID = generateRowID(),
 						sectionName = (type => {
@@ -607,11 +610,11 @@ var bladesCompanion = bladesCompanion || (function () {
 						name: character.get('name')
 					});
 					const token = createObj('graphic', tokenData);
+					toFront(token);
 					myState.harmData.push({
 						character: charid,
 						token: token.id
 					});
-					toFront(token);
 					updateHarmText(myState.harmData[myState.harmData.length - 1]);
 				}
 			}
