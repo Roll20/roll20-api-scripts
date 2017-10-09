@@ -1,0 +1,1214 @@
+// GroupCheck version 1.6
+// Last Updated: 2017-10-06
+// A script to roll checks for many tokens at once with one command.
+
+var groupCheck = groupCheck || (function () {
+	'use strict';
+	const version = '1.6',
+		stateVersion = 6,
+		dataVersion = 5,
+		// Roll appearance
+		outputStyle = function () {
+			const makeBox = function (header, subheader, freetext, content) {
+					return '<div style="border:1px solid #888;background-color:#fff;' +
+						'border-radius:5px;padding:1px 3px;margin-left:-42px;">' +
+						'<div>' + makeHeader(header) + makeSubheader(subheader) + '</div>' +
+						makeContent(content) + makeFreetext(freetext) + '</div>';
+				},
+				makeContent = text => (`<table style="width:100%">${text}</table>`),
+				makeHeader = text => ('<h3 style="text-align:center">' + text + '</h3>'),
+				makeSubheader = text => (text ? '<h4 style="text-align:center">' + text + '</h4>' : ''),
+				makeFreetext = text => (text ? '<p style="text-align:center">' + text + '</p>' : ''),
+				makeRow = function (pic, name, roll2, formula0, formula1) {
+					return '<tr style="border-bottom: 1px solid #ddd">' +
+						makeName(pic, name) +	(roll2 ? makeRoll2(formula0, formula1) : makeRoll(formula0)) +
+						'</tr>';
+				},
+				makeName = (pic, name) => {
+					const imgStyle = 'display:inline-block;height:30px;width:30px;vertical-align:middle;margin-right:4px;'
+					return '<td style="padding:3px;height:30px">' +
+						(pic ? `<div style="${imgStyle}background:url('${pic}') 0/contain no-repeat;"></div>` : '') +
+						`<strong style="vertical-align:middle;">${name}</strong>` +
+						'</td>';
+				},
+				makeRoll = formula => ('<td style="text-align:center">' + formula + '</td>'),
+				makeRoll2 = (formula0, formula1) => (makeRoll(formula0) + makeRoll(formula1)),
+				makeCommandButton = function (name, command) {
+					return `<a href="${htmlReplace(command)}"style="font-weight:bold;border:none;` +
+						`color:#000;background-color:#fff">${name}</a>`;
+				},
+				makeInlineroll = function (roll, hideformula) {
+					let boundary = '';
+					switch (detectCritical(roll.results)) {
+					case 'crit':
+						boundary = 'border:2px solid #3FB315';
+						break;
+					case 'mixed':
+						boundary = 'border:2px solid #4A57ED';
+						break;
+					case 'fumble':
+						boundary = 'border:2px solid #B31515';
+					}
+					return '<div ' + (hideformula ? '' :
+						`class="showtip tipsy" title="Rolling ${htmlReplace(roll.expression)} = ${rollToText(roll.results)}" `) +
+						'style="display:inline-block;min-width:1em;font-size:1.2em;font-weight:bold;padding:0 3px;vertical-align:middle;' +
+						(hideformula ? 'cursor:default;' : 'cursor:help;') + boundary + '">' +
+						(roll.results.total || 0) + '</div>';
+				},
+				rollToText = function (roll) {
+					switch (roll.type) {
+					case 'R':
+						let c = (roll.mods && roll.mods.customCrit) || [{
+								comp: '==',
+								point: roll.sides
+							}],
+							f = (roll.mods && roll.mods.customFumble) || [{
+								comp: '==',
+								point: 1
+							}],
+							styledRolls = _.map(roll.results, function (r) {
+								let style = rollIsCrit(r.v, c[0].comp, c[0].point) ?
+									' critsuccess' :
+									(rollIsCrit(r.v, f[0].comp, f[0].point) ?
+										' critfail' : '')
+								return `<span class='basicdiceroll${style}'>${r.v}</span>`;
+							});
+						return `(${styledRolls.join('+')})`;
+						break;
+					case 'M':
+						return roll.expr.toString().replace(/(\+|-)/g, '$1 ').replace(/\*/g, '&' + 'ast' + ';');
+						break;
+					case 'V':
+						return _.map(roll.rolls, rollToText).join(' ');
+						break;
+					case 'G':
+						return '(' + _.map(roll.rolls, a => _.map(a, rollToText).join(' '))
+							.join(' ') + ')';
+						break;
+					default:
+						return '';
+					}
+				};
+			return {
+				makeBox: makeBox,
+				makeCommandButton: makeCommandButton,
+				makeInlineroll: makeInlineroll,
+				makeRow: makeRow
+			};
+		}(),
+		// Data variables
+		importData = {
+			"5E-Shaped": {
+				"Strength Save": {
+					"name": "Strength Saving Throw",
+					"formula": "[[d20  + %strength_saving_throw_formula%]]",
+					"special": "shaped"
+				},
+				"Dexterity Save": {
+					"name": "Dexterity Saving Throw",
+					"formula": "[[d20  + %dexterity_saving_throw_formula%]]",
+					"special": "shaped"
+				},
+				"Constitution Save": {
+					"name": "Constitution Saving Throw",
+					"formula": "[[d20  + %constitution_saving_throw_formula%]]",
+					"special": "shaped"
+				},
+				"Intelligence Save": {
+					"name": "Intelligence Saving Throw",
+					"formula": "[[d20  + %intelligence_saving_throw_formula%]]",
+					"special": "shaped"
+				},
+				"Wisdom Save": {
+					"name": "Wisdom Saving Throw",
+					"formula": "[[d20  + %wisdom_saving_throw_formula%]]",
+					"special": "shaped"
+				},
+				"Charisma Save": {
+					"name": "Charisma Saving Throw",
+					"formula": "[[d20  + %charisma_saving_throw_formula%]]",
+					"special": "shaped"
+				},
+				"Strength Check": {
+					"name": "Strength Check",
+					"formula": "[[d20 + %strength_check_formula%]]",
+					"special": "shaped"
+				},
+				"Dexterity Check": {
+					"name": "Dexterity Check",
+					"formula": "[[d20 + %dexterity_check_formula%]]",
+					"special": "shaped"
+				},
+				"Constitution Check": {
+					"name": "Constitution Check",
+					"formula": "[[d20 + %constitution_check_formula%]]",
+					"special": "shaped"
+				},
+				"Intelligence Check": {
+					"name": "Intelligence Check",
+					"formula": "[[d20 + %intelligence_check_formula%]]",
+					"special": "shaped"
+				},
+				"Wisdom Check": {
+					"name": "Wisdom Check",
+					"formula": "[[d20 + %wisdom_check_formula%]]",
+					"special": "shaped"
+				},
+				"Charisma Check": {
+					"name": "Charisma Check",
+					"formula": "[[d20 + %charisma_check_formula%]]",
+					"special": "shaped"
+				},
+				"Acrobatics": {
+					"name": "Dexterity (Acrobatics) Check",
+					"formula": "[[d20 + %repeating_skill_$0_formula%]]",
+					"special": "shaped"
+				},
+				"Animal Handling": {
+					"name": "Wisdom (Animal Handling) Check",
+					"formula": "[[d20 + %repeating_skill_$1_formula%]]",
+					"special": "shaped"
+				},
+				"Arcana": {
+					"name": "Intelligence (Arcana) Check",
+					"formula": "[[d20 + %repeating_skill_$2_formula%]]",
+					"special": "shaped"
+				},
+				"Athletics": {
+					"name": "Strength (Athletics) Check",
+					"formula": "[[d20 + %repeating_skill_$3_formula%]]",
+					"special": "shaped"
+				},
+				"Deception": {
+					"name": "Charisma (Deception) Check",
+					"formula": "[[d20 + %repeating_skill_$4_formula%]]",
+					"special": "shaped"
+				},
+				"History": {
+					"name": "Intelligence (History) Check",
+					"formula": "[[d20 + %repeating_skill_$5_formula%]]",
+					"special": "shaped"
+				},
+				"Insight": {
+					"name": "Wisdom (Insight) Check",
+					"formula": "[[d20 + %repeating_skill_$6_formula%]]",
+					"special": "shaped"
+				},
+				"Intimidation": {
+					"name": "Charisma (Intimidation) Check",
+					"formula": "[[d20 + %repeating_skill_$7_formula%]]",
+					"special": "shaped"
+				},
+				"Investigation": {
+					"name": "Intelligence (Investigation) Check",
+					"formula": "[[d20 + %repeating_skill_$8_formula%]]",
+					"special": "shaped"
+				},
+				"Medicine": {
+					"name": "Wisdom (Medicine) Check",
+					"formula": "[[d20 + %repeating_skill_$9_formula%]]",
+					"special": "shaped"
+				},
+				"Nature": {
+					"name": "Intelligence (Nature) Check",
+					"formula": "[[d20 + %repeating_skill_$10_formula%]]",
+					"special": "shaped"
+				},
+				"Perception": {
+					"name": "Wisdom (Perception) Check",
+					"formula": "[[d20 + %repeating_skill_$11_formula%]]",
+					"special": "shaped"
+				},
+				"Performance": {
+					"name": "Charisma (Performance) Check",
+					"formula": "[[d20 + %repeating_skill_$12_formula%]]",
+					"special": "shaped"
+				},
+				"Persuasion": {
+					"name": "Charisma (Persuasion) Check",
+					"formula": "[[d20 + %repeating_skill_$13_formula%]]",
+					"special": "shaped"
+				},
+				"Religion": {
+					"name": "Intelligence (Religion) Check",
+					"formula": "[[d20 + %repeating_skill_$14_formula%]]",
+					"special": "shaped"
+				},
+				"Sleight of Hand": {
+					"name": "Dexterity (Sleight of Hand) Check",
+					"formula": "[[d20 + %repeating_skill_$15_formula%]]",
+					"special": "shaped"
+				},
+				"Stealth": {
+					"name": "Dexterity (Stealth) Check",
+					"formula": "[[d20 + %repeating_skill_$16_formula%]]",
+					"special": "shaped"
+				},
+				"Survival": {
+					"name": "Wisdom (Survival) Check",
+					"formula": "[[d20 + %repeating_skill_$17_formula%]]",
+					"special": "shaped"
+				},
+				"AC": {
+					"name": "Armor Class",
+					"formula": "[[%AC%]]"
+				}
+			},
+			"Pathfinder": {
+				"Fortitude Save": {
+					"name": "Fortitude Saving Throw",
+					"formula": "[[d20 + %Fort%]]"
+				},
+				"Reflex Save": {
+					"name": "Reflex Saving Throw",
+					"formula": "[[d20 + %Ref%]]"
+				},
+				"Will Save": {
+					"name": "Will Saving Throw",
+					"formula": "[[d20 + %Will%]]"
+				},
+				"Strength Check": {
+					"name": "Strength Check",
+					"formula": "[[d20 + %STR-mod% + %checks-cond%]]"
+				},
+				"Dexterity Check": {
+					"name": "Dexterity Check",
+					"formula": "[[d20 + %DEX-mod% + %checks-cond%]]"
+				},
+				"Constitution Check": {
+					"name": "Constitution Check",
+					"formula": "[[d20 + %CON-mod% + %checks-cond%]]"
+				},
+				"Intelligence Check": {
+					"name": "Intelligence Check",
+					"formula": "[[d20 + %INT-mod% + %checks-cond%]]"
+				},
+				"Wisdom Check": {
+					"name": "Wisdom Check",
+					"formula": "[[d20 + %WIS-mod% + %checks-cond%]]"
+				},
+				"Charisma Check": {
+					"name": "Charisma Check",
+					"formula": "[[d20 + %CHA-mod% + %checks-cond%]]"
+				},
+				"Perception": {
+					"name": "Perception Check",
+					"formula": "[[d20 + %Perception%]]"
+				},
+				"Stealth": {
+					"name": "Stealth Check",
+					"formula": "[[d20 + %Stealth%]]"
+				},
+				"AC": {
+					"name": "Armor Class",
+					"formula": "[[%AC%]]"
+				}
+			},
+			"5E-OGL": {
+				"Strength Save": {
+					"name": "Strength Saving Throw",
+					"formula": "[[d20 + (%strength_save_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_str_save%*%npc%) [NPC]]]"
+				},
+				"Dexterity Save": {
+					"name": "Dexterity Saving Throw",
+					"formula": "[[d20 + (%dexterity_save_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_dex_save%*%npc%) [NPC]]]"
+				},
+				"Constitution Save": {
+					"name": "Constitution Saving Throw",
+					"formula": "[[d20 + (%constitution_save_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_con_save%*%npc%) [NPC]]]"
+				},
+				"Intelligence Save": {
+					"name": "Intelligence Saving Throw",
+					"formula": "[[d20 + (%intelligence_save_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_int_save%*%npc%) [NPC]]]"
+				},
+				"Wisdom Save": {
+					"name": "Wisdom Saving Throw",
+					"formula": "[[d20 + (%wisdom_save_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_wis_save%*%npc%) [NPC]]]"
+				},
+				"Charisma Save": {
+					"name": "Charisma Saving Throw",
+					"formula": "[[d20 + (%charisma_save_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_cha_save%*%npc%) [NPC]]]"
+				},
+				"Strength Check": {
+					"name": "Strength Check",
+					"formula": "[[d20 + %strength_mod%]]"
+				},
+				"Dexterity Check": {
+					"name": "Dexterity Check",
+					"formula": "[[d20 + %dexterity_mod%]]"
+				},
+				"Constitution Check": {
+					"name": "Constitution Check",
+					"formula": "[[d20 + %constitution_mod%]]"
+				},
+				"Intelligence Check": {
+					"name": "Intelligence Check",
+					"formula": "[[d20 + %intelligence_mod%]]"
+				},
+				"Wisdom Check": {
+					"name": "Wisdom Check",
+					"formula": "[[d20 + %wisdom_mod%]]"
+				},
+				"Charisma Check": {
+					"name": "Charisma Check",
+					"formula": "[[d20 + %charisma_mod%]]"
+				},
+				"Acrobatics": {
+					"name": "Dexterity (Acrobatics) Check",
+					"formula": "[[d20 + (%acrobatics_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_acrobatics%*%npc%) [NPC]]]"
+				},
+				"Animal Handling": {
+					"name": "Wisdom (Animal Handling) Check",
+					"formula": "[[d20 + (%animal_handling_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_animal_handling%*%npc%) [NPC]]]"
+				},
+				"Arcana": {
+					"name": "Intelligence (Arcana) Check",
+					"formula": "[[d20 + (%arcana_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_arcana%*%npc%) [NPC]]]"
+				},
+				"Athletics": {
+					"name": "Strength (Athletics) Check",
+					"formula": "[[d20 + (%athletics_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_athletics%*%npc%) [NPC]]]"
+				},
+				"Deception": {
+					"name": "Charisma (Deception) Check",
+					"formula": "[[d20 + (%deception_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_deception%*%npc%) [NPC]]]"
+				},
+				"History": {
+					"name": "Intelligence (History) Check",
+					"formula": "[[d20 + (%history_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_history%*%npc%) [NPC]]]"
+				},
+				"Insight": {
+					"name": "Wisdom (Insight) Check",
+					"formula": "[[d20 + (%insight_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_insight%*%npc%) [NPC]]]"
+				},
+				"Intimidation": {
+					"name": "Charisma (Intimidation) Check",
+					"formula": "[[d20 + (%intimidation_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_intimidation%*%npc%) [NPC]]]"
+				},
+				"Investigation": {
+					"name": "Intelligence (Investigation) Check",
+					"formula": "[[d20 + (%investigation_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_investigation%*%npc%) [NPC]]]"
+				},
+				"Medicine": {
+					"name": "Wisdom (Medicine) Check",
+					"formula": "[[d20 + (%medicine_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_medicine%*%npc%) [NPC]]]"
+				},
+				"Nature": {
+					"name": "Intelligence (Nature) Check",
+					"formula": "[[d20 + (%nature_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_nature%*%npc%) [NPC]]]"
+				},
+				"Perception": {
+					"name": "Wisdom (Perception) Check",
+					"formula": "[[d20 + (%perception_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_perception%*%npc%) [NPC]]]"
+				},
+				"Performance": {
+					"name": "Charisma (Performance) Check",
+					"formula": "[[d20 + (%performance_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_performance%*%npc%) [NPC]]]"
+				},
+				"Persuasion": {
+					"name": "Charisma (Persuasion) Check",
+					"formula": "[[d20 + (%persuasion_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_persuasion%*%npc%) [NPC]]]"
+				},
+				"Religion": {
+					"name": "Intelligence (Religion) Check",
+					"formula": "[[d20 + (%religion_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_religion%*%npc%) [NPC]]]"
+				},
+				"Sleight of Hand": {
+					"name": "Dexterity (Sleight of Hand) Check",
+					"formula": "[[d20 + (%sleight_of_hand_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_sleight_of_hand%*%npc%) [NPC]]]"
+				},
+				"Stealth": {
+					"name": "Dexterity (Stealth) Check",
+					"formula": "[[d20 + (%stealth_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_stealth%*%npc%) [NPC]]]"
+				},
+				"Survival": {
+					"name": "Wisdom (Survival) Check",
+					"formula": "[[d20 + (%survival_bonus%%pbd_safe%*(1-%npc%)) [PC] + (%npc_survival%*%npc%) [NPC]]]"
+				},
+				"AC": {
+					"name": "Armor Class",
+					"formula": "[[%AC%]]"
+				}
+			},
+			"3.5": {
+				"Fortitude Save": {
+					"name": "Fortitude Saving Throw",
+					"formula": "[[d20 + %fortitude%]]"
+				},
+				"Reflex Save": {
+					"name": "Reflex Saving Throw",
+					"formula": "[[d20 + %reflex%]]"
+				},
+				"Will Save": {
+					"name": "Will Saving Throw",
+					"formula": "[[d20 + %wisdom%]]"
+				},
+				"Strength Check": {
+					"name": "Strength Check",
+					"formula": "[[d20 + %str-mod%]]"
+				},
+				"Dexterity Check": {
+					"name": "Dexterity Check",
+					"formula": "[[d20 + %dex-mod%]]"
+				},
+				"Constitution Check": {
+					"name": "Constitution Check",
+					"formula": "[[d20 + %con-mod%]]"
+				},
+				"Intelligence Check": {
+					"name": "Intelligence Check",
+					"formula": "[[d20 + %int-mod%]]"
+				},
+				"Wisdom Check": {
+					"name": "Wisdom Check",
+					"formula": "[[d20 + %wis-mod%]]"
+				},
+				"Charisma Check": {
+					"name": "Charisma Check",
+					"formula": "[[d20 + %cha-mod%]]"
+				},
+				"Hide": {
+					"name": "Hide Check",
+					"formula": "[[d20 + %hide%]]"
+				},
+				"Listen": {
+					"name": "Listen Check",
+					"formula": "[[d20 + %listen%]]"
+				},
+				"Move Silently": {
+					"name": "Move Silently Check",
+					"formula": "[[d20 + %movesilent%]]"
+				},
+				"Spot": {
+					"name": "Spot Check",
+					"formula": "[[d20 + %spot%]]"
+				},
+				"AC": {
+					"name": "Armor Class",
+					"formula": "[[%armorclass%]]"
+				}
+			}
+		},
+		optsData = {
+			list: {
+				ro: {
+					type: 'string',
+					def: 'roll1',
+					admissible: ['roll1', 'roll2', 'adv', 'dis', 'rollsetting']
+				},
+				die_adv: {
+					type: 'string',
+					def: '2d20kh1'
+				},
+				die_dis: {
+					type: 'string',
+					def: '2d20kl1'
+				},
+				fallback: {
+					type: 'string'
+				},
+				globalmod: {
+					type: 'string'
+				},
+				subheader: {
+					type: 'string',
+					local: true
+				},
+				custom: {
+					type: 'string',
+					local: true
+				},
+				button: {
+					type: 'string',
+					local: true
+				},
+				send: {
+					type: 'string',
+					local: true
+				},
+				multi: {
+					type: 'string',
+					local: true
+				},
+				input: {
+					type: 'string',
+					local: true
+				},
+				whisper: {
+					type: 'bool',
+					def: false,
+					negate: 'public'
+				},
+				hideformula: {
+					type: 'bool',
+					def: false,
+					negate: 'showformula'
+				},
+				usetokenname: {
+					type: 'bool',
+					def: true,
+					negate: 'usecharname'
+				},
+				showpicture: {
+					type: 'bool',
+					def: true,
+					negate: 'hidepicture'
+				},
+				process: {
+					type: 'bool',
+					def: false,
+					negate: 'direct'
+				},
+				showaverage: {
+					type: 'bool',
+					local: true
+				}
+			},
+			meta: {}
+		},
+		// Setup
+		checkInstall = function () {
+			if (!state.groupCheck) {
+				initializeState();
+			}
+			else if (state.groupCheck.version < stateVersion) {
+				updateState();
+			}
+			if (state.groupCheck.dataVersion < dataVersion) {
+				updateCheckList();
+			}
+			// Build metadata for available options
+			optsData.meta = {
+				allopts: _.keys(optsData.list),
+				str: _.chain(optsData.list)
+					.pick(v => v.type === 'string')
+					.keys()
+					.value(),
+				glob: _.chain(optsData.list)
+					.omit(v => v.local)
+					.keys()
+					.value(),
+				bool: _.chain(optsData.list)
+					.pick(v => v.type === 'bool')
+					.keys()
+					.value(),
+				boolNeg: _.chain(optsData.list)
+					.pick(v => v.type === 'bool')
+					.pluck('negate')
+					.value()
+			};
+			log('-=> GroupCheck v' + version + ' <=-');
+		},
+		initializeState = function () {
+			state.groupCheck = {
+				'checkList': {},
+				'options': _.chain(optsData.list)
+					.pick(v => _.has(v, 'def'))
+					.mapObject(v => v.def)
+					.value(),
+				'version': stateVersion,
+				'importInfo': '',
+				'dataVersion': dataVersion
+			};
+			log('-=> GroupCheck initialized with default settings!<=-');
+		},
+		updateState = function () {
+			switch (state.groupCheck.version) {
+			case 1:
+				_.each(state.groupCheck.checkList, function (check) {
+					let die = check.die || state.groupCheck.options.die;
+					check.formula = _.union([die], _.map(check.mod, str => '%' + str + '%'))
+						.join(' + ');
+					delete check.mod;
+				});
+				delete state.groupCheck.options.die;
+				state.groupCheck.options.hideformula = state.groupCheck.options.hidebonus;
+				delete state.groupCheck.options.hidebonus;
+				log('-=> GroupCheck has updated to a new data format (1=>2). Please ' +
+					'make sure your list of checks has converted correctly.<=-');
+			case 2:
+				_.each(state.groupCheck.checkList, function (check) {
+					check.formula = '[[' + check.formula + ']]';
+				});
+				log('-=> GroupCheck has updated to a new data format (2=>3). Please ' +
+					'make sure your list of checks has converted correctly.<=-');
+			case 3:
+				state.groupCheck.options.showpicture = true;
+			case 4:
+				state.groupCheck.options.process = false;
+			case 5:
+				state.groupCheck.dataVersion = 0;
+				state.groupCheck.importInfo = '';
+				state.groupCheck.version = 6;
+			}
+		},
+		updateCheckList = function () {
+			let changedData = false;
+			switch (state.groupCheck.dataVersion) {
+			case 0:
+				// Detect 5E-Shaped
+				if (_.has(state.groupCheck.checkList, 'Strength Save') &&
+					state.groupCheck.checkList['Strength Save'].formula ===
+					'[[d20 + %strength_saving_throw_mod%]]') {
+					state.groupCheck.importInfo = '5E-Shaped';
+				}
+				// Detect 5E-OGL
+				if (_.has(state.groupCheck.checkList, 'Strength Save') &&
+					state.groupCheck.checkList['Strength Save'].formula ===
+					'[[d20 + %strength_save_bonus% * {1%npc_str_save%0, 0}=10 +' +
+					' 0%npc_str_save% + %globalsavemod% ]]') {
+					state.groupCheck.importInfo = '5E-OGL';
+				}
+				// Detect Pathfinder
+				if (_.has(state.groupCheck.checkList, 'Fortitude Save') &&
+					state.groupCheck.checkList['Fortitude Save'].formula ===
+					'[[d20 + %Fort%]]') {
+					state.groupCheck.importInfo = 'Pathfinder';
+				}
+				// Detect 3.5
+				if (_.has(state.groupCheck.checkList, 'Move Silently') &&
+					state.groupCheck.checkList['Move Silently'].formula ===
+					'[[d20 + %movesilent%]]') {
+					state.groupCheck.importInfo = '3.5';
+				}
+				if (state.groupCheck.importInfo === '5E-OGL') {
+					changedData = true;
+				}
+			case 1:
+			case 2:
+			case 3:
+				if (state.groupCheck.importInfo === '5E-Shaped') {
+					changedData = true;
+				}
+			case 4:
+				if (state.groupCheck.importInfo === '5E-OGL') {
+					changedData = true;
+				}
+			}
+			if (state.groupCheck.importInfo && changedData) {
+				Object.assign(state.groupCheck.checkList, importData[state.groupCheck.importInfo]);
+				log('-=> GroupCheck has detected that you are using the ' +
+					state.groupCheck.importInfo + ' data set and has updated your checks ' +
+					'database automatically. Sorry for any inconvenience caused. <=-');
+			}
+			state.groupCheck.dataVersion = dataVersion;
+		},
+		// Utility functions
+		safeReadJSON = function (string) {
+			try {
+				let o = JSON.parse(string);
+				if (o && typeof o === 'object') {
+					return o;
+				}
+			}
+			catch (e) {}
+			return false;
+		},
+		sendChatNoarchive = function (who, string) {
+			sendChat(who, string, null, {
+				noarchive: true
+			});
+		},
+		recoverInlinerollFormulae = function (msg) {
+			if (_.has(msg, 'inlinerolls')) {
+				return _.chain(msg.inlinerolls)
+					.reduce(function (m, v, k) {
+						m['$[[' + k + ']]'] = '[[' + v.expression + ']]';
+						return m;
+					}, {})
+					.reduce((m, v, k) => m.replace(k, v), msg.content)
+					.value();
+			}
+			else {
+				return msg.content;
+			}
+		},
+		htmlReplace = function (str) {
+			let entities = {
+				'<': 'lt',
+				'>': 'gt',
+				"'": '#39',
+				'@': '#64',
+				'{': '#123',
+				'|': '#124',
+				'}': '#125',
+				'[': '#91',
+				'"': 'quot',
+				']': '#93',
+				'*': '#42'
+			};
+			return _.map(str.split(''), c => (_.has(entities, c)) ? ('&' + entities[c] + ';') : c)
+				.join('');
+		},
+		getWhisperPrefix = function (playerid) {
+			let player = getObj('player', playerid);
+			if (player && player.get('_displayname')) {
+				return '/w "' + player.get('_displayname') + '" ';
+			}
+			else {
+				return '/w GM ';
+			}
+		},
+		handleError = function (whisper, errorMsg) {
+			let output = whisper + '<div style="border:1px solid black;background-color:' +
+				'#FFBABA;padding:3px 3px;"><h4>Error</h4><p>' + errorMsg + '</p></div>';
+			sendChatNoarchive('GroupCheck', output);
+		},
+		printHelp = function (whisper) {
+			let helpString = whisper + '<div style="border:1px solid black;' +
+				'background-color:#FFFFFF;padding:3px 3px;">Please refer to the ' +
+				'<a style="text-decoration:underline" href="https://github.com/joesinghaus/' +
+				'roll20-api-scripts/tree/master/GroupCheck/1.6/README.md">documentation' +
+				'</a> for help with using GroupCheck, or ask in the API forum thread.</div>';
+			sendChatNoarchive('GroupCheck', helpString);
+		},
+		printCommandMenu = function (whisper, opts) {
+			let optsCommand = _.map(opts, function (value, key) {
+				return (typeof value === 'boolean') ? `--${key}` : `--${key} ${value}`;
+			}).join(' ');
+			let commandOutput = whisper + '<div style="border:1px solid black;' +
+				'background-color:#FFFFFF;padding:3px 3px;">' +
+				'<h3 style="text-align:center">Available commands:</h3><p>' +
+				_.map(_.keys(state.groupCheck.checkList), function (s) {
+					return `[${s}](!group-check ${optsCommand} --${s})`;
+				}).join('') +
+				'</p></div>';
+			sendChatNoarchive('GroupCheck', commandOutput);
+		},
+		getConfigTable = function () {
+			return '<div style="border:1px solid black;background-color:#FFFFFF;padding:' +
+				'3px 3px;display:inline-block;"><h4>Current Options</h4><br><table ' +
+				'style="margin:3px;"><tr><td><b>Name</b></td><td><b>Value</td></b></tr>' +
+				_.map(state.groupCheck.options, function (value, key) {
+					return `<tr><td>${key}</td><td>${value}</td></tr>`;
+				}).join('') +
+				'</table></div><br><div style="border:1px solid black;background-color:' +
+				'#FFFFFF;padding:3px 3px;display:inline-block;"><h4>Checks</h4><br>' +
+				'<table style="margin:3px;"><tr><td><b>Command</b></td><td><b>Name</b>' +
+				'</td><td><b>Formula</b></td><td><b>Special</b></td></tr>' +
+				_.map(state.groupCheck.checkList, function (value, key) {
+					return `<tr><td>${key}</td><td>${value.name}</td><td>` +
+						`${htmlReplace(value.formula)}</td><td>${value.special||''}</td></tr>`;
+				}).join('') +
+				'</table></div>';
+		},
+		getRollOption = function (charid) {
+			if (charid) {
+				switch (getAttrByName(charid, "shaped_d20")) {
+				case "d20":
+					return 'roll1';
+					break;
+				case "2d20kh1":
+				case "?{Disadvantaged|No,2d20kh1|Yes,d20}":
+					return 'adv';
+					break;
+				case "2d20kl1":
+				case "?{Advantaged|No,2d20kl1|Yes,d20}":
+					return 'dis';
+					break;
+				}
+			}
+			return 'roll2';
+		},
+		parseOpts = function (content, hasValue) {
+			return _.chain(content.replace(/<br\/>\n/g, ' ')
+					.replace(/({{(.*?)\s*}}\s*$)/g, '$2')
+					.split(/\s+--/))
+				.rest()
+				.reduce(function (opts, arg) {
+					let kv = arg.split(/\s(.+)/);
+					(_.contains(hasValue, kv[0])) ? (opts[kv[0]] = (kv[1] || '')) :
+					(opts[arg] = true);
+					return opts;
+				}, {})
+				.value();
+		},
+		detectCritical = function (roll) {
+			let s = [];
+			if (roll.type === 'V' && _.has(roll, 'rolls')) {
+				s = _.map(roll.rolls, detectCritical);
+			}
+			else if (roll.type === 'G' && _.has(roll, 'rolls')) {
+				s = _.chain(roll.rolls)
+					.map(a => _.map(a, detectCritical))
+					.flatten()
+					.value();
+			}
+			else if (roll.type === 'R' && _.has(roll, 'sides')) {
+				let crit = (roll.mods && roll.mods.customCrit) || [{
+					comp: '==',
+					point: roll.sides
+				}];
+				let fumble = (roll.mods && roll.mods.customFumble) || [{
+					comp: '==',
+					point: 1
+				}];
+				if (_.some(roll.results, r => rollIsCrit(r.v, crit[0].comp, crit[0].point))) {
+					s.push('crit');
+				}
+				if (_.some(roll.results, r => rollIsCrit(r.v, fumble[0].comp, fumble[0].point))) {
+					s.push('fumble');
+				}
+			}
+			let c = _.contains(s, 'crit');
+			let f = _.contains(s, 'fumble');
+			let m = _.contains(s, 'mixed') || (c && f);
+			return (m ? 'mixed' : (c ? 'crit' : (f ? 'fumble' : (false))));
+		},
+		rollIsCrit = function (value, comp, point) {
+			switch (comp) {
+			case '==':
+				return value == point;
+				break;
+			case '<=':
+				return value <= point;
+				break;
+			case '>=':
+				return value >= point;
+			}
+		},
+		replaceInput = function (formula, input) {
+			if (!_.isUndefined(input)) {
+				_.each(input.split(','), function (v, i) {
+					formula = formula.replace(new RegExp('INPUT_' + i, 'g'), v);
+				});
+			}
+			formula = formula.replace(/INPUT_\d+/g, '');
+			return formula;
+		},
+		processFormula = function (formula, special, charID, charName) {
+			if (special === 'shaped') {
+				let match = formula.match(/%(\S.*?)%/);
+				while (match) {
+					formula = formula.replace(/%(\S.*?)%/, getAttrByName(charID, match[1]) || '');
+					match = formula.match(/%(\S.*?)%/);
+				}
+				return formula.replace(/(?:{{@{(?:[a-zA-Z0-9-_])+}=1}} )?{{roll1=\[\[@{(?:[a-zA-Z0-9-_])+}(?:@{d20_mod})? \+ (.*?)\]\]}}(?: {{roll2=\[\[.*?\]\]}})?/, '$1') || '0';
+			}
+			else {
+				return formula.replace(/%(\S.*?)%/g, `@{${charName}|$1}`);
+			}
+		},
+		//Main functions
+		processTokenRollData = function (token, checkFormula, checkSpecial, opts) {
+			let displayName, computedFormula, charName, tokenPic;
+			const characterId = token.get('represents'),
+				ro = opts.rollOption(characterId),
+				character = getObj('character', characterId);
+			if (character) {
+				charName = character.get('name');
+				displayName = (opts.usetokenname) ? token.get('name') : charName;
+				computedFormula = processFormula(checkFormula, checkSpecial, characterId, charName);
+			}
+			else if (opts.fallback) {
+				displayName = token.get('name');
+				computedFormula = checkFormula.replace(/%(\S.*?)%/, opts.fallback)
+					.replace(/%(\S.*?)%/g, '0');
+			}
+			else {
+				return null;
+			}
+			tokenPic = (opts.showpicture || !displayName) ?
+				token.get('imgsrc').replace(/(?:max|original|med).png/, 'thumb.png') : false;
+			switch (ro) {
+			case 'adv':
+				computedFormula += ' (Advantage)';
+				computedFormula = computedFormula.replace(/1?d20/, opts.die_adv);
+				break;
+			case 'dis':
+				computedFormula += ' (Disadvantage)';
+				computedFormula = computedFormula.replace(/1?d20/, opts.die_dis);
+				break;
+			}
+			return {
+				'pic': tokenPic,
+				'name': displayName,
+				'roll2': (ro === 'roll2'),
+				'formula': computedFormula,
+				'id': token.id
+			}
+		},
+		sendFinalMessage = function (opts, checkName, rollData, msg) {
+			let freetext = '',
+				match, inlinerollData = {};
+			// Format inline rolls
+			if (_.has(msg[0], 'inlinerolls')) {
+				inlinerollData = _.reduce(msg[0].inlinerolls, function (r, c, i) {
+					r[`$[[${i}]]`] = {
+						result: c.results.total || 0,
+						styled: outputStyle.makeInlineroll(c, opts.hideformula)
+					};
+					return r;
+				}, {});
+			}
+			_.each(msg[0].content.split('<br>'), function (value, j) {
+				_.each(value.split('####'), function (str, n) {
+					rollData[j]['result_' + n] = [];
+					match = str.match(/\$\[\[\d+\]\]/);
+					while (match) {
+						rollData[j]['result_' + n].push(inlinerollData[match[0]].result);
+						str = str.replace(match[0], inlinerollData[match[0]].styled);
+						match = str.match(/\$\[\[\d+\]\]/);
+					}
+					rollData[j]['styled_' + n] = str;
+				});
+			});
+			// Format rows of output
+			let rolls = _.map(rollData, function (o) {
+				return outputStyle.makeRow(o.pic, o.name, o.roll2, o['styled_0'],
+					o['styled_1']);
+			});
+			if (opts.showaverage) {
+				let fakeRoll = {
+					results: {
+						total: (Math.round(10 * (_.chain(rollData)
+								.map(o => o['result_0'][0]).reduce((p, c) => p + c, 0)).value() /
+							rollData.length) / 10)
+					}
+				};
+				rolls.push(outputStyle.makeRow('', 'Average of rolls', false,
+					outputStyle.makeInlineroll(fakeRoll, true), '', ''));
+			}
+			if (_.has(opts, 'button')) {
+				let commandData = opts.button.split(/\s(.+)/),
+					commandName = commandData.shift().replace('_', ' '),
+					commandText = (commandData[0] || '').replace(/~/g, '--')
+					.replace(/RESULTS\((.+?)\)/,
+						_.map(rollData, o => o['result_0'][0]).join('$1'))
+					.replace(/IDS\((.+?)\)/, _.map(rollData, o => o.id).join('$1'));
+				freetext += outputStyle.makeCommandButton(commandName, commandText);
+			}
+			if (_.has(opts, 'send')) {
+				let command = (opts.send || '').replace(/~/g, '--')
+					.replace(/RESULTS\((.+?)\)/, _.map(rollData, o => o['result_0'][0]).join('$1'))
+					.replace(/IDS\((.+?)\)/, _.map(rollData, o => o.id).join('$1'));
+				sendChat('API', command);
+			};
+			// Combine output
+			let output = (opts.whisper ? '/w GM ' : '') +
+				outputStyle.makeBox(checkName, opts.subheader, freetext, rolls.join(''));
+			sendChat(opts.speaking, output);
+		},
+		handleConfig = function (msg) {
+			const hasValueConfig = ['import', 'add', 'delete', 'set'];
+			let opts = parseOpts(recoverInlinerollFormulae(msg), hasValueConfig),
+				whisper = getWhisperPrefix(msg.playerid),
+				output;
+			if (!playerIsGM(msg.playerid)) {
+				sendChatNoarchive('GroupCheck', whisper + 'Permission denied.');
+				return;
+			}
+			if (opts.import) {
+				if (_.has(importData, opts.import)) {
+					_.extend(state.groupCheck.checkList, importData[opts.import]);
+					state.groupCheck.importInfo = opts.import;
+					output = `Data set ${opts.import} imported.`;
+				}
+				else {
+					handleError(whisper, `Data set ${opts.import} not found.`);
+				}
+			}
+			else if (opts.add) {
+				let data = safeReadJSON(opts.add.replace(/\\(\[|\])/g, '$1$1'));
+				if (_.isObject(data)) {
+					_.each(data, function (value, key) {
+						if (!(_.isObject(value) && _.has(value, 'name') &&
+								_.has(value, 'formula') && _.isString(value.formula))) {
+							delete data[key];
+						}
+					});
+					_.extend(state.groupCheck.checkList, data);
+					output = 'Checks added. The imported JSON was: <br>' +
+						htmlReplace(JSON.stringify(data));
+				}
+				else {
+					handleError(whisper, 'Error reading input.');
+				}
+			}
+			else if (opts.delete) {
+				if (_.has(state.groupCheck.checkList, opts.delete)) {
+					delete state.groupCheck.checkList[opts.delete];
+					output = `Check ${opts.delete} deleted.`;
+				}
+				else {
+					handleError(whisper, `Check called ${opts.delete} not found.`);
+				}
+			}
+			else if (opts.set) {
+				let kv = opts.set.split(/\s(.+)/);
+				if (_.indexOf(optsData.meta.str, kv[0]) !== -1 && _.indexOf(optsData.meta.glob, kv[0]) !== -1) {
+					state.groupCheck.options[kv[0]] = kv[1];
+				}
+				else if (kv[0] === 'ro') {
+					if (_.indexOf(optsData.list.ro.admissible, kv[1]) !== -1) {
+						state.groupCheck.options.ro = kv[1];
+					}
+					else {
+						handleError(whisper, `Roll option ${kv[1]} is invalid, sorry.`);
+						return;
+					}
+				}
+				else if (_.indexOf(optsData.meta.bool, kv[0]) !== -1) {
+					state.groupCheck.options[kv[0]] = true;
+				}
+				else if (_.indexOf(optsData.meta.boolNeg, kv[0]) !== -1) {
+					kv[0] = optsData.meta.bool[_.indexOf(optsData.meta.boolNeg, kv[0])];
+					state.groupCheck.options[kv[0]] = false;
+				}
+				else {
+					handleError(whisper, 'Command not understood.');
+					return;
+				}
+				output = `Option ${kv[0]} set to ${state.groupCheck.options[kv[0]]}.`;
+			}
+			else if (opts.clear) {
+				state.groupCheck.checkList = {};
+				state.groupCheck.importInfo = '';
+				output = 'All checks cleared.';
+			}
+			else if (opts.defaults) {
+				state.groupCheck.options = _.chain(optsData.list)
+					.pick(v => _.has(v, 'def'))
+					.mapObject(v => v.def)
+					.value();
+				output = 'All options reset to defaults.';
+			}
+			else if (opts.reset) {
+				initializeState();
+				output = 'Everything is reset to factory settings.';
+			}
+			else if (opts.show) {
+				output = getConfigTable();
+			}
+			else {
+				printHelp(whisper);
+			}
+			if (output) {
+				sendChatNoarchive('GroupCheck', whisper + output);
+			}
+			return;
+		},
+		handleRolls = function (msg) {
+			// Options processing
+			let checkName, checkFormula, checkSpecial,
+				whisper = getWhisperPrefix(msg.playerid),
+				opts = parseOpts(recoverInlinerollFormulae(msg), optsData.meta.str),
+				checkCmd = _.intersection(_.keys(state.groupCheck.checkList), _.keys(opts))[0];
+			// Print menu if we don't know what to roll
+			if (opts.help) {
+				printHelp(whisper);
+				return;
+			}
+			if (!checkCmd && !opts.custom) {
+				printCommandMenu(whisper, opts);
+				return;
+			}
+			// Continue with options processing
+			if (checkCmd) {
+				checkFormula = state.groupCheck.checkList[checkCmd].formula;
+				checkName = state.groupCheck.checkList[checkCmd].name;
+				checkSpecial = state.groupCheck.checkList[checkCmd].special;
+			}
+			_.each(optsData.meta.boolNeg, function (name, index) {
+				_.has(opts, name) ? opts[optsData.meta.bool[index]] = false : null;
+			});
+			// Handle --custom
+			if (opts.custom) {
+				let kv = opts.custom.replace(/\\(\[|\])/g, '$1$1').split(/,\s?/);
+				if (kv.length < 2) {
+					handleError(whisper, "Custom roll format invalid");
+					return;
+				}
+				checkName = kv.shift();
+				checkFormula = kv.join();
+			}
+			// Remove invalid options and check commands from opts
+			// Plug in defaults for unspecified options
+			opts = _.chain(opts)
+				.pick(optsData.meta.allopts)
+				.defaults(state.groupCheck.options)
+				.value();
+			// Apply global modifier
+			if (opts.globalmod) {
+				if (checkFormula.search(/\]\](?=$)/) !== -1) {
+					checkFormula = checkFormula.replace(/\]\](?=$)/,
+						' + ' + opts.globalmod + '[global modifier]]]');
+				}
+				else {
+					checkFormula += ' + ' + opts.globalmod;
+				}
+			}
+			// Replace placeholders
+			checkFormula = replaceInput(checkFormula, opts.input);
+			// Eliminate invalid roll option.
+			if (!_.contains(optsData.list.ro.admissible, opts.ro)) {
+				handleError(whisper, 'Roll option ' + opts.ro + ' is invalid, sorry.');
+				return;
+			}
+			// Get options into desired format
+			opts.rollOption = (opts.ro === 'rollsetting') ?
+				getRollOption : ((charid) => opts.ro);
+			opts.multi = (opts.multi > 1) ? parseInt(opts.multi) : 1;
+			opts.speaking = (msg.playerid === 'API') ? 'API' : 'player|' + msg.playerid;
+			// Transform tokens into nice data packages
+			let rollData = _.chain(msg.selected)
+				.map(obj => getObj('graphic', obj._id))
+				.compact()
+				.map(token => processTokenRollData(token, checkFormula, checkSpecial, opts))
+				.compact()
+				.map(function (o) {
+					if (opts.multi === 1) return o;
+					let a = [];
+					for (let i = 0; i < opts.multi; i++) a.push(_.clone(o));
+					return a;
+				})
+				.flatten()
+				.value();
+			try {
+				if (!opts.process) {
+					let rolls = _.map(rollData, function (o) {
+						let f = opts.hideformula ? `[[${o.formula}]]` : o.formula;
+						return outputStyle.makeRow(o.pic, o.name, o.roll2, f, f);
+					}).join('');
+					let output = (opts.whisper ? '/w GM ' : '') +
+						outputStyle.makeBox(checkName, opts.subheader, '', rolls);
+					sendChat(opts.speaking, output);
+				}
+				else {
+					let sentFormula = _.map(rollData, function (o) {
+							return (o.formula + '####' + (o.roll2 ? (o.formula) : ''));
+						}).join('<br>'),
+						callback = _.partial(sendFinalMessage, opts, checkName, rollData);
+					sendChat('', sentFormula, callback);
+				}
+			}
+			catch (err) {
+				let errorMessage = 'Something went wrong with the roll. The command you ' +
+					'tried was:<br>' + msg.content + '<br> The error message generated ' +
+					'by Roll20 is:<br>' + err;
+				handleError(whisper, errorMessage);
+			}
+		},
+		handleInput = function (msg) {
+			if (msg.type === 'api') {
+				if (msg.content.search(/^!group-check($|\s)/) != -1) {
+					handleRolls(msg);
+				}
+				else if (msg.content.search(/^!group-check-config\b/) != -1) {
+					handleConfig(msg);
+				}
+			}
+		},
+		registerEventHandlers = function () {
+			on('chat:message', handleInput);
+		};
+	return {
+		CheckInstall: checkInstall,
+		RegisterEventHandlers: registerEventHandlers
+	};
+}());
+on('ready', function () {
+	'use strict';
+	groupCheck.CheckInstall();
+	groupCheck.RegisterEventHandlers();
+});
