@@ -1,8 +1,8 @@
 {
   "name": "exaltScript",
   "script": "exaltScript.js",
-  "version": "0.9",
-  "previousversions": [""],
+  "version": "0.9.5",
+  "previousversions": ["0.9"],
   "description": "This script adds general utility and automation to Exalted 3rd Edition campaigns.",
   "authors": "Pinmissile",
   "roll20userid": "2709",
