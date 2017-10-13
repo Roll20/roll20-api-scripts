@@ -1,7 +1,9 @@
 # Marching Order
 
-_v2.1 Updates_
-* The script now has a chat menu interface accessible through the 'showMarchingOrderMenu' macro.
+_v2.2 Updates_
+* Replaced interface for 'Follow'. Instead it now tells you to click the token you're following.
+* Additional protection against cyclical marching orders.
+* Players can use the script now too, but they only get the 'Follow' command.
 
 This script allows you to select tokens and tell them to follow each other
 in some specified marching order.
@@ -9,8 +11,8 @@ in some specified marching order.
 ### To set one token to follow another
 
 Select the token that will be the follower.
-From the menu, click the 'Follow' button. In the prompt, enter the name of
-the token you want to follow.
+From the menu, click the 'Follow' button. You will then be prompted to click
+the token that will be the leader.
 
 You can use this method consecutively for pairs of leader/follower
 tokens to specify a chain of tokens to be in some marching order.
@@ -35,3 +37,18 @@ They will step out of line in the marching order, but the rest of the
 marching order will be unaffected. If a token was following the token
 that stepped out of line, they will instead follow the token that the token
 which stepped out of line was following.
+
+## Help
+
+If you experience any issues while using this script or the trap themes,
+need help using it, or if you have a neat suggestion for a new feature,
+please shoot me a PM:
+https://app.roll20.net/users/46544/stephen-l
+or create a help thread on the Roll20 API forum
+
+## Show Support
+
+If you would like to show your appreciation and support for the work I do in writing,
+updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)
+or, simply leave a thank you note in the script's thread on the Roll20 forums.
+Either is greatly appreciated! Happy gaming!
