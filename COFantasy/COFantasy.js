@@ -2578,7 +2578,7 @@ var COFantasy = COFantasy || function() {
               }
             }
 
-            var touche; //false: pas touché, 1 touché, 2 critique
+            var touche = 1; //false: pas touché, 1 touché, 2 critique
             if (options.dmgCoef) touche = options.dmgCoef;
             // Calcule si touché, et les messages de dégats et attaque
             if (!options.auto) {
@@ -2675,10 +2675,8 @@ var COFantasy = COFantasy || function() {
               } else if (attackRoll < defense) {
                 attackResult = " : <span style='" + BS_LABEL + " " + BS_LABEL_WARNING + "'><b>échec</b></span>";
                 evt.succes = false;
-                if (options.demiAuto) target.partialSaveAuto = true;
                 if (options.demiAuto) {
                   target.partialSaveAuto = true;
-                  evt.succes = false;
                 } else touche = false;
               } else { // Touché normal
                 attackResult = " : <span style='" + BS_LABEL + " " + BS_LABEL_SUCCESS + "'><b>succès</b></span>";
@@ -11618,13 +11616,13 @@ on("ready", function() {
     tour: 0,
     init: 1000,
     eventId: 0,
-    version: '0.3',
+    version: '0.5',
   };
   if (state.COFantasy.version === undefined) {
     state.COFantasy.eventId = 0;
-    state.COFantasy.version = '0.3';
+    state.COFantasy.version = '0.5';
   }
-  log("COFantasy 0.3 loaded");
+  log("COFantasy 0.5 loaded");
 });
 
 on("chat:message", function(msg) {
