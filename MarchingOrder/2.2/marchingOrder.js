@@ -66,6 +66,9 @@ var MarchingOrder = (() => {
     follower.set("left",leader.prevLeft);
     follower.set("top",leader.prevTop);
     follower.set("rotation", leader.prevRotation);
+
+    if(typeof CustomStatusMarkers !== 'undefined')
+      CustomStatusMarkers.repositionStatusMarkers(follower);
   }
 
   /**
