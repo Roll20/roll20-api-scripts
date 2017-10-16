@@ -114,6 +114,10 @@ var handledeathsave = function(msg,character) {
     var result = msg.inlinerolls[0].results.total ? msg.inlinerolls[0].results.total : false;
     var resultbase = msg.inlinerolls[0].results.rolls[0].results[0].v ? msg.inlinerolls[0].results.rolls[0].results[0].v : false;
     var resultoutput = "";
+    if(msg.content.indexOf("{{global=") > -1 && result != false) {
+        var global_mod = msg.inlinerolls[1].results.total ? msg.inlinerolls[1].results.total : 0;
+        result = result + global_mod;
+    }
     if(result === false) {
         log("FAILED TO FIND DEATH SAVE ROLL RESULT");
     }
@@ -253,7 +257,8 @@ var getCleanImgsrc = function (imgsrc) {
 
 var handleslotattack = function (msg,character,player) {
     var spelllevel = (msg.content.split("{{spelllevel=")[1]||'').split("}}")[0];
-    if(spelllevel === "cantrip" || spelllevel === "npc") {
+    var innate = msg.content.indexOf("{{innate=}}") > -1 ? false : true;
+    if(spelllevel === "cantrip" || spelllevel === "npc" || innate) {
         return;
     }
     var hlinline = msg.content.split("{{hldmg=$[[")[1] || "";
@@ -269,7 +274,8 @@ var handleslotattack = function (msg,character,player) {
 var handleslotspell = function (msg,character,player) {
     var spellslot = ((msg.content.split("{{level=")[1]||'').split("}}")[0]||'').split(" ")[1];
     var ritual = msg.content.indexOf("{{ritual=1}}") > -1 ? true : false;
-    if(spellslot === "0" || spellslot === "cantrip" || spellslot === "npc" || ritual ) {
+    var innate = msg.content.indexOf("{{innate=}}") > -1 ? false : true;
+    if(spellslot === "0" || spellslot === "cantrip" || spellslot === "npc" || ritual || innate) {
         return;
     }
     resolveslot(msg,character,player,spellslot);
@@ -293,19 +299,19 @@ var resolveslot = function(msg,character,player,spellslot) {
     if(spent > 0) {
         if(state.FifthEditionOGLbyRoll20.spelltracking != "quiet") {
             if(wtype === "" || (wtype === "@{whispertoggle}" && wtoggle === "") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "general")) {
-                sendChat(msg.who, "<div class='sheet-rolltemplate-simple' style='margin-top:-7px;'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block;'>" + Math.max(spent - 1, 0) + " OF " + charslotmax.get("current") + " REMAINING</span></div></div></div>");
+                sendChat(msg.who, "<div class='sheet-rolltemplate-simple' style='margin-top:-7px;'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block;'>" + Math.max(spent - 1, 0) + " OF " + charslotmax.get("current") + " REMAINING</span></div></div></div>");
             }
             else if(wtype === "/w gm " || (wtype === "@{whispertoggle}" && wtoggle === "/w gm ") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "whisper")) {
-                sendChat(msg.who, "/w gm <div class='sheet-rolltemplate-desc'><div class='sheet-desc'><div class='sheet-label' style='margin-top:5px;'><span>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block;'>" + Math.max(spent - 1, 0) + " OF " + charslotmax.get("current") + " REMAINING</span></div></div></div>");
+                sendChat(msg.who, "/w gm <div class='sheet-rolltemplate-simple'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block;'>" + Math.max(spent - 1, 0) + " OF " + charslotmax.get("current") + " REMAINING</span></div></div></div>");
             }
         }
     }
     else {
         if(wtype === "" || (wtype === "@{whispertoggle}" && wtoggle === "") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "general")) {
-            sendChat(msg.who, "<div class='sheet-rolltemplate-simple' style='margin-top:-7px;'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block; color:red;'>ALL SLOTS EXPENDED</span></div></div></div>");
+            sendChat(msg.who, "<div class='sheet-rolltemplate-simple' style='margin-top:-7px;'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block; color:red;'>ALL SLOTS EXPENDED</span></div></div></div>");
         }
         else if(wtype === "/w gm " || (wtype === "@{whispertoggle}" && wtoggle === "/w gm ") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "whisper")) {
-            sendChat(msg.who, "/w gm <div class='sheet-rolltemplate-desc'><div class='sheet-desc'><div class='sheet-label' style='margin-top:5px;'><span>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block; color:red;'>ALL SLOTS EXPENDED</span></div></div></div>");
+            sendChat(msg.who, "/w gm <div class='sheet-rolltemplate-simple'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block; color:red;'>ALL SLOTS EXPENDED</span></div></div></div>");
         }
     }
 };
@@ -396,12 +402,15 @@ var npchp = function(msg) {
                     }
                     if(bar1 === maxhp) {
                         t_obj.set({bar1_value: hp});
+                        t_obj.set({bar1_max: hp});
                     }
                     else if(bar2 === maxhp) {
                         t_obj.set({bar2_value: hp});
+                        t_obj.set({bar2_max: hp});
                     }
                     else if(bar3 === maxhp) {
                         t_obj.set({bar3_value: hp});
+                        t_obj.set({bar3_max: hp});
                     }                
                 }
             }
