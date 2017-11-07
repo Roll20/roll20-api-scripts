@@ -1,23 +1,18 @@
-// ChatSetAttr version 1.6.3
-// Last Updated: 2017-11-06
+// ChatSetAttr version 1.6.2
+// Last Updated: 2017-10-03
 // A script to create, modify, or delete character attributes from the chat area or macros.
 // If you don't like my choices for --replace, you can edit the replacers variable at your own peril to change them.
 
 var chatSetAttr = chatSetAttr || (function () {
 	'use strict';
-	const version = '1.6.3',
+	const version = '1.6.2',
 		schemaVersion = 3,
 		replacers = [
 			[/</g, '['],
-			[/\\lbrak/g, '['],
 			[/>/g, ']'],
-			[/\\rbrak/g, ']'],
-			[/\;/g, '?'],
-			[/\\ques/g, '?'],
-			[/`/g, '@'],
-			[/\\at/g, '@'],
 			[/\~/g, '-'],
-			[/\\n/g, '\n'],
+			[/\;/g, '?'],
+			[/`/g, '@']
 		],
 		// Basic Setup
 		checkInstall = function () {
@@ -300,7 +295,7 @@ var chatSetAttr = chatSetAttr || (function () {
 						else if ('current' in o) return `${k} to ${htmlReplace(o.current) || '<i>(empty)</i>'}`;
 						else if ('max' in o) return `${k} to ${htmlReplace(o.max) || '<i>(empty)</i>'} (max)`;
 						else return null;
-					}).filter(x => !!x).join(', ').replace(/\n/g, '<br>');
+					}).filter(x => !!x).join(', ');
 					if (finalFeedback.length) {
 						feedback.push(`Setting ${finalFeedback} for character ${getCharNameById(charid)}.`);
 					}
