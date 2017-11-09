@@ -1,23 +1,23 @@
 
 
-# ChatSetAttr 
-This script is a utility that allows the user to create, modify, or delete character attributes via chat messages or macros. There are several options that determine which attributes are modified, and which characters the attributes are modified for. The script is called by the command **!setattr [--options]** for creating or modifying attributes, or **!delattr [--options]** for deleting attributes. 
+# ChatSetAttr
+This script is a utility that allows the user to create, modify, or delete character attributes via chat messages or macros. There are several options that determine which attributes are modified, and which characters the attributes are modified for. The script is called by the command **!setattr [--options]** for creating or modifying attributes, or **!delattr [--options]** for deleting attributes.
 
 ## Selecting a target
 One of the following options must be specified; they determine which characters are affected by the script.
 
 * **--all** will affect all characters in the game. USE WITH CAUTION. This option will only work for the GM. If you have a large number of characters in your campaign, this will take a while to process all attribute changes.
-* **--allgm** will affect all characters which do not have a controlling player set, which typically will be every character that is not a player character. USE WITH CAUTION. This option will only work for the GM. 
+* **--allgm** will affect all characters which do not have a controlling player set, which typically will be every character that is not a player character. USE WITH CAUTION. This option will only work for the GM.
 * **--charid charid1, charid2, ...** allows you to supply a list of character ids, and will affect characters whose ids come from this list. Non-GM Players can only affect characters that they control.
 * **--name name1, name2, ...** allows you to supply a list of character names, and will look for a character with this name to affect. Non-GM Players can only affect characters that they control.
 * **--sel** will affect all characters that are represented by tokens you have currently selected.
 
 ## Additional options
 These options will have no effect on **!delattr**, except for **--silent**.
- 
+
 * **--silent** will suppress normal output; error messages will still be displayed.
 * **--mute** will suppress normal output as well as error messages (hence **--mute** implies **--silent**).
-* **--replace** will replace the characters < , > , ~ , ; , and ` by the characters [,],-,?, and @ in attribute values. This is useful when you do not want roll20 to evaluate your expression in chat before it is parsed by the script.**
+* **--replace** will replace the characters < , > , ~ , ; , and \` by the characters [,],-,?, and @ in attribute values. This is useful when you do not want roll20 to evaluate your expression in chat before it is parsed by the script. Alternatively, you can use \\lbrak, \\rbrak, \\n, \\at, and \\ques to create [, ], a newline, @, and ?.
 * **--nocreate** will change the script's default behaviour of creating a new attribute when it cannot find one; instead, the script will display an error message when it cannot find an existing attribute with the given name.
 * **--mod** will add the new value to the existing value instead of replacing it. If the existing value is a number (or empty, which will be treated as 0), the new value will be added to the existing value. If not, an error message will be displayed instead. Try not to apply this option to attributes whose values are not numbers. You can use **!modattr** as a shortcut for **!setattr --mod**.
 * **--modb** works like **--mod**, except that the attribute's current value is kept between 0 and its maximum. You can use **!modbattr** as a shortcut for **!setattr --modb**.
@@ -46,7 +46,7 @@ In addition, there are extra insertion sequence that only make sense in the valu
 
 ## Attribute Syntax
 Attribute options will determine which attributes are set to which value (respectively deleted, in case of !delattr). The syntax for these options is **--name|value** or **--name|value|max**. Here, **name** is the name of the attribute (which is parsed case-insensitively), **value** is the value that the current value of the attribute should be set to, and **max** is the value that the maximum value of the attribute should be set to. Instead of the vertical line ('|'), you may also use '#' (for use inside roll queries, for example).
- 
+
 * Single quotes (') surrounding **value** or **max** will be stripped, as will trailing spaces. If you need to include spaces at the end of a value, enclose the whole expression in single quotes.
 * If you want to use the '|' or '#' characters inside an attribute value, you may escape them with a backslash: use '\|' or '\#' instead.
 * If the option is of the form **--name|value**, then the maximum value will not be changed.
