@@ -54,22 +54,26 @@ var ItsATrap = (() => {
    */
   function activateTrap(trap, activatingVictim) {
     let theme = getTheme();
+    let effect = new TrapEffect(trap);
 
     // Apply the trap's effects to any victims in its area and to the
     // activating victim, using the configured trap theme.
     let victims = getTrapVictims(trap, activatingVictim);
     if(victims.length > 0)
       _.each(victims, victim => {
-        let effect = new TrapEffect(trap, victim);
+        effect = new TrapEffect(trap, victim);
         theme.activateEffect(effect);
       });
     else {
       // In the absence of any victims, activate the trap with the default
       // theme, which will only display the trap's message.
       let defaultTheme = trapThemes['default'];
-      let effect = new TrapEffect(trap);
       defaultTheme.activateEffect(effect);
     }
+
+    // If the trap is destroyable, delete it after it has activated.
+    if(effect.destroyable)
+      trap.remove();
   }
 
   /**
@@ -622,6 +626,14 @@ var TrapEffect = (() => {
      */
     get areaOfEffect() {
       return this._effect.areaOfEffect;
+    }
+
+    /**
+     * Whether the trap should be destroyed after it activates.
+     * @type {boolean}
+     */
+    get destroyable() {
+      return this._effect.destroyable;
     }
 
     /**
@@ -1362,6 +1374,13 @@ var ItsATrapCreationWizard = (() => {
         name: 'GM Notes',
         desc: 'Additional secret notes shown only to the GM when the trap is activated.',
         value: trapEffect.notes
+      },
+      {
+        id: 'destroyable',
+        name: 'Destroyable',
+        desc: 'Whether to delete the trap after it is activated.',
+        value: trapEffect.destroyable ? 'yes': 'no',
+        options: ['yes', 'no']
       }
     ];
   }
@@ -1680,6 +1699,8 @@ var ItsATrapCreationWizard = (() => {
       else
         trapEffect.areaOfEffect = undefined;
 
+    if(prop === 'destroyable')
+      trapEffect.destroyable = params[0] === 'yes';
     if(prop === 'disabled')
       trapToken.set('status_interdiction', params[0] === 'yes');
     if(prop === 'effectDistance')

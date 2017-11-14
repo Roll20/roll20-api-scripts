@@ -20,22 +20,26 @@ var ItsATrap = (() => {
    */
   function activateTrap(trap, activatingVictim) {
     let theme = getTheme();
+    let effect = new TrapEffect(trap);
 
     // Apply the trap's effects to any victims in its area and to the
     // activating victim, using the configured trap theme.
     let victims = getTrapVictims(trap, activatingVictim);
     if(victims.length > 0)
       _.each(victims, victim => {
-        let effect = new TrapEffect(trap, victim);
+        effect = new TrapEffect(trap, victim);
         theme.activateEffect(effect);
       });
     else {
       // In the absence of any victims, activate the trap with the default
       // theme, which will only display the trap's message.
       let defaultTheme = trapThemes['default'];
-      let effect = new TrapEffect(trap);
       defaultTheme.activateEffect(effect);
     }
+
+    // If the trap is destroyable, delete it after it has activated.
+    if(effect.destroyable)
+      trap.remove();
   }
 
   /**

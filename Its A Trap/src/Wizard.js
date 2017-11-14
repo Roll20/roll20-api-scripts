@@ -191,6 +191,13 @@ var ItsATrapCreationWizard = (() => {
         name: 'GM Notes',
         desc: 'Additional secret notes shown only to the GM when the trap is activated.',
         value: trapEffect.notes
+      },
+      {
+        id: 'destroyable',
+        name: 'Destroyable',
+        desc: 'Whether to delete the trap after it is activated.',
+        value: trapEffect.destroyable ? 'yes': 'no',
+        options: ['yes', 'no']
       }
     ];
   }
@@ -509,6 +516,8 @@ var ItsATrapCreationWizard = (() => {
       else
         trapEffect.areaOfEffect = undefined;
 
+    if(prop === 'destroyable')
+      trapEffect.destroyable = params[0] === 'yes';
     if(prop === 'disabled')
       trapToken.set('status_interdiction', params[0] === 'yes');
     if(prop === 'effectDistance')

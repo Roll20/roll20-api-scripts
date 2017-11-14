@@ -56,6 +56,14 @@ var TrapEffect = (() => {
     }
 
     /**
+     * Whether the trap should be destroyed after it activates.
+     * @type {boolean}
+     */
+    get destroyable() {
+      return this._effect.destroyable;
+    }
+
+    /**
      * The shape of the trap's activated area. This could be an area where the
      * trap token itself is the center of the effect (square or circle), or
      * it could be a list of path IDs which define the activated areas.
