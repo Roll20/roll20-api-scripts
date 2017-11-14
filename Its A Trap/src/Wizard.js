@@ -280,9 +280,9 @@ var ItsATrapCreationWizard = (() => {
       {
         id: 'effectShape',
         name: 'Trap shape',
-        desc: 'Is the shape of the trap\'s effect circular or square?',
-        value: trapToken.get('aura1_square') ? 'square' : 'circle',
-        options: [ 'circle', 'square' ]
+        desc: 'To set paths, you must also select one or more paths defining the trap\'s blast area. A fill color must be set for tokens inside the path to be affected.',
+        value: trapEffect.effectShape || ' circle',
+        options: [ 'circle', 'square', 'paths']
       },
     ];
   }
@@ -513,8 +513,20 @@ var ItsATrapCreationWizard = (() => {
       trapToken.set('status_interdiction', params[0] === 'yes');
     if(prop === 'effectDistance')
       trapToken.set('aura1_radius', parseInt(params[0]));
-    if(prop === 'effectShape')
-      trapToken.set('aura1_square', params[0] === 'square');
+    if(prop === 'effectShape') {
+      if(['circle', 'square'].includes(params[0])) {
+        trapEffect.effectShape = params[0];
+        trapToken.set('aura1_square', params[0].includes('square'));
+      }
+      else if(params[0] === 'paths' && selected) {
+        trapEffect.effectShape = _.map(selected, path => {
+          return path.get('_id');
+        });
+        trapToken.set('aura1_square', false);
+      }
+      else
+        throw Error('Unexpected effectShape value: ' + params[0]);
+    }
     if(prop === 'flying')
       trapToken.set('status_fluffy-wing', params[0] === 'yes');
     if(prop === 'fx') {

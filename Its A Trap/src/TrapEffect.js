@@ -56,6 +56,16 @@ var TrapEffect = (() => {
     }
 
     /**
+     * The shape of the trap's activated area. This could be an area where the
+     * trap token itself is the center of the effect (square or circle), or
+     * it could be a list of path IDs which define the activated areas.
+     * @type {(string[]|string)}
+     */
+    get effectShape() {
+      return this._effect.effectShape;
+    }
+
+    /**
      * Configuration for special FX that are created when the trap activates.
      * @type {object}
      * @property {(string | FxJsonDefinition)} name

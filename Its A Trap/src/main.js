@@ -255,9 +255,22 @@ var ItsATrap = (() => {
     .value();
 
     // Get the collisions.
+    return _getTrapCollisions(token, traps, pathsToTraps);
+  }
+
+  /**
+   * Returns the list of all traps a token would collide with during its last
+   * movement from a list of traps.
+   * The traps are sorted in the order that the token will collide
+   * with them.
+   * @private
+   * @param  {Graphic} token
+   * @param {(Graphic[]|Path[])} traps
+   * @return {TokenCollisions.Collision[]}
+   */
+  function _getTrapCollisions(token, traps, pathsToTraps) {
     return _.chain(TokenCollisions.getCollisions(token, traps, {detailed: true}))
     .map(collision => {
-
       // Convert path collisions back into trap token collisions.
       if(collision.other.get('_type') === 'path') {
         let pathId = collision.other.get('_id');
@@ -302,20 +315,39 @@ var ItsATrap = (() => {
     let range = trap.get('aura1_radius');
     let pageId = trap.get('_pageid');
 
-    let victims = [triggerVictim];
-    if(range !== '') {
-      let otherTokens = findObjs({
-        _pageid: pageId,
-        _type: 'graphic',
-        layer: 'objects'
-      });
+    let effect = new TrapEffect(trap);
+    let victims = [];
+    let otherTokens = findObjs({
+      _pageid: pageId,
+      _type: 'graphic',
+      layer: 'objects'
+    });
 
-      let pageScale = getObj('page', pageId).get('scale_number');
-      range *= 70/pageScale;
-      let squareArea = trap.get('aura1_square');
+    // Case 1: The trap itself defines the blast area.
+    if(!effect.effectShape || ['circle', 'square'].includes(effect.effectShape)) {
+      victims = [triggerVictim];
+      if(range !== '') {
+        let pageScale = getObj('page', pageId).get('scale_number');
+        range *= 70/pageScale;
+        let squareArea = trap.get('aura1_square');
 
-      victims = victims.concat(LineOfSight.filterTokens(trap, otherTokens, range, squareArea));
+        victims = victims.concat(LineOfSight.filterTokens(trap, otherTokens, range, squareArea));
+      }
     }
+
+    // Case 2: One or more closed paths define the blast areas.
+    else {
+      _.each(effect.effectShape, pathId => {
+        let path = getObj('path', pathId);
+        if(path) {
+          _.each(otherTokens, token => {
+            if(TokenCollisions.isOverlapping(token, path))
+              victims.push(token);
+          });
+        }
+      });
+    }
+
     return _.chain(victims)
     .unique()
     .compact()
