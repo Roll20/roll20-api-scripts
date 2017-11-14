@@ -327,20 +327,8 @@ var ItsATrap = (() => {
       layer: 'objects'
     });
 
-    // Case 1: The trap itself defines the blast area.
-    if(!effect.effectShape || ['circle', 'square'].includes(effect.effectShape)) {
-      victims = [triggerVictim];
-      if(range !== '') {
-        let pageScale = getObj('page', pageId).get('scale_number');
-        range *= 70/pageScale;
-        let squareArea = trap.get('aura1_square');
-
-        victims = victims.concat(LineOfSight.filterTokens(trap, otherTokens, range, squareArea));
-      }
-    }
-
-    // Case 2: One or more closed paths define the blast areas.
-    else {
+    // Case 1: One or more closed paths define the blast areas.
+    if(effect.effectShape instanceof Array) {
       _.each(effect.effectShape, pathId => {
         let path = getObj('path', pathId);
         if(path) {
@@ -350,6 +338,18 @@ var ItsATrap = (() => {
           });
         }
       });
+    }
+
+    // Case 2: The trap itself defines the blast area.
+    else {
+      victims = [triggerVictim];
+      if(range !== '') {
+        let pageScale = getObj('page', pageId).get('scale_number');
+        range *= 70/pageScale;
+        let squareArea = trap.get('aura1_square');
+
+        victims = victims.concat(LineOfSight.filterTokens(trap, otherTokens, range, squareArea));
+      }
     }
 
     return _.chain(victims)
@@ -384,16 +384,8 @@ var ItsATrap = (() => {
       toOrder = toBack;
       layer = 'objects';
     }
-
-    // Also, reveal the trigger paths if the trap has any.
-    if(effect.triggerPaths) {
-      _.each(effect.triggerPaths, pathId => {
-        let path = getObj('path', pathId);
-        path.set('layer', layer);
-        toOrder(path);
-      });
-    }
-
+    _revealTriggers(trap);
+    _revealActivationAreas(trap);
     sendPing(x, y, pageId);
   }
 
@@ -434,6 +426,27 @@ var ItsATrap = (() => {
   }
 
   /**
+   * Reveals the paths defining a trap's activation area, if it has any.
+   * @param {Graphic} trap
+   */
+  function _revealActivationAreas(trap) {
+    let effect = new TrapEffect(trap);
+    let layer = 'map';
+    let toOrder = toFront;
+    if(effect.revealLayer === 'objects') {
+      toOrder = toBack;
+      layer = 'objects';
+    }
+
+    if(effect.effectShape instanceof Array)
+      _.each(effect.effectShape, pathId => {
+        let path = getObj('path', pathId);
+        path.set('layer', layer);
+        toOrder(path);
+      });
+  }
+
+  /**
    * Reveals a trap to the objects or map layer.
    * @param  {Graphic} trap
    */
@@ -447,10 +460,36 @@ var ItsATrap = (() => {
       layer = 'objects';
     }
 
+    // Reveal the trap token.
     trap.set('layer', layer);
     toOrder(trap);
-
     sendPing(trap.get('left'), trap.get('top'), trap.get('_pageid'));
+
+    // Reveal its trigger paths and activation areas, if any.
+    _revealTriggers(trap);
+    _revealActivationAreas(trap);
+  }
+
+  /**
+   * Reveals any trigger paths associated with a trap, if any.
+   * @param {Graphic} trap
+   */
+  function _revealTriggers(trap) {
+    let effect = new TrapEffect(trap);
+    let layer = 'map';
+    let toOrder = toFront;
+    if(effect.revealLayer === 'objects') {
+      toOrder = toBack;
+      layer = 'objects';
+    }
+
+    if(effect.triggerPaths) {
+      _.each(effect.triggerPaths, pathId => {
+        let path = getObj('path', pathId);
+        path.set('layer', layer);
+        toOrder(path);
+      });
+    }
   }
 
   /**
