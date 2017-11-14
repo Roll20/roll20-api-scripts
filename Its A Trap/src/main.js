@@ -194,8 +194,6 @@ var ItsATrap = (() => {
     if(token2.get('_type') === 'path') {
       let path = token2;
       pixelDist = PathMath.distanceToPoint(p1, path);
-      log('getSearchDistance path');
-      log(path);
     }
     else {
       let p2 = _getPt(token2);
@@ -554,13 +552,25 @@ var ItsATrap = (() => {
 
   // If a trap is moved back to the GM layer, remove it from the set of noticed traps.
   on('change:graphic:layer', token => {
-    if(token.get('layer') === 'gmlayer')
-      _unNoticeTrap(token);
+    try {
+      if(token.get('layer') === 'gmlayer')
+        _unNoticeTrap(token);
+    }
+    catch(err) {
+      log(`It's A Trap ERROR: ${err.msg}`);
+      log(err.stack);
+    }
   });
 
   // When a trap's token is destroyed, remove it from the set of noticed traps.
   on('destroy:graphic', function(token) {
-    _unNoticeTrap(token);
+    try {
+      _unNoticeTrap(token);
+    }
+    catch(err) {
+      log(`It's A Trap ERROR: ${err.msg}`);
+      log(err.stack);
+    }
   });
 
   return {
