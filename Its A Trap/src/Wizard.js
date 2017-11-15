@@ -313,7 +313,7 @@ var ItsATrapCreationWizard = (() => {
       {
         id: 'api',
         name: 'API Command',
-        desc: 'An API command which the trap runs when it is activated. The constants TRAP_ID and VICTIM_ID will be replaced by the object IDs for the trap and victim.',
+        desc: 'An API command which the trap runs when it is activated. The constants TRAP_ID and VICTIM_ID will be replaced by the object IDs for the trap and victim. Multiple API commands are now supported by separating each command with &quot;&#59;&#59;&quot;.',
         value: trapEffect.api
       },
 
@@ -503,9 +503,13 @@ var ItsATrapCreationWizard = (() => {
       trapToken.set('name', params[0]);
     if(prop === 'type')
       trapEffect.type = params[0];
-    if(prop === 'api')
-      trapEffect.api = params[0];
-    if(prop === 'areaOfEffect')
+    if(prop === 'api') {
+      if(params[0])
+        trapEffect.api = params[0].split(";;");
+      else
+        trapEffect.api = [];
+    }
+    if(prop === 'areaOfEffect') {
       if(params[0]) {
         trapEffect.areaOfEffect = {};
         trapEffect.areaOfEffect.name = params[0];
@@ -515,7 +519,7 @@ var ItsATrapCreationWizard = (() => {
       }
       else
         trapEffect.areaOfEffect = undefined;
-
+    }
     if(prop === 'destroyable')
       trapEffect.destroyable = params[0] === 'yes';
     if(prop === 'disabled')

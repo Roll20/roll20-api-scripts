@@ -370,9 +370,19 @@ var TrapEffect = (() => {
     playApi() {
       let api = this.api;
       if(api) {
-        api = api.split('TRAP_ID').join(this.trapId);
-        api = api.split('VICTIM_ID').join(this.victimId);
-        sendChat('ItsATrap-api', api);
+        let commands;
+        if(api instanceof Array)
+          commands = api;
+        else
+          commands = [api];
+
+        // Run each API command.
+        _.each(commands, cmd => {
+          cmd = cmd.replace(/TRAP_ID/g, this.trapId);
+          cmd = cmd.replace(/VICTIM_ID/g, this.victimId);
+
+          sendChat('ItsATrap-api', cmd);
+        });
       }
     }
 
