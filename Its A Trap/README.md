@@ -4,7 +4,7 @@ _v3.7 Updates:_
 * Paths can now be used as the activation areas for a trap. This supports both lines and polygons (requires fill color).
 * Passive search will notice activation paths for traps.
 * You can now set traps to be destroyed after they are activated.
-* Support for multiple API commands. Each command given in the API Command property should be separated with ";;".
+* Support for multiple API commands. Each command given in the API Command property should be separated with ';;'.
 * D20 themes will actively disallow a trap to have both an attack roll and a saving throw. If an attack roll is set, the saving throw settings are cleared, and if a saving throw is set, then the attack settings are cleared.
 
 This is a script that allows GMs to quickly and very easily set up traps,
