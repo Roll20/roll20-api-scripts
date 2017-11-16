@@ -1,5 +1,8 @@
 # It's A Trap! - D&D 3.5 theme
 
+_v3.1 Updates:_
+* Traps now support touch attacks. Set this by setting the 'Attack Vs' property to 'Touch AC'.
+
 This is a D&D 3.5 trap theme built to support Diana P.'s 3.5 Edition character sheet.
 
 ## Help
