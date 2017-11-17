@@ -1,3 +1,10 @@
+<a name="11.3.3"></a>
+# 11.3.3
+
+### Bug fixes
+
+* Format fixes for new format which can include environment for each monster.
+
 <a name="11.3.2"></a>
 # 11.3.2
 
