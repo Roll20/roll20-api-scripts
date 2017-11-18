@@ -3,7 +3,7 @@
 
 ### Bug fixes
 
-* Format fixes for new format which can include environment for each monster.
+* Format fixes for new format which can include environment for each monster. Also solves any issues with XGtE.
 
 <a name="11.3.2"></a>
 # 11.3.2
