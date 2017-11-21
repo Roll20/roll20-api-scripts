@@ -20,22 +20,26 @@ var ItsATrap = (() => {
    */
   function activateTrap(trap, activatingVictim) {
     let theme = getTheme();
+    let effect = new TrapEffect(trap);
 
     // Apply the trap's effects to any victims in its area and to the
     // activating victim, using the configured trap theme.
     let victims = getTrapVictims(trap, activatingVictim);
     if(victims.length > 0)
       _.each(victims, victim => {
-        let effect = new TrapEffect(trap, victim);
+        effect = new TrapEffect(trap, victim);
         theme.activateEffect(effect);
       });
     else {
       // In the absence of any victims, activate the trap with the default
       // theme, which will only display the trap's message.
       let defaultTheme = trapThemes['default'];
-      let effect = new TrapEffect(trap);
       defaultTheme.activateEffect(effect);
     }
+
+    // If the trap is destroyable, delete it after it has activated.
+    if(effect.destroyable)
+      trap.remove();
   }
 
   /**
@@ -190,8 +194,6 @@ var ItsATrap = (() => {
     if(token2.get('_type') === 'path') {
       let path = token2;
       pixelDist = PathMath.distanceToPoint(p1, path);
-      log('getSearchDistance path');
-      log(path);
     }
     else {
       let p2 = _getPt(token2);
@@ -255,9 +257,22 @@ var ItsATrap = (() => {
     .value();
 
     // Get the collisions.
+    return _getTrapCollisions(token, traps, pathsToTraps);
+  }
+
+  /**
+   * Returns the list of all traps a token would collide with during its last
+   * movement from a list of traps.
+   * The traps are sorted in the order that the token will collide
+   * with them.
+   * @private
+   * @param  {Graphic} token
+   * @param {(Graphic[]|Path[])} traps
+   * @return {TokenCollisions.Collision[]}
+   */
+  function _getTrapCollisions(token, traps, pathsToTraps) {
     return _.chain(TokenCollisions.getCollisions(token, traps, {detailed: true}))
     .map(collision => {
-
       // Convert path collisions back into trap token collisions.
       if(collision.other.get('_type') === 'path') {
         let pathId = collision.other.get('_id');
@@ -302,20 +317,39 @@ var ItsATrap = (() => {
     let range = trap.get('aura1_radius');
     let pageId = trap.get('_pageid');
 
-    let victims = [triggerVictim];
-    if(range !== '') {
-      let otherTokens = findObjs({
-        _pageid: pageId,
-        _type: 'graphic',
-        layer: 'objects'
+    let effect = new TrapEffect(trap);
+    let victims = [];
+    let otherTokens = findObjs({
+      _pageid: pageId,
+      _type: 'graphic',
+      layer: 'objects'
+    });
+
+    // Case 1: One or more closed paths define the blast areas.
+    if(effect.effectShape instanceof Array) {
+      _.each(effect.effectShape, pathId => {
+        let path = getObj('path', pathId);
+        if(path) {
+          _.each(otherTokens, token => {
+            if(TokenCollisions.isOverlapping(token, path))
+              victims.push(token);
+          });
+        }
       });
-
-      let pageScale = getObj('page', pageId).get('scale_number');
-      range *= 70/pageScale;
-      let squareArea = trap.get('aura1_square');
-
-      victims = victims.concat(LineOfSight.filterTokens(trap, otherTokens, range, squareArea));
     }
+
+    // Case 2: The trap itself defines the blast area.
+    else {
+      victims = [triggerVictim];
+      if(range !== '') {
+        let pageScale = getObj('page', pageId).get('scale_number');
+        range *= 70/pageScale;
+        let squareArea = trap.get('aura1_square');
+
+        victims = victims.concat(LineOfSight.filterTokens(trap, otherTokens, range, squareArea));
+      }
+    }
+
     return _.chain(victims)
     .unique()
     .compact()
@@ -348,16 +382,8 @@ var ItsATrap = (() => {
       toOrder = toBack;
       layer = 'objects';
     }
-
-    // Also, reveal the trigger paths if the trap has any.
-    if(effect.triggerPaths) {
-      _.each(effect.triggerPaths, pathId => {
-        let path = getObj('path', pathId);
-        path.set('layer', layer);
-        toOrder(path);
-      });
-    }
-
+    _revealTriggers(trap);
+    _revealActivationAreas(trap);
     sendPing(x, y, pageId);
   }
 
@@ -398,6 +424,27 @@ var ItsATrap = (() => {
   }
 
   /**
+   * Reveals the paths defining a trap's activation area, if it has any.
+   * @param {Graphic} trap
+   */
+  function _revealActivationAreas(trap) {
+    let effect = new TrapEffect(trap);
+    let layer = 'map';
+    let toOrder = toFront;
+    if(effect.revealLayer === 'objects') {
+      toOrder = toBack;
+      layer = 'objects';
+    }
+
+    if(effect.effectShape instanceof Array)
+      _.each(effect.effectShape, pathId => {
+        let path = getObj('path', pathId);
+        path.set('layer', layer);
+        toOrder(path);
+      });
+  }
+
+  /**
    * Reveals a trap to the objects or map layer.
    * @param  {Graphic} trap
    */
@@ -411,10 +458,36 @@ var ItsATrap = (() => {
       layer = 'objects';
     }
 
+    // Reveal the trap token.
     trap.set('layer', layer);
     toOrder(trap);
-
     sendPing(trap.get('left'), trap.get('top'), trap.get('_pageid'));
+
+    // Reveal its trigger paths and activation areas, if any.
+    _revealTriggers(trap);
+    _revealActivationAreas(trap);
+  }
+
+  /**
+   * Reveals any trigger paths associated with a trap, if any.
+   * @param {Graphic} trap
+   */
+  function _revealTriggers(trap) {
+    let effect = new TrapEffect(trap);
+    let layer = 'map';
+    let toOrder = toFront;
+    if(effect.revealLayer === 'objects') {
+      toOrder = toBack;
+      layer = 'objects';
+    }
+
+    if(effect.triggerPaths) {
+      _.each(effect.triggerPaths, pathId => {
+        let path = getObj('path', pathId);
+        path.set('layer', layer);
+        toOrder(path);
+      });
+    }
   }
 
   /**
@@ -479,13 +552,25 @@ var ItsATrap = (() => {
 
   // If a trap is moved back to the GM layer, remove it from the set of noticed traps.
   on('change:graphic:layer', token => {
-    if(token.get('layer') === 'gmlayer')
-      _unNoticeTrap(token);
+    try {
+      if(token.get('layer') === 'gmlayer')
+        _unNoticeTrap(token);
+    }
+    catch(err) {
+      log(`It's A Trap ERROR: ${err.msg}`);
+      log(err.stack);
+    }
   });
 
   // When a trap's token is destroyed, remove it from the set of noticed traps.
   on('destroy:graphic', function(token) {
-    _unNoticeTrap(token);
+    try {
+      _unNoticeTrap(token);
+    }
+    catch(err) {
+      log(`It's A Trap ERROR: ${err.msg}`);
+      log(err.stack);
+    }
   });
 
   return {

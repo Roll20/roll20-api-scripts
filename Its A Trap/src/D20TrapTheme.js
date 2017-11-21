@@ -260,18 +260,25 @@ var D20TrapTheme = (() => {
       let prop = argv[0];
       let params = argv.slice(1);
 
-      if(prop === 'attack')
+      if(prop === 'attack') {
         trapEffect.attack = parseInt(params[0]);
+        trapEffect.save = undefined;
+        trapEffect.saveDC = undefined;
+      }
       if(prop === 'damage')
         trapEffect.damage = params[0];
       if(prop === 'hideSave')
         trapEffect.hideSave = params[0] === 'yes';
       if(prop === 'missHalf')
         trapEffect.missHalf = params[0] === 'yes';
-      if(prop === 'save')
+      if(prop === 'save') {
         trapEffect.save = params[0] === 'none' ? undefined : params[0];
-      if(prop === 'saveDC')
+        trapEffect.attack = undefined;
+      }
+      if(prop === 'saveDC') {
         trapEffect.saveDC = parseInt(params[0]);
+        trapEffect.attack = undefined;
+      }
       if(prop === 'spotDC')
         trapEffect.spotDC = parseInt(params[0]);
 

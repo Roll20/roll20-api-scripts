@@ -1,8 +1,7 @@
 # It's A Trap! - Pathfinder Generic theme
 
-_3.3 Updates_
-* Added checkbox to One-Click options to enable/disable passive perception.
-* Fixed Trap Spotter to work with both the 'class-ability' and 'ability' repeating sections.
+_3.4 Updates_
+* Traps can now make touch attacks. Set this using the 'Attack Vs' property.
 
 This is a Pathfinder trap theme built to support all Pathfinder character sheets and Pathfinder characters
 who use plain attributes instead of character sheets.
