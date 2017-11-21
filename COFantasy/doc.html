@@ -377,12 +377,11 @@
                   Recharge l'arme <i>N</i> (augmente les charges d'un). Les armes sont toutes rechargées à la fin d'un combat.
                 </p>
               </div>
-              <h4 class="text-secondary">Dégâts à aire d'effet : <code>!cof-aoe <i>dm</i></code></h4>
+              <h4 class="text-secondary">Dégâts directs (sans attaquant, ou aire d'effet trop complexe pour !cof-attack) : <code>!cof-dmg <i>dm</i></code></h4>
               <div class="decalage">
-                <p>Applique des dégâts à tous les tokens sélectionné. <i>dm</i> peut être un inline roll.<br />
-                  Argument optionel: <code>--psave <i>carac seuil</i></code> : jet de <i>carac</i>, si supérieur au <i>seuil</i>, les dégâts sont divisés par 2.
+                <p>Applique des dégâts à tous les tokens sélectionnés. L'argument <i>dm</i> peut être un inline roll. Utile par exemple pour les chutes, ou bien les dégâts d'environnement, voire de pièges.<br />
+                Arguments optionels: une partie des options de <code>!cof-attack</code>, dont le type, et par exemple <code>--psave <i>carac seuil</i></code> (jet de <i>carac</i>, si supérieur au <i>seuil</i>, les dégâts sont divisés par 2).
                 </p>
-                <p>Remarque : si la forme de l'aoe le permet, mieux vaut utiliser <code>!cof-attack</code> qui gère plus d'options. Voir déjà les options <code>--ligne</code>, <code>--cone</code> et <code>--disque</code> de <code>!cof-attack</code>.</p>
               </div>
               <h4 class="text-secondary">Sortir du combat : <code>!cof-hors-combat</code></h4>
               <div class="decalage">
@@ -656,7 +655,7 @@
                 <h4 class="text-secondary">Voie de la séduction</h4>
                 <ol>
                   <li><strong>Charmant</strong> : ajouter les compétences sur la fiche</li>
-                  <li><strong>Dentelles et rapière</strong> : Ajouter un attribut <code>dentellesEtRapière</code> avec comme valeur le rang dans la voie de la séduction. Cela augmente la DEF, mais seulement lorsque le barde ne porte pas d'armure et seulement contre les attaques au contact. (ne se voit pas sur le total de DEF de la fiche)</li>
+                  <li><strong>Dentelles et rapière</strong> : Ajouter un attribut <code>dentellesEtRapiere</code> avec comme valeur le rang dans la voie de la séduction. Cela augmente la DEF, mais seulement lorsque le barde ne porte pas d'armure et seulement contre les attaques au contact. (ne se voit pas sur le total de DEF de la fiche)</li>
                   <li><strong>Arme secrète</strong> : <code>!cof-arme-secrete @{selected|token_id} @{target|token_id}</code></li>
                 </ol>
                 <h4 class="text-secondary">Voie du vagabond</h4>
@@ -716,6 +715,10 @@
                 <ol>
                   <li><strong>Éduqué</strong> : pas de support particulier, juste reporter les bonus sur la fiche.</li>
                   <li><strong>Autorité naturelle</strong> : simplement reporter sur la fiche les bonus d'init et de DEF, et ajouter la capacité intimider.</li>
+                  <li><strong>Écuyer</strong> : pour le bonus au critique, 
+                    ajouter un attribut <code>ecuyer</code> de valeur <code>true</code>. 
+                    Pour les soins de nuit, ajouter à l'écuyer un attribut <code>ecuyerDe</code>, avec comme valeur le nom du chevalier. 
+                    Si on souhaite que l'écuyer puisse soigner gratuitement la monture, il faut aussi que celle-ci ait un attribut <code>montureDe</code>, avec comme valeur le nom du chevalier.</li>
                 </ol>
               </div>
               <h3 class="text-info" id="Druide">Druide</h3>
@@ -726,17 +729,22 @@
                   <li><strong>Nuée d'insectes</strong> : ajouter une attaque magique, de portée 20 m et sans dégâts. Puis appeler cette attaque (avec <code>!cof-attack</code>) avec les arguments <code>--sortilege --effet nueeDInsectes [[5+@{selected|SAG}]]</code>. Pas de support particulier pour les DM de zone qui détruisent la nuée (enlever l'attribut <code>nueeDInsecte</code> sur la cible dans ce cas).</li>
                   <li><strong>Le guetteur</strong> : ajouter 5 à un attribut <code>preception</code>. Ajouter un personnage et token pour l'oiseau.</li>
                   <li><strong>Masque du prédateur</strong> : <code>!cof-effet-temp masqueDuPredateur [[5+@selected|SAG}]] --lanceur @{selected|token_id} --mana 2</code></li>
+                  <li><strong>Forme animale</strong> : pas d'autre support que <code>!cof-lancer-sort 3 se transforme en ?{Transformation en ?}</code> </li>.
                 </ol>
                 <h4 class="text-secondary">Voie du fauve</h4>
                 <ol>
                   <li><strong>Vitesse du félin</strong> : simplement ajouter les bonus sur la fiche, ainsi que les competences course, escalade et saut.</li>
                   <li><strong>Panthère</strong> : ajouter un personnage pour la panthère, qui sera contrôlé par le joueur.</li>
                   <li><strong>Attaque bondissante</strong> : faire l'attaque avec les options <code>--bonusAttaque 5</code> <code>--plus 1d6</code>. Les conditions d'utilisation sont à vérifier par le MJ.</li>
+                  <li><strong>Grand félin</strong> : ajuster la fiche de la panthère, et pour le soin, utiliser <code>!cof-soin @{selected|token_id} nom_familier ?{Montant des soins} --transfer</code>.
                 </ol>
                 <h4 class="text-secondary">Voie de la nature</h4>
                 <ol>
                   <li><strong>Maître de la survie</strong> : Ajouter +2 à un attribut <code>vigilance</code></li>
                   <li><strong>Marche sylvestre</strong> : quand le druide est en terrain difficile, faire <code>!cof-effet marcheSylvestre oui</code>. Faire <code>!cof-effet marcheSylvestre non</code> quand il en sort.</li>
+                  <li><strong>Résistant</strong> : ajouter un attribut </code>RD_nature</code>, avec comme valeur la RD (donc deux fois le rang dans la voie). Cette RD s'applique à toute attaque ou dommages avec l'option <code>--nature</code> ou <code>--naturel</code>. Il s'applique aussi à toute attaque venant d'un personnage avec un attribut <code>animal</code>, ou <code>insecte</code> ou bien avec un profil animal ou insecte, ou avec une race reconnue comme étant un animal ou un insecte. Dans ce cas, si on souhaite qu'une attaque d'une telle créature ne soit pas considérée comme naturelle, on peut utiliser l'option <code>--artificiel</code> à l'attaque.</li>
+                  <li><strong>Bâton de druide</strong> : Simplement créer l'attauue correspondante et permettre les deux attaques en action limitée.</li>
+                  <li><strong>Constitution héroïque</strong> : reporter sur la fiche</li>
                 </ol>
                 <h4 class="text-secondary">Voie du protecteur</h4>
                 <ol>
