@@ -87,6 +87,9 @@ var ItsATrap = (() => {
    * @param {Graphic} token
    */
   function _checkTrapInteractions(token) {
+    if(token.iatIgnoreToken)
+      return;
+
     // Objects on the GM layer don't set off traps.
     if(token.get("layer") === "objects") {
       try {
@@ -538,7 +541,7 @@ var ItsATrap = (() => {
    * When a graphic on the objects layer moves, run the script to see if it
    * passed through any traps.
    */
-  on("change:graphic:lastmove", function(token) {
+  on("change:graphic:lastmove", token => {
     try {
       // Check for trap interactions if the token isn't also a trap.
       if(!token.get('status_cobweb'))
@@ -563,7 +566,7 @@ var ItsATrap = (() => {
   });
 
   // When a trap's token is destroyed, remove it from the set of noticed traps.
-  on('destroy:graphic', function(token) {
+  on('destroy:graphic', token => {
     try {
       _unNoticeTrap(token);
     }
@@ -571,6 +574,17 @@ var ItsATrap = (() => {
       log(`It's A Trap ERROR: ${err.msg}`);
       log(err.stack);
     }
+  });
+
+  // When a token is added, make it temporarily unable to trigger traps.
+  // This is to prevent a bug related to dropping default tokens for characters
+  // to the VTT, which sometimes caused traps to trigger as though the dropped
+  // token has move.
+  on('add:graphic', token => {
+    token.iatIgnoreToken = true;
+    setTimeout(() => {
+      delete token.iatIgnoreToken;
+    }, 1000);
   });
 
   return {
