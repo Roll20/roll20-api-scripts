@@ -5,8 +5,8 @@
 var ColorEmote = ColorEmote || (function() {
     'use strict';
 
-    var version = '0.1.8',
-        lastUpdate = 1512660596,
+    var version = '0.1.7',
+        lastUpdate = 1512660186,
         schemaVersion = 0.4,
         symbols = {
             whitePawn: '&#'+'9817;',
@@ -350,6 +350,30 @@ var ColorEmote = ColorEmote || (function() {
              getConfigOption_VignetteMode();
     },
 
+    help = {
+        outer: (o) => `<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">${o}</div>`,
+        title: (t,v) => `<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">${t} v${v}</div>`,
+        subhead: (o) => `<b>${o}</b>`,
+        optional: (o) => `${ch('[')}${Array.isArray(o) ? o.join(` ${ch('|')} `):o}${ch(']')}`,
+        required: (o) => `${ch('<')}${Array.isArray(o) ? o.join(` ${ch('|')} `):o}${ch('>')}`,
+        header: (o) => `<div style="padding-left:10px;margin-bottom:3px;">${Array.isArray(o) ? o.join(''):o}</div>`,
+        paragraph: (o) => `<p>${o}</p>`,
+        items: (o) => `<li>${Array.isArray(o) ? o.join('</li><li>') : o}</li>`,
+        ol: (o) => `<ol>${help.items(o)}</ol>`,
+        ul: (o) => `<ul>${help.items(o)}</ul>`,
+        inset: (o) => `<div style="padding-left: 10px;padding-right:20px">${o}</div>`,
+        pre: (o) =>`<pre style="white-space:normal;word-break:normal;word-wrap:normal;">${o}</pre>`,
+        attr: {
+            bare: (o)=>`${ch('@')}${ch('{')}${o}${ch('}')}`,
+            selected: (o)=>`${ch('@')}${ch('{')}selected${ch('|')}${o}${ch('}')}`,
+            target: (o)=>`${ch('@')}${ch('{')}target${ch('|')}${o}${ch('}')}`,
+            char: (o,c)=>`${ch('@')}${ch('{')}${c||'CHARACTER NAME'}${ch('|')}${o}${ch('}')}`
+        },
+        bold: (o) => `<b>${o}</b>`,
+        font: {
+            command: (o)=>`<b><span style="font-family:serif;">${o}</span></b>`,
+        }
+    },
     _h = {
         outer: (...o) => `<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">${o.join(' ')}</div>`,
         title: (t,v) => `<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">${t} v${v}</div>`,
@@ -365,6 +389,7 @@ var ColorEmote = ColorEmote || (function() {
         ul: (...o) => `<ul>${_h.items(o)}</ul>`,
         grid: (...o) => `<div style="padding: 12px 0;">${o.join('')}<div style="clear:both;"></div></div>`,
         cell: (o) =>  `<div style="width: 130px; padding: 0 3px; float: left;">${o}</div>`,
+        statusCell: (o) =>  `<div style="width: 130px; padding: 0 3px; height: 1.5em; float: left;">${statusImg(o)}${o}</div>`,
         inset: (...o) => `<div style="padding-left: 10px;padding-right:20px">${o.join(' ')}</div>`,
         pre: (...o) =>`<div style="border:1px solid #e1e1e8;border-radius:4px;padding:8.5px;margin-bottom:9px;font-size:12px;white-space:normal;word-break:normal;word-wrap:normal;background-color:#f7f7f9;font-family:monospace;overflow:auto;">${o.join(' ')}</div>`,
         preformatted: (...o) =>_h.pre(o.join('<br>').replace(/\s/g,ch(' '))),

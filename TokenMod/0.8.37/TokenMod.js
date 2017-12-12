@@ -5,8 +5,8 @@
 var TokenMod = TokenMod || (function() {
     'use strict';
 
-    const version = '0.8.38',
-        lastUpdate = 1512679780,
+    const version = '0.8.37',
+        lastUpdate = 1512604267,
         schemaVersion = 0.3,
 
 
@@ -109,7 +109,7 @@ var TokenMod = TokenMod || (function() {
 		},
 
         regex = {
-            numberString: /^[-+\*/]?(0|[1-9][0-9]*)([.]+[0-9]*)?([eE][+-]?[0-9]+)?$/,
+            numberString: /^[+\\*/]?(0|[1-9][0-9]*)([.]+[0-9]*)?([eE][+-]?[0-9]+)?$/,
             stripSingleQuotes: /'([^']+(?='))'/g,
             stripDoubleQuotes: /"([^"]+(?="))"/g,
             layers: /^(?:gmlayer|objects|map|walls)$/,
