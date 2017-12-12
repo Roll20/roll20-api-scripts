@@ -1,9 +1,8 @@
 # Marching Order
 
-_v2.2 Updates_
-* Replaced interface for 'Follow'. Instead it now tells you to click the token you're following.
-* Additional protection against cyclical marching orders.
-* Players can use the script now too, but they only get the 'Follow' command.
+_v2.3 Updates_
+* Added button to stop all tokens from following each other.
+* Added capability to set a default marching order.
 
 This script allows you to select tokens and tell them to follow each other
 in some specified marching order.
@@ -37,6 +36,23 @@ They will step out of line in the marching order, but the rest of the
 marching order will be unaffected. If a token was following the token
 that stepped out of line, they will instead follow the token that the token
 which stepped out of line was following.
+
+To stop all tokens from following each other, click the Stop All Following
+button in the menu.
+
+### Default marching order
+
+From the menu, you can also set a reusable default marching order and apply it
+to the current players' page.
+
+To set a default marching order, select the leader token in an active
+marching order and click the Set Default button from the menu. Each token
+in the marching order must represent a character.
+
+To apply the saved default marching order to the current player ribbon page,
+click the Use Default button from the menu. If a character from the default
+order is missing from the current page, they will be skipped, but the rest
+of the marching order will be applied.
 
 ## Help
 
