@@ -1,3 +1,12 @@
+<a name="11.4.0"></a>
+# 11.4.0
+
+### Features
+
+* Death saving throw automation now supports `death_saving_throw_chances`
+* Advantage tracker nor properly handles `2d10` and `3d6`
+* Added `!shaped-config` options for `dice_system`, `hit_dice_recovered_on_a_short_rest`, `death_saving_throw_chances`, and `proficient_armor_weighs`
+
 <a name="11.3.3"></a>
 # 11.3.3
 
