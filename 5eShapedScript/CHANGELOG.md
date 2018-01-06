@@ -1,3 +1,10 @@
+<a name="11.5.0"></a>
+# 11.5.0
+
+### Features
+
+* Automatically revert advantage works with `Advantage+` and `Disadvantage-`
+
 <a name="11.4.0"></a>
 # 11.4.0
 
