@@ -1,6 +1,6 @@
-/*
- Current Version: 1.1.0
- Last updated: 01.03.2018
+﻿/*
+ Current Version: 1.2.0
+ Last updated: 01.04.2018
  Character Sheet and Script created by: GM Knowledge Rhino
 
  Known Issues:
@@ -1259,27 +1259,27 @@ eote.defaults = {
         },
         ABILITY: {
             BLANK: "https://i.imgur.com/NhSglh7.png",
-            A: "https://i.imgur.com/DfwBQMh.png",
-            AA: "https://i.imgur.com/6Zxowjh.png",
+            A: "https://i.imgur.com/mHG4eh2.png",
+            AA: "https://i.imgur.com/c4Zbeod.png",
             S: "https://i.imgur.com/wSsxsjb.png",
-            SA: "https://i.imgur.com/2Yt7tuO.png",
+            SA: "https://i.imgur.com/v4cUwLN.png",
             SS: "https://i.imgur.com/SiEZtMf.png"
         },
         BOOST: {
             BLANK: "https://i.imgur.com/gzPXiBK.png",
-            A: "https://i.imgur.com/ogai7AT.png",
-            AA: "https://i.imgur.com/2UmPAAR.png",
+            A: "https://i.imgur.com/g4zZseK.png",
+            AA: "https://i.imgur.com/YOTIuFZ.png",
             S: "https://i.imgur.com/NjGJpYK.png",
-            SA: "https://i.imgur.com/hVjMPcm.png"
+            SA: "https://i.imgur.com/dhStIX6.png"
         },
         CHALLENGE: {
-            BLANK: "https://i.imgur.com/YivhreJ.png",
-            F: "https://i.imgur.com/kEXYCo3.png",
-            FF: "https://i.imgur.com/N10kFiU.png",
-            FT: "https://i.imgur.com/0DbzBWh.png",
-            T: "https://i.imgur.com/ANHn6u2.png",
-            TT: "https://i.imgur.com/ciPasU7.png",
-            DESPAIR: "https://i.imgur.com/uJvVg7w.png"
+            BLANK: "https://i.imgur.com/56lp8IN.png",
+            F: "https://i.imgur.com/itob7iS.png",
+            FF: "https://i.imgur.com/TZCVOU4.png",
+            FT: "https://i.imgur.com/3aEjzhC.png",
+            T: "https://i.imgur.com/buFGnLb.png",
+            TT: "https://i.imgur.com/zhSCsAn.png",
+            DESPAIR: "https://i.imgur.com/N7ywBJp.png"
         },
         DIFFICULTY: {
             BLANK: "https://i.imgur.com/SmEKzyC.png",
@@ -1291,17 +1291,17 @@ eote.defaults = {
         },
         PROFICIENCY: {
             BLANK: "https://i.imgur.com/Cem6BPL.png",
-            A: "https://i.imgur.com/Xhq2xjn.png",
+            A: "https://i.imgur.com/XCqPA0s.png",
             S: "https://i.imgur.com/VtnKaoM.png",
-            SA: "https://i.imgur.com/MvpPbXy.png",
+            SA: "https://i.imgur.com/v4cUwLN.png",
             SS: "https://i.imgur.com/VpITyqd.png",
-            AA: "https://i.imgur.com/dEDgnfI.png",
+            AA: "https://i.imgur.com/KRYnzZ1.png",
             TRIUMPH: "https://i.imgur.com/kU33Rfs.png"
         },
         SETBACK: {
-            BLANK: "https://i.imgur.com/IC9Z2OZ.png",
-            F: "https://i.imgur.com/RDXOSYX.png",
-            T: "https://i.imgur.com/9mnfO4x.png"
+            BLANK: "https://i.imgur.com/XXG63Z9.png",
+            F: "https://i.imgur.com/motDdx2.png",
+            T: "https://i.imgur.com/rdXo6xd.png"
         },
         SYMBOLS: {
             A: "https://i.imgur.com/O1dDNFm.png",
@@ -2574,7 +2574,7 @@ eote.process.crit = function (cmd, diceObj) {
             percent: '55 to 63',
             severity: 2,
             name: 'Navigation Damaged',
-            Result: 'The vehicle\'s navigation is compromised (its handling becomes ?3 (unless it is already lower)).'
+            Result: 'The vehicle\'s navigation is compromised (its handling becomes 3 (unless it is already lower)).'
         },
         {
             percent: '64 to 72',
@@ -3177,7 +3177,7 @@ eote.process.upgrade = function (cmd, diceObj) {
     });
     return diceObj;
 };
-
+//Fix this code
 eote.process.downgrade = function (cmd, diceObj) {
 
     /* Downgrade
@@ -3239,7 +3239,7 @@ eote.process.downgrade = function (cmd, diceObj) {
     });
     return diceObj;
 };
-
+//End Fix this code
 eote.process.math = function (expr) {
 
     /* Math
