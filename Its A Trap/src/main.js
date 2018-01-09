@@ -317,7 +317,6 @@ var ItsATrap = (() => {
    * @return {Graphic[]}
    */
   function getTrapVictims(trap, triggerVictim) {
-    let range = trap.get('aura1_radius');
     let pageId = trap.get('_pageid');
 
     let effect = new TrapEffect(trap);
@@ -344,13 +343,17 @@ var ItsATrap = (() => {
     // Case 2: The trap itself defines the blast area.
     else {
       victims = [triggerVictim];
+
+      let range = trap.get('aura1_radius');
+      let squareArea = trap.get('aura1_square');
       if(range !== '') {
         let pageScale = getObj('page', pageId).get('scale_number');
         range *= 70/pageScale;
-        let squareArea = trap.get('aura1_square');
-
-        victims = victims.concat(LineOfSight.filterTokens(trap, otherTokens, range, squareArea));
       }
+      else
+        range = 0;
+
+      victims = victims.concat(LineOfSight.filterTokens(trap, otherTokens, range, squareArea));
     }
 
     return _.chain(victims)
