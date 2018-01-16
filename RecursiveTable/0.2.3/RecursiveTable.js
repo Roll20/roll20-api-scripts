@@ -5,8 +5,8 @@
 var RecursiveTable = RecursiveTable || (function() {
 	'use strict';
 
-	var version = '0.2.4',
-	lastUpdate = 1515686203,
+	var version = '0.2.3',
+	lastUpdate = 1515681102,
 	schemaVersion = 0.1,
 	clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
 	defaults = {
@@ -101,14 +101,14 @@ var RecursiveTable = RecursiveTable || (function() {
         };
 	},
 
-//	makeSuffixer = function(suffix){
-//        let c = {};
-//		return (val)=>{
-//            val = val.trim();
-//            c[val]=c[val]||0;
-//            return val+suffix.repeat(c[val]++);
-//        };
-//	},
+	makeSuffixer = function(suffix){
+        let c = {};
+		return (val)=>{
+            val = val.trim();
+            c[val]=c[val]||0;
+            return val+suffix.repeat(c[val]++);
+        };
+	},
 
     _h = {
         outer: (...o) => `<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">${o.join(' ')}</div>`,
@@ -310,7 +310,7 @@ var RecursiveTable = RecursiveTable || (function() {
 		const formatPart = (part) => (opts.showicons && part.avatar)
 			? `<div style="${s(styles.o)}">`+
 				`<img style="${s(styles.i)}" src="${part.avatar||clearURL}">`+
-				(opts.iconlabel ? `<div style="${s(styles.t)}">${part.text||ch(' ')}</div>` : '')+
+				(opts.iconlabel ? `<div style="${s(styles.t)}">${part.text}</div>` : '')+
 				`</div>`
 			: part.text
 			;
@@ -318,7 +318,7 @@ var RecursiveTable = RecursiveTable || (function() {
 		const composeParts = (parts) => _.compose(
 				((x)=>_.map(x,formatPart)),
 				(opts.sort ? (x)=>_.sortBy(x,'text') : _.identity),
-				(opts.dropempty ?  (x)=>_.filter(x,(v)=>`${v.text}${opts.showicons?v.avatar:''}`.trim().length) : _.identity)
+				(opts.dropempty ?  (x)=>_.filter(x,(v)=>`${v.text}`.trim().length) : _.identity)
 			)(parts).join(opts.delimiter);
 		
 		return new Promise((returnSubs)=>{
