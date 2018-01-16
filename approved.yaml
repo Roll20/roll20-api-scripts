@@ -413,3 +413,7 @@ itsatrapthemestarfinder:
 genesysroller:
 - "Genesys-RPG-Roller"
 - "System Toolbox"
+
+cashmaster:
+- CashMaster
+- "System Toolbox"
