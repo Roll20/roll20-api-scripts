@@ -15,6 +15,8 @@ It's a kind of general use script for anything Exalted 3e related, where you can
 (This can be disabled for individual tokens by adding the "ninja-mask" status marker on it.)
 * Quickly add five motes or fill all mote pools to capacity with the use of chat commands (Detailed below) 
 * Quickly clear Onslaught and Anima status from all tokens on the current player page.
+* Update tokens with wound penalty statuses
+* Bring over anima, onslaught and wound penalty statuses to tokens representing the same character when switching player pages.
 
 ### exaltScript can **NOT** do the following rad stuff:
 
@@ -26,13 +28,16 @@ It's a kind of general use script for anything Exalted 3e related, where you can
 
 * !exaltScript : Main command preamble
 * UI : Displays the exaltScript UI to the user. I HIGHLY recommend you make a macro for this command.
+	* condensed : Displays a condensed UI without the settings options.
 * !exaltScript addMotes : Adds 5 motes to every character on player page with mote pools (i.e. the ones that have the "personal-essence" and "peripheral-essence" attributes)
 * !exaltScript maxMotes : Fills all mote pools to capacity on the page that the players are on the current page.
 * !exaltScript customMotes X: Lets you specify a number of motes to give to the tokens on the current player board. Switch out X for a valid integer.
 * !exaltScript settings : Allows you to toggle the followed setting,
 	* initiative : Toggles initiative functions, such as automatic sorting, onslaught removal and automatic mote increase
 	* anima : Toggles automatic anima increase on removing motes  
-	* notifications: Toggles the command notifications display.
+	* notifications : Toggles the command notifications display.
+	* migration : Toggles the migrating of status effects of represented tokens when changing active player page.
+	* woundpenalty : Toggles automatic updating of wound penalty status on tokens.
 * !exaltScript clear : Clears the followed status from all tokens on the current player page.
 	* onslaught : Clears onslaught status
 	* anima : Clears anima status
