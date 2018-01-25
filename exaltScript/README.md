@@ -3,6 +3,10 @@
 exaltScript's function is to automate many tedious aspects of Exalted 3rd edition, especially when it comes to combat. 
 It's a kind of general use script for anything Exalted 3e related, where you can pick and choose what functions you want to use.
 
+## Setup
+
+In order to enable functionality of mote adding (manually or automatic through initiative), automatic anima increasing and automatic wound penalty tracking for characters, you need to set character tokens to represent their appropriate character handouts. Simply double-click the token you wish to represent and pick the appropriate character handout under "Represents Character".
+
 ## Features
 
 ### exaltScript can do the following rad stuff:
@@ -12,11 +16,11 @@ It's a kind of general use script for anything Exalted 3e related, where you can
 * Sort the turn order when the round has ended
 * Automatically remove Onslaught markers (Purple status marker) from tokens when their turn rolls around
 * Automatically increase token Anima if 5 or more Peripheral Motes are spent in one instance 
-(This can be disabled for individual tokens by adding the "ninja-mask" status marker on it.)
+(This can be disabled for individual tokens by adding the "ninja-mask" status marker on it, which is useful for Night caste solars)
 * Quickly add five motes or fill all mote pools to capacity with the use of chat commands (Detailed below) 
 * Quickly clear Onslaught and Anima status from all tokens on the current player page.
 * Update tokens with wound penalty statuses
-* Bring over anima, onslaught and wound penalty statuses to tokens representing the same character when switching player pages.
+* Migrate anima, onslaught and wound penalty statuses to tokens representing the same character when switching player pages.
 
 ### exaltScript can **NOT** do the following rad stuff:
 
