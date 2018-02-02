@@ -99,7 +99,10 @@ var ItsATrap = (() => {
           triggerDist = _.chain(effect.triggerPaths)
           .map(pathId => {
             let path = getObj('path', pathId);
-            return getSearchDistance(token, path);
+            if(path)
+              return getSearchDistance(token, path);
+            else
+              return Number.POSITIVE_INFINITY;
           })
           .min()
           .value();
@@ -282,14 +285,17 @@ var ItsATrap = (() => {
     .map(trap => {
       let effect = new TrapEffect(trap);
       if(effect.triggerPaths) {
-        return _.map(effect.triggerPaths, id => {
+        return _.chain(effect.triggerPaths)
+        .map(id => {
           if(pathsToTraps[id])
             pathsToTraps[id].push(trap);
           else
             pathsToTraps[id] = [trap];
 
-          return getObj('path', id) || trap;
-        });
+          return getObj('path', id);
+        })
+        .compact()
+        .value();
       }
       else
         return trap;
@@ -1759,7 +1765,7 @@ var ItsATrapCreationWizard = (() => {
         name: 'Set Trigger',
         desc: 'To set paths, you must also select the paths that trigger the trap.',
         value: trapEffect.triggerPaths || 'self',
-        options: ['self', 'paths']
+        options: ['self', 'set selected paths', 'add selected paths', 'remove selected paths']
       },
       {
         id: 'triggers',
@@ -1942,10 +1948,31 @@ var ItsATrapCreationWizard = (() => {
         return trigger.trim();
       });
     if(prop === 'triggerPaths')
-      if(params[0] === 'paths' && selected)
+      if(params[0] === 'set selected paths' && selected)
         trapEffect.triggerPaths = _.map(selected, path => {
           return path.get('_id');
         });
+      else if(params[0] === 'add selected paths' && selected) {
+        if(!_.isArray(trapEffect.triggerPaths))
+          trapEffect.triggerPaths = [];
+
+        trapEffect.triggerPaths = trapEffect.triggerPaths
+        .concat(_.map(selected, path => {
+          return path.get('_id');
+        }));
+      }
+      else if(params[0] === 'remove selected paths' && selected) {
+        if(!_.isArray(trapEffect.triggerPaths))
+          trapEffect.triggerPaths = [];
+
+        let selectedIds = _.map(selected, path => {
+          return path.get('_id');
+        });
+
+        trapEffect.triggerPaths = _.reject(trapEffect.triggerPaths, id => {
+          return selectedIds.includes(id);
+        });
+      }
       else
         trapEffect.triggerPaths = undefined;
 

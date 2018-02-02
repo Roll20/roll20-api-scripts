@@ -65,7 +65,10 @@ var ItsATrap = (() => {
           triggerDist = _.chain(effect.triggerPaths)
           .map(pathId => {
             let path = getObj('path', pathId);
-            return getSearchDistance(token, path);
+            if(path)
+              return getSearchDistance(token, path);
+            else
+              return Number.POSITIVE_INFINITY;
           })
           .min()
           .value();
@@ -248,14 +251,17 @@ var ItsATrap = (() => {
     .map(trap => {
       let effect = new TrapEffect(trap);
       if(effect.triggerPaths) {
-        return _.map(effect.triggerPaths, id => {
+        return _.chain(effect.triggerPaths)
+        .map(id => {
           if(pathsToTraps[id])
             pathsToTraps[id].push(trap);
           else
             pathsToTraps[id] = [trap];
 
-          return getObj('path', id) || trap;
-        });
+          return getObj('path', id);
+        })
+        .compact()
+        .value();
       }
       else
         return trap;

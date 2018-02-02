@@ -484,7 +484,7 @@ var ItsATrapCreationWizard = (() => {
         name: 'Set Trigger',
         desc: 'To set paths, you must also select the paths that trigger the trap.',
         value: trapEffect.triggerPaths || 'self',
-        options: ['self', 'paths']
+        options: ['self', 'set selected paths', 'add selected paths', 'remove selected paths']
       },
       {
         id: 'triggers',
@@ -667,10 +667,31 @@ var ItsATrapCreationWizard = (() => {
         return trigger.trim();
       });
     if(prop === 'triggerPaths')
-      if(params[0] === 'paths' && selected)
+      if(params[0] === 'set selected paths' && selected)
         trapEffect.triggerPaths = _.map(selected, path => {
           return path.get('_id');
         });
+      else if(params[0] === 'add selected paths' && selected) {
+        if(!_.isArray(trapEffect.triggerPaths))
+          trapEffect.triggerPaths = [];
+
+        trapEffect.triggerPaths = trapEffect.triggerPaths
+        .concat(_.map(selected, path => {
+          return path.get('_id');
+        }));
+      }
+      else if(params[0] === 'remove selected paths' && selected) {
+        if(!_.isArray(trapEffect.triggerPaths))
+          trapEffect.triggerPaths = [];
+
+        let selectedIds = _.map(selected, path => {
+          return path.get('_id');
+        });
+
+        trapEffect.triggerPaths = _.reject(trapEffect.triggerPaths, id => {
+          return selectedIds.includes(id);
+        });
+      }
       else
         trapEffect.triggerPaths = undefined;
 
