@@ -1473,7 +1473,7 @@ var ItsATrapCreationWizard = (() => {
    */
   function getDefaultJson() {
     return JSON.stringify({
-      effectShape: 'square',
+      effectShape: 'rectangle',
       stopAt: 'center'
     });
   }
@@ -1565,7 +1565,7 @@ var ItsATrapCreationWizard = (() => {
         name: 'Trap shape',
         desc: 'To set paths, you must also select one or more paths defining the trap\'s blast area. A fill color must be set for tokens inside the path to be affected.',
         value: trapEffect.effectShape || ' circle',
-        options: [ 'circle', 'square', 'paths']
+        options: [ 'circle', 'rectangle', 'paths']
       },
     ];
   }
@@ -1803,9 +1803,10 @@ var ItsATrapCreationWizard = (() => {
     if(prop === 'effectDistance')
       trapToken.set('aura1_radius', parseInt(params[0]));
     if(prop === 'effectShape') {
-      if(['circle', 'square'].includes(params[0])) {
+      if(['circle', 'square', 'rectangle'].includes(params[0])) {
         trapEffect.effectShape = params[0];
-        trapToken.set('aura1_square', params[0].includes('square'));
+        trapToken.set('aura1_square',
+          params[0].includes('square') || params[0].includes('rectangle'));
       }
       else if(params[0] === 'paths' && selected) {
         trapEffect.effectShape = _.map(selected, path => {
