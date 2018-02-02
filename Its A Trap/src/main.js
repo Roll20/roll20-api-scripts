@@ -130,6 +130,10 @@ var ItsATrap = (() => {
       let trapEffect = (new TrapEffect(trap, token)).json;
       trapEffect.stopAt = trapEffect.stopAt || 'center';
 
+      // Should this trap ignore the token?
+      if(trapEffect.ignores && trapEffect.ignores.includes(token.get('_id')))
+        return false;
+
       // Figure out where to stop the token.
       if(trapEffect.stopAt === 'edge' && !trapEffect.gmOnly) {
         let x = collision.pt[0];
@@ -359,6 +363,9 @@ var ItsATrap = (() => {
     return _.chain(victims)
     .unique()
     .compact()
+    .reject(victim => {
+      return effect.ignores.includes(victim.get('_id'));
+    })
     .value();
   }
 

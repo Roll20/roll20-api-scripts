@@ -500,6 +500,13 @@ var ItsATrapCreationWizard = (() => {
           else
             return undefined;
         })()
+      },
+      {
+        id: 'ignores',
+        name: 'Ignore Tokens',
+        desc: 'Select one or more tokens to be ignored by this trap.',
+        value: trapEffect.ignores || 'none',
+        options: ['none', 'set selected tokens', 'add selected tokens', 'remove selected tokens']
       }
     ];
   }
@@ -578,6 +585,26 @@ var ItsATrapCreationWizard = (() => {
     }
     if(prop === 'gmOnly')
       trapEffect.gmOnly = params[0] === 'yes';
+    if(prop === 'ignores')
+      if(params[0] === 'set selected tokens' && selected)
+        trapEffect.ignores = _.map(selected, token => {
+          return token.get('_id');
+        });
+      else if(params[0] === 'add selected tokens' && selected)
+        trapEffect.ignores = (trapEffect.ignores || [])
+        .concat(_.map(selected, token => {
+          return token.get('_id');
+        }));
+      else if(params[0] === 'remove selected tokens' && selected && trapEffect.ignores) {
+        let selectedIds = _.map(selected, token => {
+          return token.get('_id');
+        });
+        trapEffect.ignores = _.reject(trapEffect.ignores, id => {
+          return selectedIds.includes(id);
+        });
+      }
+      else
+        trapEffect.ignores = undefined;
     if(prop === 'kaboom')
       if(params[0])
         trapEffect.kaboom = {

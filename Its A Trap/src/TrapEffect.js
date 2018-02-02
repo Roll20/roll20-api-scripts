@@ -99,6 +99,15 @@ var TrapEffect = (() => {
     }
 
     /**
+     * A list of IDs for tokens that this trap ignores. These tokens will neither
+     * trigger nor be affected by the trap.
+     * @type {string[]}
+     */
+    get ignores() {
+      return this._effect.ignores || [];
+    }
+
+    /**
      * Gets a copy of the trap's JSON properties.
      * @readonly
      * @type {object}
