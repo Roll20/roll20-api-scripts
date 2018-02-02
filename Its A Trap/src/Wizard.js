@@ -306,7 +306,7 @@ var ItsATrapCreationWizard = (() => {
         name: 'Trap shape',
         desc: 'To set paths, you must also select one or more paths defining the trap\'s blast area. A fill color must be set for tokens inside the path to be affected.',
         value: trapEffect.effectShape || ' circle',
-        options: [ 'circle', 'rectangle', 'paths']
+        options: [ 'circle', 'rectangle', 'set selected paths', 'add selected paths', 'remove selected paths']
       },
     ];
   }
@@ -556,9 +556,31 @@ var ItsATrapCreationWizard = (() => {
         trapToken.set('aura1_square',
           params[0].includes('square') || params[0].includes('rectangle'));
       }
-      else if(params[0] === 'paths' && selected) {
+      else if(params[0] === 'set selected paths' && selected) {
         trapEffect.effectShape = _.map(selected, path => {
           return path.get('_id');
+        });
+        trapToken.set('aura1_square', false);
+      }
+      else if(params[0] === 'add selected paths' && selected) {
+        if(!_.isArray(trapEffect.effectShape))
+          trapEffect.effectShape = [];
+
+        trapEffect.effectShape = trapEffect.effectShape
+        .concat(_.map(selected, path => {
+          return path.get('_id');
+        }));
+        trapToken.set('aura1_square', false);
+      }
+      else if(params[0] === 'remove selected paths' && selected) {
+        if(!_.isArray(trapEffect.effectShape))
+          trapEffect.effectShape = [];
+
+        let selectedIds = _.map(selected, token => {
+          return token.get('_id');
+        });
+        trapEffect.effectShape = _.reject(trapEffect.effectShape, id => {
+          return selectedIds.includes(id);
         });
         trapToken.set('aura1_square', false);
       }
@@ -590,12 +612,19 @@ var ItsATrapCreationWizard = (() => {
         trapEffect.ignores = _.map(selected, token => {
           return token.get('_id');
         });
-      else if(params[0] === 'add selected tokens' && selected)
-        trapEffect.ignores = (trapEffect.ignores || [])
+      else if(params[0] === 'add selected tokens' && selected) {
+        if(!_.isArray(trapEffect.ignores))
+          trapEffect.ignores = [];
+
+        trapEffect.ignores = trapEffect.ignores
         .concat(_.map(selected, token => {
           return token.get('_id');
         }));
-      else if(params[0] === 'remove selected tokens' && selected && trapEffect.ignores) {
+      }
+      else if(params[0] === 'remove selected tokens' && selected) {
+        if(!_.isArray(trapEffect.ignores))
+          trapEffect.ignores = [];
+
         let selectedIds = _.map(selected, token => {
           return token.get('_id');
         });
