@@ -65,7 +65,10 @@ var ItsATrap = (() => {
           triggerDist = _.chain(effect.triggerPaths)
           .map(pathId => {
             let path = getObj('path', pathId);
-            return getSearchDistance(token, path);
+            if(path)
+              return getSearchDistance(token, path);
+            else
+              return Number.POSITIVE_INFINITY;
           })
           .min()
           .value();
@@ -129,6 +132,10 @@ var ItsATrap = (() => {
 
       let trapEffect = (new TrapEffect(trap, token)).json;
       trapEffect.stopAt = trapEffect.stopAt || 'center';
+
+      // Should this trap ignore the token?
+      if(trapEffect.ignores && trapEffect.ignores.includes(token.get('_id')))
+        return false;
 
       // Figure out where to stop the token.
       if(trapEffect.stopAt === 'edge' && !trapEffect.gmOnly) {
@@ -244,14 +251,17 @@ var ItsATrap = (() => {
     .map(trap => {
       let effect = new TrapEffect(trap);
       if(effect.triggerPaths) {
-        return _.map(effect.triggerPaths, id => {
+        return _.chain(effect.triggerPaths)
+        .map(id => {
           if(pathsToTraps[id])
             pathsToTraps[id].push(trap);
           else
             pathsToTraps[id] = [trap];
 
-          return getObj('path', id) || trap;
-        });
+          return getObj('path', id);
+        })
+        .compact()
+        .value();
       }
       else
         return trap;
@@ -359,6 +369,9 @@ var ItsATrap = (() => {
     return _.chain(victims)
     .unique()
     .compact()
+    .reject(victim => {
+      return effect.ignores.includes(victim.get('_id'));
+    })
     .value();
   }
 
