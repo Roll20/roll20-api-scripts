@@ -1,3 +1,15 @@
+<a name="12.0.0-beta.1"></a>
+# 12.0.0-beta.1
+
+### BREAKING CHANGES
+
+* Script updated to work with sheet version 16.0.0 for importing data
+* config: Will not work with earlier versions of the Shaped Sheet
+
+### Bug fixes
+
+* [#29: Trouble Importing Creature Skills](https://bitbucket.org/mlenser/5eshapedscript/issues/29/trouble-importing-creature-skills)
+
 <a name="11.5.0"></a>
 # 11.5.0
 
