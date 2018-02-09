@@ -504,7 +504,7 @@ var handleammo = function (msg,character,player) {
             ammoweight = findObjs({type: 'attribute', characterid: character.id, name: "repeating_inventory_" + ammoitemid + "_itemweight"}, {caseInsensitive: true})[0];
             totalweight = findObjs({type: 'attribute', characterid: character.id, name: "weighttotal"}, {caseInsensitive: true})[0];
             if(ammoweight && totalweight) {
-                totalweight.set({current: totalweight.get("current") - ammoweight.get("current")});
+                totalweight.set({current: totalweight.get("current") - (ammoweight.get("current") * ammonum)});
             }
         }
         var wtype = getAttrByName(character.id, "wtype");
