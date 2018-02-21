@@ -1,13 +1,5 @@
-<a name="12.0.0-rc.1"></a>
-# 12.0.0-rc.1
-
-### Bug fixes
-
-* [#38: Spell Save DC Not calculating properly in !shaped-spells](https://bitbucket.org/mlenser/5eshapedscript/issues/38/spell-save-dc-not-calculating-properly-in)
-* Script does not error when a weapon is dropped on an NPC sheet
-
-<a name="12.0.0-beta.1"></a>
-# 12.0.0-beta.1
+<a name="12.0.0"></a>
+# 12.0.0
 
 ### BREAKING CHANGES
 
@@ -17,6 +9,8 @@
 ### Bug fixes
 
 * [#29: Trouble Importing Creature Skills](https://bitbucket.org/mlenser/5eshapedscript/issues/29/trouble-importing-creature-skills)
+* [#38: Spell Save DC Not calculating properly in !shaped-spells](https://bitbucket.org/mlenser/5eshapedscript/issues/38/spell-save-dc-not-calculating-properly-in)
+* Script does not error when a weapon is dropped on an NPC sheet
 
 <a name="11.5.0"></a>
 # 11.5.0
