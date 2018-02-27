@@ -24,7 +24,7 @@
     "token.height": "read,write",
     "token.controlledby": "read",
     "token.layer": "read",
-    "token.name": "read", "write",
+    "token.name": "read,write",
     "token.bar1_value": "read,write",
     "token.bar2_value": "read,write",
     "token.bar3_value": "read",
