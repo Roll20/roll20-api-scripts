@@ -91,7 +91,7 @@ var COFantasy = COFantasy || function() {
     return player_ids;
   }
 
-  function getPictoStyleFromCommand(fullCommand, tokenId) {
+  function getPictoStyleFromCommand(fullCommand, perso) {
     if (fullCommand === undefined) return {
       picto: '',
       style: ''
@@ -117,12 +117,9 @@ var COFantasy = COFantasy || function() {
           if (Array.isArray(this_weapon)) {
             portee = this_weapon[4];
           } else {
-            var token = getObj('graphic', tokenId);
-            if (token !== undefined) {
-              var att = getAttack(attackLabel, token.get('name'), token.get('represents'));
-              if (att !== undefined) {
-                portee = getPortee(token.get('represents'), att.attackPrefix);
-              }
+            var att = getAttack(attackLabel, perso);
+            if (att !== undefined) {
+              portee = getPortee(perso.charId, att.attackPrefix);
             }
           }
         }
@@ -659,38 +656,46 @@ var COFantasy = COFantasy || function() {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
   }
 
+  //Remplace une macro ou ability par sa définition (récursivement)
+  function replaceAction(action, perso, macros, abilities) {
+    var remplacement = false;
+    if (action.indexOf('#') >= 0) {
+      macros = macros || findObjs({
+        _type: 'macro'
+      });
+      macros.forEach(function(m, i) {
+        var mName = '#' + m.get('name');
+        if (action.indexOf(mName) >= 0) {
+          action = action.replace(mName, m.get('action'));
+          if (!remplacement) macros = macros.splice(i); //Pour éviter la récursion
+          remplacement = true;
+        }
+      });
+    }
+    if (action.indexOf('%') >= 0) {
+      abilities = abilities || findObjs({
+        _type: 'ability',
+        _characterid: perso.charId
+      });
+      abilities.forEach(function(a, i) {
+        var aName = '%' + a.get('name');
+        if (action.indexOf(aName) >= 0) {
+          action = action.replace(aName, a.get('action'));
+          if (!remplacement) abilities = abilities.splice(i); //Pour éviter la récursion
+          remplacement = true;
+        }
+      });
+    }
+    if (remplacement) return replaceAction(action, perso, macros, abilities);
+    return action;
+  }
+
   //ressource est optionnel, et si présent doit être un attribut
   function bouton(action, text, perso, ressource, overlay) {
     if (action === undefined || action.trim().length === 0) return text;
     else action = action.trim();
-    if (action.indexOf('#') !== -1) {
-      // Cette commande contient au moins une macro donc on va la remplacer par sa commande (action)
-      // Toutes les Macros
-      var macros = findObjs({
-        _type: 'macro'
-      });
-      var command_words = action.split("\n");
-      //chaque ligne
-      _.each(command_words, function(line) {
-        var line_words = line.split(' ');
-        //chaque mot
-        _.each(line_words, function(word) {
-          // si le mot commence par #
-          if (word.startsWith('#')) {
-            // on recherche une macro qui s'appelle pareil (sans le #)
-            var this_macro = macros.filter(function(obj) {
-              return (obj.get('name').trim() == word.substring(1));
-            });
-            if (this_macro.length == 1) {
-              // macro trouvé
-              // on replace dans la commande initiale
-              action = action.replace(word, this_macro[0].get('action'));
-            }
-          }
-        });
-      });
-    }
-    var token = perso.token;
+    action = replaceAction(action, perso);
+    var tid = perso.token.id;
     var character = getObj('character', perso.charId);
     switch (action.charAt(0)) {
       case '!':
@@ -698,15 +703,15 @@ var COFantasy = COFantasy || function() {
         break;
       default:
         if (ressource) {
-          action = "!cof-utilise-consommable " + token.id + " " + ressource.id + " --message " + action;
+          action = "!cof-utilise-consommable " + tid + " " + ressource.id + " --message " + action;
         } else {
           action = "!cof-lancer-sort 0 " + action;
         }
     }
-    var pictoStyle = getPictoStyleFromCommand(action, token.id);
+    var pictoStyle = getPictoStyleFromCommand(action, perso);
     if (action.indexOf('@{selected') !== -1 && character !== undefined) {
       // cas spécial pour @{selected|token_id} où l'on remplace toutes les occurences par token.id
-      action = action.replace(new RegExp(escapeRegExp('@{selected|token_id}'), 'g'), token.id);
+      action = action.replace(new RegExp(escapeRegExp('@{selected|token_id}'), 'g'), tid);
       var tmp = action.split('@{selected');
       _.each(tmp, function(elem, i) {
         if (elem.startsWith('|')) {
@@ -722,10 +727,10 @@ var COFantasy = COFantasy || function() {
       action.indexOf('cof-attack') == -1 &&
       action.indexOf('cof-soin') == -1) {
       //Si on n'a pas de cible, on fait comme si le token était sélectionné.
-      var add_token = " --target " + token.id;
+      var add_token = " --target " + tid;
       if (action.indexOf(' --allie') >= 0) {
         if (action.indexOf('--lanceur') == -1)
-          add_token = " --lanceur " + token.id;
+          add_token = " --lanceur " + tid;
         else add_token = ""; //La cible sont les alliés de --lanceur.
       }
       if (action.indexOf(' --message ') != -1) action = action.replace(' --message ', add_token + ' --message ');
@@ -1452,6 +1457,7 @@ var COFantasy = COFantasy || function() {
 
   // Fait dépenser de la mana, et si pas possible, retourne false
   function depenseMana(personnage, cout, msg, evt) {
+    if (cout === 0) return true;
     var token = personnage.token;
     var charId = personnage.charId;
     var manaAttr = findObjs({
@@ -1710,15 +1716,16 @@ var COFantasy = COFantasy || function() {
     return parseInt(s.substring(3, s.indexOf(']')));
   }
 
-  function getAttack(attackLabel, tokName, charId) {
+  function getAttack(attackLabel, perso) {
     // Get attack number (does not correspond to the position in sheet !!!)
     var attackNumber = 0;
     var attPrefix, weaponName;
     while (true) {
       attPrefix = "repeating_armes_$" + attackNumber + "_";
-      weaponName = getAttrByName(charId, attPrefix + "armenom");
+      weaponName = getAttrByName(perso.charId, attPrefix + "armenom");
       if (weaponName === undefined || weaponName === "") {
-        error("Arme " + attackLabel + " n'existe pas pour " + tokName, charId);
+        perso.tokName = perso.tokName || perso.token.get('name');
+        error("Arme " + attackLabel + " n'existe pas pour " + perso.tokName, perso);
         return;
       }
       var weaponLabel = weaponName.split(' ', 1)[0];
@@ -2349,7 +2356,7 @@ var COFantasy = COFantasy || function() {
       weaponStats.portee = attaqueArray[4];
     } else {
       //On trouve l'attaque correspondant au label
-      var att = getAttack(attackLabel, attaquant.tokName, attackingCharId);
+      var att = getAttack(attackLabel, attaquant);
       if (att === undefined) return;
       var attPrefix = att.attackPrefix;
       weaponName = att.weaponName;
@@ -2785,6 +2792,9 @@ var COFantasy = COFantasy || function() {
       (crit == 20 && charAttributeAsBool(attaquant, 'ecuyer'))) crit -= 1;
     if (options.bonusCritique) crit -= options.bonusCritique;
     if (options.affute) crit -= 1;
+    if (options.contact && charAttributeAsBool(attaquant, 'frappeChirurgicale'))
+      crit -= modCarac(attaquant, 'INTELLIGENCE');
+    if (crit < 2) crit = 2;
     var dice = 20;
     if (getState(attaquant, 'affaibli')) {
       dice = 12;
@@ -3034,9 +3044,15 @@ var COFantasy = COFantasy || function() {
             paralyse = true;
             target.messages.push("Cible paralysée => réussite critique automatique");
           }
-
-          if (charAttributeAsBool(attaquant, 'champion') && d20roll >= 15)
+          if (d20roll >= 15 && charAttributeAsBool(attaquant, 'champion'))
             options.champion = true;
+          if (d20roll >= 17 && options.contact &&
+            charAttributeAsBool(attaquant, 'crocEnJambe')) {
+            if (d20roll >= 19 || !estQuadrupede(target)) {
+              setState(target, 'renverse', true, evt);
+              target.messages.push("tombe par terre");
+            }
+          }
           if (d20roll == 1 && options.chance === undefined) {
             attackResult = " : <span style='" + BS_LABEL + " " + BS_LABEL_DANGER + "'><b>échec&nbsp;critique</b></span>";
             if (options.demiAuto) {
@@ -3091,6 +3107,7 @@ var COFantasy = COFantasy || function() {
           if (absorber) line += absorber;
           else line += defense;
           line += "</b> " + attackResult;
+          if (options.test) line += " (" + attackRoll + ")";
           target.attackMessage = line;
           if (touche) {
             if (options.asDeLaGachette && attackRoll > 24) {
@@ -3627,9 +3644,9 @@ var COFantasy = COFantasy || function() {
                         " et commence à lui sucer le sang");
                     }
                     if (suce + dmg >= 6) {
-                      target.messaged.push(
+                      target.messages.push(
                         "Repus, " + attackerTokName + " se détache et s'envole");
-                      target.messaged.push(target.tokName + " se sent un peu faible...");
+                      target.messages.push(target.tokName + " se sent un peu faible...");
                       setState(target, 'affaibli', true, evt);
                       var defbuf = attributeAsInt(attaquant, 'bufDEF', 0);
                       if (defbuf === -3) {
@@ -5253,13 +5270,15 @@ var COFantasy = COFantasy || function() {
           case 'allies':
           case 'saufAllies':
             var selection = selected;
-            if (cmdSplit[0] == 'saufAllies') selection = enleveAuxSelected;
+            var saufAllies = (cmdSplit[0] == 'saufAllies');
+            if (saufAllies) selection = enleveAuxSelected;
             var actives = [];
             var allies = new Set();
             // First get the acting token (in msg.selected)
             if (actif) {
               actives = [actif];
               allies = alliesParPerso[actif.charId] || allies;
+              if (saufAllies) allies = (new Set(allies)).add(actif.charId);
             } else {
               if (msg.selected === undefined || msg.selected.length === 0) {
                 error("Pas d'allié car pas de token sélectionné", msg);
@@ -5273,6 +5292,7 @@ var COFantasy = COFantasy || function() {
                     allies.add(ci);
                   });
                 }
+                if (saufAllies) allies.add(personnage.charId);
               });
             }
             var tokens = findObjs({
@@ -5823,7 +5843,6 @@ var COFantasy = COFantasy || function() {
       attributes: []
     };
     iterSelected(msg.selected, function(perso) {
-      var name = perso.token.get('name');
       var attrs =
         findObjs({
           _type: 'attribute',
@@ -5831,11 +5850,12 @@ var COFantasy = COFantasy || function() {
           name: "charge_" + attackLabel
         });
       if (attrs.length < 1) {
-        log("Personnage " + name + " sans charge " + attackLabel);
+        perso.tokName = perso.tokName || perso.token.get('name');
+        log("Personnage " + perso.tokName + " sans charge " + attackLabel);
         return;
       }
       attrs = attrs[0];
-      var att = getAttack(attackLabel, name, perso.charId);
+      var att = getAttack(attackLabel, perso);
       if (att === undefined) {
         //  error("Arme "+attackLabel+" n'existe pas pour "+name, charId);
         return;
@@ -7876,14 +7896,12 @@ var COFantasy = COFantasy || function() {
       attributes: []
     };
     iterSelected(msg.selected, function(perso) {
-      var token = perso.token;
       var charId = perso.charId;
-      var name = token.get('name');
       var attrs = attributesInitEnMain(charId);
       attrs.forEach(function(attr) {
         var cur = parseInt(attr.get('current'));
         var attrN = labelInitEnMain(attr);
-        var att = getAttack(attrN, name, charId);
+        var att = getAttack(attrN, perso);
         if (att === undefined) {
           error("Init en main avec un label introuvable dans les armes", attr);
           return;
@@ -7897,7 +7915,7 @@ var COFantasy = COFantasy || function() {
               current: cur
             });
             attr.set('current', attr.get('max'));
-            updateNextInit(token);
+            updateNextInit(perso.token);
             return;
           }
           sendChar(charId, "a déjà " + nomArme + " en main");
@@ -8021,6 +8039,10 @@ var COFantasy = COFantasy || function() {
     var pageId;
     if (msg.selected && msg.selected.length > 0) {
       var firstSelected = getObj('graphic', msg.selected[0]._id);
+      if (firstSelected === undefined) {
+        error("Un token sélectionné n'est pas trouvé en interne", msg.selected);
+        return;
+      }
       pageId = firstSelected.get('pageid');
     }
     var opts = msg.content.split(' --');
@@ -9037,6 +9059,64 @@ var COFantasy = COFantasy || function() {
     }
   }
 
+  function estQuadrupede(perso) {
+    if (charAttributeAsBool(perso, 'quadrupede')) return true;
+    var attrRace = findObjs({
+      _type: 'attribute',
+      _characterid: perso.charId,
+      name: 'RACE'
+    });
+    if (attrRace.length === 0) return false;
+    var charRace = attrRace[0].get('current').trim().toLowerCase();
+    switch (charRace) {
+      case 'ankheg':
+      case 'araignée':
+      case 'araignee':
+      case 'basilic':
+      case 'béhir':
+      case 'behir':
+      case 'bulette':
+      case 'bison':
+      case 'centaure':
+      case 'cheval':
+      case 'chien':
+      case 'chimère':
+      case 'chimere':
+      case 'cockatrice':
+      case 'crocodile':
+      case 'dragon':
+      case 'drider':
+      case 'eléphant':
+      case 'elephant':
+      case 'éléphant':
+      case 'mammouth':
+      case 'griffon':
+      case 'hipogriffe':
+      case 'hippogriffe':
+      case 'hydre':
+      case 'licorne':
+      case 'lion':
+      case 'loup':
+      case 'worg':
+      case 'manticore':
+      case 'ours':
+      case 'panthere':
+      case 'panthère':
+      case 'pegase':
+      case 'pégase':
+      case 'pieuvre':
+      case 'rat':
+      case 'rhinoceros':
+      case 'rhinocéros':
+      case 'sanglier':
+      case 'taureau':
+      case 'tigre':
+        return true;
+      default:
+        return false;
+    }
+  }
+
   function estAnimal(perso) {
     if (charAttributeAsBool(perso, 'animal')) return true;
     var attr = findObjs({
@@ -9132,36 +9212,67 @@ var COFantasy = COFantasy || function() {
     var attr = findObjs({
       _type: 'attribute',
       _characterid: perso.charId,
-      name: 'TAILLE'
     });
-    if (attr.length === 0) return undefined;
-    switch (attr[0].get('current').toLowerCase()) {
-      case "minuscule":
-        return 1;
-      case "très petit":
-      case "très petite":
-      case "tres petit":
-        return 2;
-      case "petit":
-      case "petite":
-        return 3;
-      case "moyen":
-      case "moyenne":
-      case "normal":
-      case "normale":
-        return 4;
-      case "grand":
-      case "grande":
-        return 5;
-      case "énorme":
-      case "enorme":
-        return 6;
-      case "colossal":
-      case "colossale":
-        return 7;
-      default:
-        return undefined;
+    var attrTaille = attr.filter(function(a) {
+      return a.get('name') == 'TAILLE';
+    });
+    if (attrTaille.length > 0) {
+      switch (attrTaille[0].get('current').trim().toLowerCase()) {
+        case "minuscule":
+          return 1;
+        case "très petit":
+        case "très petite":
+        case "tres petit":
+          return 2;
+        case "petit":
+        case "petite":
+          return 3;
+        case "moyen":
+        case "moyenne":
+        case "normal":
+        case "normale":
+          return 4;
+        case "grand":
+        case "grande":
+          return 5;
+        case "énorme":
+        case "enorme":
+          return 6;
+        case "colossal":
+        case "colossale":
+          return 7;
+        default: //On passe à la méthode suivante
+      }
     }
+    var attrRace = attr.filter(function(a) {
+      return a.get('name') == 'RACE';
+    });
+    if (attrRace.length > 0) {
+      switch (attrRace[0].get('current').trim().toLowerCase()) {
+        case 'lutin':
+        case 'fee':
+          return 2;
+        case 'halfelin':
+        case 'gobelin':
+        case 'kobold':
+          return 3;
+        case 'humain':
+        case 'elfe':
+        case 'nain':
+        case 'demi-elfe':
+        case 'demi-orque':
+        case 'orque':
+        case 'gnome':
+        case 'âme-forgée':
+          return 4;
+        case 'centaure':
+        case 'demi-ogre':
+        case 'ogre':
+        case 'minotaure':
+          return 5;
+      }
+    }
+    return undefined;
   }
 
   function estAussiGrandQue(perso1, perso2) {
@@ -10845,10 +10956,10 @@ var COFantasy = COFantasy || function() {
           sendChar(perso.charId, "ne peut pas utiliser un poison qu'il n'a pas");
           return;
         }
-        var name = perso.token.get('name');
-        var att = getAttack(labelArme, name, perso.charId);
+        perso.tokName = perso.token.get('name');
+        var att = getAttack(labelArme, perso);
         if (att === undefined) {
-          error(name + " n'a pas d'arme associée au label " + labelArme, cmd);
+          error(perso.tokNname + " n'a pas d'arme associée au label " + labelArme, cmd);
           return;
         }
         if (attributeAsBool(perso, attribut)) {
@@ -10879,7 +10990,7 @@ var COFantasy = COFantasy || function() {
           });
           //À partir de ce point, tout return doit ajouter evt
           nbDoses--;
-          addLineToFramedDisplay(display, "Il restera " + nbDoses + " dose de " + nomDose + " à " + name);
+          addLineToFramedDisplay(display, "Il restera " + nbDoses + " dose de " + nomDose + " à " + perso.tokName);
           doseAttr.set('current', nbDoses);
         }
         if (decrAttribute) {
@@ -10903,7 +11014,7 @@ var COFantasy = COFantasy || function() {
             if (tr.echecCritique) { //échec critique
               jet += " Échec critique !";
               addLineToFramedDisplay(display, jet);
-              addLineToFramedDisplay(display, name + " s'empoisonne.");
+              addLineToFramedDisplay(display, perso.tokName + " s'empoisonne.");
               sendChat('', "[[" + forcePoison + "]]", function(res) {
                 var rolls = res[0];
                 var dmgRoll = rolls.inlinerolls[0];
@@ -10924,7 +11035,7 @@ var COFantasy = COFantasy || function() {
                     explications.forEach(function(e) {
                       addLineToFramedDisplay(display, e);
                     });
-                    addLineToFramedDisplay(name + " subit " + dmgDisplay + " DM");
+                    addLineToFramedDisplay(perso.tokName + " subit " + dmgDisplay + " DM");
                     addEvent(evt);
                     sendChat("", endFramedDisplay(display));
                   }); //fin de dmg dus à l'échec critique
@@ -13226,12 +13337,64 @@ var COFantasy = COFantasy || function() {
     cavalier.token.set('rotation', monture.token.get('rotation') + attributeAsInt(monture, 'directionSurMonture', 0));
   }
 
+  //Si le token représente un personnage et avec la barre de vie non liée, 
+  // assure un nom unique en ajoutant un numéro
+  function renameToken(token, tokenName) {
+    var charId = token.get('represents');
+    if (charId === undefined || charId === '') return;
+    if (token.get('bar1_link') !== '') return;
+    var tokenBaseName = tokenName;
+    if (tokenBaseName.includes('%%NUMBERED%%')) {
+      if (typeof TokenNameNumber !== 'undefined') return; //On laisse tokenNameNumber gérer ça
+      tokenBaseName = tokenBaseName.replace('%%NUMBERED%%', '');
+    }
+    var otherTokens = findObjs({
+      _type: 'graphic',
+      _pageid: token.get('pageid'),
+      represents: charId
+    });
+    var numero = 1;
+    var nePasModifier = false;
+    if (typeof TokenNameNumber !== 'undefined' && tokenBaseName.length > 0) {
+      if (!isNaN(tokenBaseName[tokenBaseName.length-1]))
+        nePasModifier = true;
+    }
+    otherTokens.forEach(function(ot) {
+      if (ot.id == token.id) return;
+      var name = ot.get('name');
+      if (nePasModifier && name == tokenBaseName) nePasModifier = false;
+      if (name.startsWith(tokenBaseName)) {
+        var suffixe = name.replace(tokenBaseName + ' ', '');
+        if (isNaN(suffixe)) return;
+        var n = parseInt(suffixe);
+        if (n >= numero) numero = n + 1;
+      }
+    });
+    if (nePasModifier) return;
+    token.set('name', tokenBaseName + ' ' + numero);
+  }
+
+  function addToken(token, nb) {
+    var tokenName = token.get('name');
+    //La plupart du temps, il faut attendre un peu que le nom soit affecté
+    if (tokenName !== '') {
+      renameToken(token, tokenName);
+      return;
+    }
+    nb = nb || 1;
+    if (nb > 20) return; //Tant pis, peut-être que le nom est vide
+    _.delay(function() {
+      addToken(token, nb + 1);
+    }, 50);
+  }
+
   return {
     apiCommand: apiCommand,
     nextTurn: nextTurn,
     destroyToken: destroyToken,
     moveToken: moveToken,
     changeHandout: changeHandout,
+    addToken: addToken,
   };
 
 }();
@@ -13245,8 +13408,9 @@ on("destroy:handout", function(prev) {
 });
 
 on("ready", function() {
-  var script_version = 0.8;
+  var script_version = 0.9;
   COF_loaded = true;
+  on('add:token', COFantasy.addToken);
   state.COFantasy = state.COFantasy || {
     combat: false,
     tour: 0,

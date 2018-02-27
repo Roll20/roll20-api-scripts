@@ -80,7 +80,6 @@
 					</li>
 					<li>Feuille de Personnages : <a data-toggle="popover" data-placement="bottom" data-html="true" data-content='<a href="https://lh3.googleusercontent.com/-CYiltExxZ_o/VZJjtdEcbkI/AAAAAAAAV7Q/8YWjPOXZ3u8/w1005-h652-no/Roll20_CO_setting.png"><img src="https://lh3.googleusercontent.com/-CYiltExxZ_o/VZJjtdEcbkI/AAAAAAAAV7Q/8YWjPOXZ3u8/w1005-h652-no/Roll20_CO_setting.png" class="img-fluid"/></a><p class="text-center"><small>Cliquer pour agrandir</small></p>' href="#">Chroniques Oubliées Fantasy (French)</a> par <a href="http://www.black-book-editions.fr/forums.php?topic_id=5255">Nata</a></li>
 					<li>Le script <a href="https://wiki.roll20.net/Script:Vector_Math">Vector math</a> pour certains calculs de distance et de collision (fait partie de la librairie de script Roll20 qui s'installe en un clic).</li>
-					<li>le script <a href="https://wiki.roll20.net/Script:Token_Name_Number">Token Name Number</a> (<a href="https://app.roll20.net/forum/post/1273423/script-tokennamenumber-automatic-numbering-of-qualifying-tokens/?pageforid=1273423#post-1273423">comment l'utiliser</a>) qui permet de faire une numérotation automatique des tokens.</li>
 				</ul>
 				<p class="lead text-center">
 					<button type="button" class="btn btn-primary" id="start"><i class="fa fa-rocket" aria-hidden="true"></i> C'est parti</button>
@@ -135,10 +134,14 @@
 									<li><a class="text-info" href="#Rôdeur">Rôdeur</a></li>
 									<li><a class="text-info" href="#Samouraï">Samouraï</a></li>
 									<li><a class="text-info" href="#Voleur">Voleur</a></li>
-									<li><a class="text-info" href="#Voies_spéciales">Voies spéciales</a></li>
-									<li><a class="text-info" href="#Autres_capacités">Autres capacités</a></li>
 								</ul>
-								<li><a href="#statistiques">Statistiques</a></li>
+                <li data-toggle="collapse" data-target="#autres_capacites"><a href="#Autres_capacités">Autres capacités</a></li>
+								<ul id="autres_capacites" class="collapse">
+									<li><a class="text-info" href="#Capacités_raciales">Voies et capacités raciales</a></li>
+									<li><a class="text-info" href="#Prestige">Voies de prestige</a></li>
+									<li><a class="text-info" href="#Créatures">Voies de créature</a></li>
+									<li><a class="text-info" href="#Capacités_diverses">Capacités diverses</a></li>
+                </ul>
 							</ol>
 						</div>
 					</div>
@@ -160,10 +163,7 @@
                 Pour tenir compte d'autre états non visibles sur les tokens, les scripts utilisent des attributs supplémentaires (hors fiche). Parfois, le MJ devra créer et remplir lui-même certains attributs, d'autres fois cela sera géré par les scripts.
               </p>
               <p>Il est important de noter la différence entre les tokens liés à un personnage (la barre 1 est liée aux points de vie du personnage, tout changement sur la fiche se répercute sur le token), et les tokens non liés (dans ce cas, la fiche de personnage est générique, et chaque token est une instance différente, avec des PV indépendants).</p>
-              <p><img class="img-fluid" src="https://i.imgur.com/KDumZNH.png" data-href="https://i.imgur.com/KDumZNH.png"></p>
-              <figcaption>Différence entre un token lié et non lié. Exemple d'utilisation avec <i>Token Name Number</i></figcaption>
-              <p>Pour gérer les états spécifiques à un token non lié, les scripts utilisent des conventions de nom d'attribut utilisant le nom du token. Pour que cela fonctionne correctement, <b>il est important que deux tokens indépendants ne portent pas le même nom</b>, même si ils représentent le même personnage.</p>
-              <p>C'est pour cette raison qu'il est fortement recommandé d'utiliser le script <a href="https://wiki.roll20.net/Script:Token_Name_Number">Token Name Number</a> (<a href="https://app.roll20.net/forum/post/1273423/script-tokennamenumber-automatic-numbering-of-qualifying-tokens/?pageforid=1273423#post-1273423" target="_blank">comment l'utiliser</a>) qui permet de faire une numérotation automatique des tokens.</p>
+              <p>Pour gérer les états spécifiques à un token non lié, les scripts utilisent des conventions de nom d'attribut utilisant le nom du token. Pour que cela fonctionne correctement, <b>il est important que deux tokens indépendants ne portent pas le même nom</b>, même si ils représentent le même personnage. Pour cette raison, le script va automatiquement renommer les tokens indépendants, en leur associant un numéro. Il est toujours possible de remodifier le nom après la création du token, mais dans ce cas, c'est vous qui gérez...</p>
               <p>Certains messages tiennent compte du genre (masculin ou féminin) des personnages.<br />
                 Ils utilisent le champ <code>Sexe</code> de la fiche de personnage. Un personnage est reconnu comme féminin si ce champ commence par la lettre <code>F</code>.
               </p>
@@ -1171,54 +1171,60 @@
                 <ol>
                   <li><strong>Doigts agiles</strong> : utiliser des compétences sur la fiche de personnage</li>
                   <li><strong>Détecter les pièges</strong> : faire le jet avec <code>!cof-jet INT 10</code></li>
+                  <li><strong>Croc-en-jambe</strong> : ajouter un attribut <code>crocEnJambe</code> de valeur <code>true</code>. Pour distinguer les adversaires quadrupèdes qui ne seraient pas connues du script, lui ajouter un attribut <code>quadrupede</code>, de valeur <code>true</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du spadassin</h4>
                 <ol>
                   <li><strong>Attaque en finesse</strong> : faire les modifications sur la fiche</li>
                   <li><strong>Esquive fatale</strong> : Ajouter un attribut <code>esquiveFatale</code> avec comme valeur courante 1 et comme valeur maximale 1. En combat, si la situation s'y prête, un bouton permettre d'utiliser l'esquive. Ne pas oublier de définir les alliés du voleur pour que la vérification des cibles soit correcte.</li>
+                  <li><strong>Frappe chirurgicale</strong> : ajouter un attribute <code>frappeChirurgicale</code>, de valeur <code>true</code>.</li>
+                  <li><strong>Ambidextrie</strong> : pas géré par le script.</li>
                 </ol>
               </div>
-              <h3 class="text-info" id="Voies_spéciales">Voies de prestige de races</h3>
+            </div>
+            <h2 class="text-primary" id="Autres_capacités">5. Autres capacités</h2>
+            <div class="decalage">
+              <h3 class="text-info" id="Capacités_raciales">Voies et capacités raciales</h3>
               <div class="decalage">
-                <h4 class="text-secondary">Voie de l'âme forgée</h4>
+                <h4 class="text-secondary">Âme forgée</h4>
                 <p>Pour les capacités raciales, un attribut <code>vieArtificielle</code> à <code>true</code> permet de diviser tous les soins par 2. Pour la résistance aux effets de drains utiliser un attribut <code>RD_drain</code> de valeur 5. Pour l'immunité aux poisons et maladies, utiliser un attribut <code>nonVivant</code> de valeur <code>true</code>. Enfin pour le saignement, ajouter un attribut <code>immuniteSaignement</code>, de valeur true.</p>
                 <ol>
                   <li><strong>Main lourde</strong> : ajuster les DM, et enlever l'option <code>--tempDmg</code> pour l'attaque à mains nues.</li>
                 </ol>
-                <h4 class="text-secondary">Voie du demi-orque</h4>
+                <h4 class="text-secondary">Demi-orque</h4>
                 <ol>
                   <li><strong>Force de la nature</strong> : ajouter les bonus sur la fiche</li>
                 </ol>
-                <h4 class="text-secondary">Voie de l'elfe sylvain</h4>
+                <h4 class="text-secondary">Elfe sylvain</h4>
                 <ol>
                   <li><strong>Grâce elfique</strong> : simplement reporter sur la fiche</li>
                 </ol>
-                <h4 class="text-secondary">Voie du gnome</h4>
+                <h4 class="text-secondary">Gnome</h4>
                 <ol>
                   <li><strong>Petit pote</strong> : ajouter le bonus de CHA sur la fiche</li>
                 </ol>
-                <h4 class="text-secondary">Voie du halfelin</h4>
+                <h4 class="text-secondary">Halfelin</h4>
                 <p>Petite taille : ajouter le bonus de DEF sur la ficher, et ajouter 2 à un attribut <code>discrétion</code>.</p>
                 <ol>
                   <li><strong>Petit veinard</strong> : Il y a beaucoup de types de dés différents. Pour l'instant, géré par le MJ : faire tirer le jet (/r) par le joueur, si ça a changé, utiliser le undo ou faire les changements à la main.</li>
                   <li><strong>Résistance légendaire</strong> : ajouter le bonus en CON sur la fiche, et ajouter un attribut <code>DEF_magie</code> avec comme valeur 5.</li>
                 </ol>
-                <h4 class="text-secondary">Voie du haut elfe</h4>
+                <h4 class="text-secondary">Haut elfe</h4>
                 <ol>
                   <li><strong>Grâce elfique</strong> : ajouter les bonus sur la fiche</li>
                 </ol>
-                <h4 class="text-secondary">Voie de l'humain</h4>
+                <h4 class="text-secondary">Humain</h4>
                 <p>Instinct de survie : créer un attribut <code>instinctDeSurvieHumain</code> avec comme valeur <code>true</code>.</p>
                 <ol>
                   <li><strong>Adaptable</strong> : aucun support</li>
                   <li><strong>Loup parmi les loups</strong> : ajouter un attribut <code>loupParmiLesLoups</code> avec comme valeur 1 ou 2 selon le rang dans la voie. Une créature sera considérée comme humanoïde si elle a l'attribut <code>humanoide</code>, ou si sa race est reconnue comme humanoïde.</li>
                 </ol>
-                <h4 class="text-secondary">Voie du nain</h4>
+                <h4 class="text-secondary">Nain</h4>
                 <ol>
                   <li><strong>Résistance</strong> : ajouter les bonus sur la fiche</li>
                 </ol>
               </div>
-              <h3 class="text-info" id="">Voies de créatures</h3>
+              <h3 class="text-info" id="Créatures">Voies de créatures</h3>
               <div class="decalage">
                 <h4 class="text-secondary">Voie du champion</h4>
                 <ol>
@@ -1277,7 +1283,7 @@
                   <li><strong>Attaque mortelle</strong> : donner la possibilité de faire une attaque avec les options <code>--bonusAttaque 5 --sournoise <i>rang</i></code>.</li>
                 </ol>
               </div>
-              <h3 class="text-info" id="Autres_capacités">Autres capacités:</h3>
+              <h3 class="text-info" id="Capacités_diverses">Autres capacités</h3>
               <div class="decalage">
                 <ul>
                   <li><strong>Baroud d'honneur</strong> : ajouter un attribut <code>baroudHonneur</code> (=true) (Quand le personnage arrive à 0 PV, il ne meurt pas jusqu'à sa prochaine attaque, qui se fait avec un bonus de +5)</li>
@@ -1297,7 +1303,7 @@
                 </ul>
               </div>
             </div>
-						<h2 class="text-primary" id="statistiques">5. Statistiques</h2>
+						<h2 class="text-primary" id="statistiques">6. Statistiques</h2>
 						<div class="decalage">
 							<p>Il est possible d'activer la collecte de statistiques en utilisant la commande <code>!cof-demarrer-statistiques</code>.</p>
 							<p>On peut arrêter la collecte avec <code>!cof-arreter-statistiques</code>, et la mettre en pause avec <code>!cof-pause-statistiques</code>.<br />
