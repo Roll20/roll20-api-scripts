@@ -1,3 +1,12 @@
+<a name="13.0.0"></a>
+# 13.0.0
+
+### Breaking Changes
+* Script updated to expend spell slots as version 17 of the sheet does.
+
+### Features
+* `!shaped-config` cleaned up to match the new UI of the settings page as of version 17 of the sheet.
+
 <a name="12.0.0"></a>
 # 12.0.0
 
