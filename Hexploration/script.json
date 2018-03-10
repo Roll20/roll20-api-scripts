@@ -1,0 +1,13 @@
+{
+    "name": "Hexploration",
+    "script": "Hexploration.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [],
+    "dependencies": ["MatrixMath", "Path Math", "Vector Math"],
+    "modifies": {},
+    "conflicts": []
+}
