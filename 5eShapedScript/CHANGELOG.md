@@ -1,3 +1,9 @@
+<a name="13.0.1"></a>
+# 13.0.1
+
+### Bug Fixes
+* [#41: !shaped-config error](https://bitbucket.org/mlenser/5eshapedscript/issues/41/shaped-config-error)
+
 <a name="13.0.0"></a>
 # 13.0.0
 
