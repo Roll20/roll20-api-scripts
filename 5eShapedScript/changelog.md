@@ -1,3 +1,9 @@
+<a name="13.0.2"></a>
+# 13.0.2
+
+### Bug Fixes
+* [#32: Selecting Challenge Rating for !shaped-monsters return incorrect results](https://bitbucket.org/mlenser/5eshapedscript/issues/32/selecting-challenge-rating-for-shaped)
+
 <a name="13.0.1"></a>
 # 13.0.1
 
