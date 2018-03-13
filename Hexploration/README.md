@@ -17,6 +17,9 @@ Note that this script only works for maps whose grid types are set to either
 'Hex (V)' or 'Hex (H)'. The opaque hexes will be aligned to the page's hex
 grid.
 
+When you move a token representing a character into an area concealed by a hex,
+the hex will be removed.
+
 ## Help
 
 If you experience any issues while using this script or the trap themes,

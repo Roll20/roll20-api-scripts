@@ -463,10 +463,6 @@ var Hexploration = {};
    * @param {int} column
    */
   function revealHex(page, row, column) {
-    log('revealHex');
-    log([row, column]);
-    log(state.Hexploration);
-
     let pageHex = Hexploration._state.getPageHex(page, row, column);
     if(pageHex) {
       let hexPath = getObj('path', pageHex.id);
@@ -515,6 +511,10 @@ var Hexploration = {};
   // If it did, reveal that hex.
   on('change:graphic', (obj, prev) => {
     try {
+      // Skip if the token doesn't represent a character.
+      if(!obj.get('represents'))
+        return;
+
       let page = getObj('page', obj.get('_pageid'));
       let hexTile = getHexTile(page);
       if(hexTile) {
