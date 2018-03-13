@@ -24,7 +24,7 @@ the hex will be removed.
 
 If you experience any issues while using this script or the trap themes,
 need help using it, or if you have a neat suggestion for a new feature, please reply to this thread:
-https://app.roll20.net/forum/post/3280344/script-its-a-trap-v2-dot-3
+https://app.roll20.net/forum/post/6179141/script-hexploration
 or shoot me a PM:
 https://app.roll20.net/users/46544/stephen-l
 
