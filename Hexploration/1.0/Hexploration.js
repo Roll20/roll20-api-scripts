@@ -80,6 +80,14 @@ var Hexploration = {};
     }
 
     /**
+     * The page that this tile describes the hex grid for.
+     * @type {Page}
+     */
+    get page() {
+      return this._page;
+    }
+
+    /**
      * The radius of the concentric circle whose circumference touches all
      * of this hex's vertices.
      * @type {number}
@@ -165,16 +173,19 @@ var Hexploration = {};
         throw new Error(
           `Cannot create HexagonTile for page with grid type ${gridType}.`);
 
+      this._page = page;
       this._isVertical = page.get('grid_type') === 'hex';
       this._scale = page.get('snapping_increment');
     }
 
     /**
-     * Produces a PathMath Polygon for this tile centered at some point.
-     * @param {vec2} center
+     * Produces a PathMath Polygon for this tile located at some row and column.
+     * @param {int} row
+     * @param {int} column
      * @return {PathMath.Polygon}
      */
-    getHexagon(center) {
+    getHexagon(row, column) {
+      let center = this.getCoordinates(row, column);
       let translation = MatrixMath.translate(center);
       let verts = _.map(this.vertices, v => {
         return MatrixMath.multiply(translation, v);
@@ -211,18 +222,110 @@ var Hexploration = {};
       let column = (x - this.startX)/this.dx;
       let row = (y - this.startY)/this.dy;
 
-      if(this.isVertical && (row % 2) === 1)
-        column += 0.5;
+      if(this.isVertical && (Math.round(row) % 2) === 1)
+        column -= 0.5;
 
-      if(this.isHorizontal && (column % 2) === 1)
-        row += 0.5;
+      if(this.isHorizontal && (Math.round(column) % 2) === 1)
+        row -= 0.5;
 
-      return [Math.floor(row), Math.floor(column)];
+      return [Math.round(row), Math.round(column)];
     }
   }
 
   _.extend(Hexploration, {
     HexagonTile
+  });
+})();
+
+(() => {
+  'use strict';
+
+  /**
+   * Remove the hex data about some path from the state.
+   */
+  function deletePath(path) {
+    let myState = getState();
+    let id = path.get('_id');
+    let key = getPageHexKey(path);
+    if(key) {
+      let [pageId, rowColumn] = key;
+      delete myState.pageHexes[pageId][rowColumn];
+      delete myState.hexIdMap[id];
+    }
+  }
+
+  /**
+   * Gets the persisted state for this script.
+   */
+  function getState() {
+    if(!state.Hexploration) {
+      state.Hexploration = {
+        // Persists hexes by their Page ID, then by their <row>x<column>.
+        pageHexes: {},
+
+        // Maps hex path IDs to their keys in pageHexes.
+        hexIdMap: {}
+      };
+    }
+    return state.Hexploration;
+  }
+
+  /**
+   * Gets the hex data at some grid location on some page. If the hex data
+   * couldn't be found, undefined is returned.
+   */
+  function getPageHex(page, row, column) {
+    let myState = getState();
+    let pageId = page.get('_id');
+    let pageHexes = myState.pageHexes[pageId];
+    if(pageHexes) {
+      let key = row + "," + column;
+      return pageHexes[key];
+    }
+  }
+
+  /**
+   * Gets the key to a page hex object in the state, given some path.
+   * This key consists of a page ID, a row, and a column. If the key
+   * could not be found, undefined is returned.
+   */
+  function getPageHexKey(path) {
+    let myState = getState();
+    let id = path.get('_id');
+    return myState.hexIdMap[id];
+  }
+
+  /**
+   * Checks if a hex has been persisted.
+   */
+  function hasPageHex(page, row, column) {
+    return !!getPageHex(page, row, column);
+  }
+
+  /**
+   * Persists data about some hex.
+   */
+  function persistHex(page, hexPath, row, column) {
+    let myState = getState();
+    let pageId = page.get('_id');
+
+    if(!myState.pageHexes[pageId])
+      myState.pageHexes[pageId] = {};
+
+    let key = row + "," + column;
+    let id = hexPath.get('_id');
+    myState.pageHexes[pageId][key] = { id };
+    myState.hexIdMap[id] = [pageId, key];
+  }
+
+  _.extend(Hexploration, {
+    _state: {
+      deletePath,
+      getPageHex,
+      getState,
+      hasPageHex,
+      persistHex
+    }
   });
 })();
 
@@ -237,17 +340,53 @@ var Hexploration = {};
    * @param {Error} err
    */
   function _error(err) {
-    sendChat('Hexploration Error', err.message);
+    _sendChat('Error: ' + err.message);
     log('Hexploration ERROR: ' + err.message);
     log(err.stack);
   }
 
   /**
-   * Gets the list of hexagons inside of some filled path.
+   * Fills the area defined by some path with hex tiles.
    * @param {Path} path
-   * @return {PathMath.Polygon[]}
+   * @return {Path[]}
    */
-  function getHexagonsInArea(path) {
+  function fillArea(path) {
+    let page = getObj('page', path.get('_pageid'));
+    let pageId = page.get('_id');
+    let tile = new Hexploration.HexagonTile(page);
+
+    let hexes = getHexesInArea(path);
+    return _.chain(hexes)
+    .map(hex => {
+      let [row, column] = hex;
+
+      // Skip if there's already a hex here.
+      if(Hexploration._state.hasPageHex(page, row, column))
+        return undefined;
+
+      // Create the hex.
+      else {
+        let hexagon = tile.getHexagon(row, column);
+        let hexPath = hexagon.render(pageId, 'objects', {
+          fill: '#FFFF88',
+          stroke: '#DDDD88',
+          stroke_width: 0
+        });
+
+        Hexploration._state.persistHex(page, hexPath, row, column);
+        return hexPath;
+      }
+    })
+    .compact()
+    .value();
+  }
+
+  /**
+   * Gets the row, column pairs for hexes contained in some area.
+   * @param {Path} path
+   * @return {vec2[]}
+   */
+  function getHexesInArea(path) {
     let page = getObj('page', path.get('_pageid'));
     let tile = new Hexploration.HexagonTile(page);
 
@@ -261,19 +400,37 @@ var Hexploration = {};
     let rows = _.range(startRowCol[0], endRowCol[0] + 1);
     let cols = _.range(startRowCol[1], endRowCol[1] + 1);
 
-    // Create the hexagons inside the polygon.
-    let hexagons = [];
-    _.each(cols, col => {
-      _.each(rows, row => {
+    // Get a list of the hex coordinates that fit in the area.
+    let hexes = [];
+    _.each(rows, row => {
+      _.each(cols, col => {
         let center = tile.getCoordinates(row, col);
-
-        if(poly.containsPt(center)) {
-          let hexagon = tile.getHexagon(center);
-          hexagons.push(hexagon);
-        }
+        if(poly.containsPt(center))
+          hexes.push([row, col]);
       });
     });
-    return hexagons;
+    return hexes;
+  }
+
+  /**
+   * Gets a HexagonTile for a page or an object residing on the page.
+   * @param {(Page|Path|Graphic)} obj
+   * @return {Hexploration.HexagonTile}
+   */
+  function getHexTile(obj) {
+    let type = obj.get('_type');
+    let page;
+    if(type === 'page')
+      page = getObj('page', obj.get('_id'));
+    else
+      page = getObj('page', obj.get('_pageid'));
+
+    try {
+      return new Hexploration.HexagonTile(page);
+    }
+    catch(err) {
+      return undefined;
+    }
   }
 
   /**
@@ -299,26 +456,88 @@ var Hexploration = {};
     }
   }
 
-  function _testFillHexAt(row, col) {
-    let pageId = Campaign().get("playerpageid");
-    let page = getObj('page', pageId);
-    let hexTile = new Hexploration.HexagonTile(page);
-    let center = hexTile.getCoordinates(row, col);
-    let hexagon = hexTile.getHexagon(center);
-    let hexPath = hexagon.render(pageId, 'objects', {
-      fill: '#FFFF88',
-      stroke: '#DDDD88',
-      stroke_width: 0
-    });
+  /**
+   * Removes a hex from a page, given its row and column.
+   * @param {Page} page
+   * @param {int} row
+   * @param {int} column
+   */
+  function revealHex(page, row, column) {
+    log('revealHex');
+    log([row, column]);
+    log(state.Hexploration);
+
+    let pageHex = Hexploration._state.getPageHex(page, row, column);
+    if(pageHex) {
+      let hexPath = getObj('path', pageHex.id);
+      Hexploration._state.deletePath(hexPath);
+      hexPath.remove();
+
+      if(pageHex.name) {
+        _sendChat("Discovered " + pageHex);
+      }
+    }
   }
 
-  function _testHex() {
-    _testFillHexAt(0, 0);
-    _testFillHexAt(1, 1);
-    _testFillHexAt(4, 4);
-    _testFillHexAt(4, 1);
+  /**
+   * Sends a message to the chat using the script's name.
+   * @param {string} msg
+   */
+  function _sendChat(msg) {
+    sendChat('Hexploration', msg);
   }
 
+  // Interpret chat commands.
+  on('chat:message', msg => {
+    try {
+      if(msg.type !== 'api')
+        return;
+
+      let argv = msg.content.split(' ');
+      if(argv[0] === CMD_FILL) {
+        if(msg.selected && msg.selected.length > 0) {
+          _.each(msg.selected, sel => {
+            let path = getObj('path', sel._id);
+            fillArea(path);
+          });
+        }
+        else
+          throw new Error('You must select one or more polygons to be ' +
+            'filled with hexes.');
+      }
+    }
+    catch(err) {
+      _error(err);
+    }
+  });
+
+  // When a graphic is moved, see if it moved into an area concealed by a hex.
+  // If it did, reveal that hex.
+  on('change:graphic', (obj, prev) => {
+    try {
+      let page = getObj('page', obj.get('_pageid'));
+      let hexTile = getHexTile(page);
+      if(hexTile) {
+        let x = obj.get('left');
+        let y = obj.get('top');
+        let [row, column] = hexTile.getRowColumn(x, y);
+        revealHex(page, row, column);
+      }
+    }
+    catch(err) {
+      _error(err);
+    }
+  });
+
+  // When a hex is deleted, remove its data from the state.
+  on('destroy:path', path => {
+    try {
+      Hexploration._state.deletePath(path);
+    }
+    catch(err) {
+      _error(err);
+    }
+  });
 
   // When the API is loaded, install the Custom Status Marker menu macro
   // if it isn't already installed.
@@ -334,55 +553,12 @@ var Hexploration = {};
     });
 
     log('⬢⬢⬢ Initialized Hexploration v1.0 ⬢⬢⬢');
-
-    //_testHex();
-  });
-
-  on('chat:message', msg => {
-    try {
-      if(msg.type !== 'api')
-        return;
-
-      let argv = msg.content.split(' ');
-      if(argv[0] === CMD_FILL) {
-        if(msg.selected && msg.selected.length > 0) {
-          _.each(msg.selected, sel => {
-            let path = getObj('path', sel._id);
-            let pageId = path.get('_pageid');
-
-            let hexagons = getHexagonsInArea(path);
-            _.each(hexagons, hex => {
-              let hexPath = hex.render(pageId, 'objects', {
-                fill: '#FFFF88',
-                stroke: '#DDDD88',
-                stroke_width: 0
-              });
-              //toFront(hexPath);
-            });
-          });
-        }
-        else
-          throw new Error('You must select one or more polygons to be ' +
-            'filled with hexes.');
-      }
-    }
-    catch(err) {
-      _error(err);
-    }
-  });
-
-  on('change:graphic', (obj, prev) => {
-    log('Test dx, dy, dist');
-    log(prev);
-    let dx = obj.get('left') - prev.left;
-    log(dx);
-    let dy = obj.get('top') - prev.top;
-    log(dy);
-    let dist = Math.sqrt(dx*dx + dy*dy);
-    log(dist);
   });
 
   _.extend(Hexploration, {
-    getHexagonsInArea
+    fillArea,
+    getHexesInArea,
+    getHexTile,
+    revealHex
   });
 })();

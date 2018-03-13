@@ -78,6 +78,14 @@
     }
 
     /**
+     * The page that this tile describes the hex grid for.
+     * @type {Page}
+     */
+    get page() {
+      return this._page;
+    }
+
+    /**
      * The radius of the concentric circle whose circumference touches all
      * of this hex's vertices.
      * @type {number}
@@ -163,16 +171,19 @@
         throw new Error(
           `Cannot create HexagonTile for page with grid type ${gridType}.`);
 
+      this._page = page;
       this._isVertical = page.get('grid_type') === 'hex';
       this._scale = page.get('snapping_increment');
     }
 
     /**
-     * Produces a PathMath Polygon for this tile centered at some point.
-     * @param {vec2} center
+     * Produces a PathMath Polygon for this tile located at some row and column.
+     * @param {int} row
+     * @param {int} column
      * @return {PathMath.Polygon}
      */
-    getHexagon(center) {
+    getHexagon(row, column) {
+      let center = this.getCoordinates(row, column);
       let translation = MatrixMath.translate(center);
       let verts = _.map(this.vertices, v => {
         return MatrixMath.multiply(translation, v);
@@ -209,13 +220,13 @@
       let column = (x - this.startX)/this.dx;
       let row = (y - this.startY)/this.dy;
 
-      if(this.isVertical && (row % 2) === 1)
-        column += 0.5;
+      if(this.isVertical && (Math.round(row) % 2) === 1)
+        column -= 0.5;
 
-      if(this.isHorizontal && (column % 2) === 1)
-        row += 0.5;
+      if(this.isHorizontal && (Math.round(column) % 2) === 1)
+        row -= 0.5;
 
-      return [Math.floor(row), Math.floor(column)];
+      return [Math.round(row), Math.round(column)];
     }
   }
 

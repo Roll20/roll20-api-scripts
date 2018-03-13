@@ -8,6 +8,7 @@ module.exports = function(grunt) {
         src: [
           'src/index.js',
           'src/HexagonTile.js',
+          'src/State.js',
           'src/main.js'
         ],
         dest: '<%= pkg.version %>/<%= pkg.script %>'
