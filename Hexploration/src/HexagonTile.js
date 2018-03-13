@@ -7,15 +7,24 @@
   const TAU = Math.PI*2;
 
   /**
-   * A square unit is 70 pixels^2.
+   * Distance between two adjacent unit hexes in a vertical hex arrangement.
    */
-  const UNIT_PIXELS_SQUARE = 70;
+  const UNIT_PIXELS_SIDE_V_DIST = 75.198561984460;
+  const UNIT_PIXELS_DIAG_V_DIST = 76.799271007752;
+  const UNIT_PIXELS_DIAG_V_DX   = 37.599280992230;
+  const UNIT_PIXELS_DIAG_V_DY   = 66.965827824268;
+  const UNIT_PIXELS_V_START_X   = 75/2;
+  const UNIT_PIXELS_V_START_Y   = 88/2;
 
   /**
-   * Grid hex tiles are just slightly wider from side to side than
-   * square tiles are. Thus, there is a small coefficient.
+   * Distance between two adjacent unit hexes in a horizontal hex arrangement.
    */
-  const UNIT_PIXELS_HEX = UNIT_PIXELS_SQUARE * 1.2;
+  const UNIT_PIXELS_SIDE_H_DIST = 79.688789983504;
+  const UNIT_PIXELS_DIAG_H_DIST = 80.185196764184;
+  const UNIT_PIXELS_DIAG_H_DX   = 69.585127490377;
+  const UNIT_PIXELS_DIAG_H_DY   = 39.844394991752;
+  const UNIT_PIXELS_H_START_X   = 94/2;
+  const UNIT_PIXELS_H_START_Y   = 81/2;
 
   /**
    * A Hexagon sized for a page, with no particular center point.
@@ -29,9 +38,10 @@
     get dx() {
       if(!this._dx) {
         if(this.isVertical)
-          this._dx = this.verticalDx;
+          this._dx = UNIT_PIXELS_SIDE_V_DIST;
         else
-          this._dx = this.verticalDy;
+          this._dx = UNIT_PIXELS_DIAG_H_DX;
+        this._dx *= this.scale;
       }
       return this._dx;
     }
@@ -43,11 +53,20 @@
     get dy() {
       if(!this._dy) {
         if(this.isVertical)
-          this._dy = this.verticalDy;
+          this._dy = UNIT_PIXELS_DIAG_V_DY;
         else
-          this._dy = this.verticalDx;
+          this._dy = UNIT_PIXELS_SIDE_H_DIST;
+        this._dy *= this.scale;
       }
       return this._dy;
+    }
+
+    /**
+     * True if this hex tile is oriented horizontally.
+     * @type {boolean}
+     */
+    get isHorizontal() {
+      return !this._isVertical;
     }
 
     /**
@@ -59,22 +78,27 @@
     }
 
     /**
-     * The radius of the hexagon. I.E. The radius of the circle whose
-     * circumference contains all the hexagon's points.
+     * The radius of the concentric circle whose circumference touches all
+     * of this hex's vertices.
      * @type {number}
      */
     get radius() {
+      if(!this._radius) {
+        if(this._isVertical)
+          this._radius = UNIT_PIXELS_V_START_Y;
+        else
+          this._radius = UNIT_PIXELS_H_START_X;
+        this._radius *= this.scale;
+      }
       return this._radius;
     }
 
     /**
-     * The length of one side of the hexagon.
+     * The page's unit scale.
      * @type {number}
      */
-    get side() {
-      if(!this._side)
-        this._side = 2 * this._radius * Math.sin(TAU/12);
-      return this._side;
+    get scale() {
+      return this._scale;
     }
 
     /**
@@ -84,9 +108,10 @@
     get startX() {
       if(!this._startX) {
         if(this.isVertical)
-          this._startX = this.width/2;
+          this._startX = UNIT_PIXELS_V_START_X;
         else
-          this._startX = this.radius;
+          this._startX = UNIT_PIXELS_H_START_X;
+        this._startX *= this.scale;
       }
       return this._startX;
     }
@@ -97,29 +122,12 @@
     get startY() {
       if(!this._startY) {
         if(this.isVertical)
-          this._startY = this.radius;
+          this._startY = UNIT_PIXELS_V_START_Y;
         else
-          this._startY = this.width/2;
+          this._startY = UNIT_PIXELS_H_START_Y;
+        this._startY *= this.scale;
       }
       return this._startY;
-    }
-
-    /**
-     * The amount of horizontal translation between two columns of
-     * vertically oriented tiles.
-     * @type {number}}
-     */
-    get verticalDx() {
-      return this.width;
-    }
-
-    /**
-     * The amount of vertical translation between two rows of vertically
-     * oriented tiles.
-     * @type {number}
-     */
-    get verticalDy() {
-      return this.radius * (1 + Math.sin(TAU/12));
     }
 
     /**
@@ -147,16 +155,6 @@
     }
 
     /**
-     * The width of the tile from one side to the opposite side.
-     * @type {number}
-     */
-    get width() {
-      if(!this._width)
-        this._width = 2 * this.radius * Math.cos(TAU/12);
-      return this._width;
-    }
-
-    /**
      * @param {Page} page
      */
     constructor(page) {
@@ -165,8 +163,8 @@
         throw new Error(
           `Cannot create HexagonTile for page with grid type ${gridType}.`);
 
-      this._radius = UNIT_PIXELS_HEX/2 * page.get('snapping_increment');
       this._isVertical = page.get('grid_type') === 'hex';
+      this._scale = page.get('snapping_increment');
     }
 
     /**
@@ -190,15 +188,34 @@
      * @return {vec2}
      */
     getCoordinates(row, column) {
-      let x = column * this.dx;
-      if(this.isVertical && (row % 2) === 0)
+      let x = column * this.dx + this.startX;
+      if(this.isVertical && (row % 2) === 1)
         x += this.startX;
 
-      let y = row * this.dy;
-      if(!this.isVertical && (column % 2) === 0)
+      let y = row * this.dy + this.startY;
+      if(this.isHorizontal && (column % 2) === 1)
         y += this.startY;
 
       return [x, y];
+    }
+
+    /**
+     * Gets the row and column (rounded down) for some X, Y center coordinates.
+     * @param {number} x
+     * @param {number} y
+     * @return {vec2}
+     */
+    getRowColumn(x, y) {
+      let column = (x - this.startX)/this.dx;
+      let row = (y - this.startY)/this.dy;
+
+      if(this.isVertical && (row % 2) === 1)
+        column += 0.5;
+
+      if(this.isHorizontal && (column % 2) === 1)
+        row += 0.5;
+
+      return [Math.floor(row), Math.floor(column)];
     }
   }
 

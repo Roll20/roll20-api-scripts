@@ -27,21 +27,22 @@
     let bbox = poly.getBoundingBox();
 
     // Determine the bounding rows and columns for the polygon.
-    let startCol = Math.floor((bbox.left - tile.startX)/tile.dx);
-    let startRow = Math.floor((bbox.top - tile.startY)/tile.dy);
-    let endCol = startCol + Math.ceil(bbox.width/tile.dx);
-    let endRow = startRow + Math.floor(bbox.height/tile.dy);
+    let startRowCol = tile.getRowColumn(bbox.left, bbox.top);
+    let endRowCol = tile.getRowColumn(bbox.right, bbox.bottom);
 
-    let cols = _.range(startCol, endCol + 1);
-    let rows = _.range(startRow, endRow + 1);
+    let rows = _.range(startRowCol[0], endRowCol[0] + 1);
+    let cols = _.range(startRowCol[1], endRowCol[1] + 1);
 
     // Create the hexagons inside the polygon.
     let hexagons = [];
     _.each(cols, col => {
       _.each(rows, row => {
         let center = tile.getCoordinates(row, col);
-        let hexagon = tile.getHexagon(center);
-        hexagons.push(hexagon);
+
+        if(poly.containsPt(center)) {
+          let hexagon = tile.getHexagon(center);
+          hexagons.push(hexagon);
+        }
       });
     });
     return hexagons;
@@ -70,6 +71,26 @@
     }
   }
 
+  function _testFillHexAt(row, col) {
+    let pageId = Campaign().get("playerpageid");
+    let page = getObj('page', pageId);
+    let hexTile = new Hexploration.HexagonTile(page);
+    let center = hexTile.getCoordinates(row, col);
+    let hexagon = hexTile.getHexagon(center);
+    let hexPath = hexagon.render(pageId, 'objects', {
+      fill: '#FFFF88',
+      stroke: '#DDDD88',
+      stroke_width: 0
+    });
+  }
+
+  function _testHex() {
+    _testFillHexAt(0, 0);
+    _testFillHexAt(1, 1);
+    _testFillHexAt(4, 4);
+    _testFillHexAt(4, 1);
+  }
+
 
   // When the API is loaded, install the Custom Status Marker menu macro
   // if it isn't already installed.
@@ -85,6 +106,8 @@
     });
 
     log('⬢⬢⬢ Initialized Hexploration vSCRIPT_VERSION ⬢⬢⬢');
+
+    //_testHex();
   });
 
   on('chat:message', msg => {
@@ -118,6 +141,17 @@
     catch(err) {
       _error(err);
     }
+  });
+
+  on('change:graphic', (obj, prev) => {
+    log('Test dx, dy, dist');
+    log(prev);
+    let dx = obj.get('left') - prev.left;
+    log(dx);
+    let dy = obj.get('top') - prev.top;
+    log(dy);
+    let dist = Math.sqrt(dx*dx + dy*dy);
+    log(dist);
   });
 
   _.extend(Hexploration, {
