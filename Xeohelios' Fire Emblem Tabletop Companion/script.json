@@ -1,7 +1,7 @@
 {
 	"name": "Fire Emblem Tabletop Combat Script (Default Version)",
 	"script": "FETTC.js",
-	"version": 1.1,
+	"version": "1.1",
 	"previousversions": ["1.0"],
 	"description": "**This is the companion script for the default version of Xeohelios' Fire Emblem Tabletop system!**\rThis script automates combat and provides other necessary functions, such as a fully-fledged, dynamic skills system faithful to the games. Skills can be found [here](https://github.com/missing-q/emblem20/wiki/Skills:-Default-Package) and the guide to making custom skills can be found [here](https://github.com/missing-q/emblem20/wiki/Skills:-Making-Custom-Skills). Macros necessary to executing the game are: \r\r**Combat**:\r`!combat @{selected|token_id} @{target|token_id}`\r\r**Use-Item**:\r``!item @{selected|token_id} ?{Item|@{selected|item_name0}|@{selected|item_name1}|@{selected|item_name2}}``\r\r**Use-Staff**:``!staff @{selected|token_id} @{target|token_id}``",
 	"authors": "Missing-q",
