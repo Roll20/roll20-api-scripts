@@ -25,6 +25,7 @@
     let tile = new Hexploration.HexagonTile(page);
 
     let hexes = getHexesInArea(path);
+    path.remove();
     return _.chain(hexes)
     .map(hex => {
       let [row, column] = hex;
