@@ -1,6 +1,6 @@
 {
   "name": "ScaleOnAdd",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -13,6 +13,8 @@
   },
   "conflicts": [],
   "script": "ScaleOnAdd.js",
-  "useroptions": {},
-  "previousversions": []
+  "useroptions": [],
+  "previousversions": [
+    "0.1.1"
+  ]
 }

@@ -1,0 +1,20 @@
+Options
+-------
+
+Once installed, the script may be edited to suit your game.
+
+Critical Success and Failure options for Combat, Parries, and Skils are currently set to 1 and 96, respectively. Set each to '0' or '101' as shown below (and helpfully commented) to disable, or adjust to your specific game style!
+
+```
+var critSucCombat = 1; //set to 0 to turn off crit success
+var critFailCombat = 96; //set to 101 to turn off crit failure
+
+...
+var critSucParry = 1; //set to 0 to turn off crit success
+var critFailParry = 96; //set to 101 to turn off crit failure
+
+...
+
+var critSucSkill = 1; //set to 0 to turn off crit success
+var critFailSkill = 96; //set to 101 to turn off crit failure
+```

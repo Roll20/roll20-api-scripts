@@ -1,76 +1,53 @@
-# It's A Trap! - Pathfinder theme
+# It's A Trap! - Pathfinder Generic theme
 
-_v1.1 Updates_
-* This update doesn't include any new features, but it has been refactored to use ES6 Javascript stuff. If you have any problems with this new version, just switch back to v1.0.
+_3.5 Updates_
+* Added support for Roll20's official Pathfinder sheet.
 
-This is a Pathfinder trap theme built to support Samuel Marino, Nibrodooh,
-Vince, Samuel Terrazas, chris-b, Magik, and James W.'s Pathfinder character sheet.
+This is a Pathfinder trap theme built to support all Pathfinder character sheets and Pathfinder characters
+who use plain attributes instead of character sheets.
 
-It provides support for Pathfinder mechanics to automate resolving trap
-attacks, saving throws, and passive searching.
+This trap theme provides built-in support for Roll20's official Pathfinder sheet; Samuel Marino, Nibrodooh,
+Vince, Samuel Terrazas, chris-b, Magik, and James W.'s community Pathfinder sheet; and for
+my own Pathfinder 'Simple' sheet.
 
-To use this theme for the It's A Trap! script, enter "Pathfinder" for the ```theme``` user option.
+Other sheets, custom sheets, and characters based upon plain attributes are also supported.
+For those, just fill in the names for the character attributes in the user options for
+this script.
 
-## TrapEffect properties
+## Trap Spotter ability
 
-This TrapTheme supports the following TrapEffect JSON properties in addition
-to all the basic TrapEffect JSON properties:
-* attack (int): The trap's attack roll bonus. Omit if the trap does not make an attack roll.
-* damage (string): The dice roll expression for the trap's damage. Omit if the trap does not deal damage.
-* hideSave (boolean): If true, then only the GM will see the saving throw rolled for the trap.
-* missHalf (boolean): If true, then the trap deals half damage on a miss.
-* notes (string): A reminder about the trap's effects, which will be whispered to the GM.
-* save (string): The saving throw for the trap. This can be one of 'fort', 'ref', or 'will'.
-* saveDC (int): The saving throw DC for the trap.
-* spotDC (int): The DC to spot the trap with passive wisdom (perception). When a character spots the trap, its trigger area will be circled.
+For built-in sheets, This Trap Theme supports the Rogue's Trap Spotter talent. It works for any
+character that has Trap Spotter in the Class Abilities section of their
+character sheet.
 
-### Example of use:
+When the character approaches within 10' of a trap, they will
+automatically get a perception check to try to notice the trap. The results
+of this check are sent to the GM. If the Perception check is successful, the
+players are also alerted about the trap's presence.
 
-Here are a couple of trap JSON examples to get you started:
+This ability only works with traps whose type is 'trap'. For the character's
+Perception check, it uses their Perception skill total on their character sheet,
+so it doesn't take into account any situational bonuses. It is the GM's job
+to account for any situational bonuses that might contribute to the hidden
+Perception check when the result is displayed to them.
 
-*Attacks vs AC*
+## Help
 
-```
-{
-	"attack": 4,
-	"damage": "2d8 + 6",
-	"message": "A pressure plate gives way and darts fire forth from hidden compartments in the walls!",
-	"notes": "If the character is hit, they also become poisoned.",
-	"spotDC": 14
-}
-```
-The above example will have the trap make an attack against the victim's AC with a +4 bonus to its attack roll.
-On a hit it does 2d8+6 damage.
-The "notes" field is a message that is whispered to the GM as a reminder about anything else that happens with the trap.
-The "message" is shown to everyone when the trap is triggered to describe what the trap is, and any other flavor text associated with it.
-The DC to spot the trap with passive perception is 14.
+Due to complications with the API reading attributes from certain character sheets,
+there have been issues in the past with things such as saving throws or passive perception
+not being correct. If this happens, first try adjusting the values for these on
+your character sheet or try re-creating the character sheet from scratch to see
+if that resolves the problem.
 
-*Requires Saving Throw*
+If you continue to experience any issues while using this script,
+need help using it, or if you have a neat suggestion for a new feature, please reply to this thread:
+https://app.roll20.net/forum/post/3280344/script-its-a-trap-v2-dot-3
+or shoot me a PM:
+https://app.roll20.net/users/46544/stephen-l
 
-```
-{
-	"damage": "8d6 + 8",
-	"fx": "explode-fire",
-	"message": "A magical glyph flashes to life and then erupts in a whirling storm of fire!",
-	"missHalf": true,
-	"notes": "The sound of the trap going off alerts the mindflayers in area K26.",
-	"save": "ref",
-	"saveDC": 16,
-	"sound": "explode",
-	"spotDC": 20
-}
-```
-The above example will have the victim make a dexterity saving throw against DC 16. For the "save" property, you can specifiy any of the following: "fort" (for Fortitude), "ref" (for Reflex), or "will" (for... Will).
-The trap deals 8d6+8 damage on a hit and has a passive perception DC 20 to spot it.
-The "missHalf": true line tells the trap that it still does half damage on a miss.
-The "sound" property specifies the same of a sound in your jukebox to play when the trap activates.
+## Show Support
 
-
-## Notes on trap automation:
-The theme's automated attacks and saving throws do not account for conditional
-modifiers. Players will need to apply those in an ad hoc fashion.
-
-If a trap deals damage, the theme will not automatically subtract
-the damage from the character's hit points. Players will still need to do that
-themselves after applying conditional modifiers to their AC/saves,
-applying damage resistance, vulnerability, etc..
+If you would like to show your appreciation and support for the work I do in writing,
+updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)
+or, simply leave a thank you note in the script's thread on the Roll20 forums.
+Either is greatly appreciated! Happy gaming!

@@ -1,0 +1,13 @@
+{
+  "name": "Rollable Table Macros",
+	"script": "RollableTableMacros.js",
+	"version": "1.1",
+	"previousversions": ["1.0"],
+	"description": "# Rollable Table Macros\r\rThis is a simple script that gets an item from a rollable table and enters its name as a chat message rather than showing it as a rollable table result. This allows use of most of the normal features of text chat such as dice rolls, inline rolls, macros, etc. A notable exception is roll queries, which aren't currently supported.\r\rThis will select an item at random from the table, respecting each item's weight. The item's icon, if any, is ignored.\r\r### How to\r\rSimply type `!rtm table-name`. The table name is not case-sensitive. If there are multiple tables with the same name, it will use the first one. If no table by that name is found, or no items are on that table, an error will be output to chat.\r\rYou can include a third paramater in the format `!rtm table-name Sender Name`. This will set the message's 'Speaking As' to whatever string is included after `table-name`.\r\r`!rtm table-name myself` will set the sender of the message to the player who typed in the API command.\r\rIf no third paramater is included, 'Speaking As' will be the formatted name of the table (example: *wild-magic-surge* becomes *Wild Magic Surge*).\r\r#### To do:\r\r* Handle text chat errors (for example, attempting to /w to a wrong name does not output anything)\r* Handle roll queries",
+	"authors": "Nathanael W.",
+	"roll20userid": "880239",
+	"useroptions": [],
+	"dependencies": [],
+	"modifies": {},
+	"conflicts": []
+}

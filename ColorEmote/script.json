@@ -1,6 +1,6 @@
 {
   "name": "ColorEmote",
-  "version": "0.1.3",
+  "version": "0.1.8",
   "description": "",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -11,6 +11,11 @@
   },
   "conflicts": [],
   "script": "ColorEmote.js",
-  "useroptions": {},
-  "previousversions": []
+  "useroptions": [],
+  "previousversions": [
+    "0.1.3",
+    "0.1.4",
+    "0.1.5",
+    "0.1.7"
+  ]
 }
