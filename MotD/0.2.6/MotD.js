@@ -5,8 +5,8 @@
 var MotD = MotD || (function() {
     'use strict';
 
-    var version = '0.2.7',
-    lastUpdate = 1521340402,
+    var version = '0.2.6',
+    lastUpdate = 1521337867,
     schemaVersion = 0.1,
     motdNoteId,
     motdNoteName = 'MotD Note',
@@ -59,7 +59,7 @@ var MotD = MotD || (function() {
                         sendChat('MotD','/w "'+who+'" '+
                             motdText.replace(/%%NAME%%/g,who)
                         );
-                    }
+                    )
                     state.MotD.playerTimes[p.id] = _.now();
                 });
             callback();

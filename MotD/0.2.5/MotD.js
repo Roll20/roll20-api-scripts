@@ -5,8 +5,8 @@
 var MotD = MotD || (function() {
     'use strict';
 
-    var version = '0.2.7',
-    lastUpdate = 1521340402,
+    var version = '0.2.5',
+    lastUpdate = 1521337491,
     schemaVersion = 0.1,
     motdNoteId,
     motdNoteName = 'MotD Note',
@@ -52,14 +52,10 @@ var MotD = MotD || (function() {
         let callback2 = ()=>{
             findObjs({type:'player',_online:true})
                 .forEach((p)=>{
-                    if( state.MotD.playerTimes[p.id] === undefined ||
-                        state.MotD.playerTimes[p.id] < (_.now() - playerOnlineCooldown) 
-                    ) {
-                        let who = p.get('displayname');
-                        sendChat('MotD','/w "'+who+'" '+
-                            motdText.replace(/%%NAME%%/g,who)
-                        );
-                    }
+                    let who = p.get('displayname');
+                    sendChat('MotD','/w "'+who+'" '+
+                        motdText.replace(/%%NAME%%/g,who)
+                    );
                     state.MotD.playerTimes[p.id] = _.now();
                 });
             callback();
