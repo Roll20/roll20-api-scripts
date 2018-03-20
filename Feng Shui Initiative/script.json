@@ -1,0 +1,13 @@
+{
+    "name": "Feng Shui Initiative",
+    "script": "Feng Shui Initiative.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "Allows GM and players to automatically deduct and resort steps from the initiative tracker to speed up play for Fung Shui 2 action scenes.\r\r**API Commands:**\r**!init** <# of steps> <token name in tracker>\rExample: !init 3 Jackie Chan\r\rIf no step value is set, the standard 3 steps are removed. If no token name is specified steps are removed from the top initiative in the tracker. If neither are specified 3 steps are removed from the top initiative.\r\r**Recomended Macros**\rQuick Attack: !init\rUnusual Attack: !init ?{Steps?|3}\rPlayer Quick Attack: !init 3 <name>\rPlayer Unusual Actions: !init ?{Steps?|3} <name>",
+    "authors": "Steve K.",
+    "roll20userid": "5047",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {},
+    "conflicts": []
+}
