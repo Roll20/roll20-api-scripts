@@ -1,0 +1,13 @@
+{
+    "name": "Hexploration",
+    "script": "Hexploration.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "# Hexploration\r\rThis script allows GMs to draw a polygon on a hex-gridded map and fill in\reach hex inside that polygon with an opaque hexagon. It's great for hex-based\rmaps where the PCs must explore and discover each area hex by hex.\r\rPair this script with the It's A Trap! script to announce new locations as\rthe PCs stumble upon them!\r\r## Usage\r\rTo create a hex-filled area, first draw a polygon containing the area you\rwant filled with hexes. Then select the polygon and activate the\r'Hexploration_fill' macro installed by this script. That's it!\r\rNote that this script only works for maps whose grid types are set to either\r'Hex (V)' or 'Hex (H)'. The opaque hexes will be aligned to the page's hex\rgrid.\r\rWhen you move a token representing a character into an area concealed by a hex,\rthe hex will be removed.\r\r## Help\r\rIf you experience any issues while using this script or the trap themes,\rneed help using it, or if you have a neat suggestion for a new feature, please reply to this thread:\rhttps://app.roll20.net/forum/post/6179141/script-hexploration\ror shoot me a PM:\rhttps://app.roll20.net/users/46544/stephen-l\r\r## Show Support\r\rIf you would like to show your appreciation and support for the work I do in writing,\rupdating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)\ror, simply leave a thank you note in the script's thread on the Roll20 forums.\rEither is greatly appreciated! Happy gaming!\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [],
+    "dependencies": ["MatrixMath", "Path Math", "Vector Math"],
+    "modifies": {},
+    "conflicts": []
+}
