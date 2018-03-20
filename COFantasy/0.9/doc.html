@@ -131,7 +131,6 @@
 									<li><a class="text-info" href="#Moine">Moine</a></li>
 									<li><a class="text-info" href="#Nécromancien">Nécromancien</a></li>
 									<li><a class="text-info" href="#Prêtre">Prêtre</a></li>
-									<li><a class="text-info" href="#Psionique">Psionique</a></li>
 									<li><a class="text-info" href="#Rôdeur">Rôdeur</a></li>
 									<li><a class="text-info" href="#Samouraï">Samouraï</a></li>
 									<li><a class="text-info" href="#Voleur">Voleur</a></li>
@@ -165,7 +164,8 @@
               </p>
               <p>Il est important de noter la différence entre les tokens liés à un personnage (la barre 1 est liée aux points de vie du personnage, tout changement sur la fiche se répercute sur le token), et les tokens non liés (dans ce cas, la fiche de personnage est générique, et chaque token est une instance différente, avec des PV indépendants).</p>
               <p>Pour gérer les états spécifiques à un token non lié, les scripts utilisent des conventions de nom d'attribut utilisant le nom du token. Pour que cela fonctionne correctement, <b>il est important que deux tokens indépendants ne portent pas le même nom</b>, même si ils représentent le même personnage. Pour cette raison, le script va automatiquement renommer les tokens indépendants, en leur associant un numéro. Il est toujours possible de remodifier le nom après la création du token, mais dans ce cas, c'est vous qui gérez...</p>
-              <p>Certains messages tiennent compte du genre (masculin ou féminin) des personnages. Ils utilisent le champ <code>Sexe</code> de la fiche de personnage. Un personnage est reconnu comme féminin si ce champ commence par la lettre <code>F</code>.
+              <p>Certains messages tiennent compte du genre (masculin ou féminin) des personnages.<br />
+                Ils utilisent le champ <code>Sexe</code> de la fiche de personnage. Un personnage est reconnu comme féminin si ce champ commence par la lettre <code>F</code>.
               </p>
               <h3 class="text-info" id="macros_abilities">2.2 Macros et Abilities</h3>
               <div class="decalage">
@@ -174,15 +174,15 @@
               </div>
               <h3 class="text-info" id="methode_selection_groupes">2.3 Méthode de sélection de groupes</h3>
               <div class="decalage">
-                <p>Comme les joueurs ne peuvent pas sélectionner un nombre arbitraire d'ennemis, 7 méthodes sont disponibles&nbsp;:</p>
+                <p>Comme les joueurs ne peuvent pas sélectionner un nombre arbitraire d'ennemis, 6 méthodes sont disponibles&nbsp;:</p>
                 <ul>
                   <li>Le MJ lance la macro en sélectionnant les cibles</li>
-                  <li id="allie">option <code>--allies</code> : cela fait chercher tous les <i>handout</i> dont le nom est Equipe suivi d'un nom, et tels que le <i>handout</i> contienne une liste de noms (un par ligne), parmis lesquels, celui du personnage qui agit. Le personnage qui agit est celui qui est sélectionné. Les cibles sont tous les alliés du personnage sélectionné, mais pas le personnage lui-même.</li>
-                  <li>option <code>--equipe <i>nom</i></code> : agit sur tous les personnages mentionnés dans le <i>handout</i> s'appelant Equipe <i>nom</i>.</li>
-                  <li>option <code>--self</code> : pour rajouter le personnage sélectionné. Utile si on veut le personnage et ses alliés, par exemple.</li>
-                  <li>option <code>--target</code> : pour ajouter une seule cible, avec une id de token. Le personnage qui agit est celui qui est sélectionné.</li>
+                  <li id="allie">option <code>--allies</code> : cela fait chercher tous les <i>handout</i> dont le nom est Equipe suivi d'un nom, et tels que dans le <i>handout</i> contienne une liste de noms (une par ligne), parmis lesquels, celui du personnage qui agit. Le personnage qui agit est celui qui est sélectionné argument.</li>
+                  <li>option <code>--equipe <i>nom</i></code> : agit sur tous les personnages mentionnés dans le <i>handout</i> s'appelant Equipe <i>nom</i></li>
+                  <li>option <code>--self</code> : pour se rajouter soi-même. Utile si on veut soi+alliés</li>
+                  <li>option <code>--target</code> : pour ajouter une seule cible, avec une id de token. Le personnage qui agit est celui qui est sélectionné</li>
                   <li>option <code>--disque</code> : le premier argument doit être l'id ou le nom d'un token qui représente un personnage, le deuxième argument un rayon. Cela sélectionne tous les tokens à une distamce de moins que le rayon du premier argument. Si un troisième argument est donné, il est interprété comme la portée maximum entre le centre du disque et le token actif (qui est supposé être celui sélectionné). Si le premier argument représente un personnage avec un max de PV à 0, il est compris comme un personnage fictif créé juste pour définir le disque, et il sera supprimé après la sélection.</li>
-                  <li>option <code>--saufAllies</code> permet d'exclure les alliés de la sélection (voir plus haut pour la définition des alliés).</li>
+                  <li>option <code>--saufAllies</code> permet d'exclure les alliés de la sélection (voir plus haut pour la définition des alliés)</li>
                 </ul>
                 <p id="exemple_equipe"><img class="img-fluid" src="https://i.imgur.com/WHfwsKo.png" data-href="https://i.imgur.com/WHfwsKo.png"></p>
                 <figcaption>Exemple d'<i>handout</i> avec différentes équipes.</figcaption>
@@ -191,7 +191,6 @@
               <div class="decalage">
                 <p>Les scripts supportent l'utilisation de la règle des points de chance, des points de récupérations, des points de mana (et de magie puissante ou rapide).</p>
                 <p>J'ai aussi choisi, comme proposé par Kegron, de diminuer la DEF de tous les protagonistes après un certain nombre de tours de combat (-2 tous les 5 tours).</p>
-                <p>Le script utilise aussi une règle de blessures graves : chaque fois qu'un personnage reçoit plus de DM que la somme de sa constitution et de son niveau, ou qu'il tombe à 0 PV, il encaisse une perte d'un point de récupération. Si il était à 0 points de récupération, il devient gravement blessé, ce qui le rend <i>affaibli</i>. Si le personnage était déjà gravement blessé, mais qu'il lui reste des PV, il tombe inconscient, et sinon, il meurt. Pour récupérer d'une blessure grave, le personnage doit se reposer une nuit, et réussir un test de CON difficulté 8 (avec le d12). Il est impossible de régénérer les points de récupération quand on est gravement blessé.<p>
               </div>
             </div>
             <h2 class="text-primary" id="action_principales">3. Actions principales</h2>
@@ -213,7 +212,7 @@
                         <figcaption>Exemple du Turn Order avec Aura</figcaption>
                       </li>
                       <li>
-                        <p>Si une "Abilities" dont le nom est <code>#TurnAction#</code> existe pour le personnage dont c'est le tour, celle-ci sera prise en compte et le joueur qui controle le personnage recevra un chuchottement qui contiendra l'ensemble des %Ability et #Macro cliquables de <code>#TurnAction</code>. Pour voir ce message en dehors du changement d'initiative, ou pour le MJ, on peut utiliser <code>!cof-turn-action</code> en sélectionnant le token (un bon candidat pour une macro de type token action).</p>
+                        <p>Si une "Abilities" dont le nom est <code>#TurnAction#</code> existe pour le personnage dont c'est le tour, celle-ci sera prise en compte et le joueur qui controle le personnage (ainsi que le MJ) recevra un chuchottement qui contiendra l'ensemble des %Ability et #Macro cliquables de <code>#TurnAction</code>.</p>
                         <p><img class="img-fluid" src="https://i.imgur.com/tTfFoPW.png" data-href="https://i.imgur.com/tTfFoPW.png"></p>
                         <figcaption>Exemple d'une macro #TurnAction#</figcaption>
                       </li>
@@ -384,15 +383,6 @@
                   Recharge l'arme <i>N</i> (augmente les charges d'un). Les armes sont toutes rechargées à la fin d'un combat.
                 </p>
               </div>
-              <h4 class="text-secondary" id="degainer">Dégainer une arme : <code>!cof-degainer <i>N</i></code></h4>
-              <div class="decalage">
-                <p>Pour certaines capacités, (commme <strong>Plus vite que son ombre</strong> ou <strong>Désarmer</strong>), il peut être utile de savoir quelle arme est en main. Pour cela, le script peut utiliser deux méthodes&nbsp;:
-                <ul>
-                  <li><code>!cof-degainer <i>L</i></code> où <i>L</i> est le label d'une des attaques sur la fiche de personnage : cela fait rengainer l'arme en main et dégainer l'arme correspondant à cette attaque. Si le label ne correspond à aucune attaque (ou qu'on ne donne pas de label), l'action fait rengainer l'arme en main.</li>
-                  <li>Si on attaque avec <code>!cof-attack <i>tok1 tok2 L</i></code>, et que l'attaque de label <code><i>L</i></code> contient le mot <code>arme</code> dans le champ <code>SPÉCIAL</code>, alors on considère qu'on doit dégainer cette arme pour pouvoir l'utiliser. Le script envoie le message et considère ensuite l'arme comme étant en main, au MJ de vérifier que le joueur dispose bien d'une action de mouvement pour le faire.</li>
-                </ul>
-                </p>
-              </div>
               <h4 class="text-secondary">Dégâts directs (sans attaquant, ou aire d'effet trop complexe pour !cof-attack) : <code>!cof-dmg <i>dm</i></code></h4>
               <div class="decalage">
                 <p>Applique des dégâts à tous les tokens sélectionnés. L'argument <i>dm</i> peut être un inline roll. Utile par exemple pour les chutes, ou bien les dégâts d'environnement, voire de pièges.<br />
@@ -463,11 +453,10 @@
                     <li>paralysé : <tt>fishing-net</tt></li>
                     <li>endormi : <tt>sleepy</tt></li>
                     <li>apeuré : <tt>screaming</tt></li>
-                    <li>invisible : <tt>ninja-mask</tt></li>
-                    <li>gravement blessé : <tt>arrowed</tt></li>
+                    <li>invisible: <tt>ninja-mask</tt></li>
                   </ul>
                   <!-- pénombre (-5 att. distance) : pas encore dans la liste -->
-                  <p>Pour faciliter la gestion des états, j'utilise deux macros dans la barre du GM, <code>!cof-set-state ?{État|mort|surpris|assome|renverse|aveugle|affaibli|etourdi|paralyse|ralenti|endormi|apeure|invisible|blessé} true</code>, et la même avec <code>false</code>.<br />
+                  <p>Pour faciliter la gestion des états, j'utilise deux macros dans la barre du GM, <code>!cof-set-state ?{État|mort|surpris|assome|renverse|aveugle|affaibli|etourdi|paralyse|ralenti|endormi|apeure|invisible} true</code>, et la même avec <code>false</code>.<br />
                     Notez que si on se contente de changer le statut pour un token lié, le changement risque de ne pas être propagé au personnage (et donc serait perdu en cas de changement de carte).
                   </p>
                 </div>
@@ -604,9 +593,9 @@
                   <li>
                     <strong>Plus vite que son ombre</strong> :
                     <ul>
-                      <li>ajouter un attribut <code>initEnMain<i>N</i></code>, où <i>N</i> est le numéro d'une attaque avec arme à poudre, avec comme valeur 10</li>
+                      <li>ajouter un attribut <code>iniEnMain<i>N</i></code>, où <i>N</i> est le numéro d'une attaque avec arme à poudre</li>
                       <li>utiliser <code>!cof-degainer <i>N</i></code> pour avoir en main l'arme <i>N</i></li>
-                      <li>exemple : <code>!cof-degainer ?{Arme en main ?|Pétoire,0|Épée,1|Aucune,-1}</code> avec <code>initEnMain0</code> = 10.</li>
+                      <li>exemple : <code>!cof-degainer ?{Arme en main ?|Pétoire,0|Épée,1|Aucune,-1}</code> avec <code>initEnMain0</code> = 0/10, il passe à 10/10 si on degaine l'arme 0.</li>
                     </ul>
                   </li>
                   <li><strong>Cadence de tir</strong>: ok</li>
@@ -889,7 +878,7 @@
                 <h4 class="text-secondary">Voie du combat</h4>
                 <ol>
                   <li><strong>Vivacité</strong> : simplement augmenter l'init sur la fiche.</li>
-                  <li><strong>Désarmer</strong> : <code>!cof-desarmer @{selected|token_id} @{target|token_id}</code>. On peut utiliser un troisième argument optionnel, qui est le label d'une arme par défaut, au cas où le guerrier n'aurait pas d'arme en main. Le script determine si la cible tient une arme à 2 mains en cherchant dans le nom de l'arme, puis dans le champ <code>SPÉCIAL</code> de l'arme. Pour savoir comment le script détermine quelle est l'arme en main, se référer à la section <a href='#degainer'>dégainer</a>.</li>
+                  <li><strong>Désarmer</strong> : faire l'attaque avec l'option <code>--test</code>. Pour le jet de l'opposant, choisir une attaque adaptée (correspondant à l'arme portée, et l'appeler avec l'option <code>--test</code> (si l'attaque s'appelle <i>attaque</i>, on peut simplement utiliser <code>%{selected|<i>attaque</i>}</code>). Le MJ doit ensuite intégrer les modificateurs comme le fait de porter une arme à 2 mains, décider si le désarmement porte, et finalement gérer l'absence d'arme.</li>
                   <li><strong>Double attaque</strong> : faire deux attaques, avec l'option supplémentaire <code>--bonusAttaque -2</code>.</li>
                   <li><strong>Attaque circulaire</strong> : faire les attaques normalement, ce n'est pas considéré comme une aoe.</li>
                   <li><strong>Attaque puissante</strong> : utiliser les options <code>--avecd12 --plus 2d6</code>.</li>
@@ -1101,34 +1090,6 @@
                   <li><strong>Messie</strong> : aucun support.</li>
                 </ol>
               </div>
-              <h3 class="text-info" id="Psionique">Psionique</h3>
-              <div class="decalage">
-                <h4 class="text-secondary">Voie de l'attaque mentale</h4>
-                <ol>
-                  <li><strong>Attaque mentale</strong> : faire 2 attaques, une pour les DMs léthaux, avec les options <code>--sortilege --attaqueMentale</code> et l'autre avec l'option supplémentaire <code>--tempDmg</code>.</li>
-                  <li><strong>Bouclier psi</strong> : </li>
-                </ol>
-                <h4 class="text-secondary">Voie du contrôle corporel</h4>
-                <ol>
-                  <li><strong>Proprioception</strong> :  </li>
-                  <li><strong>Trance de régénération</strong> : </li>
-                </ol>
-                <h4 class="text-secondary">Voie de l'empathie</h4>
-                <ol>
-                  <li><strong>Perception extra-sensorielle</strong> : </li>
-                  <li><strong>Défense intuitive</strong> : </li>
-                </ol>
-                <h4 class="text-secondary">Voie de la télékinésie</h4>
-                <ol>
-                  <li><strong>Manipulation à distance</strong> : pour les attaques à distance, le plus simple est d'utiliser une autre attaque en utilisant le score d'attaque magique et le bon modificateur de DMs.</li>
-                  <li><strong>Champ de protection</strong> : </li>
-                </ol>
-                <h4 class="text-secondary">Voie de la télépathie</h4>
-                <ol>
-                  <li><strong>Télépathie</strong> : </li>
-                  <li><strong>Radar mental</strong> : </li>
-                </ol>
-              </div>
               <h3 class="text-info" id="Rôdeur">Rôdeur</h3>
               <div class="decalage">
                 <h4 class="text-secondary">Voie de l'archer</h4>
@@ -1225,17 +1186,12 @@
             <div class="decalage">
               <h3 class="text-info" id="Capacités_raciales">Voies et capacités raciales</h3>
               <div class="decalage">
-                Quelques capacités communes à plusieurs races :
-                <ul>
-                  <li id="Vision_dans_le_noir"><strong>Vision dans le noir</strong> : cela peut se gérer au niveau du token, ou alors le script peut faire les modifications pour vous, si vous avez un attribut <code>visionDansLeNoir</code> de valeur le nombre de metres à laquelle le personnage peut voir dans le noir.</li>
-                </ul>
                 <h4 class="text-secondary">Âme forgée</h4>
                 <p>Pour les capacités raciales, un attribut <code>vieArtificielle</code> à <code>true</code> permet de diviser tous les soins par 2. Pour la résistance aux effets de drains utiliser un attribut <code>RD_drain</code> de valeur 5. Pour l'immunité aux poisons et maladies, utiliser un attribut <code>nonVivant</code> de valeur <code>true</code>. Enfin pour le saignement, ajouter un attribut <code>immuniteSaignement</code>, de valeur true.</p>
                 <ol>
                   <li><strong>Main lourde</strong> : ajuster les DM, et enlever l'option <code>--tempDmg</code> pour l'attaque à mains nues.</li>
                 </ol>
                 <h4 class="text-secondary">Demi-orque</h4>
-                <a href="#Vision_dans_le_noir">Vision dans le noir</a>.
                 <ol>
                   <li><strong>Force de la nature</strong> : ajouter les bonus sur la fiche</li>
                 </ol>
@@ -1243,13 +1199,6 @@
                 <ol>
                   <li><strong>Grâce elfique</strong> : simplement reporter sur la fiche</li>
                 </ol>
-                <h4 class="text-secondary" id="fee_et_lutin">Fée et lutin</h4>
-                <ul>
-                  <li><a href="#Vision_dans_le_noir">Vision dans le noir</a>.</li>
-                  <li><strong>Tout petit</strong> : reporter le bonus de DEF sur la fiche, et ajouter 5 à un attribut <code>discrétion</code>.</li>
-                  <li><strong>Vol</strong> et <strong>Téléportation</strong> : pas de support.</li>
-                  <li><strong>Trop petit</strong> : ajouter un attribut <code>tropPetit</code>, et pour les attaques au d3, mettre un dé quelconque dans l'attaque, et rajouter le texte <code>d3</code> dans les notes de l'attaque concernée. </li>
-                </ul>
                 <h4 class="text-secondary">Gnome</h4>
                 <ol>
                   <li><strong>Petit pote</strong> : ajouter le bonus de CHA sur la fiche</li>
@@ -1270,17 +1219,10 @@
                   <li><strong>Adaptable</strong> : aucun support</li>
                   <li><strong>Loup parmi les loups</strong> : ajouter un attribut <code>loupParmiLesLoups</code> avec comme valeur 1 ou 2 selon le rang dans la voie. Une créature sera considérée comme humanoïde si elle a l'attribut <code>humanoide</code>, ou si sa race est reconnue comme humanoïde.</li>
                 </ol>
-                <h4 class="text-secondary">Lutin</h4>
-                Voir les <a href="#fee_et_lutin">fées</a>.
                 <h4 class="text-secondary">Nain</h4>
                 <ol>
                   <li><strong>Résistance</strong> : ajouter les bonus sur la fiche</li>
                 </ol>
-                <h4 class="text-secondary">Tieflin</h4>
-                <ul>
-                  <li><a href="#Vision_dans_le_noir">Vision dans le noir</a>.</li>
-                  <li><strong>Résistance aux éléments</strong> : ajouter des attributs <code>RD_feu</code>, <code>RD_electrique</code> et <code>RD_froid</code>, de valeur 5 (ou augmentée de 5)</li>
-                </ul>
               </div>
               <h3 class="text-info" id="Créatures">Voies de créatures</h3>
               <div class="decalage">
