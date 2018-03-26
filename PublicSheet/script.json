@@ -1,0 +1,21 @@
+{
+  "name": "PublicSheet",
+  "script": "PublicSheet.js",
+  "version": "1.0",
+  "description": "\n\nThis is a utility script to manage public read-only versions of character sheets, for when you want players to see, but not edit, the character sheets of other players. Enter **!publicsheet** in chat to set it up.",
+  "authors": "Jakob",
+  "roll20userid": "726129",
+  "useroptions": [{
+    "name": "Public name pattern",
+    "type": "text",
+    "default": "(Public) NAME",
+    "description": "This is how the public version of a character will be named. Use **NAME** to insert the character name."
+  }],
+  "dependencies": {},
+  "modifies": {
+    "character.*": "read,write",
+    "attribute.*": "read,write"
+  },
+  "conflicts": [],
+  "previousversions": []
+}
