@@ -9,17 +9,17 @@ const groupCheck = (() => {
 		// Roll appearance
 		outputStyle = (() => {
 			const makeBox = (header, subheader, freetext, content) => {
-					return '<div style="border:1px solid #888;background-color:#fff;border-radius:5px;padding:1px 3px;margin-left:-42px;">' +
+					return '<div style="border:1px solid #888;background-color:#fff;border-radius:15px;padding:3px 3px 1px;margin-left:-42px;">' +
 						`<div>${makeHeader(header)}${makeSubheader(subheader)}</div>` +
 						makeContent(content) + makeFreetext(freetext) +
 						'</div>';
 				},
 				makeContent = (text) => (`<table style="width:100%">${text}</table>`),
-				makeHeader = (text) => (`<h3 style="text-align:center">${text}</h3>`),
+				makeHeader = (text) => (`<h4 style="text-align:center">${text}</h4>`),
 				makeSubheader = (text) => (text ? `<h4 style="text-align:center">${text}</h4>` : ''),
 				makeFreetext = (text) => (text ? `<p style="text-align:center">${text}</p>` : ''),
-				makeRow = (pic, name, roll2, formula0, formula1) => {
-					return '<tr style="border-bottom: 1px solid #ddd">' +
+				makeRow = (pic, name, roll2, formula0, formula1, isLast) => {
+					return `<tr${isLast ? '' :' style="border-bottom: 1px solid #ddd"'}>` +
 						makeName(pic, name) +	(roll2 ? makeRoll2(formula0, formula1) : makeRoll(formula0)) +
 						'</tr>';
 				},
@@ -27,7 +27,7 @@ const groupCheck = (() => {
 					const imgStyle = 'display:inline-block;height:30px;width:30px;vertical-align:middle;margin-right:4px;';
 					return '<td style="padding:3px;height:30px;width:85%">' +
 						(pic ? `<div style="${imgStyle}background:url('${pic}') 0/contain no-repeat;"></div>` : '') +
-						`<strong style="vertical-align:middle;">${name}</strong>` +
+						`<span style="vertical-align:middle;font-weight:bolder">${name}</span>` +
 						'</td>';
 				},
 				makeRoll = (formula) => (`<td style="text-align:center">${formula}</td>`),
@@ -860,14 +860,15 @@ const groupCheck = (() => {
 				});
 			});
 			// Format rows of output
-			const rolls = rollData.map((o) => outputStyle.makeRow(o.pic, o.name, o.roll2, o.styled_0, o.styled_1));
+			const lastIndex = opts.showaverage ? rollData.length : (rollData.length - 1);
+			const rolls = rollData.map((o, i) => outputStyle.makeRow(o.pic, o.name, o.roll2, o.styled_0, o.styled_1, i === lastIndex));
 			if (opts.showaverage) {
 				const fakeRoll = {
 					results: {
 						total: (Math.round(10 * (rollData.map(o => o.result_0[0]).reduce((p, c) => p + c, 0)) / rollData.length) / 10)
 					}
 				};
-				rolls.push(outputStyle.makeRow('', 'Average of rolls', false, outputStyle.makeInlineroll(fakeRoll, true), '', ''));
+				rolls.push(outputStyle.makeRow('', 'Average of rolls', false, outputStyle.makeInlineroll(fakeRoll, true), '', true));
 			}
 			if ('button' in opts) {
 				const commandData = opts.button.split(/\s(.+)/),
@@ -1044,9 +1045,9 @@ const groupCheck = (() => {
 				}, []);
 			try {
 				if (!opts.process) {
-					const rolls = rollData.map(o => {
-						const f = opts.hideformula ? `[[${o.formula}]]` : o.formula;
-						return outputStyle.makeRow(o.pic, o.name, o.roll2, f, f);
+					const rolls = rollData.map((roll, index, list) => {
+						const f = opts.hideformula ? `[[${roll.formula}]]` : roll.formula;
+						return outputStyle.makeRow(roll.pic, roll.name, roll.roll2, f, f, index === list.length - 1);
 					}).join('');
 					const output = (opts.whisper ? '/w GM ' : '') +
 						outputStyle.makeBox(checkName, opts.subheader, '', rolls);
