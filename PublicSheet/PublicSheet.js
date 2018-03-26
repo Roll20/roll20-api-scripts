@@ -112,8 +112,8 @@ const PublicSheet = (() => {
 
     master.get('bio', bio => {
       master.get('gmnotes', gmnotes => {
-        slave.set('bio', bio || ' ');
-        slave.set('gmnotes', gmnotes || ' ');
+        slave.set('bio', bio === 'null' ? '' : bio);
+        slave.set('gmnotes', gmnotes === 'null' ? '' : gmnotes);
         slave.set({
           avatar: master.get('avatar'),
           controlledby: targetIDs,
