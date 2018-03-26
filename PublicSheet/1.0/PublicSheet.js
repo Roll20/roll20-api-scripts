@@ -9,9 +9,9 @@ const PublicSheet = (() => {
   // Init
   const checkInstall = () => {
     // Initialise, cleanup, and log message
-    if (!state.PublicSheet) {
+    if (!state.PublicSheet || state.PublicSheet.lastVersion === 1.0) {
       state.PublicSheet = {
-        data: [],
+        data: {},
         globalconfigCache: {
           lastsaved: 0
         },
@@ -19,14 +19,9 @@ const PublicSheet = (() => {
         namePattern: '(Public) NAME',
       };
     }
-    else if (state.PublicSheet.lastVersion === 1.0) {
-      state.PublicSheet.namePattern = '(Public) NAME';
-      state.PublicSheet.globalconfigCache = {
-        lastsaved: 0
-      };
-      state.PublicSheet.lastVersion = "1.0";
-    }
-    else state.PublicSheet.data = state.PublicSheet.data.filter(o => getObj('character', o.master) && getObj('character', o.slave));
+    else Object.entries(state.PublicSheet.data).forEach(([master, slave]) => {
+      if (!getObj('character', master) || !getObj('character', slave)) delete state.PublicSheet.data[master];
+    });
     log(`-=> PublicSheet v${version} <=-`);
     checkGlobalConfig();
   };
@@ -46,24 +41,20 @@ const PublicSheet = (() => {
   const getSlaveMaster = id => {
     // Return slave/master pair in state corresponding to ID (if applicable)
 
-    const slaveIndex = state.PublicSheet.data.findIndex(o => o.slave === id),
-      masterIndex = state.PublicSheet.data.findIndex(o => o.master === id);
-    if (slaveIndex !== -1)
+    const slaveInfo = Object.entries(state.PublicSheet.data).find(([_,s]) => s === id);
+    if (slaveInfo)
       return {
-        index: slaveIndex,
-        master: state.PublicSheet.data[slaveIndex].master,
+        master: slaveInfo[0],
         slave: id,
         type: 'slave',
       };
-    else if (masterIndex !== -1)
+    else if (id in state.PublicSheet.data)
       return {
-        index: masterIndex,
         master: id,
-        slave: state.PublicSheet.data[masterIndex].slave,
+        slave: state.PublicSheet.data[id],
         type: 'master',
       };
     else return {
-      index: -1,
       type: null
     };
   };
@@ -179,10 +170,10 @@ const PublicSheet = (() => {
   const getOverview = () => {
     // Generate list of active public characters & buttons
 
-    const charRows = state.PublicSheet.data.map(o => {
-      return `<tr><td>${getObj('character', o.master).get('name')}</td>` +
-        `<td><a ${linkStyle} href="!publicsheet sync ${o.master}">Force Sync</a></td>` +
-        `<td><a ${linkStyle} href="!publicsheet remove ${o.master}">Remove</a></td></tr>`;
+    const charRows = Object.keys(state.PublicSheet.data).map(master => {
+      return `<tr><td>${getObj('character', master).get('name')}</td>` +
+        `<td><a ${linkStyle} href="!publicsheet sync ${master}">Force Sync</a></td>` +
+        `<td><a ${linkStyle} href="!publicsheet remove ${master}">Remove</a></td></tr>`;
     }).join('');
     const output = `<h3>Public characters</h3>` +
       `<table style="width:100%;margin:0 0 5px">${charRows}</table>` +
@@ -208,11 +199,11 @@ const PublicSheet = (() => {
     // Slave: delete slave from state
     // Master: delete corresponding slave and remove from state
 
-    const {index, slave, type} = getSlaveMaster(oldChar.id);
-    if (type === 'slave') state.PublicSheet.data.splice(index, 1);
+    const {slave, master, type} = getSlaveMaster(oldChar.id);
+    if (type === 'slave') delete state.PublicSheet.data[master];
     else if (type === 'master') {
       getObj('character', slave).remove();
-      state.PublicSheet.data.splice(index, 1);
+      delete state.PublicSheet.data[master];
     }
   };
   const handleAttrChange = (attr, oldAttr) => {
@@ -266,7 +257,7 @@ const PublicSheet = (() => {
 
     const args = msg.content.split(' ').slice(1),
       id = args[1],
-      {index, master, slave, type} = getSlaveMaster(id),
+      {master, slave, type} = getSlaveMaster(id),
       output = [];
 
     if (playerIsGM(msg.playerid)) {
@@ -278,10 +269,7 @@ const PublicSheet = (() => {
             output.push(`Character ${getObj('character', slave).get('name')} is already the public version` +
               `of ${getObj('character', master).get('name')}.`);
           else if (getObj('character', id)) {
-            state.PublicSheet.data.push({
-              master: id,
-              slave: setupSlave(id),
-            });
+            state.PublicSheet.data[id] = setupSlave(id);
             output.push(`Public version of character ${getObj('character', id).get('name')} added.`);
             output.push(getOverview());
           }
@@ -289,7 +277,7 @@ const PublicSheet = (() => {
           break;
         case 'remove':
           if (type) {
-            state.PublicSheet.data.splice(index, 1);
+            delete state.PublicSheet.data[master];
             if (getObj('character', slave)) getObj('character', slave).remove();
             output.push(`Public version of character ${getObj('character', master).get('name')} removed.`);
             output.push(getOverview());
@@ -312,9 +300,7 @@ const PublicSheet = (() => {
             state.PublicSheet.namePattern = args.join(' ');
             output.push(`Public version of characters will now be named "${args.join(' ')}".`);
           }
-          else {
-            output.push('Public name cannot be blank.');
-          }
+          else output.push('Public name cannot be blank.');
           break;
         default:
           output.push(getOverview());
