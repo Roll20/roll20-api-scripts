@@ -25,6 +25,7 @@ const PublicSheet = (() => {
     else if (state.PublicSheet.lastVersion === '1.0') {
       state.PublicSheet.unsynced = [];
       state.PublicSheet.onlyShowControlled = false;
+      state.PublicSheet.lastVersion = '1.1';
     }
     else Object.entries(state.PublicSheet.data).forEach(([master, slave]) => {
       if (!getObj('character', master) || !getObj('character', slave)) delete state.PublicSheet.data[master];
