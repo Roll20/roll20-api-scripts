@@ -1,9 +1,10 @@
-// PublicSheet v1.0
+// PublicSheet v1.1
 // Maintain public read-only copies of character sheets
+/* global state, findObjs, getObj, globalconfig, log, playerIsGM, createObj, sendChat, on */
 
 const PublicSheet = (() => {
   "use strict";
-  const version = "1.0",
+  const version = '1.1',
     linkStyle = 'style="color:black;background:#fff;border:1px solid black;padding:2px;font-weight:bold"';
 
   // Init
@@ -17,7 +18,13 @@ const PublicSheet = (() => {
         },
         lastVersion: version,
         namePattern: '(Public) NAME',
+        unsynced: [],
+        onlyShowControlled: false,
       };
+    }
+    else if (state.PublicSheet.lastVersion === '1.0') {
+      state.PublicSheet.unsynced = [];
+      state.PublicSheet.onlyShowControlled = false;
     }
     else Object.entries(state.PublicSheet.data).forEach(([master, slave]) => {
       if (!getObj('character', master) || !getObj('character', slave)) delete state.PublicSheet.data[master];
@@ -33,6 +40,8 @@ const PublicSheet = (() => {
     if (g && g.lastsaved && g.lastsaved > s.globalconfigCache.lastsaved) {
       log(` > Updating PublicSheet from Global Config < [${(new Date(g.lastsaved * 1000))}]`);
       s.namePattern = g['Public name pattern'] || '(Public) NAME';
+      s.unsynced = (g['Non-synchronized attributes'] || '').split(',').map(x => x.trim());
+      s.onlyShowControlled = '1' === g['Only show characters controlled by a player'];
       s.globalconfigCache = globalconfig.publicsheet;
     }
   };
@@ -162,7 +171,13 @@ const PublicSheet = (() => {
 
     const charList = findObjs({ _type: 'character' })
       .filter(x => !(getSlaveMaster(x.id).type))
+      .filter(x => !state.PublicSheet.onlyShowControlled || x.get('controlledby'))
       .map(x => [x.get('name'), x.id])
+      .sort((a,b) => {
+        if (a[0].toLowerCase() < b[0].toLowerCase()) return -1;
+        if (a[0].toLowerCase() > b[0].toLowerCase()) return 1;
+        else return 0;
+      })
       .map(([name, id]) => `${htmlReplace(name)},${id}`)
       .join('|');
     return `<a ${linkStyle} href="!publicsheet ${command} ?${htmlReplace('{')}Character?|${charList}${htmlReplace('}')}">${caption}</a>`;
@@ -210,10 +225,12 @@ const PublicSheet = (() => {
     // Slave: reset to previous value
     // Master: propagate change to slave
 
+    if (state.PublicSheet.unsynced.includes(attr.get('name').toLowerCase())) return;
     const {slave, type} = getSlaveMaster(attr.get('_characterid'));
     if (type === 'slave') attr.set({
       current: oldAttr.current,
       max: oldAttr.max,
+      name: oldAttr.name,
     });
     else if (type === 'master') setSlaveAttribute(slave, attr);
   };
@@ -295,12 +312,26 @@ const PublicSheet = (() => {
             output.push(`It seems that the character ${getObj('character', id).get('name')} does not have a public version.`);
           else output.push(`No character with id ${id} found.`);
           break;
-        case 'setpublicname':
-          if (id) {
-            state.PublicSheet.namePattern = args.join(' ');
-            output.push(`Public version of characters will now be named "${args.join(' ')}".`);
+        case 'config':
+          switch(args.shift()) {
+            case 'publicname':
+              if (args[0]) {
+                state.PublicSheet.namePattern = args.join(' ');
+                output.push(`Public version of characters will now be named "${args.join(' ')}".`);
+              }
+              else output.push('Public name cannot be blank.');
+              break;
+            case 'unsynced':
+              state.PublicSheet.unsynced = args.join(' ').toLowerCase().split(',').map(x => x.trim());
+              output.push(`List of non-synced attributes is now "${args.join(' ').toLowerCase() || 'empty'}".`);
+              break;
+            case 'onlyshowcontrolled':
+              state.PublicSheet.onlyShowControlled = ['true', '1', 'yes', 'on'].includes(args[0]);
+              output.push(state.PublicSheet.onlyShowControlled ? 'Only player-controlled characters will be offered.' : 'All characters will be offered.');
+              break;
+            default:
+              output.push(`Name pattern: ${state.PublicSheet.namePattern}.\nNon-synced attributes: ${state.PublicSheet.unsynced}`);
           }
-          else output.push('Public name cannot be blank.');
           break;
         default:
           output.push(getOverview());
