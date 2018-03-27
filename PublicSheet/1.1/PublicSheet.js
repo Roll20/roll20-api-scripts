@@ -20,6 +20,7 @@ const PublicSheet = (() => {
         namePattern: '(Public) NAME',
         unsynced: [],
         onlyShowControlled: false,
+        controlledByAll: false,
       };
     }
     else if (state.PublicSheet.lastVersion === '1.0') {
@@ -43,6 +44,7 @@ const PublicSheet = (() => {
       s.namePattern = g['Public name pattern'] || '(Public) NAME';
       s.unsynced = (g['Non-synchronized attributes'] || '').split(',').map(x => x.trim());
       s.onlyShowControlled = '1' === g['Only show characters controlled by a player'];
+      s.controlledByAll = '1' === g['Public characters are controlled by all players'];
       s.globalconfigCache = globalconfig.publicsheet;
     }
   };
@@ -105,7 +107,7 @@ const PublicSheet = (() => {
       slave = getObj('character', slaveID);
     if (!master || !slave) return;
     const controllers = master.get('controlledby'),
-      targetIDs = findObjs({ _type: 'player' })
+      targetIDs = state.PublicSheet.controlledByAll ? 'all' : findObjs({ _type: 'player' })
         .map(p => p.id)
         .filter(id => !controllers.includes(id))
         .filter(id => !playerIsGM(id))
@@ -319,6 +321,7 @@ const PublicSheet = (() => {
               if (args[0]) {
                 state.PublicSheet.namePattern = args.join(' ');
                 output.push(`Public version of characters will now be named "${args.join(' ')}".`);
+                Object.entries(state.PublicSheet.data).forEach(([master, slave]) => setSlaveProperties(master, slave));
               }
               else output.push('Public name cannot be blank.');
               break;
@@ -329,6 +332,11 @@ const PublicSheet = (() => {
             case 'onlyshowcontrolled':
               state.PublicSheet.onlyShowControlled = ['true', '1', 'yes', 'on'].includes(args[0]);
               output.push(state.PublicSheet.onlyShowControlled ? 'Only player-controlled characters will be offered.' : 'All characters will be offered.');
+              break;
+            case 'controlledbyall':
+              state.PublicSheet.controlledByAll = ['true', '1', 'yes', 'on'].includes(args[0]);
+              output.push(state.PublicSheet.controlledByAll ? 'Public characters are now controlled by all players.' : 'Public characters are now controlled only by players who do not control the original character.');
+              Object.entries(state.PublicSheet.data).forEach(([master, slave]) => setSlaveProperties(master, slave));
               break;
             default:
               output.push(`Name pattern: ${state.PublicSheet.namePattern}.\nNon-synced attributes: ${state.PublicSheet.unsynced}`);
