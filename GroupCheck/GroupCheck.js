@@ -684,14 +684,7 @@ const groupCheck = (() => {
 		},
 		sendChatNoarchive = (who, string) => sendChat(who, string, null, {noarchive: true}),
 		recoverInlinerollFormulae = (msg) => {
-			if ('inlinerolls' in msg) {
-				return msg.inlinerolls.reduce((m, v, k) => {
-						m[`$[[${k}]]`] = `[[${v.expression}]]`;
-						return m;
-					}, {})
-					.reduce((m, v, k) => m.replace(k, v), msg.content);
-			}
-			else return msg.content;
+			return (msg.inlinerolls || []).reduce((m, v, k) => m.replace(`$[[${k}]]`, `[[${v.expression}]]`), msg.content);
 		},
 		htmlReplace = (str) => {
 			const entities = {
