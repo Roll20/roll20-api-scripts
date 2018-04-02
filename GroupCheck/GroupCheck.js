@@ -1,5 +1,5 @@
 // GroupCheck version 1.8
-// Last Updated: 2018-03-29
+// Last Updated: 2018-04-02
 // A script to roll checks for many tokens at once with one command.
 /* global state, getObj, getAttrByName, on, log, sendChat, playerIsGM, _ */
 
@@ -32,8 +32,8 @@ const groupCheck = (() => {
 						`<span style="vertical-align:middle;font-weight:bolder">${name}</span>` +
 						'</td>';
 				},
-				makeCommandButton = (name, command) => {
-					const style = `style="font-weight:bold;border:none;color:#000;background:#fff;padding:0"`;
+				makeCommandButton = (name, command, useBorder) => {
+					const style = `style="font-weight:bold;color:#000;background:#fff;border:${useBorder?'1px solid black;padding:2px;margin:1px 0':'none;padding:0'}"`;
 					return `<a href="${htmlReplace(command)}" ${style}>${name}</a>`;
 				},
 				makeInlineroll = (roll, hideformula) => {
@@ -707,9 +707,10 @@ const groupCheck = (() => {
 				'[': '#91',
 				'"': 'quot',
 				']': '#93',
-				'*': '#42'
+				'*': '#42',
+				'&': 'amp',
 			};
-			const regExp = weak ? /['"@{|}[*\]]/g : /[<>'"@{|}[*\]]/g;
+			const regExp = weak ? /['"@{|}[*&\]]/g : /[<>'"@{|}[*&\]]/g;
 			return str.replace(regExp, c => ('&' + entities[c] + ';'));
 		},
 		sendChatBox = (playerid, content, background) => {
@@ -728,8 +729,8 @@ const groupCheck = (() => {
 				.join(' ');
 			const commandOutput = '<h3 style="text-align:center">Available commands</h3><p style="text-align:center">' +
 				(Object.keys(state.groupCheck.checkList)
-					.map(s => outputStyle.makeCommandButton(s, `!group-check ${optsCommand} --${s}`))
-					.join('—') || `It seems there are no checks defined yet. See the ` +
+					.map(s => outputStyle.makeCommandButton(s, `!group-check ${optsCommand} --${s}`, true))
+					.join(' ') || `It seems there are no checks defined yet. See the ` +
 					`${outputStyle.makeCommandButton('help', '!group-check --help')} for information ` +
 					`on how to add them, or just ${getImportButton('import')} one of the built-in lists.`) +
 				'</p>';
