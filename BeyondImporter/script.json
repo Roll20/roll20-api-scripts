@@ -1,0 +1,13 @@
+{
+    "name": "BeyondImporter",
+    "script": "BeyondImporter.js",
+    "version": "0.1.7",
+    "previousversions": [],
+    "description": "Import DNDBeyond characters in to Roll20 (5eOGL or Shaped sheet). Command !beyond.",
+    "authors": "Robin Kuiper",
+    "roll20userid": 1226016,
+    "useroptions": [],
+    "dependencies": {},
+    "modifies": {},
+    "conflicts": []
+}
