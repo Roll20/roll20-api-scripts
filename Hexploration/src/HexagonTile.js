@@ -28,6 +28,8 @@
 
   /**
    * A Hexagon sized for a page, with no particular center point.
+   * This effectively defines a whole grid of hexes and its geometric properties
+   * rather than just one hex.
    */
   class HexagonTile {
 
@@ -174,6 +176,79 @@
       this._page = page;
       this._isVertical = page.get('grid_type') === 'hex';
       this._scale = page.get('snapping_increment');
+    }
+
+    /**
+     * Gets the row,column coordinates for the tiles nearby some
+     * row,column position.
+     * @param {int} row
+     * @param {int} column
+     * @param {uint} distance
+     * @return {tuple<int,int>[]}
+     */
+    getNearbyHexes(row, column, distance) {
+      if(distance === 0)
+        return [];
+
+      let set = new Set();
+
+      // Use a queue to explore all adjacent hexes out to the desired distance.
+      let workQueue = [[row, column, distance]];
+      while(workQueue.length > 0) {
+        let [row, column, distance] = workQueue.shift();
+
+        // Get the positions of adjacent hexes.
+        let adjHexes = this.getAdjacentHexes(row, column);
+
+        // Add the adjacent hexes to our set and explore them if they're not
+        // explored and we still have distance left.
+        _.each(adjHexes, hex => {
+          let [nextRow, nextColumn] = hex;
+          let key = `${nextRow},${nextColumn}`;
+          if(!set.has(key) && distance > 1)
+            workQueue.push([nextRow, nextColumn, distance - 1]);
+          set.add(key);
+        });
+      }
+
+      // Transform the set into a list of tuples.
+      let list = [];
+      set.forEach(elem => {
+        let parts = elem.split(',');
+        let row = parseInt(parts[0]);
+        let col = parseInt(parts[1]);
+        list.push([row, col]);
+      });
+      return list;
+    }
+
+    /**
+     * Gets the positions of the hexes surrounding some particular hex.
+     * @param {int} row
+     * @param {int} column
+     * @return {tuple<int,int>[]}
+     */
+    getAdjacentHexes(row, column) {
+      if(this.isVertical) {
+        return [
+          [row, column + 1],
+          [row - 1, (row % 2) === 1 ? column + 1 : column],
+          [row - 1, (row % 2) === 1 ? column : column - 1],
+          [row, column - 1],
+          [row + 1, (row % 2) === 1 ? column + 1 : column],
+          [row + 1, (row % 2) === 1 ? column : column - 1]
+        ];
+      }
+      else {
+        return [
+          [(column % 2) === 1 ? row + 1 : row, column - 1],
+          [(column % 2) === 1 ? row : row - 1, column - 1],
+          [row-1, column],
+          [(column % 2) === 1 ? row + 1 : row, column + 1],
+          [(column % 2) === 1 ? row : row - 1, column + 1],
+          [row+1, column]
+        ];
+      }
     }
 
     /**
