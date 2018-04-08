@@ -19,6 +19,8 @@ When you are ready to submit your script for **public use**, create a `script.js
 * `description`: A short explanation of the script and it's use that will appear along side the script on Roll20. It is important for this section to be filled out in detail, as it's the primary way users will get information about the purpose and use of the script. Included in the description section needs to be an example use or purpose, list and explanation of API Commands, and any other information necessary to operating the script.
 * `authors`: A simple string telling who contributed toward the script (e.g. `Riley Dutton,Steve Koontz`)
 * `roll20userid`: A simple string telling the Roll20 User ID's of the authors (e.g. `1` or `45672,145678`). Used internally and won't be shown publicly on the site.
+* `patreon`: Place the URL for a Patreon campaign here, and it will appear under your script's description when selected via one-click.  (e.g. `"https://www.patreon.com/<name>"`)
+* `tipeee`: Place the URL for a Tipeee here, and it will appear under your script's description when selected via one-click.  (e.g. `"https://www.tipeee.com/<name>"`)
 * `useroptions`: An array of hashes that allow script authors to set pre-determined options for users to customize the functionality of the script. For more information check out the _Example folder's script.json for an example or see the Roll20 Wiki for more documentation.
 * `dependencies`: A list of other API scripts this script requires to function (e.g. `My Kitchen`) 
 * `modifies`: A list of the common Roll20 objects and properties the script reads and writes to. Custom objects and properties inside a namespace don't need to be included. (e.g. `bar1_value: write`)

@@ -1,0 +1,29 @@
+{
+	"name": "Fire Emblem Tabletop Combat Script",
+	"script": "FETTC.js",
+	"version": "1.2",
+	"previousversions": ["1.0, 1.1"],
+	"description": "**This is the companion script for the default version of Xeohelios' Fire Emblem Tabletop system!**\rThis script automates combat and provides other necessary functions, such as a fully-fledged, dynamic skills system faithful to the games. Skills can be found [here](https://github.com/missing-q/emblem20/wiki/Skills:-Default-Package) and the guide to making custom skills can be found [here](https://github.com/missing-q/emblem20/wiki/Skills:-Making-Custom-Skills). \r The guide to setting up your game so the script will work can be found [here](https://github.com/missing-q/emblem20/blob/master/README.md#setup). It won't do anything otherwise, so please check it out!",
+	"authors": "Missing-q",
+	"roll20userid": "1537217",
+	"useroptions": [],
+	"dependencies": [],
+	"conflicts": [],
+	"modifies": {
+		"chat": "read, write",
+		"attribute._id": "read, write",
+		"attribute.current": "read, write",
+		"attribute.max": "read, write",
+		"ability.action": "read",
+		"ability._id": "read",
+		"campaign.turnorder": "read",
+		"graphic.represents": "read",
+		"graphic._id": "read",
+		"graphic.top": "read",
+		"graphic.left": "read",
+		"graphic._type": "read",
+		"graphic._subtype": "read",
+		"ability.action": "read",
+		"graphic.statusmarkers": "read , write"
+	}
+}

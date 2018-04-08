@@ -1,0 +1,36 @@
+{
+  "name": "PublicSheet",
+  "script": "PublicSheet.js",
+  "version": "1.1",
+  "description": "\n\nThis is a utility script to manage public read-only versions of character sheets, for when you want players to see, but not edit, the character sheets of other players. Enter **!publicsheet** in chat to set it up.",
+  "authors": "Jakob",
+  "roll20userid": "726129",
+  "useroptions": [{
+    "name": "Public name pattern",
+    "type": "text",
+    "default": "(Public) NAME",
+    "description": "This is how the public version of a character will be named. Use **NAME** to insert the character name. Example: \"NAME (Public)\" will result in, e.g. \"Alice (Public)\"."
+  },{
+    "name": "Non-synchronized attributes",
+    "type": "text",
+    "default": "",
+    "description": "You can enter a list of attributes that will not be synchronized with the parent sheet here (separated by a comma, case will be ignored). Use this for attributes corresponding to character sheet tabs, and similar auxiliary attributes."
+  },{
+    "name": "Only show characters controlled by a player",
+    "type": "checkbox",
+    "description": "In the configuration query, this will hide all characters not controlled by anyone but GMs.",
+    "value": "1"
+  },{
+    "name": "Public characters are controlled by all players",
+    "type": "checkbox",
+    "description": "This will make public characters controlled by, and visible to, all players, instead of those who do not control the original character only.",
+    "value": "1"
+  }],
+  "dependencies": {},
+  "modifies": {
+    "character.*": "read,write",
+    "attribute.*": "read,write"
+  },
+  "conflicts": [],
+  "previousversions": []
+}

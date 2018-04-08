@@ -377,3 +377,63 @@ changetokenimage:
 5ebattlemaster:
 - "5EBattleMaster"
 - "System Toolbox"
+
+totalrolledage:
+- "TotalRolled for AGE"
+- "System Toolbox"
+
+hourglass:
+- "Hourglass"
+- "Utility"
+
+exalted3dice:
+- "EX3Dice"
+- "System Toolbox"
+
+pathfinderneceros:
+- "Pathfinder Companion Neceros"
+- "System Toolbox"
+
+carrytokens:
+- "CarryTokens"
+- "Tokens"
+
+inspirationtracker:
+- "InspirationTracking"
+- "System Toolbox"
+
+bladescompanion:
+- "BladesCompanion"
+- "System Toolbox"
+
+itsatrapthemestarfinder:
+- "ItsATrap_theme_Starfinder"
+- "System Toolbox"
+
+genesysroller:
+- "Genesys-RPG-Roller"
+- "System Toolbox"
+
+cashmaster:
+- CashMaster
+- "System Toolbox"
+
+fireemblemtt:
+- "Xeohelios' Fire Emblem Tabletop Companion"
+- "System Toolbox"
+
+hexploration:
+- Hexploration
+- "Maps & Drawing"
+
+messageoftheday:
+- MotD
+- Chat
+
+forbiddenlandsdice:
+- Forbidden Lands Dice Roller
+- System Toolbox
+
+fengshuiinitiative:
+- Feng Shui Initiative
+- System Toolbox

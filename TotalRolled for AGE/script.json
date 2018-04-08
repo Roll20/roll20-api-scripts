@@ -1,0 +1,18 @@
+{
+	"name": "TotalRolled for AGE",
+	"script": "TotalRolled for AGE.js",
+	"version": "2.1.0",
+	"previousversions": [],
+	"description": "Automatically totals all the rolls and modifiers used in the AGE System games. This API will also return the number of stunt point earns for that roll. It will also automatically tell if a spell TN has been met. It uses the default template so it should work in other games if the roll results are formatted for it.",
+	"authors": "Joshua Casserino,Olivier L.-L.",
+	"roll20userid": "1144634,594486",
+	"useroptions": {},
+	"dependencies": [],
+	"modifies": {
+		"msg.who" : "reads",
+		"msg.content" : "reads",
+		"sendChat" : "writes",
+		"msg.inlinerolls":"reads"
+	},
+	"conflicts": []
+}

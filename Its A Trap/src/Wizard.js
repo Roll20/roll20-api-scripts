@@ -44,6 +44,13 @@ var ItsATrapCreationWizard = (() => {
     curTrap = trapToken;
     let content = new HtmlBuilder('div');
 
+    if(!trapToken.get('status_cobweb')) {
+      trapToken.set('status_cobweb', true);
+      trapToken.set('name', 'A cunning trap');
+      trapToken.set('aura1_square', true);
+      trapToken.set('gmnotes', getDefaultJson());
+    }
+
     // Core properties
     content.append('h4', 'Core properties');
     let coreProperties = getCoreProperties(trapToken);
@@ -94,7 +101,6 @@ var ItsATrapCreationWizard = (() => {
 
     let menu = _showMenuPanel('Trap Configuration', content);
     _whisper(who, menu.toString(MENU_CSS));
-    trapToken.set('status_cobweb', true);
   }
 
   /**
@@ -191,8 +197,26 @@ var ItsATrapCreationWizard = (() => {
         name: 'GM Notes',
         desc: 'Additional secret notes shown only to the GM when the trap is activated.',
         value: trapEffect.notes
+      },
+      {
+        id: 'destroyable',
+        name: 'Destroyable',
+        desc: 'Whether to delete the trap after it is activated.',
+        value: trapEffect.destroyable ? 'yes': 'no',
+        options: ['yes', 'no']
       }
     ];
+  }
+
+  /**
+   * Produces JSON for default trap properties.
+   * @return {string}
+   */
+  function getDefaultJson() {
+    return JSON.stringify({
+      effectShape: 'rectangle',
+      stopAt: 'center'
+    });
   }
 
   /**
@@ -280,9 +304,9 @@ var ItsATrapCreationWizard = (() => {
       {
         id: 'effectShape',
         name: 'Trap shape',
-        desc: 'Is the shape of the trap\'s effect circular or square?',
-        value: trapToken.get('aura1_square') ? 'square' : 'circle',
-        options: [ 'circle', 'square' ]
+        desc: 'To set paths, you must also select one or more paths defining the trap\'s blast area. A fill color must be set for tokens inside the path to be affected.',
+        value: trapEffect.effectShape || ' circle',
+        options: [ 'circle', 'rectangle', 'set selected paths', 'add selected paths', 'remove selected paths']
       },
     ];
   }
@@ -306,7 +330,7 @@ var ItsATrapCreationWizard = (() => {
       {
         id: 'api',
         name: 'API Command',
-        desc: 'An API command which the trap runs when it is activated. The constants TRAP_ID and VICTIM_ID will be replaced by the object IDs for the trap and victim.',
+        desc: 'An API command which the trap runs when it is activated. The constants TRAP_ID and VICTIM_ID will be replaced by the object IDs for the trap and victim. Multiple API commands are now supported by separating each command with &quot;&#59;&#59;&quot;.',
         value: trapEffect.api
       },
 
@@ -460,7 +484,7 @@ var ItsATrapCreationWizard = (() => {
         name: 'Set Trigger',
         desc: 'To set paths, you must also select the paths that trigger the trap.',
         value: trapEffect.triggerPaths || 'self',
-        options: ['self', 'paths']
+        options: ['self', 'set selected paths', 'add selected paths', 'remove selected paths']
       },
       {
         id: 'triggers',
@@ -476,6 +500,13 @@ var ItsATrapCreationWizard = (() => {
           else
             return undefined;
         })()
+      },
+      {
+        id: 'ignores',
+        name: 'Ignore Tokens',
+        desc: 'Select one or more tokens to be ignored by this trap.',
+        value: trapEffect.ignores || 'none',
+        options: ['none', 'set selected tokens', 'add selected tokens', 'remove selected tokens']
       }
     ];
   }
@@ -496,9 +527,13 @@ var ItsATrapCreationWizard = (() => {
       trapToken.set('name', params[0]);
     if(prop === 'type')
       trapEffect.type = params[0];
-    if(prop === 'api')
-      trapEffect.api = params[0];
-    if(prop === 'areaOfEffect')
+    if(prop === 'api') {
+      if(params[0])
+        trapEffect.api = params[0].split(";;");
+      else
+        trapEffect.api = [];
+    }
+    if(prop === 'areaOfEffect') {
       if(params[0]) {
         trapEffect.areaOfEffect = {};
         trapEffect.areaOfEffect.name = params[0];
@@ -508,13 +543,50 @@ var ItsATrapCreationWizard = (() => {
       }
       else
         trapEffect.areaOfEffect = undefined;
-
+    }
+    if(prop === 'destroyable')
+      trapEffect.destroyable = params[0] === 'yes';
     if(prop === 'disabled')
       trapToken.set('status_interdiction', params[0] === 'yes');
     if(prop === 'effectDistance')
       trapToken.set('aura1_radius', parseInt(params[0]));
-    if(prop === 'effectShape')
-      trapToken.set('aura1_square', params[0] === 'square');
+    if(prop === 'effectShape') {
+      if(['circle', 'square', 'rectangle'].includes(params[0])) {
+        trapEffect.effectShape = params[0];
+        trapToken.set('aura1_square',
+          params[0].includes('square') || params[0].includes('rectangle'));
+      }
+      else if(params[0] === 'set selected paths' && selected) {
+        trapEffect.effectShape = _.map(selected, path => {
+          return path.get('_id');
+        });
+        trapToken.set('aura1_square', false);
+      }
+      else if(params[0] === 'add selected paths' && selected) {
+        if(!_.isArray(trapEffect.effectShape))
+          trapEffect.effectShape = [];
+
+        trapEffect.effectShape = trapEffect.effectShape
+        .concat(_.map(selected, path => {
+          return path.get('_id');
+        }));
+        trapToken.set('aura1_square', false);
+      }
+      else if(params[0] === 'remove selected paths' && selected) {
+        if(!_.isArray(trapEffect.effectShape))
+          trapEffect.effectShape = [];
+
+        let selectedIds = _.map(selected, token => {
+          return token.get('_id');
+        });
+        trapEffect.effectShape = _.reject(trapEffect.effectShape, id => {
+          return selectedIds.includes(id);
+        });
+        trapToken.set('aura1_square', false);
+      }
+      else
+        throw Error('Unexpected effectShape value: ' + params[0]);
+    }
     if(prop === 'flying')
       trapToken.set('status_fluffy-wing', params[0] === 'yes');
     if(prop === 'fx') {
@@ -535,6 +607,33 @@ var ItsATrapCreationWizard = (() => {
     }
     if(prop === 'gmOnly')
       trapEffect.gmOnly = params[0] === 'yes';
+    if(prop === 'ignores')
+      if(params[0] === 'set selected tokens' && selected)
+        trapEffect.ignores = _.map(selected, token => {
+          return token.get('_id');
+        });
+      else if(params[0] === 'add selected tokens' && selected) {
+        if(!_.isArray(trapEffect.ignores))
+          trapEffect.ignores = [];
+
+        trapEffect.ignores = trapEffect.ignores
+        .concat(_.map(selected, token => {
+          return token.get('_id');
+        }));
+      }
+      else if(params[0] === 'remove selected tokens' && selected) {
+        if(!_.isArray(trapEffect.ignores))
+          trapEffect.ignores = [];
+
+        let selectedIds = _.map(selected, token => {
+          return token.get('_id');
+        });
+        trapEffect.ignores = _.reject(trapEffect.ignores, id => {
+          return selectedIds.includes(id);
+        });
+      }
+      else
+        trapEffect.ignores = undefined;
     if(prop === 'kaboom')
       if(params[0])
         trapEffect.kaboom = {
@@ -568,10 +667,31 @@ var ItsATrapCreationWizard = (() => {
         return trigger.trim();
       });
     if(prop === 'triggerPaths')
-      if(params[0] === 'paths' && selected)
+      if(params[0] === 'set selected paths' && selected)
         trapEffect.triggerPaths = _.map(selected, path => {
           return path.get('_id');
         });
+      else if(params[0] === 'add selected paths' && selected) {
+        if(!_.isArray(trapEffect.triggerPaths))
+          trapEffect.triggerPaths = [];
+
+        trapEffect.triggerPaths = trapEffect.triggerPaths
+        .concat(_.map(selected, path => {
+          return path.get('_id');
+        }));
+      }
+      else if(params[0] === 'remove selected paths' && selected) {
+        if(!_.isArray(trapEffect.triggerPaths))
+          trapEffect.triggerPaths = [];
+
+        let selectedIds = _.map(selected, path => {
+          return path.get('_id');
+        });
+
+        trapEffect.triggerPaths = _.reject(trapEffect.triggerPaths, id => {
+          return selectedIds.includes(id);
+        });
+      }
       else
         trapEffect.triggerPaths = undefined;
 

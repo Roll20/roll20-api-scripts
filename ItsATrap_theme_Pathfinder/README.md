@@ -1,14 +1,14 @@
 # It's A Trap! - Pathfinder Generic theme
 
-_3.2 Updates_
-* The script has been made generic to handle all Pathfinder character sheets.
+_3.5 Updates_
+* Added support for Roll20's official Pathfinder sheet.
 
 This is a Pathfinder trap theme built to support all Pathfinder character sheets and Pathfinder characters
 who use plain attributes instead of character sheets.
 
-This trap theme provides built-in support for support Samuel Marino, Nibrodooh,
-Vince, Samuel Terrazas, chris-b, Magik, and James W.'s Pathfinder character sheet and for
-my own Pathfinder (Simple) character sheet.
+This trap theme provides built-in support for Roll20's official Pathfinder sheet; Samuel Marino, Nibrodooh,
+Vince, Samuel Terrazas, chris-b, Magik, and James W.'s community Pathfinder sheet; and for
+my own Pathfinder 'Simple' sheet.
 
 Other sheets, custom sheets, and characters based upon plain attributes are also supported.
 For those, just fill in the names for the character attributes in the user options for

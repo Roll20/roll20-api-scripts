@@ -1,8 +1,11 @@
 # It's A Trap!
 
-_v3.6 Updates:_
-* Passive search distance now also applies to any trigger paths set for the trap.
-* When a trap is noticed with passive searching, its trigger paths are also revealed.
+_v3.7 Updates:_
+* Paths can now be used as the activation areas for a trap. This supports both lines and polygons (requires fill color).
+* Passive search will notice activation paths for traps.
+* You can now set traps to be destroyed after they are activated.
+* Support for multiple API commands. Each command given in the API Command property should be separated with ';;'.
+* D20 themes will actively disallow a trap to have both an attack roll and a saving throw. If an attack roll is set, the saving throw settings are cleared, and if a saving throw is set, then the attack settings are cleared.
 
 This is a script that allows GMs to quickly and very easily set up traps,
 secret doors, and other hidden things on the GM layer, and detect when tokens
@@ -22,12 +25,11 @@ This will present a menu for setting up the trap's configurations.
 
 As of version 3.3, traps can be set to be triggered either by their own token or
 by a set of paths on the GM layer. By default, the trap's token is used as
-its trigger. The trap's ```Trap Shape``` property determines the token shape
-(circle or rectangle) used for the collision.
+its trigger.
 
 You can change this by opening the trap's creation wizard in the chat,
 selecting a set of polygonal or freehand paths from the GM layer, and then setting
-the ```Set Trigger property``` for the trap to ```Paths```.
+the ```Set Trigger``` property for the trap to ```Paths```.
 
 Note: Elliptical token shapes are not currently supported (unless they are circles).
 
@@ -38,6 +40,13 @@ movement, the trap will be activated!
 
 A trap can also be manually activated by clicking the 'Activate Trap' button
 in the trap's configuration menu.
+
+As of version 3.7, traps can be set to have their activation areas be either the
+trap tokens themselves or be a set of paths on the GM layer. By default, the trap's
+token is still used as the activation area. You can change this by selecting a
+set of polygonal or freehand paths from the GM layer, and then setting  
+the ```Trap Shape``` property for the trap to ```Paths```. This supports paths
+both as lines (no fill color) and polygons (requires fill color).
 
 ### TrapThemes:
 
