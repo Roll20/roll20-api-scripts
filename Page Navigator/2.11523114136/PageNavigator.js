@@ -820,7 +820,6 @@
                         command,
                         'Approve', '#009900', '#000000'
                     );
-            log(msgTarget);
             msg = ' <div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'
                 + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 110%;">'
                 + character.get('name')+' would like to move to '+destNotes+' on '+page.get('name').replace(/\[[^\[\]]*\]/g,'').trim()+'. If this move is correct, please approve the move.'
@@ -884,9 +883,7 @@
                     }
                 }
                 Campaign().set('playerspecificpages',false);
-                log('Campaign(): '+JSON.stringify(Campaign().get('playerspecificpages')));
                 Campaign().set('playerspecificpages',separated);
-                log('final Campaign(): '+JSON.stringify(Campaign().get('playerspecificpages')));
             }
         },
         
@@ -1162,7 +1159,7 @@
         },
         
         //gets the current states, and outputs everything in a nicely formatted config screen
-        configHandler = function(id,cmdDetails){
+        configHandler = function(id,cmdDetails,who){
             var msg ='',
                 dmarkerButton = '',
                 updateButton = makeButton('!nav update', '<b>Update Destinations & Pages</b>', '#fff8dc', '#191970'),
@@ -1218,7 +1215,7 @@
         
         //handles all logic for determining what move function to call
         //                      object    id    object
-        moveHandler = function(cmdDetails,id,selected){
+        moveHandler = function(cmdDetails,id,selected,who){
             //4665
             var page,token,character,folders;
             if(cmdDetails.players.length===0 && selected){
@@ -1382,7 +1379,7 @@
             sendChat('Page Navigator',msg,null,{noarchive:true});
         },
         
-        setupHandler = function(playerid,cmdDetails,selected){
+        setupHandler = function(playerid,cmdDetails,selected,who){
             var page = cmdDetails.details.page,
                 settings = {
                     location : cmdDetails.details.location,
@@ -1414,9 +1411,7 @@
         /*Self-explanatory, but handles chat input. Also passes the access of the user*/
         handleInput = function(msg_orig){
             var msg = _.clone(msg_orig),
-                cmdDetails,
-                args,
-                access;
+                cmdDetails,args,who,access;
                 
             if (msg.content.indexOf('!nav')!==0 || msg.playerid==='API') {
                 return;
@@ -1433,7 +1428,7 @@
             if(args.length===0){
                 help(msg.playerid);
             }
-            
+            who = idToDisplayName(msg.playerid);
             _.each(args,(a)=>{
                 cmdDetails = cmdExtract(a);
                 switch(cmdDetails.action){
@@ -1445,18 +1440,18 @@
                         help(msg.playerid);
                         break;
                     case 'move' || 'teleport':
-                        moveHandler(cmdDetails,msg.playerid,msg.selected,access);
+                        moveHandler(cmdDetails,msg.playerid,msg.selected,access,who);
                         break;
                     case 'config':
                         if(access==='gm'){
-                            configHandler(msg.playerid,cmdDetails);
+                            configHandler(msg.playerid,cmdDetails,who);
                         }else{
                             //message to player that configuration options are GM only
                         }
                         break;
                     case 'setup':
                         if(access==='gm'){
-                            setupHandler(msg.playerid,cmdDetails,msg.selected);
+                            setupHandler(msg.playerid,cmdDetails,msg.selected,who);
                         }
                         break;
                     default:
@@ -1585,7 +1580,7 @@
                     break;
                 case 'page':
                     mapPage(obj);
-                    loadfolders(obj);
+                    loadFolders(obj);
                     storeFolders();
                     break;
                 case 'player':
