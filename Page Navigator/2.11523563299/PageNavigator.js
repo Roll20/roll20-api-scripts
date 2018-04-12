@@ -849,9 +849,6 @@
                 folders[f]=folders[f].replace(/\[|\]/g,'');
             });
             //4220
-            log('folderAccess');
-            log(folderAccess);
-            log(folders);
             if(!_.some(folders,(f)=>{return folderAccess[f]==='players'}) && !gm){
                 //Handling for inaccessible page
                 return;
@@ -1330,8 +1327,9 @@
                     +'This wizard will setup your selected destination token(s) with the appropriate JSON. Simply click each button to setup that aspect of the destination.',//Control Panel Header closing div
                 polygonButton,locationButton,llButton,chatButton,nameButton,nameButton,settings,llQuery,locationQuery,
                 pageQuery = '?{Which Page|'+_.map(allPages,(p)=>{return p.get('name').replace(/\[[^\[\]]*\]/g,'').trim();}).join('|')+'|**PAGE NOT CREATED YET**,?{Page Name to be Created'+HE(HE('}'))+'}',
-                tokenIDs = _.map(tokens,(t)=>{return t.id}).join('|');
-            
+                tokenIDs = _.map(tokens,(t)=>{return t.id}).join('|'),
+                linkPage;
+                
             try{
                 settings = JSON.parse(decodeURIComponent(tokens[0].get('gmnotes')).split(/<[/]?.+?>/g).join(''));
                 if(!settings.polygon){
@@ -1345,32 +1343,40 @@
                     chat:''
                 };
             }
-            llQuery = '?{Link to Which Location|'+_.map(destTokens[_.filter(allPages,(p)=>{return p.get('name').replace(/\[[^\[\]]*\]/g,'').trim()===tokens[0].get('name')})[0].id],(t)=>{
-                return t.parsedGM.location;
-            }).join('|')+'|**LOCATION NOT LISTED**,?{linkLocation Text Free Type'+HE(HE('}'))+'}';
-            locationQuery = '?{Describe This Location|'+_.map(destTokens[_.filter(allPages,(p)=>{return p.get('name').replace(/\[[^\[\]]*\]/g,'').trim()===tokens[0].get('name')})[0].id],(t)=>{
-                return t.parsedGM.linkLocation;
-            }).join('|')+'|**LOCATION NOT ALREADY LINKED**,?{location Text Free Type'+HE(HE('}'))+'}';
+            linkPage = _.filter(allPages,(p)=>{return p.get('name').replace(/\[[^\[\]]*\]/g,'').trim()===tokens[0].get('name')})[0];
             nameButton = makeButton(
                     '!nav --setup,page='+pageQuery+'|'+tokenIDs+' --setup|'+tokenIDs,
-                    tokens[0].get('name'),'transparent','black'
+                    tokens[0].get('name') === '' ? 'Select Name' : tokens[0].get('name'),'transparent','black'
                 );
             polygonButton = makeButton(
                     '!nav --setup,polygon|'+tokenIDs+' --setup|'+tokenIDs,
                     'Select Boundary','transparent','black'
                 );
-            locationButton = makeButton(
-                    '!nav --setup,location='+locationQuery+'|'+tokenIDs+' --setup|'+tokenIDs,
-                    (settings.location || ''),'transparent','black'
-                );
-            llButton = makeButton(
-                    '!nav --setup,linkLocation='+llQuery+'|'+tokenIDs+' --setup|'+tokenIDs,
-                    (settings.linkLocation || ''),'transparent','black'
-                );
             chatButton = makeButton(
                     '!nav --setup,chat=?{What chat command would you like sent. Currently set to'+HE(':')+' '+HE(HE((settings.chat || '')))+'}|'+tokenIDs+' --setup|'+tokenIDs,
                     'Enter Chat Command to run','transparent','black'
                 );
+            if(linkPage){
+                llQuery = '?{Link to Which Location|'+_.map(destTokens[_.filter(allPages,(p)=>{return p.get('name').replace(/\[[^\[\]]*\]/g,'').trim()===tokens[0].get('name')})[0].id],(t)=>{
+                    return t.parsedGM.location;
+                }).join('|')+'|**LOCATION NOT LISTED**,?{linkLocation Text Free Type'+HE(HE('}'))+'}';
+                locationQuery = '?{Describe This Location|'+_.map(destTokens[_.filter(allPages,(p)=>{return p.get('name').replace(/\[[^\[\]]*\]/g,'').trim()===tokens[0].get('name')})[0].id],(t)=>{
+                    return t.parsedGM.linkLocation;
+                }).join('|')+'|**LOCATION NOT ALREADY LINKED**,?{location Text Free Type'+HE(HE('}'))+'}';
+                locationButton = makeButton(
+                        '!nav --setup,location='+locationQuery+'|'+tokenIDs+' --setup|'+tokenIDs,
+                        (settings.location || ''),'transparent','black'
+                    );
+                llButton = makeButton(
+                        '!nav --setup,linkLocation='+llQuery+'|'+tokenIDs+' --setup|'+tokenIDs,
+                        (settings.linkLocation || ''),'transparent','black'
+                    );    
+            }else{
+                locationButton = 'Token Name Required';
+                llButton = 'Token Name Required';
+            }
+            
+            
             msg+='<div style="border-bottom: 1px solid black;">'
                 +'**Token Name:**<div style="float:right;">'+nameButton+'</div><div style="clear: both"></div></div>'
                 +'<div style="border-bottom: 1px solid black;">'
