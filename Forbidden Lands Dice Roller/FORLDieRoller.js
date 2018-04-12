@@ -1,10 +1,11 @@
 // By: Barry Snyder (with guidance from Aaron) heavily leveraging the MYZ script by The Aaron
+// look into adding 3d dice https://wiki.roll20.net/API:Chat
 
 var ForbiddenLands = ForbiddenLands || (function() {
     'use strict';
 
-    var version = '0.0.1',
-        lastUpdate = 1518886210,
+    var version = '1.1',
+        lastUpdate = 'April 11th, 2018',
         schemaVersion = 0.1,
         symbols = {
             skull: '&#'+'9760;', 
@@ -249,7 +250,7 @@ var ForbiddenLands = ForbiddenLands || (function() {
         });
     },
     checkInstall = function() {
-        log('-=> ForbiddenLands v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+        log('-=> ForbiddenLands v'+version+' <=-  ['+(lastUpdate)+']');
 
         if( ! _.has(state,'ForbiddenLands') || state.ForbiddenLands.version !== schemaVersion) {
             log('  > Updating Schema to v'+schemaVersion+' <');
@@ -382,7 +383,7 @@ var ForbiddenLands = ForbiddenLands || (function() {
         let who=(getObj('player',playerid)||{get:()=>'API'}).get('_displayname');
 
         sendChat('','/w "'+who+'" '+
-'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
+	'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
 	'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'+
 		'Forbidden Lands v'+version+
 	'</div>'+
@@ -798,7 +799,6 @@ var ForbiddenLands = ForbiddenLands || (function() {
 				
 				legendaryDieType = msg.inlinerolls[3].results.rolls[0].sides;
 				legendaryDieType="d"+legendaryDieType.toString();
-				log(legendaryDieType);
 			
                // record push
                hash=(++state.ForbiddenLands.sequence);
