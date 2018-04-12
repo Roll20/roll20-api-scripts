@@ -3,7 +3,7 @@
 	"script": "TalesDieRoller.js",
 	"version": "1.0",
 	"previousversions": ["none"],
-	"description": "This is a Die Roller used for Tales from the Loop dice rolls. It is used in combination with the Tales from the Loop Character Sheet (forthcoming in April 2018) but can be used independently of each other.  Note this is based on the current alpha rules and the core MYZ system; it is subject to change.",
+	"description": "This is a Die Roller used for Tales from the Loop dice rolls.",
 	"authors": "Barry Snyder",
 	"roll20userid": "399162",
 	"useroptions": [],
