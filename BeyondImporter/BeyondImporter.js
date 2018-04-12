@@ -1,8 +1,8 @@
 /*
- * Version 0.1.7
+ * Version 0.1.8
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
- * Discord: Atheos#1014
+ * Discord: Robin#1095
  * Roll20: https://app.roll20.net/users/1226016/robin-k
  * Roll20 Thread: https://app.roll20.net/forum/post/6248700/script-beta-beyondimporter-import-dndbeyond-character-sheets
  * Github: https://github.com/RobinKuiper/Roll20APIScripts
@@ -39,6 +39,9 @@
         'stealth',
         'survival'
     ]
+
+    let class_spells = [];
+    let object;
 
     // Styling for the chat responses.
     const style = "overflow: hidden; background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;";
@@ -86,9 +89,23 @@
                    sendConfigMenu();
                 break;
 
+                case 'imports':
+                   if(args.length > 0){
+                        let setting = args.shift().split('|');
+                        let key = setting.shift();
+                        let value = (setting[0] === 'true') ? true : (setting[0] === 'false') ? false : setting[0];
+
+                        state.BEYONDIMPORTER.config.imports[key] = value;
+                   }
+
+                   sendConfigMenu();
+                break;
+
                 case 'import':
                     var json = msg.content.substring(14);
                     var character = JSON.parse(json).character;
+
+                    class_spells = [];
 
                     // Remove characters with the same name if overwrite is enabled.
                     if(state.BEYONDIMPORTER.config.overwrite){
@@ -103,7 +120,7 @@
                     }
 
                     // Create character object
-                    var object = createObj("character", { name: character.name + state.BEYONDIMPORTER.config.prefix  });
+                    object = createObj("character", { name: character.name + state.BEYONDIMPORTER.config.prefix  });
 
                     // Make Speed String
                     let speed = character.weightSpeeds.normal.walk + 'ft.';
@@ -118,7 +135,7 @@
                         const inventory = character.inventory;
                         for(var key in inventory){
                             inventory[key].forEach((item) => {
-                                var row = getOrMakeRowID(object,"repeating_inventory_",item.definition.name);
+                                var row = generateRowID();
 
                                 let attributes = {}
                                 attributes["repeating_inventory_"+row+"_itemname"] = item.definition.name;
@@ -170,7 +187,7 @@
                     if(state.BEYONDIMPORTER.config.imports.languages){
                         let languages = getObjects(character, 'type', 'language');
                         languages.forEach((language) => {
-                            var row = getOrMakeRowID(object,"repeating_proficiencies_",language.friendlySubtypeName);
+                            var row = generateRowID();
 
                             let attributes = {}
                             attributes["repeating_proficiencies_"+row+"_name"] = language.friendlySubtypeName;
@@ -186,7 +203,7 @@
                         const weapons = ['Club', 'Dagger', 'Greatclub', 'Handaxe', 'Javelin', 'Light hammer', 'Mace', 'Quarterstaff', 'Sickle', 'Spear', 'Crossbow, Light', 'Dart', 'Shortbow', 'Sling', 'Battleaxe', 'Flail', 'Glaive', 'Greataxe', 'Greatsword', 'Halberd', 'Lance', 'Longsword', 'Maul', 'Morningstar', 'Pike', 'Rapier', 'Scimitar', 'Shortsword', 'Trident', 'War pick', 'Warhammer', 'Whip', 'Blowgun', 'Crossbow, Hand', 'Crossbow, Heavy', 'Longbow', 'Net'];
                         let proficiencies = getObjects(character, 'type', 'proficiency');
                         proficiencies.forEach((prof) => {
-                            var row = getOrMakeRowID(object,"repeating_proficiencies_",prof.friendlySubtypeName);
+                            var row = generateRowID();
 
                             let attributes = {}
                             attributes["repeating_proficiencies_"+row+"_name"] = prof.friendlySubtypeName;
@@ -217,101 +234,54 @@
                                 multiclass_level += current_class.level;
                             }
 
-                            current_class.features.forEach(function(trait)
-                            {
-                                if(trait.definition.name.includes('Jack')){
-                                    jack = '@{jack}';
-                                }
+                            // Set Pact Magic as class resource
+                            if(current_class.class.name.toLowerCase() === 'warlock'){
+                                let attributes = {}
+                                attributes['other_resource_name'] = 'Pact Magic';
+                                attributes['other_resource_max'] = getPactMagicSlots(current_class.level);
+                                attributes['other_resource'] = getPactMagicSlots(current_class.level);
+                                setAttrs(object.id, attributes);
+                            }
 
-                                let description = '';
-                                trait.options.forEach((option) => {
-                                    description += option.name + '\n';
-                                    description += (option.description !== '') ? option.description + '\n\n' : '\n';
-                                });
-
-                                description += trait.definition.description;
-
-                                let t = {
-                                    name: trait.definition.name,
-                                    description: replaceChars(description),
-                                    source: 'Class',
-                                    source_type: current_class.class.name
-                                }
-
-                                createRepeatingTrait(object, t);
-                            });
-
-                            // Class Spells
-                            if(current_class.hasOwnProperty('spells')){
-                                current_class.spells.forEach((spell) => {
-                                    let level = (spell.definition.level === 0) ? 'cantrip' : spell.definition.level.toString();
-                                    var row = getOrMakeRowID(object,"repeating_spell-"+level+"_",spell.definition.name);
-
-                                    let attributes = {}
-                                    attributes["repeating_spell-"+level+"_"+row+"_spellprepared"] = (spell.prepared || spell.alwaysPrepared) ? '1' : '0';
-                                    attributes["repeating_spell-"+level+"_"+row+"_spellname"] = spell.definition.name;
-                                    attributes["repeating_spell-"+level+"_"+row+"_spellschool"] = spell.definition.school.toLowerCase();
-                                    attributes["repeating_spell-"+level+"_"+row+"_spellritual"] = (spell.ritual) ? '{{ritual=1}}' : '0';
-                                    attributes["repeating_spell-"+level+"_"+row+"_spellcastingtime"] = spell.castingTime.castingTimeInterval + ' ' + spell.castingTime.castingTimeUnit;
-                                    attributes["repeating_spell-"+level+"_"+row+"_spellrange"] = (spell.definition.range.origin === 'Ranged') ? spell.definition.range.rangeValue + 'ft.' : spell.definition.range.origin;
-                                    attributes["repeating_spell-"+level+"_"+row+"_options-flag"] = '0';
-                                    attributes["repeating_spell-"+level+"_"+row+"_spellritual"] = (spell.definition.ritual) ? '1' : '0';
-                                    attributes["repeating_spell-"+level+"_"+row+"_spellconcentration"] = (spell.definition.concentration) ? '{{concentration=1}}' : '0';
-                                    attributes["repeating_spell-"+level+"_"+row+"_spellduration"] = (spell.definition.duration.durationUnit !== null) ? spell.definition.duration.durationInterval + ' ' + spell.definition.duration.durationUnit : spell.definition.duration.durationType;
-
-                                    let descriptions = spell.definition.description.split('At Higher Levels. ');
-                                    attributes["repeating_spell-"+level+"_"+row+"_spelldescription"] = replaceChars(descriptions[0]);
-                                    attributes["repeating_spell-"+level+"_"+row+"_spellathigherlevels"] = (descriptions.length > 1) ? replaceChars(descriptions[1]) : '';
-
-                                    let components = spell.definition.components.split(', ');
-                                    attributes["repeating_spell-"+level+"_"+row+"_spellcomp_v"] = (components.includes('V')) ? '{{v=1}}' : '0';
-                                    attributes["repeating_spell-"+level+"_"+row+"_spellcomp_s"] = (components.includes('S')) ? '{{s=1}}' : '0';
-                                    attributes["repeating_spell-"+level+"_"+row+"_spellcomp_m"] = (components.includes('M')) ? '{{m=1}}' : '0';
-                                    attributes["repeating_spell-"+level+"_"+row+"_spellcomp_materials"] = (components.includes('M')) ? replaceChars(spell.definition.componentsDescription) : '';
-
-                                    // Damage/Attack
-                                    let damage = getObjects(spell, 'type', 'damage');
-                                    if(damage.length !== 0){
-                                        damage = damage[0];
-
-                                        //attributes["repeating_spell-"+level+"_"+row+"_spelloutput"] = 'ATTACK';
-                                        attributes["repeating_spell-"+level+"_"+row+"_spellattack"] = (spell.definition.range.origin === 'Ranged') ? 'Ranged' : 'Melee';
-                                        attributes["repeating_spell-"+level+"_"+row+"_spelldamage"] = (damage.die.fixedValue !== null) ? damage.die.fixedValue : damage.die.diceString;
-                                        attributes["repeating_spell-"+level+"_"+row+"_spelldamagetype"] = damage.friendlySubtypeName;
-
-                                        // FOR SPELLS WITH MULTIPLE DAMAGE OUTPUTS
-                                        //attributes["repeating_spell-"+level+"_"+row+"_spelldamage2"] = damage.die.diceString;
-                                        //attributes["repeating_spell-"+level+"_"+row+"_spelldamagetype2"] = damage.friendlySubtypeName;
-
-                                        // CREATE ATTACK
-                                        let attack = {
-                                            name: spell.definition.name,
-                                            range: (spell.definition.range.origin === 'Ranged') ? spell.definition.range.rangeValue + 'ft.' : spell.definition.range.origin,
-                                            attack: {
-                                                attribute: _ABILITY[current_class.class.spellCastingAbility]
-                                            },
-                                            damage: {
-                                                diceString: (damage.die.fixedValue !== null) ? damage.die.fixedValue : damage.die.diceString,
-                                                type: damage.friendlySubtypeName,
-                                                attribute: '0'
-                                            },
-                                            description: replaceChars(spell.definition.description)
-                                        }
-
-                                        let attackid = createRepeatingAttack(object, attack);
-                                        attributes["repeating_spell-"+level+"_"+row+"_rollcontent"] = '%{'+object.id+'|repeating_attack_'+attackid+'_attack}';
-                                        // /CREATE ATTACK
-
-                                        if(damage.hasOwnProperty('atHigherLevels') && damage.atHigherLevels.scaleType === 'spellscale'){
-                                            attributes["repeating_spell-"+level+"_"+row+"_spellhldie"] = '1';
-                                            attributes["repeating_spell-"+level+"_"+row+"_spellhldietype"] = 'd'+damage.die.diceValue;
-                                        }
+                            if(state.BEYONDIMPORTER.config.imports.class_traits){
+                                current_class.features.forEach(function(trait)
+                                {
+                                    if(trait.definition.name.includes('Jack')){
+                                        jack = '@{jack}';
                                     }
 
-                                    setAttrs(object.id, attributes);
+                                    let description = '';
+                                    trait.options.forEach((option) => {
+                                        description += option.name + '\n';
+                                        description += (option.description !== '') ? option.description + '\n\n' : '\n';
+                                    });
+
+                                    description += trait.definition.description;
+
+                                    let t = {
+                                        name: trait.definition.name,
+                                        description: replaceChars(description),
+                                        source: 'Class',
+                                        source_type: current_class.class.name
+                                    }
+
+                                    createRepeatingTrait(object, t);
                                 });
                             }
+
+                            // Class Spells
+                            if(state.BEYONDIMPORTER.config.imports.class_spells){
+                                //class_spells = class_spells.concat(current_class.spells);
+                                current_class.spells.forEach((spell) => {
+                                    spell.spellCastingAbility = current_class.class.spellCastingAbility
+                                    class_spells.push(spell)
+                                })
+                            }
                         });
+                    }
+
+                    if(state.BEYONDIMPORTER.config.imports.class_spells){
+                        importSpells(class_spells);
                     }
 
                     if(state.BEYONDIMPORTER.config.imports.traits){
@@ -472,7 +442,11 @@
                         max: hp
                     });
 
-                    sendChat('', '<div style="'+style+'">Import of <b>' + character.name + '</b> is ready.</div>');
+                    if(class_spells.length > 15){
+                        sendChat('', '<div style="'+style+'">Import of <b>' + character.name + '</b> is almost ready.<br><p>There are some more spells than expected, they will be imported over time.</p></div>');
+                    }else{
+                        sendChat('', '<div style="'+style+'">Import of <b>' + character.name + '</b> is ready.</div>');
+                    }
                 break;
 
                 default:
@@ -482,22 +456,143 @@
         }
     });
 
+    const getPactMagicSlots = (level) => {
+        switch(level){
+            case 1:
+                return 1;
+            break;
+
+            case 2: case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 10:
+                return 2;
+            break;
+
+            case 11: case 12: case 13: case 14: case 15: case 16:
+                return 3;
+            break;
+
+            default:
+                return 4
+            break;
+        }
+        return 0;
+    }
+
+    function importSpells(array) {
+        // set this to whatever number of items you can process at once
+        var chunk = 10;
+        var index = 0;
+        function doChunk() {
+            var cnt = chunk;
+            while (cnt-- && index < array.length) {
+                importSpell(array[index]);
+                ++index;
+            }
+            if (index < array.length) {
+                // set Timeout for async iteration
+                setTimeout(doChunk, 1);
+            }
+        }    
+        doChunk();    
+    }
+
+    const importSpell = (spell) => {
+        pre_log('Import spell: ' + spell.definition.name);
+        let level = (spell.definition.level === 0) ? 'cantrip' : spell.definition.level.toString();
+        var row = generateRowID();
+
+        let attributes = {}
+        attributes["repeating_spell-"+level+"_"+row+"_spellprepared"] = (spell.prepared || spell.alwaysPrepared) ? '1' : '0';
+        attributes["repeating_spell-"+level+"_"+row+"_spellname"] = spell.definition.name;
+        attributes["repeating_spell-"+level+"_"+row+"_spellschool"] = spell.definition.school.toLowerCase();
+        attributes["repeating_spell-"+level+"_"+row+"_spellritual"] = (spell.ritual) ? '{{ritual=1}}' : '0';
+        attributes["repeating_spell-"+level+"_"+row+"_spellcastingtime"] = spell.castingTime.castingTimeInterval + ' ' + spell.castingTime.castingTimeUnit;
+        attributes["repeating_spell-"+level+"_"+row+"_spellrange"] = (spell.definition.range.origin === 'Ranged') ? spell.definition.range.rangeValue + 'ft.' : spell.definition.range.origin;
+        attributes["repeating_spell-"+level+"_"+row+"_options-flag"] = '0';
+        attributes["repeating_spell-"+level+"_"+row+"_spellritual"] = (spell.definition.ritual) ? '1' : '0';
+        attributes["repeating_spell-"+level+"_"+row+"_spellconcentration"] = (spell.definition.concentration) ? '{{concentration=1}}' : '0';
+        attributes["repeating_spell-"+level+"_"+row+"_spellduration"] = (spell.definition.duration.durationUnit !== null) ? spell.definition.duration.durationInterval + ' ' + spell.definition.duration.durationUnit : spell.definition.duration.durationType;
+
+        let descriptions = spell.definition.description.split('At Higher Levels. ');
+        attributes["repeating_spell-"+level+"_"+row+"_spelldescription"] = replaceChars(descriptions[0]);
+        attributes["repeating_spell-"+level+"_"+row+"_spellathigherlevels"] = (descriptions.length > 1) ? replaceChars(descriptions[1]) : '';
+
+        let components = spell.definition.components.split(', ');
+        attributes["repeating_spell-"+level+"_"+row+"_spellcomp_v"] = (components.includes('V')) ? '{{v=1}}' : '0';
+        attributes["repeating_spell-"+level+"_"+row+"_spellcomp_s"] = (components.includes('S')) ? '{{s=1}}' : '0';
+        attributes["repeating_spell-"+level+"_"+row+"_spellcomp_m"] = (components.includes('M')) ? '{{m=1}}' : '0';
+        attributes["repeating_spell-"+level+"_"+row+"_spellcomp_materials"] = (components.includes('M')) ? replaceChars(spell.definition.componentsDescription) : '';
+
+        // Damage/Attack
+        let damage = getObjects(spell, 'type', 'damage');
+        if(damage.length !== 0){
+            damage = damage[0];
+
+            //attributes["repeating_spell-"+level+"_"+row+"_spelloutput"] = 'ATTACK';
+            attributes["repeating_spell-"+level+"_"+row+"_spellattack"] = (spell.definition.range.origin === 'Ranged') ? 'Ranged' : 'Melee';
+            attributes["repeating_spell-"+level+"_"+row+"_spelldamage"] = (damage.die.fixedValue !== null) ? damage.die.fixedValue : damage.die.diceString;
+            attributes["repeating_spell-"+level+"_"+row+"_spelldamagetype"] = damage.friendlySubtypeName;
+
+            // FOR SPELLS WITH MULTIPLE DAMAGE OUTPUTS
+            //attributes["repeating_spell-"+level+"_"+row+"_spelldamage2"] = damage.die.diceString;
+            //attributes["repeating_spell-"+level+"_"+row+"_spelldamagetype2"] = damage.friendlySubtypeName;
+
+            // CREATE ATTACK
+            let attack = {
+                name: spell.definition.name,
+                range: (spell.definition.range.origin === 'Ranged') ? spell.definition.range.rangeValue + 'ft.' : spell.definition.range.origin,
+                attack: {
+                    attribute: _ABILITY[spell.spellCastingAbility] //_ABILITY[current_class.class.spellCastingAbility]
+                },
+                damage: {
+                    diceString: (damage.die.fixedValue !== null) ? damage.die.fixedValue : damage.die.diceString,
+                    type: damage.friendlySubtypeName,
+                    attribute: '0'
+                },
+                description: replaceChars(spell.definition.description)
+            }
+
+            let attackid = createRepeatingAttack(object, attack);
+            attributes["repeating_spell-"+level+"_"+row+"_rollcontent"] = '%{'+object.id+'|repeating_attack_'+attackid+'_attack}';
+            // /CREATE ATTACK
+
+            if(damage.hasOwnProperty('atHigherLevels') && damage.atHigherLevels.scaleType === 'spellscale'){
+                attributes["repeating_spell-"+level+"_"+row+"_spellhldie"] = '1';
+                attributes["repeating_spell-"+level+"_"+row+"_spellhldietype"] = 'd'+damage.die.diceValue;
+            }
+        }
+
+        setAttrs(object.id, attributes);
+    }
+
     const sendConfigMenu = (first) => {
         let prefix = (state.BEYONDIMPORTER.config.prefix !== '') ? state.BEYONDIMPORTER.config.prefix : '[NONE]';
         let prefixButton = makeButton(prefix, '!beyond config prefix|?{Prefix}', buttonStyle);
         let overwriteButton = makeButton(state.BEYONDIMPORTER.config.overwrite, '!beyond config overwrite|'+!state.BEYONDIMPORTER.config.overwrite, buttonStyle);
+        let debugButton = makeButton(state.BEYONDIMPORTER.config.debug, '!beyond config debug|'+!state.BEYONDIMPORTER.config.debug, buttonStyle);
 
         let listItems = [
             '<span style="float: left">Overwrite:</span> '+overwriteButton,
-            '<span style="float: left">Prefix:</span> '+prefixButton
+            '<span style="float: left">Prefix:</span> '+prefixButton,
+            '<span style="float: left">Debug:</span> '+debugButton
         ]
+
+        let debug = '';
+        if(state.BEYONDIMPORTER.config.debug){
+            let debugListItems = [];
+            for(let importItemName in state.BEYONDIMPORTER.config.imports){
+                let button = makeButton(state.BEYONDIMPORTER.config.imports[importItemName], '!beyond imports '+importItemName+'|'+!state.BEYONDIMPORTER.config.imports[importItemName], buttonStyle);
+                debugListItems.push('<span style="float: left">'+importItemName+':</span> '+button)
+            }
+
+            debug += '<hr><b>Imports</b>'+makeList(debugListItems, 'overflow: hidden; list-style: none; padding: 0; margin: 0;', 'overflow: hidden');
+        }
 
         let list = makeList(listItems, 'overflow: hidden; list-style: none; padding: 0; margin: 0;', 'overflow: hidden');
 
         let resetButton = makeButton('Reset', '!beyond reset', buttonStyle + ' width: 100%');
 
         let title_text = (first) ? 'BeyondImporter First Time Setup' : 'BeyondImporter Config';
-        let text = '<div style="'+style+'">'+makeTitle(title_text)+list+'<hr><p style="font-size: 80%">You can always come back to this config by typing `!beyond config`.</p><hr>'+resetButton+'</div>';
+        let text = '<div style="'+style+'">'+makeTitle(title_text)+list+debug+'<hr><p style="font-size: 80%">You can always come back to this config by typing `!beyond config`.</p><hr>'+resetButton+'</div>';
 
         sendChat('', '/w gm ' + text);
     }
@@ -540,7 +635,7 @@
     }
 
     const createRepeatingTrait = (object, trait) => {
-        var row = getOrMakeRowID(object,"repeating_traits_",trait.name);
+        var row = generateRowID();
 
         let attributes = {}
         attributes["repeating_traits_"+row+"_name"] = trait.name;
@@ -553,7 +648,7 @@
     }
 
     const createRepeatingAttack = (object, attack) => {
-        let attackrow = getOrMakeRowID(object,"repeating_attack_",attack.name);
+        let attackrow = generateRowID();
         let attackattributes = {};
         attackattributes["repeating_attack_"+attackrow+"_options-flag"] = '0';
         attackattributes["repeating_attack_"+attackrow+"_atkname"] = attack.name;
@@ -618,13 +713,15 @@
         var i = 0;
         while (i < attrObjs.length)
         {
+            pre_log(attrObjs[i])
             // If this is a feat taken multiple times, strip the number of times it was taken from the name
-            var attrName = attrObjs[i].get("current").toString();
+            /*var attrName = attrObjs[i].get("current").toString();
             if (regexIndexOf(attrName, / x[0-9]+$/) !== -1)
                 attrName = attrName.replace(/ x[0-9]+/,"");
 
             if (attrObjs[i].get("name").indexOf(repeatPrefix) !== -1 && attrObjs[i].get("name").indexOf("_name") !== -1 && attrName === name)
                 return attrObjs[i].get("name").substring(repeatPrefix.length,(attrObjs[i].get("name").indexOf("_name")));
+            i++;*/
             i++;
         }
         return generateRowID();
@@ -686,13 +783,15 @@
             debug: false,
             prefix: '',
             imports: {
+                classes: true,
+                class_spells: true,
+                class_traits: true,
                 inventory: true,
                 proficiencies: true,
                 traits: true,
-                classes: true,
-                notes: true,
                 languages: true,
-                bonusses: true
+                bonusses: true,
+                notes: true,
             }
         };
 
@@ -709,15 +808,7 @@
                 state.BEYONDIMPORTER.config.prefix = '';
             }
             if(!state.BEYONDIMPORTER.config.hasOwnProperty('imports')){
-                state.BEYONDIMPORTER.config.imports = {
-                    inventory: true,
-                    proficiencies: true,
-                    traits: true,
-                    classes: true,
-                    notes: true,
-                    languages: true,
-                    bonusses: true
-                };
+                state.BEYONDIMPORTER.config.imports = defaults.imports;
             }else{
                 if(!state.BEYONDIMPORTER.config.imports.hasOwnProperty('inventory')){
                     state.BEYONDIMPORTER.config.imports.inventory = true;
@@ -739,6 +830,12 @@
                 }
                 if(!state.BEYONDIMPORTER.config.imports.hasOwnProperty('bonusses')){
                     state.BEYONDIMPORTER.config.imports.bonusses = true;
+                }
+                if(!state.BEYONDIMPORTER.config.imports.hasOwnProperty('class_spells')){
+                    state.BEYONDIMPORTER.config.imports.class_spells = true;
+                }
+                if(!state.BEYONDIMPORTER.config.imports.hasOwnProperty('class_traits')){
+                    state.BEYONDIMPORTER.config.imports.class_traits = true;
                 }
             }
             if(!state.BEYONDIMPORTER.config.hasOwnProperty('firsttime')){
