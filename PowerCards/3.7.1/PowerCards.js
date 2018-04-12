@@ -4,6 +4,7 @@ var PowerCards = PowerCards || (function() {
 	var PowerCards_Author = "Sky and Kurt Jaegers";
 	var PowerCards_Version = "3.7.1";
 	var PowerCards_LastUpdated = 1523318718;
+	//var PowerCard_StatusList;
 
 	// FUNCTION DECLARATIONS
 	var PowerCard = PowerCard || {};
@@ -1110,8 +1111,10 @@ var PowerCards = PowerCards || (function() {
 		symbol = altForReplace || symbol;
 		
 		if (!_.contains(statuses, symbol)) {
-			icon = state.PowerCard_StatusList[symbol].icon;
-			info = state.PowerCard_StatusList[symbol].info;
+			if (state.PowerCard_StatusList[symbol] !== undefined) {
+				icon = state.PowerCard_StatusList[symbol].icon;
+				info = state.PowerCard_StatusList[symbol].info;
+			}
 		}
 		if (_.contains(statuses, icon)){
 			i=_.indexOf(statuses, icon);
