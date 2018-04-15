@@ -1,0 +1,13 @@
+{
+    "name": "Concentration",
+    "script": "Concentration.js",
+    "version": "0.1.1",
+    "previousversions": [],
+    "description": "Keep track of concentration and reminds to do a concentration check.",
+    "authors": "Robin Kuiper",
+    "roll20userid": 1226016,
+    "useroptions": [],
+    "dependencies": {},
+    "modifies": {},
+    "conflicts": []
+}
