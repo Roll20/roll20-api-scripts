@@ -1,5 +1,5 @@
 /*
- * Version 0.0.6
+ * Version 0.0.7
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1014
@@ -170,17 +170,26 @@ var Resizer = Resizer || (function() {
                 break;
 
                 case 'fit':
+                    let keepRatio = args.shift() || false;
+                    keepRatio = (keepRatio === 'keep_ratio') ? true : false;
+                    let ratio, options;
+
                     if(msg.selected){
                         let page = getObj('page', getObj('player', msg.playerid).get('lastpage'));
-                        let options = {
-                            width: page.get('width')*70,
-                            height: page.get('height')*70,
-                            top: (page.get('height')*70)/2,
-                            left: (page.get('width')*70)/2
-                        }
                         
                         msg.selected.forEach(graphic => {
-                            getObj(graphic._type, graphic._id).set(options);
+                            obj = getObj(graphic._type, graphic._id);
+
+                            ratio = Math.min(page.get('width')*70 / obj.get('width'), page.get('height')*70 / obj.get('height'));
+
+                            options = {
+                                width: (keepRatio) ? obj.get('width')*ratio : page.get('width')*70,
+                                height: (keepRatio) ? obj.get('height')*ratio : page.get('height')*70,
+                                top: (keepRatio) ? obj.get('height')*ratio/2 : page.get('height')*70/2,
+                                left: (keepRatio) ? obj.get('width')*ratio/2 : page.get('width')*70/2
+                            }
+                            
+                            obj.set(options);
                         });
 
                         chat_text = (msg.selected.length > 1) ? 'Selected graphics where fitted to the page.' : 'Selected graphic is fitted to the page.';
@@ -264,7 +273,7 @@ var Resizer = Resizer || (function() {
         let resizeGraphicButton = makeButton('Resize Selected Graphics', '!' + state[state_name].config.command + ' ?{Width} ?{Height}', styles.button + styles.fullWidth);
         let resizePageButton = makeButton('Resize Page', '!' + state[state_name].config.command + ' page ?{Width} ?{Height} ?{Units or Pixels?|Pixels,pixels|Units,units}', styles.button + styles.fullWidth);
         let scaleButton = makeButton('Scale Entire Page', '!' + state[state_name].config.command + ' scale ?{Amount} ?{Choose|Up, up|Down, down}', styles.button + styles.fullWidth);
-        let fitButton = makeButton('Make selected fit to page', '!' + state[state_name].config.command + ' fit', styles.button + styles.fullWidth);
+        let fitButton = makeButton('Make selected fit to page', '!' + state[state_name].config.command + ' fit ?{Ratio|Keep,keep_ratio|Deny, deny}', styles.button + styles.fullWidth);
 
         message = (message) ? '<hr><p>'+message+'</p>' : '';
 
