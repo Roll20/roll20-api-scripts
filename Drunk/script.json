@@ -1,0 +1,13 @@
+{
+    "name": "Drunk",
+    "script": "Drunk.js",
+    "version": "0.0.4",
+    "previousversions": [],
+    "description": "Keeps track of Inebration.",
+    "authors": "Robin Kuiper",
+    "roll20userid": 1226016,
+    "useroptions": [],
+    "dependencies": {},
+    "modifies": {},
+    "conflicts": []
+}

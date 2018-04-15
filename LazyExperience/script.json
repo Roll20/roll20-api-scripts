@@ -1,0 +1,13 @@
+{
+    "name": "LazyExperience",
+    "script": "LazyExperience.js",
+    "version": "0.1.4",
+    "previousversions": [],
+    "description": "Keeps track of experience with easy menus and options.",
+    "authors": "Robin Kuiper",
+    "roll20userid": 1226016,
+    "useroptions": [],
+    "dependencies": {},
+    "modifies": {},
+    "conflicts": []
+}

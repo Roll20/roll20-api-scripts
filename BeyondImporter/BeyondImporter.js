@@ -2,7 +2,7 @@
  * Version 0.1.8
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
- * Discord: Robin#1095
+ * Discord: Atheos#1095
  * Roll20: https://app.roll20.net/users/1226016/robin-k
  * Roll20 Thread: https://app.roll20.net/forum/post/6248700/script-beta-beyondimporter-import-dndbeyond-character-sheets
  * Github: https://github.com/RobinKuiper/Roll20APIScripts
@@ -49,10 +49,13 @@
 
     let jack = '0';
 
+    const script_name = 'BeyondImporter';
+    const state_name = 'BeyondImporter';
+
     on('ready',()=>{ 
         checkInstall();
-        log('DNDBeyond Importer Ready!');
-        if(state.BEYONDIMPORTER.config.debug){ sendChat('', 'DNDBeyond Importer Ready!'); }
+        log(script_name + ' Ready! Command: !'+state[state_name].config.command);
+        if(state[state_name].config.debug){ sendChat('', script_name + ' Ready!'); }
     });
 
     on('chat:message', function(msg) {
@@ -70,7 +73,7 @@
                 break;
 
                 case 'reset':
-                    state.BEYONDIMPORTER = {};
+                    state[state_name] = {};
                     setDefaults(true);
                     sendConfigMenu();
                 break;
@@ -83,7 +86,7 @@
 
                         if(key === 'prefix' && value.charAt(0) !== '_'){ value = '_' + value}
 
-                        state.BEYONDIMPORTER.config[key] = value;
+                        state[state_name].config[key] = value;
                    }
 
                    sendConfigMenu();
@@ -95,7 +98,7 @@
                         let key = setting.shift();
                         let value = (setting[0] === 'true') ? true : (setting[0] === 'false') ? false : setting[0];
 
-                        state.BEYONDIMPORTER.config.imports[key] = value;
+                        state[state_name].config.imports[key] = value;
                    }
 
                    sendConfigMenu();
@@ -108,10 +111,10 @@
                     class_spells = [];
 
                     // Remove characters with the same name if overwrite is enabled.
-                    if(state.BEYONDIMPORTER.config.overwrite){
+                    if(state[state_name].config.overwrite){
                         var objects = findObjs({                                                          
                             _type: "character",
-                            name: character.name + state.BEYONDIMPORTER.config.prefix                     
+                            name: character.name + state[state_name].config.prefix                     
                         }, {caseInsensitive: true});
 
                         for(var i = 0; i < objects.length; i++){
@@ -120,7 +123,7 @@
                     }
 
                     // Create character object
-                    object = createObj("character", { name: character.name + state.BEYONDIMPORTER.config.prefix  });
+                    object = createObj("character", { name: character.name + state[state_name].config.prefix  });
 
                     // Make Speed String
                     let speed = character.weightSpeeds.normal.walk + 'ft.';
@@ -131,7 +134,7 @@
                     }
 
                     // Import Character Inventory
-                    if(state.BEYONDIMPORTER.config.imports.inventory){
+                    if(state[state_name].config.imports.inventory){
                         const inventory = character.inventory;
                         for(var key in inventory){
                             inventory[key].forEach((item) => {
@@ -184,7 +187,7 @@
                     }
 
                     // Languages
-                    if(state.BEYONDIMPORTER.config.imports.languages){
+                    if(state[state_name].config.imports.languages){
                         let languages = getObjects(character, 'type', 'language');
                         languages.forEach((language) => {
                             var row = generateRowID();
@@ -199,7 +202,7 @@
                     }
 
                     // Import Proficiencies
-                    if(state.BEYONDIMPORTER.config.imports.proficiencies){
+                    if(state[state_name].config.imports.proficiencies){
                         const weapons = ['Club', 'Dagger', 'Greatclub', 'Handaxe', 'Javelin', 'Light hammer', 'Mace', 'Quarterstaff', 'Sickle', 'Spear', 'Crossbow, Light', 'Dart', 'Shortbow', 'Sling', 'Battleaxe', 'Flail', 'Glaive', 'Greataxe', 'Greatsword', 'Halberd', 'Lance', 'Longsword', 'Maul', 'Morningstar', 'Pike', 'Rapier', 'Scimitar', 'Shortsword', 'Trident', 'War pick', 'Warhammer', 'Whip', 'Blowgun', 'Crossbow, Hand', 'Crossbow, Heavy', 'Longbow', 'Net'];
                         let proficiencies = getObjects(character, 'type', 'proficiency');
                         proficiencies.forEach((prof) => {
@@ -222,7 +225,7 @@
 
                     // Handle (Multi)Class Features
                     let multiclass_level = 0;
-                    if(state.BEYONDIMPORTER.config.imports.classes){
+                    if(state[state_name].config.imports.classes){
                         character.classes.forEach((current_class) => {
                             if(!current_class.isStartingClass){
                                 let multiclasses = {};
@@ -243,7 +246,7 @@
                                 setAttrs(object.id, attributes);
                             }
 
-                            if(state.BEYONDIMPORTER.config.imports.class_traits){
+                            if(state[state_name].config.imports.class_traits){
                                 current_class.features.forEach(function(trait)
                                 {
                                     if(trait.definition.name.includes('Jack')){
@@ -270,7 +273,7 @@
                             }
 
                             // Class Spells
-                            if(state.BEYONDIMPORTER.config.imports.class_spells){
+                            if(state[state_name].config.imports.class_spells){
                                 //class_spells = class_spells.concat(current_class.spells);
                                 current_class.spells.forEach((spell) => {
                                     spell.spellCastingAbility = current_class.class.spellCastingAbility
@@ -280,11 +283,11 @@
                         });
                     }
 
-                    if(state.BEYONDIMPORTER.config.imports.class_spells){
+                    if(state[state_name].config.imports.class_spells){
                         importSpells(class_spells);
                     }
 
-                    if(state.BEYONDIMPORTER.config.imports.traits){
+                    if(state[state_name].config.imports.traits){
                         // Race Features
                         character.features.racialTraits.forEach((trait) => {
 
@@ -333,7 +336,7 @@
 
                     let bonusses = getObjects(character, 'type', 'bonus');
                     let bonus_attributes = {}
-                    if(state.BEYONDIMPORTER.config.imports.bonusses){
+                    if(state[state_name].config.imports.bonusses){
                         bonusses.forEach(function(bonus){
                             if(!bonus.id.includes('spell')){
                                 switch(bonus.subType){
@@ -359,7 +362,7 @@
                     let contacts = '',
                     treasure = '',
                     otherNotes = '';
-                    if(state.BEYONDIMPORTER.config.imports.notes){
+                    if(state[state_name].config.imports.notes){
                         contacts += (character.notes.allies) ? 'ALLIES:\n' + character.notes.allies + '\n\n' : '';
                         contacts += (character.notes.organizations) ? 'ORGANIZATIONS:\n' + character.notes.organizations + '\n\n' : '';
                         contacts += (character.notes.enemies) ? 'ENEMIES:\n' + character.notes.enemies : '';
@@ -565,10 +568,10 @@
     }
 
     const sendConfigMenu = (first) => {
-        let prefix = (state.BEYONDIMPORTER.config.prefix !== '') ? state.BEYONDIMPORTER.config.prefix : '[NONE]';
+        let prefix = (state[state_name].config.prefix !== '') ? state[state_name].config.prefix : '[NONE]';
         let prefixButton = makeButton(prefix, '!beyond config prefix|?{Prefix}', buttonStyle);
-        let overwriteButton = makeButton(state.BEYONDIMPORTER.config.overwrite, '!beyond config overwrite|'+!state.BEYONDIMPORTER.config.overwrite, buttonStyle);
-        let debugButton = makeButton(state.BEYONDIMPORTER.config.debug, '!beyond config debug|'+!state.BEYONDIMPORTER.config.debug, buttonStyle);
+        let overwriteButton = makeButton(state[state_name].config.overwrite, '!beyond config overwrite|'+!state[state_name].config.overwrite, buttonStyle);
+        let debugButton = makeButton(state[state_name].config.debug, '!beyond config debug|'+!state[state_name].config.debug, buttonStyle);
 
         let listItems = [
             '<span style="float: left">Overwrite:</span> '+overwriteButton,
@@ -577,10 +580,10 @@
         ]
 
         let debug = '';
-        if(state.BEYONDIMPORTER.config.debug){
+        if(state[state_name].config.debug){
             let debugListItems = [];
-            for(let importItemName in state.BEYONDIMPORTER.config.imports){
-                let button = makeButton(state.BEYONDIMPORTER.config.imports[importItemName], '!beyond imports '+importItemName+'|'+!state.BEYONDIMPORTER.config.imports[importItemName], buttonStyle);
+            for(let importItemName in state[state_name].config.imports){
+                let button = makeButton(state[state_name].config.imports[importItemName], '!beyond imports '+importItemName+'|'+!state[state_name].config.imports[importItemName], buttonStyle);
                 debugListItems.push('<span style="float: left">'+importItemName+':</span> '+button)
             }
 
@@ -591,7 +594,7 @@
 
         let resetButton = makeButton('Reset', '!beyond reset', buttonStyle + ' width: 100%');
 
-        let title_text = (first) ? 'BeyondImporter First Time Setup' : 'BeyondImporter Config';
+        let title_text = (first) ? script_name + ' First Time Setup' : script_name + ' Config';
         let text = '<div style="'+style+'">'+makeTitle(title_text)+list+debug+'<hr><p style="font-size: 80%">You can always come back to this config by typing `!beyond config`.</p><hr>'+resetButton+'</div>';
 
         sendChat('', '/w gm ' + text);
@@ -608,7 +611,7 @@
 
         let command_list = makeList(listItems, 'list-style: none; padding: 0; margin: 0;')
         
-        let text = '<div style="'+style+'">'+makeTitle('BeyondImporter Help')+'<p>Go to a character on <a href="http://www.dndbeyond.com" target="_blank">DNDBeyond</a>, and put `/json` behind the link. Copy the full contents of this page and paste it behind the command `!beyond import`.</p><p>For more information take a look at my <a style="text-decoration: underline" href="https://github.com/RobinKuiper/Roll20APIScripts" target="_blank">Github</a> repository.</p><hr><b>Commands:</b>'+command_list+'<hr>'+configButton+'</div>';
+        let text = '<div style="'+style+'">'+makeTitle(script_name + ' Help')+'<p>Go to a character on <a href="http://www.dndbeyond.com" target="_blank">DNDBeyond</a>, and put `/json` behind the link. Copy the full contents of this page and paste it behind the command `!beyond import`.</p><p>For more information take a look at my <a style="text-decoration: underline" href="https://github.com/RobinKuiper/Roll20APIScripts" target="_blank">Github</a> repository.</p><hr><b>Commands:</b>'+command_list+'<hr>'+configButton+'</div>';
 
         sendChat('', '/w gm ' + text);
     }
@@ -771,8 +774,8 @@
     }
 
     const checkInstall = () => {
-        if(!_.has(state, 'BEYONDIMPORTER')){
-            state.BEYONDIMPORTER = state.BEYONDIMPORTER || {};
+        if(!_.has(state, state_name)){
+            state[state_name] = state[state_name] || {};
         }
         setDefaults();
     }
@@ -795,54 +798,54 @@
             }
         };
 
-        if(!state.BEYONDIMPORTER.config){
-            state.BEYONDIMPORTER.config = defaults;
+        if(!state[state_name].config){
+            state[state_name].config = defaults;
         }else{
-            if(!state.BEYONDIMPORTER.config.hasOwnProperty('overwrite')){
-                state.BEYONDIMPORTER.config.overwrite = false;
+            if(!state[state_name].config.hasOwnProperty('overwrite')){
+                state[state_name].config.overwrite = false;
             }
-            if(!state.BEYONDIMPORTER.config.hasOwnProperty('debug')){
-                state.BEYONDIMPORTER.config.debug = false;
+            if(!state[state_name].config.hasOwnProperty('debug')){
+                state[state_name].config.debug = false;
             }
-            if(!state.BEYONDIMPORTER.config.hasOwnProperty('prefix')){
-                state.BEYONDIMPORTER.config.prefix = '';
+            if(!state[state_name].config.hasOwnProperty('prefix')){
+                state[state_name].config.prefix = '';
             }
-            if(!state.BEYONDIMPORTER.config.hasOwnProperty('imports')){
-                state.BEYONDIMPORTER.config.imports = defaults.imports;
+            if(!state[state_name].config.hasOwnProperty('imports')){
+                state[state_name].config.imports = defaults.imports;
             }else{
-                if(!state.BEYONDIMPORTER.config.imports.hasOwnProperty('inventory')){
-                    state.BEYONDIMPORTER.config.imports.inventory = true;
+                if(!state[state_name].config.imports.hasOwnProperty('inventory')){
+                    state[state_name].config.imports.inventory = true;
                 }
-                if(!state.BEYONDIMPORTER.config.imports.hasOwnProperty('proficiencies')){
-                    state.BEYONDIMPORTER.config.imports.proficiencies = true;
+                if(!state[state_name].config.imports.hasOwnProperty('proficiencies')){
+                    state[state_name].config.imports.proficiencies = true;
                 }
-                if(!state.BEYONDIMPORTER.config.imports.hasOwnProperty('traits')){
-                    state.BEYONDIMPORTER.config.imports.traits = true;
+                if(!state[state_name].config.imports.hasOwnProperty('traits')){
+                    state[state_name].config.imports.traits = true;
                 }
-                if(!state.BEYONDIMPORTER.config.imports.hasOwnProperty('classes')){
-                    state.BEYONDIMPORTER.config.imports.classes = true;
+                if(!state[state_name].config.imports.hasOwnProperty('classes')){
+                    state[state_name].config.imports.classes = true;
                 }
-                if(!state.BEYONDIMPORTER.config.imports.hasOwnProperty('notes')){
-                    state.BEYONDIMPORTER.config.imports.notes = true;
+                if(!state[state_name].config.imports.hasOwnProperty('notes')){
+                    state[state_name].config.imports.notes = true;
                 }
-                if(!state.BEYONDIMPORTER.config.imports.hasOwnProperty('languages')){
-                    state.BEYONDIMPORTER.config.imports.languages = true;
+                if(!state[state_name].config.imports.hasOwnProperty('languages')){
+                    state[state_name].config.imports.languages = true;
                 }
-                if(!state.BEYONDIMPORTER.config.imports.hasOwnProperty('bonusses')){
-                    state.BEYONDIMPORTER.config.imports.bonusses = true;
+                if(!state[state_name].config.imports.hasOwnProperty('bonusses')){
+                    state[state_name].config.imports.bonusses = true;
                 }
-                if(!state.BEYONDIMPORTER.config.imports.hasOwnProperty('class_spells')){
-                    state.BEYONDIMPORTER.config.imports.class_spells = true;
+                if(!state[state_name].config.imports.hasOwnProperty('class_spells')){
+                    state[state_name].config.imports.class_spells = true;
                 }
-                if(!state.BEYONDIMPORTER.config.imports.hasOwnProperty('class_traits')){
-                    state.BEYONDIMPORTER.config.imports.class_traits = true;
+                if(!state[state_name].config.imports.hasOwnProperty('class_traits')){
+                    state[state_name].config.imports.class_traits = true;
                 }
             }
-            if(!state.BEYONDIMPORTER.config.hasOwnProperty('firsttime')){
+            if(!state[state_name].config.hasOwnProperty('firsttime')){
                 if(!reset){
                     sendConfigMenu(true);
                 }
-                state.BEYONDIMPORTER.config.firsttime = false;
+                state[state_name].config.firsttime = false;
             }
         }
     }

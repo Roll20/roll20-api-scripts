@@ -1,7 +1,7 @@
 {
     "name": "StatusInfo",
     "script": "StatusInfo.js",
-    "version": "0.1.3",
+    "version": "0.1.5",
     "previousversions": [],
     "description": "Show condition descriptions with the command !condition or when a statusmarker changes, works great together with Tokenmod.",
     "authors": "Robin Kuiper",

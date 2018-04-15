@@ -1,0 +1,13 @@
+{
+    "name": "Resizer",
+    "script": "Resizer.js",
+    "version": "0.0.6",
+    "previousversions": [],
+    "description": "Easily resize graphics and page. Also has the option to scale a page with it's entire contents, and to fit a graphic to the page (handy for maps).",
+    "authors": "Robin Kuiper",
+    "roll20userid": 1226016,
+    "useroptions": [],
+    "dependencies": {},
+    "modifies": {},
+    "conflicts": []
+}

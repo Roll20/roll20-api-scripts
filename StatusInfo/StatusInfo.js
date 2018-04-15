@@ -1,24 +1,38 @@
 /*
- * Version: 0.1.3
+ * Version: 0.1.5
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
- * Discord: Atheos#1014
+ * Discord: Atheos#1095
  * Roll20: https://app.roll20.net/users/1226016/robin-k
  * Roll20 Thread: https://app.roll20.net/forum/post/6252784/script-statusinfo
  * Github: https://github.com/RobinKuiper/Roll20APIScripts
  * Reddit: https://www.reddit.com/user/robinkuiper/
+ * 
+ * COMMANDS (with default command):
+ * !condition [CONDITION] - Shows condition.
+ * !condtion help - Shows help menu.
+ * !condition config - Shows config menu.
 */
 
-(function() {
-    // Styling for the chat responses.
-    const style = "overflow: hidden; background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;";
-    const buttonStyle = "background-color: #000; border: 1px solid #292929; border-radius: 3px; padding: 5px; color: #fff; text-align: center; float: right;"
-    const conditionStyle = "background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;";
-    const conditionButtonStyle = "text-decoration: underline; background-color: #fff; color: #000; padding: 0";
-    const listStyle = 'list-style: none; padding: 0; margin: 0;';
+var StatusInfo = StatusInfo || (function() {
+    'use strict';
+    
+    let whisper;
 
+    // Styling for the chat responses.
+    const style = "overflow: hidden; background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;",
+    buttonStyle = "background-color: #000; border: 1px solid #292929; border-radius: 3px; padding: 5px; color: #fff; text-align: center; float: right;",
+    conditionStyle = "background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;",
+    conditionButtonStyle = "text-decoration: underline; background-color: #fff; color: #000; padding: 0",
+    listStyle = 'list-style: none; padding: 0; margin: 0;',
+
+    icon_image_positions = {red:"#C91010",blue:"#1076C9",green:"#2FC910",brown:"#C97310",purple:"#9510C9",pink:"#EB75E1",yellow:"#E5EB75",dead:"X",skull:0,sleepy:34,"half-heart":68,"half-haze":102,interdiction:136,snail:170,"lightning-helix":204,spanner:238,"chained-heart":272,"chemical-bolt":306,"death-zone":340,"drink-me":374,"edge-crack":408,"ninja-mask":442,stopwatch:476,"fishing-net":510,overdrive:544,strong:578,fist:612,padlock:646,"three-leaves":680,"fluffy-wing":714,pummeled:748,tread:782,arrowed:816,aura:850,"back-pain":884,"black-flag":918,"bleeding-eye":952,"bolt-shield":986,"broken-heart":1020,cobweb:1054,"broken-shield":1088,"flying-flag":1122,radioactive:1156,trophy:1190,"broken-skull":1224,"frozen-orb":1258,"rolling-bomb":1292,"white-tower":1326,grab:1360,screaming:1394,grenade:1428,"sentry-gun":1462,"all-for-one":1496,"angel-outfit":1530,"archery-target":1564},
+
+    script_name = 'StatusInfo',
+    state_name = 'STATUSINFO',
+    
     // All the conditions with descriptions/icons.
-    const conditions = {
+    conditions = {
         blinded: {
             name: 'Blinded',
             descriptions: [
@@ -54,7 +68,7 @@
             name: 'Grappled',
             descriptions: [
                 'A grappled creature’s speed becomes 0, and it can’t benefit from any bonus to its speed.',
-                'The condition ends if the Grappler is <a style="' + conditionButtonStyle + '" href="!'+state.STATUSINFO.config.command+' incapacitated">incapacitated</a>.',
+                'The condition ends if the Grappler is <a style="' + conditionButtonStyle + '" href="!{command} incapacitated">incapacitated</a>.',
                 'The condition also ends if an effect removes the grappled creature from the reach of the Grappler or Grappling effect, such as when a creature is hurled away by the Thunderwave spell.'
             ],
             icon: 'grab'
@@ -77,7 +91,7 @@
         paralyzed: {
             name: 'Paralyzed',
             descriptions: [
-                'A paralyzed creature is <a style="' + conditionButtonStyle + '" href="!'+state.STATUSINFO.config.command+' incapacitated">incapacitated</a> and can’t move or speak.',
+                'A paralyzed creature is <a style="' + conditionButtonStyle + '" href="!{command} incapacitated">incapacitated</a> and can’t move or speak.',
                 'The creature automatically fails Strength and Dexterity saving throws.',
                 'Attack rolls against the creature have advantage.',
                 'Any Attack that hits the creature is a critical hit if the attacker is within 5 feet of the creature.'
@@ -88,7 +102,7 @@
             name: 'Petrified',
             descriptions: [
                 'A petrified creature is transformed, along with any nonmagical object it is wearing or carrying, into a solid inanimate substance (usually stone). Its weight increases by a factor of ten, and it ceases aging.',
-                'The creature is <a style="' + conditionButtonStyle + '" href="!'+state.STATUSINFO.config.command+' incapacitated">incapacitated</a>, can’t move or speak, and is unaware of its surroundings.',
+                'The creature is <a style="' + conditionButtonStyle + '" href="!{command} incapacitated">incapacitated</a>, can’t move or speak, and is unaware of its surroundings.',
                 'Attack rolls against the creature have advantage.',
                 'The creature automatically fails Strength and Dexterity saving throws.',
                 'The creature has Resistance to all damage.',
@@ -124,7 +138,7 @@
         stunned: {
             name: 'Stunned',
             descriptions: [
-                'A stunned creature is <a style="' + conditionButtonStyle + '" href="!'+state.STATUSINFO.config.command+' incapacitated">incapacitated</a>, can’t move, and can speak only falteringly.',
+                'A stunned creature is <a style="' + conditionButtonStyle + '" href="!{command} incapacitated">incapacitated</a>, can’t move, and can speak only falteringly.',
                 'The creature automatically fails Strength and Dexterity saving throws.',
                 'Attack rolls against the creature have advantage.'
             ],
@@ -133,7 +147,7 @@
         unconscious: {
             name: 'Unconscious',
             descriptions: [
-                'An unconscious creature is <a style="' + conditionButtonStyle + '" href="!'+state.STATUSINFO.config.command+' incapacitated">incapacitated</a>, can’t move or speak, and is unaware of its surroundings.',
+                'An unconscious creature is <a style="' + conditionButtonStyle + '" href="!{command} incapacitated">incapacitated</a>, can’t move or speak, and is unaware of its surroundings.',
                 'The creature drops whatever it’s holding and falls prone.',
                 'The creature automatically fails Strength and Dexterity saving throws.',
                 'Attack rolls against the creature have advantage.',
@@ -141,23 +155,9 @@
             ],
             icon: 'sleepy'
         },
-    }
+    },
 
-    let whisper;
-
-    on('ready', () => {
-        checkInstall();
-        log('StatusInfo Ready!');
-
-        // Handle condition descriptions when tokenmod changes the statusmarkers on a token.
-        if('undefined' !== typeof TokenMod && TokenMod.ObserveTokenChange){
-            TokenMod.ObserveTokenChange(function(obj,prev){
-                handleStatusmarkerChange(obj,prev);
-            });
-        }
-    });
-
-    on('chat:message', function(msg) {
+    handleInput = (msg) => {
         if (msg.type != 'api') return;
 
         // !condition Blinded
@@ -166,12 +166,11 @@
         let args = msg.content.split(' ');
         let command = args.shift().substring(1);
         let extracommand = args.shift();
-        //let conditionName = args[0];
 
-        if(command === state.STATUSINFO.config.command){
+        if(command === state[state_name].config.command){
             switch(extracommand){
                 case 'reset':
-                    state.STATUSINFO = {};
+                    state[state_name] = {};
                     setDefaults(true);
                     sendConfigMenu();
                 break;
@@ -188,23 +187,24 @@
 
                         if(key === 'prefix' && value.charAt(0) !== '_'){ value = '_' + value}
 
-                        state.STATUSINFO.config[key] = value;
+                        state[state_name].config[key] = value;
 
-                        whisper = (state.STATUSINFO.config.sendOnlyToGM) ? '/w gm ' : '';
+                        whisper = (state[state_name].config.sendOnlyToGM) ? '/w gm ' : '';
                    }
 
                    sendConfigMenu();
                 break;
 
                 default:
-                    if(conditionName = extracommand){
+                    let condition_name;
+                    if(condition_name = extracommand){
                         let condition;
                         // Check if hte condition exists in the condition object.
-                        if(condition = getConditionByName(conditionName)){
+                        if(condition = getConditionByName(condition_name)){
                             // Send it to chat.
                             sendConditionToChat(condition);
                         }else{
-                            sendChat('Error', whisper + 'Condition ' + conditionName + ' does not exist.');
+                            sendChat((whisper) ? script_name : '', whisper + 'Condition ' + condition_name + ' does not exist.');
                         }
                     }else{
                         sendHelpMenu();
@@ -212,15 +212,10 @@
                 break;
             }
         }
-    });
-    
-    // Handle condition descriptions when the statusmarkers are changed manually on a token.
-    on('change:graphic:statusmarkers', (obj, prev) => {
-        handleStatusmarkerChange(obj,prev);
-    });
+    },
 
-    const handleStatusmarkerChange = (obj, prev) => {
-        if(state.STATUSINFO.config.showDescOnStatusChange){
+    handleStatusmarkerChange = (obj, prev) => {
+        if(state[state_name].config.showDescOnStatusChange){
             // Check if the statusmarkers string is different from the previous statusmarkers string.
             if(obj.get('statusmarkers') !== prev.statusmarkers){
                 // Create arrays from the statusmarkers strings.
@@ -239,26 +234,53 @@
                 });
             }
         }
-    }
+    },
 
-    const getConditionByMarker = (marker) => {
+    getConditionByMarker = (marker) => {
         return getObjects(conditions, 'icon', marker).shift() || false;
-    }
+    },
 
-    const getConditionByName = (name) => {
+    getConditionByName = (name) => {
         return conditions[name.toLowerCase()] || false;
-    }
+    },
 
-    const sendConditionToChat = (condition) => {
+    sendConditionToChat = (condition, w) => {
         let description = '';
         condition.descriptions.forEach((desc) => {
-            description += '<p>'+desc+'</p>';
+            description += '<p>'+desc.replace('{command}', state[state_name].config.command)+'</p>';
         });
-        sendChat("", whisper + "<div style='" + conditionStyle + "'><h2>"+condition.name+"</h2>"+ description +"</div>");
-    }
+
+        let icon = '';
+
+        if(state[state_name].config.showIconInDescription){
+            let X = '';
+            let iconStyle = ''
+
+            if(icon_image_positions[condition.icon]){
+                iconStyle += 'width: 24px; height: 24px; margin-right: 5px; margin-top: 5px;';
+                
+                if(Number.isInteger(icon_image_positions[condition.icon])){
+                    iconStyle += 'background-image: url(https://roll20.net/images/statussheet.png);'
+                    iconStyle += 'background-position: -'+icon_image_positions[condition.icon]+'px 0;'
+                }else if(icon_image_positions[condition.icon] === 'X'){
+                    iconStyle += 'color: red; margin-right: 0px;';
+                    X = 'X';
+                }else{
+                    iconStyle += 'background-color: ' + icon_image_positions[condition.icon] + ';';
+                    iconStyle += 'border: 1px solid white; border-radius: 50%;'
+                }
+            }
+            
+            icon = '<div style="'+iconStyle+' display: inline-block;">'+X+'</div>';
+        }
+
+        makeAndSendMenu(description, icon+condition.name, {
+            title_tag: 'h2'
+        });
+    },
 
     //return an array of objects according to key, value, or key and value matching
-    const getObjects = (obj, key, val) => {
+    getObjects = (obj, key, val) => {
         var objects = [];
         for (var i in obj) {
             if (!obj.hasOwnProperty(i)) continue;
@@ -276,92 +298,130 @@
             }
         }
         return objects;
-    }
+    },
 
-    const sendConfigMenu = (first) => {
-        let commandButton = makeButton('!'+state.STATUSINFO.config.command, '!' + state.STATUSINFO.config.command + ' config command|?{Command (without !)}', buttonStyle)
-        let toGMButton = makeButton(state.STATUSINFO.config.sendOnlyToGM, '!' + state.STATUSINFO.config.command + ' config sendOnlyToGM|'+!state.STATUSINFO.config.sendOnlyToGM, buttonStyle)
-        let statusChangeButton = makeButton(state.STATUSINFO.config.showDescOnStatusChange, '!' + state.STATUSINFO.config.command + ' config showDescOnStatusChange|'+!state.STATUSINFO.config.showDescOnStatusChange, buttonStyle)
+    sendConfigMenu = (first) => {
+        let commandButton = makeButton('!'+state[state_name].config.command, '!' + state[state_name].config.command + ' config command|?{Command (without !)}', buttonStyle);
+        let toGMButton = makeButton(state[state_name].config.sendOnlyToGM, '!' + state[state_name].config.command + ' config sendOnlyToGM|'+!state[state_name].config.sendOnlyToGM, buttonStyle);
+        let statusChangeButton = makeButton(state[state_name].config.showDescOnStatusChange, '!' + state[state_name].config.command + ' config showDescOnStatusChange|'+!state[state_name].config.showDescOnStatusChange, buttonStyle);
+        let showIconButton = makeButton(state[state_name].config.showIconInDescription, '!' + state[state_name].config.command + ' config showIconInDescription|'+!state[state_name].config.showIconInDescription, buttonStyle);
 
         let listItems = [
             '<span style="float: left">Command:</span> ' + commandButton,
             '<span style="float: left">Only to GM:</span> '+toGMButton,
-            '<span style="float: left">Show on Status Change:</span> '+statusChangeButton
+            '<span style="float: left">Show on Status Change:</span> '+statusChangeButton,
+            '<span style="float: left">Display icon in chat:</span> '+showIconButton
         ];
 
-        let resetButton = makeButton('Reset', '!' + state.STATUSINFO.config.command + ' reset', buttonStyle + ' width: 100%');
+        let resetButton = makeButton('Reset', '!' + state[state_name].config.command + ' reset', buttonStyle + ' width: 100%');
 
-        let title_text = (first) ? 'StatusInfo First Time Setup' : 'StatusInfo Config';
-        let text = '<div style="'+style+'">'+makeTitle(title_text)+makeList(listItems, listStyle + ' overflow:hidden;', 'overflow: hidden')+'<hr><p style="font-size: 80%">You can always come back to this config by typing `!'+state.STATUSINFO.config.command+' config`.</p><hr>'+resetButton+'</div>';
+        let title_text = (first) ? script_name+' First Time Setup' : script_name+' Config';
+        let contents = makeList(listItems, listStyle + ' overflow:hidden;', 'overflow: hidden')+'<hr><p style="font-size: 80%">You can always come back to this config by typing `!'+state[state_name].config.command+' config`.</p><hr>'+resetButton;
+        makeAndSendMenu(contents, title_text)
+    },
 
-        sendChat('', '/w gm ' + text);
-    }
-
-    const sendHelpMenu = (first) => {
-        let configButton = makeButton('Config', '!' + state.STATUSINFO.config.command + ' config', buttonStyle + ' width: 100%;')
+    sendHelpMenu = (first) => {
+        let configButton = makeButton('Config', '!' + state[state_name].config.command + ' config', buttonStyle + ' width: 100%;')
 
         let listItems = [
-            '<span style="text-decoration: underline">!'+state.STATUSINFO.config.command+' help</span> - Shows this menu.',
-            '<span style="text-decoration: underline">!'+state.STATUSINFO.config.command+' config</span> - Shows the configuration menu.',
-            '<span style="text-decoration: underline">!'+state.STATUSINFO.config.command+' [CONDITION NAME]</span> - Shows the description of the condition entered.'
+            '<span style="text-decoration: underline">!'+state[state_name].config.command+' help</span> - Shows this menu.',
+            '<span style="text-decoration: underline">!'+state[state_name].config.command+' config</span> - Shows the configuration menu.',
+            '<span style="text-decoration: underline">!'+state[state_name].config.command+' [CONDITION]</span> - Shows the description of the condition entered.'
         ]
 
-        let text = '<div style="'+style+'">'+makeTitle('StatusInfo Help')+'<b>Commands:</b>'+makeList(listItems, listStyle)+'<hr>'+configButton+'</div>';
+        let contents = '<b>Commands:</b>'+makeList(listItems, listStyle)+'<hr>'+configButton;
+        makeAndSendMenu(contents, script_name+' Help')
+    },
 
-        sendChat('', '/w gm ' + text);
-    }
+    makeAndSendMenu = (contents, title, settings) => {
+        settings = (settings) ? settings : {};
+        title = (title && title != '') && makeTitle(title, (settings.title_tag) && settings.title_tag)
+        sendChat((whisper) ? script_name : '', whisper + '<div style="'+style+'">'+title+contents+'</div>');
+    },
 
-    const makeTitle = (title) => {
-        return '<h3 style="margin-bottom: 10px;">'+title+'</h3>';
-    }
+    makeTitle = (title, title_tag) => {
+        title_tag = (title_tag && title_tag !== '') ? title_tag : 'h3';
+        return '<'+title_tag+' style="margin-bottom: 10px;">'+title+'</'+title_tag+'>';
+    },
 
-    const makeButton = (title, href, style) => {
+    makeButton = (title, href, style) => {
         return '<a style="'+style+'" href="'+href+'">'+title+'</a>';
-    }
+    },
 
-    const makeList = (items, listStyle, itemStyle) => {
+    makeList = (items, listStyle, itemStyle) => {
         let list = '<ul style="'+listStyle+'">';
         items.forEach((item) => {
             list += '<li style="'+itemStyle+'">'+item+'</li>';
         });
         list += '</ul>';
         return list;
-    }
+    },
 
-    const checkInstall = () => {
-        if(!_.has(state, 'STATUSINFO')){
-            state.STATUSINFO = state.STATUSINFO || {};
+    checkInstall = () => {
+        if(!_.has(state, state_name)){
+            state[state_name] = state[state_name] || {};
         }
         setDefaults();
-    }
 
-    const setDefaults = (reset) => {
+        log(script_name + ' Ready! Command: !'+state[state_name].config.command);
+    },
+
+    registerEventHandlers = () => {
+        on('chat:message', handleInput);
+        on('change:graphic:statusmarkers', handleStatusmarkerChange);
+
+        // Handle condition descriptions when tokenmod changes the statusmarkers on a token.
+        if('undefined' !== typeof TokenMod && TokenMod.ObserveTokenChange){
+            TokenMod.ObserveTokenChange(function(obj,prev){
+                handleStatusmarkerChange(obj,prev);
+            });
+        }
+    },
+
+    setDefaults = (reset) => {
         const defaults = {
-            command: 'condition',
-            sendOnlyToGM: false,
-            showDescOnStatusChange: true
+            config: {
+                command: 'condition',
+                sendOnlyToGM: false,
+                showDescOnStatusChange: true,
+                showIconInDescription: true
+            }
         };
 
-        if(!state.STATUSINFO.config){
-            state.STATUSINFO.config = defaults;
+        if(!state[state_name].config){
+            state[state_name].config = defaults.config;
         }else{
-            if(!state.STATUSINFO.config.hasOwnProperty('command')){
-                state.STATUSINFO.config.command = defaults.command;
+            if(!state[state_name].config.hasOwnProperty('command')){
+                state[state_name].config.command = defaults.config.command;
             }
-            if(!state.STATUSINFO.config.hasOwnProperty('sendOnlyToGM')){
-                state.STATUSINFO.config.sendOnlyToGM = defaults.sendOnlyToGM;
+            if(!state[state_name].config.hasOwnProperty('sendOnlyToGM')){
+                state[state_name].config.sendOnlyToGM = defaults.config.sendOnlyToGM;
             }
-            if(!state.STATUSINFO.config.hasOwnProperty('showDescOnStatusChange')){
-                state.STATUSINFO.config.debug = defaults.showDescOnStatusChange;
+            if(!state[state_name].config.hasOwnProperty('showDescOnStatusChange')){
+                state[state_name].config.showDescOnStatusChange = defaults.config.showDescOnStatusChange;
             }
-            if(!state.STATUSINFO.config.hasOwnProperty('firsttime')){
-                if(!reset){
-                    sendConfigMenu(true);
-                }
-                state.STATUSINFO.config.firsttime = false;
+            if(!state[state_name].config.hasOwnProperty('showIconInDescription')){
+                state[state_name].config.showIconInDescription = defaults.config.showIconInDescription;
             }
         }
 
-        whisper = (state.STATUSINFO.config.sendOnlyToGM) ? '/w gm ' : '';
-    }
+        whisper = (state[state_name].config.sendOnlyToGM) ? '/w gm ' : '';
+
+        if(!state[state_name].config.hasOwnProperty('firsttime') && !reset){
+            sendConfigMenu(true);
+            state[state_name].config.firsttime = false;
+        }
+    };
+
+    return {
+        CheckInstall: checkInstall,
+        RegisterEventHandlers: registerEventHandlers
+    };
 })();
+
+on('ready', () => { 
+    'use strict';
+
+    StatusInfo.CheckInstall();
+    StatusInfo.RegisterEventHandlers();
+});

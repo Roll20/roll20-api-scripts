@@ -1,16 +1,16 @@
+## StatusInfo
+
 * Skype: RobinKuiper.eu
-* Discord: Atheos#1014
+* Discord: Atheos#1095
 * Roll20: https://app.roll20.net/users/1226016/robin-k
 * Reddit: https://www.reddit.com/user/robinkuiper/
 
 ---
 
-## StatusInfo
-
 StatusInfo works nicely together with [Tokenmod](https://app.roll20.net/forum/post/4225825/script-update-tokenmod-an-interface-to-adjusting-properties-of-a-token-from-a-macro-or-the-chat-area/?pageforid=4225825#post-4225825).
 It shows condition descriptions whenever a statusmarker is set or when the command `!condition` is used, eg: `!condition prone`.
 
-![Prone Description](https://i.imgur.com/NhASVq0.png "Prone Description")
+![Prone Description](https://i.imgur.com/UpBHjVh.png "Prone Description")
 
 ### Commands
 
