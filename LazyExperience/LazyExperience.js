@@ -1,5 +1,5 @@
 /* 
- * Version 0.1.4
+ * Version 0.1.5
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
@@ -658,6 +658,12 @@ var LazyExperience = LazyExperience || (function() {
         // Handle condition descriptions when tokenmod changes the statusmarkers on a token.
         if('undefined' !== typeof TokenMod && TokenMod.ObserveTokenChange){
             TokenMod.ObserveTokenChange(function(obj,prev){
+                handleStatusmarkerChange(obj,prev);
+            });
+        }
+
+        if('undefined' !== typeof DeathTracker && DeathTracker.ObserveTokenChange){
+            DeathTracker.ObserveTokenChange(function(obj,prev){
                 handleStatusmarkerChange(obj,prev);
             });
         }

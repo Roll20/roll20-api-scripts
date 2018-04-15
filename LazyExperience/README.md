@@ -54,5 +54,6 @@ A list of active players with there active characters is also shown here, and ex
 ![Dead](https://i.imgur.com/5bpZgHj.png "Dead")
 
 When a token is given the statusmarker you have set up in the config ("dead" by default), you will get the question if you want to add the experience to the session experience threshold.
+This works great with [TokenMod](https://app.roll20.net/forum/post/4225825/script-update-tokenmod-an-interface-to-adjusting-properties-of-a-token-from-a-macro-or-the-chat-area/?pageforid=4225825#post-4225825) statusmarker changes and with my [DeathTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/DeathTracker) script.
 
 Roll20 Thread: https://app.roll20.net/forum/post/6275681/script-lazyexperience/?pageforid=6275681#post-6275681

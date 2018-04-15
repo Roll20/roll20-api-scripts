@@ -1,0 +1,13 @@
+{
+    "name": "DeathTracker",
+    "script": "DeathTracker.js",
+    "version": "0.1.0",
+    "previousversions": [],
+    "description": "DeathTracker sets the statusmarker when a character is death or (optional) almost death. Works great together with LazyExperience",
+    "authors": "Robin Kuiper",
+    "roll20userid": 1226016,
+    "useroptions": [],
+    "dependencies": {},
+    "modifies": {},
+    "conflicts": []
+}
