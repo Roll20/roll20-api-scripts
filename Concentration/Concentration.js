@@ -1,5 +1,5 @@
 /*
- * Version 0.1.1
+ * Version 0.1.2
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1014
@@ -10,6 +10,8 @@
 
 var Concentration = Concentration || (function() {
     'use strict';
+
+    let checked = [];
 
     // Styling for the chat responses.
     const styles = {
@@ -29,6 +31,37 @@ var Concentration = Concentration || (function() {
     markers = ['blue', 'brown', 'green', 'pink', 'purple', 'red', 'yellow', '-', 'all-for-one', 'angel-outfit', 'archery-target', 'arrowed', 'aura', 'back-pain', 'black-flag', 'bleeding-eye', 'bolt-shield', 'broken-heart', 'broken-shield', 'broken-skull', 'chained-heart', 'chemical-bolt', 'cobweb', 'dead', 'death-zone', 'drink-me', 'edge-crack', 'fishing-net', 'fist', 'fluffy-wing', 'flying-flag', 'frozen-orb', 'grab', 'grenade', 'half-haze', 'half-heart', 'interdiction', 'lightning-helix', 'ninja-mask', 'overdrive', 'padlock', 'pummeled', 'radioactive', 'rolling-tomb', 'screaming', 'sentry-gun', 'skull', 'sleepy', 'snail', 'spanner',   'stopwatch','strong', 'three-leaves', 'tread', 'trophy', 'white-tower'],
 
     handleInput = (msg) => {
+        if(state[state_name].config.auto_add_concentration_marker && msg && msg.rolltemplate && msg.rolltemplate === 'spell' && (msg.content.includes("{{concentration=1}}"))){
+            let character_name = (msg.content.split("{{charname=")[1]||'').split("}}")[0];
+            let spell_name = (msg.content.split("{{name=")[1]||'').split("}}")[0];
+            let player = getObj('player', msg.playerid);
+            let characterid = findObjs({ name: character_name, _type: 'character' }).shift().get('id');                    
+            let represented_tokens = findObjs({ represents: characterid, _type: 'graphic' });
+            let marker = state[state_name].config.statusmarker;
+            let message;
+
+            let search_attributes = {
+                represents: characterid,
+                _type: 'graphic',
+                _pageid: player.get('lastpage')
+            }
+            search_attributes['status_'+marker] = true;
+            let is_concentrating = (findObjs(search_attributes).length > 0);
+
+            if(is_concentrating){
+                message = '<b>'+character_name+'</b> is concentrating already.';
+            }else{
+                represented_tokens.forEach(token => {
+                    let attributes = {};
+                    attributes['status_'+marker] = true;
+                    token.set(attributes);
+                    message = '<b>'+character_name+'</b> is now concentrating on <b>'+spell_name+'</b>.';
+                });
+            }
+
+            makeAndSendMenu(message);
+        }
+
         if (msg.type != 'api') return;
 
         // Split the message into command and argument(s)
@@ -70,13 +103,15 @@ var Concentration = Concentration || (function() {
     },
 
     handleGraphicChange = (obj, prev) => {
-        let bar = 'bar'+state[state_name].config.bar+'_value';
-        let marker = state[state_name].config.statusmarker;
+        if(checked.includes(obj.get('represents'))){ return false; }
+
+        let bar = 'bar'+state[state_name].config.bar+'_value',
+            target = state[state_name].config.send_reminder_to, 
+            marker = state[state_name].config.statusmarker;
 
         if(prev && obj.get('status_'+marker) && obj.get(bar) < prev[bar]){
             let calc_DC = Math.floor((prev[bar] - obj.get(bar))/2),
                 DC = (calc_DC > 10) ? calc_DC : 10,
-                target = state[state_name].config.send_reminder_to, 
                 chat_text = '<b>'+obj.get('name')+'</b> must make a Concentration Check - <b>DC ' + DC + '</b>.';
 
             if(target === 'character'){
@@ -88,6 +123,11 @@ var Concentration = Concentration || (function() {
 
             makeAndSendMenu(chat_text, '', target);
         }
+
+        let length = checked.push(obj.get('represents'));
+        setTimeout(() => {
+            checked.splice(length-1, 1);
+        }, 1000);
     },
 
     createWhisperName = (name) => {
@@ -109,12 +149,14 @@ var Concentration = Concentration || (function() {
         let commandButton = makeButton('!'+state[state_name].config.command, '!' + state[state_name].config.command + ' config command|?{Command (without !)}', styles.button + styles.float.right);
         let barButton = makeButton('bar ' + state[state_name].config.bar, '!' + state[state_name].config.command + ' config bar|?{Bar|Bar 1 (green),1|Bar 2 (blue),2|Bar 3 (red),3}', styles.button + styles.float.right);
         let sendToButton = makeButton(state[state_name].config.send_reminder_to, '!' + state[state_name].config.command + ' config send_reminder_to|?{Send To|Everyone,everyone|Character,character|GM,gm}', styles.button + styles.float.right);
+        let addConMarkerButton = makeButton(state[state_name].config.auto_add_concentration_marker, '!' + state[state_name].config.command + ' config auto_add_concentration_marker|'+!state[state_name].config.auto_add_concentration_marker, styles.button + styles.float.right);
 
         let listItems = [
             '<span style="'+styles.float.left+'">Command:</span> ' + commandButton,
             '<span style="'+styles.float.left+'">Statusmarker:</span> ' + markerButton,
             '<span style="'+styles.float.left+'">HP Bar:</span> ' + barButton,
             '<span style="'+styles.float.left+'">Send Reminder To:</span> ' + sendToButton,
+            '<span style="'+styles.float.left+'">Auto Add Con. Marker: <p style="font-size: 8pt;">Works only for 5e OGL Sheet.</p></span> ' + addConMarkerButton,
         ];
 
         let resetButton = makeButton('Reset', '!' + state[state_name].config.command + ' reset', styles.button + styles.fullWidth);
@@ -126,8 +168,8 @@ var Concentration = Concentration || (function() {
     },
 
     makeAndSendMenu = (contents, title, whisper) => {
-        title = (title && title != '') && makeTitle(title)
-        whisper = (whisper && whisper !== '') && '/w ' + whisper + ' ';
+        title = (title && title != '') ? makeTitle(title) : '';
+        whisper = (whisper && whisper !== '') ? '/w ' + whisper + ' ' : '';
         sendChat(script_name, whisper + '<div style="'+styles.menu+styles.overflow+'">'+title+contents+'</div>');
     },
 
@@ -150,7 +192,7 @@ var Concentration = Concentration || (function() {
 
     pre_log = (message) => {
         log('---------------------------------------------------------------------------------------------');
-        if(message === 'line'){ return; }
+        if(!message){ return; }
         log(message);
         log('---------------------------------------------------------------------------------------------');
     },
@@ -174,9 +216,10 @@ var Concentration = Concentration || (function() {
         const defaults = {
             config: {
                 command: 'concentration',
-                statusmarker: 'blue',
+                statusmarker: 'stopwatch',
                 bar: 1,
-                send_reminder_to: 'everyone' // character,gm
+                send_reminder_to: 'everyone', // character,gm,
+                auto_add_concentration_marker: true
             }
         };
 
@@ -194,6 +237,9 @@ var Concentration = Concentration || (function() {
             }
             if(!state[state_name].config.hasOwnProperty('send_reminder_to')){
                 state[state_name].config.send_reminder_to = defaults.config.send_reminder_to;
+            }
+            if(!state[state_name].config.hasOwnProperty('auto_add_concentration_marker')){
+                state[state_name].config.auto_add_concentration_marker = defaults.config.auto_add_concentration_marker;
             }
         }
 

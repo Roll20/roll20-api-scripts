@@ -7,7 +7,9 @@
 
 ---
 
-Concentration keeps track of characters concentration, and reminds to do a concentration check. 
+Concentration keeps track of characters concentration, and reminds to do a concentration check.
+
+If you use the 5e OGL character sheet, it can also automaticly add the concentrating marker when a concentrating spell is cast.
 
 ![Concentration Reminder](https://i.imgur.com/zEVJpOH.png "Concentration Reminder")
 
