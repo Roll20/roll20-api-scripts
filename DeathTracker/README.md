@@ -8,6 +8,7 @@
 ---
 
 DeathTracker sets the statusmarker when a character is death or (optional) almost death, works great together with my [LazyExperience](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/LazyExperience) script.
+__Optionally__: Set an **Unconscious** statusmarker on **Player Characters**.
 
 ![Config Menu](https://i.imgur.com/hoYGckL.png "Config Menu")
 

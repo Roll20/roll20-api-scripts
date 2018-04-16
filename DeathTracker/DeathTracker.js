@@ -1,5 +1,5 @@
 /*
- * Version 0.1.0
+ * Version 0.1.1
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1014
@@ -75,7 +75,7 @@ var DeathTracker = DeathTracker || (function() {
 
                         if(key === 'bar'){
                             //registerEventHandlers();
-                            message = '<span style="color: red">The API Library needs to be restarted for this to take effect.</span>';
+                            message = '<span style="color: red">The API Sandbox needs to be restarted for this to take effect.</span>';
                         }
                     }
 
@@ -94,18 +94,22 @@ var DeathTracker = DeathTracker || (function() {
         let bar = 'bar'+state[state_name].config.bar;
         let set_death_statusmarker = state[state_name].config.set_death_statusmarker;
         let set_half_statusmarker = state[state_name].config.set_half_statusmarker;
+        let pc_unconscious = state[state_name].config.pc_unconscious;
+
+        let deathMarker = state[state_name].config.death_statusmarker;
+        let halfMarker = state[state_name].config.half_statusmarker;
+        let unconsciousMarker = state[state_name].config.pc_unconscious_statusmarker;
+        
+        let playerid = (obj.get('controlledby') && obj.get('controlledby') !== '') ? obj.get('controlledby') : getObj('character', obj.get('represents')).get('controlledby');
 
         if(set_death_statusmarker && obj.get(bar+'_value') <= 0){
-            attributes['status_'+state[state_name].config.death_statusmarker] = true;
-            attributes['status_'+state[state_name].config.half_statusmarker] = false;
+            let marker = (pc_unconscious && !playerIsGM(playerid)) ? unconsciousMarker : deathMarker;
+            attributes['status_'+marker] = true;
+            attributes['status_'+halfMarker] = false;
         }else{
-            attributes['status_'+state[state_name].config.death_statusmarker] = false;
-
-            if(set_half_statusmarker && obj.get(bar+'_max') !== '' && obj.get(bar+'_value') <= obj.get(bar+'_max') / 2){
-                attributes['status_'+state[state_name].config.half_statusmarker] = true;
-            }else{
-                attributes['status_'+state[state_name].config.half_statusmarker] = false;
-            }
+            attributes['status_'+deathMarker] = false;
+            attributes['status_'+unconsciousMarker] = false;
+            attributes['status_'+halfMarker] = (set_half_statusmarker && obj.get(bar+'_max') !== '' && obj.get(bar+'_value') <= obj.get(bar+'_max') / 2);
         }
 
         obj.set(attributes);
@@ -124,24 +128,30 @@ var DeathTracker = DeathTracker || (function() {
         markerDropdown += '}';
 
         let death_markerButton = makeButton(state[state_name].config.death_statusmarker, '!' + state[state_name].config.command + ' config death_statusmarker|'+markerDropdown, styles.button + styles.float.right);
-        let half_markerButton = makeButton(state[state_name].config.half_markerButton, '!' + state[state_name].config.command + ' config half_markerButton|'+markerDropdown, styles.button + styles.float.right);
+        let half_markerButton = makeButton(state[state_name].config.half_statusmarker, '!' + state[state_name].config.command + ' config half_statusmarker|'+markerDropdown, styles.button + styles.float.right);
         let set_death_statusmarkerButton = makeButton(state[state_name].config.set_death_statusmarker, '!' + state[state_name].config.command + ' config set_death_statusmarker|'+!state[state_name].config.set_death_statusmarker, styles.button + styles.float.right)
         let set_half_statusmarkerButton = makeButton(state[state_name].config.set_half_statusmarker, '!' + state[state_name].config.command + ' config set_half_statusmarker|'+!state[state_name].config.set_death_statusmarker, styles.button + styles.float.right)
         let commandButton = makeButton('!'+state[state_name].config.command, '!' + state[state_name].config.command + ' config command|?{Command (without !)}', styles.button + styles.float.right)
         let barButton = makeButton('bar ' + state[state_name].config.bar, '!' + state[state_name].config.command + ' config bar|?{Bar|Bar 1 (green),1|Bar 2 (blue),2|Bar 3 (red),3}', styles.button + styles.float.right);
+        let pc_unconsciousButton = makeButton(state[state_name].config.pc_unconscious, '!' + state[state_name].config.command + ' config pc_unconscious|'+!state[state_name].config.pc_unconscious, styles.button + styles.float.right);
+        let pc_unconscious_markerButton = makeButton(state[state_name].config.pc_unconscious_statusmarker, '!' + state[state_name].config.command + ' config pc_unconscious_statusmarker|'+markerDropdown, styles.button + styles.float.right);
 
         let listItems = [
             '<span style="'+styles.float.left+'">Command:</span> ' + commandButton,
             '<span style="'+styles.float.left+'">HP Bar:</span> ' + barButton,
             '<span style="'+styles.float.left+'">Set Dead Statusmarker:</span> ' + set_death_statusmarkerButton,
             '<span style="'+styles.float.left+'">Set Half HP Statusmarker:</span> ' + set_half_statusmarkerButton,
+            '<span style="'+styles.float.left+'">Unconscious if PC: <p style="font-size: 8pt">Unconscious if PC.</p></span> ' + pc_unconsciousButton,
         ];
 
         if(state[state_name].config.set_death_statusmarker){
-            listItems.push('<span style="'+styles.float.left+'">Dead Statusmarker:</span> ' + death_markerButton)
+            listItems.push('<span style="'+styles.float.left+'">Dead Marker:</span> ' + death_markerButton)
         }
         if(state[state_name].config.set_half_statusmarker){
-            listItems.push('<span style="'+styles.float.left+'">Half HP Statusmarker:</span> ' + half_markerButton)
+            listItems.push('<span style="'+styles.float.left+'">Half HP Marker:</span> ' + half_markerButton)
+        }
+        if(state[state_name].config.pc_unconscious){
+            listItems.push('<span style="'+styles.float.left+'">Unconscious Marker:</span> ' + pc_unconscious_markerButton)
         }
 
         let resetButton = makeButton('Reset', '!' + state[state_name].config.command + ' reset', styles.button + styles.fullWidth);
@@ -217,7 +227,9 @@ var DeathTracker = DeathTracker || (function() {
                 set_death_statusmarker: true,
                 set_half_statusmarker: true,
                 bar: 1,
-                firsttime: (reset) ? false : true
+                firsttime: (reset) ? false : true,
+                pc_unconscious: true,
+                pc_unconscious_statusmarker: 'sleepy'
             }
         };
 
@@ -241,6 +253,12 @@ var DeathTracker = DeathTracker || (function() {
             }
             if(!state[state_name].config.hasOwnProperty('bar')){
                 state[state_name].config.bar = defaults.config.bar;
+            }
+            if(!state[state_name].config.hasOwnProperty('pc_unconscious')){
+                state[state_name].config.pc_unconscious = defaults.config.pc_unconscious;
+            }
+            if(!state[state_name].config.hasOwnProperty('pc_unconscious_statusmarker')){
+                state[state_name].config.pc_unconscious_statusmarker = defaults.config.pc_unconscious_statusmarker;
             }
         }
 
