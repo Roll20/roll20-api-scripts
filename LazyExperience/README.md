@@ -17,7 +17,7 @@ The first time you add this script you get a first time config menu in chat.
 ![Config Menu](https://i.imgur.com/sx8JMgU.png "Config Menu")
 
 * **Command** - The command you want to use with this script, eg. !xp.
-* **Marker** - The "dead" marker you want to use to give an option to reward experience when something dies.
+* **Marker** - The `dead` marker you want to use to give an option to reward experience when something dies.
 * **Player XP Attribute** - The player's experience attribute in the sheet you are using, this is defaulted to the 5e OGL sheet (experience).
 * **NPC XP Attribute** - The npc's experience attribute in the sheet you are using, this is defaulted to the 5e OGL sheet (npc_xp).
 * **Extra Players** - This can be used to add to the experience divisors (eg. for npc under no one's control, etc).
@@ -53,7 +53,7 @@ A list of active players with there active characters is also shown here, and ex
 #### Statusmarker Dead
 ![Dead](https://i.imgur.com/5bpZgHj.png "Dead")
 
-When a token is given the statusmarker you have set up in the config ("dead" by default), you will get the question if you want to add the experience to the session experience threshold.
+When a token is given the statusmarker you have set up in the config (`dead` by default), you will get the question if you want to add the experience to the session experience threshold.
 This works great with [TokenMod](https://app.roll20.net/forum/post/4225825/script-update-tokenmod-an-interface-to-adjusting-properties-of-a-token-from-a-macro-or-the-chat-area/?pageforid=4225825#post-4225825) statusmarker changes and with my [DeathTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/DeathTracker) script.
 
 Roll20 Thread: https://app.roll20.net/forum/post/6275681/script-lazyexperience/?pageforid=6275681#post-6275681

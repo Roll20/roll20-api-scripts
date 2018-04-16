@@ -3,11 +3,18 @@
     "script": "BeyondImporter.js",
     "version": "0.1.8",
     "previousversions": [],
-    "description": "Import DNDBeyond characters in to Roll20 (5eOGL or Shaped sheet). Command !beyond.",
+    "description": "Beyond Importer let's you import a character sheet from DNDBeyond into Roll20.\nThere are 2 versions of the Beyond Importer, one for the [5e Shaped Sheet](https://bitbucket.org/mlenser/5eshaped/wiki/Home) and one for the [5e OGL sheet](https://wiki.roll20.net/5th_Edition_OGL_by_Roll20).\n\n**Both version work the same.**\n\n### How it works\nGo to the character page on DNDBeyond and put '/json' after the url, eg:\n\n```https://www.dndbeyond.com/profile/Atheos/characters/1307201/json```\n\nCopy the entire content of that page, and go to Roll20.\nIn the Roll20 chat type the command `!beyond import` and paste the copied contents after that, eg:\n\n```!beyond import {'character':{'id':1307201,'name':'Qroohk','player':'Atheos','age':null,'hair':null,'eyes':null,'skin':null,'height':null,'weight':null,'size':'Medium','alignment':'Lawful Good' ..........```\n\nYour character will be imported now!\n\n### Commands\n\n* **!beyond help** - Shows the help menu.\n* **!beyond config** - Shows the config menu.\n* **!beyond import [CHARACTER JSON]** - Imports a character from the DNDBeyond json.\n\n![Config Menu](https://i.imgur.com/WLb76Uy.png 'Config Menu')",
     "authors": "Robin Kuiper",
-    "roll20userid": 1226016,
+    "roll20userid": "1226016",
     "useroptions": [],
     "dependencies": {},
-    "modifies": {},
+    "modifies": {
+        "state.BEYONDIMPORTER": "read,write",
+        "attribute.name": "read,write",
+        "attribute.current": "read,write",
+        "attribute.characterid": "read,write",
+        "attribute.max": "read,write",
+        "character.name": "read,write"
+    },
     "conflicts": []
 }

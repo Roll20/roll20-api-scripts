@@ -50,7 +50,7 @@
     let jack = '0';
 
     const script_name = 'BeyondImporter';
-    const state_name = 'BeyondImporter';
+    const state_name = 'BEYONDIMPORTER';
 
     on('ready',()=>{ 
         checkInstall();

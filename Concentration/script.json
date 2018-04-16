@@ -3,11 +3,13 @@
     "script": "Concentration.js",
     "version": "0.1.1",
     "previousversions": [],
-    "description": "Keep track of concentration and reminds to do a concentration check.",
+    "description": "Concentration keeps track of characters concentration, and reminds to do a concentration check.\n\n![Concentration Reminder](https://i.imgur.com/zEVJpOH.png \"Concentration Reminder\")\n\n### Commands\n\n* **!concentration** - Shows the config menu.\n\n![Config Menu](https://i.imgur.com/1rB3ezY.png \"Config Menu\")",
     "authors": "Robin Kuiper",
-    "roll20userid": 1226016,
+    "roll20userid": "1226016",
     "useroptions": [],
     "dependencies": {},
-    "modifies": {},
+    "modifies": {
+        "state.CONCENTRATION": "read,write"
+    },
     "conflicts": []
 }
