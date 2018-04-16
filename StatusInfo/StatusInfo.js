@@ -1,5 +1,5 @@
 /*
- * Version: 0.1.5
+ * Version: 0.1.6
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
@@ -17,7 +17,7 @@
 var StatusInfo = StatusInfo || (function() {
     'use strict';
     
-    let whisper;
+    let whisper, handled = [];
 
     // Styling for the chat responses.
     const style = "overflow: hidden; background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;",
@@ -215,6 +215,8 @@ var StatusInfo = StatusInfo || (function() {
     },
 
     handleStatusmarkerChange = (obj, prev) => {
+        if(handled.includes(obj.get('represents'))){ return; }
+
         if(state[state_name].config.showDescOnStatusChange){
             // Check if the statusmarkers string is different from the previous statusmarkers string.
             if(obj.get('statusmarkers') !== prev.statusmarkers){
@@ -234,6 +236,11 @@ var StatusInfo = StatusInfo || (function() {
                 });
             }
         }
+
+        let length = handled.push(obj.get('represents'));
+        setTimeout(() => {
+            handled.splice(length-1, 1);
+        }, 1000);
     },
 
     getConditionByMarker = (marker) => {
@@ -373,6 +380,12 @@ var StatusInfo = StatusInfo || (function() {
         // Handle condition descriptions when tokenmod changes the statusmarkers on a token.
         if('undefined' !== typeof TokenMod && TokenMod.ObserveTokenChange){
             TokenMod.ObserveTokenChange(function(obj,prev){
+                handleStatusmarkerChange(obj,prev);
+            });
+        }
+
+        if('undefined' !== typeof DeathTracker && DeathTracker.ObserveTokenChange){
+            DeathTracker.ObserveTokenChange(function(obj,prev){
                 handleStatusmarkerChange(obj,prev);
             });
         }

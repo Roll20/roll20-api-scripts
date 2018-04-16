@@ -7,7 +7,7 @@
 
 ---
 
-StatusInfo works nicely together with [Tokenmod](https://app.roll20.net/forum/post/4225825/script-update-tokenmod-an-interface-to-adjusting-properties-of-a-token-from-a-macro-or-the-chat-area/?pageforid=4225825#post-4225825).
+StatusInfo works nicely together with [Tokenmod](https://app.roll20.net/forum/post/4225825/script-update-tokenmod-an-interface-to-adjusting-properties-of-a-token-from-a-macro-or-the-chat-area/?pageforid=4225825#post-4225825) and my own [DeathTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/DeathTracker) script.
 It shows condition descriptions whenever a statusmarker is set or when the command `!condition` is used, eg: `!condition prone`.
 
 ![Prone Description](https://i.imgur.com/UpBHjVh.png "Prone Description")
