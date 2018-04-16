@@ -1,5 +1,5 @@
 /*
- * Version 0.0.4
+ * Version 0.0.5
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1014
@@ -44,20 +44,24 @@ var Drunk = Drunk || (function() {
         if (command == state[state_name].config.command) {
             switch(extracommand){
                 case 'help':
-                    sendHelpMenu();
+                    if(playerIsGM(msg.playerid)){ sendHelpMenu(); }
                 break;
 
                 case 'menu':
-                    sendMenu();
+                    if(playerIsGM(msg.playerid)){ sendMenu(); }
                 break;
 
                 case 'reset':
+                    if(!playerIsGM(msg.playerid)){ return; }
+
                     state[state_name] = {};
                     setDefaults(true);
                     sendConfigMenu();
                 break;
 
                 case 'config':
+                    if(!playerIsGM(msg.playerid)){ return; }
+
                     if(args.length > 0){
                         let setting = args.shift().split('|');
                         let key = setting.shift();
@@ -70,6 +74,8 @@ var Drunk = Drunk || (function() {
                 break;
 
                 case 'add': case 'remove':
+                    if(!playerIsGM(msg.playerid)){ return; }
+
                     characterid = args.shift();
                     let level = (extracommand === 'remove') ? -args.shift() || -1 : args.shift() || 1;
                     updateInebrationLevel(characterid, level, (new_level, old_level) => {
@@ -99,7 +105,7 @@ var Drunk = Drunk || (function() {
                 break;
 
                 default:
-                    sendMenu();
+                    if(playerIsGM(msg.playerid)){ sendMenu(); }
                 break;
             }
         }

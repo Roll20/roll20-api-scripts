@@ -1,5 +1,5 @@
 /*
- * Version: 0.1.6
+ * Version: 0.1.7
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
@@ -158,7 +158,7 @@ var StatusInfo = StatusInfo || (function() {
     },
 
     handleInput = (msg) => {
-        if (msg.type != 'api') return;
+        if (msg.type != 'api' || !playerIsGM(msg.playerid)) return;
 
         // !condition Blinded
 

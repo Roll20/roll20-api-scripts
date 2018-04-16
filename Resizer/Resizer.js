@@ -1,5 +1,5 @@
 /*
- * Version 0.0.7
+ * Version 0.0.8
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1014
@@ -38,7 +38,7 @@ var Resizer = Resizer || (function() {
     // Make map same size as page
 
     handleInput = (msg) => {
-        if (msg.type != 'api') return;
+        if (msg.type != 'api' || !playerIsGM(msg.playerid)) return;
 
         // Split the message into command and argument(s)
         let args = msg.content.split(' ');

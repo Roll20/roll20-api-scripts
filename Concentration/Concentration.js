@@ -1,5 +1,5 @@
 /*
- * Version 0.1.2
+ * Version 0.1.3
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1014
@@ -62,7 +62,7 @@ var Concentration = Concentration || (function() {
             makeAndSendMenu(message);
         }
 
-        if (msg.type != 'api') return;
+        if (msg.type != 'api' || !playerIsGM(msg.playerid)) return;
 
         // Split the message into command and argument(s)
         let args = msg.content.split(' ');
