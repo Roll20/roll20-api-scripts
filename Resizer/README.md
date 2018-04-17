@@ -19,11 +19,12 @@ Resizer lets you easily resize graphics and pages with a simple menu.
 
 * **!resizer scale [amount] [up/down]** - Scale the entire page (with everything on it) by amount and up or down, eg. `!resizer scale 2 up`.
 * **!resizer fit [?keep_ratio]** - Makes the selected graphic fit the page (handy for maps), add `keep_ratio` to the end to keep the graphics ratio.
+* **!resizer center [?horizontal] [?vertical]** - Center the selected graphic(s), add `h`, `hor` or `horizontal` for horizontal and `v`, `ver` or `vertical` for vertical centering.
 
 * **!resizer help** - Shows the help menu.
 * **!resizer config** - Shows the config menu.
 * **!resizer menu** - Shows a menu to easily resize graphics/pages.
 
-![Resizer Menu](https://i.imgur.com/pRAuPPm.png "Resizer Menu")
+![Resizer Menu](https://i.imgur.com/yiQIchr.png "Resizer Menu")
 
 Roll20 Thread: https://app.roll20.net/forum/post/6285519/script-resizer/

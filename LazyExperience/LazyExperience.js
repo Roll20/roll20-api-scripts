@@ -1,5 +1,5 @@
 /* 
- * Version 0.1.6
+ * Version 0.1.7
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
@@ -162,6 +162,11 @@ var LazyExperience = LazyExperience || (function() {
                             let player = state[state_name].players[playerid];
                             if(player.active){
                                 player.characters.forEach((character, i) => {
+                                    if(!character){
+                                        state[state_name].players[playerid].characters.splice(i, 1);
+                                        return;
+                                    }
+
                                     if(character.active){
                                         let total_experience = character.experience+session_experience
                                         let send_character_text = 'You get '+character.experience+' extra experience, bringing your total this session to <b>' + total_experience + '</b> experience.';
@@ -329,6 +334,11 @@ var LazyExperience = LazyExperience || (function() {
         for(let playerid in state[state_name].players){
             let player = state[state_name].players[playerid];
             player.characters.forEach((character, i) => {
+                if(!character){
+                    state[state_name].players[playerid].characters.splice(i, 1);
+                    return;
+                }
+
                 state[state_name].players[playerid].characters[i].experience = 0;
             })
         }
@@ -370,7 +380,12 @@ var LazyExperience = LazyExperience || (function() {
                 let characterListItems = [];
                 let characterDropdown = '?{Character';
                 let characterIds = [];
-                player.characters.forEach(character => {
+                player.characters.forEach((character, i) => {
+                    if(!character){
+                        state[state_name].players[playerid].characters.splice(i, 1);
+                        return;
+                    }
+
                     if(character.active){
                         let name = handleLongString(character.name);
                         characterListItems.push(name + ': ' + character.experience);
@@ -459,6 +474,10 @@ var LazyExperience = LazyExperience || (function() {
         let characterListItems = [];
         let characterDropdown = '?{Character';
         player.characters.forEach((character) => {
+            if(!character){
+                state[state_name].players[playerid].characters.splice(i, 1);
+                return;
+            }
             let mainButton = makeButton((character.active) ? 'Active' : 'Not Active', '!' + state[state_name].config.command + ' setcharactive ' + character.id + ' ' + playerid + ' ' + !character.active, buttonStyle);
             let main = (character.main) ? '<b style="float: right">Main</b>' : mainButton;
             characterListItems.push('<span style="float: left;">'+handleLongString(character.name)+'<br><span style="font-size: 8pt">Experience: '+character.experience+'</span></span> ' + main);

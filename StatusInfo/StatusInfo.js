@@ -1,5 +1,5 @@
 /*
- * Version: 0.1.7
+ * Version: 0.1.9
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
@@ -79,6 +79,14 @@ var StatusInfo = StatusInfo || (function() {
                 'An incapacitated creature can’t take actions or reactions.'
             ],
             icon: 'interdiction'
+        },
+        inspiration: {
+            name: 'Inspiration',
+            descriptions: [
+                'If you have inspiration, you can expend it when you make an Attack roll, saving throw, or ability check. Spending your inspiration gives you advantage on that roll.',
+                'Additionally, if you have inspiration, you can reward another player for good roleplaying, clever thinking, or simply doing something exciting in the game. When another player character does something that really contributes to the story in a fun and interesting way, you can give up your inspiration to give that character inspiration.'
+            ],
+            icon: 'black-flag'
         },
         invisibility: {
             name: 'Invisibility',
@@ -215,9 +223,11 @@ var StatusInfo = StatusInfo || (function() {
     },
 
     handleStatusmarkerChange = (obj, prev) => {
-        if(handled.includes(obj.get('represents'))){ return; }
+        if(handled.includes(obj.get('represents')) || !prev || !obj){ return; }
 
-        if(state[state_name].config.showDescOnStatusChange){
+        prev.statusmarkers = (typeof prev.get === 'function') ? prev.get('statusmarkers') : prev.statusmarkers;
+
+        if(state[state_name].config.showDescOnStatusChange && prev.statusmarkers){
             // Check if the statusmarkers string is different from the previous statusmarkers string.
             if(obj.get('statusmarkers') !== prev.statusmarkers){
                 // Create arrays from the statusmarkers strings.
@@ -386,6 +396,12 @@ var StatusInfo = StatusInfo || (function() {
 
         if('undefined' !== typeof DeathTracker && DeathTracker.ObserveTokenChange){
             DeathTracker.ObserveTokenChange(function(obj,prev){
+                handleStatusmarkerChange(obj,prev);
+            });
+        }
+
+        if('undefined' !== typeof InspirationTracker && InspirationTracker.ObserveTokenChange){
+            InspirationTracker.ObserveTokenChange(function(obj,prev){
                 handleStatusmarkerChange(obj,prev);
             });
         }

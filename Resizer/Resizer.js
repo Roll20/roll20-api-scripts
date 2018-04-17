@@ -1,5 +1,5 @@
 /*
- * Version 0.0.8
+ * Version 0.0.9
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1014
@@ -200,6 +200,28 @@ var Resizer = Resizer || (function() {
                     sendMenu(chat_text);
                 break;
 
+                case 'center':
+                    let horizontal = (args.includes('horizontal') || args.includes('h') || args.includes('hor'));
+                    let vertical = (args.includes('vertical') || args.includes('v') || args.includes('ver'));
+
+                    if((!horizontal && !vertical) || !msg.selected) return;
+
+                    msg.selected.forEach(token => {
+                        if(obj = getObj(token._type, token._id)){
+                            let page;
+                            if(page = getObj('page', obj.get('pageid'))){
+                                let attributes = {};
+                                if(horizontal){ attributes.left = page.get('width')*70/2; }
+                                if(vertical){ attributes.top = page.get('height')*70/2; }
+                                obj.set(attributes);
+
+                                chat_text = 'The graphic(s) are centered';
+                                sendMenu(chat_text);
+                            }
+                        }
+                    });
+                break;
+
                 // !resizer
                 // !resizer (with selected graphics)
                 // !resizer 50 50
@@ -274,10 +296,11 @@ var Resizer = Resizer || (function() {
         let resizePageButton = makeButton('Resize Page', '!' + state[state_name].config.command + ' page ?{Width} ?{Height} ?{Units or Pixels?|Pixels,pixels|Units,units}', styles.button + styles.fullWidth);
         let scaleButton = makeButton('Scale Entire Page', '!' + state[state_name].config.command + ' scale ?{Amount} ?{Choose|Up, up|Down, down}', styles.button + styles.fullWidth);
         let fitButton = makeButton('Make selected fit to page', '!' + state[state_name].config.command + ' fit ?{Ratio|Keep,keep_ratio|Deny, deny}', styles.button + styles.fullWidth);
+        let centerButton = makeButton('Center selected Graphics', '!' + state[state_name].config.command + ' center ?{How?|Horizontal,h|Vertical,v|Horizontal&Vertical,h v}', styles.button + styles.fullWidth);
 
         message = (message) ? '<hr><p>'+message+'</p>' : '';
 
-        let buttons = getGraphicSizeButton+resizeGraphicButton+fitButton+'<hr>'+getPageSizeButton+resizePageButton+'<hr>'+scaleButton;
+        let buttons = getGraphicSizeButton+resizeGraphicButton+centerButton+fitButton+'<hr>'+getPageSizeButton+resizePageButton+'<hr>'+scaleButton;
 
         makeAndSendMenu(buttons+message, script_name + ' Menu', 'gm');
     },
