@@ -5,8 +5,8 @@
 var BounceTokens = BounceTokens || (function(){
     'use strict';
 
-	var version = '0.1.2',
-        lastUpdate = 1523205020,
+	var version = '0.1.1',
+        lastUpdate = 1523203024,
 		schemaVersion = 0.1,
 		stepRate = 200,
 		defaultSecondsPerCycle = 20,
@@ -110,7 +110,6 @@ var BounceTokens = BounceTokens || (function(){
                 ids=[...new Set([...(msg.selected||[]).map((s)=>s._id), ...ids])];
                 ids.map((id)=>getObj('graphic',id))
                     .filter((o)=>undefined !== o)
-                    .filter((o)=>state.BounceTokens.bouncers.hasOwnProperty(o.id))
                     .forEach((o)=>{
                         o.set('top',state.BounceTokens.bouncers[o.id].top);
 						delete state.BounceTokens.bouncers[o.id];
