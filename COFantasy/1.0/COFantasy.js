@@ -1681,6 +1681,19 @@ var COFantasy = COFantasy || function() {
           }
           options.dmgCoef++; //Par défaut, incrémente de 1
           return;
+        case "incrCritCoef":
+          options.critCoef = (options.critCoef || 1);
+          if (cmd.length > 1) {
+            var incrCritCoef = parseInt(cmd[1]);
+            if (isNaN(incrCritCoef)) {
+              error("L'option --incrCritCoef attend un entier", cmd);
+              return;
+            }
+            options.critCoef += incrCritCoef;
+            return;
+          }
+          options.critCoef++; //Par défaut, incrémente de 1
+          return;
         default:
           sendChat("COF", "Argument de !cof-attack '" + arg + "' non reconnu");
       }
@@ -4419,7 +4432,7 @@ var COFantasy = COFantasy || function() {
   // displayRes est optionnel, et peut avoir 2 arguments
   // - un texte affichant le jet de dégâts
   // - la valeur finale des dégâts infligés
-  // crit est un booléen, il augmente de 1 le coefficient (option.dmgCoef) et active certains effets
+  // crit est un booléen, il augmente de 1 (ou options.critCoef) le coefficient (option.dmgCoef) et active certains effets
   function dealDamage(target, dmg, otherDmg, evt, crit, options, explications, displayRes) {
     if (options === undefined) options = {};
     var expliquer = function(msg) {
@@ -4443,7 +4456,10 @@ var COFantasy = COFantasy || function() {
       return 0;
     }
     var dmgCoef = options.dmgCoef || 1;
-    if (crit) dmgCoef++;
+    if (crit) {
+      if (options.critCoef) dmgCoef += options.critCoef;
+      else dmgCoef++;
+    }
     otherDmg = otherDmg || [];
     var dmgDisplay = dmg.display;
     var dmgTotal = dmg.total;
@@ -7726,7 +7742,8 @@ var COFantasy = COFantasy || function() {
         if (charAttributeAsInt(charId, 'armureDeVent', 0) > 0)
           addLineToFramedDisplay(display, "  mais bénéficie de son armure de vent");
       }
-      if (charAttributeAsInt(charId, 'DEFBOUCLIERON', 1) === 0)
+      if (charAttributeAsInt(charId, 'DEFBOUCLIERON', 1) === 0 && 
+        charAttributeAsInt(charId,'DEFBOUCLIER', 0))
         addLineToFramedDisplay(display, "Ne porte pas son bouclier");
       if (attributeAsBool(perso, 'etatExsangue')) {
         addLineToFramedDisplay(display, "est exsangue");
@@ -10113,6 +10130,17 @@ var COFantasy = COFantasy || function() {
         break;
       default:
         //TODO : augmenter les dés en cas de tempete de mana intense
+        if (options.tempeteDeManaIntense) {
+        var firstDicePart = argSoin.match(/[1-9][0-9]*d\d+/i);
+          if (firstDicePart && firstDicePart.length > 0) {
+            var fdp = firstDicePart[0];
+            nbDes = parseInt(fdp) + options.tempeteDeManaIntense;
+            argSoin = 
+              argSoin.replace(fdp, nbDes + fdp.substring(fdp.search(/d/i)));
+          } else {
+            argSoin = '(' + argSoin + ')*' + (1+options.tempeteDeManaIntense);
+          }
+        }
         soins = "[[" + argSoin + "]]";
     }
     if (options.tempeteDeMana && soigneur) {

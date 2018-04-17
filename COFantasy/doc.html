@@ -349,6 +349,7 @@
                   <li><code>--m2d20</code> : lance 2 d20 pour l'attaque et garde le meilleur</li>
                   <li><code>--avecd12</code> : lance un d12 au lieu du d20 pour le jet d'attaque. L'attaque est impossible si l'attaquant est déjà affaibli.</li>
                   <li><code>--incrDmgCoef <i>n</i></code> : augmente le coefficient des dégâts de base de 1. Les dégâts de base comprennent les dés de dommage de l'arme (ou du sort), plus tous les bonus constants. Le coefficient par défaut est de 1, et une réussite critique augmente ce coefficient de 1.</li>
+                  <li><code>--incrCritCoef <i>n</i></code> : augmente le coefficient des dégâts critiques de 1.</li>
                   <li><code>--affute</code> : augmente de 1 les chances de crit et +1d6 aux DM des crit.</li>
                   <li><code>--tirDeBarrage</code> : ignore la charge, multiplie les DM par 2 et message pour undo si la cible bouge.</li>
                   <li><code>--enflamme</code> : enflamme la cible, lui infligeant 1d6 DM par tour. Les flammes s'éteindent sur un 1 ou 2. Si l'option <code>--puissant</code> est donnée en conjonction, les DM augmentent de 1.</li>
@@ -359,7 +360,7 @@
                   <li><code>--feinte</code> : L'attaque ne fait pas de dégât, mais un bonus de +5 en attaque est donné sur les attaques du tour suivant sur cette cible (par celui qui a fait la feinte), et +2d6 DM si l'attaque fictive était un succès.</li>
                   <li><code>--rate</code>, <code>--touche</code>, <code>--critique</code>, <code>--echecCritique</code> : options pour tricher : le résultat des dés donne toujours le résultat voulu.</li>
                   <li><code>--ligne</code> : l'attaque porte sur toutes les cibles à portée, entre l'attaquant et le token ciblé. Si le token ciblé est plus proche que la portée de l'attaque, les tokens derrière le token ciblé sont aussi visés. Pour permettre de viser un point quelconque, on peut utiliser un personnage dédié avec un maximum de 0 pv. À chaque fois qu'un token représentant ce personnage est utilisé comme cible de <code>--ligne</code>, le token est enlevé de la carte.</li>
-                  <li><code>--disque <i>r</i></code> : l'attaque porte sur toutes les cibles dans le disque de centre le token ciblé et de rayon <i>r</i>. Comme pour <code>--ligne</code>, on peut utiliser un token cible qui sera supprimé après l'attaque.</li>
+                  <li><code>--disque <i>r</i></code> : l'attaque porte sur toutes les cibles dans le disque de centre le token ciblé et de rayon <i>r</i>. Comme pour <code>--ligne</code>, on peut utiliser un token cible qui sera supprimé après l'attaque. À noter que l'attaquant lui-même peut prendre des dégâts, sauf si l'attaque a une portée nulle et que l'attaquant se cible lui-même (attaque centrée sur le lanceur).</li>
                   <li><code>--cone <i>angle</i></code> cible toutes les créatures dans un cône de sommet l'attaquant, d'angle <i>angle</i> degrés (90 degrés par défaut), et séparé en deux par le segment joignant l'attaquant et le token visé.</li>
                   <li><code>--target <i>id</i></code> : ajoute une cible à l'attaque (s'ajoute à la cible principale et aux options d'aoe).</li>
                 </ul>
@@ -1129,7 +1130,7 @@
                 <h4 class="text-secondary">Voie du contrôle corporel</h4>
                 <ol>
                   <li><strong>Proprioception</strong> :  </li>
-                  <li><strong>Trance de régénération</strong> : </li>
+                  <li><strong>Transe de régénération</strong> : <code>!cof-soin @{selected|token_id} 1d6+[[@{selected|NIVEAU} + @{selected|CHA}]] --limiteParJour 1</code>. Il faut tirer les 2d6 pour savoir la durée de la transe. Si vous autorisez les options de tempête de mana pour ce profil, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,}</code></li>
                 </ol>
                 <h4 class="text-secondary">Voie de l'empathie</h4>
                 <ol>
@@ -1140,6 +1141,7 @@
                 <ol>
                   <li><strong>Manipulation à distance</strong> : pour les attaques à distance, le plus simple est d'utiliser une autre attaque en utilisant le score d'attaque magique et le bon modificateur de DMs.</li>
                   <li><strong>Champ de protection</strong> : </li>
+                  <li><strong>Onde de choc</strong> : faire une attaque magique de contact (portée non définie ou nulle), de dégâts 2d6 + Mod. de CHA. Si le lbale de cette attaque est <i>L</i>, la macro pour l'utiliser sera <code>!cof-attack @{selected|token_id} @{selected|token_id} <i>L</i> --auto --disque ?{Portée (max 10) ?} --etat renverse --save FOR [[10+@{selected|CHA}]] --mana 1 --targetFx explode-magic</code>. Si vous souhaitez utiliser les options de tempête de mana pour ce profil, rajoutez <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,}</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de la télépathie</h4>
                 <ol>
