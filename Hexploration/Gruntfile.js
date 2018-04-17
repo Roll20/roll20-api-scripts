@@ -7,7 +7,10 @@ module.exports = function(grunt) {
       dist: {
         src: [
           'src/index.js',
+          'src/Chat.js',
           'src/HexagonTile.js',
+          'src/Locations.js',
+          'src/Menus.js',
           'src/State.js',
           'src/main.js'
         ],
@@ -20,6 +23,7 @@ module.exports = function(grunt) {
       },
       options: {
         esversion: 6,
+        loopfunc: true,
         globals: {
           DefaultTrapTheme: true,
           D20TrapTheme: true,
