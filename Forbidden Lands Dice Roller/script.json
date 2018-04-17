@@ -1,8 +1,8 @@
 {
 	"name": "Forbidden Lands Year-Zero Die Roller",
 	"script": "FORLDieRoller.js",
-	"version": "1.0",
-	"previousversions": ["none"],
+	"version": "1.1",
+	"previousversions": ["1.0"],
 	"description": "This is a Die Roller used for Forbidden Lands dice rolls. It is used in combination with the Forbidden Lands Character Sheet (forthcoming in April 2018) but can be used independently of each other.  Note this is based on the current alpha rules and the core MYZ system; it is subject to change.",
 	"authors": "Barry Snyder",
 	"roll20userid": "399162",
