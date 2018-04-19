@@ -1,0 +1,13 @@
+{
+    "name": "HeroTracker",
+    "script": "herotracker.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "Written to support the Hero System (Champions).  Adds and removes tokens to and from the initiative tracker according to the character's speed, conforming to the Hero System Speed / Segment chart.",
+    "authors": "Darren",
+    "roll20userid": "1920548",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": [],
+    "conflicts": []
+}
