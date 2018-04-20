@@ -1,5 +1,5 @@
 /*
- * Version 0.1.8
+ * Version 0.1.9
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
@@ -10,35 +10,9 @@
 */
 
 (function() {
-    const _ABILITY = {
-        'STR': 'strength',
-        'DEX': 'dexterity',
-        'CON': 'constitution',
-        'INT': 'intelligence',
-        'WIS': 'wisdom',
-        'CHA': 'charisma'
-    }
+    const _ABILITY = {'STR': 'strength', 'DEX': 'dexterity', 'CON': 'constitution', 'INT': 'intelligence', 'WIS': 'wisdom', 'CHA': 'charisma'}
 
-    const skills = [
-        'acrobatics',
-        'animal_handling',
-        'arcana',
-        'athletics',
-        'deception',
-        'history',
-        'insight',
-        'intimidation',
-        'investigation',
-        'medicine',
-        'nature',
-        'perception',
-        'performance',
-        'persuasion',
-        'religion',
-        'sleight_of_hand',
-        'stealth',
-        'survival'
-    ]
+    const skills = ['acrobatics', 'animal_handling', 'arcana', 'athletics', 'deception', 'history', 'insight', 'intimidation', 'investigation', 'medicine', 'nature', 'perception', 'performance', 'persuasion', 'religion', 'sleight_of_hand', 'stealth', 'survival']
 
     let class_spells = [];
     let object;
@@ -55,7 +29,7 @@
     on('ready',()=>{ 
         checkInstall();
         log(script_name + ' Ready! Command: !'+state[state_name].config.command);
-        if(state[state_name].config.debug){ sendChat('', script_name + ' Ready!'); }
+        if(state[state_name].config.debug){ sendChat('', script_name + ' Ready!', null, {noarchive:true}); }
     });
 
     on('chat:message', function(msg) {
@@ -212,7 +186,7 @@
                             attributes["repeating_proficiencies_"+row+"_name"] = prof.friendlySubtypeName;
                             attributes["repeating_proficiencies_"+row+"_prof_type"] = (prof.subType.includes('weapon') || weapons.includes(prof.friendlySubtypeName)) ? 'WEAPON' : (prof.subType.includes('armor') || prof.subType.includes('shield')) ? 'ARMOR' : 'OTHER';
 
-                            let skill = prof.subType.replace('-', '_');
+                            let skill = prof.subType.replace(/-/g, '_');
                             if(skills.includes(skill)){
                                 attributes[skill + '_prof'] = '(@{pb}*@{'+skill+'_type})';
                             }
@@ -334,6 +308,26 @@
                         }
                     }
 
+                    getObjects(character, 'type', 'expertise').forEach(expertise => {
+                        let attributes = {}
+                        let type = expertise.subType.replace(/-/g, '_')
+                        pre_log(type);
+                        if(skills.includes(type)){
+                            attributes[type + '_type'] = "2";
+                        }
+
+                        if(expertise.subType === 'thieves-tools'){
+                            var row = generateRowID();
+
+                            let attributes = {}
+                            attributes["repeating_proficiencies_"+row+"_name"] = expertise.friendlySubtypeName;
+                            attributes["repeating_proficiencies_"+row+"_prof_type"] = 'OTHER';
+                            attributes["repeating_proficiencies_"+row+"_options-flag"] = '0';
+                        }
+
+                        setAttrs(object.id, attributes);
+                    });
+
                     let bonusses = getObjects(character, 'type', 'bonus');
                     let bonus_attributes = {}
                     if(state[state_name].config.imports.bonusses){
@@ -350,8 +344,9 @@
                                     break;
 
                                     default:
-                                        if(skills.includes(bonus.subType)){
-                                            bonus_attributes[bonus.subType + '_flat'] = bonus.value;
+                                        let type = bonus.subType.replace(/-/g, '_')
+                                        if(skills.includes(type)){
+                                            bonus_attributes[type + '_flat'] = bonus.value;
                                         }
                                     break;
                                 }
@@ -446,9 +441,9 @@
                     });
 
                     if(class_spells.length > 15){
-                        sendChat('', '<div style="'+style+'">Import of <b>' + character.name + '</b> is almost ready.<br><p>There are some more spells than expected, they will be imported over time.</p></div>');
+                        sendChat('', '<div style="'+style+'">Import of <b>' + character.name + '</b> is almost ready.<br><p>There are some more spells than expected, they will be imported over time.</p></div>', null, {noarchive:true});
                     }else{
-                        sendChat('', '<div style="'+style+'">Import of <b>' + character.name + '</b> is ready.</div>');
+                        sendChat('', '<div style="'+style+'">Import of <b>' + character.name + '</b> is ready.</div>', null, {noarchive:true});
                     }
                 break;
 
@@ -597,7 +592,7 @@
         let title_text = (first) ? script_name + ' First Time Setup' : script_name + ' Config';
         let text = '<div style="'+style+'">'+makeTitle(title_text)+list+debug+'<hr><p style="font-size: 80%">You can always come back to this config by typing `!beyond config`.</p><hr>'+resetButton+'</div>';
 
-        sendChat('', '/w gm ' + text);
+        sendChat('', '/w gm ' + text, null, {noarchive:true});
     }
 
     const sendHelpMenu = (first) => {
@@ -613,7 +608,7 @@
         
         let text = '<div style="'+style+'">'+makeTitle(script_name + ' Help')+'<p>Go to a character on <a href="http://www.dndbeyond.com" target="_blank">DNDBeyond</a>, and put `/json` behind the link. Copy the full contents of this page and paste it behind the command `!beyond import`.</p><p>For more information take a look at my <a style="text-decoration: underline" href="https://github.com/RobinKuiper/Roll20APIScripts" target="_blank">Github</a> repository.</p><hr><b>Commands:</b>'+command_list+'<hr>'+configButton+'</div>';
 
-        sendChat('', '/w gm ' + text);
+        sendChat('', '/w gm ' + text, null, {noarchive:true});
     }
 
     const makeTitle = (title) => {

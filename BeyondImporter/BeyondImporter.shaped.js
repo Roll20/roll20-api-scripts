@@ -76,7 +76,7 @@
     on('ready',()=>{ 
         checkInstall();
         log(script_name + ' Ready! Command: !'+state[state_name].config.command);
-        if(state[state_name].config.debug){ sendChat('', script_name + ' Ready!'); }
+        if(state[state_name].config.debug){ sendChat('', script_name + ' Ready!', null, {noarchive:true}); }
     });
 
     on('chat:message', function(msg) {
@@ -413,7 +413,7 @@
             max: hp
         });
 
-        sendChat('', '<div style="'+style+'">Import of <b>' + character.name + '</b> is ready.</div>');
+        sendChat('', '<div style="'+style+'">Import of <b>' + character.name + '</b> is ready.</div>', null, {noarchive:true});
     }
 
     const createRepeating = (section, id, fields, object) => {
@@ -538,7 +538,7 @@
         let title_text = (first) ? script_name + ' First Time Setup' : script_name + ' Config';
         let text = '<div style="'+style+'">'+makeTitle(title_text)+makeList(listItems, listStyle + ' overflow:hidden;', 'overflow: hidden')+'<hr><p style="font-size: 80%">You can always come back to this config by typing `!'+state[state_name].config.command+' config`.</p><hr>'+resetButton+'</div>';
 
-        sendChat('', '/w gm ' + text);
+        sendChat('', '/w gm ' + text, null, {noarchive:true});
     }
 
     const sendHelpMenu = (first) => {
@@ -552,7 +552,7 @@
 
         let text = '<div style="'+style+'">'+makeTitle(script_name + ' Help')+'<b>Commands:</b>'+makeList(listItems, listStyle)+'<hr>'+configButton+'</div>';
 
-        sendChat('', '/w gm ' + text);
+        sendChat('', '/w gm ' + text, null, {noarchive:true});
     }
 
     const makeTitle = (title) => {
