@@ -138,10 +138,10 @@
 								</ul>
                 <li data-toggle="collapse" data-target="#autres_capacites"><a href="#Autres_capacités">Autres capacités</a></li>
 								<ul id="autres_capacites" class="collapse">
-									<li><a class="text-info" href="#Capacités_raciales">Voies et capacités raciales</a></li>
+									<li><a class="text-info" href="#Capacites_raciales">Voies et capacités raciales</a></li>
 									<li><a class="text-info" href="#Prestige">Voies de prestige</a></li>
 									<li><a class="text-info" href="#Créatures">Voies de créature</a></li>
-									<li><a class="text-info" href="#Capacités_diverses">Capacités diverses</a></li>
+									<li><a class="text-info" href="#Capacites_diverses">Capacités diverses</a></li>
                 </ul>
 							</ol>
 						</div>
@@ -213,9 +213,9 @@
                         <figcaption>Exemple du Turn Order avec Aura</figcaption>
                       </li>
                       <li>
-                        <p>Si une "Abilities" dont le nom est <code>#TurnAction#</code> existe pour le personnage dont c'est le tour, celle-ci sera prise en compte et le joueur qui controle le personnage recevra un chuchottement qui contiendra l'ensemble des %Ability et #Macro cliquables de <code>#TurnAction</code>. Pour voir ce message en dehors du changement d'initiative, ou pour le MJ, on peut utiliser <code>!cof-turn-action</code> en sélectionnant le token (un bon candidat pour une macro de type token action).</p>
+                        <p>Si une "Abilities" dont le nom est <code>#Actions#</code> existe pour le personnage dont c'est le tour, celle-ci sera prise en compte et le joueur qui controle le personnage recevra un chuchottement qui contiendra l'ensemble des %Ability et #Macro cliquables de <code>#Actions#</code>. Par défaut, cela contient toujours une action pour attendre et une pour se défendre. Pour voir ce message en dehors du changement d'initiative, ou pour le MJ, on peut utiliser <code>!cof-turn-action</code> en sélectionnant le token (un bon candidat pour une macro de type token action).</p>
                         <p><img class="img-fluid" src="https://i.imgur.com/tTfFoPW.png" data-href="https://i.imgur.com/tTfFoPW.png"></p>
-                        <figcaption>Exemple d'une macro #TurnAction#</figcaption>
+                        <figcaption>Exemple d'une macro #Actions# (ou #TurnAction#)</figcaption>
                       </li>
                     </ul>
                   </div>
@@ -317,6 +317,7 @@
                       <li><code>crit</code> : vrai si l'attaque est un critique.</li>
                     </ul>
                   </li>
+                  <li><code>--tempsRecharge <i>effet</i> <i>duree</i></code> : l'attaque n'est possible que si l'effet est inactif sur l'attaquant, et de plus active l'effet sur l'attaquant pour la durée indiquée si l'attaque est possible.</li>
                   <li><code>--etat <i>e</i></code>: si l'attaque touche, la cible passe dans l'état <i>e</i>.</li>
                   <li><code>--etatSi <i>e condition</i></code> : si l'attaque touche et la <a href="#conditions"><i>condition</i></a> est validée, la cible passe dans l'état <i>e</i>.</li>
                   <li><code>--effet <i>e duree</i></code> : ajoute à la cible l'effet temporaire <i>e</i> pour la duree spécifiée. Pour que cela soit automatiquement mis à jour, il faut utiliser le turn tracker. Noter que l'argument de durée peut être omis pour certains effets, comme ceux qui par définition durent tout le combat.</li>
@@ -394,6 +395,7 @@
                   <li><code>!cof-degainer <i>L</i></code> où <i>L</i> est le label d'une des attaques sur la fiche de personnage : cela fait rengainer l'arme en main et dégainer l'arme correspondant à cette attaque. Si le label ne correspond à aucune attaque (ou qu'on ne donne pas de label), l'action fait rengainer l'arme en main.</li>
                   <li>Si on attaque avec <code>!cof-attack <i>tok1 tok2 L</i></code>, et que l'attaque de label <code><i>L</i></code> contient le mot <code>arme</code> dans le champ <code>SPÉCIAL</code>, alors on considère qu'on doit dégainer cette arme pour pouvoir l'utiliser. Le script envoie le message et considère ensuite l'arme comme étant en main, au MJ de vérifier que le joueur dispose bien d'une action de mouvement pour le faire.</li>
                 </ul>
+                Dans tous les cas, si le personnage dégaine une arme à 2 mains (déterminé en fonction du nom de l'arme ou du champs "divers" de l'arme), le script fait enlever le bouclier, et il le fait remettre si on passe d'une arme à 2 mains à une arme à 1 main.
                 </p>
               </div>
               <h4 class="text-secondary">Dégâts directs (sans attaquant, ou aire d'effet trop complexe pour !cof-attack) : <code>!cof-dmg <i>dm</i></code></h4>
@@ -978,7 +980,7 @@
                 </ol>
                 <h4 class="text-secondary">Voie de la magie universelle</h4>
                 <ol>
-                  <li><strong>Lumière</strong> : Le MJ peut donner les caractérisiques de lumières à un token(ou utiliser le script <code>torch</code>)</li>
+                  <li><strong>Lumière</strong> : Le MJ peut donner les caractérisiques de lumières à un token(ou utiliser le script <code>torch</code>, dans ce cas, j'utilise la macro <code>!torch 20 10 yes @{target|token_id}</code>)</li>
                   <li><strong>Détection de la magie</strong> : pas de support</li>
                   <li><strong>Invisibilité</strong> : utiliser <code>!cof-set-state invisible true --mana 1 --message se rend invisible ([[1d6+@{selected|INT}]] minutes)</code>. Pour les ennemis, mettre dans le layer gm, pour les joueurs, ne pas les cibler. Reste le problème des AOE...</li>
                   <li><strong>Vol</strong> : pas de support autre que <code>!cof-lancer-sort 2 vole ([[1d6+@{selected|INT}]] minutes)</code></li>
@@ -1130,7 +1132,7 @@
                 <h4 class="text-secondary">Voie du contrôle corporel</h4>
                 <ol>
                   <li><strong>Proprioception</strong> :  </li>
-                  <li><strong>Transe de régénération</strong> : <code>!cof-soin @{selected|token_id} 1d6+[[@{selected|NIVEAU} + @{selected|CHA}]] --limiteParJour 1</code>. Il faut tirer les 2d6 pour savoir la durée de la transe. Si vous autorisez les options de tempête de mana pour ce profil, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,}</code></li>
+                  <li><strong>Transe de régénération</strong> : <code>!cof-soin @{selected|token_id} 1d6+[[@{selected|NIVEAU} + @{selected|CHA}]] --limiteParJour <i>rang</i></code>. Il faut tirer les 2d6 pour savoir la durée de la transe. Si vous autorisez les options de tempête de mana pour ce profil, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,}</code></li>
                 </ol>
                 <h4 class="text-secondary">Voie de l'empathie</h4>
                 <ol>
@@ -1231,6 +1233,8 @@
                   <li><strong>Doigts agiles</strong> : utiliser des compétences sur la fiche de personnage</li>
                   <li><strong>Détecter les pièges</strong> : faire le jet avec <code>!cof-jet INT 10</code></li>
                   <li><strong>Croc-en-jambe</strong> : ajouter un attribut <code>crocEnJambe</code> de valeur <code>true</code>. Pour distinguer les adversaires quadrupèdes qui ne seraient pas connues du script, lui ajouter un attribut <code>quadrupede</code>, de valeur <code>true</code>.</li>
+                  <li><strong>Attaque paralysante</strong> : lancer une des attaques de contact du voleur en rajoutant les options <code>--limiteParCombat 1 attaqueParalysante --pasDeDmg --effet paralysieRoublard [[1d4]]</code>.</li>
+                  <li><strong>Attaque en traître</strong> : </li>
                 </ol>
                 <h4 class="text-secondary">Voie du spadassin</h4>
                 <ol>
@@ -1243,14 +1247,14 @@
             </div>
             <h2 class="text-primary" id="Autres_capacités">5. Autres capacités</h2>
             <div class="decalage">
-              <h3 class="text-info" id="Capacités_raciales">Voies et capacités raciales</h3>
+              <h3 class="text-info" id="Capacites_raciales">Voies et capacités raciales</h3>
               <div class="decalage">
                 Quelques capacités communes à plusieurs races :
                 <ul>
                   <li id="Vision_dans_le_noir"><strong>Vision dans le noir</strong> : cela peut se gérer au niveau du token, ou alors le script peut faire les modifications pour vous, si vous avez un attribut <code>visionDansLeNoir</code> de valeur le nombre de metres à laquelle le personnage peut voir dans le noir.</li>
                 </ul>
                 <h4 class="text-secondary">Âme forgée</h4>
-                <p>Pour les capacités raciales, un attribut <code>vieArtificielle</code> à <code>true</code> permet de diviser tous les soins par 2. Pour la résistance aux effets de drains utiliser un attribut <code>RD_drain</code> de valeur 5. Pour l'immunité aux poisons et maladies, utiliser un attribut <code>nonVivant</code> de valeur <code>true</code>. Enfin pour le saignement, ajouter un attribut <code>immuniteSaignement</code>, de valeur true.</p>
+                <p>Pour les capacités raciales, un attribut <code>vieArtificielle</code> à <code>true</code> permet de diviser tous les soins par 2. Pour la résistance aux effets de drains utiliser un attribut <code>RD_drain</code> de valeur 5. Pour la résistance au feu et au froid, un attribut <code>RD_feu</code> et un autre <code>RD_froid</code>, de valeur 5. Pour l'immunité aux poisons et maladies, utiliser un attribut <code>creatureArtificielle</code> de valeur <code>true</code>. Enfin pour le saignement, ajouter un attribut <code>immuniteSaignement</code>, de valeur true.</p>
                 <ol>
                   <li><strong>Main lourde</strong> : ajuster les DM, et enlever l'option <code>--tempDmg</code> pour l'attaque à mains nues.</li>
                 </ol>
@@ -1329,6 +1333,10 @@
                   <li><strong>Balayage</strong> : faire une version de l'attaque avec <code>--target @{target|Target2|token_id}</code></li>
                 </ol>
                 <h4 class="text-secondary">Voie des créatures élémentaires</h4>
+                <p style="margin-top:0px; margin-bottom:0px">Ajouter un attribut <code>immunite_<i>type</i></code> de valeur <code>true</code>, où <i>type</i> est le type de la créature élémentaire (feu, acide, froid, ...)</p>
+                <ol>
+                  <li><strong>Souffle</strong> : faire une attaque avec le bon nombre de d6 en DM, de portée la portée du souffle, à utiliser avec les options <code>--auto --cone --<i>type</i> --tempsRecharge rechargeSouffle [[1d4]] --psave DEX 13</code>, où <i>type</i> est le type de la créature (feu, acide, frois, ...). Ne pas oublier la possibilité d'utiliser un token cible temporaire pour le cone.</li>
+                </ol>
                 <h4 class="text-secondary">Voie des créatures magique</h4>
                 <ol>
                   <li><strong>Réduction des DM</strong> : Ajouter un attribut <code>RD_sauf_<i>genre</i></code>, où <i>genre</i> peut être <code>magique</code> ou un des types d'attaque (feu, acide, poison, etc...).</li>
@@ -1361,12 +1369,15 @@
                   <li><strong>Attaque mortelle</strong> : donner la possibilité de faire une attaque avec les options <code>--bonusAttaque 5 --sournoise <i>rang</i></code>.</li>
                 </ol>
               </div>
-              <h3 class="text-info" id="Capacités_diverses">Autres capacités</h3>
+              <h3 class="text-info" id="Capacites_diverses">Autres capacités</h3>
               <div class="decalage">
                 <ul>
                   <li><strong>Baroud d'honneur</strong> : ajouter un attribut <code>baroudHonneur</code> (=true) (Quand le personnage arrive à 0 PV, il ne meurt pas jusqu'à sa prochaine attaque, qui se fait avec un bonus de +5)</li>
                   <li><strong>Créature non-vivante</strong> : ajouter un attribut <code>nonVivant</code></li>
                   <li><strong>Force de géant</strong> : <code>!cof-effet-temp forceDeGeant 10</code>. Le bonus est de 2 par défaut, mais peut être modifié en utilisant l'option <code>--valeur</code>.</li>
+                  <li><strong>Huile de fort assaut</strong> : <code>!cof-effet-temp dmgArme(<i>L</i>) 10 --valeur 1d6</code> où <i>L</i> est le label de l'arme qu'on veut enduire d'huile de fort assaut.</li>
+                  <li><strong>Hurlement</strong> : Pour les chiens infernaux, <code>!cof-peur [[10+?{Nombre de chiens?}]] [[2d4]] --portee 50 --equipe Joueurs</code>, et pour les fantômes, <code>!cof-peur 12 [[1d6]] --portee 10 --equipe Joueurs</code>. Pour l'instant, pas de prise en compte de l'immunité au hurlement apès avoir réussi son jet de SAG.</li>
+                  <li><strong>Immunité aux armes</strong> : ajouter un attribut <code>immuniteAuxArmes</code> avec comme valeur <code>true</code></li>
                   <li>
                     <strong>Poison</strong> : pour enduire une arme de label <i>L</i> de poison, utiliser <code>!cof-enduire-poison <i>L type force save</i></code>. Pour l'instant, <i>type</i> ne peut être que <code>rapide</code>, et <i>force</i> est une expression pour les dégâts (typiquement, <code>2d6</code> pour un poison rapide). <i>save</i> est la difficulté du jet de CON pour résister au poison. On peut rajouter deux arguments optionnels :
                     <ul>
@@ -1375,8 +1386,6 @@
                     </ul>
                   </li>
                   <li><strong>Putréfaction</strong> : ajouter à l'attaque <code>--effet putrefaction 5 --save CON 14</code> (pour les données des momies)</li>
-                  <li><strong>Huile de fort assaut</strong> : <code>!cof-effet-temp dmgArme(<i>L</i>) 10 --valeur 1d6</code> où <i>L</i> est le label de l'arme qu'on veut enduire d'huile de fort assaut.</li>
-                  <li><strong>Immunité aux armes</strong> : ajouter un attribut <code>immuniteAuxArmes</code> avec comme valeur <code>true</code></li>
                   <li><strong>Sans esprit</strong> : ajouter un attribut <code>sansEsprit</code> (=true) permet la réussite automatique des jets de résistance basés sur INT, SAG ou CHA.</li>
                 </ul>
               </div>
