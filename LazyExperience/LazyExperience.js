@@ -1,5 +1,5 @@
 /* 
- * Version 0.1.7
+ * Version 0.1.11
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
@@ -261,16 +261,17 @@ var LazyExperience = LazyExperience || (function() {
 
     getPlayerCharacters = (playerid) => {
         return findObjs({
-            _type: 'character',
-            controlledby: playerid,
-            inplayerjournals: playerid
+            _type: 'character'
+        }).filter(character => {
+            let controlling = character.get('controlledby').split(',');
+            return (controlling.includes(playerid) || controlling.includes('all'));
         }).map(character => {
             return {
                 name: character.get('name'),
                 id: character.get('id'),
                 active: true,
                 experience: 0
-            }
+            };
         });
     },
 
@@ -293,7 +294,7 @@ var LazyExperience = LazyExperience || (function() {
 
         // Give XP Directly?
         if(state[state_name].config.directxp){
-            pp_experience = (characterid) ? experience : experience/getExperienceSharers();
+            let pp_experience = (characterid) ? experience : experience/getExperienceSharers();
             let send_message_text = (characterid) ? 'You have been awarded ' + pp_experience + ' experience' : 'Everyone is awarded '+pp_experience+' experience.';
 
             // Update Sheet with new experience?
@@ -473,7 +474,7 @@ var LazyExperience = LazyExperience || (function() {
 
         let characterListItems = [];
         let characterDropdown = '?{Character';
-        player.characters.forEach((character) => {
+        player.characters.forEach((character, i) => {
             if(!character){
                 state[state_name].players[playerid].characters.splice(i, 1);
                 return;
@@ -515,7 +516,7 @@ var LazyExperience = LazyExperience || (function() {
     makeAndSendMenu = (contents, title, whisper) => {
         title = (title && title != '') ? makeTitle(title) : '';
         whisper = (whisper && whisper !== '') ? '/w ' + whisper + ' ' : '';
-        sendChat(script_name, whisper + '<div style="'+style+'">'+title+contents+'</div>');
+        sendChat(script_name, whisper + '<div style="'+style+'">'+title+contents+'</div>', null, {noarchive:true});
     },
 
     makeTitle = (title) => {
@@ -550,7 +551,7 @@ var LazyExperience = LazyExperience || (function() {
         refreshPlayers();
 
         log(script_name + ' Ready! Command: !'+state[state_name].config.command);
-        if(state[state_name].config.debug){ sendChat('', script_name + ' Ready!'); }
+        if(state[state_name].config.debug){ sendChat('', script_name + ' Ready!', null, {noarchive:true}); }
     },
 
     getPlayerById = (playerid) => {
