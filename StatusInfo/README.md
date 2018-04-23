@@ -4,8 +4,13 @@
 * Discord: Atheos#1095
 * Roll20: https://app.roll20.net/users/1226016/robin-k
 * Reddit: https://www.reddit.com/user/robinkuiper/
+* Patreon: https://www.patreon.com/robinkuiper
 
 ---
+
+```
+LATEST UPDATE: It now allows you to create and edit conditions, export/import the config, and add/remove/toggle condition(s) to/from token(s), see below.
+```
 
 StatusInfo works nicely together with [Tokenmod](https://app.roll20.net/forum/post/4225825/script-update-tokenmod-an-interface-to-adjusting-properties-of-a-token-from-a-macro-or-the-chat-area/?pageforid=4225825#post-4225825) and my own [DeathTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/DeathTracker) and [InspirationTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/InspirationTracker) scripts.
 It shows condition descriptions whenever a statusmarker is set or when the command `!condition` is used, eg: `!condition prone`.
@@ -18,6 +23,30 @@ It shows condition descriptions whenever a statusmarker is set or when the comma
 * **!condition config** - Shows the config menu.
 * **!condition [CONDITION NAME]** - Shows the description of the condition entered.
 
+* **!condition add [Condition Name(s)]** - Adds the condition(s) given to the selected token(s), eg. `!condition add prone paralyzed`.
+* **!condition remove [Condition Name(s)]** - Removes the condition(s) given from the selected token(s).
+* **!condition toggle [Condition Name(s)]** - Toggles the condition(s) given from the selected token(s).
+
+* **!condition config export** - Exports the config (with conditions).
+* **!condition config import [Exported Content]** - Imports the config (with conditions).
+
+### Config
+![Config](https://i.imgur.com/y9DlZB6.png "Config")
+
+* **Command** - The command used by this script, eg. `!condition`.
+* **Only to GM** - Send the condition info only to the gm.
+* **Show on Status Change** - Send the condition info when the statusmarkers change.
+* **Display icon in chat** - Shows the icon next to the condition title in the chat condition descriptions.
+* **Conditions Config** - Configure the conditions you want to use.
+
+![Config Conditions](https://i.imgur.com/Ssb4EcW.png "Config Conditions")
+* **Change** - Change the condition settings.
+* **Add Condition** - Add a new condition.
+
+![Blinded Config](https://i.imgur.com/ENFgQmF.png "Blinded Config")
+`Basic HTML is allowed in the description.`
+
+### Default Statusmarkers
 It uses the following condition/statusmarker list by default (but you can always change this in the code):
 
 * Blinded, bleeding-eye
@@ -35,6 +64,7 @@ It uses the following condition/statusmarker list by default (but you can always
 * Stunned, fist
 * Unconscious, sleepy
 
+### Tokenmod Macro
 I run this with the following Tokenmod macro:
 
 ```
