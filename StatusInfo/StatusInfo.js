@@ -306,8 +306,8 @@ var StatusInfo = StatusInfo || (function() {
         let X = '';
         let iconStyle = ''
 
-        //if(typeof icon_image_positions[icon] === 'undefined') return false;
-        if(!icon_image_positions[icon]) return false;
+        if(typeof icon_image_positions[icon] === 'undefined') return false;
+        //if(!icon_image_positions[icon]) return false;
 
         log(icon_image_positions[icon])
         
