@@ -441,3 +441,35 @@ fengshuiinitiative:
 powercards:
 - PowerCards
 - Utility
+
+herotracker:
+- HeroTracker
+- System Toolbox
+
+statusinfo:
+- StatusInfo
+- Utility
+
+drunk:
+- Drunk
+- System Toolbox
+
+deathtracker:
+- DeathTracker
+- Utility
+
+concentration:
+- Concentration
+- System Toolbox
+
+resizer:
+- Resizer
+- Utility
+
+lazyexperience:
+- LazyExperience
+- System Toolbox
+
+inspirationtrack:
+- InspirationTracker
+- System Toolbox
