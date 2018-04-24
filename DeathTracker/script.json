@@ -1,0 +1,17 @@
+{
+    "name": "DeathTracker",
+    "script": "DeathTracker.js",
+    "version": "0.1.4",
+    "previousversions": [],
+    "description": "DeathTracker sets the statusmarker when a character is death or (optional) almost death, works great together with my [LazyExperience](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/LazyExperience) script.\n\n__Optionally__: Set an **Unconscious** statusmarker on **Player Characters**.\n\n![Config Menu](https://i.imgur.com/s4CBW9K.png \"Config Menu\")\n\n### Commands\n\n* **!dead config** - Shows the config menu.",
+    "authors": "Robin Kuiper",
+    "roll20userid": "1226016",
+    "useroptions": [],
+    "dependencies": {},
+    "modifies": {
+        "state.DEATHTRACKER": "read,write",
+        "attribute.name": "read,write",
+        "attribute.current": "read,write"
+    },
+    "conflicts": []
+}
