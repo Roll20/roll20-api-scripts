@@ -1759,7 +1759,7 @@ on('chat:message', function(msg) {
                 if (randomInteger(100) < gi){
                     statslist[i].setWithWorker({current: sprefix[i] + 1});
                     if (gi > 100){
-                        if (randomInteger(100) < gi){
+                        if (randomInteger(100) < (gi - 100)){
                             Lvstr += '<p style = "margin-bottom: 0px;"> + 2 to ' + slist[i] + "!</p>";
                             statslist[i].setWithWorker({current: sprefix[i] + 2});
                         } else{
@@ -2628,7 +2628,7 @@ on('chat:message', function(msg) {
                 if (randomInteger(100) < gi){
                     statslist[i].setWithWorker({current: sprefix[i] + 1});
                     if (gi > 100){
-                        if (randomInteger(100) < gi){
+                        if (randomInteger(100) < (gi - 100)){
                             Lvstr += '<p style = "margin-bottom: 0px;"> + 2 to ' + slist[i] + "!</p>";
                             statslist[i].setWithWorker({current: sprefix[i] + 2});
                         } else{
