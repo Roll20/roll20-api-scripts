@@ -1,0 +1,301 @@
+// Github:   
+// By:       Kastion
+// Contact:  https://app.roll20.net/users/3173313/kastion
+
+
+var PatrolNPC = PatrolNPC || (function(){
+    'use strict';
+    var thisInterval = [],
+        stepstaken = [];
+    
+    var ch = function (c) {
+		var entities = {
+			'<' : 'lt',
+			'>' : 'gt',
+			"'" : '#39',
+			'@' : '#64',
+			'{' : '#123',
+			'|' : '#124',
+			'}' : '#125',
+			'[' : '#91',
+			']' : '#93',
+			'"' : 'quot',
+			'-' : 'mdash',
+			' ' : 'nbsp'
+		};
+
+		if(_.has(entities,c) ){
+			return ('&'+entities[c]+';');
+		}
+		return '';
+	},
+
+	showHelp = function() {
+        sendChat('PatrolNPC Script',
+            '/w gm '+
+'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
+	'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'+
+		'PatrolNPC'+
+		'<div style="clear: both"></div>'+
+	'</div>'+
+	'<div style="padding-left:10px;margin-bottom:3px;">'+
+		'<p>Allows the GM to toggle patrolling of selected tokens</p>'+
+	'</div>'+
+	'<b>Commands</b>'+
+	'<div style="padding-left:10px;"><b><span style="font-family: serif;">!patrol-npc --delay ...</span></b>'+
+		'<div style="padding-left: 10px;padding-right:20px; font-size:12px;">'+
+			'Specify the Global Delay in Seconds for how long between each Patrolling NPCs movement. (Must be a number between 1 and 60) (Defaults to 3 seconds)'+
+		'</div>'+
+	'</div>'+
+	'<div style="padding-left:10px;"><b><span style="font-family: serif;">!patrol-npc --unit-size ...</span></b>'+
+		'<div style="padding-left: 10px;padding-right:20px; font-size:12px;">'+
+			'Specify the Unit Size of your maps (How big one square is in pixels) (Defaults to 70 pixels).'+
+		'</div>'+
+	'</div>'+	
+	'<div style="padding-left:10px;"><b><span style="font-family: serif;">!patrol-npc --help</span></b>'+
+		'<div style="padding-left: 10px;padding-right:20px; font-size:12px;">'+
+			'Bring up this help menu.'+
+		'</div>'+
+	'</div>'+		
+	'<b>How to Setup a Patrol NPC</b>'+
+		'<div style="padding-left: 10px;padding-right:20px; font-size:12px;">'+
+		    '- Select a Token and toggle the Green Status Marker on it<br>'+
+			'- Open up a Tokens Settings by double-clicking it<br>'+
+			'- Add the following to GM Notes seperated by commas: direction, number of squares, speed (optional)<br>'+
+			'- Valid Directions: North, South, East, West<br>'+
+			'- Valid Number of Squares: 1 to 100<br>'+
+			'- Valid Speed(Optional): 10 to 100 (This is a percentile)<br>'+
+		'</div>'+
+	'<b>GM Notes Example</b>'+
+		'<div style="padding-left: 10px;padding-right:20px">'+
+			'North,5,75<br><br>'+
+		'</div>'+	
+		'<div style="padding-left: 10px;padding-right:20px; font-size:12px;">'+
+			'The above example will make the token move 5 squares north, then back south 5 squares and repeat this at a speed of 75% '+
+			'(If our unit size is the default 70 pixels, that means it will move 52 pixels each cycle of the global delay (default 3 seconds) '+
+			'meaning it will move roughly 7 times to move 5 squares to the north.)'+
+		'</div>'+			
+'</div>'
+            );
+    },
+    
+	handleInput = function(msg) {
+        
+		if ( "api" !== msg.type || !playerIsGM(msg.playerid) ) {
+			return;
+		}
+
+        let parts = msg.content.split(/\s+--\s+/);
+		let args = parts[0].split(/\s+/);
+
+		
+		switch(args[0]) {
+			case '!patrol-npc': {
+				if(!(msg.selected && msg.selected.length > 0)) {
+					if (args[1] == "--delay")
+					{
+					    if (isNaN(args[2]) || args[2] < 1 || args[2] > 60)
+					    {
+				  	        sendChat('PatrolNPC Script',
+                            '/w gm '+
+                            'Delay must be a number between 1 and 60.'
+                             );
+                        } else {
+                            var new_delay = args[2].trim() * 1000;
+                            state.PatrolNPC.global_delay = new_delay;
+                            sendChat('PatrolNPC Script',
+                            '/w gm '+
+                            'Delay has been updated to '+(new_delay/1000)+' seconds.'+
+                            'Patrolling NPCs will be updated on next API startup.'
+                            );                            
+					    }
+					} else if (args[1] == "--unit-size") {
+					    if (isNaN(args[2]) || args[2] < 1 || args[2] > 350)
+					    {
+				  	        sendChat('PatrolNPC Script',
+                            '/w gm '+
+                            'Unit Size must be a number between 10 and 350.'
+                             );
+                        } else {
+                            var new_unitsize = args[2].trim();
+                            state.PatrolNPC.unit_size = new_unitsize;
+                            sendChat('PatrolNPC Script',
+                            '/w gm '+
+                            'Unit Size has been updated to '+new_unitsize+' pixels.'+
+                            'Patrolling NPCs will be updated on next API startup.'
+                            );                            
+					    }					   
+					} else 
+					  showHelp();
+					return;
+				 }
+                }
+				break;
+		}
+
+	},
+	
+	movePatrol = function()
+	{
+	    clearInterval(thisInterval)
+         var patrolTokens = findObjs({ 
+                     _type: "graphic", 
+                     status_greenmarker: true
+                 });
+          
+            var q = 0, speed = new Array(), direction = new Array(), distance = new Array(), direction_pixel = new Array(), xy = new Array(), rotation = new Array();
+            
+            for (q = 0; q < patrolTokens.length; q++)
+            {
+             var this_speed, patrol_variables = new Array();
+             var gmnotes = decodeURIComponent(patrolTokens[q].get("gmnotes"));
+             
+             stepstaken[q] = stepstaken[q]||0;
+             patrol_variables = gmnotes.split(",");
+            
+             if ((patrol_variables[0] != "undefined") && (patrol_variables[0] == "North" || patrol_variables[0] == "north" || patrol_variables[0] == "South" || patrol_variables[0] == "south" || patrol_variables[0] == "East" || patrol_variables[0] == "east" || patrol_variables[0] == "West" || patrol_variables[0] == "west"))
+                direction[q] = patrol_variables[0].trim();
+             else
+                direction[q] = "North"
+            
+             if (patrol_variables[1] != "undefined" && !isNaN(patrol_variables[1]) && patrol_variables[1] > 0 && patrol_variables[1] <= 100)
+                distance[q] = patrol_variables[1].trim();
+             else
+                distance[q] = 5;
+                
+             
+             if (patrol_variables[2] != "undefined" && !isNaN(patrol_variables[2]) && patrol_variables[2] > 10 && patrol_variables[2] <= 100)
+               this_speed = patrol_variables[2].trim();
+             else
+               this_speed = 100;
+                
+                speed[q] = this_speed/100;
+             
+                switch (direction[q])
+                {
+                  case "North":
+                  case "north":
+                  direction_pixel[q] = state.PatrolNPC.unit_size * -1;
+                  xy[q] = 1;
+                  rotation[q] = 180;
+                  break;
+                  case "West":
+                  case "west":
+                  direction_pixel[q] = state.PatrolNPC.unit_size * -1;
+                  xy[q] = 0;
+                  rotation[q] = 90;
+                  break;
+                  case "South":
+                  case "south":
+                  direction_pixel[q] = state.PatrolNPC.unit_size;
+                  xy[q] = 1;
+                  rotation[q] = 0;
+                  break;
+                  case "East":
+                  case "east":
+                  direction_pixel[q] = state.PatrolNPC.unit_size;
+                  xy[q] = 0;
+                  rotation[q] = 270;
+                  break;
+                  default:
+                  direction_pixel[q] = 70;
+                  xy[q] = 1;
+                  rotation[q] = 180;
+                  break;
+                }     
+            }
+          
+            thisInterval = setInterval(function() {
+            var i = 0;
+        
+            for (i = 0; i < patrolTokens.length; i++)
+            {
+        
+                 if (patrolTokens[i].get("status_greenmarker") == false) { continue; } // Skip iteration if WAS patrolling but NOW toggled off
+                 
+                 if (stepstaken[i] >= distance[i]) 
+                 {
+                    //Switch directions!
+                     direction_pixel[i] = direction_pixel[i] * -1; //will "flip" the direction we're walking
+                     stepstaken[i] = 0; //reset steps back to 0.
+                                 
+                     switch (rotation[i])
+                     {
+                       case 0:
+                       rotation[i] = 180;
+                       break;
+                       case 90:
+                       rotation[i] = 270;
+                       break;
+                       case 180:
+                       rotation[i] = 0;
+                       break;
+                       case 270: 
+                       rotation[i] = 90;
+                       break;
+                       default:
+                       rotation[i] = 0;
+                       break;
+                       }
+                 }
+                   if (stepstaken[i] == 0)
+                      patrolTokens[i].set("rotation", rotation[i]);
+        
+                   if (xy[i])
+                      patrolTokens[i].set("top", patrolTokens[i].get("top") + (direction_pixel[i]) * speed[i]); //walk!
+                   else
+                      patrolTokens[i].set("left", patrolTokens[i].get("left") + (direction_pixel[i] * speed[i])); //walk!
+                                   
+                      stepstaken[i] = (stepstaken[i] + speed[i]);     
+                   
+            }}, state.PatrolNPC.global_delay); //take an action every X seconds	    
+	},
+	
+	checkInstall = function()
+	{
+	    var script_version = "0.4.19";
+        if( ! state.PatrolNPC ) {
+                state.PatrolNPC = {
+                    version: script_version,
+                    global_delay: 3000,
+                    unit_size: 70
+                };
+            }    
+        
+        if (state.PatrolNPC.version != script_version)
+            state.PatrolNPC.version = script_version;
+        
+        if (isNaN(state.PatrolNPC.global_delay))
+            state.PatrolNPC.global_delay = 3000;
+    
+        if (isNaN(state.PatrolNPC.unit_size))
+            state.PatrolNPC.unit_size = 70;  
+        
+        if (!state.PatrolNPC.CurrentState)
+            state.PatrolNPC.CurrentState = new Array();
+    
+        log("-=> Patrol NPC - v" + state.PatrolNPC.version + " - [Delay: " + state.PatrolNPC.global_delay + "ms - Unit Size: " + state.PatrolNPC.unit_size + "] (Last Edited by Kastion Apr 26th 2018)<=-");
+
+        movePatrol();
+          
+	},
+
+    	
+	registerEventHandlers = function() {
+		on('chat:message', handleInput);
+		on('change:graphic', movePatrol);
+	};
+
+	return {
+		CheckInstall: checkInstall,
+		RegisterEventHandlers: registerEventHandlers
+	};
+
+}());
+
+on("ready", function() {
+    'use strict';
+    
+	PatrolNPC.CheckInstall();
+	PatrolNPC.RegisterEventHandlers();        
+});
