@@ -1,3 +1,10 @@
+# 13.1.0
+
+### Features
+- Support the sheet roll template changes
+- Support custom spell point costs when expending points
+- Add `config` option to change the name of spell points on new characters.
+
 # 13.0.3
 
 ### Bug fixes
