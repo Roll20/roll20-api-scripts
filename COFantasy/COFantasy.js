@@ -117,7 +117,7 @@ var COFantasy = COFantasy || function() {
           try {
             this_weapon = JSON.parse(attackLabel);
           } catch (e) {
-            error('Erreur parsing the Array', command);
+            error('Error parsing the Array', command);
           }
           if (Array.isArray(this_weapon)) {
             portee = this_weapon[4];
@@ -2644,12 +2644,13 @@ var COFantasy = COFantasy || function() {
       error("Soins sur un token sans points de vie", token);
       return;
     }
-    if (bar1 >= pvmax) {
-      if (callMax) callMax();
-      return;
+    var updateBar1;
+    if (bar1 >= pvmax) bar1 = pvmax;
+    else {
+      updateBar1 = true;
+      affectToken(token, 'bar1_value', bar1, evt);
     }
     if (soins < 0) soins = 0;
-    affectToken(token, 'bar1_value', bar1, evt);
     if (bar1 === 0) {
       if (attributeAsBool(perso, 'etatExsangue')) {
         removeTokenAttr(perso, 'etatExsangue', evt, "retrouve des couleurs");
@@ -2661,11 +2662,33 @@ var COFantasy = COFantasy || function() {
     bar1 += soins;
     var soinsEffectifs = soins;
     if (bar1 > pvmax) {
+      if (attributeAsBool(perso, 'formeDArbre')) {
+        var apv = tokenAttribute(perso, 'anciensPV');
+        if (apv.length > 0) {
+          apv = apv[0];
+          var anciensPV = parseInt(apv.get('current'));
+          var anciensMax = parseInt(apv.get('max'));
+          if (!(isNaN(anciensPV) || isNaN(anciensMax)) &&
+            anciensPV < anciensMax) {
+            anciensPV += bar1 - pvmax;
+            soinsEffectifs += bar1 - pvmax;
+            if (anciensPV > anciensMax) {
+              soinsEffectifs -= anciensPV - anciensMax;
+              anciensPV = anciensMax;
+            }
+            setTokenAttr(perso, 'anciensPV', anciensPV, evt, undefined, anciensMax);
+          }
+        }
+      }
       soinsEffectifs -= (bar1 - pvmax);
       bar1 = pvmax;
     }
-    updateCurrentBar(token, 1, bar1);
-    if (callTrue) callTrue(soinsEffectifs);
+    if (updateBar1) updateCurrentBar(token, 1, bar1);
+    if (soinsEffectifs > 0) {
+      if (callTrue) callTrue(soinsEffectifs);
+    } else {
+      if (callMax) callMax();
+    }
   }
 
   function defenseOfToken(attaquant, target, pageId, evt, options) {
@@ -2684,7 +2707,11 @@ var COFantasy = COFantasy || function() {
       defense += charAttributeAsInt(target, 'DEFDIV', 0);
     } // Dans le cas contraire, on n'utilise pas ces bonus
     defense += modCarac(target, 'DEXTERITE');
-    if (attributeAsBool(target, 'formeDArbre')) defense = 13;
+    var formeDarbre;
+    if (attributeAsBool(target, 'formeDArbre')) {
+      formeDarbre = true;
+      defense = 13;
+    }
     // Malus de défense global pour les longs combats
     if (DEF_MALUS_APRES_TOUR_5)
       defense -= (Math.floor((state.COFantasy.tour - 1) / 5) * 2);
@@ -2695,6 +2722,9 @@ var COFantasy = COFantasy || function() {
       var bonusPeau = getValeurOfEffet(target, 'peauDEcorce', 1, 'voieDesVegetaux');
       var peauIntense = attributeAsInt(target, 'peauDEcorceTempeteDeManaIntense', 0);
       bonusPeau += peauIntense;
+      if (formeDarbre) {
+        bonusPeau = Math.ceil(bonusPeau * 1.5);
+      }
       defense += bonusPeau;
       explications.push("Peau d'écorce : +" + bonusPeau + " en DEF");
       if (peauIntense)
@@ -7606,17 +7636,28 @@ var COFantasy = COFantasy || function() {
     });
     //On recherche dans le Personnage s'il a une "Ability" dont le nom est "#TurnAction#".
     var actionsParDefaut = false;
-    var actionsDuTour = abilities.filter(function(a) {
-      switch (a.get('name')) {
-        case '#TurnAction#':
-          return true;
-        case '#Actions#':
-          actionsParDefaut = true;
-          return true;
-        default:
-          return false;
-      }
-    });
+    var formeDarbre = attributeAsBool(perso, 'formeDArbre');
+    var actionsDuTour = [];
+    if (formeDarbre) {
+      actionsDuTour = abilities.filter(function(a) {
+        return (a.get('name') == '#FormeArbre#');
+      });
+      if (actionsDuTour.length === 0) formeDarbre = false;
+      else actionsParDefaut = true;
+    }
+    if (actionsDuTour.length === 0) {
+      actionsDuTour = abilities.filter(function(a) {
+        switch (a.get('name')) {
+          case '#TurnAction#':
+            return true;
+          case '#Actions#':
+            actionsParDefaut = true;
+            return true;
+          default:
+            return false;
+        }
+      });
+    }
     //Si elle existe, on lui chuchotte son exécution 
     if (actionsDuTour.length > 0) {
       // on récupère la valeur de l'action dont chaque Macro #/Ability % est mis dans un tableau 'action'
@@ -7625,7 +7666,10 @@ var COFantasy = COFantasy || function() {
         actions.push('Attendre');
         actions.push('Se défendre');
       }
-      var nBfound = 0;
+      if (formeDarbre) {
+        actions.push('Attaque');
+      }
+      var actionsAAfficher;
       var ligne = '';
       if (actions.length > 0) {
         // Toutes les Macros
@@ -7650,7 +7694,6 @@ var COFantasy = COFantasy || function() {
                 if (abilitie.get('name') === actionCmd) {
                   // l'ability existe
                   found = true;
-                  nBfound++;
                   command = abilitie.get('action').trim();
                   ligne += bouton(command, actionText, perso, false) + '<br />';
                 }
@@ -7662,7 +7705,6 @@ var COFantasy = COFantasy || function() {
                 if (found) return;
                 if (macro.get('name') === actionCmd) {
                   found = true;
-                  nBfound++;
                   command = macro.get('action').trim();
                   ligne += bouton(command, actionText, perso, false) + '<br />';
                 }
@@ -7675,15 +7717,21 @@ var COFantasy = COFantasy || function() {
               command = "!cof-action-defensive ?{Action défensive|simple|totale}";
               ligne += bouton(command, action, perso, false) + '<br />';
               found = true;
+            } else if (formeDarbre && action == 'Attaque') {
+              command = '!cof-attack @{selected|token_id} @{target|token_id} ["Branches",["@{selected|NIVEAU}",0],20,[1,6,3,0],0]';
+              ligne += bouton(command, action, perso, false) + '<br />';
+              found = true;
             }
             // Si on a toujours rien trouvé, on ajoute un petit log
-            if (!found) {
+            if (found) {
+              actionsAAfficher = true;
+            } else {
               log('Ability et Macro non trouvé : ' + action);
             }
           }
         });
       }
-      if (nBfound > 0) {
+      if (actionsAAfficher) {
         // on envoie la liste aux joueurs qui gèrent le personnage dont le token est lié
         var last_playerid;
         var title = 'Actions possibles :';
@@ -14548,9 +14596,11 @@ var COFantasy = COFantasy || function() {
             if (apv.length > 0) {
               updateCurrentBar(token, 1, apv[0].get('current'), evt, apv[0].get('max'));
               removeTokenAttr(perso, 'anciensPV', evt);
-              newInit.push({
-                _id: token.id
-              });
+              if (state.COFantasy.combat) {
+                newInit.push({
+                  _id: token.id
+                });
+              }
             }
           },
           filterUnique);
