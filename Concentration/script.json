@@ -1,8 +1,8 @@
 {
     "name": "Concentration",
     "script": "Concentration.js",
-    "version": "0.1.5",
-    "previousversions": [],
+    "version": "0.1.8",
+    "previousversions": ["0.1.5"],
     "description": "Concentration keeps track of characters concentration, and reminds to do a concentration check.\n\nIf you use the 5e OGL character sheet, it can also automaticly add the concentrating marker when a concentrating spell is cast.\n\n![Concentration Reminder](https://i.imgur.com/zEVJpOH.png \"Concentration Reminder\")\n\n### Commands\n\n* **!concentration** - Shows the config menu.\n\n![Config Menu](https://i.imgur.com/1rB3ezY.png \"Config Menu\")",
     "authors": "Robin Kuiper",
     "roll20userid": "1226016",
