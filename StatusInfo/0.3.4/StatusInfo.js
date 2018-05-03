@@ -1,12 +1,15 @@
 /*
- * Version: 0.3.2
+ * Version: 0.3.4
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
- * Roll20: https://app.roll20.net/users/1226016/robin
+ * Roll20: https://app.roll20.net/users/1226016/robin-k
  * Roll20 Thread: https://app.roll20.net/forum/post/6252784/script-statusinfo
+ * Roll20 Wiki: https://wiki.roll20.net/Script:StatusInfo
  * Github: https://github.com/RobinKuiper/Roll20APIScripts
  * Reddit: https://www.reddit.com/user/robinkuiper/
+ * Patreon: https://patreon.com/robinkuiper
+ * Paypal.me: https://www.paypal.me/robinkuiper
  * 
  * COMMANDS (with default command):
  * !condition [CONDITION] - Shows condition.
@@ -15,6 +18,7 @@
  * 
  * !condition add [condtion(s)] - Add condition(s) to selected tokens, eg. !condition add prone paralyzed
  * !condition remove [condtion(s)] - Remove condition(s) from selected tokens, eg. !condition remove prone paralyzed
+* !condition toggle [condtion(s)] - Toggles condition(s) of selected tokens, eg. !condition toggle prone paralyzed
  * 
  * !condition config export - Exports the config (with conditions).
  * !condition config import [json] - Import the given config (with conditions).
@@ -28,7 +32,10 @@
 var StatusInfo = StatusInfo || (function() {
     'use strict';
     
-    let whisper, handled = [];
+    let whisper, handled = [],
+        observers = {
+            tokenChange: []
+        }
 
     // Styling for the chat responses.
     const style = "overflow: hidden; background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;",
@@ -194,8 +201,11 @@ var StatusInfo = StatusInfo || (function() {
                         let sended = false;
                         msg.selected.forEach(s => {
                             let token = getObj(s._type, s._id);
+                            let prev = token;
                             let add = (extracommand === 'add') ? true : (extracommand === 'toggle') ? !token.get('status_'+getConditionByName(condition_key).icon) : false;
                             token.set('status_'+getConditionByName(condition_key).icon, add);
+
+                            notifyObservers('tokenChange', token, prev);
 
                             if(extracommand === 'toggle' && add && !sended){
                                 sendConditionToChat(getConditionByName(condition_key));
@@ -208,8 +218,8 @@ var StatusInfo = StatusInfo || (function() {
                 break;
 
                 default:
-                    let condition_name;
-                    if(condition_name = extracommand){
+                    let condition_name = extracommand;
+                    if(condition_name){
                         let condition;
                         // Check if hte condition exists in the condition object.
                         if(condition = getConditionByName(condition_name)){
@@ -219,7 +229,7 @@ var StatusInfo = StatusInfo || (function() {
                             sendChat((whisper) ? script_name : '', whisper + 'Condition ' + condition_name + ' does not exist.', null, {noarchive:true});
                         }
                     }else{
-                        sendHelpMenu();
+                        sendMenu(msg.selected);
                     }
                 break;
             }
@@ -256,7 +266,7 @@ var StatusInfo = StatusInfo || (function() {
 
         prev.statusmarkers = (typeof prev.get === 'function') ? prev.get('statusmarkers') : prev.statusmarkers;
 
-        if(state[state_name].config.showDescOnStatusChange && prev.statusmarkers){
+        if(state[state_name].config.showDescOnStatusChange && typeof prev.statusmarkers === 'string'){
             // Check if the statusmarkers string is different from the previous statusmarkers string.
             if(obj.get('statusmarkers') !== prev.statusmarkers){
                 // Create arrays from the statusmarkers strings.
@@ -270,16 +280,16 @@ var StatusInfo = StatusInfo || (function() {
                         let condition;
                         if(condition = getConditionByMarker(marker)){
                             sendConditionToChat(condition);
+
+                            let length = handled.push(obj.get('represents'));
+                            setTimeout(() => {
+                                handled.splice(length-1, 1);
+                            }, 1000);
                         }
                     }
                 });
             }
         }
-
-        let length = handled.push(obj.get('represents'));
-        setTimeout(() => {
-            handled.splice(length-1, 1);
-        }, 1000);
     },
 
     getConditionByMarker = (marker) => {
@@ -406,7 +416,39 @@ var StatusInfo = StatusInfo || (function() {
 
         message = (message) ? '<p style="color: red">'+message+'</p>' : '';
         let contents = message+makeList(listItems, listStyle + ' overflow:hidden;', 'overflow: hidden')+'<hr><b>Description:</b>'+condition.description+changeButton+'<hr><p>'+removeButton+backButton+'</p>';
-        makeAndSendMenu(contents, condition.name + ' Config');
+        makeAndSendMenu(contents, condition.name + ' - Config');
+    },
+
+    sendMenu = (selected, show_names) => {
+        let contents = '';
+        if(selected && selected.length){
+            selected.forEach(s => {
+                let token = getObj(s._type, s._id);
+                if(token && token.get('statusmarkers') !== ''){
+                    let statusmarkers = token.get('statusmarkers').split(',');
+                    let active_conditions = [];
+                    statusmarkers.forEach(marker => {
+                        let con;
+                        if(con = getObjects(state[state_name].conditions, 'icon', marker)){
+                            if(con[0] && con[0].name) active_conditions.push(con[0].name);
+                        }
+                    });
+
+                    if(active_conditions.length){
+                        contents += '<b>'+token.get('name') + '\'s Conditions:</b><br><i>' + active_conditions.join(', ') + '</i><hr>';
+                    }
+                }
+            });
+        }
+
+        contents += 'Toggle Condition on Selected Token(s):<br>'
+        for(let condition_key in state[state_name].conditions){
+            let condition = state[state_name].conditions[condition_key];
+            contents += makeButton(getIcon(condition.icon) || condition.name, '!' + state[state_name].config.command + ' toggle '+condition_key, buttonStyle + 'float: none; margin-right: 5px;', condition.name);
+        }
+        //contents += (!show_names) ? '<br>' + makeButton('Show Names', '!' + state[state_name].config.command + ' names', buttonStyle + 'float: none;') : '<br>' + makeButton('Hide Names', '!' + state[state_name].config.command, buttonStyle + 'float: none;');
+
+        makeAndSendMenu(contents, script_name + ' Menu');
     },
 
     sendConfigMenu = (first) => {
@@ -464,8 +506,8 @@ var StatusInfo = StatusInfo || (function() {
         return '<'+title_tag+' style="margin-bottom: 10px;">'+title+'</'+title_tag+'>';
     },
 
-    makeButton = (title, href, style) => {
-        return '<a style="'+style+'" href="'+href+'">'+title+'</a>';
+    makeButton = (title, href, style, alt) => {
+        return '<a style="'+style+'" href="'+href+'" title="'+alt+'">'+title+'</a>';
     },
 
     makeList = (items, listStyle, itemStyle) => {
@@ -484,6 +526,18 @@ var StatusInfo = StatusInfo || (function() {
         setDefaults();
 
         log(script_name + ' Ready! Command: !'+state[state_name].config.command);
+    },
+
+    observeTokenChange = function(handler){
+        if(handler && _.isFunction(handler)){
+            observers.tokenChange.push(handler);
+        }
+    },
+
+    notifyObservers = function(event,obj,prev){
+        _.each(observers[event],function(handler){
+            handler(obj,prev);
+        });
     },
 
     registerEventHandlers = () => {
@@ -512,7 +566,7 @@ var StatusInfo = StatusInfo || (function() {
 
     setDefaults = (reset) => {
 
-        // DEVELOPER NOTE: ON CHANGE! CHECK BITCH!
+        // DEVELOPER NOTE: ON CHANGE! CHECK BITCH! DENK OM OLD IMPORTS!
 
         const defaults = {
             config: {
@@ -631,6 +685,7 @@ var StatusInfo = StatusInfo || (function() {
 
     return {
         CheckInstall: checkInstall,
+        ObserveTokenChange: observeTokenChange,
         RegisterEventHandlers: registerEventHandlers
     };
 })();

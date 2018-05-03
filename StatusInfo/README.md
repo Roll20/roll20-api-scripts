@@ -2,9 +2,13 @@
 
 * Skype: RobinKuiper.eu
 * Discord: Atheos#1095
-* Roll20: https://app.roll20.net/users/1226016/robin-k
+* Roll20: https://app.roll20.net/users/1226016/robin
+* Roll20 Thread: https://app.roll20.net/forum/post/6252784/script-statusinfo
+* Roll20 Wiki: https://wiki.roll20.net/Script:StatusInfo
+* Github: https://github.com/RobinKuiper/Roll20APIScripts
 * Reddit: https://www.reddit.com/user/robinkuiper/
-* Patreon: https://www.patreon.com/robinkuiper
+* Patreon: https://patreon.com/robinkuiper
+* Paypal.me: https://www.paypal.me/robinkuiper
 
 ---
 
@@ -21,14 +25,15 @@ It shows condition descriptions whenever a statusmarker is set or when the comma
 
 * **!condition help** - Shows the help menu.
 * **!condition config** - Shows the config menu.
+* **!condition** - Shows the condition menu, where you can easily toggle conditions on selected token(s). If you have (a) token(s) selected when you use this command it will show the current conditions.
 * **!condition [CONDITION NAME]** - Shows the description of the condition entered.
 
 * **!condition add [Condition Name(s)]** - Adds the condition(s) given to the selected token(s), eg. `!condition add prone paralyzed`.
 * **!condition remove [Condition Name(s)]** - Removes the condition(s) given from the selected token(s).
 * **!condition toggle [Condition Name(s)]** - Toggles the condition(s) given from the selected token(s).
 
-* **!condition config export** - Exports the config (with conditions).
-* **!condition config import [Exported Content]** - Imports the config (with conditions).
+* **!condition config export** - Exports the config (with conditions), also possible through the config menu.
+* **!condition config import [Exported Content]** - Imports the config (with conditions), also possible through the config menu.
 
 ### Config
 ![Config](https://i.imgur.com/y9DlZB6.png "Config")
@@ -72,3 +77,14 @@ I run this with the following Tokenmod macro:
 ```
 
 Roll20 Thread: https://app.roll20.net/forum/post/6252784/script-statusinfo
+
+---
+
+#### Changelog
+
+**v0.3.5 - 01-05-2018**
+* Ready for collabration with [CombatTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/CombatTracker).
+* Small Bugfixes.
+
+**v0.3.4 - 24-04-2018**
+Fixed a "huge" bug that wouldn't send conditions to chat on statusmarker change.
