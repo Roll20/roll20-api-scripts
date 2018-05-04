@@ -1,5 +1,5 @@
 /*
- * Version: 0.3.5
+ * Version: 0.3.6
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
@@ -62,6 +62,10 @@ var StatusInfo = StatusInfo || (function() {
 
         if(command === state[state_name].config.command){
             switch(extracommand){
+                case 'handled':
+                    log(handled)
+                break;
+
                 case 'reset':
                     state[state_name] = {};
                     setDefaults(true);
@@ -234,8 +238,7 @@ var StatusInfo = StatusInfo || (function() {
 
                 if(add && !handled.includes(condition_key)){
                     sendConditionToChat(getConditionByName(condition_key));
-                    let length = handled.push(condition_key)
-                    setTimeout(() =>{ handled.splice(length-1, 1) }, 1000);
+                    doHandled(condition_key);
                 }
             });
         });
@@ -288,16 +291,19 @@ var StatusInfo = StatusInfo || (function() {
 
                             sendConditionToChat(condition);
 
-                            let length = handled.push(obj.get('represents'));
-                            handled.push(condition.name.toLowerCase());
-                            setTimeout(() => {
-                                handled.splice(length-1, 1);
-                            }, 1000);
+                            doHandled(obj.get('represents'));
                         }
                     }
                 });
             }
         }
+    },
+
+    doHandled = (what) => {
+        handled.push(what);
+        setTimeout(() => {
+            handled.splice(handled.indexOf(what), 1);
+        }, 1000);
     },
 
     getConditionByMarker = (marker) => {
