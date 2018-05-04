@@ -29,3 +29,11 @@ Just a simple script to generate a treasure in chat with the DnD 5e Dungeon Mast
 
 ##### Credits
 [Jeff Bennet](https://github.com/jfflbnntt) - The table idea.
+
+---
+
+#### Changelog
+**0.1.4**
+* Fixed a bug were currency value where the same everytime.
+* Added values to gems and arts.
+* Fixed a bug where magic item tables weren't calculated correctly.

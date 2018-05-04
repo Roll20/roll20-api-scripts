@@ -1,5 +1,5 @@
 /*
- * Version 0.1.3
+ * Version 0.1.4
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
@@ -197,19 +197,19 @@ var Treasure = Treasure || (function() {
                     ] },
                     { roll: range(75, 76), treasure: [ 
                         { die: "2d4", worth: 25, type: "art" }, 
-                        { die: 1, table: "D", type: "magic" },
+                        { die: "1", table: "D", type: "magic" },
                     ] },
                     { roll: range(77, 78), treasure: [ 
                         { die: "3d6", worth: 50, type: "gems"	}, 
-                        { die: 1, table: "D", type: "magic" },
+                        { die: "1", table: "D", type: "magic" },
                     ] },
                     { roll: [79], treasure: [ 
                         { die: "3d6", worth: 100, type: "gems"	}, 
-                        { die: 1, table: "D", type: "magic" },
+                        { die: "1", table: "D", type: "magic" },
                     ] },
                     { roll: [80], treasure: [ 
                         { die: "2d4", worth: 250, type: "art" }, 
-                        { die: 1, table: "D", type: "magic" },
+                        { die: "1", table: "D", type: "magic" },
                     ] },
                     { roll: range(81, 84), treasure: [ 
                         { die: "2d4", worth: 25, type: "art" }, 
@@ -237,11 +237,11 @@ var Treasure = Treasure || (function() {
                     ] },
                     { roll: [99], treasure: [ 
                         { die: "3d6", worth: 100, type: "gems"	}, 
-                        { die: 1, table: "H", type: "magic" },
+                        { die: "1", table: "H", type: "magic" },
                     ] },
                     { roll:[100], treasure: [ 
                         { die: "2d4", worth: 250, type: "art" }, 
-                        { die: 1, table: "H", type: "magic" },
+                        { die: "1", table: "H", type: "magic" },
                     ] },
                 ]
             },
@@ -489,129 +489,129 @@ var Treasure = Treasure || (function() {
 
     gemTables = {
         10: [
-            'Azurite (opaque mottled deep blue)',
-            'Banded agate (translucent striped brown, blue, white, or red)',
-            'Blue quartz (transparent pale blue)',
-            'Eye agate (translucent circles of gray, white, brown, blue, or green)',
-            'Hematite (opaque gray-black)',
-            'Lapis lazuli (opaque light and dark blue with yellow flecks)',
-            'Malachite (opaque striated light and dark green)',
-            'Moss agate (translucent pink or yellow-white with mossy gray or green markings)',
-            'Obsidian (opaque black)',
-            'Rhodochrosite (opaque light pink)',
-            'Tiger eye (translucent brown with golden center)',
-            'Turquoise (opaque light blue-green)',
+            'Azurite (opaque mottled deep blue) (10G)',
+            'Banded agate (translucent striped brown, blue, white, or red) (10G)',
+            'Blue quartz (transparent pale blue) (10G)',
+            'Eye agate (translucent circles of gray, white, brown, blue, or green) (10G)',
+            'Hematite (opaque gray-black) (10G)',
+            'Lapis lazuli (opaque light and dark blue with yellow flecks) (10G)',
+            'Malachite (opaque striated light and dark green) (10G)',
+            'Moss agate (translucent pink or yellow-white with mossy gray or green markings) (10G)',
+            'Obsidian (opaque black) (10G)',
+            'Rhodochrosite (opaque light pink) (10G)',
+            'Tiger eye (translucent brown with golden center) (10G)',
+            'Turquoise (opaque light blue-green) (10G)',
         ],
         50: [
-            'Bloodstone (opaque dark gray with red flecks)',
-            'Carnelian (opaque orange to red-brown)',
-            'Chalcedony (opaque white)',
-            'Chrysoprase (translucent green)',
-            'Citrine (transparent pale yellow-brown)',
-            'Jasper (opaque blue, black, or brown)',
-            'Moonstone (translucent white with pale blue glow)',
-            'Onyx (opaque bands of black and white, or pure black or white)',
-            'Quartz (transparent white, smoky gray, or yellow)',
-            'Sardonyx (opaque bands of red and white)',
-            'Star rose quartz (translucent rosy stone with white star-shaped center)',
-            'Zircon (transparent pale blue-green)',
+            'Bloodstone (opaque dark gray with red flecks) (50G)',
+            'Carnelian (opaque orange to red-brown) (50G)',
+            'Chalcedony (opaque white) (50G)',
+            'Chrysoprase (translucent green) (50G)',
+            'Citrine (transparent pale yellow-brown) (50G)',
+            'Jasper (opaque blue, black, or brown) (50G)',
+            'Moonstone (translucent white with pale blue glow) (50G)',
+            'Onyx (opaque bands of black and white, or pure black or white) (50G)',
+            'Quartz (transparent white, smoky gray, or yellow) (50G)',
+            'Sardonyx (opaque bands of red and white) (50G)',
+            'Star rose quartz (translucent rosy stone with white star-shaped center) (50G)',
+            'Zircon (transparent pale blue-green) (50G)',
         ],
         100: [
-            'Amber (transparent watery gold to rich gold)',
-            'Amethyst (transparent deep purple)',
-            'Chrysoberyl (transparent yellow-green to pale green)',
-            'Coral (opaque crimson)',
-            'Garnet (transparent red, brown-green, or violet)',
-            'Jade (translucent light green, deep green, or white)',
-            'Jet (opaque deep black)',
-            'Pearl (opaque lustrous white, yellow, or pink)',
-            'Spinel (transparent red, red-brown, or deep green)',
-            'Tourmaline (transparent pale green, blue, brown, or red)',
+            'Amber (transparent watery gold to rich gold) (100G)',
+            'Amethyst (transparent deep purple) (100G)',
+            'Chrysoberyl (transparent yellow-green to pale green) (100G)',
+            'Coral (opaque crimson) (100G)',
+            'Garnet (transparent red, brown-green, or violet) (100G)',
+            'Jade (translucent light green, deep green, or white) (100G)',
+            'Jet (opaque deep black) (100G)',
+            'Pearl (opaque lustrous white, yellow, or pink) (100G)',
+            'Spinel (transparent red, red-brown, or deep green) (100G)',
+            'Tourmaline (transparent pale green, blue, brown, or red) (100G)',
         ],
         500: [
-            'Alexandrite (transparent dark green)',
-            'Aquamarine (transparent pale blue-green)',
-            'Black pearl (opaque pure black)',
-            'Blue spinel (transparent deep blue)',
-            'Peridot (transparent rich olive green)',
-            'Topaz (transparent golden yellow)',
+            'Alexandrite (transparent dark green) (500G)',
+            'Aquamarine (transparent pale blue-green) (500G)',
+            'Black pearl (opaque pure black) (500G)',
+            'Blue spinel (transparent deep blue) (500G)',
+            'Peridot (transparent rich olive green) (500G)',
+            'Topaz (transparent golden yellow) (500G)',
         ],
         1000: [
-            'Black opal (translucent dark green with black mottling and golden flecks)',
-            'Blue sapphire (transparent blue-white to medium blue)',
-            'Emerald (transparent deep bright green)',
-            'Fire opal (translucent fiery red)',
-            'Opal (translucent pale blue with green and golden mottling)',
-            'Star ruby (translucent ruby with white star-shaped center)',
-            'Star sapphire (translucent blue sapphire with white star-shaped center)',
-            'Yellow sapphire (transparent fiery yellow or yellow-green)',
+            'Black opal (translucent dark green with black mottling and golden flecks) (1.000G)',
+            'Blue sapphire (transparent blue-white to medium blue) (1.000G)',
+            'Emerald (transparent deep bright green) (1.000G)',
+            'Fire opal (translucent fiery red) (1.000G)',
+            'Opal (translucent pale blue with green and golden mottling) (1.000G)',
+            'Star ruby (translucent ruby with white star-shaped center) (1.000G)',
+            'Star sapphire (translucent blue sapphire with white star-shaped center) (1.000G)',
+            'Yellow sapphire (transparent fiery yellow or yellow-green) (1.000G)',
         ],
         5000: [
-            'Black sapphire (translucent lustrous black with glowing highlights)',
-            'Diamond (transparent blue-white, canary, pink, brown, or blue)',
-            'Jacinth (transparent fiery orange)',
-            'Ruby (transparent clear red to deep crimson)',
+            'Black sapphire (translucent lustrous black with glowing highlights) (5.000G)',
+            'Diamond (transparent blue-white, canary, pink, brown, or blue) (5.000G)',
+            'Jacinth (transparent fiery orange) (5.000G)',
+            'Ruby (transparent clear red to deep crimson) (5.000G)',
         ]
     },
 
     artTables = {
         25: [
-            'Silver ewer',
-            'Carved bone statuette',
-            'Small gold bracelet',
-            'Cloth-of-gold vestments',
-            'Black velvet mask stitched with silver thread',
-            'Copper chalice with silver filigree',
-            'Pair of engraved bone dice',
-            'Small mirror set in a painted wooden frame',
-            'Embroidered silk handkerchief',
-            'Gold locket with a painted portrait inside',          
+            'Silver ewer (25G)',
+            'Carved bone statuette (25G)',
+            'Small gold bracelet (25G)',
+            'Cloth-of-gold vestments (25G)',
+            'Black velvet mask stitched with silver thread (25G)',
+            'Copper chalice with silver filigree (25G)',
+            'Pair of engraved bone dice (25G)',
+            'Small mirror set in a painted wooden frame (25G)',
+            'Embroidered silk handkerchief (25G)',
+            'Gold locket with a painted portrait inside (25G)',          
         ],
         250: [
-            'Gold ring set with bloodstones',
-            'Carved ivory statuette',
-            'Large gold bracelet',
-            'Silver necklace with a gemstone pendant',
-            'Bronze crown',
-            'Silk robe with gold embroidery',
-            'Large well-made tapestry',
-            'Brass mug with jade inlay',
-            'Box of turquoise animal figurines',
-            'Gold bird cage with electrum filigree',
+            'Gold ring set with bloodstones (250G)',
+            'Carved ivory statuette (250G)',
+            'Large gold bracelet (250G)',
+            'Silver necklace with a gemstone pendant (250G)',
+            'Bronze crown (250G)',
+            'Silk robe with gold embroidery (250G)',
+            'Large well-made tapestry (250G)',
+            'Brass mug with jade inlay (250G)',
+            'Box of turquoise animal figurines (250G)',
+            'Gold bird cage with electrum filigree (250G)',
         ],
         750: [
-            'Silver chalice set with moonstones',
-            'Silver-plated steel longsword with jet set in hilt',
-            'Carved harp of exotic wood with ivory inlay and zircon gems',
-            'Small gold idol',
-            'Gold dragon comb set with red garnets as eyes',
-            'Bottle stopper cork embossed with gold leaf and set with amethysts',
-            'Ceremonial electrum dagger with a black pearl in the pommel',
-            'Silver and gold brooch',
-            'Obsidian statuette with gold fittings and inlay',
-            'Painted gold war mask',
+            'Silver chalice set with moonstones (750G)',
+            'Silver-plated steel longsword with jet set in hilt (750G)',
+            'Carved harp of exotic wood with ivory inlay and zircon gems (750G)',
+            'Small gold idol (750G)',
+            'Gold dragon comb set with red garnets as eyes (750G)',
+            'Bottle stopper cork embossed with gold leaf and set with amethysts (750G)',
+            'Ceremonial electrum dagger with a black pearl in the pommel (750G)',
+            'Silver and gold brooch (750G)',
+            'Obsidian statuette with gold fittings and inlay (750G)',
+            'Painted gold war mask (750G)',
         ],
         2500: [
-            'Fine gold chain set with a fire opal',
-            'Old masterpiece painting',
-            'Embroidered silk and velvet mantle set with numerous moonstones',
-            'Platinum bracelet set with a sapphire',
-            'Embroidered glove set with jewel chips',
-            'Jeweled anklet',
-            'Gold music box',
-            'Gold circlet set with four aquamarines',
-            'Eye patch with a mock eye set in blue sapphire and moonstone',
-            'A necklace string of small pink pearls',
+            'Fine gold chain set with a fire opal (2.500G)',
+            'Old masterpiece painting (2.500G)',
+            'Embroidered silk and velvet mantle set with numerous moonstones (2.500G)',
+            'Platinum bracelet set with a sapphire (2.500G)',
+            'Embroidered glove set with jewel chips (2.500G)',
+            'Jeweled anklet (2.500G)',
+            'Gold music box (2.500G)',
+            'Gold circlet set with four aquamarines (2.500G)',
+            'Eye patch with a mock eye set in blue sapphire and moonstone (2.500G)',
+            'A necklace string of small pink pearls (2.500G)',
         ],
         7500: [
-            'Jeweled gold crown',
-            'Jeweled platinum ring',
-            'Small gold statuette set with rubies',
-            'Gold cup set with emeralds',
-            'Gold jewelry box with platinum filigree',
-            'Painted gold child’s sarcophagus',
-            'Jade game board with solid gold playing pieces',
-            'Bejeweled ivory drinking horn with gold filigree',
+            'Jeweled gold crown (7.500G)',
+            'Jeweled platinum ring (7.500G)',
+            'Small gold statuette set with rubies (7.500G)',
+            'Gold cup set with emeralds (7.500G)',
+            'Gold jewelry box with platinum filigree (7.500G)',
+            'Painted gold child’s sarcophagus (7.500G)',
+            'Jade game board with solid gold playing pieces (7.500G)',
+            'Bejeweled ivory drinking horn with gold filigree (7.500G)',
         ],
     },
 
@@ -1005,8 +1005,7 @@ var Treasure = Treasure || (function() {
     },
 
     handleInput = (msg) => {
-        if (msg.type != 'api') return;
-        if(!playerIsGM(msg.playerid)) return;
+        if (msg.type != 'api' || !playerIsGM(msg.playerid)) return;
 
         // Split the message into command and argument(s)
         let args = msg.content.split(' ');
@@ -1039,6 +1038,8 @@ var Treasure = Treasure || (function() {
                         amount = parseInt(args.shift()),
                         table;
 
+                        log("amount: " + amount)
+
                     if(cr){
                         switch(cr){
                             case '0': case '1': case '2': case '3': case '4':
@@ -1065,7 +1066,7 @@ var Treasure = Treasure || (function() {
         }
     },
 
-    calculateTreasure = (table, type='individual', amount=1) => {
+    calculateTreasure = (table, type='individual', times=1) => {
         let d100,
             checkRoll, 
             treasure, 
@@ -1080,15 +1081,15 @@ var Treasure = Treasure || (function() {
                 objects: []
             };
 
-        amount = (amount) ? amount : 1;
-
-        for(var i = 0; i < amount; i++){
+        times = (times) ? times : 1;
+        for(var i = 0; i < times; i++){
             d100 = randomBetween(1, 100);
             checkRoll = (entry) => entry.roll.indexOf(d100) !== -1;
             treasure = {
                 currency: (type === 'hoard') ? table.coins : _.find(table, checkRoll).treasure,
                 objects: (type === 'hoard') ? _.find(table.objects, checkRoll).treasure : []
-            }
+            };
+            let amount;
 
             for(var currency in treasure.currency){
                 result.currency[currency] += rollDieString(treasure.currency[currency]);
@@ -1098,15 +1099,18 @@ var Treasure = Treasure || (function() {
                 treasure.objects.forEach(obj => {
                     switch(obj.type){
                         case 'gems':
-                            result.objects.push({ object: gemTables[obj.worth][randomBetween(0, gemTables[obj.worth].length-1)], amount: rollDieString(obj.die), type: 'gems' });
+                            amount = (obj.die === "1" || obj.die === 1) ? 1 :  rollDieString(obj.die);
+                            result.objects.push({ object: gemTables[obj.worth][randomBetween(0, gemTables[obj.worth].length-1)], amount: amount, type: 'gems' });
                         break;
 
                         case 'art':
-                            result.objects.push({ object: artTables[obj.worth][randomBetween(0, artTables[obj.worth].length-1)], amount: rollDieString(obj.die), type: 'art' });
+                            amount = (obj.die === "1" || obj.die === 1) ? 1 :  rollDieString(obj.die);
+                            result.objects.push({ object: artTables[obj.worth][randomBetween(0, artTables[obj.worth].length-1)], amount: amount, type: 'art' });
                         break;
 
                         case 'magic':
-                            for(var i = 0; i < rollDieString(obj.die); i++){
+                            let times = (obj.die === "1" || obj.die === 1) ? 1 :  rollDieString(obj.die);
+                            for(var i = 0; i < times; i++){
                                 d100 = randomBetween(1, 100);
                                 checkRoll = (entry) => entry.roll.indexOf(d100) !== -1;
                                 let item = _.find(magicTables[obj.table.toLowerCase()], checkRoll).result;
@@ -1129,7 +1133,7 @@ var Treasure = Treasure || (function() {
     rollDieString = (dieStr) => {
         let die = parseDie(dieStr);
 
-        let result = randomBetween(die.amount, die.dice);
+        let result = randomBetween(die.amount, die.dice*die.amount);
 
         if(!die.modifier) return result;
 
