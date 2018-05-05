@@ -3,7 +3,7 @@
 * Skype: RobinKuiper.eu
 * Discord: Atheos#1095
 * Roll20: https://app.roll20.net/users/1226016/robin
-* Roll20 Thread: 
+* Roll20 Thread: https://app.roll20.net/forum/post/6349145/script-combattracker
 * Github: https://github.com/RobinKuiper/Roll20APIScripts
 * Reddit: https://www.reddit.com/user/robinkuiper/
 * Patreon: https://patreon.com/robinkuiper
@@ -30,8 +30,8 @@ If you use my [StatusInfo](https://github.com/RobinKuiper/Roll20APIScripts/tree/
 * **!ct start** - Starts the combat, if you have tokens selected it will try to roll initiative for them and add them to the tracker.
 * **!ct stop** - Stops the combat (closes the turntracker, removes the marker, clears the turnorder list, etc.).
 * **!ct next** - Goes to the next turn (a player can also use this if it is his turn).
-* **!ct add [condition name] [?duration]** - Adds a condition to the selected token(s).
-* **!ct remove [condition name] [?duration]** - Removes a condition from the selected token(s).
+* **!ct add [condition name] [?duration]** - Adds a condition to the selected token(s) (duration is optionally (how much rounds.)).
+* **!ct remove [condition name]** - Removes a condition from the selected token(s).
 * **!ct reset conditions** - Resets all conditions.
 
 ### Config
@@ -61,11 +61,16 @@ If you use my [StatusInfo](https://github.com/RobinKuiper/Roll20APIScripts/tree/
 * **Announce Conditions** - If you don't announce the turn, you can choose to only announce conditions in chat.
 
 
-Roll20 Thread: 
+Roll20 Thread: https://app.roll20.net/forum/post/6349145/script-combattracker
 
 ---
 
 #### Changelog
+
+**v0.1.10**
+* Fixed a bug were conditions with StatusInfo support didn't get the duration provided (needs StatusInfo update to).
+* Fixed a bug were selecting tokens by dragging caused an error.
+* Some small fixes.
 
 **v0.1.9 - 02-05-2018**
 * Good connection with [StatusInfo](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/StatusInfo)

@@ -1,9 +1,10 @@
 /* 
- * Version 0.1.9
+ * Version 0.1.10
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
  * Roll20: https://app.roll20.net/users/1226016/robin
+ * Roll20 Thread: https://app.roll20.net/forum/post/6349145/script-combattracker
  * Github: https://github.com/RobinKuiper/Roll20APIScripts
  * Reddit: https://www.reddit.com/user/robinkuiper/
  * Patreon: https://patreon.com/robinkuiper
@@ -184,13 +185,14 @@ var CombatTracker = CombatTracker || (function() {
 
     addCondition = (token, condition) => {
         if('undefined' !== typeof StatusInfo && StatusInfo.getConditionByName){
-            let duration = condition.duration;
+            const duration = condition.duration;
             condition = StatusInfo.getConditionByName(condition.name) || condition;
             condition.duration = duration;
         }
 
-        log(parseInt(condition.duration));
         if(condition.duration === 0 || condition.duration === '') condition.duration = undefined;
+
+        log(condition)
 
         if(state[state_name].conditions[strip(token.get('name'))]){
             let hasCondition = false;
@@ -207,9 +209,12 @@ var CombatTracker = CombatTracker || (function() {
         if(condition.icon){
             let prevSM = token.get('statusmarkers');
             token.set('status_'+condition.icon, true);
-            let prev = token;
+            if('undefined' !== typeof StatusInfo && StatusInfo.sendConditionToChat){
+                StatusInfo.sendConditionToChat(condition);
+            }
+            /*let prev = token;
             prev.attributes.statusmarkers = prevSM;
-            notifyObservers('tokenChange', token, prev);
+            notifyObservers('tokenChange', token, prev);*/
         }else makeAndSendMenu('Condition ' + condition.name + ' added to ' + token.get('name'));
     },
 
@@ -242,8 +247,8 @@ var CombatTracker = CombatTracker || (function() {
     handleTurnorderChange = (obj, prev) => {
         if(obj.get('turnorder') === prev.turnorder) return;
 
-        let turnorder = JSON.parse(obj.get('turnorder'));
-        let prevTurnorder = JSON.parse(prev.turnorder);
+        let turnorder = (obj.get('turnorder') === "") ? [] : JSON.parse(obj.get('turnorder'));
+        let prevTurnorder = (prev.turnorder === "") ? [] : JSON.parse(prev.turnorder);
 
         if(obj.get('turnorder') === "[]"){
             resetMarker();
@@ -251,7 +256,7 @@ var CombatTracker = CombatTracker || (function() {
             return;
         }
 
-        if(turnorder[0].id !== prevTurnorder[0].id){
+        if(turnorder.length && prevTurnorder.length && turnorder[0].id !== prevTurnorder[0].id){
             doTurnorderChange();
         }
     },
@@ -263,7 +268,7 @@ var CombatTracker = CombatTracker || (function() {
             changeMarker(obj);
         }
 
-        if('undefined' !== typeof StatusInfo && StatusInfo.GetConditions){
+        if('undefined' !== typeof StatusInfo && StatusInfo.getConditions){
 
             prev.statusmarkers = (typeof prev.get === 'function') ? prev.get('statusmarkers') : prev.statusmarkers;
 
@@ -273,14 +278,14 @@ var CombatTracker = CombatTracker || (function() {
 
                 // Marker added?
                 array_diff(oS, nS).forEach(icon => {
-                    getObjects(StatusInfo.GetConditions(), 'icon', icon).forEach(condition => {
+                    getObjects(StatusInfo.getConditions(), 'icon', icon).forEach(condition => {
                         addCondition(obj, { name: condition.name });
                     });
                 })
 
                 // Marker Removed?
                 array_diff(nS, oS).forEach(icon => {
-                    getObjects(StatusInfo.GetConditions(), 'icon', icon).forEach(condition => {
+                    getObjects(StatusInfo.getConditions(), 'icon', icon).forEach(condition => {
                         removeCondition(obj, condition.name);
                     });
                 })
@@ -329,6 +334,8 @@ var CombatTracker = CombatTracker || (function() {
     rollInitiative = (selected, sort) => {
         let character;
         selected.forEach(s => {
+            if(s._type !== 'graphic') return;
+
             let token = getObj('graphic', s._id),
                 //whisper = (token.get('layer') === 'gmlayer') ? '/w gm ' : '',
                 bonus = parseFloat(getAttrByName(token.get('represents'), state[state_name].config.initiative_attribute_name, 'current')) || 0;
@@ -473,8 +480,10 @@ var CombatTracker = CombatTracker || (function() {
     getConditionString = (token) => {
         let name = strip(token.get('name'));
         let conditionsSTR = '';
+
         if(state[state_name].conditions[name] && state[state_name].conditions[name].length){
             state[state_name].conditions[name].forEach((condition, i) => {
+                log(condition.name + ': ' + condition.duration)
                 if(typeof condition.duration === 'undefined' || condition.duration === false){
                     conditionsSTR += '<b>'+condition.name+'</b><br>';
                 }else if(condition.duration <= 0){
