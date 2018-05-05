@@ -192,8 +192,6 @@ var CombatTracker = CombatTracker || (function() {
 
         if(condition.duration === 0 || condition.duration === '') condition.duration = undefined;
 
-        log(condition)
-
         if(state[state_name].conditions[strip(token.get('name'))]){
             let hasCondition = false;
             state[state_name].conditions[strip(token.get('name'))].forEach(c => {
@@ -483,7 +481,6 @@ var CombatTracker = CombatTracker || (function() {
 
         if(state[state_name].conditions[name] && state[state_name].conditions[name].length){
             state[state_name].conditions[name].forEach((condition, i) => {
-                log(condition.name + ': ' + condition.duration)
                 if(typeof condition.duration === 'undefined' || condition.duration === false){
                     conditionsSTR += '<b>'+condition.name+'</b><br>';
                 }else if(condition.duration <= 0){

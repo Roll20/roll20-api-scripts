@@ -160,7 +160,7 @@ var CombatTracker = CombatTracker || (function() {
                     let token = getObj(s._type, s._id);
                     if(!token) return;
 
-                    addCondition(token, condition);
+                    addCondition(token, condition, true);
                 });
             break;
 
@@ -183,7 +183,7 @@ var CombatTracker = CombatTracker || (function() {
         }
     },
 
-    addCondition = (token, condition) => {
+    addCondition = (token, condition, announce=false) => {
         if('undefined' !== typeof StatusInfo && StatusInfo.getConditionByName){
             const duration = condition.duration;
             condition = StatusInfo.getConditionByName(condition.name) || condition;
@@ -191,8 +191,6 @@ var CombatTracker = CombatTracker || (function() {
         }
 
         if(condition.duration === 0 || condition.duration === '') condition.duration = undefined;
-
-        log(condition)
 
         if(state[state_name].conditions[strip(token.get('name'))]){
             let hasCondition = false;
@@ -209,12 +207,9 @@ var CombatTracker = CombatTracker || (function() {
         if(condition.icon){
             let prevSM = token.get('statusmarkers');
             token.set('status_'+condition.icon, true);
-            if('undefined' !== typeof StatusInfo && StatusInfo.sendConditionToChat){
+            if(announce && 'undefined' !== typeof StatusInfo && StatusInfo.sendConditionToChat){
                 StatusInfo.sendConditionToChat(condition);
             }
-            /*let prev = token;
-            prev.attributes.statusmarkers = prevSM;
-            notifyObservers('tokenChange', token, prev);*/
         }else makeAndSendMenu('Condition ' + condition.name + ' added to ' + token.get('name'));
     },
 
@@ -483,7 +478,6 @@ var CombatTracker = CombatTracker || (function() {
 
         if(state[state_name].conditions[name] && state[state_name].conditions[name].length){
             state[state_name].conditions[name].forEach((condition, i) => {
-                log(condition.name + ': ' + condition.duration)
                 if(typeof condition.duration === 'undefined' || condition.duration === false){
                     conditionsSTR += '<b>'+condition.name+'</b><br>';
                 }else if(condition.duration <= 0){
