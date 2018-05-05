@@ -1,5 +1,5 @@
 /*
- * Version 0.1.4
+ * Version 0.1.5
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
@@ -12,6 +12,8 @@
 
 var Treasure = Treasure || (function() {
     'use strict';
+
+    let treasure;
 
     // Styling for the chat responses.
     const styles = {
@@ -197,19 +199,19 @@ var Treasure = Treasure || (function() {
                     ] },
                     { roll: range(75, 76), treasure: [ 
                         { die: "2d4", worth: 25, type: "art" }, 
-                        { die: 1, table: "D", type: "magic" },
+                        { die: "1", table: "D", type: "magic" },
                     ] },
                     { roll: range(77, 78), treasure: [ 
                         { die: "3d6", worth: 50, type: "gems"	}, 
-                        { die: 1, table: "D", type: "magic" },
+                        { die: "1", table: "D", type: "magic" },
                     ] },
                     { roll: [79], treasure: [ 
                         { die: "3d6", worth: 100, type: "gems"	}, 
-                        { die: 1, table: "D", type: "magic" },
+                        { die: "1", table: "D", type: "magic" },
                     ] },
                     { roll: [80], treasure: [ 
                         { die: "2d4", worth: 250, type: "art" }, 
-                        { die: 1, table: "D", type: "magic" },
+                        { die: "1", table: "D", type: "magic" },
                     ] },
                     { roll: range(81, 84), treasure: [ 
                         { die: "2d4", worth: 25, type: "art" }, 
@@ -237,11 +239,11 @@ var Treasure = Treasure || (function() {
                     ] },
                     { roll: [99], treasure: [ 
                         { die: "3d6", worth: 100, type: "gems"	}, 
-                        { die: 1, table: "H", type: "magic" },
+                        { die: "1", table: "H", type: "magic" },
                     ] },
                     { roll:[100], treasure: [ 
                         { die: "2d4", worth: 250, type: "art" }, 
-                        { die: 1, table: "H", type: "magic" },
+                        { die: "1", table: "H", type: "magic" },
                     ] },
                 ]
             },
@@ -1005,8 +1007,7 @@ var Treasure = Treasure || (function() {
     },
 
     handleInput = (msg) => {
-        if (msg.type != 'api') return;
-        if(!playerIsGM(msg.playerid)) return;
+        if (msg.type != 'api' || !playerIsGM(msg.playerid)) return;
 
         // Split the message into command and argument(s)
         let args = msg.content.split(' ');
@@ -1031,6 +1032,12 @@ var Treasure = Treasure || (function() {
                     }
 
                     sendConfigMenu();
+                break;
+
+                case 'show':
+                    let what = args.shift() || 'all';
+
+                    sendTreasureToChat(what, true);
                 break;
 
                 default:
@@ -1058,17 +1065,17 @@ var Treasure = Treasure || (function() {
                             break;
                         }
 
-                        sendTreasureToChat(calculateTreasure(table, type, amount));
+                        treasure = calculateTreasure(table, type, amount)
+                        sendTreasureToChat();
                     }
                 break;
             }
         }
     },
 
-    calculateTreasure = (table, type='individual', amount=1) => {
+    calculateTreasure = (table, type='individual', times=1) => {
         let d100,
             checkRoll, 
-            treasure, 
             result = {
                 currency: { 
                     cp: 0,
@@ -1080,15 +1087,15 @@ var Treasure = Treasure || (function() {
                 objects: []
             };
 
-        amount = (amount) ? amount : 1;
-
-        for(var i = 0; i < amount; i++){
+        times = (times) ? times : 1;
+        for(var i = 0; i < times; i++){
             d100 = randomBetween(1, 100);
             checkRoll = (entry) => entry.roll.indexOf(d100) !== -1;
             treasure = {
                 currency: (type === 'hoard') ? table.coins : _.find(table, checkRoll).treasure,
                 objects: (type === 'hoard') ? _.find(table.objects, checkRoll).treasure : []
-            }
+            };
+            let amount;
 
             for(var currency in treasure.currency){
                 result.currency[currency] += rollDieString(treasure.currency[currency]);
@@ -1098,15 +1105,17 @@ var Treasure = Treasure || (function() {
                 treasure.objects.forEach(obj => {
                     switch(obj.type){
                         case 'gems':
-                            result.objects.push({ object: gemTables[obj.worth][randomBetween(0, gemTables[obj.worth].length-1)], amount: rollDieString(obj.die), type: 'gems' });
+                            amount = (obj.die === "1" || obj.die === 1) ? 1 :  rollDieString(obj.die);
+                            result.objects.push({ object: gemTables[obj.worth][randomBetween(0, gemTables[obj.worth].length-1)], amount: amount, type: 'gems' });
                         break;
 
                         case 'art':
-                            result.objects.push({ object: artTables[obj.worth][randomBetween(0, artTables[obj.worth].length-1)], amount: rollDieString(obj.die), type: 'art' });
+                            amount = (obj.die === "1" || obj.die === 1) ? 1 :  rollDieString(obj.die);
+                            result.objects.push({ object: artTables[obj.worth][randomBetween(0, artTables[obj.worth].length-1)], amount: amount, type: 'art' });
                         break;
 
                         case 'magic':
-                            let times = (obj.die === "1") ? 1 :  rollDieString(obj.die);
+                            let times = (obj.die === "1" || obj.die === 1) ? 1 :  rollDieString(obj.die);
                             for(var i = 0; i < times; i++){
                                 d100 = randomBetween(1, 100);
                                 checkRoll = (entry) => entry.roll.indexOf(d100) !== -1;
@@ -1130,7 +1139,7 @@ var Treasure = Treasure || (function() {
     rollDieString = (dieStr) => {
         let die = parseDie(dieStr);
 
-        let result = randomBetween(die.amount, die.dice);
+        let result = randomBetween(die.amount, die.dice*die.amount);
 
         if(!die.modifier) return result;
 
@@ -1183,50 +1192,82 @@ var Treasure = Treasure || (function() {
         return map;
     },
 
-    sendTreasureToChat = (treasure) => {
-        let contents = '<h5>Currency</h5>';
+    sendTreasureToChat = (what='all', override) => {
+        let target, contents, currency_contents, gem_contents, art_contents, magic_contents;
+
+        currency_contents = '<h5>Currency</h5>';
         for(var currency in treasure.currency){
             if(treasure.currency[currency] > 0){
-                contents += '<b>'+currency+'</b>: ' + formatNumber(treasure.currency[currency]) + '<br>';
+                currency_contents += '<b>'+currency+'</b>: ' + formatNumber(treasure.currency[currency]) + '<br>';
             }
         }
 
         const grouped = groupBy(treasure.objects, object => object.type);
 
         if(grouped.get('gems') && grouped.get('gems').length){
-            contents += "<br><h5>Gems</h5>";
+            gem_contents = "<h5>Gems</h5>";
             grouped.get('gems').forEach(obj => {
-                contents += (obj.amount) ? obj.amount + 'x ' : '';
-                contents += obj.object + '<br>';
+                gem_contents += (obj.amount) ? obj.amount + 'x ' : '';
+                gem_contents += obj.object + '<br>';
             })
         }
 
         if(grouped.get('art') && grouped.get('art').length){
-            contents += "<br><h5>Art Objects</h5>";
+            art_contents = "<h5>Art Objects</h5>";
             grouped.get('art').forEach(obj => {
-                contents += (obj.amount) ? obj.amount + 'x ' : '';
-                contents += obj.object + '<br>';
+                art_contents += (obj.amount) ? obj.amount + 'x ' : '';
+                art_contents += obj.object + '<br>';
             })
         }
 
         if(grouped.get('magic') && grouped.get('magic').length){
-            contents += "<br><h5>Magic Items</h5>";
+            magic_contents = "<h5>Magic Items</h5>";
             grouped.get('magic').forEach(obj => {
-                contents += (obj.amount) ? obj.amount + 'x ' : '';
-                contents += obj.object + '<br>';
+                magic_contents += (obj.amount) ? obj.amount + 'x ' : '';
+                magic_contents += obj.object + '<br>';
             })
         }
 
-        makeAndSendMenu(contents, 'Treasure', (state[state_name].config.onlyGM) ? 'gm' : '');
+        contents = currency_contents;
+        if(gem_contents) contents += '<br>'+gem_contents;
+        if(art_contents) contents += '<br>'+art_contents;
+        
+        if(override){
+            if(what === 'all'){
+                if(magic_contents) contents += '<br>' + magic_contents;
+            }else if(what === 'magic'){
+                contents = magic_contents;
+            }
+            makeAndSendMenu(contents, 'Treasure');
+
+            return;
+        }
+
+        if(state[state_name].config.chat_normal_treasure === state[state_name].config.chat_magic_items){
+            if(magic_contents) contents += '<br>'+magic_contents;
+            target = (state[state_name].config.chat_normal_treasure === 'gm') ? 'gm' : '';
+            if(target === 'gm') contents += makeButton('Show', '!'+state[state_name].config.command+' show', styles.button + styles.float.right);
+            makeAndSendMenu(contents, 'Treasure', target);
+        }else{
+            target = (state[state_name].config.chat_normal_treasure === 'gm') ? 'gm' : '';
+            if(target === 'gm') contents += makeButton('Show', '!'+state[state_name].config.command+' show normal', styles.button + styles.float.right);
+            makeAndSendMenu(contents, 'Treasure', target);
+
+            target = (state[state_name].config.chat_magic_items === 'gm') ? 'gm' : '';
+            if(target === 'gm') magic_contents += makeButton('Show', '!'+state[state_name].config.command+' show magic', styles.button + styles.float.right);
+            makeAndSendMenu(magic_contents, 'Treasure', target);
+        }
     },
 
     sendConfigMenu = (first, message) => {
         let commandButton = makeButton('!'+state[state_name].config.command, '!' + state[state_name].config.command + ' config command|?{Command (without !)}', styles.button + styles.float.right);
-        let onlyGMButton = makeButton(state[state_name].config.onlyGM, '!' + state[state_name].config.command + ' config onlyGM|'+!state[state_name].config.onlyGM, styles.button + styles.float.right);
+        let chatNormalButton = makeButton(state[state_name].config.chat_normal_treasure, '!' + state[state_name].config.command + ' config chat_normal_treasure|?{Target|gm|everyone}', styles.button + styles.float.right);
+        let chatMagicButton = makeButton(state[state_name].config.chat_magic_items, '!' + state[state_name].config.command + ' config chat_magic_items|?{Target|gm|everyone}', styles.button + styles.float.right);
 
         let listItems = [
             '<span style="'+styles.float.left+'">Command:</span> ' + commandButton,
-            '<span style="'+styles.float.left+'">Send to GM:</span> ' + onlyGMButton,
+            '<span style="'+styles.float.left+'">Treasure Target:</span> ' + chatNormalButton,
+            '<span style="'+styles.float.left+'">Magic Items Target:</span> ' + chatMagicButton,
         ];
 
         let resetButton = makeButton('Reset', '!' + state[state_name].config.command + ' reset', styles.button + styles.fullWidth);
@@ -1284,7 +1325,8 @@ var Treasure = Treasure || (function() {
         const defaults = {
             config: {
                 command: 'treasure',
-                onlyGM: true
+                chat_magic_items: 'everyone',
+                chat_normal_treasure: 'everyone'
             }
         };
 
@@ -1294,8 +1336,11 @@ var Treasure = Treasure || (function() {
             if(!state[state_name].config.hasOwnProperty('command')){
                 state[state_name].config.command = defaults.config.command;
             }
-            if(!state[state_name].config.hasOwnProperty('onlyGM')){
-                state[state_name].config.onlyGM = defaults.config.onlyGM;
+            if(!state[state_name].config.hasOwnProperty('chat_normal_treasure')){
+                state[state_name].config.chat_normal_treasure = defaults.config.chat_normal_treasure;
+            }
+            if(!state[state_name].config.hasOwnProperty('chat_magic_items')){
+                state[state_name].config.chat_magic_items = defaults.config.chat_magic_items;
             }
         }
 
