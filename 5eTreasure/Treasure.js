@@ -1253,9 +1253,10 @@ var Treasure = Treasure || (function() {
             if(target === 'gm') contents += makeButton('Show', '!'+state[state_name].config.command+' show normal', styles.button + styles.float.right);
             makeAndSendMenu(contents, 'Treasure', target);
 
+            if(!magic_contents) return;
             target = (state[state_name].config.chat_magic_items === 'gm') ? 'gm' : '';
             if(target === 'gm') magic_contents += makeButton('Show', '!'+state[state_name].config.command+' show magic', styles.button + styles.float.right);
-            if(magic_contents) makeAndSendMenu(magic_contents, 'Treasure', target);
+            makeAndSendMenu(magic_contents, 'Treasure', target);
         }
     },
 
