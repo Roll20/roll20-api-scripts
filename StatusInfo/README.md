@@ -82,6 +82,7 @@ Roll20 Thread: https://app.roll20.net/forum/post/6252784/script-statusinfo
 
 #### Changelog
 **v0.3.6 - 04-05-2018**
+* Better [CombatTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/CombatTracker) Support.
 * Bugfix.
 
 **v0.3.5 - 01-05-2018**

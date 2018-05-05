@@ -708,18 +708,19 @@ var StatusInfo = StatusInfo || (function() {
     };
 
     return {
-        CheckInstall: checkInstall,
+        checkInstall,
         ObserveTokenChange: observeTokenChange,
-        RegisterEventHandlers: registerEventHandlers,
-        GetConditions: getConditions,
-        getConditionByName: getConditionByName,
-        Conditions : handleConditions
+        registerEventHandlers,
+        getConditions,
+        getConditionByName,
+        handleConditions,
+        sendConditionToChat
     };
 })();
 
 on('ready', () => { 
     'use strict';
 
-    StatusInfo.CheckInstall();
-    StatusInfo.RegisterEventHandlers();
+    StatusInfo.checkInstall();
+    StatusInfo.registerEventHandlers();
 });
