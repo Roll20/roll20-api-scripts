@@ -11,7 +11,7 @@
 
 ---
 
-![Turn](https://i.imgur.com/zKG0n9V.png "Turn")
+![Turn](https://i.imgur.com/rqfiZZD.png "Turn")
 
 CombatTracker will be a great help in battles. Easily keep tracks of who's turn it is, use a turn timer, let players progress to the next turn by themselves, adding/removing conditions, etc.
 It has a lot of customizable configuration options.
@@ -22,17 +22,35 @@ If you use my [StatusInfo](https://github.com/RobinKuiper/Roll20APIScripts/tree/
 ![Token](https://i.imgur.com/Pbca4fn.png "Token")
 
 ### Commands
-![Menu](https://i.imgur.com/HLi4wqp.png "Menu")
+![Menu](https://i.imgur.com/I1VJz91.png "Menu")
 
 * **!ct** - Shows the CombatTracker menu.
-* **!ct help** - Shows the help menu.
 * **!ct config** - Shows the config menu.
+* **!ct favorites** - Shows the favorites menu.
 * **!ct start** - Starts the combat, if you have tokens selected it will try to roll initiative for them and add them to the tracker.
 * **!ct stop** - Stops the combat (closes the turntracker, removes the marker, clears the turnorder list, etc.).
 * **!ct next** - Goes to the next turn (a player can also use this if it is his turn).
-* **!ct add [condition name] [?duration]** - Adds a condition to the selected token(s) (duration is optionally (how much rounds.)).
+* **!ct prev** - Goes to the previous turn (gm only).
+* **!ct add [condition name] [?duration] [?direction] [?message]** - Adds a condition to the selected token(s) (duration is optionally (how much rounds.)).
+    * **[?duration]** - Optional duration, set `0` for no duration.
+    * **[?direction]** - The direction per turn, eg. `-1`, `-3`, `+1`, `+3`.
+    * **[?message]** - A message that will be visible.
 * **!ct remove [condition name]** - Removes a condition from the selected token(s).
 * **!ct reset conditions** - Resets all conditions.
+* **!ct st** - Stops the timer for this turn.
+* **!ct pt** - Pause timer toggle for this turn.
+
+### Favorites
+![Favorites](https://i.imgur.com/nQqPpNJ.png "Favorites")
+
+Here you can create, add and edit favorite conditions. By clicking on the name it will be added to the selected token(s).
+* **Name** - The name of the condition.
+* **Duration** - How long the condition lasts (0 for no duration).
+* **Direction** - The direction the duration will go to, eg. `-1`, `-3`, `+1`, `+3`.
+* **Message** - A small message that will be visible when it's the characters turn.
+
+![Edit Condition1](https://i.imgur.com/4qX4U3P.png "Edit Condition1")
+![Edit Condition2](https://i.imgur.com/u2HYbtz.png "Edit Condition2")
 
 ### Config
 ![Config](https://i.imgur.com/BhoUdlH.png "Config")
@@ -54,7 +72,7 @@ If you use my [StatusInfo](https://github.com/RobinKuiper/Roll20APIScripts/tree/
 * **Font Size** - The font size used for the token timer.
 
 ## Announcement Config
-![Announcement Config](https://i.imgur.com/9WatbLp.png "Announcement Config")
+![Announcement Config](https://i.imgur.com/BBVGnXH.png "Announcement Config")
 
 * **Announce Turn** - Announces who's turn it is in chat.
 * **Announce Round** - Announces the round in chat.
@@ -66,6 +84,16 @@ Roll20 Thread: https://app.roll20.net/forum/post/6349145/script-combattracker
 ---
 
 #### Changelog
+**v0.1.11**
+* !ct menu expanded.
+* Players can see Round number now.
+* Save and use favorite conditions.
+* Possibility to add a custom message to a condition.
+* Possiblity to add a direction to the duration of a condition, eg. `+1`, `+3`, `-1`, `-3`.
+* Possibility to pause the timer, `!ct pt` will toggle the pause. There also is a button in the menu, `!ct menu` or `!ct`.
+* Possibility to shorten a long name in the chat announcements.
+* Possibility to go to the previous turn.
+* Fixed initiative attribute config option.
 
 **v0.1.10**
 * Fixed a bug were conditions with StatusInfo support didn't get the duration provided (needs StatusInfo update to).
