@@ -18,6 +18,7 @@ Just a simple script to generate a treasure in chat with the DnD 5e Dungeon Mast
 
 * **!treasure config** - Shows the config menu.
 * **!treasure [?type] [cr] [?amount]** - This will generate the treasure. See some examples below.
+* **!treasure s [?type]** - Will create a treasure from the tokens selected.
 
 #### Examples
 ![T2](https://i.imgur.com/O2cgHcW.png "T2")
@@ -26,6 +27,19 @@ Just a simple script to generate a treasure in chat with the DnD 5e Dungeon Mast
 * **!treasure individual 5** - Same as above.
 * **!treasure 3 5** - Will generate an `individual` treasure for 5 CR 3 creatures.
 * **!treasure hoard 3** - Will generate a CR 3 `hoard` treasure.
+* **!treasure s** - Will generate an individual treasure from a combination of the challenge ratings of the selected tokens.
+* **!treasure s individual** - Same as above.
+* **!treasure s hoard** - Will creature a treasure hoard from the average of the selected token(s) challenge ratings.
+
+### Config
+![Config](https://i.imgur.com/IbRgwJA.png "Config")
+
+* **Command** - The command you want to use for this script.
+* **CR Attribute** - The CR attribute in the sheet you are using, defaulted to `5e OGL`.
+* **Treasure Target** - Send treasure to everyone or only GM.
+* **Magic Items Target** - Send magic items to everyone or only GM.
+
+![TR](https://i.imgur.com/hjz2Trx.png "TR")
 
 ##### Credits
 [Jeff Bennet](https://github.com/jfflbnntt) - The table idea.
@@ -33,6 +47,9 @@ Just a simple script to generate a treasure in chat with the DnD 5e Dungeon Mast
 ---
 
 #### Changelog
+**0.1.6**
+* Create treasure from selected tokens.
+
 **0.1.5**
 * Show last hidden treasure in normal chat.
 * Change normal treasure and magic item treasure targets (to everyone or to gm).

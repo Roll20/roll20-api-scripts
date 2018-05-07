@@ -1,5 +1,5 @@
 /*
- * Version 0.1.5
+ * Version 0.1.6
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
@@ -1015,6 +1015,8 @@ var Treasure = Treasure || (function() {
         let extracommand = args.shift();
 
         if (command == state[state_name].config.command) {
+            let table, type, amount;
+
             switch(extracommand){
                 case 'reset':
                     state[state_name] = {};
@@ -1040,36 +1042,87 @@ var Treasure = Treasure || (function() {
                     sendTreasureToChat(what, true);
                 break;
 
+                case 's':
+                    if(!msg.selected || !msg.selected.length){
+                        makeAndSendMenu('No tokens are selected.', '', 'gm');
+                        return;
+                    }
+
+                    type = args.shift() || 'individual';
+
+                    if(type !== 'hoard' && type !== 'individual'){
+                        makeAndSendMenu('<b>'+type+'</b> is not a valid option.');
+                        return;
+                    }
+
+                    let full_treasure = false;
+                    let ratings = (type === 'individual') ? {} : 0;
+                    amount = 0;
+                    msg.selected.map(s => getObj('graphic', s._id)).map(token => parseInt(getAttrByName(token.get('represents'), state[state_name].config.cr_attribute, 'current'))).forEach(cr => {
+                        if(!cr) return;
+                        if(type === 'individual'){
+                            if(ratings[cr]) ratings[cr]++
+                            else ratings[cr] = 1
+                        }else{
+                            ratings += cr;
+                            amount++
+                        }                        
+                    });
+
+                    if(type === 'individual'){
+                        for(var rating in ratings){
+                            table = getTable(rating, 'individual');
+                            treasure = calculateTreasure(table, 'individual', ratings[rating]);
+
+                            if(!full_treasure) full_treasure = treasure;
+                            else{
+                                for(var currency in treasure.currency){
+                                    full_treasure.currency[currency] += treasure.currency[currency];
+                                }
+                            }
+                        }
+                        treasure = full_treasure;
+                    }else{
+                        ratings = Math.floor(ratings / amount);
+                        table = getTable(ratings, 'hoard')
+                        treasure = calculateTreasure(table, 'hoard');
+                    }
+                    
+                    sendTreasureToChat();
+                break;
+
                 default:
-                    let type = (extracommand && extracommand.toLowerCase() === 'hoard') ? 'hoard' : 'individual',
-                        cr = (extracommand === 'hoard') ? args.shift() : extracommand,
-                        amount = parseInt(args.shift()),
-                        table;
+                    type = (extracommand && extracommand.toLowerCase() === 'hoard') ? 'hoard' : 'individual';
+                    let cr = (extracommand === 'hoard' || extracommand === 'individual') ? args.shift() : extracommand;
+                    amount = parseInt(args.shift());
 
                     if(cr){
-                        switch(cr){
-                            case '0': case '1': case '2': case '3': case '4':
-                                table = treasureTables[type][0];
-                            break;
-
-                            case '5': case '6': case '7': case '8': case '9': case '10':
-                                table = treasureTables[type][1];
-                            break;
-
-                            case '11': case '12': case '13': case '14': case '15': case '16':
-                                table = treasureTables[type][2];
-                            break;
-
-                            default:
-                                table = treasureTables[type][3];
-                            break;
-                        }
-
+                        table = getTable(cr, type);
                         treasure = calculateTreasure(table, type, amount)
                         sendTreasureToChat();
                     }
                 break;
             }
+        }
+    },
+
+    getTable = (cr, type) => {
+        switch(parseInt(cr)){
+            case 0: case 1: case 2: case 3: case 4:
+                return treasureTables[type][0];
+            break;
+
+            case 5: case 6: case 7: case 8: case 9: case 10:
+                return treasureTables[type][1];
+            break;
+
+            case 11: case 12: case 13: case 14: case 15: case 16:
+                return treasureTables[type][2];
+            break;
+
+            default:
+                return treasureTables[type][3];
+            break;
         }
     },
 
@@ -1262,11 +1315,13 @@ var Treasure = Treasure || (function() {
 
     sendConfigMenu = (first, message) => {
         let commandButton = makeButton('!'+state[state_name].config.command, '!' + state[state_name].config.command + ' config command|?{Command (without !)}', styles.button + styles.float.right);
+        let crAttrButton = makeButton(state[state_name].config.cr_attribute, '!' + state[state_name].config.command + ' config cr_attribute|?{Attribute|'+state[state_name].config.cr_attribute+'}', styles.button + styles.float.right);
         let chatNormalButton = makeButton(state[state_name].config.chat_normal_treasure, '!' + state[state_name].config.command + ' config chat_normal_treasure|?{Target|gm|everyone}', styles.button + styles.float.right);
         let chatMagicButton = makeButton(state[state_name].config.chat_magic_items, '!' + state[state_name].config.command + ' config chat_magic_items|?{Target|gm|everyone}', styles.button + styles.float.right);
 
         let listItems = [
             '<span style="'+styles.float.left+'">Command:</span> ' + commandButton,
+            '<span style="'+styles.float.left+'">CR Attribute:</span> ' + crAttrButton,
             '<span style="'+styles.float.left+'">Treasure Target:</span> ' + chatNormalButton,
             '<span style="'+styles.float.left+'">Magic Items Target:</span> ' + chatMagicButton,
         ];
@@ -1326,6 +1381,7 @@ var Treasure = Treasure || (function() {
         const defaults = {
             config: {
                 command: 'treasure',
+                cr_attribute: 'npc_challenge',
                 chat_magic_items: 'everyone',
                 chat_normal_treasure: 'everyone'
             }
@@ -1336,6 +1392,9 @@ var Treasure = Treasure || (function() {
         }else{
             if(!state[state_name].config.hasOwnProperty('command')){
                 state[state_name].config.command = defaults.config.command;
+            }
+            if(!state[state_name].config.hasOwnProperty('cr_attribute')){
+                state[state_name].config.cr_attribute = defaults.config.cr_attribute;
             }
             if(!state[state_name].config.hasOwnProperty('chat_normal_treasure')){
                 state[state_name].config.chat_normal_treasure = defaults.config.chat_normal_treasure;
