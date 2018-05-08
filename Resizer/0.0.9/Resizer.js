@@ -3,7 +3,7 @@
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1014
- * Roll20: https://app.roll20.net/users/1226016/robin-k
+ * Roll20: https://app.roll20.net/users/1226016/robin
  * Roll20 Thread: https://app.roll20.net/forum/post/6285519/script-resizer/
  * Github: https://github.com/RobinKuiper/Roll20APIScripts
  * Reddit: https://www.reddit.com/user/robinkuiper/

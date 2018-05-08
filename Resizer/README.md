@@ -1,9 +1,15 @@
 ## Resizer
 
+* Version 0.0.9
 * Skype: RobinKuiper.eu
 * Discord: Atheos#1095
-* Roll20: https://app.roll20.net/users/1226016/robin-k
+* Roll20: https://app.roll20.net/users/1226016/robin
+* Roll20 Thread: https://app.roll20.net/forum/post/6285519/script-resizer/
+* Roll20 Wiki: https://wiki.roll20.net/Script:Resizer
+* Github: https://github.com/RobinKuiper/Roll20APIScripts
 * Reddit: https://www.reddit.com/user/robinkuiper/
+* Patreon: https://patreon.com/robinkuiper
+* Paypal.me: https://www.paypal.me/robinkuiper
 
 ---
 

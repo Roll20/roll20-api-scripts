@@ -1,7 +1,7 @@
 {
     "name": "Blades in the Dark Companion Script",
     "script": "BladesCompanion.js",
-    "version": "2.1",
+    "version": "2.2",
     "description": "\n\n# Blades in the Dark Companion Script\n\nThis is a helper script mainly intended to make it easy to synchronise data (stress, trauma, harm, clocks) between the tabletop and the character sheet. Enter **!blades** in chat to get started. By default, the script will automatically create clocks on the tabletop when a clock is created on the sheet; this can be turned off in the configuration (enter **!blades config-menu**).",
     "authors": "Chris M., Jakob",
     "roll20userid": "693171, 726129",
@@ -17,5 +17,5 @@
         "text.*": "read,write"
     },
     "conflicts": [],
-    "previousversions": ["2.0"]
+    "previousversions": ["2.0", "2.1"]
 }

@@ -2,11 +2,14 @@
  * Version 0.0.9
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
- * Discord: Atheos#1014
- * Roll20: https://app.roll20.net/users/1226016/robin-k
+ * Discord: Atheos#1095
+ * Roll20: https://app.roll20.net/users/1226016/robin
  * Roll20 Thread: https://app.roll20.net/forum/post/6285519/script-resizer/
+ * Roll20 Wiki: https://wiki.roll20.net/Script:Resizer
  * Github: https://github.com/RobinKuiper/Roll20APIScripts
  * Reddit: https://www.reddit.com/user/robinkuiper/
+ * Patreon: https://patreon.com/robinkuiper
+ * Paypal.me: https://www.paypal.me/robinkuiper
 */
 
 var Resizer = Resizer || (function() {
@@ -308,7 +311,7 @@ var Resizer = Resizer || (function() {
     makeAndSendMenu = (contents, title, whisper) => {
         title = (title && title != '') && makeTitle(title)
         whisper = (whisper && whisper !== '') && '/w ' + whisper + ' ';
-        sendChat(script_name, whisper + '<div style="'+styles.menu+styles.overflow+'">'+title+contents+'</div>');
+        sendChat(script_name, whisper + '<div style="'+styles.menu+styles.overflow+'">'+title+contents+'</div>', null, {noarchive:true});
     },
 
     makeTitle = (title) => {
