@@ -1,5 +1,5 @@
 /*
- * Version 0.1.9
+ * Version 0.1.8
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
@@ -136,32 +136,17 @@ var Concentration = Concentration || (function() {
         if(prev && obj.get('status_'+marker) && obj.get(bar) < prev[bar]){
             let calc_DC = Math.floor((prev[bar] - obj.get(bar))/2),
                 DC = (calc_DC > 10) ? calc_DC : 10,
-                con_save_mod = parseInt(getAttrByName(obj.get('represents'), state[state_name].config.bonus_attribute, 'current')) || 0,
                 chat_text;
 
             if(target === 'character'){
-                if(state[state_name].config.auto_roll_save){
-                    makeAndSendMenu('&{template:default} {{name='+obj.get('name')+' - Concentration Save}} {{Modifier='+con_save_mod+'}} {{Roll=[[1d20cf<'+(DC-con_save_mod-1)+'cs>'+(DC-con_save_mod-1)+'+'+con_save_mod+']]}} {{DC='+DC+'}}', '', 'gm');
-                }else{
-                    target = createWhisperName(obj.get('name'));
-                    chat_text = "Make a Concentration Check - <b>DC " + DC + "</b>.";
-                    makeAndSendMenu(chat_text, '', target);
-                }
+                target = createWhisperName(obj.get('name'));
+                chat_text = "Make a Concentration Check - <b>DC " + DC + "</b>.";
             }else if(target === 'everyone'){
-                if(state[state_name].config.auto_roll_save){
-                    makeAndSendMenu('&{template:default} {{name='+obj.get('name')+' - Concentration Save}} {{Modifier='+con_save_mod+'}} {{Roll=[[1d20cf<'+(DC-con_save_mod-1)+'cs>'+(DC-con_save_mod-1)+'+'+con_save_mod+']]}} {{DC='+DC+'}}');
-                }else{
-                    chat_text = '<b>'+obj.get('name')+'</b> must make a Concentration Check - <b>DC ' + DC + '</b>.';
-                    makeAndSendMenu(chat_text);
-                }
-            }else{
-                if(state[state_name].config.auto_roll_save){
-                    makeAndSendMenu('&{template:default} {{name='+obj.get('name')+' - Concentration Save}} {{Modifier='+con_save_mod+'}} {{Roll=[[1d20cf<'+(DC-con_save_mod-1)+'cs>'+(DC-con_save_mod-1)+'+'+con_save_mod+']]}} {{DC='+DC+'}}', '', 'gm');
-                }else{
-                    chat_text = '<b>'+obj.get('name')+'</b> must make a Concentration Check - <b>DC ' + DC + '</b>.';
-                    makeAndSendMenu(chat_text, '', 'gm');
-                }
+                target = ''
+                chat_text = '<b>'+obj.get('name')+'</b> must make a Concentration Check - <b>DC ' + DC + '</b>.';
             }
+
+            makeAndSendMenu(chat_text, '', target);
 
             let length = checked.push(obj.get('represents'));
             setTimeout(() => {
@@ -185,31 +170,23 @@ var Concentration = Concentration || (function() {
         })
         markerDropdown += '}';
 
-        let markerButton = makeButton(state[state_name].config.statusmarker, '!' + state[state_name].config.command + ' config statusmarker|'+markerDropdown, styles.button + styles.float.right),
-            commandButton = makeButton('!'+state[state_name].config.command, '!' + state[state_name].config.command + ' config command|?{Command (without !)}', styles.button + styles.float.right),
-            barButton = makeButton('bar ' + state[state_name].config.bar, '!' + state[state_name].config.command + ' config bar|?{Bar|Bar 1 (green),1|Bar 2 (blue),2|Bar 3 (red),3}', styles.button + styles.float.right),
-            sendToButton = makeButton(state[state_name].config.send_reminder_to, '!' + state[state_name].config.command + ' config send_reminder_to|?{Send To|Everyone,everyone|Character,character|GM,gm}', styles.button + styles.float.right),
-            addConMarkerButton = makeButton(state[state_name].config.auto_add_concentration_marker, '!' + state[state_name].config.command + ' config auto_add_concentration_marker|'+!state[state_name].config.auto_add_concentration_marker, styles.button + styles.float.right),
-            autoRollButton = makeButton(state[state_name].config.auto_roll_save, '!' + state[state_name].config.command + ' config auto_roll_save|'+!state[state_name].config.auto_roll_save, styles.button + styles.float.right),
-            bonusAttrButton = makeButton(state[state_name].config.bonus_attribute, '!' + state[state_name].config.command + ' config bonus_attribute|?{Attribute|'+state[state_name].config.bonus_attribute+'}', styles.button + styles.float.right),
+        let markerButton = makeButton(state[state_name].config.statusmarker, '!' + state[state_name].config.command + ' config statusmarker|'+markerDropdown, styles.button + styles.float.right);
+        let commandButton = makeButton('!'+state[state_name].config.command, '!' + state[state_name].config.command + ' config command|?{Command (without !)}', styles.button + styles.float.right);
+        let barButton = makeButton('bar ' + state[state_name].config.bar, '!' + state[state_name].config.command + ' config bar|?{Bar|Bar 1 (green),1|Bar 2 (blue),2|Bar 3 (red),3}', styles.button + styles.float.right);
+        let sendToButton = makeButton(state[state_name].config.send_reminder_to, '!' + state[state_name].config.command + ' config send_reminder_to|?{Send To|Everyone,everyone|Character,character|GM,gm}', styles.button + styles.float.right);
+        let addConMarkerButton = makeButton(state[state_name].config.auto_add_concentration_marker, '!' + state[state_name].config.command + ' config auto_add_concentration_marker|'+!state[state_name].config.auto_add_concentration_marker, styles.button + styles.float.right);
 
-            listItems = [
-                '<span style="'+styles.float.left+'">Command:</span> ' + commandButton,
-                '<span style="'+styles.float.left+'">Statusmarker:</span> ' + markerButton,
-                '<span style="'+styles.float.left+'">HP Bar:</span> ' + barButton,
-                '<span style="'+styles.float.left+'">Send Reminder To:</span> ' + sendToButton,
-                '<span style="'+styles.float.left+'">Auto Add Con. Marker: <p style="font-size: 8pt;">Works only for 5e OGL Sheet.</p></span> ' + addConMarkerButton,
-                '<span style="'+styles.float.left+'">Auto Roll Save:</span> ' + autoRollButton,
-            ],
+        let listItems = [
+            '<span style="'+styles.float.left+'">Command:</span> ' + commandButton,
+            '<span style="'+styles.float.left+'">Statusmarker:</span> ' + markerButton,
+            '<span style="'+styles.float.left+'">HP Bar:</span> ' + barButton,
+            '<span style="'+styles.float.left+'">Send Reminder To:</span> ' + sendToButton,
+            '<span style="'+styles.float.left+'">Auto Add Con. Marker: <p style="font-size: 8pt;">Works only for 5e OGL Sheet.</p></span> ' + addConMarkerButton,
+        ];
 
-            resetButton = makeButton('Reset', '!' + state[state_name].config.command + ' reset', styles.button + styles.fullWidth),
+        let resetButton = makeButton('Reset', '!' + state[state_name].config.command + ' reset', styles.button + styles.fullWidth);
 
-            title_text = (first) ? script_name + ' First Time Setup' : script_name + ' Config';
-
-        if(state[state_name].config.auto_roll_save){
-            listItems.push('<span style="'+styles.float.left+'">Bonus Attribute:</span> ' + bonusAttrButton)
-        }
-
+        let title_text = (first) ? script_name + ' First Time Setup' : script_name + ' Config';
         message = (message) ? '<p>'+message+'</p>' : '';
         let contents = message+makeList(listItems, styles.reset + styles.list + styles.overflow, styles.overflow)+'<hr><p style="font-size: 80%">You can always come back to this config by typing `!'+state[state_name].config.command+' config`.</p><hr>'+resetButton;
         makeAndSendMenu(contents, title_text, 'gm');
@@ -268,9 +245,7 @@ var Concentration = Concentration || (function() {
                 statusmarker: 'stopwatch',
                 bar: 1,
                 send_reminder_to: 'everyone', // character,gm,
-                auto_add_concentration_marker: true,
-                auto_roll_save: true,
-                bonus_attribute: 'constitution_save_bonus'
+                auto_add_concentration_marker: true
             }
         };
 
@@ -291,12 +266,6 @@ var Concentration = Concentration || (function() {
             }
             if(!state[state_name].config.hasOwnProperty('auto_add_concentration_marker')){
                 state[state_name].config.auto_add_concentration_marker = defaults.config.auto_add_concentration_marker;
-            }
-            if(!state[state_name].config.hasOwnProperty('auto_roll_save')){
-                state[state_name].config.auto_roll_save = defaults.config.auto_roll_save;
-            }
-            if(!state[state_name].config.hasOwnProperty('bonus_attribute')){
-                state[state_name].config.bonus_attribute = defaults.config.bonus_attribute;
             }
         }
 
