@@ -2,7 +2,7 @@
 
 * Skype: RobinKuiper.eu
 * Discord: Atheos#1095
-* Roll20: https://app.roll20.net/users/1226016/robin-k
+* Roll20: https://app.roll20.net/users/1226016/robin
 * Reddit: https://www.reddit.com/user/robinkuiper/
 * Patreon: https://www.patreon.com/robinkuiper
 
@@ -58,3 +58,9 @@ When a token is given the statusmarker you have set up in the config (`dead` by 
 This works great with [TokenMod](https://app.roll20.net/forum/post/4225825/script-update-tokenmod-an-interface-to-adjusting-properties-of-a-token-from-a-macro-or-the-chat-area/?pageforid=4225825#post-4225825) statusmarker changes and with my [DeathTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/DeathTracker) script.
 
 Roll20 Thread: https://app.roll20.net/forum/post/6275681/script-lazyexperience/?pageforid=6275681#post-6275681
+
+---
+
+#### Changelog
+**v0.1.12**
+* Bugfix where the console gave errors when a player left.
