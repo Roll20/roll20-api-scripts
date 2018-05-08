@@ -2,10 +2,12 @@
  * Version 0.0.5
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
- * Discord: Atheos#1014
- * Roll20: https://app.roll20.net/users/1226016/robin-k
+ * Discord: Atheos#1095
+ * Roll20: https://app.roll20.net/users/1226016/robin
  * Github: https://github.com/RobinKuiper/Roll20APIScripts
  * Reddit: https://www.reddit.com/user/robinkuiper/
+ * Patreon: https://patreon.com/robinkuiper
+ * Paypal.me: https://www.paypal.me/robinkuiper
 */
 
 var Drunk = Drunk || (function() {
@@ -297,7 +299,7 @@ var Drunk = Drunk || (function() {
     makeAndSendMenu = (contents, title, whisper) => {
         title = (title && title != '') ? makeTitle(title) : '';
         whisper = (whisper && whisper !== '') ? '/w ' + whisper + ' ' : '';
-        sendChat(script_name, whisper + '<div style="'+styles.menu+styles.overflow+'">'+title+contents+'</div>');
+        sendChat(script_name, whisper + '<div style="'+styles.menu+styles.overflow+'">'+title+contents+'</div>', null, {noarchive:true});
     },
 
     makeTitle = (title) => {

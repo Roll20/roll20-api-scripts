@@ -1,11 +1,12 @@
 {
-    "name": "InspirationTracker (Robin Kuiper)",
+    "name": "InspirationTracker",
     "script": "InspirationTracker.js",
-    "version": "0.1.2",
-    "previousversions": [],
+    "version": "0.1.4",
+    "previousversions": ["0.1.2"],
     "description": "InspirationTracker keeps track of inspiration and adds a statusmarker to the characters token(s). You can also easily give an inspiration with the command `!inspiration` when you have token(s) selected.\nWorks great with my [StatusInfo](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/StatusInfo) script.\n\n### Commands\n\n* **!inspiration** - Gives an inspiration to selected token(s), or shows the config menu when nothing is selected.\n* **!inspiration config** - Shows the config menu.",
     "authors": "Robin Kuiper",
     "roll20userid": "1226016",
+    "patreon": "https://www.patreon.com/robinkuiper",
     "useroptions": [],
     "dependencies": {
         "state.INSPIRATIONTRACKER": "read,write",
