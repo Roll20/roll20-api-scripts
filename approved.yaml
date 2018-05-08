@@ -473,3 +473,11 @@ lazyexperience:
 inspirationtrack:
 - InspirationTracker
 - System Toolbox
+
+syncpage:
+- SyncPage
+- Utility
+
+combattracker:
+- CombatTracker
+- Utility

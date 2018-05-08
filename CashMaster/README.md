@@ -10,7 +10,14 @@ Make sure you use the correct sheet setting (`OGL`, `5E-Shaped`, or `other`).
 
 ## Usage
 
-First, select one or several party members. 
+First, select one or several party members if you are the DM or your own token if you are a player.
+
+## Player Commands
+
+- `!cm` or `!cm -help` or `!cm -h` will show this help overview
+- `!cm - transfer "[receipient character name]" [amount][currency]` or `!cm -t "[receipient character name]" [amount][currency]` to transfer coins to the recipient.
+
+## GM Commands
 
 ### Base commands
 
@@ -26,6 +33,7 @@ First, select one or several party members.
 
 ### Conversion/Cleanup commands
 
+- `!cm -merge` or `!cm -m` to merge coins to the densest denomination possible.
 - `!cm -share` or `!cm -s` to **convert and share** the money equally between party members, converting the amount into the best combination of gold, silver and copper (this should be used in smaller stores),
 - `!cm -best-share` or `!cm -bs` to **convert and share** the money equally between party members, converting the amount into the best combination of platinum, gold, electrum, silver and copper (this should only be used in larger stores that have a fair amount of cash),
 
@@ -40,8 +48,9 @@ First, select one or several party members.
 3. `!cm -loot 50gp` will (more or less evenly) distribute 50 gp among the party members.
 4. `!cm -pay 10gp` will subtract 10gp from each selected character. It will try to exchange the other coin types (e.g. it will use 1pp if the player doesn't have 10gp).
 5. `!cm -share` will collect all the money and share it evenly on the members, using gp, sp and cp only (pp and ep will be converted). Can also be used for one character to 'exchange' money.
-6. `!cm -convert` - same as `!cm -share`, but will also use platinum and electrum.
+6. `!cm -transfer "Tazeka Cauldron" 40gp` will transfer 40 gp from the selected token to the character sheet named Tazeka Cauldron.
+7. `!cm -convert` - same as `!cm -share`, but will also use platinum and electrum.
 
 ## Credits
 
-With thanks to [Kryx](https://app.roll20.net/users/277007/kryx)/[mlenser](https://github.com/mlenser) for his contributions.
+With thanks to [Kryx](https://app.roll20.net/users/277007/kryx)/[mlenser](https://github.com/mlenser) and [Michael G.](https://app.roll20.net/users/1583758/michael-g)/[VoltCruelerz](https://github.com/VoltCruelerz) for their contributions.

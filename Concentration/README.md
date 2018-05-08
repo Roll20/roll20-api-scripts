@@ -40,7 +40,6 @@ If you use the 5e OGL character sheet, it can also automaticly add the concentra
 #### Changelog:
 **0.1.9**
 * Auto Roll Saves (Optional)
-
 **01-05-2018 - 0.1.8**
 * Bugfix.
 
