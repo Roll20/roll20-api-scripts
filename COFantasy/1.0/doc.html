@@ -581,7 +581,7 @@
                 <ul>
                   <li><code>--bonus</code> pour spécifier un bonus numérique au jet.</li>
                   <li><code>--attribut</code> pour spécifier un attribut dont la valeur doit être ajoutée au jet. Il est possible de spécifier plusieurs attributs, comme par exemple <code>--attribut perception --attribut vigilance</code> pour un jet de vigilance.</li>
-                  <li><code>--nom</code> précise le nom du jet à afficher. De plus, cela va aussi faire rechercher un attribut de même nom (en mettant les caractères en minuscule). Par exemple <code>!cof-jet DEX Discrétion</code> va lancer un jet de DEX, qui sera affiché comme un jet de Discrétion, et qui va ajouter au jet le bonus d'un éventuel attribut <code>discrétion</code>.</li>
+                  <li><code>--nom</code> précise le nom du jet à afficher. De plus, cela va aussi faire rechercher un attribut de même nom (en mettant les caractères en minuscule). Par exemple <code>!cof-jet DEX --nom Discrétion</code> va lancer un jet de DEX, qui sera affiché comme un jet de Discrétion, et qui va ajouter au jet le bonus d'un éventuel attribut <code>discrétion</code>.</li>
                   <li><code>--secret</code> : le jet n'est visible que par la personne qui a lancé la commande.</li>
                   <li><code>--competences</code> : si la commande n'a pas déjà d'option <code>--nom</code>, invite l'utilisateur à choisir une compétence parmis une liste correspondant à la caractéristique (et provenant du handout <code>Compétences</code> tel que défini plus haut).</li>
                 </ul>
@@ -785,6 +785,7 @@
                   <li><strong>Baies magiques</strong> : Utiliser <code>!cof-distribuer-baies</code> avec option <code>--allies --self</code> ou <code>--target</code> pour donner des baies (en ayant sélectionné le druide, le mieux est d'utiliser une ability). Pour consommer ensuite une baie, il faut utiliser <code>!cof-consommables</code>.</li>
                   <li><strong>Forêt vivante</strong> : pas vraiment de support. On peut baisser temporairement l'init des adversaires sur la fiche.</li>
                   <li><strong>Régénération</strong> : <code>!cof-effet-temp regeneration [[@{selected|NIVEAU} + @{selected|SAG}]] --lanceur @{selected|token_id} --target @{target|token_id} --limiteCibleParJour 1 --portee 0 --mana 1</code>. Si vous utilisez l'option de magie puissante, vous pouvez rajouter <code>?{Y consacrer tout le tour ?|oui,--valeur 4|non,}</code>, et si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,}</code>, à la place.</li>
+                  <li><strong>Forme d'arbre</strong> : <code>!cof-effet-temp formeDArbre [[5+@{selected|SAG}]] --mana 2</code>. J'ai choisi de donner comme pouvoir supplémentaire à cette forme d'avoir ses propres PVs, et le druide récupère ses PVs originaux à la fin de l'effet. La transformation est annulée aussi si l'arbre perd tous ses PVs. Le nombre de PVs par défaut est de 40, mais il peut être modifié en ajoutant au argument <code>--valeur <i>pv</i></code>. Pour augmenter un peu l'intérêt de ce sort, je lui fais aussi augmenter de 50% le bonus de peau d'écorce. Si vous utilisez les actions à afficher à chaque tour, vous pouvez aussi créer une ability de nom <code>#FormeArbre#</code> contenant les sorts et actions possibles en forme d'arbre. Si une telle ability existe, elle va toujours afficher au moins les actions défensive, d'attente et d'attaque sous forme d'arbre (pas besoin de créer une attaque dédiée sur la fiche). </li>
                 </ol>
                 <h4 class="text-secondary" id="voie_végétaux">Voie des végétaux</h4>
                 <ol>
@@ -941,6 +942,15 @@
                 </ol>
                 <h4 class="text-secondary">Voie du familier</h4>
                 <h4 class="text-secondary">Voie des mutations</h4>
+                <ol>
+                  <li><strong>Mutation offensive</strong> : 
+                    <ul>
+                      <li> Faire une attaque correspondant à l'appendice monstrueux, en tenant compte d'un +3 en force. La lancer avec l'option <code>--si etat mutationOffensive</code>.</li>
+                      <li> Pour faire la mutation, <code>!cof-effet-temp mutationOffensive [[5+@{selected|CHA}]]</code>.</li>
+                      <li> Si vous utilisez les options de tempête de mana, vous pouvew rajouter <code>--rang 1 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,}</code> à la mutation.</li>
+                    </ul></li>
+                    <li><strong>Mutation protectrice</strong> : <code>!cof-effet ?{Mutation protectrice|Cuirasse,mutationCuirasse|Écailles rouges,mutationEcaillesRouges|Fourrure violette,mutationFourrureViolette|Ouïes,mutationOuies|Sang noir,mutationSangNoir} true --classeEffet mutationProtectrice</code>. Pour la valeur de protection de la cuirasse, vous pouvez soit utiliser un attribut <code>voieDesMutations</code>, de valeur le rang dans la voie, soit remplacer <code>mutationCuirasse</code> par <code>mutationCuirasse --valeur <i>rang</i></code>. Pour enlever la mutation, le MJ peut ensuite simplement sélectionner le personnage et utiliser <code>!cof-fin-classe-effet mutationProtectrice</code>.</li>
+                </ol>
                 <h4 class="text-secondary">Voie des portes</h4>
                 <ol>
                   <li><strong>Raccourci</strong> : pas de support particulier.</li>
@@ -1109,7 +1119,7 @@
                 <h4 class="text-secondary">Voie des soins</h4>
                 <p style="margin-top:0px; margin-bottom:0px">Utiliser un attribut <code>voieDesSoins</code> avec comme valeur le rang dans la voie</p>
                 <ol>
-                  <li><strong>Soins légers</strong> : <code>!cof-soin @{selected|token_id} @{target|token_id} leger</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 1 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,}</code>.</li>
+                  <li><strong>Soins légers</strong> : <code>!cof-soin @{selected|token_id} @{target|token_id} leger</code>. Vous pouvez rajouter un petit effet visuel, par exemple avec <code>--targetFx bubbling-holy</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 1 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,}</code>.</li>
                   <li><strong>Soins modérés</strong> : <code>!cof-soin @{selected|token_id} @{target|token_id} modere</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,}</code>.</li>
                   <li><strong>Soins de groupe</strong> : <code>!cof-soin @{selected|token_id} groupe</code> (ne pas oublier de définir des <a href="#allie">alliés</a>). Le sort nécessite un point de mana (barre 2 du token), et accepte l'option <code>--puissant</code> et les options de tempête de mana. Attention, toutefois, le sort ne va pas automatiquement soigner les personnages notés comme morts, ce qui est le cas général si ils sont tombés à 0 PV. Si certains alliés notés morts ne sont pas vraiment morts, mais juste inconscient, il faudra que le MJ fasse la mise à jour de l'état et des PV lui-même.</li>
                 </ol>
@@ -1195,12 +1205,16 @@
                 <h4 class="text-secondary">Voie de l'arc et du cheval</h4>
                 <h4 class="text-secondary">Voie du dirigeant</h4>
                 <ol>
-                  <li><strong>Éduqué</strong> : simplement noter les bonus et compétences sur la fiche.</li>
+                  <li><strong>Éduqué</strong> : simplement noter les bonus et compétences sur la fiche, ou des attributs <code>art</code> et <code>seduction</code>, si vous utilisez <code>!cof-jet</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de l'honneur</h4>
+                <ol>
+                  <li><strong>Chef né</strong> : ajouter un attrubut <code>immunitePeur</code>, de valeur <code>true</code>, et des attributs ou compétences pour l'intimidation et commander.</li>
+                </ol>
                 <h4 class="text-secondary">Voie du ki</h4>
                 <ol>
                   <li><strong>Esprit vide</strong> : reporter le bonus sur la fiche.</li>
+                  <li><strong>Main vide</strong> : faire l'attaque à mains nues correspondant à la capacité.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du sabre</h4>
                 <ol>
