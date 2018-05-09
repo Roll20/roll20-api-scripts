@@ -4,6 +4,7 @@
 * Discord: Atheos#1095
 * Roll20: https://app.roll20.net/users/1226016/robin
 * Roll20 Wiki: https://wiki.roll20.net/Script:Concentration
+* Roll20 Thread: https://app.roll20.net/forum/post/6364317/script-concentration/?pageforid=6364317#post-6364317
 * Github: https://github.com/RobinKuiper/Roll20APIScripts
 * Reddit: https://www.reddit.com/user/robinkuiper/
 * Patreon: https://patreon.com/robinkuiper
@@ -17,7 +18,6 @@ If you use the 5e OGL character sheet, it can also automaticly add the concentra
 
 ![Concentration Reminder](https://i.imgur.com/zEVJpOH.png "Concentration Reminder")
 ![Spell Cast](https://i.imgur.com/HucNIDc.png "Spell Cast")
-![Auto Roll](https://i.imgur.com/J4nABJN.png "Auto Roll")
 
 ### Commands
 
@@ -35,11 +35,17 @@ If you use the 5e OGL character sheet, it can also automaticly add the concentra
 * **Auto Roll Save** - If you want to Automatically roll the saving throw.
 * **Bonus Attribute** - Which attribute to use for the bonus modifier (defaulted to the constitution saving throw for the 5e OGL sheet).
 
+![Auto Roll](https://i.imgur.com/WHUV5iw.png "Auto Roll")
+
 ---
 
 #### Changelog:
+**0.1.10**
+* If you use autoroll, and the save failed, it will automatically remove the statusmarker.
+
 **0.1.9**
 * Auto Roll Saves (Optional)
+
 **01-05-2018 - 0.1.8**
 * Bugfix.
 

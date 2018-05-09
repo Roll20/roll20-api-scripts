@@ -1,10 +1,11 @@
 /*
- * Version 0.1.9
+ * Version 0.1.10
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
  * Roll20: https://app.roll20.net/users/1226016/robin
  * Roll20 Wiki: https://wiki.roll20.net/Script:Concentration
+ * Roll20 Thread: https://app.roll20.net/forum/post/6364317/script-concentration/?pageforid=6364317#post-6364317
  * Github: https://github.com/RobinKuiper/Roll20APIScripts
  * Reddit: https://www.reddit.com/user/robinkuiper/
  * Patreon: https://patreon.com/robinkuiper
@@ -120,9 +121,7 @@ var Concentration = Concentration || (function() {
         const marker = state[state_name].config.statusmarker
         
         if(!obj.get('status_'+marker)){
-            findObjs({ type: obj.get('type'), represents: obj.get('represents') }).forEach(o => {
-                o.set('status_'+marker, false);
-            });
+            removeMarker(obj.get('represents'));
         }
     },
 
@@ -140,27 +139,60 @@ var Concentration = Concentration || (function() {
                 chat_text;
 
             if(target === 'character'){
-                if(state[state_name].config.auto_roll_save){
-                    makeAndSendMenu('&{template:default} {{name='+obj.get('name')+' - Concentration Save}} {{Modifier='+con_save_mod+'}} {{Roll=[[1d20cf<'+(DC-con_save_mod-1)+'cs>'+(DC-con_save_mod-1)+'+'+con_save_mod+']]}} {{DC='+DC+'}}', '', 'gm');
-                }else{
-                    target = createWhisperName(obj.get('name'));
-                    chat_text = "Make a Concentration Check - <b>DC " + DC + "</b>.";
-                    makeAndSendMenu(chat_text, '', target);
-                }
+                chat_text = "Make a Concentration Check - <b>DC " + DC + "</b>.";
+                target = createWhisperName(obj.get('name'));
             }else if(target === 'everyone'){
-                if(state[state_name].config.auto_roll_save){
-                    makeAndSendMenu('&{template:default} {{name='+obj.get('name')+' - Concentration Save}} {{Modifier='+con_save_mod+'}} {{Roll=[[1d20cf<'+(DC-con_save_mod-1)+'cs>'+(DC-con_save_mod-1)+'+'+con_save_mod+']]}} {{DC='+DC+'}}');
-                }else{
-                    chat_text = '<b>'+obj.get('name')+'</b> must make a Concentration Check - <b>DC ' + DC + '</b>.';
-                    makeAndSendMenu(chat_text);
-                }
+                chat_text = '<b>'+obj.get('name')+'</b> must make a Concentration Check - <b>DC ' + DC + '</b>.';
+                target = '';
             }else{
-                if(state[state_name].config.auto_roll_save){
-                    makeAndSendMenu('&{template:default} {{name='+obj.get('name')+' - Concentration Save}} {{Modifier='+con_save_mod+'}} {{Roll=[[1d20cf<'+(DC-con_save_mod-1)+'cs>'+(DC-con_save_mod-1)+'+'+con_save_mod+']]}} {{DC='+DC+'}}', '', 'gm');
-                }else{
-                    chat_text = '<b>'+obj.get('name')+'</b> must make a Concentration Check - <b>DC ' + DC + '</b>.';
-                    makeAndSendMenu(chat_text, '', 'gm');
-                }
+                chat_text = '<b>'+obj.get('name')+'</b> must make a Concentration Check - <b>DC ' + DC + '</b>.';
+                target = 'gm';
+            }
+
+            if(state[state_name].config.auto_roll_save){
+                let whisper = (target !== '') ? '/w ' + target : '';
+                //&{template:default} {{name='+obj.get('name')+' - Concentration Save}} {{Modifier='+con_save_mod+'}} {{Roll=[[1d20cf<'+(DC-con_save_mod-1)+'cs>'+(DC-con_save_mod-1)+'+'+con_save_mod+']]}} {{DC='+DC+'}}
+                sendChat(script_name, '[[1d20cf<'+(DC-con_save_mod-1)+'cs>'+(DC-con_save_mod-1)+'+'+con_save_mod+']]', results => {
+                    let rollresult = results[0].inlinerolls[0].results.rolls[0].results[0].v,
+                        total = rollresult + con_save_mod,
+                        success = total >= DC,
+                        result_text = (success) ? 'Success' : 'Failed',
+                        result_color = (success) ? 'green' : 'red',
+                        title = 'Concentration Save <br> <b style="font-size: 10pt; color: gray;">'+obj.get('name')+'</b>';
+
+                    let contents = ' \
+                    <table style="width: 100%; text-align: left;"> \
+                        <tr> \
+                            <th>DC</th> \
+                            <td>'+DC+'</td> \
+                        </tr> \
+                        <tr> \
+                            <th>Modifier</th> \
+                            <td>'+con_save_mod+'</td> \
+                        </tr> \
+                        <tr> \
+                            <th>Roll Result</th> \
+                            <td>'+rollresult+'</td> \
+                        </tr> \
+                    </table> \
+                    <div style="text-align: center"> \
+                        <b style="font-size: 16pt;"> \
+                            <span style="border: 1px solid '+result_color+'; padding-bottom: 2px; padding-top: 4px;">[['+rollresult+'+'+con_save_mod+']]</span><br><br> \
+                            '+result_text+' \
+                        </b> \
+                    </div>'
+                    makeAndSendMenu(contents, title, target);
+
+                    if(target !== '' && target !== 'gm'){
+                        makeAndSendMenu(contents, title, 'gm');
+                    }
+
+                    if(!success){
+                        removeMarker(obj.get('represents'));
+                    }
+                });
+            }else{
+                makeAndSendMenu(chat_text, '', target);
             }
 
             let length = checked.push(obj.get('represents'));
@@ -168,6 +200,12 @@ var Concentration = Concentration || (function() {
                 checked.splice(length-1, 1);
             }, 1000);
         }
+    },
+
+    removeMarker = (represents, type='graphic') => {
+        findObjs({ type, represents }).forEach(o => {
+            o.set('status_'+state[state_name].config.statusmarker, false);
+        });
     },
 
     createWhisperName = (name) => {
@@ -215,7 +253,7 @@ var Concentration = Concentration || (function() {
         makeAndSendMenu(contents, title_text, 'gm');
     },
 
-    makeAndSendMenu = (contents, title, whisper) => {
+    makeAndSendMenu = (contents, title, whisper, callback) => {
         title = (title && title != '') ? makeTitle(title) : '';
         whisper = (whisper && whisper !== '') ? '/w ' + whisper + ' ' : '';
         sendChat(script_name, whisper + '<div style="'+styles.menu+styles.overflow+'">'+title+contents+'</div>', null, {noarchive:true});
