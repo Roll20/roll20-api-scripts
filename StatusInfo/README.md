@@ -19,6 +19,8 @@ LATEST UPDATE: It now allows you to create and edit conditions, export/import th
 StatusInfo works nicely together with [Tokenmod](https://app.roll20.net/forum/post/4225825/script-update-tokenmod-an-interface-to-adjusting-properties-of-a-token-from-a-macro-or-the-chat-area/?pageforid=4225825#post-4225825) and my own [DeathTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/DeathTracker) and [InspirationTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/InspirationTracker) scripts.
 It shows condition descriptions whenever a statusmarker is set or when the command `!condition` is used, eg: `!condition prone`.
 
+`It also works with the 5e Shaped sheet condition toggles now`
+
 ![Prone Description](https://i.imgur.com/UpBHjVh.png "Prone Description")
 
 ### Commands
@@ -81,6 +83,9 @@ Roll20 Thread: https://app.roll20.net/forum/post/6252784/script-statusinfo
 ---
 
 #### Changelog
+**v0.3.8**
+* Shaped sheet conditions compatible.
+
 **v0.3.7**
 * Update needed for latest [CombatTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/CombatTracker) version.
 
