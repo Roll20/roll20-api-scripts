@@ -102,6 +102,9 @@ Roll20 Thread: https://app.roll20.net/forum/post/6349145/script-combattracker
 ---
 
 #### Changelog
+**v0.1.13**
+* Bugfixes
+
 **v0.1.12**
 * Show a list of conditions on selected tokens, `!ct show`.
 * Show a list of known conditions (from StatusInfo and favorites), `!ct conditions`.

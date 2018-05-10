@@ -1,5 +1,5 @@
 /* 
- * Version 0.1.12
+ * Version 0.1.13
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
@@ -392,15 +392,8 @@ var CombatTracker = CombatTracker || (function() {
         }
     },
 
-    handleGraphicChange = (obj, prev) => {
-        if(!inFight()) return;
-
-        if(getCurrentTurn().id === obj.get('id')){
-            changeMarker(obj);
-        }
-
+    handleStatusMarkerChange = (obj, prev) => {
         if(extensions.StatusInfo){
-
             prev.statusmarkers = (typeof prev.get === 'function') ? prev.get('statusmarkers') : prev.statusmarkers;
 
             if(obj.get('statusmarkers') !== prev.statusmarkers){
@@ -409,6 +402,8 @@ var CombatTracker = CombatTracker || (function() {
 
                 // Marker added?
                 array_diff(oS, nS).forEach(icon => {
+                    if(icon === '') return;
+
                     getObjects(StatusInfo.getConditions(), 'icon', icon).forEach(condition => {
                         addCondition(obj, { name: condition.name });
                     });
@@ -416,11 +411,21 @@ var CombatTracker = CombatTracker || (function() {
 
                 // Marker Removed?
                 array_diff(nS, oS).forEach(icon => {
+                    if(icon === '') return;
+
                     getObjects(StatusInfo.getConditions(), 'icon', icon).forEach(condition => {
                         removeCondition(obj, condition.name);
                     });
                 })
             }
+        }
+    },
+
+    handleGraphicChange = (obj, prev) => {
+        if(!inFight()) return;
+
+        if(getCurrentTurn().id === obj.get('id')){
+            changeMarker(obj);
         }
     },
 
@@ -603,6 +608,7 @@ var CombatTracker = CombatTracker || (function() {
         }
 
         let conditions = getConditionString(token);
+        log(conditions)
 
         let image = (imgurl) ? '<img src="'+imgurl+'" width="50px" height="50px"  />' : '';
         name = (state[state_name].config.announcements.handleLongName) ? handleLongString(name) : name;
@@ -622,7 +628,7 @@ var CombatTracker = CombatTracker || (function() {
     },
 
     getConditionString = (token) => {
-        let name = strip(token.get('name'));
+        let name = strip(token.get('name')).toLowerCase();
         let conditionsSTR = '';
 
         if(state[state_name].conditions[name] && state[state_name].conditions[name].length){
@@ -1120,6 +1126,7 @@ var CombatTracker = CombatTracker || (function() {
         on('change:campaign:turnorder', handleTurnorderChange);
         on('change:graphic', handleGraphicChange);
         on('change:campaign:initiativepage', handeIniativePageChange);
+        on('change:graphic:statusmarkers', handleStatusMarkerChange);
 
         if(extensions.StatusInfo){
             StatusInfo.ObserveTokenChange(function(obj,prev){
@@ -1129,7 +1136,7 @@ var CombatTracker = CombatTracker || (function() {
 
         if('undefined' !== typeof TokenMod && TokenMod.ObserveTokenChange){
             TokenMod.ObserveTokenChange(function(obj,prev){
-                handleGraphicChange(obj,prev);
+                handleStatusMarkerChange(obj,prev);
             });
         }
     },
