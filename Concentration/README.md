@@ -21,7 +21,9 @@ If you use the 5e OGL character sheet, it can also automaticly add the concentra
 
 ### Commands
 
-* **!concentration** - Shows the config menu.
+* **!concentration**
+    * Shows the config menu without tokens selected.
+    * Toggles concentration on selected tokens.
 
 ### Config
 
@@ -40,6 +42,9 @@ If you use the 5e OGL character sheet, it can also automaticly add the concentra
 ---
 
 #### Changelog:
+**0.1.11**
+* `!concentration` with tokens selected will now toggle the statusmarker on them.
+
 **0.1.10**
 * If you use autoroll, and the save failed, it will automatically remove the statusmarker.
 

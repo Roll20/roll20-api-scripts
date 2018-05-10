@@ -1,5 +1,5 @@
 /*
- * Version 0.1.10
+ * Version 0.1.11
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
@@ -35,6 +35,8 @@ var Concentration = Concentration || (function() {
     markers = ['blue', 'brown', 'green', 'pink', 'purple', 'red', 'yellow', '-', 'all-for-one', 'angel-outfit', 'archery-target', 'arrowed', 'aura', 'back-pain', 'black-flag', 'bleeding-eye', 'bolt-shield', 'broken-heart', 'broken-shield', 'broken-skull', 'chained-heart', 'chemical-bolt', 'cobweb', 'dead', 'death-zone', 'drink-me', 'edge-crack', 'fishing-net', 'fist', 'fluffy-wing', 'flying-flag', 'frozen-orb', 'grab', 'grenade', 'half-haze', 'half-heart', 'interdiction', 'lightning-helix', 'ninja-mask', 'overdrive', 'padlock', 'pummeled', 'radioactive', 'rolling-tomb', 'screaming', 'sentry-gun', 'skull', 'sleepy', 'snail', 'spanner',   'stopwatch','strong', 'three-leaves', 'tread', 'trophy', 'white-tower'],
 
     handleInput = (msg) => {
+        const marker = state[state_name].config.statusmarker
+
         if(state[state_name].config.auto_add_concentration_marker && msg && msg.rolltemplate && msg.rolltemplate === 'spell' && (msg.content.includes("{{concentration=1}}"))){
             let character_name = msg.content.match(/charname=([^\n{}]*[^"\n{}])/);            
             character_name = RegExp.$1;
@@ -43,7 +45,6 @@ var Concentration = Concentration || (function() {
             let player = getObj('player', msg.playerid),
                 characterid = findObjs({ name: character_name, _type: 'character' }).shift().get('id'),                 
                 represented_tokens = findObjs({ represents: characterid, _type: 'graphic' }),
-                marker = state[state_name].config.statusmarker,
                 message,
                 target = state[state_name].config.send_reminder_to;
 
@@ -111,6 +112,15 @@ var Concentration = Concentration || (function() {
                 break;
 
                 default:
+                    if(msg.selected && msg.selected.length){
+                        msg.selected.forEach(s => {
+                            let token = getObj(s._type, s._id);
+                            token.set('status_'+marker, !token.get('status_'+marker));
+                        });
+
+                        return;
+                    }
+
                     sendConfigMenu();
                 break;
             }
