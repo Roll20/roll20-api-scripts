@@ -1,9 +1,9 @@
 /*
- * Version: 0.3.4
+ * Version: 0.3.7
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
- * Roll20: https://app.roll20.net/users/1226016/robin-k
+ * Roll20: https://app.roll20.net/users/1226016/robin
  * Roll20 Thread: https://app.roll20.net/forum/post/6252784/script-statusinfo
  * Roll20 Wiki: https://wiki.roll20.net/Script:StatusInfo
  * Github: https://github.com/RobinKuiper/Roll20APIScripts
@@ -35,10 +35,13 @@ var StatusInfo = StatusInfo || (function() {
     let whisper, handled = [],
         observers = {
             tokenChange: []
-        }
+        };
 
+    
+    const version = "0.3.7",
+    
     // Styling for the chat responses.
-    const style = "overflow: hidden; background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;",
+    style = "overflow: hidden; background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;",
     buttonStyle = "background-color: #000; border: 1px solid #292929; border-radius: 3px; padding: 5px; color: #fff; text-align: center; float: right;",
     conditionStyle = "background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;",
     conditionButtonStyle = "text-decoration: underline; background-color: #fff; color: #000; padding: 0",
@@ -190,31 +193,8 @@ var StatusInfo = StatusInfo || (function() {
                         return;
                     }
 
-                    args.forEach(condition_key => {
-                        if(!state[state_name].conditions[condition_key.toLowerCase()]){
-                            makeAndSendMenu('The condition `'+condition_key+'` does not exist.');
-                            return;
-                        }
-
-                        condition_key = condition_key.toLowerCase();
-
-                        let sended = false;
-                        msg.selected.forEach(s => {
-                            let token = getObj(s._type, s._id);
-                            let prev = token;
-                            let add = (extracommand === 'add') ? true : (extracommand === 'toggle') ? !token.get('status_'+getConditionByName(condition_key).icon) : false;
-                            token.set('status_'+getConditionByName(condition_key).icon, add);
-
-                            notifyObservers('tokenChange', token, prev);
-
-                            if(extracommand === 'toggle' && add && !sended){
-                                sendConditionToChat(getConditionByName(condition_key));
-                                sended = true;
-                            }
-                        });
-
-                        if(extracommand === 'add') sendConditionToChat(getConditionByName(condition_key));
-                    });
+                    let tokens = msg.selected.map(s => getObj(s._type, s._id))
+                    handleConditions(args, tokens, extracommand);
                 break;
 
                 default:
@@ -234,6 +214,33 @@ var StatusInfo = StatusInfo || (function() {
                 break;
             }
         }
+    },
+
+    handleConditions = (conditions, tokens, type='add', error=true) => {
+        conditions.forEach(condition_key => {
+            if(!state[state_name].conditions[condition_key.toLowerCase()]){
+                if(error) makeAndSendMenu('The condition `'+condition_key+'` does not exist.');
+                return;
+            }
+
+            condition_key = condition_key.toLowerCase();
+
+            tokens.forEach(token => {
+                let prevSM = token.get('statusmarkers');
+                let add = (type === 'add') ? true : (type === 'toggle') ? !token.get('status_'+getConditionByName(condition_key).icon) : false;
+                token.set('status_'+getConditionByName(condition_key).icon, add);
+
+                let prev = token;
+                prev.attributes.statusmarkers = prevSM;
+
+                notifyObservers('tokenChange', token, prev);
+
+                if(add && !handled.includes(condition_key)){
+                    sendConditionToChat(getConditionByName(condition_key));
+                    doHandled(condition_key);
+                }
+            });
+        });
     },
 
     esRE = function (s) {
@@ -262,7 +269,7 @@ var StatusInfo = StatusInfo || (function() {
     }()),
 
     handleStatusmarkerChange = (obj, prev) => {
-        if(handled.includes(obj.get('represents')) || !prev || !obj){ return; }
+        if(handled.includes(obj.get('represents')) || !prev || !obj) return
 
         prev.statusmarkers = (typeof prev.get === 'function') ? prev.get('statusmarkers') : prev.statusmarkers;
 
@@ -279,17 +286,23 @@ var StatusInfo = StatusInfo || (function() {
                     if(marker !== "" && !prevstatusmarkers.includes(marker)){
                         let condition;
                         if(condition = getConditionByMarker(marker)){
+                            if(handled.includes(condition.name.toLowerCase())) return;
+
                             sendConditionToChat(condition);
 
-                            let length = handled.push(obj.get('represents'));
-                            setTimeout(() => {
-                                handled.splice(length-1, 1);
-                            }, 1000);
+                            doHandled(obj.get('represents'));
                         }
                     }
                 });
             }
         }
+    },
+
+    doHandled = (what) => {
+        handled.push(what);
+        setTimeout(() => {
+            handled.splice(handled.indexOf(what), 1);
+        }, 1000);
     },
 
     getConditionByMarker = (marker) => {
@@ -519,6 +532,10 @@ var StatusInfo = StatusInfo || (function() {
         return list;
     },
 
+    getConditions = () => {
+        return state[state_name].conditions;
+    },
+
     checkInstall = () => {
         if(!_.has(state, state_name)){
             state[state_name] = state[state_name] || {};
@@ -546,19 +563,25 @@ var StatusInfo = StatusInfo || (function() {
 
         // Handle condition descriptions when tokenmod changes the statusmarkers on a token.
         if('undefined' !== typeof TokenMod && TokenMod.ObserveTokenChange){
-            TokenMod.ObserveTokenChange(function(obj,prev){
+            TokenMod.ObserveTokenChange((obj,prev) => {
                 handleStatusmarkerChange(obj,prev);
             });
         }
 
         if('undefined' !== typeof DeathTracker && DeathTracker.ObserveTokenChange){
-            DeathTracker.ObserveTokenChange(function(obj,prev){
+            DeathTracker.ObserveTokenChange((obj,prev) => {
                 handleStatusmarkerChange(obj,prev);
             });
         }
 
         if('undefined' !== typeof InspirationTracker && InspirationTracker.ObserveTokenChange){
-            InspirationTracker.ObserveTokenChange(function(obj,prev){
+            InspirationTracker.ObserveTokenChange((obj,prev) => {
+                handleStatusmarkerChange(obj,prev);
+            });
+        }
+
+        if('undefined' !== typeof CombatTracker && CombatTracker.ObserveTokenChange){
+            CombatTracker.ObserveTokenChange((obj,prev) => {
                 handleStatusmarkerChange(obj,prev);
             });
         }
@@ -684,15 +707,21 @@ var StatusInfo = StatusInfo || (function() {
     };
 
     return {
-        CheckInstall: checkInstall,
+        checkInstall,
         ObserveTokenChange: observeTokenChange,
-        RegisterEventHandlers: registerEventHandlers
+        registerEventHandlers,
+        getConditions,
+        getConditionByName,
+        handleConditions,
+        sendConditionToChat,
+        getIcon,
+        version
     };
 })();
 
 on('ready', () => { 
     'use strict';
 
-    StatusInfo.CheckInstall();
-    StatusInfo.RegisterEventHandlers();
+    StatusInfo.checkInstall();
+    StatusInfo.registerEventHandlers();
 });
