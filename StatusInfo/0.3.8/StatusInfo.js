@@ -38,7 +38,7 @@ var StatusInfo = StatusInfo || (function() {
         };
 
     
-    const version = "0.3.7",
+    const version = "0.3.8",
     
     // Styling for the chat responses.
     style = "overflow: hidden; background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;",
