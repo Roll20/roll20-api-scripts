@@ -2,7 +2,7 @@
 
 * Skype: RobinKuiper.eu
 * Discord: Atheos#1095
-* Roll20: https://app.roll20.net/users/1226016/robin-k
+* Roll20: https://app.roll20.net/users/1226016/robin
 * Roll20 Thread: https://app.roll20.net/forum/post/6252784/script-statusinfo
 * Roll20 Wiki: https://wiki.roll20.net/Script:StatusInfo
 * Github: https://github.com/RobinKuiper/Roll20APIScripts
@@ -18,6 +18,8 @@ LATEST UPDATE: It now allows you to create and edit conditions, export/import th
 
 StatusInfo works nicely together with [Tokenmod](https://app.roll20.net/forum/post/4225825/script-update-tokenmod-an-interface-to-adjusting-properties-of-a-token-from-a-macro-or-the-chat-area/?pageforid=4225825#post-4225825) and my own [DeathTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/DeathTracker) and [InspirationTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/InspirationTracker) scripts.
 It shows condition descriptions whenever a statusmarker is set or when the command `!condition` is used, eg: `!condition prone`.
+
+`It also works with the 5e Shaped sheet condition toggles now`
 
 ![Prone Description](https://i.imgur.com/UpBHjVh.png "Prone Description")
 
@@ -81,6 +83,19 @@ Roll20 Thread: https://app.roll20.net/forum/post/6252784/script-statusinfo
 ---
 
 #### Changelog
+**v0.3.8**
+* Shaped sheet conditions compatible.
 
-* **v0.3.4 - 24-04-2018**
+**v0.3.7**
+* Update needed for latest [CombatTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/CombatTracker) version.
+
+**v0.3.6 - 04-05-2018**
+* Better [CombatTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/CombatTracker) Support.
+* Bugfix.
+
+**v0.3.5 - 01-05-2018**
+* Ready for collabration with [CombatTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/CombatTracker).
+* Small Bugfixes.
+
+**v0.3.4 - 24-04-2018**
 Fixed a "huge" bug that wouldn't send conditions to chat on statusmarker change.
