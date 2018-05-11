@@ -1,5 +1,5 @@
 /* 
- * Version 0.1.13
+ * Version 0.2.0
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
@@ -26,6 +26,7 @@ var CombatTracker = CombatTracker || (function() {
     let round = 1,
         timerObj,
         intervalHandle,
+        rotationInterval,
         paused = false,
         observers = {
             tokenChange: []
@@ -183,6 +184,10 @@ var CombatTracker = CombatTracker || (function() {
 
             case 'add':
                 name = args.shift();
+                if(!name){
+                    makeAndSendMenu('No condition name was given.', '', 'gm');
+                    return;
+                }
                 duration = args.shift();
                 duration = (!duration || duration === 0) ? 'none' : duration;
                 direction = args.shift() || -1;
@@ -421,7 +426,7 @@ var CombatTracker = CombatTracker || (function() {
         }
     },
 
-    handleGraphicChange = (obj, prev) => {
+    handleGraphicMovement = (obj, prev) => {
         if(!inFight()) return;
 
         if(getCurrentTurn().id === obj.get('id')){
@@ -489,8 +494,8 @@ var CombatTracker = CombatTracker || (function() {
 
     stopCombat = () => {
         if(timerObj) timerObj.remove();
-        clearInterval(intervalHandle);
         removeMarker();
+        stopTimer();
         paused = false;
         Campaign().set({
             initiativepage: false,
@@ -501,6 +506,7 @@ var CombatTracker = CombatTracker || (function() {
     },
 
     removeMarker = () => {
+        stopRotate();
         getOrCreateMarker().remove();
     },
 
@@ -544,6 +550,22 @@ var CombatTracker = CombatTracker || (function() {
             let conditions = getConditionString(token);
             if(conditions && conditions !== '') makeAndSendMenu(conditions, 'Conditions - ' + name, (token.get('layer') === 'objects') ? '' : 'gm');
         }
+
+        Pull(token);
+        doFX(token);
+    },
+
+    doFX = (token) => {
+        if(!state[state_name].config.announcements.use_fx) return;
+
+        let pos = {x: token.get('left'), y: token.get('top')};
+        spawnFxBetweenPoints(pos, pos, state[state_name].config.announcements.fx_type, token.get('pageid'))
+    },
+
+    Pull = (token) => {
+        if(!state[state_name].config.pull) return;
+
+        sendPing(token.get('left'), token.get('top'), token.get('pageid'), null, true);
     },
 
     startTimer = (token) => {
@@ -635,12 +657,12 @@ var CombatTracker = CombatTracker || (function() {
             state[state_name].conditions[name].forEach((condition, i) => {
                 if(typeof condition.duration === 'undefined' || condition.duration === false){
                     conditionsSTR += '<b>'+condition.name+'</b><br>';
-                }else if(condition.duration <= 0){
+                }else if(condition.duration <= 1){
                     conditionsSTR += '<b>'+condition.name+'</b> removed.<br>';
                     removeCondition(token, condition.name, true);
                 }else{
-                    conditionsSTR += '<b>'+condition.name+'</b>: ' + condition.duration + '<br>';
                     state[state_name].conditions[name][i].duration = parseInt(state[state_name].conditions[name][i].duration)+parseInt(condition.direction);
+                    conditionsSTR += '<b>'+condition.name+'</b>: ' + condition.duration + '<br>';
                 }
                 conditionsSTR += (condition.message) ? '<i style="font-size: 10pt">'+condition.message+'</i><br>' : '';
             });
@@ -744,7 +766,29 @@ var CombatTracker = CombatTracker || (function() {
         }
         checkMarkerturn(marker);
         toBack(marker);
+
+        //startRotate(marker);
+
         return marker;
+    },
+
+    startRotate = (token) => {
+        clearInterval(rotationInterval);
+
+        let i = 0;
+        rotationInterval = setInterval(() => {
+            i += 2;
+
+            log(i)
+
+            if(i >= 360) i = 0;
+
+            token.set('rotation', i);
+        }, 50)
+    },
+
+    stopRotate = () => {
+        clearInterval(rotationInterval);
     },
 
     checkMarkerturn = (marker) => {
@@ -930,40 +974,47 @@ var CombatTracker = CombatTracker || (function() {
     },
 
     sendConfigMenu = (first, message) => {
-        let commandButton = makeButton('!'+state[state_name].config.command, '!' + state[state_name].config.command + ' config command|?{Command (without !)}', styles.button + styles.float.right);
-        let markerImgButton = makeButton('<img src="'+state[state_name].config.marker_img+'" width="30px" height="30px" />', '!' + state[state_name].config.command + ' config marker_img|?{Image Url}', styles.button + styles.float.right);
-        let throwIniButton = makeButton(state[state_name].config.throw_initiative, '!' + state[state_name].config.command + ' config throw_initiative|'+!state[state_name].config.throw_initiative, styles.button + styles.float.right);
-        let iniAttrButton = makeButton(state[state_name].config.initiative_attribute_name, '!' + state[state_name].config.command + ' config initiative_attribute_name|?{Attribute|'+state[state_name].config.initiative_attribute_name+'}', styles.button + styles.float.right);
-        let closeStopButton = makeButton(state[state_name].config.close_stop, '!' + state[state_name].config.command + ' config close_stop|'+!state[state_name].config.close_stop, styles.button + styles.float.right);
+        let commandButton = makeButton('!'+state[state_name].config.command, '!' + state[state_name].config.command + ' config command|?{Command (without !)}', styles.button + styles.float.right),
+            markerImgButton = makeButton('<img src="'+state[state_name].config.marker_img+'" width="30px" height="30px" />', '!' + state[state_name].config.command + ' config marker_img|?{Image Url}', styles.button + styles.float.right),
+            throwIniButton = makeButton(state[state_name].config.throw_initiative, '!' + state[state_name].config.command + ' config throw_initiative|'+!state[state_name].config.throw_initiative, styles.button + styles.float.right),
+            iniAttrButton = makeButton(state[state_name].config.initiative_attribute_name, '!' + state[state_name].config.command + ' config initiative_attribute_name|?{Attribute|'+state[state_name].config.initiative_attribute_name+'}', styles.button + styles.float.right),
+            closeStopButton = makeButton(state[state_name].config.close_stop, '!' + state[state_name].config.command + ' config close_stop|'+!state[state_name].config.close_stop, styles.button + styles.float.right),
+            pullButton = makeButton(state[state_name].config.pull, '!' + state[state_name].config.command + ' config pull|'+!state[state_name].config.pull, styles.button + styles.float.right),
 
-        let listItems = [
-            '<span style="'+styles.float.left+'">Command:</span> ' + commandButton,
-            '<span style="'+styles.float.left+'">Ini. Attribute:</span> ' + iniAttrButton,
-            '<span style="'+styles.float.left+'">Marker Img:</span> ' + markerImgButton,
-            '<span style="'+styles.float.left+'">Stop on close:</span> ' + closeStopButton,
-            '<span style="'+styles.float.left+'">Auto Roll Ini.:</span> ' + throwIniButton,
-        ];
+            listItems = [
+                '<span style="'+styles.float.left+'">Command:</span> ' + commandButton,
+                '<span style="'+styles.float.left+'">Ini. Attribute:</span> ' + iniAttrButton,
+                '<span style="'+styles.float.left+'">Marker Img:</span> ' + markerImgButton,
+                '<span style="'+styles.float.left+'">Stop on close:</span> ' + closeStopButton,
+                '<span style="'+styles.float.left+'">Auto Roll Ini.:</span> ' + throwIniButton,
+                '<span style="'+styles.float.left+'">Auto Pull Map:</span> ' + pullButton,
+            ],
 
-        let configTimerButton = makeButton('Timer Config', '!'+state[state_name].config.command + ' config timer', styles.button);
-        let configAnnouncementsButton = makeButton('Announcement Config', '!'+state[state_name].config.command + ' config announcements', styles.button);
-        let resetButton = makeButton('Reset', '!' + state[state_name].config.command + ' reset', styles.button + styles.fullWidth);
+            configTimerButton = makeButton('Timer Config', '!'+state[state_name].config.command + ' config timer', styles.button),
+            configAnnouncementsButton = makeButton('Announcement Config', '!'+state[state_name].config.command + ' config announcements', styles.button),
+            resetButton = makeButton('Reset', '!' + state[state_name].config.command + ' reset', styles.button + styles.fullWidth),
 
-        let title_text = (first) ? script_name + ' First Time Setup' : script_name + ' Config';
+            title_text = (first) ? script_name + ' First Time Setup' : script_name + ' Config';
+
         message = (message) ? '<p>'+message+'</p>' : '';
         let contents = message+makeList(listItems, styles.reset + styles.list + styles.overflow, styles.overflow)+configTimerButton+configAnnouncementsButton+'<hr><p style="font-size: 80%">You can always come back to this config by typing `!'+state[state_name].config.command+' config`.</p><hr>'+resetButton;
         makeAndSendMenu(contents, title_text, 'gm');
     },
 
     sendConfigAnnounceMenu = () =>{
-        let announceTurnButton = makeButton(state[state_name].config.announcements.announce_turn, '!' + state[state_name].config.command + ' config announcements announce_turn|'+!state[state_name].config.announcements.announce_turn, styles.button + styles.float.right);
-        let announceRoundButton = makeButton(state[state_name].config.announcements.announce_round, '!' + state[state_name].config.command + ' config announcements announce_round|'+!state[state_name].config.announcements.announce_round, styles.button + styles.float.right);
-        let announceConditionsButton = makeButton(state[state_name].config.announcements.announce_conditions, '!' + state[state_name].config.command + ' config announcements announce_conditions|'+!state[state_name].config.announcements.announce_conditions, styles.button + styles.float.right);
-        let handleLongNameButton = makeButton(state[state_name].config.announcements.handleLongName, '!' + state[state_name].config.command + ' config announcements handleLongName|'+!state[state_name].config.announcements.handleLongName, styles.button + styles.float.right);
-        
-        let listItems = [
-            '<span style="'+styles.float.left+'">Announce Turn:</span> ' + announceTurnButton,
-            '<span style="'+styles.float.left+'">Announce Round:</span> ' + announceRoundButton,
-        ];
+        let announceTurnButton = makeButton(state[state_name].config.announcements.announce_turn, '!' + state[state_name].config.command + ' config announcements announce_turn|'+!state[state_name].config.announcements.announce_turn, styles.button + styles.float.right),
+            announceRoundButton = makeButton(state[state_name].config.announcements.announce_round, '!' + state[state_name].config.command + ' config announcements announce_round|'+!state[state_name].config.announcements.announce_round, styles.button + styles.float.right),
+            announceConditionsButton = makeButton(state[state_name].config.announcements.announce_conditions, '!' + state[state_name].config.command + ' config announcements announce_conditions|'+!state[state_name].config.announcements.announce_conditions, styles.button + styles.float.right),
+            handleLongNameButton = makeButton(state[state_name].config.announcements.handleLongName, '!' + state[state_name].config.command + ' config announcements handleLongName|'+!state[state_name].config.announcements.handleLongName, styles.button + styles.float.right),
+            useFXButton = makeButton(state[state_name].config.announcements.use_fx, '!' + state[state_name].config.command + ' config announcements use_fx|'+!state[state_name].config.announcements.use_fx, styles.button + styles.float.right),
+            FXTypeButton = makeButton(state[state_name].config.announcements.fx_type, '!' + state[state_name].config.command + ' config announcements fx_type|?{Type|'+state[state_name].config.announcements.fx_type+'}', styles.button + styles.float.right),
+
+            backButton = makeButton('< Back', '!'+state[state_name].config.command + ' config', styles.button + styles.fullWidth),
+
+            listItems = [];
+
+        listItems.push('<span style="'+styles.float.left+'">Announce Round:</span> ' + announceRoundButton);
+        listItems.push('<span style="'+styles.float.left+'">Announce Turn:</span> ' + announceTurnButton);
     
         if(!state[state_name].config.announcements.announce_turn){
             listItems.push('<span style="'+styles.float.left+'">Announce Conditions:</span> ' + announceConditionsButton)
@@ -972,29 +1023,35 @@ var CombatTracker = CombatTracker || (function() {
             listItems.push('<span style="'+styles.float.left+'">Shorten Long Name:</span> ' + handleLongNameButton)
         }
 
-        let backButton = makeButton('< Back', '!'+state[state_name].config.command + ' config', styles.button + styles.fullWidth);
+        listItems.push('<span style="'+styles.float.left+'">Use FX:</span> ' + useFXButton);
+
+        if(state[state_name].config.announcements.use_fx){
+            listItems.push('<span style="'+styles.float.left+'">FX Type:</span> ' + FXTypeButton)
+        }
+
         let contents = makeList(listItems, styles.reset + styles.list + styles.overflow, styles.overflow)+'<hr>'+backButton;
         makeAndSendMenu(contents, script_name + ' Announcements Config', 'gm');
     },
 
     sendConfigTimerMenu = () => {
-        let turnTimerButton = makeButton(state[state_name].config.timer.use_timer, '!' + state[state_name].config.command + ' config timer use_timer|'+!state[state_name].config.timer.use_timer, styles.button + styles.float.right);
-        let timeButton = makeButton(state[state_name].config.timer.time, '!' + state[state_name].config.command + ' config timer time|?{Time|'+state[state_name].config.timer.time+'}', styles.button + styles.float.right);
-        let chatTimerButton = makeButton(state[state_name].config.timer.chat_timer, '!' + state[state_name].config.command + ' config timer chat_timer|'+!state[state_name].config.timer.chat_timer, styles.button + styles.float.right);
-        let tokenTimerButton = makeButton(state[state_name].config.timer.token_timer, '!' + state[state_name].config.command + ' config timer token_timer|'+!state[state_name].config.timer.token_timer, styles.button + styles.float.right);
-        let tokenFontButton = makeButton(state[state_name].config.timer.token_font, '!' + state[state_name].config.command + ' config timer token_font|?{Font|Arial|Patrick Hand|Contrail|Light|Candal}', styles.button + styles.float.right);
-        let tokenFontSizeButton = makeButton(state[state_name].config.timer.token_font_size, '!' + state[state_name].config.command + ' config timer token_font_size|?{Font Size|'+state[state_name].config.timer.token_font_size+'}', styles.button + styles.float.right);
+        let turnTimerButton = makeButton(state[state_name].config.timer.use_timer, '!' + state[state_name].config.command + ' config timer use_timer|'+!state[state_name].config.timer.use_timer, styles.button + styles.float.right),
+            timeButton = makeButton(state[state_name].config.timer.time, '!' + state[state_name].config.command + ' config timer time|?{Time|'+state[state_name].config.timer.time+'}', styles.button + styles.float.right),
+            chatTimerButton = makeButton(state[state_name].config.timer.chat_timer, '!' + state[state_name].config.command + ' config timer chat_timer|'+!state[state_name].config.timer.chat_timer, styles.button + styles.float.right),
+            tokenTimerButton = makeButton(state[state_name].config.timer.token_timer, '!' + state[state_name].config.command + ' config timer token_timer|'+!state[state_name].config.timer.token_timer, styles.button + styles.float.right),
+            tokenFontButton = makeButton(state[state_name].config.timer.token_font, '!' + state[state_name].config.command + ' config timer token_font|?{Font|Arial|Patrick Hand|Contrail|Light|Candal}', styles.button + styles.float.right),
+            tokenFontSizeButton = makeButton(state[state_name].config.timer.token_font_size, '!' + state[state_name].config.command + ' config timer token_font_size|?{Font Size|'+state[state_name].config.timer.token_font_size+'}', styles.button + styles.float.right),
 
-        let listItems = [
-            '<span style="'+styles.float.left+'">Turn Timer:</span> ' + turnTimerButton,
-            '<span style="'+styles.float.left+'">Time:</span> ' + timeButton,
-            '<span style="'+styles.float.left+'">Show in Chat:</span> ' + chatTimerButton,
-            '<span style="'+styles.float.left+'">Show on Token:</span> ' + tokenTimerButton,
-            '<span style="'+styles.float.left+'">Token Font:</span> ' + tokenFontButton,
-            '<span style="'+styles.float.left+'">Token Font Size:</span> ' + tokenFontSizeButton,
-        ];
+            backButton = makeButton('< Back', '!'+state[state_name].config.command + ' config', styles.button + styles.fullWidth),
 
-        let backButton = makeButton('< Back', '!'+state[state_name].config.command + ' config', styles.button + styles.fullWidth);
+            listItems = [
+                '<span style="'+styles.float.left+'">Turn Timer:</span> ' + turnTimerButton,
+                '<span style="'+styles.float.left+'">Time:</span> ' + timeButton,
+                '<span style="'+styles.float.left+'">Show in Chat:</span> ' + chatTimerButton,
+                '<span style="'+styles.float.left+'">Show on Token:</span> ' + tokenTimerButton,
+                '<span style="'+styles.float.left+'">Token Font:</span> ' + tokenFontButton,
+                '<span style="'+styles.float.left+'">Token Font Size:</span> ' + tokenFontSizeButton,
+            ];
+
         let contents = makeList(listItems, styles.reset + styles.list + styles.overflow, styles.overflow)+'<hr>'+backButton;
         makeAndSendMenu(contents, script_name + ' Timer Config', 'gm');
     },
@@ -1071,13 +1128,6 @@ var CombatTracker = CombatTracker || (function() {
         return list;
     },
 
-    pre_log = (message) => {
-        log('---------------------------------------------------------------------------------------------');
-        if(message === 'line'){ return; }
-        log(message);
-        log('---------------------------------------------------------------------------------------------');
-    },
-
     checkStatusInfo = () => {
         if(typeof StatusInfo === 'undefined'){
             makeAndSendMenu('Consider installing '+makeButton('StatusInfo', 'https://github.com/RobinKuiper/Roll20APIScripts/tree/master/StatusInfo', styles.textButton)+' it works great with this script.', '', 'gm');
@@ -1124,15 +1174,11 @@ var CombatTracker = CombatTracker || (function() {
     registerEventHandlers = () => {
         on('chat:message', handleInput);
         on('change:campaign:turnorder', handleTurnorderChange);
-        on('change:graphic', handleGraphicChange);
         on('change:campaign:initiativepage', handeIniativePageChange);
+        on('change:graphic:top', handleGraphicMovement);
+        on('change:graphic:left', handleGraphicMovement);
+        on('change:graphic:layer', handleGraphicMovement);
         on('change:graphic:statusmarkers', handleStatusMarkerChange);
-
-        if(extensions.StatusInfo){
-            StatusInfo.ObserveTokenChange(function(obj,prev){
-                handleGraphicChange(obj,prev);
-            });
-        }
 
         if('undefined' !== typeof TokenMod && TokenMod.ObserveTokenChange){
             TokenMod.ObserveTokenChange(function(obj,prev){
@@ -1149,6 +1195,7 @@ var CombatTracker = CombatTracker || (function() {
                 throw_initiative: true,
                 initiative_attribute_name: 'initiative_bonus',
                 close_stop: true,
+                pull: true,
                 timer: {
                     use_timer: true,
                     time: 120,
@@ -1163,6 +1210,8 @@ var CombatTracker = CombatTracker || (function() {
                     announce_turn: true,
                     announce_round: true,
                     handleLongName: true,
+                    use_fx: false,
+                    fx_type: 'nova-holy'
                 }
             },
             conditions: {},
@@ -1186,6 +1235,9 @@ var CombatTracker = CombatTracker || (function() {
             }
             if(!state[state_name].config.hasOwnProperty('close_stop')){
                 state[state_name].config.close_stop = defaults.config.close_stop;
+            }
+            if(!state[state_name].config.hasOwnProperty('pull')){
+                state[state_name].config.pull = defaults.config.pull;
             }
             if(!state[state_name].config.hasOwnProperty('timer')){
                 state[state_name].config.timer = defaults.config.timer;
@@ -1226,6 +1278,12 @@ var CombatTracker = CombatTracker || (function() {
                 }
                 if(!state[state_name].config.announcements.hasOwnProperty('handleLongName')){
                     state[state_name].config.announcements.handleLongName = defaults.config.announcements.handleLongName;
+                }
+                if(!state[state_name].config.announcements.hasOwnProperty('use_fx')){
+                    state[state_name].config.announcements.use_fx = defaults.config.announcements.use_fx;
+                }
+                if(!state[state_name].config.announcements.hasOwnProperty('fx_type')){
+                    state[state_name].config.announcements.fx_type = defaults.config.announcements.fx_type;
                 }
             }
         }
