@@ -1861,7 +1861,7 @@ on('chat:message', function(msg) {
         let HPcurrent = findObjs({ characterid: user.id, name: "HP_current", type: "attribute"})[0];
         let Userclass = findObjs({ characterid: user.id, name: "Class", type: "attribute"})[0];
 
-        let Item_Name0 = findObjs({ characterid: user.id, name: "item_uses0", type: "attribute"})[0];
+        let Item_Name0 = findObjs({ characterid: user.id, name: "item_name0", type: "attribute"})[0];
         let Item_Name1 = findObjs({ characterid: user.id, name: "item_name1", type: "attribute"})[0];
         let Item_Name2 = findObjs({ characterid: user.id, name: "item_name2", type: "attribute"})[0];
         let Item_Uses0 = findObjs({ characterid: user.id, name: "item_uses0", type: "attribute"})[0];
@@ -1869,6 +1869,8 @@ on('chat:message', function(msg) {
         let Item_Uses2 = findObjs({ characterid: user.id, name: "item_uses2", type: "attribute"})[0];
         itemuses = [Item_Uses0,Item_Uses1,Item_Uses2]
         itemnames = [Item_Name0,Item_Name1,Item_Name2]
+        log(itemuses)
+        log(itemnames)
         //All items as objects QnQ
         //Temp statboosters
         const Hearty_Cheese = {
@@ -2131,6 +2133,23 @@ on('chat:message', function(msg) {
                         }
                     } else {
                         Itemstr += '<p style = "margin-bottom: 0px;">' + user.get("name") + " changes class with a Heart Seal! </p>";
+                    }
+                }
+            }
+        }
+        //decrease uses
+        for (var i in itemnames){
+            log(i)
+            log(itemnames[i])
+            if (itemnames[i] != null){ //no object assigned checking
+                if (itemnames[i].get("current") == item){
+                    itemuses[i].setWithWorker({
+                        current: parseInt(itemuses[i].get("current")) - 1
+                    });
+                    if (itemuses[i].get("current") == 0){
+                        itemnames[i].setWithWorker({
+                            current: ""
+                        });
                     }
                 }
             }
