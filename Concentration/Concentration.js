@@ -35,50 +35,11 @@ var Concentration = Concentration || (function() {
     markers = ['blue', 'brown', 'green', 'pink', 'purple', 'red', 'yellow', '-', 'all-for-one', 'angel-outfit', 'archery-target', 'arrowed', 'aura', 'back-pain', 'black-flag', 'bleeding-eye', 'bolt-shield', 'broken-heart', 'broken-shield', 'broken-skull', 'chained-heart', 'chemical-bolt', 'cobweb', 'dead', 'death-zone', 'drink-me', 'edge-crack', 'fishing-net', 'fist', 'fluffy-wing', 'flying-flag', 'frozen-orb', 'grab', 'grenade', 'half-haze', 'half-heart', 'interdiction', 'lightning-helix', 'ninja-mask', 'overdrive', 'padlock', 'pummeled', 'radioactive', 'rolling-tomb', 'screaming', 'sentry-gun', 'skull', 'sleepy', 'snail', 'spanner',   'stopwatch','strong', 'three-leaves', 'tread', 'trophy', 'white-tower'],
 
     handleInput = (msg) => {
-        const marker = state[state_name].config.statusmarker
-
         if(state[state_name].config.auto_add_concentration_marker && msg && msg.rolltemplate && msg.rolltemplate === 'spell' && (msg.content.includes("{{concentration=1}}"))){
-            let character_name = msg.content.match(/charname=([^\n{}]*[^"\n{}])/);            
-            character_name = RegExp.$1;
-            let spell_name = msg.content.match(/name=([^\n{}]*[^"\n{}])/);  
-            spell_name = RegExp.$1;
-            let player = getObj('player', msg.playerid),
-                characterid = findObjs({ name: character_name, _type: 'character' }).shift().get('id'),                 
-                represented_tokens = findObjs({ represents: characterid, _type: 'graphic' }),
-                message,
-                target = state[state_name].config.send_reminder_to;
-
-            if(!character_name || !spell_name || !player || !characterid) return;
-
-            let search_attributes = {
-                represents: characterid,
-                _type: 'graphic',
-                _pageid: player.get('lastpage')
-            }
-            search_attributes['status_'+marker] = true;
-            let is_concentrating = (findObjs(search_attributes).length > 0);
-
-            if(is_concentrating){
-                message = '<b>'+character_name+'</b> is concentrating already.';
-            }else{
-                represented_tokens.forEach(token => {
-                    let attributes = {};
-                    attributes['status_'+marker] = true;
-                    token.set(attributes);
-                    message = '<b>'+character_name+'</b> is now concentrating on <b>'+spell_name+'</b>.';
-                });
-            }
-
-            if(target === 'character'){
-                target = createWhisperName(character_name);
-            }else if(target === 'everyone'){
-                target = ''
-            }
-
-            makeAndSendMenu(message, '', target);
+            handleConcentrationSpellCast(msg);
         }
 
-        if (msg.type != 'api' || !playerIsGM(msg.playerid)) return;
+        if (msg.type != 'api') return;
 
         // Split the message into command and argument(s)
         let args = msg.content.split(' ');
@@ -87,44 +48,122 @@ var Concentration = Concentration || (function() {
         let message;
 
         if (command == state[state_name].config.command) {
-            switch(extracommand){
-                case 'reset':
-                    state[state_name] = {};
-                    setDefaults(true);
-                    sendConfigMenu(false, '<span style="color: red">The API Library needs to be restarted for this to take effect.</span>');
-                break;
+            if(playerIsGM(msg.playerid)){
+                switch(extracommand){
+                    case 'reset':
+                        state[state_name] = {};
+                        setDefaults(true);
+                        sendConfigMenu(false, '<span style="color: red">The API Library needs to be restarted for this to take effect.</span>');
+                    break;
 
-                case 'config':
-                    if(args.length > 0){
-                        let setting = args.shift().split('|');
-                        let key = setting.shift();
-                        let value = (setting[0] === 'true') ? true : (setting[0] === 'false') ? false : setting[0];
+                    case 'config':
+                        if(args.length > 0){
+                            let setting = args.shift().split('|');
+                            let key = setting.shift();
+                            let value = (setting[0] === 'true') ? true : (setting[0] === 'false') ? false : setting[0];
 
-                        state[state_name].config[key] = value;
+                            state[state_name].config[key] = value;
 
-                        if(key === 'bar'){
-                            //registerEventHandlers();
-                            message = '<span style="color: red">The API Library needs to be restarted for this to take effect.</span>';
+                            if(key === 'bar'){
+                                //registerEventHandlers();
+                                message = '<span style="color: red">The API Library needs to be restarted for this to take effect.</span>';
+                            }
                         }
-                    }
 
-                    sendConfigMenu(false, message);
-                break;
+                        sendConfigMenu(false, message);
+                    break;
 
-                default:
-                    if(msg.selected && msg.selected.length){
-                        msg.selected.forEach(s => {
-                            let token = getObj(s._type, s._id);
-                            token.set('status_'+marker, !token.get('status_'+marker));
-                        });
+                    default:
+                        if(msg.selected && msg.selected.length){
+                            msg.selected.forEach(s => {
+                                let token = getObj(s._type, s._id);
+                                addConcentration(token, msg.playerid, extracommand);
+                            });
+                            return;
+                        }
 
-                        return;
-                    }
-
-                    sendConfigMenu();
-                break;
+                        sendConfigMenu();
+                    break;
+                }
+            }else{
+                if(msg.selected && msg.selected.length){
+                    msg.selected.forEach(s => {
+                        let token = getObj(s._type, s._id);
+                        addConcentration(token, msg.playerid, extracommand);
+                    });
+                }
             }
         }
+    },
+
+    addConcentration = (token, playerid, spell) => {
+        const marker = state[state_name].config.statusmarker
+        let character = getObj('character', token.get('represents'));
+        if((token.get('controlledby').split(',').includes(playerid) || token.get('controlledby').split(',').includes('all')) ||
+            (character && (character.get('controlledby').split(',').includes(playerid) || character.get('controlledby').split(',').includes('all'))) ||
+            playerIsGM(playerid)){
+                if(!token.get('status_'+marker)){
+                    let target = state[state_name].config.send_reminder_to;
+                    if(target === 'character'){
+                        target = createWhisperName(character_name);
+                    }else if(target === 'everyone'){
+                        target = ''
+                    }
+
+                    let message;
+                    if(spell){
+                        message = '<b>'+token.get('name')+'</b> is now concentrating on <b>'+spell+'</b>.';
+                    }else{
+                        message = '<b>'+token.get('name')+'</b> is now concentrating.';
+                    }
+
+                    makeAndSendMenu(message, '', target);
+                }
+                token.set('status_'+marker, !token.get('status_'+marker));
+        }
+    },
+
+    handleConcentrationSpellCast = (msg) => {
+        const marker = state[state_name].config.statusmarker
+
+        let character_name = msg.content.match(/charname=([^\n{}]*[^"\n{}])/);            
+        character_name = RegExp.$1;
+        let spell_name = msg.content.match(/name=([^\n{}]*[^"\n{}])/);  
+        spell_name = RegExp.$1;
+        let player = getObj('player', msg.playerid),
+            characterid = findObjs({ name: character_name, _type: 'character' }).shift().get('id'),                 
+            represented_tokens = findObjs({ represents: characterid, _type: 'graphic' }),
+            message,
+            target = state[state_name].config.send_reminder_to;
+
+        if(!character_name || !spell_name || !player || !characterid) return;
+
+        let search_attributes = {
+            represents: characterid,
+            _type: 'graphic',
+            _pageid: player.get('lastpage')
+        }
+        search_attributes['status_'+marker] = true;
+        let is_concentrating = (findObjs(search_attributes).length > 0);
+
+        if(is_concentrating){
+            message = '<b>'+character_name+'</b> is concentrating already.';
+        }else{
+            represented_tokens.forEach(token => {
+                let attributes = {};
+                attributes['status_'+marker] = true;
+                token.set(attributes);
+                message = '<b>'+character_name+'</b> is now concentrating on <b>'+spell_name+'</b>.';
+            });
+        }
+
+        if(target === 'character'){
+            target = createWhisperName(character_name);
+        }else if(target === 'everyone'){
+            target = ''
+        }
+
+        makeAndSendMenu(message, '', target);
     },
 
     handleStatusMarkerChange = (obj, prev) => {

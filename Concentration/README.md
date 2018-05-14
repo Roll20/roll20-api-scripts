@@ -42,6 +42,10 @@ If you use the 5e OGL character sheet, it can also automaticly add the concentra
 ---
 
 #### Changelog:
+**0.1.12**
+* `!concentration` can now have another argument to name the spell, eg. `!concentration Bless`.
+* `!concentration` can be used by players (for controlled characters) now.
+
 **0.1.11**
 * `!concentration` with tokens selected will now toggle the statusmarker on them.
 
