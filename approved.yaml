@@ -481,3 +481,7 @@ syncpage:
 combattracker:
 - CombatTracker
 - Utility
+
+movelighting:
+- moveLighting
+- Utility
