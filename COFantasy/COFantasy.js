@@ -268,6 +268,15 @@ var COFantasy = COFantasy || function() {
     token.set(field, newValue);
   }
 
+  function isActive(perso) {
+    var inactif =
+      getState(perso, 'mort') || getState(perso, 'surpris') ||
+      getState(perso, 'assome') || getState(perso, 'etourdi') ||
+      getState(perso, 'paralyse') || getState(perso, 'endormi') ||
+      getState(perso, 'apeure') || attributeAsBool(perso, 'statueDeBois');
+    return !inactif;
+  }
+
   function setState(personnage, etat, value, evt) {
     var token = personnage.token;
     var charId = personnage.charId;
@@ -1691,6 +1700,9 @@ var COFantasy = COFantasy || function() {
     optArgs.forEach(function(arg) {
       arg = arg.trim();
       var cmd = arg.split(" ");
+      cmd = cmd.filter(function(c) {
+        return c !== '';
+      });
       if (cmd.length === 0) cmd = [arg];
       switch (cmd[0]) {
         case "auto":
@@ -1813,6 +1825,18 @@ var COFantasy = COFantasy || function() {
           }
           options.effets = options.effets || [];
           options.effets.push(lastEtat);
+          return;
+        case 'valeur':
+          if (cmd.length < 2) {
+            error("Il manque un argument à l'option --effet de !cof-attack", cmd);
+            return;
+          }
+          if (options.effets === undefined || options.effets.length === 0) {
+            error("Il faut un effet avant l'option --valeur", optArgs);
+            return;
+          }
+          options.effets[0].valeur = cmd[1];
+          if (cmd.length > 2) options.effets.valeurMax = cmd[2];
           return;
         case "etatSi":
         case "etat":
@@ -2921,6 +2945,7 @@ var COFantasy = COFantasy || function() {
       formeDarbre = true;
       defense = 13;
     }
+    if (attributeAsBool(target, 'statueDeBois')) defense = 10;
     // Malus de défense global pour les longs combats
     if (DEF_MALUS_APRES_TOUR_5)
       defense -= (Math.floor((state.COFantasy.tour - 1) / 5) * 2);
@@ -4997,6 +5022,9 @@ var COFantasy = COFantasy || function() {
                 target.messages.push(target.tokName + " " + messageEffetCombat[ef.effet].activation);
                 setTokenAttr(target, ef.effet, true, evt);
               }
+              if (ef.valeur !== undefined) {
+                setTokenAttr(target, ef.effet + "Valeur", ef.valeur, evt, undefined, ef.valeurMax);
+              }
               if (options.tempeteDeManaIntense)
                 setTokenAttr(target, ef.effet + 'TempeteDeManaIntense', options.tempeteDeManaIntense, evt);
               if (ef.saveParTour) {
@@ -5163,6 +5191,9 @@ var COFantasy = COFantasy || function() {
                           setState(target, 'ralenti', true, evt);
                         } else if (ef.effet == 'paralyseTemp') {
                           setState(target, 'paralyse', true, evt);
+                        }
+                        if (ef.valeur !== undefined) {
+                          setTokenAttr(target, ef.effet + "Valeur", ef.valeur, evt, undefined, ef.valeurMax);
                         }
                         if (options.tempeteDeManaIntense)
                           setTokenAttr(target, ef.effet + 'TempeteDeManaIntense', options.tempeteDeManaIntense, evt);
@@ -5743,7 +5774,7 @@ var COFantasy = COFantasy || function() {
         dmgTotal > charAttributeAsInt(target, 'NIVEAU', 1) + charAttributeAsInt(target, 'CONSTITUTION', 10))) {
       var pr = pointsDeRecuperation(target);
       if (pr.current > 0) {
-        expliquer("Les dégâts son si importants que " + target.tokName + " perd 1 PR");
+        expliquer("Les dégâts sont si importants que " + target.tokName + " perd 1 PR");
         enleverPointDeRecuperation(target, evt);
       } else if (getState(target, 'blessé')) {
         if (getState(target, 'mort')) {
@@ -5757,6 +5788,36 @@ var COFantasy = COFantasy || function() {
         expliquer("Les dégâts occasionnent une blessure grave !");
       }
     }
+  }
+
+  function enlevePVStatueDeBois(perso, pvPerdus, evt) {
+    if (pvPerdus <= 0) return;
+    var attrs = tokenAttribute(perso, 'statueDeBoisValeur');
+    if (attrs.length === 0) return;
+    var cur = parseInt(attrs[0].get('current'));
+    var attrsB = tokenAttribute(perso, 'statueDeBois');
+    if (attrsB.length === 0) {
+      error("Attribut pour l'effet status de bois introuvable", cur);
+      evt.deletedAttributes = evt.deletedAttributes || [];
+      evt.deletedAttributes.push(attrs[0]);
+      attrs[0].remove();
+    }
+    if (isNaN(cur)) {
+      finDEffet(attrsB[0], 'statueDeBois', attrsB[0].get('name'), perso.charId, evt);
+      return;
+    }
+    var newCur = cur - pvPerdus;
+    if (newCur <= 0) {
+      finDEffet(attrsB[0], 'statueDeBois', attrsB[0].get('name'), perso.charId, evt);
+      return;
+    }
+    evt.attributes = evt.attributes || [];
+    evt.attributes.push({
+      attribute: attrs[0],
+      current: cur,
+      max: attrs[0].get('max')
+    });
+    attrs[0].set('current', newCur);
   }
 
   function dealDamageAfterOthers(target, crit, options, evt, expliquer, displayRes, dmgTotal, dmgDisplay, showTotal) {
@@ -5779,6 +5840,7 @@ var COFantasy = COFantasy || function() {
           showTotal = saveResult.showTotal;
         }
         var rd = charAttributeAsInt(target, 'RDS', 0);
+        if (attributeAsBool(target, 'statueDeBois')) rd += 10;
         if (crit) rd += charAttributeAsInt(target, 'RD_critique', 0);
         if (options.tranchant) rd += charAttributeAsInt(target, 'RD_tranchant', 0);
         if (options.percant) rd += charAttributeAsInt(target, 'RD_percant', 0);
@@ -5873,16 +5935,21 @@ var COFantasy = COFantasy || function() {
             tempDmg = 0;
           }
         }
+        var pvPerdus = dmgTotal;
         if (options.tempDmg) {
           var oldTempDmg = tempDmg;
           tempDmg += dmgTotal;
-          if (tempDmg > pvmax) tempDmg = pvmax;
+          if (tempDmg > pvmax) {
+            pvPerdus -= tempDmg - pvmax;
+            tempDmg = pvmax;
+          }
           if (hasMana) {
             setTokenAttr(target, 'DMTEMP', tempDmg, evt);
           } else {
             affectToken(token, 'bar2_value', oldTempDmg, evt);
             updateCurrentBar(token, 2, tempDmg);
           }
+          enlevePVStatueDeBois(target, pvPerdus, evt);
         } else {
           affectToken(token, 'bar1_value', bar1, evt);
           if (bar1 > 0 && bar1 <= dmgTotal && charAttributeAsBool(charId, 'instinctDeSurvieHumain')) {
@@ -5892,6 +5959,7 @@ var COFantasy = COFantasy || function() {
             showTotal = true;
             expliquer("L'instinct de survie aide à réduire une attaque fatale");
           }
+          pvPerdus = dmgTotal;
           bar1 = bar1 - dmgTotal;
           if (bar1 <= 0) {
             var attrFDA = tokenAttribute(target, 'formeDArbre');
@@ -5919,6 +5987,7 @@ var COFantasy = COFantasy || function() {
             } else {
               testBlessureGrave(target, dmgTotal, expliquer, evt);
               updateCurrentBar(token, 1, 0);
+              pvPerdus -= bar1;
               if (charAttributeAsBool(charId, 'baroudHonneur')) {
                 expliquer(token.get('name') + " devrait être mort, mais il continue à se battre !");
                 setTokenAttr(target, 'baroudHonneurActif', true, evt);
@@ -5936,7 +6005,9 @@ var COFantasy = COFantasy || function() {
                       if (reussite) {
                         updateCurrentBar(token, 1, 1);
                         bar1 = 1;
+                        pvPerdus--;
                         setTokenAttr(target, 'defierLaMort', defierLaMort + 10, evt);
+                        enlevePVStatueDeBois(target, pvPerdus, evt);
                       } else {
                         mort(target, expliquer, evt);
                         testBlessureGrave(target, 'mort', expliquer, evt);
@@ -5959,6 +6030,7 @@ var COFantasy = COFantasy || function() {
           } else { // bar1>0
             testBlessureGrave(target, dmgTotal, expliquer, evt);
             updateCurrentBar(token, 1, bar1);
+            enlevePVStatueDeBois(target, pvPerdus, evt);
           }
         }
         if (bar1 > 0 && tempDmg >= bar1) { //assomé
@@ -6840,7 +6912,7 @@ var COFantasy = COFantasy || function() {
   }
 
   // Récupération pour tous les tokens sélectionnés
-  function nuit(msg) {
+  function nuit(msg, evt) {
     if (state.COFantasy.combat) sortirDuCombat();
     getSelected(msg, function(selection) {
       if (selection.length === 0) {
@@ -6859,7 +6931,12 @@ var COFantasy = COFantasy || function() {
           });
         });
       }
-      recuperation(selection, "nuit", msg.playerid);
+      if (evt === undefined) evt = {
+        type: "Nuit",
+        attributes: []
+      };
+      if (msg.content.startsWith('!cof-nuit')) jour(evt);
+      recuperation(selection, true, msg.playerid, evt);
     });
   }
 
@@ -6878,32 +6955,40 @@ var COFantasy = COFantasy || function() {
     //var attrsBaie = allAttributesNamed(attrs, 'dose_baie_magique');
   }
 
+  function nouveauJour(msg) {
+    var evt = {
+      type: "Nouveau jour",
+      attributes: []
+    };
+    sendChat('player|'+msg.playerid, "Un nouveau jour se lève");
+    jour(evt);
+    if (msg.content.includes(' --repos')) nuit(msg, evt);
+    else addEvent(evt);
+  }
+
   function recuperer(msg) {
     if (state.COFantasy.combat) {
       sendPlayer(msg, "impossible de se reposer en combat");
       return;
     }
+    var reposLong = false;
+    if (msg.content.includes(' --reposLong')) reposLong = true;
     getSelected(msg, function(selection) {
       if (selection.length === 0) {
         sendPlayer(msg, "!cof-recuperer sans sélection de tokens");
         log("!cof-recuperer requiert des tokens sélectionnés");
         return;
       }
-      recuperation(selection, "recuperer", msg.playerid);
+      var evt = {
+        type: "Récuperation",
+        attributes: []
+      };
+      recuperation(selection, reposLong, msg.playerid, evt);
     });
   }
 
   //Asynchrone (jets de dés)
-  function recuperation(selection, option, playerId) {
-    if (option != "nuit" && option != "recuperer") {
-      log("Wrong option " + option + " for recuperation");
-      return;
-    }
-    var evt = {
-      type: "Récuperation",
-      attributes: []
-    };
-    if (option == 'nuit') jour(evt);
+  function recuperation(selection, reposLong, playerId, evt) {
     var manquePV = [];
     var ecuyers = [];
     var count = selection.length;
@@ -6920,7 +7005,7 @@ var COFantasy = COFantasy || function() {
         finalize();
         return;
       }
-      if (option == 'nuit') {
+      if (reposLong) {
         var attrEcuyerDe = findObjs({
           _type: 'attribute',
           _characterid: perso.charId,
@@ -6951,14 +7036,14 @@ var COFantasy = COFantasy || function() {
         hasMana = !isNaN(manaMax) && manaMax > 0;
         if (hasMana) {
           dmTemp = attributeAsInt(perso, 'DMTEMP', 0);
-          if (option == 'nuit' && (isNaN(bar2) || bar2 < manaMax)) {
+          if (reposLong && (isNaN(bar2) || bar2 < manaMax)) {
             affectToken(token, 'bar2_value', bar2, evt);
             updateCurrentBar(token, 2, manaMax);
           }
         }
       }
       if (!isNaN(dmTemp) && dmTemp > 0) { // récupération de DM temp
-        if (option == "nuit") dmTemp = 0;
+        if (reposLong) dmTemp = 0;
         else dmTemp = Math.max(0, dmTemp - 10);
         if (hasMana) {
           setTokenAttr(perso, 'DMTEMP', dmTemp, evt);
@@ -6970,14 +7055,14 @@ var COFantasy = COFantasy || function() {
       var bar1 = parseInt(token.get("bar1_value"));
       var pvmax = parseInt(token.get("bar1_max"));
       if (isNaN(bar1) || isNaN(pvmax)) return;
-      if (bar1 >= pvmax && (pr.current == pr.max || option == 'recuperer')) {
-        if (option == "recuperer") {
+      if (bar1 >= pvmax && (pr.current == pr.max || !reposLong)) {
+        if (!reposLong) {
           sendChat("", characterName + " n'a pas besoin de repos");
         }
         finalize();
         return;
       }
-      if (option == 'nuit' && charAttributeAsBool(perso, 'montureMagique')) {
+      if (reposLong && charAttributeAsBool(perso, 'montureMagique')) {
         //La monture magique récupère tous ses PV durant la nuit
         affectToken(token, 'bar1_value', bar1, evt);
         updateCurrentBar(token, 1, pvmax);
@@ -6992,7 +7077,7 @@ var COFantasy = COFantasy || function() {
         return; //Si pas de dé de vie, alors pas de PR.
       }
       var message;
-      if (option == "nuit" && pr.current < pr.max) { // on récupère un PR
+      if (reposLong && pr.current < pr.max) { // on récupère un PR
         //Sauf si on a une blessure gave
         if (getState(perso, 'blessé')) {
           testCaracteristique(perso, 'CON', 8, {}, evt, function(tr) {
@@ -7020,7 +7105,7 @@ var COFantasy = COFantasy || function() {
         finalize();
         return;
       }
-      if (option == "recuperer") {
+      if (!reposLong) {
         if (pr.current === 0) { //pas possible de récupérer
           message = " a besoin d'une nuit complète pour récupérer";
           sendChar(charId, message);
@@ -7050,7 +7135,7 @@ var COFantasy = COFantasy || function() {
         if (bar1 < pvmax) manquePV.push(perso);
         else bar1 = pvmax;
         updateCurrentBar(token, 1, bar1);
-        if (option == "nuit") {
+        if (reposLong) {
           message = "Au cours de la nuit, ";
         } else {
           message = "Après une dizaine de minutes de repos, ";
@@ -7716,15 +7801,6 @@ var COFantasy = COFantasy || function() {
     });
   }
 
-  function isActive(perso) {
-    var inactif =
-      getState(perso, 'mort') || getState(perso, 'surpris') ||
-      getState(perso, 'assome') || getState(perso, 'etourdi') ||
-      getState(perso, 'paralyse') || getState(perso, 'endormi') ||
-      getState(perso, 'apeure');
-    return !inactif;
-  }
-
   function interchangeable(attackingToken, target, pageId) { //détermine si il y a assez de tokens 
     var token = target.token;
     var charId = target.charId;
@@ -7916,6 +7992,10 @@ var COFantasy = COFantasy || function() {
   }
 
   function turnAction(perso, playerId) {
+    if (!isActive(perso)) {
+      sendChar(perso.charId, "ne peut pas agir à ce tour");
+      return;
+    }
     // Toutes les Abilities du personnage lié au Token
     var abilities = findObjs({
       _type: 'ability',
@@ -8891,6 +8971,223 @@ var COFantasy = COFantasy || function() {
     });
   }
 
+  function parseOptions(msg) {
+    var pageId;
+    if (msg.selected && msg.selected.length > 0) {
+      var firstSelected = getObj('graphic', msg.selected[0]._id);
+      if (firstSelected === undefined) {
+        error("Un token sélectionné n'est pas trouvé en interne", msg.selected);
+        return;
+      }
+      pageId = firstSelected.get('pageid');
+    }
+    var opts = msg.content.split(' --');
+    var cmd = opts.shift().split(' ');
+    cmd = cmd.filter(function(c) {
+      return c !== '';
+    });
+    var options = {
+      pageId: pageId,
+      cmd: cmd
+    };
+    opts.forEach(function(arg) {
+      cmd = arg.trim().split(' ');
+      switch (cmd[0]) {
+        case "lanceur":
+          if (cmd.length < 2) {
+            error("Il faut préciser l'id ou le nom du lanceur", arg);
+            return;
+          }
+          options.lanceur = tokenOfId(cmd[1], cmd[1], pageId);
+          if (options.lanceur === undefined) {
+            error("Argument de --lanceur non valide", cmd);
+          }
+          return;
+        case 'puissant':
+          if (cmd.length < 2) {
+            options.puissant = "on";
+            return;
+          }
+          switch (cmd[1]) {
+            case "oui":
+              options.puissant = "on";
+              return;
+            case "non":
+              options.puissant = "off";
+              return;
+            case "duree":
+              options.puissantDuree = true;
+              return;
+            default:
+              error("Option puissant non reconnue", cmd);
+          }
+          return;
+        case "mana":
+          if (cmd.length < 2) {
+            error("Pas assez d'argument pour --mana", cmd);
+            return;
+          }
+          var cout;
+          if (cmd.length > 2 && cmd[1] !== '' && cmd[2] !== '') {
+            options.lanceur = tokenOfId(cmd[1], cmd[1], pageId);
+            if (options.lanceur === undefined) {
+              error("Premier argument de --mana non valide", cmd);
+              return;
+            }
+            cout = parseInt(cmd[2]);
+          } else {
+            cout = parseInt(cmd[1]);
+          }
+          if (isNaN(cout) || cout < 0) {
+            error("Cout en mana incorrect", cmd);
+            return;
+          }
+          options.mana = cout;
+          return;
+        case "tempeteDeMana":
+          parseTempeteDeMana(cmd, options);
+          return;
+        case "rang":
+          if (cmd.length < 2) {
+            error("Usage : --rang r", cmd);
+            return;
+          }
+          var rang = parseInt(cmd[1]);
+          if (isNaN(rang) || rang < 1) {
+            error("Le rang doit être un nombre positif");
+            return;
+          }
+          options.rang = rang;
+          break;
+        case 'limiteParJour':
+          if (cmd.length < 2) {
+            error("Il manque la limite journalière", cmd);
+            return;
+          }
+          var limiteParJour = parseInt(cmd[1]);
+          if (isNaN(limiteParJour) || limiteParJour < 1) {
+            error("La limite journalière doit être un nombre positif", cmd);
+            return;
+          }
+          options.limiteParJour = limiteParJour;
+          if (cmd.length > 2) {
+            options.limiteParJourRessource = cmd[2];
+          }
+          return;
+        case 'limiteCibleParJour':
+          if (cmd.length < 2) {
+            error("Il manque la limite journalière", cmd);
+            return;
+          }
+          var limiteCibleParJour = parseInt(cmd[1]);
+          if (isNaN(limiteCibleParJour) || limiteCibleParJour < 1) {
+            error("La limite journalière doit être un nombre positif", cmd);
+            return;
+          }
+          options.limiteCibleParJour = limiteCibleParJour;
+          if (cmd.length > 2) {
+            options.limiteCibleParJourRessource = cmd[2];
+          }
+          return;
+        case 'limiteParCombat':
+          if (cmd.length < 2) {
+            options.limiteParCombat = 1;
+            return;
+          }
+          var limiteParCombat = parseInt(cmd[1]);
+          if (isNaN(limiteParCombat) || limiteParCombat < 1) {
+            error("La limite par combat doit être un nombre positif", cmd);
+            return;
+          }
+          options.limiteParCombat = limiteParCombat;
+          if (cmd.length > 2) {
+            options.limiteParCombatRessource = cmd[2];
+          }
+          return;
+        case "portee":
+          if (cmd.length < 2) {
+            error("Pas assez d'argument pour --portee n", cmd);
+            return;
+          }
+          var portee;
+          if (cmd.length > 2) {
+            var tokPortee = tokenOfId(cmd[1], cmd[1], pageId);
+            if (tokPortee === undefined) {
+              error("Premier argument de --portee non valide", cmd);
+              return;
+            }
+            portee = parseInt(cmd[2]);
+          } else {
+            portee = parseInt(cmd[1]);
+          }
+          if (isNaN(portee) || portee < 0) {
+            error("Portée incorrecte", cmd);
+            return;
+          }
+          options.portee = portee;
+          return;
+        case 'saveParTour':
+          options.saveParTour = parseSave(cmd);
+          return;
+        case 'dose':
+          if (cmd.length < 2) {
+            error("Il faut le nom de la dose", cmd);
+            return;
+          }
+          options.dose = cmd[1];
+          return;
+        case 'decrAttribute':
+          if (cmd.length < 2) {
+            error("Erreur interne d'une commande générée par bouton", opts);
+            return;
+          }
+          var attr = getObj('attribute', cmd[1]);
+          if (attr === undefined) {
+            log("Attribut à changer perdu");
+            log(cmd);
+            return;
+          }
+          options.decrAttribute = attr;
+          return;
+        case 'valeur':
+          if (cmd.length < 2) {
+            error("Il manque la valeur en argument de l'option --valeur", opts);
+            return;
+          }
+          options.valeur = cmd[1];
+          if (cmd.length > 2) options.valeurMax = cmd[2];
+          return;
+        case "fx":
+          if (cmd.length < 2) {
+            sendChat("COF", "Il manque un argument à l'option --fx");
+            return;
+          }
+          options.fx = cmd[1];
+          return;
+        case 'message':
+          if (arg.length > 8) options.message = arg.substring(8);
+          return;
+        case "targetFx":
+          if (cmd.length < 2) {
+            sendChat("COF", "Il manque un argument à l'option --targetFx");
+            return;
+          }
+          options.targetFx = cmd[1];
+          break;
+        case "classeEffet":
+          if (cmd.length < 2) {
+            sendChat("COF", "Il manque un argument à l'option --classeEffet");
+            return;
+          }
+          options.classeEffet = cmd[1];
+          return;
+        default:
+          return;
+      }
+    });
+    return options;
+  }
+
   // Ne pas remplacer les inline rolls, il faut les afficher correctement
   function dmgDirects(msg) {
     var options = parseOptions(msg);
@@ -9349,220 +9646,6 @@ var COFantasy = COFantasy || function() {
       }
     }
     addEvent(evt);
-  }
-
-  function parseOptions(msg) {
-    var pageId;
-    if (msg.selected && msg.selected.length > 0) {
-      var firstSelected = getObj('graphic', msg.selected[0]._id);
-      if (firstSelected === undefined) {
-        error("Un token sélectionné n'est pas trouvé en interne", msg.selected);
-        return;
-      }
-      pageId = firstSelected.get('pageid');
-    }
-    var opts = msg.content.split(' --');
-    var cmd = opts.shift().split(' ');
-    var options = {
-      pageId: pageId,
-      cmd: cmd
-    };
-    opts.forEach(function(arg) {
-      cmd = arg.split(' ');
-      switch (cmd[0]) {
-        case "lanceur":
-          if (cmd.length < 2) {
-            error("Il faut préciser l'id ou le nom du lanceur", arg);
-            return;
-          }
-          options.lanceur = tokenOfId(cmd[1], cmd[1], pageId);
-          if (options.lanceur === undefined) {
-            error("Argument de --lanceur non valide", cmd);
-          }
-          return;
-        case 'puissant':
-          if (cmd.length < 2) {
-            options.puissant = "on";
-            return;
-          }
-          switch (cmd[1]) {
-            case "oui":
-              options.puissant = "on";
-              return;
-            case "non":
-              options.puissant = "off";
-              return;
-            case "duree":
-              options.puissantDuree = true;
-              return;
-            default:
-              error("Option puissant non reconnue", cmd);
-          }
-          return;
-        case "mana":
-          if (cmd.length < 2) {
-            error("Pas assez d'argument pour --mana", cmd);
-            return;
-          }
-          var cout;
-          if (cmd.length > 2 && cmd[1] !== '' && cmd[2] !== '') {
-            options.lanceur = tokenOfId(cmd[1], cmd[1], pageId);
-            if (options.lanceur === undefined) {
-              error("Premier argument de --mana non valide", cmd);
-              return;
-            }
-            cout = parseInt(cmd[2]);
-          } else {
-            cout = parseInt(cmd[1]);
-          }
-          if (isNaN(cout) || cout < 0) {
-            error("Cout en mana incorrect", cmd);
-            return;
-          }
-          options.mana = cout;
-          return;
-        case "tempeteDeMana":
-          parseTempeteDeMana(cmd, options);
-          return;
-        case "rang":
-          if (cmd.length < 2) {
-            error("Usage : --rang r", cmd);
-            return;
-          }
-          var rang = parseInt(cmd[1]);
-          if (isNaN(rang) || rang < 1) {
-            error("Le rang doit être un nombre positif");
-            return;
-          }
-          options.rang = rang;
-          break;
-        case 'limiteParJour':
-          if (cmd.length < 2) {
-            error("Il manque la limite journalière", cmd);
-            return;
-          }
-          var limiteParJour = parseInt(cmd[1]);
-          if (isNaN(limiteParJour) || limiteParJour < 1) {
-            error("La limite journalière doit être un nombre positif", cmd);
-            return;
-          }
-          options.limiteParJour = limiteParJour;
-          if (cmd.length > 2) {
-            options.limiteParJourRessource = cmd[2];
-          }
-          return;
-        case 'limiteCibleParJour':
-          if (cmd.length < 2) {
-            error("Il manque la limite journalière", cmd);
-            return;
-          }
-          var limiteCibleParJour = parseInt(cmd[1]);
-          if (isNaN(limiteCibleParJour) || limiteCibleParJour < 1) {
-            error("La limite journalière doit être un nombre positif", cmd);
-            return;
-          }
-          options.limiteCibleParJour = limiteCibleParJour;
-          if (cmd.length > 2) {
-            options.limiteCibleParJourRessource = cmd[2];
-          }
-          return;
-        case 'limiteParCombat':
-          if (cmd.length < 2) {
-            options.limiteParCombat = 1;
-            return;
-          }
-          var limiteParCombat = parseInt(cmd[1]);
-          if (isNaN(limiteParCombat) || limiteParCombat < 1) {
-            error("La limite par combat doit être un nombre positif", cmd);
-            return;
-          }
-          options.limiteParCombat = limiteParCombat;
-          if (cmd.length > 2) {
-            options.limiteParCombatRessource = cmd[2];
-          }
-          return;
-        case "portee":
-          if (cmd.length < 2) {
-            error("Pas assez d'argument pour --portee n", cmd);
-            return;
-          }
-          var portee;
-          if (cmd.length > 2) {
-            var tokPortee = tokenOfId(cmd[1], cmd[1], pageId);
-            if (tokPortee === undefined) {
-              error("Premier argument de --portee non valide", cmd);
-              return;
-            }
-            portee = parseInt(cmd[2]);
-          } else {
-            portee = parseInt(cmd[1]);
-          }
-          if (isNaN(portee) || portee < 0) {
-            error("Portée incorrecte", cmd);
-            return;
-          }
-          options.portee = portee;
-          return;
-        case 'saveParTour':
-          options.saveParTour = parseSave(cmd);
-          return;
-        case 'dose':
-          if (cmd.length < 2) {
-            error("Il faut le nom de la dose", cmd);
-            return;
-          }
-          options.dose = cmd[1];
-          return;
-        case 'decrAttribute':
-          if (cmd.length < 2) {
-            error("Erreur interne d'une commande générée par bouton", opts);
-            return;
-          }
-          var attr = getObj('attribute', cmd[1]);
-          if (attr === undefined) {
-            log("Attribut à changer perdu");
-            log(cmd);
-            return;
-          }
-          options.decrAttribute = attr;
-          return;
-        case 'valeur':
-          if (cmd.length < 2) {
-            error("Il manque la valeur en argument de l'option --valeur", opts);
-            return;
-          }
-          options.valeur = cmd[1];
-          if (cmd.length > 2) options.valeurMax = cmd[2];
-          return;
-        case "fx":
-          if (cmd.length < 2) {
-            sendChat("COF", "Il manque un argument à l'option --fx");
-            return;
-          }
-          options.fx = cmd[1];
-          return;
-        case 'message':
-          if (arg.length > 8) options.message = arg.substring(8);
-          return;
-        case "targetFx":
-          if (cmd.length < 2) {
-            sendChat("COF", "Il manque un argument à l'option --targetFx");
-            return;
-          }
-          options.targetFx = cmd[1];
-          break;
-        case "classeEffet":
-          if (cmd.length < 2) {
-            sendChat("COF", "Il manque un argument à l'option --classeEffet");
-            return;
-          }
-          options.classeEffet = cmd[1];
-          return;
-        default:
-          return;
-      }
-    });
-    return options;
   }
 
   function getInit() {
@@ -11382,12 +11465,8 @@ var COFantasy = COFantasy || function() {
 
   function murDeForce(msg) {
     var cmd = removeSelectedTokenIdFromArgs(msg, 2);
-    if (cmd.length < 2) {
-      error("La fonction !cof-mur-de-force attend en argument la forme du mur", cmd);
-      return;
-    }
     var sphere = true;
-    if (cmd[1] == 'mur') sphere = false;
+    if (cmd.length > 1 && cmd[1] == 'mur') sphere = false;
     getSelected(msg, function(selected) {
       iterSelected(selected, function(lanceur) {
         var charId = lanceur.charId;
@@ -13764,15 +13843,18 @@ var COFantasy = COFantasy || function() {
       case "!cof-hors-combat":
         sortirDuCombat();
         return;
-      case "!cof-nuit":
+      case "!cof-nuit": //deprecated
         nuit(msg);
         return;
-      case "!cof-jour":
+      case "!cof-jour": //deprecated
         evt = {
           type: "Nouveau jour"
         };
         jour(evt);
         addEvent(evt);
+        return;
+      case "!cof-nouveau-jour":
+        nouveauJour(msg);
         return;
       case "!cof-recuperation":
         recuperer(msg);
@@ -14334,6 +14416,12 @@ var COFantasy = COFantasy || function() {
       activation: "se transorme en arbre",
       actif: "est transformé en arbre",
       fin: "retrouve sa forme normale"
+    },
+    statueDeBois: {
+      activation: "se transforme en statue de bois",
+      actif: "est transformé en statue de bois",
+      fin: "retrouve sa forme normale",
+      prejudiciable: true
     }
   };
 
@@ -14542,6 +14630,7 @@ var COFantasy = COFantasy || function() {
   }
 
   //L'argument effet doit être le nom complet, pas la base
+  //evt.deletedAttributes doit être défini
   function enleverEffetAttribut(charId, effet, attrName, attribut, evt) {
     var nameWithSave = effet + attribut + attrName.substr(effet.length);
     findObjs({
@@ -14567,6 +14656,7 @@ var COFantasy = COFantasy || function() {
 
   function finDEffet(attr, effet, attrName, charId, evt, options) { //L'effet arrive en fin de vie, doit être supprimé
     options = options || {};
+    evt.deletedAttributes = evt.deletedAttributes || [];
     var res;
     var newInit = [];
     var efComplet = effetComplet(effet, attrName);
@@ -14652,23 +14742,23 @@ var COFantasy = COFantasy || function() {
         break;
       case 'murDeForce':
         iterTokensOfAttribute(charId, options.pageId, effet, attrName, function(token) {
-          var attr = tokenAttribute({
+          var attrM = tokenAttribute({
             charId: charId,
             token: token
           }, 'murDeForceId');
-          if (attr.length === 0) return;
-          var imageMur = getObj('graphic', attr[0].get('current'));
+          if (attrM.length === 0) return;
+          var imageMur = getObj('graphic', attrM[0].get('current'));
           if (imageMur) {
             imageMur.remove();
           }
-          attr[0].remove();
+          attrM[0].remove();
         });
         break;
       case 'regeneration': //faire les soins restants
+        var toursRestant = attr.get('current');
+        if (toursRestant == 'tourFinal' || isNaN(toursRestant)) break;
         iterTokensOfAttribute(charId, options.pageId, effet, attrName,
           function(token) {
-            var toursRestant = attr.get('current');
-            if (toursRestant == 'tourFinal' || isNaN(toursRestant)) return;
             var perso = {
               token: token,
               charId: charId
