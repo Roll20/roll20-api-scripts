@@ -1,9 +1,9 @@
 {
     "name": "DeathTracker",
     "script": "DeathTracker.js",
-    "version": "0.1.4",
-    "previousversions": [],
-    "description": "DeathTracker sets the statusmarker when a character is death or (optional) almost death, works great together with my [LazyExperience](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/LazyExperience) script.\n\n__Optionally__: Set an **Unconscious** statusmarker on **Player Characters**.\n\n![Config Menu](https://i.imgur.com/s4CBW9K.png \"Config Menu\")\n\n### Commands\n\n* **!dead config** - Shows the config menu.",
+    "version": "0.1.6",
+    "previousversions": ["0.1.4"],
+    "description": "## DeathTracker\n\n* Skype: RobinKuiper.eu\n* Discord: Atheos#1095\n* Roll20: https://app.roll20.net/users/1226016/robin\n* Reddit: https://www.reddit.com/user/robinkuiper/\n* Patreon: https://www.patreon.com/robinkuiper\n\n---\n\n![Token](https://i.imgur.com/Glb1usj.png \"Token\")\n\nDeathTracker sets the statusmarker when a character is death or (optional) almost death, works great together with my [LazyExperience](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/LazyExperience) script.\n__Optionally__: Set an **Unconscious** statusmarker on **Player Characters**. This works great with [StatusInfo](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/StatusInfo).\n\n![Config Menu](https://i.imgur.com/cZeENYE.png \"Config Menu\")\n\n### Commands\n\n* **!dead config** - Shows the config menu.\n\n### Tints\n[Full](https://i.imgur.com/2gOgofe.png \"Full\")\n[Half](https://i.imgur.com/ODMv1Ev.png \"Half\")\n[empty](https://i.imgur.com/PgBqgLc.png \"empty\")\n\n---\n\n#### Changelog\n**0.1.6**\n* Optionally FX on HP Gain (heal).\n\n**0.1.5**\n* Optionally adjust tint color on HP loss/gain.\n* Optionally FX on HP Loss.",
     "authors": "Robin Kuiper",
     "roll20userid": "1226016",
     "patreon": "https://www.patreon.com/robinkuiper",
