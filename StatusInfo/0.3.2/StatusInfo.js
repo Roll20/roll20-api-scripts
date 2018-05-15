@@ -3,7 +3,7 @@
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
- * Roll20: https://app.roll20.net/users/1226016/robin-k
+ * Roll20: https://app.roll20.net/users/1226016/robin
  * Roll20 Thread: https://app.roll20.net/forum/post/6252784/script-statusinfo
  * Github: https://github.com/RobinKuiper/Roll20APIScripts
  * Reddit: https://www.reddit.com/user/robinkuiper/
@@ -74,7 +74,6 @@ var StatusInfo = StatusInfo || (function() {
                             if(args[0] === 'import'){
                                 let json;
                                 let config = msg.content.substring(('!'+state[state_name].config.command+' config import ').length);
-                                log(config)
                                 try{
                                     json = JSON.parse(config);
                                 } catch(e) {
@@ -308,8 +307,6 @@ var StatusInfo = StatusInfo || (function() {
 
         if(typeof icon_image_positions[icon] === 'undefined') return false;
         //if(!icon_image_positions[icon]) return false;
-
-        log(icon_image_positions[icon])
         
         iconStyle += 'width: 24px; height: 24px;';
 

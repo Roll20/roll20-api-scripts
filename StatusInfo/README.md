@@ -2,7 +2,7 @@
 
 * Skype: RobinKuiper.eu
 * Discord: Atheos#1095
-* Roll20: https://app.roll20.net/users/1226016/robin-k
+* Roll20: https://app.roll20.net/users/1226016/robin
 * Roll20 Thread: https://app.roll20.net/forum/post/6252784/script-statusinfo
 * Roll20 Wiki: https://wiki.roll20.net/Script:StatusInfo
 * Github: https://github.com/RobinKuiper/Roll20APIScripts
@@ -81,6 +81,13 @@ Roll20 Thread: https://app.roll20.net/forum/post/6252784/script-statusinfo
 ---
 
 #### Changelog
+**v0.3.6 - 04-05-2018**
+* Better [CombatTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/CombatTracker) Support.
+* Bugfix.
 
-* **v0.3.4 - 24-04-2018**
+**v0.3.5 - 01-05-2018**
+* Ready for collabration with [CombatTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/CombatTracker).
+* Small Bugfixes.
+
+**v0.3.4 - 24-04-2018**
 Fixed a "huge" bug that wouldn't send conditions to chat on statusmarker change.
