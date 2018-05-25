@@ -959,12 +959,12 @@ on('chat:message', function(msg) {
             dispDmgB = '<span style = "color:green;">' + dispDmgB + '</span>';
         }
 
-        if (!(diff >= Range1A) && (diff <= Range2A)){
+        if (!((diff >= Range1A) && (diff <= Range2A))){
             CanAttackA = false;
             log("Attacker is out of range!")
         }
 
-        if (!(diff >= Range1B) && (diff <= Range2B)){
+        if (!((diff >= Range1B) && (diff <= Range2B))){
             CanAttackB = false;
             log("Defender is out of range!")
         }
@@ -3881,11 +3881,11 @@ on('chat:message', function(msg) {
             dispDmgB = '<span style = "color:green;">' + dispDmgB + '</span>'
         }
 
-        if (!(diff >= Range1A) && (diff <= Range2A)){
+        if (!((diff >= Range1A) && (diff <= Range2A))){
             CanAttackA = false;
         }
 
-        if (!(diff >= Range1B) && (diff <= Range2B)){
+        if (!((diff >= Range1B) && (diff <= Range2B))){
             CanAttackB = false;
         }
 
