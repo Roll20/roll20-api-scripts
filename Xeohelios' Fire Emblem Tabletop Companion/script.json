@@ -9,6 +9,7 @@
 	"useroptions": [],
 	"dependencies": [],
 	"conflicts": [],
+	"patreon":"missingq",
 	"modifies": {
 		"chat": "read, write",
 		"attribute._id": "read, write",

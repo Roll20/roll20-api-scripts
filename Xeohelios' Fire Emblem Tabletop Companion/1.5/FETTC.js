@@ -959,12 +959,12 @@ on('chat:message', function(msg) {
             dispDmgB = '<span style = "color:green;">' + dispDmgB + '</span>';
         }
 
-        if (!(diff >= Range1A) && (diff <= Range2A)){
+        if (!((diff >= Range1A) && (diff <= Range2A))){
             CanAttackA = false;
             log("Attacker is out of range!")
         }
 
-        if (!(diff >= Range1B) && (diff <= Range2B)){
+        if (!((diff >= Range1B) && (diff <= Range2B))){
             CanAttackB = false;
             log("Defender is out of range!")
         }
@@ -2257,8 +2257,11 @@ on('chat:message', function(msg) {
         let fIDA = getAttrByName(staffer.id, 'fid')|| "";
         let UsesA = findObjs({ characterid: staffer.id, name: "repeating_weapons_"+fIDA+"_Uses"},{ caseInsensitive: true })[0]; //assumes it exists, since that's a requirement for the thing to activate
         let diff = ManhDist(selectedToken, targetToken);
+        let AllegianceA = getAttrByName(staffer.id, 'all');
+        let AllegianceB = getAttrByName(target.id, 'all');
 
         chatstr = '<p style = "margin-bottom: 0px;">' + staffer.get("name") + " uses " + WNameA + "!</p>";
+
 
         const Heal = {
             name : "Heal",
@@ -2764,34 +2767,45 @@ on('chat:message', function(msg) {
                     //check for range
                     if (((Range1A) <= (diff)) && ((diff) <= (Range2A))){
                         if (j.type === "healing"){
-                            //Set with workers in respect to total caps
-                            HPVal = j.effect;
-                            StaffEXPA = j.exp;
-                            dispHealA = HPVal;
-                            for (var z in SkillsA){
-                                Skill(staffer, target, SkillsA[z], "staff");
-                            }
-                            CurrHPB.setWithWorker({current: parseInt(CurrHPB.get("current")) + HPVal});
-                            chatstr += '<p style = "margin-bottom: 0px;">' + targetToken.get("name") + " is healed for " + String(HPVal) + " HP!</p>";
-                            UsesA.setWithWorker({current: parseInt(UsesA.get("current")) - 1});
-                            dispHitA = "--";
-                        }
-                        if (j.type === "status"){
-                            //Check for RNG
-                            if (randomInteger(100) < (HitA - AvoB)){
-                                for (var a in j.target){
-                                    log(j.effect);
-                                    log(j.target[a]);
-                                    j.target[a].setWithWorker("current",j.effect);
-                                }
-                                log(j.status);
-                                targetToken.set(j.status);
-                                UsesA.setWithWorker({current: parseInt(UsesA.get("current")) - 1});
-                                chatstr += '<p style = "margin-bottom: 0px;">'+ j.chatmsg + '</p>';
+                            //check for ally
+                            if ((AllegianceA == "Player" && AllegianceB == "Player") || (AllegianceA == "Player" && AllegianceB == "Ally") || (AllegianceA == "Ally" && AllegianceB == "Player") || (AllegianceA == "Ally" && AllegianceB == "Ally") || (AllegianceA == "Enemy" && AllegianceB == "Enemy")){
+                                //Set with workers in respect to total caps
+                                HPVal = j.effect;
                                 StaffEXPA = j.exp;
+                                dispHealA = HPVal;
+                                for (var z in SkillsA){
+                                    Skill(staffer, target, SkillsA[z], "staff");
+                                }
+                                CurrHPB.setWithWorker({current: parseInt(CurrHPB.get("current")) + HPVal});
+                                chatstr += '<p style = "margin-bottom: 0px;">' + targetToken.get("name") + " is healed for " + String(HPVal) + " HP!</p>";
+                                UsesA.setWithWorker({current: parseInt(UsesA.get("current")) - 1});
+                                dispHitA = "--";
                             }
                             else {
-                                chatstr += '<p style = "margin-bottom: 0px;"> Staff misses!</p>';
+                                chatstr += '<p style = "margin-bottom: 0px;"> Unit cannot be healed!</p>';
+                            }
+                        }
+                        if (j.type === "status"){
+                            //check for enemy
+                            if (!((AllegianceA == "Player" && AllegianceB == "Player") || (AllegianceA == "Player" && AllegianceB == "Ally") || (AllegianceA == "Ally" && AllegianceB == "Player") || (AllegianceA == "Ally" && AllegianceB == "Ally") || (AllegianceA == "Enemy" && AllegianceB == "Enemy"))){
+                                //Check for RNG
+                                if (randomInteger(100) < (HitA - AvoB)){
+                                    for (var a in j.target){
+                                        log(j.effect);
+                                        log(j.target[a]);
+                                        j.target[a].setWithWorker("current",j.effect);
+                                    }
+                                    log(j.status);
+                                    targetToken.set(j.status);
+                                    UsesA.setWithWorker({current: parseInt(UsesA.get("current")) - 1});
+                                    chatstr += '<p style = "margin-bottom: 0px;">'+ j.chatmsg + '</p>';
+                                    StaffEXPA = j.exp;
+                                }
+                                else {
+                                    chatstr += '<p style = "margin-bottom: 0px;"> Staff misses!</p>';
+                                }
+                            } else {
+                                chatstr += '<p style = "margin-bottom: 0px;"> Unit cannot be targeted!</p>';
                             }
                         }
                     } else {
@@ -3881,11 +3895,11 @@ on('chat:message', function(msg) {
             dispDmgB = '<span style = "color:green;">' + dispDmgB + '</span>'
         }
 
-        if (!(diff >= Range1A) && (diff <= Range2A)){
+        if (!((diff >= Range1A) && (diff <= Range2A))){
             CanAttackA = false;
         }
 
-        if (!(diff >= Range1B) && (diff <= Range2B)){
+        if (!((diff >= Range1B) && (diff <= Range2B))){
             CanAttackB = false;
         }
 
