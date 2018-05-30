@@ -3682,18 +3682,32 @@ on('chat:message', function(msg) {
         let StrengthsB = getAttrByName(defender.id, "repeating_weapons_$0_Strengths") || "";
         let WeaknessA = getAttrByName(attacker.id, 'weaknesses');
         let WeaknessB = getAttrByName(defender.id, 'weaknesses');
-        //Weapon exp
-        let SwordEXP = findObjs({ characterid: attacker.id, name: "SwordEXP", type: "attribute"})[0];
-        let LanceEXP = findObjs({ characterid: attacker.id, name: "LanceEXP", type: "attribute"})[0];
-        let AxeEXP = findObjs({ characterid: attacker.id, name: "AxeEXP", type: "attribute"})[0];
-        let BowEXP = findObjs({ characterid: attacker.id, name: "BowEXP", type: "attribute"})[0];
-        let DaggerEXP = findObjs({ characterid: attacker.id, name: "GunEXP", type: "attribute"})[0];
-        let GunEXP = findObjs({ characterid: attacker.id, name: "GunEXP", type: "attribute"})[0];
-        let DarkEXP = findObjs({ characterid: attacker.id, name: "DarkEXP", type: "attribute"})[0];
-        let LightEXP = findObjs({ characterid: attacker.id, name: "LightEXP", type: "attribute"})[0];
-        let AnimaEXP = findObjs({ characterid: attacker.id, name: "AnimaEXP", type: "attribute"})[0];
-        let StoneEXP = findObjs({ characterid: attacker.id, name: "StoneEXP", type: "attribute"})[0];
-        let StaffEXP = findObjs({ characterid: attacker.id, name: "StaffEXP", type: "attribute"})[0];
+
+        //attacker wexp
+        let SwordEXPA = findObjs({ characterid: attacker.id, name: "SwordEXP", type: "attribute"})[0];
+        let LanceEXPA = findObjs({ characterid: attacker.id, name: "LanceEXP", type: "attribute"})[0];
+        let AxeEXPA = findObjs({ characterid: attacker.id, name: "AxeEXP", type: "attribute"})[0];
+        let BowEXPA = findObjs({ characterid: attacker.id, name: "BowEXP", type: "attribute"})[0];
+        let DaggerEXPA = findObjs({ characterid: attacker.id, name: "GunEXP", type: "attribute"})[0];
+        let GunEXPA = findObjs({ characterid: attacker.id, name: "GunEXP", type: "attribute"})[0];
+        let DarkEXPA = findObjs({ characterid: attacker.id, name: "DarkEXP", type: "attribute"})[0];
+        let LightEXPA = findObjs({ characterid: attacker.id, name: "LightEXP", type: "attribute"})[0];
+        let AnimaEXPA = findObjs({ characterid: attacker.id, name: "AnimaEXP", type: "attribute"})[0];
+        let StoneEXPA = findObjs({ characterid: attacker.id, name: "StoneEXP", type: "attribute"})[0];
+        let StaffEXPA = findObjs({ characterid: attacker.id, name: "StaffEXP", type: "attribute"})[0];
+
+        //defender wexp
+        let SwordEXPB = findObjs({ characterid: defender.id, name: "SwordEXP", type: "attribute"})[0];
+        let LanceEXPB = findObjs({ characterid: defender.id, name: "LanceEXP", type: "attribute"})[0];
+        let AxeEXPB = findObjs({ characterid: defender.id, name: "AxeEXP", type: "attribute"})[0];
+        let BowEXPB = findObjs({ characterid: defender.id, name: "BowEXP", type: "attribute"})[0];
+        let DaggerEXPB = findObjs({ characterid: defender.id, name: "GunEXP", type: "attribute"})[0];
+        let GunEXPB = findObjs({ characterid: defender.id, name: "GunEXP", type: "attribute"})[0];
+        let DarkEXPB = findObjs({ characterid: defender.id, name: "DarkEXP", type: "attribute"})[0];
+        let LightEXPB = findObjs({ characterid: defender.id, name: "LightEXP", type: "attribute"})[0];
+        let AnimaEXPB = findObjs({ characterid: defender.id, name: "AnimaEXP", type: "attribute"})[0];
+        let StoneEXPB = findObjs({ characterid: defender.id, name: "StoneEXP", type: "attribute"})[0];
+        let StaffEXPB = findObjs({ characterid: defender.id, name: "StaffEXP", type: "attribute"})[0];
 
         //Hit/crit/avo/dod
         let HitA = getAttrByName(attacker.id, 'hit');
@@ -3737,7 +3751,8 @@ on('chat:message', function(msg) {
         const WepTypes = ["Sword/Katana","Lance/Nagin.","Axe/Club","Bow/Yumi","Dagger/Shurik.","Firearm/Taneg.","Anima Magic","Light Magic","Dark Magic","Stones/Other","Staves/Rods"];
         const MagWeps = ["Levin Sword","Bolt Naginata","Bolt Axe","Shining Bow","Flame Shuriken"];
         const PhysWeps = ["Flame Glaive","Light Rapier","Shadow Hammer"];
-        const WepRanks = [SwordEXP,LanceEXP,AxeEXP,BowEXP,DaggerEXP,GunEXP,AnimaEXP,LightEXP,DarkEXP,StoneEXP,StaffEXP];
+        const WepRanksA = [SwordEXPA,LanceEXPA,AxeEXPA,BowEXPA,DaggerEXPA,GunEXPA,AnimaEXPA,LightEXPA,DarkEXPA,StoneEXPA,StaffEXPA];
+        const WepRanksB = [SwordEXPB,LanceEXPB,AxeEXPB,BowEXPB,DaggerEXPB,GunEXPB,AnimaEXPB,LightEXPB,DarkEXPB,StoneEXPB,StaffEXPB];
         const WepUA = [SwordUA,LanceUA,AxeUA,BowUA,DaggerUA,GunUA,AnimaUA,LightUA,DarkUA,StoneUA,StaffUA];
         const WepUB = [SwordUB,LanceUB,AxeUB,BowUB,DaggerUB,GunUB,AnimaUB,LightUB,DarkUB,StoneUB,StaffUB];
         let DmgtypeA;
@@ -3773,14 +3788,14 @@ on('chat:message', function(msg) {
         }
         log("Numerical weapon rank is " + WRankA_num);
         //Check to see if the weapon is usable
-        if ((WepUA[WepTypes.indexOf(WTypeA)] == 1) && (WepRanks[WepTypes.indexOf(WTypeA)].get("current") >= WRankA_num)){
+        if ((WepUA[WepTypes.indexOf(WTypeA)] == 1) && (WepRanksA[WepTypes.indexOf(WTypeA)].get("current") >= WRankA_num)){
             log("Attacker's weapon is usable!");
         } else {
             log("Attacker's weapon is not usable!");
 
             CanAttackA = false;
         }
-        if ((WepUB[WepTypes.indexOf(WTypeB)] == 1) && (WepRanks[WepTypes.indexOf(WTypeB)].get("current") >= WRankB_num)){
+        if ((WepUB[WepTypes.indexOf(WTypeB)] == 1) && (WepRanksB[WepTypes.indexOf(WTypeB)].get("current") >= WRankB_num)){
             log("Defender's weapon is usable!");
         } else {
             log("Defender's weapon is not usable!");
@@ -3880,7 +3895,7 @@ on('chat:message', function(msg) {
         let WIndexA = WepTypes.indexOf(WTypeA)+ 1;
         let WIndexB = WepTypes.indexOf(WTypeB)+ 1;
         let WIN = WepTypes.indexOf(WTypeA);
-        let CurrWR = WepRanks[WIN];
+        let CurrWR = WepRanksA[WIN];
         let CWRVal = Number(CurrWR.get("current")); //Assume number because it's a numerical input
         let WTAA;
         let WTAB;
@@ -3923,6 +3938,8 @@ on('chat:message', function(msg) {
             dispDmgB = '<span style = "color:green;">' + dispDmgB + '</span>'
         }
 
+        log("diff: "+ diff + ", range1A: "+ Range1A + ", range2A: "+ Range2A + ", range1B: "+ Range1B + ", range2B: "+ Range2B );
+
         if (!((diff >= Range1A) && (diff <= Range2A))){
             CanAttackA = false;
         }
@@ -3930,6 +3947,8 @@ on('chat:message', function(msg) {
         if (!((diff >= Range1B) && (diff <= Range2B))){
             CanAttackB = false;
         }
+        log(CanAttackA);
+        log(CanAttackB);
 
         if (!CanAttackA){
             dispDmgA = "--"
