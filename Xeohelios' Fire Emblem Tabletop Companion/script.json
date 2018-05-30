@@ -1,15 +1,15 @@
 {
 	"name": "Fire Emblem Tabletop Combat Script",
 	"script": "FETTC.js",
-	"version": "1.5",
-	"previousversions": ["1.0","1.1","1.2","1.3","1.4"],
+	"version": "1.6",
+	"previousversions": ["1.0","1.1","1.2","1.3","1.4","1.5"],
 	"description": "**This is the companion script for the default version of Xeohelios' Fire Emblem Tabletop system!**\rThis script automates combat and provides other necessary functions, such as a fully-fledged, dynamic skills system faithful to the games. Skills can be found [here](https://github.com/missing-q/emblem20/wiki/Skills:-Default-Package) and the guide to making custom skills can be found [here](https://github.com/missing-q/emblem20/wiki/Skills:-Making-Custom-Skills). \r The guide to setting up your game so the script will work can be found [here](https://missing-q.github.io/emblem20/Site/setup0.html). It won't do anything otherwise, so please check it out!",
 	"authors": "Missing-q",
 	"roll20userid": "1537217",
 	"useroptions": [],
 	"dependencies": [],
 	"conflicts": [],
-	"patreon":"missingq",
+	"patreon":"https://patreon.com/missingq",
 	"modifies": {
 		"chat": "read, write",
 		"attribute._id": "read, write",
