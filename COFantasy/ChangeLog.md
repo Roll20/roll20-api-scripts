@@ -1,4 +1,9 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+# 1.03
+### Autres améliorations
+* Appels à HealthColors lors des changements de valeur des barres
+* Ajout de la possibilité d'ajouter une ligne de texte dans la fenêtre d'attaque (option --message).
+* Ajout de conditions complexes (et possiblement imbriquées) pour les options d'attaque. Cela rend les options --etatsi et --psi inutiles : à la place on peut écrire --if cond --plus ... --endif.
 ## 1.02
 ### Autres améliorations
 * Ajout de la possibilité de spécifier un save d'effet temporaire de la forme --save carac seuil demiDuree, pour que le save ne fasse que diviser par 2 la durée de l'effet.
