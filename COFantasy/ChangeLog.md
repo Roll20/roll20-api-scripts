@@ -1,6 +1,8 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 # 1.03
 ### Autres améliorations
+* !cof-tour-suivant : permet à un joueur de passer au tour suivant si il contrôle le token dont c'est le tour.
+* Gestion des personnages immobilisés : par défaut, le script empêche maintenant les joueurs de les bouger.
 * Appels à HealthColors lors des changements de valeur des barres
 * Ajout de la possibilité d'ajouter une ligne de texte dans la fenêtre d'attaque (option --message).
 * Ajout de conditions complexes (et possiblement imbriquées) pour les options d'attaque. Cela rend les options --etatsi et --psi inutiles : à la place on peut écrire --if cond --plus ... --endif.

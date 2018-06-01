@@ -99,6 +99,28 @@ var COFantasy = COFantasy || function() {
     return playerIds;
   }
 
+  function getAttack(attackLabel, perso) {
+    // Get attack number (does not correspond to the position in sheet !!!)
+    var attackNumber = 0;
+    var attPrefix, weaponName;
+    while (true) {
+      attPrefix = "repeating_armes_$" + attackNumber + "_";
+      weaponName = getAttrByName(perso.charId, attPrefix + "armenom");
+      if (weaponName === undefined || weaponName === "") {
+        return;
+      }
+      var weaponLabel = weaponName.split(' ', 1)[0];
+      if (weaponLabel == attackLabel) {
+        weaponName = weaponName.substring(weaponName.indexOf(' ') + 1);
+        return {
+          attackPrefix: attPrefix,
+          weaponName: weaponName
+        };
+      }
+      attackNumber++;
+    }
+  }
+
   function getPictoStyleFromCommand(fullCommand, perso) {
     if (fullCommand === undefined) return {
       picto: '',
@@ -115,18 +137,18 @@ var COFantasy = COFantasy || function() {
         var portee = 0;
         if (command.length > 3) {
           var attackLabel = command[3];
-          var this_weapon = [];
-          try {
-            this_weapon = JSON.parse(attackLabel);
-          } catch (e) {
-            error('Error parsing the Array', command);
-          }
-          if (Array.isArray(this_weapon)) {
-            portee = this_weapon[4];
+          var att = getAttack(attackLabel, perso);
+          if (att !== undefined) {
+            portee = getPortee(perso.charId, att.attackPrefix);
           } else {
-            var att = getAttack(attackLabel, perso);
-            if (att !== undefined) {
-              portee = getPortee(perso.charId, att.attackPrefix);
+            var thisWeapon = [];
+            try {
+              thisWeapon = JSON.parse(attackLabel);
+              if (Array.isArray(thisWeapon) && thisWeapon.length > 4) {
+                portee = thisWeapon[4];
+              }
+            } catch (e) {
+              log("Impossible de trouver la portée pour " + attackLabel);
             }
           }
         }
@@ -1727,7 +1749,7 @@ var COFantasy = COFantasy || function() {
     }
   }
 
-  function closeIte(scope){
+  function closeIte(scope) {
     var ps = scope.parentScope;
     if (ps === undefined) return;
     log("Il manque un endif");
@@ -2304,7 +2326,7 @@ var COFantasy = COFantasy || function() {
             error("--endIf sans --if correspondant", cmd);
             return;
           }
-          scope.parentScope = undefined;//To remove circular dependencies in options
+          scope.parentScope = undefined; //To remove circular dependencies in options
           scope = psEndif;
           return;
         case "else":
@@ -2337,7 +2359,7 @@ var COFantasy = COFantasy || function() {
           sendChat("COF", "Argument de !cof-attack '" + arg + "' non reconnu");
       }
     });
-    closeIte(scope);//pour fermer les endif mal formés et éviter les boucles
+    closeIte(scope); //pour fermer les endif mal formés et éviter les boucles
     options.additionalDmg = options.additionalDmg || [];
     if (options.tempeteDeMana) {
       if (options.tempeteDeMana.cout === 0) {
@@ -2601,15 +2623,21 @@ var COFantasy = COFantasy || function() {
       if (condInTarget) opt = target;
       for (var field in branch) {
         switch (field) {
-          case 'additionalDmg': case 'effets': case 'etats':
+          case 'additionalDmg':
+          case 'effets':
+          case 'etats':
             opt[field] = opt[field] || [];
             opt[field] = opt[field].concat(branch[field]);
             break;
-          case 'sournoise': case 'mana': case 'bonusAttaque': case 'bonusContreBouclier':
+          case 'sournoise':
+          case 'mana':
+          case 'bonusAttaque':
+          case 'bonusContreBouclier':
             opt[field] = opt[field] || 0;
             opt[field] += branch[field];
             break;
-          case 'dmgCoef': case 'critCoef':
+          case 'dmgCoef':
+          case 'critCoef':
             if (opt[field] === undefined) {
               if (condInTarget) opt[field] = 0;
               else opt[field] = 1;
@@ -2618,11 +2646,14 @@ var COFantasy = COFantasy || function() {
             break;
           case 'messages':
             if (condInTarget) target.messages.concat(branch.messages);
-            else {/*jshint loopfunc: true */
-              branch.messages.forEach(function(m) {explications.push(m);});
+            else { /*jshint loopfunc: true */
+              branch.messages.forEach(function(m) {
+                explications.push(m);
+              });
             }
             break;
-          default: opt[field] = branch[field];
+          default:
+            opt[field] = branch[field];
         }
       }
       evalITE(attaquant, target, deAttaque, options, explications, branch, condInTarget);
@@ -2909,28 +2940,6 @@ var COFantasy = COFantasy || function() {
 
   function rollNumber(s) {
     return parseInt(s.substring(3, s.indexOf(']')));
-  }
-
-  function getAttack(attackLabel, perso) {
-    // Get attack number (does not correspond to the position in sheet !!!)
-    var attackNumber = 0;
-    var attPrefix, weaponName;
-    while (true) {
-      attPrefix = "repeating_armes_$" + attackNumber + "_";
-      weaponName = getAttrByName(perso.charId, attPrefix + "armenom");
-      if (weaponName === undefined || weaponName === "") {
-        return;
-      }
-      var weaponLabel = weaponName.split(' ', 1)[0];
-      if (weaponLabel == attackLabel) {
-        weaponName = weaponName.substring(weaponName.indexOf(' ') + 1);
-        return {
-          attackPrefix: attPrefix,
-          weaponName: weaponName
-        };
-      }
-      attackNumber++;
-    }
   }
 
   function getWeaponStats(perso, attackLabel) {
@@ -14317,6 +14326,15 @@ var COFantasy = COFantasy || function() {
       case "!cof-tempete-de-mana":
         optionsDeTempeteDeMana(msg);
         return;
+      case "!cof-deplacer-token":
+        deplacerToken(msg);
+        return;
+      case "!cof-permettre-deplacement":
+        permettreDeplacement(msg);
+        return;
+      case "!cof-tour-suivant":
+        tourSuivant(msg);
+        return;
       default:
         return;
     }
@@ -15440,6 +15458,38 @@ var COFantasy = COFantasy || function() {
     if (count === 0) nextTurnOfActive(active, attrs, evt, pageId);
   }
 
+  //Fonction appelée par !cof-tour-suivant
+  function tourSuivant(msg) {
+    if (!state.COFantasy.combat) {
+      sendPlayer(msg, "Vous n'êtes pas en combat");
+      return;
+    }
+    var cmp = Campaign();
+    var turnOrder = cmp.get('turnorder');
+    if (turnOrder === '') {
+      error("Personne n'est en combat", turnOrder);
+      return;
+    }
+    turnOrder = JSON.parse(turnOrder);
+    if (turnOrder.length < 1) {
+      error("Personne n'est en combat", turnOrder);
+      return;
+    }
+    var active = turnOrder.shift();
+    var persoActif = tokenOfId(active.id);
+    if (persoActif === undefined) {
+      error("Impossible de trouver le personnage actif", active);
+      return;
+    }
+    if (!peutController(msg, persoActif)) {
+      sendPlayer(msg, "Ce n'est pas votre tour (personnage actif : " + persoActif.token.get('name') + ")");
+      return;
+    }
+    turnOrder.push(active);
+    cmp.set('turnorder', JSON.stringify(turnOrder));
+    nextTurn(cmp);
+  }
+
   //evt a un champ attributes et un champ deletedAttributes
   function nextTurnOfActive(active, attrs, evt, pageId) {
     if (active.id == "-1" && active.custom == "Tour") {
@@ -15459,6 +15509,7 @@ var COFantasy = COFantasy || function() {
       attrs = removeAllAttributes('intercepter', evt, attrs);
       attrs = removeAllAttributes('interposer', evt, attrs);
       attrs = removeAllAttributes('exemplaire', evt, attrs);
+      attrs = removeAllAttributes('peutEtreDeplace', evt, attrs);
       resetAttr(attrs, 'attaqueEnTraitre', evt);
       // Pour défaut dans la cuirasse, on diminue si la valeur est 2, et on supprime si c'est 1
       var defautsDansLaCuirasse = allAttributesNamed(attrs, 'defautDansLaCuirasse');
@@ -15677,9 +15728,45 @@ var COFantasy = COFantasy || function() {
     return true;
   }
 
-  function moveToken(token) {
+  function nePeutPasBouger(perso) {
+    if (attributeAsBool(perso, 'peutEtreDeplace')) return false;
+    if (isActive(perso)) {
+      if (attributeAsBool(perso, 'immobilise')) return true;
+      return false;
+    }
+    return true;
+  }
+
+  function permettreDeplacement(msg) {
+    getSelected(msg, function(selected) {
+      var evt = {
+        type: 'Permettre le déplacement pour un tour'
+      };
+      iterSelected(selected, function(perso) {
+        setTokenAttr(perso, 'peutEtreDeplace', true, evt);
+      });
+      addEvent(evt);
+    });
+  }
+
+  function moveToken(token, prev) {
     var charId = token.get('represents');
     if (charId === '') return;
+    var perso = {
+      token: token,
+      charId: charId
+    };
+    var x = token.get('left');
+    var y = token.get('top');
+    if (prev && (prev.left != x || prev.top != y) && nePeutPasBouger(perso)) {
+      sendChar(charId, "ne peut pas se déplacer.");
+      sendChat('COF', "/w GM " +
+        '<a href="!cof-deplacer-token ' + x + ' ' + y + ' --target ' + token.id + '">Déplacer </a>' +
+        '<a href="!cof-permettre-deplacement --target ' + token.id + '">Décoincer</a>');
+      token.set('left', prev.left);
+      token.set('top', prev.top);
+      return;
+    }
     var monture = {
       token: token,
       charId: charId
@@ -15693,8 +15780,6 @@ var COFantasy = COFantasy || function() {
       attr[0].remove();
       return;
     }
-    var x = token.get('left');
-    var y = token.get('top');
     var position = tokenAttribute(monture, 'positionSurMonture');
     if (position.length > 0) {
       var dx = parseInt(position[0].get('current'));
@@ -15707,6 +15792,29 @@ var COFantasy = COFantasy || function() {
     cavalier.token.set('left', x);
     cavalier.token.set('top', y);
     cavalier.token.set('rotation', monture.token.get('rotation') + attributeAsInt(monture, 'directionSurMonture', 0));
+  }
+
+  function deplacerToken(msg) {
+    var cmd = msg.content.split(' ');
+    if (cmd.length < 3) {
+      error("Il manque un argument à !cof-deplacer-token", cmd);
+      return;
+    }
+    getSelected(msg, function(selected) {
+      if (selected.length === 0) {
+        error("Il faut sélectionner un token", cmd);
+        return;
+      }
+      if (selected.length > 1) {
+        error("Déplacement de plusieurs tokens au même endroit", selected);
+        return;
+      }
+      iterSelected(selected, function(perso) {
+        perso.token.set('left', cmd[1]);
+        perso.token.set('top', cmd[2]);
+        moveToken(perso.token);
+      });
+    });
   }
 
   //Si le token représente un personnage et avec la barre de vie non liée, 

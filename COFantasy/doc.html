@@ -112,6 +112,7 @@
 									<li><a class="text-info" href="#statut_etats">Statut et états</a></li>
 									<li><a class="text-info" href="#sorts">Sorts</a></li>
 									<li><a class="text-info" href="#consommables">Consommables</a></li>
+									<li><a class="text-info" href="#deplacements">Déplacements</a></li>
 									<li><a class="text-info" href="#escaliers">Escaliers</a></li>
 									<li><a class="text-info" href="#montures">Montures</a></li>
 									<li><a class="text-info" href="#jet_caracteristiques">Jet de Caracteristiques</a></li>
@@ -219,6 +220,7 @@
                       </li>
                     </ul>
                   </div>
+                  <p>Il est possible de laisser les joueurs passer leur tour, en utilisant la commande <code>!cof-tour-suivant</code>. Une utilisation possible est de le mettre en macro dans les actions du tour (voir <code>#Actions#</code> plus bas).</p>
                 </div>
               </div>
               <h4 class="text-secondary">Attaquer une (ou plusieurs) cible : <code>!cof-attack @{selected|token_id} @{target|token_id} <i>n</i></code></h4>
@@ -568,18 +570,23 @@
                 <p>Pour cette dernière, il vous suffira de préparer un personnage avec un token qui contient, dans ses attributs, les consommables à échanger/vendre.</p>
                 </div>
               </div>
-              <h3 class="text-info" id="escaliers">3.10 Escaliers</h3>
+              <h3 class="text-info" id="deplacements">3.10 Déplacements</h3>
+              <h4 class="text-secondary">Personnages immobilisés</h4>
               <div class="decalage">
-                <p>Pour gérer les escaliers sur les cartes, vous pouvez utiliser la méthode suivante, inspirée du script Teleport : placez dans le layer "GM Info Overlay", au nivea des escaliers, des tokens qui prennent exactement la place des escaliers. Nommez ces escaliers avec un nom suivi du nombre d'étages (entre 2 et 9), suivi d'une lettre majuscule. Par exemple <code>Escalier2A</code>.</p>
+                <p>Par défaut, le script empêche le déplacement des personnages immobilisés (paralysé, étourdi, etc...). Pour permettre de déplacer ces personnages, le script envoie au MJ 2 boutons, l'un pour réaliser le déplacement qui vient d'être annulé, et l'autre pour débloquer le personnage pour un tour (et dans ce cas, toutes les personnes contrôlant le token peuvent le bouger jusqu'au prochain changement de tour.<p>
+              </div>
+              <h4 class="text-secondary" id="escaliers">Escaliers</h4>
+              <div class="decalage">
+                <p>Pour gérer les escaliers sur les cartes, vous pouvez utiliser la méthode suivante, inspirée du script Teleport : placez dans le layer "GM Info Overlay", au niveau des escaliers, des tokens qui prennent exactement la place des escaliers. Nommez ces escaliers avec un nom suivi du nombre d'étages (entre 2 et 9), suivi d'une lettre majuscule. Par exemple <code>Escalier2A</code>.</p>
                 <p>Chaque escalier de la même colonne doit avoir le même nom et même nombre d'étage, et différer seulement par la lettre finale. Ensuite, si un ensemble de tokens est sur un escalier, utilisez <code>!cof-escalier</code> pour téléporter les tokens à l'emplacement de l'escalier suivant dans l'ordre des lettres.</p>
                 <p>Dans l'exemple précédent, il serait téléporté à l'emplacement du token nommé <code>Escalier2B</code>. Cela ne fonctionne que si les bouts de l'escalier sont sur la même carte. À vous de choisir sir vous préférez révéler cette fonctionalité à vos joueurs, ou si vous le faites vous-même.</p>
               </div>
-              <h3 class="text-info" id="montures">3.11 Montures</h3>
+              <h4 class="text-secondary" id="montures">Montures</h4>
               <div class="decalage">
                 <p>Pour qu'un personnage puisse monter sur une monture, il faut que cette monture soit associée à une fiche de personnage et qu'il possède l'attribute <code>monture</code> à <code>true</code>. La commande pour monter sur la monture est <code>!cof-en-selle @{selected|token_id} @{target|token_id}</code>, à lancer en sélectionnant le cavalier.</p>
                 <p>On peut ensuite bouger la monture, cela déplace le cavalier. Le mieux est de lancer la commander alors que le token du cavalier est sur le token de la monture. Si on déplace le cavalier, cela le fait descendre de sa monture.</p>
               </div>
-              <h3 class="text-info" id="jet_caracteristiques">3.12 Jet de Caracteristiques</h3>
+              <h3 class="text-info" id="jet_caracteristiques">3.11 Jet de Caracteristiques</h3>
               <div class="decalage">
                 <p><code>!cof-jet ?{Faire un jet de |Charisme, CHA|Constitution, CON|Dextérité, DEX|Force, FOR|Intelligence, INT|Sagesse, SAG}</code> : fait un simple jet pour la caractérisique sélectionnée.</p>
                 <p>Il est aussi possible de donner en argument une difficulté au jet. Par exemple en faisant <code>!cof-jet INT ?{difficulté}</code>.</p>
@@ -1000,7 +1007,7 @@
                 </ol>
                 <h4 class="text-secondary">Voie de la magie universelle</h4>
                 <ol>
-                  <li><strong>Lumière</strong> : Le MJ peut donner les caractérisiques de lumières à un token(ou utiliser le script <code>torch</code>, dans ce cas, j'utilise la macro <code>!torch 20 10 yes @{target|token_id}</code>)</li>
+                  <li><strong>Lumière</strong> : Le MJ peut donner les caractérisiques de lumières à un token(ou utiliser le script <code>torch</code>, dans ce cas, j'utilise la macro <code>!flicker-on 20 10 yes @{target|token_id}</code>)</li>
                   <li><strong>Détection de la magie</strong> : pas de support</li>
                   <li><strong>Invisibilité</strong> : utiliser <code>!cof-set-state invisible true --mana 1 --message se rend invisible ([[1d6+@{selected|INT}]] minutes)</code>. Pour les ennemis, mettre dans le layer gm, pour les joueurs, ne pas les cibler. Reste le problème des AOE...</li>
                   <li><strong>Vol</strong> : pas de support autre que <code>!cof-lancer-sort 2 vole ([[1d6+@{selected|INT}]] minutes)</code></li>
