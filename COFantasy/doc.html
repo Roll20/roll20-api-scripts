@@ -1407,6 +1407,7 @@
               <div class="decalage">
                 <ul>
                   <li><strong>Baroud d'honneur</strong> : ajouter un attribut <code>baroudHonneur</code> (=true) (Quand le personnage arrive à 0 PV, il ne meurt pas jusqu'à sa prochaine attaque, qui se fait avec un bonus de +5)</li>
+                  <li><strong>Clignotement</strong> : <code>!cof-effet-temp clignotement [[1d6+2]]</code>.</li>
                   <li><strong>Créature non-vivante</strong> : ajouter un attribut <code>nonVivant</code></li>
                   <li><strong>Dévorer</strong> (ou aussi <strong>Empaler</strong>) : ajouter les options d'attaque <code>--if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat renverse --etat immobilise FOR @{selected|token_id} --endif --endif</code>.</li>
                   <li><strong>Force de géant</strong> : <code>!cof-effet-temp forceDeGeant 10</code>. Le bonus est de 2 par défaut, mais peut être modifié en utilisant l'option <code>--valeur</code>.</li>

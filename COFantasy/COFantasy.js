@@ -37,6 +37,7 @@ var COFantasy = COFantasy || function() {
   //à 0 PV, on perd un PR, et si plus de PR, affaibli.
   var MONTRER_TURNACTION_AU_MJ = false;
   var FORME_D_ARBRE_AMELIORE_PEAU_D_ECORCE = true; //+50% en forme d'arbre
+  var DM_MINIMUM = 0; //Dégâts minimum d'une attaque ou autre source de DM.
   var eventHistory = [];
   var updateNextInitSet = new Set();
 
@@ -4230,6 +4231,89 @@ var COFantasy = COFantasy || function() {
     }
   }
 
+  // Fonction asynchrone
+  // displayRes est optionnel, et peut avoir 2 arguments
+  // - un texte affichant le jet de dégâts
+  // - la valeur finale des dégâts infligés
+  // crit est un booléen, il augmente de 1 (ou options.critCoef) le coefficient (option.dmgCoef) et active certains effets
+  function dealDamage(target, dmg, otherDmg, evt, crit, options, explications, displayRes) {
+    if (options === undefined) options = {};
+    var expliquer = function(msg) {
+      if (explications) explications.push(msg);
+      else sendChar(target.charId, msg);
+    };
+    if (options.interposer) {
+      return dealDamageAfterOthers(target, crit, {}, evt, expliquer, displayRes, options.interposer, dmg.display, false);
+    }
+    if (attributeAsBool(target, 'intangible') ||
+      attributeAsBool(target, 'ombreMortelle') ||
+      (options.aoe === undefined &&
+        attributeAsBool(target, 'formeGazeuse'))) {
+      expliquer("L'attaque passe à travers de " + target.token.get('name'));
+      if (displayRes) displayRes('0', 0);
+      return 0;
+    }
+    if (options.asphyxie &&
+      (charAttributeAsBool(target, 'creatureArtificielle') ||
+        estNonVivant(target))) {
+      expliquer("L'asphyxie est sans effet sur une créature non-vivante");
+      if (displayRes) displayRes('0', 0);
+      return 0;
+    }
+    var dmgCoef = options.dmgCoef || 1;
+    if (target.dmgCoef) dmgCoef += target.dmgCoef;
+    if (crit) {
+      var critCoef = 1;
+      if (options.critCoef) critCoef = options.critCoef;
+      if (target.critCoef) critCoef += target.critCoef;
+      dmgCoef += critCoef;
+    }
+    otherDmg = otherDmg || [];
+    var dmgDisplay = dmg.display;
+    var dmgTotal = dmg.total;
+    var showTotal = false;
+    if (dmgCoef > 1) {
+      dmgDisplay += " X " + dmgCoef;
+      dmgTotal = dmgTotal * dmgCoef;
+      showTotal = true;
+    }
+    if (crit && options.affute) {
+      var bonusCrit = randomInteger(6);
+      dmgDisplay = "(" + dmgDisplay + ")+" + bonusCrit;
+      dmgTotal += bonusCrit;
+    }
+    //On trie les DM supplémentaires selon leur type
+    var dmgParType = {};
+    otherDmg.forEach(function(d) {
+      if (_.has(dmgParType, d.type)) dmgParType[d.type].push(d);
+      else dmgParType[d.type] = [d];
+    });
+    // Dommages de même type que le principal, mais à part, donc non affectés par les critiques
+    var mainDmgType = dmg.type;
+    var dmgExtra = dmgParType[mainDmgType];
+    if (dmgExtra && dmgExtra.length > 0 && !charAttributeAsBool(target, 'immunite_' + mainDmgType)) {
+      if (dmgCoef > 1) dmgDisplay = "(" + dmgDisplay + ")";
+      showTotal = true;
+      var count = dmgExtra.length;
+      dmgExtra.forEach(function(d) {
+        count--;
+        partialSave(d, target, false, d.display, d.total, expliquer, evt,
+          function(res) {
+            if (res) {
+              dmgTotal += res.total;
+              dmgDisplay += "+" + res.dmgDisplay;
+            } else {
+              dmgTotal += d.total;
+              dmgDisplay += "+" + d.display;
+            }
+            if (count === 0) dealDamageAfterDmgExtra(target, mainDmgType, dmgTotal, dmgDisplay, showTotal, dmgParType, dmgExtra, crit, options, evt, expliquer, displayRes);
+          });
+      });
+    } else {
+      return dealDamageAfterDmgExtra(target, mainDmgType, dmgTotal, dmgDisplay, showTotal, dmgParType, dmgExtra, crit, options, evt, expliquer, displayRes);
+    }
+  }
+
   // Effets quand on rentre en combat 
   // attaquant doit avoir un tokName et un name
   function entrerEnCombat(attaquant, cibles, explications, options, evt) {
@@ -4667,6 +4751,13 @@ var COFantasy = COFantasy || function() {
             if (options.demiAuto) {
               target.partialSaveAuto = true;
             } else touche = false;
+          } else if (d20roll % 2 && attributeAsBool(target, 'clignotement')) {
+            target.messages.push(target.tokName + " disparaît au moment où l'attaque aurait du l" + onGenre(target.charId, 'e', 'a') + " toucher");
+            attackResult = " : <span style='" + BS_LABEL + " " + BS_LABEL_WARNING + "'><b>échec</b></span>";
+            target.clignotement = true;
+            if (options.demiAuto) {
+              target.partialSaveAuto = true;
+            } else touche = false;
           } else { // Touché normal
             attackResult = " : <span style='" + BS_LABEL + " " + BS_LABEL_SUCCESS + "'><b>succès</b></span>";
           }
@@ -4716,8 +4807,10 @@ var COFantasy = COFantasy || function() {
               p2.y += dev * (p2.x - p1.x);
               spawnFxBetweenPoints(p1, p2, options.fx, pageId);
             }
-            evt.succes = false;
-            diminueMalediction(attaquant, evt);
+            if (target.clignotement === undefined) {
+              evt.succes = false;
+              diminueMalediction(attaquant, evt);
+            }
           }
         }
         target.touche = touche;
@@ -5662,89 +5755,6 @@ var COFantasy = COFantasy || function() {
     } else afterSave();
   }
 
-  // Fonction asynchrone
-  // displayRes est optionnel, et peut avoir 2 arguments
-  // - un texte affichant le jet de dégâts
-  // - la valeur finale des dégâts infligés
-  // crit est un booléen, il augmente de 1 (ou options.critCoef) le coefficient (option.dmgCoef) et active certains effets
-  function dealDamage(target, dmg, otherDmg, evt, crit, options, explications, displayRes) {
-    if (options === undefined) options = {};
-    var expliquer = function(msg) {
-      if (explications) explications.push(msg);
-      else sendChar(target.charId, msg);
-    };
-    if (options.interposer) {
-      return dealDamageAfterOthers(target, crit, {}, evt, expliquer, displayRes, options.interposer, dmg.display, false);
-    }
-    if (attributeAsBool(target, 'intangible') ||
-      attributeAsBool(target, 'ombreMortelle') ||
-      (options.aoe === undefined &&
-        attributeAsBool(target, 'formeGazeuse'))) {
-      expliquer("L'attaque passe à travers de " + target.token.get('name'));
-      if (displayRes) displayRes('0', 0);
-      return 0;
-    }
-    if (options.asphyxie &&
-      (charAttributeAsBool(target, 'creatureArtificielle') ||
-        estNonVivant(target))) {
-      expliquer("L'asphyxie est sans effet sur une créature non-vivante");
-      if (displayRes) displayRes('0', 0);
-      return 0;
-    }
-    var dmgCoef = options.dmgCoef || 1;
-    if (target.dmgCoef) dmgCoef += target.dmgCoef;
-    if (crit) {
-      var critCoef = 1;
-      if (options.critCoef) critCoef = options.critCoef;
-      if (target.critCoef) critCoef += target.critCoef;
-      dmgCoef += critCoef;
-    }
-    otherDmg = otherDmg || [];
-    var dmgDisplay = dmg.display;
-    var dmgTotal = dmg.total;
-    var showTotal = false;
-    if (dmgCoef > 1) {
-      dmgDisplay += " X " + dmgCoef;
-      dmgTotal = dmgTotal * dmgCoef;
-      showTotal = true;
-    }
-    if (crit && options.affute) {
-      var bonusCrit = randomInteger(6);
-      dmgDisplay = "(" + dmgDisplay + ")+" + bonusCrit;
-      dmgTotal += bonusCrit;
-    }
-    //On trie les DM supplémentaires selon leur type
-    var dmgParType = {};
-    otherDmg.forEach(function(d) {
-      if (_.has(dmgParType, d.type)) dmgParType[d.type].push(d);
-      else dmgParType[d.type] = [d];
-    });
-    // Dommages de même type que le principal, mais à part, donc non affectés par les critiques
-    var mainDmgType = dmg.type;
-    var dmgExtra = dmgParType[mainDmgType];
-    if (dmgExtra && dmgExtra.length > 0 && !charAttributeAsBool(target, 'immunite_' + mainDmgType)) {
-      if (dmgCoef > 1) dmgDisplay = "(" + dmgDisplay + ")";
-      showTotal = true;
-      var count = dmgExtra.length;
-      dmgExtra.forEach(function(d) {
-        count--;
-        partialSave(d, target, false, d.display, d.total, expliquer, evt,
-          function(res) {
-            if (res) {
-              dmgTotal += res.total;
-              dmgDisplay += "+" + res.dmgDisplay;
-            } else {
-              dmgTotal += d.total;
-              dmgDisplay += "+" + d.display;
-            }
-            if (count === 0) dealDamageAfterDmgExtra(target, mainDmgType, dmgTotal, dmgDisplay, showTotal, dmgParType, dmgExtra, crit, options, evt, expliquer, displayRes);
-          });
-      });
-    } else {
-      return dealDamageAfterDmgExtra(target, mainDmgType, dmgTotal, dmgDisplay, showTotal, dmgParType, dmgExtra, crit, options, evt, expliquer, displayRes);
-    }
-  }
-
   function applyRDSauf(rds, dmgType, total, display, options) {
     options = options || {};
     var typeTrouve = function(t) {
@@ -6156,7 +6166,7 @@ var COFantasy = COFantasy || function() {
           showTotal = true;
           dmgTotal = Math.ceil(dmgTotal / 2);
         }
-        if (dmgTotal < 0) dmgTotal = 0;
+        if (dmgTotal < DM_MINIMUM) dmgTotal = DM_MINIMUM;
         if (options.divise) {
           dmgTotal = Math.ceil(dmgTotal / options.divise);
           dmgDisplay = "(" + dmgDisplay + ")/" + options.divise;
@@ -14894,6 +14904,11 @@ var COFantasy = COFantasy || function() {
       actif: "est transformé en statue de bois",
       fin: "retrouve sa forme normale",
       prejudiciable: true
+    },
+    clignotement: {
+      activation: "disparaît, puis réapparaît",
+      actif: "clignote",
+      fin: "ne disparaît plus"
     }
   };
 
