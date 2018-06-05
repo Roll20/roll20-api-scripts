@@ -321,7 +321,7 @@
                   </li>
                   <li><code>--if <i>condition</i></code> <i>options</i> <code>--endif</code>: permet de ne prendre en compte des options que si certaines conditions sont réalisées. Il est possible d'utiliser un <code>--else</code> pour activer des options quand les conditions ne sont pas réalisées. Attention, les options qui modifient une option précédente (comme --valeur) doivent apparaître au même niveau que l'option qu'elles modifient. Comme les conditions peuvent dépendre du dé d'attaque, un certain nombre d'options ne sont pas affectées par cette conditionnelle : tempeteDeMana, les options d'aoe (ligne, cone, disque, target), avecd12, m2d20, auto, demiAuto, test, rate, touche, critique, echecCritique, pointsVitaux, tempsRecharge, sortilege, bonusCritique, bonusCritique, affute, munition, tirDouble, semonce, tirDeBarrage, poudre, traquenard, feinte, asDeLaGachette, magique, tranchant, percant, contondant, pasDeDmg. Ne pas hésiter à me demander si vous aviez besoin que l'une de ces options puissent être conditionnelle.</li>
                   <li><code>--tempsRecharge <i>effet</i> <i>duree</i></code> : l'attaque n'est possible que si l'effet est inactif sur l'attaquant, et de plus active l'effet sur l'attaquant pour la durée indiquée si l'attaque est possible.</li>
-                  <li><code>--etat <i>e</i></code>: si l'attaque touche, la cible passe dans l'état <i>e</i>.</li>
+                  <li><code>--etat <i>e</i></code>: si l'attaque touche, la cible passe dans l'état <i>e</i>. Il est aussi possible de spécifier une caractéristique et un seuil (comme pour <code>!cof-set-state</code>) pour faire afficher à chaque tour une action permettant de se libérer de l'état.</li>
                   <li><code>--effet <i>e duree</i></code> : ajoute à la cible l'effet temporaire <i>e</i> pour la duree spécifiée. Pour que cela soit automatiquement mis à jour, il faut utiliser le turn tracker. Noter que l'argument de durée peut être omis pour certains effets, comme ceux qui par définition durent tout le combat.</li>
                   <li><code>--valeur <i>v</i></code> : spécifie une valeur au dernier effet mentionné.</li>
                   <li><code>--peur <i>seuil duree</i></code> : fait un effet de peur si l'attaque touche. Le <i>seuil</i> sert pour le test de sagesse de résitance à la peur (tient compte de la capacité <b>sans peur</b> du chevalier).</li>
@@ -367,6 +367,7 @@
                   <li><code>--cone <i>angle</i></code> cible toutes les créatures dans un cône de sommet l'attaquant, d'angle <i>angle</i> degrés (90 degrés par défaut), et séparé en deux par le segment joignant l'attaquant et le token visé.</li>
                   <li><code>--target <i>id</i></code> : ajoute une cible à l'attaque (s'ajoute à la cible principale et aux options d'aoe).</li>
                   <li><code>--message <i>texte</i></code> : ajoute une ligne avec le message dans la fenêtre de l'attaque. Attention, <i>texte</i> ne doit pas contenir la séquence <code> --</code>.</li>
+                  <li><code>--allonge <i>n</i></code> : ajoute <i>n</i> mètres à la portée d'une attaque au contact. L'allonge peut être un nombre à virgule et même négative.</li>
                 </ul>
               </div>
               <h4 class="text-secondary">Réduction des dégâts</h4>
@@ -477,15 +478,17 @@
                     <li>renversé : <tt>back-pain</tt></li>
                     <li>mort : <tt>dead</tt> (même état pour un PJ juste inconscient à 0 PV)</li>
                     <li>paralysé : <tt>fishing-net</tt></li>
+                    <li>immobilisé : <tt>cobweb</tt></li>
                     <li>endormi : <tt>sleepy</tt></li>
                     <li>apeuré : <tt>screaming</tt></li>
                     <li>invisible : <tt>ninja-mask</tt></li>
                     <li>gravement blessé : <tt>arrowed</tt></li>
                   </ul>
                   <!-- pénombre (-5 att. distance) : pas encore dans la liste -->
-                  <p>Pour faciliter la gestion des états, j'utilise deux macros dans la barre du GM, <code>!cof-set-state ?{État|mort|surpris|assome|renverse|aveugle|affaibli|etourdi|paralyse|ralenti|endormi|apeure|invisible|blessé} true</code>, et la même avec <code>false</code>.<br />
+                  <p>Pour faciliter la gestion des états, j'utilise deux macros dans la barre du GM, <code>!cof-set-state ?{État|mort|surpris|assome|renverse|aveugle|affaibli|etourdi|paralyse|ralenti|immobilise|endormi|apeure|invisible|blessé} true</code>, et la même avec <code>false</code>.<br />
                     Notez que si on se contente de changer le statut pour un token lié, le changement risque de ne pas être propagé au personnage (et donc serait perdu en cas de changement de carte).
                   </p>
+                  <p>Enfin, il est possible de faire réaliser un jet pour se libérer d'un état, en utilisant la commande <code>!cof-save-state <i>etat</i> <i>carac</i> <i>seuil</i></code>. Il est possible de remplacer <i>seuil</i> par une id de token pour faire faire un test en opposition avec ce token. On peut aussi passer la caractéristique et le seuil en argument à <code>!cof-set-state</code> pour proposer le jet à chaque fois qu'on affiche les <code>#Actions#</code> où qu'on affiche le statut du personnage.</p>
                 </div>
                 <h4 class="text-secondary">Autres bufs et debufs</h4>
                 <div class="decalage">
@@ -1405,6 +1408,7 @@
                 <ul>
                   <li><strong>Baroud d'honneur</strong> : ajouter un attribut <code>baroudHonneur</code> (=true) (Quand le personnage arrive à 0 PV, il ne meurt pas jusqu'à sa prochaine attaque, qui se fait avec un bonus de +5)</li>
                   <li><strong>Créature non-vivante</strong> : ajouter un attribut <code>nonVivant</code></li>
+                  <li><strong>Dévorer</strong> (ou aussi <strong>Empaler</strong>) : ajouter les options d'attaque <code>--if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat renverse --etat immobilise FOR @{selected|token_id} --endif --endif</code>.</li>
                   <li><strong>Force de géant</strong> : <code>!cof-effet-temp forceDeGeant 10</code>. Le bonus est de 2 par défaut, mais peut être modifié en utilisant l'option <code>--valeur</code>.</li>
                   <li><strong>Huile de fort assaut</strong> : <code>!cof-effet-temp dmgArme(<i>L</i>) 10 --valeur 1d6</code> où <i>L</i> est le label de l'arme qu'on veut enduire d'huile de fort assaut.</li>
                   <li><strong>Hurlement</strong> : Pour les chiens infernaux, <code>!cof-peur [[10+?{Nombre de chiens?}]] [[2d4]] --portee 50 --equipe Joueurs</code>, et pour les fantômes, <code>!cof-peur 12 [[1d6]] --portee 10 --equipe Joueurs</code>. Pour l'instant, pas de prise en compte de l'immunité au hurlement apès avoir réussi son jet de SAG.</li>
