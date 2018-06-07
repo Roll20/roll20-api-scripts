@@ -1,3 +1,14 @@
+# 13.2.0
+
+### Bug fixes
+- Fix broken behaviour with CR filtering for !shaped-monsters
+- Fix broken cantrip filtering for !shaped-spells
+- Fix #52 - API-killing error on death saves
+- Fix #33 - Legendary actions not taking account of cost properly
+- Fix #37 - Turn recharges now work properly
+- Fix #54 - Monsters with apostrophes no longer break listing
+- Fix #56 - Heal spells with extra dice at higher levels now import correctly
+
 # 13.1.0
 
 ### Features
