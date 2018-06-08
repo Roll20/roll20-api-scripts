@@ -1,3 +1,13 @@
+# 13.3.0
+
+### Features
+- Support "pcOnly" option for token bar, aura and name visibility
+
+### Bug fixes
+- Fix #58 - fractional CRs should still work correctly
+- Fix uses manager to report exhausted uses properly
+- Fix #46 - innate spellcasting spells no longer duplicated
+
 # 13.2.0
 
 ### Bug fixes
