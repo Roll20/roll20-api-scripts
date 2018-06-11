@@ -15867,10 +15867,10 @@ var COFantasy = COFantasy || function() {
         }
         var charId = attr.get('characterid');
         var indexSave = attrName.indexOf('SaveParTour');
-        var effet = attrName.substring(0, indexSave);
-        attrName = effet + attrName.substr(indexSave + 11);
+        var effetC = attrName.substring(0, indexSave);
+        attrName = effetC + attrName.substr(indexSave + 11);
         var token;
-        iterTokensOfAttribute(charId, pageId, effet, attrName, function(tok) {
+        iterTokensOfAttribute(charId, pageId, effetC, attrName, function(tok) {
           if (token === undefined) token = tok;
         });
         if (token === undefined) {
@@ -15904,10 +15904,11 @@ var COFantasy = COFantasy || function() {
         var expliquer = function(msg) {
           sendChar(charId, msg);
         };
-        var msgPour = " pour ne plus être sous l'effet de " + effet;
+        var msgPour = " pour ne plus être sous l'effet de " + effetC;
         var sujet = onGenre(charId, 'il', 'elle');
-        var msgReussite = ", " + sujet + " " + messageEffetTemp[effet].fin;
-        var msgRate = ", " + sujet + " " + messageEffetTemp[effet].actif;
+        var met = messageOfEffetTemp(effetC);
+        var msgReussite = ", " + sujet + " " + met.fin;
+        var msgRate = ", " + sujet + " " + met.actif;
         var saveOpts = {
           msgPour: msgPour,
           msgReussite: msgReussite,
@@ -15919,7 +15920,7 @@ var COFantasy = COFantasy || function() {
           }, perso, expliquer, saveOpts, evt,
           function(reussite) { //asynchrone
             if (reussite) {
-              finDEffet(attrEffet, effet, attrName, charId, evt, {
+              finDEffet(attrEffet, effetC, attrName, charId, evt, {
                 attrSave: attr,
                 pageId: pageId
               });
