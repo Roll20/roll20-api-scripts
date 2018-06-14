@@ -1,6 +1,10 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
-# 1.03
-### Autres améliorations
+## 1.04
+* Correction d'un bug quand HealthColors n'était actif.
+* Possibilité d'avoir des macros ou ability ayant plusieurs lignes dans les #Actions#
+
+## 1.03
+* En cas de save par tour d'un dotGen, affiche le nom du dotGen plutôt que dotGen(nom)
 * Capacité clignotement du Barghest
 * Ajout d'actions pour se libérer des états préjudiciables
 * Nouvelle option d'attaque --allonge
@@ -10,9 +14,10 @@
 * Appels à HealthColors lors des changements de valeur des barres
 * Ajout de la possibilité d'ajouter une ligne de texte dans la fenêtre d'attaque (option --message).
 * Ajout de conditions complexes (et possiblement imbriquées) pour les options d'attaque. Cela rend les options --etatsi et --psi inutiles : à la place on peut écrire --if cond --plus ... --endif.
+
 ## 1.02
-### Autres améliorations
 * Ajout de la possibilité de spécifier un save d'effet temporaire de la forme --save carac seuil demiDuree, pour que le save ne fasse que diviser par 2 la durée de l'effet.
+
 ## 1.01
 ### Nouvelles capacités
 * Gland de pouvoir (Druide)
