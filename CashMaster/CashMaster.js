@@ -3,7 +3,7 @@
 /* global on log playerIsGM findObjs getObj getAttrByName sendChat globalconfig */
 
 /*
-CASHMASTER 0.7.0
+CASHMASTER 0.7.1
 
 A currency management script for the D&D 5e OGL sheets on roll20.net.
 Please use `!cm` for inline help and examples.
@@ -190,7 +190,7 @@ var playerCoinStatus = function playerCoinStatus(character) {
 };
 
 on('ready', function () {
-  var v = '0.7.0'; // version number
+  var v = '0.7.1'; // version number
   var usd = 110;
   /*
   Change this if you want to have a rough estimation of a character’s wealth in USD.
@@ -239,14 +239,25 @@ on('ready', function () {
   on('chat:message', function (msg) {
     if (msg.type !== 'api') return;
     if (msg.content.startsWith('!cm') !== true) return;
-    if (msg.selected == null) {
-      sendChat(scname, '/w gm **ERROR:** You need to select at least one character.');
+    log('CM Command: ' + msg.content);
+    if (msg.content.includes('-help') || msg.content === '!cm' || msg.content.includes('-h')) {
+      //! help
+      sendChat(scname, '/w gm <h1 id=\'cashmaster\'>CashMaster</h1><p>A currency management script for the D&amp;D 5e OGL and 5e Shaped sheets on Roll20.net.</p><p>Please use <code>!cm</code> for inline help and examples.</p><h2 id=\'setup\'>Setup</h2><p>Make sure you use the correct sheet setting (<code>OGL</code>, <code>5E-Shaped</code>, or <code>other</code>).</p><h2 id=\'usage\'>Usage</h2><p>First, create a macro bar button for the <code>!cm -menu</code> command for ease of use.  Then, to use it, select one or more party members if you are the DM or your own token if you are a player.</p><h2 id=\'player-commands\'>Player Commands</h2><ul><li><code>!cm</code> or <code>!cm -help</code> or <code>!cm -h</code> will show this help overview</li><li><code>!cm -menu</code> or <code>!cm -tool</code> to bring up the user menu</li><li><code>!cm -transfer &quot;[recipient character name]&quot; [amount][currency]</code> or <code>!cm -t &quot;[recipient character name]&quot; [amount][currency]</code> to transfer coins to the recipient.</li></ul><h2 id=\'gm-commands\'>GM Commands</h2><h3 id=\'base-commands\'>Base commands</h3><ul><li><code>!cm</code> or <code>!cm -help</code> or <code>!cm -h</code> will show this help overview</li><li><code>!cm -overview</code> or <code>!cm -o</code> to get an <strong>overview</strong> over the party&#39;s cash</li><li><code>!cm -overview --usd</code> will also give you an overview and a rough conversion to USD (default value: 1 gp equals roughly 110 USD).</li></ul><h3 id=\'payment-commands\'>Payment commands</h3><ul><li><code>!cm -add [amount][currency]</code> or <code>!cm -a [amount][currency]</code> to <strong>add</strong> an equal amount of money to each selected party member,</li><li><code>!cm -loot [amount][currency]</code> or <code>!cm -l [amount][currency]</code> to <strong>split up</strong> a certain amount of coins between the party members, like a found treasure. Note that in this case, no conversion between the different coin types is made - if a party of 5 shares 4 pp, then 4 party members receive one pp each, and the last member won&#39;t get anything.</li><li><code>!cm -pay [amount][currency]</code> or <code>!cm -p [amount][currency]</code> to let each selected party member <strong>pay</strong> a certain amount. The script will even try to take higher and lower coin types to get the full amount. E.g. to pay 1gp when the character has no gold, the script will use 1pp (and return 9gp), or it will take 2ep, 10sp or 100cp - or any other valid combination of coins - to pay the desired amount.</li></ul><h3 id=\'conversion-cleanup-commands\'>Conversion/Cleanup commands</h3><ul><li><code>!cm -merge</code> or <code>!cm -m</code> to merge coins to the densest denomination possible.</li><li><code>!cm -share</code> or <code>!cm -s</code> to <strong>convert and share</strong> the money equally between party members, converting the amount into the best combination of gold, silver and copper (this should be used in smaller stores),</li><li><code>!cm -best-share</code> or <code>!cm -bs</code> to <strong>convert and share</strong> the money equally between party members, converting the amount into the best combination of platinum, gold, electrum, silver and copper (this should only be used in larger stores that have a fair amount of cash),</li></ul><p><strong>Note:</strong> You can use several coin values at once, e.g. <code>!cm -loot 50gp 150sp 2000cp</code> or <code>!cm -pay 2sp 5cp</code>.</p><h3 id=\'examples\'>Examples</h3><ol><li><code>!cm -overview</code> will show a cash overview.</li><li><code>!cm -add 50gp</code> will add 50 gp to every selected character.</li><li><code>!cm -loot 50gp</code> will (more or less evenly) distribute 50 gp among the party members.</li><li><code>!cm -pay 10gp</code> will subtract 10gp from each selected character. It will try to exchange the other coin types (e.g. it will use 1pp if the player doesn&#39;t have 10gp).</li><li><code>!cm -share</code> will collect all the money and share it evenly on the members, using gp, sp and cp only (pp and ep will be converted). Can also be used for one character to &#39;exchange&#39; money.</li><li><code>!cm -transfer &quot;Tazeka Liranov&quot; 40gp</code> will transfer 40 gp from the selected token to the character sheet named Tazeka Liranov.</li><li><code>!cm -convert</code> - same as <code>!cm -share</code>, but will also use platinum and electrum.</li></ol><h2 id=\'credits\'>Credits</h2><p>With thanks to <a href=\'https://app.roll20.net/users/277007/kryx\'>Kryx</a>/<a href=\'https://github.com/mlenser\'>mlenser</a> and <a href=\'https://app.roll20.net/users/1583758/michael-g\'>Michael G.</a>/<a href=\'https://github.com/VoltCruelerz\'>VoltCruelerz</a> for their contributions.</p>'); // eslint-disable-line quotes
+    }
+
+    if (msg.content.includes('-menu') || msg.content.includes('-tool')) {
+      var menuContent = '/w ' + msg.who + ' &{template:' + rt[0] + '} {{' + rt[1] + '=<h3>Cash Master</h3><hr>' + '<h4>Universal Commands</h4>[Toolbar](!cm -tool)' + '<br>[Status](!cm -status)' + '<br>[Transfer](!cm -transfer &#34;?{Full Name of Recipient}&#34; ?{Currency to Transfer})';
+      if (playerIsGM(msg.playerid)) {
+        menuContent = menuContent + '<h4>GM-Only Commands</h4>' + '<b>Base Commands</b>' + '<br>[Readme](!cm -help)<br>[Party Overview](!cm -overview)' + '<br>[Party USD](!cm -overview --usd)' + '<br><b>Payment Commands</b>' + '<br>[Add to Each Selected](!cm -add ?{Currency to Add})' + '<br>[Bill Each Selected](!cm -pay ?{Currency to Bill})' + '<br>[Split Among Selected](!cm -loot ?{Amount to Split})' + '<br><b>Conversion Commands</b>' + '<br>[Compress Coins of Selected](!cm -merge)';
+      }
+      menuContent += '}}';
+      sendChat(scname, menuContent);
       return;
     }
 
-    if (msg.content.includes('-help') || msg.content === '!cm' || msg.content.includes('-h')) {
-      //! help
-      sendChat(scname, '/w gm <h1 id=\'cashmaster\'>CashMaster</h1><p>A currency management script for the D&amp;D 5e OGL and 5e Shaped sheets on Roll20.net.</p><p>Please use <code>!cm</code> for inline help and examples.</p><h2 id=\'setup\'>Setup</h2><p>Make sure you use the correct sheet setting (<code>OGL</code>, <code>5E-Shaped</code>, or <code>other</code>).</p><h2 id=\'usage\'>Usage</h2><p>First, select one or several party members if you are the DM or your own token if you are a player.</p><h2 id=\'player-commands\'>Player Commands</h2><ul><li><code>!cm</code> or <code>!cm -help</code> or <code>!cm -h</code> will show this help overview</li><li><code>!cm - transfer &quot;[receipient character name]&quot; [amount][currency]</code> or <code>!cm -t &quot;[receipient character name]&quot; [amount][currency]</code> to transfer coins to the recipient.</li></ul><h2 id=\'gm-commands\'>GM Commands</h2><h3 id=\'base-commands\'>Base commands</h3><ul><li><code>!cm</code> or <code>!cm -help</code> or <code>!cm -h</code> will show this help overview</li><li><code>!cm -overview</code> or <code>!cm -o</code> to get an <strong>overview</strong> over the party&#39;s cash</li><li><code>!cm -overview --usd</code> will also give you an overview and a rough conversion to USD (default value: 1 gp equals roughly 110 USD). </li></ul><h3 id=\'payment-commands\'>Payment commands</h3><ul><li><code>!cm -add [amount][currency]</code> or <code>!cm -a [amount][currency]</code> to <strong>add</strong> an equal amount of money to each selected party member,</li><li><code>!cm -loot [amount][currency]</code> or <code>!cm -l [amount][currency]</code> to <strong>split up</strong> a certain amount of coins between the party members, like a found treasure. Note that in this case, no conversion between the different coin types is made - if a party of 5 shares 4 pp, then 4 party members receive one pp each, and the last member won&#39;t get anything.</li><li><code>!cm -pay [amount][currency]</code> or <code>!cm -p [amount][currency]</code> to let each selected party member <strong>pay</strong> a certain amount. The script will even try to take higher and lower coin types to get the full amount. E.g. to pay 1gp when the character has no gold, the script will use 1pp (and return 9gp), or it will take 2ep, 10sp or 100cp - or any other valid combination of coins - to pay the desired amount.</li></ul><h3 id=\'conversion-cleanup-commands\'>Conversion/Cleanup commands</h3><ul><li><code>!cm -merge</code> or <code>!cm -m</code> to merge coins to the densest denomination possible.</li><li><code>!cm -share</code> or <code>!cm -s</code> to <strong>convert and share</strong> the money equally between party members, converting the amount into the best combination of gold, silver and copper (this should be used in smaller stores),</li><li><code>!cm -best-share</code> or <code>!cm -bs</code> to <strong>convert and share</strong> the money equally between party members, converting the amount into the best combination of platinum, gold, electrum, silver and copper (this should only be used in larger stores that have a fair amount of cash),</li></ul><p><strong>Note:</strong> You can use several coin values at once, e.g. <code>!cm -loot 50gp 150sp 2000cp</code> or <code>!cm -pay 2sp 5cp</code>.</p><h3 id=\'examples\'>Examples</h3><ol><li><code>!cm -overview</code> will show a cash overview.</li><li><code>!cm -add 50gp</code> will add 50 gp to every selected character.</li><li><code>!cm -loot 50gp</code> will (more or less evenly) distribute 50 gp among the party members.</li><li><code>!cm -pay 10gp</code> will subtract 10gp from each selected character. It will try to exchange the other coin types (e.g. it will use 1pp if the player doesn&#39;t have 10gp).</li><li><code>!cm -share</code> will collect all the money and share it evenly on the members, using gp, sp and cp only (pp and ep will be converted). Can also be used for one character to &#39;exchange&#39; money.</li><li><code>!cm -transfer &quot;Tazeka Cauldron&quot; 40gp</code> will transfer 40 gp from the selected token to the character sheet named Tazeka Cauldron.</li><li><code>!cm -convert</code> - same as <code>!cm -share</code>, but will also use platinum and electrum.</li></ol><h2 id=\'credits\'>Credits</h2><p>With thanks to <a href=\'https://app.roll20.net/users/277007/kryx\'>Kryx</a>/<a href=\'https://github.com/mlenser\'>mlenser</a> and <a href=\'https://app.roll20.net/users/1583758/michael-g\'>Michael G.</a>/<a href=\'https://github.com/VoltCruelerz\'>VoltCruelerz</a> for their contributions.</p>'); // eslint-disable-line quotes
+    if (msg.selected == null) {
+      sendChat(scname, '/w gm **ERROR:** You need to select at least one character.');
+      return;
     }
 
     // Coin Transfer between players
@@ -266,12 +277,12 @@ on('ready', function () {
       cpg = /([0-9 -]+)cp/;
       cpa = cpg.exec(msg.content);
 
-      // Retrieve target from quoted section of input
+      // Retrieve target name
+      // Double quotes must be used because multiple players could have the same first name, last name, etc
       var startQuote = msg.content.indexOf('"');
       var endQuote = msg.content.lastIndexOf('"');
       if (startQuote >= endQuote) {
         sendChat(scname, '**ERROR:** You must specify a target by name within double quotes.');
-        log('no quote');
         return;
       }
       var targetName = msg.content.substring(startQuote + 1, endQuote);
@@ -282,7 +293,7 @@ on('ready', function () {
         name: targetName
       });
       if (list.length === 0) {
-        sendChat(scname, '**ERROR:** No character exists by the name ' + targetName + '.');
+        sendChat(scname, '**ERROR:** No character exists by the name ' + targetName + '.  Did you forget to include the surname?');
         return;
       } else if (list.length > 1) {
         sendChat(scname, '**ERROR:** character name ' + targetName + ' must be unique.');
@@ -421,7 +432,7 @@ on('ready', function () {
       return;
     }
 
-    if (msg.content.includes('-status') || msg.content.includes('-s')) {
+    if (msg.content.includes('-status') || msg.content.includes('-x')) {
       output = '';
 
       msg.selected.forEach(function (obj) {
