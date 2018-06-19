@@ -201,7 +201,6 @@ Imports details of named monsters from a database of custom monsters loaded as a
 * **--<monster name>** (e.g. **--Lich**) specifies a monster to import. You may supply multiple monsters as separate options, or you may supply multiple in one option separated by commas (**--Ghoul, Zombie, Ghost**)
 * **--overwrite** if the selected token already represents a character in the journal, the import will fail to avoid accidentally overwriting data, unless you supply this option to confirm that you wish to do so.
 * **--replace** if there is already a character in the journal with the same name as the one you are importing, the import will fail, whether or not the current token represents that character. This is to avoid creating loads of duplicates by mistake, which is almost never what you want to do. If you supply **--replace** the script will overwrite any character with the same name, unless there is more than one, in which case it will fail rather than risking overwriting the wrong one. Note that **--replace** implies **--overwrite**.
-* **--as <new name>** if supplied, the new monster will be given the name specified instead of the default name defined in the database.
 
 ### Selection
 You may no or 1 tokens selected when running this command:
@@ -301,6 +300,7 @@ You must have at least one token that represents a character selected for this c
 Display configuration UI to change default behaviours. The significance of all the options is detailed [below](#configuration)
 
 ## !shaped-apply-defaults
+* Alias !shaped-token-defaults *
 Apply the same defaults that are used when setting up tokens on import to whatever tokens are currently selected. Useful for mass-configuring manually created tokens. See [below](#config-token-settings) for more details on what these options are.
 
 ### Selection

@@ -18,8 +18,8 @@ This is a script designed for use with the API on the [Roll20 Virtual Table Top]
   - [Optional Extras](#optional-extras)
 - [Usage](#usage)
   - [Import a Monster from Monster Manual Statblock text](#import-a-monster-from-monster-manual-statblock-text)
-  - [Importing Monsters from the Script Database](#importing-monsters-from-the-script-database)
-  - [Importing Spells from the Script Database](#importing-spells-from-the-script-database)
+  - [Importing Monsters from a Custom Database](#importing-monsters-from-a-custom-database)
+  - [Importing Spells from a Custom Database](#importing-spells-from-a-custom-database)
   - [Tracking advantage using the script](#tracking-advantage-using-the-script)
   - [Creating token actions for characters](#creating-token-actions-for-characters)
   - [Decrementing ammo](#decrementing-ammo)
@@ -30,11 +30,10 @@ This is a script designed for use with the API on the [Roll20 Virtual Table Top]
   - [Short/Long rest](#shortlong-rest)
 - [Full command list](#full-command-list)
   - [!shaped-import-statblock](#shaped-import-statblock)
-  - [!shaped-monsters](#shaped-monsters)
-  - [!shaped-monster](#shaped-monster)
+  - [!shaped-import-monster](#shaped-import-monster)
   - [!shaped-import-by-token](#shaped-import-by-token)
-  - [!shaped-spell](#shaped-spell)
-  - [!shaped-spells](#shaped-spells)
+  - [!shaped-import-spell](#shaped-import-spell)
+  - [!shaped-import-spell-list](#shaped-import-spell-list)
   - [!shaped-at](#shaped-at)
   - [!shaped-abilities](#shaped-abilities)
   - [!shaped-config](#shaped-config)
@@ -42,7 +41,6 @@ This is a script designed for use with the API on the [Roll20 Virtual Table Top]
   - [!shaped-rest](#shaped-rest)
   - [!shaped-update-character](#shaped-update-character)
   - [!shaped-expand-spells](#shaped-expand-spells)
-  - [!shaped-remove-spell](#shaped-remove-spell)
 - [Configuration](#configuration)
   - [Advantage Tracker](#advantage-tracker)
   - [Token Defaults](#token-defaults)
@@ -93,10 +91,11 @@ You are now set up and should be able to use the script as detailed below.
 Sometimes a new version of the script comes out. If you have installed the script according to the instructions above, you will need to update it manually when this happens. The process is exactly the same as installing the original, except that when you paste the script into your campaign, you should **replace** the script text of the previous version rather than installing a new one. This is very important, because if you end up with two different versions of the script running at the same time, Bad Things Will Happen.
 
 ## Optional Extras
-Some of the script commands allow you to import spells or monsters from custom data files. This way of importing can be faster and more customisable than dragging from the Compendium, and it's also extensible: you can add extra data files to add more content. The script comes with all the SRD monsters and spells built-in. Creating additional custom data files is beyond the scope of this README at the moment, but you may find pre-made files floating around on the internet made by other people if you search for them. These should be script files that end in .js (**not .json**), and you install them in exactly the same way that you install the main script. If it worked, you should see some lines like this in your API log:
+Some of the script commands allow you to import spells or monsters from custom data files. This can be useful for things that aren't in the SRD, or for custom stuff created by other people. Creating these custom data files is beyond the scope of this README at the moment, but you may find pre-made files floating around on the internet made by other people. These should be script files that end in .js (**not .json**), and you install them in exactly the same way that you install the main script. If it worked, you should see some lines like this in your API log:
 ```
 "ShapedScripts 1460893071585 INFO : Summary of adding entities to the lookup: {\"errors\":0,\"monsters\":{\"withErrors\":0,\"skipped\":0,\"deleted\":0,\"patched\":0,\"added\":558}}"
 ```
+You might want to try searching for something like 'roll20 5eShapedScripts data 5e-spells.js 5e-monsters.js' on Google.
 
 # Usage
 ## Import a Monster from Monster Manual Statblock text
@@ -121,30 +120,24 @@ that it absolutely requires to be correct:
 * Trait and action names need to be title case and end with a full stop, like in the MM.
 * Don't paste in descriptions at the bottom of the statblock - just the statblock proper. This is because actions can be multiline and there is no way of telling where a final multiline action ends and a description begins (see e.g. Priest in the MM - don't paste the final description paragraph in)
 
-## Importing Monsters from the Script Database
-### Manually
+## Importing Monsters from a Custom Database
+_Please see above for details about installing a custom database_
 
 1. Find a token for your new monster and place it on the tabletop
 1. Select the token
-1. Type **!shaped-import-monster --Lich** into the chat window and hit enter, replacing 'Lich' with the name of the monster you want to import. Obviously the monster name must match something in your database - which by default includes SRD monsters unless you've added additional data files. If you're not sure what names are present in the database, or exactly what spelling is being used, try the Guided approach mentioned immediately below.
+1. Type **!shaped-import-monster --Lich** into the chat window and hit enter, replacing 'Lich' with the name of the monster you want to import. Obviously the monster name must match something in your custom database. If you're not sure what names are present in the database, or exactly what spelling is being used, you can run **!shaped-import-monster** on its own and it will show a button that will launch a select list of all the available monsters.
 1. You should see a message in the chat window, and end up with a new character in the journal.
 
 Your new monster is now ready for use!
 
-### Guided
-When you run **!shaped-monsters** it will output a scrollable list of all of the monsters in the chat window, along with filter buttons to allow you to narrow the list down by things like type, CR, school, class, etc. Clicking a monster on this list will import it into your library. This script comes with all the SRD monsters and spells built in.
-
-## Importing Spells from the Script Database
-### Manually
+## Importing Spells from a Custom Database
+_Please see above for details about installing a custom database_
 
 1. Select a token that represents a character
-1. Type **!shaped-import-spell --Fireball, Cure Wounds** into the chat window and hit enter, replacing the spell names with whatever spells you want to import. If you're not sure what spells are available, try the Guided approach mentioned immediately below.
+1. Type **!shaped-import-spell --Fireball, Cure Wounds** into the chat window and hit enter, replacing the spell names with whatever spells you want to import. If you're not sure what spells are available, run **!shaped-import-spell** on its own to see a list.
 1. You should see a confirmation message in the chat window
 
 Your new spells are now ready for use!
-
-### Guided
-Similar to monsters, **!shaped-spells** will display a list of all available spells in the database, pre-filled with all SRD spells. You need a character token selected, or you need to pass a character id like **!shaped-spells --character <character_id>**.
 
 ## Tracking advantage using the script
 1. Configure your characters with the "Normal" roll option in the character sheet options (see later on for details of how to ensure that this is set automatically for characters imported with the script)
@@ -178,6 +171,7 @@ If enabled in the configuration (see below), the script will automatically decre
 ## Short/Long rest
 The script will apply the effects of a short/long rest if you run the command **!shaped-rest --type long** or **!shaped-rest --type short** with a character token selected. There are also buttons that link to this functionality on the character sheet itself. You can show these by entering "edit mode" on the sheet and ticking the checkbox on the Settings page for "Show Rests".
 
+
 # Full command list
 ## !shaped-import-statblock
 Imports details from a text statblock into a Roll20 character. The statblock must be inserted into the GM notes field of a token (_not_ a character!) and the token must be selected before running this command. The imported character will be configured with the default settings that you specify in the [default character settings configuration](#new-characters) . In addition the tokens you use will be configured according to the [default token settings configuration](#token-defaults) ready to be set as the default token for the character.
@@ -189,19 +183,14 @@ Imports details from a text statblock into a Roll20 character. The statblock mus
 ### Selection
 You must have at least one token selected. If you have more than one, it will attempt to import a statblock from each one in turn. When importing, each token will be set to represent the newly created character for it, and the script will also attempt to set the avatar for the character to be the token graphic<sup>[1](#avatar-note)</sup>.
 
-## !shaped-monsters
-* Alias !shaped-list-monsters
-Displays a list of monsters in the currently loaded JSON database. The list is displayed in the chat window and includes buttons to filter the results on Type, CR and Size. The old "Click to select a monster/spell" query input (**!shaped-import-monster**) is available as a link at the top of the monsters/spells listings. Clicking a monster that is already imported won't remove it.
-
-## !shaped-monster
-* Alias !shaped-import-monster *
-Imports details of named monsters from a database of custom monsters loaded as a separate script. The imported character will be configured with the default settings that you specify in the [default character settings configuration](#new-characters) . In addition the tokens you use will be configured according to the [default token settings configuration](#token-defaults) ready to be set as the default token for the character.
+## !shaped-import-monster
+* Alias !shaped-monster *
+Imports details of named monsters from a database of custom monsters loaded as a separate script. If run with no options, this command will display a chat window button that allows you to launch a select list of all available monsters to choose from. The imported character will be configured with the default settings that you specify in the [default character settings configuration](#new-characters) . In addition the tokens you use will be configured according to the [default token settings configuration](#token-defaults) ready to be set as the default token for the character.
 
 ### Options
 * **--<monster name>** (e.g. **--Lich**) specifies a monster to import. You may supply multiple monsters as separate options, or you may supply multiple in one option separated by commas (**--Ghoul, Zombie, Ghost**)
 * **--overwrite** if the selected token already represents a character in the journal, the import will fail to avoid accidentally overwriting data, unless you supply this option to confirm that you wish to do so.
 * **--replace** if there is already a character in the journal with the same name as the one you are importing, the import will fail, whether or not the current token represents that character. This is to avoid creating loads of duplicates by mistake, which is almost never what you want to do. If you supply **--replace** the script will overwrite any character with the same name, unless there is more than one, in which case it will fail rather than risking overwriting the wrong one. Note that **--replace** implies **--overwrite**.
-* **--as <new name>** if supplied, the new monster will be given the name specified instead of the default name defined in the database.
 
 ### Selection
 You may no or 1 tokens selected when running this command:
@@ -222,9 +211,9 @@ This basically does the same thing as [!shaped-import-monster](#shaped-import-mo
 ### Selection
 You must have at least one token selected for this command. As described above, it will use the name assigned to each token to lookup the monster it will represent from your JSON database.
 
-## !shaped-spell
-* Alias !shaped-import-spell *
-Imports details of named spells from a database of customer spells loaded as a separate script. All spells will be added to the currently selected character. 
+## !shaped-import-spell
+* Alias !shaped-spell *
+Imports details of named spells from a database of customer spells loaded as a separate script. All spells will be added to the currently selected character. If run with no options, this command will display a chat window button that allows you to launch a select list of all available spells to choose from.
 
 ### Options
 * **--<spell name>** (e.g. **--Fireball**) specifies a spell to import. You may supply multiple spells as separate options, or you may supply multiple in one option separate by commas (**--Fireball, Lightning Bolt, Wish**)
@@ -233,15 +222,20 @@ Imports details of named spells from a database of customer spells loaded as a s
 ### Selection
 You must have exactly one token that represents a character selected when running this command.
 
-## !shaped-spells
-* Alias !shaped-list-spells
-Displays a list of spells in the currently loaded database that match the supplied criteria. Each spell will be a link to either import and delete the spell, depending on whether the selected/supplied character already has that spell in their spell list or not.
+## !shaped-import-spell-list
+Imports a complete list of spells according to specified criteria into the currently selected character. This allows you to e.g. import all 1st level cleric spells. Please note that importing very large lists of spells into a character will result in character sheet and campaign lag, and will also place excessive load on the API server, which could eventually get this script banned/sanctioned. **DO NOT** do things like **!shaped-import-spell-list --classes Cleric** to import the whole cleric spell list. You shouldn't have more than ~35 spells for any character or you will run into problems.
 
 ### Options
-* **--character <characterID>** If there is no token selected, you must supply a character id for the character whose spells are to be edited.
+* **--level <level>** (e.g. **--level 1**) Restrict the list to the specified level
+* **--classes <classes>** (e.g. **--classes Cleric**) Restrict the list to the specified class or classes. If multiple, comma-separated classes are given, it will match any spell that has any of the supplied classes
+* **--school <school>** (e.g. **--school Transmutation**) Restrict the list to the specified school of magic
+* **--oaths <oaths>** (e.g. **--oaths Ancients) Restrict the list the specified paladin oath or oaths. If multiple, comma-separated oaths are given, it will match any of spell that falls under any of the supplied oaths. Valid values are Ancients, Vengeance and Devotion
+* **--domains <domains>** (e.g. **--domains War, Light**) Restrict the list to the specified cleric domain or domains. If multiple, comma-separated domains are given, it will match any spell that has any of the supplied domains
+* **--patrons <patrons>** (e.g. **--patrons Archfey**) Restrict the list to the specified warlock patron or patrons. If multiple, comma-separated patrons are given, it will match any spell that has any of the supplied patrons. Valid values are Archfey, Fiend and Great Old One
+* **--overwrite** If this option is included, the script will ovewrite existing spells with the same name with the new spells requested, otherwise they will be skipped
 
 ### Selection
-You can have up to one token that represents a character selected when running this command.
+You must have exactly one token that represents a character selected when running this command.
 
 ## !shaped-at
 Gives the selected character advantage or disadvantage, or  neither.
@@ -268,12 +262,6 @@ Creates token actions for your character as shortcuts to a variety of rolls and 
 * **--attacksMacro** - create an ability to launch chat window attack buttons
 * **--traits** - create an ability for each trait present in the character sheet
 * **--traitsMacro** - create an ability to launch the chat window traits buttons
-* **--racialTraits** - create an ability for each racial trait present in the character sheet
-* **--racialTraitsMacro** - create an ability to launch the chat window racial traits buttons
-* **--classFeatures** - create an ability for each class feature present in the character sheet
-* **--classFeaturesMacro** - create an ability to launch the chat window class feature buttons
-* **--feats** - create an ability for each feat present in the character sheet
-* **--featsMacro** - create an ability to launch the chat window feat buttons
 * **--actions** - create an ability for each action present in the character sheet
 * **--actionsMacro** - create an ability to launch the chat window actions buttons
 * **--reactions** - create an ability for each reaction present in the character sheet
@@ -301,6 +289,7 @@ You must have at least one token that represents a character selected for this c
 Display configuration UI to change default behaviours. The significance of all the options is detailed [below](#configuration)
 
 ## !shaped-apply-defaults
+* Alias !shaped-token-defaults *
 Apply the same defaults that are used when setting up tokens on import to whatever tokens are currently selected. Useful for mass-configuring manually created tokens. See [below](#config-token-settings) for more details on what these options are.
 
 ### Selection
@@ -331,16 +320,6 @@ You must select at least one token that represents a character. The selected cha
 ### Selection
 Unless you specify **--all** you must have at least one token that represents a character selected for this command to work.
 
-## !shaped-remove-spell
-Removes spells from the selected character.
-
-### Options
-* **--all** If supplied, remove all spells from the selected character.
-* **--<spell name>** Remove spells by name from the selected character. You may supply multiple spells as separate options, or you may supply multiple in one option separate by commas (**--Fireball, Lightning Bolt, Wish**)
-
-### Selection
-You must select exactly one token which represents a character.
-
 # Configuration
 ## Advantage Tracker
 * **Output** Decides how Advantage Tracker will report changes (whisper the gm, public to all, or silent)
@@ -353,98 +332,72 @@ You must select exactly one token which represents a character.
 Note that all of the settings under Token Defaults are applied to tokens only when **!shaped-import-monster**, **!shaped-import-statblock** or **!shaped-apply-defaults** are run.
 
 * **Numbered Tokens** If this is 'on', new tokens will have %%NUMBERED%% appended to their name to work with Aaron's TokenNameNumbered script. Please search for this on the API forum for more details.
+* **Token Name Override** If this is not empty, all new tokens will have their name tag set to this value. This is most useful in combination with Numbered Tokens, which allows you to have all your monsters labelled something like 'Monster 1', 'Monster 2', so your players can reference them but don't get any clues about what they are from the name.
 * **Show Name Tag** If this is 'on', the token will show its name tag to anyone who has permission to see it
-* **Token Name Override** If this is not empty, new tokens will have their name tag set to this value. This is most useful in combination with Numbered Tokens, which allows you to have all your monsters labelled something like 'Monster 1', 'Monster 2', so your players can reference them but don't get any clues about what they are from the name.
 * **Show Name to Players** If this is 'on', and **Show Name Tag** is also 'on', players will be able to see the token's name.
 * **Light Radius** Default light radius emitted from token (Note that this value will be overriden by a value derived from a monster's senses attribute where available)
 * **Dim Radius** Start of dim light within the above-specified light radius (Note that this value will be overriden by a value derived from a monster's senses attribute where available)
-* **Other players see light** Whether light emitted from the token is visible only to the controlling player(s) or to all players
+* **Show other players** Whether light emitted from the token is visible only to the controlling player(s) or to all players
 * **Has Sight** If 'on' then controlling players will be able to see areas of maps with dynamic lighting enabled based on the position of this token
 * **Light angle** Emitted light will be cast in arc this many degrees wide.
 * **LOS angle** the token's vision will be limited to an arc this many degrees wide
 * **Light multiplier** The multiplier affects how far the token can see from existing light sources. This is a good way to simulate a character who has the ability to see further than normal in low light situations or has an alternate form of vision that might allow them to navigate in the dark. For example, someone who can see twice as far in low light would have a multiplier of two.
 
 ## Token Defaults/Token Bar Options
+
 * **Bar X Attribute** Set this to the name of a sheet attribute (e.g. HP, AC, speed) to automatically set the specified token bar/bubble to the value of this attribute
 * **Bar X Link** If this is 'on' then the specified bar/bubble will be _linked_ to the configured attribute on the character sheet, i.e. changes to the bar/bubble will update the value on the character sheet. This is generally a good idea for everything except HP for generic tokens.
 * **Bar X Set Max** If this is 'on' then the specified bar will be given a maximum value (which will initially be the same as the main bar value) and will consequently display as a bar above the token as well as a value in the 'bubble'. Mainly useful for HP.
 * **Bar X Show Players** If this is 'on' then the specified bar/bubble will be shown to everyone, otherwise it will only be visible to the GM and controlling players
-* **Do not link NPC HP** If this is 'on' then the HP attribute will not be linked if the token represents an NPC, useful on HD-rolled characters.
 
 ## Token Defaults/Token Aura Options
 * **Auras** Sets up default auras for new character tokens. If you specify a range, new characters will have an aura with the specified size, colour and shape
 * **Aura X Show Players** If this is 'on' then the specified aura will be shown to everyone, otherwise it will only be visible to the GM and controlling players
 
+
 ## New Characters
 The settings in this section will be applied to new characters when they are created, since the sheet has no way of storing default options
 for new characters.
 
-* **Apply to all new chars?** If this is on, then the settings in this section will be applied to every new character, otherwise they will only be applied to characters created by the script using the various import commands, or when **!shaped-apply-defaults** is run. Please note that these defaults
-are applied at the moment of character creation, so some settings may not apply correctly - for example token actions which reference traits that have not yet been created. In this case, you should run **!shaped-apply-defaults** after your character is completely configured to complete the setup. You should also be aware that as things currently stand, this functionality does not work well for items dragged from the Compendium due to limitations in how the drag and drop functionality interacts with the sheet import systems.
-* **Sheet Output** Set whether output from the new character sheet should be public or whispered to the controlling player by default.
-* **Death Save Output** Same as Sheet Output, but specifically for death saves.
-* **Hit Dice Output** Same as Sheet Output, but specifically for Hit Dice.
+* **Apply to all new chars?** If this is on, then the settings in this section will be applied to every new character, otherwise they will only be applied to characters created by the script using the various import commands, or when **!shaped-apply-defaults** is run.
+* **Sheet Output** Set whether output from the new character sheet should be public or whispered to the controlling player by default
+* **Death Save Output** Same as Sheet Output, but specifically for death saves
+* **Initiative Output** Same as Sheet Output, but specifically for Initiative rolls
+* **Show name on Roll Template** If 'on', the character's name will be shown on all their rolls in chat
 * **Roll Options** How are d20 rolls handled by default:
-    * **Normal**: Roll one die only.
-    * **Roll with Advantage**: Roll two dice, display the highest value.
-    * **Roll with Disadvantage**: Roll two dice, display the lowest value.
-    * **Roll 2**: Roll two dice, display both results.
-* **Initiative Settings** How are d20 rolls handled by default:
-    * **Initiative Output** Same as Sheet Output, but specifically for Initiative rolls
-    * **Init Roll** Similar as Roll Options, but only applies to Initiative rolls. There is no Roll 2 option in this case because initiative must have a single value to be sent to the turn tracker.
-    * **Init to Tracker** If 'on', automatically send all initiative rolls to the turn tracker.
-    * **Break Init Ties** If 'on', the value a character's initiative bonus will be divided by 100 and added to their initiative roll to break initiative ties (matching rolls mean the character with the highest bonus goes first)
-* **Show name on Roll Template** If 'on', the character's name will be shown on all their rolls in chat.
+    * **Normal**: Roll one die only
+    * **Roll with Advantage**: Roll two dice, display the highest value
+    * **Roll with Disadvantage**: Roll two dice, display the lowest value
+    * **Roll 2**: Roll two dice, display both results
+* **Revert advantage** If enabled, (dis)advantage will automatically be reverted back to rolling normally after the next d20 roll. Useful for the most common case where you get advantage on a single roll.
+* **Init Roll** Same as above, but only applies to Initiative rolls. There is no Roll 2 option in this case because initiative must have a single value to be sent to the turn tracker
+* **Init to Tracker** If 'on', automatically send all initiative rolls to the turn tracker.
+* **Break Init Ties** If 'on', the value a character's initiative bonus will be divided by 100 and added to their initiative roll to break initiative ties (matching rolls mean the character with the highest bonus goes first)
 * **Show Target AC** If 'on', all attacks and spells with a target will require a target to be clicked and will display the target's AC on the Roll output
 * **Show Target Name** If 'on', all attacks and spells with a target will require a target to be clicked and will display the target's character name on the Roll output
-* **Auto Roll Dmg Attacks** If 'on', all attacks with automatically roll and display damage.
-* **Auto Roll Dmg Saves** If 'on', all attacks with saves will automatically roll and display damage applied on save failure.
-* **Display Settings** This submenu configures the respective sheet fields to be visible by default on new characters.
-    * **Show Passive Skills** If 'on', will enable the display of passive skills in the skills section of the Core sheet page.
-    * **Show Weight** If 'on', will enable the display of weight information on the Core sheet page.
-    * **Show Emote** If 'on', will enable the Emote field which can be customized to automatically display the Emote on the attack template.
-    * **Show Freetext** If 'on', will enable the Freetext field on attack templates.
-    * **Show Freeform** If 'on', will enable the Freeform field on attack templates.
-    * **Show Dice Modifiers** If 'on', will enable Dice modifiers.
-    * **Show Crit Range** If 'on', will show Crit Range.
-    * **Extra on a Crit** If 'on', will enable the Extra on Crit field on attack templates which can be used to specify damage to be added automatically on crits.
-* **Automatic Higher Level Queries** If 'on', the script will query the player to cast spells at a higher level whenever possible.
-* **Auto Use Ammo** If 'on', ammo will automatically decrement when launching attacks that are configured with ammo.
-* **Revert advantage** If enabled, (dis)advantage will automatically be reverted back to rolling normally after the next d20 roll. Useful for the most common case where you get advantage on a single roll.
-* **Auto spell slots/points** If enabled, (dis)advantage will automatically be reverted back to rolling normally after the next d20 roll. Useful for the most common case where you get advantage on a single roll.
-* **Houserule Settings** See [!New Characters/Houserule Settings][#new-charactershouserule-settings].
-* **Measurement Systems** Choose between imperial or metric units:
-    * **Distance System** Select feet or meters.
-    * **Weight System** Select pounds or kilograms.
-* **Hide Settings** This submenu configures the default settings for the various "hide" options from the settings page of the character sheet. These settings are designed for use with a browser extension to help mask parts of the sheet output (see character sheet documentation for more details).
-* **Default token actions** Configures which token actions will be created automatically for the character. For details of what each of these actions are, please see the documentation for [!shaped-abilities](#roll-hp-for-monsters).
+* **Auto Use Ammo** If 'on', new characters will be set to automatically decrement ammo when launching attacks that are configured with ammo.
+* **Default tab** Sets the default tab which will be open when you first go to the new character sheet.
+* **Default token actions** Configures which token actions will be created automatically for the character. For details of what each of these actions are, please see the documentation for [!shaped-abilities](#roll-hp-for-monsters). 
+* **Hiding Settings** This submenu configures the default settings for the various "hide" options from the settings page of the character sheet. These settings are designed for use with a browser extension to help mask parts of the sheet output (see character sheet documentation for more details).
+* **Text sizes** This submenu configures the default text sizes for the output of various macros in the character sheet.
 
 ## New Characters/Houserule Settings
-* **HP Recovered Long Rest** Configures how much HP should be restored on a long test.
-* **HD Recovered Long Rest** Configures how many Hit Die should be recovered on a long rest.
-* **Critical Damage** Configures the rule to apply for crits, normal rules (2x damage), max dice roll or none.
-* **Proficiency Dice** Enables the use of proficiency dice.
-* **Psionics** Enables the rules for Psionics.
-* **Custom Classes** Enables Custom classes.
-* **Expertise as advantage** Configures the default value of the "expertise as advantage" option on the character sheet.
+* **Base DC** Configures the default value for Base DC from the character sheet
 * **Medium Armor Max Dex** Sets the default value for medium armor max dex setting on the character sheet. This changes the maximum dexterity bonus allowed when wearing medium armor.
-* **Base DC** Configures the default value for Base DC from the character sheet.
-* **Honor** Enables the Honor system on the character sheet.
-* **Sanity** Enables the Sanity system on the character sheet.
-* **Multiple Inspiration** Allows multiple levels of inspiration on the character sheet.
+* **Expertise as advantage** Configures the default value the "expertise as advantage" option on the character sheet
 
 ## New Characters/Houserule Settings/Saving Throws
 * **Half Proficiency Saves** Will tick the box for adding half proficiency to unproficient saving throws.
-* **Use Custom Saves** Will turn on the option to use custom saving throws for new characters.
+* **Use Custom Saves** Will turn on the option to use custom saving throws for new characters
 * **Use average of Highest Abils** If true, the custom saves configured below will use the average of the two highest abilities assigned to them rather than just taking the highest ability.
 * **Fortitude, Reflex, Will** These submenus configure the three custom saving throws for new characters. Under each one, you can assign which abilities are used to generate the respective saving throw.
+
 
 ## Character Sheet Enhancements
 * **Roll HP On Drop** If 'on' the script will automatically Roll HP for any character whose default token doesn't have a linked attribute for the specified bar. See the [Roll HP for monsters](#roll-hp-for-monsters) section for more details.
 * **Process HD Automatically** If 'on' the script will automatically decrement your HD count when you roll hit dice and will also add the amount rolled to your HP total.
-* **Process Uses automatically** If 'on' the script will automatically decrement Use count for abilities with limited uses per resting period.
-* **Recharge uses on new turns** Automatically reset uses on "per-turn" abilities at the End of Turn.
-* **Show ammo recovery buttons** Enable buttons to automatically process recovered ammo.
+* **Process Spell Slots Automatically** Not currently working.
+* **Process Traits Automatically** If 'on' the script will automatically decrement the number of uses remaining for traits and features when they are used. It will also issue a warning if they are used when no uses remain.
 
 ## Houserules & Variants
 * **Long Rest: No HP, full HD** If 'on', the long rest command will reset all HD to full, but will not restore any HP.

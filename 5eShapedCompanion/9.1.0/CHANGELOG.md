@@ -1,31 +1,3 @@
-<a name="10.0.1"></a>
-## [10.0.1](https://github.com/symposion/roll20-shaped-scripts/compare/10.0.0...10.0.1) (2017-04-16)
-
-
-### Bug Fixes
-
-* **config-ui:** Fix error on custom saves back button ([0246f06](https://github.com/symposion/roll20-shaped-scripts/commit/0246f06)), closes [#480](https://github.com/symposion/roll20-shaped-scripts/issues/480)
-* **rests:** Script error on rest ([d5e2c31](https://github.com/symposion/roll20-shaped-scripts/commit/d5e2c31)), closes [#482](https://github.com/symposion/roll20-shaped-scripts/issues/482)
-* **srd-data:** Fixes for mummy/mummy lord ([3c89645](https://github.com/symposion/roll20-shaped-scripts/commit/3c89645))
-
-
-
-<a name="10.0.0"></a>
-# [10.0.0](https://github.com/symposion/roll20-shaped-scripts/compare/9.1.0...10.0.0) (2017-04-15)
-
-
-### Bug Fixes
-
-* **config-ui:** Bump minimum sheet version for config UI changes ([925918a](https://github.com/symposion/roll20-shaped-scripts/commit/925918a))
-* **config-ui:** Remove config UI inline styles ([54edcfe](https://github.com/symposion/roll20-shaped-scripts/commit/54edcfe))
-
-
-### BREAKING CHANGES
-
-* **config-ui:** This script now requires a minimum sheet version of 11.5.0.
-
-
-
 <a name="9.1.0"></a>
 # [9.1.0](https://github.com/symposion/roll20-shaped-scripts/compare/9.0.0...9.1.0) (2017-04-14)
 
