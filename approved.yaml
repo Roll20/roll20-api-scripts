@@ -485,3 +485,11 @@ combattracker:
 movelighting:
 - moveLighting
 - Utility
+
+elevation:
+- Elevation
+- Utility
+
+hero6playable:
+- Hero6Playable
+- System Toolbox
