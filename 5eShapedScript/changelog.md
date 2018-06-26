@@ -1,3 +1,11 @@
+# 13.4.0
+
+### Features
+- Support "pcOnly" option for "has sight"
+
+### Bug fixes
+- Fix #1 - set "Expertise as advantage" and custom saves before character import to ensure these features work correctly.
+
 # 13.3.0
 
 ### Features
