@@ -114,7 +114,8 @@ var handledeathsave = function(msg,character) {
     var result = msg.inlinerolls[0].results.total ? msg.inlinerolls[0].results.total : false;
     var resultbase = msg.inlinerolls[0].results.rolls[0].results[0].v ? msg.inlinerolls[0].results.rolls[0].results[0].v : false;
     var resultoutput = "";
-    if(msg.content.indexOf("{{global=") > -1 && result != false) {
+    // The $ sign means that the a global modifier was used.
+    if(msg.content.indexOf("{{global=$") > -1 && result != false) {
         var global_mod = msg.inlinerolls[1].results.total ? msg.inlinerolls[1].results.total : 0;
         result = result + global_mod;
     }
