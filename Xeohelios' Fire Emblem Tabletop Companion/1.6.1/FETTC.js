@@ -1879,6 +1879,11 @@ on('chat:message', function(msg) {
             return;
         }
         var user = getObj('character', selectedToken.get('represents'));
+        //Check to make sure that the tokens represent characters
+        if (selectedToken.get('represents') === ""){
+            sendChat('SYSTEM', 'Token must be linked to a character in the journal!');
+            return;
+        }
         //Personal values, for statboosters
         let HPi = findObjs({ characterid: user.id, name: "HP_i", type: "attribute"})[0];
         let Stri = findObjs({ characterid: user.id, name: "Str_i", type: "attribute"})[0];
@@ -2242,6 +2247,11 @@ on('chat:message', function(msg) {
         }
         var staffer = getObj('character', selectedToken.get('represents'));
         var target = getObj('character', targetToken.get('represents'));
+        //Check to make sure that the tokens represent characters
+        if (selectedToken.get('represents') === "" || targetToken.get('represents') === ""){
+            sendChat('SYSTEM', 'Both tokens must be linked to characters in the journal!');
+            return;
+        }
         let CurrHPA = findObjs({ characterid: staffer.id, name: "HP_current"})[0];
         //Target stats for tasty statuses
         let CurrHPB = findObjs({ characterid: target.id, name: "HP_current"})[0];
@@ -2983,7 +2993,11 @@ on('chat:message', function(msg) {
 
         var attacker = getObj('character', selectedToken.get('represents'));
         var defender = getObj('character', targetToken.get('represents'));
-
+        //Check to make sure that the tokens represent characters
+        if (selectedToken.get('represents') === "" || targetToken.get('represents') === ""){
+            sendChat('SYSTEM', 'Both tokens must be linked to characters in the journal!');
+            return;
+        }
         //grab all commands
         let SkillsA = findObjs({ characterid: attacker.id, type: "ability"});
         for (var i in SkillsA){
@@ -3020,7 +3034,11 @@ on('chat:message', function(msg) {
         var targetToken = getObj('graphic', targetId);
         var attacker = getObj('character', selectedToken.get('represents'));
         var defender = getObj('character', targetToken.get('represents'));
-
+        //Check to make sure that the tokens represent characters
+        if (selectedToken.get('represents') === "" || targetToken.get('represents') === ""){
+            sendChat('SYSTEM', 'Both tokens must be linked to characters in the journal!');
+            return;
+        }
         var who = getObj('character', selectedToken.get('represents'));
         if (!who) {
             who = selectedToken.get('name');
@@ -3510,6 +3528,11 @@ on('chat:message', function(msg) {
         }
 
         var who = getObj('character', selectedToken.get('represents'));
+        //Check to make sure that the tokens represent characters
+        if (selectedToken.get('represents') === ""){
+            sendChat('SYSTEM', 'Token must be linked to a character in the journal!');
+            return;
+        }
         var user = who.id
         if (!who) {
             who = selectedToken.get('name');
@@ -4078,6 +4101,11 @@ on('chat:message', function(msg) {
         }
         var user = getObj('character', selectedToken.get('represents'));
         var target = getObj('character', targetToken.get('represents'));
+        //Check to make sure that the tokens represent characters
+        if (selectedToken.get('represents') === "" || targetToken.get('represents') === ""){
+            sendChat('SYSTEM', 'Both tokens must be linked to characters in the journal!');
+            return;
+        }
         //just get target's stats
         let WNameB = getAttrByName(target.id, 'repeating_weapons_$0_WName') || "Empty";
         let LvB = getAttrByName(target.id, 'Level');
