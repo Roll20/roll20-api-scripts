@@ -1,5 +1,13 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 1.04
+### Nouvelles capacités
+* Runes de puissance du forgesort
+
+### Autres améliorations
+* Ajout de l'option --maxDmg pour les attaques et !cof-dmg
+* Il est maintenant possible d'ouvrir des listes d'actions indépendantes des #Actions#, et ces listes peuvent aussi contenir une référence à une autre liste.
+* Suite à une précision de Kegron, les critiques (hors 20) qui ne passent pas la DEF de la cible devienent une réussite normale
+* Prise en compte d'un attribute armeParDefaut pour définir quelle arme un personnage donné a en main (ou pas).
 * Correction d'un bug quand HealthColors n'était actif.
 * Possibilité d'avoir des macros ou ability ayant plusieurs lignes dans les #Actions#
 
