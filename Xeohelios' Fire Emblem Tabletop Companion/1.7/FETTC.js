@@ -162,7 +162,7 @@ on('chat:message', function(msg) {
         let LanceEXPA = findObjs({ characterid: attacker.id, name: "LanceEXP", type: "attribute"})[0];
         let AxeEXPA = findObjs({ characterid: attacker.id, name: "AxeEXP", type: "attribute"})[0];
         let BowEXPA = findObjs({ characterid: attacker.id, name: "BowEXP", type: "attribute"})[0];
-        let DaggerEXPA = findObjs({ characterid: attacker.id, name: "GunEXP", type: "attribute"})[0];
+        let DaggerEXPA = findObjs({ characterid: attacker.id, name: "DaggerEXP", type: "attribute"})[0];
         let GunEXPA = findObjs({ characterid: attacker.id, name: "GunEXP", type: "attribute"})[0];
         let DarkEXPA = findObjs({ characterid: attacker.id, name: "DarkEXP", type: "attribute"})[0];
         let LightEXPA = findObjs({ characterid: attacker.id, name: "LightEXP", type: "attribute"})[0];
@@ -175,7 +175,7 @@ on('chat:message', function(msg) {
         let LanceEXPB = findObjs({ characterid: defender.id, name: "LanceEXP", type: "attribute"})[0];
         let AxeEXPB = findObjs({ characterid: defender.id, name: "AxeEXP", type: "attribute"})[0];
         let BowEXPB = findObjs({ characterid: defender.id, name: "BowEXP", type: "attribute"})[0];
-        let DaggerEXPB = findObjs({ characterid: defender.id, name: "GunEXP", type: "attribute"})[0];
+        let DaggerEXPB = findObjs({ characterid: defender.id, name: "DaggerEXP", type: "attribute"})[0];
         let GunEXPB = findObjs({ characterid: defender.id, name: "GunEXP", type: "attribute"})[0];
         let DarkEXPB = findObjs({ characterid: defender.id, name: "DarkEXP", type: "attribute"})[0];
         let LightEXPB = findObjs({ characterid: defender.id, name: "LightEXP", type: "attribute"})[0];
@@ -2021,7 +2021,7 @@ on('chat:message', function(msg) {
         let LanceEXPA = findObjs({ characterid: attacker.id, name: "LanceEXP", type: "attribute"})[0];
         let AxeEXPA = findObjs({ characterid: attacker.id, name: "AxeEXP", type: "attribute"})[0];
         let BowEXPA = findObjs({ characterid: attacker.id, name: "BowEXP", type: "attribute"})[0];
-        let DaggerEXPA = findObjs({ characterid: attacker.id, name: "GunEXP", type: "attribute"})[0];
+        let DaggerEXPA = findObjs({ characterid: attacker.id, name: "DaggerEXP", type: "attribute"})[0];
         let GunEXPA = findObjs({ characterid: attacker.id, name: "GunEXP", type: "attribute"})[0];
         let DarkEXPA = findObjs({ characterid: attacker.id, name: "DarkEXP", type: "attribute"})[0];
         let LightEXPA = findObjs({ characterid: attacker.id, name: "LightEXP", type: "attribute"})[0];
@@ -2034,7 +2034,7 @@ on('chat:message', function(msg) {
         let LanceEXPB = findObjs({ characterid: defender.id, name: "LanceEXP", type: "attribute"})[0];
         let AxeEXPB = findObjs({ characterid: defender.id, name: "AxeEXP", type: "attribute"})[0];
         let BowEXPB = findObjs({ characterid: defender.id, name: "BowEXP", type: "attribute"})[0];
-        let DaggerEXPB = findObjs({ characterid: defender.id, name: "GunEXP", type: "attribute"})[0];
+        let DaggerEXPB = findObjs({ characterid: defender.id, name: "DaggerEXP", type: "attribute"})[0];
         let GunEXPB = findObjs({ characterid: defender.id, name: "GunEXP", type: "attribute"})[0];
         let DarkEXPB = findObjs({ characterid: defender.id, name: "DarkEXP", type: "attribute"})[0];
         let LightEXPB = findObjs({ characterid: defender.id, name: "LightEXP", type: "attribute"})[0];
