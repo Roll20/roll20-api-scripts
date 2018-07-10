@@ -244,6 +244,15 @@ on('chat:message', function(msg) {
         let CanAttackA = true;
         let CanAttackB = true;
         let AttackingAlly = false;
+        let DmgtotalA = 0;
+        let DmgtotalB = 0;
+
+        let DoubledA = false; //has the unit attacked/doubled/tripled/quad'd yet? for attack multiplier checks
+        let DoubledB = false;
+        let TripledA = false;
+        let TripledB = false;
+        let QuadedA = false;
+        let QuadedB = false;
 
         let SkillsA = findObjs({ characterid: attacker.id, type: "ability"});
         let SkillsB = findObjs({ characterid: defender.id, type: "ability"});
@@ -501,6 +510,8 @@ on('chat:message', function(msg) {
         let StattargetE;
         let Dmg_U;
         let Dmg_E;
+        let DisableatkA; //for attack multipliers- disables normal attacks
+        let DisableatkB;
         //exp
         if (IsPromoA == true){
             InLvA += 20;
@@ -706,9 +717,9 @@ on('chat:message', function(msg) {
                 /* Parse damage and HP modifiers- normally eval() is incredibly dangerous and
                 usually Shouldn't Be Used Under Any Circumstance Ever, but the Roll20 API sandboxes it,
                 so I think it should be alright. Oh well!*/
-                let DamagemodU = eval(obj.u_damagemod);
+                let DamagemodU = parseInt(eval(obj.u_damagemod));
                 log("Damage mod is " + DamagemodU);
-                let DamagemodE = eval(obj.e_damagemod);
+                let DamagemodE = parseInt(eval(obj.e_damagemod));
                 let HealmodU = parseInt(eval(obj.u_healfactor));
                 let HealmodE = parseInt(eval(obj.e_healfactor));
                 log("HealmodU is" + HealmodU);
@@ -787,6 +798,14 @@ on('chat:message', function(msg) {
                 }
                 log(HPA);
                 log("wexp is "+ WEXPA);
+
+                //moved message display up
+
+                if (obj.custom_string != ""){
+                    Chatstr += '<p style = "margin-bottom: 0px;"><b style = "color: #4055df;">' + obj.custom_string + "</b></p>";
+                } else {
+                    Chatstr += '<p style = "margin-bottom: 0px;"><b style = "color: #4055df;">' + obj.name + " activated!</b></p>";
+                }
 
                 if (obj.radius != 0) {
                     //tortured screaming
@@ -902,18 +921,29 @@ on('chat:message', function(msg) {
                 //Attack multiplier for stuff like Astra
                 if (obj.attack_multiplier != 0){
                     if (userid == attacker.id){
-                        for (i = 0; i < obj.attack_multiplier; i++){
+                        let mult = obj.attack_multiplier;
+                        if (DoubledA){
+                          mult -= 1; //check if user has doubled yet
+                          if (TripledA){
+                            mult -= 1; //tripled?
+                            if (QuadedA){
+                              mult -= 1; //quadrupled?
+                            }
+                          }
+                        }
+                        for (i = 0; i < mult; i++){
 
                             if (randomInteger(100) < (HitA - AvoB)){
-                                Chatstr += '<p style = "margin-bottom: 0px;">' + AName + " hits! </p>";
+                                Chatstr += '<p style = "margin-bottom: 0px;">' + AName + " hits for "+ DmgA + " damage!</p>";
                                 //Check if attack crits
                                 if (randomInteger(100) < (CritA - DdgB)){
                                     DmgA *= 3;
-                                    Chatstr += '<p style = "margin-bottom: 0px;">' + AName+ " crits! </p>";
+                                    Chatstr += '<p style = "margin-bottom: 0px;">' + AName + " crits for "+ DmgA + " damage!</p>";
                                     hasCritA = true;
                                 }
                                 //No AOE checking because that's stupidly broken. >:O
                                 HPB -= DmgA;
+                                DmgtotalA += DmgA;
                                 log("Damage is " + DmgA);
                                 CurrHPB.set("current", HPB);
                                 CWRVal += 2;
@@ -932,19 +962,30 @@ on('chat:message', function(msg) {
                         }
 
                         DoubleA = false;
-
+                        DisableatkA = true;
                     }
                     else {
-                        for (i = 0; i < obj.attack_multiplier; i++){
+                        let mult = obj.attack_multiplier;
+                        if (DoubledB){
+                          mult -= 1; //check if user has doubled yet
+                          if (TripledB){
+                            mult -= 1; //tripled?
+                            if (QuadedB){
+                              mult -= 1; //quadrupled?
+                            }
+                          }
+                        }
+                        for (i = 0; i < mult; i++){
                             if (randomInteger(100) < (HitB - AvoA)){
-                                Chatstr += '<p style = "margin-bottom: 0px;">' + DName+ " hits! </p>";
+                                Chatstr += '<p style = "margin-bottom: 0px;">' + DName + " hits for "+ DmgB + " damage! </p>";
                                 //Check if attack crits
                                 if (randomInteger(100) < (CritB - DdgA)){
                                     DmgB *= 3;
-                                    Chatstr += '<p style = "margin-bottom: 0px;">'+ DName+ " crits!</p>";
+                                    Chatstr += '<p style = "margin-bottom: 0px;">' + DName + " crits for "+ DmgB + " damage! </p>";
                                     hasCritB = true;
                                 }
                                 HPA -= DmgB;
+                                DmgtotalB += DmgB;
                                 CurrHPA.set("current", HPA);
                                 //Defender gets no WEXP to discourage turtling on EP
                                 DecUsesB();
@@ -960,13 +1001,8 @@ on('chat:message', function(msg) {
                         }
 
                         DoubleB = false;
-
+                        DisableatkB = true;
                     }
-                }
-                if (obj.custom_string != ""){
-                    Chatstr += '<p><b style = "color: #4055df;">' + obj.custom_string + "</b></p>";
-                } else {
-                    Chatstr += '<p><b style = "color: #4055df;">' + obj.name + " activated!</b></p>";
                 }
             }
 
@@ -1083,35 +1119,39 @@ on('chat:message', function(msg) {
                 log(Range1A + "-"+ Range2A);
                 diffcheckA = true;
                 if (randomInteger(100) < (HitA - AvoB)){
-                    //Check if attack crits
-                    if (randomInteger(100) < (CritA - DdgB)){
-                        DmgA *= 3;
-                        Chatstr += '<p style = "margin-bottom: 0px;">' + AName+ " crits for " + DmgA + " damage!</p>";
-                        hasCritA = true;
-                    } else {
-                        Chatstr += '<p style = "margin-bottom: 0px;">' + AName + " hits for "+ DmgA + " damage!</p>";
-                    }
-
                     //Battle skill trigger
                     for (i in SkillsA){
-                        Skill(attacker.id, defender.id, SkillsA[i], "during");
+                        Skill(attacker.id, defender.id, SkillsA[i], "during-a");
                     }
                     for (i in SkillsB){
-                        Skill(defender.id, attacker.id, SkillsB[i], "during");
+                        Skill(defender.id, attacker.id, SkillsB[i], "during-d");
                     }
 
-                    HPB -= DmgA;
-                    log("Damage is " + DmgA);
-                    CurrHPB.set("current", HPB);
-                    CWRVal += WEXPA;
-                    CurrWR.set("current",CWRVal);
-                    log("Incremented weapon EXP!");
-                    DecUsesA();
-                    log("Decreased weapon uses!");
-                    if (hasCritA){
-                        DmgA /= 3;
-                        hasCritA = false;
+                    if (!DisableatkA){ //no attack multipliers
+                      //Check if attack crits
+                      if (randomInteger(100) < (CritA - DdgB)){
+                          DmgA *= 3;
+                          Chatstr += '<p style = "margin-bottom: 0px;">' + AName+ " crits for " + DmgA + " damage!</p>";
+                          hasCritA = true;
+                      } else {
+                          Chatstr += '<p style = "margin-bottom: 0px;">' + AName + " hits for "+ DmgA + " damage!</p>";
+                      }
+
+                      HPB -= DmgA;
+                      DmgtotalA += DmgA;
+                      log("Damage is " + DmgA);
+                      CurrHPB.set("current", HPB);
+                      CWRVal += WEXPA;
+                      CurrWR.set("current",CWRVal);
+                      log("Incremented weapon EXP!");
+                      DecUsesA();
+                      log("Decreased weapon uses!");
+                      if (hasCritA){
+                          DmgA /= 3;
+                          hasCritA = false;
+                      }
                     }
+
                 } else {
                     Chatstr += '<p style = "margin-bottom: 0px;">' + AName+ " misses! </p>";
                 }
@@ -1165,9 +1205,11 @@ on('chat:message', function(msg) {
             Chatstr += '<p style = "margin-bottom: 0px;">' + AName +" cannot attack!</p>";
         }
 
+        Chatstr += '<p></p>'; //break between units
+
         if (HPB <= 0){
             CanAttackB = false;
-            log("Defender is dead!")
+            log("Defender is dead!");
         }
 
         if (CanAttackB == true){
@@ -1175,31 +1217,34 @@ on('chat:message', function(msg) {
             if (((Range1B) <= (diff)) && ((diff) <= (Range2B))){
                 diffcheckB = true;
                 if (randomInteger(100) < (HitB - AvoA)){
-                    //Check if attack crits
-                    if (randomInteger(100) < (CritB - DdgA)){
-                        DmgB *= 3;
-                        Chatstr += '<p style = "margin-bottom: 0px;">'+ DName+ " crits for " + DmgB + " damage!</p>";
-                        hasCritB = true;
-                    } else {
-                        Chatstr += '<p style = "margin-bottom: 0px;">' + DName + " hits for "+ DmgB + " damage! </p>";
-                    }
-
                     //battle skill trigger
                     for (i in SkillsB){
-                        Skill(defender.id, attacker.id, SkillsB[i], "during");
+                        Skill(defender.id, attacker.id, SkillsB[i], "during-a");
                     }
                     for (i in SkillsA){
-                        Skill(attacker.id, defender.id, SkillsA[i], "during");
+                        Skill(attacker.id, defender.id, SkillsA[i], "during-d");
                     }
 
-                    HPA -= DmgB;
-                    CurrHPA.set("current", HPA);
-                    //Defender gets no WEXP to discourage turtling on EP
-                    DecUsesB();
-                    log("Decreased weapon uses!");
-                    if (hasCritB){
-                        DmgB /= 3;
-                        hasCritB = false;
+                    if (!DisableatkB) {
+                      //Check if attack crits
+                      if (randomInteger(100) < (CritB - DdgA)){
+                          DmgB *= 3;
+                          Chatstr += '<p style = "margin-bottom: 0px;">'+ DName+ " crits for " + DmgB + " damage!</p>";
+                          hasCritB = true;
+                      } else {
+                          Chatstr += '<p style = "margin-bottom: 0px;">' + DName + " hits for "+ DmgB + " damage! </p>";
+                      }
+
+                      HPA -= DmgB;
+                      DmgtotalB += DmgB;
+                      CurrHPA.set("current", HPA);
+                      //Defender gets no WEXP to discourage turtling on EP
+                      DecUsesB();
+                      log("Decreased weapon uses!");
+                      if (hasCritB){
+                          DmgB /= 3;
+                          hasCritB = false;
+                      }
                     }
                 } else {
                     Chatstr += '<p style = "margin-bottom: 0px;">' + DName+ " misses!</p>";
@@ -1254,116 +1299,129 @@ on('chat:message', function(msg) {
             Chatstr += '<p style = "margin-bottom: 0px;">' + DName +" cannot attack!</p>";
         }
 
+        Chatstr += '<p></p>'; //break between units
+
         if (HPA <= 0){
             CanAttackA = false;
-            log("Attacker is dead!")
+            log("Attacker is dead!");
         }
 
         //Attacker doubles; I don't think I should need to do usability checking for doubleattacking since it's checked within the battle calc
         if ((DoubleA === true) && (CanAttackA == true) && (diffcheckA == true)){
             //quadattacks
+            DoubledA = true;
             if (randomInteger(100) < (HitA - AvoB)){
-                //Check if attack crits
-                if (randomInteger(100) < (CritA - DdgB)){
-                    DmgA *= 3;
-                    Chatstr += '<p style = "margin-bottom: 0px;">' + AName+ " crits for " + DmgA + " damage!</p>";
-                    hasCritA = true;
-                } else {
-                    Chatstr += '<p style = "margin-bottom: 0px;">' + AName+ " hits for " + DmgA + " damage!</p>";
-                }
-
+                //Battle skill trigger
                 for (i in SkillsA){
-                    Skill(attacker.id, defender.id, SkillsA[i], "during");
+                    Skill(attacker.id, defender.id, SkillsA[i], "during-a");
                 }
                 for (i in SkillsB){
-                    Skill(defender.id, attacker.id, SkillsB[i], "during");
+                    Skill(defender.id, attacker.id, SkillsB[i], "during-d");
                 }
 
-                HPB -= DmgA;
-                CurrHPB.set("current", HPB);
-                CWRVal += WEXPA;
-                CurrWR.set("current",CWRVal);
-                log("Incremented weapon EXP!");
-                DecUsesA();
-                log("Decreased weapon uses!");
-                if (hasCritA){
-                    DmgA /= 3;
-                    hasCritA = false;
+                if (!DisableatkA){ //no attack multipliers
+                  //Check if attack crits
+                  if (randomInteger(100) < (CritA - DdgB)){
+                      DmgA *= 3;
+                      Chatstr += '<p style = "margin-bottom: 0px;">' + AName+ " crits for " + DmgA + " damage!</p>";
+                      hasCritA = true;
+                  } else {
+                      Chatstr += '<p style = "margin-bottom: 0px;">' + AName + " hits for "+ DmgA + " damage!</p>";
+                  }
+
+                  HPB -= DmgA;
+                  DmgtotalA += DmgA;
+                  log("Damage is " + DmgA);
+                  CurrHPB.set("current", HPB);
+                  CWRVal += WEXPA;
+                  CurrWR.set("current",CWRVal);
+                  log("Incremented weapon EXP!");
+                  DecUsesA();
+                  log("Decreased weapon uses!");
+                  if (hasCritA){
+                      DmgA /= 3;
+                      hasCritA = false;
+                  }
                 }
             } else {
                 Chatstr += '<p style = "margin-bottom: 0px;">' + AName+ " misses!</p>";
             }
-            //radius
             if (AOEA != 0){
-                    let tokenInRadius = filterObjs(function(token) {
-                        if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(selectedToken,token) > AOEA || getAttrByName(token.get('represents'), 'all') == getAttrByName(selectedToken.get('represents'), 'all') || selectedToken.get("represents") == token.get("represents") || targetToken.get("represents") == token.get("represents") ) return false;
-                        else return true;
-                    });
-                    for (i in tokenInRadius){
-                        let char = tokenInRadius[i].get("represents");
-                        let char_name = tokenInRadius[i].get("name");
-                        let HPchar = findObjs({
-                            characterid: char,
-                            name: "HP_current"
-                        })[0];
-                        let def_ch = Number(getAttrByName(char, 'def_total'));
-                        let res_ch = Number(getAttrByName(char, 'res_total'));
-                        let weak_ch = getAttrByName(char, 'weaknesses');
-                        let avo_ch = getAttrByName(char, 'avo');
-                        let prov_DmgB;
-                        let prov_MtB = parseInt(getAttrByName(defender.id, 'repeating_weapons_$0_Wt')) || 0;
-                        if ( ( StrengthsB.includes("Beast") && weak_ch.includes("Beast")) || ( StrengthsB.includes("Flier") && weak_ch.includes("Flier")) || ( StrengthsB.includes("Dragon") && weak_ch.includes("Dragon")) || ( StrengthsB.includes("Armor") && weak_ch.includes("Armor")) || ( StrengthsB.includes("Monster") && weak_ch.includes("Monster")) ){
-                            prov_MtB *= 3;
-                        }
-                        if ( (PhysWepTypes.includes(WTypeB))||(PhysWeps.includes(WNameB)) ){
-                            prov_DmgB = (StrB + MtB) - def_ch;
-                        } else if ( (MWepTypes.includes(WTypeB))||(MagWeps.includes(WNameB)) ){
-                            prov_DmgB = (MagB + MtB) - res_ch;
-                        }
-                        else if (WTypeB == "Firearm/Taneg.") {
-                            prov_DmgB = MtB - def_ch;
-                        }
-                        if (prov_DmgB < 0){
-                            prov_DmgB = 0;
-                        }
-                        if (randomInteger(100) < (HitB - avo_ch)){
-                            HPchar.setWithWorker({
-                                current: HPchar.get("current") - prov_DmgB
-                            });
-                            Chatstr += '<p style = "margin-bottom: 0px;">'+ DName+ " hits " + char_name + " for " + prov_DmgB + " damage!</p>";
-                        }
+                let tokenInRadius = filterObjs(function(token) {
+                    if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(targetToken,token) > AOEA || getAttrByName(token.get('represents'), 'all') == getAttrByName(selectedToken.get('represents'), 'all') || selectedToken.get("represents") == token.get("represents") || targetToken.get("represents") == token.get("represents") ) return false;
+                    else return true;
+                });
+                for (i in tokenInRadius){
+                    let char = tokenInRadius[i].get("represents");
+                    let char_name = tokenInRadius[i].get("name");
+                    let HPchar = findObjs({
+                        characterid: char,
+                        name: "HP_current"
+                    })[0];
+                    let def_ch = Number(getAttrByName(char, 'def_total'));
+                    let res_ch = Number(getAttrByName(char, 'res_total'));
+                    let weak_ch = getAttrByName(char, 'weaknesses');
+                    let avo_ch = getAttrByName(char, 'avo');
+                    let prov_DmgA;
+                    let prov_MtA = parseInt(getAttrByName(attacker.id, 'repeating_weapons_$0_Wt')) || 0;
+                    if ( ( StrengthsA.includes("Beast") && weak_ch.includes("Beast")) || ( StrengthsA.includes("Flier") && weak_ch.includes("Flier")) || ( StrengthsA.includes("Dragon") && weak_ch.includes("Dragon")) || ( StrengthsA.includes("Armor") && weak_ch.includes("Armor")) || ( StrengthsA.includes("Monster") && weak_ch.includes("Monster")) ){
+                        prov_MtA *= 3;
+                    }
+                    if ( (PhysWepTypes.includes(WTypeA))||(PhysWeps.includes(WNameA)) ){
+                        prov_DmgA = (StrA + MtA) - def_ch;
+                    } else if ( (MWepTypes.includes(WTypeA))||(MagWeps.includes(WNameA)) ){
+                        prov_DmgA = (MagA + MtA) - res_ch;
+                    }
+                    else if (WTypeA == "Firearm/Taneg.") {
+                        prov_DmgA = MtA - def_ch;
+                    }
+                    if (prov_DmgA < 0){
+                        prov_DmgA = 0;
+                    }
+                    if (randomInteger(100) < (HitA - avo_ch)){
+                        HPchar.setWithWorker({
+                            current: HPchar.get("current") - prov_DmgA
+                        });
+                        Chatstr += '<p style = "margin-bottom: 0px;">'+ AName+ " hits " + char_name + " for " + prov_DmgA + " AOE damage!</p>";
                     }
                 }
+            }
 
             if (QuadA === true){
                 //tripleattacks
                 if (randomInteger(100) < (HitA - AvoB)){
-                    //Check if attack crits
-                    if (randomInteger(100) < (CritA - DdgB)){
-                        DmgA *= 3;
-                        Chatstr += '<p style = "margin-bottom: 0px;">' + AName+ " crits for " + DmgA + " damage!</p>";
-                        hasCritA = true;
-                    } else {
-                        Chatstr += '<p style = "margin-bottom: 0px;">' + AName+ " hits for " + DmgA + " damage!</p>";
-                    }
-
+                    TripledA = true;
+                    //Battle skill trigger
                     for (i in SkillsA){
-                        Skill(attacker.id, defender.id, SkillsA[i], "during");
+                        Skill(attacker.id, defender.id, SkillsA[i], "during-a");
                     }
                     for (i in SkillsB){
-                        Skill(defender.id, attacker.id, SkillsB[i], "during");
+                        Skill(defender.id, attacker.id, SkillsB[i], "during-d");
                     }
 
-                    HPB -= DmgA;
-                    CurrHPB.set("current", HPB);
-                    CWRVal += WEXPA;
-                    CurrWR.set("current",CWRVal);
-                    log("Incremented weapon EXP!");
-                    DecUsesA();
-                    log("Decreased weapon uses!");
-                    if (hasCritA){
-                        DmgA /= 3;
-                        hasCritA = false;
+                    if (!DisableatkA){ //no attack multipliers
+                      //Check if attack crits
+                      if (randomInteger(100) < (CritA - DdgB)){
+                          DmgA *= 3;
+                          Chatstr += '<p style = "margin-bottom: 0px;">' + AName+ " crits for " + DmgA + " damage!</p>";
+                          hasCritA = true;
+                      } else {
+                          Chatstr += '<p style = "margin-bottom: 0px;">' + AName + " hits for "+ DmgA + " damage!</p>";
+                      }
+
+                      HPB -= DmgA;
+                      DmgtotalA += DmgA;
+                      log("Damage is " + DmgA);
+                      CurrHPB.set("current", HPB);
+                      CWRVal += WEXPA;
+                      CurrWR.set("current",CWRVal);
+                      log("Incremented weapon EXP!");
+                      DecUsesA();
+                      log("Decreased weapon uses!");
+                      if (hasCritA){
+                          DmgA /= 3;
+                          hasCritA = false;
+                      }
                     }
                 } else {
                     Chatstr += '<p style = "margin-bottom: 0px;">' + AName+ " misses!</p>";
@@ -1371,7 +1429,7 @@ on('chat:message', function(msg) {
                 //radius
                 if (AOEA != 0){
                     let tokenInRadius = filterObjs(function(token) {
-                        if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(selectedToken,token) > AOEA || getAttrByName(token.get('represents'), 'all') == getAttrByName(selectedToken.get('represents'), 'all') || selectedToken.get("represents") == token.get("represents") || targetToken.get("represents") == token.get("represents") ) return false;
+                        if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(targetToken,token) > AOEA || getAttrByName(token.get('represents'), 'all') == getAttrByName(selectedToken.get('represents'), 'all') || selectedToken.get("represents") == token.get("represents") || targetToken.get("represents") == token.get("represents") ) return false;
                         else return true;
                     });
                     for (i in tokenInRadius){
@@ -1385,50 +1443,55 @@ on('chat:message', function(msg) {
                         let res_ch = Number(getAttrByName(char, 'res_total'));
                         let weak_ch = getAttrByName(char, 'weaknesses');
                         let avo_ch = getAttrByName(char, 'avo');
-                        let prov_DmgB;
-                        let prov_MtB = parseInt(getAttrByName(defender.id, 'repeating_weapons_$0_Wt')) || 0;
-                        if ( ( StrengthsB.includes("Beast") && weak_ch.includes("Beast")) || ( StrengthsB.includes("Flier") && weak_ch.includes("Flier")) || ( StrengthsB.includes("Dragon") && weak_ch.includes("Dragon")) || ( StrengthsB.includes("Armor") && weak_ch.includes("Armor")) || ( StrengthsB.includes("Monster") && weak_ch.includes("Monster")) ){
-                            prov_MtB *= 3;
+                        let prov_DmgA;
+                        let prov_MtA = parseInt(getAttrByName(attacker.id, 'repeating_weapons_$0_Wt')) || 0;
+                        if ( ( StrengthsA.includes("Beast") && weak_ch.includes("Beast")) || ( StrengthsA.includes("Flier") && weak_ch.includes("Flier")) || ( StrengthsA.includes("Dragon") && weak_ch.includes("Dragon")) || ( StrengthsA.includes("Armor") && weak_ch.includes("Armor")) || ( StrengthsA.includes("Monster") && weak_ch.includes("Monster")) ){
+                            prov_MtA *= 3;
                         }
-                        if ( (PhysWepTypes.includes(WTypeB))||(PhysWeps.includes(WNameB)) ){
-                            prov_DmgB = (StrB + MtB) - def_ch;
-                        } else if ( (MWepTypes.includes(WTypeB))||(MagWeps.includes(WNameB)) ){
-                            prov_DmgB = (MagB + MtB) - res_ch;
+                        if ( (PhysWepTypes.includes(WTypeA))||(PhysWeps.includes(WNameA)) ){
+                            prov_DmgA = (StrA + MtA) - def_ch;
+                        } else if ( (MWepTypes.includes(WTypeA))||(MagWeps.includes(WNameA)) ){
+                            prov_DmgA = (MagA + MtA) - res_ch;
                         }
-                        else if (WTypeB == "Firearm/Taneg.") {
-                            prov_DmgB = MtB - def_ch;
+                        else if (WTypeA == "Firearm/Taneg.") {
+                            prov_DmgA = MtA - def_ch;
                         }
-                        if (prov_DmgB < 0){
-                            prov_DmgB = 0;
+                        if (prov_DmgA < 0){
+                            prov_DmgA = 0;
                         }
-                        if (randomInteger(100) < (HitB - avo_ch)){
+                        if (randomInteger(100) < (HitA - avo_ch)){
                             HPchar.setWithWorker({
-                                current: HPchar.get("current") - prov_DmgB
+                                current: HPchar.get("current") - prov_DmgA
                             });
-                            Chatstr += '<p style = "margin-bottom: 0px;">'+ DName+ " hits " + char_name + " for " + prov_DmgB + " damage!</p>";
+                            Chatstr += '<p style = "margin-bottom: 0px;">'+ AName+ " hits " + char_name + " for " + prov_DmgA + " AOE damage!</p>";
                         }
                     }
                 }
 
                 //quadattacks
                 if (randomInteger(100) < (HitA - AvoB)){
+                  QuadedA = true;
+                  //Battle skill trigger
+                  for (i in SkillsA){
+                      Skill(attacker.id, defender.id, SkillsA[i], "during-a");
+                  }
+                  for (i in SkillsB){
+                      Skill(defender.id, attacker.id, SkillsB[i], "during-d");
+                  }
+
+                  if (!DisableatkA){ //no attack multipliers
                     //Check if attack crits
                     if (randomInteger(100) < (CritA - DdgB)){
                         DmgA *= 3;
                         Chatstr += '<p style = "margin-bottom: 0px;">' + AName+ " crits for " + DmgA + " damage!</p>";
                         hasCritA = true;
                     } else {
-                        Chatstr += '<p style = "margin-bottom: 0px;">' + AName+ " hits for " + DmgA + " damage!</p>";
-                    }
-
-                    for (i in SkillsA){
-                        Skill(attacker.id, defender.id, SkillsA[i], "during");
-                    }
-                    for (i in SkillsB){
-                        Skill(defender.id, attacker.id, SkillsB[i], "during");
+                        Chatstr += '<p style = "margin-bottom: 0px;">' + AName + " hits for "+ DmgA + " damage!</p>";
                     }
 
                     HPB -= DmgA;
+                    DmgtotalA += DmgA;
+                    log("Damage is " + DmgA);
                     CurrHPB.set("current", HPB);
                     CWRVal += WEXPA;
                     CurrWR.set("current",CWRVal);
@@ -1439,6 +1502,7 @@ on('chat:message', function(msg) {
                         DmgA /= 3;
                         hasCritA = false;
                     }
+                  }
                 } else {
                     Chatstr += '<p style = "margin-bottom: 0px;">' + AName+ " misses!</p>";
                 }
@@ -1446,7 +1510,7 @@ on('chat:message', function(msg) {
                 //radius
                 if (AOEA != 0){
                     let tokenInRadius = filterObjs(function(token) {
-                        if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(selectedToken,token) > AOEA || getAttrByName(token.get('represents'), 'all') == getAttrByName(selectedToken.get('represents'), 'all') || selectedToken.get("represents") == token.get("represents") || targetToken.get("represents") == token.get("represents") ) return false;
+                        if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(targetToken,token) > AOEA || getAttrByName(token.get('represents'), 'all') == getAttrByName(selectedToken.get('represents'), 'all') || selectedToken.get("represents") == token.get("represents") || targetToken.get("represents") == token.get("represents") ) return false;
                         else return true;
                     });
                     for (i in tokenInRadius){
@@ -1460,33 +1524,35 @@ on('chat:message', function(msg) {
                         let res_ch = Number(getAttrByName(char, 'res_total'));
                         let weak_ch = getAttrByName(char, 'weaknesses');
                         let avo_ch = getAttrByName(char, 'avo');
-                        let prov_DmgB;
-                        let prov_MtB = parseInt(getAttrByName(defender.id, 'repeating_weapons_$0_Wt')) || 0;
-                        if ( ( StrengthsB.includes("Beast") && weak_ch.includes("Beast")) || ( StrengthsB.includes("Flier") && weak_ch.includes("Flier")) || ( StrengthsB.includes("Dragon") && weak_ch.includes("Dragon")) || ( StrengthsB.includes("Armor") && weak_ch.includes("Armor")) || ( StrengthsB.includes("Monster") && weak_ch.includes("Monster")) ){
-                            prov_MtB *= 3;
+                        let prov_DmgA;
+                        let prov_MtA = parseInt(getAttrByName(attacker.id, 'repeating_weapons_$0_Wt')) || 0;
+                        if ( ( StrengthsA.includes("Beast") && weak_ch.includes("Beast")) || ( StrengthsA.includes("Flier") && weak_ch.includes("Flier")) || ( StrengthsA.includes("Dragon") && weak_ch.includes("Dragon")) || ( StrengthsA.includes("Armor") && weak_ch.includes("Armor")) || ( StrengthsA.includes("Monster") && weak_ch.includes("Monster")) ){
+                            prov_MtA *= 3;
                         }
-                        if ( (PhysWepTypes.includes(WTypeB))||(PhysWeps.includes(WNameB)) ){
-                            prov_DmgB = (StrB + MtB) - def_ch;
-                        } else if ( (MWepTypes.includes(WTypeB))||(MagWeps.includes(WNameB)) ){
-                            prov_DmgB = (MagB + MtB) - res_ch;
+                        if ( (PhysWepTypes.includes(WTypeA))||(PhysWeps.includes(WNameA)) ){
+                            prov_DmgA = (StrA + MtA) - def_ch;
+                        } else if ( (MWepTypes.includes(WTypeA))||(MagWeps.includes(WNameA)) ){
+                            prov_DmgA = (MagA + MtA) - res_ch;
                         }
-                        else if (WTypeB == "Firearm/Taneg.") {
-                            prov_DmgB = MtB - def_ch;
+                        else if (WTypeA == "Firearm/Taneg.") {
+                            prov_DmgA = MtA - def_ch;
                         }
-                        if (prov_DmgB < 0){
-                            prov_DmgB = 0;
+                        if (prov_DmgA < 0){
+                            prov_DmgA = 0;
                         }
-                        if (randomInteger(100) < (HitB - avo_ch)){
+                        if (randomInteger(100) < (HitA - avo_ch)){
                             HPchar.setWithWorker({
-                                current: HPchar.get("current") - prov_DmgB
+                                current: HPchar.get("current") - prov_DmgA
                             });
-                            Chatstr += '<p style = "margin-bottom: 0px;">'+ DName+ " hits " + char_name + " for " + prov_DmgB + " damage!</p>";
+                            Chatstr += '<p style = "margin-bottom: 0px;">'+ AName+ " hits " + char_name + " for " + prov_DmgA + " AOE damage!</p>";
                         }
                     }
                 }
                 //
             }
         }
+
+        Chatstr += '<p></p>'; //break between units
 
         if (HPB <= 0){
             CanAttackB = false;
@@ -1496,30 +1562,36 @@ on('chat:message', function(msg) {
         if ((DoubleB === true) && (CanAttackB == true) && (diffcheckB == true)){
             //doubleattacks
             if (randomInteger(100) < (HitB - AvoA)){
+              DoubledB = true;
+              //battle skill trigger
+              for (i in SkillsB){
+                  Skill(defender.id, attacker.id, SkillsB[i], "during-a");
+              }
+              for (i in SkillsA){
+                  Skill(attacker.id, defender.id, SkillsA[i], "during-d");
+              }
+
+              if (!DisableatkB) {
                 //Check if attack crits
                 if (randomInteger(100) < (CritB - DdgA)){
                     DmgB *= 3;
-                    Chatstr += '<p style = "margin-bottom: 0px;">' + DName+ " crits for " + DmgB + " damage!</p>";
+                    Chatstr += '<p style = "margin-bottom: 0px;">'+ DName+ " crits for " + DmgB + " damage!</p>";
                     hasCritB = true;
                 } else {
-                    Chatstr += '<p style = "margin-bottom: 0px;">' + DName+ " hits for " + DmgB + " damage!</p>";
-                }
-
-                for (i in SkillsB){
-                    Skill(defender.id, attacker.id, SkillsB[i], "during");
-                }
-                for (i in SkillsA){
-                    Skill(attacker.id, defender.id, SkillsA[i], "during");
+                    Chatstr += '<p style = "margin-bottom: 0px;">' + DName + " hits for "+ DmgB + " damage! </p>";
                 }
 
                 HPA -= DmgB;
+                DmgtotalB += DmgB;
                 CurrHPA.set("current", HPA);
+                //Defender gets no WEXP to discourage turtling on EP
                 DecUsesB();
                 log("Decreased weapon uses!");
                 if (hasCritB){
                     DmgB /= 3;
                     hasCritB = false;
                 }
+              }
             } else {
                 Chatstr += '<p style = "margin-bottom: 0px;">' + DName+ " misses!</p>";
             }
@@ -1566,32 +1638,38 @@ on('chat:message', function(msg) {
                 }
 
             if (QuadB === true){
+              TripledB = true;
                 //tripleattack
                 if (randomInteger(100) < (HitB - AvoA)){
+                  //battle skill trigger
+                  for (i in SkillsB){
+                      Skill(defender.id, attacker.id, SkillsB[i], "during-a");
+                  }
+                  for (i in SkillsA){
+                      Skill(attacker.id, defender.id, SkillsA[i], "during-d");
+                  }
+
+                  if (!DisableatkB) {
                     //Check if attack crits
                     if (randomInteger(100) < (CritB - DdgA)){
                         DmgB *= 3;
-                        Chatstr += '<p style = "margin-bottom: 0px;">' + DName+ " crits for " + DmgB + " damage!</p>";
+                        Chatstr += '<p style = "margin-bottom: 0px;">'+ DName+ " crits for " + DmgB + " damage!</p>";
                         hasCritB = true;
                     } else {
-                        Chatstr += '<p style = "margin-bottom: 0px;">' + DName+ " hits for " + DmgB + " damage!</p>";
-                    }
-
-                    for (i in SkillsB){
-                        Skill(defender.id, attacker.id, SkillsB[i], "during");
-                    }
-                    for (i in SkillsA){
-                        Skill(attacker.id, defender.id, SkillsA[i], "during");
+                        Chatstr += '<p style = "margin-bottom: 0px;">' + DName + " hits for "+ DmgB + " damage! </p>";
                     }
 
                     HPA -= DmgB;
+                    DmgtotalB += DmgB;
                     CurrHPA.set("current", HPA);
+                    //Defender gets no WEXP to discourage turtling on EP
                     DecUsesB();
                     log("Decreased weapon uses!");
                     if (hasCritB){
                         DmgB /= 3;
                         hasCritB = false;
                     }
+                  }
                 } else {
                     Chatstr += '<p style = "margin-bottom: 0px;">' + DName+ " misses!</p>";
                 }
@@ -1639,21 +1717,36 @@ on('chat:message', function(msg) {
 
                 //quad-attack
                 if (randomInteger(100) < (HitB - AvoA)){
+                  QuadedB = true;
+                  //battle skill trigger
+                  for (i in SkillsB){
+                      Skill(defender.id, attacker.id, SkillsB[i], "during-a");
+                  }
+                  for (i in SkillsA){
+                      Skill(attacker.id, defender.id, SkillsA[i], "during-d");
+                  }
+
+                  if (!DisableatkB) {
                     //Check if attack crits
                     if (randomInteger(100) < (CritB - DdgA)){
                         DmgB *= 3;
-                        Chatstr += '<p style = "margin-bottom: 0px;">' + DName+ " crits for " + DmgB + " damage!</p>";
+                        Chatstr += '<p style = "margin-bottom: 0px;">'+ DName+ " crits for " + DmgB + " damage!</p>";
                         hasCritB = true;
                     } else {
-                        Chatstr += '<p style = "margin-bottom: 0px;">' + DName+ " hits for " + DmgB + " damage!</p>";
+                        Chatstr += '<p style = "margin-bottom: 0px;">' + DName + " hits for "+ DmgB + " damage! </p>";
                     }
 
-                    for (i in SkillsB){
-                        Skill(defender.id, attacker.id, SkillsB[i], "during");
+                    HPA -= DmgB;
+                    DmgtotalB += DmgB;
+                    CurrHPA.set("current", HPA);
+                    //Defender gets no WEXP to discourage turtling on EP
+                    DecUsesB();
+                    log("Decreased weapon uses!");
+                    if (hasCritB){
+                        DmgB /= 3;
+                        hasCritB = false;
                     }
-                    for (i in SkillsA){
-                        Skill(attacker.id, defender.id, SkillsA[i], "during");
-                    }
+                  }
 
                     //radius
                     if (AOEB != 0){
@@ -1695,16 +1788,7 @@ on('chat:message', function(msg) {
                             Chatstr += '<p style = "margin-bottom: 0px;">'+ DName+ " hits " + char_name + " for " + prov_DmgB + " damage!</p>";
                         }
                     }
-                }
-
-                    HPA -= DmgB;
-                    CurrHPA.set("current", HPA);
-                    DecUsesB();
-                    log("Decreased weapon uses!");
-                    if (hasCritB){
-                        DmgB /= 3;
-                        hasCritB = false;
-                    }
+                  }
                 } else {
                     Chatstr += '<p style = "margin-bottom: 0px;">' + DName+ " misses!</p>";
                 }
@@ -1823,6 +1907,11 @@ on('chat:message', function(msg) {
 
                 '<div style = "height: 1px; background-color: #353535; width: 70%; margin: 0 auto; margin-bottom: 4px;"></div>' + //--
                 '<div style = "margin: 0 auto; width: 70%;">' + Chatstr + '</div>' + //--
+                '<div style = "height: 1px; background-color: #353535; width: 70%; margin: 0 auto; margin-bottom: 4px;"></div>' + //--
+                '<div style = "margin: 0 auto; width: 70%">'  + //--
+                '<p style = "margin-bottom: 0px;">' + AName + ' dealt ' + DmgtotalA + ' damage! ' + //--
+                '<p style = "margin-bottom: 0px;">' + DName + ' dealt ' + DmgtotalB + ' damage! ' + //---
+                '</div>'  + //--
             '</div>'
         );
         //Calculate EXP; commented out for the test
@@ -1890,6 +1979,7 @@ on('chat:message', function(msg) {
             '</div>'
             );
         }
+
     }
 
     //forecast
