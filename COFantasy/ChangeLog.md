@@ -1,4 +1,17 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 1.05
+### Capacités
+* Capacité grenaille de l'arquebusier
+* Mise à jour de la capacité forme d'arbre, suites aux indications de Kegron : la forme d'arbre a maintenant niveau * 5 PV.
+* Prise en compte des effets de protection contre les souffles et les dégâts de zone.
+
+### Correction de bug
+* undo d'une diminution de PV sur un token lié remet maintenant correctement les PVs de tous les tokens liés au même personnage.
+
+### Autres améliorations
+* Il est maintenant possible d'utiliser tir double avec 2 armes différentes.
+* Encaisser un coup est maintenant proposé en bouton à cliquer en cas d'attaque réussie.
+
 ## 1.04
 ### Nouvelles capacités
 * Runes de puissance du forgesort
