@@ -4054,7 +4054,7 @@ var COFantasy = COFantasy || function() {
       portee = portee / 10;
       options.aoe = options.aoe || {
         type: 'cone',
-        angle: 45
+        angle: 90
       };
       weaponStats.attDice -= 2;
       if (weaponStats.attDice < 0) weaponStats.attDice = 0;
@@ -4073,7 +4073,7 @@ var COFantasy = COFantasy || function() {
           definition: {
 
             "angle": -1,
-            "angleRandom": 30,
+            "angleRandom": 45,
             "duration": 8,
             "emissionRate": 40,
             "endColour": [130, 130, 130, 0],
@@ -4089,8 +4089,8 @@ var COFantasy = COFantasy || function() {
             "sizeRandom": 3,
             "speed": 12,
             "speedRandom": 3,
-            "startColour": [30, 30, 30, 1],
-            "startColourRandom": [8, 8, 8, 0.5]
+            "startColour": [25, 25, 25, 1],
+            "startColourRandom": [7, 7, 7, 0.5]
           }
         });
       } else effet = effet[0];
