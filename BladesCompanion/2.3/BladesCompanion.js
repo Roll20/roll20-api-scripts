@@ -17,59 +17,59 @@ const bladesCompanion = (() => {
 	const version = "2.3",
 		clockData = {
 			"4": [
-				"https://s3.amazonaws.com/files.d20.io/images/35514005/KGnvHj8rXV9e_ptSAGiDFw/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514004/X6W9TBuJuUNI3pNyTX5H8w/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514006/oLpG5gx3pedx7AS6IfuxLQ/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514003/3oqSNO0k82HDxjfXzlbd5A/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514007/FTMqqS_IMjUJcCUAZB4sgA/thumb.png"
+				"https://s3.amazonaws.com/files.d20.io/images/35514005/KGnvHj8rXV9e_ptSAGiDFw/thumb.png?1499238433",
+				"https://s3.amazonaws.com/files.d20.io/images/35514004/X6W9TBuJuUNI3pNyTX5H8w/thumb.png?1499238433",
+				"https://s3.amazonaws.com/files.d20.io/images/35514006/oLpG5gx3pedx7AS6IfuxLQ/thumb.png?1499238433",
+				"https://s3.amazonaws.com/files.d20.io/images/35514003/3oqSNO0k82HDxjfXzlbd5A/thumb.png?1499238433",
+				"https://s3.amazonaws.com/files.d20.io/images/35514007/FTMqqS_IMjUJcCUAZB4sgA/thumb.png?1499238433"
 			],
 			"6": [
-				"https://s3.amazonaws.com/files.d20.io/images/35514008/x4VQqGYDED0-R_M7xowR2A/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514010/H_L8trySbMhcGci5IR2pGQ/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514013/PWmtubH-YwptGm0BoHFI3g/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514011/8spAob5xL2yzG4TY-LNzow/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514009/cEDUJu3j6C3kGGKf0oC4KA/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514014/xukjwxESXN4TIzVvIm4Alw/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514012/NypxonvUPhqO0NYnqG3O7g/thumb.png"
+				"https://s3.amazonaws.com/files.d20.io/images/35514008/x4VQqGYDED0-R_M7xowR2A/thumb.png?1499238433",
+				"https://s3.amazonaws.com/files.d20.io/images/35514010/H_L8trySbMhcGci5IR2pGQ/thumb.png?1499238434",
+				"https://s3.amazonaws.com/files.d20.io/images/35514013/PWmtubH-YwptGm0BoHFI3g/thumb.png?1499238434",
+				"https://s3.amazonaws.com/files.d20.io/images/35514011/8spAob5xL2yzG4TY-LNzow/thumb.png?1499238434",
+				"https://s3.amazonaws.com/files.d20.io/images/35514009/cEDUJu3j6C3kGGKf0oC4KA/thumb.png?1499238434",
+				"https://s3.amazonaws.com/files.d20.io/images/35514014/xukjwxESXN4TIzVvIm4Alw/thumb.png?1499238434",
+				"https://s3.amazonaws.com/files.d20.io/images/35514012/NypxonvUPhqO0NYnqG3O7g/thumb.png?1499238434"
 			],
 			"8": [
-				"https://s3.amazonaws.com/files.d20.io/images/35514015/mJwweMb2l7N_m45gP5Cxwg/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514016/7CL1Ai2a1VZIb7ytiCbXrw/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514017/37g3r5OzCxtrtTkSdhUmPw/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514020/ooGYGtaWzwcwQR0vn1hK8Q/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514019/0jx-6XziI1mKsZzYhSmzIQ/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514018/H1p9Y0UL_FSUEHoU8Me2YQ/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514022/9Vqzn1KRu5UnbBpnNGZoiA/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514021/5AU5vJ2GBwwyNsyYvbUeew/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514023/fXzMAd9R3rt4hfCpcmeemg/thumb.png"
+				"https://s3.amazonaws.com/files.d20.io/images/35514015/mJwweMb2l7N_m45gP5Cxwg/thumb.png?1499238434",
+				"https://s3.amazonaws.com/files.d20.io/images/35514016/7CL1Ai2a1VZIb7ytiCbXrw/thumb.png?1499238434",
+				"https://s3.amazonaws.com/files.d20.io/images/35514017/37g3r5OzCxtrtTkSdhUmPw/thumb.png?1499238434",
+				"https://s3.amazonaws.com/files.d20.io/images/35514020/ooGYGtaWzwcwQR0vn1hK8Q/thumb.png?1499238434",
+				"https://s3.amazonaws.com/files.d20.io/images/35514019/0jx-6XziI1mKsZzYhSmzIQ/thumb.png?1499238434",
+				"https://s3.amazonaws.com/files.d20.io/images/35514018/H1p9Y0UL_FSUEHoU8Me2YQ/thumb.png?1499238434",
+				"https://s3.amazonaws.com/files.d20.io/images/35514022/9Vqzn1KRu5UnbBpnNGZoiA/thumb.png?1499238435",
+				"https://s3.amazonaws.com/files.d20.io/images/35514021/5AU5vJ2GBwwyNsyYvbUeew/thumb.png?1499238435",
+				"https://s3.amazonaws.com/files.d20.io/images/35514023/fXzMAd9R3rt4hfCpcmeemg/thumb.png?1499238435"
 			],
 			"10": [
-				"https://s3.amazonaws.com/files.d20.io/images/38926150/cw3ZmJkS0IVDkovcNq2SXg/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/38926147/NO0Wi8b1JBAWhjIO_3aLUw/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/38926151/yYQ3WOnAasfk5jXS9PsMOw/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/38926146/PSFBhZGEoov-1EfAfvkFMw/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/38926144/2mY5LLVoCTEBP5MMS8qVtw/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/38926149/xCGNaUK3yzAcYxDV_49EIA/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/38926143/cUO80FRPoWUygjm3KtMAGA/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/38926145/mtuHQr87UxjLrEx_3H11PA/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/38926148/VUSWwCMvN-lPWPaJ73aEYA/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/38926142/6nIiZuejpZuUDhCQjvFrRw/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/38926141/cDnvTKaxGfjd6xNAC1Hmfg/thumb.png"
+				"https://s3.amazonaws.com/files.d20.io/images/38926150/cw3ZmJkS0IVDkovcNq2SXg/thumb.png?1505030885",
+				"https://s3.amazonaws.com/files.d20.io/images/38926147/NO0Wi8b1JBAWhjIO_3aLUw/thumb.png?1505030885",
+				"https://s3.amazonaws.com/files.d20.io/images/38926151/yYQ3WOnAasfk5jXS9PsMOw/thumb.png?1505030885",
+				"https://s3.amazonaws.com/files.d20.io/images/38926146/PSFBhZGEoov-1EfAfvkFMw/thumb.png?1505030885",
+				"https://s3.amazonaws.com/files.d20.io/images/38926144/2mY5LLVoCTEBP5MMS8qVtw/thumb.png?1505030885",
+				"https://s3.amazonaws.com/files.d20.io/images/38926149/xCGNaUK3yzAcYxDV_49EIA/thumb.png?1505030885",
+				"https://s3.amazonaws.com/files.d20.io/images/38926143/cUO80FRPoWUygjm3KtMAGA/thumb.png?1505030885",
+				"https://s3.amazonaws.com/files.d20.io/images/38926145/mtuHQr87UxjLrEx_3H11PA/thumb.png?1505030885",
+				"https://s3.amazonaws.com/files.d20.io/images/38926148/VUSWwCMvN-lPWPaJ73aEYA/thumb.png?1505030885",
+				"https://s3.amazonaws.com/files.d20.io/images/38926142/6nIiZuejpZuUDhCQjvFrRw/thumb.png?1505030885",
+				"https://s3.amazonaws.com/files.d20.io/images/38926141/cDnvTKaxGfjd6xNAC1Hmfg/thumb.png?1505030885"
 			],
 			"12": [
-				"https://s3.amazonaws.com/files.d20.io/images/35514024/DhHigc3JKGXcdYHcdkIFyQ/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514025/R7vypCgyZurdCBwqvWS9gg/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514026/a8CcyRWolBPvXA28QYJWeA/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514027/lCUt7GWZZu7QharPaVCqXQ/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514028/G36Y2fgYBK6toXNKXdVKOQ/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514029/XyjxG9F8NVSBFOGj4P2Nhg/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514031/HD4WyjEc3_kSo-1_B49Tng/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514030/QV6CYmr01UGtjrMdgeBqog/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514032/1mMD24lOUreGnq91dzb-qA/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514035/2l3zSg_w_PgLwBNIv5SjPw/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514033/SB4yYBrs_yYn2uhTvzqK6g/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514034/4iOvfBjI6CyTPLc8S8Br5Q/thumb.png",
-				"https://s3.amazonaws.com/files.d20.io/images/35514036/9ohiSWYdqynOutaZBwbPiQ/thumb.png"
+				"https://s3.amazonaws.com/files.d20.io/images/35514024/DhHigc3JKGXcdYHcdkIFyQ/thumb.png?1499238435",
+				"https://s3.amazonaws.com/files.d20.io/images/35514025/R7vypCgyZurdCBwqvWS9gg/thumb.png?1499238435",
+				"https://s3.amazonaws.com/files.d20.io/images/35514026/a8CcyRWolBPvXA28QYJWeA/thumb.png?1499238435",
+				"https://s3.amazonaws.com/files.d20.io/images/35514027/lCUt7GWZZu7QharPaVCqXQ/thumb.png?1499238435",
+				"https://s3.amazonaws.com/files.d20.io/images/35514028/G36Y2fgYBK6toXNKXdVKOQ/thumb.png?1499238435",
+				"https://s3.amazonaws.com/files.d20.io/images/35514029/XyjxG9F8NVSBFOGj4P2Nhg/thumb.png?1499238435",
+				"https://s3.amazonaws.com/files.d20.io/images/35514031/HD4WyjEc3_kSo-1_B49Tng/thumb.png?1499238435",
+				"https://s3.amazonaws.com/files.d20.io/images/35514030/QV6CYmr01UGtjrMdgeBqog/thumb.png?1499238435",
+				"https://s3.amazonaws.com/files.d20.io/images/35514032/1mMD24lOUreGnq91dzb-qA/thumb.png?1499238435",
+				"https://s3.amazonaws.com/files.d20.io/images/35514035/2l3zSg_w_PgLwBNIv5SjPw/thumb.png?1499238436",
+				"https://s3.amazonaws.com/files.d20.io/images/35514033/SB4yYBrs_yYn2uhTvzqK6g/thumb.png?1499238436",
+				"https://s3.amazonaws.com/files.d20.io/images/35514034/4iOvfBjI6CyTPLc8S8Br5Q/thumb.png?1499238436",
+				"https://s3.amazonaws.com/files.d20.io/images/35514036/9ohiSWYdqynOutaZBwbPiQ/thumb.png?1499238436"
 			],
 		},
 		barData = {
@@ -79,16 +79,16 @@ const bladesCompanion = (() => {
 					width: 288
 				},
 				images: [
-					"https://s3.amazonaws.com/files.d20.io/images/39697104/nUFlOmvfFReNGHfiGL_84Q/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697107/fyPU4R3wysliHlmGz4hyAw/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697110/o-qPcn_sSrNTPSYWr0fY-g/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697109/APBhbZk3r59LvJGAhNMyKA/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697106/AmG_eBEYa8HBs4X7TaOo4Q/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697117/x8ZOhH5Ub5Qk7nU-ZWw6eg/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697122/23dCYINPU0H3BOoJoUtRGQ/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697111/-xHrta919DfBFG4beiYR_g/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697108/KXg0OQt-CYl8offATPS5iQ/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697105/gpQu-AtDo2of8k0TyJOaLg/thumb.png"
+					"https://s3.amazonaws.com/files.d20.io/images/39697104/nUFlOmvfFReNGHfiGL_84Q/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697107/fyPU4R3wysliHlmGz4hyAw/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697110/o-qPcn_sSrNTPSYWr0fY-g/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697109/APBhbZk3r59LvJGAhNMyKA/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697106/AmG_eBEYa8HBs4X7TaOo4Q/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697117/x8ZOhH5Ub5Qk7nU-ZWw6eg/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697122/23dCYINPU0H3BOoJoUtRGQ/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697111/-xHrta919DfBFG4beiYR_g/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697108/KXg0OQt-CYl8offATPS5iQ/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697105/gpQu-AtDo2of8k0TyJOaLg/thumb.png?1506325929"
 				]
 			},
 			stress10: {
@@ -97,17 +97,17 @@ const bladesCompanion = (() => {
 					width: 288
 				},
 				images: [
-					"https://s3.amazonaws.com/files.d20.io/images/39697121/QXp5ob_L6uq_si-oF6keLQ/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697112/5QeUiiIXOWVsla0aTTfsJQ/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697115/4Zap4CTW4DklvZbo1RJtzQ/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697120/VXvQMjIWFB5lGMV4_KB25A/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697114/nCqiYoEWKRT2_ZAVn2rs8g/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697116/N9Os4wSB4aGL-ADyYUv2uw/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697118/XkBamgsX3WkTRHJVNfWCHg/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697113/Pm2Zvn7boNwYh60gn3j2eg/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697119/Ut2NAd0eBfSEqddPNCjUhw/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697127/H4PTBULStLXxWyqOuxvMFg/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697123/CirfL-phQd32Y9w70C5XUA/thumb.png"
+					"https://s3.amazonaws.com/files.d20.io/images/39697121/QXp5ob_L6uq_si-oF6keLQ/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697112/5QeUiiIXOWVsla0aTTfsJQ/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697115/4Zap4CTW4DklvZbo1RJtzQ/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697120/VXvQMjIWFB5lGMV4_KB25A/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697114/nCqiYoEWKRT2_ZAVn2rs8g/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697116/N9Os4wSB4aGL-ADyYUv2uw/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697118/XkBamgsX3WkTRHJVNfWCHg/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697113/Pm2Zvn7boNwYh60gn3j2eg/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697119/Ut2NAd0eBfSEqddPNCjUhw/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697127/H4PTBULStLXxWyqOuxvMFg/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697123/CirfL-phQd32Y9w70C5XUA/thumb.png?1506325929"
 				]
 			},
 			stress11: {
@@ -116,18 +116,18 @@ const bladesCompanion = (() => {
 					width: 288
 				},
 				images: [
-					"https://s3.amazonaws.com/files.d20.io/images/39697124/M7nka3vigvFrnrBF0kPVPQ/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697126/PwfedxQ4H4dfD0q5CDZ_iw/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697135/VOrawfBntAsWzTc0X-K8FQ/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697128/m5QGJ3F39kEskZ-wpoDJBw/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697125/ywSDmhoxvjJsGS1aTf_fVw/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697130/c-f3IiECYfcfIE-qfljY6w/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697129/kBvtGKsmhMoeKf9l5kWmfA/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697131/rlhNawocSDNiNh5t1F87_A/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697132/umc4FNHQwy2PciDr5nKMyA/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697133/FbV_IiIRpJymMB9MaNIu0Q/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697156/gc4vS8DChFbkNZSUJMODQA/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697138/_sBAEPK3eMJi53vAlMaG6w/thumb.png"
+					"https://s3.amazonaws.com/files.d20.io/images/39697124/M7nka3vigvFrnrBF0kPVPQ/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697126/PwfedxQ4H4dfD0q5CDZ_iw/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697135/VOrawfBntAsWzTc0X-K8FQ/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697128/m5QGJ3F39kEskZ-wpoDJBw/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697125/ywSDmhoxvjJsGS1aTf_fVw/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697130/c-f3IiECYfcfIE-qfljY6w/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697129/kBvtGKsmhMoeKf9l5kWmfA/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697131/rlhNawocSDNiNh5t1F87_A/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697132/umc4FNHQwy2PciDr5nKMyA/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697133/FbV_IiIRpJymMB9MaNIu0Q/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697156/gc4vS8DChFbkNZSUJMODQA/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697138/_sBAEPK3eMJi53vAlMaG6w/thumb.png?1506325929"
 				]
 			},
 			stress12: {
@@ -136,19 +136,19 @@ const bladesCompanion = (() => {
 					width: 288
 				},
 				images: [
-					"https://s3.amazonaws.com/files.d20.io/images/39697134/M1XpsUDjyYEOdxMurj8xrQ/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697136/I7ylXmtf5ztI7qCKxoWeDw/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697137/LbWRhcS2kJZ0Up2FuFBfUQ/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697140/WXzyVk4g0oxvgl78_IjLrA/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697141/rPuc1IqiV7aKvMzobOfofA/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697139/cHai62ntavSzT4A6DidlFQ/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697145/aFqqBFI9696HAAdkNyy9Vg/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697142/s642wIsFuxr6-415TA9-zw/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697143/PRCJZ8TSeN4tz2Wx4uPlkQ/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697144/E-iQ_I3lv01SkK9C9ONZTg/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697146/9_s_RZLlKbaUjJByf5df2w/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697147/bMCtE-ng44Lj7VA7nbWGQQ/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/39697148/hYhGtXMu1rDH0eo7E30nCQ/thumb.png"
+					"https://s3.amazonaws.com/files.d20.io/images/39697134/M1XpsUDjyYEOdxMurj8xrQ/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697136/I7ylXmtf5ztI7qCKxoWeDw/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697137/LbWRhcS2kJZ0Up2FuFBfUQ/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697140/WXzyVk4g0oxvgl78_IjLrA/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697141/rPuc1IqiV7aKvMzobOfofA/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697139/cHai62ntavSzT4A6DidlFQ/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697145/aFqqBFI9696HAAdkNyy9Vg/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697142/s642wIsFuxr6-415TA9-zw/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697143/PRCJZ8TSeN4tz2Wx4uPlkQ/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697144/E-iQ_I3lv01SkK9C9ONZTg/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697146/9_s_RZLlKbaUjJByf5df2w/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697147/bMCtE-ng44Lj7VA7nbWGQQ/thumb.png?1506325929",
+					"https://s3.amazonaws.com/files.d20.io/images/39697148/hYhGtXMu1rDH0eo7E30nCQ/thumb.png?1506325929"
 				]
 			},
 			trauma: {
@@ -157,11 +157,11 @@ const bladesCompanion = (() => {
 					width: 100
 				},
 				images: [
-					"https://s3.amazonaws.com/files.d20.io/images/40383701/JvVojDvqsMD0HOqWbyg0ew/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/40383700/LQ7w5c74sMugKTSsPDgzew/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/40383699/-p2wzDUZ3kh2HL9FMMYaWQ/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/40383703/KR4VZucNliNdE2DLil4x6Q/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/40383702/a7MguC5mTXdBaqoOQWyX6A/thumb.png"
+					"https://s3.amazonaws.com/files.d20.io/images/40383701/JvVojDvqsMD0HOqWbyg0ew/thumb.png?1507479734",
+					"https://s3.amazonaws.com/files.d20.io/images/40383700/LQ7w5c74sMugKTSsPDgzew/thumb.png?1507479734",
+					"https://s3.amazonaws.com/files.d20.io/images/40383699/-p2wzDUZ3kh2HL9FMMYaWQ/thumb.png?1507479734",
+					"https://s3.amazonaws.com/files.d20.io/images/40383703/KR4VZucNliNdE2DLil4x6Q/thumb.png?1507479734",
+					"https://s3.amazonaws.com/files.d20.io/images/40383702/a7MguC5mTXdBaqoOQWyX6A/thumb.png?1507479734"
 				]
 			},
 			trauma5: {
@@ -170,19 +170,19 @@ const bladesCompanion = (() => {
 					width: 100
 				},
 				images: [
-					"https://s3.amazonaws.com/files.d20.io/images/40383716/8A_x8yPvIwdDtEdC_A08zg/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/40383711/OnLuSfqpjLk-HYUZ-dFI5A/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/40383713/CE4ATJw4f8pq8NzWVz6pYQ/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/40383714/pUU6h0WVM_XJhvZT8_d8kQ/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/40383712/RiCp5z2qZh4J_tHLfsB19g/thumb.png",
-					"https://s3.amazonaws.com/files.d20.io/images/40383715/o309NTNHyrW1gak7SBkdEQ/thumb.png"
+					"https://s3.amazonaws.com/files.d20.io/images/40383716/8A_x8yPvIwdDtEdC_A08zg/thumb.png?1507479742",
+					"https://s3.amazonaws.com/files.d20.io/images/40383711/OnLuSfqpjLk-HYUZ-dFI5A/thumb.png?1507479742",
+					"https://s3.amazonaws.com/files.d20.io/images/40383713/CE4ATJw4f8pq8NzWVz6pYQ/thumb.png?1507479742",
+					"https://s3.amazonaws.com/files.d20.io/images/40383714/pUU6h0WVM_XJhvZT8_d8kQ/thumb.png?1507479742",
+					"https://s3.amazonaws.com/files.d20.io/images/40383712/RiCp5z2qZh4J_tHLfsB19g/thumb.png?1507479742",
+					"https://s3.amazonaws.com/files.d20.io/images/40383715/o309NTNHyrW1gak7SBkdEQ/thumb.png?1507479742"
 				]
 			}
 		},
 		harmData = {
 			table: {
 				height: 160,
-				imgsrc: "https://s3.amazonaws.com/files.d20.io/images/40179767/7Ru7WnLbLmtuGb5bOdbDJA/thumb.png",
+				imgsrc: "https://s3.amazonaws.com/files.d20.io/images/40179767/7Ru7WnLbLmtuGb5bOdbDJA/thumb.png?15071538635",
 				width: 388
 			},
 			textPosition: {
