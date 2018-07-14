@@ -1,0 +1,13 @@
+{
+	"name": "WH40k Wrath & Glory Die Roller",
+	"script": "WrathAndGlory_DieRoller.js",
+	"version": "1.0",
+	"previousversions": ["1.0"],
+	"description": "This is a Die Roller for the Warhammer 40k Wrath & Glory RPG.  It provides the ability to define a roll with or without a wrath die, will calculate a die roll modifier to all dice rolled, and enables reroll of failed rolls.  Type !WAG for instructions on use. ",
+	"authors": "Barry Snyder",
+	"roll20userid": "399162",
+	"useroptions": [],
+	"dependencies": [],
+	"modifies": {},
+	"conflicts": []
+}

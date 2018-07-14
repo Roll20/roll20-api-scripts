@@ -497,3 +497,11 @@ hero6playable:
 publicsheet:
 - PublicSheet
 - Utility
+
+gmsheet:
+- GMSheet
+- System Toolbox
+
+wrathandglory:
+- "Wrath And Glory"
+- System Toolbox
