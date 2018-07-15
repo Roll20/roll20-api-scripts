@@ -229,6 +229,7 @@ on('chat:message', function(msg) {
 
         const WepRanksA = [SwordEXPA,LanceEXPA,AxeEXPA,BowEXPA,DaggerEXPA,GunEXPA,AnimaEXPA,LightEXPA,DarkEXPA,StoneEXPA,StaffEXPA];
         const WepRanksB = [SwordEXPB,LanceEXPB,AxeEXPB,BowEXPB,DaggerEXPB,GunEXPB,AnimaEXPB,LightEXPB,DarkEXPB,StoneEXPB,StaffEXPB];
+        const WRStr = ["SwordEXP", "LanceEXP", "AxeEXP", "BowEXP", "DaggerEXP", "GunEXP", "DarkEXP", "LightEXP", "AnimaEXP", "StoneEXP", "StaffEXP"] //for setattrs
 
         const WepUA = [SwordUA,LanceUA,AxeUA,BowUA,DaggerUA,GunUA,AnimaUA,LightUA,DarkUA,StoneUA,StaffUA];
         const WepUB = [SwordUB,LanceUB,AxeUB,BowUB,DaggerUB,GunUB,AnimaUB,LightUB,DarkUB,StoneUB,StaffUB];
@@ -404,8 +405,8 @@ on('chat:message', function(msg) {
         let WIndexA = WepTypes.indexOf(WTypeA)+ 1;
         let WIndexB = WepTypes.indexOf(WTypeB)+ 1;
         let WIN = WepTypes.indexOf(WTypeA);
-        let CurrWR = WepRanksA[WIN];
-        let CWRVal = Number(CurrWR.get("current")); //Assume number because it's a numerical input
+        let CurrWR = WRStr[WIN];
+        let CWRVal = parseInt(getAttrByName(attacker.id, CurrWR));
         let WTAA;
         let WTAB;
         log(CurrWR);
@@ -432,7 +433,9 @@ on('chat:message', function(msg) {
         }
         if (typeof(UsesA) == "object"){
             function DecUsesA() {
-                UsesA.setWithWorker({current: Number(UsesA.get("current")) - 1});
+                let num = parseInt(UsesA.get("current")) - 1;
+                log(num);
+                setAttrs(attacker.id, {'repeating_weapons_$0_Uses': num})
             }
             log("Is an object!");
         } else {
@@ -443,7 +446,9 @@ on('chat:message', function(msg) {
         }
         if (typeof(UsesB) == "object"){
             function DecUsesB() {
-                UsesB.setWithWorker({current: Number(UsesB.get("current")) - 1});
+                let num = parseInt(UsesB.get("current")) - 1;
+                log(num);
+                setAttrs(defender.id, {'repeating_weapons_$0_Uses': num})
             }
             log("Is an object!");
         } else {
@@ -994,7 +999,7 @@ on('chat:message', function(msg) {
                                 log("Damage is " + DmgA);
                                 CurrHPB.set("current", HPB);
                                 CWRVal += 2;
-                                CurrWR.set("current",CWRVal);
+                                setAttrs(attacker.id, {[CurrWR]: CWRVal});
                                 log("Incremented weapon EXP!");
                                 DecUsesA();
                                 log("Decreased weapon uses!");
@@ -1189,7 +1194,7 @@ on('chat:message', function(msg) {
                       log("Damage is " + DmgA);
                       CurrHPB.set("current", HPB);
                       CWRVal += WEXPA;
-                      CurrWR.set("current",CWRVal);
+                      setAttrs(attacker.id, {[CurrWR]: CWRVal});
                       log("Incremented weapon EXP!");
                       DecUsesA();
                       log("Decreased weapon uses!");
@@ -1381,7 +1386,7 @@ on('chat:message', function(msg) {
                   log("Damage is " + DmgA);
                   CurrHPB.set("current", HPB);
                   CWRVal += WEXPA;
-                  CurrWR.set("current",CWRVal);
+                  setAttrs(attacker.id, {[CurrWR]: CWRVal});
                   log("Incremented weapon EXP!");
                   DecUsesA();
                   log("Decreased weapon uses!");
@@ -1461,7 +1466,7 @@ on('chat:message', function(msg) {
                       log("Damage is " + DmgA);
                       CurrHPB.set("current", HPB);
                       CWRVal += WEXPA;
-                      CurrWR.set("current",CWRVal);
+                      setAttrs(attacker.id, {[CurrWR]: CWRVal});
                       log("Incremented weapon EXP!");
                       DecUsesA();
                       log("Decreased weapon uses!");
@@ -1541,7 +1546,7 @@ on('chat:message', function(msg) {
                     log("Damage is " + DmgA);
                     CurrHPB.set("current", HPB);
                     CWRVal += WEXPA;
-                    CurrWR.set("current",CWRVal);
+                    setAttrs(attacker.id, {[CurrWR]: CWRVal});
                     log("Incremented weapon EXP!");
                     DecUsesA();
                     log("Decreased weapon uses!");
@@ -1839,47 +1844,6 @@ on('chat:message', function(msg) {
                 } else {
                     Chatstr += '<p style = "margin-bottom: 0px;">' + DName+ " misses!</p>";
                 }
-                //radius
-                if (AOEB != 0){
-                    let tokenInRadius = filterObjs(function(token) {
-                        if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(selectedToken,token) > AOEB || getAttrByName(token.get('represents'), 'all') == getAttrByName(targetToken.get('represents'), 'all') || selectedToken.get("represents") == token.get("represents") || targetToken.get("represents") == token.get("represents") ) return false;
-                        else return true;
-                    });
-                    for (i in tokenInRadius){
-                        let char = tokenInRadius[i].get("represents");
-                        let char_name = tokenInRadius[i].get("name");
-                        let HPchar = findObjs({
-                            characterid: char,
-                            name: "HP_current"
-                        })[0];
-                        let def_ch = Number(getAttrByName(char, 'def_total'));
-                        let res_ch = Number(getAttrByName(char, 'res_total'));
-                        let weak_ch = getAttrByName(char, 'weaknesses');
-                        let avo_ch = getAttrByName(char, 'avo');
-                        let prov_DmgB;
-                        let prov_MtB = parseInt(getAttrByName(defender.id, 'repeating_weapons_$0_Wt')) || 0;
-                        if ( ( StrengthsB.includes("Beast") && weak_ch.includes("Beast")) || ( StrengthsB.includes("Flier") && weak_ch.includes("Flier")) || ( StrengthsB.includes("Dragon") && weak_ch.includes("Dragon")) || ( StrengthsB.includes("Armor") && weak_ch.includes("Armor")) || ( StrengthsB.includes("Monster") && weak_ch.includes("Monster")) ){
-                            prov_MtB *= 3;
-                        }
-                        if ( (PhysWepTypes.includes(WTypeB))||(PhysWeps.includes(WNameB)) ){
-                            prov_DmgB = (StrB + MtB) - def_ch;
-                        } else if ( (MWepTypes.includes(WTypeB))||(MagWeps.includes(WNameB)) ){
-                            prov_DmgB = (MagB + MtB) - res_ch;
-                        }
-                        else if (WTypeB == "Firearm/Taneg.") {
-                            prov_DmgB = MtB - def_ch;
-                        }
-                        if (prov_DmgB < 0){
-                            prov_DmgB = 0;
-                        }
-                        if (randomInteger(100) < (HitB - avo_ch)){
-                            HPchar.setWithWorker({
-                                current: HPchar.get("current") - prov_DmgB
-                            });
-                            Chatstr += '<p style = "margin-bottom: 0px;">'+ DName+ " hits " + char_name + " for " + prov_DmgB + " damage!</p>";
-                        }
-                    }
-                }
 
             }
         }
@@ -1889,6 +1853,11 @@ on('chat:message', function(msg) {
         }
         for (i in SkillsB){
             Skill(defender.id, attacker.id, SkillsB[i], "after");
+        }
+
+        //WEXP cap checking because sheetworkers is being stupid >:O
+        if (CWRVal > 255){
+            setAttrs(attacker.id, {[CurrWR]: 255});
         }
 
         let timesA = "";
@@ -2575,14 +2544,8 @@ on('chat:message', function(msg) {
         let HPcurrent = findObjs({ characterid: user.id, name: "HP_current", type: "attribute"})[0];
         let Userclass = findObjs({ characterid: user.id, name: "Class", type: "attribute"})[0];
 
-        let Item_Name0 = findObjs({ characterid: user.id, name: "item_name0", type: "attribute"})[0];
-        let Item_Name1 = findObjs({ characterid: user.id, name: "item_name1", type: "attribute"})[0];
-        let Item_Name2 = findObjs({ characterid: user.id, name: "item_name2", type: "attribute"})[0];
-        let Item_Uses0 = findObjs({ characterid: user.id, name: "item_uses0", type: "attribute"})[0];
-        let Item_Uses1 = findObjs({ characterid: user.id, name: "item_uses1", type: "attribute"})[0];
-        let Item_Uses2 = findObjs({ characterid: user.id, name: "item_uses2", type: "attribute"})[0];
-        itemuses = [Item_Uses0,Item_Uses1,Item_Uses2]
-        itemnames = [Item_Name0,Item_Name1,Item_Name2]
+        let itemuses = ["item_uses0", "item_uses1", "item_uses2"]
+        let itemnames = ["item_name0", "item_name1", "item_name2"]
         log(itemuses)
         log(itemnames)
         //All items as objects QnQ
@@ -2856,17 +2819,18 @@ on('chat:message', function(msg) {
         }
         //decrease uses
         for (var i in itemnames){
-            log(i)
-            log(itemnames[i])
-            if (itemnames[i] != null){ //no object assigned checking
-                if (itemnames[i].get("current") == item){
-                    itemuses[i].setWithWorker({
-                        current: parseInt(itemuses[i].get("current")) - 1
-                    });
-                    if (itemuses[i].get("current") == 0){
-                        itemnames[i].setWithWorker({
-                            current: ""
-                        });
+            let itemname_get = getAttrByName(user.id, itemnames[i]);
+            let itemuses_get = getAttrByName(user.id, itemuses[i]);
+            let names_i = itemnames[i]
+            let uses_i = itemuses[i]
+            log(uses_i)
+            if (itemname_get != null){ //no object assigned checking
+                if (itemname_get == item){
+                    let num = itemuses_get - 1
+                    log(num)
+                    setAttrs(user.id, {[uses_i]: num})
+                    if (num <= 0){
+                        setAttrs(user.id, {[names_i]: ""})
                     }
                 }
             }
@@ -3555,7 +3519,7 @@ on('chat:message', function(msg) {
         let Range1A = parseInt(getAttrByName(staffer.id, 'repeating_weapons_$0_Range1')) || 1;
         let Range2A = parseInt(getAttrByName(staffer.id, 'repeating_weapons_$0_Range2')) || 1;
         let fIDA = getAttrByName(staffer.id, 'fid')|| "";
-        let UsesA = findObjs({ characterid: staffer.id, name: "repeating_weapons_"+fIDA+"_Uses"},{ caseInsensitive: true })[0]; //assumes it exists, since that's a requirement for the thing to activate
+        let UsesA = parseInt(getAttrByName(staffer.id, 'repeating_weapons_$0_Uses')) || 0;
         let diff = ManhDist(selectedToken, targetToken);
         let AllegianceA = getAttrByName(staffer.id, 'all');
         let AllegianceB = getAttrByName(target.id, 'all');
@@ -4127,7 +4091,7 @@ on('chat:message', function(msg) {
                                 }
                                 CurrHPB.setWithWorker({current: parseInt(CurrHPB.get("current")) + HPVal});
                                 chatstr += '<p style = "margin-bottom: 0px;">' + targetToken.get("name") + " is healed for " + String(HPVal) + " HP!</p>";
-                                UsesA.setWithWorker({current: parseInt(UsesA.get("current")) - 1});
+                                setAttrs(user.id, {'repeating_weapons_$0_Uses': UsesA - 1})
                                 dispHitA = "--";
                             }
                             else {
@@ -4146,7 +4110,7 @@ on('chat:message', function(msg) {
                                     }
                                     log(j.status);
                                     targetToken.set(j.status);
-                                    UsesA.setWithWorker({current: parseInt(UsesA.get("current")) - 1});
+                                    setAttrs(user.id, {'repeating_weapons_$0_Uses': UsesA - 1})
                                     chatstr += '<p style = "margin-bottom: 0px;">'+ j.chatmsg + '</p>';
                                     StaffEXPA = j.exp;
                                 }
