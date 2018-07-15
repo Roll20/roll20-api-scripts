@@ -14,13 +14,13 @@ One of the following options must be specified; they determine which characters 
 
 ## Inline commands
 
-It is possible to use some ChatSetAttr commands in the middle of a roll template, with some limitations. To do so, write the ChatSetAttr command between the properties of a roll template. If one of the attribute values is a whole roll template property, the first inline roll within that property will be used instead. It is easiest to illustrate how this works in an example:
+It is possible to use some ChatSetAttr commands in the middle of a roll template, with some limitations. To do so, write the ChatSetAttr command between the properties of a roll template, and end it "!!!". If one of the attribute values is a whole roll template property, the first inline roll within that property will be used instead. It is easiest to illustrate how this works in an example:
 
 ```null
-&{template:default} {{name=Cthulhu}} !modattr --silent --charid @{target|character_id} --sanity|-{{Sanity damage=[[2d10+2]]}} --corruption|{{Corruption=Corruption increases by [[1]]}} {{description=Text}}
+&{template:default} {{name=Cthulhu}} !modattr --silent --charid @{target|character_id} --sanity|-{{Sanity damage=[[2d10+2]]}} --corruption|{{Corruption=Corruption increases by [[1]]}}!!! {{description=Text}}
 ```
 
-This will decrease sanity by 2d10+2 and increase corruption by 1 for the character selected with the --charid @{target|character\_id} command. In order for the parsing to work correctly, all attributes specified by roll templates must come at at the end of the command (but they are not required to be at the end of the chat message).
+This will decrease sanity by 2d10+2 and increase corruption by 1 for the character selected with the --charid @{target|character\_id} command. **It is crucial** that the ChatSetAttr part of the command is ended by three exclamation marks like in the message above – this is how the script know when to stop interpreting the roll template as part of the ChatSetAttr command.
 
 ## Additional options
 

@@ -1,5 +1,5 @@
 // ChatSetAttr version 1.8
-// Last Updated: 2018-07-13
+// Last Updated: 2018-07-15
 // A script to create, modify, or delete character attributes from the chat area or macros.
 // If you don't like my choices for --replace, you can edit the replacers variable at your own peril to change them.
 
@@ -696,12 +696,12 @@ var chatSetAttr = chatSetAttr || (function () {
 			}
 		},
 		handleInlineCommand = (msg) => {
-			const matches = msg.content.match(/!(?:set|mod|modb)attr\b[^{]*?(?:\s*--(?:[^{-]+?-?)*?{{[^}[\]]+\$\[\[(?:\d+)\]\][^}]*?}})+/g);
+			const command = msg.content.match(/!(set|mod|modb)attr .*?!!!/);
 
-			(matches || []).forEach(str => {
-				const mode = str.match(/^!(set|mod|modb)attr/),
-					newMsgContent = str.replace(/(--(?:[^{-]+?-?)*?){{[^}[\]]+\$\[\[(\d+)\]\][^}]*?}}/g, (_, pre, number) => {
-						return `${pre}$[[${number}]]`;
+			if (command) {
+				const mode = command[1],
+					newMsgContent = command[0].slice(0, -3).replace(/{{[^}[\]]+\$\[\[(\d+)\]\].*?}}/g, (_, number) => {
+						return `$[[${number}]]`;
 					});
 				const newMsg = {
 					content: newMsgContent,
@@ -711,9 +711,9 @@ var chatSetAttr = chatSetAttr || (function () {
 					processInlinerolls(newMsg),
 					msg.playerid,
 					msg.selected,
-					mode[1]
+					mode
 				);
-			});
+			}
 		},
 		// Main function, called after chat message input
 		handleInput = function (msg) {
