@@ -1,0 +1,13 @@
+{
+    "name": "Tails of Equestria Helper",
+    "script": "ToEHelper.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "# Tails of Equestria Helper\r\rThis script provides some utilities for the Tails of Equestria system. It is\rmainly meant for use with the Tails of Equestria character sheet.\r\r## Help\r\rIf you experience any issues while using this script,\rneed help using it, or if you have a neat suggestion for a new feature,\rshoot me a PM:\rhttps://app.roll20.net/users/46544/stephen-l\r\r## Show Support\r\rIf you would like to show your appreciation and support for the work I do in writing,\rupdating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)\ror, simply leave a thank you note in the script's thread on the Roll20 forums.\rEither is greatly appreciated! Happy gaming!\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {},
+    "conflicts": []
+}
