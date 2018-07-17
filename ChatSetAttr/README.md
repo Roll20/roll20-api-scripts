@@ -1,9 +1,9 @@
-
-
 # ChatSetAttr
+
 This script is a utility that allows the user to create, modify, or delete character attributes via chat messages or macros. There are several options that determine which attributes are modified, and which characters the attributes are modified for. The script is called by the command **!setattr [--options]** for creating or modifying attributes, or **!delattr [--options]** for deleting attributes.
 
 ## Selecting a target
+
 One of the following options must be specified; they determine which characters are affected by the script.
 
 * **--all** will affect all characters in the game. USE WITH CAUTION. This option will only work for the GM. If you have a large number of characters in your campaign, this will take a while to process all attribute changes.
@@ -12,7 +12,18 @@ One of the following options must be specified; they determine which characters 
 * **--name name1, name2, ...** allows you to supply a list of character names, and will look for a character with this name to affect. Non-GM Players can only affect characters that they control.
 * **--sel** will affect all characters that are represented by tokens you have currently selected.
 
+## Inline commands
+
+It is possible to use some ChatSetAttr commands in the middle of a roll template, with some limitations. To do so, write the ChatSetAttr command between the properties of a roll template, and end it "!!!". If one of the attribute values is a whole roll template property, the first inline roll within that property will be used instead. It is easiest to illustrate how this works in an example:
+
+```null
+&{template:default} {{name=Cthulhu}} !modattr --silent --charid @{target|character_id} --sanity|-{{Sanity damage=[[2d10+2]]}} --corruption|{{Corruption=Corruption increases by [[1]]}}!!! {{description=Text}}
+```
+
+This will decrease sanity by 2d10+2 and increase corruption by 1 for the character selected with the --charid @{target|character\_id} command. **It is crucial** that the ChatSetAttr part of the command is ended by three exclamation marks like in the message above – this is how the script know when to stop interpreting the roll template as part of the ChatSetAttr command.
+
 ## Additional options
+
 These options will have no effect on **!delattr**, except for **--silent**.
 
 * **--silent** will suppress normal output; error messages will still be displayed.
@@ -25,12 +36,13 @@ These options will have no effect on **!delattr**, except for **--silent**.
 * **--evaluate** is a GM-only (unless you allow it to be used by players via the configuration) option that will use JavaScript eval() to evaluate the attribute value expressions. This allows you to do math in expressions involving other attributes (see the example below). However, this option is inherently dangerous and prone to errors, so be careful.
 
 ## Feedback options
+
 The script accepts several options that modify the feedback messages sent by the script.
 
 * **--fb-public** will send the output to chat publicly, instead of whispering it to the player who sent the command. Note that error messages will still be whispered.
-* **--fb-from <NAME>** will modify the name that appears as the sender in chat messages sent by the script. If not specified, this defaults to "ChatSetAttr".
-* **--fb-header <STRING>** will replace the title of the message sent by the script - normally, "Setting Attributes" or "Deleting Attributes" - with a custom string.
-* **--fb-content <STRING>** will replace the feedback line for every character with a custom string. This will not work with **!delattr**.
+* **--fb-from \<NAME>** will modify the name that appears as the sender in chat messages sent by the script. If not specified, this defaults to "ChatSetAttr".
+* **--fb-header \<STRING>** will replace the title of the message sent by the script - normally, "Setting Attributes" or "Deleting Attributes" - with a custom string.
+* **--fb-content \<STRING>** will replace the feedback line for every character with a custom string. This will not work with **!delattr**.
 
 You can use the following special character sequences in the values of both **--fb-header** and **--fb-content**. Here, **J** is an integer, starting from 0, and refers to the **J**-th attribute you are changing. They will be dynamically replaced as follows:
 
@@ -45,6 +57,7 @@ In addition, there are extra insertion sequence that only make sense in the valu
 * \_MAX**J**\_: will insert the final maximum value of the attribute, for this character.
 
 ## Attribute Syntax
+
 Attribute options will determine which attributes are set to which value (respectively deleted, in case of !delattr). The syntax for these options is **--name|value** or **--name|value|max**. Here, **name** is the name of the attribute (which is parsed case-insensitively), **value** is the value that the current value of the attribute should be set to, and **max** is the value that the maximum value of the attribute should be set to. Instead of the vertical line ('|'), you may also use '#' (for use inside roll queries, for example).
 
 * Single quotes (') surrounding **value** or **max** will be stripped, as will trailing spaces. If you need to include spaces at the end of a value, enclose the whole expression in single quotes.
@@ -58,6 +71,7 @@ Attribute options will determine which attributes are set to which value (respec
 * You can insert the values of _other_ attributes into the attributes values to be set via %attribute\_name%. For example, **--attr1|%attr2%|%attr2\_max%** will insert the current and maximum value of **attr2** into those of **attr1**.
 
 ## Examples
+
 * **!setattr --sel --Strength|15** will set the Strength attribute for 15 for all selected characters.
 * **!setattr --name John --HP|17|27 --Dex|10** will set HP to 17 out of 27 and Dex to 10 for the character John (only one of them, if more than one character by this name exists).
 * **!delattr --all --gold** will delete the attribute called gold from all characters, if it exists.
@@ -66,4 +80,5 @@ Attribute options will determine which attributes are set to which value (respec
 * If the current value of attr1 is 3 and the current value of attr2 is 2, **!setattr --sel --evaluate --attr3|2*%attr1% + 7 - %attr2%** will set the current value of attr3 to 15.
 
 ## Global configuration
+
 There are three global configuration options, _playersCanModify_, _playersCanEvaluate_, and _useWorkers_, which can be toggled either on this page or by entering **!setattr-config** in chat. The former two will give players the possibility of modifying characters they don't control or using the **--evaluate** option. You should only activate either of these if you can trust your players not to vandalize your characters or your campaign. The last option will determine if the script triggers sheet workers on use, and should normally be toggled on.
