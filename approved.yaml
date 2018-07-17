@@ -491,7 +491,7 @@ elevation:
 - Utility
 
 hero6playable:
-- HeroSystem
+- HeroSystem6e
 - System Toolbox
 
 publicsheet:
@@ -514,6 +514,6 @@ apiselection:
 - APISelection
 - Utility
 
-talesofequestriahelper:
-- TalesOfEquestriaHelper
+tailsofequestriahelper:
+- TailsOfEquestriaHelper
 - System Toolbox
