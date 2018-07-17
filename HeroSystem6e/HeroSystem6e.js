@@ -17,16 +17,16 @@
 
 
 
-var Hero6Playable = Hero6Playable || (function() {
+var HeroSystem6e = HeroSystem6e || (function() {
 	'use strict';
 
-	var version = '1.0',
-	lastUpdate = 1529297199799,
+	var version = '1.1',
+	lastUpdate = 1531368487971,
 	lastBody = 0,
 
 	checkInstall = function() {
 	    var updated = new Date(lastUpdate);
-		log('[ Hero6Playable v'+version+', ' + updated.getFullYear() + "/" + (updated.getMonth()+1) + "/" + updated.getDate() + " ]");
+		log('[ HeroSystem6e v'+version+', ' + updated.getFullYear() + "/" + (updated.getMonth()+1) + "/" + updated.getDate() + " ]");
 	},
 
 	getChat = function(msg) {
@@ -153,7 +153,10 @@ var Hero6Playable = Hero6Playable || (function() {
 
 		});
 
-		if(has_dice === true ) return body;
+		if(has_dice === true ) {
+			lastBody = body;
+			return body;
+		}
 		else return NaN;
 	},
 
@@ -336,6 +339,6 @@ var Hero6Playable = Hero6Playable || (function() {
 on('ready',function() {
 	'use strict';
 
-	Hero6Playable.CheckInstall();
-	Hero6Playable.RegisterEventHandlers();
+	HeroSystem6e.CheckInstall();
+	HeroSystem6e.RegisterEventHandlers();
 });

@@ -1,7 +1,7 @@
-# Hero6Playable api script
-This API is designed for use with the [Hero6Playable character sheet](https://github.com/Roll20/roll20-character-sheets/tree/master/Hero6Playable).  If you are not using that character sheet, this api script will most likely be of no use to you.
+# HeroSystem6e api script
+This API is designed for use with the [HeroSystem6e character sheet](https://github.com/Roll20/roll20-character-sheets/tree/master/HeroSystem6e).  If you are not using that character sheet, this api script will most likely be of no use to you.
 
-This api script listens to chat for die rolls and its primary functions execute when they detect a "hero6template" roll template.  This API will count the body value of any normal damage dice and compute the DCV hit of any attack roll, sending the output to chat formatted to match the Hero6Playable roll template.  If by some remote chance you have a use for this api script outside of the Hero6Playable character sheet, here are the specifics of what this api will do...
+This api script listens to chat for die rolls and its primary functions execute when they detect a "hero6template" roll template.  This API will count the body value of any normal damage dice and compute the DCV hit of any attack roll, sending the output to chat formatted to match the HeroSystem6e roll template.  If by some remote chance you have a use for this api script outside of the HeroSystem6e character sheet, here are the specifics of what this api will do...
 
 ---
 This script will count the BODY of any damage roll.  The necessary roll properties are:
