@@ -5,8 +5,8 @@
 var TokenMod = TokenMod || (function() {
     'use strict';
 
-    const version = '0.8.40',
-        lastUpdate = 1531789436,
+    const version = '0.8.39',
+        lastUpdate = 1531671313,
         schemaVersion = 0.3,
 
 
@@ -48,7 +48,6 @@ var TokenMod = TokenMod || (function() {
             light_radius: {type: 'numberBlank'},
             light_dimradius: {type: 'numberBlank'},
             light_multiplier: {type: 'numberBlank'},
-            adv_fow_view_distance: {type: 'numberBlank'},
             aura1_radius: {type: 'numberBlank'},
             aura2_radius: {type: 'numberBlank'},
 
@@ -1055,19 +1054,14 @@ var TokenMod = TokenMod || (function() {
                                     _h.cell('light_dimradius'),
                                     _h.cell('light_multiplier'),
                                     _h.cell('aura1_radius'),
-                                    _h.cell('aura2_radius'),
-                                    _h.cell('adv_fow_view_distance')
+                                    _h.cell('aura2_radius')
                                 )
                             ),
                             _h.paragraph(`Here is setting a standard DnD 5e torch, turning off aura1 and setting aura2 to 30. Note that the ${_h.code('|')} is still required for setting a blank value, such as aura1_radius below.`),
                             _h.inset(
                                 _h.pre('!token-mod --set light_radius|40 light_dimradius|20 aura1_radius| aura2_radius|30')
                             ),
-							_h.paragraph(`Just as above, you can use ${_h.code('=')}, ${_h.code('+')}, ${_h.code('-')}, ${_h.code(ch('*'))}, and ${_h.code(ch('/'))} when setting these values.`),
-                            _h.paragraph(`Here is setting a standard DnD 5e torch, with advanced fog of war revealed for 30.`),
-                            _h.inset(
-                                _h.pre('!token-mod --set light_radius|40 light_dimradius|20 adv_fow_view_distance|30')
-                            )
+							_h.paragraph(`Just as above, you can use ${_h.code('=')}, ${_h.code('+')}, ${_h.code('-')}, ${_h.code(ch('*'))}, and ${_h.code(ch('/'))} when setting these values.`)
                         ),
 
 
@@ -2219,7 +2213,6 @@ var TokenMod = TokenMod || (function() {
                 case 'light_multiplier':
                 case 'aura2_radius':
                 case 'aura1_radius':
-                case 'adv_fow_view_distance':
                     delta=getRelativeChange(token.get(k),f[0]);
                     if(_.isNumber(delta) || '' === delta) {
                         mods[k]=delta;
