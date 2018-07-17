@@ -491,7 +491,7 @@ elevation:
 - Utility
 
 hero6playable:
-- Hero6Playable
+- HeroSystem
 - System Toolbox
 
 publicsheet:
@@ -504,4 +504,16 @@ gmsheet:
 
 wrathandglory:
 - "Wrath And Glory"
+- System Toolbox
+
+shuffletokens:
+- "Shuffle Tokens"
+- Tokens
+
+apiselection:
+- APISelection
+- Utility
+
+talesofequestriahelper:
+- TalesOfEquestriaHelper
 - System Toolbox
