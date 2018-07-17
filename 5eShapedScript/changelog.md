@@ -1,3 +1,11 @@
+# 13.5.0
+
+### Features
+- Support copying uses/recharge from spells on imported monsters (sheet support still needed for this to work)
+
+### Bug fixes
+- Fix #61 - fix for statblock import being broken on Windows after latest Roll20 update
+
 # 13.4.0
 
 ### Features
