@@ -1,3 +1,9 @@
+# 13.5.1
+
+### Bug fixes
+- Fix bug which was stripping last trait/action from each section on import
+- Minor relaxation of validation to improve import compatibility 
+
 # 13.5.0
 
 ### Features
