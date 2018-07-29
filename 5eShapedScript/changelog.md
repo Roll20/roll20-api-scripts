@@ -1,3 +1,10 @@
+# 13.5.2
+
+### Bug fixes
+- Fix typography in SRD data
+- Support importing reaction spells with a condition attached to casting time (e.g. Feather fall)
+- More relaxation of validation to improve import compatibility 
+
 # 13.5.1
 
 ### Bug fixes
