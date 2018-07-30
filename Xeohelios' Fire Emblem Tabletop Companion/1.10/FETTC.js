@@ -888,6 +888,10 @@ on('chat:message', function(msg) {
                             characterid: char,
                             name: "HP_current"
                         })[0];
+                        let HPC = findObjs({
+                            characterid: char,
+                            name: "HP_bd"
+                        })[0];
                         let StrC = findObjs({
                             characterid: char,
                             name: "Str_bd"
@@ -915,6 +919,10 @@ on('chat:message', function(msg) {
                         let ResC = findObjs({
                             characterid: char,
                             name: "Res_bd"
+                        })[0];
+                        let MovC = findObjs({
+                            characterid: char,
+                            name: "Mov_bd"
                         })[0];
                         let HitC = findObjs({
                             characterid: char,
@@ -2933,6 +2941,10 @@ on('chat:message', function(msg) {
                             characterid: char,
                             name: "HP_current"
                         })[0];
+                        let HPC = findObjs({
+                            characterid: char,
+                            name: "HP_bd"
+                        })[0];
                         let StrC = findObjs({
                             characterid: char,
                             name: "Str_bd"
@@ -2960,6 +2972,10 @@ on('chat:message', function(msg) {
                         let ResC = findObjs({
                             characterid: char,
                             name: "Res_bd"
+                        })[0];
+                        let MovC = findObjs({
+                            characterid: char,
+                            name: "Mov_bd"
                         })[0];
                         let HitC = findObjs({
                             characterid: char,
@@ -3674,6 +3690,10 @@ on('chat:message', function(msg) {
                             characterid: char,
                             name: "HP_current"
                         })[0];
+                        let HPC = findObjs({
+                            characterid: char,
+                            name: "HP_bd"
+                        })[0];
                         let StrC = findObjs({
                             characterid: char,
                             name: "Str_bd"
@@ -3701,6 +3721,10 @@ on('chat:message', function(msg) {
                         let ResC = findObjs({
                             characterid: char,
                             name: "Res_bd"
+                        })[0];
+                        let MovC = findObjs({
+                            characterid: char,
+                            name: "Mov_bd"
                         })[0];
                         let HitC = findObjs({
                             characterid: char,
@@ -3962,42 +3986,42 @@ on('chat:message', function(msg) {
         //queue queue queue
         if (hit != 0 && dec != 0){
             if (hit > 0){
-                queue.push([Hitmod, "decrement", dec, 0])
+                queue.push([Hitmod, "decrement", dec, 0, "stat"])
             }
             else {
-                queue.push([Hitmod, "increment", dec, 0])
+                queue.push([Hitmod, "increment", dec, 0, "stat"])
             }
         }
         if (crit != 0 && dec != 0){
             if (crit > 0){
-                queue.push([Critmod, "decrement", dec, 0])
+                queue.push([Critmod, "decrement", dec, 0, "stat"])
             }
             else {
-                queue.push([Critmod, "increment", dec, 0])
+                queue.push([Critmod, "increment", dec, 0, "stat"])
             }
         }
         if (avo != 0 && dec != 0){
             if (avo > 0){
-                queue.push([Avomod, "decrement", dec, 0])
+                queue.push([Avomod, "decrement", dec, 0, "stat"])
             }
             else {
-                queue.push([Avomod, "increment", dec, 0])
+                queue.push([Avomod, "increment", dec, 0, "stat"])
             }
         }
         if (ddg != 0 && dec != 0){
             if (hit > 0){
-                queue.push([Ddgmod, "decrement", dec, 0])
+                queue.push([Ddgmod, "decrement", dec, 0, "stat"])
             }
             else {
-                queue.push([Ddgmod, "increment", dec, 0])
+                queue.push([Ddgmod, "increment", dec, 0, "stat"])
             }
         }
         if (dmg != 0 && dec != 0){
             if (dmg > 0){
-                queue.push([Dmgmod, "decrement", dec, 0])
+                queue.push([Dmgmod, "decrement", dec, 0, "stat"])
             }
             else {
-                queue.push([Dmgmod, "increment", dec, 0])
+                queue.push([Dmgmod, "increment", dec, 0, "stat"])
             }
         }
 
@@ -4852,6 +4876,10 @@ on("change:campaign:turnorder", function(turn) {
                             characterid: char,
                             name: "HP_current"
                         })[0];
+                        let HPC = findObjs({
+                            characterid: char,
+                            name: "HP_bd"
+                        })[0];
                         let StrC = findObjs({
                             characterid: char,
                             name: "Str_bd"
@@ -4879,6 +4907,10 @@ on("change:campaign:turnorder", function(turn) {
                         let ResC = findObjs({
                             characterid: char,
                             name: "Res_bd"
+                        })[0];
+                        let MovC = findObjs({
+                            characterid: char,
+                            name: "Mov_bd"
                         })[0];
                         let HitC = findObjs({
                             characterid: char,
@@ -5023,7 +5055,7 @@ on("change:campaign:turnorder", function(turn) {
     }
     /*queueitem structure:
       [{stat}, "increment/decrement", how much/turn, floor/ceiling, source]
-      sources: "combat", "combat-r", "staff", "staff-r", "item", "command", "command-r", "turn", "turn-r"
+      sources: "combat", "combat-r", "staff", "staff-r", "item", "command", "command-r", "turn", "turn-r", "stat"
       -r's are for radii
     */
     if (queue == []){
