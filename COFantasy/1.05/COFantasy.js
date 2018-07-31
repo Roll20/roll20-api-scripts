@@ -895,7 +895,7 @@ var COFantasy = COFantasy || function() {
       var img2 = improve_image(perso2.token.get('imgsrc'));
       if (AVATAR_IN_DISPLAY) {
         var character2 = getObj('character', perso2.charId);
-        if (character2) img2 = improve_image(character2.get('avatar'));
+        if (character2) img2 = improve_image(character2.get('avatar')) || img2;
       }
       if (img2) {
         avatar2 = '<img src="' + img2 + '" style="width: 50%; display: block; max-width: 100%; height: auto; border-radius: 6px; margin: 0 auto;">';
@@ -908,7 +908,7 @@ var COFantasy = COFantasy || function() {
       var img1 = improve_image(perso1.token.get('imgsrc'));
       if (AVATAR_IN_DISPLAY) {
         var character1 = getObj('character', perso1.charId);
-        if (character1) img1 = improve_image(character1.get('avatar'));
+        if (character1) img1 = improve_image(character1.get('avatar')) || img1;
       }
       if (img1) {
         avatar1 = '<img src="' + img1 + '" style="width: ' + (avatar2 ? 50 : 100) + '%; display: block; max-width: 100%; height: auto; border-radius: 6px; margin: 0 auto;">';
@@ -3629,6 +3629,10 @@ var COFantasy = COFantasy || function() {
         attBonus -= 2;
         explications.push("Rayon affaiblissant => -2 en Attaque et aux DM");
       }
+      if (attributeAsBool(attaquant, 'enragé')) {
+        attBonus += 5;
+        explications.push("Enragé => +5 en Attaque et +1d6 DM");
+      }
     }
     return attBonus;
   }
@@ -3943,8 +3947,11 @@ var COFantasy = COFantasy || function() {
     var pageId = attaquant.token.get('pageid');
     //Options automatically set by some attributes
     if (attributeAsBool(attaquant, 'paralysieRoublard')) {
-      sendChar(attackingCharId, "ne peut pas attaquer car il est paralysé de douleur");
-      return;
+      if (!attributeAsBool(attaquant, 'enragé')) {
+        sendChar(attackingCharId, "ne peut pas attaquer car il est paralysé de douleur");
+        return;
+      }
+      sendChar(attackingCharId, "est trop enragé pour sentir la douleur");
     }
     if (charAttributeAsBool(attaquant, 'fauchage')) {
       var seuilFauchage = 10 + modCarac(attaquant, 'FORCE');
@@ -4071,17 +4078,12 @@ var COFantasy = COFantasy || function() {
         effet = createObj('custfx', {
           name: 'grenaille ' + portee,
           definition: {
-
             "angle": -1,
             "angleRandom": 45,
             "duration": 8,
             "emissionRate": 40,
             "endColour": [130, 130, 130, 0],
             "endColourRandom": [10, 10, 10, 0],
-            "gravity": {
-              "x": 0.01,
-              "y": 0.01
-            },
             "lifeSpan": portee * 5,
             "lifeSpanRandom": portee / 2,
             "maxParticles": 200,
@@ -4340,10 +4342,10 @@ var COFantasy = COFantasy || function() {
     });
     if (cibles.length === 0) {
       if (options.aoe) {
-        sendChar(attackingCharId, "aucune cible dans l'aire d'effet de " + weaponName);
+        sendChar(attackingCharId, "aucune cible dans l'aire d'effet de " + weaponName + ", action annulée");
         return;
       }
-      sendChar(attackingCharId, "est hors de portée de " + nomCiblePrincipale + " pour une attaque utilisant " + weaponName);
+      sendChar(attackingCharId, "est hors de portée de " + nomCiblePrincipale + " pour une attaque utilisant " + weaponName + ", action annulée");
       return;
     }
     var evt = options.evt || {
@@ -4522,6 +4524,7 @@ var COFantasy = COFantasy || function() {
   // - la valeur finale des dégâts infligés
   // crit est un booléen, il augmente de 1 (ou options.critCoef) le coefficient (option.dmgCoef) et active certains effets
   function dealDamage(target, dmg, otherDmg, evt, crit, options, explications, displayRes) {
+    if (target.tokName === undefined) target.tokName = target.token.get('name');
     if (options === undefined) options = {};
     var expliquer = function(msg) {
       if (explications) explications.push(msg);
@@ -4728,7 +4731,7 @@ var COFantasy = COFantasy || function() {
         }
         evt.attributes = evt.attributes || [];
         if (options.grenaille) {
-          var chargesGrenaille = tokenAttribute(attaquant, 'chargeGrenaille _' + attackLabel);
+          var chargesGrenaille = tokenAttribute(attaquant, 'chargeGrenaille_' + attackLabel);
           if (chargesGrenaille.length > 0) {
             var currentChargeGrenaille = parseInt(chargesGrenaille[0].get('current'));
             if (isNaN(currentChargeGrenaille) || currentChargeGrenaille < 1) {
@@ -4786,7 +4789,7 @@ var COFantasy = COFantasy || function() {
           }
           evt.attributes = evt.attributes || [];
           if (options.grenaille) {
-            var chargesGrenaille2 = tokenAttribute(attaquant, 'chargeGrenaille _' + secondLabel);
+            var chargesGrenaille2 = tokenAttribute(attaquant, 'chargeGrenaille_' + secondLabel);
             if (chargesGrenaille2.length > 0) {
               var currentChargeGrenaille2 = parseInt(chargesGrenaille2[0].get('current'));
               if (isNaN(currentChargeGrenaille2) || currentChargeGrenaille2 < 1) {
@@ -5323,6 +5326,12 @@ var COFantasy = COFantasy || function() {
       if (bonusMasque > 0) attDMBonusCommun += " +" + bonusMasque;
     }
     if (attributeAsBool(attaquant, 'rageDuBerserk')) {
+      options.additionalDmg.push({
+        type: mainDmgType,
+        value: '1' + options.d6
+      });
+    }
+    if (attributeAsBool(attaquant, 'enragé')) {
       options.additionalDmg.push({
         type: mainDmgType,
         value: '1' + options.d6
@@ -6666,6 +6675,15 @@ var COFantasy = COFantasy || function() {
           }
           pvPerdus = dmgTotal;
           bar1 = bar1 - dmgTotal;
+          if ((crit || bar1 < pvmax / 2) &&
+            charAttributeAsBool(target, 'peutEnrager') &&
+            !attributeAsBool(target, 'enragé')) {
+            setTokenAttr(target, 'enragé', true, evt);
+            expliquer(target.tokName + " devient enragé" + eForFemale(target.charId) + ".");
+            finDEffetDeNom(target, 'peur', evt);
+            finDEffetDeNom(target, 'peurEtourdi', evt);
+            setState(target, 'apeure', false, evt);
+          }
           if (bar1 <= 0) {
             var attrFDA = tokenAttribute(target, 'formeDArbre');
             if (attrFDA.length > 0) {
@@ -6696,6 +6714,11 @@ var COFantasy = COFantasy || function() {
               if (charAttributeAsBool(charId, 'baroudHonneur')) {
                 expliquer(token.get('name') + " devrait être mort, mais il continue à se battre !");
                 setTokenAttr(target, 'baroudHonneurActif', true, evt);
+              } else if (attributeAsBool(target, 'enragé')) {
+                if (!attributeAsBool(target, 'agitAZeroPV')) {
+                  expliquer(token.get('name') + " devrait être mort, mais il continue à se battre !");
+                  setTokenAttr(target, 'agitAZeroPV', 1, evt, undefined, getInit());
+                }
               } else {
                 var defierLaMort = charAttributeAsInt(target, 'defierLaMort', 0);
                 if (defierLaMort > 0) {
@@ -7146,7 +7169,7 @@ var COFantasy = COFantasy || function() {
           findObjs({
             _type: 'graphic',
             _subtype: 'token',
-            _pageId: pageId,
+            _pageid: pageId,
             layer: 'objects',
             represents: charId,
             name: tokenName,
@@ -11131,7 +11154,9 @@ var COFantasy = COFantasy || function() {
     display, evt, callback) {
     var charId = target.charId;
     var targetName = target.token.get('name');
-    if (charAttributeAsBool(charId, 'sansPeur') || charAttributeAsBool(charId, 'immunitePeur')) {
+    if (charAttributeAsBool(charId, 'sansPeur') ||
+      charAttributeAsBool(charId, 'immunitePeur') ||
+      attributeAsBool(charId, 'enragé')) {
       addLineToFramedDisplay(display,
         targetName + " est insensible à la peur !");
       callback();
@@ -12417,7 +12442,7 @@ var COFantasy = COFantasy || function() {
           return;
         }
         var evt = {
-          type: 'ignorer_la_douleur'
+          type: 'ignorer la douleur'
         };
         updateCurrentBar(token, 1, lastBar1, evt);
         setTokenAttr(chevalier, 'ignorerLaDouleur', lastBar1 - bar1, evt);
@@ -14937,6 +14962,280 @@ var COFantasy = COFantasy || function() {
      });*/
   }
 
+  function createCharacter(nom, avatar, spec) {
+    var res = createObj('character', {
+      name: nom,
+      avatar: avatar
+    });
+    if (!res) return;
+    var charId = res.id;
+    if (spec.attributesFiche) {
+      for (var attrName in spec.attributesFiche) {
+        var attr = findObjs({
+          _type: 'attribute',
+          _characterid: charId,
+          name: attrName
+        });
+        if (attr.length === 0) {
+          createObj('attribute', {
+            _characterid: charId,
+            name: attrName,
+            current: spec.attributesFiche[attrName]
+          });
+        } else {
+          attr[0].set('current', spec.attributesFiche[attrName]);
+        }
+      }
+    } //end attributesFiche
+    if (spec.pv) {
+      var pvAttr = findObjs({
+        _type: 'attribute',
+        _characterid: charId,
+        name: 'PV'
+      });
+      if (pvAttr.length === 0) {
+        createObj('attribute', {
+          _characterid: charId,
+          name: 'PV',
+          current: spec.pv,
+          max: spec.pv
+        });
+      } else {
+        pvAttr[0].set('current', spec.pv);
+        pvAttr[0].set('max', spec.pv);
+      }
+    }
+    var actions = "";
+    if (spec.attaques) {
+      spec.attaques.forEach(function(att) {
+        if (!att.length) {
+          error("Attaque mal formée", att);
+        } else {
+          createObj('ability', {
+            _characterid: charId,
+            name: att[0],
+            istokenaction: true,
+            action: '!cof-attack @{selected|token_id} @{target|token_id} ' + JSON.stringify(att)
+          });
+          actions += '%' + att[0] + ' ';
+        }
+      });
+    }
+    if (spec.attributes) {
+      spec.attributes.forEach(function(a) {
+        a._characterid = charId;
+        createObj('attribute', a);
+      });
+    }
+    if (spec.abilities) {
+      spec.abilities.forEach(function(a) {
+        a._characterid = charId;
+        a.istokenaction = true;
+        createObj('ability', a);
+        actions += '%' + a.name + ' ';
+      });
+    }
+    createObj('ability', {
+      _characterid: charId,
+      name: '#Actions#',
+      istokenaction: false,
+      action: actions
+    });
+  }
+
+  var predateurs = {
+    loup: {
+      nom: 'Loup',
+      avatar: "https://s3.amazonaws.com/files.d20.io/images/59094468/bX_aTjrVAbIRHjpRn-HwdQ/max.jpg?1532611383",
+      attributesFiche: {
+        NIVEAU: 1,
+        FORCE: 12,
+        DEXTERITE: 12,
+        CONSTITUTION: 12,
+        CON_SUP: '@{JETSUP}',
+        INTELLIGENCE: 2,
+        SAGESSE: 14,
+        SAG_SUP: '@{JETSUP}',
+        CHARISME: 6,
+        DEFDIV: 3 //Total 14
+      },
+      pv: 9,
+      attaques: [
+        ['Morsure', ["@{selected|ATKCAC}", 0], 20, [1, 6, 1, 0],
+          [0]
+        ]
+      ],
+      attributes: [],
+      abilities: []
+    },
+    loupAlpha: {
+      nom: 'Loup alpha',
+      avatar: "https://s3.amazonaws.com/files.d20.io/images/59094818/J0yWdxryZFKakJtNGJNNvw/max.jpg?1532612061",
+      attributesFiche: {
+        NIVEAU: 2,
+        FORCE: 16,
+        DEXTERITE: 12,
+        CONSTITUTION: 16,
+        CON_SUP: '@{JETSUP}',
+        INTELLIGENCE: 2,
+        SAGESSE: 14,
+        SAG_SUP: '@{JETSUP}',
+        CHARISME: 6,
+        DEFDIV: 4, //Total 15
+        INIT_DIV: 5 //Total 17
+      },
+      pv: 15,
+      attaques: [
+        ['Morsure', ["@{selected|ATKCAC}", -1], 20, [1, 6, 3, 0],
+          [0]
+        ]
+      ],
+      attributes: [{
+        name: 'discrétion',
+        value: 5
+      }],
+      abilities: [{
+        name: 'Embuscade',
+        action: '!cof-surprise [[15 + @{selected|DEX}]]'
+      }, {
+        name: 'Attaque-embuscade',
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",-1],20,[1,6,3,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif'
+      }]
+    },
+    worg: {
+      nom: 'Grand loup',
+      avatar: "https://s3.amazonaws.com/files.d20.io/images/25294798/4dJ_60uP2mw6UJA2elkoXA/max.jpg?1479223790",
+      attributesFiche: {
+        NIVEAU: 3,
+        FORCE: 16,
+        DEXTERITE: 12,
+        CONSTITUTION: 16,
+        CON_SUP: '@{JETSUP}',
+        INTELLIGENCE: 4,
+        SAGESSE: 14,
+        SAG_SUP: '@{JETSUP}',
+        CHARISME: 6,
+        DEFDIV: 6, //Total 17
+        INIT_DIV: 5 //Total 17
+      },
+      pv: 35,
+      attaques: [
+        ['Morsure', ["@{selected|ATKCAC}", 0], 20, [1, 6, 5, 0],
+          [0]
+        ]
+      ],
+      attributes: [{
+        name: 'discrétion',
+        value: 5
+      }],
+      abilities: [{
+        name: 'Embuscade',
+        action: '!cof-surprise [[15 + @{selected|DEX}]]'
+      }, {
+        name: 'Attaque-embuscade',
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",0],20,[1,6,5,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif'
+      }]
+    },
+    lion: {
+      nom: 'Lion',
+      attributesFiche: {
+        NIVEAU: 4,
+        FORCE: 20,
+        DEXTERITE: 18,
+        DEX_SUP: '@{JETSUP}',
+        CONSTITUTION: 20,
+        INTELLIGENCE: 4,
+        SAGESSE: 14,
+        SAG_SUP: '@{JETSUP}',
+        CHARISME: 6,
+        DEFDIV: 4, //Total 18
+        INIT_DIV: 5 //Total 23 
+      },
+      pv: 30,
+      attaques: [
+        ['Morsure', ["@{selected|ATKCAC}", -1], 20, [2, 6, 5, 0],
+          [0]
+        ]
+      ],
+      attributes: [{
+        name: 'discrétion',
+        value: 5
+      }],
+      abilities: [{
+        name: 'Embuscade',
+        action: '!cof-surprise [[15 + @{selected|DEX}]]'
+      }, {
+        name: 'Attaque-embuscade',
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",-1],20,[2,6,5,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat immobilise FOR @{selected|token_id} --endif --endif'
+      }, {
+        name: 'Dévorer',
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",-1],20,[2,6,5,0],[0]] --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat renverse --etat immobilise FOR @{selected|token_id} --endif --endif'
+      }]
+    },
+    grandLion: {
+      nom: 'Grand lion',
+      attributesFiche: {
+        NIVEAU: 5,
+        FORCE: 22,
+        DEXTERITE: 18,
+        DEX_SUP: '@{JETSUP}',
+        CONSTITUTION: 20,
+        INTELLIGENCE: 2,
+        SAGESSE: 14,
+        SAG_SUP: '@{JETSUP}',
+        CHARISME: 14,
+        DEFDIV: 6, //Total 20
+      },
+      pv: 50,
+      attaques: [
+        ['Morsure', ["@{selected|ATKCAC}", -2], 20, [2, 6, 7, 0],
+          [0]
+        ]
+      ],
+      attributes: [{
+        name: 'discrétion',
+        value: 5
+      }],
+      abilities: [{
+        name: 'Embuscade',
+        action: '!cof-surprise [[15 + @{selected|DEX}]]'
+      }, {
+        name: 'Attaque-embuscade',
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",-2],20,[2,6,7,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat immobilise FOR @{selected|token_id} --endif --endif'
+      }, {
+        name: 'Dévorer',
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",-2],20,[2,6,7,0],[0]] --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat renverse --etat immobilise FOR @{selected|token_id} --endif --endif'
+      }]
+    },
+    oursPolaire: {
+      nom: 'Ours polaire',
+      attributesFiche: {
+        NIVEAU: 6,
+        FORCE: 26,
+        FOR_SUP: '@{JETSUP}',
+        DEXTERITE: 11,
+        CONSTITUTION: 26,
+        CON_SUP: '@{JETSUP}',
+        INTELLIGENCE: 2,
+        SAGESSE: 14,
+        CHARISME: 6,
+        DEFDIV: 10, //Total 20
+      },
+      pv: 50,
+      attaques: [
+        ['Morsure', ["@{selected|ATKCAC}", 0], 20, [2, 8, 7, 0],
+          [0]
+        ]
+      ],
+    },
+    tigreDentsDeSabre: {
+      nom: 'Tigre à dents de sabre',
+    },
+    oursPrehistorique: {
+      nom: 'Ours préhistorique',
+    }
+  };
+
   function conjurationPredateur(msg) {
     var options = parseOptions(msg);
     var cmd = options.cmd;
@@ -14954,15 +15253,17 @@ var COFantasy = COFantasy || function() {
           type: 'conjuration de prédateurs'
         };
         var niveau = charAttributeAsInt(invocateur, 'NIVEAU', 1);
-        var nomPredateur;
-        if (niveau < 5) nomPredateur = 'loup';
-        else if (niveau < 9) nomPredateur = 'loupAlpha';
-        else if (niveau < 12) nomPredateur = 'worg';
-        else if (niveau < 15) nomPredateur = 'lion';
-        else if (niveau < 18) nomPredateur = 'grandLion';
-        else if (niveau < 21) nomPredateur = 'oursPolaire';
-        else if (niveau < 23) nomPredateur = 'tigreDentsDeSabre';
-        else nomPredateur = 'oursPrehistorique';
+        var predateur;
+        if (niveau < 5) predateur = predateurs.loup;
+        else if (niveau < 9) predateur = predateurs.loupAlpha;
+        else if (niveau < 12) predateur = predateurs.worg;
+        else if (niveau < 15) predateur = predateurs.lion;
+        else if (niveau < 18) predateur = predateurs.grandLion;
+        else if (niveau < 21) predateur = predateurs.oursPolaire;
+        else if (niveau < 23) predateur = predateurs.tigreDentsDeSabre;
+        else predateur = predateurs.oursPrehistorique;
+        var nomPredateur = predateur.nom + ' de ' + invocateur.token.get('name');
+        createCharacter(nomPredateur, predateur.avatar, predateur);
         addEvent(evt);
       }); //end iterSelected
     }); //end getSelected
@@ -15604,6 +15905,11 @@ var COFantasy = COFantasy || function() {
       activation: "disparaît, puis réapparaît",
       actif: "clignote",
       fin: "ne disparaît plus"
+    },
+    agitAZeroPV: {
+      activation: "continue à agir malgré les blessures",
+      actif: "devrait être à terre",
+      fin: "subit l'effet de ses blessures"
     }
   };
 
@@ -15679,11 +15985,6 @@ var COFantasy = COFantasy || function() {
       actif: "est protégé par une armure magique",
       fin: "n'est plus entouré d'un halo magique"
     },
-    criDeGuerre: {
-      activation: "pousse son cri de guerre",
-      actif: "a effrayé ses adversaires",
-      fin: "n'effraie plus ses adversaires"
-    },
     armureDuMage: {
       activation: "fait apparaître un nuage magique argenté qui le protège",
       actif: "est entouré d'une armure du mage",
@@ -15695,6 +15996,11 @@ var COFantasy = COFantasy || function() {
       fin: "ne possède plus d'arme d'argent et de lumière",
       dm: true
     },
+    criDeGuerre: {
+      activation: "pousse son cri de guerre",
+      actif: "a effrayé ses adversaires",
+      fin: "n'effraie plus ses adversaires"
+    },
     protectionContreLeMal: {
       activation: "reçoit une bénédiction de protection contre le mal",
       actif: "est protégé contre le mal",
@@ -15703,6 +16009,11 @@ var COFantasy = COFantasy || function() {
     rageDuBerserk: {
       activation: "entre dans une rage berserk",
       actif: "est dans une rage berserk",
+      fin: "retrouve son calme"
+    },
+    enragé: {
+      activation: "devient enragé",
+      actif: "est enragé",
       fin: "retrouve son calme"
     },
     bonusInitEmbuscade: { //Effet interne pour la capacité Surveillance
@@ -16070,6 +16381,17 @@ var COFantasy = COFantasy || function() {
           },
           iterTokOptions);
         break;
+      case 'agitAZeroPV':
+        iterTokensOfAttribute(charId, options.pageId, effet, attrName, function(token) {
+          var pv = token.get('bar1_value');
+          if (pv == 0) { //jshint ignore:line
+            mort({
+              charId: charId,
+              token: token
+            }, undefined, evt);
+          }
+        });
+        break;
       default:
     }
     if (options.attrSave === undefined && !getState({
@@ -16087,6 +16409,14 @@ var COFantasy = COFantasy || function() {
     attr.remove();
     if (newInit.length > 0) initiative(newInit, evt, true);
     return res;
+  }
+
+  function finDEffetDeNom(perso, effet, evt, options) { //Supprime l'effet si présent
+    var attrs = tokenAttribute(perso, effet);
+    if (attrs.length === 0) return;
+    options = options || {};
+    options.pageId = options.pageId || perso.token.get('pageid');
+    finDEffet(attrs[0], effet, attrs[0].get('name'), perso.charId, evt, options);
   }
 
   //asynchrone
