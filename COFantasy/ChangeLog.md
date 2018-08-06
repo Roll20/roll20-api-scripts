@@ -6,6 +6,9 @@
 * Mise à jour de la capacité forme d'arbre, suites aux indications de Kegron : la forme d'arbre a maintenant niveau * 5 PV.
 * Prise en compte des effets de protection contre les souffles et les dégâts de zone.
 
+### Autres améliorations
+* !cof-set-macros pour créer automatiquement les macros quand on commence une partie (ou pour mettre à jour vos macros).
+
 ### Correction de bug
 * undo d'une diminution de PV sur un token lié remet maintenant correctement les PVs de tous les tokens liés au même personnage.
 
