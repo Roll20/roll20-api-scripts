@@ -27,20 +27,20 @@ var attrLookup = function(character,name,caseSensitive){
         if(index<sortOrderKeys.length && _.has(attrs,sortOrderKeys[index])){
             returnval = attrs[sortOrderKeys[index]];
             if (returnval != undefined){
-                return returnval.get("current")
+                return returnval.get("current");
             }
             else {
-                return ""
+                return "";
             }
         }
     }
 
-    returnval = findObjs({ type:'attribute', characterid:character.id, name: name})[0];
+    returnval = getAttrByName(character.id, name);
     if (returnval != undefined){
-        return returnval.get("current")
+        return returnval;
     }
     else {
-        return ""
+        return "";
     }
 
 };
