@@ -1,7 +1,7 @@
 # Areas of Effect
 
-_v1.5 Updates_
-* Added blast and line/cone effect buttons.
+_v1.6 Updates_
+* Implemented buttons to export and import the script's state across campaigns.
 
 GMs, your spellcasting players will love you for this script! It lets you
 create graphical areas of effect for various spells and other powers, and then
@@ -66,6 +66,6 @@ or create a help thread on the Roll20 API forum
 ## Show Support
 
 If you would like to show your appreciation and support for the work I do in writing,
-updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)
+updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/publisher/165/stephen-lindberg)
 or, simply leave a thank you note in the script's thread on the Roll20 forums.
 Either is greatly appreciated! Happy gaming!
