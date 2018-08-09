@@ -11,6 +11,7 @@ var CustomStatusMarkers = (() => {
   const CLEAR_TOKEN_CMD = '!CustomStatusMarkersClearMarkersTokenState';
   const MENU_CMD = '!CustomStatusMarkersShowMenu';
   const CHANGE_SIZE_CMD = '!CustomStatusMarkersOptionsChangeSize';
+  const CHANGE_ALIGNMENT_CMD = '!CustomStatusMarkersOptionsChangeAlignment';
   const EXPORT_STATE_CMD = '!CustomStatusMarkersExportState';
   const IMPORT_STATE_CMD = '!CustomStatusMarkersImportState';
 
@@ -164,6 +165,19 @@ var CustomStatusMarkers = (() => {
       Templates.save(statusName, graphic);
 
       _whisper(msg.playerid, 'Created status ' + statusName);
+      Menu.show(msg.playerid);
+    }
+
+    /**
+     * Process an API command to set the alignment of custom status markers
+     * relative to their token.
+     * @param {ChatMessage} msg
+     */
+    static setAlignment(msg) {
+      let args = msg.content.split(' ');
+      let alignment = args[1];
+      setAlignment(alignment);
+
       Menu.show(msg.playerid);
     }
 
@@ -342,12 +356,16 @@ var CustomStatusMarkers = (() => {
       // Script settings menu (GMs only!)
       if(playerIsGM(playerId)) {
         // Options menu
-        var optionsHtml = '<table style="width: 100%;">';
-        optionsHtml += '<tr style="vertical-align: middle;">';
-        optionsHtml += '<td>[Icon Size](' + CHANGE_SIZE_CMD + ' ?{Size in pixels})</td>';
-        optionsHtml += '<td>' + getIconSize() + '</td>';
-        optionsHtml += '<tr>';
-        optionsHtml += '<table>';
+        var optionsHtml = '<table style="width: 100%;">' +
+            '<tr style="vertical-align: middle;">' +
+              '<td>[Icon Size](' + CHANGE_SIZE_CMD + ' ?{Size in pixels})</td>' +
+              '<td>' + getIconSize() + '</td>' +
+            '</tr>' +
+            '<tr>' +
+              '<td>[Icon Alignment](' + CHANGE_ALIGNMENT_CMD + ' ?{Icon Alignment:|above|inline})</td>' +
+              '<td>' + getAlignment() + '</td>' +
+            '</tr>' +
+          '</table>';
         html += Menu.showPanel('Options', optionsHtml);
 
         // Menu option - Save
@@ -475,8 +493,12 @@ var CustomStatusMarkers = (() => {
       statusMarkers = [];
     let iconSize = getIconSize();
 
-    //return (statusMarkers.length + index) * iconSize;
-    return index*iconSize;
+    // Get the appropriate offset for the configured alignment.
+    let alignment = getAlignment();
+    if(alignment === 'inline')
+      return (statusMarkers.length * MARKER_RADIUS * 2) + (index * iconSize);
+    else
+      return index*iconSize;
   }
 
   /**
@@ -487,8 +509,12 @@ var CustomStatusMarkers = (() => {
    */
   function _calcStatusMarkerTop(token) {
     let top = token.get('top') - token.get('height')/2;
-    //return top + MARKER_RADIUS - (getIconSize()-MARKER_RADIUS);
-    return top - getIconSize()/2;
+
+    let alignment = getAlignment();
+    if(alignment === 'inline')
+      return top + MARKER_RADIUS;
+    else
+      return top - getIconSize()/2;
    }
 
   /**
@@ -594,6 +620,15 @@ var CustomStatusMarkers = (() => {
     _whisper(playerId, html);
 
     return json;
+  }
+
+  /**
+   * Gets the configured alignment for status marker icons.
+   * @return {string}
+   */
+  function getAlignment() {
+    let options = getOptions();
+    return options.alignment || 'above';
   }
 
   /**
@@ -886,12 +921,27 @@ var CustomStatusMarkers = (() => {
   }
 
   /**
+   * Changes the alignment of status markers relative to their tokens.
+   * @param {string} alignment
+   */
+  function setAlignment(alignment) {
+    let scriptState = getState();
+    let options = getOptions();
+    options.alignment = alignment;
+
+    // Resize and reposition all the status markers.
+    _.each(scriptState.tokens, (tokenData, tokenId) => {
+      let token = getObj('graphic', tokenId);
+      if(token)
+        repositionStatusMarkers(token);
+    });
+  }
+
+  /**
    * Changes the size of the status markers.
    * @param {int} size
    */
   function setIconSize(size) {
-    log('Custom Status Markers: Changing size of status marker icons to ' + size);
-
     let scriptState = getState();
     let options = getOptions();
     options.iconSize = size;
@@ -1019,6 +1069,8 @@ var CustomStatusMarkers = (() => {
         Commands.clearToken(msg);
       else if(msg.content.startsWith(CHANGE_SIZE_CMD))
         Commands.setIconSize(msg);
+      else if(msg.content.startsWith(CHANGE_ALIGNMENT_CMD))
+        Commands.setAlignment(msg);
       else if(msg.content.startsWith(EXPORT_STATE_CMD))
         Commands.exportState(msg);
       else if(msg.content.startsWith(IMPORT_STATE_CMD))
