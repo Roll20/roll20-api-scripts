@@ -1,7 +1,8 @@
 # Custom Status Markers
 
-_3.2 Updates_
-* Added macros for toggling custom status markers on selected tokens.
+_3.3 Updates_
+* Fixed status tint to allow CSS hex colors.
+* Implemented export/import buttons for the script's state, allowing users to export/import their status markers across campaigns.
 
 This script allows users to create custom status markers for tokens.
 When this script is installed, it creates a 'CustomStatusMarkers' macro for
