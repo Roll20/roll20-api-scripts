@@ -286,6 +286,8 @@ var AreasOfEffect = (() => {
 
      let menu = _showMenuPanel('Export Areas of Effect', content);
      _whisper(playerid, menu.toString(MENU_CSS));
+
+     return json;
    }
 
    /**
