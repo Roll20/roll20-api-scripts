@@ -1,6 +1,8 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 1.05
 ### Capacités
+* Conjuration de prédateurs de l'invocateur
+* Cibles multiples (pour les nuées)
 * Frénésie (pour les hommes-rats)
 * Capacité enrager de la voie du Cogneur
 * Capacité grenaille de l'arquebusier
@@ -8,6 +10,7 @@
 * Prise en compte des effets de protection contre les souffles et les dégâts de zone.
 
 ### Autres améliorations
+* Ajout de l'état encombré, qui impose des d12 pour les tests de DEX.
 * Le script ne devrait plus être sensible à la casse des attributs de fiche.
 * !cof-set-macros pour créer automatiquement les macros quand on commence une partie (ou pour mettre à jour vos macros).
 
