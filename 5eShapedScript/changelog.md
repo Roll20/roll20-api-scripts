@@ -1,3 +1,8 @@
+# 13.6.0
+
+### Features
+- Startup message with versions and loaded content
+
 # 13.5.2
 
 ### Bug fixes
