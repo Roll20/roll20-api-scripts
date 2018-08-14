@@ -213,7 +213,7 @@ on('chat:message', function(msg) {
         let Range2A = parseInt(attrLookup(attacker, "repeating_weapons_$0_Range2", false)) || 1;
         let Range2B = parseInt(attrLookup(defender, "repeating_weapons_$0_Range2", false)) || 1;
         let WRankA = attrLookup(attacker, "repeating_weapons_$0_WRank", false) || "E";
-        let WRankB = attrLookup(attacker, "repeating_weapons_$0_WRank", false) || "E";
+        let WRankB = attrLookup(defender, "repeating_weapons_$0_WRank", false) || "E";
         let fIDA = getAttrByName(attacker.id, 'fid')|| "";
         let fIDB = getAttrByName(defender.id, 'fid')|| "";
         log(fIDA);
