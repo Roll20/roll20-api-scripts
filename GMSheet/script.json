@@ -1,9 +1,9 @@
 {
     "name": "GMSheet",
     "script": "GMSheet.js",
-    "version": "0.1.4",
+    "version": "0.2.0",
     "previousversions": ["0.1.3","0.1.4"],
-    "description": "### Roll20-GMSheet\r*Version 0.1.4*\r\rA quick GM Cheatsheet for the D&D 5e OGL sheets on [Roll20](http://roll20.net).\rPlease use `!gmsheet -h` for inline help and examples.\r\r#### Displayed information\r\rThe script currently shows\r\r- name, race, level and (main) class, including the character's avatar\r- inspiration!\r- HP, also indicating temporary hitpoints and injuries\r- speed, passive perception, initiative bonus\r- main abilities + modifiers\r- available spell slots\r- class resources (as stored in the attributes `class_resource` and `other_resource`)\r\r#### Usage\r\r1. Select one or several tokens\r2. Type `!gmsheet` in chat",
+    "description": "### Roll20-GMSheet\r*Version 0.2.0*\r\rA quick GM Cheatsheet for the D&D 5e OGL sheets on [Roll20](http://roll20.net).\rPlease use `!gmsheet -h` for inline help and examples.\r\r#### Displayed information\r\rThe script currently shows\r\r- name, race, level and (main) class, including the character's avatar\r- inspiration!\r- HP, also indicating temporary hitpoints and injuries\r- speed, passive perception, initiative bonus\r- main abilities + modifiers\r- available spell slots\r- class resources (as stored in the attributes `class_resource` and `other_resource`)\r\r#### Usage\r\r1. Select one or several tokens\r2. Type `!gmsheet` in chat",
     "authors": "Arthur B",
     "roll20userid": "694750",
     "useroptions": [],    
