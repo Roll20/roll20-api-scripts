@@ -489,9 +489,10 @@
                     <li>apeuré : <tt>screaming</tt></li>
                     <li>invisible : <tt>ninja-mask</tt></li>
                     <li>gravement blessé : <tt>arrowed</tt></li>
+                    <li>encombré : <tt>frozen-orb</tt></li>
                   </ul>
                   <!-- pénombre (-5 att. distance) : pas encore dans la liste -->
-                  <p>Pour faciliter la gestion des états, j'utilise deux macros dans la barre du GM, <code>!cof-set-state ?{État|mort|surpris|assome|renverse|aveugle|affaibli|etourdi|paralyse|ralenti|immobilise|endormi|apeure|invisible|blessé} true</code>, et la même avec <code>false</code>.<br />
+                  <p>Pour faciliter la gestion des états, j'utilise deux macros dans la barre du GM, <code>!cof-set-state ?{État|mort|surpris|assome|renverse|aveugle|affaibli|etourdi|paralyse|ralenti|immobilise|endormi|apeure|invisible|blessé|encombre} true</code>, et la même avec <code>false</code>. (N'oubliez pas que la commande <code>!cof-set-macros</code> permet de générer automatiquement les macros utiles au script).<br />
                     Notez que si on se contente de changer le statut pour un token lié, le changement risque de ne pas être propagé au personnage (et donc serait perdu en cas de changement de carte).
                   </p>
                   <p>Enfin, il est possible de faire réaliser un jet pour se libérer d'un état, en utilisant la commande <code>!cof-save-state <i>etat</i> <i>carac</i> <i>seuil</i></code>. Il est possible de remplacer <i>seuil</i> par une id de token pour faire faire un test en opposition avec ce token. On peut aussi passer la caractéristique et le seuil en argument à <code>!cof-set-state</code> pour proposer le jet à chaque fois qu'on affiche les <code>#Actions#</code> ou qu'on affiche le statut du personnage.</p>
@@ -961,6 +962,10 @@
               <h3 class="text-info" id="Invocateur">Invocateur</h3>
               <div class="decalage">
                 <h4 class="text-secondary">Voie de la conjuration</h4>
+                <ol>
+                  <li><strong>Conjuration de prédateur</strong> : <code>!cof-conjuration-de-predateur</code>.</li>
+                  <li><strong>Conjuration renforcée</strong> : vous pouvez soit utiliser un attribut <code>voieDeLaConjuration</code>, de valeur le rang dans la voie, soit ajouter ce rang en premier argument de <code>!cof-conjuration-de-predateur</code>.</li>
+                </ol>
                 <h4 class="text-secondary">Voie de l'entité</h4>
                 <ol>
                   <li><strong>Invocation d'une entité</strong> : ajouter la fiche correspondante.</li>
@@ -968,6 +973,9 @@
                   <!-- TODO -->
                 </ol>
                 <h4 class="text-secondary">Voie du familier</h4>
+                <ol>
+                  <li><strong>Familier</strong> : créer un token pour le familier, avec vue et controlé par le joueur. Le partage des PV n'est pas géré.</li>
+                </ol>
                 <h4 class="text-secondary">Voie des mutations</h4>
                 <ol>
                   <li><strong>Mutation offensive</strong> : 
@@ -1184,7 +1192,7 @@
                 </ol>
                 <h4 class="text-secondary">Voie de la télépathie</h4>
                 <ol>
-                  <li><strong>Télépathie</strong> : </li>
+                  <li><strong>Télépathie</strong> : pas de support particulier.</li>
                   <li><strong>Radar mental</strong> : </li>
                 </ol>
               </div>
@@ -1416,6 +1424,7 @@
               <div class="decalage">
                 <ul>
                   <li><strong>Baroud d'honneur</strong> : ajouter un attribut <code>baroudHonneur</code> (=true) (Quand le personnage arrive à 0 PV, il ne meurt pas jusqu'à sa prochaine attaque, qui se fait avec un bonus de +5)</li>
+                  <li><strong>Cibles multiples</strong> (nuées) : ajouter un attribut <code>ciblesMultiples</code>, de valeur <code>true</code>.</li>
                   <li><strong>Clignotement</strong> : <code>!cof-effet-temp clignotement [[1d6+2]]</code>.</li>
                   <li><strong>Créature non-vivante</strong> : ajouter un attribut <code>nonVivant</code></li>
                   <li><strong>Force de géant</strong> : <code>!cof-effet-temp forceDeGeant 10</code>. Le bonus est de 2 par défaut, mais peut être modifié en utilisant l'option <code>--valeur</code>.</li>
