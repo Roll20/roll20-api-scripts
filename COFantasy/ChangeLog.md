@@ -1,4 +1,17 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 1.06
+### Capacités
+* Prise en charge du sort de lumière du magicien
+* Rang 1 de la voie de la magie de guérison
+
+### Autres améliorations
+* Ajout d'un effet au feu grégeois
+
+### Correction de bugs
+* !cof-lancer-sort n'envoie plus de message en double au GM
+* Undo devenu possible pour !cof-dmg appliqué à un token lié
+* Plus de message d'erreur dans le log quand on utilise un tableau au lieu d'un label pour une attaque
+
 ## 1.05
 ### Capacités
 * Conjuration de prédateurs de l'invocateur
