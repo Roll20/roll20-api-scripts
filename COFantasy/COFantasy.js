@@ -1408,7 +1408,9 @@ var COFantasy = COFantasy || function() {
   // callback(selected, playerId)
   function getSelected(msg, callback, options) {
     var playerId = getPlayerIdFromMsg(msg);
-    var pageId = options.pageId || getPageId(playerId);
+    var pageId;
+    if (options && options.pageId) pageId = options.pageId;
+    else pageId = getPageId(playerId);
     var args = msg.content.split(' --');
     var selected = [];
     var enleveAuxSelected = [];
@@ -2623,7 +2625,8 @@ var COFantasy = COFantasy || function() {
           }
           scope.limiteParJour = limiteParJour;
           if (cmd.length > 2) {
-            scope.limiteParJourRessource = cmd[2];
+            cmd.splice(0,2);
+            scope.limiteParJourRessource = cmd.joins('_');
           }
           return;
         case 'limiteParCombat':
@@ -2638,7 +2641,8 @@ var COFantasy = COFantasy || function() {
           }
           scope.limiteParCombat = limiteParCombat;
           if (cmd.length > 2) {
-            scope.limiteParCombatRessource = cmd[2];
+            cmd.splice(0,2);
+            scope.limiteParCombatRessource = cmd.join('_');
           }
           return;
         case 'decrAttribute':
@@ -10092,7 +10096,8 @@ var COFantasy = COFantasy || function() {
           }
           options.limiteParJour = limiteParJour;
           if (cmd.length > 2) {
-            options.limiteParJourRessource = cmd[2];
+            cmd.splice(0,2);
+            options.limiteParJourRessource = cmd.join('_');
           }
           return;
         case 'limiteCibleParJour':
@@ -10107,7 +10112,8 @@ var COFantasy = COFantasy || function() {
           }
           options.limiteCibleParJour = limiteCibleParJour;
           if (cmd.length > 2) {
-            options.limiteCibleParJourRessource = cmd[2];
+            cmd.splice(0,2);
+            options.limiteCibleParJourRessource = cmd.join('_');
           }
           return;
         case 'limiteParCombat':
@@ -10122,7 +10128,8 @@ var COFantasy = COFantasy || function() {
           }
           options.limiteParCombat = limiteParCombat;
           if (cmd.length > 2) {
-            options.limiteParCombatRessource = cmd[2];
+            cmd.splice(0,2);
+            options.limiteParCombatRessource = cmd.join('_');
           }
           return;
         case "portee":
@@ -15793,7 +15800,7 @@ var COFantasy = COFantasy || function() {
       }];
       return;
     }
-    var pageId = ct.get('_pageid');
+    var pageId = ct.get('pageid');
     var tokLumiere = createObj('graphic', {
       _pageid: pageId,
       imgsrc: "https://s3.amazonaws.com/files.d20.io/images/3233035/xHOXBXoAgOHCHs8omiFAYg/thumb.png?1393406116",
