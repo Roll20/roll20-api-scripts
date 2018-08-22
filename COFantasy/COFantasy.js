@@ -15698,7 +15698,7 @@ var COFantasy = COFantasy || function() {
     inBar: true
   }, {
     name: 'Torche',
-    action: "!cof-torche",
+    action: "!cof-torche @{selected|token_id}",
     visibleto: 'all',
     istokenaction: true,
   }, {
@@ -15731,19 +15731,19 @@ var COFantasy = COFantasy || function() {
     var playerId = msg.playerid;
     var force = playerIsGM(playerId) && msg.content.includes('--force');
     var inBar = [];
+    var allMacros = findObjs({_type:'macro'});
     gameMacros.forEach(function(m) {
-      var prev = findObjs('macro', {
-        name: m.name
-      });
-      if (prev.length === 0) {
+      var prev = 
+        allMacros.find(function(macro){ return macro.get('name') == m.name;});
+      if (prev === undefined) {
         m.playerid = playerId;
         createObj('macro', m);
         sendPlayer(msg, "Macro " + m.name + " créée.");
         if (m.inBar) inBar.push(m.name);
       } else if (force) {
-        prev[0].set('action', m.action);
-        prev[0].set('visibleto', m.visibleto);
-        prev[0].set('istokenaction', m.istokenaction);
+        prev.set('action', m.action);
+        prev.set('visibleto', m.visibleto);
+        prev.set('istokenaction', m.istokenaction);
         sendPlayer(msg, "Macro " + m.name + " réécrite.");
         if (m.inBar) inBar.push(m.name);
       } else {
@@ -16028,8 +16028,8 @@ var COFantasy = COFantasy || function() {
       var msgAllume = "allume une torche, qui peut encore éclairer pendant " + tempsTorche + " minutes.";
       if (nbTorches > 1) {
         msgAllume += " Il lui reste encore " + (nbTorches - 1);
-      if (nbTorches == 2) msgAllume += " autre torche";
-      else msgAllume += " autres torches";
+        if (nbTorches == 2) msgAllume += " autre torche";
+        else msgAllume += " autres torches";
       }
       whisperChar(perso.charId, msgAllume);
       addEvent(evt);
