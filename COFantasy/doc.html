@@ -113,8 +113,7 @@
 									<li><a class="text-info" href="#sorts">Sorts</a></li>
 									<li><a class="text-info" href="#consommables">Consommables</a></li>
 									<li><a class="text-info" href="#deplacements">Déplacements</a></li>
-									<li><a class="text-info" href="#escaliers">Escaliers</a></li>
-									<li><a class="text-info" href="#montures">Montures</a></li>
+									<li><a class="text-info" href="#lumiere">Lumière</a></li>
 									<li><a class="text-info" href="#jet_caracteristiques">Jet de Caracteristiques</a></li>
 								</ul>
 								<li data-toggle="collapse" data-target="#abilities"><a href="#">Capacités par Classe</a></li>
@@ -596,7 +595,13 @@
                 <p>Pour qu'un personnage puisse monter sur une monture, il faut que cette monture soit associée à une fiche de personnage et qu'il possède l'attribute <code>monture</code> à <code>true</code>. La commande pour monter sur la monture est <code>!cof-en-selle @{selected|token_id} @{target|token_id}</code>, à lancer en sélectionnant le cavalier.</p>
                 <p>On peut ensuite bouger la monture, cela déplace le cavalier. Le mieux est de lancer la commander alors que le token du cavalier est sur le token de la monture. Si on déplace le cavalier, cela le fait descendre de sa monture.</p>
               </div>
-              <h3 class="text-info" id="jet_caracteristiques">3.11 Jet de Caracteristiques</h3>
+              <h3 class="text-info" id="lumiere">3.11 Lumière</h3>
+              <div class="decalage">
+                <p>Pour faire de la lumière, on peut utiliser <code>!cof-lumiere <i>token_id portee</i></code>. Cela va faire en sorte que le token fasse de la lumière jusqu'à <i>portee</i> mètres. Il est possible d'avoir plusieurs sources de lumière, et la commande est compatible avec la <a href='#Vision_dans_le_noir'>vision dans le noir</a>. La commande admet un troisième argument qui est la distance à laquelle la lumière devient moins brillante, et un quatrième argument qui est le nom du type de lumière (par défaut, <code>lumiere</code>), utilisé quand on éteint les lumières.</p>
+                <p>Pour éteindre des lumières, utiliser <code>!cof-eteindre-lumiere</code> en sélectionnant le ou les tokens désirés. Il est possible de prendre un argument optionnel qui est le nom du groupe de lumières que l'on souhaite éteindre. Par exemple, on peut ainsi éteindre toutes les torches et laisser les effets de lumière magique actifs.</p>
+                <p>Pour les torches, le script propose d'automatiser la gestion en utilisant la commande <code>!cof-torche <i>token_id</i></code>. Si le token tient une torche allumée, cela éteint la torche (et propose au MJ d'indiquer combien de temps la torche est restée allumée), et sinon, si le token possède des torches, cela allume une torche. Le nombre de torche et leur état est stocké dans un attribut <code>torches</code>, dont la valeur courante contient le nombre de torches dans l'inventaire, et la valeur max le temps restant pour la torche en cours d'utilisation (60 minutes pour une torche neuve). Si aucun attribut de ce nom n'existe, le script se contente d'allumer ou d'éteindre une torche, sans gérer leur nombre.</p>
+              </div>
+              <h3 class="text-info" id="jet_caracteristiques">3.12 Jet de Caracteristiques</h3>
               <div class="decalage">
                 <p><code>!cof-jet ?{Faire un jet de |Charisme, CHA|Constitution, CON|Dextérité, DEX|Force, FOR|Intelligence, INT|Sagesse, SAG}</code> : fait un simple jet pour la caractérisique sélectionnée.</p>
                 <p>Il est aussi possible de donner en argument une difficulté au jet. Par exemple en faisant <code>!cof-jet INT ?{difficulté}</code>.</p>

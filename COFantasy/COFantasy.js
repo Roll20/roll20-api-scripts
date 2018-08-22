@@ -157,18 +157,20 @@ var COFantasy = COFantasy || function() {
         var portee = 0;
         if (command.length > 3) {
           var attackLabel = command[3];
-          var att = getAttack(attackLabel, perso);
-          if (att !== undefined) {
-            portee = getPortee(perso.charId, att.attackPrefix);
-          } else {
-            var thisWeapon = [];
-            try {
-              thisWeapon = JSON.parse(attackLabel);
-              if (Array.isArray(thisWeapon) && thisWeapon.length > 4) {
-                portee = thisWeapon[4];
+          if (!attackLabel.startsWith('?')) {
+            var att = getAttack(attackLabel, perso);
+            if (att !== undefined) {
+              portee = getPortee(perso.charId, att.attackPrefix);
+            } else {
+              var thisWeapon = [];
+              try {
+                thisWeapon = JSON.parse(attackLabel);
+                if (Array.isArray(thisWeapon) && thisWeapon.length > 4) {
+                  portee = thisWeapon[4];
+                }
+              } catch (e) {
+                log("Impossible de trouver la portée pour " + attackLabel);
               }
-            } catch (e) {
-              log("Impossible de trouver la portée pour " + attackLabel);
             }
           }
         }
@@ -771,6 +773,12 @@ var COFantasy = COFantasy || function() {
     };
   }
 
+  function boutonSimple(action, style, texte) {
+    action = action.replace(/%/g, '&#37;').replace(/\)/g, '&#41;').replace(/\?/g, '&#63;').replace(/@/g, '&#64;').replace(/\[/g, '&#91;').replace(/]/g, '&#93;').replace(/"/g, '&#34;');
+    action = action.replace(/\'/g, '&apos;'); // escape quotes
+    return '<a href="' + action + '"' + style + '>' + texte + '</a>';
+  }
+
   // on, remplace tous les selected par @{character name|attr}
   function escapeRegExp(str) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
@@ -907,9 +915,7 @@ var COFantasy = COFantasy || function() {
       buttonStyle = ' style="' + pictoStyle.style + '"';
     if (overlay) overlay = ' title="' + overlay + '"';
     else overlay = '';
-    action = action.replace(/%/g, '&#37;').replace(/\)/g, '&#41;').replace(/\?/g, '&#63;').replace(/@/g, '&#64;').replace(/\[/g, '&#91;').replace(/]/g, '&#93;').replace(/"/g, '&#34;');
-    action = action.replace(/\'/g, '&apos;'); // escape quotes
-    return '<a href="' + action + '"' + buttonStyle + overlay + '>' + text + '</a>';
+    return boutonSimple(action, buttonStyle + overlay, text);
   }
 
   function improve_image(image_url) {
@@ -2625,7 +2631,7 @@ var COFantasy = COFantasy || function() {
           }
           scope.limiteParJour = limiteParJour;
           if (cmd.length > 2) {
-            cmd.splice(0,2);
+            cmd.splice(0, 2);
             scope.limiteParJourRessource = cmd.joins('_');
           }
           return;
@@ -2641,7 +2647,7 @@ var COFantasy = COFantasy || function() {
           }
           scope.limiteParCombat = limiteParCombat;
           if (cmd.length > 2) {
-            cmd.splice(0,2);
+            cmd.splice(0, 2);
             scope.limiteParCombatRessource = cmd.join('_');
           }
           return;
@@ -10096,7 +10102,7 @@ var COFantasy = COFantasy || function() {
           }
           options.limiteParJour = limiteParJour;
           if (cmd.length > 2) {
-            cmd.splice(0,2);
+            cmd.splice(0, 2);
             options.limiteParJourRessource = cmd.join('_');
           }
           return;
@@ -10112,7 +10118,7 @@ var COFantasy = COFantasy || function() {
           }
           options.limiteCibleParJour = limiteCibleParJour;
           if (cmd.length > 2) {
-            cmd.splice(0,2);
+            cmd.splice(0, 2);
             options.limiteCibleParJourRessource = cmd.join('_');
           }
           return;
@@ -10128,7 +10134,7 @@ var COFantasy = COFantasy || function() {
           }
           options.limiteParCombat = limiteParCombat;
           if (cmd.length > 2) {
-            cmd.splice(0,2);
+            cmd.splice(0, 2);
             options.limiteParCombatRessource = cmd.join('_');
           }
           return;
@@ -15692,10 +15698,9 @@ var COFantasy = COFantasy || function() {
     inBar: true
   }, {
     name: 'Torche',
-    action: "?{Allumer?|oui,!flicker-on 12 @{selected|token_id}|non,!flicker-off @{selected|token_id}|lumière,!snuff @{selected|token_id}}",
-    visibleto: '',
-    istokenaction: false,
-    inBar: true
+    action: "!cof-torche",
+    visibleto: 'all',
+    istokenaction: true,
   }, {
     name: 'Éteindre',
     action: "!cof-eteindre-lumiere ?{Quelle lumière?|Tout}",
@@ -15776,20 +15781,30 @@ var COFantasy = COFantasy || function() {
         dimRadius = '';
       }
     }
-    var ct = cible.token;
+    var nomToken = 'lumiere';
+    if (cmd.length > 4) {
+      nomToken = cmd[4].trim();
+      if (nomToken === '') nomToken = 'lumiere';
+    }
     var evt = {
       type: 'lumiere',
     };
+    ajouteUneLumiere(cible, nomToken, radius, dimRadius, evt);
+    addEvent(evt);
+  }
+
+  function ajouteUneLumiere(perso, groupe, radius, dimRadius, evt) {
+    var ct = perso.token;
     var attrName = 'lumiere';
     if (ct.get('bar1_link') === "") attrName += "_" + ct.get('name');
-    var nomLumiere = 'lumiere_' + ct.get('name');
+    var nomLumiere = groupe + '_' + ct.get('name');
     if (ct.get('bar1_max') && !ct.get('light_radius')) {
       //Cas particulier où le personnage est un vrai personnage qui ne fait pas de lumière
       setToken(ct, 'light_radius', radius, evt);
       if (dimRadius !== '') setToken(ct, 'light_dimradius', dimRadius, evt);
       setToken(ct, 'light_otherplayers', true, evt);
       var attr1 = createObj('attribute', {
-        characterid: cible.charId,
+        characterid: perso.charId,
         name: attrName,
         current: nomLumiere,
         max: 'surToken'
@@ -15815,13 +15830,13 @@ var COFantasy = COFantasy || function() {
       light_otherplayers: true
     });
     if (tokLumiere === undefined) {
-      error("Problème lors de la création du token de lumière", cmd);
+      error("Problème lors de la création du token de lumière", perso);
       return;
     }
-    evt.tokens =[tokLumiere];
+    evt.tokens = [tokLumiere];
     if (ct.get('bar1_max')) { //Lumière liée à un token
       var attr = createObj('attribute', {
-        characterid: cible.charId,
+        characterid: perso.charId,
         name: attrName,
         current: nomLumiere,
         max: tokLumiere.id
@@ -15831,9 +15846,51 @@ var COFantasy = COFantasy || function() {
         current: null
       }];
     } else { //cible temporaire, à effacer7
-      cible.remove();
+      ct.remove();
     }
-    addEvent(evt);
+  }
+
+  function eteindreUneLumiere(perso, pageId, al, lumName, evt) {
+    var lumId = al.get('max');
+    if (lumId == 'surToken') {
+      setToken(perso.token, 'light_radius', '', evt);
+      setToken(perso.token, 'light_dimradius', '', evt);
+      al.remove();
+      return;
+    }
+    var lumiere = getObj('graphic', lumId);
+    if (lumiere === undefined) {
+      var tokensLumiere = findObjs({
+        _type: 'graphic',
+        _pageid: pageId,
+        layer: 'walls',
+        name: lumName
+      });
+      if (tokensLumiere.length === 0) {
+        log("Pas de token pour la lumière " + lumName);
+        al.remove();
+        return;
+      }
+      lumiere = tokensLumiere.shift();
+      if (tokensLumiere.length > 0) {
+        //On cherche le token le plus proche de perso
+        var pos = [perso.token.get('left'), perso.token.get('top')];
+        var d =
+          VecMath.length(
+            VecMath.vec([lumiere.get('left'), lumiere.get('top')], pos));
+        tokensLumiere.forEach(function(tl) {
+          var d2 =
+            VecMath.length(
+              VecMath.vec([tl.get('left'), tl.get('top')], pos));
+          if (d2 < d) {
+            d = d2;
+            lumiere = tl;
+          }
+        });
+      }
+    }
+    al.remove();
+    if (lumiere) lumiere.remove();
   }
 
   function eteindreLumieres(msg) {
@@ -15848,55 +15905,147 @@ var COFantasy = COFantasy || function() {
       if (cmd.length > 1) groupe = cmd[1];
       if (groupe.toLowerCase() == 'tout') groupe = '';
       var pageId = options.pageId;
-            var evt = {type:"Eteindre la lumière"};
+      var evt = {
+        type: "Eteindre la lumière"
+      };
       iterSelected(selected, function(perso) {
         var attrLumiere = tokenAttribute(perso, 'lumiere');
         attrLumiere.forEach(function(al) {
           var lumName = al.get('current');
           if (groupe && !lumName.startsWith(groupe)) return;
-          var lumId = al.get('max');
-          if (lumId == 'surToken') {
-            setToken(perso.token, 'light_radius', '', evt);
-            setToken(perso.token, 'light_dimradius', '', evt);
-            al.remove();
-            return;
-          }
-          var lumiere = getObj('graphic', lumId);
-          if (lumiere === undefined) {
-            var tokensLumiere = findObjs({
-              _type: 'graphic',
-              _pageid: pageId,
-              layer: 'walls',
-              name: lumName
-            });
-            if (tokensLumiere.length === 0) {
-              log("Pas de token pour la lumière " + lumName);
-              al.remove();
-              return;
-            }
-            lumiere = tokensLumiere.shift();
-            if (tokensLumiere.length > 0) {
-              //On cherche le token le plus proche de perso
-              var pos = [perso.token.get('left'),perso.token.get('top')];
-              var d =
-                VecMath.length(
-                  VecMath.vec([lumiere.get('left'), lumiere.get('top')], pos));
-              tokensLumiere.forEach(function(tl) {
-                var d2 =
-                  VecMath.length(
-                    VecMath.vec([tl.get('left'), tl.get('top')], pos));
-                if (d2 < d) {
-                  d = d2;
-                  lumiere = tl;
-                }
-              });
-            }
-          }
-          al.remove();
-          if (lumiere) lumiere.remove();
+          eteindreUneLumiere(perso, pageId, al, lumName, evt);
         });
       });
     }, options);
+  }
+
+  function switchTorche(msg) {
+    var options = parseOptions(msg);
+    var cmd = options.cmd;
+    if (cmd.length < 2) {
+      error("Il faut préciser le token en argument de !cof-torche");
+      return;
+    }
+    var pageId = options.pageId;
+    var perso = tokenOfId(cmd[1], cmd[1], pageId);
+    if (perso === undefined) {
+      error("Token invalide", cmd);
+      return;
+    }
+    var diminueDuree = 0;
+    if (cmd.length > 2) {
+      //Dans ce cas, c'est pour diminuer la durée de vie de la torche
+      diminueDuree = parseInt(cmd[2]);
+      if (isNaN(diminueDuree) || diminueDuree <= 0) {
+        sendPlayer(msg, "Le deuxième argument de !cof-torche doit être un nombre strictement positif " + msg.content);
+        return;
+      }
+    }
+    var evt;
+    //On commence par chercher si une torche est allumée
+    var torcheAllumee = false;
+    var attrLumiere = tokenAttribute(perso, 'lumiere').filter(function(a) {
+      return a.get('current').startsWith('torche');
+    });
+    if (!diminueDuree && attrLumiere.length > 0) {
+      torcheAllumee = true;
+      evt = {
+        type: "Éteindre les torches"
+      };
+      attrLumiere.forEach(function(al) {
+        var lumName = al.get('current');
+        eteindreUneLumiere(perso, pageId, al, lumName, evt);
+      });
+    }
+    var nbTorches = 0;
+    var tempsTorche = 0;
+    var attrTorches = tokenAttribute(perso, 'torches');
+    if (attrTorches.length > 0) {
+      nbTorches = parseInt(attrTorches[0].get('current'));
+      if (isNaN(nbTorches) || nbTorches < 0) {
+        error("Nombre de torches incorrect", nbTorches);
+        if (evt) addEvent(evt);
+        return;
+      }
+      if (!torcheAllumee && nbTorches === 0) {
+        whisperChar(perso.charId, "n'a pas de torche.");
+        return;
+      }
+      tempsTorche = parseInt(attrTorches[0].get('max'));
+      if (isNaN(tempsTorche) || tempsTorche < 0) {
+        error("Temps restant pour la torche incorrect", tempsTorche);
+        if (evt) addEvent(evt);
+        return;
+      }
+      if (tempsTorche === 0) {
+        if (nbTorches === 0) { //Donc forcément torcheAllumee
+          //On remet l'attribut dans un état convenable
+          setTokenAttr(perso, 'torches', 0, evt, undefined, 60);
+          addEvent(evt);
+          return;
+        }
+        nbTorches--;
+        tempsTorche = 60;
+      }
+      if (diminueDuree) {
+        evt = evt || {
+          type: "Diminuer le duree de vie d'une torche"
+        };
+        var temps = diminueDuree;
+        tempsTorche -= diminueDuree;
+        if (tempsTorche <= 0) {
+          nbTorches--;
+          temps += tempsTorche;
+          tempsTorche = 60;
+          var msgDiminue = "torche épuisée.";
+          if (nbTorches === 0) {
+            msgDiminue += " Plus de torche !";
+          } else if (nbTorches == 1) {
+            msgDiminue += " Plus qu'une torche.";
+          } else {
+            msgDiminue += " Il lui reste " + nbTorches + " torches.";
+          }
+          whisperChar(perso.charId, msgDiminue);
+        }
+        setTokenAttr(perso, 'torches', nbTorches, evt, undefined, tempsTorche);
+        sendChar(perso.charId, '/w gm temps de torche diminué de ' + temps + ' minutes');
+        addEvent(evt);
+        return;
+      }
+
+      if (torcheAllumee) {
+        sendChar(perso.charId,
+          "/w gm torche éteinte. Reste " + nbTorches + " torches, et " +
+          tempsTorche + " minutes pour la dernière. " +
+          boutonSimple("!cof-torche " + perso.token.id + " ?{Durée?}", '', "Temps depuis allumage"));
+        addEvent(evt);
+        return;
+      }
+      evt = {
+        type: "Allumer une torche"
+      };
+      ajouteUneLumiere(perso, 'torche', 13, 7, evt);
+      var msgAllume = "allume une torche, qui peut encore éclairer pendant " + tempsTorche + " minutes.";
+      if (nbTorches > 1) {
+        msgAllume += " Il lui reste encore " + (nbTorches - 1);
+      if (nbTorches == 2) msgAllume += " autre torche";
+      else msgAllume += " autres torches";
+      }
+      whisperChar(perso.charId, msgAllume);
+      addEvent(evt);
+      return;
+    }
+    //On ne tient pas le compte précis des torches
+    if (torcheAllumee) {
+      whisperChar(perso.charId, "éteint sa torche");
+    } else {
+      evt = {
+        type: "Allumer une torche"
+      };
+      ajouteUneLumiere(perso, 'torche', 13, 7, evt);
+      whisperChar(perso.charId, "allume sa torche");
+    }
+    addEvent(evt);
   }
 
   function apiCommand(msg) {
@@ -16204,6 +16353,9 @@ var COFantasy = COFantasy || function() {
         return;
       case "!cof-eteindre-lumiere":
         eteindreLumieres(msg);
+        return;
+      case "!cof-torche":
+        switchTorche(msg);
         return;
       default:
         return;
@@ -17729,9 +17881,9 @@ var COFantasy = COFantasy || function() {
             }
           }
           if (lumiere === undefined) {
-              log("Pas de token pour la lumière " + al.get('current'));
-              al.remove();
-              return;
+            log("Pas de token pour la lumière " + al.get('current'));
+            al.remove();
+            return;
           }
           lumiere.set('left', x);
           lumiere.set('top', y);
