@@ -15903,7 +15903,7 @@ var COFantasy = COFantasy || function() {
       var cmd = options.cmd;
       var groupe;
       if (cmd.length > 1) groupe = cmd[1];
-      if (groupe.toLowerCase() == 'tout') groupe = '';
+      if (groupe && groupe.toLowerCase() == 'tout') groupe = '';
       var pageId = options.pageId;
       var evt = {
         type: "Eteindre la lumière"
