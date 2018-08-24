@@ -82,3 +82,13 @@ Attribute options will determine which attributes are set to which value (respec
 ## Global configuration
 
 There are three global configuration options, _playersCanModify_, _playersCanEvaluate_, and _useWorkers_, which can be toggled either on this page or by entering **!setattr-config** in chat. The former two will give players the possibility of modifying characters they don't control or using the **--evaluate** option. You should only activate either of these if you can trust your players not to vandalize your characters or your campaign. The last option will determine if the script triggers sheet workers on use, and should normally be toggled on.
+
+## Registering observers
+
+**Note:** this section is only intended to be read by script authors. If you are not writing API scripts, you can safely ignore this.
+
+Changes made by API scripts do not trigger the default Roll20 event handlers, by default. While perhaps a sensible choice in order to prevent infinite loops, it is unfortunate if you do want your script to ChatSetAttr-induced attribute changes. To this end, ChatSetAttr offers an observer pattern. You can register your script with ChatSetAttr like you would register Roll20 event handlers, and your handler functions will be called by ChatSetAttr. The syntax is
+
+`ChatSetAttr.registerObserver(event, observer);`
+
+where `event` is one of `"add"`, `"change"`, or `"destroy"`, and `observer` is the event handler function (with identical structure like the one you would pass to e.g. a `"change:attribute"` event).
