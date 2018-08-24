@@ -1,3 +1,12 @@
+# 13.7.0
+
+### Features
+- Check for and decrement spell components
+- Support configuring new characters created by Welcome Package script
+
+### Bug fixes
+- Fix error reporting on startup when script completely fails to load
+
 # 13.6.0
 
 ### Features
