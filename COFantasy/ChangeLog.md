@@ -1,4 +1,19 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+
+## 1.06
+### Capacités
+* Ajout de la gestion des torches
+* Prise en charge du sort de lumière du magicien
+* Rang 1 de la voie de la magie de guérison
+
+### Correction de bugs
+* !cof-lancer-sort n'envoie plus de message en double au GM
+* Undo devenu possible pour !cof-dmg appliqué à un token lié
+* Plus de message d'erreur dans le log quand on utilise un tableau au lieu d'un label pour une attaque
+
+### Autres améliorations
+* Ajout d'un effet au feu grégeois
+
 ## 1.05
 ### Capacités
 * Conjuration de prédateurs de l'invocateur
@@ -9,15 +24,13 @@
 * Mise à jour de la capacité forme d'arbre, suites aux indications de Kegron : la forme d'arbre a maintenant niveau * 5 PV.
 * Prise en compte des effets de protection contre les souffles et les dégâts de zone.
 
-### Autres améliorations
-* Ajout de l'état encombré, qui impose des d12 pour les tests de DEX.
-* Le script ne devrait plus être sensible à la casse des attributs de fiche.
-* !cof-set-macros pour créer automatiquement les macros quand on commence une partie (ou pour mettre à jour vos macros).
-
 ### Correction de bug
 * undo d'une diminution de PV sur un token lié remet maintenant correctement les PVs de tous les tokens liés au même personnage.
 
 ### Autres améliorations
+* Ajout de l'état encombré, qui impose des d12 pour les tests de DEX.
+* Le script ne devrait plus être sensible à la casse des attributs de fiche.
+* !cof-set-macros pour créer automatiquement les macros quand on commence une partie (ou pour mettre à jour vos macros).
 * Il est maintenant possible d'utiliser tir double avec 2 armes différentes.
 * Encaisser un coup est maintenant proposé en bouton à cliquer en cas d'attaque réussie.
 
