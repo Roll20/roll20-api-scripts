@@ -5,7 +5,7 @@
 	"previousversions": ["1.0"],
 	"description": "This is the Dice roller for the Vampire the Masquerade 5th Edition and is designed to be used in conjunction with its corresponding character sheet. It provides access to advanced rolling features such as correctly calculated hunger dice and provides banners to assist you determining the outcome of rolls. If you wish to use this independently of the character sheet please review the Readme file for details. ",
 	"authors": "The Grand Coterie",
-	"roll20userid": "143652, 117780",
+	"roll20userid": "143652",
 	"useroptions": [],
 	"dependencies": [],
 	"modifies": {},
