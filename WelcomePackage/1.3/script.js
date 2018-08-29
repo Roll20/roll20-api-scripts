@@ -97,9 +97,14 @@ const WelcomePackage = (() => {
         // the "version" attribute. This will be set to its correct value later
         // by the character sheet's worker.
         createObj('attribute', {
-          name: 'version',
+          name: 'mancer_confirm_flag',
           characterid: character.id,
-          current: 'set by sheet worker'
+          current: '1'
+        });
+        createObj('attribute', {
+          name: 'l1mancer_status',
+          characterid: character.id,
+          current: 'completed'
         });
 
         setTimeout(() => {
