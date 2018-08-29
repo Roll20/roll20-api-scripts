@@ -1,6 +1,6 @@
 {
 	"name": "Vampire The Masquerade 5th Edition Dice Mechanics",
-	"script": "VTM_Dice_Mechanics_v1.0.js",
+	"script": "VTM_Dice_Mechanics.js",
 	"version": "1.0",
 	"previousversions": ["1.0"],
 	"description": "This is the Dice roller for the Vampire the Masquerade 5th Edition and is designed to be used in conjunction with its corresponding character sheet. It provides access to advanced rolling features such as correctly calculated hunger dice and provides banners to assist you determining the outcome of rolls. If you wish to use this independently of the character sheet please review the Readme file for details. ",
