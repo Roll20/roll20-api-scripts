@@ -1087,7 +1087,7 @@ on('chat:message', function(msg) {
                           }
 
                           //queueeeee
-                          if (target[i] != HPCurrC) {
+                          if (target[i] != HPcurrC) {
                             if (parseInt(effect[i]) > 0){
                                 queue.push([target[i], "decrement", counter[i], 0, "combat-r"])
                                 log([target[i], "decrement", counter[i], 0, "combat-r"])
@@ -3154,7 +3154,7 @@ on('chat:message', function(msg) {
                           }
 
                           //queueeeee
-                          if (target[i] != HPCurrC) {
+                          if (target[i] != HPcurrC) {
                             if (parseInt(effect[i]) > 0){
                                 queue.push([target[i], "decrement", counter[i], 0, "combat-r"])
                                 log([target[i], "decrement", counter[i], 0, "combat-r"])
@@ -3913,7 +3913,7 @@ on('chat:message', function(msg) {
                           }
 
                           //queueeeee
-                          if (target[i] != HPCurrC) {
+                          if (target[i] != HPcurrC) {
                             if (parseInt(effect[i]) > 0){
                                 queue.push([target[i], "decrement", counter[i], 0, "combat-r"])
                                 log([target[i], "decrement", counter[i], 0, "combat-r"])
@@ -5156,7 +5156,7 @@ on("change:campaign:turnorder", function(turn) {
                           }
 
                           //queueeeee
-                          if (target[i] != HPCurrC) {
+                          if (target[i] != HPcurrC) {
                             if (parseInt(effect[i]) > 0){
                                 queue.push([target[i], "decrement", counter[i], 0, "combat-r"])
                                 log([target[i], "decrement", counter[i], 0, "combat-r"])
