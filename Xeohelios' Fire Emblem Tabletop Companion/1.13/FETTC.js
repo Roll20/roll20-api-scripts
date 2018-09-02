@@ -5281,11 +5281,11 @@ on("change:campaign:turnorder", function(turn) {
 
             if (queue[i][1] == "increment"){
                 queue[i][0].setWithWorker({
-                    current: queue[i][0].get("current") + queue[i][2] //current stat plus amt per turn
+                    current: parseInt(queue[i][0].get("current")) + parseInt(queue[i][2]) //current stat plus amt per turn
                 });
             } else if (queue[i][1] == "decrement"){
                 queue[i][0].setWithWorker({
-                    current: queue[i][0].get("current") - queue[i][2] //current stat minus amt per turn
+                    current: parseInt(queue[i][0].get("current")) - parseInt(queue[i][2]) //current stat minus amt per turn
                 });
             }
 
