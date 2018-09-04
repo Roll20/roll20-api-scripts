@@ -1,4 +1,35 @@
 /*jshint esversion: 6 */
+
+/*---------Variables---------*/
+var divstyle = 'style="width: 189px; border: 1px solid #353535; background-color: #f3f3f3; padding: 5px; color: #353535;"';
+var tablestyle = 'style="text-align:center; margin: 0 auto; border-collapse: collapse; margin-top: 5px; border-radius: 2px"';
+var headstyle = 'style="color: #f3f3f3; font-size: 18px; text-align: left; font-variant: small-caps; background-color: #353535; padding: 4px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;"';
+var namestyle = 'style="background-color: #353535; color: #f3f3f3; text-align: center; font-weight: bold; overflow: hidden; margin: 4px; margin-right: 0px; border-radius: 10px; font-family: Helvetica, Arial, sans-serif;"';
+var wrapperstyle = 'style="display: inline-block; padding:2px;"';
+var statdiv = 'style="border: 1px solid #353535; border-radius: 5px; overflow: hidden; text-align: center; display: inline-block; margin-left: 4px;"';
+var cellabel = 'style="background-color: #353535; color: #f3f3f3; font-weight: bold; padding: 2px;"';
+let none = undefined; //failsafe just in case one of the string-expressions gets evaluated incorrectly
+var queue = [];
+//I need to initialize some stats here so the centralized skills system actually works
+let DmgA = 0
+let DmgB = 0;
+let HitA = 0;
+let HitB = 0;
+let CritA = 0;
+let CritB = 0;
+let AvoA = 0;
+let AvoB = 0;
+let DdgA = 0;
+let DdgB = 0;
+let HPA = 0;
+let HPB = 0;
+let EXPAmod = 0;
+let WEXPA = 0;
+let Chatstr = ''
+let DisableatkA = false;
+let DisableatkB = false;
+
+/*---------Functions---------*/
 //huge credit to The Aaron on the forums for making this function
 //properly orders repeating functions
 var attrLookup = function(character,name,caseSensitive){
@@ -45,9 +76,6 @@ var attrLookup = function(character,name,caseSensitive){
 
 };
 
-//failsafe just in case one of the string-expressions gets evaluated incorrectly
-let none = undefined;
-
 //version that returns attr names
 var attrNameLookup = function(character,name,caseSensitive){
     let match=name.match(/^(repeating_.*)_\$(\d+)_.*$/);
@@ -86,9 +114,78 @@ var attrNameLookup = function(character,name,caseSensitive){
     return name;
 };
 
-//credit to Brian on the forums for this framework!
-var queue = [];
-function ManhDist(token1,token2) { //Manhattan Distance in tiles between two units
+//levelup function
+function Levelup (tokenid, tokenname, expobj, levelobj){
+    //Get growths
+    let Lvstr = '';
+    let HPG = Number(getAttrByName(tokenid, 'hp_gtotal'));
+    let StrG = Number(getAttrByName(tokenid, 'str_gtotal'));
+    let MagG = Number(getAttrByName(tokenid, 'mag_gtotal'));
+    let SklG = Number(getAttrByName(tokenid, 'skl_gtotal'));
+    let SpdG = Number(getAttrByName(tokenid, 'spd_gtotal'));
+    let LckG = Number(getAttrByName(tokenid, 'lck_gtotal'));
+    let DefG = Number(getAttrByName(tokenid, 'def_gtotal'));
+    let ResG = Number(getAttrByName(tokenid, 'res_gtotal'));
+    let growthslist = [HPG,StrG,MagG,SklG,SpdG,LckG,DefG,ResG];
+
+    let HPi = Number(getAttrByName(tokenid, 'hp_i'));
+    let Stri = Number(getAttrByName(tokenid, 'str_i'));
+    let Magi = Number(getAttrByName(tokenid, 'mag_i'));
+    let Skli = Number(getAttrByName(tokenid, 'skl_i'));
+    let Spdi = Number(getAttrByName(tokenid, 'spd_i'));
+    let Lcki = Number(getAttrByName(tokenid, 'lck_i'));
+    let Defi = Number(getAttrByName(tokenid, 'def_i'));
+    let Resi = Number(getAttrByName(tokenid, 'res_i'));
+    let sprefix = [HPi,Stri,Magi,Skli,Spdi,Lcki,Defi,Resi];
+
+    let HPSG = findObjs({ characterid: tokenid, name: "HP_i", type: "attribute"})[0];
+    let StrSG = findObjs({ characterid: tokenid, name: "Str_i", type: "attribute"})[0];
+    let MagSG = findObjs({ characterid: tokenid, name: "Mag_i", type: "attribute"})[0];
+    let SklSG = findObjs({ characterid: tokenid, name: "Skl_i", type: "attribute"})[0];
+    let SpdSG = findObjs({ characterid: tokenid, name: "Spd_i", type: "attribute"})[0];
+    let LckSG = findObjs({ characterid: tokenid, name: "Lck_i", type: "attribute"})[0];
+    let DefSG = findObjs({ characterid: tokenid, name: "Def_i", type: "attribute"})[0];
+    let ResSG = findObjs({ characterid: tokenid, name: "Res_i", type: "attribute"})[0];
+    let statslist = [HPSG,StrSG,MagSG,SklSG,SpdSG,LckSG,DefSG,ResSG];
+    log(statslist);
+    let slist = ["HP","Str","Mag","Skl","Spd","Lck","Def","Res"];
+
+    log(expobj);
+    log(levelobj);
+    let Aexp = parseInt(expobj.get("current"));
+    let Alvl = parseInt(levelobj.get("current"));
+    //accounting for multiple levelups
+    while (Aexp > 100){
+        expobj.set("current", (Aexp - 100));
+        levelobj.set("current", (Alvl + 1));
+        for (var i in growthslist){
+            gi = growthslist[i];
+            log(gi);
+            if (randomInteger(100) <= gi){
+                statslist[i].setWithWorker({current: sprefix[i] + 1});
+                if (gi > 100){
+                    if (randomInteger(100) <= (gi- 100)){
+                        Lvstr += '<p style = "margin-bottom: 0px;"> + 2 to ' + slist[i] + "!</p>";
+                        statslist[i].setWithWorker({current: sprefix[i] + 2});
+                    } else{
+                        Lvstr += '<p style = "margin-bottom: 0px;"> + 1 to '+ slist[i] + "!</p>";
+                    }
+                } else {
+                    Lvstr += '<p style = "margin-bottom: 0px;"> + 1 to '+ slist[i] + "!</p>";
+                }
+            }
+        }
+        log(Lvstr);
+        sendChat(tokenname, '<div ' + divstyle + '>' + //--
+            '<div ' + headstyle + '>Level Up</div>' + //--
+            '<div style = "margin: 0 auto; width: 80%; margin-top: 4px;">' + Lvstr + '</div>' + //--
+            '</div>'
+        );
+    }
+}
+
+//Manhattan Distance in tiles between two units
+function ManhDist(token1,token2) {
     let AXCoord = token1.get("left");
     let AYCoord = token1.get("top");
     let BXCoord = token2.get("left");
@@ -97,11 +194,695 @@ function ManhDist(token1,token2) { //Manhattan Distance in tiles between two uni
     return (diff/70);
 }
 
+//centralized Skills System! :^)
+//str, str, obj, obj, bool, arr, arr, obj, str, bool, bool, bool
+//weps are [dmg, dmgtype, weptype]
+function Skill(userid, targetid, usertoken, targettoken, userattacked, userwep, targetwep, obj, triggertime, singletarget, combat, friendlyfire) {
+	if (typeof obj != "object") {
+		log("obj is not an object :(");
+		return;
+	}
+	//stat initializations
+	let user;
+	let RNGSklU;
+	let RNGLuckU;
+	let CurrHPU;
+	let CurrHPE;
+	let HPU;
+	let HPE;
+	let StrU;
+	let StrE;
+	let MagU;
+	let MagE;
+	let SklU;
+	let SklE;
+	let SpdU;
+	let SpdE;
+	let LckU;
+	let LckE;
+	let DefU;
+	let DefE;
+	let ResU;
+	let ResE;
+	let HitU;
+	let HitE;
+	let CritU;
+	let CritE;
+	let AvoU;
+	let AvoE;
+	let DdgU;
+	let DdgE;
+	let DmgU;
+	let DmgE;
+	let DmgtypeU;
+	let DmgtypeE;
+	let PhysmagU;
+	let PhysmagE;
+	let PhysmaginvU;
+	let PhysmaginvE;
+	let StattargetU;
+	let StattargetE;
+	let Dmg_U;
+	let Dmg_E;
+	let Temp_HPU;
+	let Temp_HPE;
+
+	if ((triggertime == obj.triggertime) && (((obj.whotriggered == "attacker") && (userattacked == true)) || ((obj.whotriggered == "defender") && (userattacked == false)) || (obj.whotriggered == "either"))) {
+		log("Okay, first barrier passed");
+		if ((userattacked == true) && (obj.u_wepreq.indexOf(userwep[2]) != -1) && (obj.e_wepreq.indexOf(targetwep[2]) != -1)) {
+			//obj.u_wepreq is a list of weapon types (to account for Aegis/Pavise & other similar skills)
+			//just change "any" to a list of all weapon types, I guess
+			log("Skill user is attacker");
+			user = "attacker"
+		} else if ((userattacked == false) && (obj.u_wepreq.indexOf(targetwep[2]) != -1) && (obj.e_wepreq.indexOf(userwep[2]) != -1)) {
+			user = "defender";
+			log("Skill user is defender");
+		} else {
+			log("You probably don't have the right weapons");
+			return;
+		}
+		//attacking ally check;
+		if (combat == true && friendlyfire == true) {
+		    log("Friendly fire! :(")
+			return;
+		}
+		log("userid is" + userid);
+		log("targetid is " + targetid);
+
+		//stat definitions
+		HPU = findObjs({
+			characterid: userid,
+			name: "HP_bd"
+		})[0];
+		HPE = findObjs({
+			characterid: targetid,
+			name: "HP_bd"
+		})[0];
+		StrU = findObjs({
+			characterid: userid,
+			name: "Str_bd"
+		})[0];
+		StrE = findObjs({
+			characterid: targetid,
+			name: "Str_bd"
+		})[0];
+		MagU = findObjs({
+			characterid: userid,
+			name: "Mag_bd"
+		})[0];
+		MagE = findObjs({
+			characterid: targetid,
+			name: "Mag_bd"
+		})[0];
+		SklU = findObjs({
+			characterid: userid,
+			name: "Skl_bd"
+		})[0];
+		SklE = findObjs({
+			characterid: targetid,
+			name: "Skl_bd"
+		})[0];
+		SpdU = findObjs({
+			characterid: userid,
+			name: "Spd_bd"
+		})[0];
+		SpdE = findObjs({
+			characterid: targetid,
+			name: "Spd_bd"
+		})[0];
+		LckU = findObjs({
+			characterid: userid,
+			name: "Lck_bd"
+		})[0];
+		LckE = findObjs({
+			characterid: targetid,
+			name: "Lck_bd"
+		})[0];
+		DefU = findObjs({
+			characterid: userid,
+			name: "Def_bd"
+		})[0];
+		DefE = findObjs({
+			characterid: targetid,
+			name: "Def_bd"
+		})[0];
+		ResU = findObjs({
+			characterid: userid,
+			name: "Res_bd"
+		})[0];
+		ResE = findObjs({
+			characterid: targetid,
+			name: "Res_bd"
+		})[0];
+		log(ResE);
+
+		//main stats
+		CurrHPU = findObjs({ characterid: userid, name: "HP_current"},{ caseInsensitive: true })[0];
+		CurrHPE = findObjs({ characterid: userid, name: "HP_current"},{ caseInsensitive: true })[0];
+		Dmg_U = userwep[0] || 0;
+		Dmg_E = targetwep[0] || 0;
+		DmgtypeU = userwep[1] || "Physical";
+		DmgtypeE = targetwep[1] || "Physical";
+
+		var turnorder;
+        var turncounter;
+        if (Campaign().get("turnorder") == "") turnorder = [];
+        else turnorder = JSON.parse(Campaign().get("turnorder"));
+        for (var i in turnorder){
+            if (turnorder[i].custom == "Turn Counter"){
+                turncounter = turnorder[i];
+            }
+        }
+        if (turnorder[0] !== turncounter){ //STRICT EQUALITY checking for if it's the turncounter's "turn"
+            return;
+        }
+
+        let n;
+        if (turncounter != undefined){
+            n = turncounter.pr;
+        } else {
+            n = 0;
+        }
+
+		//nice stat-variables for use in expressions and such
+		let HP_StatU = getAttrByName(userid, 'hp_total');
+		let HP_StatE = getAttrByName(targetid, 'hp_total');
+		let HP_CurrU = getAttrByName(userid, 'hp_current');
+		let HP_CurrE = getAttrByName(targetid, 'hp_current');
+		let Str_StatU = getAttrByName(userid, 'str_total');
+		let Str_StatE = getAttrByName(targetid, 'str_total');
+		let Mag_StatU = getAttrByName(userid, 'mag_total');
+		let Mag_StatE = getAttrByName(targetid, 'mag_total');
+		let Skl_StatU = getAttrByName(userid, 'skl_total');
+		let Skl_StatE = getAttrByName(targetid, 'skl_total');
+		let Spd_StatU = getAttrByName(userid, 'spd_total');
+		let Spd_StatE = getAttrByName(targetid, 'spd_total');
+		let Lck_StatU = getAttrByName(userid, 'lck_total');
+		let Lck_StatE = getAttrByName(targetid, 'lck_total');
+		let Def_StatU = getAttrByName(userid, 'def_total');
+		let Def_StatE = getAttrByName(targetid, 'def_total');
+		let Res_StatU = getAttrByName(userid, 'res_total');
+		let Res_StatE = getAttrByName(targetid, 'res_total');
+		//
+
+		let rng;
+		if (obj.rng == "Skill") {
+			rng = Number(getAttrByName(userid, 'skl_total'))
+		}
+		if (obj.rng == "Luck") {
+			rng = Number(getAttrByName(userid, 'lck_total'));
+		}
+		if ((obj.customcond != "none") && (eval(obj.customcond) != true)) {
+		    log("Customcond violation")
+			return;
+		}
+		if ((obj.turncond != "none") && (eval(obj.turncond) != true)) {
+		    log("Turncond violation")
+			return;
+		}
+		log(obj.rng);
+
+		//actual skill function
+		function skillMain() {
+			//PhysmagE
+			if (DmgtypeE == "Physical" || DmgtypeE == "Firearm") {
+				PhysmagE = getAttrByName(targetid, "str_total");
+				PhysmaginvE = getAttrByName(targetid, "mag_total"); //inv for stuff like Ignis
+				log(targetid);
+			} else {
+				PhysmagE = getAttrByName(targetid, "mag_total");
+				PhysmaginvE = getAttrByName(targetid, "str_total");
+			} //I would add a def/res parameter, but I'm just going to be lazy and use the defense AND resistance definition for Luna.
+			log("PhysmagE is " + PhysmagE);
+
+			//PhysmagU
+			if (DmgtypeU == "Physical" || DmgtypeU == "Firearm") {
+				PhysmagU = getAttrByName(userid, "str_total");
+				PhysmaginvU = getAttrByName(userid, "mag_total");
+				log(targetid);
+			} else {
+				PhysmagU = getAttrByName(userid, "mag_total");
+				PhysmaginvU = getAttrByName(userid, "str_total");
+			}
+			log("PhysmagU is " + PhysmagU);
+
+
+			/* Parse damage and HP modifiers- normally eval() is incredibly dangerous and
+			usually Shouldn't Be Used Under Any Circumstance Ever, but the Roll20 API sandboxes it,
+			so I think it should be alright. Oh well!*/
+			let DamagemodU = parseInt(eval(obj.u_damagemod));
+			log("Damage mod is " + DamagemodU);
+			let DamagemodE = parseInt(eval(obj.e_damagemod));
+			let HealmodU = parseInt(eval(obj.u_healfactor));
+			let HealmodE = parseInt(eval(obj.e_healfactor));
+			log("HealmodU is" + HealmodU);
+			log("HealmodE is" + HealmodE);
+
+			log(obj.u_stat_target);
+			log(obj.e_stat_target);
+			//determining the actual stat targets- both of them should be arrays
+
+			if (obj.u_stat_target != "none") {
+				StattargetU = eval(obj.u_stat_target);
+			}
+			if (obj.e_stat_target != "none") {
+				StattargetE = eval(obj.e_stat_target);
+			}
+
+			let StattargetmodU = eval(obj.u_stat_targetmod); //should also be arrays
+			let StattargetmodE = eval(obj.e_stat_targetmod);
+			let STCounterU = eval(obj.u_stat_targetcounter);
+			let STCounterE = eval(obj.e_stat_targetcounter);
+			log(StattargetE);
+			log(StattargetmodE);
+			let currvlU = [];
+			let newvlU = [];
+			let currvlE = [];
+			let newvlE = [];
+
+			if (obj.u_stat_target != "none" && StattargetU != undefined) {
+				for (var i in StattargetmodU) {
+					log(StattargetU);
+					log(StattargetU[i])
+					log(StattargetmodU[i])
+					currvlU[i] = parseInt(StattargetU[i].get("current"));
+					newvlU[i] = parseInt(StattargetmodU[i])
+					log(currvlU[i]);
+					log(newvlU[i])
+					StattargetU[i].setWithWorker({
+						current: currvlU[i] + newvlU[i]
+					});
+					log("Set U-targeted stat to " + StattargetU[i].get("current"));
+				}
+			}
+
+			if (obj.e_stat_target != "none" && StattargetE != undefined && singletarget != false) {
+				for (var i in StattargetmodE) {
+					log(StattargetE);
+					log(StattargetE[i])
+					log(StattargetmodE[i])
+					currvlE[i] = parseInt(StattargetE[i].get("current"));
+					newvlE[i] = parseInt(StattargetmodE[i])
+					log(currvlE[i]);
+					log(newvlE[i])
+					StattargetE[i].setWithWorker({
+						current: currvlE[i] + newvlE[i]
+					});
+					log("Set E-targeted stat to " + StattargetE[i].get("current"));
+				}
+			}
+			//queue queue queue
+			if (obj.u_stat_target != "CurrHPU" && obj.u_stat_target != "CurrHPE" && obj.u_stat_target != "none") {
+				for (var q in StattargetU) {
+					if (StattargetmodU[q] > 0) {
+						queue.push([StattargetU[q], "decrement", STCounterU[q], 0, "combat"])
+						log([StattargetU[q], "decrement", STCounterU[q], 0])
+						log("Pushed to queue!")
+					} else {
+						queue.push([StattargetU[q], "increment", STCounterU[q], 0])
+						log([StattargetU[q], "increment", STCounterU[q], 0, "combat"])
+						log("Pushed to queue!")
+					}
+					//check queue for repeated buff/debuffs
+					for (var i in queue) {
+						if ((queue[i][0] == StattargetU[q]) && (queue[i][4] == "combat") && (queue[i] != queue[queue.length - 1])) { //the last element should be immune since it just got pushed
+							queue.shift();
+							i--;
+							StattargetU[q].setWithWorker({
+								current: currvlU[q]
+							}); //reset stat back to what it was before
+							log("Removed repeating b/d");
+						}
+					}
+					//
+				}
+			}
+
+			if (obj.e_stat_target != "CurrHPE" && obj.e_stat_target != "CurrHPE" && obj.e_stat_target != "none" && singletarget != false) {
+				for (var q in StattargetE) {
+					if (StattargetmodE[q] > 0) {
+						queue.push([StattargetE[q], "decrement", STCounterE[q], 0, "combat"])
+						log([StattargetE[q], "decrement", STCounterE[q], 0])
+						log("Pushed to queue!")
+					} else {
+						queue.push([StattargetE[q], "increment", STCounterE[q], 0])
+						log([StattargetE[q], "increment", STCounterE[q], 0, "combat"])
+						log("Pushed to queue!")
+					}
+					//check queue for repeated buff/debuffs
+					for (var i in queue) {
+						if ((queue[i][0] == StattargetE[q]) && (queue[i][4] == "combat") && (queue[i] != queue[queue.length - 1])) { //the last element should be immune since it just got pushed
+							queue.shift();
+							i--;
+							StattargetE[q].setWithWorker({
+								current: currvlE[q]
+							}); //reset stat back to what it was before
+							log("Removed repeating b/d");
+						}
+					}
+					//
+				}
+			}
+
+
+			if (user == "attacker") {
+				log("Damage before is " + DmgA);
+				DmgA += DamagemodU;
+				log("Damage after is " + DmgA);
+				DmgB += DamagemodE;
+				HitA += obj.u_hitmod;
+				HitB += obj.e_hitmod;
+				CritA += obj.u_critmod;
+				CritB += obj.e_critmod;
+				AvoA += obj.u_avomod;
+				AvoB += obj.e_avomod;
+				DdgA += obj.u_ddgmod;
+				DdgB += obj.e_ddgmod;
+				HPA = parseInt(HPA) + HealmodU; //this has to be here because sometimes it'll be stupid and overflow if it's not >:(
+				HPB = parseInt(HPB) + HealmodE;
+				EXPAmod *= obj.expmod_u;
+				WEXPA *= obj.wexpmod_u;
+				Temp_HPU = HPA;
+				Temp_HPE = HPB;
+			} else {
+				DmgB += DamagemodU;
+				DmgA += DamagemodE;
+				HitB += obj.u_hitmod;
+				HitA += obj.e_hitmod;
+				CritB += obj.u_critmod;
+				CritA += obj.e_critmod;
+				AvoB += obj.u_avomod;
+				AvoA += obj.e_avomod;
+				DdgB += obj.u_ddgmod;
+				DdgA += obj.e_ddgmod;
+				HPB = parseInt(HPB) + HealmodU;
+				HPA = parseInt(HPA) + HealmodE;
+				Temp_HPU = HPB;
+				Temp_HPE = HPA;
+			}
+			log(HPA);
+			log(HPB)
+			log("wexp is " + WEXPA);
+
+			//moved message display up
+
+			if (obj.custom_string != "") {
+				Chatstr += '<p style = "margin-bottom: 0px;"><b style = "color: #4055df;">' + obj.custom_string + "</b></p>";
+			} else {
+				Chatstr += '<p style = "margin-bottom: 0px;"><b style = "color: #4055df;">' + obj.name + " activated!</b></p>";
+			}
+
+			if (obj.radius != 0) {
+				//tortured screaming
+				let tokenInRadius = filterObjs(function(token) {
+					if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(usertoken, token) > obj.radius || token.get("represents") == usertoken.get("represents")) return false;
+					else return true;
+				});
+				log("Tokens in radius are: ")
+				for (var i in tokenInRadius) {
+					log(tokenInRadius[i])
+					//stat targets
+					let char = tokenInRadius[i].get("represents")
+					let HPcurrC = findObjs({
+						characterid: char,
+						name: "HP_current"
+					})[0];
+					let HPC = findObjs({
+						characterid: char,
+						name: "HP_bd"
+					})[0];
+					let StrC = findObjs({
+						characterid: char,
+						name: "Str_bd"
+					})[0];
+					let MagC = findObjs({
+						characterid: char,
+						name: "Mag_bd"
+					})[0];
+					let SklC = findObjs({
+						characterid: char,
+						name: "Skl_bd"
+					})[0];
+					let SpdC = findObjs({
+						characterid: char,
+						name: "Spd_bd"
+					})[0];
+					let LckC = findObjs({
+						characterid: char,
+						name: "Lck_bd"
+					})[0];
+					let DefC = findObjs({
+						characterid: char,
+						name: "Def_bd"
+					})[0];
+					let ResC = findObjs({
+						characterid: char,
+						name: "Res_bd"
+					})[0];
+					let MovC = findObjs({
+						characterid: char,
+						name: "Mov_bd"
+					})[0];
+					let HitC = findObjs({
+						characterid: char,
+						name: "Hitmod"
+					})[0];
+					let CritC = findObjs({
+						characterid: char,
+						name: "Critmod"
+					})[0];
+					let AvoC = findObjs({
+						characterid: char,
+						name: "Avomod"
+					})[0];
+					let DdgC = findObjs({
+						characterid: char,
+						name: "Ddgmod"
+					})[0];
+
+					//numerical stats
+					let HPcurrStat = getAttrByName(char, 'HP_current');
+					let StrStat = getAttrByName(char, 'Str_total');
+					let MagStat = getAttrByName(char, 'Mag_total');
+					let SklStat = getAttrByName(char, 'Skl_total');
+					let SpdStat = getAttrByName(char, 'Spd_total');
+					let LckStat = getAttrByName(char, 'Lck_total');
+					let DefStat = getAttrByName(char, 'Def_total');
+					let ResStat = getAttrByName(char, 'Res_total');
+					let HitStat = getAttrByName(char, 'Hit');
+					let CritStat = getAttrByName(char, 'Crit');
+					let AvoStat = getAttrByName(char, 'Avo');
+					let DdgStat = getAttrByName(char, 'Ddg');
+
+					let effect = eval(obj.radius_effect); //effect MUST be an array!!!
+					let target = eval(obj.radius_target); //likewise
+					let counter = eval(obj.radius_counter);
+					let rad_effect;
+					let def_target;
+
+					for (var i in effect) {
+						log(target[i].get("current"))
+						rad_effect = Number(target[i].get("current")) + parseInt(Number(effect[i]));
+						def_target = Number(target[i].get("current"));
+						target[i].setWithWorker({
+							current: rad_effect
+						});
+						log(target[i].get("current"))
+
+						if ((target[i] == HPcurrC) && (char == attacker.id)) {
+							HPA += parseInt(effect[1])
+						}
+
+						if ((target[i] == HPcurrC) && (char == defender.id)) {
+							HPB += parseInt(effect[1])
+						}
+
+						//queueeeee
+						if (target[i] != HPcurrC) {
+							if (parseInt(effect[i]) > 0) {
+								queue.push([target[i], "decrement", counter[i], 0, "combat-r"])
+								log([target[i], "decrement", counter[i], 0, "combat-r"])
+								log("Pushed to queue!")
+							} else {
+								queue.push([target[i], "increment", counter[i], 0, "combat-r"])
+								log([target[i], "increment", counter[i], 0, "combat-r"])
+								log("Pushed to queue!")
+							}
+
+							//check queue for repeated buff/debuffs
+							for (var j in queue) {
+								if ((queue[j][0] == target[i]) && (queue[j][4] == "command-r") && (j != queue.length - 1)) { //the last element should be immune since it just got pushed
+									log(j)
+									log(queue.length - 1)
+									log(queue)
+									target[i].setWithWorker({
+										current: def_target
+									}); //reset stat back to what it was before*/
+									log("Removed repeating b/d");
+								}
+							}
+
+							//
+						}
+						//:OOOOOO
+					}
+				}
+			}
+
+			CurrHPU.setWithWorker({
+				current: Temp_HPU
+			});
+
+			if (singletarget != true){
+			    CurrHPE.setWithWorker({
+					current: Temp_HPE
+				});
+			}
+
+			//recursionnn
+			if (obj.children_skills != []) {
+				for (var y in obj.children_skills) {
+					Child_Skill = obj.children_skills[y];
+					Skill(userid, targetid, Child_Skill, "any"); //child implementations of preexisting skills should have the triggertime "any" as well
+				}
+			}
+
+			//Attack multiplier for stuff like Astra
+			if (obj.attack_multiplier != 0 && combat != false) {
+				if (userid == attacker.id) {
+					let mult = obj.attack_multiplier;
+					if (DoubledA) {
+						mult -= 1; //check if user has doubled yet
+						if (TripledA) {
+							mult -= 1; //tripled?
+							if (QuadedA) {
+								mult -= 1; //quadrupled?
+							}
+						}
+					}
+					for (i = 0; i < mult; i++) {
+
+						if (randomInteger(100) < (HitA - AvoB)) {
+							Chatstr += '<p style = "margin-bottom: 0px;">' + AName + " hits for " + DmgA + " damage!</p>";
+							//Check if attack crits
+							if (randomInteger(100) < (CritA - DdgB)) {
+								DmgA *= 3;
+								Chatstr += '<p style = "margin-bottom: 0px;">' + AName + " crits for " + DmgA + " damage!</p>";
+								hasCritA = true;
+							}
+							//No AOE checking because that's stupidly broken. >:O
+							HPB -= DmgA;
+							DmgtotalA += DmgA;
+							log("Damage is " + DmgA);
+							CurrHPB.set("current", HPB);
+							CWRVal += 2;
+							setAttrs(attacker.id, {
+								[CurrWR]: CWRVal
+							});
+							log("Incremented weapon EXP!");
+							DecUsesA();
+							log("Decreased weapon uses!");
+							if (hasCritA) {
+								DmgA /= 3;
+								hasCritA = false;
+							}
+						} else {
+							Chatstr += '<p style = "margin-bottom: 0px;">' + AName + " misses! </p>";
+						}
+
+					}
+
+					DoubleA = false;
+					DisableatkA = true;
+				} else {
+					let mult = obj.attack_multiplier;
+					if (DoubledB) {
+						mult -= 1; //check if user has doubled yet
+						if (TripledB) {
+							mult -= 1; //tripled?
+							if (QuadedB) {
+								mult -= 1; //quadrupled?
+							}
+						}
+					}
+					for (i = 0; i < mult; i++) {
+						if (randomInteger(100) < (HitB - AvoA)) {
+							Chatstr += '<p style = "margin-bottom: 0px;">' + DName + " hits for " + DmgB + " damage! </p>";
+							//Check if attack crits
+							if (randomInteger(100) < (CritB - DdgA)) {
+								DmgB *= 3;
+								Chatstr += '<p style = "margin-bottom: 0px;">' + DName + " crits for " + DmgB + " damage! </p>";
+								hasCritB = true;
+							}
+							HPA -= DmgB;
+							DmgtotalB += DmgB;
+							CurrHPA.set("current", HPA);
+							//Defender gets no WEXP to discourage turtling on EP
+							DecUsesB();
+							log("Decreased weapon uses!");
+							if (hasCritB) {
+								DmgB /= 3;
+								hasCritB = false;
+							}
+						} else {
+							Chatstr += '<p style = "margin-bottom: 0px;">' + DName + " misses! </p>";
+						}
+
+					}
+
+					DoubleB = false;
+					DisableatkB = true;
+				}
+			}
+		}
+
+		//more conditional checks
+		if (obj.e_physmagcond != false) {
+			if ((obj.e_physmagcond == "Physical" && DmgtypeE == "Magical") || (obj.e_physmagcond == "Magical" && DmgtypeE == ("Physical" || "Firearm"))) {
+				return;
+			}
+		}
+		if (obj.u_physmagcond != false) {
+			if ((obj.u_physmagcond == "Physical" && DmgtypeU == "Magical") || (obj.u_physmagcond == "Magical" && DmgtypeU == ("Physical" || "Firearm"))) {
+				return;
+			}
+		}
+		if (obj.killcond == true) { //this should only be true if the triggertime is after
+			if (CurrHPE.get("current") > 0) {
+				return;
+			}
+		}
+
+		if (obj.rng != "none") {
+			if (randomInteger(100) < (rng * obj.rngmod)) {
+				skillMain();
+			} else {
+				log("RIP RNG");
+				return;
+			}
+
+		} else { //Plain ol' skill trigger
+			log("Regular skillmain");
+			skillMain();
+		}
+
+	} else {
+		log(triggertime + " vs " + obj.triggertime);
+		log("Attacker id is " + userid + "; Defender id is " + userid);
+		log("Userid is" + userid);
+		log("Whotriggered is " + obj.whotriggered);
+		return;
+	}
+}
+
+
+/*---------Script---------*/
+//credit to Brian on the forums for this framework!
 on('chat:message', function(msg) {
     if (msg.type != 'api') return;
     var parts = msg.content.split(' ');
     var command = parts.shift().substring(1);
-    var turnorder;
+    /*var turnorder;
     var turncounter;
     if (Campaign().get("turnorder") == "") turnorder = [];
     else turnorder = JSON.parse(Campaign().get("turnorder"));
@@ -118,7 +899,7 @@ on('chat:message', function(msg) {
         n = 0;
     }
 
-    //log(turncounter)
+    //log(turncounter)*/
 
     // Don't run if it's any other command
     if (command == 'combat') {
@@ -168,7 +949,6 @@ on('chat:message', function(msg) {
         var defender = getObj('character', targetToken.get('represents'));
         let AName = attacker.get('name');
         let DName = defender.get('name');
-        let Chatstr = '';
 
         //Grab basic stats
         let CurrHPA = findObjs({ characterid: attacker.id, name: "HP_current"},{ caseInsensitive: true })[0];
@@ -185,8 +965,8 @@ on('chat:message', function(msg) {
         let UACounterB = getAttrByName(defender.id, 'UACounter');
         let AllegianceA = getAttrByName(attacker.id, 'all');
         let AllegianceB = getAttrByName(defender.id, 'all');
-        let HPA = Number(getAttrByName(attacker.id, 'hp_current'));
-        let HPB = Number(getAttrByName(defender.id, 'hp_current'));
+        HPA = Number(getAttrByName(attacker.id, 'hp_current'));
+        HPB = Number(getAttrByName(defender.id, 'hp_current'));
         let StrA = Number(getAttrByName(attacker.id, 'str_total'));
         let StrB = Number(getAttrByName(defender.id, 'str_total'));
         let MagA = Number(getAttrByName(attacker.id, 'mag_total'));
@@ -279,14 +1059,14 @@ on('chat:message', function(msg) {
         let StaffEXPB = findObjs({ characterid: defender.id, name: "StaffEXP", type: "attribute"})[0];
 
         //Hit/crit/avo/dod
-        let HitA = getAttrByName(attacker.id, 'hit');
-        let HitB = getAttrByName(defender.id, 'hit');
-        let CritA = getAttrByName(attacker.id, 'crit');
-        let CritB = getAttrByName(defender.id, 'crit');
-        let AvoA = getAttrByName(attacker.id, 'avo');
-        let AvoB = getAttrByName(defender.id, 'avo');
-        let DdgA = getAttrByName(attacker.id, 'lck_total');
-        let DdgB = getAttrByName(defender.id, 'lck_total');
+        HitA = getAttrByName(attacker.id, 'hit');
+        HitB = getAttrByName(defender.id, 'hit');
+        CritA = getAttrByName(attacker.id, 'crit');
+        CritB = getAttrByName(defender.id, 'crit');
+        AvoA = getAttrByName(attacker.id, 'avo');
+        AvoB = getAttrByName(defender.id, 'avo');
+        DdgA = getAttrByName(attacker.id, 'lck_total');
+        DdgB = getAttrByName(defender.id, 'lck_total');
         let DmgmodA = Number(getAttrByName(attacker.id, 'Dmgmod'));
         let DmgmodB = Number(getAttrByName(defender.id, 'Dmgmod'));
 
@@ -329,8 +1109,6 @@ on('chat:message', function(msg) {
         const WepUB = [SwordUB,LanceUB,AxeUB,BowUB,DaggerUB,GunUB,AnimaUB,LightUB,DarkUB,StoneUB,StaffUB];
         let DmgtypeA;
         let DmgtypeB;
-        let DmgA;
-        let DmgB;
         let DoubleA = false;
         let DoubleB = false;
         let QuadA = false;
@@ -574,696 +1352,13 @@ on('chat:message', function(msg) {
                 SkillsB[i] = JSON.parse(SkillsB[i]);
             }
         }
-        log(SkillsB);
-        //Skills system! :^)
-        //stat initializations- technically, these do nothing in the main function because ~block scope~
-        let user;
-        let RNGSklU;
-        let RNGLuckU;
-        let CurrHPU;
-        let CurrHPE;
-        let HPU;
-        let HPE;
-        let StrU;
-        let StrE;
-        let MagU;
-        let MagE;
-        let SklU;
-        let SklE;
-        let SpdU;
-        let SpdE;
-        let LckU;
-        let LckE;
-        let DefU;
-        let DefE;
-        let ResU;
-        let ResE;
-        let HitU;
-        let HitE;
-        let CritU;
-        let CritE;
-        let AvoU;
-        let AvoE;
-        let DdgU;
-        let DdgE;
-        let DmgU;
-        let DmgE;
-        let DmgtypeU;
-        let DmgtypeE;
-        let PhysmagU;
-        let PhysmagE;
-        let PhysmaginvU;
-        let PhysmaginvE;
-        let StattargetU;
-        let StattargetE;
-        let Dmg_U;
-        let Dmg_E;
-        let DisableatkA; //for attack multipliers- disables normal attacks
-        let DisableatkB;
-        //exp
-        if (IsPromoA == true){
-            InLvA += 20;
-        }
-        if (IsPromoB == true){
-            InLvB += 20;
-        }
-        log("B level is" + InLvB);
-        log("A level is" + InLvA);
-        log(InLvB - InLvA);
-        let leveldiff = InLvB - InLvA;
-        log("leveldiff is " + leveldiff);
-        let EXPAmod;
-        if (leveldiff >= 0){
-            EXPAmod = parseInt((31 + leveldiff)/3);
-        } else if (leveldiff == -1){
-            EXPAmod = 10;
-        } else {
-            EXPAmod = parseInt(Math.max((33 + leveldiff)/3, 1));
-        }
-        log(EXPAmod);
-        let WEXPA = 2;
-        let none; //just in case something accidentally gets parsed
-
-        function Skill(userid,targetid,obj,triggertime) { //haha END ME
-        if (typeof obj != "object"){
-            log("obj is not an object :(");
-            return;
-        }
-        if ((triggertime == obj.triggertime) && (((obj.whotriggered == "attacker") && (userid == attacker.id)) || ((obj.whotriggered == "defender") && (userid == defender.id)) || (obj.whotriggered == "either"))) {
-            log("Okay, first barrier passed");
-            if ((userid == attacker.id) && (obj.u_wepreq.indexOf(WTypeA) != -1) && (obj.e_wepreq.indexOf(WTypeB) != -1)) {
-                //obj.u_wepreq is a list of weapon types (to account for Aegis/Pavise & other similar skills)
-                //just change "any" to a list of all weapon types, I guess
-                log("Skill user is attacker");
-                user = "attacker";
-                RNGSklU = SklA;
-                RNGLckU = LckA;
-                CurrHPU = CurrHPA;
-                CurrHPE = CurrHPB;
-                DmgtypeU = DmgtypeA;
-                DmgtypeE = DmgtypeB;
-                Usertoken = selectedToken;
-                Enemtoken = targetToken;
-                Dmg_U = DmgA; //just for expressions'sake
-                Dmg_E = DmgB;
-
-            } else if ((userid == defender.id) && (obj.u_wepreq.indexOf(WTypeB) != -1) && (obj.e_wepreq.indexOf(WTypeA) != -1)) {
-                user = "defender";
-                log("Skill user is defender");
-                RNGSklU = SklB;
-                RNGLckU = LckB;
-                CurrHPU = CurrHPB;
-                CurrHPE = CurrHPA;
-                DmgtypeU = DmgtypeB;
-                DmgtypeE = DmgtypeA;
-                Usertoken = targetToken;
-                Enemtoken = selectedToken;
-                Dmg_U = DmgB; //just for expressions'sake
-                Dmg_E = DmgA;
-
-            } else {
-                log("You probably don't have the right weapons");
-                return;
-            }
-            //attacking ally check; should check for true on combat implementation & false on all othera
-            if (AttackingAlly == true){
-                return;
-            }
-            log("userid is" + userid);
-            log("targetid is " + targetid);
-            log("DamageU is" + Dmg_U);
-            log(CurrHPU);
-            log(CurrHPE);
-            //stat definitions
-            HPU = findObjs({
-                characterid: userid,
-                name: "HP_bd"
-            })[0];
-            HPE = findObjs({
-                characterid: targetid,
-                name: "HP_bd"
-            })[0];
-            StrU = findObjs({
-                characterid: userid,
-                name: "Str_bd"
-            })[0];
-            StrE = findObjs({
-                characterid: targetid,
-                name: "Str_bd"
-            })[0];
-            MagU = findObjs({
-                characterid: userid,
-                name: "Mag_bd"
-            })[0];
-            MagE = findObjs({
-                characterid: targetid,
-                name: "Mag_bd"
-            })[0];
-            SklU = findObjs({
-                characterid: userid,
-                name: "Skl_bd"
-            })[0];
-            SklE = findObjs({
-                characterid: targetid,
-                name: "Skl_bd"
-            })[0];
-            SpdU = findObjs({
-                characterid: userid,
-                name: "Spd_bd"
-            })[0];
-            SpdE = findObjs({
-                characterid: targetid,
-                name: "Spd_bd"
-            })[0];
-            LckU = findObjs({
-                characterid: userid,
-                name: "Lck_bd"
-            })[0];
-            LckE = findObjs({
-                characterid: targetid,
-                name: "Lck_bd"
-            })[0];
-            DefU = findObjs({
-                characterid: userid,
-                name: "Def_bd"
-            })[0];
-            DefE = findObjs({
-                characterid: targetid,
-                name: "Def_bd"
-            })[0];
-            ResU = findObjs({
-                characterid: userid,
-                name: "Res_bd"
-            })[0];
-            ResE = findObjs({
-                characterid: targetid,
-                name: "Res_bd"
-            })[0];
-
-            log(ResE);
-
-            //nice stat-variables for use in expressions and such
-            let HP_StatU = getAttrByName(userid, 'hp_total');
-            let HP_StatE = getAttrByName(targetid, 'hp_total');
-            let HP_CurrU = getAttrByName(userid, 'hp_current');
-            let HP_CurrE = getAttrByName(targetid, 'hp_current');
-            let Str_StatU = getAttrByName(userid, 'str_total');
-            let Str_StatE = getAttrByName(targetid, 'str_total');
-            let Mag_StatU = getAttrByName(userid, 'mag_total');
-            let Mag_StatE = getAttrByName(targetid, 'mag_total');
-            let Skl_StatU = getAttrByName(userid, 'skl_total');
-            let Skl_StatE = getAttrByName(targetid, 'skl_total');
-            let Spd_StatU = getAttrByName(userid, 'spd_total');
-            let Spd_StatE = getAttrByName(targetid, 'spd_total');
-            let Lck_StatU = getAttrByName(userid, 'lck_total');
-            let Lck_StatE = getAttrByName(targetid, 'lck_total');
-            let Def_StatU = getAttrByName(userid, 'def_total');
-            let Def_StatE = getAttrByName(targetid, 'def_total');
-            let Res_StatU = getAttrByName(userid, 'res_total');
-            let Res_StatE = getAttrByName(targetid, 'res_total');
-
-            let rng;
-            if (obj.rng == "Skill") {
-                rng = RNGSklU;
-            }
-            if (obj.rng == "Luck") {
-                rng = RNGLckU;
-            }
-            if ((obj.customcond != "none") && (eval(obj.customcond) != true)){
-                return;
-            }
-            if ((obj.turncond != "none") && (eval(obj.turncond) != true)){
-                return;
-            }
-            log(obj.rng);
-
-            //actual skill function
-            function skillMain(){
-                //PhysmagE
-                if (DmgtypeE == "Physical" || DmgtypeE == "Firearm") {
-                    PhysmagE = getAttrByName(targetid, "str_total");
-                    PhysmaginvE = getAttrByName(targetid, "mag_total"); //inv for stuff like Ignis
-                    log(targetid);
-                } else {
-                    PhysmagE = getAttrByName(targetid, "mag_total");
-                    PhysmaginvE = getAttrByName(targetid, "str_total");
-                } //I would add a def/res parameter, but I'm just going to be lazy and use the defense AND resistance definition for Luna.
-                log("PhysmagE is " + PhysmagE);
-
-                //PhysmagU
-                if (DmgtypeU == "Physical" || DmgtypeU == "Firearm") {
-                    PhysmagU = getAttrByName(userid, "str_total");
-                    PhysmaginvU = getAttrByName(userid, "mag_total");
-                    log(targetid);
-                } else {
-                    PhysmagU = getAttrByName(userid, "mag_total");
-                    PhysmaginvU = getAttrByName(userid, "str_total");
-                }
-                log("PhysmagU is " + PhysmagU);
-
-
-                /* Parse damage and HP modifiers- normally eval() is incredibly dangerous and
-                usually Shouldn't Be Used Under Any Circumstance Ever, but the Roll20 API sandboxes it,
-                so I think it should be alright. Oh well!*/
-                let DamagemodU = parseInt(eval(obj.u_damagemod));
-                log("Damage mod is " + DamagemodU);
-                let DamagemodE = parseInt(eval(obj.e_damagemod));
-                let HealmodU = parseInt(eval(obj.u_healfactor));
-                let HealmodE = parseInt(eval(obj.e_healfactor));
-                log("HealmodU is" + HealmodU);
-
-                log(obj.u_stat_target);
-                log(obj.e_stat_target);
-                //determining the actual stat targets- both of them should be arrays
-
-                if (obj.u_stat_target != "none") {
-                    StattargetU = eval(obj.u_stat_target);
-                }
-                if (obj.e_stat_target != "none") {
-                    StattargetE = eval(obj.e_stat_target);
-                }
-
-                let StattargetmodU = eval(obj.u_stat_targetmod); //should also be arrays
-                let StattargetmodE = eval(obj.e_stat_targetmod);
-                let STCounterU = eval(obj.u_stat_targetcounter);
-                let STCounterE = eval(obj.e_stat_targetcounter);
-                log(StattargetE);
-                log(StattargetmodE);
-                let currvlU = [];
-                let newvlU = [];
-                let currvlE = [];
-                let newvlE = [];
-
-                if (obj.u_stat_target != "none" && StattargetU != undefined){
-                    for (var i in StattargetmodU){
-                        log(StattargetU);
-                        log(StattargetU[i])
-                        log(StattargetmodU[i])
-                        currvlU[i] = parseInt(StattargetU[i].get("current"));
-                        newvlU[i] = parseInt(StattargetmodU[i])
-                        log(currvlU[i]);
-                        log(newvlU[i])
-                        StattargetU[i].setWithWorker({
-                            current: currvlU[i] + newvlU[i]
-                        });
-                        log("Set U-targeted stat to "+ StattargetU[i].get("current"));
-                    }
-                }
-
-                if (obj.e_stat_target != "none" && StattargetE != undefined){
-                    for (var i in StattargetmodE){
-                        log(StattargetE);
-                        log(StattargetE[i])
-                        log(StattargetmodE[i])
-                        currvlE[i] = parseInt(StattargetE[i].get("current"));
-                        newvlE[i] = parseInt(StattargetmodE[i])
-                        log(currvlE[i]);
-                        log(newvlE[i])
-                        StattargetE[i].setWithWorker({
-                            current: currvlE[i] + newvlE[i]
-                        });
-                        log("Set E-targeted stat to "+ StattargetE[i].get("current"));
-                    }
-                }
-                //queue queue queue
-                if (obj.u_stat_target != "CurrHPU" && obj.u_stat_target != "CurrHPE" && obj.u_stat_target != "none"){
-                    for (var q in StattargetU){
-                        if (StattargetmodU[q] > 0){
-                            queue.push([StattargetU[q], "decrement", STCounterU[q], 0, "combat"])
-                            log([StattargetU[q], "decrement", STCounterU[q], 0])
-                            log("Pushed to queue!")
-                        } else {
-                            queue.push([StattargetU[q], "increment", STCounterU[q], 0])
-                            log([StattargetU[q], "increment", STCounterU[q], 0, "combat"])
-                            log("Pushed to queue!")
-                        }
-                        //check queue for repeated buff/debuffs
-                        for (var i in queue){
-                            if ((queue[i][0] == StattargetU[q]) && (queue[i][4] == "combat") && (queue[i] != queue[queue.length - 1])){ //the last element should be immune since it just got pushed
-                                queue.shift();
-                                i--;
-                                StattargetU[q].setWithWorker({
-                                    current: currvlU[q]
-                                }); //reset stat back to what it was before
-                                log("Removed repeating b/d");
-                            }
-                        }
-                    //
-                    }
-                }
-
-                if (obj.e_stat_target != "CurrHPE" && obj.e_stat_target != "CurrHPE" && obj.e_stat_target != "none"){
-                    for (var q in StattargetE){
-                        if (StattargetmodE[q] > 0){
-                            queue.push([StattargetE[q], "decrement", STCounterE[q], 0, "combat"])
-                            log([StattargetE[q], "decrement", STCounterE[q], 0])
-                            log("Pushed to queue!")
-                        } else {
-                            queue.push([StattargetE[q], "increment", STCounterE[q], 0])
-                            log([StattargetE[q], "increment", STCounterE[q], 0, "combat"])
-                            log("Pushed to queue!")
-                        }
-                        //check queue for repeated buff/debuffs
-                        for (var i in queue){
-                            if ((queue[i][0] == StattargetE[q]) && (queue[i][4] == "combat") && (queue[i] != queue[queue.length - 1])){ //the last element should be immune since it just got pushed
-                                queue.shift();
-                                i--;
-                                StattargetE[q].setWithWorker({
-                                    current: currvlE[q]
-                                }); //reset stat back to what it was before
-                                log("Removed repeating b/d");
-                            }
-                        }
-                    //
-                    }
-                }
-
-
-                if (userid == attacker.id) {
-                    log("Damage before is " + DmgA);
-                    DmgA += DamagemodU;
-                    log("Damage after is " + DmgA);
-                    DmgB += DamagemodE;
-                    HitA += obj.u_hitmod;
-                    HitB += obj.e_hitmod;
-                    CritA += obj.u_critmod;
-                    CritB += obj.e_critmod;
-                    AvoA += obj.u_avomod;
-                    AvoB += obj.e_avomod;
-                    DdgA += obj.u_ddgmod;
-                    DdgB += obj.e_ddgmod;
-                    HPA = parseInt(HPA) + HealmodU; //this has to be here because sometimes it'll be stupid and overflow if it's not >:(
-                    HPB = parseInt(HPB) + HealmodE;
-                    EXPAmod *= obj.expmod_u;
-                    WEXPA *= obj.wexpmod_u;
-                } else {
-                    DmgB += DamagemodU;
-                    DmgA += DamagemodE;
-                    HitB += obj.u_hitmod;
-                    HitA += obj.e_hitmod;
-                    CritB += obj.u_critmod;
-                    CritA += obj.e_critmod;
-                    AvoB += obj.u_avomod;
-                    AvoA += obj.e_avomod;
-                    DdgB += obj.u_ddgmod;
-                    DdgA += obj.e_ddgmod;
-                    HPB = parseInt(HPB) + HealmodU;
-                    HPA = parseInt(HPA) + HealmodE;
-                }
-                log(HPA);
-                log("wexp is "+ WEXPA);
-
-                //moved message display up
-
-                if (obj.custom_string != ""){
-                    Chatstr += '<p style = "margin-bottom: 0px;"><b style = "color: #4055df;">' + obj.custom_string + "</b></p>";
-                } else {
-                    Chatstr += '<p style = "margin-bottom: 0px;"><b style = "color: #4055df;">' + obj.name + " activated!</b></p>";
-                }
-
-                if (obj.radius != 0) {
-                    //tortured screaming
-                    let tokenInRadius = filterObjs(function(token) {
-                        if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(Usertoken, token) > obj.radius || token.get("represents") == Usertoken.get("represents")) return false;
-                        else return true;
-                    });
-                    log("Tokens in radius are: ")
-                    for (var i in tokenInRadius) {
-                        log(tokenInRadius[i])
-                            //stat targets
-                        let char = tokenInRadius[i].get("represents")
-                        let HPcurrC = findObjs({
-                            characterid: char,
-                            name: "HP_current"
-                        })[0];
-                        let HPC = findObjs({
-                            characterid: char,
-                            name: "HP_bd"
-                        })[0];
-                        let StrC = findObjs({
-                            characterid: char,
-                            name: "Str_bd"
-                        })[0];
-                        let MagC = findObjs({
-                            characterid: char,
-                            name: "Mag_bd"
-                        })[0];
-                        let SklC = findObjs({
-                            characterid: char,
-                            name: "Skl_bd"
-                        })[0];
-                        let SpdC = findObjs({
-                            characterid: char,
-                            name: "Spd_bd"
-                        })[0];
-                        let LckC = findObjs({
-                            characterid: char,
-                            name: "Lck_bd"
-                        })[0];
-                        let DefC = findObjs({
-                            characterid: char,
-                            name: "Def_bd"
-                        })[0];
-                        let ResC = findObjs({
-                            characterid: char,
-                            name: "Res_bd"
-                        })[0];
-                        let MovC = findObjs({
-                            characterid: char,
-                            name: "Mov_bd"
-                        })[0];
-                        let HitC = findObjs({
-                            characterid: char,
-                            name: "Hitmod"
-                        })[0];
-                        let CritC = findObjs({
-                            characterid: char,
-                            name: "Critmod"
-                        })[0];
-                        let AvoC = findObjs({
-                            characterid: char,
-                            name: "Avomod"
-                        })[0];
-                        let DdgC = findObjs({
-                            characterid: char,
-                            name: "Ddgmod"
-                        })[0];
-
-                        //numerical stats
-                        let HPcurrStat = getAttrByName(char, 'HP_current');
-                        let StrStat = getAttrByName(char, 'Str_total');
-                        let MagStat = getAttrByName(char, 'Mag_total');
-                        let SklStat = getAttrByName(char, 'Skl_total');
-                        let SpdStat = getAttrByName(char, 'Spd_total');
-                        let LckStat = getAttrByName(char, 'Lck_total');
-                        let DefStat = getAttrByName(char, 'Def_total');
-                        let ResStat = getAttrByName(char, 'Res_total');
-                        let HitStat = getAttrByName(char, 'Hit');
-                        let CritStat = getAttrByName(char, 'Crit');
-                        let AvoStat = getAttrByName(char, 'Avo');
-                        let DdgStat = getAttrByName(char, 'Ddg');
-
-                        let effect = eval(obj.radius_effect); //effect MUST be an array!!!
-                        let target = eval(obj.radius_target); //likewise
-                        let counter = eval(obj.radius_counter);
-                        let rad_effect;
-                        let def_target;
-
-                        for (var i in effect) {
-                          log(target[i].get("current"))
-                          rad_effect = Number(target[i].get("current")) + parseInt(Number(effect[i]));
-                          def_target = Number(target[i].get("current"));
-                          target[i].setWithWorker({
-                              current: rad_effect
-                          });
-                          log(target[i].get("current"))
-
-                          if ((target[i] == HPcurrC) && (char == attacker.id)) {
-                              HPA += parseInt(effect[1])
-                          }
-
-                          if ((target[i] == HPcurrC) && (char == defender.id)) {
-                              HPB += parseInt(effect[1])
-                          }
-
-                          //queueeeee
-                          if (target[i] != HPcurrC) {
-                            if (parseInt(effect[i]) > 0){
-                                queue.push([target[i], "decrement", counter[i], 0, "combat-r"])
-                                log([target[i], "decrement", counter[i], 0, "combat-r"])
-                                log("Pushed to queue!")
-                            } else {
-                                queue.push([target[i], "increment", counter[i], 0, "combat-r"])
-                                log([target[i], "increment", counter[i], 0, "combat-r"])
-                                log("Pushed to queue!")
-                            }
-
-                            //check queue for repeated buff/debuffs
-                            for (var j in queue){
-                                if ((queue[j][0] == target[i]) && (queue[j][4] == "command-r") && (j != queue.length - 1)){ //the last element should be immune since it just got pushed
-                                    log(j)
-                                    log(queue.length - 1)
-                                    log(queue)
-                                    target[i].setWithWorker({
-                                        current: def_target
-                                    }); //reset stat back to what it was before*/
-                                    log("Removed repeating b/d");
-                                }
-                            }
-
-                            //
-                          }
-                          //:OOOOOO
-                        }
-                    }
-                    CurrHPA.setWithWorker({
-                        current: HPA
-                    });
-                    CurrHPB.setWithWorker({
-                        current: HPB
-                    });
-                }
-
-                //recursionnn
-                if (obj.children_skills != []){
-                    for (var y in obj.children_skills){
-                        Child_Skill = obj.children_skills[y];
-                        Skill(userid, targetid, Child_Skill, "any"); //child implementations of preexisting skills should have the triggertime "any" as well
-                    }
-                }
-
-                //Attack multiplier for stuff like Astra
-                if (obj.attack_multiplier != 0){
-                    if (userid == attacker.id){
-                        let mult = obj.attack_multiplier;
-                        if (DoubledA){
-                          mult -= 1; //check if user has doubled yet
-                          if (TripledA){
-                            mult -= 1; //tripled?
-                            if (QuadedA){
-                              mult -= 1; //quadrupled?
-                            }
-                          }
-                        }
-                        for (i = 0; i < mult; i++){
-
-                            if (randomInteger(100) < (HitA - AvoB)){
-                                Chatstr += '<p style = "margin-bottom: 0px;">' + AName + " hits for "+ DmgA + " damage!</p>";
-                                //Check if attack crits
-                                if (randomInteger(100) < (CritA - DdgB)){
-                                    DmgA *= 3;
-                                    Chatstr += '<p style = "margin-bottom: 0px;">' + AName + " crits for "+ DmgA + " damage!</p>";
-                                    hasCritA = true;
-                                }
-                                //No AOE checking because that's stupidly broken. >:O
-                                HPB -= DmgA;
-                                DmgtotalA += DmgA;
-                                log("Damage is " + DmgA);
-                                CurrHPB.set("current", HPB);
-                                CWRVal += 2;
-                                setAttrs(attacker.id, {[CurrWR]: CWRVal});
-                                log("Incremented weapon EXP!");
-                                DecUsesA();
-                                log("Decreased weapon uses!");
-                                if (hasCritA){
-                                    DmgA /= 3;
-                                    hasCritA = false;
-                                }
-                            } else {
-                                Chatstr += '<p style = "margin-bottom: 0px;">' + AName+ " misses! </p>";
-                            }
-
-                        }
-
-                        DoubleA = false;
-                        DisableatkA = true;
-                    }
-                    else {
-                        let mult = obj.attack_multiplier;
-                        if (DoubledB){
-                          mult -= 1; //check if user has doubled yet
-                          if (TripledB){
-                            mult -= 1; //tripled?
-                            if (QuadedB){
-                              mult -= 1; //quadrupled?
-                            }
-                          }
-                        }
-                        for (i = 0; i < mult; i++){
-                            if (randomInteger(100) < (HitB - AvoA)){
-                                Chatstr += '<p style = "margin-bottom: 0px;">' + DName + " hits for "+ DmgB + " damage! </p>";
-                                //Check if attack crits
-                                if (randomInteger(100) < (CritB - DdgA)){
-                                    DmgB *= 3;
-                                    Chatstr += '<p style = "margin-bottom: 0px;">' + DName + " crits for "+ DmgB + " damage! </p>";
-                                    hasCritB = true;
-                                }
-                                HPA -= DmgB;
-                                DmgtotalB += DmgB;
-                                CurrHPA.set("current", HPA);
-                                //Defender gets no WEXP to discourage turtling on EP
-                                DecUsesB();
-                                log("Decreased weapon uses!");
-                                if (hasCritB){
-                                    DmgB /= 3;
-                                    hasCritB = false;
-                                }
-                            } else {
-                                Chatstr += '<p style = "margin-bottom: 0px;">' + DName+ " misses! </p>";
-                            }
-
-                        }
-
-                        DoubleB = false;
-                        DisableatkB = true;
-                    }
-                }
-            }
-
-            //more conditional checks
-            if (obj.e_physmagcond != false){
-                if ((obj.e_physmagcond == "Physical" && DmgtypeE == "Magical") || (obj.e_physmagcond == "Magical" && DmgtypeE == ("Physical" || "Firearm"))){
-                    return;
-                }
-            }
-            if (obj.u_physmagcond != false){
-                if ((obj.u_physmagcond == "Physical" && DmgtypeU == "Magical") || (obj.u_physmagcond == "Magical" && DmgtypeU == ("Physical" || "Firearm"))){
-                    return;
-                }
-            }
-            if (obj.killcond == true){ //this should only be true if the triggertime is after
-                if (CurrHPE.get("current") > 0){
-                    return;
-                }
-            }
-
-            if (obj.rng != "none") {
-                if (randomInteger(100) < (rng * obj.rngmod)) {
-                    skillMain();
-                } else {
-                    log("RIP RNG");
-                    return;
-                }
-
-            } else { //Plain ol' skill trigger
-                log("Regular skillmain");
-                skillMain();
-            }
-
-        } else {
-            log(triggertime + " vs " + obj.triggertime);
-            log("Attacker id is " + attacker.id + "; Defender id is " + defender.id);
-            log("Userid is" + userid);
-            log("Whotriggered is " + obj.whotriggered);
-            return;
-        }} //I know it looks weird, but don't touch this!
 
         //before triggers
         for (i in SkillsA){
-            Skill(attacker.id, defender.id, SkillsA[i], "before");
+            Skill(attacker.id, defender.id, selectedToken, targetToken, true, [DmgA, DmgtypeA, WTypeA], [DmgB, DmgtypeB, WTypeB], SkillsA[i], "before", false, true, AttackingAlly);
         }
         for (i in SkillsB){
-            Skill(defender.id, attacker.id, SkillsB[i], "before");
+            Skill(defender.id, attacker.id, targetToken, selectedToken, false, [DmgB, DmgtypeB, WTypeB], [DmgA, DmgtypeA, WTypeA], SkillsB[i], "before", false, true, AttackingAlly);
         }
         let diff = parseInt(ManhDist(selectedToken, targetToken));
         let dispHPA = HPA;
@@ -1335,10 +1430,10 @@ on('chat:message', function(msg) {
                 if (randomInteger(100) < (HitA - AvoB)){
                     //Battle skill trigger
                     for (i in SkillsA){
-                        Skill(attacker.id, defender.id, SkillsA[i], "during-a");
+                        Skill(attacker.id, defender.id, selectedToken, targetToken, true, [DmgA, DmgtypeA, WTypeA], [DmgB, DmgtypeB, WTypeB], SkillsA[i], "during-a", false, true, AttackingAlly);
                     }
                     for (i in SkillsB){
-                        Skill(defender.id, attacker.id, SkillsB[i], "during-d");
+                        Skill(defender.id, attacker.id, targetToken, selectedToken, false, [DmgB, DmgtypeB, WTypeB], [DmgA, DmgtypeA, WTypeA], SkillsB[i], "during-d", false, true, AttackingAlly);
                     }
 
                     if (!DisableatkA){ //no attack multipliers
@@ -1434,10 +1529,10 @@ on('chat:message', function(msg) {
                 if (randomInteger(100) < (HitB - AvoA)){
                     //battle skill trigger
                     for (i in SkillsB){
-                        Skill(defender.id, attacker.id, SkillsB[i], "during-a");
+                        Skill(defender.id, attacker.id, targetToken, selectedToken, false, [DmgB, DmgtypeB, WTypeB], [DmgA, DmgtypeA, WTypeA], SkillsB[i], "during-a", false, true, AttackingAlly);
                     }
                     for (i in SkillsA){
-                        Skill(attacker.id, defender.id, SkillsA[i], "during-d");
+                        Skill(attacker.id, defender.id, selectedToken, targetToken, true, [DmgA, DmgtypeA, WTypeA], [DmgB, DmgtypeB, WTypeB], SkillsA[i], "during-d", false, true, AttackingAlly);
                     }
 
                     if (!DisableatkB) {
@@ -1529,10 +1624,10 @@ on('chat:message', function(msg) {
             if (randomInteger(100) < (HitA - AvoB)){
                 //Battle skill trigger
                 for (i in SkillsA){
-                    Skill(attacker.id, defender.id, SkillsA[i], "during-a");
+                    Skill(attacker.id, defender.id, selectedToken, targetToken, true, [DmgA, DmgtypeA, WTypeA], [DmgB, DmgtypeB, WTypeB], SkillsA[i], "during-a", false, true, AttackingAlly);
                 }
                 for (i in SkillsB){
-                    Skill(defender.id, attacker.id, SkillsB[i], "during-d");
+                    Skill(defender.id, attacker.id, targetToken, selectedToken, false, [DmgB, DmgtypeB, WTypeB], [DmgA, DmgtypeA, WTypeA], SkillsB[i], "during-d", false, true, AttackingAlly);
                 }
 
                 if (!DisableatkA){ //no attack multipliers
@@ -1609,10 +1704,10 @@ on('chat:message', function(msg) {
                     TripledA = true;
                     //Battle skill trigger
                     for (i in SkillsA){
-                        Skill(attacker.id, defender.id, SkillsA[i], "during-a");
+                        Skill(attacker.id, defender.id, selectedToken, targetToken, true, [DmgA, DmgtypeA, WTypeA], [DmgB, DmgtypeB, WTypeB], SkillsA[i], "during-a", false, true, AttackingAlly);
                     }
                     for (i in SkillsB){
-                        Skill(defender.id, attacker.id, SkillsB[i], "during-d");
+                        Skill(defender.id, attacker.id, targetToken, selectedToken, false, [DmgB, DmgtypeB, WTypeB], [DmgA, DmgtypeA, WTypeA], SkillsB[i], "during-d", false, true, AttackingAlly);
                     }
 
                     if (!DisableatkA){ //no attack multipliers
@@ -1689,10 +1784,10 @@ on('chat:message', function(msg) {
                   QuadedA = true;
                   //Battle skill trigger
                   for (i in SkillsA){
-                      Skill(attacker.id, defender.id, SkillsA[i], "during-a");
+                    Skill(attacker.id, defender.id, selectedToken, targetToken, true, [DmgA, DmgtypeA, WTypeA], [DmgB, DmgtypeB, WTypeB], SkillsA[i], "during-a", false, true, AttackingAlly);
                   }
                   for (i in SkillsB){
-                      Skill(defender.id, attacker.id, SkillsB[i], "during-d");
+                    Skill(defender.id, attacker.id, targetToken, selectedToken, false, [DmgB, DmgtypeB, WTypeB], [DmgA, DmgtypeA, WTypeA], SkillsB[i], "during-d", false, true, AttackingAlly);
                   }
 
                   if (!DisableatkA){ //no attack multipliers
@@ -1781,11 +1876,11 @@ on('chat:message', function(msg) {
               DoubledB = true;
               //battle skill trigger
               for (i in SkillsB){
-                  Skill(defender.id, attacker.id, SkillsB[i], "during-a");
-              }
-              for (i in SkillsA){
-                  Skill(attacker.id, defender.id, SkillsA[i], "during-d");
-              }
+                    Skill(defender.id, attacker.id, targetToken, selectedToken, false, [DmgB, DmgtypeB, WTypeB], [DmgA, DmgtypeA, WTypeA], SkillsB[i], "during-a", false, true, AttackingAlly);
+                }
+                for (i in SkillsA){
+                    Skill(attacker.id, defender.id, selectedToken, targetToken, true, [DmgA, DmgtypeA, WTypeA], [DmgB, DmgtypeB, WTypeB], SkillsA[i], "during-d", false, true, AttackingAlly);
+                }
 
               if (!DisableatkB) {
                 //Check if attack crits
@@ -1859,11 +1954,11 @@ on('chat:message', function(msg) {
                 if (randomInteger(100) < (HitB - AvoA)){
                   //battle skill trigger
                   for (i in SkillsB){
-                      Skill(defender.id, attacker.id, SkillsB[i], "during-a");
-                  }
-                  for (i in SkillsA){
-                      Skill(attacker.id, defender.id, SkillsA[i], "during-d");
-                  }
+                        Skill(defender.id, attacker.id, targetToken, selectedToken, false, [DmgB, DmgtypeB, WTypeB], [DmgA, DmgtypeA, WTypeA], SkillsB[i], "during-a", false, true, AttackingAlly);
+                    }
+                    for (i in SkillsA){
+                        Skill(attacker.id, defender.id, selectedToken, targetToken, true, [DmgA, DmgtypeA, WTypeA], [DmgB, DmgtypeB, WTypeB], SkillsA[i], "during-d", false, true, AttackingAlly);
+                    }
 
                   if (!DisableatkB) {
                     //Check if attack crits
@@ -1936,11 +2031,11 @@ on('chat:message', function(msg) {
                   QuadedB = true;
                   //battle skill trigger
                   for (i in SkillsB){
-                      Skill(defender.id, attacker.id, SkillsB[i], "during-a");
-                  }
-                  for (i in SkillsA){
-                      Skill(attacker.id, defender.id, SkillsA[i], "during-d");
-                  }
+                        Skill(defender.id, attacker.id, targetToken, selectedToken, false, [DmgB, DmgtypeB, WTypeB], [DmgA, DmgtypeA, WTypeA], SkillsB[i], "during-a", false, true, AttackingAlly);
+                    }
+                    for (i in SkillsA){
+                        Skill(attacker.id, defender.id, selectedToken, targetToken, true, [DmgA, DmgtypeA, WTypeA], [DmgB, DmgtypeB, WTypeB], SkillsA[i], "during-d", false, true, AttackingAlly);
+                    }
 
                   if (!DisableatkB) {
                     //Check if attack crits
@@ -2013,10 +2108,10 @@ on('chat:message', function(msg) {
         }
         //after triggers
         for (i in SkillsA){
-            Skill(attacker.id, defender.id, SkillsA[i], "after");
-        }
+            Skill(attacker.id, defender.id, selectedToken, targetToken, true, [DmgA, DmgtypeA, WTypeA], [DmgB, DmgtypeB, WTypeB], SkillsA[i], "after", false, true, AttackingAlly);
+          }
         for (i in SkillsB){
-            Skill(defender.id, attacker.id, SkillsB[i], "after");
+            Skill(defender.id, attacker.id, targetToken, selectedToken, false, [DmgB, DmgtypeB, WTypeB], [DmgA, DmgtypeA, WTypeA], SkillsB[i], "after", false, true, AttackingAlly);
         }
 
         //WEXP cap checking because sheetworkers is being stupid >:O
@@ -2052,14 +2147,6 @@ on('chat:message', function(msg) {
             dispDmgB = dispDmgB+ '<span style = "color: blue;"> ↑</span>';
         }
 
-        //adapted from Ciorstaidh's Faerun Calendar css
-        var divstyle = 'style="width: 189px; border: 1px solid #353535; background-color: #f3f3f3; padding: 5px; color: #353535;"';
-        var tablestyle = 'style="text-align:center; margin: 0 auto; border-collapse: collapse; margin-top: 5px; border-radius: 2px"';
-        var headstyle = 'style="color: #f3f3f3; font-size: 18px; text-align: left; font-variant: small-caps; background-color: #353535; padding: 4px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;"';
-        var namestyle = 'style="background-color: #353535; color: #f3f3f3; text-align: center; font-weight: bold; overflow: hidden; margin: 4px; margin-right: 0px; border-radius: 10px; font-family: Helvetica, Arial, sans-serif;"';
-        var wrapperstyle = 'style="display: inline-block; padding:2px;"';
-        var statdiv = 'style="border: 1px solid #353535; border-radius: 5px; overflow: hidden; text-align: center; display: inline-block; margin-left: 4px;"';
-        var cellabel = 'style="background-color: #353535; color: #f3f3f3; font-weight: bold; padding: 2px;"';
         sendChat(who, '<div ' + divstyle + '>' + //--
                 '<div ' + headstyle + '>Combat</div>' + //--
                 '<div style = "margin: 0px auto; width: 100%; text-align: center;">' + //--
@@ -2097,71 +2184,16 @@ on('chat:message', function(msg) {
                 '</div>'  + //--
             '</div>'
         );
-        //Calculate EXP; commented out for the test
+        //Calculate EXP
         EXPA += EXPAmod;
         log(EXPAmod);
         CurrEXP.set("current",EXPA);
         log(EXPA);
         if (CurrEXP.get("current") >= 100){
-            CurrEXP.set("current",CurrEXP.get("current")-100);
-            //Get growths
-            LvA.set("current", parseInt(LvA.get("current")) + 1);
-            let Lvstr = '';
-            let HPG = Number(getAttrByName(attacker.id, 'hp_gtotal'));
-            let StrG = Number(getAttrByName(attacker.id, 'str_gtotal'));
-            let MagG = Number(getAttrByName(attacker.id, 'mag_gtotal'));
-            let SklG = Number(getAttrByName(attacker.id, 'skl_gtotal'));
-            let SpdG = Number(getAttrByName(attacker.id, 'spd_gtotal'));
-            let LckG = Number(getAttrByName(attacker.id, 'lck_gtotal'));
-            let DefG = Number(getAttrByName(attacker.id, 'def_gtotal'));
-            let ResG = Number(getAttrByName(attacker.id, 'res_gtotal'));
-            let growthslist = [HPG,StrG,MagG,SklG,SpdG,LckG,DefG,ResG];
-
-            let HPi = Number(getAttrByName(attacker.id, 'hp_i'));
-            let Stri = Number(getAttrByName(attacker.id, 'str_i'));
-            let Magi = Number(getAttrByName(attacker.id, 'mag_i'));
-            let Skli = Number(getAttrByName(attacker.id, 'skl_i'));
-            let Spdi = Number(getAttrByName(attacker.id, 'spd_i'));
-            let Lcki = Number(getAttrByName(attacker.id, 'lck_i'));
-            let Defi = Number(getAttrByName(attacker.id, 'def_i'));
-            let Resi = Number(getAttrByName(attacker.id, 'res_i'));
-            let sprefix = [HPi,Stri,Magi,Skli,Spdi,Lcki,Defi,Resi];
-
-            let HPSG = findObjs({ characterid: attacker.id, name: "HP_i", type: "attribute"})[0];
-            let StrSG = findObjs({ characterid: attacker.id, name: "Str_i", type: "attribute"})[0];
-            let MagSG = findObjs({ characterid: attacker.id, name: "Mag_i", type: "attribute"})[0];
-            let SklSG = findObjs({ characterid: attacker.id, name: "Skl_i", type: "attribute"})[0];
-            let SpdSG = findObjs({ characterid: attacker.id, name: "Spd_i", type: "attribute"})[0];
-            let LckSG = findObjs({ characterid: attacker.id, name: "Lck_i", type: "attribute"})[0];
-            let DefSG = findObjs({ characterid: attacker.id, name: "Def_i", type: "attribute"})[0];
-            let ResSG = findObjs({ characterid: attacker.id, name: "Res_i", type: "attribute"})[0];
-            let statslist = [HPSG,StrSG,MagSG,SklSG,SpdSG,LckSG,DefSG,ResSG];
-            log(statslist);
-            let slist = ["HP","Str","Mag","Skl","Spd","Lck","Def","Res"];
-            for (var i = 0; i < growthslist.length - 1; i++){
-                gi = growthslist[i];
-                log(gi);
-                if (randomInteger(100) < gi){
-                    statslist[i].setWithWorker({current: sprefix[i] + 1});
-                    if (gi > 100){
-                        if (randomInteger(100) < (gi - 100)){
-                            Lvstr += '<p style = "margin-bottom: 0px;"> + 2 to ' + slist[i] + "!</p>";
-                            statslist[i].setWithWorker({current: sprefix[i] + 2});
-                        } else{
-                            Lvstr += '<p style = "margin-bottom: 0px;"> + 1 to '+ slist[i] + "!</p>";
-                        }
-                    } else {
-                        Lvstr += '<p style = "margin-bottom: 0px;"> + 1 to '+ slist[i] + "!</p>";
-                    }
-                }
-            }
-            log(Lvstr);
-            sendChat(who, '<div ' + divstyle + '>' + //--
-                '<div ' + headstyle + '>Level Up</div>' + //--
-                '<div style = "margin: 0 auto; width: 80%; margin-top: 4px;">' + Lvstr + '</div>' + //--
-            '</div>'
-            );
+            Levelup(attacker.id, attacker.get('name'), CurrEXP, LvA)
         }
+        //clear global chatstr
+        Chatstr = ""
 
     }
     //item
@@ -2620,6 +2652,7 @@ on('chat:message', function(msg) {
         let MagA = getAttrByName(staffer.id, 'mag_total');
         let WNameA = attrLookup(staffer, "repeating_weapons_$0_WName", false) || "Empty";
         let WTypeA = attrLookup(staffer, "repeating_weapons_$0_WType", false) || "Stones/Other";
+        let WTypeB = attrLookup(target, "repeating_weapons_$0_WType", false) || "Stones/Other";
         let MtA = parseInt(attrLookup(staffer, "repeating_weapons_$0_Mt", false)) || 0;
         let WtA = parseInt(attrLookup(staffer, "repeating_weapons_$0_Wt", false)) || 0;
         let Range1A = parseInt(attrLookup(staffer, "repeating_weapons_$0_Range1", false)) || 1;
@@ -2631,7 +2664,7 @@ on('chat:message', function(msg) {
         let AllegianceA = getAttrByName(staffer.id, 'all');
         let AllegianceB = getAttrByName(target.id, 'all');
 
-        chatstr = '<p style = "margin-bottom: 0px;">' + staffer.get("name") + " uses " + WNameA + "!</p>";
+        Chatstr = '<p style = "margin-bottom: 0px;">' + staffer.get("name") + " uses " + WNameA + "!</p>";
 
 
         const Heal = {
@@ -2749,475 +2782,6 @@ on('chat:message', function(msg) {
             exp: 50
         };
 
-        //Okay, Skills system time!!
-        let user;
-        let RNGSklU;
-        let RNGLuckU;
-        let CurrHPU;
-        let CurrHPE;
-        let HPU;
-        let HPE;
-        let StrU;
-        let StrE;
-        let MagU;
-        let MagE;
-        let SklU;
-        let SklE;
-        let SpdU;
-        let SpdE;
-        let LckU;
-        let LckE;
-        let DefU;
-        let DefE;
-        let ResU;
-        let ResE;
-        let HitU;
-        let HitE;
-        let CritU;
-        let CritE;
-        let AvoU;
-        let AvoE;
-        let DdgU;
-        let DdgE;
-        let DmgU;
-        let DmgE;
-        let DmgtypeU;
-        let DmgtypeE;
-        let PhysmagU;
-        let PhysmagE;
-        let PhysmaginvU;
-        let PhysmaginvE;
-        let StattargetU;
-        let StattargetE;
-        let HPA = Number(getAttrByName(staffer.id, 'hp_current'));
-        let HPB = Number(getAttrByName(target.id, 'hp_current'));
-        let EXPbonus = 8; //unpromoted class bonus
-        let EXPAmod = 0;
-        if (IsPromoA){
-            EXPbonus = 0;
-            InLvA += 20;
-        }
-        EXPAmod = parseInt(StaffEXPA - Math.max(InLvA - 5, 0)/3 + EXPbonus);
-        EXPA += EXPAmod;
-        log(EXPAmod);
-        function Skill(userid, targetid, obj, triggertime) { //haha END ME
-            if (typeof obj != "object") {
-                log("obj is not an object :(");
-                return;
-            }
-            if (obj.triggertime != "staff"){
-                return;
-            }
-            //no whotriggered checking because it'll always be the staffer
-            log("Okay, first barrier passed");
-            user = "staffer";
-            RNGSklU = Number(getAttrByName(staffer.id, 'skl_total'));
-            RNGLckU = Number(getAttrByName(staffer.id, 'lck_total'));
-            CurrHPU = findObjs({
-                characterid: staffer.id,
-                name: "HP_current"
-            })[0];
-            CurrHPE = findObjs({
-                characterid: target.id,
-                name: "HP_current"
-            })[0];
-            DmgtypeU = "";
-            DmgtypeE = ""; //doesn't matter since staves are non-combative anyways
-            Usertoken = selectedToken;
-            //stat definitions
-            HPU = findObjs({
-                characterid: userid,
-                name: "HP_bd"
-            })[0];
-            HPE = findObjs({
-                characterid: targetid,
-                name: "HP_bd"
-            })[0];
-            StrU = findObjs({
-                characterid: userid,
-                name: "Str_bd"
-            })[0];
-            StrE = findObjs({
-                characterid: targetid,
-                name: "Str_bd"
-            })[0];
-            MagU = findObjs({
-                characterid: userid,
-                name: "Mag_bd"
-            })[0];
-            MagE = findObjs({
-                characterid: targetid,
-                name: "Mag_bd"
-            })[0];
-            SklU = findObjs({
-                characterid: userid,
-                name: "Skl_bd"
-            })[0];
-            SklE = findObjs({
-                characterid: targetid,
-                name: "Skl_bd"
-            })[0];
-            SpdU = findObjs({
-                characterid: userid,
-                name: "Spd_bd"
-            })[0];
-            SpdE = findObjs({
-                characterid: targetid,
-                name: "Spd_bd"
-            })[0];
-            LckU = findObjs({
-                characterid: userid,
-                name: "Lck_bd"
-            })[0];
-            LckE = findObjs({
-                characterid: targetid,
-                name: "Lck_bd"
-            })[0];
-            DefU = findObjs({
-                characterid: userid,
-                name: "Def_bd"
-            })[0];
-            DefE = findObjs({
-                characterid: targetid,
-                name: "Def_bd"
-            })[0];
-            ResU = findObjs({
-                characterid: userid,
-                name: "Res_bd"
-            })[0];
-            ResE = findObjs({
-                characterid: targetid,
-                name: "Res_bd"
-            })[0];
-
-            //nice stat-variables for use in expressions and such
-            let HP_StatU = getAttrByName(userid, 'hp_total');
-            let HP_StatE = getAttrByName(targetid, 'hp_total');
-            let HP_CurrU = getAttrByName(userid, 'hp_current');
-            let HP_CurrE = getAttrByName(targetid, 'hp_current');
-            let Str_StatU = getAttrByName(userid, 'str_total');
-            let Str_StatE = getAttrByName(targetid, 'str_total');
-            let Mag_StatU = getAttrByName(userid, 'mag_total');
-            let Mag_StatE = getAttrByName(targetid, 'mag_total');
-            let Skl_StatU = getAttrByName(userid, 'skl_total');
-            let Skl_StatE = getAttrByName(targetid, 'skl_total');
-            let Spd_StatU = getAttrByName(userid, 'spd_total');
-            let Spd_StatE = getAttrByName(targetid, 'spd_total');
-            let Lck_StatU = getAttrByName(userid, 'lck_total');
-            let Lck_StatE = getAttrByName(targetid, 'lck_total');
-            let Def_StatU = getAttrByName(userid, 'def_total');
-            let Def_StatE = getAttrByName(targetid, 'def_total');
-            let Res_StatU = getAttrByName(userid, 'res_total');
-            let Res_StatE = getAttrByName(targetid, 'res_total');
-
-            let rng;
-            if (obj.rng == "Skill") {
-                rng = RNGSklU;
-            }
-            if (obj.rng == "Luck") {
-                rng = RNGLckU;
-            }
-            if ((obj.customcond != "none") && (eval(obj.customcond) != true)) {
-                return;
-            }
-            if ((obj.turncond != "none") && (eval(obj.turncond) != true)){
-                return;
-            }
-            log(obj.rng)
-
-            //actual skill function
-            function skillMain() {
-                //No Physmag :O
-
-                /* Parse damage and HP modifiers- normally eval() is incredibly dangerous and
-                usually Shouldn't Be Used Under Any Circumstance Ever, but the Roll20 API sandboxes it,
-                so I think it should be alright. Oh well!*/
-                let HealmodU = parseInt(eval(obj.u_healfactor));
-                let HealmodE = parseInt(eval(obj.e_healfactor));
-                log("HealmodU is" + HealmodU);
-
-                log(obj.u_stat_target);
-                log(obj.e_stat_target);
-                //determining the actual stat targets- both of them should be arrays
-
-                if (obj.u_stat_target != "none") {
-                    StattargetU = eval(obj.u_stat_target);
-                }
-                log(StattargetU)
-                if (obj.e_stat_target != "none") {
-                    StattargetE = eval(obj.e_stat_target);
-                }
-
-                let StattargetmodU = eval(obj.u_stat_targetmod); //should also be arrays
-                let StattargetmodE = eval(obj.e_stat_targetmod);
-                let STCounterU = eval(obj.u_stat_targetcounter);
-                let STCounterE = eval(obj.e_stat_targetcounter);
-                log(StattargetE);
-                log(StattargetmodE);
-                let currvlU = [];
-                let newvlU = [];
-                let currvlE = [];
-                let newvlE = [];
-
-                if (obj.u_stat_target != "none" && StattargetU != undefined){
-                    for (var i in StattargetmodU){
-                        log(StattargetU);
-                        log(StattargetU[i])
-                        log(StattargetmodU[i])
-                        currvlU[i] = parseInt(StattargetU[i].get("current"));
-                        newvlU[i] = parseInt(StattargetmodU[i])
-                        log(currvlU[i]);
-                        log(newvlU[i])
-                        StattargetU[i].setWithWorker({
-                            current: currvlU[i] + newvlU[i]
-                        });
-                        log("Set U-targeted stat to "+ StattargetU[i].get("current"));
-                    }
-                }
-
-                if (obj.e_stat_target != "none" && StattargetE != undefined){
-                    for (var i in StattargetmodE){
-                        log(StattargetE);
-                        log(StattargetE[i])
-                        log(StattargetmodE[i])
-                        currvlE[i] = parseInt(StattargetE[i].get("current"));
-                        newvlE[i] = parseInt(StattargetmodE[i])
-                        log(currvlE[i]);
-                        log(newvlE[i])
-                        StattargetE[i].setWithWorker({
-                            current: currvlE[i] + newvlE[i]
-                        });
-                        log("Set E-targeted stat to "+ StattargetE[i].get("current"));
-                    }
-                }
-                //queue queue queue
-                if (obj.u_stat_target != "CurrHPU" && obj.u_stat_target != "CurrHPE" && obj.u_stat_target != "none"){
-                    for (var q in StattargetU){
-                        if (StattargetmodU[q] > 0){
-                            queue.push([StattargetU[q], "decrement", STCounterU[q], 0, "combat"])
-                            log([StattargetU[q], "decrement", STCounterU[q], 0])
-                            log("Pushed to queue!")
-                        } else {
-                            queue.push([StattargetU[q], "increment", STCounterU[q], 0])
-                            log([StattargetU[q], "increment", STCounterU[q], 0, "combat"])
-                            log("Pushed to queue!")
-                        }
-                        //check queue for repeated buff/debuffs
-                        for (var i in queue){
-                            if ((queue[i][0] == StattargetU[q]) && (queue[i][4] == "combat") && (queue[i] != queue[queue.length - 1])){ //the last element should be immune since it just got pushed
-                                queue.shift();
-                                i--;
-                                StattargetU[q].setWithWorker({
-                                    current: currvlU[q]
-                                }); //reset stat back to what it was before
-                                log("Removed repeating b/d");
-                            }
-                        }
-                    //
-                    }
-                }
-
-                if (obj.e_stat_target != "CurrHPE" && obj.e_stat_target != "CurrHPE" && obj.e_stat_target != "none"){
-                    for (var q in StattargetE){
-                        if (StattargetmodE[q] > 0){
-                            queue.push([StattargetE[q], "decrement", STCounterE[q], 0, "combat"])
-                            log([StattargetE[q], "decrement", STCounterE[q], 0])
-                            log("Pushed to queue!")
-                        } else {
-                            queue.push([StattargetE[q], "increment", STCounterE[q], 0])
-                            log([StattargetE[q], "increment", STCounterE[q], 0, "combat"])
-                            log("Pushed to queue!")
-                        }
-                        //check queue for repeated buff/debuffs
-                        for (var i in queue){
-                            if ((queue[i][0] == StattargetE[q]) && (queue[i][4] == "combat") && (queue[i] != queue[queue.length - 1])){ //the last element should be immune since it just got pushed
-                                queue.shift();
-                                i--;
-                                StattargetE[q].setWithWorker({
-                                    current: currvlE[q]
-                                }); //reset stat back to what it was before
-                                log("Removed repeating b/d");
-                            }
-                        }
-                    //
-                    }
-                }
-
-                HPA = parseInt(HPA) + HealmodU; //this has to be here because sometimes it'll be stupid and overflow if it's not >:(
-                HPVal = parseInt(HPVal) + HealmodE;
-                EXPAmod *= obj.expmod_u;
-                log(HPA);
-
-                if (obj.radius != 0) {
-                    //tortured screaming
-                    let tokenInRadius = filterObjs(function(token) {
-                        if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(Usertoken, token) > obj.radius || token.get("represents") == Usertoken.get("represents")) return false;
-                        else return true;
-                    });
-                    log("Tokens in radius are: ")
-                    for (var i in tokenInRadius) {
-                        log(tokenInRadius[i])
-                            //stat targets
-                        let char = tokenInRadius[i].get("represents")
-                        let HPcurrC = findObjs({
-                            characterid: char,
-                            name: "HP_current"
-                        })[0];
-                        let HPC = findObjs({
-                            characterid: char,
-                            name: "HP_bd"
-                        })[0];
-                        let StrC = findObjs({
-                            characterid: char,
-                            name: "Str_bd"
-                        })[0];
-                        let MagC = findObjs({
-                            characterid: char,
-                            name: "Mag_bd"
-                        })[0];
-                        let SklC = findObjs({
-                            characterid: char,
-                            name: "Skl_bd"
-                        })[0];
-                        let SpdC = findObjs({
-                            characterid: char,
-                            name: "Spd_bd"
-                        })[0];
-                        let LckC = findObjs({
-                            characterid: char,
-                            name: "Lck_bd"
-                        })[0];
-                        let DefC = findObjs({
-                            characterid: char,
-                            name: "Def_bd"
-                        })[0];
-                        let ResC = findObjs({
-                            characterid: char,
-                            name: "Res_bd"
-                        })[0];
-                        let MovC = findObjs({
-                            characterid: char,
-                            name: "Mov_bd"
-                        })[0];
-                        let HitC = findObjs({
-                            characterid: char,
-                            name: "Hitmod"
-                        })[0];
-                        let CritC = findObjs({
-                            characterid: char,
-                            name: "Critmod"
-                        })[0];
-                        let AvoC = findObjs({
-                            characterid: char,
-                            name: "Avomod"
-                        })[0];
-                        let DdgC = findObjs({
-                            characterid: char,
-                            name: "Ddgmod"
-                        })[0];
-
-                        //numerical stats
-                        let HPcurrStat = getAttrByName(char, 'HP_current');
-                        let StrStat = getAttrByName(char, 'Str_total');
-                        let MagStat = getAttrByName(char, 'Mag_total');
-                        let SklStat = getAttrByName(char, 'Skl_total');
-                        let SpdStat = getAttrByName(char, 'Spd_total');
-                        let LckStat = getAttrByName(char, 'Lck_total');
-                        let DefStat = getAttrByName(char, 'Def_total');
-                        let ResStat = getAttrByName(char, 'Res_total');
-                        let HitStat = getAttrByName(char, 'Hit');
-                        let CritStat = getAttrByName(char, 'Crit');
-                        let AvoStat = getAttrByName(char, 'Avo');
-                        let DdgStat = getAttrByName(char, 'Ddg');
-
-                        let effect = eval(obj.radius_effect); //effect MUST be an array!!!
-                        let target = eval(obj.radius_target); //likewise
-                        let counter = eval(obj.radius_counter);
-                        let rad_effect;
-                        let def_target;
-
-                        for (var i in effect) {
-                          log(target[i].get("current"))
-                          rad_effect = Number(target[i].get("current")) + parseInt(Number(effect[i]));
-                          def_target = Number(target[i].get("current"));
-                          target[i].setWithWorker({
-                              current: rad_effect
-                          });
-                          log(target[i].get("current"))
-
-                          if ((target[i] == HPcurrC) && (char == attacker.id)) {
-                              HPA += parseInt(effect[1])
-                          }
-
-                          if ((target[i] == HPcurrC) && (char == defender.id)) {
-                              HPB += parseInt(effect[1])
-                          }
-
-                          //queueeeee
-                          if (target[i] != HPcurrC) {
-                            if (parseInt(effect[i]) > 0){
-                                queue.push([target[i], "decrement", counter[i], 0, "combat-r"])
-                                log([target[i], "decrement", counter[i], 0, "combat-r"])
-                                log("Pushed to queue!")
-                            } else {
-                                queue.push([target[i], "increment", counter[i], 0, "combat-r"])
-                                log([target[i], "increment", counter[i], 0, "combat-r"])
-                                log("Pushed to queue!")
-                            }
-
-                            //check queue for repeated buff/debuffs
-                            for (var j in queue){
-                                if ((queue[j][0] == target[i]) && (queue[j][4] == "command-r") && (j != queue.length - 1)){ //the last element should be immune since it just got pushed
-                                    log(j)
-                                    log(queue.length - 1)
-                                    log(queue)
-                                    target[i].setWithWorker({
-                                        current: def_target
-                                    }); //reset stat back to what it was before*/
-                                    log("Removed repeating b/d");
-                                }
-                            }
-
-                            //
-                          }
-                          //:OOOOOO
-                        }
-                    }
-                }
-
-                CurrHPU.setWithWorker({
-                    current: HPA
-                });
-
-                //recursionnn
-                if (obj.children_skills != []) {
-                    for (var y in obj.children_skills) {
-                        let Child_Skill = JSON.parse(obj.children_skills[y]);
-                        Skill(userid, targetid, Child_Skill, "any"); //child implementations of preexisting skills should have the triggertime "any" as well
-                    }
-                }
-
-                if (obj.custom_string != "") {
-                    chatstr += '<p style = "margin-bottom: 0px;"><b style = "color: #4055df;">' + obj.custom_string + "</b></p>";
-                } else {
-                    chatstr += '<p style = "margin-bottom: 0px;"><b style = "color: #4055df;">' + obj.name + " activated!</b></p>";
-                }
-            }
-
-            if (obj.rng != "none") {
-                if (randomInteger(100) < (rng * obj.rngmod)) {
-                    skillMain();
-                } else {
-                    log("RIP RNG");
-                    return;
-                }
-
-            } else { //Plain ol' skill trigger
-                log("Regular skillmain");
-                skillMain();
-            }
-        }
-
         let SkillsA = findObjs({ characterid: staffer.id, type: "ability"});
         for (var i in SkillsA){
             SkillsA[i] = SkillsA[i].get("action");
@@ -3240,7 +2804,7 @@ on('chat:message', function(msg) {
         const staveslist = [Heal,Mend,Physic,Recover,Fortify,Bloom_Festal,Sun_Festal,Wane_Festal,Moon_Festal,Great_Festal,Freeze,Enfeeble,Entrap,Rescue,Silence,Hexing_Rod];
         //Script stuff here
         if (WTypeA != "Staves/Rods"){
-            chatstr += '<p style = "margin-bottom: 0px;"> Weapon is not a staff!</p>';
+            Chatstr += '<p style = "margin-bottom: 0px;"> Weapon is not a staff!</p>';
         } else {
             for (var i in staveslist){
                 if (staveslist[i].name === WNameA){
@@ -3251,19 +2815,19 @@ on('chat:message', function(msg) {
                             //check for ally
                             if ((AllegianceA == "Player" && AllegianceB == "Player") || (AllegianceA == "Player" && AllegianceB == "Ally") || (AllegianceA == "Ally" && AllegianceB == "Player") || (AllegianceA == "Ally" && AllegianceB == "Ally") || (AllegianceA == "Enemy" && AllegianceB == "Enemy")){
                                 //Set with workers in respect to total caps
-                                HPVal = j.effect;
+                                HPB = j.effect;
                                 StaffEXPA = j.exp;
-                                dispHealA = HPVal;
-                                for (var z in SkillsA){
-                                    Skill(staffer.id, target.id, SkillsA[z], "staff");
+                                dispHealA = HPB;
+                                for (i in SkillsA){
+                                    Skill(staffer.id, target.id, selectedToken, targetToken, true, [0, "Staff", WTypeA], [0, "Staff", WTypeB], SkillsA[i], "staff", false, false, false);
                                 }
-                                CurrHPB.setWithWorker({current: parseInt(CurrHPB.get("current")) + HPVal});
-                                chatstr += '<p style = "margin-bottom: 0px;">' + targetToken.get("name") + " is healed for " + String(HPVal) + " HP!</p>";
+                                CurrHPB.setWithWorker({current: parseInt(CurrHPB.get("current")) + HPB});
+                                Chatstr += '<p style = "margin-bottom: 0px;">' + targetToken.get("name") + " is healed for " + String(HPB) + " HP!</p>";
                                 setAttrs(staffer.id, {[UsesAStr]: UsesA - 1})
                                 dispHitA = "--";
                             }
                             else {
-                                chatstr += '<p style = "margin-bottom: 0px;"> Unit cannot be healed!</p>';
+                                Chatstr += '<p style = "margin-bottom: 0px;"> Unit cannot be healed!</p>';
                             }
                         }
                         if (j.type === "status"){
@@ -3279,18 +2843,18 @@ on('chat:message', function(msg) {
                                     log(j.status);
                                     targetToken.set(j.status);
                                     setAttrs(staffer.id, {[UsesAStr]: UsesA - 1})
-                                    chatstr += '<p style = "margin-bottom: 0px;">'+ j.chatmsg + '</p>';
+                                    Chatstr += '<p style = "margin-bottom: 0px;">'+ j.chatmsg + '</p>';
                                     StaffEXPA = j.exp;
                                 }
                                 else {
-                                    chatstr += '<p style = "margin-bottom: 0px;"> Staff misses!</p>';
+                                    Chatstr += '<p style = "margin-bottom: 0px;"> Staff misses!</p>';
                                 }
                             } else {
-                                chatstr += '<p style = "margin-bottom: 0px;"> Unit cannot be targeted!</p>';
+                                Chatstr += '<p style = "margin-bottom: 0px;"> Unit cannot be targeted!</p>';
                             }
                         }
                     } else {
-                        chatstr += '<p style = "margin-bottom: 0px;"> Staff is not in range!</p>';
+                        Chatstr += '<p style = "margin-bottom: 0px;"> Staff is not in range!</p>';
                     }
                 }
             }
@@ -3333,75 +2897,20 @@ on('chat:message', function(msg) {
                 '</div>' + //--
 
                 '<div style = "height: 1px; background-color: #353535; width: 70%; margin: 0 auto; margin-bottom: 4px;"></div>' + //--
-                '<div style = "margin: 0 auto; width: 70%;">' + chatstr + '</div>' + //--
+                '<div style = "margin: 0 auto; width: 70%;">' + Chatstr + '</div>' + //--
             '</div>'
         );
+        //clear global chatstr
+        Chatstr = ""
 
         //EXP!
         CurrEXP.set("current",EXPA);
         log(EXPA);
         if (CurrEXP.get("current") >= 100){
-            CurrEXP.set("current",CurrEXP.get("current")-100);
-            //Get growths
-            LvA.set("current", parseInt(LvA.get("current")) + 1);
-            let Lvstr = '';
-            let HPG = Number(getAttrByName(staffer.id, 'hp_gtotal'));
-            let StrG = Number(getAttrByName(staffer.id, 'str_gtotal'));
-            let MagG = Number(getAttrByName(staffer.id, 'mag_gtotal'));
-            let SklG = Number(getAttrByName(staffer.id, 'skl_gtotal'));
-            let SpdG = Number(getAttrByName(staffer.id, 'spd_gtotal'));
-            let LckG = Number(getAttrByName(staffer.id, 'lck_gtotal'));
-            let DefG = Number(getAttrByName(staffer.id, 'def_gtotal'));
-            let ResG = Number(getAttrByName(staffer.id, 'res_gtotal'));
-            let growthslist = [HPG,StrG,MagG,SklG,SpdG,LckG,DefG,ResG];
-
-            let HPi = Number(getAttrByName(staffer.id, 'hp_i'));
-            let Stri = Number(getAttrByName(staffer.id, 'str_i'));
-            let Magi = Number(getAttrByName(staffer.id, 'mag_i'));
-            let Skli = Number(getAttrByName(staffer.id, 'skl_i'));
-            let Spdi = Number(getAttrByName(staffer.id, 'spd_i'));
-            let Lcki = Number(getAttrByName(staffer.id, 'lck_i'));
-            let Defi = Number(getAttrByName(staffer.id, 'def_i'));
-            let Resi = Number(getAttrByName(staffer.id, 'res_i'));
-            let sprefix = [HPi,Stri,Magi,Skli,Spdi,Lcki,Defi,Resi];
-
-            let HPSG = findObjs({ characterid: staffer.id, name: "HP_i", type: "attribute"})[0];
-            let StrSG = findObjs({ characterid: staffer.id, name: "Str_i", type: "attribute"})[0];
-            let MagSG = findObjs({ characterid: staffer.id, name: "Mag_i", type: "attribute"})[0];
-            let SklSG = findObjs({ characterid: staffer.id, name: "Skl_i", type: "attribute"})[0];
-            let SpdSG = findObjs({ characterid: staffer.id, name: "Spd_i", type: "attribute"})[0];
-            let LckSG = findObjs({ characterid: staffer.id, name: "Lck_i", type: "attribute"})[0];
-            let DefSG = findObjs({ characterid: staffer.id, name: "Def_i", type: "attribute"})[0];
-            let ResSG = findObjs({ characterid: staffer.id, name: "Res_i", type: "attribute"})[0];
-            let statslist = [HPSG,StrSG,MagSG,SklSG,SpdSG,LckSG,DefSG,ResSG];
-            log(statslist);
-            let slist = ["HP","Str","Mag","Skl","Spd","Lck","Def","Res"];
-            for (var i = 0; i < growthslist.length - 1; i++){
-                gi = growthslist[i];
-                log(gi);
-                if (randomInteger(100) < gi){
-                    statslist[i].setWithWorker({current: sprefix[i] + 1});
-                    if (gi > 100){
-                        if (randomInteger(100) < (gi - 100)){
-                            Lvstr += '<p style = "margin-bottom: 0px;"> + 2 to ' + slist[i] + "!</p>";
-                            statslist[i].setWithWorker({current: sprefix[i] + 2});
-                        } else{
-                            Lvstr += '<p style = "margin-bottom: 0px;"> + 1 to '+ slist[i] + "!</p>";
-                        }
-                    } else {
-                        Lvstr += '<p style = "margin-bottom: 0px;"> + 1 to '+ slist[i] + "!</p>";
-                    }
-                }
-            }
-            log(Lvstr);
-            sendChat(who, '<div ' + divstyle + '>' + //--
-                '<div ' + headstyle + '>Level Up</div>' + //--
-                '<div style = "margin: 0 auto; width: 80%; margin-top: 4px;">' + Lvstr + '</div>' + //--
-            '</div>'
-            );
+            Levelup(staffer.id, staffer.get('name'), CurrEXP, LvA)
         }
     }
-    //skill1
+    //skill throw
     if (command == 'skill') {
         if (parts.length < 2) {
             sendChat('SYSTEM', 'You must provide a selected token id and a target token id.');
@@ -3466,7 +2975,7 @@ on('chat:message', function(msg) {
         //get second message
 
     }
-    //skill2
+    //skill handoff
     if (command == 'co'){
         log("YE")
         log(parts);
@@ -3478,6 +2987,8 @@ on('chat:message', function(msg) {
         var targetToken = getObj('graphic', targetId);
         var attacker = getObj('character', selectedToken.get('represents'));
         var defender = getObj('character', targetToken.get('represents'));
+        let AllegianceA = getAttrByName(attacker.id, 'all');
+        let AllegianceB = getAttrByName(defender.id, 'all');
         //Check to make sure that the tokens represent characters
         if (selectedToken.get('represents') === "" || targetToken.get('represents') === ""){
             sendChat('SYSTEM', 'Both tokens must be linked to characters in the journal!');
@@ -3490,7 +3001,7 @@ on('chat:message', function(msg) {
             who = 'character|' + who.id;
         }
 
-        let newSkill = findObjs({ characterid: attacker.id, type: "ability", name: skillName })[0];
+        let newSkill = findObjs({ characterid: attacker.id, type: "ability", name: skillName },{ caseInsensitive: true })[0];
         log(newSkill)
         if (newSkill == [] || newSkill == undefined){
             sendChat("SYSTEM","Provided skill name does not exist! ")
@@ -3499,46 +3010,7 @@ on('chat:message', function(msg) {
         newSkill = newSkill.get("action")
         let selectedSkill = JSON.parse(newSkill);
         log(selectedSkill)
-        //Skills system time!!
-        let user;
-        let RNGSklU;
-        let RNGLuckU;
-        let CurrHPU;
-        let CurrHPE;
-        let HPU;
-        let HPE;
-        let StrU;
-        let StrE;
-        let MagU;
-        let MagE;
-        let SklU;
-        let SklE;
-        let SpdU;
-        let SpdE;
-        let LckU;
-        let LckE;
-        let DefU;
-        let DefE;
-        let ResU;
-        let ResE;
-        let HitU;
-        let HitE;
-        let CritU;
-        let CritE;
-        let AvoU;
-        let AvoE;
-        let DdgU;
-        let DdgE;
-        let DmgU;
-        let DmgE;
-        let DmgtypeU;
-        let DmgtypeE;
-        let PhysmagU;
-        let PhysmagE;
-        let PhysmaginvU;
-        let PhysmaginvE;
-        let StattargetU;
-        let StattargetE;
+
         let CurrEXP = findObjs({ characterid: attacker.id, name: "EXP"})[0];
         let LvA = findObjs({ characterid: attacker.id, name: "Level"})[0];
         let InLvA = Number(LvA.get("current"));
@@ -3547,508 +3019,31 @@ on('chat:message', function(msg) {
         let EXPA = Number(CurrEXP.get("current"));
         let IsPromoA = getAttrByName(attacker.id, 'isPromo');
         let IsPromoB = getAttrByName(defender.id, 'isPromo');
-        let EXPAmod = (10 + ((Math.abs(InLvB-InLvA)*3)));
-        let HPA = Number(getAttrByName(attacker.id, 'hp_current'));
-        let HPB = Number(getAttrByName(defender.id, 'hp_current'));
-        let CurrHPA = findObjs({ characterid: attacker.id, name: "HP_current"})[0];
-        let CurrHPB = findObjs({ characterid: defender.id, name: "HP_current"})[0];
-        var divstyle = 'style="width: 189px; border: 1px solid #353535; background-color: #f3f3f3; padding: 5px; color: #353535;"'
-        var tablestyle = 'style="text-align:center; margin: 0 auto; border-collapse: collapse; margin-top: 5px; border-radius: 2px"';
-        var headstyle = 'style="color: #f3f3f3; font-size: 18px; text-align: left; font-variant: small-caps; background-color: #353535; padding: 4px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;"';
-        var namestyle = 'style="background-color: #353535; color: #f3f3f3; text-align: center; font-weight: bold; overflow: hidden; margin: 4px; margin-right: 0px; border-radius: 10px; font-family: Helvetica, Arial, sans-serif;"'
-        var wrapperstyle = 'style="display: inline-block; padding:2px;"'
-        var statdiv = 'style="border: 1px solid #353535; border-radius: 5px; overflow: hidden; text-align: center; display: inline-block; margin-left: 4px;"'
-        var cellabel = 'style="background-color: #353535; color: #f3f3f3; font-weight: bold; padding: 2px;"'
+        HPA = Number(getAttrByName(attacker.id, 'hp_current'));
+        HPB = Number(getAttrByName(defender.id, 'hp_current'));
+        EXPAmod = (10 + ((Math.abs(InLvB-InLvA)*3)));
 
-        function Skill(userid, targetid, obj, triggertime) { //haha END ME
-            if (typeof obj != "object") {
-                log("obj is not an object :(")
-                return;
-            }
-            if (obj.triggertime != "command"){
-                return;
-            }
-            //no whotriggered checking because it'll always be the attacker
-            log("Okay, first barrier passed")
-            user = "attacker";
-            RNGSklU = Number(getAttrByName(attacker.id, 'skl_total'));
-            RNGLckU = Number(getAttrByName(attacker.id, 'lck_total'));
-            CurrHPU = findObjs({
-                characterid: attacker.id,
-                name: "HP_current"
-            })[0];
-            CurrHPE = findObjs({
-                characterid: defender.id,
-                name: "HP_current"
-            })[0];
-            DmgtypeU = ""
-            DmgtypeE = "" //doesn't matter since commands are non-combative anyways
-            Usertoken = selectedToken;
-            //stat definitions
-            HPU = findObjs({
-                characterid: userid,
-                name: "HP_bd"
-            })[0];
-            HPE = findObjs({
-                characterid: targetid,
-                name: "HP_bd"
-            })[0];
-            StrU = findObjs({
-                characterid: userid,
-                name: "Str_bd"
-            })[0];
-            StrE = findObjs({
-                characterid: targetid,
-                name: "Str_bd"
-            })[0];
-            MagU = findObjs({
-                characterid: userid,
-                name: "Mag_bd"
-            })[0];
-            MagE = findObjs({
-                characterid: targetid,
-                name: "Mag_bd"
-            })[0];
-            SklU = findObjs({
-                characterid: userid,
-                name: "Skl_bd"
-            })[0];
-            SklE = findObjs({
-                characterid: targetid,
-                name: "Skl_bd"
-            })[0];
-            SpdU = findObjs({
-                characterid: userid,
-                name: "Spd_bd"
-            })[0];
-            SpdE = findObjs({
-                characterid: targetid,
-                name: "Spd_bd"
-            })[0];
-            LckU = findObjs({
-                characterid: userid,
-                name: "Lck_bd"
-            })[0];
-            LckE = findObjs({
-                characterid: targetid,
-                name: "Lck_bd"
-            })[0];
-            DefU = findObjs({
-                characterid: userid,
-                name: "Def_bd"
-            })[0];
-            DefE = findObjs({
-                characterid: targetid,
-                name: "Def_bd"
-            })[0];
-            ResU = findObjs({
-                characterid: userid,
-                name: "Res_bd"
-            })[0];
-            ResE = findObjs({
-                characterid: targetid,
-                name: "Res_bd"
-            })[0];
+        log(HPA);
 
-            //nice stat-variables for use in expressions and such
-            let HP_StatU = getAttrByName(userid, 'hp_total');
-            let HP_StatE = getAttrByName(targetid, 'hp_total');
-            let HP_CurrU = getAttrByName(userid, 'hp_current');
-            let HP_CurrE = getAttrByName(targetid, 'hp_current');
-            let Str_StatU = getAttrByName(userid, 'str_total');
-            let Str_StatE = getAttrByName(targetid, 'str_total');
-            let Mag_StatU = getAttrByName(userid, 'mag_total');
-            let Mag_StatE = getAttrByName(targetid, 'mag_total');
-            let Skl_StatU = getAttrByName(userid, 'skl_total');
-            let Skl_StatE = getAttrByName(targetid, 'skl_total');
-            let Spd_StatU = getAttrByName(userid, 'spd_total');
-            let Spd_StatE = getAttrByName(targetid, 'spd_total');
-            let Lck_StatU = getAttrByName(userid, 'lck_total');
-            let Lck_StatE = getAttrByName(targetid, 'lck_total');
-            let Def_StatU = getAttrByName(userid, 'def_total');
-            let Def_StatE = getAttrByName(targetid, 'def_total');
-            let Res_StatU = getAttrByName(userid, 'res_total');
-            let Res_StatE = getAttrByName(targetid, 'res_total');
-
-            let rng;
-            if (obj.rng == "Skill") {
-                rng = RNGSklU;
-            }
-            if (obj.rng == "Luck") {
-                rng = RNGLckU;
-            }
-            if ((obj.customcond != "none") && (eval(obj.customcond) != true)) {
-                return;
-            }
-            if ((obj.turncond != "none") && (eval(obj.turncond) != true)){
-                return;
-            }
-            log(obj.rng)
-
-            //actual skill function
-            function skillMain() {
-                //No Physmag :O
-
-                /* Parse damage and HP modifiers- normally eval() is incredibly dangerous and
-                usually Shouldn't Be Used Under Any Circumstance Ever, but the Roll20 API sandboxes it,
-                so I think it should be alright. Oh well!*/
-                let HealmodU = parseInt(eval(obj.u_healfactor));
-                let HealmodE = parseInt(eval(obj.e_healfactor));
-                log("HealmodU is" + HealmodU)
-
-                log(obj.u_stat_target);
-                log(obj.e_stat_target);
-                //determining the actual stat targets- both of them should be arrays
-
-                if (obj.u_stat_target != "none") {
-                    StattargetU = eval(obj.u_stat_target);
-                }
-                if (obj.e_stat_target != "none") {
-                    StattargetE = eval(obj.e_stat_target);
-                }
-
-                let StattargetmodU = eval(obj.u_stat_targetmod); //should also be arrays
-                let StattargetmodE = eval(obj.e_stat_targetmod);
-                let STCounterU = eval(obj.u_stat_targetcounter);
-                let STCounterE = eval(obj.e_stat_targetcounter);
-                log(StattargetE);
-                log(StattargetmodE);
-                let currvlU = [];
-                let newvlU = [];
-                let currvlE = [];
-                let newvlE = [];
-
-                if (obj.u_stat_target != "none" && StattargetU != undefined){
-                    for (var i in StattargetmodU){
-                        log(StattargetU);
-                        log(StattargetU[i])
-                        log(StattargetmodU[i])
-                        currvlU[i] = parseInt(StattargetU[i].get("current"));
-                        newvlU[i] = parseInt(StattargetmodU[i])
-                        log(currvlU[i]);
-                        log(newvlU[i])
-                        StattargetU[i].setWithWorker({
-                            current: currvlU[i] + newvlU[i]
-                        });
-                        log("Set U-targeted stat to "+ StattargetU[i].get("current"));
-                    }
-                }
-
-                if (obj.e_stat_target != "none" && StattargetE != undefined){
-                    for (var i in StattargetmodE){
-                        log(StattargetE);
-                        log(StattargetE[i])
-                        log(StattargetmodE[i])
-                        currvlE[i] = parseInt(StattargetE[i].get("current"));
-                        newvlE[i] = parseInt(StattargetmodE[i])
-                        log(currvlE[i]);
-                        log(newvlE[i])
-                        StattargetE[i].setWithWorker({
-                            current: currvlE[i] + newvlE[i]
-                        });
-                        log("Set E-targeted stat to "+ StattargetE[i].get("current"));
-                    }
-                }
-                //queue queue queue
-                if (obj.u_stat_target != "CurrHPU" && obj.u_stat_target != "CurrHPE" && obj.u_stat_target != "none"){
-                    for (var q in StattargetU){
-                        if (StattargetmodU[q] > 0){
-                            queue.push([StattargetU[q], "decrement", STCounterU[q], 0, "combat"])
-                            log([StattargetU[q], "decrement", STCounterU[q], 0])
-                            log("Pushed to queue!")
-                        } else {
-                            queue.push([StattargetU[q], "increment", STCounterU[q], 0])
-                            log([StattargetU[q], "increment", STCounterU[q], 0, "combat"])
-                            log("Pushed to queue!")
-                        }
-                        //check queue for repeated buff/debuffs
-                        for (var i in queue){
-                            if ((queue[i][0] == StattargetU[q]) && (queue[i][4] == "combat") && (queue[i] != queue[queue.length - 1])){ //the last element should be immune since it just got pushed
-                                queue.shift();
-                                i--;
-                                StattargetU[q].setWithWorker({
-                                    current: currvlU[q]
-                                }); //reset stat back to what it was before
-                                log("Removed repeating b/d");
-                            }
-                        }
-                    //
-                    }
-                }
-
-                if (obj.e_stat_target != "CurrHPE" && obj.e_stat_target != "CurrHPE" && obj.e_stat_target != "none"){
-                    for (var q in StattargetE){
-                        if (StattargetmodE[q] > 0){
-                            queue.push([StattargetE[q], "decrement", STCounterE[q], 0, "combat"])
-                            log([StattargetE[q], "decrement", STCounterE[q], 0])
-                            log("Pushed to queue!")
-                        } else {
-                            queue.push([StattargetE[q], "increment", STCounterE[q], 0])
-                            log([StattargetE[q], "increment", STCounterE[q], 0, "combat"])
-                            log("Pushed to queue!")
-                        }
-                        //check queue for repeated buff/debuffs
-                        for (var i in queue){
-                            if ((queue[i][0] == StattargetE[q]) && (queue[i][4] == "combat") && (queue[i] != queue[queue.length - 1])){ //the last element should be immune since it just got pushed
-                                queue.shift();
-                                i--;
-                                StattargetE[q].setWithWorker({
-                                    current: currvlE[q]
-                                }); //reset stat back to what it was before
-                                log("Removed repeating b/d");
-                            }
-                        }
-                    //
-                    }
-                }
-
-                HPA = parseInt(HPA) + HealmodU; //this has to be here because sometimes it'll be stupid and overflow if it's not >:(
-                HPB = parseInt(HPB) + HealmodE;
-                EXPAmod *= obj.expmod_u;
-                log(HPA)
-
-                if (obj.radius != 0) {
-                    //tortured screaming
-                    let tokenInRadius = filterObjs(function(token) {
-                        if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(Usertoken, token) > obj.radius || token.get("represents") == Usertoken.get("represents")) return false;
-                        else return true;
-                    });
-                    log("Tokens in radius are: ")
-                    for (var i in tokenInRadius) {
-                        log(tokenInRadius[i])
-                            //stat targets
-                        let char = tokenInRadius[i].get("represents")
-                        let HPcurrC = findObjs({
-                            characterid: char,
-                            name: "HP_current"
-                        })[0];
-                        let HPC = findObjs({
-                            characterid: char,
-                            name: "HP_bd"
-                        })[0];
-                        let StrC = findObjs({
-                            characterid: char,
-                            name: "Str_bd"
-                        })[0];
-                        let MagC = findObjs({
-                            characterid: char,
-                            name: "Mag_bd"
-                        })[0];
-                        let SklC = findObjs({
-                            characterid: char,
-                            name: "Skl_bd"
-                        })[0];
-                        let SpdC = findObjs({
-                            characterid: char,
-                            name: "Spd_bd"
-                        })[0];
-                        let LckC = findObjs({
-                            characterid: char,
-                            name: "Lck_bd"
-                        })[0];
-                        let DefC = findObjs({
-                            characterid: char,
-                            name: "Def_bd"
-                        })[0];
-                        let ResC = findObjs({
-                            characterid: char,
-                            name: "Res_bd"
-                        })[0];
-                        let MovC = findObjs({
-                            characterid: char,
-                            name: "Mov_bd"
-                        })[0];
-                        let HitC = findObjs({
-                            characterid: char,
-                            name: "Hitmod"
-                        })[0];
-                        let CritC = findObjs({
-                            characterid: char,
-                            name: "Critmod"
-                        })[0];
-                        let AvoC = findObjs({
-                            characterid: char,
-                            name: "Avomod"
-                        })[0];
-                        let DdgC = findObjs({
-                            characterid: char,
-                            name: "Ddgmod"
-                        })[0];
-
-                        //numerical stats
-                        let HPcurrStat = getAttrByName(char, 'HP_current');
-                        let StrStat = getAttrByName(char, 'Str_total');
-                        let MagStat = getAttrByName(char, 'Mag_total');
-                        let SklStat = getAttrByName(char, 'Skl_total');
-                        let SpdStat = getAttrByName(char, 'Spd_total');
-                        let LckStat = getAttrByName(char, 'Lck_total');
-                        let DefStat = getAttrByName(char, 'Def_total');
-                        let ResStat = getAttrByName(char, 'Res_total');
-                        let HitStat = getAttrByName(char, 'Hit');
-                        let CritStat = getAttrByName(char, 'Crit');
-                        let AvoStat = getAttrByName(char, 'Avo');
-                        let DdgStat = getAttrByName(char, 'Ddg');
-
-                        let effect = eval(obj.radius_effect); //effect MUST be an array!!!
-                        let target = eval(obj.radius_target); //likewise
-                        let counter = eval(obj.radius_counter);
-                        let rad_effect;
-                        let def_target;
-
-                        for (var i in effect) {
-                          log(target[i].get("current"))
-                          rad_effect = Number(target[i].get("current")) + parseInt(Number(effect[i]));
-                          def_target = Number(target[i].get("current"));
-                          target[i].setWithWorker({
-                              current: rad_effect
-                          });
-                          log(target[i].get("current"))
-
-                          if ((target[i] == HPcurrC) && (char == attacker.id)) {
-                              HPA += parseInt(effect[1])
-                          }
-
-                          if ((target[i] == HPcurrC) && (char == defender.id)) {
-                              HPB += parseInt(effect[1])
-                          }
-
-                          //queueeeee
-                          if (target[i] != HPcurrC) {
-                            if (parseInt(effect[i]) > 0){
-                                queue.push([target[i], "decrement", counter[i], 0, "combat-r"])
-                                log([target[i], "decrement", counter[i], 0, "combat-r"])
-                                log("Pushed to queue!")
-                            } else {
-                                queue.push([target[i], "increment", counter[i], 0, "combat-r"])
-                                log([target[i], "increment", counter[i], 0, "combat-r"])
-                                log("Pushed to queue!")
-                            }
-
-                            //check queue for repeated buff/debuffs
-                            for (var j in queue){
-                                if ((queue[j][0] == target[i]) && (queue[j][4] == "command-r") && (j != queue.length - 1)){ //the last element should be immune since it just got pushed
-                                    log(j)
-                                    log(queue.length - 1)
-                                    log(queue)
-                                    target[i].setWithWorker({
-                                        current: def_target
-                                    }); //reset stat back to what it was before*/
-                                    log("Removed repeating b/d");
-                                }
-                            }
-
-                            //
-                          }
-                          //:OOOOOO
-                        }
-                    }
-                    CurrHPA.setWithWorker({
-                        current: HPA
-                    });
-                    CurrHPB.setWithWorker({
-                        current: HPB
-                    });
-                }
-
-                //recursionnn
-                if (obj.children_skills != []) {
-                    for (var y in obj.children_skills) {
-                        let Child_Skill = JSON.parse(obj.children_skills[y]);
-                        Skill(userid, targetid, Child_Skill, "any"); //child implementations of preexisting skills should have the triggertime "any" as well
-                    }
-                }
-
-                let Chatstr;
-                if (obj.custom_string != "") {
-                    Chatstr = '<p style = "margin-bottom: 0px;"> <b style = "color: #4055df;">' + obj.custom_string + "</b></p>"
-                } else {
-                    Chatstr = '<p style = "margin-bottom: 0px;"><b style = "color: #4055df;">'+attacker.get("name") + " used " + obj.name + "!</b></p>"
-                }
-                sendChat(who, '<div ' + divstyle + '>' + //--
-                    '<div ' + headstyle + '>Skill</div>' + //--
-                    '<div style = "margin: 0 auto; width: 80%; margin-top: 4px;">' + Chatstr + '</div>' + //--
-                '</div>'
-                );
-            }
-
-            if (obj.rng != "none") {
-                if (randomInteger(100) < (rng * obj.rngmod)) {
-                    skillMain();
-                } else {
-                    log("RIP RNG")
-                    return;
-                }
-
-            } else { //Plain ol' skill trigger
-                log("Regular skillmain")
-                skillMain();
-            }
+        if ((AllegianceA == "Player" && AllegianceB == "Player") || (AllegianceA == "Player" && AllegianceB == "Ally") || (AllegianceA == "Ally" && AllegianceB == "Player") || (AllegianceA == "Ally" && AllegianceB == "Ally")){
+            //friendly command skills only
+            Skill(attacker.id, defender.id, selectedToken, targetToken, true, [0, "Physical", "Stones/Other"], [0, "Physical", "Stones/Other"], selectedSkill, "command", false, false, false)
+        } else {
+            //enables combative command skills
+            Skill(attacker.id, defender.id, selectedToken, targetToken, true, [0, "Physical", "Stones/Other"], [0, "Physical", "Stones/Other"], selectedSkill, "command", false, true, false)
         }
 
-        Skill(attacker.id, defender.id, selectedSkill, "command")
+        sendChat(who, '<div ' + divstyle + '>' + //--
+            '<div ' + headstyle + '>Skill</div>' + //--
+            '<div style = "margin: 0 auto; width: 80%; margin-top: 4px;">' + Chatstr + '</div>' + //--
+            '</div>'
+        );
 
         //EXPPPPP
         EXPA += EXPAmod
         CurrEXP.set("current",EXPA);
         if (CurrEXP.get("current") >= 100){
-            CurrEXP.set("current",CurrEXP.get("current")-100);
-            //Get growths
-            LvA.set("current", Number(LvA.get("current")) + 1);
-            let Lvstr = '';
-            let HPG = Number(getAttrByName(attacker.id, 'hp_gtotal'));
-            let StrG = Number(getAttrByName(attacker.id, 'str_gtotal'));
-            let MagG = Number(getAttrByName(attacker.id, 'mag_gtotal'));
-            let SklG = Number(getAttrByName(attacker.id, 'skl_gtotal'));
-            let SpdG = Number(getAttrByName(attacker.id, 'spd_gtotal'));
-            let LckG = Number(getAttrByName(attacker.id, 'lck_gtotal'));
-            let DefG = Number(getAttrByName(attacker.id, 'def_gtotal'));
-            let ResG = Number(getAttrByName(attacker.id, 'res_gtotal'));
-            let growthslist = [HPG,StrG,MagG,SklG,SpdG,LckG,DefG,ResG];
-
-            let HPi = Number(getAttrByName(attacker.id, 'hp_i'));
-            let Stri = Number(getAttrByName(attacker.id, 'str_i'));
-            let Magi = Number(getAttrByName(attacker.id, 'mag_i'));
-            let Skli = Number(getAttrByName(attacker.id, 'skl_i'));
-            let Spdi = Number(getAttrByName(attacker.id, 'spd_i'));
-            let Lcki = Number(getAttrByName(attacker.id, 'lck_i'));
-            let Defi = Number(getAttrByName(attacker.id, 'def_i'));
-            let Resi = Number(getAttrByName(attacker.id, 'res_i'));
-            let sprefix = [HPi,Stri,Magi,Skli,Spdi,Lcki,Defi,Resi];
-
-            let HPSG = findObjs({ characterid: attacker.id, name: "HP_i", type: "attribute"})[0];
-            let StrSG = findObjs({ characterid: attacker.id, name: "Str_i", type: "attribute"})[0];
-            let MagSG = findObjs({ characterid: attacker.id, name: "Mag_i", type: "attribute"})[0];
-            let SklSG = findObjs({ characterid: attacker.id, name: "Skl_i", type: "attribute"})[0];
-            let SpdSG = findObjs({ characterid: attacker.id, name: "Spd_i", type: "attribute"})[0];
-            let LckSG = findObjs({ characterid: attacker.id, name: "Lck_i", type: "attribute"})[0];
-            let DefSG = findObjs({ characterid: attacker.id, name: "Def_i", type: "attribute"})[0];
-            let ResSG = findObjs({ characterid: attacker.id, name: "Res_i", type: "attribute"})[0];
-            let statslist = [HPSG,StrSG,MagSG,SklSG,SpdSG,LckSG,DefSG,ResSG];
-            log(statslist);
-            let slist = ["HP","Str","Mag","Skl","Spd","Lck","Def","Res"];
-            for (var i = 0; i < growthslist.length - 1; i++){
-                gi = growthslist[i];
-                log(gi);
-                if (randomInteger(100) < gi){
-                    statslist[i].setWithWorker({current: sprefix[i] + 1});
-                    if (gi > 100){
-                        if (randomInteger(100) < (gi- 100)){
-                            Lvstr += '<p style = "margin-bottom: 0px;"> + 2 to ' + slist[i] + "!</p>";
-                            statslist[i].setWithWorker({current: sprefix[i] + 2});
-                        } else{
-                            Lvstr += '<p style = "margin-bottom: 0px;"> + 1 to '+ slist[i] + "!</p>";
-                        }
-                    } else {
-                        Lvstr += '<p style = "margin-bottom: 0px;"> + 1 to '+ slist[i] + "!</p>";
-                    }
-                }
-            }
-            log(Lvstr);
-            sendChat(who, '<div ' + divstyle + '>' + //--
-                '<div ' + headstyle + '>Level Up</div>' + //--
-                '<div style = "margin: 0 auto; width: 80%; margin-top: 4px;">' + Lvstr + '</div>' + //--
-            '</div>'
-            );
+            Levelup(attacker.id, attacker.get('name'), CurrEXP, LvA)
         }
 
     }
@@ -4623,13 +3618,6 @@ on('chat:message', function(msg) {
         }
 
         //adapted from Ciorstaidh's Faerun Calendar css
-        var divstyle = 'style="width: 189px; border: 1px solid #353535; background-color: #f3f3f3; padding: 5px; color: #353535;"'
-        var tablestyle = 'style="text-align:center; margin: 0 auto; border-collapse: collapse; margin-top: 5px; border-radius: 2px"';
-        var headstyle = 'style="color: #f3f3f3; font-size: 18px; text-align: left; font-variant: small-caps; background-color: #353535; padding: 4px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;"';
-        var namestyle = 'style="background-color: #353535; color: #f3f3f3; text-align: center; font-weight: bold; overflow: hidden; margin: 4px; margin-right: 0px; border-radius: 10px; font-family: Helvetica, Arial, sans-serif;"'
-        var wrapperstyle = 'style="display: inline-block; padding:2px;"'
-        var statdiv = 'style="border: 1px solid #353535; border-radius: 5px; overflow: hidden; text-align: center; display: inline-block; margin-left: 4px;"'
-        var cellabel = 'style="background-color: #353535; color: #f3f3f3; font-weight: bold; padding: 2px;"'
         sendChat(who, '<div ' + divstyle + '>' + //--
                 '<div ' + headstyle + '>Battle Forecast</div>' + //--
                 '<div style = "margin: 0px auto; width: 100%; text-align: center;">' + //--
@@ -4667,7 +3655,7 @@ on('chat:message', function(msg) {
             InLvB += 20;
         }
     }
-    //view
+    //viewer
     if (command == 'view') {
         if (parts.length < 2) {
             sendChat('SYSTEM', 'You must provide a selected token id and a target token id.');
@@ -4733,14 +3721,6 @@ on('chat:message', function(msg) {
         }
         log(namestr)
         //adapted from Ciorstaidh's Faerun Calendar css
-        var divstyle = 'style="width: 189px; border: 1px solid #353535; background-color: #f3f3f3; padding: 5px; color: #353535;"';
-        var tablestyle = 'style="text-align:center; margin: 0 auto; border-collapse: collapse; margin-top: 5px; border-radius: 2px"';
-        var headstyle = 'style="color: #f3f3f3; font-size: 18px; text-align: left; font-variant: small-caps; background-color: #353535; padding: 4px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;"';
-        var namestyle = 'style="background-color: #353535; color: #f3f3f3; text-align: center; font-weight: bold; overflow: hidden; margin: 4px; margin-right: 0px; border-radius: 10px; font-family: Helvetica, Arial, sans-serif;"';
-        var wrapperstyle = 'style="display: inline-block; padding:2px;"';
-        var statdiv = 'style="border: 1px solid #353535; border-radius: 5px; overflow: hidden; text-align: center; display: inline-block; margin-left: 4px;"';
-        var cellabel = 'style="background-color: #353535; color: #f3f3f3; font-weight: bold; padding: 2px;"';
-        var cellabel2 = 'style="background-color: #353535; color: #f3f3f3; padding: 2px;"';
         sendChat(who, '<div ' + divstyle + '>' + //--
                 '<div ' + headstyle + '>Unit Viewer</div>' + //--
                 '<div style = "margin: 0px auto; width: 100%; text-align: center;">' + //--
@@ -4766,7 +3746,6 @@ on('chat:message', function(msg) {
         );
 
     }
-
 });
 
 //turn
@@ -4802,433 +3781,25 @@ on("change:campaign:turnorder", function(turn) {
            let id = Skills[i].get('characterid');
            Skills[i] = JSON.parse(Skills[i].get("action"));
            Skills[i]["ID"] = id;
+           Skills[i]["char"] = findObjs({ id: id },{ caseInsensitive: true })[0].get("name") || ""
        }
     } else {
         return;
     }
     log(Skills);
-
-    //Skills system, user-centric version
-    let user;
-        let RNGSklU;
-        let RNGLuckU;
-        let CurrHPU;
-        let HPU;
-        let StrU;
-        let MagU;
-        let SklU;
-        let SpdU;
-        let LckU;
-        let DefU;
-        let ResU;
-        let HitU;
-        let CritU;
-        let AvoU;
-        let DdgU;
-        let DdgE;
-        let DmgU;
-        let DmgtypeU;
-        let PhysmagU;
-        let PhysmaginvU;
-        let StattargetU;
-        let StattargetE;
-        let HPA;
-        let CurrHPA;
-        var divstyle = 'style="width: 189px; border: 1px solid #353535; background-color: #f3f3f3; padding: 5px; color: #353535;"';
-        var tablestyle = 'style="text-align:center; margin: 0 auto; border-collapse: collapse; margin-top: 5px; border-radius: 2px"';
-        var headstyle = 'style="color: #f3f3f3; font-size: 18px; text-align: left; font-variant: small-caps; background-color: #353535; padding: 4px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;"';
-        var namestyle = 'style="background-color: #353535; color: #f3f3f3; text-align: center; font-weight: bold; overflow: hidden; margin: 4px; margin-right: 0px; border-radius: 10px; font-family: Helvetica, Arial, sans-serif;"';
-        var wrapperstyle = 'style="display: inline-block; padding:2px;"';
-        var statdiv = 'style="border: 1px solid #353535; border-radius: 5px; overflow: hidden; text-align: center; display: inline-block; margin-left: 4px;"';
-        var cellabel = 'style="background-color: #353535; color: #f3f3f3; font-weight: bold; padding: 2px;"';
-
-        function Skill(userid, obj, triggertime) { //haha END ME
-            if (typeof obj != "object") {
-                log("obj is not an object :(");
-                return;
-            }
-            if (obj.triggertime != "turn"){ //JUST making sure
-                return;
-            }
-            //no whotriggered checking because it'll always be the attacker
-            log("Okay, first barrier passed");
-            user = "attacker";
-            RNGSklU = Number(getAttrByName(userid, 'skl_total'));
-            RNGLckU = Number(getAttrByName(userid, 'lck_total'));
-            CurrHPU = findObjs({
-                characterid: userid,
-                name: "HP_current"
-            })[0];
-            let who = findObjs({ //get the first token on the page that represents the given user
-                type: "character",
-                id: userid
-            })[0].get("name") || "User";
-            HPA = Number(getAttrByName(userid, 'hp_current'));
-            DmgtypeU = "";
-            DmgtypeE = ""; //doesn't matter since commands are non-combative anyways
-            Usertoken = findObjs({ //get the first token on the page that represents the given user
-                type: "graphic",
-                subtype: "token",
-                represents: userid
-            })[0];
-            //stat definitions
-            HPU = findObjs({
-                characterid: userid,
-                name: "HP_bd"
-            })[0];
-            StrU = findObjs({
-                characterid: userid,
-                name: "Str_bd"
-            })[0];
-            MagU = findObjs({
-                characterid: userid,
-                name: "Mag_bd"
-            })[0];
-            SklU = findObjs({
-                characterid: userid,
-                name: "Skl_bd"
-            })[0];
-            SpdU = findObjs({
-                characterid: userid,
-                name: "Spd_bd"
-            })[0];
-            LckU = findObjs({
-                characterid: userid,
-                name: "Lck_bd"
-            })[0];
-            DefU = findObjs({
-                characterid: userid,
-                name: "Def_bd"
-            })[0];
-            ResU = findObjs({
-                characterid: userid,
-                name: "Res_bd"
-            })[0];
-
-            //nice stat-variables for use in expressions and such
-            let HP_StatU = getAttrByName(userid, 'hp_total');
-            let HP_CurrU = getAttrByName(userid, 'hp_current');
-            let Str_StatU = getAttrByName(userid, 'str_total');
-            let Mag_StatU = getAttrByName(userid, 'mag_total');
-            let Skl_StatU = getAttrByName(userid, 'skl_total');
-            let Spd_StatU = getAttrByName(userid, 'spd_total');
-            let Lck_StatU = getAttrByName(userid, 'lck_total');
-            let Def_StatU = getAttrByName(userid, 'def_total');
-            let Res_StatU = getAttrByName(userid, 'res_total');
-
-            let rng;
-            if (obj.rng == "Skill") {
-                rng = RNGSklU;
-            }
-            if (obj.rng == "Luck") {
-                rng = RNGLckU;
-            }
-            if ((obj.customcond != "none") && (eval(obj.customcond) != true)) {
-                return;
-            }
-            if ((obj.turncond != "none") && (eval(obj.turncond) != true)) {
-                return;
-            }
-            log(obj.rng);
-
-            //actual skill function
-            function skillMain() {
-                //No Physmag :O
-
-                /* Parse damage and HP modifiers- normally eval() is incredibly dangerous and
-                usually Shouldn't Be Used Under Any Circumstance Ever, but the Roll20 API sandboxes it,
-                so I think it should be alright. Oh well!*/
-                let HealmodU = parseInt(eval(obj.u_healfactor));
-                log("HealmodU is" + HealmodU);
-
-                log(obj.u_stat_target);
-                log(obj.e_stat_target);
-                //determining the actual stat targets- both of them should be arrays
-
-                if (obj.u_stat_target != "none") {
-                    StattargetU = eval(obj.u_stat_target);
-                }
-                if (obj.e_stat_target != "none") {
-                    StattargetE = eval(obj.e_stat_target);
-                }
-
-                let StattargetmodU = eval(obj.u_stat_targetmod); //should also be arrays
-                let StattargetmodE = eval(obj.e_stat_targetmod);
-                let STCounterU = eval(obj.u_stat_targetcounter);
-                let STCounterE = eval(obj.e_stat_targetcounter);
-                log(StattargetE);
-                log(StattargetmodE);
-                let currvlU = [];
-                let newvlU = [];
-                let currvlE = [];
-                let newvlE = [];
-
-                if (obj.u_stat_target != "none" && StattargetU != undefined){
-                    for (var i in StattargetmodU){
-                        log(StattargetU);
-                        log(StattargetU[i])
-                        log(StattargetmodU[i])
-                        currvlU[i] = parseInt(StattargetU[i].get("current"));
-                        newvlU[i] = parseInt(StattargetmodU[i])
-                        log(currvlU[i]);
-                        log(newvlU[i])
-                        StattargetU[i].setWithWorker({
-                            current: currvlU[i] + newvlU[i]
-                        });
-                        log("Set U-targeted stat to "+ StattargetU[i].get("current"));
-                    }
-                }
-
-                if (obj.e_stat_target != "none" && StattargetE != undefined){
-                    for (var i in StattargetmodE){
-                        log(StattargetE);
-                        log(StattargetE[i])
-                        log(StattargetmodE[i])
-                        currvlE[i] = parseInt(StattargetE[i].get("current"));
-                        newvlE[i] = parseInt(StattargetmodE[i])
-                        log(currvlE[i]);
-                        log(newvlE[i])
-                        StattargetE[i].setWithWorker({
-                            current: currvlE[i] + newvlE[i]
-                        });
-                        log("Set E-targeted stat to "+ StattargetE[i].get("current"));
-                    }
-                }
-                //queue queue queue
-                if (obj.u_stat_target != "CurrHPU" && obj.u_stat_target != "CurrHPE" && obj.u_stat_target != "none"){
-                    for (var q in StattargetU){
-                        if (StattargetmodU[q] > 0){
-                            queue.push([StattargetU[q], "decrement", STCounterU[q], 0, "combat"])
-                            log([StattargetU[q], "decrement", STCounterU[q], 0])
-                            log("Pushed to queue!")
-                        } else {
-                            queue.push([StattargetU[q], "increment", STCounterU[q], 0])
-                            log([StattargetU[q], "increment", STCounterU[q], 0, "combat"])
-                            log("Pushed to queue!")
-                        }
-                        //check queue for repeated buff/debuffs
-                        for (var i in queue){
-                            if ((queue[i][0] == StattargetU[q]) && (queue[i][4] == "combat") && (queue[i] != queue[queue.length - 1])){ //the last element should be immune since it just got pushed
-                                queue.shift();
-                                i--;
-                                StattargetU[q].setWithWorker({
-                                    current: currvlU[q]
-                                }); //reset stat back to what it was before
-                                log("Removed repeating b/d");
-                            }
-                        }
-                    //
-                    }
-                }
-
-                if (obj.e_stat_target != "CurrHPE" && obj.e_stat_target != "CurrHPE" && obj.e_stat_target != "none"){
-                    for (var q in StattargetE){
-                        if (StattargetmodE[q] > 0){
-                            queue.push([StattargetE[q], "decrement", STCounterE[q], 0, "combat"])
-                            log([StattargetE[q], "decrement", STCounterE[q], 0])
-                            log("Pushed to queue!")
-                        } else {
-                            queue.push([StattargetE[q], "increment", STCounterE[q], 0])
-                            log([StattargetE[q], "increment", STCounterE[q], 0, "combat"])
-                            log("Pushed to queue!")
-                        }
-                        //check queue for repeated buff/debuffs
-                        for (var i in queue){
-                            if ((queue[i][0] == StattargetE[q]) && (queue[i][4] == "combat") && (queue[i] != queue[queue.length - 1])){ //the last element should be immune since it just got pushed
-                                queue.shift();
-                                i--;
-                                StattargetE[q].setWithWorker({
-                                    current: currvlE[q]
-                                }); //reset stat back to what it was before
-                                log("Removed repeating b/d");
-                            }
-                        }
-                    //
-                    }
-                }
-
-                HPA = parseInt(HPA) + HealmodU; //this has to be here because sometimes it'll be stupid and overflow if it's not >:(
-                log(HPA)
-
-                if (obj.radius != 0) {
-                    //tortured screaming
-                    let tokenInRadius = filterObjs(function(token) {
-                        if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(Usertoken, token) > obj.radius || token.get("represents") == Usertoken.get("represents")) return false;
-                        else return true;
-                    });
-                    log("Tokens in radius are: ")
-                    for (var i in tokenInRadius) {
-                        log(tokenInRadius[i])
-                            //stat targets
-                        let char = tokenInRadius[i].get("represents")
-                        let HPcurrC = findObjs({
-                            characterid: char,
-                            name: "HP_current"
-                        })[0];
-                        let HPC = findObjs({
-                            characterid: char,
-                            name: "HP_bd"
-                        })[0];
-                        let StrC = findObjs({
-                            characterid: char,
-                            name: "Str_bd"
-                        })[0];
-                        let MagC = findObjs({
-                            characterid: char,
-                            name: "Mag_bd"
-                        })[0];
-                        let SklC = findObjs({
-                            characterid: char,
-                            name: "Skl_bd"
-                        })[0];
-                        let SpdC = findObjs({
-                            characterid: char,
-                            name: "Spd_bd"
-                        })[0];
-                        let LckC = findObjs({
-                            characterid: char,
-                            name: "Lck_bd"
-                        })[0];
-                        let DefC = findObjs({
-                            characterid: char,
-                            name: "Def_bd"
-                        })[0];
-                        let ResC = findObjs({
-                            characterid: char,
-                            name: "Res_bd"
-                        })[0];
-                        let MovC = findObjs({
-                            characterid: char,
-                            name: "Mov_bd"
-                        })[0];
-                        let HitC = findObjs({
-                            characterid: char,
-                            name: "Hitmod"
-                        })[0];
-                        let CritC = findObjs({
-                            characterid: char,
-                            name: "Critmod"
-                        })[0];
-                        let AvoC = findObjs({
-                            characterid: char,
-                            name: "Avomod"
-                        })[0];
-                        let DdgC = findObjs({
-                            characterid: char,
-                            name: "Ddgmod"
-                        })[0];
-
-                        //numerical stats
-                        let HPcurrStat = getAttrByName(char, 'HP_current');
-                        let StrStat = getAttrByName(char, 'Str_total');
-                        let MagStat = getAttrByName(char, 'Mag_total');
-                        let SklStat = getAttrByName(char, 'Skl_total');
-                        let SpdStat = getAttrByName(char, 'Spd_total');
-                        let LckStat = getAttrByName(char, 'Lck_total');
-                        let DefStat = getAttrByName(char, 'Def_total');
-                        let ResStat = getAttrByName(char, 'Res_total');
-                        let HitStat = getAttrByName(char, 'Hit');
-                        let CritStat = getAttrByName(char, 'Crit');
-                        let AvoStat = getAttrByName(char, 'Avo');
-                        let DdgStat = getAttrByName(char, 'Ddg');
-
-                        let effect = eval(obj.radius_effect); //effect MUST be an array!!!
-                        let target = eval(obj.radius_target); //likewise
-                        let counter = eval(obj.radius_counter);
-                        let rad_effect;
-                        let def_target;
-
-                        for (var i in effect) {
-                          log(target[i].get("current"))
-                          rad_effect = Number(target[i].get("current")) + parseInt(Number(effect[i]));
-                          def_target = Number(target[i].get("current"));
-                          target[i].setWithWorker({
-                              current: rad_effect
-                          });
-                          log(target[i].get("current"))
-
-                          if ((target[i] == HPcurrC) && (char == attacker.id)) {
-                              HPA += parseInt(effect[1])
-                          }
-
-                          if ((target[i] == HPcurrC) && (char == defender.id)) {
-                              HPB += parseInt(effect[1])
-                          }
-
-                          //queueeeee
-                          if (target[i] != HPcurrC) {
-                            if (parseInt(effect[i]) > 0){
-                                queue.push([target[i], "decrement", counter[i], 0, "combat-r"])
-                                log([target[i], "decrement", counter[i], 0, "combat-r"])
-                                log("Pushed to queue!")
-                            } else {
-                                queue.push([target[i], "increment", counter[i], 0, "combat-r"])
-                                log([target[i], "increment", counter[i], 0, "combat-r"])
-                                log("Pushed to queue!")
-                            }
-
-                            //check queue for repeated buff/debuffs
-                            for (var j in queue){
-                                if ((queue[j][0] == target[i]) && (queue[j][4] == "command-r") && (j != queue.length - 1)){ //the last element should be immune since it just got pushed
-                                    log(j)
-                                    log(queue.length - 1)
-                                    log(queue)
-                                    target[i].setWithWorker({
-                                        current: def_target
-                                    }); //reset stat back to what it was before*/
-                                    log("Removed repeating b/d");
-                                }
-                            }
-
-                            //
-                          }
-                          //:OOOOOO
-                        }
-                    }
-                }
-
-                CurrHPU.setWithWorker({
-                    current: HPA
-                });
-                //recursionnn
-                if (obj.children_skills != []) {
-                    for (var y in obj.children_skills) {
-                        let Child_Skill = JSON.parse(obj.children_skills[y]);
-                        Skill(userid, Child_Skill, "any"); //child implementations of preexisting skills should have the triggertime "any" as well
-                    }
-                }
-
-                let Chatstr;
-                if (obj.custom_string != "") {
-                    '<p style = "margin-bottom: 0px;"> <b style = "color: #4055df;">' + obj.custom_string + "</b></p>"
-                } else {
-                    Chatstr = '<p style = "margin-bottom: 0px;"><b style = "color: #4055df;">'+ obj.name + " activated!</b></p>"
-                }
-                sendChat(who, '<div ' + divstyle + '>' + //--
-                    '<div ' + headstyle + '>Skill</div>' + //--
-                    '<div style = "margin: 0 auto; width: 80%; margin-top: 4px;">' + Chatstr + '</div>' + //--
+    for (var j in Skills){
+        Skill(Skills[i].ID, undefined, getObj('graphic', Skills[i].ID), undefined, true, [0, "Physical", "Stones/Other"], [0, "Physical", "Stones/Other"], Skills[i], "turn", true, false, false)
+        log(Skills[i].ID);
+        if (Chatstr != ""){
+            sendChat(Skills[i].char, '<div ' + divstyle + '>' + //--
+                '<div ' + headstyle + '>Skill</div>' + //--
+                '<div style = "margin: 0 auto; width: 80%; margin-top: 4px;">' + Chatstr + '</div>' + //--
                 '</div>'
-                );
-            }
-
-            if (obj.rng != "none") {
-                if (randomInteger(100) < (rng * obj.rngmod)) {
-                    skillMain();
-                } else {
-                    log("RIP RNG")
-                    return;
-                }
-
-            } else { //Plain ol' skill trigger
-                log("Regular skillmain")
-                skillMain();
-            }
+            );
         }
-        for (var j in Skills){
-            Skill(Skills[i].ID, Skills[i], "turn")
-        }
+        Chatstr = "";
+    }
 });
-
 
 //queue
 on("change:campaign:turnorder", function(turn) {
@@ -5263,6 +3834,11 @@ on("change:campaign:turnorder", function(turn) {
     log(queue);
     //remove entries targeting the same stat from the queue; prioritize earlier entries
     for (var i in queue){
+        if (queue[i][0] == undefined){ //check if stat is undefined
+            log("Removed undefined entry from queue") //log repeats before deletion :0
+            queue.shift(); //remove element from queue
+            i --; //decrement i
+        }
         for (var j in queue){
             if ((queue[i][0] == queue[j][0]) && (queue[i][4] == queue[j][4]) && (i != j)){ //check if the stats and sources are the same
                 log("Removed repeated entry from queue: " + queue[i][0].get("name")) //log repeats before deletion :0
