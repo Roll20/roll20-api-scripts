@@ -1,4 +1,4 @@
-// Vampire the Masquerade 5e Dice Mechanics by Momtahan K (Version 1.1).
+// Vampire the Masquerade 5e Dice Mechanics by Momtahan K (Version 1.2).
 //
 // The following code is an adaptation of that produced by Roll20 user Konrad J. for "Hero Quest Dice Mechanics". 
 // Many thanks for providing this code free to use.
@@ -7,7 +7,7 @@
 // Portions of the materials are the copyrights and trademarks of White Wolf Publishing AB, and are used with permission. All rights reserved. For more in formation please visit whitewolf.com
 //
 // With the exception of materials under the copyright of White Wolf all extra code should be considered under
-// GNU General Public License v3 or later (GPL-3.0-or-later) Copyright 2018
+// GNU General Public License v3 or later (GPL-3.0-or-later) Copyright 2018 held my Momtahan.K
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,6 +25,12 @@
 // This license MUST be copied on to any derivative work.
 // Effectively feel free to use, edit and modify the code to your hearts content. As I understand it this will only cause an issue if you 
 // try to use it for commerical gain. This has been added to ensure the community benefits from it.
+
+// Versions
+// Version 1.2
+// Updated images to a different location
+// Version 1.1
+// Bug fixes and updated images to a different location
 
 
 // Guide to use the code
@@ -321,7 +327,7 @@ function processVampireDiceScript(run, dc) {
 		}
 	}
 
-	let thebeast = '<img src="https://imgur.com/ARnnOE6.png" title="The Beast" height="20" width="228"/>';
+	let thebeast = '<img src="https://raw.githubusercontent.com/Kirintale/roll20-character-sheets/master/vampire-v5/Banners/TheBeast.png" title="The Beast" height="20" width="228"/>';
 
 	if (run.rouseStatRoll) {
 		if (diceTotals.successScore > 0) {
@@ -373,11 +379,11 @@ function addRollDeclarations(diceTotals, outputMessage, endTemplateSection, theb
 	if (diceTotals.successScore == 0 && vtmGlobal.luckydice) {
 		let lastResort = '<img src="https://raw.githubusercontent.com/Roll20/roll20-character-sheets/master/vampire-v5/Banners/lastresort.png" title="Miss" height="20" width="228"/>';
 		outputMessage += "{{Fate=" + lastResort + endTemplateSection;
-		let miss = '<img src="https://imgur.com/l8jqvvp.png" title="Miss" height="20" width="228"/>';
+		let miss = '<img src="https://raw.githubusercontent.com/Kirintale/roll20-character-sheets/master/vampire-v5/Banners/MissFail.png" title="Miss" height="20" width="228"/>';
 		outputMessage += "{{Miss=" + miss + endTemplateSection;
 	} else if (diceTotals.successScore == 0) {
 		//outputMessage += "{{Fate=" + "Total failure" + endTemplateSection;
-		let miss = '<img src="https://imgur.com/l8jqvvp.png" title="Miss" height="20" width="228"/>';
+		let miss = '<img src="https://raw.githubusercontent.com/Kirintale/roll20-character-sheets/master/vampire-v5/Banners/MissFail.png" title="Miss" height="20" width="228"/>';
 		outputMessage += "{{Miss=" + miss + endTemplateSection;
 	} else if (vtmGlobal.luckydice) {
 		let lastResort = '<img src="https://raw.githubusercontent.com/Roll20/roll20-character-sheets/master/vampire-v5/Banners/lastresort.png" title="Miss" height="20" width="228"/>';
@@ -385,10 +391,10 @@ function addRollDeclarations(diceTotals, outputMessage, endTemplateSection, theb
 	}
 
 	if ((diceTotals.muddyCritScore >= 2) || (diceTotals.muddyCritScore === 1 && (diceTotals.critScore >= 1))) {
-		let messy = '<img src="https://imgur.com/RB68YQO.png" title="Messy" height="20" width="228"/>';
+		let messy = '<img src="https://raw.githubusercontent.com/Kirintale/roll20-character-sheets/master/vampire-v5/Banners/MessyCritical.png" title="Messy" height="20" width="228"/>';
 		outputMessage += "{{Messy=" + messy + endTemplateSection;
 	} else if (diceTotals.critScore >= 2) {
-		let crit = '<img src="https://imgur.com/ja9Dvq5.png" title="Crit" height="20" width="228"/>';
+		let crit = '<img src="https://raw.githubusercontent.com/Kirintale/roll20-character-sheets/master/vampire-v5/Banners/CriticalHit.png" title="Crit" height="20" width="228"/>';
 		outputMessage += "{{Crit=" + crit + endTemplateSection;
 	}
 
