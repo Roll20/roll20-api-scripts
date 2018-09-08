@@ -8,7 +8,7 @@ Many thanks to Konrad J who's Hero Quest roller this is based on.
 
 ### Known Bugs
 
-If a player has speech marks in their name this can cause issues.
+If a player has double speech marks (\") in their name this can cause issues, single ones (') work fine.
 
 ### Guide to use the code
 
