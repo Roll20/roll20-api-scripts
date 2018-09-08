@@ -6,6 +6,10 @@ Version 1.2 (2018/09/08)
 ### Many Thanks	
 Many thanks to Konrad J who's Hero Quest roller this is based on.
 
+### Known Bugs
+
+If a player has speech marks in their name this can cause issues.
+
 ### Guide to use the code
 
 There are several different types of rolls that are available.
