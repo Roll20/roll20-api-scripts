@@ -85,6 +85,8 @@ var attrNameLookup = function(character,name,caseSensitive){
 
 //credit to Brian on the forums for this framework!
 var queue = [];
+let none = undefined; //just in case something accidentally gets parsed
+
 function ManhDist(token1,token2) { //Manhattan Distance in tiles between two units
     let AXCoord = token1.get("left");
     let AYCoord = token1.get("top");
@@ -639,7 +641,6 @@ on('chat:message', function(msg) {
         }
         log(EXPAmod);
         let WEXPA = 2;
-        let none; //just in case something accidentally gets parsed
 
         function Skill(userid,targetid,obj,triggertime) { //haha END ME
         if (typeof obj != "object"){
