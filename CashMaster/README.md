@@ -39,6 +39,7 @@ A character has a tracked account if it has discrete values for its saved coins.
 ### Shop Commands
 
 - `!cm -viewShop` or `!cm -vs` will display the shop data of the selected token to all players.  The GM is presented with both the player view and the edit view.
+- `!cm -viewItem "[item name]^[shopkeeper name]"` will display the details of a particular item from the specified shopkeeper.  This is used when the GM sets verbosity to low.
 - `!cm -buy "[item name]^[shopkeeper name]"` will attempt to purchase the named item from the named shopkeeper.  If you have sufficient funds, the funds will be removed and you will be presented with a purchase message.  If you are using the OGL character sheet, you will also find it transferred into your inventory.
 
 ## GM Commands
@@ -71,6 +72,7 @@ Use caution when using the below commands.
 
 These commands set up and manipulate shops.
 - `!cm -makeShop "[shop name]^[shop location]^[shop appearance]^[shopkeeper appearance]` creates a shop for the selected character token with the assigned attributes.  The token must point to a character sheet.  If you wish to have a single shop with multiple shopkeepers, use rollable tables and have them feed to the same character sheet for the shop.
+- `!cm -setShopVerbosity [high|low]` sets the amount of information that is printed out when displaying a shop.
 - `!cm -updateShop "[parameter name]^[parameter value]"` will update the named parameter to the new value.
 - `!cm -addItem "[item name]^[price]^[description]^[quantity]^[weight]^[properties]^[modifiers]"` creates a new item in the selected token's shop.
 - `!cm -updateItem "[item name]^[parameter name]^[parameter value]"` will look up the specified item name in the selected token's shop and update the named parameter to be the specified value.
