@@ -665,13 +665,13 @@ function calculateVariables(argv, who) {
 		let identifier = entry.substring(0, 1);
 
 		if (identifier === "a") {
-				// Assign an int directly to an attribute
-				let value = parseInt(entry.substring(1), 10);
-				input.attribute = value;
+			// Assign an int directly to an attribute
+			let value = parseInt(entry.substring(1), 10);
+			input.attribute = value;
 		} else if (identifier === "s") {
-				// Assign an int directly to a skill
-				let value = parseInt(entry.substring(1), 10);
-				input.skill = value;
+			// Assign an int directly to a skill
+			let value = parseInt(entry.substring(1), 10);
+			input.skill = value;
 		} else if (identifier === "o") {
 			// Used to assign a trait much like "p", this is used in Willpower rolls to assign humanity
 			let value = parseInt(entry.substring(1), 10);
@@ -727,7 +727,7 @@ function calculateVariables(argv, who) {
 			let value = parseInt(entry.substring(1), 10);
 			input.difficulty = value;
 		} else if (input.type === "remorse") {
-			log ("remorse variable")
+			log("remorse variable")
 			// Used for remorse rolls
 			let totalValue = parseInt(entry.substring(1), 10);
 			let totalRemorse = updateMultiboxValue(totalValue);
