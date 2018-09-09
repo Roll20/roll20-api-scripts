@@ -8,7 +8,7 @@ Many thanks to Konrad J who's Hero Quest roller this is based on.
 
 ### Known Bugs
 
-If a player has double speech marks (\") in their name this can cause issues, single ones (') work fine.
+Errors may occur if the player enters a name with tilde (\~), this is because the tilde is symbol I've used to identify names. There are no plans to fix this as this was introduce to enable full names.
 
 ### Guide to use the code
 
@@ -28,9 +28,9 @@ Note: For anyone reading the code, to make the frenzy roll work I had to invert 
 !vtm humanity o# m# // Used for humanity roll. 
 
 Optional Flags:
-An extra variable (c"custom name ") may be added to any of these rolls to display a custom name in the roll template. Note: As a coding querk please have a space after the name but before the close in the speech marks.
-Example !vtm roll w5 r1 c"Prince Wolf " will roll 5 black die, 1 red die and the character will have the name - Prince Wolf
-An extra variable (t"custom name") may be added to any of these rolls to display the roll type. This is text below the custom name
+An extra variable (c~custom name ~) may be added to any of these rolls to display a custom name in the roll template. Note: As a coding querk please have a space after the name but before the close in the tilde.
+Example !vtm roll w5 r1 c~Prince Wolf ~ will roll 5 black die, 1 red die and the character will have the name - Prince Wolf
+An extra variable (t~custom name~) may be added to any of these rolls to display the roll type. This is text below the custom name
 Adding b# to a skill roll will add the value/2.0 to the number of vampire dice. This is used for blood potency when handling disciplines
 If needs be both the Frenzy and Humanity Roll can be updated to use real values. For now however I'm going to leave it.
 
@@ -42,10 +42,10 @@ For people reading the code there are several functions which I have yet to remo
 	shows dice rolled as graphic, small, medium, or large if "on" or as text if "off"
   !vtm test // this will output every side of every die to the chat window (currently does not work)
   !vtm hero // Only for true heroes
-  !vtm lupine // When people ask for too much
+  !vtm lupine // When people ask for too much. Currently disabled.
 
 ### Versions
 Version 1.2
-Updated images to a different location
+Updated images to a different location. Fixed bugs where players name would not appear for specific rolls. Fixed bug in which speech marks in a players name would cause issues.
 Version 1.1
 Bug fixes and updated images to a different location. Renamed Humanity to Remorse, added a new "Humanity" roll.
