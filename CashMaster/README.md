@@ -1,6 +1,6 @@
 # CashMaster
 
-A currency management script for the D&D 5e OGL and 5e Shaped sheets on Roll20.net.
+A currency management script for the D&D 5e OGL sheets on Roll20.net.
 
 Please use `!cm` for inline help and examples.
 
@@ -15,11 +15,11 @@ Please use `!cm` for inline help and examples.
 
 ### GM Setup
 
-1. Set the character sheet setting (`OGL`, `5E-Shaped`, or `other`).
-2. Create a macro bar button for the command `!cm -menu`
-3. Press the CashMaster button you just created.  It will display a menu in the chat log.
-4. Select the character tokens of ALL party members and companion NPCs.  Do not select pets or mounts unless the party considers them an equal member of the party (and thus should be a valid recipient for `-loot` and similar commands).  Such creatures must have full character sheets with currency fields.
-5. Press the chat UI button titled Set Party to Selected.
+1. Create a macro bar button for the command `!cm -menu`
+2. Press the CashMaster button you just created.  It will display a menu in the chat log.
+3. Select the character tokens of ALL party members and companion NPCs.  Do not select pets or mounts unless the party considers them an equal member of the party (and thus should be a valid recipient for `-loot` and similar commands).  Such creatures must have full character sheets with currency fields.
+4. Press the chat UI button titled Set Party to Selected.
+5. For each shopkeeper, press the [Show Shop on Selected] button in the menu.  The shopkeeper must have a character sheet and the token must point to it.
 
 ## Player Commands
 
@@ -35,6 +35,12 @@ A character has a tracked account if it has discrete values for its saved coins.
 - `!cm -transfer "[recipient character name]" [amount][currency]` or `!cm -t "[recipient character name]" [amount][currency]` to transfer coins to the recipient's tracked account.
 - `!cm -invoice "[recipient character name]" [amount][currency]` or `!cm -i "[recipient character name]" [amount][currency]` to request coins to the recipient's tracked account.
 - `!cm -giveNPC "[NPC Name, service rendered]" [amount][currency]` or `!cm -dropWithReason "[reason for dropping coins]" [amount][currency]` to move coins from the player's tracked account to an untracked account.
+
+### Shop Commands
+
+- `!cm -viewShop` or `!cm -vs` will display the shop data of the selected token to all players.  The GM is presented with both the player view and the edit view.
+- `!cm -viewItem "[item name]^[shopkeeper name]"` will display the details of a particular item from the specified shopkeeper.  This is used when the GM sets verbosity to low.
+- `!cm -buy "[item name]^[shopkeeper name]"` will attempt to purchase the named item from the named shopkeeper.  If you have sufficient funds, the funds will be removed and you will be presented with a purchase message.  If you are using the OGL character sheet, you will also find it transferred into your inventory.
 
 ## GM Commands
 
@@ -62,14 +68,25 @@ Use caution when using the below commands.
 - `!cm -setParty` or `!cm -sp` to set the default party list.  These will be the default targets for party actions if you have nothing selected.
 - `!cm -revert` or `!cm -r` reverts a given transaction id.  This is an internal command used to revert transactions.
 
+### Shop Commands
+
+These commands set up and manipulate shops.
+- `!cm -makeShop "[shop name]^[shop location]^[shop appearance]^[shopkeeper appearance]` creates a shop for the selected character token with the assigned attributes.  The token must point to a character sheet.  If you wish to have a single shop with multiple shopkeepers, use rollable tables and have them feed to the same character sheet for the shop.
+- `!cm -setShopVerbosity [high|low]` sets the amount of information that is printed out when displaying a shop.
+- `!cm -updateShop "[parameter name]^[parameter value]"` will update the named parameter to the new value.
+- `!cm -addItem "[item name]^[price]^[description]^[quantity]^[weight]^[properties]^[modifiers]"` creates a new item in the selected token's shop.
+- `!cm -updateItem "[item name]^[parameter name]^[parameter value]"` will look up the specified item name in the selected token's shop and update the named parameter to be the specified value.
+- `!cm -updateItem "[item name]^DELETE^YES"` will delete the specified item from the selected token's shop.
+- `!cm -updateItem "[item name]^DUPLICATE^YES"` will duplicate the specified item, adding a new item to the end of the shop's list of items named `"Copy of [item name]"`.
+
 ## Tips
 
 1. `-noToken` and `-nt` will cause CashMaster to disregard what character is selected.
 2. You can use several coin values at once, e.g. `!cm -loot 50gp 150sp 2000cp` or `!cm -pay 2sp 5cp`.
-3. You can combine multiple subcommands into a single chat command with a semicolon `;` between them.  For example, `!cm -add 5gp; -merge`
-4. You can select multiple subjects and targets using **Advanced Mode**.  For example, `!cm -transfer -S "Billy Bob,Joe Bob" -T "Sarah Bob,Sonya Bob" -C "10gp"`.  When using multiple subjects and targets, it will perform an operation for each subject-target pair.  In that case, it will perform four transactions of 10gp each.
+3. You can combine multiple subcommands into a single chat command with a double-semicolon `;;` between them.  For example, `!cm -add 5gp; -merge`
+4. You can select multiple subjects and targets using **Advanced Mode**.  For example, `!cm -transfer -S "Billy Bob^Joe Bob" -T "Sarah Bob^Sonya Bob" -C "10gp"`.  When using multiple subjects and targets, it will perform an operation for each subject-target pair.  In that case, it will perform four transactions of 10gp each.
 5. In **Advanced Mode**, you don't need to specify `-C "[amoung][currency]"` and can instead just use the standard `[amount][currency]`.  The ` -C ` currency tag allows you to specify the gp value at a particular point in the command in case you have strangley-named or inconveniently ID'd characters.
-6. CashMaster will parse **both character IDs and character names**.  You can even mix and match!  If Billy Bob's ID was `-L4ncF3ych3ZLtWaY3uY`, Instead of the example in **Tip 4**, you could use `!cm -transfer -S "-L4ncF3ych3ZLtWaY3uY,Joe Bob" -T "Sarah Bob,Sonya Bob" -C "10gp"`.
+6. CashMaster will parse **both character IDs and character names**.  You can even mix and match!  If Billy Bob's ID was `-L4ncF3ych3ZLtWaY3uY`, Instead of the example in **Tip 4**, you could use `!cm -transfer -S "-L4ncF3ych3ZLtWaY3uY^Joe Bob" -T "Sarah Bob^Sonya Bob" -C "10gp"`.
 7. CashMaster is compatible with `@{selected|character_id}` and `@{target|character_id}` as they will simply be parsed down to IDs.  As an example, your players could use `!cm -t -T "@{target|character_id}" 1gp` to transfer a gold amongst themselves.
 
 ## Examples
