@@ -23,6 +23,19 @@ const WelcomePackage = (() => {
   };
 
   const observers = [];
+  let isReady = false;
+
+  /**
+   * Event handler for when a player logs into the game.
+   * @private
+   * @param {Player} player
+   */
+  function _handlePlayerOnline(player) {
+    if(player.get('_online') && !playerIsGM(player.get('_id'))) {
+      createPlayerCharacter(player);
+      addCharacterCreateMacro(player);
+    }
+  }
 
   /**
    * Registers a function to be notified when a character is created
@@ -86,33 +99,29 @@ const WelcomePackage = (() => {
         name = `${who}'s character`;
       }
 
+      let character = createObj('character', {
+        controlledby: playerId,
+        inplayerjournals: 'all',
+        name
+      });
+
+      // Disable the Charactermancer for the new character by creating
+      // the "version" attribute. This will be set to its correct value later
+      // by the character sheet's worker.
+      createObj('attribute', {
+        name: 'mancer_confirm_flag',
+        characterid: character.id,
+        current: '1'
+      });
+      createObj('attribute', {
+        name: 'l1mancer_status',
+        characterid: character.id,
+        current: 'completed'
+      });
+
       setTimeout(() => {
-        let character = createObj('character', {
-          controlledby: playerId,
-          inplayerjournals: 'all',
-          name
-        });
-
-        // Disable the Charactermancer for the new character by creating
-        // the "version" attribute. This will be set to its correct value later
-        // by the character sheet's worker.
-        createObj('attribute', {
-          name: 'mancer_confirm_flag',
-          characterid: character.id,
-          current: '1'
-        });
-        createObj('attribute', {
-          name: 'l1mancer_status',
-          characterid: character.id,
-          current: 'completed'
-        });
-
-        setTimeout(() => {
-          notifyAddCharacter(character);
-          setTimeout(() => {
-            showCharacterLink(who, character);
-          }, 1000);
-        }, 1000);
+        notifyAddCharacter(character);
+        showCharacterLink(who, character);
       }, 1000);
     }
   }
@@ -139,14 +148,26 @@ const WelcomePackage = (() => {
 
   // When a player logs in, create a character for them if they don't have one.
   on('change:player:_online', player => {
-    if(player.get('_online') && !playerIsGM(player.get('_id'))) {
-      createPlayerCharacter(player);
-      addCharacterCreateMacro(player);
-    }
+    if(isReady)
+      _handlePlayerOnline(player);
   });
 
   on('ready', () => {
     log('🎁🎁🎁 Initialized Welcome Package 🎁🎁🎁');
+    isReady = true;
+
+    // Wait some amount of time to give other scripts a chance to finish
+    // loading. Then process any pending logged in players.
+    setTimeout(() => {
+      // Once we're loaded, create a character for any player that doesn't
+      // have one.
+      let players = findObjs({
+        _type: 'player'
+      });
+      _.each(players, player => {
+        _handlePlayerOnline(player);
+      });
+    }, 5000);
   });
 
   /**
@@ -164,6 +185,7 @@ const WelcomePackage = (() => {
   });
 
   return {
-    OnAddCharacter: onAddCharacter
+    OnAddCharacter: onAddCharacter,
+    onAddCharacter
   };
 })();
