@@ -5,7 +5,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 /* global on log playerIsGM findObjs getObj getAttrByName sendChat globalconfig state */
 
 /*
-CASHMASTER 0.9.1
+CASHMASTER 0.9.0
 
 A currency management script for the D&D 5e OGL sheets on roll20.net.
 Please use `!cm` for inline help and examples.
@@ -21,8 +21,7 @@ var initCM = function initCM() {
       Party: [],
       DefaultCharacterNames: {},
       TransactionHistory: [],
-      MaxTransactionId: 0,
-      ShopDisplayVerbose: true
+      MaxTransactionId: 0
     };
   }
   if (!state.CashMaster.Party) {
@@ -366,7 +365,7 @@ var ParseException = function ParseException(message) {
 };
 
 on('ready', function () {
-  var v = '0.9.1'; // version number
+  var v = '0.9.0'; // version number
   var usd = 110;
   /*
   Change this if you want to have a rough estimation of a character’s wealth in USD.
@@ -435,7 +434,7 @@ on('ready', function () {
     var currencySpecified = false;
 
     // These commands *do* have targets, but the targets are not characters.  Instead, they are strings.
-    var allowStringTarget = argTokens.includes('-dropWithReason') || argTokens.includes('-giveNPC') || argTokens.includes('-buy') || argTokens.includes('-makeShop') || argTokens.includes('-addItem') || argTokens.includes('-updateShop') || argTokens.includes('-updateItem') || argTokens.includes('-viewItem');
+    var allowStringTarget = argTokens.includes('-dropWithReason') || argTokens.includes('-giveNPC') || argTokens.includes('-buy') || argTokens.includes('-makeShop') || argTokens.includes('-addItem') || argTokens.includes('-updateShop') || argTokens.includes('-updateItem');
 
     // Wrapping in try/catch because of the forEach.  This allows us to easily escape to report errors to the user immediately.
     try {
@@ -714,7 +713,7 @@ on('ready', function () {
     return '' + gmNotesHeaderString + outputLines.join('');
   };
 
-  var displayShop = function displayShop(subject, shop, shopkeeperName, whisperRecipient) {
+  var displayShop = function displayShop(subject, shop, shopkeeperName) {
     subject.get('_defaulttoken', function (tokenJSON) {
       var avatarTag = '';
       if (tokenJSON) {
@@ -734,86 +733,54 @@ on('ready', function () {
       var playerShop = '';
       var gmShop = '';
 
-      if (state.CashMaster.ShopDisplayVerbose) {
-        var shopDisplay = '&{template:' + rt[0] + '} {{' + rt[1] + '=<div align="left" style="margin-left: 7px;margin-right: 7px">' + ('<h3>' + avatarTag + shop.Name + '</h3><hr>') + ('<br><b>Location:</b> ' + shop.Location) + ('<br><b>Appearance:</b> ' + shop.Appearance) + ('<br><b>Shopkeeper:</b> ' + shop.Shopkeeper);
+      var shopDisplay = '&{template:' + rt[0] + '} {{' + rt[1] + '=<div align="left" style="margin-left: 7px;margin-right: 7px">' + ('<h3>' + avatarTag + shop.Name + '</h3><hr>') + ('<br><b>Location:</b> ' + shop.Location) + ('<br><b>Appearance:</b> ' + shop.Appearance) + ('<br><b>Shopkeeper:</b> ' + shop.Shopkeeper);
 
-        playerShop += shopDisplay;
-        gmShop += shopDisplay;
-        gmShop += '<br>[Edit](!cm -updateShop &#34;?{Shop Field|Name|Location|Appearance|Shopkeeper}^?{New Field Value}&#34;)';
+      playerShop += shopDisplay;
+      gmShop += shopDisplay;
+      gmShop += '<br>[Edit](!cm -updateShop &#34;?{Shop Field|Name|Location|Appearance|Shopkeeper}^?{New Field Value}&#34;)';
 
-        if (shop.Items) {
-          var waresHeader = '<hr><h4>Wares</h4>';
-          playerShop += waresHeader;
-          gmShop += waresHeader;
-          shop.Items.forEach(function (item) {
-            var itemDisplay = '<br><b>' + item.Name;
+      if (shop.Items) {
+        var waresHeader = '<hr><h4>Wares</h4>';
+        playerShop += waresHeader;
+        gmShop += waresHeader;
+        shop.Items.forEach(function (item) {
+          var itemDisplay = '<br><b>' + item.Name;
 
-            itemDisplay += item.Quantity && item.Quantity > 1 ? ' x' + item.Quantity + '</b>' : '</b>';
-            itemDisplay += item.Price ? '<br><b>Price</b>: ' + item.Price : '';
-            itemDisplay += item.Weight ? '<br><b>Weight</b>: ' + item.Weight + 'lbs' : '';
-            itemDisplay += item.Description ? '<br><b>Description</b>: ' + item.Description : '';
-            itemDisplay += item.Modifiers ? '<br><b>Modifiers</b>: ' + item.Weight : '';
-            itemDisplay += item.Properties ? '<br><b>Properties</b>: ' + item.Properties : '';
-            itemDisplay += '<br>';
+          itemDisplay += item.Quantity && item.Quantity > 1 ? ' x' + item.Quantity + '</b>' : '</b>';
+          itemDisplay += item.Price ? '<br><b>Price</b>: ' + item.Price : '';
+          itemDisplay += item.Weight ? '<br><b>Weight</b>: ' + item.Weight + 'lbs' : '';
+          itemDisplay += item.Description ? '<br><b>Description</b>: ' + item.Description : '';
+          itemDisplay += item.Modifiers ? '<br><b>Modifiers</b>: ' + item.Weight : '';
+          itemDisplay += item.Properties ? '<br><b>Properties</b>: ' + item.Properties : '';
+          itemDisplay += '<br>';
 
-            playerShop += itemDisplay;
-            gmShop += itemDisplay;
+          playerShop += itemDisplay;
+          gmShop += itemDisplay;
 
-            if (item.Quantity > 0 && item.Price) {
-              var buyButton = '[Buy](!cm -buy -T &#34;' + item.Name + ',' + shopkeeperName + '&#34;)';
-              playerShop += buyButton;
-              gmShop += buyButton;
-            }
+          if (item.Quantity > 0 && item.Price) {
+            var buyButton = '[Buy](!cm -buy -T &#34;' + item.Name + ',' + shopkeeperName + '&#34;)';
+            playerShop += buyButton;
+            gmShop += buyButton;
+          }
 
-            gmShop += '[Edit](!cm -updateItem &#34;' + item.Name + '^?{Item Field|Name|Quantity|Price|Weight|Description|Modifiers|Properties}^?{New field value}&#34;)';
-            gmShop += '[Delete](!cm -updateItem &#34;' + item.Name + ',?{Type DELETE if you wish to delete ' + item.Name + '.},?{Are you absolutely sure|YES|NO}&#34;)';
-            gmShop += '[Duplicate](!cm -updateItem &#34;' + item.Name + ',DUPLICATE,?{Duplicate the item|YES|NO}&#34;)';
+          gmShop += '[Edit](!cm -updateItem &#34;' + item.Name + '^?{Item Field|Name|Quantity|Price|Weight|Description|Modifiers|Properties}^?{New field value}&#34;)';
+          gmShop += '[Delete](!cm -updateItem &#34;' + item.Name + ',?{Type DELETE if you wish to delete ' + item.Name + '.},?{Are you absolutely sure|YES|NO}&#34;)';
+          gmShop += '[Duplicate](!cm -updateItem &#34;' + item.Name + ',DUPLICATE,?{Duplicate the item|YES|NO}&#34;)';
 
-            playerShop += '<br>';
-            gmShop += '<br>';
-          });
-        } else {
-          shop.Items = [];
-        }
-
-        gmShop += '<br>[Add Item](!cm -addItem &#34;' + '?{Item Name}^' + '?{Item Price.  Leave blank to disable Buy button.}^' + '?{Item Description}^' + '?{Quantity}^' + '?{Weight}^' + '?{Properties.  It is okay to leave blank.}^' + '?{Modifiers.  It is okay to leave blank.}&#34;)';
+          playerShop += '<br>';
+          gmShop += '<br>';
+        });
       } else {
-        var _shopDisplay = '&{template:' + rt[0] + '} {{' + rt[1] + '=<div align="left" style="margin-left: 7px;margin-right: 7px">' + ('<h3>' + avatarTag + shop.Name + '</h3>');
-
-        playerShop += _shopDisplay;
-        gmShop += _shopDisplay;
-        gmShop += '<br>[Edit](!cm -updateShop &#34;?{Shop Field|Name|Location|Appearance|Shopkeeper}^?{New Field Value}&#34;)<br>';
-
-        if (shop.Items) {
-          shop.Items.forEach(function (item) {
-            var itemDisplay = '<br><b>' + item.Name + '</b>' + ('<br>[View](!cm -viewItem &#34;' + item.Name + ',' + shopkeeperName + '&#34;)');
-
-            playerShop += itemDisplay;
-            gmShop += itemDisplay;
-
-            gmShop += '[Edit](!cm -updateItem &#34;' + item.Name + '^?{Item Field|Name|Quantity|Price|Weight|Description|Modifiers|Properties}^?{New field value}&#34;)';
-            gmShop += '[Delete](!cm -updateItem &#34;' + item.Name + ',?{Type DELETE if you wish to delete ' + item.Name + '.},?{Are you absolutely sure|YES|NO}&#34;)';
-            gmShop += '[Duplicate](!cm -updateItem &#34;' + item.Name + ',DUPLICATE,?{Duplicate the item|YES|NO}&#34;)';
-
-            playerShop += '<br>';
-            gmShop += '<br>';
-          });
-        } else {
-          shop.Items = [];
-        }
-
-        gmShop += '<br>[Add Item](!cm -addItem &#34;' + '?{Item Name}^' + '?{Item Price.  Leave blank to disable Buy button.}^' + '?{Item Description}^' + '?{Quantity}^' + '?{Weight}^' + '?{Properties.  It is okay to leave blank.}^' + '?{Modifiers.  It is okay to leave blank.}&#34;)';
+        shop.Items = [];
       }
+
+      gmShop += '<br>[Add Item](!cm -addItem &#34;' + '?{Item Name}^' + '?{Item Price.  Leave blank to disable Buy button.}^' + '?{Item Description}^' + '?{Quantity}^' + '?{Weight}^' + '?{Properties.  It is okay to leave blank.}^' + '?{Modifiers.  It is okay to leave blank.}&#34;)';
 
       var closeDiv = '</div>}}';
       playerShop += closeDiv;
       gmShop += closeDiv;
 
-      if (whisperRecipient !== '') {
-        sendChat(shopkeeperName, '/w ' + whisperRecipient + ' ' + playerShop);
-      } else {
-        sendChat(shopkeeperName, playerShop);
-      }
+      sendChat(shopkeeperName, playerShop);
       sendChat(shopkeeperName, '/w gm ' + gmShop);
     });
   };
@@ -989,14 +956,14 @@ on('ready', function () {
       // Operations that do not require a selection
       if (subcommand === '!cm' || argTokens.includes('-help') || argTokens.includes('-h')) {
         //! help
-        sendChat(scname, '/w gm <h1 id=\'cashmaster\'>CashMaster</h1><p>A currency management script for the D&amp;D 5e OGL sheets on Roll20.net.</p><p>Please use <code>!cm</code> for inline help and examples.</p><h2 id=\'setup\'>Setup</h2><h3 id=\'player-setup\'>Player Setup</h3><ol><li>Create a macro bar button for the command <code>!cm -menu</code></li><li>Press the CashMaster button you just created.  It will display a menu in the chat log.</li><li>Click on your character token</li><li>Press the chat UI button titled Set Default Character.</li></ol><h3 id=\'gm-setup\'>GM Setup</h3><ol><li>Create a macro bar button for the command <code>!cm -menu</code></li><li>Press the CashMaster button you just created.  It will display a menu in the chat log.</li><li>Select the character tokens of ALL party members and companion NPCs.  Do not select pets or mounts unless the party considers them an equal member of the party (and thus should be a valid recipient for <code>-loot</code> and similar commands).  Such creatures must have full character sheets with currency fields.</li><li>Press the chat UI button titled Set Party to Selected.</li><li>For each shopkeeper, press the [Show Shop on Selected] button in the menu.  The shopkeeper must have a character sheet and the token must point to it.</li></ol><h2 id=\'player-commands\'>Player Commands</h2><h3 id=\'help-commands\'>Help Commands</h3><ul><li><code>!cm</code> or <code>!cm -help</code> or <code>!cm -h</code> will show this help overview</li><li><code>!cm -menu</code> or <code>!cm -tool</code> to bring up the user menu</li><li><code>!cm -status</code> or <code>!cm -ss</code> to display your current coin purse contents</li></ul><h3 id=\'accounting-commands\'>Accounting commands</h3><p>A character has a tracked account if it has discrete values for its saved coins.  PCs necessarily have tracked accounts while NPCs usually do not, instead having as much gold as the DM feels is necessary at that moment.</p><ul><li><code>!cm -transfer &quot;[recipient character name]&quot; [amount][currency]</code> or <code>!cm -t &quot;[recipient character name]&quot; [amount][currency]</code> to transfer coins to the recipient&#39;s tracked account.</li><li><code>!cm -invoice &quot;[recipient character name]&quot; [amount][currency]</code> or <code>!cm -i &quot;[recipient character name]&quot; [amount][currency]</code> to request coins to the recipient&#39;s tracked account.</li><li><code>!cm -giveNPC &quot;[NPC Name, service rendered]&quot; [amount][currency]</code> or <code>!cm -dropWithReason &quot;[reason for dropping coins]&quot; [amount][currency]</code> to move coins from the player&#39;s tracked account to an untracked account.</li></ul><h3 id=\'shop-commands\'>Shop Commands</h3><ul><li><code>!cm -viewShop</code> or <code>!cm -vs</code> will display the shop data of the selected token to all players.  The GM is presented with both the player view and the edit view.</li><li><code>!cm -viewItem &quot;[item name]^[shopkeeper name]&quot;</code> will display the details of a particular item from the specified shopkeeper.  This is used when the GM sets verbosity to low.</li><li><code>!cm -buy &quot;[item name]^[shopkeeper name]&quot;</code> will attempt to purchase the named item from the named shopkeeper.  If you have sufficient funds, the funds will be removed and you will be presented with a purchase message.  If you are using the OGL character sheet, you will also find it transferred into your inventory.</li></ul><h2 id=\'gm-commands\'>GM Commands</h2><p>In addition to the above commands, the GM has access to the following commands.</p><h3 id=\'help-commands\'>Help commands</h3><ul><li><code>!cm</code> or <code>!cm -help</code> or <code>!cm -h</code> will show this help overview</li><li><code>!cm -overview</code> or <code>!cm -o</code> to get an <strong>overview</strong> over the party&#39;s cash</li><li><code>!cm -overview --usd</code> will also give you an overview and a rough conversion to USD (default value: 1 gp equals roughly 110 USD).</li></ul><h3 id=\'accounting-commands\'>Accounting Commands</h3><p>These operations directly add and remove gold from party inventories.</p><ul><li><code>!cm -add [amount][currency]</code> or <code>!cm -a [amount][currency]</code> to <strong>add</strong> an equal amount of money to each selected party member,</li><li><code>!cm -loot [amount][currency]</code> or <code>!cm -l [amount][currency]</code> to <strong>split up</strong> a certain amount of coins between the party members, like a found treasure. Note that in this case, no conversion between the different coin types is made - if a party of 5 shares 4 pp, then 4 party members receive one pp each, and the last member won&#39;t get anything.</li><li><code>!cm -sub [amount][currency]</code> or <code>!cm -pay [amount][currency]</code> or <code>!cm -p [amount][currency]</code> to let each selected party member <strong>pay</strong> a certain amount. The script will even try to take higher and lower coin types to get the full amount. E.g. to pay 1gp when the character has no gold, the script will use 1pp (and return 9gp), or it will take 2ep, 10sp or 100cp - or any other valid combination of coins - to pay the desired amount.</li></ul><h3 id=\'admin-commands\'>Admin Commands</h3><p>Use caution when using the below commands.</p><ul><li><code>!cm -merge</code> or <code>!cm -m</code> to <strong>merge</strong> coins to the densest denomination possible.</li><li><code>!cm -share</code> or <code>!cm -s</code> to <strong>reallocate and share</strong> the money equally between selected party members, converting the amount into the best combination of gold, silver and copper (this should be used in smaller stores),</li><li><code>!cm -best-share</code> or <code>!cm -bs</code> to <strong>reallocate and share</strong> the money equally between selected party members, converting the amount into the best combination of platinum, gold, electrum, silver and copper (this should only be used in larger stores that have a fair amount of cash),</li><li><code>!cm -setParty</code> or <code>!cm -sp</code> to set the default party list.  These will be the default targets for party actions if you have nothing selected.</li><li><code>!cm -revert</code> or <code>!cm -r</code> reverts a given transaction id.  This is an internal command used to revert transactions.</li></ul><h3 id=\'shop-commands\'>Shop Commands</h3><p>These commands set up and manipulate shops.</p><ul><li><code>!cm -makeShop &quot;[shop name]^[shop location]^[shop appearance]^[shopkeeper appearance]</code> creates a shop for the selected character token with the assigned attributes.  The token must point to a character sheet.  If you wish to have a single shop with multiple shopkeepers, use rollable tables and have them feed to the same character sheet for the shop.</li><li><code>!cm -setShopVerbosity [high|low]</code> sets the amount of information that is printed out when displaying a shop.</li><li><code>!cm -updateShop &quot;[parameter name]^[parameter value]&quot;</code> will update the named parameter to the new value.</li><li><code>!cm -addItem &quot;[item name]^[price]^[description]^[quantity]^[weight]^[properties]^[modifiers]&quot;</code> creates a new item in the selected token&#39;s shop.</li><li><code>!cm -updateItem &quot;[item name]^[parameter name]^[parameter value]&quot;</code> will look up the specified item name in the selected token&#39;s shop and update the named parameter to be the specified value.</li><li><code>!cm -updateItem &quot;[item name]^DELETE^YES&quot;</code> will delete the specified item from the selected token&#39;s shop.</li><li><code>!cm -updateItem &quot;[item name]^DUPLICATE^YES&quot;</code> will duplicate the specified item, adding a new item to the end of the shop&#39;s list of items named <code>&quot;Copy of [item name]&quot;</code>.</li></ul><h2 id=\'tips\'>Tips</h2><ol><li><code>-noToken</code> and <code>-nt</code> will cause CashMaster to disregard what character is selected.</li><li>You can use several coin values at once, e.g. <code>!cm -loot 50gp 150sp 2000cp</code> or <code>!cm -pay 2sp 5cp</code>.</li><li>You can combine multiple subcommands into a single chat command with a double-semicolon <code>;;</code> between them.  For example, <code>!cm -add 5gp; -merge</code></li><li>You can select multiple subjects and targets using <strong>Advanced Mode</strong>.  For example, <code>!cm -transfer -S &quot;Billy Bob^Joe Bob&quot; -T &quot;Sarah Bob^Sonya Bob&quot; -C &quot;10gp&quot;</code>.  When using multiple subjects and targets, it will perform an operation for each subject-target pair.  In that case, it will perform four transactions of 10gp each.</li><li>In <strong>Advanced Mode</strong>, you don&#39;t need to specify <code>-C &quot;[amoung][currency]&quot;</code> and can instead just use the standard <code>[amount][currency]</code>.  The <code>-C</code> currency tag allows you to specify the gp value at a particular point in the command in case you have strangley-named or inconveniently ID&#39;d characters.</li><li>CashMaster will parse <strong>both character IDs and character names</strong>.  You can even mix and match!  If Billy Bob&#39;s ID was <code>-L4ncF3ych3ZLtWaY3uY</code>, Instead of the example in <strong>Tip 4</strong>, you could use <code>!cm -transfer -S &quot;-L4ncF3ych3ZLtWaY3uY^Joe Bob&quot; -T &quot;Sarah Bob^Sonya Bob&quot; -C &quot;10gp&quot;</code>.</li><li>CashMaster is compatible with <code>@{selected|character_id}</code> and <code>@{target|character_id}</code> as they will simply be parsed down to IDs.  As an example, your players could use <code>!cm -t -T &quot;@{target|character_id}&quot; 1gp</code> to transfer a gold amongst themselves.</li></ol><h2 id=\'examples\'>Examples</h2><ol><li><code>!cm -overview</code> will show a cash overview.</li><li><code>!cm -add 50gp</code> will add 50 gp to every selected character.</li><li><code>!cm -loot 50gp</code> will (more or less evenly) distribute 50 gp among the party members.</li><li><code>!cm -pay 10gp</code> will subtract 10gp from each selected character. It will try to exchange the other coin types (e.g. it will use 1pp if the player doesn&#39;t have 10gp).</li><li><code>!cm -share</code> will collect all the money and share it evenly on the members, using gp, sp and cp only (pp and ep will be converted). Can also be used for one character to &#39;exchange&#39; money.</li><li><code>!cm -transfer &quot;Tazeka Liranov&quot; 40gp</code> will transfer 40 gp from the selected token to the character sheet named Tazeka Liranov.</li><li><code>!cm -convert</code> - same as <code>!cm -share</code>, but will also use platinum and electrum.</li></ol><h2 id=\'credits\'>Credits</h2><p>With thanks to <a href=\'https://app.roll20.net/users/277007/kryx\'>Kryx</a>/<a href=\'https://github.com/mlenser\'>mlenser</a> and <a href=\'https://app.roll20.net/users/1583758/michael-g\'>Michael G.</a>/<a href=\'https://github.com/VoltCruelerz\'>VoltCruelerz</a> for their contributions.</p>'); // eslint-disable-line quotes
+        sendChat(scname, '/w gm <h1 id=\'cashmaster\'>CashMaster</h1><p>A currency management script for the D&amp;D 5e OGL sheets on Roll20.net.</p><p>Please use <code>!cm</code> for inline help and examples.</p><h2 id=\'setup\'>Setup</h2><h3 id=\'player-setup\'>Player Setup</h3><ol><li>Create a macro bar button for the command <code>!cm -menu</code></li><li>Press the CashMaster button you just created.  It will display a menu in the chat log.</li><li>Click on your character token</li><li>Press the chat UI button titled Set Default Character.</li></ol><h3 id=\'gm-setup\'>GM Setup</h3><ol><li>Create a macro bar button for the command <code>!cm -menu</code></li><li>Press the CashMaster button you just created.  It will display a menu in the chat log.</li><li>Select the character tokens of ALL party members and companion NPCs.  Do not select pets or mounts unless the party considers them an equal member of the party (and thus should be a valid recipient for <code>-loot</code> and similar commands).  Such creatures must have full character sheets with currency fields.</li><li>Press the chat UI button titled Set Party to Selected.</li><li>For each shopkeeper, press the [Show Shop on Selected] button in the menu.  The shopkeeper must have a character sheet and the token must point to it.</li></ol><h2 id=\'player-commands\'>Player Commands</h2><h3 id=\'help-commands\'>Help Commands</h3><ul><li><code>!cm</code> or <code>!cm -help</code> or <code>!cm -h</code> will show this help overview</li><li><code>!cm -menu</code> or <code>!cm -tool</code> to bring up the user menu</li><li><code>!cm -status</code> or <code>!cm -ss</code> to display your current coin purse contents</li></ul><h3 id=\'accounting-commands\'>Accounting commands</h3><p>A character has a tracked account if it has discrete values for its saved coins.  PCs necessarily have tracked accounts while NPCs usually do not, instead having as much gold as the DM feels is necessary at that moment.</p><ul><li><code>!cm -transfer &quot;[recipient character name]&quot; [amount][currency]</code> or <code>!cm -t &quot;[recipient character name]&quot; [amount][currency]</code> to transfer coins to the recipient&#39;s tracked account.</li><li><code>!cm -invoice &quot;[recipient character name]&quot; [amount][currency]</code> or <code>!cm -i &quot;[recipient character name]&quot; [amount][currency]</code> to request coins to the recipient&#39;s tracked account.</li><li><code>!cm -giveNPC &quot;[NPC Name, service rendered]&quot; [amount][currency]</code> or <code>!cm -dropWithReason &quot;[reason for dropping coins]&quot; [amount][currency]</code> to move coins from the player&#39;s tracked account to an untracked account.</li></ul><h3 id=\'shop-commands\'>Shop Commands</h3><ul><li><code>!cm -viewShop</code> or <code>!cm -vs</code> will display the shop data of the selected token to all players.  The GM is presented with both the player view and the edit view.</li><li><code>!cm -buy &quot;[item name]^[shopkeeper name]&quot;</code> will attempt to purchase the named item from the named shopkeeper.  If you have sufficient funds, the funds will be removed and you will be presented with a purchase message.  If you are using the OGL character sheet, you will also find it transferred into your inventory.</li></ul><h2 id=\'gm-commands\'>GM Commands</h2><p>In addition to the above commands, the GM has access to the following commands.</p><h3 id=\'help-commands\'>Help commands</h3><ul><li><code>!cm</code> or <code>!cm -help</code> or <code>!cm -h</code> will show this help overview</li><li><code>!cm -overview</code> or <code>!cm -o</code> to get an <strong>overview</strong> over the party&#39;s cash</li><li><code>!cm -overview --usd</code> will also give you an overview and a rough conversion to USD (default value: 1 gp equals roughly 110 USD).</li></ul><h3 id=\'accounting-commands\'>Accounting Commands</h3><p>These operations directly add and remove gold from party inventories.</p><ul><li><code>!cm -add [amount][currency]</code> or <code>!cm -a [amount][currency]</code> to <strong>add</strong> an equal amount of money to each selected party member,</li><li><code>!cm -loot [amount][currency]</code> or <code>!cm -l [amount][currency]</code> to <strong>split up</strong> a certain amount of coins between the party members, like a found treasure. Note that in this case, no conversion between the different coin types is made - if a party of 5 shares 4 pp, then 4 party members receive one pp each, and the last member won&#39;t get anything.</li><li><code>!cm -sub [amount][currency]</code> or <code>!cm -pay [amount][currency]</code> or <code>!cm -p [amount][currency]</code> to let each selected party member <strong>pay</strong> a certain amount. The script will even try to take higher and lower coin types to get the full amount. E.g. to pay 1gp when the character has no gold, the script will use 1pp (and return 9gp), or it will take 2ep, 10sp or 100cp - or any other valid combination of coins - to pay the desired amount.</li></ul><h3 id=\'admin-commands\'>Admin Commands</h3><p>Use caution when using the below commands.</p><ul><li><code>!cm -merge</code> or <code>!cm -m</code> to <strong>merge</strong> coins to the densest denomination possible.</li><li><code>!cm -share</code> or <code>!cm -s</code> to <strong>reallocate and share</strong> the money equally between selected party members, converting the amount into the best combination of gold, silver and copper (this should be used in smaller stores),</li><li><code>!cm -best-share</code> or <code>!cm -bs</code> to <strong>reallocate and share</strong> the money equally between selected party members, converting the amount into the best combination of platinum, gold, electrum, silver and copper (this should only be used in larger stores that have a fair amount of cash),</li><li><code>!cm -setParty</code> or <code>!cm -sp</code> to set the default party list.  These will be the default targets for party actions if you have nothing selected.</li><li><code>!cm -revert</code> or <code>!cm -r</code> reverts a given transaction id.  This is an internal command used to revert transactions.</li></ul><h3 id=\'shop-commands\'>Shop Commands</h3><p>These commands set up and manipulate shops.</p><ul><li><code>!cm -makeShop &quot;[shop name]^[shop location]^[shop appearance]^[shopkeeper appearance]</code> creates a shop for the selected character token with the assigned attributes.  The token must point to a character sheet.  If you wish to have a single shop with multiple shopkeepers, use rollable tables and have them feed to the same character sheet for the shop.</li><li><code>!cm -updateShop &quot;[parameter name]^[parameter value]&quot;</code> will update the named parameter to the new value.</li><li><code>!cm -addItem &quot;[item name]^[price]^[description]^[quantity]^[weight]^[properties]^[modifiers]&quot;</code> creates a new item in the selected token&#39;s shop.</li><li><code>!cm -updateItem &quot;[item name]^[parameter name]^[parameter value]&quot;</code> will look up the specified item name in the selected token&#39;s shop and update the named parameter to be the specified value.</li><li><code>!cm -updateItem &quot;[item name]^DELETE^YES&quot;</code> will delete the specified item from the selected token&#39;s shop.</li><li><code>!cm -updateItem &quot;[item name]^DUPLICATE^YES&quot;</code> will duplicate the specified item, adding a new item to the end of the shop&#39;s list of items named <code>&quot;Copy of [item name]&quot;</code>.</li></ul><h2 id=\'tips\'>Tips</h2><ol><li><code>-noToken</code> and <code>-nt</code> will cause CashMaster to disregard what character is selected.</li><li>You can use several coin values at once, e.g. <code>!cm -loot 50gp 150sp 2000cp</code> or <code>!cm -pay 2sp 5cp</code>.</li><li>You can combine multiple subcommands into a single chat command with a double-semicolon <code>;;</code> between them.  For example, <code>!cm -add 5gp; -merge</code></li><li>You can select multiple subjects and targets using <strong>Advanced Mode</strong>.  For example, <code>!cm -transfer -S &quot;Billy Bob^Joe Bob&quot; -T &quot;Sarah Bob^Sonya Bob&quot; -C &quot;10gp&quot;</code>.  When using multiple subjects and targets, it will perform an operation for each subject-target pair.  In that case, it will perform four transactions of 10gp each.</li><li>In <strong>Advanced Mode</strong>, you don&#39;t need to specify <code>-C &quot;[amoung][currency]&quot;</code> and can instead just use the standard <code>[amount][currency]</code>.  The <code>-C</code> currency tag allows you to specify the gp value at a particular point in the command in case you have strangley-named or inconveniently ID&#39;d characters.</li><li>CashMaster will parse <strong>both character IDs and character names</strong>.  You can even mix and match!  If Billy Bob&#39;s ID was <code>-L4ncF3ych3ZLtWaY3uY</code>, Instead of the example in <strong>Tip 4</strong>, you could use <code>!cm -transfer -S &quot;-L4ncF3ych3ZLtWaY3uY^Joe Bob&quot; -T &quot;Sarah Bob^Sonya Bob&quot; -C &quot;10gp&quot;</code>.</li><li>CashMaster is compatible with <code>@{selected|character_id}</code> and <code>@{target|character_id}</code> as they will simply be parsed down to IDs.  As an example, your players could use <code>!cm -t -T &quot;@{target|character_id}&quot; 1gp</code> to transfer a gold amongst themselves.</li></ol><h2 id=\'examples\'>Examples</h2><ol><li><code>!cm -overview</code> will show a cash overview.</li><li><code>!cm -add 50gp</code> will add 50 gp to every selected character.</li><li><code>!cm -loot 50gp</code> will (more or less evenly) distribute 50 gp among the party members.</li><li><code>!cm -pay 10gp</code> will subtract 10gp from each selected character. It will try to exchange the other coin types (e.g. it will use 1pp if the player doesn&#39;t have 10gp).</li><li><code>!cm -share</code> will collect all the money and share it evenly on the members, using gp, sp and cp only (pp and ep will be converted). Can also be used for one character to &#39;exchange&#39; money.</li><li><code>!cm -transfer &quot;Tazeka Liranov&quot; 40gp</code> will transfer 40 gp from the selected token to the character sheet named Tazeka Liranov.</li><li><code>!cm -convert</code> - same as <code>!cm -share</code>, but will also use platinum and electrum.</li></ol><h2 id=\'credits\'>Credits</h2><p>With thanks to <a href=\'https://app.roll20.net/users/277007/kryx\'>Kryx</a>/<a href=\'https://github.com/mlenser\'>mlenser</a> and <a href=\'https://app.roll20.net/users/1583758/michael-g\'>Michael G.</a>/<a href=\'https://github.com/VoltCruelerz\'>VoltCruelerz</a> for their contributions.</p>'); // eslint-disable-line quotes
       }
 
       // Display the CashMaster Menu
       if (argTokens.includes('-menu') || argTokens.includes('-toolbar') || argTokens.includes('-tool')) {
         var menuContent = '/w "' + msg.who + '" &{template:' + rt[0] + '} {{' + rt[1] + '=<h3>Cash Master</h3><hr>' + '<h4>Universal Commands</h4>' + '<br><b>Tools</b>' + '<br>[Toolbar](!cm -tool)' + '<br>[Status](!cm -status)' + '<br><b>Operations</b>' + ('<br>[Transfer to PC](!cm -transfer &#34;?{Recipient' + getRecipientOptions() + '}&#34; ?{Currency to Transfer})') + '<br>[Transfer to NPC](!cm -giveNPC &#34;?{List recipient name and reason}&#34; ?{Currency to Transfer})' + ('<br>[Invoice Player](!cm -invoice &#34;?{Invoicee' + getRecipientOptions() + '}&#34; ?{Currency to Request})') + '<br><b>Utilities</b>' + '<br>[Set Default Character](!cm -sc ?{Will you set a new default character|Yes})' + '<br>[Remove Default Character](!cm -rc ?{Will you remove your default character|Yes})';
         if (playerIsGM(msg.playerid)) {
-          menuContent = menuContent + '<h4>GM-Only Commands</h4>' + '<b>Base Commands</b>' + '<br>[Readme](!cm -help)<br>[Party Overview](!cm -overview)' + '<br>[Selected USD](!cm -overview --usd)' + '<br><b>Accounting Commands</b>' + '<br>[Credit Each Selected](!cm -add ?{Currency to Add})' + '<br>[Bill Each Selected](!cm -sub ?{Currency to Bill})' + '<br>[Split Among Selected](!cm -loot ?{Amount to Split})' + '<br>[Transaction History](!cm -th)' + '<br><b>Shop Commands</b>' + '<br>[Show Shop of Selected](!cm -vs)' + '<br>[Create Shop on Selected](!cm -makeShop &#34;?{Shop Name}^?{Describe the area around the store}^?{Describe the appearance of the store}^?{Describe the shopkeeper}&#34;)' + '<br>[Set Shop Verbosity](!cm -setShopVerbosity ?{Set Verbosity|High|Low})' + '<br><b>Admin Commands</b>' + '<br>[Compress Coins of Selected](!cm -merge)' + '<br>[Reallocate Coins](!cm -s ?{Will you REALLOCATE party funds evenly|Yes})' + '<br>[Set Party to Selected](!cm -sp ?{Will you SET the party to selected|Yes})';
+          menuContent = menuContent + '<h4>GM-Only Commands</h4>' + '<b>Base Commands</b>' + '<br>[Readme](!cm -help)<br>[Party Overview](!cm -overview)' + '<br>[Selected USD](!cm -overview --usd)' + '<br><b>Accounting Commands</b>' + '<br>[Credit Each Selected](!cm -add ?{Currency to Add})' + '<br>[Bill Each Selected](!cm -sub ?{Currency to Bill})' + '<br>[Split Among Selected](!cm -loot ?{Amount to Split})' + '<br>[Transaction History](!cm -th)' + '<br><b>Shop Commands</b>' + '<br>[Show Shop of Selected](!cm -vs)' + '<br>[Create Shop on Selected](!cm -makeShop &#34;?{Shop Name}^?{Describe the area around the store}^?{Describe the appearance of the store}^?{Describe the shopkeeper}&#34;)' + '<br><b>Admin Commands</b>' + '<br>[Compress Coins of Selected](!cm -merge)' + '<br>[Reallocate Coins](!cm -s ?{Will you REALLOCATE party funds evenly|Yes})' + '<br>[Set Party to Selected](!cm -sp ?{Will you SET the party to selected|Yes})';
         }
         menuContent += '}}';
         sendChat(scname, menuContent);
@@ -1019,20 +986,6 @@ on('ready', function () {
           tx.Reverted = true;
           var _sender = msg.who;
           printTransactionHistory(_sender);
-          return;
-        }
-
-        if (argTokens.includes('-setShopVerbosity')) {
-          var result = argTokens[2];
-          if (result === 'High') {
-            state.CashMaster.ShopDisplayVerbose = true;
-            sendChat(scname, '/w gm Updated Verbosity Setting: high');
-          } else if (result === 'Low') {
-            state.CashMaster.ShopDisplayVerbose = false;
-            sendChat(scname, '/w gm Updated Verbosity Setting: low');
-          } else {
-            sendChat(scname, '/w gm Invalid Verbosity Setting');
-          }
           return;
         }
       }
@@ -1081,7 +1034,7 @@ on('ready', function () {
               if (gmNotes.CashMaster) {
                 if (gmNotes.CashMaster.Shop) {
                   var shop = gmNotes.CashMaster.Shop;
-                  displayShop(subject, shop, getAttrByName(subject.id, 'character_name'), '');
+                  displayShop(subject, shop, getAttrByName(subject.id, 'character_name'));
                   return;
                 }
               }
@@ -1323,49 +1276,6 @@ on('ready', function () {
         return;
       }
 
-      // Displays item details to the user
-      if (argTokens.includes('-viewItem')) {
-        if (targets.length === 2) {
-          var itemName = targets[0];
-          var shopkeeperName = targets[1];
-          var shopkeeper = getCharByAny(shopkeeperName);
-          if (shopkeeper) {
-            shopkeeper.get('gmnotes', function (source) {
-              if (source) {
-                var gmNotes = parseGmNotes(source);
-                if (gmNotes) {
-                  if (gmNotes.CashMaster) {
-                    if (gmNotes.CashMaster.Shop) {
-                      var shop = gmNotes.CashMaster.Shop;
-                      var item = shop.Items.find(function (p) {
-                        return p.Name === itemName;
-                      });
-                      if (item) {
-                        var itemDisplay = '&{template:' + rt[0] + '} {{' + rt[1] + '=<div align="left" style="margin-left: 7px;margin-right: 7px">' + ('<h3>' + item.Name + '</h3><hr>');
-                        itemDisplay += item.Quantity && item.Quantity > 1 ? '<b>Stock</b>: ' + item.Quantity : '<b>Stock</b>: None Available';
-                        itemDisplay += item.Price ? '<br><b>Price</b>: ' + item.Price : '';
-                        itemDisplay += item.Weight ? '<br><b>Weight</b>: ' + item.Weight + 'lbs' : '';
-                        itemDisplay += item.Description ? '<br><b>Description</b>: ' + item.Description : '';
-                        itemDisplay += item.Modifiers ? '<br><b>Modifiers</b>: ' + item.Weight : '';
-                        itemDisplay += item.Properties ? '<br><b>Properties</b>: ' + item.Properties : '';
-                        itemDisplay += '<br>';
-                        if (item.Quantity > 0 && item.Price) {
-                          itemDisplay += '[Buy for ' + item.Price + '](!cm -buy -T &#34;' + item.Name + ',' + shopkeeperName + '&#34;)';
-                        }
-                        itemDisplay += '</div>}}';
-
-                        sendChat(scname, '/w ' + msg.who + ' ' + itemDisplay);
-                      }
-                    }
-                  }
-                }
-              }
-            });
-          }
-        }
-        return;
-      }
-
       // Drop Currency or Give it to an NPC
       if (argTokens.includes('-dropWithReason') || argTokens.includes('-giveNPC') || argTokens.includes('-buy')) {
         subjects.forEach(function (subject) {
@@ -1376,12 +1286,12 @@ on('ready', function () {
 
           if (argTokens.includes('-buy')) {
             if (targets.length === 2) {
-              var _shopkeeperName = targets[1];
-              log('Attempting to purchase ' + reason + ' from ' + _shopkeeperName);
-              var _shopkeeper = getCharByAny(_shopkeeperName);
-              var _itemName = reason;
-              if (_shopkeeper) {
-                _shopkeeper.get('gmnotes', function (source) {
+              var shopkeeperName = targets[1];
+              log('Attempting to purchase ' + reason + ' from ' + shopkeeperName);
+              var shopkeeper = getCharByAny(shopkeeperName);
+              var itemName = reason;
+              if (shopkeeper) {
+                shopkeeper.get('gmnotes', function (source) {
                   if (source) {
                     var gmNotes = parseGmNotes(source);
                     if (gmNotes) {
@@ -1389,11 +1299,11 @@ on('ready', function () {
                         if (gmNotes.CashMaster.Shop) {
                           var shop = gmNotes.CashMaster.Shop;
                           var item = shop.Items.find(function (p) {
-                            return p.Name === _itemName;
+                            return p.Name === itemName;
                           });
                           if (item) {
                             if (item.Quantity > 0) {
-                              log('Valid Buy Target.  Purchaser: ' + subjectName + ', Seller: ' + _shopkeeperName + ' of ' + shop.Name + 'x' + item.Quantity + ', Item: ' + _itemName);
+                              log('Valid Buy Target.  Purchaser: ' + subjectName + ', Seller: ' + shopkeeperName + ' of ' + shop.Name + 'x' + item.Quantity + ', Item: ' + itemName);
                               item.Quantity -= 1;
                               // Prepare updated notes
                               var gmNoteString = JSON.stringify(gmNotes, null, 4);
@@ -1429,7 +1339,7 @@ on('ready', function () {
                               if (subtractResult.Success) {
                                 // Schedule major write operations
                                 setTimeout(function () {
-                                  _shopkeeper.set('gmnotes', gmNoteOutput);
+                                  shopkeeper.set('gmnotes', gmNoteOutput);
                                 }, 0);
                                 setTimeout(function () {
                                   oglItem.createOrIncrementItem(subject, item);
@@ -1438,7 +1348,7 @@ on('ready', function () {
 
                               sendChat(scname, '/w gm &{template:' + rt[0] + '} {{' + rt[1] + '=<b>GM Transfer Report</b><br>' + subjectName + '</b><hr>' + reason + '<hr>' + transactionOutput + subtractResult.Output + '}}');
                               sendChat(scname, '/w ' + subjectName + ' &{template:' + rt[0] + '} {{' + rt[1] + '=<b>Sender Transfer Report</b><br>' + subjectName + '</b><hr>' + reason + '<hr>' + output + transactionOutput + subtractResult.Output + '}}');
-                              setTimeout(displayShop, 500, subject, shop, getAttrByName(subject.id, 'character_name'), subjectName);
+                              setTimeout(displayShop, 500, subject, shop, getAttrByName(subject.id, 'character_name'));
                             }
                           }
                         }
@@ -1850,7 +1760,7 @@ on('ready', function () {
           var shopName = targets[0];
           var locale = targets[1];
           var appearance = targets[2];
-          var _shopkeeper2 = targets[3];
+          var shopkeeper = targets[3];
           subject.get('gmnotes', function (source) {
             log('Existing Notes: ' + source);
             var gmNotes = '';
@@ -1880,13 +1790,13 @@ on('ready', function () {
             log('  Name: ' + shopName);
             log('  Location: ' + locale);
             log('  Appearance: ' + appearance);
-            log('  Shopkeeper: ' + _shopkeeper2);
+            log('  Shopkeeper: ' + shopkeeper);
 
             var shop = {
               Name: shopName,
               Location: locale,
               Appearance: appearance,
-              Shopkeeper: _shopkeeper2,
+              Shopkeeper: shopkeeper,
               Items: []
             };
             var shopTemplate = {
@@ -1904,7 +1814,7 @@ on('ready', function () {
               subject.set('gmnotes', gmNoteOutput);
             }, 0);
             sendChat(scname, '/w gm Creating new shop ' + shopName + '...');
-            setTimeout(displayShop, 500, subject, shop, getAttrByName(subject.id, 'character_name'), '');
+            setTimeout(displayShop, 500, subject, shop, getAttrByName(subject.id, 'character_name'));
           });
           return;
         }
@@ -1956,7 +1866,7 @@ on('ready', function () {
                     _subject.set('gmnotes', gmNoteOutput);
                   }, 0);
                   sendChat(scname, '/w gm Shop Updating...');
-                  setTimeout(displayShop, 500, _subject, shop, getAttrByName(_subject.id, 'character_name'), '');
+                  setTimeout(displayShop, 500, _subject, shop, getAttrByName(_subject.id, 'character_name'));
                 }
               }
             }
@@ -1970,7 +1880,7 @@ on('ready', function () {
             sendChat(scname, '/w gm Invalid item update command.');
             return;
           }
-          var _itemName2 = targets[0];
+          var itemName = targets[0];
           var _param = targets[1];
           var _paramValue = targets[2];
 
@@ -1991,7 +1901,7 @@ on('ready', function () {
                     if (items.length > 0) {
                       var itemIndex = items.map(function (i) {
                         return i.Name;
-                      }).indexOf(_itemName2);
+                      }).indexOf(itemName);
                       if (itemIndex === -1) {
                         sendChat(scname, '/w gm Item does not exist');
                         return;
@@ -2051,7 +1961,7 @@ on('ready', function () {
                       setTimeout(function () {
                         _subject2.set('gmnotes', gmNoteOutput);
                       }, 0);
-                      setTimeout(displayShop, 500, _subject2, shop, getAttrByName(_subject2.id, 'character_name'), '');
+                      setTimeout(displayShop, 500, _subject2, shop, getAttrByName(_subject2.id, 'character_name'));
                     }
                   }
                 }
@@ -2069,7 +1979,7 @@ on('ready', function () {
           }
           var _subject3 = subjects[0];
 
-          var _itemName3 = targets[0];
+          var _itemName = targets[0];
           var price = targets[1];
           var desc = targets[2];
           var quantity = targets[3];
@@ -2090,7 +2000,7 @@ on('ready', function () {
                   if (shop.Items) {
                     var items = shop.Items;
                     items.push({
-                      Name: _itemName3,
+                      Name: _itemName,
                       Price: price,
                       Description: desc,
                       Quantity: quantity,
@@ -2107,7 +2017,7 @@ on('ready', function () {
                       _subject3.set('gmnotes', gmNoteOutput);
                     }, 0);
                     sendChat(scname, '/w gm Adding Item...');
-                    setTimeout(displayShop, 500, _subject3, shop, getAttrByName(_subject3.id, 'character_name'), '');
+                    setTimeout(displayShop, 500, _subject3, shop, getAttrByName(_subject3.id, 'character_name'));
                   }
                 }
               }

@@ -1,6 +1,6 @@
 {
   "name": "FateDots",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Provides numbered multi dots for Fate stress boxes.",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -12,6 +12,8 @@
   },
   "conflicts": [],
   "script": "FateDots.js",
-  "useroptions": {},
-  "previousversions": []
+  "useroptions": [],
+  "previousversions": [
+    "0.2.1"
+  ]
 }

@@ -1,10 +1,14 @@
 # Vampire the Masquerade 5th Edition Dice Roller.
 
 ### Current Version
-Version 1.0 (29/10/2018) 
+Version 1.2 (2018/09/08) 
 
 ### Many Thanks	
 Many thanks to Konrad J who's Hero Quest roller this is based on.
+
+### Known Bugs
+
+Errors may occur if the player enters a name with tilde (\~), this is because the tilde is symbol I've used to identify names. There are no plans to fix this as this was introduce to enable full names.
 
 ### Guide to use the code
 
@@ -20,12 +24,13 @@ Note: For anyone reading the code, to make the frenzy roll work I had to invert 
 !vtm rouse          // Rolls one single rouse dice. Success on 6+
 !vtm reroll w#      // Used for will power re-roll # is the number of die to roll
 !vtm frenzy p# o# q# // Rolls for frenzy. This is used to add 1/3 humanity (rounded down) to willpower, to roll. As mentioned previously p# is a special case and the number of dice rolled is not equal to the number you enter. Unless you are looking at multistate boxes, don't use this. o# is similar but for humanity. q# Should be used to set the difficulty of the Frenzy roll
-!vtm humanity x# m# // Used for humanity roll. x# is under a similar constraint as p# and o# due to multistate checkbox issues once again.
+!vtm remorse x# m# // Used for remorse roll. x# is under a similar constraint as p# and o# due to multistate checkbox issues once again.
+!vtm humanity o# m# // Used for humanity roll. 
 
 Optional Flags:
-An extra variable (c"custom name ") may be added to any of these rolls to display a custom name in the roll template. Note: As a coding querk please have a space after the name but before the close in the speech marks.
-Example !vtm roll w5 r1 c"Prince Wolf " will roll 5 black die, 1 red die and the character will have the name - Prince Wolf
-An extra variable (t"custom name") may be added to any of these rolls to display the roll type. This is text below the custom name
+An extra variable (c~custom name ~) may be added to any of these rolls to display a custom name in the roll template. Note: As a coding querk please have a space after the name but before the close in the tilde.
+Example !vtm roll w5 r1 c~Prince Wolf ~ will roll 5 black die, 1 red die and the character will have the name - Prince Wolf
+An extra variable (t~custom name~) may be added to any of these rolls to display the roll type. This is text below the custom name
 Adding b# to a skill roll will add the value/2.0 to the number of vampire dice. This is used for blood potency when handling disciplines
 If needs be both the Frenzy and Humanity Roll can be updated to use real values. For now however I'm going to leave it.
 
@@ -37,4 +42,10 @@ For people reading the code there are several functions which I have yet to remo
 	shows dice rolled as graphic, small, medium, or large if "on" or as text if "off"
   !vtm test // this will output every side of every die to the chat window (currently does not work)
   !vtm hero // Only for true heroes
-  !vtm lupine // When people ask for too much
+  !vtm lupine // When people ask for too much. Currently disabled.
+
+### Versions
+Version 1.2
+Updated images to a different location. Fixed bugs where players name would not appear for specific rolls. Fixed bug in which speech marks in a players name would cause issues.
+Version 1.1
+Bug fixes and updated images to a different location. Renamed Humanity to Remorse, added a new "Humanity" roll.
