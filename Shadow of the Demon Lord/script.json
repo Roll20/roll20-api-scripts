@@ -1,0 +1,41 @@
+{
+    "name": "Shadow of the Demon Lord",
+    "script": "sotdl.js",
+    "version": "0.1",
+    "previousversions": [],
+    "description": "This is the start of taking the current Shadow of the Demon Lord character sheet to the next level, since the core Game Mechanics requirements exceed what can be done with macros.",
+    "authors": "Matthew Paluch",
+    "roll20userid": 170911,
+    "useroptions": [
+        {
+            "name": "variable1", 
+            "type": "text",
+            "default": "Default Text",
+            "description": "This is the first user option. Options will appear in the order they are placed inside the useroptions hash on their API page. This option is a text input that will accept any string."
+        },
+        {
+            "name": "variable2", 
+            "type": "number",
+            "default": "1",
+            "description": "The second user option is a number input and will only accept valid numbers."
+        },
+        {
+            "name": "selectoption",
+            "type": "select", 
+            "options": ["one", "two", "three"],
+            "default": "three",
+            "description": "The third user option is a select, with both set options and a default option."
+        },
+        {
+            "name": "variable3", 
+            "type": "checkbox",
+            "value": "borkborkbork",
+            "checked" : "checked",
+            "description": "The fourth user option is a checkbox with a value for the checked box as well as whether or not the box is checked by default."
+        }
+    ],
+    "dependencies": [],
+    "modifies": {
+    },
+    "conflicts": []
+}
