@@ -3945,10 +3945,27 @@ on('chat:message', function(msg) {
 
                 if (obj.radius != 0) {
                     //tortured screaming
-                    let tokenInRadius = filterObjs(function(token) {
-                        if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(Usertoken, token) > obj.radius || token.get("represents") == Usertoken.get("represents")) return false;
-                        else return true;
-                    });
+                    let allc;
+                    let tokenInRadius;
+                    if (obj.radius_allegiance == "enemy"){
+                        allc = true;
+                        tokenInRadius = filterObjs(function(token) {
+                            if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(Usertoken, token) > obj.radius || token.get("represents") == Usertoken.get("represents") || (getAttrByName(token.get('represents'), 'all') != getAttrByName(Usertoken.get('represents'), 'all')) != allc ) return false;
+                            else return true;
+                        });
+                    } else if (obj.radius_allegiance == "ally"){
+                        allc = false;
+                        tokenInRadius = filterObjs(function(token) {
+                            if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(Usertoken, token) > obj.radius || token.get("represents") == Usertoken.get("represents") || (getAttrByName(token.get('represents'), 'all') != getAttrByName(Usertoken.get('represents'), 'all')) != allc ) return false;
+                            else return true;
+                        });
+                    } else {
+                        tokenInRadius = filterObjs(function(token) {
+                            if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(Usertoken, token) > obj.radius || token.get("represents") == Usertoken.get("represents")) return false;
+                            else return true;
+                        });
+                    }
+                    log(allc)
                     log("Tokens in radius are: ")
                     for (var i in tokenInRadius) {
                         log(tokenInRadius[i])
@@ -3958,6 +3975,7 @@ on('chat:message', function(msg) {
                             characterid: char,
                             name: "HP_current"
                         })[0];
+                        log(HPcurrC)
                         let HPC = findObjs({
                             characterid: char,
                             name: "HP_bd"
@@ -4038,14 +4056,15 @@ on('chat:message', function(msg) {
                           target[i].setWithWorker({
                               current: rad_effect
                           });
+                          log("target is")
                           log(target[i].get("current"))
 
                           if ((target[i] == HPcurrC) && (char == attacker.id)) {
-                              HPA += parseInt(effect[1])
+                              HPA += parseInt(effect[i])
                           }
 
                           if ((target[i] == HPcurrC) && (char == defender.id)) {
-                              HPB += parseInt(effect[1])
+                              HPB += parseInt(effect[i])
                           }
 
                           //queueeeee
@@ -4581,7 +4600,7 @@ on('chat:message', function(msg) {
         }
 
         //Targeted stat
-        if ( (PhysWepTypes.includes(WTypeA))||(PhysWeps.includes(WNameA)) ){
+        if ( ((PhysWepTypes.includes(WTypeA))||(PhysWeps.includes(WNameA))) && (!MagWeps.includes(WNameA)) ){
             DmgtypeA = "Physical";
             DmgA = (StrA + MtA) - DefB;
         } else if ( (MWepTypes.includes(WTypeA))||(MagWeps.includes(WNameA)) ){
@@ -4609,7 +4628,7 @@ on('chat:message', function(msg) {
 
         log(DmgtypeA);
         log(DmgA);
-        if ( (PhysWepTypes.includes(WTypeB))||(PhysWeps.includes(WNameB)) ){
+        if ( ((PhysWepTypes.includes(WTypeB))||(PhysWeps.includes(WNameB))) && (!MagWeps.includes(WNameB)) ){
             DmgtypeB = "Physical";
             DmgB = (StrB + MtB) - DefA;
         } else if ( (MWepTypes.includes(WTypeB))||(MagWeps.includes(WNameB)) ){
@@ -5188,10 +5207,27 @@ on("change:campaign:turnorder", function(turn) {
 
                 if (obj.radius != 0) {
                     //tortured screaming
-                    let tokenInRadius = filterObjs(function(token) {
-                        if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(Usertoken, token) > obj.radius || token.get("represents") == Usertoken.get("represents")) return false;
-                        else return true;
-                    });
+                    let allc;
+                    let tokenInRadius;
+                    if (obj.radius_allegiance == "enemy"){
+                        allc = true;
+                        tokenInRadius = filterObjs(function(token) {
+                            if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(Usertoken, token) > obj.radius || token.get("represents") == Usertoken.get("represents") || (getAttrByName(token.get('represents'), 'all') != getAttrByName(Usertoken.get('represents'), 'all')) != allc ) return false;
+                            else return true;
+                        });
+                    } else if (obj.radius_allegiance == "ally"){
+                        allc = false;
+                        tokenInRadius = filterObjs(function(token) {
+                            if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(Usertoken, token) > obj.radius || token.get("represents") == Usertoken.get("represents") || (getAttrByName(token.get('represents'), 'all') != getAttrByName(Usertoken.get('represents'), 'all')) != allc ) return false;
+                            else return true;
+                        });
+                    } else {
+                        tokenInRadius = filterObjs(function(token) {
+                            if ((token.get('type') !== 'graphic' || token.get('subtype') !== 'token' || token.get('represents') == "") || ManhDist(Usertoken, token) > obj.radius || token.get("represents") == Usertoken.get("represents")) return false;
+                            else return true;
+                        });
+                    }
+                    log(allc)
                     log("Tokens in radius are: ")
                     for (var i in tokenInRadius) {
                         log(tokenInRadius[i])
@@ -5201,6 +5237,7 @@ on("change:campaign:turnorder", function(turn) {
                             characterid: char,
                             name: "HP_current"
                         })[0];
+                        log(HPcurrC)
                         let HPC = findObjs({
                             characterid: char,
                             name: "HP_bd"
@@ -5281,15 +5318,8 @@ on("change:campaign:turnorder", function(turn) {
                           target[i].setWithWorker({
                               current: rad_effect
                           });
+                          log("target is")
                           log(target[i].get("current"))
-
-                          if ((target[i] == HPcurrC) && (char == attacker.id)) {
-                              HPA += parseInt(effect[1])
-                          }
-
-                          if ((target[i] == HPcurrC) && (char == defender.id)) {
-                              HPB += parseInt(effect[1])
-                          }
 
                           //queueeeee
                           if (target[i] != HPcurrC) {
@@ -5365,6 +5395,7 @@ on("change:campaign:turnorder", function(turn) {
         }
 });
 
+
 //queue
 on("change:campaign:turnorder", function(turn) {
     var turnorder;
@@ -5405,6 +5436,11 @@ on("change:campaign:turnorder", function(turn) {
                 i --; //decrement i
                 j --;
             }
+        }
+        if (queue[i][0] == undefined){
+          log("Removed undefined entry") //log repeats before deletion :0
+          queue.shift(); //remove element from queue
+          i --; //decrement i
         }
     }
 
