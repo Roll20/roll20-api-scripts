@@ -451,7 +451,7 @@ on('chat:message', function(msg) {
 
         log(DmgtypeA);
         log(DmgA);
-        if ( (PhysWepTypes.includes(WTypeB))||(PhysWeps.includes(WNameB)) ){
+        if ( ((PhysWepTypes.includes(WTypeB))||(PhysWeps.includes(WNameB))) && (!MagWeps.includes(WNameB)) ){
             DmgtypeB = "Physical";
             DmgB = (StrB + MtB) - DefA;
         } else if ( (MWepTypes.includes(WTypeB))||(MagWeps.includes(WNameB)) ){
@@ -512,20 +512,41 @@ on('chat:message', function(msg) {
         let WTAB;
         log(CurrWR);
         log(CWRVal);
-        if( (WIndexA == 1 && WIndexB == 3) || (WIndexA == 3 && WIndexB == 2) || (WIndexA == 2 && WIndexB == 1) || (WIndexA == 4 && WIndexB == 5) || (WIndexA == 5 && WIndexB == 6) || (WIndexA == 6 && WIndexB == 4) || (WIndexA == 7 && WIndexB == 8) || (WIndexA == 8 && WIndexB == 9) || (WIndexA == 9 && WIndexB == 7)) {
-            DmgA +=1;
-            HitA +=15;
-            DmgB -= 1;
-            HitB -=15;
-            WTAA = true;
+
+        //credit to KizoALR for the reaver/dual weapon script!
+        if (WNameA.toLowerCase().includes("dual") || WNameB.toLowerCase().includes("dual") || WNameA.toLowerCase().includes("reaver") || WNameB.toLowerCase().includes("reaver")){
+            if( (WIndexA == 1 && WIndexB == 3) || (WIndexA == 3 && WIndexB == 2) || (WIndexA == 2 && WIndexB == 1) || (WIndexA == 4 && WIndexB == 5) || (WIndexA == 5 && WIndexB == 6) || (WIndexA == 6 && WIndexB == 4) || (WIndexA == 7 && WIndexB == 8) || (WIndexA == 8 && WIndexB == 9) || (WIndexA == 9 && WIndexB == 7)) {
+                DmgA -= 2;
+                HitA -= 30;
+                DmgB += 2;
+                HitB += 30;
+                WTAB = true;
+            }
+            if( (WIndexA == 3 && WIndexB == 1) || (WIndexA == 2 && WIndexB == 3) || (WIndexA == 1 && WIndexB == 2) || (WIndexA == 5 && WIndexB == 4) || (WIndexA == 6 && WIndexB == 5) || (WIndexA == 4 && WIndexB == 6) || (WIndexA == 8 && WIndexB == 7) || (WIndexA == 9 && WIndexB == 8) || (WIndexA == 7 && WIndexB == 9)) {
+                DmgA += 2;
+                HitA += 30;
+                DmgB -= 2;
+                HitB -= 30;
+                WTAA = true;
+            }
         }
-        if( (WIndexA == 3 && WIndexB == 1) || (WIndexA == 2 && WIndexB == 3) || (WIndexA == 1 && WIndexB == 2) || (WIndexA == 5 && WIndexB == 4) || (WIndexA == 6 && WIndexB == 5) || (WIndexA == 4 && WIndexB == 6) || (WIndexA == 8 && WIndexB == 7) || (WIndexA == 9 && WIndexB == 8) || (WIndexA == 7 && WIndexB == 9)) {
-            DmgA -=1;
-            HitA -=15;
-            DmgB += 1;
-            HitB +=15;
-            WTAB = true;
+        else {
+            if( (WIndexA == 1 && WIndexB == 3) || (WIndexA == 3 && WIndexB == 2) || (WIndexA == 2 && WIndexB == 1) || (WIndexA == 4 && WIndexB == 5) || (WIndexA == 5 && WIndexB == 6) || (WIndexA == 6 && WIndexB == 4) || (WIndexA == 7 && WIndexB == 8) || (WIndexA == 8 && WIndexB == 9) || (WIndexA == 9 && WIndexB == 7)) {
+                DmgA +=1;
+                HitA +=15;
+                DmgB -= 1;
+                HitB -=15;
+                WTAA = true;
+            }
+            if( (WIndexA == 3 && WIndexB == 1) || (WIndexA == 2 && WIndexB == 3) || (WIndexA == 1 && WIndexB == 2) || (WIndexA == 5 && WIndexB == 4) || (WIndexA == 6 && WIndexB == 5) || (WIndexA == 4 && WIndexB == 6) || (WIndexA == 8 && WIndexB == 7) || (WIndexA == 9 && WIndexB == 8) || (WIndexA == 7 && WIndexB == 9)) {
+                DmgA -=1;
+                HitA -=15;
+                DmgB += 1;
+                HitB +=15;
+                WTAB = true;
+            }
         }
+
         if (DmgA < 0){
             DmgA = 0;
         }
@@ -4269,10 +4290,10 @@ on('chat:message', function(msg) {
             current: Number(Avomod.get("current")) + avo
         });
         Ddgmod.setWithWorker({
-            current: Number(Hitmod.get("current")) + ddg
+            current: Number(Ddgmod.get("current")) + ddg
         });
         Dmgmod.setWithWorker({
-            current: Number(Hitmod.get("current")) + dmg
+            current: Number(Dmgmod.get("current")) + dmg
         });
 
         //queue queue queue
@@ -4678,20 +4699,41 @@ on('chat:message', function(msg) {
         let WTAB;
         log(CurrWR);
         log(CWRVal);
-        if( (WIndexA == 1 && WIndexB == 3) || (WIndexA == 3 && WIndexB == 2) || (WIndexA == 2 && WIndexB == 1) || (WIndexA == 4 && WIndexB == 5) || (WIndexA == 5 && WIndexB == 6) || (WIndexA == 6 && WIndexB == 4) || (WIndexA == 7 && WIndexB == 8) || (WIndexA == 8 && WIndexB == 9) || (WIndexA == 9 && WIndexB == 7)) {
-            DmgA +=1;
-            HitA +=15;
-            DmgB -= 1;
-            HitB -=15;
-            WTAA = true;
+
+        //credit to KizoALR for the reaver/dual weapon script!
+        if (WNameA.toLowerCase().includes("dual") || WNameB.toLowerCase().includes("dual") || WNameA.toLowerCase().includes("reaver") || WNameB.toLowerCase().includes("reaver")){
+            if( (WIndexA == 1 && WIndexB == 3) || (WIndexA == 3 && WIndexB == 2) || (WIndexA == 2 && WIndexB == 1) || (WIndexA == 4 && WIndexB == 5) || (WIndexA == 5 && WIndexB == 6) || (WIndexA == 6 && WIndexB == 4) || (WIndexA == 7 && WIndexB == 8) || (WIndexA == 8 && WIndexB == 9) || (WIndexA == 9 && WIndexB == 7)) {
+                DmgA -= 2;
+                HitA -= 30;
+                DmgB += 2;
+                HitB += 30;
+                WTAB = true;
+            }
+            if( (WIndexA == 3 && WIndexB == 1) || (WIndexA == 2 && WIndexB == 3) || (WIndexA == 1 && WIndexB == 2) || (WIndexA == 5 && WIndexB == 4) || (WIndexA == 6 && WIndexB == 5) || (WIndexA == 4 && WIndexB == 6) || (WIndexA == 8 && WIndexB == 7) || (WIndexA == 9 && WIndexB == 8) || (WIndexA == 7 && WIndexB == 9)) {
+                DmgA += 2;
+                HitA += 30;
+                DmgB -= 2;
+                HitB -= 30;
+                WTAA = true;
+            }
         }
-        if( (WIndexA == 3 && WIndexB == 1) || (WIndexA == 2 && WIndexB == 3) || (WIndexA == 1 && WIndexB == 2) || (WIndexA == 5 && WIndexB == 4) || (WIndexA == 6 && WIndexB == 5) || (WIndexA == 4 && WIndexB == 6) || (WIndexA == 8 && WIndexB == 7) || (WIndexA == 9 && WIndexB == 8) || (WIndexA == 7 && WIndexB == 9)) {
-            DmgA -=1;
-            HitA -=15;
-            DmgB += 1;
-            HitB +=15;
-            WTAB = true;
+        else {
+            if( (WIndexA == 1 && WIndexB == 3) || (WIndexA == 3 && WIndexB == 2) || (WIndexA == 2 && WIndexB == 1) || (WIndexA == 4 && WIndexB == 5) || (WIndexA == 5 && WIndexB == 6) || (WIndexA == 6 && WIndexB == 4) || (WIndexA == 7 && WIndexB == 8) || (WIndexA == 8 && WIndexB == 9) || (WIndexA == 9 && WIndexB == 7)) {
+                DmgA +=1;
+                HitA +=15;
+                DmgB -= 1;
+                HitB -=15;
+                WTAA = true;
+            }
+            if( (WIndexA == 3 && WIndexB == 1) || (WIndexA == 2 && WIndexB == 3) || (WIndexA == 1 && WIndexB == 2) || (WIndexA == 5 && WIndexB == 4) || (WIndexA == 6 && WIndexB == 5) || (WIndexA == 4 && WIndexB == 6) || (WIndexA == 8 && WIndexB == 7) || (WIndexA == 9 && WIndexB == 8) || (WIndexA == 7 && WIndexB == 9)) {
+                DmgA -=1;
+                HitA -=15;
+                DmgB += 1;
+                HitB +=15;
+                WTAB = true;
+            }
         }
+
         if (DmgA < 0){
             DmgA = 0;
         }
