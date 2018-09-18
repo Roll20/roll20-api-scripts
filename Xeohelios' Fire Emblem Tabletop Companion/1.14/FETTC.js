@@ -909,10 +909,10 @@ on('chat:message', function(msg) {
                     for (var q in StattargetU){
                         if (StattargetmodU[q] > 0){
                             queue.push([StattargetU[q], "decrement", STCounterU[q], 0, "combat"])
-                            log([StattargetU[q], "decrement", STCounterU[q], 0])
+                            log([StattargetU[q], "decrement", STCounterU[q], 0, "combat"])
                             log("Pushed to queue!")
                         } else {
-                            queue.push([StattargetU[q], "increment", STCounterU[q], 0])
+                            queue.push([StattargetU[q], "increment", STCounterU[q], 0, "combat"])
                             log([StattargetU[q], "increment", STCounterU[q], 0, "combat"])
                             log("Pushed to queue!")
                         }
@@ -938,10 +938,11 @@ on('chat:message', function(msg) {
                             log([StattargetE[q], "decrement", STCounterE[q], 0])
                             log("Pushed to queue!")
                         } else {
-                            queue.push([StattargetE[q], "increment", STCounterE[q], 0])
+                            queue.push([StattargetE[q], "increment", STCounterE[q], 0, "combat"])
                             log([StattargetE[q], "increment", STCounterE[q], 0, "combat"])
                             log("Pushed to queue!")
                         }
+                        log(queue[i][4])
                         //check queue for repeated buff/debuffs
                         for (var i in queue){
                             if ((queue[i][0] == StattargetE[q]) && (queue[i][4] == "combat") && (queue[i] != queue[queue.length - 1])){ //the last element should be immune since it just got pushed
@@ -3152,10 +3153,10 @@ on('chat:message', function(msg) {
                     for (var q in StattargetU){
                         if (StattargetmodU[q] > 0){
                             queue.push([StattargetU[q], "decrement", STCounterU[q], 0, "combat"])
-                            log([StattargetU[q], "decrement", STCounterU[q], 0])
+                            log([StattargetU[q], "decrement", STCounterU[q], 0, "combat"])
                             log("Pushed to queue!")
                         } else {
-                            queue.push([StattargetU[q], "increment", STCounterU[q], 0])
+                            queue.push([StattargetU[q], "increment", STCounterU[q], 0, "combat"])
                             log([StattargetU[q], "increment", STCounterU[q], 0, "combat"])
                             log("Pushed to queue!")
                         }
@@ -3181,10 +3182,11 @@ on('chat:message', function(msg) {
                             log([StattargetE[q], "decrement", STCounterE[q], 0])
                             log("Pushed to queue!")
                         } else {
-                            queue.push([StattargetE[q], "increment", STCounterE[q], 0])
+                            queue.push([StattargetE[q], "increment", STCounterE[q], 0, "combat"])
                             log([StattargetE[q], "increment", STCounterE[q], 0, "combat"])
                             log("Pushed to queue!")
                         }
+                        log(queue[i][4])
                         //check queue for repeated buff/debuffs
                         for (var i in queue){
                             if ((queue[i][0] == StattargetE[q]) && (queue[i][4] == "combat") && (queue[i] != queue[queue.length - 1])){ //the last element should be immune since it just got pushed
@@ -3911,10 +3913,10 @@ on('chat:message', function(msg) {
                     for (var q in StattargetU){
                         if (StattargetmodU[q] > 0){
                             queue.push([StattargetU[q], "decrement", STCounterU[q], 0, "combat"])
-                            log([StattargetU[q], "decrement", STCounterU[q], 0])
+                            log([StattargetU[q], "decrement", STCounterU[q], 0, "combat"])
                             log("Pushed to queue!")
                         } else {
-                            queue.push([StattargetU[q], "increment", STCounterU[q], 0])
+                            queue.push([StattargetU[q], "increment", STCounterU[q], 0, "combat"])
                             log([StattargetU[q], "increment", STCounterU[q], 0, "combat"])
                             log("Pushed to queue!")
                         }
@@ -3940,10 +3942,11 @@ on('chat:message', function(msg) {
                             log([StattargetE[q], "decrement", STCounterE[q], 0])
                             log("Pushed to queue!")
                         } else {
-                            queue.push([StattargetE[q], "increment", STCounterE[q], 0])
+                            queue.push([StattargetE[q], "increment", STCounterE[q], 0, "combat"])
                             log([StattargetE[q], "increment", STCounterE[q], 0, "combat"])
                             log("Pushed to queue!")
                         }
+                        log(queue[i][4])
                         //check queue for repeated buff/debuffs
                         for (var i in queue){
                             if ((queue[i][0] == StattargetE[q]) && (queue[i][4] == "combat") && (queue[i] != queue[queue.length - 1])){ //the last element should be immune since it just got pushed
@@ -5196,10 +5199,10 @@ on("change:campaign:turnorder", function(turn) {
                     for (var q in StattargetU){
                         if (StattargetmodU[q] > 0){
                             queue.push([StattargetU[q], "decrement", STCounterU[q], 0, "combat"])
-                            log([StattargetU[q], "decrement", STCounterU[q], 0])
+                            log([StattargetU[q], "decrement", STCounterU[q], 0, "combat"])
                             log("Pushed to queue!")
                         } else {
-                            queue.push([StattargetU[q], "increment", STCounterU[q], 0])
+                            queue.push([StattargetU[q], "increment", STCounterU[q], 0, "combat"])
                             log([StattargetU[q], "increment", STCounterU[q], 0, "combat"])
                             log("Pushed to queue!")
                         }
@@ -5225,10 +5228,11 @@ on("change:campaign:turnorder", function(turn) {
                             log([StattargetE[q], "decrement", STCounterE[q], 0])
                             log("Pushed to queue!")
                         } else {
-                            queue.push([StattargetE[q], "increment", STCounterE[q], 0])
+                            queue.push([StattargetE[q], "increment", STCounterE[q], 0, "combat"])
                             log([StattargetE[q], "increment", STCounterE[q], 0, "combat"])
                             log("Pushed to queue!")
                         }
+                        log(queue[i][4])
                         //check queue for repeated buff/debuffs
                         for (var i in queue){
                             if ((queue[i][0] == StattargetE[q]) && (queue[i][4] == "combat") && (queue[i] != queue[queue.length - 1])){ //the last element should be immune since it just got pushed
