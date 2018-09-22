@@ -1,0 +1,15 @@
+{
+    "name": "Meta Macros",
+    "script": "compile.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "Enriches macros with textual substitution rules (aka meta-macros), as well as other conveniences like comments and multi-line commands.\nSee https://github.com/Roll20/roll20-api-scripts/tree/master/MetaMacros for details.",
+    "authors": "Henning Koehler",
+    "roll20userid": 470716,
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {
+        "macro": "write"
+    },
+    "conflicts": []
+}
