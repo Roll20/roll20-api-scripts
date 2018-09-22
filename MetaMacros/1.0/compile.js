@@ -115,7 +115,7 @@ on("chat:message", function(msg) {
         result.push(current);
         return result;
     }
-    
+
     /**
     * substitute {param} expressions in body with their position in parameters
     *  e.g. substArgs("[[1d20+$attack{bonus}]]", ["bonus"]) = [ "[[1d20+$attack", 0, "]]" ]
