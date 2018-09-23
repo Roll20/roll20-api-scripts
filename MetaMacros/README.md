@@ -39,14 +39,14 @@ $name(param_0, ..., param_n) = body
 where `name`, `param_0` ... `param_n` are identifiers, i.e., non-empty strings consisting of alpha-numberic characters and/or `_`.
 For meta-macros without any parameters, the `(` brackets `)` can be omitted.
 
-After a meta-macro has been defined, any occurrance of `$name(arg_0, ..., arg_n)` will be replaced with the `body` of the macro definition.
+After a meta-macro has been defined, any occurrance of `$name(arg_0, ..., arg_n)` will be replaced with the `body` of the meta-macro definition.
 Here any occurance of `{param_0}` ... `{param_n}` in `body` will  be replaced with `arg_0` ... `arg_n`, respectively.
 If `arg_0` ... `arg_n` contain any meta-macro invocations, these will be resolved first.
-If the number of arguments does not match the number of parameters in the macro definition, missing arguments will be treated as the empty string, while extra arguments will be discarded.
+If the number of arguments does not match the number of parameters in the meta-macro definition, missing arguments will be treated as the empty string, while extra arguments will be discarded.
 For meta-macro invocations without any arguments, the `(` brackets `)` can be omitted.
 
 If the `body` in a meta-macro definition contains any meta-macro invocations, these will be resolved at the time of definition (this prevents infinite circular resolution).
-As a result the order of macro-definition matters:
+As a result the order of meta-macro definitions matters:
 
 ```
 $attack = [[1d20+$bab]]
@@ -96,15 +96,15 @@ which can be executed as normal.
 
 Note that all compilation will replace any existing content of the target macro.
 
-#### Compile a specific source-macro into a target macro
+#### Compile a specific source macro into a target macro
 
 The `!compile sourceMacro targetMacro` command will compile `sourceMacro` into `targetMacro`.
 
-#### Compile a specific source-macro
+#### Compile a specific source macro
 
 The `!compile sourceMacro` command will compile `sourceMacro` into `_sourceMacro_`.
 
-#### Compile all source-macros
+#### Compile all source macros
 
 The `!compile all` command will compile all macros which (1) do not start with `_`, and (2) contain extension-specific code.
 
