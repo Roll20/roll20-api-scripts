@@ -24,7 +24,6 @@
 		"graphic.left": "read",
 		"graphic._type": "read",
 		"graphic._subtype": "read",
-		"ability.action": "read",
 		"graphic.statusmarkers": "read , write"
 	}
 }
