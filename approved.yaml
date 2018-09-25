@@ -521,3 +521,7 @@ tailsofequestriahelper:
 vampire5e:
 - vampire-v5
 - System Toolbox
+
+metamacros:
+- "MetaMacros"
+- Utility
