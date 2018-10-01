@@ -2356,6 +2356,7 @@ on('chat:message', function(msg) {
             return;
         }
         var user = getObj('character', selectedToken.get('represents'));
+        let SkillsU = findObjs({ characterid: user.id, type: "ability"});
         //Check to make sure that the tokens represent characters
         if (selectedToken.get('represents') === ""){
             sendChat('SYSTEM', 'Token must be linked to a character in the journal!');
@@ -2624,6 +2625,12 @@ on('chat:message', function(msg) {
                 }
                 if (j.type == "temp_statbooster"){
                     let curr = parseInt(j.target.get("current"));
+                    //credit to Kizo-ALR for script!
+                    if ((SkillsU.filter(e => e.get("name") === 'Potent-Potion').length > 0)||(SkillsU.filter(e => e.get("name") === 'Potent Potion').length > 0)){
+                        j.effect *= 1.5;
+                        j.effect = parseInt(j.effect)
+                        Itemstr += '<p style = "margin-bottom: 0px;"><b style = "color: #4055df;">Potent Potion activated!</b></p>'
+                    }
                     j.target.setWithWorker({
                         current: curr + j.effect
                     });
@@ -2653,6 +2660,11 @@ on('chat:message', function(msg) {
                     Itemstr += '<p style = "margin-bottom: 0px;">' + j.targetstr + ' increased by '+ j.effect +'!</p>'
                 }
                 if (j.type == "healing"){
+                    if ((SkillsU.filter(e => e.get("name") === 'Potent-Potion').length > 0)||(SkillsU.filter(e => e.get("name") === 'Potent Potion').length > 0)){
+                        j.effect *= 1.5;
+                        j.effect = parseInt(j.effect)
+                        Itemstr += '<p style = "margin-bottom: 0px;"><b style = "color: #4055df;">Potent Potion activated!</b></p>'
+                    }
                     HPcurrent.setWithWorker({
                         current: parseInt(HPcurrent.get("current")) + j.effect
                     });
