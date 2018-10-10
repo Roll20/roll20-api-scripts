@@ -44,7 +44,7 @@ If you use my [StatusInfo](https://github.com/RobinKuiper/Roll20APIScripts/tree/
 
 ### Conditions
 
-![Show](https://i.imgur.com/DaPFDhK.png "Show")
+![Show](https://i.imgur.com/02XejFv.png "Show")
 
 #### Commands
 * **!ct conditions** - Shows a list of known conditions from StatusInfo and favorites.
@@ -78,7 +78,8 @@ Here you can create, add and edit favorite conditions. By clicking on the name i
 * **Marker Img.** - Image (url) you want to use as a marker.
 * **Stop on Close** - Stop the combat on turnorder close (removes the marker, clears the turnorder list, etc.).
 * **Auto Roll Ini.** - If you want to autoroll (and add) the selected tokens' initiative when you start combat.
-* **Auto Pull Map** - If you want to pull the page to the token (same as `shift + hold left click`).
+* **Auto Pull Map** - If you want to pull the page to the token (same as `shift + hold left click`). Works only for the GM due to API limitations.
+* **Skip Custom Items** - Automatically skip custom items in the tracker.
 
 ## Timer Config
 ![Timer Config](https://i.imgur.com/QZRKy6a.png "Timer Config")
@@ -106,8 +107,20 @@ Roll20 Thread: https://app.roll20.net/forum/post/6349145/script-combattracker
 ---
 
 #### Changelog
+**v0.2.3**
+* Optionally whisper turns to gm.
+* Bugfix where StatusInfo conditions got the same duration.
+
+**v0.2.2**
+* Optionally skip custom items.
+* Improved condition show menu, with button to show custom messages or StatusInfo descriptions.
+
+**v0.2.1**
+* Some fixes and improvements by The Aaron
+* Bugfixes
+
 **v0.2.0**
-* Optionally auto Pull
+* Optionally auto Pull (Works only for DM due to API limitations)
 * Optionally use FX on turn change.
 * Fixed condition round counter.
 * Logical shit & bugfixes.
