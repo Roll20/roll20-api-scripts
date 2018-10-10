@@ -1,5 +1,5 @@
 /*
- * Version 0.1.11
+ * Version 0.1.12
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
