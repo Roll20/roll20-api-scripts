@@ -62,5 +62,8 @@ Roll20 Thread: https://app.roll20.net/forum/post/6275681/script-lazyexperience/?
 ---
 
 #### Changelog
+**v0.1.13**
+* Bugfixes
+
 **v0.1.12**
 * Bugfix where the console gave errors when a player left.
