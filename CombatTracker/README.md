@@ -2,6 +2,7 @@
 
 * Skype: RobinKuiper.eu
 * Discord: Atheos#1095
+* My Discord Server: https://discord.gg/AcC9VME
 * Roll20: https://app.roll20.net/users/1226016/robin
 * Roll20 Thread: https://app.roll20.net/forum/post/6349145/script-combattracker
 * Github: https://github.com/RobinKuiper/Roll20APIScripts
@@ -71,14 +72,20 @@ Here you can create, add and edit favorite conditions. By clicking on the name i
 ![Edit Condition2](https://i.imgur.com/u2HYbtz.png "Edit Condition2")
 
 ### Config
-![Config](https://i.imgur.com/YCDPz24.png "Config")
+![Config](https://i.imgur.com/C16pRgV.png "Config")
 
 * **Command** - The command used for this script, eg. !ct.
 * **Ini. Attribute** - The initiative bonus attribute used in the character sheet that you are using, defaults to `initiative_bonus` used in the 5e OGL sheet.
 * **Marker Img.** - Image (url) you want to use as a marker.
 * **Stop on Close** - Stop the combat on turnorder close (removes the marker, clears the turnorder list, etc.).
-* **Auto Roll Ini.** - If you want to autoroll (and add) the selected tokens' initiative when you start combat.
 * **Auto Pull Map** - If you want to pull the page to the token (same as `shift + hold left click`). Works only for the GM due to API limitations.
+
+## Turnorder Config
+![Turnorder Config](https://i.imgur.com/40s1DxS.png "Turnorder Config")
+
+* **Auto Roll Ini.** - If you want to autoroll (and add) the selected tokens' initiative when you start combat.
+* **Reroll Ini. p. Round** - Reroll initiative on every round.
+* **Auto Sort** - Toggle the auto sorting of the turnorder.
 * **Skip Custom Items** - Automatically skip custom items in the tracker.
 
 ## Timer Config
@@ -101,12 +108,33 @@ Here you can create, add and edit favorite conditions. By clicking on the name i
 * **Use FX** - If you want to use some special effect with the turn change.
     * **FX Type** - The name-color of the FX you want to use, for custom FX use the id.
 
+## Macro Config
+![Macro Config](https://i.imgur.com/dI74TaC.png "Macro Config")
+
+_The macro (ability) should be in the characters abilities tab._
+
+![Abilities Example](https://i.imgur.com/PkXtrMi.png "Abilities Example")
+
+* **Run Macro** - Toggle if we should run the macro on a characters turn.
+* **Macro Name** - The name of the macro.
+
 
 Roll20 Thread: https://app.roll20.net/forum/post/6349145/script-combattracker
 
 ---
 
+[![Become a Patron](https://c5.patreon.com/external/logo/become_a_patron_button.png "Become a Patron")](https://www.patreon.com/bePatron?u=10835266)
+
+---
+
 #### Changelog
+**v0.2.4**
+* Changed config menu, turnorder settings now in seperate menu.
+* Optionally run a character macro (ability) on the characters turn.
+* Optionally turn off auto sorting turnorder.
+* Optionally reroll initiative every round.
+* FX will now not show when a token is on the gmlayer.
+
 **v0.2.3**
 * Optionally whisper turns to gm.
 * Bugfix where StatusInfo conditions got the same duration.

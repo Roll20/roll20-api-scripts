@@ -1296,6 +1296,8 @@ var CombatTracker = CombatTracker || (function() {
         if(state[state_name].config.debug){
 			makeAndSendMenu(script_name + ' Ready! Debug On.', '', 'gm');
         }
+        
+        log(StatusInfo.getConditionByName('Stunned'))
     },
 
     handeIniativePageChange = (obj,prev) => {
@@ -1499,7 +1501,7 @@ on('ready',function() {
 
 /*
 conditions = {
-    54235346534564: [
+    xandir: [
         { name: 'prone', duration: '1' }
     ]
 }
