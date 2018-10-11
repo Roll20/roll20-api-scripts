@@ -2,6 +2,7 @@
 
 * Skype: RobinKuiper.eu
 * Discord: Atheos#1095
+* My Discord Server: https://discord.gg/AcC9VME
 * Roll20: https://app.roll20.net/users/1226016/robin
 * Roll20 Thread: https://app.roll20.net/forum/post/6349145/script-combattracker
 * Github: https://github.com/RobinKuiper/Roll20APIScripts
@@ -35,4 +36,12 @@ With AlignmentTracker you can keep track of a players alignment. It makes a new 
 * **Attribute** - The alignment attribute, depends on which sheet you use.
 * **Show Players** - Show the alignment handout to the corresponding player.
 
-Roll20 Thread: 
+---
+
+[![Become a Patron](https://c5.patreon.com/external/logo/become_a_patron_button.png "Become a Patron")](https://www.patreon.com/bePatron?u=10835266)
+
+---
+
+#### Changelog
+**v0.1.1**
+* Fixed a bug where a character with no alignment crashed the API.

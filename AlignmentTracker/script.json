@@ -1,8 +1,8 @@
 {
     "name": "AlignmentTracker",
     "script": "AlignmentTracker.js",
-    "version": "0.1.0",
-    "previousversions": [],
+    "version": "0.1.1",
+    "previousversions": ["0.1.0"],
     "description": "",
     "authors": "Robin Kuiper",
     "roll20userid": "1226016",
