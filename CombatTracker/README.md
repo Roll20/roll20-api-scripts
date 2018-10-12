@@ -89,10 +89,11 @@ Here you can create, add and edit favorite conditions. By clicking on the name i
 * **Skip Custom Items** - Automatically skip custom items in the tracker.
 
 ## Timer Config
-![Timer Config](https://i.imgur.com/QZRKy6a.png "Timer Config")
+![Timer Config](https://i.imgur.com/dMvjkoO.png "Timer Config")
 
 * **Turn Timer** - If you want to use the timer.
 * **Time** - The time per turn (in seconds).
+* **Auto Skip** - Toggle if we should auto skip the turn when the timer hits zero.
 * **Show in Chat** - Announce remaining time in chat at intervals.
 * **Show on Token** - Show a timer above the current token.
 * **Token Font** - The font used for the token timer.
@@ -128,6 +129,10 @@ Roll20 Thread: https://app.roll20.net/forum/post/6349145/script-combattracker
 ---
 
 #### Changelog
+**v0.2.5**
+* Fixed a "bug" where the marker wouldn't show on the first turn when initiative is not rolled with CT.
+* Toggle auto skip turn when timer runs out.
+
 **v0.2.4**
 * Changed config menu, turnorder settings now in seperate menu.
 * Optionally run a character macro (ability) on the characters turn.
