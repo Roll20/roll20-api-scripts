@@ -223,7 +223,7 @@ var AlignmentTracker = AlignmentTracker || (function() {
                 return { x: 16, y: 5 };
             break;
 
-            case 'nn': case 'neutralneutral': case 'tn': case 'trueneutral':
+            case 'nn': case 'neutralneutral': case 'tn': case 'trueneutral': case 'neutral':
                 return { x: 16, y: 16 };
             break;
 

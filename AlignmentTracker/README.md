@@ -45,6 +45,7 @@ With AlignmentTracker you can keep track of a players alignment. It makes a new 
 #### Changelog
 **v0.1.2**
 * Reordered the alignment table slightly.
+* Added "Neutral" to the alignment possibilities.
 
 **v0.1.1**
 * Fixed a bug where a character with no alignment crashed the API.
