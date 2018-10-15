@@ -132,6 +132,8 @@ Roll20 Thread: https://app.roll20.net/forum/post/6349145/script-combattracker
 **v0.2.5**
 * Fixed a "bug" where the marker wouldn't show on the first turn when initiative is not rolled with CT.
 * Toggle auto skip turn when timer runs out.
+* Optionally show auto initiative roll in chat.
+* !ct next bugfix.
 
 **v0.2.4**
 * Changed config menu, turnorder settings now in seperate menu.
