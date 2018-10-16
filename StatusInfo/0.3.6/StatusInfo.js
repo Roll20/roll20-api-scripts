@@ -62,10 +62,6 @@ var StatusInfo = StatusInfo || (function() {
 
         if(command === state[state_name].config.command){
             switch(extracommand){
-                case 'handled':
-                    log(handled)
-                break;
-
                 case 'reset':
                     state[state_name] = {};
                     setDefaults(true);
