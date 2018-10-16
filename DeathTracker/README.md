@@ -13,7 +13,7 @@
 DeathTracker sets the statusmarker when a character is death or (optional) almost death, works great together with my [LazyExperience](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/LazyExperience) script.
 __Optionally__: Set an **Unconscious** statusmarker on **Player Characters**. This works great with [StatusInfo](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/StatusInfo).
 
-![Config Menu](https://i.imgur.com/cZeENYE.png "Config Menu")
+![Config Menu](https://i.imgur.com/MiKTAow.png "Config Menu")
 
 ### Commands
 
@@ -27,6 +27,12 @@ __Optionally__: Set an **Unconscious** statusmarker on **Player Characters**. Th
 ---
 
 #### Changelog
+**0.1.8**
+* Tint config expanded.
+
+**0.1.7**
+* TokenMod support by The Aaron.
+
 **0.1.6**
 * Optionally FX on HP Gain (heal).
 
