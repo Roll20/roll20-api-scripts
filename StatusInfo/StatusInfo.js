@@ -1,5 +1,5 @@
 /*
- * Version: 0.3.10
+ * Version: 0.3.6
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
@@ -35,13 +35,10 @@ var StatusInfo = StatusInfo || (function() {
     let whisper, handled = [],
         observers = {
             tokenChange: []
-        };
+        }
 
-    
-    const version = "0.3.8",
-    
     // Styling for the chat responses.
-    style = "overflow: hidden; background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;",
+    const style = "overflow: hidden; background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;",
     buttonStyle = "background-color: #000; border: 1px solid #292929; border-radius: 3px; padding: 5px; color: #fff; text-align: center; float: right;",
     conditionStyle = "background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;",
     conditionButtonStyle = "text-decoration: underline; background-color: #fff; color: #000; padding: 0",
@@ -49,15 +46,14 @@ var StatusInfo = StatusInfo || (function() {
 
     icon_image_positions = {red:"#C91010",blue:"#1076C9",green:"#2FC910",brown:"#C97310",purple:"#9510C9",pink:"#EB75E1",yellow:"#E5EB75",dead:"X",skull:0,sleepy:34,"half-heart":68,"half-haze":102,interdiction:136,snail:170,"lightning-helix":204,spanner:238,"chained-heart":272,"chemical-bolt":306,"death-zone":340,"drink-me":374,"edge-crack":408,"ninja-mask":442,stopwatch:476,"fishing-net":510,overdrive:544,strong:578,fist:612,padlock:646,"three-leaves":680,"fluffy-wing":714,pummeled:748,tread:782,arrowed:816,aura:850,"back-pain":884,"black-flag":918,"bleeding-eye":952,"bolt-shield":986,"broken-heart":1020,cobweb:1054,"broken-shield":1088,"flying-flag":1122,radioactive:1156,trophy:1190,"broken-skull":1224,"frozen-orb":1258,"rolling-bomb":1292,"white-tower":1326,grab:1360,screaming:1394,grenade:1428,"sentry-gun":1462,"all-for-one":1496,"angel-outfit":1530,"archery-target":1564},
     markers = ['blue', 'brown', 'green', 'pink', 'purple', 'red', 'yellow', '-', 'all-for-one', 'angel-outfit', 'archery-target', 'arrowed', 'aura', 'back-pain', 'black-flag', 'bleeding-eye', 'bolt-shield', 'broken-heart', 'broken-shield', 'broken-skull', 'chained-heart', 'chemical-bolt', 'cobweb', 'dead', 'death-zone', 'drink-me', 'edge-crack', 'fishing-net', 'fist', 'fluffy-wing', 'flying-flag', 'frozen-orb', 'grab', 'grenade', 'half-haze', 'half-heart', 'interdiction', 'lightning-helix', 'ninja-mask', 'overdrive', 'padlock', 'pummeled', 'radioactive', 'rolling-bomb', 'screaming', 'sentry-gun', 'skull', 'sleepy', 'snail', 'spanner',   'stopwatch','strong', 'three-leaves', 'tread', 'trophy', 'white-tower'],
-    shaped_conditions = ['blinded', 'charmed', 'deafened', 'frightened', 'grappled', 'incapacitated', 'invisible', 'paralyzed', 'petrified', 'poisoned', 'prone', 'restrained', 'stunned', 'unconscious'],
 
     script_name = 'StatusInfo',
     state_name = 'STATUSINFO',
 
     handleInput = (msg) => {
-        if (msg.type != 'api') return;
+        if (msg.type != 'api' || !playerIsGM(msg.playerid)) return;
 
-        // !condition BlindedBlinded
+        // !condition Blinded
 
         // Split the message into command and argument(s)
         let args = msg.content.split(' ');
@@ -66,23 +62,21 @@ var StatusInfo = StatusInfo || (function() {
 
         if(command === state[state_name].config.command){
             switch(extracommand){
-                case 'reset':
-                    if(!playerIsGM(msg.playerid)) return;
+                case 'handled':
+                    log(handled)
+                break;
 
+                case 'reset':
                     state[state_name] = {};
                     setDefaults(true);
                     sendConfigMenu();
                 break;
 
                 case 'help':
-                    if(!playerIsGM(msg.playerid)) return;
-
                     sendHelpMenu();
                 break;
 
                 case 'config':
-                    if(!playerIsGM(msg.playerid)) return;
-
                     if(args.length > 0){
                         if(args[0] === 'export' || args[0] === 'import'){
                             if(args[0] === 'export'){
@@ -124,8 +118,6 @@ var StatusInfo = StatusInfo || (function() {
                 // !s config-conditions prone
                 // !s config-conditions prone name|blaat
                 case 'config-conditions':
-                    if(!playerIsGM(msg.playerid)) return;
-
                     let condition = args.shift();
                     if(condition === 'add'){
                         condition = args.shift();
@@ -193,8 +185,6 @@ var StatusInfo = StatusInfo || (function() {
                 break;
 
                 case 'add': case 'remove': case 'toggle':
-                    if(!state[state_name].config.userToggle && !playerIsGM(msg.playerid)) return;
-
                     if(!msg.selected || !msg.selected.length){
                         makeAndSendMenu('No tokens are selected.');
                         return;
@@ -209,8 +199,6 @@ var StatusInfo = StatusInfo || (function() {
                 break;
 
                 default:
-                    if(!state[state_name].config.userAllowed && !playerIsGM(msg.playerid)) return;
-
                     let condition_name = extracommand;
                     if(condition_name){
                         let condition;
@@ -222,8 +210,6 @@ var StatusInfo = StatusInfo || (function() {
                             sendChat((whisper) ? script_name : '', whisper + 'Condition ' + condition_name + ' does not exist.', null, {noarchive:true});
                         }
                     }else{
-                        if(!playerIsGM(msg.playerid)) return;
-
                         sendMenu(msg.selected);
                     }
                 break;
@@ -254,23 +240,8 @@ var StatusInfo = StatusInfo || (function() {
                     sendConditionToChat(getConditionByName(condition_key));
                     doHandled(condition_key);
                 }
-
-                handleShapedSheet(token.get('represents'), condition_key, add);
             });
         });
-    },
-
-    handleShapedSheet = (characterid, condition, add) => {
-        let character = getObj('character', characterid);
-        if(character){
-            let sheet = getAttrByName(character.get('id'), 'character_sheet', 'current');
-            if(!sheet || !sheet.toLowerCase().includes('shaped')) return;
-            if(!shaped_conditions.includes(condition)) return;
-
-            let attributes = {};
-            attributes[condition] = (add) ? '1': '0';
-            setAttrs(character.get('id'), attributes);
-        }
     },
 
     esRE = function (s) {
@@ -312,36 +283,20 @@ var StatusInfo = StatusInfo || (function() {
 
                 // Loop through the statusmarkers array.
                 statusmarkers.forEach(function(marker){
-                    let condition = getConditionByMarker(marker);
-                    if(!condition) return;
                     // If it is a new statusmarkers, get the condition from the conditions object, and send it to chat.
                     if(marker !== "" && !prevstatusmarkers.includes(marker)){
-                        if(handled.includes(condition.name.toLowerCase())) return;
+                        let condition;
+                        if(condition = getConditionByMarker(marker)){
+                            if(handled.includes(condition.name.toLowerCase())) return;
 
-                        //sendConditionToChat(condition);
-                        handleConditions([condition.name], [obj], 'add', false)
-                        doHandled(obj.get('represents'));
+                            sendConditionToChat(condition);
+
+                            doHandled(obj.get('represents'));
+                        }
                     }
                 });
-
-                prevstatusmarkers.forEach((marker) => {
-                    let condition = getConditionByMarker(marker);
-                    if(!condition) return;
-
-                    if(marker !== '' && !statusmarkers.includes(marker)){
-                        handleConditions([condition.name], [obj], 'remove', false);
-                    }
-                })
             }
         }
-    },
-
-    handleAttributeChange = (obj, prev) => {
-        if(!shaped_conditions.includes(obj.get('name'))) return;
-
-        let tokens = findObjs({ represents: obj.get('characterid') });
-
-        handleConditions([obj.get('name')], tokens, (obj.get('current') === '1') ? 'add' : 'remove')
     },
 
     doHandled = (what) => {
@@ -512,8 +467,6 @@ var StatusInfo = StatusInfo || (function() {
 
     sendConfigMenu = (first) => {
         let commandButton = makeButton('!'+state[state_name].config.command, '!' + state[state_name].config.command + ' config command|?{Command (without !)}', buttonStyle);
-        let userAllowedButton = makeButton(state[state_name].config.userAllowed, '!' + state[state_name].config.command + ' config userAllowed|'+!state[state_name].config.userAllowed, buttonStyle);
-        let userToggleButton = makeButton(state[state_name].config.userToggle, '!' + state[state_name].config.command + ' config userToggle|'+!state[state_name].config.userToggle, buttonStyle);
         let toGMButton = makeButton(state[state_name].config.sendOnlyToGM, '!' + state[state_name].config.command + ' config sendOnlyToGM|'+!state[state_name].config.sendOnlyToGM, buttonStyle);
         let statusChangeButton = makeButton(state[state_name].config.showDescOnStatusChange, '!' + state[state_name].config.command + ' config showDescOnStatusChange|'+!state[state_name].config.showDescOnStatusChange, buttonStyle);
         let showIconButton = makeButton(state[state_name].config.showIconInDescription, '!' + state[state_name].config.command + ' config showIconInDescription|'+!state[state_name].config.showIconInDescription, buttonStyle);
@@ -521,8 +474,6 @@ var StatusInfo = StatusInfo || (function() {
         let listItems = [
             '<span style="float: left">Command:</span> ' + commandButton,
             '<span style="float: left">Only to GM:</span> '+toGMButton,
-            '<span style="float: left">Player Show:</span> '+userAllowedButton,
-            '<span style="float: left">Player Toggle:</span> '+userToggleButton,
             '<span style="float: left">Show on Status Change:</span> '+statusChangeButton,
             '<span style="float: left">Display icon in chat:</span> '+showIconButton
         ];
@@ -610,7 +561,6 @@ var StatusInfo = StatusInfo || (function() {
     registerEventHandlers = () => {
         on('chat:message', handleInput);
         on('change:graphic:statusmarkers', handleStatusmarkerChange);
-        on('change:attribute', handleAttributeChange);
 
         // Handle condition descriptions when tokenmod changes the statusmarkers on a token.
         if('undefined' !== typeof TokenMod && TokenMod.ObserveTokenChange){
@@ -645,8 +595,6 @@ var StatusInfo = StatusInfo || (function() {
         const defaults = {
             config: {
                 command: 'condition',
-                userAllowed: false,
-                userToggle: false,
                 sendOnlyToGM: false,
                 showDescOnStatusChange: true,
                 showIconInDescription: true
@@ -736,12 +684,6 @@ var StatusInfo = StatusInfo || (function() {
             if(!state[state_name].config.hasOwnProperty('command')){
                 state[state_name].config.command = defaults.config.command;
             }
-            if(!state[state_name].config.hasOwnProperty('userAllowed')){
-                state[state_name].config.userAllowed = defaults.config.userAllowed;
-            }
-            if(!state[state_name].config.hasOwnProperty('userToggle')){
-                state[state_name].config.userToggle = defaults.config.userToggle;
-            }
             if(!state[state_name].config.hasOwnProperty('sendOnlyToGM')){
                 state[state_name].config.sendOnlyToGM = defaults.config.sendOnlyToGM;
             }
@@ -772,9 +714,7 @@ var StatusInfo = StatusInfo || (function() {
         getConditions,
         getConditionByName,
         handleConditions,
-        sendConditionToChat,
-        getIcon,
-        version
+        sendConditionToChat
     };
 })();
 
