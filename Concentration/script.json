@@ -1,8 +1,8 @@
 {
     "name": "Concentration",
     "script": "Concentration.js",
-    "version": "0.1.12",
-    "previousversions": ["0.1.5", "0.1.8"],
+    "version": "0.1.14",
+    "previousversions": ["0.1.5", "0.1.8", "0.1.12", "0.1.13"],
     "description": "Concentration keeps track of characters concentration, and reminds to do a concentration check.  If you use the 5e OGL character sheet, it can also automaticly add the concentrating marker when a concentrating spell is cast.  ![Concentration Reminder](https://i.imgur.com/zEVJpOH.png \"Concentration Reminder\") ![Spell Cast](https://i.imgur.com/HucNIDc.png \"Spell Cast\")  ### Commands  * **!concentration**     * Shows the config menu without tokens selected.     * Toggles concentration on selected tokens.  ### Config  ![Config Menu](https://i.imgur.com/P2Siu61.png \"Config Menu\")  * **Command** - Which command you want to use for this script. * **Statusmarker** - Which statusmarker you want to use for concentration. * **HP Bar** - Which bar do you use as the HP bar? * **Send Reminder To** - To who you want to send the reminder. * **Auto Add Con. Marker** - Automatically add the concentration marker when a concentration spell is cast (works only for the 5e OGL sheet at the moment). * **Auto Roll Save** - If you want to Automatically roll the saving throw. * **Bonus Attribute** - Which attribute to use for the bonus modifier (defaulted to the constitution saving throw for the 5e OGL sheet).  ![Auto Roll](https://i.imgur.com/WHUV5iw.png \"Auto Roll\")  ---  #### Changelog: **0.1.11** * `!concentration` with tokens selected will now toggle the statusmarker on them.  **0.1.10** * If you use autoroll, and the save failed, it will automatically remove the statusmarker.  **0.1.9** * Auto Roll Saves (Optional)  **01-05-2018 - 0.1.8** * Bugfix.  **28-04-2018 - 0.1.7** * Remove statusmarker from all objects when removed.  **25-04-2018 - 0.1.5** * Correct whisper target on spell cast concentration check.",
     "authors": "Robin Kuiper",
     "roll20userid": "1226016",

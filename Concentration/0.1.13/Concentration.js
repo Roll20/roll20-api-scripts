@@ -1,9 +1,8 @@
 /*
- * Version 0.1.14
+ * Version 0.1.13
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
- * My Discord Server: https://discord.gg/AcC9VME
  * Roll20: https://app.roll20.net/users/1226016/robin
  * Roll20 Wiki: https://wiki.roll20.net/Script:Concentration
  * Roll20 Thread: https://app.roll20.net/forum/post/6364317/script-concentration/?pageforid=6364317#post-6364317
@@ -23,7 +22,6 @@ var Concentration = Concentration || (function() {
         reset: 'padding: 0; margin: 0;',
         menu:  'background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;',
         button: 'background-color: #000; border: 1px solid #292929; border-radius: 3px; padding: 5px; color: #fff; text-align: center;',
-        textButton: 'background-color: transparent; border: none; padding: 0; color: #000; text-decoration: underline',
         list: 'list-style: none;',
         float: {
             right: 'float: right;',
@@ -75,40 +73,22 @@ var Concentration = Concentration || (function() {
                         sendConfigMenu(false, message);
                     break;
 
-                    case 'advantage-menu':
-                        sendAdvantageMenu();
-                    break;
-
-                    case 'toggle-advantage':
-                        let id = args[0];
-
-                        if(state[state_name].advantages[id]){
-                            state[state_name].advantages[id] = !state[state_name].advantages[id];
-                        }else{
-                            state[state_name].advantages[id] = true;
-                        }
-
-                        sendAdvantageMenu();
-                    break;
-
                     case 'roll':
-                        let represents = args[0],
-                            DC = parseInt(args[1], 10),
-                            con_save_mod = parseInt(args[2], 10),
-                            name = args[3],
-                            target = args[4];
+                        let DC = parseInt(args[0], 10),
+                            con_save_mod = parseInt(args[1], 10),
+                            name = args[2],
+                            target = args[3];
 
-                        roll(represents, DC, con_save_mod, name, target, false);
+                        roll(DC, con_save_mod, name, target, false);
                     break;
 
                     case 'advantage':
-                    let represents_a = args[0],
-                        DC_a = parseInt(args[1], 10),
-                        con_save_mod_a = parseInt(args[2], 10),
-                        name_a = args[3],
-                        target_a = args[4];
+                        let DCa = parseInt(args[0], 10),
+                            con_save_moda = parseInt(args[1], 10),
+                            namea = args[2],
+                            targeta = args[3];
 
-                        roll(represents_a, DC_a, con_save_mod_a, name_a, target_a, true);
+                        roll(DCa, con_save_moda, namea, targeta, true);
                     break;
 
                     default:
@@ -237,13 +217,13 @@ var Concentration = Concentration || (function() {
             }
 
             if(state[state_name].config.show_roll_button){
-                chat_text += '<hr>' + makeButton('Advantage', '!' + state[state_name].config.command + ' advantage ' + obj.get('represents') + ' ' + DC + ' ' + con_save_mod + ' ' + obj.get('name') + ' ' + target, styles.button + styles.float.right);
-                chat_text += '&nbsp;' + makeButton('Roll', '!' + state[state_name].config.command + ' roll ' + obj.get('represents') + ' ' + DC + ' ' + con_save_mod + ' ' + obj.get('name') + ' ' + target, styles.button + styles.float.left);
+                chat_text += '<hr>' + makeButton('Advantage', '!' + state[state_name].config.command + ' advantage ' + DC + ' ' + con_save_mod + ' ' + obj.get('name') + ' ' + target, styles.button + styles.float.right);
+                chat_text += '&nbsp;' + makeButton('Roll', '!' + state[state_name].config.command + ' roll ' + DC + ' ' + con_save_mod + ' ' + obj.get('name') + ' ' + target, styles.button + styles.float.left);
             }
 
             if(state[state_name].config.auto_roll_save){
                 //&{template:default} {{name='+obj.get('name')+' - Concentration Save}} {{Modifier='+con_save_mod+'}} {{Roll=[[1d20cf<'+(DC-con_save_mod-1)+'cs>'+(DC-con_save_mod-1)+'+'+con_save_mod+']]}} {{DC='+DC+'}}
-                roll(obj.get('represents'), DC, con_save_mod, obj.get('name'), target, state[state_name].advantages[obj.get('represents')]);
+                roll(DC, con_save_mod, obj.get('name'), target);
             }else{
                 makeAndSendMenu(chat_text, '', target);
             }
@@ -255,7 +235,7 @@ var Concentration = Concentration || (function() {
         }
     },
 
-    roll = (represents, DC, con_save_mod, name, target, advantage) => {
+    roll = (DC, con_save_mod, name, target, advantage) => {
         sendChat(script_name, '[[1d20cf<'+(DC-con_save_mod-1)+'cs>'+(DC-con_save_mod-1)+'+'+con_save_mod+']]', results => {
             let title = 'Concentration Save <br> <b style="font-size: 10pt; color: gray;">'+name+'</b>',
                 advantageRollResult;
@@ -263,7 +243,7 @@ var Concentration = Concentration || (function() {
             let rollresult = results[0].inlinerolls[0].results.rolls[0].results[0].v;
             let result = rollresult;
 
-            if(advantage){
+            if(state[state_name].config.advantage || advantage){
                 advantageRollResult = randomInteger(20);
                 result = (rollresult <= advantageRollResult) ? advantageRollResult : rollresult;
             }
@@ -275,7 +255,7 @@ var Concentration = Concentration || (function() {
             let result_text = (success) ? 'Success' : 'Failed',
                 result_color = (success) ? 'green' : 'red';
 
-            let rollResultString = (advantage) ? rollresult + ' / ' + advantageRollResult : rollresult;
+            let rollResultString = (state[state_name].config.advantage || advantage) ? rollresult + ' / ' + advantageRollResult : rollresult;
 
             let contents = ' \
             <table style="width: 100%; text-align: left;"> \
@@ -305,7 +285,7 @@ var Concentration = Concentration || (function() {
             }
 
             if(!success){
-                removeMarker(represents);
+                removeMarker(obj.get('represents'));
             }
         });
     },
@@ -337,7 +317,7 @@ var Concentration = Concentration || (function() {
             sendToButton = makeButton(state[state_name].config.send_reminder_to, '!' + state[state_name].config.command + ' config send_reminder_to|?{Send To|Everyone,everyone|Character,character|GM,gm}', styles.button + styles.float.right),
             addConMarkerButton = makeButton(state[state_name].config.auto_add_concentration_marker, '!' + state[state_name].config.command + ' config auto_add_concentration_marker|'+!state[state_name].config.auto_add_concentration_marker, styles.button + styles.float.right),
             autoRollButton = makeButton(state[state_name].config.auto_roll_save, '!' + state[state_name].config.command + ' config auto_roll_save|'+!state[state_name].config.auto_roll_save, styles.button + styles.float.right),
-            //advantageButton = makeButton(state[state_name].config.advantage, '!' + state[state_name].config.command + ' config advantage|'+!state[state_name].config.advantage, styles.button + styles.float.right),
+            advantageButton = makeButton(state[state_name].config.advantage, '!' + state[state_name].config.command + ' config advantage|'+!state[state_name].config.advantage, styles.button + styles.float.right),
             bonusAttrButton = makeButton(state[state_name].config.bonus_attribute, '!' + state[state_name].config.command + ' config bonus_attribute|?{Attribute|'+state[state_name].config.bonus_attribute+'}', styles.button + styles.float.right),
             showRollButtonButton = makeButton(state[state_name].config.show_roll_button, '!' + state[state_name].config.command + ' config show_roll_button|'+!state[state_name].config.show_roll_button, styles.button + styles.float.right),
 
@@ -354,9 +334,9 @@ var Concentration = Concentration || (function() {
 
             title_text = (first) ? script_name + ' First Time Setup' : script_name + ' Config';
 
-        /*if(state[state_name].config.auto_roll_save){
+        if(state[state_name].config.auto_roll_save){
             listItems.push('<span style="'+styles.float.left+'">Advantage:</span> ' + advantageButton);
-        }*/
+        }
 
         if(state[state_name].config.auto_roll_save){
             listItems.push('<span style="'+styles.float.left+'">Bonus Attribute:</span> ' + bonusAttrButton)
@@ -366,31 +346,9 @@ var Concentration = Concentration || (function() {
             listItems.push('<span style="'+styles.float.left+'">Roll Button:</span> ' + showRollButtonButton);
         }
 
-        let advantageMenuButton = (state[state_name].config.auto_roll_save) ? makeButton('Advantage Menu', '!' + state[state_name].config.command + ' advantage-menu', styles.button + styles.fullWidth) : '';
-
         message = (message) ? '<p>'+message+'</p>' : '';
-        let contents = message+makeList(listItems, styles.reset + styles.list + styles.overflow, styles.overflow)+'<br>'+advantageMenuButton+'<hr><p style="font-size: 80%">You can always come back to this config by typing `!'+state[state_name].config.command+' config`.</p><hr>'+resetButton;
+        let contents = message+makeList(listItems, styles.reset + styles.list + styles.overflow, styles.overflow)+'<hr><p style="font-size: 80%">You can always come back to this config by typing `!'+state[state_name].config.command+' config`.</p><hr>'+resetButton;
         makeAndSendMenu(contents, title_text, 'gm');
-    },
-
-    sendAdvantageMenu = () => {
-        let menu_text = "";
-        let characters = findObjs({ type: 'character' }).sort((a, b) => {
-            let nameA = a.get('name').toUpperCase();
-            let nameB = b.get('name').toUpperCase();
-
-            if(nameA < nameB) return -1;
-            if(nameA > nameB) return 1;
-
-            return 0;
-        });
-
-        characters.forEach(character => {
-            let name = (state[state_name].advantages && state[state_name].advantages[character.get('id')]) ? '<b>'+character.get('name')+'</b>' : character.get('name');
-            menu_text += makeButton(name, '!' + state[state_name].config.command + ' toggle-advantage ' + character.get('id'), styles.textButton) + '<br>';
-        });
-
-        makeAndSendMenu(menu_text, 'Advantage Menu', 'gm');
     },
 
     makeAndSendMenu = (contents, title, whisper, callback) => {
@@ -451,8 +409,7 @@ var Concentration = Concentration || (function() {
                 advantage: false,
                 bonus_attribute: 'constitution_save_bonus',
                 show_roll_button: true
-            },
-            advantages: {}
+            }
         };
 
         if(!state[state_name].config){
@@ -485,9 +442,6 @@ var Concentration = Concentration || (function() {
             if(!state[state_name].config.hasOwnProperty('show_roll_button')){
                 state[state_name].config.show_roll_button = defaults.config.show_roll_button;
             }
-        }
-        if(!state[state_name].advantages){
-            state[state_name].advantages = defaults.advantages;
         }
 
         if(!state[state_name].config.hasOwnProperty('firsttime') && !reset){
