@@ -1,10 +1,9 @@
 /* 
- * Version 0.2.5
+ * Version 0.2.3
  * Made By Robin Kuiper
  * Changes in Version 0.2.1 by The Aaron
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
- * My Discord Server: https://discord.gg/AcC9VME
  * Roll20: https://app.roll20.net/users/1226016/robin
  * Roll20 Thread: https://app.roll20.net/forum/post/6349145/script-combattracker
  * Github: https://github.com/RobinKuiper/Roll20APIScripts
@@ -67,8 +66,6 @@ var CombatTracker = CombatTracker || (function() {
         if(command !== state[state_name].config.command) return;
 
         if(extracommand === 'next'){
-            if(!getTurnorder().length) return;
-
             if(playerIsGM(msg.playerid) || msg.playerid === 'api'){
                 NextTurn();
                 return;
@@ -121,16 +118,6 @@ var CombatTracker = CombatTracker || (function() {
                     }
 
                     sendConfigTimerMenu();
-                }else if (args[0] === 'turnorder'){
-                    if(args[1]){
-                        let setting = args[1].split('|');
-                        let key = setting.shift();
-                        let value = (setting[0] === 'true') ? true : (setting[0] === 'false') ? false : setting[0];
-
-                        state[state_name].config.turnorder[key] = value;
-                    }
-
-                    sendConfigTurnorderMenu();
                 }else if (args[0] === 'announcements'){
                     if(args[1]){
                         let setting = args[1].split('|');
@@ -141,16 +128,6 @@ var CombatTracker = CombatTracker || (function() {
                     }
 
                     sendConfigAnnounceMenu();
-                }else if (args[0] === 'macro'){
-                    if(args[1]){
-                        let setting = args[1].split('|');
-                        let key = setting.shift();
-                        let value = (setting[0] === 'true') ? true : (setting[0] === 'false') ? false : setting[0];
-
-                        state[state_name].config.macro[key] = value;
-                    }
-
-                    sendConfigMacroMenu();
                 }else{
                     if(args[0]){
                         let setting = args.shift().split('|');
@@ -527,11 +504,9 @@ var CombatTracker = CombatTracker || (function() {
         resetMarker();
         Campaign().set('initiativepage', Campaign().get('playerpageid'));
 
-        if(selected && state[state_name].config.turnorder.throw_initiative){
-            rollInitiative(selected, state[state_name].config.turnorder.auto_sort);
+        if(selected && state[state_name].config.throw_initiative){
+            rollInitiative(selected, true);
         }
-        
-        doTurnorderChange();
     },
 
     inFight = () => {
@@ -543,28 +518,12 @@ var CombatTracker = CombatTracker || (function() {
             if(s._type !== 'graphic') return;
 
             let token = getObj('graphic', s._id),
-                whisper = (token.get('layer') === 'gmlayer') ? 'gm ' : '',
+                //whisper = (token.get('layer') === 'gmlayer') ? '/w gm ' : '',
                 bonus = parseFloat(getAttrByName(token.get('represents'), state[state_name].config.initiative_attribute_name, 'current')) || 0;
-                let roll = randomInteger(20);
-                //pr = (Math.round(pr) !== pr) ? pr.toFixed(2) : pr;
+                let pr = randomBetween(1,20)+bonus;
+                pr = (Math.round(pr) !== pr) ? pr.toFixed(2) : pr;
                 
-            if(state[state_name].config.turnorder.show_initiative_roll){
-                let contents = ' \
-                <table style="width: 100%; text-align: left;"> \
-                    <tr> \
-                        <th>Modifier</th> \
-                        <td>'+bonus+'</td> \
-                    </tr> \
-                </table> \
-                <div style="text-align: center"> \
-                    <b style="font-size: 16pt;"> \
-                        <span style="border: 1px solid green; padding-bottom: 2px; padding-top: 4px;">[['+roll+'+'+bonus+']]</span><br><br> \
-                    </b> \
-                </div>'
-                makeAndSendMenu(contents, token.get('name') + ' Initiative', whisper);
-            }
-
-            addToTurnorder({ id: token.get('id'), pr: roll+bonus, custom: '', pageid: token.get('pageid') });
+                addToTurnorder({ id: token.get('id'), pr, custom: '', pageid: token.get('pageid') });
         });
 
         if(sort){
@@ -583,11 +542,6 @@ var CombatTracker = CombatTracker || (function() {
         });
         state[state_name].turnorder = {};
         round = 1;
-    },
-
-    clearTurnorder = () => {
-        Campaign().set({ turnorder: '' });
-        state[state_name].turnorder = {};
     },
 
     removeMarker = () => {
@@ -610,12 +564,12 @@ var CombatTracker = CombatTracker || (function() {
     },
 
     doTurnorderChange = (prev=false) => {
-        if(!Campaign().get('initiativepage') || getTurnorder().length <= 1) return;
+        if(!Campaign().get('initiativepage')) return;
 
         let turn = getCurrentTurn();
 
         if(turn.id === '-1'){
-            if(!state[state_name].config.turnorder.skip_custom) resetMarker();
+            if(!state[state_name].config.skip_custom) resetMarker();
             else NextTurn();
             return;
         }
@@ -640,13 +594,6 @@ var CombatTracker = CombatTracker || (function() {
 
         changeMarker(token || false);
 
-        if(state[state_name].config.macro.run_macro){
-            let ability = findObjs({ _characterid: token.get('represents'), _type: 'ability', name: state[state_name].config.macro.macro_name })
-            if(ability && ability.length){
-                sendChat(token.get('name'), ability[0].get('action'), null, {noarchive:true} );
-            }
-        }
-
         if(state[state_name].config.announcements.announce_turn){
             announceTurn(token || turn.custom, (token.get('layer') === 'objects') ? '' : 'gm');
         }else if(state[state_name].config.announcements.announce_conditions){
@@ -660,7 +607,7 @@ var CombatTracker = CombatTracker || (function() {
     },
 
     doFX = (token) => {
-        if(!state[state_name].config.announcements.use_fx || token.get('layer') === 'gmlayer') return;
+        if(!state[state_name].config.announcements.use_fx) return;
 
         let pos = {x: token.get('left'), y: token.get('top')};
         spawnFxBetweenPoints(pos, pos, state[state_name].config.announcements.fx_type, token.get('pageid'));
@@ -708,8 +655,7 @@ var CombatTracker = CombatTracker || (function() {
             if(time <= 0){
                 if(timerObj) timerObj.remove();
                 clearInterval(intervalHandle);
-                if(state[state_name].config.timer.auto_skip) NextTurn();
-                else makeAndSendMenu(token.get('name') + "'s time ran out!", '');
+                NextTurn();
             }
 
             time--;
@@ -786,7 +732,6 @@ var CombatTracker = CombatTracker || (function() {
     NextTurn = () => {
         let turnorder = getTurnorder(),
             current_turn = turnorder.shift();
-
         turnorder.push(current_turn);
 
         setTurnorder(turnorder);
@@ -812,14 +757,7 @@ var CombatTracker = CombatTracker || (function() {
             makeAndSendMenu(text);
         }
 
-        if(state[state_name].config.turnorder.reroll_ini_round){
-            let turnorder = getTurnorder();
-            clearTurnorder();
-            rollInitiative(turnorder.map(t => { return (t.id !== -1 && t.id !== marker.get('id')) ? { _type: 'graphic', _id: t.id } : false }), state[state_name].config.turnorder.auto_sort);
-            sortTurnorder();
-        }else{
-            NextTurn();
-        }
+        NextTurn();
     },
 
     PrevRound = () => {
@@ -1104,53 +1042,31 @@ var CombatTracker = CombatTracker || (function() {
     sendConfigMenu = (first, message) => {
         let commandButton = makeButton('!'+state[state_name].config.command, '!' + state[state_name].config.command + ' config command|?{Command (without !)}', styles.button + styles.float.right),
             markerImgButton = makeButton('<img src="'+state[state_name].config.marker_img+'" width="30px" height="30px" />', '!' + state[state_name].config.command + ' config marker_img|?{Image Url}', styles.button + styles.float.right),
+            throwIniButton = makeButton(state[state_name].config.throw_initiative, '!' + state[state_name].config.command + ' config throw_initiative|'+!state[state_name].config.throw_initiative, styles.button + styles.float.right),
             iniAttrButton = makeButton(state[state_name].config.initiative_attribute_name, '!' + state[state_name].config.command + ' config initiative_attribute_name|?{Attribute|'+state[state_name].config.initiative_attribute_name+'}', styles.button + styles.float.right),
             closeStopButton = makeButton(state[state_name].config.close_stop, '!' + state[state_name].config.command + ' config close_stop|'+!state[state_name].config.close_stop, styles.button + styles.float.right),
             pullButton = makeButton(state[state_name].config.pull, '!' + state[state_name].config.command + ' config pull|'+!state[state_name].config.pull, styles.button + styles.float.right),
-            
+            skipCustomButton = makeButton(state[state_name].config.skip_custom, '!' + state[state_name].config.command + ' config skip_custom|'+!state[state_name].config.skip_custom, styles.button + styles.float.right),
+
             listItems = [
                 '<span style="'+styles.float.left+'">Command:</span> ' + commandButton,
                 '<span style="'+styles.float.left+'">Ini. Attribute:</span> ' + iniAttrButton,
                 '<span style="'+styles.float.left+'">Marker Img:</span> ' + markerImgButton,
                 '<span style="'+styles.float.left+'">Stop on close:</span> ' + closeStopButton,
+                '<span style="'+styles.float.left+'">Auto Roll Ini.:</span> ' + throwIniButton,
                 '<span style="'+styles.float.left+'">Auto Pull Map:</span> ' + pullButton,
+                '<span style="'+styles.float.left+'">Skip Custom Item:</span> ' + skipCustomButton
             ],
 
-            configTurnorderButton = makeButton('Turnorder Config', '!'+state[state_name].config.command + ' config turnorder', styles.button),
             configTimerButton = makeButton('Timer Config', '!'+state[state_name].config.command + ' config timer', styles.button),
             configAnnouncementsButton = makeButton('Announcement Config', '!'+state[state_name].config.command + ' config announcements', styles.button),
-            configMacroButton = makeButton('Macro Config', '!'+state[state_name].config.command + ' config macro', styles.button),
             resetButton = makeButton('Reset', '!' + state[state_name].config.command + ' reset', styles.button + styles.fullWidth),
 
             title_text = (first) ? script_name + ' First Time Setup' : script_name + ' Config';
 
         message = (message) ? '<p>'+message+'</p>' : '';
-        let contents = message+makeList(listItems, styles.reset + styles.list + styles.overflow, styles.overflow)+configTurnorderButton+'<br>'+configTimerButton+'<br>'+configAnnouncementsButton+'<br>'+configMacroButton+'<hr><p style="font-size: 80%">You can always come back to this config by typing `!'+state[state_name].config.command+' config`.</p><hr>'+resetButton;
+        let contents = message+makeList(listItems, styles.reset + styles.list + styles.overflow, styles.overflow)+configTimerButton+configAnnouncementsButton+'<hr><p style="font-size: 80%">You can always come back to this config by typing `!'+state[state_name].config.command+' config`.</p><hr>'+resetButton;
         makeAndSendMenu(contents, title_text, 'gm');
-    },
-
-    sendConfigTurnorderMenu = () => {
-        let throwIniButton = makeButton(state[state_name].config.turnorder.throw_initiative, '!' + state[state_name].config.command + ' config turnorder throw_initiative|'+!state[state_name].config.turnorder.throw_initiative, styles.button + styles.float.right),
-            showRollButton = makeButton(state[state_name].config.turnorder.show_initiative_roll, '!' + state[state_name].config.command + ' config turnorder show_initiative_roll|'+!state[state_name].config.turnorder.show_initiative_roll, styles.button + styles.float.right),
-            autoSortButton = makeButton(state[state_name].config.turnorder.auto_sort, '!' + state[state_name].config.command + ' config turnorder auto_sort|'+!state[state_name].config.turnorder.auto_sort, styles.button + styles.float.right),
-            rerollIniButton = makeButton(state[state_name].config.turnorder.reroll_ini_round, '!' + state[state_name].config.command + ' config turnorder reroll_ini_round|'+!state[state_name].config.turnorder.reroll_ini_round, styles.button + styles.float.right),
-            skipCustomButton = makeButton(state[state_name].config.turnorder.skip_custom, '!' + state[state_name].config.command + ' config turnorder skip_custom|'+!state[state_name].config.turnorder.skip_custom, styles.button + styles.float.right),
-
-            backButton = makeButton('< Back', '!'+state[state_name].config.command + ' config', styles.button + styles.fullWidth),
-
-            listItems = [
-                '<span style="'+styles.float.left+'">Auto Roll Ini.:</span> ' + throwIniButton,
-                '<span style="'+styles.float.left+'">Reroll Ini. p. Round:</span> ' + rerollIniButton,
-                '<span style="'+styles.float.left+'">Auto Sort:</span> ' + autoSortButton,
-                '<span style="'+styles.float.left+'">Skip Custom Item:</span> ' + skipCustomButton
-            ];
-
-            if(state[state_name].config.turnorder.throw_initiative){
-                listItems.push('<span style="'+styles.float.left+'">Show Initiative:</span> ' + showRollButton)
-            }
-
-        let contents = makeList(listItems, styles.reset + styles.list + styles.overflow, styles.overflow)+'<hr>'+backButton;
-        makeAndSendMenu(contents, script_name + ' Turnorder Config', 'gm');
     },
 
     sendConfigAnnounceMenu = () =>{
@@ -1190,7 +1106,6 @@ var CombatTracker = CombatTracker || (function() {
     sendConfigTimerMenu = () => {
         let turnTimerButton = makeButton(state[state_name].config.timer.use_timer, '!' + state[state_name].config.command + ' config timer use_timer|'+!state[state_name].config.timer.use_timer, styles.button + styles.float.right),
             timeButton = makeButton(state[state_name].config.timer.time, '!' + state[state_name].config.command + ' config timer time|?{Time|'+state[state_name].config.timer.time+'}', styles.button + styles.float.right),
-            autoSkipButton = makeButton(state[state_name].config.timer.auto_skip, '!' + state[state_name].config.command + ' config timer auto_skip|'+!state[state_name].config.timer.auto_skip, styles.button + styles.float.right),
             chatTimerButton = makeButton(state[state_name].config.timer.chat_timer, '!' + state[state_name].config.command + ' config timer chat_timer|'+!state[state_name].config.timer.chat_timer, styles.button + styles.float.right),
             tokenTimerButton = makeButton(state[state_name].config.timer.token_timer, '!' + state[state_name].config.command + ' config timer token_timer|'+!state[state_name].config.timer.token_timer, styles.button + styles.float.right),
             tokenFontButton = makeButton(state[state_name].config.timer.token_font, '!' + state[state_name].config.command + ' config timer token_font|?{Font|Arial|Patrick Hand|Contrail|Light|Candal}', styles.button + styles.float.right),
@@ -1201,7 +1116,6 @@ var CombatTracker = CombatTracker || (function() {
             listItems = [
                 '<span style="'+styles.float.left+'">Turn Timer:</span> ' + turnTimerButton,
                 '<span style="'+styles.float.left+'">Time:</span> ' + timeButton,
-                '<span style="'+styles.float.left+'">Auto Skip:</span> ' + autoSkipButton,
                 '<span style="'+styles.float.left+'">Show in Chat:</span> ' + chatTimerButton,
                 '<span style="'+styles.float.left+'">Show on Token:</span> ' + tokenTimerButton,
                 '<span style="'+styles.float.left+'">Token Font:</span> ' + tokenFontButton,
@@ -1210,21 +1124,6 @@ var CombatTracker = CombatTracker || (function() {
 
         let contents = makeList(listItems, styles.reset + styles.list + styles.overflow, styles.overflow)+'<hr>'+backButton;
         makeAndSendMenu(contents, script_name + ' Timer Config', 'gm');
-    },
-
-    sendConfigMacroMenu = () => {
-        let runMacroButton = makeButton(state[state_name].config.macro.run_macro, '!' + state[state_name].config.command + ' config macro run_macro|'+!state[state_name].config.macro.run_macro, styles.button + styles.float.right),
-            macroNameButton = makeButton(state[state_name].config.macro.macro_name, '!' + state[state_name].config.command + ' config macro macro_name|?{Macro Name|'+state[state_name].config.macro.macro_name+'}', styles.button + styles.float.right),
-
-            backButton = makeButton('< Back', '!'+state[state_name].config.command + ' config', styles.button + styles.fullWidth),
-
-            listItems = [
-                '<span style="'+styles.float.left+'">Run Macro:</span> ' + runMacroButton,
-                '<span style="'+styles.float.left+'">Macro Name:</span> ' + macroNameButton,
-            ];
-
-        let contents = '<p>A macro with the right name should be in the characters ability list.</p>'+makeList(listItems, styles.reset + styles.list + styles.overflow, styles.overflow)+'<hr>'+backButton;
-        makeAndSendMenu(contents, script_name + ' Macro Config', 'gm');
     },
 
     sendMenu = () => {
@@ -1324,6 +1223,8 @@ var CombatTracker = CombatTracker || (function() {
         if(state[state_name].config.debug){
 			makeAndSendMenu(script_name + ' Ready! Debug On.', '', 'gm');
         }
+        
+        log(StatusInfo.getConditionByName('Stunned'))
     },
 
     handeIniativePageChange = (obj,prev) => {
@@ -1365,20 +1266,14 @@ var CombatTracker = CombatTracker || (function() {
             config: {
                 command: 'ct',
                 marker_img: 'https://s3.amazonaws.com/files.d20.io/images/52550079/U-3U950B3wk_KRtspSPyuw/thumb.png?1524507826',
+                throw_initiative: true,
                 initiative_attribute_name: 'initiative_bonus',
                 close_stop: true,
+                skip_custom: true,
                 pull: true,
-                turnorder: {
-                    throw_initiative: true,
-                    show_initiative_roll: false,
-                    auto_sort: true,
-                    reroll_ini_round: false,
-                    skip_custom: true,
-                },
                 timer: {
                     use_timer: true,
                     time: 120,
-                    auto_skip: true,
                     chat_timer: true,
                     token_timer: true,
                     token_font: 'Candal',
@@ -1393,10 +1288,6 @@ var CombatTracker = CombatTracker || (function() {
                     handleLongName: true,
                     use_fx: false,
                     fx_type: 'nova-holy'
-                },
-                macro: {
-                    run_macro: true,
-                    macro_name: 'CT_TURN'
                 }
             },
             conditions: {},
@@ -1412,6 +1303,12 @@ var CombatTracker = CombatTracker || (function() {
             if(!state[state_name].config.hasOwnProperty('marker_img')){
                 state[state_name].config.marker_img = defaults.config.marker_img;
             }
+            if(!state[state_name].config.hasOwnProperty('skip_custom')){
+                state[state_name].config.skip_custom = defaults.config.skip_custom;
+            }
+            if(!state[state_name].config.hasOwnProperty('throw_initiative')){
+                state[state_name].config.throw_initiative = defaults.config.throw_initiative;
+            }
             if(!state[state_name].config.hasOwnProperty('initiative_attribute_name')){
                 state[state_name].config.initiative_attribute_name = defaults.config.initiative_attribute_name;
             }
@@ -1421,22 +1318,6 @@ var CombatTracker = CombatTracker || (function() {
             if(!state[state_name].config.hasOwnProperty('pull')){
                 state[state_name].config.pull = defaults.config.pull;
             }
-            if(!state[state_name].config.hasOwnProperty('turnorder')){
-                state[state_name].config.turnorder = defaults.config.turnorder;
-            }else{
-                if(!state[state_name].config.turnorder.hasOwnProperty('skip_custom')){
-                    state[state_name].config.turnorder.skip_custom = defaults.config.turnorder.skip_custom;
-                }
-                if(!state[state_name].config.turnorder.hasOwnProperty('throw_initiative')){
-                    state[state_name].config.turnorder.throw_initiative = defaults.config.turnorder.throw_initiative;
-                }
-                if(!state[state_name].config.turnorder.hasOwnProperty('auto_sort')){
-                    state[state_name].config.turnorder.auto_sort = defaults.config.turnorder.auto_sort;
-                }
-                if(!state[state_name].config.hasOwnProperty('reroll_ini_round')){
-                    state[state_name].config.turnorder.reroll_ini_round = defaults.config.turnorder.reroll_ini_round;
-                }
-            }
             if(!state[state_name].config.hasOwnProperty('timer')){
                 state[state_name].config.timer = defaults.config.timer;
             }else{
@@ -1445,9 +1326,6 @@ var CombatTracker = CombatTracker || (function() {
                 }
                 if(!state[state_name].config.timer.hasOwnProperty('time')){
                     state[state_name].config.timer.time = defaults.config.timer.time;
-                }
-                if(!state[state_name].config.timer.hasOwnProperty('auto_skip')){
-                    state[state_name].config.timer.auto_skip = defaults.config.timer.auto_skip;
                 }
                 if(!state[state_name].config.timer.hasOwnProperty('chat_timer')){
                     state[state_name].config.timer.chat_timer = defaults.config.timer.chat_timer;
@@ -1490,16 +1368,6 @@ var CombatTracker = CombatTracker || (function() {
                     state[state_name].config.announcements.fx_type = defaults.config.announcements.fx_type;
                 }
             }
-            if(!state[state_name].config.hasOwnProperty('macro')){
-                state[state_name].config.macro = defaults.config.macro;
-            }else{
-                if(!state[state_name].config.macro.hasOwnProperty('run_macro')){
-                    state[state_name].config.macro.run_macro = defaults.config.macro.run_macro;
-                }
-                if(!state[state_name].config.macro.hasOwnProperty('macro_name')){
-                    state[state_name].config.macro.macro_name = defaults.config.macro.macro_name;
-                }
-            }
         }
 
         if(!state[state_name].hasOwnProperty('conditions')){
@@ -1532,7 +1400,7 @@ on('ready',function() {
 
 /*
 conditions = {
-    54235346534564: [
+    xandir: [
         { name: 'prone', duration: '1' }
     ]
 }

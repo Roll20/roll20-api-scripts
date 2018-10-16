@@ -1,5 +1,5 @@
 /* 
- * Version 0.2.5
+ * Version 0.2.4
  * Made By Robin Kuiper
  * Changes in Version 0.2.1 by The Aaron
  * Skype: RobinKuiper.eu
@@ -67,8 +67,6 @@ var CombatTracker = CombatTracker || (function() {
         if(command !== state[state_name].config.command) return;
 
         if(extracommand === 'next'){
-            if(!getTurnorder().length) return;
-
             if(playerIsGM(msg.playerid) || msg.playerid === 'api'){
                 NextTurn();
                 return;
@@ -530,8 +528,6 @@ var CombatTracker = CombatTracker || (function() {
         if(selected && state[state_name].config.turnorder.throw_initiative){
             rollInitiative(selected, state[state_name].config.turnorder.auto_sort);
         }
-        
-        doTurnorderChange();
     },
 
     inFight = () => {
@@ -543,28 +539,12 @@ var CombatTracker = CombatTracker || (function() {
             if(s._type !== 'graphic') return;
 
             let token = getObj('graphic', s._id),
-                whisper = (token.get('layer') === 'gmlayer') ? 'gm ' : '',
+                //whisper = (token.get('layer') === 'gmlayer') ? '/w gm ' : '',
                 bonus = parseFloat(getAttrByName(token.get('represents'), state[state_name].config.initiative_attribute_name, 'current')) || 0;
-                let roll = randomInteger(20);
-                //pr = (Math.round(pr) !== pr) ? pr.toFixed(2) : pr;
+                let pr = randomBetween(1,20)+bonus;
+                pr = (Math.round(pr) !== pr) ? pr.toFixed(2) : pr;
                 
-            if(state[state_name].config.turnorder.show_initiative_roll){
-                let contents = ' \
-                <table style="width: 100%; text-align: left;"> \
-                    <tr> \
-                        <th>Modifier</th> \
-                        <td>'+bonus+'</td> \
-                    </tr> \
-                </table> \
-                <div style="text-align: center"> \
-                    <b style="font-size: 16pt;"> \
-                        <span style="border: 1px solid green; padding-bottom: 2px; padding-top: 4px;">[['+roll+'+'+bonus+']]</span><br><br> \
-                    </b> \
-                </div>'
-                makeAndSendMenu(contents, token.get('name') + ' Initiative', whisper);
-            }
-
-            addToTurnorder({ id: token.get('id'), pr: roll+bonus, custom: '', pageid: token.get('pageid') });
+                addToTurnorder({ id: token.get('id'), pr, custom: '', pageid: token.get('pageid') });
         });
 
         if(sort){
@@ -610,7 +590,7 @@ var CombatTracker = CombatTracker || (function() {
     },
 
     doTurnorderChange = (prev=false) => {
-        if(!Campaign().get('initiativepage') || getTurnorder().length <= 1) return;
+        if(!Campaign().get('initiativepage')) return;
 
         let turn = getCurrentTurn();
 
@@ -708,8 +688,7 @@ var CombatTracker = CombatTracker || (function() {
             if(time <= 0){
                 if(timerObj) timerObj.remove();
                 clearInterval(intervalHandle);
-                if(state[state_name].config.timer.auto_skip) NextTurn();
-                else makeAndSendMenu(token.get('name') + "'s time ran out!", '');
+                NextTurn();
             }
 
             time--;
@@ -1131,7 +1110,6 @@ var CombatTracker = CombatTracker || (function() {
 
     sendConfigTurnorderMenu = () => {
         let throwIniButton = makeButton(state[state_name].config.turnorder.throw_initiative, '!' + state[state_name].config.command + ' config turnorder throw_initiative|'+!state[state_name].config.turnorder.throw_initiative, styles.button + styles.float.right),
-            showRollButton = makeButton(state[state_name].config.turnorder.show_initiative_roll, '!' + state[state_name].config.command + ' config turnorder show_initiative_roll|'+!state[state_name].config.turnorder.show_initiative_roll, styles.button + styles.float.right),
             autoSortButton = makeButton(state[state_name].config.turnorder.auto_sort, '!' + state[state_name].config.command + ' config turnorder auto_sort|'+!state[state_name].config.turnorder.auto_sort, styles.button + styles.float.right),
             rerollIniButton = makeButton(state[state_name].config.turnorder.reroll_ini_round, '!' + state[state_name].config.command + ' config turnorder reroll_ini_round|'+!state[state_name].config.turnorder.reroll_ini_round, styles.button + styles.float.right),
             skipCustomButton = makeButton(state[state_name].config.turnorder.skip_custom, '!' + state[state_name].config.command + ' config turnorder skip_custom|'+!state[state_name].config.turnorder.skip_custom, styles.button + styles.float.right),
@@ -1144,10 +1122,6 @@ var CombatTracker = CombatTracker || (function() {
                 '<span style="'+styles.float.left+'">Auto Sort:</span> ' + autoSortButton,
                 '<span style="'+styles.float.left+'">Skip Custom Item:</span> ' + skipCustomButton
             ];
-
-            if(state[state_name].config.turnorder.throw_initiative){
-                listItems.push('<span style="'+styles.float.left+'">Show Initiative:</span> ' + showRollButton)
-            }
 
         let contents = makeList(listItems, styles.reset + styles.list + styles.overflow, styles.overflow)+'<hr>'+backButton;
         makeAndSendMenu(contents, script_name + ' Turnorder Config', 'gm');
@@ -1190,7 +1164,6 @@ var CombatTracker = CombatTracker || (function() {
     sendConfigTimerMenu = () => {
         let turnTimerButton = makeButton(state[state_name].config.timer.use_timer, '!' + state[state_name].config.command + ' config timer use_timer|'+!state[state_name].config.timer.use_timer, styles.button + styles.float.right),
             timeButton = makeButton(state[state_name].config.timer.time, '!' + state[state_name].config.command + ' config timer time|?{Time|'+state[state_name].config.timer.time+'}', styles.button + styles.float.right),
-            autoSkipButton = makeButton(state[state_name].config.timer.auto_skip, '!' + state[state_name].config.command + ' config timer auto_skip|'+!state[state_name].config.timer.auto_skip, styles.button + styles.float.right),
             chatTimerButton = makeButton(state[state_name].config.timer.chat_timer, '!' + state[state_name].config.command + ' config timer chat_timer|'+!state[state_name].config.timer.chat_timer, styles.button + styles.float.right),
             tokenTimerButton = makeButton(state[state_name].config.timer.token_timer, '!' + state[state_name].config.command + ' config timer token_timer|'+!state[state_name].config.timer.token_timer, styles.button + styles.float.right),
             tokenFontButton = makeButton(state[state_name].config.timer.token_font, '!' + state[state_name].config.command + ' config timer token_font|?{Font|Arial|Patrick Hand|Contrail|Light|Candal}', styles.button + styles.float.right),
@@ -1201,7 +1174,6 @@ var CombatTracker = CombatTracker || (function() {
             listItems = [
                 '<span style="'+styles.float.left+'">Turn Timer:</span> ' + turnTimerButton,
                 '<span style="'+styles.float.left+'">Time:</span> ' + timeButton,
-                '<span style="'+styles.float.left+'">Auto Skip:</span> ' + autoSkipButton,
                 '<span style="'+styles.float.left+'">Show in Chat:</span> ' + chatTimerButton,
                 '<span style="'+styles.float.left+'">Show on Token:</span> ' + tokenTimerButton,
                 '<span style="'+styles.float.left+'">Token Font:</span> ' + tokenFontButton,
@@ -1324,6 +1296,8 @@ var CombatTracker = CombatTracker || (function() {
         if(state[state_name].config.debug){
 			makeAndSendMenu(script_name + ' Ready! Debug On.', '', 'gm');
         }
+        
+        log(StatusInfo.getConditionByName('Stunned'))
     },
 
     handeIniativePageChange = (obj,prev) => {
@@ -1369,16 +1343,14 @@ var CombatTracker = CombatTracker || (function() {
                 close_stop: true,
                 pull: true,
                 turnorder: {
-                    throw_initiative: true,
-                    show_initiative_roll: false,
-                    auto_sort: true,
-                    reroll_ini_round: false,
-                    skip_custom: true,
+                    throw_initiative: state[state_name].config.throw_initiative || true,
+                    auto_sort: state[state_name].config.auto_sort || true,
+                    reroll_ini_round: state[state_name].config.reroll_ini_round || false,
+                    skip_custom: state[state_name].config.skip_custom || true,
                 },
                 timer: {
                     use_timer: true,
                     time: 120,
-                    auto_skip: true,
                     chat_timer: true,
                     token_timer: true,
                     token_font: 'Candal',
@@ -1445,9 +1417,6 @@ var CombatTracker = CombatTracker || (function() {
                 }
                 if(!state[state_name].config.timer.hasOwnProperty('time')){
                     state[state_name].config.timer.time = defaults.config.timer.time;
-                }
-                if(!state[state_name].config.timer.hasOwnProperty('auto_skip')){
-                    state[state_name].config.timer.auto_skip = defaults.config.timer.auto_skip;
                 }
                 if(!state[state_name].config.timer.hasOwnProperty('chat_timer')){
                     state[state_name].config.timer.chat_timer = defaults.config.timer.chat_timer;
@@ -1532,7 +1501,7 @@ on('ready',function() {
 
 /*
 conditions = {
-    54235346534564: [
+    xandir: [
         { name: 'prone', duration: '1' }
     ]
 }
