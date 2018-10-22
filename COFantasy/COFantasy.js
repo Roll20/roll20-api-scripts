@@ -1581,7 +1581,7 @@ var COFantasy = COFantasy || function() {
               if (distanceCombat(tokenCentre, actif.token, pageId, {
                   strict1: true
                 }) > portee) {
-                sendChar(actif.charId, "Le centre de l'effet est placé trop loin (portée " + portee + ")");
+                sendChar(actif.charId, "Le centre de l'effet est placé trop loin (portée " + portee + " m)");
                 return;
               }
             }
@@ -3085,6 +3085,28 @@ var COFantasy = COFantasy || function() {
       evt.deletedAttributes.push(attr);
     }
     attr.remove();
+  }
+
+  function removeAllAttributes(name, evt, attrs) {
+    if (attrs === undefined) {
+      attrs = findObjs({
+        _type: 'attribute'
+      });
+    }
+    var attrsNamed = allAttributesNamed(attrs, name);
+    if (attrsNamed.length === 0) return attrs;
+    if (evt.deletedAttributes === undefined) evt.deletedAttributes = [];
+    attrsNamed.forEach(function(attr) {
+      evt.deletedAttributes.push(attr);
+      attr.remove();
+    });
+    attrs = attrs.filter(function(attr) {
+      var ind = attrsNamed.findIndex(function(nattr) {
+        return nattr.id == attr.id;
+      });
+      return (ind == -1);
+    });
+    return attrs;
   }
 
   function initiative(selected, evt, recompute) { //set initiative for selected tokens
@@ -6233,6 +6255,7 @@ var COFantasy = COFantasy || function() {
     }); //Fin de la boucle pour toutes cibles
   }
 
+  //Affichage final d'une attaque
   function finaliseDisplay(display, explications, evt) {
     explications.forEach(function(expl) {
       addLineToFramedDisplay(display, expl, 80);
@@ -6257,6 +6280,8 @@ var COFantasy = COFantasy || function() {
                 "Rune de puissance", evt.personnage));
           }
         }
+        var sort = false;
+        if (evt.action.options && evt.action.options.sortilege) sort = true;
         if (evt.action.cibles) {
           evt.action.cibles.forEach(function(target) {
             if (attributeAsBool(target, 'encaisserUnCoup')) {
@@ -6264,6 +6289,21 @@ var COFantasy = COFantasy || function() {
                 bouton("!cof-encaisser-un-coup " + evt.id,
                   "encaisser le coup", target)
               );
+            }
+            if (sort) {
+              if (attributeAsBool(target, 'absorberUnSort')) {
+                addLineToFramedDisplay(display, target.tokName + " peut " +
+                  bouton("!cof-absorber-au-bouclier " + evt.id,
+                    "absorber le sort", target)
+                );
+              }
+            } else {
+              if (attributeAsBool(target, 'absorberUnCoup')) {
+                addLineToFramedDisplay(display, target.tokName + " peut " +
+                  bouton("!cof-absorber-au-bouclier " + evt.id,
+                    "absorber le coup", target)
+                );
+              }
             }
           });
         }
@@ -7309,28 +7349,6 @@ var COFantasy = COFantasy || function() {
     });
   }
 
-  function removeAllAttributes(name, evt, attrs) {
-    if (attrs === undefined) {
-      attrs = findObjs({
-        _type: 'attribute'
-      });
-    }
-    var attrsNamed = allAttributesNamed(attrs, name);
-    if (attrsNamed.length === 0) return attrs;
-    if (evt.deletedAttributes === undefined) evt.deletedAttributes = [];
-    attrsNamed.forEach(function(attr) {
-      evt.deletedAttributes.push(attr);
-      attr.remove();
-    });
-    attrs = attrs.filter(function(attr) {
-      var ind = attrsNamed.findIndex(function(nattr) {
-        return nattr.id == attr.id;
-      });
-      return (ind == -1);
-    });
-    return attrs;
-  }
-
   //Met tous les attributs avec le nom au max
   function resetAttr(attrs, attrName, evt, msg) {
     allAttributesNamed(attrs, attrName).forEach(function(att) {
@@ -7910,6 +7928,10 @@ var COFantasy = COFantasy || function() {
     attrs = removeAllAttributes('limiteParJour', evt, attrs);
     attrs = removeAllAttributes('tueurFantasmagorique', evt, attrs);
     attrs = removeAllAttributes('resisteInjonction', evt, attrs);
+    //Les élixirs
+    var attrsElixirsACreer = attrs.filter(function(a) {
+      return a.get('name').startsWith('elixirsACreer');
+    });
     attrs = removeAllAttributes('elixirsACreer', evt, attrs);
     attrs = removeAllAttributes('elixir', evt, attrs);
     //On pourrait diviser par 2 le nombre de baies
@@ -9830,13 +9852,6 @@ var COFantasy = COFantasy || function() {
     return male;
   }
 
-  function removeAttr(selected, attribute, evt, msg) {
-    if (selected === undefined || selected.length === 0) return [];
-    iterSelected(selected, function(perso) {
-      removeTokenAttr(perso, attribute, evt, msg);
-    });
-  }
-
   function armureMagique(msg) {
     msg.content += " armureMagique";
     effetCombat(msg);
@@ -9861,8 +9876,12 @@ var COFantasy = COFantasy || function() {
       type: 'other'
     };
     getSelected(msg, function(selected) {
+      if (selected === undefined || selected.length === 0) {
+        sendPlayer(msg, "Pas de token sélectionné pour !cof--buf-def");
+      }
       iterSelected(selected, function(perso) {
         setTokenAttr(perso, 'bufDEF', buf, evt, message);
+        setToken(perso.token, 'status_blue', buf, evt);
       });
       if (evt.attributes.length === 0) {
         error("Pas de cible valide sélectionnée pour !cod-buf-def", msg);
@@ -9877,11 +9896,13 @@ var COFantasy = COFantasy || function() {
       type: 'other'
     };
     getSelected(msg, function(selected) {
-      removeAttr(selected, 'bufDEF', evt, "retrouve sa défense normale");
-      if (evt.deletedAttributes.length === 0) {
-        error("Pas de cible valide sélectionnée pour !cod-remove-buf-def", msg);
-        return;
+      if (selected === undefined || selected.length === 0) {
+        sendPlayer(msg, "Pas de token sélectionné pour !cof-remove-buf-def");
       }
+      iterSelected(selected, function(perso) {
+        removeTokenAttr(perso, 'bufDEF', evt, "retrouve sa défense normale");
+        setToken(perso.token, 'status_blue', false, evt);
+      });
       addEvent(evt);
     });
   }
@@ -9923,6 +9944,18 @@ var COFantasy = COFantasy || function() {
     }
     if (attributeAsBool(personnage, 'putrefactionOutrTombe')) {
       bonus -= 2;
+    }
+    var fortifie = attributeAsInt(personnage, 'fortifie', 0);
+    if (fortifie > 0) {
+      bonus += 3;
+      if (evt) {
+        fortifie--;
+        if (fortifie === 0) {
+          removeTokenAttr(personnage, 'fortifie', evt);
+        } else {
+          setTokenAttr(personnage, 'fortifie', fortifie, evt);
+        }
+      }
     }
     switch (carac) {
       case 'DEX':
@@ -10237,7 +10270,7 @@ var COFantasy = COFantasy || function() {
     }
     getSelected(msg, function(selected, playerId) {
       if (selected === undefined || selected.length === 0) {
-        error("pas de cible pour les dégâts", msg);
+        sendPlayer(msg, "pas de cible trouvée, action annulée");
         return;
       }
       var evt = {
@@ -13592,21 +13625,31 @@ var COFantasy = COFantasy || function() {
 
   // asynchrone : on fait les jets du guerrier en opposition
   function absorberAuBouclier(msg) {
-    getSelected(msg, function(selected) {
+    var options = parseOptions(msg);
+    if (options === undefined) return;
+    var cmd = options.cmd;
+    var evtARefaire = lastEvent();
+    if (cmd !== undefined && cmd.length > 1) { //On relance pour un événement particulier
+      evtARefaire = findEvent(cmd[1]);
+      if (evtARefaire === undefined) {
+        error("L'action est trop ancienne ou a été annulée", cmd);
+        return;
+      }
+    }
+    getSelected(msg, function(selected, playerId) {
       if (selected.length === 0) {
         error("Personne n'est sélectionné pour absorber", msg);
         return;
       }
-      var lastAct = lastEvent();
-      if (lastAct === undefined) {
+      if (evtARefaire === undefined) {
         sendChat('', "Historique d'actions vide, pas d'action trouvée pour absorber un coup ou un sort");
         return;
       }
-      if (lastAct.type != 'Attaque' || lastAct.succes === false) {
+      if (evtARefaire.type != 'Attaque' || evtARefaire.succes === false) {
         sendChat('', "la dernière action n'est pas une attaque réussie, trop tard pour absorber l'attaque précédente");
         return;
       }
-      var attaque = lastAct.action;
+      var attaque = evtARefaire.action;
       var options = attaque.options;
       options.rollsAttack = attaque.rollsAttack;
       var evt = {
@@ -13625,6 +13668,10 @@ var COFantasy = COFantasy || function() {
       var toProceed;
       var count = selected.length;
       iterSelected(selected, function(guerrier) {
+        if (!peutController(msg, guerrier)) {
+          sendPlayer(msg, "pas le droit d'utiliser ce bouton");
+          return;
+        }
         if (ficheAttributeAsInt(guerrier, 'DEFBOUCLIERON', 1) != 1) {
           sendChar(guerrier.charId, "ne porte pas son bouclier, il ne peut pas " + evt.type);
           count--;
@@ -14938,6 +14985,201 @@ var COFantasy = COFantasy || function() {
     addEvent(evt);
   }
 
+  function armeDeContact(perso, arme, labelArmeDefaut, armeContact) {
+    if (arme) return arme;
+    var labelArme = tokenAttribute(perso, 'armeEnMain');
+    if (labelArme.length > 0) {
+      labelArme = labelArme[0].get('current');
+      arme = getWeaponStats(perso, labelArme);
+    }
+    if (arme === undefined && labelArmeDefaut)
+      arme = getWeaponStats(perso, labelArmeDefaut);
+    //L'arme doit être une arme de contact ?
+    if (armeContact && arme && arme.portee) {
+      sendChar(perso.charId, armeContact + " " + arme.name + " est une arme à distance.");
+      return;
+    }
+    if (arme) {
+      return arme;
+    }
+    arme = {
+      name: 'Attaque par défaut',
+      attSkillDiv: 0,
+      attSkill: getAttrByName(perso.charId, "ATKCAC"),
+      crit: 20,
+      parDefaut: true,
+    };
+    return arme;
+  }
+
+  function attaqueContactOpposee(playerId, attaquant, defenseur, evt, options, callback) {
+    var explications = [];
+    options = options || {};
+    options.contact = true;
+    attaquant.tokName = attaquant.tokName || attaquant.token.get('name');
+    defenseur.tokName = defenseur.tokName || defenseur.token.get('name');
+    if (attaquant.name === undefined) {
+      var charAttaquant = getObj('character', attaquant.charId);
+      if (charAttaquant === undefined) {
+        error("Attaquant sans personnage", attaquant);
+        return;
+      }
+      attaquant.name = charAttaquant.get('name');
+    }
+    if (defenseur.name === undefined) {
+      var charDefenseur = getObj('character', defenseur.charId);
+      if (charDefenseur === undefined) {
+        error("Défenseur sans personnage", defenseur);
+        return;
+      }
+      defenseur.name = charDefenseur.get('name');
+    }
+    entrerEnCombat(attaquant, [defenseur], explications, options, evt);
+    //Recherche des armes utilisées
+    var armeAttaquant = armeDeContact(attaquant, options.armeAttaquant, options.labelArmeAttaquant, options.armeAttaquantContact);
+    var armeDefenseur = armeDeContact(defenseur, options.armeDefenseur, options.labelArmeDefenseur, options.armeDefenseurContact);
+    var action = options.action || "<b>Attaque opposée</b>";
+    if (!armeAttaquant.parDefaut) {
+      action += " <span style='" + BS_LABEL + " " + BS_LABEL_INFO + "; text-transform: none; font-size: 100%;'>(" + armeAttaquant.name + ")</span>";
+    }
+    var display = startFramedDisplay(playerId, action, attaquant, {
+      perso2: defenseur
+    });
+    var critAttaquant = critEnAttaque(attaquant, armeAttaquant, options);
+    var dice = 20;
+    if (estAffaibli(attaquant)) {
+      dice = 12;
+      explications.push("Attaquant affaibli => D12 au lieu de D20 en Attaque");
+    } else if (getState(attaquant, 'immobilise')) {
+      dice = 12;
+      explications.push("Attaquant immobilisé => D12 au lieu de D20 en Attaque");
+    }
+    var toEvaluateAttack = attackExpression(attaquant, 1, dice, critAttaquant, armeAttaquant);
+    sendChat('', toEvaluateAttack, function(resAttack) {
+      var rollsAttack = options.rollsAttack || resAttack[0];
+      var afterEvaluateAttack = rollsAttack.content.split(' ');
+      var attRollNumber = rollNumber(afterEvaluateAttack[0]);
+      var attSkillNumber = rollNumber(afterEvaluateAttack[1]);
+      var d20rollAttaquant = rollsAttack.inlinerolls[attRollNumber].results.total;
+      var attSkill = rollsAttack.inlinerolls[attSkillNumber].results.total;
+      var attBonus =
+        bonusAttaqueA(attaquant, armeAttaquant.name, evt, explications, options);
+      var pageId = options.pageId || attaquant.token.get('pageid');
+      attBonus +=
+        bonusAttaqueD(attaquant, defenseur, 0, pageId, evt, explications, options);
+      var attackRollAttaquant = d20rollAttaquant + attSkill + attBonus;
+      var attRollValue = buildinline(rollsAttack.inlinerolls[attRollNumber]);
+      attRollValue += (attSkill > 0) ? "+" + attSkill : (attSkill < 0) ? attSkill : "";
+      attRollValue += (attBonus > 0) ? "+" + attBonus : (attBonus < 0) ? attBonus : "";
+      if (options.bonusAttaqueAttaquant) {
+        options.bonusAttaqueAttaquant.forEach(function(bad) {
+          attRollValue += (bad.val > 0) ? "+" + bad.val : (bad.val < 0) ? bad.val : "";
+          attackRollAttaquant += bad.val;
+          if (bad.explication) explications.push(bad.explication);
+        });
+      }
+      addLineToFramedDisplay(display, "Jet de " + attaquant.tokName + " : " + attRollValue);
+      var critDefenseur = critEnAttaque(defenseur, armeDefenseur, options);
+      var dice = 20;
+      if (estAffaibli(defenseur)) {
+        dice = 12;
+        explications.push("Défenseur affaibli => D12 au lieu de D20 en Attaque");
+      } else if (getState(defenseur, 'immobilise')) {
+        dice = 12;
+        explications.push("Défenseur immobilisé => D12 au lieu de D20 en Attaque");
+      }
+      toEvaluateAttack = attackExpression(defenseur, 1, dice, critDefenseur, armeDefenseur);
+      sendChat('', toEvaluateAttack, function(resAttack) {
+        rollsAttack = options.rollsAttack || resAttack[0];
+        afterEvaluateAttack = rollsAttack.content.split(' ');
+        attRollNumber = rollNumber(afterEvaluateAttack[0]);
+        attSkillNumber = rollNumber(afterEvaluateAttack[1]);
+        var d20rollDefenseur = rollsAttack.inlinerolls[attRollNumber].results.total;
+        var attSkill = rollsAttack.inlinerolls[attSkillNumber].results.total;
+        attBonus =
+          bonusAttaqueA(defenseur, armeDefenseur.name, evt, explications, options);
+        attBonus +=
+          bonusAttaqueD(defenseur, attaquant, 0, pageId, evt, explications, options);
+        var attackRollDefenseur = d20rollDefenseur + attSkill + attBonus;
+        attRollValue = buildinline(rollsAttack.inlinerolls[attRollNumber]);
+        attRollValue += (attSkill > 0) ? "+" + attSkill : (attSkill < 0) ? attSkill : "";
+        attRollValue += (attBonus > 0) ? "+" + attBonus : (attBonus < 0) ? attBonus : "";
+        if (options.bonusAttaqueDefenseur) {
+          options.bonusAttaqueDefenseur.forEach(function(bad) {
+            attRollValue += (bad.val > 0) ? "+" + bad.val : (bad.val < 0) ? bad.val : "";
+            attackRollDefenseur += bad.val;
+            if (bad.explication) explications.push(bad.explication);
+          });
+        }
+        addLineToFramedDisplay(display, "Jet de " + defenseur.tokName + " : " + attRollValue);
+        var resultat = {
+          rollAttaquant: attackRollAttaquant,
+          rollDefenseur: attackRollDefenseur,
+        };
+        if (d20rollAttaquant == 1 && d20rollDefenseur > 1) {
+          resultat.echec = true;
+          resultat.echecCRitique = true;
+          diminueMalediction(attaquant, evt);
+        } else if (d20rollDefenseur == 1 & d20rollAttaquant > 1) {
+          resultat.succes = true;
+          resultat.echecCritiqueDefenseur = true;
+          diminueMalediction(defenseur, evt);
+        } else if (d20rollAttaquant >= critAttaquant && d20rollDefenseur < critDefenseur) {
+          resultat.succes = true;
+          resultat.critique = true;
+          diminueMalediction(defenseur, evt);
+        } else if (d20rollAttaquant < critAttaquant && d20rollDefenseur >= critDefenseur) {
+          resultat.succes = false;
+          resultat.critiqueDefenseur = true;
+          diminueMalediction(attaquant, evt);
+        } else if (attackRollAttaquant < attackRollDefenseur) {
+          resultat.echec = true;
+          diminueMalediction(attaquant, evt);
+        } else {
+          resultat.succes = true;
+          diminueMalediction(defenseur, evt);
+        }
+        callback(resultat, display, explications); //evt est mis à jour
+      }); //fin du sendchat pour jet du défenseur
+    }); //Fin du sendChat pour jet de l'attaquant
+  }
+
+  function testAttaqueOpposee(msg) {
+    var cmd = msg.content.split(' ');
+    if (cmd.length < 3) {
+      error("Il faut 2 personnages pour un test d'attaque en opposition", cmd);
+      return;
+    }
+    var attaquant = tokenOfId(cmd[1], cmd[1]);
+    var defenseur = tokenOfId(cmd[2], cmd[2]);
+    if (attaquant === undefined) {
+      error("Le premier argument de !cof-test-attaque-opposee doit être un token valide", cmd[1]);
+      return;
+    }
+    if (defenseur === undefined) {
+      error("Le deuxième argument de !cof-test-attaque-opposee doit être un token valide", cmd[2]);
+      return;
+    }
+    var evt = {
+      type: "Test d'attaque opposée"
+    };
+    var options = {};
+    if (cmd.length > 3) options.labelArmeAttaquant = cmd[3];
+    var playerId = getPlayerIdFromMsg(msg);
+    attaqueContactOpposee(playerId, attaquant, defenseur, evt, options,
+      function(res, display, explications) {
+        if (res.succes)
+          addLineToFramedDisplay(display, attaquant.token.get('name') + " remporte le test");
+        else
+          addLineToFramedDisplay(display, defenseur.token.get('name') + " remporte le test");
+        explications.forEach(function(expl) {
+          addLineToFramedDisplay(display, expl, 80);
+        });
+        sendChat("", endFramedDisplay(display));
+        addEvent(evt);
+      });
+  }
+
   //!cof-desarmer attaquant cible, optionellement un label d'arme
   function desarmer(msg) {
     var cmd = msg.content.split(' ');
@@ -14951,175 +15193,73 @@ var COFantasy = COFantasy || function() {
       return;
     }
     guerrier.tokName = guerrier.token.get('name');
-    var charGuerrier = getObj('character', guerrier.charId);
-    if (charGuerrier === undefined) {
-      error("Impossible de trouver la fiche de " + guerrier.tokName, guerrier);
-      return;
-    }
-    guerrier.name = charGuerrier.get('name');
     var cible = tokenOfId(cmd[2], cmd[2]);
     if (cible === undefined) {
       error("Le deuxième argument de !cof-desarmer n'est pas un token valide", cmd);
       return;
     }
     cible.tokName = cible.token.get('name');
-    var charCible = getObj('character', cible.charId);
-    if (charCible === undefined) {
-      error("Impossible de trouver la fiche de " + cible.tokName, cible);
-      return;
-    }
-    cible.name = charCible.get('name');
     var pageId = guerrier.token.get('pageid');
     if (distanceCombat(guerrier.token, cible.token, pageId)) {
       sendChar(guerrier.charId, "est trop loin de " + cible.tokName + " pour le désarmer.");
       return;
     }
+    var options = {
+      action: "<b>Désarmement</b>",
+      armeContact: "doit porter une arme de contact pour désarmer son adversaire.",
+      armeDefenseur: armeCible,
+      pageId: pageId,
+    };
+    //On cherche l'arme de la cible. On en aura besoin pour désarmer
+    var armeCible;
+    var attrArmeCible = tokenAttribute(cible, 'armeEnMain');
+    if (attrArmeCible.length > 0) {
+      attrArmeCible = attrArmeCible[0];
+      armeCible = getWeaponStats(cible, attrArmeCible.get('current'));
+      if (armeCible) {
+        options.armeDefenseur = armeCible;
+        if (armeCible.deuxMains) {
+          options.bonusAttaqueDefenseur = [{
+            val: 5,
+            explication: cible.tokName + " porte une arme à 2 mains => +5 à son jet"
+          }];
+        }
+      }
+    } else attrArmeCible = undefined;
+    var enleverArmeCible = function() {
+      if (attrArmeCible) {
+        evt.deletedAttributes = evt.deletedAttributes || [];
+        evt.deletedAttributes.push(attrArmeCible);
+        attrArmeCible.remove();
+      }
+    };
     var evt = {
       type: 'Désarmer'
     };
-    var explications = [];
-    var options = {
-      contact: true
-    };
-    entrerEnCombat(guerrier, [cible], explications, options, evt);
-    //D'abord on cherche si le guerrier a une arme tenue en main
-    var armeGuerrier;
-    var labelArmeGuerrier = tokenAttribute(guerrier, 'armeEnMain');
-    if (labelArmeGuerrier.length > 0) {
-      labelArmeGuerrier = labelArmeGuerrier[0].get('current');
-      armeGuerrier = getWeaponStats(guerrier, labelArmeGuerrier);
-    }
-    //sinon, on regarde si on a en argument un label d'arme
-    if (armeGuerrier === undefined && cmd.length > 3)
-      armeGuerrier = getWeaponStats(guerrier, cmd[3]);
-    //L'arme doit être une arme de contact
-    if (armeGuerrier && armeGuerrier.portee) {
-      sendChar(guerrier.charId, "doit porter une arme de contact pour désarmer son adversaire. " + armeGuerrier.name + " est une arme à distance");
-      return;
-    }
-    var action = "<b>Désarmement</b>";
-    if (armeGuerrier) {
-      action += " <span style='" + BS_LABEL + " " + BS_LABEL_INFO + "; text-transform: none; font-size: 100%;'>(" + armeGuerrier.name + ")</span>";
-    } else {
-      armeGuerrier = {
-        name: 'Attaque par défaut',
-        attSkillDiv: 0,
-        attSkill: getAttrByName(guerrier.charId, "ATKCAC"),
-        crit: 20
-      };
-    }
-    var display = startFramedDisplay(getPlayerIdFromMsg(msg), action, guerrier, {
-      perso2: cible
-    });
-    var critGuerrier = critEnAttaque(guerrier, armeGuerrier, options);
-    var dice = 20;
-    if (estAffaibli(guerrier)) {
-      dice = 12;
-      explications.push("Attaquant affaibli => D12 au lieu de D20 en Attaque");
-    } else if (getState(guerrier, 'immobilise')) {
-      dice = 12;
-      explications.push("Attaquant immobilisé => D12 au lieu de D20 en Attaque");
-    }
-    var toEvaluateAttack = attackExpression(guerrier, 1, dice, critGuerrier, armeGuerrier);
-    sendChat('', toEvaluateAttack, function(resAttack) {
-      var rollsAttack = options.rollsAttack || resAttack[0];
-      var afterEvaluateAttack = rollsAttack.content.split(' ');
-      var attRollNumber = rollNumber(afterEvaluateAttack[0]);
-      var attSkillNumber = rollNumber(afterEvaluateAttack[1]);
-      var d20rollGuerrier = rollsAttack.inlinerolls[attRollNumber].results.total;
-      var attSkill = rollsAttack.inlinerolls[attSkillNumber].results.total;
-      var attBonus =
-        bonusAttaqueA(guerrier, armeGuerrier.name, evt, explications, options);
-      attBonus +=
-        bonusAttaqueD(guerrier, cible, 0, pageId, evt, explications, options);
-      var attackRollGuerrier = d20rollGuerrier + attSkill + attBonus;
-      var attRollValue = buildinline(rollsAttack.inlinerolls[attRollNumber]);
-      if (attSkill > 0) attRollValue += "+" + attSkill;
-      else if (attSkill < 0) attRollValue += attSkill;
-      if (attBonus > 0) attRollValue += "+" + attBonus;
-      else if (attBonus < 0) attRollValue += attBonus;
-      addLineToFramedDisplay(display, "Jet de " + guerrier.tokName + " : " + attRollValue);
-      //Maintenant, on cherche l'arme de la cible
-      var armeCible;
-      var attrArmeCible = tokenAttribute(cible, 'armeEnMain');
-      if (attrArmeCible.length > 0) {
-        attrArmeCible = attrArmeCible[0];
-        armeCible = getWeaponStats(cible, attrArmeCible.get('current'));
-      } else attrArmeCible = undefined;
-      var enleverArmeCible = function() {
-        if (attrArmeCible) {
-          evt.deletedAttributes = evt.deletedAttributes || [];
-          evt.deletedAttributes.push(attrArmeCible);
-          attrArmeCible.remove();
-        }
-      };
-      if (armeCible === undefined) {
-        armeCible = {
-          name: 'Attaque par défaut',
-          attSkillDiv: 0,
-          attSkill: getAttrByName(cible.charId, "ATKCAC"),
-          crit: 20
-        };
-      }
-      var critCible = critEnAttaque(cible, armeCible, options);
-      var dice = 20;
-      if (estAffaibli(cible)) {
-        dice = 12;
-        explications.push("Défenseur affaibli => D12 au lieu de D20 en Attaque");
-      } else if (getState(cible, 'immobilise')) {
-        dice = 12;
-        explications.push("Défenseur immobilisé => D12 au lieu de D20 en Attaque");
-      }
-      toEvaluateAttack = attackExpression(cible, 1, dice, critCible, armeCible);
-      sendChat('', toEvaluateAttack, function(resAttack) {
-        rollsAttack = options.rollsAttack || resAttack[0];
-        afterEvaluateAttack = rollsAttack.content.split(' ');
-        attRollNumber = rollNumber(afterEvaluateAttack[0]);
-        attSkillNumber = rollNumber(afterEvaluateAttack[1]);
-        var d20rollCible = rollsAttack.inlinerolls[attRollNumber].results.total;
-        var attSkill = rollsAttack.inlinerolls[attSkillNumber].results.total;
-        attBonus =
-          bonusAttaqueA(cible, armeCible.name, evt, explications, options);
-        attBonus +=
-          bonusAttaqueD(cible, guerrier, 0, pageId, evt, explications, options);
-        var attackRollCible = d20rollCible + attSkill + attBonus;
-        attRollValue = buildinline(rollsAttack.inlinerolls[attRollNumber]);
-        if (attSkill > 0) attRollValue += "+" + attSkill;
-        else if (attSkill < 0) attRollValue += attSkill;
-        if (attBonus > 0) attRollValue += "+" + attBonus;
-        else if (attBonus < 0) attRollValue += attBonus;
-        if (armeCible.deuxMains) {
-          attRollValue += " +5";
-          attackRollCible += 5;
-          explications.push(cible.tokName + " porte une arme à 2 mains => +5 à son jet");
-        }
-        addLineToFramedDisplay(display, "Jet de " + cible.tokName + " : " + attRollValue);
+    if (cmd.length > 3) options.labelArmeAttaquant = cmd[3];
+    var playerId = getPlayerIdFromMsg(msg);
+    attaqueContactOpposee(playerId, guerrier, cible, evt, options,
+      function(res, display, explications) {
         var resultat;
-        if (d20rollGuerrier == 1 && d20rollCible > 1) {
+        if (res.echecCritique && !res.echecCritiqueDefenseur) {
           resultat = "<span style='" + BS_LABEL + " " + BS_LABEL_DANGER + "'><b>échec&nbsp;critique</b></span>";
-          diminueMalediction(guerrier, evt);
-        } else if (d20rollCible == 1 & d20rollGuerrier > 1) {
+        } else if (res.echecCritiqueDefenseur && !res.echecCritique) {
           resultat = "<span style='" + BS_LABEL + " " + BS_LABEL_SUCCESS + "'><b>succès</b></span>, " + cible.tokName + " laisse tomber son arme, difficile de la récupérer...";
-          diminueMalediction(cible, evt);
           enleverArmeCible();
-        } else if (d20rollGuerrier >= critGuerrier && d20rollCible < critCible) {
+        } else if (res.critique && !res.critiqueDefenseur) {
           resultat = "<span style='" + BS_LABEL + " " + BS_LABEL_SUCCESS + "'><b>réussite critique</b></span> : " + cible.tokName + " est désarmé, et " + guerrier.tokName + " empêche de reprendre l'arme";
-          diminueMalediction(cible, evt);
           enleverArmeCible();
-        } else if (d20rollGuerrier < critGuerrier && d20rollCible >= critCible) {
+        } else if (res.critiqueDefenseur && !res.critique) {
           resultat = "<span style='" + BS_LABEL + " " + BS_LABEL_WARNING + "'><b>échec</b></span>, " + cible.tokName + " garde son arme bien en main";
-          diminueMalediction(guerrier, evt);
-        } else if (attackRollGuerrier < attackRollCible) {
+        } else if (res.echec) {
           resultat = "<span style='" + BS_LABEL + " " + BS_LABEL_WARNING + "'><b>échec</b></span>, " + guerrier.tokName + " n'a pas réussi à désarmer son adversaire";
-          diminueMalediction(guerrier, evt);
-        } else if (attackRollGuerrier > attackRollCible + 9) {
-          resultat = "<span style='" + BS_LABEL + " " + BS_LABEL_SUCCESS + "'><b>succès</b></span>, " + guerrier.tokName + " désarme son adversaire et l'empêche de récupérer son arme";
-          diminueMalediction(cible, evt);
+        } else { //succès
           enleverArmeCible();
-        } else {
-          resultat = "<span style='" + BS_LABEL + " " + BS_LABEL_SUCCESS + "'><b>succès</b></span>, " + guerrier.tokName + " désarme son adversaire.";
-          diminueMalediction(cible, evt);
-          enleverArmeCible();
+          if (res.rollAttaquant > res.rollDefenseur + 9) {
+            resultat = "<span style='" + BS_LABEL + " " + BS_LABEL_SUCCESS + "'><b>succès</b></span>, " + guerrier.tokName + " désarme son adversaire et l'empêche de récupérer son arme";
+          } else {
+            resultat = "<span style='" + BS_LABEL + " " + BS_LABEL_SUCCESS + "'><b>succès</b></span>, " + guerrier.tokName + " désarme son adversaire.";
+          }
         }
         addLineToFramedDisplay(display, resultat);
         explications.forEach(function(expl) {
@@ -15127,8 +15267,7 @@ var COFantasy = COFantasy || function() {
         });
         sendChat("", endFramedDisplay(display));
         addEvent(evt);
-      }); //fin du sendchat pour jet de la cible
-    }); //Fin du sendChat pour jet du guerrier
+      });
   }
 
   function sendCommands(from, commands) {
@@ -15672,6 +15811,11 @@ var COFantasy = COFantasy || function() {
     action: "!cof-jet",
     visibleto: 'all',
     istokenaction: true,
+  }, {
+    name: 'Jets GM',
+    action: "!cof-jet --secret",
+    visibleto: '',
+    istokenaction: false,
     inBar: true
   }, {
     name: 'Nuit',
@@ -15731,10 +15875,14 @@ var COFantasy = COFantasy || function() {
     var playerId = msg.playerid;
     var force = playerIsGM(playerId) && msg.content.includes('--force');
     var inBar = [];
-    var allMacros = findObjs({_type:'macro'});
+    var allMacros = findObjs({
+      _type: 'macro'
+    });
     gameMacros.forEach(function(m) {
-      var prev = 
-        allMacros.find(function(macro){ return macro.get('name') == m.name;});
+      var prev =
+        allMacros.find(function(macro) {
+          return macro.get('name') == m.name;
+        });
       if (prev === undefined) {
         m.playerid = playerId;
         createObj('macro', m);
@@ -16025,11 +16173,15 @@ var COFantasy = COFantasy || function() {
         type: "Allumer une torche"
       };
       ajouteUneLumiere(perso, 'torche', 13, 7, evt);
-      var msgAllume = "allume une torche, qui peut encore éclairer pendant " + tempsTorche + " minutes.";
+      var msgAllume =
+        "allume une torche, qui peut encore éclairer pendant " + tempsTorche +
+        " minute";
+      if (tempsTorche > 1) msgAllume += 's';
+      msgAllume += '.';
       if (nbTorches > 1) {
         msgAllume += " Il lui reste encore " + (nbTorches - 1);
-        if (nbTorches == 2) msgAllume += " autre torche";
-        else msgAllume += " autres torches";
+        if (nbTorches == 2) msgAllume += " autre torche.";
+        else msgAllume += " autres torches.";
       }
       whisperChar(perso.charId, msgAllume);
       addEvent(evt);
@@ -16323,6 +16475,9 @@ var COFantasy = COFantasy || function() {
         return;
       case "!cof-delivrance":
         delivrance(msg);
+        return;
+      case "!cof-test-attaque-opposee":
+        testAttaqueOpposee(msg);
         return;
       case "!cof-desarmer":
         desarmer(msg);

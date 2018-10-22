@@ -386,7 +386,8 @@
               </div>
               <h4 class="text-secondary">Manoeuvres</h4>
               <div class="decalage">
-                <p><code>!cof-action-defensive</code> avec comme argument soit <code>simple</code>, soit <code>totale</code> donne le bonus en défense de l'action défensive (p 71). Cette action est disponible par défaut si le personnage a une ability <code>#Actions</code>. Alternativement, si vous n'utilisez pas cette méthode, vous pouvez créer une macro accessible à tous les tokens, <code>!cof-action-defensive ?{Action défensive|simple|totale}</code>.</p>
+                <p><code>!cof-action-defensive</code> avec comme argument soit <code>simple</code>, soit <code>totale</code> donne le bonus en défense de l'action défensive (p 71). Cette action est disponible par défaut si le personnage a une ability <code>#Actions#</code>. Alternativement, si vous n'utilisez pas cette méthode, vous pouvez créer une macro accessible à tous les tokens, <code>!cof-action-defensive ?{Action défensive|simple|totale}</code>.</p>
+                <p>Pour les autres manoeuvres, il est possible de faire un test d'attaque opposée avec la commande <code>!cof-test-attaque-opposee @{selected|token_id} @{target|token_id}</code>. Les effets des manoeuvres ne sont pas encore implémentés, mais c'est prévu.<p>
               </div>
               <h4 class="text-secondary">Recharger des armes : <code>!cof-recharger <i>N</i></code></h4>
               <div class="decalage">
@@ -922,14 +923,14 @@
                     <strong>Absorber un coup</strong> :
                     <ul>
                       <li>utiliser <code>!cof-effet-temp absorberUnCoup 1</code> pour se mettre en position. Attention, ça ne vérifie pas si le guerrier porte son bouclier.</li>
-                      <li>juste après l'attaque que l'on veut absorber, utiliser <code>!cof-absorber-au-bouclier</code></li>
+                      <li>normalement, le script propose un bouton à activer en cas d'attaque réussie alors que le guerrier est en position, mais en cas de besoin, vous pouvez utiliser <code>!cof-absorber-au-bouclier</code> pour absorber un coup.</li>
                     </ul>
                   </li>
                   <li>
                     <strong>Absorber un sort</strong> :
                     <ul>
                       <li>utiliser <code>!cof-effet-temp absorberUnSort 1</code> pour se mettre en position. Attention, ça ne vérifie pas si le guerrier porte son bouclier.</li>
-                      <li>juste après l'attaque que l'on veut absorber, utiliser <code>!cof-absorber-au-bouclier</code></li>
+                      <li>normalement, le script propose un bouton à activer en cas d'attaque réussie alors que le guerrier est en position, mais en cas de besoin, vous pouvez utiliser <code>!cof-absorber-au-bouclier</code> pour absorber un sort.</li>
                     </ul>
                   </li>
                 </ol>
@@ -1267,7 +1268,7 @@
                 <h4 class="text-secondary">Voie de l'assassin</h4>
                 <ol>
                   <li><strong>Discrétion</strong> : on peut ajouter une compétence discrétion sur la fiche, avec le bon bonus. Pour l'utilisation de <code>!cof-jet</code>, ajouter un attribut <code>discrétion</code> avec la valeur du bonus total.</li>
-                  <li><strong>Attaque sournoise</strong> : Faire des versions des attaques avec <code>--sournoise <i>n</i></code>, où <i>n</i> est le rang dans la voie. Au MJ de vérifier que les conditions de l'attaque sournoise sont remplies. (Exemple de macro pour un voleur qui aurait une attaque <code>Dague</code> et une attaque <code>arbalète</code> : <code>?{Arme utilisée?|Dague,%{selected|Dague}|Arbalète,%{selected|Arbalète}} --sournoise 2</code>)</li>
+                  <li><strong>Attaque sournoise</strong> : Faire des versions des attaques avec <code>--sournoise <i>n</i></code>, où <i>n</i> est le rang dans la voie. Au MJ de vérifier que les conditions de l'attaque sournoise sont remplies. (Exemple de macro pour un voleur qui aurait une attaque <code>Dague</code> et une attaque <code>arbalète</code> : <code>?{Arme utilisée?|Dague,%{selected|Dague}|Arbalète,%{selected|Arbalète}} --sournoise 2</code>). Une alternative à cette macro est d'écrire une ability par arme (qui fait des actions comme <code>%{selected|Dague} --sournoise 2</code>) et de lister ces actions dans une ability nommée <code>#Attaque-sournoise#</code>, qui peut elle-même se trouver dans les <code>#Actions#</code>.</li>
                   <li><strong>Ombre mouvante</strong> : pas beaucoup de support. Faire <code>!cof-jet DEX 10</code> pour le jet de dextérité, le reste est géré par le MJ.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de l'aventurier</h4>
