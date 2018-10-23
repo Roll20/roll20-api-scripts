@@ -220,6 +220,10 @@ on('chat:message', function(msg) {
         let WRankB = attrLookup(defender, "repeating_weapons_$0_WRank", false) || "E";
         let fIDA = getAttrByName(attacker.id, 'fid')|| "";
         let fIDB = getAttrByName(defender.id, 'fid')|| "";
+        let WPSkillA = attrLookup(attacker, "repeating_weapons_$0_Skill_wp", false) || "";
+        let WPSkillB = attrLookup(attacker, "repeating_weapons_$0_Skill_wp", false) || "";
+        log("Weapon Skill is")
+        log(WPSkillA)
         log(fIDA);
         log(fIDB);
         let UsesA;
@@ -587,6 +591,11 @@ on('chat:message', function(msg) {
             }
         }
         log(SkillsA);
+        //append first weapon skill
+        if (WPSkillA != ""){
+            WPSkillA = JSON.parse(WPSkillA)
+            SkillsA.push(WPSkillA)
+        }
 
         for (var i in SkillsB){
             SkillsB[i] = SkillsB[i].get("action");
@@ -595,6 +604,11 @@ on('chat:message', function(msg) {
             }
         }
         log(SkillsB);
+        //append first weapon skill
+        if (WPSkillB != ""){
+            WPSkillB = JSON.parse(WPSkillB)
+            SkillsB.push(WPSkillB)
+        }
         //Skills system! :^)
         //stat initializations- technically, these do nothing in the main function because ~block scope~
         let user;
@@ -1465,6 +1479,10 @@ on('chat:message', function(msg) {
             log("Defender is dead!");
             BIsDead = true;
         }
+        if((typeof(UsesA) == "object") && (UsesA.get("current") == 0)){
+            Chatstr += '<p style = "margin-bottom: 0px;">' + AName +"'s weapon broke!</p>";
+            CanAttackA = false;
+        }
 
         if (CanAttackB == true){
             //Check if defender's attack hits
@@ -1559,6 +1577,10 @@ on('chat:message', function(msg) {
             CanAttackA = false;
             log("Attacker is dead!");
             AIsDead = true;
+        }
+        if((typeof(UsesB) == "object") && (UsesB.get("current") == 0)){
+            Chatstr += '<p style = "margin-bottom: 0px;">' + DName +"'s weapon broke!</p>";
+            CanAttackB = false;
         }
 
         //Attacker doubles; I don't think I should need to do usability checking for doubleattacking since it's checked within the battle calc
@@ -1811,6 +1833,11 @@ on('chat:message', function(msg) {
 
         if (HPB <= 0){
             CanAttackB = false;
+            BIsDead = true;
+        }
+        if((typeof(UsesA) == "object") && (UsesA.get("current") == 0)){
+            Chatstr += '<p style = "margin-bottom: 0px;">' + AName +"'s weapon broke!</p>";
+            CanAttackA = false;
         }
 
         //Defender doubles
@@ -3612,11 +3639,16 @@ on('chat:message', function(msg) {
             sendChat('SYSTEM', 'Both tokens must be linked to characters in the journal!');
             return;
         }
+        let WPSkillA = attrLookup(attacker, "repeating_weapons_$0_Skill_wp", false) || "";
         //grab all commands
         let SkillsA = findObjs({ characterid: attacker.id, type: "ability"});
         for (var i in SkillsA){
             SkillsA[i] = SkillsA[i].get("action");
             SkillsA[i] = JSON.parse(SkillsA[i]);
+        }
+        if (WPSkillA != ""){
+            WPSkillA = JSON.parse(WPSkillA)
+            SkillsA.push(WPSkillA)
         }
         let temp = []
         SkillsA.forEach(function(entry, i) {
@@ -3624,6 +3656,7 @@ on('chat:message', function(msg) {
                 temp.push(SkillsA[i])
             }
         });
+
         SkillsA = temp;
         let namestr = "";
         for (i in SkillsA){
@@ -3660,16 +3693,23 @@ on('chat:message', function(msg) {
         } else {
             who = 'character|' + who.id;
         }
-
+        let WPSkillA = JSON.parse(attrLookup(attacker, "repeating_weapons_$0_Skill_wp", false)) || "";
+        log(WPSkillA)
         let newSkill = findObjs({ characterid: attacker.id, type: "ability", name: skillName })[0];
         log(newSkill)
-        if (newSkill == [] || newSkill == undefined){
+        let selectedSkill;
+        if ((newSkill == [] || newSkill == undefined) && skillName != WPSkillA.name){
             sendChat("SYSTEM","Provided skill name does not exist! ")
             return;
         }
-        newSkill = newSkill.get("action")
-        let selectedSkill = JSON.parse(newSkill);
-        log(selectedSkill)
+        if (skillName = WPSkillA.name){
+            selectedSkill = WPSkillA;
+        } else {
+            newSkill = newSkill.get("action")
+            selectedSkill = JSON.parse(newSkill);
+            log(selectedSkill)
+        }
+
         //Skills system time!!
         let user;
         let RNGSklU;
@@ -3951,7 +3991,7 @@ on('chat:message', function(msg) {
                     for (var q in StattargetE){
                         if (StattargetmodE[q] > 0){
                             queue.push([StattargetE[q], "decrement", STCounterE[q], 0, "combat"])
-                            log([StattargetE[q], "decrement", STCounterE[q], 0])
+                            log([StattargetE[q], "decrement", STCounterE[q], 0, "combat"])
                             log("Pushed to queue!")
                         } else {
                             queue.push([StattargetE[q], "increment", STCounterE[q], 0, "combat"])
