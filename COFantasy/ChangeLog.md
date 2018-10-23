@@ -1,8 +1,10 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 
+
 ## 1.06
 ### Capacités
-* Ajout de la gestion des torches
+* Le fortifiant du forgefort affecte maintenant la commande !cof-jet
+* Absorber un coup ou un sort est maintenant disponible sur l'affichage des attaques qui portent sur un guerrier en position.
 * Prise en charge du sort de lumière du magicien
 * Rang 1 de la voie de la magie de guérison
 
@@ -12,6 +14,8 @@
 * Plus de message d'erreur dans le log quand on utilise un tableau au lieu d'un label pour une attaque
 
 ### Autres améliorations
+* Ajout d'une commande pour les tests d'attaque au contact opposée
+* Ajout de la gestion des torches
 * Ajout d'un effet au feu grégeois
 
 ## 1.05
