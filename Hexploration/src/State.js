@@ -38,6 +38,9 @@
    *           discovery will be announced in the chat.
    * @property {string} [nameId]
    *           The ID for the Path labelling the named hex on the GM layer.
+   * @property {number} [maxDistance]
+   *           The maximum distance a character can be away from the hex to
+   *           reveal it.
    */
 
   /**
@@ -160,6 +163,11 @@
 
   /**
    * Persists data about some hex.
+   * @param {Page} page
+   * @param {Path} hexPath
+   * @param {number} row
+   * @param {number} column
+   * @return {PageHex}
    */
   function persistHex(page, hexPath, row, column) {
     let myState = getState();
@@ -173,6 +181,8 @@
 
     myState.pageHexes[pageId][key] = { id };
     myState.hexIdMap[id] = [pageId, key];
+
+    return myState.pageHexes[pageId][key];
   }
 
   _.extend(Hexploration, {

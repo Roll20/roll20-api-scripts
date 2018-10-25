@@ -44,33 +44,36 @@
     .map(hex => {
       let [row, column] = hex;
 
-      // Skip if there's already a hex here.
-      if(Hexploration._state.hasPageHex(page, row, column))
-        return undefined;
+      // If there is already a hex here, remove the existing hex so that
+      // we can replace it.
+      let oldHex = Hexploration._state.getPageHex(page, row, column);
+      if(oldHex) {
+        let hexPath = getObj('path', oldHex.id);
+        Hexploration._state.deletePath(hexPath);
+        hexPath.remove();
+      }
 
       // Create the hex.
-      else {
-        let hexagon = tile.getHexagon(row, column);
-        let hexPath = hexagon.render(pageId, 'objects', {
-          fill: config.fillColor,
-          stroke: config.strokeColor,
-          stroke_width: config.strokeWidth
-        });
+      let hexagon = tile.getHexagon(row, column);
+      let hexPath = hexagon.render(pageId, 'objects', {
+        fill: config.fillColor,
+        stroke: config.strokeColor,
+        stroke_width: config.strokeWidth
+      });
 
-        Hexploration._state.persistHex(page, hexPath, row, column);
+      let persistedHex = Hexploration._state.persistHex(page, hexPath, row, column);
+      persistedHex.maxDistance = config.maxDistance;
 
-        // If there was a location marker at the hex's location, give the
-        // hex a name and remove the marker.
-        let location = locations[row + ',' + column];
-        if(location) {
-          let [name, marker] = location;
-          Hexploration._locations.setHexName(hexPath, name);
-          marker.remove();
-        }
-
-
-        return hexPath;
+      // If there was a location marker at the hex's location, give the
+      // hex a name and remove the marker.
+      let location = locations[row + ',' + column];
+      if(location) {
+        let [name, marker] = location;
+        Hexploration._locations.setHexName(hexPath, name);
+        marker.remove();
       }
+
+      return hexPath;
     })
     .compact()
     .value();
@@ -187,10 +190,15 @@
    * @param {Page} page
    * @param {int} row
    * @param {int} column
+   * @param {uint} [distance]
    */
-  function revealHex(page, row, column) {
+  function revealHex(page, row, column, distance=0) {
     let pageHex = Hexploration._state.getPageHex(page, row, column);
     if(pageHex) {
+      // Skip the hex if the distance is further than the max distance.
+      if(distance > pageHex.maxDistance)
+        return;
+
       let hexPath = getObj('path', pageHex.id);
       Hexploration._state.deletePath(hexPath);
       hexPath.remove();
@@ -211,14 +219,18 @@
     if(hexTile) {
       let x = obj.get('left');
       let y = obj.get('top');
-      let [row, column] = hexTile.getRowColumn(x, y);
+
+      // Always reveal the hex the token moved onto.
+      let tokenHex = hexTile.getRowColumn(x, y);
+      let [row, column] = tokenHex;
       revealHex(page, row, column);
 
       // Also reveal any nearby hexes, out to the configured reveal distance.
       let nearbyHexes = hexTile.getNearbyHexes(row, column, config.revealDistance);
       _.each(nearbyHexes, hex => {
         let [row, column] = hex;
-        revealHex(page, row, column);
+        let distance = hexTile.getDistance(tokenHex, hex);
+        revealHex(page, row, column, distance);
       });
     }
   }
@@ -285,7 +297,7 @@
     }
   });
 
-  // When the API is loaded, install the Custom Status Marker menu macro
+  // When the API is loaded, install the menu macro
   // if it isn't already installed.
   on('ready', () => {
     let players = findObjs({

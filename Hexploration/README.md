@@ -1,11 +1,7 @@
 # Hexploration
 
-_v1.1 Updates:_
-* The script now has a chat menu interface.
-* Implemented script configurations for hex colors.
-* Implemented reveal distance configuration. When a token moves, it will also reveal hexes out to this distance.
-* Hexes can now be named. When the named hex is revealed, it will announce that it has been discovered in the chat.
-* Implemented inverted fill. This works like the ordinary polygon fill, except that every hex NOT in the selected polygons is filled instead.
+_v1.2 Updates:_
+* Added Maximum Reveal Distance configuration. While this is set, hexes currently being drawn will only be revealed if you are within the specified number of hexes.
 
 This script allows GMs to draw a polygon on a hex-gridded map and fill in
 each hex inside that polygon with an opaque hexagon. It's great for hex-based
@@ -76,20 +72,39 @@ want to name, then use this action to specify a name for it.
 The script contains the following configurations that can be set from the
 script's chat menu:
 
-### Hex Color
+### Drawing configs
+
+These configurations set properties for hexes as you are drawing them.
+
+#### Hex Color
 
 This allows you to specify the color, border color, and label color of hexes.
-This must be set before the hexes are rendered.
 
-### Border Width
+#### Border Width
 
-This sets the width of the border outlines on hexes. This must be set before
-rendering the hexes.
+This sets the width of the border outlines on hexes.
 
-### Reveal Distance
+#### Maximum Reveal Distance
 
-This specifies how far out (in units) hexes are revealed when a character
-token is moved.
+If this is set, then a character can only reveal the hexes being drawn if they
+are within the specified number of hexes away from them.
+
+E.g., if a hex is drawn while this config is set to 3, then a character must be
+within 3 hexes from it to reveal it. The hex will not be revealed if the
+character is 4 or more hexes away from it, even if the global reveal distance
+is set very high.
+
+If this is not set, then the hex can be revealed from a theoretically infinite
+distance away (out to the global reveal distance).
+
+### Global configs
+
+These configs apply globally throughout the use of this script.
+
+#### Reveal Distance
+
+This is the global reveal distance. It specifies how far out (in units) hexes 
+are revealed when a character token is moved.
 
 ## Help
 

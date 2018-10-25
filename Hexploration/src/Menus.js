@@ -63,6 +63,17 @@
         value: config.strokeWidth || '0'
       },
       {
+        id: 'maxDistance',
+        name: 'Maximum Reveal Distance',
+        desc: 'Hexes being drawn will only be revealed if you are within this distance, in hex units.',
+        value: (() => {
+          if(config.maxDistance >= 0)
+            return '' + config.maxDistance;
+          else
+            return '-';
+        })()
+      },
+      {
         id: 'revealDistance',
         name: 'Reveal Distance',
         desc: 'When you move, hexes this many units from your position will be revealed.',
@@ -106,6 +117,13 @@
     }
     if(prop === 'strokeWidth')
       config.strokeWidth = parseInt(params[0]) || 0;
+    if(prop === 'maxDistance') {
+      let value = parseInt(params[0]);
+      if(value >= 0)
+        config.maxDistance = value;
+      else
+        config.maxDistance = undefined;
+    }
     if(prop === 'revealDistance')
       config.revealDistance = parseInt(params[0]) || 0;
 
