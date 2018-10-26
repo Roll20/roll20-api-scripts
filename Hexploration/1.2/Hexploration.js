@@ -301,6 +301,8 @@ var Hexploration = {};
 
     /**
      * Gets the distance between two hexes.
+     * @param {vec2} p1
+     * @param {vec2} p2
      */
     getDistance(p1, p2) {
       let cubic1 = this._getCubicCoords(...p1);
@@ -368,6 +370,11 @@ var Hexploration = {};
         let col = parseInt(parts[1]);
         list.push([row, col]);
       });
+
+      // Sort by increasing distance.
+      list = _.sortBy(list, elem => {
+        return this.getDistance([row, column], elem);
+      });
       return list;
     }
 
@@ -388,6 +395,41 @@ var Hexploration = {};
         row -= 0.5;
 
       return [Math.round(row), Math.round(column)];
+    }
+
+    /**
+     * Gets the coordinates for the hexes in between two pairs of hex
+     * coordinates, not including these two hexes.
+     * @param {vec2} p1
+     * @param {vec2} p2
+     * @return {vec2[]}
+     */
+    getTweenHexes(p1, p2) {
+      let xy1 = this.getCoordinates(...p1);
+      let xy2 = this.getCoordinates(...p2);
+
+      let u = VecMath.sub(xy2, xy1);
+      let dist = VecMath.length(u);
+      let uHat = VecMath.normalize(u);
+      let scale = UNIT_PIXELS_SIDE_V_DIST*this.scale;
+      let dxy = VecMath.scale(uHat, scale);
+
+      let curXY = VecMath.add(xy1, dxy);
+      let curDist = scale;
+      let result = [];
+      while(curDist < dist - scale/4) {
+        let hex = this.getRowColumn(...curXY);
+
+        // Skip if this hex is the start or end hex.
+        let [row, col] = hex;
+        if(!((row === p1[0] && col === p1[1]) ||
+            (row === p2[0] && col === p2[1])))
+          result.push(hex);
+
+        curXY = VecMath.add(curXY, dxy);
+        curDist += scale;
+      }
+      return result;
     }
   }
 
@@ -521,7 +563,7 @@ var Hexploration = {};
       },
       {
         id: 'maxDistance',
-        name: 'Maximum Reveal Distance',
+        name: 'Hex Reveal Distance',
         desc: 'Hexes being drawn will only be revealed if you are within this distance, in hex units.',
         value: (() => {
           if(config.maxDistance >= 0)
@@ -532,7 +574,7 @@ var Hexploration = {};
       },
       {
         id: 'revealDistance',
-        name: 'Reveal Distance',
+        name: 'Line of Sight',
         desc: 'When you move, hexes this many units from your position will be revealed.',
         value: config.revealDistance || '0'
       }
@@ -750,6 +792,23 @@ var Hexploration = {};
    */
 
   /**
+   * Deletes the persisted hex at some grid location on some page.
+   * No effect if a hex doesn't exist at that location.
+   * @param {(Page|string)} page
+   *        The Page or its ID.
+   * @param {int} row
+   * @param {int} column
+   */
+  function deleteHex(page, row, column) {
+    let oldHex = Hexploration._state.getPageHex(page, row, column);
+    if(oldHex) {
+      let hexPath = getObj('path', oldHex.id);
+      Hexploration._state.deletePath(hexPath);
+      hexPath.remove();
+    }
+  }
+
+  /**
    * Remove the hex data about some path from the state.
    * @param {Path} path
    */
@@ -887,6 +946,7 @@ var Hexploration = {};
 
   _.extend(Hexploration, {
     _state: {
+      deleteHex,
       deletePath,
       getConfig,
       getPageHex,
@@ -946,12 +1006,7 @@ var Hexploration = {};
 
       // If there is already a hex here, remove the existing hex so that
       // we can replace it.
-      let oldHex = Hexploration._state.getPageHex(page, row, column);
-      if(oldHex) {
-        let hexPath = getObj('path', oldHex.id);
-        Hexploration._state.deletePath(hexPath);
-        hexPath.remove();
-      }
+      Hexploration._state.deleteHex(page, row, column);
 
       // Create the hex.
       let hexagon = tile.getHexagon(row, column);
@@ -1128,6 +1183,18 @@ var Hexploration = {};
       // Also reveal any nearby hexes, out to the configured reveal distance.
       let nearbyHexes = hexTile.getNearbyHexes(row, column, config.revealDistance);
       _.each(nearbyHexes, hex => {
+        // Skip revealing this hex if there is an unrevealed hex between it and
+        // the token.
+        let tweenHexes = hexTile.getTweenHexes(tokenHex, hex);
+        let lineOfSightBlocked = (tweenHexes.length > 0 &&
+          !!_.find(tweenHexes, tweenHex => {
+            return Hexploration._state.hasPageHex(page, ...tweenHex);
+          }));
+        if(lineOfSightBlocked)
+          return;
+
+        // We have line of sight. Reveal it if we're within its maximum
+        // distance.
         let [row, column] = hex;
         let distance = hexTile.getDistance(tokenHex, hex);
         revealHex(page, row, column, distance);

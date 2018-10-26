@@ -50,6 +50,23 @@
    */
 
   /**
+   * Deletes the persisted hex at some grid location on some page.
+   * No effect if a hex doesn't exist at that location.
+   * @param {(Page|string)} page
+   *        The Page or its ID.
+   * @param {int} row
+   * @param {int} column
+   */
+  function deleteHex(page, row, column) {
+    let oldHex = Hexploration._state.getPageHex(page, row, column);
+    if(oldHex) {
+      let hexPath = getObj('path', oldHex.id);
+      Hexploration._state.deletePath(hexPath);
+      hexPath.remove();
+    }
+  }
+
+  /**
    * Remove the hex data about some path from the state.
    * @param {Path} path
    */
@@ -187,6 +204,7 @@
 
   _.extend(Hexploration, {
     _state: {
+      deleteHex,
       deletePath,
       getConfig,
       getPageHex,

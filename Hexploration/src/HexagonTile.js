@@ -255,6 +255,8 @@
 
     /**
      * Gets the distance between two hexes.
+     * @param {vec2} p1
+     * @param {vec2} p2
      */
     getDistance(p1, p2) {
       let cubic1 = this._getCubicCoords(...p1);
@@ -322,6 +324,11 @@
         let col = parseInt(parts[1]);
         list.push([row, col]);
       });
+
+      // Sort by increasing distance.
+      list = _.sortBy(list, elem => {
+        return this.getDistance([row, column], elem);
+      });
       return list;
     }
 
@@ -342,6 +349,41 @@
         row -= 0.5;
 
       return [Math.round(row), Math.round(column)];
+    }
+
+    /**
+     * Gets the coordinates for the hexes in between two pairs of hex
+     * coordinates, not including these two hexes.
+     * @param {vec2} p1
+     * @param {vec2} p2
+     * @return {vec2[]}
+     */
+    getTweenHexes(p1, p2) {
+      let xy1 = this.getCoordinates(...p1);
+      let xy2 = this.getCoordinates(...p2);
+
+      let u = VecMath.sub(xy2, xy1);
+      let dist = VecMath.length(u);
+      let uHat = VecMath.normalize(u);
+      let scale = UNIT_PIXELS_SIDE_V_DIST*this.scale;
+      let dxy = VecMath.scale(uHat, scale);
+
+      let curXY = VecMath.add(xy1, dxy);
+      let curDist = scale;
+      let result = [];
+      while(curDist < dist - scale/4) {
+        let hex = this.getRowColumn(...curXY);
+
+        // Skip if this hex is the start or end hex.
+        let [row, col] = hex;
+        if(!((row === p1[0] && col === p1[1]) ||
+            (row === p2[0] && col === p2[1])))
+          result.push(hex);
+
+        curXY = VecMath.add(curXY, dxy);
+        curDist += scale;
+      }
+      return result;
     }
   }
 

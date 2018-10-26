@@ -64,7 +64,7 @@
       },
       {
         id: 'maxDistance',
-        name: 'Maximum Reveal Distance',
+        name: 'Hex Reveal Distance',
         desc: 'Hexes being drawn will only be revealed if you are within this distance, in hex units.',
         value: (() => {
           if(config.maxDistance >= 0)
@@ -75,7 +75,7 @@
       },
       {
         id: 'revealDistance',
-        name: 'Reveal Distance',
+        name: 'Line of Sight',
         desc: 'When you move, hexes this many units from your position will be revealed.',
         value: config.revealDistance || '0'
       }

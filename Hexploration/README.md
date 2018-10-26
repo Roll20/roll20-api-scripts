@@ -84,7 +84,7 @@ This allows you to specify the color, border color, and label color of hexes.
 
 This sets the width of the border outlines on hexes.
 
-#### Maximum Reveal Distance
+#### Hex Reveal Distance
 
 If this is set, then a character can only reveal the hexes being drawn if they
 are within the specified number of hexes away from them.
@@ -95,15 +95,15 @@ character is 4 or more hexes away from it, even if the global reveal distance
 is set very high.
 
 If this is not set, then the hex can be revealed from a theoretically infinite
-distance away (out to the global reveal distance).
+distance away (out to the line of sight distance).
 
 ### Global configs
 
 These configs apply globally throughout the use of this script.
 
-#### Reveal Distance
+#### Line of Sight
 
-This is the global reveal distance. It specifies how far out (in units) hexes 
+This is the global reveal distance. It specifies how far out (in units) hexes
 are revealed when a character token is moved.
 
 ## Help

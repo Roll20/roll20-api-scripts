@@ -46,12 +46,7 @@
 
       // If there is already a hex here, remove the existing hex so that
       // we can replace it.
-      let oldHex = Hexploration._state.getPageHex(page, row, column);
-      if(oldHex) {
-        let hexPath = getObj('path', oldHex.id);
-        Hexploration._state.deletePath(hexPath);
-        hexPath.remove();
-      }
+      Hexploration._state.deleteHex(page, row, column);
 
       // Create the hex.
       let hexagon = tile.getHexagon(row, column);
@@ -228,6 +223,18 @@
       // Also reveal any nearby hexes, out to the configured reveal distance.
       let nearbyHexes = hexTile.getNearbyHexes(row, column, config.revealDistance);
       _.each(nearbyHexes, hex => {
+        // Skip revealing this hex if there is an unrevealed hex between it and
+        // the token.
+        let tweenHexes = hexTile.getTweenHexes(tokenHex, hex);
+        let lineOfSightBlocked = (tweenHexes.length > 0 &&
+          !!_.find(tweenHexes, tweenHex => {
+            return Hexploration._state.hasPageHex(page, ...tweenHex);
+          }));
+        if(lineOfSightBlocked)
+          return;
+
+        // We have line of sight. Reveal it if we're within its maximum
+        // distance.
         let [row, column] = hex;
         let distance = hexTile.getDistance(tokenHex, hex);
         revealHex(page, row, column, distance);
