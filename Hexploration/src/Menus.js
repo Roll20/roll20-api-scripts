@@ -133,10 +133,13 @@
   /**
    * Displays a stylized announcement in the chat that
    */
-  function showDiscovery(name) {
+  function showDiscovery(name, imgsrc) {
     let menu = new HtmlBuilder('.menu');
     menu.append('.menuHeader', 'Discovered Location');
-    menu.append('.menuBody', `<h4>${name}</h4>`);
+    if(imgsrc)
+      menu.append('.menuBody', `<img src='${imgsrc}' style='height: 32px; width: 32px;'><h4>${name}</h4>`);
+    else
+      menu.append('.menuBody', `<h4>${name}</h4>`);
     Hexploration._chat.broadcast(menu.toString(MENU_CSS));
   }
 

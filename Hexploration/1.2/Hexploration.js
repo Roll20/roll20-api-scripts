@@ -455,7 +455,24 @@ var Hexploration = {};
   }
 
   /**
-   * Sets the name for a hex.
+   * Sets the icon and name for a hex.
+   * @param {Path} path
+   *        The path representing the hex.
+   * @param {Graphic} icon
+   *        The icon containing the graphic and name for the hex when it is
+   *        revealed.
+   */
+  function setHexIcon(path, icon) {
+    let pageHex = Hexploration._state.getPageHexByPath(path);
+    if(!pageHex)
+      throw new Error('Could not find PageHex data for path ' + path.get('_id'));
+
+    pageHex.iconId = icon.get('_id');
+    icon.set('layer', 'gmlayer');
+  }
+
+  /**
+   * Sets the name for a hex, without assigning it an icon.
    * @param {Path} path
    *        The Path representing the hex.
    * @param {string} name
@@ -492,6 +509,7 @@ var Hexploration = {};
   _.extend(Hexploration, {
     _locations: {
       getMarkers,
+      setHexIcon,
       setHexName
     }
   });
@@ -632,10 +650,13 @@ var Hexploration = {};
   /**
    * Displays a stylized announcement in the chat that
    */
-  function showDiscovery(name) {
+  function showDiscovery(name, imgsrc) {
     let menu = new HtmlBuilder('.menu');
     menu.append('.menuHeader', 'Discovered Location');
-    menu.append('.menuBody', `<h4>${name}</h4>`);
+    if(imgsrc)
+      menu.append('.menuBody', `<img src='${imgsrc}' style='height: 32px; width: 32px;'><h4>${name}</h4>`);
+    else
+      menu.append('.menuBody', `<h4>${name}</h4>`);
     Hexploration._chat.broadcast(menu.toString(MENU_CSS));
   }
 
@@ -994,10 +1015,9 @@ var Hexploration = {};
     _.each(locationMarkers, marker => {
       let x = marker.get('left');
       let y = marker.get('top');
-      let name = marker.get('name');
 
       let [row, column] = tile.getRowColumn(x, y);
-      locations[row + ',' + column] = [name, marker];
+      locations[row + ',' + column] = marker;
     });
 
     return _.chain(hexes)
@@ -1021,11 +1041,9 @@ var Hexploration = {};
 
       // If there was a location marker at the hex's location, give the
       // hex a name and remove the marker.
-      let location = locations[row + ',' + column];
-      if(location) {
-        let [name, marker] = location;
-        Hexploration._locations.setHexName(hexPath, name);
-        marker.remove();
+      let marker = locations[row + ',' + column];
+      if(marker) {
+        Hexploration._locations.setHexIcon(hexPath, marker);
       }
 
       return hexPath;
@@ -1158,7 +1176,18 @@ var Hexploration = {};
       Hexploration._state.deletePath(hexPath);
       hexPath.remove();
 
-      if(pageHex.name)
+      if(pageHex.iconId) {
+        let icon = getObj('graphic', pageHex.iconId);
+        if(icon) {
+          icon.set('layer', 'objects');
+          icon.set('showname', true);
+
+          let name = icon.get('name');
+          let imgsrc = icon.get('imgsrc');
+          Hexploration._menus.showDiscovery(name, imgsrc);
+        }
+      }
+      else if(pageHex.name)
         Hexploration._menus.showDiscovery(pageHex.name);
     }
   }

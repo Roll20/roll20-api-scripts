@@ -34,10 +34,9 @@
     _.each(locationMarkers, marker => {
       let x = marker.get('left');
       let y = marker.get('top');
-      let name = marker.get('name');
 
       let [row, column] = tile.getRowColumn(x, y);
-      locations[row + ',' + column] = [name, marker];
+      locations[row + ',' + column] = marker;
     });
 
     return _.chain(hexes)
@@ -61,11 +60,9 @@
 
       // If there was a location marker at the hex's location, give the
       // hex a name and remove the marker.
-      let location = locations[row + ',' + column];
-      if(location) {
-        let [name, marker] = location;
-        Hexploration._locations.setHexName(hexPath, name);
-        marker.remove();
+      let marker = locations[row + ',' + column];
+      if(marker) {
+        Hexploration._locations.setHexIcon(hexPath, marker);
       }
 
       return hexPath;
@@ -198,7 +195,18 @@
       Hexploration._state.deletePath(hexPath);
       hexPath.remove();
 
-      if(pageHex.name)
+      if(pageHex.iconId) {
+        let icon = getObj('graphic', pageHex.iconId);
+        if(icon) {
+          icon.set('layer', 'objects');
+          icon.set('showname', true);
+
+          let name = icon.get('name');
+          let imgsrc = icon.get('imgsrc');
+          Hexploration._menus.showDiscovery(name, imgsrc);
+        }
+      }
+      else if(pageHex.name)
         Hexploration._menus.showDiscovery(pageHex.name);
     }
   }

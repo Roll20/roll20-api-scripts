@@ -2,6 +2,8 @@
 
 _v1.2 Updates:_
 * Added Maximum Reveal Distance configuration. While this is set, hexes currently being drawn will only be revealed if you are within the specified number of hexes.
+* Line of sight is enforced when revealing hexes.
+* Hexes can now be given icons.
 
 This script allows GMs to draw a polygon on a hex-gridded map and fill in
 each hex inside that polygon with an opaque hexagon. It's great for hex-based
@@ -42,10 +44,21 @@ There are two ways to name locations hidden by hexes:
 
 Before rendering the hexes using the 'Fill Polygon' action, create named tokens
 with the 'white-tower' status representing the locations you want to conceal
-with the hexes.
+with the hexes. This will also set the icon for the hex to that of the named
+token.
 
 To name a hex that's already been rendered, select the hex and set its name
 using the 'Name Hex' action from the menu.
+
+### Setting a Hex's Icon
+
+Hexes can be assigned a named icon. The icon will be hidden on the GM layer,
+and it and its name will be revealed when its hex is revealed.
+
+To make a hex with an icon, create a named token with the 'white-tower' status
+representing the location you want to conceal within a hex. Then fill the area
+containing that token with hexes. It will be automatically concealed and
+assigned to the hex it was in.
 
 ## Actions
 
@@ -117,6 +130,6 @@ https://app.roll20.net/users/46544/stephen-l
 ## Show Support
 
 If you would like to show your appreciation and support for the work I do in writing,
-updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)
+updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&type=all&publisher=Stephen%20L)
 or, simply leave a thank you note in the script's thread on the Roll20 forums.
 Either is greatly appreciated! Happy gaming!
