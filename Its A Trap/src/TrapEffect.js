@@ -25,7 +25,6 @@ var TrapEffect = (() => {
   };
 
   return class TrapEffect {
-
     /**
      * An API chat command that will be executed when the trap is activated.
      * If the constants TRAP_ID and VICTIM_ID are provided,
@@ -53,6 +52,15 @@ var TrapEffect = (() => {
      */
     get areaOfEffect() {
       return this._effect.areaOfEffect;
+    }
+
+    /**
+     * The delay for the trap in seconds. If undefined or 0, the trap
+     * activates instantly when triggered.
+     * @type {uint}
+     */
+    get delay() {
+      return this._effect.delay;
     }
 
     /**
@@ -557,6 +565,13 @@ var TrapEffect = (() => {
         state.TokenMod.playersCanUse_ids = true;
         sendChat('It\'s A Trap', command);
       }
+    }
+
+    /**
+     * Saves the current trap effect properties to the trap's token.
+     */
+    save() {
+      this._trap.set('gmnotes', JSON.stringify(this.json));
     }
   };
 })();

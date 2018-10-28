@@ -507,6 +507,12 @@ var ItsATrapCreationWizard = (() => {
         desc: 'Select one or more tokens to be ignored by this trap.',
         value: trapEffect.ignores || 'none',
         options: ['none', 'set selected tokens', 'add selected tokens', 'remove selected tokens']
+      },
+      {
+        id: 'delay',
+        name: 'Delay Activation',
+        desc: 'When the trap is triggered, its effect is delayed for the specified number of seconds. For best results, also be sure to set an area effect for the trap and set the Stops Tokens At property of the trap to None.',
+        value: trapEffect.delay + ' seconds' || '-'
       }
     ];
   }
@@ -544,6 +550,8 @@ var ItsATrapCreationWizard = (() => {
       else
         trapEffect.areaOfEffect = undefined;
     }
+    if(prop === 'delay')
+      trapEffect.delay = params[0] || undefined;
     if(prop === 'destroyable')
       trapEffect.destroyable = params[0] === 'yes';
     if(prop === 'disabled')
