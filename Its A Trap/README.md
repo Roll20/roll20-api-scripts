@@ -1,11 +1,7 @@
 # It's A Trap!
 
-_v3.7 Updates:_
-* Paths can now be used as the activation areas for a trap. This supports both lines and polygons (requires fill color).
-* Passive search will notice activation paths for traps.
-* You can now set traps to be destroyed after they are activated.
-* Support for multiple API commands. Each command given in the API Command property should be separated with ';;'.
-* D20 themes will actively disallow a trap to have both an attack roll and a saving throw. If an attack roll is set, the saving throw settings are cleared, and if a saving throw is set, then the attack settings are cleared.
+_v3.9 Updates:_
+* Implemented delayed activation for traps. See the 'Delay Activation' property.
 
 This is a script that allows GMs to quickly and very easily set up traps,
 secret doors, and other hidden things on the GM layer, and detect when tokens
@@ -75,6 +71,6 @@ https://app.roll20.net/users/46544/stephen-l
 ## Show Support
 
 If you would like to show your appreciation and support for the work I do in writing,
-updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)
+updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=new&type=all&publisher=Stephen%20L)
 or, simply leave a thank you note in the script's thread on the Roll20 forums.
 Either is greatly appreciated! Happy gaming!
