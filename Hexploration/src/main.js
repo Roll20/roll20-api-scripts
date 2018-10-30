@@ -34,43 +34,38 @@
     _.each(locationMarkers, marker => {
       let x = marker.get('left');
       let y = marker.get('top');
-      let name = marker.get('name');
 
       let [row, column] = tile.getRowColumn(x, y);
-      locations[row + ',' + column] = [name, marker];
+      locations[row + ',' + column] = marker;
     });
 
     return _.chain(hexes)
     .map(hex => {
       let [row, column] = hex;
 
-      // Skip if there's already a hex here.
-      if(Hexploration._state.hasPageHex(page, row, column))
-        return undefined;
+      // If there is already a hex here, remove the existing hex so that
+      // we can replace it.
+      Hexploration._state.deleteHex(page, row, column);
 
       // Create the hex.
-      else {
-        let hexagon = tile.getHexagon(row, column);
-        let hexPath = hexagon.render(pageId, 'objects', {
-          fill: config.fillColor,
-          stroke: config.strokeColor,
-          stroke_width: config.strokeWidth
-        });
+      let hexagon = tile.getHexagon(row, column);
+      let hexPath = hexagon.render(pageId, 'objects', {
+        fill: config.fillColor,
+        stroke: config.strokeColor,
+        stroke_width: config.strokeWidth
+      });
 
-        Hexploration._state.persistHex(page, hexPath, row, column);
+      let persistedHex = Hexploration._state.persistHex(page, hexPath, row, column);
+      persistedHex.maxDistance = config.maxDistance;
 
-        // If there was a location marker at the hex's location, give the
-        // hex a name and remove the marker.
-        let location = locations[row + ',' + column];
-        if(location) {
-          let [name, marker] = location;
-          Hexploration._locations.setHexName(hexPath, name);
-          marker.remove();
-        }
-
-
-        return hexPath;
+      // If there was a location marker at the hex's location, give the
+      // hex a name and remove the marker.
+      let marker = locations[row + ',' + column];
+      if(marker) {
+        Hexploration._locations.setHexIcon(hexPath, marker);
       }
+
+      return hexPath;
     })
     .compact()
     .value();
@@ -187,15 +182,31 @@
    * @param {Page} page
    * @param {int} row
    * @param {int} column
+   * @param {uint} [distance]
    */
-  function revealHex(page, row, column) {
+  function revealHex(page, row, column, distance=0) {
     let pageHex = Hexploration._state.getPageHex(page, row, column);
     if(pageHex) {
+      // Skip the hex if the distance is further than the max distance.
+      if(distance > pageHex.maxDistance)
+        return;
+
       let hexPath = getObj('path', pageHex.id);
       Hexploration._state.deletePath(hexPath);
       hexPath.remove();
 
-      if(pageHex.name)
+      if(pageHex.iconId) {
+        let icon = getObj('graphic', pageHex.iconId);
+        if(icon) {
+          icon.set('layer', 'objects');
+          icon.set('showname', true);
+
+          let name = icon.get('name');
+          let imgsrc = icon.get('imgsrc');
+          Hexploration._menus.showDiscovery(name, imgsrc);
+        }
+      }
+      else if(pageHex.name)
         Hexploration._menus.showDiscovery(pageHex.name);
     }
   }
@@ -211,14 +222,30 @@
     if(hexTile) {
       let x = obj.get('left');
       let y = obj.get('top');
-      let [row, column] = hexTile.getRowColumn(x, y);
+
+      // Always reveal the hex the token moved onto.
+      let tokenHex = hexTile.getRowColumn(x, y);
+      let [row, column] = tokenHex;
       revealHex(page, row, column);
 
       // Also reveal any nearby hexes, out to the configured reveal distance.
       let nearbyHexes = hexTile.getNearbyHexes(row, column, config.revealDistance);
       _.each(nearbyHexes, hex => {
+        // Skip revealing this hex if there is an unrevealed hex between it and
+        // the token.
+        let tweenHexes = hexTile.getTweenHexes(tokenHex, hex);
+        let lineOfSightBlocked = (tweenHexes.length > 0 &&
+          !!_.find(tweenHexes, tweenHex => {
+            return Hexploration._state.hasPageHex(page, ...tweenHex);
+          }));
+        if(lineOfSightBlocked)
+          return;
+
+        // We have line of sight. Reveal it if we're within its maximum
+        // distance.
         let [row, column] = hex;
-        revealHex(page, row, column);
+        let distance = hexTile.getDistance(tokenHex, hex);
+        revealHex(page, row, column, distance);
       });
     }
   }
@@ -285,7 +312,7 @@
     }
   });
 
-  // When the API is loaded, install the Custom Status Marker menu macro
+  // When the API is loaded, install the menu macro
   // if it isn't already installed.
   on('ready', () => {
     let players = findObjs({

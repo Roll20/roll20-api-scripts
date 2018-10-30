@@ -63,8 +63,19 @@
         value: config.strokeWidth || '0'
       },
       {
+        id: 'maxDistance',
+        name: 'Hex Reveal Distance',
+        desc: 'Hexes being drawn will only be revealed if you are within this distance, in hex units.',
+        value: (() => {
+          if(config.maxDistance >= 0)
+            return '' + config.maxDistance;
+          else
+            return '-';
+        })()
+      },
+      {
         id: 'revealDistance',
-        name: 'Reveal Distance',
+        name: 'Line of Sight',
         desc: 'When you move, hexes this many units from your position will be revealed.',
         value: config.revealDistance || '0'
       }
@@ -106,6 +117,13 @@
     }
     if(prop === 'strokeWidth')
       config.strokeWidth = parseInt(params[0]) || 0;
+    if(prop === 'maxDistance') {
+      let value = parseInt(params[0]);
+      if(value >= 0)
+        config.maxDistance = value;
+      else
+        config.maxDistance = undefined;
+    }
     if(prop === 'revealDistance')
       config.revealDistance = parseInt(params[0]) || 0;
 
@@ -115,10 +133,13 @@
   /**
    * Displays a stylized announcement in the chat that
    */
-  function showDiscovery(name) {
+  function showDiscovery(name, imgsrc) {
     let menu = new HtmlBuilder('.menu');
     menu.append('.menuHeader', 'Discovered Location');
-    menu.append('.menuBody', `<h4>${name}</h4>`);
+    if(imgsrc)
+      menu.append('.menuBody', `<img src='${imgsrc}' style='height: 32px; width: 32px;'><h4>${name}</h4>`);
+    else
+      menu.append('.menuBody', `<h4>${name}</h4>`);
     Hexploration._chat.broadcast(menu.toString(MENU_CSS));
   }
 

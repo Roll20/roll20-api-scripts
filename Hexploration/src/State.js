@@ -38,6 +38,9 @@
    *           discovery will be announced in the chat.
    * @property {string} [nameId]
    *           The ID for the Path labelling the named hex on the GM layer.
+   * @property {number} [maxDistance]
+   *           The maximum distance a character can be away from the hex to
+   *           reveal it.
    */
 
   /**
@@ -45,6 +48,23 @@
    * The second element is the <row>,<column> string for the hex.
    * @typedef {tuple<string, string>} PageHexKey
    */
+
+  /**
+   * Deletes the persisted hex at some grid location on some page.
+   * No effect if a hex doesn't exist at that location.
+   * @param {(Page|string)} page
+   *        The Page or its ID.
+   * @param {int} row
+   * @param {int} column
+   */
+  function deleteHex(page, row, column) {
+    let oldHex = Hexploration._state.getPageHex(page, row, column);
+    if(oldHex) {
+      let hexPath = getObj('path', oldHex.id);
+      Hexploration._state.deletePath(hexPath);
+      hexPath.remove();
+    }
+  }
 
   /**
    * Remove the hex data about some path from the state.
@@ -160,6 +180,11 @@
 
   /**
    * Persists data about some hex.
+   * @param {Page} page
+   * @param {Path} hexPath
+   * @param {number} row
+   * @param {number} column
+   * @return {PageHex}
    */
   function persistHex(page, hexPath, row, column) {
     let myState = getState();
@@ -173,10 +198,13 @@
 
     myState.pageHexes[pageId][key] = { id };
     myState.hexIdMap[id] = [pageId, key];
+
+    return myState.pageHexes[pageId][key];
   }
 
   _.extend(Hexploration, {
     _state: {
+      deleteHex,
       deletePath,
       getConfig,
       getPageHex,

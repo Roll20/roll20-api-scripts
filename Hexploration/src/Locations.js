@@ -15,7 +15,24 @@
   }
 
   /**
-   * Sets the name for a hex.
+   * Sets the icon and name for a hex.
+   * @param {Path} path
+   *        The path representing the hex.
+   * @param {Graphic} icon
+   *        The icon containing the graphic and name for the hex when it is
+   *        revealed.
+   */
+  function setHexIcon(path, icon) {
+    let pageHex = Hexploration._state.getPageHexByPath(path);
+    if(!pageHex)
+      throw new Error('Could not find PageHex data for path ' + path.get('_id'));
+
+    pageHex.iconId = icon.get('_id');
+    icon.set('layer', 'gmlayer');
+  }
+
+  /**
+   * Sets the name for a hex, without assigning it an icon.
    * @param {Path} path
    *        The Path representing the hex.
    * @param {string} name
@@ -52,6 +69,7 @@
   _.extend(Hexploration, {
     _locations: {
       getMarkers,
+      setHexIcon,
       setHexName
     }
   });
