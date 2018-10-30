@@ -2,6 +2,7 @@
 
 * Skype: RobinKuiper.eu
 * Discord: Atheos#1095
+* My Discord Server: https://discord.gg/AcC9VME
 * Roll20: https://app.roll20.net/users/1226016/robin
 * Roll20 Thread: https://app.roll20.net/forum/post/6252784/script-statusinfo
 * Roll20 Wiki: https://wiki.roll20.net/Script:StatusInfo
@@ -18,6 +19,8 @@ LATEST UPDATE: It now allows you to create and edit conditions, export/import th
 
 StatusInfo works nicely together with [Tokenmod](https://app.roll20.net/forum/post/4225825/script-update-tokenmod-an-interface-to-adjusting-properties-of-a-token-from-a-macro-or-the-chat-area/?pageforid=4225825#post-4225825) and my own [DeathTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/DeathTracker) and [InspirationTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/InspirationTracker) scripts.
 It shows condition descriptions whenever a statusmarker is set or when the command `!condition` is used, eg: `!condition prone`.
+
+`It also works with the 5e Shaped sheet condition toggles now`
 
 ![Prone Description](https://i.imgur.com/UpBHjVh.png "Prone Description")
 
@@ -36,9 +39,11 @@ It shows condition descriptions whenever a statusmarker is set or when the comma
 * **!condition config import [Exported Content]** - Imports the config (with conditions), also possible through the config menu.
 
 ### Config
-![Config](https://i.imgur.com/y9DlZB6.png "Config")
+![Config](https://i.imgur.com/LZLmQ2P.png "Config")
 
 * **Command** - The command used by this script, eg. `!condition`.
+* **Player Show** - Let players show conditions with `!condition prone`.
+* **Player Toggle** - Let players toggle conditions on their controlled tokens.
 * **Only to GM** - Send the condition info only to the gm.
 * **Show on Status Change** - Send the condition info when the statusmarkers change.
 * **Display icon in chat** - Shows the icon next to the condition title in the chat condition descriptions.
@@ -80,7 +85,20 @@ Roll20 Thread: https://app.roll20.net/forum/post/6252784/script-statusinfo
 
 ---
 
+[![Become a Patron](https://c5.patreon.com/external/logo/become_a_patron_button.png "Become a Patron")](https://www.patreon.com/bePatron?u=10835266)
+
+---
+
 #### Changelog
+**v0.3.10**
+* Added `Player Show` and `Player Toggle` config option.
+
+**v0.3.8**
+* Shaped sheet conditions compatible.
+
+**v0.3.7**
+* Update needed for latest [CombatTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/CombatTracker) version.
+
 **v0.3.6 - 04-05-2018**
 * Better [CombatTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/CombatTracker) Support.
 * Bugfix.
