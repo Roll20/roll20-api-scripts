@@ -1,41 +1,42 @@
 // By: Barry Snyder heavily leveraging the MYZ script courtesy of The Aaron
-// look into adding 3d dice https://wiki.roll20.net/API:Chat
+// Version 2.0
 
-// TO DO: add modifier to result
-			
+            
 var WrathAndGlory = WrathAndGlory || (function() {
     'use strict';
 
-    var version = '1',
-        lastUpdate = 'June 29 , 2018',
+    var version = '2',
+        lastUpdate = 'November 10th, 2018',
         schemaVersion = 0.1,
-        symbols = {
-            ruin:  '&#'+'9760;',  // symbol
-            iconsymbol:  "<img src='https://i.imgur.com/MBp0zjM.gif'>", // symbol
-            exaltedsymbol:  "<img src='https://i.imgur.com/bBkI0vT.png'>", // symbol
-			wrathiconsymbol:  "<img src='https://i.imgur.com/q4Xmxeb.gif'>", // symbol
-            wrathexaltedsymbol:  "<img src='https://i.imgur.com/bBkI0vT.png'>", // symbol
-            blackexaltedsymbol:  "<img src='https://i.imgur.com/SICpNfF.png'>", // symbol
-            explosion:  '&#'+'128165;',	 // symbol
-            rerollsymbol: '&#'+'127922;' // symbol
+        symbols = { 
+            iconsymbol:  "<img src='https://i.imgur.com/GOA0o3s.png'>", 
+            exaltedsymbol:  "<img src='https://i.imgur.com/VjSiyZL.png'>", 
+            ruinsymbol: "<img src='https://i.imgur.com/XtJ1j2x.png'>", 
+			blackicon: "<img src='https://i.imgur.com/94YUvsN.png'>",
+			blackexalted: "<img src='https://i.imgur.com/W7ldWiC.png'>",
+			blackruin: "<img src='https://i.imgur.com/zA1plx9.png'>",
+            rerollsymbol: '&#'+'127922;' 
         },
         wagBackground = 'https://i.imgur.com/vnvGWET.jpg', 
-        ruinDie = "<img src='https://i.imgur.com/a6YJU1E.png'>",
         colors = {
-			white: '#FFFFFF', //base rolls
-			red: '#cc0000', //wrath rolls
+            white: '#FFFFFF', 
+            red: '#cc0000', 
             yellow: '#ffcc00', 
             black: '#000000', 
-			gold: '#ffcc00' 
+            gold: '#ffcc00' 
         },
         defaults = {
             css: {
                 button: {
+                    'display': 'block', 
+                    'margin': '0em 0em 0.2em 0em', 
                     'border': '1px solid #000000',
                     'border-radius': '.3em',
                     'background-color': '#003399',
-                    'font-weight': 'bold',
-                    'color': 'white'
+                    'font-weight': 'normal', 
+                    'color': 'white',
+                    'text-decoration': 'none !important', //CUSTOM
+                    'text-align': 'right'
                 },
                 errorMsg: {
                     'font-size': '.8em',
@@ -53,30 +54,35 @@ var WrathAndGlory = WrathAndGlory || (function() {
                     'display': 'inline-block',
                     'padding': '.1em .6em',
                     'border-radius': '0 0 .75em 0',
-                    'margin': '-.1em .2em 0em -.6em'
+                    'margin': '-.1em .1em 0em -.6em'
                 },
 
-                optionalMsg: {						// background and text for optional text message
-                    'font-size': '1em',
+                optionalMsg: {                      // background and text for optional text message
+                    'font-weight': 'bold',  
+                    'font-size': '.9em',
+                    'text-align': 'left',  
                     'border': '.1em solid #000000',  
                     'border-radius': '.5em',
                     'background-color': '#e6e6e6', 
                     'color': '#000000',
-                    'margin': '0 .1em .2em .1em',
-                    'padding': '.1em .4em',
+                    'margin': '0em 0.2em 0.4em 0em', 
+                    //'padding': '0.2em', 
                     'overflow': 'hidden'
                 },
-                optionalMsgLabel: {					// background and text for optional text label
-                    'font-weight': 'bold',
+                optionalMsgLabel: {                 // background and text for optional text label
+                    'float': 'left',  
+                    'text-align': 'left', 
+                    'font-weight': 'normal', 
+                    'font-size': '.9em',
                     'background-color': '#404040',
                     'color': '#ffffff',
                     'display': 'inline-block',
-                    'padding': '.1em .6em .1em .4em',
+                    'padding': '0.2em 0.4em 0.2em 0.2em', 
                     'border-radius': '0 0 .75em 0',
-                    'margin': '-.1em .2em 0em -.4em'
+                    'margin': '-0.2em 0.4em 0em -0.2em' 
                 },
 
-                wagMsg: {							// roll background and border
+                wagMsg: {                           // roll background and border
                     'font-size': '1em',
                     'border': '.2em solid #000000', 
                     'border-radius': '.5em',
@@ -87,20 +93,21 @@ var WrathAndGlory = WrathAndGlory || (function() {
                     'background-size': '100%',
                     'margin': '0 0',
                     'padding': '.3em',
-                    'overflow': 'hidden'
+                    'overflow': 'hidden',
+                    'max-width': '24em' 
                 },
                 wagMsgLabelContainer: {
                     'max-width': '10em',
-                    'float': 'left',
+                    'float': 'right', 
                     'font-size': '1.5em',
-                    'margin-right': '.2em'
+                    'margin-left': '.2em' 
                 },
-                wagMsgLabel: {						// border around dice result summary
+                wagMsgLabel: {                      // border around dice result summary
                     'border': '.1em solid #000000',
                     'border-radius': '.25em',
                     'font-weight': 'normal',
                     'padding': '.1em',
-                    'margin-bottom': '.1em',
+                    'margin': '0em 0em 0.2em 0em', 
                     'text-align': 'center'
                 },
                 wagDie: {
@@ -111,9 +118,9 @@ var WrathAndGlory = WrathAndGlory || (function() {
                     'text-align': 'center',
                     'width': '1.5em', // was 1.6
                     'height': '1.5em', // was 1.3
-                    'float': 'left',
+                     'float': 'left', 
                     'margin-right': '.1em',
-                    'margin-bottom': '.1em'
+                    'margin-bottom': '.1em' 
                 }
             }
         },
@@ -190,7 +197,7 @@ var WrathAndGlory = WrathAndGlory || (function() {
                 '<%= diceImages %>'+
             '</div>'
         );
-		
+        
     },
     makeErrorMsg = function(msg){
         return templates.errorMsg({
@@ -211,8 +218,12 @@ var WrathAndGlory = WrathAndGlory || (function() {
         });
     },
 
-    makeOptionalText = function (optional){
+    makeOptionalText = function (optional,damage,successes){
         return '<div>'+_.map(optional,function(o){
+			// if the optional text is Damage set msg to be DR + Successes          
+			if(o.label=="Damage"){
+				o.msg=damage+'&nbsp;('+o.msg+'+'+successes+')';
+			};
             return makeOptionalMsg(o.label,o.msg);
         }).join('')+'</div>';
     },
@@ -226,7 +237,7 @@ var WrathAndGlory = WrathAndGlory || (function() {
             defaults: defaults,
             css: {
                 'background-color': bgcolor,
-				'color': color
+                'color': color
             }
         });
     },
@@ -297,25 +308,25 @@ var WrathAndGlory = WrathAndGlory || (function() {
 
     ch = function (c) {
         var entities = {
-			'<' : 'lt',
-			'>' : 'gt',
-			"'" : '#39',
-			'@' : '#64',
-			'{' : '#123',
-			'|' : '#124',
-			'}' : '#125',
-			'[' : '#91',
-			']' : '#93',
-			'"' : 'quot',
-			'-' : 'mdash',
-			' ' : 'nbsp'
-		};
+            '<' : 'lt',
+            '>' : 'gt',
+            "'" : '#39',
+            '@' : '#64',
+            '{' : '#123',
+            '|' : '#124',
+            '}' : '#125',
+            '[' : '#91',
+            ']' : '#93',
+            '"' : 'quot',
+            '-' : 'mdash',
+            ' ' : 'nbsp'
+        };
 
-		if(_.has(entities,c) ){
-			return ('&'+entities[c]+';');
-		}
-		return '';
-	},
+        if(_.has(entities,c) ){
+            return ('&'+entities[c]+';');
+        }
+        return '';
+    },
 
 
     makeConfigOption = function(config,command,text) {
@@ -385,30 +396,37 @@ var WrathAndGlory = WrathAndGlory || (function() {
         let who=(getObj('player',playerid)||{get:()=>'API'}).get('_displayname');
 
         sendChat('','/w "'+who+'" '+
-	'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
-	'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'+
-		'Wrath & Glory v'+version+
-	'</div>'+
-	'<div style="padding-left:10px;margin-bottom:3px;">'+
-		'<p>Wrath & Glory automates the rolling of dice tests.</p>'+
-	'</div>'+
-	'<b>Reading Results</b>'+
-	'<div style="padding-left:10px;">'+
-		'<p>The macro presents a column of results on the left with labels and dice on the right.  The results are listed in sequence from total number of successes ('+symbols.explosion+'), total number of icons rolled ('+symbols.iconsymbol+'), total number of exalted icons rolled ('+symbols.blackexaltedsymbol+'), whether there is a complication on the roll ('+ruinDie+'), and a reroll button ('+symbols.rerollsymbol+') to reroll all failed dice (except a 1 on a wrath die).</p>'+
-	'<b>Commands</b>'+
-	'<div style="padding-left:10px;">'+
-		'<b><span style="font-family: serif;">!wag '+ch('[')+'dice pool'+ch(']')+' '+ch('[')+'wrath die'+ch(']')+' '+'--'+ch('<')+'Label'+ch('>')+ch('|')+ch('<')+'Message'+ch('>')+' ...'+ch(']')+'</span></b>'+
-		'<div style="padding-left: 10px;padding-right:20px">'+
-			'<p>Performs a Wrath & Glory test.</p>'+
-			'<ul>'+
-				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
-					'<b><span style="font-family: serif;">'+ch('[')+'dice pool'+ch(']')+'</span></b> '+ch('-')+' An inline dice expression rolling the d6s. This is the pool of dice less one for the Wrath die if a wrath die is part of the test. Example: '+ch('[')+ch('[')+'3d6'+ch(']')+ch(']')+
-				'</li> '+
-				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
-					'<b><span style="font-family: serif;">'+ch('[')+'wrath die'+ch(']')+'</span></b> '+ch('-')+' An inline dice expression rolling a d6 for wrath; leave blank if there is not a wrath die. Example: '+ch('[')+ch('[')+'1d6'+ch(']')+ch(']')+
-				'</li> '+
-					'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
-	'<b><span style="font-family: serif;">'+ch('[')+'--'+ch('<')+'Label'+ch('>')+ch('|')+ch('<')+'Message'+ch('>')+' ...'+ch(']')+'</span></b> '+ch('-')+' An optional set of text to be shown above the die roll. Label may be omitted to just provide a text field.  You can specify as many optional descriptions as you like.  A special use of the Label is to identify a die modifier for cases such as Soak and Brutal weapons.  That must be listed as Modifier|#.'+
+    '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
+    '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'+
+        'Wrath & Glory v'+version+
+    '</div>'+
+    '<div style="padding-left:10px;margin-bottom:3px;">'+
+        '<p>Wrath & Glory automates the rolling of dice tests.</p>'+
+    '</div>'+
+    '<b>Reading Results</b>'+
+    '<div style="padding-left:10px;">'+
+        '<p>The macro presents a column of results on the left with labels and dice on the right.  The results are listed in sequence as follows:<br>'+
+		'<ul>'+
+		'<li>Total successes (Total)'+
+		'<li>Total <b>Icons</b> rolled ('+symbols.blackicon+')</li>'+
+		'<li>Total <b>Exalted Icons</b> rolled ('+symbols.blackexalted+')</li>'+
+		'<li>Total Ruin('+symbols.blackruin+')</li>'+
+		'<li>Reroll button ('+symbols.rerollsymbol+') to reroll all failed dice.</li>'+
+		'</ul>'+
+    '<b>Commands</b>'+
+    '<div style="padding-left:10px;">'+
+        '<b><span style="font-family: serif;">!wag '+ch('[')+'dice pool'+ch(']')+' '+ch('[')+'wrath die'+ch(']')+' '+'--'+ch('<')+'Label'+ch('>')+ch('|')+ch('<')+'Message'+ch('>')+' ...'+ch(']')+'</span></b>'+
+        '<div style="padding-left: 10px;padding-right:20px">'+
+            '<p>Performs a Wrath & Glory test.</p>'+
+            '<ul>'+
+                '<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
+                    '<b><span style="font-family: serif;">'+ch('[')+'dice pool'+ch(']')+'</span></b> '+ch('-')+' An inline dice expression rolling the d6s. This is the pool of dice less one for the Wrath die if a wrath die is part of the test. Example: '+ch('[')+ch('[')+'3d6'+ch(']')+ch(']')+
+                '</li> '+
+                '<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
+                    '<b><span style="font-family: serif;">'+ch('[')+'wrath die'+ch(']')+'</span></b> '+ch('-')+' An inline dice expression rolling a d6 for wrath; leave blank if there is not a wrath die. Example: '+ch('[')+ch('[')+'1d6'+ch(']')+ch(']')+
+                '</li> '+
+                    '<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
+    '<b><span style="font-family: serif;">'+ch('[')+'--'+ch('<')+'Label'+ch('>')+ch('|')+ch('<')+'Message'+ch('>')+' ...'+ch(']')+'</span></b> '+ch('-')+' An optional set of text to be shown above the die roll. Label may be omitted to just provide a text field.  You can specify as many optional descriptions as you like.  A special use of the Label is to identify a die modifier for cases such as Soak and Brutal weapons.  That must be listed as Modifier|#.'+
                     '<div style="padding-left: 10px;padding-right:20px">Example with Wrath:'+
                         '<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'+
                             '!wag '+ch('[')+ch('[')+'6d6'+ch(']')+ch(']')+' '+ch('[')+ch('[')+'1d6'+ch(']')+ch(']')+' --Player|Sever --Skill|Athletics (Strength) --Modifier|0'+
@@ -419,15 +437,15 @@ var WrathAndGlory = WrathAndGlory || (function() {
                             '!wag '+ch('[')+ch('[')+'6d6'+ch(']')+ch(']')+' '+' --Player|Sever --Skill|Soak (Toughness) --Modifier|1'+
                         '</pre>'+
                     '</div>'+
-				'</li> '+
-			'</ul>'+
-		'</div>'+
+                '</li> '+
+            '</ul>'+
+        '</div>'+
     '</div>'+
-	'<div style="padding-left:10px;">'+
-		'<b><span style="font-family: serif;">!wwag '+ch('[')+'dice pool'+ch(']')+' '+ch('[')+'wrath die'+ch(']')+' '+'--'+ch('<')+'Label'+ch('>')+ch('|')+ch('<')+'Message'+ch('>')+' ...'+ch(']')+'</span></b>'+
-		'<div style="padding-left: 10px;padding-right:20px">'+
-			'<p>Identical to !wag except that the results are whispered to the player rolling and the GM.</p>'+
-		'</div>'+
+    '<div style="padding-left:10px;">'+
+        '<b><span style="font-family: serif;">!wwag '+ch('[')+'dice pool'+ch(']')+' '+ch('[')+'wrath die'+ch(']')+' '+'--'+ch('<')+'Label'+ch('>')+ch('|')+ch('<')+'Message'+ch('>')+' ...'+ch(']')+'</span></b>'+
+        '<div style="padding-left: 10px;padding-right:20px">'+
+            '<p>Identical to !wag except that the results are whispered to the player rolling and the GM.</p>'+
+        '</div>'+
     '</div>'+
     ( playerIsGM(playerid) ?
         '<b>Configuration</b>' + getAllConfigOptions() :
@@ -445,28 +463,28 @@ var WrathAndGlory = WrathAndGlory || (function() {
             msg.inlinerolls[idx].results.rolls[0]
         ) {
             _.each(msg.inlinerolls[idx].results.rolls,function(res){
-                rolls=_.reduce(_.map(res.results,function(r){	
-					// modify the roll with the die modifier passed through before sorting and returning results
-					r.v = r.v + dmod; // add diemod to r.v
-					r.v = Math.max(1,r.v); // r.v cannot be less than 1
-					r.v = Math.min(6,r.v); // r.v cannot be greater than 6
+                rolls=_.reduce(_.map(res.results,function(r){   
+                    // modify the roll with the die modifier passed through before sorting and returning results
+                    r.v = r.v + dmod; // add diemod to r.v
+                    r.v = Math.max(1,r.v); // r.v cannot be less than 1
+                    r.v = Math.min(6,r.v); // r.v cannot be greater than 6
                     return r.v;
                 }).sort()  || [], function(m,r){
                     m[r]=(m[r]||0)+1;
                     return m;
                 },rolls);
             });
-        }				
+        }               
         return rolls;
     },
 
     getDiceArray = function(c) {
         return _.reduce(c,function(m,v,k){
-			_.times(v,function(){m.push(k);});
+            _.times(v,function(){m.push(k);});
             return m;
         },[]);
     },
-		
+        
     makeDiceImages = function(dice,bgcolor,color){
         bgcolor=bgcolor||'black';
         color=color||'white';
@@ -483,15 +501,15 @@ var WrathAndGlory = WrathAndGlory || (function() {
         }).reverse().join('');
     },
     getRollableDiceCount = function(dice){
-		
+        
         return _.filter(dice,function(v){return (v+'').match(/^\d+$/);}).length;
     },
-	
+    
     makeRerollExpression = function(dice, dieType='d6'){
         var cnt = getRollableDiceCount(dice);
         return ' '+ch('[')+ch('[')+cnt+dieType+ch(']')+ch(']')+' ';
     },
-	
+    
     validatePlayerRollHash = function(playerid, hash, base, wrath){
         var obj=state.WrathAndGlory.playerRolls[playerid];
         return (obj && obj.hash === hash &&
@@ -507,7 +525,7 @@ var WrathAndGlory = WrathAndGlory || (function() {
             success: 0,
             icon: 0,
             exalted: 0,
-			ruin: 0,
+            ruin: 0,
             rerolls: 0
         };
     },
@@ -636,10 +654,13 @@ var WrathAndGlory = WrathAndGlory || (function() {
             successes=0,
             icons=0,
             exaltedicons=0,
-			ruins=0,
+            ruins=0,
             rerolls=0,
-			diemod=0, //new line
+            diemod=0, //new line
             rerolledValues,
+			basedmg=0,
+			pen=0,
+			damage=0,
 
             reroll=false,
             rerollButton,
@@ -647,32 +668,32 @@ var WrathAndGlory = WrathAndGlory || (function() {
             cmd,
             hash,
             matches,
-            owner,	
+            owner,  
             output;
-						
+                        
         if (msg.type !== "api") {
             return;
         }
 
-		if(_.has(msg,'inlinerolls')){
+        if(_.has(msg,'inlinerolls')){
             rollIndices=_.map(msg.content.match(/\$\[\[(\d+)\]\]/g),function(i){
                 return i.match(/\d+/)[0];
             });
-		
-			msg.content = _.chain(msg.inlinerolls)
-				.reduce(function(m,v,k){
-					m['$[['+k+']]']=v.results.total || 0;
-					return m;
-				},{})
-				.reduce(function(m,v,k){
-					return m.replace(k,v);
-				},msg.content)
-				.value();
-		}
-		
+        
+            msg.content = _.chain(msg.inlinerolls)
+                .reduce(function(m,v,k){
+                    m['$[['+k+']]']=v.results.total || 0;
+                    return m;
+                },{})
+                .reduce(function(m,v,k){
+                    return m.replace(k,v);
+                },msg.content)
+                .value();
+        }
+        
         who=(getObj('player',msg.playerid)||{get:()=>'API'}).get('_displayname');
-        optional = msg.content.split(/\s+--/);					
-        args = optional.shift().split(/\s+/);				
+        optional = msg.content.split(/\s+--/);                  
+        args = optional.shift().split(/\s+/);               
         optional = _.map(optional,function(o){
             var s=o.split(/\|/),
                 k=s.shift();
@@ -683,13 +704,20 @@ var WrathAndGlory = WrathAndGlory || (function() {
             };
         });
 
-		// pull out the modifier and set to a number			
-		_.each(optional,function(a){
-			if(a.label=="Modifier"){
-				diemod=a.msg*1;
-			};
-		});
-					
+        // pull out the modifier and set to a number            
+        _.each(optional,function(a){
+            if(a.label=="Modifier"){
+                diemod=a.msg*1;
+            };
+        });
+
+		// pull out the Damage and set to a number            
+        _.each(optional,function(a){
+            if(a.label=="Damage"){
+                basedmg=a.msg*1;
+            };
+        });
+		
         cmd=args.shift();
         matches=cmd.match(/^(!\S+)\[([^\]]+)\]/);
         if(matches){
@@ -710,7 +738,7 @@ var WrathAndGlory = WrathAndGlory || (function() {
                 }
 
                 reroll=!!hash
-		
+        
                 if( reroll &&
                     ( _.has(state.WrathAndGlory.playerRolls,msg.playerid) &&
                         ( hash !== state.WrathAndGlory.playerRolls[msg.playerid].hash) )
@@ -729,12 +757,12 @@ var WrathAndGlory = WrathAndGlory || (function() {
                         return;
                     }
                 }
-				
+                
                 owner = owner || msg.playerid;
-				
+                
                 baseDice=getDiceCounts(msg,rollIndices[0],diemod);  // added diemod to getDiceCounts
                 wrathDice=getDiceCounts(msg,rollIndices[1],diemod); // added diemod to getDiceCounts
-						
+                        
                 if(reroll &&
                     (
                         _.has(state.WrathAndGlory.playerRolls,owner) &&
@@ -748,45 +776,46 @@ var WrathAndGlory = WrathAndGlory || (function() {
                     reportBadRerollCounts(msg.playerid);
                     return;
                 }
-				
+                
                 rerolledValues=getCountsForRoll(owner,hash);
 
                 successes = rerolledValues.success + (baseDice['4']||0) + (baseDice['5']||0) + (baseDice['6']||0) + (baseDice['6']||0) + (wrathDice['4']||0) + (wrathDice['5']||0) + (wrathDice['6']||0) + (wrathDice['6']||0); 
                 icons = rerolledValues.icon + (baseDice['4']||0) + (baseDice['5']||0) + (wrathDice['4']||0) + (wrathDice['5']||0);
                 exaltedicons = rerolledValues.exalted + (baseDice['6']||0) + (wrathDice['6']||0);
                 ruins = rerolledValues.ruin + (wrathDice['1']||0);
-				if(reroll){rerolls = rerolledValues.rerolls+1}; 	// only update if there is a reroll ... should be at 0 when a roll is first made
-					
-                optional = (optional.length && optional) || getOptionalForRoll(owner,hash);				
+				damage = successes + basedmg;
+				
+                if(reroll){rerolls = rerolledValues.rerolls+1};     // only update if there is a reroll ... should be at 0 when a roll is first made
+                    
+                optional = (optional.length && optional) || getOptionalForRoll(owner,hash);             
                 baseDiceArray=_.map(getDiceArray(baseDice),function(v){
                     switch(v){
                         case '4':
-							return symbols.iconsymbol;
+                            return symbols.iconsymbol;
                         case '5':
-							return symbols.iconsymbol;
+                            return symbols.iconsymbol;
                         case '6':
                             return symbols.exaltedsymbol;
                         default:
                             return v;
                     }
                 });
-								
-
+                                
                 wrathDiceArray=_.map(getDiceArray(wrathDice),function(v){
                     switch(v){
                         case '1':
-                            return ruinDie+'&nbsp;&nbsp;&nbsp;';
+                            return symbols.ruinsymbol;
                         case '4':
-							return symbols.wrathiconsymbol;
+                            return symbols.iconsymbol;
                         case '5':
-							return symbols.wrathiconsymbol;
+                            return symbols.iconsymbol;
                         case '6':
-                            return symbols.wrathexaltedsymbol;
+                            return symbols.exaltedsymbol;
                         default:
                             return v;
                     }
                 });
-			
+            
                // record reroll
                hash=(++state.WrathAndGlory.sequence);
                recordPlayerRollHash(owner,{
@@ -800,33 +829,35 @@ var WrathAndGlory = WrathAndGlory || (function() {
                         success: successes,
                         icon: icons,
                         exalted: exaltedicons,
-						ruin: ruins,
+                        ruin: ruins,
                         rerolls: rerolls
                     },
                     optional: optional
                 });
-					
+                    
                 rerollButton = (_.reduce([baseDiceArray,wrathDiceArray],function(m,dice){ return m+getRollableDiceCount(dice);},0) ?
                     makeButton(
                         '!'+(w?'w':'')+'wag['+hash+'] '+
                         makeRerollExpression(baseDiceArray)+
                         makeRerollExpression(wrathDiceArray),
-                        symbols.rerollsymbol+'&nbsp;&nbsp;&nbsp;'+rerolls
+                        '<span style="font-size: 0.5em">Reroll</span>&nbsp;'+symbols.rerollsymbol 
                     ) :
                     ''
                 );
 
-                output = makeOutput([ 
-                        makeLabel( symbols.explosion+'&nbsp;&nbsp;'+successes, colors.gold, colors.black),
-                        makeLabel( symbols.iconsymbol+'&nbsp;&nbsp;&nbsp;&nbsp;'+icons, colors.black, colors.white),				
-                        makeLabel( symbols.exaltedsymbol+'&nbsp;'+exaltedicons, colors.black, colors.white), 				
-                        makeLabel( ruinDie+'&nbsp;&nbsp;&nbsp;&nbsp;'+ruins, colors.red, colors.white), 
+                output = makeOutput([  
+                        makeLabel( '<span style="font-size: 0.5em">Total</span>&nbsp;&nbsp;&nbsp;'+successes, colors.black, colors.white),
+                        makeLabel( symbols.iconsymbol+'&nbsp;&nbsp;&nbsp;'+icons, colors.black, colors.white),      
+                        makeLabel( symbols.exaltedsymbol+'&nbsp;&nbsp;&nbsp;'+exaltedicons, colors.black, colors.white),
+                        makeLabel( symbols.ruinsymbol+'&nbsp;&nbsp;&nbsp;'+ruins, colors.red, colors.white), 
                         rerollButton
                     ].join(''),
                     [
-                        makeOptionalText(optional),
+                        makeOptionalText(optional,damage,successes),
+                        "<div>",  //needed to prevent the dice to overflow in a nasty way under the floating results div
                         makeDiceImages(baseDiceArray,colors.black, colors.white),
-                        makeDiceImages(wrathDiceArray,colors.red, colors.white) 
+                        makeDiceImages(wrathDiceArray,colors.red, colors.white),
+                        '</div>'
                     ].join('')
                 );
 
@@ -854,9 +885,9 @@ var WrathAndGlory = WrathAndGlory || (function() {
                 if(!args.length) {
                     sendChat('','/w "'+who+'" '+
 '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
-	'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'+
-		'WrathAndGlory v'+version+
-	'</div>'+
+    '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'+
+        'WrathAndGlory v'+version+
+    '</div>'+
     '<b>Configuration</b>'+
     getAllConfigOptions()+
 '</div>'
