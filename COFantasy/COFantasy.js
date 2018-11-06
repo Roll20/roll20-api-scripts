@@ -3638,7 +3638,7 @@ var COFantasy = COFantasy || function() {
     }
     if (getState(target, 'surpris')) defense -= 5;
     if (getState(target, 'renverse')) defense -= 5;
-    if (getState(target, 'aveugle')) defense -= 5;
+    if (getState(target, 'aveugle') || attributeAsBool(target, 'aveugleManoeuvre')) defense -= 5;
     if (getState(target, 'etourdi') || attributeAsBool(target, 'peurEtourdi'))
       defense -= 5;
     defense += attributeAsInt(target, 'bufDEF', 0);
@@ -3806,6 +3806,10 @@ var COFantasy = COFantasy || function() {
         attBonus -= 5;
         explications.push("Attaquant aveuglé => -5 en Attaque");
       }
+    } else if (attributeAsBool(attaquant, 'aveugleManoeuvre')) {
+      attBonus -= 5;
+      options.aveugleManoeuvre = true;
+      explications.push("Attaquant aveuglé => -5 en Attaque et aux DM");
     }
     if (options.tirDouble) {
       attBonus += 2;
@@ -5852,6 +5856,9 @@ var COFantasy = COFantasy || function() {
         mainDmgRollExpr += " + " + dmSpec.value;
         return false;
       });
+      if (options.aveugleManoeuvre) {
+        mainDmgRollExpr += " -5";
+      }
       var mainDmgRoll = {
         type: mainDmgType,
         value: mainDmgRollExpr
@@ -15118,7 +15125,7 @@ var COFantasy = COFantasy || function() {
         };
         if (d20rollAttaquant == 1 && d20rollDefenseur > 1) {
           resultat.echec = true;
-          resultat.echecCRitique = true;
+          resultat.echecCritique = true;
           diminueMalediction(attaquant, evt);
         } else if (d20rollDefenseur == 1 & d20rollAttaquant > 1) {
           resultat.succes = true;
@@ -15241,15 +15248,15 @@ var COFantasy = COFantasy || function() {
     attaqueContactOpposee(playerId, guerrier, cible, evt, options,
       function(res, display, explications) {
         var resultat;
-        if (res.echecCritique && !res.echecCritiqueDefenseur) {
+        if (res.echecCritique) {
           resultat = "<span style='" + BS_LABEL + " " + BS_LABEL_DANGER + "'><b>échec&nbsp;critique</b></span>";
-        } else if (res.echecCritiqueDefenseur && !res.echecCritique) {
+        } else if (res.echecCritiqueDefenseur) {
           resultat = "<span style='" + BS_LABEL + " " + BS_LABEL_SUCCESS + "'><b>succès</b></span>, " + cible.tokName + " laisse tomber son arme, difficile de la récupérer...";
           enleverArmeCible();
-        } else if (res.critique && !res.critiqueDefenseur) {
+        } else if (res.critique) {
           resultat = "<span style='" + BS_LABEL + " " + BS_LABEL_SUCCESS + "'><b>réussite critique</b></span> : " + cible.tokName + " est désarmé, et " + guerrier.tokName + " empêche de reprendre l'arme";
           enleverArmeCible();
-        } else if (res.critiqueDefenseur && !res.critique) {
+        } else if (res.critiqueDefenseur) {
           resultat = "<span style='" + BS_LABEL + " " + BS_LABEL_WARNING + "'><b>échec</b></span>, " + cible.tokName + " garde son arme bien en main";
         } else if (res.echec) {
           resultat = "<span style='" + BS_LABEL + " " + BS_LABEL_WARNING + "'><b>échec</b></span>, " + guerrier.tokName + " n'a pas réussi à désarmer son adversaire";
@@ -16577,6 +16584,12 @@ var COFantasy = COFantasy || function() {
       activation: "n'y voit plus rien !",
       actif: "", //Déjà affiché avec l'état aveugle
       fin: "retrouve la vue",
+      prejudiciable: true
+    },
+    aveugleManoeuvre: {
+      activation: "est aveuglé par la manoeuvre",
+      actif: "a du mal à voir où sont ses adversaires",
+      fin: "retrouve une vision normale",
       prejudiciable: true
     },
     ralentiTemp: {
@@ -18127,10 +18140,19 @@ var COFantasy = COFantasy || function() {
       token.set('light_angle', 360);
     }
     if (token.get('bar1_link') !== '') return;
+    var copyOf = 0;
     var tokenBaseName = tokenName;
     if (tokenBaseName.includes('%%NUMBERED%%')) {
       if (typeof TokenNameNumber !== 'undefined') return; //On laisse tokenNameNumber gérer ça
       tokenBaseName = tokenBaseName.replace('%%NUMBERED%%', '');
+    } else {
+      // On regarde si le nom se termine par un entier
+      var lastSpace = tokenBaseName.lastIndexOf(' ');
+      if (lastSpace > 0) {
+        copyOf = +tokenBaseName.substring(lastSpace + 1);
+        if (isNaN(copyOf)) copyOf = 0;
+        else tokenBaseName = tokenBaseName.substring(0, lastSpace);
+      }
     }
     var otherTokens = findObjs({
       _type: 'graphic',
@@ -18152,6 +18174,7 @@ var COFantasy = COFantasy || function() {
       if (!isNaN(tokenBaseName[tokenBaseName.length - 1]))
         nePasModifier = true;
     }
+    var pageId = token.get('pageid');
     otherTokens.forEach(function(ot) {
       if (ot.id == token.id) return;
       var name = ot.get('name');
@@ -18160,10 +18183,13 @@ var COFantasy = COFantasy || function() {
         var suffixe = name.replace(tokenBaseName + ' ', '');
         if (isNaN(suffixe)) return;
         var n = parseInt(suffixe);
+        if (n == copyOf) {
+          if (ot.get('pageid') == pageId) copyOf = 0;
+        }
         if (n >= numero) numero = n + 1;
       }
     });
-    if (nePasModifier) return;
+    if (nePasModifier || copyOf > 0) return;
     token.set('name', tokenBaseName + ' ' + numero);
   }
 
