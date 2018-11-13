@@ -387,10 +387,8 @@
               <h4 class="text-secondary">Manoeuvres</h4>
               <div class="decalage">
                 <p><code>!cof-action-defensive</code> avec comme argument soit <code>simple</code>, soit <code>totale</code> donne le bonus en défense de l'action défensive (p 71). Cette action est disponible par défaut si le personnage a une ability <code>#Actions#</code>. Alternativement, si vous n'utilisez pas cette méthode, vous pouvez créer une macro accessible à tous les tokens, <code>!cof-action-defensive ?{Action défensive|simple|totale}</code>.</p>
-                <p>Pour les autres manoeuvres, il est possible de faire un test d'attaque opposée avec la commande <code>!cof-test-attaque-opposee @{selected|token_id} @{target|token_id}</code>. Les effets des manoeuvres ne sont pas encore tous implémentés, mais c'est prévu.<p>
-                <ul>
-                  <li>Aveugler : sélectionner la cible, et lui appliquer <code>!cof-effet-temp aveugleManoeuvre 1</code>, remplacer <code>1</code> par <code>[[1d6]]</code> en cas de critique.</li>
-                </ul>
+                <p>Les manoeuvres risquées peuvent être lancées avec la commande <code>!cof-manoeuvre @{selected|token_id} @{target|token_id} <i>effet</i></code>. Liste des manoeuvres : <code>aveugler</code>, <code>bloquer</code>, <code>desarmer</code>, <code>faireDiversion</code>, <code>menacer</code>, <code>renverser</code>, <code>repousser</code>, <code>tenirADistance</code>.</p>
+                <p>Il est aussi possible de faire un test d'attaque opposée avec la commande <code>!cof-test-attaque-opposee @{selected|token_id} @{target|token_id}</code>.</p>
               </div>
               <h4 class="text-secondary">Recharger des armes : <code>!cof-recharger <i>N</i></code></h4>
               <div class="decalage">
@@ -961,7 +959,7 @@
                 </ol>
                 <h4 class="text-secondary">Voie du soldat</h4>
                 <ol>
-                  <li><strong>Posture de combat</strong> : <code>!cof-posture-de-combat <i>bonus attr1 attr2</i></code>, ou les deux <i>attr</i> peuvent être soit <code>DEF</code> soit <code>ATT</code> soit <code>DM</code>, et le <i>bonus</i> est retiré au premier attribut pour être ajouté au second. Le bonus peut être limité si le guerrier a un attribut <code>voieDuSoldat</code> qui indique son rang dans la voie. Exemple d'utilisation&nbsp;: <code>!cof-posture-de-combat @{selected|token_id} ?{Bonus} ?{Baisser|Défense,DEF|Attaque,ATT|Dégâts,DM} ?{Augmenter|Défense,DEF|Attaque,ATT|Dégâts,DM}</code>. Normalement, la règle fait décider de sa posture au guerrier à chaque tour, mais en pratique, il en change assez rarement. Une posture de combat reste donc active jusqu'à la fin du combat ou jusqu'à ce qu'on en change (elle est neutre si on a le même attribut à buffer et débuffer).</li>
+                  <li><strong>Posture de combat</strong> : <code>!cof-posture-de-combat <i>bonus attr1 attr2</i></code>, où les deux <i>attr</i> peuvent être soit <code>DEF</code> soit <code>ATT</code> soit <code>DM</code>, et le <i>bonus</i> est retiré au premier attribut pour être ajouté au second. Le bonus peut être limité si le guerrier a un attribut <code>voieDuSoldat</code> qui indique son rang dans la voie. Exemple d'utilisation&nbsp;: <code>!cof-posture-de-combat ?{Bonus} ?{Baisser|Défense,DEF|Attaque,ATT|Dégâts,DM} ?{Augmenter|Défense,DEF|Attaque,ATT|Dégâts,DM}</code>. Normalement, la règle fait décider de sa posture au guerrier à chaque tour, mais en pratique, il en change assez rarement. Une posture de combat reste donc active jusqu'à la fin du combat ou jusqu'à ce qu'on en change (elle est neutre si on a le même attribut à buffer et débuffer).</li>
                   <li><strong>Combat en phalange</strong> : ajouter un attribut <code>combatEnPhalange</code>, valeur <code>true</code>. Les bonus seront ajoutés automatiquement en fonctions des alliés définis selon <a href="#allie">cette méthode</a>.</li>
                   <li><strong>Prouesse</strong> : pas de support pour l'instant. On peut utiliser <code>!cof-dmg 1d4 --ignoreRD</code> pour sacrifier les PV, le MJ peut ensuite gérer les effets du bonus au test.</li>
                   <li><strong>Dernier rempart</strong> : pas de support particulier, le MJ doit gérer les attaques supplémentaires.</li>
