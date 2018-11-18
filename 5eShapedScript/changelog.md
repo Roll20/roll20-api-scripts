@@ -1,3 +1,8 @@
+# 13.8.0
+
+### Features
+- Updated script SRD data to the November 2018 errata
+
 # 13.7.0
 
 ### Features
