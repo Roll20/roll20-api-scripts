@@ -25,7 +25,6 @@ var TrapEffect = (() => {
   };
 
   return class TrapEffect {
-
     /**
      * An API chat command that will be executed when the trap is activated.
      * If the constants TRAP_ID and VICTIM_ID are provided,
@@ -56,6 +55,33 @@ var TrapEffect = (() => {
     }
 
     /**
+     * The delay for the trap in seconds. If undefined or 0, the trap
+     * activates instantly when triggered.
+     * @type {uint}
+     */
+    get delay() {
+      return this._effect.delay;
+    }
+
+    /**
+     * Whether the trap should be destroyed after it activates.
+     * @type {boolean}
+     */
+    get destroyable() {
+      return this._effect.destroyable;
+    }
+
+    /**
+     * The shape of the trap's activated area. This could be an area where the
+     * trap token itself is the center of the effect (square or circle), or
+     * it could be a list of path IDs which define the activated areas.
+     * @type {(string[]|string)}
+     */
+    get effectShape() {
+      return this._effect.effectShape;
+    }
+
+    /**
      * Configuration for special FX that are created when the trap activates.
      * @type {object}
      * @property {(string | FxJsonDefinition)} name
@@ -78,6 +104,15 @@ var TrapEffect = (() => {
      */
     get gmOnly() {
       return this._effect.gmOnly;
+    }
+
+    /**
+     * A list of IDs for tokens that this trap ignores. These tokens will neither
+     * trigger nor be affected by the trap.
+     * @type {string[]}
+     */
+    get ignores() {
+      return this._effect.ignores || [];
     }
 
     /**
@@ -352,9 +387,19 @@ var TrapEffect = (() => {
     playApi() {
       let api = this.api;
       if(api) {
-        api = api.split('TRAP_ID').join(this.trapId);
-        api = api.split('VICTIM_ID').join(this.victimId);
-        sendChat('ItsATrap-api', api);
+        let commands;
+        if(api instanceof Array)
+          commands = api;
+        else
+          commands = [api];
+
+        // Run each API command.
+        _.each(commands, cmd => {
+          cmd = cmd.replace(/TRAP_ID/g, this.trapId);
+          cmd = cmd.replace(/VICTIM_ID/g, this.victimId);
+
+          sendChat('ItsATrap-api', cmd);
+        });
       }
     }
 
@@ -520,6 +565,13 @@ var TrapEffect = (() => {
         state.TokenMod.playersCanUse_ids = true;
         sendChat('It\'s A Trap', command);
       }
+    }
+
+    /**
+     * Saves the current trap effect properties to the trap's token.
+     */
+    save() {
+      this._trap.set('gmnotes', JSON.stringify(this.json));
     }
   };
 })();

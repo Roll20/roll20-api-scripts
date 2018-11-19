@@ -154,12 +154,19 @@ var TrapTheme = (() => {
       // Find the row with the given name.
       return TrapTheme.getSheetRepeatingRow(character, sectionName, rowAttrs => {
         let nameField = rowAttrs[nameFieldName];
+        if(!nameField)
+          return false;
         return nameField.get('current').toLowerCase().trim() === nameFieldValue;
       })
 
       // Get the current value of that row.
       .then(rowAttrs => {
+        if(!rowAttrs)
+          return NaN;
+
         let valueField = rowAttrs[valueFieldName];
+        if(!valueField)
+          return NaN;
         return valueField.get('current');
       });
     }

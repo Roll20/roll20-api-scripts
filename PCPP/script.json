@@ -1,7 +1,7 @@
 {
   "name": "PCPP",
-  "version": "0.3.2",
-  "description": "PowerCard PreProcessor - Provides API time evaluation and preprocessing of commands for PowerCards v1 or v2.",
+  "version": "0.3.3",
+  "description": "PowerCard PreProcessor - Provides API time evaluation and preprocessing of commands for PowerCards v1, v2, or v3",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -13,6 +13,7 @@
   "script": "PCPP.js",
   "useroptions": [],
   "previousversions": [
-    "0.3.1"
+    "0.3.1",
+    "0.3.2"
   ]
 }

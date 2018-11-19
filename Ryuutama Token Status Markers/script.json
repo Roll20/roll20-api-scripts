@@ -1,6 +1,6 @@
 {
   "name": "Ryuutama Token Status Markers",
-  "version": "1.0",
+  "version": "1.1",
   "description": "A script to automatically update tokens with hp, mp, and status conditions. Meant to be used in conjunction with the Ryuutama character sheet, but can be used independently.",
   "authors": "King Puff",
   "roll20userid": "665159",

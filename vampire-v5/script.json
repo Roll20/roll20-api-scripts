@@ -1,0 +1,14 @@
+{
+	"name": "Vampire The Masquerade 5th Edition Dice Mechanics",
+	"script": "VTM_Dice_Mechanics.js",
+	"version": "1.2",
+	"previousversions": ["1.0","1.1","1.2"],
+	"patreon":"https://www.justgiving.com/fundraising/vtm-5thed-character-sheet-red-cross",
+	"description": "This is the Dice roller for the Vampire the Masquerade 5th Edition and is designed to be used in conjunction with its corresponding character sheet. It provides access to advanced rolling features such as correctly calculated hunger dice and provides banners to assist you determining the outcome of rolls. If you wish to use this independently of the character sheet please review the Readme file for details.\n To findout about the character sheet itself and more about the API script please check out our [Sheet Guide](https://wiki.roll20.net/Vampire_The_Masquerade_5th_edition#Welcome_to_The_World_of_Darkness)  \n\n NOTE: Errors may occur if the player enters a name with tilde (\~), this is because the tilde is symbol I've used to identify names.",
+	"authors": "The Grand Coterie",
+	"roll20userid": "143652",
+	"useroptions": [],
+	"dependencies": [],
+	"modifies": {},
+	"conflicts": []
+}
