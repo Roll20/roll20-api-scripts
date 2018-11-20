@@ -1,0 +1,4 @@
+/.idea
+# Dependency directory
+node_modules
+ghToken.json
