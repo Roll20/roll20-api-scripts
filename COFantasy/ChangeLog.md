@@ -9,6 +9,7 @@
 * Rang 1 de la voie de la magie de guérison
 
 ### Correction de bugs
+* Amélioration de la compatibilité avec les autres scripts
 * Le copy-paste de mobs devrait maintenant ne plus rajouter de numéros
 * !cof-lancer-sort n'envoie plus de message en double au GM
 * Undo devenu possible pour !cof-dmg appliqué à un token lié
