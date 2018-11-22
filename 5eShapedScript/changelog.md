@@ -1,3 +1,11 @@
+# 13.9.0
+
+### Features
+- Extract SRD processing code to allow it to be used elsewhere
+
+### Bug fixes
+- Fix bad build from 13.8.0
+
 # 13.8.0
 
 ### Features
