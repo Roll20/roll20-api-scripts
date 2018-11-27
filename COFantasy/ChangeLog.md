@@ -1,5 +1,17 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 
+##1.07
+
+### Capacités
+* Ajout de la monture loyale du samouraï
+* Ajout du radar mental du psionique
+* Ajout de la capacité Bouclier psi du psionique
+* Ajout de la capacité Proprioception du psionique
+* Ajout de la capacité Défense intuitive du psionique
+* Ajout du champ de protection du psionique
+
+### Autres améliorations
+* Les options de script sont maintenant accessibles avec la commande !cof-options. Les options sont persistantes pour une même partie.
 
 ## 1.06
 ### Capacités
