@@ -301,7 +301,7 @@ function doDoubles(result, do10s, limit, args = null) {
 	// As doRerolls(), above, putting the roll results in a container.
     var vals = result.rolls[0].results;
 	
-	if (typeof vals != 'undefined')
+	if (typeof vals == 'undefined')
 	{
 		return;
 	}
