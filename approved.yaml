@@ -525,3 +525,7 @@ vampire5e:
 metamacros:
 - "MetaMacros"
 - Utility
+
+dupchartoken:
+  - "Duplicate Character Sheet and Token"
+  - Utility
