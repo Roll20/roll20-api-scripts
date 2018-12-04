@@ -54,15 +54,20 @@ var COFantasy = COFantasy || function() {
           val: true,
           type: 'bool'
         },
+        dm_minimum: {
+          explications: "Dégâts minimum d'une attaque ou autre source de DM.",
+          val: 0,
+          type: 'int'
+        },
         forme_d_arbre_amelioree: {
           explications: "+50% à l'effet de la peau d'écorce en forme d'arbre.",
           val: true,
           type: 'bool'
         },
-        dm_minimum: {
-          explications: "Dégâts minimum d'une attaque ou autre source de DM.",
-          val: 0,
-          type: 'int'
+        initiative_variable: {
+          explications: "Ajoute 1d6 à l'initiative, lancé une fois par combat",
+          val: false,
+          type: 'bool'
         },
         usure_DEF: {
           explications: "Malus de -2 en DEF tous les n tours. Mettre à 0 pour ne pas avoir de malus d'usure",
@@ -118,15 +123,16 @@ var COFantasy = COFantasy || function() {
   function copyOptions(dst, src) {
     for (var o in src) {
       var opt = src[o];
+      var isOption = opt.type == 'options';
       if (dst[o] === undefined) {
         dst[o] = {
           explications: opt.explications,
           val: {},
           type: opt.type,
         };
-        if (opt.type == 'options') copyOptions(dst[o].val, opt.val);
-        else dst[o].val = opt.val;
+        if (!isOption) dst[o].val = opt.val;
       }
+      if (isOption) copyOptions(dst[o].val, opt.val);
     }
   }
 
@@ -3194,6 +3200,56 @@ var COFantasy = COFantasy || function() {
     return attrs;
   }
 
+  function onGenre(charId, male, female) {
+    var sex = getAttrByName(charId, 'SEXE');
+    if (sex.startsWith('F')) return female;
+    return male;
+  }
+
+  function tokenInit(perso, evt) {
+    var persoMonte = tokenAttribute(perso, 'estMontePar');
+    if (persoMonte.length > 0) {
+      var cavalier = tokenOfId(persoMonte[0].get('current'), persoMonte[0].get('max'), perso.token.get('pageid'));
+      if (cavalier !== undefined) return tokenInit(cavalier, evt);
+    }
+    var init = ficheAttributeAsInt(perso, 'DEXTERITE', 10);
+    init += ficheAttributeAsInt(perso, 'INIT_DIV', 0);
+    //Règle optionelle : +1d6, à lancer en entrant en combat
+    if (stateCOF.options.regles.val.initiative_variable) {
+      var bonusVariable = attributeAsInt(perso, 'bonusInitVariable', 0);
+      if (bonusVariable === 0) {
+        bonusVariable = randomInteger(6);
+        var msg = "entre en combat. ";
+        msg += onGenre(perso.charId, 'Il', 'Elle') + " fait ";
+        msg += '<span style="display: inline-block; border-radius: 5px; padding: 0 4px; background-color: #F1E6DA; color: #000;" title="1d6 = ' + bonusVariable + '" class="a inlinerollresult showtip tipsy-n">' + bonusVariable + "</span>";
+        msg += " à son jet d'initiative";
+        setTokenAttr(perso, 'bonusInitVariable', bonusVariable, evt, msg);
+      }
+      init += bonusVariable;
+    }
+    if (attributeAsBool(perso, 'formeDArbre')) init = 7;
+    if (getState(perso, 'aveugle')) init -= 5;
+    // Voie du compagnon animal rang 2 (surveillance)
+    init += attributeAsInt(perso, 'bonusInitEmbuscade', 0);
+    // Voie du chef d'armée rang 2 (Capitaine)
+    if (aUnCapitaine(perso, evt)) init += 2;
+    if (charAttributeAsBool(perso, 'graceFeline')) {
+      init += modCarac(perso, 'CHARISME');
+    }
+    if (attributeAsBool(perso, 'masqueDuPredateur')) {
+      init += getValeurOfEffet(perso, 'masqueDuPredateur', modCarac(perso, 'SAGESSE'));
+    }
+    // Voie du pistolero rang 1 (plus vite que son ombre)
+    var armeEnMain = tokenAttribute(perso, 'armeEnMain');
+    if (armeEnMain.length > 0) {
+      var armeL = armeEnMain[0].get('current');
+      if (charAttributeAsInt(perso, "charge_" + armeL, 0) > 0) {
+        init += charAttributeAsInt(perso, 'initEnMain' + armeL, 0);
+      }
+    }
+    return init;
+  }
+
   function initiative(selected, evt, recompute) { //set initiative for selected tokens
     // Always called when entering combat mode
     // set the initiative counter, if not yet set
@@ -3590,37 +3646,6 @@ var COFantasy = COFantasy || function() {
       return compagnonPresent;
     }
     return false;
-  }
-
-  function tokenInit(perso, evt) {
-    var persoMonte = tokenAttribute(perso, 'estMontePar');
-    if (persoMonte.length > 0) {
-      var cavalier = tokenOfId(persoMonte[0].get('current'), persoMonte[0].get('max'), perso.token.get('pageid'));
-      if (cavalier !== undefined) return tokenInit(cavalier, evt);
-    }
-    var init = ficheAttributeAsInt(perso, 'DEXTERITE', 10);
-    init += ficheAttributeAsInt(perso, 'INIT_DIV', 0);
-    if (attributeAsBool(perso, 'formeDArbre')) init = 7;
-    if (getState(perso, 'aveugle')) init -= 5;
-    // Voie du compagnon animal rang 2 (surveillance)
-    init += attributeAsInt(perso, 'bonusInitEmbuscade', 0);
-    // Voie du chef d'armée rang 2 (Capitaine)
-    if (aUnCapitaine(perso, evt)) init += 2;
-    if (charAttributeAsBool(perso, 'graceFeline')) {
-      init += modCarac(perso, 'CHARISME');
-    }
-    if (attributeAsBool(perso, 'masqueDuPredateur')) {
-      init += getValeurOfEffet(perso, 'masqueDuPredateur', modCarac(perso, 'SAGESSE'));
-    }
-    // Voie du pistolero rang 1 (plus vite que son ombre)
-    var armeEnMain = tokenAttribute(perso, 'armeEnMain');
-    if (armeEnMain.length > 0) {
-      var armeL = armeEnMain[0].get('current');
-      if (charAttributeAsInt(perso, "charge_" + armeL, 0) > 0) {
-        init += charAttributeAsInt(perso, 'initEnMain' + armeL, 0);
-      }
-    }
-    return init;
   }
 
   //fonction avec callback, mais synchrone
@@ -4978,8 +5003,8 @@ var COFantasy = COFantasy || function() {
   }
 
   // Effets quand on rentre en combat 
-  // attaquant doit avoir un tokName et un name
-  function entrerEnCombat(attaquant, cibles, explications, options, evt) {
+  // attaquant doit avoir un tokName et peut calculer le name
+  function entrerEnCombat(attaquant, cibles, explications, evt) {
     if (!stateCOF.combat) {
       var selected = [{
         _id: attaquant.token.id
@@ -4998,6 +5023,11 @@ var COFantasy = COFantasy || function() {
     var pacifisme = tokenAttribute(attaquant, 'pacifisme');
     if (pacifisme.length > 0 && pacifisme[0].get('current') > 0) {
       pacifisme[0].set('current', 0);
+      if (attaquant.name === undefined) {
+        var attackChar = getObj('character', attaquant.charId);
+        if (attackChar) attaquant.name = attackChar.get('name');
+        else attaquant.name = attaquant.tokName;
+      }
       sendChat("GM", '/w "' + attaquant.name + '" ' + attaquant.tokName + " perd son pacifisme");
     }
     if (attributeAsBool(attaquant, 'sanctuaire')) {
@@ -5198,7 +5228,7 @@ var COFantasy = COFantasy || function() {
     if (limiteRessources(attaquant, options, attackLabel, weaponName, evt))
       return;
     // Effets quand on rentre en combat 
-    entrerEnCombat(attaquant, cibles, explications, options, evt);
+    entrerEnCombat(attaquant, cibles, explications, evt);
     // On commence par le jet d'attaque de base : juste le ou les dés d'attaque 
     // et le modificateur d'arme et de caractéritiques qui apparaissent dans 
     // la description de l'attaque. Il faut quand même tenir compte des
@@ -5957,6 +5987,32 @@ var COFantasy = COFantasy || function() {
       if (loupParmiLesLoups > 0 && estHumanoide(target)) {
         attDMBonus += "+" + loupParmiLesLoups;
         target.messages.push("Loup parmi les loups : +" + loupParmiLesLoups + " DM");
+      }
+      //Bonus aux DMs dus au défi samouraï
+      var defiSamouraiAttr = tokenAttribute(attaquant, 'defiSamourai');
+      if (defiSamouraiAttr.length > 0) {
+        defiSamouraiAttr = defiSamouraiAttr[0];
+        var cibleDefi = defiSamouraiAttr.get('max');
+        if (cibleDefi.startsWith(target.token.id)) cibleDefi = true;
+        else {
+          var cibleDefiSep = cibleDefi.indexOf(' ');
+          var cibleDefiName = cibleDefi.substring(cibleDefiSep + 1);
+          if (cibleDefiName == target.tokName) {
+            var cibleDefiId = cibleDefi.substring(0, cibleDefiSep);
+            cibleDefi = tokenOfId(cibleDefiId, cibleDefiName, pageId);
+            if (cibleDefi !== undefined && cibleDefi.id != target.id)
+              cibleDefi = false;
+            else cibleDefi = true;
+          } else cibleDefi = false;
+        }
+        if (cibleDefi) {
+          var bonusDefi = parseInt(defiSamouraiAttr.get('current'));
+          target.additionalDmg.push({
+            type: mainDmgType,
+            value: bonusDefi
+          });
+          target.messages.push(attackerTokName + " bénéficie d'un bonus de +" + bonusDefi + " aux DMs contre " + target.tokName);
+        }
       }
 
       if (attributeAsBool(attaquant, 'ombreMortelle') ||
@@ -7829,7 +7885,8 @@ var COFantasy = COFantasy || function() {
         evt.deletedAttributes.push(obj);
         obj.remove();
       } else if (estEffetCombat(attrName)) {
-        sendChar(charId, messageEffetCombat[effetCombatOfAttribute(obj)].fin);
+        var mc = messageEffetCombat[effetCombatOfAttribute(obj)].fin;
+        if (mc && mc !== '') sendChar(charId, mc);
         evt.deletedAttributes.push(obj);
         obj.remove();
       } else if (estAttributEffetCombat(attrName)) {
@@ -10265,12 +10322,6 @@ var COFantasy = COFantasy || function() {
 
   function eForFemale(charId) {
     return onGenre(charId, '', 'e');
-  }
-
-  function onGenre(charId, male, female) {
-    var sex = getAttrByName(charId, 'SEXE');
-    if (sex.startsWith('F')) return female;
-    return male;
   }
 
   function armureMagique(msg) {
@@ -15233,7 +15284,7 @@ var COFantasy = COFantasy || function() {
       }
       defenseur.name = charDefenseur.get('name');
     }
-    entrerEnCombat(attaquant, [defenseur], explications, options, evt);
+    entrerEnCombat(attaquant, [defenseur], explications, evt);
     //Recherche des armes utilisées
     var armeAttaquant = armeDeContact(attaquant, options.armeAttaquant, options.labelArmeAttaquant, options.armeAttaquantContact);
     var armeDefenseur = armeDeContact(defenseur, options.armeDefenseur, options.labelArmeDefenseur, options.armeDefenseurContact);
@@ -16725,7 +16776,7 @@ var COFantasy = COFantasy || function() {
     var titre = "Options de COFantasy";
     if (prefix !== '') {
       titre += "<br>" + prefix + ' (';
-      titre += boutonSimple('!cof-options'+up, '', 'retour') + ')';
+      titre += boutonSimple('!cof-options' + up, '', 'retour') + ')';
     }
     var display = startFramedDisplay(playerId, titre, undefined, {
       chuchote: true
@@ -16766,6 +16817,55 @@ var COFantasy = COFantasy || function() {
     }
     addLineToFramedDisplay(display, boutonSimple('!cof-options' + prefix + ' reset', '', 'Valeurs par défaut'), 70);
     sendChat('', endFramedDisplay(display));
+  }
+
+  function lancerDefiSamourai(msg) {
+    var options = parseOptions(msg);
+    if (options === undefined) return;
+    var cmd = options.cmd;
+    if (cmd === undefined || cmd.length < 3) {
+      error("cof-defi-samourai demande au moins 2 options",
+        msg.content);
+      return;
+    }
+    var pageId = options.pageId;
+    var samourai = tokenOfId(cmd[1], cmd[1], pageId);
+    if (samourai === undefined) {
+      error("Le token sélectionné n'est pas valide", msg.content);
+      return;
+    }
+    samourai.tokName = samourai.token.get('name');
+    if (attributeAsBool(samourai, 'defiSamourai')) {
+      sendPlayer(msg, samourai.tokName + " a déjà lancé un défi durant ce combat.");
+      return;
+    }
+    var cible = tokenOfId(cmd[2], cmd[2], pageId);
+    if (cible === undefined) {
+      error("Le deuxième token sélectionné n'est pas valide", msg.content);
+      return;
+    }
+    cible.tokName = cible.token.get('name');
+    var evt = {
+      type: 'Défi samouraï'
+    };
+    var explications = [];
+    entrerEnCombat(samourai, [cible], explications, evt);
+    explications.forEach(function(m) {
+      sendChar(samourai.charId, m);
+    });
+    var bonus;
+    if (cmd.length > 3) {
+      bonus = parseInt(cmd[3]);
+      if (isNaN(bonus) || bonus < 1) {
+        error("Bonus de défi de samouraï incorrect", cmd[3]);
+        bonus = undefined;
+      }
+    }
+    if (bonus === undefined)
+      bonus = charAttributeAsInt(samourai, 'voieDeLHonneur', 2);
+    setTokenAttr(samourai, 'defiSamourai', bonus, evt,
+      samourai.tokName + " lance un défi à " + cible.tokName,
+      cible.token.id + ' ' + cible.tokName);
   }
 
   function apiCommand(msg) {
@@ -17088,6 +17188,9 @@ var COFantasy = COFantasy || function() {
         return;
       case "!cof-torche":
         switchTorche(msg);
+        return;
+      case "!cof-defi-samourai":
+        lancerDefiSamourai(msg);
         return;
       default:
         return;
@@ -17568,7 +17671,7 @@ var COFantasy = COFantasy || function() {
     criDeGuerre: {
       activation: "pousse son cri de guerre",
       actif: "a effrayé ses adversaires",
-      fin: "n'effraie plus ses adversaires"
+      fin: ""
     },
     protectionContreLeMal: {
       activation: "reçoit une bénédiction de protection contre le mal",
@@ -17596,6 +17699,16 @@ var COFantasy = COFantasy || function() {
       fin: "se remet de la putréfaction",
       prejudiciable: true,
       dm: true
+    },
+    bonusInitVariable: {
+      activation: "entre en combat",
+      actif: "est en combat",
+      fin: ''
+    },
+    defiSamourai: {
+      activation: "lance un défi",
+      actif: "a lancé un défi",
+      fin: ''
     }
   };
 

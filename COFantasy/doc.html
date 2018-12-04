@@ -203,6 +203,7 @@
                 <h4 class="text-secondary">Initiative : <code>!cof-init</code></h4>
                 <div class="decalage">
                   <p>Les tokens sélectionnés sont ajouté au tracker de tour. Si celui-ci n'existe pas, un nouveau est créé, avec compteur de tour à 1, et on rentre en combat.</p>
+                  <p>Une option du script (ajustable en utilisant <code>!cof-options</code>) permet d'utiliser la règle de l'initiative variable (ajout d'un d6 à l'initiative). </p>
                   <p>Les règles de tri suivent ce qui est donné p 70 : priorité aux PJs. Pour l'instant, on distingue un PJ d'un PNJ au dé de vie : si le personnage d'a pas de dé de vie, c'est un PNJ. Ensuite, entre PJs, priorité à la plus haute sagesse. Pour les PNJ, c'est aléatoire.</p>
                   <p>À chaque instant, le token dont c'est le tour d'agir est signalé par un drapeau noir.</p>
                   <div class="alert alert-primary">
@@ -1260,6 +1261,7 @@
                 <h4 class="text-secondary">Voie de l'honneur</h4>
                 <ol>
                   <li><strong>Chef né</strong> : ajouter un attrubut <code>immunitePeur</code>, de valeur <code>true</code>, et des attributs ou compétences pour l'intimidation et commander.</li>
+                  <li><strong>Défi</strong> : <code>!cof-defi-samourai @{selected|token_id} @{target|token_id} <i>bonus</i></code>. Le bonus en argument est optionnel. Si il n'est pas présent, le script utilise la valeur d'un attribut <code>voieDeLHonneur</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du ki</h4>
                 <ol>
