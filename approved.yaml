@@ -527,5 +527,5 @@ metamacros:
 - Utility
 
 dupchartoken:
-  - "Duplicate Character Sheet and Token"
+  - "DupCharToken"
   - Utility
