@@ -1,5 +1,10 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 
+##1.08
+
+* Ajout de la capacité vampirisation de la Voie de la magie maléfique
+* Plus d'affichages de jets de dé (pour les soins de groupe, baies, fortifiants, ...)
+
 ##1.07
 
 ### Capacités
