@@ -3,10 +3,10 @@
 var ForbiddenLands = ForbiddenLands || (function() {
     'use strict';
 
-    var version = '0.0.1',
-        lastUpdate = 1518886210,
-        schemaVersion = 0.1,
-        symbols = {
+    var version = '1.2',
+        lastUpdate = 'December 12th, 2018',
+		schemaVersion = 0.1,
+		symbols = {
             skull: '&#'+'9760;', 
             sword:  '&#'+'9876;',
 			xxsword:  '2' + '&#'+'9876;',
@@ -249,7 +249,7 @@ var ForbiddenLands = ForbiddenLands || (function() {
         });
     },
     checkInstall = function() {
-        log('-=> ForbiddenLands v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+        log('-=> ForbiddenLands v'+version+' <=-  ['+(lastUpdate)+']');
 
         if( ! _.has(state,'ForbiddenLands') || state.ForbiddenLands.version !== schemaVersion) {
             log('  > Updating Schema to v'+schemaVersion+' <');
@@ -409,7 +409,13 @@ var ForbiddenLands = ForbiddenLands || (function() {
 				'</li> '+
 					'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
 					'<b><span style="font-family: serif;">'+ch('[')+'--'+ch('<')+'Label'+ch('>')+ch('|')+ch('<')+'Message'+ch('>')+' ...'+ch(']')+'</span></b> '+ch('-')+' An optional set of text to be shown above the die roll. Label may be omitted to just provid a text field.  You can specify as many optional descriptions as you like.'+
-                    '<div style="padding-left: 10px;padding-right:20px">'+
+                   
+				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
+					'<b><span style="font-family: serif;">Excluding Dice Rolls:</span></b> Dice roll expressions must be included but to not roll leave as a 0; an empty express '+ch('[')+ch('[')+''+ch(']')+ch(']')+' will throw a syntax error . Example of setting an expression to roll no dice: '+ch('[')+ch('[')+'0'+ch(']')+ch(']')+
+				'</li> '+
+				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
+					'<b><span style="font-family: serif;">Example:</span></b> '+ 
+					'<div style="padding-left: 10px;padding-right:20px">'+
                         '<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'+
                             '!forl '+ch('[')+ch('[')+'5d6'+ch(']')+ch(']')+' '+ch('[')+ch('[')+'3d6'+ch(']')+ch(']')+' '+ch('[')+ch('[')+'4d6'+ch(']')+ch(']')+' '+ch('[')+ch('[')+'1d10'+ch(']')+ch(']')+' --Player|Wulfred --Skill|Stealth (Agility)'+
                         '</pre>'+
@@ -796,10 +802,9 @@ var ForbiddenLands = ForbiddenLands || (function() {
                     }
                 });
 				
-				legendaryDieType = msg.inlinerolls[3].results.rolls[0].sides;
-				legendaryDieType="d"+legendaryDieType.toString();
-				log(legendaryDieType);
-			
+				legendaryDieType = msg.inlinerolls[3].expression;
+
+				
                // record push
                hash=(++state.ForbiddenLands.sequence);
                recordPlayerRollHash(owner,{
