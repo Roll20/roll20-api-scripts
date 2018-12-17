@@ -1,0 +1,31 @@
+{
+    "name": "It's a Trap! - World of Darkness classic theme",
+    "script": "TrapTheme.js",
+    "version": "3.0",
+    "previousversions": [],
+    "description": "# It's A Trap! - World of Darkness (classic) theme\r\rThis script is a trap theme supplement for the It's a Trap! script designed to\rsupport World of Darkness (classic) character sheets.\r\rCurrently this script provides automatic support for the following sheets:\rChangeling: The Dreaming, Demon: The Fallen, Mage: The Ascension, Vampire: The Dark Ages, Vampire: The Masquerade, Werewolf: The Apocalypse, and all the forementioned's 20th anniversary edition variations.\r\rOther sheets, custom sheets, and characters based upon plain attributes are also supported.\rFor those, just fill in the names for the character attributes in the user options for\rthis script.\r\r## Help\r\rDue to complications with the API reading attributes from certain character sheets,\rthere have been issues in the past with things such as saving throws or passive perception\rnot being correct. If this happens, first try adjusting the values for these on\ryour character sheet or try re-creating the character sheet from scratch to see\rif that resolves the problem.\r\rIf you continue to experience any issues while using this script,\rneed help using it, or if you have a neat suggestion for a new feature, please reply to this thread:\rhttps://app.roll20.net/forum/post/3280344/script-its-a-trap-v2-dot-3\ror shoot me a PM:\rhttps://app.roll20.net/users/46544/stephen-l\r\r## Show Support\r\rIf you would like to show your appreciation and support for the work I do in writing,\rupdating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)\ror, simply leave a thank you note in the script's thread on the Roll20 forums.\rEither is greatly appreciated! Happy gaming!\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [
+      {
+        "name": "sheet",
+        "type": "select",
+        "options": ["custom/none", "Changeling: The Dreaming", "Demon: The Fallen", "Mage: The Ascension", "Vampire: The Dark Ages", "Vampire: The Masquerade", "Werewolf: The Apocalypse"],
+        "default": "custom/none",
+        "description": "For some supported character sheets the attribute names are already known. For custom/none, you'll need to fill in the attribute names in the fields below."
+      },
+      {
+        "name": "perception",
+        "type": "text",
+        "description": "The name of the Perception attribute."
+      },
+      {
+        "name": "alertness",
+        "type": "text",
+        "description": "The name of the Alertness attribute."
+      }
+    ],
+    "dependencies": ["HTML Builder", "It's a Trap!"],
+    "modifies": {},
+    "conflicts": []
+}

@@ -1,0 +1,16 @@
+{
+  "name": "Shuffle Tokens",
+  "version": "1.0.0",
+  "description": "Shuffles positions of selected cards and or tokens in the map window.",
+  "authors": "Ashton McAllan",
+  "roll20userid": "666728",
+  "patreon": "https://www.patreon.com/acegiak",
+  "dependencies": [],
+  "modifies": {
+    "graphic.*": "read,write"
+  },
+  "conflicts": [],
+  "script": "ShuffleTokens.js",
+  "useroptions": {},
+  "previousversions": []
+}

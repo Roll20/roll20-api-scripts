@@ -4,7 +4,7 @@ var ForbiddenLands = ForbiddenLands || (function() {
     'use strict';
 
     var version = '1.2',
-        lastUpdate = 'December 12th, 2018',
+    lastUpdate = 'December 12th, 2018',
 		schemaVersion = 0.1,
 		symbols = {
             skull: '&#'+'9760;', 

@@ -1,0 +1,13 @@
+{
+    "name": "Roleplaying is Magic 4E Dice",
+    "script": "mlp_dice.js",
+    "version": "1.1",
+    "previousversions": [],
+    "description": "# Roleplaying is Magic 4E dice\r\r*Dependencies*\r* Roleplaying Is Magic 4E character sheet - v1.1+\r\r*v1.1 Updates*\r* The script now has an API.\r* Compatible with the It's A Trap! MLP-RIM-4 theme.\r* Requires v1.1 of the Roleplaying is Magic 4E character sheet.\r\rThis is a script for rolling dice checks checks for the\r[Roleplaying is Magic: Season 4 edition](http://roleplayingismagic.com/),\ra popular fan-created tabletop RPG system based upon the world of\rMy Little Pony: Friendship is Magic and developed by Roan Arts.\r\r## Character sheet\r\rThis script is codependent with the [Roleplaying is Magic 4E character sheet](https://github.com/Cazra/roll20-character-sheets/tree/master/RoleplayingIsMagic_4E).\rIt can be used either by using the chat command documented in the script or\rwith the dice rolling buttons the character sheet's Skills section.\r\r## Using it as a chat command\r\rYou can use this script to roll dice checks for the RiM 4 system using the\rfollowing chat command:\r\r```\r!r {skill name} [+/- ad hoc Advantages/Drawbacks] [\"Any ad hoc notes about the skill roll\"]\r```\r\re.g. ```!r Stealth +1 \"+2 if hiding in a wooded area\"```\r\rThe skill name is case-insensitive and supports shortened names. For example\rinstead of rolling ```!r Spellcasting```, you can roll ```!r spell```.\r\r*Important:* In order to roll a skill check for a character, you must be currently\rspeaking as that character in the chat.\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {},
+    "conflicts": []
+}

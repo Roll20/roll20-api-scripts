@@ -1,0 +1,17 @@
+{
+  "name": "Dynamic Light Helper",
+  "script": "DynamicLightHelper.js",
+  "version": "2.0",
+  "description": "DynamicLightHelper automatically splits lines drawn on the Dynamic Lighting layer and adds control points for easy manipulation.\r\r## Commands\r\r```!Dynamic_Light_Helper [hidehelp|showhelp]```\r\rWhen DynamicLightHelper starts up, it will whisper command buttons to the gm to allow them to toggle help on and off.\r\rDynamicLightHelper works on square grids.  You can toggle it on and off by setting the `Show Labels (hex only)` setting in the **Page Settings** dialog.",
+  "authors": "Stephen Shomo",
+  "roll20userid": "135636",
+  "dependencies": [],
+  "modifies": {
+    "state.Dynamic_Light_Helper": "read,write",
+    "path.*": "create,read,write,remove",
+    "page.grid_type": "read,write",
+    "page.gridlabels": "read,write",
+    "graphic.*": "create"
+  },
+  "conflicts": []
+}

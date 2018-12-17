@@ -1,0 +1,16 @@
+{
+    "name": "Shadow of the Demon Lord",
+    "script": "sotdl.js",
+    "version": "0.2",
+    "previousversions": ["0.1"],
+    "description": "This takes the Shadow of the Demon Lord character sheet to the next level, since the core Game Mechanics requirements exceed what can be done with macros, such as detecting rolls totaling 20 or more.",
+    "authors": "Matthew Paluch(170911)",
+    "roll20userid": "170911",
+    "useroptions": [
+    ],
+    "dependencies": [],
+    "modifies": {
+    	"state.DL": "read,write"
+    },
+    "conflicts": []
+}

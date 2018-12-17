@@ -1,0 +1,17 @@
+{
+  "name": "Interpreted sendChat",
+  "script": "Interpreted sendChat.js",
+  "version": "2.2",
+  "previousversions": ["2.1","2.0","1.1"],
+  "description": "Provides a function for other scripts to use to assist in sending messages to the chat. This script is not intended to stand alone.",
+  "authors": "Brian Shields",
+  "roll20userid": "235259",
+  "patreon": "https://www.patreon.com/bshields",
+  "useroptions": [],
+  "dependencies": ["levenshteinDistance"],
+  "modifies": {
+    "character.type": "read",
+    "character.name": "read"
+  },
+  "conflicts": []
+}

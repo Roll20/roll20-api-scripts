@@ -1,20 +1,76 @@
 # It's A Trap!
 
-###### Required Scripts
-* [Token Collisions](https://github.com/Roll20/roll20-api-scripts/tree/master/Token%20Collisions)
-* [Vector Math](https://github.com/Roll20/roll20-api-scripts/tree/master/Vector%20Math)
+_v3.9 Updates:_
+* Implemented delayed activation for traps. See the 'Delay Activation' property.
 
-This is a script that allows GMs to quickly and very easily set up traps on the GM layer, and detect when tokens on the objects layer move over them. This trap detection even works for tokens moving by waypoints.
+This is a script that allows GMs to quickly and very easily set up traps,
+secret doors, and other hidden things on the GM layer, and detect when tokens
+on the objects layer move over them. This trap detection even works for tokens
+moving by waypoints.
 
-### To set up traps:
+Combined with modules called Trap Themes, this script also allows system-specific
+automation of trap effects and passive perception used to spot them.
 
-Place the token for your trap on the GM layer. Give it the cobweb status marker. 
+### Creating traps:
 
-By default, traps will only affect characters on the ground (ones that don't have a wing or angel status marker). To have a trap also affect flying characters, give it the wing or angel status marker.
+Place the token for your trap on the ```GM layer```.
+Then, select the trap token and activate its 'ItsATrap_trapCreationWizard' token macro.
+This will present a menu for setting up the trap's configurations.
 
-By default, trap tokens won't appear when they are activated. If you would like the trap to become visible to the players when it is activated, give it the bleeding eye status marker. 
+### Setting trap triggers:
 
-### To set off traps:
+As of version 3.3, traps can be set to be triggered either by their own token or
+by a set of paths on the GM layer. By default, the trap's token is used as
+its trigger.
 
-If a token moves across a trap at ANY point during its movement, the trap will be activated!
+You can change this by opening the trap's creation wizard in the chat,
+selecting a set of polygonal or freehand paths from the GM layer, and then setting
+the ```Set Trigger``` property for the trap to ```Paths```.
 
+Note: Elliptical token shapes are not currently supported (unless they are circles).
+
+### Activating traps:
+
+If a token moves across a trap or its trigger paths at ANY point during its
+movement, the trap will be activated!
+
+A trap can also be manually activated by clicking the 'Activate Trap' button
+in the trap's configuration menu.
+
+As of version 3.7, traps can be set to have their activation areas be either the
+trap tokens themselves or be a set of paths on the GM layer. By default, the trap's
+token is still used as the activation area. You can change this by selecting a
+set of polygonal or freehand paths from the GM layer, and then setting  
+the ```Trap Shape``` property for the trap to ```Paths```. This supports paths
+both as lines (no fill color) and polygons (requires fill color).
+
+### TrapThemes:
+
+TrapThemes are used to provide support for formatting messages for traps and
+automating system-specific trap activation and passive search mechanics.
+
+By default the ```default``` theme will be used. This is a very basic,
+system-agnostic TrapTheme which provides support for the basic TrapEffect properties
+and has no passive search mechanics.
+
+If you install a system-specific trap theme, then It's A Trap will automatically use
+that theme instead.
+
+Additional system-specific themes are available as their own API scripts.
+If you would like to implement a TrapTheme for your system, take a look at
+the ```default``` or ```5E-OGL``` TrapThemes as an example to get you started.
+
+## Help
+
+If you experience any issues while using this script or the trap themes,
+need help using it, or if you have a neat suggestion for a new feature, please reply to this thread:
+https://app.roll20.net/forum/post/3280344/script-its-a-trap-v2-dot-3
+or shoot me a PM:
+https://app.roll20.net/users/46544/stephen-l
+
+## Show Support
+
+If you would like to show your appreciation and support for the work I do in writing,
+updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=new&type=all&publisher=Stephen%20L)
+or, simply leave a thank you note in the script's thread on the Roll20 forums.
+Either is greatly appreciated! Happy gaming!

@@ -1,0 +1,16 @@
+{
+  "name": "Marking Conditions",
+  "script": "Marking Conditions.js",
+  "version": "3.3",
+  "previousversions": ["3.2","3.1","3.0","2.0","1.1","1.0"],
+  "description": "Sets and removes statusmarkers on tokens.",
+  "authors": "Brian Shields",
+  "roll20userid": "235259",
+  "patreon": "https://www.patreon.com/bshields",
+  "useroptions": [],
+  "dependencies": ["splitArgs"],
+  "modifies": {
+    "token.statusmarkers": "write"
+  },
+  "conflicts": []
+}
