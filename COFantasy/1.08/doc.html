@@ -336,6 +336,7 @@
                   <li><code>--feu</code>, <code>--acide</code>, <code>--electrique</code>, <code>--froid</code>, <code>--sonique</code>, --<code>poison</code>, --<code>maladie</code> : les dégâts sont de type feu, acide, électrique, froid ou sonique. Le type spécifie uniquement le dernier <code>--plus</code> précédent cette option, ou si il n'y en a pas, celui des dégâts principaux. Seul le dernier type spécifié est pris en compte (pas de type multiple pour l'instant). Le type affecte différents attributs, et aussi la couleur d'affichage des dégâts.</li>
                   <li><code>--tranchant</code>, <code>--percant</code>, <code>--contondant</code> : précise le type d'arme (si pertinent), pour pouvoir utiliser les RD spécifiques à un type d'arme.</li>
                   <li><code>--ignoreRD</code> : l'attaque ignore les RD et division de DMs.</li>
+                  <li><code>--ignoreMoitieRD</code> : l'attaque ignore la moitié de la RD.</li>
                   <li><code>--sortilege</code> pour indiquer qu'il s'agit d'un sortilège, de façons à pouvoir appliquer tous les effets spécifiques aux sorts. Cette options devrait être passées pour toutes les capacités suivies d'une étoile dans le livre des règles. En particulier, tout sortilege ignore les malus d'obstacles.</li>
                   <li><code>--reroll1</code> : relance les 1 aux dés de dégats. À noter que cela ne concerne que les dés de base de l'attaque, pas les DM supplémentaire. </li>
                   <li><code>--explodeMax</code> : relance les valeurs maximum aux dés de DM de base, et rajoute le nouveau résultat (qui lui-même explose).</li>
@@ -754,15 +755,14 @@
                 <h4 class="text-secondary">Voie de la guerre</h4>
                 <ol>
                   <li><strong>Armure sur mesure</strong> : simplement reporter sur la fiche le bon malus d'armure</li>
-                  <li><strong>Écuyer</strong> : pour le bonus au critique, ajouter un attribut <code>ecuyer</code> de valeur <code>true</code>. Pour les soins de nuit, ajouter à l'ecuyer un attribute <code>ecuyerDe</code>, avec comme valeur le nom du chevalier. Si on souhaite que l'ecuyer puisse soigner gratuitement la monture, il faut aussi que celle-ci ait un attribut <code>montureDe</code>, avec comme valeur le nom du chevalier.</li>
-                  <li>
-                    <strong>Encaisser un coup</strong> :
+                  <li> <strong>Encaisser un coup</strong> :
                     <ul>
                       <li>utiliser <code>!cof-effet-temp encaisserUnCoup 1</code> pour se mettre en position</li>
                       <li>normalement, le script propose un bouton à activer en cas d'attaque réussie alors que le chevalier est en position, mais en cas de besoin, vous pouvez utiliser <code>!cof-encaisser-un-coup</code> pour amortir un coup.</li>
                     </ul>
                   </li>
                   <li><strong>Coup de bouclier</strong> : faire une attaque de bouclier, avec l'option <code>--avecd12</code></li>
+                  <li><strong>Frappe lourde</strong> : faire l'attaque avec les options <code>--avecd12 --plus 2d6 --ignoreMoitieRD</code></li>
                 </ol>
                 <h4 class="text-secondary">Voie du héro</h4>
                 <ol>
@@ -1340,6 +1340,9 @@
                   <li><strong>Vol</strong> et <strong>Téléportation</strong> : pas de support.</li>
                   <li><strong>Trop petit</strong> : ajouter un attribut <code>tropPetit</code>, et pour les attaques au d3, mettre un dé quelconque dans l'attaque, et rajouter le texte <code>d3</code> dans les notes de l'attaque concernée. </li>
                 </ul>
+                <ol>
+                  <li><strong>Langage des animaux</strong> : aucun support</li>
+                </ol>
                 <h4 class="text-secondary">Gnome</h4>
                 <ol>
                   <li><strong>Petit pote</strong> : ajouter le bonus de CHA sur la fiche</li>
@@ -1371,6 +1374,9 @@
                   <li><a href="#Vision_dans_le_noir">Vision dans le noir</a>.</li>
                   <li><strong>Résistance aux éléments</strong> : ajouter des attributs <code>RD_feu</code>, <code>RD_electrique</code> et <code>RD_froid</code>, de valeur 5 (ou augmentée de 5)</li>
                 </ul>
+                <ol>
+                  <li><strong>Se faire discret</strong> : ajouter les jets sur la fiche, ou bien des attributs <code>mentir</code> et <code>deguisement</code> de valeur 5, à utiliser avec <code>!cof-jet</code>.</li>
+                </ol>
               </div>
               <h3 class="text-info" id="Créatures">Voies de créatures</h3>
               <div class="decalage">

@@ -2329,6 +2329,7 @@ var COFantasy = COFantasy || function() {
       switch (cmd[0]) {
         case "pressionMortelle":
         case "ignoreRD":
+        case "ignoreMoitieRD":
         case "tempDmg":
         case "vampirise":
         case "enflamme":
@@ -5933,6 +5934,7 @@ var COFantasy = COFantasy || function() {
     };
     cibles.forEach(function(target) {
       target.ignoreRD = options.ignoreRD;
+      target.ignoreMoitieRD = options.ignoreMoitieRD;
       target.tempDmg = options.tempDmg;
       target.enflamme = options.enflamme;
       target.malediction = options.malediction;
@@ -6758,6 +6760,7 @@ var COFantasy = COFantasy || function() {
       if (options.vampirise || target.vampirise) {
         rdMain += attributeAsInt(target, 'RD_drain', 0);
       }
+      if (target.ignoreMoitieRD) rdMain = parseInt(rdMain / 2);
       if (rdMain > 0 && dmgTotal > 0) {
         dmgTotal -= rdMain;
         if (dmgTotal < 0) {
@@ -6771,6 +6774,7 @@ var COFantasy = COFantasy || function() {
       if (attributeAsBool(target, 'protectionContreLesElements')) {
         rdElems = getValeurOfEffet(target, 'protectionContreLesElements', 1, 'voieDeLaMagieElementaire') * 2;
       }
+      if (target.ignoreMoitieRD) rdElems = parseInt(rdElems / 2);
       if (rdElems > 0 && dmgTotal > 0 && estElementaire(mainDmgType)) {
         if (dmgTotal > rdElems) {
           dmgDisplay += ' - ' + rdElems;
@@ -6793,13 +6797,15 @@ var COFantasy = COFantasy || function() {
         var attrName = attr.get('name');
         if (attrName.startsWith('RD_sauf_')) {
           var rds = parseInt(attr.get('current'));
+          if (target.ignoreMoitieRD) rds = parseInt(rds / 2);
           if (isNaN(rds) || rds < 1) return;
           rdSauf[attrName.substr(8)] = rds;
         }
       });
       if (attributeAsBool(target, 'formeDArbre')) {
         rdSauf.feu_tranchant = rdSauf.feu_tranchant || 0;
-        rdSauf.feu_tranchant += 10;
+        if (target.ignoreMoitieRD) rdSauf.feu_tranchant += 5;
+        else rdSauf.feu_tranchant += 10;
       }
       var additionalType = {
         magique: options.magique,
@@ -6902,6 +6908,7 @@ var COFantasy = COFantasy || function() {
             if (typeCount === 0) {
               if (target.ignoreRD === undefined) {
                 var rdl = typeRD(target, dmgType);
+                if (target.ignoreMoitieRD) rdl = parseInt(rdl / 2);
                 if (rdl > 0 && dm > 0) {
                   dm -= rdl;
                   if (dm < 0) {
@@ -7110,6 +7117,7 @@ var COFantasy = COFantasy || function() {
           expliquer(target.tokName + " dévie le coup sur son armure");
         }
         if (target.ignoreRD) rd = 0;
+        else if (target.ignoreMoitieRD) rd = parseInt(rd / 2);
         if (rd > 0) {
           if (showTotal) dmgDisplay = "(" + dmgDisplay + ") - " + rd;
           else {
@@ -10611,6 +10619,7 @@ var COFantasy = COFantasy || function() {
           case 'tempDmg':
           case 'morts-vivants':
           case 'ignoreRD':
+          case 'ignoreMoitieRD':
           case 'maxDmg':
             options[opt[0]] = true;
             return;
@@ -10688,6 +10697,7 @@ var COFantasy = COFantasy || function() {
           var name = perso.token.get('name');
           var explications = [];
           perso.ignoreRD = options.ignoreRD;
+          perso.ignoreMoitieRD = options.ignoreMoitieRD;
           perso.tempDmg = options.tempDmg;
           dealDamage(perso, dmg, [], evt, false, options, explications,
             function(dmgDisplay, dmgFinal) {
@@ -16299,6 +16309,16 @@ var COFantasy = COFantasy || function() {
     }); //end getSelected
   }
 
+  function conjurationArmee(msg) {
+    getSelected(msg, function(selected, playerId) {
+      if (selected.length === 0) {
+        sendPlayer(msg, "Il faut sélectionner le lanceur de la conjuration d'arméé");
+        return;
+      }
+      iterSelected(selected, function(invocateur) {});
+    });
+  }
+
   //Crée les macros utiles au jeu
   var gameMacros = [{
     name: 'Actions',
@@ -17216,6 +17236,9 @@ var COFantasy = COFantasy || function() {
         return;
       case "!cof-conjuration-de-predateur":
         conjurationPredateur(msg);
+        return;
+      case "!cof-conjuration-armee":
+        conjurationArmee(msg);
         return;
       case "!cof-set-macros":
         setGameMacros(msg);

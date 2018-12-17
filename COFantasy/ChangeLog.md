@@ -1,11 +1,15 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 
-##1.08
+## 1.08
 
+### Capacités
+* Ajout de la capacité Frappe lourde du chevalier
 * Ajout de la capacité vampirisation de la Voie de la magie maléfique
+
+### Autres améliorations
 * Plus d'affichages de jets de dé (pour les soins de groupe, baies, fortifiants, ...)
 
-##1.07
+## 1.07
 
 ### Capacités
 * Ajout du défi du samouraï
