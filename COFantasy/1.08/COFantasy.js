@@ -3301,7 +3301,7 @@ var COFantasy = COFantasy || function() {
     var init = ficheAttributeAsInt(perso, 'DEXTERITE', 10);
     init += ficheAttributeAsInt(perso, 'INIT_DIV', 0);
     //Règle optionelle : +1d6, à lancer en entrant en combat
-    if (stateCOF.options.regles.val.initiative_variable) {
+    if (stateCOF.options.regles.val.initiative_variable.val) {
       var bonusVariable = attributeAsInt(perso, 'bonusInitVariable', 0);
       if (bonusVariable === 0) {
         var rollD6 = rollDePlus(6);
@@ -19007,7 +19007,7 @@ on("destroy:handout", function(prev) {
 });
 
 on("ready", function() {
-  var script_version = 1.07;
+  var script_version = 1.08;
   COF_loaded = true;
   on('add:token', COFantasy.addToken);
   state.COFantasy = state.COFantasy || {
