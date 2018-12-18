@@ -1,13 +1,12 @@
 // By: Barry Snyder (with guidance from Aaron) heavily leveraging the MYZ script by The Aaron
-// look into adding 3d dice https://wiki.roll20.net/API:Chat
 
 var ForbiddenLands = ForbiddenLands || (function() {
     'use strict';
 
-    var version = '1.1',
-        lastUpdate = 'April 11th, 2018',
-        schemaVersion = 0.1,
-        symbols = {
+    var version = '1.2',
+    lastUpdate = 'December 12th, 2018',
+		schemaVersion = 0.1,
+		symbols = {
             skull: '&#'+'9760;', 
             sword:  '&#'+'9876;',
 			xxsword:  '2' + '&#'+'9876;',
@@ -383,7 +382,7 @@ var ForbiddenLands = ForbiddenLands || (function() {
         let who=(getObj('player',playerid)||{get:()=>'API'}).get('_displayname');
 
         sendChat('','/w "'+who+'" '+
-	'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
+'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
 	'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'+
 		'Forbidden Lands v'+version+
 	'</div>'+
@@ -410,7 +409,13 @@ var ForbiddenLands = ForbiddenLands || (function() {
 				'</li> '+
 					'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
 					'<b><span style="font-family: serif;">'+ch('[')+'--'+ch('<')+'Label'+ch('>')+ch('|')+ch('<')+'Message'+ch('>')+' ...'+ch(']')+'</span></b> '+ch('-')+' An optional set of text to be shown above the die roll. Label may be omitted to just provid a text field.  You can specify as many optional descriptions as you like.'+
-                    '<div style="padding-left: 10px;padding-right:20px">'+
+                   
+				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
+					'<b><span style="font-family: serif;">Excluding Dice Rolls:</span></b> Dice roll expressions must be included but to not roll leave as a 0; an empty express '+ch('[')+ch('[')+''+ch(']')+ch(']')+' will throw a syntax error . Example of setting an expression to roll no dice: '+ch('[')+ch('[')+'0'+ch(']')+ch(']')+
+				'</li> '+
+				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
+					'<b><span style="font-family: serif;">Example:</span></b> '+ 
+					'<div style="padding-left: 10px;padding-right:20px">'+
                         '<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'+
                             '!forl '+ch('[')+ch('[')+'5d6'+ch(']')+ch(']')+' '+ch('[')+ch('[')+'3d6'+ch(']')+ch(']')+' '+ch('[')+ch('[')+'4d6'+ch(']')+ch(']')+' '+ch('[')+ch('[')+'1d10'+ch(']')+ch(']')+' --Player|Wulfred --Skill|Stealth (Agility)'+
                         '</pre>'+
@@ -797,9 +802,9 @@ var ForbiddenLands = ForbiddenLands || (function() {
                     }
                 });
 				
-				legendaryDieType = msg.inlinerolls[3].results.rolls[0].sides;
-				legendaryDieType="d"+legendaryDieType.toString();
-			
+				legendaryDieType = msg.inlinerolls[3].expression;
+
+				
                // record push
                hash=(++state.ForbiddenLands.sequence);
                recordPlayerRollHash(owner,{
