@@ -6,15 +6,15 @@ The chat commands are displayed in the chat on launch.
 
 Type !help to display it in the chat.
 
-<b>!setup</b>
-Runs the first time setup
-<b>!reset</b>
-Resets the game.
-<b>!round</b>
-Displays what round is being played.
-<b>!setround #</b>
-sets the round to a value.
-<b>!fixdice</b>
-Orders the dices.
-<b>!players</b>
-Shows amount of players.
+<b>!setup</b><br>
+Runs the first time setup<br>
+<b>!reset</b><br>
+Resets the game.<br>
+<b>!round</b><br>
+Displays what round is being played.<br>
+<b>!setround #</b><br>
+sets the round to a value.<br>
+<b>!fixdice</b><br>
+Orders the dices.<br>
+<b>!players</b><br>
+Shows amount of players.<br>
