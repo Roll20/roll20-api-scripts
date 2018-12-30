@@ -1,20 +1,20 @@
-#Yatzoid
+# Yatzoid
 Provides automated round and turn tracking, Token renaming, 
 as well as the setup, and reset system of the game. Also contains some chat commands.
 
 The chat commands are displayed in the chat on launch.
-Type <br>!help</br> to display it in the chat.
 
-the chat will display:
-<br>!setup</br>
+Type !help to display it in the chat.
+
+<b>!setup</b>
 Runs the first time setup
-<br>!reset</br>
+<b>!reset</b>
 Resets the game.
-<br>!round</br>
+<b>!round</b>
 Displays what round is being played.
-<br>!setround #</br>
+<b>!setround #</b>
 sets the round to a value.
-<br>!fixdice</br>
+<b>!fixdice</b>
 Orders the dices.
-<br>!players</br>
+<b>!players</b>
 Shows amount of players.
