@@ -1629,16 +1629,26 @@ var COFantasy = COFantasy || function() {
             count += equipes.length;
             equipes.forEach(function(equipe) {
               equipe.get('notes', function(note) { //asynchrone
-                var names = note.split('<br>');
-                var tokens = tokensNamed(names, pageId);
-                if (tokens.length === 0) {
+                var persos = charactersInHandout(note, nomEquipe);
+                var tokens = findObjs({
+                  _type: 'graphic',
+                  _subtype: 'token',
+                  _pageid: pageId,
+                  layer: 'objects'
+                });
+                var uneCible = false;
+                tokens.forEach(function(tok) {
+                  var tokCharId = tok.get('represents');
+                  if (persos.has(tokCharId)) {
+                    uneCible = true;
+                    selected.push({
+                      _id: tok.id
+                    });
+                  }
+                });
+                if (!uneCible) {
                   error("Pas de token de l'" + nomEquipe + " sur la page");
                 }
-                tokens.forEach(function(tok) {
-                  selected.push({
-                    _id: tok.id
-                  });
-                });
                 count--;
                 if (count === 0) finalCall();
                 return;
@@ -7934,24 +7944,6 @@ var COFantasy = COFantasy || function() {
     addEvent(evt);
   }
 
-  function tokensNamed(names, pageId) {
-    var tokens = findObjs({
-      _type: 'graphic',
-      _subtype: 'token',
-      _pageid: pageId,
-      layer: 'objects'
-    });
-    tokens = tokens.filter(function(obj) {
-      var tokCharId = obj.get('represents');
-      if (tokCharId === undefined) return false;
-      var tokChar = getObj('character', tokCharId);
-      if (tokChar === undefined) return false;
-      var i = names.indexOf(tokChar.get('name'));
-      return (i >= 0);
-    });
-    return tokens;
-  }
-
   function pointsDeRecuperation(perso) {
     // retourne les nombre de PR restant
     var attrPR = tokenAttribute(perso, 'pointsDeRecuperation');
@@ -9534,35 +9526,40 @@ var COFantasy = COFantasy || function() {
     }
   }
 
+  function charactersInHandout(note, nomEquipe) {
+    note = note.trim();
+    if (note.startsWith('<p>')) note = note.substring(3);
+    note = note.trim().replace(/<p>/g, '<br>');
+    note = note.replace(/<\/p>/g, '');
+    var names = note.trim().split('<br>');
+    var persos = new Set();
+    names.forEach(function(name) {
+      name = name.replace(/<(?:.|\s)*?>/g, ''); //Pour enlever les <h2>, etc
+      name = name.trim();
+      if (name.length === 0) return;
+      var characters = findObjs({
+        _type: 'character',
+        name: name
+      });
+      if (characters.length === 0) {
+        log(name + " dans l'équipe " + nomEquipe + " est inconnu");
+        return;
+      }
+      if (characters.length > 1) {
+        log(name + " dans l'équipe " + nomEquipe + " est en double");
+      }
+      characters.forEach(function(character) {
+        persos.add(character.id);
+      });
+    });
+    return persos;
+  }
+
   function parseHandout(hand) {
     var handName = hand.get('name');
     if (handName.startsWith("Equipe ")) {
       hand.get('notes', function(note) { // asynchronous
-        note = note.trim();
-        if (note.startsWith('<p>')) note = note.substring(3);
-        note = note.trim().replace(/<p>/g, '<br>');
-        note = note.replace(/<\/p>/g, '');
-        var names = note.trim().split('<br>');
-        var persos = new Set();
-        names.forEach(function(name) {
-          name = name.replace(/<(?:.|\s)*?>/g, ''); //Pour enlever les <h2>, etc
-          name = name.trim();
-          if (name.length === 0) return;
-          var characters = findObjs({
-            _type: 'character',
-            name: name
-          });
-          if (characters.length === 0) {
-            log(name + " dans l'équipe " + hand.get('name') + " est inconnu");
-            return;
-          }
-          if (characters.length > 1) {
-            log(name + " dans l'équipe " + hand.get('name') + " est en double");
-          }
-          characters.forEach(function(character) {
-            persos.add(character.id);
-          });
-        });
+        var persos = charactersInHandout(note, handName);
         persos.forEach(function(charId) {
           var ancien = alliesParPerso[charId];
           if (ancien === undefined) {
@@ -9585,7 +9582,7 @@ var COFantasy = COFantasy || function() {
         CHA: []
       };
       hand.get('notes', function(note) { // asynchronous
-        var carac; //La carac don t on spécifie les compétences actuellement
+        var carac; //La carac dont on spécifie les compétences actuellement
         var lignes = note.trim().replace(/<p>|<\/p>/g, '<br>').split('<br>');
         lignes.forEach(function(ligne) {
           ligne = ligne.trim();
