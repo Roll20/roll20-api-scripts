@@ -10,6 +10,7 @@
 * Plus d'affichages de jets de dé (pour les soins de groupe, baies, fortifiants, ...)
 
 ### Correction de bug
+* Les options --equipe lisent maintenant correctement les handouts
 * Correction d'un bug qui empêchait d'inactiver l'initiative variable
 
 ## 1.07
