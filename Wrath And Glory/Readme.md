@@ -9,8 +9,11 @@ More thanks than I can give go to The Aaron whose MYZ Die Roller was the foundat
 
 ### Changelog
 
-** July 10th, 2018: version 1.0 submitted to Roll20** 
+** January 13th, 2018: version 2.1 Damage Bug Fix** 
+1. Fixed Damage roll on a reroll; was formatting output string on a reroll of damage incorrectly.
 
 ** November 10th, 2018: version 2.0 Die Roll Layout** 
 1. Changed layout of die rolls (reversed plaement of labels)
 2. Die Roller will now calculate Damage if Damage is passed through set to DR.
+
+** July 10th, 2018: version 1.0 submitted to Roll20** 
