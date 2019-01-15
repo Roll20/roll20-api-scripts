@@ -8,6 +8,7 @@
 
 ### Autres améliorations
 * Plus d'affichages de jets de dé (pour les soins de groupe, baies, fortifiants, ...)
+* Compatibilité avec les fiches de PNJ (version 2.1 des fiches)
 
 ### Correction de bug
 * Les options --equipe lisent maintenant correctement les handouts

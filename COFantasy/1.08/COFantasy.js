@@ -193,18 +193,47 @@ var COFantasy = COFantasy || function() {
     return playerIds;
   }
 
-  var attackNameRegExp = new RegExp(/^(repeating_armes_.*_)armenom$/);
+  function persoEstPNJ(perso) {
+    if (perso.pnj) return true;
+    var typePerso = getAttrByName(perso.charId, 'type_personnage');
+    return typePerso == 'PNJ';
+  }
 
+  var attackNameRegExp = new RegExp(/^(repeating_armes_.*_)armenom$/);
+  var attackNamePNJRegExp = new RegExp(/^(repeating_pnj.*_)armenom$/);
+
+  //Met perso.pnj à true si on a un PNJ
   function getAttack(attackLabel, perso) {
     var res;
     var attributes = findObjs({
       _type: 'attribute',
       _characterid: perso.charId,
     });
+    var findAttack = function(n) {
+      return attackNameRegExp.exec(n);
+    };
+    if (perso.pnj) {
+      findAttack = function(n) {
+        return attackNamePNJRegExp.exec(n);
+      };
+    }
+    var trouve;
+    attributes.forEach(function(a) {
+      if (trouve) return;
+      if (a.get('name').toLowerCase() == 'type_personnage') {
+        trouve = true;
+        if (a.get('current') == 'PNJ') {
+          perso.pnj = true;
+          findAttack = function(n) {
+            return attackNamePNJRegExp.exec(n);
+          };
+        }
+      }
+    });
     attributes.forEach(function(a) {
       if (res) return;
       var an = a.get('name');
-      var m = attackNameRegExp.exec(an);
+      var m = findAttack(an);
       if (m) {
         var attPrefix = m[1];
         var weaponName = a.get('current');
@@ -1332,6 +1361,14 @@ var COFantasy = COFantasy || function() {
   }
 
   // Caution : does not work with repeating attributes!!!!
+  function ficheAttribute(personnage, name, def) {
+    var attr = charAttribute(personnage.charId, name, {
+      caseInsensitive: true
+    });
+    if (attr.length === 0) return def;
+    return attr[0].get('current');
+  }
+
   function ficheAttributeAsInt(personnage, name, def) {
     var attr = charAttribute(personnage.charId, name, {
       caseInsensitive: true
@@ -3684,20 +3721,24 @@ var COFantasy = COFantasy || function() {
       name: att.weaponName
     };
     var charId = perso.charId;
-    weaponStats.attSkill =
-      getAttrByName(charId, attPrefix + "armeatk") ||
-      getAttrByName(charId, "ATKCAC");
-    weaponStats.attSkillDiv = getAttrByName(charId, attPrefix + "armeatkdiv") || 0;
-    // DMG
+    weaponStats.attSkill = getAttrByName(charId, attPrefix + "armeatk");
     weaponStats.attNbDices = getAttrByName(charId, attPrefix + "armedmnbde") || 1;
     weaponStats.attDice = getAttrByName(charId, attPrefix + "armedmde") || 4;
-    weaponStats.attCarBonus =
-      getAttrByName(charId, attPrefix + "armedmcar") ||
-      modCarac(perso, "FORCE");
-    weaponStats.attDMBonusCommun = getAttrByName(charId, attPrefix + "armedmdiv");
     weaponStats.crit = getAttrByName(charId, attPrefix + "armecrit") || 20;
-    weaponStats.portee = getPortee(charId, attPrefix);
     weaponStats.divers = getAttrByName(charId, attPrefix + "armespec");
+    if (perso.pnj) {
+      if (weaponStats.attSkill === undefined) weaponStats.attSkill = 0;
+      weaponStats.attDMBonusCommun = getAttrByName(charId, attPrefix + "armedm");
+    } else {
+      if (!weaponStats.attSkill)
+        weaponStats.attSkill = getAttrByName(charId, "ATKCAC");
+      weaponStats.attSkillDiv = getAttrByName(charId, attPrefix + "armeatkdiv") || 0;
+      weaponStats.attCarBonus =
+        getAttrByName(charId, attPrefix + "armedmcar") ||
+        modCarac(perso, "FORCE");
+      weaponStats.attDMBonusCommun = getAttrByName(charId, attPrefix + "armedmdiv");
+    }
+    weaponStats.portee = getPortee(charId, attPrefix);
     //On cherche si c'est une arme à 2 mains
     var t = weaponStats.name.toLowerCase();
     if (t.includes('2 mains') || t.includes('deux mains')) {
@@ -5740,6 +5781,7 @@ var COFantasy = COFantasy || function() {
   }
 
   function computeAttackCarBonus(attaquant, x) {
+    if (x === undefined) return '';
     var attCarBonus = x;
     if (isNaN(attCarBonus)) {
       if (attCarBonus.startsWith('@{')) {
@@ -7857,7 +7899,18 @@ var COFantasy = COFantasy || function() {
           _type: 'attribute',
           _characterid: charId,
           name: 'PV'
+        }, {
+          caseInsensitive: true
         });
+        if (getAttrByName(charId, 'type_personnage') == 'PNJ') {
+          pvAttr = findObjs({
+            _type: 'attribute',
+            _characterid: charId,
+            name: 'pnj_pv'
+          }, {
+            caseInsensitive: true
+          });
+        }
         if (pvAttr.length === 0) {
           error("Personnage sans PV ", charId);
           return;
@@ -9616,7 +9669,9 @@ var COFantasy = COFantasy || function() {
   }
 
   function estPJ(perso) {
-    var dv = charAttributeAsInt(perso, 'DV', 0);
+    var typePerso = ficheAttribute(perso, 'type_personnage', 'PJ');
+    if (typePerso == 'PNJ') return false;
+    var dv = ficheAttributeAsInt(perso, 'DV', 0);
     if (dv === 0) return false;
     if (perso.token.get('bar1_link') === '') return false;
     return estControlleParJoueur(perso.charId);
@@ -10119,8 +10174,9 @@ var COFantasy = COFantasy || function() {
           chuchote: true
         });
         var line =
-          "Points de vie    : " + token.get('bar1_value') + " / " +
-          getAttrByName(charId, 'PV', 'max');
+          "Points de vie    : " + token.get('bar1_value') + " / ";
+        if (persoEstPNJ(perso)) line += getAttrByName(charId, 'pnj_pv', 'max');
+        else line += getAttrByName(charId, 'PV', 'max');
         addLineToFramedDisplay(display, line);
         var manaAttr = findObjs({
           _type: 'attribute',
@@ -12149,30 +12205,16 @@ var COFantasy = COFantasy || function() {
   }
 
   function raceIs(perso, race) {
-    var attr = findObjs({
-      _type: 'attribute',
-      _characterid: perso.charId,
-      name: 'RACE'
-    }, {
-      caseInsensitive: true
-    });
-    if (attr.length === 0) return false;
-    var charRace = attr[0].get('current').toLowerCase();
-    return (charRace == race.toLowerCase());
+    var charRace = ficheAttribute(perso, 'RACE');
+    if (charRace === undefined) return false;
+    return (charRace.toLowercase() == race.toLowerCase());
   }
 
   function estMortVivant(perso) {
     if (charAttributeAsBool(perso, 'mort-vivant')) return true;
-    var attr = findObjs({
-      _type: 'attribute',
-      _characterid: perso.charId,
-      name: 'RACE'
-    }, {
-      caseInsensitive: true
-    });
-    if (attr.length === 0) return false;
-    var charRace = attr[0].get('current').toLowerCase();
-    switch (charRace) {
+    var charRace = ficheAttribute(perso, 'RACE');
+    if (charRace === undefined) return false;
+    switch (charRace.toLowerCase()) {
       case 'squelette':
       case 'zombie':
       case 'mort-vivant':
@@ -12191,16 +12233,9 @@ var COFantasy = COFantasy || function() {
   }
 
   function estUnGeant(perso) {
-    var attr = findObjs({
-      _type: 'attribute',
-      _characterid: perso.charId,
-      name: 'RACE'
-    }, {
-      caseInsensitive: true
-    });
-    if (attr.length === 0) return false;
-    var charRace = attr[0].get('current').toLowerCase();
-    switch (charRace) {
+    var charRace = ficheAttribute(perso, 'RACE');
+    if (charRace === undefined) return false;
+    switch (charRace.trim().toLowerCase()) {
       case 'géant':
       case 'geant':
       case 'ogre':
@@ -12214,16 +12249,9 @@ var COFantasy = COFantasy || function() {
 
   function estHumanoide(perso) {
     if (charAttributeAsBool(perso, 'humanoide')) return true;
-    var attr = findObjs({
-      _type: 'attribute',
-      _characterid: perso.charId,
-      name: 'RACE'
-    }, {
-      caseInsensitive: true
-    });
-    if (attr.length === 0) return false;
-    var charRace = attr[0].get('current').toLowerCase();
-    switch (charRace) {
+    var charRace = ficheAttribute(perso, 'RACE');
+    if (charRace === undefined) return false;
+    switch (charRace.trim().toLowerCase()) {
       case 'humain':
       case 'nain':
       case 'elfe':
@@ -12257,16 +12285,9 @@ var COFantasy = COFantasy || function() {
 
   function estQuadrupede(perso) {
     if (charAttributeAsBool(perso, 'quadrupede')) return true;
-    var attrRace = findObjs({
-      _type: 'attribute',
-      _characterid: perso.charId,
-      name: 'RACE'
-    }, {
-      caseInsensitive: true
-    });
-    if (attrRace.length === 0) return false;
-    var charRace = attrRace[0].get('current').trim().toLowerCase();
-    switch (charRace) {
+    var charRace = ficheAttribute(perso, 'RACE');
+    if (charRace === undefined) return false;
+    switch (charRace.trim().toLowerCase()) {
       case 'ankheg':
       case 'araignée':
       case 'araignee':
@@ -12379,16 +12400,9 @@ var COFantasy = COFantasy || function() {
 
   function estMauvais(perso) {
     if (charAttributeAsBool(perso, 'mauvais')) return true;
-    var attr = findObjs({
-      _type: 'attribute',
-      _characterid: perso.charId,
-      name: 'RACE'
-    }, {
-      caseInsensitive: true
-    });
-    if (attr.length === 0) return false;
-    var charRace = attr[0].get('current').toLowerCase();
-    switch (charRace) {
+    var charRace = ficheAttribute(perso, 'RACE');
+    if (charRace === undefined) return false;
+    switch (charRace.trim().toLowerCase()) {
       case 'squelette':
       case 'zombie':
       case 'élémentaire':
@@ -12948,7 +12962,7 @@ var COFantasy = COFantasy || function() {
         var lastBar1 = affecte.prev.bar1_value;
         var bar1 = parseInt(token.get('bar1_value'));
         if (isNaN(lastBar1) || isNaN(bar1) || lastBar1 <= bar1) {
-          sendChar(charId, "ne peut ignorer la douleur : il semble que la dernière attaque ne lui ai pas enlevé de PV");
+          sendChar(charId, "ne peut ignorer la douleur : il semble que la dernière attaque ne lui ait pas enlevé de PV");
           return;
         }
         var evt = {
@@ -15093,12 +15107,22 @@ var COFantasy = COFantasy || function() {
       name: 'DEFDIV',
       current: 5
     });
-    var pvAttr = createObj('attribute', {
-      characterid: caid,
-      name: 'PV',
-      current: pvArbre,
-      max: pvArbre
-    });
+    var pvAttr;
+    if (persoEstPNJ(druide)) {
+      pvAttr = createObj('attribute', {
+        characterid: caid,
+        name: 'pnj_pv',
+        current: pvArbre,
+        max: pvArbre
+      });
+    } else {
+      pvAttr = createObj('attribute', {
+        characterid: caid,
+        name: 'PV',
+        current: pvArbre,
+        max: pvArbre
+      });
+    }
     createObj('attribute', {
       characterid: caid,
       name: 'RD_sauf_feu_tranchant',
@@ -15873,7 +15897,7 @@ var COFantasy = COFantasy || function() {
     } //end attributesFiche
     if (spec.pv) {
       var pvAttr = attrs.filter(function(a) {
-        return a.get('name') == 'PV';
+        return a.get('name').toUpperCase() == 'PV';
       });
       if (pvAttr.length === 0) {
         pvAttr = createObj('attribute', {
