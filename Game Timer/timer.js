@@ -6,6 +6,7 @@ on("ready", function () {
     let bar2Splitor = /^(\w|)(\w|)(\w|)(\w|)([.]|)(\w+|)/i;
     let bar2numSplitor = [/[-][-](\d+)/i];
     let bar2num2Splitor = /[.](\d+)/i;
+    let bar1max2Splitor = [/[:](\S+|)/i];
     const statusLookup = [
         "red",
         "red,blue",
@@ -69,7 +70,7 @@ on("ready", function () {
                         let m = Math.floor((sec - (h * 60)) / 60);
                         let s = Math.floor(sec % 60);
                         c.bar3_value = `${sec}`;
-                        c.name = `${`00${h}`.slice(-2)}:${`00${m}`.slice(-2)}:${`00${s}`.slice(-2)}`;
+                        c.name = obj.get('bar1_max') + `${`00${h}`.slice(-2)}:${`00${m}`.slice(-2)}:${`00${s}`.slice(-2)}`;
                     }
                     obj.set(c);
                 };
@@ -92,6 +93,7 @@ on("ready", function () {
             let marker = cmd.includes('--marker') || cmd.includes('-m');
             let aura = cmd.includes('--aura') || cmd.includes('-a');
             let angle = bar2numSplitor.some(check => check.test(cmd));
+            let name = bar1max2Splitor.some(check => check.test(cmd));
             (msg.selected || [])
                 .map((o) => getObj('graphic', o._id))
                 .filter(o => undefined !== o)
@@ -128,6 +130,9 @@ on("ready", function () {
                     }
                     if (angle) {
                         c.bar2_value = (c.bar2_value.match(/[.](\d+)/i) ? (c.bar2_value.replace(bar2num2Splitor, "." + msg.content.match(/[-][-](\d+)/i)[1])) : c.bar2_value + "." + msg.content.match(/[-][-](\d+)/i)[1]);
+                    }
+                    if (name) {
+                        c.bar1_max = (msg.content.match(/[:](\S+|)/i)[1]);
                     }
                     o.set(c);
                 });
