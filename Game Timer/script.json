@@ -6,7 +6,6 @@
     "description": "This is a simple script to court how long does player use the game room. Just upload a clock picture on the table and name game.clock. Then the picture will court the time. API sandbox will shutdown soon when all player exit the room. Support for multiple clock at same time.Thankyou Aaron. He make my idea be true.",
     "authors": "Sad",
     "roll20userid": "1540094",
-    "useroptions": "",
     "dependencies": "",
     "modifies": {
         "graphic.rotation": "read,write",
