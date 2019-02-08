@@ -533,3 +533,7 @@ dupchartoken:
 yatzoid:
   - "Yatzoid"
   - "System Toolbox"
+
+gametimer:
+  - "Game Timer"
+  - Utility

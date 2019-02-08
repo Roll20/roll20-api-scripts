@@ -1,0 +1,20 @@
+{
+    "name": "Game Timer",
+    "script": "timer.js",
+    "version": "1.1",
+    "previousversions": ["1.0"],
+    "description": "This is a simple script to court how long does player use the game room. Just upload a clock picture on the table and name game.clock. Then the picture will court the time. API sandbox will shutdown soon when all player exit the room. Support for multiple clock at same time.Thankyou Aaron. He make my idea be true.",
+    "authors": "Sad",
+    "roll20userid": "1540094",
+    "useroptions": "",
+    "dependencies": "",
+    "modifies": {
+        "graphic.rotation": "read,write",
+        "graphic.gmnotes": "read,write",
+        "graphic.bar1_link": "read,write",
+        "graphic.bar2_link": "read,write",
+        "graphic.bar3_link": "read,write",
+        "graphic.statusmarkers": "read,write"
+    },
+    "conflicts":""
+}
