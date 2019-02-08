@@ -43,13 +43,16 @@ on("ready", function () {
                         bar3_value: obj.get('bar3_value') || "0",
                         bar2_value: obj.get('bar2_value') || "",
                         name: obj.get('name') || '00:00:00',
-                        showname: true,
+                        showname: true
                     };
                     let sec = parseInt(c.bar3_value);
                     if (key.indexOf("r") === -1) {
-                        c = {
-                            rotation: (((((parseInt(obj.get('bar3_value')) || 0) % 60) * rotPerSec) + (rotPerSec * (deltaS / 1000)) % 360 + 360) % 360) + parseInt(key[6] || 0)
-                        }
+                        c.rotation =
+                            (((((parseInt(obj.get('bar3_value')) || 0) % 60) * rotPerSec) + (rotPerSec * (deltaS / 1000)) % 360 + 360) % 360) + parseInt(key[6] || 0)
+
+                    }
+                    else {
+                        c.rotation = parseInt(key[6] || 0);
                     }
                     if (key.indexOf("s") === -1) {
                         let phase = (sec % (statusLookup.length));
@@ -103,7 +106,7 @@ on("ready", function () {
                     c.bar2_value = o.get('bar2_value');
                     if (create) {
                         c.bar1_value = 'game.clock';
-                        //c.bar3_value = 0;
+                        c.showname = true;
                         //c.bar2_value = 1;
                         //c.rotation = 0;
                         //c.statusmarkers = '';
