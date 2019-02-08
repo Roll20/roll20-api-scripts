@@ -6,7 +6,7 @@ on("ready", function () {
     let bar2Splitor = /^(\w|)(\w|)(\w|)(\w|)([.]|)(\w+|)/i;
     let bar2numSplitor = [/[-][-](\d+)/i];
     let bar2num2Splitor = /[.](\d+)/i;
-    let bar1max2Splitor = [/[:](\S+|)/i];
+    let bar1max2Splitor = [/[:]([\s\S]+)/i];
     const statusLookup = [
         "red",
         "red,blue",
@@ -132,7 +132,7 @@ on("ready", function () {
                         c.bar2_value = (c.bar2_value.match(/[.](\d+)/i) ? (c.bar2_value.replace(bar2num2Splitor, "." + msg.content.match(/[-][-](\d+)/i)[1])) : c.bar2_value + "." + msg.content.match(/[-][-](\d+)/i)[1]);
                     }
                     if (name) {
-                        c.bar1_max = (msg.content.match(/[:](\S+|)/i)[1]);
+                        c.bar1_max = (msg.content.match(/[:]([\s\S]+)/i)[1]);
                     }
                     o.set(c);
                 });
