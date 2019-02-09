@@ -6,6 +6,7 @@ on("ready", function () {
     let bar2Splitor = /^(\w|)(\w|)(\w|)(\w|)([.]|)(\w+|)/i;
     let bar2numSplitor = [/[-][-](\d+)/i];
     let bar2num2Splitor = /[.](\d+)/i;
+    let bar1max2Splitor = [/[:]([\s\S]+)/i];
     const statusLookup = [
         "red",
         "red,blue",
@@ -42,13 +43,16 @@ on("ready", function () {
                         bar3_value: obj.get('bar3_value') || "0",
                         bar2_value: obj.get('bar2_value') || "",
                         name: obj.get('name') || '00:00:00',
-                        showname: true,
+                        showname: true
                     };
                     let sec = parseInt(c.bar3_value);
                     if (key.indexOf("r") === -1) {
-                        c = {
-                            rotation: (((((parseInt(obj.get('bar3_value')) || 0) % 60) * rotPerSec) + (rotPerSec * (deltaS / 1000)) % 360 + 360) % 360) + parseInt(key[6] || 0)
-                        }
+                        c.rotation =
+                            (((((parseInt(obj.get('bar3_value')) || 0) % 60) * rotPerSec) + (rotPerSec * (deltaS / 1000)) % 360 + 360) % 360) + parseInt(key[6] || 0)
+
+                    }
+                    else {
+                        c.rotation = parseInt(key[6] || 0);
                     }
                     if (key.indexOf("s") === -1) {
                         let phase = (sec % (statusLookup.length));
@@ -69,7 +73,7 @@ on("ready", function () {
                         let m = Math.floor((sec - (h * 60)) / 60);
                         let s = Math.floor(sec % 60);
                         c.bar3_value = `${sec}`;
-                        c.name = `${`00${h}`.slice(-2)}:${`00${m}`.slice(-2)}:${`00${s}`.slice(-2)}`;
+                        c.name = obj.get('bar1_max') + `${`00${h}`.slice(-2)}:${`00${m}`.slice(-2)}:${`00${s}`.slice(-2)}`;
                     }
                     obj.set(c);
                 };
@@ -92,6 +96,7 @@ on("ready", function () {
             let marker = cmd.includes('--marker') || cmd.includes('-m');
             let aura = cmd.includes('--aura') || cmd.includes('-a');
             let angle = bar2numSplitor.some(check => check.test(cmd));
+            let name = bar1max2Splitor.some(check => check.test(cmd));
             (msg.selected || [])
                 .map((o) => getObj('graphic', o._id))
                 .filter(o => undefined !== o)
@@ -101,7 +106,7 @@ on("ready", function () {
                     c.bar2_value = o.get('bar2_value');
                     if (create) {
                         c.bar1_value = 'game.clock';
-                        //c.bar3_value = 0;
+                        c.showname = true;
                         //c.bar2_value = 1;
                         //c.rotation = 0;
                         //c.statusmarkers = '';
@@ -128,6 +133,9 @@ on("ready", function () {
                     }
                     if (angle) {
                         c.bar2_value = (c.bar2_value.match(/[.](\d+)/i) ? (c.bar2_value.replace(bar2num2Splitor, "." + msg.content.match(/[-][-](\d+)/i)[1])) : c.bar2_value + "." + msg.content.match(/[-][-](\d+)/i)[1]);
+                    }
+                    if (name) {
+                        c.bar1_max = (msg.content.match(/[:]([\s\S]+)/i)[1]);
                     }
                     o.set(c);
                 });
