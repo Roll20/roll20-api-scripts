@@ -3,6 +3,7 @@
 ## 1.08
 
 ### Capacités
+* Ajout de la conjuration d'armée de l'invocateur
 * Ajout de la capacité Frappe lourde du chevalier
 * Ajout de la capacité vampirisation de la Voie de la magie maléfique
 
@@ -11,6 +12,7 @@
 * Compatibilité avec les fiches de PNJ (version 2.1 des fiches)
 
 ### Correction de bug
+* L'angle des cônes est maintenant correctement calculé (il était 2 fois trop grand avant)
 * Les options --equipe lisent maintenant correctement les handouts
 * Correction d'un bug qui empêchait d'inactiver l'initiative variable
 

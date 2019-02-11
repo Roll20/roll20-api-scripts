@@ -838,7 +838,7 @@
                   <li><strong>Murmures dans le vent</strong> : rien à faire</li>
                   <li><strong>Sous tension</strong> : <code>!cof-effet-temp sousTension [[5+@{selected|CHA}]]</code>. Pour l'attaque, définir une attaque magique à 1d6+CHA, et l'appeler avec les options <code>--si etat sousTension --electrique --sortilege --fx beam-holy</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>, seulement pour la mise sous tension (pas l'attaque).</li>
                   <li><strong>Télékinésie</strong> : Pas de support autre que <code>!cof-lancer-sort 1 lance un sort de télékinésie</code></li>
-                  <li><strong>Foudre</strong> : Faire une attaque de foudre de portée 10 m (attaque magique, dégâts 4d6 + CHA), et faire les attaques avec les options <code>--psave DEX [[12+@{selected|DEX}]] --mana 2 --electrique --sortilege --ligne --fx beam-holy</code>. Si vous utilisez l'option de magie puissante, vous pouvez rajouter <code>?{Y consacrer le tour entier ?|oui,--puissant|non,&amp;#32;}</code>. Et si, à la place, vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 4 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>. </li>
+                  <li><strong>Foudre</strong> : Faire une attaque de foudre de portée 10 m (attaque magique, dégâts 4d6 + CHA), et faire les attaques avec les options <code>--psave DEX [[12+@{selected|DEX}]] --mana 2 --electrique --sortilege --ligne --targetFx beam-holy</code>. Si vous utilisez l'option de magie puissante, vous pouvez rajouter <code>?{Y consacrer le tour entier ?|oui,--puissant|non,&amp;#32;}</code>. Et si, à la place, vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 4 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>. </li>
                   <li><strong>Forme éthérée</strong> : <code>!cof-effet-temp intangible [[5 + @{selected|CHA}]] --mana 3</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 5 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code></li>
                 </ol>
                 <h4 class="text-secondary">Voie de la divination</h4>
@@ -975,17 +975,20 @@
                 <ol>
                   <li><strong>Conjuration de prédateur</strong> : <code>!cof-conjuration-de-predateur</code>.</li>
                   <li><strong>Conjuration renforcée</strong> : vous pouvez soit utiliser un attribut <code>voieDeLaConjuration</code>, de valeur le rang dans la voie, soit ajouter ce rang en premier argument de <code>!cof-conjuration-de-predateur</code>.</li>
+                  <li><strong>Conjuration d'armée</strong> : <code>!cof-conjuration-armee --mana 1 --limiteParJour 1</code>. Le niveau de puissance de l'armée et déterminé par la valeur d'un attribut <code>voieDeLaConjuration</code>, ou sinon par un argument optionnel qui donne les DMs infligés par l'armée (par exemple, <code>!cof-conjuration-armee 2d6</code>). L'armée va apparaître comme un token normal, mais avec une aura de 20m de coté qui représente la place qu'elle occupe. Pour les dégâts qu'elle inflige, utiliser son attaque sur toutes les cibles désignées par l'invocateur. Pour faire disparaître l'armée, il suffit de la tuer (par exemple en utilisant <code>!cof-set-states mort true</code>). Tous les personnages dans la zone de l'armée et qui ne sont pas alliés de l'invocateurs ont automatiquement une nouvelle action dans leur liste pour attaquer l'armée. Cette action leur permet aussi de bénéficier d'une division des DM par 2 lorsque l'armée les attaque.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de l'entité</h4>
                 <ol>
                   <li><strong>Invocation d'une entité</strong> : ajouter la fiche correspondante.</li>
                   <li><strong>Lien magique</strong> : pour l'instant, gérer à la main le transfer de dégâts.</li>
                   <!-- TODO -->
+                  <li><strong>Amélioration</strong> : ajuster la fiche de l'entité.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du familier</h4>
                 <ol>
                   <li><strong>Familier</strong> : créer un token pour le familier, avec vue et controlé par le joueur. Le partage des PV n'est pas géré.</li>
                   <li><strong>Résistance</strong> : ajouter la valeur de RD sur la fiche du familier.</li>
+                  <li><strong>Sens développés</strong> : ajouter un attribut <code>perception</code> de valeur 5 (ou augmenter cet attribut, si il existe déjà), et ajouter un attribut <code>visionDansLeNoir</code> de valeur 20 (40 si le personnage dispose déjà de la vision dans le noir).</li>
                 </ol>
                 <h4 class="text-secondary">Voie des mutations</h4>
                 <ol>

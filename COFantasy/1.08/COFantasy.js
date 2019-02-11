@@ -570,42 +570,66 @@ var COFantasy = COFantasy || function() {
         aff.prev.light_losangle = token.get('light_losangle');
       if (value) token.set('light_losangle', 0);
       else token.set('light_losangle', 360);
-    } else if (value && etat == 'mort' && !estNonVivant(personnage)) {
-      //Cherche si certains peuvent siphoner l'âme
-      var pageId = token.get('pageid');
-      var allToks =
-        findObjs({
-          _type: "graphic",
-          _pageid: pageId,
-          _subtype: "token",
-          layer: "objects"
-        });
-      allToks.forEach(function(tok) {
-        if (tok.id == token.id) return;
-        var ci = tok.get('represents');
-        if (ci === '') return;
-        var p = {
-          token: tok,
-          charId: ci
-        };
-        if (getState(p, 'mort')) return;
-        if (distanceCombat(token, tok, pageId) > 20) return;
-        if (charIdAttributeAsBool(ci, 'siphonDesAmes')) {
-          var bonus = charIdAttributeAsBool(ci, 'siphonDesAmes', 0);
-          var soin = rollDePlus(6, bonus);
-          soigneToken(p, soin.val, evt,
-            function(s) {
-              var siphMsg = "siphone l'âme de " + token.get('name') +
-                ". Il récupère ";
-              if (s == soin.val) siphMsg += soin.roll + " pv.";
-              else siphMsg += s + " pv (jet " + soin.roll + ").";
-              sendChar(ci, siphMsg);
-            },
-            function() {
-              sendChar(ci, "est déjà au maximum de point de vie. Il laisse échapper l'âme de " + token.get('name'));
-            });
+    } else if (value && etat == 'mort') {
+      if (charAttributeAsBool(personnage, 'armeeConjuree')) {
+        removeFromTurnTracker(personnage.token.id, evt);
+        personnage.token.remove();
+        sendChar(personnage.charId, 'disparaît');
+        var armeeChar = getObj('character', personnage.charId);
+        if (armeeChar) {
+          evt.deletedCharacters = evt.deletedCharacters || [];
+          evt.deletedCharacters.push({
+            id: personnage.charId,
+            name: armeeChar.get('name'),
+            avatar: armeeChar.get('avatar'),
+            attributes: findObjs({
+              _type: 'attributes',
+              _characterid: personnage.charId
+            }),
+            abilities: findObjs({
+              _type: 'ability',
+              _characterid: personnage.charId
+            })
+          });
+          armeeChar.remove();
         }
-      });
+      } else if (!estNonVivant(personnage)) {
+        //Cherche si certains peuvent siphoner l'âme
+        var pageId = token.get('pageid');
+        var allToks =
+          findObjs({
+            _type: "graphic",
+            _pageid: pageId,
+            _subtype: "token",
+            layer: "objects"
+          });
+        allToks.forEach(function(tok) {
+          if (tok.id == token.id) return;
+          var ci = tok.get('represents');
+          if (ci === '') return;
+          var p = {
+            token: tok,
+            charId: ci
+          };
+          if (getState(p, 'mort')) return;
+          if (distanceCombat(token, tok, pageId) > 20) return;
+          if (charIdAttributeAsBool(ci, 'siphonDesAmes')) {
+            var bonus = charIdAttributeAsBool(ci, 'siphonDesAmes', 0);
+            var soin = rollDePlus(6, bonus);
+            soigneToken(p, soin.val, evt,
+              function(s) {
+                var siphMsg = "siphone l'âme de " + token.get('name') +
+                  ". Il récupère ";
+                if (s == soin.val) siphMsg += soin.roll + " pv.";
+                else siphMsg += s + " pv (jet " + soin.roll + ").";
+                sendChar(ci, siphMsg);
+              },
+              function() {
+                sendChar(ci, "est déjà au maximum de point de vie. Il laisse échapper l'âme de " + token.get('name'));
+              });
+          }
+        });
+      }
     }
     if (token.get('bar1_link') !== "") {
       if (charId === '') {
@@ -2415,6 +2439,7 @@ var COFantasy = COFantasy || function() {
         case "traquenard":
         case "tueurDeGeants":
         case "grenaille":
+        case "attaqueArmeeConjuree":
           options[cmd[0]] = true;
           return;
         case "imparable": //deprecated
@@ -4306,6 +4331,7 @@ var COFantasy = COFantasy || function() {
     return res;
   }
 
+  //Retourne true si il existe une limite qui empêche de lancer le sort
   function limiteRessources(personnage, options, defResource, msg, evt) {
     if (options.mana) {
       if (personnage) {
@@ -4643,7 +4669,7 @@ var COFantasy = COFantasy || function() {
               if (getState(cible, 'mort')) return; //pas de dégâts aux morts
               var pt = tokenCenter(obj);
               var distToTrajectory = VecMath.ptSegDist(pt, pta, ptt);
-              if (distToTrajectory > (obj.get('width') + obj.get('height')) / 2)
+              if (distToTrajectory > (obj.get('width') + obj.get('height')) / 4)
                 return;
               cible.tokName = obj.get('name');
               var objChar = getObj('character', objCharId);
@@ -4707,7 +4733,7 @@ var COFantasy = COFantasy || function() {
               spawnFxBetweenPoints(p1eC, p2eC, options.fx, pageId);
             }
             var vecCentre = VecMath.normalize(VecMath.vec(pta, ptt));
-            var cosAngle = Math.cos(options.aoe.angle * Math.PI / 180.0);
+            var cosAngle = Math.cos(options.aoe.angle * Math.PI / 360.0);
             if (targetToken.get('bar1_max') == 0) { // jshint ignore:line
               //C'est juste un token utilisé pour définir le cone
               cibles = [];
@@ -4806,6 +4832,9 @@ var COFantasy = COFantasy || function() {
         sendChar(attackingCharId, "est tenu à distance de " + target.tokName + ", " + onGenre(attackingCharId, "il", "elle") + " ne peut pas l'attaquer ce tour.");
         return false;
       }
+      if (charAttributeAsBool(target, 'armeeConjuree')) {
+        return options.attaqueArmeeConjuree;
+      }
       return true;
     });
     if (cibles.length === 0) return;
@@ -4835,6 +4864,9 @@ var COFantasy = COFantasy || function() {
     var evt = options.evt || {
       type: "Tentative d'attaque"
     };
+    if (options.attaqueArmeeConjuree) {
+      setTokenAttr(attaquant, 'attaqueArmeeConjuree', 1, evt, undefined, getInit());
+    }
     evt.action = evt.action || {
       options: JSON.parse(JSON.stringify(options)) //pour la chance etc.
     };
@@ -5089,17 +5121,15 @@ var COFantasy = COFantasy || function() {
   // Effets quand on rentre en combat 
   // attaquant doit avoir un tokName et peut calculer le name
   function entrerEnCombat(attaquant, cibles, explications, evt) {
-    if (!stateCOF.combat) {
-      var selected = [{
-        _id: attaquant.token.id
-      }];
-      cibles.forEach(function(target) {
-        selected.push({
-          _id: target.token.id
-        });
+    var selected = [{
+      _id: attaquant.token.id
+    }];
+    cibles.forEach(function(target) {
+      selected.push({
+        _id: target.token.id
       });
-      initiative(selected, evt);
-    }
+    });
+    initiative(selected, evt); //ne recalcule pas l'init
     if (getState(attaquant, 'invisible')) {
       explications.push(attaquant.tokName + " redevient visible");
       setState(attaquant, 'invisible', false, evt);
@@ -6098,7 +6128,8 @@ var COFantasy = COFantasy || function() {
       }
 
       if (attributeAsBool(attaquant, 'ombreMortelle') ||
-        attributeAsBool(attaquant, 'dedoublement')) {
+        attributeAsBool(attaquant, 'dedoublement') ||
+        (charAttributeAsBool(attaquant, 'armeeConjuree') && attributeAsBool(target, 'attaqueArmeeConjuree'))) {
         if (options.divise) options.divise *= 2;
         else options.divise = 2;
       }
@@ -9716,6 +9747,7 @@ var COFantasy = COFantasy || function() {
   //dont le nom commence et termine par #, contenant une liste d'actions
   //à afficher
   function turnAction(perso, playerId, listActions) {
+    var pageId = perso.token.get('pageid');
     // Toutes les Abilities du personnage lié au Token
     var abilities = findObjs({
       _type: 'ability',
@@ -9770,23 +9802,67 @@ var COFantasy = COFantasy || function() {
         .replace(/%#([^#]*)#/g, '\n!cof-liste-actions $1')
         .replace(/%/g, '\n%').replace(/#/g, '\n#')
         .split("\n");
-      if (actionsParDefaut) {
-        actions.push('Attendre');
-        actions.push('Se défendre');
-        if (stateCOF.options.affichage.val.manoeuvres.val) actions.push('Manoeuvre');
-      }
-      if (formeDarbre) {
-        actions.push('Attaque');
-      }
       var actionsAAfficher;
       var ligne = '';
+      var command = '';
+      if (formeDarbre) {
+        actionsAAfficher = true;
+        command = '!cof-attack @{selected|token_id} @{target|token_id} ["Branches",["@{selected|NIVEAU}",0],20,[1,6,3,0],0]';
+        ligne += bouton(command, 'Attaque', perso, false) + '<br />';
+      }
+      //On cherche si il y a une armée conjurée à attaquer
+      var attrs_armee =
+        findObjs({
+          _type: "attribute",
+          name: 'armeeConjuree',
+        });
+      if (attrs_armee.length > 0) {
+        var allTokens =
+          findObjs({
+            _type: "graphic",
+            _pageid: pageId,
+            _subtype: "token",
+            layer: "objects"
+          });
+        var page = getObj("page", pageId);
+        var scale = page.get('scale_number');
+        var px = perso.token.get('left');
+        var py = perso.token.get('top');
+        var pxp = px + 10 * PIX_PER_UNIT / scale;
+        var pxm = px - 10 * PIX_PER_UNIT / scale;
+        var pyp = py + 10 * PIX_PER_UNIT / scale;
+        var pym = py - 10 * PIX_PER_UNIT / scale;
+        var ps = tokenSize(perso.token, 0);
+        pxp += ps;
+        pxm -= ps;
+        pyp += ps;
+        pym -= ps;
+        attrs_armee.forEach(function(aa) {
+          var aacid = aa.get('characterid');
+          if (aacid == perso.charId) return;
+          var invocId = aa.get('current');
+          if (invocId == perso.charId) return;
+          var allies = alliesParPerso[invocId] || new Set();
+          if (allies.has(perso.charId)) return;
+          allTokens.forEach(function(t) {
+            if (t.get('represents') == aacid) {
+              //teste si dans un carré de 20 m de coté autour de l'armée.
+              var tx = t.get('left');
+              var ty = t.get('top');
+              if (tx < pxp && tx > pxm && ty < pyp && ty > pym) {
+                command = '!cof-attack ' + perso.token.id + ' ' + t.id + ' ["AttaqueArmée",[0,0],20,[0,6,' + (charAttributeAsInt(perso, 'NIVEAU', 1) + 1) + ',0],20] --auto --attaqueArmeeConjuree';
+                ligne += bouton(command, "Attaque de l'armée", perso, false) + '<br />';
+              }
+            }
+          });
+        });
+      }
       if (actions.length > 0) {
         // Toutes les Macros
         var macros = findObjs({
           _type: 'macro'
         });
         var found;
-        var command = '';
         // On recherche si l'action existe (Ability % ou Macro #)
         actions.forEach(function(action, i) {
           action = action.trim();
@@ -9825,22 +9901,6 @@ var COFantasy = COFantasy || function() {
               command = action;
               ligne += bouton(command, actionText, perso, false) + '<br />';
               found = true;
-            } else if (action == 'Attendre') {
-              command = "!cof-attendre ?{Nouvelle initiative}";
-              ligne += bouton(command, action, perso, false) + '<br />';
-              found = true;
-            } else if (action == 'Se défendre') {
-              command = "!cof-action-defensive ?{Action défensive|simple|totale}";
-              ligne += bouton(command, action, perso, false) + '<br />';
-              found = true;
-            } else if (action == 'Manoeuvre') {
-              command = "!cof-manoeuvre @{selected|token_id} @{target|token_id} ?{Manoeuvre?|aveugler|bloquer|desarmer|faireDiversion|menacer|renverser|tenirADistance|repousser}";
-              ligne += bouton(command, action, perso, false) + '<br />';
-              found = true;
-            } else if (formeDarbre && action == 'Attaque') {
-              command = '!cof-attack @{selected|token_id} @{target|token_id} ["Branches",["@{selected|NIVEAU}",0],20,[1,6,3,0],0]';
-              ligne += bouton(command, action, perso, false) + '<br />';
-              found = true;
             }
             if (found) {
               actionsAAfficher = true;
@@ -9850,6 +9910,19 @@ var COFantasy = COFantasy || function() {
             }
           }
         });
+      }
+      if (actionsParDefaut) {
+        actionsAAfficher = true;
+        command = "!cof-attendre ?{Nouvelle initiative}";
+        ligne += bouton(command, 'Attendre', perso, false) + '<br />';
+        if (!charAttributeAsBool(perso, 'armeeConjuree')) {
+          command = "!cof-action-defensive ?{Action défensive|simple|totale}";
+          ligne += bouton(command, 'Se défendre', perso, false) + '<br />';
+          if (stateCOF.options.affichage.val.manoeuvres.val) {
+            command = "!cof-manoeuvre @{selected|token_id} @{target|token_id} ?{Manoeuvre?|aveugler|bloquer|desarmer|faireDiversion|menacer|renverser|tenirADistance|repousser}";
+            ligne += bouton(command, 'Manoeuvres', perso, false) + '<br />';
+          }
+        }
       }
       for (var etat in cof_states) {
         var saveEtat = boutonSaveState(perso, etat);
@@ -14026,7 +14099,7 @@ var COFantasy = COFantasy || function() {
           attAbsBonus += bad;
           if (attAbsBonus > 0) msgAbsorber += "+" + attAbsBonus;
           else if (attAbsBonus < 0) msgAbsorber += attAbsBonus;
-          explAbsorber.push(cible.tokName + " tente d'absorber l'attaque avec son bouclier. Il fait " + msgAbsorber);
+          explAbsorber.push(cible.tokName + " tente d'absorber l'attaque avec son bouclier. " + onGenre(cible.charId, "Il", "elle") + " fait " + msgAbsorber);
           cible.absorber = totalAbsorbe;
           cible.absorberDisplay = msgAbsorber;
           cible.absorberExpl = explAbsorber;
@@ -15918,6 +15991,7 @@ var COFantasy = COFantasy || function() {
       }
     }
     var actions = "";
+    if (spec.actions) actions = spec.actions;
     if (spec.attaques) {
       spec.attaques.forEach(function(att) {
         if (!att.length) {
@@ -16011,7 +16085,7 @@ var COFantasy = COFantasy || function() {
       ],
       attributes: [{
         name: 'discrétion',
-        value: 5
+        current: 5
       }],
       abilities: [{
         name: 'Embuscade',
@@ -16048,7 +16122,7 @@ var COFantasy = COFantasy || function() {
       ],
       attributes: [{
         name: 'discrétion',
-        value: 5
+        current: 5
       }],
       abilities: [{
         name: 'Embuscade',
@@ -16085,7 +16159,7 @@ var COFantasy = COFantasy || function() {
       ],
       attributes: [{
         name: 'discrétion',
-        value: 5
+        current: 5
       }],
       abilities: [{
         name: 'Embuscade',
@@ -16124,7 +16198,7 @@ var COFantasy = COFantasy || function() {
       ],
       attributes: [{
         name: 'discrétion',
-        value: 5
+        current: 5
       }],
       abilities: [{
         name: 'Embuscade',
@@ -16197,7 +16271,7 @@ var COFantasy = COFantasy || function() {
       ],
       attributes: [{
         name: 'discrétion',
-        value: 5
+        current: 5
       }],
       abilities: [{
         name: 'Embuscade',
@@ -16330,13 +16404,98 @@ var COFantasy = COFantasy || function() {
     }); //end getSelected
   }
 
+  //!cof-conjuration-armee [dé de DM] --limiteParJour...
   function conjurationArmee(msg) {
+    var options = parseOptions(msg);
+    if (options === undefined) return;
+    var cmd = options.cmd;
+    if (cmd === undefined) {
+      error("Problème de parse options", msg.content);
+      return;
+    }
     getSelected(msg, function(selected, playerId) {
       if (selected.length === 0) {
         sendPlayer(msg, "Il faut sélectionner le lanceur de la conjuration d'arméé");
         return;
       }
-      iterSelected(selected, function(invocateur) {});
+      iterSelected(selected, function(invocateur) {
+        var pageId = invocateur.token.get('pageid');
+        var niveau = ficheAttributeAsInt(invocateur, 'NIVEAU', 1);
+        var evt = {
+          type: "Conjuration d'armée"
+        };
+        if (limiteRessources(invocateur, options, 'conjurationArmee', "conjurer une armée", evt)) return;
+        var deDM;
+        var nbDeDM;
+        if (cmd.length > 1) {
+          var argDe = cmd[1].split(/d/i);
+          if (argDe.length == 2) {
+            nbDeDM = parseInt(argDe[0]);
+            if (isNaN(nbDeDM) || nbDeDM < 1) nbDeDM = undefined;
+            else {
+              deDM = parseInt(argDe[1]);
+              if (isNaN(deDM) || deDM < 1) deDM = undefined;
+            }
+          }
+        }
+        if (deDM === undefined) {
+          var rang = charAttributeAsInt(invocateur, 'voieDeLaConjuration', 3);
+          if (rang <= 3) {
+            deDM = 6;
+            nbDeDM = 1;
+          } else if (rang == 4) {
+            deDM = 10;
+            nbDeDM = 1;
+          } else {
+            deDM = 6;
+            nbDeDM = 2;
+          }
+        }
+        var nomArmee = "Armée de " + invocateur.token.get('name');
+        var token = createObj('graphic', {
+          name: nomArmee,
+          subtype: 'token',
+          pageid: pageId,
+          imgsrc: 'https://s3.amazonaws.com/files.d20.io/images/73283129/-jrKAyQQ1P7zpD09xeTbXw/thumb.png?1549546953',
+          left: invocateur.token.get('left'),
+          top: invocateur.token.get('top'),
+          width: 70,
+          height: 70,
+          layer: 'objects',
+          showname: 'true',
+          showplayers_bar1: 'true',
+          light_hassight: 'true',
+          light_angle: 0, //Pour que le joueur ne voit rien par ses yeux
+          aura1_radius: 10,
+          aura1_color: "#d56eef",
+          aura1_square: true
+        });
+        toFront(token);
+        var avatar = "https://s3.amazonaws.com/files.d20.io/images/73283254/r6sbxbP1QKKtqXyYq-MlLA/max.png?1549547198";
+        var attaque = '!cof-attack @{selected|token_id} @{target|token_id} ';
+        attaque += '["Attaque",["@{selected|ATKCAC}",0],20,[' + nbDeDM + ',' + deDM + ',0,0],[20]] --auto';
+        var abilities = [{
+          name: 'Attaque',
+          action: attaque
+        }];
+        var attributes = [{
+          name: 'armeeConjuree',
+          current: invocateur.charId
+        }];
+        var charArmee =
+          createCharacter(nomArmee, playerId, avatar, token, {
+            pv: niveau * 10,
+            abilities: abilities,
+            attributes: attributes
+          });
+        evt.characters = [charArmee];
+        evt.tokens = [token];
+        if (stateCOF.combat) {
+          initiative([{
+            _id: token.id
+          }], evt);
+        }
+      });
     });
   }
 
@@ -17666,6 +17825,11 @@ var COFantasy = COFantasy || function() {
       activation: "devient protégé par un champ télékinétique",
       actif: "est protégé par un champ télékinétique",
       fin: "n'est plus sous l'effet d'un champ de protection",
+    },
+    attaqueArmeeConjuree: {
+      activation: "se bat contre une armée conjurée",
+      actif: "se bat contre une armée conjurée",
+      fin: "ne se bat plus contre l'armée conjurée"
     },
   };
 
