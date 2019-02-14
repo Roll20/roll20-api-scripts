@@ -1,0 +1,6 @@
+This rudimentary script can be sluggish, but be patient.  It can greatly speed up some simple rolls for you.
+Type !critloc to determine Critical Hit Location.
+Type !crithead, !critarm, !critbody, or !critleg to roll a critical hit for the appropriate location.
+Type !crithead x, !critarm x, !critbody x, or !critleg x to determine the outcome of a critical rolled by other means.
+For example: !crithead 99 will return the results of a Critical hit to the head with a value of 99.
+Type !oops to roll an Oops! result.
