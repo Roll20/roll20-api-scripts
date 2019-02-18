@@ -1,5 +1,10 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 
+## 1.09
+
+### Capacités
+* Ajout de la surpuissance physique de l'invocateur
+
 ## 1.08
 
 ### Capacités
