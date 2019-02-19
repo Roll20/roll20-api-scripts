@@ -537,3 +537,7 @@ yatzoid:
 gametimer:
   - "Game Timer"
   - Utility
+
+wfrp4e:
+  - "WFRP4e Combat Ccripts"
+  - "System Toolbox"
