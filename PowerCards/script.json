@@ -1,8 +1,8 @@
 {
     "name": "PowerCards",
     "script": "PowerCards.js",
-    "version": "3.8.8",
-    "previousversions": ["3.8.8","3.8.0","3.7.9","3.7.6","3.7.2","3.7.1"],
+    "version": "3.8.11",
+    "previousversions": ["3.8.11","3.8.8","3.8.0","3.7.9","3.7.6","3.7.2","3.7.1"],
     "description": "PowerCards allows you to define highly customizable templated output for PC and NPC actions, spells, abilities, statistics, or almost any other purpose you can come up with. Their original purpose was to present ability and attack information (powers) in a format similar to the power blocks from the official D&D 4E products, but the format works well for any system. PowerCards are output to the chat window with full HTML/CSS formatting. A handful of options use information from the 5E OGL sheet, but these options are not critical to the functioning of the core features of the script.",
     "authors": "Sky, Kurt Jaegers",
 	"patreon": "https://www.patreon.com/KurtJaegers",
