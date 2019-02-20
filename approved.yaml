@@ -437,3 +437,107 @@ forbiddenlandsdice:
 fengshuiinitiative:
 - Feng Shui Initiative
 - System Toolbox
+
+powercards:
+- PowerCards
+- Utility
+
+herotracker:
+- HeroTracker
+- System Toolbox
+
+statusinfo:
+- StatusInfo
+- Utility
+
+drunk:
+- Drunk
+- System Toolbox
+
+deathtracker:
+- DeathTracker
+- Utility
+
+concentration:
+- Concentration
+- System Toolbox
+
+resizer:
+- Resizer
+- Utility
+
+lazyexperience:
+- LazyExperience
+- System Toolbox
+
+inspirationtrack:
+- InspirationTracker
+- System Toolbox
+
+syncpage:
+- SyncPage
+- Utility
+
+combattracker:
+- CombatTracker
+- Utility
+
+movelighting:
+- moveLighting
+- Utility
+
+elevation:
+- Elevation
+- Utility
+
+hero6playable:
+- HeroSystem6e
+- System Toolbox
+
+publicsheet:
+- PublicSheet
+- Utility
+
+gmsheet:
+- GMSheet
+- System Toolbox
+
+wrathandglory:
+- "Wrath And Glory"
+- System Toolbox
+
+shuffletokens:
+- "Shuffle Tokens"
+- Tokens
+
+apiselection:
+- APISelection
+- Utility
+
+tailsofequestriahelper:
+- TailsOfEquestriaHelper
+- System Toolbox
+
+vampire5e:
+- vampire-v5
+- System Toolbox
+
+metamacros:
+- "MetaMacros"
+- Utility
+
+dupchartoken:
+  - "DupCharToken"
+  - Utility
+
+yatzoid:
+  - "Yatzoid"
+  - "System Toolbox"
+
+gametimer:
+  - "Game Timer"
+  - Utility
+
+wfrp4e:
+  - "WFRP4e"
+  - "System Toolbox"

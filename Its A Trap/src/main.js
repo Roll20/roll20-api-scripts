@@ -19,6 +19,38 @@ var ItsATrap = (() => {
    *        The victim that triggered the trap.
    */
   function activateTrap(trap, activatingVictim) {
+    let effect = new TrapEffect(trap);
+    if(effect.delay) {
+      // Set the interdiction status on the trap so that it doesn't get
+      // delay-activated multiple times.
+      effect.trap.set('status_interdiction', true);
+
+      // Activate the trap after the delay.
+      setTimeout(() => {
+        _activateTrap(trap);
+      }, 1000*effect.delay);
+
+      // Let the GM know that the trap has been triggered.
+      let announcer = state.ItsATrap.userOptions.announcer;
+      if(activatingVictim)
+        sendChat(announcer, `/w gm The trap ${effect.name} has been ` +
+          `triggered by ${activatingVictim.get('name')}. ` +
+          `It will activate in ${effect.delay} seconds.`);
+      else
+        sendChat(announcer, `/w gm The trap ${effect.name} has been ` +
+          `triggered. It will activate in ${effect.delay} seconds.`);
+    }
+    else
+      _activateTrap(trap, activatingVictim);
+  }
+
+  /**
+   * Helper for activateTrap.
+   * @param {Graphic} trap
+   * @param {Graphic} [activatingVictim]
+   *        The victim that triggered the trap.
+   */
+  function _activateTrap(trap, activatingVictim) {
     let theme = getTheme();
     let effect = new TrapEffect(trap);
 
@@ -526,7 +558,7 @@ var ItsATrap = (() => {
     let interval = setInterval(() => {
       let theme = getTheme();
       if(theme) {
-        log(`☒☠☒ Initialized It's A Trap! using theme '${getTheme().name}' ☒☠☒`);
+        log(`☠☒☠ Initialized It's A Trap! using theme '${getTheme().name}' ☠☒☠`);
         clearInterval(interval);
       }
       else if(numRetries > 0)

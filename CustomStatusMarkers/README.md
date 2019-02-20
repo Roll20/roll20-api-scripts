@@ -1,7 +1,9 @@
 # Custom Status Markers
 
-_3.2 Updates_
-* Added macros for toggling custom status markers on selected tokens.
+_3.3 Updates_
+* Fixed status tint to allow CSS hex colors.
+* Implemented export/import buttons for the script's state, allowing users to export/import their status markers across campaigns.
+* Added configuration for status marker alignment. Custom status markers can be positioned either above their token, or inline with the token's built-in status markers.
 
 This script allows users to create custom status markers for tokens.
 When this script is installed, it creates a 'CustomStatusMarkers' macro for
@@ -50,3 +52,18 @@ button next to it in the menu.
 
 A command is provided for clearing the Custom Status Markers module's state.
 Warning: This will delete all your saved custom status markers!
+
+## Help
+
+If you experience any issues while using this script or the trap themes,
+need help using it, or if you have a neat suggestion for a new feature,
+please shoot me a PM:
+https://app.roll20.net/users/46544/stephen-l
+or create a help thread on the Roll20 API forum
+
+## Show Support
+
+If you would like to show your appreciation and support for the work I do in writing,
+updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/publisher/165/stephen-lindberg)
+or, simply leave a thank you note in the script's thread on the Roll20 forums.
+Either is greatly appreciated! Happy gaming!

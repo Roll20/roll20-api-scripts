@@ -1,0 +1,15 @@
+{
+"name": "Elevation",
+"script":"Elevation.js",	
+"version": "0.1.0",
+"description": "Defines different elevation levels to allow showing/hiding of different map sections with DL paths for different elevations",
+"authors": "Lucian Holland",
+"roll20userid": "791452",
+"dependencies": [],
+"modifies": {
+	"state.Elevation": "read,write",
+	"graphic.*": "read,write",
+	"path.*": "read,write"
+	},
+"conflicts":[]
+}

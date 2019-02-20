@@ -28,6 +28,8 @@
 
   /**
    * A Hexagon sized for a page, with no particular center point.
+   * This effectively defines a whole grid of hexes and its geometric properties
+   * rather than just one hex.
    */
   class HexagonTile {
 
@@ -177,18 +179,32 @@
     }
 
     /**
-     * Produces a PathMath Polygon for this tile located at some row and column.
+     * Gets the positions of the hexes surrounding some particular hex.
      * @param {int} row
      * @param {int} column
-     * @return {PathMath.Polygon}
+     * @return {tuple<int,int>[]}
      */
-    getHexagon(row, column) {
-      let center = this.getCoordinates(row, column);
-      let translation = MatrixMath.translate(center);
-      let verts = _.map(this.vertices, v => {
-        return MatrixMath.multiply(translation, v);
-      });
-      return new PathMath.Polygon(verts);
+    getAdjacentHexes(row, column) {
+      if(this.isVertical) {
+        return [
+          [row, column + 1],
+          [row - 1, (row % 2) === 1 ? column + 1 : column],
+          [row - 1, (row % 2) === 1 ? column : column - 1],
+          [row, column - 1],
+          [row + 1, (row % 2) === 1 ? column + 1 : column],
+          [row + 1, (row % 2) === 1 ? column : column - 1]
+        ];
+      }
+      else {
+        return [
+          [(column % 2) === 1 ? row + 1 : row, column - 1],
+          [(column % 2) === 1 ? row : row - 1, column - 1],
+          [row-1, column],
+          [(column % 2) === 1 ? row + 1 : row, column + 1],
+          [(column % 2) === 1 ? row : row - 1, column + 1],
+          [row+1, column]
+        ];
+      }
     }
 
     /**
@@ -211,6 +227,112 @@
     }
 
     /**
+     * Converts row/column coordinates to Qbert style XYZ coordinates. This
+     * helps to simplify some hex math problems by thinking of the hexes as
+     * cubes stacked like in Qbert.
+     * @param {int} row
+     * @param {int} column
+     * @return {vec3}
+     */
+    _getCubicCoords(row, column) {
+      // When arranged on a Qbert plane, the x,y,z coordinates of each cube
+      // should add up to 0. We'll also assume that Z decreases monotonically
+      // as the Qbert cubes descend. In a vertical arrangement,
+      let x, y, z;
+      if(this.isHorizontal) {
+        z = -column;
+        x = Math.floor(column/2) - row;
+        y = -(x + z);
+      }
+      else {
+        z = -row;
+        x = Math.floor((row+1)/2) + column;
+        y = -(x + z);
+      }
+
+      return [x, y, z];
+    }
+
+    /**
+     * Gets the distance between two hexes.
+     * @param {vec2} p1
+     * @param {vec2} p2
+     */
+    getDistance(p1, p2) {
+      let cubic1 = this._getCubicCoords(...p1);
+      let cubic2 = this._getCubicCoords(...p2);
+
+      let dx = Math.abs(cubic1[0] - cubic2[0]);
+      let dy = Math.abs(cubic1[1] - cubic2[1]);
+      let dz = Math.abs(cubic1[2] - cubic2[2]);
+      return Math.max(dx, dy, dz);
+    }
+
+    /**
+     * Produces a PathMath Polygon for this tile located at some row and column.
+     * @param {int} row
+     * @param {int} column
+     * @return {PathMath.Polygon}
+     */
+    getHexagon(row, column) {
+      let center = this.getCoordinates(row, column);
+      let translation = MatrixMath.translate(center);
+      let verts = _.map(this.vertices, v => {
+        return MatrixMath.multiply(translation, v);
+      });
+      return new PathMath.Polygon(verts);
+    }
+
+    /**
+     * Gets the row,column coordinates for the tiles nearby some
+     * row,column position.
+     * @param {int} row
+     * @param {int} column
+     * @param {uint} distance
+     * @return {tuple<int,int>[]}
+     */
+    getNearbyHexes(row, column, distance) {
+      if(distance === 0)
+        return [];
+
+      let set = new Set();
+
+      // Use a queue to explore all adjacent hexes out to the desired distance.
+      let workQueue = [[row, column, distance]];
+      while(workQueue.length > 0) {
+        let [row, column, distance] = workQueue.shift();
+
+        // Get the positions of adjacent hexes.
+        let adjHexes = this.getAdjacentHexes(row, column);
+
+        // Add the adjacent hexes to our set and explore them if they're not
+        // explored and we still have distance left.
+        _.each(adjHexes, hex => {
+          let [nextRow, nextColumn] = hex;
+          let key = `${nextRow},${nextColumn}`;
+          if(!set.has(key) && distance > 1)
+            workQueue.push([nextRow, nextColumn, distance - 1]);
+          set.add(key);
+        });
+      }
+
+      // Transform the set into a list of tuples.
+      let list = [];
+      set.forEach(elem => {
+        let parts = elem.split(',');
+        let row = parseInt(parts[0]);
+        let col = parseInt(parts[1]);
+        list.push([row, col]);
+      });
+
+      // Sort by increasing distance.
+      list = _.sortBy(list, elem => {
+        return this.getDistance([row, column], elem);
+      });
+      return list;
+    }
+
+    /**
      * Gets the row and column (rounded down) for some X, Y center coordinates.
      * @param {number} x
      * @param {number} y
@@ -227,6 +349,41 @@
         row -= 0.5;
 
       return [Math.round(row), Math.round(column)];
+    }
+
+    /**
+     * Gets the coordinates for the hexes in between two pairs of hex
+     * coordinates, not including these two hexes.
+     * @param {vec2} p1
+     * @param {vec2} p2
+     * @return {vec2[]}
+     */
+    getTweenHexes(p1, p2) {
+      let xy1 = this.getCoordinates(...p1);
+      let xy2 = this.getCoordinates(...p2);
+
+      let u = VecMath.sub(xy2, xy1);
+      let dist = VecMath.length(u);
+      let uHat = VecMath.normalize(u);
+      let scale = UNIT_PIXELS_SIDE_V_DIST*this.scale;
+      let dxy = VecMath.scale(uHat, scale);
+
+      let curXY = VecMath.add(xy1, dxy);
+      let curDist = scale;
+      let result = [];
+      while(curDist < dist - scale/4) {
+        let hex = this.getRowColumn(...curXY);
+
+        // Skip if this hex is the start or end hex.
+        let [row, col] = hex;
+        if(!((row === p1[0] && col === p1[1]) ||
+            (row === p2[0] && col === p2[1])))
+          result.push(hex);
+
+        curXY = VecMath.add(curXY, dxy);
+        curDist += scale;
+      }
+      return result;
     }
   }
 
