@@ -257,9 +257,9 @@
                           <li>
                             <code>BONUS_ATTAQUE</code> : Valeur de bonus de l'attaque de l'Arme/Attaque.<br />
                             Exemple pour le token selectionné :
-                            <div class="decalage">Au contact : <i>"@{selected|ATKCAC}"</i><br />
-                              A distance : <i>"@{selected|ATKTIR}"</i><br />
-                              Magique : "@{selected|ATKMAG}"
+                            <div class="decalage">Au contact : <i>"@{ATKCAC}"</i><br />
+                              A distance : <i>"@{ATKTIR}"</i><br />
+                              Magique : "@{ATKMAG}"
                             </div>
                           </li>
                           <li><code>BONUS</code> : Un éventuel bonus de l'Arme/Attaque. Exemple : -1, 0, 1, 2, 3, etc ...</li>
@@ -271,7 +271,7 @@
                         <ul>
                           <li><code>NOMBRE_DE_DÉ</code> : Combien de dé à lancer. Exemple : 0, 1, 2, 3, etc ...</li>
                           <li><code>VALEUR_DÉ</code> : Le nombre de face du dé. Exemple : 4, 6, 8, 10, 12</li>
-                          <li><code>MOD_DÉGÂTS</code> : Le MOD des dégâts à ajouter. Exemple : "@{selected|SAG}", -1, 0, etc...</li>
+                          <li><code>MOD_DÉGÂTS</code> : Le MOD des dégâts à ajouter. Exemple : "@{SAG}", -1, 0, etc...</li>
                           <li><code>AUTRE_BONUS</code> : D'éventuels autres bonus/malus. Exemple : -1, 0, 1, 2, 3, etc ...</li>
                         </ul>
                       </li>
@@ -279,7 +279,7 @@
                     </ul>
                     <div class="alert alert-success" role="alert">
                       <p>Exemple pour le sort "<i>Flèche enflammée</i>" :</p>
-                      <div class="decalage"><code>!cof-attack @{selected|token_id} @{target|token_id} ["Flèche_Enflammée",["@{selected|ATKMAG}",0],20,[1,6,"@{selected|INT}",0],30] --fx beam-fire --feu --sortilege --enflamme</code></div>
+                      <div class="decalage"><code>!cof-attack @{selected|token_id} @{target|token_id} ["Flèche_Enflammée",["@{ATKMAG}",0],20,[1,6,"@{INT}",0],30] --fx beam-fire --feu --sortilege --enflamme</code></div>
                     </div>
                     <div class="alert alert-warning" role="alert"><strong>Attention :</strong> Aucun espace n'est toléré.</div>
                   </li>
@@ -318,6 +318,7 @@
                     <ul id="conditions">
                       <li><code>moins</code> <i>attribut</i> : vrai si l'attribut <i>attribut</i> de la cible est moins haute que celle de l'attaquant</li>
                       <li><code>etat</code> <i>e</i> : vrai si l'état <i>e</i> est actif sur l'attaquant. Cet état peut être un des états définis plus bas, ou un attribut quelconque.</li>
+                      <li><code>etatCible</code> <i>e</i> : vrai si l'état <i>e</i> est actif sur toutes la cible. Cet état peut être un des états définis plus bas, ou un attribut quelconque.</li>
                       <li><code>deAttaque</code> <i>n</i> : vrai si le jet de dé d'attaque est supérieur ou égal à <i>n</i>.</li>
                       <li><code>crit</code> : vrai si l'attaque est un critique.</li>
                     </ul>
@@ -574,7 +575,7 @@
                       <ul>
                         <li>Name : <code>dose_Parch. Flèche enflammée</code></li>
                         <li>Current : <code>1</code> (la quantité)</li>
-                        <li>Max : <code>!cof-attack @{selected|token_id} @{target|token_id} ["Flèche_Enflammée",["@{selected|ATKCAC}",0],20,[1,6,"@{selected|SAG}",0],30] --fx beam-fire --feu --sortilege --enflamme</code></li>
+                        <li>Max : <code>!cof-attack @{selected|token_id} @{target|token_id} ["Flèche_Enflammée",["@{ATKCAC}",0],20,[1,6,"@{SAG}",0],30] --fx beam-fire --feu --sortilege --enflamme</code></li>
                       </ul>
                     </li>
                   </ul>
@@ -1190,16 +1191,20 @@
                 <ol>
                   <li><strong>Attaque mentale</strong> : faire 2 attaques, une pour les DMs léthaux, avec les options <code>--sortilege --attaqueMentale</code> et l'autre avec l'option supplémentaire <code>--tempDmg</code> (et en ajustant les DM).</li>
                   <li><strong>Bouclier psi</strong> : ajouter un attribut <code>bouclierPsi</code> de valeur <code>true</code>.</li>
+                  <li><strong>Attaque étourdissante</strong> : faire une attaque mentale, avec les options <code>--avecd12 --if moins NIVEAU --if etatCible bouclierPsi --effet etourdiTemp 1 --save CHA [[8+@{selected|CHA}]] --else --effet etourdiTemp 1</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du contrôle corporel</h4>
                 <ol>
                   <li><strong>Proprioception</strong> : ajouter les PVs sur la fiche, et mettre un attribut <code>proprioception</code> à <code>true</code>. </li>
                   <li><strong>Transe de régénération</strong> : <code>!cof-soin @{selected|token_id} 1d6+[[@{selected|NIVEAU} + @{selected|CHA}]] --limiteParJour <i>rang</i></code>. Il faut tirer les 2d6 pour savoir la durée de la transe. Si vous autorisez les options de tempête de mana pour ce profil, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code></li>
+                  <li><strong>Contrôle du métabolisme</strong> : ajouter un attribut <code>controleDuMetabolisme</code>, de valeur <code>true</code>. Ne pas modifier l'initiative, le bonus de charisme sera pris en compte par le script.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de l'empathie</h4>
                 <ol>
                   <li><strong>Perception extra-sensorielle</strong> : ajuster l'initiative et ajouter le bonus à un attribut <code>perception</code> (pour les jets).</li>
                   <li><strong>Défense intuitive</strong> : ajouter un attribut <code>defenseIntuitive</code> de valeur <code>true</code>. Ne pas modifier la DEF sur la fiche, la sagesse sera automatiquement prise en compte.</li>
+                  <li><strong>Perception du passé</strong> : on peut faire le jet en utilisant <code>!cof-jet SAG 15</code>.</li>
+                  <li><strong>Vision lointaine</strong> : pas de support particulier. Utiliser <code>!cof-jet SAG</code> pour les jets de sagesse.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de la télékinésie</h4>
                 <ol>

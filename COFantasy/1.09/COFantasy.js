@@ -2334,6 +2334,19 @@ var COFantasy = COFantasy || function() {
           attribute: args[1],
           text: args[1]
         };
+      case "etatCible":
+        if (_.has(cof_states, args[1])) {
+          return {
+            type: 'etatCible',
+            etat: args[1],
+            text: args[1]
+          };
+        }
+        return {
+          type: 'attributCible',
+          attribute: args[1],
+          text: args[1]
+        };
       case "deAttaque":
         var valeurDeAttaque = parseInt(args[1]);
         if (isNaN(valeurDeAttaque)) {
@@ -2444,6 +2457,7 @@ var COFantasy = COFantasy || function() {
         case "tueurDeGeants":
         case "grenaille":
         case "attaqueArmeeConjuree":
+        case "difficultePVmax":
           options[cmd[0]] = true;
           return;
         case "imparable": //deprecated
@@ -3216,8 +3230,22 @@ var COFantasy = COFantasy || function() {
         return resMoins;
       case "etat":
         return (getState(attaquant, cond.etat));
+      case "etatCible":
+        var resEtatCible = true;
+        cibles.forEach(function(target) {
+          if (resEtatCible && !getState(target, cond.etat))
+            resEtatCible = false;
+        });
+        return resEtatCible;
       case "attribut":
-        return (charAttributeAsBool(attaquant, cond.attribute));
+        return (attributeAsBool(attaquant, cond.attribute));
+      case "attributCible":
+        var resAttrCible = true;
+        cibles.forEach(function(target) {
+          if (resAttrCible && !attributeAsBool(target, cond.attribute))
+            resAttrCible = false;
+        });
+        return resAttrCible;
       case "deAttaque":
         if (deAttaque === undefined) {
           error("Condition de dé d'attaque non supportée ici", cond);
@@ -3253,6 +3281,8 @@ var COFantasy = COFantasy || function() {
           resCondition = testCondition(ite.condition, attaquant, [], deAttaque);
           break;
         case 'moins':
+        case 'etatCible':
+        case 'attributCible':
           if (target === undefined) return true;
           condInTarget = true;
           resCondition = testCondition(ite.condition, attaquant, [target], deAttaque);
@@ -3400,6 +3430,9 @@ var COFantasy = COFantasy || function() {
     }
     if (attributeAsBool(perso, 'masqueDuPredateur')) {
       init += getValeurOfEffet(perso, 'masqueDuPredateur', modCarac(perso, 'SAGESSE'));
+    }
+    if (charAttributeAsBool(perso, 'controleDuMetabolisme')) {
+      init += getValeurOfEffet(perso, 'controleDuMetabolisme', modCarac(perso, 'CHARISME'));
     }
     // Voie du pistolero rang 1 (plus vite que son ombre)
     var armeEnMain = tokenAttribute(perso, 'armeEnMain');
@@ -3816,6 +3849,15 @@ var COFantasy = COFantasy || function() {
 
   function defenseOfToken(attaquant, target, pageId, evt, options) {
     options = options || {};
+    if (options.difficultePVmax) {
+      var pvmax = parseInt(target.token.get("bar1_max"));
+      if (isNaN(pvmax)) {
+        error("Points de vie de " + target.token.get('name') + " mal formés",
+          target.token.get("bar1_max"));
+        return 0;
+      }
+      return pvmax;
+    }
     var tokenName = target.tokName;
     var explications = target.messages;
     var defense = 10;
@@ -5871,7 +5913,7 @@ var COFantasy = COFantasy || function() {
     }
     attCar = computeCarExpression(attaquant, attCar);
     if (attCar === undefined) return x;
-    return attCar + ficheAttributeAsInt(attaquant, 'NIVEAU') + attDiv;
+    return attCar + ficheAttributeAsInt(attaquant, 'NIVEAU', 1) + attDiv;
   }
 
   function attackDealDmg(attaquant, cibles, critSug, attackLabel, weaponStats, d20roll, display, options, evt, explications, pageId) {
@@ -10664,6 +10706,8 @@ var COFantasy = COFantasy || function() {
       case 'CON':
         if (attributeAsBool(personnage, 'mutationSilhouetteMassive'))
           bonus += 5;
+        if (charAttributeAsBool(personnage, 'controleDuMetabolisme'))
+          bonus += modCarac(personnage, 'CHARISME');
         break;
     }
     return bonus;
@@ -16562,7 +16606,7 @@ var COFantasy = COFantasy || function() {
   }, {
     name: 'Attaque',
     action: "!cof-attack @{selected|token_id} @{target|token_id}",
-    visibleto: '',
+    visibleto: 'all',
     istokenaction: false
   }, {
     name: 'Consommables',
