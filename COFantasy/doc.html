@@ -257,9 +257,9 @@
                           <li>
                             <code>BONUS_ATTAQUE</code> : Valeur de bonus de l'attaque de l'Arme/Attaque.<br />
                             Exemple pour le token selectionné :
-                            <div class="decalage">Au contact : <i>"@{ATKCAC}"</i><br />
-                              A distance : <i>"@{ATKTIR}"</i><br />
-                              Magique : "@{ATKMAG}"
+                            <div class="decalage">Au contact : <i>"@{selected|ATKCAC}"</i><br />
+                              A distance : <i>"@{selected|ATKTIR}"</i><br />
+                              Magique : <i>"@{selected|ATKMAG}"</i>
                             </div>
                           </li>
                           <li><code>BONUS</code> : Un éventuel bonus de l'Arme/Attaque. Exemple : -1, 0, 1, 2, 3, etc ...</li>
@@ -271,7 +271,7 @@
                         <ul>
                           <li><code>NOMBRE_DE_DÉ</code> : Combien de dé à lancer. Exemple : 0, 1, 2, 3, etc ...</li>
                           <li><code>VALEUR_DÉ</code> : Le nombre de face du dé. Exemple : 4, 6, 8, 10, 12</li>
-                          <li><code>MOD_DÉGÂTS</code> : Le MOD des dégâts à ajouter. Exemple : "@{SAG}", -1, 0, etc...</li>
+                          <li><code>MOD_DÉGÂTS</code> : Le MOD des dégâts à ajouter. Exemple : "@{selected|SAG}", -1, 0, etc...</li>
                           <li><code>AUTRE_BONUS</code> : D'éventuels autres bonus/malus. Exemple : -1, 0, 1, 2, 3, etc ...</li>
                         </ul>
                       </li>
@@ -279,7 +279,7 @@
                     </ul>
                     <div class="alert alert-success" role="alert">
                       <p>Exemple pour le sort "<i>Flèche enflammée</i>" :</p>
-                      <div class="decalage"><code>!cof-attack @{selected|token_id} @{target|token_id} ["Flèche_Enflammée",["@{ATKMAG}",0],20,[1,6,"@{INT}",0],30] --fx beam-fire --feu --sortilege --enflamme</code></div>
+                      <div class="decalage"><code>!cof-attack @{selected|token_id} @{target|token_id} ["Flèche_Enflammée",["@{selected|ATKMAG}",0],20,[1,6,"@{selected|INT}",0],30] --fx beam-fire --feu --sortilege --enflamme</code></div>
                     </div>
                     <div class="alert alert-warning" role="alert"><strong>Attention :</strong> Aucun espace n'est toléré.</div>
                   </li>
@@ -575,7 +575,7 @@
                       <ul>
                         <li>Name : <code>dose_Parch. Flèche enflammée</code></li>
                         <li>Current : <code>1</code> (la quantité)</li>
-                        <li>Max : <code>!cof-attack @{selected|token_id} @{target|token_id} ["Flèche_Enflammée",["@{ATKCAC}",0],20,[1,6,"@{SAG}",0],30] --fx beam-fire --feu --sortilege --enflamme</code></li>
+                        <li>Max : <code>!cof-attack @{selected|token_id} @{target|token_id} ["Flèche_Enflammée",["@{selected|ATKCAC}",0],20,[1,6,"@{selected|SAG}",0],30] --fx beam-fire --feu --sortilege --enflamme</code></li>
                       </ul>
                     </li>
                   </ul>

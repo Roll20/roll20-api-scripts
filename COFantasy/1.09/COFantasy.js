@@ -15496,7 +15496,7 @@ var COFantasy = COFantasy || function() {
     arme = {
       name: 'Attaque par défaut',
       attSkillDiv: 0,
-      attSkill: "@{ATKCAC}",
+      attSkill: "@{selected|ATKCAC}",
       crit: 20,
       parDefaut: true,
     };
@@ -16149,7 +16149,7 @@ var COFantasy = COFantasy || function() {
       },
       pv: 9,
       attaques: [
-        ['Morsure', ["@{ATKCAC}", 0], 20, [1, 6, 1, 0],
+        ['Morsure', ["@{selected|ATKCAC}", 0], 20, [1, 6, 1, 0],
           [0]
         ]
       ],
@@ -16177,7 +16177,7 @@ var COFantasy = COFantasy || function() {
       },
       pv: 15,
       attaques: [
-        ['Morsure', ["@{ATKCAC}", -1], 20, [1, 6, 3, 0],
+        ['Morsure', ["@{selected|ATKCAC}", -1], 20, [1, 6, 3, 0],
           [0]
         ]
       ],
@@ -16190,7 +16190,7 @@ var COFantasy = COFantasy || function() {
         action: '!cof-surprise [[15 + @{selected|DEX}]]'
       }, {
         name: 'Attaque-embuscade',
-        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{ATKCAC}",-1],20,[1,6,3,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif'
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",-1],20,[1,6,3,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif'
       }]
     },
     worg: {
@@ -16214,7 +16214,7 @@ var COFantasy = COFantasy || function() {
       },
       pv: 35,
       attaques: [
-        ['Morsure', ["@{ATKCAC}", 0], 20, [1, 6, 5, 0],
+        ['Morsure', ["@{selected|ATKCAC}", 0], 20, [1, 6, 5, 0],
           [0]
         ]
       ],
@@ -16227,7 +16227,7 @@ var COFantasy = COFantasy || function() {
         action: '!cof-surprise [[15 + @{selected|DEX}]]'
       }, {
         name: 'Attaque-embuscade',
-        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{ATKCAC}",0],20,[1,6,5,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif'
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",0],20,[1,6,5,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif'
       }]
     },
     lion: {
@@ -16251,7 +16251,7 @@ var COFantasy = COFantasy || function() {
       },
       pv: 30,
       attaques: [
-        ['Morsure', ["@{ATKCAC}", -1], 20, [2, 6, 5, 0],
+        ['Morsure', ["@{selected|ATKCAC}", -1], 20, [2, 6, 5, 0],
           [0]
         ]
       ],
@@ -16264,10 +16264,10 @@ var COFantasy = COFantasy || function() {
         action: '!cof-surprise [[15 + @{selected|DEX}]]'
       }, {
         name: 'Attaque-embuscade',
-        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{ATKCAC}",-1],20,[2,6,5,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat immobilise FOR @{selected|token_id} --endif --endif'
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",-1],20,[2,6,5,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat immobilise FOR @{selected|token_id} --endif --endif'
       }, {
         name: 'Dévorer',
-        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{ATKCAC}",-1],20,[2,6,5,0],[0]] --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat renverse --etat immobilise FOR @{selected|token_id} --endif --endif'
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",-1],20,[2,6,5,0],[0]] --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat renverse --etat immobilise FOR @{selected|token_id} --endif --endif'
       }]
     },
     grandLion: {
@@ -16290,7 +16290,7 @@ var COFantasy = COFantasy || function() {
       },
       pv: 50,
       attaques: [
-        ['Morsure', ["@{ATKCAC}", -2], 20, [2, 6, 7, 0],
+        ['Morsure', ["@{selected|ATKCAC}", -2], 20, [2, 6, 7, 0],
           [0]
         ]
       ],
@@ -16303,10 +16303,10 @@ var COFantasy = COFantasy || function() {
         action: '!cof-surprise [[15 + @{selected|DEX}]]'
       }, {
         name: 'Attaque-embuscade',
-        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{ATKCAC}",-2],20,[2,6,7,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat immobilise FOR @{selected|token_id} --endif --endif'
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",-2],20,[2,6,7,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat immobilise FOR @{selected|token_id} --endif --endif'
       }, {
         name: 'Dévorer',
-        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{ATKCAC}",-2],20,[2,6,7,0],[0]] --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat renverse --etat immobilise FOR @{selected|token_id} --endif --endif'
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",-2],20,[2,6,7,0],[0]] --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat renverse --etat immobilise FOR @{selected|token_id} --endif --endif'
       }]
     },
     oursPolaire: {
@@ -16329,7 +16329,7 @@ var COFantasy = COFantasy || function() {
       },
       pv: 70,
       attaques: [
-        ['Morsure', ["@{ATKCAC}", 0], 20, [2, 8, 7, 0],
+        ['Morsure', ["@{selected|ATKCAC}", 0], 20, [2, 8, 7, 0],
           [0]
         ]
       ],
@@ -16363,7 +16363,7 @@ var COFantasy = COFantasy || function() {
       },
       pv: 90,
       attaques: [
-        ['Morsure', ["@{ATKCAC}", -1], 20, [2, 6, 12, 0],
+        ['Morsure', ["@{selected|ATKCAC}", -1], 20, [2, 6, 12, 0],
           [0]
         ]
       ],
@@ -16376,10 +16376,10 @@ var COFantasy = COFantasy || function() {
         action: '!cof-surprise [[15 + @{selected|DEX}]]'
       }, {
         name: 'Attaque-embuscade',
-        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{ATKCAC}",-1],20,[2,6,12,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat immobilise FOR @{selected|token_id} --endif --endif'
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",-1],20,[2,6,12,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat immobilise FOR @{selected|token_id} --endif --endif'
       }, {
         name: 'Dévorer',
-        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{ATKCAC}",-1],20,[2,6,12,0],[0]] --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat renverse --etat immobilise FOR @{selected|token_id} --endif --endif'
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",-1],20,[2,6,12,0],[0]] --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat renverse --etat immobilise FOR @{selected|token_id} --endif --endif'
       }]
     },
     oursPrehistorique: {
@@ -16402,7 +16402,7 @@ var COFantasy = COFantasy || function() {
       },
       pv: 110,
       attaques: [
-        ['Griffes', ["@{ATKCAC}", -2], 20, [3, 6, 13, 0],
+        ['Griffes', ["@{selected|ATKCAC}", -2], 20, [3, 6, 13, 0],
           [0]
         ]
       ],
@@ -16571,7 +16571,7 @@ var COFantasy = COFantasy || function() {
         toFront(token);
         var avatar = "https://s3.amazonaws.com/files.d20.io/images/73283254/r6sbxbP1QKKtqXyYq-MlLA/max.png?1549547198";
         var attaque = '!cof-attack @{selected|token_id} @{target|token_id} ';
-        attaque += '["Attaque",["@{ATKCAC}",0],20,[' + nbDeDM + ',' + deDM + ',0,0],[20]] --auto';
+        attaque += '["Attaque",["@{selected|ATKCAC}",0],20,[' + nbDeDM + ',' + deDM + ',0,0],[20]] --auto';
         var abilities = [{
           name: 'Attaque',
           action: attaque
