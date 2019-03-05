@@ -3,7 +3,13 @@
 ## 1.09
 
 ### Capacités
+* Ajout de l'attaque étourdissante du psionique
+* Ajout de controle du métabolisme du psionique
 * Ajout de la surpuissance physique de l'invocateur
+
+## Correction de bugs
+* La macro Attaque est maintenant visible des joueurs
+* Correction d'un bug qui faisait planter l'API en cas d'attaque d'un personnage de niveau jamais modifié.
 
 ## 1.08
 

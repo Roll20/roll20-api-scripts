@@ -2334,6 +2334,19 @@ var COFantasy = COFantasy || function() {
           attribute: args[1],
           text: args[1]
         };
+      case "etatCible":
+        if (_.has(cof_states, args[1])) {
+          return {
+            type: 'etatCible',
+            etat: args[1],
+            text: args[1]
+          };
+        }
+        return {
+          type: 'attributCible',
+          attribute: args[1],
+          text: args[1]
+        };
       case "deAttaque":
         var valeurDeAttaque = parseInt(args[1]);
         if (isNaN(valeurDeAttaque)) {
@@ -2444,6 +2457,7 @@ var COFantasy = COFantasy || function() {
         case "tueurDeGeants":
         case "grenaille":
         case "attaqueArmeeConjuree":
+        case "difficultePVmax":
           options[cmd[0]] = true;
           return;
         case "imparable": //deprecated
@@ -3216,8 +3230,22 @@ var COFantasy = COFantasy || function() {
         return resMoins;
       case "etat":
         return (getState(attaquant, cond.etat));
+      case "etatCible":
+        var resEtatCible = true;
+        cibles.forEach(function(target) {
+          if (resEtatCible && !getState(target, cond.etat))
+            resEtatCible = false;
+        });
+        return resEtatCible;
       case "attribut":
-        return (charAttributeAsBool(attaquant, cond.attribute));
+        return (attributeAsBool(attaquant, cond.attribute));
+      case "attributCible":
+        var resAttrCible = true;
+        cibles.forEach(function(target) {
+          if (resAttrCible && !attributeAsBool(target, cond.attribute))
+            resAttrCible = false;
+        });
+        return resAttrCible;
       case "deAttaque":
         if (deAttaque === undefined) {
           error("Condition de dé d'attaque non supportée ici", cond);
@@ -3253,6 +3281,8 @@ var COFantasy = COFantasy || function() {
           resCondition = testCondition(ite.condition, attaquant, [], deAttaque);
           break;
         case 'moins':
+        case 'etatCible':
+        case 'attributCible':
           if (target === undefined) return true;
           condInTarget = true;
           resCondition = testCondition(ite.condition, attaquant, [target], deAttaque);
@@ -3400,6 +3430,9 @@ var COFantasy = COFantasy || function() {
     }
     if (attributeAsBool(perso, 'masqueDuPredateur')) {
       init += getValeurOfEffet(perso, 'masqueDuPredateur', modCarac(perso, 'SAGESSE'));
+    }
+    if (charAttributeAsBool(perso, 'controleDuMetabolisme')) {
+      init += getValeurOfEffet(perso, 'controleDuMetabolisme', modCarac(perso, 'CHARISME'));
     }
     // Voie du pistolero rang 1 (plus vite que son ombre)
     var armeEnMain = tokenAttribute(perso, 'armeEnMain');
@@ -3816,6 +3849,15 @@ var COFantasy = COFantasy || function() {
 
   function defenseOfToken(attaquant, target, pageId, evt, options) {
     options = options || {};
+    if (options.difficultePVmax) {
+      var pvmax = parseInt(target.token.get("bar1_max"));
+      if (isNaN(pvmax)) {
+        error("Points de vie de " + target.token.get('name') + " mal formés",
+          target.token.get("bar1_max"));
+        return 0;
+      }
+      return pvmax;
+    }
     var tokenName = target.tokName;
     var explications = target.messages;
     var defense = 10;
@@ -5871,7 +5913,7 @@ var COFantasy = COFantasy || function() {
     }
     attCar = computeCarExpression(attaquant, attCar);
     if (attCar === undefined) return x;
-    return attCar + ficheAttributeAsInt(attaquant, 'NIVEAU') + attDiv;
+    return attCar + ficheAttributeAsInt(attaquant, 'NIVEAU', 1) + attDiv;
   }
 
   function attackDealDmg(attaquant, cibles, critSug, attackLabel, weaponStats, d20roll, display, options, evt, explications, pageId) {
@@ -10664,6 +10706,8 @@ var COFantasy = COFantasy || function() {
       case 'CON':
         if (attributeAsBool(personnage, 'mutationSilhouetteMassive'))
           bonus += 5;
+        if (charAttributeAsBool(personnage, 'controleDuMetabolisme'))
+          bonus += modCarac(personnage, 'CHARISME');
         break;
     }
     return bonus;
@@ -15452,7 +15496,7 @@ var COFantasy = COFantasy || function() {
     arme = {
       name: 'Attaque par défaut',
       attSkillDiv: 0,
-      attSkill: "@{ATKCAC}",
+      attSkill: "@{selected|ATKCAC}",
       crit: 20,
       parDefaut: true,
     };
@@ -16105,7 +16149,7 @@ var COFantasy = COFantasy || function() {
       },
       pv: 9,
       attaques: [
-        ['Morsure', ["@{ATKCAC}", 0], 20, [1, 6, 1, 0],
+        ['Morsure', ["@{selected|ATKCAC}", 0], 20, [1, 6, 1, 0],
           [0]
         ]
       ],
@@ -16133,7 +16177,7 @@ var COFantasy = COFantasy || function() {
       },
       pv: 15,
       attaques: [
-        ['Morsure', ["@{ATKCAC}", -1], 20, [1, 6, 3, 0],
+        ['Morsure', ["@{selected|ATKCAC}", -1], 20, [1, 6, 3, 0],
           [0]
         ]
       ],
@@ -16146,7 +16190,7 @@ var COFantasy = COFantasy || function() {
         action: '!cof-surprise [[15 + @{selected|DEX}]]'
       }, {
         name: 'Attaque-embuscade',
-        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{ATKCAC}",-1],20,[1,6,3,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif'
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",-1],20,[1,6,3,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif'
       }]
     },
     worg: {
@@ -16170,7 +16214,7 @@ var COFantasy = COFantasy || function() {
       },
       pv: 35,
       attaques: [
-        ['Morsure', ["@{ATKCAC}", 0], 20, [1, 6, 5, 0],
+        ['Morsure', ["@{selected|ATKCAC}", 0], 20, [1, 6, 5, 0],
           [0]
         ]
       ],
@@ -16183,7 +16227,7 @@ var COFantasy = COFantasy || function() {
         action: '!cof-surprise [[15 + @{selected|DEX}]]'
       }, {
         name: 'Attaque-embuscade',
-        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{ATKCAC}",0],20,[1,6,5,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif'
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",0],20,[1,6,5,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif'
       }]
     },
     lion: {
@@ -16207,7 +16251,7 @@ var COFantasy = COFantasy || function() {
       },
       pv: 30,
       attaques: [
-        ['Morsure', ["@{ATKCAC}", -1], 20, [2, 6, 5, 0],
+        ['Morsure', ["@{selected|ATKCAC}", -1], 20, [2, 6, 5, 0],
           [0]
         ]
       ],
@@ -16220,10 +16264,10 @@ var COFantasy = COFantasy || function() {
         action: '!cof-surprise [[15 + @{selected|DEX}]]'
       }, {
         name: 'Attaque-embuscade',
-        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{ATKCAC}",-1],20,[2,6,5,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat immobilise FOR @{selected|token_id} --endif --endif'
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",-1],20,[2,6,5,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat immobilise FOR @{selected|token_id} --endif --endif'
       }, {
         name: 'Dévorer',
-        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{ATKCAC}",-1],20,[2,6,5,0],[0]] --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat renverse --etat immobilise FOR @{selected|token_id} --endif --endif'
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",-1],20,[2,6,5,0],[0]] --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat renverse --etat immobilise FOR @{selected|token_id} --endif --endif'
       }]
     },
     grandLion: {
@@ -16246,7 +16290,7 @@ var COFantasy = COFantasy || function() {
       },
       pv: 50,
       attaques: [
-        ['Morsure', ["@{ATKCAC}", -2], 20, [2, 6, 7, 0],
+        ['Morsure', ["@{selected|ATKCAC}", -2], 20, [2, 6, 7, 0],
           [0]
         ]
       ],
@@ -16259,10 +16303,10 @@ var COFantasy = COFantasy || function() {
         action: '!cof-surprise [[15 + @{selected|DEX}]]'
       }, {
         name: 'Attaque-embuscade',
-        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{ATKCAC}",-2],20,[2,6,7,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat immobilise FOR @{selected|token_id} --endif --endif'
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",-2],20,[2,6,7,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat immobilise FOR @{selected|token_id} --endif --endif'
       }, {
         name: 'Dévorer',
-        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{ATKCAC}",-2],20,[2,6,7,0],[0]] --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat renverse --etat immobilise FOR @{selected|token_id} --endif --endif'
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",-2],20,[2,6,7,0],[0]] --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat renverse --etat immobilise FOR @{selected|token_id} --endif --endif'
       }]
     },
     oursPolaire: {
@@ -16285,7 +16329,7 @@ var COFantasy = COFantasy || function() {
       },
       pv: 70,
       attaques: [
-        ['Morsure', ["@{ATKCAC}", 0], 20, [2, 8, 7, 0],
+        ['Morsure', ["@{selected|ATKCAC}", 0], 20, [2, 8, 7, 0],
           [0]
         ]
       ],
@@ -16319,7 +16363,7 @@ var COFantasy = COFantasy || function() {
       },
       pv: 90,
       attaques: [
-        ['Morsure', ["@{ATKCAC}", -1], 20, [2, 6, 12, 0],
+        ['Morsure', ["@{selected|ATKCAC}", -1], 20, [2, 6, 12, 0],
           [0]
         ]
       ],
@@ -16332,10 +16376,10 @@ var COFantasy = COFantasy || function() {
         action: '!cof-surprise [[15 + @{selected|DEX}]]'
       }, {
         name: 'Attaque-embuscade',
-        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{ATKCAC}",-1],20,[2,6,12,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat immobilise FOR @{selected|token_id} --endif --endif'
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",-1],20,[2,6,12,0],[0]] --sournoise 1 --if moins FOR --etat renverse --endif --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat immobilise FOR @{selected|token_id} --endif --endif'
       }, {
         name: 'Dévorer',
-        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{ATKCAC}",-1],20,[2,6,12,0],[0]] --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat renverse --etat immobilise FOR @{selected|token_id} --endif --endif'
+        action: '!cof-attack @{selected|token_id} @{target|token_id} ["Morsure",["@{selected|ATKCAC}",-1],20,[2,6,12,0],[0]] --if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat renverse --etat immobilise FOR @{selected|token_id} --endif --endif'
       }]
     },
     oursPrehistorique: {
@@ -16358,7 +16402,7 @@ var COFantasy = COFantasy || function() {
       },
       pv: 110,
       attaques: [
-        ['Griffes', ["@{ATKCAC}", -2], 20, [3, 6, 13, 0],
+        ['Griffes', ["@{selected|ATKCAC}", -2], 20, [3, 6, 13, 0],
           [0]
         ]
       ],
@@ -16527,7 +16571,7 @@ var COFantasy = COFantasy || function() {
         toFront(token);
         var avatar = "https://s3.amazonaws.com/files.d20.io/images/73283254/r6sbxbP1QKKtqXyYq-MlLA/max.png?1549547198";
         var attaque = '!cof-attack @{selected|token_id} @{target|token_id} ';
-        attaque += '["Attaque",["@{ATKCAC}",0],20,[' + nbDeDM + ',' + deDM + ',0,0],[20]] --auto';
+        attaque += '["Attaque",["@{selected|ATKCAC}",0],20,[' + nbDeDM + ',' + deDM + ',0,0],[20]] --auto';
         var abilities = [{
           name: 'Attaque',
           action: attaque
@@ -16562,7 +16606,7 @@ var COFantasy = COFantasy || function() {
   }, {
     name: 'Attaque',
     action: "!cof-attack @{selected|token_id} @{target|token_id}",
-    visibleto: '',
+    visibleto: 'all',
     istokenaction: false
   }, {
     name: 'Consommables',
