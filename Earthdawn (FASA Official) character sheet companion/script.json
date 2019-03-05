@@ -1,0 +1,17 @@
+{
+    "name": "Earthdawn (FASA Official) character sheet companion",
+    "script": "Earthdawn.js",
+    "version": "01.000",
+    "previousversions": [],
+    "description": "The Roll20 Earthdawn® (FASA Official) character sheet helper API is made to work with the Earthdawn® (FASA Official) character sheet and provides many features that automate and assist in many tasks. It is optimized for 4th edition, but currently has limited support for other editions./r/r For more information please see [Earthdawn Sheet wiki page](https://wiki.roll20.net/Earthdawn_(FASA_Official)).",
+    "authors": "Chris Dickey",
+    "roll20userid": "633707",
+    "useroptions": [],
+    "dependencies": ["HtmlBuilder"],
+    "modifies": {
+        "character": "read,write",
+        "attribute": "read,write,create",
+        "ability": "read,write,create"
+    },
+    "conflicts": [""]
+}
