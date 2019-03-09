@@ -1,14 +1,15 @@
-// !merchant - Pulls up the menu and allows the GM to generate random loot
-// Red Colour: #7E2D40
+// Designed for Giffy's Darker Dungeons. Go to /r/Darkerdungeons for more info. 
+//Created for the 2.0 rule set
 
 var DDEncounterGenerator = DDEncounterGenerator || (function() {
     'use strict';
-    const color      = '#7E2D40';
-    const divstyle   = 'style="width: 189px; border: 1px solid black; background-color: #ffffff; padding: 5px;"';
-    const astyle1    = `'style="text-align:center; border: 1px solid black; margin: 1px; padding: 2px; background-color: ${color}; border-radius: 4px;  box-shadow: 1px 1px 1px #707070; width: 100px;`;
-    const astyle2    = `style="text-align:center; border: 1px solid black; margin: 1px; padding: 2px; background-color: ${color}; border-radius: 4px;  box-shadow: 1px 1px 1px #707070; width: 150px;`;
-    const arrowstyle = `style="border: none; border-top: 3px solid transparent; border-bottom: 3px solid transparent; border-left: 195px solid ${color}; margin-bottom: 2px; margin-top: 2px;"`;
-    const headstyle  = `style="color: ${color}; font-size: 18px; text-align: left; font-constiant: small-caps; font-family: Times, serif;"`;
+    const blue = '#063e62';
+    const gold = '#b49e67'
+    const divstyle   = 'style="color: #fff;width: 189px; border: 1px solid black; background-color: #131415; padding: 5px;"';
+    const astyle1    = `'style="text-align:center; border: 1px solid black; margin: 1px; padding: 2px; background-color: ${blue}; border-radius: 4px;  box-shadow: 1px 1px 1px #707070; width: 100px;`;
+    const astyle2    = `style="text-align:center; border: 1px solid black; margin: 1px; padding: 2px; background-color: ${blue}; border-radius: 4px;  box-shadow: 1px 1px 1px #707070; width: 150px;`;
+    const arrowstyle = `style="border: none; border-top: 3px solid transparent; border-bottom: 3px solid transparent; border-left: 195px solid ${gold}; margin: 3px 0px;"`;
+    const headstyle  = `style="color: #fff; font-size: 18px; text-align: left; font-constiant: small-caps; font-family: Times, serif; margin-bottom: 2px;"`;
     const substyle   = 'style="font-size: 11px; line-height: 13px; margin-top: -2px; font-style: italic;"';
     const version    = '1.0',
     
@@ -17,6 +18,9 @@ var DDEncounterGenerator = DDEncounterGenerator || (function() {
         if (msg.type !== "api") { return; }
         if(playerIsGM(msg.playerid)){
             switch(args[0]) {
+                case '!darkerdungeons':
+                    darkerdungeonsMenu();
+                    break;
                 case '!DDencounters':
                     ddencounterMenu();
                     break;
@@ -35,9 +39,6 @@ var DDEncounterGenerator = DDEncounterGenerator || (function() {
                 case '!DDencountersLethal':
                     ddencountersLethal();
                     break;
-                case '!DDdegrees':
-                    dddegreesMenu();
-                    break;
                 case '!DDboons':
                     ddboons();
                     break;
@@ -47,11 +48,26 @@ var DDEncounterGenerator = DDEncounterGenerator || (function() {
             }
         };
     },
+
+    darkerdungeonsMenu = () => {
+        sendChat('Darker Dungeon Encounters', '/w gm <div ' + divstyle + '>' +
+            `<div ${headstyle}>Darker Dungeons</div>` +
+            `<div ${substyle}>Menu (v.${version})</div>` +
+            '<div ' + arrowstyle + '></div>' +
+            `<div style="text-align:center;"><a ${astyle2}" href="!DDencounters">Encounters Menu</a></div>` +
+            `<div style="text-align:center;">!DDencounters</div>` +
+            `<hr style="margin: 5px 2px;" />` +
+            `<div style="text-align:center;"><a ${astyle2}" href="!DDboons">Boons</a></div>` +
+            `<div style="text-align:center;">!DDboons</div>` +
+            `<div style="text-align:center;"><a ${astyle2}" href="!DDconsequences">Consequence</a></div>` +
+            `<div style="text-align:center;">!DDconsequences</div>` +
+            '</div>'
+        );
+    },
     
     ddencounterMenu = () => {
-        sendChat('Darker Dungeon Encounters', '/w gm <div ' + divstyle + '>' +
+        sendChat('Darker Dungeons', '/w gm <div ' + divstyle + '>' +
             `<div ${headstyle}>Darker Dungeon Encounters</div>` +
-            `<div ${substyle}>Menu (v.${version})</div>` +
             '<div ' + arrowstyle + '></div>' +
             `<div style="text-align:center;"><a ${astyle2}" href="!DDencountersSafe">Safe and Civilized</a></div>` +
             `<div>A village, a barren desert, a well-defended plain.</div>` +
@@ -161,21 +177,6 @@ var DDEncounterGenerator = DDEncounterGenerator || (function() {
     },
     
     //BOONES & CONSEQUENCES
-    dddegreesMenu = () => {
-        sendChat('Darker Dungeon Degrees of Success', 
-            '/w gm <div ' + divstyle + '>' +
-                `<div ${headstyle}>Darker Dungeon Degrees of Success</div>` +
-                `<div ${substyle}>Menu (v.${version})</div>` +
-                `<div ${arrowstyle}></div>` +
-                `<div style="text-align:center;"><a ${astyle2}" href="!DDboons">Boons</a></div>` +
-                `<div>One boon for a success, and two for a critical success.</div>` +
-                `<hr style="margin: 5px 2px;" />` +
-                `<div style="text-align:center;"><a ${astyle2}" href="!DDconsequences">Consquences</a></div>` +
-                `<div>One consequence for a failure, and two for a critical failure.</div>` +
-            '</div>'
-        );
-    },
-
     ddboons = () => {
         const array = ["You restore some hit points","You gain a hit die","You find some extra gold","You gain a favour from an ally","You regain a spell slot","You deal extra damage","You heal some mental stress","You may spend a hit die to recover some hit points","You may switch places with a nearby ally","You can move to an advantageous position","You learn a piece of rare information","You (temporarily) lose one level of exhaustion","A magic item regains one charge","The locals hear about your achievement","You apply a condition to your enemy","A god notices your achievement","A condition improves","You gain advantage to your next roll","Your enemies are intimidated by you","You move your enemy"];
         outputDegree(array, "Boon");
