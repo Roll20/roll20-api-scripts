@@ -14,6 +14,7 @@ var DarkerDungeons = DarkerDungeons || (function() {
     const substyle   = 'style="font-size: 11px; line-height: 13px; margin-top: -2px; font-style: italic;"';
     const breaks     = `style="border-color:${gold}; margin: 5px 2px;"`;
     const label      = `style="color: #c9c9c9; display:inline-block; width: 50%;"`
+    const label2     = `style="color: #c9c9c9; display:inline-block; width: 32%;"`
     const version    = '1.0',
     
     handleInput = (msg) => {
@@ -225,14 +226,11 @@ var DarkerDungeons = DarkerDungeons || (function() {
             `<div ${headstyle}>Darker Dungeons</div>` +
             `<div ${substyle}>Character Generator</div>` +
             '<div ' + arrowstyle + '></div>' +
-            `<div style="text-align:center;">${race}</div>` +
-            `<hr ${breaks} />` +
-            `<div style="text-align:center;">${background}<br/>${Class}</div>` +
-            `<hr ${breaks} />` +
+            `<div style="text-align:center;">${race}</div><hr ${breaks} />` +
+            `<div style="text-align:center;">${background}<br/>${Class}</div><hr ${breaks} />` +
             scores +
-            `<div style="text-align:center;"><a ${astyle2}" href="!darkerdungeons --reroll">Reroll Attribute</a></div>` +
-            `<hr ${breaks} />` +
-            `<div style="text-align:center;"><a ${astyle2}" href="!darkerdungeons --details">Reroll Attribute</a></div>` +
+            `<div style="text-align:center;"><a ${astyle2}" href="!darkerdungeons --reroll">Reroll Attribute</a></div><hr ${breaks} />` +
+            `<div style="text-align:center;"><a ${astyle2}" href="!darkerdungeons --details">Details</a></div>` +
             `</div>`
         );
     }, 
@@ -375,36 +373,130 @@ var DarkerDungeons = DarkerDungeons || (function() {
     },
 
     dddetails = () => {
-        let ouput = [];
-        const age = () => {
-            const roll = d100();
-            (roll <= 39) ? "Young adult" : (roll <= 74) ? "Early middle-age" : (roll <= 91) ? "Late middle-age" : (roll <= 97) ? "Old" : "Very old";
-        };
+        const ageRoll = d100(), weightRoll = d100(), heightRoll = d100(), familyRoll = d100(), featureRoll = d100(), raisedRoll = d100(), memoryRoll = d100(), motivationRoll = d100(), habitRoll = d100(), questRoll = d100();
+        const age     = 
+            (ageRoll <= 39) ? "Young adult":
+            (ageRoll <= 74) ? "Early middle-age":
+            (ageRoll <= 91) ? "Late middle-age":
+            (ageRoll <= 97) ? "Old": 
+            "Very old";
+        const weight  = 
+            (weightRoll <= 5) ? "Very thin":
+            (weightRoll <= 30) ? "Thin":
+            (weightRoll <= 70) ? "Average":
+            (weightRoll <= 95) ? "Fat": 
+            "Very fat";
+        const family  = 
+            (familyRoll <= 5) ? "None":
+            (familyRoll <= 30) ? "Small":
+            (familyRoll <= 70) ? "Average":
+            (familyRoll <= 95) ? "Large":
+            "Disowned";
+        const height  = 
+            (heightRoll <= 5) ? "Very short":
+            (heightRoll <= 30) ? "Short":
+            (heightRoll <= 70) ? "Average":
+            (heightRoll <= 95) ? "Tall":
+            "Very tall"; 
+        const feature = 
+            (featureRoll <= 20) ? "Scar":
+            (featureRoll <= 40) ? "Tattoo":
+            (featureRoll <= 60) ? "Piercing" :
+            (featureRoll <= 80) ? "Birthmark" :
+            "Accent";
+        const raised  = 
+            (raisedRoll <= 40) ? "Natural Parent(s)":
+            (raisedRoll <= 60) ? "Close family":
+            (raisedRoll <= 70) ? "Adopted Parent(s)":
+            (raisedRoll <= 90) ? "An institution":
+            "Yourself";
+        const memory = 
+            (memoryRoll <= 20) ? "Achievement A goal you helped complete":
+            (memoryRoll <= 40) ? "Conflict Someone opposed you":
+            (memoryRoll <= 60) ? "Friendship A close bond forged or tested":
+            (memoryRoll <= 80) ? "Loss Something precious was taken":
+            "Love A love gained or los";
+        const motivation = 
+            (motivationRoll <= 6) ? "Achievement To become the best":
+            (motivationRoll <= 12) ? "Acquisition To obtain possessions or wealth":
+            (motivationRoll <= 18) ? "Balance To bring all things into harmony":
+            (motivationRoll <= 24) ? "Beneficence To protect, heal, and mend":
+            (motivationRoll <= 30) ? "Creation To build or make new":
+            (motivationRoll <= 36) ? "Discovery To explore, uncover, and pioneer":
+            (motivationRoll <= 42) ? "Education To inform, teach, or train":
+            (motivationRoll <= 48) ? "Hedonism To enjoy all things sensuous":
+            (motivationRoll <= 54) ? "Liberation To free the self and/or others":
+            (motivationRoll <= 60) ? "Nobility To be virtuous, honest, and brave":
+            (motivationRoll <= 66) ? "Order To organize and reduce chaos":
+            (motivationRoll <= 73) ? "Play To have fun, to enjoy life":
+            (motivationRoll <= 79) ? "Power To control and lead others":
+            (motivationRoll <= 85) ? "Recognition To gain approval, status, or fame":
+            (motivationRoll <= 91) ? "Service To follow a person or group":
+            (motivationRoll <= 97) ? "Understanding To seek knowledge or wisdom":
+            "Choose";
+        const habit = 
+            (habitRoll <= 3) ? "Humming":
+            (habitRoll <= 6) ? "Dancing":
+            (habitRoll <= 9) ? "Sleepwalking":
+            (habitRoll <= 12) ? "Facial tics":
+            (habitRoll <= 15) ? "Fingernail biting":
+            (habitRoll <= 18) ? "Daydreaming":
+            (habitRoll <= 21) ? "Talking in sleep":
+            (habitRoll <= 24) ? "Whistling":
+            (habitRoll <= 27) ? "Name dropping":
+            (habitRoll <= 30) ? "Constant grooming":
+            (habitRoll <= 33) ? "Foot tapping":
+            (habitRoll <= 36) ? "Lip biting/licking":
+            (habitRoll <= 39) ? "Coin flipping":
+            (habitRoll <= 42) ? "Chewing":
+            (habitRoll <= 45) ? "Knuckle cracking":
+            (habitRoll <= 48) ? "Collects odd things":
+            (habitRoll <= 51) ? "Singing":
+            (habitRoll <= 54) ? "Snacking":
+            (habitRoll <= 57) ? "Pacing":
+            (habitRoll <= 60) ? "Counting":
+            (habitRoll <= 63) ? "Snoring":
+            (habitRoll <= 66) ? "Beard/hair stroking":
+            (habitRoll <= 69) ? "Nose picking":
+            (habitRoll <= 72) ? "Apologizing":
+            (habitRoll <= 75) ? "Exaggeration":
+            (habitRoll <= 78) ? "Superstitious":
+            (habitRoll <= 81) ? "Belching":
+            (habitRoll <= 84) ? "Repeating others":
+            (habitRoll <= 87) ? "Smelling things":
+            (habitRoll <= 90) ? "Teeth picking":
+            (habitRoll <= 93) ? "Swearing":
+            (habitRoll <= 96) ? "Telling secrets":
+            (habitRoll <= 99) ? "Repeating yourself":
+            "Choose";
 
-        const weight = () => {
-            const roll = d100();
-            (roll <= 5) ? "Very thin" : (roll <= 30) ? "Thin" : (roll <= 70) ? "Average" : (roll <= 95) ? "Fat" : "Very fat";
-        };
+        const quest = 
+            (questRoll <= 10) ? "Acquire To take possession of a particular item":
+            (questRoll <= 20) ? "Craft To create an item or art piece":
+            (questRoll <= 30) ? "Deliver To bring something somewhere":
+            (questRoll <= 40) ? "Destroy To destroy a precious object":
+            (questRoll <= 50) ? "Discover To find a person, place, or thing":
+            (questRoll <= 60) ? "Explore To map out a location":
+            (questRoll <= 70) ? "Justice To apprehend someone":
+            (questRoll <= 80) ? "Learn To gain specific knowledge":
+            (questRoll <= 90) ? "Meet To find someone":
+            "Vengeance To take revenge on someone";
 
-        const family = () => {
-            const roll = d100();
-            (roll <= 5) ? "None" : (roll <= 30) ? "Small" : (roll <= 70) ? "Average" : (roll <= 95) ? "Large" : "Disowned";
-        };
-
-        const height = () => {
-            const roll = d100();
-            (roll <= 5) ? "Very short" : (roll <= 30) ? "Short" : (roll <= 70) ? "Average" : (roll <= 95) ? "Tall" : "Very tall"; 
-        };
-
-        const feature = () => {
-            const roll = d100();
-            (roll <= 20) ? "Scar" : (roll <= 40) ? "Tattoo" : (roll <= 60) ? "Piercing" : (roll <= 80) ? "Birthmark" : "Accent";
-        };
-
-        const raised = () => {
-            const roll = d100();
-            (roll <= 40) ? "Natural Parent(s)" : (roll <= 60) ? "Close family" : (roll <= 70) ? "Adopted Parent(s)" : (roll <= 90) ? "An institution" : "Yourself";
-        };
+        sendChat('Darker Dungeon', '<div ' + divstyle + '>' +
+            `<div ${headstyle}>Darker Dungeons</div>` +
+            `<div ${substyle}>Character Details</div>` +
+            '<div ' + arrowstyle + '></div>' +
+            `<div style="margin-left:5%;"><label ${label2}>Age</label><b>${age}</b></div><hr ${breaks} />` +
+            `<div style="margin-left:5%;"><label ${label2}>Height</label><b>${height}</b></div><hr ${breaks} />` +
+            `<div style="margin-left:5%;"><label ${label2}>Weight</label><b>${weight}</b></div><hr ${breaks} />` +
+            `<div style="margin-left:5%;"><label ${label2}>Feature</label><b>${feature}</b></div><hr ${breaks} />` +
+            `<div style="margin-left:5%;"><label ${label2}>Motivation</label><b>${motivation}</b></div><hr ${breaks} />` +
+            `<div style="margin-left:5%;"><label ${label2}>Habit</label><b>${habit}</b></div><hr ${breaks} />` +
+            `<div style="margin-left:5%;"><label ${label2}>Family</label><b>${family}</b></div><hr ${breaks} />` +
+            `<div style="margin-left:5%;"><label ${label2}>Raised By</label><b>${raised}</b></div><hr ${breaks} />` +
+            `<div style="margin-left:5%;"><label ${label2}>Quest</label><b>${quest}</b></div><hr ${breaks} />` +
+            `</div>`
+        );
 
 
     },
@@ -426,22 +518,14 @@ var DarkerDungeons = DarkerDungeons || (function() {
         sendChat('Darker Dungeon Help', '/w gm <div ' + divstyle + '>' +
             `<div ${headstyle}>Darker Dungeons Help</div>` +
             '<div ' + arrowstyle + '></div>' +
-            `<div style="text-align:center;"><b>Character Generator </b><br />!darkerdungeons --character</div>` +
-            `<hr ${breaks} />` +
-            `<div style="text-align:center;"><b>Encounter Menu </b><br />!darkerdungeons --encounter</div>` +
-            `<hr ${breaks} />` +
-            `<div style="text-align:center;"><b>Safe Encounter </b><br />!darkerdungeons --safe</div>` +
-            `<hr ${breaks} />` +
-            `<div style="text-align:center;"><b>Dangerous Encounter </b><br />!darkerdungeons --dangerous</div>` +
-            `<hr ${breaks} />` +
-            `<div style="text-align:center;"><b>Enemy Encounter </b><br />!darkerdungeons --enemy</div>` +
-            `<hr ${breaks} />` +
-            `<div style="text-align:center;"><b>Hostile Encounter </b><br />!darkerdungeons --hostile</div>` +
-             `<hr ${breaks} />` +
-            `<div style="text-align:center;"><b>Lethal Encounter </b><br />!darkerdungeons --lethal</div>` +
-            `<hr ${breaks} />` +
-            `<div style="text-align:center;"><b>Boon </b><br />!darkerdungeons --boon</div>` +
-            `<hr ${breaks} />` +
+            `<div style="text-align:center;"><b>Character Generator </b><br />!darkerdungeons --character</div><hr ${breaks} />` +
+            `<div style="text-align:center;"><b>Encounter Menu </b><br />!darkerdungeons --encounter</div><hr ${breaks} />` +
+            `<div style="text-align:center;"><b>Safe Encounter </b><br />!darkerdungeons --safe</div><hr ${breaks} />` +
+            `<div style="text-align:center;"><b>Dangerous Encounter </b><br />!darkerdungeons --dangerous</div><hr ${breaks} />` +
+            `<div style="text-align:center;"><b>Enemy Encounter </b><br />!darkerdungeons --enemy</div><hr ${breaks} />` +
+            `<div style="text-align:center;"><b>Hostile Encounter </b><br />!darkerdungeons --hostile</div><hr ${breaks} />` +
+            `<div style="text-align:center;"><b>Lethal Encounter </b><br />!darkerdungeons --lethal</div><hr ${breaks} />` +
+            `<div style="text-align:center;"><b>Boon </b><br />!darkerdungeons --boon</div><hr ${breaks} />` +
             `<div style="text-align:center;"><b>Consequence </b><br />!darkerdungeons --consequence</div>` +
             '</div>'
         );
