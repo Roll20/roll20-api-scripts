@@ -5,12 +5,15 @@ var DarkerDungeons = DarkerDungeons || (function() {
     'use strict';
     const blue = '#063e62';
     const gold = '#b49e67';
+    const red  = `#8f1313`;
     const divstyle   = 'style="color: #eee;width: 90%; border: 1px solid black; background-color: #131415; padding: 5px;"';
     const astyle1    = `'style="text-align:center; border: 1px solid black; margin: 1px; padding: 2px; background-color: ${blue}; border-radius: 4px;  box-shadow: 1px 1px 1px #707070; width: 100px;`;
     const astyle2    = `style="text-align:center; border: 1px solid black; margin: 3px; padding: 2px; background-color: ${blue}; border-radius: 4px;  box-shadow: 1px 1px 1px #707070; width: 150px;`;
     const arrowstyle = `style="border: none; border-top: 3px solid transparent; border-bottom: 3px solid transparent; border-left: 195px solid ${gold}; margin: 5px 0px;"`;
     const headstyle  = `style="color: #fff; font-size: 18px; text-align: left; font-constiant: small-caps; font-family: Times, serif; margin-bottom: 2px;"`;
     const substyle   = 'style="font-size: 11px; line-height: 13px; margin-top: -2px; font-style: italic;"';
+    const breaks     = `style="border-color:${gold}; margin: 5px 2px;"`;
+    const label      = `style="color: #c9c9c9; display:inline-block; width: 50%;"`
     const version    = '1.0',
     
     handleInput = (msg) => {
@@ -20,6 +23,12 @@ var DarkerDungeons = DarkerDungeons || (function() {
             switch(args[1]) {
                 case 'character':
                     ddcharacter();
+                    break;
+                case 'details':
+                    dddetails();
+                    break;
+                case 'reroll':
+                    ddreroll();
                     break;
                 case 'encounter':
                     if(!playerIsGM(msg.playerid)){ return; }
@@ -46,10 +55,10 @@ var DarkerDungeons = DarkerDungeons || (function() {
                     ddencountersLethal();
                     break;
                 case 'boon':
-                    ddboons();
+                    ddBoonConsquence('Boon');
                     break;
                 case 'consequence':
-                    ddconsequences();
+                    ddBoonConsquence('Consequence');
                     break;
                 case 'help':
                     showHelp();
@@ -67,13 +76,13 @@ var DarkerDungeons = DarkerDungeons || (function() {
             `<div ${substyle}>Menu (v.${version})</div>` +
             '<div ' + arrowstyle + '></div>' +
             `<div style="text-align:center;"><a ${astyle2}" href="!darkerdungeons --encounter">Encounter Menu</a></div>` +
-            `<hr style="margin: 5px 2px;" />` +
+            `<hr ${breaks} />` +
             `<div style="text-align:center;"><a ${astyle2}" href="!darkerdungeons --boon">Boon</a></div>` +
-             `<hr style="margin: 5px 2px;" />` +
+            `<hr ${breaks} />` +
             `<div style="text-align:center;"><a ${astyle2}" href="!darkerdungeons --consequence">Consequence</a></div>` +
-            `<hr style="margin: 5px 2px;" />` +
+            `<hr ${breaks} />` +
             `<div style="text-align:center;"><a ${astyle2}" href="!darkerdungeons --character">Character</a></div>` +
-            `<hr style="margin: 5px 2px;" />` +
+            `<hr ${breaks}  />` +
             `<div style="text-align:center;"><a ${astyle2}" href="!darkerdungeons --help">Help</a></div>` +
             '</div>'
         );
@@ -85,23 +94,25 @@ var DarkerDungeons = DarkerDungeons || (function() {
             '<div ' + arrowstyle + '></div>' +
             `<div style="text-align:center;"><a ${astyle2}" href="!darkerdungeons --safe">Safe and Civilized</a></div>` +
             `<div>A village, a barren desert, a well-defended plain.</div>` +
-            `<hr style="margin: 5px 2px;" />` +
+            `<hr ${breaks} />` +
             `<div style="text-align:center;"><a ${astyle2}" href="!darkerdungeons --dangerous">Dangerous frontier</a></div>` +
             `<div> A wild forest, a treacherous swamp, a disturbed graveyard.</div>` +
-            `<hr style="margin: 5px 2px;" />` +
+            `<hr ${breaks} />` +
             `<div style="text-align:center;"><a ${astyle2}" href="!darkerdungeons --enemy">Enemy territory</a></div>` +
             `<div>A monster's lair, an enemy camp, a haunted wood.</div>` +
-            `<hr style="margin: 5px 2px;" />` +
+            `<hr ${breaks}  />` +
             `<div style="text-align:center;"><a ${astyle2}" href="!darkerdungeons --hostile">Heavily populated hostile territory</a></div>` +
             `<div>An enemy settlement, a mind-flayer city, a kobold nest.</div>` +
-             `<hr style="margin: 5px 2px;" />` +
+             `<hr ${breaks} />` +
             `<div style="text-align:center;"><a ${astyle2}" href="!darkerdungeons --lethal">Lethal and actively hunted</a></div>` +
             `<div>A plane of madness, a god's domain, a layer of hell.</div>` +
             '</div>'
         );
     },
 
-    d6 = () => { return Math.floor(Math.random() * 5) + 1; },
+    d4   = () => { return Math.floor(Math.random() * 3) + 1; },
+    d6   = () => { return Math.floor(Math.random() * 5) + 1; },
+    d10  = () => { return Math.floor(Math.random() * 9) + 1; },
     d100 = () => { return Math.floor(Math.random() * 99) + 1; },
     randomArray = (array) => { return array[Math.floor(Math.random() * array.length)]; },
 
@@ -112,34 +123,23 @@ var DarkerDungeons = DarkerDungeons || (function() {
     ddencountersHostile   = () => { outputEncounters(4, "Hostile"); },
     ddencountersLethal    = () => { outputEncounters(5, "Lethal"); },
 
-    generateDiscovery = () => {
-        const d6 = d6();
-        const disc = 
-            (d6 <= 4) ? "Nothing" :
-            (d6 === 5) ? "Morning hour." :
-            "Afternoon hour.";
-
-        return disc;
-    },
-
     outputEncounters = (threshold, danger) => {
-        const discovery  = generateDiscovery();
-        const encounters = [];
-        let output       = [];
+        const discovery  = generateDiscovery(d6());
+        let encounters = [], output = [];
 
         ["Dawn", "Morning", "Noon", "Dusk", "Night"].forEach((encounter) => {
-            const d6 = d6();
-            (d6 <= threshold) ? encounters.push(encounter) : false;
+            const roll = d6();
+            (roll <= threshold) ? encounters.push(encounter) : false;
         });
 
         if (encounters || discovery) {
             encounters.forEach((time) => {
-                const type = generateType();
+                const type = generateType(d6());
                 const description = generateDescription(type);
                 output += 
                         `<div style="font-weight:bold; text-transform:small-caps;">${time}: ${type}</div>` +
                         `<div>${description}</div>` +
-                        `<hr style="margin: 5px 2px;" />`
+                        `<hr ${breaks} />`
             });
         } else {
             output += `<div font-weight:bold;">No encounters today</div>`;
@@ -160,14 +160,17 @@ var DarkerDungeons = DarkerDungeons || (function() {
         );
     },
 
-    generateType = () => {
-        const d6 = d6();
+    generateDiscovery = (roll) => {
+        return (roll <= 4) ? "Nothing" : (roll === 5) ? "Morning hour." : "Afternoon hour.";
+    },
+
+    generateType = (roll) => {
         const type = 
-            (d6 === 1) ? "Character" : 
-            (d6 === 2) ? "Social (Friendly)" : 
-            (d6 === 3) ? "Social (Hostile)" : 
-            (d6 === 4) ? "Skill Challenge" : 
-            (d6 === 5) ? "Combat (Non-commital)" :
+            (roll === 1) ? "Character" : 
+            (roll === 2) ? "Social (Friendly)" : 
+            (roll === 3) ? "Social (Hostile)" : 
+            (roll === 4) ? "Skill Challenge" : 
+            (roll === 5) ? "Combat (Non-commital)" :
             ("Combat (Aggressive)");
         return type;
     },
@@ -192,14 +195,11 @@ var DarkerDungeons = DarkerDungeons || (function() {
     },
     
     //BOONES & CONSEQUENCES
-    ddboons = () => {
-        const array = ["You restore some hit points","You gain a hit die","You find some extra gold","You gain a favour from an ally","You regain a spell slot","You deal extra damage","You heal some mental stress","You may spend a hit die to recover some hit points","You may switch places with a nearby ally","You can move to an advantageous position","You learn a piece of rare information","You (temporarily) lose one level of exhaustion","A magic item regains one charge","The locals hear about your achievement","You apply a condition to your enemy","A god notices your achievement","A condition improves","You gain advantage to your next roll","Your enemies are intimidated by you","You move your enemy"];
-        outputDegree(array, "Boon");
-    },
-
-    ddconsequences = () => {
-        const array = ["You or an ally take damage","An enemy reacts and takes an action","You gain some mental stress","Take a notch on your weapon/armor/item","You lose an item","One of your conditions worsens","Your torch goes out","An NPC becomes hostile to you","You lose some gold","You learn some misinformation","Your enemy becomes enraged","You gain the attention of the local guards","You drop your weapon","You stop and fall prone","You are poisoned or diseased","You are imprisoned","A crowd turns against you","A higher authority learns of your misdoings","A god punishes you","You lose some ammunition or hit dice"];
-        outputDegree(array, "Consequence");
+    ddBoonConsquence = (type) => {
+        const array = (type === "Boon") ?
+            ["You restore some hit points","You gain a hit die","You find some extra gold","You gain a favour from an ally","You regain a spell slot","You deal extra damage","You heal some mental stress","You may spend a hit die to recover some hit points","You may switch places with a nearby ally","You can move to an advantageous position","You learn a piece of rare information","You (temporarily) lose one level of exhaustion","A magic item regains one charge","The locals hear about your achievement","You apply a condition to your enemy","A god notices your achievement","A condition improves","You gain advantage to your next roll","Your enemies are intimidated by you","You move your enemy"] :
+            ["You or an ally take damage","An enemy reacts and takes an action","You gain some mental stress","Take a notch on your weapon/armor/item","You lose an item","One of your conditions worsens","Your torch goes out","An NPC becomes hostile to you","You lose some gold","You learn some misinformation","Your enemy becomes enraged","You gain the attention of the local guards","You drop your weapon","You stop and fall prone","You are poisoned or diseased","You are imprisoned","A crowd turns against you","A higher authority learns of your misdoings","A god punishes you","You lose some ammunition or hit dice"];
+       outputDegree(array, type);
     },
 
     outputDegree = (array, degree) => {
@@ -216,46 +216,46 @@ var DarkerDungeons = DarkerDungeons || (function() {
 
     //CHARACTER GENERATOR
     ddcharacter = () => {
-        const race = characterRace(d100());
-        sendChat('Darker Dungeons', `/w gm <div>CHARACTER ${race}</div>`);
-        //const background = ["Acolyte", "Charlatan", "Criminal", "Entertainer", "Folk Hero", "Guild Artisan", "Hermit", "Noble", "Outlander", "Sage", "Sailor", "Soldier", "Urchin", "Choose"];
-        //const class      = ["Barbarian", "Bard", "Cleric", "Druid", "Fighter", "Monk", "Paladin", "Ranger", "Rogue", "Sorcerer", "Warlock", "Wizard", "Choose"];
-       // const classSpec = {
-       //     Cleric: ["Forge", "Grave", "Knowledge", "Life", "Light", "Nature", "Tempest", "Trickery", "War", "Choose"],
-       //     Fighter: ["Archery", "Defense", "Dueling", "Greater Weapon", "Protection", "Two-Weapon", "Choose"],
-        //    Sorcerer: ["Divine Soul", "Draconic Blood", "Shadow Magic", "Storm Sorcery", "Wild Magic", "Choose"],
-       //     Warlock: ["Archfey", "Celestial", "Fiend", "Great Old One", "Hexblade", "Choose"]
-       // };
+        const race       = characterRace(d100());
+        const background = characterBackground(d100());
+        const Class      = characterClass(d100());
+        const scores     = characterAbility();
 
-        sendChat('Darker Dungeon', '/w gm <div ' + divstyle + '>' +
+        sendChat('Darker Dungeon', '<div ' + divstyle + '>' +
             `<div ${headstyle}>Darker Dungeons</div>` +
             `<div ${substyle}>Character Generator</div>` +
             '<div ' + arrowstyle + '></div>' +
             `<div style="text-align:center;">${race}</div>` +
-            `<hr style="margin: 5px 2px;" />` +
-            '</div>'
+            `<hr ${breaks} />` +
+            `<div style="text-align:center;">${background}<br/>${Class}</div>` +
+            `<hr ${breaks} />` +
+            scores +
+            `<div style="text-align:center;"><a ${astyle2}" href="!darkerdungeons --reroll">Reroll Attribute</a></div>` +
+            `<hr ${breaks} />` +
+            `<div style="text-align:center;"><a ${astyle2}" href="!darkerdungeons --details">Reroll Attribute</a></div>` +
+            `</div>`
         );
     }, 
 
     characterRace = (roll) => {
-        let race = 
+        const race = 
             (roll === 1) ? "Aasimar" :
-            (roll >= 2 && roll <= 4) ? "Dragonborn" :
-            (roll >= 5 && roll <= 19) ? "Dwarf" :
-            (roll >= 20 && roll <= 29) ? "Elf" :
-            (roll === 30 || roll === 31) ? "Firbolg" :
-            (roll === 32 || roll === 33) ? "Gith" :
-            (roll >= 34 && roll <= 39) ? "Gnome" :
-            (roll === 40 || roll === 41) ? "Goliath" :
+            (roll <= 4) ? "Dragonborn" :
+            (roll <= 19) ? "Dwarf" :
+            (roll <= 29) ? "Elf" :
+            (roll <= 31) ? "Firbolg" :
+            (roll <= 33) ? "Gith" :
+            (roll <= 39) ? "Gnome" :
+            (roll <= 41) ? "Goliath" :
             (roll === 42) ? "Half-Elf" : 
             (roll === 43) ? "Half-Ork" :
-            (roll >= 44 && roll <= 50) ? "Halfling" :
-            (roll >= 51 && roll <= 90) ? "Human": 
+            (roll <= 50) ? "Halfling" :
+            (roll <= 90) ? "Human": 
             (roll === 91) ? "Kenku" :
             (roll === 92) ? "Lizardfolk" :
-            (roll == 93) ? "Monstrous" : 
+            (roll === 93) ? "Monstrous" : 
             (roll === 94) ? "Tabaxi" :
-            (roll >= 95 && roll <= 98) ? "Tiefling" : 
+            (roll <= 98) ? "Tiefling" : 
             (roll === 99) ? "Triton" :
             "Choose";
         if (race === "Dragonborn"|| race === "Gith" || race === "Halfling") {
@@ -264,30 +264,162 @@ var DarkerDungeons = DarkerDungeons || (function() {
             return `${race} (${subrace})`;
         } else if (race === "Aasimar" || race === "Dwarf" || race === "Elf" || race === "Gnome" || race === "Monstrous" || race === "Tiefling") {
             const subraceRoll = d100();
-            sendChat('Darker Dungeons', `/w gm <div>TESTS</div>`);
-            sendChat('Darker Dungeons', `/w gm <div>RACE D100 ${subraceRoll}</div>`);
+            let subrace = "";
             if (race === "Aasimar") {
-               const subrace = (subraceRoll <= 33) ? "Fallen" : (subraceRoll >= 34 && subraceRoll <= 67) ? "Protector" : "Scourage";
-               return `${race} (${subrace})`;
+               subrace += (subraceRoll <= 33) ? "Fallen" : (subraceRoll <= 67) ? "Protector" : "Scourage";
             } else if (race ===  "Dwarf") {
-                const subrace = (subraceRoll <= 45) ? "Hill" :  (subraceRoll >= 46 && subraceRoll <= 90) ? "Mountain" :  "Duergar";
-                return `${race} (${subrace})`;
+               subrace += (subraceRoll <= 45) ? "Hill" :  (subraceRoll <= 90) ? "Mountain" :  "Duergar";
             } else if (race ===  "Elf") {
-                const subrace = (subraceRoll <= 10) ? "Drow" : (subraceRoll >= 11 && subraceRoll <= 20) ? "Eladrin" :  (subraceRoll >= 21 && subraceRoll <= 50) ? "High" :  (subraceRoll >= 51 && subraceRoll <= 60) ? "Sea" : (subraceRoll >= 61 && subraceRoll <= 70) ? "Shadar-kai": "Wood";
-                return `${race} (${subrace})`;
+               subrace += (subraceRoll <= 10) ? "Drow" : (subraceRoll <= 20) ? "Eladrin" :  (subraceRoll <= 50) ? "High" :  (subraceRoll <= 60) ? "Sea" : (subraceRoll <= 70) ? "Shadar-kai": "Wood";
             } else if (race ===  "Gnome") {
-                const subrace = (subraceRoll <= 45) ? "Forest" : (subraceRoll >= 46 && subraceRoll <= 90) ? "Rock" :  "Deep";
-                return `${race} (${subrace})`;
+               subrace += (subraceRoll <= 45) ? "Forest" : (subraceRoll <= 90) ? "Rock" :  "Deep";
             } else if (race === "Monstrous") {
-                const subrace = (subraceRoll <= 10) ? "Bugbear" : (subraceRoll >= 11 && subraceRoll <= 35) ? "Goblin": (subraceRoll >= 36 && subraceRoll <= 50) ? "Hobgoblin" : (subraceRoll >= 51 && subraceRoll <= 75) ? "Kobold" : (subraceRoll >= 76 && subraceRoll <= 90) ? "Orc" : "Yuan-ti";
-                
+               subrace += (subraceRoll <= 10) ? "Bugbear" : (subraceRoll <= 35) ? "Goblin": (subraceRoll <= 50) ? "Hobgoblin" : (subraceRoll <= 75) ? "Kobold" : (subraceRoll <= 90) ? "Orc" : "Yuan-ti";
             } else {
-                const subrace = (subraceRoll <= 12) ? "Asmodeus" : (subraceRoll >= 13 && subraceRoll <= 23) ? "Baalzebul" : (subraceRoll >= 24 && subraceRoll <= 34) ? "Dispater" : (subraceRoll >= 35 && subraceRoll <= 45) ? "Fierna" : (subraceRoll >= 46 && subraceRoll <= 56) ? "Glasya" :  (subraceRoll >= 57 && subraceRoll <= 67) ? "Levistus" : (subraceRoll >= 68 && subraceRoll <= 78) ? "Mammon" : (subraceRoll >= 79 && subraceRoll <= 89) ? "Mephistopheles" : "Zariel";
+               subrace += (subraceRoll <= 12) ? "Asmodeus" : (subraceRoll <= 23) ? "Baalzebul" : (subraceRoll <= 34) ? "Dispater" : (subraceRoll <= 45) ? "Fierna" : (subraceRoll <= 56) ? "Glasya" :  (subraceRoll <= 67) ? "Levistus" : (subraceRoll <= 78) ? "Mammon" : (subraceRoll <= 89) ? "Mephistopheles" : "Zariel";
             };
+            return `${race} (${subrace})`;
         } else {
             return race;
         };
     }, 
+
+    characterBackground = (roll) => {
+        const background = 
+            (roll <= 7) ? "Acolyte" :
+            (roll <= 14) ? "Charlatan" :
+            (roll <= 21) ? "Criminal" :
+            (roll <= 28) ? "Entertainer" :
+            (roll <= 35) ? "Folk Hero" :
+            (roll <= 42) ? "Guild Artisan" :
+            (roll <= 49) ? "Hermit" :
+            (roll <= 56) ? "Noble" :
+            (roll <= 63) ? "Outlander" : 
+            (roll <= 70) ? "Sage" :
+            (roll <= 77) ? "Sailor" :
+            (roll <= 84) ? "Soldier": 
+            (roll <= 91) ? "Urchin" :
+            "Choose";
+
+        return `${background}`;
+    },
+
+    characterClass = (roll) => {
+        const Class = 
+            (roll <= 8) ? "Barbarian" :
+            (roll <= 16) ? "Bard" :
+            (roll <= 24) ? "Cleric" :
+            (roll <= 32) ? "Druid" :
+            (roll <= 40) ? "Fighter" :
+            (roll <= 48) ? "Monk" :
+            (roll <= 56) ? "Paladin" :
+            (roll <= 64) ? "Ranger" :
+            (roll <= 72) ? "Rogue" : 
+            (roll <= 80) ? "Sorcerer" :
+            (roll <= 88) ? "Warlock" :
+            (roll <= 96) ? "Wizard": 
+            "Choose";
+
+        const gold =
+            (Class === "Rogue" || Class === "Warlock" || Class === "Wizard") ? (d4() + d4() + d4() + d4()) * 10 :
+            (Class === "Druid" || Class === "Barbarian") ? (d4() + d4()) * 10 :
+            (Class === "Sorcerer") ? (d4() + d4() + d4()) * 10 :
+            (Class === "Monk") ? d4() + d4() + d4() + d4() + d4() :
+            (d4() + d4() + d4() + d4() + d4()) * 10;
+
+        if (Class === "Cleric" || Class === "Fighter" || Class === "Sorcerer" || Class === "Warlock") {
+            const specRoll = d100();
+            let specialisation = ""
+            if (Class === "Cleric") {
+                const domainArray = ["Forge", "Grave", "Knowledge", "Life", "Light", "Nature", "Tempest", "Trickery", "War", "Choose"];
+                specialisation += randomArray(domainArray);
+            } else if (Class === "Fighter") {
+                specialisation +=
+                    (roll <= 16) ? "Archery" :
+                    (roll <= 32) ? "Defense" :
+                    (roll <= 48) ? "Dueling" :
+                    (roll <= 64) ? "Greater Weapon" :
+                    (roll <= 80) ? "Protection" :
+                    (roll <= 96) ? "Two-Weapon" : 
+                    "Choose";
+            } else if (Class === "Sorcerer") {
+                specialisation +=
+                    (roll <= 19) ? "Divine Soul" :
+                    (roll <= 38) ? "Draconic Blood" :
+                    (roll <= 57) ? "Shadow Magic" :
+                    (roll <= 76) ? "Storm Sorcery" :
+                    (roll <= 95) ? "Wild Magic" :
+                    "Choose";
+            } else {
+                specialisation +=
+                    (roll <= 19) ? "Archfey" :
+                    (roll <= 38) ? "Celestial" :
+                    (roll <= 57) ? "Fiend" :
+                    (roll <= 76) ? "Great Old One" :
+                    (roll <= 95) ? "Hexblade" :
+                    "Choose";
+            };
+            return `${Class} (${specialisation}), ${gold} gp`;
+        } else {
+            return `${Class}, ${gold} gp`;
+        };
+    },
+
+    characterAbility = () => {
+        let output  = [];
+        ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"].forEach((attr) => {
+            const score = d6() + d6() + d6();
+            output += `<div style="margin-left:25%;"><label ${label}>${attr}</label> <b>${score}</b></div>`
+        });
+        return output;
+    },
+
+    dddetails = () => {
+        let ouput = [];
+        const age = () => {
+            const roll = d100();
+            (roll <= 39) ? "Young adult" : (roll <= 74) ? "Early middle-age" : (roll <= 91) ? "Late middle-age" : (roll <= 97) ? "Old" : "Very old";
+        };
+
+        const weight = () => {
+            const roll = d100();
+            (roll <= 5) ? "Very thin" : (roll <= 30) ? "Thin" : (roll <= 70) ? "Average" : (roll <= 95) ? "Fat" : "Very fat";
+        };
+
+        const family = () => {
+            const roll = d100();
+            (roll <= 5) ? "None" : (roll <= 30) ? "Small" : (roll <= 70) ? "Average" : (roll <= 95) ? "Large" : "Disowned";
+        };
+
+        const height = () => {
+            const roll = d100();
+            (roll <= 5) ? "Very short" : (roll <= 30) ? "Short" : (roll <= 70) ? "Average" : (roll <= 95) ? "Tall" : "Very tall"; 
+        };
+
+        const feature = () => {
+            const roll = d100();
+            (roll <= 20) ? "Scar" : (roll <= 40) ? "Tattoo" : (roll <= 60) ? "Piercing" : (roll <= 80) ? "Birthmark" : "Accent";
+        };
+
+        const raised = () => {
+            const roll = d100();
+            (roll <= 40) ? "Natural Parent(s)" : (roll <= 60) ? "Close family" : (roll <= 70) ? "Adopted Parent(s)" : (roll <= 90) ? "An institution" : "Yourself";
+        };
+
+
+    },
+
+    ddreroll = () => {
+        const score = d6() + d6() + d6();
+        sendChat(`Reroll Attribute`, 
+            `<div ${divstyle}>` +
+                `<div ${headstyle}>Darker Dungeons</div>` +
+                `<div ${substyle}>Reroll Attribute</div>` +
+                `<div ${arrowstyle}></div>` +
+                `<div style="text-align:center;"><b>${score}</b></div>` +
+            '</div>'
+        );
+    },
 
     //SHOW HELP
     showHelp = () => {
@@ -295,21 +427,21 @@ var DarkerDungeons = DarkerDungeons || (function() {
             `<div ${headstyle}>Darker Dungeons Help</div>` +
             '<div ' + arrowstyle + '></div>' +
             `<div style="text-align:center;"><b>Character Generator </b><br />!darkerdungeons --character</div>` +
-            `<hr style="margin: 5px 2px;" />` +
+            `<hr ${breaks} />` +
             `<div style="text-align:center;"><b>Encounter Menu </b><br />!darkerdungeons --encounter</div>` +
-            `<hr style="margin: 5px 2px;" />` +
+            `<hr ${breaks} />` +
             `<div style="text-align:center;"><b>Safe Encounter </b><br />!darkerdungeons --safe</div>` +
-            `<hr style="margin: 5px 2px;" />` +
+            `<hr ${breaks} />` +
             `<div style="text-align:center;"><b>Dangerous Encounter </b><br />!darkerdungeons --dangerous</div>` +
-            `<hr style="margin: 5px 2px;" />` +
+            `<hr ${breaks} />` +
             `<div style="text-align:center;"><b>Enemy Encounter </b><br />!darkerdungeons --enemy</div>` +
-            `<hr style="margin: 5px 2px;" />` +
+            `<hr ${breaks} />` +
             `<div style="text-align:center;"><b>Hostile Encounter </b><br />!darkerdungeons --hostile</div>` +
-             `<hr style="margin: 5px 2px;" />` +
+             `<hr ${breaks} />` +
             `<div style="text-align:center;"><b>Lethal Encounter </b><br />!darkerdungeons --lethal</div>` +
-            `<hr style="margin: 5px 2px;" />` +
+            `<hr ${breaks} />` +
             `<div style="text-align:center;"><b>Boon </b><br />!darkerdungeons --boon</div>` +
-            `<hr style="margin: 5px 2px;" />` +
+            `<hr ${breaks} />` +
             `<div style="text-align:center;"><b>Consequence </b><br />!darkerdungeons --consequence</div>` +
             '</div>'
         );
