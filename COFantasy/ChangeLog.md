@@ -11,6 +11,9 @@
 * La macro Attaque est maintenant visible des joueurs
 * Correction d'un bug qui faisait planter l'API en cas d'attaque d'un personnage de niveau jamais modifié.
 
+## Autres améliorations
+* Possibilités d'utiliser des fx créés par le MJ.
+
 ## 1.08
 
 ### Capacités
