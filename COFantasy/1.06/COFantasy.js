@@ -18632,8 +18632,8 @@ on("ready", function() {
 
 on("chat:message", function(msg) {
   "use strict";
-  if (!COF_loaded || msg.type != "api") return;
-  COFantasy.apiCommand(msg);
+  if (COF_loaded && msg.type == "api" && msg.content.startsWith('!cof-')) 
+    COFantasy.apiCommand(msg);
 });
 
 on("change:campaign:turnorder", COFantasy.nextTurn);

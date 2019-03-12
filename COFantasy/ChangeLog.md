@@ -1,5 +1,46 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 
+## 1.09
+
+### Capacités
+* Ajout de l'attaque étourdissante du psionique
+* Ajout de controle du métabolisme du psionique
+* Ajout de la surpuissance physique de l'invocateur
+
+## Correction de bugs
+* La macro Attaque est maintenant visible des joueurs
+* Correction d'un bug qui faisait planter l'API en cas d'attaque d'un personnage de niveau jamais modifié.
+
+## 1.08
+
+### Capacités
+* Ajout de la conjuration d'armée de l'invocateur
+* Ajout de la capacité Frappe lourde du chevalier
+* Ajout de la capacité vampirisation de la Voie de la magie maléfique
+
+### Autres améliorations
+* Plus d'affichages de jets de dé (pour les soins de groupe, baies, fortifiants, ...)
+* Compatibilité avec les fiches de PNJ (version 2.1 des fiches)
+
+### Correction de bug
+* L'angle des cônes est maintenant correctement calculé (il était 2 fois trop grand avant)
+* Les options --equipe lisent maintenant correctement les handouts
+* Correction d'un bug qui empêchait d'inactiver l'initiative variable
+
+## 1.07
+
+### Capacités
+* Ajout du défi du samouraï
+* Ajout de la monture loyale du samouraï
+* Ajout du radar mental du psionique
+* Ajout de la capacité Bouclier psi du psionique
+* Ajout de la capacité Proprioception du psionique
+* Ajout de la capacité Défense intuitive du psionique
+* Ajout du champ de protection du psionique
+
+### Autres améliorations
+* Ajout d'une option pour ajouter 1d6 à l'initiative au début du combat
+* Les options de script sont maintenant accessibles avec la commande !cof-options. Les options sont persistantes pour une même partie.
 
 ## 1.06
 ### Capacités
@@ -9,6 +50,7 @@
 * Rang 1 de la voie de la magie de guérison
 
 ### Correction de bugs
+* Amélioration de la compatibilité avec les autres scripts
 * Le copy-paste de mobs devrait maintenant ne plus rajouter de numéros
 * !cof-lancer-sort n'envoie plus de message en double au GM
 * Undo devenu possible pour !cof-dmg appliqué à un token lié

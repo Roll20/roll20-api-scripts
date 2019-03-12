@@ -525,3 +525,29 @@ vampire5e:
 metamacros:
 - "MetaMacros"
 - Utility
+
+dupchartoken:
+  - "DupCharToken"
+  - Utility
+
+yatzoid:
+  - "Yatzoid"
+  - "System Toolbox"
+
+gametimer:
+  - "Game Timer"
+  - Utility
+
+wfrp4e:
+  - "WFRP4e"
+  - "System Toolbox"
+
+earthdawnofficial:
+- "Earthdawn (FASA Official) character sheet companion"
+- "System Toolbox"
+
+
+
+
+
+

@@ -1,0 +1,10 @@
+{
+    "name": "WFRP4e",
+    "version": "1.0.0",
+    "description": "Speeds common combat tasks for Warhammer Fantasy Roleplay 4th Edition",
+    "authors": "Seth Williams",
+    "roll20userid": "143288",
+    "dependencies": [],
+    "modifies": [],
+    "conflicts": []
+}
