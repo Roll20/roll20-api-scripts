@@ -84,7 +84,7 @@ var RegExpEscapeSpecial =/([\/\\\/\[\]\(\)\{\}\?\+\*\|\.\^\$])/g;
       
       
           //break the string down by line returns
-          var data = gmNotes.split("%3Cbr");
+          var data = gmNotes.split("%3Cp%3E");
       
           // gmNotes = stripString(gmNotes, "%3E", "");
           for (var i = 0; i < data.length; i++) {
@@ -106,6 +106,9 @@ var RegExpEscapeSpecial =/([\/\\\/\[\]\(\)\{\}\?\+\*\|\.\^\$])/g;
                   data[i] = data[i].replace(/%40/g,"@");
                   data[i] = data[i].replace(/%7B/g,"{");
                   data[i] = data[i].replace(/%7D/g,"}");
+                  data[i] = data[i].replace(/%5B/g,"[");
+                  data[i] = data[i].replace(/%5D/g,"]");
+                  data[i] = data[i].replace('</p',"");
           }
       
           var charName = getValueFromText(data,'character_name');
@@ -152,8 +155,8 @@ var RegExpEscapeSpecial =/([\/\\\/\[\]\(\)\{\}\?\+\*\|\.\^\$])/g;
       
           token.set("name", charName||'');
           //token.set("showname", true);
-          token.set("bar3_value", HP||0);
-          token.set("bar3_max", HP||0);
+          token.set("bar1_value", HP||0);
+          token.set("bar1_max", HP||0);
           //token.set("bar2_value", ac||0);
           //token.set("showplayers_bar3", true);
           token.set("status_blue",true);
