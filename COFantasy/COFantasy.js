@@ -2377,6 +2377,26 @@ var COFantasy = COFantasy || function() {
     closeIte(ps);
   }
 
+  function getFx(cmd, argName, obj, funName) {
+    if (cmd.length < 2) {
+      var errMsg = "Il manque un argument à l'option --" + argName;
+      if (funName) errMsg += " de " + funName;
+      sendChat("COF", errMsg);
+      return;
+    }
+    if (cmd[1] == 'custom' && cmd.length > 2) {
+      var effet = findObjs({
+        _type: 'custfx',
+        name: cmd[2]
+      });
+      if (effet.length === 0) {
+        sendChat("COF", "L'effet custom " + cmd[2] + " est inconnu.");
+        return;
+      }
+      obj[argName] = effet[0].id;
+    } else obj[argName] = cmd[1];
+  }
+
   function parseAttack(msg) {
     // Arguments to cof-attack should be:
     // - attacking token
@@ -2667,19 +2687,11 @@ var COFantasy = COFantasy || function() {
           }
           break;
         case "fx":
-          if (cmd.length < 2) {
-            sendChat("COF", "Il manque un argument à l'option --fx de !cof-attack");
-            return;
-          }
-          scope.fx = cmd[1];
-          break;
+          getFx(cmd, 'fx', scope, '!cof-attack');
+          return;
         case "targetFx":
-          if (cmd.length < 2) {
-            sendChat("COF", "Il manque un argument à l'option --targetFx de !cof-attack");
-            return;
-          }
-          scope.targetFx = cmd[1];
-          break;
+          getFx(cmd, 'targetFx', scope, '!cof-attack');
+          return;
         case 'psave':
           var psaveopt = scope;
           if (cmd.length > 3 && cmd[3] == 'local') {
@@ -9519,21 +9531,13 @@ var COFantasy = COFantasy || function() {
           if (cmd.length > 2) options.valeurMax = cmd[2];
           return;
         case "fx":
-          if (cmd.length < 2) {
-            sendChat("COF", "Il manque un argument à l'option --fx");
-            return;
-          }
-          options.fx = cmd[1];
+          getFx(cmd, 'fx', options);
           return;
         case 'message':
           if (arg.length > 8) options.message = arg.substring(8);
           return;
         case "targetFx":
-          if (cmd.length < 2) {
-            sendChat("COF", "Il manque un argument à l'option --targetFx");
-            return;
-          }
-          options.targetFx = cmd[1];
+          getFx(cmd, 'targetFx', options);
           break;
         case "classeEffet":
           if (cmd.length < 2) {
