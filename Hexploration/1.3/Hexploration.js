@@ -1311,7 +1311,7 @@ var Hexploration = {};
       }
     });
 
-    log('⬢⬢⬢ Initialized Hexploration v1.2 ⬢⬢⬢');
+    log('⬢⬢⬢ Initialized Hexploration v1.3 ⬢⬢⬢');
   });
 
   _.extend(Hexploration, {
