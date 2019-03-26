@@ -3,6 +3,7 @@
 ## 1.09
 
 ### Capacités
+* Ajout de la capacité Tir fatal du samouraï
 * Ajout de la suggestion du psionique
 * Ajout de l'aura de feu de l'élémentaire de feu
 * Ajout de l'attaque étourdissante du psionique

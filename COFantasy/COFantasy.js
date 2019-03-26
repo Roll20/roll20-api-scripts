@@ -2455,6 +2455,7 @@ var COFantasy = COFantasy || function() {
         case "maxDmg":
           scope[cmd[0]] = true;
           return;
+        case 'arc':
         case "affute":
         case "argent":
         case "artificiel":
@@ -3838,6 +3839,13 @@ var COFantasy = COFantasy || function() {
         }
       }
     }
+    //On cherche si c'est un arc
+    var p = weaponStats.name.search(/\barc\b/i);
+    if (p >= 0) weaponStats.arc = true;
+    else if (weaponStats.divers) {
+      p = weaponStats.divers.search(/\barc\b/i);
+      if (p >= 0) weaponStats.arc = true;
+    }
     return weaponStats;
   }
 
@@ -4951,6 +4959,7 @@ var COFantasy = COFantasy || function() {
     //On met à jour l'arme en main, si nécessaire
     if (weaponStats.divers && weaponStats.divers.toLowerCase().includes('arme')) {
       options.weaponStats = weaponStats;
+      options.messages = options.messages || [];
       degainerArme(attaquant, attackLabel, evt, options);
     }
     //On fait les tests pour les cibles qui bénéficieraient d'un sanctuaire
@@ -5104,6 +5113,13 @@ var COFantasy = COFantasy || function() {
     }
   }
 
+  function ajouteDe6Crit(x, first) {
+    var bonusCrit = rollDePlus(6);
+    if (first) x.dmgDisplay = "(" + x.dmgDisplay + ")+";
+    x.dmgDisplay += bonusCrit.roll;
+    x.dmgTotal += bonusCrit.val;
+  }
+
   // Fonction asynchrone
   // displayRes est optionnel, et peut avoir 2 arguments
   // - un texte affichant le jet de dégâts
@@ -5151,10 +5167,24 @@ var COFantasy = COFantasy || function() {
       dmgTotal = dmgTotal * dmgCoef;
       showTotal = true;
     }
-    if (crit && options.affute) {
-      var bonusCrit = rollDePlus(6);
-      dmgDisplay = "(" + dmgDisplay + ")+" + bonusCrit.roll;
-      dmgTotal += bonusCrit.val;
+    if (crit) {
+      var firstBonusCritique = true;
+      var x = {
+        dmgDisplay: dmgDisplay,
+        dmgTotal: dmgTotal
+      };
+      if (options.affute) {
+        ajouteDe6Crit(x, firstBonusCritique);
+        firstBonusCritique = false;
+      }
+      if (options.tirFatal) {
+        ajouteDe6Crit(x, firstBonusCritique);
+        if (options.tirFatal > 1) {
+          ajouteDe6Crit(x, false);
+        }
+      }
+      dmgDisplay = x.dmgDisplay;
+      dmgTotal = x.dmgTotal;
     }
     //On trie les DM supplémentaires selon leur type
     var dmgParType = {};
@@ -5235,6 +5265,14 @@ var COFantasy = COFantasy || function() {
     if (options.affute) crit -= 1;
     if (options.contact && charAttributeAsBool(attaquant, 'frappeChirurgicale'))
       crit -= modCarac(attaquant, 'INTELLIGENCE');
+    if (options.arc || weaponStats.arc) {
+      if (charAttributeAsBool(attaquant, 'tirFatal')) {
+        crit -= modCarac(attaquant, 'SAGESSE');
+        options.tirFatal = 1;
+        if (charAttributeAsInt(attaquant, 'voieDeLArcEtDuCheval', 3) > 4)
+          options.tirFatal = 2;
+      }
+    }
     if (crit < 2) crit = 2;
     return crit;
   }
@@ -11199,17 +11237,22 @@ var COFantasy = COFantasy || function() {
     var armeActuelle = tokenAttribute(perso, 'armeEnMain');
     var labelArmeActuelle;
     var ancienneArme;
+    var message = perso.token.get('name') + " ";
     if (armeActuelle.length > 0) {
       armeActuelle = armeActuelle[0];
       labelArmeActuelle = armeActuelle.get('current');
-      ancienneArme = getWeaponStats(perso, labelArmeActuelle);
       if (labelArmeActuelle == labelArme) {
         //Pas besoin de dégainer. Pas de message ?
+        if (options && options.weaponStats) return options.weaponStats.name;
+        ancienneArme = getWeaponStats(perso, labelArmeActuelle);
         if (ancienneArme) return ancienneArme.name;
         return;
       }
+      //On dégaine une nouvelle arme
+      ancienneArme = getWeaponStats(perso, labelArmeActuelle);
       if (ancienneArme) {
-        sendChar(perso.charId, "rengaine " + ancienneArme.name);
+        if (options.messages) message += "rengaine " + ancienneArme.name + " et ";
+        else sendChar(perso.charId, "rengaine " + ancienneArme.name);
       }
     } else armeActuelle = undefined;
     //Puis on dégaine
@@ -11303,10 +11346,13 @@ var COFantasy = COFantasy || function() {
         max: ''
       });
       armeActuelle.set('current', labelArme);
-      sendChar(perso.charId, "dégaine " + nouvelleArme.name);
     } else {
-      setTokenAttr(perso, 'armeEnMain', labelArme, evt, "dégaine " + nouvelleArme.name);
+      setTokenAttr(perso, 'armeEnMain', labelArme, evt);
     }
+      if (options.messages) {
+        message += "dégaine " + nouvelleArme.name;
+        options.messages.push(message);
+      } else sendChar(perso.charId, "dégaine " + nouvelleArme.name);
     if (charAttributeAsInt(perso, "initEnMain" + labelArme, 0) > 0)
       updateNextInit(perso.token);
     return;
