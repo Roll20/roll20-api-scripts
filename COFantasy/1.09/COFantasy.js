@@ -74,6 +74,11 @@ var COFantasy = COFantasy || function() {
           val: 5,
           type: 'int'
         },
+        mana_totale: {
+          explications: "Tous les sorts ont un coût, celui des tempêtes de mana est multiplié par 3",
+          val: false,
+          type: 'bool'
+        },
       }
     },
     affichage: {
@@ -2247,8 +2252,10 @@ var COFantasy = COFantasy || function() {
     if (options.rang) max = options.rang;
     var mana = options.mana || 0;
     var niveau = ficheAttributeAsInt(perso, 'NIVEAU', 1);
-    if (max === undefined || max > niveau - mana)
-      max = niveau - mana;
+    var cout_par_effet = 1;
+    if (stateCOF.options.regles.val.mana_totale.val) cout_par_effet = 3;
+    if (max === undefined || max > niveau - (mana / cout_par_effet))
+      max = Math.floor(niveau - (mana / cout_par_effet));
     if (max < 1) {
       sendChar(perso.charId, "ne peut pas dépenser plus de mana en tempête de mana (niveau " + niveau + ", mana déjà dépensée " + mana + ")");
       return;
@@ -2307,7 +2314,9 @@ var COFantasy = COFantasy || function() {
       }
     });
     options.mana = options.mana || 0;
-    options.mana += options.tempeteDeMana.cout;
+    if (stateCOF.options.regles.val.mana_totale.val)
+      options.mana += options.tempeteDeMana.cout * 3;
+    else options.mana += options.tempeteDeMana.cout;
   }
 
   function parseCondition(args) {
@@ -2446,6 +2455,7 @@ var COFantasy = COFantasy || function() {
         case "maxDmg":
           scope[cmd[0]] = true;
           return;
+        case 'arc':
         case "affute":
         case "argent":
         case "artificiel":
@@ -3084,7 +3094,10 @@ var COFantasy = COFantasy || function() {
           options.tempeteDeManaDuree = false;
           if (options.tempeteDeMana && options.tempeteDeMana.cout)
             options.tempeteDeMana.cout--;
-          if (options.mana) options.mana--;
+          if (options.mana) {
+            if (stateCOF.options.regles.val.mana_totale.val) options.mana -= 3;
+            else options.mana--;
+          }
         }
       }
     }
@@ -3825,6 +3838,13 @@ var COFantasy = COFantasy || function() {
           weaponStats.deuxMains = true;
         }
       }
+    }
+    //On cherche si c'est un arc
+    var p = weaponStats.name.search(/\barc\b/i);
+    if (p >= 0) weaponStats.arc = true;
+    else if (weaponStats.divers) {
+      p = weaponStats.divers.search(/\barc\b/i);
+      if (p >= 0) weaponStats.arc = true;
     }
     return weaponStats;
   }
@@ -4939,6 +4959,7 @@ var COFantasy = COFantasy || function() {
     //On met à jour l'arme en main, si nécessaire
     if (weaponStats.divers && weaponStats.divers.toLowerCase().includes('arme')) {
       options.weaponStats = weaponStats;
+      options.messages = options.messages || [];
       degainerArme(attaquant, attackLabel, evt, options);
     }
     //On fait les tests pour les cibles qui bénéficieraient d'un sanctuaire
@@ -5092,6 +5113,13 @@ var COFantasy = COFantasy || function() {
     }
   }
 
+  function ajouteDe6Crit(x, first) {
+    var bonusCrit = rollDePlus(6);
+    if (first) x.dmgDisplay = "(" + x.dmgDisplay + ")+";
+    x.dmgDisplay += bonusCrit.roll;
+    x.dmgTotal += bonusCrit.val;
+  }
+
   // Fonction asynchrone
   // displayRes est optionnel, et peut avoir 2 arguments
   // - un texte affichant le jet de dégâts
@@ -5139,10 +5167,24 @@ var COFantasy = COFantasy || function() {
       dmgTotal = dmgTotal * dmgCoef;
       showTotal = true;
     }
-    if (crit && options.affute) {
-      var bonusCrit = rollDePlus(6);
-      dmgDisplay = "(" + dmgDisplay + ")+" + bonusCrit.roll;
-      dmgTotal += bonusCrit.val;
+    if (crit) {
+      var firstBonusCritique = true;
+      var x = {
+        dmgDisplay: dmgDisplay,
+        dmgTotal: dmgTotal
+      };
+      if (options.affute) {
+        ajouteDe6Crit(x, firstBonusCritique);
+        firstBonusCritique = false;
+      }
+      if (options.tirFatal) {
+        ajouteDe6Crit(x, firstBonusCritique);
+        if (options.tirFatal > 1) {
+          ajouteDe6Crit(x, false);
+        }
+      }
+      dmgDisplay = x.dmgDisplay;
+      dmgTotal = x.dmgTotal;
     }
     //On trie les DM supplémentaires selon leur type
     var dmgParType = {};
@@ -5223,6 +5265,14 @@ var COFantasy = COFantasy || function() {
     if (options.affute) crit -= 1;
     if (options.contact && charAttributeAsBool(attaquant, 'frappeChirurgicale'))
       crit -= modCarac(attaquant, 'INTELLIGENCE');
+    if (options.arc || weaponStats.arc) {
+      if (charAttributeAsBool(attaquant, 'tirFatal')) {
+        crit -= modCarac(attaquant, 'SAGESSE');
+        options.tirFatal = 1;
+        if (charAttributeAsInt(attaquant, 'voieDeLArcEtDuCheval', 3) > 4)
+          options.tirFatal = 2;
+      }
+    }
     if (crit < 2) crit = 2;
     return crit;
   }
@@ -6519,46 +6569,76 @@ var COFantasy = COFantasy || function() {
                     });
                   }
                   target.dmgMessage = "<b>DM :</b> " + dmgDisplay;
-                  if (attributeAsBool(target, 'sousTension') && options.contact) {
-                    ciblesCount++;
-                    sendChat("", "[[1d6]]", function(res) {
-                      var rolls = res[0];
-                      var explRoll = rolls.inlinerolls[0];
-                      var r = {
-                        total: explRoll.results.total,
-                        type: 'electrique',
-                        display: buildinline(explRoll, 'electrique', true)
-                      };
-                      dealDamage(attaquant, r, [], evt, false, options,
-                        target.messages,
-                        function(dmgDisplay, dmg) {
-                          var dmgMsg =
-                            "<b>Décharge électrique sur " + attackerTokName + " :</b> " +
-                            dmgDisplay;
-                          target.messages.push(dmgMsg);
-                          finCibles();
-                        });
+                  if (options.contact) {
+                    //Les DMs automatiques en cas de toucher une cible
+                    if (attributeAsBool(target, 'sousTension')) {
+                      ciblesCount++;
+                      sendChat("", "[[1d6]]", function(res) {
+                        var rolls = res[0];
+                        var explRoll = rolls.inlinerolls[0];
+                        var r = {
+                          total: explRoll.results.total,
+                          type: 'electrique',
+                          display: buildinline(explRoll, 'electrique', true)
+                        };
+                        dealDamage(attaquant, r, [], evt, false, options,
+                          target.messages,
+                          function(dmgDisplay, dmg) {
+                            var dmgMsg =
+                              "<b>Décharge électrique sur " + attackerTokName + " :</b> " +
+                              dmgDisplay;
+                            target.messages.push(dmgMsg);
+                            finCibles();
+                          });
+                      });
+                    }
+                    if (attributeAsBool(target, 'sangMordant')) {
+                      ciblesCount++;
+                      sendChat("", "[[1d6]]", function(res) {
+                        var rolls = res[0];
+                        var explRoll = rolls.inlinerolls[0];
+                        var r = {
+                          total: explRoll.results.total,
+                          type: 'acide',
+                          display: buildinline(explRoll, 'acide', true)
+                        };
+                        dealDamage(attaquant, r, [], evt, false, options,
+                          target.messages,
+                          function(dmgDisplay, dmg) {
+                            var dmgMsg =
+                              "<b>Le sang acide gicle sur " + attackerTokName + " :</b> " +
+                              dmgDisplay + " DM";
+                            target.messages.push(dmgMsg);
+                            finCibles();
+                          });
+                      });
+                    }
+                    var attrDmSiToucheContact = findObjs({
+                      _type: 'attribute',
+                      _characterid: target.charId,
+                      name: 'dmSiToucheContact'
                     });
-                  }
-                  if (attributeAsBool(target, 'sangMordant') && options.contact) {
-                    ciblesCount++;
-                    sendChat("", "[[1d6]]", function(res) {
-                      var rolls = res[0];
-                      var explRoll = rolls.inlinerolls[0];
-                      var r = {
-                        total: explRoll.results.total,
-                        type: 'acide',
-                        display: buildinline(explRoll, 'acide', true)
-                      };
-                      dealDamage(attaquant, r, [], evt, false, options,
-                        target.messages,
-                        function(dmgDisplay, dmg) {
-                          var dmgMsg =
-                            "<b>Le sang acide gicle sur " + attackerTokName + " :</b> " +
-                            dmgDisplay + " DM";
-                          target.messages.push(dmgMsg);
-                          finCibles();
-                        });
+                    attrDmSiToucheContact.forEach(function(dstc) {
+                      ciblesCount++;
+                      sendChat("", "[[" + dstc.get('current') + "]]", function(res) {
+                        var rolls = res[0];
+                        var explRoll = rolls.inlinerolls[0];
+                        var type = dstc.get('max');
+                        var r = {
+                          total: explRoll.results.total,
+                          type: type,
+                          display: buildinline(explRoll, type, true)
+                        };
+                        dealDamage(attaquant, r, [], evt, false, options,
+                          target.messages,
+                          function(dmgDisplay, dmg) {
+                            var dmgMsg =
+                              "<b>" + attackerTokName + " subit :</b> " +
+                              dmgDisplay + " DM en touchant " + target.tokName;
+                            target.messages.push(dmgMsg);
+                            finCibles();
+                          });
+                      });
                     });
                   }
                   finCibles();
@@ -9333,7 +9413,7 @@ var COFantasy = COFantasy || function() {
   }
 
   function parseOptions(msg) {
-    var pageId;
+    var pageId, playerId;
     if (msg.selected && msg.selected.length > 0) {
       var firstSelected = getObj('graphic', msg.selected[0]._id);
       if (firstSelected === undefined) {
@@ -9342,7 +9422,7 @@ var COFantasy = COFantasy || function() {
       }
       pageId = firstSelected.get('pageid');
     } else {
-      var playerId = getPlayerIdFromMsg(msg);
+      playerId = getPlayerIdFromMsg(msg);
       pageId = getPageId(playerId);
     }
     var opts = msg.content.split(' --');
@@ -9352,6 +9432,7 @@ var COFantasy = COFantasy || function() {
     });
     var options = {
       pageId: pageId,
+      playerId: playerId,
       cmd: cmd
     };
     opts.forEach(function(arg) {
@@ -11156,17 +11237,22 @@ var COFantasy = COFantasy || function() {
     var armeActuelle = tokenAttribute(perso, 'armeEnMain');
     var labelArmeActuelle;
     var ancienneArme;
+    var message = perso.token.get('name') + " ";
     if (armeActuelle.length > 0) {
       armeActuelle = armeActuelle[0];
       labelArmeActuelle = armeActuelle.get('current');
-      ancienneArme = getWeaponStats(perso, labelArmeActuelle);
       if (labelArmeActuelle == labelArme) {
         //Pas besoin de dégainer. Pas de message ?
+        if (options && options.weaponStats) return options.weaponStats.name;
+        ancienneArme = getWeaponStats(perso, labelArmeActuelle);
         if (ancienneArme) return ancienneArme.name;
         return;
       }
+      //On dégaine une nouvelle arme
+      ancienneArme = getWeaponStats(perso, labelArmeActuelle);
       if (ancienneArme) {
-        sendChar(perso.charId, "rengaine " + ancienneArme.name);
+        if (options.messages) message += "rengaine " + ancienneArme.name + " et ";
+        else sendChar(perso.charId, "rengaine " + ancienneArme.name);
       }
     } else armeActuelle = undefined;
     //Puis on dégaine
@@ -11260,10 +11346,13 @@ var COFantasy = COFantasy || function() {
         max: ''
       });
       armeActuelle.set('current', labelArme);
-      sendChar(perso.charId, "dégaine " + nouvelleArme.name);
     } else {
-      setTokenAttr(perso, 'armeEnMain', labelArme, evt, "dégaine " + nouvelleArme.name);
+      setTokenAttr(perso, 'armeEnMain', labelArme, evt);
     }
+      if (options.messages) {
+        message += "dégaine " + nouvelleArme.name;
+        options.messages.push(message);
+      } else sendChar(perso.charId, "dégaine " + nouvelleArme.name);
     if (charAttributeAsInt(perso, "initEnMain" + labelArme, 0) > 0)
       updateNextInit(perso.token);
     return;
@@ -12327,6 +12416,81 @@ var COFantasy = COFantasy || function() {
     }, {
       lanceur: caster
     });
+  }
+
+  //!cof-attaque-magique-contre-pv {selected|token_id} {target|token_id}
+  function attaqueMagiqueContrePV(msg) {
+    var options = parseOptions(msg);
+    if (options === undefined || options.cmd === undefined) return;
+    var cmd = options.cmd;
+    if (cmd.length < 3) {
+      error("Il faut au moins 2 arguments à !cof-attaque-magique-contre-pv", cmd);
+      return;
+    }
+    var attaquant = tokenOfId(cmd[1], cmd[1]);
+    var cible = tokenOfId(cmd[2], cmd[2]);
+    if (attaquant === undefined || cible === undefined) {
+      error("Arguments de !cof-attaque-magique-contre-pv incorrects", cmd);
+      return;
+    }
+    if (options.portee !== undefined) {
+      var distance = distanceCombat(attaquant.token, cible.token, options.pageId);
+      if (distance > options.portee) {
+        sendChar(attaquant.charId, "est trop loin de " + cible.token.get('name') +
+          " pour l'attaque magique");
+        return;
+      }
+    }
+    var pvMax = parseInt(cible.token.get('bar1_max'));
+    if (isNaN(pvMax)) {
+      error("Token avec des PV max qui ne sont pas un nombre", cible.token);
+      return;
+    }
+    var evt = {
+      type: 'attaque magique',
+    };
+    if (limiteRessources(attaquant, options, 'attaque magique', "l'attaque magique", evt)) return;
+    var attaquantChar = getObj('character', attaquant.charId);
+    attaquant.tokName = attaquant.token.get('name');
+    attaquant.name = attaquantChar.get('name');
+    var playerId = options.playerId || getPlayerIdFromMsg(msg);
+    var explications = [];
+    var bonusA = bonusDAttaque(attaquant, explications, evt);
+    if (bonusA === 0) bonusA = "";
+    else if (bonusA > 0) bonusA = " +" + bonusA;
+    var attMagText = addOrigin(attaquant.name, "[[" + getAttrByName(attaquant.charId, 'ATKMAG') + bonusA + "]]");
+    var de = computeDice(attaquant);
+    var action = "<b>Attaque magique</b> (contre pv max)";
+    var display = startFramedDisplay(playerId, action, attaquant, {
+      perso2: cible
+    });
+    sendChat("", "[[" + de + "]] " + attMagText, function(res) {
+      var rolls = res[0];
+      var afterEvaluate = rolls.content.split(" ");
+      var attRollNumber = rollNumber(afterEvaluate[0]);
+      var attSkillNumber = rollNumber(afterEvaluate[1]);
+      var d20roll = rolls.inlinerolls[attRollNumber].results.total;
+      var attSkill = rolls.inlinerolls[attSkillNumber].results.total;
+      var attackRoll = d20roll + attSkill;
+      var line =
+        attaquant.tokName + " fait " +
+        buildinline(rolls.inlinerolls[attRollNumber]);
+      if (attSkill > 0) line += "+" + attSkill + " = " + attackRoll;
+      else if (attSkill < 0) line += attSkill + " = " + attackRoll;
+      addLineToFramedDisplay(display, line);
+      var reussi;
+      if (d20roll == 1) reussi = false;
+      else if (d20roll == 20) reussi = true;
+      else reussi = (attackRoll >= pvMax);
+      if (reussi) {
+        addLineToFramedDisplay(display, "<b>Attaque réussie !</b>");
+      } else {
+        diminueMalediction(attaquant, evt);
+        addLineToFramedDisplay(display, "<b>L'attaque échoue.</b>");
+      }
+      sendChat("", endFramedDisplay(display));
+      addEvent(evt);
+    }); //Fin du jet de dés pour l'attaque
   }
 
   function transeGuerison(msg) {
@@ -17345,6 +17509,9 @@ var COFantasy = COFantasy || function() {
         return;
       case "!cof-sommeil":
         sommeil(msg);
+        return;
+      case "!cof-attaque-magique-contre-pv":
+        attaqueMagiqueContrePV(msg);
         return;
       case "!cof-transe-guerison":
         transeGuerison(msg);
