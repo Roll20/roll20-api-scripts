@@ -3,6 +3,8 @@
 ## 1.09
 
 ### Capacités
+* Ajout d'une option pour faciliter l'usage des lames jumelles du samouraï
+* Ajout de la capacité Kiai du samouraï
 * Ajout de la capacité Tir fatal du samouraï
 * Ajout de la suggestion du psionique
 * Ajout de l'aura de feu de l'élémentaire de feu
