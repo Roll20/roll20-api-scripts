@@ -1716,7 +1716,8 @@ Step/Action Dice Table
 				}	break;
 				case "help": {
 //					s = this.makeButton( "Wiki Link", "https://wiki.roll20.net/Earthdawn_4e_(Integrated)", 
-					s = this.makeButton( "Wiki Link", "https://wiki.roll20.net/Earthdawn_(FASA_Official)", 
+//					s = this.makeButton( "Wiki Link", "https://wiki.roll20.net/Earthdawn_(FASA_Official)", 
+					s = this.makeButton( "Wiki Link", "https://wiki.roll20.net/Earthdawn_-_FASA_Official", 
 								"This button will open this character sheets Wiki Documentation, which should answer most of your questions about how to use this sheet. <br\>Note that you should tell your browser to open this link in another tab.", 
 								"black", "white", true );
 //                    s = "&{template:chathelp} " + Earthdawn.braceOpen() + Earthdawn.braceOpen() + 
