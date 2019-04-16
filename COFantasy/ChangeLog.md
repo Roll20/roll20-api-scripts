@@ -3,6 +3,8 @@
 ## 1.09
 
 ### Capacités
+* Ajout d'une option pour faciliter l'usage des lames jumelles du samouraï
+* Ajout de la capacité Kiai du samouraï
 * Ajout de la capacité Tir fatal du samouraï
 * Ajout de la suggestion du psionique
 * Ajout de l'aura de feu de l'élémentaire de feu
@@ -11,6 +13,7 @@
 * Ajout de la surpuissance physique de l'invocateur
 
 ## Correction de bugs
+* Correction d'un bug avec les manoeuvres quand un des opposants n'a pas d'arme précise en main
 * La macro Attaque est maintenant visible des joueurs
 * Correction d'un bug qui faisait planter l'API en cas d'attaque d'un personnage de niveau jamais modifié.
 

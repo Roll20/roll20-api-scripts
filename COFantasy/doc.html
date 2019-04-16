@@ -1270,21 +1270,25 @@
                 <ol>
                   <li><strong>Éduqué</strong> : simplement noter les bonus et compétences sur la fiche, ou des attributs <code>art</code> et <code>seduction</code>, si vous utilisez <code>!cof-jet</code>.</li>
                   <li><strong>Homme de cour</strong> : ajouter un attribut <code>étiquette</code>, de valeur 5.</li>
+                  <li><strong>Lame de lignée</strong> : pas de support particulier pour l'arme, mais quand le samouraï perd l'arme, vous pouvez rajouter un attribut <code>lameDeLigneePerdue</code>, de valeur <code>true</code> (à effacer quand il la retrouve).</li>
                 </ol>
                 <h4 class="text-secondary">Voie de l'honneur</h4>
                 <ol>
                   <li><strong>Chef né</strong> : ajouter un attrubut <code>immunitePeur</code>, de valeur <code>true</code>, et des attributs ou compétences pour l'intimidation et commander.</li>
                   <li><strong>Défi</strong> : <code>!cof-defi-samourai @{selected|token_id} @{target|token_id} <i>bonus</i></code>. Le bonus en argument est optionnel. Si il n'est pas présent, le script utilise la valeur d'un attribut <code>voieDeLHonneur</code>.</li>
+                  <li><strong>Honorable</strong> : pas de support particulier. </li>
                 </ol>
                 <h4 class="text-secondary">Voie du ki</h4>
                 <ol>
                   <li><strong>Esprit vide</strong> : reporter le bonus sur la fiche.</li>
                   <li><strong>Main vide</strong> : faire l'attaque à mains nues correspondant à la capacité.</li>
+                  <li><strong>Kiai</strong> : ajouter un attribut <code>kiai</code>, de valeur courante 1 et de valeur maximale 1. Au rang 5, mettre ces valeurs à 2, le script se charge d'attendre 1d6 tours avant de proposer le deuxième kiai.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du sabre</h4>
                 <ol>
                   <li><strong>Technique du sabre</strong> : ajuster les attaques au sabre en conséquence.</li>
                   <li><strong>Frappe du vide</strong> : ajouter un attribut <code>frappeDuVide</code>, avec comme valeur courante <code>1</code>, et comme valeur maximale <code>1</code>.</li>
+                  <li><strong>Lames Jumelles</strong> : faire les attaques avec l'option <code>--lamesJumelles</code> permet de prendre en compte la force courante de l'attaquant pour les malus éventuels à l'attaque.</li>
                 </ol>
               </div>
               <h3 class="text-info" id="Voleur">Voleur</h3>
