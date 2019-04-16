@@ -4203,8 +4203,8 @@ var COFantasy = COFantasy || function() {
     if (options.lamesJumelles) {
       var force = modCarac(attaquant, 'FORCE');
       if (force < 2) {
-        attBonus += force-2;
-        explications.push("Lames jumelles => "+(force-2)+" en Attaque");
+        attBonus += force - 2;
+        explications.push("Lames jumelles => " + (force - 2) + " en Attaque");
       }
     }
     return attBonus;
@@ -15761,7 +15761,7 @@ var COFantasy = COFantasy || function() {
     arme = {
       name: 'Attaque par défaut',
       attSkillDiv: 0,
-      attSkill: "@{selected|ATKCAC}",
+      attSkill: "@{ATKCAC}",
       crit: 20,
       parDefaut: true,
     };
