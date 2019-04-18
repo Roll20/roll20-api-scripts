@@ -2,7 +2,7 @@ var bshields = bshields || {};
 bshields.flight = (function() {
     'use strict';
 
-    var version = 3.4,
+    var version = 3.5,
         commands = {
             fly: function(args, msg) {
                 var height = parseInt(args[0]) || 0;
