@@ -13,6 +13,7 @@
 * Ajout de la surpuissance physique de l'invocateur
 
 ## Correction de bugs
+* Correction d'un bug avec l'effet de peur des attaques, maintenant la résistance se fait avec le meilleur de FOR et SAG.
 * Correction d'un bug avec les manoeuvres quand un des opposants n'a pas d'arme précise en main
 * La macro Attaque est maintenant visible des joueurs
 * Correction d'un bug qui faisait planter l'API en cas d'attaque d'un personnage de niveau jamais modifié.
