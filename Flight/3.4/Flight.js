@@ -41,7 +41,6 @@ bshields.flight = (function() {
             markerStr = _.chain(num.toString().split(''))
                 .map((d) => `${marker}@${d}`)
                 .value()
-                .reverse()
                 .join(',');
         }
         
