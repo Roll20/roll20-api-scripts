@@ -1,7 +1,7 @@
 var HeroLabImporter = HeroLabImporter || (function() {
     'use strict';
 /*******
- * Hero Lab Importer v1.0.4
+ * Hero Lab Importer v1.0
  * The purpose of this is to allow people to import their characters directly into Roll20.
  * 
  * This system utilizes a DLL to export characters, but the system can operate manually.
@@ -54,7 +54,7 @@ var HeroLabImporter = HeroLabImporter || (function() {
  * --help
  *   Shows the help screen.
  */
- 	var version = "1.0.4";
+ 	var version = "1.0.2";
 	var module = "HeroLabImporter";
 	
 	//Helper Functions
@@ -197,32 +197,7 @@ var HeroLabImporter = HeroLabImporter || (function() {
     var logOutput = function(item) {
         log('['+module+':' + currentDateOutput() + '] ' + item);
     };
-    
-    var handleMessageInlineRolls = function(msg) {
-		logDebugOutput("handleMessageInlineRolls");
-		if (_.has(msg,'inlinerolls')) {
-          msg.content = _.chain(msg.inlinerolls)
-            .reduce(function(m,v,k){
-                var ti=_.reduce(v.results.rolls,function(m2,v2){
-                    if(_.has(v2,'table')){
-                        m2.push(_.reduce(v2.results,function(m3,v3){
-                            m3.push(v3.tableItem.name);
-                            return m3;
-                        },[]).join(', '));
-                    }
-                    return m2;
-                },[]).join(', ');
-                m['$[['+k+']]']= (ti.length && ti) || v.results.total || 0;
-                return m;
-            },{})
-            .reduce(function(m,v,k){
-                return m.replace(k,v);
-            },msg.content)
-            .value();
-        }
-		return msg;
-	};
-	
+
 	var onChatMessage = function(msg) {
 		logVerboseOutput("onChatMessage");
 		if (msg.type !== "api") { return; }
@@ -282,6 +257,7 @@ var HeroLabImporter = HeroLabImporter || (function() {
 				    while (commands.length) {
 				        setValue += commands.shift() + " ";
 				    }
+				    logVerboseOutput("key = " + setKey + ", value = " + setValue.trim());
 				    setOptions.push({'key':setKey, 'value':setValue.trim()});
 				    break;
 				case 'mode':
@@ -320,7 +296,9 @@ var HeroLabImporter = HeroLabImporter || (function() {
 				    logVerboseOutput("arg: showoption");
 				    showOptions.push(commands.shift());
 				    break;
-
+                case 'finish':
+                    whisperTalker(msg, name + " has been imported.");
+                    break;
             }
 		}
 		
@@ -440,14 +418,14 @@ var HeroLabImporter = HeroLabImporter || (function() {
 		        theAttribute.setWithWorker({current: setOption.value.replace(/&#123;/g,"{").replace(/&#125;/g,"}").replace(/&#91;/g,"[").replace(/&#93;/g,"]")});
 		    }
 		});
-		
+
 		_.each(showOptions, function(option) {
 		   var attr = findObjs({
 		       _type: "attribute",
 		       name: option,
 		       _characterid: journalEntry.get("_id")
 		   });
-		   
+
 		   if (attr && attr.length) {
 		       logVerboseOutput("attrExistsToFind");
 		       var current = attr[0].get("current").replace(/{/g,"&#123;").replace(/}/g,"&#125;").replace(/\[/g,"&#91;").replace(/\]/g,"&#93;");
