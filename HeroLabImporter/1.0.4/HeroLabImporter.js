@@ -13,8 +13,8 @@ var HeroLabImporter = HeroLabImporter || (function() {
  * Changing values here will change the default values when it comes down to loading this script. */
   var blockAll = false;     //If true, all options, except --allowall will be disabled.
   var allowPlayer = false;  //If true, players may use the commands in this importer. WARNING: They may create any characters, and can replace Journal entries!
-  var outputDebug = false;   //If true, this script will output debug logs.
-  var outputVerbose = false; //If true, this script will output verbose logs.
+  var outputDebug = true;   //If true, this script will output debug logs.
+  var outputVerbose = true; //If true, this script will output verbose logs.
 /**
  * !!!!!!!!!!!!!!!!!!!!! All commands begin with !HeroLabImporter !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * 
@@ -59,18 +59,16 @@ var HeroLabImporter = HeroLabImporter || (function() {
 	
 	//Blame the system that saves these values.
 	//Roll20 likes to replace characters when saving to the database.
-	var specialCharacterBegin = "&#";
+	var specialCharacterBegin = "\&\#";
 	var specialCharacterEnd = ";";
-	var regExpBegin = "/";
-	var regExpEnd = "/g";
 	var openSquirlyNumber = "123";
 	var closeSquirlyNumber = "125";
 	var openBracketNumber = "91";
 	var closeBracketNumber = "93";
-	var regExpOpenSquirly = new RegExp(regExpBegin + specialCharacterBegin + openSquirlyNumber + specialCharacterEnd + regExpEnd);
-	var regExpCloseSquirly = new RegExp(regExpBegin + specialCharacterBegin + closeSquirlyNumber + specialCharacterEnd + regExpEnd);
-	var regExpOpenBracket = new RegExp(regExpBegin + specialCharacterBegin + openBracketNumber + specialCharacterEnd + regExpEnd);
-	var regExpCloseBracket = new RegExp(regExpBegin + specialCharacterBegin + closeBracketNumber + specialCharacterEnd + regExpEnd);
+	var regExpOpenSquirly = new RegExp(specialCharacterBegin + openSquirlyNumber + specialCharacterEnd, "g");
+	var regExpCloseSquirly = new RegExp(specialCharacterBegin + closeSquirlyNumber + specialCharacterEnd, "g");
+	var regExpOpenBracket = new RegExp(specialCharacterBegin + openBracketNumber + specialCharacterEnd, "g");
+	var regExpCloseBracket = new RegExp(specialCharacterBegin + closeBracketNumber + specialCharacterEnd, "g");
 	var openSquirly = specialCharacterBegin + openSquirlyNumber + specialCharacterEnd;
 	var closeSquirly = specialCharacterBegin + closeSquirlyNumber + specialCharacterEnd;
 	var openBracket = specialCharacterBegin + openBracketNumber + specialCharacterEnd;
@@ -78,11 +76,15 @@ var HeroLabImporter = HeroLabImporter || (function() {
 	
 	//Helper Functions
 	var toRollable = function(str) {
-	    return str.replace(regExpOpenSquirly,"{").replace(regExpCloseSquirly,"}").replace(regExpOpenBracket,"[").replace(regExpCloseBracket,"]");
+	    var repl = str.replace(regExpOpenSquirly,"{").replace(regExpCloseSquirly,"}").replace(regExpOpenBracket,"[").replace(regExpCloseBracket,"]");
+	    logVerboseOutput("toRollable: " + str + " = " + repl);
+	    return repl;
 	};
 	
 	var toReadable = function(str) {
-	    return str.replace(/{/g,openSquirly).replace(/}/g,closeSquirly).replace(/\[/g,openBracket).replace(/\]/g,closeBracket);
+	    var repl = str.replace(/{/g,openSquirly).replace(/}/g,closeSquirly).replace(/\[/g,openBracket).replace(/\]/g,closeBracket);
+	    logVerboseOutput("toReadable: " + str + " = " + repl);
+	    return repl;
 	};
 	
 	var currentDateOutput = function() {
@@ -400,13 +402,13 @@ var HeroLabImporter = HeroLabImporter || (function() {
 		    _.each(possibleEntries, function(entry) {
 		        logVerboseOutput("setallinactive: " + entry.get("name"));
 		        var id = entry.get("_id");
-		        entriesChanged.push(entry.get("name"));
 		        _.each(setOptions, function(setOption){ 
 		            var optionValue = toRollable(setOption.value);
         		    logVerboseOutput("setAttr: " + setOption.key + " = " + optionValue);
+        		    var attrName = getAttrName(setOption.key, addtype, curId);
         		    var attr = findObjs({
         		        _type: "attribute",
-        		        name: getAttrName(setOption.key, addtype, curId),
+        		        name: attrName,
         		        _characterid: id
         		    });
         		    var theAttribute = null;
@@ -416,29 +418,29 @@ var HeroLabImporter = HeroLabImporter || (function() {
         		    } else {
         		        logVerboseOutput("attrDoesNotExist");
         		        theAttribute = createObj("attribute", {
-        		            name: getAttrName(setOption.key, addtype, curId),
+        		            name: attrName,
         		            _characterid: id
         		        });
         		    }
         		    if (getAttrSet(setOption.key) == "max") {
         		        if (theAttribute.get("max") != optionValue) {
         		            theAttribute.setWithWorker({max: optionValue});
-        		            entriesChanged.push(entry.get("name") + "| " + theAttribute.name + ":max set");
+        		            entriesChanged.push(entry.get("name") + "| " + attrName + ":max set");
         		        }
         		    } else {
         		        if (theAttribute.get("current") != optionValue) {
         		            theAttribute.setWithWorker({current: optionValue});
-        		            entriesChanged.push(entry.get("name") + "| " + theAttribute.name + ":current set");
+        		            entriesChanged.push(entry.get("name") + "| " + attrName + ":current set");
         		        }
         		    }
     		    });
-    		    var entryInformation = "Entries modified:<ul>";
-    		    _.each(entriesChanged, function(ent) {
-    		       entryInformation += "<li>" + ent + "</li>";
-    		    });
-    		    entryInformation += "</ul>";
-    		    whisperTalker(msg, entryInformation);
 		    });
+		    var entryInformation = "Entries modified:<ul>";
+		    _.each(entriesChanged, function(ent) {
+		       entryInformation += "<li>" + ent + "</li>";
+		    });
+		    entryInformation += "</ul>";
+		    whisperTalker(msg, entryInformation);
 		    return;
 		} else {
 		    var possibleEntries = findObjs({
