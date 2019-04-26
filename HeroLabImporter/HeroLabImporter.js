@@ -54,10 +54,37 @@ var HeroLabImporter = HeroLabImporter || (function() {
  * --help
  *   Shows the help screen.
  */
- 	var version = "1.0.2";
+ 	var version = "1.0.4";
 	var module = "HeroLabImporter";
 	
+	//Blame the system that saves these values.
+	//Roll20 likes to replace characters when saving to the database.
+	var specialCharacterBegin = "&#";
+	var specialCharacterEnd = ";";
+	var regExpBegin = "/";
+	var regExpEnd = "/g";
+	var openSquirlyNumber = "123";
+	var closeSquirlyNumber = "125";
+	var openBracketNumber = "91";
+	var closeBracketNumber = "93";
+	var regExpOpenSquirly = new RegExp(regExpBegin + specialCharacterBegin + openSquirlyNumber + specialCharacterEnd + regExpEnd);
+	var regExpCloseSquirly = new RegExp(regExpBegin + specialCharacterBegin + closeSquirlyNumber + specialCharacterEnd + regExpEnd);
+	var regExpOpenBracket = new RegExp(regExpBegin + specialCharacterBegin + openBracketNumber + specialCharacterEnd + regExpEnd);
+	var regExpCloseBracket = new RegExp(regExpBegin + specialCharacterBegin + closeBracketNumber + specialCharacterEnd + regExpEnd);
+	var openSquirly = specialCharacterBegin + openSquirlyNumber + specialCharacterEnd;
+	var closeSquirly = specialCharacterBegin + closeSquirlyNumber + specialCharacterEnd;
+	var openBracket = specialCharacterBegin + openBracketNumber + specialCharacterEnd;
+	var closeBracket = specialCharacterBegin + closeBracketNumber + specialCharacterEnd;
+	
 	//Helper Functions
+	var toRollable = function(str) {
+	    return str.replace(regExpOpenSquirly,"{").replace(regExpCloseSquirly,"}").replace(regExpOpenBracket,"[").replace(regExpCloseBracket,"]");
+	};
+	
+	var toReadable = function(str) {
+	    return str.replace(/{/g,openSquirly).replace(/}/g,closeSquirly).replace(/\[/g,openBracket).replace(/\]/g,closeBracket);
+	};
+	
 	var currentDateOutput = function() {
         var date = new Date();
         var month = date.getMonth() + 1;
@@ -363,6 +390,56 @@ var HeroLabImporter = HeroLabImporter || (function() {
 		            name: name
 		        });
 		    }
+		} else if (mode == "setallinactive") {
+		    var possibleEntries = findObjs({
+		        _type: "character",
+		        controlledby: "",
+		        inplayerjournals: ""
+		    });
+		    var entriesChanged = [];
+		    _.each(possibleEntries, function(entry) {
+		        logVerboseOutput("setallinactive: " + entry.get("name"));
+		        var id = entry.get("_id");
+		        entriesChanged.push(entry.get("name"));
+		        _.each(setOptions, function(setOption){ 
+		            var optionValue = toRollable(setOption.value);
+        		    logVerboseOutput("setAttr: " + setOption.key + " = " + optionValue);
+        		    var attr = findObjs({
+        		        _type: "attribute",
+        		        name: getAttrName(setOption.key, addtype, curId),
+        		        _characterid: id
+        		    });
+        		    var theAttribute = null;
+        		    if (attr && attr.length) {
+        		        logVerboseOutput("attrExists");
+        		        theAttribute = attr[0];
+        		    } else {
+        		        logVerboseOutput("attrDoesNotExist");
+        		        theAttribute = createObj("attribute", {
+        		            name: getAttrName(setOption.key, addtype, curId),
+        		            _characterid: id
+        		        });
+        		    }
+        		    if (getAttrSet(setOption.key) == "max") {
+        		        if (theAttribute.get("max") != optionValue) {
+        		            theAttribute.setWithWorker({max: optionValue});
+        		            entriesChanged.push(entry.get("name") + "| " + theAttribute.name + ":max set");
+        		        }
+        		    } else {
+        		        if (theAttribute.get("current") != optionValue) {
+        		            theAttribute.setWithWorker({current: optionValue});
+        		            entriesChanged.push(entry.get("name") + "| " + theAttribute.name + ":current set");
+        		        }
+        		    }
+    		    });
+    		    var entryInformation = "Entries modified:<ul>";
+    		    _.each(entriesChanged, function(ent) {
+    		       entryInformation += "<li>" + ent + "</li>";
+    		    });
+    		    entryInformation += "</ul>";
+    		    whisperTalker(msg, entryInformation);
+		    });
+		    return;
 		} else {
 		    var possibleEntries = findObjs({
 		        _type: "character",
@@ -394,8 +471,9 @@ var HeroLabImporter = HeroLabImporter || (function() {
 		}
 	
 		//Now, we iterate through each of the items.
-		_.each(setOptions, function(setOption){ 
-		    logVerboseOutput("setAttr: " + setOption.key + " = " + setOption.value.replace(/&#123;/g,"{").replace(/&#125;/g,"}").replace(/&#91;/g,"[").replace(/&#93;/g,"]"));
+		_.each(setOptions, function(setOption){
+		    var optionValue = toRollable(setOption.value);
+		    logVerboseOutput("setAttr: " + setOption.key + " = " + optionValue);
 		    var attr = findObjs({
 		        _type: "attribute",
 		        name: getAttrName(setOption.key, addtype, curId),
@@ -413,9 +491,9 @@ var HeroLabImporter = HeroLabImporter || (function() {
 		        });
 		    }
 		    if (getAttrSet(setOption.key) == "max") {
-		        theAttribute.setWithWorker({max: setOption.value.replace(/&#123;/g,"{").replace(/&#125;/g,"}").replace(/&#91;/g,"[").replace(/&#93;/g,"]")});
+		        theAttribute.setWithWorker({max: optionValue});
 		    } else {
-		        theAttribute.setWithWorker({current: setOption.value.replace(/&#123;/g,"{").replace(/&#125;/g,"}").replace(/&#91;/g,"[").replace(/&#93;/g,"]")});
+		        theAttribute.setWithWorker({current: optionValue});
 		    }
 		});
 
@@ -428,8 +506,8 @@ var HeroLabImporter = HeroLabImporter || (function() {
 
 		   if (attr && attr.length) {
 		       logVerboseOutput("attrExistsToFind");
-		       var current = attr[0].get("current").replace(/{/g,"&#123;").replace(/}/g,"&#125;").replace(/\[/g,"&#91;").replace(/\]/g,"&#93;");
-		       var max = attr[0].get("max").replace(/{/g,"&#123;").replace(/}/g,"&#125;").replace(/\[/g,"&#91;").replace(/\]/g,"&#93;");
+		       var current = toReadable(attr[0].get("current"));
+		       var max = toReadable(attr[0].get("max"));
 		       whisperTalker(msg, option + " = '" + current + "'/'" + max + "'");
 		   } else {
 		       whisperTalker(msg, option + " does not exist");
