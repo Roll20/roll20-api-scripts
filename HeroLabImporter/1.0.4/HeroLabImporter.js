@@ -13,8 +13,8 @@ var HeroLabImporter = HeroLabImporter || (function() {
  * Changing values here will change the default values when it comes down to loading this script. */
   var blockAll = false;     //If true, all options, except --allowall will be disabled.
   var allowPlayer = false;  //If true, players may use the commands in this importer. WARNING: They may create any characters, and can replace Journal entries!
-  var outputDebug = true;   //If true, this script will output debug logs.
-  var outputVerbose = true; //If true, this script will output verbose logs.
+  var outputDebug = false;   //If true, this script will output debug logs.
+  var outputVerbose = false; //If true, this script will output verbose logs.
 /**
  * !!!!!!!!!!!!!!!!!!!!! All commands begin with !HeroLabImporter !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * 
