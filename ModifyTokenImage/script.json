@@ -1,0 +1,17 @@
+{
+	"name": "Modify Token Image",
+	"script": "modifytokenimage.js",
+	"version": "1.0.4",
+	"previousversions": ["1.0.3"],
+	"description": "Allows you to modify the token images for use in Polymorph or other reasons for changing the Token image without changing the location of the token. \r\rSETUP\rYou need a folder in your Journal named 'Token Images', and each Token that you want enabled to switch token images needs to have its own folder named after the Token. For example, if you have a Token named 'Bugbear', you need a Folder underneath 'Token Images' called 'Bugbear'. In that folder, you need handouts with each of the possible token images that the token can switch to.\r\rUSAGE\rTo utilize any of these utilities, you will use !ModifyTokenImage, with one of the following addons:\r\r!ModifyTokenImage --next\rChanges to the next token image in the list.\r\r!ModifyTokenImage --previous\rChanges to the previous token image in the list.\r\r!ModifyTokenImage --set HandoutName\rSets the token image to the specified handout name's avatar.\r\r!ModifyTokenImage --gm\rToggles if Players can utilize the next, previous and set commands on tokens they control.\r\r!ModifyTokenImage --debug\rThrows Debug information to the API Log.",
+	"authors": "Zachare Sylvestre",
+	"roll20userid": "3482602",
+	"dependencies": [],
+	"conflicts": [],
+	"modifies": [
+		"graphic.imgurl": "read,write",
+		"handout.avatar": "read",
+		"graphic.name": "read",
+		"handout.name": "read"
+	]
+}
