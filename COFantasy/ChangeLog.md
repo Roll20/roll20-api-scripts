@@ -1,5 +1,13 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 
+## 1.10
+
+### Capacités
+* Ajout de l'enveloppement du cube gelatineux
+
+### Autres améliorations
+* Possibilité d'enduire des munitions de poison
+
 ## 1.09
 
 ### Capacités
