@@ -562,4 +562,6 @@ gurpsge:
   - "GURPS_GE"
   - "System Toolbox"
 
-
+pathfinderhlimport:
+  - "HeroLabImporter"
+  - "System Toolbox"
