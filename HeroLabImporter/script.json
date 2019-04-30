@@ -1,0 +1,14 @@
+{
+	"name": "Hero Lab Importer",
+	"script": "modifytokenimage.js",
+	"version": "1.0.4",
+	"previousversions": [],
+	"description": "This script allows you to import your HeroLab Characters and Monsters into Roll20 without much fuss! /r/rThis script requires that you have HeroLab, and use a Custom Output Plugin called HeroLabCharacterExporter for HeroLab, which is located at https://github.com/Imper1um/Roll20HLCE /r/rTo utilize, copy the .txt output from Roll20HLCE into the Chat Window and your NPC Journal Entry will be created!",
+	"authors": "Zachare Sylvestre",
+	"roll20userid": "3482602",
+	"dependencies": [],
+	"conflicts": [],
+	"modifies": [
+		"character.name": "read,write"
+	]
+}
