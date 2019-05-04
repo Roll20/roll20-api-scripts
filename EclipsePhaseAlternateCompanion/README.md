@@ -107,11 +107,12 @@ If you need to **add** or **remove** charaters during an ongoing battle, you *mu
 If you accidentally use the normal `Next` button or manually add or remove tokens from an ongoing battle, the script will output a warning message to the chat. This warning message also contains a `reset` button, which you can use to invoke `!epbattleman --reset`, thereby undoing your inconsistency-introducing change.
 
 #### Recommended Macros
-**BStart**: `!epbattleman --start`
-**BNext**: `!epbattleman --next`
-**BEnd**: `!epbattleman --end`
-**BAdd**: `!epbattleman --add`
-**BDrop**: `!epbattleman --drop`
+
+- **BStart**: `!epbattleman --start`
+- **BNext**: `!epbattleman --next`
+- **BEnd**: `!epbattleman --end`
+- **BAdd**: `!epbattleman --add`
+- **BDrop**: `!epbattleman --drop`
 
 *In [Roll20 ES](https://github.com/SSStormy/roll20-enhancement-suite) Format*:
 ```json
@@ -308,9 +309,10 @@ on('ready',()=>{
 ```
 
 #### Recommended Macros
-**Copy**: `!dup-char-by-token`
-**Backup**: `!epclean --backup --prefix ?{Prefix}`
-**Egocast**: `!epclean --egocast`
+
+- **Copy**: `!dup-char-by-token`
+- **Backup**: `!epclean --backup --prefix ?{Prefix}`
+- **Egocast**: `!epclean --egocast`
 
 *In [Roll20 ES](https://github.com/SSStormy/roll20-enhancement-suite) Format*:
 ```json
@@ -365,9 +367,10 @@ The Character Tools script deals with *Damage* (DV) and *Stress* (SV) applicatio
 4. Sometimes the response of the script will tell you to pick new derangements or upgrade existing ones, as well as roll something else, all which you should do.
 
 #### Recommended Macros
-**DV**: `!epchar --damage ?{DV} --armour ?{Apply Armour|None|Energy|Kinetic|Untyped} --ap ?{AP|0}`
-**GMDV**: `!epchar --damage ?{DV} --armour ?{Apply Armour|None|Energy|Kinetic|Untyped}  --ap ?{AP|0} --output GM`
-**SV**: `!epchar --stress ?{SV}`
+
+- **DV**: `!epchar --damage ?{DV} --armour ?{Apply Armour|None|Energy|Kinetic|Untyped} --ap ?{AP|0}`
+- **GMDV**: `!epchar --damage ?{DV} --armour ?{Apply Armour|None|Energy|Kinetic|Untyped}  --ap ?{AP|0} --output GM`
+- **SV**: `!epchar --stress ?{SV}`
 
 *In [Roll20 ES](https://github.com/SSStormy/roll20-enhancement-suite) Format*:
 ```json
@@ -418,7 +421,8 @@ See macro below.
 You can also specify character ids instead of names as trailing arguments, but it's not quite as convenient, perhaps.
 
 #### Recommended Macros
-**CharSkill**: `!epgmtools --best-mod --skill-name ?{Skill Name|Perception|Kinesics}` and append one instance of `--char-name <CharName>` for each player character in your group with name `<CharName>`
+
+- **CharSkill**: `!epgmtools --best-mod --skill-name ?{Skill Name|Perception|Kinesics}` and append one instance of `--char-name <CharName>` for each player character in your group with name `<CharName>`
 
 ### Group Rolls
 **Command**: `!epgroup-roll`
@@ -443,9 +447,10 @@ Rolled results go to the tracker automatically.
 
 
 #### Recommended Macros
-**GroupIni**: `!epgroup-roll --ini`
-**GroupFray/2**: `!epgroup-roll --fray-halved --mod ?{Mod|0}`
-**GroupSkill**: `!epgroup-roll --skill ?{Skill|Fray} --mod ?{Mod|0}`
+
+- **GroupIni**: `!epgroup-roll --ini`
+- **GroupFray/2**: `!epgroup-roll --fray-halved --mod ?{Mod|0}`
+- **GroupSkill**: `!epgroup-roll --skill ?{Skill|Fray} --mod ?{Mod|0}`
 
 *In [Roll20 ES](https://github.com/SSStormy/roll20-enhancement-suite) Format*:
 ```json
@@ -558,8 +563,9 @@ Normally, the script does not override existing token abilities. This behaviour 
 2. Run `!eptoken --clear`, to delete all token abilities.
 
 #### Recommended Macros
-**TokenActions**: `!eptoken --fray --fray-halved --ini`
-**TokenSkill**: `!eptoken --skill ?{Skill|Perception}`
+
+- **TokenActions**: `!eptoken --fray --fray-halved --ini`
+- **TokenSkill**: `!eptoken --skill ?{Skill|Perception}`
 
 If you are using *The Aaron*'s [TokenMod](https://github.com/shdwjk/Roll20API/blob/master/TokenMod/TokenMod.js) script (as you should ;), I also recommend
 **TokenSetup**: `!token-mod --on showname --set bar1_link|death_rating bar2_link|wounds bar3_link|damage`
@@ -647,10 +653,11 @@ Currently, the script only supports exporting the currently active morph instanc
 3. Go to the **API Text Exchange** field on the **Options** tab in the Character sheet and c&p the text there to where you need it, e.g. another sheet where you want to import this morph model.
 
 #### Recommended Macros
-**Search**: `!epcompendium-data --search ?{Search for} --name-only --rank`
-**SheetImport**: `!epcompendium-import --from-sheet`
-**SheetExport**: `!epcompendium-export --morph`
-**RandomDerangement**: `!epcompendium-import --derangement * --duration [[floor(1d10/2)]]`
+
+- **Search**: `!epcompendium-data --search ?{Search for} --name-only --rank`
+- **SheetImport**: `!epcompendium-import --from-sheet`
+- **SheetExport**: `!epcompendium-export --morph`
+- **RandomDerangement**: `!epcompendium-import --derangement * --duration [[floor(1d10/2)]]`
 
 Plus all the macros generated for each [EP Compendium Release](https://github.com/Bathtor/EPCompendium/releases).
 
