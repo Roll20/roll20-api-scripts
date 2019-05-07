@@ -565,3 +565,7 @@ gurpsge:
 #pathfinderhlimport:
  # - "HeroLabImporter"
  # - "System Toolbox"
+
+eclipsephasecompanion:
+  - "EclipsePhaseAlternateCompanion"
+  - "System Toolbox"
