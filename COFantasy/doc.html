@@ -729,7 +729,7 @@
                   <li><strong>Ignorer la douleur</strong> : <code>!cof-ignorer-la-douleur</code>. À faire juste après le coup.</li>
                   <li><strong>Piqures d'insectes</strong> : ajouter un attribut <code>piquresDInsectes</code>, avec comme valeur le rang dans la voie</li>
                   <li><strong>Laissez-le-moi</strong> : pas de support pour restreindre au chef de groupe. On pourraît peut-être utiliser la voie du chef d'armée pour le faire automatiquement ? Pour l'instant, utiliser l'option <code>--plus 1d6</code> contre les leaders.</li>
-                  <li><strong>Seul contre tous</strong> : pas de support particulier.</li>
+                  <li><strong>Seul contre tous</strong> : ajoute un attribut <code>seulContreTous</code>, de valeur <code>true</code>. Les actions affichées en cas de riposte seront en priorité les attaques d'un ability <code>#ActionsRiposte#</code> ou sinon les attaques des actions habituelles du personnages (venant donc de <code>#Actions#</code>).</li>
                   <li><strong>Charisme héroïque</strong> : reporter sur la fiche.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du meneur d'hommes</h4>
@@ -1365,6 +1365,7 @@
                       <li>Pour l'effet permanent, utiliser un attribut <code>champion</code>, avec une valeur <code>true</code></li>
                     </ul>
                   </li>
+                  <li><strong>Riposte</strong> : Ajouter un attribut <code>riposte</code>, de valeur <code>true</code>. Les actions affichées en cas de riposte seront en priorité les attaques d'un ability <code>#ActionsRiposte#</code> ou sinon les attaques des actions habituelles du personnages (venant donc de <code>#Actions#</code>).</li>
                 </ol>
                 <h4 class="text-secondary">Voie du chef d'armée</h4>
                 <ol>
