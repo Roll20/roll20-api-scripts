@@ -3,6 +3,8 @@
 ## 1.10
 
 ### Capacités
+* Ajout de la capacité Riposte du champion
+* Ajout de la capacité Seul contre tous du chevalier
 * Ajout de l'enveloppement du cube gelatineux
 
 ### Autres améliorations
