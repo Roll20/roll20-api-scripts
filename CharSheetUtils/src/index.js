@@ -142,10 +142,10 @@ var CharSheetUtils = (() => {
     }
 
     /**
-     * Asynchronously rolls a dice roll expression and returns the result's total in
-     * a callback. The result is undefined if an invalid expression is given.
+     * Asynchronously rolls a dice roll expression and returns the roll result
+     * in a Promise.
      * @param  {string} expr
-     * @return {Promise<int>}
+     * @return {Promise<RollResult>}
      */
     static rollAsync(expr) {
       return new Promise((resolve, reject) => {
@@ -155,6 +155,7 @@ var CharSheetUtils = (() => {
             resolve(results);
           }
           catch(err) {
+            log(expr);
             reject(err);
           }
         });

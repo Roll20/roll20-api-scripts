@@ -1,0 +1,31 @@
+{
+    "name": "Check It Out",
+    "script": "CheckItOut.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [
+        {
+          "name": "defaultDescription",
+          "type": "text",
+          "default": "No problem here.",
+          "description": "The default description for objects that have not been assigned a description."
+        }
+    ],
+    "dependencies": [
+      "Character Sheet Utils",
+      "HTML Builder",
+      "splitArgs"
+    ],
+    "modifies": {
+        "chat": "write",
+        "gmnotes": "read, write",
+        "lastmove": "read, write",
+        "layer": "read, write",
+        "left": "read, write",
+        "token": "read",
+        "top": "read, write"
+    }
+}
