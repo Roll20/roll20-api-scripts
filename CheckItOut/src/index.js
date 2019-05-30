@@ -13,15 +13,34 @@ var CheckItOut = (() => {
     theme: undefined
   };
 
+  const PIX_PER_UNIT = 70;
+
   /**
    * Make a character check out an object. The results will be displayed in
    * the chat in a stylized panel.
    * @param {Player} player The player who requested to check the object.
    * @param {Character} character The player's character.
    * @param {Graphic} checkedObj The object being checked.
-   * @return {Promise}
    */
   function checkObject(player, character, checkedObj) {
+    if (closeEnoughToCheck(character, checkedObj))
+      _checkObject(player, character, checkedObj);
+    else {
+      let charName = character.get('name');
+      let who = player.get('_displayname');
+      CheckItOut.utils.Chat.whisper(who, `${charName} is not close enough ` +
+        `to examine that.`);
+    }
+  }
+
+  /**
+   * Helper for checkObject.
+   * @param {Player} player The player who requested to check the object.
+   * @param {Character} character The player's character.
+   * @param {Graphic} checkedObj The object being checked.
+   * @return {Promise}
+   */
+  function _checkObject(player, character, checkedObj) {
     let theme = getTheme();
     let userOpts = CheckItOut.State.getUserOpts();
     let objProps = getObjProps(checkedObj);
@@ -71,6 +90,56 @@ var CheckItOut = (() => {
           throw new Error(`Jukebox track with title ${soundName} does not exist.`);
       }
     });
+  }
+
+  /**
+   * Determines if a character is close enough to examine some object.
+   * @param {Character} character
+   * @param {Graphic} checkedObj
+   * @return {boolean}
+   */
+  function closeEnoughToCheck(character, checkedObj) {
+    let objProps = getObjProps(checkedObj);
+    let pageID = checkedObj.get('_pageid');
+    let page = getObj('page', pageID);
+
+    // If the maxDist property is defined, check if the character's token
+    // is within that range of the object.
+    if (objProps.core.maxDist) {
+      // Get the character's token.
+      let charToken = findObjs({
+        _type: 'graphic',
+        _pageid: pageID,
+        represents: character.get('_id')
+      })[0];
+
+      if (!charToken) {
+        throw new Error(`No token representing ${character.get('name')} is ` +
+          `on the same page as ${checkedObj.get('name')}.`);
+      }
+
+      // Get the pixel distance between the character and the object.
+      let pt1 = [
+        charToken.get('left'),
+        charToken.get('top')
+      ];
+      let pt2 = [
+        checkedObj.get('left'),
+        checkedObj.get('top')
+      ];
+      let r1 = charToken.get('width')/2;
+      let r2 = checkedObj.get('width')/2;
+      let pixDist = Math.max(VecMath.dist(pt1, pt2) - (r1 + r2), 0);
+
+      // Get the unit distance between the character and the object.
+      let scaleNumber = page.get('scale_number');
+      let snapInc = page.get('snapping_increment');
+      let unitDist = (pixDist/PIX_PER_UNIT)*(scaleNumber/snapInc);
+
+      return unitDist <= objProps.core.maxDist;
+    }
+    else
+      return true;
   }
 
   /**
@@ -131,7 +200,7 @@ var CheckItOut = (() => {
   function setTheme(themeName) {
     let state = CheckItOut.State.getState();
     state.themeName = themeName;
-    
+
     let themeClz = CheckItOut.themes.getRegisteredTheme(themeName) ||
       CheckItOut.themes.impl.DefaultTheme;
     CACHE.theme = new themeClz();
@@ -152,6 +221,7 @@ var CheckItOut = (() => {
     getObjProps,
     getOrCreateObjProps,
     getTheme,
+    closeEnoughToCheck,
     setTheme
   };
 })();

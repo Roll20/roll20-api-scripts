@@ -17,7 +17,8 @@
     "dependencies": [
       "Character Sheet Utils",
       "HTML Builder",
-      "splitArgs"
+      "splitArgs",
+      "Vector Math"
     ],
     "modifies": {
         "chat": "write",

@@ -73,7 +73,7 @@
         _.defaults(objProps.theme.investigation, {
           cachedResults: {}
         });
-        
+
         let cachedResults = objProps.theme.investigation.cachedResults[charID];
         if (cachedResults)
           return cachedResults;

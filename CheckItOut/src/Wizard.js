@@ -63,6 +63,14 @@
           value: objInfo.core.description
         },
         {
+          id: 'maxDist',
+          name: 'Max Distance',
+          desc: 'Characters must be within this distance of the object ' +
+            'in order to examine it. This is measured in whatever units ' +
+            'are used for the object\'s page.',
+          value: objInfo.core.maxDist || 'infinity'
+        },
+        {
           id: 'sound',
           name: 'Sound effect',
           desc: 'A sound effect that is played when the object is checked.',
@@ -88,6 +96,8 @@
         this._target.set('name', params[0]);
       if (propID === 'description')
         objProps.core.description = params[0];
+      if (propID === 'maxDist')
+        objProps.core.maxDist = parseFloat(params[0]);
       if (propID === 'sound')
         objProps.core.sound = params[0];
     }

@@ -54,6 +54,7 @@ module.exports = function(grunt) {
           CharSheetUtils: false,
           CheckItOut: true,
           HtmlBuilder: false,
+          VecMath: false,
 
           // Symbols defined by Roll20
           _: false,
