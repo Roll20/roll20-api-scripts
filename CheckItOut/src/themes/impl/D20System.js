@@ -24,14 +24,8 @@
     /**
      * @inheritdoc
      */
-    checkObject(character, checkedObj) {
-      let objProps = CheckItOut.getObjProps(checkedObj) || {};
-
-      // No problem here.
-      if (!objProps.theme)
-        return Promise.resolve([]);
-
-      return this._getInvestigationResults(character, checkedObj);
+    checkObject(character, obj) {
+      return this._getInvestigationResults(character, obj);
     }
 
     /**
@@ -63,10 +57,10 @@
 
       return Promise.resolve()
       .then(() => {
-        let objProps = CheckItOut.getObjProps(checkedObj) || {};
+        let objProps = CheckItOut.ObjProps.get(checkedObj);
 
         // No problem here.
-        if (!objProps.theme.investigation)
+        if (!objProps || !objProps.theme.investigation)
           return [];
 
         // If we have cached investigation results, just return those.
@@ -91,7 +85,7 @@
           let objName = checkedObj.get('name');
           CheckItOut.utils.Chat.whisperGM(`${charName} rolled ${result.total} ` +
             `on their ${this.skillName} check for ${objName}.`);
-          log(result);
+          // log(result);
 
           return _.chain(objProps.theme.investigation.checks)
           .map((paragraph, dcStr) => {
@@ -113,7 +107,7 @@
      * @inheritdoc
      */
     getWizardProperties(checkedObj) {
-      let objProps = CheckItOut.getObjProps(checkedObj) || {};
+      let objProps = CheckItOut.ObjProps.getReadOnly(checkedObj);
 
       return [
         {
@@ -167,7 +161,7 @@
      * @inheritdoc
      */
     modifyWizardProperty(checkedObj, prop, params) {
-      let objProps = CheckItOut.getOrCreateObjProps(checkedObj);
+      let objProps = CheckItOut.ObjProps.create(checkedObj);
 
       // Create the property if it doesn't exist.
       _.defaults(objProps.theme, {

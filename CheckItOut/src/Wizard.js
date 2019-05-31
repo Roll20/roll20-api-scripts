@@ -45,9 +45,7 @@
      * @return {WizardProperty[]}
      */
     getProperties() {
-      let objInfo = CheckItOut.getObjProps(this._target) || {
-        core: {}
-      };
+      let objInfo = CheckItOut.ObjProps.getReadOnly(this._target);
 
       return [
         {
@@ -85,7 +83,9 @@
      * @param {string[]} params The new parameters for the modified property.
      */
     modifyProperty(propID, params) {
-      let objProps = CheckItOut.getOrCreateObjProps(this._target);
+      let objProps = CheckItOut.ObjProps.create(this._target);
+
+      //log(`Modifying ${propID}.`);
 
       // global properties
       if (propID === 'globalTheme')

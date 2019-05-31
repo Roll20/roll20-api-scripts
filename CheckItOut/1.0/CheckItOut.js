@@ -43,7 +43,7 @@ var CheckItOut = (() => {
   function _checkObject(player, character, checkedObj) {
     let theme = getTheme();
     let userOpts = CheckItOut.State.getUserOpts();
-    let objProps = getObjProps(checkedObj);
+    let objProps = CheckItOut.ObjProps.getReadOnly(checkedObj);
 
     let charName = character.get('name');
     let objName = checkedObj.get('name');
@@ -99,7 +99,7 @@ var CheckItOut = (() => {
    * @return {boolean}
    */
   function closeEnoughToCheck(character, checkedObj) {
-    let objProps = getObjProps(checkedObj);
+    let objProps = CheckItOut.ObjProps.getReadOnly(checkedObj);
     let pageID = checkedObj.get('_pageid');
     let page = getObj('page', pageID);
 
@@ -143,43 +143,6 @@ var CheckItOut = (() => {
   }
 
   /**
-   * Get a read-only copy of the persisted properties for an object.
-   * @param {Graphic} checkedObj
-   * @return {ObjProps}
-   */
-  function getObjProps(checkedObj) {
-    let checkedID = checkedObj.get('_id');
-    let props = CheckItOut.State.getState().graphics[checkedID] || {};
-    _.defaults(props, {
-      core: {},
-      theme: {}
-    });
-    return props;
-  }
-
-  /**
-   * Gets the persisted properties for an object, creating them if
-   * they don't exist.
-   * @param {Graphic} checkedObj
-   * @return {ObjProps}
-   */
-  function getOrCreateObjProps(checkedObj) {
-    let existingProps = getObjProps(checkedObj);
-    if (existingProps)
-      return existingProps;
-    else {
-      let checkedID = checkedObj.get('_id');
-      let newProps = {
-        id: checkedID,
-        core: {},
-        theme: {}
-      };
-      CheckItOut.State.getState().graphics[checkedID] = newProps;
-      return newProps;
-    }
-  }
-
-  /**
    * Gets the configured CheckItOutTheme used for system-specific
    * behavior for investigating things.
    * @return {CheckItOutTheme}
@@ -218,10 +181,8 @@ var CheckItOut = (() => {
 
   return {
     checkObject,
-    getObjProps,
-    getOrCreateObjProps,
-    getTheme,
     closeEnoughToCheck,
+    getTheme,
     setTheme
   };
 })();
@@ -399,6 +360,19 @@ var CheckItOut = (() => {
   });
 })();
 
+(() => {
+  'use strict';
+
+  /**
+   * Delete the persisted properties for an object if it is destroyed.
+   */
+  on('destroy:graphic', obj => {
+    CheckItOut.ObjProps.delete(obj);
+
+    //log(CheckItOut.State.getState());
+  });
+})();
+
 /**
  * This module installs the player and GM macros for using the script.
  */
@@ -481,6 +455,93 @@ var CheckItOut = (() => {
       log(err.stack);
     }
   });
+})();
+
+(() => {
+  'use strict';
+
+  /**
+   * A module for managing the persisted properties of
+   * objects for this script.
+   */
+  CheckItOut.ObjProps = class {
+    /**
+     * Creates new persisted properties for an object. If the object already
+     * has persisted properties, the existing properties are returned.
+     * @param {Graphic} obj
+     * @return {ObjProps}
+     */
+    static create(obj) {
+      let objID = obj.get('_id');
+
+      // If properties for the object exist, return those. Otherwise
+      // create blank persisted properties for it.
+      let existingProps = CheckItOut.State.getState().graphics[objID];
+      if (existingProps)
+        return existingProps;
+      else {
+        let newProps = {
+          id: objID
+        };
+        let defaults = CheckItOut.ObjProps.getDefaults();
+        _.defaults(newProps, defaults
+        );
+        CheckItOut.State.getState().graphics[objID] = newProps;
+        return newProps;
+      }
+    }
+
+    /**
+     * Deletes the persisted properties for an object.
+     * @param {Graphic} obj
+     */
+    static delete(obj) {
+      let objID = obj.get('_id');
+      let state = CheckItOut.State.getState();
+
+      let props = state.graphics[objID];
+      if (props)
+        delete state.graphics[objID];
+    }
+
+    /**
+     * Gets the persisted properties for an object. Returns undefined if
+     * they don't exist.
+     * @param {Graphic} obj
+     * @return {ObjProps}
+     */
+    static get(obj) {
+      let objID = obj.get('_id');
+      return CheckItOut.State.getState().graphics[objID];
+    }
+
+    /**
+     * Produces an empty object properties structure.
+     * @return {ObjProps}
+     */
+    static getDefaults() {
+      return {
+        core: {},
+        theme: {}
+      };
+    }
+
+    /**
+     * Gets an immutable copy an object's persisted properties. If the object
+     * has no persisted properties, a default properties structure is provided.
+     * @param {Graphic} obj
+     * @return {ObjProps}
+     */
+    static getReadOnly(obj) {
+      let existingProps = CheckItOut.ObjProps.get(obj);
+
+      // If the properties exist, return a deep copy of them.
+      if (existingProps)
+        return JSON.parse(JSON.stringify(existingProps));
+      else
+        return CheckItOut.ObjProps.getDefaults();
+    }
+  };
 })();
 
 (() => {
@@ -591,9 +652,7 @@ var CheckItOut = (() => {
      * @return {WizardProperty[]}
      */
     getProperties() {
-      let objInfo = CheckItOut.getObjProps(this._target) || {
-        core: {}
-      };
+      let objInfo = CheckItOut.ObjProps.getReadOnly(this._target);
 
       return [
         {
@@ -631,7 +690,9 @@ var CheckItOut = (() => {
      * @param {string[]} params The new parameters for the modified property.
      */
     modifyProperty(propID, params) {
-      let objProps = CheckItOut.getOrCreateObjProps(this._target);
+      let objProps = CheckItOut.ObjProps.create(this._target);
+
+      //log(`Modifying ${propID}.`);
 
       // global properties
       if (propID === 'globalTheme')
@@ -876,14 +937,8 @@ var CheckItOut = (() => {
     /**
      * @inheritdoc
      */
-    checkObject(character, checkedObj) {
-      let objProps = CheckItOut.getObjProps(checkedObj) || {};
-
-      // No problem here.
-      if (!objProps.theme)
-        return Promise.resolve([]);
-
-      return this._getInvestigationResults(character, checkedObj);
+    checkObject(character, obj) {
+      return this._getInvestigationResults(character, obj);
     }
 
     /**
@@ -915,10 +970,10 @@ var CheckItOut = (() => {
 
       return Promise.resolve()
       .then(() => {
-        let objProps = CheckItOut.getObjProps(checkedObj) || {};
+        let objProps = CheckItOut.ObjProps.get(checkedObj);
 
         // No problem here.
-        if (!objProps.theme.investigation)
+        if (!objProps || !objProps.theme.investigation)
           return [];
 
         // If we have cached investigation results, just return those.
@@ -943,7 +998,7 @@ var CheckItOut = (() => {
           let objName = checkedObj.get('name');
           CheckItOut.utils.Chat.whisperGM(`${charName} rolled ${result.total} ` +
             `on their ${this.skillName} check for ${objName}.`);
-          log(result);
+          // log(result);
 
           return _.chain(objProps.theme.investigation.checks)
           .map((paragraph, dcStr) => {
@@ -965,7 +1020,7 @@ var CheckItOut = (() => {
      * @inheritdoc
      */
     getWizardProperties(checkedObj) {
-      let objProps = CheckItOut.getObjProps(checkedObj) || {};
+      let objProps = CheckItOut.ObjProps.getReadOnly(checkedObj);
 
       return [
         {
@@ -1019,7 +1074,7 @@ var CheckItOut = (() => {
      * @inheritdoc
      */
     modifyWizardProperty(checkedObj, prop, params) {
-      let objProps = CheckItOut.getOrCreateObjProps(checkedObj);
+      let objProps = CheckItOut.ObjProps.create(checkedObj);
 
       // Create the property if it doesn't exist.
       _.defaults(objProps.theme, {

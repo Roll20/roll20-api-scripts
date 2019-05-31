@@ -43,7 +43,7 @@ var CheckItOut = (() => {
   function _checkObject(player, character, checkedObj) {
     let theme = getTheme();
     let userOpts = CheckItOut.State.getUserOpts();
-    let objProps = getObjProps(checkedObj);
+    let objProps = CheckItOut.ObjProps.getReadOnly(checkedObj);
 
     let charName = character.get('name');
     let objName = checkedObj.get('name');
@@ -99,7 +99,7 @@ var CheckItOut = (() => {
    * @return {boolean}
    */
   function closeEnoughToCheck(character, checkedObj) {
-    let objProps = getObjProps(checkedObj);
+    let objProps = CheckItOut.ObjProps.getReadOnly(checkedObj);
     let pageID = checkedObj.get('_pageid');
     let page = getObj('page', pageID);
 
@@ -143,43 +143,6 @@ var CheckItOut = (() => {
   }
 
   /**
-   * Get a read-only copy of the persisted properties for an object.
-   * @param {Graphic} checkedObj
-   * @return {ObjProps}
-   */
-  function getObjProps(checkedObj) {
-    let checkedID = checkedObj.get('_id');
-    let props = CheckItOut.State.getState().graphics[checkedID] || {};
-    _.defaults(props, {
-      core: {},
-      theme: {}
-    });
-    return props;
-  }
-
-  /**
-   * Gets the persisted properties for an object, creating them if
-   * they don't exist.
-   * @param {Graphic} checkedObj
-   * @return {ObjProps}
-   */
-  function getOrCreateObjProps(checkedObj) {
-    let existingProps = getObjProps(checkedObj);
-    if (existingProps)
-      return existingProps;
-    else {
-      let checkedID = checkedObj.get('_id');
-      let newProps = {
-        id: checkedID,
-        core: {},
-        theme: {}
-      };
-      CheckItOut.State.getState().graphics[checkedID] = newProps;
-      return newProps;
-    }
-  }
-
-  /**
    * Gets the configured CheckItOutTheme used for system-specific
    * behavior for investigating things.
    * @return {CheckItOutTheme}
@@ -218,10 +181,8 @@ var CheckItOut = (() => {
 
   return {
     checkObject,
-    getObjProps,
-    getOrCreateObjProps,
-    getTheme,
     closeEnoughToCheck,
+    getTheme,
     setTheme
   };
 })();

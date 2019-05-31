@@ -8,7 +8,9 @@ module.exports = function(grunt) {
         src: [
           'src/index.js',
           'src/Commands.js',
+          'src/GarbageCollection.js',
           'src/Macros.js',
+          'src/ObjProps.js',
           'src/State.js',
           'src/Wizard.js',
           'src/themes/index.js',
