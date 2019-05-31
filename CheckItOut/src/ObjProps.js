@@ -7,6 +7,21 @@
    */
   CheckItOut.ObjProps = class {
     /**
+     * Copies the persisted properties from one object to another. This
+     * overwrites any existing properties on the receiving object.
+     * @param {Graphic} fromObj
+     * @param {Graphic} toObj
+     */
+    static copy(fromObj, toObj) {
+      let fromProps = CheckItOut.ObjProps.create(fromObj);
+      let toProps = CheckItOut.ObjProps.create(toObj);
+
+      let clone = CheckItOut.utils.deepCopy(fromProps);
+      _.extend(toProps, clone);
+    }
+
+
+    /**
      * Creates new persisted properties for an object. If the object already
      * has persisted properties, the existing properties are returned.
      * @param {Graphic} obj
@@ -78,7 +93,7 @@
 
       // If the properties exist, return a deep copy of them.
       if (existingProps)
-        return JSON.parse(JSON.stringify(existingProps));
+        return CheckItOut.utils.deepCopy(existingProps);
       else
         return CheckItOut.ObjProps.getDefaults();
     }

@@ -185,6 +185,14 @@
         CheckItOut.commands.MODIFY_CORE_PROPERTY_CMD, globalProperties);
       content.append(globalContent);
 
+      // Add copy button
+      let objID = this._target.get('_id');
+      content.append('div', `[Copy properties to...]` +
+        `(${CheckItOut.commands.COPY_PROPS_CMD} ${objID} ` +
+        `&#64;{target|token_id})`, {
+          title: 'Copy the properties from this object to another one.'
+        });
+
       // Show the menu to the GM who requested it.
       let menu = new CheckItOut.utils.Menu('Object Properties', content);
       menu.show(player);

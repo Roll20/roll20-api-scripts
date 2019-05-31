@@ -191,6 +191,7 @@ var CheckItOut = (() => {
   'use strict';
 
   const CHECK_OBJECT_CMD = '!CheckItOut_CheckObject';
+  const COPY_PROPS_CMD = '!CheckItOut_CopyPropertiesToTargetObject';
   const DISPLAY_WIZARD_CMD = '!CheckItOut_GMWizard_showMenu';
   const MODIFY_CORE_PROPERTY_CMD = '!CheckItOut_GMWizard_setPropertyCore';
   const MODIFY_THEME_PROPERTY_CMD = '!CheckItOut_GMWizard_setPropertyTheme';
@@ -198,6 +199,7 @@ var CheckItOut = (() => {
   _.extend(CheckItOut, {
     commands: {
       CHECK_OBJECT_CMD,
+      COPY_PROPS_CMD,
       DISPLAY_WIZARD_CMD,
       MODIFY_CORE_PROPERTY_CMD,
       MODIFY_THEME_PROPERTY_CMD
@@ -213,12 +215,14 @@ var CheckItOut = (() => {
     if (!player)
       throw new Error(`Could not find player ID ${msg.playerid}.`);
 
+    // Validate arguments.
     let argv = bshields.splitArgs(msg.content);
     if (argv.length !== 3) {
       log(argv);
       throw new Error(`Incorrect # arguments.`);
     }
 
+    // Get the character's token.
     let charTokenID = argv[1];
     let charToken = getObj('graphic', charTokenID);
     if (charToken) {
@@ -245,6 +249,33 @@ var CheckItOut = (() => {
     else {
       throw new Error('A character token must be selected.');
     }
+  }
+
+  /**
+   * Exectures a command to copy the properties of one object to another.
+   * @param {Message} msg
+   */
+  function doCopyPropsCmd(msg) {
+    // Validate arguments.
+    let argv = bshields.splitArgs(msg.content);
+    if (argv.length !== 3) {
+      log(argv);
+      throw new Error(`Incorrect # arguments.`);
+    }
+
+    // Get the object to copy properties from.
+    let fromID = argv[1];
+    let fromObj = getObj('graphic', fromID);
+    if (!fromObj)
+      throw new Error('fromObj does not exist.');
+
+    // Get the object to copy properties to.
+    let toID = argv[2];
+    let toObj = getObj('graphic', toID);
+    if (!toObj)
+      throw new Error('toObj does not exist.');
+
+    CheckItOut.ObjProps.copy(fromObj, toObj);
   }
 
   /**
@@ -347,6 +378,8 @@ var CheckItOut = (() => {
     try {
       if (msg.content.startsWith(CHECK_OBJECT_CMD))
         doCheckObjectCmd(msg);
+      if (msg.content.startsWith(COPY_PROPS_CMD))
+        doCopyPropsCmd(msg);
       if (msg.content.startsWith(DISPLAY_WIZARD_CMD))
         doShowGMWizard(msg);
       if (msg.content.startsWith(MODIFY_CORE_PROPERTY_CMD))
@@ -466,6 +499,21 @@ var CheckItOut = (() => {
    */
   CheckItOut.ObjProps = class {
     /**
+     * Copies the persisted properties from one object to another. This
+     * overwrites any existing properties on the receiving object.
+     * @param {Graphic} fromObj
+     * @param {Graphic} toObj
+     */
+    static copy(fromObj, toObj) {
+      let fromProps = CheckItOut.ObjProps.create(fromObj);
+      let toProps = CheckItOut.ObjProps.create(toObj);
+
+      let clone = CheckItOut.utils.deepCopy(fromProps);
+      _.extend(toProps, clone);
+    }
+
+
+    /**
      * Creates new persisted properties for an object. If the object already
      * has persisted properties, the existing properties are returned.
      * @param {Graphic} obj
@@ -537,7 +585,7 @@ var CheckItOut = (() => {
 
       // If the properties exist, return a deep copy of them.
       if (existingProps)
-        return JSON.parse(JSON.stringify(existingProps));
+        return CheckItOut.utils.deepCopy(existingProps);
       else
         return CheckItOut.ObjProps.getDefaults();
     }
@@ -791,6 +839,11 @@ var CheckItOut = (() => {
       let globalContent = this._renderProps(
         CheckItOut.commands.MODIFY_CORE_PROPERTY_CMD, globalProperties);
       content.append(globalContent);
+
+      // Add copy button
+      let objID = this._target.get('_id');
+      content.append('div', `[Copy properties to...]` +
+        `(${CheckItOut.commands.COPY_PROPS_CMD} ${objID} &#64;{target|token_id})`);
 
       // Show the menu to the GM who requested it.
       let menu = new CheckItOut.utils.Menu('Object Properties', content);
@@ -1626,7 +1679,19 @@ var CheckItOut = (() => {
 (() => {
   'use strict';
 
-  CheckItOut.utils = {};
+  /**
+   * Creates a deep copy of an object. This object must be a POJO
+   * (Plain Old Javascript Object).
+   * @param {object} obj
+   */
+  function deepCopy(obj) {
+    let json = JSON.stringify(obj);
+    return JSON.parse(json);
+  }
+
+  CheckItOut.utils = {
+    deepCopy
+  };
 })();
 
 (() => {

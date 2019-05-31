@@ -2,6 +2,7 @@
   'use strict';
 
   const CHECK_OBJECT_CMD = '!CheckItOut_CheckObject';
+  const COPY_PROPS_CMD = '!CheckItOut_CopyPropertiesToTargetObject';
   const DISPLAY_WIZARD_CMD = '!CheckItOut_GMWizard_showMenu';
   const MODIFY_CORE_PROPERTY_CMD = '!CheckItOut_GMWizard_setPropertyCore';
   const MODIFY_THEME_PROPERTY_CMD = '!CheckItOut_GMWizard_setPropertyTheme';
@@ -9,6 +10,7 @@
   _.extend(CheckItOut, {
     commands: {
       CHECK_OBJECT_CMD,
+      COPY_PROPS_CMD,
       DISPLAY_WIZARD_CMD,
       MODIFY_CORE_PROPERTY_CMD,
       MODIFY_THEME_PROPERTY_CMD
@@ -24,12 +26,14 @@
     if (!player)
       throw new Error(`Could not find player ID ${msg.playerid}.`);
 
+    // Validate arguments.
     let argv = bshields.splitArgs(msg.content);
     if (argv.length !== 3) {
       log(argv);
       throw new Error(`Incorrect # arguments.`);
     }
 
+    // Get the character's token.
     let charTokenID = argv[1];
     let charToken = getObj('graphic', charTokenID);
     if (charToken) {
@@ -56,6 +60,33 @@
     else {
       throw new Error('A character token must be selected.');
     }
+  }
+
+  /**
+   * Exectures a command to copy the properties of one object to another.
+   * @param {Message} msg
+   */
+  function doCopyPropsCmd(msg) {
+    // Validate arguments.
+    let argv = bshields.splitArgs(msg.content);
+    if (argv.length !== 3) {
+      log(argv);
+      throw new Error(`Incorrect # arguments.`);
+    }
+
+    // Get the object to copy properties from.
+    let fromID = argv[1];
+    let fromObj = getObj('graphic', fromID);
+    if (!fromObj)
+      throw new Error('fromObj does not exist.');
+
+    // Get the object to copy properties to.
+    let toID = argv[2];
+    let toObj = getObj('graphic', toID);
+    if (!toObj)
+      throw new Error('toObj does not exist.');
+
+    CheckItOut.ObjProps.copy(fromObj, toObj);
   }
 
   /**
@@ -158,6 +189,8 @@
     try {
       if (msg.content.startsWith(CHECK_OBJECT_CMD))
         doCheckObjectCmd(msg);
+      if (msg.content.startsWith(COPY_PROPS_CMD))
+        doCopyPropsCmd(msg);
       if (msg.content.startsWith(DISPLAY_WIZARD_CMD))
         doShowGMWizard(msg);
       if (msg.content.startsWith(MODIFY_CORE_PROPERTY_CMD))
