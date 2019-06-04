@@ -566,10 +566,19 @@ eclipsephasecompanion:
   - "EclipsePhaseAlternateCompanion"
   - "System Toolbox"
 
-
 tokenfate:
   - "tokenFate"
   - "Utility"
+
+checkitout:
+  - "Check It Out"
+  - "Utility"
+
+charsheetutils:
+  - "CharSheetUtils"
+  - "Utility"
+
+
 
 
 
