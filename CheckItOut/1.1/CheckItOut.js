@@ -612,7 +612,6 @@ var CheckItOut = (() => {
    * state data.
    */
   CheckItOut.State = class {
-
     /**
      * Updates the state when migrating from one version of this script to a
      * newer one.
@@ -1291,27 +1290,27 @@ var CheckItOut = (() => {
     /**
      * @inheritdoc
      */
-    get skillNames() {
-      return [
-        'Search',
-        'Appraise',
-        'Decipher Script',
-        'Knowledge(Arcana)',
-        'Knowledge(Architecture & Engineering)',
-        'Knowledge(Dungeoneering)',
-        'Knowledge(Geography)',
-        'Knowledge(History)',
-        'Knowledge(Local)',
-        'Knowledge(Nature)',
-        'Knowledge(Nobility & Royalty)',
-        'Knowledge(Religion)',
-        'Knowledge(The Planes)',
-        'Listen',
-        'Sense Motive',
-        'Spellcraft',
-        'Spot',
-        'Survival'
-      ];
+     get skillNames() {
+       return [
+         'Search',
+         'Appraise',
+         'Decipher Script',
+         'Knowledge(Arcana)',
+         'Knowledge(Architecture & Engineering)',
+         'Knowledge(Dungeoneering)',
+         'Knowledge(Geography)',
+         'Knowledge(History)',
+         'Knowledge(Local)',
+         'Knowledge(Nature)',
+         'Knowledge(Nobility & Royalty)',
+         'Knowledge(Religion)',
+         'Knowledge(The Planes)',
+         'Listen',
+         'Sense Motive',
+         'Spellcraft',
+         'Spot',
+         'Survival'
+       ];
     }
 
     constructor() {

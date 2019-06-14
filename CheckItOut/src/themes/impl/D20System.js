@@ -17,7 +17,7 @@
      * @type {string[]}
      */
     get skillNames() {
-     throw new Error('Not implemented');
+      throw new Error('Not implemented');
     }
 
     constructor() {
