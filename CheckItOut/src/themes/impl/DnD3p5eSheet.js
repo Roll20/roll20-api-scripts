@@ -23,8 +23,48 @@
     /**
      * @inheritdoc
      */
+<<<<<<< HEAD
+    getSkillMod(character, skillName) {
+      if (skillName === 'Appraise')
+        return CharSheetUtils.getSheetAttr(character, 'appraise');
+      if (skillName === 'Decipher Script')
+        return CharSheetUtils.getSheetAttr(character, 'decipherscript');
+      if (skillName === 'Knowledge(Arcana)')
+        return CharSheetUtils.getSheetAttr(character, 'knowarcana');
+      if (skillName === 'Knowledge(Architecture & Engineering)')
+        return CharSheetUtils.getSheetAttr(character, 'knowengineer');
+      if (skillName === 'Knowledge(Dungeoneering)')
+        return CharSheetUtils.getSheetAttr(character, 'knowdungeon');
+      if (skillName === 'Knowledge(Geography)')
+        return CharSheetUtils.getSheetAttr(character, 'knowgeography');
+      if (skillName === 'Knowledge(History)')
+        return CharSheetUtils.getSheetAttr(character, 'knowhistory');
+      if (skillName === 'Knowledge(Local)')
+        return CharSheetUtils.getSheetAttr(character, 'knowlocal');
+      if (skillName === 'Knowledge(Nature)')
+        return CharSheetUtils.getSheetAttr(character, 'knownature');
+      if (skillName === 'Knowledge(Nobility & Royalty)')
+        return CharSheetUtils.getSheetAttr(character, 'knownobility');
+      if (skillName === 'Knowledge(Religion)')
+        return CharSheetUtils.getSheetAttr(character, 'knowreligion');
+      if (skillName === 'Knowledge(The Planes)')
+        return CharSheetUtils.getSheetAttr(character, 'knowplanes');
+      if (skillName === 'Listen')
+        return CharSheetUtils.getSheetAttr(character, 'listen');
+      if (skillName === 'Sense Motive')
+        return CharSheetUtils.getSheetAttr(character, 'sensemotive');
+      if (skillName === 'Spellcraft')
+        return CharSheetUtils.getSheetAttr(character, 'spellcraft');
+      if (skillName === 'Spot')
+        return CharSheetUtils.getSheetAttr(character, 'spot');
+      if (skillName === 'Survival')
+        return CharSheetUtils.getSheetAttr(character, 'survival');
+      if (skillName === 'Search')
+        return CharSheetUtils.getSheetAttr(character, 'search');
+=======
     getInvestigationMod(character) {
       return CharSheetUtils.getSheetAttr(character, 'search');
+>>>>>>> 74cc68c309981ff00eaf89ddaf560008889649f3
     }
   }
 

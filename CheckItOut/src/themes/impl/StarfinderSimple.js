@@ -21,9 +21,32 @@
     /**
      * @inheritdoc
      */
+<<<<<<< HEAD
+     getSkillMod(character, skillName) {
+       if (skillName === 'Computers')
+         return CharSheetUtils.getSheetAttr(character, 'Computers');
+       if (skillName === 'Culture')
+         return CharSheetUtils.getSheetAttr(character, 'Culture');
+       if (skillName === 'Engineering')
+         return CharSheetUtils.getSheetAttr(character, 'Engineering');
+       if (skillName === 'Life Science')
+         return CharSheetUtils.getSheetAttr(character, 'Life-Science');
+       if (skillName === 'Medicine')
+         return CharSheetUtils.getSheetAttr(character, 'Medicine');
+       if (skillName === 'Mysticism')
+         return CharSheetUtils.getSheetAttr(character, 'Mysticism');
+       if (skillName === 'Perception')
+         return CharSheetUtils.getSheetAttr(character, 'Perception');
+       if (skillName === 'Physical Science')
+         return CharSheetUtils.getSheetAttr(character, 'Physical-Science');
+       if (skillName === 'Survival')
+         return CharSheetUtils.getSheetAttr(character, 'Survival');
+     }
+=======
     getInvestigationMod(character) {
       return CharSheetUtils.getSheetAttr(character, 'Perception');
     }
+>>>>>>> 74cc68c309981ff00eaf89ddaf560008889649f3
   }
 
   CheckItOut.themes.register(StarfinderSimple);

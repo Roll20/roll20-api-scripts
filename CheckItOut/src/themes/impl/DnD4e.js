@@ -11,8 +11,22 @@
     /**
      * @inheritdoc
      */
+<<<<<<< HEAD
+    get skillNames() {
+      return [
+        'Perception',
+        'Arcana',
+        'Dungeoneering',
+        'History',
+        'Insight',
+        'Nature',
+        'Religion',
+        'Streetwise'
+      ];
+=======
     get skillName() {
       return 'Perception';
+>>>>>>> 74cc68c309981ff00eaf89ddaf560008889649f3
     }
 
     constructor() {

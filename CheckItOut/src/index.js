@@ -175,8 +175,8 @@ var CheckItOut = (() => {
     // Show initialization log.
     let theme = getTheme();
     let version = 'SCRIPT_VERSION'; // This will be filled in by Grunt.
-    log(`ಠಠ--> Initialized Check It Out v${version} using theme ` +
-      `'${theme.name}' <--ಠಠ`);
+    log(`*** Initialized Check It Out v${version} using theme ` +
+      `'${theme.name}' ***`);
   });
 
   return {

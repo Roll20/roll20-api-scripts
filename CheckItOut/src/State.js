@@ -11,11 +11,36 @@
 
   const DEFAULT_DESCRIPTION = 'No problem here.';
 
+<<<<<<< HEAD
+
+
+=======
+>>>>>>> 74cc68c309981ff00eaf89ddaf560008889649f3
   /**
    * An interface for initializing and accessing the script's persisted
    * state data.
    */
   CheckItOut.State = class {
+<<<<<<< HEAD
+
+    /**
+     * Updates the state when migrating from one version of this script to a
+     * newer one.
+     */
+    static _doUpdates() {
+      let curVersion = state.CheckItOut.version;
+
+      if (curVersion === '1.0') {
+        CheckItOut.State._updateTo_1_1();
+        curVersion = '1.1';
+      }
+
+      // Set the state's version to the latest.
+      state.CheckItOut.version = 'SCRIPT_VERSION';
+    }
+
+=======
+>>>>>>> 74cc68c309981ff00eaf89ddaf560008889649f3
     /**
      * Get the script's persisted state.
      * @return {CheckItOutState}
@@ -43,9 +68,20 @@
       _.defaults(state.CheckItOut, {
         graphics: {},
         themeName: 'default',
+<<<<<<< HEAD
+        userOptions: {},
+        version: '1.0'
+      });
+
+      // Do any work necessary to migrate the state's data to the
+      // latest version.
+      CheckItOut.State._doUpdates();
+
+=======
         userOptions: {}
       });
 
+>>>>>>> 74cc68c309981ff00eaf89ddaf560008889649f3
       // Add useroptions to the state.
       let userOptions = globalconfig && globalconfig.checkitout;
       if (userOptions)
@@ -56,5 +92,27 @@
         defaultDescription: DEFAULT_DESCRIPTION
       });
     }
+<<<<<<< HEAD
+
+    /**
+     * Update from version 1.0 to 1.1.
+     */
+    static _updateTo_1_1() {
+      let theme = CheckItOut.getTheme();
+
+      if (theme instanceof CheckItOut.themes.impl.D20System) {
+        let defaultSkill= theme.skillNames[0];
+
+        // Migrate "investigation" theme properties to their appropriate
+        // default skill property.
+        _.each(state.CheckItOut.graphics, objProps => {
+          let themeProps = objProps.theme;
+          themeProps['skillCheck_' + defaultSkill] = themeProps.investigation;
+          delete themeProps.investigation;
+        });
+      }
+    }
+=======
+>>>>>>> 74cc68c309981ff00eaf89ddaf560008889649f3
   };
 })();

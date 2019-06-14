@@ -21,9 +21,40 @@
     /**
      * @inheritdoc
      */
+<<<<<<< HEAD
+    getSkillMod(character, skillName) {
+      if (skillName === 'Arcana')
+        return CharSheetUtils.getSheetAttr(character,
+          'skill/name/arcana/total_with_sign');
+      if (skillName === 'History')
+        return CharSheetUtils.getSheetAttr(character,
+          'skill/name/history/total_with_sign');
+      if (skillName === 'Insight')
+        return CharSheetUtils.getSheetAttr(character,
+          'skill/name/insight/total_with_sign');
+      if (skillName === 'Investigation')
+        return CharSheetUtils.getSheetAttr(character,
+          'skill/name/investigation/total_with_sign');
+      if (skillName === 'Medicine')
+        return CharSheetUtils.getSheetAttr(character,
+          'skill/name/medicine/total_with_sign');
+      if (skillName === 'Nature')
+        return CharSheetUtils.getSheetAttr(character,
+          'skill/name/nature/total_with_sign');
+      if (skillName === 'Perception')
+        return CharSheetUtils.getSheetAttr(character,
+          'skill/name/perception/total_with_sign');
+      if (skillName === 'Religion')
+        return CharSheetUtils.getSheetAttr(character,
+          'skill/name/religion/total_with_sign');
+      if (skillName === 'Survival')
+        return CharSheetUtils.getSheetAttr(character,
+          'skill/name/survival/total_with_sign');
+=======
     getInvestigationMod(character) {
       return CharSheetUtils.getSheetAttr(character,
         'skill/name/investigation/total_with_sign');
+>>>>>>> 74cc68c309981ff00eaf89ddaf560008889649f3
     }
   }
 
