@@ -10,11 +10,14 @@
    */
   CheckItOut.themes.impl.D20System = class extends CheckItOutTheme {
     /**
-     * The name of the skill used to investigate things.
-     * @type {string}
+     * A list of the names of skills that can be used to investigate things.
+     * The first string should be the primary skill used. The rest should be
+     * provided in increasing alphabetical order.
+     * @abstract
+     * @type {string[]}
      */
-    get skillName() {
-      throw new Error('Not implemented.');
+    get skillNames() {
+      throw new Error('Not implemented');
     }
 
     constructor() {
@@ -25,7 +28,16 @@
      * @inheritdoc
      */
     checkObject(character, obj) {
-      return this._getInvestigationResults(character, obj);
+      return Promise.all(_.map(this.skillNames, skillName => {
+        return this._getInvestigationResults(character, obj, skillName);
+      }))
+      .then(allParagraphs => {
+        return _.chain(allParagraphs)
+        .flatten()
+        .compact()
+        .uniq()
+        .value();
+      });
     }
 
     /**
@@ -35,10 +47,11 @@
      * the theme is for.
      * @abstract
      * @param {Character} character
+     * @param {string} skillName
      * @return {Promise<int>}
      */
-    getInvestigationMod(character) {
-      _.noop(character);
+    getSkillMod(character, skillName) {
+      _.noop(character, skillName);
       throw new Error('Not implemented.');
     }
 
@@ -50,9 +63,10 @@
      * the theme is for.
      * @param {Character} character
      * @param {Graphic} checkedObj
+     * @param {string} skillName
      * @return {Promise<string[]>}
      */
-    _getInvestigationResults(character, checkedObj) {
+    _getInvestigationResults(character, checkedObj, skillName) {
       let charID = character.get('_id');
 
       return Promise.resolve()
@@ -60,44 +74,58 @@
         let objProps = CheckItOut.ObjProps.get(checkedObj);
 
         // No problem here.
-        if (!objProps || !objProps.theme.investigation)
+        if (!objProps || !objProps.theme['skillCheck_' + skillName])
           return [];
 
         // If we have cached investigation results, just return those.
-        _.defaults(objProps.theme.investigation, {
+        _.defaults(objProps.theme['skillCheck_' + skillName], {
           cachedResults: {}
         });
 
-        let cachedResults = objProps.theme.investigation.cachedResults[charID];
+        let cachedResults = objProps.theme['skillCheck_' + skillName].cachedResults[charID];
         if (cachedResults)
           return cachedResults;
 
         // Try rolling investigation to see if we can learn more details.
-        return this.getInvestigationMod(character)
-        .then(investigationMod => {
-          return CharSheetUtils.rollAsync(`1d20 + ${investigationMod}`);
+        return this.getSkillMod(character, skillName)
+        .then(skillMod => {
+          return Promise.all([
+            CharSheetUtils.rollAsync(`1d20 + ${skillMod}`),
+            10 + skillMod
+          ]);
         })
 
         // Get the paragraphs for checks whose DCs we beat.
         .then(result => {
+          let [rolledResult, passiveResult] = result;
+
+          // Skip if this skill has no checks for the object.
+          let checks = objProps.theme['skillCheck_' + skillName].checks;
+          if (_.size(checks) === 0)
+            return [];
+
           // Whisper the result to the GM.
           let charName = character.get('name');
           let objName = checkedObj.get('name');
-          CheckItOut.utils.Chat.whisperGM(`${charName} rolled ${result.total} ` +
-            `on their ${this.skillName} check for ${objName}.`);
-          // log(result);
+          let rollMsg = `${charName} rolled ${rolledResult.total} ` +
+            `on their ${skillName} check for ${objName}. `;
+          if (objProps.theme.allowPassives)
+            rollMsg += `Passive: ${passiveResult}`;
+          CheckItOut.utils.Chat.whisperGM(rollMsg);
+          log(result);
 
-          return _.chain(objProps.theme.investigation.checks)
+          // Get the paragraphs for DCs that were passed.
+          return _.chain(checks)
           .map((paragraph, dcStr) => {
             let dc = parseInt(dcStr);
-            if (result.total >= dc)
+            if (rolledResult.total >= dc || (objProps.theme.allowPassives && passiveResult >= dc))
               return paragraph;
           })
           .compact()
           .value();
         })
         .then(paragraphs => {
-          objProps.theme.investigation.cachedResults[charID] = paragraphs;
+          objProps.theme['skillCheck_' + skillName].cachedResults[charID] = paragraphs;
           return paragraphs;
         });
       });
@@ -111,46 +139,81 @@
 
       return [
         {
-          id: 'investigation',
-          name: `${this.skillName} checks`,
-          desc: `Additional details revealed from successful ` +
-            `${this.skillName} checks.`,
+          id: 'skillCheck',
+          name: `Skill Checks`,
+          desc: `Additional details revealed from successful skill checks.`,
           value: (() => {
-            if (objProps.theme.investigation) {
-              // sort the DCs.
-              let dcStrs = _.keys(objProps.theme.investigation.checks);
-              let dcs = _.map(dcStrs, dc => {
-                return parseInt(dc);
-              });
-              dcs.sort();
+            let checks = [];
 
-              // Render a line for each DC, paragraph pair.
-              return _.map(dcs, dc => {
-                let paragraph = objProps.theme.investigation.checks[dc];
-                return `<p>DC ${dc}: ${paragraph}</p>`;
-              }).join('');
-            }
+            // Iterate through each skill supported by this theme.
+            _.each(this.skillNames.sort(), skillName => {
+              if (objProps.theme['skillCheck_' + skillName]) {
+                // sort the DCs.
+                let dcStrs = _.keys(objProps.theme['skillCheck_' + skillName].checks);
+                let dcs = _.map(dcStrs, dc => {
+                  return parseInt(dc);
+                }).sort();
+
+                // Skip if there are no DCs for this skill.
+                if (dcs.length === 0)
+                  return;
+
+                // Render a line for each DC, paragraph pair.
+                checks.push(`<p>${skillName}:</p>`);
+                _.each(dcs, dc => {
+                  let paragraph = objProps.theme['skillCheck_' + skillName].checks[dc];
+                  checks.push(`<p style="font-weight: lighter;">DC ${dc}: ${paragraph}</p>`);
+                }).join('');
+              }
+            });
+
+            // Create the concatenated string of skill checks <p> blocks.
+            if (checks.length > 0)
+              return checks.join('');
             else
               return 'None';
           })(),
           properties: [
             {
+              id: 'skillName',
+              name: 'Skill',
+              desc: 'The skill used for the check.',
+              options: _.map(this.skillNames, skillName => {
+                return CheckItOut.utils.sanitizeStr(skillName);
+              }).sort()
+            },
+            {
               id: 'dc',
               name: 'DC',
-              desc: `The DC for the ${this.skillName} check.`
+              desc: `The DC for the skill check.`
             },
             {
               id: 'paragraph',
               name: 'Details',
               desc: `Additional details revealed if the character ` +
-                `succeeds at the ${this.skillName} check.`
+                `succeeds at the skill check.`
             }
           ]
         },
         {
+          id: 'allowPassives',
+          name: 'Allow Passive Skills',
+          desc: 'Whether to allow passive skills to be used when checking ' +
+            'out the object. When determining the results of a check the ' +
+            'higher of the character\'s passive score and their rolled ' +
+            'score will be used.',
+          value: (() => {
+            if (objProps.theme.allowPassives)
+              return 'yes';
+            else
+              return 'no';
+          })(),
+          options: ['yes', 'no']
+        },
+        {
           id: 'resetCache',
           name: 'Reset Cache',
-          desc: `Resets the cached ${this.skillName} results for this object.`,
+          desc: `Resets the cached skill check results for this object.`,
           isButton: true,
           prompt: true
         }
@@ -164,27 +227,38 @@
       let objProps = CheckItOut.ObjProps.create(checkedObj);
 
       // Create the property if it doesn't exist.
-      _.defaults(objProps.theme, {
-        investigation: {}
-      });
-      _.defaults(objProps.theme.investigation, {
-        checks: {},
-        cachedResults: {}
+      _.each(this.skillNames, skillName => {
+        let skillProp = 'skillCheck_' + skillName;
+        _.defaults(objProps.theme, {
+          [skillProp]: {}
+        });
+        _.defaults(objProps.theme[skillProp], {
+          checks: {},
+          cachedResults: {}
+        });
       });
 
-      if (prop === 'investigation') {
-        let dc = parseInt(params[0]);
-        let paragraph = params[1];
+      if (prop === 'skillCheck') {
+        let skillName = CheckItOut.utils.unsanitizeStr(params[0]);
+        let dc = parseInt(params[1]);
+        let paragraph = params[2];
 
         // Persist the check, or delete it if the paragraph is blank.
         if (paragraph)
-          objProps.theme.investigation.checks[dc] = paragraph;
+          objProps.theme['skillCheck_' + skillName].checks[dc] = paragraph;
         else
-          delete objProps.theme.investigation.checks[dc];
+          delete objProps.theme['skillCheck_' + skillName].checks[dc];
+      }
+
+      if (prop === 'allowPassives') {
+        let allowed = params[0] === 'yes';
+        objProps.theme.allowPassives = allowed;
       }
 
       if (prop === 'resetCache' && params[0] === 'yes') {
-        objProps.theme.investigation.cachedResults = {};
+        _.each(this.skillNames, skillName => {
+          objProps.theme['skillCheck_' + skillName].cachedResults = {};
+        });
       }
     }
   };

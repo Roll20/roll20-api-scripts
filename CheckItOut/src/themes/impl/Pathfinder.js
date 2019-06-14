@@ -11,8 +11,26 @@
     /**
      * @inheritdoc
      */
-    get skillName() {
-      return 'Perception';
+    get skillNames() {
+      return [
+        'Perception',
+        'Appraise',
+        'Heal',
+        'Knowledge(Arcana)',
+        'Knowledge(Dungeoneering)',
+        'Knowledge(Engineering)',
+        'Knowledge(Geography)',
+        'Knowledge(History)',
+        'Knowledge(Local)',
+        'Knowledge(Nature)',
+        'Knowledge(Nobility)',
+        'Knowledge(Planes)',
+        'Knowledge(Religion)',
+        'Linguistics',
+        'Sense Motive',
+        'Spellcraft',
+        'Survival'
+      ];
     }
 
     constructor() {
