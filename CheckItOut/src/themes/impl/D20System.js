@@ -112,7 +112,7 @@
           if (objProps.theme.allowPassives)
             rollMsg += `Passive: ${passiveResult}`;
           CheckItOut.utils.Chat.whisperGM(rollMsg);
-          log(result);
+          //log(result);
 
           // Get the paragraphs for DCs that were passed.
           return _.chain(checks)
