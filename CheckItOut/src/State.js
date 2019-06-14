@@ -11,18 +11,13 @@
 
   const DEFAULT_DESCRIPTION = 'No problem here.';
 
-<<<<<<< HEAD
 
 
-=======
->>>>>>> 74cc68c309981ff00eaf89ddaf560008889649f3
   /**
    * An interface for initializing and accessing the script's persisted
    * state data.
    */
   CheckItOut.State = class {
-<<<<<<< HEAD
-
     /**
      * Updates the state when migrating from one version of this script to a
      * newer one.
@@ -39,8 +34,6 @@
       state.CheckItOut.version = 'SCRIPT_VERSION';
     }
 
-=======
->>>>>>> 74cc68c309981ff00eaf89ddaf560008889649f3
     /**
      * Get the script's persisted state.
      * @return {CheckItOutState}
@@ -68,7 +61,6 @@
       _.defaults(state.CheckItOut, {
         graphics: {},
         themeName: 'default',
-<<<<<<< HEAD
         userOptions: {},
         version: '1.0'
       });
@@ -77,11 +69,6 @@
       // latest version.
       CheckItOut.State._doUpdates();
 
-=======
-        userOptions: {}
-      });
-
->>>>>>> 74cc68c309981ff00eaf89ddaf560008889649f3
       // Add useroptions to the state.
       let userOptions = globalconfig && globalconfig.checkitout;
       if (userOptions)
@@ -92,7 +79,6 @@
         defaultDescription: DEFAULT_DESCRIPTION
       });
     }
-<<<<<<< HEAD
 
     /**
      * Update from version 1.0 to 1.1.
@@ -112,7 +98,5 @@
         });
       }
     }
-=======
->>>>>>> 74cc68c309981ff00eaf89ddaf560008889649f3
   };
 })();

@@ -23,7 +23,6 @@
     /**
      * @inheritdoc
      */
-<<<<<<< HEAD
     getSkillMod(character, skillName) {
       if (skillName === 'Appraise')
         return CharSheetUtils.getSheetAttr(character, 'appraise');
@@ -61,10 +60,6 @@
         return CharSheetUtils.getSheetAttr(character, 'survival');
       if (skillName === 'Search')
         return CharSheetUtils.getSheetAttr(character, 'search');
-=======
-    getInvestigationMod(character) {
-      return CharSheetUtils.getSheetAttr(character, 'search');
->>>>>>> 74cc68c309981ff00eaf89ddaf560008889649f3
     }
   }
 

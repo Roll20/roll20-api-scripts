@@ -11,7 +11,6 @@
     /**
      * @inheritdoc
      */
-<<<<<<< HEAD
     get skillNames() {
       return [
         'Investigation',
@@ -24,10 +23,6 @@
         'Religion',
         'Survival'
       ];
-=======
-    get skillName() {
-      return 'Investigation';
->>>>>>> 74cc68c309981ff00eaf89ddaf560008889649f3
     }
 
     constructor() {

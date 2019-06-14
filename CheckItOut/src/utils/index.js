@@ -14,7 +14,6 @@
     return JSON.parse(json);
   }
 
-<<<<<<< HEAD
   /**
    * Gets the HTML-sanitized version of a string.
    * E.g., all '&'s will be changed to '&#38;'.
@@ -43,9 +42,5 @@
     deepCopy,
     sanitizeStr,
     unsanitizeStr
-=======
-  CheckItOut.utils = {
-    deepCopy
->>>>>>> 74cc68c309981ff00eaf89ddaf560008889649f3
   };
 })();

@@ -21,7 +21,6 @@
     /**
      * @inheritdoc
      */
-<<<<<<< HEAD
     getSkillMod(character, skillName) {
       if (skillName === 'Conspiracy')
         return CharSheetUtils.getSheetAttr(character, 'conspiracy');
@@ -35,10 +34,6 @@
         return CharSheetUtils.getSheetAttr(character, 'perception');
       if (skillName === 'Science')
         return CharSheetUtils.getSheetAttr(character, 'science');
-=======
-    getInvestigationMod(character) {
-      return CharSheetUtils.getSheetAttr(character, 'perception');
->>>>>>> 74cc68c309981ff00eaf89ddaf560008889649f3
     }
   }
 

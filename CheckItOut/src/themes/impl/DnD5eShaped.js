@@ -21,7 +21,6 @@
     /**
      * @inheritdoc
      */
-<<<<<<< HEAD
     getSkillMod(character, skillName) {
       if (skillName === 'Arcana')
         return CharSheetUtils.getSheetAttr(character,
@@ -50,11 +49,6 @@
       if (skillName === 'Survival')
         return CharSheetUtils.getSheetAttr(character,
           'skill/name/survival/total_with_sign');
-=======
-    getInvestigationMod(character) {
-      return CharSheetUtils.getSheetAttr(character,
-        'skill/name/investigation/total_with_sign');
->>>>>>> 74cc68c309981ff00eaf89ddaf560008889649f3
     }
   }
 

@@ -21,7 +21,6 @@
     /**
      * @inheritdoc
      */
-<<<<<<< HEAD
      getSkillMod(character, skillName) {
        if (skillName === 'Computers')
          return CharSheetUtils.getSheetAttr(character, 'Computers');
@@ -42,11 +41,6 @@
        if (skillName === 'Survival')
          return CharSheetUtils.getSheetAttr(character, 'Survival');
      }
-=======
-    getInvestigationMod(character) {
-      return CharSheetUtils.getSheetAttr(character, 'Perception');
-    }
->>>>>>> 74cc68c309981ff00eaf89ddaf560008889649f3
   }
 
   CheckItOut.themes.register(StarfinderSimple);
