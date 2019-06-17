@@ -1,8 +1,8 @@
 /* read Help.txt */
 var CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
     'use strict';
-    var version = 1.0,
-    releasedate= "2019-03-15",
+    var version = 1.001,
+    releasedate= "2019-06-16",
     schemaversion = 1.0,
     author="Natha (roll20userid:75857)",
     warning = "This script is meant to be used with the Cypher Systems by Roll20 sheet.",
@@ -159,7 +159,7 @@ var CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
 	    var npcMaxHealth = 0;
 	    var npcArmor=0;
 	    if (applyArmor!="n"){
-	        npcArmor = parseInt(getAttrByName(characterObj.id, "Armor", "current")) || 0;
+	        npcArmor = parseInt(getAttrByName(characterObj.id, "armor", "current")) || 0;
             //DEBUG
             //sendChat("GM", "/w gm npcDamage() Debug : Armor of ('"+npcName+"', char id:"+characterObj.id+", token id:"+tokenObj.id+") = "+npcArmor);
 	    };
@@ -173,11 +173,11 @@ var CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
 	        // It's a "full" character NPC : get the attributes values
 	        var attObjArray = findObjs({
 	                        _type: "attribute",
-	                        name: "Health",
+	                        name: "health",
 	                        _characterid: characterObj.id
 	                    });
 	        if (attObjArray == false) {
-	            sendChat("GM", "/w gm npcDamage() Error : this character ('"+npcName+"') has no Health attribute!");
+	            sendChat("GM", "/w gm npcDamage() Error : this character ('"+npcName+"') has no 'health' attribute!");
 	            return false;
 	        } else {
 	            npcHealth=parseInt(attObjArray[0].get("current")) || 0;
