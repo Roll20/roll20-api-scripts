@@ -8,6 +8,10 @@
 - "5th Edition OGL by Roll20 Companion"
 - "System Toolbox"
 
+cyphersystem:
+- "Cypher Systems by Roll20 Companion"
+- "System Toolbox"
+
 ammo:
 - "Ammo"
 - "Character"
@@ -553,6 +557,26 @@ powercardshelper:
 darkerdunegeon:
   - "Darker Dungeon"
   - "System Toolbox"
+
+gurpsge:
+  - "GURPS_GE"
+  - "System Toolbox"
+
+eclipsephasecompanion:
+  - "EclipsePhaseAlternateCompanion"
+  - "System Toolbox"
+
+tokenfate:
+  - "tokenFate"
+  - "Utility"
+
+checkitout:
+  - "CheckItOut"
+  - "Utility"
+
+charsheetutils:
+  - "CharSheetUtils"
+  - "Utility"
 
 
 

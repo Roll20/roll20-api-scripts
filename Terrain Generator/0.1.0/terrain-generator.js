@@ -113,6 +113,20 @@ var TerrainGenerator = TerrainGenerator || (function () {
         };
 
         let handleInput = function (msg) {
+            
+            // Process inline rolls from https://wiki.roll20.net/API:Cookbook#processInlinerolls
+            if (_.has(msg, 'inlinerolls')) {
+                msg.content = _.chain(msg.inlinerolls)
+                        .reduce(function(previous, current, index) {
+                            previous['$[[' + index + ']]'] = current.results.total || 0;
+                            return previous;
+                        },{})
+                        .reduce(function(previous, current, index) {
+                            return previous.replace(index, current);
+                        }, msg.content)
+                        .value();
+            }
+            
             if (msg.type !== 'api') {
 
             }
