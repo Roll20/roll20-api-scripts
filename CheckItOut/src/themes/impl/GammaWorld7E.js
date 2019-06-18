@@ -9,6 +9,20 @@
    * @abstract
    */
   CheckItOut.themes.impl.GammaWorld7E = class extends DnD4e {
+    /**
+     * @inheritdoc
+     */
+    get skillNames() {
+      return [
+        'Perception',
+        'Conspiracy',
+        'Insight',
+        'Mechanics',
+        'Nature',
+        'Science'
+      ];
+    }
+
     constructor() {
       super();
     }

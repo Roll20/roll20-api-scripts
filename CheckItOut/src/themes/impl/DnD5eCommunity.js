@@ -21,8 +21,25 @@
     /**
      * @inheritdoc
      */
-    getInvestigationMod(character) {
-      return CharSheetUtils.getSheetAttr(character, 'investigation');
+    getSkillMod(character, skillName) {
+      if (skillName === 'Arcana')
+        return CharSheetUtils.getSheetAttr(character, 'arcana');
+      if (skillName === 'History')
+        return CharSheetUtils.getSheetAttr(character, 'history');
+      if (skillName === 'Insight')
+        return CharSheetUtils.getSheetAttr(character, 'insight');
+      if (skillName === 'Investigation')
+        return CharSheetUtils.getSheetAttr(character, 'investigation');
+      if (skillName === 'Medicine')
+        return CharSheetUtils.getSheetAttr(character, 'medicine');
+      if (skillName === 'Nature')
+        return CharSheetUtils.getSheetAttr(character, 'nature');
+      if (skillName === 'Perception')
+        return CharSheetUtils.getSheetAttr(character, 'perception');
+      if (skillName === 'Religion')
+        return CharSheetUtils.getSheetAttr(character, 'religion');
+      if (skillName === 'Survival')
+        return CharSheetUtils.getSheetAttr(character, 'survival');
     }
   }
 

@@ -11,8 +11,18 @@
     /**
      * @inheritdoc
      */
-    get skillName() {
-      return 'Investigation';
+    get skillNames() {
+      return [
+        'Investigation',
+        'Arcana',
+        'History',
+        'Insight',
+        'Medicine',
+        'Nature',
+        'Perception',
+        'Religion',
+        'Survival'
+      ];
     }
 
     constructor() {
