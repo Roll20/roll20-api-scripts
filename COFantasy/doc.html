@@ -827,7 +827,7 @@
                 <ol>
                   <li><strong>Familier</strong> : créer un token pour le familier, avec vue et controlé par le joueur. Le partage des PV n'est pas géré.</li>
                   <li><strong>Serviteur invisible&nbsp;</strong>: ok</li>
-                  <li><strong>Mur de force</strong> : <code>!cof-mur-de-force ?{Spherique?|Oui|Non,mur} --mana 1 --image <i>path</i></code> où <i>path</i> est l'adresse url d'une image de la librairie Roll20 qui représente un mur de force (sera placé dans le layer map). L'image n'est utilisée qu'en cas de mur sphérique. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Mur de force</strong> : <code>!cof-mur-de-force ?{Spherique?|Oui|Non,mur} --mana 1</code>. Cela affiche une image d'un champ de force, mais seulement si il est sphérique. Il est possible de ne pas avoir d'image en utilisant l'option <code>--no-image</code>, ou d'utiliser une autre image avec l'option <code>--image <i>path</i></code> où <i>path</i> est l'adresse url d'une image de la librairie Roll20 qui représente un mur de force sphérique (sera placé dans le layer map). Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
                   <li>
                     <strong>Épée dansante</strong> :
                     <ul>
@@ -1392,11 +1392,11 @@
                 <h4 class="text-secondary">Voie des créatures magique</h4>
                 <ol>
                   <li><strong>Réduction des DM</strong> : Ajouter un attribut <code>RD_sauf_<i>genre</i></code>, où <i>genre</i> peut être <code>magique</code> ou un des types d'attaque (feu, acide, poison, etc...).</li>
+                  <li><strong>Vitalité surnaturelle</strong> : ajouter un attribut <code>vitaliteSurnaturelle</code>, de valeur courante le nombre de PV régénéré par tour. Si un type de dégât empêche la régénération, inscrire ce type en valeur maximal de l'attribut. Si plusieurs types de dégâts, les séparer par une virgule. Par exemple, un troll aura un attribut <code>vitaliteSurnaturelle</code>, de valeur courante <code>5</code>, et de valeur maximale <code>feu,acide</code>. Si vous voulez réinitialiser les dégâts qui ne peuvent pas se régénérer sur un personnage, vous pouvez utiliser des soins normaux (<code>!cof-soin</code>), et si vous avez augmenté à la main les PVs, vous pouvez effacer les attributs <code>DMSuivis<em>type</em></code> qui ont été créés par le script.</li>
                 </ol>
                 <h4 class="text-secondary">Voie des créatures volantes</h4>
                 <ol>
                   <li><strong>Vol rapide</strong> : simplement faire une variante de l'attaque avec les options <code>--bonusAttaque 5 --plus 1d6</code> à utiliser le premier tour de combat si a créature est en vol et attaque une créature au sol. Ne pas oublier l'action de mouvement supplémentaire en vol.</li>
-                  <li><strong>Vitalité surnaturelle</strong> : ajouter un attribut <code>vitaliteSurnaturelle</code>, de valeur courante le nombre de PV régénéré par tour. Si un type de dégât empêche la régénération, inscrire ce type en valeur maximal de l'attribut. Si plusieurs types de dégâts, les séparer par une virgule. Par exemple, un troll aura un attribut <code>vitaliteSurnaturelle</code>, de valeur courante <code>5</code>, et de valeur maximale <code>feu,acide</code>. Si vous voulez réinitialiser les dégâts qui ne peuvent pas se régénérer sur un personnage, vous pouvez utiliser des soins normaux (<code>!cof-soin</code>), et si vous avez augmenté à la main les PVs, vous pouvez effacer les attributs <code>DMSuivis<em>type</em></code> qui ont été créés par le script.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de la magie de combat</h4>
                 <ol>

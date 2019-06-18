@@ -121,6 +121,11 @@ var COFantasy = COFantasy || function() {
           type: 'image',
           val: "https://s3.amazonaws.com/files.d20.io/images/52767134/KEGYUXeKnxZr5dbDwQEO4Q/thumb.png?15248300835"
         },
+        image_mur_de_force: {
+          explication: "Image utilisée pour un mur de force sphérique",
+          type: 'image',
+          val: "https://s3.amazonaws.com/files.d20.io/images/33213510/5r3NGSso1QBJMJewTEKv0A/thumb.png?1495195634"
+        },
       }
     }
   };
@@ -1724,6 +1729,13 @@ var COFantasy = COFantasy || function() {
     addCellInFramedDisplay(display, cell, 80, false);
   }
 
+  function computeScale(pageId) {
+    var page = getObj("page", pageId);
+          var scale = page.get('scale_number');
+          var unit = page.get('scale_units');
+          if (unit == 'ft') scale *= 0.3048;
+    return scale;
+  }
   //options peut avoir les champs:
   // - strict1 = true si on considère que tok1 doit avoir une taille nulle
   // - strict2
@@ -1732,8 +1744,7 @@ var COFantasy = COFantasy || function() {
     if (pageId === undefined) {
       pageId = tok1.get('pageid');
     }
-    var page = getObj("page", pageId);
-    var scale = page.get('scale_number');
+    var scale = computeScale(pageId);
     var pt1 = tokenCenter(tok1);
     var pt2 = tokenCenter(tok2);
     var distance_pix = VecMath.length(VecMath.vec(pt1, pt2));
@@ -10513,8 +10524,7 @@ var COFantasy = COFantasy || function() {
               _subtype: "token",
               layer: "objects"
             });
-          var page = getObj("page", pageId);
-          var scale = page.get('scale_number');
+          var scale = computeScale(pageId);
           var px = perso.token.get('left');
           var py = perso.token.get('top');
           var pxp = px + 10 * PIX_PER_UNIT / scale;
@@ -13969,53 +13979,62 @@ var COFantasy = COFantasy || function() {
     var cmd = msg.content.split(' ');
     var sphere = true;
     if (cmd.length > 1 && cmd[1] == 'mur') sphere = false;
+    var options = {
+      image: stateCOF.options.images.val.image_mur_de_force.val,
+      mana: 0
+    };
+    var args = msg.content.split(' --');
+    args.shift();
+    args.forEach(function(opt) {
+      var optCmd = opt.split(' ');
+      switch (optCmd[0]) {
+        case 'mana':
+          if (optCmd.length < 2) {
+            error("Il manque le coût en mana", cmd);
+            return;
+          }
+          options.mana = parseInt(optCmd[1]);
+          if (isNaN(options.mana) || options.mana < 0) {
+            error("Coût en mana incorrect", optCmd);
+            options.mana = 0;
+          }
+          return;
+        case 'puissant':
+          options.puissant = true;
+          return;
+        case 'image':
+          if (optCmd.length < 2) {
+            error("Il manque l'adresse de l'image", cmd);
+            return;
+          }
+          options.image = optCmd[1];
+          return;
+        case 'no-image':
+          options.image = undefined;
+          return;
+        default:
+          error("Option inconnue", cmd);
+      }
+    });
     getSelected(msg, function(selected) {
+      if (selected.length === 0) {
+        sendPlayer(msg, "Aucun personnage sélectionner pour lancer le mur de force");
+        return;
+      }
+      var evt = {
+        type: "Mur de force"
+      };
+      initiative(selected, evt);
       iterSelected(selected, function(lanceur) {
         var charId = lanceur.charId;
         var token = lanceur.token;
-        var pageId = lanceur.token.get('pageid');
-        var options = {};
-        var args = msg.content.split(' --');
-        args.shift();
-        args.forEach(function(opt) {
-          var optCmd = opt.split(' ');
-          switch (optCmd[0]) {
-            case 'mana':
-              if (optCmd.length < 2) {
-                error("Il manque le coût en mana", cmd);
-                options.mana = 5;
-                return;
-              }
-              options.mana = parseInt(optCmd[1]);
-              if (isNaN(options.mana) || options.mana < 0) {
-                error("Coût en mana incorrect", optCmd);
-                options.mana = 5;
-              }
-              return;
-            case 'puissant':
-              options.puissant = true;
-              return;
-            case 'image':
-              if (optCmd.length < 2) {
-                error("Il manque l'adresse de l'image", cmd);
-                return;
-              }
-              options.image = optCmd[1];
-              return;
-            default:
-              error("Option inconnue", cmd);
-          }
-        });
-        var evt = {
-          type: "Mur de force"
-        };
+        var pageId = token.get('pageid');
         if (!depenseMana(lanceur, options.mana, "lancer un mur de force", evt)) {
           return;
         }
         sendChar(charId, "lance un sort de mur de force");
         if (options.image && sphere) {
-          var page = getObj("page", pageId);
-          var scale = page.get('scale_number');
+          var scale = computeScale(pageId);
           var diametre = PIX_PER_UNIT * (6 / scale);
           var imageFields = {
             _pageid: pageId,
@@ -14037,8 +14056,8 @@ var COFantasy = COFantasy || function() {
         } else {
           sendChar(charId, '/w "' + token.get('name') + '" ' + "placer l'image du mur sur la carte");
         }
-        addEvent(evt);
       });
+      addEvent(evt);
     });
   }
 
@@ -14549,7 +14568,7 @@ var COFantasy = COFantasy || function() {
   function escalier(msg) {
     getSelected(msg, function(selected) {
       if (selected.length === 0) {
-        sendPlayer(msg, "!cof-escalier sans sélection de token");
+        sendPlayer(msg, "Pas de sélection de token pour !cof-escalier");
         log("!cof-escalier requiert de sélectionner des tokens");
         return;
       }
