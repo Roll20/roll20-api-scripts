@@ -1,8 +1,16 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 
+## 1.11
+### Capacités
+* Destruction des mort-vivants peut maintenant utiliser les options de tempête de mana
+* Mur de force utilise maintenant une image par défaut.
+* Ajout de la capacité vitalité surnaturelle des créatures magiques.
+* Ajout de l'aspect du démon
+
 ## 1.10
 
 ### Capacités
+* Ajout de la capacité corps élémentaire de la voie de l'élémentaire
 * Ajout de la capacité Riposte du champion
 * Ajout de la capacité Seul contre tous du chevalier
 * Ajout de l'enveloppement du cube gelatineux
