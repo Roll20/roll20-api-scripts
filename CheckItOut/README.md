@@ -1,5 +1,9 @@
 # Check It Out
 
+_1.1 Updates_
+* D20 themes now support checks for multiple types of skills.
+* D20 themes support option to use passive skills.
+
 'Check It Out' provides the GM with capabilities to add descriptive properties to
 objects on the VTT's 'objects' layer. The script also provides a macro to the
 players so that they can approach and examine those objects to see those descriptions.
