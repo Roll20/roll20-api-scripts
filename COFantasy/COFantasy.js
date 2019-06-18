@@ -1731,9 +1731,9 @@ var COFantasy = COFantasy || function() {
 
   function computeScale(pageId) {
     var page = getObj("page", pageId);
-          var scale = page.get('scale_number');
-          var unit = page.get('scale_units');
-          if (unit == 'ft') scale *= 0.3048;
+    var scale = page.get('scale_number');
+    var unit = page.get('scale_units');
+    if (unit == 'ft') scale *= 0.3048;
     return scale;
   }
   //options peut avoir les champs:
@@ -15117,10 +15117,49 @@ var COFantasy = COFantasy || function() {
     dm = dm.replace(/\[/g, '&#91;');
     dm = dm.replace(/\]/g, '&#93;');
     getSelected(msg, function(selected, playerId) {
+      if (selected.length === 0) {
+        sendPlayer(msg, "Il faut sélectionner le lanceur de la destruction des morts-vivants");
+        return;
+      }
+      if (selected.length > 1) {
+        sendPlayer(msg, "Ne sélectionner qu'un token à la fois pour lancer la destruction des mort-vivants.");
+        return;
+      }
       iterSelected(selected, function(lanceur) {
+        if (options.tempeteDeMana) {
+          if (options.tempeteDeMana.cout === 0) {
+            //On demande de préciser les options
+            var optMana = {
+              mana: options.mana,
+              dm: true,
+              soins: false,
+              duree: false,
+              rang: options.rang,
+            };
+            setTempeteDeMana(playerId, lanceur, msg.content, optMana);
+            return;
+          } else {
+            if (options.rang && options.tempeteDeMana.cout > options.rang) {
+              sendChar(lanceur.charId, "Attention, le coût de la tempête de mana (" + options.tempeteDeMana.cout + ") est supérieur au rang du sort");
+            }
+          }
+        }
+        if (options.tempeteDeManaIntense) {
+          var findNbDes = dm.match(/^([0-9]+)d/);
+          if (findNbDes && findNbDes.length > 1) {
+            var nbDes = parseInt(findNbDes[1]);
+            dm = dm.replace(findNbDes[0], (nbDes + options.tempeteDeManaIntense) + 'd');
+          } else {
+            log("Pas réussi à trouver le nombre de dés dans " + dm);
+          }
+        }
         var evt = {
           type: "Destruction des morts-vivants"
         };
+        if (!depenseMana(lanceur, options.mana, "lancer une destruction des mort-vivants", evt)) {
+          addEvent(evt);
+          return;
+        }
         var display = startFramedDisplay(playerId,
           "<b>Sort :<b> destruction des morts-vivants", lanceur);
         var name = lanceur.token.get('name');
