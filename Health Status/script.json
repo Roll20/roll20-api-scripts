@@ -1,0 +1,13 @@
+{
+    "name": "Health Status",
+    "script": "healthCommand.js",
+    "version": "0.1",
+    "previousversions": [],
+    "description": "In the old CRPGs (Baldur's Gate, Icewind Dale), you could hover your cursor over a monster and see *roughly* how much health it had. This script aims to let you and your players do just that.\n\n## Commands\n__!hp [token_id]__<br />Used to show the current HP of the target in game chat. Running this command from a macro lets your players use it too.You can use this macro below in your game.\n```\n!hp @{target|token_id}\n```",
+    "authors": "AndrielChaoti",
+    "roll20userid": "303668",
+    "modifies": {
+        "bar1_value": "reads",
+        "bar1_max": "reads"
+    }
+}
