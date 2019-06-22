@@ -35,14 +35,14 @@
        * @inheritdoc
        */
       getAC(character) {
-        return TrapTheme.getSheetAttr(character, 'ac');
+        return CharSheetUtils.getSheetAttr(character, 'ac');
       }
 
       /**
        * @inheritdoc
        */
       getPassivePerception(character) {
-        return TrapTheme.getSheetAttr(character, 'perception')
+        return CharSheetUtils.getSheetAttr(character, 'perception')
         .then(perception => {
           return perception + 10;
         });
@@ -52,7 +52,7 @@
        * @inheritdoc
        */
       getSaveBonus(character, saveName) {
-        return TrapTheme.getSheetAttr(character, SAVE_NAMES[saveName]);
+        return CharSheetUtils.getSheetAttr(character, SAVE_NAMES[saveName]);
       }
 
       /**
@@ -80,7 +80,7 @@
 
         // Perform automated behavior for Trap Spotter.
         if((effect.type === 'trap' || _.isUndefined(effect.type)) && effect.spotDC && character) {
-          TrapTheme.getSheetRepeatingRow(character, 'classabilities', rowAttrs => {
+          CharSheetUtils.getSheetRepeatingRow(character, 'classabilities', rowAttrs => {
             if(!rowAttrs.name)
               return false;
 
@@ -116,10 +116,10 @@
           state.TrapThemePFSimple.trapSpotterAttempts[trapId][charId] = true;
 
         // Make a hidden Perception check to try to notice the trap.
-        TrapTheme.getSheetAttr(character, 'perception')
+        CharSheetUtils.getSheetAttr(character, 'perception')
         .then(perception => {
           if(_.isNumber(perception)) {
-            return TrapTheme.rollAsync(`1d20 + ${perception}`);
+            return CharSheetUtils.rollAsync(`1d20 + ${perception}`);
           }
           else
             throw new Error('Trap Spotter: Could not get Perception value for Character ' + charToken.get('_id') + '.');

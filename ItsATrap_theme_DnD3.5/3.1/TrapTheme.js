@@ -63,7 +63,7 @@
       _doTrapAttack(character, effectResults) {
         return Promise.all([
           this.getAC(character),
-          TrapTheme.rollAsync('1d20 + ' + effectResults.attack)
+          CharSheetUtils.rollAsync('1d20 + ' + effectResults.attack)
         ])
         .then(tuple => {
           let ac = tuple[0];
@@ -86,7 +86,7 @@
       _doTrapTouchAttack(character, effectResults) {
         return Promise.all([
           this.getTouchAC(character),
-          TrapTheme.rollAsync('1d20 + ' + effectResults.attack)
+          CharSheetUtils.rollAsync('1d20 + ' + effectResults.attack)
         ])
         .then(tuple => {
           let ac = tuple[0] || 10;
@@ -103,7 +103,7 @@
        * @inheritdoc
        */
       getAC(character) {
-        return TrapTheme.getSheetAttr(character, 'armorclass');
+        return CharSheetUtils.getSheetAttr(character, 'armorclass');
       }
 
       /**
@@ -116,7 +116,7 @@
             current: 0,
             characterid: character.get('_id')
           });
-        return TrapTheme.getSheetAttr(character, 'spot')
+        return CharSheetUtils.getSheetAttr(character, 'spot')
         .then(spot => {
           return spot + 10;
         });
@@ -126,7 +126,7 @@
        * @inheritdoc
        */
       getSaveBonus(character, saveName) {
-        return TrapTheme.getSheetAttr(character, SAVE_NAMES[saveName]);
+        return CharSheetUtils.getSheetAttr(character, SAVE_NAMES[saveName]);
       }
 
       /**
@@ -156,7 +156,7 @@
        * @inheritdoc
        */
       getTouchAC(character) {
-        return TrapTheme.getSheetAttr(character, 'touchac');
+        return CharSheetUtils.getSheetAttr(character, 'touchac');
       }
 
       /**
