@@ -1,0 +1,20 @@
+{
+    "name": "Mass Combat",
+    "script": "MassCombat.js",
+    "version": "1.0",
+    "previousversions": ["0.9"],
+    "description": "This is the companion script for Kyburn's Mass Combat ruleset for 5e D&D.",
+    "authors": "M. Greene",
+    "roll20userid": "1583758",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {
+        "state.MassCombat": "read,write",
+        "token.status_*": "read,write",
+        "token.bar*": "read,write",
+        "char.[npcstat]": "read,write",
+        "char.[traits]": "read,write",
+        "char.[actions]": "read,write"
+    },
+    "conflicts": []
+}
