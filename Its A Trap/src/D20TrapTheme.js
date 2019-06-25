@@ -43,7 +43,7 @@ var D20TrapTheme = (() => {
     _doTrapAttack(character, effectResults) {
       return Promise.all([
         this.getAC(character),
-        TrapTheme.rollAsync('1d20 + ' + effectResults.attack)
+        CharSheetUtils.rollAsync('1d20 + ' + effectResults.attack)
       ])
       .then(tuple => {
         let ac = tuple[0];
@@ -66,7 +66,7 @@ var D20TrapTheme = (() => {
       .then(saveBonus => {
         saveBonus = saveBonus || 0;
         effectResults.saveBonus = saveBonus;
-        return TrapTheme.rollAsync('1d20 + ' + saveBonus);
+        return CharSheetUtils.rollAsync('1d20 + ' + saveBonus);
       })
       .then((saveRoll) => {
         effectResults.roll = saveRoll;

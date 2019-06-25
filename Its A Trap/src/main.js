@@ -558,7 +558,7 @@ var ItsATrap = (() => {
     let interval = setInterval(() => {
       let theme = getTheme();
       if(theme) {
-        log(`☠☒☠ Initialized It's A Trap! using theme '${getTheme().name}' ☠☒☠`);
+        log(`--- Initialized It's A Trap! vSCRIPT_VERSION, using theme '${getTheme().name}' ---`);
         clearInterval(interval);
       }
       else if(numRetries > 0)
@@ -571,12 +571,16 @@ var ItsATrap = (() => {
   // Handle macro commands.
   on('chat:message', msg => {
     try {
-      if(msg.content === REMOTE_ACTIVATE_CMD) {
+      let argv = msg.content.split(' ');
+      if(argv[0] === REMOTE_ACTIVATE_CMD) {
         let theme = getTheme();
-        _.each(msg.selected, item => {
-          let trap = getObj('graphic', item._id);
+
+        let trapId = argv[1];
+        let trap = getObj('graphic', trapId);
+        if (trap)
           activateTrap(trap);
-        });
+        else
+          throw new Error(`Could not activate trap ID ${trapId}. It does not exist.`);
       }
     }
     catch(err) {

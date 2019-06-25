@@ -33,14 +33,14 @@
        */
       getAC(character) {
         return Promise.all([
-          TrapTheme.getSheetAttr(character, 'AC_calc')
+          CharSheetUtils.getSheetAttr(character, 'AC_calc')
           .then(result => {
             if(_.isNumber(result))
               return result;
             else
               return TrapTheme.forceAttrCalculation(character, 'AC_calc');
           }),
-          TrapTheme.getSheetAttr(character, 'AC_no_armour_calc')
+          CharSheetUtils.getSheetAttr(character, 'AC_no_armour_calc')
           .then(result => {
             if(_.isNumber(result))
               return result;
@@ -58,14 +58,14 @@
        * @inheritdoc
        */
       getPassivePerception(character) {
-        return TrapTheme.getSheetAttr(character, 'passive_perception');
+        return CharSheetUtils.getSheetAttr(character, 'passive_perception');
       }
 
       /**
        * @inheritdoc
        */
       getSaveBonus(character, saveName) {
-        return TrapTheme.getSheetAttr(character, SAVE_NAMES[saveName])
+        return CharSheetUtils.getSheetAttr(character, SAVE_NAMES[saveName])
         .then(result => {
           if(_.isNumber(result))
             return result;
