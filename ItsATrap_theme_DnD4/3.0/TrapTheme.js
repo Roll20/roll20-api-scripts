@@ -26,14 +26,14 @@
        * @inheritdoc
        */
       getDefense(character, defenseName) {
-        return TrapTheme.getSheetAttr(character, DEFENSE_NAMES[defenseName]);
+        return CharSheetUtils.getSheetAttr(character, DEFENSE_NAMES[defenseName]);
       }
 
       /**
        * @inheritdoc
        */
       getPassivePerception(character) {
-        return TrapTheme.getSheetAttr(character, 'passive-perception');
+        return CharSheetUtils.getSheetAttr(character, 'passive-perception');
       }
     }
     ItsATrap.registerTheme(new TrapThemeDnD4());

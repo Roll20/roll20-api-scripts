@@ -104,7 +104,7 @@
           attrName = SHEET_ATTRS[sheet].alertness;
 
         if(attrName)
-          return TrapTheme.getSheetAttr(character, attrName);
+          return CharSheetUtils.getSheetAttr(character, attrName);
         else
           return Promise.reject(new Error('Please provide name of the attribute ' +
             'for Alertness in the One-Click options.'));
@@ -123,7 +123,7 @@
           attrName = SHEET_ATTRS[sheet].perception;
 
         if(attrName)
-          return TrapTheme.getSheetAttr(character, attrName);
+          return CharSheetUtils.getSheetAttr(character, attrName);
         else
           return Promise.reject(new Error('Please provide name of the attribute ' +
             'for Perception in the One-Click options.'));
@@ -285,7 +285,7 @@
        */
       rollWodcDice(dice, difficulty=6) {
         if(dice && difficulty)
-          return TrapTheme.rollAsync(`${dice}d10>${difficulty}`)
+          return CharSheetUtils.rollAsync(`${dice}d10>${difficulty}`)
           .then(roll => {
             if(roll)
               return roll.total;

@@ -95,7 +95,7 @@ var ItsATrapCreationWizard = (() => {
     }
 
     // Remote activate button
-    content.append('div', `[Activate Trap](${ItsATrap.REMOTE_ACTIVATE_CMD})`, {
+    content.append('div', `[Activate Trap](${ItsATrap.REMOTE_ACTIVATE_CMD} ${curTrap.get('_id')})`, {
       style: { 'margin-top' : '2em' }
     });
 
