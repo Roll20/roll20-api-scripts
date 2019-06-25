@@ -21,20 +21,20 @@ This script supports automatically converting prototype creatures into formation
 
 ### Utility & Admin
 - `!mc -overview` Brings up the main menu, which has buttons for all the rest of these.
-- `!mc -makeFormation [NUMBER OF UNITS] [Levied|Manufactured|Mercenary] [Infantry|Cavalry|Archers|Scouts|Mages]` Converts a selected token and its character sheet into a formation.  Once a token has been turned into a formation, the red bar is health, the yellow bar is chaos points, and the blue bar is fatality points.  The bars are not permanently bound to underlying stats in the formation character sheet, so you can create duplicates without them sharing a health pool.  Once created, DO NOT RENAME IT without using the Rename command.  DO NOT MANUALLY ALTER BARS.  Use the damage/heal/recover/revert buttons.  The commands will account for fatality points and chaos points.  Manually altering them will not be detected and math errors usually results in the Long Rest thinking more people died than actually did. :(  EXAMPLE: `!mc -makeFormation 100 Levied Infantry`
-- `!mc -rename ^[NEW NAME]^` Renames the selected formation to the new name.  I use carets instead of quotes because quotes could reasonably show up in a character name.
-- `!mc -history` Displays the operational history with revert buttons.
-- `!mc -battleRating` Displays the total Battle Rating of the selected formations.  If you also select hero units, they will be listed separately.
-- `!mc -upkeep` Displays the total upkeep of the selected formations.
+- `!mc -makeFormation [NUMBER OF UNITS] [Levied|Manufactured|Mercenary] [Infantry|Cavalry|Archers|Scouts|Mages]` Converts a selected token and its character sheet into a formation.  Once a token has been turned into a formation, the red bar is health, the yellow bar is chaos points, and the blue bar is fatality points.  The bars are not permanently bound to underlying stats in the formation character sheet, so you can create duplicates without them sharing a health pool.  Once created, DO NOT RENAME IT without using the Rename command.  DO NOT MANUALLY ALTER BARS.  Use the damage/heal/recover/revert buttons.  The commands will account for fatality points and chaos points.  Manually altering them will not cause problems (unless you make a math error, in which case Long resting usually kills more of your troops).  Here is an example use of this command: `!mc -makeFormation 100 Levied Infantry`
+- `!mc -rename ^[NEW NAME]^` Renames the selected formation to the new name.  I use carets instead of quotes because quotes could reasonably show up in a character name.  For example `!mc -rename ^Bilbo Baggins^`
+- `!mc -history` Nearly every operation that changes the state of a formation creates an operation history entry.  This command allows you to peruse them and selectively revert them.
+- `!mc -battleRating` Displays the total Battle Rating of the selected formations.  If you also select hero units, they will also be displayed, but listed separately.
+- `!mc -upkeep` Displays the total upkeep of the selected formations, taking into account what creature type they are, how they are acquired, their CR, and how many there are.  It does not account for equipment costs.
 - `!mc -saveInitiative` Saves the current initiative order, in case you wish to zoom in on an encounter for a hero.  Warning: using this more than once will overwrite the previous save.
 - `!mc -loadInitiative` Loads the saved initiative order.
 
 ### Statistics
 All these operations require a selected formation token.
-- `!mc -resize [NUMBER OF UNITS]` Resizes the selected formation to the new size, adjusting hit points and action damage.  This is implicitly performed by the Long Rest and Make Formation commands.
+- `!mc -resize [NUMBER OF UNITS]` Resizes the selected formation to have a new number of members, automatically adjusting hit points and action damage.  This is implicitly performed by the Long Rest and Make Formation commands.  Advanced calculations in these fields is not supported at this time.  Should the script encounter something it cannot parse, it will abort that action, inform the user, and continue on with any other actions the formation might have.
 - `!mc -setInt [NEW INT MODIFIER]` Sets the commander's intelligence modifier to the specified value, which is used for attack modifiers.
-- `!mc -ac` Displays the AC of the selected formation.
-- `!mc -speed` Displays the speed of the selected formation.
+- `!mc -ac` Displays the AC of the selected formation.  This button exists because a lot of people store AC in one of the other token bars, but Mass Combat occupies all three.
+- `!mc -speed` Displays the speed of the selected formation.  Similar to AC, this exists because a lot of people put speed in the other token bar.
 - `!mc -morale` Brings up the Morale menu with lots of configuration options for the selected formation.  The menu also includes a Leadership check roll.
 
 ### Battle
@@ -50,7 +50,7 @@ All these operations require a selected formation token.  Those operations that 
 - `!mc -recover` Removes the icon and converts chaos points into hit points.
 #### Restore
 - `!mc -heal [HEAL POINTS]` Attempts to heal a formation by the provided value.  It will be capped by the presence of fatality and chaos points.
-- `!mc -longrest yes` Performs the long rest operation on the selected formations.  This will first convert chaos points to hit points, and then reduce the maximum hit points by fatality points and downscale the formation to account for fatalities.  The user is presented with the number of dead and survivors.  Action damage will automatically be scaled down to account for this.  Like pop disorganization, this has a confirmation parameter for UI usability.
+- `!mc -longrest yes` Performs the long rest operation on the selected formations.  This will first convert chaos points to hit points, and then Resize (see above) the formation to account for fatalities.  The user is then presented with the number of dead and survivors.  Like pop disorganization, this has a confirmation parameter for UI usability.
 #### Stance
 - `!mc -guard` Toggles the Guarding status icon for guarding formations.
 - `!mc -defend` Toggles the Defending status icon for defending formations.
