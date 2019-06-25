@@ -53,6 +53,38 @@ var ItsATrap = (() => {
    *        The victim that triggered the trap.
    */
   function activateTrap(trap, activatingVictim) {
+    let effect = new TrapEffect(trap);
+    if(effect.delay) {
+      // Set the interdiction status on the trap so that it doesn't get
+      // delay-activated multiple times.
+      effect.trap.set('status_interdiction', true);
+
+      // Activate the trap after the delay.
+      setTimeout(() => {
+        _activateTrap(trap);
+      }, 1000*effect.delay);
+
+      // Let the GM know that the trap has been triggered.
+      let announcer = state.ItsATrap.userOptions.announcer;
+      if(activatingVictim)
+        sendChat(announcer, `/w gm The trap ${effect.name} has been ` +
+          `triggered by ${activatingVictim.get('name')}. ` +
+          `It will activate in ${effect.delay} seconds.`);
+      else
+        sendChat(announcer, `/w gm The trap ${effect.name} has been ` +
+          `triggered. It will activate in ${effect.delay} seconds.`);
+    }
+    else
+      _activateTrap(trap, activatingVictim);
+  }
+
+  /**
+   * Helper for activateTrap.
+   * @param {Graphic} trap
+   * @param {Graphic} [activatingVictim]
+   *        The victim that triggered the trap.
+   */
+  function _activateTrap(trap, activatingVictim) {
     let theme = getTheme();
     let effect = new TrapEffect(trap);
 
@@ -99,7 +131,10 @@ var ItsATrap = (() => {
           triggerDist = _.chain(effect.triggerPaths)
           .map(pathId => {
             let path = getObj('path', pathId);
-            return getSearchDistance(token, path);
+            if(path)
+              return getSearchDistance(token, path);
+            else
+              return Number.POSITIVE_INFINITY;
           })
           .min()
           .value();
@@ -163,6 +198,10 @@ var ItsATrap = (() => {
 
       let trapEffect = (new TrapEffect(trap, token)).json;
       trapEffect.stopAt = trapEffect.stopAt || 'center';
+
+      // Should this trap ignore the token?
+      if(trapEffect.ignores && trapEffect.ignores.includes(token.get('_id')))
+        return false;
 
       // Figure out where to stop the token.
       if(trapEffect.stopAt === 'edge' && !trapEffect.gmOnly) {
@@ -278,14 +317,17 @@ var ItsATrap = (() => {
     .map(trap => {
       let effect = new TrapEffect(trap);
       if(effect.triggerPaths) {
-        return _.map(effect.triggerPaths, id => {
+        return _.chain(effect.triggerPaths)
+        .map(id => {
           if(pathsToTraps[id])
             pathsToTraps[id].push(trap);
           else
             pathsToTraps[id] = [trap];
 
-          return getObj('path', id) || trap;
-        });
+          return getObj('path', id);
+        })
+        .compact()
+        .value();
       }
       else
         return trap;
@@ -351,7 +393,6 @@ var ItsATrap = (() => {
    * @return {Graphic[]}
    */
   function getTrapVictims(trap, triggerVictim) {
-    let range = trap.get('aura1_radius');
     let pageId = trap.get('_pageid');
 
     let effect = new TrapEffect(trap);
@@ -378,18 +419,25 @@ var ItsATrap = (() => {
     // Case 2: The trap itself defines the blast area.
     else {
       victims = [triggerVictim];
+
+      let range = trap.get('aura1_radius');
+      let squareArea = trap.get('aura1_square');
       if(range !== '') {
         let pageScale = getObj('page', pageId).get('scale_number');
         range *= 70/pageScale;
-        let squareArea = trap.get('aura1_square');
-
-        victims = victims.concat(LineOfSight.filterTokens(trap, otherTokens, range, squareArea));
       }
+      else
+        range = 0;
+
+      victims = victims.concat(LineOfSight.filterTokens(trap, otherTokens, range, squareArea));
     }
 
     return _.chain(victims)
     .unique()
     .compact()
+    .reject(victim => {
+      return effect.ignores.includes(victim.get('_id'));
+    })
     .value();
   }
 
@@ -544,7 +592,7 @@ var ItsATrap = (() => {
     let interval = setInterval(() => {
       let theme = getTheme();
       if(theme) {
-        log(`☒☠☒ Initialized It's A Trap! using theme '${getTheme().name}' ☒☠☒`);
+        log(`--- Initialized It's A Trap! v3.9.1, using theme '${getTheme().name}' ---`);
         clearInterval(interval);
       }
       else if(numRetries > 0)
@@ -557,12 +605,16 @@ var ItsATrap = (() => {
   // Handle macro commands.
   on('chat:message', msg => {
     try {
-      if(msg.content === REMOTE_ACTIVATE_CMD) {
+      let argv = msg.content.split(' ');
+      if(argv[0] === REMOTE_ACTIVATE_CMD) {
         let theme = getTheme();
-        _.each(msg.selected, item => {
-          let trap = getObj('graphic', item._id);
+
+        let trapId = argv[1];
+        let trap = getObj('graphic', trapId);
+        if (trap)
           activateTrap(trap);
-        });
+        else
+          throw new Error(`Could not activate trap ID ${trapId}. It does not exist.`);
       }
     }
     catch(err) {
@@ -661,7 +713,6 @@ var TrapEffect = (() => {
   };
 
   return class TrapEffect {
-
     /**
      * An API chat command that will be executed when the trap is activated.
      * If the constants TRAP_ID and VICTIM_ID are provided,
@@ -689,6 +740,15 @@ var TrapEffect = (() => {
      */
     get areaOfEffect() {
       return this._effect.areaOfEffect;
+    }
+
+    /**
+     * The delay for the trap in seconds. If undefined or 0, the trap
+     * activates instantly when triggered.
+     * @type {uint}
+     */
+    get delay() {
+      return this._effect.delay;
     }
 
     /**
@@ -732,6 +792,15 @@ var TrapEffect = (() => {
      */
     get gmOnly() {
       return this._effect.gmOnly;
+    }
+
+    /**
+     * A list of IDs for tokens that this trap ignores. These tokens will neither
+     * trigger nor be affected by the trap.
+     * @type {string[]}
+     */
+    get ignores() {
+      return this._effect.ignores || [];
     }
 
     /**
@@ -1185,6 +1254,13 @@ var TrapEffect = (() => {
         sendChat('It\'s A Trap', command);
       }
     }
+
+    /**
+     * Saves the current trap effect properties to the trap's token.
+     */
+    save() {
+      this._trap.set('gmnotes', JSON.stringify(this.json));
+    }
   };
 })();
 
@@ -1300,6 +1376,13 @@ var ItsATrapCreationWizard = (() => {
     curTrap = trapToken;
     let content = new HtmlBuilder('div');
 
+    if(!trapToken.get('status_cobweb')) {
+      trapToken.set('status_cobweb', true);
+      trapToken.set('name', 'A cunning trap');
+      trapToken.set('aura1_square', true);
+      trapToken.set('gmnotes', getDefaultJson());
+    }
+
     // Core properties
     content.append('h4', 'Core properties');
     let coreProperties = getCoreProperties(trapToken);
@@ -1344,13 +1427,12 @@ var ItsATrapCreationWizard = (() => {
     }
 
     // Remote activate button
-    content.append('div', `[Activate Trap](${ItsATrap.REMOTE_ACTIVATE_CMD})`, {
+    content.append('div', `[Activate Trap](${ItsATrap.REMOTE_ACTIVATE_CMD} ${curTrap.get('_id')})`, {
       style: { 'margin-top' : '2em' }
     });
 
     let menu = _showMenuPanel('Trap Configuration', content);
     _whisper(who, menu.toString(MENU_CSS));
-    trapToken.set('status_cobweb', true);
   }
 
   /**
@@ -1459,6 +1541,17 @@ var ItsATrapCreationWizard = (() => {
   }
 
   /**
+   * Produces JSON for default trap properties.
+   * @return {string}
+   */
+  function getDefaultJson() {
+    return JSON.stringify({
+      effectShape: 'rectangle',
+      stopAt: 'center'
+    });
+  }
+
+  /**
    * Gets a list of the core trap properties for a trap token dealing
    * with revealing the trap.
    * @param {Graphic} token
@@ -1545,7 +1638,7 @@ var ItsATrapCreationWizard = (() => {
         name: 'Trap shape',
         desc: 'To set paths, you must also select one or more paths defining the trap\'s blast area. A fill color must be set for tokens inside the path to be affected.',
         value: trapEffect.effectShape || ' circle',
-        options: [ 'circle', 'square', 'paths']
+        options: [ 'circle', 'rectangle', 'set selected paths', 'add selected paths', 'remove selected paths']
       },
     ];
   }
@@ -1723,7 +1816,7 @@ var ItsATrapCreationWizard = (() => {
         name: 'Set Trigger',
         desc: 'To set paths, you must also select the paths that trigger the trap.',
         value: trapEffect.triggerPaths || 'self',
-        options: ['self', 'paths']
+        options: ['self', 'set selected paths', 'add selected paths', 'remove selected paths']
       },
       {
         id: 'triggers',
@@ -1739,6 +1832,19 @@ var ItsATrapCreationWizard = (() => {
           else
             return undefined;
         })()
+      },
+      {
+        id: 'ignores',
+        name: 'Ignore Tokens',
+        desc: 'Select one or more tokens to be ignored by this trap.',
+        value: trapEffect.ignores || 'none',
+        options: ['none', 'set selected tokens', 'add selected tokens', 'remove selected tokens']
+      },
+      {
+        id: 'delay',
+        name: 'Delay Activation',
+        desc: 'When the trap is triggered, its effect is delayed for the specified number of seconds. For best results, also be sure to set an area effect for the trap and set the Stops Tokens At property of the trap to None.',
+        value: trapEffect.delay + ' seconds' || '-'
       }
     ];
   }
@@ -1776,6 +1882,8 @@ var ItsATrapCreationWizard = (() => {
       else
         trapEffect.areaOfEffect = undefined;
     }
+    if(prop === 'delay')
+      trapEffect.delay = params[0] || undefined;
     if(prop === 'destroyable')
       trapEffect.destroyable = params[0] === 'yes';
     if(prop === 'disabled')
@@ -1783,13 +1891,36 @@ var ItsATrapCreationWizard = (() => {
     if(prop === 'effectDistance')
       trapToken.set('aura1_radius', parseInt(params[0]));
     if(prop === 'effectShape') {
-      if(['circle', 'square'].includes(params[0])) {
+      if(['circle', 'square', 'rectangle'].includes(params[0])) {
         trapEffect.effectShape = params[0];
-        trapToken.set('aura1_square', params[0].includes('square'));
+        trapToken.set('aura1_square',
+          params[0].includes('square') || params[0].includes('rectangle'));
       }
-      else if(params[0] === 'paths' && selected) {
+      else if(params[0] === 'set selected paths' && selected) {
         trapEffect.effectShape = _.map(selected, path => {
           return path.get('_id');
+        });
+        trapToken.set('aura1_square', false);
+      }
+      else if(params[0] === 'add selected paths' && selected) {
+        if(!_.isArray(trapEffect.effectShape))
+          trapEffect.effectShape = [];
+
+        trapEffect.effectShape = trapEffect.effectShape
+        .concat(_.map(selected, path => {
+          return path.get('_id');
+        }));
+        trapToken.set('aura1_square', false);
+      }
+      else if(params[0] === 'remove selected paths' && selected) {
+        if(!_.isArray(trapEffect.effectShape))
+          trapEffect.effectShape = [];
+
+        let selectedIds = _.map(selected, token => {
+          return token.get('_id');
+        });
+        trapEffect.effectShape = _.reject(trapEffect.effectShape, id => {
+          return selectedIds.includes(id);
         });
         trapToken.set('aura1_square', false);
       }
@@ -1816,6 +1947,33 @@ var ItsATrapCreationWizard = (() => {
     }
     if(prop === 'gmOnly')
       trapEffect.gmOnly = params[0] === 'yes';
+    if(prop === 'ignores')
+      if(params[0] === 'set selected tokens' && selected)
+        trapEffect.ignores = _.map(selected, token => {
+          return token.get('_id');
+        });
+      else if(params[0] === 'add selected tokens' && selected) {
+        if(!_.isArray(trapEffect.ignores))
+          trapEffect.ignores = [];
+
+        trapEffect.ignores = trapEffect.ignores
+        .concat(_.map(selected, token => {
+          return token.get('_id');
+        }));
+      }
+      else if(params[0] === 'remove selected tokens' && selected) {
+        if(!_.isArray(trapEffect.ignores))
+          trapEffect.ignores = [];
+
+        let selectedIds = _.map(selected, token => {
+          return token.get('_id');
+        });
+        trapEffect.ignores = _.reject(trapEffect.ignores, id => {
+          return selectedIds.includes(id);
+        });
+      }
+      else
+        trapEffect.ignores = undefined;
     if(prop === 'kaboom')
       if(params[0])
         trapEffect.kaboom = {
@@ -1849,10 +2007,31 @@ var ItsATrapCreationWizard = (() => {
         return trigger.trim();
       });
     if(prop === 'triggerPaths')
-      if(params[0] === 'paths' && selected)
+      if(params[0] === 'set selected paths' && selected)
         trapEffect.triggerPaths = _.map(selected, path => {
           return path.get('_id');
         });
+      else if(params[0] === 'add selected paths' && selected) {
+        if(!_.isArray(trapEffect.triggerPaths))
+          trapEffect.triggerPaths = [];
+
+        trapEffect.triggerPaths = trapEffect.triggerPaths
+        .concat(_.map(selected, path => {
+          return path.get('_id');
+        }));
+      }
+      else if(params[0] === 'remove selected paths' && selected) {
+        if(!_.isArray(trapEffect.triggerPaths))
+          trapEffect.triggerPaths = [];
+
+        let selectedIds = _.map(selected, path => {
+          return path.get('_id');
+        });
+
+        trapEffect.triggerPaths = _.reject(trapEffect.triggerPaths, id => {
+          return selectedIds.includes(id);
+        });
+      }
       else
         trapEffect.triggerPaths = undefined;
 
@@ -2026,134 +2205,6 @@ var TrapTheme = (() => {
     }
 
     /**
-     * Attempts to force a calculated attribute to be corrected by
-     * setting it.
-     * @param {Character} character
-     * @param {string} attr
-     */
-    static forceAttrCalculation(character, attr) {
-      // Attempt to force the calculation of the save modifier by setting it.
-      createObj('attribute', {
-        _characterid: character.get('_id'),
-        name: attr,
-        current: -9999
-      });
-
-      // Then try again.
-      return CharSheetUtils.getSheetAttr(character, attr)
-      .then(result => {
-        if(_.isNumber(result))
-          return result;
-        else
-          log('Could not calculate attribute: ' + attr + ' - ' + result);
-      });
-    }
-
-    /**
-     * Asynchronously gets the value of a character sheet attribute.
-     * @param  {Character} character
-     * @param  {string} attr
-     * @return {Promise<number>}
-     *         Contains the value of the attribute.
-     */
-    static getSheetAttr(character, attr) {
-      if(attr.includes('/'))
-        return CharSheetUtils.getSheetRepeatingAttr(character, attr);
-      else {
-        let rollExpr = '@{' + character.get('name') + '|' + attr + '}';
-        return CharSheetUtils.rollAsync(rollExpr)
-        .then((roll) => {
-          if(roll)
-            return roll.total;
-          else
-            throw new Error('Could not resolve roll expression: ' + rollExpr);
-        })
-        .then(value => {
-          if(_.isNumber(value))
-            return value;
-
-          // If the attribute is autocalculated, but could its current value
-          // could not be resolved, try to force it to calculate its value as a
-          // last-ditch effort.
-          else
-            return TrapTheme.forceAttrCalculation(character, attr);
-        });
-      }
-    }
-
-    /**
-     * Asynchronously gets the value of a character sheet attribute from a
-     * repeating row.
-     * @param {Character} character
-     * @param {string} attr
-     *        Here, attr has the format "sectionName/nameFieldName/nameFieldValue/valueFieldName".
-     *        For example: "skills/name/perception/total"
-     * @return {Promise<number>}
-     *         Contains the value of the attribute.
-     */
-    static getSheetRepeatingAttr(character, attr) {
-      let parts = attr.split('/');
-      let sectionName = parts[0];
-      let nameFieldName = parts[1];
-      let nameFieldValue = parts[2].toLowerCase();
-      let valueFieldName = parts[3];
-
-      // Find the row with the given name.
-      return CharSheetUtils.getSheetRepeatingRow(character, sectionName, rowAttrs => {
-        let nameField = rowAttrs[nameFieldName];
-        return nameField.get('current').toLowerCase().trim() === nameFieldValue;
-      })
-
-      // Get the current value of that row.
-      .then(rowAttrs => {
-        let valueField = rowAttrs[valueFieldName];
-        return valueField.get('current');
-      });
-    }
-
-    /**
-     * Gets the map of attributes inside of a repeating section row.
-     * @param {Character} character
-     * @param {string} section
-     *        The name of the repeating section.
-     * @param {func} rowFilter
-     *        A filter function to find the correct row. The argument passed to it is a
-     *        map of attribute names (without the repeating section ID part - e.g. "name"
-     *        instead of "repeating_skills_-123abc_name") to their actual attributes in
-     *        the current row being filtered. The function should return true iff it is
-     *        the correct row we're looking for.
-     * @return {Promise<any>}
-     *         Contains the map of attributes.
-     */
-    static getSheetRepeatingRow(character, section, rowFilter) {
-      // Get all attributes in this section and group them by row.
-      let attrs = findObjs({
-        _type: 'attribute',
-        _characterid: character.get('_id')
-      });
-
-      // Group the attributes by row.
-      let rows = {};
-      _.each(attrs, attr => {
-        let regex = new RegExp(`repeating_${section}_(-([0-9a-zA-Z\-_](?!_storage))+?|\$\d+?)_([0-9a-zA-Z\-_]+)`);
-        let match = attr.get('name').match(regex);
-        if(match) {
-          let rowId = match[1];
-          let attrName = match[3];
-          if(!rows[rowId])
-            rows[rowId] = {};
-
-          rows[rowId][attrName] = attr;
-        }
-      });
-
-      // Find the row that matches our filter.
-      return Promise.resolve(_.find(rows, rowAttrs => {
-        return rowFilter(rowAttrs);
-      }));
-    }
-
-    /**
      * Gets a list of a trap's theme-specific configured properties.
      * @param {Graphic} trap
      * @return {TrapProperty[]}
@@ -2219,26 +2270,6 @@ var TrapTheme = (() => {
      */
     passiveSearch(trap, charToken) {
       throw new Error('Not implemented.');
-    }
-
-    /**
-     * Asynchronously rolls a dice roll expression and returns the result's total in
-     * a callback. The result is undefined if an invalid expression is given.
-     * @param  {string} expr
-     * @return {Promise<int>}
-     */
-    static rollAsync(expr) {
-      return new Promise((resolve, reject) => {
-        sendChat('TrapTheme', '/w gm [[' + expr + ']]', (msg) => {
-          try {
-            let results = msg[0].inlinerolls[0].results;
-            resolve(results);
-          }
-          catch(err) {
-            reject(err);
-          }
-        });
-      });
     }
   };
 })();

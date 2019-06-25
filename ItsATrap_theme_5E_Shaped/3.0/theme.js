@@ -32,7 +32,7 @@
        * @inheritdoc
        */
       getAC(character) {
-        return TrapTheme.getSheetAttr(character, 'AC');
+        return CharSheetUtils.getSheetAttr(character, 'AC');
       }
 
       /**
@@ -53,7 +53,7 @@
           let idEnd = attrName.lastIndexOf('_');
           let rowId = attrName.substring(idStart, idEnd);
 
-          return TrapTheme.getSheetAttr(character, 'repeating_skill_' + rowId + '_passive');
+          return CharSheetUtils.getSheetAttr(character, 'repeating_skill_' + rowId + '_passive');
         }
         else {
           return Promise.resolve();
@@ -64,7 +64,7 @@
        * @inheritdoc
        */
       getSaveBonus(character, saveName) {
-        return TrapTheme.getSheetAttr(character, SAVE_NAMES[saveName]);
+        return CharSheetUtils.getSheetAttr(character, SAVE_NAMES[saveName]);
       }
     }
     ItsATrap.registerTheme(new TrapTheme5EShaped());

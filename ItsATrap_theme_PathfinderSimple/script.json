@@ -1,7 +1,7 @@
 {
     "name": "It's a Trap! - Pathfinder (Simple) theme",
     "script": "theme.js",
-    "version": "3.1.1",
+    "version": "3.1.2",
     "previousversions": ["1.0", "3.0", "3.1"],
     "description": "# It's A Trap! - Pathfinder (Simple) theme (Deprecated)\r\rThis script is deprecated. Please use the generic Pathfinder trap theme instead.\r",
     "authors": "Stephen Lindberg",

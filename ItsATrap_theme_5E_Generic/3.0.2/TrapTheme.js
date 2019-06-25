@@ -79,7 +79,7 @@
           attrName = sheet.ac
 
         if(attrName)
-          return TrapTheme.getSheetAttr(character, attrName);
+          return CharSheetUtils.getSheetAttr(character, attrName);
         else
           return Promise.reject(new Error('Please provide name of the attribute for AC in the One-Click options.'));
       }
@@ -96,14 +96,14 @@
           attrName = sheet.passivePerception;
 
         if(attrName)
-          return TrapTheme.getSheetAttr(character, attrName);
+          return CharSheetUtils.getSheetAttr(character, attrName);
         else {
           attrName = getOption('perceptionModifier');
           if(sheet)
             attrName = sheet.perceptionModifier;
 
           if(attrName)
-            return TrapTheme.getSheetAttr(character, attrName)
+            return CharSheetUtils.getSheetAttr(character, attrName)
             .then(value => {
               return value + 10;
             });
@@ -127,7 +127,7 @@
           attrName = sheet[key];
 
         if(attrName)
-          return TrapTheme.getSheetAttr(character, attrName);
+          return CharSheetUtils.getSheetAttr(character, attrName);
         else
           return Promise.reject('Please provide name of the attribute for ' +
             saveName + ' save modifier in the One-Click options.');
