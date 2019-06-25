@@ -1,0 +1,15 @@
+{
+    "name": "Difficulty Rating",
+    "script": "DifficultyRating.js",
+    "version": "1.03",
+    "previousversions": [],
+    "description": "This script allows automatic difficulty calculation for 5th Edition D&D Encounters.  It is compatible with the OGL and 5e-Shaped scripts.",
+    "authors": "M. Greene",
+    "roll20userid": "1583758",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {
+        "state.DifficultyRating": "read,write"
+    },
+    "conflicts": []
+}
