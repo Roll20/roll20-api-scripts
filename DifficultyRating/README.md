@@ -17,10 +17,17 @@ Once installed, upon API startup, Difficulty Rating will prompt the user in the 
 
 After initial setup, simply add your player characters to the default party, drag some NPCs onto the board, select them, and click the Calculate button.
 
-## Credits
+## Links
+
+### Credits
 
 - Author: [Michael G.](https://app.roll20.net/users/1583758/michael-g)/[VoltCruelerz](https://github.com/VoltCruelerz)
 - Designer: [Wolf Thunderspirit](https://app.roll20.net/users/2762597)
+
+# Sourcing
+
+- [Github](https://github.com/Roll20/roll20-api-scripts/tree/master/DifficultyRating)
+- [Forums](https://app.roll20.net/forum/post/7542136/script-difficulty-rating-5e-encounter-calculator)
 
 ## Version History
 
