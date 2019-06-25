@@ -582,6 +582,7 @@ healthstatus:
   - "Health Status"
   - "Utility"
 
-
-
+difficultyrating:
+  - "Difficulty Rating"
+  - "System Toolbox"
 
