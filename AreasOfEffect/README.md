@@ -1,7 +1,7 @@
 # Areas of Effect
 
-_v1.6 Updates_
-* Implemented buttons to export and import the script's state across campaigns.
+_v1.6.1 Updates_
+* Fixed unicode icons in chat menu.
 
 GMs, your spellcasting players will love you for this script! It lets you
 create graphical areas of effect for various spells and other powers, and then
