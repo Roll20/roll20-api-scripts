@@ -1,6 +1,6 @@
 {
-    "name": "Standby",
-    "script": "Standby.js",
+    "name": "Initiative Standby",
+    "script": "Initiative-Standby.js",
     "version": "0.1",
     "previousversions": [],
     "description": "",
