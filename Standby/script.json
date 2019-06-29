@@ -1,0 +1,15 @@
+{
+    "name": "Standby",
+    "script": "Standby.js",
+    "version": "0.1",
+    "previousversions": [],
+    "description": "",
+    "authors": "M. Greene",
+    "roll20userid": "1583758",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {
+        "Campaign.turnorder": "read,write"
+    },
+    "conflicts": []
+}
