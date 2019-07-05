@@ -13,5 +13,5 @@
         "attribute": "read,write,create",
         "ability": "read,write,create"
     },
-    "conflicts": [""]
+    "conflicts": []
 }
