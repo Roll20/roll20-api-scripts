@@ -31,7 +31,7 @@ e.g. 'pit trap' or 'explosive runes'
 #### Type
 The It's A Trap! script, contrary to its name, can be used to automate more kinds of
 hidden objects than just traps. By default, the value of this property will just be
-'trap', but you could define it to be something like 'hazard", "hidden enemy",
+'trap', but you could define it to be something like 'hazard', 'hidden enemy',
 or 'concealed item' instead. This type will appear in the trap's header when
 it is activated.
 
