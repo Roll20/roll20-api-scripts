@@ -1,7 +1,10 @@
-# It's A Trap! - D&D 4th Edition
+# It's A Trap! - 5th Edition (Community) theme (Deprecated)
 
-This is a trap theme to support the D&D 4th Edition character sheet by
-Alex L., Ville S., and Wesley L..
+This is a D&D 5th edition trap theme for the It's A Trap! script, compatible with
+the 5th Edition (Community) character sheet by John Myles (Actoba).
+
+This trap theme is deprecated and planned for removal from the Roll20 API when
+the next version of It's A Trap! is released. Please use the 5E Generic Trap Theme instead.
 
 ## Help
 
