@@ -178,8 +178,7 @@ var ItsATrap = (() => {
         token.set("left", x);
         token.set("top", y);
       }
-      else if(trapEffect.stopAt === 'center' && !trapEffect.gmOnly &&
-          ['circle', 'rectangle'].includes(trapEffect.effectShape)) {
+      else if(trapEffect.stopAt === 'center' && !trapEffect.gmOnly) {
         let x = trap.get("left");
         let y = trap.get("top");
 

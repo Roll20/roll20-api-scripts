@@ -432,17 +432,7 @@ var TrapEffect = (() => {
             stroke: '#ff0000'
           }));
 
-          // Construct a fake player object to create the effect for.
-          // This will correctly set the AoE's controlledby property to ''
-          // to denote that it is controlled by no one.
-          let fakePlayer = {
-            get: function() {
-              return '';
-            }
-          };
-
-          // Create the AoE.
-          let aoeGraphic = AreasOfEffect.applyEffect(fakePlayer, this.areaOfEffect.name, path);
+          let aoeGraphic = AreasOfEffect.applyEffect('', this.areaOfEffect.name, path);
           aoeGraphic.set('layer', 'map');
           toFront(aoeGraphic);
         }
