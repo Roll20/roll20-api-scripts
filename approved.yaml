@@ -594,5 +594,8 @@ initiativestandby:
  - "Initiative-Standby"
  - Utility
 
+handsup:
+  - "HandsUp"
+  - Utility
 
 
