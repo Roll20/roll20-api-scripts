@@ -3,7 +3,7 @@
   "script": "damageControl.js",
   "version": "1.0",
   "previousversions": [],
-  "description": "Auto-calculation Damage and Armor degradation.",
+  "description": "Only work with the sheet : Cyberpunk 2k20 V2 !!! Auto-calculation Damage and Armor degradation.",
   "authors": "Michael Notaro",
   "roll20userid": "812421"
 }
