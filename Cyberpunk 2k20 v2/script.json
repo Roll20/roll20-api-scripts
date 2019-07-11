@@ -1,6 +1,6 @@
 {
   "name": "micka9fr",
-  "script": "damageControl.js",
+  "script": "cyberpunk_2k20_v2_damage_control_api.js",
   "version": "1.0",
   "previousversions": [],
   "description": "Only work with the sheet : Cyberpunk 2k20 V2 !!! Auto-calculation Damage and Armor degradation.",
