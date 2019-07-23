@@ -339,6 +339,17 @@ var CustomStatusMarkers = (() => {
 
     icon.set('left', left);
     icon.set('top', top);
+
+    // Bring the icon to the front.
+    let controlledBy = token.get('controlledby');
+    if (!controlledBy) {
+      let charId = token.get('represents');
+      if (charId) {
+        let character = getObj('character', charId);
+        controlledBy = character.get('controlledby');
+      }
+    }
+    icon.set('controlledby', controlledBy);
     toFront(icon);
 
     // Move the badge, if the icon marker has one.
