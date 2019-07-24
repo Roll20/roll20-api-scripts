@@ -497,8 +497,9 @@ var ItsATrapCreationWizard = (() => {
             _type: 'jukeboxtrack'
           });
           let trackNames = _.map(tracks, track => {
-            return track.get('title');
+            return _htmlEncode(track.get('title'));
           });
+          trackNames.sort();
           return ['none', ...trackNames];
         })()
       }
@@ -562,6 +563,29 @@ var ItsATrapCreationWizard = (() => {
         })()
       }
     ];
+  }
+
+  /**
+   * HTML-decodes a string.
+   * @param {string} str
+   * @return {string}
+   */
+  function _htmlDecode(str) {
+    return str.replace(/#(\d+);/g, (match, code) => {
+      return String.fromCharCode(code);
+    });
+  }
+
+  /**
+   * HTML-encodes a string, making it safe to use in chat-based action buttons.
+   * @param {string} str
+   * @return {string}
+   */
+  function _htmlEncode(str) {
+    return str.replace(/[{}()\[\]<>!@#$%^&*\/\\'"+=,.?]/g, match => {
+      let charCode = match.charCodeAt(0);
+      return `#${charCode};`;
+    });
   }
 
   /**
@@ -712,7 +736,7 @@ var ItsATrapCreationWizard = (() => {
     if(prop === 'searchDist')
       trapToken.set('aura2_radius', parseInt(params[0]));
     if(prop === 'sound')
-      trapEffect.sound = params[0];
+      trapEffect.sound = _htmlDecode(params[0]);
     if(prop === 'stopAt')
       trapEffect.stopAt = params[0];
     if(prop === 'tokenMod')
