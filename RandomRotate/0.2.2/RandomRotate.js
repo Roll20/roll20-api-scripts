@@ -5,11 +5,11 @@
 var RandomRotate = RandomRotate || (function(){
 	'use strict';
 
-	var version = '0.2.3',
-        lastUpdate = 1565053927,
+	var version = '0.2.2',
+        lastUpdate = 1564442879,
 
 	checkInstall = function(){
-          log('-=> RandomRotate v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+        log('-=> RandomRotate v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
 	},
 
 	showHelp = function() {
@@ -27,11 +27,6 @@ var RandomRotate = RandomRotate || (function(){
 	+'<div style="padding-left:10px;"><b><span style="font-family: serif;">!random-rotate</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'Adjusts the rotation of all the selected tokens to a random angle.'
-		+'</div>'
-	+'</div>'
-	+'<div style="padding-left:10px;"><b><span style="font-family: serif;">!random-spread</span></b>'
-		+'<div style="padding-left: 10px;padding-right:20px">'
-			+'Adjusts the location of the selected tokens to a random location within the bounds of the current token positions.'
 		+'</div>'
 	+'</div>'
 +'</div>'
