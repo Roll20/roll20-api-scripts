@@ -262,7 +262,7 @@ const ChatSetAttr = (function () {
 						let moddedValue = parseFloat(v) + parseFloat(attr.get(k) || "0");
 						if (!_.isNaN(moddedValue)) {
 							if (opts.modb && k === "current") {
-								moddedValue = Math.min(Math.max(moddedValue, 0), parseFloat(attr.get("max")) || Infinity);
+								moddedValue = Math.min(Math.max(moddedValue, 0), parseFloat(attr.get("max") || Infinity));
 							}
 							newValue[k] = moddedValue;
 						} else {
