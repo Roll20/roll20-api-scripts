@@ -2,41 +2,41 @@
 // By:       The Aaron, Arcane Scriptomancer
 // Contact:  https://app.roll20.net/users/104025/the-aaron
 
-var Torch = Torch || (function() {
-    'use strict';
+const Torch = (() => { // eslint-disable-line no-unused-vars
 
-    var version = '0.8.12',
-        lastUpdate = 1563585897,
-        schemaVersion = 0.1,
-		flickerURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
-		flickerPeriod = 400,
-		flickerDeltaLocation = 2,
-		flickerDeltaRadius = 0.1,
-		flickerDeltaAngle = 5,
+    const version = '0.8.13';
+    const lastUpdate = 1565053382;
+    const schemaVersion = 0.1;
+	const flickerURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659';
+	const flickerPeriod = 400;
+	const flickerDeltaLocation = 2;
+	const flickerDeltaRadius = 0.1;
+	const flickerDeltaAngle = 5;
 
-	ch = function (c) {
-		var entities = {
-			'<' : 'lt',
-			'>' : 'gt',
-			"'" : '#39',
-			'@' : '#64',
-			'{' : '#123',
-			'|' : '#124',
-			'}' : '#125',
-			'[' : '#91',
-			']' : '#93',
-			'"' : 'quot',
-			'-' : 'mdash',
-			' ' : 'nbsp'
-		};
+    const ch = (c) => {
+        const entities = {
+            '<' : 'lt',
+            '>' : 'gt',
+            "'" : '#39',
+            '@' : '#64',
+            '{' : '#123',
+            '|' : '#124',
+            '}' : '#125',
+            '[' : '#91',
+            ']' : '#93',
+            '"' : 'quot',
+            '*' : 'ast',
+            '/' : 'sol',
+            ' ' : 'nbsp'
+        };
 
-		if(_.has(entities,c) ){
-			return ('&'+entities[c]+';');
-		}
-		return '';
-	},
+        if( entities.hasOwnProperty(c) ){
+            return `&${entities[c]};`;
+        }
+        return '';
+    };
 
-	showHelp = function(who) {
+	const showHelp = (who) => {
         sendChat('',
             '/w "'+who+'" '+
     '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
@@ -119,10 +119,10 @@ var Torch = Torch || (function() {
         '</div>'+
     '</div>'
             );
-    },
-	setFlicker = function(o,r,d,p,a) {
-		var found = _.findWhere(state.Torch.flickers, {parent: o.id}),
-			fobj;
+    };
+	const setFlicker = (o,r,d,p,a) => {
+		let found = _.findWhere(state.Torch.flickers, {parent: o.id});
+		let fobj;
 
 		if( found ) {
 			fobj = getObj('graphic',found.id);
@@ -172,26 +172,26 @@ var Torch = Torch || (function() {
             light_angle: a
 
 		};
-	},
+	};
 
-	clearFlicker = function(fid) {
-		var f = getObj('graphic',fid);
+	const clearFlicker = (fid) => {
+		const f = getObj('graphic',fid);
         if(f) {
             f.remove();
         }
 		delete state.Torch.flickers[fid];
-	},
+	};
 	
-	handleInput = function(msg) {
-		var args, radius, dim_radius, arc_angle=360, other_players, page, objs=[],who,whoChar;
+	const handleInput = (msg) => {
+		let radius, dim_radius, arc_angle=360, other_players, page, objs=[];
 
 		if (msg.type !== "api") {
 			return;
 		}
-        whoChar = (getObj('player',msg.playerid)||{get:()=>'API'});
-        who=whoChar.get('_displayname');
+        let whoChar = (getObj('player',msg.playerid)||{get:()=>'API'});
+        let who=whoChar.get('_displayname');
 
-		args = msg.content.split(" ");
+		let args = msg.content.split(" ");
 		switch(args[0]) {
 			case '!torch':
 				if((args[1]||'').match(/^(--)?help$/) || ( !_.has(msg,'selected') && args.length < 5)) {
@@ -199,14 +199,14 @@ var Torch = Torch || (function() {
 					return;
 				}
                 radius = parseInt(args[1],10) || 40;
-                dim_radius = parseInt(args[2],10) || (radius/2);
+                dim_radius = ( (undefined === args[2] || '-' === args[2]) ? (radius/2) : parseInt(args[2],10) );
 				other_players = _.contains([1,'1','on','yes','true','sure','yup','-'], args[3] || 1 );
 
                 objs = _.chain(args)
                     .rest(4)
                     .uniq()
                     .filter(function(a){
-                        var angle=a.match(/^--(\d+)$/);
+                        let angle=a.match(/^--(\d+)$/);
                         if(angle){
                             arc_angle=(Math.min(360,Math.max(0,angle[1])));
                             return false;
@@ -322,14 +322,14 @@ var Torch = Torch || (function() {
 					return;
 				}
                 radius = parseInt(args[1],10) || 40;
-                dim_radius = parseInt(args[2],10) || (radius/2);
+                dim_radius = ( (undefined === args[2] || '-' === args[2]) ? (radius/2) : parseInt(args[2],10) );
 				other_players = _.contains([1,'1','on','yes','true','sure','yup','-'], args[3] || 1 );
 
                 objs=_.chain(args)
                     .rest(4)
                     .uniq()
                     .filter(function(a){
-                        var angle=a.match(/^--(\d+)$/);
+                        let angle=a.match(/^--(\d+)$/);
                         if(angle){
                             arc_angle=(Math.min(360,Math.max(0,angle[1])));
                             return false;
@@ -386,8 +386,8 @@ var Torch = Torch || (function() {
         ])
     ];
 
-	const animateFlicker = function() {
-		var pages = getActivePages();
+	const animateFlicker = () => {
+		let pages = getActivePages();
 
 		_.chain(state.Torch.flickers)
 			.where({active:true})
@@ -395,7 +395,7 @@ var Torch = Torch || (function() {
 				return _.contains(pages,o.page);
 			})
 			.each(function(fdata){
-				var o = getObj('graphic',fdata.parent),
+				let o = getObj('graphic',fdata.parent),
 					f = getObj('graphic',fdata.id),
 					dx, dy, dr, da;
 
@@ -419,10 +419,10 @@ var Torch = Torch || (function() {
 					}
 				}
 			});
-	},
+	};
 
-	handleTokenDelete = function(obj) {
-		var found = _.findWhere(state.Torch.flickers, {parent: obj.id});
+	const handleTokenDelete = (obj) => {
+		let found = _.findWhere(state.Torch.flickers, {parent: obj.id});
 
 		if(found) {
 			clearFlicker(found.id);
@@ -432,9 +432,9 @@ var Torch = Torch || (function() {
 				delete state.Torch.flickers[obj.id];
 			}
 		}
-	},
+	};
 
-	checkInstall = function() {
+	const checkInstall = () => {
         log('-=> Torch v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
 
         if( ! _.has(state,'Torch') || state.Torch.version !== schemaVersion) {
@@ -447,22 +447,18 @@ var Torch = Torch || (function() {
 		}
 
 		setInterval(animateFlicker,flickerPeriod);
-	},
+	};
 
-	registerEventHandlers = function() {
+	const registerEventHandlers = () => {
 		on('chat:message', handleInput);
 		on('destroy:graphic', handleTokenDelete);
 	};
 
-	return {
-		CheckInstall: checkInstall,
-		RegisterEventHandlers: registerEventHandlers
-	};
-}());
+    on("ready",() => {
+        checkInstall();
+        registerEventHandlers();
+    });
 
-on("ready",function(){
-	'use strict';
+	return { };
+})();
 
-	Torch.CheckInstall();
-	Torch.RegisterEventHandlers();
-});
