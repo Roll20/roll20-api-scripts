@@ -1094,16 +1094,11 @@ const GroupCheck = (() => {
       };
 
       if (opts.process) {
-        Promise.all(rollData.map(o => new Promise((resolve, reject) => {
-          const formula = `${o.formula}${o.roll2 ? `<br>${o.formula}` : ""}`;
-          try {
-            sendChat("", formula, msg => resolve(msg));
-          } catch(err) {
-            reject(err);
-          }
+        Promise.all(rollData.map(o => new Promise((resolve) => {
+          sendChat("", `${o.formula}${o.roll2 ? `<br>${o.formula}` : ""}`, resolve);
         })))
-          .catch(sendErrorMessage)
-          .then(messages => sendFinalMessage(messages, opts, checkName, rollData));
+          .then(messages => sendFinalMessage(messages, opts, checkName, rollData))
+          .catch(sendErrorMessage);
       } else {
         try {
           const rolls = rollData.map((roll, index, list) => {
