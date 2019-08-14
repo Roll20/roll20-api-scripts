@@ -205,7 +205,7 @@ var ItsATrapCreationWizard = (() => {
         id: 'notes',
         name: 'GM Notes',
         desc: 'Additional secret notes shown only to the GM when the trap is activated.',
-        value: trapEffect.notes
+        value: trapEffect.notes || '-'
       },
       {
         id: 'destroyable',
@@ -248,7 +248,7 @@ var ItsATrapCreationWizard = (() => {
         id: 'searchDist',
         name: 'Max Search Distance',
         desc: 'How far away can characters passively search for this trap?',
-        value: trapToken.get('aura2_radius') || trapEffect.searchDist
+        value: trapToken.get('aura2_radius') || trapEffect.searchDist || '-'
       },
       {
         id: 'revealToPlayers',
@@ -301,13 +301,13 @@ var ItsATrapCreationWizard = (() => {
         id: 'effectDistance',
         name: 'Blast distance',
         desc: 'How far away can the trap affect other tokens?',
-        value: trapToken.get('aura1_radius') || 0
+        value: trapToken.get('aura1_radius') || '-'
       },
       {
         id: 'stopAt',
         name: 'Stops Tokens At',
         desc: 'Does this trap stop tokens that pass through its trigger area?',
-        value: trapEffect.stopAt,
+        value: trapEffect.stopAt || 'center',
         options: ['center', 'edge', 'none']
       },
       {
@@ -424,7 +424,7 @@ var ItsATrapCreationWizard = (() => {
             id: 'tokenMod',
             name: 'TokenMod script',
             desc: 'Modify affected tokens with the TokenMod script by The Aaron.',
-            value: trapEffect.tokenMod
+            value: trapEffect.tokenMod || '-'
           };
       })()
     ]);
@@ -450,7 +450,7 @@ var ItsATrapCreationWizard = (() => {
         id: 'api',
         name: 'API Command',
         desc: 'An API command which the trap runs when it is activated. The constants TRAP_ID and VICTIM_ID will be replaced by the object IDs for the trap and victim. Multiple API commands are now supported by separating each command with &quot;&#59;&#59;&quot;.',
-        value: trapEffect.api
+        value: trapEffect.api || '-'
       },
       {
         id: 'fx',
@@ -491,7 +491,7 @@ var ItsATrapCreationWizard = (() => {
         id: 'sound',
         name: 'Sound',
         desc: 'A sound from your jukebox that will play when the trap is activated.',
-        value: trapEffect.sound,
+        value: trapEffect.sound || '-',
         options: (() => {
           let tracks = findObjs({
             _type: 'jukeboxtrack'
