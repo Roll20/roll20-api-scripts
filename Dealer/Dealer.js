@@ -3,7 +3,7 @@ log('-=> Dealer v' + version + ' <=-');
 
 // Last Updated: 2019-08-16
 // A script to deal and take cards to selected users from specified decks.
-// Syntax is !deal [give,take] [number of cards to take as integer] [--name of deck]
+// Syntax is !deal --[give,take] [number of cards as integer] --[deck name]
 
 on('chat:message', (msg) => {
     if ('api' === msg.type && /!deal\b/i.test(msg.content) && msg.selected) {
