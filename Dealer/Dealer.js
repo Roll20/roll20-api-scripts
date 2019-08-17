@@ -1,10 +1,10 @@
-        const version = '1.0.0';
-        log('-=> Dealer v'+version+' <=-');
+const version = '1.0.0';
+log('-=> Dealer v' + version + ' <=-');
 
 on('chat:message', (msg) => {
     if ('api' === msg.type && /!deal\b/i.test(msg.content) && msg.selected) {
- 
-        
+
+
         //get parameter and use default of 'give' if parameter is missing or malformed
         const args = msg.content.split(/\s+--/);
 
@@ -75,7 +75,7 @@ on('chat:message', (msg) => {
 
 
         // give card to player
-        // If the ownerid is undefined (no valid controller) perform the transaction
+        // If the ownerid is undefined (no valid controller) explain and exit
         if (!ownerid) {
             sendChat('deal', '/w gm If a token represents a character controlled by \'All Players\', an individual player must be also be specified. If there are multiple controllers, only the first will get inspiration.');
             return;
@@ -93,8 +93,6 @@ on('chat:message', (msg) => {
             }
             // get playerId of Token controller
             //assign selected token to a variable
-
-
 
             switch (cardAction) {
                 case 'take':
@@ -122,7 +120,6 @@ on('chat:message', (msg) => {
                     giveCardToPlayer(cardid, ownerid);
                     break;
             }
-
 
             numCards--;
             log("numCards = " + numCards)
