@@ -1,6 +1,10 @@
+        const version = '1.0.0';
+        log('-=> Dealer v'+version+' <=-');
+
 on('chat:message', (msg) => {
     if ('api' === msg.type && /!deal\b/i.test(msg.content) && msg.selected) {
-        //        log(msg);
+ 
+        
         //get parameter and use default of 'give' if parameter is missing or malformed
         const args = msg.content.split(/\s+--/);
 
