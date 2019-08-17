@@ -21,8 +21,6 @@ on('chat:message', (msg) => {
 
         let numCards = args[1].split(/\s+/)[1];
         numCards = Number((Number.isInteger(Number(numCards))) ? numCards : 1);
-        log("numCards = " + numCards)
-
 
         const actions = ['give', 'take'];
         let cardAction = 'give';
@@ -30,7 +28,6 @@ on('chat:message', (msg) => {
             cardAction = action;
         }
         let deckChoice = args[2] || 'Playing Cards';
-        log('card action is ' + cardAction);
 
         //getid of deck
         let theDeck = findObjs({
