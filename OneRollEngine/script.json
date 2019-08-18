@@ -1,0 +1,20 @@
+{
+    "name": "One Roll Engine Matching Sets",
+    "script": "matchingSets.js",
+    "version": "0.2",
+    "previousversions": ["0.1"],
+    "description": "This script automatically finds sets of matching dice in rolled dice pools. It is intended to support \"Matching Set\" style games like One Roll Engine or Mistborn RPG. It provides an auto-match function along with a !sets roll modifier (see the readme for usage).",
+    "authors": "Ean M., dart44",
+    "roll20userid": "9863, 12366",
+    "useroptions": [
+        {
+            "name": "Die Size", 
+            "type": "number",
+            "default": 10,
+            "description": "This is the size of die used in your game's dice pool. The script with automatically find matches in any dice pool of this size. "
+        }
+    ],
+    "dependencies": [],
+    "modifies": {},
+    "conflicts": []
+}

@@ -1,154 +1,91 @@
 # Custom Status Markers
-
-_2.1 Updates_
-* Chat-based menu. Users no longer need to interact with this script using chat commands.
-
-_v2.0 Updates_
-* Code clean-up.
-* Cleaner, expanded, and easy to use exposed API.
-* Bug fixes.
-
-##### Dependencies:
-* Path Math
-
 This script allows users to create custom status markers for tokens.
 When this script is installed, it creates a 'CustomStatusMarkers' macro for
 displaying the script's menu.
 
 ## Opening the menu
-
 To open the script's menu, just run the 'CustomStatusMarkers' macro installed
 by this script.
 
-## Creating status markers
+## Custom Status Markers menu
+This menu shows all your game's custom status markers and allows you and your
+players to toggle them on and off on tokens they control.
 
-You can create markers either as graphics or as drawn paths. When you've
-chosen the graphic/made your drawing for the marker, do the following to
-save it:
-1) Select the marker's graphic/paths.
-2) Click the 'New Status Marker' button in the menu.
-
-### Setting/toggling status markers on tokens
-
+### Toggle
 To give a token a custom status marker or to remove a custom status marker from
 a token, do the following:
-1) Select one or more tokens to assign the status maker to.
-2) Click the status marker button in the menu.
 
-You can also add a number to the status marker by clicking the '#' next to it
-in the menu.
+1. Select one or more tokens to assign the status maker to.
+2. Click the 'toggle' button for the status marker button in the menu.
+
+### Counter (# button)
+You can create a numerical badge for status markers.
+
+1. Select one or more tokens to set a status badge to.
+2. Click the 'count' button for the status marker you want a badge for.
+3. Enter the number for the badge. Enter nothing to remove the badge.
+
+### Tint (rainbow button)
+You can set a tint color for status marker icons.
+
+1. Select one or more tokens to set a status badge to.
+2. Click the palette button for the status marker you want to change the icon tint color for.
+3. Enter in the color name or hex value. Enter nothing to remove the tint color.
 
 ### Deleting status markers
+You can delete one of your saved custom status markers by clicking the 'X'
+button next to it in the menu. This button is only available to the GM.
 
-You can delete one of your saved custom status markers by clicking the 'del'
-button next to it in the menu.
+## Options menu
+This menu provides global configurations used by the Custom Status Markers
+script. It is only available to the GM.
 
-### Clearing the Custom Status Markers state
+### Icon Size
+This configuration sets the size of the script's status icons, in pixels.
 
-A command is provided for clearing the Custom Status Markers module's state.
+### Icon Alignment
+This configuration sets how custom status icons are displayed relative to
+their host token and built-in status markers. Options include:
+
+* Above: Custom status markers are displayed above their token.
+* Inline: Custom status markers are displayed in front of their token, alongside any built-in status markers.
+
+## Menu Actions
+This menu has several buttons for managing the game's custom status markers.
+It is only available to the GM.
+
+### New Status Marker
+You can create markers from any graphic you have uploaded to your library. When you've
+chosen the graphic for the marker, do the following to save it:
+
+1. Select the marker's graphic.
+2. Click the 'New Status Marker' button in the menu.
+3. Give it a name.
+
+### Remove Token Markers
+This button removes all custom status markers currently on the selected token.
+
+### Import/Export State
+The Import State and Export State buttons allow GMs to transfer their custom
+status markers between games. Clicking Export State will show the JSON data
+for the current game's custom status markers. This JSON can be copied and
+pasted into the Import State button's prompt in another game. Please note that
+importing the state will overwrite the custom status markers already
+in the game.
+
+### Clear State
+This command will clear the Custom Status Markers module's state.
 Warning: This will delete all your saved custom status markers!
 
-### API documentation
-The following classes and functions are exposed through the CustomStatusMarkers
-object:
+## Help
+If you experience any issues while using this script or the trap themes,
+need help using it, or if you have a neat suggestion for a new feature,
+please shoot me a PM:
+https://app.roll20.net/users/46544/stephen-l
+or create a help thread on the Roll20 API forum
 
-```
-/**
- * Adds a custom status marker to a token, with an optional count badge.
- * @param  {Graphic} token
- * @param  {String} statusName
- * @param  {String} [count]
- */
-function addStatusMarker(token, statusName, count)
-
-/**
- * Clears the Custom Status Markers state for a particular token.
- * @param  {Graphic} token
- */
-function clearTokenState(token)
-
-/**
- * Deletes a custom status marker template.
- * @param  {string}   statusName
- */
-function deleteTemplate(statusName)
-
-/**
- * Returns this module's object for the Roll20 API state.
- * @return {Object}
- */
-function getState()
-
-/**
- * Gets the names of all the custom status markers on a token.
- * @param {Graphic} token
- * @return {string[]}
- */
-function getStatusMarkers(token)
-
-/**
- * Loads a StatusMarkerTemplate from the module state.
- * @param  {String}   statusName
- * @param  {Function(StatusMarkerTemplate)} callback
- */
-function getTemplate(statusName, callback)
-
-/**
- * Checks if a token has the custom status marker with the specified name.
- * @param {graphic} token
- * @param {string} statusName
- * @return {boolean}
- *         True iff the token has the custom status marker active.
- */
-function hasStatusMarker(token, statusName)
-
-/**
- * Registers a Custom Status Markers event handler.
- * Each handler takes a token and a StatusMarker as parameters.
- * The following events are supported: 'add', 'change', 'remove'
- * @param {string} event
- * @param {function} handler
- */
-function on(event, handler)
-
-/**
- * Deletes a custom status marker from a token.
- * @param {Graphic} token
- * @param {String} statusName
- */
-function removeStatusMarker(token, statusName)
-
-/**
- * Removes all custom status markers from a token.
- * @param {Graphic} token
- */
-function removeStatusMarkers(token)
-
-/**
- * Moves a token's custom status markers to their correct positions.
- * @param {Graphic} token
- */
-function repositionStatusMarkers(token)
-
-/**
- * Saves a custom status marker template.
- * @param {String} statusName
- * @param {(Graphic|Path|Path[])} icon
- */
-function saveTemplate(statusName, icon)
-
-/**
- * Toggles a custom status marker on a token, with an optional count badge.
- * @param  {Graphic} token
- * @param  {String} statusName
- * @param  {String} [count]
- */
-function toggleStatusMarker(token, statusName, count)
-
-/**
- * Removes a custom status marker event handler.
- * @param {string} event
- * @param {function} handler
- */
-function un(event, handler)
-```
+## Show Support
+If you would like to show your appreciation and support for the work I do in writing,
+updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/publisher/165/stephen-lindberg)
+or, simply leave a thank you note in the script's thread on the Roll20 forums.
+Either is greatly appreciated! Happy gaming!

@@ -1,0 +1,13 @@
+{
+	"name": "Tales from the Loop Die Roller",
+	"script": "TalesDieRoller.js",
+	"version": "1.0",
+	"previousversions": ["none"],
+	"description": "This is a Die Roller used for Tales from the Loop dice rolls.",
+	"authors": "Barry Snyder",
+	"roll20userid": "399162",
+	"useroptions": [],
+	"dependencies": [],
+	"modifies": {},
+	"conflicts": []
+}

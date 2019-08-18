@@ -1,0 +1,1497 @@
+<html lang="fr">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<meta name="description" content="Documentation du script COFantasy sous Roll20">
+		<meta name="author" content="Ulti & Kamille">
+		<title>Scripts pour Chroniques Oubliées Fantasy sous Roll20</title>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+		<script src="https://use.fontawesome.com/4ee7d58794.js"></script>
+	</head>
+	<body data-target="#list" data-spy="scroll" data-offset="10">
+		<script>
+			$('document').ready(function() {      
+        $(document).on('click', '#start', function() {
+          $('.start').toggle();
+          $('div.sticky-top ul.collapse').collapse('hide');
+        });
+			     
+        if (window.location.hash) {
+          $('.start').toggle();
+          $(document).scrollTop( $(window.location.hash).offset().top );
+        }
+			  
+			  $('[data-toggle="popover"]').popover();
+        
+        $(document).on('click', '[data-href]', function(){
+          window.open($(this).data('href'));
+        });
+			     
+        $('a[href^="http://"], a[href^="https://"]').attr('target','_blank');
+
+        $('div.sticky-top ul.collapse').on('show.bs.collapse', function () {
+        $('div.sticky-top ul.collapse').collapse('hide');
+        });
+			});
+		</script>
+		<style>
+			body{position: relative;}
+			.jumbotron.start{margin-top: 20px;}
+			[data-toggle="popover"], button, [data-href] {cursor: pointer}
+			.jumbotron p {margin-bottom: 0}
+			img{margin: 0 auto; display: block; border-radius: 3px; -webkit-box-shadow: 0px 3px 8px 1px rgba(61, 61, 61,0.40); -moz-box-shadow: 0px 3px 8px 1px rgba(61, 61, 61,0.40); box-shadow: 0px 3px 8px 1px rgba(61, 61, 61,0.4);}
+			.card, img:hover{-webkit-box-shadow: 0px 3px 8px 1px rgba(61, 61, 61,0.60); -moz-box-shadow: 0px 3px 8px 1px rgba(61, 61, 61,0.60); box-shadow: 0px 3px 8px 1px rgba(61, 61, 61,0.60);}
+      .card {margin-bottom: 20px;}
+      .card > img {-webkit-box-shadow: none; -moz-box-shadow: none; box-shadow: none;}
+      .card.added > img {-webkit-filter: grayscale(100%); -moz-filter: grayscale(100%); -o-filter: grayscale(100%); -ms-filter: grayscale(100%); filter: grayscale(100%); }
+      .card .card-title {height: 52px; overflow: hidden}
+			figcaption {font-size: 0.7em; text-align: center; margin-top: -0.7rem; margin-bottom: 0.7rem;}
+      div.decalage {margin-left: 10px;}
+      h3.text-info {margin-top: 30px;}
+      h4.text-secondary {margin-top: 30px;}
+      .content li {margin-top: 10px}
+      div.decalage > h3.text-info:first-child, div.decalage > h4.text-secondary:first-child, .content li:first-child {margin-top: 0px;}
+      div.alert > p:last-child {margin-bottom: 0}
+      #json_data textarea {margin-bottom: 10px;}
+      #json_data button {margin-bottom: 10px; margin-right: 5px float: right;}
+      #json_data button::after {clear: both;}
+		</style>
+		<div class="container">
+			<div class="jumbotron start">
+				<h1 class="display-3">Chroniques Oubliées Fantasy</h1>
+				<p class="lead">Documentation du script <a href="http://www.black-book-editions.fr/forums.php?topic_id=7842">COFantasy</a> sous Roll20</p>
+				<hr class="my-4">
+				<p>Ce document a pour but de vous aider à installer et configurer le script COFantasy sur le site <a href="https://roll20.net/">Roll20.net</a>.</p>
+				<p>Prérequis:</p>
+        <ul>
+					<li>Un <a href="https://app.roll20.net/account/supporter">compte Pro</a> sur Roll20 afin de pouvoir intégrer des scripts.</li>
+					<li>
+						Un niveau de connaissance minimum sur Roll20.<br />
+						<div class="alert alert-light" role="alert">
+							<p>Nous ferons de notre mieux pour détailler au mieux les procédures mais notre but ici n'est pas de vous expliquer le fonctionnement de Roll20 et nous partirons du principe que vous avez des notions sur ce dernier.<br />Si ce n'est pas le cas, nous vous invitons tout d'abord à vous familiariser avec l'outils et savoir notamment créer/utiliser :</p>
+              <ul>
+								<li>des <i><a href="https://wiki.roll20.net/Macros">Macros</a></i></li>
+								<li>des <i><a href="https://wiki.roll20.net/Journal#Attributes_.26_Abilities_Tab">Attributs</a> et des <a href="https://wiki.roll20.net/Journal#Attributes_.26_Abilities_Tab">Capacités</a></i> des personnages</li>
+							</ul>
+						</div>
+					</li>
+					<li>Feuille de Personnages : <a data-toggle="popover" data-placement="bottom" data-html="true" data-content='<a href="https://lh3.googleusercontent.com/-CYiltExxZ_o/VZJjtdEcbkI/AAAAAAAAV7Q/8YWjPOXZ3u8/w1005-h652-no/Roll20_CO_setting.png"><img src="https://lh3.googleusercontent.com/-CYiltExxZ_o/VZJjtdEcbkI/AAAAAAAAV7Q/8YWjPOXZ3u8/w1005-h652-no/Roll20_CO_setting.png" class="img-fluid"/></a><p class="text-center"><small>Cliquer pour agrandir</small></p>' href="#">Chroniques Oubliées Fantasy (French)</a> par <a href="http://www.black-book-editions.fr/forums.php?topic_id=5255">Nata</a></li>
+					<li>Le script <a href="https://wiki.roll20.net/Script:Vector_Math">Vector math</a> pour certains calculs de distance et de collision (fait partie de la librairie de script Roll20 qui s'installe en un clic).</li>
+				</ul>
+				<p class="lead text-center">
+					<button type="button" class="btn btn-primary" id="start"><i class="fa fa-rocket" aria-hidden="true"></i> C'est parti</button>
+				</p>
+			</div>
+		</div>
+		<div class="container-fluid">
+			<div class="collapse start hide">
+				<div class="row">
+					<div class="col-md-3 col-sm-4 d-none d-sm-block d-md-block d-lg-block d-xl-block">
+						<div class="sticky-top">
+							<h1>Sommaire</h1>
+							<ol>
+								<li id="start"><a href="#">Introduction</a></li>
+								<li data-toggle="collapse" data-target="#how_to_use"><a href="#comment_utiliser_script">Comment utiliser Le script</a></li>
+								<ul id="how_to_use" class="collapse">
+									<li><a class="text-info" href="#token_personnages">Tokens et personnages</a></li>
+									<li><a class="text-info" href="#macros_abilities">Macros et Abilities</a></li>
+									<li><a class="text-info" href="#methode_selection_groupes">Méthode de sélection de groupes</a></li>
+									<li><a class="text-info" href="#regles_optionnelles">Règles optionnelles utilisées</a></li>
+								</ul>
+								<li data-toggle="collapse" data-target="#main_action"><a href="#action_principales">Actions principales</a></li>
+								<ul id="main_action" class="collapse">
+									<li><a class="text-info" href="#le_combat">Le combat</a></li>
+									<li><a class="text-info" href="#soins">Soins</a></li>
+									<li><a class="text-info" href="#annulation">Annulation</a></li>
+									<li><a class="text-info" href="#repos">Repos</a></li>
+									<li><a class="text-info" href="#chance">Chance</a></li>
+									<li><a class="text-info" href="#surprise">Surprise</a></li>
+									<li><a class="text-info" href="#statut_etats">Statut et états</a></li>
+									<li><a class="text-info" href="#sorts">Sorts</a></li>
+									<li><a class="text-info" href="#consommables">Consommables</a></li>
+									<li><a class="text-info" href="#deplacements">Déplacements</a></li>
+									<li><a class="text-info" href="#lumiere">Lumière</a></li>
+									<li><a class="text-info" href="#jet_caracteristiques">Jet de Caracteristiques</a></li>
+								</ul>
+								<li data-toggle="collapse" data-target="#abilities"><a href="#">Capacités par Classe</a></li>
+								<ul id="abilities" class="collapse">
+									<li><a class="text-info" href="#Arquebusier">Arquebusier</a></li>
+									<li><a class="text-info" href="#Barbare">Barbare</a></li>
+									<li><a class="text-info" href="#Barde">Barde</a></li>
+									<li><a class="text-info" href="#Chevalier">Chevalier</a></li>
+									<li><a class="text-info" href="#Druide">Druide</a></li>
+									<li><a class="text-info" href="#Ensorceleur">Ensorceleur</a></li>
+									<li><a class="text-info" href="#Forgesort">Forgesort</a></li>
+									<li><a class="text-info" href="#Guerrier">Guerrier</a></li>
+									<li><a class="text-info" href="#Invocateur">Invocateur</a></li>
+									<li><a class="text-info" href="#Magicien">Magicien</a></li>
+									<li><a class="text-info" href="#Moine">Moine</a></li>
+									<li><a class="text-info" href="#Necromancien">Nécromancien</a></li>
+									<li><a class="text-info" href="#Pretre">Prêtre</a></li>
+									<li><a class="text-info" href="#Psionique">Psionique</a></li>
+									<li><a class="text-info" href="#Rôdeur">Rôdeur</a></li>
+									<li><a class="text-info" href="#Samouraï">Samouraï</a></li>
+									<li><a class="text-info" href="#Voleur">Voleur</a></li>
+								</ul>
+                <li data-toggle="collapse" data-target="#autres_capacites"><a href="#Autres_capacités">Autres capacités</a></li>
+								<ul id="autres_capacites" class="collapse">
+									<li><a class="text-info" href="#Capacites_raciales">Voies et capacités raciales</a></li>
+									<li><a class="text-info" href="#Prestige">Voies de prestige</a></li>
+									<li><a class="text-info" href="#Créatures">Voies de créature</a></li>
+									<li><a class="text-info" href="#Capacites_diverses">Capacités diverses</a></li>
+                </ul>
+							</ol>
+						</div>
+					</div>
+					<div class="col-md-9 col-sm-8 content">
+						<h2 class="text-primary" id="comment_utiliser_script">2. Comment utiliser Le script</h2>
+            <div class="decalage">
+              <h3 class="text-info" id="token_personnages">2.1 Tokens et personnages</h3>
+              <div class="decalage">
+                <p>Ces scripts ont été écrits pour fonctionner avec les fiches de personnages développées par <a href="https://github.com/Roll20/roll20-character-sheets/tree/master/ChroniquesOubliees">Natha</a>.</p>
+                <p><img class="img-fluid" src="https://i.imgur.com/rF0Qxht.png" data-href="https://i.imgur.com/rF0Qxht.png"></p>
+                <figcaption>A choisir pendant la création de la partie sur Roll20.</figcaption>
+              </div>
+              <p>Chaque token avec lequel vous souhaitez interagir doit représenter un personnage.</p>
+              <p>La barre 1 représente toujours les points de vie du token (attribut PV pour un PJ et pnj_pv pour un PNJ, si vous liez la barre à un attribut).<br />
+                La barre 2 est soit la mana, pour les personnages qui ont des points de mana, soit les dégâts temporaires pour les personnages qui n’ont pas de points de mana<br />
+                La barre 3 est utilisée pour donner un modificateur temporaire à l’attaque du token.
+              </p>
+              <p>Les statuts des tokens sont en partie utilisés pour représenter des états. Voir plus loin pour la <a href="#etats">liste des statuts</a> utilisés par les scripts.<br />
+                Pour tenir compte d'autre états non visibles sur les tokens, les scripts utilisent des attributs supplémentaires (hors fiche). Parfois, le MJ devra créer et remplir lui-même certains attributs, d'autres fois cela sera géré par les scripts.
+              </p>
+              <p>Il est important de noter la différence entre les tokens liés à un personnage (la barre 1 est liée aux points de vie du personnage, tout changement sur la fiche se répercute sur le token), et les tokens non liés (dans ce cas, la fiche de personnage est générique, et chaque token est une instance différente, avec des PV indépendants).</p>
+              <p>Pour gérer les états spécifiques à un token non lié, les scripts utilisent des conventions de nom d'attribut utilisant le nom du token. Pour que cela fonctionne correctement, <b>il est important que deux tokens indépendants ne portent pas le même nom</b>, même si ils représentent le même personnage. Pour cette raison, le script va automatiquement renommer les tokens indépendants, en leur associant un numéro. Il est toujours possible de remodifier le nom après la création du token, mais dans ce cas, c'est vous qui gérez...</p>
+              <p>Certains messages tiennent compte du genre (masculin ou féminin) des personnages. Ils utilisent le champ <code>Sexe</code> de la fiche de personnage. Un personnage est reconnu comme féminin si ce champ commence par la lettre <code>F</code>.
+              </p>
+              <h3 class="text-info" id="macros_abilities">2.2 Macros et Abilities</h3>
+              <div class="decalage">
+                <p>Comme tous les scripts, ces scripts sont utilisables tels quels dans le chat, mais ils sont pensés pour être utilisés par des macros qui permettent un autre niveau d'automatisation parfois difficile d'accès au sein des scripts. Il est d'ailleurs possible de demander au script de générer la plupart des macros utiles en tapant la commande <code>!cof-set-macros</code> dans le chat.</p>
+                La grosse majorité des capacités et attaques des personnages devraient être utilisées au sein d'abilities de personnages, accessibles comme "Token action". Si ces abilities utilisent des macros, ne pas oublier de rendre ces macros accessibles aux joueurs.
+              </div>
+              <h3 class="text-info" id="methode_selection_groupes">2.3 Méthode de sélection de groupes</h3>
+              <div class="decalage">
+                <p>Comme les joueurs ne peuvent pas sélectionner un nombre arbitraire d'ennemis, 7 méthodes sont disponibles&nbsp;:</p>
+                <ul>
+                  <li>Le MJ lance la macro en sélectionnant les cibles</li>
+                  <li id="allie">option <code>--allies</code> : cela fait chercher tous les <i>handout</i> dont le nom est Equipe suivi d'un nom, et tels que le <i>handout</i> contienne une liste de noms (un par ligne), parmis lesquels, celui du personnage qui agit. Le personnage qui agit est celui qui est sélectionné. Les cibles sont tous les alliés du personnage sélectionné, mais pas le personnage lui-même. Attention, les noms de personnages ne doivent pas contenir de balise XML (texte encadré par des &lt; et &gt;).</li>
+                  <li>option <code>--equipe <i>nom</i></code> : agit sur tous les personnages mentionnés dans le <i>handout</i> s'appelant Equipe <i>nom</i>.</li>
+                  <li>option <code>--self</code> : pour rajouter le personnage sélectionné. Utile si on veut le personnage et ses alliés, par exemple.</li>
+                  <li>option <code>--target</code> : pour ajouter une seule cible, avec une id de token. Le personnage qui agit est celui qui est sélectionné.</li>
+                  <li>option <code>--disque</code> : le premier argument doit être l'id ou le nom d'un token qui représente un personnage, le deuxième argument un rayon. Cela sélectionne tous les tokens à une distamce de moins que le rayon du premier argument. Si un troisième argument est donné, il est interprété comme la portée maximum entre le centre du disque et le token actif (qui est supposé être celui sélectionné). Si le premier argument représente un personnage avec un max de PV à 0, il est compris comme un personnage fictif créé juste pour définir le disque, et il sera supprimé après la sélection.</li>
+                  <li>option <code>--saufAllies</code> permet d'exclure les alliés de la sélection (voir plus haut pour la définition des alliés).</li>
+                </ul>
+                <p id="exemple_equipe"><img class="img-fluid" src="https://i.imgur.com/WHfwsKo.png" data-href="https://i.imgur.com/WHfwsKo.png"></p>
+                <figcaption>Exemple d'<i>handout</i> avec différentes équipes.</figcaption>
+              </div>
+              <h3 class="text-info" id="regles_optionnelles">2.4 Règles optionnelles utilisées</h3>
+              <div class="decalage">
+                <p>Les scripts supportent l'utilisation de la règle des points de chance, des points de récupérations, des points de mana (et de magie puissante ou rapide, ainsi que de tempête de mana).</p>
+                <p>J'ai aussi choisi, comme proposé par Kegron, de diminuer la DEF de tous les protagonistes après un certain nombre de tours de combat (-2 tous les 5 tours).</p>
+                <p>Le script utilise aussi une règle de blessures graves : chaque fois qu'un personnage reçoit plus de DM que la somme de sa constitution et de son niveau, ou qu'il tombe à 0 PV, il encaisse une perte d'un point de récupération. Si il était à 0 points de récupération, il devient gravement blessé, ce qui le rend <i>affaibli</i>. Si le personnage était déjà gravement blessé, mais qu'il lui reste des PV, il tombe inconscient, et sinon, il meurt. Pour récupérer d'une blessure grave, le personnage doit se reposer une nuit, et réussir un test de CON difficulté 8 (avec le d12). Il est impossible de régénérer les points de récupération quand on est gravement blessé.<p>
+                <p>Il est possible de changer les options du script avec la commande <code>!cof-options</code>.</p>
+              </div>
+            </div>
+            <h2 class="text-primary" id="action_principales">3. Actions principales</h2>
+            <p>Pour la plupart des actions ci-dessous, il est généralement utile de créer des macros facilitant leur utilisation. Pour mettre en place un jeu de macros par défaut, vous pouvez taper <code>!cof-set-macros</code> dans le chat. Si vous souhaitez redéfinir des macros existantes, vous pouvez taper <code>!cof-set-macros --force</code>.</p>
+            <div class="decalage">
+              <h3 class="text-info" id="le_combat">3.1 Le combat</h3>
+              <div class="decalage">
+                <h4 class="text-secondary">Initiative : <code>!cof-init</code></h4>
+                <div class="decalage">
+                  <p>Les tokens sélectionnés sont ajouté au tracker de tour. Si celui-ci n'existe pas, un nouveau est créé, avec compteur de tour à 1, et on rentre en combat.</p>
+                  <p>Une option du script (ajustable en utilisant <code>!cof-options</code>) permet d'utiliser la règle de l'initiative variable (ajout d'un d6 à l'initiative). </p>
+                  <p>Les règles de tri suivent ce qui est donné p 70 : priorité aux PJs. Pour l'instant, on distingue un PJ d'un PNJ au dé de vie : si le personnage d'a pas de dé de vie, c'est un PNJ. Ensuite, entre PJs, priorité à la plus haute sagesse. Pour les PNJ, c'est aléatoire.</p>
+                  <p>À chaque instant, le token dont c'est le tour d'agir est signalé par un drapeau noir.</p>
+                  <div class="alert alert-primary">
+                    <h3>Astuces :</h3>
+                    <ul>
+                      <li><p><code>!cof-attendre ?{Nouvelle initiative}</code> : Permet d'attendre avant d'agir en réduisant temporairement son initiative.</p></li>
+                      <li>
+                        <code>!cof-init --aura</code> : Remplace le drapeau noir par une aura autour du Token de couleur verte (ou rouge si le personnage n'est pas contrôlé par un joueur ou dans une <a href="#exemple_equipe">équipe</a> contenant un personnage contrôlé par un joueur).</p>
+                        <p><img class="img-fluid" src="https://i.imgur.com/kfqD2Lw.gif" data-href="https://i.imgur.com/kfqD2Lw.gif"></p>
+                        <figcaption>Exemple du Turn Order avec Aura</figcaption>
+                      </li>
+                      <li>
+                        <p>Si une "Abilities" dont le nom est <code>#Actions#</code> existe pour le personnage dont c'est le tour, celle-ci sera prise en compte et le joueur qui controle le personnage recevra un chuchottement qui contiendra l'ensemble des %Ability et #Macro cliquables de <code>#Actions#</code>. Par défaut, cela contient toujours une action pour attendre et une pour se défendre. Pour voir ce message en dehors du changement d'initiative, ou pour le MJ, on peut utiliser <code>!cof-liste-actions</code> en sélectionnant le token (un bon candidat pour une macro de type token action, d'ailleurs généré par la commande <code>!cof-set-macros</code>).</p>
+                        <p><img class="img-fluid" src="https://i.imgur.com/tTfFoPW.png" data-href="https://i.imgur.com/tTfFoPW.png"></p>
+                        <figcaption>Exemple d'une macro #Actions# (ou #TurnAction#)</figcaption>
+                      </li>
+                    </ul>
+                  </div>
+                  <p>Il est possible d'ouvrir d'autre listes d'actions, à partir des commandes ou même d'une liste d'actions. Une liste d'action doit être stoquée dans une ability dont le nom commence et termine par <code>#</code>. Pour y faire référence dans une liste, il suffit d'écrire le nom de l'ability (commençant donc par <code>%</code>). Pour faire afficher la liste depuis une commande, utiliser <code>!cof-liste-actions <i>nom</i></code> (où le nom est celui de l'ability sans les <code>#</code>). Par exemple, si on ne souhaite pas afficher la liste complète des sorts d'un personnage à son tour, on peut faire une ability <code>#Sorts#</code>, puis faire une macro qui lance <code>!cof-liste-actions Sorts</code> pour que le joueur puisse afficher la liste quand il le souhaite, et aussi (ou à la place) mettre une ligne <code>%#Sorts#</code> dans son ability <code>#Actions#</code>.</p>
+                  <p>Il est possible de laisser les joueurs passer leur tour, en utilisant la commande <code>!cof-tour-suivant</code>. Une utilisation possible est de le mettre en macro dans les actions du tour (voir <code>#Actions#</code> ci-dessus).</p>
+                </div>
+              </div>
+              <h4 class="text-secondary">Attaquer une (ou plusieurs) cible : <code>!cof-attack @{selected|token_id} @{target|token_id} <i>n</i></code></h4>
+              <div class="decalage">
+                <p>où <i>n</i> est soit :</p>
+                <ul>
+                  <li>
+                    <p>la première partie (avant le premier blanc) du nom de l'attaque sur la fiche.</p>
+                    <div class="alert alert-success" role="alert">
+                      <p>Exemple :</p>
+                      <div class="decalage">
+                        <code>!cof-attack @{selected|token_id} @{target|token_id} 1</code>
+                      </div>
+                    </div>
+                    <div class="alert alert-warning" role="alert">
+                      <p><strong>Attention :</strong> Il faut utiliser des noms d'attaque comme "1 Épée longue". L'attaque tient compte de toutes les informations de l'attaque, y compris chances de critique et portée.</p>
+                    </div>
+                  </li>
+                </ul>
+                <p>soit :</p>
+                <ul id="tableau_arme">
+                  <li>
+                    <p>un tableau d'arme sous la forme : <code>[ ARME, [ATTAQUE], CRIT, [DM], [PORTÉE] ]</code></p>
+                    <p><img class="img-fluid" src="https://i.imgur.com/3QvxP9e.png" data-href="https://i.imgur.com/3QvxP9e.png"></p>
+                    <figcaption>Le sort "<i>Flèche enflammée</i>"</figcaption>
+                    <ul>
+                      <li><code>ARME</code> : Nom de l'Arme/Attaque. Exemple : "Flèche_Enflammée"</li>
+                      <li>
+                        <code>[ATTAQUE]</code> : un tableau des valeur d'attaque de l'arme : <code>[BONUS_ATTAQUE, BONUS]</code>
+                        <ul>
+                          <li>
+                            <code>BONUS_ATTAQUE</code> : Valeur de bonus de l'attaque de l'Arme/Attaque.<br />
+                            Exemple pour le token selectionné :
+                            <div class="decalage">Au contact : <i>"@{selected|ATKCAC}"</i><br />
+                              A distance : <i>"@{selected|ATKTIR}"</i><br />
+                              Magique : "@{selected|ATKMAG}"
+                            </div>
+                          </li>
+                          <li><code>BONUS</code> : Un éventuel bonus de l'Arme/Attaque. Exemple : -1, 0, 1, 2, 3, etc ...</li>
+                        </ul>
+                      </li>
+                      <li><code>CRIT</code> : La valeur de critique de l'arme. Exemple : 20</li>
+                      <li>
+                        <code>[DM]</code> : un tableau des valeur d'attaque de l'arme : <code>[NOMBRE_DE_DÉ, VALEUR_DÉ, MOD_DÉGÂTS, AUTRE_BONUS]</code>
+                        <ul>
+                          <li><code>NOMBRE_DE_DÉ</code> : Combien de dé à lancer. Exemple : 0, 1, 2, 3, etc ...</li>
+                          <li><code>VALEUR_DÉ</code> : Le nombre de face du dé. Exemple : 4, 6, 8, 10, 12</li>
+                          <li><code>MOD_DÉGÂTS</code> : Le MOD des dégâts à ajouter. Exemple : "@{selected|SAG}", -1, 0, etc...</li>
+                          <li><code>AUTRE_BONUS</code> : D'éventuels autres bonus/malus. Exemple : -1, 0, 1, 2, 3, etc ...</li>
+                        </ul>
+                      </li>
+                      <li><code>[PORTÉE]</code> : La portée en mètre de l'Arme/Attaque. Exemple : 0, 10, 20 , 30</li>
+                    </ul>
+                    <div class="alert alert-success" role="alert">
+                      <p>Exemple pour le sort "<i>Flèche enflammée</i>" :</p>
+                      <div class="decalage"><code>!cof-attack @{selected|token_id} @{target|token_id} ["Flèche_Enflammée",["@{selected|ATKMAG}",0],20,[1,6,"@{selected|INT}",0],30] --fx beam-fire --feu --sortilege --enflamme</code></div>
+                    </div>
+                    <div class="alert alert-warning" role="alert"><strong>Attention :</strong> Aucun espace n'est toléré.</div>
+                  </li>
+                </ul>
+                <p>Pour plus de facilité, utilisez une macro <code>Attaque</code> qui fait <code>!cof-attack @{selected|token_id} @{target|token_id}</code>, comme ça, dans l'exemple précédent, vous avez juste une ability avec comme valeur <code>#Attaque 1</code> (ou mieux, <code>#Attaque 1 --tranchant</code>).</p>
+                <p><img class="img-fluid" src="https://i.imgur.com/CxX71qp.png" data-href="https://i.imgur.com/CxX71qp.png"></p>
+              </div>
+              <figcaption>Ajout de la Macro <i>Attaque</i>.</figcaption>
+              <p><img class="img-fluid" src="https://i.imgur.com/MWTVRO4.png" data-href="https://i.imgur.com/MWTVRO4.png"></p>
+              <figcaption>Création des <i>Abilities</i> (Capacités) du Personnage.</figcaption>
+              <p><img class="img-fluid" src="https://i.imgur.com/iQrzLZh.png" data-href="https://i.imgur.com/iQrzLZh.png"></p>
+              <figcaption>ne pas oublier de cocher la case "<i>Show as Token Action</i>".</figcaption>
+              <p><img class="img-fluid" src="https://i.imgur.com/GmUxCpB.png" data-href="https://i.imgur.com/GmUxCpB.png"></p>
+              <figcaption>Ne pas oublier de mettre un numéro pour l'arme. A utiliser dans la création des <i>Abilities</i>.</figcaption>
+              <p>Malus ou bonus temporaire à une attaque : utiliser la barre 3.</p>
+              <p>Le test d'attaque à distance tient compte de la portée (malus de -1 à -5 si distance entre portée et deux fois cette valeur), ainsi que des tokens sur le trajet de l'attaque. Une attaque de trop loin ne porte jamais.</p>
+              <p>Utiliser une attaque fait rentrer l'attaquant en combat (et le rajoute au turn tracker).</p>
+              <h4 class="text-secondary">Options pour l'attaque&nbsp;:</h4>
+              <div class="decalage">
+                <ul>
+                  <li><code>--tempDmg</code> : l'attaque fait des dégâts temporaires (tient compte de la force de l'adversaire, utilise la barre 2 pour les dmg temp, sauf si le token a des PM, auquel cas on utilisera un attribut temporaire).</li>
+                  <li><code>--pasDeDmg</code> : l'attaque ne fait pas de DM.</li>
+                  <li><code>--poudre</code> : l'arme est une arme à poudre, utilisation d'un dé de poudre</li>
+                  <li><code>--auto</code> : l'attaque réussit automatiquement</li>
+                  <li><code>--bonusAttaque <i>n</i></code> : ajoute <i>n</i> au jet d'attaque</li>
+                  <li><code>--bonusCritique <i>n</i></code> : augmente <i>n</i> à la plage de coups critiques</li>
+                  <li><code>--bonusContreBouclier <i>n</i></code> : ajoute <i>n</i> au jet d'attaque si le défenseur porte un bouclier. Utile par exemple pour le fléau d'arme.</li>
+                  <li><code>--psave <i>carac seuil</i></code> : jet de <i>carac</i>, si le jet est supérieur à <i>seuil</i>, les dégâts sont divisés par 2. <i>carac</i> est l'abbréviation de caractéristiques de 3 lettres standard (FOR, DEX, ...). Si on souhaite que le jet ne permette de réduire qu'une partie des dommages (la dernière ajoutée avec <code>--plus</code>), on peut ajouter <code>local</code>. La syntaxe complète est alors <code>--psave <i>carac seuil</i> local</code></li>
+                  <li><code>--demiAuto</code> : si l'attaque rate, on considère juste que les saves partiels sont automatiquemet réussi. Ça signifie en général que la cible prend au moins la moitié des dégâts.</li>
+                  <li><code>--save <i>carac seuil</i></code> : même effet que <code>--psave</code>, mais pour annuler le dernier <code>--effet</code> ou <code>etat</code> (aucun effet sur les DM). Si on rajoute un argument <code>demiDuree</code> au save, alors la réussite du save ne fait que diviser par 2 sa durée.</li>
+                  <li><code>--saveParTour <i>carac seuil</i></code> : même effet que <code>--save</code>, mais donne droit à un jet à la fin de chaque tour au lieu d'un jet au moment de l'attaque.</li>
+                  <li><code>--fx <i>effet</i></code> : ajoute un <a href="https://wiki.roll20.net/Custom_FX">effet</a> qui part de l'attaquant à la cible. Si l'attaque rate, l'effet rate aussi, d'autant plus que le jet d'attaque est loin de la défense.</li>
+                  <li><code>--targetFx <i>effet</i></code> : ajoute un <a href="https://wiki.roll20.net/Custom_FX">effet</a> au niveau de la cible.</li>
+                  <li>
+                    <code>--si <i>conditon</i></code> : l'attaque n'est possible que si <i>condition</i> est validée. Une condition peut être
+                    <ul id="conditions">
+                      <li><code>moins</code> <i>attribut</i> : vrai si l'attribut <i>attribut</i> de la cible est moins haute que celle de l'attaquant</li>
+                      <li><code>etat</code> <i>e</i> : vrai si l'état <i>e</i> est actif sur l'attaquant. Cet état peut être un des états définis plus bas, ou un attribut quelconque.</li>
+                      <li><code>deAttaque</code> <i>n</i> : vrai si le jet de dé d'attaque est supérieur ou égal à <i>n</i>.</li>
+                      <li><code>crit</code> : vrai si l'attaque est un critique.</li>
+                    </ul>
+                  </li>
+                  <li><code>--if <i>condition</i></code> <i>options</i> <code>--endif</code>: permet de ne prendre en compte des options que si certaines conditions sont réalisées. Il est possible d'utiliser un <code>--else</code> pour activer des options quand les conditions ne sont pas réalisées. Attention, les options qui modifient une option précédente (comme --valeur) doivent apparaître au même niveau que l'option qu'elles modifient. Comme les conditions peuvent dépendre du dé d'attaque, un certain nombre d'options ne sont pas affectées par cette conditionnelle : tempeteDeMana, les options d'aoe (ligne, cone, disque, target), avecd12, m2d20, auto, demiAuto, test, rate, touche, critique, echecCritique, pointsVitaux, tempsRecharge, sortilege, bonusCritique, bonusCritique, affute, munition, tirDouble, semonce, tirDeBarrage, poudre, traquenard, feinte, asDeLaGachette, magique, tranchant, percant, contondant, pasDeDmg. Ne pas hésiter à me demander si vous aviez besoin que l'une de ces options puissent être conditionnelle.</li>
+                  <li><code>--tempsRecharge <i>effet</i> <i>duree</i></code> : l'attaque n'est possible que si l'effet est inactif sur l'attaquant, et de plus active l'effet sur l'attaquant pour la durée indiquée si l'attaque est possible. Il existe un effet temporaire générique, <code>rechargeGen(<i>desc</i>)</code> que vous pouvez utiliser si aucun effet existant ne correspond pour votre attaque.</li>
+                  <li><code>--etat <i>e</i></code>: si l'attaque touche, la cible passe dans l'état <i>e</i>. Il est aussi possible de spécifier une caractéristique et un seuil (comme pour <code>!cof-set-state</code>) pour faire afficher à chaque tour une action permettant de se libérer de l'état.</li>
+                  <li><code>--effet <i>e duree</i></code> : ajoute à la cible l'effet temporaire <i>e</i> pour la duree spécifiée. Pour que cela soit automatiquement mis à jour, il faut utiliser le turn tracker. Noter que l'argument de durée peut être omis pour certains effets, comme ceux qui par définition durent tout le combat.</li>
+                  <li><code>--valeur <i>v</i></code> : spécifie une valeur au dernier effet mentionné.</li>
+                  <li><code>--peur <i>seuil duree</i></code> : fait un effet de peur si l'attaque touche. Le <i>seuil</i> sert pour le test de sagesse de résitance à la peur (tient compte de la capacité <b>sans peur</b> du chevalier).</li>
+                  <li><code>--plus <i>dmg</i></code> :
+                    ajoute <i>dmg</i> dégâts. Attention, si <i>dmg</i> est un simple nombre, ces dégâts sont multipliés par les critiques (sauf si de type différent de l'attaque principale). Ainsi, <code>--plus [[1d6]]</code> donnera des dégâts multipliés par les critiques (car la fonction ne voit que le résultat du jet), alors que <code>--plus 1d6</code> ne le sera pas. </li>
+                  <li><code>--sournoise <i>n</i></code> : ajoute <i>n</i>d6 de dégâts d'attaque sournoise ou par surprise.</li>
+                  <li><code>--test</code> pour voir le résultat du jet d'attaque. On n'applique pas les résultats d'un touché.</li>
+                  <li><code>--magique</code> : les dégâts sont magiques. On peut passer en argument le niveau de magie. Il est utilisé contre les créatures immunisées aux armes. Le niveau par défaut est 1.</li>
+                  <li><code>--feu</code>, <code>--acide</code>, <code>--electrique</code>, <code>--froid</code>, <code>--sonique</code>, --<code>poison</code>, --<code>maladie</code> : les dégâts sont de type feu, acide, électrique, froid ou sonique. Le type spécifie uniquement le dernier <code>--plus</code> précédent cette option, ou si il n'y en a pas, celui des dégâts principaux. Seul le dernier type spécifié est pris en compte (pas de type multiple pour l'instant). Le type affecte différents attributs, et aussi la couleur d'affichage des dégâts.</li>
+                  <li><code>--tranchant</code>, <code>--percant</code>, <code>--contondant</code> : précise le type d'arme (si pertinent), pour pouvoir utiliser les RD spécifiques à un type d'arme.</li>
+                  <li><code>--ignoreRD</code> : l'attaque ignore les RD et division de DMs.</li>
+                  <li><code>--ignoreMoitieRD</code> : l'attaque ignore la moitié de la RD.</li>
+                  <li><code>--sortilege</code> pour indiquer qu'il s'agit d'un sortilège, de façons à pouvoir appliquer tous les effets spécifiques aux sorts. Cette options devrait être passées pour toutes les capacités suivies d'une étoile dans le livre des règles. En particulier, tout sortilege ignore les malus d'obstacles.</li>
+                  <li><code>--reroll1</code> : relance les 1 aux dés de dégats. À noter que cela ne concerne que les dés de base de l'attaque, pas les DM supplémentaire. </li>
+                  <li><code>--explodeMax</code> : relance les valeurs maximum aux dés de DM de base, et rajoute le nouveau résultat (qui lui-même explose).</li>
+                  <li><code>--mana <i>n</i></code> : l'attaque coûte <i>n</i> points de mana.</li>
+                  <li><code>--rang <i>n</i></code> : indique le rang de la capacité utilisée, si besoin. Utilisé par l'option <code>--tempeteDeMana</code>.</li>
+                  <li><code>--tempeteDeMana <i>liste</i></code> : indique des effets de tempête de mana. La liste peut contenir un nombre (pour l'effet intense), <code>duree</code>, <code>rapide</code>, <code>portee</code> et <code>altruiste <i>id</i></code>. Si le rang du sort est spécifié (par l'option <code>--rang</code>, un message est affichée si le coût en mana est supérieur au rang. Si la liste d'options est vide ou ne contient que <code>altruiste</code>, le script affiche un menu dans le chat pour spécifier les options de tempête de mana.</li>
+                  <li><code>--limiteParJour <i>l</i></code> : limite le nombre d'utilisations de cette attaque à <i>l</i> fois par jour. On peut préciser un nom après <i>l</i>, qui va correspondre à une ressource pouvant être partagée avec d'autres attaques ou d'autres effets (voir <code>!cof-effet-temp</code>). Par défaut, le nom de cette ressource est le label de l'attaque.</li>
+                  <li><code>--limiteParCombat</code> : même effet que la limite par jour. Si aucun argument n'est donné, la limite est de une fois par combat.</li>
+                  <li><code>--munition <i>nom</i> <i>taux</i></code> : l'attaque utilise des munitions dont on garde le compte. Le nombre de munitions doit être inscrit dans un attribut <code>munition_<i>nom</i></code>. <i>nom</i> ne doit pas contenir de blanc, mais à l'affichage les <code>_</code> seront remplacés par des blancs. La valeur courante de l'attribut est le nombre qu'il reste sur le personnage, alors que le maximum contient ce qu'il a plus ce qu'il peut récupérer après le combat. À chaque attaque portée, une munition est utilisée, et il y a <i>taux</i> chances (sur 100) que la munition ne soit pas récupérable. En fin de combat, on considère que le personnage récupère toutes les munitions récupérables. Par défaut, le taux de pertes est de 100&nbsp;%.</li>
+                  <li><code>--vampirise</code> : soigne de tous les DM infligés</li>
+                  <li><code>--tueurDeGeants</code> : bonus de +2 en attaque et +2d6 DM contre les géants, ogres, ettins et cyclopes.</li>
+                  <li><code>--ignoreObstacles</code> : ignore les tokens sur le trajet. Ça semble nécessaire pour les attaques magiques d'après Kegron.</li>
+                  <li><code>--puissant</code> : augmente la valeur max des dés de dégâts de 2. Si <code>--puissant</code> est suivi d'un argument <i>effet</i>, on teste la présence d'un attribut <i>effet</i><code>Puissant</code> pour décider si l'attaque est puissante ou non. Il est aussi possible de donner <code>oui</code> ou <code>non</code> en argument (ce n'est alors pas considéré comme un effet).</li>
+                  <li><code>--strigeSuce</code> : option spécifique aux striges. Donne le malus de -3 en DEF et compte la quantite sucée. Quand cette quantité arrive à 6, enlève le malus de DEF et rend la cible affaiblie.</li>
+                  <li><code>--mainsDEnergie</code> : +2 à +5 à l'attaque, selon l'armure de la cible</li>
+                  <li><code>--semonce</code> : +5 au touché et +1d6 aux DM (ne change pas les charges de l'arme).</li>
+                  <li><code>--m2d20</code> : lance 2 d20 pour l'attaque et garde le meilleur</li>
+                  <li><code>--avecd12</code> : lance un d12 au lieu du d20 pour le jet d'attaque. L'attaque est impossible si l'attaquant est déjà affaibli.</li>
+                  <li><code>--incrDmgCoef <i>n</i></code> : augmente le coefficient des dégâts de base de 1. Les dégâts de base comprennent les dés de dommage de l'arme (ou du sort), plus tous les bonus constants. Le coefficient par défaut est de 1, et une réussite critique augmente ce coefficient de 1.</li>
+                  <li><code>--incrCritCoef <i>n</i></code> : augmente le coefficient des dégâts critiques de 1.</li>
+                  <li><code>--maxDmg</code> : l'attaque inflige le maximum de DM permis par les dés de base.</li>
+                  <li><code>--affute</code> : augmente de 1 les chances de crit et +1d6 aux DM des crit.</li>
+                  <li><code>--tirDeBarrage</code> : ignore la charge, multiplie les DM par 2 et message pour undo si la cible bouge.</li>
+                  <li><code>--enflamme</code> : enflamme la cible, lui infligeant 1d6 DM par tour. Les flammes s'éteindent sur un 1 ou 2. Si l'option <code>--puissant</code> est donnée en conjonction, les DM augmentent de 1.</li>
+                  <li><code>--malediction</code> : maudit la cible pour 3 jets.</li>
+                  <li><code>--asDeLaGachette</code> : ajoute 1d6 DM si le jet d'attaque dépasse une DEF de 25.</li>
+                  <li><code>--argent</code> : bonus de +2 en attaque et 1d6 aux DM si la cible est un mort-vivant ou un démon (utilise le champ <code>Race</code> de la fiche ou si présent un attribut <code>mort-vivant</code>).</li>
+                  <li><code>--pietine</code> : si l'attaquant est de taille au moins égale à celle de la cible (ou si la taille de l'un des deux n'est pas connue), fait un test opposé de FOR. En cas d'échec de la cible, elle est renversée et les DM sont doublés.</li>
+                  <li><code>--feinte</code> : L'attaque ne fait pas de dégât, mais un bonus de +5 en attaque est donné sur les attaques du tour suivant sur cette cible (par celui qui a fait la feinte), et +2d6 DM si l'attaque fictive était un succès.</li>
+                  <li><code>--rate</code>, <code>--touche</code>, <code>--critique</code>, <code>--echecCritique</code> : options pour tricher : le résultat des dés donne toujours le résultat voulu.</li>
+                  <li><code>--ligne</code> : l'attaque porte sur toutes les cibles à portée, entre l'attaquant et le token ciblé. Si le token ciblé est plus proche que la portée de l'attaque, les tokens derrière le token ciblé sont aussi visés. Pour permettre de viser un point quelconque, on peut utiliser un personnage dédié avec un maximum de 0 pv. À chaque fois qu'un token représentant ce personnage est utilisé comme cible de <code>--ligne</code>, le token est enlevé de la carte.</li>
+                  <li><code>--disque <i>r</i></code> : l'attaque porte sur toutes les cibles dans le disque de centre le token ciblé et de rayon <i>r</i>. Comme pour <code>--ligne</code>, on peut utiliser un token cible qui sera supprimé après l'attaque. À noter que l'attaquant lui-même peut prendre des dégâts, sauf si l'attaque a une portée nulle et que l'attaquant se cible lui-même (attaque centrée sur le lanceur).</li>
+                  <li><code>--cone <i>angle</i></code> cible toutes les créatures dans un cône de sommet l'attaquant, d'angle <i>angle</i> degrés (90 degrés par défaut), et séparé en deux par le segment joignant l'attaquant et le token visé.</li>
+                  <li><code>--target <i>id</i></code> : ajoute une cible à l'attaque (s'ajoute à la cible principale et aux options d'aoe).</li>
+                  <li><code>--message <i>texte</i></code> : ajoute une ligne avec le message dans la fenêtre de l'attaque. Attention, <i>texte</i> ne doit pas contenir la séquence <code> --</code>.</li>
+                  <li><code>--allonge <i>n</i></code> : ajoute <i>n</i> mètres à la portée d'une attaque au contact. L'allonge peut être un nombre à virgule et même négative.</li>
+                </ul>
+              </div>
+              <h4 class="text-secondary">Réduction des dégâts</h4>
+              <div class="decalage">
+                <ul>
+                  <li>La RD sur la fiche diminue tous les dégâts.</li>
+                  <li>L'attribut hors fiche <code>RD_critique</code> diminue les dégâts des critiques (pour les casques).</li>
+                  <li>les attributs hors fiche <code>RD_<i>genre</i></code> diminuent les dégâts pour ce genre (<i>genre</i> = <code>tranchant</code>, <code>percant</code>, <code>contondant</code>, ou un type (<code>feu</code>, <code>acide</code>, etc...) ou <code>drain</code>)</li>
+                  <li>l'attribut <code>RD_sauf_magique</code> diminue tous les dégâts, sauf si les dégâts sont spécifiés magiques (avec l'option <code>--magique</code>).</li>
+                  <li>Les attributs <code>RD_sauf_<i>genre</i></code> permettent de préciser une RD sauf pour un type donné. Il est possible de préciser plusieurs genres, séparés par un <code>_</code>.</li>
+                  <li>pour les attaques, il faut préciser le genre si besoin (comme <code>--tranchant</code> pour une épée)</li>
+                  <li>pour les résistances sauf un genre d'arme le mieux est de spécifier une RD aux 2 autres genres, si on ne veut pas résister aussi aux attaques magiques.</li>
+                </ul>
+              </div>
+              <h4 class="text-secondary">Manoeuvres</h4>
+              <div class="decalage">
+                <p><code>!cof-action-defensive</code> avec comme argument soit <code>simple</code>, soit <code>totale</code> donne le bonus en défense de l'action défensive (p 71). Cette action est disponible par défaut si le personnage a une ability <code>#Actions#</code>. Alternativement, si vous n'utilisez pas cette méthode, vous pouvez créer une macro accessible à tous les tokens, <code>!cof-action-defensive ?{Action défensive|simple|totale}</code>.</p>
+                <p>Les manoeuvres risquées peuvent être lancées avec la commande <code>!cof-manoeuvre @{selected|token_id} @{target|token_id} <i>effet</i></code>. Liste des manoeuvres : <code>aveugler</code>, <code>bloquer</code>, <code>desarmer</code>, <code>faireDiversion</code>, <code>menacer</code>, <code>renverser</code>, <code>repousser</code>, <code>tenirADistance</code>.</p>
+                <p>Il est aussi possible de faire un test d'attaque opposée avec la commande <code>!cof-test-attaque-opposee @{selected|token_id} @{target|token_id}</code>.</p>
+              </div>
+              <h4 class="text-secondary">Recharger des armes : <code>!cof-recharger <i>N</i></code></h4>
+              <div class="decalage">
+                <p>Il faut un attribut <code>charge_<i>N</i></code> où <i>N</i> est le label de l'arme. La valeur max est le maximum de charges. Noter que si on a 2 armes à une charge, il faut utiliser un maximum de 2.<br />
+                Recharge l'arme <i>N</i> (augmente les charges d'un). Les armes sont toutes rechargées à la fin d'un combat.<br />
+                La commande adment un argment optionel <code>--grenaille</code> pour charger (une arme à poudre) avec de la grenaille.
+                </p>
+              </div>
+              <h4 class="text-secondary" id="degainer">Dégainer une arme : <code>!cof-degainer <i>N</i></code></h4>
+              <div class="decalage">
+                <p>Pour certaines capacités, (commme <strong>Plus vite que son ombre</strong> ou <strong>Désarmer</strong>), il peut être utile de savoir quelle arme est en main. Pour cela, le script peut utiliser deux méthodes&nbsp;:
+                <ul>
+                  <li><code>!cof-degainer <i>L</i></code> où <i>L</i> est le label d'une des attaques sur la fiche de personnage : cela fait rengainer l'arme en main et dégainer l'arme correspondant à cette attaque. Si le label ne correspond à aucune attaque (ou qu'on ne donne pas de label), l'action fait rengainer l'arme en main.</li>
+                  <li>Si on attaque avec <code>!cof-attack <i>tok1 tok2 L</i></code>, et que l'attaque de label <code><i>L</i></code> contient le mot <code>arme</code> dans le champ <code>SPÉCIAL</code>, alors on considère qu'on doit dégainer cette arme pour pouvoir l'utiliser. Le script envoie le message et considère ensuite l'arme comme étant en main, au MJ de vérifier que le joueur dispose bien d'une action de mouvement pour le faire.</li>
+                  <li>En fin de combat, si le personnage a la capacité frappe du vide, le script va automatiquement lui faire rengainer son arme.</li>
+                  <li>Enfin, en fin de combat, si le personnage possède un attribut <code>armeParDefaut</code>, le script va lui faire dégainer l'arme dont le label est stocké dans l'attribut. Donc si l'attribut est vide, le personnage va rengainer son arme.</li>
+                </ul>
+                Dans tous les cas, si le personnage dégaine une arme à 2 mains (déterminé en fonction du nom de l'arme ou du champs "divers" de l'arme), le script fait enlever le bouclier, et il le fait remettre si on passe d'une arme à 2 mains à une arme à 1 main.
+                </p>
+              </div>
+              <h4 class="text-secondary">Dégâts directs (sans attaquant, ou aire d'effet trop complexe pour !cof-attack) : <code>!cof-dmg <i>dm</i></code></h4>
+              <div class="decalage">
+                <p>Applique des dégâts à tous les tokens sélectionnés. L'argument <i>dm</i> peut être un inline roll. Utile par exemple pour les chutes, ou bien les dégâts d'environnement, voire de pièges.<br />
+                Arguments optionels: une partie des options de <code>!cof-attack</code>, dont le type, et par exemple <code>--psave <i>carac seuil</i></code> (jet de <i>carac</i>, si supérieur au <i>seuil</i>, les dégâts sont divisés par 2).
+                </p>
+                <p> Il est possible d'infliger des dégâts sur la durée en utilisant la commande <code>!cof-effet-temp dotGen(<i>nom</i>) <i>duree</i> --valeur <i>expr</i> <i>tyoe</i></code>. <i>k</i> doit être un nombre entre 1 et 5 (permettant d'avoir jusqu'à 5 dots génériques simultanés sur un personnage). Les arguments de <code>--valeur</code> donnent l'expression à évaluer, de type lancé de dé, et le type de dégâts. Par défaut, si rien n'est précisé, c'est <code>1d6</code> et <code>normal</code>. On peut utiliser les options habituelles de <code>!cof-effet-temp</code>. Ainsi, si on souhaite infliger des dégâts de poison de 1d4+1 par tour, pendant 10 tours, avec un jet de CON difficulté 12 pour arrêter l'effet, on pourra écrire <code>!cof-effet-temp dotGen(monPoison) 10 --saveParTour CON 12 --valeur 1d4+1 poison</code>.
+                </p>
+              </div>
+              <h4 class="text-secondary">Sortir du combat : <code>!cof-fin-combat</code></h4>
+              <div class="decalage">
+                <p>Ferme aussi le tracker de tour. Encore à mettre en macro dans la barre du MJ (macro automatiquement générée par <code>!cof-set-macros</code>). Permet de tenir compte de pleins de capacités qui durent un combat, ou utilisables une seule fois par combat,...</p>
+              </div>
+              <h3 class="text-info" id="soins">3.2 Soins :</h3>
+              <div class="decalage">
+                <h4 class="text-secondary"><code>!cof-soin @{selected|token_id} @{target|token_id} <i>x</i></code></h4>
+                <div class="decalage">
+                  <p><i>x</i> peut être un nombre, un jet de dé ou <code>leger</code>, <code>modere</code>, <code>groupe</code> ou <code>secondSouffle</code>.</p>
+                  <p>Les deux premiers arguments sont optionnels. Si <code>!cof-soin</code> n'a qu'un seul argument, c'est interprété comme le montant des soins, et les tokens soignés sont ceux sélectionnés. Si <code>!cof-soin</code> n'a que 2 arguments, le premier argument est le token du soigneur, et les cibles doivent être désignées avec une option de sélection de groupe.</p>
+                  <span>Options :</span>
+                  <ul>
+                    <li><code>--portee <i>n</i></code> : permet de spécifier une distance maximum entre le soigneur et le soigné (au-delà, le soin échoue)</li>
+                    <li><code>--transfer</code> : le soin est payé avec les PV du soigneur</li>
+                    <li><code>--mana <i>n</i></code> : demande au lanceur de payer <i>n</i> points de mana</li>
+                  </ul>
+                </div>
+              </div>
+              <h3 class="text-info" id="annulation">3.3 Annulation : <code>!cof-undo</code></h3>
+              <div class="decalage">
+                <p>Fait partie des fonctions que je met en macro dans la barre du MJ, ça peut servir très souvent. Elle est d'ailleurs générée par la commande <code>!cof-set-macros</code>.</p>
+              </div>
+              <h3 class="text-info" id="repos">3.4 Repos et changement de jour</h3>
+              <div class="decalage">
+                Par défaut, le script utilise les points de récupérations qui apparaissent sur la fiche. Mais si vous souhaitez changer le nombre maximal de points de récupération, vous pouvez ajouter un attribut <code>pointsDeRecuperation</code>, dont la valeur courante sera le nombre de PR courant, et le max son maxium. Dans ce cas, modifier les PR sur la fiche sera sans effet pour le script.
+                <h4 class="text-secondary">Changement de jour</h4>
+                <div class="decalage">
+                  <p><code>!cof-nouveau-jour</code> : remise à zéro de toutes les limites journalières. </p>
+                </div>
+                <h4 class="text-secondary">Repos de plus de 8 h</h4>
+                <div class="decalage">
+                  <p>Fait récupérer 1 PR ou les points de vie correspondant à 1 PR, plus les points de mana.</p>
+                  <ul>
+                    <li><code>!cof-nouveau-jour --repos</code> : Pour une nuit qui se passe bien : fait l'effet d'un nouveau jour sur le monde, et, si aucun token n'est sélectionné, applique un repos de 8 h à tous les tokens de la page, sinon applique ce repos uniquement aux tokens sélectionnés.</li>
+                    <li><code>!cof-recuperation --reposLong</code> : applique le repos aux tokens selectionnés, sans remettre à zéro les limites journalières.
+                  </ul>
+                </div>
+                <h4 class="text-secondary">Repos de 10 minutes</h4>
+                <div class="decalage">
+                  <p><code>!cof-recuperation</code> : dépense 1 PR pour se soigner. À mettre en macro associée aux tokens, car tous les joueurs en ont besoin (généré par <code>!cof-set-macros</code>.</p>
+                </div>
+              </div>
+              <h3 class="text-info" id="chance">3.5 Chance</h3>
+              <div class="decalage">
+                <p>Le script essaie de détecter les cas où un point de chance peut être utile, et dans ce cas fournit un bouton (utilisable par les joueurs contrôlant le perosnnage ou le GM), permettant de dépenser un point de chance. Attention, pour l'instant, il n'est pas possible de faire juste un undo de la dépense de point de chnce. Le undo après la dépense de point de chance annule toute l'action. Il faut ensuite faire un undo par point de chance dépensé.</p>
+                <p>Pour les cas non prévus par le script, on peut faire juste <code>!cof-chance autre</code>.</p>
+              </div>
+              <h3 class="text-info" id="surprise">3.6 Surprise : <code>!cof-surprise ?difficulte</code></h3>
+              <div class="decalage">
+                <p>Fait un test de surprise sur tous les tokens sélectionné. Si la difficulté n'est pas présente, ils sont automatiquement surpris. Les valeurs des attributs (hors fiche) <code>vigilance</code> et <code>perception</code> sont ajoutés au test de sagesse.</p>
+                <p>Si vous souhaitez préciser que la surprise est le fait d'un personnage ou effet non vivant (pour ne pas faire bénéficier du bonus de la capacité Radar mental), vous pouvez rajouter l'option <code>--nonVivant</code>.</p>
+              </div>
+              <h3 class="text-info" id="statut_etats">3.7 Statut et états</h3>
+              <div class="decalage">
+                <p><code>!cof-statut</code> affiche l'état courant de tous les tokens sélectionnés. Utile pour connaître facilement les états qui ne sont pas directement visibles sur un token (points de récupération, armes chargées, ...).</p>
+                <h4 class="text-secondary" id="etats">États gérés en utilisant le statut des tokens</h4>
+                <div class="decalage">
+                  <p><code>!cof-set-state <i>etat</i> <i>[true|false]</i></code> permet de changer l'état des tokens sélectionnés. Si cet état concerne un personnage avec tokens liés (en liant la barre 1 aux points de vie), alors l'état persiste si on change de carte (utilisation d'un attribut hors fiche).</p>
+                  <span>Liste des états et statut correspondant :</span>
+                  <ul>
+                    <li>surpris : <tt>lightning-helix</tt></li>
+                    <li>aveuglé : <tt>bleeding-eye</tt> (change aussi la vision du token)</li>
+                    <li>affaibli : <tt>half-heart</tt> (lié aussi au statut sur la fiche, pour les tokens liés par les points de vie)</li>
+                    <li>étourdi : <tt>half-haze</tt></li>
+                    <li>assomé : <tt>pummeled</tt></li>
+                    <li>ralenti : <tt>snail</tt></li>
+                    <li>renversé : <tt>back-pain</tt></li>
+                    <li>mort : <tt>dead</tt> (même état pour un PJ juste inconscient à 0 PV)</li>
+                    <li>paralysé : <tt>fishing-net</tt></li>
+                    <li>immobilisé : <tt>cobweb</tt></li>
+                    <li>endormi : <tt>sleepy</tt></li>
+                    <li>apeuré : <tt>screaming</tt></li>
+                    <li>invisible : <tt>ninja-mask</tt></li>
+                    <li>gravement blessé : <tt>arrowed</tt></li>
+                    <li>encombré : <tt>frozen-orb</tt></li>
+                  </ul>
+                  <!-- pénombre (-5 att. distance) : pas encore dans la liste -->
+                  <p>Pour faciliter la gestion des états, j'utilise deux macros dans la barre du GM, <code>!cof-set-state ?{État|mort|surpris|assome|renverse|aveugle|affaibli|etourdi|paralyse|ralenti|immobilise|endormi|apeure|invisible|blessé|encombre} true</code>, et la même avec <code>false</code>. (N'oubliez pas que la commande <code>!cof-set-macros</code> permet de générer automatiquement les macros utiles au script).<br />
+                    Notez que si on se contente de changer le statut pour un token lié, le changement risque de ne pas être propagé au personnage (et donc serait perdu en cas de changement de carte).
+                  </p>
+                  <p>Enfin, il est possible de faire réaliser un jet pour se libérer d'un état, en utilisant la commande <code>!cof-save-state <i>etat</i> <i>carac</i> <i>seuil</i></code>. Il est possible de remplacer <i>seuil</i> par une id de token pour faire faire un test en opposition avec ce token. On peut aussi passer la caractéristique et le seuil en argument à <code>!cof-set-state</code> pour proposer le jet à chaque fois qu'on affiche les <code>#Actions#</code> ou qu'on affiche le statut du personnage.</p>
+                </div>
+                <h4 class="text-secondary">Autres bufs et debufs</h4>
+                <div class="decalage">
+                  <p><code>!cof-buf-def <i>n</i></code> : buf ou debuf de la DEF.</p>
+                  <p><code>!cof-remove-buf-def</code> : enlève tout buf ou debuf de la def.</p>
+                  <p><code>!cof-effet-temp <i>effet duree</i></code> : ajoute l'effet <i>effet</i> à la cible pour la durée, <code>!cof-effet-combat <i>effet</i></code> ajoute l'effet pour le combat, et <code>!cof-effet <i>effet</i></code> ajoute ou enlève un effet à durée indéterminée. À noter que si la durée est 0 ou <code>fin</code>, alors la commande met fin à l'effet (utile pour des effets temporaires qui ont une action en fin d'effet, comme <code>agrandissement</code> ou <code>formeDArbre</code>).</p>
+                  <ul>
+                    <li><code>--lanceur <i>id</i></code> : indique quel est le lanceur. Utile pour un certain nombre d'autres options.</li>
+                    <li><code>--mana <i>id cout</i></code> : impose au token <i>id</i> de dépenser <i>cout</i> mana. Si <code>--lanceur</code> est donné, <i>id</i> est inutile.</li>
+                    <li><code>--limiteParJour <i>l</i></code> : limite le nombre d'utilisations de cette effet à <i>l</i> fois par jour. On peut préciser un nom après <i>l</i>, qui va correspondre à une ressource pouvant être partagée avec d'autres attaques ou d'autres effets (voir <code>!cof-attack</code>). Par défaut, le nom de cette ressource est <i>effet</i>.</li>
+                    <li><code>--limiteParCombat</code> : même effet que la limite par jour. Si aucun argument n'est donné, la limite est de une fois par combat.</li>
+                    <li><code>--dose <i>nom</i></code>: définie une ressource nommée <code>dose_<i>nom</i></code>, dont la valeur doit être positive (à la manière des munitions). Utile par exemple pour les parchemins, les potions ou les baguettes.</li>
+                    <li><code>--portee <i>id d</i></code> : impose aux cibles de l'effet d'être à moins de <i>d</i> mètres du token <i>id</i>. Si <code>--lanceur</code> est précisé, inutile de donner <i>id</i>.</li>
+                    <li><code>--puissant</code> : lance la version puissante de l'effet</li>
+                    <li><code>--puissant oui</code> : idem</li>
+                    <li><code>--puissant non</code> : lance la version non puissante (efface le dernier effet puissant)</li>
+                    <li><code>--puissant duree</code> : multiplie la durée par 2</li>
+                    <li><code>--saveParTour <i>carac seuil</i></code> : la cible peut se sortir de l'effet chaque tour grâce à un test de <i>carac</i> de difficulte <i>seuil</i>.</li>
+                    <li><code>--save <i>carac seuil</i></code> : la cible peut faire un jet pour échapper à l'effet. Si on ajoute l'argument <code>demiDuree</code>, alors réussir la sauvegarde ne fait que diviser la durée.</li>
+                  <li><code>--tempeteDeMana <i>liste</i></code> : indique des effets de tempête de mana. La liste peut contenir un nombre (pour l'effet intense), <code>duree</code>, <code>rapide</code> et <code>portee</code>. Si le rang du sort est spécifié (par l'option <code>--rang</code>, un message est affichée si le coût en mana est supérieur au rang. Si la liste d'options est vide, le script affiche un menu dans le chat pour spécifier les options de tempête de mana.</li>
+                    <li><code>--valeur <i>n</i></code> : pour certains effet, permet de spécifier une valeur qui remplace la valeur par défaut de l'effet.</li>
+                    <li><code>--fx <i>effet</i></code> : affiche l'effet spécial entre le lanceur et ses cibles.</li>
+                    <li><code>--targetFx <i>effet</i></code> : affiche l'effet spécial sur toutes les cibles.</li> 
+                  </ul>
+                </div>
+              </div>
+              <h3 class="text-info" id="sorts">3.8 Sorts</h3>
+              <div class="decalage">
+                <p><code>!cof-attaque-magique @{selected|token_id} @{target|token_id}</code> : fait un jet d'attaque magique opposé entre le lanceur et sa cible, et dit juste si le sort est raté ou réussi. Options disponibles : <code>--portee</code> et <code>--mana</code>.</p>
+                <p><code>!cof-lancer-sort <i>mana texte</i></code> : le token sélectionné lance un sort ayant un coût en mana, <i>texte</i> décrit le sort, mais pas d'effet (autre que la dépense de mana) à part /w au joueur et au MJ.</p>
+                <p><code>!cof-peur <i>difficulté durée</i></code> : effet de peur (nécromant, dragon, etc). Tant que la peur est active, statut screaming. <i>difficulté</i> est la difficulté du jet de SAG.</p>
+                <span>Options :</span>
+                <ul>
+                  <li><code>--resisteAvecForce</code> : on prend le max de FOR et SAG pour résister</li>
+                  <li><code>--etourdi</code> : la peur fait fuir ou rend étourdi</li>
+                  <li><code>--ralenti</code> : la peur ralenti</li>
+                  <li><code>--effroi</code> : la peur est passive (pas un sort)</li>
+                  <li><code>--portee <i>n</i></code> : limite la portée du sort à <i>n</i> metres.</li>
+                  <li><code>--lanceur <i>id</i></code> : le lanceur de l'effet de peur (si il y en a un). Nécessaire pour la portée, par exemple.</li>
+                </ul>
+              </div>
+              <h3 class="text-info" id="consommables">3.9 Consommables <code>!cof-consommables</code></h3>
+              <div class="decalage">
+                <p>Cette fonction affiche une liste de consommables, avec la possibilité de cliquer sur un élément de la liste pour le consommer (et activer son effet) ou l'échanger avec un autre personnage (via le symbole &#8596;).</p>
+                <p>Pour cela, la fonction regarde tous les attributs qui commencent par <code>dose_</code>, <code>elixir_</code> ou <code>consommable_</code>. La valeur courante doit être le nombre d'éléments possédé, et le max peut être une commande à effectuer pour activer l'effet. La fonction est à réserver aux tokens liés à un personnage. Il est aussi possible de simplement écrire un message qui s'affichera (et diminuera la quantité de consommables).</p>
+                <p><img class="img-fluid" src="https://i.imgur.com/WZT8buT.png" data-href="https://i.imgur.com/WZT8buT.png"></p>
+                <figcaption>Exemple d'une liste de consommable.</figcaption>
+                <!--<p>Attention, les boutons sont utilisables par tout le monde, ce qui permet de faire utiliser un des concommables d'un personnage par un autre. Le script vérifie juste que le token qui utilise l'objet est au contact.</p>-->
+                <p>Pour l'instant, seules les commandes <code>!cof-effet-temp</code>, <code>!cof-effet-combat</code>, <code>!cof-effet</code>, <code>!cof-enduire-poison</code>, <code>!cof-attack</code> et <code>!cof-soin</code> diminuent correctement le nombre de consommables.</p>
+                <div class="alert alert-warning">
+                  <p><strong>Attention : </strong></p>
+                  <ul>
+                    <li>Pour la commande <code>!cof-attack</code>, il est vivemement recommandé d'utiliser un <a href="#tableau_arme">tableau d'arme</a>, notamment afin de faciliter l'échange du consommable.</li>
+                    <li>De manière générale, faites attention avec les références utilisé dans le consommable du personnage qui utilise le consommable.<br />
+                    </li>
+                  </ul>
+                </div>
+                <div class="alert alert-success">
+                  <p><strong>Exemple de consommables, à ajouter dans un "<em>Attribute</em>" de l'onglet "<em>Attributes & Abilities</em>" du personnage :</strong></p>
+                  <ul>
+                    <li>
+                      Potions de soins légers
+                      <ul>
+                        <li>Name : <code>dose_Potion soins légers</code></li>
+                        <li>Current : <code>1</code> (la quantité)</li>
+                        <li>Max : <code>!cof-soin @{selected|token_id} @{selected|token_id} 1D8+@{selected|NIVEAU}</code></li>
+                      </ul>
+                    </li>
+                    <li>
+                      Parchemin Flèche enflammée
+                      <ul>
+                        <li>Name : <code>dose_Parch. Flèche enflammée</code></li>
+                        <li>Current : <code>1</code> (la quantité)</li>
+                        <li>Max : <code>!cof-attack @{selected|token_id} @{target|token_id} ["Flèche_Enflammée",["@{selected|ATKCAC}",0],20,[1,6,"@{selected|SAG}",0],30] --fx beam-fire --feu --sortilege --enflamme</code></li>
+                      </ul>
+                    </li>
+                  </ul>
+                </div>
+                <p>L'échange via le symbole <span class="text-danger"><strong>&#8596;</strong></span> vous permettra de sélectionner un token destinataire qui recevra le consommable dans sa liste. Si le consommable existe déjà pour le destinataire, sa quantité sera augmenté de 1, sinon le consommable sera créé.</p>
+                <div class="alert alert-secondary">
+                <p>Cette fonction peut-être très utile pour que les PJ échangent entre eux un consommable, mais aussi pour faciliter la vente d'objet entre PNJ et PJ.</p>
+                <p>Pour cette dernière, il vous suffira de préparer un personnage avec un token qui contient, dans ses attributs, les consommables à échanger/vendre.</p>
+                </div>
+              </div>
+              <h3 class="text-info" id="deplacements">3.10 Déplacements</h3>
+              <h4 class="text-secondary">Personnages immobilisés</h4>
+              <div class="decalage">
+                <p>Par défaut, le script empêche le déplacement des personnages immobilisés (paralysé, étourdi, etc...). Pour permettre de déplacer ces personnages, le script envoie au MJ 2 boutons, l'un pour réaliser le déplacement qui vient d'être annulé, et l'autre pour débloquer le personnage pour un tour (et dans ce cas, toutes les personnes contrôlant le token peuvent le bouger jusqu'au prochain changement de tour.<p>
+              </div>
+              <h4 class="text-secondary" id="escaliers">Escaliers</h4>
+              <div class="decalage">
+                <p>Pour gérer les escaliers sur les cartes, vous pouvez utiliser la méthode suivante, inspirée du script Teleport : placez dans le layer "GM Info Overlay", au niveau des escaliers, des tokens qui prennent exactement la place des escaliers. Nommez ces escaliers avec un nom suivi du nombre d'étages (entre 2 et 9), suivi d'une lettre majuscule. Par exemple <code>Escalier2A</code>.</p>
+                <p>Chaque escalier de la même colonne doit avoir le même nom et même nombre d'étage, et différer seulement par la lettre finale. Ensuite, si un ensemble de tokens est sur un escalier, utilisez <code>!cof-escalier</code> pour téléporter les tokens à l'emplacement de l'escalier suivant dans l'ordre des lettres.</p>
+                <p>Dans l'exemple précédent, il serait téléporté à l'emplacement du token nommé <code>Escalier2B</code>. Cela ne fonctionne que si les bouts de l'escalier sont sur la même carte. À vous de choisir sir vous préférez révéler cette fonctionalité à vos joueurs, ou si vous le faites vous-même.</p>
+              </div>
+              <h4 class="text-secondary" id="montures">Montures</h4>
+              <div class="decalage">
+                <p>Pour qu'un personnage puisse monter sur une monture, il faut que cette monture soit associée à une fiche de personnage et qu'il possède l'attribute <code>monture</code> à <code>true</code>. La commande pour monter sur la monture est <code>!cof-en-selle @{selected|token_id} @{target|token_id}</code>, à lancer en sélectionnant le cavalier.</p>
+                <p>On peut ensuite bouger la monture, cela déplace le cavalier. Le mieux est de lancer la commander alors que le token du cavalier est sur le token de la monture. Si on déplace le cavalier, cela le fait descendre de sa monture.</p>
+              </div>
+              <h3 class="text-info" id="lumiere">3.11 Lumière</h3>
+              <div class="decalage">
+                <p>Pour faire de la lumière, on peut utiliser <code>!cof-lumiere <i>token_id portee</i></code>. Cela va faire en sorte que le token fasse de la lumière jusqu'à <i>portee</i> mètres. Il est possible d'avoir plusieurs sources de lumière, et la commande est compatible avec la <a href='#Vision_dans_le_noir'>vision dans le noir</a>. La commande admet un troisième argument qui est la distance à laquelle la lumière devient moins brillante, et un quatrième argument qui est le nom du type de lumière (par défaut, <code>lumiere</code>), utilisé quand on éteint les lumières.</p>
+                <p>Pour éteindre des lumières, utiliser <code>!cof-eteindre-lumiere</code> en sélectionnant le ou les tokens désirés. Il est possible de prendre un argument optionnel qui est le nom du groupe de lumières que l'on souhaite éteindre. Par exemple, on peut ainsi éteindre toutes les torches et laisser les effets de lumière magique actifs.</p>
+                <p>Pour les torches, le script propose d'automatiser la gestion en utilisant la commande <code>!cof-torche <i>token_id</i></code>. Si le token tient une torche allumée, cela éteint la torche (et propose au MJ d'indiquer combien de temps la torche est restée allumée), et sinon, si le token possède des torches, cela allume une torche. Le nombre de torche et leur état est stocké dans un attribut <code>torches</code>, dont la valeur courante contient le nombre de torches dans l'inventaire, et la valeur max le temps restant pour la torche en cours d'utilisation (60 minutes pour une torche neuve). Si aucun attribut de ce nom n'existe, le script se contente d'allumer ou d'éteindre une torche, sans gérer leur nombre.</p>
+              </div>
+              <h3 class="text-info" id="jet_caracteristiques">3.12 Jet de Caracteristiques</h3>
+              <div class="decalage">
+                <p><code>!cof-jet ?{Faire un jet de |Charisme, CHA|Constitution, CON|Dextérité, DEX|Force, FOR|Intelligence, INT|Sagesse, SAG}</code> : fait un simple jet pour la caractérisique sélectionnée.</p>
+                <p>Il est aussi possible de donner en argument une difficulté au jet. Par exemple en faisant <code>!cof-jet INT ?{difficulté}</code>.</p>
+                <p>Si on ne donne aucun argument (en dehors des options), la commande demande de préciser la caractéristique à tester. Si il existe un handout nommé <code>Compétences</code>, celui-ci sera utilisé pour proposer pour chaque caractéristique un choix de compétences à tester. Le handout doit contenir dans ses notes des lignes commençant par une caractéristique (FOR, DEX, ...), suivi de <code>:</code>, puis des noms de compétences, séparés par des blancs, des retours à la ligne, des virgules ou des <code>/</code>.</p>
+                <p>Enfin, la fonction accepte les arguments suivants:</p>
+                <ul>
+                  <li><code>--bonus</code> pour spécifier un bonus numérique au jet.</li>
+                  <li><code>--attribut</code> pour spécifier un attribut dont la valeur doit être ajoutée au jet. Il est possible de spécifier plusieurs attributs, comme par exemple <code>--attribut perception --attribut vigilance</code> pour un jet de vigilance.</li>
+                  <li><code>--nom</code> précise le nom du jet à afficher. De plus, cela va aussi faire rechercher un attribut de même nom (en mettant les caractères en minuscule). Par exemple <code>!cof-jet DEX --nom Discrétion</code> va lancer un jet de DEX, qui sera affiché comme un jet de Discrétion, et qui va ajouter au jet le bonus d'un éventuel attribut <code>discrétion</code>.</li>
+                  <li><code>--secret</code> : le jet n'est visible que par la personne qui a lancé la commande.</li>
+                  <li><code>--competences</code> : si la commande n'a pas déjà d'option <code>--nom</code>, invite l'utilisateur à choisir une compétence parmis une liste correspondant à la caractéristique (et provenant du handout <code>Compétences</code> tel que défini plus haut).</li>
+                </ul>
+              </div>
+            </div>
+						<h2 class="text-primary">4. Capacités par Classe</h2>
+            <div class="decalage">
+              <h3 class="text-info" id="Arquebusier">Arquebusier</h3>
+              <div class="decalage">
+                <h4 class="text-secondary">Voie de l'artilleur</h4>
+                <ol>
+                  <li><strong>Mécanismes</strong> : ajouter les bonus sur la fiche</li>
+                  <li><strong>Tir de semonce</strong> : utiliser l'option <code>--semonce</code> à <code>!cof-attack</code> On laisse le MJ vérifier si la dernière attaque du personnage était bien un échec (devrait être facile à voir dans le chat). Exemple de macro d'utilisation, en supposant qu'on ait déjà des abilities Pétoire et Mousquet : <code>?{Arme?|Mousquet,%{selected|Mousquet}|Pétoire,%{selected|Pétoire}} --semonce</code> (Note: faire attention à ce que les abilities <code>Mousquet</code> et <code>Pétoire</code> ne contiennent pas de ligne vide)</li>
+                  <li><strong>Tir de barrage</strong> : Utiliser l'option <code>--tirDeBarrage</code>. Ça multiplie les dégâts par 2, ignore la charge, et laisse un message demandant le undo si la cible décide de ne pas bouger.</li>
+                  <li><strong>Couleuvrine</strong> : ajouter une attaque à distance, avec l'option <code>--limiteParCombat</code></li>
+                </ol>
+                <h4 class="text-secondary">Voie des explosifs</h4>
+                <ol>
+                  <li><strong>Chimiste</strong> : enlever l'option <code>--poudre</code> aux attaques avec arme à poudre. Si vous utilisez la capacité alternative <strong>Grenaille</strong>, vous pouvez soit gérer les charges de grenaille avec <code>!cof-recharger <i>L</i> --grenaille</code>, soit (si vous ne voulez pas faire gérer les charges) utiliser l'option <code>--grenaille</code>. Si vous utilisez la même attaque pour plusieurs armes et que seule une partie est chargée de grenaille, il faudra aussi utiliser cette option pour utiliser l'arme chargée de grenaille.</li>
+                  <li><strong>Démolition</strong> : pas de support particulier</li>
+                  <li><strong>Poudre puissante</strong> : ajuster les attaques</li>
+                </ol>
+                <h4 class="text-secondary">Voie du champ de bataille</h4>
+                <ol>
+                  <li><strong>Action concertée</strong> : utiliser <code>!cof-echange-init @{selected|token_id} @{target|token_id} <i>n</i></code> où <i>n</i> peut valoir 1 ou 2 selon le rang dans la voie. !Pas testé!</li>
+                  <li><strong>À couvert</strong> : <code>!cof-a-couvert @{selected|token_id} @{target|token_id}</code> le target est l'allié qui se déplace avec l'arquebusier. Se sélectionner soi-même si pas d'allié.</li>
+                  <li><strong>Combattant aguerri</strong> : se reporter à la capacité choisie</li>
+                </ol>
+                <h4 class="text-secondary">Voie du Pistolero</h4>
+                <ol>
+                  <li>
+                    <strong>Plus vite que son ombre</strong> :
+                    <ul>
+                      <li>ajouter un attribut <code>initEnMain<i>N</i></code>, où <i>N</i> est le numéro d'une attaque avec arme à poudre, avec comme valeur 10</li>
+                      <li>utiliser <code>!cof-degainer <i>N</i></code> pour avoir en main l'arme <i>N</i></li>
+                      <li>exemple : <code>!cof-degainer ?{Arme en main ?|Pétoire,0|Épée,1|Aucune,-1}</code> avec <code>initEnMain0</code> = 10.</li>
+                    </ul>
+                  </li>
+                  <li><strong>Cadence de tir</strong> : pas de support</li>
+                  <li><strong>Tir double</strong> : utiliser l'option <code>--tirDouble</code> si deux tirs sur une même cible. Si les deux armes sont différentes, rajouter le label de la deuxième arme après l'option (si le label est <i>l2</i>, cela donne <code>--tirDouble <i>l2</i></code>).</li>
+                  <li><strong>As de la gâchette</strong> : utiliser l'option <code>--asDeLaGachette</code> pour les attaques avec des armes à poudre ou des arbalètes.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de la précision</h4>
+                <ol>
+                  <li><strong>Joli coup !</strong> : créer un attribut <code>joliCoup</code> (valeur true).</li>
+                  <li><strong>Tir précis</strong> : créer un attribut <code>tirPrecis</code>, valeur 1 ou 2 (le bonus apporté par la capacité)</li>
+                  <li><strong>Défaut dans la cuirasse</strong> : utiliser <code>!cof-defaut-dans-la-cuirasse @{selected|token_id} @{target|token_id}</code></li>
+                </ol>
+              </div>
+              <h3 class="text-info" id="Barbare">Barbare</h3>
+              <div class="decalage">
+                <h4 class="text-secondary">Voie de la brute</h4>
+                <ol>
+                  <li><strong>Argument de taille</strong> : ajouter les capacité et le bonus de PV sur la fiche.</li>
+                  <li><strong>Tour de force</strong> : utiliser <code>!cof-tour-de-force ?{Difficulté du jet de force ?}</code></li>
+                  <li><strong>Attaque brutale</strong> : faire l'attaque avec les options <code>--bonusAttaque -2 --plus 1d6</code></li>
+                </ol>
+                <h4 class="text-secondary">Voie du pagne</h4>
+                <ol>
+                  <li><strong>Vigueur</strong> : ajouter les capacités avec leurs bonus sur la fiche</li>
+                  <li><strong>Peau de pierre</strong> : augmenter la DEF sur la fiche</li>
+                  <li><strong>Tatouages</strong> : ajouter le bonus choisi sur la fiche</li>
+                </ol>
+                <h4 class="text-secondary">Voie du pourfendeur</h4>
+                <ol>
+                  <li><strong>Réflexes félins</strong> : ajouter un attribut <code>reflexesFelins</code>, avec comme valeur le bonus aux saves</li>
+                  <li><strong>Charge</strong> : faire une attaque avec les options <code>--bonusAttaque 2</code> <code>--plus 1d6</code></li>
+                  <li><strong>Enchaînement</strong> : à gérer par le MJ</li>
+                </ol>
+                <h4 class="text-secondary">Voie du primitif</h4>
+                <ol>
+                  <li><strong>Proche de la nature</strong> : ajouter le rang à un attribut <code>perception</code></li>
+                  <li><strong>Armure de vent</strong> : Ajouter un attribut <code>armureDeVent</code> avec comme valeur le rang dans la voie du primitif. Cela augmente la DEF, mais seulement lorsque le barbare ne porte pas d'armure (ne se voit pas sur le total de DEF de la fiche)</li>
+                  <li><strong>Vigilance</strong> : ajouter 5 à un attribut <code>vigilance</code> et ajouter un attribut <code>immuniteAuxSournoises</code> avec comme valeur <code>true</code></li>
+                </ol>
+                <h4 class="text-secondary">Voie de la rage</h4>
+                <ol>
+                  <li><strong>Cri de guerre</strong> : <code>!cof-effet-combat criDeGuerre</code></li>
+                  <li><strong>Défier la mort</strong> : ajouter un attribut <code>defierLaMort</code> de valeur 10 et de maximum 10. (pour l'instant ne prend pas la rage en compte)</li>
+                  <li><strong>Rage du berserk</strong> : utiliser <code>!cof-rage-du-berserk</code>, à la fois pour entrer en rage et pour tenter d'en sortir avant la fin du combat.</li>
+                </ol>
+              </div>
+              <h3 class="text-info" id="Barde">Barde</h3>
+              <div class="decalage">
+                <h4 class="text-secondary">Voie de l'escrime</h4>
+                <ol>
+                  <li><strong>Précision</strong> : simplement utiliser le bon score sur la fiche.</li>
+                  <li><strong>Intelligence du combat</strong> : ajouter les bonus sur la fiche.</li>
+                  <li><strong>Feinte</strong> : faire une attaque avec l'option <code>--feinte</code> pour profiter des effets de feinte au tour suivant.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du musicien</h4>
+                <ol>
+                  <li><strong>Chant des héros</strong> : <code>!cof-effet-temp chantDesHeros [[5+@{selected|CHA}]] --allies</code>. Il faut avoir défini une <a href="#allie">équipe</a> avec le barde. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--lanceur @{selected|token_id} --rang 1 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Attaque sonore</strong> : Ajouter une attaque sur la fiche, utilisant l'attaque magique, de portée 10 m, et de DM 1d6+CHA. Appeler cette attaque avec les options <code>--sonique --magique --sortilege --cone --fx breath-smoke</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Zone de silence</strong> : <code>!cof-effet-temp zoneDeSilence [[1d6+@{selected|CHA}]] --lanceur @{selected|token_id} --mana 1 --portee 35 --disque @{target|token_id} 3</code>. Le script ne gère pas le moment où les cibles sortent de la zone. Si cela arrive, le MJ doit enlever à la main l'attribut <code>zoneDeSilence</code> crée par le script pour le personnage concerné. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Danse irrésisitible</strong> : Ajouter une attaque sur la fiche, de portée 100 m, utilisant l'attaque magique, avec les options <code>--mana 2 --sortilege --pasDeDmg --effet danseIrresistible [[1d4+@{selected|CHA]]</code>. Si vous utilisez les options de mana puissante, rajoutez <code>?{Y consacrer tout le tour?|Oui,--puissant duree|Non,&amp;#32;}</code>. Si vous péférez utiliser l'option de tempête de mana, rajoutez <code>--rang 4 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Musique fascinante</strong> : pas de support particulier</li>
+                </ol>
+                <h4 class="text-secondary">Voie du saltimbanque</h4>
+                <ol>
+                  <li><strong>Acrobate</strong> : ajouter les compétences sur la fiche</li>
+                  <li><strong>Grâce féline</strong> : simplement ajouter les bonus sur la fiche</li>
+                  <li><strong>Lanceur de couteau</strong> : faire normalement l'attaque.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de la séduction</h4>
+                <ol>
+                  <li><strong>Charmant</strong> : ajouter les compétences sur la fiche</li>
+                  <li><strong>Dentelles et rapière</strong> : Ajouter un attribut <code>dentellesEtRapiere</code> avec comme valeur le rang dans la voie de la séduction. Cela augmente la DEF, mais seulement lorsque le barde ne porte pas d'armure et seulement contre les attaques au contact. (ne se voit pas sur le total de DEF de la fiche)</li>
+                  <li><strong>Arme secrète</strong> : <code>!cof-arme-secrete @{selected|token_id} @{target|token_id}</code></li>
+                </ol>
+                <h4 class="text-secondary">Voie du vagabond</h4>
+                <ol>
+                  <li><strong>Rumeurs et légendes</strong> : ajouter les compétences sur la fiche</li>
+                  <li><strong>Compréhension des langues</strong> : <code>!cof-lancer-sort 0 lance un sort de compréhension des langues qui dure [[1d6+@{selected|CHA}]] minutes</code></li>
+                  <li><strong>Débrouillard</strong> : pas de support particulier. Ajouter le bonus aux compétences que vous souhaitez noter.</li>
+                  <li><strong>Déguisement</strong> : !cof-lancer-sort 1 lance un sort de déguisement</li>
+                  <li><strong>Touche à tout</strong> : se reporter aux capacités choisies</li>
+                </ol>
+              </div>
+              <h3 class="text-info" id="Chevalier">Chevalier</h3>
+              <div class="decalage">
+                <h4 class="text-secondary">Voie du cavalier</h4>
+                <ol>
+                  <li><strong>Fidèle monture</strong> : Faire un personnage pour la monture, avec un attribute <code>monture</code> à <code>true</code>. Pour monter sur la monture, on peut utiliser <code>!cof-en-selle @{selected|token_id} <i>nom_de_la_monture</i></code>. Pour en descendre, il suffit de bouger le token du chevalier.</li>
+                  <li><strong>Cavalier émérite</strong> : ajuster la DEF de la monture. Ajouter au chevalier un attribut <code>cavalierEmerite</code> avec comme valeur 2.</li>
+                  <li><strong>Monture magique</strong> : pour les soins automatiques de la nuit, ajouter un attribut <code>montureMagique</code> de valeur <code>true</code>.</li>
+                  <li>
+                    <strong>Charge</strong> : pas de support pour le déplacement, mais
+                    <ul>
+                      <li>Pour l'attaque : utiliser <code>--m2d20 --plus 1d6</code></li>
+                      <li>Pour les créatures sur la trajectoire, utiliser <code>!cof-jet FOR 18</code>, et en cas de succès, infliger les DM.</li>
+                    </ul>
+                  </li>
+                  <li><strong>Monture fantastique</strong> : Faire un personnage pour la monture, avec un attribut <code>monture</code> à <code>true</code></li>
+                </ol>
+                <h4 class="text-secondary">Voie de la guerre</h4>
+                <ol>
+                  <li><strong>Armure sur mesure</strong> : simplement reporter sur la fiche le bon malus d'armure</li>
+                  <li> <strong>Encaisser un coup</strong> :
+                    <ul>
+                      <li>utiliser <code>!cof-effet-temp encaisserUnCoup 1</code> pour se mettre en position</li>
+                      <li>normalement, le script propose un bouton à activer en cas d'attaque réussie alors que le chevalier est en position, mais en cas de besoin, vous pouvez utiliser <code>!cof-encaisser-un-coup</code> pour amortir un coup.</li>
+                    </ul>
+                  </li>
+                  <li><strong>Coup de bouclier</strong> : faire une attaque de bouclier, avec l'option <code>--avecd12</code></li>
+                  <li><strong>Frappe lourde</strong> : faire l'attaque avec les options <code>--avecd12 --plus 2d6 --ignoreMoitieRD</code></li>
+                </ol>
+                <h4 class="text-secondary">Voie du héro</h4>
+                <ol>
+                  <li><strong>Ignorer la douleur</strong> : <code>!cof-ignorer-la-douleur</code>. À faire juste après le coup.</li>
+                  <li><strong>Piqures d'insectes</strong> : ajouter un attribut <code>piquresDInsectes</code>, avec comme valeur le rang dans la voie</li>
+                  <li><strong>Laissez-le-moi</strong> : pas de support pour restreindre au chef de groupe. On pourraît peut-être utiliser la voie du chef d'armée pour le faire automatiquement ? Pour l'instant, utiliser l'option <code>--plus 1d6</code> contre les leaders.</li>
+                  <li><strong>Seul contre tous</strong> : pas de support particulier.</li>
+                  <li><strong>Charisme héroïque</strong> : reporter sur la fiche.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du meneur d'hommes</h4>
+                <ol>
+                  <li><strong>Sans peur</strong> : Ajouter un attribut <code>sansPeur</code>, utilisé quand on essaiera de faire peur à un <a href="#allie">allié</a>.</li>
+                  <li><strong>Intercepter</strong> : Juste après l'attaque réussie, utiliser <code>!cof-intercepter</code>. Il faut un attribut <code>voieDuMeneurDHomme</code> avec comme valeur le rang dans la voie.</li>
+                  <li><strong>Exemplaire</strong> : <code>!cof-exemplaire</code>, juste après l'attaque ratée.</li>
+                  <li><strong>Ordre de bataille</strong> : pas de support</li>
+                </ol>
+                <h4 class="text-secondary">Voie de la noblesse</h4>
+                <ol>
+                  <li><strong>Éduqué</strong> : pas de support particulier, juste reporter les bonus sur la fiche.</li>
+                  <li><strong>Autorité naturelle</strong> : simplement reporter sur la fiche les bonus d'init et de DEF, et ajouter la capacité intimider.</li>
+                  <li><strong>Écuyer</strong> : pour le bonus au critique, 
+                    ajouter un attribut <code>ecuyer</code> de valeur <code>true</code>. 
+                    Pour les soins de nuit, ajouter à l'écuyer un attribut <code>ecuyerDe</code>, avec comme valeur le nom du chevalier. 
+                    Si on souhaite que l'écuyer puisse soigner gratuitement la monture, il faut aussi que celle-ci ait un attribut <code>montureDe</code>, avec comme valeur le nom du chevalier.</li>
+                </ol>
+              </div>
+              <h3 class="text-info" id="Druide">Druide</h3>
+              <div class="decalage">
+                <h4 class="text-secondary">Voie des animaux</h4>
+                <ol>
+                  <li><strong>Langage des animaux</strong> : pas de support particulier</li>
+                  <li><strong>Nuée d'insectes</strong> : ajouter une attaque magique, de portée 20 m. Puis appeler cette attaque (avec <code>!cof-attack</code>) avec les arguments <code>--pasDeDmg --sortilege --effet nueeDInsectes [[5+@{selected|SAG}]]</code>. Pas de support particulier pour les DM de zone qui détruisent la nuée (enlever l'attribut <code>nueeDInsecte</code> sur la cible dans ce cas). Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Le guetteur</strong> : ajouter 5 à un attribut <code>preception</code>. Ajouter un personnage et token pour l'oiseau.</li>
+                  <li><strong>Masque du prédateur</strong> : <code>!cof-effet-temp masqueDuPredateur [[5+@{selected|SAG}]] --mana 2</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 4 ?{Tempête de mana?|Oui,--tempeteDeMana altruiste|Non,&amp;#32;}</code>. Notez que le mot clé <code>altruiste</code> est facultatif, ici. À vous de choisir si vous l'autorisez ou pas.</li>
+                  <li><strong>Forme animale</strong> : pas d'autre support que <code>!cof-lancer-sort 3 se transforme en ?{Transformation en ?}</code> </li>.
+                </ol>
+                <h4 class="text-secondary">Voie du fauve</h4>
+                <ol>
+                  <li><strong>Vitesse du félin</strong> : simplement ajouter les bonus sur la fiche, ainsi que les competences course, escalade et saut.</li>
+                  <li><strong>Panthère</strong> : ajouter un personnage pour la panthère, qui sera contrôlé par le joueur.</li>
+                  <li><strong>Attaque bondissante</strong> : faire l'attaque avec les options <code>--bonusAttaque 5</code> <code>--plus 1d6</code>. Les conditions d'utilisation sont à vérifier par le MJ.</li>
+                  <li><strong>Grand félin</strong> : ajuster la fiche de la panthère, et pour le soin, utiliser <code>!cof-soin @{selected|token_id} nom_familier ?{Montant des soins} --transfer</code>.
+                </ol>
+                <h4 class="text-secondary">Voie de la nature</h4>
+                <ol>
+                  <li><strong>Maître de la survie</strong> : Ajouter +2 à un attribut <code>vigilance</code></li>
+                  <li><strong>Marche sylvestre</strong> : quand le druide est en terrain difficile, faire <code>!cof-effet marcheSylvestre oui</code>. Faire <code>!cof-effet marcheSylvestre non</code> quand il en sort.</li>
+                  <li><strong>Résistant</strong> : ajouter un attribut </code>RD_nature</code>, avec comme valeur la RD (donc deux fois le rang dans la voie). Cette RD s'applique à toute attaque ou dommages avec l'option <code>--nature</code> ou <code>--naturel</code>. Il s'applique aussi à toute attaque venant d'un personnage avec un attribut <code>animal</code>, ou <code>insecte</code> ou bien avec un profil animal ou insecte, ou avec une race reconnue comme étant un animal ou un insecte. Dans ce cas, si on souhaite qu'une attaque d'une telle créature ne soit pas considérée comme naturelle, on peut utiliser l'option <code>--artificiel</code> à l'attaque.</li>
+                  <li><strong>Bâton de druide</strong> : Simplement créer l'attaque correspondante et permettre les deux attaques en action limitée.</li>
+                  <li><strong>Constitution héroïque</strong> : reporter sur la fiche</li>
+                </ol>
+                <h4 class="text-secondary">Voie du protecteur</h4>
+                <ol>
+                  <li><strong>Baies magiques</strong> : Utiliser <code>!cof-distribuer-baies</code> avec option <code>--allies --self</code> ou <code>--target</code> pour donner des baies (en ayant sélectionné le druide, le mieux est d'utiliser une ability). Pour consommer ensuite une baie, il faut utiliser <code>!cof-consommables</code>.</li>
+                  <li><strong>Forêt vivante</strong> : pas vraiment de support. On peut baisser temporairement l'init des adversaires sur la fiche.</li>
+                  <li><strong>Régénération</strong> : <code>!cof-effet-temp regeneration [[@{selected|NIVEAU} + @{selected|SAG}]] --lanceur @{selected|token_id} --target @{target|token_id} --limiteCibleParJour 1 --portee 0 --mana 1</code>. Si vous utilisez l'option de magie puissante, vous pouvez rajouter <code>?{Y consacrer tout le tour ?|oui,--valeur 4|non,&amp;#32;}</code>, et si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>, à la place.</li>
+                  <li><strong>Forme d'arbre</strong> : <code>!cof-effet-temp formeDArbre [[5+@{selected|SAG}]] --mana 2</code>. J'ai choisi de donner comme pouvoir supplémentaire à cette forme d'avoir ses propres PVs, et le druide récupère ses PVs originaux à la fin de l'effet. La transformation est annulée aussi si l'arbre perd tous ses PVs. Le nombre de PVs par défaut est de niveau x 5, mais il peut être modifié en ajoutant au argument <code>--valeur <i>pv</i></code>. Pour augmenter un peu l'intérêt de ce sort, je lui fais aussi augmenter de 50% le bonus de peau d'écorce. Si vous utilisez les actions à afficher à chaque tour, vous pouvez aussi créer une ability de nom <code>#FormeArbre#</code> contenant les sorts et actions possibles en forme d'arbre. Si une telle ability existe, elle va toujours afficher au moins les actions défensive, d'attente et d'attaque sous forme d'arbre (pas besoin de créer une attaque dédiée sur la fiche). Il est possible de spécifier une image pour le token en forme d'arbre, en utilisant le valeur courante d'un attribut <code>tokenFormeDArbre</code>.</li>
+                  <li><strong>Sagesse héroïque</strong> : reporter sur la fiche</li>
+                </ol>
+                <h4 class="text-secondary" id="voie_végétaux">Voie des végétaux</h4>
+                <ol>
+                  <li><strong>Peau d'écorce</strong> : <code>!cof-effet-temp peauDEcorce [[5+@{selected|SAG}]]</code>. Par défaut, utilise la valeur d'un attribut <code>voieDesVegetaux</code> (qui devrait avoir comme valeur le rang dans la voie). Il est possible de choisir une autre valeur en utilisant l'option <code>--valeur</code>, et si aucune des deux méthodes n'est utilisée, le bonus de DEF est de 1. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 1 ?{Tempête de mana?|Oui,--tempeteDeMana altruiste|Non,&amp;#32;}</code>. Notez que le mot clé <code>altruiste</code> est facultatif, ici. À vous de choisir si vous l'autorisez ou pas.</li>
+                  <li><strong>Prison végétale</strong> : <code>!cof-effet-temp prisonVegetale [[5+@{selected|SAG}]] --saveParTour FOR [[10+@{selected|SAG}]] --lanceur @{selected|token_id} --disque @{target|token_id} 10 20 --saufAllies</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Animation d'un arbre</strong> :  <code>!cof-animer-arbre @{selected|token_id} @{target|token_id} --mana 1 --portee 0</code>. Cela implique d'avoir un token représentant l'arbre sur la carte. Ce que je fais, c'est de passer un token d'arbre du layer map au layer tokens, puis je laisse le joueur faire le sort. Si c'est trop compliqué, vous pouvez aussi préparer un personnage arbre, avec les caractéristiques décrites, et le faire arriver sur la carte à la main (ne pas oublier son attribut <code>RD_sauf_feu_tranchant</code> à 10, dans ce cas).</li>
+                  <li><strong>Gland de pouvoir</strong> : Faire une attaque magique de portée 10 m, et l'utiliser avec les options <code>--pasDeDmg --sortilege --effet statueDeBois [[2d6+@{selected|SAG}]] --valeur 10 10 --mana 2</code>.</li>
+                  <li><strong>Porte végétale</strong> : Pas de support au niveau du script, à part <code>!cof-lancer-sort 3 lance un sort de porte végétale</code>.</li>
+                </ol>
+              </div>
+              <h3 class="text-info" id="Ensorceleur">Ensorceleur</h3>
+              <div class="decalage">
+                <h4 class="text-secondary">Voie de l'air</h4>
+                <ol>
+                  <li><strong>Murmures dans le vent</strong> : rien à faire</li>
+                  <li><strong>Sous tension</strong> : <code>!cof-effet-temp sousTension [[5+@{selected|CHA}]]</code>. Pour l'attaque, définir une attaque magique à 1d6+CHA, et l'appeler avec les options <code>--si etat sousTension --electrique --sortilege --fx beam-holy</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>, seulement pour la mise sous tension (pas l'attaque).</li>
+                  <li><strong>Télékinésie</strong> : Pas de support autre que <code>!cof-lancer-sort 1 lance un sort de télékinésie</code></li>
+                  <li><strong>Foudre</strong> : Faire une attaque de foudre de portée 10 m (attaque magique, dégâts 4d6 + CHA), et faire les attaques avec les options <code>--psave DEX [[12+@{selected|DEX}]] --mana 2 --electrique --sortilege --ligne --targetFx beam-holy</code>. Si vous utilisez l'option de magie puissante, vous pouvez rajouter <code>?{Y consacrer le tour entier ?|oui,--puissant|non,&amp;#32;}</code>. Et si, à la place, vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 4 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>. </li>
+                  <li><strong>Forme éthérée</strong> : <code>!cof-effet-temp intangible [[5 + @{selected|CHA}]] --mana 3</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 5 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code></li>
+                </ol>
+                <h4 class="text-secondary">Voie de la divination</h4>
+                <ol>
+                  <li><strong>6eme sens</strong> : ajouter le bonus en DEF divers et initiative diver, ajouter un attribut <code>vigilance</code>, de valeur 2*rang (le bonus aux jet de surprise).</li>
+                  <li><strong>Détection de l'invisible</strong> : pas de support</li>
+                  <li><strong>Clairvoyance</strong> : pas de support particulier</li>
+                </ol>
+                <h4 class="text-secondary">Voie de l'envoûteur</h4>
+                <ol>
+                  <li><strong>Injonction</strong> : utiliser <code>!cof-injonction @{selected|token_id} @{target|token_id} --portee 20</code></li>
+                  <li><strong>Sommeil</strong> : <code>!cof-sommeil @{selected|token_id} --disque @{target|token_id} 5 20</code>. Pour sélectionner le centre de la zone, on peut utiliser un personnage fictif (avec un token représentant une cible, par exemple) ayant 0 de max de PV.</li>
+                  <li><strong>Confusion</strong>: faire une attaque de portée 20 m, et pour la macro, utiliser les options <code>--pasDeDmg --sortilege --attaqueMentale --mana 1 --effet confusion [[3+@{selected|CHA}]] --saveParTour SAG [[10+@{selected|CHA}]]</code>. Si vous utilisez les options de magie puissante, vous pouvez remplacer la durée par <code>?{Y consacrer tout le tour?|Oui,[[6+2*@{selected|CHA}]]|Non,[[3+@{selected|CHA}]]}</code>.  Et si à la place, vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Amitié</strong>: pas de support particulier, sinon <code>!cof-lancer-sort 2 lance un sort d'amitié</code></li>
+                  <li><strong>Domination</strong> : utiliser <code>!cof-attaque-magique @{selected|token_id} @{target|token_id} --mana 3 --portee 20 --attaqueMentale</code></li>
+                </ol>
+                <h4 class="text-secondary">Voie des illusions</h4>
+                <ol>
+                  <li><strong>Image décalée</strong> : <code>!cof-effet-temp imageDecalee [[5+@{selected|CHA}]]</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 1 ?{Tempête de mana?|Oui,--tempeteDeMana altruiste|Non,&amp;#32;}</code>. Notez que le mot clé <code>altruiste</code> est facultatif, ici. À vous de choisir si vous l'autorisez ou pas.</li>
+                  <li><strong>Mirage</strong> : pas de support particulier</li>
+                  <li><strong>Imitation</strong> : pas de support autre que <code>!cof-lancer-sort 1 lance un sort d'imitation ([[5+@{selected|CHA}]] minutes)</code>.</li>
+                  <li><strong>Dédoublement</strong> : ajouter une attaque magique, de portée 20 m, avec les options <code>--pasDeDmg --sortilege --mana 2 --effet dedoublement [[5+@{selected|CHA}]]</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 4 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Tueur fantasmagorique</strong> : <code>!cof-tueur-fantasmagorique @{selected|token_id} @{target|token_id} --portee 20 --mana 3</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 5 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de l'invocation</h4>
+                <ol>
+                  <li><strong>Familier</strong> : créer un token pour le familier, avec vue et controlé par le joueur. Le partage des PV n'est pas géré.</li>
+                  <li><strong>Serviteur invisible&nbsp;</strong>: ok</li>
+                  <li><strong>Mur de force</strong> : <code>!cof-mur-de-force ?{Spherique?|Oui|Non,mur} --mana 1 --image <i>path</i></code> où <i>path</i> est l'adresse url d'une image de la librairie Roll20 qui représente un mur de force (sera placé dans le layer map). L'image n'est utilisée qu'en cas de mur sphérique. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li>
+                    <strong>Épée dansante</strong> :
+                    <ul>
+                      <li>sort: <code>!cof-effet-temp epeeDansante [[5+@{selected|CHA}]] --mana 2</code></li>
+                      <li>attaque: faire une attaque de portée 20 m, avec les options <code>--si etat epeeDansante</code> <code>--magique</code> <code>--ignoreObstacles</code></li>
+                        <li>si vous jouez les options de magie puissante, rajoutez <code>--puissant ?{Y passer tout le tour ?|oui|non}</code> pour le sort, et <code>--puissant epeeDansante</code> pour l'attaque. </li>
+                        <li>si vous utilisez les options de tempête de mana, ajoutez juste <code>--rang 4 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code> au sort.</li>
+                    </ul>
+                  </li>
+                  <li><strong>Charisme héroïque</strong> : reporter sur la fiche</li>
+                </ol>
+              </div>
+              <h3 class="text-info" id="Forgesort">Forgesort</h3>
+              <div class="decalage">
+                <h4 class="text-secondary">Voie des artefacts</h4>
+                <ol>
+                  <li><strong>Bâton de mage</strong> : simplement adapter l'attaque, avec aussi <code>--magique</code>. Pour l'éclair d'énergie, le mieux est d'ajouter une autre attaque.</li>
+                  <li><strong>Blocage</strong> : pas de support particulier</li>
+                  <li><strong>Sac sans fond</strong> : pas de support particulier</li>
+                  <li><strong>Frappe des arcanes</strong> : le plus simple est d'utiliser la même ligne d'attaque (disons que son label est <code>E</code>) que pour l'attaque d'énergie (mais si besoin, rien n'empèche d'en utiliser une autre). La commande sera alors <code>!cof-attack @{selected|token_id} @{selected|token_id} E --auto --magique --disque 10 --etat renverse --save FOR [[10+@{selected|INT}]] --mana 2</code>. Si vous utilisez les options de magie puissante, rajoutez <code>?{Y consacrer tout le tour ?|Oui,--puissant|Non,&amp;#32;}</code>. Sinon, si vous utilisez les options de tempête de mana, rajouez <code>--rang 4 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code></li>
+                </ol>
+                <h4 class="text-secondary">Voie des élixirs</h4>
+                <p style="margin-top:0px; margin-bottom:0px">Pour créer ou juste voir ses élixirs, utiliser la commande <code>!cof-elixirs</code>. Pour cela, il faut aussi un attribut <code>voieDesElixirs</code> avec comme valeur le rang dans la voie. Noter que la commande <code>!cof-elixirs</code> affiche une liste d'élixirs, et que pour effectivement créer un élixir, il faut cliquer sur le bouton correspondant dans cette liste.</p>
+                <ol>
+                  <li><strong>Fortifiant</strong> : création à l'aide de <code>!cof-elixirs</code>, et utilisation avec la même commande, ou bien en utilisant <code>!cof-consommables</code>. un attribut <code>fortifiants</code> qui contient le nombre de fortifiants possédés. <code>!cof-fortifiant @{selected|token_id} @{target|token_id}</code></li>
+                  <li><strong>Feu grégeois</strong> : comme pour les fortifiants.</li>
+                  <li><strong>Élixir de guérison</strong> : comme pour les fortifiants.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du métal</h4>
+                <ol>
+                  <li><strong>Forgeron</strong> : Il faut un attribut <code>voieDuMetal</code> pour connaître le rang (ou utiliser l'option <code>--valeur</code>. Lancer le sort avec <code>!cof-effet-temp forgeron(<i>L</i>) [[5+@{selected|INT}]]</code> où <i>L</i> est le label d'une attaque. Ensuite, chaque fois que cette attaque sera utilisée, les dégâts seront ajoutés. Limitations : si deux attaques utilisent la même arme, il faut faire deux fois l'action, une pour chaque attaque. Si vous utilisez les options de tempête de mana, vous pouvez rajouter <code>--rang 1 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Métal brûlant</strong> : faire une attaque magique de portée 20 m. L'appeler avec les options <code>--pasDeDmg --sortilege --effet ?{Chauffer|une arme,armeBrulante|une armure,armureBrulante} [[5+@{selected|INT}]]</code>. Si vous utilisez les options de tempête de mana, rajoutez <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Magnétisme</strong> : <code>!cof-effet-temp magnetisme [[3+@{selected|INT}]] --mana 1</code>. L'effet n'est actif que contre les attaques ayant l'option <code>--metal</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du golem</h4>
+                <ol>
+                  <li><strong>Grosse tête</strong> : pas de support (pas de save basé sur INT ?)</li>
+                  <li><strong>Golem</strong> : ajouter un personnage et un token pour le golem (ne pas oublier l'attribut <code>nonVivant</code> à <code>true</code> pour le golem). Pour les réparations, utiliser <code>!cof-soin @[selected|token_id} <i>nom_du_golem</i> <i>rang</i>d6+@{selected|INT}</code>.</li>
+                  <li><strong>Protecteur</strong> : <code>!cof-interposer</code> permet de s'interposer à la place de la cible de la dernière attaque. (Attention, pas de undo pour cette action)</li>
+                  <li><strong>Golem supérieur</strong> : reporter les avantages sur la fiche du golem.</li>
+                  <li><strong>Intelligence héroïque</strong> : reporter sur la fiche</li>
+                </ol>
+                <h4 class="text-secondary">Voie des runes</h4>
+                <ol>
+                  <li><strong>Runes de défense</strong> : ajuster la DEF sur la fiche.</li>
+                  <li><strong>Runes d'énergie</strong> : Rajouter un attribut <code>runeDEnergie</code> avec comme valeur courante et maximale, 1. Le mieux est de le rajouter à tous les personnages sur lesquels le forgesort fait régulièrement ces runes. Si un jour, pour une raison ou pour une autre, un combat a lieu sans que ces runes aient été posées, mettre ces attributs à 0 (le maximum ne bouge pas et reste à 1). Pour l'utilisation des runes, le script essaie de trouver des cas où ça puisse être fait automatiquement (attaque, jet de caractéristique), mais le résultat sera incorrect si l'action demande de jeter plus d'un dé (malédiction, charge,...). Pour simplement diminuer la rune d'énergie d'un ou plusieurs tokens, les sélectionner et lancer <code>!cof-rune-energie</code>.</li>
+                  <li><strong>Runes de protection</strong> : rajouter un attribut <code>runeDeProtection</code> de valeur courante et maximale 1. Pour utiliser la rune, <code>!cof-rune-protection</code>.</li>
+                  <li><strong>Runes de puissance</strong> : Rajouter un attribut <code>runeDePuissance(<i>L</i>)</code>, où <i>L</i> est le label de l'arme sur lquelle la rune est inscrite, et avec comme valeur courante et maximale, 1. Le mieux est de le rajouter à tous les personnages sur lesquels le forgesort fait régulièrement ces runes. Si un jour, pour une raison ou pour une autre, un combat a lieu sans que ces runes aient été posées, mettre ces attributs à 0 (le maximum ne bouge pas et reste à 1). Pour l'utilisation des runes, le script essaie de trouver des cas où ça puisse être fait automatiquement (attaque avec une arme). Pour simplement diminuer la rune d'énergie d'un ou plusieurs tokens, les sélectionner et lancer <code>!cof-rune-puissance <i>L</i></code>.</li>
+                </ol>
+              </div>
+              <h3 class="text-info" id="Guerrier">Guerrier</h3>
+              <div class="decalage">
+                <h4 class="text-secondary">Voie du bouclier</h4>
+                <ol>
+                  <li><strong>Protéger un allié</strong> : <code>!cof-proteger-un-allie @{selected|token_id} @{target|token_id}</code>. Fonctionne aussi si on remplace le target par un nom de token. Le script ne vérifie pas que le guerrier ne change pas d'allié plus d'une fois par tour.</li>
+                  <li>
+                    <strong>Absorber un coup</strong> :
+                    <ul>
+                      <li>utiliser <code>!cof-effet-temp absorberUnCoup 1</code> pour se mettre en position. Attention, ça ne vérifie pas si le guerrier porte son bouclier.</li>
+                      <li>normalement, le script propose un bouton à activer en cas d'attaque réussie alors que le guerrier est en position, mais en cas de besoin, vous pouvez utiliser <code>!cof-absorber-au-bouclier</code> pour absorber un coup.</li>
+                    </ul>
+                  </li>
+                  <li>
+                    <strong>Absorber un sort</strong> :
+                    <ul>
+                      <li>utiliser <code>!cof-effet-temp absorberUnSort 1</code> pour se mettre en position. Attention, ça ne vérifie pas si le guerrier porte son bouclier.</li>
+                      <li>normalement, le script propose un bouton à activer en cas d'attaque réussie alors que le guerrier est en position, mais en cas de besoin, vous pouvez utiliser <code>!cof-absorber-au-bouclier</code> pour absorber un sort.</li>
+                    </ul>
+                  </li>
+                </ol>
+                <h4 class="text-secondary">Voie du combat</h4>
+                <ol>
+                  <li><strong>Vivacité</strong> : simplement augmenter l'init sur la fiche.</li>
+                  <li><strong>Désarmer</strong> : <code>!cof-desarmer @{selected|token_id} @{target|token_id}</code>. On peut utiliser un troisième argument optionnel, qui est le label d'une arme par défaut, au cas où le guerrier n'aurait pas d'arme en main. Le script determine si la cible tient une arme à 2 mains en cherchant dans le nom de l'arme, puis dans le champ <code>SPÉCIAL</code> de l'arme. Pour savoir comment le script détermine quelle est l'arme en main, se référer à la section <a href='#degainer'>dégainer</a>.</li>
+                  <li><strong>Double attaque</strong> : faire deux attaques, avec l'option supplémentaire <code>--bonusAttaque -2</code>.</li>
+                  <li><strong>Attaque circulaire</strong> : faire les attaques normalement, ce n'est pas considéré comme une aoe.</li>
+                  <li><strong>Attaque puissante</strong> : utiliser les options <code>--avecd12 --plus 2d6</code>.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du maître d'armes</h4>
+                <ol>
+                  <li><strong>Arme de prédilection</strong> : le mieux est de refléter ça sur l'attaque dans la fiche.</li>
+                  <li><strong>Science du critique</strong> : pour ne pas avoir à modifier les chances de critique pour toutes les attaques, utiliser un attribut <code>scienceDuCritique</code> (valeur <code>true</code>). Attention à ne pas faire ça ET modifier les chances de critiques de l'attaque, car ça s'additionne.</li>
+                  <li><strong>Spécialisation</strong> : reporter le bonus aux DM sur la fiche.</li>
+                  <li><strong>Attaque parfaite</strong> : utiliser les options <code>--m2d20 --plus 1d6</code>.</li>
+                  <li><strong>Riposte</strong> : pas de support particulier.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de la résistance</h4>
+                <ol>
+                  <li><strong>Robustesse</strong> : rajouter les PV sur la fiche.</li>
+                  <li><strong>Armure naturelle</strong> : rajouter la DEF sur la fiche.</li>
+                  <li><strong>Second souffle</strong> : <code>!cof-soin @{selected|token_id} secondSouffle</code></li>
+                </ol>
+                <h4 class="text-secondary">Voie du soldat</h4>
+                <ol>
+                  <li><strong>Posture de combat</strong> : <code>!cof-posture-de-combat <i>bonus attr1 attr2</i></code>, où les deux <i>attr</i> peuvent être soit <code>DEF</code> soit <code>ATT</code> soit <code>DM</code>, et le <i>bonus</i> est retiré au premier attribut pour être ajouté au second. Le bonus peut être limité si le guerrier a un attribut <code>voieDuSoldat</code> qui indique son rang dans la voie. Exemple d'utilisation&nbsp;: <code>!cof-posture-de-combat ?{Bonus} ?{Baisser|Défense,DEF|Attaque,ATT|Dégâts,DM} ?{Augmenter|Défense,DEF|Attaque,ATT|Dégâts,DM}</code>. Normalement, la règle fait décider de sa posture au guerrier à chaque tour, mais en pratique, il en change assez rarement. Une posture de combat reste donc active jusqu'à la fin du combat ou jusqu'à ce qu'on en change (elle est neutre si on a le même attribut à buffer et débuffer).</li>
+                  <li><strong>Combat en phalange</strong> : ajouter un attribut <code>combatEnPhalange</code>, valeur <code>true</code>. Les bonus seront ajoutés automatiquement en fonctions des alliés définis selon <a href="#allie">cette méthode</a>.</li>
+                  <li><strong>Prouesse</strong> : pas de support pour l'instant. On peut utiliser <code>!cof-dmg 1d4 --ignoreRD</code> pour sacrifier les PV, le MJ peut ensuite gérer les effets du bonus au test.</li>
+                  <li><strong>Dernier rempart</strong> : pas de support particulier, le MJ doit gérer les attaques supplémentaires.</li>
+                  <li><strong>Force héroïque</strong> : reporter sur la fiche.</li>
+                </ol>
+              </div>
+              <h3 class="text-info" id="Invocateur">Invocateur</h3>
+              <div class="decalage">
+                <h4 class="text-secondary">Voie de la conjuration</h4>
+                <ol>
+                  <li><strong>Conjuration de prédateur</strong> : <code>!cof-conjuration-de-predateur</code>.</li>
+                  <li><strong>Conjuration renforcée</strong> : vous pouvez soit utiliser un attribut <code>voieDeLaConjuration</code>, de valeur le rang dans la voie, soit ajouter ce rang en premier argument de <code>!cof-conjuration-de-predateur</code>.</li>
+                  <li><strong>Conjuration d'armée</strong> : <code>!cof-conjuration-armee --mana 1 --limiteParJour 1</code>. Le niveau de puissance de l'armée et déterminé par la valeur d'un attribut <code>voieDeLaConjuration</code>, ou sinon par un argument optionnel qui donne les DMs infligés par l'armée (par exemple, <code>!cof-conjuration-armee 2d6</code>). L'armée va apparaître comme un token normal, mais avec une aura de 20m de coté qui représente la place qu'elle occupe. Pour les dégâts qu'elle inflige, utiliser son attaque sur toutes les cibles désignées par l'invocateur. Pour faire disparaître l'armée, il suffit de la tuer (par exemple en utilisant <code>!cof-set-states mort true</code>). Tous les personnages dans la zone de l'armée et qui ne sont pas alliés de l'invocateurs ont automatiquement une nouvelle action dans leur liste pour attaquer l'armée. Cette action leur permet aussi de bénéficier d'une division des DM par 2 lorsque l'armée les attaque.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de l'entité</h4>
+                <ol>
+                  <li><strong>Invocation d'une entité</strong> : ajouter la fiche correspondante.</li>
+                  <li><strong>Lien magique</strong> : pour l'instant, gérer à la main le transfer de dégâts.</li>
+                  <!-- TODO -->
+                  <li><strong>Amélioration</strong> : ajuster la fiche de l'entité.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du familier</h4>
+                <ol>
+                  <li><strong>Familier</strong> : créer un token pour le familier, avec vue et controlé par le joueur. Le partage des PV n'est pas géré.</li>
+                  <li><strong>Résistance</strong> : ajouter la valeur de RD sur la fiche du familier.</li>
+                  <li><strong>Sens développés</strong> : ajouter un attribut <code>perception</code> de valeur 5 (ou augmenter cet attribut, si il existe déjà), et ajouter un attribut <code>visionDansLeNoir</code> de valeur 20 (40 si le personnage dispose déjà de la vision dans le noir).</li>
+                </ol>
+                <h4 class="text-secondary">Voie des mutations</h4>
+                <ol>
+                  <li><strong>Mutation offensive</strong> : 
+                    <ul>
+                      <li> Faire une attaque correspondant à l'appendice monstrueux, en tenant compte d'un +3 en force. La lancer avec l'option <code>--si etat mutationOffensive</code>.</li>
+                      <li> Pour faire la mutation, <code>!cof-effet-temp mutationOffensive [[5+@{selected|CHA}]]</code>.</li>
+                      <li> Si vous utilisez les options de tempête de mana, vous pouvew rajouter <code>--rang 1 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code> à la mutation.</li>
+                    </ul></li>
+                    <li><strong>Mutation protectrice</strong> : <code>!cof-effet ?{Mutation protectrice|Cuirasse,mutationCuirasse|Écailles rouges,mutationEcaillesRouges|Fourrure violette,mutationFourrureViolette|Ouïes,mutationOuies|Sang noir,mutationSangNoir} true --classeEffet mutationProtectrice</code>. Pour la valeur de protection de la cuirasse, vous pouvez soit utiliser un attribut <code>voieDesMutations</code>, de valeur le rang dans la voie, soit remplacer <code>mutationCuirasse</code> par <code>mutationCuirasse --valeur <i>rang</i></code>. Pour enlever la mutation, le MJ peut ensuite simplement sélectionner le personnage et utiliser <code>!cof-fin-classe-effet mutationProtectrice</code>.</li>
+                </ol>
+                <h4 class="text-secondary">Voie des portes</h4>
+                <ol>
+                  <li><strong>Raccourci</strong> : pas de support particulier.</li>
+                  <li><strong>Porte artificielle</strong> : pas de support particulier.</li>
+                </ol>
+              </div>
+              <h3 class="text-info" id="Magicien">Magicien</h3>
+              <div class="decalage">
+                <h4 class="text-secondary">Voie de la magie des arcanes</h4>
+                <ol>
+                  <li><strong>Agrandissement</strong> : <code>!cof-effet-temp agrandissement [[5+@{selected|INT}]] --target @{target|token_id} --lanceur @{selected|token_id} --portee 0</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 1 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Forme gazeuse</strong> : <code>!cof-effet-temp formeGazeuse [[1d4 + @{selected|INT}]]</code>. Au MJ de faire attention que sous cette forme, toutes les capacités sont interdites. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana altruiste|Non,&amp;#32;}</code>. Notez que le mot clé <code>altruiste</code> est facultatif, ici. À vous de choisir si vous l'autorisez ou pas.</li>
+                  <li><strong>Hâte</strong> : Pour garder le compte de l'effet, on peut utiliser <code>!cof-effet-temp hate [[1d6+@{selected|INT}]] --mana 1</code>, au MJ de gérer ensuite les actions possibles chaque tour. Pour savoir si le sort est encore actif, on peut utiliser <code>!cof-statut</code>.</li>
+                  <li><strong>Téléportation</strong> : Pas de support autre que <code>!cof-lancer-sort 2 se téléporte (à [[@{selected|INTELLIGENCE}*10]] m maximum)</code>.</li>
+                  <li><strong>Désintégration</strong> : faire une attaque magique de portée 20 m, de dégâts 5d6, modificateur INT, avec les options <code>--sortilege --magique</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 5 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de la magie destructrice</h4>
+                <ol>
+                  <li><strong>Projectile magique</strong> : <code>!cof-attack</code> avec options <code>--auto</code> et <code>--magique --sortilege --fx beam-magic</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 1 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Rayon affaiblissant</strong> : <code>!cof-attack</code> d'une attaque de 10 m de portee, avec les options <code>--pasDeDmg --effet rayonAffaiblissant [[1d6+@{selected|INT}]] --sortilege</code>. On peut aussi ajouter un petit visuel avec <code>--fx splatter-magic</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Flèche enflammée</strong> : Utiliser une attaque sur la fiche, et la lancer avec les options <code>--fx beam-fire --feu --mana 1 --sortilege --enflamme</code>. Si vous utilisez les options de magie puissante, vous pouvez rajouter <code>?{Y consacrer le tour entier ?|oui,--puissant|non,&amp;#32;}</code>. Si vous souhaitez à la place utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Boule de feu</strong> : Utiliser une attaque sur la fiche (attaque magique, portée 30 m, 4d6+INT de DM), et la lancer avec les options <code>--targetFx explode-fire --feu --mana 2 --sortilege --disque 6 --demiAuto --psave DEX [[10+@{selected|INT}]]</code>. Si vous utilisez l'option de magie puissante, vous pouvez aussi rajouter <code>?{Y consacrer tout le tour?|Oui,--puissant|Non,&amp;#32;}</code>. Si vous souhaitez utiliser à la place l'option de tempête de mana, vous pouvez rajouter <code>--rang 4 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Rituel de puissance</strong> : lancer les attaques utilisant le rituel avec les options <code>--avecd12 --plus 2d6</code>.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de la magie élémentaire</h4>
+                <ol>
+                  <li><strong>Asphyxie</strong> : ajouter une attaque magique sur la fiche, de portée 20 m. Utiliser cette attaque avec les options <code>--sortilege --pasDeDmg --effet asphyxie [[1+@{selected|INT}]]</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 1 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Protection contre les éléments</strong> : ajouter un attribut <code>voieDeLaMagieElementaire</code> avec comme valeur le rang dans la voie. Pour lancer le sort, faire <code>!cof-effet-temp protectionContreLesElements [[5+@{selected|INT}]]</code>. Notez que si vous utilisez une option <code>--valeur</code> à la place d'utiliser l'attribut, la RD sera cette valeur multipliée par 2.</li>
+                  <li><strong>Arme enflammée</strong> : Lancer le sort avec <code>!cof-effet-temp armeEnflammee(?{Label de l'arme à enflammer ?}) [[5+@{selected|INT}]] --lanceur @{selected|token_id} --target @{target|token_id} --portee 0 --mana 1</code>. Le label demandé par la macro est celui utilisé pour l'attaque correspondant à l'arme. Limitations : si deux attaques utilisent la même arme, il faut faire deux fois l'action, une pour chaque attaque. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Respiration aquatique</strong> : pas de support autre que <code>!cof-lancer-sort 2 lance un sort de respiration aquatique (durée 10 minutes, sur soi plus [[@{selected|INT]] compagnons)</code>.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de la magie protectrice</h4>
+                <ol>
+                  <li><strong>Armure du mage</strong> : <code>!cof-effet-combat armureDuMage</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 1 ?{Tempête de mana?|Oui,--tempeteDeMana altruiste|Non,&amp;#32;}</code>. Notez que le mot clé <code>altruiste</code> est facultatif, ici. À vous de choisir si vous l'autorisez ou pas.</li>
+                  <li><strong>Chute ralentie</strong> : pas de support.</li>
+                  <li><strong>Flou</strong> : <code>!cof-effet-temp flou [[1d4+@{selected|INT}]] --mana 1</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana altruiste|Non,&amp;#32;}</code>. Notez que le mot clé <code>altruiste</code> est facultatif, ici. À vous de choisir si vous l'autorisez ou pas.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de la magie universelle</h4>
+                <ol>
+                  <li><strong>Lumière</strong> : <code>!cof-lumiere @{target|token_id} 20</code>. On peut utiliser une cible qui ne soit qu'un personnage sans PV, et dans ce cas le token disparaît, et pour éteindre la lumière, le MJ doit supprimer le token dans le layer de l'éclairage dynamique. Si la cible est un personnage avec des PV, alors la lumière se déplacera avec lui, et pour étaindre la lumière, il faut séclectionner le ou les tokens et lancer <code>!cof-eteindre-lumiere lumiere</code>.</li>
+                  <li><strong>Détection de la magie</strong> : pas de support</li>
+                  <li><strong>Invisibilité</strong> : utiliser <code>!cof-set-state invisible true --mana 1 --message se rend invisible ([[1d6+@{selected|INT}]] minutes)</code>. Pour les ennemis, mettre dans le layer gm, pour les joueurs, ne pas les cibler. Reste le problème des AOE...</li>
+                  <li><strong>Vol</strong> : pas de support autre que <code>!cof-lancer-sort 2 vole ([[1d6+@{selected|INT}]] minutes)</code></li>
+                  <li><strong>Intelligence héroïque</strong> : reporter sur la fiche</li>
+                </ol>
+              </div>
+              <h3 class="text-info" id="Moine">Moine</h3>
+              <div class="decalage">
+                <h4 class="text-secondary">Voie de l’énergie vitale</h4>
+                <ol>
+                  <li><strong>Main d'énergie</strong> : utiliser l'attaque à mains nues avec l'option <code>--mainsDEnergie</code>. D'autre part, ajouter l'option <code>--magique</code> à toutes les attaques à mains nues.</li>
+                  <li><strong>Pression mortelle</strong> : utiliser l'option <code>--pointsVitaux</code> pour ne pas infliger immédiatement les dégâts, et l'option <code>--pressionMortelle</code> pour libérer les dégâts.</li>
+                  <li><strong>Invulnérable</strong>: utiliser un attribut <code>invulnerable</code> = true</li>
+                  <li><strong>Projection du ki</strong> : ajouter simplement l'attaque sur la fiche, et utiliser les options <code>--sortilege --magique</code>.</li>
+                  <li><strong>Ascétisme</strong> : noter la constitution comme une caractéristique supérieure sur la fiche.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de la maîtrise</h4>
+                <ol>
+                  <li><strong>Esquive du singe</strong> : mettre à jour la défense sur la fiche, et ajouter un attribut <code>acrobatie</code> avec le bonus donné par la capacité.</li>
+                  <li><strong>Morsure du serpent</strong> : pour ne pas avoir à modifier les chances de critique pour toutes les attaques au contact, utiliser un attribut <code>morsureDuSerpent</code> (valeur <code>true</code>). Attention à ne pas faire ça ET modifier les chances de critiques de l'attaque, car ça s'additionne. (En revanche, pas de soucis avec la science du critique).</li>
+                  <li><strong>Griffes du tigre</strong> : rajouter l'option <code>--exploseMax</code> aux attaques à mains nues.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de la méditation</h4>
+                <ol>
+                  <li><strong>Pacifisme</strong> : ajouter un attribut <code>pacifisme</code>, avec maximum 5. La valeur courante de cet attribut est automatiquement ajouté à la défense quand le personnage est attaqué. La valeur courante est remise au max à chaque sortie de combat (le mj utilise <code>!cof-fin-combat</code>). La valeur est mise à 0 à chaque attaque.</li>
+                  <li><strong>Transe de guérison</strong> : <code>!cof-transe-guerison</code></li>
+                  <li><strong>Maîtrise du ki</strong> : adapter les valeurs de DEF et init</li>
+                  <li><strong>Projection mentale</strong> : aucun support</li>
+                  <li><strong>Sagesse héroïque</strong> : reporter sur la fiche</li>
+                </ol>
+                <h4 class="text-secondary">Voie du poing</h4>
+                <ol>
+                  <li><strong>Poings de fer</strong> : simplement enlever le <code>--tempDmg</code> et ajuster les dégâts</li>
+                  <li><strong>Parade de projectiles</strong> : annuler l'attaque (<code>!cof-undo</code>) si le moine utilise ça.</li>
+                  <li><strong>Peau de fer</strong> : ajuster la DEF sur la fiche.</li>
+                  <li><strong>Déluge de coups</strong> : le MJ gère le nombre d'attaques. Pour les attaques au d12, utiliser l'option <code>--avecd12</code>.</li>
+                  <li><strong>Puissance du ki</strong> : utiliser les options <code>--avecd12 --plus 2d6</code>.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du vent</h4>
+                <ol>
+                  <li><strong>Pas du vent</strong> : pas de support particulier, simplement ajuster l'initiative.</li>
+                  <li><strong>Course du vent</strong> : géré par le MJ.</li>
+                  <li><strong>Course des airs</strong> : pas de support.</li>
+                  <li><strong>Lévitation</strong> : pas de support.</li>
+                  <li><strong>Passe-muraille</strong> : pas de support.</li>
+                </ol>
+              </div>
+              <h3 class="text-info" id="Necromancien">Nécromancien</h3>
+              <div class="decalage">
+                <h4 class="text-secondary">Voie du démon</h4>
+                <ol>
+                  <li><strong>Malédiction</strong> : Ajouter une attaque magiquede portée 20 m, avec les options <code>--pasDeDmg --sortilege --malediction</code></li>
+                  <li>
+                    <strong>Aspect de la succube</strong> :
+                    <ul>
+                      <li>Transformation : <code>!cof-effet-temp aspectDeLaSuccube [[5+@{selected|INT}]]</code>.</li>
+                      <li>Pour l'attaque, faire une attaque magique de contact, et l'invoquer avec les arguments <code>--sortilege --vampirise --si etat aspectDeLaSuccube</code>.</li>
+                      <li> Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter à la transformation <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                    </ul>
+                  </li>
+                  <li><strong>Pacte sanglant</strong> : un support est prévu, mais en attendant, le MJ doit gérer les bonus. Il peut infliger les dégâts avec la commande <code>!cof-dmg 1d4 --ignoreRD</code></li>
+                </ol>
+                <h4 class="text-secondary">Voie de la mort</h4>
+                <ol>
+                  <li><strong>Siphon des âmes</strong> : ajouter un attribut <code>siphonDesAmes</code>, de valeur <code>true</code>.</li>
+                  <li><strong>Masque mortuaire</strong> : <code>!cof-effet-temp masqueMortuaire [[5+@{selected|INT}]]</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana altruiste|Non,&amp;#32;}</code>. Notez que le mot clé <code>altruiste</code> est facultatif, ici. À vous de choisir si vous l'autorisez ou pas.</li>
+                  <li><strong>Baiser du vampire</strong> : faire une attaque magique de portée 50 m et de DM 1d8+INT, à lancer avec les options <code>--sortilege --magique --vampirise --mana 1</code>. Si vous utilisez les options de magie puissante, rajoutez <code>?{Y consacrer le tour?|oui,--puissant|non,&amp;#32;}</code>. Si vous préférez l'option de tempête de mana, rajoutez <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Briser les coeurs</strong> : faire une attaque magique de portée 20, de DM 5d6+INT, lancée avec les options <code>--sortilege --magique --psave CON [[10+@{selected|INT}]] --mana 2</code>. Pour les options de mana puissante ou de tempête de mana, procédez comme avec le Baiser du vampire.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de l'outre-tombe</h4>
+                <ol>
+                  <li><strong>Peur</strong> : Faire une attaque <code>Peur</code> utilisant le score d'attaque magique, de portée 20 m. Pour l'attaque, ajouter les arguments <code>--sortilege --pasDeDmg --peur [[10+@{selected|INT}]] [[1d4+<i>r</i>]]</code> où <i>r</i> est le rang dans la voie. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 1 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Animation d'un mort-vivant</strong> : simplement faire un personnage pour le mort-vivant contrôlé. Le MJ devra se charger de la perte de 1PV tous les 6 tours, si besoin.</li>
+                  <li><strong>Putréfaction</strong> : ajouter une attaque magique de portée 10 m, de DM 1d6+INT, lancée avec les options <code>--sortilege --magique --effet putrefactionOutreTombe --save CON [[12+@{selected|INT}]] --mana 1</code>. Si vous utilisez les options de magie puissante, rajoutez <code>?{Y consacrer le tour?|Oui,--puissant|Non,&amp;#32;}</code>. Si vous préférez utiliser l'option de tempête de mana, rajoutez <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du sang</h4>
+                <ol>
+                  <li><strong>Saignements</strong> : ajouter une attaque magique de portée 10 m. La lancer avec les options <code>--pasDeDmg --sortilege --effet saignementsSang <i>rang</i></code>, où <i>rang</i> est le rang dans la Voie. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 1 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Sang mordant</strong> : <code>!cof-effet-temp sangMordant [[5+@{selected|INT}]]</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana altruiste|Non,&amp;#32;}</code>. Notez que le mot clé <code>altruiste</code> est facultatif, ici. À vous de choisir si vous l'autorisez ou pas.</li>
+                  <li><strong>Exsangue</strong> : ajouter un attribut <code>exsangue</code>, avec comme valeur <code>true</code>.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de la sombre magie</h4>
+                <p style="margin-top:0px; margin-bottom:0px">Ajouter sur la fiche une compétence <code>Occultisme</code> avec en bonus 2 fois le rang dans cette voie.</p>
+                <ol>
+                  <li><strong>Ténèbres</strong> : faire une attaque Ténèbres, de portée 20 m. Pour l'attaque, utiliser les arguments <code>--pasDeDmg --disque 5 --auto --effet aveugleTemp [[5+@{selected|INT}]]</code>. Au MJ ensuite d'enlever l'état aveuglé quand les cibles sortent de la zone.</li>
+                  <li><strong>Pattes d'araignées</strong> : pas de support</li>
+                  <li><strong>Strangulation</strong> : 
+                    <ul>
+                      <li>Attaque initiale : attaque magique, de portée 20 m, et de dégâts 1d6+INT, avec les options <code>--effet strangulation <i>rang</i> --mana 1 --sortilege</code>. Le script va vérifier que la cible est bien vivante, en se basant sur la race, et sinon sur la présence éventuelle d'un attribut <code>nonVivant</code>.</li>
+                      <li>Maintenir la strangulation: <code>!cof-strangulation @{selected|token_id} @{target|token_id}</code>.</li>
+                      <li>Option de magie puissante : ajouter <code>?{Y consacrer le tour entier ?|Oui,--puissant|Non,&amp;#32;}</code> à l'attaque initiale.</li>
+                      <li>Option de tempête de mana : rajoutez <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code> à l'attaque.</li>.
+                    </ul>
+                  <li><strong>Ombre mortelle</strong> : <code>!cof-ombre-mortelle @{selected|token_id} @{target|token_id} [[3+@{selected|INT}]] --portee 20 --mana 2</code> va créer un double de la cible, (à condition de disposer de 2 points de mana) et ajouter ce double à l'initiative. Au MJ ensuite de la faire attaquer à son tour (pas d'aoe, juste attaquer le token dont elle est l'ombre). Le token disparaît lorsque le nombre de tours est écoulé. Il est possible de choisir l'image utilisée pour représenter l'ombre en passant l'url de l'image avec l'option <code>--image</code>. Si vous utilisez le script <code>marchingOrder</code>, vous pouvez même faire que l'ombre suive son propriétaire automatiquement.</li>
+                  <li><strong>Intelligence héroïque</strong> : utiliser la fiche</li>
+                </ol>
+              </div>
+              <h3 class="text-info" id="Pretre">Prêtre</h3>
+              <div class="decalage">
+                <h4 class="text-secondary">Voie de la foi</h4>
+                <ol>
+                  <li><strong>Parole divine</strong> : géré simplement avec une compétence "convaincre"</li>
+                  <li>
+                    <strong>Arme d'argent</strong> :
+                    <ul>
+                      <li><code>!cof-effet-combat armeDArgent</code> pour lancer le sort.</li>
+                      <li>Pour attaquer avec l'arme d'argent, faire l'attaque avec les DM appropriés, puis l'utiliser avec les options <code>--si etat armeDArgent --argent --magique</code>.</li>
+                      <li>Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code> au lancement du sort.</li>
+                    </ul>
+                  </li>
+                  <li><strong>Ailes célestes</strong> : <code>!cof-effet-temp ailesCelestes [[5+@{selected|SAG}]] --mana 1</code>. Si vous utilisez l'option de magie puissante. rajoutez <code> ?{Y consacrer tout le tour?|Oui,--puissant duree|Non,&amp;#32;}</code>. Si vous préférez plutôt utiliser l'option de tempête de mana, rajoutez <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana altruiste|Non,&amp;#32;}</code>. Notez que le mot clé <code>altruiste</code> est facultatif, ici. À vous de choisir si vous l'autorisez ou pas.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de la guerre sainte</h4>
+                <ol>
+                  <li><strong>Arme bénie</strong> : utiliser l'option <code>--reroll1</code> et <code>--magique</code> à l'attaque</li>
+                  <li><strong>Bouclier de la foi</strong> : ajuster le bonus de DEF du bouclier</li>
+                  <li><strong>Marteau sprirituel</strong> : utiliser une attaque, avec les options <code>--magique</code>, <code>--sortilege</code>, <code>--mana 1</code>. Si vous utilisez les options de magie puissante, ajoutez <code>?{Y passer tout le tour ?|oui,--puissant|non,&amp;#32;}</code>. Si vous préférez utiliser l'option de tempête de mana, rajoutez <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Châtiment divin</strong> : faire une attaque de contact avec les modificateurs <code>--bonusAttaque [[@{selected|SAG}]] --plus [[@{selected|SAG}]]</code></li>
+                </ol>
+                <h4 class="text-secondary">Voie de la prière</h4>
+                <ol>
+                  <li><strong>Bénédiction</strong> : <code>!cof-effet-temp benediction [[3+@{selected|SAG}]] --allies --self</code>. Il faut avoir défini une <a href="#allie">équipe</a> avec le prêtre. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--lanceur @{selected|token_id} --rang 1 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Destruction des morts-vivants</strong> : <code>!cof-destruction-des-morts-vivants 2d6</code>. Au rang 4 dans la voie, ajuster les dégâts.</li>
+                  <li><strong>Sanctuaire</strong> : <code>!cof-effet-temp sanctuaire [[5+@{selected|SAG}]] --mana 1</code>. Si vous utilisez les options de magie Puissante, rajoutez <code>?{Y consacrer tout le tour ?|Oui,--puissant duree|Non,&amp;#32;}</code>. Si vous préférez utiliser l'option de tempête de mana, rajoutez <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana altruiste|Non,&amp;#32;}</code>. Notez que le mot clé <code>altruiste</code> est facultatif, ici. À vous de choisir si vous l'autorisez ou pas.</li>
+                </ol>
+                <h4 class="text-secondary">Voie des soins</h4>
+                <p style="margin-top:0px; margin-bottom:0px">Utiliser un attribut <code>voieDesSoins</code> avec comme valeur le rang dans la voie</p>
+                <ol>
+                  <li><strong>Soins légers</strong> : <code>!cof-soin @{selected|token_id} @{target|token_id} leger</code>. Vous pouvez rajouter un petit effet visuel, par exemple avec <code>--targetFx bubbling-holy</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 1 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Soins modérés</strong> : <code>!cof-soin @{selected|token_id} @{target|token_id} modere</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Soins de groupe</strong> : <code>!cof-soin @{selected|token_id} groupe</code> (ne pas oublier de définir des <a href="#allie">alliés</a>). Le sort nécessite un point de mana (barre 2 du token), et accepte l'option <code>--puissant</code> et les options de tempête de mana. Attention, toutefois, le sort ne va pas automatiquement soigner les personnages notés comme morts, ce qui est le cas général si ils sont tombés à 0 PV. Si certains alliés notés morts ne sont pas vraiment morts, mais juste inconscient, il faudra que le MJ fasse la mise à jour de l'état et des PV lui-même.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de la spiritualité</h4>
+                <ol>
+                  <li><strong>Vêtements sacrés</strong> : Ajouter un attribut <code>vetementsSacres</code> avec comme valeur le rang dans la voie de la spiritualité. Cela augmente la DEF, mais seulement lorsque le prêtre ne porte pas d'armure (ne se voit pas sur le total de DEF de la fiche)</li>
+                  <li><strong>Protection contre le mal</strong> : <code>!cof-effet-combat protectionContreLeMal --lanceur @{selected|token_id} --target @{target|token_id} --portee 0</code>. Donne le bonus contre toute créature dont l'attribut <code>RACE</code> est <code>squelette</code>, <code>zombie</code>, <code>démon</code>, <code>élémentaire</code>, ou bien qui possède l'attribut <code>mauvais</code> (valeur <code>true</code>). Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Délivrance</strong> : <code>!cof-delivrance @{selected|token_id} @{target|token_id} --mana 1 --portee 0</code></li>
+                  <li><strong>Marche des plans</strong> : <code>!cof-lancer-sort 2 marche entre les plans (il peut se déplacer de [[(3+@{selected|SAG})*10]] km)</code>.</li>
+                  <li><strong>Messie</strong> : aucun support.</li>
+                </ol>
+              </div>
+              <h3 class="text-info" id="Psionique">Psionique</h3>
+              <div class="decalage">
+                <h4 class="text-secondary">Voie de l'attaque mentale</h4>
+                <ol>
+                  <li><strong>Attaque mentale</strong> : faire 2 attaques, une pour les DMs léthaux, avec les options <code>--sortilege --attaqueMentale</code> et l'autre avec l'option supplémentaire <code>--tempDmg</code>.</li>
+                  <li><strong>Bouclier psi</strong> : ajouter un attribut <code>bouclierPsi</code> de valeur <code>true</code>.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du contrôle corporel</h4>
+                <ol>
+                  <li><strong>Proprioception</strong> : ajouter les PVs sur la fiche, et mettre un attribut <code>proprioception</code> à <code>true</code>. </li>
+                  <li><strong>Transe de régénération</strong> : <code>!cof-soin @{selected|token_id} 1d6+[[@{selected|NIVEAU} + @{selected|CHA}]] --limiteParJour <i>rang</i></code>. Il faut tirer les 2d6 pour savoir la durée de la transe. Si vous autorisez les options de tempête de mana pour ce profil, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code></li>
+                </ol>
+                <h4 class="text-secondary">Voie de l'empathie</h4>
+                <ol>
+                  <li><strong>Perception extra-sensorielle</strong> : ajuster l'initiative et ajouter le bonus à un attribut <code>perception</code> (pour les jets).</li>
+                  <li><strong>Défense intuitive</strong> : ajouter un attribut <code>defenseIntuitive</code> de valeur <code>true</code>. Ne pas modifier la DEF sur la fiche, la sagesse sera automatiquement prise en compte.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de la télékinésie</h4>
+                <ol>
+                  <li><strong>Manipulation à distance</strong> : pour les attaques à distance, le plus simple est d'utiliser une autre attaque en utilisant le score d'attaque magique et le bon modificateur de DMs.</li>
+                  <li><strong>Champ de protection</strong> : pour l'effet de base, si vous suivez les règles, ajustez simplement la DEF sur la fiche. Si vous préférez en faire un sort, vous pouvez utiliser la commande <code>!cof-effet-temp champDeProtection [[5+@{selected|CHA}]]</code>. La valeur par défaut est celle d'un attribut <code>voieDeLaTelekinesie</code>, et pour utiliser une autre valeur, on peut utiliser l'option <code>--valeur</code>. Pour le champ à distance, faire <code>!cof-effet-temp champDeProtection 1 --lanceur @{selected|token_id} --portee 10 --valeur <em>n</em> --target @{target|token_id}</code>. </li>
+                  <li><strong>Onde de choc</strong> : faire une attaque magique de contact (portée non définie ou nulle), de dégâts 2d6 + Mod. de CHA. Si le lbale de cette attaque est <i>L</i>, la macro pour l'utiliser sera <code>!cof-attack @{selected|token_id} @{selected|token_id} <i>L</i> --auto --disque ?{Portée (max 10) ?|10} --etat renverse --save FOR [[10+@{selected|CHA}]] --mana 1 --targetFx explode-magic</code>. Si vous souhaitez utiliser les options de tempête de mana pour ce profil, rajoutez <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de la télépathie</h4>
+                <ol>
+                  <li><strong>Télépathie</strong> : pas de support particulier.</li>
+                  <li><strong>Radar mental</strong> : ajouter un attribut <code>radarMental</code>, de valeur le bonus procuré par le radar mental (2 fois le rang dans la voie).</li>
+                </ol>
+              </div>
+              <h3 class="text-info" id="Rôdeur">Rôdeur</h3>
+              <div class="decalage">
+                <h4 class="text-secondary">Voie de l'archer</h4>
+                <ol>
+                  <li><strong>Sens affutés</strong> : ajouter le bonus à un attribut <code>perception</code></li>
+                  <li><strong>Tir aveugle</strong> : ajouter un attribut <code>tirAveugle</code>, avec comme valeur <code>true</code>.</li>
+                  <li><strong>Tir rapide</strong> : faire simplement deux attaques dans le tour</li>
+                  <li><strong>Flèche mortelle</strong> : faire l'attaque avec les options <code>--m2d20 --incrDmgCoef</code></li>
+                  <li><strong>Dans le mille</strong> : faire l'attaque avec les options <code>--avecd12 --plus 2d6</code></li>
+                </ol>
+                <h4 class="text-secondary">Voie du compagnon animal</h4>
+                <ol>
+                  <li><strong>Odorat</strong> : faire un jet de capacité "pistage", test de SAG bonus +5</li>
+                  <li><strong>Surveillance</strong> : ajouter un attribut <code>surveillance</code>, avec comme valeur le nom du compagnon (doit être exactement le même que celui du token du compagnon). Cela automatise l'initiative et le bonus aux jets de surprise, le reste se gère manuellement</li>
+                  <li><strong>Combat</strong> : ajouter le loup sous contrôle du joueur</li>
+                  <li><strong>Empathie animale</strong> : pour soigner, utiliser <code>!cof-soin @{selected|token_id} <i>nom_familier</i> ?{Montant des soins} --transfer</code></li>
+                  <li><strong>Animal fabuleux</strong> : ajuster les caractéristiques du loup</li>
+                </ol>
+                <h4 class="text-secondary">Voie de l'escarmouche</h4>
+                <ol>
+                  <li><strong>Chasseur émérite</strong> : ajouter un attribut <code>chasseurEmerite</code> (valeur true). Puis, si dans le profil (attribut PROFIL) de la cible, il y a <code>animal</code>, le bonus s'applique.</li>
+                  <li><strong>Traquenard</strong> : ajouter un attribut <code>traquenard</code> (valeur courante 1, valeur maximale 1), puis option <code>--traquenard</code> pour l'attaque. Exemple pour un personnage qui aurait une ability <code>Arme</code> permettant d'utiliser son épée, et une ability <code>Arc</code> permettant d'utiliser son arc : <code>?{Arme?|Épée,%{selected|Attaque}|Arc,%{selected|Arc}} --traquenard</code> (Note : bien faire attention à ce que les abilities ne contiennent pas de ligne vide, et que la dernière ligne est bien expansée en <code>!cof-attack</code>). En interne, chaque fois que le personnage fait une attaque, la valeur courante de son attribut <code>traquenard</code> passe à 0. Cette valeur courante repasse à 1 automatiquement en fin de combat. C'est cette valeur qui détermine si l'option <code>--traquenard</code> est valide ou non.</li>
+                  <li><strong>Attaque éclair</strong> : <code>--plus [[@{selected|DEX}]] --bonusAttaque [[@{selected|DEX}]]</code></li>
+                  <li><strong>Repli</strong> : simplement faire un jet en utilisant par exemple <code>!cof-jet DEX 10</code>, et décrire le résultat.</li>
+                  <li><strong>Dextérité héroïque</strong> : reporter sur la fiche.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de la survie</h4>
+                <ol>
+                  <li><strong>Endurant</strong> : ajouter un jet de capacité "survie", test de CON avec le bonus</li>
+                  <li><strong>Nature nourricière</strong> : pour la recherche d'herbes, on peut utiliser <code>!cof-nature-nourriciere</code></li>
+                  <li><strong>Grand pas</strong> : ajouter les compétences natation et escalade</li>
+                </ol>
+                <h4 class="text-secondary">Voie du traqueur</h4>
+                <ol>
+                  <li><strong>Pas de loup</strong> : ok</li>
+                  <li><strong>Ennemi juré</strong> : ajouter un attribut <code>ennemiJure</code> avec comme valeur la race des ennemis. Cette race doit se retrouver dans le champ race de l'ennemi.</li>
+                  <li><strong>Embuscade</strong> : en cas d'attaque sur les ennemis, les mettre tous surpris avec la commande <code>!cof-set-state surpris true</code></li>
+                </ol>
+              </div>
+              <h3 class="text-info" id="Samouraï">Samouraï</h3>
+              <div class="decalage">
+                <h4 class="text-secondary">Voie de l'arc et du cheval</h4>
+                <ol>
+                  <li><strong>Monture loyale</strong> : ajouter un attribut <code>montureLoyale</code>, de valeur <code>true</code>. Pour la monture, il faut faire un personnage avec un attribut <code>monture</code> à <code>true</code>. Pour monter de la monture, utiliser <code>!cof-en-selle @{selected|token_id} nom_de_la_monture</code>, et pour en descendre, il suffit de bouger le token du samouraï.</li>
+                  <li><strong>Tir en mouvement</strong> : pas de support particulier.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du dirigeant</h4>
+                <ol>
+                  <li><strong>Éduqué</strong> : simplement noter les bonus et compétences sur la fiche, ou des attributs <code>art</code> et <code>seduction</code>, si vous utilisez <code>!cof-jet</code>.</li>
+                  <li><strong>Homme de cour</strong> : ajouter un attribut <code>étiquette</code>, de valeur 5.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de l'honneur</h4>
+                <ol>
+                  <li><strong>Chef né</strong> : ajouter un attrubut <code>immunitePeur</code>, de valeur <code>true</code>, et des attributs ou compétences pour l'intimidation et commander.</li>
+                  <li><strong>Défi</strong> : <code>!cof-defi-samourai @{selected|token_id} @{target|token_id} <i>bonus</i></code>. Le bonus en argument est optionnel. Si il n'est pas présent, le script utilise la valeur d'un attribut <code>voieDeLHonneur</code>.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du ki</h4>
+                <ol>
+                  <li><strong>Esprit vide</strong> : reporter le bonus sur la fiche.</li>
+                  <li><strong>Main vide</strong> : faire l'attaque à mains nues correspondant à la capacité.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du sabre</h4>
+                <ol>
+                  <li><strong>Technique du sabre</strong> : ajuster les attaques au sabre en conséquence.</li>
+                  <li><strong>Frappe du vide</strong> : ajouter un attribut <code>frappeDuVide</code>, avec comme valeur courante <code>1</code>, et comme valeur maximale <code>1</code>.</li>
+                </ol>
+              </div>
+              <h3 class="text-info" id="Voleur">Voleur</h3>
+              <div class="decalage">
+                <h4 class="text-secondary">Voie de l'assassin</h4>
+                <ol>
+                  <li><strong>Discrétion</strong> : on peut ajouter une compétence discrétion sur la fiche, avec le bon bonus. Pour l'utilisation de <code>!cof-jet</code>, ajouter un attribut <code>discrétion</code> avec la valeur du bonus total.</li>
+                  <li><strong>Attaque sournoise</strong> : Faire des versions des attaques avec <code>--sournoise <i>n</i></code>, où <i>n</i> est le rang dans la voie. Au MJ de vérifier que les conditions de l'attaque sournoise sont remplies. (Exemple de macro pour un voleur qui aurait une attaque <code>Dague</code> et une attaque <code>arbalète</code> : <code>?{Arme utilisée?|Dague,%{selected|Dague}|Arbalète,%{selected|Arbalète}} --sournoise 2</code>). Une alternative à cette macro est d'écrire une ability par arme (qui fait des actions comme <code>%{selected|Dague} --sournoise 2</code>) et de lister ces actions dans une ability nommée <code>#Attaque-sournoise#</code>, qui peut elle-même se trouver dans les <code>#Actions#</code>.</li>
+                  <li><strong>Ombre mouvante</strong> : pas beaucoup de support. Faire <code>!cof-jet DEX 10</code> pour le jet de dextérité, le reste est géré par le MJ.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de l'aventurier</h4>
+                <ol>
+                  <li><strong>Sprint</strong> : pas de support, au MJ de vérifier que ce n'est utilisé qu'une fois par combat.</li>
+                  <li><strong>Provocation</strong> : <code>!cof-provocation @{selected|token_id} @{target|token_id}</code>. Au joueur ensuite de faire son attaque gratuite si la provocation est réussie et que l'adversaire l'attaque.</li>
+                  <li><strong>Grâce féline</strong> : ajouter un attribut <code>graceFeline</code> avec comme valeur <code>true</code>. Cela va affecter l'initiative et la DEF, mais sans se voir sur la fiche. Pour les tests de déplacement, il faut gérer à part.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du déplacement</h4>
+                <ol>
+                  <li><strong>Esquive</strong> : Augmenter la DEF sur la fiche.</li>
+                  <li><strong>Chute</strong> : pas de support particulier.</li>
+                  <li><strong>Acrobaties</strong> : faire <code>!cof-jet DEX 15</code> pour le jet de dextérité, le reste est géré par le MJ.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du roublard</h4>
+                <ol>
+                  <li><strong>Doigts agiles</strong> : utiliser des compétences sur la fiche de personnage</li>
+                  <li><strong>Détecter les pièges</strong> : faire le jet avec <code>!cof-jet INT ?{Piège normal?|Oui,10|Magique,15} --secret</code></li>
+                  <li><strong>Croc-en-jambe</strong> : ajouter un attribut <code>crocEnJambe</code> de valeur <code>true</code>. Pour distinguer les adversaires quadrupèdes qui ne seraient pas connues du script, lui ajouter un attribut <code>quadrupede</code>, de valeur <code>true</code>.</li>
+                  <li><strong>Attaque paralysante</strong> : lancer une des attaques de contact du voleur en rajoutant les options <code>--limiteParCombat 1 attaqueParalysante --pasDeDmg --effet paralysieRoublard [[1d4]]</code>.</li>
+                  <li><strong>Attaque en traître</strong> : Ajouter un attribut <code>attaqueEnTraitre</code>, de valeur courante 1, et de valeur maximale 1. Les actions affichées en cas d'attaque en traître seront en priorité les attaques d'un ability <code>#AttaqueEnTraitre#</code> ou sinon les attaques des actions habituelles du personnages (venant donc de <code>#Actions#</code>).</li>
+                </ol>
+                <h4 class="text-secondary">Voie du spadassin</h4>
+                <ol>
+                  <li><strong>Attaque en finesse</strong> : faire les modifications sur la fiche</li>
+                  <li><strong>Esquive fatale</strong> : Ajouter un attribut <code>esquiveFatale</code> avec comme valeur courante 1 et comme valeur maximale 1. En combat, si la situation s'y prête, un bouton permettre d'utiliser l'esquive. Ne pas oublier de définir les alliés du voleur pour que la vérification des cibles soit correcte.</li>
+                  <li><strong>Frappe chirurgicale</strong> : ajouter un attribute <code>frappeChirurgicale</code>, de valeur <code>true</code>.</li>
+                  <li><strong>Ambidextrie</strong> : pas géré par le script.</li>
+                </ol>
+              </div>
+            </div>
+            <h2 class="text-primary" id="Autres_capacités">5. Autres capacités</h2>
+            <div class="decalage">
+              <h3 class="text-info" id="Capacites_raciales">Voies et capacités raciales</h3>
+              <div class="decalage">
+                Quelques capacités communes à plusieurs races :
+                <ul>
+                  <li id="Vision_dans_le_noir"><strong>Vision dans le noir</strong> : cela peut se gérer au niveau du token, ou alors le script peut faire les modifications pour vous, si vous avez un attribut <code>visionDansLeNoir</code> de valeur le nombre de metres à laquelle le personnage peut voir dans le noir.</li>
+                </ul>
+                <h4 class="text-secondary">Âme forgée</h4>
+                <p>Pour les capacités raciales, un attribut <code>vieArtificielle</code> à <code>true</code> permet de diviser tous les soins par 2. Pour la résistance aux effets de drains utiliser un attribut <code>RD_drain</code> de valeur 5. Pour la résistance au feu et au froid, un attribut <code>RD_feu</code> et un autre <code>RD_froid</code>, de valeur 5. Pour l'immunité aux poisons et maladies, utiliser un attribut <code>creatureArtificielle</code> de valeur <code>true</code>. Enfin pour le saignement, ajouter un attribut <code>immuniteSaignement</code>, de valeur true.</p>
+                <ol>
+                  <li><strong>Main lourde</strong> : ajuster les DM, et enlever l'option <code>--tempDmg</code> pour l'attaque à mains nues.</li>
+                </ol>
+                <h4 class="text-secondary">Demi-orque</h4>
+                <a href="#Vision_dans_le_noir">Vision dans le noir</a>.
+                <ol>
+                  <li><strong>Force de la nature</strong> : ajouter les bonus sur la fiche</li>
+                </ol>
+                <h4 class="text-secondary">Elfe sylvain</h4>
+                <ol>
+                  <li><strong>Grâce elfique</strong> : simplement reporter sur la fiche</li>
+                </ol>
+                <h4 class="text-secondary" id="fee_et_lutin">Fée et lutin</h4>
+                <ul>
+                  <li><a href="#Vision_dans_le_noir">Vision dans le noir</a>.</li>
+                  <li><strong>Tout petit</strong> : reporter le bonus de DEF sur la fiche, et ajouter 5 à un attribut <code>discrétion</code>.</li>
+                  <li><strong>Vol</strong> et <strong>Téléportation</strong> : pas de support.</li>
+                  <li><strong>Trop petit</strong> : ajouter un attribut <code>tropPetit</code>, et pour les attaques au d3, mettre un dé quelconque dans l'attaque, et rajouter le texte <code>d3</code> dans les notes de l'attaque concernée. </li>
+                </ul>
+                <ol>
+                  <li><strong>Langage des animaux</strong> : aucun support</li>
+                </ol>
+                <h4 class="text-secondary">Gnome</h4>
+                <ol>
+                  <li><strong>Petit pote</strong> : ajouter le bonus de CHA sur la fiche</li>
+                </ol>
+                <h4 class="text-secondary">Halfelin</h4>
+                <p>Petite taille : ajouter le bonus de DEF sur la ficher, et ajouter 2 à un attribut <code>discrétion</code>.</p>
+                <ol>
+                  <li><strong>Petit veinard</strong> : Il y a beaucoup de types de dés différents. Pour l'instant, géré par le MJ : faire tirer le jet (/r) par le joueur, si ça a changé, utiliser le undo ou faire les changements à la main.</li>
+                  <li><strong>Résistance légendaire</strong> : ajouter le bonus en CON sur la fiche, et ajouter un attribut <code>DEF_magie</code> avec comme valeur 5.</li>
+                </ol>
+                <h4 class="text-secondary">Haut elfe</h4>
+                <ol>
+                  <li><strong>Grâce elfique</strong> : ajouter les bonus sur la fiche</li>
+                </ol>
+                <h4 class="text-secondary">Humain</h4>
+                <p>Instinct de survie : créer un attribut <code>instinctDeSurvieHumain</code> avec comme valeur <code>true</code>.</p>
+                <ol>
+                  <li><strong>Adaptable</strong> : aucun support</li>
+                  <li><strong>Loup parmi les loups</strong> : ajouter un attribut <code>loupParmiLesLoups</code> avec comme valeur 1 ou 2 selon le rang dans la voie. Une créature sera considérée comme humanoïde si elle a l'attribut <code>humanoide</code>, ou si sa race est reconnue comme humanoïde.</li>
+                </ol>
+                <h4 class="text-secondary">Lutin</h4>
+                Voir les <a href="#fee_et_lutin">fées</a>.
+                <h4 class="text-secondary">Nain</h4>
+                <ol>
+                  <li><strong>Résistance</strong> : ajouter les bonus sur la fiche</li>
+                </ol>
+                <h4 class="text-secondary">Tieflin</h4>
+                <ul>
+                  <li><a href="#Vision_dans_le_noir">Vision dans le noir</a>.</li>
+                  <li><strong>Résistance aux éléments</strong> : ajouter des attributs <code>RD_feu</code>, <code>RD_electrique</code> et <code>RD_froid</code>, de valeur 5 (ou augmentée de 5)</li>
+                </ul>
+                <ol>
+                  <li><strong>Se faire discret</strong> : ajouter les jets sur la fiche, ou bien des attributs <code>mentir</code> et <code>deguisement</code> de valeur 5, à utiliser avec <code>!cof-jet</code>.</li>
+                </ol>
+              </div>
+              <h3 class="text-info" id="Créatures">Voies de créatures</h3>
+              <div class="decalage">
+                <h4 class="text-secondary">Voie du champion</h4>
+                <ol>
+                  <li>
+                    <strong>Imparable</strong>:
+                    <ul>
+                      <li>Utiliser l'option <code>--m2d20</code> pour l'action limitée.</li>
+                      <li>Pour l'effet permanent, utiliser un attribut <code>champion</code>, avec une valeur <code>true</code></li>
+                    </ul>
+                  </li>
+                </ol>
+                <h4 class="text-secondary">Voie du chef d'armée</h4>
+                <ol>
+                  <li><strong>Sergent</strong> : ne pas oublier l'action de plus donnée à un allié par tour. Utiliser un attribut <code>sergent</code> = true (pour l'attaque ignorée par combat)</li>
+                  <li><strong>Capitaine</strong> : pour désigner le capitaine d'un ensemble de tokens sélectionné (quelle que soit <a href="#methode_selection_groupes">la méthode</a>), on peut utiliser <code>!cof-capitaine @{selected|token_id}</code>, en ajoutant les options de sélection (comme <code>--target @{target|token_id}</code>. Au lieu de sélectionner une cible, on peut utiliser le nom d'un token. Si le capitaine fait parti de la sélection, il sera automatiquement exclu (on ne peut être son propre capitaine). Si à la place d'une id de token, l'argument est <code>--aucun</code>, cela enlève le capitaine. L'attribut généré est lié à un personnage, pas un token spécifique, il suffit donc de cibler un token représentant un personnage pour affecter tous les tokens qui représentent ce personnage. Pas de support particulier pour l'attaque supplémentaire en cas d'action limitée.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du cogneur</h4>
+                <ol>
+                  <li><strong>Charge</strong> : Faire l'attaque avec les arguments <code>--m2d20 --pietine</code>.</li>
+                  <li><strong>Enrager</strong> : ajouter un attribut <code>peutEnrager</code> de valeur <code>true</code>.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du colosse</h4>
+                <ol>
+                  <li><strong>Fauchage</strong> : ajouter la RD, et ajouter un attribut <code>fauchage</code>, qui va faire automatiquement le renversement si le dé d'attaque est entre 15 et 20.</li>
+                  <li><strong>Balayage</strong> : faire une version de l'attaque avec <code>--target @{target|Target2|token_id}</code></li>
+                </ol>
+                <h4 class="text-secondary">Voie des créatures élémentaires</h4>
+                <p style="margin-top:0px; margin-bottom:0px">Ajouter un attribut <code>immunite_<i>type</i></code> de valeur <code>true</code>, où <i>type</i> est le type de la créature élémentaire (feu, acide, froid, ...)</p>
+                <ol>
+                  <li><strong>Souffle</strong> : faire une attaque avec le bon nombre de d6 en DM, de portée la portée du souffle, à utiliser avec les options <code>--auto --cone --<i>type</i> --tempsRecharge rechargeSouffle [[1d4]] --psave DEX 13</code>, où <i>type</i> est le type de la créature (feu, acide, frois, ...). Ne pas oublier la possibilité d'utiliser un token cible temporaire pour le cone.</li>
+                </ol>
+                <h4 class="text-secondary">Voie des créatures magique</h4>
+                <ol>
+                  <li><strong>Réduction des DM</strong> : Ajouter un attribut <code>RD_sauf_<i>genre</i></code>, où <i>genre</i> peut être <code>magique</code> ou un des types d'attaque (feu, acide, poison, etc...).</li>
+                </ol>
+                <h4 class="text-secondary">Voie des créatures volantes</h4>
+                <ol>
+                  <li><strong>Vol rapide</strong> : simplement faire une variante de l'attaque avec les options <code>--bonusAttaque 5 --plus 1d6</code> à utiliser le premier tour de combat si a créature est en vol et attaque une créature au sol. Ne pas oublier l'action de mouvement supplémentaire en vol.</li>
+                </ol>
+                <h4 class="text-secondary">Voie de la magie de combat</h4>
+                <ol>
+                  <li><strong>Attaque magique</strong> : simplement une attaque, avec les options <code>--sortilege --magique --fx beam-magic</code>. Pour la version de zone, utiliser les options <code>--disque 5 --auto --psave DEX 10</code>.</li>
+                  <li><strong>Armure magique</strong> : utiliser <code>!cof-effet-combat armureMagique</code></li>
+                </ol>
+                <h4 class="text-secondary">Voie de la magie de guérison</h4>
+                <ol>
+                  <li><strong>Soigner</strong> : <code>!cof-soin @{selected|token_id} @{target|target1|token_id} [[ceil(@{target|target1|PV|max}/2)]] --limiteCibleParJour 1</code></li>
+                </ol>
+                <h4 class="text-secondary">Voie de la magie maléfique</h4>
+                <ol>
+                  <li><strong>Vampirisation</strong> :
+                    <ul>
+                      <li> Ajouter une attaque magique avec les DMs de vampirisation, lancée avec l'option <code>--vampirise</code> (et probablement aussi <code>--sortilege</code> et <code>--magique</code>).</li>
+                      <li> Ajouter un attribut <code>siphonDesAmes</code>, de valeur de NC de la créature (ou <code>true</code> si le NC est 0).</li>
+                    </ul>
+                  </li>
+                </ol>
+                <h4 class="text-secondary">Voie de la meute</h4>
+                <ol>
+                  <li><strong>Intergeanchables</strong> : Utiliser un attribut <code>interchangeable</code>, avec comme valeur le nombre d'opposants à partir duquel les cibles peuvent être interverties</li>
+                </ol>
+                <h4 class="text-secondary">Voie du PNJ récurrent</h4>
+                <ol>
+                  <li><strong>Instinct de survie</strong> : ajouter un attribut <code>instinctDeSurvie</code> avec comme valeur le nombre de PV en-dessous duquel le PNJ gagne un bonus de DEF. les autres effets sont à faire par le MJ.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du prédateur</h4>
+                <ol>
+                  <li><strong>Embuscade</strong> : Sélectionner les ennemis du prédateurs, et utiliser <code>!cof-surprise</code>. Par exemple, contre une équipe de joueurs dans le <i>handout</i> <code>Equipe joueurs</code> (cf la <a href="#methode_selection_groupes">méthode de sélection de groupes</a>), on pourra utiliser l'ability <code>!cof-surprise [[15 + @{selected|DEX}]] --nonVivant @{selected|token_id} --equipe joueurs</code>. Pour les bonus en discrétion et init, reporter sur la fiche (et à un attribut <code>discrétion</code>), pour l'attaque en embuscade sur une cible surprise, rajouter à une attaque les options <code>--sournoise 1 --if moins FOR --etat renverse --endif</code>.</li>
+                  <li><strong>Dévorer</strong> : ajouter les options d'attaque <code>--if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat renverse --etat immobilise FOR @{selected|token_id} --endif --endif</code>.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du tueur</h4>
+                <ol>
+                  <li><strong>Attaque mortelle</strong> : donner la possibilité de faire une attaque avec les options <code>--bonusAttaque 5 --sournoise <i>rang</i></code>.</li>
+                </ol>
+              </div>
+              <h3 class="text-info" id="Capacites_diverses">Autres capacités</h3>
+              <div class="decalage">
+                <ul>
+                  <li><strong>Baroud d'honneur</strong> : ajouter un attribut <code>baroudHonneur</code> (=true) (Quand le personnage arrive à 0 PV, il ne meurt pas jusqu'à sa prochaine attaque, qui se fait avec un bonus de +5)</li>
+                  <li><strong>Cibles multiples</strong> (nuées) : ajouter un attribut <code>ciblesMultiples</code>, de valeur <code>true</code>.</li>
+                  <li><strong>Clignotement</strong> : <code>!cof-effet-temp clignotement [[1d6+2]]</code>.</li>
+                  <li><strong>Créature non-vivante</strong> : ajouter un attribut <code>nonVivant</code></li>
+                  <li><strong>Force de géant</strong> : <code>!cof-effet-temp forceDeGeant 10</code>. Le bonus est de 2 par défaut, mais peut être modifié en utilisant l'option <code>--valeur</code>.</li>
+                  <li><strong>Frénésie</strong> : Ajouter une attribut <code>frenesie</code> avec comme valeur le nombre de PV en-dessous duquel la créature devient frénétique (+2 aus jets d'attaque).</li>
+                  <li><strong>Huile de fort assaut</strong> : <code>!cof-effet-temp dmgArme(<i>L</i>) 10 --valeur 1d6</code> où <i>L</i> est le label de l'arme qu'on veut enduire d'huile de fort assaut.</li>
+                  <li><strong>Hurlement</strong> : Pour les chiens infernaux, <code>!cof-peur [[10+?{Nombre de chiens?}]] [[2d4]] --portee 50 --equipe Joueurs</code>, et pour les fantômes, <code>!cof-peur 12 [[1d6]] --portee 10 --equipe Joueurs</code>. Pour l'instant, pas de prise en compte de l'immunité au hurlement apès avoir réussi son jet de SAG.</li>
+                  <li><strong>Immunité aux armes</strong> : ajouter un attribut <code>immuniteAuxArmes</code> avec comme valeur <code>true</code></li>
+                  <li>
+                    <strong>Poison</strong> : pour enduire une arme de label <i>L</i> de poison, utiliser <code>!cof-enduire-poison <i>L type force save</i></code>. Pour l'instant, <i>type</i> ne peut être que <code>rapide</code>, et <i>force</i> est une expression pour les dégâts (typiquement, <code>2d6</code> pour un poison rapide). <i>save</i> est la difficulté du jet de CON pour résister au poison. On peut rajouter deux arguments optionnels :
+                    <ul>
+                      <li><code>--testINT</code> <i>n</i>: fixe la difficulté du jet d'INT pour réussir à poser le poison. La difficulté par défaut est 14.</li>
+                      <li><code>--dose</code> <i>nom</i>: indique une ressource dans laquelle on puise pour enduire de poison (à la manière de munitions). Il faudra que le personnage ait une ability de nom <code>dose_</code><i>nom</i> avec comme valeur le nombre de doses possédées.</li>
+                    </ul>
+                  </li>
+                  <li><strong>Protection contre les souffles</strong> et dégâts de zone : ajouter un attribut <code>protectionDMZone</code>, de valeur <code>true</code>. Pour une protection contre un seul élément (feu, froid, etc), ajouter <code>_</code> et le nom de l'élément. Par exemple, contre le feu, on aura un attribut <code>protectionDMZone_feu</code>.</li>
+                  <li><strong>Putréfaction</strong> : ajouter à l'attaque <code>--effet putrefaction 5 --save CON 14</code> (pour les données des momies)</li>
+                  <li><strong>Sans esprit</strong> : ajouter un attribut <code>sansEsprit</code> (=true) permet la réussite automatique des jets de résistance basés sur INT, SAG ou CHA.</li>
+                </ul>
+              </div>
+            </div>
+						<h2 class="text-primary" id="statistiques">6. Statistiques</h2>
+						<div class="decalage">
+							<p>Il est possible d'activer la collecte de statistiques en utilisant la commande <code>!cof-demarrer-statistiques</code>.</p>
+							<p>On peut arrêter la collecte avec <code>!cof-arreter-statistiques</code>, et la mettre en pause avec <code>!cof-pause-statistiques</code>.<br />
+								Si on redémarre après une mise en pause, on reprend les statistiques comme elles étaient au moment de la pause. Si on redémarre des statistiques en court, cela remet les statistiques à zéro.
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

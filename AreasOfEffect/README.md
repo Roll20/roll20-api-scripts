@@ -1,7 +1,7 @@
 # Areas of Effect
 
-_v1.3 Updates_
-* The script now exposes an interface to its public functions.
+_v1.6.1 Updates_
+* Fixed unicode icons in chat menu.
 
 GMs, your spellcasting players will love you for this script! It lets you
 create graphical areas of effect for various spells and other powers, and then
@@ -60,12 +60,12 @@ then upload them to your game in order to make use of them with this script ._
 If you experience any issues while using this script or the trap themes,
 need help using it, or if you have a neat suggestion for a new feature,
 please shoot me a PM:
-https://app.roll20.net/users/46544/stephen-l 
+https://app.roll20.net/users/46544/stephen-l
 or create a help thread on the Roll20 API forum
 
 ## Show Support
 
 If you would like to show your appreciation and support for the work I do in writing,
-updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)
+updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/publisher/165/stephen-lindberg)
 or, simply leave a thank you note in the script's thread on the Roll20 forums.
 Either is greatly appreciated! Happy gaming!

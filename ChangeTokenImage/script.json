@@ -1,8 +1,9 @@
 {
     "name": "ChangeTokenImage",
-    "version": "0.1.20",
+    "script": "ChangeTokenImage.js",
+    "version": "0.1.33",
     "description": "Interface to change token images from a rollable table.",
-    "authors": "Chris B,Aaron",
+    "authors": "Chris B, The Aaron",
     "roll20userid": "144324",
     "dependencies": [],
     "modifies": {

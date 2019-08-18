@@ -72,7 +72,7 @@ var MarchingOrder = (function() {
       var follower = leader.follower;
       follower.prevLeft = follower.get("left");
       follower.prevTop = follower.get("top");
-      follower.prevRotation = follower.get("rotation")
+      follower.prevRotation = follower.get("rotation");
 
       follower.set("left",leader.prevLeft);
       follower.set("top",leader.prevTop);
@@ -215,7 +215,7 @@ var MarchingOrder = (function() {
 
       // Cardinal directions (GM only)
       if(playerIsGM(playerId)) {
-        actionsHtml += '<div style="text-align: center;">March in order:</div>'
+        actionsHtml += '<div style="text-align: center;">March in order:</div>';
         actionsHtml += '<div><table style="width: 100%;">';
         actionsHtml += '<tr><td></td><td>[North](' + FOLLOW_CMD + ' north)</td><td></td></tr>';
         actionsHtml += '<tr><td>[West](' + FOLLOW_CMD + ' west)</td><td></td><td>[East](' + FOLLOW_CMD + ' east)</td></tr>';
@@ -301,7 +301,7 @@ var MarchingOrder = (function() {
             else if(arg)
                 _cmdFollowNamedToken(tokens, arg);
             else
-                _replyHowToMessage(playerName);
+                _replyHowToMessage(msg);
         }
         else if(_msgStartsWith(msg, MENU_CMD)) {
             _showMenu(msg.who, msg.playerid);

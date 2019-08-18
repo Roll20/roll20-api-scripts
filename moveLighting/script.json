@@ -1,0 +1,15 @@
+{
+	"name": "Move Lighting",
+	"script": "moveLighting.js",
+	"version": "0.1.4",
+	"previousversions": [],
+	"description": "# Page FX\n\n_v0.1.4 Updates_\n\nUse the command !movelight with the parameters of:\n\n1) the layer to move to and\n\n2) the ID of the dynamic lighting path object\n\nExample: !movelight gmlayer -LDSsme9FmMDFmf",
+	"authors": "Luke LeClair a.k.a Kastion",
+	"roll20userid": 3173313,
+	"useroptions": [],
+	"dependencies": [],
+	"modifies": {
+		"graphic:bar1_value": "read"
+	},
+	"conflicts": []
+}

@@ -1,0 +1,13 @@
+{
+  "name": "AgoneDice",
+  "version": "0.1",
+  "description": "Allows automatic fumble with Agone-(french) sheet",
+  "authors": "Le GDF",
+  "roll20userid": "1686183",
+  "dependencies": [],
+  "modifies": [],
+  "conflicts": [],
+  "script": "AgoneDice.js",
+  "useroptions": {},
+  "previousversions": []
+}

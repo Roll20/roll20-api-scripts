@@ -1,0 +1,16 @@
+{
+  "name": "PeekCard",
+  "script": "PeekCard.js",
+  "version": "0.1.0",
+  "description": "Allows you to look at cards you've played facedown by running the `!peek-card` command.  Use `!peek-card --help` for a full description of available options.",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "useroptions": {},
+  "dependencies": {},
+  "modifies": {
+    "state.PeekCard": "read,write"
+  },
+  "conflicts": [],
+  "previousversions": []
+}

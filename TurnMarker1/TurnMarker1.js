@@ -2,6 +2,7 @@
 // By:       The Aaron, Arcane Scriptomancer
 // Contact:  https://app.roll20.net/users/104025/the-aaron
 
+/* global GroupInitiative:false Mark:false */
 /*  ############################################################### */
 /*  TurnMarker */
 /*  ############################################################### */
@@ -9,8 +10,8 @@
 var TurnMarker = TurnMarker || (function(){
     "use strict";
     
-    var version = '1.3.8',
-        lastUpdate = 1490871535,
+    var version = '1.3.9',
+        lastUpdate = 1500408657,
         schemaVersion = 1.17,
         active = false,
         threadSync = 1,
@@ -145,93 +146,94 @@ var TurnMarker = TurnMarker || (function(){
 
         switch(command) {
             case "!tm":
-            case "!turnmarker":
-                if(!playerIsGM(msg.playerid)){
-                    return;
-                }
-                let tokens=_.rest(tokenized),marker,value;
-                switch (tokens[0]) {
-                    case 'reset':
-                        marker = getMarker();
-                        value = parseInt(tokens[1],10)||0;
-                        marker.set({
-                            name: state.TurnMarker.tokenName+' '+value,
-                            bar2_value: value
-                        });
-                        sendChat('','/w "'+who+'" <b>Round</b> count is reset to <b>'+value+'</b>.');
-                        break;
-
-                    case 'ping-target':
-                        var obj=getObj('graphic',tokens[1]);
-                        if(obj){
-                            fixedSendPing(obj.get('left'),obj.get('top'),obj.get('pageid'),null,true);
-                        }
-                        break;
-
-                    case 'autopull':
-                        if(_.contains(_.keys(autoPullOptions), tokens[1])){
-                            state.TurnMarker.autoPull=tokens[1];
-                            sendChat('','/w "'+who+'" <b>AutoPull</b> is now <b>'+(autoPullOptions[state.TurnMarker.autoPull])+'</b>.');
-                        } else {
-                            sendChat('','/w "'+who+'" "'+tokens[1]+'" is not a valid <b>AutoPull</b> options.  Please specify one of: '+_.keys(autoPullOptions).join(', ')+'</b>.');
-                        }
-                        break;
-
-                    case 'toggle-announce':
-                        state.TurnMarker.announceRounds=!state.TurnMarker.announceRounds;
-                        sendChat('','/w "'+who+'" <b>Announce Rounds</b> is now <b>'+(state.TurnMarker.announceRounds ? 'ON':'OFF' )+'</b>.');
-                        break;
-
-                    case 'toggle-announce-turn':
-                        state.TurnMarker.announceTurnChange=!state.TurnMarker.announceTurnChange;
-                        sendChat('','/w "'+who+'" <b>Announce Turn Changes</b> is now <b>'+(state.TurnMarker.announceTurnChange ? 'ON':'OFF' )+'</b>.');
-                        break;
-
-                    case 'toggle-announce-player':
-                        state.TurnMarker.announcePlayerInTurnAnnounce=!state.TurnMarker.announcePlayerInTurnAnnounce;
-                        sendChat('','/w "'+who+'" <b>Player Name in Announce</b> is now <b>'+(state.TurnMarker.announcePlayerInTurnAnnounce ? 'ON':'OFF' )+'</b>.');
-                        break;
-
-                    case 'toggle-skip-hidden':
-                        state.TurnMarker.autoskipHidden=!state.TurnMarker.autoskipHidden;
-                        sendChat('','/w "'+who+'" <b>Auto-skip Hidden</b> is now <b>'+(state.TurnMarker.autoskipHidden ? 'ON':'OFF' )+'</b>.');
-                        break;
-
-                    case 'toggle-animations':
-                        state.TurnMarker.playAnimations=!state.TurnMarker.playAnimations;
-                        if(state.TurnMarker.playAnimations) {
-                            stepAnimation(threadSync);
-                        } else {
+            case "!turnmarker": {
+                    if(!playerIsGM(msg.playerid)){
+                        return;
+                    }
+                    let tokens=_.rest(tokenized),marker,value;
+                    switch (tokens[0]) {
+                        case 'reset':
                             marker = getMarker();
+                            value = parseInt(tokens[1],10)||0;
                             marker.set({
-                                aura1_radius: '',
-                                aura2_radius: ''
+                                name: state.TurnMarker.tokenName+' '+value,
+                                bar2_value: value
                             });
-                        }
+                            sendChat('','/w "'+who+'" <b>Round</b> count is reset to <b>'+value+'</b>.');
+                            break;
 
-                        sendChat('','/w "'+who+'" <b>Animations</b> are now <b>'+(state.TurnMarker.playAnimations ? 'ON':'OFF' )+'</b>.');
-                        break;
+                        case 'ping-target':
+                            var obj=getObj('graphic',tokens[1]);
+                            if(obj){
+                                fixedSendPing(obj.get('left'),obj.get('top'),obj.get('pageid'),null,true);
+                            }
+                            break;
 
-                    case 'toggle-rotate':
-                        state.TurnMarker.rotation=!state.TurnMarker.rotation;
-                        sendChat('','/w "'+who+'" <b>Rotation</b> is now <b>'+(state.TurnMarker.rotation ? 'ON':'OFF' )+'</b>.');
-                        break;
+                        case 'autopull':
+                            if(_.contains(_.keys(autoPullOptions), tokens[1])){
+                                state.TurnMarker.autoPull=tokens[1];
+                                sendChat('','/w "'+who+'" <b>AutoPull</b> is now <b>'+(autoPullOptions[state.TurnMarker.autoPull])+'</b>.');
+                            } else {
+                                sendChat('','/w "'+who+'" "'+tokens[1]+'" is not a valid <b>AutoPull</b> options.  Please specify one of: '+_.keys(autoPullOptions).join(', ')+'</b>.');
+                            }
+                            break;
 
-                    case 'toggle-aura-1':
-                        state.TurnMarker.aura1.pulse=!state.TurnMarker.aura1.pulse;
-                        sendChat('','/w "'+who+'" <b>Aura 1</b> is now <b>'+(state.TurnMarker.aura1.pulse ? 'ON':'OFF' )+'</b>.');
-                        break;
+                        case 'toggle-announce':
+                            state.TurnMarker.announceRounds=!state.TurnMarker.announceRounds;
+                            sendChat('','/w "'+who+'" <b>Announce Rounds</b> is now <b>'+(state.TurnMarker.announceRounds ? 'ON':'OFF' )+'</b>.');
+                            break;
 
-                    case 'toggle-aura-2':
-                        state.TurnMarker.aura2.pulse=!state.TurnMarker.aura2.pulse;
-                        sendChat('','/w "'+who+'" <b>Aura 2</b> is now <b>'+(state.TurnMarker.aura2.pulse ? 'ON':'OFF' )+'</b>.');
-                        break;
+                        case 'toggle-announce-turn':
+                            state.TurnMarker.announceTurnChange=!state.TurnMarker.announceTurnChange;
+                            sendChat('','/w "'+who+'" <b>Announce Turn Changes</b> is now <b>'+(state.TurnMarker.announceTurnChange ? 'ON':'OFF' )+'</b>.');
+                            break;
 
-                    default:
-                    case 'help':
-                        showHelp(who);
-                        break;
+                        case 'toggle-announce-player':
+                            state.TurnMarker.announcePlayerInTurnAnnounce=!state.TurnMarker.announcePlayerInTurnAnnounce;
+                            sendChat('','/w "'+who+'" <b>Player Name in Announce</b> is now <b>'+(state.TurnMarker.announcePlayerInTurnAnnounce ? 'ON':'OFF' )+'</b>.');
+                            break;
 
+                        case 'toggle-skip-hidden':
+                            state.TurnMarker.autoskipHidden=!state.TurnMarker.autoskipHidden;
+                            sendChat('','/w "'+who+'" <b>Auto-skip Hidden</b> is now <b>'+(state.TurnMarker.autoskipHidden ? 'ON':'OFF' )+'</b>.');
+                            break;
+
+                        case 'toggle-animations':
+                            state.TurnMarker.playAnimations=!state.TurnMarker.playAnimations;
+                            if(state.TurnMarker.playAnimations) {
+                                stepAnimation(threadSync);
+                            } else {
+                                marker = getMarker();
+                                marker.set({
+                                    aura1_radius: '',
+                                    aura2_radius: ''
+                                });
+                            }
+
+                            sendChat('','/w "'+who+'" <b>Animations</b> are now <b>'+(state.TurnMarker.playAnimations ? 'ON':'OFF' )+'</b>.');
+                            break;
+
+                        case 'toggle-rotate':
+                            state.TurnMarker.rotation=!state.TurnMarker.rotation;
+                            sendChat('','/w "'+who+'" <b>Rotation</b> is now <b>'+(state.TurnMarker.rotation ? 'ON':'OFF' )+'</b>.');
+                            break;
+
+                        case 'toggle-aura-1':
+                            state.TurnMarker.aura1.pulse=!state.TurnMarker.aura1.pulse;
+                            sendChat('','/w "'+who+'" <b>Aura 1</b> is now <b>'+(state.TurnMarker.aura1.pulse ? 'ON':'OFF' )+'</b>.');
+                            break;
+
+                        case 'toggle-aura-2':
+                            state.TurnMarker.aura2.pulse=!state.TurnMarker.aura2.pulse;
+                            sendChat('','/w "'+who+'" <b>Aura 2</b> is now <b>'+(state.TurnMarker.aura2.pulse ? 'ON':'OFF' )+'</b>.');
+                            break;
+
+                        default:
+                        case 'help':
+                            showHelp(who);
+                            break;
+
+                    }
                 }
                 break;
 
@@ -308,6 +310,7 @@ var TurnMarker = TurnMarker || (function(){
                 
                 marker = getMarker();
                 marker.set({
+                    "layer": obj.get("layer"),
                     "top": obj.get("top"),
                     "left": obj.get("left")
                 });
@@ -444,6 +447,14 @@ var TurnMarker = TurnMarker || (function(){
         }
     },
 
+    handleDestroyGraphic = function(obj){
+        if(TurnOrder.HasTurn(obj.id)){
+            let prev=JSON.parse(JSON.stringify(Campaign()));
+            TurnOrder.RemoveTurn(obj.id);
+            handleTurnOrderChange(Campaign(),prev);
+        }
+    },
+
     handleTurnOrderChange = function(obj, prev) {
         var prevOrder=JSON.parse(prev.turnorder);
         var objOrder=JSON.parse(obj.get('turnorder'));
@@ -460,21 +471,21 @@ var TurnMarker = TurnMarker || (function(){
 
     handleExternalTurnOrderChange = function() {
         var marker = getMarker(),
-    		turnorder = Campaign().get('turnorder'),
-			markerTurn;
+            turnorder = Campaign().get('turnorder'),
+            markerTurn;
 
-		turnorder = ('' === turnorder) ? [] : JSON.parse(turnorder);
-		markerTurn = _.filter(turnorder, function(i){
-			return marker.id === i.id;
-		})[0];
+        turnorder = ('' === turnorder) ? [] : JSON.parse(turnorder);
+        markerTurn = _.filter(turnorder, function(i){
+            return marker.id === i.id;
+        })[0];
 
-		if(markerTurn.pr !== -1){
-			markerTurn.pr = -1;
-			turnorder =_.union([markerTurn], _.reject(turnorder, function(i){
-				return marker.id === i.id;
-			}));
-			Campaign().set('turnorder',JSON.stringify(turnorder));
-		}
+        if(markerTurn.pr !== -1){
+            markerTurn.pr = -1;
+            turnorder =_.union([markerTurn], _.reject(turnorder, function(i){
+                return marker.id === i.id || (getObj('graphic',i.id)||{get:_.noop}).get('imgsrc')===state.TurnMarker.tokenURL;
+            }));
+            Campaign().set('turnorder',JSON.stringify(turnorder));
+        }
         _.defer(dispatchInitiativePage);
     },
 
@@ -665,7 +676,8 @@ var TurnMarker = TurnMarker || (function(){
     registerEventHandlers = function(){        
         on("change:campaign:initiativepage", dispatchInitiativePage );
         on("change:campaign:turnorder", handleTurnOrderChange );
-        on("change:graphic", checkForTokenMove );
+        on("change:graphic:lastmove", checkForTokenMove );
+        on("destroy:graphic", handleDestroyGraphic );
         on("chat:message", handleInput );
 
         dispatchInitiativePage();
@@ -736,7 +748,11 @@ var TurnOrder = TurnOrder || (function() {
             var turnorder = this.Get();
             turnorder.push(entry);
             this.Set(turnorder);
+        },
+        RemoveTurn: function(id){
+            this.Set(_.reject(this.Get(),(o)=>o.id===id));
         }
+
     };
 }());
 

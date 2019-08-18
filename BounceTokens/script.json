@@ -1,6 +1,6 @@
 {
   "name": "BounceTokens",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Allows the GM to toggle bouncing of selected tokens.",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -17,5 +17,8 @@
   "conflicts": [],
   "script": "BounceTokens.js",
   "useroptions": [],
-  "previousversions": []
+  "previousversions": [
+    "0.1.0",
+    "0.1.1"
+  ]
 }

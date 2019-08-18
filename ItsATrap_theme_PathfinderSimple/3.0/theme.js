@@ -28,14 +28,14 @@
        * @inheritdoc
        */
       getAC(character) {
-        return TrapTheme.getSheetAttr(character, 'ac');
+        return CharSheetUtils.getSheetAttr(character, 'ac');
       }
 
       /**
        * @inheritdoc
        */
       getPassivePerception(character) {
-        return TrapTheme.getSheetAttr(character, 'perception')
+        return CharSheetUtils.getSheetAttr(character, 'perception')
         .then(perception => {
           return perception + 10;
         });
@@ -45,7 +45,7 @@
        * @inheritdoc
        */
       getSaveBonus(character, saveName) {
-        return TrapTheme.getSheetAttr(character, SAVE_NAMES[saveName]);
+        return CharSheetUtils.getSheetAttr(character, SAVE_NAMES[saveName]);
       }
 
       /**

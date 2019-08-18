@@ -1,6 +1,6 @@
 {
   "name": "emas",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Provides player !emas and !as commands.",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -11,6 +11,7 @@
   "script": "Emas.js",
   "useroptions": [],
   "previousversions": [
-    "0.8.1"
+    "0.8.1",
+    "0.8.2"
   ]
 }
