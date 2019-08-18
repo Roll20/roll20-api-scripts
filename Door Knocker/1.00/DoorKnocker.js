@@ -55,32 +55,32 @@ Possible stretch goal(s)
             '<' : 'lt',
             '>' : 'gt',
             "'" : '#39',
-            '@' : '#64',
-            '{' : '#123',
-            '|' : '#124',
-            '}' : '#125',
-            '[' : '#91',
-            ']' : '#93',
-            '"' : 'quot',
-            '-' : 'mdash',
-            ' ' : 'nbsp'
-        };
+    		'@' : '#64',
+			'{' : '#123',
+			'|' : '#124',
+			'}' : '#125',
+			'[' : '#91',
+			']' : '#93',
+			'"' : 'quot',
+			'-' : 'mdash',
+			' ' : 'nbsp'
+		};
 
-        if(_.has(entities,c) ){
-            return ('&'+entities[c]+';');
-        }
-        return '';
-    },
-    
-    cleanImgSrc = function(img){
+		if(_.has(entities,c) ){
+			return ('&'+entities[c]+';');
+		}
+		return '';
+	},
+	
+	cleanImgSrc = function(img){
         var parts = img.match(/(.*\/images\/.*)(thumb|med|original|max)(.*)$/);
         if(parts) {
             return parts[1]+'thumb'+parts[3];
         }
         return;
     },
-    
-    esRE = function (s) {
+	
+	esRE = function (s) {
         var escapeForRegexp = /(\\|\/|\[|\]|\(|\)|\{|\}|\?|\+|\*|\||\.|\^|\$)/g;
         return s.replace(escapeForRegexp,"\\$1");
     },
@@ -136,10 +136,10 @@ Possible stretch goal(s)
                 };
                 log(`  > Updating Schema to v${version} <`);
                 state.DoorKnocker.version = version;
-            }
+    		}
             buildTemplates();
-            updateHelp();
-            helpLink = `https://journal.roll20.net/character/${state.DoorKnocker.help}`;
+    		updateHelp();
+    		helpLink = `https://journal.roll20.net/character/${state.DoorKnocker.help}`;
         }catch(err){
             sendError(err);
         }
@@ -238,9 +238,9 @@ Possible stretch goal(s)
                     </p>
                     <h3>Opening and Closing Doors</h3>
                     <p>
-                        Open, close, and toggle doors using the key keyword followed by an option to tell the script whether to open doors, close doors, or toggle doors. You can 
-                        also pass an optional second option to tell the script to open/close/toggle all doors within range of the knocker token, on the same page as the token, or 
-                        in the entire campaign. These commands look like:
+                        Open and close using the <b>key</b> keyword followed by an option to tell the script whether to open doors, close doors, or toggle doors. 
+                        You can also pass an optional second option to tell the script to open/close/toggle all doors within range of the knocker token. These commands 
+                        look like:
                     </p>
                     <p>
                         <b>!knock --key|open/close/toggle|all/page/campaign</b>
@@ -250,7 +250,7 @@ Possible stretch goal(s)
                         <li><b>open/close/toggle:</b> This option tells the script to open, close, or toggle (open closed doors and close open doors) the closest door (or all doors if also using the all option)</li>
                         <li><b>all/page/campaign:</b> <i>Optional argument</i> This option tells the script to operate on all doors within range, all doors on a page, or all doors in the campaign.</li>
                     </ul>
-                    <h3>Setting up Door Knocker</h3>
+                    <h3>Setting up the Door Knocker</h3>
                     <p>
                         Set the wall, door, and locked door stroke colors in the settings menu using hex color codes (e.g. #000000). You can also set these values 
                         by selecting an already created DL line. The command syntax for using a selected DL line looks like:
@@ -299,7 +299,7 @@ Possible stretch goal(s)
                             <h4><br>Interface Options:</h4>
                             <b>Display aura when door in range:</b>${makeButton(`!knock --aura|${state.DoorKnocker.auraDisplay ? 'off':'on'}`,state.DoorKnocker.auraDisplay ? 'enabled':'disabled',state.DoorKnocker.auraDisplay ? 'green':'black','white','Toggle on/off display of an aura when a door is in range')}<br>
                             <h4><br>Color Relationships:</h4>
-                            <b>Walls:</b>${makeButton(`!knock --preset|wall|?{What Color are your Doors|#ff9900}`,state.DoorKnocker.wallColor,state.DoorKnocker.wallColor,setContrast(hexToRgb(state.DoorKnocker.wallColor)),'Enter the hex color of your dynamic lighting walls')}<br>
+                            <b>Walls:</b>${makeButton(`!knock --preset|wall|?{What Color are your Walls|#ff9900}`,state.DoorKnocker.wallColor,state.DoorKnocker.wallColor,setContrast(hexToRgb(state.DoorKnocker.wallColor)),'Enter the hex color of your dynamic lighting walls')}<br>
                             <b>Doors:</b>${makeButton(`!knock --preset|door|?{What Color are your Doors|#ff9900}`,state.DoorKnocker.doorColor,state.DoorKnocker.doorColor,setContrast(hexToRgb(state.DoorKnocker.doorColor)),'Enter the hex color of your dynamic lighting doors')}<br>`
             },
             coloring={
@@ -620,9 +620,9 @@ Possible stretch goal(s)
         }catch(err){
             sendError(err);
         }
-    },
-    
-    cmdExtract = function(cmd){
+	},
+	
+	cmdExtract = function(cmd){
         var cmdSep = {
                 details:{}
             },
@@ -645,7 +645,7 @@ Possible stretch goal(s)
         });
         return cmdSep;
     },
-    
+	
     RegisterEventHandlers = function() {
         on('chat:message', HandleInput);
         on('change:graphic:rotation',keyTurn);
@@ -656,8 +656,8 @@ Possible stretch goal(s)
     
     return {
         CheckInstall: checkInstall,
-        RegisterEventHandlers: RegisterEventHandlers
-    };
+    	RegisterEventHandlers: RegisterEventHandlers
+	};
     
 }());
 
