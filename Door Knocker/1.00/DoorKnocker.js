@@ -7,7 +7,7 @@ var DoorKnocker = DoorKnocker || (function() {var scriptStart = new Error;
         helpCharacter,
         helpLink,
         IDqueue = {},
-        defaultTokenImage = 'https://s3.amazonaws.com/files.d20.io/images/89130138/7GW6JI_WQkL6jzxl-e5c6g/max.png?1565753519';
+        defaultTokenImage = 'https://s3.amazonaws.com/files.d20.io/images/89593533/NjVfN1rZhwh0lbuuYTuQWA/max.png?1566172197';
         
 /*
 Door Knocker script:
