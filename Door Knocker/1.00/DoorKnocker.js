@@ -33,6 +33,10 @@ Secondary goal(s)
 Possible stretch goal(s)
 - implementation of lockpicking
 - Hidden doors
+
+Credits:
+Default token image is from https://game-icons.net/
+under the creative commons license: https://creativecommons.org/licenses/by/3.0/#
 */
     const defaults = {
         css: {
