@@ -238,9 +238,9 @@ Possible stretch goal(s)
                     </p>
                     <h3>Opening and Closing Doors</h3>
                     <p>
-                        Open and close using the <b>key</b> keyword followed by an option to tell the script whether to open doors, close doors, or toggle doors. 
-                        You can also pass an optional second option to tell the script to open/close/toggle all doors within range of the knocker token. These commands 
-                        look like:
+                        Open, close, and toggle doors using the key keyword followed by an option to tell the script whether to open doors, close doors, or toggle doors. You can 
+                        also pass an optional second option to tell the script to open/close/toggle all doors within range of the knocker token, on the same page as the token, or 
+                        in the entire campaign. These commands look like:
                     </p>
                     <p>
                         <b>!knock --key|open/close/toggle|all/page/campaign</b>
@@ -250,7 +250,7 @@ Possible stretch goal(s)
                         <li><b>open/close/toggle:</b> This option tells the script to open, close, or toggle (open closed doors and close open doors) the closest door (or all doors if also using the all option)</li>
                         <li><b>all/page/campaign:</b> <i>Optional argument</i> This option tells the script to operate on all doors within range, all doors on a page, or all doors in the campaign.</li>
                     </ul>
-                    <h3>Setting up the Door Knocker</h3>
+                    <h3>Setting up Door Knocker</h3>
                     <p>
                         Set the wall, door, and locked door stroke colors in the settings menu using hex color codes (e.g. #000000). You can also set these values 
                         by selecting an already created DL line. The command syntax for using a selected DL line looks like:
