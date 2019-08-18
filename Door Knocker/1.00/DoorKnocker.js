@@ -55,32 +55,32 @@ Possible stretch goal(s)
             '<' : 'lt',
             '>' : 'gt',
             "'" : '#39',
-    		'@' : '#64',
-			'{' : '#123',
-			'|' : '#124',
-			'}' : '#125',
-			'[' : '#91',
-			']' : '#93',
-			'"' : 'quot',
-			'-' : 'mdash',
-			' ' : 'nbsp'
-		};
+            '@' : '#64',
+            '{' : '#123',
+            '|' : '#124',
+            '}' : '#125',
+            '[' : '#91',
+            ']' : '#93',
+            '"' : 'quot',
+            '-' : 'mdash',
+            ' ' : 'nbsp'
+        };
 
-		if(_.has(entities,c) ){
-			return ('&'+entities[c]+';');
-		}
-		return '';
-	},
-	
-	cleanImgSrc = function(img){
+        if(_.has(entities,c) ){
+            return ('&'+entities[c]+';');
+        }
+        return '';
+    },
+    
+    cleanImgSrc = function(img){
         var parts = img.match(/(.*\/images\/.*)(thumb|med|original|max)(.*)$/);
         if(parts) {
             return parts[1]+'thumb'+parts[3];
         }
         return;
     },
-	
-	esRE = function (s) {
+    
+    esRE = function (s) {
         var escapeForRegexp = /(\\|\/|\[|\]|\(|\)|\{|\}|\?|\+|\*|\||\.|\^|\$)/g;
         return s.replace(escapeForRegexp,"\\$1");
     },
@@ -120,7 +120,7 @@ Possible stretch goal(s)
             +'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'//Control Panel Header div
             +'Door Knocker v'+version+'<b> Error Handling</b></div>'
             +'<div style="border-top: 1px solid #000000; border-radius: .2em; background-color: white;">'
-            +'The following error occurred:<br><pre><div style="color:red"><b>'+err.message+'<br>'+stackToSend+'</b></div></pre>Please post this error report to the <b><u>[Script forum thread](https://app.roll20.net/forum/post/7478947/script-menu-maker/?pageforid=7478947#post-7478947)</u></b>.'
+            +'The following error occurred:<br><pre><div style="color:red"><b>'+err.message+'<br>'+stackToSend+'</b></div></pre>Please post this error report to the <b><u>[Script forum thread](https://app.roll20.net/forum/post/7698809/script-door-knocker/?pageforid=7698809#post-7698809)</u></b>.'
             +'</div>'
             +'</div>');
     },
@@ -136,10 +136,10 @@ Possible stretch goal(s)
                 };
                 log(`  > Updating Schema to v${version} <`);
                 state.DoorKnocker.version = version;
-    		}
+            }
             buildTemplates();
-    		updateHelp();
-    		helpLink = `https://journal.roll20.net/character/${state.DoorKnocker.help}`;
+            updateHelp();
+            helpLink = `https://journal.roll20.net/character/${state.DoorKnocker.help}`;
         }catch(err){
             sendError(err);
         }
@@ -620,9 +620,9 @@ Possible stretch goal(s)
         }catch(err){
             sendError(err);
         }
-	},
-	
-	cmdExtract = function(cmd){
+    },
+    
+    cmdExtract = function(cmd){
         var cmdSep = {
                 details:{}
             },
@@ -645,7 +645,7 @@ Possible stretch goal(s)
         });
         return cmdSep;
     },
-	
+    
     RegisterEventHandlers = function() {
         on('chat:message', HandleInput);
         on('change:graphic:rotation',keyTurn);
@@ -656,8 +656,8 @@ Possible stretch goal(s)
     
     return {
         CheckInstall: checkInstall,
-    	RegisterEventHandlers: RegisterEventHandlers
-	};
+        RegisterEventHandlers: RegisterEventHandlers
+    };
     
 }());
 
