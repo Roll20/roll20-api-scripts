@@ -575,6 +575,9 @@ Possible stretch goal(s)
                     return;
                 }
             }
+            if(!/#(?:[a-f\d]{2}){3}/.test(color)){
+                return;
+            }
             state.DoorKnocker[`${type}Color`] = color;
             if(state.DoorKnocker.cmd === 'settings'){
                 updateHelp(playerid,selection,state.DoorKnocker.cmd);
