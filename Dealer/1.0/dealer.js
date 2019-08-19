@@ -1,10 +1,9 @@
-on('ready',()=>{
-
 // Dealer
 // Last Updated: 2019-08-16
 // A script to deal and take cards to selected users from specified decks.
 // Syntax is !deal --[give,take] [number of cards as integer] --[deck name]
 
+on('ready',()=>{
 const version = '1.0.0';
 log('-=> Dealer v' + version + ' <=-');
 
