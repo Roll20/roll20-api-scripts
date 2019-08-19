@@ -1,12 +1,13 @@
-const version = '1.0.0';
-log('-=> Dealer v' + version + ' <=-');
-
+// Dealer
 // Last Updated: 2019-08-16
 // A script to deal and take cards to selected users from specified decks.
 // Syntax is !deal --[give,take] [number of cards as integer] --[deck name]
 
+log('-=> Dealer v' + version + ' <=-');
+
 on('chat:message', (msg) => {
     if ('api' === msg.type && /!deal\b/i.test(msg.content) && msg.selected) {
+const version = '1.0.0';
 
 
         //get parameter and use default of 'give' if parameter is missing or malformed
