@@ -1,0 +1,17 @@
+{
+  "name": "GMAura",
+  "script": "GMAura.js",
+  "version": "0.1.0",
+  "description": "GMAura creates gm-only auras on selected or specified tokens.\r\rAuras are created as invisible tokens on the GM layer with their aura 1 set up with the specified options. Changes to the location and size of the original token will be mimicked by the aura tokens. Changes to the location and size of the aura tokens will be reverted to keep them synchronized to the object layer token. To remove an aura, simply delete its gm layer token. Removal of the object layer token will cause the aura tokens to be cleaned up.\r\r## Commands\r\r```!gm-aura --help```\r\rShow this help.\r\r```!gm-aura [--color <color> | --c <color>] [--radius <radius> | --r <radius>] [--square | --s] [--ids <token id> [token id ...]]```\r\rThis command creates an invisible ura token on the GM layer for each selected or specified token.\r\r* `--color <color>` -- Sets the color of the created aura. (Default: `#ff00ff`) Any color format that works for TokenMod works (except `transparent`).\r* `--c <color>` -- Shorthand for `--color`.\r* `--radius <radius>` -- Sets the radius of the created aura. The number is relative to the page just like regular auras, usually 5 for one square. (Default: `0`, or just on the token.)\r* `--r <radius>` -- Shorthand for `--radius`.\r* `--square` -- Sets the created aura to be square. (Default: `round`)\r* `--s` -- Shorthand for `--square`.\r* `--ids <token id> [token id ...]` -- a list of token ids to create auras for.\r\r```!gm-aura --color #ff0000 --radius 10 --square ```\r\r**Note:** You can create multi-line commands by enclosing the arguments after !gm-aura in `{{` and `}}`.\r\r```\r!gm-aura {{\r  --c rgb(.7,.7,.3)\r  --r 15\r}}\r```\r\r**Note:** You can use inline rolls as part of your command\r\r```\r!gm-aura --radius [[1d3*5]]\r```\r\r### Colors\r\rColors can be specified in multiple formats:\r\r* **HTML Color** -- This is 6 or 3 hexidecimal digits, optionally prefaced by `#`. Digits in a 3 digit hexidecimal color are doubled. All of the following are the same: `#ff00aa`, `#f0a`, `ff00aa`, `f0a`\r* **RGB Color** -- This is an RGB color in the format `rgb(1.0,1.0,1.0)` or `rgb(256,256,256)`. Decimal numbers are in the scale of 0.0 to 1.0, integer numbers are scaled 0 to 256. Note that numbers can be outside this range for the purpose of doing math.\r* **HSV Color** -- This is an HSV color in the format `hsv(1.0,1.0,1.0)` or `hsv(360,100,100)`. Decimal numbers are in the scale of 0.0 to 1.0, integer numbers are scaled 0 to 360 for the hue and 0 to 100 for saturation and value. Note that numbers can be outside this range for the purpose of doing math.",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "useroptions": {},
+  "dependencies": {},
+  "modifies": {
+    "state.GMAura": "read,write",
+    "graphic.*": "read,write"
+  },
+  "conflicts": [],
+  "previousversions": []
+}
