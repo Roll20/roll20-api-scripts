@@ -1,7 +1,11 @@
+// Github:   https://github.com/shdwjk/Roll20API/blob/master/GMAura/GMAura.js
+// By:       The Aaron, Arcane Scriptomancer
+// Contact:  https://app.roll20.net/users/104025/the-aaron
+
 on('ready',()=>{
 	
     const version = '0.1.0';
-    const lastUpdate = 1567480045;
+    const lastUpdate = 1567481378;
     const schemaVersion = 0.1;
 	const clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659';
 	const regex = {
@@ -483,7 +487,7 @@ on('ready',()=>{
 				_h.paragraph(`Colors can be specified in multiple formats:`),
 				_h.inset(
 					_h.ul(
-						`${_h.bold('HTML Color')} -- This is 6 or 3 hexidecimal digits, optionally prefaced by ${_h.code('#')}.  Digits in a 3 digit hexidecimal color are doubled.  All of the following are the same: ${_h.code('#ff00aa')}, ${_h.code('#f0a')}, ${_h.code('ff00aa')}, ${_h.code('f0a')}`,
+						`${_h.bold('HTML Color')} -- This is 6 or 3 hexadecimal digits, optionally prefaced by ${_h.code('#')}.  Digits in a 3 digit hexadecimal color are doubled.  All of the following are the same: ${_h.code('#ff00aa')}, ${_h.code('#f0a')}, ${_h.code('ff00aa')}, ${_h.code('f0a')}`,
 						`${_h.bold('RGB Color')} -- This is an RGB color in the format ${_h.code('rgb(1.0,1.0,1.0)')} or ${_h.code('rgb(256,256,256)')}.  Decimal numbers are in the scale of 0.0 to 1.0, integer numbers are scaled 0 to 256.  Note that numbers can be outside this range for the purpose of doing math.`,
 						`${_h.bold('HSV Color')} -- This is an HSV color in the format ${_h.code('hsv(1.0,1.0,1.0)')} or ${_h.code('hsv(360,100,100)')}.  Decimal numbers are in the scale of 0.0 to 1.0, integer numbers are scaled 0 to 360 for the hue and 0 to 100 for saturation and value.  Note that numbers can be outside this range for the purpose of doing math.`
 					)
