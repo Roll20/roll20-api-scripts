@@ -12152,12 +12152,27 @@ var COFantasy = COFantasy || function() {
           if (options.valeur !== undefined) {
             setTokenAttr(perso, effetC + "Valeur", options.valeur, evt, undefined, options.valeurMax);
           }
-          //On retire l'autre aspect du Nécromancien si il est présent
-          if (effetC == "aspectDuDemon") {
-            finDEffetDeNom(perso, "aspectDeLaSuccube", evt);
-          }
-          if (effetC == "aspectDeLaSuccube") {
-            finDEffetDeNom(perso, "aspectDuDemon", evt);
+          switch (effetC) { //effets supplémentaires associés
+            case 'aspectDuDemon':
+              //On retire l'autre aspect du Nécromancien si il est présent
+              finDEffetDeNom(perso, "aspectDeLaSuccube", evt);
+              break;
+            case 'aspectDeLaSuccube':
+              finDEffetDeNom(perso, "aspectDuDemon", evt);
+              break;
+            case 'aveugleTemp':
+              setState(perso, 'aveugle', true, evt);
+              break;
+            case 'ralentiTemp':
+              setState(perso, 'ralenti', true, evt);
+              break;
+            case 'paralyseTemp':
+              setState(perso, 'paralyse', true, evt);
+              break;
+            case 'etourdiTemp':
+              setState(perso, 'etourdi', true, evt);
+              break;
+            default:
           }
           setTokenAttr(
             perso, effetC, d, evt, messageEffetTemp[effet].activation,

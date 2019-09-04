@@ -7,6 +7,9 @@
 * Ajout de la capacité vitalité surnaturelle des créatures magiques.
 * Ajout de l'aspect du démon
 
+### Corrections de bugs
+* !cof-effet-temp met bien l'état associé quand on utilise paralyseTemp ou etourdiTemp
+
 ## 1.10
 
 ### Capacités
