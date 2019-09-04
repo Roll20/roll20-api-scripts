@@ -1,7 +1,7 @@
 // Dealer
-// Last Updated: 2019-08-16
+// Last Updated: 2019-09-03
 // A script to deal and take cards to selected users from specified decks.
-// Syntax is !deal --[give,take] [number of cards as integer] --[deck name]
+// Syntax is !deal --[give,take] [number of cards as integer] --[deck name]|[card name]
 on('ready', () => {
     const version = '1.1.0';
     log('-=> Dealer v' + version + ' <=-');
