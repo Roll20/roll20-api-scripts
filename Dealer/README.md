@@ -2,9 +2,9 @@
 Deals and takes cards from players by deck
 
 Syntax is:
-`!deal --[give,take] [#] --[deck name]|[Card Name-optional]`
+`!deal --[give,take] [#] --[deck name]|[Card Name]`
 
-If give/take is not specified, it gives a card to the player controlling the selected token If deck name is not specified, it defaults to "Playing Cards".
+If give/take is not specified, it gives a card to the player controlling the selected token If deck name is not specified, it defaults to "Playing Cards". If a card name is not specified, it defaults to a random card from the specified deck.
 
 You can specify a number of cards to give or take. After the action word, type an integer, after a space:
 
