@@ -10,6 +10,20 @@ Other sheets, custom sheets, and characters based upon plain attributes are also
 For those, just fill in the names for the character attributes in the user options for
 this script.
 
+## Theme-specific properties
+The following trap properties are specific to this trap theme script.
+
+### Attack Dice
+The number of dice rolled in the trap's attack.
+
+### Damage Dice
+The number of dice rolled for the trap's pre-SOAK damage.
+
+### Passive Perception
+The number of successes a character must get in a Perception + Alertness roll
+to passively notice a trap. This is rolled automatically the first time a
+character comes within search range for the trap.
+
 ## Help
 
 Due to complications with the API reading attributes from certain character sheets,

@@ -562,6 +562,42 @@ gurpsge:
   - "GURPS_GE"
   - "System Toolbox"
 
-#pathfinderhlimport:
- # - "HeroLabImporter"
- # - "System Toolbox"
+eclipsephasecompanion:
+  - "EclipsePhaseAlternateCompanion"
+  - "System Toolbox"
+
+tokenfate:
+  - "tokenFate"
+  - "Utility"
+
+checkitout:
+  - "CheckItOut"
+  - "Utility"
+
+charsheetutils:
+  - "CharSheetUtils"
+  - "Utility"
+
+healthstatus:
+  - "Health Status"
+  - "Utility"
+
+difficultyrating:
+  - "DifficultyRating"
+  - "System Toolbox"
+
+kmasscombat:
+  - "Mass-Combat"
+  - System Toolbox
+
+initiativestandby:
+ - "Initiative-Standby"
+ - Utility
+
+handsup:
+  - "HandsUp"
+  - Utility
+
+gmaura:
+  - "GMAura"
+  - Utility
