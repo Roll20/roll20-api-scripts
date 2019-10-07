@@ -206,10 +206,10 @@ var DungeonUtils = (function (module) {
         }
     };
 
-    module.placeDungeon = function (map) {
+    module.placeDungeon = function (map, wall) {
         map.forEach(function (col, x) {
             col.forEach(function (cellType, y) {
-                module.placeTile(x, y, cellType);
+                module.placeTile(x, y, cellType, wall);
             });
         });
     };
@@ -308,14 +308,14 @@ var DungeonUtils = (function (module) {
         });
     };
 
-    module.placeTile = function (x, y, type) {
+    module.placeTile = function (x, y, type, wall) {
         var tile;
         switch (type) {
         case TILE_EMPTY:
             tile = EMPTY_TILE_IMAGE;
             break;
         case TILE_WALL:
-            tile = WALL_TILE_IMAGE;
+            tile = wall || WALL_TILE_IMAGE;
             break;
         case TILE_FLOOR:
             // Floor tiles are handled separately
