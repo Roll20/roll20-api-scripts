@@ -75,7 +75,7 @@ Installation
 
 ### Installation
 
-- Open the **raw** text of the latest release of the script. At the time of writing that is [v0.9.0](https://github.com/Bathtor/EPSheet/releases/download/script-v0.9.0/ep-script.js).
+- Open the **raw** text of the latest release of the script. At the time of writing that is [v1.0.2](https://github.com/Bathtor/EPSheet/releases/download/script-v1.0.2/ep-script.js).
 - Copy *all* the text -- **Ctrl+A** followed by **Ctrl+C** (**Cmd+A**, **Cmd+C** on a Mac)
 - Go to the API Script page for your Roll20 campaign
 - Paste the text into a new script, or override an older version if updating. Don't forget to give it a sensible name, e.g. `epscript.js`!
@@ -83,7 +83,9 @@ Installation
 - Leave the Roll20 API Script page open, and open up your campaign view in a different tab/window. That should cause your sandbox to spin up. If no errors are reported, you should be good to go.
 
 #### EPCompendium
-If you would like access to the EPCompendium-related features, you must also install the data script for the compendium. Follow the same procedure as above for the latest release of the EPCompendium, [v5.0.0](https://github.com/Bathtor/EPCompendium/releases/tag/v5.0.0) at the time of writing. Each Compendium release also contains a number of macros prepared to use with the script that you can just c&p into your campaign.
+If you would like access to the EPCompendium-related features, you must also install the data script for the compendium. Follow the same procedure as above for the latest release of the EPCompendium, [v6.0.0](https://github.com/Bathtor/EPCompendium/releases/tag/v6.0.0) at the time of writing. Each Compendium release also contains a number of macros prepared to use with the script that you can just c&p into your campaign.
+
+**Note** that there's a load time dependency between the compendium script and the companion script, so make sure that the compendium script's tab is to the right of the companion script's.
 
 #### Updating
 If you need to update one of the script installed above, simply follow the same instructions as for a normal installation. Do make sure, that you always override old script versions, and never have two versions running in parallel!
