@@ -1138,6 +1138,7 @@ var COFantasy = COFantasy || function() {
       macros.forEach(function(m, i) {
         var mName = '#' + m.get('name');
         if (action.indexOf(mName) >= 0) {
+          mName = new RegExp(mName+"\\b", "g");
           action = action.replace(mName, m.get('action'));
           if (!remplacement)
             macros = macros.filter(function(m, k) {
