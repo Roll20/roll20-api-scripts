@@ -8,10 +8,10 @@
 	"roll20userid": "3482602",
 	"dependencies": [],
 	"conflicts": [],
-	"modifies": [
+	"modifies": {
 		"graphic.imgurl": "read,write",
 		"handout.avatar": "read",
 		"graphic.name": "read",
 		"handout.name": "read"
-	]
+	}
 }
