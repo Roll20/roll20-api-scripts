@@ -112,8 +112,7 @@ var TerrainGenerator = TerrainGenerator || (function () {
             return generateObjects(pageName, tableName, itemNames, size, size, sparsity, variance, randomRotation)
         };
 
-        let handleInput = function (msg_orig) {
-            let msg=_.clone(msg_orig);
+        let handleInput = function (msg) {
             
             // Process inline rolls from https://wiki.roll20.net/API:Cookbook#processInlinerolls
             if (_.has(msg, 'inlinerolls')) {
