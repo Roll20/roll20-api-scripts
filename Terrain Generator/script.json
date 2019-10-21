@@ -1,7 +1,7 @@
 {
     "name": "Terrain Generator",
     "script": "terrain-generator.js",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "previousversions": [],
     "description": "Automates creation of outdoor maps (forests, deserts, etc.\rCommands:\r!TGFillBG [pageName] [rollableTableName] [itemNames] [size]\r!TGSpawnTrees [pageName] [rollableTableName] [itemNames] [size] [sparsity] [variation] [randomRotation]\rFor more info/help/suggestions go to: https://app.roll20.net/forum/post/4554521/script-terrain-generator",
     "authors": "Sebastian O.",
