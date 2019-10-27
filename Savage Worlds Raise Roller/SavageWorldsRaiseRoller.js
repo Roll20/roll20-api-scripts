@@ -1,5 +1,9 @@
 //SavageWorldsRaiseRoller.js
 //
+// By: Carl Davis
+// https://app.roll20.net/users/2505097/carl-d  (Carl D.)
+// Email: cdavis AT SIGN webcommando.com  (replace AT SIGN with @)
+//
 //
 // This API script performs a Savage Worlds roll (including wild die) and then displays
 // a list of the target numbers with information on if this roll would be a success and any raises associated with
