@@ -22,7 +22,12 @@ After initial setup, simply add your player characters to the default party, dra
 - Author: [Michael G.](https://app.roll20.net/users/1583758/michael-g)/[VoltCruelerz](https://github.com/VoltCruelerz)
 - Designer: [Wolf Thunderspirit](https://app.roll20.net/users/2762597)
 
+## Links
+- [Github](https://github.com/Roll20/roll20-api-scripts/tree/master/DifficultyRating)
+- [Forums](https://app.roll20.net/forum/post/7542136/script-difficulty-rating-5e-encounter-calculator)
+
 ## Version History
 
 - 1.00: Initial Release
 - 1.03: Improve 5e-Shaped compatibility
+- 1.04: Fix CR < 1 bug
