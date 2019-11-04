@@ -1,0 +1,15 @@
+{
+  "name": "Savage Worlds Raise Roller",
+  "version": "0.1.0",
+  "description": "This script performs a Savage Worlds roll (including wild die if needed) and displays a list of the target numbers with details on whether this roll would be a success and any raises associated with it.",
+  "authors": "Carl D.",
+  "roll20userid": "2505097",
+  "patreon": "",
+  "dependencies": [],
+  "modifies": {},
+  "conflicts": [],
+  "previousversions": [],
+  "script": "SavageWorldsRaiseRoller.js",
+  "useroptions": {},
+  "previousversions": []
+}
