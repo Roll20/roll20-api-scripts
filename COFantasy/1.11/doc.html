@@ -332,6 +332,7 @@
                   <li><code>--cone <i>angle</i></code> cible toutes les créatures dans un cône de sommet l'attaquant, d'angle <i>angle</i> degrés (90 degrés par défaut), et séparé en deux par le segment joignant l'attaquant et le token visé.</li>
                   <li><code>--target <i>id</i></code> : ajoute une cible à l'attaque (s'ajoute à la cible principale et aux options d'aoe).</li>
                   <li><code>--message <i>texte</i></code> : ajoute une ligne avec le message dans la fenêtre de l'attaque. Attention, <i>texte</i> ne doit pas contenir la séquence <code> --</code>.</li>
+                  <li><code>--secret</code> : affiche les jets et résultats de l'attaque seulement aux joueurs qui contrôlent l'attaquant ou ses cibles, ainsi qu'au MJ.</li>
                   <li><code>--allonge <i>n</i></code> : ajoute <i>n</i> mètres à la portée d'une attaque au contact. L'allonge peut être un nombre à virgule et même négative.</li>
                 </ul>
               </div>
@@ -1397,6 +1398,7 @@
                 <h4 class="text-secondary">Voie des créatures volantes</h4>
                 <ol>
                   <li><strong>Vol rapide</strong> : simplement faire une variante de l'attaque avec les options <code>--bonusAttaque 5 --plus 1d6</code> à utiliser le premier tour de combat si a créature est en vol et attaque une créature au sol. Ne pas oublier l'action de mouvement supplémentaire en vol.</li>
+                  <li><strong>Agripper</strong> : ajouter un attribut <code>agripper</code> de valeur <code>true</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de la magie de combat</h4>
                 <ol>
@@ -1426,7 +1428,7 @@
                 </ol>
                 <h4 class="text-secondary">Voie du prédateur</h4>
                 <ol>
-                  <li><strong>Embuscade</strong> : Sélectionner les ennemis du prédateurs, et utiliser <code>!cof-surprise</code>. Par exemple, contre une équipe de joueurs dans le <i>handout</i> <code>Equipe joueurs</code> (cf la <a href="#methode_selection_groupes">méthode de sélection de groupes</a>), on pourra utiliser l'ability <code>!cof-surprise [[15 + @{selected|DEX}]] --nonVivant @{selected|token_id} --equipe joueurs</code>. Pour les bonus en discrétion et init, reporter sur la fiche (et à un attribut <code>discrétion</code>), pour l'attaque en embuscade sur une cible surprise, rajouter à une attaque les options <code>--sournoise 1 --if moins FOR --etat renverse --endif</code>.</li>
+                  <li><strong>Embuscade</strong> : Sélectionner les ennemis du prédateurs, et utiliser <code>!cof-surprise</code>. Par exemple, contre une équipe de joueurs dans le <i>handout</i> <code>Equipe joueurs</code> (cf la <a href="#methode_selection_groupes">méthode de sélection de groupes</a>), on pourra utiliser l'ability <code>!cof-surprise [[15 + @{selected|DEX}]] @{selected|token_id} --equipe joueurs</code>. Pour les bonus en discrétion et init, reporter sur la fiche (et à un attribut <code>discrétion</code>), pour l'attaque en embuscade sur une cible surprise, rajouter à une attaque les options <code>--sournoise 1 --if moins FOR --etat renverse --endif</code>.</li>
                   <li><strong>Dévorer</strong> : ajouter les options d'attaque <code>--if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat renverse --etat immobilise FOR @{selected|token_id} --endif --endif</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du tueur</h4>
