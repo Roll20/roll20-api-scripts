@@ -2,6 +2,7 @@
 
 ## 1.11
 ### Capacités
+* Animer un cadavre, rang 2 de la voie de la magie maléfique.
 * Agripper, rang 2 de la voie des créature volantes
 * Destruction des mort-vivants peut maintenant utiliser les options de tempête de mana
 * Mur de force utilise maintenant une image par défaut.
@@ -9,6 +10,7 @@
 * Ajout de l'aspect du démon
 
 ### Corrections de bugs
+* Correction de bug (crash) avec les attaques magiques de certaines capacités
 * Changement du nom de macro "Jets GM" en "Jets-GM"
 * Correction d'un bug dans les macros de soin quand la cible a des DMs temporaires sur la barre 2
 * Correction d'un bug de siphon des âmes

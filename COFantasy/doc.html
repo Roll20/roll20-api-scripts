@@ -1408,6 +1408,7 @@
                 <h4 class="text-secondary">Voie de la magie de guérison</h4>
                 <ol>
                   <li><strong>Soigner</strong> : <code>!cof-soin @{selected|token_id} @{target|target1|token_id} [[ceil(@{target|target1|PV|max}/2)]] --limiteCibleParJour 1</code></li>
+                  <li><strong>Guérir</strong> : <code>!cof-guerir @{selected|token_id} @{target|token_id} --portee 0</code></li>
                 </ol>
                 <h4 class="text-secondary">Voie de la magie maléfique</h4>
                 <ol>
@@ -1417,6 +1418,7 @@
                       <li> Ajouter un attribut <code>siphonDesAmes</code>, de valeur de NC de la créature (ou <code>true</code> si le NC est 0).</li>
                     </ul>
                   </li>
+                  <li><strong>Animer un cadavre</strong> : <code>!cof-animer-cadavre @{selected|token_id} @{target|token_id}</code>. Au cas où vous auriez besoin d'enlever l'état de cadavre, il suffit d'enlever l'attribut nommé <code>cadavreAnime</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de la meute</h4>
                 <ol>
