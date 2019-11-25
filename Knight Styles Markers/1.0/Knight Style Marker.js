@@ -7,9 +7,9 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
 	var name;
 	
 	var checkInstall = function() {
-        var gc = globalconfig && globalconfig.knightstylemarker;
-		
-		allPage = gc['Toute Page'];
+        var gc = global['Knight Style Marker'];
+		 
+	    	allPage = gc['Toute Page'];
     };
 	
 	var registerEventHandlers = function() {
@@ -111,6 +111,8 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
         CheckInstall: checkInstall
     };
 }());
+
+var global = globalconfig || undefined;
 
 on("ready", function() {
     'use strict';
