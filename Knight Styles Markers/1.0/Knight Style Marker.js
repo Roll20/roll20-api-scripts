@@ -7,10 +7,13 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
 	var name;
 	
 	var checkInstall = function() {
-        var gc = globalconfig && globalconfig.knightstylemarker;
+		var gc = global['Knight Style Marker'];
 		
-		allPage = gc['Toute Page'];
-    };
+		if(gc != undefined)
+		{
+	    	allPage = gc['Toute Page'];
+		}
+	};
 	
 	var registerEventHandlers = function() {
 		on("change:attribute", function (atr)
@@ -112,6 +115,8 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
     };
 }());
 
+var global = globalconfig || undefined;
+
 on("ready", function() {
     'use strict';
 	KnightStyleMarker.CheckInstall();
@@ -123,4 +128,7 @@ on("ready", function() {
     log("Knight Style Marker Ready");
     // If it is then send a message to the GM to tell them the script is ready.
     sendChat("Knight Style Marker", "/w gm Knight Style Marker Ready");
+	
+	log("GlobalConfig verification (will be deleted soon) :");
+	log(globalconfig);
 });
