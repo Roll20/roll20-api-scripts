@@ -1,0 +1,10 @@
+{
+    "name": "PowerCards Macro Helper",
+    "script": "PCMHelper.js",
+    "version": "1.0.5",
+    "previousversions": ["1.0.5"],
+    "description": "Automatically creates character attributes and macros to allow for system-generated PowerCards based on compendium/custom entered NPC Actions and Player Attacks.",
+    "authors": "Kurt Jaegers",
+	"patreon": "https://www.patreon.com/KurtJaegers",
+    "roll20userid": "2365448"
+}

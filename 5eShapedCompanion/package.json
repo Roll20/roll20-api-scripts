@@ -1,6 +1,6 @@
 {
   "name": "5e-shaped-companion",
-  "version": "7.2.0",
+  "version": "10.0.1",
   "description": "Support script for 5e Shaped Character Sheet on the Roll20.net VTT platform",
   "main": "5eShapedCompanion.js",
   "scripts": {

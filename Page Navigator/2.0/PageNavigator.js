@@ -101,15 +101,17 @@
           
         /*Checks the API environment to make sure everything is prepped for the script*/
         checkInstall = function() {
-            if(state.PAGENAVIGATOR.version && state.PAGENAVIGATOR.version <= 1.47){
-                if(!state.PAGENAVIGATOR.upgrade){
-                    sendChat('Page Navigator','/w gm Page Navigator has been upgraded to version '+schemaVersion+'. This version makes significant '
-                    +'changes to how the script functions. Please review the updates at the <b><u>[Page Navigator v2.X Forum Thread](https://app.roll20.net/forum'
-                    +'/post/4905683/script-update-page-navigator-v2-dot-x/?pageforid=4905683#post-4905683)</u></b>. If you would like to use the new version of the script, '
-                    +'please verify the upgrade below. If you do not wish to upgrade, please go to your campaign API script page and change your '
-                    +'selected version for Page Navigator back to the previous verison. No changes have been made yet, and Page Navigator startup '
-                    +'was aborted.<br>[Approve](!nav --upgrade)',null,{noarchive:true});
-                    return;
+            if(state.PAGENAVIGATOR){
+                if(state.PAGENAVIGATOR.version && state.PAGENAVIGATOR.version <= 1.47){
+                    if(!state.PAGENAVIGATOR.upgrade){
+                        sendChat('Page Navigator','/w gm Page Navigator has been upgraded to version '+schemaVersion+'. This version makes significant '
+                        +'changes to how the script functions. Please review the updates at the <b><u>[Page Navigator v2.X Forum Thread](https://app.roll20.net/forum'
+                        +'/post/4905683/script-update-page-navigator-v2-dot-x/?pageforid=4905683#post-4905683)</u></b>. If you would like to use the new version of the script, '
+                        +'please verify the upgrade below. If you do not wish to upgrade, please go to your campaign API script page and change your '
+                        +'selected version for Page Navigator back to the previous verison. No changes have been made yet, and Page Navigator startup '
+                        +'was aborted.<br>[Approve](!nav --upgrade)',null,{noarchive:true});
+                        return;
+                    }
                 }
             }
             log('-=> Page Navigator v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');

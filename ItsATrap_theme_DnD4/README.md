@@ -3,6 +3,36 @@
 This is a trap theme to support the D&D 4th Edition character sheet by
 Alex L., Ville S., and Wesley L..
 
+## Theme-specific properties
+The following trap properties are specific to this trap theme script.
+
+### Attack Bonus
+The modifier for the trap's attack roll, if it makes an attack roll.
+
+### Damage
+A dice expression for the damage dealt by the trap on a hit. This does not
+take any damage resistances or immunities into account.
+
+### Defense
+This property specifies whether the trap's attack roll is against its victim's
+AC, Fortitude, Reflex, or Will.
+
+### Miss - Half Damage
+This property specifies whether victims of the trap will still take half damage,
+even if they avoided the trap. This does not take into account any special
+abilities such as Evasion.
+
+### Saving Throw
+If the trap allows a saving throw, choose which saving throw it uses with this
+property.
+
+### Saving Throw DC
+This property specifies the DC for the above saving throw.
+
+### Spot DC
+This property specifies the passive Perception needed for a character to
+passively spot the trap.
+
 ## Help
 
 Due to complications with the API reading attributes from certain character sheets,

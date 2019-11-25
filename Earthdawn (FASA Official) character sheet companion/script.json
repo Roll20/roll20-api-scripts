@@ -1,0 +1,17 @@
+{
+    "name": "Earthdawn by FASA character sheet companion",
+    "script": "Earthdawn.js",
+    "version": "01.000",
+    "previousversions": [],
+    "description": "The Roll20 Earthdawn by FASA character sheet companion API script is made to work with the Earthdawn by FASA character sheet and also the 1879 by FASA character sheet. It provides many features that automate and assist in many tasks. It is optimized for Earthdawn 4th edition and 1879 1st Edition, but currently has limited support for other editions.\r\r For more information please see [Earthdawn Sheet wiki page](https://wiki.roll20.net/Earthdawn_-_FASA_Official).",
+    "authors": "Chris Dickey",
+    "roll20userid": "633707",
+    "useroptions": [],
+    "dependencies": ["HTML Builder"],
+    "modifies": {
+        "character": "read,write",
+        "attribute": "read,write,create",
+        "ability": "read,write,create"
+    },
+    "conflicts": []
+}

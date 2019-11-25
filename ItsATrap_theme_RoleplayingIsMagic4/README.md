@@ -3,6 +3,28 @@
 This is a My Little Pony: Roleplaying is Magic 4th edition theme for the It's A Trap! script,
 built for use with the Roleplaying is Magic 4E character sheet.
 
+## Theme-specific properties
+The following trap properties are specific to this trap theme script.
+
+### Damage
+A dice roll expression for the trap's damage.
+
+### Miss - Half Damage
+This property specifies whether the trap still deals half damage, even on a miss.
+
+### Skill Check
+This property specifies the skill roll needed to avoid the trap.
+
+The first prompt asks for the name of the skill.
+
+The second prompt asks for the primary attribute the skill is based on.
+
+The third prompt asks for the skill check's difficulty.
+
+### Spot DC
+This property specifies the Perception skill check difficulty for
+passively noticing the trap.
+
 ### Note about passive Perception
 
 The Roleplaying is Magic 4E system doesn't actually have any defined rolls for

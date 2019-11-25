@@ -1,7 +1,7 @@
 {
 "name": "Dynamic Light Recorder",
 "script":"DynamicLightRecorder.js",	
-"version": "1.0.1",
+"version": "1.0.2",
 "description": "Records dynamic lighting paths for map tiles & automatically recreates them when new tiles are placed.",
 "authors": "Lucian Holland",
 "roll20userid": "791452",
