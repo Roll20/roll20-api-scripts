@@ -1,6 +1,0 @@
-## Blood and Honor
-
-Putting "noblood" in any token's GM Notes will cause it to never bleed.
-Use !clearblood and all blood will move to the top left corner of the map for convenient removal.
-There are currently three custom colors, but you can easily add your own in the script. Put one of the following into the GM Notes if you want the token to bleed a color other than red:
-bloodcolor_orange, bloodcolor_purple, bloodcolor_blue
