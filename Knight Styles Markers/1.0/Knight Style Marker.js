@@ -7,10 +7,13 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
 	var name;
 	
 	var checkInstall = function() {
-        var gc = global['Knight Style Marker'];
-		 
+		var gc = global['Knight Style Marker'];
+		
+		if(gc != undefined)
+		{
 	    	allPage = gc['Toute Page'];
-};
+		}
+	};
 	
 	var registerEventHandlers = function() {
 		on("change:attribute", function (atr)
