@@ -615,7 +615,7 @@ emas:
   - System Toolbox
 
 pcpp:
-  - 'PowerCard PreProcessor'
+  - 'PCPP'
   - 'Utility'
 
 cyberpunkv2:
@@ -643,7 +643,7 @@ flight:
   - 'Utility'
 
 shadowofdemonlord:
-  - Shadow of the Demon Lord
+  - 'Shadow of the Demon Lord'
   - System Toolbox
 
 myz:
