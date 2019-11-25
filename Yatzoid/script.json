@@ -1,0 +1,13 @@
+{
+    "name": "Yatzoid",
+    "script": "Yatzoid.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "Provides automated round and turn tracking, Token renaming, as well as the setup, and reset system of the game. Also contains some chat commands.",
+    "authors": "Runnetty",
+    "roll20userid": "2534935",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {},
+    "conflicts": []
+}

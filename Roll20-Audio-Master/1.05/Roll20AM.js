@@ -633,7 +633,7 @@ var Roll20AM = Roll20AM || (function() {
             '=': (a,b)=>b
         },
         nVol,
-        error=false;
+        error=false,
         adj=(''+change).match(/^\s*([+-\/*]?)(\d+)\s*$/);
         if(adj){
             adj[2]=parseInt(adj[2],10);

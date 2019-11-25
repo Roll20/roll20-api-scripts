@@ -128,7 +128,9 @@ on("add:graphic", function(graphic) {
         });
         
         var character = getObj("character", graphic.get("represents"));
-        setStatusAttributes(character, graphic);
+        if(character){
+            setStatusAttributes(character, graphic);
+        }
         
         graphic.set("showplayers_bar1", true);
         graphic.set("showplayers_bar2", true);
@@ -192,9 +194,11 @@ on("change:attribute", function(attribute, prev) {
     if (attributes.indexOf(attribute.get('name') > -1)) {
         var tokens = findObjs({ _type: "graphic", _subtype: "token", represents: attribute.get("_characterid") });
         var character = getObj("character", attribute.get("_characterid"));
-        _.each(tokens, function(token) {
-            setStatusAttributes(character, token);
-        });
+        if(character){
+            _.each(tokens, function(token) {
+                setStatusAttributes(character, token);
+            });
+        }
     }
 });
 

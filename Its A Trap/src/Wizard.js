@@ -44,6 +44,13 @@ var ItsATrapCreationWizard = (() => {
     curTrap = trapToken;
     let content = new HtmlBuilder('div');
 
+    if(!trapToken.get('status_cobweb')) {
+      trapToken.set('status_cobweb', true);
+      trapToken.set('name', 'A cunning trap');
+      trapToken.set('aura1_square', true);
+      trapToken.set('gmnotes', getDefaultJson());
+    }
+
     // Core properties
     content.append('h4', 'Core properties');
     let coreProperties = getCoreProperties(trapToken);
@@ -71,11 +78,20 @@ var ItsATrapCreationWizard = (() => {
     content.append(_displayWizardProperties(MODIFY_CORE_PROPERTY_CMD, revealProperties));
 
     // Special properties
-    content.append('h4', 'Special properties', {
-      style: { 'margin-top' : '2em' }
-    });
     let specialProperties = getSpecialProperties(trapToken);
-    content.append(_displayWizardProperties(MODIFY_CORE_PROPERTY_CMD, specialProperties));
+    if (specialProperties.length > 0) {
+      content.append('h4', 'Special properties', {
+        style: { 'margin-top' : '2em' }
+      });
+      content.append(_displayWizardProperties(MODIFY_CORE_PROPERTY_CMD, specialProperties));
+    }
+
+    // Script properties
+    content.append('h4', 'External script properties', {
+      style: { 'margin-top': '2em' }
+    });
+    let scriptProperties = getScriptProperties(trapToken);
+    content.append(_displayWizardProperties(MODIFY_CORE_PROPERTY_CMD, scriptProperties));
 
     // Theme properties
     let theme = ItsATrap.getTheme();
@@ -88,13 +104,12 @@ var ItsATrapCreationWizard = (() => {
     }
 
     // Remote activate button
-    content.append('div', `[Activate Trap](${ItsATrap.REMOTE_ACTIVATE_CMD})`, {
+    content.append('div', `[Activate Trap](${ItsATrap.REMOTE_ACTIVATE_CMD} ${curTrap.get('_id')})`, {
       style: { 'margin-top' : '2em' }
     });
 
     let menu = _showMenuPanel('Trap Configuration', content);
     _whisper(who, menu.toString(MENU_CSS));
-    trapToken.set('status_cobweb', true);
   }
 
   /**
@@ -190,9 +205,27 @@ var ItsATrapCreationWizard = (() => {
         id: 'notes',
         name: 'GM Notes',
         desc: 'Additional secret notes shown only to the GM when the trap is activated.',
-        value: trapEffect.notes
+        value: trapEffect.notes || '-'
+      },
+      {
+        id: 'destroyable',
+        name: 'Destroyable',
+        desc: 'Whether to delete the trap after it is activated.',
+        value: trapEffect.destroyable ? 'yes': 'no',
+        options: ['yes', 'no']
       }
     ];
+  }
+
+  /**
+   * Produces JSON for default trap properties.
+   * @return {string}
+   */
+  function getDefaultJson() {
+    return JSON.stringify({
+      effectShape: 'rectangle',
+      stopAt: 'center'
+    });
   }
 
   /**
@@ -215,7 +248,7 @@ var ItsATrapCreationWizard = (() => {
         id: 'searchDist',
         name: 'Max Search Distance',
         desc: 'How far away can characters passively search for this trap?',
-        value: trapToken.get('aura2_radius') || trapEffect.searchDist
+        value: trapToken.get('aura2_radius') || trapEffect.searchDist || '-'
       },
       {
         id: 'revealToPlayers',
@@ -268,32 +301,30 @@ var ItsATrapCreationWizard = (() => {
         id: 'effectDistance',
         name: 'Blast distance',
         desc: 'How far away can the trap affect other tokens?',
-        value: trapToken.get('aura1_radius') || 0
+        value: trapToken.get('aura1_radius') || '-'
       },
       {
         id: 'stopAt',
         name: 'Stops Tokens At',
         desc: 'Does this trap stop tokens that pass through its trigger area?',
-        value: trapEffect.stopAt,
+        value: trapEffect.stopAt || 'center',
         options: ['center', 'edge', 'none']
       },
       {
         id: 'effectShape',
         name: 'Trap shape',
-        desc: 'Is the shape of the trap\'s effect circular or square?',
-        value: trapToken.get('aura1_square') ? 'square' : 'circle',
-        options: [ 'circle', 'square' ]
+        desc: 'To set paths, you must also select one or more paths defining the trap\'s blast area. A fill color must be set for tokens inside the path to be affected.',
+        value: trapEffect.effectShape || ' circle',
+        options: [ 'circle', 'rectangle', 'set selected paths', 'add selected paths', 'remove selected paths']
       },
     ];
   }
 
   /**
-   * Gets a list of the core trap properties for a trap token dealing
-   * with special side effects such as FX, sound, and API commands.
-   * @param {Graphic} token
-   * @return {object[]}
+   * Gets a a list of the trap properties for a trap token dealing with
+   * supported API scripts.
    */
-  function getSpecialProperties(trapToken) {
+  function getScriptProperties(trapToken) {
     let trapEffect = (new TrapEffect(trapToken)).json;
 
     let LPAREN = '&#40;';
@@ -303,16 +334,13 @@ var ItsATrapCreationWizard = (() => {
     let RBRACE = '&#93;';
 
     return _.compact([
-      {
-        id: 'api',
-        name: 'API Command',
-        desc: 'An API command which the trap runs when it is activated. The constants TRAP_ID and VICTIM_ID will be replaced by the object IDs for the trap and victim.',
-        value: trapEffect.api
-      },
-
       // Requires AreasOfEffect script.
       (() => {
-        if(typeof AreasOfEffect !== 'undefined')
+        if(typeof AreasOfEffect !== 'undefined') {
+          let effectNames = _.map(AreasOfEffect.getEffects(), effect => {
+            return effect.name;
+          });
+
           return {
             id: 'areaOfEffect',
             name: 'Areas of Effect script',
@@ -333,6 +361,7 @@ var ItsATrapCreationWizard = (() => {
                 id: 'name',
                 name: 'AoE Name',
                 desc: 'The name of the saved AreasOfEffect effect.',
+                options: ['none', ...effectNames]
               },
               {
                 id: 'direction',
@@ -341,43 +370,8 @@ var ItsATrapCreationWizard = (() => {
               }
             ]
           };
+        }
       })(),
-
-      {
-        id: 'fx',
-        name: 'Special FX',
-        desc: 'What special FX are displayed when the trap is activated?',
-        value: (() => {
-          let fx = trapEffect.fx;
-          if(fx) {
-            let result = fx.name;
-            if(fx.offset)
-              result += '; Offset: ' + fx.offset;
-            if(fx.direction)
-              result += '; Direction: ' + fx.direction;
-            return result;
-          }
-          else
-            return 'None';
-        })(),
-        properties: [
-          {
-            id: 'name',
-            name: 'FX Name',
-            desc: 'The name of the special FX.'
-          },
-          {
-            id: 'offset',
-            name: 'FX Offset',
-            desc: 'The offset ' + LPAREN + 'in units' + RPAREN + ' of the special FX from the trap\'s center. Format: ' + LBRACE + 'X,Y' + RBRACE
-          },
-          {
-            id: 'direction',
-            name: 'FX Direction',
-            desc: 'The directional vector for the special FX ' + LPAREN + 'Leave blank to direct it towards characters' + RPAREN + '. Format: ' + LBRACE + 'X,Y' + RBRACE
-          }
-        ]
-      },
 
       // Requires KABOOM script by PaprikaCC (Bodin Punyaprateep).
       (() => {
@@ -422,21 +416,93 @@ var ItsATrapCreationWizard = (() => {
             ]
           };
       })(),
-      {
-        id: 'sound',
-        name: 'Sound',
-        desc: 'A sound from your jukebox that will play when the trap is activated.',
-        value: trapEffect.sound
-      },
+
+      // Requires the TokenMod script by The Aaron.
       (() => {
         if(typeof TokenMod !== 'undefined')
           return {
             id: 'tokenMod',
             name: 'TokenMod script',
             desc: 'Modify affected tokens with the TokenMod script by The Aaron.',
-            value: trapEffect.tokenMod
+            value: trapEffect.tokenMod || '-'
           };
       })()
+    ]);
+  }
+
+  /**
+   * Gets a list of the core trap properties for a trap token dealing
+   * with special side effects such as FX, sound, and API commands.
+   * @param {Graphic} token
+   * @return {object[]}
+   */
+  function getSpecialProperties(trapToken) {
+    let trapEffect = (new TrapEffect(trapToken)).json;
+
+    let LPAREN = '&#40;';
+    let RPAREN = '&#41;';
+
+    let LBRACE = '&#91;';
+    let RBRACE = '&#93;';
+
+    return _.compact([
+      {
+        id: 'api',
+        name: 'API Command',
+        desc: 'An API command which the trap runs when it is activated. The constants TRAP_ID and VICTIM_ID will be replaced by the object IDs for the trap and victim. Multiple API commands are now supported by separating each command with &quot;&#59;&#59;&quot;.',
+        value: trapEffect.api || '-'
+      },
+      {
+        id: 'fx',
+        name: 'Special FX',
+        desc: 'What special FX are displayed when the trap is activated?',
+        value: (() => {
+          let fx = trapEffect.fx;
+          if(fx) {
+            let result = fx.name;
+            if(fx.offset)
+              result += '; Offset: ' + fx.offset;
+            if(fx.direction)
+              result += '; Direction: ' + fx.direction;
+            return result;
+          }
+          else
+            return 'None';
+        })(),
+        properties: [
+          {
+            id: 'name',
+            name: 'FX Name',
+            desc: 'The name of the special FX.'
+          },
+          {
+            id: 'offset',
+            name: 'FX Offset',
+            desc: 'The offset ' + LPAREN + 'in units' + RPAREN + ' of the special FX from the trap\'s center. Format: ' + LBRACE + 'X,Y' + RBRACE
+          },
+          {
+            id: 'direction',
+            name: 'FX Direction',
+            desc: 'The directional vector for the special FX ' + LPAREN + 'Leave blank to direct it towards characters' + RPAREN + '. Format: ' + LBRACE + 'X,Y' + RBRACE
+          }
+        ]
+      },
+      {
+        id: 'sound',
+        name: 'Sound',
+        desc: 'A sound from your jukebox that will play when the trap is activated.',
+        value: trapEffect.sound || '-',
+        options: (() => {
+          let tracks = findObjs({
+            _type: 'jukeboxtrack'
+          });
+          let trackNames = _.map(tracks, track => {
+            return _htmlEncode(track.get('title'));
+          });
+          trackNames.sort();
+          return ['none', ...trackNames];
+        })()
+      }
     ]);
   }
 
@@ -460,7 +526,7 @@ var ItsATrapCreationWizard = (() => {
         name: 'Set Trigger',
         desc: 'To set paths, you must also select the paths that trigger the trap.',
         value: trapEffect.triggerPaths || 'self',
-        options: ['self', 'paths']
+        options: ['self', 'set selected paths', 'add selected paths', 'remove selected paths']
       },
       {
         id: 'triggers',
@@ -474,10 +540,52 @@ var ItsATrapCreationWizard = (() => {
           if(triggers)
             return triggers.join(', ');
           else
-            return undefined;
+            return 'none';
+        })(),
+        options: ['none', 'set selected traps', 'add selected traps', 'remove selected traps']
+      },
+      {
+        id: 'ignores',
+        name: 'Ignore Tokens',
+        desc: 'Select one or more tokens to be ignored by this trap.',
+        value: trapEffect.ignores || 'none',
+        options: ['none', 'set selected tokens', 'add selected tokens', 'remove selected tokens']
+      },
+      {
+        id: 'delay',
+        name: 'Delay Activation',
+        desc: 'When the trap is triggered, its effect is delayed for the specified number of seconds. For best results, also be sure to set an area effect for the trap and set the Stops Tokens At property of the trap to None.',
+        value: (() => {
+          if (trapEffect.delay)
+            return trapEffect.delay + ' seconds';
+          else
+            return '-';
         })()
       }
     ];
+  }
+
+  /**
+   * HTML-decodes a string.
+   * @param {string} str
+   * @return {string}
+   */
+  function _htmlDecode(str) {
+    return str.replace(/#(\d+);/g, (match, code) => {
+      return String.fromCharCode(code);
+    });
+  }
+
+  /**
+   * HTML-encodes a string, making it safe to use in chat-based action buttons.
+   * @param {string} str
+   * @return {string}
+   */
+  function _htmlEncode(str) {
+    return str.replace(/[{}()\[\]<>!@#$%^&*\/\\'"+=,.?]/g, match => {
+      let charCode = match.charCodeAt(0);
+      return `#${charCode};`;
+    });
   }
 
   /**
@@ -496,10 +604,14 @@ var ItsATrapCreationWizard = (() => {
       trapToken.set('name', params[0]);
     if(prop === 'type')
       trapEffect.type = params[0];
-    if(prop === 'api')
-      trapEffect.api = params[0];
-    if(prop === 'areaOfEffect')
-      if(params[0]) {
+    if(prop === 'api') {
+      if(params[0])
+        trapEffect.api = params[0].split(";;");
+      else
+        trapEffect.api = [];
+    }
+    if(prop === 'areaOfEffect') {
+      if(params[0] && params[0] !== 'none') {
         trapEffect.areaOfEffect = {};
         trapEffect.areaOfEffect.name = params[0];
         try {
@@ -508,13 +620,52 @@ var ItsATrapCreationWizard = (() => {
       }
       else
         trapEffect.areaOfEffect = undefined;
-
+    }
+    if(prop === 'delay')
+      trapEffect.delay = params[0] || undefined;
+    if(prop === 'destroyable')
+      trapEffect.destroyable = params[0] === 'yes';
     if(prop === 'disabled')
       trapToken.set('status_interdiction', params[0] === 'yes');
     if(prop === 'effectDistance')
       trapToken.set('aura1_radius', parseInt(params[0]));
-    if(prop === 'effectShape')
-      trapToken.set('aura1_square', params[0] === 'square');
+    if(prop === 'effectShape') {
+      if(['circle', 'square', 'rectangle'].includes(params[0])) {
+        trapEffect.effectShape = params[0];
+        trapToken.set('aura1_square',
+          params[0].includes('square') || params[0].includes('rectangle'));
+      }
+      else if(params[0] === 'set selected paths' && selected) {
+        trapEffect.effectShape = _.map(selected, path => {
+          return path.get('_id');
+        });
+        trapToken.set('aura1_square', false);
+      }
+      else if(params[0] === 'add selected paths' && selected) {
+        if(!_.isArray(trapEffect.effectShape))
+          trapEffect.effectShape = [];
+
+        trapEffect.effectShape = trapEffect.effectShape
+        .concat(_.map(selected, path => {
+          return path.get('_id');
+        }));
+        trapToken.set('aura1_square', false);
+      }
+      else if(params[0] === 'remove selected paths' && selected) {
+        if(!_.isArray(trapEffect.effectShape))
+          trapEffect.effectShape = [];
+
+        let selectedIds = _.map(selected, token => {
+          return token.get('_id');
+        });
+        trapEffect.effectShape = _.reject(trapEffect.effectShape, id => {
+          return selectedIds.includes(id);
+        });
+        trapToken.set('aura1_square', false);
+      }
+      else
+        throw Error('Unexpected effectShape value: ' + params[0]);
+    }
     if(prop === 'flying')
       trapToken.set('status_fluffy-wing', params[0] === 'yes');
     if(prop === 'fx') {
@@ -535,6 +686,33 @@ var ItsATrapCreationWizard = (() => {
     }
     if(prop === 'gmOnly')
       trapEffect.gmOnly = params[0] === 'yes';
+    if(prop === 'ignores')
+      if(params[0] === 'set selected tokens' && selected)
+        trapEffect.ignores = _.map(selected, token => {
+          return token.get('_id');
+        });
+      else if(params[0] === 'add selected tokens' && selected) {
+        if(!_.isArray(trapEffect.ignores))
+          trapEffect.ignores = [];
+
+        trapEffect.ignores = trapEffect.ignores
+        .concat(_.map(selected, token => {
+          return token.get('_id');
+        }));
+      }
+      else if(params[0] === 'remove selected tokens' && selected) {
+        if(!_.isArray(trapEffect.ignores))
+          trapEffect.ignores = [];
+
+        let selectedIds = _.map(selected, token => {
+          return token.get('_id');
+        });
+        trapEffect.ignores = _.reject(trapEffect.ignores, id => {
+          return selectedIds.includes(id);
+        });
+      }
+      else
+        trapEffect.ignores = undefined;
     if(prop === 'kaboom')
       if(params[0])
         trapEffect.kaboom = {
@@ -558,20 +736,71 @@ var ItsATrapCreationWizard = (() => {
     if(prop === 'searchDist')
       trapToken.set('aura2_radius', parseInt(params[0]));
     if(prop === 'sound')
-      trapEffect.sound = params[0];
+      trapEffect.sound = _htmlDecode(params[0]);
     if(prop === 'stopAt')
       trapEffect.stopAt = params[0];
     if(prop === 'tokenMod')
       trapEffect.tokenMod = params[0];
-    if(prop === 'triggers')
-      trapEffect.triggers = _.map(params[0].split(','), trigger => {
-        return trigger.trim();
-      });
+    if(prop === 'triggers') {
+      if (params[0] === 'set selected traps' && selected) {
+        trapEffect.triggers = _.map(selected, token => {
+          let tokenId = token.get('_id');
+          if (tokenId !== trapToken.get('_id'))
+            return token.get('_id');
+        });
+      }
+      else if (params[0] === 'add selected traps') {
+        if (!_.isArray(trapEffect.triggers))
+          trapEffect.triggers = [];
+
+        trapEffect.triggers = trapEffect.triggers
+        .concat(_.map(selected, token => {
+          let tokenId = token.get('_id');
+          if (tokenId !== trapToken.get('_id'))
+            return token.get('_id');
+        }));
+      }
+      else if (params[0] === 'remove selected traps') {
+        if (!_.isArray(trapEffect.triggers))
+          trapEffect.triggers = [];
+
+        let selectedIds = _.map(selected, path => {
+          return path.get('_id');
+        });
+
+        trapEffect.triggers = _.reject(trapEffect.triggers, id => {
+          return selectedIds.includes(id);
+        });
+      }
+      else
+        trapEffect.triggers = undefined;
+    }
     if(prop === 'triggerPaths')
-      if(params[0] === 'paths' && selected)
+      if(params[0] === 'set selected paths' && selected)
         trapEffect.triggerPaths = _.map(selected, path => {
           return path.get('_id');
         });
+      else if(params[0] === 'add selected paths' && selected) {
+        if(!_.isArray(trapEffect.triggerPaths))
+          trapEffect.triggerPaths = [];
+
+        trapEffect.triggerPaths = trapEffect.triggerPaths
+        .concat(_.map(selected, path => {
+          return path.get('_id');
+        }));
+      }
+      else if(params[0] === 'remove selected paths' && selected) {
+        if(!_.isArray(trapEffect.triggerPaths))
+          trapEffect.triggerPaths = [];
+
+        let selectedIds = _.map(selected, path => {
+          return path.get('_id');
+        });
+
+        trapEffect.triggerPaths = _.reject(trapEffect.triggerPaths, id => {
+          return selectedIds.includes(id);
+        });
+      }
       else
         trapEffect.triggerPaths = undefined;
 

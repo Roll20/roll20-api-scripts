@@ -38,11 +38,39 @@ module.exports = function(grunt) {
         },
         strict: true
       }
+    },
+    'string-replace': {
+      dist: {
+        files: {
+          '<%= pkg.version %>/<%= pkg.script %>': '<%= pkg.version %>/<%= pkg.script %>'
+        }
+      },
+      options: {
+        replacements: [
+          {
+            pattern: 'SCRIPT_VERSION',
+            replacement: '<%= pkg.version %>'
+          },
+
+          // Convert unicode characters to HTML entities.
+          {
+            pattern: /./g,
+            replacement: function(match) {
+              let charCode = match.charCodeAt(0);
+              if (charCode > 255)
+                return '&#' + charCode + ';';
+              else
+                return match;
+            }
+          }
+        ]
+      }
     }
   });
 
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-string-replace');
 
-  grunt.registerTask('default', ['jshint', 'concat']);
+  grunt.registerTask('default', ['jshint', 'concat', 'string-replace']);
 };

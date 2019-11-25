@@ -1,0 +1,13 @@
+{
+    "name": "WFRP 2E Actions (Havoc)",
+    "script": "wfrp2e-api.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "A set of functions and roll templates for robust WFRP2E player actions, including initiative, Magic casting, Fortune re-rolls, Ulric's Fury, Attack and Parry Rolls, and maybe a little bit more.",
+    "authors": "Paul \"Havoc\" Stein",
+    "roll20userid": "55273",
+    "useroptions": [],
+    "dependencies": ["splitArgs"],
+    "modifies": {},
+    "conflicts": []
+}

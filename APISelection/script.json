@@ -1,0 +1,18 @@
+{
+  "name": "APISelection",
+  "script": "APISelection.js",
+  "version": "0.1.0",
+  "description": "APISelection adds a simple interface for other scripters to use when creating scripts that operate on a persisted selection of objects, as well as sharing a list of selected objects across multiple scripts.\n\nAt its heart, it is nothing more than a mapping from a `string` key, to an array of `string`s, with an interface to make manipulating those arrays easy.\n\n## Public Interface\n\nAPISelection has 5 public functions:\n* `getList( id )` -- Returns an array which represents that `id`.  It will always return an array, even if nothing has been saved for that `id`.  The returned array will always only contain strings.  Manipulations of the returned array will not change the stored array.\n* `setList( id , list )` -- Sets the array for an `id`.  The current array for the id will be replaced.  Returns a copy of the stored array, as with `getList( id )`.  Only one copy of a value in the `list` will be retained, duplicates are removed.\n* `deleteList( id )` -- Removes the array for an `id`.  Returns the emtpy array `[]`.\n* `removeFromList( id, list )` -- Removes the values in the `list` argument from the stored array for the `id`.  Returns a copy of the stored array with the `list` arguments removed as with `getList( id )`.\n* `addToList( id , list )` -- Adds the contents of the `list` argument to the stored array for the `id`.  All duplicate values are removed. Returns a copy of the stored array with the `list` arguments added as with `getList( id )`.\n\n### Example Use\n```\non('ready',()=>{\n  APISelection.setList(\n    'party-characters',\n    findObjs({type:'character'})\n      .filter((c)=>c.get('controlledby').length)\n      .map(c=>c.id)\n  );\n  // ...\n  let partyCharIds = APISelection.getList('party-characters');\n  let partyTokens = findObjs({type:'graphic'})\n    .filter(t=>partyCharIds.includes(t.get('represents')));\n\n  // ... etc\n});\n```\n\n\n## Commands\n\n```!api-selection```\n\nLists the current selection lists and their values.  Mainly useful for scripters inspecting what is happening.",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "useroptions":{
+  },
+  "dependencies": {
+  },
+  "modifies": {
+    "state.APISelection": "read,write"
+  },
+  "conflicts": [
+  ]
+}

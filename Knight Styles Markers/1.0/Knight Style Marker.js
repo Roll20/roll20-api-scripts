@@ -10,7 +10,7 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
         var gc = global['Knight Style Marker'];
 		 
 	    	allPage = gc['Toute Page'];
-    };
+};
 	
 	var registerEventHandlers = function() {
 		on("change:attribute", function (atr)
