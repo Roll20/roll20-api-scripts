@@ -125,4 +125,7 @@ on("ready", function() {
     log("Knight Style Marker Ready");
     // If it is then send a message to the GM to tell them the script is ready.
     sendChat("Knight Style Marker", "/w gm Knight Style Marker Ready");
+	
+	log("GlobalConfig verification (will be deleted soon) :");
+	log(globalconfig);
 });
