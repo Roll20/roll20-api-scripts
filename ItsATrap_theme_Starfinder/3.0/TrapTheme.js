@@ -95,7 +95,7 @@
       _doTrapCombatManeuver(character, effectResults) {
         return Promise.all([
           this.getACM(character),
-          TrapTheme.rollAsync('1d20 + ' + effectResults.attack)
+          CharSheetUtils.rollAsync('1d20 + ' + effectResults.attack)
         ])
         .then(tuple => {
           let ac = tuple[0] || 10;
@@ -115,7 +115,7 @@
       _doTrapEACAttack(character, effectResults) {
         return Promise.all([
           this.getEAC(character),
-          TrapTheme.rollAsync('1d20 + ' + effectResults.attack)
+          CharSheetUtils.rollAsync('1d20 + ' + effectResults.attack)
         ])
         .then(tuple => {
           let ac = tuple[0] || 10;
@@ -135,7 +135,7 @@
       _doTrapKACAttack(character, effectResults) {
         return Promise.all([
           this.getKAC(character),
-          TrapTheme.rollAsync('1d20 + ' + effectResults.attack)
+          CharSheetUtils.rollAsync('1d20 + ' + effectResults.attack)
         ])
         .then(tuple => {
           let ac = tuple[0] || 10;
@@ -155,7 +155,7 @@
       _doTrapStarshipACAttack(character, effectResults) {
         return Promise.all([
           this.getStarshipAC(character),
-          TrapTheme.rollAsync('1d20 + ' + effectResults.attack)
+          CharSheetUtils.rollAsync('1d20 + ' + effectResults.attack)
         ])
         .then(tuple => {
           let ac = tuple[0] || 10;
@@ -175,7 +175,7 @@
       _doTrapStarshipTLAttack(character, effectResults) {
         return Promise.all([
           this.getStarshipTL(character),
-          TrapTheme.rollAsync('1d20 + ' + effectResults.attack)
+          CharSheetUtils.rollAsync('1d20 + ' + effectResults.attack)
         ])
         .then(tuple => {
           let ac = tuple[0] || 10;
@@ -200,7 +200,7 @@
           attrName = SHEET_ATTRS[sheet].acm
 
         if(attrName)
-          return TrapTheme.getSheetAttr(character, attrName);
+          return CharSheetUtils.getSheetAttr(character, attrName);
         else
           return Promise.reject(new Error('Please provide name of the attribute for ACM in the One-Click options.'));
       }
@@ -215,7 +215,7 @@
           attrName = SHEET_ATTRS[sheet].eac;
 
         if(attrName)
-          return TrapTheme.getSheetAttr(character, attrName);
+          return CharSheetUtils.getSheetAttr(character, attrName);
         else
           return Promise.reject(new Error('Please provide name of the attribute for EAC in the One-Click options.'));
       }
@@ -230,7 +230,7 @@
           attrName = SHEET_ATTRS[sheet].kac;
 
         if(attrName)
-          return TrapTheme.getSheetAttr(character, attrName);
+          return CharSheetUtils.getSheetAttr(character, attrName);
         else
           return Promise.reject(new Error('Please provide name of the attribute for KAC in the One-Click options.'));
       }
@@ -245,7 +245,7 @@
           attrName = SHEET_ATTRS[sheet].starshipAC;
 
         if(attrName)
-          return TrapTheme.getSheetAttr(character, attrName);
+          return CharSheetUtils.getSheetAttr(character, attrName);
         else
           return Promise.reject(new Error('Please provide name of the attribute for starship AC in the One-Click options.'));
       }
@@ -260,7 +260,7 @@
           attrName = SHEET_ATTRS[sheet].starshipTL;
 
         if(attrName)
-          return TrapTheme.getSheetAttr(character, attrName);
+          return CharSheetUtils.getSheetAttr(character, attrName);
         else
           return Promise.reject(new Error('Please provide name of the attribute for starship TL in the One-Click options.'));
       }
@@ -288,7 +288,7 @@
           attrName = SHEET_ATTRS[sheet].perceptionModifier;
 
         if(attrName)
-          return TrapTheme.getSheetAttr(character, attrName);
+          return CharSheetUtils.getSheetAttr(character, attrName);
         else
           return Promise.reject(new Error('Please provide name of the attribute ' +
             'for the perception modifier in the One-Click options.'));
@@ -305,7 +305,7 @@
           attrName = SHEET_ATTRS[sheet][key];
 
         if(attrName)
-          return TrapTheme.getSheetAttr(character, attrName);
+          return CharSheetUtils.getSheetAttr(character, attrName);
         else
           return Promise.reject('Please provide name of the attribute for ' +
             saveName + ' save modifier in the One-Click options.');

@@ -60,7 +60,7 @@
 	"status_sentry-gun":		"write",
 	"status_all-for-one":		"write",
 	"status_angel-outfit":		"write",
-	"status_archery-target":	"write",
+	"status_archery-target":	"write"
     },
     "conflicts":	[]
 }

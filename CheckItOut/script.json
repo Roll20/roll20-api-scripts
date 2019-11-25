@@ -1,0 +1,32 @@
+{
+    "name": "Check It Out",
+    "script": "CheckItOut.js",
+    "version": "1.1",
+    "previousversions": ["1.0"],
+    "description": "# Check It Out\r\r_1.1 Updates_\r* D20 themes now support checks for multiple types of skills.\r* D20 themes support option to use passive skills.\r\r'Check It Out' provides the GM with capabilities to add descriptive properties to\robjects on the VTT's 'objects' layer. The script also provides a macro to the\rplayers so that they can approach and examine those objects to see those descriptions.\r\rThe script can also be configured with a theme, which provides extra\robject properties and automated system-specific functionality for a selection\rof supported character sheets.\r\rFor example, in D&D 5 games, Investigation ability check DCs can be assigned to learn more\rinformation about an object. When the player uses this script's macro to examine\rthe object, it will automatically roll an Investigation check and reveal\rinformation about the object based on the hidden roll's result.\r\rCurrently, themes for the following character sheets are supported:\r* D&D 3.5E\r* D&D 4E\r* D&D 5E:\r    * Roll20\r    * Community\r    * Shaped\r* Gamma World 7th Edition\r* Pathfinder:\r    * Roll20\r    * Community\r    * Simple\r* Starfinder:\r    * Roll20\r    * Simple\r\r## GM Wizard\r\rThe GM can set properties for a selected object by using the ```CheckItOut_GM_Wizard```\rmacro installed by this script. This macro displays a menu in the chat visible\ronly to the GM for setting up the message displayed when a PC examines the\robject, as well as other properties, some of which may be system/character sheet-specific.\r\rDetailed information about these properties is provided when you mouse-over them in the GM wizard.\r\r## Examining Objects\r\rThe PCs can examine an object using the ```CheckItOut``` macro. If the GM set\rup informational properties for the object, the PC will be informed about them\rthrough a whispered message in the chat. Otherwise, it'll just display the\rdefault message. Additionally, the GM will be informed that that PC tried to\rexamine the object.\r\rCurrently, only things on the ```Objects``` layer can be examined.\r\r## Character Sheet Themes\r\rThis script can be configured to use system-specific rules for examining objects\rby selecting a supported character sheet from its configurations. These themes\rprovide extra properties for objects such as automated investigation checks.\r\rEach theme is built to work with a specific character sheet. You can configure which\rone you're using from the GM wizard's global properties.\r\r### Writing Custom Themes\r\rIf you're familiar with writing API scripts and character sheets, you can write\ryour own custom theme by extending the CheckItOut.themes.CheckItOutTheme base\rclass and registering it using the CheckItOut.themes.register(class) function.\rUse the implementations included with this script as examples for writing your own.\r\r## Help\r\rIf you experience any issues while using this script or the trap themes,\rneed help using it, or if you have a neat suggestion for a new feature, please\rreply to the script's support thread in the Roll20 API forum, or shoot me a PM:\rhttps://app.roll20.net/users/46544/stephen-l\r\r## Show Support\r\rIf you would like to show your appreciation and support for the work I do in writing,\rupdating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=new&type=all&publisher=Stephen%20L)\ror, simply leave a thank you note in the script's thread on the Roll20 forums.\rEither is greatly appreciated! Happy gaming!\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [
+        {
+          "name": "defaultDescription",
+          "type": "text",
+          "default": "No problem here.",
+          "description": "The default description for objects that have not been assigned a description."
+        }
+    ],
+    "dependencies": [
+      "Character Sheet Utils",
+      "HTML Builder",
+      "splitArgs",
+      "Vector Math"
+    ],
+    "modifies": {
+        "chat": "write",
+        "gmnotes": "read, write",
+        "lastmove": "read, write",
+        "layer": "read, write",
+        "left": "read, write",
+        "token": "read",
+        "top": "read, write"
+    }
+}

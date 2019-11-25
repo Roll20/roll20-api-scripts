@@ -1,0 +1,17 @@
+{
+    "name": "Hands Up",
+    "script": "script.js",
+    "version": "1.0.0",
+    "previousversions": [],
+    "description": "# Hands Up\r\rDo you have players in your game who are shy, soft-spoken, or otherwise have\rtrouble speaking over the other players? This script will extend the\raccessibility of your game by allowing players to raise their hand to get your\rattention when they want to speak.\r\rThis script installs a macro named 'Raise Hand', which when pressed will cause\rthe player's icon color to flash in order to get the GM's attention. The player\rcan later lower their hand by simply pressing the same macro again.\r\r_WARNING: This script displays animations of color in small portions of the screen,\rwhich may be harmful to some photosensitive people. By using this script, you\ragree to not hold its author liable for any epileptic events it may cause.\rPlease use the dance mat in a well-lit area with plenty of space.\rEnjoy the script!_\r\r## Help\r\rIf you experience any issues while using this script or the trap themes,\rneed help using it, or if you have a neat suggestion for a new feature,\rplease shoot me a PM:\rhttps://app.roll20.net/users/46544/stephen-l\ror create a help thread on the Roll20 API forum\r\r## Show Support\r\rIf you would like to show your appreciation and support for the work I do in writing,\rupdating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/publisher/165/stephen-lindberg)\ror, simply leave a thank you note in the script's thread on the Roll20 forums.\rEither is greatly appreciated! Happy gaming!\r",
+    "authors": "Stephen Lindberg",
+    "roll20userid": 46544,
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {
+      "chat": "read, write",
+      "macros": "read, write",
+      "player.color": "read, write"
+    },
+    "conflicts": []
+}

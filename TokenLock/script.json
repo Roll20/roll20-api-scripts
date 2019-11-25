@@ -1,6 +1,6 @@
 {
   "name": "TokenLock",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "TokenLock allows the GM to selectively prevent players from moving their tokens. Since `change:graphic` events to not specify who changed the graphic, determination of player tokens is based on whether that token has an entry in the `controlled by` field of either the token or the character it represents. If `controlled by` is empty, the GM can freely move the token at any point. If there is any entry in `controlled by`, the token can only be moved when TokenLock is unlocked.\r \r Moving of player controlled cards is still permissible.\r \r ## Commands\r \r ```!tl ```\r \r Executing the command with no arguments prints this help. The following arguments may be supplied in order to change the configuration. All changes are persisted between script restarts.\r \r * `lock` -- Locks the player tokens to prevent moving them.\r * `unlock` -- Unlocks the player tokens allowing them to be moved.\r \r ```!tl-config [<Options>|--help]```\r \r Swaps the selected Tokens for their counterparts on the other layer.\r \r * `--help` -- Shows the Help screen.\r * `--toggle-allowmoveonturn` -- Sets whether tokens can be moved if they are at the top of the turn order.",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -22,6 +22,7 @@
   "previousversions": [
     "0.2.3",
     "0.2.4",
-    "0.2.5"
+    "0.2.5",
+    "0.2.6"
   ]
 }
