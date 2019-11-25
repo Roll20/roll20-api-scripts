@@ -1,7 +1,7 @@
- //
+//
 // DupCharToken
 //
-// This script will duplicate a character sheet and tokens giving the new characters and tokens an identifying number and
+// This script will duplicate a character sheet and token giving the new characters and tokens an identifying number and
 // linking each new token to it's own individual new character sheet.
 // This script is useful for those who want to create multiple copies of monsters because they prefer multiple character sheets to linking tokens as Mooks. 
 // Using an argument of "clean" causes it to clean up (delete) numbered tokens and characters such as this script creates. 
@@ -19,16 +19,34 @@
 //	The original token and character (without a number) will not be deleted. 
 //
 //
-// Known bugs/issues:  If the avatar image of the character is not in a user library (i.e: it's a marketplace image or from the Monster Manual, or the like), 
-// due to limits placed upon the API, it can't set an avatar image. You will have to do that yourself. 
+// Known bugs/issues:  
+// 1 - If the avatar image of the character is not in a user library (i.e: it's a marketplace image or from the Monster Manual, or the like), 
+//     due to limits placed upon the API, it can't set an avatar image. You will have to do that yourself, or (better yet) 
+//     copy the image to your own library on roll20, and set the token to be copied to use the immage in your library. 
+//     Two ways to copy the image to your own library on roll20 are as follows: 
+//     A) download an image and then upload it manually, either by downloading the set, 
+//     or placing a copy on the VTT, pressing "z" and right clicking the preview.
+//     or
+//     B) Right click the image in your marketplace collection (in the art library) and choosing "Copy to Library" or "Copy to Folder"
+//     B is probably faster, unless you are working with a whole set.
+// 2 - It takes a while to make copies, and if it takes too long, the API processor might think that the script is in an Infinit Loop and 
+//     cancel with an error message on the API scipts page. If nothing happens for a long period of time (more than 30 seconds) after a command to the script
+//     go to API scripts page of the campaign, and if there is an error message there, restart the API sandbox. 
+//     You can then attempt the process again by breaking it down into smaller batches. If the campaign is small and the characters do not have 
+//     excessive amounts of attributes and abilities, this script should be able to make over 40 copies in one go. But I am told that 
+//     for larger campaigns with lots of characters, and if those characters have lots of attributres and abilites, this number can be lower. 
+//     I think the number might also be higher or lower due to how busy (slow) the server is. 
+//     Anyway, if you need (for example) 20 Orcs, and you find the sandbox erroring out, try making two batches of 10, or 4 batches of 5. 
+// 3 - Version 01.00 had unknown problems with the Roll20 script library, where the script could not be added or imported from the script library. 
+//     The script would work if it was gotten from GitHub and pasted into an API screen, but did not work from the script library. 
+//     It is hoped that version 1.01 will fix this, but if not, get it from the script library. 
 //
 //
 // This script is based upon a script by "The Aaron".
 //		https://app.roll20.net/forum/post/5687127/duplicate-character-sheet-plus-linked-token-script/?pageforid=5687127#post-5687127
 // It has been modified to it's current form by Chris Dickey (Roll20 user "Chris D").
-// Last updated: 2019 Nov
-// Version 01.00 Chris D. 
-// Version 01.01 Chris D. 
+// Version 01.00  Dec 2018  Chris D.   Original release. 
+// Version  1.01  Nov 2019  Chris D.   After all characters have been created, do loops to read attributes and abilities once and create for each new character.
 //
 //
 // Commands:
@@ -60,7 +78,7 @@ on('ready',()=>{
 				if( !msg.selected || msg.selected.length == 0 )
 					sChat( "Please select exactly one token representing the character to duplicate.  Script usage is !DupCharToken (Number of tokens to create) (Starting number)   or !DupCharToken clean");
 				else {
-					_.each( msg.selected, function( sel ) {		// for each message, find base token name and base character name. add unique ones to list.
+					_.each( msg.selected, function( sel ) {		// for each token selected, find base token name and base character name. add unique ones to list.
 						let tokenObj = getObj('graphic', sel._id);
 						if ( _.isUndefined( tokenObj ) )
 							sChat( "Token is invalid in some way." );
@@ -107,6 +125,8 @@ on('ready',()=>{
 				});
 				sChat( "Deleted characters: " + d.join() + "." );
 						// End clean
+
+
 			} else if( !msg.selected || msg.selected.length !== 1 )
 				sChat( "Please select exactly one token representing the character to duplicate.  Script usage is !DupCharToken (Number of tokens to create) (Starting number)   or !DupCharToken clean");
 			else {				// Not cleaning up, presumably duplicating.
@@ -129,6 +149,7 @@ on('ready',()=>{
 					sChat( "Token is invalid in some way." );
 				else {		// Good command line.
 					let charArray = [],
+						tokenArray = [],
 						links = [];
 
 					function getLink( n, lnk ) {
@@ -146,10 +167,13 @@ on('ready',()=>{
 					let charObj = getObj('character', tokenObj.get('represents'));
 					if ( _.isUndefined( charObj ) )
 						sChat( "Token is not correctly linked to a good character." );
-					else		// Everything is good. We are duplicating. 
+					else {		// Everything is good. We are duplicating. 
+						let oldCid = charObj.id;
+						let tmpC = JSON.stringify( charObj ),
+							tmpT = JSON.stringify( tokenObj );
+
 						for( let i = startnum; i < (startnum + num); ++i) {			// We are going to want to duplicate both the character and token this many times.
-							let oldCid = charObj.id;
-							let newC = JSON.parse(JSON.stringify( charObj ));			// Simple true copy of object. 
+							let newC = JSON.parse( tmpC );			// Simple true copy of object. 
 							delete newC._id;
 							newC.name= charObj.get( 'name' ) + " " + i;
 							
@@ -159,7 +183,7 @@ on('ready',()=>{
 							else
 								newC.avatar = "";
 
-							let newT = JSON.parse(JSON.stringify( tokenObj ));
+							let newT = JSON.parse( tmpT );
 							delete newT._id;
 							newT.name = tokenObj.get( 'name' ) + " " + i;
 							parts = newT.imgsrc.match(/(.*\/images\/.*)(thumb|med|original|max)([^?]*)(\?[^?]+)?$/);
@@ -170,31 +194,36 @@ on('ready',()=>{
 
 							let newCObj = createObj('character', newC);
 							let newTObj = createObj('graphic', newT);
-							charArray.push( newCObj );
 							newTObj.set('represents', newCObj.id);
-
-							_.each(findObjs({type:'attribute', characterid:oldCid}),(a)=>{			// Copy each attribute
-								let sa = JSON.parse(JSON.stringify(a));
-								delete sa._id;
-								delete sa._type;
-								delete sa._characterid;
-								sa._characterid = newCObj.id;
-								let newA = createObj('attribute', sa);
-								if( links.indexOf( sa.name ) > -1 ) 
-									newTObj.set( "bar" + (links.indexOf( sa.name ) + 1).toString() + "_link", newA.id);		// Link the new token to the new attribute.
-							});
-							_.each(findObjs({type:'ability', characterid:oldCid}),(a)=>{			// Copy each ability
-								let sa = JSON.parse(JSON.stringify(a));
-								delete sa._id;
-								delete sa._type;
-								delete sa._characterid;
-								sa._characterid = newCObj.id;
-								createObj('ability', sa);
-							});
 
 							setDefaultTokenForCharacter( newCObj, newTObj);
 							toFront( newTObj );
+							charArray.push( newCObj );
+							tokenArray.push( newTObj );
 						}		// End For each character to create.
+
+						_.each(findObjs({type:'attribute', characterid:oldCid}),(a)=>{			// Copy each attribute
+							let sa = JSON.parse(JSON.stringify(a));
+							delete sa._id;
+							delete sa._type;
+							for( let i = 0; i < charArray.length; ++i ) {
+								delete sa._characterid;
+								sa._characterid = charArray[ i ].id;
+								let newA = createObj('attribute', sa);
+								if( links.indexOf( sa.name ) > -1 ) 
+									tokenArray[ i ].set( "bar" + (links.indexOf( sa.name ) + 1).toString() + "_link", newA.id);		// Link the new token to the new attribute.
+							};
+						});
+						_.each(findObjs({type:'ability', characterid:oldCid}),(a)=>{			// Copy each ability
+							let sa = JSON.parse(JSON.stringify(a));
+							delete sa._id;
+							delete sa._type;
+							for( let i = 0; i < charArray.length; ++i ) {
+								delete sa._characterid;
+								sa._characterid = charArray[ i ].id;
+								createObj('ability', sa);
+							};
+						});
 
 						charObj.get("bio", function(bio) {
 							charObj.get("gmnotes", function(gmnotes) {
@@ -207,9 +236,10 @@ on('ready',()=>{
 							});
 						});
 						sChat( "Duplicated: " + charObj.get( "name" ) + " " + num + " times." );
+					}
 				}		// End tokenObj is OK.
             }		// End have one token selected. 
         }		// End msg if for this script. 
     }); 	// End on Chat. 
-});		// End on Ready.
- 
+		// End on Ready.
+});
