@@ -87,7 +87,7 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
 
 				if(value == "couvert")
 				{
-					sendChat(name, "/me se met à couvert.");
+					sendChat(name, "/me se met &#224; couvert.");
 
 					_.each(currentPageTokens, function(obj) {   
 						obj.set("status_aura", true);
