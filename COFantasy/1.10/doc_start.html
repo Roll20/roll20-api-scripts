@@ -1,0 +1,53 @@
+<html lang="fr">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<meta name="description" content="Documentation du script COFantasy sous Roll20">
+		<meta name="author" content="Ulti & Kamille">
+		<title>Scripts pour Chroniques Oubliées Fantasy sous Roll20</title>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+		<script src="https://use.fontawesome.com/4ee7d58794.js"></script>
+	</head>
+	<body data-target="#list" data-spy="scroll" data-offset="10">
+		<script>
+			$('document').ready(function() {      
+        $(document).on('click', '#start', function() {
+          window.open("doc.html", "_blank");
+        });
+			});
+		</script>
+		<style>
+			body{position: relative;}
+			.jumbotron{margin-top: 20px;}
+			.jumbotron p {margin-bottom: 0}
+		</style>
+		<div class="container">
+			<div class="jumbotron">
+				<h1 class="display-3">Chroniques Oubliées Fantasy</h1>
+				<p class="lead">Documentation du script <a href="http://www.black-book-editions.fr/forums.php?topic_id=7842">COFantasy</a> sous Roll20</p>
+				<hr class="my-4">
+				<p>Ce document a pour but de vous aider à installer et configurer le script COFantasy sur le site <a href="https://roll20.net/">Roll20.net</a>.</p>
+				<p>Prérequis:</p>
+        <ul>
+					<li>Un <a href="https://app.roll20.net/account/supporter">compte Pro</a> sur Roll20 afin de pouvoir intégrer des scripts.</li>
+					<li>
+						Un niveau de connaissance minimum sur Roll20.<br />
+						<div class="alert alert-light" role="alert">
+							<p>Nous ferons de notre mieux pour détailler au mieux les procédures mais notre but ici n'est pas de vous expliquer le fonctionnement de Roll20 et nous partirons du principe que vous avez des notions sur ce dernier.<br />Si ce n'est pas le cas, nous vous invitons tout d'abord à vous familiariser avec l'outils et savoir notamment créer/utiliser :</p>
+              <ul>
+								<li>des <i><a href="https://wiki.roll20.net/Macros">Macros</a></i></li>
+								<li>des <i><a href="https://wiki.roll20.net/Journal#Attributes_.26_Abilities_Tab">Attributs</a> et des <a href="https://wiki.roll20.net/Journal#Attributes_.26_Abilities_Tab">Capacités</a></i> des personnages</li>
+							</ul>
+						</div>
+					</li>
+					<li>Feuille de Personnages : <a data-toggle="popover" data-placement="bottom" data-html="true" data-content='<a href="https://lh3.googleusercontent.com/-CYiltExxZ_o/VZJjtdEcbkI/AAAAAAAAV7Q/8YWjPOXZ3u8/w1005-h652-no/Roll20_CO_setting.png"><img src="https://lh3.googleusercontent.com/-CYiltExxZ_o/VZJjtdEcbkI/AAAAAAAAV7Q/8YWjPOXZ3u8/w1005-h652-no/Roll20_CO_setting.png" class="img-fluid"/></a><p class="text-center"><small>Cliquer pour agrandir</small></p>' href="#">Chroniques Oubliées Fantasy (French)</a> par <a href="http://www.black-book-editions.fr/forums.php?topic_id=5255">Nata</a></li>
+					<li>Le script <a href="https://wiki.roll20.net/Script:Vector_Math">Vector math</a> pour certains calculs de distance et de collision (fait partie de la librairie de script Roll20 qui s'installe en un clic).</li>
+				</ul>
+				<p class="lead text-center">
+					<button type="button" class="btn btn-primary" id="start"><i class="fa fa-rocket" aria-hidden="true"></i> C'est parti</button>
+				</p>
+			</div>
+		</div>
+	</body>
+</html>

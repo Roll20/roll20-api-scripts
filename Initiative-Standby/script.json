@@ -1,0 +1,16 @@
+{
+    "name": "Initiative Standby",
+    "script": "Initiative-Standby.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "# Initiative Standby\r\rA simple script for when your encounters see a lot of turn skipping by yanking and restoring from initiative order.  \r\rWhile a token is yanked, the `interdiction` icon will appear on the token and display its previous initiative order.  When it is restored, that value is consumed to reinsert it back where it was in initiative.  Ass Roll20 does not support non-digits in the status fields, it multiplies by 100 to shift the decimal place so no data is lost if you have tie-breakers configured.\r\r- Author: [Michael Greene (Volt Cruelerz)](https://app.roll20.net/users/1583758/michael-g)\r- Forum Thread: (doesn't exist yet)\r\r## Commands\r`!standby [yank|restore]` Will yank or restore the selected tokens.\r\r## Verison History\r- 1.0: Initial Release\r\r## Alters\r- `Campaign.turnorder`\r- `Token.status_interdiction`",
+    "authors": "M. Greene",
+    "roll20userid": "1583758",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {
+        "Campaign.turnorder": "read,write",
+        "Token.status_interdiction": "read,write"
+    },
+    "conflicts": []
+}

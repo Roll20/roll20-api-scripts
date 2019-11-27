@@ -1,5 +1,40 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 
+## 1.11
+### Capacités
+* Ajout d'une option pour que les créations d'élixirs soient considérées comme des sorts (avec éventuellement un coût en mana)
+* Animer un cadavre, rang 2 de la voie de la magie maléfique.
+* Agripper, rang 2 de la voie des créature volantes
+* Destruction des mort-vivants peut maintenant utiliser les options de tempête de mana
+* Mur de force utilise maintenant une image par défaut.
+* Ajout de la capacité vitalité surnaturelle des créatures magiques.
+* Ajout de l'aspect du démon
+
+### Corrections de bugs
+* Correction d'un bug de !cof-degainer causant un crash.
+* Correction d'un bug de !cof-ignorer-la-douleur : ne reconnaissait plus les attaques
+* Correction de bug (crash) avec les attaques magiques de certaines capacités
+* Changement du nom de macro "Jets GM" en "Jets-GM"
+* Correction d'un bug dans les macros de soin quand la cible a des DMs temporaires sur la barre 2
+* Correction d'un bug de siphon des âmes
+* Dans les listes d'actions, remplace les macros correctement même si un nom de macro est préfixe d'un autre.
+* !cof-effet-temp met bien l'état associé quand on utilise paralyseTemp ou etourdiTemp
+
+### Autres améliorations
+* ajout d'explications aux jets de caractéristiques
+* ajout d'une option --secret à !cof-attack
+
+## 1.10
+
+### Capacités
+* Ajout de la capacité corps élémentaire de la voie de l'élémentaire
+* Ajout de la capacité Riposte du champion
+* Ajout de la capacité Seul contre tous du chevalier
+* Ajout de l'enveloppement du cube gelatineux
+
+### Autres améliorations
+* Possibilité d'enduire des munitions de poison
+
 ## 1.09
 
 ### Capacités

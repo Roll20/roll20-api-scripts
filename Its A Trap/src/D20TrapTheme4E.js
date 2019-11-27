@@ -22,7 +22,7 @@ var D20TrapTheme4E = (() => {
         if(character && effectResult.defense && effectResult.attack) {
           return Promise.all([
             this.getDefense(character, effectResult.defense),
-            TrapTheme.rollAsync('1d20 + ' + effectResult.attack)
+            CharSheetUtils.rollAsync('1d20 + ' + effectResult.attack)
           ])
           .then(tuple => {
             let defenseValue = tuple[0];

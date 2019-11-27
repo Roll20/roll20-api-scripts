@@ -1,3 +1,0 @@
-## IMPORTANT NOTE ## When pasting into a macro, if it is opened after saving, the entire command will need to be repasted due to the way queries and macros interact. The ASCII formats must remain intact (ie, &#123; and &#125;) in order for the drop down queries to work as intended.
-
-!time -?{Time options|Plus Time,plus ?&#123;hours&#124;0&#125;:?&#123;minutes&#124;0&#125;|Add Event,addevent ?&#123;name&#125;:?&#123;hours&#124;0&#125;:?&#123;minutes&#124;0&#125;|List of Events,events|Set Time,set ?&#123;hours&#124;0&#125;:?&#123;minutes&#124;0&#125;|Show Time,show|Set Timeformat,setformat ?&#123;format&#124;24&#125;}

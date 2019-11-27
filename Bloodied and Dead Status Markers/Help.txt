@@ -1,2 +1,0 @@
-Bloodied and Dead Status Markers (Contributed by Ken Bauer)
-This script automatically adds the Red marker to represent the "bloodied" state for any tokens that drop below half their health, and the "dead" marker for any that drop to 0 or less. It's assumed that health is stored in Bar 1. The bar that is read can be changed by using the command !ChangeBar ****. The value can be bar1, bar2, or bar3.
