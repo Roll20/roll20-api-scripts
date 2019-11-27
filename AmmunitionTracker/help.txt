@@ -1,6 +1,0 @@
-!bthelp - This will display a quick help section
-!setgun *SLOT* *NAME* *AMMUNITION* - Example "!setgun 1 revolver 200". 
-!bullets *SLOT* - This decreases one point of ammunition from X slot
-!btdel *SLOT* - Deletes the contents of a slot
-!btedit *SLOT* *NEW_AMMUNITION_VALUE* - Changes the ammunition value of an already existing slot
-!btmyslots - Displays a list of all slots you own.
