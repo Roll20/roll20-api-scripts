@@ -9,11 +9,8 @@ module.exports = function(grunt) {
           'src/index.js',
           'src/Commands.js',
           'src/Config.js',
-          'src/Events.js',
           'src/Macros.js',
-          'src/Paths.js',
           'src/State.js',
-          'src/Templates.js',
           'src/Wizard.js',
           'src/utils/index.js',
             'src/utils/Chat.js',
@@ -33,10 +30,11 @@ module.exports = function(grunt) {
         globals: {
           // Symbols defined by API scripts
           CustomStatusMarkers: true,
-          PathMath: false,
+          MarchingOrder: true,
 
           // Symbols defined by Roll20
           _: false,
+          Campaign: false,
           createObj: false,
           findObjs: false,
           getObj: false,
@@ -52,6 +50,7 @@ module.exports = function(grunt) {
         nonbsp: true,
         nonew: true,
         strict: true,
+        sub: true,
         undef: true,
         unused: true
       }
