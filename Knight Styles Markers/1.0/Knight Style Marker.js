@@ -7,12 +7,9 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
 	var name;
 	
 	var checkInstall = function() {
-		var gc = global['Knight Style Marker'];
+		var gc = global['knightstylesmarkers'];
 		
-		if(gc != undefined)
-		{
-	    	allPage = gc['Toute Page'];
-		}
+	    allPage = gc['Toute Page'];
 	};
 	
 	var registerEventHandlers = function() {
@@ -90,7 +87,7 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
 
 				if(value == "couvert")
 				{
-					sendChat(name, "/me se met à couvert.");
+					sendChat(name, "/me se met &#224; couvert.");
 
 					_.each(currentPageTokens, function(obj) {   
 						obj.set("status_aura", true);
