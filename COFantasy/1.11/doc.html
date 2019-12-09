@@ -860,7 +860,7 @@
                 <h4 class="text-secondary">Voie du métal</h4>
                 <ol>
                   <li><strong>Forgeron</strong> : Il faut un attribut <code>voieDuMetal</code> pour connaître le rang (ou utiliser l'option <code>--valeur</code>. Lancer le sort avec <code>!cof-effet-temp forgeron(<i>L</i>) [[5+@{selected|INT}]]</code> où <i>L</i> est le label d'une attaque. Ensuite, chaque fois que cette attaque sera utilisée, les dégâts seront ajoutés. Limitations : si deux attaques utilisent la même arme, il faut faire deux fois l'action, une pour chaque attaque. Si vous utilisez les options de tempête de mana, vous pouvez rajouter <code>--rang 1 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
-                  <li><strong>Métal brûlant</strong> : faire une attaque magique de portée 20 m. L'appeler avec les options <code>--pasDeDmg --sortilege --effet ?{Chauffer|une arme,armeBrulante|une armure,armureBrulante} [[5+@{selected|INT}]]</code>. Si vous utilisez les options de tempête de mana, rajoutez <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Métal brûlant</strong> : faire une attaque, de type magique et de portée 20 m. L'appeler (avec <code>!cof-attack</code>) avec les options <code>--pasDeDmg --sortilege --effet ?{Chauffer|une arme,armeBrulante|une armure,armureBrulante} [[5+@{selected|INT}]]</code>. Si vous utilisez les options de tempête de mana, rajoutez <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
                   <li><strong>Magnétisme</strong> : <code>!cof-effet-temp magnetisme [[3+@{selected|INT}]] --mana 1</code>. L'effet n'est actif que contre les attaques ayant l'option <code>--metal</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du golem</h4>
@@ -1381,7 +1381,7 @@
                 </ol>
                 <h4 class="text-secondary">Voie du colosse</h4>
                 <ol>
-                  <li><strong>Fauchage</strong> : ajouter la RD, et ajouter un attribut <code>fauchage</code>, qui va faire automatiquement le renversement si le dé d'attaque est entre 15 et 20.</li>
+                  <li><strong>Fauchage</strong> : ajouter la RD, et ajouter un attribut <code>fauchage</code> de valeur <code>true</code>, qui va faire automatiquement le renversement si le dé d'attaque est entre 15 et 20.</li>
                   <li><strong>Balayage</strong> : faire une version de l'attaque avec <code>--target @{target|Target2|token_id}</code></li>
                 </ol>
                 <h4 class="text-secondary">Voie des créatures élémentaires</h4>
