@@ -3332,7 +3332,7 @@ var COFantasy = COFantasy || function() {
 
   // Fait dépenser de la mana, et si pas possible, retourne false
   function depenseMana(personnage, cout, msg, evt) {
-    if (cout === 0) return true;
+    if (isNaN(cout) || cout === 0) return true;
     var token = personnage.token;
     var charId = personnage.charId;
     var manaAttr = findObjs({
@@ -11273,6 +11273,33 @@ var COFantasy = COFantasy || function() {
             default:
           }
           addLineToFramedDisplay(display, postureMsg);
+        }
+        var rangSoin = charAttributeAsInt(perso, 'voieDesSoins', 0);
+        if (rangSoin > 0) {
+          var msgSoins;
+          var soinsRestants;
+          var soins = "";
+          var soinsLegers = charAttributeAsInt(perso, 'soinsLegers', 0);
+          if (soinsLegers < rangSoin) {
+            soinsRestants = rangSoin - soinsLegers;
+            if (soinsRestants > 1) soins = 's';
+            msgSoins = "peut encore faire " + soinsRestants + "soin" + soins + " léger" + soins;
+            addLineToFramedDisplay(msgSoins, display);
+          } else {
+            addLineToFramedDisplay("ne peut plus faire de soin léger aujourd'hui", display);
+          }
+          if (rangSoin > 1) {
+            var soinsModeres = charAttributeAsInt(perso, 'soinsModeres', 0);
+            if (soinsModeres < rangSoin) {
+              soinsRestants = rangSoin - soinsModeres;
+              if (soinsRestants > 1) soins = 's';
+              else soins = '';
+              msgSoins = "peut encore faire " + soinsRestants + "soin" + soins + " modéré" + soins;
+              addLineToFramedDisplay(msgSoins, display);
+            } else {
+              addLineToFramedDisplay("ne peut plus faire de soin modéré aujourd'hui", display);
+            }
+          }
         }
         sendChat("", endFramedDisplay(display));
       });
