@@ -5,8 +5,8 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
 	var allPage;
 	var currentPageTokens;
 	var name;
-	
-	var prepareKSM = function() {
+  
+  var prepareKSM = function() {
         if(!state.KSM)
         {
             state.KSM = {
@@ -150,7 +150,7 @@ on("ready", function() {
 	
     log("Knight Style Marker Started");
     KnightStyleMarker.PrepareKSM();
-	KnightStyleMarker.OptionsChange();
+  	KnightStyleMarker.OptionsChange();
     KnightStyleMarker.EventHandlers();
 	
     log("Knight Style Marker Ready");
