@@ -5,8 +5,8 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
 	var allPage;
 	var currentPageTokens;
 	var name;
-  
-  var prepareKSM = function() {
+	
+	var prepareKSM = function() {
         if(!state.KSM)
         {
             state.KSM = {
@@ -31,14 +31,14 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
                 {
                     state.KSM.allPage = true;
                     
-                    sendChat("Knight Style Marker", "/w gm Réglé pour s'afficher sur toutes les pages.");
+                    sendChat("Knight Style Marker", "/w gm R&#233;gl&#233; pour s'afficher sur toutes les pages.");
                 }
                 
                 if(msg.content == "!KSM NAP")
                 {
                     state.KSM.allPage = false;
                     
-                    sendChat("Knight Style Marker", "/w gm Réglé pour s'afficher uniquement sur la page où se trouve les joueurs.");
+                    sendChat("Knight Style Marker", "/w gm R&#233;gl&#233; pour s'afficher uniquement sur la page o&#249; se trouve les joueurs.");
                 }
             }
         });
@@ -150,7 +150,7 @@ on("ready", function() {
 	
     log("Knight Style Marker Started");
     KnightStyleMarker.PrepareKSM();
-  	KnightStyleMarker.OptionsChange();
+	KnightStyleMarker.OptionsChange();
     KnightStyleMarker.EventHandlers();
 	
     log("Knight Style Marker Ready");
