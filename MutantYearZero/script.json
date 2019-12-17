@@ -1,7 +1,7 @@
 {
   "name": "MutantYearZero",
-  "version": "0.1.10",
-  "description": "!myz and !wmyz provide the Mutant Year Zero dice mechanics.",
+  "version": "0.1.11",
+  "description": "MutantYearZero automates the rolling of Skill, Base (Stat), and Gear dice using Mutant: Year Zero dice mechanics.\r\r## Commands\r\r```\r!myz [Skill Roll] [Base Roll] [Gear Roll] [--&lt;Label&gt;|&lt;Message&gt; ...]\r```\r\rPerforms a Mutant Year Zero Roll.\r\r* **[Skill Roll]** -- An inline dice expression rolling the d6s. 6s are counted as a success (☢). Example: [[3d6]]\r* **[Base Roll]** -- An inline dice expression rolling the d6s. 6s are counted as a success (☢). 1s are counted as Trama (☣). Example: [[4d6]]\r* **[Gear Roll]** -- An inline dice expression rolling the d6s (☢). 1s are counted as Gear Degradation (💥). Example: [[2d6]]\r* **[--&lt;Label&gt;|&lt;Message&gt; ...]** -- An optional set of text to be shown above the die roll. Label may be omitted to just provid a text field. You can specify as many optional descriptions as you like.\r```\r!myz [[5d6]] [[3d6]] [[4d6]] --Player|Buzzard --Skill|Know the Zone (Wits)\r```\r\r```\r!wmyz [Skill Roll] [Base Roll] [Gear Roll]\r```\r\rIdentical to !myz except that the results are whispered to the player rolling and the GM.\r\r### Configuration\r\r* **GM Can Push** -- determines if the GM is allowed to push a player' roll.\r* **Report Mode** -- determines when and how invalid push attempts are\rreported. Options are: `None`, `GM`, `GM & Player`, `Public`",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -13,6 +13,7 @@
   "script": "MutantYearZero.js",
   "useroptions": [],
   "previousversions": [
+    "0.1.10",
     "0.1.8",
     "0.1.9"
   ]
