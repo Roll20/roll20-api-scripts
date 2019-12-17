@@ -707,19 +707,19 @@ imperialcalendar:
   - 'Utility'
 
 motd:
-  - "MotD - Message of the Day"
+  - "MotD"
   - "Utility"
 
 mutantyearzero:
-  - "MutantYearZero Dice Roller"
+  - "MutantYearZero"
   - "System Toolbox"
 
 base64:
-  - "Base64 - Encoding and decoding library for API scripts"
+  - "Base64"
   - "Utility"
 
 dryerase:
-  - "DryErase - Drawing permissions system"
+  - "DryErase"
   - "Utility"
 
 maplock:
@@ -741,7 +741,3 @@ scaleonadd:
 tableexport:
   - "TableExport"
   - "Utility"
-
-turnmarker1:
-  - "TurnMarker1"
-  - "Character"
