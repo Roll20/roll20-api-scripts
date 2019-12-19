@@ -5,13 +5,13 @@
 const TokenCondition = (() => { // eslint-disable-line no-unused-vars
 
     const version = '0.1.0';
-    const lastUpdate = 1576733901;
+    const lastUpdate = 1576734366;
     const schemaVersion = 0.1;
 
     let lookup = {};
 
     const mirroredProps = [
-            'name', 'left', 'top', 'width', 'height', 'rotation',
+            'left', 'top', 'width', 'height', 'rotation',
             'flipv', 'fliph', 'bar1_value', 'bar1_max',
             'bar2_value', 'bar2_max', 'bar3_value', 'bar3_max',
             'tint_color', 'lastmove', 'controlledby', 'light_hassight',
