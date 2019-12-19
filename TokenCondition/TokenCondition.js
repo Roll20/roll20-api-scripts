@@ -2,10 +2,11 @@
 // By:       The Aaron, Arcane Scriptomancer
 // Contact:  https://app.roll20.net/users/104025/the-aaron
 
+/* global GroupInitiative TokenMod */
 const TokenCondition = (() => { // eslint-disable-line no-unused-vars
 
     const version = '0.1.0';
-    const lastUpdate = 1576734366;
+    const lastUpdate = 1576735908;
     const schemaVersion = 0.1;
 
     let lookup = {};
@@ -265,11 +266,50 @@ const TokenCondition = (() => { // eslint-disable-line no-unused-vars
         }
     };
 
+	const handleTurnOrderChange = () => {
+		let handled = [];
+		Campaign().set({
+			turnorder: JSON.stringify(JSON.parse( Campaign().get('turnorder') || '[]').map( (turn,idx,arr) => {
+				if(lookup.hasOwnProperty(turn.id)){
+					let data = lookup[turn.id];
+					if(data.target !== turn.id){
+
+						if(handled.includes(data.target)){
+							return;
+						}
+
+						let turns = arr.filter( e => e.id === data.target);
+						if(turns.length !== 0){
+							return;
+						}
+
+						handled.push(data.target);
+
+						return {
+							id: data.target,
+							pr: turn.pr,
+							custom: turn.custom
+						};
+
+					}
+					return turn;
+				}
+			}).filter(t => t !== undefined)
+		)});
+	};
+
     const registerEventHandlers = () => {
         on('add:graphic', handleAddGraphic);
         on('change:graphic', handleChangeGraphic);
         on('destroy:graphic', handleDestroyGraphic);
         on('chat:message', handleInput);
+
+        if('undefined' !== typeof GroupInitiative && GroupInitiative.ObserveTurnOrderChange){
+            GroupInitiative.ObserveTurnOrderChange(handleTurnOrderChange);
+        }
+        if('undefined' !== typeof TokenMod && TokenMod.ObserveTokenChange){
+            TokenMod.ObserveTokenChange(handleChangeGraphic);
+        }
     };
 
     on('ready', () => {
