@@ -1,0 +1,16 @@
+{
+  "name": "TokenCondition",
+  "script": "TokenCondition.js",
+  "version": "0.1.1",
+  "description": "TokenCondition makes it easy to drop condition tokens onto your player and monster tokens. Simply create a Character with a name that starts with Condition:, such as Condition: Charmed. Create a Token that represents that Character and assign it to the Character as the Default Token. When you want ot assign that condition to a Token, drag the condition Character's default token on top of it. From then on, it will stick to the Token and any changes made to either one will be mirrored correctly. When you're done with the condtion, just delete the Token. You can even drag multiple condtions onto a single token.\r\r## Commands\r\r```\r!token-condition\r```\r\rDisplay this help.",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "useroptions": {},
+  "dependencies": {},
+  "modifies": {
+    "state.TokenCondition": "read,write"
+  },
+  "conflicts": [],
+  "previousversions": []
+}
