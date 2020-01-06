@@ -1,4 +1,4 @@
-﻿/*
+/*
     Current Version: 2.6
     Last updated: 04.15.2015
     Character Sheet and Script Maintained by: Steve Day

@@ -1,4 +1,4 @@
-﻿ //
+ //
 // Earthdawn Step Dice Roller
 // Plus Earthdawn 4th edition character sheet helper class, which also serves as helper for the 1879 (FASA Official) character sheet. 
 //
