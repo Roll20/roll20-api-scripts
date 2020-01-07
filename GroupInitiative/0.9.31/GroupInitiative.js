@@ -8,7 +8,7 @@ var GroupInitiative = GroupInitiative || (function() {
     const isString = (s)=>'string'===typeof s || s instanceof String;
 
     const version = '0.9.31';
-    const lastUpdate = 1578365441;
+    const lastUpdate = 1578366460;
     const schemaVersion = 1.2;
 
     let bonusCache = {};
@@ -931,11 +931,13 @@ var GroupInitiative = GroupInitiative || (function() {
     };
 
     const rollForTokenIDsExternal = (ids,options) => {
-        setTimeout(()=>makeRollsForIDs(ids,{
-            isReroll: false,
-            prev: Campaign().get('turnorder'),
-            manualBonus: parseFloat(options.manualBonus)||0
-        }), 0);
+        if(Array.isArray(ids)){
+            setTimeout(()=>makeRollsForIDs(ids,{
+                isReroll: false,
+                prev: Campaign().get('turnorder'),
+                manualBonus: parseFloat(options && options.manualBonus)||0
+            }), 0);
+        }
     };
 
     const makeRollsForIDs = (ids,options={}) => {
