@@ -1,8 +1,8 @@
 {
   "name": "MonsterHitDice",
   "script": "MonsterHitDice.js",
-  "version": "0.3.6",
-  "description": "Automatically fills in the hit points for a characters dragged onto the table top.\r \r The default token for the character needs to represent that creature but **should not** have the bar used for hit points linked to an attribute.  Use the settings below to configure the script for how you calculate hit points in your game.  There are several sheets for which the configurations are built in or you can use the more detailed settings.  Details about each setting are included along with it.\r \r There are no in-game commands for this script as it is purely responsive to the event of adding a token to the table top.",
+  "version": "0.3.7",
+  "description": "Automatically fills in the hit points for a characters dragged onto the table top.\r\rThe default token for the character needs to represent that creature but **should not** have the bar used for hit points linked to an attribute.  Use the settings below to configure the script for how you calculate hit points in your game.  There are several sheets for which the configurations are built in or you can use the more detailed settings.  Details about each setting are included along with it.\r\r## Commands\r\r```\r!mhd\r```\r\rThis will reroll hitpoints for all selected tokens.",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -76,6 +76,7 @@
   "previousversions": [
     "0.3.3",
     "0.3.4",
-    "0.3.5"
+    "0.3.5",
+    "0.3.6"
   ]
 }
