@@ -181,6 +181,16 @@ var CustomStatusMarkers = (() => {
     return statusMarker;
   }
 
+  function deprecationNotice() {
+    let scriptState = CustomStatusMarkers.State.getState();
+
+    if (!scriptState._showedDeprecationNotice) {
+      scriptState._showedDeprecationNotice = true;
+
+      CustomStatusMarkers.utils.Chat.whisperGM(`<h1 style="color: #800;">Notice:</h1> <p style="color: red;">The <b>Custom Status Markers</b> script has been deprecated. Although it is still functional, it is no longer being maintained or supported in favor of Roll20's built-in custom token markers.</p> <p>See https://app.roll20.net/forum/post/8033593/release-note-for-january-7-2020 for more information on using Roll20's custom token markers.</p> <p>Thank you for using this script in your games prior to 2020!</p>`);
+    }
+  }
+
   /**
    * Gets the names of all the custom status markers on a token.
    * @param {Graphic} token
@@ -394,8 +404,6 @@ var CustomStatusMarkers = (() => {
     }
   }
 
-
-
   /**
    * Sets the count badge for a status marker.
    * @param  {Graphic} token
@@ -492,6 +500,8 @@ var CustomStatusMarkers = (() => {
   on('ready', () => {
     CustomStatusMarkers.Macros.installMacros();
     log('--- Initialized Custom Status Markers vSCRIPT_VERSION ---');
+
+    deprecationNotice();
   });
 
   return {
