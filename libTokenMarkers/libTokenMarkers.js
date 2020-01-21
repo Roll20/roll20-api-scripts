@@ -5,8 +5,10 @@
 const libTokenMarkers = (() => { // eslint-disable-line no-unused-vars
 
     const version = '0.1.0';
-    const lastUpdate = 1579578892;
+    const lastUpdate = 1579579200;
     const schemaVersion = 0.1;
+
+    const isString = (s) => 'string' === typeof s || s instanceof String;
 
     class TokenMarker {
         constructor( name, tag, url ) {
@@ -98,6 +100,9 @@ const libTokenMarkers = (() => { // eslint-disable-line no-unused-vars
             };
 
             TokenMarkerRegistry.getStatuses = (keyOrName='') => {
+                if(!isString(keyOrName)){
+                    return [];
+                }
                 if(tokenMarkers.hasOwnProperty(keyOrName)){
                     return [tokenMarkers[keyOrName]];
                 }
