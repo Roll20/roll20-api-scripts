@@ -5,7 +5,7 @@
 const libTokenMarkers = (() => { // eslint-disable-line no-unused-vars
 
     const version = '0.1.0';
-    const lastUpdate = 1579386546;
+    const lastUpdate = 1579578892;
     const schemaVersion = 0.1;
 
     class TokenMarker {
@@ -97,7 +97,7 @@ const libTokenMarkers = (() => { // eslint-disable-line no-unused-vars
                 JSON.parse(Campaign().get('_token_markers')||'[]').forEach( tm => insertTokenMarker(new TokenMarker(tm.name, tm.tag, tm.url)));
             };
 
-            TokenMarkerRegistry.getStatuses = (keyOrName) => {
+            TokenMarkerRegistry.getStatuses = (keyOrName='') => {
                 if(tokenMarkers.hasOwnProperty(keyOrName)){
                     return [tokenMarkers[keyOrName]];
                 }
@@ -108,7 +108,7 @@ const libTokenMarkers = (() => { // eslint-disable-line no-unused-vars
                 return [];
             };
 
-            TokenMarkerRegistry.getStatus = (keyOrName) => (TokenMarkerRegistry.getStatuses(keyOrName))[0] || new NullTokenMarker();
+            TokenMarkerRegistry.getStatus = (keyOrName='') => (TokenMarkerRegistry.getStatuses(keyOrName))[0] || new NullTokenMarker();
 
             TokenMarkerRegistry.getOrderedList = () => {
                 return [...orderedLookup].map( key => tokenMarkers[key]);
