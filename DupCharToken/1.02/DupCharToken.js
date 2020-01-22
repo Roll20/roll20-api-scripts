@@ -67,8 +67,9 @@ on('ready',()=>{
 
     on('chat:message',(msg)=>{
 		'use strict';
-		try {
-			if( 'api' === msg.type && /^!dupCharToken\b/i.test( msg.content ) && playerIsGM( msg.playerid )) {
+
+		if( 'api' === msg.type && /^!dupCharToken\b/i.test( msg.content ) && playerIsGM( msg.playerid )) {
+			try {
 
 				function sChat( txt ) {
 					sendChat('DupCharToken', '/w ' + msg.who.replace(" (GM)","") + ' <div style="color: #993333;font-weight:bold;">' + txt + '</div>', null, {noarchive:true});
@@ -104,27 +105,29 @@ on('ready',()=>{
 							arr.forEach( function(nm ) { re += nm + "|"; });
 							return new RegExp ( re.slice( 0, -1) + ")\\s\\d+\\s*$" );
 						};
-									// search for token names.  for each found token, delete.
-						let reg = getRegEx( tnames ),
+						if( tnames.length ) {					// search for token names.  for each found token, delete.
+							let reg = getRegEx( tnames ),
+								d = [];
+							_.each(findObjs({type:"graphic", _subtype: "token" }),( tObj )=>{
+								if( reg.test( tObj.get( 'name' ) ) ) {
+									d.push( tObj.get( 'name' ) );
+									tObj.remove();
+								}
+							});
+							sChat( "Deleted tokens: " + d.join() + "." );
+						}
+
+						if( cnames.length ) {					// search for character names, for each, delete. 
+							let reg = getRegEx( cnames ),
 							d = [];
-						_.each(findObjs({type:"graphic", _subtype: "token" }),( tObj )=>{
-							if( reg.test( tObj.get( 'name' ) ) ) {
-								d.push( tObj.get( 'name' ) );
-								tObj.remove();
-							}
-						});
-						sChat( "Deleted tokens: " + d.join() + "." );
-						
-									// search for character names, for each, delete. 
-						reg = getRegEx( cnames );
-						d = [];
-						_.each(findObjs({type:"character" }),( cObj )=>{
-							if( reg.test( cObj.get( 'name' ) ) ) {
-								d.push( cObj.get( 'name' ) );
-								cObj.remove();
-							}
-						});
-						sChat( "Deleted characters: " + d.join() + "." );
+							_.each(findObjs({type:"character" }),( cObj )=>{
+								if( reg.test( cObj.get( 'name' ) ) ) {
+									d.push( cObj.get( 'name' ) );
+									cObj.remove();
+								}
+							});
+							sChat( "Deleted characters: " + d.join() + "." );
+						}
 					}
 							// End clean
 				} else if( !msg.selected || msg.selected.length !== 1 )
@@ -239,11 +242,11 @@ on('ready',()=>{
 						}
 					}		// End tokenObj is OK.
 				}		// End have one token selected. 
-			}		// End msg if for this script. 
-		} catch(err) {
-			log( msg);
-			log( "DupCharToken.js error caught: " + err );
-		}
+			} catch(err) {
+				log( msg);
+				log( "DupCharToken.js error caught: " + err );
+			}
+		}		// End msg if for this script. 
     }); 	// End on Chat. 
 		// End on Ready.
 });
