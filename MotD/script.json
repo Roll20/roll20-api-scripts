@@ -1,7 +1,7 @@
 {
   "name": "Message of the Day",
-  "version": "0.2.11",
-  "description": "Greets players that log in with the contents of a particular note.",
+  "version": "0.2.12",
+  "description": "MotD is a simple script that creates a handout named **MotD Note**. When a player logs in, it whispers the contents of that note to the player. Any formatting that works in the Note is passed on to the player. You can use `%%NAME%%` as a placeholder for the name of the player.\r\r## Commands\r\r```\r!motd [--help | --all | --PLAYER NAME ...]\r```\r\r* **--help** -- Shows the Help screen\r* **--all** -- Show the Message of the Day to all logged in players (including GM).\r* **--PLAYER NAME** -- Player who should be shown the Message of the Day. Matches are case-insensitive and will match partial names. You can have multiple of this argument to show to multiple players.\r\rIn the absense of any arguments, will show the Message of the Day to the current player.\r\rShow the Message of the day to the player named &quot;Bob the Slayer&quot;:\r```\r!motd --Bob the Slayer\r```\r\rShow the Message of the day to all the players with &quot;ka&quot; in their name\r```\r!motd --ka\r```\r\rShow the Message of the day to all the logged in players.\r```\r!motd --all\r```\r\rThe Player Interactions section of the help will show when each player was\rlast seen by MotD and when they were last shown the message of the day text.",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -20,6 +20,7 @@
   "previousversions": [
     "0.2.1",
     "0.2.10",
+    "0.2.11",
     "0.2.2",
     "0.2.3",
     "0.2.4",

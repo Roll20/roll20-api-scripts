@@ -705,3 +705,55 @@ markingconditions:
 imperialcalendar:
   - 'ImperialCalendar'
   - 'Utility'
+
+motd:
+  - "MotD"
+  - "Utility"
+
+mutantyearzero:
+  - "MutantYearZero"
+  - "System Toolbox"
+
+base64:
+  - "Base64"
+  - "Utility"
+
+dryerase:
+  - "DryErase"
+  - "Utility"
+
+maplock:
+  - "MapLock"
+  - "Tokens"
+
+measure:
+  - "Measure"
+  - "Utility"
+
+notelog:
+  - "NoteLog"
+  - "Utility"
+
+scaleonadd:
+  - "ScaleOnAdd"
+  - "Tokens"
+
+tableexport:
+  - "TableExport"
+  - "Utility"
+
+tokencondition:
+  - "TokenCondition"
+  - "Utility"
+
+libtokenmrkers:
+  - "libTokenMarkers"
+  - "Utility"
+
+abfroll:
+  - "ABFRoll"
+  - "System Toolbox"
+
+
+
+  

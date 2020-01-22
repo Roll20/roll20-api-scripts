@@ -2,17 +2,46 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
 	'use strict';
 	
 	var version = "1.0";
-	var allPage = true;
+	var allPage;
 	var currentPageTokens;
 	var name;
 	
-	var checkInstall = function() {
-		var gc = global['Knight Style Marker'];
-		
-		if(gc != undefined)
-		{
-	    	allPage = gc['Toute Page'];
-		}
+	var prepareKSM = function() {
+        if(!state.KSM)
+        {
+            state.KSM = {
+                allPage: true
+            };
+        }
+        
+        log(state.KSM);
+	};
+	
+	var registerOptionsChange = function() {
+    	on('chat:message',function(msg)
+        {
+            
+            if(msg.type != 'api') return;
+            
+            var ID = msg.playerid;
+            
+            if(playerIsGM(ID))
+            {
+                if(msg.content == '!KSM AP')
+                {
+                    state.KSM.allPage = true;
+                    
+                    sendChat("Knight Style Marker", "/w gm R&#233;gl&#233; pour s'afficher sur toutes les pages.");
+                }
+                
+                if(msg.content == "!KSM NAP")
+                {
+                    state.KSM.allPage = false;
+                    
+                    sendChat("Knight Style Marker", "/w gm R&#233;gl&#233; pour s'afficher uniquement sur la page o&#249; se trouve les joueurs.");
+                }
+            }
+        });
 	};
 	
 	var registerEventHandlers = function() {
@@ -34,7 +63,7 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
 					name = getAttrByName(id, "surnom");
 				}
 
-				if(allPage == true)
+				if(state.KSM.allPage == true)
 				{
 					currentPageTokens= findObjs({                             
 						represents: id,                         
@@ -90,7 +119,7 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
 
 				if(value == "couvert")
 				{
-					sendChat(name, "/me se met à couvert.");
+					sendChat(name, "/me se met &#224; couvert.");
 
 					_.each(currentPageTokens, function(obj) {   
 						obj.set("status_aura", true);
@@ -110,25 +139,21 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
 	};
 	
 	return {
+	    PrepareKSM: prepareKSM,
         EventHandlers: registerEventHandlers,
-        CheckInstall: checkInstall
+        OptionsChange: registerOptionsChange
     };
 }());
 
-var global = globalconfig || undefined;
-
 on("ready", function() {
     'use strict';
-	KnightStyleMarker.CheckInstall();
 	
     log("Knight Style Marker Started");
-	
+    KnightStyleMarker.PrepareKSM();
+	KnightStyleMarker.OptionsChange();
     KnightStyleMarker.EventHandlers();
 	
     log("Knight Style Marker Ready");
     // If it is then send a message to the GM to tell them the script is ready.
     sendChat("Knight Style Marker", "/w gm Knight Style Marker Ready");
-	
-	log("GlobalConfig verification (will be deleted soon) :");
-	log(globalconfig);
 });

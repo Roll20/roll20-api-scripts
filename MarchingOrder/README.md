@@ -1,8 +1,7 @@
 # Marching Order
 
-_v2.3 Updates_
-* Added button to stop all tokens from following each other.
-* Added capability to set a default marching order.
+_v2.4 Updates_
+* Code refactored into modules.
 
 This script allows you to select tokens and tell them to follow each other
 in some specified marching order.
@@ -65,6 +64,9 @@ or create a help thread on the Roll20 API forum
 ## Show Support
 
 If you would like to show your appreciation and support for the work I do in writing,
-updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)
+updating, maintaining, and providing tech support my API scripts, please consider buying one of my art packs from the Roll20 marketplace:
+
+https://marketplace.roll20.net/browse/search?category=itemtype:Art&author=Stephen%20Lindberg|Stephen%20L
+
 or, simply leave a thank you note in the script's thread on the Roll20 forums.
 Either is greatly appreciated! Happy gaming!
