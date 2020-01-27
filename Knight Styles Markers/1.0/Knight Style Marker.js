@@ -128,7 +128,7 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
 
 				if(value == "defensif")
 				{
-					sendChat(name, "/me se met en défensif.");
+					sendChat(name, "/me se met en d&#233;fensif.");
 
 					_.each(currentPageTokens, function(obj) {   
 						obj.set("status_bolt-shield", true);
