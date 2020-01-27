@@ -690,6 +690,10 @@ coloremote:
   - 'ColorEmote'
   - 'Utility'
 
+colorenote:
+  - 'ColorNote'
+  - 'Utility'
+
 sharevision:
   - 'ShareVision'
   - 'Utility'
