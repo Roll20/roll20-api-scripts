@@ -1,15 +1,48 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 
+## 2.0
+### Capacités
+* Ajout de la vulnérabilité aux critiques (pour les seigneurs de l'hiver)
+* La capacité tir fatal peut maintenant être appliquée à d'autres catégories d'armes que l'arc.
+* L'option --argent devient --armeDArgent. Cela permet d'utiliser --argent pour les armes en argent ordinaires.
+
+### Autres améliorations
+* Mise à jour automatique des macros de jeu (par défaut)
+* Gestion des directions d'escaliers
+* La fiche peut désormais changer d'affichage si le script est utilisé dans la partie.
+* Ajout d'une liste d'actions par défaut (si #Actions# n'est pas définie), et qui consiste en toutes les abilities du personnage.
+* Possibilité de commenter une ligne de #Actions#, en la faisant commencer par //.
+* Nouveau type de dégât, --argent.
+* Les montures de l'attaquant et de sa cible ne sont plus considérées comme des obstacles lors des attaques à distance.
+
+### Corrections de bugs
+* Prise en compte correcte du niveau de voie du métal ou de la valeur de la capacité forgeron
+
 ## 1.11
 ### Capacités
+* Ajout d'une option pour que les créations d'élixirs soient considérées comme des sorts (avec éventuellement un coût en mana)
+* Animer un cadavre, rang 2 de la voie de la magie maléfique.
+* Agripper, rang 2 de la voie des créature volantes
 * Destruction des mort-vivants peut maintenant utiliser les options de tempête de mana
 * Mur de force utilise maintenant une image par défaut.
 * Ajout de la capacité vitalité surnaturelle des créatures magiques.
 * Ajout de l'aspect du démon
 
 ### Corrections de bugs
+* Correction d'un bug qui faisait planter l'API quand il n'y avait pas de coût en mana pour certains sorts (comme destruction des morts vivants)
+* Correction d'un bug de !cof-degainer causant un crash.
+* Correction d'un bug de !cof-ignorer-la-douleur : ne reconnaissait plus les attaques
+* Correction de bug (crash) avec les attaques magiques de certaines capacités
+* Changement du nom de macro "Jets GM" en "Jets-GM"
+* Correction d'un bug dans les macros de soin quand la cible a des DMs temporaires sur la barre 2
+* Correction d'un bug de siphon des âmes
 * Dans les listes d'actions, remplace les macros correctement même si un nom de macro est préfixe d'un autre.
 * !cof-effet-temp met bien l'état associé quand on utilise paralyseTemp ou etourdiTemp
+
+### Autres améliorations
+* Affichage du nombre de soins restants dans le statut
+* ajout d'explications aux jets de caractéristiques
+* ajout d'une option --secret à !cof-attack
 
 ## 1.10
 

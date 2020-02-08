@@ -10,7 +10,7 @@
     "dependencies": [],
     "modifies": {
         "state.ShareVision.version": "read,write",
-        "token.statusmarker": "read,write",
+        "token.statusmarker": "read,write"
     },
     "conflicts": []
 }
