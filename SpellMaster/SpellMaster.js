@@ -9,7 +9,7 @@ const SpellDict = {};
 const SpellMasterInstall = () => {
     const defaultSettings = {
         Sheet: 'OGL',
-        Version: 2.001
+        Version: 2.003
     };
     if(!state.SpellMaster) {
         state.SpellMaster = defaultSettings;
@@ -977,8 +977,9 @@ on('ready', () => {
                         // Build the entry for it
                         const prepButton = spellKnown
                             ? `[-](!SpellMaster --UpdateBook ^${book.Name}^ --RemoveSpell ^${spell.Name}^ --Confirm ^Yes^ --RefreshKnowables ^Yes^)`
-                            : `[+](!SpellMaster --UpdateBook ^${book.Name}^ --ImportSpell ^${spell.Name}^ --RefreshKnowables ^Yes^)`
-                        const spellLine = `${prepButton} ${spell.Name}<br/>`;
+                            : `[+](!SpellMaster --UpdateBook ^${book.Name}^ --ImportSpell ^${spell.Name}^ --RefreshKnowables ^Yes^ --FlushCache ^Yes^)`
+                        const printLink = CreateLink(spell.Name, `!SpellMaster --PrintDummySpell ^${spell.Name}^ --HypotheticalBook ^${book.Name}^`);
+                        const spellLine = `${prepButton} ${printLink}<br/>`;
                         knowables += spellLine;
                         break;
                     }
@@ -988,7 +989,7 @@ on('ready', () => {
 
         knowables += `</div>}}`;
         dlog(knowables);
-        sendChat(scname, knowables);
+        sendChat(scname, knowables, null, null, { noarchive: true });
     };
 
     // Gets the link to cast the enchantment
@@ -1063,6 +1064,34 @@ on('ready', () => {
         } else {
             flog('Printing Custom Enchantments is not yet supported.');
         }
+    };
+
+    /**
+     * Print a dummy version of the spell.
+     * @param book {Object} the spellbook object to consider adding to.
+     * @param spell {Object} the spell to print
+     * @param chatMessage {Object} the source chat message to reply to
+     */
+    const PrintDummySpell = (book, spell, chatMessage) => {
+        const char = GetCharByAny(book.Owner);
+        let cachedBook = RefreshCachedBook(book);
+
+        const casterInfo = GetCasterInfo(char, book, cachedBook, book.Stat, 0, false);
+        const attackRollStr = casterInfo.AttackRollStr;
+        const dc = casterInfo.DC;
+        const casterLevel = casterInfo.CasterLevel;
+
+        let spellDetails = GetSpellDetails(book, book.Stat, '', 0, spell, false);
+        spellDetails = GetUpcastString(spell, spell.Level, spellDetails, casterLevel);
+
+        let parseableDetails = spellDetails.toLowerCase();
+        let isSpellAttack = parseableDetails.includes('spell attack');
+        const saveString = IdentifySaves(parseableDetails);
+
+        const descriptionFull = `<b>- DC:</b> ${dc} ${saveString}<br>${spellDetails}`;
+
+        const whisperToggle = GetCachedAttr(char, cachedBook, 'whispertoggle') === '/w gm ';
+        return PublishMagicEffect(book.Owner, spell, isSpellAttack, attackRollStr, descriptionFull, chatMessage, whisperToggle);
     };
 
     // The various subsections of a spellbook that can be cached
@@ -2763,6 +2792,25 @@ on('ready', () => {
             }
 
             PrintKnowables(msg, spellbook, level);
+            return;
+        }
+
+        const printSpellTag = '--PrintDummySpell';
+        if (argWords.includes(printSpellTag)) {
+            const spellName = GetParamValue(argParams, 'PrintDummySpell');
+            const spell = SpellDict[spellName];
+            if(!spell) {
+                sendChat(scname, `/w "${msg.who.replace(' (GM)', '')}" Invalid spell ${spellName}`, null, { noarchive: true });
+                return;
+            }
+            const bookName = GetParamValue(argParams, 'HypotheticalBook');
+            const spellbook = BookDict[bookName];
+            if (!spellbook) {
+                sendChat(scname, `/w "${msg.who.replace(' (GM)', '')}" No such book as ${bookName}`);
+                return;
+            }
+
+            PrintDummySpell(spellbook, spell, msg);
             return;
         }
 

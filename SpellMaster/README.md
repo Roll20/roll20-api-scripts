@@ -72,7 +72,7 @@ New in SpellMaster 2.000, magic items allow you to track spell enchantments on m
 ### Spells
 Spells appear within their level in alphabetical order.
 
-- **Level 1 Spells - [4] / [4] - [...]**: The initial line denotes the spell level and current spell slots.  Click on a number to change it.  Currents *can* be higher than maximums, though Long Rest will reset them back to the maximum.  Pressing `[...]` will display all knowable spells for your character given your classes and spell lists at the specified level in the chat where you can add or remove them at your liesure.
+- **Level 1 Spells - [4] / [4] - [...]**: The initial line denotes the spell level and current spell slots.  Click on a number to change it.  Currents *can* be higher than maximums, though Long Rest will reset them back to the maximum.  Pressing `[...]` will display all knowable spells for your character given your classes and spell lists at the specified level in the chat where you can add or remove them at your liesure.  Clicking on a spell in that chat menu list will print a dummy version of it.
 - **[_] Azdregath's Opulent Ooze (R) - [-]**: The line with the spell's name on it has several features.
     - **[_]**: Clicking this empty checkbox will fill it with an X to mark it as prepared.  Cantrips are always checked.
     - **Azdregath's Opulent Ooze**: Clicking this will cast the spell.  See the casting details below.
@@ -146,6 +146,7 @@ SpellMaster was largely born out of a dissatisfaction with the performance of ex
 - 2.000: Magic Items, one-click install, new version number system
     - 2.001: Enabled auto-rolling of rolled item charges.
     - 2.002: Damerau-Levenshtein distance suggestions for mistyped spells, item sorting
+    - 2.003: Chat menu now allows dummy casting, fixed caching bug
 
 ## Future Work
 ### Usability
