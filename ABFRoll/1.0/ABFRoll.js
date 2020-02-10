@@ -281,7 +281,6 @@ var ABFRoll = ABFRoll || (function() {
                 lowerFumble = array.customFumble[i].point;
 		    }
 		}
-		
     };
     
     var getMastery = function(msg)
@@ -483,7 +482,7 @@ var ABFRoll = ABFRoll || (function() {
 				//NOM JET
 				subname = str.match(/{{subname=[\-\'(){}^a-zA-Z0-9ÀÁÂÃÄÅàáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëÇçÌÍÎÏìíîïÙÚÛÜùúûüÿÑñ_\s]+}}/);
 				str = str.replace(/{{subname=[\-\'(){}^a-zA-Z0-9ÀÁÂÃÄÅàáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëÇçÌÍÎÏìíîïÙÚÛÜùúûüÿÑñ_\s]+}}/, "");
-				
+
 				//traitement du jet
 				var roll = msg.inlinerolls[inlineRolls(msg)];
 
@@ -503,7 +502,7 @@ var ABFRoll = ABFRoll || (function() {
 			    var bonusToSplit = 0+roll.results.rolls[1].expr;
 			
 				var bonusSplit = bonusToSplit.split("+");
-				
+				log(bonusToSplit);
 				for(var i = 0;i < bonusSplit.length;i++)
 				{
 				    bonus += Number(bonusSplit[i]);
