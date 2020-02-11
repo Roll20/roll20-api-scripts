@@ -2,11 +2,17 @@
 
 ## 2.0
 ### Capacités
+* Ajout de la capacité "Foudres divines" du prêtre
+* Ajout de la capacité "Furie berserk" du barbare
+* Ajout de la capacité "Même pas mal" du barbare
 * Ajout de la vulnérabilité aux critiques (pour les seigneurs de l'hiver)
 * La capacité tir fatal peut maintenant être appliquée à d'autres catégories d'armes que l'arc.
 * L'option --argent devient --armeDArgent. Cela permet d'utiliser --argent pour les armes en argent ordinaires.
 
 ### Autres améliorations
+* Ajout d'un effet temporaire armesEnflammees pour enflammer toutes les armes portées par un personnage
+* Ajout d'une option pour multiplier les dm d'un autre type que le principal en cas de critique.
+* Rattrapage et message d'erreur en cas d'expression de dégâts mal formés.
 * Mise à jour automatique des macros de jeu (par défaut)
 * Gestion des directions d'escaliers
 * La fiche peut désormais changer d'affichage si le script est utilisé dans la partie.

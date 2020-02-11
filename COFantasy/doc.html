@@ -330,6 +330,7 @@
                   <li><code>--ligne</code> : l'attaque porte sur toutes les cibles à portée, entre l'attaquant et le token ciblé. Si le token ciblé est plus proche que la portée de l'attaque, les tokens derrière le token ciblé sont aussi visés. Pour permettre de viser un point quelconque, on peut utiliser un personnage dédié avec un maximum de 0 pv. À chaque fois qu'un token représentant ce personnage est utilisé comme cible de <code>--ligne</code>, le token est enlevé de la carte.</li>
                   <li><code>--disque <i>r</i></code> : l'attaque porte sur toutes les cibles dans le disque de centre le token ciblé et de rayon <i>r</i>. Comme pour <code>--ligne</code>, on peut utiliser un token cible qui sera supprimé après l'attaque. À noter que l'attaquant lui-même peut prendre des dégâts, sauf si l'attaque a une portée nulle et que l'attaquant se cible lui-même (attaque centrée sur le lanceur).</li>
                   <li><code>--cone <i>angle</i></code> cible toutes les créatures dans un cône de sommet l'attaquant, d'angle <i>angle</i> degrés (90 degrés par défaut), et séparé en deux par le segment joignant l'attaquant et le token visé.</li>
+                  <li><code>--saufAllies</code> : ne cible pas les allies dans la zone ou les cibles spécifiées.</li>
                   <li><code>--target <i>id</i></code> : ajoute une cible à l'attaque (s'ajoute à la cible principale et aux options d'aoe).</li>
                   <li><code>--message <i>texte</i></code> : ajoute une ligne avec le message dans la fenêtre de l'attaque. Attention, <i>texte</i> ne doit pas contenir la séquence <code> --</code>.</li>
                   <li><code>--secret</code> : affiche les jets et résultats de l'attaque seulement aux joueurs qui contrôlent l'attaquant ou ses cibles, ainsi qu'au MJ.</li>
@@ -658,6 +659,8 @@
                   <li><strong>Cri de guerre</strong> : <code>!cof-effet-combat criDeGuerre</code></li>
                   <li><strong>Défier la mort</strong> : ajouter un attribut <code>defierLaMort</code> de valeur 10 et de maximum 10. (pour l'instant ne prend pas la rage en compte)</li>
                   <li><strong>Rage du berserk</strong> : utiliser <code>!cof-rage-du-berserk</code>, à la fois pour entrer en rage et pour tenter d'en sortir avant la fin du combat.</li>
+                  <li><strong>Même pas mal</strong> : ajouter un attribut <code>memePasMal</code>, de valeur <code>true</code>. Le joueur doit lui-même activer la rage ou le furie si il souhaite en profiter.</li>
+                  <li><strong>Rage du berserk</strong> : utiliser <code>!cof-rage-du-berserk --furie</code> pour entrer en rage et pour tenter d'en sortir avant la fin du combat. Pour sortir de la rage, l'option <code>--furie</code> peut être omise.</li>
                 </ol>
               </div>
               <h3 class="text-info" id="Barde">Barde</h3>
@@ -1116,6 +1119,7 @@
                     </ul>
                   </li>
                   <li><strong>Ailes célestes</strong> : <code>!cof-effet-temp ailesCelestes [[5+@{selected|SAG}]] --mana 1</code>. Si vous utilisez l'option de magie puissante. rajoutez <code> ?{Y consacrer tout le tour?|Oui,--puissant duree|Non,&amp;#32;}</code>. Si vous préférez plutôt utiliser l'option de tempête de mana, rajoutez <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana altruiste|Non,&amp;#32;}</code>. Notez que le mot clé <code>altruiste</code> est facultatif, ici. À vous de choisir si vous l'autorisez ou pas.</li>
+                  <li><strong>Foudres divines</strong> : créer une attaque magique, de label <code>L</code>, de portée nulle, et la lancer avec la ligne <code>!cof-attack @{selected|token_id} @{selected|token_id} L --electrique --disque 10 --saufAllies --mana 2</code>. Si vous utilisez les options de magie puissante, rajoutez <code>?{Y consacrer tout le tour ?|Oui,--puissant|Non,&amp;#32;}</code>. Sinon, si vous utilisez les options de tempête de mana, rajouez <code>--rang 4 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code></li>
                 </ol>
                 <h4 class="text-secondary">Voie de la guerre sainte</h4>
                 <ol>
