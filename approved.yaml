@@ -758,8 +758,10 @@ abfroll:
   - "ABFRoll"
   - "System Toolbox"
 
-spellmaster:
+spellmastersrd:
   - "SpellMaster-SRD"
   - "System Toolbox"
 
-  
+spellmaster:
+  - "SpellMaster"
+  - "System Toolbox"
