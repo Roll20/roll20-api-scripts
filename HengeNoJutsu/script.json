@@ -1,0 +1,14 @@
+{
+  "name": "HengeNoJutsu Token Changer",
+  "script": "hengenojutsu.js",
+  "version": "1.0",
+  "description": "Henge No Jutsu Token Changer transforms a token image between two saved states with only one command (or macro) and a little smoke effect.\r\rSee it here in action:\r[https://imgur.com/a/tygImsB](https://imgur.com/a/tygImsB)\r\r### Usage\r 1. Create a rollable table with two images \r 2. Select the desired token\r 3. !hengenojutsu [rollatable name]\r",
+  "authors": "Daniel Neubacher",
+  "roll20userid": "2581852",
+  "useroptions":{},
+  "dependencies": {},
+  "modifies": {
+      "imgsrc": "read,write"
+  },
+  "conflicts": []
+}
