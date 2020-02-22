@@ -992,7 +992,7 @@ on('ready', () => {
         // Iterate over all table spells
         for(let i = 0; i < SpellList.length; i++) {
             const spell = SpellList[i];
-            if (spell.Level === level) {
+            if (spell.Level === level && !spell.Name.endsWith('- SRD')) {
                 // Determine if the spell is knowable (on any of the book's classes' lists)
                 for (let j = 0; j < leveledClasses.length; j++) {
                     const leveledClass = leveledClasses[j];
