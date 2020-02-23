@@ -96,4 +96,4 @@ Upload a custom token marker named matrix. One is included in the GitHub for thi
 
 Upload a custom token marker named matrix and astral. Two are included in this GitHub for this script.
 
-![Token Markers](https://raw.githubusercontent.com/clevett/roll20-api-scripts/shadowrunv1/Shadowrun%205th%20Edition/imgs/groupiniTokenMarkers.png)
+![Token Markers](https://raw.githubusercontent.com/clevett/roll20-api-scripts/shadowrunv1/Shadowrun%205th%20Edition/imgs/groupiniTokenMarkers.png =100x20)
