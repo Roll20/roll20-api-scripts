@@ -48,6 +48,9 @@ const sr5HelperFunctions = {
             .filter(id => getObj("character", id || ""));
     },
 
+    //Used to verify a token represents a character before trying to Link Tokens.
+    getTokenRepresents: selectedToken => [selectedToken].map(obj => getObj("graphic", obj._id)).map(token => token.get("represents")),
+
     //Sheet type examples 'sprite', 'host', 'vehicle', 'grunt', 'pc'....
     getSheetType: id => getAttrByName([id], 'sheet_type'),
 
@@ -114,13 +117,12 @@ var sr5api = sr5api || (function() {
     //== This looks at a Token's Linked character Sheet and set a number of defaults 
     linkTokens = selected => {
         selected.forEach(token => {
-            const represents = getTokenRepresents(token);
-            const characterID = sr5HelperFunctions.getIDsFromTokens(token);
-            const characterName = getAttrByName([characterID], 'character_name');
-            const tokenID       = JSON.stringify(token).split(`_id":"`)[1].split(`","`)[0];
+            const characterID   = sr5HelperFunctions.getCharacterIdFromTokenId(token["_id"]) || false;
+            const characterName = getAttrByName(characterID, 'character_name') || "";
+            const tokenID       = token["_id"];
 
-            if (represents[0] != "") {
-                const update = tokenLinker(characterID);
+            if (characterID) {
+                const update = tokenLinker(characterID, tokenID, characterName);
 
                 //Set the default token for the represented character sheet
                 const tokenGet = getObj("graphic", tokenID);
@@ -138,37 +140,47 @@ var sr5api = sr5api || (function() {
         });
     },
 
-    tokenLinker = characterID => {
+    tokenLinker = (characterID, tokenID, characterName) => {
         try {
-            const sheetType  = getAttrByName([characterID], 'sheet_type');
-            let update = {}; 
+            const sheetType  = getAttrByName(characterID, 'sheet_type');
+            const statusMarkers = sr5HelperFunctions.getStatusIcons(tokenID);
+            const matrixMarker = statusMarkers.includes('matrix') ? 'matrix' : false;
 
-            update[`bar1_value`] = 0;
-            update[`bar2_value`] = 0;
-            update[`bar3_value`] = 0;
+            const stunCharacters = ['grunt', 'pc'];
+            const physicalCharacters = stunCharacters.concat(['vehicle']);
+            const matrixCharacters = ['vehicle', 'host', 'sprite'];
+            const stun = stunCharacters.includes(sheetType) ? true : false;
+            const matrix = matrixCharacters.includes(sheetType) || matrixMarker ? true : false;
+            const physical = physicalCharacters.includes(sheetType) ? true : false;
 
-            const bar1Attribute = sheetType === "grunt" || sheetType === "pc" ? "stun" : sheetType === "vehicle" || sheetType === "host" || sheetType === "sprite" ? "matrix" : false;
-            const bar3Attribute = sheetType === "grunt" || sheetType === "pc" || sheetType === "vehicle" ? "physical" : false;
-
-            update[`bar1_max`] = bar1Attribute ? getAttrByName([characterID], `${bar1Attribute}`, "max") || 0 : "";
-            update[`bar3_max`] = bar3Attribute ? getAttrByName([characterID], `${bar3Attribute}`, "max") || 0 : "";
+            let update = {
+                bar1_value: 0,
+                bar2_value: 0,
+                bar3_value: 0,
+                name: characterName || "",
+                bar1_link: "",
+                bar2_link: "",
+                bar3_link: "",
+                showname: true,
+                showplayers_bar1: true,
+                showplayers_bar2: true,
+                showplayers_bar3: true,
+                bar1_max: stun ? getAttrByName(characterID, `stun`, "max") || 0 : "",
+                bar2_max: matrix ? getAttrByName(characterID, `matrix`, "max") || 0 : "",
+                bar3_max: physical ? getAttrByName(characterID, `physical`, "max") || 0 : "",
+            }; 
 
             if (sheetType === 'pc') {
-                ['stun', 'physical'].forEach(attr => {
+                ['stun', 'matrix', 'physical'].forEach(attr => {
                     const link = sr5HelperFunctions.getCharacterAttr(characterID, `${attr}`);
-                    const num = attr === 'stun' ? 1 : 3;
-                    link[0] ? update[`bar${num}_link`] = link[0].id : log(`Linked attribute not found for bar${num}`);
+                    if (attr === 'matrix' && matrixMarker) {
+                        link[0] ? update[`bar2_link`] = link[0].id : log(`Linked attribute not found for bar${num}`);
+                    } else {
+                        const num = attr === 'stun' ? 1 : 3;
+                        link[0] ? update[`bar${num}_link`] = link[0].id : log(`Linked attribute not found for bar${num}`);
+                    }
                 });
-            } else {
-                update[`bar1_link`] = "";
-                update[`bar2_link`] = "";
-                update[`bar3_link`] = "";
             }
-
-            update.showname         = true;
-            update.showplayers_bar1 = true;
-            update.showplayers_bar2 = true;
-            update.showplayers_bar3 = true;
 
             return update
         } catch (error) {
@@ -319,11 +331,9 @@ var sr5api = sr5api || (function() {
                 const characterID = sr5HelperFunctions.getCharacterIdFromTokenId(token["_id"]);
                 const statusMarkers = sr5HelperFunctions.getStatusIcons(token["_id"]);
                 const sheetType  = sr5HelperFunctions.getSheetType(characterID);
-                const intiativeType = sheetType === "sprite" || sheetType === "host" || sheetType === "vehicle" || statusMarkers.includes('matrix') ? 'matrix' : statusMarkers.includes('astral') ? 'astral' : 'initiative';;
+                const intiativeType = sheetType === "sprite" || sheetType === "host" || sheetType === "vehicle" || statusMarkers.includes('matrix') ? 'matrix' : statusMarkers.includes('astral') ? 'astral' : 'initiative';
                 const mod = getAttrByName(characterID, `${intiativeType}_mod`); 
                 const dice = getAttrByName(characterID, `${intiativeType}_dice`);
-
-                log(statusMarkers)
 
                 const character = new Character(characterID)
                 character.expression = `${mod}+${dice}d6cs0cf0`
