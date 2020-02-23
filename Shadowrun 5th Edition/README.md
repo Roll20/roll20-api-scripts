@@ -14,9 +14,9 @@ Roll initiative for all the selected tokens and add it to the token tracker.
 
 ### Functionality
 
-* Host, Vehicle, Sprites, and tokens with matrix status marker will roll Matrix Initiative.
+* Host, vehicle, sprites, and tokens with matrix status marker will roll Matrix Initiative.
 * Characters with astral marker will roll Astral Initiative.
-* All other tokens will roll meat space initiative
+* All other tokens will roll meat space Initiative
 
 ### Requirements
 
@@ -61,10 +61,10 @@ Setup a number of defaults on a token. Character sheets set to PC will link thei
 
 ### Functionality
 
-* Populate bar 1 for PC & grunts with stun.
-* Populate bar 2 for Vehicle, Hosts, Sprites, and PC or Grunts with 'matrix' token marker with matrix.
-* Populate bar 3 for PC, grunt, and vehicles with physical.
-* Populate name with character_name.
+* Populate bar 1 for PC & grunts with stun
+* Populate bar 2 for vehicle, hosts, sprites, and PC or grunts with 'matrix' token marker with matrix
+* Populate bar 3 for PC, grunt, and vehicles with physical
+* Populate name with character_name
 * Link bar 1 with stun if PC
 * Link bar 2 with matrix if 'matrix' token marker is on token
 * Link bar 3 with physical if PC
@@ -73,7 +73,6 @@ Setup a number of defaults on a token. Character sheets set to PC will link thei
 * Toggle on show players bar 2
 * Toggle on show players bar 3
 * Set default token on the character sheet
-
 
 ### Requirements
 
