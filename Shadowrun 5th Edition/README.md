@@ -50,6 +50,7 @@ Adds a initiative turn to the Turn Order that will count up the Combat Rounds an
 * Add Initiative Counter before rolling initiative to avoid it triggering immedately.
 * Use arrow at the bottom of Turn Order cycle through turns
 
+![Turn Order arrow](https://github.com/clevett/roll20-api-scripts/blob/shadowrunv1/Shadowrun%205th%20Edition/imgs/counterarrow.png?raw=true)
 
 ## Link Tokens
 
