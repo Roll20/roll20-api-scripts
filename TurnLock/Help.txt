@@ -1,4 +1,0 @@
-Commands:
-
-!tlock (enables turn lock, preventing tokens from moving if it is not their turn)
-!tunlock (disables turn lock)

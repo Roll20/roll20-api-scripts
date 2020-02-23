@@ -12,7 +12,7 @@
       cmd: 'CMD',
       perceptionModifier: 'Perception',
       fnHasTrapSpotter: character => {
-        return TrapTheme.getSheetRepeatingRow(character, 'class-ability', rowAttrs => {
+        return CharSheetUtils.getSheetRepeatingRow(character, 'class-ability', rowAttrs => {
           if(!rowAttrs.name)
             return false;
 
@@ -23,7 +23,7 @@
           // If it wasn't in the 'class-ability' repeating section, try
           // getting it from the 'ability' repeating section.
           if(!trapSpotter) {
-            return TrapTheme.getSheetRepeatingRow(character, 'ability', rowAttrs => {
+            return CharSheetUtils.getSheetRepeatingRow(character, 'ability', rowAttrs => {
               if(!rowAttrs.name)
                 return false;
 
@@ -48,7 +48,7 @@
       cmd: 'cmd',
       perceptionModifier: 'perception',
       fnHasTrapSpotter: character => {
-        return TrapTheme.getSheetRepeatingRow(character, 'classabilities', rowAttrs => {
+        return CharSheetUtils.getSheetRepeatingRow(character, 'classabilities', rowAttrs => {
           if(!rowAttrs.name)
             return false;
 
@@ -137,7 +137,7 @@
       _doTrapCombatManeuver(character, effectResults) {
         return Promise.all([
           this.getCMD(character),
-          TrapTheme.rollAsync('1d20 + ' + effectResults.attack)
+          CharSheetUtils.rollAsync('1d20 + ' + effectResults.attack)
         ])
         .then(tuple => {
           let cmd = tuple[0] || 10;
@@ -157,7 +157,7 @@
       _doTrapTouchAttack(character, effectResults) {
         return Promise.all([
           this.getTouchAC(character),
-          TrapTheme.rollAsync('1d20 + ' + effectResults.attack)
+          CharSheetUtils.rollAsync('1d20 + ' + effectResults.attack)
         ])
         .then(tuple => {
           let ac = tuple[0] || 10;
@@ -180,7 +180,7 @@
           attrName = SHEET_ATTRS[sheet].ac
 
         if(attrName)
-          return TrapTheme.getSheetAttr(character, attrName);
+          return CharSheetUtils.getSheetAttr(character, attrName);
         else
           return Promise.reject(new Error('Please provide name of the attribute for AC in the One-Click options.'));
       }
@@ -197,7 +197,7 @@
           attrName = SHEET_ATTRS[sheet].cmd
 
         if(attrName)
-          return TrapTheme.getSheetAttr(character, attrName);
+          return CharSheetUtils.getSheetAttr(character, attrName);
         else
           return Promise.reject(new Error('Please provide name of the attribute for CMD in the One-Click options.'));
       }
@@ -225,7 +225,7 @@
           attrName = SHEET_ATTRS[sheet].perceptionModifier;
 
         if(attrName)
-          return TrapTheme.getSheetAttr(character, attrName);
+          return CharSheetUtils.getSheetAttr(character, attrName);
         else
           return Promise.reject(new Error('Please provide name of the attribute ' +
             'for the perception modifier in the One-Click options.'));
@@ -242,7 +242,7 @@
           attrName = SHEET_ATTRS[sheet][key];
 
         if(attrName)
-          return TrapTheme.getSheetAttr(character, attrName);
+          return CharSheetUtils.getSheetAttr(character, attrName);
         else
           return Promise.reject('Please provide name of the attribute for ' +
             saveName + ' save modifier in the One-Click options.');
@@ -281,7 +281,7 @@
           attrName = SHEET_ATTRS[sheet].touch;
 
         if(attrName)
-          return TrapTheme.getSheetAttr(character, attrName);
+          return CharSheetUtils.getSheetAttr(character, attrName);
         else
           return Promise.reject(new Error('Please provide name of the attribute for touch AC in the One-Click options.'));
       }
@@ -439,7 +439,7 @@
               return this.getPerceptionModifier(character)
               .then(perception => {
                 if(_.isNumber(perception))
-                  return TrapTheme.rollAsync(`1d20 + ${perception}`);
+                  return CharSheetUtils.rollAsync(`1d20 + ${perception}`);
                 else
                   throw new Error('Trap Spotter: Could not get Perception value for Character ' + charToken.get('_id') + '.');
               })

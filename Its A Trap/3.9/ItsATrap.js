@@ -605,12 +605,16 @@ var ItsATrap = (() => {
   // Handle macro commands.
   on('chat:message', msg => {
     try {
-      if(msg.content === REMOTE_ACTIVATE_CMD) {
+      let argv = msg.content.split(' ');
+      if(argv[0] === REMOTE_ACTIVATE_CMD) {
         let theme = getTheme();
-        _.each(msg.selected, item => {
-          let trap = getObj('graphic', item._id);
+
+        let trapId = argv[1];
+        let trap = getObj('graphic', item._id);
+        if (trap)
           activateTrap(trap);
-        });
+        else
+          throw new Error(`Could not activate trap ID ${trapId}. It does not exist.`);
       }
     }
     catch(err) {
@@ -1423,7 +1427,7 @@ var ItsATrapCreationWizard = (() => {
     }
 
     // Remote activate button
-    content.append('div', `[Activate Trap](${ItsATrap.REMOTE_ACTIVATE_CMD})`, {
+    content.append('div', `[Activate Trap](${ItsATrap.REMOTE_ACTIVATE_CMD} ${curTrap.get('_id')})`, {
       style: { 'margin-top' : '2em' }
     });
 
@@ -2215,7 +2219,7 @@ var TrapTheme = (() => {
       });
 
       // Then try again.
-      return TrapTheme.getSheetAttr(character, attr)
+      return CharSheetUtils.getSheetAttr(character, attr)
       .then(result => {
         if(_.isNumber(result))
           return result;
@@ -2233,10 +2237,10 @@ var TrapTheme = (() => {
      */
     static getSheetAttr(character, attr) {
       if(attr.includes('/'))
-        return TrapTheme.getSheetRepeatingAttr(character, attr);
+        return CharSheetUtils.getSheetRepeatingAttr(character, attr);
       else {
         let rollExpr = '@{' + character.get('name') + '|' + attr + '}';
-        return TrapTheme.rollAsync(rollExpr)
+        return CharSheetUtils.rollAsync(rollExpr)
         .then((roll) => {
           if(roll)
             return roll.total;
@@ -2274,7 +2278,7 @@ var TrapTheme = (() => {
       let valueFieldName = parts[3];
 
       // Find the row with the given name.
-      return TrapTheme.getSheetRepeatingRow(character, sectionName, rowAttrs => {
+      return CharSheetUtils.getSheetRepeatingRow(character, sectionName, rowAttrs => {
         let nameField = rowAttrs[nameFieldName];
         if(!nameField)
           return false;
@@ -2470,7 +2474,7 @@ var D20TrapTheme = (() => {
     _doTrapAttack(character, effectResults) {
       return Promise.all([
         this.getAC(character),
-        TrapTheme.rollAsync('1d20 + ' + effectResults.attack)
+        CharSheetUtils.rollAsync('1d20 + ' + effectResults.attack)
       ])
       .then(tuple => {
         let ac = tuple[0];
@@ -2493,7 +2497,7 @@ var D20TrapTheme = (() => {
       .then(saveBonus => {
         saveBonus = saveBonus || 0;
         effectResults.saveBonus = saveBonus;
-        return TrapTheme.rollAsync('1d20 + ' + saveBonus);
+        return CharSheetUtils.rollAsync('1d20 + ' + saveBonus);
       })
       .then((saveRoll) => {
         effectResults.roll = saveRoll;
@@ -2764,7 +2768,7 @@ var D20TrapTheme4E = (() => {
         if(character && effectResult.defense && effectResult.attack) {
           return Promise.all([
             this.getDefense(character, effectResult.defense),
-            TrapTheme.rollAsync('1d20 + ' + effectResult.attack)
+            CharSheetUtils.rollAsync('1d20 + ' + effectResult.attack)
           ])
           .then(tuple => {
             let defenseValue = tuple[0];

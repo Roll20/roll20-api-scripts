@@ -44,7 +44,7 @@
             current: 0
           });
 
-        return TrapTheme.getSheetAttr(character, 'armorclass');
+        return CharSheetUtils.getSheetAttr(character, 'armorclass');
       }
 
       /**
@@ -57,7 +57,7 @@
             current: 0,
             characterid: character.get('_id')
           });
-        return TrapTheme.getSheetAttr(character, 'spot')
+        return CharSheetUtils.getSheetAttr(character, 'spot')
         .then(spot => {
           return spot + 10;
         });
@@ -67,7 +67,7 @@
        * @inheritdoc
        */
       getSaveBonus(character, saveName) {
-        return TrapTheme.getSheetAttr(character, SAVE_NAMES[saveName]);
+        return CharSheetUtils.getSheetAttr(character, SAVE_NAMES[saveName]);
       }
 
       /**

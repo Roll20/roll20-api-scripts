@@ -1,10 +1,10 @@
-﻿ //
+ //
 // Earthdawn Step Dice Roller
-// Plus Earthdawn 4th edition character sheet helper class. 
+// Plus Earthdawn 4th edition character sheet helper class, which also serves as helper for the 1879 (FASA Official) character sheet. 
 //
 // By Chris Dickey 
 // Version: See line two of code below.
-// Last updated: 2018 Dec
+// Last updated: 2019 April
 //
 // Earthdawn (FASA Official) Character sheet and associated API Copyright 2015-2019 by Christopher D. Dickey. 
 //
@@ -20,7 +20,7 @@
 //      !edInit~ ?{Initiative Step}~ ?{Karma Step | 0}~ for Initiative            The results will be added to the Initiative tracker.
 //
 //
-// This module also contains a great deal of code that works with the Earthdawn character sheet authored by me.
+// This module also contains a great deal of code that works with the Earthdawn and 1879 character sheets authored by me.
 // This is all within the ParseObj class. If that class is removed, the stepdice roller will still work, but not the character sheet buttons.
 //
 // All commands that invoke this section of the code start with         !Earthdawn~
@@ -260,7 +260,7 @@ Earthdawn.Constants = {
 				return x[ x.length -2 ].toUpperCase();
 			else if (section == 4 )
 				return x[ x.length -1 ];
-			else {
+			else {			// There is a possibility that the RowID might contain an underscore. 
 				x.pop();
 				x.pop();
 				x.shift();
@@ -456,6 +456,9 @@ Earthdawn.EDclass = function( origMsg ) {
                     // Check if the namespaced property exists, creating it if it doesn't
         if( ! state.Earthdawn ) {
             state.Earthdawn = {
+					game:			"ED",
+					gED:			true,
+					g1879:			false,
                     edition:        4,
 					effectIsAction: false,
                     logCommandline: false,
@@ -535,7 +538,8 @@ Earthdawn.EDclass = function( origMsg ) {
         }
 
         if( state.Earthdawn.logStartup ) {
-            log( "---Earthdawn.js Version: " + Earthdawn.Version + " loaded.   For Earthdawn Edition: " + state.Earthdawn.edition + " ---");
+            log( "---Earthdawn.js Version: " + Earthdawn.Version + " loaded.   For " + state.Earthdawn.game 
+					+ " Edition: " + state.Earthdawn.edition + " ---");
 			log( "---  Roll Style: " + state.Earthdawn.style + style 
 					+ "   Options: Effect tests " + (state.Earthdawn.effectIsAction ? "are" : "are NOT") + " Action tests. ---" );
 			log( "---  CursedLuckSilent is " + ((state.Earthdawn.CursedLuckSilent && state.Earthdawn.CursedLuckSilent & 0x04 ) ? "Silent" : "not Silent")
@@ -779,16 +783,16 @@ Step/Action Dice Table
             stepNum = 0;
         if ( stepNum < 8 ) {         // The step numbers less than 8 don't follow the same pattern as the rest of the table and should just be set to the correct value.
             switch( stepNum ) {
-                case 1:     dice = ((state.Earthdawn.edition == 3) ? "{{1d6!-3}+d1}kh1+" : "{{1d4!-2}+d1}kh1+" );     break;         // Roll a d4 minus something, but also roll a "d1" and keep only the highest one.
-                case 2:     dice = ((state.Earthdawn.edition == 3) ? "{{1d6!-2}+d1}kh1+" : "{{1d4!-1}+d1}kh1+" );     break;
-                case 3:     dice = ((state.Earthdawn.edition == 3) ? "{{1d6!-1}+d1}kh1+" : "d4!+" );     break;
+                case 1:     dice = ((state.Earthdawn.gED && state.Earthdawn.edition == 3) ? "{{1d6!-3}+d1}kh1+" : "{{1d4!-2}+d1}kh1+" );     break;         // Roll a d4 minus something, but also roll a "d1" and keep only the highest one.
+                case 2:     dice = ((state.Earthdawn.gED && state.Earthdawn.edition == 3) ? "{{1d6!-2}+d1}kh1+" : "{{1d4!-1}+d1}kh1+" );     break;
+                case 3:     dice = ((state.Earthdawn.gED && tate.Earthdawn.edition == 3) ? "{{1d6!-1}+d1}kh1+" : "d4!+" );     break;
                 case 4:     dice = "d6!+";      break;
                 case 5:     dice = "d8!+";      break;
                 case 6:     dice = "d10!+";     break;
                 case 7:     dice = "d12!+";     break;
             }
         }  // end step 7 or less
-        else if( state.Earthdawn.edition == 3 ) {        // Earthdawn 3rd edition.
+        else if( state.Earthdawn.gED && state.Earthdawn.edition == 3 ) {        // Earthdawn 3rd edition.
             var baseNum = stepNum - 6;
             var twelves = 0;
             if( stepNum > 12 ) {        // Calculate the number of d12's we need to roll.
@@ -1674,8 +1678,12 @@ Step/Action Dice Table
 					if( !playerIsGM( this.edClass.msg.playerid ) )
 						this.chat( "Error! Only GM can change state variables!", Earthdawn.whoTo.player | Earthdawn.whoFrom.api | Earthdawn.whoFrom.noArchive, "gmState" );
 					else {
-						s += this.makeButton("Change Edition", "!Earthdawn~ Misc: State: edition: ?{What Earthdawn rules Edition|Forth Edition,4|Third Edition,3|First Edition,1}", 
-								"Switch API and Character sheet to 1st/3rd/4th Edition" );
+						if( ssa[ 2 ] === "1879" )
+							s += this.makeButton("Change Edition", "!Earthdawn~ Misc: State: edition: 1 1879", 
+									"Switch API and Character sheet to 1879 First Edition" );
+						else
+							s += this.makeButton("Change Edition", "!Earthdawn~ Misc: State: edition: ?{What Earthdawn rules Edition|Forth Edition,4 ED|Third Edition,3 ED|First Edition,1 ED}", 
+									"Switch API and Character sheet to Earthdawn 1st/3rd/4th Edition" );
 						s += this.makeButton("Result Style", "!Earthdawn~ Misc: State: Style: ?{What roll results style do you want|Vague Roll Result,2|Vague Success (not recommended),0|Full,1}", 
 								"Switch API to provide different details on roll results. Vague Roll result is suggested. It does not say what the exact result is, but says how much it was made by. Vague Success says exactly what the roll was, but does not say the TN or how close you were." );
 						s += this.makeButton("Effect is Action", "!Earthdawn~ Misc: State: EffectIsAction: ?{Is an Effect test to be treated identically to an Action test|No,0|Yes,1}", 
@@ -1708,7 +1716,8 @@ Step/Action Dice Table
 				}	break;
 				case "help": {
 //					s = this.makeButton( "Wiki Link", "https://wiki.roll20.net/Earthdawn_4e_(Integrated)", 
-					s = this.makeButton( "Wiki Link", "https://wiki.roll20.net/Earthdawn_(FASA_Official)", 
+//					s = this.makeButton( "Wiki Link", "https://wiki.roll20.net/Earthdawn_(FASA_Official)", 
+					s = this.makeButton( "Wiki Link", "https://wiki.roll20.net/Earthdawn_-_FASA_Official", 
 								"This button will open this character sheets Wiki Documentation, which should answer most of your questions about how to use this sheet. <br\>Note that you should tell your browser to open this link in another tab.", 
 								"black", "white", true );
 //                    s = "&{template:chathelp} " + Earthdawn.braceOpen() + Earthdawn.braceOpen() + 
@@ -3184,7 +3193,8 @@ log( ssa);
 
                 var smc = [];			// IMPORTAINT NOTE!!! if you make changes that affect any attrib, also edit attribute section of the on ready event near the bottom of this file and the chat menu section dealing with status's.
                 smc.push ( { code: "karma", prompt: "Karma", attrib: "Karma-Roll", icon: "lightning-helix", submenu: "?{Karma|None,[0^u]|One,[1^s]|Two,[2^b]|Three,[3^c]}" } );
-                smc.push ( { code: "devpnt", prompt: "Dev Pnts", attrib: "Devotion-Roll", icon: "angel-outfit", submenu: "?{Dev Pnts|None,[0^u]|One,[1^s]|Two,[2^b]|Three,[3^c]}" } );
+				if( state.Earthdawn.gED )
+					smc.push ( { code: "devpnt", prompt: "Dev Pnts", attrib: "Devotion-Roll", icon: "angel-outfit", submenu: "?{Dev Pnts|None,[0^u]|One,[1^s]|Two,[2^b]|Three,[3^c]}" } );
                 smc.push ( { code: "willforce", prompt: "WillForce", attrib: "SP-Willforce-Use", icon: "chemical-bolt" } );
                                     // Combat options: - Not shown - Attack to knockdown, Attack to Stun, Jump-up, setting against a charge, shatter shield.
                 smc.push ( { code: "aggressive", prompt: "Aggressive Attack", attrib: "combatOption-AggressiveAttack", icon: "sentry-gun" } );
@@ -3473,7 +3483,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                 }
                 if( kcdef === undefined)
                     kcdef = -1;
-                if( dpdef === undefined)
+                if( dpdef === undefined || state.Earthdawn.g1879)
                     dpdef = -1;
 
                 let ttmp,
@@ -3505,11 +3515,13 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 									if( !isNaN( kc2 ) )
 										kc = kc2;
 								}
-                                ttmp2 = getAttrByName( this.charID, ttmp.replace( /Karma-/g, "DP-") );
-								if( ttmp2 !== undefined && ttmp2 !== "") {
-									let dp2 = parseInt( ttmp2 );
-									if( !isNaN( dp2 ) )
-										dp = dp2;
+								if( state.Earthdawn.gED ) {
+									ttmp2 = getAttrByName( this.charID, ttmp.replace( /Karma-/g, "DP-") );
+									if( ttmp2 !== undefined && ttmp2 !== "") {
+										let dp2 = parseInt( ttmp2 );
+										if( !isNaN( dp2 ) )
+											dp = dp2;
+									}
 								}
 							} else if( ssa[ 0 ].toLowerCase().startsWith( "d" ))		// If we got a number, and ssa[0] starts with d, then it is DP, otherwise karma.
 								dp = parseInt( ttmp );
@@ -3522,7 +3534,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                             kdice += parseInt( getAttrByName( this.charID, "Karma-Roll" ) || 0);
                         if (dp > 0)
                             ddice += dp;
-                        else if ( dp === 0)
+                        else if ( dp === 0 && state.Earthdawn.gED)
                             ddice += parseInt( getAttrByName( this.charID, "Devotion-Roll" ) || 0);
                     }
 
@@ -3618,6 +3630,10 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                 } 
                 if( this.tokenAction ) {
                     this.chat( "Error! Linktoken must be a character sheet action, never a token action.", Earthdawn.whoFrom.apierror); 
+                    return;
+                } 
+                if( this.edClass.msg.selected === undefined ) {
+                    this.chat( "Error! You must have exactly one token selected to Link the character sheet to the Token.", Earthdawn.whoFrom.apierror); 
                     return;
                 } 
                 let Count = 0;
@@ -4365,11 +4381,9 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 					}   // end catch
 					break;
 				case "state":
-                    // Set which edition of Earthdawn rules campaign uses. Send this information to each individual character sheet so the sheetworkers know.
+                    // Set various state.Earthdawn values. 
                     // ssa is an array that holds the parameters.
-                    //      Edition : (edition)
-                    //      Style:  : Standard - 0, Full - 1, Vague - 2. 
-                    //      LogLevel: 0 = None. 1 bit Startup msg. 2 bit command line. 
+                    //      Earthdawn~ State~ (one of the options below)~ (parameters). 
 					try {
 						if( !playerIsGM( this.edClass.msg.playerid ) ) 
 							this.chat( "Error! Only GM can set state variables." );
@@ -4382,8 +4396,11 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 								this.chat( "Campaign now set so that CursedLuckSilent is " + state.Earthdawn.CursedLuckSilent, Earthdawn.whoFrom.api | Earthdawn.whoTo.gm | Earthdawn.whoFrom.noArchive);
 							}	break;
 							case "edition":
+								state.Earthdawn.g1879 = (ssa[ 3 ].slice( -4 ) === "1879");
+								state.Earthdawn.gED = !state.Earthdawn.g1879;
+								state.Earthdawn.game = state.Earthdawn.gED ? "ED" : "1879";
 								state.Earthdawn.edition = parseInt( ssa[ 3 ] );
-								this.chat( "Campaign now set to use Earthdawn Edition " + state.Earthdawn.edition + " rules."  );
+								this.chat( "Campaign now set to use " + state.Earthdawn.game + " Edition " + state.Earthdawn.edition + " rules."  );
 								var count = 0;
 
 								var chars = findObjs({ _type: "character" });
@@ -4441,8 +4458,9 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 								break;
 							}
 							if( logging )
-								this.chat( "Campaign now set to - logging Startup: " + state.Earthdawn.logStartup + " -   " + 
-																			 "Commandline: " + state.Earthdawn.logCommandline + "."  );
+								this.chat( "Campaign now set to " + state.Earthdawn.game 
+											+ " - logging Startup: " + state.Earthdawn.logStartup + " -   " 
+											+ "Commandline: " + state.Earthdawn.logCommandline + "."  );
 						}
 					} catch(err) {
 						log( "ED.funcMisc.State() error caught: " + err );
@@ -5899,7 +5917,9 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 										// but the current sheet IS blindsiding, need to figure out the targets blindsided value. 
 						if ((getAttrByName( cID, "condition-Blindsided") != "1" ) && (getAttrByName( po.charID, "condition-Blindsiding") == "1" )) {
 							val -= 2;
-							if ( !(flags & Earthdawn.flagsTarget.Natural) && (state.Earthdawn.edition == 4) && getAttrByName( cID, "condition-NoShield") != "1" )
+							if ( !(flags & Earthdawn.flagsTarget.Natural) 
+									&& (state.Earthdawn.g1879 || (state.Earthdawn.gED && state.Earthdawn.edition == 4)) 
+									&& getAttrByName( cID, "condition-NoShield") != "1" )
 								val -= parseInt( getAttrByName( cID, "Shield-" + what2) || 0) + parseInt( getAttrByName( cID, what + "-ShieldBuff") || 0)
 						}
 					}
@@ -6984,6 +7004,11 @@ on("ready", function() {
 
 				switch ( Earthdawn.getParam( cmd, 1, ",") ) {
 				case "SheetUpdate":
+					let game = Earthdawn.getParam( cmd, 4, ",");
+					state.Earthdawn.gED = !game || (game !== "1879" );
+					state.Earthdawn.g1879 = !state.Earthdawn.gED;
+					state.Earthdawn.game = state.Earthdawn.gED ? "ED" : "1879";
+
 					if( shouldUpdate( 0.301 ))
 						ED.updateVersion0p301( attr.get( "_characterid" ));
 					if( shouldUpdate( 0.303 ))
