@@ -107,6 +107,7 @@ var sr5api = sr5api || (function() {
         feedback += `<hr ${breaks} />`
         feedback += `<div ${centered}><a ${astyle} href="!sr5 --initCounter">Initiative Counter</a></div>`
         feedback += `<div ${centered}>Adds an entry to track initiative passes. When it returns to top of tracker it will subtract all entries by 10.</div>`
+        feedback += `<hr ${breaks} />`
         feedback += `<div ${centered}><a ${astyle} href="!sr5 --rollInit">Roll Initiative</a></div>`
         feedback += `<div ${centered}>Roll intiative for all selected tokens</div>`
         
