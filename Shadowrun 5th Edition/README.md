@@ -25,7 +25,7 @@ Roll initiative for all the selected tokens and add it to the token tracker.
 * Selected tokens must represent a character sheet.
 * Custom token markers named 'astral' & 'matrix' toggles
 
-### Token Markers
+### [Token Markers](https://github.com/clevett/roll20-api-scripts/blob/shadowrunv1/Shadowrun%205th%20Edition/README.md#token-markers-2)
 
 Upload a custom token marker named matrix and astral. Two are included in the GitHub for this script.
 
@@ -86,7 +86,7 @@ Setup a number of defaults on a token. Character sheets set to PC will link thei
 ![Represent Tokens](https://github.com/clevett/roll20-api-scripts/blob/shadowrunv1/Shadowrun%205th%20Edition/imgs/linkerrepcharacter.png?raw=true
 )
 
-### Token Markers
+### [Token Markers](https://github.com/clevett/roll20-api-scripts/blob/shadowrunv1/Shadowrun%205th%20Edition/README.md#token-markers-2)
 
 Upload a custom token marker named matrix. One is included in the GitHub for this script.
 
