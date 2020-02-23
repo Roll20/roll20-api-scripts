@@ -8,6 +8,8 @@ API helper to be used with the Shadowrun 5th Edition character sheet. To access 
 
 Roll initiative for all the selected tokens and add it to the token tracker.
 
+![Roll Group Initiative](https://github.com/clevett/roll20-api-scripts/blob/shadowrunv1/Shadowrun%205th%20Edition/imgs/groupinit.png?raw=true)
+
 ### Command
 
 !sr5 --rollInit
@@ -27,6 +29,7 @@ Roll initiative for all the selected tokens and add it to the token tracker.
 
 Upload a custom token marker named matrix and astral. Two are included in the GitHub for this script.
 
+![Token Markers](https://github.com/clevett/roll20-api-scripts/blob/shadowrunv1/Shadowrun%205th%20Edition/imgs/groupinitIcons.png?raw=true)
 
 ## Initiative Counter
 
@@ -80,6 +83,17 @@ Setup a number of defaults on a token. Character sheets set to PC will link thei
 * Select tokens, recommend doing < 10 at a time to avoid timing out API
 * Selected tokens must represent a character sheet.
 
+![Represent Tokens](https://github.com/clevett/roll20-api-scripts/blob/shadowrunv1/Shadowrun%205th%20Edition/imgs/linkerrepcharacter.png?raw=true
+)
+
 ### Token Markers
 
 Upload a custom token marker named matrix. One is included in the GitHub for this script.
+
+---
+
+## Token Markers
+
+Upload a custom token marker named matrix and astral. Two are included in the GitHub for this script.
+
+![Token Markers](https://raw.githubusercontent.com/clevett/roll20-api-scripts/shadowrunv1/Shadowrun%205th%20Edition/imgs/groupiniTokenMarkers.png)
