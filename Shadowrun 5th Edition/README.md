@@ -57,7 +57,7 @@ Adds a initiative turn to the Turn Order that will count up the Combat Rounds an
 
 ## Link Tokens
 
-Setup a number of defaults on a token. Character sheets set to PC will link their stun & physical. Others sheets will only input the values but not link the attributes to the character sheet.
+Sets a number of defaults on a token then sets the selected token as the default for the represented character sheet. Character sheets set to PC will link their stun & physical attributes. Others sheets will only input the values but not link the attributes to the character sheet.
 
 ### Command
 
@@ -83,8 +83,7 @@ Setup a number of defaults on a token. Character sheets set to PC will link thei
 * Select tokens, recommend doing < 10 at a time to avoid timing out API
 * Selected tokens must represent a character sheet.
 
-![Represent Tokens](https://github.com/clevett/roll20-api-scripts/blob/shadowrunv1/Shadowrun%205th%20Edition/imgs/linkerrepcharacter.png?raw=true
-)
+![Represent Tokens](https://github.com/clevett/roll20-api-scripts/blob/shadowrunv1/Shadowrun%205th%20Edition/imgs/linkerrepcharacter.png?raw=true)
 
 ### [Token Markers](https://github.com/clevett/roll20-api-scripts/blob/shadowrunv1/Shadowrun%205th%20Edition/README.md#token-markers-2)
 
