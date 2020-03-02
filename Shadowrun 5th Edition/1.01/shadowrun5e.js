@@ -74,7 +74,7 @@ var sr5api = sr5api || (function() {
     const breaks     = `style="border-color:${third}; margin: 5px 2px;"`;
     const circles    = `style='font-family:pictos;color: #fff;padding:2%;${buttons} width: 15px;'`
     const centered   = `style="text-align:center;"`;
-    const version    = '1';
+    const version    = '1.01';
     const header     = `<div ${divstyle}><div ${headstyle}>Shadowrun 5th Edition <span ${substyle}>(v.${version})</span></div><div ${arrowstyle}>`;
     const errorMessage = (name, error) => log(`${name}: ${error}`)
 
@@ -86,13 +86,25 @@ var sr5api = sr5api || (function() {
             const selected = msg.selected;
             switch(args[1]) {
                 case "linkToken":
-                    selected ? linkTokens(selected) : selected === undefined ? chatMessage(noTokensSelected) : apiMenu();
+                    if (args[2]) {
+                        args[2] === 'info' ? chatMessage(apiCommands.linkToken.info) : chatMessage(apiCommands.linkToken.help)
+                    } else {
+                        selected ? linkTokens(selected) : selected === undefined ? chatMessage(noTokensSelected) : apiMenu();
+                    }
                     break;
                 case "initCounter":
-                    addInitiativeCounter()
+                    if (args[2]) {
+                        args[2] === 'info' ? chatMessage(apiCommands.initCounter.info) : chatMessage(apiCommands.initCounter.help)
+                    } else {
+                        addInitiativeCounter()
+                    }
                     break;
                 case "rollInit":
-                    selected ? rollInitaitve(selected) : selected === undefined  ? chatMessage(noTokensSelected) : apiMenu();
+                    if (args[2]) {
+                        args[2] === 'info' ? chatMessage(apiCommands.rollInit.info) : chatMessage(apiCommands.rollInit.help)
+                    } else {
+                        selected ? rollInitaitve(selected) : selected === undefined  ? chatMessage(noTokensSelected) : apiMenu();
+                    }
                     break;
                 default:
                     apiMenu()
@@ -112,18 +124,23 @@ var sr5api = sr5api || (function() {
         chatMessage(feedback);
     },
 
+    readmeLink = '[Readme](https://github.com/Roll20/roll20-api-scripts/tree/master/Shadowrun%205th%20Edition)',
+    returnMenu = `<div ${centered}><a ${astyle} href="!sr5">Api Menu</a></div>`,
     apiCommands = {
         linkToken: {
             name: 'Link Tokens',
-            description: ''
+            info: `<div ${centered}>Link Tokens</div><div>Set a number of defaults on selected tokens then set the default token on the represented character sheets. For full details review the ${readmeLink}</div></div>${returnMenu}`,
+            help: `<div ${centered}>Link Tokens</div><div ${centered}>!sr5 --linkToken</div><ol><li>Set token to represent a character sheet in the token settings</li><li>Select a token or multiple tokens</li><li>Run the above command or push the menu button in chat.</li></ol><div>${readmeLink}</div>${returnMenu}`
         },
         initCounter: {
             name: 'Initiative Counter',
-            description: ''
+            info: `<div ${centered}>Initiative Counter</div><div>Adds a initiative turn to the Turn Order that will count up the Combat Rounds and Initiative Passes. Every time this custom entry gets to the top of a round it will reduce initiative by 10 and remove any entries that are less than 1. If it is the only entry in the Turn Order it will increase the round counter.</div><div>${readmeLink}</div>${returnMenu}`,
+            help: `<div ${centered}>Initiative Counter</div><div ${centered}>!sr5 --initCounter</div><ul><li>Add counter before rolling initiative.</li><li>Use arrow at the bottom of the turn tracker to cycle through turns.</li></ul><div>${readmeLink}</div>${returnMenu}`
         },
         rollInit: {
             name: 'Roll Initiative',
-            description: ''
+            info: `<div ${centered}>Roll Initiative</div><div>Roll initiative for all the selected tokens and add it to the token tracker.</div><div>${readmeLink}</div>${returnMenu}`,
+            help: `<div ${centered}>Roll Initiative</div><div ${centered}>!sr5 --rollInit</div><ol><li>Set tokens to represent a characters sheet</li><li>Select a token or multiple tokens.</li><li>Run the above command or push the menu button in chat.</li></ol><div>${readmeLink}</div>${returnMenu}`
         }
     },
 
