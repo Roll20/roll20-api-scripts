@@ -10,6 +10,7 @@
 * L'option --argent devient --armeDArgent. Cela permet d'utiliser --argent pour les armes en argent ordinaires.
 
 ### Autres améliorations
+* Ajout de l'effet temporarire affaibli (affaibliTemp)
 * Ajout d'un effet temporaire armesEnflammees pour enflammer toutes les armes portées par un personnage
 * Ajout d'une option pour multiplier les dm d'un autre type que le principal en cas de critique.
 * Rattrapage et message d'erreur en cas d'expression de dégâts mal formés.
@@ -22,6 +23,7 @@
 * Les montures de l'attaquant et de sa cible ne sont plus considérées comme des obstacles lors des attaques à distance.
 
 ### Corrections de bugs
+* En interne, modCarac accepte des id de personnage, ce qui fixe certains bugs avec des capacités de chevaliers.
 * Prise en compte correcte du niveau de voie du métal ou de la valeur de la capacité forgeron
 
 ## 1.11
