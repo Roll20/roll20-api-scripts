@@ -1222,6 +1222,7 @@ var COFantasy = COFantasy || function() {
   //Retourne le mod de la caractéristque entière.
   //si carac n'est pas une carac, retourne 0
   function modCarac(perso, carac) {
+    if (perso.charId === undefined) perso = {charId: perso};
     var res = Math.floor((ficheAttributeAsInt(perso, carac, 10) - 10) / 2);
     if (carac == 'FORCE' && attributeAsBool(perso, 'mutationMusclesHypertrophies')) res += 2;
     else if (carac == 'DEXTERITE' && attributeAsBool(perso, 'mutationSilhouetteFiliforme')) res += 4;
@@ -7142,6 +7143,8 @@ var COFantasy = COFantasy || function() {
                   setState(target, 'paralyse', true, evt);
                 } else if (ef.effet == 'etourdiTemp') {
                   setState(target, 'etourdi', true, evt);
+                } else if (ef.effet == 'affaibliTemp') {
+                  setState(target, 'affaibli', true, evt);
                 }
               } else { //On a un effet de combat
                 target.messages.push(target.tokName + " " + messageEffetCombat[ef.effet].activation);
@@ -7383,6 +7386,8 @@ var COFantasy = COFantasy || function() {
                           setState(target, 'paralyse', true, evt);
                         } else if (ef.effet == 'etourdiTemp') {
                           setState(target, 'etourdi', true, evt);
+                        } else if (ef.effet == 'affaibliTemp') {
+                          setState(target, 'affaibli', true, evt);
                         }
                         if (ef.valeur !== undefined) {
                           setTokenAttr(target, ef.effet + "Valeur", ef.valeur, evt, undefined, ef.valeurMax);
@@ -12704,6 +12709,9 @@ var COFantasy = COFantasy || function() {
             case 'etourdiTemp':
               setState(perso, 'etourdi', true, evt);
               break;
+            case 'affaibliTemp':
+              setState(perso, 'affaibli', true, evt);
+              break;
             default:
           }
           setTokenAttr(
@@ -12771,7 +12779,7 @@ var COFantasy = COFantasy || function() {
         iterSelected(selected, function(perso) {
           var attr = tokenAttribute(perso, effetC);
           if (attr.length === 0) {
-            log(perso.token.get('name') + "n'a pas d'attribut " + effetC);
+            log(perso.token.get('name') + " n'a pas d'attribut " + effetC);
             return;
           }
           finDEffet(attr[0], effetC, attr[0].get('name'), perso.charId, evt, opt);
@@ -19542,6 +19550,12 @@ var COFantasy = COFantasy || function() {
       fin: "n'est plus étourdi",
       prejudiciable: true
     },
+    affaibliTemp: {
+      activation: "se sent faible",
+      actif: "", //Déjà affiché avec l'état aveugle
+      fin: "se sent moins faible",
+      prejudiciable: true
+    },
     aveugleManoeuvre: {
       activation: "est aveuglé par la manoeuvre",
       actif: "a du mal à voir où sont ses adversaires",
@@ -20215,6 +20229,17 @@ var COFantasy = COFantasy || function() {
               token: token,
               charId: charId
             }, 'etourdi', false, evt);
+          }, {
+            tousLesTokens: true
+          });
+        break;
+      case 'affaibliTemp':
+        iterTokensOfAttribute(charId, options.pageId, effet, attrName,
+          function(token) {
+            setState({
+              token: token,
+              charId: charId
+            }, 'affaibli', false, evt);
           }, {
             tousLesTokens: true
           });
