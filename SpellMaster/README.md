@@ -147,6 +147,7 @@ SpellMaster was largely born out of a dissatisfaction with the performance of ex
     - 2.001: Enabled auto-rolling of rolled item charges.
     - 2.002: Damerau-Levenshtein distance suggestions for mistyped spells, item sorting
     - 2.003: Chat menu now allows dummy casting, fixed caching bug
+    - 2.004: Fixes artificer slot leveling.
 
 ## Future Work
 ### Usability
