@@ -89,6 +89,8 @@
         // Try rolling investigation to see if we can learn more details.
         return this.getSkillMod(character, skillName)
         .then(skillMod => {
+          skillMod = parseInt(skillMod);
+
           return Promise.all([
             CharSheetUtils.rollAsync(`1d20 + ${skillMod}`),
             10 + skillMod

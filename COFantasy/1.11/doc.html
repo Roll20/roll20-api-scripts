@@ -332,6 +332,7 @@
                   <li><code>--cone <i>angle</i></code> cible toutes les créatures dans un cône de sommet l'attaquant, d'angle <i>angle</i> degrés (90 degrés par défaut), et séparé en deux par le segment joignant l'attaquant et le token visé.</li>
                   <li><code>--target <i>id</i></code> : ajoute une cible à l'attaque (s'ajoute à la cible principale et aux options d'aoe).</li>
                   <li><code>--message <i>texte</i></code> : ajoute une ligne avec le message dans la fenêtre de l'attaque. Attention, <i>texte</i> ne doit pas contenir la séquence <code> --</code>.</li>
+                  <li><code>--secret</code> : affiche les jets et résultats de l'attaque seulement aux joueurs qui contrôlent l'attaquant ou ses cibles, ainsi qu'au MJ.</li>
                   <li><code>--allonge <i>n</i></code> : ajoute <i>n</i> mètres à la portée d'une attaque au contact. L'allonge peut être un nombre à virgule et même négative.</li>
                 </ul>
               </div>
@@ -852,14 +853,14 @@
                 <h4 class="text-secondary">Voie des élixirs</h4>
                 <p style="margin-top:0px; margin-bottom:0px">Pour créer ou juste voir ses élixirs, utiliser la commande <code>!cof-elixirs</code>. Pour cela, il faut aussi un attribut <code>voieDesElixirs</code> avec comme valeur le rang dans la voie. Noter que la commande <code>!cof-elixirs</code> affiche une liste d'élixirs, et que pour effectivement créer un élixir, il faut cliquer sur le bouton correspondant dans cette liste.</p>
                 <ol>
-                  <li><strong>Fortifiant</strong> : création à l'aide de <code>!cof-elixirs</code>, et utilisation avec la même commande, ou bien en utilisant <code>!cof-consommables</code>. un attribut <code>fortifiants</code> qui contient le nombre de fortifiants possédés. <code>!cof-fortifiant @{selected|token_id} @{target|token_id}</code></li>
-                  <li><strong>Feu grégeois</strong> : comme pour les fortifiants.</li>
-                  <li><strong>Élixir de guérison</strong> : comme pour les fortifiants.</li>
+                  <li><strong>Fortifiant</strong> : création à l'aide de <code>!cof-elixirs</code>, et utilisation avec la même commande, ou bien en utilisant <code>!cof-consommables</code>.</li>
+                  <li><strong>Feu grégeois</strong> : création à l'aide de <code>!cof-elixirs</code>, et utilisation avec la même commande, ou bien en utilisant <code>!cof-consommables</code>.</li>
+                  <li><strong>Élixir de guérison</strong> : création à l'aide de <code>!cof-elixirs</code>, et utilisation avec la même commande, ou bien en utilisant <code>!cof-consommables</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du métal</h4>
                 <ol>
                   <li><strong>Forgeron</strong> : Il faut un attribut <code>voieDuMetal</code> pour connaître le rang (ou utiliser l'option <code>--valeur</code>. Lancer le sort avec <code>!cof-effet-temp forgeron(<i>L</i>) [[5+@{selected|INT}]]</code> où <i>L</i> est le label d'une attaque. Ensuite, chaque fois que cette attaque sera utilisée, les dégâts seront ajoutés. Limitations : si deux attaques utilisent la même arme, il faut faire deux fois l'action, une pour chaque attaque. Si vous utilisez les options de tempête de mana, vous pouvez rajouter <code>--rang 1 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
-                  <li><strong>Métal brûlant</strong> : faire une attaque magique de portée 20 m. L'appeler avec les options <code>--pasDeDmg --sortilege --effet ?{Chauffer|une arme,armeBrulante|une armure,armureBrulante} [[5+@{selected|INT}]]</code>. Si vous utilisez les options de tempête de mana, rajoutez <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Métal brûlant</strong> : faire une attaque, de type magique et de portée 20 m. L'appeler (avec <code>!cof-attack</code>) avec les options <code>--pasDeDmg --sortilege --effet ?{Chauffer|une arme,armeBrulante|une armure,armureBrulante} [[5+@{selected|INT}]]</code>. Si vous utilisez les options de tempête de mana, rajoutez <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
                   <li><strong>Magnétisme</strong> : <code>!cof-effet-temp magnetisme [[3+@{selected|INT}]] --mana 1</code>. L'effet n'est actif que contre les attaques ayant l'option <code>--metal</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du golem</h4>
@@ -1126,7 +1127,7 @@
                 <h4 class="text-secondary">Voie de la prière</h4>
                 <ol>
                   <li><strong>Bénédiction</strong> : <code>!cof-effet-temp benediction [[3+@{selected|SAG}]] --allies --self</code>. Il faut avoir défini une <a href="#allie">équipe</a> avec le prêtre. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--lanceur @{selected|token_id} --rang 1 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
-                  <li><strong>Destruction des morts-vivants</strong> : <code>!cof-destruction-des-morts-vivants 2d6</code>. Au rang 4 dans la voie, ajuster les dégâts. Si vouus souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>.</li>
+                  <li><strong>Destruction des morts-vivants</strong> : <code>!cof-destruction-des-morts-vivants 2d6</code>. Au rang 4 dans la voie, ajuster les dégâts. Si vouus souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>. Noter que le script considère comme mort-vivant tout personnage avec le champ race à <code>squelette</code>, <code>zombie</code>, <code>momie</code>, <code>goule</code>,<code>vampire</code> ou <code>mort-vivant</code>, ou alors qui possède un attribut <code>mort-vivant</code> de valeur <code>true</code>.</li>
                   <li><strong>Sanctuaire</strong> : <code>!cof-effet-temp sanctuaire [[5+@{selected|SAG}]] --mana 1</code>. Si vous utilisez les options de magie Puissante, rajoutez <code>?{Y consacrer tout le tour ?|Oui,--puissant duree|Non,&amp;#32;}</code>. Si vous préférez utiliser l'option de tempête de mana, rajoutez <code>--rang 3 ?{Tempête de mana?|Oui,--tempeteDeMana altruiste|Non,&amp;#32;}</code>. Notez que le mot clé <code>altruiste</code> est facultatif, ici. À vous de choisir si vous l'autorisez ou pas.</li>
                 </ol>
                 <h4 class="text-secondary">Voie des soins</h4>
@@ -1380,7 +1381,7 @@
                 </ol>
                 <h4 class="text-secondary">Voie du colosse</h4>
                 <ol>
-                  <li><strong>Fauchage</strong> : ajouter la RD, et ajouter un attribut <code>fauchage</code>, qui va faire automatiquement le renversement si le dé d'attaque est entre 15 et 20.</li>
+                  <li><strong>Fauchage</strong> : ajouter la RD, et ajouter un attribut <code>fauchage</code> de valeur <code>true</code>, qui va faire automatiquement le renversement si le dé d'attaque est entre 15 et 20.</li>
                   <li><strong>Balayage</strong> : faire une version de l'attaque avec <code>--target @{target|Target2|token_id}</code></li>
                 </ol>
                 <h4 class="text-secondary">Voie des créatures élémentaires</h4>
@@ -1397,6 +1398,7 @@
                 <h4 class="text-secondary">Voie des créatures volantes</h4>
                 <ol>
                   <li><strong>Vol rapide</strong> : simplement faire une variante de l'attaque avec les options <code>--bonusAttaque 5 --plus 1d6</code> à utiliser le premier tour de combat si a créature est en vol et attaque une créature au sol. Ne pas oublier l'action de mouvement supplémentaire en vol.</li>
+                  <li><strong>Agripper</strong> : ajouter un attribut <code>agripper</code> de valeur <code>true</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de la magie de combat</h4>
                 <ol>
@@ -1406,6 +1408,7 @@
                 <h4 class="text-secondary">Voie de la magie de guérison</h4>
                 <ol>
                   <li><strong>Soigner</strong> : <code>!cof-soin @{selected|token_id} @{target|target1|token_id} [[ceil(@{target|target1|PV|max}/2)]] --limiteCibleParJour 1</code></li>
+                  <li><strong>Guérir</strong> : <code>!cof-guerir @{selected|token_id} @{target|token_id} --portee 0</code></li>
                 </ol>
                 <h4 class="text-secondary">Voie de la magie maléfique</h4>
                 <ol>
@@ -1415,6 +1418,7 @@
                       <li> Ajouter un attribut <code>siphonDesAmes</code>, de valeur de NC de la créature (ou <code>true</code> si le NC est 0).</li>
                     </ul>
                   </li>
+                  <li><strong>Animer un cadavre</strong> : <code>!cof-animer-cadavre @{selected|token_id} @{target|token_id}</code>. Au cas où vous auriez besoin d'enlever l'état de cadavre, il suffit d'enlever l'attribut nommé <code>cadavreAnime</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de la meute</h4>
                 <ol>
@@ -1426,7 +1430,7 @@
                 </ol>
                 <h4 class="text-secondary">Voie du prédateur</h4>
                 <ol>
-                  <li><strong>Embuscade</strong> : Sélectionner les ennemis du prédateurs, et utiliser <code>!cof-surprise</code>. Par exemple, contre une équipe de joueurs dans le <i>handout</i> <code>Equipe joueurs</code> (cf la <a href="#methode_selection_groupes">méthode de sélection de groupes</a>), on pourra utiliser l'ability <code>!cof-surprise [[15 + @{selected|DEX}]] --nonVivant @{selected|token_id} --equipe joueurs</code>. Pour les bonus en discrétion et init, reporter sur la fiche (et à un attribut <code>discrétion</code>), pour l'attaque en embuscade sur une cible surprise, rajouter à une attaque les options <code>--sournoise 1 --if moins FOR --etat renverse --endif</code>.</li>
+                  <li><strong>Embuscade</strong> : Sélectionner les ennemis du prédateurs, et utiliser <code>!cof-surprise</code>. Par exemple, contre une équipe de joueurs dans le <i>handout</i> <code>Equipe joueurs</code> (cf la <a href="#methode_selection_groupes">méthode de sélection de groupes</a>), on pourra utiliser l'ability <code>!cof-surprise [[15 + @{selected|DEX}]] @{selected|token_id} --equipe joueurs</code>. Pour les bonus en discrétion et init, reporter sur la fiche (et à un attribut <code>discrétion</code>), pour l'attaque en embuscade sur une cible surprise, rajouter à une attaque les options <code>--sournoise 1 --if moins FOR --etat renverse --endif</code>.</li>
                   <li><strong>Dévorer</strong> : ajouter les options d'attaque <code>--if deAttaque 15 --message @{selected|token_name} saisit sa proie entre ses crocs et peut faire une attaque gratuite --if moins FOR --etat renverse --etat immobilise FOR @{selected|token_id} --endif --endif</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du tueur</h4>

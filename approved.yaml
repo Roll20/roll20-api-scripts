@@ -601,3 +601,171 @@ handsup:
 gmaura:
   - "GMAura"
   - Utility
+
+savageworldsraiseroller:
+  - 'Savage Worlds Raise Roller'
+  - System Toolbox
+
+knightstylesmarkers:
+  - 'Knight Styles Markers'
+  - System Toolbox
+
+emas:
+  - 'Emas'
+  - System Toolbox
+
+pcpp:
+  - 'PCPP'
+  - 'Utility'
+
+cyberpunkv2:
+  - 'Cyberpunk 2k20 v2'
+  - System Toolbox
+
+fatedots:
+  - 'FateDots'
+  - System Toolbox
+
+recursivetable:
+  - 'RecursiveTable'
+  - 'Utility'
+
+initiativeassistant:
+  - 'InitiativeAssistant'
+  - 'Utility'
+
+talesfromtheloopdierolelr:
+  - 'Tales From the Loop Die Roller'
+  - System Toolbox
+
+flight:
+  - 'Flight'
+  - 'Utility'
+
+shadowofdemonlord:
+  - 'Shadow of the Demon Lord'
+  - System Toolbox
+
+myz:
+  - MutantYearZero
+  - System Toolbox
+
+doorknocker:
+  - 'Door Knocker'
+  - 'Utility'
+
+randomrotate:
+  - 'RandomRotate'
+  - 'Utility'
+
+dealer:
+  - 'Dealer'
+  - 'Utility'
+
+facing:
+  - 'Facing'
+  - 'Utility'
+
+wilddice:
+  - 'WildDice'
+  - 'Utility'
+
+aligmenttracker:
+  - 'AlignmentTracker'
+  - 'Utility'
+
+modifytokenimage:
+  - ModifyTokenImage
+  - 'Utility'
+
+apiheartbeat:
+  - 'APIHeartBeat'
+  - 'Utility'
+
+fliptoken:
+  - 'Flip Tokens'
+  - 'Utility'
+
+coloremote:
+  - 'ColorEmote'
+  - 'Utility'
+
+colorenote:
+  - 'ColorNote'
+  - 'Utility'
+
+sharevision:
+  - 'ShareVision'
+  - 'Utility'
+
+peekcard:
+  - 'PeekCard'
+  - 'Utility'
+
+markingconditions:
+  - 'Marking Conditions'
+  - System Toolbox
+
+imperialcalendar:
+  - 'ImperialCalendar'
+  - 'Utility'
+
+motd:
+  - "MotD"
+  - "Utility"
+
+mutantyearzero:
+  - "MutantYearZero"
+  - "System Toolbox"
+
+base64:
+  - "Base64"
+  - "Utility"
+
+dryerase:
+  - "DryErase"
+  - "Utility"
+
+maplock:
+  - "MapLock"
+  - "Tokens"
+
+measure:
+  - "Measure"
+  - "Utility"
+
+notelog:
+  - "NoteLog"
+  - "Utility"
+
+scaleonadd:
+  - "ScaleOnAdd"
+  - "Tokens"
+
+tableexport:
+  - "TableExport"
+  - "Utility"
+
+tokencondition:
+  - "TokenCondition"
+  - "Utility"
+
+libtokenmrkers:
+  - "libTokenMarkers"
+  - "Utility"
+
+abfroll:
+  - "ABFRoll"
+  - "System Toolbox"
+
+spellmastersrd:
+  - "SpellMaster-SRD"
+  - "System Toolbox"
+
+spellmaster:
+  - "SpellMaster"
+  - "System Toolbox"
+
+shadowrun5thedition:
+  - "Shadowrun 5th Edition"
+  - "System Toolbox"

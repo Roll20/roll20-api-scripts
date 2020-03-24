@@ -1,4 +1,7 @@
-# Custom Status Markers
+# Custom Status Markers (Deprecated)
+
+_Notice: This script is no longer updated or actively maintained._
+
 This script allows users to create custom status markers for tokens.
 When this script is installed, it creates a 'CustomStatusMarkers' macro for
 displaying the script's menu.
@@ -78,14 +81,7 @@ This command will clear the Custom Status Markers module's state.
 Warning: This will delete all your saved custom status markers!
 
 ## Help
-If you experience any issues while using this script or the trap themes,
-need help using it, or if you have a neat suggestion for a new feature,
-please shoot me a PM:
-https://app.roll20.net/users/46544/stephen-l
-or create a help thread on the Roll20 API forum
-
-## Show Support
-If you would like to show your appreciation and support for the work I do in writing,
-updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/publisher/165/stephen-lindberg)
-or, simply leave a thank you note in the script's thread on the Roll20 forums.
-Either is greatly appreciated! Happy gaming!
+Sorry, but I am no providing technical support for this script.
+Although this script is still functional, it is provided as-is and is no longer
+being updated or maintained, in favor of Roll20's built-in custom token markers
+(see https://app.roll20.net/forum/post/8033593/release-note-for-january-7-2020).

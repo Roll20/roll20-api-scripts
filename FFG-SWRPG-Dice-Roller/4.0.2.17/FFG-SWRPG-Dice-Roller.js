@@ -1,4 +1,4 @@
-﻿/*
+/*
 Version Info:
 Version 4.0.2.17
 */

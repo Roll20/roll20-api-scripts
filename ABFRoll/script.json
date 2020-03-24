@@ -1,0 +1,13 @@
+{
+    "name": "ABFRoll",
+    "script": "ABFRoll.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "This API works in addition to the Anima Beyond Fantasy sheet.\r\r## Commands\r\r```!ABFList```\r\rThis command displays the list of attack/defense rolls made from the sheet.\r\r```!ABFClean```\r\rThis command cleans up the list\r\r```!ABFAPI /w gm &{template:ABFBase} {{name=GM}} {{subname=^{attack}}} {{result=[[0d100cs>[[90]]cf<[[3+0+0-0]]+[[?{Score|0}]] ]]}}```\r\rThis command allows to enter, in the list, a fixed attack roll. If you replace {{subname=^{attack}} with {{subname=^{block}}, it will add it to the list as a fixed defensive roll.",
+    "authors": "Alain H.",
+    "roll20userid": "67962",
+    "useroptions": [],
+    "dependencies": [],
+    "conflicts": [],
+    "tipeee":"https://fr.tipeee.com/zakarik"
+}

@@ -1,0 +1,13 @@
+{
+    "name": "Knight Style Marker",
+    "script": "Knight Style Marker.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "Il s'agit du script pour accompagner la fiche de personnage de Knight, afin d'afficher des status sur les tokens, et de pr&#233;venir lorsqu'un personnage change de style de combat.\r\r**Commandes :**\r**!KSM AP** - Permet de faire en sorte que les marqueurs soient affich&#233;s sur les tokens du joueur changeant de style pr&#233;sent sur toutes les pages de la partie (par d&#233;faut)\r**!KSM NAP** - Permet de faire sorte que seul les marqueurs ne s'affiche que sur les tokens du joueur changeant de style pr&#233;sent sur la page o&#249; se trouvent les joueurs.",
+    "authors": "Alain H.",
+    "roll20userid": "67962",
+    "useroptions": [],
+    "dependencies": [],
+    "conflicts": [],
+    "tipeee":"https://fr.tipeee.com/zakarik"
+}

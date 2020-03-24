@@ -1,7 +1,7 @@
 {
   "name": "MapLock",
-  "version": "0.4.4",
-  "description": "Provides locking of graphics to prevent moving/resizing/rotating them.  Also highlighting.\r\rSee `!map-lock --help` from the console for help and configuration options.",
+  "version": "0.4.5",
+  "description": "MapLock provides a way to lock individual graphics in place. This prevents them from being moved, resized, or rotated by reverting any of those changes that are made to them. It also provides tinting of locked items.\r\r**Note:** Even though it's called MapLock, it works for any graphics on any layers.\r\r## Commands\r\r```\r!map-lock &lt; lock | unlock | toggle-highlight | --help &gt;\r```\r\rAdjusts locking options for selected graphics.\r\r* **lock** -- Adds these graphics to the list of locked items.\r* **unlock** -- Removes these graphics from the list of locked items.\r* **toggle-highlight** -- Turns on or off the red tinting of locked graphics.\r* **--help** -- Shows the help.",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -19,8 +19,5 @@
   "conflicts": [],
   "script": "MapLock.js",
   "useroptions": [],
-  "previousversions": [
-    "0.4.1",
-    "0.4.3"
-  ]
+  "previousversions": []
 }
