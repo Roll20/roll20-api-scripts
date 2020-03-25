@@ -2,6 +2,10 @@
 
 ## 2.0
 ### Capacités
+* Ajout de l'esquive acrobatique du barde
+* Ajout de l'ouverture mortelle du voleur
+* Ajout de l'immunité à la surprise du voleur
+* Changement des bonus d'interchangeable, qui rendaient les combats trop longs. Il y a une option pour revenir aux bonus d'origine.
 * Ajout de la capacité "Foudres divines" du prêtre
 * Ajout de la capacité "Furie berserk" du barbare
 * Ajout de la capacité "Même pas mal" du barbare
@@ -10,6 +14,9 @@
 * L'option --argent devient --armeDArgent. Cela permet d'utiliser --argent pour les armes en argent ordinaires.
 
 ### Autres améliorations
+* gestion du niveau d'ébriété.
+* ajout d'une option d'affichage pour ne pas montrer la DEF des adversaires.
+* Les messages de dégâts d'effets temporaires indiquent le numéro de mob quand la cible n'est pas un personnage unique.
 * Ajout de l'effet temporarire affaibli (affaibliTemp)
 * Ajout d'un effet temporaire armesEnflammees pour enflammer toutes les armes portées par un personnage
 * Ajout d'une option pour multiplier les dm d'un autre type que le principal en cas de critique.
