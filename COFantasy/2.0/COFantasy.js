@@ -21951,7 +21951,7 @@ on("ready", function() {
       });
     }
   } else {
-    if (state.COFamtasy.scriptSheets) {
+    if (state.COFantasy.scriptSheets) {
       findObjs({
         _type: 'character'
       }).forEach(function(c) {
