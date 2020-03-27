@@ -5,7 +5,7 @@
 const WildDice = (() => { // eslint-disable-line no-unused-vars
 
     const version = '0.3.4';
-    const lastUpdate = 1585352895;
+    const lastUpdate = 1585353091;
 
     const ch = (c) => {
         const entities = {
@@ -133,7 +133,7 @@ const WildDice = (() => { // eslint-disable-line no-unused-vars
                 }
                 let sum = _.reduce(rDice.concat(bonusDice),function(m,r){return m+r;},0) + wildDie + pips;
 
-                sendChat( who, ` ${w ? '/w gm ' : ''}${f.outer(f.diceblock(
+                sendChat( `player|${msg.playerid}`, ` ${w ? '/w gm ' : ''}${f.outer(f.diceblock(
                                 _.map(rDice,function(d){
                                         var c = 'white';
                                         if( markFirstMax && d === _.max(rDice) ) {
