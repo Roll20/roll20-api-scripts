@@ -1,6 +1,6 @@
 {
   "name": "WildDice",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Implements the Wild Dice rolling mechanic.",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -12,6 +12,7 @@
   "useroptions": [],
   "previousversions": [
     "0.3.1",
-    "0.3.2"
+    "0.3.2",
+    "0.3.3"
   ]
 }
