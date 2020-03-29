@@ -29,8 +29,8 @@ module.exports = function(grunt) {
         freeze: true,
         globals: {
           // Symbols defined by API scripts
-          CustomStatusMarkers: true,
           MarchingOrder: true,
+          VecMath: true,
 
           // Symbols defined by Roll20
           _: false,

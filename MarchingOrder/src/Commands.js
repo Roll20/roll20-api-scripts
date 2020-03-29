@@ -5,75 +5,111 @@
   'use strict';
 
   const MENU_CMD = '!showMarchingOrderMenu';
-  const FOLLOW_CMD = '!marchingOrderFollow';
+  const NEW_FORMATION_CMD = '!marchingOrderNewFormation';
   const STOP_ALL_CMD = '!marchingOrderStopAll';
-  const DEFAULT_USE_CMD = '!marchingOrderUseDefault';
-  const DEFAULT_SET_CMD = '!marchingOrderSetDefault';
+  const USE_FORMATION_CMD = '!marchingOrderUseFormation';
+  const DELETE_FORMATION_CMD = '!marchingOrderDeleteFormation';
+  const CLEAR_STATE_CMD = '!marchingOrderClearState';
 
   /**
-   * Extracts the selected graphics from a chat message.
-   * @param {ChatMessage} msg
-   * @return {Graphic[]}
+   * Process an API command to clear the script's state.
    */
-  function _getGraphicsFromMsg(msg) {
-    var result = [];
+  function _cmdClearState(msg) {
+    let player = getObj('player', msg.playerid);
+    if (playerIsGM(msg.playerid)) {
+      let argv = msg.content.split(' ');
+      if (argv.length < 2)
+        throw new Error("CLEAR_STATE_CMD takes 1 parameter: A confirmation " +
+          "for whether you want to delete the script's state.");
 
-    var selected = msg.selected;
-    if(selected) {
-      _.each(selected, s => {
-        let graphic = getObj('graphic', s._id);
-        if(graphic)
-          result.push(graphic);
-      });
+      let isSure = (argv[1] === 'yes');
+      if (isSure) {
+        MarchingOrder.State.clearState();
+        MarchingOrder.Wizard.showMainMenu(player);
+      }
     }
-    return result;
+    else
+      MarchingOrder.utils.Chat.tattle(player, 'Clear State');
+  }
+
+  /**
+   * Delete a saved marching formation.
+   */
+  function _cmdDeleteFormation(msg) {
+    let player = getObj('player', msg.playerid);
+    if (playerIsGM(msg.playerid)) {
+      let argv = msg.content.split(' ');
+      if (argv.length < 2)
+        throw new Error("DELETE_FORMATION_CMD takes 2 parameters: The name " +
+          "for the formation and a confirmation for whether you want to " +
+          "delete the formation.");
+      let formationName = argv.slice(1, -1).join(' ');
+
+      let isSure = (_.last(argv) === 'yes');
+      if (isSure) {
+        MarchingOrder.deleteFormation(formationName);
+        MarchingOrder.Wizard.showMainMenu(player);
+      }
+    }
+    else
+      MarchingOrder.utils.Chat.tattle(player, 'Delete Saved Formation');
   }
 
   /**
    * Process an API command to have tokens follow each other.
    */
-  function _cmdFollow(msg) {
-    let argv = msg.content.split(' ');
-    let dirMatch = argv[1].match(/(north|south|east|west)/);
-    if(dirMatch) {
-      let selected = _getGraphicsFromMsg(msg);
-      MarchingOrder.followAllDirection(selected, dirMatch[0]);
-    }
-    else {
-      let follower = getObj('graphic', argv[1]);
-      let leader = getObj('graphic', argv[2]);
-      if(follower && leader)
-        MarchingOrder.followAllToken(follower, leader);
-      else
-        throw new Error(`Invalid arguments given for FOLLOW_CMD: ${argv.slice(1)}`);
-    }
-  }
+  function _cmdNewFormation(msg) {
+    let player = getObj('player', msg.playerid);
+    if (playerIsGM(msg.playerid)) {
+      let argv = msg.content.split(' ');
+      if (argv.length < 3)
+        throw new Error("NEW_FORMATION_CMD takes 2 parameters: A cardinal direction and a name for the formation.");
 
-  /**
-   * Process an API command to set the default marching order.
-   */
-  function _cmdSetDefaultMarchingOrder(msg) {
-    let argv = msg.content.split(' ');
-    let leader = getObj('graphic', argv[1]);
-    if (leader) {
-      MarchingOrder.Config.setDefaultMarchingOrder(leader);
-      menu(msg);
+      let followers = MarchingOrder.utils.Chat.getGraphicsFromMsg(msg);
+      let leader = _.find(followers, token => {
+        return token.get('status_black-flag') || token.get('status_flying-flag');
+      });
+      if (!leader)
+        throw new Error(`No leader has been selected. The leader token must ` +
+          `have the black-flag or flying-flag status icon set.`);
+      leader.set('status_black-flag', false);
+      leader.set('status_flying-flag', false);
+
+      let direction = argv[1];
+      let name = argv.slice(2).join(' ');
+      MarchingOrder.newFormation(name, leader, followers, direction);
+      MarchingOrder.Wizard.showMainMenu(player);
     }
     else
-      throw new Error(`Leader token not found for DEFAULT_SET_CMD: ${argv.slice(1)}`);
-  }
-
-  function _cmdUnfollowAll(msg) {
-    _.noop(msg);
-    MarchingOrder.unfollowAll();
+      MarchingOrder.utils.tattle(player, 'Delete Saved Formation');
   }
 
   /**
-   * Process an aPI command to use the default marching order.
+   * Process an API command to use a saved formation.
    */
-  function _cmdUseDefaultMarchingOrder(msg) {
-    _.noop(msg);
-    MarchingOrder.useDefaultMarchingOrder();
+  function _cmdUseFormation(msg) {
+    let player = getObj('player', msg.playerid);
+    if (playerIsGM(msg.playerid)) {
+      let argv = msg.content.split(' ');
+      if (argv.length < 2)
+        throw new Error("NEW_FORMATION_CMD takes 1 parameter: The name for the formation.");
+
+      let name = argv.slice(1).join(' ');
+      MarchingOrder.useFormation(name);
+    }
+    else
+      MarchingOrder.utils.Chat.tattle(player, 'Use Saved Formation');
+  }
+
+  /**
+   * Stops all marching orders currently in use.
+   */
+  function _cmdStopAll(msg) {
+    let player = getObj('player', msg.playerid);
+    if (playerIsGM(msg.playerid))
+      MarchingOrder.unfollowAll();
+    else
+      MarchingOrder.utils.Chat.tattle(player, 'Stop All Formations');
   }
 
   /**
@@ -81,7 +117,7 @@
    */
   function menu(msg) {
     let player = getObj('player', msg.playerid);
-    MarchingOrder.Wizard.show(player);
+    MarchingOrder.Wizard.showMainMenu(player);
   }
 
   // Event handler for the script's API chat commands.
@@ -90,14 +126,16 @@
     try {
       if(argv[0] === MENU_CMD)
         menu(msg);
-      else if (argv[0] === DEFAULT_SET_CMD)
-        _cmdSetDefaultMarchingOrder(msg);
-      else if (argv[0] === DEFAULT_USE_CMD)
-        _cmdUseDefaultMarchingOrder(msg);
-      else if (argv[0] === FOLLOW_CMD)
-        _cmdFollow(msg);
+      else if (argv[0] === NEW_FORMATION_CMD)
+        _cmdNewFormation(msg);
       else if (argv[0] === STOP_ALL_CMD)
-        _cmdUnfollowAll(msg);
+        _cmdStopAll(msg);
+      else if (argv[0] === USE_FORMATION_CMD)
+        _cmdUseFormation(msg);
+      else if (argv[0] === DELETE_FORMATION_CMD)
+        _cmdDeleteFormation(msg);
+      else if (argv[0] === CLEAR_STATE_CMD)
+        _cmdClearState(msg);
     }
     catch(err) {
       MarchingOrder.utils.Chat.error(err);
@@ -108,10 +146,11 @@
    * Expose the command constants for use in other modules.
    */
   MarchingOrder.Commands = {
-    DEFAULT_SET_CMD,
-    DEFAULT_USE_CMD,
-    FOLLOW_CMD,
+    CLEAR_STATE_CMD,
+    DELETE_FORMATION_CMD,
     MENU_CMD,
-    STOP_ALL_CMD
+    NEW_FORMATION_CMD,
+    STOP_ALL_CMD,
+    USE_FORMATION_CMD
   };
 })();
