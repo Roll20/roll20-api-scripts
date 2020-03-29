@@ -406,10 +406,17 @@ var MarchingOrder = (() => {
     // Load the leader's followers.
     _initLeader(leader);
     _.each(formation.followers, follower => {
-      let token = _findPersistedToken(follower.id);
-      _setFormationOnToken(leader, token, follower.data);
+      try {
+        let token = _findPersistedToken(follower.id);
+        _setFormationOnToken(leader, token, follower.data);
+      }
+      catch (err) {
+        // Warn the GM, but skip the token if it isn't available.
+        MarchingOrder.utils.Chat.error(err);
+      }
     });
-    MarchingOrder.utils.Chat.broadcast(`Using formation "${name}"!`);
+    MarchingOrder.utils.Chat.broadcast(`Using formation "${name}", ` +
+      `with ${formation.leaderID} as the leader!`);
   }
 
   // When the API is loaded, install the Custom Status Marker menu macro
