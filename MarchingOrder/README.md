@@ -51,7 +51,7 @@ applied to the relevant tokens on the page that currently has the
 players ribbon.
 
 Be advised of the following gotchas:
-* All of the tokens in the formation must be on the current page.
+* All of the tokens in the formation must be on the current page. If a token is missing, the script will yell at you for it, but the rest of the tokens will be allowed to move in formation.
 * There can't be duplicates of any tokens in the formation on the current page.
 
 #### Saved Formations -> Delete

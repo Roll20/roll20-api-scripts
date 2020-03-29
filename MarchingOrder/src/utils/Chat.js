@@ -70,6 +70,16 @@
     }
 
     /**
+     * Notify GMs about a warning.
+     * @param {Error} err
+     */
+    static warn(err) {
+      log(`MarchingOrder WARNING: ${err.message}`);
+      MarchingOrder.utils.Chat.whisperGM(
+        `WARNING: ${err.message}`);
+    }
+
+    /**
      * Whispers a message to someoen.
      * @param {Player} player The player who will receive the whisper.
      * @param {string} msg The whispered message.

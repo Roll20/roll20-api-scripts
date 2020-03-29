@@ -412,7 +412,7 @@ var MarchingOrder = (() => {
       }
       catch (err) {
         // Warn the GM, but skip the token if it isn't available.
-        MarchingOrder.utils.Chat.error(err);
+        MarchingOrder.utils.Chat.warn(err);
       }
     });
     MarchingOrder.utils.Chat.broadcast(`Using formation "${name}", ` +
