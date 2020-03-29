@@ -14,7 +14,7 @@ moves. This formation is maintained even when the leader travels around corners.
 ## Chat Menu
 
 When the script is installed, it will create a macro called
-"MarchingOrderMenu". This macro will display a menu in the chat that provides
+'MarchingOrderMenu'. This macro will display a menu in the chat that provides
 the user interface for the script.
 
 ### New formation
@@ -31,6 +31,7 @@ be applied to the selected tokens and it will also be saved for future use
 
 Be advised of the following gotchas:
 * You must have one of the selected tokens have either the 'black-flag' or 'flying flag' status marker. This is used to designate the leader of the formation.
+* Each new formation must have a unique name.
 
 ### Stop Following
 
@@ -85,7 +86,7 @@ any further technical support on versions prior to 3.0.
 
 ## Help
 
-My scripts are provided "as-is", without warranty of any kind, expressed or implied.
+My scripts are provided 'as-is', without warranty of any kind, expressed or implied.
 
 That said, if you experience any issues while using this script,
 need help using it, or if you have a neat suggestion for a new feature,
