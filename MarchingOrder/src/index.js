@@ -222,8 +222,7 @@ var MarchingOrder = (() => {
 
 
         let xy = getFollowerOffset(lastSeg, relDist, follower.data.dv);
-        follower.token.set('left', xy[0]);
-        follower.token.set('top', xy[1]);
+        _setNewFollowerPosition(leader, follower.token, xy);
       }
 
       // Otherwise, find the segment upon which the projected distance would
@@ -239,8 +238,7 @@ var MarchingOrder = (() => {
 
           if (currDist < uLen) {
             let xy = getFollowerOffset(segment, currDist, follower.data.dv);
-            follower.token.set('left', xy[0]);
-            follower.token.set('top', xy[1]);
+            _setNewFollowerPosition(leader, follower.token, xy);
             return true;
           }
           else
@@ -248,6 +246,34 @@ var MarchingOrder = (() => {
         });
       }
     });
+  }
+
+  /**
+   * Sets the new position for a token in a formation while also doing
+   * token collision with dynamic lighting walls.
+   * @param {Graphic} leader
+   * @param {Graphic} token
+   * @param {vec3} newXY
+   */
+  function _setNewFollowerPosition(leader, token, newXY) {
+    // Set the new position based on the formation movement.
+    token.set('left', newXY[0]);
+    token.set('top', newXY[1]);
+
+    // Check for collisions with dynamic lighting and update the position if
+    // necessary.
+    token.set('lastmove', leader.get('lastmove'));
+    let walls = findObjs({
+      _type: 'path',
+      _pageid: Campaign().get("playerpageid"),
+      layer: 'walls'
+    });
+    let collision =
+      TokenCollisions.getCollisions(token, walls, { detailed: true })[0];
+    if (collision) {
+      token.set('left', collision.pt[0]);
+      token.set('top', collision.pt[1]);
+    }
   }
 
   /**
@@ -427,6 +453,10 @@ var MarchingOrder = (() => {
         throw new Error("The new version of the Marching Order script " +
           "requires the Vector Math script. Go install it, or be plagued " +
           "with errors!");
+      if (!TokenCollisions)
+        throw new Error("The new version of the Marching Order script " +
+          "requires the Token Collisions script. Go install it, " +
+          "or be plagued with errors!");
 
       let moState = MarchingOrder.State.getState();
       if (!moState.version)
@@ -439,7 +469,7 @@ var MarchingOrder = (() => {
       log('--- Initialized Marching Order vSCRIPT_VERSION ---');
     }
     catch (err) {
-      MarchingOrder.util.Chat.error(err);
+      MarchingOrder.utils.Chat.error(err);
     }
   });
 

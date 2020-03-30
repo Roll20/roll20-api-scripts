@@ -30,6 +30,7 @@ module.exports = function(grunt) {
         globals: {
           // Symbols defined by API scripts
           MarchingOrder: true,
+          TokenCollisions: true,
           VecMath: true,
 
           // Symbols defined by Roll20
@@ -64,7 +65,7 @@ module.exports = function(grunt) {
       options: {
         replacements: [
           {
-            pattern: 'SCRIPT_VERSION',
+            pattern: /SCRIPT_VERSION/g,
             replacement: '<%= pkg.version %>'
           },
 

@@ -8,7 +8,8 @@
     "roll20userid": 46544,
     "useroptions": [],
     "dependencies": [
-      "Vector Math"
+      "Vector Math",
+      "Token Collisions"
     ],
     "modifies": {
         "left": "read, write",
