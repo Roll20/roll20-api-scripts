@@ -32,7 +32,7 @@
 //     After downloading the image to your own Roll20 library, make sure the Character and Token to be copied uses that image. 
 // 2 - It takes a while to make copies, and if it takes too long, the API processor might think that the script is in an Infinite Loop and 
 //     cancel with an error message on the API scripts page. If nothing happens for a long period of time (more than 30 seconds) after a command 
-//	   to the script go to API scripts page of the campaign, and if there is an error message there, restart the API sandbox. 
+//	   to the script, go to API scripts page of the campaign, and if there is an error message there, restart the API sandbox. 
 //     You can then attempt the process again by breaking it down into smaller batches. If the campaign is small and the characters do not have 
 //     excessive amounts of attributes and abilities, this script should be able to make over 40 copies in one go. But I am told that 
 //     for larger campaigns with lots of characters, and if those characters have lots of attributes and abilities, this number can be lower. 
@@ -49,6 +49,7 @@
 // Version 01.00  Dec 2018  Chris D.   Original release. 
 // Version  1.01  Nov 2019  Chris D.   After all characters have been created, do loops to read attributes and abilities once and create for each new character.
 // Version  1.02  Jan 2020  Chris D.   Fixed bug where script would crash API if clean was run with no tokens selected. 
+// Version  1.03  Mar 2020  Chris D.   Tokens dragged from the journal would not be correctly linked. Moved setDefaultTokenForCharacter to occur after attributes are copied.
 //
 //
 // Commands:
@@ -198,9 +199,6 @@ on('ready',()=>{
 								let newCObj = createObj('character', newC);
 								let newTObj = createObj('graphic', newT);
 								newTObj.set('represents', newCObj.id);
-
-								setDefaultTokenForCharacter( newCObj, newTObj);
-								toFront( newTObj );
 								charArray.push( newCObj );
 								tokenArray.push( newTObj );
 							}		// End For each character to create.
@@ -228,16 +226,20 @@ on('ready',()=>{
 								};
 							});
 
+							for( let i = 0; i < charArray.length; ++i ) {
+								setDefaultTokenForCharacter( charArray[ i ], tokenArray[ i ]);
+								toFront( tokenArray[ i ] );
+							}
 							charObj.get("bio", function(bio) {
-								charObj.get("gmnotes", function(gmnotes) {
-									_.each( charArray, c => { 
-										if( !_.isNull( bio ) && !_.isUndefined( bio) && bio != "null" && bio != "undefined" && !(typeof bio === 'string' && bio.trim() == "") )
-											c.set( 'bio', bio ); 
-										if( !_.isNull( gmnotes ) && !_.isUndefined( gmnotes) && gmnotes != "null" && gmnotes != "undefined" && !(typeof gmnotes === 'string' && gmnotes.trim() == "") )
-											c.set( 'gmnotes', gmnotes ); 
-									});
-								});
-							});
+								_.each( charArray, c => { 
+									if( !_.isNull( bio ) && !_.isUndefined( bio) && bio != "null" && bio != "undefined" && !(typeof bio === 'string' && bio.trim() !== "") )
+										c.set( 'bio', bio ); 
+							});	});
+							charObj.get("gmnotes", function(gmnotes) {
+								_.each( charArray, c => { 
+									if( !_.isNull( gmnotes ) && !_.isUndefined( gmnotes) && gmnotes != "null" && gmnotes != "undefined" && !(typeof gmnotes === 'string' && gmnotes.trim() !== "") )
+										c.set( 'gmnotes', gmnotes ); 
+							});	});
 							sChat( "Duplicated: " + charObj.get( "name" ) + " " + num + " times." );
 						}
 					}		// End tokenObj is OK.
