@@ -60,10 +60,15 @@ var MarchingOrder = (() => {
       let tokens = findObjs({
         _pageid: Campaign().get("playerpageid"),
         _type: "graphic",
+        layer: 'objects',
         represents: character.get('_id')
       });
       if (tokens.length === 1)
         return tokens[0];
+      else if (tokens.length > 1)
+        throw new Error(`Could not find unique token representing the ` +
+          `character with name ${id}. Please make sure there aren't any ` +
+          `duplicates on the map.`);
     }
 
     // Next, try to get the token by its name.
@@ -71,15 +76,41 @@ var MarchingOrder = (() => {
       let tokens = findObjs({
         _pageid: Campaign().get("playerpageid"),
         _type: "graphic",
+        layer: 'objects',
         name: id
       });
       if (tokens.length === 1)
         return tokens[0];
       else if (tokens.length > 1)
-        throw new Error(`Could not find unique token with ID ${id}. ` +
+        throw new Error(`Could not find unique token with name ${id}. ` +
           `Please make sure there aren't any duplicates on the map.`);
     }
-    throw new Error(`Token with ID ${id} does not exist.`);
+    throw new Error(`Token with name ${id} does not exist.`);
+  }
+
+  /**
+   * Make a token follow directly behind another outside of a regular formation.
+   * This can also be used to chain tokens together in a single-file
+   * following order.
+   * @param {Graphic} leader
+   * @param {Graphic} token
+   * @param {int} distance
+   */
+  function follow(leader, token, distance) {
+    // Fail if the leader already has followers.
+    if (leader.followers && leader.followers.length > 0)
+      throw new Error(`Cannot follow ${leader.get('name')}. They already have followers.`);
+
+    // Have the follower stop following anyone they were previously following.
+    unfollow(token);
+
+    // Make the token follow directly behind its leader.
+    _initFollowLeader(leader);
+
+    let du = (leader.get('width') + token.get('width'))/2 + distance;
+    _setFormationOnToken(leader, token, {du, dv: 0});
+    MarchingOrder.utils.Chat.broadcast(
+      `${token.get('name')} is following ${leader.get('name')}.`);
   }
 
   /**
@@ -179,13 +210,23 @@ var MarchingOrder = (() => {
    * Initializes a leader token for a marching formation.
    * @param {Graphic} leader
    */
-  function _initLeader(leader) {
+  function _initFormationLeader(leader) {
     // Have all the tokens involved leave any formation they were previously in.
     unfollow(leader);
     _.each(leader.followers, follower => {
       unfollow(follower.token);
     });
 
+    // Reset the leader's marching properties.
+    leader.followers = [];
+    leader.moveSegments = [];
+  }
+
+  /**
+   * Initializes a leader token for a following order.
+   * @param {Graphic} leader
+   */
+  function _initFollowLeader(leader) {
     // Reset the leader's marching properties.
     leader.followers = [];
     leader.moveSegments = [];
@@ -212,6 +253,11 @@ var MarchingOrder = (() => {
 
     // Have each follower follow in formation with the leader.
     _.each(leader.followers, follower => {
+      let oldXY = [
+        follower.token.get('left'),
+        follower.token.get('top')
+      ];
+
       // If the projected distance is farther than the total tracked movement
       // distance, then just march the follower relative to the last segment.
       if (follower.data.du >= totalMoveDist) {
@@ -219,7 +265,6 @@ var MarchingOrder = (() => {
         let lastDist = VecMath.dist(lastSeg[0], lastSeg[1]);
 
         let relDist = (follower.data.du - totalMoveDist) + lastDist;
-
 
         let xy = getFollowerOffset(lastSeg, relDist, follower.data.dv);
         _setNewFollowerPosition(leader, follower.token, xy);
@@ -244,6 +289,12 @@ var MarchingOrder = (() => {
           else
             currDist -= uLen;
         });
+      }
+
+      // If the follower has followers, move them too.
+      if (follower.token.followers) {
+        follower.token.set('lastmove', `${oldXY[0]},${oldXY[1]}`);
+        moveInFormation(follower.token);
       }
     });
   }
@@ -302,7 +353,7 @@ var MarchingOrder = (() => {
     });
 
     // Set up the formation data for the leader and its followers.
-    _initLeader(leader);
+    _initFormationLeader(leader);
     _.each(followers, token => {
       // Get the vector from the leader to the follower.
       let tokenXY = _getTokenPt(token);
@@ -321,10 +372,15 @@ var MarchingOrder = (() => {
       _setFormationOnToken(leader, token, {du, dv});
     });
 
-    // Save the formation for future use.
-    saveFormation(name, leader);
-    MarchingOrder.utils.Chat.broadcast(`Defined new marching formation ` +
-      `${name} with ${leader.get('name')} as the leader.`);
+    // Save the formation for future use if a name was provided.
+    if (name) {
+      saveFormation(name, leader);
+      MarchingOrder.utils.Chat.broadcast(`Defined new marching formation ` +
+        `${name} with ${leader.get('name')} as the leader.`);
+    }
+    else
+      MarchingOrder.utils.Chat.broadcast(`Created ad-hoc marching formation ` +
+        `with ${leader.get('name')} as the leader.`);
   }
 
   /**
@@ -380,6 +436,9 @@ var MarchingOrder = (() => {
    * for token.
    */
   function _setFormationOnToken(leader, token, data) {
+    if (token.leader)
+      unfollow(token);
+
     token.leader = leader;
     leader.followers.push({token, data});
   }
@@ -390,6 +449,7 @@ var MarchingOrder = (() => {
    * @param {Graphic} token The token that is leaving its marching formation.
    */
   function unfollow(token) {
+    // Unfollow the token from any formation it's part of.
     let leader = token.leader;
     if (leader && leader.followers) {
       // Remove the token from its leader's list of followers.
@@ -430,7 +490,7 @@ var MarchingOrder = (() => {
     let leader = _findPersistedToken(formation.leaderID);
 
     // Load the leader's followers.
-    _initLeader(leader);
+    _initFormationLeader(leader);
     _.each(formation.followers, follower => {
       try {
         let token = _findPersistedToken(follower.id);
@@ -481,14 +541,14 @@ var MarchingOrder = (() => {
     try {
       let token = getObj('graphic', obj.get('_id'));
 
+      // If the token was following in some formation, leave the
+      // formation.
+      if (token.leader)
+        unfollow(token);
+
       // If the token has followers, have them move in formation behind it.
       if (token.followers)
         moveInFormation(token);
-
-      // Otherwise, if the token was following in some formation, leave the
-      // formation.
-      else if (token.leader)
-        unfollow(token);
     }
     catch(err) {
       MarchingOrder.utils.Chat.error(err);
@@ -497,6 +557,7 @@ var MarchingOrder = (() => {
 
   return {
     deleteFormation,
+    follow,
     getFollowerOffset,
     moveInFormation,
     newFormation,
