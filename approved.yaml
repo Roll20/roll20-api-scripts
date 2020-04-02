@@ -690,6 +690,10 @@ coloremote:
   - 'ColorEmote'
   - 'Utility'
 
+colorenote:
+  - 'ColorNote'
+  - 'Utility'
+
 sharevision:
   - 'ShareVision'
   - 'Utility'
@@ -754,6 +758,18 @@ abfroll:
   - "ABFRoll"
   - "System Toolbox"
 
+spellmastersrd:
+  - "SpellMaster-SRD"
+  - "System Toolbox"
 
+spellmaster:
+  - "SpellMaster"
+  - "System Toolbox"
 
-  
+shadowrun5thedition:
+  - "Shadowrun 5th Edition"
+  - "System Toolbox"
+
+combatmaster:
+  - "CombatMaster"
+  - "Utility"

@@ -1,5 +1,38 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 
+## 2.0
+### Capacités
+* Ajout de l'esquive acrobatique du barde
+* Ajout de l'ouverture mortelle du voleur
+* Ajout de l'immunité à la surprise du voleur
+* Changement des bonus d'interchangeable, qui rendaient les combats trop longs. Il y a une option pour revenir aux bonus d'origine.
+* Ajout de la capacité "Foudres divines" du prêtre
+* Ajout de la capacité "Furie berserk" du barbare
+* Ajout de la capacité "Même pas mal" du barbare
+* Ajout de la vulnérabilité aux critiques (pour les seigneurs de l'hiver)
+* La capacité tir fatal peut maintenant être appliquée à d'autres catégories d'armes que l'arc.
+* L'option --argent devient --armeDArgent. Cela permet d'utiliser --argent pour les armes en argent ordinaires.
+
+### Autres améliorations
+* gestion du niveau d'ébriété.
+* ajout d'une option d'affichage pour ne pas montrer la DEF des adversaires.
+* Les messages de dégâts d'effets temporaires indiquent le numéro de mob quand la cible n'est pas un personnage unique.
+* Ajout de l'effet temporarire affaibli (affaibliTemp)
+* Ajout d'un effet temporaire armesEnflammees pour enflammer toutes les armes portées par un personnage
+* Ajout d'une option pour multiplier les dm d'un autre type que le principal en cas de critique.
+* Rattrapage et message d'erreur en cas d'expression de dégâts mal formés.
+* Mise à jour automatique des macros de jeu (par défaut)
+* Gestion des directions d'escaliers
+* La fiche peut désormais changer d'affichage si le script est utilisé dans la partie.
+* Ajout d'une liste d'actions par défaut (si #Actions# n'est pas définie), et qui consiste en toutes les abilities du personnage.
+* Possibilité de commenter une ligne de #Actions#, en la faisant commencer par //.
+* Nouveau type de dégât, --argent.
+* Les montures de l'attaquant et de sa cible ne sont plus considérées comme des obstacles lors des attaques à distance.
+
+### Corrections de bugs
+* En interne, modCarac accepte des id de personnage, ce qui fixe certains bugs avec des capacités de chevaliers.
+* Prise en compte correcte du niveau de voie du métal ou de la valeur de la capacité forgeron
+
 ## 1.11
 ### Capacités
 * Ajout d'une option pour que les créations d'élixirs soient considérées comme des sorts (avec éventuellement un coût en mana)

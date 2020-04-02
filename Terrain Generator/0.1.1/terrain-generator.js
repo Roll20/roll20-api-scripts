@@ -112,7 +112,8 @@ var TerrainGenerator = TerrainGenerator || (function () {
             return generateObjects(pageName, tableName, itemNames, size, size, sparsity, variance, randomRotation)
         };
 
-        let handleInput = function (msg) {
+        let handleInput = function (msg_orig) {
+            let msg = _.clone(msg_orig);
             
             // Process inline rolls from https://wiki.roll20.net/API:Cookbook#processInlinerolls
             if (_.has(msg, 'inlinerolls')) {
@@ -135,7 +136,7 @@ var TerrainGenerator = TerrainGenerator || (function () {
                 sendChat('TerrainGenerator', getWhisperTarget(msg.playerid) + 'Only GM can use this script');
             }
             else if (msg.content.startsWith('!TGGeneral')) {
-                let args = msg.content.split(' ');
+                let args = msg.content.split(/\s+/);
                 if (args.length !== 9) {
                     log('TerrainGenerator: Wrong number of arguments for !TGGeneral');
                     sendChat('TerrainGenerator', getWhisperTarget(msg.playerid) + 'Wrong number of arguments for !TGGeneral');
@@ -158,7 +159,7 @@ var TerrainGenerator = TerrainGenerator || (function () {
                 }
             }
             else if (msg.content.startsWith('!TGFillBG')) {
-                let args = msg.content.split(' ');
+                let args = msg.content.split(/\s+/);
                 if (args.length !== 5) {
                     log('TerrainGenerator: Wrong number of arguments for !TGFillBG');
                     sendChat('TerrainGenerator', getWhisperTarget(msg.playerid) + 'Wrong number of arguments for !TGFillBG');
@@ -177,7 +178,7 @@ var TerrainGenerator = TerrainGenerator || (function () {
                 }
             }
             else if (msg.content.startsWith('!TGSpawnTrees')) {
-                let args = msg.content.split(' ');
+                let args = msg.content.split(/\s+/);
                 if (args.length !== 8) {
                     log('TerrainGenerator: Wrong number of arguments for !TGSpawnTrees');
                     sendChat('TerrainGenerator', getWhisperTarget(msg.playerid) + 'Wrong number of arguments for !TGSpawnTrees');

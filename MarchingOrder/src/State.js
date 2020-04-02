@@ -7,6 +7,14 @@
   MarchingOrder.State = class {
 
     /**
+     * Clears the script's state and resets it to its factory defaults.
+     */
+    static clearState() {
+      delete state.marchingOrder;
+      MarchingOrder.State.getState();
+    }
+
+    /**
      * Displays the JSONified state for this script to the chat.
      * @param {Player} player
      * @return {string}
@@ -38,9 +46,12 @@
      */
     static getState() {
       if(!state.marchingOrder)
-        state.marchingOrder = {
-          defaultOrder: []
-        };
+        state.marchingOrder = {};
+
+      _.defaults(state.marchingOrder, {
+        savedFormations: {}
+      });
+
       return state.marchingOrder;
     }
 
