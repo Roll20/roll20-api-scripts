@@ -67,14 +67,14 @@ var sr5api = sr5api || (function() {
     const primary = '#610b0d', secondary = '#666', third = '#e7e6e5';
     const divstyle   = 'style="color: #eee;width: 90%; border: 1px solid black; background-color: #131415; padding: 5px;"';
     const buttons    = `text-align:center; border: 1px solid black; margin: 3px; padding: 2px; background-color: ${primary}; border-radius: 4px;  box-shadow: 1px 1px 1px ${secondary};`
-    const astyle     = `style="text-align:center; ${buttons} width: 150px;"`;
+    const astyle     = `style="text-align:center; ${buttons} width: 11vw;"`;
     const arrowstyle = `style="border: none; border-top: 3px solid transparent; border-bottom: 3px solid transparent; border-left: 195px solid ${secondary}; margin: 5px 0px;"`;
     const headstyle  = `style="color: #fff; font-size: 18px; text-align: left; font-constiant: small-caps; font-family: Times, serif; margin-bottom: 2px;"`;
     const substyle   = 'style="font-size: 0.8em; line-height: 13px; margin-top: -2px; font-style: italic;"';
     const breaks     = `style="border-color:${third}; margin: 5px 2px;"`;
     const circles    = `style='font-family:pictos;color: #fff;padding:2%;${buttons} width: 15px;'`
     const centered   = `style="text-align:center;"`;
-    const version    = '1.01';
+    const version    = '1.011';
     const header     = `<div ${divstyle}><div ${headstyle}>Shadowrun 5th Edition <span ${substyle}>(v.${version})</span></div><div ${arrowstyle}>`;
     const errorMessage = (name, error) => log(`${name}: ${error}`)
 
