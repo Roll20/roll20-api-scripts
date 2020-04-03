@@ -67,19 +67,21 @@ var sr5api = sr5api || (function() {
     const primary = '#610b0d', secondary = '#666', third = '#e7e6e5';
     const divstyle   = 'style="color: #eee;width: 90%; border: 1px solid black; background-color: #131415; padding: 5px;"';
     const buttons    = `text-align:center; border: 1px solid black; margin: 3px; padding: 2px; background-color: ${primary}; border-radius: 4px;  box-shadow: 1px 1px 1px ${secondary};`
-    const astyle     = `style="text-align:center; ${buttons} width: 11vw;"`;
+    const astyle     = `style="text-align:center; ${buttons} width: 68%;"`;
     const arrowstyle = `style="border: none; border-top: 3px solid transparent; border-bottom: 3px solid transparent; border-left: 195px solid ${secondary}; margin: 5px 0px;"`;
     const headstyle  = `style="color: #fff; font-size: 18px; text-align: left; font-constiant: small-caps; font-family: Times, serif; margin-bottom: 2px;"`;
     const substyle   = 'style="font-size: 0.8em; line-height: 13px; margin-top: -2px; font-style: italic;"';
     const breaks     = `style="border-color:${third}; margin: 5px 2px;"`;
     const circles    = `style='font-family:pictos;color: #fff;padding:2%;${buttons} width: 15px;'`
     const centered   = `style="text-align:center;"`;
+    const apiName    = `Shadowrun 5th Edition`;
     const version    = '1.011';
-    const header     = `<div ${divstyle}><div ${headstyle}>Shadowrun 5th Edition <span ${substyle}>(v.${version})</span></div><div ${arrowstyle}>`;
+    const header     = `<div ${divstyle}><div ${headstyle}>${apiName} <span ${substyle}>(v.${version})</span></div><div ${arrowstyle}>`;
     const errorMessage = (name, error) => log(`${name}: ${error}`)
 
     const handleInput = msg => {
-        const args = msg.content.split(" --");
+        const args = msg.content.split(" --")
+        const who = msg.who.split(' ')[0]
         log(args)
         if (args[0] === "!sr5" && msg.type === "api") {
             const noTokensSelected = `<div ${centered}>No tokens selected.</div>`;
@@ -89,7 +91,7 @@ var sr5api = sr5api || (function() {
                     if (args[2]) {
                         args[2] === 'info' ? chatMessage(apiCommands.linkToken.info) : chatMessage(apiCommands.linkToken.help)
                     } else {
-                        selected ? linkTokens(selected) : selected === undefined ? chatMessage(noTokensSelected) : apiMenu();
+                        selected ? linkTokens(selected, who) : selected === undefined ? chatMessage(noTokensSelected) : apiMenu();
                     }
                     break;
                 case "initCounter":
@@ -107,21 +109,21 @@ var sr5api = sr5api || (function() {
                     }
                     break;
                 default:
-                    apiMenu()
+                    apiMenu(who)
             }
-        } else if (msg.who === 'Sr5 Roll Initiative') {
+        } else if (msg.who === `${apiName} Roll Initiative`) {
             processIniatitive(msg.inlinerolls)
         } else if (msg.inlinerolls) {
             //reRollDice(msg);
         } 
     },
 
-    apiMenu = () => {
+    apiMenu = who => {
         let feedback = ""
         let commandArray = ['linkToken', 'initCounter', 'rollInit']
         commandArray.forEach(command => feedback += menuButtons(command));
 
-        chatMessage(feedback);
+        chatMessage(feedback, who);
     },
 
     readmeLink = '[Readme](https://github.com/Roll20/roll20-api-scripts/tree/master/Shadowrun%205th%20Edition)',
@@ -156,11 +158,12 @@ var sr5api = sr5api || (function() {
 
     //:+:+:+:+:+: TOKEN LINKER :+:+:+:+:+: //
     //== This looks at a Token's Linked character Sheet and set a number of defaults 
-    linkTokens = selected => {
+    linkTokens = (selected, who) => {
         selected.forEach(token => {
             const characterID   = sr5HelperFunctions.getCharacterIdFromTokenId(token["_id"]) || false;
             const characterName = getAttrByName(characterID, 'character_name') || "";
             const tokenID       = token["_id"];
+            let feedback = '';
 
             if (characterID) {
                 const update = tokenLinker(characterID, tokenID, characterName);
@@ -171,13 +174,16 @@ var sr5api = sr5api || (function() {
                 if (update) {
                     tokenGet.set(update);
                     setDefaultTokenForCharacter(representsCharacter, tokenGet);
-                    chatMessage(`<div ${centered}><strong>${characterName}</strong></div><hr ${breaks} /><div>Token defaults set.</div>`);
+
+                    feedback += `<div ${centered}><strong>${characterName}</strong></div><hr ${breaks} /><div>Token defaults set.</div>`
                 } else {
                     errorMessage('linkTokens', 'Update not found')
                 };
             } else {
-                chatMessage(`<div>Token does not represents a character. Set a character in the Token settings.</div>`);
+                feedback += `<div>Token does not represents a character. Set a character in the Token settings.</div>`;
             }
+
+            sendChat(`${apiName} Token Linker`, `/w ${who} ${header}</div>${feedback}</div>`)
         });
     },
 
@@ -359,7 +365,7 @@ var sr5api = sr5api || (function() {
                 feedback += `</div><br />`
             }
 
-            sendChat('Sr5 Roll Initiative', `${header}</div>${feedback}</div>`);
+            sendChat(`${apiName} Roll Initiative`, `${header}</div>${feedback}</div>`);
         } catch (error) {
             errorMessage('rollInitaitve', error)
         }
@@ -399,7 +405,7 @@ var sr5api = sr5api || (function() {
     },
     
     //Send message to chat
-    chatMessage = feedback => sendChat('API', `/w gm ${header}</div>${feedback}</div>`),
+    chatMessage = (feedback, who) => sendChat(`${apiName} API`, `/w ${who || 'gm'} ${header}</div>${feedback}</div>`),
 
     registerEventHandlers = () => {
         on('chat:message', handleInput);
