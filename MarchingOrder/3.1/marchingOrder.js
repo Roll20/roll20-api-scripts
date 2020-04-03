@@ -316,7 +316,7 @@ var MarchingOrder = (() => {
     token.set('lastmove', leader.get('lastmove'));
     let walls = findObjs({
       _type: 'path',
-      _pageid: Campaign().get("playerpageid"),
+      _pageid: token.get('_pageid'),
       layer: 'walls'
     });
     let collision =
