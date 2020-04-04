@@ -1,7 +1,7 @@
 var AgoneDice = AgoneDice || (function () {
 	'use strict';
 	var version = '0.1',
-	lastUpdate = 1493989583,
+	lastUpdate = 1586019853,
 
 	checkInstall = function() {
 		log('### AgoneDice v'+version+' ### ['+(new Date(lastUpdate*1000))+']');
@@ -71,7 +71,7 @@ var AgoneDice = AgoneDice || (function () {
 
 			case 'whisper':
 			case 'general':
-				if (!_.has(msg, 'inlinerolls') || !_.has(msg, 'rolltemplate')) {
+				if (!_.has(msg, 'inlinerolls') || (!_.has(msg, 'rolltemplate')) || (msg.content.indexOf('Fumble') > -1)) {
 					return;
 				}
 				var diceRoll = msg.inlinerolls[0].results;
