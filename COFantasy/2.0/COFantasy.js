@@ -11149,6 +11149,7 @@ var COFantasy = COFantasy || function() {
         command = '!cof-soin 5';
         ligne += bouton(command, "Régénération", perso, false) + " si source élémentaire proche<br />";
       }
+      //La liste d'action proprement dite
       if (actionsDuTour.length > 0) {
         // on récupère la valeur de l'action dont chaque Macro #/Ability % est mis dans un tableau 'action'
         var actions = actionsDuTour[0].get('action')
@@ -11171,9 +11172,10 @@ var COFantasy = COFantasy || function() {
               if (action.startsWith('//')) return; //commented out line
               var actionCommands = action.split(' ');
               var actionCmd = actionCommands[0];
-              var actionText = action.replace(/-/g, ' ').replace(/_/g, ' ');
+              var actionText = actionCmd.replace(/-/g, ' ').replace(/_/g, ' ');
               found = false;
               if (actionCmd.startsWith('%')) {
+              // Ability
                 actionCmd = actionCmd.substr(1);
                 actionText = actionText.substr(1);
                 abilities.forEach(function(abilitie, index) {
@@ -11182,10 +11184,15 @@ var COFantasy = COFantasy || function() {
                     // l'ability existe
                     found = true;
                     command = abilitie.get('action').trim();
+                    if (actionCommands.length > 1) {
+                      //On rajoute les options de l'ability
+                      command += action.substr(action.indexOf(' '));
+                    }
                     ligne += bouton(command, actionText, perso, false) + '<br />';
                   }
                 });
               } else if (actionCmd.startsWith('#')) {
+              // Macro
                 actionCmd = actionCmd.substr(1);
                 actionText = actionText.substr(1);
                 macros.forEach(function(macro, index) {
@@ -11193,10 +11200,15 @@ var COFantasy = COFantasy || function() {
                   if (macro.get('name') === actionCmd) {
                     found = true;
                     command = macro.get('action').trim();
+                    if (actionCommands.length > 1) {
+                      //On rajoute les options de la macro
+                      command += action.substr(action.indexOf(' '));
+                    }
                     ligne += bouton(command, actionText, perso, false) + '<br />';
                   }
                 });
               } else if (actionCmd.startsWith('!')) {
+              // commande API
                 if (actionCommands.length > 1) {
                   actionText = actionCommands[1].replace(/-/g, ' ').replace(/_/g, ' ');
                 }
@@ -13594,7 +13606,7 @@ var COFantasy = COFantasy || function() {
       var casterName = caster.token.get('name');
       var casterCharName = casterChar.get('name');
       var cha = modCarac(caster, 'CHARISME');
-      var attMagText = addOrigin(casterCharName, computeArmeAtk(caster, '@{ATKMAG}'));
+      var attMagText = addOrigin(casterCharName, '[[' + computeArmeAtk(caster, '@{ATKMAG}') + ']]');
       var action = "<b>Capacité</b> : Sort de sommeil";
       var display = startFramedDisplay(playerId, action, caster);
       sendChat("", "[[1d6]] [[" + attMagText + "]]", function(res) {
