@@ -216,6 +216,7 @@ var sr5api = sr5api || (function() {
                 playersedit_bar1: true,
                 playersedit_bar2: true,
                 playersedit_bar3: true,
+                light_hassight: true,
                 bar1_max: stun ? getAttrByName(characterID, `stun`, "max") || 0 : "",
                 bar2_max: matrix ? getAttrByName(characterID, `matrix`, "max") || 0 : "",
                 bar3_max: physical ? getAttrByName(characterID, `physical`, "max") || 0 : "",
