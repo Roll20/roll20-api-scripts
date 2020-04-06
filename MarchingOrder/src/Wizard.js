@@ -14,27 +14,54 @@
       const Menu = MarchingOrder.utils.Menu;
 
       // Menu options
-      // Follow (define a new marching formation)
-      let actionsHtml = '<div style="text-align: center;">[New Formation](' +
-        Commands.NEW_FORMATION_CMD + ' ' +
-        '?{Initial Marching Direction|north|south|east|west} ' +
-        '?{Give the formation a name.})' +
+      let actionsHtml = '';
+
+      // Ad-Hoc menu
+      actionsHtml += '<h2>Ad-Hoc Formations:</h2>';
+
+      // Follow (Players can use this one)
+      actionsHtml += '<div style="text-align: center;" ' +
+        'title="Have a selected token follow directly behind another token.">' +
+        '[Follow](' + Commands.FOLLOW_CMD + ' &#64;{selected|token_id} ' +
+        '&#64;{target|token_id} ?{How far to you want them to follow behind, in pixels?|0})</div>';
+
+      // Anonymous formation (Players can use this one too!)
+      actionsHtml += '<div style="padding-top: 1em; text-align: center;" ' +
+        'title="Create a one-time-use formation that will not be saved.">' +
+        '[Ad-Hoc Formation](' + Commands.ANON_FORMATION_CMD + ' ' +
+        '?{Initial Marching Direction|north|south|east|west})' +
         '</div>';
 
       if(playerIsGM(playerId)) {
-        // Stop all following
-        actionsHtml += '<div style="padding-top: 1em; text-align: center;">' +
-          '[Stop All Following](' + Commands.STOP_ALL_CMD + ')</div>';
-
         actionsHtml += '<hr/>';
+
+        // Saved formations menu
+        actionsHtml += '<h2>Saved Formations:</h2>';
+
+        // New formation
+        actionsHtml += '<div style="padding-top: 1em; text-align: center;" ' +
+          'title="Create and save a new reusable formation.">' +
+          '[New Formation](' + Commands.NEW_FORMATION_CMD + ' ' +
+          '?{Initial Marching Direction|north|south|east|west} ' +
+          '?{Give the formation a name.})' +
+          '</div>';
 
         // Show saved formations
         actionsHtml += MarchingOrder.Wizard._getFormationsHtml();
 
         actionsHtml += '<hr/>';
 
+        // Other actions
+        actionsHtml += '<h2>Other Actions:</h2>';
+
+        // Stop all following
+        actionsHtml += '<div style="padding-top: 1em; text-align: center;" ' +
+          'title="Cancel all active formations.">' +
+          '[Stop All Following](' + Commands.STOP_ALL_CMD + ')</div>';
+
         // Clear state
-        actionsHtml += '<div style="padding-top: 1em; text-align: center;">' +
+        actionsHtml += '<div style="padding-top: 1em; text-align: center;" ' +
+          'title="Clear the state for the Marching Order script. This will delete all your saved formations for the script!">' +
           '[Clear Script State](' + Commands.CLEAR_STATE_CMD +
           ' ?{Are you sure?|yes|no})</div>';
       }
@@ -63,7 +90,7 @@
           'No marching formations have been saved yet.</div>';
       }
 
-      let actionsHtml = '<h2>Saved Formations:</h2>';
+      let actionsHtml = '';
       actionsHtml += '<div style="font-style: italic; font-size: small; ' +
         'color: #aaa;">Previews of formations are shown marching westward.' +
         '</div>';
@@ -83,12 +110,11 @@
         actionsHtml += `<h3 style="background: ${borderColor}; color: white; padding-left: 0.5em;">${formation.name}</h3>`;
         actionsHtml += MarchingOrder.Wizard._renderFormationPreview(formation);
 
-
         // Render controls for the formation.
         actionsHtml += '<div style="text-align: center;">';
-        actionsHtml += '<div style="display: inline-block; padding-top: 1em; text-align: center;">' +
+        actionsHtml += '<div style="display: inline-block; padding-top: 1em; text-align: center;" title="Use this formation on the current page.">' +
           '[Use](' + Commands.USE_FORMATION_CMD + ' ' + name + ')</div>';
-        actionsHtml += '<div style="display: inline-block; padding-top: 1em; text-align: center;">' +
+        actionsHtml += '<div style="display: inline-block; padding-top: 1em; text-align: center;" title="Delete this formation.">' +
           '[Delete](' + Commands.DELETE_FORMATION_CMD + ' ' + name +
           ' ?{Are you sure you want to delete formation ' + name +
           '?|yes|no})</div>';
@@ -106,6 +132,7 @@
      */
     static _renderFormationPreview(formation) {
       let tokens = [{
+        id: formation.leaderID,
         imgsrc: formation.leaderImgSrc,
         data: {
           du: 0,
