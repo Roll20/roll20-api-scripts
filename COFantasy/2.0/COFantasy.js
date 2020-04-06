@@ -1800,9 +1800,24 @@ var COFantasy = COFantasy || function() {
     var evt = options.evt || {
       type: "Jet de " + caracteristique
     };
-    var display = startFramedDisplay(playerId, titre, perso, {
-      chuchote: options.secret
+    var optionsDisplay = {};
+    if (options.secret) {
+      if (playerIsGM(playerId)) optionsDisplay.chuchote = true;
+      else {
+        var character = getObj('character', perso.charId);
+        if (character) {
+          optionsDisplay.chuchote = '"' + character.get('name') + '"';
+          var controledByGM = false;
+    var charControlledby = character.get('controlledby');
+    charControlledby.split(",").forEach(function(controlledby) {
+      if( playerIsGM(controlledby)) controledByGM = true;
     });
+          if (!controledByGM) optionsDisplay.retarde = true;
+        }
+        else optionsDisplay.retarde = true;
+      }
+    }
+    var display = startFramedDisplay(playerId, titre, perso, optionsDisplay);
     if (difficulte === undefined) {
       jetCaracteristique(perso, caracteristique, options, evt,
         function(rt, explications) {
@@ -1828,7 +1843,12 @@ var COFantasy = COFantasy || function() {
             }
           }
           addEvent(evt);
-          sendChat('', endFramedDisplay(display));
+          if (optionsDisplay.retarde) {
+            addFramedHeader(display, playerId, true);
+            sendChat('', endFramedDisplay(display));
+            addFramedHeader(display, undefined, 'gm');
+            sendChat('', endFramedDisplay(display));
+          } else sendChat('', endFramedDisplay(display));
         });
     } else {
       if (options.chance) options.bonus = options.chance * 10;
@@ -1862,7 +1882,12 @@ var COFantasy = COFantasy || function() {
             }
             addLineToFramedDisplay(display, msgRate);
           }
-          sendChat('', endFramedDisplay(display));
+          if (optionsDisplay.retarde) {
+            addFramedHeader(display, playerId, true);
+            sendChat('', endFramedDisplay(display));
+            addFramedHeader(display, undefined, 'gm');
+            sendChat('', endFramedDisplay(display));
+          } else sendChat('', endFramedDisplay(display));
         });
     }
   }
@@ -1936,10 +1961,10 @@ var COFantasy = COFantasy || function() {
     var pt2 = tokenCenter(tok2);
     var distance_pix = VecMath.length(VecMath.vec(pt1, pt2));
     options = options || {};
-    if (!options.strict1) distance_pix -= tokenSize(tok1, PIX_PER_UNIT);
-    if (!options.strict2) distance_pix -= tokenSize(tok2, PIX_PER_UNIT);
+    if (!options.strict1) distance_pix -= tokenSize(tok1, PIX_PER_UNIT / 2);
+    if (!options.strict2) distance_pix -= tokenSize(tok2, PIX_PER_UNIT / 2);
     if (options.allonge) distance_pix -= (options.allonge * PIX_PER_UNIT) / scale;
-    if ((!options.strict1 || !options.strict2) && distance_pix < PIX_PER_UNIT * 1.5) return 0; //cases voisines
+    if ((!options.strict1 || !options.strict2) && distance_pix < PIX_PER_UNIT * 1.4) return 0; //cases voisines
     return ((distance_pix / PIX_PER_UNIT) * scale);
   }
 
@@ -3846,6 +3871,10 @@ var COFantasy = COFantasy || function() {
     if (getState(perso, 'aveugle')) init -= 5;
     // Voie du compagnon animal rang 2 (surveillance)
     init += attributeAsInt(perso, 'bonusInitEmbuscade', 0);
+    // Familier
+    if (familier(perso)) init += 2;
+    // Sixième sens en sort
+    if (attributeAsBool(perso, 'sixiemeSens')) init += 2;
     // Voie du chef d'armée rang 2 (Capitaine)
     if (aUnCapitaine(perso, evt)) init += 2;
     if (charAttributeAsBool(perso, 'graceFeline')) {
@@ -4328,6 +4357,36 @@ var COFantasy = COFantasy || function() {
     return false;
   }
 
+  function familier(personnage) {
+    var familier = findObjs({
+      _type: 'attribute',
+      _characterid: personnage.charId,
+      name: 'familier'
+    });
+    if (familier.length > 0) {
+      var compagnon = familier[0].get('current');
+      var compToken = findObjs({
+        _type: 'graphic',
+        _subtype: 'token',
+        _pageid: personnage.token.get('pageid'),
+        layer: 'objects',
+        name: compagnon
+      });
+      var compagnonPresent = false;
+      compToken.forEach(function(tok) {
+        var compCharId = tok.get('represents');
+        if (compCharId === '') return;
+        if (isActive({
+            token: tok,
+            charId: compCharId
+          })) compagnonPresent = true;
+        return;
+      });
+      return compagnonPresent;
+    }
+    return false;
+  }
+
   function defenseOfToken(attaquant, target, pageId, evt, options) {
     options = options || {};
     if (options.difficultePVmax) {
@@ -4397,6 +4456,10 @@ var COFantasy = COFantasy || function() {
       var bonusMutation = getValeurOfEffet(target, 'mutationCuirasse', 2, 'voieDesMutations');
       defense += bonusMutation;
       explications.push("Cuirasse : +" + bonusMutation + " en DEF");
+    }
+    if (attributeAsBool(target, 'sixiemeSens')) {
+      defense += 2;
+      explications.push("Sixième sens : +2 DEF");
     }
     if (getState(target, 'surpris')) defense -= 5;
     if (getState(target, 'renverse')) defense -= 5;
@@ -5157,6 +5220,7 @@ var COFantasy = COFantasy || function() {
         angle: 90
       };
       weaponStats.attDice -= 2;
+      weaponStats.attDMBonusCommun = Math.ceil(weaponStats.attDMBonusCommun / 2);
       if (weaponStats.attDice < 0) weaponStats.attDice = 0;
       if (options.tirDouble && options.tirDouble.stats) {
         options.tirDouble.stats.attDice -= 2;
@@ -5321,6 +5385,8 @@ var COFantasy = COFantasy || function() {
             }
             var vecCentre = VecMath.normalize(VecMath.vec(pta, ptt));
             var cosAngle = Math.cos(options.aoe.angle * Math.PI / 360.0);
+            //Pour éviter des artfacts d'arrondi:
+            cosAngle = (Math.floor(cosAngle * 1000000)) / 1000000;
             if (targetToken.get('bar1_max') == 0) { // jshint ignore:line
               //C'est juste un token utilisé pour définir le cone
               cibles = [];
@@ -8207,7 +8273,7 @@ var COFantasy = COFantasy || function() {
         if (options.percant) rd += charAttributeAsInt(target, 'RD_percant', 0);
         if (options.contondant) rd += charAttributeAsInt(target, 'RD_contondant', 0);
         if (options.distance) {
-          var piqures = charAttributeAsInt(target, 'puquresDInsecte', 0);
+          var piqures = charAttributeAsInt(target, 'piquresDInsectes', 0);
           if (piqures > 0 && ficheAttributeAsBool(target, 'DEFARMUREON') && ficheAttributeAsInt(target, 'DEFARMURE', 0) > 5) rd += piqures;
         }
         if (attributeAsBool(target, 'masqueMortuaire')) rd += 2;
@@ -8341,9 +8407,9 @@ var COFantasy = COFantasy || function() {
         } else {
           if (bar1 > 0 && bar1 <= dmgTotal &&
             charAttributeAsBool(target, 'instinctDeSurvieHumain')) {
-            dmgTotal = dmgTotal / 2;
+            dmgTotal = Math.floor(dmgTotal / 2);
             for (var dmType4 in dmSuivis) {
-              dmSuivis[dmType4] = Math.ceil(dmSuivis[dmType4] / 2);
+              dmSuivis[dmType4] = Math.floor(dmSuivis[dmType4] / 2);
             }
             if (dmgTotal < 1) dmgTotal = 1;
             dmgDisplay += "/2";
@@ -8418,10 +8484,11 @@ var COFantasy = COFantasy || function() {
               !attributeAsBool(target, 'sergentUtilise')) {
               expliquer(token.get('name') + " évite l'attaque in-extremis");
               setTokenAttr(target, 'sergentUtilise', true, evt);
+              pvPerdus = 0;
             } else {
               testBlessureGrave(target, dmgTotal, expliquer, evt);
               updateCurrentBar(token, 1, 0, evt);
-              pvPerdus -= bar1;
+              pvPerdus += bar1;
               if (charAttributeAsBool(target, 'baroudHonneur')) {
                 expliquer(token.get('name') + " devrait être mort, mais il continue à se battre !");
                 setTokenAttr(target, 'baroudHonneurActif', true, evt);
@@ -8456,7 +8523,7 @@ var COFantasy = COFantasy || function() {
                       }
                       if (showTotal) dmgDisplay += " = " + dmgTotal;
                       if (displayRes === undefined) return dmgDisplay;
-                      displayRes(dmgDisplay, dmgTotal);
+                      displayRes(dmgDisplay, pvPerdus);
                     });
                   if (displayRes === undefined) return dmgDisplay;
                   return;
@@ -8477,7 +8544,7 @@ var COFantasy = COFantasy || function() {
         }
         if (showTotal) dmgDisplay += " = " + dmgTotal;
         if (displayRes === undefined) return dmgDisplay;
-        displayRes(dmgDisplay, dmgTotal);
+        displayRes(dmgDisplay, pvPerdus);
       });
     return dmgDisplay;
   }
@@ -10699,6 +10766,7 @@ var COFantasy = COFantasy || function() {
           setTokenAttr(perso, 'bonusInitEmbuscade', 5, evt, "garde un temps d'avance grâce à son compagnon animal");
           initPerso(perso, evt, true);
         }
+        if (attributeAsBool(perso, 'sixiemeSens')) bonusSurprise += 5;
         if (testSurprise !== undefined) {
           testCaracteristique(perso, 'SAG', testSurprise, {
               bonus: bonusSurprise,
@@ -11081,6 +11149,7 @@ var COFantasy = COFantasy || function() {
         command = '!cof-soin 5';
         ligne += bouton(command, "Régénération", perso, false) + " si source élémentaire proche<br />";
       }
+      //La liste d'action proprement dite
       if (actionsDuTour.length > 0) {
         // on récupère la valeur de l'action dont chaque Macro #/Ability % est mis dans un tableau 'action'
         var actions = actionsDuTour[0].get('action')
@@ -11103,9 +11172,10 @@ var COFantasy = COFantasy || function() {
               if (action.startsWith('//')) return; //commented out line
               var actionCommands = action.split(' ');
               var actionCmd = actionCommands[0];
-              var actionText = action.replace(/-/g, ' ').replace(/_/g, ' ');
+              var actionText = actionCmd.replace(/-/g, ' ').replace(/_/g, ' ');
               found = false;
               if (actionCmd.startsWith('%')) {
+              // Ability
                 actionCmd = actionCmd.substr(1);
                 actionText = actionText.substr(1);
                 abilities.forEach(function(abilitie, index) {
@@ -11114,10 +11184,15 @@ var COFantasy = COFantasy || function() {
                     // l'ability existe
                     found = true;
                     command = abilitie.get('action').trim();
+                    if (actionCommands.length > 1) {
+                      //On rajoute les options de l'ability
+                      command += action.substr(action.indexOf(' '));
+                    }
                     ligne += bouton(command, actionText, perso, false) + '<br />';
                   }
                 });
               } else if (actionCmd.startsWith('#')) {
+              // Macro
                 actionCmd = actionCmd.substr(1);
                 actionText = actionText.substr(1);
                 macros.forEach(function(macro, index) {
@@ -11125,10 +11200,15 @@ var COFantasy = COFantasy || function() {
                   if (macro.get('name') === actionCmd) {
                     found = true;
                     command = macro.get('action').trim();
+                    if (actionCommands.length > 1) {
+                      //On rajoute les options de la macro
+                      command += action.substr(action.indexOf(' '));
+                    }
                     ligne += bouton(command, actionText, perso, false) + '<br />';
                   }
                 });
               } else if (actionCmd.startsWith('!')) {
+              // commande API
                 if (actionCommands.length > 1) {
                   actionText = actionCommands[1].replace(/-/g, ' ').replace(/_/g, ' ');
                 }
@@ -13526,7 +13606,7 @@ var COFantasy = COFantasy || function() {
       var casterName = caster.token.get('name');
       var casterCharName = casterChar.get('name');
       var cha = modCarac(caster, 'CHARISME');
-      var attMagText = addOrigin(casterCharName, computeArmeAtk(caster, '@{ATKMAG}'));
+      var attMagText = addOrigin(casterCharName, '[[' + computeArmeAtk(caster, '@{ATKMAG}') + ']]');
       var action = "<b>Capacité</b> : Sort de sommeil";
       var display = startFramedDisplay(playerId, action, caster);
       sendChat("", "[[1d6]] [[" + attMagText + "]]", function(res) {
@@ -20504,6 +20584,11 @@ var COFantasy = COFantasy || function() {
       activation: "devient plus massif",
       actif: "a une silhouette massive",
       fin: "retrouve une silhouette normale",
+    },
+    sixiemeSens: {
+      activation: "fait un rituel de divination",
+      actif: "sait un peu à l'avance ce qu'il va se passer",
+      fin: "l'effet du rituel de divination prend fin",
     },
   };
 
