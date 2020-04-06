@@ -1,5 +1,11 @@
 # Marching Order
 
+_3.1 Updates_
+* Added button for creating ad-hoc formations that aren't saved.
+* Added button for making one token follow another at some set distance as an ad-hoc formation.
+* Reorganized the menu a little bit.
+* Formations will only look for their tokens on the objects layer when they are applied.
+
 _v3.0 Updates_
 * The script has been reworked entirely. Marching orders now work based upon formations formed when you tell a group of tokens to follow a leader.
 * You can now save multiple formations and load them up to be used later.
@@ -17,13 +23,55 @@ When the script is installed, it will create a macro called
 'MarchingOrderMenu'. This macro will display a menu in the chat that provides
 the user interface for the script.
 
-### New formation
+Below is documentation for each of the menu items:
+
+### Ad-Hoc Formations
+
+The following menu items allow you to create one-time-use marching formations.
+
+#### Ad-Hoc Formations -> Follow
+
+This button allows you to have a token simply follow behind another.
+
+First, select the token that you want to be the follower, then click the Follow
+button. Next, click the token you want them to follow. Then in the prompt that
+appears, enter how far behind you want them to follow (leave as 0 to follow
+directly behind them).
+
+Be advised of the following gotchas:
+* A token can't follow behind another if the other token already has followers.
+
+#### Ad-Hoc Formations -> Ad-Hoc Formation
+
+To form a one-time-use formation, use this button.
 
 To create a new marching order formation, select a group of tokens, with one
 of them having either the black-flag or flying-flag status marker active. That
 token will be the leader of the formation. (See Moving in Formation below)
 
-Then click the New Formation button the chat menu. It will ask you to enter
+Then click the Ad-Hoc Formation button in the chat menu. It will ask you to enter
+which direction the formation is facing at the time you've created it.
+This marching formation will be applied to the selected tokens.
+
+Be advised of the following gotchas:
+* You must have one of the selected tokens have either the 'black-flag' or 'flying flag' status marker. This is used to designate the leader of the formation.
+
+### Saved Formations
+
+Under this section of the chat menu, you can view the formations you have
+previously created. The formations each displayed in a boxed area with their name,
+a preview of the formation, and some buttons to either use the formation or
+delete it. The previews display the marching orders proceeding westward.
+
+### Saved Formations - > New formation
+
+This button allows you to create a formation and save it for future use.
+
+To create a new marching order formation, select a group of tokens, with one
+of them having either the black-flag or flying-flag status marker active. That
+token will be the leader of the formation. (See Moving in Formation below)
+
+Then click the New Formation button in the chat menu. It will ask you to enter
 which direction the formation is facing at the time you've created it, and it
 will ask you to give a name for the new formation. This marching formation will
 be applied to the selected tokens and it will also be saved for future use
@@ -32,18 +80,6 @@ be applied to the selected tokens and it will also be saved for future use
 Be advised of the following gotchas:
 * You must have one of the selected tokens have either the 'black-flag' or 'flying flag' status marker. This is used to designate the leader of the formation.
 * Each new formation must have a unique name.
-
-### Stop Following
-
-To stop all the active marching formations, click the Stop All Following button
-in the chat menu.
-
-### Saved Formations
-
-Under this section of the chat menu, you can view the formations you have
-previously created. The formations each displayed in a boxed area with their name,
-a preview of the formation, and some buttons to either use the formation or
-delete it. The previews display the marching orders proceeding westward.
 
 #### Saved Formations -> Use
 
@@ -59,7 +95,14 @@ Be advised of the following gotchas:
 
 Click this button to delete the previously saved marching formation.
 
-### Clear Script State
+### Other Actions
+
+#### Other Actions -> Stop Following
+
+To stop all the active marching formations, click the Stop All Following button
+in the chat menu.
+
+#### Other Actions -> Clear Script State
 
 If you'd like to start afresh with a whole blank state for the Marching Order
 script, you can click the Clear Script State button to reset the script
