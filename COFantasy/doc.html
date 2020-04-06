@@ -97,6 +97,7 @@
 									<li><a class="text-info" href="#Capacites_raciales">Voies et capacités raciales</a></li>
 									<li><a class="text-info" href="#Prestige">Voies de prestige</a></li>
 									<li><a class="text-info" href="#Créatures">Voies de créature</a></li>
+									<li><a class="text-info" href="#Sorts">Autres sorts</a></li>
 									<li><a class="text-info" href="#Capacites_diverses">Capacités diverses</a></li>
                 </ul>
 							</ol>
@@ -581,7 +582,7 @@
                   <li><code>--bonus</code> pour spécifier un bonus numérique au jet.</li>
                   <li><code>--attribut</code> pour spécifier un attribut dont la valeur doit être ajoutée au jet. Il est possible de spécifier plusieurs attributs, comme par exemple <code>--attribut perception --attribut vigilance</code> pour un jet de vigilance.</li>
                   <li><code>--nom</code> précise le nom du jet à afficher. De plus, cela va aussi faire rechercher un attribut de même nom (en mettant les caractères en minuscule). Par exemple <code>!cof-jet DEX --nom Discrétion</code> va lancer un jet de DEX, qui sera affiché comme un jet de Discrétion, et qui va ajouter au jet le bonus d'un éventuel attribut <code>discrétion</code>.</li>
-                  <li><code>--secret</code> : le jet n'est visible que par la personne qui a lancé la commande.</li>
+                  <li><code>--secret</code> : le jet n'est visible que par les personnes qui contrôlent le personnage, plus le MJ. Si la personne qui a lancé la commande est MJ, il sera le seul à voir le résultat.</li>
                   <li><code>--competences</code> : si la commande n'a pas déjà d'option <code>--nom</code>, invite l'utilisateur à choisir une compétence parmis une liste correspondant à la caractéristique (et provenant du handout <code>Compétences</code> tel que défini plus haut).</li>
                 </ul>
               </div>
@@ -832,7 +833,7 @@
                 </ol>
                 <h4 class="text-secondary">Voie de l'invocation</h4>
                 <ol>
-                  <li><strong>Familier</strong> : créer un token pour le familier, avec vue et controlé par le joueur. Le partage des PV n'est pas géré.</li>
+                  <li><strong>Familier</strong> : créer un token pour le familier, avec vue et controlé par le joueur. Le partage des PV n'est pas géré. Pour le bonus en initiative, ajouter un attribut <code>familier</code>, avec comme valeur le nom du compagnon (doit être exactement le même que celui du token du compagnon). Cela automatise l'initiative quand le familier est présent.</li>
                   <li><strong>Serviteur invisible&nbsp;</strong>: ok</li>
                   <li><strong>Mur de force</strong> : <code>!cof-mur-de-force ?{Spherique?|Oui|Non,mur} --mana 1</code>. Cela affiche une image d'un champ de force, mais seulement si il est sphérique. Il est possible de ne pas avoir d'image en utilisant l'option <code>--no-image</code>, ou d'utiliser une autre image avec l'option <code>--image <i>path</i></code> où <i>path</i> est l'adresse url d'une image de la librairie Roll20 qui représente un mur de force sphérique (sera placé dans le layer map). Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 3 ?{Tempête de mana?|Non,&amp;#32;|Oui,--tempeteDeMana}</code>.</li>
                   <li>
@@ -953,7 +954,7 @@
                 </ol>
                 <h4 class="text-secondary">Voie du familier</h4>
                 <ol>
-                  <li><strong>Familier</strong> : créer un token pour le familier, avec vue et controlé par le joueur. Le partage des PV n'est pas géré.</li>
+                  <li><strong>Familier</strong> : créer un token pour le familier, avec vue et controlé par le joueur. Le partage des PV n'est pas géré. Pour le bonus en initiative, ajouter un attribut <code>familier</code>, avec comme valeur le nom du compagnon (doit être exactement le même que celui du token du compagnon). Cela automatise l'initiative quand le familier est présent.</li>
                   <li><strong>Résistance</strong> : ajouter la valeur de RD sur la fiche du familier.</li>
                   <li><strong>Sens développés</strong> : ajouter un attribut <code>perception</code> de valeur 5 (ou augmenter cet attribut, si il existe déjà), et ajouter un attribut <code>visionDansLeNoir</code> de valeur 20 (40 si le personnage dispose déjà de la vision dans le noir).</li>
                 </ol>
@@ -1112,7 +1113,7 @@
               <div class="decalage">
                 <h4 class="text-secondary">Voie de la foi</h4>
                 <ol>
-                  <li><strong>Parole divine</strong> : géré simplement avec une compétence "convaincre"</li>
+                  <li><strong>Parole divine</strong> : ajouter un attribut <code>convaincre</code>, de valeur 2 fois le rang dans la voie, et ajouter cette compétence dans la liste.</li>
                   <li>
                     <strong>Arme d'argent</strong> :
                     <ul>
@@ -1396,7 +1397,7 @@
                 <h4 class="text-secondary">Voie des créatures élémentaires</h4>
                 <p style="margin-top:0px; margin-bottom:0px">Ajouter un attribut <code>immunite_<i>type</i></code> de valeur <code>true</code>, où <i>type</i> est le type de la créature élémentaire (feu, acide, froid, ...)</p>
                 <ol>
-                  <li><strong>Souffle</strong> : faire une attaque avec le bon nombre de d6 en DM, de portée la portée du souffle, à utiliser avec les options <code>--auto --cone --<i>type</i> --tempsRecharge rechargeSouffle [[1d4]] --psave DEX 13</code>, où <i>type</i> est le type de la créature (feu, acide, frois, ...). Ne pas oublier la possibilité d'utiliser un token cible temporaire pour le cone.</li>
+                  <li><strong>Souffle</strong> : faire une attaque avec le bon nombre de d6 en DM, de portée la portée du souffle, à utiliser avec les options <code>--auto --cone --<i>type</i> --tempsRecharge rechargeSouffle [[1d4]] --psave DEX 13</code>, où <i>type</i> est le type de la créature (feu, acide, froid, ...). Ne pas oublier la possibilité d'utiliser un token cible temporaire pour le cone.</li>
                   <li><strong>Corps élémentaire</strong> : ajouter un attribut <code>corpsElementaire</code>, de valeur l'élément (<code>feu</code>, <code>froid</code>,...). Cela va automatiquement ajoute les dégâts aux attaques de contact, et faire des dégâts à ceux qui l'attaquent au contact. Cela va aussi faire apparaître dans les actions du tour une action de régéneration, que le MJ peut utiliser chaque tour, à lui de voir si les conditions s'y prêtent (source élémentaire proche). Pas de support générique pour les victimes saisies ou aggriper, à gérer au cas par cas.</li>
                 </ol>
                 <h4 class="text-secondary">Voie des créatures magique</h4>
@@ -1448,7 +1449,15 @@
                   <li><strong>Attaque mortelle</strong> : donner la possibilité de faire une attaque avec les options <code>--bonusAttaque 5 --sournoise <i>rang</i></code>.</li>
                 </ol>
               </div>
-              <h3 class="text-info" id="Capacites_diverses">4.3 Autres capacités</h3>
+              <h3 class="text-info" id="Sorts">4.3 Autres Sorts</h3>
+              <div class="decalage">
+                Sorts qui ne sont pas dans des voies, mais peuvent venir du grimoire (dans le compagnon) ou d'effets de parchemins.
+                <ul>
+                  <li><strong>Force de géant</strong> : <code>!cof-effet-temp forceDeGeant 10</code>. Le bonus est de 2 par défaut, mais peut être modifié en utilisant l'option <code>--valeur</code>.</li>
+                  <li><strong>Sixième sens</strong> : <code>!cof-effet sixiemeSens true</code>. Pour mettre fin à l'effet du sort (qui a une durée en heures), on peut effacer l'attribut <code>sixiemeSens</code>, ou mieux encore, sélectionner le token et faire <code>!cof-effet sixiemeSens false</code>.</li>
+                </ul>
+              </div>
+              <h3 class="text-info" id="Capacites_diverses">4.4 Autres capacités</h3>
               <div class="decalage">
                 <ul>
                   <li><strong>Baroud d'honneur</strong> : ajouter un attribut <code>baroudHonneur</code> (=true) (Quand le personnage arrive à 0 PV, il ne meurt pas jusqu'à sa prochaine attaque, qui se fait avec un bonus de +5)</li>
@@ -1457,7 +1466,6 @@
                   <li><strong>Créature non-vivante</strong> : ajouter un attribut <code>nonVivant</code></li>
                   <li><strong>Dégâts si touché au contact</strong> (élémentaire de feu,...) : ajouter un attribut nommé <code>dmSiToucheContact</code>, de valeur courante les dégâts, et de valeur maximale leur type. Par exemple, pour un élémentaire de feu, la valeur courant sera <code>1d6</code>, et la valeur maximale sera <code>feu</code>.</li>
                   <li><strong>Enveloppement</strong> (cube gélatineux) : ajouter l'option <code>--enveloppe</code>, puis quand le bouton apparaît si l'attaque réussit, cliquer dessus. En cas d'enveloppement, la cible ne peut plus bouger et se déplace avec le cube (déplacer le cube met la cible dans le cube), et au tour du cube, il faut presser les boutons de dégâts pour les infliger aux cibles enveloppées.</li>
-                  <li><strong>Force de géant</strong> : <code>!cof-effet-temp forceDeGeant 10</code>. Le bonus est de 2 par défaut, mais peut être modifié en utilisant l'option <code>--valeur</code>.</li>
                   <li><strong>Frénésie</strong> : Ajouter une attribut <code>frenesie</code> avec comme valeur le nombre de PV en-dessous duquel la créature devient frénétique (+2 aus jets d'attaque).</li>
                   <li><strong>Huile de fort assaut</strong> : <code>!cof-effet-temp dmgArme(<i>L</i>) 10 --valeur 1d6</code> où <i>L</i> est le label de l'arme qu'on veut enduire d'huile de fort assaut.</li>
                   <li><strong>Hurlement</strong> : Pour les chiens infernaux, <code>!cof-peur [[10+?{Nombre de chiens?}]] [[2d4]] --portee 50 --equipe Joueurs</code>, et pour les fantômes, <code>!cof-peur 12 [[1d6]] --portee 10 --equipe Joueurs</code>. Pour l'instant, pas de prise en compte de l'immunité au hurlement apès avoir réussi son jet de SAG.</li>
