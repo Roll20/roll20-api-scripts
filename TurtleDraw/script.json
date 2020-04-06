@@ -1,0 +1,14 @@
+{
+  "name": "Turtle Draw",
+  "version": "0.1.0",
+  "description": "This script provides a way to draw rooms by walking a 'turtle' around the grid map. A UI is displayed that allows the user to move in the four directions while raising or lowering the pen. Two colors are possible for lines ...door color and wall coloring.",
+  "authors": "Carl D.",
+  "roll20userid": "2505097",
+  "patreon": "",
+  "dependencies": [],
+  "modifies": {},
+  "conflicts": [],
+  "script": "TurtleDraw.js",
+  "useroptions": {},
+  "previousversions": []
+}
