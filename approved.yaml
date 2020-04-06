@@ -773,3 +773,7 @@ shadowrun5thedition:
 combatmaster:
   - "CombatMaster"
   - "Utility"
+
+deltagreen:
+  - "Delta Green"
+  - "System Toolbox"
