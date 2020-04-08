@@ -1,5 +1,5 @@
 /* 
- * Version 2.04
+ * Version 2.07
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.04',
+	    version = '2.07',
         timerObj,
         intervalHandle,
         debug = true,
@@ -1027,8 +1027,9 @@ var CombatMaster = CombatMaster || (function() {
         }
 
         if (cmdDetails.details.id) {
-            removeConditionFromToken(getObj('graphic', cmdDetails.details.id), cmdDetails.details.condition)  
-            doRemoveConditionCalls(getObj(token._type, token._id),cmdDetails.details.condition)
+            let token = getObj('graphic', cmdDetails.details.id)
+            removeConditionFromToken(token, cmdDetails.details.condition)  
+            doRemoveConditionCalls(token,cmdDetails.details.condition)
         } else if (selectedTokens) {
         	selectedTokens.forEach(token => {
         	    if (token._type == 'graphic') {
@@ -1173,19 +1174,21 @@ var CombatMaster = CombatMaster || (function() {
                     if (condition.key == key) {
                         if (condition.iconType) {
                             icon = getIconTag(condition.iconType, condition.icon)
-                        }                          
-                        if (condition.target.length > 0) {
-                            condition.target.forEach((target, j) => {
-                                if (icon) {
-                                    removeMarker(getObj('graphic', target),icon)
-                                } else {
-                                    removeTokenCondition(condition.tokenConditionID)
-                                }    
-                            })    
-                        }
+                        }           
+                        if (condition.hasOwnProperty('target')) {
+                            if (condition.target.length > 0) {
+                                condition.target.forEach((target, j) => {
+                                    if (icon) {
+                                        removeMarker(getObj('graphic', target),icon)
+                                    } else if (condition.iconType == 'Token Condition') {
+                                        removeTokenCondition(condition.tokenConditionID)
+                                    }    
+                                })    
+                            }
+                        }    
                         if (icon) {            
                             removeMarker(tokenObj,icon)
-                        } else {
+                        } else if (condition.iconType == 'Token Condition') {
                             removeTokenCondition(condition.tokenConditionID)
                         }                            
                         state[combatState].conditions.splice(i,1)
@@ -1212,7 +1215,10 @@ var CombatMaster = CombatMaster || (function() {
         }
         
         let condition = getConditionByKey(key)
-        let icon      = getDefaultIcon(condition.iconType,condition.icon, 'margin-right: 5px; margin-top: 5px; display: inline-block;');
+        let icon
+        if (['Combat Master','Token Marker'].includes(condition.iconType)) {
+            icon  = getDefaultIcon(condition.iconType,condition.icon, 'margin-right: 5px; margin-top: 5px; display: inline-block;');
+        }    
         makeAndSendMenu(condition.description,icon+condition.name,(state[combatState].config.status.sendOnlyToGM) ? 'gm' : '');
     },
   
@@ -1275,16 +1281,17 @@ var CombatMaster = CombatMaster || (function() {
         
     				if (!characterObj) {
                          makeAndSendMenu('A token was found not assigned to a character sheet',' ', whisper);   
-                    } else {  
-                        initAttributes  = initiative.initiativeAttributes.split(';')
-                        log(initAttributes)
-                        initAttributes.forEach((attributes) => {
-                            attribute  = getAttrByName(characterObj.id,attributes,'current') 
-                            if (!attribute) {
-                                makeAndSendMenu('Initiative Attribute ' + attributes + ' not found on character sheet',' ', whisper);  
-                            }                       
-                        })
-                    }    
+                    } 
+                    // else {  
+                    //     initAttributes  = initiative.initiativeAttributes.split(';')
+                    //     log(initAttributes)
+                    //     initAttributes.forEach((attributes) => {
+                    //         attribute  = getAttrByName(characterObj.id,attributes,'current') 
+                    //         if (!attribute) {
+                    //             makeAndSendMenu('Initiative Attribute ' + attributes + ' not found on character sheet',' ', whisper);  
+                    //         }                       
+                    //     })
+                    // }    
                 }    
 			})    
         }  
@@ -1479,7 +1486,7 @@ var CombatMaster = CombatMaster || (function() {
         } else {
             statusmarkers = []
         } 
-        
+        log(statusmarkers)
         if (duration) {
             statusmarker = marker+'@'+duration
         } else {
@@ -1487,8 +1494,10 @@ var CombatMaster = CombatMaster || (function() {
         }
 
         [...statusmarkers].forEach((a, i) => {
+            log(a.indexOf(marker))
+            
             if (a.indexOf(marker) > -1) {
-                statusmarkers.splice(i,0,statusmarker)
+                statusmarkers.splice(i,0)
                 exists = true
             }        
         });        
@@ -1962,7 +1971,7 @@ var CombatMaster = CombatMaster || (function() {
         intervalHandle = setInterval(() => {
             if(paused) return;
 
-            if(timerObj) timerObj.set({
+            if(timerObj && timer.showTokenTimer) timerObj.set({
                 top: token.get('top')+token.get('width')/2+40,
                 left: token.get('left'),
                 text: 'Timer: ' + time,
@@ -2077,7 +2086,7 @@ var CombatMaster = CombatMaster || (function() {
                         log('Prev:'      + prev)
                         log('Show:'      + show)
                     }            
-                    
+                    log(condition)
                     descriptionButton = makeButton(condition.name, '!cmaster --show,description,key='+condition.key) 
                     
                     if (!delay && !show) {
@@ -3447,7 +3456,7 @@ var CombatMaster = CombatMaster || (function() {
         }
         setDefaults();
         buildHelp();
-        log(script_name + ' Ready! Command: !'+state[combatState].config.command);
+        log(script_name + ' Ready! Command: !cmaster --main');
     },    
     
     registerEventHandlers = function() {
@@ -3458,12 +3467,6 @@ var CombatMaster = CombatMaster || (function() {
         on('change:graphic:top', handleGraphicMovement);
         on('change:graphic:left', handleGraphicMovement);
         on('change:graphic:layer', handleGraphicMovement);
-        
-        if('undefined' !== typeof API && API.ObserveTokenChange){
-            API.ObserveTokenChange(function(obj,prev) {
-                handleStatusMarkerChange(obj,prev);
-            });
-        }
 
         if('undefined' !== typeof DeathTracker && DeathTracker.ObserveTokenChange){
             DeathTracker.ObserveTokenChange(function(obj,prev) {
@@ -3476,6 +3479,12 @@ var CombatMaster = CombatMaster || (function() {
                 handleStatusMarkerChange(obj,prev);
             });
         }
+        
+        if('undefined' !== typeof TokenMod && TokenMod.ObserveTokenChange) {             
+            TokenMod.ObserveTokenChange(function(obj,prev) {
+                handleStatusMarkerChange(obj,prev);
+            });    
+        }       
     };
     
     return {
