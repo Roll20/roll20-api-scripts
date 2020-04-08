@@ -38,6 +38,48 @@
     }
 
     /**
+     * Extracts the selected graphics from a chat message.
+     * @param {ChatMessage} msg
+     * @return {Graphic[]}
+     */
+    static getGraphicsFromMsg(msg) {
+      var result = [];
+
+      var selected = msg.selected;
+      if(selected) {
+        _.each(selected, s => {
+          let graphic = getObj('graphic', s._id);
+          if(graphic)
+            result.push(graphic);
+        });
+      }
+      return result;
+    }
+
+    /**
+     * Publicly shame a player for trying to use a GMs-only part of this script.
+     * @param {Player} player
+     * @param {string} component A descriptor of the component the player tried
+     * to access.
+     */
+    static tattle(player, component) {
+      let name = player.get('_displayname');
+      MarchingOrder.utils.Chat.broadcast(`Player ${name} has been caught ` +
+        `accessing a GMs-only part of the Marching Order ` +
+        `script: ${component}. Shame on them!`);
+    }
+
+    /**
+     * Notify GMs about a warning.
+     * @param {Error} err
+     */
+    static warn(err) {
+      log(`MarchingOrder WARNING: ${err.message}`);
+      MarchingOrder.utils.Chat.whisperGM(
+        `WARNING: ${err.message}`);
+    }
+
+    /**
      * Whispers a message to someoen.
      * @param {Player} player The player who will receive the whisper.
      * @param {string} msg The whispered message.

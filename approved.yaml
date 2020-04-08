@@ -769,3 +769,7 @@ spellmaster:
 shadowrun5thedition:
   - "Shadowrun 5th Edition"
   - "System Toolbox"
+
+combatmaster:
+  - "CombatMaster"
+  - "Utility"
