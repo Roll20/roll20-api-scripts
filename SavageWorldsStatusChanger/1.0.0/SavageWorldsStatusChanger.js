@@ -22,7 +22,7 @@
 
 */
 //  By: Carl D.  https://app.roll20.net/users/2505097/carl-d
-//
+//  http://www.webcommando.com/
 //
 var SavageWorldsStatusChanger = SavageWorldsStatusChanger || (function() {
     'use strict';
