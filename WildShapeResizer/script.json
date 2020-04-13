@@ -1,0 +1,16 @@
+{
+    "name": "WildShapeResizer",
+    "script": "WildShapeResizer.js",
+    "version": "0.0.1",
+    "previousversions": [],
+    "description": "A script to automatically resize a Rollable Table Token when a different side is chosen. It does this by repurposing the “weight” attribute of the Items in the Rollable Table. It was written with D&D Druid Wild Shape tokens in mind, but would work for any square rollable table tokens from which players will choose different sides.\nThe script listens to token:change events, looks for a table with the same name as the token, and updates the token size when the side changes, so no other configuration should be required.",
+    "authors": "Erik O.",
+    "roll20userid": "1828947",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {
+        "token.width": "read,write",
+        "token.height": "read,write"
+    },
+    "conflicts": []
+}
