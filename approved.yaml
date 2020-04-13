@@ -774,10 +774,6 @@ combatmaster:
   - "CombatMaster"
   - "Utility"
 
-deltagreen:
-  - "Delta Green"
-  - "System Toolbox"
-
 wildshaperesizer:
   - "WildShapeResizer"
   - "Utility"
