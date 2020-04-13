@@ -773,3 +773,15 @@ shadowrun5thedition:
 combatmaster:
   - "CombatMaster"
   - "Utility"
+
+deltagreen:
+  - "Delta Green"
+  - "System Toolbox"
+
+wildshaperesizer:
+  - "WildShapeResizer"
+  - "Utility"
+
+savageworldsstatuschanger:
+  - "SavageWorldsStatusChanger"
+  - "System Toolbox"
