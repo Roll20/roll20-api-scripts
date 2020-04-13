@@ -1,5 +1,5 @@
 /* 
- * Version 1.8 Alpha
+ * Version 2.09
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,13 +11,14 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '1.8 Alpha',
+	    version = '2.09',
         timerObj,
         intervalHandle,
         debug = true,
         rotationInterval,
         paused = false,
         who = 'gm',
+        playerID = null,
         markers = [],
         observers = {
             tokenChange: []
@@ -31,7 +32,7 @@ var CombatMaster = CombatMaster || (function() {
         stopImage = '6',
         tagImage = '3',
         noTagImage = 'd',
-        deleteImage = 'D',
+        deleteImage = '#',
         shuffleImage = ';',
         randomSingleImage = '`',
         randomLoopImage = '?',
@@ -53,6 +54,7 @@ var CombatMaster = CombatMaster || (function() {
         showImage = 'v',
         delayImage = '}',
         sortConditionsImage = '0';
+        
     //Styling for the chat responses.
     const styles = {
         reset: 'padding: 0; margin: 0;',
@@ -103,35 +105,45 @@ var CombatMaster = CombatMaster || (function() {
         }
         
         log(msg_orig)
-        var msg = _.clone(msg_orig),cmdDetails,args,restrict,player
-        let playerID = msg.playerid
+        
+        var msg = _.clone(msg_orig),args,restrict,player
+        
+        playerID = msg.playerid
         if (playerIsGM(msg.playerid)) {
+              state[combatState].config.gmPlayerID = msg.playerid
               who = 'gm'
         } else {
             who = getObj('player', msg.playerid).get('displayname');
-           
         }
-        
-        // if (debug) {
-        //     log ('Who:'+who)
-        // }
-        
+
 		if(_.has(msg,'inlinerolls')) {//calculates inline rolls
 			msg.content = inlineExtract(msg);
 		}
-        //splits the message contents into discrete arguments
-		args = msg.content.split(/\s+--/);
-	    if(args[0] === '!cmaster'){
-            if(args[1]){
-                _.each(_.rest(args,1),(cmd) =>{
-                    cmdDetails = cmdExtract(cmd);
-                    if (debug){
-                        log(cmdDetails)
-                    }
-                    commandHandler(cmdDetails,msg,restrict,who,playerID)
-                })    
-            }
-    	}
+		
+		//splits the message contents into discrete arguments, special handling for import
+	    let cmdDetails = {
+	        details: {}
+	    }
+        
+        if (msg.content.indexOf('import') >= 0) {
+            cmdDetails.action = 'import'
+            msg.content = msg.content.replace('!cmaster ','')
+            cmdDetails.details['config'] = msg.content.replace('--import,','')
+            commandHandler(cmdDetails,msg,restrict,who,playerID)
+        } else {
+    		args = msg.content.split(/\s+--/);
+    	    if(args[0] === '!cmaster'){
+                if(args[1]){
+                    _.each(_.rest(args,1),(cmd) =>{
+                        cmdDetails = cmdExtract(cmd);
+                        if (debug){
+                            log(cmdDetails)
+                        }
+                        commandHandler(cmdDetails,msg,restrict,who,playerID)
+                    })    
+                }
+        	}
+        }	
 	},  
 	
 	//Extracts inline rolls
@@ -150,47 +162,45 @@ var CombatMaster = CombatMaster || (function() {
     //Extracts the command details from a command string passed from handleInput	
 	cmdExtract = function(cmd){
 	    var cmdSep = {
-	        details:{}
+	        details: {}
 	    },
 	    vars,
 	    temp,
 	    details;
+        log(cmd)
+        //special handling of import is required
         
         let values = parseLine(cmd)
         let lookup = values.lookup
         let tokens = values.tokens
+        if (debug) {
+            log('Lookup:' + lookup)
+            log('Tokens:' + tokens)
+        }
 
-        log('Lookup:' + lookup)
-        log('Tokens:' + tokens)
         //find the action and set the cmdSep Action
 	    cmdSep.action = String(tokens).match(/turn|show|config|back|reset|main|remove|add|new|delete|import|export|help/);
         //the ./ is an escape within the URL so the hyperlink works.  Remove it
         cmd.replace('./', '');
 
         //split additional command actions
-        if (cmdSep.action == 'import') {
-            cmdSep.details['config'] = cmd.replace(cmdSep.action+',','')
-        } else {
-    	    _.each(String(tokens).replace(cmdSep.action+',','').split(','),(d) => {
-                vars=d.match(/(who|next|previous|delay|start|timer|stop|pause|show|all|favorites|setup|conditions|condition|sort|combat|turnorder|accouncements|timer|macro|status|list|export|import|type|key|value|setup|tracker|confirm|direction|duration|message|initiative|config|assigned|type|action|description|target|id|)(?:\:|=)([^,]+)/) || null;
-                if(vars) {
-                    if (vars[2].includes('INDEX')) {
-                        let key, result, temp
-                        for (key in lookup) {
-                            result = lookup[key].replace(/{/g, '')  
-                            result = result.replace(/}/g, '') 
-                            log(result)
-                            vars[2] = vars[2].replace('{INDEX:' + key + '}',result)
-                        }
-                    }                        
-                    temp = (vars[2] === 'true') ? true : (vars[2] === 'false') ? false : vars[2]
-                    cmdSep.details[vars[1]]=temp;
-                } else {
-                    cmdSep.details[d]=d;
-                }
-            });
-        }    
-
+	    _.each(String(tokens).replace(cmdSep.action+',','').split(','),(d) => {
+            vars=d.match(/(who|next|previous|delay|start|timer|stop|pause|show|all|favorites|setup|conditions|condition|sort|combat|turnorder|accouncements|timer|macro|status|list|export|import|type|key|value|setup|tracker|confirm|direction|duration|message|initiative|config|assigned|type|action|description|target|id|)(?:\:|=)([^,]+)/) || null;
+            if(vars) {
+                if (vars[2].includes('INDEX')) {
+                    let key, result, temp
+                    for (key in lookup) {
+                        result = lookup[key].replace(/{/g, '')  
+                        result = result.replace(/}/g, '') 
+                        vars[2] = vars[2].replace('{INDEX:' + key + '}',result)
+                    }
+                }                        
+                temp = (vars[2] === 'true') ? true : (vars[2] === 'false') ? false : vars[2]
+                cmdSep.details[vars[1]]=temp;
+            } else {
+                cmdSep.details[d]=d;
+            }
+        });
 
         return cmdSep;
 	},	   
@@ -358,7 +368,7 @@ var CombatMaster = CombatMaster || (function() {
             }    
         }      
         if (cmdDetails.action == 'import') {
-            importConditions(cmdDetails.details.config)
+            importCombatMaster(cmdDetails.details.config)
         }
         if (cmdDetails.action == 'reset') {
 			state[combatState] = {};
@@ -413,7 +423,7 @@ var CombatMaster = CombatMaster || (function() {
         for (key in conditions) {
             condition       = getConditionByKey(key)
             
-            let installed = verifyLibTokenMarker(condition.iconType)
+            let installed = verifyInstalls(condition.iconType)
             if (!installed) {
                 return
             }
@@ -547,7 +557,17 @@ var CombatMaster = CombatMaster || (function() {
         let backButton = makeBigButton('Back', '!cmaster --back,setup'),
             listItems = [],
             turnorder = state[combatState].config.turnorder;
-		    
+
+        let installed 
+        installed = verifyInstalls(turnorder.nextMarkerType)
+        if (!installed) {
+            return
+        }	
+        installed = verifyInstalls(turnorder.markerType)
+        if (!installed) {
+            return
+        }        
+        
 		listItems.push(makeTextButton('Sort Turnorder',turnorder.sortTurnOrder, '!cmaster --config,turnorder,key=sortTurnOrder,value='+!turnorder.sortTurnOrder + ' --show,turnorder'))
         listItems.push(makeTextButton('Center Map on Token', turnorder.centerToken, '!cmaster --config,turnorder,key=centerToken,value='+!turnorder.centerToken + ' --show,turnorder'))
         listItems.push(makeTextButton('Use Marker',turnorder.useMarker, '!cmaster --config,turnorder,key=useMarker,value='+!turnorder.useMarker + ' --show,turnorder'))
@@ -556,10 +576,6 @@ var CombatMaster = CombatMaster || (function() {
         if (turnorder.markerType == 'External URL') {
             listItems.push(makeTextButton('Marker', '<img src="'+turnorder.externalMarkerURL+'" width="20px" height="20px" />', '!cmaster --config,turnorder,key=externalMarkerURL,value=?{Image Url} --show,turnorder'))
         }  else if (turnorder.markerType == 'Token Marker')	{
-            let installed = verifyLibTokenMarker(turnorder.markerType)
-            if (!installed) {
-                return
-            }
 		    listItems.push(makeTextButton('Marker Name',turnorder.tokenMarkerName, '!cmaster --config,turnorder,key=tokenMarkerName,value=?{Marker Name|} --show,turnorder'))
             listItems.push(getDefaultIcon('Token Marker',turnorder.tokenMarkerName))
 		}			
@@ -569,10 +585,6 @@ var CombatMaster = CombatMaster || (function() {
 		if (turnorder.nextMarkerType == 'External URL') {	
 			 listItems.push(makeTextButton('Next Marker', '<img src="'+turnorder.nextExternalMarkerURL+'" width="20px" height="20px" />', '!cmaster --config,turnorder,key=nextExternalMarkerURL,value=?{Image Url} --show,turnorder'))
 		} else if (turnorder.nextMarkerType == 'Token Marker')	{
-            let installed = verifyLibTokenMarker(turnorder.nextMarkerType)
-            if (!installed) {
-                return
-            }		    
 		    listItems.push(makeTextButton('Next Marker Name',turnorder.nextTokenMarkerName, '!cmaster --config,turnorder,key=nextTokenMarkerName,value=?{Next Marker Name|} --show,turnorder'))
             listItems.push(getDefaultIcon('Token Marker', turnorder.nextTokenMarkerName))
 		}	
@@ -632,12 +644,12 @@ var CombatMaster = CombatMaster || (function() {
 	
 	sendMacroMenu = function() {
         let backButton = makeBigButton('Back', '!cmaster --back,setup'),
-            addButton = makeBigButton('Add Substiution', '!cmaster --new,macro,type=?{Type|CharID,CharID|CharName,CharName|TokenID,TokenID|},action=?{Action|}'),
+            addButton = makeBigButton('Add Substiution', '!cmaster --new,macro,type=?{Type|CharID,CharID|CharName,CharName|TokenID,TokenID|PlayerID,PlayerID},action=?{Action|}'),
             substitutions = state[combatState].config.macro.substitutions,
             listItems=[], contents,deleteButton,listContents
   
         substitutions.forEach((substitution) => {
-            deleteButton = makeImageButton('!cmaster --delete,macro,action='+substitution.action,backImage,'Delete Substitution','transparent',12)
+            deleteButton = makeImageButton('!cmaster --delete,macro,action='+substitution.action,deleteImage,'Delete Substitution','transparent',12)
             
             listContents ='<div>'
             listContents +='<span style="vertical-align:middle">'+substitution.type+ '-'+substitution.action+'</span>'
@@ -677,7 +689,7 @@ var CombatMaster = CombatMaster || (function() {
 			
         for (key in state[combatState].config.conditions) {
             condition       = getConditionByKey(key)
-            let installed = verifyLibTokenMarker(condition.iconType)
+            let installed = verifyInstalls(condition.iconType)
             if (!installed) {
                 return
             }            
@@ -712,6 +724,7 @@ var CombatMaster = CombatMaster || (function() {
     },
 
     sendConditionMenu = function(key) {
+        // const matchConditionChar = (character) => (character||{get:()=>''}).get('name').match(/^\s*(condition|decoration|mount)\s*:/i);
         let condition  = state[combatState].config.conditions[key], listItems = [], markerDropdown = ''
 
         if (debug) {
@@ -728,39 +741,44 @@ var CombatMaster = CombatMaster || (function() {
 		    backButton          = makeBigButton('Back', '!cmaster --back')	 
 
 		listItems.push(makeTextButton('Name', condition.name, '!cmaster --config,condition='+key+',key=name,value=?{Name}'))
-		listItems.push(makeTextButton('Icon Type', condition.iconType, '!cmaster --config,condition='+key+',key=iconType,value=?{Icon Type|Combat Master,Combat Master|Token Marker,Token Marker|Token Condition, Token Condition} --show,condition='+key))
-
-        let installed = verifyLibTokenMarker(condition.iconType)
+		listItems.push(makeTextButton('Icon Type', condition.iconType, '!cmaster --config,condition='+key+',key=iconType,value=?{Icon Type|Combat Master,Combat Master|Token Marker,Token Marker|Token Condition,Token Condition} --show,condition='+key))
+        
+        let installed = verifyInstalls(condition.iconType)
         if (!installed) {
             return
         }   
 
+        markerDropdown = '?{Marker';
         if (condition.iconType == 'Combat Master') {
-    		markerDropdown = '?{Marker';		
             ctMarkers.forEach((marker) => {
                 markerDropdown += '|'+ucFirst(marker).replace(/-/g, ' ')+','+marker
             })
-            markerDropdown += '}';            
         } else if (condition.iconType == 'Token Marker') {
             if (markers.length == 0) {
     	        markers = getTokenMarkers();
             }
-            
-    		markerDropdown = '?{Marker';		
             markers.forEach((marker) => {
                 markerDropdown += '|'+marker.name+','+marker.name
             })
-            markerDropdown += '}';
-        } else if (condition.iconType == 'Token Condition') {
+        } 
+        // else if (condition.iconType == 'Token Condition') {
             
-        }    
-
-	    listItems.push(makeTextButton('Icon', getDefaultIcon(condition.iconType,condition.icon), '!cmaster --config,condition='+key+',key=icon,value='+markerDropdown+' --show,condition='+key))				
+        //     let conditionChars = findObjs({type:"character"}).filter(matchConditionChar);
+        //     log(conditionChars)
+        // }    
+        markerDropdown += '}';
+        
+        if (condition.iconType == 'Token Condition') {
+            listItems.push(makeTextButton('Icon', condition.icon, '!cmaster --config,condition='+key+',key=icon,value=?{Token Condition|} --show,condition='+key))				
+        } else {     
+	        listItems.push(makeTextButton('Icon', getDefaultIcon(condition.iconType,condition.icon), '!cmaster --config,condition='+key+',key=icon,value='+markerDropdown+' --show,condition='+key))				
+        }
+        
 		listItems.push(makeTextButton('Duration', condition.duration, '!cmaster --config,condition='+key+',key=duration,value=?{Duration|1} --show,condition='+key))
 		listItems.push(makeTextButton('Direction', condition.direction, '!cmaster --config,condition='+key+',key=direction,value=?{Direction|0} --show,condition='+key))
 		listItems.push(makeTextButton('Override', condition.override, '!cmaster --config,condition='+key+',key=override,value='+!condition.override+' --show,condition='+key))
 		listItems.push(makeTextButton('Favorites', condition.favorite, '!cmaster --config,condition='+key+',key=favorite,value='+!condition.favorite+' --show,condition='+key))
-		listItems.push(makeTextButton('Message', condition.message, '!cmaster --config,condition='+key+',key=message,value=?{Message}) --show,condition='+key))
+		listItems.push(makeTextButton('Message', condition.message, '!cmaster --config,condition='+key+',key=message,value=?{Message} --show,condition='+key))
         listItems.push(makeTextButton('Targeted', condition.targeted, '!cmaster --config,condition='+key+',key=targeted,value='+!condition.targeted+' --show,condition='+key))
         listItems.push('<div style="margin-top:3px"><i><b>Adding Condition</b></i></div>' )
 		listItems.push(makeTextButton('API', condition.addAPI, '!cmaster --config,condition='+key+',key=addAPI,value=?{API Command|} --show,condition='+key))
@@ -792,9 +810,9 @@ var CombatMaster = CombatMaster || (function() {
         }    
     },
     
-    importConditions = function (config) {
-        let json, 
-            backButton = makeBigButton('Back', '!cmaster --back,setup');
+    importCombatMaster = function (config) {
+        let json 
+        let backButton = makeBigButton('Back', '!cmaster --back,setup');
         
         json = JSON.parse(config.replace('config=',''));
         if (['cmaster','cm'].includes(json.command)) {
@@ -851,7 +869,6 @@ var CombatMaster = CombatMaster || (function() {
 		}    
 		else {
     		if (cmdDetails.details.key === 'name' && cmdDetails.details.value.replace(/\s/g, '').toLowerCase() !== state[combatState].config.conditions[cmdDetails.details.condition]) { 
-
       			state[combatState].config.conditions[cmdDetails.details.value.toLowerCase()] = state[combatState].config.conditions[cmdDetails.details.condition];
       			state[combatState].config.conditions[cmdDetails.details.value.toLowerCase()].key = cmdDetails.details.value.toLowerCase()
       			state[combatState].config.conditions[cmdDetails.details.value.toLowerCase()].name = cmdDetails.details.value
@@ -1010,7 +1027,9 @@ var CombatMaster = CombatMaster || (function() {
         }
 
         if (cmdDetails.details.id) {
-            removeConditionFromToken(getObj('graphic', cmdDetails.details.id), cmdDetails.details.condition)  
+            let token = getObj('graphic', cmdDetails.details.id)
+            removeConditionFromToken(token, cmdDetails.details.condition)  
+            doRemoveConditionCalls(token,cmdDetails.details.condition)
         } else if (selectedTokens) {
         	selectedTokens.forEach(token => {
         	    if (token._type == 'graphic') {
@@ -1027,7 +1046,7 @@ var CombatMaster = CombatMaster || (function() {
 
         if (debug) {
             log('Add Condition To Token')
-            log('Key:'+key)
+            log('Key:' + key)
             log('Duration:' + duration)
             log('Direction:' + direction)
             log('Message:'+message)
@@ -1040,6 +1059,7 @@ var CombatMaster = CombatMaster || (function() {
             newCondition.id                 = tokenObj.get("_id")
             newCondition.key                = key
             newCondition.target             = []
+            newCondition.tokenConditionID   = null
             
             if (defaultCondition) {
                 newCondition.name               = defaultCondition.name
@@ -1047,7 +1067,7 @@ var CombatMaster = CombatMaster || (function() {
                 newCondition.iconType           = defaultCondition.iconType
                 newCondition.addMacro           = defaultCondition.addMacro
                 newCondition.addPersistentMacro = defaultCondition.addPersistentMacro
-            } else{
+            } else {
                 newCondition.name               = key
                 newCondition.icon               = null
                 newCondition.iconType           = null
@@ -1056,14 +1076,35 @@ var CombatMaster = CombatMaster || (function() {
             }
             
             let icon
-            if (newCondition.iconType == 'Token Marker') {
-                if ('undefined' !== typeof libTokenMarkers && libTokenMarkers.getOrderedList) {
-                    icon = libTokenMarkers.getStatus(newCondition.icon).getTag()
-                } else {
-                    makeAndSendMenu('libTokenMarker must be installed if using Custom Icons', '', 'gm');
-                }               
-            } else if (newCondition.iconType == 'Combat Master') {
-                icon = newCondition.icon
+            if (newCondition.iconType) {
+                icon = getIconTag(newCondition.iconType, newCondition.icon)
+            }
+
+            if (newCondition.iconType == 'Token Condition') {
+                let characterObj = findObjs({name: newCondition.icon, _type: 'character'})[0];
+                characterObj.get("defaulttoken", function(defaulttoken) {
+
+                    let newToken = JSON.parse(defaulttoken)
+                    let condition = createObj('graphic', {
+                                        subtype:'token',
+                                        name: newToken.name,
+                                        imgsrc: getCleanImgsrc(newToken.imgsrc),
+                                        pageid: tokenObj.get('pageid'),
+                                        represents: characterObj.id,
+                                        layer: tokenObj.get('layer'),
+                                        left: tokenObj.get('left'), 
+                                        top: tokenObj.get('top'),
+                                        width: tokenObj.get('width'), 
+                                        height: tokenObj.get('height')
+                                    });   
+                    let result = TokenCondition.AttachConditionToToken(condition.id,tokenObj.id);
+                    log(result)             
+        			if(result.success) {
+        				newCondition.tokenConditionID = condition.id
+        			} else {
+        				log(`Attach failed. Message: ${result.reason}`);
+        			}                                        
+                });
             }
             
             if (!duration && defaultCondition) {
@@ -1084,7 +1125,10 @@ var CombatMaster = CombatMaster || (function() {
                 newCondition.message = message
             }   
             
-            state[combatState].conditions.push(newCondition)
+            setTimeout(function() {
+                 log(newCondition)
+                 state[combatState].conditions.push(newCondition)
+            },500) 
 
             if (icon) {
                 if (newCondition.key == 'dead' || newCondition.duration <= 1) {
@@ -1096,58 +1140,85 @@ var CombatMaster = CombatMaster || (function() {
                         addMarker(tokenObj,icon,newCondition.duration)
                     }
                 }  
-            }    
+            } 
             
             if (state[combatState].config.status.sendConditions && !removed && defaultCondition) {
                 sendConditionToChat(newCondition.key)
             }  
-
             if (defaultCondition && defaultCondition.targeted) {
                 targetedCondition(newCondition.id, key)
             }    
         }    
     },  
 
-    removeConditionFromToken = function(tokenObj,key,removeAll) {
+    getCleanImgsrc =  function (imgsrc) {
+        let parts = imgsrc.match(/(.*\/images\/.*)(thumb|med|original|max)([^?]*)(\?[^?]+)?$/);
+        if(parts) {
+            return parts[1]+'thumb'+parts[3]+(parts[4]?parts[4]:`?${Math.round(Math.random()*9999999)}`);
+        }
+        return;
+    },
+    
+    removeConditionFromToken = function(tokenObj,key) {
         if (debug) {
             log('Remove Condition From Token')
             log('Condition:'+key)
         } 
           
         let removed = false
+        let icon
         
         if (verifyCondition(tokenObj.get("_id"), key)) {  
             [...state[combatState].conditions].forEach((condition, i) => {
                 if (condition.id == tokenObj.get('_id')) {
                     if (condition.key == key) {
-                        if (condition.target.length > 0) {
-                            condition.target.forEach((target, j) => {
-                                log(target)
-                                removeMarker(getObj('graphic', target),condition.icon)
-                            })    
-                        }
+                        if (condition.iconType) {
+                            icon = getIconTag(condition.iconType, condition.icon)
+                        }           
+                        if (condition.hasOwnProperty('target')) {
+                            if (condition.target.length > 0) {
+                                condition.target.forEach((target, j) => {
+                                    if (icon) {
+                                        removeMarker(getObj('graphic', target),icon)
+                                    } else if (condition.iconType == 'Token Condition') {
+                                        removeTokenCondition(condition.tokenConditionID)
+                                    }    
+                                })    
+                            }
+                        }    
+                        if (icon) {            
+                            removeMarker(tokenObj,icon)
+                        } else if (condition.iconType == 'Token Condition') {
+                            removeTokenCondition(condition.tokenConditionID)
+                        }                            
                         state[combatState].conditions.splice(i,1)
                         removed = true
                     }
                 }      
             });  
         }    
-        
-        let condition = getConditionByKey(key)
-        if (condition) {
-            removeMarker(tokenObj,getConditionByKey(key).icon)
-        }
-        
         return removed
     },
 
+    removeTokenCondition = function (id) {
+        if (debug) {
+            log('Remove Token Condition')
+            log('Token Condition ID:' + id)
+        }
+        let conditionToken = findObjs({_id:id,_pageid:Campaign().get("playerpageid"), _type: 'graphic'})[0];
+        conditionToken.remove()
+    },
+    
     sendConditionToChat = function (key) {
         if (debug) {
             log("Send Condition To Chat")
         }
         
         let condition = getConditionByKey(key)
-        let icon      = getDefaultIcon(condition.iconType,condition.icon, 'margin-right: 5px; margin-top: 5px; display: inline-block;');
+        let icon
+        if (['Combat Master','Token Marker'].includes(condition.iconType)) {
+            icon  = getDefaultIcon(condition.iconType,condition.icon, 'margin-right: 5px; margin-top: 5px; display: inline-block;');
+        }    
         makeAndSendMenu(condition.description,icon+condition.name,(state[combatState].config.status.sendOnlyToGM) ? 'gm' : '');
     },
   
@@ -1162,17 +1233,12 @@ var CombatMaster = CombatMaster || (function() {
         [...state[combatState].conditions].forEach((condition,i) => {
             if (condition.id == id && condition.key == key) {
                 selectedTokens.forEach(token => {
-                    if (condition.iconType == 'Token Marker') {
-                        if ('undefined' !== typeof libTokenMarkers && libTokenMarkers.getOrderedList) {
-                            icon = libTokenMarkers.getStatus(condition.icon).getTag()
-                        } else {
-                            makeAndSendMenu('libTokenMarker must be installed if using Custom Icons', '', 'gm');
-                        }               
-                    } else if (condition.iconType == 'Combat Master') {
-                        icon = condition.icon
-                    }                    
-                    state[combatState].conditions[i].target.push(token._id)
-                    addMarker(getObj('graphic', token._id),icon)
+                    let installed = verifyInstalls(condition.iconType)
+                    if (installed) {
+                        icon = getIconTag(condition.iconType,condition.icon)
+                        state[combatState].conditions[i].target.push(token._id)
+                        addMarker(getObj('graphic', token._id),icon)
+                    }    
                 })    
             }   
             log (state[combatState].conditions[i])
@@ -1215,16 +1281,17 @@ var CombatMaster = CombatMaster || (function() {
         
     				if (!characterObj) {
                          makeAndSendMenu('A token was found not assigned to a character sheet',' ', whisper);   
-                    } else {  
-                        initAttributes  = initiative.initiativeAttributes.split(';')
-                        log(initAttributes)
-                        initAttributes.forEach((attributes) => {
-                            attribute  = getAttrByName(characterObj.id,attributes,'current') 
-                            if (!attribute) {
-                                makeAndSendMenu('Initiative Attribute ' + attributes + ' not found on character sheet',' ', whisper);  
-                            }                       
-                        })
-                    }    
+                    } 
+                    // else {  
+                    //     initAttributes  = initiative.initiativeAttributes.split(';')
+                    //     log(initAttributes)
+                    //     initAttributes.forEach((attributes) => {
+                    //         attribute  = getAttrByName(characterObj.id,attributes,'current') 
+                    //         if (!attribute) {
+                    //             makeAndSendMenu('Initiative Attribute ' + attributes + ' not found on character sheet',' ', whisper);  
+                    //         }                       
+                    //     })
+                    // }    
                 }    
 			})    
         }  
@@ -1419,7 +1486,7 @@ var CombatMaster = CombatMaster || (function() {
         } else {
             statusmarkers = []
         } 
-        
+        log(statusmarkers)
         if (duration) {
             statusmarker = marker+'@'+duration
         } else {
@@ -1427,8 +1494,10 @@ var CombatMaster = CombatMaster || (function() {
         }
 
         [...statusmarkers].forEach((a, i) => {
+            log(a.indexOf(marker))
+            
             if (a.indexOf(marker) > -1) {
-                statusmarkers.splice(i,0,statusmarker)
+                statusmarkers.splice(i,0)
                 exists = true
             }        
         });        
@@ -1652,7 +1721,7 @@ var CombatMaster = CombatMaster || (function() {
         }
         
         if (turn.id === '-1') { 
-            doTurnorderCalls()
+            doRoundCalls()
             nextTurn();
             return;
         }
@@ -1724,6 +1793,7 @@ var CombatMaster = CombatMaster || (function() {
         });
 
         setTurnorder(turnorder);
+        doTurnorderChange();
     },
 
     getTurnorder = function () {
@@ -1902,7 +1972,7 @@ var CombatMaster = CombatMaster || (function() {
         intervalHandle = setInterval(() => {
             if(paused) return;
 
-            if(timerObj) timerObj.set({
+            if(timerObj && timer.showTokenTimer) timerObj.set({
                 top: token.get('top')+token.get('width')/2+40,
                 left: token.get('left'),
                 text: 'Timer: ' + time,
@@ -1965,32 +2035,35 @@ var CombatMaster = CombatMaster || (function() {
         
         contents += conditions
         
-        let characterObj = getObj('character', tokenObj.get('represents'))  
-        let controlledBy = characterObj.get('controlledby')
-        let players      = controlledBy.split(",")        
+        let characterObj = getObj('character', tokenObj.get('represents')) 
 
-        if (characterObj && state[combatState].config.status.userChanges) {
-            if (players.length > 1) {
-                let playerObj, displayName
-                players.forEach((playerID) => {
-                    playerObj = getObj('player', playerID)
-                    if (playerObj) {
-                        displayName = playerObj.get('displayname')
-                        sendMainMenu(displayName)
-                    }    
-                })
-            }            
-        }   
-
-        if (characterObj && state[combatState].config.announcements.announceTurn) {
-            let target
-            if (players[0] != "") {
-                target = (state[combatState].config.announcements.whisperToGM) ? 'gm' : ''
-            } else {
-                target = (!state[combatState].config.announcements.showNPCTurns) ? 'gm' : ''
-            }    
-            makeAndSendMenu(contents,title,target);
-        }   
+        if (characterObj) {
+            let controlledBy = characterObj.get('controlledby')
+            let players      = controlledBy.split(",")        
+        
+            if (state[combatState].config.status.userChanges) {
+                if (players.length > 1) {
+                    let playerObj, displayName
+                    players.forEach((playerID) => {
+                        playerObj = getObj('player', playerID)
+                        if (playerObj) {
+                            displayName = playerObj.get('displayname')
+                            sendMainMenu(displayName)
+                        }    
+                    })
+                }            
+            }   
+            
+            if (state[combatState].config.announcements.announceTurn) {
+                let target
+                if (players[0] != "") {
+                    target = (state[combatState].config.announcements.whisperToGM) ? 'gm' : ''
+                } else {
+                    target = (!state[combatState].config.announcements.showNPCTurns) ? 'gm' : ''
+                }    
+                makeAndSendMenu(contents,title,target);
+            }   
+        }
     },
 
     getAnnounceConditions = function (tokenObj, prev, delay, show) {
@@ -2014,7 +2087,7 @@ var CombatMaster = CombatMaster || (function() {
                         log('Prev:'      + prev)
                         log('Show:'      + show)
                     }            
-                    
+                    log(condition)
                     descriptionButton = makeButton(condition.name, '!cmaster --show,description,key='+condition.key) 
                     
                     if (!delay && !show) {
@@ -2025,7 +2098,7 @@ var CombatMaster = CombatMaster || (function() {
                         }
                     }    
                     
-                    if (condition.duration == 0 && condition.direction != 0) {
+                    if (condition.duration <= 0 && condition.direction != 0) {
                         output += '<div style="display:inline-block;"><strong>'+descriptionButton+'</strong> removed</div>';
                         if (!delay && !show) {
                             removeConditionFromToken(tokenObj, condition.key);  
@@ -2116,10 +2189,10 @@ var CombatMaster = CombatMaster || (function() {
             return 'None'
         }
         
-        if (iconType == 'Token Marker') {
-            if('undefined' !== typeof libTokenMarkers && libTokenMarkers.getOrderedList){
-                return libTokenMarkers.getStatus(icon).getHTML(1.7);
-            } 
+        let installed = verifyInstalls(iconType)
+        
+        if (iconType == 'Token Marker' && installed) {
+            return libTokenMarkers.getStatus(icon).getHTML(1.7);
         } else if (iconType == 'Combat Master') {   
             let X = '';
             let iconStyle = ''
@@ -2149,16 +2222,12 @@ var CombatMaster = CombatMaster || (function() {
     
             return '<div style="vertical-align:middle;'+iconStyle+'">'+X+'</div>';
         } else if (iconType == 'Token Condition') {
-            
+            return '<b>TC </b> '
         }    
     },
     
     getTokenMarkers = function () {
-        if('undefined' !== typeof libTokenMarkers && libTokenMarkers.getOrderedList){
-            return libTokenMarkers.getOrderedList();
-        }
-        
-        return null
+        return libTokenMarkers.getOrderedList();
     },    
  
     findIcon = function (icon) {
@@ -2168,14 +2237,42 @@ var CombatMaster = CombatMaster || (function() {
             }
         })
     },
-    
-    verifyLibTokenMarker = function(iconType) {
+
+    getIconTag = function (iconType,iconName) {
+        if (debug) {
+            log('Get Icon Tag')
+            log('Icon Type:' + iconType)
+            log('Icon Name:' + iconName)
+        }
+        
+        let installed = verifyInstalls(iconType)
+        if (!installed) {
+            return
+        }
+        
+        
+        let iconTag = null
         if (iconType == 'Token Marker') {
-            if ('undefined' == typeof libTokenMarkers ) {
-                makeAndSendMenu('libTokenMarker must be installed if using Custom Icons.', '', 'gm');
-                return false
-            }                 
-        }        
+            iconTag = libTokenMarkers.getStatus(iconName).getTag()
+        } else if (iconType == 'Combat Master') {
+            iconTag = iconName
+        }    
+        
+        if (debug) {
+            log('Icon Tag:' + iconTag)
+        }  
+        
+        return iconTag
+    },
+    
+    verifyInstalls = function(iconType) {
+        if (iconType == 'Token Marker' && 'undefined' == typeof libTokenMarkers) {
+            makeAndSendMenu('libTokenMarker API must be installed if using Custom Icons.', '', 'gm');
+            return false
+        } else if (iconType == 'Token Condition' && 'undefined' == typeof TokenCondition) {
+            makeAndSendMenu('Token Condition API must be installed if using Token Condition.', '', 'gm');
+            return false
+        }       
         return true
     },
     
@@ -2244,11 +2341,11 @@ var CombatMaster = CombatMaster || (function() {
             for (key in state[combatState].conditions) {
                 condition = state[combatState].conditions[key]
                 if (tokenObj.get('_id') == condition.id && condition.addPersistentMacro) {
-                    ability = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:condition.addMacro})[0]
+                    ability = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:condition.addPersistentMacro})[0]
                     if (ability) {
                         sendCalltoChat(tokenObj,characterObj,ability.get('action'))
                     } else {
-                        macro = findObjs({_type:'macro', name:condition.addMacro})[0]
+                        macro = findObjs({_type:'macro', name:condition.addPersistentMacro})[0]
                         if (macro) {
                             sendCalltoChat(tokenObj,characterObj,macro.get('action'))
                         }                    
@@ -2283,11 +2380,16 @@ var CombatMaster = CombatMaster || (function() {
         if (characterObj) {
             if (!['None',''].includes(condition.addMacro)) {
                 macro = findObjs({_type:'macro', name:condition.addMacro})[0]
-                log(macro)
                 if (macro) {
                     sendCalltoChat(tokenObj,characterObj,macro.get('action'))
                 }   
             }
+            if (!['None',''].includes(condition.addPersistentMacro)) {
+                macro = findObjs({_type:'macro', name:condition.addPersistentMacro})[0]
+                if (macro) {
+                    sendCalltoChat(tokenObj,characterObj,macro.get('action'))
+                }    
+            }            
             if (!['None',''].includes(condition.addAPI)) {
                 sendCalltoChat(tokenObj,characterObj,condition.addAPI)
             }
@@ -2332,13 +2434,13 @@ var CombatMaster = CombatMaster || (function() {
         }
     },    
 
-    sendCalltoChat = function(tokenObj,characterObj,action,playerID) {
+    sendCalltoChat = function(tokenObj,characterObj,action) {
         if (debug) {
             log("sendCalltoChat")
             log('Token:'+tokenObj.get('_id'))
             log('Character:'+characterObj.get('name'))
         }
-        
+        log(action)
         let substitutions = state[combatState].config.macro.substitutions
         let replaceString
         
@@ -2351,9 +2453,12 @@ var CombatMaster = CombatMaster || (function() {
                     action = action.replace(replaceString, characterObj.get('_id'), 'g')
                 } else if (substitution.type == 'TokenID') {
                     action = action.replace(replaceString, tokenObj.get('_id'), 'g')
-                }    
+                } else if (substitution.type == 'PlayerID') {
+                    action = action.replace(replaceString, state[combatState].config.gmPlayerID, 'g')
+                }                  
             })
         } 
+        log(action)
         sendChat(tokenObj.get('name'), action, null, {noarchive:true});
     },
     
@@ -2453,19 +2558,18 @@ var CombatMaster = CombatMaster || (function() {
     },
 
     handleGraphicMovement = function (obj /*, prev */) {
-        let turnID, objID
         if (debug) {
             log ('Handle Graphic Movement')
         } 
  
         if(!inFight()) return;
+        
+        let turnorder =  getTurnorder()
 
-        if (obj.hasOwnProperty("id")) {
-            if (getCurrentTurn().id && obj.get('id')) {
-                if(getCurrentTurn().id === obj.get('id')){
-                    changeMarker(obj);
-                }
-            }   
+        if (obj.hasOwnProperty("id") && turnorder.length > 0) {
+            if(getCurrentTurn().id === obj.get('id')){
+                changeMarker(obj);
+            }
         }    
     },
 
@@ -2561,7 +2665,8 @@ var CombatMaster = CombatMaster || (function() {
                 command: 'cmaster',		
 				duration: false,
 				favorite: false,
-				previousPage: null,				
+				previousPage: null,			
+				gmPlayerID: null,
 				initiative: {
                     rollInitiative: 'CombatMaster',
                     initiativeDie: 20,
@@ -3357,7 +3462,7 @@ var CombatMaster = CombatMaster || (function() {
         }
         setDefaults();
         buildHelp();
-        log(script_name + ' Ready! Command: !'+state[combatState].config.command);
+        log(script_name + ' Ready! Command: !cmaster --main');
     },    
     
     registerEventHandlers = function() {
@@ -3368,12 +3473,6 @@ var CombatMaster = CombatMaster || (function() {
         on('change:graphic:top', handleGraphicMovement);
         on('change:graphic:left', handleGraphicMovement);
         on('change:graphic:layer', handleGraphicMovement);
-        
-        if('undefined' !== typeof API && API.ObserveTokenChange){
-            API.ObserveTokenChange(function(obj,prev) {
-                handleStatusMarkerChange(obj,prev);
-            });
-        }
 
         if('undefined' !== typeof DeathTracker && DeathTracker.ObserveTokenChange){
             DeathTracker.ObserveTokenChange(function(obj,prev) {
@@ -3386,6 +3485,12 @@ var CombatMaster = CombatMaster || (function() {
                 handleStatusMarkerChange(obj,prev);
             });
         }
+        
+        if('undefined' !== typeof TokenMod && TokenMod.ObserveTokenChange) {             
+            TokenMod.ObserveTokenChange(function(obj,prev) {
+                handleStatusMarkerChange(obj,prev);
+            });    
+        }       
     };
     
     return {

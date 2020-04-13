@@ -5,7 +5,7 @@
 	"previousversions": ["1.8 Alpha"],
 	"description": "# Combat Master v2.0\r\r###### The script provides management of combat, incuding rolling initiative, stepping through a turnorder, adding or remove conditions, tracking the length of a condition and external calls to APIs and Macros.\rtype !cmaster --help for syntax",
 	"authors": ["Victor B"],
-	"roll20userid": ["3135709"],
+	"roll20userid": "3135709",
 	"useroptions": [],
 	"dependencies": [],
 	"modifies": {
