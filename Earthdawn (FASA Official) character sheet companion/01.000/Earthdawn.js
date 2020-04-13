@@ -1684,7 +1684,7 @@ Step/Action Dice Table
 						else
 							s += this.makeButton("Change Edition", "!Earthdawn~ Misc: State: edition: ?{What Earthdawn rules Edition|Forth Edition,4 ED|Third Edition,3 ED|First Edition,1 ED}", 
 									"Switch API and Character sheet to Earthdawn 1st/3rd/4th Edition" );
-						s += this.makeButton("Result Style", "!Earthdawn~ Misc: State: Style: ?{What roll results style do you want|Vague Roll Result,2|Vague Success (not recommended),0|Full,1}", 
+						s += this.makeButton("Result Style", "!Earthdawn~ Misc: State: Style: ?{What roll results style do you want|Vague Roll Result,2|Vague Success (not recommended),1|Full,0}",
 								"Switch API to provide different details on roll results. Vague Roll result is suggested. It does not say what the exact result is, but says how much it was made by. Vague Success says exactly what the roll was, but does not say the TN or how close you were." );
 						s += this.makeButton("Effect is Action", "!Earthdawn~ Misc: State: EffectIsAction: ?{Is an Effect test to be treated identically to an Action test|No,0|Yes,1}", 
 								"Two schools of thought. Effect Tests are Action tests, and modifiers that affect Action Tests also affect Effect Tests, or they are not and they don't." );
