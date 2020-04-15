@@ -310,6 +310,8 @@
                   <li><code>--tueurDeGeants</code> : bonus de +2 en attaque et +2d6 DM contre les géants, ogres, ettins et cyclopes.</li>
                   <li><code>--ignoreObstacles</code> : ignore les tokens sur le trajet. Ça semble nécessaire pour les attaques magiques d'après Kegron.</li>
                   <li><code>--puissant</code> : augmente la valeur max des dés de dégâts de 2. Si <code>--puissant</code> est suivi d'un argument <i>effet</i>, on teste la présence d'un attribut <i>effet</i><code>Puissant</code> pour décider si l'attaque est puissante ou non. Il est aussi possible de donner <code>oui</code> ou <code>non</code> en argument (ce n'est alors pas considéré comme un effet).</li>
+                  <li><code>--attaqueAssuree</code> : implémente une attaque assurée (+5 à l'attaque, dégâts divisés par 2, critique impossible).</li>
+                  <li><code>--attaqueRisquee</code> : implémente une attaque risquée (+2 à l'attaque au contact, -4 en DEF pendant un tour).</li>
                   <li><code>--strigeSuce</code> : option spécifique aux striges. Donne le malus de -3 en DEF et compte la quantite sucée. Quand cette quantité arrive à 6, enlève le malus de DEF et rend la cible affaiblie.</li>
                   <li><code>--mainsDEnergie</code> : +2 à +5 à l'attaque, selon l'armure de la cible</li>
                   <li><code>--semonce</code> : +5 au touché et +1d6 aux DM (ne change pas les charges de l'arme).</li>
@@ -557,9 +559,10 @@
               </div>
               <h4 class="text-secondary" id="escaliers">Escaliers</h4>
               <div class="decalage">
-                <p>Pour gérer les escaliers sur les cartes, vous pouvez utiliser la méthode suivante, inspirée du script Teleport : placez dans le layer "GM Info Overlay", au niveau des escaliers, des tokens qui prennent exactement la place des escaliers. Nommez ces escaliers avec un nom suivi du nombre d'étages (entre 2 et 9), suivi d'une lettre majuscule. Par exemple <code>Escalier2A</code>.</p>
-                <p>Chaque escalier de la même colonne doit avoir le même nom et même nombre d'étage, et différer seulement par la lettre finale. Ensuite, si un ensemble de tokens est sur un escalier, utilisez <code>!cof-escalier</code> pour téléporter les tokens à l'emplacement de l'escalier suivant dans l'ordre des lettres. Si vous utilisez l'argument <code>haut</code>, alors les tokens n'iront pas plus loin que le dernier étage, e tavec l'argument <code>bas</code>, il iront dans l'ordre inverse.</p>
-                <p>Dans l'exemple précédent, il serait téléporté à l'emplacement du token nommé <code>Escalier2B</code>. Cela ne fonctionne que si les bouts de l'escalier sont sur la même carte. À vous de choisir sir vous préférez révéler cette fonctionalité à vos joueurs, ou si vous le faites vous-même.</p>
+                <p>Pour gérer les escaliers sur les cartes, vous pouvez utiliser la méthode suivante, inspirée du script Teleport : placez dans le layer "GM Info Overlay", au niveau des escaliers, des tokens qui prennent exactement la place des escaliers. Nommez ces escaliers avec un nom, suivi d'une lettre majuscule. Par exemple <code>EscalierA</code>.</p>
+                <p>Chaque escalier de la même colonne doit avoir le même nom, et différer seulement par la lettre finale. Ensuite, si un ensemble de tokens est sur un escalier, utilisez <code>!cof-escalier</code> pour téléporter les tokens à l'emplacement de l'escalier suivant dans l'ordre des lettres. Si vous utilisez l'argument <code>haut</code>, alors les tokens n'iront pas plus loin que le dernier étage, et avec l'argument <code>bas</code>, il iront dans l'ordre inverse.</p>
+                <p>Dans l'exemple précédent, il serait téléporté à l'emplacement du token nommé <code>EscalierB</code>. Cela ne fonctionne que si les bouts de l'escalier sont sur la même carte. À vous de choisir sir vous préférez révéler cette fonctionalité à vos joueurs, ou si vous le faites vous-même.</p>
+                <p>La limite au nombre d'escaliers est de 12 étages, donc pas de lettre après <code>L</code>.</p>
               </div>
               <h4 class="text-secondary" id="montures">Montures</h4>
               <div class="decalage">
@@ -642,7 +645,7 @@
                 <h4 class="text-secondary">Voie du pagne</h4>
                 <ol>
                   <li><strong>Vigueur</strong> : ajouter les capacités avec leurs bonus sur la fiche</li>
-                  <li><strong>Peau de pierre</strong> : augmenter la DEF sur la fiche</li>
+                  <li><strong>Peau de pierre</strong> : ajouter un attribut <code>peauDePierre</code>, de valeur <code>true</code>. La nouvelle DEF sera calculée automatiquement.</li>
                   <li><strong>Tatouages</strong> : ajouter le bonus choisi sur la fiche</li>
                 </ol>
                 <h4 class="text-secondary">Voie du pourfendeur</h4>
@@ -1460,6 +1463,7 @@
               <h3 class="text-info" id="Capacites_diverses">4.4 Autres capacités</h3>
               <div class="decalage">
                 <ul>
+                  <li><strong>Attaque en meute</strong> : ajouter un attribut <code>attaqueEnMeute</code> de valeur courante le bonus d'attaque (2 pour un gobelin). Cela confère le bonus pour toutes les attaques de personnages avec cet attribut suivant la première effectuée par un autre personnage avec cet attribut, dans un même tour.</li>
                   <li><strong>Baroud d'honneur</strong> : ajouter un attribut <code>baroudHonneur</code> (=true) (Quand le personnage arrive à 0 PV, il ne meurt pas jusqu'à sa prochaine attaque, qui se fait avec un bonus de +5)</li>
                   <li><strong>Cibles multiples</strong> (nuées) : ajouter un attribut <code>ciblesMultiples</code>, de valeur <code>true</code>.</li>
                   <li><strong>Clignotement</strong> : <code>!cof-effet-temp clignotement [[1d6+2]]</code>.</li>
