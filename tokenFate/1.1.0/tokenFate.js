@@ -53,12 +53,13 @@ var TokenFate = TokenFate || (function() {
 		}
 	},
 
-    handleMessages = function(msg)
+    handleMessages = function(msg_orig)
     {
 		if('api' !== msg.type ) {
 			return;
 		}
-
+	    
+	let msg = _.clone(msg_orig);
         //This sorcery shamelessly taken from The Aaron's Ammo script
         if(_.has(msg,'inlinerolls')){
 			msg.content = _.chain(msg.inlinerolls)
