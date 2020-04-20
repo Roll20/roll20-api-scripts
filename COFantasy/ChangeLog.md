@@ -1,7 +1,17 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 
+## 2.01
+## Autres améliorations
+* Possibilité d'afficher des images et de jouer des sons selon le résultat d'une attaque.
+
+### Corrections de bugs
+* Correction d'un bug pour les effets d'attaque conditionnels.
+* Amélioration du parsing de handout pour les compétences en équipes.
+* Correction d'un bug avec la tempete de mana qui pouvait faire affecter la cible plus le lanceur de l'effet du sort.
+
 ## 2.0
 ### Capacités
+* Ajout de la capacité "Attaque en meute" des Gobelins
 * Amélioration de la prise en compte du bonus d'init grâce aux familiers
 * Ajout de l'esquive acrobatique du barde
 * Ajout de l'ouverture mortelle du voleur
@@ -15,6 +25,14 @@
 * L'option --argent devient --armeDArgent. Cela permet d'utiliser --argent pour les armes en argent ordinaires.
 
 ### Autres améliorations
+* Ajout de l'option d'attaque assurée et de l'option attaque risquée
+* Affichage de la défense dans le statut, quand elle ne correspond pas à la défense affichée sur la fiche.
+* Simplification du nommage des escaliers.
+* Possibilité d'ajouter un message en argument de !cof-soins
+* Ajout d'un icone pour les tokens affectés par saignement ou asphyxie
+* Utilisation d'un dé explosif pour l'initiative variable
+* Suite à une précision de Kegron sur les forums BBE, les attaques réussies font toujours au moins 1 DM.
+* Si un personnage est monté sur une monture, assouplissement des conditions pour toucher au contact (on considère le token de la monture)
 * On peut maintenant donner des arguments aux macros dans les listes d'actions
 * !cof-jet --secret, lorsqu'il est employé par un joueur, envoie maintenant le résultat du jet à toutes les personnes qui contrôlent le personnage et au MJ.
 * gestion du sort sixième sens
@@ -34,6 +52,8 @@
 * Les montures de l'attaquant et de sa cible ne sont plus considérées comme des obstacles lors des attaques à distance.
 
 ### Corrections de bugs
+* Correction d'un bug qui empechait l'affichage du résultat d'un tour de force.
+* Trouve les points de chance quand ils sont à la valeur par défaut
 * Correction d'un bug qui faisait planter le sort de commeil
 * Plus d'affichage de dégâts chaque tour sur les personnages morts
 * En interne, modCarac accepte des id de personnage, ce qui fixe certains bugs avec des capacités de chevaliers.
