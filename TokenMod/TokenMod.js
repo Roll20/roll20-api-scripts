@@ -5,7 +5,7 @@
 const TokenMod = (() => { // eslint-disable-line no-unused-vars
 
     const version = '0.8.52';
-    const lastUpdate = 1587417000;
+    const lastUpdate = 1587417952;
     const schemaVersion = 0.3;
 
     const fields = {
@@ -1998,7 +1998,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
 
                         _h.subhead('Replacing (^)'),
                         _h.inset(
-                            _h.paragraph(`You can replace images in the list of sides by prefacing the source of an image with ${_h.code('^')} and append an ${_h.code(ch('@'))} followed by a number to specify which images to replace.  Indicies start at 1.`),
+                            _h.paragraph(`You can replace images in the list of sides by prefacing the source of an image with ${_h.code('^')} and append ${_h.code(ch(':@'))} followed by a number to specify which images to replace.  Indicies start at 1.`),
                             _h.inset(
                                 _h.pre('!token-mod --set imgsrc|^https://s3.amazonaws.com/files.d20.io/images/4095816/086YSl3v0Kz3SlDAu245Vg/max.png?1400535580:@2'),
                                 _h.pre(`!token-mod --set imgsrc|^${_h.attr.target('token_id')}:@2 --ids ${_h.attr.selected('token_id')}`)
