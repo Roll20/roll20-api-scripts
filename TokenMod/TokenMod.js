@@ -5,7 +5,7 @@
 const TokenMod = (() => { // eslint-disable-line no-unused-vars
 
     const version = '0.8.54';
-    const lastUpdate = 1587833769;
+    const lastUpdate = 1587842776;
     const schemaVersion = 0.4;
 
     const fields = {
@@ -1278,11 +1278,13 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
     };
 
     const assureHelpHandout = (create = false) => {
+        const helpIcon = "https://s3.amazonaws.com/files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385";
+
         // find handout
         let props = {type:'handout', name:'Help: TokenMod'};
         let hh = findObjs(props)[0];
         if(!hh) {
-            hh = createObj('handout',Object.assign(props, {inplayerjournals: "all"}));
+            hh = createObj('handout',Object.assign(props, {inplayerjournals: "all", avatar: helpIcon}));
             create = true;
         }
         if(create || version !== state.TokenMod.lastHelpVersion){
