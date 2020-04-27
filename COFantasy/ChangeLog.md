@@ -1,10 +1,36 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 2.02
+### Capacités
+* Ajout des rangs 4 et 5 de la Voie de la résistance du guerrier.
+* Ajout des rangs 4 et 5 de la Voie de la précisison de l'arquebusier.
+* Amélioration de la prise en charge de la capacité Esquive du voleur.
+* Ajout du rang 2 de la Voie du tueur.
+
+### Autres améliorations
+* Possibilité de changer les états directement depuis le token
+* Ajout de conditions sur un attribut de cible quelconque pour l'attaque
+* Possibilité d'arrêter tous les sons.
+
+### Corrections de bugs
+* Protection contre les macros et abilities de nom vide.
+* Immunité à la surprise permet bien de ne pas faire le test.
+* Utilisation d'un attribut mortVivant au lieu de mort-vivant.
 
 ## 2.01
-## Autres améliorations
+### Capacités
+* Ajout du rang 3 de la Voie du tueur.
+
+### Autres améliorations
+* Ajout d'une commande !cof-jouer-son
+* bloque les personnages sous prison végétale.
+* Possibilité d'ajouter des contraintes (comme --dose) au fonctions de repos.
+* La capacité nature nourricière génère des consommanbles.
+* prise en compte de l'option --attaqueMentale pour les créatures sans esprit.
+* Ajout d'options de son sur les effets et le rechargement
 * Possibilité d'afficher des images et de jouer des sons selon le résultat d'une attaque.
 
 ### Corrections de bugs
+* Factorisation et amélioration des significations des options de sons et d'images d'attaques.
 * Correction d'un bug pour les effets d'attaque conditionnels.
 * Amélioration du parsing de handout pour les compétences en équipes.
 * Correction d'un bug avec la tempete de mana qui pouvait faire affecter la cible plus le lanceur de l'effet du sort.
