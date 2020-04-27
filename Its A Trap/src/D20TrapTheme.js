@@ -215,6 +215,9 @@ var D20TrapTheme = (() => {
 
         // Add the saving throw message.
         if(effectResults.save) {
+          if (!effectResults.saveDC)
+            throw new Error(`You forgot to set the trap's save DC!`);
+
           let rollResult = D20TrapTheme.htmlRollResult(effectResults.roll, '1d20 + ' + effectResults.saveBonus);
           let saveMsg = new HtmlBuilder('.paddedRow');
           saveMsg.append('span.bold', effectResults.save.toUpperCase() + ' save:');

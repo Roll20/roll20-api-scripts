@@ -78,7 +78,12 @@ var TrapEffect = (() => {
      * @type {(string[]|string)}
      */
     get effectShape() {
-      return this._effect.effectShape;
+      if (this._trap.get('aura1_radius'))
+        return 'burst';
+      else if (['circle', 'rectangle', 'square'].includes(this._effect.effectShape))
+        return 'self';
+      else
+        return this._effect.effectShape || 'self';
     }
 
     /**
@@ -191,7 +196,7 @@ var TrapEffect = (() => {
      * @type {string}
      */
     get stopAt() {
-      return this._effect.stopAt;
+      return this._effect.stopAt || 'center';
     }
 
     /**

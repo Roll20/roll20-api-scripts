@@ -1,5 +1,12 @@
 # It's A Trap!
 
+_3.10 Updates:_
+* Shortened script menu macro's name.
+* Changed menu macro to NOT be a token action. (A lot of users seemed to be annoyed by this...)
+* Combined reveal properties for "Reveal when Activated", "Reveal when Spotted", and "Reveal Layer" to a multi-prompt property called "Reveal the Trap?"
+* Moved "Destroyable" property to reveal properties group in menu. Changed its name to "Delete when Activated?".
+* Renamed some other trap properties in the menu to *hopefully* be more intuitive to users.
+
 _v3.9 Updates:_
 * Implemented delayed activation for traps. See the 'Delay Activation' property.
 

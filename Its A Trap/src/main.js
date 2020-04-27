@@ -162,8 +162,7 @@ var ItsATrap = (() => {
       if(trap.get('status_interdiction'))
         return false;
 
-      let trapEffect = (new TrapEffect(trap, token)).json;
-      trapEffect.stopAt = trapEffect.stopAt || 'center';
+      let trapEffect = new TrapEffect(trap, token);
 
       // Should this trap ignore the token?
       if(trapEffect.ignores && trapEffect.ignores.includes(token.get('_id')))
@@ -179,7 +178,7 @@ var ItsATrap = (() => {
         token.set("top", y);
       }
       else if(trapEffect.stopAt === 'center' && !trapEffect.gmOnly &&
-          [undefined, 'circle', 'rectangle'].includes(trapEffect.effectShape)) {
+      ['self', 'burst'].includes(trapEffect.effectShape)) {
         let x = trap.get("left");
         let y = trap.get("top");
 
@@ -516,8 +515,8 @@ var ItsATrap = (() => {
     sendPing(trap.get('left'), trap.get('top'), trap.get('_pageid'));
 
     // Reveal its trigger paths and activation areas, if any.
-    _revealTriggers(trap);
     _revealActivationAreas(trap);
+    _revealTriggers(trap);
   }
 
   /**
