@@ -1654,7 +1654,7 @@ var ItsATrapCreationWizard = (() => {
         name: 'Activation Area',
         desc: `The area of the trap that actually affects tokens after it is triggered. To set paths, you must also select one or more paths defining the trap's blast area. A fill color must be set for tokens inside the path to be affected.`,
         value: trapEffect.effectShape || 'self',
-        options: [ 'self', 'burst', 'set selected paths', 'add selected paths', 'remove selected paths']
+        options: [ 'self', 'burst', 'set selected shapes']
       },
       (() => {
         if (trapEffect.effectShape === 'burst')
@@ -1741,7 +1741,7 @@ var ItsATrapCreationWizard = (() => {
           else
             return 'none';
         })(),
-        options: ['none', 'set selected traps', 'add selected traps', 'remove selected traps']
+        options: ['none', 'set selected traps']
       },
       {
         id: 'destroyable',
@@ -1912,7 +1912,7 @@ var ItsATrapCreationWizard = (() => {
               return 'self - circle';
           }
         })(),
-        options: ['self - rectangle', 'self - circle', 'set selected paths', 'add selected paths', 'remove selected paths']
+        options: ['self - rectangle', 'self - circle', 'set selected lines']
       },
       {
         id: 'stopAt',
@@ -1934,7 +1934,7 @@ var ItsATrapCreationWizard = (() => {
         name: 'Ignore Token IDs',
         desc: 'Select one or more tokens to be ignored by this trap.',
         value: trapEffect.ignores || 'none',
-        options: ['none', 'set selected tokens', 'add selected tokens', 'remove selected tokens']
+        options: ['none', 'set selected tokens']
       },
       {
         id: 'flying',
@@ -2032,31 +2032,9 @@ var ItsATrapCreationWizard = (() => {
         trapEffect.effectShape = 'burst';
         trapToken.set('aura1_radius', 10);
       }
-      else if(params[0] === 'set selected paths' && selected) {
+      else if(params[0] === 'set selected shapes' && selected) {
         trapEffect.effectShape = _.map(selected, path => {
           return path.get('_id');
-        });
-        trapToken.set('aura1_radius', '');
-      }
-      else if(params[0] === 'add selected paths' && selected) {
-        if(!_.isArray(trapEffect.effectShape))
-          trapEffect.effectShape = [];
-
-        trapEffect.effectShape = trapEffect.effectShape
-        .concat(_.map(selected, path => {
-          return path.get('_id');
-        }));
-        trapToken.set('aura1_radius', '');
-      }
-      else if(params[0] === 'remove selected paths' && selected) {
-        if(!_.isArray(trapEffect.effectShape))
-          trapEffect.effectShape = [];
-
-        let selectedIds = _.map(selected, token => {
-          return token.get('_id');
-        });
-        trapEffect.effectShape = _.reject(trapEffect.effectShape, id => {
-          return selectedIds.includes(id);
         });
         trapToken.set('aura1_radius', '');
       }
@@ -2088,26 +2066,6 @@ var ItsATrapCreationWizard = (() => {
         trapEffect.ignores = _.map(selected, token => {
           return token.get('_id');
         });
-      else if(params[0] === 'add selected tokens' && selected) {
-        if(!_.isArray(trapEffect.ignores))
-          trapEffect.ignores = [];
-
-        trapEffect.ignores = trapEffect.ignores
-        .concat(_.map(selected, token => {
-          return token.get('_id');
-        }));
-      }
-      else if(params[0] === 'remove selected tokens' && selected) {
-        if(!_.isArray(trapEffect.ignores))
-          trapEffect.ignores = [];
-
-        let selectedIds = _.map(selected, token => {
-          return token.get('_id');
-        });
-        trapEffect.ignores = _.reject(trapEffect.ignores, id => {
-          return selectedIds.includes(id);
-        });
-      }
       else
         trapEffect.ignores = undefined;
     if(prop === 'kaboom')
@@ -2147,29 +2105,6 @@ var ItsATrapCreationWizard = (() => {
             return token.get('_id');
         });
       }
-      else if (params[0] === 'add selected traps') {
-        if (!_.isArray(trapEffect.triggers))
-          trapEffect.triggers = [];
-
-        trapEffect.triggers = trapEffect.triggers
-        .concat(_.map(selected, token => {
-          let tokenId = token.get('_id');
-          if (tokenId !== trapToken.get('_id'))
-            return token.get('_id');
-        }));
-      }
-      else if (params[0] === 'remove selected traps') {
-        if (!_.isArray(trapEffect.triggers))
-          trapEffect.triggers = [];
-
-        let selectedIds = _.map(selected, path => {
-          return path.get('_id');
-        });
-
-        trapEffect.triggers = _.reject(trapEffect.triggers, id => {
-          return selectedIds.includes(id);
-        });
-      }
       else
         trapEffect.triggers = undefined;
     }
@@ -2182,32 +2117,9 @@ var ItsATrapCreationWizard = (() => {
         trapEffect.triggerPaths = undefined;
         trapToken.set('aura1_square', true);
       }
-      else if (params[0] === 'set selected paths' && selected) {
+      else if (params[0] === 'set selected lines' && selected) {
         trapEffect.triggerPaths = _.map(selected, path => {
           return path.get('_id');
-        });
-        trapToken.set('aura1_square', false);
-      }
-      else if (params[0] === 'add selected paths' && selected) {
-        if(!_.isArray(trapEffect.triggerPaths))
-          trapEffect.triggerPaths = [];
-
-        trapEffect.triggerPaths = trapEffect.triggerPaths
-        .concat(_.map(selected, path => {
-          return path.get('_id');
-        }));
-        trapToken.set('aura1_square', false);
-      }
-      else if (params[0] === 'remove selected paths' && selected) {
-        if(!_.isArray(trapEffect.triggerPaths))
-          trapEffect.triggerPaths = [];
-
-        let selectedIds = _.map(selected, path => {
-          return path.get('_id');
-        });
-
-        trapEffect.triggerPaths = _.reject(trapEffect.triggerPaths, id => {
-          return selectedIds.includes(id);
         });
         trapToken.set('aura1_square', false);
       }
