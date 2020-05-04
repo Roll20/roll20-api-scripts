@@ -2,7 +2,7 @@
 This is a die roller for use on Roll20.net with Forbidden Lands using the YZ system. 
 
 ### Current Version
-Version 1.3 (April 22nd, 2018) 
+Version 1.3 (April 25th, 2020) 
 
 ### Many Thanks	
 More thanks than I can give go to The Aaron whose MYZ Die Roller (same base rule system) was the foundation for this script roller. Further thanks goes for his patience and guidance as I tweaked his script to the mechanics of Forbidden Lands.
