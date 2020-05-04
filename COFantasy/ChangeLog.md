@@ -1,4 +1,23 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 2.03
+### Capacités
+* Amélioration du renouvellement des élixirs sur un forgesort.
+* Rang 4 de la voie du bouclier du guerrier
+* Meilleure interface des runes du forgesort, avec implementation du rang 4, et  renouvellement automatique des runes selon le choix des forgesorts.
+
+### Autres améliorations
+* Ajout de l'attaque de groupe, avec possibilité d'action spécifique détectée par le script.
+* Ajout d'une option pour rajouter les attaques risquees et assurees a toutes les actions
+* Ajout de la condition echecCritique pour --si et --if
+* Ajout d'une option --image pour !cof-effet-temp et !cof-soins
+* Nouvelle façon de souligner le personnage dont c'est le tour. Pour revenir à l'ancien système, utiliser !cof-options.
+* Affichage des icones correspondant aux états dans la fonction statut.
+
+### Corrections de bugs
+* Correction d'un bug qui empêchait les écuyer de soigner (et l'undo de certains repos).
+* double escape des ':' dans les boutons (sinon, pas de lien)
+* Correction d'un buf sur les effets génériques avec saveParTour
+
 ## 2.02
 ### Capacités
 * Ajout des rangs 4 et 5 de la Voie de la résistance du guerrier.
@@ -12,6 +31,7 @@
 * Possibilité d'arrêter tous les sons.
 
 ### Corrections de bugs
+* Correction d'un bug sur les runes de protections
 * Protection contre les macros et abilities de nom vide.
 * Immunité à la surprise permet bien de ne pas faire le test.
 * Utilisation d'un attribut mortVivant au lieu de mort-vivant.
