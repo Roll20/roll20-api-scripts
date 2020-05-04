@@ -3,18 +3,18 @@
 var ForbiddenLands = ForbiddenLands || (function() {
     'use strict';
 
-    var version = '1.2',
-    lastUpdate = 'December 12th, 2018',
+    var version = '1.3',
+    lastUpdate = 'April 25th, 2020',
 		schemaVersion = 0.1,
 		symbols = {
-            skull: '&#'+'9760;', 
+            skull: '&#'+'9760;',
             sword:  '&#'+'9876;',
 			xxsword:  '2' + '&#'+'9876;',
 			xxxsword:  '3' + '&#'+'9876;',
-			xxxxsword:  '4' + '&#'+'9876;',			
+			xxxxsword:  '4' + '&#'+'9876;',
             push: '&#'+'10150;'
         },
-        flBackground = 'https://i.imgur.com/fysa1Yo.jpg', 
+        flBackground = 'https://i.imgur.com/fysa1Yo.jpg',
         colors = {
             lightGreen: '#89D878', //successes
             yellow: '#ddcf43', //misery
@@ -75,7 +75,7 @@ var ForbiddenLands = ForbiddenLands || (function() {
 
                 forlMsg: {							// roll background and border
                     'font-size': '1.25em',
-                    'border': '.2em solid #8b3f1f', 
+                    'border': '.2em solid #8b3f1f',
                     'border-radius': '.5em',
                     'background-color': '#2c2119',
                     'background-image': 'url('+flBackground+')',
@@ -119,7 +119,7 @@ var ForbiddenLands = ForbiddenLands || (function() {
             'gm': 'GM',
             'gm+player': 'GM & Player',
             'public': 'Public'
-        }, 
+        },
         templates = {},
 
     buildTemplates = function() {
@@ -331,7 +331,7 @@ var ForbiddenLands = ForbiddenLands || (function() {
                 text+
                 '<div style="clear:both;"></div>'+
             '</div>';
-        
+
     },
 
     makeConfigOptionSelection = function(config,values,command,text) {
@@ -409,12 +409,12 @@ var ForbiddenLands = ForbiddenLands || (function() {
 				'</li> '+
 					'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
 					'<b><span style="font-family: serif;">'+ch('[')+'--'+ch('<')+'Label'+ch('>')+ch('|')+ch('<')+'Message'+ch('>')+' ...'+ch(']')+'</span></b> '+ch('-')+' An optional set of text to be shown above the die roll. Label may be omitted to just provid a text field.  You can specify as many optional descriptions as you like.'+
-                   
+
 				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
 					'<b><span style="font-family: serif;">Excluding Dice Rolls:</span></b> Dice roll expressions must be included but to not roll leave as a 0; an empty express '+ch('[')+ch('[')+''+ch(']')+ch(']')+' will throw a syntax error . Example of setting an expression to roll no dice: '+ch('[')+ch('[')+'0'+ch(']')+ch(']')+
 				'</li> '+
 				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
-					'<b><span style="font-family: serif;">Example:</span></b> '+ 
+					'<b><span style="font-family: serif;">Example:</span></b> '+
 					'<div style="padding-left: 10px;padding-right:20px">'+
                         '<pre style="white-space:normal;word-break:normal;word-wrap:normal;">'+
                             '!forl '+ch('[')+ch('[')+'5d6'+ch(']')+ch(']')+' '+ch('[')+ch('[')+'3d6'+ch(']')+ch(']')+' '+ch('[')+ch('[')+'4d6'+ch(']')+ch(']')+' '+ch('[')+ch('[')+'1d10'+ch(']')+ch(']')+' --Player|Wulfred --Skill|Stealth (Agility)'+
@@ -463,7 +463,7 @@ var ForbiddenLands = ForbiddenLands || (function() {
             return m;
         },[]);
     },
-		
+
     makeDiceImages = function(dice,bgcolor,color){
         bgcolor=bgcolor||'black';
         color=color||'white';
@@ -482,19 +482,43 @@ var ForbiddenLands = ForbiddenLands || (function() {
     getRollableDiceCount = function(dice){
         return _.filter(dice,function(v){return (v+'').match(/^\d+$/);}).length;
     },
-	
+
     makeRerollExpression = function(dice, dieType='d6'){
         var cnt = getRollableDiceCount(dice);
         return ' '+ch('[')+ch('[')+cnt+dieType+ch(']')+ch(']')+' ';
     },
-	
+
+    makeLegendaryRerollExpression = function(resultArray, dieExpression, diceArray){
+        var rerollExpressionArray = [];
+        var dieExpressionArray = dieExpression.split("+");
+        var dieWithResult = 0;
+        _.each(dieExpressionArray, function(dieExp){
+            // Split the die expression in number of dice and die type
+            var singleDieArray = dieExp.split('d');
+            var numDiceRolled = parseInt(singleDieArray[0].replace(/\D+/g,""));
+            var dieType = parseInt(singleDieArray[1].replace(/\D+/g,""));
+            if (numDiceRolled > 0) {
+                // If a legendary die was rolled, it will have a result in the array, the results are in order
+                var resultForThisDie = resultArray[dieWithResult];
+                dieWithResult++;
+                var newDieExpression = "(0)d" + dieType;
+                if (/^\d+$/.test(resultForThisDie)) {
+                    // The die result is a number and the die can be rerolled
+                    var newDieExpression = "("+numDiceRolled+")d" + dieType
+                }
+                rerollExpressionArray.push(newDieExpression)
+            }
+        });
+        return ' '+ch('[')+ch('[')+rerollExpressionArray.join("+")+ch(']')+ch(']')+' ';
+    },
+
     validatePlayerRollHash = function(playerid, hash, skill,base,gear,legend){
         var obj=state.ForbiddenLands.playerRolls[playerid];
         return (obj && obj.hash === hash &&
             obj.dice.skillDice === skill &&
             obj.dice.baseDice === base &&
             obj.dice.gearDice === gear &&
-            obj.dice.legendDice === legend 
+            obj.dice.legendDice === legend
         );
     },
     getCountsForRoll = function(playerid,hash){
@@ -726,7 +750,7 @@ var ForbiddenLands = ForbiddenLands || (function() {
                 baseDice=getDiceCounts(msg,rollIndices[1]);
                 gearDice=getDiceCounts(msg,rollIndices[2]);
                 legendDice=getDiceCounts(msg,rollIndices[3]);
-						
+
                 if(push &&
                     (
                         _.has(state.ForbiddenLands.playerRolls,owner) &&
@@ -742,14 +766,14 @@ var ForbiddenLands = ForbiddenLands || (function() {
                     reportBadPushCounts(msg.playerid);
                     return;
                 }
-				
+
                 pushedValues=getCountsForRoll(owner,hash);
 
-                successes = pushedValues.success + (skillDice['6']||0) + (baseDice['6']||0) + (gearDice['6']||0) + (legendDice['6']||0) + (legendDice['7']||0) + (legendDice['8']||0) + (legendDice['8']||0) + (legendDice['9']||0) + (legendDice['9']||0) + (legendDice['10']||0) + (legendDice['10']||0) + (legendDice['10']||0) + (legendDice['11']||0) + (legendDice['11']||0) + (legendDice['11']||0) + (legendDice['12']||0) + (legendDice['12']||0) + (legendDice['12']||0) + (legendDice['12']||0); 
+                successes = pushedValues.success + (skillDice['6']||0) + (baseDice['6']||0) + (gearDice['6']||0) + (legendDice['6']||0) + (legendDice['7']||0) + (legendDice['8']||0) + (legendDice['8']||0) + (legendDice['9']||0) + (legendDice['9']||0) + (legendDice['10']||0) + (legendDice['10']||0) + (legendDice['10']||0) + (legendDice['11']||0) + (legendDice['11']||0) + (legendDice['11']||0) + (legendDice['12']||0) + (legendDice['12']||0) + (legendDice['12']||0) + (legendDice['12']||0);
                 trauma = pushedValues.trauma + (baseDice['1']||0);
                 gearDamage = pushedValues.damage + (gearDice['1']||0);
 				if(push){pushes = pushedValues.pushes+1}; 	// only update if there is a push ... should be at 0 when a roll is first made
-					
+
                 optional = (optional.length && optional) || getOptionalForRoll(owner,hash);
 
                 skillDiceArray=_.map(getDiceArray(skillDice),function(v){
@@ -772,7 +796,7 @@ var ForbiddenLands = ForbiddenLands || (function() {
                             return v;
                     }
                 });
-				
+
                 gearDiceArray=_.map(getDiceArray(gearDice),function(v){
                     switch(v){
                         case '1':
@@ -783,7 +807,7 @@ var ForbiddenLands = ForbiddenLands || (function() {
                             return v;
                     }
                 });
-				
+
                 legendDiceArray=_.map(getDiceArray(legendDice),function(v){
                     switch(v){
 						case '6':
@@ -801,10 +825,10 @@ var ForbiddenLands = ForbiddenLands || (function() {
                             return v;
                     }
                 });
-				
+
 				legendaryDieType = msg.inlinerolls[3].expression;
 
-				
+
                // record push
                hash=(++state.ForbiddenLands.sequence);
                recordPlayerRollHash(owner,{
@@ -825,22 +849,22 @@ var ForbiddenLands = ForbiddenLands || (function() {
                     optional: optional
                 });
 
-                pushButton = (_.reduce([skillDiceArray,baseDiceArray,gearDiceArray],function(m,dice){ return m+getRollableDiceCount(dice);},0) ?
+                pushButton = (_.reduce([skillDiceArray,baseDiceArray,gearDiceArray, legendDiceArray],function(m,dice){ return m+getRollableDiceCount(dice);},0) ?
                     makeButton(
                         '!'+(w?'w':'')+'forl['+hash+'] '+
                         makeRerollExpression(skillDiceArray)+
                         makeRerollExpression(baseDiceArray)+
                         makeRerollExpression(gearDiceArray)+
-                        makeRerollExpression(legendDiceArray,legendaryDieType),
+                        makeLegendaryRerollExpression(legendDiceArray,legendaryDieType, legendDice),
                         symbols.push+' '+pushes
                     ) :
                     ''
                 );
 
-                output = makeOutput([ 
+                output = makeOutput([
                         makeLabel( successes+'  '+symbols.sword, colors.lightGreen, colors.black),
-                        makeLabel( trauma+' '+symbols.skull, colors.white, colors.black),				
-                        makeLabel( gearDamage+' '+symbols.skull, colors.black, colors.white), 
+                        makeLabel( trauma+' '+symbols.skull, colors.white, colors.black),
+                        makeLabel( gearDamage+' '+symbols.skull, colors.black, colors.white),
                         pushButton
                     ].join(''),
                     [
@@ -848,7 +872,7 @@ var ForbiddenLands = ForbiddenLands || (function() {
                         makeDiceImages(skillDiceArray,colors.maroon),
                         makeDiceImages(baseDiceArray,colors.white, colors.black),
                         makeDiceImages(gearDiceArray,colors.black),
-						makeDiceImages(legendDiceArray,colors.gold, colors.black) 
+						makeDiceImages(legendDiceArray,colors.gold, colors.black)
                     ].join('')
                 );
 
@@ -899,7 +923,7 @@ var ForbiddenLands = ForbiddenLands || (function() {
                                 '</div>'
                             );
                             break;
-                        
+
                         case 'set-report-mode':
                             if(_.has(reportingModes,opt[0])){
                                 state.ForbiddenLands.config.reportMode=opt[0];
@@ -920,7 +944,7 @@ var ForbiddenLands = ForbiddenLands || (function() {
                                 '<div><b>Unsupported Option:</div> '+a+'</div>'
                             );
                     }
-                            
+
                 });
 
                 break;
@@ -935,7 +959,7 @@ var ForbiddenLands = ForbiddenLands || (function() {
         CheckInstall: checkInstall,
         RegisterEventHandlers: registerEventHandlers
     };
-    
+
 }());
 
 on('ready',function() {
