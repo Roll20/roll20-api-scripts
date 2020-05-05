@@ -5,9 +5,9 @@
 /* global GroupInitiative TokenMod */
 const Bump = (() => { // eslint-disable-line no-unused-vars
 
-	const scriptName = scriptName;
+	const scriptName = "Bump";
     const version = '0.2.18';
-    const lastUpdate = 1588434359;
+    const lastUpdate = 1588695217;
     const schemaVersion = 0.5;
     const clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659';
     const checkerURL = 'https://s3.amazonaws.com/files.d20.io/images/16204335/MGS1pylFSsnd5Xb9jAzMqg/med.png?1455260461';
