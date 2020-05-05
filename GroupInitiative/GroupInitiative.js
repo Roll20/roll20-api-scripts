@@ -6,7 +6,7 @@ const GroupInitiative = (() => { // eslint-disable-line no-unused-vars
 
     const scriptName = "GroupInitiative";
     const version = '0.9.33';
-    const lastUpdate = 1588695392;
+    const lastUpdate = 1588470793;
     const schemaVersion = 1.3;
 
     const isString = (s)=>'string'===typeof s || s instanceof String;
@@ -52,18 +52,17 @@ const GroupInitiative = (() => { // eslint-disable-line no-unused-vars
       const entities = {
         '<' : 'lt',
         '>' : 'gt',
-		'&' : 'amp',
         "'" : '#39',
         '@' : '#64',
         '{' : '#123',
-        '|' : '#124',
-        '}' : '#125',
-        '[' : '#91',
-        ']' : '#93',
-        '"' : 'quot',
-        '*' : 'ast',
-        '/' : 'sol',
-        ' ' : 'nbsp'
+          '|' : '#124',
+          '}' : '#125',
+          '[' : '#91',
+            ']' : '#93',
+            '"' : 'quot',
+            '*' : 'ast',
+            '/' : 'sol',
+            ' ' : 'nbsp'
       };
 
       if( entities.hasOwnProperty(c) ){
