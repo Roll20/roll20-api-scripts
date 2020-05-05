@@ -10,7 +10,7 @@ var TokenFate = TokenFate || (function() {
     'use strict';
 
     var version = '1.1.1',
-    lastUpdate = 1587153240,
+    lastUpdate = 1588184063,
     multiFate = 1,
     msgStart = "",
     selectedToken = "",
@@ -55,7 +55,7 @@ var TokenFate = TokenFate || (function() {
 
     handleMessages = function(msg_orig)
     {
-        if('api' !== msg.type ) {
+        if('api' !== msg_orig.type ) {
             return;
         }
         let msg = _.clone(msg_orig);
