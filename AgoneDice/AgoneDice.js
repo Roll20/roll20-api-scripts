@@ -1,6 +1,6 @@
 var AgoneDice = AgoneDice || (function () {
 	'use strict';
-	var version = '0.1',
+	var version = '0.2',
 	lastUpdate = 1586019853,
 
 	checkInstall = function() {
