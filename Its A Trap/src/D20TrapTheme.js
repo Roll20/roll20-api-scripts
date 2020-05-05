@@ -131,13 +131,6 @@ var D20TrapTheme = (() => {
           value: trapEffect.damage || '-'
         },
         {
-          id: 'hideSave',
-          name: 'Hide Save Result',
-          desc: 'Show the Saving Throw result only to the GM?',
-          value: trapEffect.hideSave ? 'yes' : 'no',
-          options: ['yes', 'no']
-        },
-        {
           id: 'missHalf',
           name: 'Miss - Half Damage',
           desc: 'Does the trap deal half damage on a miss?',
@@ -147,20 +140,39 @@ var D20TrapTheme = (() => {
         {
           id: 'save',
           name: 'Saving Throw',
-          desc: 'The type of saving throw used by the trap.',
-          value: trapEffect.save || 'none',
-          options: [ 'none', 'str', 'dex', 'con', 'int', 'wis', 'cha' ]
-        },
-        {
-          id: 'saveDC',
-          name: 'Saving Throw DC',
-          desc: `The DC for the trap's saving throw.`,
-          value: trapEffect.saveDC || '-'
+          desc: `The trap's saving throw.`,
+          value: (() => {
+            let gmOnly = trapEffect.hideSave ? '(hide results)' : '';
+            if (trapEffect.save)
+              return `${trapEffect.save} save DC ${trapEffect.saveDC}` +
+                `${trapEffect.hideSave ? ' (hide results)' : ''}`;
+            else
+              return 'none';
+          })(),
+          properties: [
+            {
+              id: 'save',
+              name: 'Saving Throw',
+              desc: 'Which saving throw does the trap use?',
+              options: [ 'none', 'str', 'dex', 'con', 'int', 'wis', 'cha' ]
+            },
+            {
+              id: 'dc',
+              name: 'Save DC',
+              desc: 'What is the DC for the saving throw?'
+            },
+            {
+              id: 'hideSave',
+              name: 'Hide Save Result',
+              desc: 'Show the Saving Throw result only to the GM?',
+              options: ['no', 'yes']
+            }
+          ]
         },
         {
           id: 'spotDC',
-          name: 'Spot DC',
-          desc: 'The skill check DC to spot the trap.',
+          name: 'Passive Detection DC',
+          desc: 'The passive skill check DC to detect the trap.',
           value: trapEffect.spotDC || '-'
         }
       ];
@@ -215,6 +227,9 @@ var D20TrapTheme = (() => {
 
         // Add the saving throw message.
         if(effectResults.save) {
+          if (!effectResults.saveDC)
+            throw new Error(`You forgot to set the trap's save DC!`);
+
           let rollResult = D20TrapTheme.htmlRollResult(effectResults.roll, '1d20 + ' + effectResults.saveBonus);
           let saveMsg = new HtmlBuilder('.paddedRow');
           saveMsg.append('span.bold', effectResults.save.toUpperCase() + ' save:');
@@ -273,16 +288,12 @@ var D20TrapTheme = (() => {
       }
       if(prop === 'damage')
         trapEffect.damage = params[0];
-      if(prop === 'hideSave')
-        trapEffect.hideSave = params[0] === 'yes';
       if(prop === 'missHalf')
         trapEffect.missHalf = params[0] === 'yes';
       if(prop === 'save') {
         trapEffect.save = params[0] === 'none' ? undefined : params[0];
-        trapEffect.attack = undefined;
-      }
-      if(prop === 'saveDC') {
-        trapEffect.saveDC = parseInt(params[0]);
+        trapEffect.saveDC = parseInt(params[1]) || 0;
+        trapEffect.hideSave = params[2] === 'yes';
         trapEffect.attack = undefined;
       }
       if(prop === 'spotDC')
