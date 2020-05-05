@@ -15,6 +15,7 @@
   },
   "conflicts": [],
   "script": "GroupInitiative.js",
+<<<<<<< HEAD
   "useroptions": [],
   "previousversions": [
     "0.9.17",
@@ -34,4 +35,7 @@
     "0.9.31",
     "0.9.32"
   ]
+=======
+  "useroptions": []
+>>>>>>> b394cf674ea8567ea57c770ae0e53b489aa9714b
 }
