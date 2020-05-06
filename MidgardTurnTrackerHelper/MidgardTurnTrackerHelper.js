@@ -3,10 +3,13 @@
 var turnorder;
 var command;
 var player;
+var message;
+var menue;
 
 on('chat:message', function(msg) {
 	
 	let player = msg.playerid;
+	let message = msg;
 		
 	if (!playerIsGM(player)) { return; } //Nur GMs dürfen die Chat-Commandos ausführen
 	
@@ -22,6 +25,13 @@ on('chat:message', function(msg) {
 });
 
 function CommandList(msg) { // Liste der Befehle in den Chat ausgeben mit Chatmenue
+		let menue = "&{template:default} {{name=Midgard Turn Order Helfer}}" +
+					"{{[!midt](!midt) = Dieses Menü}}" + 
+					"{{[!midtinit](!midtinit) = Rundenphasen hinzufügen und sortieren}}" +
+					"{{[!midtclear](!midtclear) = Rundentracker leeren}}" +
+					"{{[!midtsort](!midtsort) = Rundentracker sortieren}}";
+		
+		sendChat("Turn Order","/w gm &{template:default}" + menue);
 	}
 
 function SortTurnOrder() { //Sortieren der Turn Order
