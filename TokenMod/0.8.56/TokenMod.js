@@ -5,7 +5,7 @@
 const TokenMod = (() => { // eslint-disable-line no-unused-vars
 
     const version = '0.8.56';
-    const lastUpdate = 1589026421;
+    const lastUpdate = 1589026818;
     const schemaVersion = 0.4;
 
     const fields = {
@@ -1590,8 +1590,8 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
                     ),
                     _h.paragraph(`The following are considered true values: ${_h.code('1')}, ${_h.code('on')}, ${_h.code('yes')}, ${_h.code('true')}, ${_h.code('sure')}, ${_h.code('yup')}`),
 
-                    _h.subhead("Probablistic Booleans"),
-                    _h.paragraph(`TokenMod accepts the following probablistic values which are true some of the time and false otherwise: ${_h.code('couldbe')} (true 1 in 8 times) , ${_h.code('sometimes')} (true 1 in 4 times) , ${_h.code('maybe')} (true 1 in 2 times), ${_h.code('probably')} (true 3 in 4 times), ${_h.code('likely')} (true 7 in 8 times)`),
+                    _h.subhead("Probabilistic Booleans"),
+                    _h.paragraph(`TokenMod accepts the following probabilistic values which are true some of the time and false otherwise: ${_h.code('couldbe')} (true 1 in 8 times) , ${_h.code('sometimes')} (true 1 in 4 times) , ${_h.code('maybe')} (true 1 in 2 times), ${_h.code('probably')} (true 3 in 4 times), ${_h.code('likely')} (true 7 in 8 times)`),
 
                     _h.paragraph(`Anything else is considered false.`),
 
