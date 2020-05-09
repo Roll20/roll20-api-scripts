@@ -1,23 +1,23 @@
 This script deals with the special needs of the turn tracker with the German RPG MIDGARD
 ========================================================================================
 
-Instuctions:
+Anleitung:
 ============
 
-This script has the following commands (type the commands into the chat. It works only for GMs)
-===============================================================================================
+Dieses Script führt die folgenden Chat-Befehle aus (Nur für den GM)
+===================================================================
 
-!midt 		- Opens the menue of the script. The Buttons are clickable
+!midt 		- Öffnet des Menü (Die Knöpfe links können angeklickt werden
 
-!midtinit 	- Adds the following items to the turn tracker and sorts it: ===Bewegung=== ; ===Gw/2=== ; ===Rundenende===
+!midtinit 	- Fügt die folgenden Phasen einer Kampfrunde dem Turn Tracker hinzu und sortiert ihn: ===Bewegung=== ; ===Gw/2=== ; ===Rundenende===
 
-!midtclear	- Clears the tracker and runs !midtinit
+!midtclear	- Leert den Turn Tracker und führt !midtinit aus
 
-!midtsort   - Sorts the turntracker
+!midtsort   - Sortiert den Turn Tracker
 
-!midttoggle - Switches the automatism on and off
+!midttoggle - Schaltet den Automatismus an und aus
 
-Automatism
-==========
+Automatismus
+============
 
-When the turn tracker is opened and empty, !midtinit will be performed. 
+Wenn der Turn Tracker geöffnet und leer ist, wird !midtinit ausgeführt
