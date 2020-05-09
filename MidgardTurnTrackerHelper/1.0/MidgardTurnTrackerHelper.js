@@ -1,10 +1,11 @@
 // This script deals with the special needs of the turn order and the German RPG Midgard
 
-var turnorder;
+let turnorder = [];
 var command;
 var player;
 var message;
 var menue;
+let automatism = true;
 
 on('chat:message', function(msg) {
 	
@@ -20,6 +21,7 @@ on('chat:message', function(msg) {
 		    case '!midtinit': InitTurnOrder(); break; // Turn Order initialisieren
 			case '!midtclear': ClearTurnOrder(); break; // Turn Order löschen
 			case '!midtsort': SortTurnOrder(); break; // Turnorder sortieren
+			case '!midttoggle': ToggleAuto(); break; // Schaltet den Automatismus an oder aus
 	}
 
 });
@@ -29,9 +31,21 @@ function CommandList(msg) { // Liste der Befehle in den Chat ausgeben mit Chatme
 					"{{[!midt](!midt) = Dieses Menü}}" + 
 					"{{[!midtinit](!midtinit) = Rundenphasen hinzufügen und sortieren}}" +
 					"{{[!midtclear](!midtclear) = Rundentracker leeren}}" +
-					"{{[!midtsort](!midtsort) = Rundentracker sortieren}}";
+					"{{[!midtsort](!midtsort) = Rundentracker sortieren}}" +
+					"{{[!midttoggle](!midttoggle) = Automatismus umschalten}}";
 		
 		sendChat("Turn Order","/w gm &{template:default}" + menue);
+	}
+	
+function ToggleAuto() { // Automatismus umschalten
+		if(automatism == true) {
+			automatism = false;
+			sendChat("Turn Order","/w gm Automatismus abgeschaltet!"); 
+		} else if(automatism == false) {
+			automatism = true;
+			sendChat("Turn Order","/w gm Automatismus angeschaltet!");
+		}
+		CommandList(message); // Und Befehlsübersicht erneut aufrufen
 	}
 
 function SortTurnOrder() { //Sortieren der Turn Order
@@ -42,8 +56,9 @@ function SortTurnOrder() { //Sortieren der Turn Order
 	}
 
 function ClearTurnOrder() { // Turn Order löschen
-		let turnorder = [];
+		turnorder = [];
 		Campaign().set("turnorder", JSON.stringify(turnorder));
+		InitTurnOrder(); // Und wieder die Defauleinträge setzen
 	}
 
 function InitTurnOrder() { // Turn Order mit Grunddaten initialisieren  
@@ -73,4 +88,17 @@ function InitTurnOrder() { // Turn Order mit Grunddaten initialisieren
 	Campaign().set("turnorder", JSON.stringify(turnorder));
 	SortTurnOrder();
  }
-    
+ 
+// Wenn die Turnorder geöffnet wird und leer ist, befüllen 
+ 
+ on('change:campaign:initiativepage',(obj)=>{
+        if(false === obj.get('initiativepage') || automatism == false){
+            return;
+        } else {
+// Wenn Turnorder leer ist, diese initialisieren
+			turnorder = Campaign().get("turnorder");
+			if(turnorder === undefined || turnorder.length == 2) {
+				InitTurnOrder();
+			}
+        }
+    });
