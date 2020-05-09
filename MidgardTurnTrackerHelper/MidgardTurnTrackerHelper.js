@@ -54,7 +54,7 @@ function InitTurnOrder() { // Turn Order mit Grunddaten initialisieren
 
 		turnorder.push({
 		id: "-1",
-		pr: "Z",
+		pr: "999",
 		custom: "==Bewegung=="
 	});
 	
