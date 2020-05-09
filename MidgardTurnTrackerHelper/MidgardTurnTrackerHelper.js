@@ -54,13 +54,19 @@ function InitTurnOrder() { // Turn Order mit Grunddaten initialisieren
 
 		turnorder.push({
 		id: "-1",
-		pr: "999",
+		pr: "Z",
 		custom: "==Bewegung=="
 	});
 	
 	turnorder.push({
 		id: "-1",
-		pr: "0",
+		pr: "-1",
+		custom: "==Gw/2=="
+	});
+	
+	turnorder.push({
+		id: "-1",
+		pr: "-2",
 		custom: "==Rundenende=="
 	});
 	
