@@ -8,6 +8,10 @@
     "roll20userid": "240",
 	"useroptions": [],
     "dependencies": [],
-    "modifies": {},
+    "modifies": {
+        "msg.playerid": "read",
+        "msg.content": "read",
+        "campaign.turnorder": "read,write",
+    },
     "conflicts": []
 }
