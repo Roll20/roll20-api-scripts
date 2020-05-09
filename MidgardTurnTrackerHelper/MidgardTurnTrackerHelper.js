@@ -36,7 +36,7 @@ function CommandList(msg) { // Liste der Befehle in den Chat ausgeben mit Chatme
 
 function SortTurnOrder() { //Sortieren der Turn Order
 	
-	let turnorder = JSON.parse(Campaign().get('turnorder')).sort((b,a) => { return a.pr - b.pr });
+	let turnorder = JSON.parse(Campaign().get('turnorder')).sort((a,b) => { return b.pr - a.pr });
 	Campaign().set("turnorder", JSON.stringify(turnorder));
 	
 	}
