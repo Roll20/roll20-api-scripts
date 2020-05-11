@@ -4,8 +4,8 @@
 
 const TokenMod = (() => { // eslint-disable-line no-unused-vars
 
-    const version = '0.8.56';
-    const lastUpdate = 1589026818;
+    const version = '0.8.55';
+    const lastUpdate = 1589025048;
     const schemaVersion = 0.4;
 
     const fields = {
@@ -117,14 +117,6 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
     const reportTypes = [
             'gm', 'player', 'all', 'control', 'token', 'character'
         ];
-
-    const propBool = {
-      couldbe:   ()=>(randomInteger(8)<=1),
-      sometimes: ()=>(randomInteger(8)<=2),
-      maybe:     ()=>(randomInteger(8)<=4),
-      probably:  ()=>(randomInteger(8)<=6),
-      likely:    ()=>(randomInteger(8)<=7)
-    };
 
     const unalias = (name) => fieldAliases.hasOwnProperty(name) ? fieldAliases[name] : name;
 
@@ -1588,13 +1580,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
                     _h.inset(
                         _h.pre('!token-mod --set showname|yes isdrawing|no')
                     ),
-                    _h.paragraph(`The following are considered true values: ${_h.code('1')}, ${_h.code('on')}, ${_h.code('yes')}, ${_h.code('true')}, ${_h.code('sure')}, ${_h.code('yup')}`),
-
-                    _h.subhead("Probabilistic Booleans"),
-                    _h.paragraph(`TokenMod accepts the following probabilistic values which are true some of the time and false otherwise: ${_h.code('couldbe')} (true 1 in 8 times) , ${_h.code('sometimes')} (true 1 in 4 times) , ${_h.code('maybe')} (true 1 in 2 times), ${_h.code('probably')} (true 3 in 4 times), ${_h.code('likely')} (true 7 in 8 times)`),
-
-                    _h.paragraph(`Anything else is considered false.`),
-
+                    _h.paragraph(`The following are considered true values: ${_h.code('1')}, ${_h.code('on')}, ${_h.code('yes')}, ${_h.code('true')}, ${_h.code('sure')}, ${_h.code('yup')}  Anything else is considered false.`),
                     _h.subhead("Updated Dynamic Lighting"),
                     _h.paragraph(`${_h.code("has_bright_light_vision")} is the UDL version of ${_h.bold("light_hassight")}. It controls if a token can see at all, and must be turned on for a token to use UDL.  You can also use the alias ${_h.code("bright_vision")}.`),
                     _h.paragraph(`${_h.code("has_night_vision")} controls if a token can see without emitted light around it.  This was handled with ${_h.bold("light_otherplayers")} in the old light system.  In the new light system, you don't need to be emitting light to see if you have night vision turned on.  You can also use the alias ${_h.code("night_vision")}.`),
@@ -2527,16 +2513,8 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
         if(_.has(fields,cmd)) {
             retr[cmd]=[];
             switch(fields[cmd].type) {
-                case 'boolean': {
-                      let v = args.shift().toLowerCase();
-                      if(filters.isTruthyArgument(v)){
-                        retr[cmd].push(true);
-                      } else if (propBool.hasOwnProperty(v)){
-                        retr[cmd].push(propBool[v]());
-                      } else {
-                        retr[cmd].push(false);
-                      }
-                    }
+                case 'boolean':
+                    retr[cmd].push(filters.isTruthyArgument(args.shift()));
                     break;
 
                 case 'text':
