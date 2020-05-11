@@ -2103,10 +2103,10 @@ var COFantasy = COFantasy || function() {
     if (difficulte === undefined) {
       jetCaracteristique(perso, caracteristique, options, evt,
         function(rt, explications) {
-          explications.forEach(function(m) {
-            addLineToFramedDisplay(display, m);
-          });
           addLineToFramedDisplay(display, "<b>Résultat :</b> " + rt.texte);
+          explications.forEach(function(m) {
+            addLineToFramedDisplay(display, m, 80);
+          });
           addStatistics(playerId, ["Jet de carac", caracteristique], rt.roll);
           // Maintenant, on diminue la malédiction si le test est un échec
           var attrMalediction = tokenAttribute(perso, 'malediction');
@@ -2709,15 +2709,11 @@ var COFantasy = COFantasy || function() {
       if (nj == 'perception') {
         options.bonusAttrs = options.bonusAttrs || [];
         options.bonusAttrs.push('diversionManoeuvreValeur');
-        options.bonus = 0;
       }
       if (options.bonus)
         titre += " (" + ((options.bonus > 0) ? '+' : '') + options.bonus + ")";
       if (difficulte !== undefined) titre += " difficulté " + difficulte;
       iterSelected(selected, function(perso) {
-        if (nj == 'perception' && ficheAttributeAsBool(perso, 'casque_on')) {
-          perso.bonusJet = -ficheAttributeAsInt(perso, 'casque_malus');
-        }
         jetPerso(perso, caracteristique, difficulte, titre, playerId, options);
       }); //fin de iterSelected
     }); //fin de getSelected
@@ -3117,6 +3113,7 @@ var COFantasy = COFantasy || function() {
         case "pietine":
         case "maxDmg":
         case "ouvertureMortelle":
+        case "seulementVivant":
           scope[cmd[0]] = true;
           return;
         case 'arc':
@@ -3240,7 +3237,7 @@ var COFantasy = COFantasy || function() {
               duree: duree,
               message: m
             };
-            scope.seulementVivant = m && m.seulementVivant;
+            scope.seulementVivant = scope.seulementVivant || (m && m.seulementVivant);
           } else if (estEffetCombat(cmd[1])) {
             lastEtat = {
               effet: cmd[1]
@@ -12820,13 +12817,21 @@ var COFantasy = COFantasy || function() {
     var token = personnage.token;
     var explications = [];
     var bonusCarac = bonusTestCarac(carac, personnage, evt, explications);
+    if (options.bonus) bonusCarac += options.bonus;
     if (options.bonusAttrs) {
       options.bonusAttrs.forEach(function(attr) {
-        bonusCarac += charAttributeAsInt(personnage, attr, 0);
+        var bonusAttribut = charAttributeAsInt(personnage, attr, 0);
+        if(bonusAttribut != 0) {
+          explications.push("Attribut " + attr + " : " + ((bonusAttribut<0) ? "-" : "+") + bonusAttribut);
+          bonusCarac += bonusAttribut;
+        }
+        if (attr == 'perception' && ficheAttributeAsBool(personnage, 'casque_on')) {
+          var malusCasque = ficheAttributeAsInt(personnage, 'casque_malus');
+          explications.push("Malus de casque : -" + malusCasque);
+          bonusCarac -= malusCasque;
+        }
       });
     }
-    if (options.bonus) bonusCarac += options.bonus;
-    if (personnage.bonusJet) bonusCarac += personnage.bonusJet;
     var carSup = nbreDeTestCarac(carac, personnage);
     var de = computeDice(personnage, {
       nbDe: carSup,
@@ -15520,44 +15525,30 @@ var COFantasy = COFantasy || function() {
   }
 
   function lancerSort(msg) {
-    var cmd = msg.content.split(' ');
-    if (cmd.length < 3) {
-      error("La fonction !cof-lancer-sort attend en argument le coût en mana", cmd);
-      return;
+    var options = parseOptions(msg);
+    if (options === undefined) return;
+    var cmd = options.cmd;
+    if (cmd === undefined) return;
+    if (options.messages === undefined) options.messages = [];
+    if (cmd.length > 1) options.messages.unshift(cmd.slice(1).join(' '));
+    if (options.messages.length < 1) {
+      options.messages.push("lance un sort");
     }
-    cmd.shift();
-    var indexLanceur = cmd.findIndex(function(c) {
-      return c == '--lanceur';
-    });
-    if (indexLanceur > -1 && indexLanceur < cmd.length - 1) {
-      var l = persoOfId(cmd[indexLanceur + 1]);
-      if (l) {
-        msg.selected = [{
-          _id: cmd[indexLanceur + 1]
-        }];
-        cmd.splice(indexLanceur, 2);
-      }
-    }
-    var mana = parseInt(cmd.shift());
-    if (isNaN(mana) || mana < 0) {
-      error("Le deuxième argument de !cof-lancer-sort doit être un nombre positif", msg.content);
-      return;
-    }
-    var spell = cmd.join(' ');
     getSelected(msg, function(selected) {
       if (selected.length === 0) {
         error("Pas de token sélectionée pour !cof-lancer-sort", cmd);
         return;
       }
+      var evt = {
+        type: "lancement de sort"
+      };
+      if (options.son) playSound(options.son);
       iterSelected(selected, function(lanceur) {
-        var charId = lanceur.charId;
-        var evt = {
-          type: "lancement de sort"
-        };
-        if (depenseMana(lanceur, mana, spell, evt)) {
-          whisperChar(charId, spell);
-          addEvent(evt);
-        }
+        if (limiteRessources(lanceur, options, undefined, "lancer un sort", evt)) return;
+        options.messages.forEach(function (m) {
+          whisperChar(lanceur.charId, m);
+        });
+        addEvent(evt);
       });
     });
   }
@@ -23421,7 +23412,7 @@ on("destroy:handout", function(prev) {
 });
 
 on("ready", function() {
-  var script_version = "2.04";
+  var script_version = "2.05";
   // Récupération des token Markers attachés à la campagne image, nom, tag, Id 
   on('add:token', COFantasy.addToken);
   on("change:graphic:statusmarkers", COFantasy.changeMarker);
@@ -23621,6 +23612,34 @@ on("ready", function() {
       a.remove();
     });
     log("Mise à jour de la RD effectuée");
+  }
+  if (state.COFantasy.version < 2.05) {
+    attrs = findObjs({
+      _type: 'attribute',
+    });
+    attrs.forEach(function(a) {
+      var attrName = a.get('name');
+      if (!attrName.startsWith('dose_') && !attrName.startsWith('consommable_')) return;
+      var action = a.get('max');
+      if (!action.startsWith('!cof-lancer-sort')) return;
+      var mana = action.charAt(17);
+      var message = action.substring(19);
+      a.set("max", "!cof-lancer-sort --message " + message + " --mana " + mana);
+    });
+    log("Mise à jour des consommables !cof-lancer-sort effectuée");
+    macros = findObjs({
+      _type: 'macro'
+    }).concat(findObjs({
+      _type: 'ability'
+    }));
+    macros.forEach(function(m) {
+      var macro = m.get("action");
+      if (!macro.startsWith('!cof-lancer-sort')) return;
+      var mana = macro.charAt(17);
+      var message = macro.substring(19);
+      m.set("action", "!cof-lancer-sort --message " + message + " --mana " + mana);
+    });
+    log("Mise à jour des ability & macros !cof-lancer-sort effectuée");
   }
   state.COFantasy.version = script_version;
   if (state.COFantasy.options.affichage.val.fiche.val) {
