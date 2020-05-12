@@ -11,7 +11,7 @@
     "modifies": {
         "msg.playerid": "read",
         "msg.content": "read",
-        "campaign.turnorder": "read,write",
+        "campaign.turnorder": "read,write"
     },
     "conflicts": []
 }
