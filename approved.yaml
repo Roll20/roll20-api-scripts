@@ -786,6 +786,6 @@ savageworldsstatuschanger:
   - "SavageWorldsStatusChanger"
   - "System Toolbox"
 
-midgardturntracker:
+midgardturntrackerhelper:
   - "MidgardTurnTrackerHelper"
   - "Utility"
