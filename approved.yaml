@@ -64,6 +64,10 @@ pathfinderskillbook:
 - "Pathfinder Skillbook"
 - "System Toolbox"
 
+pathfinder2utilities:
+- "Pathfinder2Utilities"
+- "Utility"
+
 ffgstarwarsdice:
 - "FFG-SWRPG-Dice-Roller"
 - "System Toolbox"
@@ -781,3 +785,7 @@ wildshaperesizer:
 savageworldsstatuschanger:
   - "SavageWorldsStatusChanger"
   - "System Toolbox"
+
+midgardturntrackerhelper:
+  - "MidgardTurnTrackerHelper"
+  - "Utility"

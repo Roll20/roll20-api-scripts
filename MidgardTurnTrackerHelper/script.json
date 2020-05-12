@@ -1,0 +1,17 @@
+{
+    "name": "Midgard Turn Tracker Helper",
+    "script": "MidgardTurnTrackerHelper.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "This script is used for the German RPG Midgard. It adds some functionality to the turn tracker. It sorts the turn tracker, adds 'Bewegungsphase' and 'Rundenende' to the turn tracker and sorts it. To see a list of commands, type '!midt' in the Roll20 chat windows. This works only for GMs",
+	"authors": "Hans-Joachim Maier",
+    "roll20userid": "240",
+	"useroptions": [],
+    "dependencies": [],
+    "modifies": {
+        "msg.playerid": "read",
+        "msg.content": "read",
+        "campaign.turnorder": "read,write"
+    },
+    "conflicts": []
+}
