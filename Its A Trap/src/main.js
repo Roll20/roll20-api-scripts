@@ -31,13 +31,12 @@ var ItsATrap = (() => {
       }, 1000*effect.delay);
 
       // Let the GM know that the trap has been triggered.
-      let announcer = state.ItsATrap.userOptions.announcer;
       if(activatingVictim)
-        sendChat(announcer, `/w gm The trap ${effect.name} has been ` +
+        ItsATrap.Chat.whisperGM(`The trap ${effect.name} has been ` +
           `triggered by ${activatingVictim.get('name')}. ` +
           `It will activate in ${effect.delay} seconds.`);
       else
-        sendChat(announcer, `/w gm The trap ${effect.name} has been ` +
+        ItsATrap.Chat.whisperGM(`The trap ${effect.name} has been ` +
           `triggered. It will activate in ${effect.delay} seconds.`);
     }
     else
@@ -448,11 +447,10 @@ var ItsATrap = (() => {
   function noticeTrap(trap, noticeMessage) {
     let id = trap.get('_id');
     let effect = new TrapEffect(trap);
-    let announcer = state.ItsATrap.userOptions.announcer;
 
     if(!state.ItsATrap.noticedTraps[id]) {
       state.ItsATrap.noticedTraps[id] = true;
-      sendChat(announcer, noticeMessage);
+      ItsATrap.Chat.broadcast(noticeMessage);
 
       if(effect.revealWhenSpotted)
         revealTrap(trap);

@@ -100,7 +100,7 @@ var ItsATrapCreationWizard = (() => {
     });
 
     let menu = _showMenuPanel('Trap Configuration', content);
-    _whisper(who, menu.toString(MENU_CSS));
+    ItsATrap.Chat.whisperGM(menu.toString(MENU_CSS));
   }
 
   /**
@@ -134,15 +134,6 @@ var ItsATrapCreationWizard = (() => {
     });
 
     return table;
-  }
-
-  /**
-   * Fixes msg.who.
-   * @param {string} who
-   * @return {string}
-   */
-  function _fixWho(who) {
-    return who.replace(/\(GM\)/, '').trim();
   }
 
   /**
@@ -798,13 +789,7 @@ var ItsATrapCreationWizard = (() => {
     return menu;
   }
 
-  /**
-   * @private
-   * Whispers a Marching Order message to someone.
-   */
-  function _whisper(who, msg) {
-    sendChat('Its A Trap! script', '/w "' + _fixWho(who) + '" ' + msg);
-  }
+
 
   on('ready', () => {
     // Delete the 3.9.4 version of the macro.
@@ -813,7 +798,7 @@ var ItsATrapCreationWizard = (() => {
       name: 'ItsATrap_trapCreationWizard'
     });
     if (oldMacros.length > 0) {
-      sendChat(`It's A Trap! script`, `<h2>Notice: It's A Trap v3.10</h2>` +
+      ItsATrap.Chat.whisperGM(`<h2>Notice: It's A Trap v3.10</h2>` +
         `<p>The old It's A Trap macro has been replaced with a shorter ` +
         `version named "TrapMaker". Please re-enable it on your macro ` +
         `settings. By popular demand, it no longer appears as a token ` + `action.</p> ` +
