@@ -2,16 +2,17 @@
 // API Commands:
 // !5ehelp - Gives a list of the script's API commands in the chat tab.
 // !5estatus - Lists the current status of the script's features in the chat tab.
-// !ammotracking on/off/quiet - Automatically expends linked resource when attack is made
+// !ammotracking on/off/player/quiet - Automatically expends linked resource when attack is made
 // !autonpctoken on/off - Automatically generates a NPC token on the GM's screen based on the default token when an NPC's health calculation is rolled
-// !deathsavetracking on/off/quiet - Automatically ticks off successes and failures when death saves are rolled, clearing on death, stabilization, or hp recovery
-// !spelltracking on/off/quiet - Automatically expends spell charges as cast, factoring in higher level casting
+// !deathsavetracking on/off/player/quiet - Automatically ticks off successes and failures when death saves are rolled, clearing on death, stabilization, or hp recovery
+// !spelltracking on/off/player/quiet - Automatically expends spell charges as cast, factoring in higher level casting
 // !longrest <character name> - If spelltracking is on, this command will reset all of the character's spell slots to unspent.
 // !npchp <character name> - Rolls randomly NPC hit point totals using their formula. If no character name is provided it will roll the selected tokens.
 //
 // Options:
 // on - Toggles the functionality on (default)
 // off - Disables the functionality
+// player - Maintains functionality but only sends data to the GM and the player involved..
 // quiet - Maintains functionality while preventing results from being output to the chat.
 
 on('chat:message', function(msg) {
@@ -84,7 +85,7 @@ var handleapicommand = function(msg,command,option) {
         return;
     }
     // RESOLVE COMMAND WITH OPTION
-    else if(option && (option === "on" || option === "off" || option === "quiet")) {
+    else if(option && (option === "on" || option === "off" || option === "quiet" || option === "player")) {
         state.FifthEditionOGLbyRoll20[command] = option;
     }
     // ELSE TOGGLE WITHOUT OPTION
@@ -106,8 +107,15 @@ var outputstatus = function(msg) {
 };
 
 var outputhelp = function(msg) {
-    sendChat(msg.who, "<div class='sheet-rolltemplate-desc'><div class='sheet-desc'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>!5estatus</span><span style='display:block;'>!ammotracking on/off/quiet</span><span style='display:block;'>!autonpctoken on/off</span><span style='display:block;'>!deathsavetracking on/off/quiet</span><span style='display:block;'>!spelltracking on/off/quiet</span><span style='display:block;'>!longrest \<character name\></span><span style='display:block; margin-top:5px;'>5th Edition OGL by Roll20</span></div></div></div>");    
+    sendChat(msg.who, "<div class='sheet-rolltemplate-desc'><div class='sheet-desc'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>!5estatus</span><span style='display:block;'>!ammotracking on/off/player/quiet</span><span style='display:block;'>!autonpctoken on/off</span><span style='display:block;'>!deathsavetracking on/off/player/quiet</span><span style='display:block;'>!spelltracking on/off/player/quiet</span><span style='display:block;'>!longrest \<character name\></span><span style='display:block; margin-top:5px;'>5th Edition OGL by Roll20</span></div></div></div>");
 };
+
+//Helper Function (would be nicer if there was a namespace this all sat inside)
+var sendTargetedChat = function(from, player, msg) {
+  sendChat(from, `/w gm ${msg}`);
+  if (player !== undefined)
+    sendChat(from, `/w "${player}" ${msg}`);
+}
 
 // AUTOMATICALLY APPLY DEATH SAVE RESULTS
 var handledeathsave = function(msg,character) {
@@ -163,7 +171,7 @@ var handledeathsave = function(msg,character) {
         else {
             fail1.set({current:"on"});
             resultoutput = "FAILED 1 of 3";
-        } 
+        }
     }
     else {
         var succ1 = findObjs({type: 'attribute', characterid: character.id, name: "deathsave_succ1"}, {caseInsensitive: true})[0];
@@ -196,11 +204,12 @@ var handledeathsave = function(msg,character) {
         }
     }
     if(state.FifthEditionOGLbyRoll20.deathsavetracking != "quiet") {
+       var playerName = state.FifthEditionOGLbyRoll20.deathsavetracking==="player" ? player.get('displayname') : undefined;
         if(getAttrByName(character.id, "wtype") === "") {
             sendChat(msg.who, "<div class='sheet-rolltemplate-simple' style='margin-top:-7px;'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span>" + resultoutput + "</span></div></div></div>");
         }
         else {
-            sendChat(msg.who, "/w gm <div class='sheet-rolltemplate-desc'><div class='sheet-desc'><div class='sheet-label' style='margin-top:5px;'><span>" + resultoutput + "</span></div></div></div>");
+            sendTargetedChat(msg.who, playerName, "<div class='sheet-rolltemplate-desc'><div class='sheet-desc'><div class='sheet-label' style='margin-top:5px;'><span>" + resultoutput + "</span></div></div></div>");
         }
     }
 };
@@ -299,13 +308,14 @@ var resolveslot = function(msg,character,player,spellslot) {
     charslot.set({current: Math.max(spent - 1, 0)});
     var wtype = getAttrByName(character.id, "wtype");
     var wtoggle = getAttrByName(character.id, "whispertoggle");
+    var playerName = state.FifthEditionOGLbyRoll20.spelltracking==="player" ? player.get('displayname') : undefined;
     if(spent > 0) {
         if(state.FifthEditionOGLbyRoll20.spelltracking != "quiet") {
             if(wtype === "" || (wtype === "@{whispertoggle}" && wtoggle === "") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "general")) {
                 sendChat(msg.who, "<div class='sheet-rolltemplate-simple' style='margin-top:-7px;'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block;'>" + Math.max(spent - 1, 0) + " OF " + charslotmax.get("current") + " REMAINING</span></div></div></div>");
             }
             else if(wtype === "/w gm " || (wtype === "@{whispertoggle}" && wtoggle === "/w gm ") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "whisper")) {
-                sendChat(msg.who, "/w gm <div class='sheet-rolltemplate-simple'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block;'>" + Math.max(spent - 1, 0) + " OF " + charslotmax.get("current") + " REMAINING</span></div></div></div>");
+                sendTargetedChat(msg.who, playerName, "<div class='sheet-rolltemplate-simple'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block;'>" + Math.max(spent - 1, 0) + " OF " + charslotmax.get("current") + " REMAINING</span></div></div></div>");
             }
         }
     }
@@ -314,7 +324,7 @@ var resolveslot = function(msg,character,player,spellslot) {
             sendChat(msg.who, "<div class='sheet-rolltemplate-simple' style='margin-top:-7px;'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block; color:red;'>ALL SLOTS EXPENDED</span></div></div></div>");
         }
         else if(wtype === "/w gm " || (wtype === "@{whispertoggle}" && wtoggle === "/w gm ") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "whisper")) {
-            sendChat(msg.who, "/w gm <div class='sheet-rolltemplate-simple'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block; color:red;'>ALL SLOTS EXPENDED</span></div></div></div>");
+            sendTargetedChat(msg.who, playerName, "<div class='sheet-rolltemplate-simple'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block; color:red;'>ALL SLOTS EXPENDED</span></div></div></div>");
         }
     }
 };
@@ -361,10 +371,10 @@ var npchp = function(msg) {
     var qualifier = msg.content.substring(6).trim();
     var tokens = [];
     if(qualifier.length > 0) {
-        if ((qualifier.match(/"/g)||[]).length > 1) {  
+        if ((qualifier.match(/"/g)||[]).length > 1) {
             qualifier = qualifier.match( /"(.*?)"/ )[1];
         }
-        else if ((qualifier.match(/'/g)||[]).length > 1) {  
+        else if ((qualifier.match(/'/g)||[]).length > 1) {
             qualifier = qualifier.match( /'(.*?)'/ )[1];
         }
         var character = findObjs({type: 'character', name: qualifier}, {caseInsensitive: true})[0] || false;
@@ -414,12 +424,12 @@ var npchp = function(msg) {
                     else if(bar3 === maxhp) {
                         t_obj.set({bar3_value: hp});
                         t_obj.set({bar3_max: hp});
-                    }                
+                    }
                 }
             }
         }
     });
-    
+
 
 }
 
@@ -461,8 +471,8 @@ var handleammo = function (msg,character,player) {
             ammoname = temp[0];
             ammonum = !isNaN(parseInt(temp[1],10)) ? parseInt(temp[1],10) : 1;
         };
-        var resources = filterObjs(function(obj) {    
-            if(obj.get("type") === "attribute" && obj.get("characterid") === character.id && (obj.get("current") + "").toLowerCase() === ammoname.toLowerCase() && obj.get("name").indexOf("resource") > -1) return true;    
+        var resources = filterObjs(function(obj) {
+            if(obj.get("type") === "attribute" && obj.get("characterid") === character.id && (obj.get("current") + "").toLowerCase() === ammoname.toLowerCase() && obj.get("name").indexOf("resource") > -1) return true;
             else return false;
         });
         if(!resources[0]) {
@@ -477,8 +487,8 @@ var handleammo = function (msg,character,player) {
         }
         else {
            var atkname = (msg.content.split("{{rname=")[1]||'').split("}}")[0];
-           var attacks = filterObjs(function(obj) {    
-               if(obj.get("type") === "attribute" && obj.get("characterid") === character.id && obj.get("current") === atkname) return true;    
+           var attacks = filterObjs(function(obj) {
+               if(obj.get("type") === "attribute" && obj.get("characterid") === character.id && obj.get("current") === atkname) return true;
                else return false;
            });
            var reg = new RegExp(/.+?(?=_atkname)/);
@@ -512,12 +522,13 @@ var handleammo = function (msg,character,player) {
         }
         var wtype = getAttrByName(character.id, "wtype");
         var wtoggle = getAttrByName(character.id, "whispertoggle");
+        var playerName = state.FifthEditionOGLbyRoll20.ammotracking==="player" ? player.get('displayname') : undefined;
         if(ammoresource.get("current") < 0) {
             if(wtype === "" || (wtype === "@{whispertoggle}" && wtoggle === "") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "general")) {
                 sendChat(msg.who, "<div class='sheet-rolltemplate-simple' style='margin-top:-7px;'><div class='sheet-container' style='border-radius: 0px;'><div class='sheet-label' style='margin-top:5px;'><span style='display:block; color:red;'>OUT OF AMMO</span></div></div></div>");
             }
             else if(wtype === "/w gm " || (wtype === "@{whispertoggle}" && wtoggle === "/w gm ") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "whisper")) {
-                sendChat(msg.who, "/w gm <div class='sheet-rolltemplate-desc'><div class='sheet-desc' style='border-radius: 0px;'><div class='sheet-label' style='margin-top:5px;'><span style='display:block; color:red;'>OUT OF AMMO</span></div></div></div>");
+                sendTargetedChat(msg.who, playerName, "<div class='sheet-rolltemplate-desc'><div class='sheet-desc' style='border-radius: 0px;'><div class='sheet-label' style='margin-top:5px;'><span style='display:block; color:red;'>OUT OF AMMO</span></div></div></div>");
             }
         }
         else if(state.FifthEditionOGLbyRoll20.ammotracking != "quiet") {
@@ -525,7 +536,7 @@ var handleammo = function (msg,character,player) {
                 sendChat(msg.who, "<div class='sheet-rolltemplate-simple' style='margin-top:-7px;'><div class='sheet-container' style='border-radius: 0px;'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>" + ammoname + ": " + ammoresource.get("current") + " LEFT</span></div></div></div>");
             }
             else if(wtype === "/w gm " || (wtype === "@{whispertoggle}" && wtoggle === "/w gm ") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "whisper")) {
-                sendChat(msg.who, "/w gm <div class='sheet-rolltemplate-desc'><div class='sheet-desc' style='border-radius: 0px;'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>" + ammoname + ": " + ammoresource.get("current") + " LEFT</span></div></div></div>");
+                sendTargetedChat(msg.who, playerName, "<div class='sheet-rolltemplate-desc'><div class='sheet-desc' style='border-radius: 0px;'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>" + ammoname + ": " + ammoresource.get("current") + " LEFT</span></div></div></div>");
             };
         }
     }
