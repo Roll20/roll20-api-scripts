@@ -40,7 +40,7 @@ on('chat:message', function(msg) {
         var player = getObj("player", msg.playerid);
         if(["simple","npc"].indexOf(msg.rolltemplate) > -1) {
             if(_.has(msg,'inlinerolls') && msg.content.indexOf("^{death-save-u}") > -1 && character && state.FifthEditionOGLbyRoll20.deathsavetracking != "off") {
-                handledeathsave(msg,character);
+                handledeathsave(msg,character,player);
             }
             if(_.has(msg,'inlinerolls') && msg.content.indexOf("^{hp}") > -1 && character && msg.rolltemplate && msg.rolltemplate === "npc" && state.FifthEditionOGLbyRoll20.autonpctoken != "off") {
                 handlenpctoken(msg,character,player);
@@ -112,7 +112,7 @@ var outputhelp = function(msg) {
 
 
 // AUTOMATICALLY APPLY DEATH SAVE RESULTS
-var handledeathsave = function(msg,character) {
+var handledeathsave = function(msg,character,player) {
     var result = msg.inlinerolls[0].results.total ? msg.inlinerolls[0].results.total : false;
     var resultbase = msg.inlinerolls[0].results.rolls[0].results[0].v ? msg.inlinerolls[0].results.rolls[0].results[0].v : false;
     var resultoutput = "";
@@ -197,10 +197,12 @@ var handledeathsave = function(msg,character) {
             resultoutput = "SUCCEEDED 1 of 3";
         }
     }
+    let wtype = getAttrByName(character.id, "wtype")
+    let displayName=player.get('displayname');
     let playerName = "";
     if (state.FifthEditionOGLbyRoll20.deathsavetracking==="player")
-      playerName = (displayName===undefined) ? undefined : `/w "${player.get('displayname')}" `;
-    var sendPlayerMsg=(playerName !== "" || getAttrByName(character.id, "wtype") === "");
+      playerName = (displayName===undefined || playerIsGM(player.get("_id"))) ? undefined : `/w "${player.get('displayname')}" `;
+    var sendPlayerMsg=(playerName !== "" || wtype === "");
     var sendGMMsg=(playerName !== "" || wtype !== "");
 
     if(state.FifthEditionOGLbyRoll20.deathsavetracking != "quiet") {
@@ -308,9 +310,10 @@ var resolveslot = function(msg,character,player,spellslot) {
     charslot.set({current: Math.max(spent - 1, 0)});
     var wtype = getAttrByName(character.id, "wtype");
     var wtoggle = getAttrByName(character.id, "whispertoggle");
+    let displayName=player.get('displayname');
     let playerName = "";
     if (state.FifthEditionOGLbyRoll20.spelltracking==="player")
-      playerName = (displayName===undefined) ? undefined : `/w "${player.get('displayname')}" `;
+      playerName = (displayName===undefined || playerIsGM(player.get("_id"))) ? undefined : `/w "${player.get('displayname')}" `;
     var sendPlayerMsg=(playerName !== "" || wtype === "" || (wtype === "@{whispertoggle}" && wtoggle === "") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "general"));
     var sendGMMsg=(playerName !== "" || wtype === "/w gm " || (wtype === "@{whispertoggle}" && wtoggle === "/w gm ") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "whisper"));
     if(spent > 0) {
@@ -320,7 +323,7 @@ var resolveslot = function(msg,character,player,spellslot) {
                     sendChat(msg.who, playerName + "<div class='sheet-rolltemplate-simple' style='margin-top:-7px;'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block;'>" + Math.max(spent - 1, 0) + " OF " + charslotmax.get("current") + " REMAINING</span></div></div></div>");
             }
             if(sendGMMsg) {
-                sendChat(msg.who, playerName, "/w gm <div class='sheet-rolltemplate-simple'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block;'>" + Math.max(spent - 1, 0) + " OF " + charslotmax.get("current") + " REMAINING</span></div></div></div>");
+                sendChat(msg.who, "/w gm <div class='sheet-rolltemplate-simple'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block;'>" + Math.max(spent - 1, 0) + " OF " + charslotmax.get("current") + " REMAINING</span></div></div></div>");
             }
         }
     }
@@ -330,7 +333,7 @@ var resolveslot = function(msg,character,player,spellslot) {
                 sendChat(msg.who, playerName + "<div class='sheet-rolltemplate-simple' style='margin-top:-7px;'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block; color:red;'>ALL SLOTS EXPENDED</span></div></div></div>");
         }
         if(sendGMMsg) {
-            sendChat(msg.who, playerName, "/w gm <div class='sheet-rolltemplate-simple'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block; color:red;'>ALL SLOTS EXPENDED</span></div></div></div>");
+            sendChat(msg.who, "/w gm <div class='sheet-rolltemplate-simple'><div class='sheet-container'><div class='sheet-label' style='margin-top:5px;'><span style='display:block;'>SPELL SLOT LEVEL " + spellslot + "</span><span style='display:block; color:red;'>ALL SLOTS EXPENDED</span></div></div></div>");
         }
     }
 };
@@ -531,7 +534,7 @@ var handleammo = function (msg,character,player) {
         let displayName=player.get('displayname');
         let playerName = "";
         if (state.FifthEditionOGLbyRoll20.ammotracking==="player")
-          playerName = (displayName===undefined) ? undefined : `/w "${player.get('displayname')}" `;
+          playerName = (displayName===undefined || playerIsGM(player.get("_id"))) ? undefined : `/w "${player.get('displayname')}" `;
         var sendPlayerMsg=(playerName !== "" || wtype === "" || (wtype === "@{whispertoggle}" && wtoggle === "") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "general"));
         var sendGMMsg=(playerName !== "" || wtype === "/w gm " || (wtype === "@{whispertoggle}" && wtoggle === "/w gm ") || (wtype === "?{Whisper?|Public Roll,|Whisper Roll,/w gm }" && msg.type === "whisper"));
         if(ammoresource.get("current") < 0) {
