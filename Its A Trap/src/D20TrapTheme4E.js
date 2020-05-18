@@ -42,8 +42,7 @@ var D20TrapTheme4E = (() => {
         effect.announce(html.toString(TrapTheme.css));
       })
       .catch(err => {
-        sendChat('Trap theme: ' + this.name, '/w gm ' + err.message);
-        log(err.stack);
+        ItsATrap.Chat.error(err);
       });
     }
 
