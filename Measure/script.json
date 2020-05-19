@@ -1,7 +1,7 @@
 {
   "name": "Measure",
-  "version": "0.3.2",
-  "description": "Measure distances between multiple tokens, both from the corners and the center.",
+  "version": "0.3.3",
+  "description": "Measures the distance between multiple tokens.  The distance between each\rselected token will be shown in the units of measure for the current page.\rAlternatively, multiple token ids can be specified as arguments to the command\rto see the distance between those tokens.\r\r**Note:** Because of a bug in Roll20, the distance between selected and\r`@{target}` indicated tokens can not be measured.\r\r## Commands\r\r```\r!measure [token_id token_id [token_id ...]]\r```\r\rThis will display the distance between all the selected tokens, or all the\rtokens whose token_ids are specified.  Measurements will be provided between\rall provided tokens in the units of the current page.\r\rDuplicate IDs are ignored.  An example for measuring the distance between\rtokens players don't control:\r\r```\r!measure @{target|first|token_id} @{target|second|token_id}\r@{target|third|token_id} @{target|fourth|token_id}\r```\rTo measure between only two tokens, the second token can be clicked for the\rtwo additional `@{target}` commands and a single distance will be provided.",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -18,7 +18,5 @@
   "conflicts": [],
   "script": "Measure.js",
   "useroptions": [],
-  "previousversions": [
-    "0.3.1"
-  ]
+  "previousversions": []
 }

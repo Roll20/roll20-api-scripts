@@ -1,7 +1,7 @@
 {
   "name": "TableExport",
-  "version": "0.2.3",
-  "description": "A script for exporting Rollable Tables between accounts.",
+  "version": "0.2.4",
+  "description": "This script dumps commands to the chat for reconstructing a rollable table on another campaign. While this can be done on your own campaigns via the transmogrifyer, this script allows you to pass those commands to a friend and thus share your own creative works with others.\r\r**Caveat:** Avatar images that are not in your own library will be ignored by the API on import, but will not prevent creation of the table and table items.\r\r**Note:** Running any of the following commands without any arguments will\rdisplay help.\r\r## Commands\r```\r!export-table --&lt;Table Name&gt; [ --&lt;Table Name&gt; ...]\r```\r\rFor all table names, case is ignored and you may use partial names so long as they are unique. For example, &quot;King Maximillian&quot; could be called &quot;max&quot; as long as &quot;max&quot; does not appear in any other table names. Exception: An exact match will trump a partial match. In the previous example, if a table named &quot;Max&quot; existed, it would be the only table matched for **--max**.\r\r* **--&lt;Table Name&gt;** — This is the name of a table to export. You can specify as many tables as you like in a single command.\r\r```\r!import-table --&lt;Table Name&gt; --&lt;[ show | hide ]&gt;\r```\r\rThis is the command output by **!export-table** to create the new table. You likely will not need issue these commands directly.\r\r* **--&lt;Table Name&gt;** — This is the name of the table to be create.\r* **--&lt;[ show | hide ]&gt;** — This whether to show the table to players or hide it.\r\r```\r!import-table-item --&lt;Table Name&gt; --&lt;Table Item Name&gt; --&lt;Weight&gt; --&lt;Avatar URL&gt;\r```\r\rThis is the command output by **!export-table** to create the new table. You likely will not need issue these commands directly.\r\r* **--&lt;Table Name&gt;** — This is the name of the table to add items to. Note: unlike for **!export-table**, this must be an exact name match to the created table.\r* **--&lt;Table Item Name&gt;** — This is the name of the table item to create. Note: Because the string ` --` may occur in a table item name, you may see `[TABLEEXPORT:ESCAPE]` show up as a replacement in these commands. This value is corrected internally to the correct ` --` sequence on import.\r\r* **--&lt;Weight&gt;** — This is the weight for this table item and should be an integer value.\r* **--&lt;Avatar URL&gt;** — This is the URL for the avatar image of the table item.",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -18,6 +18,6 @@
   },
   "conflicts": [],
   "script": "TableExport.js",
-  "useroptions": {},
+  "useroptions": [],
   "previousversions": []
 }

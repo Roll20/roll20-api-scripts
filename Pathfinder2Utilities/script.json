@@ -1,0 +1,21 @@
+{
+  "name": "Pathfinder 2 Utilities",
+  "script": "pf2utils.js",
+  "version": "160520",
+  "previousversions": ["100520"],
+  "description": "A set of utilities for Pathfinder 2 standard abilities and modifier tracking. See https://wiki.roll20.net/Script:Pathfinder_2_Utilities#Supported_Abilities.",
+  "authors": "Mark Green",
+  "roll20userid": 1093402,
+  "modifies": [
+    {"_id":  "read"},
+    {"_type":  "read"},
+    {"_subtype": "read"},
+    {"_pageid": "read"},
+    {"represents":  "read"},
+    {"controlledby":  "read"},
+    {"turnorder":  "write"},
+    {"playerpageid": "read"},
+    {"current": "read"},
+    {"Campaign": "read"}
+  ]
+}

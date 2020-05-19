@@ -78,7 +78,12 @@ var TrapEffect = (() => {
      * @type {(string[]|string)}
      */
     get effectShape() {
-      return this._effect.effectShape;
+      if (this._trap.get('aura1_radius'))
+        return 'burst';
+      else if (['circle', 'rectangle', 'square'].includes(this._effect.effectShape))
+        return 'self';
+      else
+        return this._effect.effectShape || 'self';
     }
 
     /**
@@ -191,7 +196,7 @@ var TrapEffect = (() => {
      * @type {string}
      */
     get stopAt() {
-      return this._effect.stopAt;
+      return this._effect.stopAt || 'center';
     }
 
     /**
@@ -326,23 +331,21 @@ var TrapEffect = (() => {
      */
     announce(message) {
       message = message || this.message;
-      let announcer = state.ItsATrap.userOptions.announcer;
 
       // Display the message to everyone, unless it's a secret.
       if(this.gmOnly) {
-        message = '/w gm ' + message;
-        sendChat(announcer, message);
+        ItsATrap.Chat.whisperGM(message);
 
         // Whisper any secret notes to the GM.
         if(this.notes)
-          sendChat(announcer, '/w gm Trap Notes:<br/>' + this.notes);
+          ItsATrap.Chat.whisperGM(`Trap Notes:<br/>${this.notes}`);
       }
       else {
-        sendChat(announcer, message);
+        ItsATrap.Chat.broadcast(message);
 
         // Whisper any secret notes to the GM.
         if(this.notes)
-          sendChat(announcer, '/w gm Trap Notes:<br/>' + this.notes);
+          ItsATrap.Chat.whisperGM(`Trap Notes:<br/>${this.notes}`);
 
         // Reveal the trap if it's set to become visible.
         if(this.trap.get('status_bleeding-eye'))
@@ -432,7 +435,17 @@ var TrapEffect = (() => {
             stroke: '#ff0000'
           }));
 
-          let aoeGraphic = AreasOfEffect.applyEffect('', this.areaOfEffect.name, path);
+          // Construct a fake player object to create the effect for.
+          // This will correctly set the AoE's controlledby property to ''
+          // to denote that it is controlled by no one.
+          let fakePlayer = {
+            get: function() {
+              return '';
+            }
+          };
+
+          // Create the AoE.
+          let aoeGraphic = AreasOfEffect.applyEffect(fakePlayer, this.areaOfEffect.name, path);
           aoeGraphic.set('layer', 'map');
           toFront(aoeGraphic);
         }
@@ -563,7 +576,7 @@ var TrapEffect = (() => {
         }
 
         state.TokenMod.playersCanUse_ids = true;
-        sendChat('It\'s A Trap', command);
+        sendChat('ItsATrap-api', command);
       }
     }
 

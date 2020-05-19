@@ -1,0 +1,13 @@
+{
+    "name": "Cypher Systems by Roll20 Companion",
+    "script": "cypher_systems_by_roll20.js",
+    "version": "1.001",
+    "previousversions": [],
+    "description": "Enables the applying to characters of Stats costs and Recovery rolls advancement from the chat roll template, as well as applying Damage to NPCs.",
+    "authors": "Natha",
+    "roll20userid": "75857",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {},
+    "conflicts": ["Natha's Numenera","Cypher System Sheet"]
+}

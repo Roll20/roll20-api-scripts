@@ -1,7 +1,7 @@
 {
   "name": "DryErase",
-  "version": "0.1.7",
-  "description": "",
+  "version": "0.1.8",
+  "description": "DryErase gives you control over how your players are drawing on your maps.  It\rallows you to prevent any drawing, allow certain people to draw, label\rdrawings so you know who made them, move all drawings to the GM layer until\rthey have been approved, and grant/revoke drawing access easily during the\rgame.\r\r## Commands\r\r```!dry-erase [--help]```\r\rThis command accesses the hep as well as the configuration and player options.\r\r## Player Permissions\r\rOn the help screen, you will see listed all of the players in the current game with a button next to them to set their permissions.  GMs are always permitted to draw.  Players can be Granted permission to draw using the **Grant** button next to their name.  If they have permission to draw, you can use the **Revoke** button next to their name to remove that permission.\r\r## Configuration\r\r* **Auto Delete** -- Turning this option on will immediately delete drawings\r  created by players that have not been granted permission to draw.\r* **Auto Hide** -- Turning this option on will immediately move to the GM\r  layer any drawings created by players that have not been granted permission\r  to draw.\r* **Report** -- Turning this option on will notify the GM when a drawing has\r  been created by a player that has not been granted permission to draw.  The\r  notification will allow the GM to:\r** **Erase**: immediately remove the drawing.\r** **Allow**: permit this specific drawing.\r** **Grant Player**: grant drawing permission to this player.\r* **Label Granted Player Drawings** -- Turning this on causes all drawings to\r  receive a highlight on the GM Layer with the name of the drawing player.\r  (Default is to only do this for players that have not been granted\r  permission).\r\rDryErase tracks when it was last active and will appropriately handle drawings\rmade while the API was not active.",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -23,7 +23,5 @@
   "conflicts": [],
   "script": "DryErase.js",
   "useroptions": [],
-  "previousversions": [
-    "0.1.6"
-  ]
+  "previousversions": []
 }

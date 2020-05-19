@@ -1,7 +1,7 @@
 {
   "name": "RandomRotate",
-  "version": "0.2.1",
-  "description": "Allows the GM to easily rotate all selected tokens to a random angle.",
+  "version": "0.2.3",
+  "description": "Allows the GM to easily randomize the rotation of the selected tokens.\r\r## Commands\r\r```!random-rotate```\r\rAdjusts the rotation of all the selected tokens to a random angle.\r\r```!random-spread```\r\rAdjusts the location of the selected tokens to a random location within the bounds of the current token positions.",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -12,6 +12,9 @@
   },
   "conflicts": [],
   "script": "RandomRotate.js",
-  "useroptions": {},
-  "previousversions": []
+  "useroptions": [],
+  "previousversions": [
+    "0.2.1",
+    "0.2.2"
+  ]
 }
