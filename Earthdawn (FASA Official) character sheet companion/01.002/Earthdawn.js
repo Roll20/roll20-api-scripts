@@ -32,7 +32,7 @@
 // Define a Name-space
 var Earthdawn = Earthdawn || {};
             // define any name-space constants
-Earthdawn.Version = "1.0021";
+Earthdawn.Version = "1.0022";
 
 Earthdawn.whoFrom = {
 	player:		0x08,
@@ -599,6 +599,8 @@ Earthdawn.EDclass = function( origMsg ) {
 				vUpdate( this, this.updateVersion1p001, 1.001 );
             if( state.Earthdawn.version < 1.0021)
 				vUpdate( this, this.updateVersion1p0021, 1.0021 );
+            if( state.Earthdawn.version < 1.0022)
+				vUpdate( this, this.updateVersion1p0022, 1.0022 );
 					
             state.Earthdawn.version = Earthdawn.Version;    
         }
@@ -913,7 +915,6 @@ Earthdawn.EDclass = function( origMsg ) {
         'use strict';
         try {
 			let count = 0;
-
 							// go through all attributes for this character and look for ones we are interested in
 			let attributes = findObjs({ _type: "attribute", _characterid: cID });
 			_.each( attributes, function (att) {
@@ -924,12 +925,33 @@ Earthdawn.EDclass = function( origMsg ) {
 						att.set( "current", "(-1*@{Armor-IP})");
 				}
 			}); // End for each attribute.
-
 			return count;
         } catch(err) {
 			log( "ED.updateVersion1p0021() cID=" + cID + "   error caught: " + err );
         }
     }; // end updateVersion1p0021()
+
+
+
+	this.updateVersion1p0022 = function( cID ) {
+        'use strict';
+        try {
+			let count = 0;
+							// go through all attributes for this character and look for ones we are interested in
+			let attributes = findObjs({ _type: "attribute", _characterid: cID });
+			_.each( attributes, function (att) {
+				if ( att.get("name").endsWith( "_Mod-Type" )) {
+					if( att.get( "current" ).search( /Armor-IP/ ) != -1)
+						att.set( "current", "@{Adjust-All-Tests-Total}+(-1*@{Armor-IP})");
+					else if( att.get( "current" ).search( /IP/ ) != -1)
+						att.set( "current", "@{Adjust-All-Tests-Total}+(-1*@{IP})");
+				}
+			}); // End for each attribute.
+			return count;
+        } catch(err) {
+			log( "ED.updateVersion1p0022() cID=" + cID + "   error caught: " + err );
+        }
+    }; // end updateVersion1p0022()
 
 
 
@@ -1602,7 +1624,12 @@ Step/Action Dice Table
 
 //				if( stepAttrib === "Linked" )		// We need some but not all of the elements of NAC_Step. 
 //					step += this.getValue( pre + "Attribute");
-				modtypevalue = this.getValue( modtype.slice( 6, -2)) * ( modtype.endsWith( "IP})" ) ? -1 : 1 );			// Initiative Penalties need to be subtracted instead of added. 
+				if( modtype.search( /IP/ ) != -1 )
+					modtypevalue = (this.getValue((modtype.search( /Armor-IP/ ) != -1) ? "Armor-IP" : "IP") * -1) + this.getValue( "Adjust-All-Tests-Total" );			// Initiative Penalties need to be subtracted instead of added. 
+				else if (modtype == "0" || modtype == "(0)")
+					modtypevalue = 0;
+				else
+					modtypevalue = this.getValue( modtype.replace( /[@\(\{\}\)]/g, ""));
                 this.misc[ "step" ] = step + modtypevalue + this.getValue( pre + stepAttrib) + this.getValue( pre + "Mods" ) - this.mookWounds();
 				this.misc[ "ModValue" ] = modtypevalue;
                 this.misc[ "reason" ] = Earthdawn.getAttrBN( this.charID, pre + "Name", "").trim() + ((ssa[ 1 ] === "wpn") ? " damage" : "");
@@ -3608,7 +3635,13 @@ log( nm);
             try {
 				if ( this.StatusMarkerCollection != undefined )
 					return;
-
+// "red", "blue", "green", "brown", "purple", "pink", "yellow", "dead", 
+// "skull", "sleepy", "half-heart", "half-haze", "interdiction", "snail", "lightning-helix", xx "spanner", 
+// xx "chained-heart", "chemical-bolt", "death-zone", x"drink-me", x"edge-crack", "ninja-mask", "stopwatch", "fishing-net", 
+// "overdrive", "strong", xx "fist", xx "padlock", "three-leaves", "fluffy-wing", xx "pummeled", "tread", 
+// "arrowed", "aura", "back-pain", xx "black-flag", "bleeding-eye", xx "bolt-shield", xx "broken-heart", xx "cobweb", 
+// "broken-shield", xx "flying-flag", xx "radioactive", xx "trophy", "broken-skull", xx "frozen-orb", "rolling-bomb", "white-tower", 
+// xx "grab", "screaming", xx "grenade", "sentry-gun", "all-for-one", "angel-outfit", "archery-target"
                 var smc = [];			// IMPORTAINT NOTE!!! if you make changes that affect any attrib, also edit attribute section of the on ready event near the bottom of this file and the chat menu section dealing with status's.
                 smc.push ( { code: "karma", prompt: "Karma", attrib: "Karma-Roll", icon: "lightning-helix", submenu: "?{Karma|None,[0^u]|One,[1^s]|Two,[2^b]|Three,[3^c]}" } );
 				if( state.Earthdawn.gED )
@@ -3639,8 +3672,8 @@ log( nm);
                 smc.push ( { code: "debuff", prompt: "debuff", icon: "broken-skull", submenu: "?{Amount|0}" } );
                 smc.push ( { code: "debuff2", prompt: "debuff2", icon: "screaming", submenu: "?{Amount|0}" } );
 
-                smc.push ( { code: "ambushing", prompt: "Ambushing", attrib: "Creature-Ambushing", icon: "red" } );
-                smc.push ( { code: "divingcharging", prompt: "Diving/Charging", attrib: "Creature-DivingCharging", icon: "purple" } );
+                smc.push ( { code: "ambushing", prompt: "Ambushing", attrib: "Creature-Ambushing", icon: "overdrive" } );
+                smc.push ( { code: "divingcharging", prompt: "Diving/Charging", attrib: "Creature-DivingCharging", icon: "rolling-bomb" } );
  //               smc.push ( { code: "pd", prompt: "PD minus", icon: "bolt-shield", submenu: "?{Amount to subtract from PD|0}" } );
  //               smc.push ( { code: "md", prompt: "MD minus", icon: "frozen-orb", submenu: "?{Amount to subtract from MD|0}" } );
  //               smc.push ( { code: "sd", prompt: "SD minus", icon: "chained-heart", submenu: "?{Amount to subtract from SD|0}" } );
@@ -4044,7 +4077,11 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                     // ParseObj.LinkToken ()
                     // Make sure the character associated with CharID is ready to Link.
                     // Link all selected tokens to this character.
-        this.LinkToken = function()  {
+					//
+					// By default the routine both sets the token to some standards, and links it. 
+					// if ssa[1] is "SetToken", then set the token only, don't link it. 
+					// if ssa[1] is "LinkOnly" then link it, without setting any of the options. 
+        this.LinkToken = function( ssa )  {
             'use strict';
 
             try {
@@ -4067,9 +4104,12 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                     this.chat( "Error! You can't link more than one token to a non-mook character!", Earthdawn.whoFrom.apiWarning );
                     return;
                 }
+
                 var edParse = this,
 					sName = "";
-				let CharObj = getObj("character", edParse.charID); 
+				let CharObj = getObj("character", edParse.charID),
+					setTokenOnly = (ssa && ssa.length > 1) ? ssa[1].search( /SetToken/i ) !== -1 : false, 
+					linkOnly = (ssa && ssa.length > 1) ? ssa[1].search( /LinkOnly/i ) !== -1 : false;
 
                 _.each( this.edClass.msg.selected, function( sel ) { 
                     let TokenObj = getObj("graphic", sel._id); 
@@ -4077,7 +4117,8 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                     if (typeof TokenObj === 'undefined' ) 
                         return;
 
-                    Earthdawn.set( TokenObj, "represents", edParse.charID );
+					if( !setTokenOnly )
+						Earthdawn.set( TokenObj, "represents", edParse.charID );
 					sName = TokenObj.get( "name");
 					if( sName === undefined || sName.length < 1 ) {
 						if (typeof CharObj !== 'undefined' ) {
@@ -4094,16 +4135,18 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                     Earthdawn.set( TokenObj, "bar2_max",   Earthdawn.getAttrBN( edParse.charID, "Wounds_max", "8" ));
                     Earthdawn.set( TokenObj, "bar3_value", Earthdawn.getAttrBN( edParse.charID, "Damage", "0" ));
                     Earthdawn.set( TokenObj, "bar3_max",   Earthdawn.getAttrBN( edParse.charID, "Damage_max", "20" ));
-                    Earthdawn.set( TokenObj, "showname", true );
-					Earthdawn.set( TokenObj, "showplayers_name", ((pc == "0") || (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_name)) ? true : false);
-					Earthdawn.set( TokenObj, "showplayers_bar1", ((pc == "0") && (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_pcKarma)) 
-											|| ((pc != "0") && (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_karma)) ? true : false);
-                    Earthdawn.set( TokenObj, "showplayers_bar2", ((pc == "0") || (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_wounds)) ? true : false);
-					Earthdawn.set( TokenObj, "showplayers_bar3", ((pc == "0") || (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_damage)) ? true : false);
-                    Earthdawn.set( TokenObj, "showplayers_aura1", true );
-                    Earthdawn.set( TokenObj, "showplayers_aura2", true );
-					Earthdawn.set( TokenObj, "light_hassight", pc != -1 );
-                    if( pc == "0" || pc == "1" ) {        // Not a mook, unique PC or NPC.
+					if( !linkOnly ) {
+						Earthdawn.set( TokenObj, "showname", true );
+						Earthdawn.set( TokenObj, "showplayers_name", ((pc == "0") || (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_name)) ? true : false);
+						Earthdawn.set( TokenObj, "showplayers_bar1", ((pc == "0") && (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_pcKarma)) 
+												|| ((pc != "0") && (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_karma)) ? true : false);
+						Earthdawn.set( TokenObj, "showplayers_bar2", ((pc == "0") || (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_wounds)) ? true : false);
+						Earthdawn.set( TokenObj, "showplayers_bar3", ((pc == "0") || (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_damage)) ? true : false);
+						Earthdawn.set( TokenObj, "showplayers_aura1", true );
+						Earthdawn.set( TokenObj, "showplayers_aura2", true );
+						Earthdawn.set( TokenObj, "light_hassight", pc != -1 );
+					}
+                    if( !setTokenOnly && ( pc == "0" || pc == "1" )) {        // Not a mook, unique PC or NPC.
                         var kobj  = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: edParse.charID, name: "Karma" }, 0);
                         var kid = kobj.get("_id");
                         if( kid !== undefined )
@@ -4118,20 +4161,21 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                            Earthdawn.set( TokenObj, "bar3_link", kid );
                     } // End not mook
 
-                    if (typeof CharObj != 'undefined' ) {
+                    if (!setTokenOnly && typeof CharObj != 'undefined' ) {
                         setDefaultTokenForCharacter( CharObj, TokenObj);
                         Count = Count + 1;
 						if( !CharObj.get( "avatar" ))
 							Earthdawn.set( CharObj, "avatar", TokenObj.get( "imgsrc" ) );
                     }
                 });  // End for each selected token
-                if( Count == 0) 
-                    this.chat( "Error! No selected token to link.", Earthdawn.whoFrom.apiError | Earthdawn.whoTo.player); 
-                 else      // _defaulttoken is readonly, so user must do the last step.
+                if( Count == 0) {
+					if ( !setTokenOnly )
+						this.chat( "Error! No selected token to link.", Earthdawn.whoFrom.apiError | Earthdawn.whoTo.player); 
+                } else      // _defaulttoken is readonly, so user must do the last step.
                     this.chat( "Token " + sName + " is linked.", Earthdawn.whoTo.player | Earthdawn.whoFrom.noArchive ); 
             } catch(err) {
                 this.edClass.errorLog( "ED.LinkToken error caught: " + err );
-            }   
+            }
         } // End ParseObj.LinkToken()
 
 
@@ -5409,7 +5453,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 						}
 					}
 					if( Earthdawn.getAttrBN( this.charID, "combatOption-CalledShot", "0" ) == "1" ) {
-						if( modtype.slice(2, 16 ) === "Adjust-Attacks" )
+						if( modtype.startsWith( "@{Adjust-Attacks" ))
 							txt += texttip( " Called Shot.", "Take one Strain; –3 penalty to Attack test; if successful, attack hits designated area. One automatic extra success for maneuver being attempted, other extra successes spent that way count twice." );
 					}
 					if( Earthdawn.getAttrBN( this.charID, "combatOption-SplitMovement", "0" ) == "1" && action == 1 )
@@ -5418,17 +5462,26 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 						txt += texttip( " Tail Attack.", "Tail Attack: T'Skrang only: Make extra Attack, Damage = STR. -2 to all Tests." );
 					if( Earthdawn.getAttrBN( this.charID, "condition-RangeLong", "0" ) == "1" && (modtype == "@{Adjust-Attacks-Total}" || modtype == "@{Adjust-Damage-Total}" ))
 						txt += texttip( " Long Range.", "The attack is being made at long range. -2 to attack and damage tests." );
-					if( Earthdawn.getAttrBN( this.charID, "condition-Blindsiding", "0" ) == "1" && modtype.slice( 2, 17) === "Adjust-Attacks-" )
+					if( Earthdawn.getAttrBN( this.charID, "condition-Blindsiding", "0" ) == "1" && modtype.startsWith( "@{Adjust-Attacks-" ))
 						txt += texttip( " Blindsiding.", "The acting character is blindsiding the targeted character, who takes -2 penalty to PD and MD. Can't use shield. No active defenses." );
-					if( Earthdawn.getAttrBN( this.charID, "condition-TargetPartialCover", "0" ) == "1" && modtype.slice( 2, 17) === "Adjust-Attacks-" )
+					if( Earthdawn.getAttrBN( this.charID, "condition-TargetPartialCover", "0" ) == "1" && modtype.startsWith( "@{Adjust-Attacks-" ))
 						txt += texttip( " Tgt Cover.", "The targeted character has cover from the acting character. +2 bonus to PD and MD." );
 					if( Earthdawn.getAttrBN( this.charID, "condition-Surprised", "0" ) == "1" )
 						txt += texttip( " Surprised!", "Acting character is surprised. Can it do this action?" );
 					if( Earthdawn.getAttrBN( this.charID, "combatOption-Reserved", "0" ) == "1" && action == 1)
 						txt += texttip( " Reserved actn", "Reserved Action: +2 to all Target Numbers. Specify an event to interrupt." );
 					if( Earthdawn.getAttrBN( this.charID, "condition-Harried", "0" ) != "0" )
-						txt += texttip( " Harried:" + Earthdawn.getAttrBN( this.charID, "condition-Harried", "0" ), "Harried: Penalty to all Tests and to PD and MD." );
-						
+						txt += texttip( " Harried: " + Earthdawn.getAttrBN( this.charID, "condition-Harried", "0" ), "Harried: Penalty to all Tests and to PD and MD." );
+					if( Earthdawn.getAttrBN( this.charID, "Creature-Ambushing", "0" ) != "0" 
+								&& (modtype.startsWith( "@{Adjust-Attacks-T" ) || modtype.startsWith( "@{Adjust-Damage-T" ) || modtype.search( /\{IP\}/ ) != -1 ))
+						txt += texttip( " Ambush: " + Earthdawn.getAttrBN( this.charID, "Creature-Ambush", "0" ), "Ambush: Added to Initiative, Attack, and Damage." );
+					if( Earthdawn.getAttrBN( this.charID, "Creature-DivingCharging", "0" ) != "0" && (modtype.startsWith( "@{Adjust-Attacks-T" ) || modtype.startsWith( "@{Adjust-Damage-T" )))
+						txt += texttip( " Diving or Charging: " + Earthdawn.getAttrBN( this.charID, "Creature-DiveCharge", "0" ), "Diving or Charging: Added to Attack, and Damage" );
+					if (modtype.search( /Armor-IP/ ) != -1)
+						txt += texttip( " Armor (only) IP: -" + Earthdawn.getAttrBN( this.charID, "Armor-IP", "0" ), "Penalty from Armor (but not shield)." );
+					else if (modtype.search( /IP/ ) != -1)
+						txt += texttip( " IP: -" + Earthdawn.getAttrBN( this.charID, "IP", "0" ), "Penalty from Armor and shield." );
+
 					let modvalue = this.misc[ "ModValue" ] + extraMod;
 					if( txt.length > 0 || modvalue )
 						body.append( (( ++linenum % 2) ? ".odd" : ".even"), texttip( "<b>Mods:</b> " + ((modvalue) ? modvalue.toString() + " "  : " " ), "Total of all bonuses and Penalties." ) + txt);
@@ -5519,7 +5572,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 					txt += ((txt.length > 0) ? "   " : "" ) + "<span style='color: red;'>Failure</span> " 
 							+ ((( "StyleOverride" in this.misc ? this.misc[ "StyleOverride" ] : state.Earthdawn.style) != Earthdawn.style.VagueSuccess ) 
 							? " by " + this.BuildRoll( this.misc[ "showResult" ], this.misc[ "failBy" ], rolls ) + "." : "!" );
-				if( "succBy" in this.misc )
+				if( "succBy" in this.misc ) {
 					txt += ((txt.length > 0) ? "   " : "" ) + "<span style='color: green;'>Success</span> " 
 							+ ((( "StyleOverride" in this.misc ? this.misc[ "StyleOverride" ] : state.Earthdawn.style) != Earthdawn.style.VagueSuccess ) 
 							? " by " + this.BuildRoll( this.misc[ "showResult" ], this.misc[ "succBy" ], rolls ) : "!" )
@@ -5531,6 +5584,10 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 									+ " extra success" + (( this.misc[ "extraSucc" ] < 2) ? "!" : "es!") 
 									+ (("grimCast" in this.misc) ? " One added assuming you are casting from your own Grimoire." : "") )) }) 
 							: ".");
+					if (this.misc[ "reason" ] === "Jumpup Test") {
+						body.append( (( ++linenum % 2) ? ".odd" : ".even"), "No longer Knocked Down");
+						this.MarkerSet( [ "m", "knocked", "u" ] );
+				}	}
 
 				if( "Willful" in this.misc )
 					txt += " Note: Target is Willful";
@@ -8820,7 +8877,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 						this.misc[ "dpask" ] = SubsegmentArray[ 1 ];
 					break;
 				case "linktoken":        // Link selected token(s) to CharId (that has been previously parsed)
-					this.LinkToken();
+					this.LinkToken( SubsegmentArray );
 					break;
 				case "recalc":                  // Recalc function is done by sheetworker, but after they do the work, need to reload combat slots. 
 					this.chat( "Note: Sheetworker Recalc is triggered by setting the dropdown TO recalc, not by pressing the button.", Earthdawn.whoTo.player ); 
@@ -9162,6 +9219,8 @@ on("ready", function() {
 						ED.updateVersion1p001( attr.get( "_characterid" ));
 					if( shouldUpdate( 1.0021 ))
 						ED.updateVersion1p0021( attr.get( "_characterid" ));
+					if( shouldUpdate( 1.0022 ))
+						ED.updateVersion1p0022( attr.get( "_characterid" ));
 					break;
 				default:
 					log( "Unknown command in APIflag: " + cmd);
@@ -9196,6 +9255,70 @@ on("ready", function() {
 					stepValue,
 					bCount,
 					type;
+
+				function typeLP() {
+					if( type === undefined )
+						type = Earthdawn.getAttrBN( cID, sa.slice( 0, -4 ) + "Type", "D1-Novice" );
+					if( type.indexOf( "-" ) > 0 ) {
+						let tier = Earthdawn.getParam( type, 2, "-"), 
+							disc = Earthdawn.getParam( type, 1, "-");
+						if( (state.Earthdawn.gED && tier == "Novice") || (state.Earthdawn.g1879 && ( bCount !== "S") && ( tier == "Initiate" || tier == "Profession" )))		// Note, bCount might have already been set in SKK.
+							bCount = "T";		// Only need to count 1879 if Initiate, or ED if Novice. Otherwise we certainly need accounting.
+						if( disc === "QD" ) {				// Questor
+							lpBasis = 0;					// Note that this is not the final value, it gets adjusted in the switch below. 
+							misclabel = tier + " Granted Questor Devotion.";
+						} else if( disc === "PA" ) {		// Path
+							lpBasis = 0;
+							misclabel = tier + " Path Talent Option.";
+						} else {
+							lpBasis = parseInt(disc.slice( -1 )) -1;
+							misclabel = tier + [ " ", " 2nd ", " 3rd ", " 4th " ][lpBasis] 
+										+ (state.Earthdawn.gED 	? ( disc.slice( 0, 2) == "TO" ? "Talent Option" : "Discipline Talent")
+										: (( disc.slice( 0, 2) == "TO") ? "Optional"
+										: ((disc === "F1") ? "Free"
+										: ((tier == "Profession") ? "Prof" : "Core"))) + " Skill");
+						}
+						if( disc === "F1") 
+							++lpBasis;
+						switch ( tier ) {
+							case "Master": 							++lpBasis;
+							case "Warden":		case "Exemplar":	++lpBasis;
+							case "Journeyman": 	case "Adherent":	++lpBasis;
+						}
+					} else {		// Not from Discipline
+						switch ( type ) {
+							case "Master": 							++lpBasis;
+							case "Warden":		case "Exemplar":	++lpBasis;
+							case "Journeyman": 	case "Adherent":	++lpBasis;
+							case "Initiate":	case "Novice":
+								break;
+						case "Dummy":
+						case "Free":
+						case "Item":
+						case "Creature":
+						case "Power":
+						case "Other":
+							return -1;
+						case "Racial":
+							misclabel = "Racial Talent";
+							lpBasis = 0;
+						break;
+						case "Versatility":
+							misclabel = "Versatility Talent";
+							lpBasis = 1;
+						break;
+						case "Special":
+							misclabel = "Special";
+							lpBasis = 0;
+						break;
+						default:
+							log( "Error! ED Attribute recordWrap typeLP for: " + sa );
+							log( "Continued: Got type: " + type );
+						}
+					}
+					return 
+				} // end typeLP
+
 
                 switch( wrapper ) {
                 case "DSP_Circle":
@@ -9261,9 +9384,9 @@ on("ready", function() {
                 case "SP-Rank":
 					bCount = "T";
 					header = Earthdawn.getParam( sa, 2, "-");
-					misclabel = state.Earthdawn.gED ? "Novice Discipline Talent" : "Initiate Core Skill";
 					miscval = rankFrom + " -> " + rankTo;
-					lpBasis = 0;
+					if (typeLP() === -1)
+						return;
 					break;
                 case "Rank":
 					miscval = rankFrom + " -> " + rankTo;
@@ -9285,65 +9408,14 @@ on("ready", function() {
 							lpBasis = 1;
 							header = Earthdawn.getAttrBN( cID, sa.slice( 0, -4 ) + "Name", "" );
 							if( state.Earthdawn.gED )
-								break;			// Earthdawn, all knowledge skills are just skills, never Proffesional skills.  For 1879, it falls through.
+								break;			// Earthdawn, all knowledge skills are just skills, never Professional skills.  For 1879, it falls through.
 							type = Earthdawn.getAttrBN( cID, sa.slice( 0, -4 ) + "Type", "F1-Novice" );
 						}
 					case "T":
-						if( type === undefined ) {
+						if( type === undefined )
 							header = Earthdawn.getAttrBN( cID, sa.slice( 0, -4 ) + "Name", "" );
-							type = Earthdawn.getAttrBN( cID, sa.slice( 0, -4 ) + "Type", "D1-Novice" );
-						}
-						if( type.indexOf( "-" ) > 0 ) {
-							let tier = Earthdawn.getParam( type, 2, "-"), 
-								disc = Earthdawn.getParam( type, 1, "-");
-							if( (state.Earthdawn.gED && tier == "Novice") || (state.Earthdawn.g1879 && ( bCount !== "S") && ( tier == "Initiate" || tier == "Profession" )))		// Note, bCount might have already been set in SKK.
-								bCount = "T";		// Only need to count 1879 if Initiate, or ED if Novice. Otherwise we certainly need accounting.
-							if( disc === "QD" ) {				// Questor
-								lpBasis = 0;					// Note that this is not the final value, it gets adjusted in the switch below. 
-								misclabel = tier + " Granted Questor Devotion.";
-							} else if( disc === "PA" ) {		// Path
-								lpBasis = 0;
-								misclabel = tier + " Path Talent Option.";
-							} else {
-								lpBasis = parseInt(disc.slice( -1 )) -1;
-								misclabel = tier + [ " ", " 2nd ", " 3rd ", " 4th " ][lpBasis] 
-											+ (state.Earthdawn.gED 	? ( disc.slice( 0, 2) == "TO" ? "Talent Option" : "Discipline Talent")
-											: (( disc.slice( 0, 2) == "TO") ? "Optional"
-											: ((disc === "F1") ? "Free"
-											: ((tier == "Profession") ? "" : "Core"))) + " Skill");
-							}
-							if( disc === "F1") 
-								++lpBasis;
-							switch ( tier ) {
-								case "Master": 							++lpBasis;
-								case "Warden":		case "Exemplar":	++lpBasis;
-								case "Journeyman": 	case "Adherent":	++lpBasis;
-							}
-						} else {		// Not from Discipline
-							switch ( type ) {
-							case "Dummy":
-							case "Free":
-							case "Item":
-							case "Creature":
-							case "Other":
-								return;
-							case "Racial":
-								misclabel = "Racial Talent";
-								lpBasis = 0;
-							break;
-							case "Versatility":
-								misclabel = "Versatility Talent";
-								lpBasis = 1;
-							break;
-							case "Special":
-								misclabel = "Special";
-								lpBasis = 0;
-							break;
-							default:
-								log( "Error! ED Attribute recordWrap for: " + sa );
-								log( "Continued: Got type: " + type );
-							}
-						}
+						if (typeLP() === -1)
+							return;
 						break;
 					case "TI":
 						header = Earthdawn.getAttrBN( cID, sa.slice( 0, -4 ) + "Name", "" );
@@ -9671,7 +9743,7 @@ on("ready", function() {
 					let i = sm.indexOf( "[" + attr.get("current") + "^" );
 					if ( i != -1) {				// There is a [n^a] structure. 
 						op = sm.charAt( sm.indexOf( "^", i) + 1);
-					} else					// The submenu has no [n^a] structure, so just send the value with a z in front of it.
+					} else					// The sub-menu has no [n^a] structure, so just send the value with a z in front of it.
 						op = "z" + attr.get("current");
 				} 
 				if( "a" <= op && op <= "j" )
@@ -9684,11 +9756,21 @@ on("ready", function() {
                     }) // End ForEach Token 
 			}   break;
 
+            case "Creature-Ambush":
+				Earthdawn.abilityRemove( cID, "Ambush");
+				if( parseInt( attr.get("current")))
+					Earthdawn.abilityAdd( cID, "Ambush",  "!edToken~ ForEach~ marker: ambushing :t");
+				break;
+            case "Creature-DiveCharge":
+				Earthdawn.abilityRemove( cID, "​Charge" );
+				if( parseInt(attr.get("current")))
+					Earthdawn.abilityAdd( cID, "Charge",  "!edToken~ ForEach~ marker: divingcharging :t");
+				break;
             case "Durability-Rank":
 				recordWrap( "Durability-Rank" );
 				break;
 			case "Hide-Spells-Tab":	{	// If we are hiding the spell pages, also remove the spell token actions. 
-                if( attr.get("current") == "1") {       // Checkbox is being turned on
+                if( attr.get("current") == "1") {       // Check-box is being turned on
 					Earthdawn.abilityRemove( cID, Earthdawn.constant( "Spell" ) + "​Grimoire" );
 					if (state.Earthdawn.gED)
 						Earthdawn.abilityRemove( cID, Earthdawn.constant( "Spell" ) + "Spells" );

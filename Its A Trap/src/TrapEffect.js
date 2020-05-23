@@ -331,23 +331,21 @@ var TrapEffect = (() => {
      */
     announce(message) {
       message = message || this.message;
-      let announcer = state.ItsATrap.userOptions.announcer;
 
       // Display the message to everyone, unless it's a secret.
       if(this.gmOnly) {
-        message = '/w gm ' + message;
-        sendChat(announcer, message);
+        ItsATrap.Chat.whisperGM(message);
 
         // Whisper any secret notes to the GM.
         if(this.notes)
-          sendChat(announcer, '/w gm Trap Notes:<br/>' + this.notes);
+          ItsATrap.Chat.whisperGM(`Trap Notes:<br/>${this.notes}`);
       }
       else {
-        sendChat(announcer, message);
+        ItsATrap.Chat.broadcast(message);
 
         // Whisper any secret notes to the GM.
         if(this.notes)
-          sendChat(announcer, '/w gm Trap Notes:<br/>' + this.notes);
+          ItsATrap.Chat.whisperGM(`Trap Notes:<br/>${this.notes}`);
 
         // Reveal the trap if it's set to become visible.
         if(this.trap.get('status_bleeding-eye'))
@@ -578,7 +576,7 @@ var TrapEffect = (() => {
         }
 
         state.TokenMod.playersCanUse_ids = true;
-        sendChat('It\'s A Trap', command);
+        sendChat('ItsATrap-api', command);
       }
     }
 

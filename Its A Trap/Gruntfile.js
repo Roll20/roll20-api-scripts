@@ -16,7 +16,8 @@ module.exports = function(grunt) {
           'src/TrapTheme.js',
           'src/D20TrapTheme.js',
           'src/D20TrapTheme4E.js',
-          'src/DefaultTrapTheme.js'
+          'src/DefaultTrapTheme.js',
+          'src/ChatUtils.js'
         ],
         dest: '<%= pkg.version %>/<%= pkg.script %>'
       }
