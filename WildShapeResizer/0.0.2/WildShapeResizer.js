@@ -20,6 +20,7 @@ var WildShapeResizer =
     "use strict";
 
     const version = "0.0.2";
+    const defaultGridSize = 70;
 
     const checkTokenSize = (token) => {
       const name = token.get("name");
@@ -29,10 +30,14 @@ var WildShapeResizer =
       if (!tableItems || tableItems.length < 1) return;
 
       const page = getObj("page", token.get("_pageid"));
-      let gridSize = 70;
+      let gridSize = defaultGridSize;
 
       if (page) {
         gridSize = page.get("snapping_increment") * gridSize;
+      }
+
+      if (gridSize <= 0) {
+        gridSize = defaultGridSize;
       }
 
       const side = tableItems[token.get("currentSide")];
