@@ -14,28 +14,28 @@
  * Version: 0.0.2
  */
 
-var WildShapeResizer =
+const WildShapeResizer =
   WildShapeResizer ||
   (() => {
     "use strict";
 
-    var version = "0.0.2";
+    const version = "0.0.2";
 
-    var checkTokenSize = (token) => {
-      var name = token.get("name");
+    const checkTokenSize = (token) => {
+      const name = token.get("name");
       if (!name) return;
 
-      var tableItems = itemsForToken(token);
+      const tableItems = itemsForToken(token);
       if (!tableItems || tableItems.length < 1) return;
 
-      var page = getObj("page", token.get("_pageid"));
-      var gridSize = 70;
+      const page = getObj("page", token.get("_pageid"));
+      let gridSize = 70;
 
       if (page) {
         gridSize = page.get("snapping_increment") * gridSize;
       }
 
-      var side = tableItems[token.get("currentSide")];
+      const side = tableItems[token.get("currentSide")];
       if (side.get("avatar") !== token.get("imgsrc")) {
         // Rollable Table sides are copied into the token when it is created. If you change the table
         log("WildShapeResizer ERROR: token image does not match table image");
@@ -47,20 +47,20 @@ var WildShapeResizer =
         return;
       }
 
-      var weight = side.get("weight");
-      var dimension = gridSize * weight;
+      const weight = side.get("weight");
+      const dimension = gridSize * weight;
       doResize(token, dimension);
     };
 
-    var doResize = (token, dimension) => {
-      var name = token.get("name");
+    const doResize = (token, dimension) => {
+      const name = token.get("name");
 
-      var currentW = token.get("width");
-      var currentH = token.get("height");
+      const currentW = token.get("width");
+      const currentH = token.get("height");
 
       // TODO: get the locations of the other tokens on the board and try to keep from overlapping them
-      var currentL = token.get("left");
-      var currentT = token.get("top");
+      const currentL = token.get("left");
+      const currentT = token.get("top");
 
       if (
         currentW &&
@@ -84,11 +84,11 @@ var WildShapeResizer =
       }
     };
 
-    var itemsForToken = (token) => {
-      var name = token.get("name");
+    const itemsForToken = (token) => {
+      const name = token.get("name");
       if (!name) return undefined;
 
-      var table = findObjs({ _type: "rollabletable", name: name })[0];
+      const table = findObjs({ _type: "rollabletable", name: name })[0];
       if (!table) return undefined;
 
       return findObjs({
@@ -97,11 +97,11 @@ var WildShapeResizer =
       });
     };
 
-    var registerHandlers = () => {
+    const registerHandlers = () => {
       on("change:token", checkTokenSize);
     };
 
-    var notifyStart = () => {
+    const notifyStart = () => {
       log(`.oO WildShapeResizer ${version} Oo.`);
     };
 
