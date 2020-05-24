@@ -14,7 +14,7 @@
  * Version: 0.0.2
  */
 
-const WildShapeResizer =
+var WildShapeResizer =
   WildShapeResizer ||
   (() => {
     "use strict";
