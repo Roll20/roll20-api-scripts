@@ -41,7 +41,7 @@ var WildShapeResizer =
       }
 
       const side = tableItems[token.get("currentSide")];
-      if (side.get("avatar") !== token.get("imgsrc")) {
+      if (!imageCompare(side.get("avatar"), token.get("imgsrc"))) {
         // Rollable Table sides are copied into the token when it is created. If you change the table
         log("WildShapeResizer ERROR: token image does not match table image");
         sendChat(
@@ -101,6 +101,16 @@ var WildShapeResizer =
         _rollabletableid: table.id,
       });
     };
+
+    const imageCompare = (img1, img2) => {
+      return imageNormalize(img1) === imageNormalize(img2);
+    }
+
+    const imageNormalize = (img) => {
+      img = img.replace(/\?.*$/, '');
+      img = img.replace(/(.*)\/[^.]+/, '$1/max');
+      return img;
+    }
 
     const registerHandlers = () => {
       on("change:token", checkTokenSize);
