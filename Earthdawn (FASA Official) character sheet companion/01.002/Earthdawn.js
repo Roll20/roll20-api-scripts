@@ -32,7 +32,7 @@
 // Define a Name-space
 var Earthdawn = Earthdawn || {};
             // define any name-space constants
-Earthdawn.Version = "1.0022";
+Earthdawn.Version = "1.0023";
 
 Earthdawn.whoFrom = {
 	player:		0x08,
@@ -305,7 +305,7 @@ Earthdawn.tokenLinkNPC = {			// Bit flags that control how the sheet links NPC t
 
 
 			// Look for an object. If you can't find one, make one and return that. 
-    Earthdawn.findOrMakeObj = function ( attrs, deflt ) {
+    Earthdawn.findOrMakeObj = function ( attrs, deflt, maxDeflt ) {
         'use strict';
         try {
 			let obj = findObjs( attrs )[0];
@@ -313,8 +313,10 @@ Earthdawn.tokenLinkNPC = {			// Bit flags that control how the sheet links NPC t
 				let type = attrs[ "_type" ];
 				delete attrs[ "_type" ];
 				obj = createObj( type, attrs);
-				if( obj && deflt !== undefined )
+				if( obj && deflt !== undefined && deflt !== null )
 					Earthdawn.setWithWorker( obj, "current", deflt );
+				if( obj && maxDeflt !== undefined && maxDeflt !== null )
+					Earthdawn.setWithWorker( obj, "max", maxDeflt );
 			}
 			return obj;
         } catch(err) {
@@ -1470,7 +1472,7 @@ Step/Action Dice Table
 					if( special === "Recovery" ) {				// Recovery Test
 						this.bFlags |= Earthdawn.flags.Recovery;
 						if (Earthdawn.getAttrBN( this.charID, "NPC", "0") != "2") {
-							let aobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: "Recovery-Tests" }, 0);
+							let aobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: "Recovery-Tests" }, 0, 2);
 							if( aobj.get( "current" ) >= Earthdawn.getAttrBN( this.charID, "Recovery-Tests_max", "2")) {
 								this.chat( this.tokenInfo.name + " does not have a recover test to spend.", Earthdawn.whoFrom.apiWarning );
 								return;
@@ -1530,22 +1532,20 @@ Step/Action Dice Table
 							if( Earthdawn.getAttrBN( this.charID, pre + "Resistance", "0" ) === "1" ) {
 								step += 3;
 								this.misc[ "Resistance" ] = true;
-							}
-					}
+					}		}
 					if( Earthdawn.getAttrBN( this.charID, pre + "NotMoveBased", "0" ) != "1" ) {		// Unlike the above two, these two have not already been subtracted from the step, so we need to subtract them now.
 						let tstep = Earthdawn.getAttrBN( this.charID, "condition-ImpairedMovement", "0" );
 						if( tstep > 0 ) {
 							step -= tstep;
 							this.misc[ "MoveBased" ] = (tstep == 2) ? "Partial" : "Full";
-						}
-					}
+					}	}
 					if( Earthdawn.getAttrBN( this.charID, pre + "NotVisionBased", "0" ) != "1" ) {
 						let tstep = Earthdawn.getAttrBN( this.charID, "condition-Darkness", "0" );
 						if( tstep > 0 ) {
 							step -= tstep;
 							this.misc[ "VisionBased" ] = (tstep == 2) ? "Partial" : "Full";
-						}
-					}
+					}	}
+					this.misc[ "sayTotalSuccess" ] = Earthdawn.getAttrBN( this.charID, pre + "sayTotalSuccess", "0" ) == "1";
                 } break;
                 case "ska":
                 case "skac":
@@ -5414,23 +5414,31 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 					}});
 
 				let action = 0;		// No test or no modifiers.
+				if( "SP-Step" in this.misc )
+					this.misc[ "ModType" ] = "@{Adjust-All-Tests-Total}";		// The spellcasting talents are talents to, make them look a bit more like the other talents.
 				if( "ModType" in this.misc ) {		// Conditions and options that affected the step.
 					let modtype = this.misc[ "ModType" ],
 						txt = "",
 						extraMod = 0;
-					
-					if ( modtype === "@{Adjust-All-Tests-Total}" || modtype.startsWith( "@{Adjust-Attacks-" ))
+
+					if ( modtype.search ( /Adjust-All-Tests-Total/ ) != -1 || modtype.startsWith( "@{Adjust-Attacks-" ))		// Action, Attack, and Inititive. 
 						action = 1;		// Action.
-					else if ( modtype.length > 10 )
+					else if ( modtype.length > 10 )		// Effect and Damage, but not no roll or no modifiers. 
 						action = -1;	// Effect.
 
-					if( Earthdawn.getAttrBN( this.charID, "Wounds", "0" ) > 0 )
-						txt += texttip( " " + Earthdawn.getAttrBN( this.charID, "Wounds", "0" ) + " Wounds.", "-1 penalty to all action and effect tests per wound." );
+					let wnd = Earthdawn.getAttrBN( this.charID, "Wounds", "0" );
+					if( wnd > 0 ) {
+						let fury = Earthdawn.getAttrBN( this.charID, "Creature-Fury", "0" );
+						if( fury >= wnd )
+							txt += texttip( "  +" + wnd + " Fury.", "Instead of suffering penalties, Wounds grant this creature a bonus to tests." );
+						else
+							txt += texttip( "  -" + Earthdawn.getAttrBN( this.charID, "Wounds", "0" ) + " Wounds.", "-1 penalty to all action and effect tests per wound." );
+					}
 					if( Earthdawn.getAttrBN( this.charID, "combatOption-AggressiveAttack", "0" ) == "1" ) {
 						if( modtype.endsWith( "-CC}" ))
 							txt += texttip( " Aggressive.", "Aggressive Stance: +3 bonus to Close Combat attack and damage tests. -3 Penalty to PD and MD. 1 Strain per Attack." );
 					}
-					if( "rsPrefix" in this.misc ) {
+					if( "rsPrefix" in this.misc || "SP-Step" in this.misc ) {
 						if( Earthdawn.getAttrBN( this.charID, "combatOption-DefensiveStance", "0" ) == "1" && (action == 1 || modtype.startsWith( "@{Adjust-Damage-" ))) {
 							if ( ("Defensive" in this.misc ) )
 								extraMod += 3;
@@ -5452,7 +5460,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 							txt += texttip( " Impaired Vision: " + this.misc[ "VisionBased" ], "Impaired Vision: -2/-4 Penalty to all sight based tests due to Darkness, Blindness or Dazzling." );
 						}
 					}
-					if( Earthdawn.getAttrBN( this.charID, "combatOption-CalledShot", "0" ) == "1" ) {
+					if( Earthdawn.getAttrBN( this.charID, "combatOption-CalledShot", "0" ) == "1" && !("SP-Step" in this.misc)) {
 						if( modtype.startsWith( "@{Adjust-Attacks" ))
 							txt += texttip( " Called Shot.", "Take one Strain; –3 penalty to Attack test; if successful, attack hits designated area. One automatic extra success for maneuver being attempted, other extra successes spent that way count twice." );
 					}
@@ -5460,11 +5468,11 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 						txt += texttip( " Split Move.", "Split Movement: Take 1 Strain and be Harried to attack during movement." );
 					if( Earthdawn.getAttrBN( this.charID, "combatOption-TailAttack", "0" ) == "1" && action == 1 )
 						txt += texttip( " Tail Attack.", "Tail Attack: T'Skrang only: Make extra Attack, Damage = STR. -2 to all Tests." );
-					if( Earthdawn.getAttrBN( this.charID, "condition-RangeLong", "0" ) == "1" && (modtype == "@{Adjust-Attacks-Total}" || modtype == "@{Adjust-Damage-Total}" ))
+					if( Earthdawn.getAttrBN( this.charID, "condition-RangeLong", "0" ) == "1" && (modtype == "@{Adjust-Attacks-Total}" || modtype == "@{Adjust-Damage-Total}" ) && !("SP-Step" in this.misc))
 						txt += texttip( " Long Range.", "The attack is being made at long range. -2 to attack and damage tests." );
-					if( Earthdawn.getAttrBN( this.charID, "condition-Blindsiding", "0" ) == "1" && modtype.startsWith( "@{Adjust-Attacks-" ))
+					if( Earthdawn.getAttrBN( this.charID, "condition-Blindsiding", "0" ) == "1" && (modtype.startsWith( "@{Adjust-Attacks-" ) || "SP-Step" in this.misc))
 						txt += texttip( " Blindsiding.", "The acting character is blindsiding the targeted character, who takes -2 penalty to PD and MD. Can't use shield. No active defenses." );
-					if( Earthdawn.getAttrBN( this.charID, "condition-TargetPartialCover", "0" ) == "1" && modtype.startsWith( "@{Adjust-Attacks-" ))
+					if( Earthdawn.getAttrBN( this.charID, "condition-TargetPartialCover", "0" ) == "1" && (modtype.startsWith( "@{Adjust-Attacks-" ) || "SP-Step" in this.misc))
 						txt += texttip( " Tgt Cover.", "The targeted character has cover from the acting character. +2 bonus to PD and MD." );
 					if( Earthdawn.getAttrBN( this.charID, "condition-Surprised", "0" ) == "1" )
 						txt += texttip( " Surprised!", "Acting character is surprised. Can it do this action?" );
@@ -5491,7 +5499,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 					let txt = "",
 					targetChar = Earthdawn.tokToChar( Earthdawn.getParam( this.targetIDs[ this.indexTarget ], 1, ":")); 
 					if ( targetChar ) {
-						if( Earthdawn.getAttrBN( targetChar, "Adjust-Defenses-Total", "0" ) != 0 && this.misc[ "targettype" ].indexOf( "SD") == -1)
+						if( Earthdawn.getAttrBN( targetChar, "Adjust-Defenses-Total", "0" ) != 0 && ( "targettype" in this.misc && this.misc[ "targettype" ].indexOf( "SD") == -1))
 							txt += texttip( " " + Earthdawn.getAttrBN( targetChar, "Adjust-Defenses-Total", "0" ) + " ", "Total of all bonuses and penalties to targets PD and MD." );
 						if( Earthdawn.getAttrBN( targetChar, "combatOption-AggressiveAttack", "0" ) == "1" )
 							txt += texttip( " Aggressive.", "Target is in an Aggressive Stance, giving bonuses to Attack and Damage, but -3 penalty to PD and MD." );
@@ -5576,19 +5584,25 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 					txt += ((txt.length > 0) ? "   " : "" ) + "<span style='color: green;'>Success</span> " 
 							+ ((( "StyleOverride" in this.misc ? this.misc[ "StyleOverride" ] : state.Earthdawn.style) != Earthdawn.style.VagueSuccess ) 
 							? " by " + this.BuildRoll( this.misc[ "showResult" ], this.misc[ "succBy" ], rolls ) : "!" )
-							+ (( "extraSucc" in this.misc && this.misc[ "extraSucc" ] > 0) 
-							? new HtmlBuilder( "span", " (" + this.misc[ "extraSucc" ] + " ES)", {
-								style: { "background": "lightgoldenrodyellow" },
-								class: "showtip tipsy",
-								title: Earthdawn.encode( Earthdawn.encode( this.misc[ "extraSucc" ] 
-									+ " extra success" + (( this.misc[ "extraSucc" ] < 2) ? "!" : "es!") 
-									+ (("grimCast" in this.misc) ? " One added assuming you are casting from your own Grimoire." : "") )) }) 
-							: ".");
+							+ (( "extraSucc" in this.misc && this.misc[ "extraSucc" ] > 0)
+							? (("sayTotalSuccess" in this.misc && this.misc[ "sayTotalSuccess" ] ) 
+								? new HtmlBuilder( "span", " (" + ( parseInt( this.misc[ "extraSucc" ] ) + 1) + " TOTAL Successes)", {
+									style: { "background": "lavender" },
+									class: "showtip tipsy",
+									title: Earthdawn.encode( Earthdawn.encode( this.misc[ "extraSucc" ] 
+										+ " extra success" + (( this.misc[ "extraSucc" ] < 2) ? "!" : "es!") 
+										+ (("grimCast" in this.misc) ? " One added assuming you are casting from your own Grimoire." : ""))) })
+								: new HtmlBuilder( "span", " (" + this.misc[ "extraSucc" ] + " EXTRA Successes)", {
+									style: { "background": "lightgoldenrodyellow" },
+									class: "showtip tipsy",
+									title: Earthdawn.encode( Earthdawn.encode(( parseInt( this.misc[ "extraSucc" ] ) + 1) 
+										+ " total success" + (( this.misc[ "extraSucc" ] < 1) ? "!" : "es!") 
+										+ (("grimCast" in this.misc) ? " One added assuming you are casting from your own Grimoire." : ""))) })
+								) : ".");
 					if (this.misc[ "reason" ] === "Jumpup Test") {
 						body.append( (( ++linenum % 2) ? ".odd" : ".even"), "No longer Knocked Down");
 						this.MarkerSet( [ "m", "knocked", "u" ] );
 				}	}
-
 				if( "Willful" in this.misc )
 					txt += " Note: Target is Willful";
 				if( txt.length > 0 ) {
@@ -5599,27 +5613,33 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 					body.append( "", "Rule of Ones", { style: { "background-color": "DarkRed", "color": "white", "text-align": 	"center" }});
 					playerCardNix.push( body._children.length );
 				}
+
 				if( "secondaryResult" in this.misc ) {
-					var TNall = (this.bFlags & Earthdawn.flags.VerboseRoll) 
+					let TNall = (this.bFlags & Earthdawn.flags.VerboseRoll) 
 							|| (( "StyleOverride" in this.misc ? this.misc[ "StyleOverride" ] : state.Earthdawn.style) === Earthdawn.style.Full);
 					txt = "<b>Cntr-Atk:</b>" 
 							+ ( TNall ? " TN# " + this.misc[ "targetNum2" ] : "" )
-							+ ((this.misc[ "secondaryResult" ] < 0) 
+							+ ((this.misc[ "secondaryResult" ] < 0)
 									? " <span style='color: red;'>Failed</span>  by " 
 									: " <span style='color: green;'>Succeeded</span> by ") 
 							+ Math.abs( this.misc[ "secondaryResult" ])
-							+ ((this.misc[ "secondaryResult" ] > 9) 
-							? new HtmlBuilder( "span", " (" + Math.floor((this.misc[ "secondaryResult" ] - 5) / 5) + " ES)", {
-								style: { "background": "lightgoldenrodyellow" },
-								class: "showtip tipsy",
-								title: Earthdawn.encode( Earthdawn.encode( Math.floor((this.misc[ "secondaryResult" ] - 5) / 5)
-									+ " extra success" + ((this.misc[ "secondaryResult" ] < 14) ? "!" : "es!") )) }) 
-							: ".");
+							+ ((this.misc[ "secondaryResult" ] > 9)
+							? (("sayTotalSuccess" in this.misc && this.misc[ "sayTotalSuccess" ] )
+								? new HtmlBuilder( "span", " (" + Math.floor(this.misc[ "secondaryResult" ] / 5) + " TOTAL Successes)", {
+									style: { "background": "lavender" },
+									class: "showtip tipsy",
+									title: Earthdawn.encode( Earthdawn.encode( this.misc[ "extraSucc" ] 
+										+ " extra success" + (( this.misc[ "extraSucc" ] < 2) ? "!" : "es!"))) })
+								: new HtmlBuilder( "span", " (" + Math.floor((this.misc[ "secondaryResult" ] - 5) / 5) + " EXTRA Successes)", {
+									style: { "background": "lightgoldenrodyellow" },
+									class: "showtip tipsy",
+									title: Earthdawn.encode( Earthdawn.encode( Math.floor(this.misc[ "secondaryResult" ] / 5)
+										+ " total success" + ((this.misc[ "secondaryResult" ] < 9) ? "!" : "es!"))) })
+							) : ".");
 					if( txt.length > 0 ) {
 						body.append( (( ++linenum % 2) ? ".odd" : ".even"), txt);
 						playerCardNix.push( body._children.length );
-					}
-				}
+				}	}
 				if( "Spell" in this.misc ) {
 					let splines = this.Spell( this.misc[ "Spell" ] );
 					if( _.isArray( splines ))
@@ -6164,16 +6184,18 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 					} else if( ssa[ 1 ] !== aseq[ 2 ] ) {
 						this.chat( "Error! Trying to cast: " + Earthdawn.getAttrBN( this.charID, pre + (!bGrim ? "Contains" : "Name"), "" )
 								+ " but the last spell started was: " 
-								+ Earthdawn.getAttrBN( this.charID,  Earthdawn.buildPre(( aseq[1] == "G" ? "SP" : "SPM"), aseq[ 2 ] ) + (aseq[1] == "G" ? "Name" : "Contains"), "") + ".", Earthdawn.whoFrom.apiWarning ); 
+								+ Earthdawn.getAttrBN( this.charID,  Earthdawn.buildPre(( aseq[1] == "G" ? "SP" : "SPM"), aseq[ 2 ] ) 
+								+ (aseq[1] == "G" ? "Name" : "Contains"), "") + ".", Earthdawn.whoFrom.apiWarning ); 
 						return;
-					} else if( (parseInt(Earthdawn.getAttrBN( this.charID, pre + "sThreads", "0" ) || 0) + aseq.length - 6) > (bGrim ? 0 : parseInt( Earthdawn.getAttrBN( this.charID, pre + "mThreads", "0" )) ))	// We can skip this test is threads are not needed.
+					} else if( (parseInt(Earthdawn.getAttrBN( this.charID, pre + "sThreads", "0" ) || 0) + aseq.length - 6) > (bGrim 
+										? 0 : parseInt( Earthdawn.getAttrBN( this.charID, pre + "mThreads", "0" )) ))	// We can skip this test is threads are not needed.
 						if( aseq [ 3 ] != "2" )
 							this.misc[ "warnMsg" ] = "Note: Have you pulled all the threads you need? Only " + aseq [ 4 ] + " of " 
-													+ (parseInt(Earthdawn.getAttrBN( this.charID, pre + "sThreads", "0" ) || 0) + aseq.length - 6) + " done.";
+										+ (parseInt(Earthdawn.getAttrBN( this.charID, pre + "sThreads", "0" ) || 0) + aseq.length - 6) + " done.";
 					let fx = Earthdawn.getAttrBN( this.charID, pre + "FX", "");
 					if( fx && ( fx.startsWith( "Attempt" ) || fx.startsWith( "Success")))
 						this.misc[ "FX" ] = fx;
-
+					this.misc[ "sayTotalSuccess" ] = Earthdawn.getAttrBN( this.charID, pre + "sayTotalSuccess", "0" ) == "1";
 					ssa[ 2 ] = "Cast2";
 					this.misc[ "Spell" ] = ssa;
 					this.Roll( [ "Roll" ] );
@@ -6347,7 +6369,9 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 										// but the current sheet IS blindsiding, need to figure out the targets blindsided value. 
 						if ((Earthdawn.getAttrBN( cID, "condition-Blindsided", "0") != "1" ) && (Earthdawn.getAttrBN( po.charID, "condition-Blindsiding", "0") == "1" )) {
 							val -= 2;
-							if ( !(flags & Earthdawn.flagsTarget.Natural) 
+							if (Earthdawn.getAttrBN( cID, "combatOption-DefensiveStance", "0") == "1" )
+								val -= 3;	// remove the Defensive stance bonus target had.
+							if ( !(flags & Earthdawn.flagsTarget.Natural) 		// remove any bonus attached to shield target had.
 									&& (state.Earthdawn.g1879 || (state.Earthdawn.gED && state.Earthdawn.edition == 4)) 
 									&& Earthdawn.getAttrBN( cID, "condition-NoShield", "0") != "1" )
 								val -= parseInt( Earthdawn.getAttrBN( cID, "Shield-" + what2, 0)) + parseInt( Earthdawn.getAttrBN( cID, what + "-ShieldBuff", 0))
@@ -8627,6 +8651,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                     copySpell( "Effect", "");
                     copySpell( "SuccessLevels", "");
                     copySpell( "ExtraThreads", "");
+                    copySpell( "sayTotalSuccess", "0");
                     toMatrix( "EnhThread", "x");
                     copySpell( "SuccessText", "");
                     copySpell( "FX", "");
@@ -8958,14 +8983,14 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 					case "str-step":                this.Karma( "Karma-Control-KnockDown", -1 );        this.misc[ "reason" ] = "Knockdown Test";     	this.misc[ "headcolor" ] = "ask";		break;
 					case "initiative":              this.Karma( "Karma-Control-Initiative", -1 );       this.misc[ "reason" ] = "Initiative";    		this.misc[ "headcolor" ] = "init";		break;
 					case "attack-step":             this.Lookup( 3, [ "PD", "Adjust-TN-Total" ]);       this.misc[ "reason" ] = "Attack Test";        	this.misc[ "headcolor" ] = "attack";	this.Damage( ["Strain", "NA", this.getValue( "combatOption-AggressiveAttack") * this.getValue( "Misc-Aggressive-Strain") ] );		this.Bonus( [ 0, "Adjust-Attacks-Bonus" ] );	break;
-					case "sp-spellcasting-step":    this.Karma( "SP-Spellcasting-Karma-Control", 0 );   this.misc[ "reason" ] = "Spellcasting";  		this.misc[ "headcolor" ] = "md";		break;
-					case "sp-patterncraft-step":    this.Karma( "SP-Patterncraft-Karma-Control", 0 );   this.misc[ "reason" ] = state.Earthdawn.g1879 ? "Magic Theory" : "Patterncraft";  	this.misc[ "headcolor" ] = "ask";		break;
-					case "sp-elementalism-step":    this.Karma( "SP-Elementalism-Karma-Control", 0 );   this.misc[ "reason" ] = "Elementalism";  		this.misc[ "headcolor" ] = "ask";		this.bFlags |= Earthdawn.flags.VerboseRoll;		break;
-					case "sp-illusionism-step":     this.Karma( "SP-Illusionism-Karma-Control", 0 );    this.misc[ "reason" ] = "Illusionism";   		this.misc[ "headcolor" ] = "ask";		this.bFlags |= Earthdawn.flags.VerboseRoll;		break;
-					case "sp-nethermancy-step":     this.Karma( "SP-Nethermancy-Karma-Control", 0 );    this.misc[ "reason" ] = "Nethermancy";   		this.misc[ "headcolor" ] = "ask";		this.bFlags |= Earthdawn.flags.VerboseRoll;		break;
-					case "sp-shamanism-step":		this.Karma( "SP-Shamanism-Karma-Control", 0 );		this.misc[ "reason" ] = "Shamanism";			this.misc[ "headcolor" ] = "ask";		this.bFlags |= Earthdawn.flags.VerboseRoll;		break;
-					case "sp-wizardry-step":        this.Karma( "SP-Wizardry-Karma-Control", 0 );       this.misc[ "reason" ] = "Wizardry";      		this.misc[ "headcolor" ] = "ask";		this.bFlags |= Earthdawn.flags.VerboseRoll;		break;
-					case "sp-power-step":			this.Karma( "SP-Power-Karma-Control", 0 );			this.misc[ "reason" ] = "Power";				this.misc[ "headcolor" ] = "ask";		this.bFlags |= Earthdawn.flags.VerboseRoll;		break;
+					case "sp-spellcasting-step":    this.Karma( "SP-Spellcasting-Karma-Control", 0 );   this.misc[ "reason" ] = "Spellcasting";  		this.misc[ "headcolor" ] = "md";															this.misc[ "SP-Step" ] = true;		break;
+					case "sp-patterncraft-step":    this.Karma( "SP-Patterncraft-Karma-Control", 0 );   this.misc[ "reason" ] = state.Earthdawn.g1879 ? "Magic Theory" : "Patterncraft";  		this.misc[ "headcolor" ] = "ask";					this.misc[ "SP-Step" ] = true;			break;
+					case "sp-elementalism-step":    this.Karma( "SP-Elementalism-Karma-Control", 0 );   this.misc[ "reason" ] = "Elementalism";  		this.misc[ "headcolor" ] = "ask";		this.bFlags |= Earthdawn.flags.VerboseRoll;			this.misc[ "SP-Step" ] = true;			break;
+					case "sp-illusionism-step":     this.Karma( "SP-Illusionism-Karma-Control", 0 );    this.misc[ "reason" ] = "Illusionism";   		this.misc[ "headcolor" ] = "ask";		this.bFlags |= Earthdawn.flags.VerboseRoll;			this.misc[ "SP-Step" ] = true;			break;
+					case "sp-nethermancy-step":     this.Karma( "SP-Nethermancy-Karma-Control", 0 );    this.misc[ "reason" ] = "Nethermancy";   		this.misc[ "headcolor" ] = "ask";		this.bFlags |= Earthdawn.flags.VerboseRoll;			this.misc[ "SP-Step" ] = true;			break;
+					case "sp-shamanism-step":		this.Karma( "SP-Shamanism-Karma-Control", 0 );		this.misc[ "reason" ] = "Shamanism";			this.misc[ "headcolor" ] = "ask";		this.bFlags |= Earthdawn.flags.VerboseRoll;			this.misc[ "SP-Step" ] = true;			break;
+					case "sp-wizardry-step":        this.Karma( "SP-Wizardry-Karma-Control", 0 );       this.misc[ "reason" ] = "Wizardry";      		this.misc[ "headcolor" ] = "ask";		this.bFlags |= Earthdawn.flags.VerboseRoll;			this.misc[ "SP-Step" ] = true;			break;
+					case "sp-power-step":			this.Karma( "SP-Power-Karma-Control", 0 );			this.misc[ "reason" ] = "Power";				this.misc[ "headcolor" ] = "ask";		this.bFlags |= Earthdawn.flags.VerboseRoll;			this.misc[ "SP-Step" ] = true;			break;
 					case "speak-step":				this.Karma( "Karma-Control-Speak", -1 );			this.misc[ "reason" ] = "Speak Language Test";	this.misc[ "headcolor" ] = "action";	this.misc[ "rollWhoSee" ] = "RollType-Speak";		if (state.Earthdawn.gED) this.Damage( ["Strain", "NA", 1 ] );			break;
 					case "readwrite-step":			this.Karma( "Karma-Control-ReadWrite", -1 );		this.misc[ "reason" ] = "R/W Language Test";	this.misc[ "headcolor" ] = "action";	this.misc[ "rollWhoSee" ] = "RollType-ReadWrite";	if (state.Earthdawn.gED) this.Damage( ["Strain", "NA", 1 ] );			break;
 
@@ -8980,7 +9005,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 						}
 						this.misc[ "headcolor" ] = "recovery";
 						if (Earthdawn.getAttrBN( this.charID, "NPC", "0") != "2") {
-							let aobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: "Recovery-Tests" });
+							let aobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: "Recovery-Tests" }, 0, 2);
 							if( aobj.get( "current" ) >= Earthdawn.getAttrBN( this.charID, "Recovery-Tests_max", "2")) {
 								this.chat( this.tokenInfo.name + " does not have a recover test to spend.", Earthdawn.whoFrom.apiWarning );
 								falloutParse = true;
