@@ -75,7 +75,7 @@ var sr5api = sr5api || (function() {
 	const circles    = `style='font-family:pictos;color: #fff;padding:2%;${buttons} width: 15px;'`
 	const centered   = `style="text-align:center;"`;
 	const apiName    = `Shadowrun 5th Edition`;
-	const version    = '1.02';
+	const version    = '1.03';
 	const header     = `<div ${divstyle}><div ${headstyle}>${apiName} <span ${substyle}>(v.${version})</span></div><div ${arrowstyle}>`;
 	const errorMessage = (name, error) => log(`${name}: ${error}`)
 
@@ -129,7 +129,9 @@ var sr5api = sr5api || (function() {
 				processIniatitive(msg.inlinerolls)
 		} else if (msg.inlinerolls) {
 				//reRollDice(msg);
-		} 
+		} else {
+			apiMenu(who)
+		}
 	},
 
 	apiMenu = who => {
