@@ -10,7 +10,7 @@
       {
         "name": "sheet",
         "type": "select",
-        "options": ["custom/none", "Starfinder Simple"],
+        "options": ["custom/none", "Roll20", "Starfinder Simple"],
         "default": "custom/none",
         "description": "For some supported character sheets the attribute names are already known. For custom/none, you'll need to fill in the attribute names in the fields below."
       },

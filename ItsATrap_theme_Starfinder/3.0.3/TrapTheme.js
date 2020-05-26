@@ -3,6 +3,17 @@
 
   // A mapping of known attribute names for supported character sheets.
   const SHEET_ATTRS = {
+    'Roll20': {
+      kac: 'kac',
+      eac: 'eac',
+      fortSaveModifier: 'fort',
+      refSaveModifier: 'ref',
+      willSaveModifier: 'will',
+      acm: 'cmd',
+      starshipAC: 'ac',
+      starshipTL: 'tl',
+      perceptionModifier: 'perception'
+    },
     'Starfinder Simple': {
       kac: 'KAC',
       eac: 'EAC',
