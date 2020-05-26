@@ -2766,22 +2766,36 @@ var D20TrapTheme4E = (() => {
       return [
         {
           id: 'attack',
-          name: 'Attack Bonus',
+          name: 'Attack Roll',
           desc: `The trap's attack roll bonus vs AC.`,
-          value: trapEffect.attack
+          value: (() => {
+            let atkBonus = trapEffect.attack;
+            let atkVs = trapEffect.defense;
+
+            if (atkVs)
+              return `+${atkBonus} vs ${atkVs}`;
+            else
+              return 'none';
+          })(),
+          properties: [
+            {
+              id: 'bonus',
+              name: 'Attack Bonus',
+              desc: 'What is the attack roll modifier?'
+            },
+            {
+              id: 'vs',
+              name: 'Defense',
+              desc: 'What defense does the attack target?',
+              options: ['ac', 'fort', 'ref', 'will']
+            }
+          ]
         },
         {
           id: 'damage',
           name: 'Damage',
           desc: `The dice roll expression for the trap's damage.`,
           value: trapEffect.damage
-        },
-        {
-          id: 'defense',
-          name: 'Defense',
-          desc: `The defense targeted by the trap's attack.`,
-          value: trapEffect.defense,
-          options: [ 'none', 'ac', 'fort', 'ref', 'will' ]
         },
         {
           id: 'missHalf',
@@ -2792,7 +2806,7 @@ var D20TrapTheme4E = (() => {
         },
         {
           id: 'spotDC',
-          name: 'Spot DC',
+          name: 'Perception DC',
           desc: 'The skill check DC to spot the trap.',
           value: trapEffect.spotDC
         }
@@ -2849,12 +2863,21 @@ var D20TrapTheme4E = (() => {
       let prop = argv[0];
       let params = argv.slice(1);
 
-      if(prop === 'attack')
-        trapEffect.attack = parseInt(params[0]);
+      if(prop === 'attack') {
+        let bonus = parseInt(params[0]);
+        let defense = params[1];
+
+        if (!bonus && bonus !== 0) {
+          trapEffect.attack = undefined;
+          trapEffect.defense = undefined;
+        }
+        else {
+          trapEffect.attack = bonus;
+          trapEffect.defense = defense;
+        }
+      }
       if(prop === 'damage')
         trapEffect.damage = params[0];
-      if(prop === 'defense')
-        trapEffect.defense = params[0] === 'none' ? undefined : params[0];
       if(prop === 'missHalf')
         trapEffect.missHalf = params[0] === 'yes';
       if(prop === 'spotDC')
