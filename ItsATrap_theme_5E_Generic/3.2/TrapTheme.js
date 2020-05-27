@@ -366,5 +366,11 @@
     let themeInst = new TrapTheme5EGeneric();
     ItsATrap.registerTheme(themeInst);
     themeInst.getSheet();
+
+    // Notify user about updates.
+    if (!themeInst.getState().version) {
+      themeInst.getState().version = '3.2';
+      sendChat("It's A Trap!", "/w gm <h2>Notice:</h2><p>The D&D 5E trap theme has been updated to version 3.2. It now automatically detects which character sheet you're using so you don't have to set it yourself! Happy rolling!</p>");
+    }
   });
 })();

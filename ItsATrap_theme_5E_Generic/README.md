@@ -11,12 +11,22 @@ By default, it will automatically detect which character sheet you're using,
 but if needed, you can also specify which sheet the script is using from the
 theme-specific trap properties.
 
+This currently supports the following D&D 5E character sheets:
+
+* Roll20 Official
+* Community
+* Shaped
+
 ## Theme-specific properties
 The following trap properties are specific to this trap theme script.
 
 ### Character Sheet
 Manually specify which character sheet your game is using. By default, this
 will try to auto-detect your character sheet.
+
+You can also specify that you are using a custom character sheet. If you do so,
+an additional property will appear under this one to specify the attribute
+names used for the custom sheet.
 
 ### Attack Bonus
 The modifier for the trap's attack roll, if it makes an attack roll.
