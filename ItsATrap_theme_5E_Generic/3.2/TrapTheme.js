@@ -77,7 +77,7 @@
         if(attrName)
           return CharSheetUtils.getSheetAttr(character, attrName);
         else
-          return Promise.reject(new Error('Please provide name of the attribute for AC in the One-Click options.'));
+          return Promise.reject(new Error('Could not resolve AC attribute.'));
       }
 
       /**
@@ -98,8 +98,7 @@
               return value + 10;
             });
           else
-            return Promise.reject(new Error('Please provide name of the attribute ' +
-              'for either passive perception or the perception modifier in the One-Click options.'));
+            return Promise.reject(new Error('Could not resolve passive perception attribute.'));
         }
       }
 
@@ -312,7 +311,7 @@
               {
                 id: 'perceptionModifier',
                 name: 'Perception',
-                desc: 'Specify attribute name for Perception modifier.'
+                desc: 'Specify attribute name for Perception skill modifier.'
               },
               {
                 id: 'passivePerception',
@@ -336,7 +335,6 @@
         let prop = argv[0];
         let params = argv.slice(1);
 
-        // Parse both the attack bonus and the attack type from the 'attack' property.
         if (prop === 'sheet') {
           if (params[0] === 'Auto-detect')
             this.getState().sheet = undefined;
