@@ -1,28 +1,41 @@
 # It's A Trap! - Pathfinder Generic theme
 
-_3.5 Updates_
-* Added support for Roll20's official Pathfinder sheet.
+_3.6 Updates_
 
-This is a Pathfinder trap theme built to support all Pathfinder character sheets and Pathfinder characters
-who use plain attributes instead of character sheets.
+* Implemented automatic character sheet detection.
+* User can also manually select which character sheet is being used in-game.
+* User can specify custom sheet and its attributes in-game.
 
-This trap theme provides built-in support for Roll20's official Pathfinder sheet; Samuel Marino, Nibrodooh,
-Vince, Samuel Terrazas, chris-b, Magik, and James W.'s community Pathfinder sheet; and for
-my own Pathfinder 'Simple' sheet.
+This is a Pathfinder trap theme built to support all Pathfinder character sheets.
+By default, it will automatically detect which character sheet you're using,
+but if needed, you can also specify which sheet the script is using from the
+theme-specific trap properties.
 
-Other sheets, custom sheets, and characters based upon plain attributes are also supported.
-For those, just fill in the names for the character attributes in the user options for
-this script.
+This currently supports the following Pathfinder character sheets:
+
+* Roll20
+* Community
+* Simple
 
 ## Theme-specific properties
 The following trap properties are specific to this trap theme script.
 
-### Attack Bonus
-The modifier for the trap's attack roll, if it makes an attack roll.
+### Character Sheet
+Manually specify which character sheet your game is using. By default, this
+will try to auto-detect your character sheet.
 
-### Attack vs
-This property specifies whether the trap's attack roll is against its victim's
-AC, touch AC, or CMD.
+You can also specify that you are using a custom character sheet. If you do so,
+an additional property will appear under this one to specify the attribute
+names used for the custom sheet.
+
+### Enable Passive Perception?
+Specify whether to globally enable passive perception. Pathfinder doesn't normally
+use passive perception, but the option is here for groups that want to use it.
+This is set to 'no' by default.
+
+### Attack Roll
+This property specifies the trap's attack roll modifier and which type of AC it
+targets (normal or touch), if it makes an attack roll.
 
 ### Damage
 A dice expression for the damage dealt by the trap on a hit. This does not
@@ -39,10 +52,7 @@ abilities such as Evasion.
 
 ### Saving Throw
 If the trap allows a saving throw, choose which saving throw it uses with this
-property.
-
-### Saving Throw DC
-This property specifies the DC for the above saving throw.
+property and specify the save DC.
 
 ### Spot DC
 This property specifies the passive Perecption (10 + Perception skill modifier)

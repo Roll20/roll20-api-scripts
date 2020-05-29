@@ -553,7 +553,14 @@
     // Register the trap theme and try to auto-detect the sheet being used.
     let themeInst = new TrapThemeDnD3_5();
     ItsATrap.registerTheme(themeInst);
-    themeInst.getSheet();
+    try {
+      themeInst.getSheet();
+    }
+    catch (err) {
+      // This is fine. It could be a new game where APIs are set up but players
+      // haven't made their characters yet.
+      _.noop(err);
+    }
 
     // Notify user about updates.
     if (!themeInst.getState().version) {
