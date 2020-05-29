@@ -32,6 +32,19 @@
     custom: {}
   };
 
+  /**
+   * Get the state for this script, creating it for the first time if
+   * necessary.
+   * @return The state.
+   */
+  function getState() {
+    if (!state.TrapThemeDnD3_5)
+      state.TrapThemeDnD3_5 = {
+        sheet: undefined
+      };
+    return state.TrapThemeDnD3_5;
+  }
+
   // Register the theme with ItsATrap.
   on('ready', () => {
     /**
@@ -160,14 +173,14 @@
        * @return The character sheet name.
        */
       getSheet() {
-        let name = this.getState().sheet;
+        let name = getState().sheet;
         if (name) {
           // If we're using a custom sheet, update the cached attributes from
           // the state.
           if (name === 'custom') {
-            if (!this.getState().customAttrs)
-              this.getState().customAttrs = {};
-            SHEET_ATTRS.custom = this.getState().customAttrs;
+            if (!getState().customAttrs)
+              getState().customAttrs = {};
+            SHEET_ATTRS.custom = getState().customAttrs;
           }
           return name;
         }
@@ -179,11 +192,8 @@
               this._cachedSheet = 'AdventurePack';
             else if (this._getSheetTryBlackCompany())
               this._cachedSheet = 'BlackCompany';
-            else {
-              throw new Error('Could not auto-detect D&D 3.5 character sheet ' +
-                'for your game. Please set it manually from the trap properties ' +
-                'menu under Theme-Specific Properties.');
-            }
+            else
+              return undefined;
 
             log("D&D 3.5 trap theme - auto-detected character sheet: " +
               this._cachedSheet);
@@ -268,19 +278,6 @@
       }
 
       /**
-       * Get the state for this script, creating it for the first time if
-       * necessary.
-       * @return The state.
-       */
-      getState() {
-        if (!state.TrapThemeDnD3_5)
-          state.TrapThemeDnD3_5 = {
-            sheet: undefined
-          };
-        return state.TrapThemeDnD3_5;
-      }
-
-      /**
        * @inheritdoc
        */
       getThemeProperties(trapToken) {
@@ -293,18 +290,20 @@
           name: 'Character Sheet',
           desc: 'Specify the character sheet used in your game.',
           value: (() => {
-            let sheet = this.getState().sheet;
+            let sheet = getState().sheet;
             if (sheet)
               return sheet;
             else {
-              try {
-                sheet = this.getSheet();
-                return `${sheet}<br/>(auto-detected)`;
+              sheet = this.getSheet();
+              if (!sheet) {
+                setTimeout(() => {
+                  ItsATrap.Chat.whisperGM('Could not auto-detect D&D 3.5E character sheet ' +
+                    'for your game. Please set it manually from the trap properties ' +
+                    'menu under Theme-Specific Properties.');
+                }, 100);
+                return 'auto-detect';
               }
-              catch (err) {
-                _.noop(err);
-                return 'Could not auto-detect. Please manually specify sheet.'
-              }
+              return `${sheet}<br/>(auto-detected)`;
             }
           })(),
           options: ['Auto-detect', 'DianaP', 'AdventurePack', 'BlackCompany', 'custom']
@@ -515,13 +514,13 @@
 
         if (prop === 'sheet') {
           if (params[0] === 'Auto-detect')
-            this.getState().sheet = undefined;
+            getState().sheet = undefined;
           else
-            this.getState().sheet = params[0];
+            getState().sheet = params[0];
         }
 
         if (prop === 'customAttrs') {
-          SHEET_ATTRS.custom = this.getState().customAttrs = {
+          SHEET_ATTRS.custom = getState().customAttrs = {
             ac: params[0],
             touch: params[1],
             fort: params[2],
@@ -563,8 +562,8 @@
     }
 
     // Notify user about updates.
-    if (!themeInst.getState().version) {
-      themeInst.getState().version = '3.2';
+    if (!getState().version) {
+      getState().version = '3.2';
       sendChat("It's A Trap!", "/w gm <h2>Notice:</h2><p>The D&D 3.5 trap theme has been updated to version 3.2. It now automatically detects which character sheet you're using so you don't have to set it yourself! Happy rolling!</p>");
     }
   });
