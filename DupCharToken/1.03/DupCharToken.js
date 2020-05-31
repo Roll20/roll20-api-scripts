@@ -50,6 +50,7 @@
 // Version  1.01  Nov 2019  Chris D.   After all characters have been created, do loops to read attributes and abilities once and create for each new character.
 // Version  1.02  Jan 2020  Chris D.   Fixed bug where script would crash API if clean was run with no tokens selected. 
 // Version  1.03  Mar 2020  Chris D.   Tokens dragged from the journal would not be correctly linked. Moved setDefaultTokenForCharacter to occur after attributes are copied.
+// Update   1.031 May 2020  Chris D.   Minor bugfix with copying bio and gmnotes. 
 //
 //
 // Commands:
@@ -173,7 +174,7 @@ on('ready',()=>{
 							sChat( "Token is not correctly linked to a good character." );
 						else {		// Everything is good. We are duplicating. 
 							let oldCid = charObj.id;
-							let tmpC = JSON.stringify( charObj ),
+							let tmpC = JSON.stringify( charObj ).replace ( /\,"bio"\:.*?\,/gi, ',"bio":"",').replace ( /\,"gmnotes"\:.*?\,/gi, ',"gmnotes":"",'),
 								tmpT = JSON.stringify( tokenObj );
 
 							for( let i = startnum; i < (startnum + num); ++i) {			// We are going to want to duplicate both the character and token this many times.
@@ -232,12 +233,12 @@ on('ready',()=>{
 							}
 							charObj.get("bio", function(bio) {
 								_.each( charArray, c => { 
-									if( !_.isNull( bio ) && !_.isUndefined( bio) && bio != "null" && bio != "undefined" && !(typeof bio === 'string' && bio.trim() !== "") )
+									if( !_.isNull( bio ) && !_.isUndefined( bio) && bio != "null" && bio != "undefined" && (typeof bio === 'string' && bio.trim() !== "") )
 										c.set( 'bio', bio ); 
 							});	});
 							charObj.get("gmnotes", function(gmnotes) {
 								_.each( charArray, c => { 
-									if( !_.isNull( gmnotes ) && !_.isUndefined( gmnotes) && gmnotes != "null" && gmnotes != "undefined" && !(typeof gmnotes === 'string' && gmnotes.trim() !== "") )
+									if( !_.isNull( gmnotes ) && !_.isUndefined( gmnotes) && gmnotes != "null" && gmnotes != "undefined" && (typeof gmnotes === 'string' && gmnotes.trim() !== "") )
 										c.set( 'gmnotes', gmnotes ); 
 							});	});
 							sChat( "Duplicated: " + charObj.get( "name" ) + " " + num + " times." );
