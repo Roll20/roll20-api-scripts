@@ -170,7 +170,7 @@ var D20TrapTheme = (() => {
         },
         {
           id: 'spotDC',
-          name: 'Passive Detection DC',
+          name: 'Passive Perception DC',
           desc: 'The passive skill check DC to detect the trap.',
           value: trapEffect.spotDC || '-'
         }
