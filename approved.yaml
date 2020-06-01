@@ -789,3 +789,6 @@ savageworldsstatuschanger:
 midgardturntrackerhelper:
   - "MidgardTurnTrackerHelper"
   - "Utility"
+shortrest:
+  - "ShortRest"
+  - "System Toolbox"
