@@ -18,31 +18,30 @@ To use this script, resources must include a code in their name, separated from 
 **+LR1d6** This resource will add 1d6 to the resource up to its maximum value
 
 
-## !r-Charges
+## !r-charges
 *used for restoring charges that are user-controlled, such as "at dawn" or "under a full moon".
 
 **+1d6**
 
 
-## !r-Ammo
+## !r-ammo
 no code is used here. The script looks for common ammo types: Crossbow bolts, Arrows, Bullets, etc. It rolls 1d2 for each piece of ammo expended. If the result is a "2", the ammo is recovered. The max and current values are adjusted to reflect the new total.
 
+### !r-help
+This will display the basic help syntax in chat.
 
-## Special Cases
-Finally, the following special cases exist. Class Resources that have any of the following names are recognized and handled appropriately:
+### !r-list
+This will list every resource that can be recovered without using a code. The script will recognize by name almost every recoverable class resource from an official sourcebook with the exception of ties such as Ravnica or Acquisitions, Inc.
 
-### These are recovered on a Short or Long Rest:
-- Spell Slots, Warlock Spell Slots
-- Channel Divinity
-- Wild Shape
-- Superiority Dice
-- Ki Points, Ki
 
- ### These are recovered on a Long Rest.
-- Rages
-- Lay on Hands
-- Sorcery Points
+#### Short Rest Class Resources
+Spell Slots, Warlock Spell Slots, Spell Points, Channel Divinity, Wild Shapes, Second Wind, Action Surge, Superiority Dice, Ki, Ki Points, Visions of the Past, Enthralling Performance, Words of Terror, Unbreakable Majesty, Spirit Totem, Indomitable, Arcane Shot, Detect Portal, Ethereal Step, Magic-Users Nemesis, Favored by the Gods, Wind Soul, Blade Song, Arcane Abeyance, Illusory Step, Shapechanger
 
+#### Long Rest Class Resources
+Rages, Lay on Hands, Sorcery Points, Flash of Genius, Divine Intervention, Eyes of the Grave, Warding Flare, Wrath of the Storm, Cleansing Touch, War Priest Attack, Sentinel at Deaths Door, Embodiment of the Law, Universal Speech, Mantle of Majesty, Infectious Inspiration, Shadow Lore, Balm of the Summer Court, Natural Recovery, Fungal Infestation, Hidden Paths, Walker in Dreams, Faithful Summons, Fighting Spirit, Warding Maneuver, Strength before Death, Unwavering Mark, Wholeness of Body, Glorious Defense, Undying Sentinel, Invincible Conqueror, Holy Nimbus, Living Legend, Emissary of Redemption, Elder Champion, Avenging Angel, Dread Lord, Hunters Sense, Unerring Eye, Spell Thief, Strength of the Grave, Tides of Chaos, Unearthly Recovery, Mystic Arcanum-6th, Mystic Arcanum-7th, Mystic Arcanum-8th, Mystic Arcanum-9th, Eldritch Master, Chronal Shift, Momentary Stasis, Benign Transposition, Instinctive Charm, Power Surge, Violent Attraction, Event Horizon, 
+
+#### Ammo Types
+Crossbow bolts, Arrows, Bullets, Sling Bullets, Needles, Darts
 
 
 **Bardic Inspiration** needs a +SR or +LR code, since the recovery rate changes at fifth level
