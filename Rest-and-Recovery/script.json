@@ -1,0 +1,15 @@
+{
+  "name": "Rest-and-Recovery",
+  "script": "Rest-And-Recovery.js",
+  "version": "0.0.2",
+  "description": "# Rest and Recovery\rA Roll20 API script to handle recovery on the resource attributes on the D&D 5th Edition by Roll20 sheet.\rTo use this script, resources must include a code in their name, separated from the name by a plus sign. You can include standard dice expressions as well. "1d6" is used in all examples, but you can do 2d6+3, 3d20, etc. Here are examples of the commands given and the codes that are affected.\r\r## !r-short\r*Used for Short Rest*\r\r**+SR** This resource will return to its maximumm value\r\r**+SR1d6** This resource will add 1d6 to the resource up to its maximum value\r\r\r## !r-long\r*Used for Long Rest*\r\r**+LR** This resource will return to its maximumm value\r\r**+LR1d6** This resource will add 1d6 to the resource up to its maximum value\r\r\r## !r-Charges\r*used for restoring charges that are user-controlled, such as "at dawn" or "under a full moon".\r\r**+1d6**\r\r\r## !r-Ammo\rno code is used here. The script looks for common ammo types: Crossbow bolts, Arrows, Bullets, etc. It rolls 1d2 for each piece of ammo expended. If the result is a "2", the ammo is recovered. The max and current values are adjusted to reflect the new total.\r\r\r## Special Cases\rFinally, the following special cases exist. Class Resources that have any of the following names are recognized and handled appropriately:\r\r### These are recovered on a Short or Long Rest:\r- Spell Slots, Warlock Spell Slots\r- Channel Divinity\r- Wild Shape\r- Superiority Dice\r- Ki Points, Ki\r\r ### These are recovered on a Long Rest.\r- Rages\r- Lay on Hands\r- Sorcery Points\r\r\r\r**Bardic Inspiration** needs a +SR or +LR code, since the recovery rate changes at fifth level",
+  "authors": "Keith Curtis",
+  "roll20userid": "162065",
+  "dependencies": [],
+  "modifies": {
+        "attribute.current": "read,write",
+        "attribute.max": "read,write"
+  },
+  "conflicts": [],
+  "previousversions":[""]
+}
