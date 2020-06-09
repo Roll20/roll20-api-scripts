@@ -724,6 +724,10 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
             +'e.g. !xp challenge '+ch('@')+ch('{')+'target|npc-xp'+ch('}')+' 1 '+ch('@')+ch('{')+'character1|character_id'+ch('}')+' ' 
             +ch('@')+ch('{')+'character2|character_id'+ch('}')+' ...'
             +'</li></ul>'
+            +'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+            +'<b><span style="font-family: serif;">selected</span></b> '+ch('-')+' Adds experience from all selected tokens that are marked as dead and have not '
+            +'already been recorded. EasyExperience uses the pink dot to indicate that a token has been recorded, which allows you to select all tokens on a map '
+            +'as often as desired with no duplicate counting.'
             +'</li>'
             +'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
             +'<b><span style="font-family: serif;">session</span></b> '+ch('-')+' Divides the Session xp total by the number of PCs and applies that xp to all PCs.'
@@ -805,9 +809,64 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
                                 }
                             }
                             break;
+                        case 'selected':
+                        {
+                            let total = 0
+                            let counted = 0
+                            
+                            if(msg.selected === undefined){
+                                sendChat('EASYEXPERIENCE script','/w gm No tokens selected for !xp selected')
+                                return
+                            }
+
+                            msg.selected.forEach(function(e) {
+                                counted++;
+                                if (e._type != "graphic"){
+                                    log("easyexperience: skipping non-token type " + e._type)
+                                    return
+                                }
+                                let tok = getObj(e._type, e._id)
+                                if (tok === undefined) {
+                                    log("easyexperience: failed to get token with id " + e._id)
+                                    return
+                                }
+                                let name = tok.get("name")
+                                if (name === undefined) {
+                                    log("easyexperience: skipping token with undefined name - id " + e._id)
+                                    return
+                                }
+                                let charID = tok.get("represents")
+                                if(charID === undefined) {
+                                    log("easyexperience: skipping undefined charID for " + name)
+                                    return
+                                }
+                                var dead = tok.get("status_dead")
+                                if (!dead) {
+                                    log("easyexperience: skipping non-dead " + name)
+                                    return
+                                }
+                                let xp = getAttrByName(charID, "npc_xp")
+                                if (xp === undefined) {
+                                    log("easyexperience: skipping undefined xp for " + name)
+                                    return
+                                }
+                                var pink = tok.get("status_pink")
+                                if (pink) {
+                                    log("easyexperience: skipping already recorded " + name)
+                                    return
+                                }
+                                sendChat('EASYEXPERIENCE script','/w gm recording ' + xp + ' for token ' + name)
+                                recordXP(xp);
+                                total += xp;
+                                tok.set("status_pink")
+                            })
+                            sendChat('EASYEXPERIENCE script','/w gm seleted recorded ' + total + ' xp from ' + counted + ' items.')
+
+                            break;
+                        }
                         default:
                             showHelp();
-					}
+                }
                 break;
             case '!xp-config':
                 switch(args[1]){
