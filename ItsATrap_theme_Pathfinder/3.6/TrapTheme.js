@@ -3,7 +3,7 @@
 
   // A mapping of known attribute names for supported character sheets.
   const SHEET_ATTRS = {
-    'Pathfinder Community': {
+    'Community': {
       ac: 'AC',
       touch: 'Touch',
       fortSaveModifier: 'Fort',
@@ -39,7 +39,7 @@
         });
       }
     },
-    'Pathfinder Official': {
+    'Roll20': {
       ac: 'ac',
       touch: 'ac_touch',
       fortSaveModifier: 'fortitude',
@@ -60,7 +60,7 @@
         });
       }
     },
-    'Pathfinder Simple': {
+    'Simple': {
       ac: 'ac',
       touch: 'ac_touch',
       fortSaveModifier: 'fort',
@@ -80,31 +80,26 @@
           return !!trapSpotter;
         });
       }
-    }
+    },
+    custom: {}
   };
 
   /**
-   * Gets the value of a One-Click user option for this script.
-   * @param {string} option
-   * @return {any}
+   * Get the state for this script, creating it for the first time if
+   * necessary.
+   * @return The state.
    */
-  function getOption(option) {
-    let options = globalconfig && globalconfig.itsatrapthemepathfinder;
-    if(!options)
-      options = (state.itsatrapthemepathfinder && state.itsatrapthemepathfinder.useroptions) || {};
-
-    return options[option];
+  function getState() {
+    if (!state.itsatrapthemepathfinder)
+      state.itsatrapthemepathfinder = {
+        sheet: undefined,
+        trapSpotterAttempts: {}
+      };
+    return state.itsatrapthemepathfinder;
   }
 
   // Register the theme with ItsATrap.
   on('ready', () => {
-
-    // Initialize state
-    if(!state.itsatrapthemepathfinder)
-      state.itsatrapthemepathfinder = {
-        trapSpotterAttempts: {}
-      };
-
     /**
      * The concrete TrapTheme class.
      */
@@ -195,15 +190,11 @@
        * @inheritdoc
        */
       getAC(character) {
-        let sheet = getOption('sheet');
-        let attrName = getOption('ac');
-        if(sheet && SHEET_ATTRS[sheet])
-          attrName = SHEET_ATTRS[sheet].ac
+        let sheet = this.getSheet();
+        sheet = SHEET_ATTRS[sheet];
 
-        if(attrName)
-          return CharSheetUtils.getSheetAttr(character, attrName);
-        else
-          return Promise.reject(new Error('Please provide name of the attribute for AC in the One-Click options.'));
+        let attrName = sheet.ac;
+        return CharSheetUtils.getSheetAttr(character, attrName);
       }
 
       /**
@@ -212,15 +203,11 @@
        * @return {Promise<number>}
        */
       getCMD(character) {
-        let sheet = getOption('sheet');
-        let attrName = getOption('cmd');
-        if(sheet && SHEET_ATTRS[sheet])
-          attrName = SHEET_ATTRS[sheet].cmd
+        let sheet = this.getSheet();
+        sheet = SHEET_ATTRS[sheet];
 
-        if(attrName)
-          return CharSheetUtils.getSheetAttr(character, attrName);
-        else
-          return Promise.reject(new Error('Please provide name of the attribute for CMD in the One-Click options.'));
+        let attrName = sheet.cmd;
+        return CharSheetUtils.getSheetAttr(character, attrName);
       }
 
       /**
@@ -239,34 +226,93 @@
        * @return {Promise<number>}
        */
       getPerceptionModifier(character) {
-        let sheet = getOption('sheet');
+        let sheet = this.getSheet();
+        sheet = SHEET_ATTRS[sheet];
 
-        let attrName = getOption('perceptionModifier');
-        if(sheet && SHEET_ATTRS[sheet])
-          attrName = SHEET_ATTRS[sheet].perceptionModifier;
-
-        if(attrName)
-          return CharSheetUtils.getSheetAttr(character, attrName);
-        else
-          return Promise.reject(new Error('Please provide name of the attribute ' +
-            'for the perception modifier in the One-Click options.'));
+        let attrName = sheet.perceptionModifier;
+        return CharSheetUtils.getSheetAttr(character, attrName);
       }
 
       /**
        * @inheritdoc
        */
       getSaveBonus(character, saveName) {
-        let sheet = getOption('sheet');
-        let key = saveName + 'SaveModifier';
-        let attrName = getOption(key);
-        if(sheet && SHEET_ATTRS[sheet])
-          attrName = SHEET_ATTRS[sheet][key];
+        let sheet = this.getSheet();
+        sheet = SHEET_ATTRS[sheet];
 
-        if(attrName)
-          return CharSheetUtils.getSheetAttr(character, attrName);
-        else
-          return Promise.reject('Please provide name of the attribute for ' +
-            saveName + ' save modifier in the One-Click options.');
+        let key = saveName + 'SaveModifier';
+        let attrName = sheet[key];
+        return CharSheetUtils.getSheetAttr(character, attrName);
+      }
+
+      /**
+       * Get the name of the character sheet being used, either by
+       * auto-detecting it, or having it set manually.
+       * @return The character sheet name.
+       */
+      getSheet() {
+        let name = getState().sheet;
+        if (name) {
+          // If we're using a custom sheet, update the cached attributes from
+          // the state.
+          if (name === 'custom') {
+            if (!getState().customAttrs)
+              getState().customAttrs = {};
+            SHEET_ATTRS.custom = getState().customAttrs;
+          }
+          return name;
+        }
+        else {
+          if (!this._cachedSheet) {
+            if (this._getSheetTryRoll20())
+              this._cachedSheet = 'Roll20';
+            else if (this._getSheetTryCommunity())
+              this._cachedSheet = 'Community';
+            else if (this._getSheetTrySimple())
+              this._cachedSheet = 'Simple';
+            else
+              return undefined;
+
+            log("Pathfinder trap theme - auto-detected character sheet: " +
+              this._cachedSheet);
+          }
+          return this._cachedSheet;
+        }
+      }
+
+      /**
+       * Try to auto-detect the Roll20 sheet.
+       */
+      _getSheetTryRoll20() {
+        let result = findObjs({
+          _type: 'attribute',
+          name: 'initialize_character_flag'
+        })[0];
+        return !!result;
+      }
+
+      /**
+       * Try to auto-detect the Community sheet.
+       */
+      _getSheetTryCommunity() {
+        let result = findObjs({
+          _type: 'attribute',
+          name: 'PFSheet_Version'
+        })[0];
+        return !!result;
+      }
+
+      /**
+       * Try to auto-detect the "Simple" sheet.
+       */
+      _getSheetTrySimple() {
+        let result = _.find(findObjs({
+          _type: 'attribute',
+          name: 'character_sheet'
+        }), attr => {
+          return attr.get('current').startsWith("Pathfinder_Simple");
+        })
+        return !!result;
       }
 
       /**
@@ -275,6 +321,107 @@
       getThemeProperties(trapToken) {
         let result = super.getThemeProperties(trapToken);
         let trapEffect = (new TrapEffect(trapToken)).json;
+
+        // Prepend an option for specifying the character sheet.
+        result.unshift({
+          id: 'sheet',
+          name: 'Character Sheet',
+          desc: 'Specify the character sheet used in your game.',
+          value: (() => {
+            let sheet = getState().sheet;
+            if (sheet)
+              return sheet;
+            else {
+              sheet = this.getSheet();
+              if (!sheet) {
+                setTimeout(() => {
+                  ItsATrap.Chat.whisperGM('Could not auto-detect Pathfinder character sheet ' +
+                    'for your game. Please set it manually from the trap properties ' +
+                    'menu under Theme-Specific Properties.');
+                }, 100);
+                return 'auto-detect';
+              }
+              return `${sheet}<br/>(auto-detected)`;
+            }
+          })(),
+          options: ['Auto-detect', 'Roll20', 'Community', 'Simple', 'custom']
+        });
+
+        // If the user is using a custom sheet or just bare-bones attributes,
+        // display another property to specify the attribute names.
+        if (this.getSheet() === 'custom') {
+          result.splice(1, 0, {
+            id: 'customAttrs',
+            name: 'Custom Sheet Attrs',
+            desc: (() => {
+              let attrKeys = _.keys(SHEET_ATTRS.custom);
+              if (_.size(attrKeys) === 0)
+                return 'Custom attributes not specified!';
+              else {
+                attrKeys.sort();
+                let result = '';
+                _.each(attrKeys, key => {
+                  let value = SHEET_ATTRS.custom[key];
+                  result += `${key}: ${value}<br/>`;
+                })
+                return result;
+              }
+            })(),
+            value: 'Mouse-over to view current settings.',
+            properties: [
+              {
+                id: 'ac',
+                name: 'Armor Class',
+                desc: 'Specify attribute name for Armor Class.'
+              },
+              {
+                id: 'touch',
+                name: 'Touch AC',
+                desc: 'Specify attribute name for Touch AC.'
+              },
+              {
+                id: 'fortSaveModifier',
+                name: 'Fortitude',
+                desc: 'Specify attribute name for Fortitude saving throw modifier.'
+              },
+              {
+                id: 'refSaveModifier',
+                name: 'Reflex',
+                desc: 'Specify attribute name for Reflex saving throw modifier.'
+              },
+              {
+                id: 'willSaveModifier',
+                name: 'Will',
+                desc: 'Specify attribute name for Will saving throw modifier.'
+              },
+              {
+                id: 'cmd',
+                name: 'Will',
+                desc: 'Specify attribute name for CMD.'
+              },
+              {
+                id: 'perceptionModifier',
+                name: 'Spot',
+                desc: 'Specify attribute name for Perception skill modifier.'
+              }
+            ]
+          });
+        }
+
+        // Insert a global property for enabling passive perception for
+        // Pathfinder (by default Pathfinder doesn't have passive perception).
+        result.splice(1, 0, {
+          id: 'enablePassivePerception',
+          name: 'Enable Passive Perception?',
+          desc: 'Specify whether to globally enable passive perception for your Pathfinder game.',
+          value: (() => {
+            if (getState().enablePassivePerception)
+              return 'yes';
+            else
+              return 'no';
+          })(),
+          options: ['yes', 'no']
+        });
 
         // Modify the saving throw types.
         _.find(result, item => {
@@ -328,15 +475,11 @@
        * @inheritdoc
        */
       getTouchAC(character) {
-        let sheet = getOption('sheet');
-        let attrName = getOption('touchAC');
-        if(sheet && SHEET_ATTRS[sheet])
-          attrName = SHEET_ATTRS[sheet].touch;
+        let sheet = this.getSheet();
+        sheet = SHEET_ATTRS[sheet];
 
-        if(attrName)
-          return CharSheetUtils.getSheetAttr(character, attrName);
-        else
-          return Promise.reject(new Error('Please provide name of the attribute for touch AC in the One-Click options.'));
+        let attrName = sheet.touch;
+        return CharSheetUtils.getSheetAttr(character, attrName);
       }
 
       /**
@@ -428,6 +571,29 @@
         let prop = argv[0];
         let params = argv.slice(1);
 
+        if (prop === 'sheet') {
+          if (params[0] === 'Auto-detect')
+            getState().sheet = undefined;
+          else
+            getState().sheet = params[0];
+        }
+
+        if (prop === 'customAttrs') {
+          SHEET_ATTRS.custom = getState().customAttrs = {
+            ac: params[0],
+            touch: params[1],
+            fortSaveModifier: params[2],
+            refSaveModifier: params[3],
+            willSaveModifier: params[4],
+            cmd: params[5],
+            perceptionModifier: params[6]
+          };
+        }
+
+        if (prop === 'enablePassivePerception') {
+          getState().enablePassivePerception = params[0] === 'yes';
+        }
+
         // Parse both the attack bonus and the attack type from the 'attack' property.
         if (prop === 'attack') {
           let atkBonus = parseInt(params[0]);
@@ -451,7 +617,7 @@
        * Also supports the Trap Spotter ability.
        */
       passiveSearch(trap, charToken) {
-        let passiveEnabled = getOption('enablePassivePerception') === '1';
+        let passiveEnabled = getState().enablePassivePerception;
         if(passiveEnabled)
           super.passiveSearch(trap, charToken);
 
@@ -472,8 +638,7 @@
        */
       _trapSpotter(character, trap, effect) {
         // Trap spotter only works with supported character sheets.
-        let sheet = getOption('sheet');
-        if(!(sheet && SHEET_ATTRS[sheet]))
+        if (this.getSheet() === 'custom')
           return;
 
         // Use an implementation appropriate for the current character sheet.
@@ -492,7 +657,7 @@
               let charId = character.get('_id');
 
               // Check for a previous attempt.
-              let attempts = state.itsatrapthemepathfinder.trapSpotterAttempts;
+              let attempts = getState().trapSpotterAttempts;
               if(!attempts[trapId])
                 attempts[trapId] = {};
               if(attempts[trapId][charId])
@@ -530,15 +695,25 @@
         }
       }
     }
-    ItsATrap.registerTheme(new TrapThemePFGeneric());
+
+    // Register the trap theme and try to auto-detect the sheet being used.
+    let themeInst = new TrapThemePFGeneric();
+    ItsATrap.registerTheme(themeInst);
+    themeInst.getSheet();
+
+    // Notify user about updates.
+    if (!getState().version) {
+      getState().version = '3.6';
+      sendChat("It's A Trap!", "/w gm <h2>Notice:</h2><p>The Pathfinder trap theme has been updated to version 3.6. It now automatically detects which character sheet you're using so you don't have to set it yourself! Happy rolling!</p>");
+    }
   });
 
   // When a trap is deleted, remove it from the Trap Theme's persisted state.
   on('destroy:graphic', token => {
     try {
       let id = token.get('_id');
-      if(state.itsatrapthemepathfinder.trapSpotterAttempts[id])
-        delete state.itsatrapthemepathfinder.trapSpotterAttempts[id];
+      if(getState().trapSpotterAttempts[id])
+        delete getState().trapSpotterAttempts[id];
     }
     catch(err) {
       log('ERROR - TrapTheme Pathfinder:');

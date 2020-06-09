@@ -1,27 +1,32 @@
 # It's A Trap! - D&D 5E Generic
 
-_v3.1 Updates:_
+_v3.2 Updates:_
 
-* Changed name of _ogl_ sheet to _roll20_.
-* Condensed saving throw properties into a single 'Saving Throw' property
+* Implemented automatic character sheet detection.
+* User can also manually select which character sheet is being used in-game.
+* User can specify custom sheet and its attributes in-game.
 
-This is a trap theme to support any campaign using D&D 5th Edition rules. To
-use this, you will need to enter in the names of some character attributes into
-the script's One-Click options as they appear in the character sheet data or
-attributes/abilities tab. These attribute names include:
+This is a trap theme to support any campaign using D&D 5th Edition rules.
+By default, it will automatically detect which character sheet you're using,
+but if needed, you can also specify which sheet the script is using from the
+theme-specific trap properties.
 
-* AC
-* Strength save modifier
-* Dexterity save modifier
-* Constitution save modifier
-* Intelligence save modifier
-* Wisdom save modifier
-* Charisma save modifier
-* Perception Modifier
-* Passive Perception (If it is available on the sheet you are using)
+This currently supports the following D&D 5E character sheets:
+
+* Roll20 Official
+* Community
+* Shaped
 
 ## Theme-specific properties
 The following trap properties are specific to this trap theme script.
+
+### Character Sheet
+Manually specify which character sheet your game is using. By default, this
+will try to auto-detect your character sheet.
+
+You can also specify that you are using a custom character sheet. If you do so,
+an additional property will appear under this one to specify the attribute
+names used for the custom sheet.
 
 ### Attack Bonus
 The modifier for the trap's attack roll, if it makes an attack roll.
