@@ -1,71 +1,12 @@
 {
     "name": "It's a Trap! - Starfinder theme",
     "script": "TrapTheme.js",
-    "version": "3.0.2",
-    "previousversions": [],
-    "description": "# It's A Trap! - Starfinder Generic theme\r\rThis is a Starfinder trap theme built to support all Starfinder character sheets and Starfinder characters\rwho use plain attributes instead of character sheets.\r\rThis trap theme provides built-in support for Phillip Goettsch's Starfinder character sheet.\r\rOther sheets, custom sheets, and characters based upon plain attributes are also supported.\rFor those, just fill in the names for the character attributes in the user options for\rthis script.\r\r## Theme-specific properties\rThe following trap properties are specific to this trap theme script.\r\r### Attack Bonus\rThe modifier for the trap's attack roll, if it makes an attack roll.\r\r### Attack vs\rThis property specifies whether the trap's attack roll is against its victim's\rKAC, EAC, ACM (Ac vs Combat Maneuvers), Starship AC, or Starship TL.\r\r### Damage\rA dice expression for the damage dealt by the trap on a hit. This does not\rtake any damage resistances or immunities into account.\r\r### Hide Save Result\rThis property specifies whether the result of the trap's saving throws will be\rhidden from the players.\r\r### Miss - Half Damage\rThis property specifies whether victims of the trap will still take half damage,\reven if they avoided the trap. This does not take into account any special\rabilities such as Evasion.\r\r### Saving Throw\rIf the trap allows a saving throw, choose which saving throw it uses with this\rproperty.\r\r### Saving Throw DC\rThis property specifies the DC for the above saving throw.\r\r### Spot DC\rThis property specifies the passive Perception (10 + Perception skill modifier)\rneeded for a character to passively spot the trap.\r\r## Help\r\rDue to complications with the API reading attributes from certain character sheets,\rthere have been issues in the past with things such as saving throws or passive perception\rnot being correct. If this happens, first try adjusting the values for these on\ryour character sheet or try re-creating the character sheet from scratch to see\rif that resolves the problem.\r\rIf you continue to experience any issues while using this script,\rneed help using it, or if you have a neat suggestion for a new feature, please reply to this thread:\rhttps://app.roll20.net/forum/post/3280344/script-its-a-trap-v2-dot-3\ror shoot me a PM:\rhttps://app.roll20.net/users/46544/stephen-l\r\r## Show Support\r\rIf you would like to show your appreciation and support for the work I do in writing,\rupdating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)\ror, simply leave a thank you note in the script's thread on the Roll20 forums.\rEither is greatly appreciated! Happy gaming!\r",
+    "version": "3.1",
+    "previousversions": ["3.0.2", "3.0.3"],
+    "description": "# It's A Trap! - Starfinder Generic theme\r\r_3.1 Updates_\r\r* Implemented automatic character sheet detection.\r* User can also manually select which character sheet is being used in-game.\r* User can specify custom sheet and its attributes in-game.\r\rThis is a Starfinder trap theme built to support all Starfinder character sheets\rBy default, it will automatically detect which character sheet you're using,\rbut if needed, you can also specify which sheet the script is using from the\rtheme-specific trap properties.\r\rThis currently supports the following Pathfinder character sheets:\r\r* Roll20\r* Simple\r\r## Theme-specific properties\rThe following trap properties are specific to this trap theme script.\r\r### Character Sheet\rManually specify which character sheet your game is using. By default, this\rwill try to auto-detect your character sheet.\r\rYou can also specify that you are using a custom character sheet. If you do so,\ran additional property will appear under this one to specify the attribute\rnames used for the custom sheet.\r\r### Enable Passive Perception?\rSpecify whether to globally enable passive perception. Starfinder doesn't normally\ruse passive perception, but the option is here for groups that want to use it.\rThis is set to 'no' by default.\r\r### Attack Roll\rThis property specifies the trap's attack roll modifier and which type of AC it\rtargets (KAC, EAC, etc.), if it makes an attack roll.\r\r### Damage\rA dice expression for the damage dealt by the trap on a hit. This does not\rtake any damage resistances or immunities into account.\r\r### Hide Save Result\rThis property specifies whether the result of the trap's saving throws will be\rhidden from the players.\r\r### Miss - Half Damage\rThis property specifies whether victims of the trap will still take half damage,\reven if they avoided the trap. This does not take into account any special\rabilities such as Evasion.\r\r### Saving Throw\rIf the trap allows a saving throw, choose which saving throw it uses with this\rproperty and specify the save DC.\r\r### Perception DC\rThis property specifies the passive Perception (10 + Perception skill modifier)\rneeded for a character to passively spot the trap.\r\r## Help\r\rDue to complications with the API reading attributes from certain character sheets,\rthere have been issues in the past with things such as saving throws or passive perception\rnot being correct. If this happens, first try adjusting the values for these on\ryour character sheet or try re-creating the character sheet from scratch to see\rif that resolves the problem.\r\rMy scripts are provided 'as-is', without warranty of any kind, expressed or implied.\r\rThat said, if you experience any issues while using this script,\rneed help using it, or if you have a neat suggestion for a new feature,\rplease shoot me a PM:\rhttps://app.roll20.net/users/46544/stephen-l\r\rWhen messaging me about an issue, please be sure to include any error messages that\rappear in your API Console Log, any configurations you've got set up for the\rscript in the VTT, and any options you've got set up for the script on your\rgame's API Scripts page. The more information you provide me, the better the\rchances I'll be able to help.\r\r## Show Support\r\rIf you would like to show your appreciation and support for the work I do in writing,\rupdating, maintaining, and providing tech support my API scripts,\rplease consider buying one of my art packs from the Roll20 marketplace:\r\rhttps://marketplace.roll20.net/browse/search?category=itemtype:Art&author=Stephen%20Lindberg|Stephen%20L\r",
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
-    "useroptions": [
-      {
-        "name": "sheet",
-        "type": "select",
-        "options": ["custom/none", "Starfinder Simple"],
-        "default": "custom/none",
-        "description": "For some supported character sheets the attribute names are already known. For custom/none, you'll need to fill in the attribute names in the fields below."
-      },
-      {
-        "name": "kac",
-        "type": "text",
-        "description": "The name of the Kinetic AC attribute."
-      },
-      {
-        "name": "eac",
-        "type": "text",
-        "description": "The name of the Energy AC attribute."
-      },
-      {
-        "name": "fortSaveModifier",
-        "type": "text",
-        "description": "The name of the Fortitude save modifier attribute."
-      },
-      {
-        "name": "refSaveModifier",
-        "type": "text",
-        "description": "The name of the Reflex save modifier attribute."
-      },
-      {
-        "name": "willSaveModifier",
-        "type": "text",
-        "description": "The name of the Will save modifier attribute."
-      },
-      {
-        "name": "acm",
-        "type": "text",
-        "description": "The name of the AC against Combat Maneuvers attribute."
-      },
-      {
-        "name": "perceptionModifier",
-        "type": "text",
-        "description": "The name of the Perception skill modifier attribute."
-      },
-      {
-        "name": "starshipAC",
-        "type": "text",
-        "description": "The name of the starship AC attribute."
-      },
-      {
-        "name": "starshipTL",
-        "type": "text",
-        "description": "The name of the starship TL attribute."
-      },
-      {
-        "name": "enablePassivePerception",
-        "type": "checkbox",
-        "value": "1",
-        "description": "If this is checked, then passive perception similar to D&D 5 will be enabled to detect traps."
-      }
-    ],
+    "useroptions": [],
     "dependencies": ["HTML Builder", "It's a Trap!"],
     "modifies": {},
     "conflicts": []

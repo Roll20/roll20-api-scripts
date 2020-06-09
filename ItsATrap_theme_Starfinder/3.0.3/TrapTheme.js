@@ -3,83 +3,27 @@
 
   // A mapping of known attribute names for supported character sheets.
   const SHEET_ATTRS = {
-    'Pathfinder Community': {
-      ac: 'AC',
-      touch: 'Touch',
-      fortSaveModifier: 'Fort',
-      refSaveModifier: 'Ref',
-      willSaveModifier: 'Will',
-      cmd: 'CMD',
-      perceptionModifier: 'Perception',
-      fnHasTrapSpotter: character => {
-        return CharSheetUtils.getSheetRepeatingRow(character, 'class-ability', rowAttrs => {
-          if(!rowAttrs.name)
-            return false;
-
-          let abilityName = rowAttrs.name.get('current');
-          return abilityName.toLowerCase().includes('trap spotter');
-        })
-        .then(trapSpotter => {
-          // If it wasn't in the 'class-ability' repeating section, try
-          // getting it from the 'ability' repeating section.
-          if(!trapSpotter) {
-            return CharSheetUtils.getSheetRepeatingRow(character, 'ability', rowAttrs => {
-              if(!rowAttrs.name)
-                return false;
-
-              let abilityName = rowAttrs.name.get('current');
-              return abilityName.toLowerCase().includes('trap spotter');
-            })
-            .then(trapSpotter => {
-              return !!trapSpotter;
-            })
-          }
-          else
-            return true;
-        });
-      }
-    },
-    'Pathfinder Official': {
-      ac: 'ac',
-      touch: 'ac_touch',
-      fortSaveModifier: 'fortitude',
-      refSaveModifier: 'reflex',
-      willSaveModifier: 'will',
-      cmd: 'cmd_mod',
-      perceptionModifier: 'perception',
-      fnHasTrapSpotter: character => {
-        return CharSheetUtils.getSheetRepeatingRow(character, 'abilities', rowAttrs => {
-          if(!rowAttrs.name)
-            return false;
-
-          let abilityName = rowAttrs.name.get('current');
-          return abilityName.toLowerCase().includes('trap spotter');
-        })
-        .then(trapSpotter => {
-          return !!trapSpotter;
-        });
-      }
-    },
-    'Pathfinder Simple': {
-      ac: 'ac',
-      touch: 'ac_touch',
+    'Roll20': {
+      kac: 'kac',
+      eac: 'eac',
       fortSaveModifier: 'fort',
       refSaveModifier: 'ref',
       willSaveModifier: 'will',
-      cmd: 'cmd',
-      perceptionModifier: 'perception',
-      fnHasTrapSpotter: character => {
-        return CharSheetUtils.getSheetRepeatingRow(character, 'classabilities', rowAttrs => {
-          if(!rowAttrs.name)
-            return false;
-
-          let abilityName = rowAttrs.name.get('current');
-          return abilityName.toLowerCase().includes('trap spotter');
-        })
-        .then(trapSpotter => {
-          return !!trapSpotter;
-        });
-      }
+      acm: 'cmd',
+      starshipAC: 'ac',
+      starshipTL: 'tl',
+      perceptionModifier: 'perception'
+    },
+    'Starfinder Simple': {
+      kac: 'KAC',
+      eac: 'EAC',
+      fortSaveModifier: 'Fort',
+      refSaveModifier: 'Ref',
+      willSaveModifier: 'Will',
+      acm: 'ACM',
+      starshipAC: 'starship-ac-total',
+      starshipTL: 'starship-tl-total',
+      perceptionModifier: 'Perception'
     }
   };
 
@@ -89,9 +33,9 @@
    * @return {any}
    */
   function getOption(option) {
-    let options = globalconfig && globalconfig.itsatrapthemepathfinder;
+    let options = globalconfig && globalconfig.itsatrapthemestarfinder;
     if(!options)
-      options = (state.itsatrapthemepathfinder && state.itsatrapthemepathfinder.useroptions) || {};
+      options = (state.itsatrapthemestarfinder && state.itsatrapthemestarfinder.useroptions) || {};
 
     return options[option];
   }
@@ -100,21 +44,21 @@
   on('ready', () => {
 
     // Initialize state
-    if(!state.itsatrapthemepathfinder)
-      state.itsatrapthemepathfinder = {
+    if(!state.itsatrapthemestarfinder)
+      state.itsatrapthemestarfinder = {
         trapSpotterAttempts: {}
       };
 
     /**
      * The concrete TrapTheme class.
      */
-    class TrapThemePFGeneric extends D20TrapTheme {
+    class TrapThemeStarfinder extends D20TrapTheme {
 
       /**
        * @inheritdoc
        */
       get name() {
-        return 'Pathfinder-Generic';
+        return 'Starfinder Generic';
       }
 
       /**
@@ -130,19 +74,23 @@
           effectResults.character = character;
           if(character) {
             if(effectResults.attack)
-              if(effectResults.attackVs === 'CMD')
+              if(effectResults.attackVs === 'ACM')
                 return this._doTrapCombatManeuver(character, effectResults);
-              else if(effectResults.attackVs === 'touch AC')
-                return this._doTrapTouchAttack(character, effectResults);
+              else if(effectResults.attackVs === 'EAC')
+                return this._doTrapEACAttack(character, effectResults);
+              else if(effectResults.attackVs === 'starship AC')
+                return this._doTrapStarshipACAttack(character, effectResults);
+              else if(effectResults.attackVs === 'starship TL')
+                return this._doTrapStarshipTLAttack(character, effectResults);
               else
-                return this._doTrapAttack(character, effectResults);
+                return this._doTrapKACAttack(character, effectResults);
             else if(effectResults.save && effectResults.saveDC)
               return this._doTrapSave(character, effectResults);
           }
           return effectResults;
         })
         .then(effectResults => {
-          let html = TrapThemePFGeneric.htmlTrapActivation(effectResults);
+          let html = TrapThemeStarfinder.htmlTrapActivation(effectResults);
           effect.announce(html.toString(TrapTheme.css));
         })
         .catch(err => {
@@ -157,27 +105,7 @@
        */
       _doTrapCombatManeuver(character, effectResults) {
         return Promise.all([
-          this.getCMD(character),
-          CharSheetUtils.rollAsync('1d20 + ' + effectResults.attack)
-        ])
-        .then(tuple => {
-          let cmd = tuple[0] || 10;
-          let roll = tuple[1];
-
-          effectResults.cmd = cmd;
-          effectResults.roll = roll;
-          effectResults.trapHit = roll.total >= cmd;
-          return effectResults;
-        });
-      }
-
-      /**
-       * Does a trap's Combat Maneuver roll.
-       * @private
-       */
-      _doTrapTouchAttack(character, effectResults) {
-        return Promise.all([
-          this.getTouchAC(character),
+          this.getACM(character),
           CharSheetUtils.rollAsync('1d20 + ' + effectResults.attack)
         ])
         .then(tuple => {
@@ -192,18 +120,83 @@
       }
 
       /**
-       * @inheritdoc
+       * Does a trap's attack vs Energy AC.
+       * @private
        */
-      getAC(character) {
-        let sheet = getOption('sheet');
-        let attrName = getOption('ac');
-        if(sheet && SHEET_ATTRS[sheet])
-          attrName = SHEET_ATTRS[sheet].ac
+      _doTrapEACAttack(character, effectResults) {
+        return Promise.all([
+          this.getEAC(character),
+          CharSheetUtils.rollAsync('1d20 + ' + effectResults.attack)
+        ])
+        .then(tuple => {
+          let ac = tuple[0] || 10;
+          let roll = tuple[1];
 
-        if(attrName)
-          return CharSheetUtils.getSheetAttr(character, attrName);
-        else
-          return Promise.reject(new Error('Please provide name of the attribute for AC in the One-Click options.'));
+          effectResults.ac = ac;
+          effectResults.roll = roll;
+          effectResults.trapHit = roll.total >= ac;
+          return effectResults;
+        });
+      }
+
+      /**
+       * Does a trap's attack vs Kinetic AC.
+       * @private
+       */
+      _doTrapKACAttack(character, effectResults) {
+        return Promise.all([
+          this.getKAC(character),
+          CharSheetUtils.rollAsync('1d20 + ' + effectResults.attack)
+        ])
+        .then(tuple => {
+          let ac = tuple[0] || 10;
+          let roll = tuple[1];
+
+          effectResults.ac = ac;
+          effectResults.roll = roll;
+          effectResults.trapHit = roll.total >= ac;
+          return effectResults;
+        });
+      }
+
+      /**
+       * Does a trap's attack vs starship AC.
+       * @private
+       */
+      _doTrapStarshipACAttack(character, effectResults) {
+        return Promise.all([
+          this.getStarshipAC(character),
+          CharSheetUtils.rollAsync('1d20 + ' + effectResults.attack)
+        ])
+        .then(tuple => {
+          let ac = tuple[0] || 10;
+          let roll = tuple[1];
+
+          effectResults.ac = ac;
+          effectResults.roll = roll;
+          effectResults.trapHit = roll.total >= ac;
+          return effectResults;
+        });
+      }
+
+      /**
+       * Does a trap's attack vs starship TL.
+       * @private
+       */
+      _doTrapStarshipTLAttack(character, effectResults) {
+        return Promise.all([
+          this.getStarshipTL(character),
+          CharSheetUtils.rollAsync('1d20 + ' + effectResults.attack)
+        ])
+        .then(tuple => {
+          let ac = tuple[0] || 10;
+          let roll = tuple[1];
+
+          effectResults.ac = ac;
+          effectResults.roll = roll;
+          effectResults.trapHit = roll.total >= ac;
+          return effectResults;
+        });
       }
 
       /**
@@ -211,16 +204,76 @@
        * @param {Character} character
        * @return {Promise<number>}
        */
-      getCMD(character) {
+      getACM(character) {
         let sheet = getOption('sheet');
-        let attrName = getOption('cmd');
+        let attrName = getOption('acm');
         if(sheet && SHEET_ATTRS[sheet])
-          attrName = SHEET_ATTRS[sheet].cmd
+          attrName = SHEET_ATTRS[sheet].acm
 
         if(attrName)
           return CharSheetUtils.getSheetAttr(character, attrName);
         else
-          return Promise.reject(new Error('Please provide name of the attribute for CMD in the One-Click options.'));
+          return Promise.reject(new Error('Please provide name of the attribute for ACM in the One-Click options.'));
+      }
+
+      /**
+       * @inheritdoc
+       */
+      getEAC(character) {
+        let sheet = getOption('sheet');
+        let attrName = getOption('eac');
+        if(sheet && SHEET_ATTRS[sheet])
+          attrName = SHEET_ATTRS[sheet].eac;
+
+        if(attrName)
+          return CharSheetUtils.getSheetAttr(character, attrName);
+        else
+          return Promise.reject(new Error('Please provide name of the attribute for EAC in the One-Click options.'));
+      }
+
+      /**
+       * @inheritdoc
+       */
+      getKAC(character) {
+        let sheet = getOption('sheet');
+        let attrName = getOption('kac');
+        if(sheet && SHEET_ATTRS[sheet])
+          attrName = SHEET_ATTRS[sheet].kac;
+
+        if(attrName)
+          return CharSheetUtils.getSheetAttr(character, attrName);
+        else
+          return Promise.reject(new Error('Please provide name of the attribute for KAC in the One-Click options.'));
+      }
+
+      /**
+       * @inheritdoc
+       */
+      getStarshipAC(character) {
+        let sheet = getOption('sheet');
+        let attrName = getOption('starshipAC');
+        if(sheet && SHEET_ATTRS[sheet])
+          attrName = SHEET_ATTRS[sheet].starshipAC;
+
+        if(attrName)
+          return CharSheetUtils.getSheetAttr(character, attrName);
+        else
+          return Promise.reject(new Error('Please provide name of the attribute for starship AC in the One-Click options.'));
+      }
+
+      /**
+       * @inheritdoc
+       */
+      getStarshipTL(character) {
+        let sheet = getOption('sheet');
+        let attrName = getOption('starshipTL');
+        if(sheet && SHEET_ATTRS[sheet])
+          attrName = SHEET_ATTRS[sheet].starshipTL;
+
+        if(attrName)
+          return CharSheetUtils.getSheetAttr(character, attrName);
+        else
+          return Promise.reject(new Error('Please provide name of the attribute for starship TL in the One-Click options.'));
       }
 
       /**
@@ -311,7 +364,7 @@
                   id: 'vs',
                   name: 'AC type',
                   desc: 'Which AC is the attack against?',
-                  options: ['AC', 'CMD', 'touch AC']
+                  options: ['KAC', 'EAC', 'ACM', "starship AC", "starship TL"]
                 }
               ]
             });
@@ -322,21 +375,6 @@
         });
 
         return result;
-      }
-
-      /**
-       * @inheritdoc
-       */
-      getTouchAC(character) {
-        let sheet = getOption('sheet');
-        let attrName = getOption('touchAC');
-        if(sheet && SHEET_ATTRS[sheet])
-          attrName = SHEET_ATTRS[sheet].touch;
-
-        if(attrName)
-          return CharSheetUtils.getSheetAttr(character, attrName);
-        else
-          return Promise.reject(new Error('Please provide name of the attribute for touch AC in the One-Click options.'));
       }
 
       /**
@@ -361,20 +399,30 @@
             let rollResult = D20TrapTheme.htmlRollResult(effectResults.roll, '1d20 + ' + effectResults.attack);
             let row = content.append('.paddedRow')
 
-            if(effectResults.attackVs === 'CMD') {
+            if(effectResults.attackVs === 'ACM') {
               row.append('span.bold', 'Maneuver roll:');
               row.append('span', rollResult);
-              row.append('span', ' vs CMD ' + effectResults.cmd);
+              row.append('span', ' vs ACM ' + effectResults.ac);
             }
-            else if(effectResults.attackVs === 'touch AC') {
+            else if(effectResults.attackVs === 'EAC') {
               row.append('span.bold', 'Attack roll:');
               row.append('span', rollResult);
-              row.append('span', ' vs Touch AC ' + effectResults.ac);
+              row.append('span', ' vs EAC ' + effectResults.ac);
+            }
+            else if(effectResults.attackVs === 'starship AC') {
+              row.append('span.bold', 'Attack roll:');
+              row.append('span', rollResult);
+              row.append('span', ' vs starship AC ' + effectResults.ac);
+            }
+            else if(effectResults.attackVs === 'starship TL') {
+              row.append('span.bold', 'Attack roll:');
+              row.append('span', rollResult);
+              row.append('span', ' vs starship TL ' + effectResults.ac);
             }
             else {
               row.append('span.bold', 'Attack roll:');
               row.append('span', rollResult);
-              row.append('span', ' vs AC ' + effectResults.ac);
+              row.append('span', ' vs KAC ' + effectResults.ac);
             }
           }
 
@@ -394,12 +442,7 @@
           }
 
           // Add the hit/miss message.
-          if(effectResults.trapHit === 'AC unknown') {
-            content.append('.paddedRow', 'AC could not be determined with the current version of your character sheet. For the time being, please resolve the attack against AC manually.');
-            if(effectResults.damage)
-              content.append('.paddedRow', 'Damage: [[' + effectResults.damage + ']]');
-          }
-          else if(effectResults.trapHit) {
+          if(effectResults.trapHit) {
             let row = content.append('.paddedRow');
             row.append('span.hit', 'HIT! ');
             if(effectResults.damage)
@@ -448,101 +491,13 @@
 
       /**
        * @inheritdoc
-       * Also supports the Trap Spotter ability.
        */
       passiveSearch(trap, charToken) {
         let passiveEnabled = getOption('enablePassivePerception') === '1';
         if(passiveEnabled)
           super.passiveSearch(trap, charToken);
-
-        let character = getObj('character', charToken.get('represents'));
-        let effect = (new TrapEffect(trap, charToken)).json;
-
-        // Perform automated behavior for Trap Spotter.
-        let isTrap = effect.type === 'trap' || _.isUndefined(effect.type);
-        if(isTrap && effect.spotDC && character) {
-          if(ItsATrap.getSearchDistance(trap, charToken) <= 10)
-            this._trapSpotter(character, trap, effect);
-        }
-      }
-
-      /**
-       * Generic Trap Spotter behavior.
-       * @private
-       */
-      _trapSpotter(character, trap, effect) {
-        // Trap spotter only works with supported character sheets.
-        let sheet = getOption('sheet');
-        if(!(sheet && SHEET_ATTRS[sheet]))
-          return;
-
-        // Use an implementation appropriate for the current character sheet.
-        let hasTrapSpotter = SHEET_ATTRS[sheet].fnHasTrapSpotter;
-
-        // Check if the character has the Trap Spotter ability.
-        if(hasTrapSpotter) {
-          hasTrapSpotter(character)
-          .then(hasIt => {
-
-            // If they have it, make a secret Perception check.
-            // Quit early if this character has already attempted to trap-spot
-            // this trap.
-            if(hasIt) {
-              let trapId = trap.get('_id');
-              let charId = character.get('_id');
-
-              // Check for a previous attempt.
-              let attempts = state.itsatrapthemepathfinder.trapSpotterAttempts;
-              if(!attempts[trapId])
-                attempts[trapId] = {};
-              if(attempts[trapId][charId])
-                return;
-              else
-                attempts[trapId][charId] = true;
-
-              // Make the secret Perception check.
-              return this.getPerceptionModifier(character)
-              .then(perception => {
-                if(_.isNumber(perception))
-                  return CharSheetUtils.rollAsync(`1d20 + ${perception}`);
-                else
-                  throw new Error('Trap Spotter: Could not get Perception value for Character ' + charToken.get('_id') + '.');
-              })
-              .then(searchResult => {
-                return searchResult.total;
-              })
-              .then(total => {
-                // Inform the GM about the Trap Spotter attempt.
-                sendChat('Trap theme: ' + this.name, `/w gm ${character.get('name')} attempted to notice trap "${trap.get('name')}" with Trap Spotter ability. Perception ${total} vs DC ${effect.spotDC}`);
-
-                // Resolve whether the trap was spotted or not.
-                if(total >= effect.spotDC) {
-                  let html = TrapTheme.htmlNoticeTrap(character, trap);
-                  ItsATrap.noticeTrap(trap, html.toString(TrapTheme.css));
-                }
-              });
-            }
-          })
-          .catch(err => {
-            sendChat('Trap theme: ' + this.name, '/w gm ' + err.message);
-            log(err.stack);
-          });
-        }
       }
     }
-    ItsATrap.registerTheme(new TrapThemePFGeneric());
-  });
-
-  // When a trap is deleted, remove it from the Trap Theme's persisted state.
-  on('destroy:graphic', token => {
-    try {
-      let id = token.get('_id');
-      if(state.itsatrapthemepathfinder.trapSpotterAttempts[id])
-        delete state.itsatrapthemepathfinder.trapSpotterAttempts[id];
-    }
-    catch(err) {
-      log('ERROR - TrapTheme Pathfinder:');
-      log(err.stack);
-    }
+    ItsATrap.registerTheme(new TrapThemeStarfinder());
   });
 })();
