@@ -5,17 +5,25 @@
  * Discord: Naudran#2980
  * Roll20: https://app.roll20.net/users/1062502/werner-d
  * Github: https://github.com/Werner-Dohse
+ * 
+ * The whoResourceReset json works as follows:
+ ** class: The class the ability is part of
+ ** resource: List of resources that can reset with a short rest, use | to divide between abilities
+ ** fromlevel: From which level is this ability reset during a short rest. Use 0 if the ability resets whenever you receive it
 */
 var ShortRest = ShortRest || (function() {
     'use strict';
 
     const version = '0.1.1',
         whoResourceReset = [
-            { class: 'cleric', resource: 'channel divinity' },
-            { class: 'druid', resource: 'wild shape' },
-            { class: 'fighter', resource: 'action surge|second wind|superiority dice' },
+            { class: 'cleric', resource: 'channel divinity|visions of the past' },
+            { class: 'druid', resource: 'wild shape|spirit totem' },
+            { class: 'fighter', resource: 'action surge|second wind|superiority dice|arcane shot' },
             { class: 'monk', resource: 'ki' },
-            { class: 'bard', resource: 'bardic inspiration', fromlevel: 5 }
+            { class: 'bard', resource: 'bardic inspiration|enthralling performance|words of terror|unbreakable majesty', fromlevel: "5|0|0|0" },
+            { class: 'ranger', resource: 'detect portal|etherreal step|magic user\'s nemesis' },
+            { class: 'sorceror', resource: 'favored by the gods|wind soul' },
+            { class: 'wizard', resource: 'blade song|arcane abeyance|illusory self' },
         ],
         whoSpellSlotsReset = 'warlock',
         messageTemplate = '<div class=\'sheet-rolltemplate-simple\' style=\'margin-top: -7px;\'><div class=\'sheet-container\'><div class=\'sheet-label\' style=\'margin-top: 5px;padding: 15px\'><span>{{message}}</span></div></div></div>',
@@ -285,7 +293,12 @@ var ShortRest = ShortRest || (function() {
             if (resourceDetail) {
                 // check if we have a from level limit
                 if (resourceDetail.fromlevel) {
-                    if (checkClassLevel(character, isBase, resourceDetail.fromlevel, className)) {
+                    // check if the from level is for THIS resource
+                    const resrc = resourceDetail.resource.split('|');
+                    const fromLevel = resourceDetail.fromlevel.split('|');
+                    const idx = resrc.findIndex(r => r === resourceName.get('current').toLowerCase());
+
+                    if (checkClassLevel(character, isBase, +fromLevel[idx], className)) {
                         const resourceMax = resource.get('max');            
                         resource.set('current', resourceMax);
 
