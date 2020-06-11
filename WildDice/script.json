@@ -1,7 +1,7 @@
 {
   "name": "WildDice",
-  "version": "0.3.4",
-  "description": "Implements the Wild Dice rolling mechanic.",
+  "version": "0.3.5",
+  "description": "Implements the [Wild Dice](https://en.wikipedia.org/wiki/D6_System#The_Wild_Die) rolling mechanic used in D6 System/OpenD6-games, and in [Star Wars D6](https://wiki.roll20.net/Star_Wars_D6). [Wild Dice Script](https://wiki.roll20.net/Script:Wild_Dice) on the Roll20 Wiki. \n* **!wd --help** Shows the Help screen\n* **!wd [[dice expression]]** Ex. `!wd [[4d6+2]]` rolls 3 normal dice and one Wild dice\n* **!wwd** for rolls whipsered to GM.",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -13,6 +13,7 @@
   "previousversions": [
     "0.3.1",
     "0.3.2",
-    "0.3.3"
+    "0.3.3",
+    "0.3.4"
   ]
 }
