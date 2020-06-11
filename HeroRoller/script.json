@@ -1,0 +1,13 @@
+{
+  "name": "Hero Roller",
+  "script": "heroll.js",
+  "version": "1.0",
+  "previousversions": [ "1.0" ],
+  "description": "# Hero Roller api script\r\nThis API is designed to be used with the [HeroSystem6e character sheet](https:\/\/github.com\/Roll20\/roll20-character-sheets\/tree\/master\/HeroSystem6e), however its interaction with the sheet is very light. It requests only 3 attributes from the sheet (OCV, ocv_base, and roll_target), and creates them if they are not found. It also allows the over-riding of these values, to the script can be used on its own. Because of these facts, this script should work with nearly any character sheet for a game requiring Hero System roll mechanics.\r\n\r\nThis api script listens to the chat for api calls beginning with \"!heroll \".  This script provides templates for powers (hand attack, blast, aid, healing, etc.), along with argument handles to tweak the output to your desire. The script will roll activation, to hit (gathering OCV and figuring the DCV hit), figure damage (BODY, STUN, KB) or points output, count values based on the standard mechanics (normal damage, killing damage, luck, unluck), and output to the resulting roll to the chat in an appealing package (either in a 'tall' format or a 'sidecar' format). The script also includes a 'verbose' parameter that will output the various parameters used in the construction of the roll, show what the user provided and how that input was interpreted by the engine. This can be helpful when debugging why a call to the script produced an unexpected outcome. The verbose output is included below the normal output from the script. The script also includes a 'recall' parameter, to allow you to access the previous roll (all calls), your own last roll, or to designate a speaker to get their last roll. Once retrieved, parameters can be overwritten (for instance, recalling the last roll and applying the verbose parameter to see what happened). \r\n\r\nText description of the output really doesn't do it justice, nor could all of the instructions for use be put in this short blurb. I suggest you read the instructions to see some examples of the script in action.\r\n\r\nHero Roller was originally based on the herodc script written by GiGs (which was based on other work that came before), and I would not have gotten it where it is without the help of GiGs, The Aaron, and Jakob.",
+  "authors": "timmaugh",
+  "roll20userid": "5962076",
+  "useroptions": [],
+  "dependencies": [],
+  "modifies": ["state"],
+  "conflicts": []
+}
