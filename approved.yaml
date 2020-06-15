@@ -789,6 +789,31 @@ savageworldsstatuschanger:
 midgardturntrackerhelper:
   - "MidgardTurnTrackerHelper"
   - "Utility"
+
 shortrest:
   - "ShortRest"
   - "System Toolbox"
+
+tokenmarker:
+  - "TokenMarker"
+  - "Utility"
+
+heroroller:
+  - "HeroRoller"
+  - "System Toolbox"
+
+universalvttimport:
+  - "UniversalVTTImporter"
+  - "Utility"
+
+supernotes:
+  - "Supernotes"
+  - "Utility"
+
+restandrecovery:
+  - "Rest-and-Recovery"
+  - "Utility"  
+   
+tokenactionmarker:
+  - "Token-Action-Maker"
+  - "Utility"
