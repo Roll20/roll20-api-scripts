@@ -1,10 +1,22 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
-## 2.06
+## 2.07
 ### Autres améliorations
+* Utilisation des options standard pour le mur de force
+
+## 2.06
+### Capacités
+* Ajout de la capacité lien épique.
+
+### Autres améliorations
+* Amélioration de la gestion de l'attaque en meute des gobelins.
+* Possibilité qu'une arme fasse de la lumière quand elle est dégainée.
+* Extinction de la lumière quand l'effet d'arme enflammée prend fin
+* Ajout d'une option pour modifier la portée d'une attaque.
 * Ajout de la résistance à la magie (bonus aux tests pour résister à la magie)
 * Intégration d'une table d'échecs critique, avec jets et effets pris en compte.
 
 ### Corrections de bugs
+* Correction de bug d'affichage du nombre de soins restants.
 * Les sortilèges ne sont plus affectés par les RD/tranchant. La destruction des mort-vivants devient un sortilege.
 * Correction de bug sur les effets de peur qui ralentissent.
 
