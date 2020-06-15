@@ -6,10 +6,15 @@ The script can be used in 2 ways, either by clicking on Hit Dice on the 5e OGL S
 *If there is any I missed please let me know.*
 
 ### Resources
-+ Cleric - Channel Divinity
-+ Druid - Wild Shape
-+ Fighter - Action Surge; Second Wind
++ Cleric - Channel Divinity; Visions of the Past
++ Druid - Wild Shape; Spirit Totem
++ Fighter - Action Surge; Second Wind; Superiority Dice; Arcane Shot
 + Monk - Ki
++ Bard - Bardic Inspiration from level 5, Enthralling Performance; Words of Terror; Unbreakable Majesty
++ Ranger - Detect Portal; Etherreal Step; Magic User's Nemesis
++ Sorceror - Favored by the Gods; Wind Soul
++ Wizard - Blade Song; Arcane Abeyance; Illusory Self\r\r
+
 
 ### Spell Slots
 + Warlock
