@@ -754,7 +754,7 @@ tokencondition:
   - "TokenCondition"
   - "Utility"
 
-libtokenmrkers:
+libtokenmarkers:
   - "libTokenMarkers"
   - "Utility"
 
