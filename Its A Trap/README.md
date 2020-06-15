@@ -1,10 +1,8 @@
 # It's A Trap!
 
-_3.10 Updates:_
+_v3.12 Updates_
 
-* Shortened script menu macro's name.
-* Changed menu macro to NOT be a token action. (A lot of users seemed to be annoyed by this...)
-* Renamed, combined, and reordered some trap properties in the menu to _hopefully_ be more intuitive to users.
+* Added support for escaped special characters in API Commands.
 
 This is a script that allows GMs to quickly and very easily set up traps,
 secret doors, and other hidden things on the GM layer, and detect when tokens
@@ -138,19 +136,6 @@ This defines the area in which characters can be affected by the trap when it ac
 This property is only visible if **Activation Area** is set to **burst**. This
 sets the radius of the burst area.
 
-#### API Command
-This property can be used to issue an API chat command when the trap activates.
-This property supports a couple keywords to support commands involving the trap
-and its victims.
-
-The keyword TRAP_ID will be substituted for the ID of the trap's token.
-
-The keyword VICTIM_ID will be substituted for the ID of token for some character
-being affected by the trap. If there are multiple victims affected by the trap,
-the command will be issued individually for each victim.
-
-e.g. _'!someApiCommand TRAP_ID VICTIM_ID'_
-
 #### Special FX
 This property is used to display a particle effect when the trap activates,
 using Roll20's special FX system.
@@ -208,6 +193,38 @@ The third prompt asks which layer the trap token is moved to when it is detected
 
 ### External script properties
 These properties are available when you have certain other API scripts installed.
+
+#### API Command
+This property can be used to issue an API chat command when the trap activates.
+This property supports a couple keywords to support commands involving the trap
+and its victims.
+
+The keyword TRAP_ID will be substituted for the ID of the trap's token.
+
+The keyword VICTIM_ID will be substituted for the ID of token for some character
+being affected by the trap. If there are multiple victims affected by the trap,
+the command will be issued individually for each victim.
+
+The keyword VICTIM_CHAR_ID will be substituted for the ID of the character being
+affected by the trap.
+
+e.g. _'!someApiCommand TRAP_ID VICTIM_ID VICTIM_CHAR_NAME'_
+
+For some API commands using special characters, you'll need to escape those
+characters by prefixing them with a \ (backslash). These special characters
+include: [, ], {, }, and @.
+
+e.g.:
+
+```
+!power \{\{
+  --name|Spear Launcher
+  --leftsub|Trap
+  --rightsub|Trigger: Pressure is applied to the floor tile.
+  --Attack:|\[\[ 1d20 + 14 \]\] vs AC \@\{VICTIM_CHAR_NAME|ac\}
+  --Damage:|\[\[ 2d6 + 6 \]\] piercing
+\}\}
+```
 
 #### Areas of Effect script
 This property is only available if you have the **Areas of Effect** script installed.

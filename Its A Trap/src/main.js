@@ -488,8 +488,13 @@ var ItsATrap = (() => {
     if(effect.effectShape instanceof Array)
       _.each(effect.effectShape, pathId => {
         let path = getObj('path', pathId);
-        path.set('layer', layer);
-        toOrder(path);
+        if (path) {
+          path.set('layer', layer);
+          toOrder(path);
+        }
+        else {
+          ItsATrap.Chat.error(new Error(`Could not find activation area shape ${pathId} for trap ${effect.name}. Perhaps you deleted it? Either way, please fix it through the trap's Activation Area property.`));
+        }
       });
   }
 
@@ -533,8 +538,13 @@ var ItsATrap = (() => {
     if(effect.triggerPaths) {
       _.each(effect.triggerPaths, pathId => {
         let path = getObj('path', pathId);
-        path.set('layer', layer);
-        toOrder(path);
+        if (path) {
+          path.set('layer', layer);
+          toOrder(path);
+        }
+        else {
+          ItsATrap.Chat.error(new Error(`Could not find trigger path ${pathId} for trap ${effect.name}. Perhaps you deleted it? Either way, please fix it through the trap's Trigger Area property.`));
+        }
       });
     }
   }

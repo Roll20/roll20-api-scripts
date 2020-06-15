@@ -31,6 +31,17 @@ var ItsATrapCreationWizard = (() => {
     }
   };
 
+  const LPAREN = '&#40;';
+  const RPAREN = '&#41;';
+
+  const LBRACKET = '&#91;';
+  const RBRACKET = '&#93;';
+
+  const LBRACE = '&#123;';
+  const RBRACE = '&#125;';
+
+  const ATSIGN = '&#64;';
+
   // The last trap that was edited in the wizard.
   let curTrap;
 
@@ -144,12 +155,6 @@ var ItsATrapCreationWizard = (() => {
   function getCoreProperties(trapToken) {
     let trapEffect = new TrapEffect(trapToken);
 
-    let LPAREN = '&#40;';
-    let RPAREN = '&#41;';
-
-    let LBRACE = '&#91;';
-    let RBRACE = '&#93;';
-
     return [
       {
         id: 'name',
@@ -211,12 +216,6 @@ var ItsATrapCreationWizard = (() => {
    */
   function getRevealProperties(trapToken) {
     let trapEffect = (new TrapEffect(trapToken)).json;
-
-    let LPAREN = '&#40;';
-    let RPAREN = '&#41;';
-
-    let LBRACE = '&#91;';
-    let RBRACE = '&#93;';
 
     return [
       {
@@ -286,12 +285,6 @@ var ItsATrapCreationWizard = (() => {
   function getShapeProperties(trapToken) {
     let trapEffect = new TrapEffect(trapToken);
 
-    let LPAREN = '&#40;';
-    let RPAREN = '&#41;';
-
-    let LBRACE = '&#91;';
-    let RBRACE = '&#93;';
-
     return _.compact([
       {
         id: 'effectShape',
@@ -314,12 +307,6 @@ var ItsATrapCreationWizard = (() => {
             })()
           };
       })(),
-      {
-        id: 'api',
-        name: 'API Command',
-        desc: 'An API command which the trap runs when it is activated. The constants TRAP_ID and VICTIM_ID will be replaced by the object IDs for the trap and victim. Multiple API commands are now supported by separating each command with &quot;&#59;&#59;&quot;.',
-        value: trapEffect.api || '-'
-      },
       {
         id: 'fx',
         name: 'Special FX',
@@ -346,12 +333,12 @@ var ItsATrapCreationWizard = (() => {
           {
             id: 'offset',
             name: 'FX Offset',
-            desc: 'The offset ' + LPAREN + 'in units' + RPAREN + ' of the special FX from the trap\'s center. Format: ' + LBRACE + 'X,Y' + RBRACE
+            desc: 'The offset ' + LPAREN + 'in units' + RPAREN + ' of the special FX from the trap\'s center. Format: ' + LBRACKET + 'X,Y' + RBRACKET
           },
           {
             id: 'direction',
             name: 'FX Direction',
-            desc: 'The directional vector for the special FX ' + LPAREN + 'Leave blank to direct it towards characters' + RPAREN + '. Format: ' + LBRACE + 'X,Y' + RBRACE
+            desc: 'The directional vector for the special FX ' + LPAREN + 'Leave blank to direct it towards characters' + RPAREN + '. Format: ' + LBRACKET + 'X,Y' + RBRACKET
           }
         ]
       },
@@ -402,15 +389,32 @@ var ItsATrapCreationWizard = (() => {
    * supported API scripts.
    */
   function getScriptProperties(trapToken) {
-    let trapEffect = (new TrapEffect(trapToken)).json;
-
-    let LPAREN = '&#40;';
-    let RPAREN = '&#41;';
-
-    let LBRACE = '&#91;';
-    let RBRACE = '&#93;';
+    let trapEffect = new TrapEffect(trapToken);
 
     return _.compact([
+      {
+        id: 'api',
+        name: 'API Command',
+        desc: 'An API command which the trap runs when it is activated. The constants TRAP_ID and VICTIM_ID will be replaced by the object IDs for the trap and victim. Multiple API commands are now supported by separating each command with &quot;&#59;&#59;&quot;. Certain special characters must be escaped. See README section about the API Command property for details.',
+        value: (() => {
+          if (trapEffect.api.length > 0) {
+            let result = '';
+            _.each(trapEffect.api, cmd => {
+              result += cmd.replace(/\\\[/g, LBRACKET)
+                .replace(/\\\]/g, RBRACKET)
+                .replace(/\\{/g, LBRACE)
+                .replace(/\\}/g, RBRACE)
+                .replace(/\\@/g, ATSIGN) + "<br/>";
+            });
+            return result;
+          }
+          else
+            return '-';
+
+
+        })()
+      },
+
       // Requires AreasOfEffect script.
       (() => {
         if(typeof AreasOfEffect !== 'undefined') {
@@ -443,7 +447,7 @@ var ItsATrapCreationWizard = (() => {
               {
                 id: 'direction',
                 name: 'AoE Direction',
-                desc: 'The direction of the AoE effect. Optional. If omitted, then the effect will be directed toward affected tokens. Format: ' + LBRACE + 'X,Y' + RBRACE
+                desc: 'The direction of the AoE effect. Optional. If omitted, then the effect will be directed toward affected tokens. Format: ' + LBRACKET + 'X,Y' + RBRACKET
               }
             ]
           };
@@ -508,38 +512,12 @@ var ItsATrapCreationWizard = (() => {
   }
 
   /**
-   * Gets a list of the core trap properties for a trap token dealing
-   * with special side effects such as FX, sound, and API commands.
-   * @param {Graphic} token
-   * @return {object[]}
-   */
-  function getSpecialProperties(trapToken) {
-    let trapEffect = (new TrapEffect(trapToken)).json;
-
-    let LPAREN = '&#40;';
-    let RPAREN = '&#41;';
-
-    let LBRACE = '&#91;';
-    let RBRACE = '&#93;';
-
-    return _.compact([
-
-    ]);
-  }
-
-  /**
    * Gets a list of the core trap properties for a trap token.
    * @param {Graphic} token
    * @return {object[]}
    */
   function getTriggerProperties(trapToken) {
     let trapEffect = (new TrapEffect(trapToken)).json;
-
-    let LPAREN = '&#40;';
-    let RPAREN = '&#41;';
-
-    let LBRACE = '&#91;';
-    let RBRACE = '&#93;';
 
     return [
       {
