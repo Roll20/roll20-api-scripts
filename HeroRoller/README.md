@@ -1,7 +1,7 @@
 ﻿# HEROLLER: CARE AND KEEPING
 
 # Introduction
-Hero Roller (or, heroll, for short), works with the Hero character sheet. It takes a command line of arguments to describe the Hero power you want to use, then spits out all of the parameters that the roll would produce, in game... hopefully in a visually appealing package.
+<div style="float:right;width:20%;max-width:250px;margin:5px 0px 10px 5px; display:inline-block;"><div><img width=200 src="https://s3.amazonaws.com/files.d20.io/images/143716628/WvIGJgGieMlpI-LkXHpQuQ/med.png"></div><div><img width=200 src="https://s3.amazonaws.com/files.d20.io/images/143719334/P47RsL4gIovsYmu5SKkNPg/med.png"></div></div>Hero Roller (or, heroll, for short), works with the Hero character sheet. It takes a command line of arguments to describe the Hero power you want to use, then spits out all of the parameters that the roll would produce in game... hopefully in a visually appealing package.
 
 ## Arguments Are... Our Friends
 Each argument is detected by a the presence of a space followed by a double dash in the command line. The following example is 3.5d6 (effectively, 3d6+1d3) with a designation of the normal mechanic and a name of "Doom Smack".
@@ -23,7 +23,7 @@ Each argument has various aliases that can be used in its place. For instance, y
 For some arguments, there are only a range of valid options you can pass. For instance, the  **_dkb_** ("does knockback") argument can only accept:  _yes, y, no, n, true, t, false_, or  _f_. If the supplied value does not pass validation, a default value is substituted in its place. See the section  *Output Structure: Verbose*  for the ability to see how the value you supply maps to the value used for the output.
 
 ### Templates  
-Templates are collections of the various other arguments that can quickly get you many options at once. For instance, an "Aid" power will work differently than a "Blast." Templates are a starting point, not an end point. Each individual argument can still be explicitly over-ridden -- so that even if your designated template defaults to not doing knockback in an attack, you could override that by invoking the  **_dkb_** argument and setting it to  _true_. I suggest you try the arguments separately, first, so that you understand what they do, then consult the Template section to see what slat of options each template represents.
+Templates are collections of the various other arguments that can quickly get you many options at once. For instance, an "Aid" power will work differently than a "Blast." Templates are a starting point, not an end point. Each individual argument can still be explicitly over-ridden -- so that even if your designated template defaults to not doing knockback in an attack, you could override that by invoking the  **_dkb_** argument and setting it to  _true_. I suggest you try the arguments separately, first, so that you understand what they do, then consult the Template section to see what slate of options each template represents.
 
     !heroll --d:4d6 --t:flash --dkb:true
 
@@ -117,28 +117,201 @@ What you supply might not always map to what you expect. In that case, you proba
 ## Argument List  
 
 The following arguments are available to use with the heroll script engine. Each argument can be aliased with various options (so you don't have to type "--activation" if you would prefer to use the shorter "--a"). Each argument has to pass certain validation checks (ensuring that it is a number, or a boolean true/false, for example), and if the validation fails, certain default values are used instead. The table below lists all of this information.
-| Argument     | Aliases                                                                   | Valid Options                                     | Default    | Notes                                                                                                                                                                                                                                                                                                                                                                                                      |
-|--------------|---------------------------------------------------------------------------|---------------------------------------------------|------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| act          | a, act, activation                                                        | [number]                                          | 0          |                                                                                                                                                                                                                                                                                                                                                                                                            |
-| dice         | d, dice                                                                   | [see Dice and the Roll Equation]                  | 1d6        |                                                                                                                                                                                                                                                                                                                                                                                                            |
-| dbody        | db, dbody, doesbody                                                       | y, yes, n, no, t, true, f, false                  | [template] | whether an attack should report BODY damage; also whether a Points-output should derive points from BODY                                                                                                                                                                                                                                                                                                   |
-| dkb          | dkb, dknockback, doesknockback                                            | y, yes, n, no, t, true, f, false                  | [template] |                                                                                                                                                                                                                                                                                                                                                                                                            |
-| dstun        | ds, dstun, doesstun                                                       | y, yes, n, no, t, true, f, false                  | [template] | whether an attack should report STUN damage; also whether a Points-output should derive points from STUN (default)                                                                                                                                                                                                                                                                                         |
-| extradice    | xd, xdice, extradice                                                      | [number]                                          | 0          |                                                                                                                                                                                                                                                                                                                                                                                                            |
-| kbdicemod    | xkb, extrakb, kbdice, kbdicemod                                           | [number]                                          | 0          |                                                                                                                                                                                                                                                                                                                                                                                                            |
-| loc          | l, loc, location                                                          | any, random, none, [hit location], [special shot] | none       |                                                                                                                                                                                                                                                                                                                                                                                                            |
-| mechanic     | rm, rollmech, rollmechanic, m, mech, mechanic                             | n, k, l                                           | [template] | This can be set in any of three places; see the Mechanic section.                                                                                                                                                                                                                                                                                                                                          |
-| outputformat | of, output, format, outputformat, sc                                      | tall, sc                                          | tall       |                                                                                                                                                                                                                                                                                                                                                                                                            |
-| pointslabel  | pl, plbl, plabel, ptsl, ptslbl, ptslabel, pointsl, pointslbl, pointslabel | [string]                                          | [template] |                                                                                                                                                                                                                                                                                                                                                                                                            |
-| powername    | pn, pname, powername                                                      | [string]                                          | [template] |                                                                                                                                                                                                                                                                                                                                                                                                            |
-| primarycolor | c, col, color, pc, primarycolor                                           | 3- or 6-digit hex, with or without #              | [template] |                                                                                                                                                                                                                                                                                                                                                                                                            |
-| stunmod      | xs, xstun, extrastun, stunmod                                             | [number]                                          | 0          |                                                                                                                                                                                                                                                                                                                                                                                                            |
-| template     | p, pwr, pow, power, t, tmp, template                                      | [see table, below]                                | c          |                                                                                                                                                                                                                                                                                                                                                                                                            |
-| useomcv      | mental, um, omcv, useomcv                                                 | y, yes, n, no, t, true, f, false                  | FALSE      |                                                                                                                                                                                                                                                                                                                                                                                                            |
-| ocv          | o, ocv                                                                    | [number]                                          | -1         | supply an OCV to override any checking of a character sheet (including when you don't have a character sheet). This flattens all OCV mods to 0, including any originating from a called-shot. Including the location argument will still invoke BODY and STUN multipliers.                                                                                                                                 |
-| verbose      | v, verbose                                                                | y, yes, n, no, t, true, f, false                  | FALSE      |                                                                                                                                                                                                                                                                                                                                                                                                            |
-| recall       | r, rc, recall                                                                | last, [valid id]                                  | [current]  |  |
+<details>
+<summary>act</summary>
 
+	aliases       : a, act, activation
+	valid options : [number]
+	default       : (none)
+	flag value    : 
+	notes         : 
+</details>
+<details>
+<summary>dice</summary>
+
+	aliases       : d, dice
+	valid options : [see Dice and the Roll Equation]
+	default       : 1d6
+	flag value    : 
+	notes         : 
+</details>
+<details>
+<summary>dbody</summary>
+
+	aliases       : db, dbody, doesbody
+	valid options : y, yes, n, no, t, true, f, false
+	default       : [per template]
+	flag value    : true
+	notes         : whether an attack should report BODY damage; also whether 
+	                a Points-output should derive points from BODY
+</details>
+<details>
+<summary>dkb</summary>
+
+	aliases       : dkb, dknockback, doesknockback
+	valid options : y, yes, n, no, t, true, f, false
+	default       : [per template]
+	flag value    : true
+	notes         : 
+</details>
+<details>
+<summary>dstun</summary>
+
+	aliases       : ds, dstun, doesstun
+	valid options : y, yes, n, no, t, true, f, false
+	default       : [per template]
+	flag value    : true
+	notes         : whether an attack should report STUN damage; also whether 
+	                a Points-output should derive points from STUN (default)
+</details>
+<details>
+<summary>extradice</summary>
+
+	aliases       : xd, xdice, extradice
+	valid options : [number]
+	default       : 0
+	flag value    : 
+	notes         : 
+</details>
+<details>
+<summary>kbdicemod</summary>
+
+	aliases       : xkb, extrakb, kbdice, kbdicemod
+	valid options : [number]
+	default       : 0
+	flag value    : 
+	notes         : 
+</details>
+<details>
+<summary>loc</summary>
+
+	aliases       : l, loc, location
+	valid options : any, random, none, [hit location], [special shot]
+	default       : none
+	flag value    : random
+	notes         : 
+</details>
+<details>
+<summary>mechanic</summary>
+
+	aliases       : rm, rollmech, rollmechanic, m, mech, mechanic
+	valid options : n, k, l, u
+	default       : [per template]
+	flag value    : 
+	notes         : This can be set in any of three places; see the Mechanic section.
+</details>
+<details>
+<summary>ocv</summary>
+
+	aliases       : o, ocv
+	valid options : [number]
+	default       : (none)
+	flag value    : 
+	notes         : supply an OCV to override any checking of a character sheet 
+	                (including when you don't have a character sheet). This 
+	                flattens all OCV mods to 0, including any originating from
+	                a called-shot. Including the location argument will still invoke 
+	                BODY and STUN multipliers.
+</details>
+<details>
+<summary>outputformat</summary>
+
+	aliases       : of, output, format, outputformat, sc
+	valid options : tall, sc
+	default       : tall
+	flag value    : sc
+	notes         : 
+</details>
+<details>
+<summary>pointslabel</summary>
+
+	aliases       : pl, plbl, plabel, ptsl, ptslbl, ptslabel, pointsl, pointslbl, pointslabel
+	valid options : [string]
+	default       : [per template]
+	flag value    : 
+	notes         : 
+</details>
+<details>
+<summary>powername</summary>
+
+	aliases       : pn, pname, powername
+	valid options : [string]
+	default       : [per template]
+	flag value    : 
+	notes         : 
+</details>
+<details>
+<summary>primarycolor</summary>
+
+	aliases       : c, col, color, pc, primarycolor
+	valid options : 3- or 6-digit hex, with or without #
+	default       : [per template]
+	flag value    : 
+	notes         : 
+</details>
+<details>
+<summary>selective</summary>
+
+	aliases       : s, sel, selective
+	valid options : y, yes, n, no, t, true, f, false
+	default       : false
+	flag value    : true
+	notes         : use for both Area Effect: Selective and Non-Selective
+</details>
+<details>
+<summary>stunmod</summary>
+
+	aliases       : xs, xstun, extrastun, stunmod
+	valid options : [number]
+	default       : 0
+	flag value    : 
+	notes         : 
+</details>
+<details>
+<summary>target</summary>
+
+	aliases       : tgt, target
+	valid options : [list of token_ids]
+	default       : (none)
+	flag value    : 
+	notes         : 
+</details>
+<details>
+<summary>template</summary>
+
+	aliases       : p, pwr, pow, power, t, tmp, template
+	valid options : [see table, below]
+	default       : c
+	flag value    : 
+	notes         : 
+</details>
+<details>
+<summary>useomcv</summary>
+
+	aliases       : mental, um, omcv, useomcv
+	valid options : y, yes, n, no, t, true, f, false
+	default       : false
+	flag value    : true
+	notes         : 
+</details>
+<details>
+<summary>verbose</summary>
+
+	aliases       : v, verbose
+	valid options : yes, n, no, t, true, f, false
+	default       : false
+	flag value    : true
+	notes         : 
+</details>
+<details>
+<summary>recall</summary>
+
+	aliases       : r, rc, recall
+	valid options : last, [valid id]
+	default       : [current speaker]
+	flag value    : [current speaker]
+	notes         : *in beta*
+</details>
 
 ### Arguments Requiring No Value
 Certain arguments don't require an explicit value declaration (following the ":"), because just by including them you are invoking the "true" state. These are listed below.
@@ -152,8 +325,9 @@ Certain arguments don't require an explicit value declaration (following the ":"
     useomcv      ==>   true  
     verbose      ==>   true  
     recall       ==>   (current speaker)
+    loc			 ==>	random
 
-All aliases of these arguments will behave the same (so  **_sc_**, an alias of  **_outputformat_**, will invoke the sidecar layout if included as  **--sc**).
+All aliases of these arguments will behave the same (so  **_sc_**, an alias of  **_outputformat_**, will invoke the sidecar layout if included as  **_--sc_**, and **_--l_**, an alias of **_location_**, will apply a random location).
 
 # Mechanic
 
@@ -163,7 +337,7 @@ The  **_mechanic_** argument represents the way dice are totaled in the Hero sys
 
 The mechanic can be set in a template default, in an explicit argument, or as a shorthand inclusion in the  **_dice_** argument (i.e., "3d6+1k" uses the shorthand "k" to trigger the killing mechanic). The order of precedence goes:
 
-**_template_** is trumped by  **_mechanic_** argument is trumped by  a _(**shorthand**)_ 
+**_template_** is trumped by  **_mechanic_** argument is trumped by  a _**shorthand**_ 
 
 That means that in the following line:  
 
@@ -423,6 +597,15 @@ _**alias**: l, luck_
     useomcv      : false
     outputas     : "points"
 
+# Representing Area Effect With Targets
+With update 1.2, the Hero Roller script gained the ability to process targets. This not only allows for target designation for a straightforward attack (1 target), but also Area Effect attacks (n-targets) with or without the Selective or Non-Selective modifier (both require individual to-hit rolls for targets within the affected area).
+
+Targets can be designated with the  **_--target_**  (alias:  **_--tgt_**) argument, which accepts a list of token ids delimited by either a space or a comma. The  **_--selective_**  (aliases  **_--sel_**,  **_--s_**) argument,  tells the Hero Roller script to roll individual to-hit rolls for each designated target. The **_selective_** argument takes no value. (I will suggest my  [InsertArgs](https://app.roll20.net/forum/post/8842638/insertargs-substitution-script-with-custom-replacement-hooks) script here to help manage creating this list on the fly... currently in beta).
+
+Multiple targets  _without_  **_selective_** and _without_ a **_location_** will render as many as 3 to a line. Invoking either **_selective_** or a **_location_** will force each target to its own line.
+
+With Area Effect attacks (multiple targets), the top to-hit roll in the output panel is used to target the hex for the attack. **_Selective_** provides the individual to-hit rolls, if needed.
+
 # Understanding the Output
 
 The heroll engine does many things for you, but there are some things that it cannot do. You need to understand the boundaries and limitations so you know what will be left to you to figure either prior to invoking a call to the heroll engine, or after, interpreting the numbers that are presented to you.
@@ -451,6 +634,8 @@ If your game is not using locations for attack targets (even "random" locations 
 ## Dice Color
 
 The dice shown as the pool of dice rolled are in one color for your d6, and in the alternate color for your d3 and/or adder. The actual color (primary vs alternate) is assigned based on the contrast-iness of the color you chose for the **_primarycolor_** argument.
+## Target Information
+A lot of data can be presented for a target. The number on a target's token image is the D(M)CV of the target (if there is a character sheet to pull it from. If the target has a D(M)CV and that target was hit by the to-hit roll, a target icon will also appear on the token image in the output panel. If either **_selective_** or a **_location_** was invoked, there will be information to the right of the token image in the output panel. **_Selective_** provides the first two, a "to-hit" roll and a "hit dcv". **_Location_** provides the next two, which are BODY and STUN modifiers for the location hit for each token.
 # Recall
 ***Note:*** *this feature is still in beta.*
 The last roll for each speaker is stored in the game's ***state*** variable (read more about the state variable on the wiki). Every roll for a speaker overwrites the previously stored roll for them. Using the ***recall*** argument, you can retrieve the last roll for yourself (default, no value required), for the most recent speaker (*last*), or for a given speaker (via their id).
