@@ -1,7 +1,7 @@
 {
   "name": "Tagmar",
   "script": "Tagmar.js",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": " Provides a lookup for rolls in the Tagmar RPG.\r\r## Commands\r\r```!tagmar <skill> <roll> [descriptive text]```\r* `<skill>` - The value of the skill from -7 to 20. You can use inline rolls or attribute references to fill this in.\r* `<roll>` - The roll value. You will likely use an inline roll for this.\r* `[descriptive text]` - The rest of the command will be presented as a description of the roll.\r\r```!wtagmar <skill> <roll> [descriptive text]```\rIdentical to `!tagmar` but whispered to the player.\r\r```!gtagmar <skill> <roll> [descriptive text]```\rIdentical to `!tagmar` but the result is only whispered to the gm and the player.\r\r```!btagmar <skill> <roll> [descriptive text]```\rIdentical to `!tagmar` but the result is only whispered to the gm while the group only sees ???.\r\r```!bwtagmar <skill> <roll> [descriptive text]```\rIdentical to `!tagmar` but the result is only whispered to the gm while the player only sees ???.",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -14,6 +14,7 @@
   "conflicts": [],
   "previousversions": [
     "0.1.0",
-    "0.1.1"
+    "0.1.1",
+    "0.1.2"
   ]
 }

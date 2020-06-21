@@ -240,7 +240,7 @@
             else {
               // default to primary attribute.
               let rollExpr = '2d6 + ' + attr + ' [' + effectResult.skill.attr + ']';
-              return TrapTheme.rollAsync('2d6 + ' + attr + ' [' + effectResult.skill.attr + ']')
+              return CharSheetUtils.rollAsync('2d6 + ' + attr + ' [' + effectResult.skill.attr + ']')
               .then(attrRoll => {
                 effectResult.skill.roll = attrRoll;
                 effectResult.skill.rollExpr = rollExpr;

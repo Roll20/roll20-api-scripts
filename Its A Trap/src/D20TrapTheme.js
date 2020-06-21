@@ -31,8 +31,7 @@ var D20TrapTheme = (() => {
         effect.announce(html.toString(TrapTheme.css));
       })
       .catch(err => {
-        sendChat('TrapTheme: ' + this.name, '/w gm ' + err.message);
-        log(err.stack);
+        ItsATrap.Chat.error(err);
       });
     }
 
@@ -43,7 +42,7 @@ var D20TrapTheme = (() => {
     _doTrapAttack(character, effectResults) {
       return Promise.all([
         this.getAC(character),
-        TrapTheme.rollAsync('1d20 + ' + effectResults.attack)
+        CharSheetUtils.rollAsync('1d20 + ' + effectResults.attack)
       ])
       .then(tuple => {
         let ac = tuple[0];
@@ -66,7 +65,7 @@ var D20TrapTheme = (() => {
       .then(saveBonus => {
         saveBonus = saveBonus || 0;
         effectResults.saveBonus = saveBonus;
-        return TrapTheme.rollAsync('1d20 + ' + saveBonus);
+        return CharSheetUtils.rollAsync('1d20 + ' + saveBonus);
       })
       .then((saveRoll) => {
         effectResults.roll = saveRoll;
@@ -122,20 +121,13 @@ var D20TrapTheme = (() => {
           id: 'attack',
           name: 'Attack Bonus',
           desc: `The trap's attack roll bonus vs AC.`,
-          value: trapEffect.attack
+          value: trapEffect.attack || '-'
         },
         {
           id: 'damage',
           name: 'Damage',
           desc: `The dice roll expression for the trap's damage.`,
-          value: trapEffect.damage
-        },
-        {
-          id: 'hideSave',
-          name: 'Hide Save Result',
-          desc: 'Show the Saving Throw result only to the GM?',
-          value: trapEffect.hideSave ? 'yes' : 'no',
-          options: ['yes', 'no']
+          value: trapEffect.damage || '-'
         },
         {
           id: 'missHalf',
@@ -147,21 +139,40 @@ var D20TrapTheme = (() => {
         {
           id: 'save',
           name: 'Saving Throw',
-          desc: 'The type of saving throw used by the trap.',
-          value: trapEffect.save,
-          options: [ 'none', 'str', 'dex', 'con', 'int', 'wis', 'cha' ]
-        },
-        {
-          id: 'saveDC',
-          name: 'Saving Throw DC',
-          desc: `The DC for the trap's saving throw.`,
-          value: trapEffect.saveDC
+          desc: `The trap's saving throw.`,
+          value: (() => {
+            let gmOnly = trapEffect.hideSave ? '(hide results)' : '';
+            if (trapEffect.save)
+              return `${trapEffect.save} save DC ${trapEffect.saveDC}` +
+                `${trapEffect.hideSave ? ' (hide results)' : ''}`;
+            else
+              return 'none';
+          })(),
+          properties: [
+            {
+              id: 'save',
+              name: 'Saving Throw',
+              desc: 'Which saving throw does the trap use?',
+              options: [ 'none', 'str', 'dex', 'con', 'int', 'wis', 'cha' ]
+            },
+            {
+              id: 'dc',
+              name: 'Save DC',
+              desc: 'What is the DC for the saving throw?'
+            },
+            {
+              id: 'hideSave',
+              name: 'Hide Save Result',
+              desc: 'Show the Saving Throw result only to the GM?',
+              options: ['no', 'yes']
+            }
+          ]
         },
         {
           id: 'spotDC',
-          name: 'Spot DC',
-          desc: 'The skill check DC to spot the trap.',
-          value: trapEffect.spotDC
+          name: 'Passive Perception DC',
+          desc: 'The passive skill check DC to detect the trap.',
+          value: trapEffect.spotDC || '-'
         }
       ];
     }
@@ -197,10 +208,11 @@ var D20TrapTheme = (() => {
       content.append('.paddedRow trapMessage', effectResults.message);
 
       if(effectResults.character) {
-
         var row = content.append('.paddedRow');
         row.append('span.bold', 'Target:');
         row.append('span', effectResults.character.get('name'));
+
+        var hasHitResult = false;
 
         // Add the attack roll message.
         if(effectResults.attack) {
@@ -209,10 +221,14 @@ var D20TrapTheme = (() => {
             .append('span.bold', 'Attack roll:')
             .append('span', rollResult)
             .append('span', ' vs AC ' + effectResults.ac);
+          hasHitResult = true;
         }
 
         // Add the saving throw message.
         if(effectResults.save) {
+          if (!effectResults.saveDC)
+            throw new Error(`You forgot to set the trap's save DC!`);
+
           let rollResult = D20TrapTheme.htmlRollResult(effectResults.roll, '1d20 + ' + effectResults.saveBonus);
           let saveMsg = new HtmlBuilder('.paddedRow');
           saveMsg.append('span.bold', effectResults.save.toUpperCase() + ' save:');
@@ -221,30 +237,34 @@ var D20TrapTheme = (() => {
 
           // If the save result is a secret, whisper it to the GM.
           if(effectResults.hideSave)
-            sendChat('Admiral Ackbar', '/w gm ' + saveMsg.toString(TrapTheme.css));
+            ItsATrap.Chat.whisperGM(saveMsg.toString(TrapTheme.css));
           else
             content.append(saveMsg);
+
+          hasHitResult = true;
         }
 
-        // Add the hit/miss message.
-        if(effectResults.trapHit === 'AC unknown') {
-          content.append('.paddedRow', 'AC could not be determined with the current version of your character sheet. For the time being, please resolve the attack against AC manually.');
-          if(effectResults.damage)
-            content.append('.paddedRow', 'Damage: [[' + effectResults.damage + ']]');
-        }
-        else if(effectResults.trapHit) {
-          let row = content.append('.paddedRow');
-          row.append('span.hit', 'HIT! ');
-          if(effectResults.damage)
-            row.append('span', 'Damage: [[' + effectResults.damage + ']]');
-          else
-            row.append('span', 'You fall prey to the ' + (effectResults.type || 'trap') + '\'s effects!');
-        }
-        else {
-          let row = content.append('.paddedRow');
-          row.append('span.miss', 'MISS! ');
-          if(effectResults.damage && effectResults.missHalf)
-            row.append('span', 'Half damage: [[floor((' + effectResults.damage + ')/2)]].');
+        if (hasHitResult) {
+          // Add the hit/miss message.
+          if(effectResults.trapHit === 'AC unknown') {
+            content.append('.paddedRow', 'AC could not be determined with the current version of your character sheet. For the time being, please resolve the attack against AC manually.');
+            if(effectResults.damage)
+              content.append('.paddedRow', 'Damage: [[' + effectResults.damage + ']]');
+          }
+          else if(effectResults.trapHit) {
+            let row = content.append('.paddedRow');
+            row.append('span.hit', 'HIT! ');
+            if(effectResults.damage)
+              row.append('span', 'Damage: [[' + effectResults.damage + ']]');
+            else
+              row.append('span', 'You fall prey to the ' + (effectResults.type || 'trap') + '\'s effects!');
+          }
+          else {
+            let row = content.append('.paddedRow');
+            row.append('span.miss', 'MISS! ');
+            if(effectResults.damage && effectResults.missHalf)
+              row.append('span', 'Half damage: [[floor((' + effectResults.damage + ')/2)]].');
+          }
         }
       }
 
@@ -267,16 +287,12 @@ var D20TrapTheme = (() => {
       }
       if(prop === 'damage')
         trapEffect.damage = params[0];
-      if(prop === 'hideSave')
-        trapEffect.hideSave = params[0] === 'yes';
       if(prop === 'missHalf')
         trapEffect.missHalf = params[0] === 'yes';
       if(prop === 'save') {
         trapEffect.save = params[0] === 'none' ? undefined : params[0];
-        trapEffect.attack = undefined;
-      }
-      if(prop === 'saveDC') {
-        trapEffect.saveDC = parseInt(params[0]);
+        trapEffect.saveDC = parseInt(params[1]) || 0;
+        trapEffect.hideSave = params[2] === 'yes';
         trapEffect.attack = undefined;
       }
       if(prop === 'spotDC')
@@ -305,8 +321,7 @@ var D20TrapTheme = (() => {
           }
         })
         .catch(err => {
-          sendChat('Trap theme: ' + this.name, '/w gm ' + err.message);
-          log(err.stack);
+          ItsATrap.Chat.error(err);
         });
       }
     }

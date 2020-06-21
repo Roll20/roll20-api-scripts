@@ -31,7 +31,7 @@
        * @inheritdoc
        */
       getAC(character) {
-        return TrapTheme.getSheetAttr(character, 'ac');
+        return CharSheetUtils.getSheetAttr(character, 'ac');
       }
 
       /**
@@ -66,14 +66,14 @@
             current: 0
           });
 
-        return TrapTheme.getSheetAttr(character, 'passive_wisdom');
+        return CharSheetUtils.getSheetAttr(character, 'passive_wisdom');
       }
 
       /**
        * @inheritdoc
        */
       getSaveBonus(character, saveName) {
-        return TrapTheme.getSheetAttr(character, SAVE_NAMES[saveName]);
+        return CharSheetUtils.getSheetAttr(character, SAVE_NAMES[saveName]);
       }
     }
 

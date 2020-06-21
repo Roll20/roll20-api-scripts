@@ -1,0 +1,30 @@
+{
+    "name": "ShortRest",
+    "script": "ShortRest.js",
+    "version": "0.1.1",
+    "previousversions": [],
+    "description": "Allows Hit Dice, Class Resource and Spellslot tracking for Short Rests on the 5e OGL Character Sheet.\r\rThe script can be used in 2 ways, either by clicking on Hit Dice on the 5e OGL Sheet or by selecting a token and running the `!shortrest-nohd` command (if you want to do a short rest without expending any Hit Dice.) The script will then check if you have any Hit Die to spend, if you aren't already full health it will update the character's health with the rolled amount. Further to this it will check whether the class has any resources or spell slots that resets on a short rest and reset those.\r\r## Classes supported\r\r*If there is any I missed please let me know.*\r\r### Resources\r\r+ Cleric - Channel Divinity; Visions of the Past\r+ Druid - Wild Shape; Spirit Totem\r+ Fighter - Action Surge; Second Wind; Superiority Dice; Arcane Shot\r+ Monk - Ki\r+ Bard - Bardic Inspiration from level 5, Enthralling Performance; Words of Terror; Unbreakable Majesty\r+ Ranger - Detect Portal; Etherreal Step; Magic User's Nemesis\r+ Sorceror - Favored by the Gods; Wind Soul\r+ Wizard - Blade Song; Arcane Abeyance; Illusory Self\r\r### Spell Slots\r\r+ Warlock",
+    "authors": "Werner D.; Original Author Unkown",
+    "roll20userid": "1062502",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {
+        "attribute.characterid": "read",
+        "character.name": "read",
+        "graphic": "read",
+        "attribute.hp": "read,write",
+        "attribute.current": "read,write",
+        "attribute.max": "read",
+        "attribute.hit_dice": "read,write",
+        "attribute.class": "read",
+        "attribute.class_resource": "read,write",
+        "attribute.class_resource_name": "read",
+        "attribute.other_resource": "read,write",
+        "attribute.other_resource_name": "read",
+        "attribute.repeating_resource": "read,write",
+        "attribute.repeating_resource_name": "read",
+        "attribute.lvl$_slots_total": "read",
+        "attribute.lvl$__slots_expended": "read,write"
+    },
+    "conflicts": []
+}

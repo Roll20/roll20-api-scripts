@@ -1,9 +1,7 @@
 # Hexploration
 
-_v1.2 Updates:_
-* Added Maximum Reveal Distance configuration. While this is set, hexes currently being drawn will only be revealed if you are within the specified number of hexes.
-* Line of sight is enforced when revealing hexes.
-* Hexes can now be given icons.
+_v1.3 Updates:_
+* Fixed a couple state bugs.
 
 This script allows GMs to draw a polygon on a hex-gridded map and fill in
 each hex inside that polygon with an opaque hexagon. It's great for hex-based

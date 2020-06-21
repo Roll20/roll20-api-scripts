@@ -1,0 +1,17 @@
+{
+  "name": "AgoneCleanOlds",
+  "version": "0.1",
+  "description": "Allows the GM to clean old attributes from Agone-(french) sheet version 0.1, with the command !AgoneCleanOlds in the chat (can take a while).\rI recommand to first copy your game and test on it.",
+  "authors": "Le GDF",
+  "roll20userid": "1686183",
+  "dependencies": [],
+  "modifies": {
+    "characters": "read",
+    "characters.id": "read",
+    "attribute.characterid": "read,remove",
+  },
+  "conflicts": [],
+  "script": "AgoneCleanOlds.js",
+  "useroptions": {},
+  "previousversions": []
+}

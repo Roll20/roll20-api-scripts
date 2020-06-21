@@ -225,7 +225,7 @@ var setUpToken = function() {
                         b1 = findObjs({_characterid: token.get("represents"), name: "HP-temp"})[0];
                     };
                     token.set({bar1_link: b1.get("_id"), bar1_value: b1.get("current"), bar1_max: b1.get("max")});
-                    log("Updaing '" + token.get("name") + "' Bar1");
+                    log("Updating '" + token.get("name") + "' Bar1");
                 };
                 if(!b2 || getObj("attribute", b2).get("name") !== "REC") {
                     b2 = findObjs({_characterid: token.get("represents"), name: "REC"})[0];
@@ -238,7 +238,7 @@ var setUpToken = function() {
                         b2 = findObjs({_characterid: token.get("represents"), name: "REC"})[0];
                     };
                     token.set({bar2_link: b2.get("_id"), bar2_value: b2.get("current"), bar2_max: b2.get("max")});
-                    log("Updaing '" + token.get("name") + "' Bar2");
+                    log("Updating '" + token.get("name") + "' Bar2");
                 };
                 if(!b3 || getObj("attribute", b3).get("name") !== "HP") {
                     b3 = findObjs({_characterid: token.get("represents"), name: "HP"})[0];
@@ -251,7 +251,7 @@ var setUpToken = function() {
                         b3 = findObjs({_characterid: token.get("represents"), name: "HP"})[0];
                     };
                     token.set({bar3_link: b3.get("_id"), bar3_value: b3.get("current"), bar3_max: b3.get("max")});
-                    log("Updaing '" + token.get("name") + "' Bar3");
+                    log("Updating '" + token.get("name") + "' Bar3");
                 };
             }
             else {

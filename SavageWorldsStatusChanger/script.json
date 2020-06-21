@@ -1,0 +1,14 @@
+{
+  "name": "Savage Worlds Status Changer",
+  "version": "1.0.0",
+  "description": "This script makes it easy to assign a status to a set of selected tokens. Call the script with the appropriate status name and the assigned status marker is added to the token or set of tokens. You can change what status marker is used, as well, to allow access to your custom markers or change which build in marker is used.",
+  "authors": "Carl D.",
+  "roll20userid": "2505097",
+  "patreon": "",
+  "dependencies": [],
+  "modifies": {},
+  "conflicts": [],
+  "script": "SavageWorldsStatusChanger.js",
+  "useroptions": {},
+  "previousversions": []
+}

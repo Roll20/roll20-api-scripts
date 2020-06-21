@@ -2040,7 +2040,7 @@ var TrapTheme = (() => {
       });
 
       // Then try again.
-      return TrapTheme.getSheetAttr(character, attr)
+      return CharSheetUtils.getSheetAttr(character, attr)
       .then(result => {
         if(_.isNumber(result))
           return result;
@@ -2058,10 +2058,10 @@ var TrapTheme = (() => {
      */
     static getSheetAttr(character, attr) {
       if(attr.includes('/'))
-        return TrapTheme.getSheetRepeatingAttr(character, attr);
+        return CharSheetUtils.getSheetRepeatingAttr(character, attr);
       else {
         let rollExpr = '@{' + character.get('name') + '|' + attr + '}';
-        return TrapTheme.rollAsync(rollExpr)
+        return CharSheetUtils.rollAsync(rollExpr)
         .then((roll) => {
           if(roll)
             return roll.total;
@@ -2099,7 +2099,7 @@ var TrapTheme = (() => {
       let valueFieldName = parts[3];
 
       // Find the row with the given name.
-      return TrapTheme.getSheetRepeatingRow(character, sectionName, rowAttrs => {
+      return CharSheetUtils.getSheetRepeatingRow(character, sectionName, rowAttrs => {
         let nameField = rowAttrs[nameFieldName];
         return nameField.get('current').toLowerCase().trim() === nameFieldValue;
       })
@@ -2288,7 +2288,7 @@ var D20TrapTheme = (() => {
     _doTrapAttack(character, effectResults) {
       return Promise.all([
         this.getAC(character),
-        TrapTheme.rollAsync('1d20 + ' + effectResults.attack)
+        CharSheetUtils.rollAsync('1d20 + ' + effectResults.attack)
       ])
       .then(tuple => {
         let ac = tuple[0];
@@ -2311,7 +2311,7 @@ var D20TrapTheme = (() => {
       .then(saveBonus => {
         saveBonus = saveBonus || 0;
         effectResults.saveBonus = saveBonus;
-        return TrapTheme.rollAsync('1d20 + ' + saveBonus);
+        return CharSheetUtils.rollAsync('1d20 + ' + saveBonus);
       })
       .then((saveRoll) => {
         effectResults.roll = saveRoll;
@@ -2582,7 +2582,7 @@ var D20TrapTheme4E = (() => {
         if(character && effectResult.defense && effectResult.attack) {
           return Promise.all([
             this.getDefense(character, effectResult.defense),
-            TrapTheme.rollAsync('1d20 + ' + effectResult.attack)
+            CharSheetUtils.rollAsync('1d20 + ' + effectResult.attack)
           ])
           .then(tuple => {
             let defenseValue = tuple[0];

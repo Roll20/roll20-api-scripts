@@ -1,4 +1,4 @@
-﻿/*
+/*
     Current Version: 4.0.4.0
     Last updated: 03.07.2016
     Character Sheet and Script Maintained by: GM Knowledge Rhino

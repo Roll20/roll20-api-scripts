@@ -31,13 +31,12 @@ var ItsATrap = (() => {
       }, 1000*effect.delay);
 
       // Let the GM know that the trap has been triggered.
-      let announcer = state.ItsATrap.userOptions.announcer;
       if(activatingVictim)
-        sendChat(announcer, `/w gm The trap ${effect.name} has been ` +
+        ItsATrap.Chat.whisperGM(`The trap ${effect.name} has been ` +
           `triggered by ${activatingVictim.get('name')}. ` +
           `It will activate in ${effect.delay} seconds.`);
       else
-        sendChat(announcer, `/w gm The trap ${effect.name} has been ` +
+        ItsATrap.Chat.whisperGM(`The trap ${effect.name} has been ` +
           `triggered. It will activate in ${effect.delay} seconds.`);
     }
     else
@@ -162,8 +161,7 @@ var ItsATrap = (() => {
       if(trap.get('status_interdiction'))
         return false;
 
-      let trapEffect = (new TrapEffect(trap, token)).json;
-      trapEffect.stopAt = trapEffect.stopAt || 'center';
+      let trapEffect = new TrapEffect(trap, token);
 
       // Should this trap ignore the token?
       if(trapEffect.ignores && trapEffect.ignores.includes(token.get('_id')))
@@ -178,7 +176,8 @@ var ItsATrap = (() => {
         token.set("left", x);
         token.set("top", y);
       }
-      else if(trapEffect.stopAt === 'center' && !trapEffect.gmOnly) {
+      else if(trapEffect.stopAt === 'center' && !trapEffect.gmOnly &&
+      ['self', 'burst'].includes(trapEffect.effectShape)) {
         let x = trap.get("left");
         let y = trap.get("top");
 
@@ -448,11 +447,10 @@ var ItsATrap = (() => {
   function noticeTrap(trap, noticeMessage) {
     let id = trap.get('_id');
     let effect = new TrapEffect(trap);
-    let announcer = state.ItsATrap.userOptions.announcer;
 
     if(!state.ItsATrap.noticedTraps[id]) {
       state.ItsATrap.noticedTraps[id] = true;
-      sendChat(announcer, noticeMessage);
+      ItsATrap.Chat.broadcast(noticeMessage);
 
       if(effect.revealWhenSpotted)
         revealTrap(trap);
@@ -490,8 +488,13 @@ var ItsATrap = (() => {
     if(effect.effectShape instanceof Array)
       _.each(effect.effectShape, pathId => {
         let path = getObj('path', pathId);
-        path.set('layer', layer);
-        toOrder(path);
+        if (path) {
+          path.set('layer', layer);
+          toOrder(path);
+        }
+        else {
+          ItsATrap.Chat.error(new Error(`Could not find activation area shape ${pathId} for trap ${effect.name}. Perhaps you deleted it? Either way, please fix it through the trap's Activation Area property.`));
+        }
       });
   }
 
@@ -515,8 +518,8 @@ var ItsATrap = (() => {
     sendPing(trap.get('left'), trap.get('top'), trap.get('_pageid'));
 
     // Reveal its trigger paths and activation areas, if any.
-    _revealTriggers(trap);
     _revealActivationAreas(trap);
+    _revealTriggers(trap);
   }
 
   /**
@@ -535,8 +538,13 @@ var ItsATrap = (() => {
     if(effect.triggerPaths) {
       _.each(effect.triggerPaths, pathId => {
         let path = getObj('path', pathId);
-        path.set('layer', layer);
-        toOrder(path);
+        if (path) {
+          path.set('layer', layer);
+          toOrder(path);
+        }
+        else {
+          ItsATrap.Chat.error(new Error(`Could not find trigger path ${pathId} for trap ${effect.name}. Perhaps you deleted it? Either way, please fix it through the trap's Trigger Area property.`));
+        }
       });
     }
   }
@@ -558,7 +566,7 @@ var ItsATrap = (() => {
     let interval = setInterval(() => {
       let theme = getTheme();
       if(theme) {
-        log(`☠☒☠ Initialized It's A Trap! using theme '${getTheme().name}' ☠☒☠`);
+        log(`--- Initialized It's A Trap! vSCRIPT_VERSION, using theme '${getTheme().name}' ---`);
         clearInterval(interval);
       }
       else if(numRetries > 0)
@@ -571,12 +579,16 @@ var ItsATrap = (() => {
   // Handle macro commands.
   on('chat:message', msg => {
     try {
-      if(msg.content === REMOTE_ACTIVATE_CMD) {
+      let argv = msg.content.split(' ');
+      if(argv[0] === REMOTE_ACTIVATE_CMD) {
         let theme = getTheme();
-        _.each(msg.selected, item => {
-          let trap = getObj('graphic', item._id);
+
+        let trapId = argv[1];
+        let trap = getObj('graphic', trapId);
+        if (trap)
           activateTrap(trap);
-        });
+        else
+          throw new Error(`Could not activate trap ID ${trapId}. It does not exist.`);
       }
     }
     catch(err) {

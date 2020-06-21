@@ -259,7 +259,7 @@
                             Exemple pour le token selectionné :
                             <div class="decalage">Au contact : <i>"@{selected|ATKCAC}"</i><br />
                               A distance : <i>"@{selected|ATKTIR}"</i><br />
-                              Magique : "@{selected|ATKMAG}"
+                              Magique : <i>"@{selected|ATKMAG}"</i>
                             </div>
                           </li>
                           <li><code>BONUS</code> : Un éventuel bonus de l'Arme/Attaque. Exemple : -1, 0, 1, 2, 3, etc ...</li>
@@ -311,13 +311,14 @@
                   <li><code>--demiAuto</code> : si l'attaque rate, on considère juste que les saves partiels sont automatiquemet réussi. Ça signifie en général que la cible prend au moins la moitié des dégâts.</li>
                   <li><code>--save <i>carac seuil</i></code> : même effet que <code>--psave</code>, mais pour annuler le dernier <code>--effet</code> ou <code>etat</code> (aucun effet sur les DM). Si on rajoute un argument <code>demiDuree</code> au save, alors la réussite du save ne fait que diviser par 2 sa durée.</li>
                   <li><code>--saveParTour <i>carac seuil</i></code> : même effet que <code>--save</code>, mais donne droit à un jet à la fin de chaque tour au lieu d'un jet au moment de l'attaque.</li>
-                  <li><code>--fx <i>effet</i></code> : ajoute un <a href="https://wiki.roll20.net/Custom_FX">effet</a> qui part de l'attaquant à la cible. Si l'attaque rate, l'effet rate aussi, d'autant plus que le jet d'attaque est loin de la défense.</li>
-                  <li><code>--targetFx <i>effet</i></code> : ajoute un <a href="https://wiki.roll20.net/Custom_FX">effet</a> au niveau de la cible.</li>
+                  <li><code>--fx <i>effet</i></code> : ajoute un <a href="https://wiki.roll20.net/Custom_FX">effet</a> qui part de l'attaquant à la cible. Si l'attaque rate, l'effet rate aussi, d'autant plus que le jet d'attaque est loin de la défense. Il est possible d'utiliser un effet que vous avez défini vous-même en utilisant l'option <code>--fx custom <i>nom</i></code>, où <i>nom</i> est le nom de votre effet.</li>
+                  <li><code>--targetFx <i>effet</i></code> : ajoute un <a href="https://wiki.roll20.net/Custom_FX">effet</a> au niveau de la cible (l'effet ne doit pas être directionnel). Comme avec <code>--fx</code>, on peut utiliser un effet qu'on a créé.</li>
                   <li>
                     <code>--si <i>conditon</i></code> : l'attaque n'est possible que si <i>condition</i> est validée. Une condition peut être
                     <ul id="conditions">
                       <li><code>moins</code> <i>attribut</i> : vrai si l'attribut <i>attribut</i> de la cible est moins haute que celle de l'attaquant</li>
                       <li><code>etat</code> <i>e</i> : vrai si l'état <i>e</i> est actif sur l'attaquant. Cet état peut être un des états définis plus bas, ou un attribut quelconque.</li>
+                      <li><code>etatCible</code> <i>e</i> : vrai si l'état <i>e</i> est actif sur toutes la cible. Cet état peut être un des états définis plus bas, ou un attribut quelconque.</li>
                       <li><code>deAttaque</code> <i>n</i> : vrai si le jet de dé d'attaque est supérieur ou égal à <i>n</i>.</li>
                       <li><code>crit</code> : vrai si l'attaque est un critique.</li>
                     </ul>
@@ -342,7 +343,7 @@
                   <li><code>--explodeMax</code> : relance les valeurs maximum aux dés de DM de base, et rajoute le nouveau résultat (qui lui-même explose).</li>
                   <li><code>--mana <i>n</i></code> : l'attaque coûte <i>n</i> points de mana.</li>
                   <li><code>--rang <i>n</i></code> : indique le rang de la capacité utilisée, si besoin. Utilisé par l'option <code>--tempeteDeMana</code>.</li>
-                  <li><code>--tempeteDeMana <i>liste</i></code> : indique des effets de tempête de mana. La liste peut contenir un nombre (pour l'effet intense), <code>duree</code>, <code>rapide</code>, <code>portee</code> et <code>altruiste <i>id</i></code>. Si le rang du sort est spécifié (par l'option <code>--rang</code>, un message est affichée si le coût en mana est supérieur au rang. Si la liste d'options est vide ou ne contient que <code>altruiste</code>, le script affiche un menu dans le chat pour spécifier les options de tempête de mana.</li>
+                  <li><code>--tempeteDeMana <i>liste</i></code> : indique des effets de tempête de mana. La liste peut contenir un nombre (pour l'effet intense), <code>duree</code>, <code>rapide</code>, <code>portee</code> et <code>altruiste <i>id</i></code>. Si le rang du sort est spécifié (par l'option <code>--rang</code>, un message est affichée si le coût en mana est supérieur au rang. Si la liste d'options est vide ou ne contient que <code>altruiste</code>, le script affiche un menu dans le chat pour spécifier les options de tempête de mana. Il est possible d'utiliser les règles de mana totale pour les coûts de tempête de mana (à activer avec <code>!cof-options</code>).</li>
                   <li><code>--limiteParJour <i>l</i></code> : limite le nombre d'utilisations de cette attaque à <i>l</i> fois par jour. On peut préciser un nom après <i>l</i>, qui va correspondre à une ressource pouvant être partagée avec d'autres attaques ou d'autres effets (voir <code>!cof-effet-temp</code>). Par défaut, le nom de cette ressource est le label de l'attaque.</li>
                   <li><code>--limiteParCombat</code> : même effet que la limite par jour. Si aucun argument n'est donné, la limite est de une fois par combat.</li>
                   <li><code>--munition <i>nom</i> <i>taux</i></code> : l'attaque utilise des munitions dont on garde le compte. Le nombre de munitions doit être inscrit dans un attribut <code>munition_<i>nom</i></code>. <i>nom</i> ne doit pas contenir de blanc, mais à l'affichage les <code>_</code> seront remplacés par des blancs. La valeur courante de l'attribut est le nombre qu'il reste sur le personnage, alors que le maximum contient ce qu'il a plus ce qu'il peut récupérer après le combat. À chaque attaque portée, une munition est utilisée, et il y a <i>taux</i> chances (sur 100) que la munition ne soit pas récupérable. En fin de combat, on considère que le personnage récupère toutes les munitions récupérables. Par défaut, le taux de pertes est de 100&nbsp;%.</li>
@@ -522,8 +523,8 @@
                     <li><code>--save <i>carac seuil</i></code> : la cible peut faire un jet pour échapper à l'effet. Si on ajoute l'argument <code>demiDuree</code>, alors réussir la sauvegarde ne fait que diviser la durée.</li>
                   <li><code>--tempeteDeMana <i>liste</i></code> : indique des effets de tempête de mana. La liste peut contenir un nombre (pour l'effet intense), <code>duree</code>, <code>rapide</code> et <code>portee</code>. Si le rang du sort est spécifié (par l'option <code>--rang</code>, un message est affichée si le coût en mana est supérieur au rang. Si la liste d'options est vide, le script affiche un menu dans le chat pour spécifier les options de tempête de mana.</li>
                     <li><code>--valeur <i>n</i></code> : pour certains effet, permet de spécifier une valeur qui remplace la valeur par défaut de l'effet.</li>
-                    <li><code>--fx <i>effet</i></code> : affiche l'effet spécial entre le lanceur et ses cibles.</li>
-                    <li><code>--targetFx <i>effet</i></code> : affiche l'effet spécial sur toutes les cibles.</li> 
+                    <li><code>--fx <i>effet</i></code> : affiche l'effet spécial entre le lanceur et ses cibles. Il est possible d'utiliser un effet que vous avez défini vous-même en utilisant l'option <code>--fx custom <i>nom</i></code>, où <i>nom</i> est le nom de votre effet.</li>
+                    <li><code>--targetFx <i>effet</i></code> : affiche l'effet spécial sur toutes les cibles (l'effet ne doit pas être directionnel).</li> 
                   </ul>
                 </div>
               </div>
@@ -838,7 +839,7 @@
                   <li><strong>Murmures dans le vent</strong> : rien à faire</li>
                   <li><strong>Sous tension</strong> : <code>!cof-effet-temp sousTension [[5+@{selected|CHA}]]</code>. Pour l'attaque, définir une attaque magique à 1d6+CHA, et l'appeler avec les options <code>--si etat sousTension --electrique --sortilege --fx beam-holy</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>, seulement pour la mise sous tension (pas l'attaque).</li>
                   <li><strong>Télékinésie</strong> : Pas de support autre que <code>!cof-lancer-sort 1 lance un sort de télékinésie</code></li>
-                  <li><strong>Foudre</strong> : Faire une attaque de foudre de portée 10 m (attaque magique, dégâts 4d6 + CHA), et faire les attaques avec les options <code>--psave DEX [[12+@{selected|DEX}]] --mana 2 --electrique --sortilege --ligne --targetFx beam-holy</code>. Si vous utilisez l'option de magie puissante, vous pouvez rajouter <code>?{Y consacrer le tour entier ?|oui,--puissant|non,&amp;#32;}</code>. Et si, à la place, vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 4 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>. </li>
+                  <li><strong>Foudre</strong> : Faire une attaque de foudre de portée 10 m (attaque magique, dégâts 4d6 + CHA), et faire les attaques avec les options <code>--psave DEX [[12+@{selected|DEX}]] --mana 2 --electrique --sortilege --ligne --fx beam-holy</code>. Si vous utilisez l'option de magie puissante, vous pouvez rajouter <code>?{Y consacrer le tour entier ?|oui,--puissant|non,&amp;#32;}</code>. Et si, à la place, vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 4 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code>. </li>
                   <li><strong>Forme éthérée</strong> : <code>!cof-effet-temp intangible [[5 + @{selected|CHA}]] --mana 3</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 5 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code></li>
                 </ol>
                 <h4 class="text-secondary">Voie de la divination</h4>
@@ -975,7 +976,7 @@
                 <ol>
                   <li><strong>Conjuration de prédateur</strong> : <code>!cof-conjuration-de-predateur</code>.</li>
                   <li><strong>Conjuration renforcée</strong> : vous pouvez soit utiliser un attribut <code>voieDeLaConjuration</code>, de valeur le rang dans la voie, soit ajouter ce rang en premier argument de <code>!cof-conjuration-de-predateur</code>.</li>
-                  <li><strong>Conjuration d'armée</strong> : <code>!cof-conjuration-armee --mana 1 --limiteParJour 1</code>. Le niveau de puissance de l'armée et déterminé par la valeur d'un attribut <code>voieDeLaConjuration</code>, ou sinon par un argument optionnel qui donne les DMs infligés par l'armée (par exemple, <code>!cof-conjuration-armee 2d6</code>). L'armée va apparaître comme un token normal, mais avec une aura de 20m de coté qui représente la place qu'elle occupe. Pour les dégâts qu'elle inflige, utiliser son attaque sur toutes les cibles désignées par l'invocateur. Pour faire disparaître l'armée, il suffit de la tuer (par exemple en utilisant <code>!cof-set-states mort true</code>). Tous les personnages dans la zone de l'armée et qui ne sont pas alliés de l'invocateurs ont automatiquement une nouvelle action dans leur liste pour attaquer l'armée. Cette action leur permet aussi de bénéficier d'une division des DM par 2 lorsque l'armée les attaque.</li>
+                  <li><strong>Conjuration d'armée</strong> : <code>!cof-conjuration-armee --mana 1 --limiteParJour 1</code>. Le niveau de puissance de l'armée et déterminé par la valeur d'un attribut <code>voieDeLaConjuration</code>, ou sinon par un argument optionnel qui donne les DMs infligés par l'armée (par exemple, <code>!cof-conjuration-armee 2d6</code>). L'armée va apparaître comme un token normal, mais avec une aura de 20m de coté qui représente la place qu'elle occupe. Pour les dégâts qu'elle inflige, utiliser son attaque sur toutes les cibles désignées par l'invocateur. Pour faire disparaître l'armée, il suffit de la tuer (par exemple en utilisant <code>!cof-set-state mort true</code>). Tous les personnages dans la zone de l'armée et qui ne sont pas alliés de l'invocateurs ont automatiquement une nouvelle action dans leur liste pour attaquer l'armée. Cette action leur permet aussi de bénéficier d'une division des DM par 2 lorsque l'armée les attaque.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de l'entité</h4>
                 <ol>
@@ -1190,16 +1191,20 @@
                 <ol>
                   <li><strong>Attaque mentale</strong> : faire 2 attaques, une pour les DMs léthaux, avec les options <code>--sortilege --attaqueMentale</code> et l'autre avec l'option supplémentaire <code>--tempDmg</code> (et en ajustant les DM).</li>
                   <li><strong>Bouclier psi</strong> : ajouter un attribut <code>bouclierPsi</code> de valeur <code>true</code>.</li>
+                  <li><strong>Attaque étourdissante</strong> : faire une attaque mentale, avec les options <code>--avecd12 --if moins NIVEAU --if etatCible bouclierPsi --effet etourdiTemp 1 --save CHA [[8+@{selected|CHA}]] --else --effet etourdiTemp 1</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du contrôle corporel</h4>
                 <ol>
                   <li><strong>Proprioception</strong> : ajouter les PVs sur la fiche, et mettre un attribut <code>proprioception</code> à <code>true</code>. </li>
                   <li><strong>Transe de régénération</strong> : <code>!cof-soin @{selected|token_id} 1d6+[[@{selected|NIVEAU} + @{selected|CHA}]] --limiteParJour <i>rang</i></code>. Il faut tirer les 2d6 pour savoir la durée de la transe. Si vous autorisez les options de tempête de mana pour ce profil, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Oui,--tempeteDeMana|Non,&amp;#32;}</code></li>
+                  <li><strong>Contrôle du métabolisme</strong> : ajouter un attribut <code>controleDuMetabolisme</code>, de valeur <code>true</code>. Ne pas modifier l'initiative, le bonus de charisme sera pris en compte par le script.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de l'empathie</h4>
                 <ol>
                   <li><strong>Perception extra-sensorielle</strong> : ajuster l'initiative et ajouter le bonus à un attribut <code>perception</code> (pour les jets).</li>
                   <li><strong>Défense intuitive</strong> : ajouter un attribut <code>defenseIntuitive</code> de valeur <code>true</code>. Ne pas modifier la DEF sur la fiche, la sagesse sera automatiquement prise en compte.</li>
+                  <li><strong>Perception du passé</strong> : on peut faire le jet en utilisant <code>!cof-jet SAG 15</code>.</li>
+                  <li><strong>Vision lointaine</strong> : pas de support particulier. Utiliser <code>!cof-jet SAG</code> pour les jets de sagesse.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de la télékinésie</h4>
                 <ol>
@@ -1211,6 +1216,7 @@
                 <ol>
                   <li><strong>Télépathie</strong> : pas de support particulier.</li>
                   <li><strong>Radar mental</strong> : ajouter un attribut <code>radarMental</code>, de valeur le bonus procuré par le radar mental (2 fois le rang dans la voie).</li>
+                  <li><strong>Suggestion</strong> : utiliser <code>!cof-attaque-magique-contre-pv @{selected|token_id} @{target|token_id} --limiteParJour 1 suggestion --mana 1</code> (attention, ça ne teste pas si la cible a un niveau inférieur au psionique, ni si la cible est pensante). </li>
                 </ol>
               </div>
               <h3 class="text-info" id="Rôdeur">Rôdeur</h3>
@@ -1258,26 +1264,31 @@
                 <ol>
                   <li><strong>Monture loyale</strong> : ajouter un attribut <code>montureLoyale</code>, de valeur <code>true</code>. Pour la monture, il faut faire un personnage avec un attribut <code>monture</code> à <code>true</code>. Pour monter de la monture, utiliser <code>!cof-en-selle @{selected|token_id} nom_de_la_monture</code>, et pour en descendre, il suffit de bouger le token du samouraï.</li>
                   <li><strong>Tir en mouvement</strong> : pas de support particulier.</li>
+                  <li><strong>Tir fatal</strong> : ajouter un attribut <code>tirFatal</code>, de valeur <code>true</code>. Pour tenir compte du bonus supplémentaire avec le rang dans la voie, remplir un attribut <code>voieDeLArcEtDuCheval</code> contenant le rang atteint dans cette voie.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du dirigeant</h4>
                 <ol>
                   <li><strong>Éduqué</strong> : simplement noter les bonus et compétences sur la fiche, ou des attributs <code>art</code> et <code>seduction</code>, si vous utilisez <code>!cof-jet</code>.</li>
                   <li><strong>Homme de cour</strong> : ajouter un attribut <code>étiquette</code>, de valeur 5.</li>
+                  <li><strong>Lame de lignée</strong> : pas de support particulier pour l'arme, mais quand le samouraï perd l'arme, vous pouvez rajouter un attribut <code>lameDeLigneePerdue</code>, de valeur <code>true</code> (à effacer quand il la retrouve).</li>
                 </ol>
                 <h4 class="text-secondary">Voie de l'honneur</h4>
                 <ol>
                   <li><strong>Chef né</strong> : ajouter un attrubut <code>immunitePeur</code>, de valeur <code>true</code>, et des attributs ou compétences pour l'intimidation et commander.</li>
                   <li><strong>Défi</strong> : <code>!cof-defi-samourai @{selected|token_id} @{target|token_id} <i>bonus</i></code>. Le bonus en argument est optionnel. Si il n'est pas présent, le script utilise la valeur d'un attribut <code>voieDeLHonneur</code>.</li>
+                  <li><strong>Honorable</strong> : pas de support particulier. </li>
                 </ol>
                 <h4 class="text-secondary">Voie du ki</h4>
                 <ol>
                   <li><strong>Esprit vide</strong> : reporter le bonus sur la fiche.</li>
                   <li><strong>Main vide</strong> : faire l'attaque à mains nues correspondant à la capacité.</li>
+                  <li><strong>Kiai</strong> : ajouter un attribut <code>kiai</code>, de valeur courante 1 et de valeur maximale 1. Au rang 5, mettre ces valeurs à 2, le script se charge d'attendre 1d6 tours avant de proposer le deuxième kiai.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du sabre</h4>
                 <ol>
                   <li><strong>Technique du sabre</strong> : ajuster les attaques au sabre en conséquence.</li>
                   <li><strong>Frappe du vide</strong> : ajouter un attribut <code>frappeDuVide</code>, avec comme valeur courante <code>1</code>, et comme valeur maximale <code>1</code>.</li>
+                  <li><strong>Lames Jumelles</strong> : faire les attaques avec l'option <code>--lamesJumelles</code> permet de prendre en compte la force courante de l'attaquant pour les malus éventuels à l'attaque.</li>
                 </ol>
               </div>
               <h3 class="text-info" id="Voleur">Voleur</h3>
@@ -1467,6 +1478,7 @@
                   <li><strong>Cibles multiples</strong> (nuées) : ajouter un attribut <code>ciblesMultiples</code>, de valeur <code>true</code>.</li>
                   <li><strong>Clignotement</strong> : <code>!cof-effet-temp clignotement [[1d6+2]]</code>.</li>
                   <li><strong>Créature non-vivante</strong> : ajouter un attribut <code>nonVivant</code></li>
+                  <li><strong>Dégâts si touché au contact</strong> (élémentaire de feu,...) : ajouter un attribut nommé <code>dmSiToucheContact</code>, de valeur courante les dégâts, et de valeur maximale leur type. Par exemple, pour un élémentaire de feu, la valeur courant sera <code>1d6</code>, et la valeur maximale sera <code>feu</code>.</li>
                   <li><strong>Force de géant</strong> : <code>!cof-effet-temp forceDeGeant 10</code>. Le bonus est de 2 par défaut, mais peut être modifié en utilisant l'option <code>--valeur</code>.</li>
                   <li><strong>Frénésie</strong> : Ajouter une attribut <code>frenesie</code> avec comme valeur le nombre de PV en-dessous duquel la créature devient frénétique (+2 aus jets d'attaque).</li>
                   <li><strong>Huile de fort assaut</strong> : <code>!cof-effet-temp dmgArme(<i>L</i>) 10 --valeur 1d6</code> où <i>L</i> est le label de l'arme qu'on veut enduire d'huile de fort assaut.</li>

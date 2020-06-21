@@ -61,8 +61,10 @@
     let oldHex = Hexploration._state.getPageHex(page, row, column);
     if(oldHex) {
       let hexPath = getObj('path', oldHex.id);
-      Hexploration._state.deletePath(hexPath);
-      hexPath.remove();
+      if(hexPath) {
+        Hexploration._state.deletePath(hexPath);
+        hexPath.remove();
+      }
     }
   }
 
@@ -78,10 +80,12 @@
       let [pageId, rowColumn] = key;
       let pageHex = myState.pageHexes[pageId][rowColumn];
 
-      // If the hex was named, delete the label for its name.
-      if(pageHex.nameId) {
-        let namePath = getObj('text', pageHex.nameId);
-        namePath.remove();
+      if(pageHex) {
+        // If the hex was named, delete the label for its name.
+        if(pageHex.nameId) {
+          let namePath = getObj('text', pageHex.nameId);
+          namePath.remove();
+        }
       }
 
       delete myState.pageHexes[pageId][rowColumn];

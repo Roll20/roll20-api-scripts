@@ -1,0 +1,13 @@
+{
+    "name": "Delta Green Companion API",
+    "script": "DG_companion.js",
+    "version": "1.5",
+    "previousversions": [],
+    "description": "Enhances the Unofficial Delta Green Character Sheet with autocomputation of projection on bonds.",
+    "authors": " Marco M.",
+    "roll20userid": "3726",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {},
+    "conflicts": []
+}
