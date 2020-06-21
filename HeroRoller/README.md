@@ -1,7 +1,7 @@
 ﻿# HEROLLER: CARE AND KEEPING
 
 # Introduction
-<div style="float:right;width:20%;max-width:250px;margin:5px 0px 10px 5px; display:inline-block;"><div><img width=200 src="https://s3.amazonaws.com/files.d20.io/images/143716628/WvIGJgGieMlpI-LkXHpQuQ/med.png"></div><div><img width=200 src="https://s3.amazonaws.com/files.d20.io/images/143719334/P47RsL4gIovsYmu5SKkNPg/med.png"></div></div>Hero Roller (or, heroll, for short), works with the Hero character sheet. It takes a command line of arguments to describe the Hero power you want to use, then spits out all of the parameters that the roll would produce in game... hopefully in a visually appealing package.
+Hero Roller (or, heroll, for short), works with the Hero character sheet. It takes a command line of arguments to describe the Hero power you want to use, then spits out all of the parameters that the roll would produce in game... hopefully in a visually appealing package.
 
 ## Arguments Are... Our Friends
 Each argument is detected by a the presence of a space followed by a double dash in the command line. The following example is 3.5d6 (effectively, 3d6+1d3) with a designation of the normal mechanic and a name of "Doom Smack".
