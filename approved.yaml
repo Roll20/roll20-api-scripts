@@ -810,8 +810,8 @@ supernotes:
   - "Supernotes"
   - "Utility"
 
-changemapclonetoken:
-  - "ChangeMap_CloneToken"
+changemapclonetokens:
+  - "ChangeMap_CloneTokens"
   - "Utility"
 
 #restandrecovery:
