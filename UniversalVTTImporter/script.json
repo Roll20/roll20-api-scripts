@@ -11,8 +11,5 @@
   "modifies": {
     "state.UniversalVTTImporter": "read,write"
   },
-  "conflicts": [],
-  "previousversions": [
-    "0.1.0"
-  ]
+  "conflicts": []
 }

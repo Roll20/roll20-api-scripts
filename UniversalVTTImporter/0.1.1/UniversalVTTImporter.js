@@ -6,7 +6,7 @@ const UniversalVTTImporter = (() => { // eslint-disable-line no-unused-vars
 
   const scriptName = 'UniversalVTTImporter';
   const version = '0.1.1';
-  const lastUpdate = 1592776122;
+  const lastUpdate = 1592794899;
   const schemaVersion = 0.1;
   const clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659';
 
@@ -158,7 +158,7 @@ const UniversalVTTImporter = (() => { // eslint-disable-line no-unused-vars
             `Next export the Universal VTT version into a ${_h.code('.dd2vtt')} file.`,
             `Drop your map image file onto a page and scale it as desired.`,
             `Open the properties by double clicking the image.`,
-            `Load the Universal VTT file in a text editor and copy the contents.`,
+            `Load the Universal VTT file in a text editor and copy the contents.  You can use the <a href="http://roll20api.net/uvtti.html">Universal VTT Import Sanitizer</a> do this efficiently.`,
             `Paste the contents into the GM Notes section of the map graphic and save changes.`,
             `With the graphic selected, run ${_h.code('!uvtt')}`
           ),
