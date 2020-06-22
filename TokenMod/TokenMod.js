@@ -6,7 +6,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
 
     const scriptName = "TokenMod";
     const version = '0.8.58';
-    const lastUpdate = 1592796712;
+    const lastUpdate = 1592828703;
     const schemaVersion = 0.4;
 
     const fields = {
@@ -1674,7 +1674,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
                   _h.paragraph(`Moving forward 2 grid spaces, then right 10ft, then 3 units at 45 degrees to the current facing and updating to that face that direction. `),
                   _h.inset(
                     _h.preformatted(
-                      '!token-mod --move 2g =90|10ft 45!|3u'
+                      '!token-mod --move 2g 90|10ft =45!|3u'
                     )
                   )
                 )
