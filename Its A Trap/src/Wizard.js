@@ -31,6 +31,17 @@ var ItsATrapCreationWizard = (() => {
     }
   };
 
+  const LPAREN = '&#40;';
+  const RPAREN = '&#41;';
+
+  const LBRACKET = '&#91;';
+  const RBRACKET = '&#93;';
+
+  const LBRACE = '&#123;';
+  const RBRACE = '&#125;';
+
+  const ATSIGN = '&#64;';
+
   // The last trap that was edited in the wizard.
   let curTrap;
 
@@ -144,12 +155,6 @@ var ItsATrapCreationWizard = (() => {
   function getCoreProperties(trapToken) {
     let trapEffect = new TrapEffect(trapToken);
 
-    let LPAREN = '&#40;';
-    let RPAREN = '&#41;';
-
-    let LBRACE = '&#91;';
-    let RBRACE = '&#93;';
-
     return [
       {
         id: 'name',
@@ -212,12 +217,6 @@ var ItsATrapCreationWizard = (() => {
   function getRevealProperties(trapToken) {
     let trapEffect = (new TrapEffect(trapToken)).json;
 
-    let LPAREN = '&#40;';
-    let RPAREN = '&#41;';
-
-    let LBRACE = '&#91;';
-    let RBRACE = '&#93;';
-
     return [
       {
         id: 'searchDist',
@@ -234,6 +233,12 @@ var ItsATrapCreationWizard = (() => {
             return '-';
         })()
         //value: trapToken.get('aura2_radius') || trapEffect.searchDist || '-'
+      },
+      {
+        id: 'detectMessage',
+        name: 'Detection Message',
+        desc: 'What message is displayed when a character notices the trap with passive detection?',
+        value: trapEffect.detectMessage || '-'
       },
       {
         id: 'revealOpts',
@@ -286,12 +291,6 @@ var ItsATrapCreationWizard = (() => {
   function getShapeProperties(trapToken) {
     let trapEffect = new TrapEffect(trapToken);
 
-    let LPAREN = '&#40;';
-    let RPAREN = '&#41;';
-
-    let LBRACE = '&#91;';
-    let RBRACE = '&#93;';
-
     return _.compact([
       {
         id: 'effectShape',
@@ -314,12 +313,6 @@ var ItsATrapCreationWizard = (() => {
             })()
           };
       })(),
-      {
-        id: 'api',
-        name: 'API Command',
-        desc: 'An API command which the trap runs when it is activated. The constants TRAP_ID and VICTIM_ID will be replaced by the object IDs for the trap and victim. Multiple API commands are now supported by separating each command with &quot;&#59;&#59;&quot;.',
-        value: trapEffect.api || '-'
-      },
       {
         id: 'fx',
         name: 'Special FX',
@@ -346,12 +339,12 @@ var ItsATrapCreationWizard = (() => {
           {
             id: 'offset',
             name: 'FX Offset',
-            desc: 'The offset ' + LPAREN + 'in units' + RPAREN + ' of the special FX from the trap\'s center. Format: ' + LBRACE + 'X,Y' + RBRACE
+            desc: 'The offset ' + LPAREN + 'in units' + RPAREN + ' of the special FX from the trap\'s center. Format: ' + LBRACKET + 'X,Y' + RBRACKET
           },
           {
             id: 'direction',
             name: 'FX Direction',
-            desc: 'The directional vector for the special FX ' + LPAREN + 'Leave blank to direct it towards characters' + RPAREN + '. Format: ' + LBRACE + 'X,Y' + RBRACE
+            desc: 'The directional vector for the special FX ' + LPAREN + 'Leave blank to direct it towards characters' + RPAREN + '. Format: ' + LBRACKET + 'X,Y' + RBRACKET
           }
         ]
       },
@@ -402,15 +395,32 @@ var ItsATrapCreationWizard = (() => {
    * supported API scripts.
    */
   function getScriptProperties(trapToken) {
-    let trapEffect = (new TrapEffect(trapToken)).json;
-
-    let LPAREN = '&#40;';
-    let RPAREN = '&#41;';
-
-    let LBRACE = '&#91;';
-    let RBRACE = '&#93;';
+    let trapEffect = new TrapEffect(trapToken);
 
     return _.compact([
+      {
+        id: 'api',
+        name: 'API Command',
+        desc: 'An API command which the trap runs when it is activated. The constants TRAP_ID and VICTIM_ID will be replaced by the object IDs for the trap and victim. Multiple API commands are now supported by separating each command with &quot;&#59;&#59;&quot;. Certain special characters must be escaped. See README section about the API Command property for details.',
+        value: (() => {
+          if (trapEffect.api.length > 0) {
+            let result = '';
+            _.each(trapEffect.api, cmd => {
+              result += cmd.replace(/\\\[/g, LBRACKET)
+                .replace(/\\\]/g, RBRACKET)
+                .replace(/\\{/g, LBRACE)
+                .replace(/\\}/g, RBRACE)
+                .replace(/\\@/g, ATSIGN) + "<br/>";
+            });
+            return result;
+          }
+          else
+            return '-';
+
+
+        })()
+      },
+
       // Requires AreasOfEffect script.
       (() => {
         if(typeof AreasOfEffect !== 'undefined') {
@@ -443,7 +453,7 @@ var ItsATrapCreationWizard = (() => {
               {
                 id: 'direction',
                 name: 'AoE Direction',
-                desc: 'The direction of the AoE effect. Optional. If omitted, then the effect will be directed toward affected tokens. Format: ' + LBRACE + 'X,Y' + RBRACE
+                desc: 'The direction of the AoE effect. Optional. If omitted, then the effect will be directed toward affected tokens. Format: ' + LBRACKET + 'X,Y' + RBRACKET
               }
             ]
           };
@@ -508,26 +518,6 @@ var ItsATrapCreationWizard = (() => {
   }
 
   /**
-   * Gets a list of the core trap properties for a trap token dealing
-   * with special side effects such as FX, sound, and API commands.
-   * @param {Graphic} token
-   * @return {object[]}
-   */
-  function getSpecialProperties(trapToken) {
-    let trapEffect = (new TrapEffect(trapToken)).json;
-
-    let LPAREN = '&#40;';
-    let RPAREN = '&#41;';
-
-    let LBRACE = '&#91;';
-    let RBRACE = '&#93;';
-
-    return _.compact([
-
-    ]);
-  }
-
-  /**
    * Gets a list of the core trap properties for a trap token.
    * @param {Graphic} token
    * @return {object[]}
@@ -535,13 +525,7 @@ var ItsATrapCreationWizard = (() => {
   function getTriggerProperties(trapToken) {
     let trapEffect = (new TrapEffect(trapToken)).json;
 
-    let LPAREN = '&#40;';
-    let RPAREN = '&#41;';
-
-    let LBRACE = '&#91;';
-    let RBRACE = '&#93;';
-
-    return [
+    return _.compact([
       {
         id: 'triggerPaths',
         name: 'Trigger Area',
@@ -556,49 +540,57 @@ var ItsATrapCreationWizard = (() => {
               return 'self - circle';
           }
         })(),
-        options: ['self - rectangle', 'self - circle', 'set selected lines']
+        options: ['self - rectangle', 'self - circle', 'set selected lines', 'none']
       },
-      {
-        id: 'stopAt',
-        name: 'Trigger Collision',
-        desc: 'Does this trap stop tokens that pass through its trigger area?',
-        value: (() => {
-          let type = trapEffect.stopAt || 'center';
-          if (type === 'center')
-            return 'Move to center of trap token.';
-          else if (type === 'edge')
-            return 'Stop at edge of trigger area.';
-          else
-            return 'None';
-        })(),
-        options: ['center', 'edge', 'none']
-      },
-      {
-        id: 'ignores',
-        name: 'Ignore Token IDs',
-        desc: 'Select one or more tokens to be ignored by this trap.',
-        value: trapEffect.ignores || 'none',
-        options: ['none', 'set selected tokens']
-      },
-      {
-        id: 'flying',
-        name: 'Affects Flying Tokens?',
-        desc: 'Should this trap affect flying tokens ' + LPAREN + 'fluffy-wing status ' + RPAREN + '?',
-        value: trapToken.get('status_fluffy-wing') ? 'yes' : 'no',
-        options: ['yes', 'no']
-      },
-      {
-        id: 'delay',
-        name: 'Delay Activation',
-        desc: 'When the trap is triggered, its effect is delayed for the specified number of seconds. For best results, also be sure to set an area effect for the trap and set the Stops Tokens At property of the trap to None.',
-        value: (() => {
-          if (trapEffect.delay)
-            return trapEffect.delay + ' seconds';
-          else
-            return '-';
-        })()
-      }
-    ];
+      ...(() => {
+        if (trapEffect.triggerPaths === 'none')
+          return [];
+        else {
+          return [
+            {
+              id: 'stopAt',
+              name: 'Trigger Collision',
+              desc: 'Does this trap stop tokens that pass through its trigger area?',
+              value: (() => {
+                let type = trapEffect.stopAt || 'center';
+                if (type === 'center')
+                  return 'Move to center of trap token.';
+                else if (type === 'edge')
+                  return 'Stop at edge of trigger area.';
+                else
+                  return 'None';
+              })(),
+              options: ['center', 'edge', 'none']
+            },
+            {
+              id: 'ignores',
+              name: 'Ignore Token IDs',
+              desc: 'Select one or more tokens to be ignored by this trap.',
+              value: trapEffect.ignores || 'none',
+              options: ['none', 'set selected tokens']
+            },
+            {
+              id: 'flying',
+              name: 'Affects Flying Tokens?',
+              desc: 'Should this trap affect flying tokens ' + LPAREN + 'fluffy-wing status ' + RPAREN + '?',
+              value: trapToken.get('status_fluffy-wing') ? 'yes' : 'no',
+              options: ['yes', 'no']
+            },
+            {
+              id: 'delay',
+              name: 'Delay Activation',
+              desc: 'When the trap is triggered, its effect is delayed for the specified number of seconds. For best results, also be sure to set an area effect for the trap and set the Stops Tokens At property of the trap to None.',
+              value: (() => {
+                if (trapEffect.delay)
+                  return trapEffect.delay + ' seconds';
+                else
+                  return '-';
+              })()
+            }
+          ];
+        }
+      })()
+    ]);
   }
 
   /**
@@ -661,6 +653,8 @@ var ItsATrapCreationWizard = (() => {
       trapEffect.delay = params[0] || undefined;
     if(prop === 'destroyable')
       trapEffect.destroyable = params[0] === 'yes';
+    if (prop === 'detectMessage')
+      trapEffect.detectMessage = params[0];
     if(prop === 'disabled')
       trapToken.set('status_interdiction', params[0] === 'yes');
 
@@ -765,6 +759,10 @@ var ItsATrapCreationWizard = (() => {
         trapEffect.triggerPaths = _.map(selected, path => {
           return path.get('_id');
         });
+        trapToken.set('aura1_square', false);
+      }
+      else if (params[0] === 'none') {
+        trapEffect.triggerPaths = 'none';
         trapToken.set('aura1_square', false);
       }
       else {
