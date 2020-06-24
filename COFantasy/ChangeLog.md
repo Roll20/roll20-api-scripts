@@ -1,10 +1,31 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
-## 2.06
+## 2.08
+### Capacités
+* Résistance à la magie du barbare
+
 ### Autres améliorations
+* Attaques par défaut dans la liste d'actions, possibilité de se passer complètement des attributs pour les attaques (actif quand la version 3.3 de la fiche sera là.
+
+## 2.07
+### Autres améliorations
+* Correction de l'affichage des armes dans le statut avec les nouvelles fiches
+* Correction d'un bug quand il n'y avait aucun token actif dans le tour de combat
+* Utilisation des options standard pour le mur de force
+
+## 2.06
+### Capacités
+* Ajout de la capacité lien épique.
+
+### Autres améliorations
+* Amélioration de la gestion de l'attaque en meute des gobelins.
+* Possibilité qu'une arme fasse de la lumière quand elle est dégainée.
+* Extinction de la lumière quand l'effet d'arme enflammée prend fin
+* Ajout d'une option pour modifier la portée d'une attaque.
 * Ajout de la résistance à la magie (bonus aux tests pour résister à la magie)
 * Intégration d'une table d'échecs critique, avec jets et effets pris en compte.
 
 ### Corrections de bugs
+* Correction de bug d'affichage du nombre de soins restants.
 * Les sortilèges ne sont plus affectés par les RD/tranchant. La destruction des mort-vivants devient un sortilege.
 * Correction de bug sur les effets de peur qui ralentissent.
 

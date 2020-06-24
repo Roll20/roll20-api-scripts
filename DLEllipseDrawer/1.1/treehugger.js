@@ -8,7 +8,7 @@ default number of sides is 20; this can be adjusted using the command
 
 on("ready",function(){
 var gc = globalconfig && globalconfig.dlellipsedrawer;
-    if(isNaN(gc.N) != 1){
+    if(gc != undefined && isNaN(gc.N) != 1){
         var n = Math.ceil(gc.N);
     }
     else{

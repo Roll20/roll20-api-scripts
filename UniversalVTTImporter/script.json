@@ -1,0 +1,15 @@
+{
+  "name": "UniversalVTTImporter",
+  "script": "UniversalVTTImporter.js",
+  "version": "0.1.1",
+  "description": "Imports UniversalVTT files, `.dd2vtt`, as used by Dungeondraft.\r\rSee the *Help: UniversalVTTImporter* Handout in game for help, or run `!uvtt --help`.\r\rYou can also visit http://roll20api.net/uvtti.html for instructions and a handy file sanititzer.",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "useroptions": {},
+  "dependencies": {},
+  "modifies": {
+    "state.UniversalVTTImporter": "read,write"
+  },
+  "conflicts": []
+}
