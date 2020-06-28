@@ -64,6 +64,10 @@ pathfinderskillbook:
 - "Pathfinder Skillbook"
 - "System Toolbox"
 
+pathfinder2utilities:
+- "Pathfinder2Utilities"
+- "System Toolbox"
+
 ffgstarwarsdice:
 - "FFG-SWRPG-Dice-Roller"
 - "System Toolbox"
@@ -769,3 +773,51 @@ spellmaster:
 shadowrun5thedition:
   - "Shadowrun 5th Edition"
   - "System Toolbox"
+
+combatmaster:
+  - "CombatMaster"
+  - "Utility"
+
+wildshaperesizer:
+  - "WildShapeResizer"
+  - "Utility"
+
+savageworldsstatuschanger:
+  - "SavageWorldsStatusChanger"
+  - "System Toolbox"
+
+midgardturntrackerhelper:
+  - "MidgardTurnTrackerHelper"
+  - "Utility"
+
+shortrest:
+  - "ShortRest"
+  - "System Toolbox"
+
+tokenmarker:
+  - "TokenMarker"
+  - "Utility"
+
+heroroller:
+  - "HeroRoller"
+  - "System Toolbox"
+
+universalvttimport:
+  - "UniversalVTTImporter"
+  - "Utility"
+
+supernotes:
+  - "Supernotes"
+  - "Utility"
+
+changemapclonetokens:
+  - "ChangeMap_CloneTokens"
+  - "Utility"
+
+#restandrecovery:
+#  - "Rest-and-Recovery"
+#  - "Utility"
+
+#tokenactionmarker:
+#  - "Token-Action-Maker"
+#  - "Utility"

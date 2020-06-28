@@ -1,7 +1,141 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 2.08
+### Capacités
+* Résistance à la magie du barbare
+
+### Autres améliorations
+* Attaques par défaut dans la liste d'actions, possibilité de se passer complètement des attributs pour les attaques (actif quand la version 3.3 de la fiche sera là.
+
+## 2.07
+### Autres améliorations
+* Correction de l'affichage des armes dans le statut avec les nouvelles fiches
+* Correction d'un bug quand il n'y avait aucun token actif dans le tour de combat
+* Utilisation des options standard pour le mur de force
+
+## 2.06
+### Capacités
+* Ajout de la capacité lien épique.
+
+### Autres améliorations
+* Amélioration de la gestion de l'attaque en meute des gobelins.
+* Possibilité qu'une arme fasse de la lumière quand elle est dégainée.
+* Extinction de la lumière quand l'effet d'arme enflammée prend fin
+* Ajout d'une option pour modifier la portée d'une attaque.
+* Ajout de la résistance à la magie (bonus aux tests pour résister à la magie)
+* Intégration d'une table d'échecs critique, avec jets et effets pris en compte.
+
+### Corrections de bugs
+* Correction de bug d'affichage du nombre de soins restants.
+* Les sortilèges ne sont plus affectés par les RD/tranchant. La destruction des mort-vivants devient un sortilege.
+* Correction de bug sur les effets de peur qui ralentissent.
+
+## 2.05
+### Capacités
+* Possibilité de spécifier une valeur (option --valeur) pour le rayon affaiblissant.
+* Ajout de la capacité Peau d'acier du barbare.
+* Ajout de la partie soins de la capacité guérison du prêtre.
+* Ajout de la capacité Amitié de l'ensorceleur.
+* Amélioration de l'automatisation de la capacité Ignorer la douleur du chevalier
+* Ajout de la capacité Peau de pierre du magicien
+* Enflammer une arme fait maintenant de la lumière.
+
+### Autres améliorations
+* Possibilité de spécifier une valeur à --ignoreRD
+* Au changement de jour, affichage des effets à durée indéterminée encore actifs pour que le MJ puisse les supprimer si besoin.
+* Possibilité d'utilise une table pour les échecs critiques.
+* Création automatique d'un personnage cible
+* Possibilité de changer l'aura d'initiative
+* Application de la règle selon laquelle les dm de base d'une attaque ne peuvent être 0 (pour les gobelins ou personnages avec peu de force).
+* Ajout des markers de statut personnalisés
+* Amélioration de l'interface des attaques qui n'utilisent pas les champs d'attaque de la fiche
+* Prise en compte de l'unité de mesure de la carte pour les distances de vision
+* Possibilité de changer des difficultés de sauvegarde en fonction de la mana dépensée en tempête de mana intense.
+* Amélioration des affichages de jets
+* Standardisation de !cof-lancer-sorts et support dans les consommables
+
+### Corrections de bugs
+* Meilleur comportement des tokens de lumières quand on change de carte pour un même personnage.
+* Correction d'un bug dans le renouvellement des élixirs qui empêchait de créer de nouveaux élixirs si le forgesort n'a aucun élixir sur lui à la tombée de la nuit.
+* Les attaques à distance ne déclanchent plus l'effet aggriper.
+* Prévention de crash en cas d'erreur interne de roll20.
+
+## 2.04
+### Capacités
+* restriction des capacités de la voie de la mort aux cibles vivantes seulement.
+
+### Autres améliorations
+* Passage de la RD sur la fiche
+
+## 2.03
+### Capacités
+* Amélioration du renouvellement des élixirs sur un forgesort.
+* Rang 4 de la voie du bouclier du guerrier
+* Meilleure interface des runes du forgesort, avec implementation du rang 4, et  renouvellement automatique des runes selon le choix des forgesorts.
+
+### Autres améliorations
+* Prise en charge des spécificités de l'épieu.
+* Prévention de crash de la sandbox.
+* Ajout de l'option --son pour !cof-rage-du-berserk
+* Ajout de l'attaque de groupe, avec possibilité d'action spécifique détectée par le script.
+* Ajout d'une option pour rajouter les attaques risquees et assurees a toutes les actions
+* Ajout de la condition echecCritique pour --si et --if
+* Ajout d'une option --image pour !cof-effet-temp et !cof-soins
+* Nouvelle façon de souligner le personnage dont c'est le tour. Pour revenir à l'ancien système, utiliser !cof-options.
+* Affichage des icones correspondant aux états dans la fonction statut.
+
+### Corrections de bugs
+* Plus de demande de mana si l'option de jeu mana est désactivé pour les fiches.
+* possibilité d'utiliser !cof-jouer-son dans les actions du tour
+* meilleure gestion de l'affichage du marqueur d'initiative pour les personnages sur une monture.
+* Correction d'un bug qui empêchait les écuyer de soigner (et l'undo de certains repos).
+* double escape des ':' dans les boutons (sinon, pas de lien)
+* Correction d'un buf sur les effets génériques avec saveParTour
+
+## 2.02
+### Capacités
+* Ajout des rangs 4 et 5 de la Voie de la résistance du guerrier.
+* Ajout des rangs 4 et 5 de la Voie de la précisison de l'arquebusier.
+* Amélioration de la prise en charge de la capacité Esquive du voleur.
+* Ajout du rang 2 de la Voie du tueur.
+
+### Autres améliorations
+* Possibilité de changer les états directement depuis le token
+* Ajout de conditions sur un attribut de cible quelconque pour l'attaque
+* Possibilité d'arrêter tous les sons.
+
+### Corrections de bugs
+* Correction d'un bug sur les runes de protections
+* Protection contre les macros et abilities de nom vide.
+* Immunité à la surprise permet bien de ne pas faire le test.
+* Utilisation d'un attribut mortVivant au lieu de mort-vivant.
+
+## 2.01
+### Capacités
+* Ajout du rang 3 de la Voie du tueur.
+
+### Autres améliorations
+* Ajout d'une commande !cof-jouer-son
+* bloque les personnages sous prison végétale.
+* Possibilité d'ajouter des contraintes (comme --dose) au fonctions de repos.
+* La capacité nature nourricière génère des consommanbles.
+* prise en compte de l'option --attaqueMentale pour les créatures sans esprit.
+* Ajout d'options de son sur les effets et le rechargement
+* Possibilité d'afficher des images et de jouer des sons selon le résultat d'une attaque.
+
+### Corrections de bugs
+* Factorisation et amélioration des significations des options de sons et d'images d'attaques.
+* Correction d'un bug pour les effets d'attaque conditionnels.
+* Amélioration du parsing de handout pour les compétences en équipes.
+* Correction d'un bug avec la tempete de mana qui pouvait faire affecter la cible plus le lanceur de l'effet du sort.
 
 ## 2.0
 ### Capacités
+* Ajout de la capacité "Attaque en meute" des Gobelins
+* Amélioration de la prise en compte du bonus d'init grâce aux familiers
+* Ajout de l'esquive acrobatique du barde
+* Ajout de l'ouverture mortelle du voleur
+* Ajout de l'immunité à la surprise du voleur
+* Changement des bonus d'interchangeable, qui rendaient les combats trop longs. Il y a une option pour revenir aux bonus d'origine.
 * Ajout de la capacité "Foudres divines" du prêtre
 * Ajout de la capacité "Furie berserk" du barbare
 * Ajout de la capacité "Même pas mal" du barbare
@@ -10,6 +144,20 @@
 * L'option --argent devient --armeDArgent. Cela permet d'utiliser --argent pour les armes en argent ordinaires.
 
 ### Autres améliorations
+* Ajout de l'option d'attaque assurée et de l'option attaque risquée
+* Affichage de la défense dans le statut, quand elle ne correspond pas à la défense affichée sur la fiche.
+* Simplification du nommage des escaliers.
+* Possibilité d'ajouter un message en argument de !cof-soins
+* Ajout d'un icone pour les tokens affectés par saignement ou asphyxie
+* Utilisation d'un dé explosif pour l'initiative variable
+* Suite à une précision de Kegron sur les forums BBE, les attaques réussies font toujours au moins 1 DM.
+* Si un personnage est monté sur une monture, assouplissement des conditions pour toucher au contact (on considère le token de la monture)
+* On peut maintenant donner des arguments aux macros dans les listes d'actions
+* !cof-jet --secret, lorsqu'il est employé par un joueur, envoie maintenant le résultat du jet à toutes les personnes qui contrôlent le personnage et au MJ.
+* gestion du sort sixième sens
+* gestion du niveau d'ébriété.
+* ajout d'une option d'affichage pour ne pas montrer la DEF des adversaires.
+* Les messages de dégâts d'effets temporaires indiquent le numéro de mob quand la cible n'est pas un personnage unique.
 * Ajout de l'effet temporarire affaibli (affaibliTemp)
 * Ajout d'un effet temporaire armesEnflammees pour enflammer toutes les armes portées par un personnage
 * Ajout d'une option pour multiplier les dm d'un autre type que le principal en cas de critique.
@@ -23,6 +171,10 @@
 * Les montures de l'attaquant et de sa cible ne sont plus considérées comme des obstacles lors des attaques à distance.
 
 ### Corrections de bugs
+* Correction d'un bug qui empechait l'affichage du résultat d'un tour de force.
+* Trouve les points de chance quand ils sont à la valeur par défaut
+* Correction d'un bug qui faisait planter le sort de commeil
+* Plus d'affichage de dégâts chaque tour sur les personnages morts
 * En interne, modCarac accepte des id de personnage, ce qui fixe certains bugs avec des capacités de chevaliers.
 * Prise en compte correcte du niveau de voie du métal ou de la valeur de la capacité forgeron
 

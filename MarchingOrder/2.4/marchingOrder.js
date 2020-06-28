@@ -453,9 +453,10 @@ var MarchingOrder = (() => {
      */
     static getState() {
       if(!state.marchingOrder)
-        state.marchingOrder = {
-          defaultOrder: []
-        };
+        state.marchingOrder = {};
+      _.defaults(state.marchingOrder, {
+        defaultOrder: []
+      });
       return state.marchingOrder;
     }
 

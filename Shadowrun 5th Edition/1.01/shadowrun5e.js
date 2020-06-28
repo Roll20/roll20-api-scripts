@@ -64,64 +64,80 @@ const sr5HelperFunctions = {
 
 var sr5api = sr5api || (function() {
     'use strict';
-    const primary = '#610b0d', secondary = '#666', third = '#e7e6e5';
-    const divstyle   = 'style="color: #eee;width: 90%; border: 1px solid black; background-color: #131415; padding: 5px;"';
-    const buttons    = `text-align:center; border: 1px solid black; margin: 3px; padding: 2px; background-color: ${primary}; border-radius: 4px;  box-shadow: 1px 1px 1px ${secondary};`
-    const astyle     = `style="text-align:center; ${buttons} width: 150px;"`;
+    const primary = '#610b0d', secondary = '#666', third = '#e7e6e5', accent = '#333';
+    const divstyle   = `style="color: #eee;width: 90%; border: 1px solid ${accent}; background-color: #131415; padding: 5px;"`;
+    const buttons    = `text-align:center; border: 1px solid ${accent}; margin: 3px; padding: 2px; background-color: ${primary}; border-radius: 4px;  box-shadow: 1px 1px 1px ${secondary};`
+    const astyle     = `style="text-align:center; ${buttons} width: 68%;"`;
     const arrowstyle = `style="border: none; border-top: 3px solid transparent; border-bottom: 3px solid transparent; border-left: 195px solid ${secondary}; margin: 5px 0px;"`;
     const headstyle  = `style="color: #fff; font-size: 18px; text-align: left; font-constiant: small-caps; font-family: Times, serif; margin-bottom: 2px;"`;
     const substyle   = 'style="font-size: 0.8em; line-height: 13px; margin-top: -2px; font-style: italic;"';
     const breaks     = `style="border-color:${third}; margin: 5px 2px;"`;
     const circles    = `style='font-family:pictos;color: #fff;padding:2%;${buttons} width: 15px;'`
     const centered   = `style="text-align:center;"`;
-    const version    = '1.01';
-    const header     = `<div ${divstyle}><div ${headstyle}>Shadowrun 5th Edition <span ${substyle}>(v.${version})</span></div><div ${arrowstyle}>`;
+    const apiName    = `Shadowrun 5th Edition`;
+    const version    = '1.011';
+    const header     = `<div ${divstyle}><div ${headstyle}>${apiName} <span ${substyle}>(v.${version})</span></div><div ${arrowstyle}>`;
     const errorMessage = (name, error) => log(`${name}: ${error}`)
 
     const handleInput = msg => {
-        const args = msg.content.split(" --");
+        const args = msg.content.split(" --")
+        const who = msg.who.split(' ')[0]
         log(args)
         if (args[0] === "!sr5" && msg.type === "api") {
             const noTokensSelected = `<div ${centered}>No tokens selected.</div>`;
             const selected = msg.selected;
             switch(args[1]) {
-                case "linkToken":
-                    if (args[2]) {
-                        args[2] === 'info' ? chatMessage(apiCommands.linkToken.info) : chatMessage(apiCommands.linkToken.help)
-                    } else {
-                        selected ? linkTokens(selected) : selected === undefined ? chatMessage(noTokensSelected) : apiMenu();
-                    }
-                    break;
-                case "initCounter":
-                    if (args[2]) {
-                        args[2] === 'info' ? chatMessage(apiCommands.initCounter.info) : chatMessage(apiCommands.initCounter.help)
-                    } else {
-                        addInitiativeCounter()
-                    }
-                    break;
-                case "rollInit":
-                    if (args[2]) {
-                        args[2] === 'info' ? chatMessage(apiCommands.rollInit.info) : chatMessage(apiCommands.rollInit.help)
-                    } else {
-                        selected ? rollInitaitve(selected) : selected === undefined  ? chatMessage(noTokensSelected) : apiMenu();
-                    }
-                    break;
-                default:
-                    apiMenu()
+              case "linkToken":
+                  if (args[2]) {
+                      args[2] === 'info' ? chatMessage(apiCommands.linkToken.info) : chatMessage(apiCommands.linkToken.help)
+                  } else {
+                      selected ? linkTokens(selected, who) : selected === undefined ? chatMessage(noTokensSelected) : apiMenu();
+                  }
+                  break;
+              case "initCounter":
+                  if (args[2]) {
+                      if (args[2] === 'info') {
+                        chatMessage(apiCommands.initCounter.info)
+                      } else if (args[2] === 'help') {
+                        chatMessage(apiCommands.initCounter.help)
+                      } else {
+                        chatMessage(`Arguement provided was invalid, ${args[0]} <br /> ${returnMenu}`)
+                      }
+                  } else {
+                      addInitiativeCounter()
+                  }
+                  break;
+              case "rollInit":
+                  if (args[2]) {
+                      if (args[2] === 'info') {
+                        chatMessage(apiCommands.rollInit.info)
+                      } else if (args[2] === 'help') {
+                        chatMessage(apiCommands.rollInit.help)
+                      } else if (args[2] === 'error') {
+                        chatMessage(apiCommands.rollInit.error)
+                      } else {
+                        chatMessage(`Arguement provided was invalid, ${args[0]} <br/> ${returnMenu}`)
+                      }
+                  } else {
+                      selected ? rollInitaitve(selected) : selected === undefined  ? chatMessage(noTokensSelected) : apiMenu();
+                  }
+                  break;
+              default:
+                  apiMenu(who)
             }
-        } else if (msg.who === 'Sr5 Roll Initiative') {
+        } else if (msg.who === `${apiName} Roll Initiative`) {
             processIniatitive(msg.inlinerolls)
         } else if (msg.inlinerolls) {
             //reRollDice(msg);
         } 
     },
 
-    apiMenu = () => {
+    apiMenu = who => {
         let feedback = ""
         let commandArray = ['linkToken', 'initCounter', 'rollInit']
         commandArray.forEach(command => feedback += menuButtons(command));
 
-        chatMessage(feedback);
+        chatMessage(feedback, who);
     },
 
     readmeLink = '[Readme](https://github.com/Roll20/roll20-api-scripts/tree/master/Shadowrun%205th%20Edition)',
@@ -140,7 +156,8 @@ var sr5api = sr5api || (function() {
         rollInit: {
             name: 'Roll Initiative',
             info: `<div ${centered}>Roll Initiative</div><div>Roll initiative for all the selected tokens and add it to the token tracker.</div><div>${readmeLink}</div>${returnMenu}`,
-            help: `<div ${centered}>Roll Initiative</div><div ${centered}>!sr5 --rollInit</div><ol><li>Set tokens to represent a characters sheet</li><li>Select a token or multiple tokens.</li><li>Run the above command or push the menu button in chat.</li></ol><div>${readmeLink}</div>${returnMenu}`
+            help: `<div ${centered}>Roll Initiative</div><div ${centered}>!sr5 --rollInit</div><ol><li>Set tokens to represent a characters sheet</li><li>Select a token or multiple tokens.</li><li>Run the above command or push the menu button in chat.</li></ol><div>${readmeLink}</div>${returnMenu}`,
+            error: `<div ${centered}><strong>Roll Initiative</strong></div><div ${centered}>Troubleshooting</div><ol> <li>Ensure initiative modifier attributes are valid</li> <li>Ensure initiative dice are valid</li> <li>Change attributes related to intiative then change them back to their original value to toggle sheetworkers</li> </ol> <div>${readmeLink}</div>${returnMenu}`
         }
     },
 
@@ -156,11 +173,12 @@ var sr5api = sr5api || (function() {
 
     //:+:+:+:+:+: TOKEN LINKER :+:+:+:+:+: //
     //== This looks at a Token's Linked character Sheet and set a number of defaults 
-    linkTokens = selected => {
+    linkTokens = (selected, who) => {
         selected.forEach(token => {
             const characterID   = sr5HelperFunctions.getCharacterIdFromTokenId(token["_id"]) || false;
             const characterName = getAttrByName(characterID, 'character_name') || "";
             const tokenID       = token["_id"];
+            let feedback = '';
 
             if (characterID) {
                 const update = tokenLinker(characterID, tokenID, characterName);
@@ -171,13 +189,16 @@ var sr5api = sr5api || (function() {
                 if (update) {
                     tokenGet.set(update);
                     setDefaultTokenForCharacter(representsCharacter, tokenGet);
-                    chatMessage(`<div ${centered}><strong>${characterName}</strong></div><hr ${breaks} /><div>Token defaults set.</div>`);
+
+                    feedback += `<div ${centered}><strong>${characterName}</strong></div><hr ${breaks} /><div>Token defaults set.</div>`
                 } else {
                     errorMessage('linkTokens', 'Update not found')
                 };
             } else {
-                chatMessage(`<div>Token does not represents a character. Set a character in the Token settings.</div>`);
+                feedback += `<div>Token does not represents a character. Set a character in the Token settings.</div>`;
             }
+
+            sendChat(`${apiName} Token Linker`, `/w ${who} ${header}</div>${feedback}</div>`)
         });
     },
 
@@ -206,6 +227,11 @@ var sr5api = sr5api || (function() {
                 showplayers_bar1: true,
                 showplayers_bar2: true,
                 showplayers_bar3: true,
+                playersedit_name: true,
+                playersedit_bar1: true,
+                playersedit_bar2: true,
+                playersedit_bar3: true,
+                light_hassight: true,
                 bar1_max: stun ? getAttrByName(characterID, `stun`, "max") || 0 : "",
                 bar2_max: matrix ? getAttrByName(characterID, `matrix`, "max") || 0 : "",
                 bar3_max: physical ? getAttrByName(characterID, `physical`, "max") || 0 : "",
@@ -355,11 +381,14 @@ var sr5api = sr5api || (function() {
                 feedback += `<div style='display: inline-block; border: 1px solid ${third}; border-radius: 5px; padding: 2%; background-color: ${secondary}; margin-bottom: 3%; width: 95%;'>`
                 feedback += `<img src='${value.src}' style='margin-right: 2%; width: 20%;'>`
                 feedback += `<label style='display: inline-block; font-weight: bold; font-size: 1.3em; color: ${third}; vertical-align: middle; width: 60%;'>${value.name}</label>`
-                feedback += `<div style='color: black; width: 15%; display: inline-block;'>[[${value.expression} [${value.token}]]]</div>`
+
+                const roll = value.expression ? `[[${value.expression} [${value.token}]]]` : `<a ${circles} href="!sr5 --rollInit --error">!</a>`
+                feedback += `<div style='color: ${accent}; width: 15%; display: inline-block;'>${roll}</div>`
+
                 feedback += `</div><br />`
             }
 
-            sendChat('Sr5 Roll Initiative', `${header}</div>${feedback}</div>`);
+            sendChat(`${apiName} Roll Initiative`, `${header}</div>${feedback}</div>`);
         } catch (error) {
             errorMessage('rollInitaitve', error)
         }
@@ -373,11 +402,20 @@ var sr5api = sr5api || (function() {
                 const statusMarkers = sr5HelperFunctions.getStatusIcons(token["_id"]);
                 const sheetType  = sr5HelperFunctions.getSheetType(characterID);
                 const intiativeType = sheetType === "sprite" || sheetType === "host" || sheetType === "vehicle" || statusMarkers.includes('matrix') ? 'matrix' : statusMarkers.includes('astral') ? 'astral' : 'initiative';
-                const mod = getAttrByName(characterID, `${intiativeType}_mod`); 
-                const dice = getAttrByName(characterID, `${intiativeType}_dice`);
 
                 const character = new Character(characterID)
-                character.expression = `${mod}+${dice}d6cs0cf0`
+                character.modifier = getAttrByName(characterID, `${intiativeType}_modifier`);
+                character.dice = getAttrByName(characterID, `${intiativeType}_dice`);
+
+                log(character.dice)
+                log(character.modifier)
+
+                if (character.modifier && character.dice) {
+                  character.expression = `${character.modifier}+${character.dice}d6cs0cf0`
+                } else {
+                  character.expression = undefined
+                }
+
                 array.push(character)
             });
             return array
@@ -399,7 +437,7 @@ var sr5api = sr5api || (function() {
     },
     
     //Send message to chat
-    chatMessage = feedback => sendChat('API', `/w gm ${header}</div>${feedback}</div>`),
+    chatMessage = (feedback, who) => sendChat(`${apiName} API`, `/w ${who || 'gm'} ${header}</div>${feedback}</div>`),
 
     registerEventHandlers = () => {
         on('chat:message', handleInput);
@@ -426,7 +464,7 @@ sr5CounterCheckInitiative = () => {
         turnorder.splice(counterIndex, 1)
 
         let newTurnOrder = []
-        //Reduce all the intiatiives by 10 or remove them if < 0
+        //Reduce all the intiatives by 10 or remove them if < 0
         turnorder.forEach(element => {     
             element.pr -= 10
             element.pr > 0 ? newTurnOrder.push(element) : false;
@@ -439,7 +477,7 @@ sr5CounterCheckInitiative = () => {
         let pass = newTurnOrder.length < 1 ? 1 : parseInt(split[1], 10) + 1
         counter.pr = `${round} / ${pass}`
 
-        newTurnOrder.length < 1 ? sendChat('API', `<div style="color: #eee;width: 90%; border: 1px solid black; background-color: #131415; padding: 5px;"><div style="color: #fff; font-size: 18px; text-align: left; font-constiant: small-caps; font-family: Times, serif; margin-bottom: 2px;">Shadowrun 5th Edition <span style="font-size: 0.8em; line-height: 13px; margin-top: -2px; font-style: italic;">(v.1)</span></div><div style="border: none; border-top: 3px solid transparent; border-bottom: 3px solid transparent; border-left: 195px solid #666; margin: 5px 0px;"></div><div style="text-align:center;">Combat Round <strong>${round}</strong></span></div>`) : false;
+        newTurnOrder.length < 1 ? sendChat('API', `<div style="color: #eee;width: 90%; border: 1px solid ${accent}; background-color: #131415; padding: 5px;"><div style="color: #fff; font-size: 18px; text-align: left; font-constiant: small-caps; font-family: Times, serif; margin-bottom: 2px;">Shadowrun 5th Edition <span style="font-size: 0.8em; line-height: 13px; margin-top: -2px; font-style: italic;">(v.1)</span></div><div style="border: none; border-top: 3px solid transparent; border-bottom: 3px solid transparent; border-left: 195px solid #666; margin: 5px 0px;"></div><div style="text-align:center;">Combat Round <strong>${round}</strong></span></div>`) : false;
 
         newTurnOrder.push(counter)
 
