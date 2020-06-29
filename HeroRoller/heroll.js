@@ -1,9 +1,9 @@
 ﻿/*
 =========================================================
 Name			:	Hero Roller (heroll)
-Version			:	1.0, Build 1
-Last Update		:	6/11/2020
-GitHub			:	https://gist.github.com/TimRohr22/9c70ac41de325f0c951125a0d041b5bd
+Version			:	1.2
+Last Update		:	6/17/2020
+GitHub			:	https://github.com/Roll20/roll20-api-scripts/tree/master/HeroRoller
 Roll20 Contact	:	timmaugh
 =========================================================
 
@@ -20,8 +20,8 @@ const heroll = (() => {
 	//		VERSION
 	// ==================================================
 	const versionInfo = () => {
-		const vrs = '1.0';
-		const vd = new Date(1591884277984);
+		const vrs = '1.2';
+		const vd = new Date(1592600907866);
 		log('\u0166\u0166 HeRoller v' + vrs + ', ' + vd.getFullYear() + '/' + (vd.getMonth() + 1) + '/' + vd.getDate() + ' \u0166\u0166');
 		return;
 	};
@@ -173,6 +173,13 @@ const heroll = (() => {
 		"r": "recall",					// for recalling the last roll or the last roll for this user
 		"rc": "recall",
 		"recall": "recall",
+
+		"tgt": "target",				// target of attack
+		"target": "target",
+
+		"s": "selective",				// whether multiple targets get indiv to-hit rolls
+		"sel": "selective",
+		"selective": "selective",
 	};
 
 	const templateAliasTable = {		// aliases for the various accepted templates
@@ -249,7 +256,10 @@ const heroll = (() => {
 		outputformat: 'sc',
 		useomcv: true,
 		verbose: true,
-		recall: "" // the default case for this will be the current speaker id, so it is grabbed at the time it is needed
+		recall: "", // the default case for this will be the current speaker id, so it is grabbed at the time it is needed
+		selective: true,
+		loc: "random",
+
 	};
 
 	// ==================================================
@@ -284,10 +294,13 @@ const heroll = (() => {
 
 	const recallState = (thisRoller) => {
 		let speakID = thisRoller.recallParameters.speakID || thisRoller.theSpeaker.id;
-		if (state.heroll[speakID]) {
+		if (typeof state.heroll[speakID] !== undefined) {
 			thisRoller.parameters = state.heroll[speakID].parameters;
 			thisRoller.userparameters = state.heroll[speakID].userparameters;
 			thisRoller.theResult = state.heroll[speakID].theResult;
+
+			// this will drive whether we load a previous roll
+			thisRoller.recallParameters.recall = true;
 		}
 		return;
 	};
@@ -389,10 +402,12 @@ const heroll = (() => {
 			"radio_target": -1,
 			"OCV": 0,
 			"ocv_base": 0,
+			"DCV": 0,
+			"DMCV": 0,
 		}
-		let value = attrDefaultTable[attr];
-		let retAttr = findObjs({ type: 'attribute', characterid: charid, name: attr })[0] || createObj("attribute", { name: attr, current: value, characterid: charid });
-		retAttr.currval = retAttr.get('current');
+		let defvalue = attrDefaultTable[attr];
+		let retAttr = findObjs({ type: 'attribute', characterid: charid, name: attr })[0] || createObj("attribute", { name: attr, current: defvalue, characterid: charid });
+		retAttr.currval = retAttr.get('current') || defvalue;
 		return retAttr.currval;
 	};
 
@@ -425,7 +440,7 @@ const heroll = (() => {
 			legshot: { ocvmod: -4 },
 			focus: { ocvmod: -4, ksx: randomInteger(3), nsx: 1, bx: 1, hitlabel: "Focus" },
 			random: { ocvmod: 0 },
-			none: { ocvmod: 0, ksx: randomInteger(3) },
+			none: { ocvmod: 0, ksx: randomInteger(3), hitlabel: "none" },
 		};
 		return locationDataTable[loc] || locationDataTable.none;
 	};
@@ -702,6 +717,14 @@ const heroll = (() => {
 						valInput = "tall";
 						break;
 				}
+
+			case "target":
+				valInput = origCap.split(/[\s,]/);				// split on white space or comma
+				break;
+
+			case "selective":
+				valInput = true;
+				break;
 		}
 
 		return valInput;
@@ -745,6 +768,8 @@ const heroll = (() => {
 			extradice: "--",
 			recall: "--",
 			verbose: "--",
+			target: "--",
+			selective: "--",
 			notes: ""
 		};
 
@@ -772,6 +797,8 @@ const heroll = (() => {
 			notes: "",
 			extradice: [0, 0, 0, "--", "0d6"],					// d6, d3, adder, shorthand (not used), roll equation
 			recall: "--",
+			target: [],											// ids of any targets supplied
+			selective: false,									// whether to roll individual to-hits for each supplied target
 			verbose: false,
 
 			//inaccessible to user
@@ -822,6 +849,7 @@ const heroll = (() => {
 			__V_NOTE__: "",										// place for note in verbose output
 			__SIDECAR_VIS__: "none",							// visibility for all sidecar elements (works opposite of tall based elements) (block for sidecar; none for tall)
 			__NOTES__: "",										// text from the notes argument
+			__TARGET_TABLE_HOOK__: "",							// hook for the rows of target information, if one/more is specified
 		};
 
 		// RESULT ROLL
@@ -838,27 +866,26 @@ const heroll = (() => {
 			location: { ocvmod: 0, ksx: 1, nsx: 1, bx: 1, hitlabel: "" },
 			kbroll: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
 			knockback: 0,
+			targetData: [],										// if targets are designated, this will hold any relevant data (pic, to hit roll, location, etc.)
 		};
 		return;
 	};
 
 	const processRecall = (thisRoller, args) => {
-		// this will drive whether we load a previous roll
-		thisRoller.recallParameters.recall = true;
-
 		// the recall speaker was already set to current speaker with the defaults, so we only need to overwrite it if there is a value supplied
 		if (thisRoller.userparameters.recall !== "") { 
-			thisRoller.recallParameters.speakID = thisRoller.userparameters.recall === "last" ? state.heroll.lastSpeaker : thisRoller.userparameters.recall;
+			thisRoller.recallParameters.speakID = (thisRoller.userparameters.recall === "last" && state.heroll.lastSpeaker !== "none") ? state.heroll.lastSpeaker : thisRoller.userparameters.recall;
 		}
 
 		// load previous roll
 		recallState(thisRoller);
 
-		// that just overwrote our user supplied arguments, so reapply with only those allowed
-		// first, what isn't allowed:
-		const dropProps = ["dice", "extradice", "recall", "template"];
-		extendFromArray(thisRoller.userparameters, args.filter((a) => { return !dropProps.includes(a[0]); }));
-
+		if (thisRoller.recallParameters.recall === true) {
+			// that just overwrote our user supplied arguments, so reapply with only those allowed
+			// first, what isn't allowed:
+			const dropProps = ["dice", "extradice", "recall", "template"];
+			extendFromArray(thisRoller.userparameters, args.filter((a) => { return !dropProps.includes(a[0]); }));
+		}
 		return;
 	};
 
@@ -911,6 +938,38 @@ const heroll = (() => {
 		return;
 	};
 
+	const processTargets = (thisRoller) => {
+		if (thisRoller.parameters.mechanic === "l" || thisRoller.parameters.mechanic === "u") return; // no targets for luck & unluck
+		let attr = thisRoller.parameters.useomcv ? "DMCV" : "DCV";				// decide which attribute we're using for the defensive value, if character sheet is present
+		if (thisRoller.parameters.target.length > 0) {							// if a target was designated -- "target" here is an array of targets
+			thisRoller.theResult.targetData = thisRoller.parameters.target
+				.filter((a) => { return getObj('graphic', a); })				// limit to only those that are properly formatted (filter out the bad)
+				.map((a) => {													// each should output an object of key:value pairs for the info we need
+					let loc = getResultLocation(thisRoller);
+					let thr = thisRoller.parameters.selective === true ? roll3d6() : thisRoller.theResult.tohitroll;
+					let token = getObj('graphic', a);
+					let chardcv = "";
+					let charishit = "";
+					if (token.get('represents') !== "") {						// check whether token has character sheet
+						chardcv = getCharacterAttr(attr, token.get('represents'));	
+						charishit = 11 + thisRoller.theSpeaker.ocvFinal - thr >= chardcv ? "&#9678;" : "";	// if character is hit, load the target character into the string; otherwise, empty
+					}
+					return {
+						__TARGET_IMG__: token.get('imgsrc'),
+						__TARGET_DCV__: chardcv,
+						__TARGET_TOHIT_VIS__: thisRoller.parameters.selective ? "block" : "none",
+						__TARGET_TOHIT_ROLL__: thr,
+						__TARGET_LOC_VIS__: loc.hitlabel !== "none" ? "block" : "none",
+						__TARGET_LOC__: loc.hitlabel + (randomInteger(2) > 1 ? " (R)" : " (L)"),
+						__TARGET_BX__: loc.bx,
+						__TARGET_SX__: thisRoller.parameters.mechanic === "k" ? loc.ksx : loc.nsx,
+						__TARGET_HIT_DCV__: 11 + thisRoller.theSpeaker.ocvFinal - thr,
+						__TARGET_ISHIT__: (thisRoller.parameters.target.length === 1 || !thisRoller.parameters.selective) ? "" : charishit,
+					};
+				});
+		} 
+	};
+
 	const processOCV = (thisRoller) => {
 		// process using OMCV instead of OCV
 		if (thisRoller.parameters.useomcv === true && thisRoller.theSpeaker !== undefined && thisRoller.theSpeaker.speakerType === "character") { // if there is a character involved, get the ocv and location info from the sheet
@@ -941,14 +1000,19 @@ const heroll = (() => {
 	};
 
 	const getResultLocation = (thisRoller) => {
+		// if it's a recall and the situation would normally trip a location generation (like random)
+		// we should only roll it if there is no recall version of the location argument passed
+		// original roll generates a random location; once set, that should stay the same for recalls, only changing if the recall explicitly includes new location argument
+//		if (thisRoller.theResult.location.hitlabel !== "" /* default would mean no location, ie: first roll*/ && thisRoller.recallParameters.recall === true )
 
+		let loc = {};
 		// if we need to get a location, get it; run the location through the locationDataTable to get properties
 		if (thisRoller.parameters.loc == "any" || thisRoller.parameters.loc == "random" || thisRoller.parameters.loc.indexOf("shot") > -1) {
-			Object.assign(thisRoller.theResult.location, getLocationData(specHitLocation(genHitLocation(thisRoller.parameters.loc))));
+			loc = getLocationData(specHitLocation(genHitLocation(thisRoller.parameters.loc)));
 		} else {
-			Object.assign(thisRoller.theResult.location, getLocationData(thisRoller.parameters.loc));
+			loc = getLocationData(thisRoller.parameters.loc);
 		}
-		return;
+		return loc;
 	};
 
 	const rollResult = (thisRoller) => {
@@ -1054,9 +1118,10 @@ const heroll = (() => {
 		prioritizeArg("template", setTemplateDefaults, thisRoller);		// look for and process template argument, if present
 		processArguments(thisRoller);									// process the rest of the arguments
 		processOCV(thisRoller);											// figure out if OMCV, location, or OCV override should alter the OCV (or replace it)
+		processTargets(thisRoller);
 		// rollActivation();											// no longer needed as 3d6 roll was already generated in the initialization of defaults
 		// rollToHit();													// no longer needed as 3d6 roll was already generated in the initialization of defaults
-		getResultLocation(thisRoller);									// generate a location if necessary, then retrieve location information
+		thisRoller.theResult.location = getResultLocation(thisRoller);	// generate a location if necessary, then retrieve location information
 		if (!thisRoller.recallParameters.recall) rollResult(thisRoller);// generate dice pool
 		calcResult(thisRoller);											// turn dice pool into stun, body, knockback, multipliers, points, etc.
 		storeState(thisRoller);											// store in the state variable
@@ -1106,7 +1171,7 @@ const heroll = (() => {
 		}
 
 		// LOCATION
-		if (thisRoller.parameters.loc != "none") {
+		if (thisRoller.parameters.loc != "none" && thisRoller.parameters.target.length === 0) { // if there is a location AND there are no targets (targets show their own locations)
 			if (thisRoller.parameters.outputformat === "tall") {
 				thisRoller.outputParams.__LOC_TALL_VIS__ = "block";
 			} else {
@@ -1118,7 +1183,10 @@ const heroll = (() => {
 			if (thisRoller.parameters.mechanic == "k") thisRoller.outputParams.__STUN_MULT__ = thisRoller.theResult.location.ksx;
 			else if (thisRoller.parameters.mechanic == "n") thisRoller.outputParams.__STUN_MULT__ = thisRoller.theResult.location.nsx;
 
-		}
+		} else {
+			thisRoller.outputParams.__BODY_MULT__ = "--";										// this will either be hidden or direct people to the target info
+			thisRoller.outputParams.__STUN_MULT__ = "--";
+        }
 
 		// TO HIT BAR
 		thisRoller.outputParams.__TOHIT_ROLL__ = thisRoller.theResult.tohitroll;
@@ -1221,6 +1289,26 @@ const heroll = (() => {
 			}
 		}
 
+		// TARGETING
+		if (thisRoller.parameters.target.length > 0) {									// if a target was designated
+			let targetTable = '';
+			let targetRow = '';
+			if (thisRoller.parameters.selective || thisRoller.parameters.loc !== "none") {	// selective or location damage needed
+				targetTable = '__TABLE-ROWS__';
+				targetRow = '<!--TARGETING BAR --> <div style="overflow: hidden; background-color: black; display: block"><div style="width:95%; margin: 10px auto 7px; overflow:hidden;"><!-- TARGET --><div style="width:33.3%; display: inline-block; float: left; position: relative;"><div style="overflow: visible; width: 94%; margin: auto; border-radius: 5px; background-color: #ffffff; position: relative; float:left; display: block;"><div style="display: block"><div style="padding: 3px 1px 1px; text-align: center; font-weight: bold; background-color: white; border-radius: 5px 5px 5px 5px; color: black"><div style="background-size:48px; height: 48px; position: relative;"><img height="48" width="48" style="max-height:48px;" src="__TARGET_IMG__"><div style="position:absolute;left: 2px;top: -3px;font-size: 18px;line-height: 18px;color:#bf1f2f;font-weight: normal;">__TARGET_ISHIT__</div><div style="position:absolute;right: 3px;top: -1px;font-size: 13px;line-height: 16px;color: #bf1f2f;font-weight: normal;text-align: right;">__TARGET_DCV__</div></div></div></div></div></div><!-- BUBBLES --><div style="width:66.7%; display: inline-block; float: left; position: relative;"><div style="width:95%; margin:auto;"><div style="display:block;"><!-- To Hit Roll Bubble --><div style="width: 25%; display:inline-block; float:left;"><div style="width:93%; margin:auto;"><div style="height: 35px; width: 100%; border-radius: 5px; background-color: #ffffff; float: left; display: __TARGET_TOHIT_VIS__"><div style="position: relative; padding-right: 1px; font-size: 18px; line-height: 18px; text-align: center; font-family: dicefontd6; color: #bf1f2f">K</div><div style="position: relative; padding-right: 1px; font-size: 13px; line-height: 16px; text-align: center; color: #000000">__TARGET_TOHIT_ROLL__</div></div></div></div><!-- Hit DCV Bubble --><div style="width: 25%; display:inline-block; float:left;"><div style="width:93%; margin:auto;"><div style="height: 35px; width: 100%; border-radius: 5px; background-color: #ffffff; float: left; display: __TARGET_TOHIT_VIS__"><div style="position: relative; padding-right: 1px; font-size: 18px; line-height: 18px; text-align: center; font-family: dicefontd6; color: #bf1f2f">&#9678;</div><div style="position: relative; padding-right: 1px; font-size: 13px; line-height: 16px; text-align: center; color: #000000">__TARGET_HIT_DCV__</div></div></div></div><!-- STUN Multiplier Bubble --><div style="width: 25%; display:inline-block; float:right;"><div style="width:93%; margin:auto;"><div style="height: 35px; width: 100%; border-radius: 5px; background-color: #ff8000; float: left; display: __TARGET_LOC_VIS__"><div style="position: relative; padding-right: 1px; font-size: 18px; line-height: 18px; text-align: center; font-family: dicefontd6; color: #ffffff">&#128497;</div><div style="position: relative; padding-right: 1px; font-size: 13px; line-height: 16px; text-align: center; color: white"><span style="font-size:8px;">x</span>__TARGET_SX__</div></div></div></div><!-- BODY Multiplier Bubble --><div style="width: 25%; display:inline-block; float:right;"><div style="width:93%; margin:auto;"><div style="height: 35px; width: 100%; border-radius: 5px; background-color: #bf1f2f; float: left; display: __TARGET_LOC_VIS__"><div style="position: relative; padding-right: 1px; font-size: 18px; line-height: 18px; text-align: center; font-family: dicefontd6; color: #ffffff">&#127778;</div><div style="position: relative; padding-right: 1px; font-size: 13px; line-height: 16px; text-align: center; color: white"><span style="font-size:8px;">x</span>__TARGET_BX__</div></div></div></div></div><!-- TARGET LOCATION BAR --><div style="padding:5px 0px 0px; clear: both; display:__TARGET_LOC_VIS__;"><div style="display: block"><div style="line-height: 12px; font-style: italic; color:#ffffff; display: block"><div style="font-weight: bold; text-align: left; float: left">Loc</div><div style="text-align: right; float: right; color:#ffffff">__TARGET_LOC__</div><div style="overflow: hidden"><div style="border-bottom: 1px dotted white; height: 10px; margin: 0px 3px">&nbsp;</div></div></div></div></div></div></div></div></div>';
+			} else {																	// only output images of targets
+				targetTable = '<!-- TARGETING BAR --><div style="overflow: hidden; background-color: black; display: block"><div style="width:95%; margin: 10px auto 7px; overflow:hidden;">__TABLE-ROWS__</div></div>';
+				targetRow = '<!--TARGET --><div style="width:33.3%; display: inline-block; float: left; position: relative;"><div style="overflow: visible; width: 94%; margin: 4px auto; border-radius: 5px; background-color: #ffffff; position: relative; float:left; display: block;"><div style="display: block"><div style="padding: 3px 1px 1px; text-align: center; font-weight: bold; background-color: white; border-radius: 5px 5px 5px 5px; color: black"><div style="background-size:48px; height: 48px; position: relative;"><img height="48" width="48" style="max-height:48px;" src="__TARGET_IMG__"><div style="position:absolute;left: 2px;top: -3px;font-size: 18px;line-height: 18px;color:#bf1f2f;font-weight: normal;">__TARGET_ISHIT__</div><div style="position:absolute;right: 3px;top: -1px;font-size: 13px;line-height: 16px;color: #bf1f2f;font-weight: normal;text-align: right;">__TARGET_DCV__</div></div></div></div></div></div>';
+            }
+			if (thisRoller.theResult.targetData.length > 0) {
+				let targetKeysRegex = new RegExp(Object.keys(thisRoller.theResult.targetData[0]).join("|"), 'gi');
+				let targetAllRows = thisRoller.theResult.targetData.reduce((a, v, i) => {
+					return a + targetRow.replace(targetKeysRegex, (matched) => { return v[matched]; })
+				},"");
+				thisRoller.outputParams.__TARGET_TABLE_HOOK__ = targetTable.replace("__TABLE-ROWS__",targetAllRows);
+            }
+		}
+
 		// NOTES
 		if (thisRoller.parameters.notes != "") {
 			thisRoller.outputParams.__NOTES__ = thisRoller.parameters.notes;
@@ -1243,7 +1331,7 @@ const heroll = (() => {
 	};
 
 	const sendOutputToChat = (thisRoller) => {
-		let htmlForm = '<div style="width: 405px;overflow: hidden;"><div style="width: 240px;overflow: hidden;float: left;"><div style="padding-top: 16px"><div style="margin-right: 16px; position: relative; font-family: &quot; helvetica neue&quot; , &quot;helvetica&quot; , &quot;arial&quot; , sans-serif; font-size: 12px"><!-- CHARACTER BAR --><div style="overflow: hidden"><div style="border: 1px #000000; border-radius: 15px 15px 0px 0px; background-color: black; text-align: center;color: #efefef; font-size: 25px; line-height: 35px">__CHARNAME__</div></div><!-- MECHANIC BAR --><div style="display: __MECH_VIS__"><div style="position: absolute; top: -16px; right: -16px; height: 44px; width: 44px; border-radius: 24px; background-color: __MECH_BGC__; border: 2px solid black; float: right; display: block"><div style="display: block"><div style="position: relative; font-size: 25px; line-height: 44px; text-align: center; color: white">__MECH__</div></div></div></div><!-- POWER NAME BAR --><div style="border: #000000 solid;overflow: visible;padding: 12px 5px 7px;border-width: 0px 2px;background-color: __PRIMARY_BG_COL__;color:__PRIMARY_TEXT_COL__;position: relative;min-height: 29px;display: block;"><div style="font-size: 20px;font-weight: bold;line-height: 29px;">__POWERNAME__</div></div><!-- DIE STRENGTH AND ACTIVATION BAR --><div style="border: #000000 solid;overflow: visible;padding: 0px 5px 3px;border-width: 0px 2px;height: 20px;background-color: __PRIMARY_BG_COL__;color:__PRIMARY_TEXT_COL__;position: relative;display:__DS_TALL_VIS__"><div style="float: left; width: 55%; font-size: 17px; font-weight: bold; line-height: 17px; font-style: italic;">__DIE_STRENGTH__</div><div style="position:absolute; width: 50px; top:-24px;right:3px;display: __ACT_VIS__"><div style="border: 1px solid; overflow: hidden; display: block; border-radius: 5px; color:black; border-color: __SECONDARY_BG_COL__"><div style="padding: 3px 1px 1px; text-align: center; font-weight: bold; background-color: #ffffff; font-size: 10px">ACT __ACT_TGT__-</div><div style="padding: 1px; text-align: center; background-color: #ffffff; line-height: 17px">__ACT_ROLL__</div></div></div><div style="clear: both"></div></div><!-- TO-HIT BAR --><div style="border: #000000 solid; overflow: hidden; padding: 6px 7px 2px; border-width: 1px 2px 0px 2px; text-align: center; background-color: #ffffff; display: __TOHIT_VIS__"><div style="float: left; width: 31%; display: inline-block"><div style="display: block"><div style="border: 1px solid; overflow: hidden; display: block; border-radius: 5px; border-color: __PRIMARY_BG_COL__"><div style="padding: 3px 1px 1px; text-align: center; font-weight: bold; background-color: #ffffff">__TOHIT_OCV_LBL__</div><div style="padding: 1px; text-align: center; background-color: #ffffff; border-color: #000000; font-size: 20px; line-height: 30px">__TOHIT_OCV__</div></div></div></div><div style="width: 31%; margin: 0px auto; display: inline-block"><div style="display: block"><div style="border: 1px solid; overflow: hidden; display: block; border-radius: 5px; border-color: __PRIMARY_BG_COL__"><div style="padding: 3px 1px 1px; text-align: center; font-weight: bold; background-color: #ffffff">ROLL</div><div style="padding: 1px; text-align: center; background-color: #ffffff; font-size: 20px; line-height: 30px">__TOHIT_ROLL__</div></div></div></div><div style="float: right; width: 31%; display: inline-block"><div style="display: block"><div style="border: 1px solid; overflow: hidden; display: block; border-radius: 5px; border-color: __PRIMARY_BG_COL__"><div style="padding: 3px 1px 1px; text-align: center; font-weight: bold; background-color: #ffffff">__TOHIT_DCV_LBL__</div><div style="padding: 1px; text-align: center; background-color: #ffffff; font-size: 20px; line-height: 30px">__TOHIT_DCV__</div></div></div></div></div><!-- LOCATION BAR --><div style="border: #000000 solid; overflow: hidden; padding: 5px 7px 5px 5px; border-width: 0px 2px; background-color: white; display: __LOC_TALL_VIS__"><div style="display: block"><div style="line-height: 15px; font-style: italic; clear: both; display: block"><div style="font-weight: bold; text-align: left; float: left">Hit Location</div><div style="text-align: right; float: right">__LOC__</div><div style="overflow: hidden"><div style="border-bottom: 1px dotted black; height: 10px; margin: 0px 3px">&nbsp;</div></div></div></div></div><!-- DIE POOL BAR --><div style="border: #000000 solid; overflow: hidden; border-width: 1px 2px 0px 2px; background-color: __SECONDARY_BG_COL__; display: __DIEPOOL_TALL_VIS__; padding: 0px 5px; clear: both"><div style="text-align: left; font-size: 17px; padding: 5px 0px; line-height: 20px;font-family:dicefontd6;font-size:26px;color:__SECONDARY_TEXT_COL__;">__DIEPOOL__</div></div><!-- RESULT BAR (DAMAGE WITH MULTIPLIERS)--><div style="border: #000000 solid; overflow: hidden; padding: 10px 0px 7px 0px; border-width: 1px 2px 0px 2px; text-align: center; background-color: black; display: __RES_MULT_VIS__"><div style="overflow: visible; width: 30%; margin: 0px auto 0px 2%; border-radius: 5px; background-color: transparent; position: relative; display: inline-block; float: left"><div style="display: block"><div style="padding: 3px 0px 1px; font-weight: bold; background-color: white; border-radius: 5px 5px 0px 0px; color: black; display: block"><div style="float: left; display: inline-block; margin-left: 4px">BODY</div><div style="float: right; display: inline-block; margin-right: 4px"><span style="font-size: 8px">x</span>__BODY_MULT__</div><div style="clear: both"></div></div><div style="text-align: center; font-size: 20px; background-color: #bf1f2f; border-radius: 0px 0px 5px 5px; color: white; line-height: 30px">__RES_BODY__</div></div></div><div style="overflow: visible; width: 30%; margin: 0px auto; border-radius: 5px; background-color: transparent; position: relative; display: inline-block"><div style="display: block"><div style="padding: 3px 0px 1px; font-weight: bold; background-color: white; border-radius: 5px 5px 0px 0px; color: black; display: block"><div style="float: left; display: inline-block; margin-left: 4px">STUN</div><div style="float: right; display: inline-block; margin-right: 4px"><span style="font-size: 8px">x</span>__STUN_MULT__</div><div style="clear: both"></div></div><div style="text-align: center; font-size: 20px; background-color: #ff8000; border-radius: 0px 0px 5px 5px; color: white; line-height: 30px">__RES_STUN__</div></div></div><div style="width: 30%; margin: 0px 2% 0px auto; overflow: visible; border-radius: 5px; background-color: transparent; position: relative; display: inline-block; float: right"><div style="display: block"><div style="padding: 3px 0px 1px; text-align: center; font-weight: bold; background-color: white; border-radius: 5px 5px 0px 0px; color: black">KB</div><div style="text-align: center; font-size: 20px; background-color: #00b8a9; border-radius: 0px 0px 5px 5px; color: white; line-height: 30px">__RES_KB__</div></div></div></div><!-- RESULT BAR (DAMAGE, NO MULTIPLIER) --><div style="border: #000000 solid; overflow: hidden; padding: 10px 0px 7px 0px; border-width: 1px 2px 0px 2px; text-align: center; background-color: black; display: __RES_BASE_VIS__"><div style="overflow: visible; width: 30%; margin: 0px auto 0px 2%; border-radius: 5px; background-color: transparent; position: relative; display: inline-block; float: left"><div style="display: block"><div style="padding: 3px 1px 1px; text-align: center; font-weight: bold; background-color: white; border-radius: 5px 5px 0px 0px; color: black">BODY</div><div style="text-align: center; font-size: 20px; background-color: #bf1f2f; border-radius: 0px 0px 5px 5px; color: white; line-height: 30px">__RES_BODY__</div></div></div><div style="overflow: visible; width: 30%; margin: 0px auto; border-radius: 5px; background-color: transparent; position: relative; display: inline-block"><div style="display: block"><div style="padding: 3px 1px 1px; text-align: center; font-weight: bold; background-color: white; border-radius: 5px 5px 0px 0px; color: black">STUN</div><div style="text-align: center; font-size: 20px; background-color: #ff8000; border-radius: 0px 0px 5px 5px; color: white; line-height: 30px">__RES_STUN__</div></div></div><div style="width: 30%; margin: 0px 2% 0px auto; overflow: visible; border-radius: 5px; background-color: transparent; position: relative; display: inline-block; float: right"><div style="display: block"><div style="padding: 3px 0px 1px; text-align: center; font-weight: bold; background-color: white; border-radius: 5px 5px 0px 0px; color: black">KB</div><div style="text-align: center; font-size: 20px; background-color: #00b8a9; border-radius: 0px 0px 5px 5px; color: white; line-height: 30px">__RES_KB__</div></div></div></div><!-- RESULT BAR (POINTS) --><div style="border: #000000 solid; overflow: hidden; padding: 10px 7px 7px 7px; border-width: 1px 2px 0px 2px; text-align: center; background: black; display: __RES_PTS_VIS__"><div style="border: 1px solid; overflow: hidden; border-radius: 5px; background-color: transparent; position: relative; display: block"><div style="display: block"><div style="padding: 3px 1px 1px; text-align: center; font-weight: bold; background-color: white; border-radius: 5px 5px 0px 0px; color: black">__RES_PTS_LBL__</div><div style="padding: 1px; text-align: center; font-size: 20px; background-color: #6495ED; border-radius: 0px 0px 5px 5px; color: white; line-height: 30px;overflow:hidden;">__RES_PTS__</div></div></div></div><!-- BOTTOM BAR --><div style="overflow: hidden"><div style="border: 1px #000000;border-radius: 0px 0px 15px 15px;background-color: black;text-align: center;"><div style="color: #FFFFFF;text-align:left;padding: 5px 15px 10px;font-style: italic;line-height: 12px;font-size: 12px;display:block;">__NOTES__</div></div></div><!-- ========== VERBOSE OUTPUT ========== --><div style="overflow: hidden;display: __V_VIS__;margin-top: 5px;"><div style="border: #000000 solid;border-radius: 15px 15px 0px 0px;text-align: center;line-height: 25px;font-size:10px;font-weight: bold;border-width: 2px 2px 0px 2px;">Verbose Output</div><div style="text-align:left;font-size:9px;border:#000000 solid;border-width:0px 2px 0px 2px;padding:3px 4px;">__V_NOTE__</div><div style="border:#000000 solid;border-width:0px 2px 2px 2px;border-radius: 0px 0px 15px 15px;line-height:15px;">&nbsp;</div></div></div></div></div><!-- ========== SIDECAR ========== --><div style="width: 160px; overflow: hidden; float: right;display:__SIDECAR_VIS__"><div style="padding-top: 16px"><div style="position: relative; font-family: &quot; helvetica neue&quot; , &quot;helvetica&quot; , &quot;arial&quot; , sans-serif; font-size: 12px"><!-- CONNECTING DOTS --><div style="height: 20px; display: block; clear: both"><div style="height: 8px;font-size: 8px;clear: both;display: block;line-height: 9px;"><div style="width: 0px;display: inline-block;float: left;">&nbsp;</div><div style="width: 8px; background-color: black; border-radius: 4px; display: inline-block; float: left; height: 8px">&nbsp;</div><div style="width: 10px;display: inline-block;float: left;">&nbsp;</div><div style="width: 8px; background-color: black; border-radius: 4px; display: inline-block; float: left; height: 8px">&nbsp;</div><div style="width: 10px;display: inline-block;float: left;">&nbsp;</div><div style="width: 8px; background-color: black; border-radius: 4px; display: inline-block; float: left; height: 8px">&nbsp;</div><div style="width: 10px;display: inline-block;float: left;">&nbsp;</div><div style="width: 8px; background-color: black; border-radius: 4px; display: inline-block; float: left; height: 8px">&nbsp;</div><div style="width: 10px;display: inline-block;float: left;">&nbsp;</div><div style="width: 8px; background-color: black; border-radius: 4px; display: inline-block; float: left; height: 8px">&nbsp;</div></div><div style="height: 12px; clear: both; display: block"><div style="width: 72px; display: inline-block; float: left">&nbsp;</div><div style="width: 8px; background-color: black; border-radius: 4px; display: inline-block; float: left; height: 8px; margin: 2px 0px">&nbsp;</div></div></div><!-- TOP BAR (SIDECAR)--><div style="overflow: visible"><div style="border: 1px #000000; border-radius: 15px 15px 0px 0px; background-color: black; text-align: center; height: 15px">&nbsp;</div></div><!-- DIE STRENGTH AND ACTIVATION BAR --><div style="border: #000000 solid;overflow: hidden;padding: 3px 5px;border-width: 0px 2px;height: 42px;background-color: __PRIMARY_BG_COL__;color:__PRIMARY_TEXT_COL__;position: relative;"><div style="float: left; width: 55%; font-size: 17px; font-weight: bold; line-height: 17px; font-style: italic; margin-top: 15px;">__DIE_STRENGTH__</div><div style="float: right; width: 50px; display: inline-block"><div style="display: __ACT_VIS__"><div style="border: 1px solid; overflow: hidden; display: block; border-radius: 5px; color: black; border-color: __SECONDARY_BG_COL__"><div style="padding: 3px 1px 1px; text-align: center; font-weight: bold; background-color: #ffffff; font-size: 10px">ACT __ACT_TGT__-</div><div style="padding: 1px; text-align: center; background-color: #ffffff; line-height: 17px">__ACT_ROLL__</div></div></div></div><div style="clear: both"></div></div><!-- DIE POOL BAR --><div style="border: #000000 solid; overflow: hidden; border-width: 1px 2px 0px 2px; background-color: __SECONDARY_BG_COL__; display: block; padding: 0px 5px; clear: both"><div style="text-align: left; font-size: 17px; padding: 5px 0px; line-height: 20px;font-family:dicefontd6;font-size:26px;color:__SECONDARY_TEXT_COL__;">__DIEPOOL__</div></div><!-- LOCATION BAR --><div style="border: #000000 solid; overflow: hidden; padding: 5px 7px 0px 5px; border-width: 1px 2px 0px 2px; background-color: white; display: __LOC_SC_VIS__"><div style="display: block"><div style="line-height: 15px; font-style: italic; clear: both; display: block"><div style="font-weight: bold; text-align: left; float: left">Hit Location</div><div style="text-align: right; float: right">__LOC__</div><div style="overflow: hidden"><div style="border-bottom: 1px dotted black; height: 10px; margin: 0px 3px">&nbsp;</div></div></div></div><div style="padding: 6px 5px 3px 5px; display: block"><div style="height: 25px"><div style="float: left; height: 20px; width: 20px; border-radius: 12px; background-color: #ff8000; overflow: visible; display: block; border: 1px solid black"><div style="position: relative; font-size: 10px; text-align: center; line-height: 20px; margin: 0px; color: white">__STUN_MULT__</div></div><div style="float: left"><div style="float: left; font-size: 12; font-style: italic; line-height: 24px; text-align: left; margin-left: 4px">STUN Mult.</div></div></div><div style="height: 25px"><div style="height: 20px; width: 20px; border-radius: 12px; background-color: #bf1f2f; overflow: hidden; display: block; border: 1px solid black; float: left"><div style="position: relative; font-size: 10px; text-align: center; line-height: 20px; margin: 0px; color: white">__BODY_MULT__</div></div><div style="float: left"><div style="float: left; font-size: 12; font-style: italic; line-height: 24px; text-align: left; margin-left: 4px">BODY Mult.</div></div></div></div></div><!-- BOTTOM BAR (SIDECAR) --><div style="overflow: hidden"><div style="border: 1px #000000; border-radius: 0px 0px 15px 15px; background-color: black; height: 15px">&nbsp;</div></div></div></div></div></div>';
+		let htmlForm = '<div style="width: 405px;overflow: hidden;"><div style="width: 240px;overflow: hidden;float: left;"><div style="padding-top: 16px"><div style="margin-right: 16px; position: relative; font-family: &quot; helvetica neue&quot; , &quot;helvetica&quot; , &quot;arial&quot; , sans-serif; font-size: 12px"><!-- CHARACTER BAR --><div style="overflow: hidden"><div style="border: 1px #000000; border-radius: 15px 15px 0px 0px; background-color: black; text-align: center;color: #efefef; font-size: 25px; line-height: 35px">__CHARNAME__</div></div><!-- MECHANIC BAR --><div style="display: __MECH_VIS__"><div style="position: absolute; top: -16px; right: -14px; height: 44px; width: 44px; border-radius: 24px; background-color: __MECH_BGC__; border: 2px solid black; float: right; display: block"><div style="display: block"><div style="position: relative; font-size: 25px; line-height: 44px; text-align: center; color: white">__MECH__</div></div></div></div><!-- POWER NAME BAR --><div style="border: #000000 solid;overflow: visible;padding: 12px 5px 7px;border-width: 0px 2px;background-color: __PRIMARY_BG_COL__;color:__PRIMARY_TEXT_COL__;position: relative;min-height: 29px;display: block;"><div style="font-size: 20px;font-weight: bold;line-height: 29px;">__POWERNAME__</div></div><!-- DIE STRENGTH AND ACTIVATION BAR --><div style="border: #000000 solid;overflow: visible;padding: 0px 5px 3px;border-width: 0px 2px;height: 20px;background-color: __PRIMARY_BG_COL__;color:__PRIMARY_TEXT_COL__;position: relative;display:__DS_TALL_VIS__"><div style="float: left; width: 55%; font-size: 17px; font-weight: bold; line-height: 17px; font-style: italic;">__DIE_STRENGTH__</div><div style="position:absolute; width: 50px; top:-24px;right:3px;display: __ACT_VIS__"><div style="border: 1px solid; overflow: hidden; display: block; border-radius: 5px; color:black; border-color: __SECONDARY_BG_COL__"><div style="padding: 3px 1px 1px; text-align: center; font-weight: bold; background-color: #ffffff; font-size: 10px">ACT __ACT_TGT__-</div><div style="padding: 1px; text-align: center; background-color: #ffffff; line-height: 17px">__ACT_ROLL__</div></div></div><div style="clear: both"></div></div><!-- TO-HIT BAR --><div style="border: #000000 solid; overflow: hidden; padding: 6px 7px 2px; border-width: 1px 2px 0px 2px; text-align: center; background-color: #ffffff; display: __TOHIT_VIS__"><div style="float: left; width: 31%; display: inline-block"><div style="display: block"><div style="border: 1px solid; overflow: hidden; display: block; border-radius: 5px; border-color: __PRIMARY_BG_COL__"><div style="padding: 3px 1px 1px; text-align: center; font-weight: bold; background-color: #ffffff">__TOHIT_OCV_LBL__</div><div style="padding: 1px; text-align: center; background-color: #ffffff; border-color: #000000; font-size: 20px; line-height: 30px">__TOHIT_OCV__</div></div></div></div><div style="width: 31%; margin: 0px auto; display: inline-block"><div style="display: block"><div style="border: 1px solid; overflow: hidden; display: block; border-radius: 5px; border-color: __PRIMARY_BG_COL__"><div style="padding: 3px 1px 1px; text-align: center; font-weight: bold; background-color: #ffffff">ROLL</div><div style="padding: 1px; text-align: center; background-color: #ffffff; font-size: 20px; line-height: 30px">__TOHIT_ROLL__</div></div></div></div><div style="float: right; width: 31%; display: inline-block"><div style="display: block"><div style="border: 1px solid; overflow: hidden; display: block; border-radius: 5px; border-color: __PRIMARY_BG_COL__"><div style="padding: 3px 1px 1px; text-align: center; font-weight: bold; background-color: #ffffff">__TOHIT_DCV_LBL__</div><div style="padding: 1px; text-align: center; background-color: #ffffff; font-size: 20px; line-height: 30px">__TOHIT_DCV__</div></div></div></div></div><!-- LOCATION BAR --><div style="border: #000000 solid; overflow: hidden; padding: 5px 7px 5px 5px; border-width: 0px 2px; background-color: white; display: __LOC_TALL_VIS__"><div style="display: block"><div style="line-height: 15px; font-style: italic; clear: both; display: block"><div style="font-weight: bold; text-align: left; float: left">Hit Location</div><div style="text-align: right; float: right">__LOC__</div><div style="overflow: hidden"><div style="border-bottom: 1px dotted black; height: 10px; margin: 0px 3px">&nbsp;</div></div></div></div></div><!-- DIE POOL BAR --><div style="border: #000000 solid; overflow: hidden; border-width: 1px 2px 0px 2px; background-color: __SECONDARY_BG_COL__; display: __DIEPOOL_TALL_VIS__; padding: 0px 5px; clear: both"><div style="text-align: left; font-size: 17px; padding: 5px 0px; line-height: 20px;font-family:dicefontd6;font-size:26px;color:__SECONDARY_TEXT_COL__;">__DIEPOOL__</div></div><!-- RESULT BAR (DAMAGE WITH MULTIPLIERS)--><div style="overflow: hidden; background-color: black; display: __RES_MULT_VIS__"><div style="width:95%; margin: 10px auto 7px; overflow:hidden;"><div style="width:33.3%; display: inline-block; float: left;"><div style="overflow: visible; width: 94%; margin: auto; border-radius: 5px; background-color: transparent; position: relative; display: block; float: left"><div style="display: block"><div style="padding: 3px 0px 1px; font-weight: bold; background-color: white; border-radius: 5px 5px 0px 0px; color: black; display: block"><div style="float: left; display: inline-block; margin-left: 4px">BODY</div><div style="float: right; display: inline-block; margin-right: 4px"><span style="font-size: 8px">x</span>__BODY_MULT__</div><div style="clear: both"></div></div><div style="text-align: center; font-size: 20px; background-color: #bf1f2f; border-radius: 0px 0px 5px 5px; color: white; line-height: 30px">__RES_BODY__</div></div></div></div><div style="width:33.4%; display: inline-block; float: left;"><div style="overflow: visible; width: 94%; margin: auto; border-radius: 5px; background-color: transparent; position: relative; display: block"><div style="display: block"><div style="padding: 3px 0px 1px; font-weight: bold; background-color: white; border-radius: 5px 5px 0px 0px; color: black; display: block"><div style="float: left; display: inline-block; margin-left: 4px">STUN</div><div style="float: right; display: inline-block; margin-right: 4px"><span style="font-size: 8px">x</span>__STUN_MULT__</div><div style="clear: both"></div></div><div style="text-align: center; font-size: 20px; background-color: #ff8000; border-radius: 0px 0px 5px 5px; color: white; line-height: 30px">__RES_STUN__</div></div></div></div><div style="width:33.3%; display: inline-block; float: left;"><div style="width: 94%; margin: auto; overflow: visible; border-radius: 5px; background-color: transparent; position: relative; display: block; float: right"><div style="display: block"><div style="padding: 3px 0px 1px; text-align: center; font-weight: bold; background-color: white; border-radius: 5px 5px 0px 0px; color: black">KB</div><div style="text-align: center; font-size: 20px; background-color: #00b8a9; border-radius: 0px 0px 5px 5px; color: white; line-height: 30px">__RES_KB__</div></div></div></div></div></div><!-- RESULT BAR (DAMAGE, NO MULTIPLIER) --><div style="overflow: hidden; background-color: black; display: __RES_BASE_VIS__"><div style="width:95%; margin: 10px auto 7px; overflow:hidden;"><div style="width:33.3%; display: inline-block; float: left;"><div style="overflow: visible; width: 94%; margin: auto; border-radius: 5px; background-color: transparent; position: relative; float:left; display: block;"><div style="display: block"><div style="padding: 3px 1px 1px; text-align: center; font-weight: bold; background-color: white; border-radius: 5px 5px 0px 0px; color: black">BODY</div><div style="text-align: center; font-size: 20px; background-color: #bf1f2f; border-radius: 0px 0px 5px 5px; color: white; line-height: 30px">__RES_BODY__</div></div></div></div><div style="width:33.4%; display: inline-block; float:left;"><div style="overflow: visible; width: 94%; margin: auto; border-radius: 5px; background-color: transparent; position: relative; display: block"><div style="display: block"><div style="padding: 3px 1px 1px; text-align: center; font-weight: bold; background-color: white; border-radius: 5px 5px 0px 0px; color: black">STUN</div><div style="text-align: center; font-size: 20px; background-color: #ff8000; border-radius: 0px 0px 5px 5px; color: white; line-height: 30px">__RES_STUN__</div></div></div></div><div style="width:33.3%; display: inline-block; float: left;"><div style="width: 94%; margin: auto; overflow: visible; border-radius: 5px; background-color: transparent; position: relative; float:right; display: block;"><div style="display: block"><div style="padding: 3px 0px 1px; text-align: center; font-weight: bold; background-color: white; border-radius: 5px 5px 0px 0px; color: black">KB</div><div style="text-align: center; font-size: 20px; background-color: #00b8a9; border-radius: 0px 0px 5px 5px; color: white; line-height: 30px">__RES_KB__</div></div></div></div></div></div><!-- RESULT BAR (POINTS) --><div style="overflow: hidden; background-color: black; display: __RES_PTS_VIS__"><div style="width:95%; margin: 10px auto 7px; overflow:hidden;"><div style="overflow: hidden; border-radius: 5px; position: relative; display: block"><div style="display: block"><div style="padding: 3px 0px 1px; text-align: center; font-weight: bold; background-color: white; border-radius: 5px 5px 0px 0px; color: black">__RES_PTS_LBL__</div><div style="padding: 1px; text-align: center; font-size: 20px; background-color: #bf1f2f; border-radius: 0px 0px 5px 5px; color: white; line-height: 30px">__RES_PTS__</div></div></div></div></div>__TARGET_TABLE_HOOK__<!-- BOTTOM BAR --><div style="overflow: hidden"><div style="border: 1px #000000;border-radius: 0px 0px 15px 15px;background-color: black;text-align: center;"><div style="color: #FFFFFF;text-align:left;padding: 5px 15px 10px;font-style: italic;line-height: 12px;font-size: 12px;display:block;">__NOTES__</div></div></div><!-- ========== VERBOSE OUTPUT ========== --><div style="overflow: hidden;display: __V_VIS__;margin-top: 5px;"><div style="border: #000000 solid;border-radius: 15px 15px 0px 0px;text-align: center;line-height: 25px;font-size:10px;font-weight: bold;border-width: 2px 2px 0px 2px;">Verbose Output</div><div style="text-align:left;font-size:9px;border:#000000 solid;border-width:0px 2px 0px 2px;padding:3px 4px;">__V_NOTE__</div><div style="border:#000000 solid;border-width:0px 2px 2px 2px;border-radius: 0px 0px 15px 15px;line-height:15px;">&nbsp;</div></div></div></div></div><!-- ========== SIDECAR ========== --><div style="width: 160px; overflow: hidden; float: right;display:__SIDECAR_VIS__"><div style="padding-top: 16px"><div style="position: relative; font-family: &quot; helvetica neue&quot; , &quot;helvetica&quot; , &quot;arial&quot; , sans-serif; font-size: 12px"><!-- CONNECTING DOTS --><div style="height: 20px; display: block; clear: both"><div style="height: 8px;font-size: 8px;clear: both;display: block;line-height: 9px;"><div style="width: 0px;display: inline-block;float: left;">&nbsp;</div><div style="width: 8px; background-color: black; border-radius: 4px; display: inline-block; float: left; height: 8px">&nbsp;</div><div style="width: 10px;display: inline-block;float: left;">&nbsp;</div><div style="width: 8px; background-color: black; border-radius: 4px; display: inline-block; float: left; height: 8px">&nbsp;</div><div style="width: 10px;display: inline-block;float: left;">&nbsp;</div><div style="width: 8px; background-color: black; border-radius: 4px; display: inline-block; float: left; height: 8px">&nbsp;</div><div style="width: 10px;display: inline-block;float: left;">&nbsp;</div><div style="width: 8px; background-color: black; border-radius: 4px; display: inline-block; float: left; height: 8px">&nbsp;</div><div style="width: 10px;display: inline-block;float: left;">&nbsp;</div><div style="width: 8px; background-color: black; border-radius: 4px; display: inline-block; float: left; height: 8px">&nbsp;</div></div><div style="height: 12px; clear: both; display: block"><div style="width: 72px; display: inline-block; float: left">&nbsp;</div><div style="width: 8px; background-color: black; border-radius: 4px; display: inline-block; float: left; height: 8px; margin: 2px 0px">&nbsp;</div></div></div><!-- TOP BAR (SIDECAR)--><div style="overflow: visible"><div style="border: 1px #000000; border-radius: 15px 15px 0px 0px; background-color: black; text-align: center; height: 15px">&nbsp;</div></div><!-- DIE STRENGTH AND ACTIVATION BAR --><div style="border: #000000 solid;overflow: hidden;padding: 3px 5px;border-width: 0px 2px;height: 42px;background-color: __PRIMARY_BG_COL__;color:__PRIMARY_TEXT_COL__;position: relative;"><div style="float: left; width: 55%; font-size: 17px; font-weight: bold; line-height: 17px; font-style: italic; margin-top: 15px;">__DIE_STRENGTH__</div><div style="float: right; width: 50px; display: inline-block"><div style="display: __ACT_VIS__"><div style="border: 1px solid; overflow: hidden; display: block; border-radius: 5px; color: black; border-color: __SECONDARY_BG_COL__"><div style="padding: 3px 1px 1px; text-align: center; font-weight: bold; background-color: #ffffff; font-size: 10px">ACT __ACT_TGT__-</div><div style="padding: 1px; text-align: center; background-color: #ffffff; line-height: 17px">__ACT_ROLL__</div></div></div></div><div style="clear: both"></div></div><!-- DIE POOL BAR --><div style="border: #000000 solid; overflow: hidden; border-width: 1px 2px 0px 2px; background-color: __SECONDARY_BG_COL__; display: block; padding: 0px 5px; clear: both"><div style="text-align: left; font-size: 17px; padding: 5px 0px; line-height: 20px;font-family:dicefontd6;font-size:26px;color:__SECONDARY_TEXT_COL__;">__DIEPOOL__</div></div><!-- LOCATION BAR --><div style="border: #000000 solid; overflow: hidden; padding: 5px 7px 0px 5px; border-width: 1px 2px 0px 2px; background-color: white; display: __LOC_SC_VIS__"><div style="display: block"><div style="line-height: 15px; font-style: italic; clear: both; display: block"><div style="font-weight: bold; text-align: left; float: left">Hit Location</div><div style="text-align: right; float: right">__LOC__</div><div style="overflow: hidden"><div style="border-bottom: 1px dotted black; height: 10px; margin: 0px 3px">&nbsp;</div></div></div></div><div style="padding: 6px 5px 3px 5px; display: block"><div style="height: 25px"><div style="float: left; height: 20px; width: 20px; border-radius: 12px; background-color: #ff8000; overflow: visible; display: block; border: 1px solid black"><div style="position: relative; font-size: 10px; text-align: center; line-height: 20px; margin: 0px; color: white">__STUN_MULT__</div></div><div style="float: left"><div style="float: left; font-size: 12; font-style: italic; line-height: 24px; text-align: left; margin-left: 4px">STUN Mult.</div></div></div><div style="height: 25px"><div style="height: 20px; width: 20px; border-radius: 12px; background-color: #bf1f2f; overflow: hidden; display: block; border: 1px solid black; float: left"><div style="position: relative; font-size: 10px; text-align: center; line-height: 20px; margin: 0px; color: white">__BODY_MULT__</div></div><div style="float: left"><div style="float: left; font-size: 12; font-style: italic; line-height: 24px; text-align: left; margin-left: 4px">BODY Mult.</div></div></div></div></div><!-- BOTTOM BAR (SIDECAR) --><div style="overflow: hidden"><div style="border: 1px #000000; border-radius: 0px 0px 15px 15px; background-color: black; height: 15px">&nbsp;</div></div></div></div></div></div>';
 
 		// join the output paramaters with a pipe, turn that into a regular expression, and feed that into the replace to modify the html form with our figured values
 		let chatString = htmlForm.replace(new RegExp(Object.keys(thisRoller.outputParams).join("|"), 'gi'),
