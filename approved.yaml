@@ -814,10 +814,10 @@ changemapclonetokens:
   - "ChangeMap_CloneTokens"
   - "Utility"
 
-#restandrecovery:
-#  - "Rest-and-Recovery"
-#  - "Utility"
+restandrecovery:
+  - "Rest-and-Recovery"
+  - "Utility"
 
-#tokenactionmarker:
-#  - "Token-Action-Maker"
-#  - "Utility"
+tokenactionmarker:
+  - "Token-Action-Maker"
+  - "Utility"
