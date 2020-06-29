@@ -83,16 +83,20 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
 					obj.set("status_strong", false);
 					obj.set("status_fist", false);
 					obj.set("status_aura", false);
+					obj.set("status_edge-crack", false);
+					obj.set("status_sentry-gun", false);
+					obj.set("status_grab", false);
+					obj.set("status_archery-target", false);
 				});
 
 				if(value == "standard")
 				{
-					sendChat(name, "/me revient en posture standard.");
+					sendChat(name, "/me revient en style standard.");
 				}
 
 				if(value == "agressif")
 				{
-					sendChat(name, "/me se met en aggressif.");
+					sendChat(name, "/me se met en style aggressif.");
 
 					_.each(currentPageTokens, function(obj) {   
 						obj.set("status_fist", true);
@@ -101,7 +105,7 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
 
 				if(value == "akimbo")
 				{
-					sendChat(name, "/me se met en akimbo.");
+					sendChat(name, "/me se met en style akimbo.");
 
 					_.each(currentPageTokens, function(obj) {   
 						obj.set("status_strong", true);
@@ -110,7 +114,7 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
 
 				if(value == "ambidextre")
 				{
-					sendChat(name, "/me se met en ambidextre.");
+					sendChat(name, "/me se met en style ambidextre.");
 
 					_.each(currentPageTokens, function(obj) {   
 						obj.set("status_all-for-one", true);
@@ -119,7 +123,7 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
 
 				if(value == "couvert")
 				{
-					sendChat(name, "/me se met &#224; couvert.");
+					sendChat(name, "/me se met en style &#224; couvert.");
 
 					_.each(currentPageTokens, function(obj) {   
 						obj.set("status_aura", true);
@@ -128,10 +132,46 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
 
 				if(value == "defensif")
 				{
-					sendChat(name, "/me se met en d&#233;fensif.");
+					sendChat(name, "/me se met en style d&#233;fensif.");
 
 					_.each(currentPageTokens, function(obj) {   
 						obj.set("status_bolt-shield", true);
+					});
+				}
+				
+				if(value == "precis")
+				{
+					sendChat(name, "/me se met en style pr&#233;cis.");
+
+					_.each(currentPageTokens, function(obj) {   
+						obj.set("status_edge-crack", true);
+					});
+				}
+				
+				if(value == "pilonnage")
+				{
+					sendChat(name, "/me se met en style pilonnage.");
+
+					_.each(currentPageTokens, function(obj) {   
+						obj.set("status_sentry-gun", true);
+					});
+				}
+				
+				if(value == "puissant")
+				{
+					sendChat(name, "/me se met en style puissant.");
+
+					_.each(currentPageTokens, function(obj) {   
+						obj.set("status_grab", true);
+					});
+				}
+				
+				if(value == "suppression")
+				{
+					sendChat(name, "/me se met en style suppression.");
+
+					_.each(currentPageTokens, function(obj) {   
+						obj.set("status_archery-target", true);
 					});
 				}
 			}
