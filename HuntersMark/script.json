@@ -1,0 +1,9 @@
+{
+    "name": "Hunter's Mark",
+    "script": "huntersmark.js",
+    "version": "0.3.0",
+    "previousversions": [],
+    "description": "A script that lets each character have their own custom Status Marker, which they can use to mark other tokens. You can make only one target at a time. When you mark a new target, the old marker is removed. This is perfect for abilities like D&D's Hunter's Mark.\r\rFor instructions run `!hunters-mark --help`.",
+    "authors": "GiGs",
+    "roll20userid": "157788"
+    }
