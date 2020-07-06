@@ -826,4 +826,6 @@ tokenactionmarker:
   - "5E Resting in Style"
   - "System Toolbox"
 
-  
+huntersmark:
+  - "HuntersMark"
+  - "Utility"
