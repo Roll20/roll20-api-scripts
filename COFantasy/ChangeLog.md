@@ -1,10 +1,22 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 2.08
 ### Capacités
+* Support pour l'énergie de la mort, utilisée dans la campagne Vengeance.
+* Adaptable de la Voie de l'humain
 * Résistance à la magie du barbare
 
 ### Autres améliorations
+* Possibilité de ne pas appliquer l'usure pour un combat (!cof-usure-off)
+* Ajout d'un effet retardé pour le cas où on doit compter des nombres de tours
+* Ajout du bonus de couvert
 * Attaques par défaut dans la liste d'actions, possibilité de se passer complètement des attributs pour les attaques (actif quand la version 3.3 de la fiche sera là.
+
+### Corrections de bugs
+* Correction d'un bug qui faisait planter en cas de save dans une attaque
+* Correction de l'affichage en cas d'immunité à un type d'attaque
+* Prise en compte correcte de l'attribut option_pm par défaut
+* Garde le jet d'image décalée en mémoire pour le cas des capacité qui font relancer l'attaque.
+* Prise en compte des réflexes félins (Voie du pourfendeur) dans l'initiative
 
 ## 2.07
 ### Autres améliorations
