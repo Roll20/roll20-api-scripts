@@ -1,0 +1,30 @@
+{
+    "name": "moneyMaster",
+    "script": "moneyMaster.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "A script that will handle 'transactions' (spending money and returning exact change). Additionally, this script allows the GM to automatically split money (rounded to the nearest copper) equally amoung any number of party members.",
+    "authors": "Joshua W.",
+    "roll20userid": "1664871",
+    "dependencies": [
+        "splitArgs"
+    ],
+    "modifies": {
+        "state.autoStaggered": "read,write",
+        "handout.id": "read",
+        "handout.name": "read,write",
+        "handout.notes": "read,write",
+        "handout.gmnotes": "read,write",
+        "handout.archived": "read,write",
+        "character.id": "read",
+        "character.name": "read",
+        "graphic.id": "read",
+        "attribute.gp": "read,write",
+        "attribute.sp": "read,write",
+        "attribute.cp": "read,write",
+        "attribute.gp.current": "read,write",
+        "attribute.sp.current": "read,write",
+        "attribute.cp.current": "read,write"
+    },
+    "conflicts": []
+}
