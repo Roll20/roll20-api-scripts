@@ -27,7 +27,7 @@ This script as written is optimized for the D&D 5th Edition by Roll20 sheet, but
 
 *--images* Pulls all images from the bio field of the character assigned to a token, if any exist. Otherwise returns notice that no artwork is available
 
-*--image[1-9]* Pulls indexed image from the bio field of the character assigned to a token, if any exist. *--image1* will pull the first image, *--image2* the second and so on. Otherwise returns first image if available. If no images are available, returns notice that no artwork is available.
+*--image[number]* Pulls indexed image from the bio field of the character assigned to a token, if any exist. *--image1* will pull the first image, *--image2* the second and so on. Otherwise returns first image if available. If no images are available, returns notice that no artwork is available.
 
 *--help* Displays help.
 
