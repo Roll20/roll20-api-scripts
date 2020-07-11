@@ -18,11 +18,11 @@ on('ready', () => {
     const decodeUnicode = (str) => str.replace(/%u[0-9a-fA-F]{2,4}/g, (m) => String.fromCharCode(parseInt(m.slice(2), 16)));
 
 
-    const version = '0.0.4';
-    log('Supernotes v' + version + ' is ready!  Please set lines 3-5 to work with the roll templates your sheet of choice');
+    const version = '0.0.5';
+    log('Supernotes v' + version + ' is ready!  To set the template of choice or to toggle the send to players option, Use the command !gmnote --config');
 
     on('chat:message', function(msg) {
-        if ('api' === msg.type && msg.content.match(/^!(gm|pc)note/) && playerIsGM(msg.playerid)) {
+        if ('api' === msg.type && msg.content.match(/^!(gm|pc)note\b/) && playerIsGM(msg.playerid)) {
             let match = msg.content.match(/^!gmnote-(.*)$/);
 
             //define command                     
