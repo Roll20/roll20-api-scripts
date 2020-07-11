@@ -121,13 +121,9 @@ on('ready', () => {
                     sendChat('Supernotes', messagePrefix + '&{template:' + template + '}{{' + title + '=' + 'Supernotes Help' + '}} {{' + theText + '=' + message + '}}');
 
                 } else {
-
-                    if ((option !== 'bio' && option !== 'charnote' && option !== 'avatar' && option !== 'image' && option !== 'images' && !option.match(/^imag(e|es|e[1-9])/)) || (option === undefined)) {
-                        //|| (option === undefined
+                    if (!(option + '').match(/^(bio|charnote|avatar|imag(e|es|e[1-9]))/)) {
                         option = 'token';
                     }
-
-
 
 
                     let playerButton = '';
@@ -182,8 +178,10 @@ on('ready', () => {
                                             artwork = String(artwork);
 
 
-                                            imageIndex = option.charAt(option.length - 1);
-                                            if (isNaN(imageIndex)) {
+                                            imageIndex = option.match(/\d+/g);
+
+
+                                            if (isNaN(imageIndex) || !imageIndex) {
                                                 imageIndex = 1
                                             }
 
@@ -196,7 +194,8 @@ on('ready', () => {
                                             artwork = artwork.split(",")[imageIndex];
 
                                         }
-                                        if (artwork) {
+                                        log("no artwork? =" + artwork);
+                                        if (artwork.length > 1) {
                                             message = artwork;
                                         } else {
                                             message = 'No artwork exists for this character.';
