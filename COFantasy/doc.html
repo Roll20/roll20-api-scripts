@@ -165,7 +165,7 @@
               <h3 class="text-info" id="regles_optionnelles">1.4 Règles optionnelles utilisées</h3>
               <div class="decalage">
                 <p>Les scripts supportent l'utilisation de la règle des points de chance, des points de récupérations, des points de mana (et de magie puissante ou rapide, ainsi que de tempête de mana).</p>
-                <p>J'ai aussi choisi, comme proposé par Kegron, de diminuer la DEF de tous les protagonistes après un certain nombre de tours de combat (-2 tous les 5 tours).</p>
+                <p>J'ai aussi choisi, comme proposé par Kegron, de diminuer la DEF de tous les protagonistes après un certain nombre de tours de combat (-2 tous les 5 tours, peut être désactivé pendant un combat par la commande <code>!cof-usure-off</code>, ou bien dans les options de jeu).</p>
                 <p>Le script utilise aussi une règle de blessures graves : chaque fois qu'un personnage reçoit plus de DM que la somme de sa constitution et de son niveau, ou qu'il tombe à 0 PV, il encaisse une perte d'un point de récupération. Si il était à 0 points de récupération, il devient gravement blessé, ce qui le rend <i>affaibli</i>. Si le personnage était déjà gravement blessé, mais qu'il lui reste des PV, il tombe inconscient, et sinon, il meurt. Pour récupérer d'une blessure grave, le personnage doit se reposer une nuit, et réussir un test de CON difficulté 8 (avec le d12). Il est impossible de régénérer les points de récupération quand on est gravement blessé.<p>
                 <p>Il est possible de changer les options du script avec la commande <code>!cof-options</code>.</p>
               </div>
@@ -194,39 +194,39 @@
                   </div>
 
                   <h4>Liste d'actions pour le personnage dont c'est le tour</h4>
-                        <p>Si une "Abilities" dont le nom est <code>#Actions#</code> existe pour le personnage dont c'est le tour, celle-ci sera prise en compte et le joueur qui controle le personnage recevra un chuchottement qui contiendra l'ensemble des %Ability et #Macro cliquables de <code>#Actions#</code>. Par défaut, cela contient toujours une action pour attendre et une pour se défendre. Pour voir ce message en dehors du changement d'initiative, ou pour le MJ, on peut utiliser <code>!cof-liste-actions</code> en sélectionnant le token (un bon candidat pour une macro de type token action, d'ailleurs généré par la commande <code>!cof-set-macros</code>). Il est possible de commenter temporairement une ligne de cette liste, en ajoutant // au début de celle-ci. Par défaut, si aucune ability <code>#Actions#</code> n'existe, la liste des abilities du personnage sera affichée.</p>
+                    <p>Par défaut, le script affiche, pour le personnage dont c'est le tour, une liste d'actions. Cette liste est chuchotée au joueur qui contrôle le perosnnage. Elle se compose des attaques du personnage, des abilities et des actions d'attendre, se défendre et faire une manoeuvre. Il est possible de ne pas afficher une attaque en décochant la case sous le dé dans les options d'attaque.</p>
+                    <p>Si une "Abilities" dont le nom est <code>#Actions#</code> existe pour le personnage dont c'est le tour, la liste de toutes les abilities est remplacée par les %Ability et #Macro cliquables de <code>#Actions#</code>.</p>
+                    <p>Pour voir ce message en dehors du changement d'initiative, ou pour le MJ, on peut utiliser <code>!cof-liste-actions</code> en sélectionnant le token (un bon candidat pour une macro de type token action, d'ailleurs généré par la commande <code>!cof-set-macros</code>). Il est possible de commenter temporairement une ligne de cette liste, en ajoutant <code>//</code> au début de celle-ci.</p>
                         <p><img class="img-fluid" src="https://i.imgur.com/tTfFoPW.png" data-href="https://i.imgur.com/tTfFoPW.png"></p>
                         <figcaption>Exemple d'une macro #Actions# (ou #TurnAction#)</figcaption>
+              <p><img class="img-fluid" src="https://i.imgur.com/MWTVRO4.png" data-href="https://i.imgur.com/MWTVRO4.png"></p>
+              <figcaption>Création des <i>Abilities</i> (Capacités) du Personnage.</figcaption>
                   <p>Il est possible d'ouvrir d'autre listes d'actions, à partir des commandes ou même d'une liste d'actions. Une liste d'action doit être stoquée dans une ability dont le nom commence et termine par <code>#</code>. Pour y faire référence dans une liste, il suffit d'écrire le nom de l'ability (commençant donc par <code>%</code>). Pour faire afficher la liste depuis une commande, utiliser <code>!cof-liste-actions <i>nom</i></code> (où le nom est celui de l'ability sans les <code>#</code>). Par exemple, si on ne souhaite pas afficher la liste complète des sorts d'un personnage à son tour, on peut faire une ability <code>#Sorts#</code>, puis faire une macro qui lance <code>!cof-liste-actions Sorts</code> pour que le joueur puisse afficher la liste quand il le souhaite, et aussi (ou à la place) mettre une ligne <code>%#Sorts#</code> dans son ability <code>#Actions#</code>.</p>
                 </div>
               </div>
               <h4 class="text-secondary">Attaquer une (ou plusieurs) cible : <code>!cof-attack @{selected|token_id} @{target|token_id} <i>n</i></code></h4>
               <div class="decalage">
-                <p>où <i>n</i> est un argument optionnel qui peut soit correspondre au label de l'attaque sur la fiche du personnage (ce label est automatiquement généré par la fiche et affiché juste devant le nom), soit être le nom de l'attaque. Si cet argument est absent ou qu'il ne correspnd pas à un label de la fiche du personnage, l'attaque aura les valeurs par défaut d'une attaque au contact infligeant 1d4 DM.</p>
+                <p>où <i>n</i> est un argument optionnel qui peut soit correspondre au label de l'attaque sur la fiche du personnage (ce label est automatiquement généré par la fiche et affiché juste devant le nom), soit être le nom de l'attaque. Si cet argument est absent ou qu'il ne correspnd pas à un label de la fiche du personnage, l'attaque aura les valeurs par défaut d'une attaque au contact infligeant 1d4 DM. Pour plus de facilité, vous pouvez utiliser la macro <code>Attaque</code> qui fait <code>!cof-attack @{selected|token_id} @{target|token_id}</code></p>
                     <div class="alert alert-success" role="alert">
                       <p>Exemple avec label :</p>
                       <div class="decalage">
                         <code>!cof-attack @{selected|token_id} @{target|token_id} 1</code>
                       </div>
                     </div>
-                      <p>L'attaque tient alors compte de toutes les informations de l'attaque, y compris chances de critique et portée. En l'absence de label, on peut spécifier ces informations sous forme d'options d'attaque</p>
+                    <p>L'attaque tient alors compte de toutes les informations de l'attaque, y compris chances de critique, portée, type d'attaque, type de dégâs et autres options spécifiées sur la fiche. Par défaut, l'attaque montre le label, le nom de l'attaque, le calcul du bonus d'attaque, le calcul des dégâts, la portée et un champ <code>SPÉCIAL</code>. En cliquant sur la roue au bout à droite de cette ligne, on affiche une deuxième ligne, avec un case à décocher pour ne pas faire apparaître l'attaque à chaque tour, un choix de type d'attaque, des modificateurs, un choix de type de degâts et un champ d'options. Les modificateurs sont constitués d'options sans argument, séparée par une espace. Les options sont reprises telles quels comme un argument à l'attaque (voir plus bas pour le liste de ces options). </p>
+                    <img class="img-fluid" src="images/armes.jpg">
+              <figcaption>Exemple d'attaques.</figcaption>
+                    <p> En l'absence de label, on peut spécifier ces informations sous forme d'options d'attaque</p>
                     <div class="alert alert-success" role="alert">
                       <p>Exemple pour le sort "<i>Flèche enflammée</i>" :</p>
                       <div class="decalage"><code>!cof-attack @{selected|token_id} @{target|token_id} Flèche Enflammée --toucher [[@{selected|ATKMAG}]] --dm 1d6 + [[@{selected|INT}]] --portee 30 --fx beam-fire --feu --sortilege --enflamme</code></div>
                     </div>
-                <p>Pour plus de facilité, utilisez la macro <code>Attaque</code> qui fait <code>!cof-attack @{selected|token_id} @{target|token_id}</code>, comme ça, dans l'exemple avec label, vous avez juste une ability avec comme valeur <code>#Attaque 1</code> (ou mieux, <code>#Attaque 1 --tranchant</code>).</p>
-              <p><img class="img-fluid" src="https://i.imgur.com/MWTVRO4.png" data-href="https://i.imgur.com/MWTVRO4.png"></p>
-              <figcaption>Création des <i>Abilities</i> (Capacités) du Personnage.</figcaption>
-              <p><img class="img-fluid" src="https://i.imgur.com/GmUxCpB.png" data-href="https://i.imgur.com/GmUxCpB.png"></p>
-              <figcaption>Ne pas oublier de mettre un numéro pour l'arme. A utiliser dans la création des <i>Abilities</i>.</figcaption>
               <p>Malus ou bonus temporaire à une attaque : utiliser la barre 3.</p>
               <p>Le test d'attaque à distance tient compte de la portée (malus de -1 à -5 si distance entre portée et deux fois cette valeur), ainsi que des tokens sur le trajet de l'attaque. Une attaque de trop loin ne porte jamais.</p>
               <p>Utiliser une attaque fait rentrer l'attaquant en combat (et le rajoute au turn tracker).</p>
               <h4 class="text-secondary">Options pour l'attaque&nbsp;:</h4>
-              <p>En cas d'échec critique à une attaque, le script va suggérer des effets d'échec critique inspirés de <a href="">cette table suggérée par l'auteur du jeu</a>. Le script proposera même dans la plupart des cas un bouton qui automatisera les lancers de dés et l'application de l'effet, si relevant.</p>
-              <p>Il est aussi possible d'utiliser une table personnelle, non-automatisée (voir les options d'affichage, !cof-options affichage). La table utilisée (Echec-Critique-Contact) peut être modifiée par le MJ.</p>
-              <h4 class="text-secondary">Options pour l'attaque&nbsp;:</h4>
               <div class="decalage">
+                Toutes les options sans arguments peuvent être directement utilisées comme modificateurs dans le liste des modifcateurs d'une attaque.
                 <ul>
                   <li><code>--nom <i>txt</i></code> : nom de l'attaque à afficher. Remplace le nom dans la ligne d'attaque si on a donné un label en argument. Le nom ne doit pas comporte de blanc usivi de 2 tirets (<code> --</code>).</li>
                   <li><code>--toucher <i>n</i></code> : bonus de base de l'attaque. Remplace les valeurs dans la ligne d'attaque si on a donné un label en argument.</li>
@@ -352,7 +352,7 @@
 
                 À noter que parmis les types de dégâts, on peut spécifier <code>tranchant</code>, <code>percant</code> ou <code>contondant</code>, voire <code>nature</code> ou <code>drain</code>.
                 Pour la RD des casques, utiliser la case prévue à cet effet sur la fiche (se cumule avec un attribut <code>RD_critique</code>, si présent).
-                Pour que les RD /magique ou /tranchant soient bien pris en compte, il faut que les attaques faisant des dégâts magiques aient l'option <code>--magique</code> et les armes le type de dommage (comme <code>--tranchant</code> pour une épée). Enfin, pour les résistances <i>sauf un genre d'arme</i> (comme <code>/tranchant</code>), la RD va s'appliquer à tous les dégâts, sauf élémentaires ou bien qui aura précisé le genre dans son attaque. Pour une RD qui s'appliquerait à toutes les armes sauf tranchantes, le mieux est de spécifier une RD aux 2 autres genres, <code>tranchant:</code> et <code>contondant:</code>.
+                Pour que les RD /magique ou /tranchant soient bien pris en compte, il faut que les attaques faisant des dégâts magiques aient l'option <code>--magique</code> et les armes le type de dommage (comme <code>--tranchant</code> pour une épée). Enfin, pour les résistances <i>sauf un genre d'arme</i> (comme <code>/tranchant</code>), la RD va s'appliquer à tous les dégâts, sauf élémentaires ou bien qui aura précisé le genre dans son attaque. Pour une RD qui s'appliquerait à toutes les armes sauf tranchantes, le mieux est de spécifier une RD aux 2 autres genres, <code>percant:</code> et <code>contondant:</code>.
               </div>
               <h4 class="text-secondary">Manoeuvres</h4>
               <div class="decalage">
@@ -379,6 +379,13 @@
                 Dans tous les cas, si le personnage dégaine une arme à 2 mains, le script fait enlever le bouclier, et il le fait remettre si on passe d'une arme à 2 mains à une arme à 1 main. Pour savoir si une attaque (identifiée par un label) est une arme à 2 mains, le script regarde le nom de l'arme. Parfois, c'est suffisant (genre 1 Épée à 2 mains), mais souvent ça ne suffit pas. Dans ce cas, le script regarde aussi le champ divers de l'attaque, et cherche si il trouve <code>2 mains</code> dans ce champ.
                 </p>
               </div>
+              <h4 class="text-secondary" id="degainer">Couvert :<code>!cof-bonus-couvert <i>b</i></code></h4>
+              <div class="decalage">
+                Pour donner un bonus en DEF contre toutes les attaques à distance, on peut utiliser <code>!cof-bonus-couvert ?{Bonus du couvert?}</code> en sélectionnant les tokens bénéficiant du couvert.
+              </div>
+              <h4 class="text-secondary">Échecs critiques&nbsp;:</h4>
+              <p>En cas d'échec critique à une attaque, le script va suggérer des effets d'échec critique inspirés de <a href="">cette table suggérée par l'auteur du jeu</a>. Le script proposera même dans la plupart des cas un bouton qui automatisera les lancers de dés et l'application de l'effet, si relevant.</p>
+              <p>Il est aussi possible d'utiliser une table personnelle, non-automatisée (voir les options d'affichage, !cof-options affichage). La table utilisée (Echec-Critique-Contact) peut être modifiée par le MJ.</p>
               <h4 class="text-secondary">Dégâts directs (sans attaquant, ou aire d'effet trop complexe pour !cof-attack) : <code>!cof-dmg <i>dm</i></code></h4>
               <div class="decalage">
                 <p>Applique des dégâts à tous les tokens sélectionnés. L'argument <i>dm</i> peut être un inline roll. Utile par exemple pour les chutes, ou bien les dégâts d'environnement, voire de pièges.<br />
@@ -628,6 +635,10 @@
                   </ul>
                   <p><code>!cof-boire-alcool</code> et <code>!cof-desaouler</code> permettent de faire varier le niveau d'ébriété. Par exemple, pour tester si le niveau d'ébriété augmente après avoir bu un certain nombre de verres, on peut utiliser la macro <code>!cof-boire-alcool --save CON [[10+?{Nombre de verres}]]</code>.
                 </div>
+                <h4 class="text-secondary">Effets retardés</h4>
+                <div class="decalage">
+                  On peut utiliser l'effet temporaire générique <code>effetRetarde(<i>nom</i>)</code> pour programmer un effet qui aura lieu après un certain nombre de tours. Au bout de ce nombre de tours, le nom est affiché, ainsi que le texte de valeur (avec <code>--valeur</code> si besoin. La syntaxe est <code>!cof-effet-temp effetRetarde(<i>nom</i>) <i>duree</i> --valeur <i>message</i></code>.
+                </div>
               </div>
               <h3 class="text-info" id="sorts">2.8 Sorts</h3>
               <div class="decalage">
@@ -795,7 +806,7 @@
                 </ol>
                 <h4 class="text-secondary">Voie du pourfendeur</h4>
                 <ol>
-                  <li><strong>Réflexes félins</strong> : ajouter un attribut <code>reflexesFelins</code>, avec comme valeur le bonus aux saves</li>
+                  <li><strong>Réflexes félins</strong> : ajouter un attribut <code>reflexesFelins</code>, avec comme valeur le bonus aux saves et à l'initiative</li>
                   <li><strong>Charge</strong> : faire une attaque avec les options <code>--bonusAttaque 2</code> <code>--plus 1d6</code></li>
                   <li><strong>Enchaînement</strong> : à gérer par le MJ</li>
                 </ol>
@@ -1352,7 +1363,7 @@
                   <li><strong>Sens affutés</strong> : ajouter le bonus à un attribut <code>perception</code></li>
                   <li><strong>Tir aveugle</strong> : ajouter un attribut <code>tirAveugle</code>, avec comme valeur <code>true</code>.</li>
                   <li><strong>Tir rapide</strong> : faire simplement deux attaques dans le tour</li>
-                  <li><strong>Flèche mortelle</strong> : faire l'attaque avec les options <code>--m2d20 --incrDmgCoef</code></li>
+                  <li><strong>Flèche de mort</strong> : faire l'attaque avec les options <code>--m2d20 --incrDmgCoef</code></li>
                   <li><strong>Dans le mille</strong> : faire l'attaque avec les options <code>--avecd12 --plus 2d6</code></li>
                 </ol>
                 <h4 class="text-secondary">Voie du compagnon animal</h4>
@@ -1505,7 +1516,7 @@
                 <h4 class="text-secondary">Humain</h4>
                 <p>Instinct de survie : créer un attribut <code>instinctDeSurvieHumain</code> avec comme valeur <code>true</code>.</p>
                 <ol>
-                  <li><strong>Adaptable</strong> : aucun support</li>
+                  <li><strong>Adaptable</strong> : ajouter un attribut <code>adaptable</code>, de valeur le bonus en cas de test raté. Le script ne va appliquer le bonus que pour les tests avec difficulté identifiée. Le MJ devra l'appliquer dans les cas ratés par le script.</li>
                   <li><strong>Loup parmi les loups</strong> : ajouter un attribut <code>loupParmiLesLoups</code> avec comme valeur 1 ou 2 selon le rang dans la voie. Une créature sera considérée comme humanoïde si elle a l'attribut <code>humanoide</code>, ou si sa race est reconnue comme humanoïde.</li>
                 </ol>
                 <h4 class="text-secondary">Lutin</h4>
@@ -1513,6 +1524,7 @@
                 <h4 class="text-secondary">Nain</h4>
                 <ol>
                   <li><strong>Résistance</strong> : ajouter les bonus sur la fiche</li>
+                  <li><strong>Solide comme un roc</strong> : ajouter le texte <code>2/1</code> dans la RD sur la fiche.</li>
                 </ol>
                 <h4 class="text-secondary">Tieflin</h4>
                 <ul>
@@ -1554,7 +1566,7 @@
                 </ol>
                 <h4 class="text-secondary">Voie du colosse</h4>
                 <ol>
-                  <li><strong>Fauchage</strong> : ajouter la RD, et ajouter un attribut <code>fauchage</code> de valeur <code>true</code>, qui va faire automatiquement le renversement si le dé d'attaque est entre 15 et 20.</li>
+                  <li><strong>Fauchage</strong> : ajouter la RD, et ajouter un attribut <code>fauchage</code> de valeur <code>true</code>, qui va faire automatiquement le renversement si le dé d'attaque est entre 15 et 20. Il est possible de changer ce seuil en indiquant dans l'attribut la valeur à laquelle le dé d'attaque provoque le renversement (15 par défaut).</li>
                   <li><strong>Balayage</strong> : faire une version de l'attaque avec <code>--target @{target|Target2|token_id}</code></li>
                 </ol>
                 <h4 class="text-secondary">Voie des créatures élémentaires</h4>
@@ -1632,6 +1644,7 @@
                   <li><strong>Clignotement</strong> : <code>!cof-effet-temp clignotement [[1d6+2]]</code>.</li>
                   <li><strong>Créature non-vivante</strong> : ajouter un attribut <code>nonVivant</code></li>
                   <li><strong>Dégâts si touché au contact</strong> (élémentaire de feu,...) : ajouter un attribut nommé <code>dmSiToucheContact</code>, de valeur courante les dégâts, et de valeur maximale leur type. Par exemple, pour un élémentaire de feu, la valeur courant sera <code>1d6</code>, et la valeur maximale sera <code>feu</code>.</li>
+                  <li><strong>Énergie de la mort</strong> (pour la campagne Vengeance) : ajouter un attribut <code>energieDeLaMort</code> de valeur <code>true</code>. Le MJ devra être attentif au message indiquant le retour à la vie, car c'est lui qui devra enlever l'état mort et ajuster les PVs.</li>
                   <li><strong>Enveloppement</strong> (cube gélatineux) : ajouter l'option <code>--enveloppe</code>, puis quand le bouton apparaît si l'attaque réussit, cliquer dessus. En cas d'enveloppement, la cible ne peut plus bouger et se déplace avec le cube (déplacer le cube met la cible dans le cube), et au tour du cube, il faut presser les boutons de dégâts pour les infliger aux cibles enveloppées.</li>
                   <li><strong>Frénésie</strong> : Ajouter une attribut <code>frenesie</code> avec comme valeur le nombre de PV en-dessous duquel la créature devient frénétique (+2 aus jets d'attaque).</li>
                   <li><strong>Huile de fort assaut</strong> : <code>!cof-effet-temp dmgArme(<i>L</i>) 10 --valeur 1d6</code> où <i>L</i> est le label de l'arme qu'on veut enduire d'huile de fort assaut.</li>

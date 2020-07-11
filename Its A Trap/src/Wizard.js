@@ -846,6 +846,9 @@ var ItsATrapCreationWizard = (() => {
       }
 
       if(msg.content.startsWith(DISPLAY_WIZARD_CMD)) {
+        if (!msg.selected || !msg.selected[0])
+          throw new Error("You must have a token selected to use trap macro.");
+
         let trapToken = getObj('graphic', msg.selected[0]._id);
         displayWizard(msg.who, msg.playerId, trapToken);
       }
@@ -861,9 +864,8 @@ var ItsATrapCreationWizard = (() => {
         displayWizard(msg.who, msg.playerId, curTrap);
       }
     }
-    catch(err) {
-      log('ItsATrapCreationWizard: ' + err.message);
-      log(err.stack);
+    catch (err) {
+      ItsATrap.Chat.error(err);
     }
   });
 
