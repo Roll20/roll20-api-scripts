@@ -122,7 +122,7 @@ on('ready', () => {
 
                 } else {
 
-                    if ((option !== 'bio' && option !== 'charnote' && option !== 'avatar' && option !== 'image') || (option === undefined)) {
+                    if ((option !== 'bio' && option !== 'charnote' && option !== 'avatar' && option !== 'image' && option !== 'images' && !option.match(/^imag(e|es|e[1-9])/)) || (option === undefined)) {
                         //|| (option === undefined
                         option = 'token';
                     }
@@ -152,13 +152,12 @@ on('ready', () => {
                             .filter(c => undefined !== c)
                             .forEach(c => {
                                 message = "<img src='" + c.get('avatar') + "'>";
-                                log('avatar = ' + c.get('avatar'));
                                 whom = c.get('name');
                                 sendChat(whom, messagePrefix + '&{template:' + template + '}{{' + title + '=' + whom + '}} {{' + theText + '=' + message + playerButton + '}}');
                             });
                     } else {
 
-                        if (option === 'image') {
+                        if (option.match(/^imag(e|es|e[1-9])/)) {
 
 
                             (msg.selected || [])
@@ -176,8 +175,27 @@ on('ready', () => {
                                         } else {
                                             message = decodeUnicode(val);
                                         }
-                                        artwork = message.match(/\<img src.*?\>/g)
+                                        if (option === "images") {
+                                            artwork = message.match(/\<img src.*?\>/g)
+                                        } else {
+                                            artwork = message.match(/\<img src.*?\>/g);
+                                            artwork = String(artwork);
 
+
+                                            imageIndex = option.charAt(option.length - 1);
+                                            if (isNaN(imageIndex)) {
+                                                imageIndex = 1
+                                            }
+
+                                            if (imageIndex > (artwork.split(",")).length) {
+                                                imageIndex = 1
+                                            }
+
+                                            imageIndex = imageIndex - 1; //corrects from human readable
+
+                                            artwork = artwork.split(",")[imageIndex];
+
+                                        }
                                         if (artwork) {
                                             message = artwork;
                                         } else {
