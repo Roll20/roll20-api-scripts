@@ -194,8 +194,8 @@ on('ready', () => {
                                             artwork = artwork.split(",")[imageIndex];
 
                                         }
-                                        log("no artwork? =" + artwork);
-                                        if (artwork.length > 1) {
+                                        log("artwork string =" + artwork);
+                                        if ((''+artwork).length > 3) {
                                             message = artwork;
                                         } else {
                                             message = 'No artwork exists for this character.';
