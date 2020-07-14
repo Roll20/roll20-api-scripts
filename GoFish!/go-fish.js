@@ -868,13 +868,15 @@ GoFish.GoFish = function() {
             // two decimal places
             let cashOutValue = Math.floor(value * GoFish.CASH_OUT_PERCENTAGE * 100);
             cashOutValue = cashOutValue / 100;
+
+            let cashoutMultiplierDisplay = GoFish.CASH_OUT_PERCENTAGE * 100;
             
             let coinTemplate = GoFish.Templates.coin(cashOutValue);
             let template;
             if (weightArg !== '') {
                 template = `<div><strong>${who}</strong> cashed out a <strong>${fish.weight}lb ${fish.name}</strong> for <strong>${cashOutValue}gp</strong>${coinTemplate}<div style="${GoFish.Styles.subtext}">(${value}gp * 40% = ${cashOutValue}gp)</div></div>`;
             } else {
-                template = `<div><strong>${who}</strong> cashed out a <strong>${fish.name}</strong> for <strong>${cashOutValue}gp</strong>${coinTemplate}<div style="${GoFish.Styles.subtext}">(${value}gp * 40% = ${cashOutValue}gp)</div></div>`;
+                template = `<div><strong>${who}</strong> cashed out a <strong>${fish.name}</strong> for <strong>${cashOutValue}gp</strong>${coinTemplate}<div style="${GoFish.Styles.subtext}">(${value}gp * ${cashoutMultiplierDisplay}% = ${cashOutValue}gp)</div></div>`;
             }
             sendChat(GoFish.BOT_NAME, `/w ${who} ${template}`);
             sendChat(GoFish.BOT_NAME, `/w gm ${template}`);

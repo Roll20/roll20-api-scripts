@@ -15,13 +15,16 @@
     </ol>
 </p>
 <p><em>Usage notes: A character must have a 'Dexterity' (or 'DEX' modifier) and 'Fishing' attribute supplied to their characters. This helps the system generate their 'Fishing Skill' which will drop better items for them on average.</em></p>
+<hr/>
 <h3>Usage</h3>
 <h4>namespace</h4>
 <code>!go-fish</code>
 <p><strong>!go-fish</strong> is the official API command for GoFish!, and all interactions will begin with this keyword. Providing no additional arguments will print the usage.</p>
+<hr/>
 <h4>help/usage</h4>
 <code>!go-fish help</code>
 <p>This is the official way to print in-game usage, which will be printed directly to the chat feed. All API commands and instructions will be listed here. In lieu of 'help', you may also pass '-h' or '--help'.</p>
+<hr/>
 <h4>Solo fishing</h4>
 <code>!go-fish [water-source] [pool-type]</code>
 <p>
@@ -40,6 +43,7 @@
         <li> pool-type - the rarity pool that the fish are being generated from. <em>lesser (default) | common | greater</em>
     </ul>
 </p>
+<hr/>
 <h4>Timed fishing tourney</h4>
 <code>!go-fish time [time] [water-source] [pool-type]</code>
 <p>
@@ -52,6 +56,7 @@
         <li> pool-type - the rarity pool that the fish are being generated from. <em>lesser (default) | common | greater</em>
     </ul>
 </p>
+<hr/>
 <h4>Quantified fishing tourney</h4>
 <code>!go-fish amount [amount] [water-source] [pool-type]</code>
 <p>
@@ -64,6 +69,7 @@
         <li> pool-type - the rarity pool that the fish are being generated from. <em>lesser (default) | common | greater</em>
     </ul>
 </p>
+<hr/>
 <h4>Value of fish</h4>
 <code>!go-fish valueof [fishname] [weight]</code>
 <p>
@@ -75,7 +81,8 @@
         <li> weight - the weight of the fish (in pounds). Up to two decimal places are used. <em>ex: 4.45</em>
     </ul>
 </p>
-<h4>Cashout</h4>
+<hr/>
+<h4>Cashing out</h4>
 <code>!go-fish cashout [fishname] [weight]</code>
 <p>
     If a player does not want to carry around a bunch of specifically weighted fish, the player may cash the fish out for a lower value than they might get at a market. The value is calculated with the <i>CASH_OUT_PERCENTAGE</i> which can be configured, but is set to 40% of the actual value by default. If no weight is provided, the default value is used for the calculation.
@@ -86,7 +93,8 @@
         <li> weight - the weight of the fish (in pounds). Up to two decimal places are used. <em>ex: 4.45</em>
     </ul>
 </p>
-<h4>Cashout</h4>
+<hr/>
+<h4>Resetting game</h4>
 <code>!go-fish reset</code>
 <p>
     <strong>(GM Only)</strong> Resets GoFish! to its default state. This resets all tables and all records kept in the GoFish! Index.
