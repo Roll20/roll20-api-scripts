@@ -19,10 +19,12 @@
 <p>The library is set up in such a way that the <strong>Master Fish List</strong>, the fishing table names, the rarity of fishes, the value of fishes, the weight of fishes, and etc. is easily customizable. Any DM can quickly edit and manpulate these settings to expand upon the listings already provided.</p>
 <p>All caught fish belong to a table (freshwater or saltwater), and from there their sizes are randomly generated. A player or the GM has the ability to cash in these fish at any time with the <strong>built in value system</strong>.</p>
 <p>GoFish! is also shipped with the <strong>GoFish! Index</strong> which keeps track of a master fish list for the GM, and all discovered fish for the Party (as well as <strong>maintains a list of all-time-records</strong>).</p>
+<hr/>
+<h4>The gist</h4>
+ <p>
+    A user must have a 'Dexterity' (or 'DEX' modifier) and 'Fishing' attribute supplied to their character. This helps the system generate their 'Fishing Skill' which will drop better items for them on average.
+</p>
 <p>
-    <p>
-        A user must have a 'Dexterity' (or 'DEX' modifier) and 'Fishing' attribute supplied to their character. This helps the system generate their 'Fishing Skill' which will drop better items for them on average.
-    </p>
     At it's core, GoFish! is used in three easy steps:
     <ol>
         <li>Select a character, or characters, to go fishing.</li>
@@ -34,14 +36,14 @@
 <h3>Usage</h3>
 <h4>namespace</h4>
 <code>!go-fish</code>
+<br/>
 <p><strong>!go-fish</strong> is the official API command for GoFish!, and all interactions will begin with this keyword. Providing no additional arguments will print the usage.</p>
-<hr/>
 <h4>help/usage</h4>
 <code>!go-fish help</code>
 <p>This is the official way to print in-game usage, which will be printed directly to the chat feed. All API commands and instructions will be listed here. In lieu of 'help', you may also pass '-h' or '--help'.</p>
-<hr/>
 <h4>Solo fishing</h4>
 <code>!go-fish [water-source] [pool-type]</code>
+<br/>
 <p>
     Fishes for the first selected character. The most detailed display of fish are shown this way. A random fish of a random weight (in lbs) is caught from the given water-source and pool-type. A random amount of time passes (in minutes). The character's fishing rod's durability decreases by a random amount.
     <br/>
@@ -58,9 +60,9 @@
         <li> pool-type - the rarity pool that the fish are being generated from. <em>lesser (default) | common | greater</em>
     </ul>
 </p>
-<hr/>
 <h4>Timed fishing tourney</h4>
 <code>!go-fish time [time] [water-source] [pool-type]</code>
+<br/>
 <p>
     Fishes for X minutes for all selected characters. As many fish are caught as possible within the time limit by each character, mutually exclusively. The fish caught are listed by the character who caught them. Fishing skill affects each character as described above. Each character's fishing rod will decrease more with each catch.
     <br/>
@@ -71,9 +73,9 @@
         <li> pool-type - the rarity pool that the fish are being generated from. <em>lesser (default) | common | greater</em>
     </ul>
 </p>
-<hr/>
 <h4>Quantified fishing tourney</h4>
 <code>!go-fish amount [amount] [water-source] [pool-type]</code>
+<br/>
 <p>
     All characters fish until X amount of fish are caught. All fish caught count towards the amount, so oftentimes characters with higher fishing skills will catch many more fish than those with lower fishing skills. Fishing skill affects each character as described above. Each character's fishing rod will decrease more with each catch. The amount of time passed is the amount of time it took to reach the Xth fish.
     <br/>
@@ -84,9 +86,9 @@
         <li> pool-type - the rarity pool that the fish are being generated from. <em>lesser (default) | common | greater</em>
     </ul>
 </p>
-<hr/>
 <h4>Value of fish</h4>
 <code>!go-fish valueof [fishname] [weight]</code>
+<br/>
 <p>
     Retrieves the profile of the given fish as well as what it is worth. If no weight is passed, its default value is provided. Otherwise, the value is calculated proportionately.
     <br/>
@@ -96,9 +98,9 @@
         <li> weight - the weight of the fish (in pounds). Up to two decimal places are used. <em>ex: 4.45</em>
     </ul>
 </p>
-<hr/>
 <h4>Cashing out</h4>
 <code>!go-fish cashout [fishname] [weight]</code>
+<br/>
 <p>
     If a player does not want to carry around a bunch of specifically weighted fish, the player may cash the fish out for a lower value than they might get at a market. The value is calculated with the <i>CASH_OUT_PERCENTAGE</i> which can be configured, but is set to 40% of the actual value by default. If no weight is provided, the default value is used for the calculation.
     <br/>
@@ -108,9 +110,9 @@
         <li> weight - the weight of the fish (in pounds). Up to two decimal places are used. <em>ex: 4.45</em>
     </ul>
 </p>
-<hr/>
 <h4>Resetting game</h4>
-<code>!go-fish reset</code>
+<h4><code>!go-fish reset</code></h4>
+<br/>
 <p>
     <strong>(GM Only)</strong> Resets GoFish! to its default state. This resets all tables and all records kept in the GoFish! Index.
     <br/>
