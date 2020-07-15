@@ -84,7 +84,6 @@
 </p>
 <h4>Value of fish</h4>
 <h5><code>!go-fish valueof [fishname] [weight]</code></h5>
-<br/>
 <p>
     Retrieves the profile of the given fish as well as what it is worth. If no weight is passed, its default value is provided. Otherwise, the value is calculated proportionately.
     <br/>
