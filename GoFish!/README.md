@@ -35,15 +35,13 @@
 <hr/>
 <h3>Usage</h3>
 <h4>namespace</h4>
-<code>!go-fish</code>
-<br/>
+<h5><code>!go-fish</code></h5>
 <p><strong>!go-fish</strong> is the official API command for GoFish!, and all interactions will begin with this keyword. Providing no additional arguments will print the usage.</p>
 <h4>help/usage</h4>
 <code>!go-fish help</code>
 <p>This is the official way to print in-game usage, which will be printed directly to the chat feed. All API commands and instructions will be listed here. In lieu of 'help', you may also pass '-h' or '--help'.</p>
 <h4>Solo fishing</h4>
-<code>!go-fish [water-source] [pool-type]</code>
-<br/>
+<h5><code>!go-fish [water-source] [pool-type]</code></h5>
 <p>
     Fishes for the first selected character. The most detailed display of fish are shown this way. A random fish of a random weight (in lbs) is caught from the given water-source and pool-type. A random amount of time passes (in minutes). The character's fishing rod's durability decreases by a random amount.
     <br/>
@@ -61,8 +59,7 @@
     </ul>
 </p>
 <h4>Timed fishing tourney</h4>
-<code>!go-fish time [time] [water-source] [pool-type]</code>
-<br/>
+<h5><code>!go-fish time [time] [water-source] [pool-type]</code></h5>
 <p>
     Fishes for X minutes for all selected characters. As many fish are caught as possible within the time limit by each character, mutually exclusively. The fish caught are listed by the character who caught them. Fishing skill affects each character as described above. Each character's fishing rod will decrease more with each catch.
     <br/>
@@ -74,8 +71,7 @@
     </ul>
 </p>
 <h4>Quantified fishing tourney</h4>
-<code>!go-fish amount [amount] [water-source] [pool-type]</code>
-<br/>
+<h5><code>!go-fish amount [amount] [water-source] [pool-type]</code></h5>
 <p>
     All characters fish until X amount of fish are caught. All fish caught count towards the amount, so oftentimes characters with higher fishing skills will catch many more fish than those with lower fishing skills. Fishing skill affects each character as described above. Each character's fishing rod will decrease more with each catch. The amount of time passed is the amount of time it took to reach the Xth fish.
     <br/>
@@ -87,7 +83,7 @@
     </ul>
 </p>
 <h4>Value of fish</h4>
-<code>!go-fish valueof [fishname] [weight]</code>
+<h5><code>!go-fish valueof [fishname] [weight]</code></h5>
 <br/>
 <p>
     Retrieves the profile of the given fish as well as what it is worth. If no weight is passed, its default value is provided. Otherwise, the value is calculated proportionately.
@@ -99,8 +95,7 @@
     </ul>
 </p>
 <h4>Cashing out</h4>
-<code>!go-fish cashout [fishname] [weight]</code>
-<br/>
+<h5><code>!go-fish cashout [fishname] [weight]</code></h5>
 <p>
     If a player does not want to carry around a bunch of specifically weighted fish, the player may cash the fish out for a lower value than they might get at a market. The value is calculated with the <i>CASH_OUT_PERCENTAGE</i> which can be configured, but is set to 40% of the actual value by default. If no weight is provided, the default value is used for the calculation.
     <br/>
