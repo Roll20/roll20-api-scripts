@@ -111,8 +111,7 @@
     </ul>
 </p>
 <h4>Resetting game</h4>
-<h4><code>!go-fish reset</code></h4>
-<br/>
+<h5><code>!go-fish reset</code></h5>
 <p>
     <strong>(GM Only)</strong> Resets GoFish! to its default state. This resets all tables and all records kept in the GoFish! Index.
     <br/>
