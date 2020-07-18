@@ -26,6 +26,8 @@ GoFish.AVERAGE_FISHING_TIME = 60.0;                         // our base time
 GoFish.MAXIMUM_FISHING_TIME = 120.00;                       // maximum time to wait
 GoFish.WAIT_TIME = 8.667;                                   // multiplier for in-game wait time to real-time
 GoFish.CASH_OUT_PERCENTAGE = 0.4;                           // the ratio of the cashout value
+GoFish.ROD_DURABILITY_DEFAULT = 10;                         // how durable a rod is if none is provided
+GoFish.XP_STEP = 250;                                       // the base amount to be multiplied for level xp requirements
 
 // rollable tables names
 GoFish.FRESHWATER_LESSER = "go-fish-freshwater-lesser";     // lesser freshwater pools
@@ -40,27 +42,32 @@ GoFish.FISH_RARITIES = {            // rarity types, and their value in gold,
     common: {                       // and a numeric score of their rank
         name: 'common',
         value: 0.05,
-        rank: 1
+        rank: 1,
+        xp: 5
     },
     uncommon: {
         name: 'uncommon',
         value: 1,
-        rank: 2
+        rank: 2,
+        xp: 10
     },
     rare: {
         name: 'rare',
         value: 10,
-        rank: 3
+        rank: 3,
+        xp: 25
     },
     epic: {
         name: 'epic',
         value: 50,
-        rank: 4
+        rank: 4,
+        xp: 100
     },
     legendary: {
         name: 'legendary',
         value: 250,
-        rank: 5
+        rank: 5,
+        xp: 250
     }
 };
 
@@ -68,32 +75,38 @@ GoFish.FISH_SIZES = {               // fish sizes and their base weight in lbs
     tiny: {                         // and a numeric score of their rank
         name: 'tiny',
         baseWeight: 0.1,
-        rank: 1
+        rank: 1,
+        rigor: 1
     },
     small: {
         name: 'small',
         baseWeight: 1,
-        rank: 2
+        rank: 2,
+        rigor: 2
     },
     medium: {
         name: 'medium',
         baseWeight: 2,
-        rank: 3
+        rank: 3,
+        rigor: 3
     },
     large: {
         name: 'large',
         baseWeight: 5,
-        rank: 4
+        rank: 4,
+        rigor: 5
     },
     huge: {
         name: 'huge',
         baseWeight: 8,
-        rank: 5
+        rank: 5,
+        rigor: 8
     },
     gargantuan: {
         name: 'gargantuan',
         baseWeight: 13,
-        rank: 6
+        rank: 6,
+        rigor: 13
     }
 };
 
@@ -217,7 +230,7 @@ GoFish.Data.MASTER_FISH_LIST = {
             isEnemy: true
         },
         {
-            name: 'Giant Salamander',
+            name: 'Giant Lizard',
             size: GoFish.FISH_SIZES.gargantuan,
             rarity: GoFish.FISH_RARITIES.rare,
             weightOverride: 100,
@@ -244,14 +257,14 @@ GoFish.Data.MASTER_FISH_LIST = {
             rarity: GoFish.FISH_RARITIES.epic
         },
         {
-            name: 'Sea Wolf',
+            name: 'Freshwater Sea Wolf',
             size: GoFish.FISH_SIZES.gargantuan,
             rarity: GoFish.FISH_RARITIES.epic,
             weightOverride: 75,
             isEnemy: true
         },
         {
-            name: 'Sea Cat',
+            name: 'Freshwater Sea Cat',
             size: GoFish.FISH_SIZES.gargantuan,
             rarity: GoFish.FISH_RARITIES.epic,
             weightOverride: 300,
@@ -369,7 +382,7 @@ GoFish.Data.MASTER_FISH_LIST = {
             rarity: GoFish.FISH_RARITIES.epic
         },
         {
-            name: 'Sea Cat',
+            name: 'Saltwater Sea Cat',
             size: GoFish.FISH_SIZES.gargantuan,
             rarity: GoFish.FISH_RARITIES.epic,
             weightOverride: 300,
@@ -430,7 +443,8 @@ GoFish.Data.Dialogue = {
 
 // object that holds all GoFish data
 GoFish.Data.Game = {
-    FishList: []
+    FishList: [],
+    Characters: []
 };
 
 // Styles ======================================================================
@@ -515,7 +529,21 @@ GoFish.Styles = {
     fishNameSmall: 'font-size: 14px; color: white; font-weight: bold;display: table-cell; width: 55%;',
     fishWeightSmall: 'font-size: 10px; color: white; display: table-cell; text-align-vertical: middle; width: 20%; text-align: right;',
     cashOutButton: `color: black; border-radius: 5px; padding: 2px; background-color: white; font-size: 10px; text-align: center; border: 1px solid black;`,
-    linkOverride: `border: none; background-color: transparent; padding: 0;`
+    linkOverride: `border: none; background-color: transparent; padding: 0;`,
+    experienceContainer: `width: 100%; height: 10px; border: 1px solid black; border-radius: 3px; display: table; align-self: center; align-content: center; vertical-align: middle;`,
+    levelUp: `border-radius: 5px; padding: 2px; background-color: #d4f1d9; font-size: 12px;`,
+    list: {
+        list: 'display: table; align-self: center; border: 1px solid black; border-radius: 5px; background-color: #F1F1D4; padding: 2px; font-size: 10px;',
+        header: 'display: table-caption; background-color: #333330; border: 1px solid black; color: white; font-weight: bold; text-align-center; border-radius: 5px; padding: 2px;',
+        row: 'display: table-row; padding: 4px;',
+        labelCell: 'display: table-cell; width: 75%; padding: 2px; font-weight: bold;',
+        valueCell: 'display: table-cell; width: 25%; padding: 2px;'
+    },
+    dangerTip: `border-radius: 5px; padding: 4px; background-color: #f1d4d4; font-size: 10px;`,
+    toolStats: ``,
+    durability: {
+        bar: `display: table; border-left: 1px solid black; padding: 3px; width: 90%; border-bottom: 1px solid black; border-radius: 3px;`
+    }
 };
 
 // Templates ===================================================================
@@ -601,6 +629,20 @@ GoFish.Templates = {
     error: function(msg) {
         return `<div style="${GoFish.Styles.errorBox}">${msg}</div>`;
     },
+    // experience bar
+    experienceBar: function(character, gainedXP, nextLvlAmount) {
+        gainedXP = Math.round(gainedXP);
+        let descriptor = `<div style="text-align: center; align-items: center;"><strong>${character.name}</strong> gained <strong>${gainedXP} fishing experience</strong>.</div>`;
+        let currentWidth = (Number(character.xp - gainedXP) / nextLvlAmount) * 100;
+        let currentXP = `<div style="width: ${currentWidth}%; background-color: #800080; height: 10px; display: table-cell;"></div>`;
+        let newWidth = (Number(gainedXP) / nextLvlAmount) * 100;
+        let newXP = `<div style="width: ${newWidth}%; background-color: #e200e2; height: 10px; display: table-cell;"></div>`;
+        let remainingXP = `<div style="width:${100 - newWidth - currentWidth}%; height: 10px; display: table-cell;"></div>`;
+        let bar = `<div style="${GoFish.Styles.experienceContainer};">${currentXP}${newXP}${remainingXP}</div>`;
+        let experienceDiv = `<div style="text-align: center; align-items: center; display: table; width: 100%;"><span style="display: table-cell: width: 5%;"><strong>${character.fishingSkill}</strong></span><div style="display: table-cell; width: 90%; vertical-align: middle;">${bar}</div><span style="display: table-cell; width: 5%;"><strong>${character.fishingSkill + 1}</strong></span></div>`;
+        let totalExperience = `<div style="text-align: center; align-items: center; font-size: 10px;"><strong>Total XP:</strong> ${character.xp} / ${nextLvlAmount}</div>`;
+        return `<div style="${GoFish.Styles.tooltip}${GoFish.Styles.shadow} border: 1px solid black; align-items: center; text-align: center; vertical-align: middle;">${descriptor}${experienceDiv}${totalExperience}</div>`;
+    },
     // template for a given fish
     fish: function(fish) {
         
@@ -680,6 +722,14 @@ GoFish.Templates = {
         } else {
             return GoFish.Templates.emptyNet();
         }
+    },
+    // summary for a fish list
+    fishListSummary: function(size, totalCashoutValue, totalWeight) {
+        let header = `<div style="${GoFish.Styles.list.header}">Fishing summary</div>`;
+        let fishCaughtRow = `<div style="${GoFish.Styles.list.row}"><div style="${GoFish.Styles.list.labelCell}"># of fish caught</div><div style="${GoFish.Styles.list.valueCell}">${size}</div></div>`;
+        let cashoutRow = `<div style="${GoFish.Styles.list.row}"><div style="${GoFish.Styles.list.labelCell}">cashout value</div><div style="${GoFish.Styles.list.valueCell}">${totalCashoutValue}gp</div></div>`;
+        let weightRow = `<div style="${GoFish.Styles.list.row}"><div style="${GoFish.Styles.list.labelCell}">total weight</div><div style="${GoFish.Styles.list.valueCell}">${totalWeight}lbs</div></div>`;
+        return `<div style="${GoFish.Styles.list.list}">${header}${fishCaughtRow}${cashoutRow}${weightRow}</div>`;
     },
     // template for GM Notes on the GoFish index
     gmIndex: function() {
@@ -767,10 +817,19 @@ GoFish.Templates = {
         
         return `<div><h2>GoFish Index</h2><h4>by theTexasWave</h4><hr/><br/><h3>Party fish list</h3><h4>Sorted by value</h4>${table}</div>`;
     },
+    // level up!
+    levelUp: function(name, fishingSkill) {
+        return `<div style="${GoFish.Styles.levelUp}${GoFish.Styles.shadow} border: 1px solid black;">&#9757;&#9;<strong>${name}'s</strong> fishing skill increased to <strong>+${fishingSkill}</strong>!</div>`;
+    },
     // displays when a player catches a new record
     newRecord: function(){
         let style = GoFish.Styles.newRecord + GoFish.Styles.glow;
         return `<div style="${style}">New record!</div>`;
+    },
+    // displays when a rod breaks
+    rodBreaks: function(fishsize, durabilityCost) {
+        let content = `&#10060;&#9;While attempting to catch a <strong>${fishsize}</strong> fish, your rod consumes <strong>${durabilityCost}</strong> durability and <strong>breaks</strong>.`;
+        return `<div style="${GoFish.Styles.dangerTip}${GoFish.Styles.shadow} border: 1px solid black;">${content}</div>`;  
     },
     // a small popout for the passage of time
     time: function(time) {
@@ -795,6 +854,19 @@ GoFish.Templates = {
             });
         });
         return template;
+    },
+    // tool stats changes
+    toolStats: function(rodDurability, maxDurability, durabilityCost) {
+        let fw = (maxDurability - rodDurability - durabilityCost) / maxDurability * 100;
+        let fl = `<div style="display: table-cell; height: 4px; width:${fw}%;"></div>`;
+        let cw = durabilityCost / maxDurability * 100;
+        let dl = `<div style="display: table-cell; background-color: #ffa500; border: 1px solid #ff8400; height: 4px; border-radius: 2px; width:${cw}%;"></div>`;
+        let hw = ((rodDurability - durabilityCost) / maxDurability)  * 100;
+        let rh = `<div style="display: table-cell; background-color: #00ff00; border: 1px solid #00ffa2; height: 4px; border-radius: 2px; width:${hw}%;"></div>`;
+        let bar = `<div style="${GoFish.Styles.durability.bar}">${rh}${dl}${fl}</div>`;
+        let label = `<div style="font-size: 10px; text-align: center; align-items: center;">&#127907;&#9;<strong>Rod durability: </strong> ${rodDurability - durabilityCost} \/ ${maxDurability}</div>`;
+        let usage = `<div style="font-size: 10px; text-align: center; align-items: center; "><strong>${durabilityCost}</strong> rod durability consumed...</div>`;
+        return `<div style="${GoFish.Styles.tooltip}${GoFish.Styles.shadow}; border: 1px solid black;">${usage}<div style="text-align: center; align-items: center; ">${bar}</style>${label}</div>`;
     },
     // printed for GoFish usage
     usage: function() {
@@ -868,15 +940,13 @@ GoFish.GoFish = function() {
             // two decimal places
             let cashOutValue = Math.floor(value * GoFish.CASH_OUT_PERCENTAGE * 100);
             cashOutValue = cashOutValue / 100;
-
-            let cashoutMultiplierDisplay = GoFish.CASH_OUT_PERCENTAGE * 100;
             
             let coinTemplate = GoFish.Templates.coin(cashOutValue);
             let template;
             if (weightArg !== '') {
                 template = `<div><strong>${who}</strong> cashed out a <strong>${fish.weight}lb ${fish.name}</strong> for <strong>${cashOutValue}gp</strong>${coinTemplate}<div style="${GoFish.Styles.subtext}">(${value}gp * 40% = ${cashOutValue}gp)</div></div>`;
             } else {
-                template = `<div><strong>${who}</strong> cashed out a <strong>${fish.name}</strong> for <strong>${cashOutValue}gp</strong>${coinTemplate}<div style="${GoFish.Styles.subtext}">(${value}gp * ${cashoutMultiplierDisplay}% = ${cashOutValue}gp)</div></div>`;
+                template = `<div><strong>${who}</strong> cashed out a <strong>${fish.name}</strong> for <strong>${cashOutValue}gp</strong>${coinTemplate}<div style="${GoFish.Styles.subtext}">(${value}gp * 40% = ${cashOutValue}gp)</div></div>`;
             }
             sendChat(GoFish.BOT_NAME, `/w ${who} ${template}`);
             sendChat(GoFish.BOT_NAME, `/w gm ${template}`);
@@ -888,9 +958,9 @@ GoFish.GoFish = function() {
     // uneven haul.
     this.amount = async function(tokens, amount, source, level) {
         if (tokens.length > 1) {
-            sendChat(GoFish.BOT_NAME, `/em ${tokens.length} players enter a fishing tourney for ${amount} fish!`);
+            sendChat(GoFish.BOT_NAME, `/em - ${tokens.length} players enter a fishing tourney for ${amount} fish.`);
         } else {
-            sendChat(tokens[0].get("name"), `/desc /em attempts to catch ${amount} fish!`);
+            sendChat(tokens[0].get("name"), `/desc /em attempts to catch ${amount} fish.`);
         }
         
         let table = this.getTable(source, level);
@@ -899,27 +969,73 @@ GoFish.GoFish = function() {
         let lastTimeMarker  = 0;
         
         let fishermanTable = this.createFishermanQueue(tokens);
+        let tappedOut = [];
+        let totalXP = 0;
         // catch fish
-        while (runningTotal < amount) {
+        while (runningTotal < amount && fishermanTable.length > 0) {
             let fisherman = fishermanTable.shift();
             lastTimeMarker = Number(fisherman.timeMarker);
             let fish = await this.catchFish(fisherman.fishingSkill, table);
-            fisherman.fish.push(fish);
-            runningTotal += 1;
-            fisherman.timeMarker += this.rollFishingTime(fisherman.fishingSkill);
-            this.insertIntoFishermanQueue(fishermanTable, fisherman);
+            let durabilityCost = this.rollDurabilityCost(fish, fisherman.rollCount);
+            fisherman.rod.runningDurabilityCost += durabilityCost;
+            
+            if (fisherman.rod.durability >= fisherman.rod.runningDurabilityCost) {
+                fisherman.fish.push(fish);
+                runningTotal += 1;
+                fisherman.timeMarker += this.rollFishingTime(fisherman.rollCount);
+                fisherman.runningWeight += fish.weight;
+                totalXP += this.calculateXP(fish);
+                this.insertIntoFishermanQueue(fishermanTable, fisherman);
+                
+                if(!fish.isEnemy) {
+                    fisherman.totalValue += this.computeValue(fish);
+                }
+            } else {
+                fisherman.rod.brokeBy = {
+                    fish: fish,
+                    cost: durabilityCost
+                };
+                tappedOut.push(fisherman);
+            }
         }
+        log(JSON.stringify(tappedOut));
+        let xpShare = Math.floor(totalXP / tokens.length);
         
         // print all catches
-        sendChat(GoFish.BOT_NAME, GoFish.Templates.time(lastTimeMarker));
-        log(fishermanTable.length);
+        fishermanTable = fishermanTable.concat(tappedOut);
+        log(JSON.stringify(fishermanTable));
         for (let i = 0; i < fishermanTable.length; i++) {
             let fisherman = fishermanTable[i];
+            // header
+            sendChat(fisherman.name, `/em Results`);
+            
+            // time
+            sendChat(GoFish.BOT_NAME, GoFish.Templates.time(lastTimeMarker));
+            
+            // format value
+            let cashoutValue = Math.round(fisherman.totalValue * 0.4 * 100) / 100;
+            fisherman.runningWeight = Math.round(fisherman.totalValue * 100) / 100;
+            fisherman.totalValue = Math.round(fisherman.totalValue * 100) / 100;
+            sendChat(GoFish.BOT_NAME, GoFish.Templates.fishListSummary(fisherman.fish.length, cashoutValue, fisherman.runningWeight));
+            
+            // xp
+            this.awardCharacterXP(fisherman.token, xpShare);
             sendChat(GoFish.BOT_NAME, `<h4>${fisherman.name} caught...</h4>${GoFish.Templates.fishList(fisherman.fish)}`);
-            let toolChange = await GoFish.Templates.toolChange(fisherman.name, fisherman.rollCount, fisherman.fish.length - 1);
-            sendChat(GoFish.BOT_NAME, toolChange);
+            
+            // rod status
+            if (fisherman.rod.durability >= fisherman.rod.runningDurabilityCost) {
+                // tool deprecation
+                this.getAttribute(fisherman.token, "RodDurability").set("current", fisherman.rod.durability - fisherman.rod.runningDurabilityCost);
+                sendChat(GoFish.BOT_NAME, GoFish.Templates.toolStats(fisherman.rod.durability, fisherman.rod.maxDurability, fisherman.rod.runningDurabilityCost));
+            } else {
+                // set cost to zero
+                this.getAttribute(fisherman.token, "RodDurability").set("current", 0);
+                sendChat(GoFish.BOT_NAME, GoFish.Templates.rodBreaks(fisherman.rod.brokeBy.fish.size.name, fisherman.rod.brokeBy.cost));
+            }
+            
+            // update all entries
             for (let j = 0; j < fisherman.fish.length; j++) {
-                this.updateFishIndex(fisherman.name, fisherman.fish[j]);
+                this.updateFishIndex(fisherman.token, fisherman.fish[j]);
             }
         }
         
@@ -931,37 +1047,85 @@ GoFish.GoFish = function() {
     this.time = async function(tokens, timeLimit, source, level) {
         
         if (tokens.length > 1) {
-            sendChat(GoFish.BOT_NAME, `/em ${tokens.length} players enter a ${timeLimit} minute long fishing tourney!`);
+            sendChat(GoFish.BOT_NAME, `/em - ${tokens.length} players enter a ${timeLimit} minute long fishing tourney.`);
         } else {
-            sendChat(tokens[0].get("name"), `/em fishes for ${timeLimit} minutes!`);
+            sendChat(tokens[0].get("name"), `/em fishes for ${timeLimit} minutes.`);
         }
         
         let table = this.getTable(source, level);
         
         // display
-        sendChat(GoFish.BOT_NAME, GoFish.Templates.time(timeLimit));
         for(let i = 0; i < tokens.length; i++) {
             let token = tokens[i];
             const name = token.get("name");
             let fishingSkill = this.getFishingSkill(token);
             let rollCount = this.getFishingRollCount(fishingSkill);
             
+            let rod = this.getFishingRod(token);
             let runningTime = 0;
-            runningTime += this.rollFishingTime(fishingSkill);
+            let runningXP = 0;
+            let totalValue = 0;
+            let runningWeight = 0;
+            runningTime += this.rollFishingTime(rollCount);
             let catches = [];
             while (runningTime < timeLimit)
             {
                 let fish = await this.catchFish(fishingSkill, table);
-                catches.push(fish);
-                runningTime += this.rollFishingTime(fishingSkill);
+                let durabilityCost =  this.rollDurabilityCost(fish, rollCount);
+                rod.runningDurabilityCost += durabilityCost;
+                
+                if (rod.durability >= rod.runningDurabilityCost) {
+                    catches.push(fish);
+                    runningTime += this.rollFishingTime(rollCount);
+                    runningXP += this.calculateXP(fish);
+                    runningWeight += fish.weight;
+                    if(!fish.isEnemy) {
+                        totalValue += this.computeValue(fish);
+                    }
+                } else {
+                    runningTime = timeLimit;
+                    rod.brokeBy = {
+                        fish: fish,
+                        cost: durabilityCost
+                    };
+                }
             }
             
-            sendChat(GoFish.BOT_NAME, `<h4>${name} caught...</h4>${GoFish.Templates.fishList(catches)}`);
-            let toolChange = await GoFish.Templates.toolChange(name, rollCount, catches.length);
-            sendChat(GoFish.BOT_NAME, toolChange);
+            // round and calculate values
+            totalValue = Math.floor(totalValue * 100) / 100;
+            totalWeight = Math.floor(totalWeight * 100) / 100;
+            let totalCashoutValue = totalValue * 0.4;
+            totalCashoutValue = Math.floor(totalCashoutValue * 100) / 100;
             
+            // Print results
+            sendChat(name, `/em Results`);
+            
+            // time passed
+            sendChat(GoFish.BOT_NAME, GoFish.Templates.time(timeLimit));
+            
+            // summary
+            sendChat(GoFish.BOT_NAME, GoFish.Templates.fishListSummary(catches.length, totalCashoutValue, totalWeight));
+            
+            // rod status
+            if (rod.durability >= rod.runningDurabilityCost) {
+                // tool deprecation
+                this.getAttribute(token, "RodDurability").set("current", rod.durability - rod.runningDurabilityCost);
+                sendChat(GoFish.BOT_NAME, GoFish.Templates.toolStats(rod.durability, rod.maxDurability, rod.runningDurabilityCost));
+            } else {
+                // set cost to zero
+                this.getAttribute(token, "RodDurability").set("current", 0);
+                sendChat(GoFish.BOT_NAME, GoFish.Templates.rodBreaks(rod.brokeBy.fish.size.name, rod.brokeBy.cost));
+            }
+            
+            // experience
+            this.awardCharacterXP(token, runningXP);
+            
+            // fish list
+            sendChat(GoFish.BOT_NAME, `<h4>${name} caught...</h4>${GoFish.Templates.fishList(catches)}`);
+            
+            // update fish entries
             for (let i = 0; i < catches.length; i++) {
-                this.updateFishIndex(name, catches[i]);
+                this.updateFishIndex(token, catches[i]);
             }
         };
         
@@ -971,49 +1135,73 @@ GoFish.GoFish = function() {
     // main minigame logic
     this.goFishing = async function(token, source, level) {
         const name = token.get("name");
-        let fishingSkill = this.getFishingSkill(token);
         let table = this.getTable(source, level);
         
+        let fishingSkill = this.getFishingSkill(token);
+        let rollCount = this.getFishingRollCount(fishingSkill);
         
         sendChat(name, `/em begins to fish.`);
         
         // Roll time
-        let timeRoll = this.rollFishingTime(fishingSkill);
-        let rollCount = this.getFishingRollCount(fishingSkill);
+        let timeRoll = this.rollFishingTime(rollCount);
+        
+        // roll fish
         let fish = await this.catchFish(fishingSkill, table);
-        
-        // Complete
-        log(name + " rolled a " + JSON.stringify(fish));
-        
-        // Formatting and display
-        let hasBeenDiscovered = this.hasBeenDiscovered(fish.name);
-        let breaksNewRecord = this.breaksNewRecord(fish);
-        this.updateFishIndex(name, fish);
-        
-        // time cost
-        sendChat(GoFish.BOT_NAME, GoFish.Templates.time(timeRoll));
-        
-        // dialogue
-        sendChat(GoFish.BOT_NAME, this.getDialogue('oncatch', [fish.size.name]));
-        
-        // badges
-        if (!hasBeenDiscovered) {
-            sendChat(GoFish.BOT_NAME, `<div style="${GoFish.Styles.newLbl}">New!</div>`)
-        } else if (breaksNewRecord) {
-            sendChat(GoFish.BOT_NAME, GoFish.Templates.newRecord());
+        let durabilityCost = this.rollDurabilityCost(fish, rollCount);
+        let durabilityAtr = this.getAttribute(token, "RodDurability");
+
+        if (!durabilityAtr) {
+            throw new Error("Character must have a positive 'RodDurability' attribute with a Current and Max..");
         }
         
-        // fish view
-        let template = GoFish.Templates.fish(fish);
-        sendChat(GoFish.BOT_NAME, template);
+        let maxDurability = durabilityAtr.get("max");
+        let rodDurability = durabilityAtr.get("current");
         
-        // tool deprecation
-        let toolChange = await GoFish.Templates.toolChange(name, rollCount);
-        sendChat(GoFish.BOT_NAME, toolChange);
+        if (durabilityCost <= rodDurability) {
         
-        // cash out button
-        if (!fish.isEnemy) {
-            sendChat(GoFish.BOT_NAME, GoFish.Templates.cashOutButton(fish));
+            // subtract cost
+            this.getAttribute(token, "RodDurability").set("current", rodDurability - durabilityCost);
+            
+            let xp = this.calculateXP(fish);
+    
+            // Complete
+            log(name + " rolled a " + JSON.stringify(fish));
+            
+            // Formatting and display
+            let hasBeenDiscovered = this.hasBeenDiscovered(fish.name);
+            let breaksNewRecord = this.breaksNewRecord(fish);
+            this.updateFishIndex(token, fish);
+            
+            // time cost
+            sendChat(GoFish.BOT_NAME, GoFish.Templates.time(timeRoll));
+            
+            // dialogue
+            sendChat(GoFish.BOT_NAME, this.getDialogue('oncatch', [fish.size.name]));
+            
+            // badges
+            if (!hasBeenDiscovered) {
+                sendChat(GoFish.BOT_NAME, `<div style="${GoFish.Styles.newLbl}">New!</div>`)
+            } else if (breaksNewRecord) {
+                sendChat(GoFish.BOT_NAME, GoFish.Templates.newRecord());
+            }
+            
+            // fish view
+            let template = GoFish.Templates.fish(fish);
+            sendChat(GoFish.BOT_NAME, template);
+            
+            // tool deprecation
+            sendChat(GoFish.BOT_NAME, GoFish.Templates.toolStats(rodDurability, maxDurability, durabilityCost));
+            
+            this.awardCharacterXP(token, xp);
+            
+            // cash out button
+            if (!fish.isEnemy) {
+                sendChat(GoFish.BOT_NAME, GoFish.Templates.cashOutButton(fish));
+            }
+        } else {
+            // set cost to zero
+            this.getAttribute(token, "RodDurability").set("current", 0);
+            sendChat(GoFish.BOT_NAME, GoFish.Templates.rodBreaks(fish.size.name, durabilityCost));
         }
     };
     
@@ -1047,6 +1235,59 @@ GoFish.GoFish = function() {
 
     // Region: Utility Functions ===============================================
 
+        // awards XP to a character, prints a chart displaying progress
+    this.awardCharacterXP = function(token, xp) {
+        // get character data
+        let character;
+        let characterList = GoFish.Data.Game.Characters;
+
+        for (let i = 0; i < characterList.length; i++) {
+            if (characterList[i].name === token.get("name")) {
+                character = characterList[i];
+            }
+        }
+  
+        // initialize if not found
+        if (!character) {
+            let fishingSkill = this.getAttribute(token, "Fishing").get("current");
+            character = {
+                name: token.get("name"),
+                fishingSkill: Number(fishingSkill),
+                xp: 0
+            };
+            GoFish.Data.Game.Characters.push(character);
+        }
+
+        character.xp = Math.round(character.xp + xp);
+        let xpLimit = this.getXPForNextLevel(character.fishingSkill);
+
+        // level skill up
+        if (character.xp >= xpLimit) {
+            character.fishingSkill += 1;
+            character.xp -= xpLimit;
+            sendChat(GoFish.BOT_NAME, GoFish.Templates.levelUp(character.name, character.fishingSkill));
+            let fishingAttribute = this.getAttribute(token, "Fishing");
+            fishingAttribute.set("current", character.fishingSkill);
+            xpLimit = this.getXPForNextLevel(character.fishingSkill);
+            
+            xp = character.xp   // set this for the experience bar to display properly
+        }
+        
+        
+        // update character list
+        for (let i = 0; i < characterList.length; i++) {
+            if (characterList[i].name === character.name) {
+                characterList[i] = character;
+            }
+        }
+        
+        // update game data
+        GoFish.Data.Game.Characters = characterList; 
+        state.GoFish = GoFish.Data.Game;
+
+        sendChat(GoFish.BOT_NAME, GoFish.Templates.experienceBar(character, xp, xpLimit));
+    }
+
     // returns boolean indicating if caught fish
     // breaks a record, false otherwise or hasn't
     // been discovered
@@ -1061,6 +1302,20 @@ GoFish.GoFish = function() {
             }
         }
         return false;
+    }
+    
+    // calculates the xp value of a catch,
+    // based on weight and rarity
+    this.calculateXP = function(fish) {
+        let xp = fish.rarity.xp;
+        let denominator;
+        if (fish.weightOverride) {
+            denominator = fish.weightOverride;
+        } else {
+            denominator = fish.size.baseWeight;
+        }
+        xp *= (fish.weight / denominator);
+        return xp;
     }
     
     // the business logic for catching a fish
@@ -1148,13 +1403,23 @@ GoFish.GoFish = function() {
             let token = tokens[i];
             let fishingSkill = this.getFishingSkill(token);
             let rollCount = this.getFishingRollCount(fishingSkill);
-            let timeMarker = this.rollFishingTime(fishingSkill);
+            let timeMarker = this.rollFishingTime(rollCount);
+            let rodDurability = this.getAttribute(token, "RodDurability");
+            if (!rodDurability) {
+                rodDurability = GoFish.ROD_DURABILITY_DEFAULT;
+            }
             let fisherman = {
                 name: token.get("name"),
                 fishingSkill: fishingSkill,
+                rodDurability: rodDurability,
                 rollCount: rollCount,
                 timeMarker: timeMarker,
-                fish: []
+                fish: [],
+                token: token,
+                xpGain: 0,
+                totalValue: 0,
+                rod: this.getFishingRod(token),
+                runningWeight: 0
             };
             this.insertIntoFishermanQueue(queue, fisherman);
         }
@@ -1210,6 +1475,26 @@ GoFish.GoFish = function() {
             }
         }
     };
+    
+    // returns a fishing rod object for given token
+    this.getFishingRod = function(token) {
+        let durabilityAtr = this.getAttribute(token, "RodDurability");
+
+        if (!durabilityAtr) {
+            throw new Error("Character must have a positive 'RodDurability' attribute with a Current and Max.");
+        }
+        
+        let maxDurability = durabilityAtr.get("max");
+        let rodDurability = durabilityAtr.get("current");
+
+        let rod = {
+            durability: rodDurability,
+            maxDurability: maxDurability,
+            runningDurabilityCost: 0
+        };
+        
+        return rod;
+    }
     
     // calculates number of rolls for a fishing skill
     this.getFishingRollCount = function(fishingSkill) {
@@ -1291,6 +1576,11 @@ GoFish.GoFish = function() {
         return '';
     }
     
+    // retrieves the amount of xp needed to level up
+    this.getXPForNextLevel = function(currentFishingSkill) {
+        return (Math.pow(3, Number(currentFishingSkill))) * GoFish.XP_STEP;
+    }
+    
     // returns boolean indicating if given fish has
     // yet been discovered by players
     this.hasBeenDiscovered = function(fishname) {
@@ -1317,6 +1607,18 @@ GoFish.GoFish = function() {
     this.printUsage = function() {
         sendChat(GoFish.BOT_NAME, GoFish.Templates.usage());
     };
+    
+    // rolls the durability cost for a given fish
+    this.rollDurabilityCost = function(fish, rollCount) {
+        let cost = 1000;
+        for (let i = 0; i < rollCount; i++) {
+            let roll = Math.floor(Math.random() * fish.size.rigor) + 1;
+            if (roll < cost) {
+                cost = roll;
+            }
+        }
+        return cost;
+    }
     
     // rolls a fish from the given table
     this.rollFish = async function(table) {
@@ -1349,15 +1651,19 @@ GoFish.GoFish = function() {
     };
     
     // rolls how long it takes to get a bite
-    this.rollFishingTime = function(fishingSkill) {
-        let roll = Math.random();
-        let rollTime = Math.floor(roll * (GoFish.AVERAGE_FISHING_TIME / fishingSkill));
+    this.rollFishingTime = function(rollCount) {
+        let rollTime = Math.floor(Math.random() * GoFish.MAXIMUM_FISHING_TIME);
+        
+        for(let i = 0; i < rollCount; i++) {
+            let roll = Math.floor(Math.random() * GoFish.MAXIMUM_FISHING_TIME);
+            if (roll < rollTime) {
+                rollTime = roll;
+            }
+        }
         
         // boundaries
         if (rollTime < GoFish.MINIMUM_FISHING_TIME) {
             rollTime = GoFish.MINIMUM_FISHING_TIME;
-        } else if (rollTime > GoFish.MAXIMUM_FISHING_TIME) {
-            rollTime = GoFish.MAXIMUM_FISHING_TIME;
         }
         
         return rollTime;
@@ -1597,9 +1903,10 @@ GoFish.GoFish = function() {
     };
     
     // updates the GoFish index with the given fish
-    this.updateFishIndex = function(who, fish) {
+    this.updateFishIndex = function(token, fish) {
         let found = false;
         let fishList = GoFish.Data.Game.FishList;
+        
         for (let i = 0; i < fishList.length; i++) {
             if (fishList[i].name === fish.name) {
                 found = true;
@@ -1607,7 +1914,7 @@ GoFish.GoFish = function() {
                 entry.numberCaught += 1;
                 if (fish.weight > entry.largestCaught) {
                     entry.largestCaught = fish.weight;
-                    entry.recordHolder = who;
+                    entry.recordHolder = token.get("name");
                 }
                 GoFish.Data.Game.FishList[i] = Object.assign({}, entry);
             }
@@ -1616,7 +1923,7 @@ GoFish.GoFish = function() {
         if (!found) {
             fish.largestCaught = fish.weight;
             fish.numberCaught = 1;
-            fish.recordHolder = who;
+            fish.recordHolder = token.get("name");
             fish.watersource = this.getWaterSource(fish.name);
             GoFish.Data.Game.FishList.push(fish);
         }
@@ -1632,6 +1939,8 @@ GoFish.GoFish = function() {
                 }
             }
         }
+        
+        // set game data
         GoFish.Data.Game.FishList = fishList;
         
         // update state
@@ -1699,7 +2008,8 @@ on("chat:message", function(msg) {
                         fisher.printCommand(msg.who, 'reset', []);
                         // clear state
                         state.GoFish = {
-                            FishList: []
+                            FishList: [],
+                            Characters: []
                         };
                         // remove index handout
                         let index = findObjs({type: "handout", name: "GoFish! Index"})[0];
