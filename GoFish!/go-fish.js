@@ -133,7 +133,7 @@ GoFish.Data.TABLE_NAME_LIST = [
 ];
 
 // the version number, updated by theTexasWave
-GoFish.Data.VERSION_NUMBER = 'v1.0.0';
+GoFish.Data.VERSION_NUMBER = 'v1.1.0';
     
 // The Master Fish List - the bread and butter
 // contains all fish to be rolled. Follow schema below
@@ -998,12 +998,12 @@ GoFish.GoFish = function() {
                 tappedOut.push(fisherman);
             }
         }
-        log(JSON.stringify(tappedOut));
+
         let xpShare = Math.floor(totalXP / tokens.length);
         
         // print all catches
         fishermanTable = fishermanTable.concat(tappedOut);
-        log(JSON.stringify(fishermanTable));
+
         for (let i = 0; i < fishermanTable.length; i++) {
             let fisherman = fishermanTable[i];
             // header
@@ -1073,7 +1073,7 @@ GoFish.GoFish = function() {
                 let fish = await this.catchFish(fishingSkill, table);
                 let durabilityCost =  this.rollDurabilityCost(fish, rollCount);
                 rod.runningDurabilityCost += durabilityCost;
-                
+                log(durabilityCost + ' ' + JSON.stringify(rod));
                 if (rod.durability >= rod.runningDurabilityCost) {
                     catches.push(fish);
                     runningTime += this.rollFishingTime(rollCount);
@@ -1090,13 +1090,12 @@ GoFish.GoFish = function() {
                     };
                 }
             }
-            
+
             // round and calculate values
             totalValue = Math.floor(totalValue * 100) / 100;
-            totalWeight = Math.floor(totalWeight * 100) / 100;
+            runningWeight = Math.floor(runningWeight * 100) / 100;
             let totalCashoutValue = totalValue * 0.4;
             totalCashoutValue = Math.floor(totalCashoutValue * 100) / 100;
-            
             // Print results
             sendChat(name, `/em Results`);
             
@@ -1104,7 +1103,7 @@ GoFish.GoFish = function() {
             sendChat(GoFish.BOT_NAME, GoFish.Templates.time(timeLimit));
             
             // summary
-            sendChat(GoFish.BOT_NAME, GoFish.Templates.fishListSummary(catches.length, totalCashoutValue, totalWeight));
+            sendChat(GoFish.BOT_NAME, GoFish.Templates.fishListSummary(catches.length, totalCashoutValue, runningWeight));
             
             // rod status
             if (rod.durability >= rod.runningDurabilityCost) {
