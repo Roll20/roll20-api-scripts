@@ -830,5 +830,21 @@ huntersmark:
   - "HuntersMark"
   - "Utility"
 
+spintokens:
+  - "SpinTokens"
+  - "Utility"
+
+agonecleanolds:
+  - "AgoneCleanOlds"
+  - "System Toolbox"
+
+deltagreenrpgcompanion:
+  - "DeltaGreenRPGCompanion"
+  - "System Toolbox"
+
+dynamiclightrecorder::
+  - "DynamicLightRecorder"
+  - "Utility"
+
 
 
