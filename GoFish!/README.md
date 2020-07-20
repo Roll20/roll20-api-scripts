@@ -21,16 +21,13 @@
 <p>GoFish! is also shipped with the <strong>GoFish! Index</strong> which keeps track of a master fish list for the GM, and all discovered fish for the Party (as well as <strong>maintains a list of all-time-records</strong>).</p>
 <hr/>
 <h4>The gist</h4>
- <p>
-    A user must have a 'Dexterity' (or 'DEX' modifier) and 'Fishing' attribute supplied to their character. This helps the system generate their 'Fishing Skill' which will drop better items for them on average.
+<p>
+    A user must have a 'Dexterity' (or 'DEX' modifier), a 'RodDurability' attribute (with current and max), and a 'Fishing' attribute supplied to their character. This helps the system generate their 'Fishing Skill' which will drop better items for them on average. Select a character and enter one of the <b>!go-fish</b> commands to get rolling.
 </p>
 <p>
-    At it's core, GoFish! is used in three easy steps:
-    <ol>
-        <li>Select a character, or characters, to go fishing.</li>
-        <li>Engage in the fishing minigame by entering one of the <strong>!go-fish</strong> API commands.</li>
-        <li>Interact with the persistent fishing data as you see fit.</li>
-    </ol>
+    As of v1.1.0, fishing now includes an <b>experience</b> system, where a character's fishing skill automatically increases over time based on the weight, size, and rarity of a fish caught.
+    <br/>
+    I've also added a <b>rod durability</b> system, which acts as a "stamina" system of sorts that keeps players from just abusing the system. Rod durability decreases with each fish and is determined by a random roll based on the size of the fish, and can be decreased with a higher fishing skill.
 </p>
 <hr/>
 <h3>Usage</h3>
