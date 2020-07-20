@@ -842,9 +842,10 @@ deltagreenrpgcompanion:
   - "DeltaGreenRPGCompanion"
   - "System Toolbox"
 
-dynamiclightrecorder::
+dynamiclightrecorder:
   - "DynamicLightRecorder"
   - "Utility"
 
-
-
+gofish:
+  - "GoFish!"
+  - "Utility"
