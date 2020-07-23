@@ -35,6 +35,8 @@ Select your character, then run the `!long-rest` command. It will:
 
 - remove temporary hit points.
 
+- reduce exhaustion level.
+
 - replenish spell slots.
 
 - replenish class specific resources, like **Lay on Hands**, **Arcane Recovery** and **Rage**.
