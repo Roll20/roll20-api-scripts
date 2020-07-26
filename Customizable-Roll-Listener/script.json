@@ -1,8 +1,8 @@
 {
 	"name": "Customizable Roll Listener",
 	"script": "CRL.js",
-	"version": "1.0",
-	"previousversions": [],
+	"version": "1.1",
+	"previousversions": ["1.0"],
 	"description": "# Customizable Roll Listener\r\r### The script allows you to define custom reactions to various chat input and roll results. Listeners are stored as abilities in a script created character, which also holds the script's help menu. Access the help menu via by typing '!crl' in to chat.",
 	"authors": "Scott C.",
 	"roll20userid": "459831",
