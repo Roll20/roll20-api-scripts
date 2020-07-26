@@ -1,7 +1,7 @@
 var tokenAction = tokenAction || (function() {
     'use strict';
 
-    var version = '0.3.0',
+    var version = '0.3.1',
         sheetVersion = 'D&D 5th Edition by Roll20',
 
         checkInstall = function() {
@@ -148,9 +148,7 @@ var tokenAction = tokenAction || (function() {
                 var level = s.get('name').split('_')[1].replace('spell-', ''),
                     apiButton = "[" + s.get('current') + "](~repeating_spell-" + level + "_" + s.get('name').split('_')[2] + "_spell)";
 
-                if (level === "cantrip") {
-                    level = "Cantrips";
-                } else if (level === "1") {
+                if (level === "1") {
                     level = "1st";
                 } else if (level === "2") {
                     level = "2nd";
@@ -168,6 +166,8 @@ var tokenAction = tokenAction || (function() {
                     level = "8th";
                 } else if (level === "9") {
                     level = "9th";
+                } else {
+                    level = "Cantrips";
                 }
 
                 sb[level].push(apiButton);
