@@ -1,7 +1,7 @@
 var tokenAction = tokenAction || (function() {
     'use strict';
 
-    var version = '0.3.0',
+    var version = '0.3.1',
         sheetVersion = 'D&D 5th Edition by Roll20',
 
         checkInstall = function() {
