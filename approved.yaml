@@ -849,3 +849,7 @@ dynamiclightrecorder:
 gofish:
   - "GoFish!"
   - "Utility"
+
+weaponarcs:
+- "WeaponArcs"
+- "Tokens"
