@@ -1,0 +1,8 @@
+{
+    "name": "FotN Companion",
+    "script": "FotN Companion.js",
+    "version": "1.0",
+    "previousversions": "[]",
+    "authors": "Joshua S.",
+    "roll20userid": "1220608",
+    "description": "# FotN Companion\r\rThis script allows you to wyrd (draw runes from a deck) and have those runes placed on an official FotN playmat located on a page called 'playmats', remove runes from the playmat, generate a deck based on an official FotN character sheet's rune list or a set of user described runes, place alka tokens to the map, and will reflect status from the official FotN character sheet to an appropriate playmat. This script is usable on its own, but will function better when used with the FotN character sheet and MapChange script. It allows the following commands: !wyrd, !cleanup, !build, !alka. Please see the readme file at https://github.com/yehoshua1312/Yehoshua/blob/master/roll20/roll20-character-sheets/README.txt for complete instructions."
