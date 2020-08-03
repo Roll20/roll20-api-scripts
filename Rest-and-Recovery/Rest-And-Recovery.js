@@ -1,7 +1,7 @@
 // Rest and Recovery
 // A Roll20 API script to handle recovery on the resource attributes on the D&D 5th Edition by Roll20 sheet.
 on('ready', () => {
-    const version = '0.0.2';
+    const version = '0.0.3';
     const sheetVersion = 'D&D 5th Edition by Roll20';
     log('Rest and Recovery v' + version + ' is ready!  Designed for use with the ' + sheetVersion + ' character sheet!');
                 const shortRestList = ['Spell Slots', 'Warlock Spell Slots','Spell Points','Channel Divinity', 'Wild Shapes', 'Second Wind','Action Surge','Superiority Dice', 'Ki', 'Ki Points','Visions of the Past','Enthralling Performance','Words of Terror','Unbreakable Majesty','Spirit Totem','Arcane Shot','Detect Portal','Ethereal Step','Magic-Users Nemesis','Favored by the Gods','Wind Soul','Bladesong','Blade Song','Arcane Abeyance','Illusory Self','Shapechanger','Fey Step', 'Hidden Step', 'Firbolg Magic', 'Stones Endurance', 'Saving Face', 'Grovel Cower and Beg', 'Hungry Jaws', 'Fury of the Small', 'Breath Weapon'];
