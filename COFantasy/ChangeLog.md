@@ -1,17 +1,26 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 2.08
 ### Capacités
+* Support pour la capacité forêt vivante du druide.
+* Ajout de la capacité botte mortelle du barde.
+* Possibilité de spécifier le bonus apporté par une feinte.
 * Support pour l'énergie de la mort, utilisée dans la campagne Vengeance.
 * Adaptable de la Voie de l'humain
 * Résistance à la magie du barbare
 
 ### Autres améliorations
+* Les armes à poudre font maintenant des DM explosifs par défaut.
+* Gestion de l'arme en main gauche.
+* Ajout d'un raccourci pour faire afficher toutes les action d'attaque visibles dur la fiche dans n'importe quelle liste d'actions.
+* Ajout de la possibilité de mettre des options globales dans les listes d'action.
+* Prise en compte des jets, attributs et inputs dans la partie options des lignes d'attaque, quand elles sont utilisées depuis un bouton (comme avec les listes d'action).
 * Possibilité de ne pas appliquer l'usure pour un combat (!cof-usure-off)
 * Ajout d'un effet retardé pour le cas où on doit compter des nombres de tours
 * Ajout du bonus de couvert
 * Attaques par défaut dans la liste d'actions, possibilité de se passer complètement des attributs pour les attaques (actif quand la version 3.3 de la fiche sera là.
 
 ### Corrections de bugs
+* Prise en compte correcte de l'armure des PNJ pour la main d'énergie.
 * Correction d'un bug qui faisait planter en cas de save dans une attaque
 * Correction de l'affichage en cas d'immunité à un type d'attaque
 * Prise en compte correcte de l'attribut option_pm par défaut
