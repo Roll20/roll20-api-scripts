@@ -1,0 +1,19 @@
+{
+  "name": "SpawnDefaultToken",
+  "script": "SpawnDefaultToken.js",
+  "version": "0.0",
+  "description": "Spawns one or more default tokens for a given character, with various options for placement and token characteristics",
+  "authors": "David M.",
+  "roll20userid": 3987469
+  "patreon": [],
+  "useroptions": [],
+  "dependencies": [],
+  "modifies": {       
+    "character.*": "read",
+    "graphic.*": "read,write",
+    "ability.*": "read",
+    "player.displayname": "read"
+  },
+  "conflicts": [],
+  "previousversions": []
+}
