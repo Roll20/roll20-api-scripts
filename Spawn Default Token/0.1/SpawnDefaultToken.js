@@ -1,5 +1,5 @@
 /*
-    Select an existing token, then call !spawn --name|<CharToSpawn> --optionalArgs
+    Select an existing token, then call !spawn --name|<CharToSpawn> --optionalArgs 
     
     Description of of syntax: < > only added for readability. do not include 
     !Spawn {{
