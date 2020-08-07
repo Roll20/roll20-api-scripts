@@ -913,7 +913,7 @@ const SpawnDefaultToken = (() => {
         let args = inlineContent.split(/\s+--/).map(arg=>{
                 let cmds = arg.split('|');
                 return {
-                    cmd: cmds.shift().toLowerCase(),
+                    cmd: cmds.shift().toLowerCase().trim(),
                     params: cmds[0]
                 };
             });
