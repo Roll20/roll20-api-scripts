@@ -1,7 +1,7 @@
 /*
-    Select an existing token, then call !spawn --name|CharToSpawn --optionalArgs 
+    Select an existing token, then call !spawn --name|<CharToSpawn> --optionalArgs
     
-    Description of of syntax: < > only added for readability. do not include < > 
+    Description of of syntax:
     !Spawn {{
       --name|        < charName >    //(REQUIRED) name of the character whose target we want to spawn
       --targets|     < # >           //Destination override. Instead of using selected token(s) as origin, use target token(s)
@@ -537,7 +537,7 @@ const SpawnDefaultToken = (() => {
             //"Placement" parameter. Additional checks if 'grid' or 'burst' 
             if ( _.contains(['stack', 'row', 'col', 'column', 'surround'], data.placement.toLowerCase()) ) {
                 //Good, no additional info req'd
-            } else if ( data.placement.match(/grid/) ) {
+            } else if ( data.placement.match(/grid/i) ) {
                     //grid case     --check for number
                     if ( !data.placement.match(/(\d+)/) ) {
                         retVal.push('Invalid grid row length supplied (\"' + data.placement + '\"). Format is --placement|grid #');
@@ -546,7 +546,7 @@ const SpawnDefaultToken = (() => {
                         data.gridCols = data.placement.match(/(\d+)/)[0];   //use first number found for gridCols
                         data.placement = 'grid';
                     }
-            } else if ( data.placement.match(/burst/) ) {  
+            } else if ( data.placement.match(/burst/i) ) {  
                     //burst case    --check for number
                     if ( !data.placement.match(/(\d+)/) ) {
                         retVal.push('Invalid burst radius supplied (\"' + data.placement + '\"). Format is --placement|burst #');
