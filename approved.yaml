@@ -853,3 +853,7 @@ gofish:
 weaponarcs:
 - "WeaponArcs"
 - "Tokens"
+
+spawndefaulttoken:
+- "SpawnDefaultToken"
+- "Tokens"
