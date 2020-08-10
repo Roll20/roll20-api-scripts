@@ -1,7 +1,7 @@
 {
   "name": "WeaponArcs",
   "script": "WeaponArcs.js",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "WeaponArcs provides a means to add weapon arcs to tokens for visualization of range and targetable tokens.\rSee the in-game Help Handout for more details or run the help command `!weapon-arc --help`.\r\r[Forum Discussion](https://app.roll20.net/forum/post/8996556/script-weaponarcs-visible-arcs-that-follow-your-token-and-maintain-their-relative-rotation/?pageforid=8996556#post-8996556)",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -14,6 +14,7 @@
   "conflicts": [],
   "previousversions": [
     "0.1.0",
-    "0.1.1"
+    "0.1.1",
+    "0.1.2"
   ]
 }
