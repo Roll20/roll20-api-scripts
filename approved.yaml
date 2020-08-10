@@ -857,3 +857,7 @@ weaponarcs:
 spawndefaulttoken:
 - "Spawn Default Token"
 - "Tokens"
+
+fotncompanion:
+- "FotN Companion"
+- "System Toolbox"
