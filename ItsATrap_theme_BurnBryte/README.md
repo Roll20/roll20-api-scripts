@@ -30,6 +30,11 @@ Describe here what happens if a target fails their skill roll against the trap.
 
 E.g. 'The target takes 1 damage.' or 'Gain a minor condition - sprained ankle.'
 
+#### Failure Prompts
+The On Hit property supports integration with Burn Bryte's Failure-Prompts
+rollable table. To use it, just enter 'prompt' (without the quotes) for the
+On Hit property.
+
 ### Perception Complexity
 If this is set, passive perception will be enabled for the trap.
 When a character gets close enough, this script will automatically roll their

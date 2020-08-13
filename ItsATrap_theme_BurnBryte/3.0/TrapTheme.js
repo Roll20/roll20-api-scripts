@@ -51,7 +51,9 @@
           effectResults.character = character;
         })
         .then(() => {
-          let html = TrapThemeBurnBryte.htmlTrapActivation(effectResults);
+          return TrapThemeBurnBryte.htmlTrapActivation(effectResults);
+        })
+        .then(html => {
           effect.announce(html.toString(TrapTheme.css));
         })
         .catch(err => {
@@ -156,46 +158,55 @@
       /**
        * Produces the HTML for a trap activation message.
        * @param {object} effectResults
-       * @return {HtmlBuilder}
+       * @return {Promise<HtmlBuilder>}
        */
       static htmlTrapActivation(effectResults) {
-        let content = new HtmlBuilder('div');
+        return TrapThemeBurnBryte.rollFailurePrompt()
+        .then(failPrompt => {
+          let content = new HtmlBuilder('div');
 
-        // Add the flavor message.
-        content.append('.paddedRow trapMessage', effectResults.message);
+          // Add the flavor message.
+          content.append('.paddedRow trapMessage', effectResults.message);
 
-        if(effectResults.character) {
-          let row = content.append('.paddedRow');
-          row.append('span.bold', 'Target:', {
-            style: {
-              'padding-right': '1em'
-            }
-          });
-          row.append('span', effectResults.character.get('name'));
-
-          // Add the complexity message.
-          if(effectResults.complexity) {
-            let row = content.append('.paddedRow')
-            row.append('span.bold', 'Complexity:', {
+          if(effectResults.character) {
+            let row = content.append('.paddedRow');
+            row.append('span.bold', 'Target:', {
               style: {
                 'padding-right': '1em'
               }
             });
-            row.append('span', effectResults.complexity);
+            row.append('span', effectResults.character.get('name'));
 
-            if (effectResults.onHit) {
+            // Add the complexity message.
+            if(effectResults.complexity) {
               let row = content.append('.paddedRow')
-              row.append('span.bold', 'Oh Hit:', {
+              row.append('span.bold', 'Complexity:', {
                 style: {
                   'padding-right': '1em'
                 }
               });
-              row.append('span', effectResults.onHit);
+              row.append('span', effectResults.complexity);
+
+              if (effectResults.onHit) {
+                // If we're using the prompt, replace the onHit message with
+                // whatever we rolled from the table.
+                let onHit = effectResults.onHit;
+                if (onHit.toLowerCase() === 'prompt')
+                  onHit = failPrompt;
+
+                let row = content.append('.paddedRow')
+                row.append('span.bold', 'Oh Hit:', {
+                  style: {
+                    'padding-right': '1em'
+                  }
+                });
+                row.append('span', onHit);
+              }
             }
           }
-        }
 
-        return TrapTheme.htmlTable(content, '#a22', effectResults);
+          return TrapTheme.htmlTable(content, '#a22', effectResults);
+        });
       }
 
       /**
@@ -244,7 +255,7 @@
           if(!_.isNumber(perception))
             throw new Error('Passive Perception: Could not get Perception for Character ' + charToken.get('_id') + '.');
 
-          return this.rollBurnBryteDice(perception, effect.perception);
+          return TrapThemeBurnBryte.rollBurnBryteDice(perception, effect.perception);
         })
         .then(result => {
           // Inform the GM about the Perception attempt.
@@ -269,7 +280,7 @@
        * @return {BurnBryteDiceResult} The result object containing the dice
        * rolls and whether it's a pass or fail.
        */
-      rollBurnBryteDice(diceSize, complexity=2) {
+      static rollBurnBryteDice(diceSize, complexity=2) {
         if (diceSize && complexity) {
           return CharSheetUtils.rollAsync(`${complexity}d${diceSize}mt`)
           .then(roll => {
@@ -286,6 +297,25 @@
         }
         else
           return Promise.resolve(undefined);
+      }
+
+      /**
+       * Roll some result from the Burn Bryte Failure-Prompts table.
+       * @return {Promise<string>}
+       */
+      static rollFailurePrompt() {
+        // Make sure the Failure-Prompts table exists!
+        let table = findObjs({
+          _type: 'rollabletable',
+          name: 'Failure-Prompts'
+        })[0];
+        if (!table)
+          throw new Error(`Failure-Prompts table doesn't exist.`);
+
+        return CharSheetUtils.rollAsync(`1t[Failure-Prompts]`)
+        .then(roll => {
+          return roll.rolls[0].results[0].tableItem.name;
+        });
       }
     }
 
