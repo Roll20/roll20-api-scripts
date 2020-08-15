@@ -844,6 +844,7 @@ sr5CounterCheckInitiative = () => {
     //Send off the newTurnOrder to the Campaign's turnorder object to make everything
     //  official!
     sr5HelperFunctions.setTurnorder(newTurnOrder);
+  };
 },
 //fire off sr5CounterCheckInitiative when the Campaign Turnorder changes!
 on('change:campaign:turnorder', () => {
