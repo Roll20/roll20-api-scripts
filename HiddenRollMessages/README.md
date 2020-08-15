@@ -18,8 +18,8 @@ Some scenearios where this plugin would enhance the experience:
 ## Screen Shots 
 -----------------
 
-![GM_view](screenshots/gm_view.png)
-![player_view](screenshots/player_view.png)
+![GM_view](screenshots/gm_view.PNG)
+![player_view](screenshots/player_view.PNG)
 
 
 ## How to install
@@ -63,7 +63,7 @@ The format of notes should be as follows:
 Let's say we are playing DnD and we are investigating a wizard's lair. As the players are walking down an alley, there is a strange object hanging on the wall. We want to create an HRM that rolls for Arcana and if the roll succeeds, the player will get a whisper telling them what that object is. 
 
 Here is what the handout should look like: 
-![example handout](screenshots/example_handout.png)
+![example handout](screenshots/example_handout.PNG)
 
 Once you are done, save the handout. Now one of two things will happen. 
 
