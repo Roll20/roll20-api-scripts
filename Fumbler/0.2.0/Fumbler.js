@@ -155,8 +155,8 @@ var fumbler = fumbler || (function()
 				{
 					try
 					{
-                       notes = notes.replace( /(<([^>]+)>)/ig, '');
-                       notes = notes.replace(/&nbsp;/gi, '') // Coder error. Not sure how to incorporate this regex to the above
+                        notes = notes.replace( /(<([^>]+)>)/ig, '');
+                        notes = notes.replace(/&nbsp;/gi, '') // Coder error. Not sure how to incorporate this regex to the above
 						chart = JSON.parse(notes);
 						chart.sort(sort_json_by_low)
 						let bounded_roll = ((rolled > chart[chart.length - 1].high ) ? randomInteger(chart[chart.length - 1].high) : rolled) // if a custom chart is allowed, roll up to whatever the maximum value specified is
