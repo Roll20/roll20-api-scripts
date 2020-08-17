@@ -15,5 +15,8 @@
     "player.displayname": "read"
   },
   "conflicts": [],
-  "previousversions": ["0.0"]
+  "previousversions": [
+     "0.0",
+     "0.1"
+  ]
 }
