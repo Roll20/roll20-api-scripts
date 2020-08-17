@@ -2,7 +2,7 @@
 
 ## Description
 ---------------
-Inspired by Disco Elysium, this script will roll a check for all player in the background then whisper the player with some information if they pass the check. This script was designed to allow GMs to easily and quickly pass information to a user based on a roll. It uses handouts in order to accomplish this
+Inspired by Disco Elysium, this script will roll a check for all player in the background then whisper the player with some information if they pass the check. The information needed to evaluate this check will be passed as json data in the 'notes' portion of a custom handout object.  This script was designed to allow GMs to easily and quickly pass information to a user based on a roll without slowing the flow of the game.
 
 ## Goal
 -----------------
