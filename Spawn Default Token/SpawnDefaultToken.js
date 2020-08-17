@@ -41,7 +41,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.0.0';
+    const version = '0.2';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -158,27 +158,28 @@ const SpawnDefaultToken = (() => {
             }
             
             //Check for rollable table token and side selection
-            sidesArr=baseObj["sides"].split('|');
-            if ( (currentSideNew !== -999) && (sidesArr[0] !== '') ) {
-                
-                //check for random side
-                if ( isNaN(currentSideNew) ) {
-                    currentSideNew = randomInteger(sidesArr.length) - 1;    // Setting to random side. currentSide is 1-based for user
-                } else {
-                    currentSideNew = parseInt(currentSideNew) - 1;          //currentSide is 1-based for user
-                }
-                
-                //set the current side (wtih data validation for the requested side)
-                if ( (currentSideNew > 0) || (currentSideNew <= sidesArr.length-1) ) {
-                    newSideImg = getCleanImgsrc(sidesArr[currentSideNew]);     //URL of the image
-                    baseObj["currentSide"] = currentSideNew;
-                    baseObj["imgsrc"] = newSideImg;
-                } else {
-                    sendChat('SpawnAPI',`/w "${who}" `+ 'Error: Requested index of currentSide is invalid');
-                    return retVal;
+            if (baseObj.hasOwnProperty('sides')) {
+                sidesArr=baseObj["sides"].split('|');
+                if ( (currentSideNew !== -999) && (sidesArr[0] !== '') ) {
+                    
+                    //check for random side
+                    if ( isNaN(currentSideNew) ) {
+                        currentSideNew = randomInteger(sidesArr.length) - 1;    // Setting to random side. currentSide is 1-based for user
+                    } else {
+                        currentSideNew = parseInt(currentSideNew) - 1;          //currentSide is 1-based for user
+                    }
+                    
+                    //set the current side (wtih data validation for the requested side)
+                    if ( (currentSideNew > 0) || (currentSideNew <= sidesArr.length-1) ) {
+                        newSideImg = getCleanImgsrc(sidesArr[currentSideNew]);     //URL of the image
+                        baseObj["currentSide"] = currentSideNew;
+                        baseObj["imgsrc"] = newSideImg;
+                    } else {
+                        sendChat('SpawnAPI',`/w "${who}" `+ 'Error: Requested index of currentSide is invalid');
+                        return retVal;
+                    }
                 }
             }
-            
             ////////////////////////////////////////////////////////////
             //      Spawn the Token!
             ////////////////////////////////////////////////////////////
