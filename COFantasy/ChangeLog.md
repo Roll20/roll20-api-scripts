@@ -9,6 +9,10 @@
 * Résistance à la magie du barbare
 
 ### Autres améliorations
+* Possibilité d'accumuler les durées d'effets.
+* Gestion de --secret pour les !cof-effet
+* Ajout de l'option d'attaque --ifSaveFails
+* Ajout des options d'avantage et désavantage cumulatives.
 * Les armes à poudre font maintenant des DM explosifs par défaut.
 * Gestion de l'arme en main gauche.
 * Ajout d'un raccourci pour faire afficher toutes les action d'attaque visibles dur la fiche dans n'importe quelle liste d'actions.
@@ -20,6 +24,7 @@
 * Attaques par défaut dans la liste d'actions, possibilité de se passer complètement des attributs pour les attaques (actif quand la version 3.3 de la fiche sera là.
 
 ### Corrections de bugs
+* Prise en compte de la forêt vivante dans les jets sans difficulté explicite.
 * Prise en compte correcte de l'armure des PNJ pour la main d'énergie.
 * Correction d'un bug qui faisait planter en cas de save dans une attaque
 * Correction de l'affichage en cas d'immunité à un type d'attaque
