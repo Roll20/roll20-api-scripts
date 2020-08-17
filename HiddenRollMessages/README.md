@@ -21,11 +21,6 @@ Some scenearios where this plugin would enhance the experience:
 ![GM_view](screenshots/gm_view.PNG)
 ![player_view](screenshots/player_view.PNG)
 
-
-## How to install
----------------
-Access the api scripts from the game's option menu and select HiddenRollMessages in the dropdown :) 
-
 ## User Config
 -----------------
 In the scripts.json you can configure 2 main variables
@@ -34,6 +29,14 @@ In the scripts.json you can configure 2 main variables
 dice_sides (integer) -> what kind of dice to roll for the hidden roll
 
 HRM_identifier (string) -> The identifier you wish to use to denote a handout as an [HRM] handout
+```
+
+## Commands
+----------------
+The script is mostly controlled by creating and deleting handouts with our identifiers but we do have one api command you can type 
+
+```
+!hrm play <name of the handout> -> plays the handout with name <name of the handout>. Use this command if you want to play a handout without deleting it.
 ```
 
 ## Usage 
@@ -73,11 +76,13 @@ Once you are done, save the handout. Now one of two things will happen.
 
 Now to run the roll, simply delete the handout and the you should see a message telling you which players passed the check (if you are the GM) or the corresponding "on_pass" or "on_fail" messages 
 
-
-### Important note on testing 
-The program will NOT roll for any characters controlled by the GM! So to see the results from a Player's perspective, you may need to create a second account and join the room or get a friend to help you. 
+If you need to change the HRM after creation, you can simply edit it and the system will update
+<b> if you change the name of the HRM after creation though, make sure the new name still has the [HRM] tag at the front </b>
+Also, before you submit changes, make sure the JSON is correct or else the program will complain and you'll have to remake it ;)
 
 ### Other Important Notes
+### Important note on testing 
+The program will NOT roll for any characters controlled by the GM! So to see the results from a Player's perspective, you may need to create a second account and join the room or get a friend to help you. 
 #### How are rolls calculated?
 -------------------------
 The system calculates the roll using the following formula:
@@ -91,3 +96,7 @@ This makes sense in a game like DnD, where every roll is 1d20 + some modifier va
 This is why I allow users to customize the dice_sides to adjust for the different systems. In the case of Gumshoe style systems, we can change the dice_sides to 0 and simply use the skill value as the "attr" in our JSON.
 
 TL;DR I didn't think of how to impliment every system, but hopefully the system is robust enough that you (the user) can adapt to it. If not, send me a Issue request and I'll look into it!
+
+### Known Issues
+1. If the user for whatever reason removes the \[HRM\] tag from the name, the roll will not run when the handout is deleted. Even worst is on the backend will use memory for that handout forever. Probably not an issue unless you do this like 10000000 times, but still worth noting.
+2. If you put in a attribute that doesn't exist for the json. You will always fail that roll.

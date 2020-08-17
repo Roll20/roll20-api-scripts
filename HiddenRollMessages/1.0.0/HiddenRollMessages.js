@@ -24,11 +24,21 @@ var hidden_roll_messages = hidden_roll_messages || {}
 hidden_roll_messages.roll_controller = class {
     
     constructor() {
-        /*--- User Config --- */
-        this.dice_sides = 20;
-        this.HRM_identifier = "!!!"; // the symbols used at the begining of a handout name
+        /*--- User Config if no global config --- */
+        let dice_sides = 20;
+        let HRM_identifier = "!!!";
+        /*-----------------------------------------*/
+
+        if(globalconfig){
+            dice_sides = globalconfig.dice_sides;
+            HRM_identifier = globalconfig.HRM_identifier;
+        }
+        
+        this.dice_sides = dice_sides;
+        this.HRM_identifier = HRM_identifier; // the symbols used at the begining of a handout name
                                      // signify it should be a hidden roll message
-        /*--------------------*/
+
+        log(globalconfig)
 
         // edit down here if you know what you're doing
         this.name_json_map = {}; // key: name of the handout, value: the json info 
@@ -86,14 +96,16 @@ hidden_roll_messages.roll_controller = class {
         */
         
         // Set up custom handlers below!
-        on("change:handout", this.add_hidden_roll_message.bind(this));
+        on("change:handout", this.edit_hidden_roll_message.bind(this));
         on("destroy:handout", this.process_handout.bind(this));
+        on("chat:message", this.parse_command.bind(this));
     }
     
-    add_hidden_roll_message(handout){
+    edit_hidden_roll_message(handout, prev){
         /*
         param: 
            @handout (handout_event) -> The handout that was just created
+           @prev (list) -> list of previous values
         
         Desc:
            Parses the handout for `!!!` at the begining of the handout name.
@@ -105,14 +117,18 @@ hidden_roll_messages.roll_controller = class {
         Called from:
            constructor()
         */
-        
+
         let handout_name = handout.get("name");
         let tag_check = ((handout_name.slice(0,this.iden_length) === this.HRM_identifier) ? true : false);
+        let potential_HRM_tag = handout_name.slice(0, 5);
         
-        if(tag_check) {
+        if(tag_check) { // creating a new [HRM]
             let new_name = "[HRM] " + handout_name.slice(this.iden_length); // replace the identifier with [HRM]
             handout.set("name", new_name);
             handout.get("notes", this.extract_note_data.bind(this, handout));
+        }
+        else if(potential_HRM_tag === "[HRM]") { // Editing an existing [HRM]
+            this.edit_HRM(handout, prev)
         }
         
     }
@@ -136,7 +152,6 @@ hidden_roll_messages.roll_controller = class {
         
         let name = handout.get("name");
         let json_string = note.replace(/(<([^>]+)>)/gi, "");
-        
         json_string = json_string.replace(/&nbsp;/gi, '');
 
         try{
@@ -156,10 +171,11 @@ hidden_roll_messages.roll_controller = class {
 
     }
     
-    process_handout(handout) {
+    process_handout(handout, delete_handout=true) {
         /*
         param: 
-           @handout (handout_event) -> The handout that was just deleted
+           @handout (handout Object) -> The handout that was just deleted
+           @delete_handout (boolean) -> boolean to determine whether or not to delete the handout after the handout has finished rolling
         
         Desc:
            Parses the recently deleted handout and checks to see if it's an [HRM] handout.
@@ -182,6 +198,8 @@ hidden_roll_messages.roll_controller = class {
             }).filter((obj) => obj.get("controlledby") != "" && obj.get("controlledby") != this.GM.get("displayname"));
             try{
                 this.roll(characters, handout_name);    
+                if(delete_handout)
+                    delete this.name_json_map[handout_name]
             }
             catch(error) {
                 log(error);
@@ -189,8 +207,33 @@ hidden_roll_messages.roll_controller = class {
             }
 
         }
+        
     }
     
+    edit_HRM(handout, prev) { 
+        /*
+        params: 
+           @handout (handout Object) -> The handout that was just deleted
+           @prev {handout Object} -> Reference to the previous handout
+
+        Desc: 
+            This callback function will be called when the user is editing an existing [HRM] handout
+            It will remove the previous reference in our dictionary and update it with the new information.
+
+            ## make sure the name still contains the [HRM] tag in the front or things will not work.
+
+        Returns: 
+            - None, but updates the information in our name_json_map
+
+        called from:
+            process_handout()
+        */
+
+        delete this.name_json_map[prev["name"]] 
+        handout.get("notes", this.extract_note_data.bind(this, handout))
+
+    }
+
     roll(characters, handout_name) {
         /*
         params: 
@@ -271,6 +314,68 @@ hidden_roll_messages.roll_controller = class {
         }
 
     }
+
+    parse_command(command){
+        /*
+            params: 
+                @command {Chat Object} -> The text recieved by the api
+            
+            Desc: 
+                Parses the command to see if it's a hrm command then execute a function
+            
+            Returns: 
+                - None
+                
+            Called From:
+                setup_listeners()
+
+        */
+        if(command.type == "api" && command.content.indexOf("!hrm ") !== -1) {
+            command = command.content.split( " " );
+
+            if(command[1] === "play"){
+                let handout_name = command.slice(2).join(" ");
+                this.play_HRM(handout_name);
+            }
+
+        }
+    }
+
+    play_HRM(handout_name){
+        /*
+            params: 
+                @handout_name {string} -> name of the HRM handout you want to play w/o [HRM] tag
+            
+            Desc: 
+                Finds the handout name in our name_json_map and executes the hidden roll without deleting the hangout.
+            
+            Returns: 
+                - None
+                
+            Called From:
+                parse_command()
+        */
+       let handout = findObjs({                              
+            _type: "handout",                          
+        }).filter((obj) => {
+            let name = obj.get("name")
+            name = name.slice(5).trim() // remove [HRM] tag and any weird spaces
+            if(name === handout_name)
+                return true 
+            return false
+
+        });;
+
+        if(handout.length == 0){
+            let command = "/w " + this.GM.get("displayname") + " <b> No handout exists with that name </b>";
+            sendChat("[HRM]", command, null, {noarchive:true} );
+            return
+        }
+        else {
+            this.process_handout(handout[0], false)
+        }
+    }
+
 }
 
 on("ready", function() {
