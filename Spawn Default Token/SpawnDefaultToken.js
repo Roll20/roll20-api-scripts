@@ -23,8 +23,12 @@
                                                     // toFront,front,top,above  : Spawn token moved to front
                                                     // toBack,back,bottom,below : Spawn token moved to back
       --light|       < #,# >                //Set light radius that all players can see. 
-                                                    //First # is the total radius of the light (light_radius)
-                                                    //Second # is the start of dim light (light_dimradius)
+                                                    //For Legacy Dynamic Lighting (LDL):
+                                                        //First # is the total radius of the light (light_radius)
+                                                        //Second # is the start of dim light (light_dimradius) (so: 10,5 will be 10 ft of total light, with dim radius starting at 5ft)
+                                                    //For Updated Dynamic Lighting (UDL):
+                                                        //First # is the radius of bright light (bright_light_distance)
+                                                        //Second # is the additional radius of dim light (so: 10,5 will be 10ft of bright light + 5ft of dim light)
       --mook|        < yes/no >             //DEFAULT = false (the "represents" characteristic of the token is removed so changes to one linked attribute, e.g. hp, will not propagate to other associated tokens.
                                                     //If set to true, linked attributes will affect all tokens associated with that sheet
       --force|       < yes/no >             //DEFAULT = false. The origin point is by default relative to the geometric center of the origin token
@@ -41,7 +45,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.2';
+    const version = '0.3';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -126,6 +130,8 @@ const SpawnDefaultToken = (() => {
         let imgsrc;
         let sides;
         let sidesArr;
+        let iLightRad;
+        let iLightDim;
         
         try {
             let baseObj = JSON.parse(tokenJSON);
@@ -150,12 +156,36 @@ const SpawnDefaultToken = (() => {
                 baseObj.represents = "";
             } 
             
+            //Get page lighting mode (UDL vs LDL)
+            var page = findObjs({                              
+              _id: pageID,                        
+            });
+            let UDL = page[0].get("dynamic_lighting_enabled");
+            
             //set emitted light
-            if (lightRad !== "") {
+            if (UDL) {
+                //Updated Dynamic Lighting
+                iLightRad = parseInt(lightRad);
+                iLightDim = parseInt(lightDim);
+                
+                if (iLightRad === 0) {baseObj.emits_bright_light = false;}
+                if (iLightDim === 0) {baseObj.emits_low_light = false;}
+                
+                if (lightRad !== "" && iLightRad > 0) {
+                    baseObj.emits_bright_light = true;
+                    baseObj.bright_light_distance = lightRad
+                }
+                if (lightDim !== "" && iLightDim > 0) {
+                    baseObj.emits_low_light = true;
+                    baseObj.low_light_distance = (iLightRad + iLightDim).toString();
+                }
+            } else if (lightRad !== "") {
+                //Legacy Dynamic Lighting
                 baseObj.light_radius = lightRad;
                 baseObj.light_dimradius = lightDim;
                 baseObj.light_otherplayers = true;
             }
+            
             
             //Check for rollable table token and side selection
             if (baseObj.hasOwnProperty('sides')) {
