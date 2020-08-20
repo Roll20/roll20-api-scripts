@@ -45,7 +45,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.3';
+    const version = '0.4';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -523,8 +523,8 @@ const SpawnDefaultToken = (() => {
                             break;
                         case "size":
                             let sizes = param.split(',');
-                            data.sizeX = parseInt(sizes[0]) * 70;
-                            data.sizeY = parseInt(sizes[1]) * 70;
+                            data.sizeX = parseFloat(sizes[0]) * 70;
+                            data.sizeY = parseFloat(sizes[1]) * 70;
                             break;
                         case "order":
                             if (_.contains(['tofront', 'front', 'top', 'above'], param.toLowerCase())) {
