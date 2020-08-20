@@ -45,7 +45,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.2';
+    const version = '0.3';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
