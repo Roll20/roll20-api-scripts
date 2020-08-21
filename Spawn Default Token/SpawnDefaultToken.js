@@ -37,6 +37,9 @@
       --sheet|       < charName2 >          //DEFAULT = selected character. The character sheet in which to look for the supplied ability
                                                     //useful if the ability exists on a "macro mule" or simply another character sheet
       --ability|     < abilityName >        //The ability to trigger after spawning occurs. With caveats s described below
+      --fx|          < type-color >         //Trigger FX at each origin point.
+                                                    //Supported types are: bomb,bubbling,burn,burst,explode,glow,missile,nova,splatter
+                                                    //Supported colors are: acid,blood,charm,death,fire,frost,holy,magic,slime,smoke,water
     }}
     
     
@@ -45,7 +48,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.4';
+    const version = '0.5';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -464,6 +467,10 @@ const SpawnDefaultToken = (() => {
         let validObj = "false"; //data validation string
         let o = 0;              //counter for originTok loops
         let q = 0;              //counter for spawn qty loops
+        let fxModes = ['bomb', 'bubbling', 'burn', 'burst', 'explode', 'glow', 'missile', 'nova', 'splatter'];
+        let fxColors = ['acid', 'blood', 'charm', 'death', 'fire', 'frost', 'holy', 'magic', 'slime', 'smoke', 'water'];
+        
+        
         
         try {
             //args is an array object full of cmd:params pairs
@@ -545,6 +552,9 @@ const SpawnDefaultToken = (() => {
                                 data.mook = true;
                             }
                             break;
+                        case "fx":
+                            data.fx = param;
+                            break;
                         default:
                             retVal.push('Unexpected argument identifier (' + option + '). Choose from: (' + data.validArgs + ')');
                             break;    
@@ -613,6 +623,19 @@ const SpawnDefaultToken = (() => {
                 retVal.push('Non-numeric qty detected. Format is \"--qty|#\"');
             } else if ( data.qty <  1 || data.qty > 20 ) {
                 retVal.push('Input qty out of range. Must be between 1 and 20.');
+            }
+            
+            //Check for supported FX
+            if (data.fx !== '') {
+                let fx = data.fx.split('-');
+                log(fx);
+                if (fx.length !== 2) {
+                    retVal.push('Invalid FX format. Format is --fx|type-color');
+                } else if (fxModes.indexOf(fx[0]) === -1 ) {
+                    retVal.push('Invalid FX type requested. Supported types are ' + fxModes.join(','));
+                } else if (fxColors.indexOf(fx[1]) === -1 ) {
+                    retVal.push('Invalid FX color requested. Supported colors are ' + fxColors.join(','));
+                }
             }
             
             //2nd data validation checkpoint. Potentially return several error msgs
@@ -885,6 +908,11 @@ const SpawnDefaultToken = (() => {
                     let iteration = 0
                     for (o = 0; o < data.originToks.length; o++) {
                         for (q = 0; q < data.qty; q++) {                                
+                            //trigger special FX?
+                            if (data.fx !== ''){
+                                spawnFx(data.spawnX[iteration], data.spawnY[iteration], data.fx, data.spawnPageID);
+                            }
+                            //Spawn the token!
                             spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook);
                             iteration += 1;
                         }    
@@ -1012,7 +1040,8 @@ const SpawnDefaultToken = (() => {
                     
                     //
                     sheetName: "",      //the char sheet in which to look for the supplied ability, defaults to the sheet tied to the first selected token 
-                    abilityName: ""    //an ability to trigger after spawning
+                    abilityName: "",     //an ability to trigger after spawning
+                    fx: ""              //fx to trigger at the origni point(s)
                 };
                 
                 //Parse msg into an array of argument objects [{cmd:params}]
