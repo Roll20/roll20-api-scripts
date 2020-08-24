@@ -48,7 +48,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.5';
+    const version = '0.6';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -123,6 +123,7 @@ const SpawnDefaultToken = (() => {
             }
         return;
     };
+    
     
     //This function runs asynchronously, as called from the processCommands function
     //We will sendChat errors, but the rest of processCommands keeps running :(
@@ -217,6 +218,20 @@ const SpawnDefaultToken = (() => {
             //      Spawn the Token!
             ////////////////////////////////////////////////////////////
             spawnObj = createObj('graphic',baseObj);
+            
+            //---------------------------------------------------------
+            //Support for TokenNameNumber script by TheAaron
+            //  Triggers a global function in v0.5.12 or later of his script
+            if (baseObj.name) {
+                if (baseObj.name.match( /%%NUMBERED%%/ ) ) {
+                    processCreated = (( 'undefined' !== typeof TokenNameNumber && TokenNameNumber.NotifyOfCreatedToken ) 
+                		? TokenNameNumber.NotifyOfCreatedToken
+                		: _.noop ),
+            	
+                    processCreated(spawnObj);
+                }
+            }
+            //---------------------------------------------------------
             
             //set the z-order
             switch (zOrder) {
