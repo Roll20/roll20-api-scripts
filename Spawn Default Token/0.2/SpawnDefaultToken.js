@@ -23,12 +23,8 @@
                                                     // toFront,front,top,above  : Spawn token moved to front
                                                     // toBack,back,bottom,below : Spawn token moved to back
       --light|       < #,# >                //Set light radius that all players can see. 
-                                                    //For Legacy Dynamic Lighting (LDL):
-                                                        //First # is the total radius of the light (light_radius)
-                                                        //Second # is the start of dim light (light_dimradius) (so: 10,5 will be 10 ft of total light, with dim radius starting at 5ft)
-                                                    //For Updated Dynamic Lighting (UDL):
-                                                        //First # is the radius of bright light (bright_light_distance)
-                                                        //Second # is the additional radius of dim light (so: 10,5 will be 10ft of bright light + 5ft of dim light)
+                                                    //First # is the total radius of the light (light_radius)
+                                                    //Second # is the start of dim light (light_dimradius)
       --mook|        < yes/no >             //DEFAULT = false (the "represents" characteristic of the token is removed so changes to one linked attribute, e.g. hp, will not propagate to other associated tokens.
                                                     //If set to true, linked attributes will affect all tokens associated with that sheet
       --force|       < yes/no >             //DEFAULT = false. The origin point is by default relative to the geometric center of the origin token
@@ -37,9 +33,6 @@
       --sheet|       < charName2 >          //DEFAULT = selected character. The character sheet in which to look for the supplied ability
                                                     //useful if the ability exists on a "macro mule" or simply another character sheet
       --ability|     < abilityName >        //The ability to trigger after spawning occurs. With caveats s described below
-      --fx|          < type-color >         //Trigger FX at each origin point.
-                                                    //Supported types are: bomb,bubbling,burn,burst,explode,glow,missile,nova,splatter
-                                                    //Supported colors are: acid,blood,charm,death,fire,frost,holy,magic,slime,smoke,water
     }}
     
     
@@ -48,7 +41,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.6';
+    const version = '0.2';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -124,7 +117,6 @@ const SpawnDefaultToken = (() => {
         return;
     };
     
-    
     //This function runs asynchronously, as called from the processCommands function
     //We will sendChat errors, but the rest of processCommands keeps running :(
      const spawnTokenAtXY = function (who, tokenJSON, pageID, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook) {
@@ -134,8 +126,6 @@ const SpawnDefaultToken = (() => {
         let imgsrc;
         let sides;
         let sidesArr;
-        let iLightRad;
-        let iLightDim;
         
         try {
             let baseObj = JSON.parse(tokenJSON);
@@ -160,36 +150,12 @@ const SpawnDefaultToken = (() => {
                 baseObj.represents = "";
             } 
             
-            //Get page lighting mode (UDL vs LDL)
-            var page = findObjs({                              
-              _id: pageID,                        
-            });
-            let UDL = page[0].get("dynamic_lighting_enabled");
-            
             //set emitted light
-            if (UDL) {
-                //Updated Dynamic Lighting
-                iLightRad = parseInt(lightRad);
-                iLightDim = parseInt(lightDim);
-                
-                if (iLightRad === 0) {baseObj.emits_bright_light = false;}
-                if (iLightDim === 0) {baseObj.emits_low_light = false;}
-                
-                if (lightRad !== "" && iLightRad > 0) {
-                    baseObj.emits_bright_light = true;
-                    baseObj.bright_light_distance = lightRad
-                }
-                if (lightDim !== "" && iLightDim > 0) {
-                    baseObj.emits_low_light = true;
-                    baseObj.low_light_distance = (iLightRad + iLightDim).toString();
-                }
-            } else if (lightRad !== "") {
-                //Legacy Dynamic Lighting
+            if (lightRad !== "") {
                 baseObj.light_radius = lightRad;
                 baseObj.light_dimradius = lightDim;
                 baseObj.light_otherplayers = true;
             }
-            
             
             //Check for rollable table token and side selection
             if (baseObj.hasOwnProperty('sides')) {
@@ -218,20 +184,6 @@ const SpawnDefaultToken = (() => {
             //      Spawn the Token!
             ////////////////////////////////////////////////////////////
             spawnObj = createObj('graphic',baseObj);
-            
-            //---------------------------------------------------------
-            //Support for TokenNameNumber script by TheAaron
-            //  Triggers a global function in v0.5.12 or later of his script
-            if (baseObj.name) {
-                if (baseObj.name.match( /%%NUMBERED%%/ ) ) {
-                    processCreated = (( 'undefined' !== typeof TokenNameNumber && TokenNameNumber.NotifyOfCreatedToken ) 
-                		? TokenNameNumber.NotifyOfCreatedToken
-                		: _.noop ),
-            	
-                    processCreated(spawnObj);
-                }
-            }
-            //---------------------------------------------------------
             
             //set the z-order
             switch (zOrder) {
@@ -482,10 +434,6 @@ const SpawnDefaultToken = (() => {
         let validObj = "false"; //data validation string
         let o = 0;              //counter for originTok loops
         let q = 0;              //counter for spawn qty loops
-        let fxModes = ['bomb', 'bubbling', 'burn', 'burst', 'explode', 'glow', 'missile', 'nova', 'splatter'];
-        let fxColors = ['acid', 'blood', 'charm', 'death', 'fire', 'frost', 'holy', 'magic', 'slime', 'smoke', 'water'];
-        
-        
         
         try {
             //args is an array object full of cmd:params pairs
@@ -545,8 +493,8 @@ const SpawnDefaultToken = (() => {
                             break;
                         case "size":
                             let sizes = param.split(',');
-                            data.sizeX = parseFloat(sizes[0]) * 70;
-                            data.sizeY = parseFloat(sizes[1]) * 70;
+                            data.sizeX = parseInt(sizes[0]) * 70;
+                            data.sizeY = parseInt(sizes[1]) * 70;
                             break;
                         case "order":
                             if (_.contains(['tofront', 'front', 'top', 'above'], param.toLowerCase())) {
@@ -566,9 +514,6 @@ const SpawnDefaultToken = (() => {
                             if (_.contains(['yes', '1'], param.toLowerCase())) {
                                 data.mook = true;
                             }
-                            break;
-                        case "fx":
-                            data.fx = param;
                             break;
                         default:
                             retVal.push('Unexpected argument identifier (' + option + '). Choose from: (' + data.validArgs + ')');
@@ -638,19 +583,6 @@ const SpawnDefaultToken = (() => {
                 retVal.push('Non-numeric qty detected. Format is \"--qty|#\"');
             } else if ( data.qty <  1 || data.qty > 20 ) {
                 retVal.push('Input qty out of range. Must be between 1 and 20.');
-            }
-            
-            //Check for supported FX
-            if (data.fx !== '') {
-                let fx = data.fx.split('-');
-                log(fx);
-                if (fx.length !== 2) {
-                    retVal.push('Invalid FX format. Format is --fx|type-color');
-                } else if (fxModes.indexOf(fx[0]) === -1 ) {
-                    retVal.push('Invalid FX type requested. Supported types are ' + fxModes.join(','));
-                } else if (fxColors.indexOf(fx[1]) === -1 ) {
-                    retVal.push('Invalid FX color requested. Supported colors are ' + fxColors.join(','));
-                }
             }
             
             //2nd data validation checkpoint. Potentially return several error msgs
@@ -923,11 +855,6 @@ const SpawnDefaultToken = (() => {
                     let iteration = 0
                     for (o = 0; o < data.originToks.length; o++) {
                         for (q = 0; q < data.qty; q++) {                                
-                            //trigger special FX?
-                            if (data.fx !== ''){
-                                spawnFx(data.spawnX[iteration], data.spawnY[iteration], data.fx, data.spawnPageID);
-                            }
-                            //Spawn the token!
                             spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook);
                             iteration += 1;
                         }    
@@ -1055,8 +982,7 @@ const SpawnDefaultToken = (() => {
                     
                     //
                     sheetName: "",      //the char sheet in which to look for the supplied ability, defaults to the sheet tied to the first selected token 
-                    abilityName: "",     //an ability to trigger after spawning
-                    fx: ""              //fx to trigger at the origni point(s)
+                    abilityName: ""    //an ability to trigger after spawning
                 };
                 
                 //Parse msg into an array of argument objects [{cmd:params}]
