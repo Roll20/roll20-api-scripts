@@ -1,6 +1,5 @@
 /* 
- * Roll20: https://app.roll20.net/users/6205674/angelo
- * Github: https://github.com/ocangelo/roll20/
+original script from: https://github.com/ocangelo/roll20
 */
 
 /*jshint -W069 */
@@ -9,7 +8,7 @@
 
 const WS_API = {
     NAME : "WildShape",
-    VERSION : "1.3",
+    VERSION : "1.3.1",
     REQUIRED_HELPER_VERSION: "1.3.1",
 
     STATENAME : "WILDSHAPE",
@@ -67,7 +66,7 @@ const WS_API = {
     DEFAULT_CONFIG : {
         SEP: "###",              // separator used in commands
 
-        DRUID_WS_RES : "wild shape",
+        DRUID_WS_RES : "",
         MUTE_SHIFT: false,
 
         PC_DATA : {
@@ -986,7 +985,7 @@ var WildShape = WildShape || (function() {
                     }
                     else
                     {
-                        UTILS.chatErrorToPlayer(shiftData.who, "Cannot find wildshape resource = " + wsResName);
+                        UTILS.chatErrorToPlayer(shiftData.who, "Cannot find wildshape resource attribute on character sheet = " + wsResName);
                         return false;
                     }
                 }
