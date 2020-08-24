@@ -782,6 +782,10 @@ wildshaperesizer:
   - "WildShapeResizer"
   - "Utility"
 
+wildshape:
+  - "WildShape"
+  - "Utility"
+
 savageworldsstatuschanger:
   - "SavageWorldsStatusChanger"
   - "System Toolbox"
@@ -861,3 +865,10 @@ spawndefaulttoken:
 fotncompanion:
 - "FotN Companion"
 - "System Toolbox"
+
+hiddenrollmessages:
+  - "HiddenRollMessages"
+  - "Utility"
+
+
+
