@@ -9,12 +9,13 @@
       --offset|	 < #,# >         //X,Y pos or neg shift in position of the spawn origin point(s) relative to the origin token(s), in number of SQUARES 
                                             //DEFAULT = 0,0  // (NOTE: a POSITIVE Y offset means LOWER on the map)
       --placement|   < option >      //How to arrange the tokens relative to the origin point (+ offset)
-                                             //'stack'      : (DEFAULT) All tokens will be stacked on top of each other
-                                             //'row'        : A horizontal row of tokens
-                                             //'column,col' : A vertical column of tokens
-                                             //'surround'   : A clockwise spiral placement around origin token, starting at top  (NOTE: any supplied offset will be ignored)
-                                             //'grid #'     : A square grid with "#" tokens per row. Raster left to right
-                                             //'burst #'    : An expanding diagonal distribution of tokens starting "#" squares from the 4 origin token corners. Large qty will form an "X" pattern
+                                            //'stack'      : (DEFAULT) All tokens will be stacked on top of each other
+                                            //'row'        : A horizontal row of tokens
+                                            //'column,col' : A vertical column of tokens
+                                            //'surround'   : A clockwise spiral placement around origin token, starting at top  (NOTE: any supplied offset will be ignored)
+                                            //'grid #'     : A square grid with "#" tokens per row. Raster left to right
+                                            //'burst #'    : An expanding diagonal distribution of tokens starting "#" squares from the 4 origin token corners. Large qty will form an "X" pattern
+                                            //'cross #'     = "evenly" distributed vert/horiz qty, starting directly above origin by # squares. Large qty will form a "+" pattern
       --size|        < #,# >                //DEFAULT = 1,1 (X,Y) - How many SQUARES wide and tall are the spawned tokens?
       --side|        < # or rand>           //DEFAULT = 1. Sets the side of a rollable table token. 
                                                     // #              : Sets the side of all spawned tokens to "#"
@@ -48,7 +49,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.6';
+    const version = '0.7';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -127,7 +128,7 @@ const SpawnDefaultToken = (() => {
     
     //This function runs asynchronously, as called from the processCommands function
     //We will sendChat errors, but the rest of processCommands keeps running :(
-     const spawnTokenAtXY = function (who, tokenJSON, pageID, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook) {
+     const spawnTokenAtXY = function (who, tokenJSON, pageID, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL) {
         let newSideImg;
         let spawnObj;
         let currentSideOld;
@@ -159,12 +160,6 @@ const SpawnDefaultToken = (() => {
             if (mook === true) {
                 baseObj.represents = "";
             } 
-            
-            //Get page lighting mode (UDL vs LDL)
-            var page = findObjs({                              
-              _id: pageID,                        
-            });
-            let UDL = page[0].get("dynamic_lighting_enabled");
             
             //set emitted light
             if (UDL) {
@@ -476,6 +471,120 @@ const SpawnDefaultToken = (() => {
         
     };
     
+    //Similar to GetBurstArr function above, but returns an array of coords "evenly" distributed in a "Plus" pattern at a certain radius...
+    //      ... relative origin token (NOTE: when adjusted for offset, retains the "size" of origin token)
+                    //         5
+                    //         1
+                    //    7 3 Tok 4 8  
+                    //         2
+                    //         6
+    const GetCrossArr = function (qty, left, top, width, height, rad, force) {
+        function pt(x,y) {
+            this.x = x,
+            this.y = y
+        };
+        let pts = [];
+        
+        let originX = left;
+        let originY = top;
+        
+        let xSpacing = (2 * rad)*70 + width - 70;
+        let ySpacing = (2 * rad)*70 + height - 70;
+        //let xSpacing = rad*70 + width;
+        //let ySpacing = rad*70 + height;
+        
+        
+        let startX = originX;
+        let startY 
+        
+        if ( (height/70)%2===0 ) {
+            if (force) {
+                startY = originY -70 - Math.floor(height/2) - (rad-1)*70;
+            } else {
+                startY = originY -35 - Math.floor(height/2) - (rad-1)*70;
+            }
+        } else {
+            startY = originY - height/2 -35 - (rad-1)*70;
+        }
+      
+        
+        let x;
+        let y;
+        
+        let revolutions = 0;
+        let i = 0;
+        
+        while (i < qty) {
+            x = startX; 
+            y = startY; 
+            
+            for (let n = 0; n < 4; n++) {
+                if (i < qty) {
+                    switch (n) {
+                        case 0:         //ABOVE
+                            pts.push( new pt(x,y) );
+                            break;
+                        case 1:         //BELOW
+                            pts.push( new pt(x,y+ySpacing) );
+                            break;
+                        case 2:         //LEFT
+                            if ( (height/70)%2===0 ) {
+                                if (force) {
+                                    pts.push( new pt(x - 70 - Math.floor(width/2) - (rad-1)*70 - revolutions*70, originY ) );
+                                } else {
+                                    pts.push( new pt(x - width/2-35 - (rad-1)*70 - revolutions*70, originY ) );
+                                }
+                            } else {
+                                pts.push( new pt(x - 35 - Math.floor(width/2) - (rad-1)*70 - revolutions*70, originY ) );
+                            }
+                            break;
+                        case 3:         //RIGHT
+                            //pts.push( new pt(x+70+Math.floor(width/2), y+70+Math.ceil(height/2)) );
+                            pts.push( new pt( pts[pts.length-1].x + xSpacing, originY ) );
+                            break;
+                    }
+                }
+            }
+            revolutions += 1;
+            /*
+            for (let n = 0; n < 4; n++) {
+                if (i < qty) {
+                    switch (n) {
+                        case 0:
+                            pts.push( new pt(x,y) );
+                            break;
+                        case 1:
+                            pts.push( new pt(x,y+ySpacing) );
+                            break;
+                        case 2:
+                            if ( (height/70)%2===0 ) {
+                                if (force) {
+                                    pts.push( new pt(x-70-Math.floor(width/2), y+70+Math.floor(height/2)) );
+                                } else {
+                                    pts.push( new pt(x-width/2-35, y+height/2+35) );
+                                }
+                            } else {
+                                pts.push( new pt(x-35-Math.floor(width/2), y+35+Math.ceil(height/2)) );
+                            }
+                            break;
+                        case 3:
+                            //pts.push( new pt(x+70+Math.floor(width/2), y+70+Math.ceil(height/2)) );
+                            pts.push( new pt( pts[pts.length-1].x + xSpacing, pts[pts.length-1].y ) );
+                            break;
+                    }
+                }
+            }
+            */
+            xSpacing += 140;
+            ySpacing += 140;
+            //startX -= 70;     //no X adjustment, start of each cross is just directly above the previous start
+            startY -= 70;
+            i++;
+        }
+        return pts;
+        
+    };
+    
     //This is the primary worker function
     const processCommands = function(data, args) {
         let retVal = [];        //array of potential error messages to pass back to main handleInput funtion
@@ -610,6 +719,15 @@ const SpawnDefaultToken = (() => {
                         //good burst #
                         data.burstRad = data.placement.match(/(\d+)/)[0];   //use first number found for burstRad
                         data.placement = 'burst';
+                    }
+            }  else if ( data.placement.match(/cross/i) ) {  
+                    //burst case    --check for number
+                    if ( !data.placement.match(/(\d+)/) ) {
+                        retVal.push('Invalid cross radius supplied (\"' + data.placement + '\"). Format is --placement|cross #');
+                    } else {        
+                        //good burst #
+                        data.crossRad = data.placement.match(/(\d+)/)[0];   //use first number found for crossRad
+                        data.placement = 'cross';
                     }
             } else {
                 retVal.push('Invalid placement argument (\"' + data.placement + '\"). Choose from: (' + data.validPlacements + ')');
@@ -841,6 +959,8 @@ const SpawnDefaultToken = (() => {
             
             let left;
             let top;
+            let width;
+            let height;
             //Calculate spawn coords
             switch (data.placement) {   //If user gave no "placement" command, default to "stack" tokens on top of each other
                 //there will be (qty*num_OriginToks) coordinate pairs
@@ -896,6 +1016,20 @@ const SpawnDefaultToken = (() => {
                         }
                     }
                     break;   
+                case "cross":   //arrange in an expanding cross pattern vertically & horizontally 
+                    for (o = 0; o < data.originToks.length; o++) {
+                        left = data.originToks[o].get("left") + data.offsetX + tokSizeCorrectX[o];
+                        top = data.originToks[o].get("top") + data.offsetY + tokSizeCorrectY[o];
+                        width = parseFloat(data.originToks[o].get("width"));
+                        height = parseFloat(data.originToks[o].get("height"))
+                        
+                        let crossSquares = GetCrossArr(data.qty, left, top, width, height, data.crossRad, data.forceToSquare);
+                        for (q = 0; q < data.qty; q++) {
+                            data.spawnX.push(crossSquares[q].x);   
+                            data.spawnY.push(crossSquares[q].y);
+                        }
+                    }
+                    break;   
                 case "stack":   //The default case is "stack"
                 default:    
                     for (o = 0; o < data.originToks.length; o++) {
@@ -908,6 +1042,14 @@ const SpawnDefaultToken = (() => {
                     }
                     break;    
             }
+            
+            //Get page lighting mode (UDL vs LDL)
+            var page = findObjs({                              
+              _id: data.spawnPageID,                        
+            });
+            data.UDL = page[0].get("dynamic_lighting_enabled");
+            let spawnX_max = parseInt(page[0].get("width"))*70;
+            let spawnY_max = parseInt(page[0].get("height"))*70;
             
             //grab the character object to spawn from supplied spawnName
             let spawnObj = getCharacterFromName(data.spawnName);
@@ -922,13 +1064,18 @@ const SpawnDefaultToken = (() => {
                 spawnObj.get("_defaulttoken", function(defaultToken) {
                     let iteration = 0
                     for (o = 0; o < data.originToks.length; o++) {
-                        for (q = 0; q < data.qty; q++) {                                
-                            //trigger special FX?
-                            if (data.fx !== ''){
-                                spawnFx(data.spawnX[iteration], data.spawnY[iteration], data.fx, data.spawnPageID);
+                        for (q = 0; q < data.qty; q++) {
+                            //Make sure we don't try to spawn off the map
+                            if (data.spawnX[iteration] > 0 && data.spawnX[iteration] < spawnX_max & data.spawnY[iteration] > 0 && data.spawnY[iteration] < spawnY_max) {
+                                //trigger special FX?
+                                if (data.fx !== ''){
+                                    spawnFx(data.spawnX[iteration], data.spawnY[iteration], data.fx, data.spawnPageID);
+                                }
+                                //Spawn the token!
+                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL);
+                            } else {
+                                log("off the map!");
                             }
-                            //Spawn the token!
-                            spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook);
                             iteration += 1;
                         }    
                     }
@@ -1034,14 +1181,17 @@ const SpawnDefaultToken = (() => {
                     offsetX: 0,         //offset from origin token. (Note: offset is input in SQUARES and converted to pixels)
                     offsetY: 0,
                     forceToSquare: false,    //Forces spawn to occur in a full square. If false && origin token is even number of squares, may spawn between squares depending on offset conditions
-                    validPlacements: "stack, row, col/column, surround, grid, burst",    //list of valid placement arguments for error message
+                    validPlacements: "stack, row, col/column, surround, grid, burst, cross",    //list of valid placement arguments for error message
                     placement: "stack", //how to place multiple tokens:
                                             //'stack'       = tokens stacked on top of each other
                                             //'row'         = horizontal row of tokens
                                             //'column/col'  = vertical column of tokens
                                             //'surround'    = clockwise spiral placement around origin  (ignores offset)
-                                            //'grid #'        = square grid with # cols. Raster left to right
-                                            //'burst #'       = "evenly" distributed qty, starting at corners and away from origin by #
+                                            //'grid #'      = square grid with # cols. Raster left to right
+                                            //'burst #'     = "evenly" distributed diagonal qty, starting at corners and away from origin by #
+                                            //'cross #'     = "evenly" distributed vert/horiz qty, starting directly above origin by # squares
+                    burstRad: 0,        //how far away from origin the burst placement starts
+                    crossRad: 0,        //how far away from origin the cross placement starts
                     gridCols: 3,        //Only used for grid placement. number of tokens per row 
                                             
                     //Spawned token properties
@@ -1052,6 +1202,7 @@ const SpawnDefaultToken = (() => {
                     lightRad: -999,     //Optional change the emitted light characteristics --> light_radius
                     lightDim: -999,     //Optional change the emitted light characteristics --> light_dimradius
                     mook: false,        //Will the token use "represents"? If true, will change linked attributes for all associated tokens (e.g. hp)
+                    UDL: false,         //Does the page use UDL?
                     
                     //
                     sheetName: "",      //the char sheet in which to look for the supplied ability, defaults to the sheet tied to the first selected token 
