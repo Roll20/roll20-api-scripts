@@ -72,6 +72,15 @@ var TrapEffect = (() => {
     }
 
     /**
+     * A custom message that is displayed when a character notices a trap via
+     * passive detection.
+     * @type {string}
+     */
+    get detectMessage() {
+      return this._effect.detectMessage;
+    }
+
+    /**
      * The shape of the trap's activated area. This could be an area where the
      * trap token itself is the center of the effect (square or circle), or
      * it could be a list of path IDs which define the activated areas.
@@ -409,9 +418,6 @@ var TrapEffect = (() => {
         else
           commands = [api];
 
-        log(`Victim:`);
-        log(this.victim);
-
         // Run each API command.
         _.each(commands, cmd => {
           cmd = cmd.replace(/TRAP_ID/g, this.trapId)
@@ -425,8 +431,6 @@ var TrapEffect = (() => {
             .replace(/(\t|\n|\r)/g, ' ')
             .replace(/\[\[ +/g, '[[')
             .replace(/ +\]\]/g, ']]');
-          log(`API: ${cmd}`);
-
           sendChat('ItsATrap-api', `${cmd}`);
         });
       }
