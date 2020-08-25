@@ -490,8 +490,6 @@ const SpawnDefaultToken = (() => {
         
         let xSpacing = (2 * rad)*70 + width - 70;
         let ySpacing = (2 * rad)*70 + height - 70;
-        //let xSpacing = rad*70 + width;
-        //let ySpacing = rad*70 + height;
         
         
         let startX = originX;
@@ -528,7 +526,7 @@ const SpawnDefaultToken = (() => {
                             pts.push( new pt(x,y+ySpacing) );
                             break;
                         case 2:         //LEFT
-                            if ( (height/70)%2===0 ) {
+                            if ( (width/70)%2===0 ) {
                                 if (force) {
                                     pts.push( new pt(x - 70 - Math.floor(width/2) - (rad-1)*70 - revolutions*70, originY ) );
                                 } else {
@@ -537,6 +535,7 @@ const SpawnDefaultToken = (() => {
                             } else {
                                 pts.push( new pt(x - 35 - Math.floor(width/2) - (rad-1)*70 - revolutions*70, originY ) );
                             }
+                            //pts.push( new pt( tempX, tempY );
                             break;
                         case 3:         //RIGHT
                             //pts.push( new pt(x+70+Math.floor(width/2), y+70+Math.ceil(height/2)) );
@@ -546,35 +545,6 @@ const SpawnDefaultToken = (() => {
                 }
             }
             revolutions += 1;
-            /*
-            for (let n = 0; n < 4; n++) {
-                if (i < qty) {
-                    switch (n) {
-                        case 0:
-                            pts.push( new pt(x,y) );
-                            break;
-                        case 1:
-                            pts.push( new pt(x,y+ySpacing) );
-                            break;
-                        case 2:
-                            if ( (height/70)%2===0 ) {
-                                if (force) {
-                                    pts.push( new pt(x-70-Math.floor(width/2), y+70+Math.floor(height/2)) );
-                                } else {
-                                    pts.push( new pt(x-width/2-35, y+height/2+35) );
-                                }
-                            } else {
-                                pts.push( new pt(x-35-Math.floor(width/2), y+35+Math.ceil(height/2)) );
-                            }
-                            break;
-                        case 3:
-                            //pts.push( new pt(x+70+Math.floor(width/2), y+70+Math.ceil(height/2)) );
-                            pts.push( new pt( pts[pts.length-1].x + xSpacing, pts[pts.length-1].y ) );
-                            break;
-                    }
-                }
-            }
-            */
             xSpacing += 140;
             ySpacing += 140;
             //startX -= 70;     //no X adjustment, start of each cross is just directly above the previous start
