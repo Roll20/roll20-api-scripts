@@ -1,0 +1,30 @@
+{
+	"name": "PaladinAura 5E",
+	"script": "PaladinAura.js",
+	"version": "1.0",
+	"previousversions": [],
+	"description": "A Roll20 API that auto-applies Paladin Auras and shows which characters are affected by the aura through the use of token-markers.\nDepreciated version: https://github.com/LaytonGB/PaladinAura",
+	"authors": "Layton Burchell. Special thanks to: Gustav Merelius.",
+	"roll20userid": "1519557",
+	"patreon": "",
+	"tipeee": "",
+	"useroptions": [{
+		"name": "DiagonalMeasurementMethod",
+		"type": "select",
+		"default": "auto",
+		"description": "Changes how distances are calculated between tokens. \"auto\" will match the settings of the page.",
+		"options": [
+			"auto",
+			"foure",
+			"threefive",
+			"manhattan",
+			"pythagorean"
+		]
+	}],
+	"dependencies": [],
+	"modifies": {
+		"state.PaladinAura": "read,write",
+		"token.status_bolt-shield": "read,write"
+	},
+	"conflicts": ""
+}
