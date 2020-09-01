@@ -790,6 +790,10 @@ wildshape:
   - "WildShape"
   - "Utility"
 
+wildhelpers:
+  - "WildHelpers"
+  - "Utility"
+
 savageworldsstatuschanger:
   - "SavageWorldsStatusChanger"
   - "System Toolbox"
