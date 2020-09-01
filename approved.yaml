@@ -418,6 +418,10 @@ itsatrapthemestarfinder:
 - "ItsATrap_theme_Starfinder"
 - "System Toolbox"
 
+itsatrapthemeburnbryte:
+- "ItsATrap_theme_BurnBryte"
+- "System Toolbox"
+
 genesysroller:
 - "Genesys-RPG-Roller"
 - "System Toolbox"
@@ -869,6 +873,3 @@ fotncompanion:
 hiddenrollmessages:
   - "HiddenRollMessages"
   - "Utility"
-
-
-
