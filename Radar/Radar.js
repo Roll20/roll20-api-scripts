@@ -2,6 +2,7 @@
 //  Overview
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
+
     The Radar script creates an animated wavefront from a selected token to reveal visible and invisible tokens on the map
         ---The radar temporarily "pings" all token objects on the layers specified by spawning the default token of a character named "RadarPing"
             ---the RadarPing token should be a completely transparent token with an aura not visible to all players, with no "controlled by" properties set
@@ -451,8 +452,13 @@ const Radar = (() => {
             xDist = ( (tokX - originX) / 70) / gridIncrement;
             yDist = ( (tokY - originY) / 70) / gridIncrement;
         } else {
-            xDist = scaleNumber * ( (tokX - originX) / 70) / gridIncrement;
-            yDist = scaleNumber * ( (tokY - originY) / 70) / gridIncrement;
+            if ( gridIncrement === 0) {
+                xDist = scaleNumber * ( (tokX - originX) / 70);
+                yDist = scaleNumber * ( (tokY - originY) / 70);
+            } else {
+                xDist = scaleNumber * ( (tokX - originX) / 70) / gridIncrement;
+                yDist = scaleNumber * ( (tokY - originY) / 70) / gridIncrement;
+            }
         }
         totalDist = Math.sqrt( Math.pow(xDist, 2) + Math.pow(yDist, 2) );
         
@@ -595,6 +601,7 @@ const Radar = (() => {
         let PageGridIncrement = 1;  //how many gridlines per 70px
         let displayUnits = "u";         //output distances in "units" or use pageScaleUnits 
         let includeTotalDist = false;   //inlude the total range in the output, or just directional (X & Y distances)
+        let hasSight = false;       //Will the RadarPing token grant temporary sight to the 
         
         let gmToks = [];            //array of all tokens on GM layer
         let objToks = [];           //array of all tokens on object layer
