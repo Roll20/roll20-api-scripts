@@ -41,6 +41,9 @@
       --fx|          < type-color >         //Trigger FX at each origin point.
                                                     //Supported types are: bomb,bubbling,burn,burst,explode,glow,missile,nova,splatter
                                                     //Supported colors are: acid,blood,charm,death,fire,frost,holy,magic,slime,smoke,water
+      --bar1|        < currentVal/optionalMax >            //overrides the token's bar1 current and max values. Max is optional. If overridden, bar1_link will be removed
+      --bar2|        < currentVal/optionalMax >            //overrides the token's bar2 current and max values. Max is optional. If overridden, bar2_link will be removed
+      --bar3|        < currentVal/optionalMax >            //overrides the token's bar3 current and max values. Max is optional. If overridden, bar3_link will be removed
     }}
     
     
@@ -49,7 +52,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.7';
+    const version = '0.8';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -128,7 +131,7 @@ const SpawnDefaultToken = (() => {
     
     //This function runs asynchronously, as called from the processCommands function
     //We will sendChat errors, but the rest of processCommands keeps running :(
-     const spawnTokenAtXY = function (who, tokenJSON, pageID, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL) {
+     const spawnTokenAtXY = function (who, tokenJSON, pageID, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar2Val, bar2Max, bar3Val, bar3Max) {
         let newSideImg;
         let spawnObj;
         let currentSideOld;
@@ -159,7 +162,32 @@ const SpawnDefaultToken = (() => {
             //check for mook
             if (mook === true) {
                 baseObj.represents = "";
-            } 
+            }
+            
+            //token bar overrides
+            if (bar1Val !== "") {
+                baseObj.bar1_value = bar1Val;
+                baseObj.bar1_link = "";
+            }
+            if (bar1Max !== "") {
+                baseObj.bar1_max = bar1Max;
+            }
+            
+            if (bar2Val !== "") {
+                baseObj.bar2_value = bar2Val;
+                baseObj.bar2_link = "";
+            }
+            if (bar2Max !== "") {
+                baseObj.bar2_max = bar2Max;
+            }
+            
+            if (bar3Val !== "") {
+                baseObj.bar3_value = bar3Val;
+                baseObj.bar3_link = "";
+            }
+            if (bar3Max !== "") {
+                baseObj.bar3_max = bar3Max;
+            }
             
             //set emitted light
             if (UDL) {
@@ -535,10 +563,8 @@ const SpawnDefaultToken = (() => {
                             } else {
                                 pts.push( new pt(x - 35 - Math.floor(width/2) - (rad-1)*70 - revolutions*70, originY ) );
                             }
-                            //pts.push( new pt( tempX, tempY );
                             break;
                         case 3:         //RIGHT
-                            //pts.push( new pt(x+70+Math.floor(width/2), y+70+Math.ceil(height/2)) );
                             pts.push( new pt( pts[pts.length-1].x + xSpacing, originY ) );
                             break;
                     }
@@ -644,6 +670,27 @@ const SpawnDefaultToken = (() => {
                             //Default case is false. Only change if user requests false
                             if (_.contains(['yes', '1'], param.toLowerCase())) {
                                 data.mook = true;
+                            }
+                            break;
+                        case "bar1":
+                            let bar1 = param.split('/');
+                            data.bar1Val = bar1[0].trim();
+                            if (bar1.length > 1) {
+                                data.bar1Max = bar1[1].trim();
+                            }
+                            break;
+                         case "bar2":
+                            let bar2 = param.split('/');
+                            data.bar2Val = bar2[0].trim();
+                            if (bar2.length > 1) {
+                                data.bar2Max = bar2[1].trim();
+                            }
+                            break;
+                         case "bar3":
+                            let bar3 = param.split('/');
+                            data.bar3Val = bar3[0].trim();
+                            if (bar3.length > 1) {
+                                data.bar3Max = bar3[1].trim();
                             }
                             break;
                         case "fx":
@@ -1042,7 +1089,7 @@ const SpawnDefaultToken = (() => {
                                     spawnFx(data.spawnX[iteration], data.spawnY[iteration], data.fx, data.spawnPageID);
                                 }
                                 //Spawn the token!
-                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL);
+                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL, data.bar1Val, data.bar1Max, data.bar2Val, data.bar2Max,data.bar3Val, data.bar3Max);
                             } else {
                                 log("off the map!");
                             }
@@ -1172,6 +1219,12 @@ const SpawnDefaultToken = (() => {
                     lightRad: -999,     //Optional change the emitted light characteristics --> light_radius
                     lightDim: -999,     //Optional change the emitted light characteristics --> light_dimradius
                     mook: false,        //Will the token use "represents"? If true, will change linked attributes for all associated tokens (e.g. hp)
+                    bar1Val: "",        //bar1 overridevalue 
+                    bar1Max: "",        //bar1_max overridevalue
+                    bar2Val: "",        //bar2 overridevalue 
+                    bar2Max: "",        //bar2_max overridevalue
+                    bar3Val: "",        //bar3 overridevalue 
+                    bar3Max: "",        //bar3_max overridevalue
                     UDL: false,         //Does the page use UDL?
                     
                     //
