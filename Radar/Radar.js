@@ -33,7 +33,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
     !radar {{
-        --range|        <#>                             //Default=350. How far the radar range extends, in pixels. Measured from center of selected token. Accepts inline rolls e.g. [[ 5*70 ]]
+        --range|        <# <optional units> >           //Default=350. How far the radar range extends, in pixels. Measured from center of selected token. Accepts inline rolls e.g. [[ 5*70 ]]
+                                                            //optionally, can specify units in "u" or the units in Page settings. e.g. "60u" or "60ft"
         --spacing|      <#>                             //Default=35. The spacing between waves, in pixels (lower number = slower wavefront)
         --wavedelay|    <#>                             //Default=50. How much time to wait before next wave, in ms (higher number = slower wavefront)
         --wavelife|     <#>                             //Default=200. How long each wave wil remain on screen, in ms (higher number = more waves present at any one time)
@@ -49,6 +50,8 @@
         --silent|       <yes/true/1> or <no/false/0>    //Default=false. If true, no output template will be sent to chat. animations only.
         
         --units|        <u/units/squares/square/hexes/hex> for "u", or <anything else> to just use map settings, e.g. ft, km, miles
+                                                        //Only affects Display output
+                                                        //for GRIDLESS MAP, this command must be included or else all results will be INFINITY
         
         //--------------------------------------------------------------------------------------
         //ONLY CHOOSE ONE OF THESE TWO FILTERS: (tokfilter or charfilter)
@@ -90,7 +93,7 @@
 const Radar = (() => {
     
     const scriptName = "Radar";
-    const version = '0.1';
+    const version = '0.3';
     
     const PING_NAME = 'RadarPing'; 
     
@@ -452,7 +455,7 @@ const Radar = (() => {
             xDist = ( (tokX - originX) / 70) / gridIncrement;
             yDist = ( (tokY - originY) / 70) / gridIncrement;
         } else {
-            if ( gridIncrement === 0) {
+            if ( gridIncrement === 0) { //gridless map support
                 xDist = scaleNumber * ( (tokX - originX) / 70);
                 yDist = scaleNumber * ( (tokY - originY) / 70);
             } else {
@@ -581,6 +584,7 @@ const Radar = (() => {
         
         let validArgs = "range, wavespacing, wavedelay, wavelife, pinglife, layer, charfilter, tokfilter, title, silent, units, LoS";
         let range = 350;            //how far the radar range extends, in pixels
+        let convertRange = "";      //will we need to convert range from pixels to "u" or another page-defined distance unit?
         let waveIncrement = 35;     //the spacing between waves, in pixels (lower number = slower wavefront)
         let waveDelay = 50;         //how much time to wait between each wave increment, in ms (higher number = slower wavefront)
         let waveLife = 200;         //how long each wave wil remain on screen, in ms (higher number = more waves present at any one time)
@@ -650,6 +654,10 @@ const Radar = (() => {
                     switch(option) {
                         case "range":
                             range = parseInt(param);
+                            let u = param.match(/[a-z]/i);   //if not an empty string, we will use page settings to convert range to "u" or other map-defined units
+                            if (u !== null) {
+                                convertRange = u[0]
+                            }
                             break;
                         case "wavespacing":
                             waveIncrement = parseInt(param);
@@ -779,6 +787,23 @@ const Radar = (() => {
                 pageDL = thePage.get("showlighting") || thePage.get("dynamic_lighting_enabled")
                 if (displayUnits === undefined) {
                     displayUnits = pageScaleUnits;
+                }
+                
+                //possibly convert the range from user-supplied units to pixels
+                if (convertRange !== "") {
+                    if (pageGridIncrement !== 0) {  //grid map
+                        if (convertRange === "u") {
+                            range = range * 70 * pageGridIncrement;                 //convert from "u" to pixels
+                        } else {
+                            range = (range * 70 * pageGridIncrement) / pageScaleNumber; //convert from page units to pixels
+                        }
+                    } else {                        //gridless map, only use page settings
+                        if (convertRange === "u") {
+                            sendChat(scriptName,`/w "${who}" `+ 'Warning: Units \"u\" selected on a gridless map. Range will be calculated in pixels and will probably be much smaller than expected ');
+                        } else {
+                            range = (range * 70) / pageScaleNumber;
+                        }
+                    }
                 }
                 
                 let spawnObj = getCharacterFromName(PING_NAME);
