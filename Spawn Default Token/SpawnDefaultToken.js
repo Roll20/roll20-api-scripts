@@ -44,6 +44,9 @@
       --bar1|        < currentVal/optionalMax >            //overrides the token's bar1 current and max values. Max is optional. If overridden, bar1_link will be removed
       --bar2|        < currentVal/optionalMax >            //overrides the token's bar2 current and max values. Max is optional. If overridden, bar2_link will be removed
       --bar3|        < currentVal/optionalMax >            //overrides the token's bar3 current and max values. Max is optional. If overridden, bar3_link will be removed
+      --expand|      < #frames, delay >             //DEFAULT = 0,0. Animates the token during spawn. Expands from size = 0 to max size
+                                                        //#frames: how many frames the expansion animation will use. Start with something like 20
+                                                        //delay: how many milliseconds between triggering each frame? Start with something like 50. Any less than 30 may appear instant
     }}
     
     
@@ -52,7 +55,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.8';
+    const version = '0.9';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -128,10 +131,9 @@ const SpawnDefaultToken = (() => {
         return;
     };
     
-    
     //This function runs asynchronously, as called from the processCommands function
     //We will sendChat errors, but the rest of processCommands keeps running :(
-     const spawnTokenAtXY = function (who, tokenJSON, pageID, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar2Val, bar2Max, bar3Val, bar3Max) {
+    async function spawnTokenAtXY (who, tokenJSON, pageID, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar2Val, bar2Max, bar3Val, bar3Max, expandIterations, expandDelay) {
         let newSideImg;
         let spawnObj;
         let currentSideOld;
@@ -141,15 +143,26 @@ const SpawnDefaultToken = (() => {
         let iLightRad;
         let iLightDim;
         
+        let result;
+        //let expand = true;
+        //let delay = 50;            //in ms
+        
         try {
             let baseObj = JSON.parse(tokenJSON);
             
             //set token properties
             baseObj.pageid = pageID;
-            baseObj.left = spawnX;
-            baseObj.top = spawnY;
-            baseObj.width = sizeX;
-            baseObj.height = sizeY;
+            if (expandIterations === 0) {       //spawn full-sized token 
+                baseObj.left = spawnX;
+                baseObj.top = spawnY;
+                baseObj.width = sizeX;
+                baseObj.height = sizeY;
+            } else {                            //will animate and expand token to full size after spawning
+                baseObj.left = spawnX;
+                baseObj.top = spawnY;
+                baseObj.width = 0;
+                baseObj.height = 0;
+            }
             
             baseObj.imgsrc = getCleanImgsrc(baseObj.imgsrc); //ensure that we're using the thumb.png
             
@@ -244,7 +257,7 @@ const SpawnDefaultToken = (() => {
             
             //---------------------------------------------------------
             //Support for TokenNameNumber script by TheAaron
-            //  Triggers a global function in v0.5.12 or later of his script
+            //  Triggers a global function in v0.5.12 or later of his script to rename the token
             if (baseObj.name) {
                 if (baseObj.name.match( /%%NUMBERED%%/ ) ) {
                     processCreated = (( 'undefined' !== typeof TokenNameNumber && TokenNameNumber.NotifyOfCreatedToken ) 
@@ -255,6 +268,36 @@ const SpawnDefaultToken = (() => {
                 }
             }
             //---------------------------------------------------------
+            
+            //check for expanding token size
+            if (expandIterations > 0) {
+                let new_W, new_H;
+                
+                let factor = 1 / expandIterations;  // size expansion factor.  
+                
+                while (spawnObj.get("width") <= sizeX) {
+                    promise = new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            new_W = Math.min(spawnObj.get("width") + sizeX * factor, sizeX)
+                            new_H = Math.min(spawnObj.get("height") + sizeY * factor, sizeY)
+                            
+                            spawnObj.set("width", new_W);
+                            spawnObj.set("height", new_H);
+                            //spawnObj.set("width", spawnObj.get("width") + sizeX * factor);
+                            //spawnObj.set("height", spawnObj.get("height") + sizeX * factor);
+                            resolve("done!");
+                        }, expandDelay);
+                    });
+                    
+                    result = await promise;
+                }
+                if (spawnObj.get("width") > sizeX) {
+                    spawnObj.set("width", sizeX);
+                }
+                if (spawnObj.get("height") > sizeY) {
+                    spawnObj.set("height", sizeY);
+                }
+            }
             
             //set the z-order
             switch (zOrder) {
@@ -696,6 +739,13 @@ const SpawnDefaultToken = (() => {
                         case "fx":
                             data.fx = param;
                             break;
+                        case "expand":
+                            let p = param.split(',');
+                            data.expandIterations = parseInt(p[0]);
+                            if (p.length > 1) {
+                                data.expandDelay = parseInt(p[1]);
+                            }
+                            break;
                         default:
                             retVal.push('Unexpected argument identifier (' + option + '). Choose from: (' + data.validArgs + ')');
                             break;    
@@ -778,13 +828,22 @@ const SpawnDefaultToken = (() => {
             //Check for supported FX
             if (data.fx !== '') {
                 let fx = data.fx.split('-');
-                log(fx);
                 if (fx.length !== 2) {
                     retVal.push('Invalid FX format. Format is --fx|type-color');
                 } else if (fxModes.indexOf(fx[0]) === -1 ) {
                     retVal.push('Invalid FX type requested. Supported types are ' + fxModes.join(','));
                 } else if (fxColors.indexOf(fx[1]) === -1 ) {
                     retVal.push('Invalid FX color requested. Supported colors are ' + fxColors.join(','));
+                }
+            }
+            
+            //check token expansion animation parameters
+            if (data.expandIterations !== 0) {
+                if (isNaN(data.expandIterations)) {
+                    retVal.push('Non-numeric animation iterations detected. Format is \"--expand|#,#\" \(iterations, delay\)');
+                }
+                if (isNaN(data.expandDelay)) {
+                    retVal.push('Non-numeric animation delay detected. Format is \"--expand|#,#\" \(iterations, delay\)');
                 }
             }
             
@@ -1089,7 +1148,8 @@ const SpawnDefaultToken = (() => {
                                     spawnFx(data.spawnX[iteration], data.spawnY[iteration], data.fx, data.spawnPageID);
                                 }
                                 //Spawn the token!
-                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL, data.bar1Val, data.bar1Max, data.bar2Val, data.bar2Max,data.bar3Val, data.bar3Max);
+                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL, data.bar1Val, data.bar1Max, data.bar2Val, data.bar2Max,data.bar3Val, data.bar3Max, data.expandIterations, data.expandDelay);
+                                
                             } else {
                                 log("off the map!");
                             }
@@ -1178,7 +1238,7 @@ const SpawnDefaultToken = (() => {
                 var data = {
                     who: whoDat,        //Who called the script
                     spawnName: "",      //name of the target to spawn
-                    validArgs: "name, qty, targets, placement, force, offset, sheet, ability, side, size, zOrder, light, mook",    //list of valid user commands for error message
+                    validArgs: "name, qty, targets, placement, force, offset, sheet, ability, side, size, zOrder, light, mook, fx, bar1, bar2, bar3, expand",    //list of valid user commands for error message
                     qty: 1,             //how many tokens to spawn at each origin
                     //tokenIDs and objects
                     originToks: [],     //array of token objects to be used as reference point(s) for spawn location(s). 
@@ -1227,10 +1287,11 @@ const SpawnDefaultToken = (() => {
                     bar3Max: "",        //bar3_max overridevalue
                     UDL: false,         //Does the page use UDL?
                     
-                    //
-                    sheetName: "",      //the char sheet in which to look for the supplied ability, defaults to the sheet tied to the first selected token 
-                    abilityName: "",     //an ability to trigger after spawning
-                    fx: ""              //fx to trigger at the origni point(s)
+                    sheetName: "",          //the char sheet in which to look for the supplied ability, defaults to the sheet tied to the first selected token 
+                    abilityName: "",        //an ability to trigger after spawning
+                    fx: "",                  //fx to trigger at the origin point(s)
+                    expandIterations: 0,    //how many animation frames to use if animated token expansion is called for
+                    expandDelay: 50         //delay (in ms) between each frame if animated expansion is called for
                 };
                 
                 //Parse msg into an array of argument objects [{cmd:params}]
