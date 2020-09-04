@@ -1,6 +1,9 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 2.08
 ### Capacités
+* Petit veinard du halfelin.
+* Mot de mort du nécromancien.
+* Support pour l'étreinte des serpents.
 * Support pour la capacité forêt vivante du druide.
 * Ajout de la capacité botte mortelle du barde.
 * Possibilité de spécifier le bonus apporté par une feinte.
@@ -9,6 +12,12 @@
 * Résistance à la magie du barbare
 
 ### Autres améliorations
+* Ajout d'une option diviseDmg
+* Ajout des options d'attaque à la liste du tour.
+* Prise en compte des options d'attaque sur la fiche
+* Utilisation des lignes d'attaques pour les PNJs créés par le script
+* Ajout de possibilité de tempête de mana pour !cof-lancer-sort
+* Ajout de !cof-set-attribute
 * Possibilité d'accumuler les durées d'effets.
 * Gestion de --secret pour les !cof-effet
 * Ajout de l'option d'attaque --ifSaveFails
@@ -24,6 +33,8 @@
 * Attaques par défaut dans la liste d'actions, possibilité de se passer complètement des attributs pour les attaques (actif quand la version 3.3 de la fiche sera là.
 
 ### Corrections de bugs
+* Évaluation plus précoce des conditions, permettant de mieux les prendre en compte
+* Utilisation d'une valeur d'attaque plus cohérente pour les PNJ en cas d'attaque magique opposée.
 * Prise en compte de la forêt vivante dans les jets sans difficulté explicite.
 * Prise en compte correcte de l'armure des PNJ pour la main d'énergie.
 * Correction d'un bug qui faisait planter en cas de save dans une attaque
