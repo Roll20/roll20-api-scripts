@@ -30,11 +30,10 @@ is used as a prefix search for a name to put the item before or after.
 
 Remove all elements with a counter of 0.
 
-## Planned Features
+## Permission Notes
 
-Right now, anyone can run the commands. Some GMs might want to allow players
-to add items, others will not. Fewer will want players to be able to clear the
-turn order.
+Clearing, loading, and starting the encounter is limited to GMs. Adding
+counters is open to anyone. YMMV if this is a bug or a feature.
 
 ## Questions? Comments? Ideas? Bugs?
 

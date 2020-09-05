@@ -51,12 +51,16 @@ var ChatTurnManager =
       Campaign().set("turnorder", JSON.stringify(turns));
     };
 
-    const handleClear = (msg) => {
-      log(`ChatTurnManager: CLEARING: ${Campaign().get("turnorder")}`)
+    const handleClear = (msg, isGM) => {
+      if (!isGM) return;
+      const turns = Campaign().get("turnorder");
       setTurns([]);
+      log(`ChatTurnManager: CLEARING: ${turns}`)
+      sendChat('ChatTurnManager', `/w GM Turns cleared. To restore, run <code>!turns-load ${turns}</code>`)
     };
 
-    const handleLoad = (msg) => {
+    const handleLoad = (msg, isGM) => {
+      if (!isGM) return;
       Campaign().set("turnorder", msg.split(/\s+/, 2)[1]);
     }
 
@@ -66,7 +70,8 @@ var ChatTurnManager =
       setTurns(turns);
     };
 
-    const handleBegin = (msg) => {
+    const handleBegin = (msg, isGM) => {
+      if (!isGM) return;
       let turns = getTurns();
 
       turns = _.filter(turns, (t) => t.custom !== counterName);
@@ -139,7 +144,7 @@ var ChatTurnManager =
       if (msg.type != "api" || !msg.content.startsWith("!turns")) return;
       const cmd = msg.content.split(/\s+/)[0].substring(7);
       const handler = handlers[`handle${cmd.charAt(0).toUpperCase()}${cmd.slice(1)}`];
-      if (handler) handler(msg.content);
+      if (handler) handler(msg.content, playerIsGM(msg.playerid));
       else log(`ChatTurnManager: unknown cmd: ${cmd}`);
     };
 
