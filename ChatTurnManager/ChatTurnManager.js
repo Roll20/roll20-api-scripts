@@ -52,8 +52,13 @@ var ChatTurnManager =
     };
 
     const handleClear = (msg) => {
+      log(`ChatTurnManager: CLEARING: ${Campaign().get("turnorder")}`)
       setTurns([]);
     };
+
+    const handleLoad = (msg) => {
+      Campaign().set("turnorder", msg.split(/\s+/, 2)[1]);
+    }
 
     const handleClean = (msg) => {
       let turns = getTurns();
@@ -122,6 +127,7 @@ var ChatTurnManager =
 
     const handlers = {
       handleClear,
+      handleLoad,
       handleClean,
       handleBegin,
       handleUp,
