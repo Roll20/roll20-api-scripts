@@ -30,6 +30,12 @@ is used as a prefix search for a name to put the item before or after.
 
 Remove all elements with a counter of 0.
 
+## Planned Features
+
+Right now, anyone can run the commands. Some GMs might want to allow players
+to add items, others will not. Fewer will want players to be able to clear the
+turn order.
+
 ## Questions? Comments? Ideas? Bugs?
 
 Feedback is welcome!
