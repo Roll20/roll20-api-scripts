@@ -269,6 +269,16 @@ const SpawnDefaultToken = (() => {
             }
             //---------------------------------------------------------
             
+            //set the z-order
+            switch (zOrder) {
+                case 'toBack':
+                    toBack(spawnObj);
+                    break;
+                default:
+                    toFront(spawnObj);
+                    break;
+            }
+            
             //check for expanding token size
             if (expandIterations > 0) {
                 let new_W, new_H;
@@ -297,16 +307,6 @@ const SpawnDefaultToken = (() => {
                 if (spawnObj.get("height") > sizeY) {
                     spawnObj.set("height", sizeY);
                 }
-            }
-            
-            //set the z-order
-            switch (zOrder) {
-                case 'toBack':
-                    toBack(spawnObj);
-                    break;
-                default:
-                    toFront(spawnObj);
-                    break;
             }
         }
         catch(err) {
