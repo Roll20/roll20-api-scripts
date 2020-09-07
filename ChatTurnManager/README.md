@@ -4,19 +4,15 @@ A script to simplify Turn Order Management, and move it into chat.
 
 ## Commands
 
-### `!turns-begin` / `!turns-start`
+### `!turns-begin` / `!turns-start` (GM Only)
 
 Sort the Turn Counter numerically descending, and add a turn counter to the
 top of the order
 
-### `!turns-clear`
+### `!turns-clear` (GM Only)
 
 Clear the turn order. There is no confirmation, but the GM gets a whisper with
 a load command to restore what was just cleared, if done in error.
-
-### `!turns-load <JSON string>`
-
-Load the turn order from a blob of JSON data.
 
 ### `!turns-down <n> [--<before|after> prefix] name`
 
@@ -34,6 +30,18 @@ is used as a prefix search for a name to put the item before or after.
 ### `!turns-clean`
 
 Remove all elements with a counter of 0 (or less).
+
+### `!turns-remove prefix` / `!turns-rm prefix` (GM Only)
+
+Remove the element first with the given prefix.
+
+### `!turns-load <JSON string>` (GM Only)
+
+Load the turn order from a blob of JSON data.
+
+### `!turns-append <JSON string>` (GM Only)
+
+Append the turn order data from a blob of JSON data to the current list.
 
 ## Permission Notes
 
