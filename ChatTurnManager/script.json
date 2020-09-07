@@ -1,8 +1,8 @@
 {
     "name": "ChatTurnManager",
     "script": "ChatTurnManager.js",
-    "version": "0.0.1",
-    "previousversions": [],
+    "version": "0.0.2",
+    "previousversions": ["0.0.1"],
     "description": "A script to simplify Turn Order Management, and move it into chat.",
     "authors": "Erik O.",
     "roll20userid": "1828947",
