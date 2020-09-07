@@ -66,7 +66,7 @@ var ChatTurnManager =
 
     const handleClean = (msg) => {
       let turns = getTurns();
-      turns = _.filter(turns, (t) => t.pr != 0);
+      turns = _.filter(turns, (t) => t.pr <= 0);
       setTurns(turns);
     };
 

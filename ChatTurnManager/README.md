@@ -33,7 +33,7 @@ is used as a prefix search for a name to put the item before or after.
 
 ### `!turns-clean`
 
-Remove all elements with a counter of 0.
+Remove all elements with a counter of 0 (or less).
 
 ## Permission Notes
 
