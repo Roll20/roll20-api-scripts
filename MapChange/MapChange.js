@@ -6,11 +6,11 @@ var MapChange = MapChange || (function() {
     'use strict';
     // Defaults.
     // Date last modified in unix timestamp format.
-    var lastModified = "1466627592";
+    var lastModified = "1599488624";
     // Name of the person who last modified the script.
     var modifiedBy = "TheWhiteWolves";
     // Local version of the script.
-    var version = "1.3";
+    var version = "1.4;
     // Set to true to use built in debug statements
     var debug = false;
     // Set to false to turn off notifing the GM when a player moves.
@@ -343,6 +343,7 @@ var MapChange = MapChange || (function() {
 
     // Convert the provided display name into the player id for that player.
     var getPlayerIdFromDisplayName = function(name) {
+        name = name.replace("(GM)", "").trim();
         // Find all the player objects in the campaign.
         var players = findObjs({_type: 'player'});
         // Loop through them and try to convert the display name into the player's id.
