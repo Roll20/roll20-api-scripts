@@ -1,7 +1,7 @@
 {
 	"name": "MapChange",
 	"script": "MapChange.js",
-	"version": "1.3",
+	"version": "1.4",
 	"description": "Provides a way for users to move between maps in a campaign without the GM needing to move them.\n\nFor full information on how to use the script, use the command '!mc help' in game.",
 	"authors": "TheWhiteWolves",
 	"roll20userid": "1043",
@@ -44,5 +44,5 @@
 		"state.MapChange": "read,write"
 	},
 	"conflicts": [],
-	"previousversions": [1.0, 1.1, 1.2]
+	"previousversions": [1.0,1.1,1.2,1.3]
 }
