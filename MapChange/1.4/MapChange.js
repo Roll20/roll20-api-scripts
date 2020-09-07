@@ -343,6 +343,7 @@ var MapChange = MapChange || (function() {
 
     // Convert the provided display name into the player id for that player.
     var getPlayerIdFromDisplayName = function(name) {
+        // Remove the GM tag from a players name and trim any leftover whitespace
         name = name.replace("(GM)", "").trim();
         // Find all the player objects in the campaign.
         var players = findObjs({_type: 'player'});
