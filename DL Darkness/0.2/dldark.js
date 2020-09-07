@@ -1,12 +1,11 @@
-//This script creates a gridded circle based on a specific token on the Dynamic Lighting layer to be used as magical darkness, then moves that token to the map
+//This script creates a gridded circle on the Dynamic Lighting layer, based on a specific token to be used as magical darkness, then moves that token to the map
 //      This is based on a darkness concept contributed by Avi on the forum:  
 //      https://app.roll20.net/forum/post/5899495/stupid-roll20-tricks-and-some-clever-ones
 //The circle approximation code is based on theAaron's !dlcircle script, simplified to handle only circles rather than ellipses
 //To use:
-//  Create a character whose token has the desired image of the darkness generated
+//  Create a character whose token has the desired image of the darkness generated, and drag that token to the map.
 //  Add an Ability macro to call !dldark and set as a token action
 /*
-
 SYNTAX
     !dldark <buffer> <makeGrid> <sendToMapLayer>
     
@@ -26,7 +25,6 @@ EXAMPLES
     !dldark 15 true
     
     !dldark ?{buffer radius?|15} true false
-
 */
 
 const dldark = (() => {
