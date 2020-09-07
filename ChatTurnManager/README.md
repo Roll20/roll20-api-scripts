@@ -11,7 +11,12 @@ top of the order
 
 ### `!turns-clear`
 
-Clear the turn order. **NOTE:** _THERE IS NO CONFIRMATION._
+Clear the turn order. There is no confirmation, but the GM gets a whisper with
+a load command to restore what was just cleared, if done in error.
+
+### `!turns-load <JSON string>`
+
+Load the turn order from a blob of JSON data.
 
 ### `!turns-down <n> [--<before|after> prefix] name`
 
