@@ -131,6 +131,7 @@ const SpawnDefaultToken = (() => {
         return;
     };
     
+    
     //This function runs asynchronously, as called from the processCommands function
     //We will sendChat errors, but the rest of processCommands keeps running :(
     async function spawnTokenAtXY (who, tokenJSON, pageID, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar2Val, bar2Max, bar3Val, bar3Max, expandIterations, expandDelay) {
@@ -141,12 +142,9 @@ const SpawnDefaultToken = (() => {
         let sides;
         let sidesArr;
         let iLightRad;
-        let iLightDim;
-        
+        let iLightDim;      
         let result;
-        //let expand = true;
-        //let delay = 50;            //in ms
-        
+                
         try {
             let baseObj = JSON.parse(tokenJSON);
             
@@ -201,6 +199,12 @@ const SpawnDefaultToken = (() => {
             if (bar3Max !== "") {
                 baseObj.bar3_max = bar3Max;
             }
+            
+            //Get page lighting mode (UDL vs LDL)
+            var page = findObjs({                              
+              _id: pageID,                        
+            });
+            let UDL = page[0].get("dynamic_lighting_enabled");
             
             //set emitted light
             if (UDL) {
@@ -836,7 +840,7 @@ const SpawnDefaultToken = (() => {
                     retVal.push('Invalid FX color requested. Supported colors are ' + fxColors.join(','));
                 }
             }
-            
+
             //check token expansion animation parameters
             if (data.expandIterations !== 0) {
                 if (isNaN(data.expandIterations)) {
@@ -1286,7 +1290,6 @@ const SpawnDefaultToken = (() => {
                     bar3Val: "",        //bar3 overridevalue 
                     bar3Max: "",        //bar3_max overridevalue
                     UDL: false,         //Does the page use UDL?
-                    
                     sheetName: "",          //the char sheet in which to look for the supplied ability, defaults to the sheet tied to the first selected token 
                     abilityName: "",        //an ability to trigger after spawning
                     fx: "",                  //fx to trigger at the origin point(s)

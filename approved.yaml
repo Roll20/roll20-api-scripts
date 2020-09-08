@@ -418,6 +418,10 @@ itsatrapthemestarfinder:
 - "ItsATrap_theme_Starfinder"
 - "System Toolbox"
 
+itsatrapthemeburnbryte:
+- "ItsATrap_theme_BurnBryte"
+- "System Toolbox"
+
 genesysroller:
 - "Genesys-RPG-Roller"
 - "System Toolbox"
@@ -782,6 +786,14 @@ wildshaperesizer:
   - "WildShapeResizer"
   - "Utility"
 
+wildshape:
+  - "WildShape"
+  - "Utility"
+
+wildhelpers:
+  - "WildHelpers"
+  - "Utility"
+
 savageworldsstatuschanger:
   - "SavageWorldsStatusChanger"
   - "System Toolbox"
@@ -861,3 +873,7 @@ spawndefaulttoken:
 fotncompanion:
 - "FotN Companion"
 - "System Toolbox"
+
+hiddenrollmessages:
+  - "HiddenRollMessages"
+  - "Utility"

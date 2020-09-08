@@ -1,7 +1,7 @@
 {
   "name": "SpawnDefaultToken",
   "script": "SpawnDefaultToken.js",
-  "version": "0.0",
+  "version": "0.9",
   "description": "Spawns one or more default tokens for a given character, with various options for placement and token characteristics",
   "authors": "David M.",
   "roll20userid": 3987469,
