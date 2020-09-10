@@ -97,7 +97,10 @@ var TrapTheme = (() => {
       let effect = new TrapEffect(trap, character);
 
       content.append('.paddedRow trapMessage', character.get('name') + ' notices a ' + (effect.type || 'trap') + ':');
-      content.append('.paddedRow', trap.get('name'));
+      if (effect.detectMessage)
+        content.append('.paddedRow', effect.detectMessage);
+      else
+        content.append('.paddedRow', trap.get('name'));
 
       return TrapTheme.htmlTable(content, '#000', effect);
     }

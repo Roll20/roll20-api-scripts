@@ -44,15 +44,23 @@ To use this, select the carrier token and then click the Drop All command.
 
 ## Help
 
-If you experience any issues while using this script or the trap themes,
+My scripts are provided 'as-is', without warranty of any kind, expressed or implied.
+
+That said, if you experience any issues while using this script,
 need help using it, or if you have a neat suggestion for a new feature,
 please shoot me a PM:
 https://app.roll20.net/users/46544/stephen-l
-or create a help thread on the Roll20 API forum
+
+When messaging me about an issue, please be sure to include any error messages that
+appear in your API Console Log, any configurations you've got set up for the
+script in the VTT, and any options you've got set up for the script on your
+game's API Scripts page. The more information you provide me, the better the
+chances I'll be able to help.
 
 ## Show Support
 
 If you would like to show your appreciation and support for the work I do in writing,
-updating, and maintaining my API scripts, consider buying one of my art packs from the Roll20 marketplace (https://marketplace.roll20.net/browse/search/?keywords=&sortby=newest&type=all&genre=all&author=Stephen%20Lindberg)
-or, simply leave a thank you note in the script's thread on the Roll20 forums.
-Either is greatly appreciated! Happy gaming!
+updating, maintaining, and providing tech support my API scripts,
+please consider buying one of my art packs from the Roll20 marketplace:
+
+https://marketplace.roll20.net/browse/search?category=itemtype:Art&author=Stephen%20Lindberg|Stephen%20L

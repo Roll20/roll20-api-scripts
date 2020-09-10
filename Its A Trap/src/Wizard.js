@@ -235,6 +235,12 @@ var ItsATrapCreationWizard = (() => {
         //value: trapToken.get('aura2_radius') || trapEffect.searchDist || '-'
       },
       {
+        id: 'detectMessage',
+        name: 'Detection Message',
+        desc: 'What message is displayed when a character notices the trap with passive detection?',
+        value: trapEffect.detectMessage || '-'
+      },
+      {
         id: 'revealOpts',
         name: 'Reveal the Trap?',
         desc: 'Whether the trap should be revealed when the trap is activated and/or spotted, or if not, whether the trap troken is deleted after it activates.',
@@ -519,7 +525,7 @@ var ItsATrapCreationWizard = (() => {
   function getTriggerProperties(trapToken) {
     let trapEffect = (new TrapEffect(trapToken)).json;
 
-    return [
+    return _.compact([
       {
         id: 'triggerPaths',
         name: 'Trigger Area',
@@ -534,49 +540,57 @@ var ItsATrapCreationWizard = (() => {
               return 'self - circle';
           }
         })(),
-        options: ['self - rectangle', 'self - circle', 'set selected lines']
+        options: ['self - rectangle', 'self - circle', 'set selected lines', 'none']
       },
-      {
-        id: 'stopAt',
-        name: 'Trigger Collision',
-        desc: 'Does this trap stop tokens that pass through its trigger area?',
-        value: (() => {
-          let type = trapEffect.stopAt || 'center';
-          if (type === 'center')
-            return 'Move to center of trap token.';
-          else if (type === 'edge')
-            return 'Stop at edge of trigger area.';
-          else
-            return 'None';
-        })(),
-        options: ['center', 'edge', 'none']
-      },
-      {
-        id: 'ignores',
-        name: 'Ignore Token IDs',
-        desc: 'Select one or more tokens to be ignored by this trap.',
-        value: trapEffect.ignores || 'none',
-        options: ['none', 'set selected tokens']
-      },
-      {
-        id: 'flying',
-        name: 'Affects Flying Tokens?',
-        desc: 'Should this trap affect flying tokens ' + LPAREN + 'fluffy-wing status ' + RPAREN + '?',
-        value: trapToken.get('status_fluffy-wing') ? 'yes' : 'no',
-        options: ['yes', 'no']
-      },
-      {
-        id: 'delay',
-        name: 'Delay Activation',
-        desc: 'When the trap is triggered, its effect is delayed for the specified number of seconds. For best results, also be sure to set an area effect for the trap and set the Stops Tokens At property of the trap to None.',
-        value: (() => {
-          if (trapEffect.delay)
-            return trapEffect.delay + ' seconds';
-          else
-            return '-';
-        })()
-      }
-    ];
+      ...(() => {
+        if (trapEffect.triggerPaths === 'none')
+          return [];
+        else {
+          return [
+            {
+              id: 'stopAt',
+              name: 'Trigger Collision',
+              desc: 'Does this trap stop tokens that pass through its trigger area?',
+              value: (() => {
+                let type = trapEffect.stopAt || 'center';
+                if (type === 'center')
+                  return 'Move to center of trap token.';
+                else if (type === 'edge')
+                  return 'Stop at edge of trigger area.';
+                else
+                  return 'None';
+              })(),
+              options: ['center', 'edge', 'none']
+            },
+            {
+              id: 'ignores',
+              name: 'Ignore Token IDs',
+              desc: 'Select one or more tokens to be ignored by this trap.',
+              value: trapEffect.ignores || 'none',
+              options: ['none', 'set selected tokens']
+            },
+            {
+              id: 'flying',
+              name: 'Affects Flying Tokens?',
+              desc: 'Should this trap affect flying tokens ' + LPAREN + 'fluffy-wing status ' + RPAREN + '?',
+              value: trapToken.get('status_fluffy-wing') ? 'yes' : 'no',
+              options: ['yes', 'no']
+            },
+            {
+              id: 'delay',
+              name: 'Delay Activation',
+              desc: 'When the trap is triggered, its effect is delayed for the specified number of seconds. For best results, also be sure to set an area effect for the trap and set the Stops Tokens At property of the trap to None.',
+              value: (() => {
+                if (trapEffect.delay)
+                  return trapEffect.delay + ' seconds';
+                else
+                  return '-';
+              })()
+            }
+          ];
+        }
+      })()
+    ]);
   }
 
   /**
@@ -639,6 +653,8 @@ var ItsATrapCreationWizard = (() => {
       trapEffect.delay = params[0] || undefined;
     if(prop === 'destroyable')
       trapEffect.destroyable = params[0] === 'yes';
+    if (prop === 'detectMessage')
+      trapEffect.detectMessage = params[0];
     if(prop === 'disabled')
       trapToken.set('status_interdiction', params[0] === 'yes');
 
@@ -745,6 +761,10 @@ var ItsATrapCreationWizard = (() => {
         });
         trapToken.set('aura1_square', false);
       }
+      else if (params[0] === 'none') {
+        trapEffect.triggerPaths = 'none';
+        trapToken.set('aura1_square', false);
+      }
       else {
         trapEffect.triggerPaths = undefined;
         trapToken.set('aura1_square', false);
@@ -826,6 +846,9 @@ var ItsATrapCreationWizard = (() => {
       }
 
       if(msg.content.startsWith(DISPLAY_WIZARD_CMD)) {
+        if (!msg.selected || !msg.selected[0])
+          throw new Error("You must have a token selected to use trap macro.");
+
         let trapToken = getObj('graphic', msg.selected[0]._id);
         displayWizard(msg.who, msg.playerId, trapToken);
       }
@@ -841,9 +864,8 @@ var ItsATrapCreationWizard = (() => {
         displayWizard(msg.who, msg.playerId, curTrap);
       }
     }
-    catch(err) {
-      log('ItsATrapCreationWizard: ' + err.message);
-      log(err.stack);
+    catch (err) {
+      ItsATrap.Chat.error(err);
     }
   });
 

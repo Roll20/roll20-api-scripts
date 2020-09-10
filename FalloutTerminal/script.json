@@ -1,8 +1,8 @@
 {
     "name": "Fallout Terminal",
     "script": "terminal.js",
-    "version": "1.1",
-    "previousversions": ["1.0"],
+    "version": "1.2",
+    "previousversions": ["1.1","1.0"],
     "description": "# Fallout Terminal\r\r_v1.1 Updates:_\r* There are now useroptions to specify the colors for the terminal screens.\r\rWith this script, you can set up a token to display an interactive\rFallout-like terminal in the chat.\r\r## Creating a Terminal\r\rTo create a terminal, create a token whose name starts with 'terminal'\rand copy-paste the JSON defining your terminal's content into its gmnotes.\r\r## Activating a Terminal\r\rWhen this script is installed, it creates a 'displayTerminal' token macro\rfor all the GM players. Just select the terminal's token and click the\rtoken macro to activate the terminal.\r\r## Terminal JSON specification\r\rThe JSON for defining a terminal's content has the following structure:\r\r```\r{\r  \"name\": String, // The name of the terminal.\r  \"content\": String, // The content of the terminal's first screen.\r  \"locked\": [Boolean], // Whether the terminal is locked. Default false.\r  \"password\": [String], // The password for the locked terminal.\r  \"attempts\": [Number], // The number of attempts allowed to guess the locked terminal's password.\r  \"screens\": [{ // The screens or screen IDs that the initial screen can access.\r    {\r      \"name\": String, // The name of this screen.\r      \"content\": [String], // The content of this screen.\r      \"screens\": [more screens] // Additional screens that can be accessed from this screen.\r    }\r  }]\r}\r```\r\r### Terminal JSON Example\r\rFor an example of JSON used to display a terminal, see the example here:\rhttps://raw.githubusercontent.com/Roll20/roll20-api-scripts/master/FalloutTerminal/example.json\r",
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
