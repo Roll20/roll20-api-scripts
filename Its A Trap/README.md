@@ -1,8 +1,9 @@
 # It's A Trap!
 
-_v3.12 Updates_
+_v3.13 Updates_
 
-* Added support for escaped special characters in API Commands.
+* Can specify 'none' for trap trigger areas.
+* Can specify message for when a character notices a trap via passive detection using the 'Detection Message' property.
 
 This is a script that allows GMs to quickly and very easily set up traps,
 secret doors, and other hidden things on the GM layer, and detect when tokens
@@ -90,6 +91,7 @@ trap. Options include:
 * **self - rectangle**: The trap's own token is used as the trigger area, which is treated as a rectangular shape.
 * **self - circle**: The trap's own token is used as the trigger area, which is treated as a circular shape.
 * **set selected lines**: You must have one or more lines selected on the VTT to use this option. Those lines will be used as the trigger area for the trap.
+* **none**: The trap has no trigger area, thus it cannot be triggered. Use this for things like secret doors, which shouldn't activate, but should be noticeable with passive detection.
 
 #### Trigger Collision
 This property defines how character tokens collide with the trap's trigger area. Options include:
@@ -181,6 +183,14 @@ Dynamic lighting walls will block line of sight to a trap, even if the character
 is close enough to otherwise try to passively spot it.
 
 e.g. If this is set to 10 ft, then a character must be within 10 ft of the trap in order to passively notice it.
+
+#### Detection Message
+
+By default, when a character notices a trap via passive detection (Perception/Spot/etc.),
+the script will just announce the name of the trap that was noticed. Use this property to specify
+a custom message to be displayed when a character notices a trap.
+
+e.g. 'The air feels warm and you notice holes greased with oil lining the walls.'
 
 #### Reveal the Trap?
 This property determines whether the trap's token will be revealed (moved to a visible layer) when it is activated and/or detected.

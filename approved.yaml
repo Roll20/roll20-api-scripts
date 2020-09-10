@@ -418,6 +418,10 @@ itsatrapthemestarfinder:
 - "ItsATrap_theme_Starfinder"
 - "System Toolbox"
 
+itsatrapthemeburnbryte:
+- "ItsATrap_theme_BurnBryte"
+- "System Toolbox"
+
 genesysroller:
 - "Genesys-RPG-Roller"
 - "System Toolbox"
@@ -782,6 +786,14 @@ wildshaperesizer:
   - "WildShapeResizer"
   - "Utility"
 
+wildshape:
+  - "WildShape"
+  - "Utility"
+
+wildhelpers:
+  - "WildHelpers"
+  - "Utility"
+
 savageworldsstatuschanger:
   - "SavageWorldsStatusChanger"
   - "System Toolbox"
@@ -810,10 +822,58 @@ supernotes:
   - "Supernotes"
   - "Utility"
 
-#restandrecovery:
-#  - "Rest-and-Recovery"
-#  - "Utility"
+changemapclonetokens:
+  - "ChangeMap_CloneTokens"
+  - "Utility"
 
-#tokenactionmarker:
-#  - "Token-Action-Maker"
-#  - "Utility"
+restandrecovery:
+  - "Rest-and-Recovery"
+  - "Utility"
+
+tokenactionmarker:
+  - "Token-Action-Maker"
+  - "Utility"
+
+5erestinstyle:
+  - "5E Resting in Style"
+  - "System Toolbox"
+
+huntersmark:
+  - "HuntersMark"
+  - "Utility"
+
+spintokens:
+  - "SpinTokens"
+  - "Utility"
+
+agonecleanolds:
+  - "AgoneCleanOlds"
+  - "System Toolbox"
+
+deltagreenrpgcompanion:
+  - "DeltaGreenRPGCompanion"
+  - "System Toolbox"
+
+dynamiclightrecorder:
+  - "DynamicLightRecorder"
+  - "Utility"
+
+gofish:
+  - "GoFish!"
+  - "Utility"
+
+weaponarcs:
+- "WeaponArcs"
+- "Tokens"
+
+spawndefaulttoken:
+- "Spawn Default Token"
+- "Tokens"
+
+fotncompanion:
+- "FotN Companion"
+- "System Toolbox"
+
+hiddenrollmessages:
+  - "HiddenRollMessages"
+  - "Utility"

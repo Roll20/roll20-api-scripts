@@ -1,7 +1,7 @@
 {
     "name": "It's a Trap! - D&D 5E Shaped theme",
     "script": "theme.js",
-    "version": "3.0.2",
+    "version": "3.0.1",
     "previousversions": ["1.0", "1.1", "1.2", "3.0"],
     "description": "# It's A Trap! - 5th Edition (Shapedv2) theme (Deprecated)\r\r_This script is deprecated. Please use the generic D&D 5E trap theme instead._\r",
     "authors": "Stephen Lindberg",

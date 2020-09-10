@@ -1,0 +1,29 @@
+{
+    "name": "Hidden Roll Messages",
+    "script": "HiddenRollMessages.js",
+    "version": "1.0.0",
+    "previousversions": [],
+    "description": "Inspired by Disco Elysium, this script will roll a check for all player in the background then whisper the player with some information if they pass the check. This script was designed to allow GMs to easily and quickly pass information to a user based on a roll. It uses handouts in order to accomplish this. Checkout the README.md for a getting started.",
+    "authors": "Phillip T.",
+    "roll20userid": "7364874",
+    "useroptions": [
+        {
+            "name": "dice_sides", 
+            "type": "number",
+            "default": "20",
+            "description": "The kind of dice to roll for the hidden roll. Default is d20"
+        },
+        {
+            "name": "HRM_identifier", 
+            "type": "text",
+            "default": "!!!",
+            "description": "What the user wants to add to the name to specify it is a [HRM] handout. Default is '!!!'."
+        }
+    ],
+    "dependencies": [],
+    "modifies": {
+        "handout.name.id": "read,write",
+        "handout.notes": "read"
+    },
+    "conflicts": []
+}

@@ -1,0 +1,21 @@
+{
+	"name": "Change Map - Clone Tokens",
+	"script": "ChangeMapCloneTokens.js",
+	"version": "1.0",
+	"description": "This script listens for change of page event (drag the ribbon) and will clone player tokens onto the new page. Ignoring duplicate tokens by name.\nPrevious workflow for changing the page is drag player ribbon to new page then copy paste for all the tokens. What a shamozzle!\n/nConsiderations:/n- 'Player tokens' are tokens that/na.) have a charater sheet/nb.) character sheet is controlled by a player./n/n- 'Player tokens' are assumed to have unique names./n/n- The spawn coords of the new tokens reflect the original postion of the token on previous map.",
+	"authors": "Dystopian Djinni",
+	"roll20userid": "2047875",
+	"patreon": "",
+	"useroptions": [{}],
+	"dependencies": [],
+	"modifies": {
+		"Campaign.playerpageid": "read,write",
+		"Campaign.playerspecificpages": "read,write",
+		"Page.name": "read",
+		"token":"read,write",
+		"character": "read",
+		"state.MapChange": "read"
+	},
+	"conflicts": [],
+	"previousversions": []
+}
