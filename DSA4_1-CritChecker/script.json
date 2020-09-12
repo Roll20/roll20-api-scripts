@@ -1,0 +1,15 @@
+{
+    "name": "DSA 4.1 Crit Checker",
+    "script": "dsa41-crit-checker.js",
+    "version": "1.0.0",
+    "previousversions": [],
+    "description": "This API Script checks for a critical success or failure of talent rolls in the DSA 4.1 Character Sheet (ie. 2 or more 1s or 20s in a roll). It is absolutely useless with any other Character Sheets",
+    "authors": "Christian S.",
+    "roll20userid": "6296398",
+    "useroptions": [
+    ],
+    "dependencies": [],
+    "modifies": {
+    },
+    "conflicts": []
+}
