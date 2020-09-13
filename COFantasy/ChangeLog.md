@@ -1,4 +1,11 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 2.09
+### Autres améliorations
+* Ajout d'une macro pour suivre un autre personnage
+* Possibilité d'utiliser la défense et l'initiative d'un autre personnage.
+* Possibilité de lier les PVs.
+* Les effets temporaires lancés avec une option de mana disparaissent quand le lanceur meurt.
+
 ## 2.08
 ### Capacités
 * Petit veinard du halfelin.
