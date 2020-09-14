@@ -1,0 +1,21 @@
+{
+  "name": "dldark",
+  "script": "dldark.js",
+  "version": "0.2",
+  "description": "creates a gridded circle based on a specific token on the Dynamic Lighting layer to be used as magical darkness",
+  "authors": "David M.",
+  "roll20userid": 3987469,
+  "patreon": [],
+  "useroptions": [],
+  "dependencies": [],
+  "modifies": {           
+    "graphic.*": "read",
+    "path.*": "write",    
+    "player.displayname": "read"
+  },
+  "conflicts": [],
+  "previousversions": [
+     "0.0",
+     "0.1"     
+  ]
+}
