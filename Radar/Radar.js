@@ -96,7 +96,7 @@
 const Radar = (() => {
     
     const scriptName = "Radar";
-    const version = '0.4';
+    const version = '0.4.1';
     
     const PING_NAME = 'RadarPing'; 
     
