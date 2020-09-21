@@ -877,3 +877,7 @@ fotncompanion:
 hiddenrollmessages:
   - "HiddenRollMessages"
   - "Utility"
+
+dkrystal:
+  - "KrystalDice"
+  - "System Toolbox"
