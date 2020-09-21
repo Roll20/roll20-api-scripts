@@ -881,3 +881,23 @@ hiddenrollmessages:
 dkrystal:
   - "KrystalDice"
   - "System Toolbox"
+
+paladinaura:
+  - "PaladinAura"
+  - "System Toolbox"
+
+dldarkness:
+  - "DL Darkness"
+  - "Utility"
+
+dsacritchecker:
+  - "DSA4_1-CritChecker"
+  - "System Toolbox"
+
+radar:
+    - "Radar"
+    - "Utility"
+
+chatturnmanager:
+    - "ChatTurnManager"
+    - "Utility"
