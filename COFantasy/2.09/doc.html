@@ -131,7 +131,7 @@
                 <figcaption>A choisir pendant la création de la partie sur Roll20.</figcaption>
               </div>
               <p>Chaque token avec lequel vous souhaitez interagir doit représenter un personnage.</p>
-              <p>La barre 1 représente toujours les points de vie du token (attribut PV pour un PJ et pnj_pv pour un PNJ, si vous liez la barre à un attribut).<br />
+              <p>La barre 1 représente toujours les points de vie du token.<br />
                 La barre 2 est soit la mana, pour les personnages qui ont des points de mana, soit les dégâts temporaires pour les personnages qui n’ont pas de points de mana<br />
                 La barre 3 est utilisée pour donner un modificateur temporaire à l’attaque du token.
               </p>
@@ -456,7 +456,6 @@
               </div>
               <h3 class="text-info" id="repos">2.4 Repos et changement de jour</h3>
               <div class="decalage">
-                Par défaut, le script utilise les points de récupérations qui apparaissent sur la fiche. Mais si vous souhaitez changer le nombre maximal de points de récupération, vous pouvez ajouter un attribut <code>pointsDeRecuperation</code>, dont la valeur courante sera le nombre de PR courant, et le max son maxium. Dans ce cas, modifier les PR sur la fiche sera sans effet pour le script.
                 <h4 class="text-secondary">Changement de jour</h4>
                 <div class="decalage">
                   <p><code>!cof-nouveau-jour</code> : remise à zéro de toutes les limites journalières. </p>
@@ -1407,7 +1406,7 @@
                 <h4 class="text-secondary">Voie de la survie</h4>
                 <ol>
                   <li><strong>Endurant</strong> : ajouter un jet de capacité "survie", test de CON avec le bonus</li>
-                  <li><strong>Nature nourricière</strong> : pour la recherche d'herbes, créer un attribut <code>voieDeLaSurvie</code> avec comme valeur le rang du personnage dans la voie. On peut utiliser <code>!cof-nature-nourriciere</code> pour lancer la recherche. Cela crée automatiquement les doses de plantes médicinales dans les consommables du personnage. Ces doses sont supprimées toutes les nuits.</li>
+                  <li><strong>Nature nourricière</strong> : pour la recherche d'herbes, créer un attribut <code>voieDeLaSurvie</code> avec comme valeur le rang du personnage dans la voie. On peut utiliser <code>!cof-nature-nourriciere</code> pour lancer la recherche. Cela crée automatiquement les doses de plantes médicinales dans les consommables du personnage. Ces doses sont supprimées toutes les nuits. Pour les besoins d'un personnage, j'ai aussi donné la possibilité de trouver des baies magiques à la place des herbes médicinales. Pour cela, il faut un attribut <code>natureNourriciereBaies</code> de valeur <code>true</code>.</li>
                   <li><strong>Grand pas</strong> : ajouter les compétences natation et escalade</li>
                 </ol>
                 <h4 class="text-secondary">Voie du traqueur</h4>

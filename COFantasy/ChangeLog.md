@@ -6,6 +6,9 @@
 * Possibilité de lier les PVs.
 * Les effets temporaires lancés avec une option de mana disparaissent quand le lanceur meurt.
 
+### Corrections de bugs
+* Prise en compte correcte des caractéristiques de PNJs dans les jets.
+
 ## 2.08
 ### Capacités
 * Petit veinard du halfelin.
