@@ -1,0 +1,8 @@
+{
+  "name": "Krystal Die",
+  "script": "dKrystal.js",
+  "version": "1.0",
+  "description": "Script pour le Jeu de Rôle Krystal, édité par Les XII Singes.\r Permet de lancer des dés Krystal (dK) et de sommer le résultat correctement. Les 1, 3 et 6 seront ajoutés au total et affichés en vert. Les 2, 4 et 5 ne seront pas sommés et apparaîtront en rouge.\r Pour utiliser ce script, il faut entrer la commande !XdK dans le chat de Roll20. X doit être remplacé par le nombre de dés à lancer. Autrement dit, pour lancer 1 dé Krystal, il faut écrire !1dK. Pour en lancer 2, il faut écrire !2dK. Et ainsi de suite.\r Je conseille au maître du jeu de créer une macro pour que les joueurs n'aient pas à retenir cette commande spécifique à ce jeu : !?{Nombre|1}dK.",
+  "authors": "Elsa T.",
+  "roll20userid": "2085580"
+}
