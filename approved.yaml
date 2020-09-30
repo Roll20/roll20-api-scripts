@@ -863,16 +863,16 @@ gofish:
   - "Utility"
 
 weaponarcs:
-- "WeaponArcs"
-- "Tokens"
+  - "WeaponArcs"
+  - "Tokens"
 
 spawndefaulttoken:
-- "Spawn Default Token"
-- "Tokens"
+  - "Spawn Default Token"
+  - "Tokens"
 
 fotncompanion:
-- "FotN Companion"
-- "System Toolbox"
+  - "FotN Companion"
+  - "System Toolbox"
 
 hiddenrollmessages:
   - "HiddenRollMessages"
@@ -895,9 +895,13 @@ dsacritchecker:
   - "System Toolbox"
 
 radar:
-    - "Radar"
-    - "Utility"
+  - "Radar"
+  - "Utility"
 
 chatturnmanager:
-    - "ChatTurnManager"
-    - "Utility"
+  - "ChatTurnManager"
+  - "Utility"
+
+encounterhelper:
+  - "EncounterHelper"
+  - "Utility"
