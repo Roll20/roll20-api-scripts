@@ -1,7 +1,7 @@
 {
     "name": "PowerCards Macro Helper",
     "script": "PCMHelper.js",
-    "version": "1.0.10",
+    "version": "1.0.9",
     "previousversions": ["1.0.9","1.0.8","1.0.5"],
     "description": "Automatically creates character attributes and macros to allow for system-generated PowerCards based on compendium/custom entered NPC Actions and Player Attacks.",
     "authors": "Kurt Jaegers",
