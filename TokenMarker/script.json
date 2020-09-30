@@ -1,0 +1,13 @@
+{
+    "name": "TokenMarker",
+    "script": "TokenMarker.js",
+    "version": "1.0.0.0",
+    "description": "Allows simple scripted methods to mark and clear custom markers for tokens. No validation between marker and condition is made, just whether the marker is part of the loaded set.  ",
+    "authors": "Andy H & Akinbar",
+    "roll20userid": "176293",
+    "dependencies": [],
+    "modifies": {
+        "statusmarkers" : "read.write"
+    },
+    "conflicts": []
+}

@@ -114,7 +114,7 @@ on('ready',()=>{
 					}
 				});
 				sChat( "Deleted tokens: " + d.join() + "." );
-				
+
 							// search for character names, for each, delete. 
 				reg = getRegEx( cnames );
 				d = [];
@@ -177,7 +177,7 @@ on('ready',()=>{
 							let newC = JSON.parse( tmpC );			// Simple true copy of object. 
 							delete newC._id;
 							newC.name= charObj.get( 'name' ) + " " + i;
-							
+
 							let parts = newC.avatar.match(/(.*\/images\/.*)(thumb|med|original|max)([^?]*)(\?[^?]+)?$/);
 							if(parts)
 								newC.avatar = parts[1]+'thumb'+parts[3]+(parts[4]?parts[4]:`?${Math.round(Math.random()*9999999)}`);

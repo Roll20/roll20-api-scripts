@@ -155,9 +155,12 @@ var fumbler = fumbler || (function()
 				{
 					try
 					{
-						notes = notes.split(/<[/]?.+?>/g).join('');
+						notes = notes.replace( /(<([^>]+)>)/ig, '');
+						notes = notes.replace(/&nbsp;/gi, '') // Coder error. Not sure how to incorporate this regex to the above
 						chart = JSON.parse(notes);
-						showFumble(chart, rolled)
+						chart.sort(sort_json_by_low)
+						let bounded_roll = ((rolled > chart[chart.length - 1].high ) ? randomInteger(chart[chart.length - 1].high) : rolled) // if a custom chart is allowed, roll up to whatever the maximum value specified is
+						showFumble(chart, bounded_roll)
 					}
 					catch (err)
 					{
@@ -171,6 +174,22 @@ var fumbler = fumbler || (function()
 			sendChat('Fumbler', 'Can not find the fumble chart handout named: ' + fumbleParams[0]);
 		}
 	},
+
+	/**
+	 * Sort json object list by "low" attribute
+	 *
+	 * @param {object} x
+	 * @param {object} y
+	 */
+	 sort_json_by_low = function(x,y){
+		 if(x.low < y.low){
+			 return -1;
+		 }
+		 else if(x.low > y.low){
+			 return 1
+		 }
+		 return 0
+	 },
 
 	/**
 	 * Handle chat events

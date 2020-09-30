@@ -1,8 +1,8 @@
 {
     "name": "Markov",
     "script": "Markov.js",
-    "version": "0.1.2",
-    "previousversions": ["0.1.0", "0.1.1"],
+    "version": "0.1.3",
+    "previousversions": ["0.1.0", "0.1.1", "0.1.2"],
     "description": "A simple name generator that uses markov chains\r\rTo use, enter `!markov` in the chat and a new name will be generated using a markov chain.\rFor full command usage, enter `!markov -h` in chat.\n\nSee the README for more details.\r( https://github.com/Roll20/roll20-api-scripts/tree/master/Markov )",
     "authors": "Ryan Jentzsch, Craig Burton (retooled into Roll20 -- based on works created by drow <drow@bin.sh> and released into the public domain)",
     "roll20userid": "1638601, 83244",

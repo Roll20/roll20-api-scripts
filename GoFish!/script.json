@@ -1,0 +1,13 @@
+{
+    "name": "GoFish!",
+    "script": "go-fish.js",
+    "version": "1.1.0",
+    "previousVersions": ["1.0.0"],
+    "description": "A fishing mini-game in which a character, or a group of characters, can engage in a fishing tourney by selecting a token and choosing from a number of API commands. To run the module, or get a full list of commands, run !go-fish which will display usage. You may alternatively visit the README for all details.",
+    "authors": "theTexasWave",
+    "roll20userid": "3034675",
+    "patreon": "https://www.patreon.com/theTexasWave",
+    "dependencies": [],
+    "modifies": "handouts, rollabletables, characters",
+    "conflicts": []
+}

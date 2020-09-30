@@ -1,11 +1,11 @@
 {
 	"name": "EasyExperience",
 	"script": "EasyExperience.js",
-	"version": "1.11521693362",
-	"previousversions": ["1.11518023682","1.11","1.1","1.04", "1.03", "1.02", "1.01", "1.0", "0.4"],
+	"version": "1.12",
+	"previousversions": [ "1.11521693362", "1.11518023682","1.11","1.1","1.04", "1.03", "1.02", "1.01", "1.0", "0.4"],
 	"description": "# EasyExperience\r\r###### Make awarding XP simple!\r\r### PC vs. NPC: \rThe script determines if a character is a PC or an NPC based on whether or not it is controlled by a  specific player. Characters with no control, or only controlled by 'All Players' are ignored.\r\r### Storing of XP\rThe script will create a character named ExperienceThresholds with a Session XP attribute and an attribute for each level in your system’s progression. This is where the script stores the XP accrued in a session and the thresholds for progressing to the next level respectively\r\r### Commands\rUse !xp followed by one of these commands to call the script:\r*help – Shows the help screen\r*challenge – Add an XP amount to the session tally. This can be a typed in number or passed via an attribute call to a character’s attribute. You can also follow this amount with the number of times you would like it added. You can specify characters to add XP to (in place of the session tally) by adding their character ids on to the end of the command; you must specify a multiplication value in this case and the total xp will be divided evenly among the specified PCs.\r*session – Divides the session xp total by the number of PCs and applies that xp to all PCs\r*config – Select your experience progression system and set PCs to active or MIA.\r**XP Progression options: Pathfinder slow, medium, fast, or Society play, D&D 5e, and custom",
-	"authors": "Scott C.",
-	"roll20userid": "459831",
+	"authors": ["Scott C.", "Bret"],
+	"roll20userid": ["459831", "3067505"],
 	"useroptions": [],
 	"dependencies": [],
 	"modifies": {

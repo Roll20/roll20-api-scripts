@@ -1,5 +1,6 @@
 {
     "name": "WFRP4e",
+    "script": "WFRP4e.js",
     "version": "1.0.0",
     "description": "Speeds common combat tasks for Warhammer Fantasy Roleplay 4th Edition",
     "authors": "Seth Williams",

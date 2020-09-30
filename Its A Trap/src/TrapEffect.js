@@ -30,10 +30,10 @@ var TrapEffect = (() => {
      * If the constants TRAP_ID and VICTIM_ID are provided,
      * they will be replaced by the IDs for the trap token and the token for
      * the trap's victim, respectively in the API chat command message.
-     * @type {string}
+     * @type {string[]}
      */
     get api() {
-      return this._effect.api;
+      return this._effect.api || [];
     }
 
     /**
@@ -72,13 +72,27 @@ var TrapEffect = (() => {
     }
 
     /**
+     * A custom message that is displayed when a character notices a trap via
+     * passive detection.
+     * @type {string}
+     */
+    get detectMessage() {
+      return this._effect.detectMessage;
+    }
+
+    /**
      * The shape of the trap's activated area. This could be an area where the
      * trap token itself is the center of the effect (square or circle), or
      * it could be a list of path IDs which define the activated areas.
      * @type {(string[]|string)}
      */
     get effectShape() {
-      return this._effect.effectShape;
+      if (this._trap.get('aura1_radius'))
+        return 'burst';
+      else if (['circle', 'rectangle', 'square'].includes(this._effect.effectShape))
+        return 'self';
+      else
+        return this._effect.effectShape || 'self';
     }
 
     /**
@@ -191,7 +205,7 @@ var TrapEffect = (() => {
      * @type {string}
      */
     get stopAt() {
-      return this._effect.stopAt;
+      return this._effect.stopAt || 'center';
     }
 
     /**
@@ -252,11 +266,24 @@ var TrapEffect = (() => {
     }
 
     /**
-     * The ID of the trap's victim.
+     * The ID of the trap's victim's token.
      * @type {uuid}
      */
     get victimId() {
       return this._victim && this._victim.get('_id');
+    }
+
+    /**
+     * The name of the trap's victim's character.
+     * @type {uuid}
+     */
+    get victimCharName() {
+      if (this._victim) {
+        let char = getObj('character', this._victim.get('represents'));
+        if (char)
+          return char.get('name');
+      }
+      return undefined;
     }
 
     /**
@@ -326,23 +353,21 @@ var TrapEffect = (() => {
      */
     announce(message) {
       message = message || this.message;
-      let announcer = state.ItsATrap.userOptions.announcer;
 
       // Display the message to everyone, unless it's a secret.
       if(this.gmOnly) {
-        message = '/w gm ' + message;
-        sendChat(announcer, message);
+        ItsATrap.Chat.whisperGM(message);
 
         // Whisper any secret notes to the GM.
         if(this.notes)
-          sendChat(announcer, '/w gm Trap Notes:<br/>' + this.notes);
+          ItsATrap.Chat.whisperGM(`Trap Notes:<br/>${this.notes}`);
       }
       else {
-        sendChat(announcer, message);
+        ItsATrap.Chat.broadcast(message);
 
         // Whisper any secret notes to the GM.
         if(this.notes)
-          sendChat(announcer, '/w gm Trap Notes:<br/>' + this.notes);
+          ItsATrap.Chat.whisperGM(`Trap Notes:<br/>${this.notes}`);
 
         // Reveal the trap if it's set to become visible.
         if(this.trap.get('status_bleeding-eye'))
@@ -395,10 +420,18 @@ var TrapEffect = (() => {
 
         // Run each API command.
         _.each(commands, cmd => {
-          cmd = cmd.replace(/TRAP_ID/g, this.trapId);
-          cmd = cmd.replace(/VICTIM_ID/g, this.victimId);
-
-          sendChat('ItsATrap-api', cmd);
+          cmd = cmd.replace(/TRAP_ID/g, this.trapId)
+            .replace(/VICTIM_ID/g, this.victimId)
+            .replace(/VICTIM_CHAR_NAME/g, this.victimCharName)
+            .replace(/\\\[/g, '[')
+            .replace(/\\\]/g, ']')
+            .replace(/\\{/g, '{')
+            .replace(/\\}/g, '}')
+            .replace(/\\@/g, '@')
+            .replace(/(\t|\n|\r)/g, ' ')
+            .replace(/\[\[ +/g, '[[')
+            .replace(/ +\]\]/g, ']]');
+          sendChat('ItsATrap-api', `${cmd}`);
         });
       }
     }
@@ -573,7 +606,7 @@ var TrapEffect = (() => {
         }
 
         state.TokenMod.playersCanUse_ids = true;
-        sendChat('It\'s A Trap', command);
+        sendChat('ItsATrap-api', command);
       }
     }
 
