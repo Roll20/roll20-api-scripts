@@ -1,12 +1,19 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 2.09
+### Capacités
+* Vitalité surnaturelle du barbare
+* Riposte du guerrier
+
 ### Autres améliorations
+* Ajout d'une option --plusCrit aux attaques.
+* Ajout d'une option --plageEchecCritique aux jets.
 * Ajout d'une macro pour suivre un autre personnage
 * Possibilité d'utiliser la défense et l'initiative d'un autre personnage.
 * Possibilité de lier les PVs.
 * Les effets temporaires lancés avec une option de mana disparaissent quand le lanceur meurt.
 
 ### Corrections de bugs
+* Undo avant de faire le jet d'attaque pour l'esquive acrobatique
 * Prise en compte correcte des caractéristiques de PNJs dans les jets.
 
 ## 2.08
