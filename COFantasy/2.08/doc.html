@@ -306,8 +306,10 @@
                   <li><code>--avecd12</code> : lance un d12 au lieu du d20 pour le jet d'attaque. L'attaque est impossible si l'attaquant est déjà affaibli.</li>
                   <li><code>--incrDmgCoef <i>n</i></code> : augmente le coefficient des dégâts de base de 1. Les dégâts de base comprennent les dés de dommage de l'arme (ou du sort), plus tous les bonus constants. Le coefficient par défaut est de 1, et une réussite critique augmente ce coefficient de 1.</li>
                   <li><code>--incrCritCoef <i>n</i></code> : augmente le coefficient des dégâts critiques de 1.</li>
+                  <li><code>--diviseDmg <i>n</i></code> : divise les dégâts de base par <i>n</i>.</li>
                   <li><code>--maxDmg</code> : l'attaque inflige le maximum de DM permis par les dés de base.</li>
                   <li><code>--difficultePVmax</code> : la difficulté du jet d'attaque est le maximum de PVs au lieu de la défense.</li>
+                  <li><code>--difficultePV</code> : la difficulté du jet d'attaque est la valeur courante des PVs au lieu de la défense.</li>
                   <li><code>--affute</code> : augmente de 1 les chances de crit et +1d6 aux DM des crit.</li>
                   <li><code>--tirDeBarrage</code> : ignore la charge, multiplie les DM par 2 et message pour undo si la cible bouge.</li>
                   <li><code>--enflamme</code> : enflamme la cible, lui infligeant 1d6 DM par tour. Les flammes s'éteindent sur un 1 ou 2. Si l'option <code>--puissant</code> est donnée en conjonction, les DM augmentent de 1.</li>
@@ -317,6 +319,7 @@
                   <li><code>--pietine</code> : si l'attaquant est de taille au moins égale à celle de la cible (ou si la taille de l'un des deux n'est pas connue), fait un test opposé de FOR. En cas d'échec de la cible, elle est renversée et les DM sont doublés.</li>
                   <li><code>--feinte</code> : L'attaque ne fait pas de dégât, mais un bonus de +5 en attaque est donné sur les attaques du tour suivant sur cette cible (par celui qui a fait la feinte), et +2d6 DM si l'attaque fictive était un succès. Si l'attaquant possède un attribut <code>bonusFeinte</code>, c'est la valeur de cet attribut qui est donné en bonus aux attaques, à la place de +5.</li>
                   <li><code>--enveloppe <i>difficulte type expr</i></code> : si l'attaque touche, elle a une chance d'envelopper la cible. Dans ce cas, un bouton apparaît qui lance un test en opposition. Si celui-ci est remporté par l'attaquant, <i>difficulte</i> est la difficulté du test pour se sortir de l'enveloppement, <i>type</i> est soit <code>label</code>, et dans ce cas, <i>expr</i> doit être le label d'une attaque de l'attaquant, soit <code>ability</code>, et dans ce cas, <i>expr</i> est le nom d'une ability de l'attaquant. Cette attaque ou ability est appelée pour les dégâts périodiques. Si les deux derniers arguments sont ommis, le script prend <code>label</code> et le label de l'attaque courante, et si le premier argument est ommis, la difficulté est de 15.</li>
+                  <li><code>--etreinte <i>difficulte</i></code> : si l'attaque touche, il y a une chance que l'attaquant puisse s'enrouler autour de la cible. Dans ce cas, un bouton apparaît qui lance un test en opposition. Si celui-ci est remporté par l'attaquant, <i>difficulte</i> est la difficulté du test pour se sortir de l'enveloppement. Cela fera apparaître un bouton pour les dégâts de l'étreinte, par défait <code>1d6</code>, mais on peut spécifier une autre expression pour les dégâts (optionelle, juste après la difficulté).</li>
                   <li><code>--ouvertureMortelle</code> : touche automatiquement, fait des dégât comme en cas de critique et multiplie par 2 les dégâts d'attaque sournoise (si il y en as).</li>
                   <li><code>--rate</code>, <code>--touche</code>, <code>--critique</code>, <code>--echecCritique</code> : options pour tricher : le résultat des dés donne toujours le résultat voulu.</li>
                   <li><code>--ligne</code> : l'attaque porte sur toutes les cibles à portée, entre l'attaquant et le token ciblé. Si le token ciblé est plus proche que la portée de l'attaque, les tokens derrière le token ciblé sont aussi visés. Pour permettre de viser un point quelconque, on peut utiliser un personnage dédié avec un maximum de 0 pv. À chaque fois qu'un token représentant ce personnage est utilisé comme cible de <code>--ligne</code>, le token est enlevé de la carte.</li>
@@ -643,6 +646,10 @@
                 <h4 class="text-secondary">Effets retardés</h4>
                 <div class="decalage">
                   On peut utiliser l'effet temporaire générique <code>effetRetarde(<i>nom</i>)</code> pour programmer un effet qui aura lieu après un certain nombre de tours. Au bout de ce nombre de tours, le nom est affiché, ainsi que le texte de valeur (avec <code>--valeur</code> si besoin. La syntaxe est <code>!cof-effet-temp effetRetarde(<i>nom</i>) <i>duree</i> --valeur <i>message</i></code>.
+                </div>
+                <h4 class="text-secondary">Autres attributs : <code>!cof-set-attribute</code></h4>
+                <div class="decalage">
+                  Il est possible de changer ou créer n'importe quel attribut avec la fonction <code>!cof-set-attribute <i>nom</i> <i>val</i></code>. Attention, ça peut interragir de façon imprévue avec le script ou la fiche, si on écrit dans un attribut utilisé par la fiche. Pour le moment, cette fonction n'est disponible que pour les MJs, histoire de limiter les risques.
                 </div>
               </div>
               <h3 class="text-info" id="sorts">2.8 Sorts</h3>
@@ -1254,6 +1261,7 @@
                   <li><strong>Masque mortuaire</strong> : <code>!cof-effet-temp masqueMortuaire [[5+@{selected|INT}]]</code>. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Non,&amp;#32;|Oui,--tempeteDeMana altruiste}</code>. Notez que le mot clé <code>altruiste</code> est facultatif, ici. À vous de choisir si vous l'autorisez ou pas.</li>
                   <li><strong>Baiser du vampire</strong> : faire une attaque magique de portée 50 m et de DM 1d8+INT, à lancer avec les options <code>--sortilege --magique --vampirise --seulementVivant --mana 1</code>. Si vous utilisez les options de magie puissante, rajoutez <code>?{Y consacrer le tour?|oui,--puissant|non,&amp;#32;}</code>. Si vous préférez l'option de tempête de mana, rajoutez <code>--rang 3 ?{Tempête de mana?|Non,&amp;#32;|Oui,--tempeteDeMana}</code>.</li>
                   <li><strong>Briser les coeurs</strong> : faire une attaque magique de portée 20, de DM 5d6+INT, lancée avec les options <code>--sortilege --magique --psave CON [[10+@{selected|INT}]] tempete 2 --seulementVivant --mana 2</code>. Pour les options de mana puissante ou de tempête de mana, procédez comme avec le Baiser du vampire. À noter que la partie <code>tempete 2</code> implémente une chose qui n'est pas dans les règles, à savoir augmenter la difficulté du test de constitution de 2 par point de mana investi en tempête de mana intense. Je trouvais en effet que sans cet ajout, à mana égale, le sort était moins intéressant que le baiser du vampire. Il reste moins fort et plus situationnel que la désintégration du magicien (à mana égale), même avec ce changement.</li>
+                  <li><strong>Mot de mort</strong> : faire une attaque magique, avec les options <code>--difficultePV --pasDeDmg --etat mort --save CON [[10+@{selected|INT}]] tempete 2 --mana 3</code>. Comme pour <strong>Briser les coeurs</strong>, je pense qu'on peut augmenter la difficulté du jet de résistance avec la puissance de la tempête de mana.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de l'outre-tombe</h4>
                 <ol>
@@ -1513,7 +1521,7 @@
                 <h4 class="text-secondary">Halfelin</h4>
                 <p>Petite taille : ajouter le bonus de DEF sur la ficher, et ajouter 2 à un attribut <code>discrétion</code>.</p>
                 <ol>
-                  <li><strong>Petit veinard</strong> : Il y a beaucoup de types de dés différents. Pour l'instant, géré par le MJ : faire tirer le jet (/r) par le joueur, si ça a changé, utiliser le undo ou faire les changements à la main.</li>
+                  <li><strong>Petit veinard</strong> : ajouter un attribut <code>petitVeinard</code> de valeur courante 1, et de valeur maximale 1. Le script ne va automatiser que les relancer de dés d'attaque ou de jets de caractéristiques (et encore, pas tous). Il propose d'utiliser la chance à chaque attaque, même réussie, mais dans ce cas, c'est au joueur de relancer le dé concerné, et au MJ d'en appliquer les conséquences.</li>
                   <li><strong>Résistance légendaire</strong> : ajouter le bonus en CON sur la fiche, et ajouter un attribut <code>DEF_magie</code> avec comme valeur 5.</li>
                 </ol>
                 <h4 class="text-secondary">Haut elfe</h4>
@@ -1529,6 +1537,9 @@
                 <h4 class="text-secondary">Lutin</h4>
                 Voir les <a href="#fee_et_lutin">fées</a>.
                 <h4 class="text-secondary">Nain</h4>
+                <ul>
+                  <li><a href="#Vision_dans_le_noir">Vision dans le noir</a>.</li>
+                </ul>
                 <ol>
                   <li><strong>Résistance</strong> : ajouter les bonus sur la fiche</li>
                   <li><strong>Solide comme un roc</strong> : ajouter le texte <code>2/1</code> dans la RD sur la fiche.</li>
@@ -1653,6 +1664,7 @@
                   <li><strong>Dégâts si touché au contact</strong> (élémentaire de feu,...) : ajouter un attribut nommé <code>dmSiToucheContact</code>, de valeur courante les dégâts, et de valeur maximale leur type. Par exemple, pour un élémentaire de feu, la valeur courant sera <code>1d6</code>, et la valeur maximale sera <code>feu</code>.</li>
                   <li><strong>Énergie de la mort</strong> (pour la campagne Vengeance) : ajouter un attribut <code>energieDeLaMort</code> de valeur <code>true</code>. Le MJ devra être attentif au message indiquant le retour à la vie, car c'est lui qui devra enlever l'état mort et ajuster les PVs.</li>
                   <li><strong>Enveloppement</strong> (cube gélatineux) : ajouter l'option <code>--enveloppe</code>, puis quand le bouton apparaît si l'attaque réussit, cliquer dessus. En cas d'enveloppement, la cible ne peut plus bouger et se déplace avec le cube (déplacer le cube met la cible dans le cube), et au tour du cube, il faut presser les boutons de dégâts pour les infliger aux cibles enveloppées.</li>
+                  <li><strong>Étreinte</strong> (serpents) : ajouter l'option <code>--etreinte <i>difficulte</i></code>, puis quand le bouton apparaît si l'attaque réussit, cliquer dessus. En cas d'étreinte réussie, la cible ne peut plus bouger et se déplace avec le serpent, et au tour du serpent, il faut presser les boutons de dégâts pour les infliger aux cibles étreintes.</li>
                   <li><strong>Frénésie</strong> : Ajouter une attribut <code>frenesie</code> avec comme valeur le nombre de PV en-dessous duquel la créature devient frénétique (+2 aus jets d'attaque).</li>
                   <li><strong>Huile de fort assaut</strong> : <code>!cof-effet-temp dmgArme(<i>L</i>) 10 --valeur 1d6</code> où <i>L</i> est le label de l'arme qu'on veut enduire d'huile de fort assaut.</li>
                   <li><strong>Hurlement</strong> : Pour les chiens infernaux, <code>!cof-peur [[10+?{Nombre de chiens?}]] [[2d4]] --portee 50 --equipe Joueurs</code>, et pour les fantômes, <code>!cof-peur 12 [[1d6]] --portee 10 --equipe Joueurs</code>. Pour l'instant, pas de prise en compte de l'immunité au hurlement apès avoir réussi son jet de SAG.</li>

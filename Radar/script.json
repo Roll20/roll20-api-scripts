@@ -1,0 +1,22 @@
+{
+  "name": "Radar",
+  "script": "Radar.js",
+  "version": "0.1",
+  "description": "The Radar script creates an animated wavefront from a selected token to reveal visible and invisible tokens on the map, with optional character or token property filters. Output including directional and distance information of qualifying tokens is whispered in the chat to the player calling the script, via the default template.",
+  "authors": "David M.",
+  "roll20userid": 3987469,
+  "patreon": [],
+  "useroptions": [],
+  "dependencies": [],
+  "modifies": {       
+    "character.*": "read",
+    "path.*": "read",
+    "graphic.*": "read,write",    
+    "player.displayname": "read"
+  },
+  "conflicts": [],
+  "previousversions": [
+    "0.1",
+    "0.2"
+  ]
+}
