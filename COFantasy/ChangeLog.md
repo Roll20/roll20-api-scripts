@@ -1,4 +1,15 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 2.10
+### Capacités
+* Chair à canon de la voie du PNJ récurrent
+* Nuée de criquets (Druide Prestige)
+* Increvable (Rôdeur, Survie rang 4)
+* Intervention divine du prêtre
+
+### Autres améliorations
+* Support du nouvel éclairage dynamique
+* Une série de capacités sont à déclencher par les joueurs avant les jets de dégâts : Absorber un Coup, Absorber un Sort, Encaisser un Coup, Résistance à la Magie, Esquive Acrobatique, Esquive fatale, Parade Magistrale, Rune de Protection
+
 ## 2.09
 ### Capacités
 * Vitalité surnaturelle du barbare
