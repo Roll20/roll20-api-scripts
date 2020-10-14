@@ -1,7 +1,7 @@
 {
 	"name": "Combat Master",
 	"version": "2.34",
-	"description": "# Combat Master v2.34\r\r###### The script provides management of combat, incuding rolling initiative(option to use GroupInitiative), stepping through a turnorder, adding or remove conditions(import/export lists), tracking the length of a condition, and options for using external calls to other APIs and Macros.\rtype `!cmaster --main` for launching the API, and select the `i` in the corner for help.\nVisit the [Combat Master](https://app.roll20.net/forum/post/8126152/combatmaster-alpha)-forum thread for duscussions and updates.\n\nThe v.2.33 version didn't work for some reason through the install menu, but with the v.2.34 update, the current version and older api version from the dropdown might work again. The older versions might use `!cmaster --main` for accessing the help menu.",
+	"description": "# Combat Master v2.34\r\r###### The script provides management of combat, incuding rolling initiative(option to use GroupInitiative), stepping through a turnorder, adding or remove conditions(import/export lists), tracking the length of a condition, and options for using external calls to other APIs and Macros.\rtype `!cmaster --main` for launching the API, and select the `i` in the corner for help.\n* Visit the [Combat Master](https://app.roll20.net/forum/post/8126152/combatmaster-alpha)-forum thread for duscussions and updates.\n* [Combat Master repo](https://github.com/vicberg/CombatMaster) is the location of the active development of the API, and can contain newer versions of the API than through the install menu\n\nThe v.2.33 version didn't work for some reason through the install menu, but with the v.2.34 update, the current version and older api version from the dropdown might work again. v.2.32 was the previous menu version that worked. The older versions might use `!cmaster --main` for accessing the help menu.",
 	"authors": "Victor B",
 	"roll20userid": "3135709",
 	"useroptions": [],
@@ -13,6 +13,7 @@
 	"conflicts": [],
 	"previousversions": [
 		"2.33",
+		"2.32",
 		"2.22"
 	]
 }
