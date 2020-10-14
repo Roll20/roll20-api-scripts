@@ -26,11 +26,21 @@ const WS_API = {
         SHAPE_SIZE : "auto",        
         SHAPE_SIZES : [
             "auto",
+            "tiny",
             "normal",
             "large",
             "huge",
             "gargantuan",
         ],
+        SHAPE_SIZES_SCALE : [
+            0, //"auto",
+            0.5, //"tiny",
+            1, //"normal",
+            2, //"large",
+            3, //"huge",
+            4, //"gargantuan",
+        ],
+
 
         STATS: {
             NAMES: ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"],
@@ -626,7 +636,7 @@ var WildShape = WildShape || (function() {
     };
 
     const getCreatureSize = (targetSize) => {        
-        return targetSize ? Math.max(_.indexOf(WS_API.SETTINGS.SHAPE_SIZES, targetSize.toLowerCase()), 0) : 0;
+        return WS_API.SETTINGS.SHAPE_SIZES_SCALE[targetSize ? Math.max(_.indexOf(WS_API.SETTINGS.SHAPE_SIZES, targetSize.toLowerCase()), 0) : 0];
     };
 
     const findShifterData = (tokenObj, silent = false) => {
@@ -687,7 +697,7 @@ var WildShape = WildShape || (function() {
             
             // get token size
             targetSize =  getCreatureSize(targetData[WS_API.FIELDS.SIZE]);
-            if (targetSize === 0)
+            if (targetSize == 0)
             {
                 targetSize = getAttrByName(shiftData.targetCharacterId, "token_size");
                 if(!targetSize)
