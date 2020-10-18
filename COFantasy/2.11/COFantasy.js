@@ -25492,7 +25492,7 @@ var COFantasy = COFantasy || function() {
       var c = Campaign();
       var ps = c.get('playerspecificpages');
       if (ps) pageId = ps[playerId];
-      if (playerId === undefined) pageId = c.get('playerpageid');
+      if (pageId === undefined) pageId = c.get('playerpageid');
     }
     var indexNom = msg.content.indexOf(' ');
     var nom = msg.content.substring(indexNom).trim();
