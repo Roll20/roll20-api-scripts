@@ -96,7 +96,7 @@
 const Radar = (() => {
     
     const scriptName = "Radar";
-    const version = '0.4.1';
+    const version = '0.4';
     
     const PING_NAME = 'RadarPing'; 
     
@@ -1017,16 +1017,14 @@ const Radar = (() => {
                     radius += waveIncrement;
                     
                     //Ping target tokens as the radar wavefront hits them
-                    if (tokLife > 0) {
-                        toksInRange.forEach( tok => {
-                            if ( (tok.dist > oldRadius) && (tok.dist <= radius) ) {
-                                spawnObj.get("_defaulttoken", async function(defaultToken) {
-                                    result = await spawnTokenAtXY(who, defaultToken, pageID, tok["left"], tok["top"], tok["width"]+padding, tok["height"]+padding, controlledby, tokLife, tok.filterColor);
-                                });
-                                
-                            }
-                        });
-                    }
+                    toksInRange.forEach( tok => {
+                        if ( (tok.dist > oldRadius) && (tok.dist <= radius) ) {
+                            spawnObj.get("_defaulttoken", async function(defaultToken) {
+                                result = await spawnTokenAtXY(who, defaultToken, pageID, tok["left"], tok["top"], tok["width"]+padding, tok["height"]+padding, controlledby, tokLife, tok.filterColor);
+                            });
+                            
+                        }
+                    });
                     
                 }
                 
