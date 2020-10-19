@@ -1,4 +1,32 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 2.10
+### Capacités
+* Chair à canon de la voie du PNJ récurrent
+* Nuée de criquets (Druide Prestige)
+* Increvable (Rôdeur, Survie rang 4)
+* Intervention divine du prêtre
+
+### Autres améliorations
+* Support du nouvel éclairage dynamique
+* Une série de capacités sont à déclencher par les joueurs avant les jets de dégâts : Absorber un Coup, Absorber un Sort, Encaisser un Coup, Résistance à la Magie, Esquive Acrobatique, Esquive fatale, Parade Magistrale, Rune de Protection
+
+## 2.09
+### Capacités
+* Vitalité surnaturelle du barbare
+* Riposte du guerrier
+
+### Autres améliorations
+* Ajout d'une option --plusCrit aux attaques.
+* Ajout d'une option --plageEchecCritique aux jets.
+* Ajout d'une macro pour suivre un autre personnage
+* Possibilité d'utiliser la défense et l'initiative d'un autre personnage.
+* Possibilité de lier les PVs.
+* Les effets temporaires lancés avec une option de mana disparaissent quand le lanceur meurt.
+
+### Corrections de bugs
+* Undo avant de faire le jet d'attaque pour l'esquive acrobatique
+* Prise en compte correcte des caractéristiques de PNJs dans les jets.
+
 ## 2.08
 ### Capacités
 * Petit veinard du halfelin.

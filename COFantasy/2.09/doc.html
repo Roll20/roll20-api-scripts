@@ -121,7 +121,7 @@
 						</div>
 					</div>
 					<div class="col-md-9 col-sm-8 content">
-            <h1>Documentation pour la version 2.10 de COFantasy</h1>
+            <h1>Documentation pour la version 2.08 de COFantasy</h1>
 						<h2 class="text-primary" id="comment_utiliser_script">1. Comment utiliser Le script</h2>
             <div class="decalage">
               <h3 class="text-info" id="token_personnages">1.1 Tokens et personnages</h3>
@@ -1334,8 +1334,6 @@
                   <li><strong>Bénédiction</strong> : <code>!cof-effet-temp benediction [[3+@{selected|SAG}]] --allies --self</code>. Il faut avoir défini une <a href="#allie">équipe</a> avec le prêtre. Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--lanceur @{selected|token_id} --rang 1 ?{Tempête de mana?|Non,&amp;#32;|Oui,--tempeteDeMana}</code>.</li>
                   <li><strong>Destruction des morts-vivants</strong> : <code>!cof-destruction-des-morts-vivants 2d6</code>. Au rang 4 dans la voie, ajuster les dégâts. Si vouus souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Non,&amp;#32;|Oui,--tempeteDeMana}</code>. Noter que le script considère comme mort-vivant tout personnage avec le champ race à <code>squelette</code>, <code>zombie</code>, <code>momie</code>, <code>goule</code>,<code>vampire</code> ou <code>mort-vivant</code>, ou alors qui possède un attribut <code>mortVivant</code> de valeur <code>true</code>.</li>
                   <li><strong>Sanctuaire</strong> : <code>!cof-effet-temp sanctuaire [[5+@{selected|SAG}]] --mana 1</code>. Si vous utilisez les options de magie Puissante, rajoutez <code>?{Y consacrer tout le tour ?|Oui,--puissant duree|Non,&amp;#32;}</code>. Si vous préférez utiliser l'option de tempête de mana, rajoutez <code>--rang 3 ?{Tempête de mana?|Non,&amp;#32;|Oui,--tempeteDeMana altruiste}</code>. Notez que le mot clé <code>altruiste</code> est facultatif, ici. À vous de choisir si vous l'autorisez ou pas.</li>
-                  <li><strong>Intervention Divine</strong> : ajouter au personnage un attribut <code>interventionDivine</code> de valeur courante et maximale 1. Ensuite, utiliser <code>!cof-intervention-divine ?{Type ?|rate|touche}</code> juste après l'attaque en sélectionnant le token du Prêtre pour modifier le résultat selon le choix. Il est très pratique de mettre cette commande dans une Ability à afficher en Token Action. Ne supporte que le jet de touche de la dernière attaque effectuée.</li>
-                  <li><strong>Sagesse héroïque</strong> : Reporter les bonus sur la fiche.</li>
                 </ol>
                 <h4 class="text-secondary">Voie des soins</h4>
                 <p style="margin-top:0px; margin-bottom:0px">Utiliser un attribut <code>voieDesSoins</code> avec comme valeur le rang dans la voie</p>
@@ -1419,8 +1417,6 @@
                   <li><strong>Endurant</strong> : ajouter un jet de capacité "survie", test de CON avec le bonus</li>
                   <li><strong>Nature nourricière</strong> : pour la recherche d'herbes, créer un attribut <code>voieDeLaSurvie</code> avec comme valeur le rang du personnage dans la voie. On peut utiliser <code>!cof-nature-nourriciere</code> pour lancer la recherche. Cela crée automatiquement les doses de plantes médicinales dans les consommables du personnage. Ces doses sont supprimées toutes les nuits. Pour les besoins d'un personnage, j'ai aussi donné la possibilité de trouver des baies magiques à la place des herbes médicinales. Pour cela, il faut un attribut <code>natureNourriciereBaies</code> de valeur <code>true</code>.</li>
                   <li><strong>Grand pas</strong> : ajouter les compétences natation et escalade</li>
-                  <li><strong>Increvable</strong> : ajouter un attribut <code>increvable</code> de valeur courante et maximum 1</li>
-                  <li><strong>Constitution héroïque</strong> : reporter les bonus sur la fiche</li>
                 </ol>
                 <h4 class="text-secondary">Voie du traqueur</h4>
                 <ol>
@@ -1574,11 +1570,6 @@
               </div>
               <h3 class="text-info" id="Prestige">4.2 Voies de prestige et capacités épiques</h3>
               <div class="decalage">
-                <h4 class="text-secondary">Voie des vermines</h4>
-                <ol>
-                  <li><strong>Nuée de criquets</strong> : ajouter une attaque magique, de portée 20 m. Puis appeler cette attaque (avec <code>!cof-attack</code>) avec les arguments <code>--pasDeDmg --sortilege --effet nueeDeCriquets [[5+@{selected|SAG}]]</code>. Pas de support particulier pour les DM de zone qui détruisent la nuée (enlever l'attribut <code>nueeDeCriquets</code> sur la cible dans ce cas). Si vous souhaitez utiliser l'option de tempête de mana, vous pouvez rajouter <code>--rang 2 ?{Tempête de mana?|Non,&amp;#32;|Oui,--tempeteDeMana}</code>. À noter que l'option <code>--mana 0</code> est là pour indiquer au script de terminer l'effet au cas où le druide meurt.</li>
-                </ol>
-                <h4 class="text-secondary">Capacités épiques</h4>
                 <ul>
                   <li><strong>Lien épique</strong>: ajouter pour chaque personnage un attribut <code>lienEpique</code>, qui contiennent la même chose dans le champ courant (pensez à un nom d'équipe, par exemple).</li>
                 </ul>
@@ -1655,7 +1646,6 @@
                 <h4 class="text-secondary">Voie du PNJ récurrent</h4>
                 <ol>
                   <li><strong>Instinct de survie</strong> : ajouter un attribut <code>instinctDeSurvie</code> avec comme valeur le nombre de PV en-dessous duquel le PNJ gagne un bonus de DEF. les autres effets sont à faire par le MJ.</li>
-                  <li><strong>Chair à canon</strong> : ajouter un attribut <code>chairACanon</code> de valeur courante et maximale <code>1</code>. Ajouter ensuite à tous ses sous-fifres un attribut <code>chairACanonDe</code> de valeur le nom exact du token du PNJ.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du prédateur</h4>
                 <ol>
