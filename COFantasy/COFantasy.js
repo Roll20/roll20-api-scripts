@@ -1525,6 +1525,7 @@ var COFantasy = COFantasy || function() {
   // - strict2
   // - allonge
   function distanceCombat(tok1, tok2, pageId, options) {
+    options = options || {};
     if (pageId === undefined) {
       pageId = tok1.get('pageid');
     }
@@ -1555,7 +1556,6 @@ var COFantasy = COFantasy || function() {
     var pt1 = tokenCenter(pseudoTok1);
     var pt2 = tokenCenter(pseudoTok2);
     var distance_pix = VecMath.length(VecMath.vec(pt1, pt2));
-    options = options || {};
     if (!options.strict1) distance_pix -= tokenSize(pseudoTok1, PIX_PER_UNIT / 2);
     if (!options.strict2) distance_pix -= tokenSize(pseudoTok2, PIX_PER_UNIT / 2);
     if (options.allonge) distance_pix -= (options.allonge * PIX_PER_UNIT) / scale;
