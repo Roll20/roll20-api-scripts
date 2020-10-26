@@ -121,7 +121,7 @@
 						</div>
 					</div>
 					<div class="col-md-9 col-sm-8 content">
-            <h1>Documentation pour la version 2.11 de COFantasy</h1>
+            <h1>Documentation pour la version 2.10 de COFantasy</h1>
 						<h2 class="text-primary" id="comment_utiliser_script">1. Comment utiliser Le script</h2>
             <div class="decalage">
               <h3 class="text-info" id="token_personnages">1.1 Tokens et personnages</h3>
@@ -711,13 +711,9 @@
                 </div>
               </div>
               <h3 class="text-info" id="deplacements">2.10 Déplacements</h3>
-              <h4 class="text-secondary">Retrouver un personnage</h4>
-              <div class="decalage">
-                <p>Pour centrer la vue d'un joueur sur un token particulier, on peut utiliser <code>!cof-centrer-sur-token</code> suivi du nom du token. Généralement, c'est une bonne idée pour un joueur d'avoir une macro avec le nom de son token pour le retrouver facilement quand il arrive sur une nouvelle case.</p>
-              </div>
               <h4 class="text-secondary">Personnages immobilisés</h4>
               <div class="decalage">
-                <p>Par défaut, le script empêche le déplacement des personnages immobilisés (paralysé, étourdi, etc...). Pour permettre de déplacer ces personnages, le script envoie au MJ 2 boutons, l'un pour réaliser le déplacement qui vient d'être annulé, et l'autre pour débloquer le personnage pour un tour (et dans ce cas, toutes les personnes contrôlant le token peuvent le bouger jusqu'au prochain changement de tour.</p>
+                <p>Par défaut, le script empêche le déplacement des personnages immobilisés (paralysé, étourdi, etc...). Pour permettre de déplacer ces personnages, le script envoie au MJ 2 boutons, l'un pour réaliser le déplacement qui vient d'être annulé, et l'autre pour débloquer le personnage pour un tour (et dans ce cas, toutes les personnes contrôlant le token peuvent le bouger jusqu'au prochain changement de tour.<p>
               </div>
               <h4 class="text-secondary" id="escaliers">Escaliers</h4>
               <div class="decalage">
@@ -725,7 +721,6 @@
                 <p>Chaque escalier de la même colonne doit avoir le même nom, et différer seulement par la lettre finale. Ensuite, si un ensemble de tokens est sur un escalier, utilisez <code>!cof-escalier</code> pour téléporter les tokens à l'emplacement de l'escalier suivant dans l'ordre des lettres. Si vous utilisez l'argument <code>haut</code>, alors les tokens n'iront pas plus loin que le dernier étage, et avec l'argument <code>bas</code>, il iront dans l'ordre inverse.</p>
                 <p>Dans l'exemple précédent, il serait téléporté à l'emplacement du token nommé <code>EscalierB</code>. Cela ne fonctionne que si les bouts de l'escalier sont sur la même carte. À vous de choisir sir vous préférez révéler cette fonctionalité à vos joueurs, ou si vous le faites vous-même.</p>
                 <p>La limite au nombre d'escaliers est de 12 étages, donc pas de lettre après <code>L</code>.</p>
-                <p>Il est possible d'avoir des escaliers qui mènent à d'autres cartes (ce qui fait alors changer la carte vue par le joueur). Il suffit que le nom de l'escalier commence par <code>tmap_</code>. Attention, à cause de limitations de Roll20, cela ne peut fonctionner que si l'image du token est dans une lirary personnelle d'un joueur : si elle vient du marketplace, il fait d'abord la copier dans sa library, puis utiliser l'image qui est dans la library pour le token.</p>
               </div>
               <h4 class="text-secondary" id="montures">Montures</h4>
               <div class="decalage">
@@ -1604,8 +1599,7 @@
                 <h4 class="text-secondary">Voie du chef d'armée</h4>
                 <ol>
                   <li><strong>Sergent</strong> : ne pas oublier l'action de plus donnée à un allié par tour. Utiliser un attribut <code>sergent</code> = true (pour l'attaque ignorée par combat)</li>
-                  <li><strong>Capitaine</strong> : pour désigner le capitaine d'un ensemble de tokens sélectionné (quelle que soit <a href="#methode_selection_groupes">la méthode</a>), on peut utiliser <code>!cof-capitaine @{selected|token_id} 2</code>, en ajoutant les options de sélection (comme <code>--target @{target|token_id}</code>). Au lieu de sélectionner une cible, on peut utiliser le nom d'un token. Si le capitaine fait parti de la sélection, il sera automatiquement exclu (on ne peut être son propre capitaine). Si à la place de <code>2</code>, le deuxième argument est <code>0</code>, cela enlève le capitaine. L'attribut généré est lié à un personnage, pas un token spécifique, il suffit donc de cibler un token représentant un personnage pour affecter tous les tokens qui représentent ce personnage. Pas de support particulier pour l'attaque supplémentaire en cas d'action limitée.</li>
-                  <li><strong>Commandant</strong> : il faut ajouter un attribut <code>commandant</code> de valeur <code>true</code>. La méthode pour désigner les personnages sous les ordres du commandant est la même que pour le capitaine : <code>!cof-capitaine @{selected|token_id} 3</code> (notez que la valeur est <code>3</code> pour le commandant, et <code>2</code> pour le capitaine).</li>
+                  <li><strong>Capitaine</strong> : pour désigner le capitaine d'un ensemble de tokens sélectionné (quelle que soit <a href="#methode_selection_groupes">la méthode</a>), on peut utiliser <code>!cof-capitaine @{selected|token_id}</code>, en ajoutant les options de sélection (comme <code>--target @{target|token_id}</code>). Au lieu de sélectionner une cible, on peut utiliser le nom d'un token. Si le capitaine fait parti de la sélection, il sera automatiquement exclu (on ne peut être son propre capitaine). Si à la place d'une id de token, l'argument est <code>--aucun</code>, cela enlève le capitaine. L'attribut généré est lié à un personnage, pas un token spécifique, il suffit donc de cibler un token représentant un personnage pour affecter tous les tokens qui représentent ce personnage. Pas de support particulier pour l'attaque supplémentaire en cas d'action limitée.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du cogneur</h4>
                 <ol>
@@ -1675,14 +1669,13 @@
                   <li><strong>Assassinat</strong> : rajouter <code>--if etatCible surpris --etat mort --save CON 15 --endif</code> à l'Attaque mortelle.</li>
                 </ol>
               </div>
-              <h3 class="text-info" id="Sorts">4.4 Autres sorts</h3>
+              <h3 class="text-info" id="Sorts">4.4 Autres Sorts</h3>
               <div class="decalage">
                 Sorts qui ne sont pas dans des voies, mais peuvent venir du grimoire (dans le compagnon) ou d'effets de parchemins.
                 <ul>
                   <li><strong>Force de géant</strong> : <code>!cof-effet-temp forceDeGeant 10</code>. Le bonus est de 2 par défaut, mais peut être modifié en utilisant l'option <code>--valeur</code>.</li>
                   <li><strong>Résistance à la magie</strong> : pour l'augmentation de la DEF contre la magie, utiliser un attribut <code>DEF_magie</code> et pour le bonus aux tests, <code>resistanceALaMagie</code></li>
                   <li><strong>Sixième sens</strong> : <code>!cof-effet sixiemeSens true</code>. Pour mettre fin à l'effet du sort (qui a une durée en heures), on peut effacer l'attribut <code>sixiemeSens</code>, ou mieux encore, sélectionner le token et faire <code>!cof-effet sixiemeSens false</code>.</li>
-                  <li><strong>Toiles</strong> : <code>!cof-effet-temp toiles [[5+@{selected|SAG}]] --saveParTour FOR [[10+@{selected|SAG}]] --lanceur @{selected|token_id} --disque @{target|token_id} 5 20 --saufAllies --mana 0</code>. </li>
                 </ul>
               </div>
               <h3 class="text-info" id="Capacites_diverses">4.5 Autres capacités</h3>
