@@ -1525,10 +1525,10 @@ var COFantasy = COFantasy || function() {
   // - strict2
   // - allonge
   function distanceCombat(tok1, tok2, pageId, options) {
-    options = options || {};
     if (pageId === undefined) {
       pageId = tok1.get('pageid');
     }
+    options = options || {};
     //perso montés
     var pseudoTok1 = tok1;
     if (!options.strict1) {
@@ -9603,16 +9603,16 @@ var COFantasy = COFantasy || function() {
       if (options.tueurDeGrands) {
         target.taille = target.taille || taillePersonnage(target, 4);
         if (target.taille == 5) {
-        target.additionalDmg.push({
-          type: mainDmgType,
-          value: '1d6'
-        });
+          target.additionalDmg.push({
+            type: mainDmgType,
+            value: '1d6'
+          });
           target.message.push("Cible grande => +1d6 DM");
         } else if (target.taille > 5) {
-        target.additionalDmg.push({
-          type: mainDmgType,
-          value: '2d6'
-        });
+          target.additionalDmg.push({
+            type: mainDmgType,
+            value: '2d6'
+          });
           target.message.push("Cible énorme => +2d6 DM");
         }
       }
@@ -10787,11 +10787,7 @@ var COFantasy = COFantasy || function() {
       res.sauf.feu_tranchant = res.sauf.feu_tranchant || 0;
       res.sauf.feu_tranchant += 10;
     }
-    var attrRD = 'RDS';
-    if (persoEstPNJ(perso)) {
-      attrRD = 'pnj_rd';
-    }
-    var rd = ficheAttribute(perso, attrRD, '').trim();
+    var rd = ficheAttribute(perso, 'RDS', '').trim();
     if (rd === '') {
       perso.rd = res;
       return res;
@@ -10967,7 +10963,7 @@ var COFantasy = COFantasy || function() {
           divide();
           expliquer(target.token.get('name') + " est protégé contre les dégâts de zone");
         }
-        if (attributeAsBool('resistanceA_'+dmgType)) {
+        if (attributeAsBool('resistanceA_' + dmgType)) {
           divide();
         }
         if (estElementaire(dmgType)) {
@@ -22429,7 +22425,6 @@ var COFantasy = COFantasy || function() {
         pnj_def: 13,
         pnj_init: 7,
         RDS: '10/feu_tranchant',
-        pnj_rd: '10/feu_tranchant',
         race: 'arbre',
         taille: 'grand'
       },
@@ -23757,7 +23752,6 @@ var COFantasy = COFantasy || function() {
         pnj_def: 22,
         pnj_init: 10,
         RDS: 2,
-        pnj_rd: 2,
         race: 'ours',
         taille: 'énorme'
       },
