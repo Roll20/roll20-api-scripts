@@ -1,5 +1,5 @@
 /* 
- * Version 2.34
+ * Version 2.32
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-        version = '2.34',
+        version = '2.32',
         timerObj,
         intervalHandle,
         debug = true,
@@ -188,9 +188,7 @@ var CombatMaster = CombatMaster || (function() {
         vars,
         temp,
         details;
-        if (debug) {
-            log(cmd)
-        }    
+        log(cmd)
         //special handling of import is required
         
         let values = parseLine(cmd)
@@ -444,6 +442,7 @@ var CombatMaster = CombatMaster || (function() {
                 tokenObj        = getObj('graphic', token._id)    
                 if (tokenObj) {
                     tokenObj.set('statusmarkers', "")
+                    log(tokenObj)
                 }
             }
         })    
@@ -476,7 +475,6 @@ var CombatMaster = CombatMaster || (function() {
         } else {
             helpButton          = makeImageButton('!cmaster --help,stopped',helpImage,'Help','transparent',18,'white')
         }    
-        
         let listItems           = []
         let titleText           = 'CombatMaster Menu<span style="'+styles.version+'"> ('+version+')</span>'+'<span style='+styles.buttonRight+'>'+helpButton+'</span>'
         let contents, key, condition, conditions, conditionButton, addButton, removeButton, favoriteButton, listContents, rowCount=1;
@@ -561,7 +559,7 @@ var CombatMaster = CombatMaster || (function() {
             }
         }
         
-        let viewButton = makeBigButton('Change View', '!cmaster --show,view,value=?{View|All,all|Conditions,conditions|Spells,spells|Favorites,favorites} --main')
+        let viewButton = makeBigButton('Change View', '!cmaster --show,view,value=?{View|All,all|Conditions,conditions|Spells,spells|Favorites,favorites|} --main')
 
         state[combatState].config.previousPage = 'main'
         
@@ -573,7 +571,7 @@ var CombatMaster = CombatMaster || (function() {
         }
         
         if (who == 'gm' || who == 'None') {
-            makeAndSendMenu(contents+makeList(listItems)+viewButton,titleText,'gm');
+            makeAndSendMenu(contents+makeList(listItems)+viewButton,titleText,who);
         } else {
             makeAndSendMenu(makeList(listItems)+viewButton,titleText,who);
         }    
@@ -692,15 +690,15 @@ var CombatMaster = CombatMaster || (function() {
         }   
         
         listItems.push('<div style="margin-top:3px"><i><b>Beginning of Each Round</b></i></div>' )
-        listItems.push(makeTextButton('API',turnorder.roundAPI, '!cmaster --config,turnorder,key=roundAPI,value={{?{API Command|}}} --show,turnorder'))
-        listItems.push(makeTextButton('Roll20AM',turnorder.roundRoll20AM, '!cmaster --config,turnorder,key=roundRoll20AM,value={{?{Roll20AM Command|}}} --show,turnorder'))
+        listItems.push(makeTextButton('API',turnorder.roundAPI, '!cmaster --config,turnorder,key=roundAPI,value=?{API Command|} --show,turnorder'))
+        listItems.push(makeTextButton('Roll20AM',turnorder.roundRoll20AM, '!cmaster --config,turnorder,key=roundRoll20AM,value=?{Roll20AM Command|} --show,turnorder'))
         listItems.push(makeTextButton('FX',turnorder.roundFX, '!cmaster --config,turnorder,key=roundFX,value=?{FX Command|} --show,turnorder'))
         listItems.push(makeTextButton('Characters Macro',turnorder.characterRoundMacro, '!cmaster --config,turnorder,key=characterRoundMacro,value=?{Macro Name|} --show,turnorder'))
         listItems.push(makeTextButton('All Tokens Macro',turnorder.allRoundMacro, '!cmaster --config,turnorder,key=allRoundMacro,value=?{Macro Name|} --show,turnorder'))
         
         listItems.push('<div style="margin-top:3px"><i><b>Beginning of Each Turn</b></i></div>' )
-        listItems.push(makeTextButton('API',turnorder.turnAPI, '!cmaster --config,turnorder,key=turnAPI,value={{?{API Command|}}} --show,turnorder'))
-        listItems.push(makeTextButton('Roll20AM',turnorder.turnRoll20AM, '!cmaster --config,turnorder,key=turnRoll20AM,value={{?{Roll20AM Command|}}} --show,turnorder'))
+        listItems.push(makeTextButton('API',turnorder.turnAPI, '!cmaster --config,turnorder,key=turnAPI,value=?{API Command|} --show,turnorder'))
+        listItems.push(makeTextButton('Roll20AM',turnorder.turnRoll20AM, '!cmaster --config,turnorder,key=turnRoll20AM,value=?{Roll20AM Command|} --show,turnorder'))
         listItems.push(makeTextButton('FX',turnorder.turnFX, '!cmaster --config,turnorder,key=turnFX,value=?{FX Command|} --show,turnorder'))
         listItems.push(makeTextButton('Macro',turnorder.turnMacro, '!cmaster --config,turnorder,key=turnMacro,value=?{Macro Name|} --show,turnorder'))
 
@@ -785,6 +783,7 @@ var CombatMaster = CombatMaster || (function() {
         const banner = makeBanner('concentration','Concentration','setup') 
         let concentration = state[combatState].config.concentration
         let listItems = []
+        log(concentration)
 
         listItems.push(makeTextButton('Use Concentration (5E)', concentration.useConcentration, '!cmaster --config,concentration,key=useConcentration,value='+!concentration.useConcentration + ' --show,concentration'))
         
@@ -862,7 +861,7 @@ var CombatMaster = CombatMaster || (function() {
         }
         
         let removeButton        = makeBigButton('Delete Condition', '!cmaster --delete,condition='+key+',confirm=?{Are you sure?|Yes,yes|No,no}')
-        let descriptionButton   = makeBigButton('Edit Description', '!cmaster --config,condition='+key+',key=description,value={{?{Description|'+condition.description+'}}} --show,condition='+key)
+        let descriptionButton   = makeBigButton('Edit Description', '!cmaster --config,condition='+key+',key=description,value=?{Description|'+condition.description+'} --show,condition='+key)
         let backButton          = makeBigButton('Back', '!cmaster --back')   
 
         listItems.push(makeTextButton('Name', condition.name, '!cmaster --config,condition='+key+',key=name,value=?{Name}'))
@@ -884,11 +883,8 @@ var CombatMaster = CombatMaster || (function() {
         listItems.push(makeTextButton('Direction', condition.direction, '!cmaster --config,condition='+key+',key=direction,value=?{Direction|0} --show,condition='+key))
         listItems.push(makeTextButton('Override', condition.override, '!cmaster --config,condition='+key+',key=override,value='+!condition.override+' --show,condition='+key))
         listItems.push(makeTextButton('Favorites', condition.favorite, '!cmaster --config,condition='+key+',key=favorite,value='+!condition.favorite+' --show,condition='+key))
-        listItems.push(makeTextButton('Message', condition.message, '!cmaster --config,condition='+key+',key=message,value={{?{Message}}} --show,condition='+key))
+        listItems.push(makeTextButton('Message', condition.message, '!cmaster --config,condition='+key+',key=message,value=?{Message} --show,condition='+key))
         listItems.push(makeTextButton('Targeted', condition.targeted, '!cmaster --config,condition='+key+',key=targeted,value='+!condition.targeted+' --show,condition='+key))
-        if (condition.targeted) {
-            listItems.push(makeTextButton('Targeted API', condition.targetedAPI, '!cmaster --config,condition='+key+',key=targetedAPI,value=?{Targeted API|Caster&Targets,casterTargets|Targets(Only),targets} --show,condition='+key))
-        }
         listItems.push(makeTextButton('Concentration', condition.concentration, '!cmaster --config,condition='+key+',key=concentration,value='+!condition.concentration+' --show,condition='+key))
         listItems.push('<div style="margin-top:3px"><i><b>Adding Condition</b></i></div>' )
         listItems.push(makeBigButton('Add APIs', '!cmaster --show,condition='+key+',addAPI'))
@@ -990,11 +986,11 @@ var CombatMaster = CombatMaster || (function() {
         if (debug) {
             log('Targeted Condition')
         }
-        let condition    = getConditionByKey(key)
+
         let title        = 'Select Targets'
         let addButton    = makeImageButton('!cmaster --add,target,id='+id+',condition='+key,tagImage,'Targeted Icons','transparent',18,'white')
         title           += '<div style="display:inline-block;float:right;vertical-aligh:middle">'+addButton+'</div>'     
-        let contents     = 'Select target tokens to assign **' + condition.name + '** and hit the button above when ready'
+        let contents     = 'Select target tokens to assign this condition and hit the button above when ready'
         makeAndSendMenu(contents,title,'gm');
     },
 
@@ -1002,11 +998,12 @@ var CombatMaster = CombatMaster || (function() {
         if (debug) {
             log('Targeted Spell')
         }
+
+        let title        = 'Select Targets'
         let condition    = getConditionByKey(key)
-        let title        = 'Select Origin'
         let addButton    = makeImageButton(`!cmaster --add,condition=${key},duration=${condition.duration},direction=${condition.direction}`,tagImage,'Spell Targets','transparent',18,'white')
         title           += '<div style="display:inline-block;float:right;vertical-aligh:middle">'+addButton+'</div>'     
-        let contents     = 'Select the token to track the duration of **' + condition.name + '** and hit the button above when ready'
+        let contents     = 'Select target tokens to assign this spell and hit the button above when ready'
         makeAndSendMenu(contents,title,'gm');
     },
     
@@ -1077,7 +1074,7 @@ var CombatMaster = CombatMaster || (function() {
         }   
         
         if(!name){
-            sendConditionsMenu('You didn\'t give a condition name, eg. <i>!cmaster --new,condition=Prone</i>.');
+            sendConditionsMenu('You didn\'t give a condition name, eg. <i>!condition add Prone</i>.');
         } else if (state[combatState].config.conditions[name.toLowerCase()]) {
             sendConditionsMenu('The condition `'+name+'` already exists.');
         } else {
@@ -1148,10 +1145,6 @@ var CombatMaster = CombatMaster || (function() {
         return state[combatState].config.conditions;
     },  
 
-    findAssignedCondition = function (id, key) {
-        return state[combatState].conditions.filter(el => el.key == key && el.id == id)
-    },
-
     verifyCondition = function(token,key) {
         let condition  = getConditionByKey(key)
         
@@ -1186,11 +1179,12 @@ var CombatMaster = CombatMaster || (function() {
         if (debug) {
             log('Add Condition')
         }
-        let condition
+        
         if (selectedTokens) {
             selectedTokens.forEach(token => {
                 if (token._type == 'graphic') {
                     addConditionToToken(getObj(token._type, token._id),cmdDetails.details.condition,cmdDetails.details.duration,cmdDetails.details.direction,cmdDetails.details.message)    
+                    doAddConditionCalls(getObj(token._type, token._id),cmdDetails.details.condition,playerID)
                 }
             });     
         } else {
@@ -1206,10 +1200,12 @@ var CombatMaster = CombatMaster || (function() {
         if (cmdDetails.details.id) {
             let token = getObj('graphic', cmdDetails.details.id)
             removeConditionFromToken(token, cmdDetails.details.condition)  
+            doRemoveConditionCalls(token,cmdDetails.details.condition)
         } else if (selectedTokens) {
             selectedTokens.forEach(token => {
                 if (token._type == 'graphic') {
-                    removeConditionFromToken(getObj(token._type, token._id), cmdDetails.details.condition)  
+                    removeConditionFromToken(getObj(token._type, token._id), cmdDetails.details.condition)   
+                    doRemoveConditionCalls(getObj(token._type, token._id),cmdDetails.details.condition)
                 }    
             });     
         }   
@@ -1230,10 +1226,13 @@ var CombatMaster = CombatMaster || (function() {
         if (verifyCondition(tokenObj.get("_id"), key)) {
             
             let remove = removeConditionFromToken(tokenObj, key);   
-
+            log('Remove:'+remove)
+                // log('Removed:'+remove.removed)
+                // log('Targets:' +removed.target)
             newCondition.id                 = tokenObj.get("_id")
             newCondition.key                = key
-            newCondition.target             = remove.targets
+            newCondition.target             = remove.target
+            log(newCondition.target)
             newCondition.tokenConditionID   = null
             
             if (defaultCondition) {
@@ -1243,23 +1242,21 @@ var CombatMaster = CombatMaster || (function() {
                 newCondition.addMacro           = defaultCondition.addMacro
                 newCondition.addPersistentMacro = defaultCondition.addPersistentMacro
                 newCondition.concentration      = defaultCondition.concentration
-                newCondition.override           = defaultCondition.override
                 newCondition.message            = defaultCondition.message
                 newCondition.type               = defaultCondition.type
-                newCondition.targeted           = defaultCondition.targeted
-                newCondition.targetedAPI        = defaultCondition.targetedAPI
             } else {
                 newCondition.name               = key
                 newCondition.icon               = null
                 newCondition.iconType           = null
                 newCondition.addMacro           = null
                 newCondition.addPersistentMacro = null
-                newCondition.concentration      = false
-                newCondition.override           = false             
-                newCondition.message            = null
                 newCondition.type               = 'Condition'
-                newCondition.targeted           = false
-                newCondition.targetedAPI        = null                
+                newCondition.concentration      = false
+            }
+            
+            let icon
+            if (newCondition.iconType) {
+                icon = getIconTag(newCondition.iconType, newCondition.icon)
             }
 
             if (newCondition.iconType == 'Token Condition') {
@@ -1310,29 +1307,38 @@ var CombatMaster = CombatMaster || (function() {
                  state[combatState].conditions.push(newCondition)
             },500) 
 
-            addMarker(tokenObj, newCondition.iconType, newCondition.icon, newCondition.duration, newCondition.direction, newCondition.key)
+            if (icon) {
+                if (newCondition.key == 'dead' || newCondition.duration <= 1) {
+                    addMarker(tokenObj,icon)
+                } else {   
+                    if (newCondition.duration >= 10) {
+                        addMarker(tokenObj,icon)
+                    } else {
+                        addMarker(tokenObj,icon,newCondition.duration)
+                    }
+                }  
+            } 
 
-            if (newCondition.target.length > 0) {
-                newCondition.target.forEach((targets) => {    
+            if (newCondition.target.length > 0 && icon) {
+                newCondition.target.forEach((targets) => {     
                     if (newCondition.key != 'dead') { 
-                        addMarker(getObj('graphic', targets),newCondition.iconType,newCondition.icon,newCondition.duration, newCondition.direction, newCondition.key)
+                        if (newCondition.duration >= 10) {
+                            addMarker(getObj('graphic', targets),icon)
+                        } else {
+                            addMarker(getObj('graphic', targets),icon,newCondition.duration)
+                        }
                     }   
                 })    
             }
              
-            if (!remove.removed) { 
-                if (state[combatState].config.status.sendConditions && defaultCondition) {
-                    sendConditionToChat(newCondition.key)
-                }  
-                if (newCondition.targeted) {
-                    targetedCondition(newCondition.id, key)
-                }    
-                if (newCondition.concentration == true && newCondition.override == true) {
-                    targetedCaster('concentration',newCondition.duration,newCondition.direction,'Concentrating on ' + newCondition.name)
-                }
-                if (!newCondition.targeted || (newCondition.targeted && newCondition.targetedAPI == 'casterTargets')) {
-                    doAddConditionCalls(tokenObj,key)
-                }  
+            if (state[combatState].config.status.sendConditions && !remove.removed && defaultCondition) {
+                sendConditionToChat(newCondition.key)
+            }  
+            if (defaultCondition && defaultCondition.targeted) {
+                targetedCondition(newCondition.id, key)
+            }    
+            if (defaultCondition && defaultCondition.concentration == true && defaultCondition.override == true) {
+                targetedCaster('concentration',newCondition.duration,newCondition.direction,'Concentrating on ' + defaultCondition.name)
             }
         }    
     },  
@@ -1355,42 +1361,38 @@ var CombatMaster = CombatMaster || (function() {
         }  
         
         let removed = false
-        let targets = [];
-        let target;
+        let icon
+        let target = [];
         
         [...state[combatState].conditions].forEach((condition, i) => {
             if (condition.id == tokenObj.get('_id') && condition.key == key) {
+                if (condition.iconType) {
+                    icon = getIconTag(condition.iconType, condition.icon)
+                }           
                 if (condition.hasOwnProperty('target')) {
                     if (condition.target.length > 0) {
-                        targets = condition.target
-                        targets.forEach((target, j) => {
-                            if (condition.iconType == 'Token Condition') {
+                        target = condition.target
+                        condition.target.forEach((target, j) => {
+                            if (icon) {
+                                removeMarker(getObj('graphic', target),icon)
+                            } else if (condition.iconType == 'Token Condition') {
                                 removeTokenCondition(condition.tokenConditionID)
-                            } else {
-                                removeMarker(getObj('graphic', target), condition.iconType, condition.icon)
-                                if (condition.targeted) {
-                                    doRemoveConditionCalls(getObj('graphic', target),condition.key)
-                                }                                    
-                            }  
+                            }    
                         })    
                     }
                 }    
-
-                if (condition.iconType == 'Token Condition') {
+                if (icon) {            
+                    removeMarker(tokenObj,icon)
+                } else if (condition.iconType == 'Token Condition') {
                     removeTokenCondition(condition.tokenConditionID)
-                } else {            
-                    removeMarker(tokenObj, condition.iconType, condition.icon)
-                }  
-
+                }     
                 if (condition.concentration == true) {
                     let concentration = getConditionByKey('concentration')
-                    removeMarker(tokenObj, concentration.iconType, concentration.icon)                    
-                }   
-
-                if (!condition.targeted || (condition.targeted && condition.targetedAPI == 'casterTargets')) {
-                    doRemoveConditionCalls(tokenObj,condition.key)
-                }            
-                
+                    icon = getIconTag(concentration.iconType, concentration.icon)
+                    if (icon) {            
+                        removeMarker(tokenObj,icon)                    
+                    }
+                }    
                 state[combatState].conditions.splice(i,1)
                 removed = true
             }      
@@ -1398,7 +1400,7 @@ var CombatMaster = CombatMaster || (function() {
         
         return {
             removed,
-            targets
+            target
         }; 
     },
 
@@ -1428,12 +1430,16 @@ var CombatMaster = CombatMaster || (function() {
             log("Add Targets to Condition")
         }
         
+        let icon
         [...state[combatState].conditions].forEach((condition,i) => {
             if (condition.id == id && condition.key == key) {
                 selectedTokens.forEach(token => {
-                    state[combatState].conditions[i].target.push(token._id)
-                    addMarker(getObj('graphic', token._id), condition.iconType, condition.icon, condition.duration, condition.direction, condition.key)
-                    doAddConditionCalls(getObj('graphic', token._id), condition.key)
+                    let installed = verifyInstalls(condition.iconType)
+                    if (installed) {
+                        icon = getIconTag(condition.iconType,condition.icon)
+                        state[combatState].conditions[i].target.push(token._id)
+                        addMarker(getObj('graphic', token._id),icon)
+                    }    
                 })    
             }   
         });   
@@ -1517,6 +1523,8 @@ var CombatMaster = CombatMaster || (function() {
             doRoundCalls()
             doTurnorderChange()
         },2000) 
+        
+        log(hold)
     },
     
     restartCombat = function (hold,who) {
@@ -1534,6 +1542,10 @@ var CombatMaster = CombatMaster || (function() {
             tokenObj = getObj('graphic', condition.id)
             if (tokenObj) {
                 addConditionToToken(tokenObj,condition.key,condition.duration,condition.direction,condition.message);
+                icon = getIconTag(condition.iconType, condition.icon)
+                condition.target.forEach((target) => {
+                    addMarker(getObj('graphic', target),icon)
+                }) 
             } 
         }) 
  
@@ -1597,6 +1609,8 @@ var CombatMaster = CombatMaster || (function() {
             state[combatState].conditions = [];
             sendMainMenu(who)
         },2000)   
+        
+        log(hold)
     },
 
     clearHold = function (hold) {
@@ -1725,70 +1739,64 @@ var CombatMaster = CombatMaster || (function() {
 //*************************************************************************************************************
 //MARKERS
 //*************************************************************************************************************     
-    addMarker = function(tokenObj, markerType, marker, duration, direction, key) {
+    addMarker = function(tokenObj, marker, duration) {
         if (debug) {
             log('Add Marker')
             log(marker)
         }
         
-        let installed = verifyInstalls(markerType)
-        if (!installed) {
-             makeAndSendMenu('You are missing an API required by an Icon Type you are using.  Install libTokenMarker or TokenConditions.');
-             return
-        }
+        let exists
+        let statusmarker
+        let statusmarkers
+        let condition = getConditionByMarker(marker)
         
-        let icon = getIconTag(markerType, marker)
-        if (!icon) {
-            return
+        if (tokenObj.get('statusmarkers')) {
+            statusmarkers = tokenObj.get('statusmarkers').split(',')
+        } else {
+            statusmarkers = []
+        } 
+
+        if (duration) {
+            statusmarker = marker+'@'+duration
+        } else {
+            statusmarker = marker
         }
 
-        removeMarker(tokenObj, markerType, marker)
+        [...statusmarkers].forEach((a, i) => {
+            if (a.indexOf(marker) > -1) {
+                statusmarkers.splice(i,0)
+                exists = true
+            }        
+        });        
         
-        setTimeout(() => {
-            let statusMarkers = returnMarkers(tokenObj)
-            
-            let statusMarker
-            if (key == 'dead' || duration <= 0 || duration >= 10 || (duration == 1 && direction == 0)) {
-                statusMarker = icon
-            } else {
-                statusMarker = icon+'@'+duration
-            }    
-    
-            statusMarkers.push(statusMarker)
-            tokenObj.set('statusmarkers', statusMarkers.join())
-        }, 500);
+        if (!exists) {
+            statusmarkers.push(statusmarker)
+        }
+        
+        tokenObj.set('statusmarkers', statusmarkers.join())
+        log(tokenObj)
+        handleShapedSheet(tokenObj.get('represents'), condition.key, true);
+        
     },
 
-    removeMarker = function(tokenObj, markerType, marker) {
+    removeMarker = function(tokenObj, marker) {
         if (debug) {
             log('Remove Marker')
-            log(marker)
         }
         
-        let installed = verifyInstalls(markerType)
-        if (!installed) {
-             makeAndSendMenu('You are missing an API required by an Icon Type you are using.  Install libTokenMarker or TokenConditions.');
-             return
-        }
-        
-        let icon = getIconTag(markerType, marker)
-        if (!icon) {
-            return
-        }
-        
-        let statusMarkers = returnMarkers(tokenObj)
-        
-        log(statusMarkers);    
-        statusMarkers.forEach((a, i) => {
+        let statusmarkers = tokenObj.get('statusmarkers').split(',');
+        let condition = getConditionByMarker(marker);
+
+        [...statusmarkers].forEach((a, i) => {
             if (a.indexOf(marker) > -1) {
-                statusMarkers.splice(i,1)
+                statusmarkers.splice(i,1)
             }  
         });       
-        tokenObj.set('statusmarkers', statusMarkers.join())
-    },
-    
-    returnMarkers = function(tokenObj) {
-        return tokenObj.get('statusmarkers').split(',')
+
+        tokenObj.set('statusmarkers', statusmarkers.join())
+        log(tokenObj)
+        handleShapedSheet(tokenObj.get('represents'), condition.key, false);
+        
     },
     
     resetMarker = function (next=false) {
@@ -1943,6 +1951,7 @@ var CombatMaster = CombatMaster || (function() {
                         if(!condition) return;
                         if(marker !== '' && !newstatusmarkers.includes(marker)){
                             removeConditionFromToken(obj, condition.key);
+                            doRemoveConditionCalls(obj,condition.key)
                         }
                     })
                 }    
@@ -1953,6 +1962,7 @@ var CombatMaster = CombatMaster || (function() {
                         if(!condition) return;
                         if(marker !== "" && !prevstatusmarkers.includes(marker)){
                             addConditionToToken(obj,condition.key,condition.duration,condition.direction,condition.message);
+                            doAddConditionCalls(obj,condition.key)
                         }
                     });
                 }    
@@ -2053,7 +2063,7 @@ var CombatMaster = CombatMaster || (function() {
         let turnorder = (obj.get('turnorder') === "") ? [] : JSON.parse(obj.get('turnorder'));
         let prevTurnorder = (prev.turnorder === "") ? [] : JSON.parse(prev.turnorder);
 
-        if(obj.get('turnorder') == []){
+        if(obj.get('turnorder') === "[]"){
             stopCombat();
             return;
         }
@@ -2371,19 +2381,17 @@ var CombatMaster = CombatMaster || (function() {
                         output += '<div style="display:inline-block;"><strong>'+descriptionButton+'</strong> removed</div>';
                         if (!delay && !show) {
                             removeConditionFromToken(tokenObj, condition.key);  
+                            doRemoveConditionCalls(tokenObj,condition.key)
                             removed = true
                         }    
                     } else if (condition.duration > 0 && condition.direction != 0) {
                         output += '<div style="display:inline-block;"><strong>'+descriptionButton+'</strong> '+condition.duration+' Rounds Left</div>';
 
                         if (!delay && !show) {
-                            // addMarker(getObj('graphic', targets),condition.iconType,condition.icon,condition.duration,condition.direction,condition.key)
                             addConditionToToken(tokenObj,condition.key,condition.duration,condition.direction,condition.message)
                         }   
-                        if (condition.hasOwnProperty('message')) {
-                            if (condition.message != 'None' && condition.message.length > 0) {
-                                output += '<div style="display:inline-block;"><strong>Message: </strong>'+condition.message + '</div>';
-                            }    
+                        if (condition.message != 'None' && condition.message.length > 0) {
+                            output += '<div style="display:inline-block;"><strong>Message: </strong>'+condition.message + '</div>';
                         }    
                     } else if (condition.direction == 0) {
                         output += '<div style="display:inline-block;"><strong>'+descriptionButton+'</strong> '+condition.duration+' Permanent</div>';
@@ -2573,6 +2581,7 @@ var CombatMaster = CombatMaster || (function() {
                 tokenObj     = getObj('graphic',turn.id)
                 if (tokenObj) {
                     characterObj = getObj('character',tokenObj.get('represents'))
+    
                     if (characterObj) {
                         if (!['None',''].includes(config.allRoundMacro)) {
                             macro = getMacro(tokenObj, config.allRoundMacro)
@@ -2620,8 +2629,10 @@ var CombatMaster = CombatMaster || (function() {
             }
 
             for (key in state[combatState].conditions) {
+
                 condition = state[combatState].conditions[key]
                 if (tokenObj.get('_id') == condition.id && condition.addPersistentMacro) {
+                    log ('made it')
                     ability = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:condition.addMacro})[0]
                     if (ability) {
                         sendCalltoChat(tokenObj,characterObj,ability.get('action'))
@@ -2645,7 +2656,7 @@ var CombatMaster = CombatMaster || (function() {
         }
     },
  
-    doAddConditionCalls = function (tokenObj,key) {
+    doAddConditionCalls = function (tokenObj,key,playerID) {
         if (debug) {
             log("Do Add Condition Calls")
         }
@@ -2944,6 +2955,7 @@ var CombatMaster = CombatMaster || (function() {
         }  
         
        state[combatState].ignores.push(key)
+       log(state[combatState].ignores)
        makeAndSendMenu('Spell has been added to Ignore List','Spell Ignored','gm');
     },
     
@@ -3323,7 +3335,6 @@ var CombatMaster = CombatMaster || (function() {
                         favorite: false,
                         message: 'None',
                         targeted: false,
-                        targetedAPI: 'casterTargets',
                         concentration: false,
                         addAPI: 'None',
                         addRoll20AM: 'None',
@@ -3348,7 +3359,6 @@ var CombatMaster = CombatMaster || (function() {
                         favorite: false,
                         message: 'None',
                         targeted: false,
-                        targetedAPI: 'casterTargets',
                         concentration: false,
                         addAPI: 'None',
                         addRoll20AM: 'None',
@@ -3373,7 +3383,6 @@ var CombatMaster = CombatMaster || (function() {
                         favorite: false,
                         message: 'None',
                         targeted: false,
-                        targetedAPI: 'casterTargets',
                         concentration: false,
                         addAPI: 'None',
                         addRoll20AM: 'None',
@@ -3398,7 +3407,6 @@ var CombatMaster = CombatMaster || (function() {
                         favorite: false,
                         message: 'None',
                         targeted: false,
-                        targetedAPI: 'casterTargets',
                         concentration: false,
                         addAPI: 'None',
                         addRoll20AM: 'None',
@@ -3423,7 +3431,6 @@ var CombatMaster = CombatMaster || (function() {
                         favorite: false,
                         message: 'None',
                         targeted: false,
-                        targetedAPI: 'casterTargets',
                         concentration: false,
                         addAPI: 'None',
                         addRoll20AM: 'None',
@@ -3448,7 +3455,6 @@ var CombatMaster = CombatMaster || (function() {
                         favorite: false,
                         message: 'None',
                         targeted: false,
-                        targetedAPI: 'casterTargets',
                         concentration: false,
                         addAPI: 'None',
                         addRoll20AM: 'None',
@@ -3473,7 +3479,6 @@ var CombatMaster = CombatMaster || (function() {
                         favorite: false,
                         message: 'None',
                         targeted: false,
-                        targetedAPI: 'casterTargets',
                         concentration: false,
                         addAPI: 'None',
                         addRoll20AM: 'None',
@@ -3498,7 +3503,6 @@ var CombatMaster = CombatMaster || (function() {
                         favorite: false,
                         message: 'None',
                         targeted: false,
-                        targetedAPI: 'casterTargets',
                         concentration: false,
                         addAPI: 'None',
                         addRoll20AM: 'None',
@@ -3523,7 +3527,6 @@ var CombatMaster = CombatMaster || (function() {
                         favorite: false,
                         message: 'None',
                         targeted: false,
-                        targetedAPI: 'casterTargets',
                         concentration: false,
                         addAPI: 'None',
                         addRoll20AM: 'None',
@@ -3548,7 +3551,6 @@ var CombatMaster = CombatMaster || (function() {
                         favorite: false,
                         message: 'None',
                         targeted: false,
-                        targetedAPI: 'casterTargets',
                         concentration: false,
                         addAPI: 'None',
                         addRoll20AM: 'None',
@@ -3573,7 +3575,6 @@ var CombatMaster = CombatMaster || (function() {
                         favorite: false,
                         message: 'None',
                         targeted: false,
-                        targetedAPI: 'casterTargets',
                         concentration: false,
                         addAPI: 'None',
                         addRoll20AM: 'None',
@@ -3598,7 +3599,6 @@ var CombatMaster = CombatMaster || (function() {
                         favorite: false,
                         message: 'None',
                         targeted: false,
-                        targetedAPI: 'casterTargets',
                         concentration: false,
                         addAPI: 'None',
                         addRoll20AM: 'None',
@@ -3623,7 +3623,6 @@ var CombatMaster = CombatMaster || (function() {
                         favorite: false,
                         message: 'None',
                         targeted: false,
-                        targetedAPI: 'casterTargets',
                         concentration: false,
                         addAPI: 'None',
                         addRoll20AM: 'None',
@@ -3648,7 +3647,6 @@ var CombatMaster = CombatMaster || (function() {
                         favorite: false,
                         message: 'None',
                         targeted: false,
-                        targetedAPI: 'casterTargets',
                         concentration: false,
                         addAPI: 'None',
                         addRoll20AM: 'None',
@@ -3673,7 +3671,6 @@ var CombatMaster = CombatMaster || (function() {
                         favorite: false,
                         message: 'None',
                         targeted: false,
-                        targetedAPI: 'casterTargets',
                         concentration: false,
                         addAPI: 'None',
                         addRoll20AM: 'None',
@@ -3698,7 +3695,6 @@ var CombatMaster = CombatMaster || (function() {
                         favorite: false,
                         message: 'None',
                         targeted: false,
-                        targetedAPI: 'casterTargets',
                         concentration: false,
                         addAPI: 'None',
                         addRoll20AM: 'None',
@@ -3813,6 +3809,7 @@ var CombatMaster = CombatMaster || (function() {
                 if(!state[combatState].config.turnorder.hasOwnProperty('turnMacro')){
                     state[combatState].config.turnorder.turnMacro = combatDefaults.config.turnorder.turnMacro;
                 }    
+                 
                 if(!state[combatState].config.turnorder.hasOwnProperty('roundAPI')){
                     state[combatState].config.turnorder.roundAPI = combatDefaults.config.turnorder.roundAPI;
                 }       
@@ -3978,9 +3975,6 @@ var CombatMaster = CombatMaster || (function() {
                 if (!condition.hasOwnProperty('targeted')) {
                     condition.targeted = false
                 }     
-                if (!condition.hasOwnProperty('targetedAPI')) {
-                    condition.targetedAPI = 'casterTargets'
-                }                     
                 if (!condition.hasOwnProperty('concentration')) {
                     condition.concentration = false
                 }                       
@@ -4501,7 +4495,6 @@ var CombatMaster = CombatMaster || (function() {
     
     registerEventHandlers = function() {
         on('chat:message', inputHandler);
-        on('close:campaign:turnorder', handleTurnorderChange);
         on('change:campaign:turnorder', handleTurnorderChange);
         on('change:graphic:statusmarkers', handleStatusMarkerChange);
         on('change:campaign:initiativepage', handeIniativePageChange);

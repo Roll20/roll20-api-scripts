@@ -1,4 +1,28 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 2.11
+### Capacités
+* Commandant de la voie du chef d'armée.
+
+### Autres améliorations
+* Ajout d'une commande pour centrer sa vue du jeu sur un token.
+* Déplace la vue du joueur quand il emprunte un escalier.
+* Prise en compte des fiches Terres d'Arran
+* Possibilité de déplacer un personnage vers une autre carte.
+
+### Corrections de bugs
+* Prise en compte de la taille des cellules de la grille des cartes, car elle est utilisée en jeu pour mesurer les distances.
+
+## 2.10
+### Capacités
+* Chair à canon de la voie du PNJ récurrent
+* Nuée de criquets (Druide Prestige)
+* Increvable (Rôdeur, Survie rang 4)
+* Intervention divine du prêtre
+
+### Autres améliorations
+* Support du nouvel éclairage dynamique
+* Une série de capacités sont à déclencher par les joueurs avant les jets de dégâts : Absorber un Coup, Absorber un Sort, Encaisser un Coup, Résistance à la Magie, Esquive Acrobatique, Esquive fatale, Parade Magistrale, Rune de Protection
+
 ## 2.09
 ### Capacités
 * Vitalité surnaturelle du barbare
