@@ -1,5 +1,5 @@
 /* 
- * Version 2.33
+ * Version 2.32
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.33',
+        version = '2.32',
         timerObj,
         intervalHandle,
         debug = true,
@@ -23,12 +23,12 @@ var CombatMaster = CombatMaster || (function() {
         observers = {
             tokenChange: []
         },
-		whisper, handled = [],	
+        whisper, handled = [],  
         extensions = {
             StatusInfo: true // This will be set to true automatically if you have StatusInfo
         },
         startImage = '4',
-		pauseImage = '5',
+        pauseImage = '5',
         stopImage = '6',
         tagImage = '3',
         noTagImage = 'd',
@@ -49,7 +49,7 @@ var CombatMaster = CombatMaster || (function() {
         timerImage = 't',
         favoriteImage = 'S',
         allConditionsImage = 'G',
-        addImage = '&',		
+        addImage = '&',     
         doneImage = '3',
         showImage = 'v',
         delayImage = '}',
@@ -63,20 +63,20 @@ var CombatMaster = CombatMaster || (function() {
     const styles = {
         reset: 'padding: 0; margin: 0;',
         menu:  'background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px;',
- 		title: 'font-size:14px;font-weight:bold;background-color:black;padding:3px;border-top-left-radius:3px;border-top-right-radius:3px',
- 		titleText: 'color:white',
- 		titleSpacer: 'font-weight: bold; border-bottom: 1px solid black;font-size: 100%;style="float:left;',
- 		version:'font-size:10px;',
- 		header: 'margin-top:10px;margin-bottom:5px;font-weight:bold;font-style:italic;display:inline-block;',
+        title: 'font-size:14px;font-weight:bold;background-color:black;padding:3px;border-top-left-radius:3px;border-top-right-radius:3px',
+        titleText: 'color:white',
+        titleSpacer: 'font-weight: bold; border-bottom: 1px solid black;font-size: 100%;style="float:left;',
+        version:'font-size:10px;',
+        header: 'margin-top:10px;margin-bottom:5px;font-weight:bold;font-style:italic;display:inline-block;',
         button: 'background-color: #000; border: 1px solid #292929; border-radius: 3px; padding: 5px; color: #fff; text-align: center;width:100%',
         textButton: 'background-color:#fff; color: #000; text-align: center; float: right;',
         conditionButton: 'background-color:#fff; color: #000;margin-left:1px;',
- 		linkButton: 'background-color:#fff; color: #000; text-align: center;vertical-align:middle',
- 		textLabel: 'background-color:#fff;float:left;text-align:center;margin-top:8px',
- 		bigButton: 'width:80%;border-radius:5px;text-align:center;margin-left:15px',
+        linkButton: 'background-color:#fff; color: #000; text-align: center;vertical-align:middle',
+        textLabel: 'background-color:#fff;float:left;text-align:center;margin-top:8px',
+        bigButton: 'width:80%;border-radius:5px;text-align:center;margin-left:15px',
         bigButtonLink: 'background-color:#000000; border-radius: 5px; padding: 5px; color: #fff; text-align: center;width:100%',
         wrapBox: ' border: 1px solid #292929; border-radius: 3px;margin-top:3px;margin-bottom:3px',
- 		body: 'background-color:#fff',
+        body: 'background-color:#fff',
         list: 'list-style: none;padding:2px',
         float: {
             right: 'float: right;',
@@ -137,14 +137,14 @@ var CombatMaster = CombatMaster || (function() {
             who = getObj('player', msg.playerid).get('displayname');
         }
 
-		if(_.has(msg,'inlinerolls')) {//calculates inline rolls
-			msg.content = inlineExtract(msg);
-		}
-		
-		//splits the message contents into discrete arguments, special handling for import
-	    let cmdDetails = {
-	        details: {}
-	    }
+        if(_.has(msg,'inlinerolls')) {//calculates inline rolls
+            msg.content = inlineExtract(msg);
+        }
+        
+        //splits the message contents into discrete arguments, special handling for import
+        let cmdDetails = {
+            details: {}
+        }
         
         if (msg.content.indexOf('import') >= 0) {
             cmdDetails.action = 'import'
@@ -152,8 +152,8 @@ var CombatMaster = CombatMaster || (function() {
             cmdDetails.details['config'] = msg.content.replace('--import,','')
             commandHandler(cmdDetails,msg,restrict,who,playerID)
         } else {
-    		args = msg.content.split(/\s+--/);
-    	    if(args[0] === '!cmaster'){
+            args = msg.content.split(/\s+--/);
+            if(args[0] === '!cmaster'){
                 if(args[1]){
                     _.each(_.rest(args,1),(cmd) =>{
                         cmdDetails = cmdExtract(cmd);
@@ -163,34 +163,32 @@ var CombatMaster = CombatMaster || (function() {
                         commandHandler(cmdDetails,msg,restrict,who,playerID)
                     })    
                 }
-        	}
+            }
         }
-	},  
-	
-	//Extracts inline rolls
-	inlineExtract = function(msg){
-	    return _.chain(msg.inlinerolls)
-				.reduce(function(m,v,k){
-					m['$[['+k+']]']=v.results.total || 0;
-					return m;
-				},{})
-				.reduce(function(m,v,k){
-					return m.replace(k,v);
-				},msg.content)
-				.value();
-	},
-	
-    //Extracts the command details from a command string passed from handleInput	
-	cmdExtract = function(cmd){
-	    var cmdSep = {
-	        details: {}
-	    },
-	    vars,
-	    temp,
-	    details;
-	    if (debug) {
-            log(cmd)
-	    }    
+    },  
+    
+    //Extracts inline rolls
+    inlineExtract = function(msg){
+        return _.chain(msg.inlinerolls)
+                .reduce(function(m,v,k){
+                    m['$[['+k+']]']=v.results.total || 0;
+                    return m;
+                },{})
+                .reduce(function(m,v,k){
+                    return m.replace(k,v);
+                },msg.content)
+                .value();
+    },
+    
+    //Extracts the command details from a command string passed from handleInput    
+    cmdExtract = function(cmd){
+        var cmdSep = {
+            details: {}
+        },
+        vars,
+        temp,
+        details;
+        log(cmd)
         //special handling of import is required
         
         let values = parseLine(cmd)
@@ -202,12 +200,12 @@ var CombatMaster = CombatMaster || (function() {
         }
 
         //find the action and set the cmdSep Action
-	    cmdSep.action = String(tokens).match(/turn|show|config|back|reset|main|remove|add|new|delete|import|export|help|spell|ignore|clear/);
+        cmdSep.action = String(tokens).match(/turn|show|config|back|reset|main|remove|add|new|delete|import|export|help|spell|ignore|clear/);
         //the ./ is an escape within the URL so the hyperlink works.  Remove it
         cmd.replace('./', '');
 
         //split additional command actions
-	    _.each(String(tokens).replace(cmdSep.action+',','').split(','),(d) => {
+        _.each(String(tokens).replace(cmdSep.action+',','').split(','),(d) => {
             vars=d.match(/(who|next|main|previous|delay|start|stop|hold|timer|pause|show|all|favorites|setup|conditions|condition|sort|combat|turnorder|accouncements|timer|macro|status|list|export|import|type|key|value|setup|tracker|confirm|direction|duration|message|initiative|config|assigned|type|action|description|target|id|started|stopped|held|addAPI|remAPI|concentration|view|)(?:\:|=)([^,]+)/) || null;
             if(vars) {
                 if (vars[2].includes('INDEX')) {
@@ -226,7 +224,7 @@ var CombatMaster = CombatMaster || (function() {
         });
 
         return cmdSep;
-	},	   
+    },     
 
     parseLine = function(cmd) {
         let lookup = [];
@@ -265,13 +263,13 @@ var CombatMaster = CombatMaster || (function() {
         };
     },
 
-	//Processes the commands based on Delay Time (if any)
-	commandHandler = function(cmdDetails,msg,restrict,who,playerID){
-	    if (debug){
-	        log ('Command Handler')
-	        log (cmdDetails.action)
-	    }
-	    
+    //Processes the commands based on Delay Time (if any)
+    commandHandler = function(cmdDetails,msg,restrict,who,playerID){
+        if (debug){
+            log ('Command Handler')
+            log (cmdDetails.action)
+        }
+        
         if (cmdDetails.action == 'back'){
             if (cmdDetails.details.setup) {
                 cmdDetails.action = 'show'
@@ -282,12 +280,12 @@ var CombatMaster = CombatMaster || (function() {
                 if (state[combatState].config.previousPage == 'main') {
                     cmdDetails.action = 'main'
                  } else {
-	                cmdDetails.action = 'show'
-	                cmdDetails.details['conditions'] = true  
+                    cmdDetails.action = 'show'
+                    cmdDetails.details['conditions'] = true  
 
                  }
             }           
-        }    	        
+        }               
         
         if (cmdDetails.action == 'main' || !cmdDetails.action){
             sendMainMenu(who)
@@ -420,22 +418,22 @@ var CombatMaster = CombatMaster || (function() {
         }
         
         if (cmdDetails.action == 'reset') {
-			state[combatState] = {};
-			setDefaults(true);
-			sendMainMenu(who)
+            state[combatState] = {};
+            setDefaults(true);
+            sendMainMenu(who)
         }
         if (cmdDetails.action == 'ignore') {
-			state[combatState].ignores = [];
-			sendMainMenu(who)
+            state[combatState].ignores = [];
+            sendMainMenu(who)
         }  
         if (cmdDetails.action == 'clear') {
-			clearTokenStatuses(msg.selected)
-			sendMainMenu(who)
+            clearTokenStatuses(msg.selected)
+            sendMainMenu(who)
         }          
         if (cmdDetails.action == 'help') {
-    		showHelp(cmdDetails)
+            showHelp(cmdDetails)
         }        
-	},
+    },
 
     clearTokenStatuses = function(selectedTokens) {
         let tokenObj
@@ -444,6 +442,7 @@ var CombatMaster = CombatMaster || (function() {
                 tokenObj        = getObj('graphic', token._id)    
                 if (tokenObj) {
                     tokenObj.set('statusmarkers', "")
+                    log(tokenObj)
                 }
             }
         })    
@@ -476,7 +475,6 @@ var CombatMaster = CombatMaster || (function() {
         } else {
             helpButton          = makeImageButton('!cmaster --help,stopped',helpImage,'Help','transparent',18,'white')
         }    
-        
         let listItems           = []
         let titleText           = 'CombatMaster Menu<span style="'+styles.version+'"> ('+version+')</span>'+'<span style='+styles.buttonRight+'>'+helpButton+'</span>'
         let contents, key, condition, conditions, conditionButton, addButton, removeButton, favoriteButton, listContents, rowCount=1;
@@ -525,13 +523,13 @@ var CombatMaster = CombatMaster || (function() {
                 favoriteButton = makeImageButton('!cmaster --config,condition='+key+',key=favorite,value='+!condition.favorite+' --tracker',allConditionsImage,'Add to Favorites','transparent',12)
             }
             
-			if (rowCount == 1) {
+            if (rowCount == 1) {
                 listContents = '<div>'
                 rowCount = 2
-			} else {
-			   listContents = '<div style='+styles.background+'>'
-			   rowCount = 1
-			}   
+            } else {
+               listContents = '<div style='+styles.background+'>'
+               rowCount = 1
+            }   
             listContents += getDefaultIcon(condition.iconType,condition.icon,'display:inline-block;margin-right:3px')
             listContents += '<span style="vertical-align:middle">'+condition.name+'</span>'
             if (state[combatState].config.status.userChanges && who != 'gm') {
@@ -561,7 +559,7 @@ var CombatMaster = CombatMaster || (function() {
             }
         }
         
-        let viewButton = makeBigButton('Change View', '!cmaster --show,view,value=?{View|All,all|Conditions,conditions|Spells,spells|Favorites,favorites} --main')
+        let viewButton = makeBigButton('Change View', '!cmaster --show,view,value=?{View|All,all|Conditions,conditions|Spells,spells|Favorites,favorites|} --main')
 
         state[combatState].config.previousPage = 'main'
         
@@ -573,7 +571,7 @@ var CombatMaster = CombatMaster || (function() {
         }
         
         if (who == 'gm' || who == 'None') {
-            makeAndSendMenu(contents+makeList(listItems)+viewButton,titleText,'gm');
+            makeAndSendMenu(contents+makeList(listItems)+viewButton,titleText,who);
         } else {
             makeAndSendMenu(makeList(listItems)+viewButton,titleText,who);
         }    
@@ -587,46 +585,46 @@ var CombatMaster = CombatMaster || (function() {
     },    
 
     sendConfigMenu = function() {
-		let configIntiativeButton       = makeBigButton('Initiative', '!cmaster --show,initiative')
-	    let configTurnorderButton       = makeBigButton('Turnorder', '!cmaster --show,turnorder')
-		let	configTimerButton           = makeBigButton('Timer', '!cmaster --show,timer')
-		let	configAnnouncementsButton   = makeBigButton('Announce', '!cmaster --show,announce')
-		let	configMacroButton           = makeBigButton('Macro & API', '!cmaster --show,macro')
-		let	configConcentrationButton   = makeBigButton('Concentration', '!cmaster --show,concentration')
-		let	configStatusButton          = makeBigButton('Status', '!cmaster --show,status')
-		let	configConditionButton       = makeBigButton('Conditions', '!cmaster --show,conditions')
-		let	exportButton                = makeBigButton('Export', '!cmaster --show,export')
-		let	importButton                = makeBigButton('Import', '!cmaster --import,config=?{Config}')	
-		let	resetButton                 = makeBigButton('Reset', '!cmaster --reset')
-		let	ignoreButton                = makeBigButton('Remove Ignores', '!cmaster --ignore')
-		let	clearButton                 = makeBigButton('Clear Token Statuses', '!cmaster --clear')
-		let helpButton                  = makeImageButton('!cmaster --help,setup',helpImage,'Help','transparent',18,'white')
-		let	backToTrackerButton         = makeBigButton('Back', '!cmaster --back,tracker')
-		let	titleText                   = 'Setup'+'<span style='+styles.buttonRight+'>'+helpButton+'</span>'
-		let	combatHeaderText            = '<div style="'+styles.header+'">Combat Setup</div>'
-		let	statusHeadersText           = '<div style="'+styles.header+'">Status Setup</div>'
-		let	resetHeaderText             = '<div style="'+styles.header+'">Reset CombatMaster</div>'	
-		let	backToTrackerText           = '<div style="'+styles.header+'">Return</div>'	
-		let contents	
-		
-	 	contents  = combatHeaderText
-		contents += configIntiativeButton
-		contents += configTurnorderButton			
-		contents += configTimerButton
-		contents += configAnnouncementsButton
-		contents += configMacroButton
-		contents += statusHeadersText 
-		contents += configStatusButton
-		contents += configConditionButton
-		contents += configConcentrationButton
-		contents += exportButton
-		contents += importButton
-		contents += resetHeaderText
-		contents += resetButton
-		contents += ignoreButton
-		contents += clearButton
-	    contents += backToTrackerText
-	    contents += backToTrackerButton
+        let configIntiativeButton       = makeBigButton('Initiative', '!cmaster --show,initiative')
+        let configTurnorderButton       = makeBigButton('Turnorder', '!cmaster --show,turnorder')
+        let configTimerButton           = makeBigButton('Timer', '!cmaster --show,timer')
+        let configAnnouncementsButton   = makeBigButton('Announce', '!cmaster --show,announce')
+        let configMacroButton           = makeBigButton('Macro & API', '!cmaster --show,macro')
+        let configConcentrationButton   = makeBigButton('Concentration', '!cmaster --show,concentration')
+        let configStatusButton          = makeBigButton('Status', '!cmaster --show,status')
+        let configConditionButton       = makeBigButton('Conditions', '!cmaster --show,conditions')
+        let exportButton                = makeBigButton('Export', '!cmaster --show,export')
+        let importButton                = makeBigButton('Import', '!cmaster --import,config=?{Config}') 
+        let resetButton                 = makeBigButton('Reset', '!cmaster --reset')
+        let ignoreButton                = makeBigButton('Remove Ignores', '!cmaster --ignore')
+        let clearButton                 = makeBigButton('Clear Token Statuses', '!cmaster --clear')
+        let helpButton                  = makeImageButton('!cmaster --help,setup',helpImage,'Help','transparent',18,'white')
+        let backToTrackerButton         = makeBigButton('Back', '!cmaster --back,tracker')
+        let titleText                   = 'Setup'+'<span style='+styles.buttonRight+'>'+helpButton+'</span>'
+        let combatHeaderText            = '<div style="'+styles.header+'">Combat Setup</div>'
+        let statusHeadersText           = '<div style="'+styles.header+'">Status Setup</div>'
+        let resetHeaderText             = '<div style="'+styles.header+'">Reset CombatMaster</div>' 
+        let backToTrackerText           = '<div style="'+styles.header+'">Return</div>' 
+        let contents    
+        
+        contents  = combatHeaderText
+        contents += configIntiativeButton
+        contents += configTurnorderButton           
+        contents += configTimerButton
+        contents += configAnnouncementsButton
+        contents += configMacroButton
+        contents += statusHeadersText 
+        contents += configStatusButton
+        contents += configConditionButton
+        contents += configConcentrationButton
+        contents += exportButton
+        contents += importButton
+        contents += resetHeaderText
+        contents += resetButton
+        contents += ignoreButton
+        contents += clearButton
+        contents += backToTrackerText
+        contents += backToTrackerButton
 
         makeAndSendMenu(contents, titleText, 'gm');
     },
@@ -635,8 +633,8 @@ var CombatMaster = CombatMaster || (function() {
         const banner = makeBanner('initiative','Initiative','setup')
         let listItems  = []
         let initiative = state[combatState].config.initiative;
-		
-		listItems.push(makeTextButton('Roll Initiative', initiative.rollInitiative, '!cmaster --config,initiative,key=rollInitiative,value=?{Initiative|None,None|CombatMaster,CombatMaster|Group-Init,Group-Init} --show,initiative'))
+        
+        listItems.push(makeTextButton('Roll Initiative', initiative.rollInitiative, '!cmaster --config,initiative,key=rollInitiative,value=?{Initiative|None,None|CombatMaster,CombatMaster|Group-Init,Group-Init} --show,initiative'))
         listItems.push(makeTextButton('Roll Each Round', initiative.rollEachRound, '!cmaster --config,initiative,key=rollEachRound,value='+!initiative.rollEachRound + ' --show,initiative')) 
         
         if (initiative.rollInitiative == 'CombatMaster') {
@@ -645,17 +643,17 @@ var CombatMaster = CombatMaster || (function() {
             listItems.push(makeTextButton('Show Initiative in Chat', initiative.showInitiative, '!cmaster --config,initiative,key=showInitiative,value='+!initiative.showInitiative + ' --show,initiative'))
         }
         
-		if (initiative.rollInitiative == 'Group-Init') {	
-			listItems.push(makeTextButton('Target Tokens', initiative.apiTargetTokens, '!cmaster --config,initiative,key=apiTargetTokens,value=?{Target Tokens|} --show,initiative'))
+        if (initiative.rollInitiative == 'Group-Init') {    
+            listItems.push(makeTextButton('Target Tokens', initiative.apiTargetTokens, '!cmaster --config,initiative,key=apiTargetTokens,value=?{Target Tokens|} --show,initiative'))
             if (!initiative.apiTargetTokens > '') {
                 listItems.push('<div>'+initiative.apiTargetTokens+'</div>')
             }
-		}
+        }
 
         makeAndSendMenu(makeList(listItems,banner.backButton),banner.titleText,'gm');
     },
 
-	sendTurnorderMenu = function() {
+    sendTurnorderMenu = function() {
         const banner = makeBanner('turnorder','Turnorder','setup')
         let listItems = []
         let turnorder = state[combatState].config.turnorder
@@ -664,49 +662,49 @@ var CombatMaster = CombatMaster || (function() {
         installed = verifyInstalls(turnorder.nextMarkerType)
         if (!installed) {
             return
-        }	
+        }   
         installed = verifyInstalls(turnorder.markerType)
         if (!installed) {
             return
         }        
         
-		listItems.push(makeTextButton('Sort Turnorder',turnorder.sortTurnOrder, '!cmaster --config,turnorder,key=sortTurnOrder,value='+!turnorder.sortTurnOrder + ' --show,turnorder'))
+        listItems.push(makeTextButton('Sort Turnorder',turnorder.sortTurnOrder, '!cmaster --config,turnorder,key=sortTurnOrder,value='+!turnorder.sortTurnOrder + ' --show,turnorder'))
         listItems.push(makeTextButton('Center Map on Token', turnorder.centerToken, '!cmaster --config,turnorder,key=centerToken,value='+!turnorder.centerToken + ' --show,turnorder'))
         listItems.push(makeTextButton('Use Marker',turnorder.useMarker, '!cmaster --config,turnorder,key=useMarker,value='+!turnorder.useMarker + ' --show,turnorder'))
-    	listItems.push(makeTextButton('Marker Type',turnorder.markerType, '!cmaster --config,turnorder,key=markerType,value=?{Marker Type|External URL,External URL|Token Marker,Token Marker|Token Condition,Token Condition} --show,turnorder'))
+        listItems.push(makeTextButton('Marker Type',turnorder.markerType, '!cmaster --config,turnorder,key=markerType,value=?{Marker Type|External URL,External URL|Token Marker,Token Marker|Token Condition,Token Condition} --show,turnorder'))
         
         if (turnorder.markerType == 'External URL') {
             listItems.push(makeTextButton('Marker', '<img src="'+turnorder.externalMarkerURL+'" width="20px" height="20px" />', '!cmaster --config,turnorder,key=externalMarkerURL,value=?{Image Url} --show,turnorder'))
-        }  else if (turnorder.markerType == 'Token Marker')	{
-		    listItems.push(makeTextButton('Marker Name',turnorder.tokenMarkerName, '!cmaster --config,turnorder,key=tokenMarkerName,value=?{Marker Name|} --show,turnorder'))
+        }  else if (turnorder.markerType == 'Token Marker') {
+            listItems.push(makeTextButton('Marker Name',turnorder.tokenMarkerName, '!cmaster --config,turnorder,key=tokenMarkerName,value=?{Marker Name|} --show,turnorder'))
             listItems.push(getDefaultIcon('Token Marker',turnorder.tokenMarkerName))
-		}			
-		
-		listItems.push(makeTextButton('Use Next Marker',turnorder.nextMarkerType, '!cmaster --config,turnorder,key=nextMarkerType,value=?{Next Marker Type|None,None|External URL,External URL|Token Marker,Token Marker|Token Condition,Token Condition} --show,turnorder'))
-		
-		if (turnorder.nextMarkerType == 'External URL') {	
-			 listItems.push(makeTextButton('Next Marker', '<img src="'+turnorder.nextExternalMarkerURL+'" width="20px" height="20px" />', '!cmaster --config,turnorder,key=nextExternalMarkerURL,value=?{Image Url} --show,turnorder'))
-		} else if (turnorder.nextMarkerType == 'Token Marker')	{
-		    listItems.push(makeTextButton('Next Marker Name',turnorder.nextTokenMarkerName, '!cmaster --config,turnorder,key=nextTokenMarkerName,value=?{Next Marker Name|} --show,turnorder'))
-            listItems.push(getDefaultIcon('Token Marker', turnorder.nextTokenMarkerName))
-		}	
+        }           
         
-		listItems.push('<div style="margin-top:3px"><i><b>Beginning of Each Round</b></i></div>' )
-        listItems.push(makeTextButton('API',turnorder.roundAPI, '!cmaster --config,turnorder,key=roundAPI,value={{?{API Command|}}} --show,turnorder'))
-        listItems.push(makeTextButton('Roll20AM',turnorder.roundRoll20AM, '!cmaster --config,turnorder,key=roundRoll20AM,value={{?{Roll20AM Command|}}} --show,turnorder'))
+        listItems.push(makeTextButton('Use Next Marker',turnorder.nextMarkerType, '!cmaster --config,turnorder,key=nextMarkerType,value=?{Next Marker Type|None,None|External URL,External URL|Token Marker,Token Marker|Token Condition,Token Condition} --show,turnorder'))
+        
+        if (turnorder.nextMarkerType == 'External URL') {   
+             listItems.push(makeTextButton('Next Marker', '<img src="'+turnorder.nextExternalMarkerURL+'" width="20px" height="20px" />', '!cmaster --config,turnorder,key=nextExternalMarkerURL,value=?{Image Url} --show,turnorder'))
+        } else if (turnorder.nextMarkerType == 'Token Marker')  {
+            listItems.push(makeTextButton('Next Marker Name',turnorder.nextTokenMarkerName, '!cmaster --config,turnorder,key=nextTokenMarkerName,value=?{Next Marker Name|} --show,turnorder'))
+            listItems.push(getDefaultIcon('Token Marker', turnorder.nextTokenMarkerName))
+        }   
+        
+        listItems.push('<div style="margin-top:3px"><i><b>Beginning of Each Round</b></i></div>' )
+        listItems.push(makeTextButton('API',turnorder.roundAPI, '!cmaster --config,turnorder,key=roundAPI,value=?{API Command|} --show,turnorder'))
+        listItems.push(makeTextButton('Roll20AM',turnorder.roundRoll20AM, '!cmaster --config,turnorder,key=roundRoll20AM,value=?{Roll20AM Command|} --show,turnorder'))
         listItems.push(makeTextButton('FX',turnorder.roundFX, '!cmaster --config,turnorder,key=roundFX,value=?{FX Command|} --show,turnorder'))
         listItems.push(makeTextButton('Characters Macro',turnorder.characterRoundMacro, '!cmaster --config,turnorder,key=characterRoundMacro,value=?{Macro Name|} --show,turnorder'))
         listItems.push(makeTextButton('All Tokens Macro',turnorder.allRoundMacro, '!cmaster --config,turnorder,key=allRoundMacro,value=?{Macro Name|} --show,turnorder'))
         
-		listItems.push('<div style="margin-top:3px"><i><b>Beginning of Each Turn</b></i></div>' )
-        listItems.push(makeTextButton('API',turnorder.turnAPI, '!cmaster --config,turnorder,key=turnAPI,value={{?{API Command|}}} --show,turnorder'))
-        listItems.push(makeTextButton('Roll20AM',turnorder.turnRoll20AM, '!cmaster --config,turnorder,key=turnRoll20AM,value={{?{Roll20AM Command|}}} --show,turnorder'))
+        listItems.push('<div style="margin-top:3px"><i><b>Beginning of Each Turn</b></i></div>' )
+        listItems.push(makeTextButton('API',turnorder.turnAPI, '!cmaster --config,turnorder,key=turnAPI,value=?{API Command|} --show,turnorder'))
+        listItems.push(makeTextButton('Roll20AM',turnorder.turnRoll20AM, '!cmaster --config,turnorder,key=turnRoll20AM,value=?{Roll20AM Command|} --show,turnorder'))
         listItems.push(makeTextButton('FX',turnorder.turnFX, '!cmaster --config,turnorder,key=turnFX,value=?{FX Command|} --show,turnorder'))
         listItems.push(makeTextButton('Macro',turnorder.turnMacro, '!cmaster --config,turnorder,key=turnMacro,value=?{Macro Name|} --show,turnorder'))
 
         makeAndSendMenu(makeList(listItems,banner.backButton),banner.titleText,'gm');
     },
-	
+    
     sendTimerMenu = function() {
         const banner = makeBanner('timer','Timer','setup')
         let listItems = []
@@ -724,25 +722,25 @@ var CombatMaster = CombatMaster || (function() {
         }
             
         makeAndSendMenu(makeList(listItems,banner.backButton),banner.titleText,'gm');
-    },	
-	
+    },  
+    
     sendAnnounceMenu = function() {
         const banner = makeBanner('announcements','Announcements','setup')      
-		let	announcements = state[combatState].config.announcements
-		
-		let	listItems = [
-				makeTextButton('Announce Rounds', announcements.announceRound, '!cmaster --config,announcements,key=announceRound,value='+!announcements.announceRound + ' --show,announce'),
-				makeTextButton('Announce Turns', announcements.announceTurn, '!cmaster --config,announcements,key=announceTurn,value='+!announcements.announceTurn + ' --show,announce'),
-				makeTextButton('Whisper GM Only', announcements.whisperToGM, '!cmaster --config,announcements,key=whisperToGM,value='+!announcements.whisperToGM + ' --show,announce'),
-				makeTextButton('Shorten Long Names', announcements.handleLongName, '!cmaster --config,announcements,key=handleLongName,value='+!announcements.handleLongName + ' --show,announce'),
-                makeTextButton('Show NPC Conditions', announcements.showNPCTurns, '!cmaster --config,announcements,key=showNPCTurns,value='+!announcements.showNPCTurns + ' --show,announce'),				
-			]
-		
-		makeAndSendMenu(makeList(listItems,banner.backButton),banner.titleText,'gm');
+        let announcements = state[combatState].config.announcements
+        
+        let listItems = [
+                makeTextButton('Announce Rounds', announcements.announceRound, '!cmaster --config,announcements,key=announceRound,value='+!announcements.announceRound + ' --show,announce'),
+                makeTextButton('Announce Turns', announcements.announceTurn, '!cmaster --config,announcements,key=announceTurn,value='+!announcements.announceTurn + ' --show,announce'),
+                makeTextButton('Whisper GM Only', announcements.whisperToGM, '!cmaster --config,announcements,key=whisperToGM,value='+!announcements.whisperToGM + ' --show,announce'),
+                makeTextButton('Shorten Long Names', announcements.handleLongName, '!cmaster --config,announcements,key=handleLongName,value='+!announcements.handleLongName + ' --show,announce'),
+                makeTextButton('Show NPC Conditions', announcements.showNPCTurns, '!cmaster --config,announcements,key=showNPCTurns,value='+!announcements.showNPCTurns + ' --show,announce'),              
+            ]
+        
+        makeAndSendMenu(makeList(listItems,banner.backButton),banner.titleText,'gm');
     },
-	
-	sendMacroMenu = function() {
-	    const banner = makeBanner('macro','Macro & API','setup') 
+    
+    sendMacroMenu = function() {
+        const banner = makeBanner('macro','Macro & API','setup') 
         let addButton = makeBigButton('Add Substiution', '!cmaster --new,macro,type=?{Type|CharID,CharID|CharName,CharName|TokenID,TokenID|PlayerID,PlayerID},action=?{Action|}')
         let substitutions = state[combatState].config.macro.substitutions
         let listItems=[],contents,deleteButton,listContents
@@ -759,77 +757,78 @@ var CombatMaster = CombatMaster || (function() {
         }) 
 
         makeAndSendMenu(addButton+makeList(listItems,banner.backButton),banner.titleText,'gm');
-	},
-	
-	sendStatusMenu = function() {
-	    const banner = makeBanner('status','Status','setup') 
-        let	status = state[combatState].config.status
+    },
+    
+    sendStatusMenu = function() {
+        const banner = makeBanner('status','Status','setup') 
+        let status = state[combatState].config.status
         
         let listItems = [
-				makeTextButton('Whisper GM Only', status.sendOnlyToGM, '!cmaster --config,status,key=sendOnlyToGM,value='+!status.sendOnlyToGM+' --show,status'),
-				makeTextButton('Player Allowed Changes', status.userChanges, '!cmaster --config,status,key=userChanges,value='+!status.userChanges+' --show,status'),
-				makeTextButton('Send Changes to Chat', status.sendConditions, '!cmaster --config,status,key=sendConditions,value='+!status.sendConditions+' --show,status'),	
-				makeTextButton('Clear Conditions on Close', status.clearConditions, '!cmaster --config,status,key=clearConditions,value='+!status.clearConditions + ' --show,status'),
-				makeTextButton('Use Messages', status.useMessage, '!cmaster --config,status,key=useMessage,value='+!status.useMessage + ' --show,status'),
-				makeTextButton('Auto Add Spells', status.autoAddSpells, '!cmaster --config,status,key=autoAddSpells,value='+!status.autoAddSpells+' --show,status'),
-		]	
+                makeTextButton('Whisper GM Only', status.sendOnlyToGM, '!cmaster --config,status,key=sendOnlyToGM,value='+!status.sendOnlyToGM+' --show,status'),
+                makeTextButton('Player Allowed Changes', status.userChanges, '!cmaster --config,status,key=userChanges,value='+!status.userChanges+' --show,status'),
+                makeTextButton('Send Changes to Chat', status.sendConditions, '!cmaster --config,status,key=sendConditions,value='+!status.sendConditions+' --show,status'),    
+                makeTextButton('Clear Conditions on Close', status.clearConditions, '!cmaster --config,status,key=clearConditions,value='+!status.clearConditions + ' --show,status'),
+                makeTextButton('Use Messages', status.useMessage, '!cmaster --config,status,key=useMessage,value='+!status.useMessage + ' --show,status'),
+                makeTextButton('Auto Add Spells', status.autoAddSpells, '!cmaster --config,status,key=autoAddSpells,value='+!status.autoAddSpells+' --show,status'),
+        ]   
 
         if (status.autoAddSpells) {
             listItems.push(makeTextButton('Sheet', status.sheet, '!cmaster --config,status,key=sheet,value=?{Sheet|D&D5E OGL,OGL|D&D5E Shaped,Shaped|PF2,PF2|} --show,status'))
         }
         
-		makeAndSendMenu(makeList(listItems,banner.backButton),banner.titleText,'gm');	
-	},
+        makeAndSendMenu(makeList(listItems,banner.backButton),banner.titleText,'gm');   
+    },
 
-	sendConcentrationMenu = function() {
-	    const banner = makeBanner('concentration','Concentration','setup') 
-        let	concentration = state[combatState].config.concentration
+    sendConcentrationMenu = function() {
+        const banner = makeBanner('concentration','Concentration','setup') 
+        let concentration = state[combatState].config.concentration
         let listItems = []
+        log(concentration)
 
-		listItems.push(makeTextButton('Use Concentration (5E)', concentration.useConcentration, '!cmaster --config,concentration,key=useConcentration,value='+!concentration.useConcentration + ' --show,concentration'))
-		
-		if (concentration.useConcentration) {
-		    listItems.push(makeTextButton('Add Marker', concentration.autoAdd, '!cmaster --config,concentration,key=autoAdd,value='+!concentration.autoAdd+' --show,concentration'))	            
-		    listItems.push(makeTextButton('Check for Save', concentration.autoRoll, '!cmaster --config,concentration,key=autoRoll,value='+!concentration.autoRoll+' --show,concentration'))  
-		    listItems.push(makeTextButton('Notify', concentration.notify, '!cmaster --config,concentration,key=notify,value=?{Notify|Everyone,Everyone|Character,Character|GM,GM} --show,concentration'))
-		 }
-		
-		if (concentration.autoRoll) {
-		    listItems.push(makeTextButton('Wound Bar', concentration.woundBar, '!cmaster --config,concentration,key=woundBar,value=?{Wound Bar|Bar1,bar1|Bar2,bar2|Bar3,bar3} --show,concentration'))  
-		    listItems.push(makeTextButton('Attribute', concentration.attribute, '!cmaster --config,concentration,key=attribute,value=?{Attribute|} --show,concentration'))  
-		    
-		}
+        listItems.push(makeTextButton('Use Concentration (5E)', concentration.useConcentration, '!cmaster --config,concentration,key=useConcentration,value='+!concentration.useConcentration + ' --show,concentration'))
+        
+        if (concentration.useConcentration) {
+            listItems.push(makeTextButton('Add Marker', concentration.autoAdd, '!cmaster --config,concentration,key=autoAdd,value='+!concentration.autoAdd+' --show,concentration'))                
+            listItems.push(makeTextButton('Check for Save', concentration.autoRoll, '!cmaster --config,concentration,key=autoRoll,value='+!concentration.autoRoll+' --show,concentration'))  
+            listItems.push(makeTextButton('Notify', concentration.notify, '!cmaster --config,concentration,key=notify,value=?{Notify|Everyone,Everyone|Character,Character|GM,GM} --show,concentration'))
+         }
+        
+        if (concentration.autoRoll) {
+            listItems.push(makeTextButton('Wound Bar', concentration.woundBar, '!cmaster --config,concentration,key=woundBar,value=?{Wound Bar|Bar1,bar1|Bar2,bar2|Bar3,bar3} --show,concentration'))  
+            listItems.push(makeTextButton('Attribute', concentration.attribute, '!cmaster --config,concentration,key=attribute,value=?{Attribute|} --show,concentration'))  
+            
+        }
 
-		makeAndSendMenu(makeList(listItems,banner.backButton),banner.titleText,'gm');	
-	},
-	
+        makeAndSendMenu(makeList(listItems,banner.backButton),banner.titleText,'gm');   
+    },
+    
     sendConditionsMenu = function(message) {
         let key, condition, conditionButton, favorite, icon, output, rowCount=1
         let backButton = makeBigButton('Back', '!cmaster --back,setup')
-		let	addButton = makeBigButton('Add Condition', '!cmaster --new,condition=?{Name}')
+        let addButton = makeBigButton('Add Condition', '!cmaster --new,condition=?{Name}')
         let helpButton = makeImageButton('!cmaster --help,conditions',helpImage,'Help','transparent',18,'white')
-        let	titleText  = 'Conditions Setup'+'<span style='+styles.buttonRight+'>'+helpButton+'</span>'      
-		let	listItems = []
-		let	listContents
+        let titleText  = 'Conditions Setup'+'<span style='+styles.buttonRight+'>'+helpButton+'</span>'      
+        let listItems = []
+        let listContents
         let icons = []
         let check = true
-			
+            
         for (key in state[combatState].config.conditions) {
             condition       = getConditionByKey(key)
             let installed = verifyInstalls(condition.iconType)
             if (!installed) {
                 return
             }            
-			conditionButton = makeImageButton('!cmaster --show,condition=' + key,backImage,'Edit Condition','transparent',12)
-			
-			if (rowCount == 1) {
+            conditionButton = makeImageButton('!cmaster --show,condition=' + key,backImage,'Edit Condition','transparent',12)
+            
+            if (rowCount == 1) {
                 listContents = '<div>'
                 rowCount = 2
-			} else {
-			   listContents = '<div style='+styles.background+'>'
-			   rowCount = 1
-			}    
-			
+            } else {
+               listContents = '<div style='+styles.background+'>'
+               rowCount = 1
+            }    
+            
             listContents += getDefaultIcon(condition.iconType,condition.icon,'display:inline-block;margin-right:3px')
             listContents += '<span style="vertical-align:middle">'+condition.name+'</span>'
             listContents += '<span style="float:right;vertical-align:middle">'+conditionButton+'</span>'
@@ -847,7 +846,7 @@ var CombatMaster = CombatMaster || (function() {
         let contents = message + makeList(listItems, backButton, addButton);
         
         state[combatState].config.previousPage = 'conditions'
-        makeAndSendMenu(contents,titleText,'gm');	
+        makeAndSendMenu(contents,titleText,'gm');   
     },
 
     sendConditionMenu = function(key) {
@@ -855,19 +854,19 @@ var CombatMaster = CombatMaster || (function() {
         let listItems = []
         let markerDropdown = ''
         let helpButton = makeImageButton('!cmaster --help,condition',helpImage,'Help','transparent',18,'white')
-        let	titleText  = 'Condition Setup'+'<span style='+styles.buttonRight+'>'+helpButton+'</span>'  
+        let titleText  = 'Condition Setup'+'<span style='+styles.buttonRight+'>'+helpButton+'</span>'  
 
         if (typeof condition.description == 'undefined') {
             condition.description = ' '
         }
         
-	    let removeButton        = makeBigButton('Delete Condition', '!cmaster --delete,condition='+key+',confirm=?{Are you sure?|Yes,yes|No,no}')
-		let descriptionButton   = makeBigButton('Edit Description', '!cmaster --config,condition='+key+',key=description,value={{?{Description|'+condition.description+'}}} --show,condition='+key)
-		let backButton          = makeBigButton('Back', '!cmaster --back')	 
+        let removeButton        = makeBigButton('Delete Condition', '!cmaster --delete,condition='+key+',confirm=?{Are you sure?|Yes,yes|No,no}')
+        let descriptionButton   = makeBigButton('Edit Description', '!cmaster --config,condition='+key+',key=description,value=?{Description|'+condition.description+'} --show,condition='+key)
+        let backButton          = makeBigButton('Back', '!cmaster --back')   
 
-		listItems.push(makeTextButton('Name', condition.name, '!cmaster --config,condition='+key+',key=name,value=?{Name}'))
-		listItems.push(makeTextButton('Type', condition.type, '!cmaster --config,condition='+key+',key=type,value=?{Type|Condition,Condition|Spell,Spell} --show,condition='+key))
-		listItems.push(makeTextButton('Icon Type', condition.iconType, '!cmaster --config,condition='+key+',key=iconType,value=?{Icon Type|Combat Master,Combat Master|Token Marker,Token Marker|Token Condition,Token Condition} --show,condition='+key))
+        listItems.push(makeTextButton('Name', condition.name, '!cmaster --config,condition='+key+',key=name,value=?{Name}'))
+        listItems.push(makeTextButton('Type', condition.type, '!cmaster --config,condition='+key+',key=type,value=?{Type|Condition,Condition|Spell,Spell} --show,condition='+key))
+        listItems.push(makeTextButton('Icon Type', condition.iconType, '!cmaster --config,condition='+key+',key=iconType,value=?{Icon Type|Combat Master,Combat Master|Token Marker,Token Marker|Token Condition,Token Condition} --show,condition='+key))
         
         let installed = verifyInstalls(condition.iconType)
         if (!installed) {
@@ -875,27 +874,24 @@ var CombatMaster = CombatMaster || (function() {
         }   
 
         if (condition.iconType == 'Token Condition') {
-            listItems.push(makeTextButton('Icon', condition.icon, '!cmaster --config,condition='+key+',key=icon,value=?{Token Condition|} --show,condition='+key))				
+            listItems.push(makeTextButton('Icon', condition.icon, '!cmaster --config,condition='+key+',key=icon,value=?{Token Condition|} --show,condition='+key))              
         } else {     
-	        listItems.push(makeTextButton('Icon', getDefaultIcon(condition.iconType,condition.icon), '!cmaster --config,condition='+key+',key=icon,value='+buildMarkerDropdown(condition.iconType)+' --show,condition='+key))				
+            listItems.push(makeTextButton('Icon', getDefaultIcon(condition.iconType,condition.icon), '!cmaster --config,condition='+key+',key=icon,value='+buildMarkerDropdown(condition.iconType)+' --show,condition='+key))               
         }
         
-		listItems.push(makeTextButton('Duration', condition.duration, '!cmaster --config,condition='+key+',key=duration,value=?{Duration|1} --show,condition='+key))
-		listItems.push(makeTextButton('Direction', condition.direction, '!cmaster --config,condition='+key+',key=direction,value=?{Direction|0} --show,condition='+key))
-		listItems.push(makeTextButton('Override', condition.override, '!cmaster --config,condition='+key+',key=override,value='+!condition.override+' --show,condition='+key))
-		listItems.push(makeTextButton('Favorites', condition.favorite, '!cmaster --config,condition='+key+',key=favorite,value='+!condition.favorite+' --show,condition='+key))
-		listItems.push(makeTextButton('Message', condition.message, '!cmaster --config,condition='+key+',key=message,value={{?{Message}}} --show,condition='+key))
+        listItems.push(makeTextButton('Duration', condition.duration, '!cmaster --config,condition='+key+',key=duration,value=?{Duration|1} --show,condition='+key))
+        listItems.push(makeTextButton('Direction', condition.direction, '!cmaster --config,condition='+key+',key=direction,value=?{Direction|0} --show,condition='+key))
+        listItems.push(makeTextButton('Override', condition.override, '!cmaster --config,condition='+key+',key=override,value='+!condition.override+' --show,condition='+key))
+        listItems.push(makeTextButton('Favorites', condition.favorite, '!cmaster --config,condition='+key+',key=favorite,value='+!condition.favorite+' --show,condition='+key))
+        listItems.push(makeTextButton('Message', condition.message, '!cmaster --config,condition='+key+',key=message,value=?{Message} --show,condition='+key))
         listItems.push(makeTextButton('Targeted', condition.targeted, '!cmaster --config,condition='+key+',key=targeted,value='+!condition.targeted+' --show,condition='+key))
-        if (condition.targeted) {
-            listItems.push(makeTextButton('Targeted API', condition.targetedAPI, '!cmaster --config,condition='+key+',key=targetedAPI,value=?{Targeted API|Caster&Targets,casterTargets|Targets(Only),targets} --show,condition='+key))
-        }
         listItems.push(makeTextButton('Concentration', condition.concentration, '!cmaster --config,condition='+key+',key=concentration,value='+!condition.concentration+' --show,condition='+key))
         listItems.push('<div style="margin-top:3px"><i><b>Adding Condition</b></i></div>' )
-		listItems.push(makeBigButton('Add APIs', '!cmaster --show,condition='+key+',addAPI'))
+        listItems.push(makeBigButton('Add APIs', '!cmaster --show,condition='+key+',addAPI'))
         listItems.push('<div style="margin-top:3px"><i><b>Removing Condition</b></i></div>' )
-		listItems.push(makeBigButton('Remove APIs', '!cmaster --show,condition='+key+',remAPI'))
+        listItems.push(makeBigButton('Remove APIs', '!cmaster --show,condition='+key+',remAPI'))
 
-		let contents = makeList(listItems)+'<hr>'+descriptionButton+'<b>Description:</b>'+condition.description+removeButton+'<hr>'+backButton 	
+        let contents = makeList(listItems)+'<hr>'+descriptionButton+'<b>Description:</b>'+condition.description+removeButton+'<hr>'+backButton  
         makeAndSendMenu(contents,titleText,'gm');
     },
     
@@ -905,14 +901,14 @@ var CombatMaster = CombatMaster || (function() {
         let condition  = state[combatState].config.conditions[key]
 
         listItems = [
-		    makeTextButton('API', condition.addAPI, '!cmaster --config,condition='+key+',key=addAPI,value=?{API Command|} --show,condition='+key),
-    		makeTextButton('Roll20AM', condition.addRoll20AM, '!cmaster --config,condition='+key+',key=addRoll20AM,value=?{Roll20AM Command|} --show,condition='+key),
-		    makeTextButton('FX', condition.addFX, '!cmaster --config,condition='+key+',key=addFX,value=?{FX|} --show,condition='+key),
-		    makeTextButton('Macro', condition.addMacro, '!cmaster --config,condition='+key+',key=addMacro,value=?{Macro|} --show,condition='+key),
-		    makeTextButton('Persistent Macro', condition.addPersistentMacro, '!cmaster --config,condition='+key+',key=addPersistentMacro,value='+!condition.addPersistentMacro+' --show,condition='+key)
-		]
-		
-		makeAndSendMenu(makeList(listItems,banner.backButton),banner.titleText,'gm');
+            makeTextButton('API', condition.addAPI, '!cmaster --config,condition='+key+',key=addAPI,value=?{API Command|} --show,condition='+key),
+            makeTextButton('Roll20AM', condition.addRoll20AM, '!cmaster --config,condition='+key+',key=addRoll20AM,value=?{Roll20AM Command|} --show,condition='+key),
+            makeTextButton('FX', condition.addFX, '!cmaster --config,condition='+key+',key=addFX,value=?{FX|} --show,condition='+key),
+            makeTextButton('Macro', condition.addMacro, '!cmaster --config,condition='+key+',key=addMacro,value=?{Macro|} --show,condition='+key),
+            makeTextButton('Persistent Macro', condition.addPersistentMacro, '!cmaster --config,condition='+key+',key=addPersistentMacro,value='+!condition.addPersistentMacro+' --show,condition='+key)
+        ]
+        
+        makeAndSendMenu(makeList(listItems,banner.backButton),banner.titleText,'gm');
     },
 
     sendConditionRemAPIMenu = function (key) {
@@ -921,13 +917,13 @@ var CombatMaster = CombatMaster || (function() {
         let condition  = state[combatState].config.conditions[key]
         
         listItems = [
-		    makeTextButton('API', condition.remAPI, '!cmaster --config,condition='+key+',key=remAPI,value=?{API Command|} --show,condition='+key),
-		    makeTextButton('Roll20AM', condition.remRoll20AM, '!cmaster --config,condition='+key+',key=remRoll20AM,value=?{Roll20AM Command|} --show,condition='+key),
-		    makeTextButton('FX', condition.remFX, '!cmaster --config,condition='+key+',key=remFX,value=?{FX|} --show,condition='+key),
-		    makeTextButton('Macro', condition.remMacro, '!cmaster --config,condition='+key+',key=remMacro,value=?{Macro|} --show,condition='+key)
-		]
-		
-		makeAndSendMenu(makeList(listItems,banner.backButton),banner.titleText,'gm');        
+            makeTextButton('API', condition.remAPI, '!cmaster --config,condition='+key+',key=remAPI,value=?{API Command|} --show,condition='+key),
+            makeTextButton('Roll20AM', condition.remRoll20AM, '!cmaster --config,condition='+key+',key=remRoll20AM,value=?{Roll20AM Command|} --show,condition='+key),
+            makeTextButton('FX', condition.remFX, '!cmaster --config,condition='+key+',key=remFX,value=?{FX|} --show,condition='+key),
+            makeTextButton('Macro', condition.remMacro, '!cmaster --config,condition='+key+',key=remMacro,value=?{Macro|} --show,condition='+key)
+        ]
+        
+        makeAndSendMenu(makeList(listItems,banner.backButton),banner.titleText,'gm');        
     },
     
     buildMarkerDropdown = function (iconType) {
@@ -939,7 +935,7 @@ var CombatMaster = CombatMaster || (function() {
             })
         } else if (iconType == 'Token Marker') {
             if (markers.length == 0) {
-    	        markers = getTokenMarkers();
+                markers = getTokenMarkers();
             }
             markers.forEach((marker) => {
                 markerDropdown += '|'+marker.name+','+marker.name
@@ -990,11 +986,11 @@ var CombatMaster = CombatMaster || (function() {
         if (debug) {
             log('Targeted Condition')
         }
-        let condition    = getConditionByKey(key)
+
         let title        = 'Select Targets'
         let addButton    = makeImageButton('!cmaster --add,target,id='+id+',condition='+key,tagImage,'Targeted Icons','transparent',18,'white')
         title           += '<div style="display:inline-block;float:right;vertical-aligh:middle">'+addButton+'</div>'     
-        let contents     = 'Select target tokens to assign **' + condition.name + '** and hit the button above when ready'
+        let contents     = 'Select target tokens to assign this condition and hit the button above when ready'
         makeAndSendMenu(contents,title,'gm');
     },
 
@@ -1002,11 +998,12 @@ var CombatMaster = CombatMaster || (function() {
         if (debug) {
             log('Targeted Spell')
         }
+
+        let title        = 'Select Targets'
         let condition    = getConditionByKey(key)
-        let title        = 'Select Origin'
         let addButton    = makeImageButton(`!cmaster --add,condition=${key},duration=${condition.duration},direction=${condition.direction}`,tagImage,'Spell Targets','transparent',18,'white')
         title           += '<div style="display:inline-block;float:right;vertical-aligh:middle">'+addButton+'</div>'     
-        let contents     = 'Select the token to track the duration of **' + condition.name + '** and hit the button above when ready'
+        let contents     = 'Select target tokens to assign this spell and hit the button above when ready'
         makeAndSendMenu(contents,title,'gm');
     },
     
@@ -1025,106 +1022,106 @@ var CombatMaster = CombatMaster || (function() {
     
 //*************************************************************************************************************
 //SESSION STATE MAINTENANCE
-//*************************************************************************************************************	
-	editCombatState = function (cmdDetails) {
-		if(cmdDetails.details.initiative){
-			state[combatState].config.initiative[cmdDetails.details.key] = cmdDetails.details.value;
-		}
-		else if(cmdDetails.details.timer){
-			state[combatState].config.timer[cmdDetails.details.key] = cmdDetails.details.value;
-		}
-		else if (cmdDetails.details.turnorder){
-			if (cmdDetails.details.key === 'initiativeDie') {
-				cmdDetails.details.value = parseInt(value);
-			}
-			state[combatState].config.turnorder[cmdDetails.details.key] = cmdDetails.details.value;
-		}	
-		else if (cmdDetails.details.announcements){
-			state[combatState].config.announcements[cmdDetails.details.key] = cmdDetails.details.value;
-		}
-		else if (cmdDetails.details.status){
-			state[combatState].config.status[cmdDetails.details.key] = cmdDetails.details.value;
-		}  
-		else if (cmdDetails.details.concentration){
-			state[combatState].config.concentration[cmdDetails.details.key] = cmdDetails.details.value;
-		} 		
-		else {
-    		if (cmdDetails.details.key === 'name' && cmdDetails.details.value.replace(/\s/g, '').toLowerCase() !== state[combatState].config.conditions[cmdDetails.details.condition]) { 
-      			state[combatState].config.conditions[cmdDetails.details.value.toLowerCase()] = state[combatState].config.conditions[cmdDetails.details.condition];
-      			state[combatState].config.conditions[cmdDetails.details.value.toLowerCase()].key = cmdDetails.details.value.toLowerCase()
-      			state[combatState].config.conditions[cmdDetails.details.value.toLowerCase()].name = cmdDetails.details.value
-      			delete state[combatState].config.conditions[cmdDetails.details.condition];
-      			sendConditionMenu(cmdDetails.details.value.toLowerCase())
-    	    } else {
-    	        if (cmdDetails.details.key == 'description') {
-    	            cmdDetails.details.value = cmdDetails.details.value
-    	        }
-		        state[combatState].config.conditions[cmdDetails.details.condition][cmdDetails.details.key] = cmdDetails.details.value;
-    	    }      
-		}
-	},
+//************************************************************************************************************* 
+    editCombatState = function (cmdDetails) {
+        if(cmdDetails.details.initiative){
+            state[combatState].config.initiative[cmdDetails.details.key] = cmdDetails.details.value;
+        }
+        else if(cmdDetails.details.timer){
+            state[combatState].config.timer[cmdDetails.details.key] = cmdDetails.details.value;
+        }
+        else if (cmdDetails.details.turnorder){
+            if (cmdDetails.details.key === 'initiativeDie') {
+                cmdDetails.details.value = parseInt(value);
+            }
+            state[combatState].config.turnorder[cmdDetails.details.key] = cmdDetails.details.value;
+        }   
+        else if (cmdDetails.details.announcements){
+            state[combatState].config.announcements[cmdDetails.details.key] = cmdDetails.details.value;
+        }
+        else if (cmdDetails.details.status){
+            state[combatState].config.status[cmdDetails.details.key] = cmdDetails.details.value;
+        }  
+        else if (cmdDetails.details.concentration){
+            state[combatState].config.concentration[cmdDetails.details.key] = cmdDetails.details.value;
+        }       
+        else {
+            if (cmdDetails.details.key === 'name' && cmdDetails.details.value.replace(/\s/g, '').toLowerCase() !== state[combatState].config.conditions[cmdDetails.details.condition]) { 
+                state[combatState].config.conditions[cmdDetails.details.value.toLowerCase()] = state[combatState].config.conditions[cmdDetails.details.condition];
+                state[combatState].config.conditions[cmdDetails.details.value.toLowerCase()].key = cmdDetails.details.value.toLowerCase()
+                state[combatState].config.conditions[cmdDetails.details.value.toLowerCase()].name = cmdDetails.details.value
+                delete state[combatState].config.conditions[cmdDetails.details.condition];
+                sendConditionMenu(cmdDetails.details.value.toLowerCase())
+            } else {
+                if (cmdDetails.details.key == 'description') {
+                    cmdDetails.details.value = cmdDetails.details.value
+                }
+                state[combatState].config.conditions[cmdDetails.details.condition][cmdDetails.details.key] = cmdDetails.details.value;
+            }      
+        }
+    },
     
-	editShowState = function (value) {
-		state[combatState].config.status.showConditions = value;
-	},
-	
+    editShowState = function (value) {
+        state[combatState].config.status.showConditions = value;
+    },
+    
 //*************************************************************************************************************
 //CONDITIONS 
-//*************************************************************************************************************		
-	newCondition = function (name, type='Condition', concentration=false, description='None') {
+//*************************************************************************************************************     
+    newCondition = function (name, type='Condition', concentration=false, description='None') {
         if (debug) {
             log ('Create Condition')
-        }	
+        }   
         
-		if(!name){
-			sendConditionsMenu('You didn\'t give a condition name, eg. <i>!cmaster --new,condition=Prone</i>.');
-		} else if (state[combatState].config.conditions[name.toLowerCase()]) {
-			sendConditionsMenu('The condition `'+name+'` already exists.');
-		} else {
-			state[combatState].config.conditions[name.toLowerCase()] = {
-				name: name,
-				key: name.toLowerCase(),
-				type: type,
-				icon: 'red',
-				iconType: 'Combat Master',
-				description: ' ',
-				duration: 1,
-				direction: 0,
-				message: 'None',
-				concentration: concentration,
-				description: description,
-				tageted: false,
-				addAPI: 'None',
-				addRoll20AM: 'None',
-				addFX: 'None',
-				addMacro: 'None',
-				addPersistentMacro: false,
-				remAPI: 'None',
-				remRoll20AM: 'None',
-				remFX: 'None',
-				remMacro: 'None'				
-			}	
-		    sendConditionMenu(name.toLowerCase());		
-		}		
-	},
-	
-	deleteCondition = function (key, confirm) {	
+        if(!name){
+            sendConditionsMenu('You didn\'t give a condition name, eg. <i>!condition add Prone</i>.');
+        } else if (state[combatState].config.conditions[name.toLowerCase()]) {
+            sendConditionsMenu('The condition `'+name+'` already exists.');
+        } else {
+            state[combatState].config.conditions[name.toLowerCase()] = {
+                name: name,
+                key: name.toLowerCase(),
+                type: type,
+                icon: 'red',
+                iconType: 'Combat Master',
+                description: ' ',
+                duration: 1,
+                direction: 0,
+                message: 'None',
+                concentration: concentration,
+                description: description,
+                tageted: false,
+                addAPI: 'None',
+                addRoll20AM: 'None',
+                addFX: 'None',
+                addMacro: 'None',
+                addPersistentMacro: false,
+                remAPI: 'None',
+                remRoll20AM: 'None',
+                remFX: 'None',
+                remMacro: 'None'                
+            }   
+            sendConditionMenu(name.toLowerCase());      
+        }       
+    },
+    
+    deleteCondition = function (key, confirm) { 
         if (debug) {
             log ('Delete Condition')
-        }	
+        }   
 
-		if (confirm === 'yes') {
-			if(!key){
-				sendConditionsMenu('You didn\'t give a condition name, eg. <i>!cmaster --delete,condition=Prone</i>.');
-			} else if( !state[combatState].config.conditions[key]){
-				sendConditionsMenu('The condition `'+key+'` does\'t exist.');
-			} else {
-				delete state[combatState].config.conditions[key];
-				sendConditionsMenu('The condition `'+key+'` is removed.');
-			}
-		}	
-		sendConditionsMenu('Condition was deleted')
-	},
+        if (confirm === 'yes') {
+            if(!key){
+                sendConditionsMenu('You didn\'t give a condition name, eg. <i>!cmaster --delete,condition=Prone</i>.');
+            } else if( !state[combatState].config.conditions[key]){
+                sendConditionsMenu('The condition `'+key+'` does\'t exist.');
+            } else {
+                delete state[combatState].config.conditions[key];
+                sendConditionsMenu('The condition `'+key+'` is removed.');
+            }
+        }   
+        sendConditionsMenu('Condition was deleted')
+    },
 
     getConditionByMarker = function (marker) {
         if (debug) {
@@ -1146,11 +1143,7 @@ var CombatMaster = CombatMaster || (function() {
     
     getConditions = function () {
         return state[combatState].config.conditions;
-    }, 	
-
-    findAssignedCondition = function (id, key) {
-        return state[combatState].conditions.filter(el => el.key == key && el.id == id)
-    },
+    },  
 
     verifyCondition = function(token,key) {
         let condition  = getConditionByKey(key)
@@ -1162,16 +1155,16 @@ var CombatMaster = CombatMaster || (function() {
             return true
         }
         if (typeof condition.direction == 'undefined' || typeof condition.duration == 'undefined') {
-			makeAndSendMenu('The condition you are trying to use has not be setup yet', '', 'gm');
-			return false;            
+            makeAndSendMenu('The condition you are trying to use has not be setup yet', '', 'gm');
+            return false;            
         }
-		if (!key) {
-			makeAndSendMenu('No condition name was given.', '', 'gm');
-			return false;
-		}
-		if (!token || !token.length) {		
-			makeAndSendMenu('No tokens were selected.', '', 'gm');
-			return false;
+        if (!key) {
+            makeAndSendMenu('No condition name was given.', '', 'gm');
+            return false;
+        }
+        if (!token || !token.length) {      
+            makeAndSendMenu('No tokens were selected.', '', 'gm');
+            return false;
         }
         if (token == getOrCreateMarker().get('id')) {
             return false;
@@ -1186,13 +1179,14 @@ var CombatMaster = CombatMaster || (function() {
         if (debug) {
             log('Add Condition')
         }
-        let condition
+        
         if (selectedTokens) {
-        	selectedTokens.forEach(token => {
-        	    if (token._type == 'graphic') {
-    			    addConditionToToken(getObj(token._type, token._id),cmdDetails.details.condition,cmdDetails.details.duration,cmdDetails.details.direction,cmdDetails.details.message)    
-        	    }
-        	});	 	
+            selectedTokens.forEach(token => {
+                if (token._type == 'graphic') {
+                    addConditionToToken(getObj(token._type, token._id),cmdDetails.details.condition,cmdDetails.details.duration,cmdDetails.details.direction,cmdDetails.details.message)    
+                    doAddConditionCalls(getObj(token._type, token._id),cmdDetails.details.condition,playerID)
+                }
+            });     
         } else {
             makeAndSendMenu('No tokens were selected.', '', 'gm');
         }   
@@ -1206,18 +1200,20 @@ var CombatMaster = CombatMaster || (function() {
         if (cmdDetails.details.id) {
             let token = getObj('graphic', cmdDetails.details.id)
             removeConditionFromToken(token, cmdDetails.details.condition)  
+            doRemoveConditionCalls(token,cmdDetails.details.condition)
         } else if (selectedTokens) {
-        	selectedTokens.forEach(token => {
-        	    if (token._type == 'graphic') {
-    			    removeConditionFromToken(getObj(token._type, token._id), cmdDetails.details.condition)  
-        	    }    
-        	});	 	
-        }	
+            selectedTokens.forEach(token => {
+                if (token._type == 'graphic') {
+                    removeConditionFromToken(getObj(token._type, token._id), cmdDetails.details.condition)   
+                    doRemoveConditionCalls(getObj(token._type, token._id),cmdDetails.details.condition)
+                }    
+            });     
+        }   
     },
     
     addConditionToToken = function(tokenObj,key,duration,direction,message) {
-	    let	defaultCondition = getConditionByKey(key)
-	    let newCondition = {}
+        let defaultCondition = getConditionByKey(key)
+        let newCondition = {}
 
         if (!tokenObj) {
             return
@@ -1230,10 +1226,13 @@ var CombatMaster = CombatMaster || (function() {
         if (verifyCondition(tokenObj.get("_id"), key)) {
             
             let remove = removeConditionFromToken(tokenObj, key);   
-
+            log('Remove:'+remove)
+                // log('Removed:'+remove.removed)
+                // log('Targets:' +removed.target)
             newCondition.id                 = tokenObj.get("_id")
             newCondition.key                = key
-            newCondition.target             = remove.targets
+            newCondition.target             = remove.target
+            log(newCondition.target)
             newCondition.tokenConditionID   = null
             
             if (defaultCondition) {
@@ -1243,23 +1242,21 @@ var CombatMaster = CombatMaster || (function() {
                 newCondition.addMacro           = defaultCondition.addMacro
                 newCondition.addPersistentMacro = defaultCondition.addPersistentMacro
                 newCondition.concentration      = defaultCondition.concentration
-                newCondition.override           = defaultCondition.override
                 newCondition.message            = defaultCondition.message
                 newCondition.type               = defaultCondition.type
-                newCondition.targeted           = defaultCondition.targeted
-                newCondition.targetedAPI        = defaultCondition.targetedAPI
             } else {
                 newCondition.name               = key
                 newCondition.icon               = null
                 newCondition.iconType           = null
                 newCondition.addMacro           = null
                 newCondition.addPersistentMacro = null
-                newCondition.concentration      = false
-                newCondition.override           = false             
-                newCondition.message            = null
                 newCondition.type               = 'Condition'
-                newCondition.targeted           = false
-                newCondition.targetedAPI        = null                
+                newCondition.concentration      = false
+            }
+            
+            let icon
+            if (newCondition.iconType) {
+                icon = getIconTag(newCondition.iconType, newCondition.icon)
             }
 
             if (newCondition.iconType == 'Token Condition') {
@@ -1280,11 +1277,11 @@ var CombatMaster = CombatMaster || (function() {
                                         height: tokenObj.get('height')
                                     });   
                     let result = TokenCondition.AttachConditionToToken(condition.id,tokenObj.id);
-        			if(result.success) {
-        				newCondition.tokenConditionID = condition.id
-        			} else {
-        				log(`Attach failed. Message: ${result.reason}`);
-        			}                                        
+                    if(result.success) {
+                        newCondition.tokenConditionID = condition.id
+                    } else {
+                        log(`Attach failed. Message: ${result.reason}`);
+                    }                                        
                 });
             }
             
@@ -1310,29 +1307,38 @@ var CombatMaster = CombatMaster || (function() {
                  state[combatState].conditions.push(newCondition)
             },500) 
 
-            addMarker(tokenObj, newCondition.iconType, newCondition.icon, newCondition.duration, newCondition.direction, newCondition.key)
+            if (icon) {
+                if (newCondition.key == 'dead' || newCondition.duration <= 1) {
+                    addMarker(tokenObj,icon)
+                } else {   
+                    if (newCondition.duration >= 10) {
+                        addMarker(tokenObj,icon)
+                    } else {
+                        addMarker(tokenObj,icon,newCondition.duration)
+                    }
+                }  
+            } 
 
-            if (newCondition.target.length > 0) {
-                newCondition.target.forEach((targets) => {    
+            if (newCondition.target.length > 0 && icon) {
+                newCondition.target.forEach((targets) => {     
                     if (newCondition.key != 'dead') { 
-                        addMarker(getObj('graphic', targets),newCondition.iconType,newCondition.icon,newCondition.duration, newCondition.direction, newCondition.key)
+                        if (newCondition.duration >= 10) {
+                            addMarker(getObj('graphic', targets),icon)
+                        } else {
+                            addMarker(getObj('graphic', targets),icon,newCondition.duration)
+                        }
                     }   
                 })    
             }
              
-            if (!remove.removed) { 
-                if (state[combatState].config.status.sendConditions && defaultCondition) {
-                    sendConditionToChat(newCondition.key)
-                }  
-                if (newCondition.targeted) {
-                    targetedCondition(newCondition.id, key)
-                }    
-                if (newCondition.concentration == true && newCondition.override == true) {
-                    targetedCaster('concentration',newCondition.duration,newCondition.direction,'Concentrating on ' + newCondition.name)
-                }
-     		    if (!newCondition.targeted || (newCondition.targeted && newCondition.targetedAPI == 'casterTargets')) {
-    			    doAddConditionCalls(tokenObj,key)
-    			}  
+            if (state[combatState].config.status.sendConditions && !remove.removed && defaultCondition) {
+                sendConditionToChat(newCondition.key)
+            }  
+            if (defaultCondition && defaultCondition.targeted) {
+                targetedCondition(newCondition.id, key)
+            }    
+            if (defaultCondition && defaultCondition.concentration == true && defaultCondition.override == true) {
+                targetedCaster('concentration',newCondition.duration,newCondition.direction,'Concentrating on ' + defaultCondition.name)
             }
         }    
     },  
@@ -1355,42 +1361,38 @@ var CombatMaster = CombatMaster || (function() {
         }  
         
         let removed = false
-        let targets = [];
-        let target;
+        let icon
+        let target = [];
         
         [...state[combatState].conditions].forEach((condition, i) => {
             if (condition.id == tokenObj.get('_id') && condition.key == key) {
+                if (condition.iconType) {
+                    icon = getIconTag(condition.iconType, condition.icon)
+                }           
                 if (condition.hasOwnProperty('target')) {
                     if (condition.target.length > 0) {
-                        targets = condition.target
-                        targets.forEach((target, j) => {
-                            if (condition.iconType == 'Token Condition') {
+                        target = condition.target
+                        condition.target.forEach((target, j) => {
+                            if (icon) {
+                                removeMarker(getObj('graphic', target),icon)
+                            } else if (condition.iconType == 'Token Condition') {
                                 removeTokenCondition(condition.tokenConditionID)
-                            } else {
-                                removeMarker(getObj('graphic', target), condition.iconType, condition.icon)
-                			    if (condition.targeted) {
-                			        doRemoveConditionCalls(getObj('graphic', target),condition.key)
-                			    }                                    
-                            }  
+                            }    
                         })    
                     }
                 }    
-
-                if (condition.iconType == 'Token Condition') {
+                if (icon) {            
+                    removeMarker(tokenObj,icon)
+                } else if (condition.iconType == 'Token Condition') {
                     removeTokenCondition(condition.tokenConditionID)
-                } else {            
-                    removeMarker(tokenObj, condition.iconType, condition.icon)
-                }  
-
+                }     
                 if (condition.concentration == true) {
                     let concentration = getConditionByKey('concentration')
-                    removeMarker(tokenObj, concentration.iconType, concentration.icon)                    
-                }   
-
-			    if (!condition.targeted || (condition.targeted && condition.targetedAPI == 'casterTargets')) {
-			        doRemoveConditionCalls(tokenObj,condition.key)
-			    }            
-			    
+                    icon = getIconTag(concentration.iconType, concentration.icon)
+                    if (icon) {            
+                        removeMarker(tokenObj,icon)                    
+                    }
+                }    
                 state[combatState].conditions.splice(i,1)
                 removed = true
             }      
@@ -1398,7 +1400,7 @@ var CombatMaster = CombatMaster || (function() {
         
         return {
             removed,
-            targets
+            target
         }; 
     },
 
@@ -1428,12 +1430,16 @@ var CombatMaster = CombatMaster || (function() {
             log("Add Targets to Condition")
         }
         
+        let icon
         [...state[combatState].conditions].forEach((condition,i) => {
             if (condition.id == id && condition.key == key) {
                 selectedTokens.forEach(token => {
-                    state[combatState].conditions[i].target.push(token._id)
-                    addMarker(getObj('graphic', token._id), condition.iconType, condition.icon, condition.duration, condition.direction, condition.key)
-                    doAddConditionCalls(getObj('graphic', token._id), condition.key)
+                    let installed = verifyInstalls(condition.iconType)
+                    if (installed) {
+                        icon = getIconTag(condition.iconType,condition.icon)
+                        state[combatState].conditions[i].target.push(token._id)
+                        addMarker(getObj('graphic', token._id),icon)
+                    }    
                 })    
             }   
         });   
@@ -1443,7 +1449,7 @@ var CombatMaster = CombatMaster || (function() {
     
 //*************************************************************************************************************
 //START/STOP COMBAT
-//*************************************************************************************************************	
+//************************************************************************************************************* 
     verifySetup = function(selectedTokens, initiative) {
         let initAttributes, turnorder, attribute, whisper, characterObj, verified=true, i, tokenObj
  
@@ -1472,12 +1478,12 @@ var CombatMaster = CombatMaster || (function() {
                     if (tokenObj) {
                         whisper         = (tokenObj.layer == 'gmlayer') ? 'gm ' : ''
                         characterObj    = getObj('character', tokenObj.get('represents'))
-        				if (!characterObj) {
+                        if (!characterObj) {
                              makeAndSendMenu('A token was found not assigned to a character sheet',' ', whisper);   
                         } 
                     }    
                 }    
-			})    
+            })    
         }  
         
         return verified
@@ -1517,6 +1523,8 @@ var CombatMaster = CombatMaster || (function() {
             doRoundCalls()
             doTurnorderChange()
         },2000) 
+        
+        log(hold)
     },
     
     restartCombat = function (hold,who) {
@@ -1534,6 +1542,10 @@ var CombatMaster = CombatMaster || (function() {
             tokenObj = getObj('graphic', condition.id)
             if (tokenObj) {
                 addConditionToToken(tokenObj,condition.key,condition.duration,condition.direction,condition.message);
+                icon = getIconTag(condition.iconType, condition.icon)
+                condition.target.forEach((target) => {
+                    addMarker(getObj('graphic', target),icon)
+                }) 
             } 
         }) 
  
@@ -1597,6 +1609,8 @@ var CombatMaster = CombatMaster || (function() {
             state[combatState].conditions = [];
             sendMainMenu(who)
         },2000)   
+        
+        log(hold)
     },
 
     clearHold = function (hold) {
@@ -1675,14 +1689,14 @@ var CombatMaster = CombatMaster || (function() {
     },
 
     rollGroupInit = function (selectedTokens) {
-        let giRoll = () => sendChat('',`/w gm <code>GroupInitiative.RollForTokenIDs()</code> is not supported.`);    	
+        let giRoll = () => sendChat('',`/w gm <code>GroupInitiative.RollForTokenIDs()</code> is not supported.`);       
         
 
-    	if('undefined' !== typeof GroupInitiative && GroupInitiative.RollForTokenIDs){
-			GroupInitiative.RollForTokenIDs(
-				(selectedTokens||[]).map(s=>s._id),{manualBonus: 0}
-			);   
-    	} 	
+        if('undefined' !== typeof GroupInitiative && GroupInitiative.RollForTokenIDs){
+            GroupInitiative.RollForTokenIDs(
+                (selectedTokens||[]).map(s=>s._id),{manualBonus: 0}
+            );   
+        }   
     },
     
     sendInitiativeChat = function (name,rollInit,bonus,rollInit1,whisper) { 
@@ -1724,71 +1738,65 @@ var CombatMaster = CombatMaster || (function() {
     },
 //*************************************************************************************************************
 //MARKERS
-//*************************************************************************************************************	    
-    addMarker = function(tokenObj, markerType, marker, duration, direction, key) {
+//*************************************************************************************************************     
+    addMarker = function(tokenObj, marker, duration) {
         if (debug) {
             log('Add Marker')
             log(marker)
         }
         
-        let installed = verifyInstalls(markerType)
-        if (!installed) {
-             makeAndSendMenu('You are missing an API required by an Icon Type you are using.  Install libTokenMarker or TokenConditions.');
-             return
-        }
+        let exists
+        let statusmarker
+        let statusmarkers
+        let condition = getConditionByMarker(marker)
         
-        let icon = getIconTag(markerType, marker)
-        if (!icon) {
-            return
+        if (tokenObj.get('statusmarkers')) {
+            statusmarkers = tokenObj.get('statusmarkers').split(',')
+        } else {
+            statusmarkers = []
+        } 
+
+        if (duration) {
+            statusmarker = marker+'@'+duration
+        } else {
+            statusmarker = marker
         }
 
-        removeMarker(tokenObj, markerType, marker)
+        [...statusmarkers].forEach((a, i) => {
+            if (a.indexOf(marker) > -1) {
+                statusmarkers.splice(i,0)
+                exists = true
+            }        
+        });        
         
-        setTimeout(() => {
-            let statusMarkers = returnMarkers(tokenObj)
-            
-            let statusMarker
-            if (key == 'dead' || duration <= 0 || duration >= 10 || (duration == 1 && direction == 0)) {
-                statusMarker = icon
-            } else {
-                statusMarker = icon+'@'+duration
-            }    
-    
-            statusMarkers.push(statusMarker)
-            tokenObj.set('statusmarkers', statusMarkers.join())
-        }, 500);
+        if (!exists) {
+            statusmarkers.push(statusmarker)
+        }
+        
+        tokenObj.set('statusmarkers', statusmarkers.join())
+        log(tokenObj)
+        handleShapedSheet(tokenObj.get('represents'), condition.key, true);
+        
     },
 
-    removeMarker = function(tokenObj, markerType, marker) {
+    removeMarker = function(tokenObj, marker) {
         if (debug) {
             log('Remove Marker')
-            log(marker)
         }
         
-        let installed = verifyInstalls(markerType)
-        if (!installed) {
-             makeAndSendMenu('You are missing an API required by an Icon Type you are using.  Install libTokenMarker or TokenConditions.');
-             return
-        }
-        
-        let icon = getIconTag(markerType, marker)
-        if (!icon) {
-            return
-        }
-        
-        let statusMarkers = returnMarkers(tokenObj)
-        
-        log(statusMarkers);    
-        statusMarkers.forEach((a, i) => {
+        let statusmarkers = tokenObj.get('statusmarkers').split(',');
+        let condition = getConditionByMarker(marker);
+
+        [...statusmarkers].forEach((a, i) => {
             if (a.indexOf(marker) > -1) {
-                statusMarkers.splice(i,1)
+                statusmarkers.splice(i,1)
             }  
         });       
-        tokenObj.set('statusmarkers', statusMarkers.join())
-    },
-    
-    returnMarkers = function(tokenObj) {
-        return tokenObj.get('statusmarkers').split(',')
+
+        tokenObj.set('statusmarkers', statusmarkers.join())
+        log(tokenObj)
+        handleShapedSheet(tokenObj.get('represents'), condition.key, false);
+        
     },
     
     resetMarker = function (next=false) {
@@ -1813,20 +1821,20 @@ var CombatMaster = CombatMaster || (function() {
 
     getOrCreateMarker = function (next=false) {
         let pageid    = Campaign().get('playerpageid')
-		let	turnorder = state[combatState].config.turnorder
-		
+        let turnorder = state[combatState].config.turnorder
+        
         if (debug) {
             log('Get or Create Marker')
-        }	
-		
-		let imgsrc
-		if (turnorder.markerType == 'External URL') {	
-            imgsrc = (next) ? turnorder.nextExternalMarkerURL : turnorder.externalMarkerURL
-		} else {
-			imgsrc = (next) ? turnorder.nextTokenMarkerURL : turnorder.tokenMarkerURL		
-		}
+        }   
         
- 		let markers = (next) ? findObjs({pageid,imgsrc,name: 'NextMarker'}) : findObjs({pageid,imgsrc});
+        let imgsrc
+        if (turnorder.markerType == 'External URL') {   
+            imgsrc = (next) ? turnorder.nextExternalMarkerURL : turnorder.externalMarkerURL
+        } else {
+            imgsrc = (next) ? turnorder.nextTokenMarkerURL : turnorder.tokenMarkerURL       
+        }
+        
+        let markers = (next) ? findObjs({pageid,imgsrc,name: 'NextMarker'}) : findObjs({pageid,imgsrc});
         
         markers.forEach((marker, i) => {
             if(i > 0 && !next) marker.remove();
@@ -1943,6 +1951,7 @@ var CombatMaster = CombatMaster || (function() {
                         if(!condition) return;
                         if(marker !== '' && !newstatusmarkers.includes(marker)){
                             removeConditionFromToken(obj, condition.key);
+                            doRemoveConditionCalls(obj,condition.key)
                         }
                     })
                 }    
@@ -1953,6 +1962,7 @@ var CombatMaster = CombatMaster || (function() {
                         if(!condition) return;
                         if(marker !== "" && !prevstatusmarkers.includes(marker)){
                             addConditionToToken(obj,condition.key,condition.duration,condition.direction,condition.message);
+                            doAddConditionCalls(obj,condition.key)
                         }
                     });
                 }    
@@ -1961,7 +1971,7 @@ var CombatMaster = CombatMaster || (function() {
     },    
 //*************************************************************************************************************
 //TURNORDER
-//*************************************************************************************************************	      
+//*************************************************************************************************************       
     clearTurnorder = function () {
         Campaign().set({ turnorder: '' });
         state[combatState].turnorder = {};
@@ -2010,7 +2020,7 @@ var CombatMaster = CombatMaster || (function() {
             return;
         }
 
-		if (tokenObj) {
+        if (tokenObj) {
             toFront(tokenObj);
 
             if (state[combatState].config.timer.useTimer) {
@@ -2053,7 +2063,7 @@ var CombatMaster = CombatMaster || (function() {
         let turnorder = (obj.get('turnorder') === "") ? [] : JSON.parse(obj.get('turnorder'));
         let prevTurnorder = (prev.turnorder === "") ? [] : JSON.parse(prev.turnorder);
 
-        if(obj.get('turnorder') == []){
+        if(obj.get('turnorder') === "[]"){
             stopCombat();
             return;
         }
@@ -2095,7 +2105,7 @@ var CombatMaster = CombatMaster || (function() {
 
 //*************************************************************************************************************
 //TURNS
-//*************************************************************************************************************	          
+//*************************************************************************************************************           
     delayTurn = function () {
         let turnorder, currentTurn, nextTurn, dummy
 
@@ -2219,7 +2229,7 @@ var CombatMaster = CombatMaster || (function() {
     },
 //*************************************************************************************************************
 //TIMER 
-//*************************************************************************************************************	
+//************************************************************************************************************* 
     startTimer = function (token) {
         let timer = state[combatState].config.timer,
             config_time = parseInt(timer.time),
@@ -2278,7 +2288,7 @@ var CombatMaster = CombatMaster || (function() {
     },
 //*************************************************************************************************************
 //ANNOUNCE 
-//*************************************************************************************************************	  
+//*************************************************************************************************************   
     announcePlayer = function (tokenObj, prev, delay=false, show) {
         if (debug) {
             log('Announce Player')
@@ -2371,13 +2381,13 @@ var CombatMaster = CombatMaster || (function() {
                         output += '<div style="display:inline-block;"><strong>'+descriptionButton+'</strong> removed</div>';
                         if (!delay && !show) {
                             removeConditionFromToken(tokenObj, condition.key);  
+                            doRemoveConditionCalls(tokenObj,condition.key)
                             removed = true
                         }    
                     } else if (condition.duration > 0 && condition.direction != 0) {
                         output += '<div style="display:inline-block;"><strong>'+descriptionButton+'</strong> '+condition.duration+' Rounds Left</div>';
 
                         if (!delay && !show) {
-                            // addMarker(getObj('graphic', targets),condition.iconType,condition.icon,condition.duration,condition.direction,condition.key)
                             addConditionToToken(tokenObj,condition.key,condition.duration,condition.direction,condition.message)
                         }   
                         if (condition.message != 'None' && condition.message.length > 0) {
@@ -2403,10 +2413,10 @@ var CombatMaster = CombatMaster || (function() {
     },    
 //*************************************************************************************************************
 //MAKES 
-//*************************************************************************************************************	
+//************************************************************************************************************* 
     makeAndSendMenu = function (contents, title, whisper) {
         whisper = (whisper && whisper !== '') ? '/w ' + whisper + ' ' : '';
-		title = makeTitle(title)
+        title = makeTitle(title)
         sendChat(script_name, whisper + '<div style="'+styles.menu+styles.overflow+'">'+title+contents+'</div>', null, {noarchive:true});
     },
 
@@ -2421,19 +2431,19 @@ var CombatMaster = CombatMaster || (function() {
         };
     },
     
-	makeTitle = function (title) {
-		return '<div style="'+styles.title+'"><span style='+styles.titleText+'>'+title+'</span></div>'
-	},
-	
+    makeTitle = function (title) {
+        return '<div style="'+styles.title+'"><span style='+styles.titleText+'>'+title+'</span></div>'
+    },
+    
     makeBigButton = function (title, href) {
         return '<div style="'+styles.bigButton+'"><a style="'+styles.bigButtonLink+'" href="'+href+'">'+title+'</a></div>';
     },
 
-	makeButton = function (title, href) {
+    makeButton = function (title, href) {
         return '<a style="'+styles.conditionButton+'" href="'+href+'">'+title+'</a>';
     },
 
-	makeTextButton = function (label, value, href) {
+    makeTextButton = function (label, value, href) {
         return '<span style="'+styles.textLabel+'">'+label+'</span><a style="'+styles.textButton+'" href="'+href+'">'+value+'</a>';
     },
 
@@ -2443,27 +2453,27 @@ var CombatMaster = CombatMaster || (function() {
         }
         return '<div style="display:inline-block;margin-right:3px;padding:1px;vertical-align:middle;"><a href="'+command+'" title= "'+toolTip+'" style="margin:0px;padding:0px;border:0px solid;background-color:'+backgroundColor+'"><span style="color:'+color+';padding:0px;font-size:'+size+'px;font-family: \'Pictos\'">'+image+'</span></a></div>'
     },
-	
+    
     makeList = function (items, backButton, extraButton) {
         let list;
         
         list  = '<ul style="'+styles.reset + styles.list + styles.overflow+'">'
-		items.forEach((item) => {
+        items.forEach((item) => {
             list += '<li style="'+styles.overflow+'">'+item+'</li>';
         });
-		list += '</ul>'
-		
-		if (extraButton) {
-			list += extraButton
-		}
-		if(backButton) {
-			list += '<hr>'+backButton;
-		}
+        list += '</ul>'
+        
+        if (extraButton) {
+            list += extraButton
+        }
+        if(backButton) {
+            list += '<hr>'+backButton;
+        }
         return list;
     },    
 //*************************************************************************************************************
 //ICONS 
-//*************************************************************************************************************	        
+//*************************************************************************************************************         
     getDefaultIcon = function (iconType, icon, style='', height, width) {
         if (iconType == 'None') {
             return 'None'
@@ -2571,6 +2581,7 @@ var CombatMaster = CombatMaster || (function() {
                 tokenObj     = getObj('graphic',turn.id)
                 if (tokenObj) {
                     characterObj = getObj('character',tokenObj.get('represents'))
+    
                     if (characterObj) {
                         if (!['None',''].includes(config.allRoundMacro)) {
                             macro = getMacro(tokenObj, config.allRoundMacro)
@@ -2618,8 +2629,10 @@ var CombatMaster = CombatMaster || (function() {
             }
 
             for (key in state[combatState].conditions) {
+
                 condition = state[combatState].conditions[key]
                 if (tokenObj.get('_id') == condition.id && condition.addPersistentMacro) {
+                    log ('made it')
                     ability = findObjs({_characterid:tokenObj.get('represents'), _type:'ability', name:condition.addMacro})[0]
                     if (ability) {
                         sendCalltoChat(tokenObj,characterObj,ability.get('action'))
@@ -2643,7 +2656,7 @@ var CombatMaster = CombatMaster || (function() {
         }
     },
  
-    doAddConditionCalls = function (tokenObj,key) {
+    doAddConditionCalls = function (tokenObj,key,playerID) {
         if (debug) {
             log("Do Add Condition Calls")
         }
@@ -2750,7 +2763,7 @@ var CombatMaster = CombatMaster || (function() {
     
 //*************************************************************************************************************
 //SUBSTITUTIONS 
-//*************************************************************************************************************	   
+//*************************************************************************************************************    
     newSubstitution = function(cmdDetails) {
         if (debug) {
             log('Add Substitution')
@@ -2763,7 +2776,7 @@ var CombatMaster = CombatMaster || (function() {
         
         state[combatState].config.macro.substitutions.push(substitution)
         
-		sendMacroMenu();		
+        sendMacroMenu();        
     },  
     
     removeSubstitution = function(cmdDetails) {
@@ -2776,11 +2789,11 @@ var CombatMaster = CombatMaster || (function() {
                 state[combatState].config.macro.substitutions.splice(i,1)
             }
         })
-		sendMacroMenu();
+        sendMacroMenu();
     },      
 //*************************************************************************************************************
 //SPELLS 
-//*************************************************************************************************************	  
+//*************************************************************************************************************   
     handleSpellCast = function(msg) {
         if (debug) {
             log('Handle Spell Cast')
@@ -2874,30 +2887,30 @@ var CombatMaster = CombatMaster || (function() {
             }            
             if (typeof condition == 'undefined' && !getIgnoresByKey(key)) {
                 state[combatState].spells[key] = {
-                				name: spellName,
-                				key: key,
-                				type: 'Spell',
-                				icon: 'red',
-                				iconType: 'Combat Master',
-                				description: description,
-                				duration: duration,
-                				direction: direction,
-                				message: 'None',
-                				targeted: false,
-                				favorite: false,
-                				concentration: concentrate,
-                				description: description,
-                				addAPI: 'None',
-                				addRoll20AM: 'None',
-                				addFX: 'None',
-                				addMacro: 'None',
-                				addPersistentMacro: false,
-                				remAPI: 'None',
-                				remRoll20AM: 'None',
-                				remFX: 'None',
-                				remMacro: 'None'				
+                                name: spellName,
+                                key: key,
+                                type: 'Spell',
+                                icon: 'red',
+                                iconType: 'Combat Master',
+                                description: description,
+                                duration: duration,
+                                direction: direction,
+                                message: 'None',
+                                targeted: false,
+                                favorite: false,
+                                concentration: concentrate,
+                                description: description,
+                                addAPI: 'None',
+                                addRoll20AM: 'None',
+                                addFX: 'None',
+                                addMacro: 'None',
+                                addPersistentMacro: false,
+                                remAPI: 'None',
+                                remRoll20AM: 'None',
+                                remFX: 'None',
+                                remMacro: 'None'                
                 } 
-			
+            
                 let addSpellButton = makeBigButton(`Add Spell to Combat Master`, `!cmaster --spell,confirm=true,key=${key}`)
                 let ignoreSpellButton = makeBigButton(`Ignore this Spell`, `!cmaster --spell,confirm=false,key=${key}`)
                 makeAndSendMenu(`A new spell - ${spellName} - was detected<br>`+addSpellButton+ignoreSpellButton ,`New Spell Found`,`gm`)
@@ -2942,6 +2955,7 @@ var CombatMaster = CombatMaster || (function() {
         }  
         
        state[combatState].ignores.push(key)
+       log(state[combatState].ignores)
        makeAndSendMenu('Spell has been added to Ignore List','Spell Ignored','gm');
     },
     
@@ -2960,7 +2974,7 @@ var CombatMaster = CombatMaster || (function() {
     },
 //*************************************************************************************************************
 //SPELLS 
-//*************************************************************************************************************	  
+//*************************************************************************************************************   
     handleConstitutionSave = function(obj, prev) {
         if (debug) {
             log('Handle Constitution Save')
@@ -3202,7 +3216,7 @@ var CombatMaster = CombatMaster || (function() {
     },
     
     buildParty = function(){
-		var partyList = '|All,all';
+        var partyList = '|All,all';
         _.each(findObjs({type:'player'}),player=>{
             let who = getObj('player', player.id).get('displayname');
             if (playerIsGM(player.id)){
@@ -3224,48 +3238,48 @@ var CombatMaster = CombatMaster || (function() {
             conditions: [],
             ignores: [],
             spells: [],
-			config: {
-                command: 'cmaster',		
-				duration: false,
-				favorite: false,
-				previousPage: null,			
-				gmPlayerID: null,
-				hold: {
-				    held: false,
-				    turnorder: [],
-				    conditions: [],
-				    round: 1
-				},	
-				initiative: {
+            config: {
+                command: 'cmaster',     
+                duration: false,
+                favorite: false,
+                previousPage: null,         
+                gmPlayerID: null,
+                hold: {
+                    held: false,
+                    turnorder: [],
+                    conditions: [],
+                    round: 1
+                },  
+                initiative: {
                     rollInitiative: 'CombatMaster',
                     initiativeDie: 20,
-					initiativeAttributes: 'initiative_bonus',					
+                    initiativeAttributes: 'initiative_bonus',                   
                     showInitiative: false,
                     rollEachRound: false,
-                    apiTargetTokens: 'None'				
-				},
+                    apiTargetTokens: 'None'             
+                },
                 turnorder: {
                     useMarker: true,
-					markerType: 'External URL',
-					externalMarkerURL: 'https://s3.amazonaws.com/files.d20.io/images/52550079/U-3U950B3wk_KRtspSPyuw/thumb.png?1524507826',
-					nextMarkerType: 'External URL',
-					nextExternalMarkerURL: 'https://s3.amazonaws.com/files.d20.io/images/66352183/90UOrT-_Odg2WvvLbKOthw/thumb.png?1541422636',
-					tokenMarkerName: 'None',
-					tokenMarkerURL: null,
-					nextTokenMarkerName: 'None',
-					nextTokenMarkerURL: null,
-	                sortTurnOrder: true,
-					centerToken: true,	
-					turnAPI: 'None',
-					turnRoll20AM: 'None',
-					turnFX: 'None',
+                    markerType: 'External URL',
+                    externalMarkerURL: 'https://s3.amazonaws.com/files.d20.io/images/52550079/U-3U950B3wk_KRtspSPyuw/thumb.png?1524507826',
+                    nextMarkerType: 'External URL',
+                    nextExternalMarkerURL: 'https://s3.amazonaws.com/files.d20.io/images/66352183/90UOrT-_Odg2WvvLbKOthw/thumb.png?1541422636',
+                    tokenMarkerName: 'None',
+                    tokenMarkerURL: null,
+                    nextTokenMarkerName: 'None',
+                    nextTokenMarkerURL: null,
+                    sortTurnOrder: true,
+                    centerToken: true,  
+                    turnAPI: 'None',
+                    turnRoll20AM: 'None',
+                    turnFX: 'None',
                     turnMacro: 'None',
-					roundAPI: 'None',
-					roundRoll20AM: 'None',
-					roundFX: 'None',
-					roundMacro: 'None',	
-					characterRoundMacro: 'None',
-					allRoundMacro: 'None',					
+                    roundAPI: 'None',
+                    roundRoll20AM: 'None',
+                    roundFX: 'None',
+                    roundMacro: 'None', 
+                    characterRoundMacro: 'None',
+                    allRoundMacro: 'None',                  
                 },
                 timer: {
                     useTimer: true,
@@ -3282,433 +3296,417 @@ var CombatMaster = CombatMaster || (function() {
                     whisperToGM: false,
                     announceRound: true,
                     handleLongName: true,
-					showNPCTurns: false,                    
+                    showNPCTurns: false,                    
                 },
                 macro: {
                     substitutions: [],
-                },				
-				status: {
-					userAllowed: false,
-					userChanges: false,
-					sendOnlyToGM: false,
-					sendConditions: true,
-					clearConditions: false,
-					showConditions: 'all',
-					useMessage: false,
-					access: 'None',
-					autoAddSpells: false,
-					sheet: 'OGL',
-				},	
-				concentration: {
-					useConcentration: false,
-					notify: 'GM',
-					autoAdd: false,
-					autoRoll: false,
-					woundBar: 'Bar1',
-					attribute: 'None'
-				},					
-			    conditions: {
-					blinded: {
-						name: 'Blinded',
-						key: 'blinded',
-						type: 'Condition',
-						description: '<p>A blinded creature cannot see and automatically fails any ability check that requires sight.</p> <p>Attack rolls against the creature have advantage, and the creature making Attack rolls have disadvantage.</p>',
-						icon: 'bleeding-eye',
-						iconType: 'Combat Master',
-						duration: 1,
-						direction: -1,
-						override: true,
-						favorite: false,
-						message: 'None',
-						targeted: false,
-						targetedAPI: 'casterTargets',
-						concentration: false,
-						addAPI: 'None',
-						addRoll20AM: 'None',
-						addFX: 'None',
-						addMacro: 'None',
-						addPersistentMacro: false,
-						remAPI: 'None',
-						remRoll20AM: 'None',
-						remFX: 'None',
-						remMacro: 'None',
-					},
-					charmed: {
-						name: 'Charmed',
-						key: 'charmed',
-						type: 'Spell',
-						description: "<p>A charmed creature can't Attack the charmer or target the charmer with harmful Abilities or magical effects.</p> <p>The charmer has advantage on any ability check to interact socially with the creature.</p>",
-						icon: 'broken-heart',
-						iconType: 'Combat Master',
-						duration: 1,
-						direction: -1,
-						override: true,
-						favorite: false,
-						message: 'None',
-						targeted: false,
-						targetedAPI: 'casterTargets',
-						concentration: false,
-						addAPI: 'None',
-						addRoll20AM: 'None',
-						addFX: 'None',
-						addMacro: 'None',
-						addPersistentMacro: false,
-						remAPI: 'None',
-						remRoll20AM: 'None',
-						remFX: 'None',
-						remMacro: 'None',
-					},
-					concentration: {
-						name: 'Concentration',
-						key: 'concentration',
-						type: 'Spell',
-						description: "<p>In order to keep their magic active. If you lose concentration, such a spell ends. If a spell must be maintained with concentralion, that fact appears in its Duration entry, and the spell specifics how long you can concentrate on it. You can end concentration at any time (no action required)..</p>",
-						icon: 'trophy',
-						iconType: 'Combat Master',
-						duration: 1,
-						direction: 0,
-						override: true,
-						favorite: false,
-						message: 'None',
-						targeted: false,
-						targetedAPI: 'casterTargets',
-						concentration: false,
-						addAPI: 'None',
-						addRoll20AM: 'None',
-						addFX: 'None',
-						addMacro: 'None',
-						addPersistentMacro: false,
-						remAPI: 'None',
-						remRoll20AM: 'None',
-						remFX: 'None',
-						remMacro: 'None',
-					},					
-					deafened: {
-						name: 'Deafened',
-						key: 'deafened',
-						type: 'Condition',
-						description: "<p>A deafened creature can't hear and automatically fails any ability check that requires hearing.</p>",
-						icon: 'edge-crack',
-						iconType: 'Combat Master',
-						duration: 1,
-						direction: -1,
-						override: true,
-						favorite: false,
-						message: 'None',
-						targeted: false,
-						targetedAPI: 'casterTargets',
-						concentration: false,
-						addAPI: 'None',
-						addRoll20AM: 'None',
-						addFX: 'None',
-						addMacro: 'None',
-						addPersistentMacro: false,
-						remAPI: 'None',
-						remRoll20AM: 'None',
-						remFX: 'None',
-						remMacro: 'None',
-					},
-					frightened: {
-						name: 'Frightened',
-						key: 'frightened',
-						type: 'Condition',
-						description: "<p>A frightened creature has disadvantage on Ability Checks and Attack rolls while the source of its fear is within line of sight.</p> <p>The creature can't willingly move closer to the source of its fear.</p>",
-						icon: 'screaming',
-						iconType: 'Combat Master',
-						duration: 1,
-						direction: -1,
-						override: true,
-						favorite: false,
-						message: 'None',
-						targeted: false,
-						targetedAPI: 'casterTargets',
-						concentration: false,
-						addAPI: 'None',
-						addRoll20AM: 'None',
-						addFX: 'None',
-						addMacro: 'None',
-						addPersistentMacro: false,
-						remAPI: 'None',
-						remRoll20AM: 'None',
-						remFX: 'None',
-						remMacro: 'None',
-					},
-					grappled: {
-						name: 'Grappled',
-						key: 'grappled',
-						type: 'Condition',
-						description: "<p>A grappled creature's speed becomes 0, and it can't benefit from any bonus to its speed.</p> <p>The condition ends if the Grappler is <i>incapacitated</i>.</p> <p>The condition also ends if an effect removes the grappled creature from the reach of the Grappler or Grappling effect, such as when a creature is hurled away by the Thunderwave spell.</p>",
-						icon: 'grab',
-						iconType: 'Combat Master',
-						duration: 1,
-						direction: -1,
-						override: true,
-						favorite: false,
-						message: 'None',
-						targeted: false,
-						targetedAPI: 'casterTargets',
-						concentration: false,
-						addAPI: 'None',
-						addRoll20AM: 'None',
-						addFX: 'None',
-						addMacro: 'None',
-						addPersistentMacro: false,
-						remAPI: 'None',
-						remRoll20AM: 'None',
-						remFX: 'None',
-						remMacro: 'None',					
-					},
-					incapacitated: {
-						name: 'Incapacitated',
-						key: 'incapacitated',
-						type: 'Condition',
-						description: "<p>An incapacitated creature can't take actions or reactions.</p>",
-						icon: 'interdiction',
-						iconType: 'Combat Master',
-						duration: 1,
-						direction: -1,
-						override: true,
-						favorite: false,
-						message: 'None',
-						targeted: false,
-						targetedAPI: 'casterTargets',
-						concentration: false,
-						addAPI: 'None',
-						addRoll20AM: 'None',
-						addFX: 'None',
-						addMacro: 'None',
-						addPersistentMacro: false,
-						remAPI: 'None',
-						remRoll20AM: 'None',
-						remFX: 'None',
-						remMacro: 'None',						
-					},
-					inspiration: {
-						name: 'Inspiration',
-						key: 'inspiration',
-						type: 'Spell',
-						description: "<p>If you have inspiration, you can expend it when you make an Attack roll, saving throw, or ability check. Spending your inspiration gives you advantage on that roll.</p> <p>Additionally, if you have inspiration, you can reward another player for good roleplaying, clever thinking, or simply doing something exciting in the game. When another player character does something that really contributes to the story in a fun and interesting way, you can give up your inspiration to give that character inspiration.</p>",
-						icon: 'black-flag',
-						iconType: 'Combat Master',
-						duration: 1,
-						direction: -1,
-						override: true,
-						favorite: false,
-						message: 'None',
-						targeted: false,
-						targetedAPI: 'casterTargets',
-						concentration: false,
-						addAPI: 'None',
-						addRoll20AM: 'None',
-						addFX: 'None',
-						addMacro: 'None',
-						addPersistentMacro: false,
-						remAPI: 'None',
-						remRoll20AM: 'None',
-						remFX: 'None',
-						remMacro: 'None',	
-					},
-					invisibility: {
-						name: 'Invisibility',
-						key: 'invisibility',
-						type: 'Spell',
-						description: "<p>An invisible creature is impossible to see without the aid of magic or a Special sense. For the purpose of Hiding, the creature is heavily obscured. The creature's location can be detected by any noise it makes or any tracks it leaves.</p> <p>Attack rolls against the creature have disadvantage, and the creature's Attack rolls have advantage.</p>",
-						icon: 'ninja-mask',
-						iconType: 'Combat Master',
-						duration: 1,
-						direction: -1,
-						override: true,
-						favorite: false,
-						message: 'None',
-						targeted: false,
-						targetedAPI: 'casterTargets',
-						concentration: false,
-						addAPI: 'None',
-						addRoll20AM: 'None',
-						addFX: 'None',
-						addMacro: 'None',
-						addPersistentMacro: false,
-						remAPI: 'None',
-						remRoll20AM: 'None',
-						remFX: 'None',
-						remMacro: 'None',	
-					},
-					paralyzed: {
-						name: 'Paralyzed',
-						key: 'paralyzed',
-						type: 'Condition',
-						description: "<p>A paralyzed creature is <i>incapacitated</i> and can't move or speak.</p> <p>The creature automatically fails Strength and Dexterity saving throws.</p> <p>Attack rolls against the creature have advantage.</p> <p>Any Attack that hits the creature is a critical hit if the attacker is within 5 feet of the creature.</p>",
-						icon: 'pummeled',
-						iconType: 'Combat Master',
-						duration: 1,
-						direction: -1,
-						override: true,
-						favorite: false,
-						message: 'None',
-						targeted: false,
-						targetedAPI: 'casterTargets',
-						concentration: false,
-						addAPI: 'None',
-						addRoll20AM: 'None',
-						addFX: 'None',
-						addMacro: 'None',
-						addPersistentMacro: false,
-						remAPI: 'None',
-						remRoll20AM: 'None',
-						remFX: 'None',
-						remMacro: 'None',	
-					},
-					petrified: {
-						name: 'Petrified',
-						key: 'petrified',
-						type: 'Condition',
-						description: "<p>A petrified creature is transformed, along with any nonmagical object it is wearing or carrying, into a solid inanimate substance (usually stone). Its weight increases by a factor of ten, and it ceases aging.</p> <p>The creature is <i>incapacitated</i>, can't move or speak, and is unaware of its surroundings.</p> <p>Attack rolls against the creature have advantage.</p> <p>The creature automatically fails Strength and Dexterity saving throws.</p> <p>The creature has Resistance to all damage.</p> <p>The creature is immune to poison and disease, although a poison or disease already in its system is suspended, not neutralized.</p>",
-						icon: 'frozen-orb',
-						iconType: 'Combat Master',
-						duration: 1,
-						direction: -1,
-						override: true,
-						favorite: false,
-						message: 'None',
-						targeted: false,
-						targetedAPI: 'casterTargets',
-						concentration: false,
-						addAPI: 'None',
-						addRoll20AM: 'None',
-						addFX: 'None',
-						addMacro: 'None',
-						addPersistentMacro: false,
-						remAPI: 'None',
-						remRoll20AM: 'None',
-						remFX: 'None',
-						remMacro: 'None',	
-					},
-					poisoned: {
-						name: 'Poisoned',
-						key: 'poisoned',
-						type: 'Condition',
-						description: '<p>A poisoned creature has disadvantage on Attack rolls and Ability Checks.</p>',
-						icon: 'chemical-bolt',
-						iconType: 'Combat Master',
-						duration: 1,
-						direction: -1,
-						override: true,
-						favorite: false,
-						message: 'None',
-						targeted: false,
-						targetedAPI: 'casterTargets',
-						concentration: false,
-						addAPI: 'None',
-						addRoll20AM: 'None',
-						addFX: 'None',
-						addMacro: 'None',
-						addPersistentMacro: false,
-						remAPI: 'None',
-						remRoll20AM: 'None',
-						remFX: 'None',
-						remMacro: 'None',	
-					},
-					prone: {
-						name: 'Prone',
-						key: 'prone',
-						type: 'Condition',
-						description: "<p>A prone creature's only Movement option is to crawl, unless it stands up and thereby ends the condition.</p> <p>The creature has disadvantage on Attack rolls.</p> <p>An Attack roll against the creature has advantage if the attacker is within 5 feet of the creature. Otherwise, the Attack roll has disadvantage.</p>",
-						icon: 'back-pain',
-						iconType: 'Combat Master',
-						duration: 1,
-						direction: -1,
-						override: true,
-						favorite: false,
-						message: 'None',
-						targeted: false,
-						targetedAPI: 'casterTargets',
-						concentration: false,
-						addAPI: 'None',
-						addRoll20AM: 'None',
-						addFX: 'None',
-						addMacro: 'None',
-						addPersistentMacro: false,
-						remAPI: 'None',
-						remRoll20AM: 'None',
-						remFX: 'None',
-						remMacro: 'None',	
-					},
-					restrained: {
-						name: 'Restrained',
-						key: 'restrained',
-						type: 'Condition',
-						description: "<p>A restrained creature's speed becomes 0, and it can't benefit from any bonus to its speed.</p> <p>Attack rolls against the creature have advantage, and the creature's Attack rolls have disadvantage.</p> <p>The creature has disadvantage on Dexterity saving throws.</p>",
-						icon: 'fishing-net',
-						iconType: 'Combat Master',
-						duration: 1,
-						direction: -1,
-						override: true,
-						favorite: false,
-						message: 'None',
-						targeted: false,
-						targetedAPI: 'casterTargets',
-						concentration: false,
-						addAPI: 'None',
-						addRoll20AM: 'None',
-						addFX: 'None',
-						addMacro: 'None',
-						addPersistentMacro: false,
-						remAPI: 'None',
-						remRoll20AM: 'None',
-						remFX: 'None',
-						remMacro: 'None',	
-					},
-					stunned: {
-						name: 'Stunned',
-						key: 'stunned',
-						type: 'Condition',
-						description: "<p>A stunned creature is <i>incapacitated</i>, can't move, and can speak only falteringly.</p> <p>The creature automatically fails Strength and Dexterity saving throws.</p> <p>Attack rolls against the creature have advantage.</p>",
-						icon: 'fist',
-						iconType: 'Combat Master',
-						duration: 1,
-						direction: -1,
-						override: true,
-						favorite: false,
-						message: 'None',
-						targeted: false,
-						targetedAPI: 'casterTargets',
-						concentration: false,
-						addAPI: 'None',
-						addRoll20AM: 'None',
-						addFX: 'None',
-						addMacro: 'None',
-						addPersistentMacro: false,
-						remAPI: 'None',
-						remRoll20AM: 'None',
-						remFX: 'None',
-						remMacro: 'None',	
-					},
-					unconscious: {
-						name: 'Unconscious',
-						key: 'unconscious',
-						type: 'Condition',
-						description: "<p>An unconscious creature is <i>incapacitated</i>, can't move or speak, and is unaware of its surroundings.</p> <p>The creature drops whatever it's holding and falls prone.</p> <p>The creature automatically fails Strength and Dexterity saving throws.</p> <p>Attack rolls against the creature have advantage.</p> <p>Any Attack that hits the creature is a critical hit if the attacker is within 5 feet of the creature.</p>",
-						icon: 'sleepy',
-						iconType: 'Combat Master',
-						duration: 1,
-						direction: -1,
-						override: true,
-						favorite: false,
-						message: 'None',
-						targeted: false,
-						targetedAPI: 'casterTargets',
-						concentration: false,
-						addAPI: 'None',
-						addRoll20AM: 'None',
-						addFX: 'None',
-						addMacro: 'None',
-						addPersistentMacro: false,
-						remAPI: 'None',
-						remRoll20AM: 'None',
-						remFX: 'None',
-						remMacro: 'None',	
-					},				
-				},	
+                },              
+                status: {
+                    userAllowed: false,
+                    userChanges: false,
+                    sendOnlyToGM: false,
+                    sendConditions: true,
+                    clearConditions: false,
+                    showConditions: 'all',
+                    useMessage: false,
+                    access: 'None',
+                    autoAddSpells: false,
+                    sheet: 'OGL',
+                },  
+                concentration: {
+                    useConcentration: false,
+                    notify: 'GM',
+                    autoAdd: false,
+                    autoRoll: false,
+                    woundBar: 'Bar1',
+                    attribute: 'None'
+                },                  
+                conditions: {
+                    blinded: {
+                        name: 'Blinded',
+                        key: 'blinded',
+                        type: 'Condition',
+                        description: '<p>A blinded creature cannot see and automatically fails any ability check that requires sight.</p> <p>Attack rolls against the creature have advantage, and the creature making Attack rolls have disadvantage.</p>',
+                        icon: 'bleeding-eye',
+                        iconType: 'Combat Master',
+                        duration: 1,
+                        direction: -1,
+                        override: true,
+                        favorite: false,
+                        message: 'None',
+                        targeted: false,
+                        concentration: false,
+                        addAPI: 'None',
+                        addRoll20AM: 'None',
+                        addFX: 'None',
+                        addMacro: 'None',
+                        addPersistentMacro: false,
+                        remAPI: 'None',
+                        remRoll20AM: 'None',
+                        remFX: 'None',
+                        remMacro: 'None',
+                    },
+                    charmed: {
+                        name: 'Charmed',
+                        key: 'charmed',
+                        type: 'Spell',
+                        description: "<p>A charmed creature can't Attack the charmer or target the charmer with harmful Abilities or magical effects.</p> <p>The charmer has advantage on any ability check to interact socially with the creature.</p>",
+                        icon: 'broken-heart',
+                        iconType: 'Combat Master',
+                        duration: 1,
+                        direction: -1,
+                        override: true,
+                        favorite: false,
+                        message: 'None',
+                        targeted: false,
+                        concentration: false,
+                        addAPI: 'None',
+                        addRoll20AM: 'None',
+                        addFX: 'None',
+                        addMacro: 'None',
+                        addPersistentMacro: false,
+                        remAPI: 'None',
+                        remRoll20AM: 'None',
+                        remFX: 'None',
+                        remMacro: 'None',
+                    },
+                    concentration: {
+                        name: 'Concentration',
+                        key: 'concentration',
+                        type: 'Spell',
+                        description: "<p>In order to keep their magic active. If you lose concentration, such a spell ends. If a spell must be maintained with concentralion, that fact appears in its Duration entry, and the spell specifics how long you can concentrate on it. You can end concentration at any time (no action required)..</p>",
+                        icon: 'trophy',
+                        iconType: 'Combat Master',
+                        duration: 1,
+                        direction: 0,
+                        override: true,
+                        favorite: false,
+                        message: 'None',
+                        targeted: false,
+                        concentration: false,
+                        addAPI: 'None',
+                        addRoll20AM: 'None',
+                        addFX: 'None',
+                        addMacro: 'None',
+                        addPersistentMacro: false,
+                        remAPI: 'None',
+                        remRoll20AM: 'None',
+                        remFX: 'None',
+                        remMacro: 'None',
+                    },                  
+                    deafened: {
+                        name: 'Deafened',
+                        key: 'deafened',
+                        type: 'Condition',
+                        description: "<p>A deafened creature can't hear and automatically fails any ability check that requires hearing.</p>",
+                        icon: 'edge-crack',
+                        iconType: 'Combat Master',
+                        duration: 1,
+                        direction: -1,
+                        override: true,
+                        favorite: false,
+                        message: 'None',
+                        targeted: false,
+                        concentration: false,
+                        addAPI: 'None',
+                        addRoll20AM: 'None',
+                        addFX: 'None',
+                        addMacro: 'None',
+                        addPersistentMacro: false,
+                        remAPI: 'None',
+                        remRoll20AM: 'None',
+                        remFX: 'None',
+                        remMacro: 'None',
+                    },
+                    frightened: {
+                        name: 'Frightened',
+                        key: 'frightened',
+                        type: 'Condition',
+                        description: "<p>A frightened creature has disadvantage on Ability Checks and Attack rolls while the source of its fear is within line of sight.</p> <p>The creature can't willingly move closer to the source of its fear.</p>",
+                        icon: 'screaming',
+                        iconType: 'Combat Master',
+                        duration: 1,
+                        direction: -1,
+                        override: true,
+                        favorite: false,
+                        message: 'None',
+                        targeted: false,
+                        concentration: false,
+                        addAPI: 'None',
+                        addRoll20AM: 'None',
+                        addFX: 'None',
+                        addMacro: 'None',
+                        addPersistentMacro: false,
+                        remAPI: 'None',
+                        remRoll20AM: 'None',
+                        remFX: 'None',
+                        remMacro: 'None',
+                    },
+                    grappled: {
+                        name: 'Grappled',
+                        key: 'grappled',
+                        type: 'Condition',
+                        description: "<p>A grappled creature's speed becomes 0, and it can't benefit from any bonus to its speed.</p> <p>The condition ends if the Grappler is <i>incapacitated</i>.</p> <p>The condition also ends if an effect removes the grappled creature from the reach of the Grappler or Grappling effect, such as when a creature is hurled away by the Thunderwave spell.</p>",
+                        icon: 'grab',
+                        iconType: 'Combat Master',
+                        duration: 1,
+                        direction: -1,
+                        override: true,
+                        favorite: false,
+                        message: 'None',
+                        targeted: false,
+                        concentration: false,
+                        addAPI: 'None',
+                        addRoll20AM: 'None',
+                        addFX: 'None',
+                        addMacro: 'None',
+                        addPersistentMacro: false,
+                        remAPI: 'None',
+                        remRoll20AM: 'None',
+                        remFX: 'None',
+                        remMacro: 'None',                   
+                    },
+                    incapacitated: {
+                        name: 'Incapacitated',
+                        key: 'incapacitated',
+                        type: 'Condition',
+                        description: "<p>An incapacitated creature can't take actions or reactions.</p>",
+                        icon: 'interdiction',
+                        iconType: 'Combat Master',
+                        duration: 1,
+                        direction: -1,
+                        override: true,
+                        favorite: false,
+                        message: 'None',
+                        targeted: false,
+                        concentration: false,
+                        addAPI: 'None',
+                        addRoll20AM: 'None',
+                        addFX: 'None',
+                        addMacro: 'None',
+                        addPersistentMacro: false,
+                        remAPI: 'None',
+                        remRoll20AM: 'None',
+                        remFX: 'None',
+                        remMacro: 'None',                       
+                    },
+                    inspiration: {
+                        name: 'Inspiration',
+                        key: 'inspiration',
+                        type: 'Spell',
+                        description: "<p>If you have inspiration, you can expend it when you make an Attack roll, saving throw, or ability check. Spending your inspiration gives you advantage on that roll.</p> <p>Additionally, if you have inspiration, you can reward another player for good roleplaying, clever thinking, or simply doing something exciting in the game. When another player character does something that really contributes to the story in a fun and interesting way, you can give up your inspiration to give that character inspiration.</p>",
+                        icon: 'black-flag',
+                        iconType: 'Combat Master',
+                        duration: 1,
+                        direction: -1,
+                        override: true,
+                        favorite: false,
+                        message: 'None',
+                        targeted: false,
+                        concentration: false,
+                        addAPI: 'None',
+                        addRoll20AM: 'None',
+                        addFX: 'None',
+                        addMacro: 'None',
+                        addPersistentMacro: false,
+                        remAPI: 'None',
+                        remRoll20AM: 'None',
+                        remFX: 'None',
+                        remMacro: 'None',   
+                    },
+                    invisibility: {
+                        name: 'Invisibility',
+                        key: 'invisibility',
+                        type: 'Spell',
+                        description: "<p>An invisible creature is impossible to see without the aid of magic or a Special sense. For the purpose of Hiding, the creature is heavily obscured. The creature's location can be detected by any noise it makes or any tracks it leaves.</p> <p>Attack rolls against the creature have disadvantage, and the creature's Attack rolls have advantage.</p>",
+                        icon: 'ninja-mask',
+                        iconType: 'Combat Master',
+                        duration: 1,
+                        direction: -1,
+                        override: true,
+                        favorite: false,
+                        message: 'None',
+                        targeted: false,
+                        concentration: false,
+                        addAPI: 'None',
+                        addRoll20AM: 'None',
+                        addFX: 'None',
+                        addMacro: 'None',
+                        addPersistentMacro: false,
+                        remAPI: 'None',
+                        remRoll20AM: 'None',
+                        remFX: 'None',
+                        remMacro: 'None',   
+                    },
+                    paralyzed: {
+                        name: 'Paralyzed',
+                        key: 'paralyzed',
+                        type: 'Condition',
+                        description: "<p>A paralyzed creature is <i>incapacitated</i> and can't move or speak.</p> <p>The creature automatically fails Strength and Dexterity saving throws.</p> <p>Attack rolls against the creature have advantage.</p> <p>Any Attack that hits the creature is a critical hit if the attacker is within 5 feet of the creature.</p>",
+                        icon: 'pummeled',
+                        iconType: 'Combat Master',
+                        duration: 1,
+                        direction: -1,
+                        override: true,
+                        favorite: false,
+                        message: 'None',
+                        targeted: false,
+                        concentration: false,
+                        addAPI: 'None',
+                        addRoll20AM: 'None',
+                        addFX: 'None',
+                        addMacro: 'None',
+                        addPersistentMacro: false,
+                        remAPI: 'None',
+                        remRoll20AM: 'None',
+                        remFX: 'None',
+                        remMacro: 'None',   
+                    },
+                    petrified: {
+                        name: 'Petrified',
+                        key: 'petrified',
+                        type: 'Condition',
+                        description: "<p>A petrified creature is transformed, along with any nonmagical object it is wearing or carrying, into a solid inanimate substance (usually stone). Its weight increases by a factor of ten, and it ceases aging.</p> <p>The creature is <i>incapacitated</i>, can't move or speak, and is unaware of its surroundings.</p> <p>Attack rolls against the creature have advantage.</p> <p>The creature automatically fails Strength and Dexterity saving throws.</p> <p>The creature has Resistance to all damage.</p> <p>The creature is immune to poison and disease, although a poison or disease already in its system is suspended, not neutralized.</p>",
+                        icon: 'frozen-orb',
+                        iconType: 'Combat Master',
+                        duration: 1,
+                        direction: -1,
+                        override: true,
+                        favorite: false,
+                        message: 'None',
+                        targeted: false,
+                        concentration: false,
+                        addAPI: 'None',
+                        addRoll20AM: 'None',
+                        addFX: 'None',
+                        addMacro: 'None',
+                        addPersistentMacro: false,
+                        remAPI: 'None',
+                        remRoll20AM: 'None',
+                        remFX: 'None',
+                        remMacro: 'None',   
+                    },
+                    poisoned: {
+                        name: 'Poisoned',
+                        key: 'poisoned',
+                        type: 'Condition',
+                        description: '<p>A poisoned creature has disadvantage on Attack rolls and Ability Checks.</p>',
+                        icon: 'chemical-bolt',
+                        iconType: 'Combat Master',
+                        duration: 1,
+                        direction: -1,
+                        override: true,
+                        favorite: false,
+                        message: 'None',
+                        targeted: false,
+                        concentration: false,
+                        addAPI: 'None',
+                        addRoll20AM: 'None',
+                        addFX: 'None',
+                        addMacro: 'None',
+                        addPersistentMacro: false,
+                        remAPI: 'None',
+                        remRoll20AM: 'None',
+                        remFX: 'None',
+                        remMacro: 'None',   
+                    },
+                    prone: {
+                        name: 'Prone',
+                        key: 'prone',
+                        type: 'Condition',
+                        description: "<p>A prone creature's only Movement option is to crawl, unless it stands up and thereby ends the condition.</p> <p>The creature has disadvantage on Attack rolls.</p> <p>An Attack roll against the creature has advantage if the attacker is within 5 feet of the creature. Otherwise, the Attack roll has disadvantage.</p>",
+                        icon: 'back-pain',
+                        iconType: 'Combat Master',
+                        duration: 1,
+                        direction: -1,
+                        override: true,
+                        favorite: false,
+                        message: 'None',
+                        targeted: false,
+                        concentration: false,
+                        addAPI: 'None',
+                        addRoll20AM: 'None',
+                        addFX: 'None',
+                        addMacro: 'None',
+                        addPersistentMacro: false,
+                        remAPI: 'None',
+                        remRoll20AM: 'None',
+                        remFX: 'None',
+                        remMacro: 'None',   
+                    },
+                    restrained: {
+                        name: 'Restrained',
+                        key: 'restrained',
+                        type: 'Condition',
+                        description: "<p>A restrained creature's speed becomes 0, and it can't benefit from any bonus to its speed.</p> <p>Attack rolls against the creature have advantage, and the creature's Attack rolls have disadvantage.</p> <p>The creature has disadvantage on Dexterity saving throws.</p>",
+                        icon: 'fishing-net',
+                        iconType: 'Combat Master',
+                        duration: 1,
+                        direction: -1,
+                        override: true,
+                        favorite: false,
+                        message: 'None',
+                        targeted: false,
+                        concentration: false,
+                        addAPI: 'None',
+                        addRoll20AM: 'None',
+                        addFX: 'None',
+                        addMacro: 'None',
+                        addPersistentMacro: false,
+                        remAPI: 'None',
+                        remRoll20AM: 'None',
+                        remFX: 'None',
+                        remMacro: 'None',   
+                    },
+                    stunned: {
+                        name: 'Stunned',
+                        key: 'stunned',
+                        type: 'Condition',
+                        description: "<p>A stunned creature is <i>incapacitated</i>, can't move, and can speak only falteringly.</p> <p>The creature automatically fails Strength and Dexterity saving throws.</p> <p>Attack rolls against the creature have advantage.</p>",
+                        icon: 'fist',
+                        iconType: 'Combat Master',
+                        duration: 1,
+                        direction: -1,
+                        override: true,
+                        favorite: false,
+                        message: 'None',
+                        targeted: false,
+                        concentration: false,
+                        addAPI: 'None',
+                        addRoll20AM: 'None',
+                        addFX: 'None',
+                        addMacro: 'None',
+                        addPersistentMacro: false,
+                        remAPI: 'None',
+                        remRoll20AM: 'None',
+                        remFX: 'None',
+                        remMacro: 'None',   
+                    },
+                    unconscious: {
+                        name: 'Unconscious',
+                        key: 'unconscious',
+                        type: 'Condition',
+                        description: "<p>An unconscious creature is <i>incapacitated</i>, can't move or speak, and is unaware of its surroundings.</p> <p>The creature drops whatever it's holding and falls prone.</p> <p>The creature automatically fails Strength and Dexterity saving throws.</p> <p>Attack rolls against the creature have advantage.</p> <p>Any Attack that hits the creature is a critical hit if the attacker is within 5 feet of the creature.</p>",
+                        icon: 'sleepy',
+                        iconType: 'Combat Master',
+                        duration: 1,
+                        direction: -1,
+                        override: true,
+                        favorite: false,
+                        message: 'None',
+                        targeted: false,
+                        concentration: false,
+                        addAPI: 'None',
+                        addRoll20AM: 'None',
+                        addFX: 'None',
+                        addMacro: 'None',
+                        addPersistentMacro: false,
+                        remAPI: 'None',
+                        remRoll20AM: 'None',
+                        remFX: 'None',
+                        remMacro: 'None',   
+                    },              
+                },  
             },
         };
 
@@ -3716,16 +3714,16 @@ var CombatMaster = CombatMaster || (function() {
         if(!state[combatState].config || typeof state[combatState].config == 'undefined' || reset) {
             state[combatState].config = combatDefaults.config;
         } else {
-		
+        
             if(!state[combatState].config.hasOwnProperty('command')){
                 state[combatState].config.command = combatDefaults.config.command;
             }
-			if(!state[combatState].config.hasOwnProperty('favorite')){
-				state[combatState].config.favorite = combatDefaults.config.favorite;
-			}  			
-			if(!state[combatState].config.hasOwnProperty('previousPage')){
-				state[combatState].config.previousPage = combatDefaults.config.previousPage;
-			}  
+            if(!state[combatState].config.hasOwnProperty('favorite')){
+                state[combatState].config.favorite = combatDefaults.config.favorite;
+            }           
+            if(!state[combatState].config.hasOwnProperty('previousPage')){
+                state[combatState].config.previousPage = combatDefaults.config.previousPage;
+            }  
             if(!state[combatState].config.hasOwnProperty('hold')){
                 state[combatState].config.hold = combatDefaults.config.hold;
             } else {
@@ -3741,13 +3739,13 @@ var CombatMaster = CombatMaster || (function() {
                 if(!state[combatState].config.hold.hasOwnProperty('round')){
                     state[combatState].config.hold.round = combatDefaults.config.hold.round;    
                 }                    
-            }				
+            }               
             if(!state[combatState].config.hasOwnProperty('initiative')){
                 state[combatState].config.initiative = combatDefaults.config.initiative;
-            } else {		
-				if(!state[combatState].config.initiative.hasOwnProperty('initiativeAttributes')){
-					state[combatState].config.initiative.initiativeAttributes = combatDefaults.config.initiative.initiativeAttributes;
-				}			
+            } else {        
+                if(!state[combatState].config.initiative.hasOwnProperty('initiativeAttributes')){
+                    state[combatState].config.initiative.initiativeAttributes = combatDefaults.config.initiative.initiativeAttributes;
+                }           
                 if(!state[combatState].config.initiative.hasOwnProperty('rollInitiative')){
                     state[combatState].config.initiative.rollInitiative = combatDefaults.config.initiative.rollInitiative;
                 }
@@ -3761,62 +3759,63 @@ var CombatMaster = CombatMaster || (function() {
                 if(!state[combatState].config.initiative.hasOwnProperty('apiTargetTokens')){
                     state[combatState].config.initiative.apiTargetTokens = combatDefaults.config.initiative.apiTargetTokens;
                 }  
-			}			
-						
+            }           
+                        
             if(!state[combatState].config.hasOwnProperty('turnorder')){
                 state[combatState].config.turnorder = combatDefaults.config.turnorder;
             } else {
-				if(!state[combatState].config.turnorder.hasOwnProperty('useMarker')){
-					state[combatState].config.turnorder.useMarker = combatDefaults.config.turnorder.useMarker;
-				}     
-				if(!state[combatState].config.turnorder.hasOwnProperty('markerType')){
-					state[combatState].config.turnorder.markerType = combatDefaults.config.turnorder.markerType;
-				}  				
-				if(!state[combatState].config.turnorder.hasOwnProperty('externalMarkerURL')){
-					state[combatState].config.turnorder.externalMarkerURL = combatDefaults.config.turnorder.externalMarkerURL;
-				}
-				if(!state[combatState].config.turnorder.hasOwnProperty('nextMarkerType')){
-					state[combatState].config.turnorder.nextMarkerType = combatDefaults.config.turnorder.nextMarkerType;
-				}
-				if(!state[combatState].config.turnorder.hasOwnProperty('nextExternalMarkerURL')){
-					state[combatState].config.turnorder.nextExternalMarkerURL = combatDefaults.config.turnorder.nextExternalMarkerURL;
-				}
-				if(!state[combatState].config.turnorder.hasOwnProperty('tokenMarkerName')){
-					state[combatState].config.turnorder.tokenMarkerName = combatDefaults.config.turnorder.tokenMarkerName;
-				} 
-				if(!state[combatState].config.turnorder.hasOwnProperty('tokenMarkerURL')){
-					state[combatState].config.turnorder.tokenMarkerURL = combatDefaults.config.turnorder.tokenMarkerURL;
-				} 				
-				if(!state[combatState].config.turnorder.hasOwnProperty('nextTokenMarkerName')){
-					state[combatState].config.turnorder.nextTokenMarkerName = combatDefaults.config.turnorder.nextTokenMarkerName;
-				}	
-				if(!state[combatState].config.turnorder.hasOwnProperty('nextTokenMarkerURL')){
-					state[combatState].config.turnorder.nextTokenMarkerURL = combatDefaults.config.turnorder.nextTokenMarkerURL;
-				}				
-				if(!state[combatState].config.turnorder.hasOwnProperty('centerToken')){
-					state[combatState].config.turnorder.centerToken = combatDefaults.config.turnorder.centerToken;
-				}	
+                if(!state[combatState].config.turnorder.hasOwnProperty('useMarker')){
+                    state[combatState].config.turnorder.useMarker = combatDefaults.config.turnorder.useMarker;
+                }     
+                if(!state[combatState].config.turnorder.hasOwnProperty('markerType')){
+                    state[combatState].config.turnorder.markerType = combatDefaults.config.turnorder.markerType;
+                }               
+                if(!state[combatState].config.turnorder.hasOwnProperty('externalMarkerURL')){
+                    state[combatState].config.turnorder.externalMarkerURL = combatDefaults.config.turnorder.externalMarkerURL;
+                }
+                if(!state[combatState].config.turnorder.hasOwnProperty('nextMarkerType')){
+                    state[combatState].config.turnorder.nextMarkerType = combatDefaults.config.turnorder.nextMarkerType;
+                }
+                if(!state[combatState].config.turnorder.hasOwnProperty('nextExternalMarkerURL')){
+                    state[combatState].config.turnorder.nextExternalMarkerURL = combatDefaults.config.turnorder.nextExternalMarkerURL;
+                }
+                if(!state[combatState].config.turnorder.hasOwnProperty('tokenMarkerName')){
+                    state[combatState].config.turnorder.tokenMarkerName = combatDefaults.config.turnorder.tokenMarkerName;
+                } 
+                if(!state[combatState].config.turnorder.hasOwnProperty('tokenMarkerURL')){
+                    state[combatState].config.turnorder.tokenMarkerURL = combatDefaults.config.turnorder.tokenMarkerURL;
+                }               
+                if(!state[combatState].config.turnorder.hasOwnProperty('nextTokenMarkerName')){
+                    state[combatState].config.turnorder.nextTokenMarkerName = combatDefaults.config.turnorder.nextTokenMarkerName;
+                }   
+                if(!state[combatState].config.turnorder.hasOwnProperty('nextTokenMarkerURL')){
+                    state[combatState].config.turnorder.nextTokenMarkerURL = combatDefaults.config.turnorder.nextTokenMarkerURL;
+                }               
+                if(!state[combatState].config.turnorder.hasOwnProperty('centerToken')){
+                    state[combatState].config.turnorder.centerToken = combatDefaults.config.turnorder.centerToken;
+                }   
                 if(!state[combatState].config.turnorder.hasOwnProperty('sortTurnOrder')){
                     state[combatState].config.turnorder.sortTurnOrder = combatDefaults.config.turnorder.sortTurnOrder;
-                }	
+                }   
                 if(!state[combatState].config.turnorder.hasOwnProperty('turnAPI')){
                     state[combatState].config.turnorder.turnAPI = combatDefaults.config.turnorder.turnAPI;
-                }		
+                }       
                 if(!state[combatState].config.turnorder.hasOwnProperty('turnRoll20AM')){
                     state[combatState].config.turnorder.turnRoll20AM = combatDefaults.config.turnorder.turnRoll20AM;
-                }				
+                }               
                 if(!state[combatState].config.turnorder.hasOwnProperty('turnFX')){
                     state[combatState].config.turnorder.turnFX = combatDefaults.config.turnorder.turnFX;
                 }
                 if(!state[combatState].config.turnorder.hasOwnProperty('turnMacro')){
                     state[combatState].config.turnorder.turnMacro = combatDefaults.config.turnorder.turnMacro;
                 }    
+                 
                 if(!state[combatState].config.turnorder.hasOwnProperty('roundAPI')){
                     state[combatState].config.turnorder.roundAPI = combatDefaults.config.turnorder.roundAPI;
-                }		
+                }       
                 if(!state[combatState].config.turnorder.hasOwnProperty('roundRoll20AM')){
                     state[combatState].config.turnorder.roundRoll20AM = combatDefaults.config.turnorder.roundRoll20AM;
-                }				
+                }               
                 if(!state[combatState].config.turnorder.hasOwnProperty('roundFX')){
                     state[combatState].config.turnorder.roundFX = combatDefaults.config.turnorder.roundFX;
                 }
@@ -3827,7 +3826,7 @@ var CombatMaster = CombatMaster || (function() {
                     state[combatState].config.turnorder.allRoundMacro = combatDefaults.config.turnorder.allRoundMacro;
                 }          
             }
-			
+            
             if(!state[combatState].config.hasOwnProperty('timer')){
                 state[combatState].config.timer = combatDefaults.config.timer;
             } else {
@@ -3856,7 +3855,7 @@ var CombatMaster = CombatMaster || (function() {
                     state[combatState].config.timer.timerFontColor = combatDefaults.config.timer.timerFontColor;
                 }
             }
-			
+            
             if(!state[combatState].config.hasOwnProperty('announcements')){
                 state[combatState].config.announcements = combatDefaults.config.announcements;
             } else {
@@ -3872,68 +3871,68 @@ var CombatMaster = CombatMaster || (function() {
                 if(!state[combatState].config.announcements.hasOwnProperty('handleLongName')){
                     state[combatState].config.announcements.handleLongName = combatDefaults.config.announcements.handleLongName;
                 }
-				if(!state[combatState].config.announcements.hasOwnProperty('showNPCTurns')){
-					state[combatState].config.announcements.showNPCTurns = combatDefaults.config.announcements.showNPCTurns;
-				}                
-			}
+                if(!state[combatState].config.announcements.hasOwnProperty('showNPCTurns')){
+                    state[combatState].config.announcements.showNPCTurns = combatDefaults.config.announcements.showNPCTurns;
+                }                
+            }
 
             if(!state[combatState].config.hasOwnProperty('macro')){
                 state[combatState].config.macro = combatDefaults.config.macro;
             }
             
-			if(!state[combatState].config.hasOwnProperty('status')) {
-				state[combatState].config.status = combatDefaults.config.status;
-			} else {
-				if(!state[combatState].config.status.hasOwnProperty('userChanges')){
-					state[combatState].config.status.userChanges = combatDefaults.config.status.userChanges;
-				}
-				if(!state[combatState].config.status.hasOwnProperty('sendOnlyToGM')){
-					state[combatState].config.status.sendOnlyToGM = combatDefaults.config.status.sendOnlyToGM;
-				}
-				if(!state[combatState].config.status.hasOwnProperty('sendConditions')){
-					state[combatState].config.status.sendConditions = combatDefaults.config.status.sendConditions;
-				}           
-				if(!state[combatState].config.status.hasOwnProperty('clearConditions')){
-					state[combatState].config.status.clearConditions = combatDefaults.config.status.clearConditions;
-				}      
-				if(!state[combatState].config.status.hasOwnProperty('useMessage')){
-					state[combatState].config.status.useMessage = combatDefaults.config.status.useMessage;
-				}
-				if(!state[combatState].config.status.hasOwnProperty('showConditions')){
-					state[combatState].config.status.showConditions = combatDefaults.config.status.showConditions;
-				}	
-				if(!state[combatState].config.status.hasOwnProperty('access')){
-					state[combatState].config.status.access = combatDefaults.config.status.access;
-				}	
-				if(!state[combatState].config.status.hasOwnProperty('autoAddSpells')){
-					state[combatState].config.status.autoAddSpells = combatDefaults.config.status.autoAddSpells;
-				}	
-				if(!state[combatState].config.status.hasOwnProperty('sheet')){
-					state[combatState].config.status.sheet = combatDefaults.config.status.sheet;
-				}				
+            if(!state[combatState].config.hasOwnProperty('status')) {
+                state[combatState].config.status = combatDefaults.config.status;
+            } else {
+                if(!state[combatState].config.status.hasOwnProperty('userChanges')){
+                    state[combatState].config.status.userChanges = combatDefaults.config.status.userChanges;
+                }
+                if(!state[combatState].config.status.hasOwnProperty('sendOnlyToGM')){
+                    state[combatState].config.status.sendOnlyToGM = combatDefaults.config.status.sendOnlyToGM;
+                }
+                if(!state[combatState].config.status.hasOwnProperty('sendConditions')){
+                    state[combatState].config.status.sendConditions = combatDefaults.config.status.sendConditions;
+                }           
+                if(!state[combatState].config.status.hasOwnProperty('clearConditions')){
+                    state[combatState].config.status.clearConditions = combatDefaults.config.status.clearConditions;
+                }      
+                if(!state[combatState].config.status.hasOwnProperty('useMessage')){
+                    state[combatState].config.status.useMessage = combatDefaults.config.status.useMessage;
+                }
+                if(!state[combatState].config.status.hasOwnProperty('showConditions')){
+                    state[combatState].config.status.showConditions = combatDefaults.config.status.showConditions;
+                }   
+                if(!state[combatState].config.status.hasOwnProperty('access')){
+                    state[combatState].config.status.access = combatDefaults.config.status.access;
+                }   
+                if(!state[combatState].config.status.hasOwnProperty('autoAddSpells')){
+                    state[combatState].config.status.autoAddSpells = combatDefaults.config.status.autoAddSpells;
+                }   
+                if(!state[combatState].config.status.hasOwnProperty('sheet')){
+                    state[combatState].config.status.sheet = combatDefaults.config.status.sheet;
+                }               
             }
             
-			if(!state[combatState].config.hasOwnProperty('concentration')) {
-				state[combatState].config.concentration = combatDefaults.config.concentration;
-			} else {
-				if(!state[combatState].config.concentration.hasOwnProperty('useConcentration')){
-					state[combatState].config.concentration.useConcentration = combatDefaults.config.concentration.useConcentration;
-				}
-				if(!state[combatState].config.concentration.hasOwnProperty('notify')){
-					state[combatState].config.concentration.notify = combatDefaults.config.concentration.notify;
-				}      
-				if(!state[combatState].config.concentration.hasOwnProperty('autoAdd')){
-					state[combatState].config.concentration.autoAdd = combatDefaults.config.concentration.autoAdd;
-				}
-				if(!state[combatState].config.concentration.hasOwnProperty('autoRoll')){
-					state[combatState].config.concentration.autoRoll = combatDefaults.config.concentration.autoRoll;
-				}
-				if(!state[combatState].config.concentration.hasOwnProperty('woundBar')){
-					state[combatState].config.concentration.woundBar = combatDefaults.config.concentration.woundBar;
-				}	
-				if(!state[combatState].config.concentration.hasOwnProperty('attribute')){
-					state[combatState].config.concentration.attribute = combatDefaults.config.concentration.attribute;
-				}					
+            if(!state[combatState].config.hasOwnProperty('concentration')) {
+                state[combatState].config.concentration = combatDefaults.config.concentration;
+            } else {
+                if(!state[combatState].config.concentration.hasOwnProperty('useConcentration')){
+                    state[combatState].config.concentration.useConcentration = combatDefaults.config.concentration.useConcentration;
+                }
+                if(!state[combatState].config.concentration.hasOwnProperty('notify')){
+                    state[combatState].config.concentration.notify = combatDefaults.config.concentration.notify;
+                }      
+                if(!state[combatState].config.concentration.hasOwnProperty('autoAdd')){
+                    state[combatState].config.concentration.autoAdd = combatDefaults.config.concentration.autoAdd;
+                }
+                if(!state[combatState].config.concentration.hasOwnProperty('autoRoll')){
+                    state[combatState].config.concentration.autoRoll = combatDefaults.config.concentration.autoRoll;
+                }
+                if(!state[combatState].config.concentration.hasOwnProperty('woundBar')){
+                    state[combatState].config.concentration.woundBar = combatDefaults.config.concentration.woundBar;
+                }   
+                if(!state[combatState].config.concentration.hasOwnProperty('attribute')){
+                    state[combatState].config.concentration.attribute = combatDefaults.config.concentration.attribute;
+                }                   
             }            
         }
         
@@ -3976,9 +3975,6 @@ var CombatMaster = CombatMaster || (function() {
                 if (!condition.hasOwnProperty('targeted')) {
                     condition.targeted = false
                 }     
-                if (!condition.hasOwnProperty('targetedAPI')) {
-                    condition.targetedAPI = 'casterTargets'
-                }                     
                 if (!condition.hasOwnProperty('concentration')) {
                     condition.concentration = false
                 }                       
@@ -4499,7 +4495,6 @@ var CombatMaster = CombatMaster || (function() {
     
     registerEventHandlers = function() {
         on('chat:message', inputHandler);
-        on('close:campaign:turnorder', handleTurnorderChange);
         on('change:campaign:turnorder', handleTurnorderChange);
         on('change:graphic:statusmarkers', handleStatusMarkerChange);
         on('change:campaign:initiativepage', handeIniativePageChange);
@@ -4534,7 +4529,7 @@ var CombatMaster = CombatMaster || (function() {
         getConditions,
         getConditionByKey,
         sendConditionToChat,
-        getDefaultIcon	
+        getDefaultIcon  
     };
 })();
 
@@ -4543,5 +4538,5 @@ on('ready',function() {
 
     CombatMaster.CheckInstall();
     CombatMaster.RegisterEventHandlers();
- 	        
+            
 });
