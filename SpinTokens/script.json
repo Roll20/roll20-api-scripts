@@ -1,6 +1,6 @@
 {
   "name": "SpinTokens",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "SpinTokens provides a way to toggle tokens to be spinning at various rates. GMs can spin any tokens, while players are limited to the tokens they can control.\r\r## Commands\r\r```!spin-start [Seconds Per Cycle] [--help | [--ids | <token_id> | [<token_id> ...]]]```\r\rStarts all specified tokens spinning. Tokens are specified by selecting them, and optionally by specifying their token_ids using the --ids argument.\r\r* `Seconds Per Cycle` -- specifies how fast the tokens should spin. This is the number of seconds before the token spins around in one complete circle. A second hand would use the number 60, for example.\r* `--ids` -- specifies additional tokens to apply the spin to.\r* `--help` -- shows this help message.\r\r```!spin-stop [--help | [--ids | <token_id> | [<token_id> ...]]]```\r\rStops all specified tokens from spinning. Tokens are specified by selecting them, and optionally by specifying their token_ids using the --ids argument.\r\r* `--ids` -- specifies additional tokens to apply the spin to.\r* `--help` -- shows this help message.",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -17,5 +17,7 @@
   "conflicts": [],
   "script": "SpinTokens.js",
   "useroptions": [],
-  "previousversions": []
+  "previousversions": [
+    "0.4.2"
+  ]
 }

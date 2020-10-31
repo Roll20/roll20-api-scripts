@@ -1,6 +1,59 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 2.12
+### Capacités
+* Faucheuse de géants
+
+### Autres améliorations
+* Ajout des résistances permettant de diviser les dégâts d'un type donné.
+* Utilisation des consommables sur la fiche pour les PJs (au lieu des attributs dose_ ou consommable_).
+* Utilisation du token de la monture pour les personnages montés, dans les calculs de distance.
+
+## 2.11
+### Capacités
+* Commandant de la voie du chef d'armée.
+
+### Autres améliorations
+* Ajout d'une commande pour centrer sa vue du jeu sur un token.
+* Déplace la vue du joueur quand il emprunte un escalier.
+* Prise en compte des fiches Terres d'Arran
+* Possibilité de déplacer un personnage vers une autre carte.
+
+### Corrections de bugs
+* Prise en compte de la taille des cellules de la grille des cartes, car elle est utilisée en jeu pour mesurer les distances.
+
+## 2.10
+### Capacités
+* Chair à canon de la voie du PNJ récurrent
+* Nuée de criquets (Druide Prestige)
+* Increvable (Rôdeur, Survie rang 4)
+* Intervention divine du prêtre
+
+### Autres améliorations
+* Support du nouvel éclairage dynamique
+* Une série de capacités sont à déclencher par les joueurs avant les jets de dégâts : Absorber un Coup, Absorber un Sort, Encaisser un Coup, Résistance à la Magie, Esquive Acrobatique, Esquive fatale, Parade Magistrale, Rune de Protection
+
+## 2.09
+### Capacités
+* Vitalité surnaturelle du barbare
+* Riposte du guerrier
+
+### Autres améliorations
+* Ajout d'une option --plusCrit aux attaques.
+* Ajout d'une option --plageEchecCritique aux jets.
+* Ajout d'une macro pour suivre un autre personnage
+* Possibilité d'utiliser la défense et l'initiative d'un autre personnage.
+* Possibilité de lier les PVs.
+* Les effets temporaires lancés avec une option de mana disparaissent quand le lanceur meurt.
+
+### Corrections de bugs
+* Undo avant de faire le jet d'attaque pour l'esquive acrobatique
+* Prise en compte correcte des caractéristiques de PNJs dans les jets.
+
 ## 2.08
 ### Capacités
+* Petit veinard du halfelin.
+* Mot de mort du nécromancien.
+* Support pour l'étreinte des serpents.
 * Support pour la capacité forêt vivante du druide.
 * Ajout de la capacité botte mortelle du barde.
 * Possibilité de spécifier le bonus apporté par une feinte.
@@ -9,6 +62,12 @@
 * Résistance à la magie du barbare
 
 ### Autres améliorations
+* Ajout d'une option diviseDmg
+* Ajout des options d'attaque à la liste du tour.
+* Prise en compte des options d'attaque sur la fiche
+* Utilisation des lignes d'attaques pour les PNJs créés par le script
+* Ajout de possibilité de tempête de mana pour !cof-lancer-sort
+* Ajout de !cof-set-attribute
 * Possibilité d'accumuler les durées d'effets.
 * Gestion de --secret pour les !cof-effet
 * Ajout de l'option d'attaque --ifSaveFails
@@ -24,6 +83,8 @@
 * Attaques par défaut dans la liste d'actions, possibilité de se passer complètement des attributs pour les attaques (actif quand la version 3.3 de la fiche sera là.
 
 ### Corrections de bugs
+* Évaluation plus précoce des conditions, permettant de mieux les prendre en compte
+* Utilisation d'une valeur d'attaque plus cohérente pour les PNJ en cas d'attaque magique opposée.
 * Prise en compte de la forêt vivante dans les jets sans difficulté explicite.
 * Prise en compte correcte de l'armure des PNJ pour la main d'énergie.
 * Correction d'un bug qui faisait planter en cas de save dans une attaque

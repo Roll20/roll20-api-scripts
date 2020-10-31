@@ -1,15 +1,20 @@
 {
-	"name": "Combat Master v2.0",
-	"script": "CombatMaster.js",
-	"version": "2.0",
-	"previousversions": ["2.22"],
-	"description": "# Combat Master v2.14\r\r###### The script provides management of combat, incuding rolling initiative, stepping through a turnorder, adding or remove conditions, tracking the length of a condition and external calls to APIs and Macros.\rtype !cmaster --help for syntax",
-	"authors": ["Victor B"],
+	"name": "Combat Master",
+	"version": "2.36",
+	"description": "# Combat Master v2.36\r## Warning: This API-menu version of COMBATMASTER isn't working for some reason, so you need to manually install it\n To manually install latest version of CombatMaster, selecting 'New Script' from the row displaying your APIs, and [copy the latest version of the script](https://raw.githubusercontent.com/vicberg/CombatMaster/master/CombatMaster.js), paste it in the large text box, name it 'CombatMaster.js', and press 'Save Script'.\nRoll20 is looking into the issue.\r\r**Features:** The script provides management of combat, incuding rolling initiative(option to use GroupInitiative), stepping through a turnorder, adding or remove conditions(import/export lists), tracking the length of a condition, and options for using external calls to other APIs and Macros.\rtype `!cmaster --main` for launching the API, and select the `i` in the corner for help.\n* Visit the [Combat Master Alpha](https://app.roll20.net/forum/post/8126152/combatmaster-alpha)-forum thread for discussions and updates on the script.\n* [Combat Master repo](https://github.com/vicberg/CombatMaster) is the location of the active development of the API, and can contain newer versions of the API than through the install menu\n\nThe v.2.33 version didn't work for some reason through the install menu, but since the v.2.34 update, several older versions of the script have been made avaiable for direct install [here](https://github.com/Roll20/roll20-api-scripts/tree/master/CombatMaster). v.2.32 was the last version that worked through the API menu, but all versions work if the code is directly coped and manually installed. v.2.22 and older versions might use `!cmaster --help` for accessing the help menu, instead of the current `!cmaster --main`.",
+	"authors": "Victor B",
 	"roll20userid": "3135709",
 	"useroptions": [],
 	"dependencies": [],
+	"script": "CombatMaster.js",
 	"modifies": {
 		"state.COMBATMASTER": "read,write"
 	},
-	"conflicts": []
+	"conflicts": [],
+	"previousversions": [
+		"2.34",
+		"2.33",
+		"2.32",
+		"2.22"
+	]
 }
