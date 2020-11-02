@@ -2,8 +2,6 @@ on('chat:message', function(msg) {
 
   if (msg.type !== "api" && msg.content !== "!rollhandout") {
     return;
-  } else {
-      log("should start")
   }
 
   let handouts = findObjs({type:'handout'});
@@ -204,7 +202,6 @@ on('chat:message', function(msg) {
           } //end for each section
 
           handout.set('notes', notes);
-          log("handout settled");
 
         }//end if Handout has <table>
 
