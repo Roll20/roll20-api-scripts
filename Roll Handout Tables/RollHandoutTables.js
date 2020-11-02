@@ -1,4 +1,4 @@
-on('ready', function() { //comment out for first run
+on('ready', function() { 
 
 
   on('add:handout', function(obj) {
@@ -6,12 +6,12 @@ on('ready', function() { //comment out for first run
       log('handout created: ' + obj.get('name'));
 
 
-    on('change:handout', function(obj) { //comment out for first run
+    on('change:handout', function(obj) { 
         if (i > 0) {
             return;
         }
 
-        i++; //comment out for first run
+        i++;
 
 
       var strip = /<[^>]*>/g, diceRoll = /(\d+d\d+(\+\d+)?)/g, leftBracket = "[[", rightBracket = "]]";
@@ -215,8 +215,8 @@ on('ready', function() { //comment out for first run
 
     );//end obj get
 
-    });//end change:handout - comment out for first run
+    });//end change:handout 
 
   });//end add:handout
 
-});//end on ready - comment out for first run
+});//end on ready
