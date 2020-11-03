@@ -220,7 +220,7 @@ on('ready',()=>{
 
   var i;
   const onChangeHandout = (obj, prev) => {
-    if (i > 0) {
+    if (i>0) {
         i = 0
         return
     }
