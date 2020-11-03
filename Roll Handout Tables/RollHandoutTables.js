@@ -116,10 +116,7 @@ on('ready',()=>{
 
                 if (!(notes.includes(linkTable))) {
 
-                  log(linkTable);
-                  log(notes);
                   notesNew = notes.replace(table[t], linkTable + table[t]);
-                  log(notes);
 
                 }
 
