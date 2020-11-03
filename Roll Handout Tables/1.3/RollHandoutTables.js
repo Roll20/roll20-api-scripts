@@ -4,8 +4,10 @@ on('ready',()=>{
     // do stuff here with handout
     var strip = /<[^>]*>/g, diceRoll = /(\d+d\d+(\+\d+)?)/g, leftBracket = "[[", rightBracket = "]]";
     var handoutName = handout.get("name");
-    var notesNew;
+
     handout.get("notes", function(notes){
+
+      var notesNew = notes
 
       if (notes.includes("<table>")) {
 
@@ -110,7 +112,9 @@ on('ready',()=>{
 
               //check if tableName exists, if so log "table already created with this name" and continue;
               var findTable = findObjs({type: 'rollabletable', name: tableName});
-              var linkTable = "<br><a href=\"`!rt [[ 1t[" + tableName + "] ]]\">Roll Recursive</a></br>" + "<br><a href=\"`/r 1t[" + tableName + "]\">Roll</a></br>";
+              var rollLink = "<br><a href=\"`[[ 1t[" + tableName + "] ]]\">Roll</a></br>";
+              var recursiveLink = "<br><a href=\"`!rt [[ 1t[" + tableName + "] ]]\">Roll Recursive</a></br>";
+              var linkTable = rollLink + recursiveLink;
 
               if (findTable.length) {
 
@@ -151,12 +155,23 @@ on('ready',()=>{
                 (range[1] !== undefined ? weight = parseInt(range[1]) - parseInt(range[0]) + 1 : weight = 1); //finds range of first column
                 (col[1].match(diceRoll) ? input = col[1].replace(diceRoll, leftBracket + "$1" + rightBracket) : input = col[1] ); //surrounds any dice rolls with brackets
 
+                var numCheck = /^\d+\s/;
+                if (input.match(numCheck)) {
+                  input = "&nbsp;" + input;
+                }
+
                 if (col[2]) { //repeat process if table has four columns
 
                   rangeB = col[2].split("-");
                   col[2] = col[2].replace(strip, ""), col[3] = col[3].replace(strip, "");
                   (rangeB[1] !== undefined ? weightB = parseInt(rangeB[1]) - parseInt(rangeB[0]) + 1 : weightB = 1);
                   (col[3].match(diceRoll) ? inputB = col[3].replace(diceRoll, leftBracket + "$1" + rightBracket) : inputB = col[3] );
+
+
+                    var numCheck = /^\d+\s/;
+                    if (inputB.match(numCheck)) {
+                      inputB = "&nbsp;" + input;
+                    }
 
                   //add weight/items from third/fourth column
                   createObj("tableitem", {
