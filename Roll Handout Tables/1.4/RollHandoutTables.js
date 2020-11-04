@@ -10,7 +10,7 @@ on('ready', () => {
     let notesNew;
 
     handout.get('notes', (notes) => {
-      
+
       notesNew = notes;
 
       if (notes.includes('<table>')) {
