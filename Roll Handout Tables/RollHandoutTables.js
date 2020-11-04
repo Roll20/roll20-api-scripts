@@ -1,7 +1,7 @@
 on('ready', () => {
   let activeHandoutID = [];
   const processSingleHandout = (handout) => {
-    // do stuff here with handout
+
     const strip = /<[^>]*>/g;
     const diceRoll = /(\d+d\d+(\+\d+)?)/g;
     const leftBracket = '[[';
@@ -226,7 +226,6 @@ on('ready', () => {
   }
 
   on('chat:message',(msg)=>{
-    // some chat stuff that calls processAllHandouts()
 
       if (msg.type !== 'api' && msg.content !== '!rollhandout') {
         return;
