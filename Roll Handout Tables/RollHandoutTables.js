@@ -186,9 +186,9 @@ on('ready', () => {
                 }); // end create obj A
               }//end for each row loop
 
-                //replace old notes with new notes that include roll link
-                notesNew = notes.replace(table[t], linkTable + table[t]);
-                continue;
+               //replace old notes with new notes that include roll link
+               notesNew = notes.replace(table[t], linkTable + table[t]);
+               continue;
             }//end table loop?
           } else {
             continue;
