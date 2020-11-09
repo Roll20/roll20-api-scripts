@@ -174,7 +174,7 @@
                   <li>Terres d'Arran (COTA p. 112) : activation l'option <code>brulure de magie</code> via <code>!cof-options</code> et utiliser les options de mana standard (voire ci-dessous). Si vous désirez appliquer ce système à COF, vous pouvez créer un attribut de personnage de nom <code>famille</code> avec comme valeur courante <code>combattant</code> pour doubler les dégâts sur les profils combattants. Brûlure de Magie est incompatible avec Mana Totale.</li>
                 </ul>
                 <p>J'ai aussi choisi, comme proposé par Kegron, de diminuer la DEF de tous les protagonistes après un certain nombre de tours de combat (-2 tous les 5 tours, peut être désactivé pendant un combat par la commande <code>!cof-usure-off</code>, ou bien dans les options de jeu).</p>
-                <p>Le script utilise aussi une règle de blessures graves : chaque fois qu'un personnage reçoit plus de DM que la somme de sa constitution et de son niveau, ou qu'il tombe à 0 PV, il encaisse une perte d'un point de récupération. Si il était à 0 points de récupération, il devient gravement blessé, ce qui le rend <i>affaibli</i>. Si le personnage était déjà gravement blessé, mais qu'il lui reste des PV, il tombe inconscient, et sinon, il meurt. Pour récupérer d'une blessure grave, le personnage doit se reposer une nuit, et réussir un test de CON difficulté 8 (avec le d12). Il est impossible de régénérer les points de récupération quand on est gravement blessé.<p>
+                <p>Le script utilise aussi une règle de blessures graves : chaque fois qu'un personnage reçoit plus de DM que la somme de sa constitution et de son niveau, ou qu'il tombe à 0 PV, il encaisse une perte d'un point de récupération. Si il était à 0 points de récupération, il devient gravement blessé, ce qui le rend <i>affaibli</i>. Si le personnage était déjà gravement blessé, mais qu'il lui reste des PV, il tombe inconscient, et sinon, il meurt. Pour récupérer d'une blessure grave, le personnage doit se reposer une nuit, et réussir un test de CON difficulté 8 (avec le d12). Il est impossible de régénérer les points de récupération quand on est gravement blessé.</p>
                 <p>Il est possible de changer les options du script avec la commande <code>!cof-options</code>.</p>
               </div>
             </div>
@@ -358,19 +358,27 @@
               </div>
               <h4 class="text-secondary">Réduction des dégâts</h4>
               <div class="decalage">
-                Le script utilise la RD décrite sur la fiche. Cette RD peut se décomposer en plusieurs parties, séparées par une virgule. Chaque élément est soit
+                <h5>Fonctionnement de base</h5>
                 <ul>
-                  <li> un nombre. C'est une RD qui s'applique à tous les dégats</li>
-                  <li> un type suivie de <code>:</code> et un nombre, c'est une RD qui ne s'applique qu'à ce type de degâts. Par exemple, une RD de 5 contre le feu s'écrira <code>feu:5</code>.</li>
-                  <li> un nombre, suivi de <code>/</code> et un ou plusieurs types séparés de <code>_</code>, c'est une RD qui s'applique à tous les dégâts, sauf ceux du type mentionné. Par exemple, une RD à tout sauf aux dégâts magiques s'écrira <code>5/magique</code>. Une RD à tout sauf au feu et au froid pourra s'écrire <code>10/feu_froid</code>. Une RD qui laisse toujours passer au moins un PV s'écrit avec <code>/1</code>.
+                  <li>Le script utilise les cases RD et Casque présentes sur les fiches.</li>
+                  <li>Il est possible d'indiquer plusieurs RD différentes, il suffit de les séparer par une virgule.</li>
+                  <li>Toutes les RD se cumulent.</li>
+                  <li>Le script se base sur les types de dégâts pour choisir d'appliquer ou non les dégâts.</li>
+                  <li>Pour les armes magiques, il est possible de spécifier à la fois le type de l'arme (par exemple <code>--tranchant</code>) et <code>--magique</code>.</li>
                 </ul>
-                Tous les éléments de RD se cumulent. Ainsi, si on a une RD de <code>5/argent, feu:10</code> des dégâts de feu seront réduits de 15, des dégâts d'argent ne seront pas réduits et des dégâts normaux seront réduits de 5.
-
-                À noter que parmis les types de dégâts, on peut spécifier <code>tranchant</code>, <code>percant</code> ou <code>contondant</code>, voire <code>nature</code> ou <code>drain</code>.
-                Pour la RD des casques, utiliser la case prévue à cet effet sur la fiche (se cumule avec un attribut <code>RD_critique</code>, si présent).
-                Pour que les RD /magique ou /tranchant soient bien pris en compte, il faut que les attaques faisant des dégâts magiques aient l'option <code>--magique</code> et les armes le type de dommage (comme <code>--tranchant</code> pour une épée). Enfin, pour les résistances <i>sauf un genre d'arme</i> (comme <code>/tranchant</code>), la RD va s'appliquer à tous les dégâts, sauf élémentaires ou bien qui aura précisé le genre dans son attaque. Pour une RD qui s'appliquerait à toutes les armes sauf tranchantes, le mieux est de spécifier une RD aux 2 autres genres, <code>percant:</code> et <code>contondant:</code>.
-                <p>Pour les effets qui divisent la dégâts subits d'un type donné, utilisez un attribut <code>resistanceA_<i>type</i></code> Par exemple une potion de résistance au feu pourra être simulée par la commande <code>!cof-set-attribute resistanceA_feu true</code>. Il faut ensuite effacer l'attribut à la fin de l'effet.</p>
-                </p>
+                <h5>RD simple</h5>
+                <p>Dans le cas d'une RD simple (résistance à tous les dégâts), il suffit d'indiquer un nombre. Exemple : <code>3</code></p>
+                <h5>RD à un type de dégâts particuliers</h5>
+                <p>Pour une RD qui ne s'applique qu'à un type de dégâts particuliers, indiquer le type et la valeur séparés par <code>:</code>. Exemple : <code>feu:5</code></p>
+                <h5>RD sauf un type de dégâts particuliers</h5>
+                <p>Pour une RD qui s'applique tout le temps sauf type de dégâts particulier, indiquer la valeur et le type séparés par <code>/</code>. Exemple : <code>5/magique</code><br/>
+                Pour une RD qui s'appliquerait à tous les types d'armes sauf une, utiliser à la place une résistance aux 2 autres types d'armes. Exemple, pour 5/tranchant, utiliser <code>percant:5,contondant:5</code>.</p>
+                <h5>RD critique</h5>
+                <p>Utiliser un attribut <code>RD_critique</code> avec comme valeur courante la résistance aux critiques. Se combine avec une éventuelle RD critique fournie par le port d'un casque.</p>
+                <h5>Résistances</h5>
+                <p>Pour les effets qui divisent la dégâts subits d'un type donné, utilisez un attribut <code>resistanceA_<i>type</i></code>. Il est aussi possible d'octroyer une résistance temporaire, par exemple une potion de résistance au feu pourra être simulée par la commande <code>!cof-set-attribute resistanceA_feu true</code>. Il faut ensuite effacer l'attribut à la fin de l'effet.</p>
+                <h5>Armures/Boucliers de Protection (COF p. 203)</h5>
+                <p>Utiliser un attribut <code>armureProtection</code> ou <code>bouclierProtection</code> avec comme valeur <code>true</code>. Le script détecte si l'équipement est porté ou pas via la fiche, et fonctionne spécifiquement contre les attaques qui utilisent <code>--sournoise</code></p>
               </div>
               <h4 class="text-secondary">Manoeuvres</h4>
               <div class="decalage">
@@ -1105,14 +1113,14 @@
                     <strong>Absorber un coup</strong> :
                     <ul>
                       <li>utiliser <code>!cof-effet-temp absorberUnCoup 1</code> pour se mettre en position. Attention, ça ne vérifie pas si le guerrier porte son bouclier.</li>
-                      <li>normalement, le script propose un bouton à activer en cas d'attaque réussie alors que le guerrier est en position, mais en cas de besoin, vous pouvez utiliser <code>!cof-absorber-au-bouclier</code> pour absorber un coup.</li>
+                      <li>le script propose un bouton à activer en cas d'attaque réussie alors que le guerrier est en position,</li>
                     </ul>
                   </li>
                   <li>
                     <strong>Absorber un sort</strong> :
                     <ul>
                       <li>utiliser <code>!cof-effet-temp absorberUnSort 1</code> pour se mettre en position. Attention, ça ne vérifie pas si le guerrier porte son bouclier.</li>
-                      <li>normalement, le script propose un bouton à activer en cas d'attaque réussie alors que le guerrier est en position, mais en cas de besoin, vous pouvez utiliser <code>!cof-absorber-au-bouclier</code> pour absorber un sort.</li>
+                      <li>le script propose un bouton à activer en cas d'attaque réussie alors que le guerrier est en position.</li>
                     </ul>
                   </li>
                   <li><strong>Armure lourde</strong> : Noter l'armure sur la feuille du personnage, et ajouter un attribut <code>armureLourdeGuerrier</code> au personnage. L'annulation du critique ne se produira que si l'armure est portée et que la valeur totale du bonus de défense supérieure ou égale à 8 (le bonus de DEF d'une armure de plaques complète).</li>
