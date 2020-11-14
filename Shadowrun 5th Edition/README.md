@@ -94,28 +94,3 @@ Upload a custom token marker named matrix. One is included in the GitHub for thi
 Upload a custom token marker named [matrix](https://raw.githubusercontent.com/clevett/roll20-api-scripts/shadowrunv1/Shadowrun%205th%20Edition/matrix.png) and [astral](https://raw.githubusercontent.com/clevett/roll20-api-scripts/shadowrunv1/Shadowrun%205th%20Edition/astral.png). Two are included in this GitHub for this script.
 
 ![Token Markers](https://raw.githubusercontent.com/clevett/roll20-api-scripts/shadowrunv1/Shadowrun%205th%20Edition/imgs/groupiniTokenMarkers.png)
-
----
-
-# Technical Info
-
-Technical information for contributors.
-
-## To Do
-
-- Add Mocha & Chia testing
-
-## Release
-
-@author: Cassie Levett, additional contributions by R. William Morris
-@version: 1.04
-@new: Complete overhaul of coding documentation to make it easier to read and be understood
-@new: Switched the colors/bars for stun and matrix damage; most video games identify health as red and mana as blue, so stun condition monitor is now the bar 2 (blue) and the matrix damage condition monitor is bar 1 (green)
-@bugfix: Fixed problem in handleInput function that resulted in the apiMenu firing off whenever anything that wasn't a valid command was typed into chat.
-@bugfix: Fixed some spelling errors and vague error responses in handleInput.
-@bugfix: Fixed a problem with our Initiative Counter being added to the turnorder array with .unshift instead of .push, leading to a round automatically advancing incorrectly when the next person rolled initiative.
-@bugfix: Fixed a formatting issue with the notification that a new Combat Round had begun; it should now match the styling for the rest of the API.
-@bugfix: Removed some orphan helper functions that didn't do anything in v.1.03, including d6, getTokenURL, getTokenId, getTokenAttrsFromCharacterID, getIDsFromTokens and getTokenRepresents.
-@bugfix: Consolidated sr5HelperFunctions.getCharacterIdFromTokenId function into a single function.
-@bugfix: Folded the getSheetType helper function into the Character @class as .type.
-@bugfix: Fixed a problem in addInitiativeToTracker where the turnorder wasn't sorted properly when initiative was rolled by more than once person in a turn (for example, when players are encouraged to click the button for their own initiative).

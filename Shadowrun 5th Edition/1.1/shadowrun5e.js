@@ -1,13 +1,7 @@
 //:+:+:+:+:+: SHADOWRUN 5th Edition API :+:+:+:+:+: //
 /**
- * The Shadowrun 5th Edition API for Roll20, designed to work with the Shadowrun 5th
- * Edition Character Sheet by Cassie Levett. This API provides for three commands:
- *   * !sr5 --linkToken
- *   * !sr5 --initCounter
- *   * !sr5 --rollInit
- * Refer to the README for details
- * @author: Cassie Levett, additional contributions by R. William Morris
  * @version: 1.1
+ * See additional details in Tech Notes.md
 // +:+:+:+:+: SHADOWRUN 5th Edition API :+:+:+:+:+: //
 
 //:+:+:+:+:+: OBJECT CONSTRUCTORS :+:+:+:+:+: //
@@ -85,7 +79,7 @@ const breaks     = `style="border-color:${third}; margin: 5px 2px;"`;
 const circles    = `style='font-family:pictos;color: #fff;padding:2%;${buttons} width: 15px;'`
 const centered   = `style="text-align:center;"`;
 const apiName    = `Shadowrun 5th Edition`;
-const version    = '1.04';
+const version    = '1.1';
 const header     = `<div ${divstyle}><div ${headstyle}>${apiName} <span ${substyle}>(v.${version})</span></div><div ${arrowstyle}>`;
 const errorMessage = (name, error) => log(`${name}: ${error}`);
 const readmeLink = '[Readme](https://github.com/Roll20/roll20-api-scripts/tree/master/Shadowrun%205th%20Edition)';
@@ -128,12 +122,12 @@ const sr5HelperFunctions = {
   setTurnorder: (turnorder) => Campaign().set("turnorder", JSON.stringify(turnorder)),
 
   // The findIndex function is used in the addInitiativeToTracker and 
-  //   sr5CounterCheckInitiative functions to find the index of an object in an array
+  //   sr5InitCounterUpdate functions to find the index of an object in an array
   //   based on a value
   findIndex: (property, match) => property.findIndex(element => Object.values(element).includes(match)),
 
   // The sortDescending function is used in the processInitiative and 
-  //   sr5CounterCheckInitiative functions to sort the array (sortorder) in Descending
+  //   sr5InitCounterUpdate functions to sort the array (sortorder) in Descending
   //   order
   sortDescending: (array, key) => array.sort((a,b) => a[key] > b[key] ? -1 : 1),
 }
@@ -532,7 +526,6 @@ var sr5api = sr5api || (function() {
   *   This is used in the addInitiativeToTracker and addInitiativeCounter. Full
   *   description of the Campaign object is at 
   *   https://roll20.zendesk.com/hc/en-us/articles/360037772793-API-Objects#API:Objects-Campaign
-  * @TODO: Consider moving this up to sr5HelperFunctions
   */
   openInitiativePage = () => {
     if (Campaign().get('initiativepage') === false) {
@@ -604,9 +597,6 @@ var sr5api = sr5api || (function() {
    * @param: {Object} characterInitiativeRolls: information contained in
    *   msg.inlinerolls, which is then passed off to the processResults function for
    *   processing
-   * @TODO: This whole process fails to sort initiative previously rolled and active;
-   *   need to figure out how to make sure all initiative scores are always processed
-   *   properly
    */
   processInitiative = characterInitiativeRolls => {
     try {
@@ -632,7 +622,6 @@ var sr5api = sr5api || (function() {
    *   * .results.total: the Initiative that resulted from the die roll
    * @return: An array with an element for each Character object, including
    *   character.total with the Initiative result gathered from msg.inlinerolls
-   * @TODO: Consider adding character.total to the Character object we created?
    */
   processResults = results => {
     try {
@@ -673,23 +662,20 @@ var sr5api = sr5api || (function() {
       let feedback = '';
       //iterate through the selectedInitiatives array and build a themed response to
       //  display in chat
-      //@TODO rename 'value' to make more sense, maybe 'character' as the name of the array
-      for (let [key, value] of Object.entries(selectedInitiatives)) {
+      selectedInitiatives.forEach(character => {
         feedback += `<div style='display: inline-block; border: 1px solid ${third}; border-radius: 5px; padding: 2%; background-color: ${secondary}; margin-bottom: 3%; width: 95%;'>`
         //Display the token's image first
-        feedback += `<img src='${value.src}' style='margin-right: 2%; width: 20%;'>`
+        feedback += `<img src='${character.src}' style='margin-right: 2%; width: 20%;'>`
         //Display the name associated with the token next
-        feedback += `<label style='display: inline-block; font-weight: bold; font-size: 1.3em; color: ${third}; vertical-align: middle; width: 60%;'>${value.name}</label>`
+        feedback += `<label style='display: inline-block; font-weight: bold; font-size: 1.3em; color: ${third}; vertical-align: middle; width: 60%;'>${character.name}</label>`
         //Display the result of the roll (.expression) and the id of the token (.token);
         //  This actually rolls the dice for initiative, using double brackets on either
-        //  side of value.expression
-        //@TODO: Why are we adding the id of the token to this? This appears in the
-        //  inlinerolls object as msg.inlinerolls.results.rolls[3].text. What is it?
-        const roll = value.expression ? `[[${value.expression} [${value.token}]]]` : `<a ${circles} href="!sr5 --rollInit --error">!</a>`
+        //  side of character.expression
+        const roll = character.expression ? `[[${character.expression}]]` : `<a ${circles} href="!sr5 --rollInit --error">!</a>`
         feedback += `<div style='color: ${accent}; width: 15%; display: inline-block;'>${roll}</div>`
         //Close out the theming for the box
         feedback += `</div><br />`
-      }
+      })
       //send the themed feedback to chat; note this will trigger the
       //  processInitiative(msg.inlinerolls) function in the handleInput function
       sendChat(`${apiName} Roll Initiative`, `${header}</div>${feedback}</div>`);
@@ -720,7 +706,6 @@ var sr5api = sr5api || (function() {
           matrix.includes(character.type) || character.markers.includes('matrix') ? 'matrix' :
           character.markers.includes('astral') ? 'astral' :
           'initiative'
-        log(intiativeType)
         //search the character sheet for the appropriate initiative modifier (the integer
         //  added to the roll)
         character.modifier = getAttrByName(characterID, `${intiativeType}_mod`);
@@ -733,7 +718,6 @@ var sr5api = sr5api || (function() {
           const modifier = intiativeType === 'matrix' || !character.woundToggle ? character.modifier : character.modifier + character.wounds
           character.expression = `${modifier}+${character.dice}d6cs0cf0`
         }
-        log(character)
         //add the character object we've built to the array
         array.push(character)
       });
@@ -745,7 +729,6 @@ var sr5api = sr5api || (function() {
   //:+:+:+:+:+: END GROUP INITIATIVE :+:+:+:+:+: //
     
   //Send message to chat
-  //TODO: Consider making this a helper function
   chatMessage = (feedback, who) => sendChat(`${apiName} API`, `/w ${who || 'gm'} ${header}</div>${feedback}</div>`),
 
   registerEventHandlers = () => {
@@ -765,7 +748,7 @@ on("ready",() => {
 
 //:+:+:+:+:+: INITIATIVE COUNTER :+:+:+:+:+: //
 /**
- * The sr5CounterCheckInitiative function is called whenever there is a change in the
+ * The sr5InitCounterUpdate function is called whenever there is a change in the
  *   turnorder for the campaign, usually when the GM clicks the Next Turn arrow button
  *   on the Initiative Tracker. This function checks to see if our Initiative Counter is
  *   at the top of the Initiative Tracker and, if so, updates all Initiatives for the
@@ -774,10 +757,8 @@ on("ready",() => {
  *   current turnorder)
  * @return: Update the Campaign.turnorder with the new Initiative Counter with updated
  *   Round/Pass information
- * @TODO: The name of this functionality is misleading. Maybe change to
- *   sr5InitCounterUpdate?
  */
-sr5CounterCheckInitiative = () => {
+sr5InitCounterUpdate = () => {
   //First, gather information on the current turnorder for the Campaign
   let turnorder = sr5HelperFunctions.getTurnorder();
   //Next, search through turnorder for the index of the element that contains our
@@ -825,8 +806,8 @@ sr5CounterCheckInitiative = () => {
     sr5HelperFunctions.setTurnorder(newTurnOrder);
   };
 },
-//fire off sr5CounterCheckInitiative when the Campaign Turnorder changes!
+//fire off sr5InitCounterUpdate when the Campaign Turnorder changes!
 on('change:campaign:turnorder', () => {
-    sr5CounterCheckInitiative();
+    sr5InitCounterUpdate();
 });
 //:+:+:+:+:+: END INITIATIVE COUNTER :+:+:+:+:+: //
