@@ -63,8 +63,8 @@ Sets a number of defaults on a token then sets the selected token as the default
 
 ### Functionality
 
-- Populate bar 1 for PC & grunts with stun
-- Populate bar 2 for vehicle, hosts, sprites, and PC or grunts with 'matrix' token marker with matrix
+- Populate bar 1 for vehicle, hosts, sprites, and PC or grunts with 'matrix' token marker with matrix
+- Populate bar 2 for PC & grunts with stun
 - Populate bar 3 for PC, grunt, and vehicles with physical
 - Populate name with character_name
 - Link bar 1 with stun if PC
