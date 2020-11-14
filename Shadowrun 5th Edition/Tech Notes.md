@@ -15,6 +15,7 @@ Note any new releases here
 @author: Cassie Levett
 @version: 1.1
 @new: initiative roller now evaluates the wounds toggle. It adds in wounds if its not a matrix character and toggle is on.
+@revert: Changed the bars back to their original set. Bar color can be changed in Settings of the VTT. Stun being the most used damage is centered.
 
 ### 1.2
 

@@ -1,7 +1,7 @@
 //:+:+:+:+:+: SHADOWRUN 5th Edition API :+:+:+:+:+: //
 /**
  * @version: 1.1
- * See additional details in Tech Notes.md
+ * See additional details in Tech Notes.md including a Change Log
 // +:+:+:+:+: SHADOWRUN 5th Edition API :+:+:+:+:+: //
 
 //:+:+:+:+:+: OBJECT CONSTRUCTORS :+:+:+:+:+: //
@@ -408,10 +408,6 @@ var sr5api = sr5api || (function() {
       const matrix = matrixCharacters.includes(sheetType) || matrixMarker ? true : false;
       const physical = physicalCharacters.includes(sheetType) ? true : false;
       //create the update object using the default settings
-      //@TODO: Consider only changing barX settings to true if that type of condition
-      //  monitor exists
-      //@TODO: Rework this entire section so that we can set options within the macro
-      //  button, but keep the below as defaults
       let update = {
         bar1_value: 0,
         bar2_value: 0,
@@ -429,8 +425,8 @@ var sr5api = sr5api || (function() {
         playersedit_bar2: true,
         playersedit_bar3: true,
         light_hassight: true,
-        bar1_max: matrix ? getAttrByName(characterID, `matrix`, "max") || 0 : "",
-        bar2_max: stun ? getAttrByName(characterID, `stun`, "max") || 0 : "",
+        bar1_max: stun ? getAttrByName(characterID, `stun`, "max") || 0 : "",
+        bar2_max: matrix ? getAttrByName(characterID, `matrix`, "max") || 0 : "",
         bar3_max: physical ? getAttrByName(characterID, `physical`, "max") || 0 : "",
       }; 
       //If the sheetType is 'pc', iterate through each of stun, matrix and physical
