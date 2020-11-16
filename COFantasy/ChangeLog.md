@@ -1,6 +1,17 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 2.15
+### Autres améliorations
+* Prise en compte de l'immunité à l'asphyxie des démons.
+* Utilisation des consommables sur la fiche pour les PNJs aussi.
+* Si "Jet Secret" est configuré sur une fiche de PNJ, seul le total des jets d'attaques, de dommages, de caractéristiques et de sauvegardes sont affichés, sans les détails. Le MJ reçoit un whisper avec le détail du jet.
+
+### Capacités
+* Absorption d'énergie (spectre, vampire, sylvanien maudit)
+* Projeter (voie du Cogneur rang 3)
+
 ## 2.14
 ### Autres améliorations
+* Prise en compte de la chance pour les saves.
 * Prise en compte de la chance pour les esquives acrobatiques et les absorptions au bouclier
 * Utilisation de l'obglet des jets cachés des PNJs par le script
 * Réorganisation des menus de règles optionnelles
@@ -11,6 +22,7 @@
 * Implémentation d'une option pour les armures/bouclier "de protection" (COF p. 203)
 
 ### Corrections de bugs
+* Correction d'un bug sur le tour de force du barbare.
 * Correction d'un crash lors de l'utilisation d'un point de chance sur une riposte.
 * Correction d'un bug pour les conditions moins (comme moins FOR), quand l'attaquant est un PNJ et le défenseur un PJ.
 
