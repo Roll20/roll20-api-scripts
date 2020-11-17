@@ -99,7 +99,7 @@ on('ready', () => {
                   r = 1;
               }
 
-              if (sectionHeaderIsName) {
+              if (sectionHeaderIsName && tableName !== sectionHeader) {
                 tableName = `${handoutName} - ${sectionHeader}`
               }
 
