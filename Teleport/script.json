@@ -1,9 +1,9 @@
 {
     "name": "Teleport",
     "script": "teleport.js",
-    "version": "1.0",
-    "previousversions": [],
-    "description": "Teleport is a chat-button based manager and creator for teleportation pads that allow players to move between same-page locations on the current player ribbon page. This does not move them between pages. It can be used for multi-floor houses, magical teleporation, traps and puzzles, elevators, and so on. !teleport --menu will get you the main menu, there is also a handout created (Teleport API) that explains its use when it is first installed.",
+    "version": "1.1",
+    "previousversions": ["1.0"],
+    "description": "Teleport is a chat-button based manager and creator for teleportation pads that allow players to move between same-page locations or between pages with preparation. Currently cross-page teleportation requires tokens on the gmlayer to be prepared for destination pages. It can be used for multi-floor houses, magical teleporation, traps and puzzles, elevators, and so on. !teleport --menu will get you the main menu, there is also a handout created (Teleport API) that explains its use when it is first installed.",
     "authors": "Patrick K.",
     "roll20userid": "616652",
     "useroptions": [
