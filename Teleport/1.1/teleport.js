@@ -163,8 +163,8 @@
             output +='<p>A selected token can also be teleported to a destination pad without autoteleport by using the teleport token button associated with that teleport pad.</p>';
 
             output +='<p>Each pad has an individual menu for invoking teleport for a selected token, and for pinging a pad if you cannot locate it on the page.</p>';
-            output +='<p>Right now, the Teleport Pad display is <b>fixed to the player ribbon</b> meaning that the list of teleport pads only displays those' + 
-            'on the active player ribbon page, which means if you are creating pads on other pages, they will not show up in the current player ribbon display.</p>';
+            output +='<p>Creating a pad will automatically pull up the pad list for the page you are on' + 
+            ' and allow you to immediately begin editing it.</p>';
             output +='<p>'+ standardButtonBuilder({param:'Main Menu',apicall:'menu',icon:'help'}) +'</p>';
             output +='</div>';
             // The first time you ever use this, you get an output to chat. You don't get another unless you delete the handout. 
@@ -851,10 +851,7 @@
                     if(pad.get('_subtype') === 'card'){ return outputToChat("Select a target token that is not a card.")}
                     if(pad.get('bar1_value') === 'teleportpad'){return outputToChat("Select a target token that is not already a teleport pad.")}
                     if(pad.get('_pageid') !== Campaign().get('playerpageid')){
-                        let txt = 'You have created a teleport pad that is not on the Player Ribbon page.';
-                        txt += '\r It will not show up in the teleport pad list, and to see this pad on the list,';
-                        txt += ' you will have to move the player ribbon to this page, as right now teleport between pages is not enacted.'
-                        outputToChat(txt);
+                        //
                     }
                     pad.set({
                         layer:'gmlayer',
@@ -968,7 +965,7 @@
             if(Teleport.configparams.AUTOTELEPORT===false){
                 return;
             }
-            if(obj.get('_subtype') === "token" && obj.get('lastmove') !== '' && obj.get('layer') === 'object' ){
+            if(obj.get('_subtype') === "token" && obj.get('lastmove') !== '' && obj.get('layer') === 'objects' ){
                 teleportPadCheck(obj);
             }
         },
