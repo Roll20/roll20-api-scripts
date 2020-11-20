@@ -10,7 +10,7 @@
                 - causing GM layer creatures to appear with pings and effects
                 - anything else you can think of for the tools this provides. 
         */
-        var version = '1.0',
+        var version = '1.1',
             author = '616652/Patrick K.',
             lastModified = 1605432403;
         // State variables are carried over between sessions, 
