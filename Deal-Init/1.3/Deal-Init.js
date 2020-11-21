@@ -4,7 +4,7 @@
 // Help:     !deal-init --help
 
 // on deck
-// o Once and only once in deal()
+// o Once and only once in   deal()
 
 //Rev History
 // 0.4 minimize chat output
