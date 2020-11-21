@@ -58,7 +58,7 @@
             'locked':0x2B55,
             'unlocked':0x1F7E2,
             'ping':0x1F50E,
-            'menu':0x1F53C,
+            'menu':0x1F4AC,
             'pad':0x1F4AB,
             'editname':[0x1F3F7,0xFE0F],
             'message':0x1F4AD,
@@ -142,33 +142,67 @@
             subconstruct('</a>');
             return results
         },
+        rawButtonBuilder = function(contentsObj){
+            let results = '<a style="' + defaultButtonStyles + configButtonStyles + ';padding:.2em;" href="' + contentsObj.link + '">',
+            subconstruct = txt => results += txt;
+            if(contentsObj.icon){
+                subconstruct( contentsObj.param + ' ' + emojibuilder(contentsObj.icon));
+            }else{
+                subconstruct( contentsObj.param );
+            }
+            subconstruct('</a>');
+            return results
+        },
         // Start of menu display functions
         // Help Display - this may be concatenated into a handout so it doesn't clutter up the interface at astartup. 
         helpDisplay = function(){
-            let output = ' <div style="' + boundingBoxStyles + '">' 
+            let partialoutput = '',output = ' <div style="' + boundingBoxStyles + '">' 
             + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 100%;style="border-bottom:1px solid black;">';
             output +='<span style="display:block;' + headingAreaStyles + '">'
             output +='Teleport Help';
             output +='</span>'
             output +='</div>';
-            output +='<p>Teleport is an API script that uses chat menus and chat buttons to manage teleport pads.</p>';
-            output +='<p>This includes creating teleport pads, registering teleport pad destinations, managing general settings,' + 
-                      ' locking pads individually from autoteleporting, setting keys as requirements to activate auto-teleport,' + 
-                      ' and un-linking teleport pad destinations.</p>';
-            output +='<p>Teleport pads are tokens that reside on the GM layer. If Autoteleport is set to true, and the teleport pad has a linked pad,' + 
-                      ' a token moved into its area on the object layer is teleported automatically to the linked pad.</p>';
-            output += '<p>Linked pads are set as destinations, and two-way teleport works by linking each pad to the other. You can make a one-way teleport' + 
-                      ' by setting up two tokens and linking only one of them to the other. You can link many portals to one portal. If you link several' + 
-                      ' teleport pads from a single pad, the destination is random, unless you set the "Multi-Link" property on the Pad Edit Panel to "Select."</p>';
-            output +='<p>A selected token can also be teleported to a destination pad without autoteleport by using the teleport token button associated with that teleport pad.</p>';
 
-            output +='<p>Each pad has an individual menu for invoking teleport for a selected token, and for pinging a pad if you cannot locate it on the page.</p>';
-            output +='<p>Creating a pad will automatically pull up the pad list for the page you are on' + 
-            ' and allow you to immediately begin editing it.</p>';
+            output += '<h3>Teleport</h3><br />';
+
+            output += '<p>This script provides a way for GMs or players to teleport tokens within a page or between pages.</p>';
+
+            output += '<hr /><h4>Installation</h4><br />';
+
+            output += '<p>On installation, a note (<i>Teleport API</i>) is created, and help text appears in chat, both of which have buttons which activate the main menu. The note persists, and will not be re-created unless you remove the note, so you can always find and activate the menu button. You can also type <code>!teleport --menu</code> into chat. </p>';
+
+            output += '<hr /><h4>Beginning Setup</h4><br />';
+
+            output += '<p>To set up a teleport pad token, drag a token to the objects layer and then click on the chat button to "Create Teleport Pad" on the main menu. </p>';
+            output += '<ul><li>You will be prompted with a naming box, name your teleport pad whatever you like. You can rename it later from the interface. This is for you to read, and is not used by the API to find portal pads, so don\'t worry about renaming it at any time.</li>';
+            output += '<li>The token will be automatically moved to the GM layer and set up with its initializing properties.</li></ul>';
+
+            output += '<p>Once you do this, the chat menu will pop up a list of teleport pads it detects on the page the <b>GM</b> is on currently. You can now use the teleport button on the chat (the emoji button that looks like sparkles, and gives you a tooltip of "teleport token" on mouseover) for that teleport pad to teleport a selected token to this teleport pad.</p>';
+
+            output += '<p>To set up auto-teleporting (players able to interact with one teleport pad that automatically moves them to another teleport pad), you need to <b>link</b> the first teleport pad you created to a second teleport pad.</p>';
+            output += '<ul><li>Create a second teleport pad as you did the first one.</li>';
+            output += '<li>Now, go to the gmlayer and select both teleport pads.</li>';
+            output += '<li>On the teleport pad list, click the "link" button on either pad. Teleport is smart enough not to link a portal to itself, so it will add the <b>other</b> portal to the portal linking button you pressed, and it should list it this way (show the name of the linked portal in its "linked to" label).</li>';
+            output += '<li>If you want the portals to link to each-other and be a two-way teleport, repeat this for the second portal, so each shows "linked" to the other teleport pad.</li></ul>';
+
+            output += '<p>Now, on the objects layer, test this by dragging any token over one of the teleport pads. These pads are invisible to your players, so if you want them to find them it is good practice to put a visible marker of the teleport pad on the map layer. You should see the token move to the gm layer, move to the other teleport pad location, and re-appear on the token layer.</p>';
+
+            output += '<hr /><h4>Cross-Page Teleport</h4><br />';
+
+            output += '<p>To set up cross-page teleport, you must create teleport tokens on each page you want to link by way of teleport, and then use the Global Teleport Pad List to link them, similar to how you did in the <b>Beginning Setup</b>. You also must make sure that player tokens for each player you want to teleport exist in the target pages. Preferably, they should be on the GM layer. If you don\'t have player tokens on the target page, the teleport or auto-teleport will fail. Currently, the API has trouble with creating tokens on target pages (specifically to do with images from the Roll20 Marketplace), so <b>Teleport</b> doesn\'t try and make a player token on the target page at this point.</p>';
+
+            output += '<p><b>Some warnings:</b></p>';
+            output += '<ul><li>Linking two pads, then copying one to another page will not work: teleport pads are linked by their unique IDs, and pasting a teleport pad to another page creates a new token with a new ID. It will keep links it has to <b>other teleport pads</b> but any links <b><i>to</i></b> it will be broken and will have to be re-set.</li>';
+            output += '<li>Cross-page teleport tries to spawn a specific page ribbon, and this will happen even if a player is not online - so teleporting player tokens to other pages when they are not online may have unforseen consequences. This is still being tested, and if out of synch can be "fixed" when all players are back online.</li></ul>';
+
+            output += '<hr /><h4>Creating API buttons from Teleport buttons</h4><br />';
+
+            output += '<p>Any activation of a button in chat will leave a record of what the command was - so you can press the up-arrow in chat to see the command that was passed to activate teleport.js. All commands are prefixed by !teleport and contain an attribute prefixed by two dashes to direct the command.</p>';
+
+            
             output +='<p>'+ standardButtonBuilder({param:'Main Menu',apicall:'menu',icon:'help'}) +'</p>';
             output +='</div>';
             // The first time you ever use this, you get an output to chat. You don't get another unless you delete the handout. 
-            outputToChat(output); 
             return output;
         },
         menuDisplay = function(){
@@ -955,7 +989,7 @@
         },
         outputToChat = function(msg,tgt){
             tgt = (tgt !== undefined && tgt !== null)?tgt:'gm';
-            sendChat('system','/w "' + tgt + '" ' + msg,null,{noarchive:true});
+            sendChat('Teleport','/w "' + tgt + '" ' + msg,null,{noarchive:true});
         },
         outputOpenMessage = function(msg,tgt){
             formattedmessage = '<div><div>' + msg + '</div></div>';
@@ -985,7 +1019,7 @@
                                 return player;
                             })();
             TOKENMARKERS = JSON.parse(Campaign().get("token_markers"));
-            
+            var helpoutput = '';
             if(!state.teleport.help || !getObj('handout',state.teleport.help)){
                 if(findObjs({type:'handout',name:'Teleport API'})[0]){
                     state.teleport.help = findObjs({type:'handout',name:'Teleport API'})[0].get('_id');
@@ -1000,8 +1034,12 @@
                     setTimeout(function(){
                         handout.set('notes',content);
                     },0);
+                    helpoutput += '<p>' + rawButtonBuilder({param:'Teleport API Handout', link: 'http://journal.roll20.net/handout/' + handout.get('_id'), icon:'menu'}) + '</p>';
+                    // have to add chat call here to point to API handout instead of giant blob help. 
                 }
             }
+            helpoutput += '<p>'+ standardButtonBuilder({param:'Teleport Main Menu',apicall:'menu',icon:'help'}) +'</p>';
+            outputToChat(helpoutput); 
         };     
         return {
             startup: RegisterEventHandlers,
