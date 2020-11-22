@@ -824,6 +824,10 @@ universalvttimport:
   - "UniversalVTTImporter"
   - "Utility"
 
+udlwindows:
+  - "UDLWindows"
+  - "Utility"
+
 supernotes:
   - "Supernotes"
   - "Utility"
