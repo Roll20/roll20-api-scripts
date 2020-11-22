@@ -764,6 +764,10 @@ libtokenmrkers:
   - "libTokenMarkers"
   - "Utility"
 
+md5sum:
+  - "MD5Sum"
+  - "Utility"
+
 abfroll:
   - "ABFRoll"
   - "System Toolbox"
