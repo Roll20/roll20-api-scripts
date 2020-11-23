@@ -1,0 +1,17 @@
+{
+	"name" : "Initiative Tracker Plus",
+	"script" : "",
+	"version" : "",
+	"previousversions" : [
+		"1.0"
+	],
+	"description" : "",
+	"authors" : "Ken L., James C. (Chuz)",
+	"roll20userid" : "4306461",
+	"patreon" : "https://www.patreon.com/ChuzGaming",
+	"tipeee" : "",
+	"useroptions" : "",
+	"dependancies" : "",
+	"modifies" : "token effects, turnorder",
+	"conflicts" : ""
+}

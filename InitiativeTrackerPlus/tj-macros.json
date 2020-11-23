@@ -1,0 +1,109 @@
+{
+    "schema_version": 2,
+    "macros": [
+        {
+            "attributes": {
+                "action": "!tj -start",
+                "istokenaction": false,
+                "name": "TJ-Start",
+                "visibleto": ""
+            },
+            "macrobar": {
+                "color": "#274e13",
+                "name": null
+            }
+        },
+        {
+            "attributes": {
+                "action": "!tj -reset ?{round-start|1}",
+                "istokenaction": false,
+                "name": "TJ-Reset",
+                "visibleto": ""
+            }
+        },
+        {
+            "attributes": {
+                "action": "!tj -addstatus ?{name}:?{duration}:?{direction}:?{message}",
+                "istokenaction": true,
+                "name": "TJ-AddStatus",
+                "visibleto": "all"
+            }
+        },
+        {
+            "attributes": {
+                "action": "!tj -edit",
+                "istokenaction": true,
+                "name": "TJ-EditStatus",
+                "visibleto": ""
+            }
+        },
+        {
+            "attributes": {
+                "action": "!tj -addfav ?{name}:?{duration}:?{direction}:?{message}",
+                "istokenaction": false,
+                "name": "TJ-AddFav",
+                "visibleto": ""
+            },
+            "macrobar": {
+                "color": "#00ffff",
+                "name": null
+            }
+        },
+        {
+            "attributes": {
+                "action": "!tj -listfavs",
+                "istokenaction": false,
+                "name": "TJ-ListFavs",
+                "visibleto": ""
+            },
+            "macrobar": {
+                "color": "#073763",
+                "name": null
+            }
+        },
+        {
+            "attributes": {
+                "action": "!tj -addfav Blessed:10:-1:\n!tj -addfav Blinded:10:-1:\n!tj -addfav Charmed:10:-1:\n!tj -addfav Clone/Simulacrum:1:+0:\n!tj -addfav Confused:10:-1:\n!tj -addfav Cursed:1:+0:\n!tj -addfav Deafened:10:-1:\n!tj -addfav Diseased:1:+0:\n!tj -addfav Dying:1:+0:\n!tj -addfav Exhausted 1:1:+0:\n!tj -addfav Exhausted 2:1:+0:\n!tj -addfav Exhausted 3:1:+0:\n!tj -addfav Exhausted 4:1:+0:\n!tj -addfav Exhausted 5:1:+0:\n!tj -addfav Exhausted 6:1:+0:\n!tj -addfav Flying:1:+0:\n!tj -addfav Frightened:10:-1:\n!tj -addfav Grappled:1:+0:\n!tj -addfav Hasted:10:-1:\n!tj -addfav Hexed:1:+0:\n!tj -addfav Incapacitated:1:+0:\n!tj -addfav Inspired:1:+0:\n!tj -addfav Invisible:1:+0:\n!tj -addfav Knocked Out:1:+0:\n!tj -addfav Mage Armor:1:+0:\n!tj -addfav Marked:1:+0:\n!tj -addfav Max HP Down:1:+0:\n!tj -addfav Max HP Up:1:+0:\n!tj -addfav Mirror Image:10:-1:\n!tj -addfav Paralyzed:1:+0:\n!tj -addfav Petrified:1:+0:\n!tj -addfav Poisoned:1:+0:\n!tj -addfav Polymorphed:1:+0:\n!tj -addfav Prone:1:+0:\n!tj -addfav Protection vs Acid:10:-1:\n!tj -addfav Protection vs Bludgeoning:10:-1:\n!tj -addfav Protection vs Cold:10:-1:\n!tj -addfav Protection vs Electric:10:-1:\n!tj -addfav Protection vs Fire:10:-1:\n!tj -addfav Protection vs Force:10:-1:\n!tj -addfav Protection vs Necrotic:10:-1:\n!tj -addfav Protection vs Piercing:10:-1:\n!tj -addfav Protection vs Poison:10:-1:\n!tj -addfav Protection vs Psychic:10:-1:\n!tj -addfav Protection vs Radiant:10:-1:\n!tj -addfav Protection vs Slashing:10:-1:\n!tj -addfav Protection vs Thunder:10:-1:\n!tj -addfav Rage:10:-1:\n!tj -addfav Webbed:10:-1:\n!tj -addfav Sleeping:10:-1:\n!tj -addfav Slowed:10:-1:\n!tj -addfav Truesight:10:-1:\n!tj -addfav Wildshaped:1:+0:\n",
+                "istokenaction": false,
+                "name": "TJ-Favorites-Setup",
+                "visibleto": ""
+            }
+        },
+        {
+            "attributes": {
+                "action": "!tj -clear",
+                "istokenaction": false,
+                "name": "TJ-Clear",
+                "visibleto": ""
+            },
+            "macrobar": {
+                "color": "#660000",
+                "name": null
+            }
+        },
+        {
+            "attributes": {
+                "action": "!tj -setIndicatorImage",
+                "istokenaction": false,
+                "name": "TJ-SetIndicatorImage",
+                "visibleto": ""
+            },
+            "macrobar": {
+                "color": "#6666FF",
+                "name": null
+            }
+        },
+        {
+            "attributes": {
+                "action": "!tj -defaultIndicatorImage",
+                "istokenaction": false,
+                "name": "TJ-resetIndicatorImage",
+                "visibleto": ""
+            },
+            "macrobar": {
+                "color": "#6666CC",
+                "name": null
+            }
+        }
+    ]
+}
