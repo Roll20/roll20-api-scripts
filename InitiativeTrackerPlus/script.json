@@ -1,9 +1,8 @@
 {
 	"name" : "Initiative Tracker Plus",
-	"script" : "",
-	"version" : "",
+	"script" : "initiative_tracker_plus.js",
+	"version" : "1.0",
 	"previousversions" : [
-		"1.0"
 	],
 	"description" : "",
 	"authors" : "Ken L., James C. (Chuz)",

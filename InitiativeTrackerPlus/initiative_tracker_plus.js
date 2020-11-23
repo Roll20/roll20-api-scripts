@@ -634,7 +634,7 @@ var TrackerJacker = (function() {
 			switch(flags.tj_state) {
 				case TJ_StateEnum.ACTIVE:
 					graphic.set('tint_color','transparent');
-					indicator = '\u25B6 '; // Play button
+					indicator = '\u23F5 '; // Play button
 					break;
 				case TJ_StateEnum.PAUSED:
 					graphic = findTrackerGraphic();

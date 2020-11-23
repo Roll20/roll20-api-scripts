@@ -11,6 +11,8 @@ An attempt to modernize Tracker Jacker and add new functionality as it becomes d
 * 2020-11-18 - Added the ability to save and load favorite.  The save creates a Handout called "TJFavsJSON", the load looks for that handout and loads the JSON from it.
 * 2020-11-22 - The first actor's turn is now announced when starting the tracker.
 * 2020-11-22 - Added the ability to change the initiative indicator (spinning green thing by default) to any other image.
+* 2020-11-23 - Submit current codebase to Roll20's Script repository in the hopes of becoming a one-click API script.
+* 2020-11-23 - Updated initiative round indicator to have Play, Stop and Pause buttons instead of ? and ??
 
 
 
