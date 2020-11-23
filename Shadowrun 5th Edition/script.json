@@ -1,10 +1,10 @@
 {
     "name": "Shadowrun 5th Edition",
     "script": "shadowrun5e.js",
-    "version": "1.02",
-    "previousversions": ["1.0", "1.01"],
-    "description": "Created to be used with Shadowrun 5th Edition character sheet. https://github.com/Roll20/roll20-api-scripts/tree/master/Shadowrun%205th%20Edition",
+    "version": "1.1",
+    "previousversions": ["1.0", "1.01", "1.02", "1.1"],
+    "description": "Created to be used with Shadowrun 5th Edition character sheet. Instructions for use can be found at in the [ReadMe on Github](https://github.com/Roll20/roll20-api-scripts/tree/master/Shadowrun%205th%20Edition ). Contributions from R. William Morris",
     "authors": "Cassie Levett",
-    "roll20userid": "557736",
+    "roll20userid": "557736, 1163672",
     "patreon": "https://www.patreon.com/emeraldgrid"
  }

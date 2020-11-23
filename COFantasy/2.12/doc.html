@@ -121,7 +121,7 @@
 						</div>
 					</div>
 					<div class="col-md-9 col-sm-8 content">
-            <h1>Documentation pour la version 2.15 de COFantasy</h1>
+            <h1>Documentation pour la version 2.12 de COFantasy</h1>
 						<h2 class="text-primary" id="comment_utiliser_script">1. Comment utiliser Le script</h2>
             <div class="decalage">
               <h3 class="text-info" id="token_personnages">1.1 Tokens et personnages</h3>
@@ -166,15 +166,9 @@
               </div>
               <h3 class="text-info" id="regles_optionnelles">1.4 Règles optionnelles utilisées</h3>
               <div class="decalage">
-                <p>Les scripts supportent l'utilisation de la règle des points de chance, des points de récupérations, des points de mana. Plusieurs systèmes de mana sont gérés par le script.</p>
-                <ul>
-                  <li>Système de base (COF p. 79) : utiliser les options de mana présentées ci-dessous.</li>
-                  <li>Mana Totale (COF p. 180) : activer l'option <code>mana totale</code> via <code>!cof-options</code></li>
-                  <li>Tempête de Mana (COF Compagnon p. 105) : utiliser l'option <code>--tempeteDeMana</code> présentée ci-dessous. Tempête de Mana est compatible avec Mana Totale et Brûlure de Magie.</li>
-                  <li>Terres d'Arran (COTA p. 112) : activation l'option <code>brulure de magie</code> via <code>!cof-options</code> et utiliser les options de mana standard (voire ci-dessous). Si vous désirez appliquer ce système à COF, vous pouvez créer un attribut de personnage de nom <code>famille</code> avec comme valeur courante <code>combattant</code> pour doubler les dégâts sur les profils combattants. Brûlure de Magie est incompatible avec Mana Totale.</li>
-                </ul>
+                <p>Les scripts supportent l'utilisation de la règle des points de chance, des points de récupérations, des points de mana (et de magie puissante ou rapide, ainsi que de tempête de mana).</p>
                 <p>J'ai aussi choisi, comme proposé par Kegron, de diminuer la DEF de tous les protagonistes après un certain nombre de tours de combat (-2 tous les 5 tours, peut être désactivé pendant un combat par la commande <code>!cof-usure-off</code>, ou bien dans les options de jeu).</p>
-                <p>Le script utilise aussi une règle de blessures graves : chaque fois qu'un personnage reçoit plus de DM que la somme de sa constitution et de son niveau, ou qu'il tombe à 0 PV, il encaisse une perte d'un point de récupération. Si il était à 0 points de récupération, il devient gravement blessé, ce qui le rend <i>affaibli</i>. Si le personnage était déjà gravement blessé, mais qu'il lui reste des PV, il tombe inconscient, et sinon, il meurt. Pour récupérer d'une blessure grave, le personnage doit se reposer une nuit, et réussir un test de CON difficulté 8 (avec le d12). Il est impossible de régénérer les points de récupération quand on est gravement blessé.</p>
+                <p>Le script utilise aussi une règle de blessures graves : chaque fois qu'un personnage reçoit plus de DM que la somme de sa constitution et de son niveau, ou qu'il tombe à 0 PV, il encaisse une perte d'un point de récupération. Si il était à 0 points de récupération, il devient gravement blessé, ce qui le rend <i>affaibli</i>. Si le personnage était déjà gravement blessé, mais qu'il lui reste des PV, il tombe inconscient, et sinon, il meurt. Pour récupérer d'une blessure grave, le personnage doit se reposer une nuit, et réussir un test de CON difficulté 8 (avec le d12). Il est impossible de régénérer les points de récupération quand on est gravement blessé.<p>
                 <p>Il est possible de changer les options du script avec la commande <code>!cof-options</code>.</p>
               </div>
             </div>
@@ -304,7 +298,7 @@
                   <li><code>--tueurDeGeants</code> : bonus de +2 en attaque et +2d6 DM contre les géants, ogres, ettins et cyclopes.</li>
                   <li><code>--tueurDeGrands</code> : bonus de +1d6 DM contre les créatures de taille grande et +2d6 DM contre les créatures de taille énorme ou plus.</li>
                   <li><code>--ignoreObstacles</code> : ignore les tokens sur le trajet. Ça semble nécessaire pour les attaques magiques d'après Kegron.</li>
-                  <li><code>--puissant</code> : augmente la valeur max des dés de dégâts de 2. Si <code>--puissant</code> est suivi d'un argument <i>effet</i>, on teste la présence d'un attribut <i>effet</i><code>Puissant</code> pour décider si l'attaque est puissante ou non. Il est aussi possible de donner <code>oui</code> ou <code>non</code> en argument (ce n'est alors pas considéré comme un effet). <code>--puissant portee</code> permet de doubler la portée de l'attaque (utile pour l'option de Magie Puissante)</li>
+                  <li><code>--puissant</code> : augmente la valeur max des dés de dégâts de 2. Si <code>--puissant</code> est suivi d'un argument <i>effet</i>, on teste la présence d'un attribut <i>effet</i><code>Puissant</code> pour décider si l'attaque est puissante ou non. Il est aussi possible de donner <code>oui</code> ou <code>non</code> en argument (ce n'est alors pas considéré comme un effet).</li>
                   <li><code>--attaqueAssuree</code> : implémente une attaque assurée (+5 à l'attaque, dégâts divisés par 2, critique impossible).</li>
                   <li><code>--attaqueRisquee</code> : implémente une attaque risquée (+2 à l'attaque au contact, -4 en DEF pendant un tour).</li>
                   <li><code>--attaqueDeGroupe <i>n</i></code> : <i>n</i> est le nombre de créatures qui attaquent ; implémente une attaque de groupe (+2 à l'attaque par attaquant au-delà du premier, x2 DMG si l'attaque dépasse la DEF de 5 ou plus, x3 DMG si critique).</li>
@@ -327,7 +321,6 @@
                   <li><code>--asDeLaGachette</code> : ajoute 1d6 DM si le jet d'attaque dépasse une DEF de 25.</li>
                   <li><code>--armeDArgent</code> : bonus de +2 en attaque et 1d6 aux DM si la cible est un mort-vivant ou un démon (utilise le champ <code>Race</code> de la fiche ou si présent un attribut <code>mortVivant</code>).</li>
                   <li><code>--pietine</code> : si l'attaquant est de taille au moins égale à celle de la cible (ou si la taille de l'un des deux n'est pas connue), fait un test opposé de FOR. En cas d'échec de la cible, elle est renversée et les DM sont doublés.</li>
-                  <li><code>--percute</code> : comme <code>--pietine</code>, mais la cible est en plus projetée à 1d6+1 mètres et étourdie si elle rate un test de CON difficulté 15, renouvelable chaque tour.</li>
                   <li><code>--feinte</code> : L'attaque ne fait pas de dégât, mais un bonus de +5 en attaque est donné sur les attaques du tour suivant sur cette cible (par celui qui a fait la feinte), et +2d6 DM si l'attaque fictive était un succès. Si l'attaquant possède un attribut <code>bonusFeinte</code>, c'est la valeur de cet attribut qui est donné en bonus aux attaques, à la place de +5.</li>
                   <li><code>--enveloppe <i>difficulte type expr</i></code> : si l'attaque touche, elle a une chance d'envelopper la cible. Dans ce cas, un bouton apparaît qui lance un test en opposition. Si celui-ci est remporté par l'attaquant, <i>difficulte</i> est la difficulté du test pour se sortir de l'enveloppement, <i>type</i> est soit <code>label</code>, et dans ce cas, <i>expr</i> doit être le label d'une attaque de l'attaquant, soit <code>ability</code>, et dans ce cas, <i>expr</i> est le nom d'une ability de l'attaquant. Cette attaque ou ability est appelée pour les dégâts périodiques. Si les deux derniers arguments sont ommis, le script prend <code>label</code> et le label de l'attaque courante, et si le premier argument est ommis, la difficulté est de 15.</li>
                   <li><code>--etreinte <i>difficulte</i></code> : si l'attaque touche, il y a une chance que l'attaquant puisse s'enrouler autour de la cible. Dans ce cas, un bouton apparaît qui lance un test en opposition. Si celui-ci est remporté par l'attaquant, <i>difficulte</i> est la difficulté du test pour se sortir de l'enveloppement. Cela fera apparaître un bouton pour les dégâts de l'étreinte, par défait <code>1d6</code>, mais on peut spécifier une autre expression pour les dégâts (optionelle, juste après la difficulté).</li>
@@ -359,27 +352,19 @@
               </div>
               <h4 class="text-secondary">Réduction des dégâts</h4>
               <div class="decalage">
-                <h5>Fonctionnement de base</h5>
+                Le script utilise la RD décrite sur la fiche. Cette RD peut se décomposer en plusieurs parties, séparées par une virgule. Chaque élément est soit
                 <ul>
-                  <li>Le script utilise les cases RD et Casque présentes sur les fiches.</li>
-                  <li>Il est possible d'indiquer plusieurs RD différentes, il suffit de les séparer par une virgule.</li>
-                  <li>Toutes les RD se cumulent.</li>
-                  <li>Le script se base sur les types de dégâts pour choisir d'appliquer ou non les dégâts.</li>
-                  <li>Pour les armes magiques, il est possible de spécifier à la fois le type de l'arme (par exemple <code>--tranchant</code>) et <code>--magique</code>.</li>
+                  <li> un nombre. C'est une RD qui s'applique à tous les dégats</li>
+                  <li> un type suivie de <code>:</code> et un nombre, c'est une RD qui ne s'applique qu'à ce type de degâts. Par exemple, une RD de 5 contre le feu s'écrira <code>feu:5</code>.</li>
+                  <li> un nombre, suivi de <code>/</code> et un ou plusieurs types séparés de <code>_</code>, c'est une RD qui s'applique à tous les dégâts, sauf ceux du type mentionné. Par exemple, une RD à tout sauf aux dégâts magiques s'écrira <code>5/magique</code>. Une RD à tout sauf au feu et au froid pourra s'écrire <code>10/feu_froid</code>. Une RD qui laisse toujours passer au moins un PV s'écrit avec <code>/1</code>.
                 </ul>
-                <h5>RD simple</h5>
-                <p>Dans le cas d'une RD simple (résistance à tous les dégâts), il suffit d'indiquer un nombre. Exemple : <code>3</code></p>
-                <h5>RD à un type de dégâts particuliers</h5>
-                <p>Pour une RD qui ne s'applique qu'à un type de dégâts particuliers, indiquer le type et la valeur séparés par <code>:</code>. Exemple : <code>feu:5</code></p>
-                <h5>RD sauf un ou plusieurs types de dégâts particuliers</h5>
-                <p>Pour une RD qui s'applique tout le temps sauf un ou plusieurs types de dégâts particuliers, indiquer la valeur puis <code>/</code> puis les différents types séparés par <code>_</code>. Exemple <code>/</code>. Exemple : <code>5/argent_magique</code><br/>
-                Pour une RD qui s'appliquerait à tous les types d'armes sauf une, utiliser à la place une résistance aux 2 autres types d'armes. Exemple, pour 5/tranchant, utiliser <code>percant:5,contondant:5</code>.</p>
-                <h5>RD critique</h5>
-                <p>Utiliser un attribut <code>RD_critique</code> avec comme valeur courante la résistance aux critiques. Se combine avec une éventuelle RD critique fournie par le port d'un casque.</p>
-                <h5>Résistances</h5>
-                <p>Pour les effets qui divisent la dégâts subits d'un type donné, utilisez un attribut <code>resistanceA_<i>type</i></code>. Il est aussi possible d'octroyer une résistance temporaire, par exemple une potion de résistance au feu pourra être simulée par la commande <code>!cof-set-attribute resistanceA_feu true</code>. Il faut ensuite effacer l'attribut à la fin de l'effet.</p>
-                <h5>Armures/Boucliers de Protection (COF p. 203)</h5>
-                <p>Utiliser un attribut <code>armureProtection</code> ou <code>bouclierProtection</code> avec comme valeur <code>true</code>. Le script détecte si l'équipement est porté ou pas via la fiche, et fonctionne spécifiquement contre les attaques qui utilisent <code>--sournoise</code></p>
+                Tous les éléments de RD se cumulent. Ainsi, si on a une RD de <code>5/argent, feu:10</code> des dégâts de feu seront réduits de 15, des dégâts d'argent ne seront pas réduits et des dégâts normaux seront réduits de 5.
+
+                À noter que parmis les types de dégâts, on peut spécifier <code>tranchant</code>, <code>percant</code> ou <code>contondant</code>, voire <code>nature</code> ou <code>drain</code>.
+                Pour la RD des casques, utiliser la case prévue à cet effet sur la fiche (se cumule avec un attribut <code>RD_critique</code>, si présent).
+                Pour que les RD /magique ou /tranchant soient bien pris en compte, il faut que les attaques faisant des dégâts magiques aient l'option <code>--magique</code> et les armes le type de dommage (comme <code>--tranchant</code> pour une épée). Enfin, pour les résistances <i>sauf un genre d'arme</i> (comme <code>/tranchant</code>), la RD va s'appliquer à tous les dégâts, sauf élémentaires ou bien qui aura précisé le genre dans son attaque. Pour une RD qui s'appliquerait à toutes les armes sauf tranchantes, le mieux est de spécifier une RD aux 2 autres genres, <code>percant:</code> et <code>contondant:</code>.
+                <p>Pour les effets qui divisent la dégâts subits d'un type donné, utilisez un attribut <code>resistanceA_<i>type</i></code> Par exemple une potion de résistance au feu pourra être simulée par la commande <code>!cof-set-attribute resistanceA_feu true</code>. Il faut ensuite effacer l'attribut à la fin de l'effet.</p>
+                </p>
               </div>
               <h4 class="text-secondary">Manoeuvres</h4>
               <div class="decalage">
@@ -497,6 +482,7 @@
               <h3 class="text-info" id="chance">2.5 Chance</h3>
               <div class="decalage">
                 <p>Le script essaie de détecter les cas où un point de chance peut être utile, et dans ce cas fournit un bouton (utilisable par les joueurs contrôlant le perosnnage ou le GM), permettant de dépenser un point de chance. Attention, pour l'instant, il n'est pas possible de faire juste un undo de la dépense de point de chnce. Le undo après la dépense de point de chance annule toute l'action. Il faut ensuite faire un undo par point de chance dépensé.</p>
+                <p>Pour les cas non prévus par le script, on peut faire juste <code>!cof-chance autre</code>.</p>
               </div>
               <h3 class="text-info" id="surprise">2.6 Surprise : <code>!cof-surprise ?difficulte</code></h3>
               <div class="decalage">
@@ -649,7 +635,6 @@
                     <li><code>--puissant oui</code> : idem</li>
                     <li><code>--puissant non</code> : lance la version non puissante (efface le dernier effet puissant)</li>
                     <li><code>--puissant duree</code> : multiplie la durée par 2</li>
-                    <li><code>--puissant portee</code> : multiplie la portée par 2</li>
                     <li><code>--saveParTour <i>carac seuil</i></code> : la cible peut se sortir de l'effet chaque tour grâce à un test de <i>carac</i> de difficulte <i>seuil</i>.</li>
                     <li><code>--save <i>carac seuil</i></code> : la cible peut faire un jet pour échapper à l'effet. Si on ajoute l'argument <code>demiDuree</code>, alors réussir la sauvegarde ne fait que diviser la durée.</li>
                   <li><code>--tempeteDeMana <i>liste</i></code> : indique des effets de tempête de mana. La liste peut contenir un nombre (pour l'effet intense), <code>duree</code>, <code>rapide</code> et <code>portee</code>. Si le rang du sort est spécifié (par l'option <code>--rang</code>, un message est affichée si le coût en mana est supérieur au rang. Si la liste d'options est vide, le script affiche un menu dans le chat pour spécifier les options de tempête de mana.</li>
@@ -934,7 +919,7 @@
                   <li> <strong>Encaisser un coup</strong> :
                     <ul>
                       <li>utiliser <code>!cof-effet-temp encaisserUnCoup 1</code> pour se mettre en position</li>
-                      <li>Le script proposera un bouton à activer en cas d'attaque réussie alors que le chevalier est en position.</li>
+                      <li>normalement, le script propose un bouton à activer en cas d'attaque réussie alors que le chevalier est en position, mais en cas de besoin, vous pouvez utiliser <code>!cof-encaisser-un-coup</code> pour amortir un coup.</li>
                     </ul>
                   </li>
                   <li><strong>Coup de bouclier</strong> : faire une attaque de bouclier, avec l'option <code>--avecd12</code></li>
@@ -1113,14 +1098,14 @@
                     <strong>Absorber un coup</strong> :
                     <ul>
                       <li>utiliser <code>!cof-effet-temp absorberUnCoup 1</code> pour se mettre en position. Attention, ça ne vérifie pas si le guerrier porte son bouclier.</li>
-                      <li>le script propose un bouton à activer en cas d'attaque réussie alors que le guerrier est en position,</li>
+                      <li>normalement, le script propose un bouton à activer en cas d'attaque réussie alors que le guerrier est en position, mais en cas de besoin, vous pouvez utiliser <code>!cof-absorber-au-bouclier</code> pour absorber un coup.</li>
                     </ul>
                   </li>
                   <li>
                     <strong>Absorber un sort</strong> :
                     <ul>
                       <li>utiliser <code>!cof-effet-temp absorberUnSort 1</code> pour se mettre en position. Attention, ça ne vérifie pas si le guerrier porte son bouclier.</li>
-                      <li>le script propose un bouton à activer en cas d'attaque réussie alors que le guerrier est en position.</li>
+                      <li>normalement, le script propose un bouton à activer en cas d'attaque réussie alors que le guerrier est en position, mais en cas de besoin, vous pouvez utiliser <code>!cof-absorber-au-bouclier</code> pour absorber un sort.</li>
                     </ul>
                   </li>
                   <li><strong>Armure lourde</strong> : Noter l'armure sur la feuille du personnage, et ajouter un attribut <code>armureLourdeGuerrier</code> au personnage. L'annulation du critique ne se produira que si l'armure est portée et que la valeur totale du bonus de défense supérieure ou égale à 8 (le bonus de DEF d'une armure de plaques complète).</li>
@@ -1632,7 +1617,6 @@
                 <ol>
                   <li><strong>Charge</strong> : Faire l'attaque avec les arguments <code>--m2d20 --pietine</code>.</li>
                   <li><strong>Enrager</strong> : ajouter un attribut <code>peutEnrager</code> de valeur <code>true</code>.</li>
-                  <li><strong>Percuter</strong> : Remplacer <code>--pietine</code> par <code>--percute</code> dans l'attaque de Charge.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du colosse</h4>
                 <ol>
@@ -1710,7 +1694,6 @@
               <h3 class="text-info" id="Capacites_diverses">4.5 Autres capacités</h3>
               <div class="decalage">
                 <ul>
-                  <li><strong>Absorption d'énergie</strong> : ajouter un attribut <code>absorptionEnergie</code> de valeur courante la valeur du soin accordé à l'attaquant à chaque fois qu'il endommage une cible.</li>
                   <li><strong>Attaque en meute</strong> : ajouter un attribut <code>attaqueEnMeute</code> de valeur courante le bonus d'attaque (2 pour un gobelin). Cela confère le bonus pour toutes les attaques de personnages avec cet attribut suivant une effectuée par un autre personnage avec cet attribut, jusqu'au prochain tour de ce personnage. Ainsi, si 2 créatures continuent d'attaquer la même cible, elles bénéficieront du bonus tout le temps, sauf la toute première attaque.</li>
                   <li><strong>Baroud d'honneur</strong> : ajouter un attribut <code>baroudHonneur</code> (=true) (Quand le personnage arrive à 0 PV, il ne meurt pas jusqu'à sa prochaine attaque, qui se fait avec un bonus de +5)</li>
                   <li><strong>Cibles multiples</strong> (nuées) : ajouter un attribut <code>ciblesMultiples</code>, de valeur <code>true</code>.</li>

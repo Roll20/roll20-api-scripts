@@ -1,4 +1,44 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 2.15
+### Autres améliorations
+* Prise en compte de l'immunité à l'asphyxie des démons.
+* Utilisation des consommables sur la fiche pour les PNJs aussi.
+* Si "Jet Secret" est configuré sur une fiche de PNJ, seul le total des jets d'attaques, de dommages, de caractéristiques et de sauvegardes sont affichés, sans les détails. Le MJ reçoit un whisper avec le détail du jet.
+
+### Capacités
+* Absorption d'énergie (spectre, vampire, sylvanien maudit)
+* Projeter (voie du Cogneur rang 3)
+
+## 2.14
+### Autres améliorations
+* Prise en compte de la chance pour les saves.
+* Prise en compte de la chance pour les esquives acrobatiques et les absorptions au bouclier
+* Utilisation de l'obglet des jets cachés des PNJs par le script
+* Réorganisation des menus de règles optionnelles
+* Suppression des options de génération d'attaques devenues obsolètes
+* Implémentation d'une option pour Brûlure de Magie (COTA, applicable à COF)
+* Implémentation d'une option de portée augmentée pour magie puissante (hors Tempête de Mana)
+* Implémentation d'une option pour l'affichage des durées des effets
+* Implémentation d'une option pour les armures/bouclier "de protection" (COF p. 203)
+
+### Corrections de bugs
+* Correction d'un bug sur le tour de force du barbare.
+* Correction d'un crash lors de l'utilisation d'un point de chance sur une riposte.
+* Correction d'un bug pour les conditions moins (comme moins FOR), quand l'attaquant est un PNJ et le défenseur un PJ.
+
+## 2.13
+### Corrections de bugs
+* Mise à jour des attributs d'équipement divers
+
+## 2.12
+### Capacités
+* Faucheuse de géants
+
+### Autres améliorations
+* Ajout des résistances permettant de diviser les dégâts d'un type donné.
+* Utilisation des consommables sur la fiche pour les PJs (au lieu des attributs dose_ ou consommable_).
+* Utilisation du token de la monture pour les personnages montés, dans les calculs de distance.
+
 ## 2.11
 ### Capacités
 * Commandant de la voie du chef d'armée.

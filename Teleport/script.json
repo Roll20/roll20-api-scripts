@@ -1,0 +1,63 @@
+{
+    "name": "Teleport",
+    "script": "teleport.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "Teleport is a chat-button based manager and creator for teleportation pads that allow players to move between same-page locations on the current player ribbon page. This does not move them between pages. It can be used for multi-floor houses, magical teleporation, traps and puzzles, elevators, and so on. !teleport --menu will get you the main menu, there is also a handout created (Teleport API) that explains its use when it is first installed.",
+    "authors": "Patrick K.",
+    "roll20userid": "616652",
+    "useroptions": [
+        {
+            "name": "AUTOTELEPORT", 
+            "type": "checkbox",
+            "value": "true",
+            "checked":"checked",
+            "description": "Determines whether or not players can use teleportation pads to move between linked pads."
+        },
+        {
+            "name": "AUTOPING", 
+            "type": "checkbox",
+            "value": "true",
+            "checked":"checked",
+            "description": "Determines whether or not players that are teleported get a ping to move their view to their new location."
+        },
+        {
+            "name": "HIDEPING", 
+            "type": "checkbox",
+            "value": "true",
+            "checked":"checked",
+            "description": "Determines whether or not a player specific ping hides the ping-ring that normally results by turning the player color transparent briefly."
+        },
+        {
+            "name": "SHOWSFX", 
+            "type": "checkbox",
+            "value": "true",
+            "checked":"checked",
+            "description": "Determines whether or not special effects are turned off globally, while sfx are normally determined per-pad. Can be useful to turn off if encountering lag."
+        }
+    ],
+    "dependencies": [],
+    "modifies": {
+        "state.teleport.config.AUTOTELEPORT": "read,write",
+        "state.teleport.config.AUTOPING": "read,write",
+        "state.teleport.config.HIDEPING": "read,write",
+        "state.teleport.config.SHOWSFX": "read,write",
+        "state.teleport.increment":"read,write",
+        "state.teleport.help":"read,write",
+        "token.name":"read,write",
+        "token.bar1_link": "read,write",
+        "token.bar2_link": "read,write",
+        "token.bar3_link": "read,write",
+        "token.bar1_max": "read,write",
+        "token.bar2_max": "read,write",
+        "token.bar3_max": "read,write",
+        "token.fliph":"read,write",
+        "token.top":"read,write",
+        "token.left":"read,write",
+        "handout.name":"read,write",
+        "handout.contents":"read,write",
+        "handout.inplayerjournals":"read,write",
+        "handout.controlledby":"read,write"
+    },
+    "conflicts": []
+}

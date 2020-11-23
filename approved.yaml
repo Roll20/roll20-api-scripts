@@ -907,3 +907,15 @@ chatturnmanager:
 encounterhelper:
   - "EncounterHelper"
   - "Utility"
+
+rolltablehandouts:
+  - "Roll Handout Tables"
+  - "Utility"
+
+dealinit:
+  - "Deal-Init"
+  - "System Tooolbox"
+
+teleport:
+  - "Teleport"
+  - "Utility"

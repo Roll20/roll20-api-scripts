@@ -121,7 +121,7 @@
 						</div>
 					</div>
 					<div class="col-md-9 col-sm-8 content">
-            <h1>Documentation pour la version 2.15 de COFantasy</h1>
+            <h1>Documentation pour la version 2.14 de COFantasy</h1>
 						<h2 class="text-primary" id="comment_utiliser_script">1. Comment utiliser Le script</h2>
             <div class="decalage">
               <h3 class="text-info" id="token_personnages">1.1 Tokens et personnages</h3>
@@ -327,7 +327,6 @@
                   <li><code>--asDeLaGachette</code> : ajoute 1d6 DM si le jet d'attaque dépasse une DEF de 25.</li>
                   <li><code>--armeDArgent</code> : bonus de +2 en attaque et 1d6 aux DM si la cible est un mort-vivant ou un démon (utilise le champ <code>Race</code> de la fiche ou si présent un attribut <code>mortVivant</code>).</li>
                   <li><code>--pietine</code> : si l'attaquant est de taille au moins égale à celle de la cible (ou si la taille de l'un des deux n'est pas connue), fait un test opposé de FOR. En cas d'échec de la cible, elle est renversée et les DM sont doublés.</li>
-                  <li><code>--percute</code> : comme <code>--pietine</code>, mais la cible est en plus projetée à 1d6+1 mètres et étourdie si elle rate un test de CON difficulté 15, renouvelable chaque tour.</li>
                   <li><code>--feinte</code> : L'attaque ne fait pas de dégât, mais un bonus de +5 en attaque est donné sur les attaques du tour suivant sur cette cible (par celui qui a fait la feinte), et +2d6 DM si l'attaque fictive était un succès. Si l'attaquant possède un attribut <code>bonusFeinte</code>, c'est la valeur de cet attribut qui est donné en bonus aux attaques, à la place de +5.</li>
                   <li><code>--enveloppe <i>difficulte type expr</i></code> : si l'attaque touche, elle a une chance d'envelopper la cible. Dans ce cas, un bouton apparaît qui lance un test en opposition. Si celui-ci est remporté par l'attaquant, <i>difficulte</i> est la difficulté du test pour se sortir de l'enveloppement, <i>type</i> est soit <code>label</code>, et dans ce cas, <i>expr</i> doit être le label d'une attaque de l'attaquant, soit <code>ability</code>, et dans ce cas, <i>expr</i> est le nom d'une ability de l'attaquant. Cette attaque ou ability est appelée pour les dégâts périodiques. Si les deux derniers arguments sont ommis, le script prend <code>label</code> et le label de l'attaque courante, et si le premier argument est ommis, la difficulté est de 15.</li>
                   <li><code>--etreinte <i>difficulte</i></code> : si l'attaque touche, il y a une chance que l'attaquant puisse s'enrouler autour de la cible. Dans ce cas, un bouton apparaît qui lance un test en opposition. Si celui-ci est remporté par l'attaquant, <i>difficulte</i> est la difficulté du test pour se sortir de l'enveloppement. Cela fera apparaître un bouton pour les dégâts de l'étreinte, par défait <code>1d6</code>, mais on peut spécifier une autre expression pour les dégâts (optionelle, juste après la difficulté).</li>
@@ -371,8 +370,8 @@
                 <p>Dans le cas d'une RD simple (résistance à tous les dégâts), il suffit d'indiquer un nombre. Exemple : <code>3</code></p>
                 <h5>RD à un type de dégâts particuliers</h5>
                 <p>Pour une RD qui ne s'applique qu'à un type de dégâts particuliers, indiquer le type et la valeur séparés par <code>:</code>. Exemple : <code>feu:5</code></p>
-                <h5>RD sauf un ou plusieurs types de dégâts particuliers</h5>
-                <p>Pour une RD qui s'applique tout le temps sauf un ou plusieurs types de dégâts particuliers, indiquer la valeur puis <code>/</code> puis les différents types séparés par <code>_</code>. Exemple <code>/</code>. Exemple : <code>5/argent_magique</code><br/>
+                <h5>RD sauf un type de dégâts particuliers</h5>
+                <p>Pour une RD qui s'applique tout le temps sauf type de dégâts particulier, indiquer la valeur et le type séparés par <code>/</code>. Exemple : <code>5/magique</code><br/>
                 Pour une RD qui s'appliquerait à tous les types d'armes sauf une, utiliser à la place une résistance aux 2 autres types d'armes. Exemple, pour 5/tranchant, utiliser <code>percant:5,contondant:5</code>.</p>
                 <h5>RD critique</h5>
                 <p>Utiliser un attribut <code>RD_critique</code> avec comme valeur courante la résistance aux critiques. Se combine avec une éventuelle RD critique fournie par le port d'un casque.</p>
@@ -497,6 +496,7 @@
               <h3 class="text-info" id="chance">2.5 Chance</h3>
               <div class="decalage">
                 <p>Le script essaie de détecter les cas où un point de chance peut être utile, et dans ce cas fournit un bouton (utilisable par les joueurs contrôlant le perosnnage ou le GM), permettant de dépenser un point de chance. Attention, pour l'instant, il n'est pas possible de faire juste un undo de la dépense de point de chnce. Le undo après la dépense de point de chance annule toute l'action. Il faut ensuite faire un undo par point de chance dépensé.</p>
+                <p>Pour les cas non prévus par le script, on peut faire juste <code>!cof-chance autre</code>.</p>
               </div>
               <h3 class="text-info" id="surprise">2.6 Surprise : <code>!cof-surprise ?difficulte</code></h3>
               <div class="decalage">
@@ -1632,7 +1632,6 @@
                 <ol>
                   <li><strong>Charge</strong> : Faire l'attaque avec les arguments <code>--m2d20 --pietine</code>.</li>
                   <li><strong>Enrager</strong> : ajouter un attribut <code>peutEnrager</code> de valeur <code>true</code>.</li>
-                  <li><strong>Percuter</strong> : Remplacer <code>--pietine</code> par <code>--percute</code> dans l'attaque de Charge.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du colosse</h4>
                 <ol>
@@ -1710,7 +1709,6 @@
               <h3 class="text-info" id="Capacites_diverses">4.5 Autres capacités</h3>
               <div class="decalage">
                 <ul>
-                  <li><strong>Absorption d'énergie</strong> : ajouter un attribut <code>absorptionEnergie</code> de valeur courante la valeur du soin accordé à l'attaquant à chaque fois qu'il endommage une cible.</li>
                   <li><strong>Attaque en meute</strong> : ajouter un attribut <code>attaqueEnMeute</code> de valeur courante le bonus d'attaque (2 pour un gobelin). Cela confère le bonus pour toutes les attaques de personnages avec cet attribut suivant une effectuée par un autre personnage avec cet attribut, jusqu'au prochain tour de ce personnage. Ainsi, si 2 créatures continuent d'attaquer la même cible, elles bénéficieront du bonus tout le temps, sauf la toute première attaque.</li>
                   <li><strong>Baroud d'honneur</strong> : ajouter un attribut <code>baroudHonneur</code> (=true) (Quand le personnage arrive à 0 PV, il ne meurt pas jusqu'à sa prochaine attaque, qui se fait avec un bonus de +5)</li>
                   <li><strong>Cibles multiples</strong> (nuées) : ajouter un attribut <code>ciblesMultiples</code>, de valeur <code>true</code>.</li>
