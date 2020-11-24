@@ -1,5 +1,5 @@
 /**
- * trackerjacker.js
+ * initiative_tracker_plus.js
  *
  * * Copyright 2015: Ken L.
  * Licensed under the GPL Version 3 license.
@@ -57,13 +57,13 @@
 ************************************************************************************/
 
 var statusMarkers = [];
-var TrackerJacker = (function() {
+var InitiativeTrackerPlus = (function() {
 	'use strict';
 	var version = 1.24,
 		author = 'Ken L.',
 		pending = null;
 
-	var TJ_StateEnum = Object.freeze({
+	var ITP_StateEnum = Object.freeze({
 		ACTIVE: 0,
 		PAUSED: 1,
 		STOPPED: 2,
@@ -76,10 +76,10 @@ var TrackerJacker = (function() {
 	});
 
 	var fields = {
-		feedbackName: 'TrackerJacker',
+		feedbackName: 'InitiativeTrackerPlus',
 		feedbackImg: 'https://s3.amazonaws.com/files.d20.io/images/11514664/jfQMTRqrT75QfmaD98BQMQ/thumb.png?1439491849',
 		trackerId: '',
-		trackerName: 'trackerjacker_tracker',
+		trackerName: 'initiative_tracker_plus_tracker',
 		trackerImg: 'https://s3.amazonaws.com/files.d20.io/images/11920268/i0nMbVlxQLNMiO12gW9h3g/thumb.png?1440939062',
 		trackerImgRatio: 2.25,
 		rotation_degree: 15,
@@ -91,7 +91,7 @@ var TrackerJacker = (function() {
 	fields.defaultTrackerImg = fields.trackerImg;
 
 	var flags = {
-		tj_state: TJ_StateEnum.STOPPED, image: true,
+		tj_state: ITP_StateEnum.STOPPED, image: true,
 		rotation: true,
 		animating: false,
 		archive: false,
@@ -112,7 +112,7 @@ var TrackerJacker = (function() {
 	};
 
 
-	var TrackerJacker_tmp = (function() {
+	var InitiativeTrackerPlus_tmp = (function() {
 		var templates = {
 			button: _.template('<a style="display: inline-block; font-size: 100%; color: black; padding: 3px 3px 3px 3px; margin: 2px 2px 2px 2px; border: 1px solid black; border-radius: 0.5em; font-weight: bold; text-shadow: -1px -1px 1px #FFF, 1px -1px 1px #FFF, -1px 1px 1px #FFF, 1px 1px 1px #FFF; background-color: #C7D0D2;" href="<%= command %>"><%= text %></a>'),
 			confirm_box: _.template('<div style="font-weight: bold; background-color: #FFF; text-align: center; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 1em; border: 1px solid black; margin: 5px 5px 5px 5px; padding: 2px 2px 2px 2px;">'
@@ -247,14 +247,14 @@ var TrackerJacker = (function() {
 	 * Init
 	 */
 	var init = function() {
-		if (!state.trackerjacker)
-			{state.trackerjacker = {};}
-		if (!state.trackerjacker.effects)
-			{state.trackerjacker.effects = {};}
-		if (!state.trackerjacker.statuses)
-			{state.trackerjacker.statuses = [];}
-		if (!state.trackerjacker.favs)
-			{state.trackerjacker.favs = {};}
+		if (!state.initiative_tracker_plus)
+			{state.initiative_tracker_plus = {};}
+		if (!state.initiative_tracker_plus.effects)
+			{state.initiative_tracker_plus.effects = {};}
+		if (!state.initiative_tracker_plus.statuses)
+			{state.initiative_tracker_plus.statuses = [];}
+		if (!state.initiative_tracker_plus.favs)
+			{state.initiative_tracker_plus.favs = {};}
 	};
 
 
@@ -263,10 +263,10 @@ var TrackerJacker = (function() {
 	 */
 	var cleanSlate = function() {
 		log('Clearing Persistent Data...');
-		state.trackerjacker = {};
-		state.trackerjacker.effects = {};
-		state.trackerjacker.statuses = [];
-		state.trackerjacker.favs = {};
+		state.initiative_tracker_plus = {};
+		state.initiative_tracker_plus.effects = {};
+		state.initiative_tracker_plus.statuses = [];
+		state.initiative_tracker_plus.favs = {};
 	}
 
 
@@ -458,14 +458,14 @@ var TrackerJacker = (function() {
 			//TODO only clear statuses that have a duration
 			updateTurnorderMarker(turnorder);
 		}
-		if (!state.trackerjacker)
-			{state.trackerjacker = {};}
-		if (!state.trackerjacker.effects)
-			{state.trackerjacker.effects = {};}
-		if (!state.trackerjacker.statuses)
-			{state.trackerjacker.statuses = [];}
-		if (!state.trackerjacker.favs)
-			{state.trackerjacker.favs = {};}
+		if (!state.initiative_tracker_plus)
+			{state.initiative_tracker_plus = {};}
+		if (!state.initiative_tracker_plus.effects)
+			{state.initiative_tracker_plus.effects = {};}
+		if (!state.initiative_tracker_plus.statuses)
+			{state.initiative_tracker_plus.statuses = [];}
+		if (!state.initiative_tracker_plus.favs)
+			{state.initiative_tracker_plus.favs = {};}
 	};
 
 
@@ -516,12 +516,12 @@ var TrackerJacker = (function() {
 		var retval;
 		statusName = statusName.toLowerCase();
 
-		var found = _.find(state.trackerjacker.statuses, function(e) {
+		var found = _.find(state.initiative_tracker_plus.statuses, function(e) {
 			if (e.name === statusName) {
 				retval = e;
 				e.refc += inc;
 				if (e.refc <= 0) {
-					state.trackerjacker.statuses = _.reject(state.trackerjacker.statuses, function(e) {
+					state.initiative_tracker_plus.statuses = _.reject(state.initiative_tracker_plus.statuses, function(e) {
 						if (e.name === statusName)
 							{return true;}
 					});
@@ -535,7 +535,7 @@ var TrackerJacker = (function() {
 		});
 
 		if (!found) {
-			state.trackerjacker.statuses.push({
+			state.initiative_tracker_plus.statuses.push({
 				name: statusName.toLowerCase(),
 				marker: marker,
 				refc: inc
@@ -555,7 +555,7 @@ var TrackerJacker = (function() {
 			status,
 			hasRemovedEffect;
 
-		_.each(_.keys(state.trackerjacker.effects), function(e) {
+		_.each(_.keys(state.initiative_tracker_plus.effects), function(e) {
 			token = getObj('graphic',e);
 			if (!token) {
 				return;
@@ -571,7 +571,7 @@ var TrackerJacker = (function() {
 			tokenStatusString = tokenStatusString.split(',');
 			_.each(effects, function(elem) {
 				statusName = elem.name.toLowerCase();
-				status = _.findWhere(state.trackerjacker.statuses,{name: statusName});
+				status = _.findWhere(state.initiative_tracker_plus.statuses,{name: statusName});
 				if (status) {
 					tokenStatusString = _.reject(tokenStatusString, function(j) {
 						return j.match(new RegExp(status.marker+'@?[1-9]?$', 'i'));
@@ -632,16 +632,16 @@ var TrackerJacker = (function() {
 				{rounds = parseInt(rounds[0]);}
 
 			switch(flags.tj_state) {
-				case TJ_StateEnum.ACTIVE:
+				case ITP_StateEnum.ACTIVE:
 					graphic.set('tint_color','transparent');
 					indicator = '\u23F5 '; // Play button
 					break;
-				case TJ_StateEnum.PAUSED:
+				case ITP_StateEnum.PAUSED:
 					graphic = findTrackerGraphic();
 					graphic.set('tint_color','#FFFFFF');
 					indicator ='\u23F8 '; // Pause button
 					break;
-				case TJ_StateEnum.STOPPED:
+				case ITP_StateEnum.STOPPED:
 					graphic.set('tint_color','transparent');
 					indicator = '\u23F9 '; // Stop button
 					break;
@@ -662,7 +662,7 @@ var TrackerJacker = (function() {
 	 * Status exists
 	 */
 	var statusExists = function(statusName) {
-		return _.findWhere(state.trackerjacker.statuses,{name: statusName});
+		return _.findWhere(state.initiative_tracker_plus.statuses,{name: statusName});
 	};
 
 	/**
@@ -672,7 +672,7 @@ var TrackerJacker = (function() {
 		if (!curToken)
 			{return;}
 
-		var effects = state.trackerjacker.effects[curToken.get('_id')];
+		var effects = state.initiative_tracker_plus.effects[curToken.get('_id')];
 		if (effects && effects.length > 0)
 			{return effects;}
 		return undefined;
@@ -686,7 +686,7 @@ var TrackerJacker = (function() {
 			{return;}
 
 		if(Array.isArray(effects))
-			{state.trackerjacker.effects[curToken.get('_id')] = effects;}
+			{state.initiative_tracker_plus.effects[curToken.get('_id')] = effects;}
 	};
 
 	/**
@@ -723,7 +723,7 @@ var TrackerJacker = (function() {
 						+ '<div><span style="font-weight: bold;">Name</span><br>'+'<span style="font-style: italic;">'+statusName+'</span></div>'
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
-						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Name" href="!tj -edit_multi_status '
+						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Name" href="!itp -edit_multi_status '
 							+ statusName + ' @ name @ ?{name|'+statusName+'} @ ' + idString
 							+ '"><img src="'+design.edit_icon+'"></img></a>'
 					+ '</td>'
@@ -733,7 +733,7 @@ var TrackerJacker = (function() {
 						+ '<div><span style="font-weight: bold;">Marker</span><br>'+'<span style="font-style: italic;">'+mImg+'</span></div>'
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
-						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Marker" href="!tj -edit_multi_status '
+						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Marker" href="!itp -edit_multi_status '
 							+ statusName + ' @ marker @ 1 @ ' + idString
 							+ '"><img src="'+design.edit_icon+'"></img></a>'
 					+ '</td>'
@@ -743,7 +743,7 @@ var TrackerJacker = (function() {
 						+ '<div><span style="font-weight: bold;">Duration</span><br>'+'<span style="font-style: italic;">Varies</span></div>'
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
-						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Duration" href="!tj -edit_multi_status '
+						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Duration" href="!itp -edit_multi_status '
 							+ statusName + ' @ duration @ ?{duration|1} @ ' + idString
 							+ '"><img src="'+design.edit_icon+'"></img></a>'
 					+ '</td>'
@@ -753,7 +753,7 @@ var TrackerJacker = (function() {
 						+ '<div><span style="font-weight: bold;">Direction</span><br>'+'<span style="font-style: italic;">Varies</span></div>'
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
-						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Direction" href="!tj -edit_multi_status '
+						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Direction" href="!itp -edit_multi_status '
 							+ statusName + ' @ direction @ ?{direction|-1} @ ' + idString
 							+ '"><img src="'+design.edit_icon+'"></img></a>'
 					+ '</td>'
@@ -763,7 +763,7 @@ var TrackerJacker = (function() {
 						+ '<div><span style="font-weight: bold;">Message</span><br>'+'<span style="font-style: italic;">Varies</span></div>'
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
-						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Message" href="!tj -edit_multi_status '
+						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Message" href="!itp -edit_multi_status '
 							+ statusName + ' @ message @ ?{message} @ ' + idString
 							+ '"><img src="'+design.edit_icon+'"></img></a>'
 					+ '</td>'
@@ -804,12 +804,12 @@ var TrackerJacker = (function() {
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
 						+ '<a style="height: 16px; width: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit '+e.statusName+' status" '
-							+ 'href="!tj -dispmultistatusconfig change @ ' + e.statusName + ' @ ' + e.id
+							+ 'href="!itp -dispmultistatusconfig change @ ' + e.statusName + ' @ ' + e.id
 							+ '"><img src="'+design.edit_icon+'"></img></a>'
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
 						+ '<a style="height: 16px; width: 16px;  border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Remove '+e.statusName+' status" '
-							+ 'href="!tj -dispmultistatusconfig remove @ ' + e.statusName + ' @ ' + e.id
+							+ 'href="!itp -dispmultistatusconfig remove @ ' + e.statusName + ' @ ' + e.id
 							+ '"><img src="'+design.delete_icon+'"></img></a>'
 					+ '</td>'
 				+ '</tr>';
@@ -845,13 +845,13 @@ var TrackerJacker = (function() {
 
 		_.each(statusMarkers,function(e) {
 			if (!favored) {
-				command = (!custcommand ? ('!tj -marker ' + e.urlName + ' %% ' + statusName) : (custcommand+e.urlName));
+				command = (!custcommand ? ('!itp -marker ' + e.urlName + ' %% ' + statusName) : (custcommand+e.urlName));
 			} else {
-				command = (!custcommand ? ('!tj -marker ' + e.urlName + ' %% ' + statusName + ' %% ' + 'fav') : (custcommand+e.urlName));
+				command = (!custcommand ? ('!itp -marker ' + e.urlName + ' %% ' + statusName + ' %% ' + 'fav') : (custcommand+e.urlName));
 			}
 
 			//n*m is evil
-			if (!favored && (taken = _.findWhere(state.trackerjacker.statuses,{marker: e.name}))) {
+			if (!favored && (taken = _.findWhere(state.initiative_tracker_plus.statuses,{marker: e.name}))) {
 				takenList += '<div style="float: left; padding: 1px 1px 1px 1px; width: 25px; height: 25px;">'
 					+ '<span class="showtip tipsy" title="'+taken.name+'" style="width: 21px; height: 21px"><img style="text-align: center;" alt="'+e.displayName+'" src="'+e.img+'"></img></span>'
 					+'</div>';
@@ -956,7 +956,7 @@ var TrackerJacker = (function() {
 					+ (name ? ('It is ' + name + '\'s turn') : 'Turn')
 				+ '</td>'
 				+ '<td width="32px" height="32px">'
-					+ '<a style="width: 20px; height: 18px; background: none; border: none;" href="!tj -disptokenconfig '+curToken.get('_id')+'"><img src="'+design.settings_icon+'"></img></a>'
+					+ '<a style="width: 20px; height: 18px; background: none; border: none;" href="!itp -disptokenconfig '+curToken.get('_id')+'"><img src="'+design.settings_icon+'"></img></a>'
 					+ '<a style="width: 30px; height: 18px; background: red; border: solid 1px; color: white; font-weight: heavy;" href="!eot"><nobr>EOT</nobr></a>'
 				+ '</td>'
 				+ '</tr>';
@@ -992,7 +992,7 @@ var TrackerJacker = (function() {
 			content = '',
 			markerdef;
 
-		var sorted = state.trackerjacker.favs;
+		var sorted = state.initiative_tracker_plus.favs;
 		if(wantSorted && wantSorted != 0 && wantSorted != 'false') {
 			sorted = _.sortBy(sorted, 'name');
 		}
@@ -1008,17 +1008,17 @@ var TrackerJacker = (function() {
 						+ e.name
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
-						+ '<a style="height: 16px; width: 16px;  border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Apply '+e.name+' status" href="!tj -applyfav '
+						+ '<a style="height: 16px; width: 16px;  border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Apply '+e.name+' status" href="!itp -applyfav '
 							+ e.name
 							+ '"><img src="'+design.apply_icon+'"></img></a>'
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
-						+ '<a style="height: 16px; width: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit '+e.name+' status" href="!tj -dispstatusconfig '
+						+ '<a style="height: 16px; width: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit '+e.name+' status" href="!itp -dispstatusconfig '
 							+ ' %% changefav %% '+e.name
 							+ '"><img src="'+design.edit_icon+'"></img></a>'
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
-						+ '<a style="height: 16px; width: 16px;  border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Remove '+e.name+' status" href="!tj -dispstatusconfig '
+						+ '<a style="height: 16px; width: 16px;  border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Remove '+e.name+' status" href="!itp -dispstatusconfig '
 							+ ' %% removefav %% '+e.name
 							+ '"><img src="'+design.delete_icon+'"></img></a>'
 					+ '</td>'
@@ -1081,7 +1081,7 @@ var TrackerJacker = (function() {
 						+ '<div><span style="font-weight: bold;">Name</span><br>'+'<span style="font-style: italic;">'+statusName+'</span></div>'
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
-						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Name" href="!tj -edit_status '
+						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Name" href="!itp -edit_status '
 							+ (favored ? 'changefav':'change')+' %% ' + (favored ? (''):(curToken.get('_id'))) +' %% '+statusName+' %% name %% ?{name|'+statusName+'}'
 							+ '"><img src="'+design.edit_icon+'"></img></a>'
 					+ '</td>'
@@ -1091,7 +1091,7 @@ var TrackerJacker = (function() {
 						+ '<div><span style="font-weight: bold;">Marker</span><br>'+'<span style="font-style: italic;">'+mImg+'</span></div>'
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
-						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Marker" href="!tj -edit_status '
+						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Marker" href="!itp -edit_status '
 							+ (favored ? 'changefav':'change')+' %% ' + (favored ? (''):(curToken.get('_id'))) +' %% '+statusName+' %% marker %% mark'
 							+ '"><img src="'+design.edit_icon+'"></img></a>'
 					+ '</td>'
@@ -1101,7 +1101,7 @@ var TrackerJacker = (function() {
 						+ '<div><span style="font-weight: bold;">Duration</span><br>'+'<span style="font-style: italic;">'+status.duration+'</span></div>'
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
-						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Duration" href="!tj -edit_status '
+						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Duration" href="!itp -edit_status '
 							+ (favored ? 'changefav':'change')+' %% ' + (favored ? (''):(curToken.get('_id'))) +' %% '+statusName+' %% duration %% ?{duration|'+status.duration+'}'
 							+ '"><img src="'+design.edit_icon+'"></img></a>'
 					+ '</td>'
@@ -1111,7 +1111,7 @@ var TrackerJacker = (function() {
 						+ '<div><span style="font-weight: bold;">Direction</span><br>'+'<span style="font-style: italic;">'+status.direction+'</span></div>'
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
-						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Direction" href="!tj -edit_status '
+						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Direction" href="!itp -edit_status '
 							+ (favored ? 'changefav':'change')+' %% ' + (favored ? (''):(curToken.get('_id'))) +' %% '+statusName+' %% direction %% ?{direction|'+status.direction+'}'
 							+ '"><img src="'+design.edit_icon+'"></img></a>'
 					+ '</td>'
@@ -1121,7 +1121,7 @@ var TrackerJacker = (function() {
 						+ '<div><span style="font-weight: bold;">Message</span><br>'+'<span style="font-style: italic;">'+status.msg+'</span></div>'
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
-						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Message" href="!tj -edit_status '
+						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Message" href="!itp -edit_status '
 							+ (favored ? 'changefav':'change')+' %% ' + (favored ? (''):(curToken.get('_id'))) +' %% '+statusName+' %% message %% ?{message|'+status.msg+'}'
 							+ '"><img src="'+design.edit_icon+'"></img></a>'
 					+ '</td>'
@@ -1129,8 +1129,8 @@ var TrackerJacker = (function() {
 				+ (favored ? '':('<tr>'
 					+ '<td colspan="2">'
 						//+ '<a href="!CreatureGen -help">cookies</a>'
-						//+ '<a style="font-weight: bold" href="!tj -addfav '+statusName+' %% '+status.duration+' %% '+status.direction+' %% '+status.msg+' %% '+globalStatus.marker+'"> Add to Favorites</a>'
-						+ TrackerJacker_tmp.getTemplate({command: '!tj -addfav '+statusName+' %% '+status.duration+' %% '+status.direction+' %% '+status.msg+' %% '+globalStatus.marker, text: 'Add to Favorites'},'button')
+						//+ '<a style="font-weight: bold" href="!itp -addfav '+statusName+' %% '+status.duration+' %% '+status.direction+' %% '+status.msg+' %% '+globalStatus.marker+'"> Add to Favorites</a>'
+						+ InitiativeTrackerPlus_tmp.getTemplate({command: '!itp -addfav '+statusName+' %% '+status.duration+' %% '+status.direction+' %% '+status.msg+' %% '+globalStatus.marker, text: 'Add to Favorites'},'button')
 
 					+ '</td>'
 				+ '</tr>'))
@@ -1168,12 +1168,12 @@ var TrackerJacker = (function() {
 						+ e.name
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
-						+ '<a style="height: 16px; width: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit '+e.name+' status" href="!tj -dispstatusconfig '
+						+ '<a style="height: 16px; width: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit '+e.name+' status" href="!itp -dispstatusconfig '
 							+ curToken.get('_id')+' %% change %% '+e.name
 							+ '"><img src="'+design.edit_icon+'"></img></a>'
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
-						+ '<a style="height: 16px; width: 16px;  border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Remove '+e.name+' status" href="!tj -dispstatusconfig '
+						+ '<a style="height: 16px; width: 16px;  border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Remove '+e.name+' status" href="!itp -dispstatusconfig '
 							+ curToken.get('_id')+' %% remove %% '+e.name
 							+ '"><img src="'+design.delete_icon+'"></img></a>'
 					+ '</td>'
@@ -1192,8 +1192,8 @@ var TrackerJacker = (function() {
 		content += midcontent;
 		content += '</table>';
 		content += /*'<div style="border-top: 1px solid black;">'
-					+ '<a style="font-weight: bold" href="!tj -addstatus ?{name}:?{duration}:?{direction}:?{message}"> Add Status</a>'
-					+ '<br><a style="font-weight: bold" href="!tj -listfavs"> Apply Favorite</a>'
+					+ '<a style="font-weight: bold" href="!itp -addstatus ?{name}:?{duration}:?{direction}:?{message}"> Add Status</a>'
+					+ '<br><a style="font-weight: bold" href="!itp -listfavs"> Apply Favorite</a>'
 				+ '</div>'+*/'</div>';
 		return content;
 	};
@@ -1307,7 +1307,7 @@ var TrackerJacker = (function() {
 	 * Handle the turn order advancement given the current and prior ordering
 	 */
 	var handleAdvanceTurn = function(turnorder,priororder) {
-		if (flags.tj_state === TJ_StateEnum.STOPPED || flags.tj_state === TJ_StateEnum.PAUSED || !turnorder || !priororder)
+		if (flags.tj_state === ITP_StateEnum.STOPPED || flags.tj_state === ITP_StateEnum.PAUSED || !turnorder || !priororder)
 			{return;}
 		if (typeof(turnorder) === 'string')
 			{turnorder = JSON.parse(turnorder);}
@@ -1348,8 +1348,8 @@ var TrackerJacker = (function() {
 					}
 					graphic = findTrackerGraphic();
 
-					if (flags.tj_state === TJ_StateEnum.ACTIVE)
-						{flags.tj_state = TJ_StateEnum.FROZEN;}
+					if (flags.tj_state === ITP_StateEnum.ACTIVE)
+						{flags.tj_state = ITP_StateEnum.FROZEN;}
 					maxsize = Math.max(parseInt(curToken.get('width')),parseInt(curToken.get('height')));
 					graphic.set('layer','gmlayer');
 					graphic.set('left',curToken.get('left'));
@@ -1366,8 +1366,8 @@ var TrackerJacker = (function() {
 								graphic.set('layer','map');
 								toFront(graphic);
 							}
-							if (flags.tj_state === TJ_StateEnum.FROZEN)
-								{flags.tj_state = TJ_StateEnum.ACTIVE;}
+							if (flags.tj_state === ITP_StateEnum.FROZEN)
+								{flags.tj_state = ITP_StateEnum.ACTIVE;}
 						}
 					},500);
 					// Manage status
@@ -1385,11 +1385,11 @@ var TrackerJacker = (function() {
 	 */
 	var favoriteExists = function(statusName) {
 		statusName = statusName.toLowerCase();
-		var found = _.find(_.keys(state.trackerjacker.favs), function(e) {
+		var found = _.find(_.keys(state.initiative_tracker_plus.favs), function(e) {
 			return e === statusName;
 		});
 		if (found)
-			{found = state.trackerjacker.favs[found]; }
+			{found = state.initiative_tracker_plus.favs[found]; }
 		return found;
 	};
 
@@ -1415,7 +1415,7 @@ var TrackerJacker = (function() {
 			return;
 		}
 
-		var markerUsed = _.find(state.trackerjacker.statuses, function(e) {
+		var markerUsed = _.find(state.initiative_tracker_plus.statuses, function(e) {
 			if (typeof(e.marker) !== 'undefined'
 			&& e.marker === fav.marker
 			&& e.name !== fav.name)
@@ -1435,7 +1435,7 @@ var TrackerJacker = (function() {
 			if (!curToken || curToken.get('_subtype') !== 'token' || curToken.get('isdrawing'))
 				{return;}
 			effectId = e._id;
-			effectList = state.trackerjacker.effects[effectId];
+			effectList = state.initiative_tracker_plus.effects[effectId];
 
 			if ((status = _.find(effectList,function(elem) {return elem.name.toLowerCase() === fav.name.toLowerCase();}))) {
 				return;
@@ -1448,7 +1448,7 @@ var TrackerJacker = (function() {
 				});
 				updateGlobalStatus(fav.name,undefined,1);
 			} else {
-				state.trackerjacker.effects[effectId] = effectList = new Array({
+				state.initiative_tracker_plus.effects[effectId] = effectList = new Array({
 					name: fav.name,
 					duration: fav.duration,
 					direction: fav.direction,
@@ -1478,7 +1478,7 @@ var TrackerJacker = (function() {
 		if (status && !status.marker && fav.marker)
 			{doDirectMarkerApply(markerdef.name+' %% '+fav.name); }
 		else if (status && !status.marker)
-			{content += '<br><div style="text-align: center;">'+TrackerJacker_tmp.getTemplate({command: '!tj -dispmarker '+fav.name, text: 'Choose Marker'},'button')+'</div>';}
+			{content += '<br><div style="text-align: center;">'+InitiativeTrackerPlus_tmp.getTemplate({command: '!itp -dispmarker '+fav.name, text: 'Choose Marker'},'button')+'</div>';}
 
 		updateAllTokenMarkers();
 		content += '</div>';
@@ -1533,7 +1533,7 @@ var TrackerJacker = (function() {
 			marker: marker
 		};
 
-		state.trackerjacker.favs[name] = newFav;
+		state.initiative_tracker_plus.favs[name] = newFav;
 
 		var content = '<div style="font-weight: bold; background-color: '+design.statusbgcolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em;">'
 			+ '<div style="text-align: center; color: '+design.statuscolor+'; border-bottom: 2px solid black;">'
@@ -1544,7 +1544,7 @@ var TrackerJacker = (function() {
 			+ '<br>Duration: ' + duration
 			+ '<br>Direction: ' + direction
 			+ (msg ? ('<br>Message: ' + msg):'')
-			+ (marker ? '':('<br><div style="text-align: center;">'+TrackerJacker_tmp.getTemplate({command: '!tj -dispmarker '+name+ ' %% fav', text: 'Choose Marker'},'button')+'</div>'));
+			+ (marker ? '':('<br><div style="text-align: center;">'+InitiativeTrackerPlus_tmp.getTemplate({command: '!itp -dispmarker '+name+ ' %% fav', text: 'Choose Marker'},'button')+'</div>'));
 		content += '</div>';
 
 		sendFeedback(content);
@@ -1571,7 +1571,7 @@ var TrackerJacker = (function() {
 			+ 'Favorite ' + '<span style="color:'+design.statuscolor+';">'+statusName+'</span> removed.'
 			+ '</div>';
 
-		delete state.trackerjacker.favs[statusName];
+		delete state.initiative_tracker_plus.favs[statusName];
 		sendFeedback(content);
 	};
 
@@ -1581,7 +1581,7 @@ var TrackerJacker = (function() {
 	**/
 	var saveFavs = function(wantSorted) {
 		var handout = createObj('handout', {
-			 name: 'TJFavsJSON',
+			 name: 'ITPFavsJSON',
 			 inplayerjournals: 'none',
 			 archived: false,
 		});
@@ -1590,15 +1590,15 @@ var TrackerJacker = (function() {
 		gmnotes = '',
 		markerdef;
 /*
-		var sorted = state.trackerjacker.favs;
+		var sorted = state.initiative_tracker_plus.favs;
 		if(wantSorted && wantSorted != 0 && wantSorted != 'false') {
 			sorted = _.sortBy(sorted, 'name');
 		}
 
 		gmnotes = JSON.stringify(sorted);
 */
-		gmnotes = JSON.stringify(state.trackerjacker.favs);
-		notes = "Copy this handout to another lobby using the transmogrifier or copy the GM notes section in it's entirety and paste into a handout in the other lobby of the exact same name as this one.  Then run '!tj loadFavs' in the new lobby with TrackerJacker loaded in the APIs.";
+		gmnotes = JSON.stringify(state.initiative_tracker_plus.favs);
+		notes = "Copy this handout to another lobby using the transmogrifier or copy the GM notes section in it's entirety and paste into a handout in the other lobby of the exact same name as this one.  Then run '!itp loadFavs' in the new lobby with InitiativeTrackerPlus loaded in the APIs.";
 
 		handout.set({
 			 notes: notes
@@ -1612,17 +1612,17 @@ var TrackerJacker = (function() {
 
 
 	/**
-		Read the handout "TrackerJacker Favorites JSON" if it exists and create favorites list from it
+		Read the handout "InitiativeTrackerPlus Favorites JSON" if it exists and create favorites list from it
 	**/
 	var loadFavs = function() {
-		var handouts = findObjs({type: 'handout', name: 'TJFavsJSON'});
+		var handouts = findObjs({type: 'handout', name: 'ITPFavsJSON'});
 		var handout = handouts[0];
 
 		handout.get("gmnotes", function(gmnotes) {
-			state.trackerjacker.favs = JSON.parse(gmnotes);
+			state.initiative_tracker_plus.favs = JSON.parse(gmnotes);
 		});
 
-		sendFeedback('Favorites loaded from handout "TJFavsJSON"');
+		sendFeedback('Favorites loaded from handout "ITPFavsJSON"');
 	}
 
 
@@ -1670,7 +1670,7 @@ var TrackerJacker = (function() {
 		}
 
 		if (marker && (!_.find(statusMarkers, function(e) { return e.tag === marker; })
-		|| !!_.find(state.trackerjacker.statuses, function(e) { return e.tag === e.marker;}))) {
+		|| !!_.find(state.initiative_tracker_plus.statuses, function(e) { return e.tag === e.marker;}))) {
 			sendError('Marker invalid or already in use');
 			return;
 		}
@@ -1687,7 +1687,7 @@ var TrackerJacker = (function() {
 			if (!curToken || curToken.get('_subtype') !== 'token' || curToken.get('isdrawing'))
 				{return;}
 			effectId = e._id;
-			effectList = state.trackerjacker.effects[effectId];
+			effectList = state.initiative_tracker_plus.effects[effectId];
 
 			if ((status = _.find(effectList,function(elem) {return elem.name.toLowerCase() === name.toLowerCase();}))) {
 				return;
@@ -1700,7 +1700,7 @@ var TrackerJacker = (function() {
 				});
 				updateGlobalStatus(name,undefined,1);
 			} else {
-				state.trackerjacker.effects[effectId] = effectList = new Array({
+				state.initiative_tracker_plus.effects[effectId] = effectList = new Array({
 					name: name,
 					duration: duration,
 					direction: direction,
@@ -1730,7 +1730,7 @@ var TrackerJacker = (function() {
 			if (marker)
 				{status.marker = marker;}
 			else
-				{content += '<br><div style="text-align: center;">'+TrackerJacker_tmp.getTemplate({command: '!tj -dispmarker '+name, text: 'Choose Marker'},'button')+'</div>';}
+				{content += '<br><div style="text-align: center;">'+InitiativeTrackerPlus_tmp.getTemplate({command: '!itp -dispmarker '+name, text: 'Choose Marker'},'button')+'</div>';}
 		}
 
 		content += '</div>';
@@ -1762,7 +1762,7 @@ var TrackerJacker = (function() {
 			curToken = getObj('graphic', e._id);
 			if (!curToken || curToken.get('_subtype') !== 'token' || curToken.get('isdrawing'))
 				{return;}
-			effects = state.trackerjacker.effects[effectId];
+			effects = state.initiative_tracker_plus.effects[effectId];
 			effects = _.reject(effects,function(elem) {
 				if (elem.name.toLowerCase() === args) {
 					found = true;
@@ -2008,7 +2008,7 @@ var TrackerJacker = (function() {
 			}
 			gstatus = statusExists(statusName);
 			newValue = newValue.toLowerCase();
-			effectList = state.trackerjacker.effects;
+			effectList = state.initiative_tracker_plus.effects;
 			_.each(effectList,function(effects) {
 				_.each(effects,function(e) {
 					if (e.name === statusName)
@@ -2022,7 +2022,7 @@ var TrackerJacker = (function() {
 			sendFeedback(content);
 			return;
 		} else {
-			idString = _.chain(_.keys(state.trackerjacker.effects))
+			idString = _.chain(_.keys(state.initiative_tracker_plus.effects))
 				.reject(function(n) {
 					return !_.contains(idString,n);
 				})
@@ -2162,7 +2162,7 @@ var TrackerJacker = (function() {
 			},args);
 			addPending(pr_marker,hashes[0]);
 
-			content = makeMarkerDisplay(undefined,false,'!tj -relay hc% '
+			content = makeMarkerDisplay(undefined,false,'!itp -relay hc% '
 				+ hashes[0]
 				+ ' %% ');
 
@@ -2203,8 +2203,8 @@ var TrackerJacker = (function() {
 		content += midcontent;
 		content += (markerdef ? '': (
 				'<div style="text-align: center;">'
-				+ TrackerJacker_tmp.getTemplate({command: '!tj -relay hc% ' + hashes[0], text: 'Choose Marker'},'button')
-				+ TrackerJacker_tmp.getTemplate({command: '!tj -relay hc% ' + hashes[1], text: 'Request Without Marker'},'button')
+				+ InitiativeTrackerPlus_tmp.getTemplate({command: '!itp -relay hc% ' + hashes[0], text: 'Choose Marker'},'button')
+				+ InitiativeTrackerPlus_tmp.getTemplate({command: '!itp -relay hc% ' + hashes[1], text: 'Request Without Marker'},'button')
 				+ '</div>'
 			));
 		content += '</div>';
@@ -2265,7 +2265,7 @@ var TrackerJacker = (function() {
 
 			if (statusExists(args.statusArgs.name)) {
 				doAddStatus(argStr,selection);
-			} else if(!!!_.find(state.trackerjacker.statuses,function(e){if (e.marker === args.statusArgs.marker){return true;}})) {
+			} else if(!!!_.find(state.initiative_tracker_plus.statuses,function(e){if (e.marker === args.statusArgs.marker){return true;}})) {
 				doAddStatus(argStr,selection);
 			} else {
 				sendError('Marker <img src="'+markerdef.img+'"></img> is already in use, cannot use it for \'' + args.statusArgs.name + '\' ');
@@ -2315,10 +2315,10 @@ var TrackerJacker = (function() {
 		content += '<table style="text-align: center; width: 100%">'
 			+ '<tr>'
 				+ '<td>'
-					+ TrackerJacker_tmp.getTemplate({command: '!tj -relay hc% ' + hashes[0], text: 'Confirm'},'button')
+					+ InitiativeTrackerPlus_tmp.getTemplate({command: '!itp -relay hc% ' + hashes[0], text: 'Confirm'},'button')
 				+ '</td>'
 				+ '<td>'
-					+ TrackerJacker_tmp.getTemplate({command: '!tj -relay hc% ' + hashes[1], text: 'Reject'},'button')
+					+ InitiativeTrackerPlus_tmp.getTemplate({command: '!itp -relay hc% ' + hashes[1], text: 'Reject'},'button')
 				+ '</td>'
 			+ '</tr>'
 		+ '</table>';
@@ -2375,7 +2375,7 @@ var TrackerJacker = (function() {
 			return;
 		}
 
-		_.each(state.trackerjacker.statuses, function(e) {
+		_.each(state.initiative_tracker_plus.statuses, function(e) {
 			if (e.marker === markerName)
 				{found = e;}
 			if (e.name === statusName)
@@ -2462,7 +2462,7 @@ var TrackerJacker = (function() {
 					}
 					gstatus = statusExists(statusName);
 					newValue = newValue.toLowerCase();
-					effectList = state.trackerjacker.effects;
+					effectList = state.initiative_tracker_plus.effects;
 					_.each(effectList,function(effects) {
 						_.each(effects,function(e) {
 							if (e.name === statusName) {
@@ -2524,8 +2524,8 @@ var TrackerJacker = (function() {
 					}
 					fav.name = newValue.toLowerCase();
 					//manually remove from state
-					delete state.trackerjacker.favs[statusName];
-					state.trackerjacker.favs[newValue] = fav;
+					delete state.initiative_tracker_plus.favs[statusName];
+					state.initiative_tracker_plus.favs[newValue] = fav;
 					midcontent += 'Status name now: ' + newValue;
 					break;
 				case 'marker':
@@ -2650,14 +2650,14 @@ var TrackerJacker = (function() {
 		if (!flags.animating)
 			{return;}
 
-		if (flags.tj_state === TJ_StateEnum.ACTIVE) {
+		if (flags.tj_state === ITP_StateEnum.ACTIVE) {
 			if (flags.rotation) {
 				var graphic = findTrackerGraphic();
 				graphic.set('rotation',parseInt(graphic.get('rotation'))+fields.rotation_degree);
 			}
 			setTimeout(function() {animateTracker();}, fields.rotation_rate);
-		} else if (flags.tj_state === TJ_StateEnum.PAUSED
-		|| flags.tj_state === TJ_StateEnum.FROZEN) {
+		} else if (flags.tj_state === ITP_StateEnum.PAUSED
+		|| flags.tj_state === ITP_StateEnum.FROZEN) {
 			setTimeout(function() {animateTracker();}, fields.rotation_rate);
 		} else {
 			flags.animating = false;
@@ -2670,11 +2670,11 @@ var TrackerJacker = (function() {
 	 * don't want it to tick down on status effects.
 	 */
 	var doStartTracker = function() {
-		if (flags.tj_state === TJ_StateEnum.ACTIVE) {
+		if (flags.tj_state === ITP_StateEnum.ACTIVE) {
 			doPauseTracker();
 			return;
 		}
-		flags.tj_state = TJ_StateEnum.ACTIVE;
+		flags.tj_state = ITP_StateEnum.ACTIVE;
 		prepareTurnorder();
 		var curToken = findCurrentTurnToken();
 		if (curToken) {
@@ -2708,11 +2708,11 @@ var TrackerJacker = (function() {
 	};
 
 	/**
-	 * Stops the tracker, removing all trackerjacker controlled
+	 * Stops the tracker, removing all initiative_tracker_plus controlled
 	 * statuses.
 	 */
 	var doStopTracker = function() {
-		flags.tj_state = TJ_StateEnum.STOPPED;
+		flags.tj_state = ITP_StateEnum.STOPPED;
 		// Remove Graphic
 		var trackergraphics = findObjs({
 				_type: 'graphic',
@@ -2726,25 +2726,25 @@ var TrackerJacker = (function() {
 		updateTurnorderMarker();
 		// Clean markers
 		var toRemove = [];
-		_.each(state.trackerjacker.statuses,function(e) {
+		_.each(state.initiative_tracker_plus.statuses,function(e) {
 			toRemove.push({name: '', marker: e.marker});
 		});
 		updateAllTokenMarkers(toRemove);
 		// Clean state
-		state.trackerjacker.effects = {};
-		state.trackerjacker.statuses = [];
+		state.initiative_tracker_plus.effects = {};
+		state.initiative_tracker_plus.statuses = [];
 	};
 
 	/**
 	 * Pause the tracker
 	 *
-	 * DEPRECATED due to toggle of !tj -start
+	 * DEPRECATED due to toggle of !itp -start
 	 */
 	var doPauseTracker = function() {
-		if(flags.tj_state === TJ_StateEnum.PAUSED) {
+		if(flags.tj_state === ITP_StateEnum.PAUSED) {
 			doStartTracker();
 		} else {
-			flags.tj_state = TJ_StateEnum.PAUSED;
+			flags.tj_state = ITP_StateEnum.PAUSED;
 			updateTurnorderMarker();
 		}
 	};
@@ -2753,7 +2753,7 @@ var TrackerJacker = (function() {
 	 * Perform player controled turn advancement (!eot)
 	 */
 	var doPlayerAdvanceTurn = function(senderId) {
-		if (!senderId || flags.tj_state !== TJ_StateEnum.ACTIVE)
+		if (!senderId || flags.tj_state !== ITP_StateEnum.ACTIVE)
 			{return;}
 		var turnorder = Campaign().get('turnorder');
 		if (!turnorder)
@@ -2818,53 +2818,53 @@ var TrackerJacker = (function() {
 		var content =
 			'<div style="background-color: #FFF; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em; margin-left: 2px; margin-right: 2px; padding-top: 5px; padding-bottom: 5px;">'
 				+ '<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-					+ '<span style="font-weight: bold; font-size: 125%">TrackerJacker v'+version+'</span>'
+					+ '<span style="font-weight: bold; font-size: 125%">InitiativeTrackerPlus v'+version+'</span>'
 				+ '</div>'
 				+ '<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 					+ '<div style="font-weight: bold;">'
-						+ '!tj -help'
+						+ '!itp -help'
 					+ '</div>'
 					+ '<li style="padding-left: 10px;">'
 						+ 'Display this message'
 					+ '</li>'
 					+ '<br>'
 					+ '<div style="font-weight: bold;">'
-						+ '!tj -start'
+						+ '!itp -start'
 					+ '</div>'
 					+ '<li style="padding-left: 10px;">'
 						+ 'Start/Pause the tracker. If not started starts; if active pauses; if paused, resumes. Behaves as a toggle.'
 					+ '</li>'
 					+ '<br>'
 					+ '<div style="font-weight: bold;">'
-						+ '!tj -stop'
+						+ '!itp -stop'
 					+ '</div>'
 					+ '<li style="padding-left: 10px;">'
 						+ 'Stops the tracker and clears all status effects.'
 					+ '</li>'
 					+ '<br>'
 					+ '<div style="font-weight: bold;">'
-						+ '!tj -clear'
+						+ '!itp -clear'
 					+ '</div>'
 					+ '<li style="padding-left: 10px;">'
 						+ 'Stops the tracker as the -stop command, but in addition clears the turnorder'
 					+ '</li>'
 					+ '<br>'
 					+ '<div style="font-weight: bold;">'
-						+ '!tj -pause'
+						+ '!itp -pause'
 					+ '</div>'
 					+ '<li style="padding-left: 10px;">'
 						+ 'Pauses the tracker.'
 					+ '</li>'
 					+ '<br>'
 					+ '<div style="font-weight: bold;">'
-						+ '!tj -reset [round#]'
+						+ '!itp -reset [round#]'
 					+ '</div>'
 					+ '<li style="padding-left: 10px;">'
 						+ 'Reset the tracker\'s round counter to the given round, if none is supplied, it is set to round 1.'
 					+ '</li>'
 					+ '<br>'
 					+ '<div style="font-weight: bold;">'
-						+ '!tj -addstatus [name]:[duration]:[direction]:[message]'
+						+ '!itp -addstatus [name]:[duration]:[direction]:[message]'
 					+ '</div>'
 					+ '<li style="padding-left: 10px;">'
 						+ 'Add a status to the group of selected tokens, if it does not have the named status.'
@@ -2883,35 +2883,35 @@ var TrackerJacker = (function() {
 					+ '</li>'
 					+ '<br>'
 					+ '<div style="font-weight: bold;">'
-						+ '!tj -removestatus [name]'
+						+ '!itp -removestatus [name]'
 					+ '</div>'
 					+ '<li style="padding-left: 10px;">'
 						+ 'Remove a status from a group of selected tokens given the name.'
 					+ '</li>'
 					+ '<br>'
 					+ '<div style="font-weight: bold;">'
-						+ '!tj -edit'
+						+ '!itp -edit'
 					+ '</div>'
 					+ '<li style="padding-left: 10px;">'
 						+ 'Edit statuses on the selected tokens'
 					+ '</li>'
 					+ '<br>'
 					+ '<div style="font-weight: bold;">'
-						+ '!tj -addfav [name]:[duration]:[direction]:[message]'
+						+ '!itp -addfav [name]:[duration]:[direction]:[message]'
 					+ '</div>'
 					+ '<li style="padding-left: 10px;">'
 						+ 'Add a favorite status for quick application to selected tokens later.'
 					+ '</li>'
 					+ '<br>'
 					+ '<div style="font-weight: bold;">'
-						+ '!tj -listfavs'
+						+ '!itp -listfavs'
 					+ '</div>'
 					+ '<li style="padding-left: 10px;">'
 						+ 'Displays favorite statuses with options to apply or edit.'
 					+ '</li>'
 					+ '<br>'
 					+ '<div style="font-weight: bold;">'
-						+ '!tj -listfavs 1'
+						+ '!itp -listfavs 1'
 					+ '</div>'
 					+ '<li style="padding-left: 10px;">'
 						+ 'Displays favorite statuses (in alphabetical order) with options to apply or edit.'
@@ -2925,22 +2925,22 @@ var TrackerJacker = (function() {
 					+ '</li>'
 					+ '<br>'
 					+ '<div style="font-weight: bold;">'
-						+ '!tj -saveFavs'
+						+ '!itp -saveFavs'
 					+ '</div>'
 					+ '<li style="padding-left: 10px;">'
-						+ 'Save your current Favorites into in the GM notes section of a handout called "TJFavsJSON".  This can be copy/pasted into a handout with the same name in another lobby and then "!tj -loadFavs" can be run to load them there.'
+						+ 'Save your current Favorites into in the GM notes section of a handout called "ITPFavsJSON".  This can be copy/pasted into a handout with the same name in another lobby and then "!itp -loadFavs" can be run to load them there.'
 					+ '</li>'
 					+ '<br>'
 					+ '<div style="font-weight: bold;">'
-						+ '!tj -loadFavs'
+						+ '!itp -loadFavs'
 					+ '</div>'
 					+ '<li style="padding-left: 10px;">'
-						+ 'Load Favorites previously saved via "!tj -saveFavs".  Requires the handout "TJFavsJSON" to exist and have properly exported data in the GM notes section.'
+						+ 'Load Favorites previously saved via "!itp -saveFavs".  Requires the handout "ITPFavsJSON" to exist and have properly exported data in the GM notes section.'
 					+ '</li>'
 
 					+ '<br>'
 					+ '<div style="font-weight: bold;">'
-						+ '!tj -setIndicatorImage'
+						+ '!itp -setIndicatorImage'
 					+ '</div>'
 					+ '<li style="padding-left: 10px;">'
 						+ 'Replaces the current initiative indicator with a new image'
@@ -2955,7 +2955,7 @@ var TrackerJacker = (function() {
 					+ '</li>'
 					+ '<br>'
 					+ '<div style="font-weight: bold;">'
-						+ '!tj -defaultIndicatorImage'
+						+ '!itp -defaultIndicatorImage'
 					+ '</div>'
 					+ '<li style="padding-left: 10px;">'
 						+ 'Revert the initiative indicator to the original green one.'
@@ -3036,8 +3036,8 @@ var TrackerJacker = (function() {
 
 		if (msg.type === 'api'
 		&& playerIsGM(senderId)
-		&& args.indexOf('!tj') === 0) {
-			args = args.replace('!tj','').trim();
+		&& args.indexOf('!itp') === 0) {
+			args = args.replace('!itp','').trim();
 			if (args.indexOf('-start') === 0) {
 				doStartTracker();
 			} else if (args.indexOf('-stop') === 0) {
@@ -3114,11 +3114,11 @@ var TrackerJacker = (function() {
 		} else if (msg.type === 'api') {
 			if (args.indexOf('!eot') === 0) {
 				doPlayerAdvanceTurn(senderId);
-			} else if (args.indexOf('!tj -addstatus') === 0) {
-				args = args.replace('!tj -addstatus','').trim();
+			} else if (args.indexOf('!itp -addstatus') === 0) {
+				args = args.replace('!itp -addstatus','').trim();
 				doPlayerAddStatus(args,selected,senderId);
-			}  else if (args.indexOf('!tj -relay') === 0) {
-				args = args.replace('!tj -relay','').trim();
+			}  else if (args.indexOf('!itp -relay') === 0) {
+				args = args.replace('!itp -relay','').trim();
 				doRelay(args,senderId);
 			}
 		}
@@ -3144,7 +3144,7 @@ var TrackerJacker = (function() {
 	 * Handle Graphic movement events
 	 */
 	var handleChangeGraphicMovement = function(obj,prev) {
-		if (!flags.image || flags.tj_state === TJ_StateEnum.STOPPED)
+		if (!flags.image || flags.tj_state === ITP_StateEnum.STOPPED)
 			{return;}
 		var graphic = findTrackerGraphic(),
 			curToken = findCurrentTurnToken(),
@@ -3159,8 +3159,8 @@ var TrackerJacker = (function() {
 		graphic.set('top',curToken.get('top'));
 		graphic.set('width',maxsize*fields.trackerImgRatio);
 		graphic.set('height',maxsize*fields.trackerImgRatio);
-		if (flags.tj_state === TJ_StateEnum.ACTIVE)
-			{flags.tj_state = TJ_StateEnum.FROZEN;}
+		if (flags.tj_state === ITP_StateEnum.ACTIVE)
+			{flags.tj_state = ITP_StateEnum.FROZEN;}
 		setTimeout(function() {
 			if (graphic) {
 				if (curToken.get('layer') === 'gmlayer') {
@@ -3170,8 +3170,8 @@ var TrackerJacker = (function() {
 					graphic.set('layer','map');
 					toFront(graphic);
 				}
-				if (flags.tj_state === TJ_StateEnum.FROZEN)
-					{flags.tj_state = TJ_StateEnum.ACTIVE;}
+				if (flags.tj_state === ITP_StateEnum.FROZEN)
+					{flags.tj_state = ITP_StateEnum.ACTIVE;}
 			}
 		},500);
 	};
@@ -3215,8 +3215,8 @@ log(marker);
 	};
 	statusMarkers = getMarkersFromCampaign(tokenMarkers);
 
-	TrackerJacker.init();
-	TrackerJacker.registerAPI();
+	InitiativeTrackerPlus.init();
+	InitiativeTrackerPlus.registerAPI();
 });
 
 
