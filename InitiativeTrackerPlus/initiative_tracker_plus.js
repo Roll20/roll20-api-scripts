@@ -2,6 +2,7 @@
  * initiative_tracker_plus.js
  *
  * * Copyright 2015: Ken L.
+ * * Copyright 2020: James C.
  * Licensed under the GPL Version 3 license.
  * http://www.gnu.org/licenses/gpl.html
  *
@@ -52,7 +53,7 @@
  	By James A Culp III
  	aka Chuz@6906 on Discord
 
-	Git Repository: https://github.com/jaculpiii/Roll20_API_Scripts
+	Git Repository: https://github.com/jaculpiii/roll20-api-scripts
  	Changes detailed in README.md
 ************************************************************************************/
 
@@ -60,7 +61,7 @@ var statusMarkers = [];
 var InitiativeTrackerPlus = (function() {
 	'use strict';
 	var version = 1.24,
-		author = 'Ken L.',
+		author = 'James C. (Chuz)',
 		pending = null;
 
 	var ITP_StateEnum = Object.freeze({
