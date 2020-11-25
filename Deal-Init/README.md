@@ -35,7 +35,7 @@ The script only has a few options:
 --help : Displays the help.
 --reset : Reset the deck and shuffle. Use at the start of a new scene or encounter to start 
           the deck fresh
---reset : Reset the deck with 4 Jokers and shuffle. Use at the start of a new scene or 
+--4jreset : Reset the deck with 4 Jokers and shuffle. Use at the start of a new scene or 
           encounter to start the deck fresh
 --show : Shows the current contents of the deck, discard pile, and turn order (hand)
 --onlyto --string : Deal initiative only to token names that contain "string".  
