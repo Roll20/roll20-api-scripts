@@ -78,11 +78,7 @@ var InitiativeTrackerPlus = (function() {
 
 	var fields = {
 		feedbackName: 'InitiativeTrackerPlus',
-<<<<<<< HEAD
 //		feedbackImg: 'https://s3.amazonaws.com/files.d20.io/images/182010618/cD46In_LjS2Tu8eM_Hp71Q/thumb.png?1606747709',
-=======
-/		feedbackImg: 'https://s3.amazonaws.com/files.d20.io/images/182010618/cD46In_LjS2Tu8eM_Hp71Q/thumb.png?1606747709',
->>>>>>> LocalDev
 		feedbackImg: 'https://s3.amazonaws.com/files.d20.io/images/182013978/rBFyjNCx7ciwOe1mdn_WkA/thumb.png?1606749407',
 		trackerId: '',
 		trackerName: 'initiative_tracker_plus_tracker',
