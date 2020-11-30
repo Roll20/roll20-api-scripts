@@ -77,7 +77,8 @@ var InitiativeTrackerPlus = (function() {
 
 	var fields = {
 		feedbackName: 'InitiativeTrackerPlus',
-		feedbackImg: 'https://s3.amazonaws.com/files.d20.io/images/11514664/jfQMTRqrT75QfmaD98BQMQ/thumb.png?1439491849',
+//		feedbackImg: 'https://s3.amazonaws.com/files.d20.io/images/182010618/cD46In_LjS2Tu8eM_Hp71Q/thumb.png?1606747709',
+		feedbackImg: 'https://s3.amazonaws.com/files.d20.io/images/182013978/rBFyjNCx7ciwOe1mdn_WkA/thumb.png?1606749407',
 		trackerId: '',
 		trackerName: 'initiative_tracker_plus_tracker',
 		trackerImg: 'https://s3.amazonaws.com/files.d20.io/images/11920268/i0nMbVlxQLNMiO12gW9h3g/thumb.png?1440939062',
