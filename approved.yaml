@@ -927,3 +927,7 @@ dealinit:
 teleport:
   - "Teleport"
   - "Utility"
+
+initiativetracker:
+  - "InitiativeTrackerPlus"
+  - "Utility"
