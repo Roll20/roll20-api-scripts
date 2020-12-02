@@ -14,6 +14,8 @@ An attempt to modernize Tracker Jacker and add new functionality as it becomes d
 * 2020-11-23 - Submit current codebase to Roll20's Script repository in the hopes of becoming a one-click API script.
 * 2020-11-23 - Updated initiative round indicator to have Play, Stop and Pause buttons instead of ? and ??
 * 2020-11-23 - Changed references to Tracker Jacker to Initiative Tracker Plus.  I am doing this to differentiate the new and drastically changing codebase from Ken L.'s original codebase so users that are happy with OG Tracker Jacker can continue to use it without confusion.
+* 2020-12-02 - Added a command to clear all statuses from a token.  `!itp -dispmultistatusconfig removeall` while the token(s) are selected, or a button appears on the edit message as well.
+* 2020-12-02 - Some minor code cleanup to make it easier for me to work with.
 
 
 **Commands:**  
@@ -46,6 +48,9 @@ Add a status to the group of selected tokens, if it does not have the named stat
 ***`!itp -removestatus [name]`***
 Remove a status from a group of selected tokens given the name.
   
+***`!itp -dispmultistatusconfig removeall`***
+Remove all statuses from 1 or more selected tokens.
+
 ***`!itp -edit`***
 Edit statuses on the selected tokens
   

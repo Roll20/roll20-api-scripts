@@ -7,7 +7,6 @@ Things to add/fix
   
 **New Features:**  
 * Add "Next Up" on the Turn Notification
-* Add a command to clear all statuses from a token
 * Find a way to change some of the configuration settings from within roll20, maybe make them part of the state data so after the script is initially installed they could be loaded with a macro  
   * Make EOT button hideable
   * Allow the default initiative value (normally -100) configurable
