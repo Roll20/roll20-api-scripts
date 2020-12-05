@@ -18,7 +18,7 @@ on('ready', () => {
     const decodeUnicode = (str) => str.replace(/%u[0-9a-fA-F]{2,4}/g, (m) => String.fromCharCode(parseInt(m.slice(2), 16)));
 
 
-    const version = '0.0.6';
+    const version = '0.0.7';
     log('Supernotes v' + version + ' is ready!  To set the template of choice or to toggle the send to players option, Use the command !gmnote --config');
 
     on('chat:message', function(msg) {
@@ -242,9 +242,9 @@ on('ready', () => {
                                     .filter((o) => o.get('gmnotes').length > 0)
                                     .forEach(o => {
                                         if (regex) {
-                                            message = _.filter(decodeURIComponent(decodeUnicode(o.get('gmnotes'))).split(/(?:[\n\r]+|<br\/?>)/), (l) => regex.test(l)).join('\r');
+                                            message = _.filter(unescape(decodeUnicode(o.get('gmnotes'))).split(/(?:[\n\r]+|<br\/?>)/), (l) => regex.test(l)).join('\r');
                                         } else {
-                                            message = decodeURIComponent(decodeUnicode(o.get('gmnotes')));
+                                            message = unescape(decodeUnicode(o.get('gmnotes')));
                                         }
                                         whom = o.get('name');
 
