@@ -164,6 +164,7 @@ customfx:
 itsatraptheme5eshaped:
 - "ItsATrap_theme_5E_Shaped"
 - "System Toolbox"
+- "hidden"
 
 roleplayingismagic4edice:
 - "RoleplayingIsMagic_4E_Dice"
@@ -224,6 +225,7 @@ htmlbuilder:
 itsatraptheme5eogl:
 - "ItsATrap_theme_5E_OGL"
 - "System Toolbox"
+- "hidden"
 
 itsatrapthemepathfindersimple:
 - "ItsATrap_theme_PathfinderSimple"
@@ -416,6 +418,10 @@ bladescompanion:
 
 itsatrapthemestarfinder:
 - "ItsATrap_theme_Starfinder"
+- "System Toolbox"
+
+itsatrapthemeburnbryte:
+- "ItsATrap_theme_BurnBryte"
 - "System Toolbox"
 
 genesysroller:
@@ -758,6 +764,10 @@ libtokenmrkers:
   - "libTokenMarkers"
   - "Utility"
 
+md5sum:
+  - "MD5Sum"
+  - "Utility"
+
 abfroll:
   - "ABFRoll"
   - "System Toolbox"
@@ -782,6 +792,14 @@ wildshaperesizer:
   - "WildShapeResizer"
   - "Utility"
 
+wildshape:
+  - "WildShape"
+  - "Utility"
+
+wildhelpers:
+  - "WildHelpers"
+  - "Utility"
+
 savageworldsstatuschanger:
   - "SavageWorldsStatusChanger"
   - "System Toolbox"
@@ -804,6 +822,10 @@ heroroller:
 
 universalvttimport:
   - "UniversalVTTImporter"
+  - "Utility"
+
+udlwindows:
+  - "UDLWindows"
   - "Utility"
 
 supernotes:
@@ -851,5 +873,58 @@ gofish:
   - "Utility"
 
 weaponarcs:
-- "WeaponArcs"
-- "Tokens"
+  - "WeaponArcs"
+  - "Tokens"
+
+spawndefaulttoken:
+  - "Spawn Default Token"
+  - "Tokens"
+
+fotncompanion:
+  - "FotN Companion"
+  - "System Toolbox"
+
+hiddenrollmessages:
+  - "HiddenRollMessages"
+  - "Utility"
+
+dkrystal:
+  - "KrystalDice"
+  - "System Toolbox"
+
+paladinaura:
+  - "PaladinAura"
+  - "System Toolbox"
+
+dldarkness:
+  - "DL Darkness"
+  - "Utility"
+
+dsacritchecker:
+  - "DSA4_1-CritChecker"
+  - "System Toolbox"
+
+radar:
+  - "Radar"
+  - "Utility"
+
+chatturnmanager:
+  - "ChatTurnManager"
+  - "Utility"
+
+encounterhelper:
+  - "EncounterHelper"
+  - "Utility"
+
+rolltablehandouts:
+  - "Roll Handout Tables"
+  - "Utility"
+
+dealinit:
+  - "Deal-Init"
+  - "System Tooolbox"
+
+teleport:
+  - "Teleport"
+  - "Utility"
+
