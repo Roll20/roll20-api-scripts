@@ -41,3 +41,7 @@ When first installed, Supernotes is configured for the default roll template. It
 You will need to edit the code of the script if you wish to create a custom configuration, or contact keithcurtis on the Roll20 forum and request an addition. The pre-installed sheets are:
 
 Default Template, D&D 5th Edition by Roll20, 5e Shaped, Pathfinder by Roll20, Pathfinder Community, Pathfinder 2e by Roll20, Starfinder
+
+## Changelog
+
+0.0.7 Fixed bug where token notes would break on accented characters
