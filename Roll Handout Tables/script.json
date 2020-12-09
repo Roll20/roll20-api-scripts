@@ -9,7 +9,7 @@
     "useroptions": [
       "none yet"
     ],
-    "dependencies": "RecursiveTables for using the Roll Recursive link",
+    "dependencies": "Recursive Tables",
     "modifies": {
         "handout.notes": "read,write",
         "rollabletable": "read,write",

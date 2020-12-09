@@ -404,6 +404,10 @@ on('ready', () => {
       processAllHandouts();
   });
 
+  if('undefined' === typeof RecursiveTable){
+    setTimeout(()=>sendChat('Roll Handout Tables',`/w gm <div style="background:#ff9999;padding:.5em;border:3px solid darkred;border-radius:1em;line-height:1em;color:darkred;"><b>Roll Handout Tables</b> requires the script RecursiveTable, which can be installed from the 1-Click Script Library.</div>`),1000);
+  }
+
   on('change:handout',onChangeHandout);
 
 });
