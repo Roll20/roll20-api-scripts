@@ -1,5 +1,17 @@
 on('ready', () => {
   let activeHandoutID = [];
+  let linkToggle = true;
+    const ToggleLinks = (input) => {
+      log(input);
+      if (!(/on|off/.test(input))){return;}
+      if (input == 'off') {
+        linkToggle = false;
+        sendChat('Roll Handout Tables','/w gm Writing links to handouts has been turned OFF');
+      } else {
+        linkToggle = true;
+        sendChat('Roll Handout Tables','/w gm Writing links to handouts has been turned ON');
+      }
+    };
   const processSingleHandout = (handout) => {
     const leftBracket = '[[';
     const rightBracket = ']]';
@@ -22,7 +34,6 @@ on('ready', () => {
     const strip = /<[^>]*>/g;
     const re_range = /^(\d+?|\d+?[-–]\d+?)$/;
     const re_dash = /[-–]/;
-
     /*
       Function declarataions
     */
@@ -45,12 +56,36 @@ on('ready', () => {
       str = str.trim();
       str = str.replace(/\s/gmi, '_');
       str = str.replace(/[\:\(\)\,]/gmi,'');
+      str = str.replace(/\u{2013}/gu,'-');
+      str = str.replace(/[^\x00-\x7F]/gmi,'');
+      str = str.replace(/^_|_$/,'');
+      return str;
+    };
+    const FinalNameCleaner = (str) => {
+      str = str.replace(/^\d\._/,'');
+      str = str.replace(/_Complications|_and_Appointments/,'');
+      str = str.replace(/Sentient_Magic_Items/,'Sentient_Item');
+      str = str.replace(/Personal_Decisions*/,'Motivation');
+      str = str.replace(/Adventurer_Story/,'Story');
+      str = str.replace(/Downtime_Activities/, 'Downtime');
+      str = str.replace(/Treasure_Challenge/,'Treasure');
+      str = str.replace(/Hoard_Challenge/, 'Hoard');
+      str = str.replace(/Attitude_and_Race/,'Ship_Attitude');
+      str = str.replace(/Encounters*/, 'Enctr');
+      str = str.replace(/Dungeons*/gi,'Dungeon');
+      str = str.replace(/Levels*/, 'Lvl');
+      str = str.replace(/Clan's_Notable_Trait/,handoutName + '_Notable_Trait');
+      str = str.replace(/Purpose_of_Raid/i,handoutName + '_Raid_Purpose');
+      str = str.replace(/tables_/i,'');
+      str = str.replace(/Random/i,'Rndm');
+      str = str.replace(/^(\w+?)_(\1)/i,'$2');
       return str;
     };
     const TableNaming = (element) => {
       let hdrs = element.match(re_Header);
       let bool_handoutUsed = false;
       let randomID = Math.floor(Math.random() * 999);
+      if ((/Names/i).test(handoutName)){handoutName ='';}
       if (backupName == ''){backupName = randomID.toString()}
       if (hdrs) {
         let lastHdr = hdrs[hdrs.length-1].replace(strip,'');
@@ -80,6 +115,7 @@ on('ready', () => {
         newTableName = `${handoutName}_${newTableName}`;
       }
       newTableName = TxtCleaner(newTableName);
+      newTableName = FinalNameCleaner(newTableName);
       return newTableName;
     };
     const RangeChecker = (obj) => {
@@ -316,6 +352,7 @@ on('ready', () => {
       return tableItems;
     };
     const ParseSections = (element, index, array) => {
+      let r = 1;
       let backupName;
       let tableItems = [];
       let altTableItems = [];
@@ -332,20 +369,34 @@ on('ready', () => {
     */
     const rawHandoutName = handout.get('name');
     let tempName = rawHandoutName.replace(/\s/g,'_').replace(/[\:\(\)\,]/g,'');
-    if (tempName == 'Stocking_a_Dungeon'){
-      tempName = 'Dungeon';
-    } else {
-      tempName = tempName;
+    switch (true) {
+        case tempName == 'Stocking_a_Dungeon':
+            tempName = 'Dungeon';
+            break;
+        case /Customization/.test(tempName):
+            tempName = '';
+            break;
+        case tempName == 'Mapping_a_Wilderness':
+            tempName = 'Wilderness';
+            break;
+        case tempName == 'Random_Settlements':
+            tempName = 'Settlement'
+            break;
+        case tempName == 'Random_Ships':
+            tempName = 'Ship';
+            break;
+        default:
+        tempName = tempName;
     }
-    const handoutName = tempName;
+    let handoutName = tempName;
     let newTableName = '';
     let backupName = '';
     let tbls = [];
     let handoutTblNames = [];
     let tblNames = GetTableNames();
     handout.get('notes', (notes) => {
-      const HandleNotes = new Promise((resolve, reject) => {
-        const tempFunc = () => {
+      const CallHandler = new Promise((resolve, reject) => {
+        const HandleNotes = () => {
           notes = notes.replace(re_spaceReplace,'');
           let tempNotes = notes;
           if(notes.includes(`<table>`)) {
@@ -363,10 +414,10 @@ on('ready', () => {
             reject('error');
           }
         };
-        setTimeout(tempFunc, 0);
+        setTimeout(HandleNotes, 0);
       });
-      if(notes){
-        HandleNotes.then(
+      if(notes && linkToggle){
+        CallHandler.then(
           (txt) => {SetNotes(txt);},
           (err) => {}
         );
@@ -403,10 +454,18 @@ on('ready', () => {
       }
       processAllHandouts();
   });
+  on('chat:message',(msg)=>{
+      let command = /^!handoutlinks (on|off)$/i;
+      if (msg.type !== 'api' || !command.test(msg.content)) {
+        return;
+      }
+      log('accepted input');
+      ToggleLinks(msg.content.replace(command,'$1'));
+  });
 
-  if('undefined' === typeof RecursiveTable){
-    setTimeout(()=>sendChat('Roll Handout Tables',`/w gm <div style="background:#ff9999;padding:.5em;border:3px solid darkred;border-radius:1em;line-height:1em;color:darkred;"><b>Roll Handout Tables</b> requires the script RecursiveTable, which can be installed from the 1-Click Script Library.</div>`),1000);
-  }
+    if('undefined' === typeof RecursiveTable){
+        setTimeout(()=>sendChat('Roll Handout Tables',`/w gm <div style="background:#ff9999;padding:.5em;border:3px solid darkred;border-radius:1em;line-height:1em;color:darkred;"><b>Roll Handout Tables</b> requires the script RecursiveTable, which can be installed from the 1-Click Script Library.</div>`),1000);
+    }
 
   on('change:handout',onChangeHandout);
 
