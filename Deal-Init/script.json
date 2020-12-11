@@ -1,21 +1,12 @@
 {
 "name": "DealInit",
 "script":"Deal-Init.js",	
-"version": "1.3",
-"previousversions": [ 
-    "1.2"
-],
-"description": "Handles Savage Worlds card-based Inititive by dealing cards to Turn Order, automatically handling Jokers and Initiative Edges and sorting Turn Order by suit.",
+"version": "1.4",
+"previousversions": [ "1.3","1.2" ],
+"description": "Handles Savage Worlds card-based Inititive by dealing cards to Turn Order, automatically handling Jokers and Initiative Edges and sorting Turn Order by suit. To see options, type: !deal-init --help",
 "authors": "Pat Elwer",
 "roll20userid": "8948",
-"useroptions": [
-    {
-      "name": "Use Initiative Deck with 4 Jokers",
-      "type": "checkbox",
-      "description": "Select this option to add 2 extra Jokers to your Initiative Deck.",
-      "value": "use4Jokers"
-    }
-  ],
+"useroptions": [],
 "dependencies": [],
 "modifies": {
 	"character.": "read",
