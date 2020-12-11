@@ -9,12 +9,14 @@ On installation, a note (*Teleport API*) is created, and help text appears in ch
 ## Beginning Setup
 
 To set up a teleport pad token, drag a token to the objects layer and then click on the chat button to "Create Teleport Pad" on the main menu. 
+
 * You will be prompted with a naming box, name your teleport pad whatever you like. You can rename it later from the interface. This is for you to read, and is not used by the API to find portal pads, so don't worry about renaming it at any time. 
 * The token will be automatically moved to the GM layer and set up with its initializing properties.
 
 Once you do this, the chat menu will pop up a list of teleport pads it detects on the page the **GM** is on currently. You can now use the teleport button on the chat (the emoji button that looks like sparkles, and gives you a tooltip of "teleport token" on mouseover) for that teleport pad to teleport a selected token to this teleport pad. 
 
 To set up auto-teleporting (players able to interact with one teleport pad that automatically moves them to another teleport pad), you need to **link** the first teleport pad you created to a second teleport pad. 
+
 * Create a second teleport pad as you did the first one. 
 * Now, go to the gmlayer and select both teleport pads. 
 * On the teleport pad list, click the "link" button on either pad. Teleport is smart enough not to link a portal to itself, so it will add the **other** portal to the portal linking button you pressed, and it should list it this way (show the name of the linked portal in its "linked to" label).
