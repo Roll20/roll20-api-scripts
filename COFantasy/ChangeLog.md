@@ -1,6 +1,31 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 2.15
+### Capacités
+* Gestion des capacités d'auras.
+* Capacité "n'abandonne jamais", des guerriers maudits.
+* Réduire la distance de la Voie du tueur de géants.
+* Absorption d'énergie (spectre, vampire, sylvanien maudit)
+* Projeter (voie du Cogneur rang 3)
+* Second ennemi juré (voie du Traqueur rang 4)
+* Injonction Mortelle (Magie Maléfique rang 3)
+
+### Autres améliorations
+* Ajout du fer froid.
+* Reconnaissance des haches, et prise en compte des RD/hache.
+* Possibilité d'utiliser directement le nom d'un état lorsqu'on veut appliquer cet état seulement un certain nombre de tours (avec --effet d'une attaque ou avec !cof-effet-temp).
+* Il faut que le membre du groupe avec la capacité Sans peur soit sur la même page que l'allié pour lui faire bénéficier du bonus.
+* Une attaque avec le label -1 utilise l'arme en main, si il y en a une.
+* Prise en compte de l'immunité à l'asphyxie des démons.
+* Utilisation des consommables sur la fiche pour les PNJs aussi.
+* Si "Jet Secret" est configuré sur une fiche de PNJ, seul le total des jets d'attaques, de dommages, de caractéristiques et de sauvegardes sont affichés, sans les détails. Le MJ reçoit un whisper avec le détail du jet.
+
+### Corrections de bugs
+* Correction d'nu bug avec la forme d'arbre du druide.
+* Dur à cuir et enragés ne mourraient pas si tapé plus d'une fois dans le tour.
+
 ## 2.14
 ### Autres améliorations
+* Prise en compte de la chance pour les saves.
 * Prise en compte de la chance pour les esquives acrobatiques et les absorptions au bouclier
 * Utilisation de l'obglet des jets cachés des PNJs par le script
 * Réorganisation des menus de règles optionnelles
@@ -11,6 +36,7 @@
 * Implémentation d'une option pour les armures/bouclier "de protection" (COF p. 203)
 
 ### Corrections de bugs
+* Correction d'un bug sur le tour de force du barbare.
 * Correction d'un crash lors de l'utilisation d'un point de chance sur une riposte.
 * Correction d'un bug pour les conditions moins (comme moins FOR), quand l'attaquant est un PNJ et le défenseur un PJ.
 
