@@ -5,8 +5,8 @@
 const UniversalVTTImporter = (() => { // eslint-disable-line no-unused-vars
 
   const scriptName = 'UniversalVTTImporter';
-  const version = '0.1.4';
-  const lastUpdate = 1604861007;
+  const version = '0.1.3';
+  const lastUpdate = 1604711658;
   const schemaVersion = 0.1;
   const clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659';
 
@@ -351,9 +351,9 @@ const UniversalVTTImporter = (() => { // eslint-disable-line no-unused-vars
     const dataSizeY = sread(data,['resolution','map_size','y'])||1;
     const dataOriginX = sread(data,['resolution','map_origin','x'])||0;
     const dataOriginY = sread(data,['resolution','map_origin','y'])||0;
-    //const dppg = sread(data,['resolution','pixels_per_grid'])||70;
-    const scaleFactorX = (tokenWidth/dataSizeX);
-    const scaleFactorY = (tokenHeight/dataSizeY);
+    const dppg = sread(data,['resolution','pixels_per_grid'])||70;
+    const scaleFactorX = (tokenWidth/(dataSizeX*dppg))*70;
+    const scaleFactorY = (tokenHeight/(dataSizeY*dppg))*70;
     const newX = (x) => tokenOriginX + ((x-dataOriginX)*scaleFactorX);
     const newY = (y) => tokenOriginY + ((y-dataOriginY)*scaleFactorY);
     const newPt = (pt) => ({x:newX(pt.x),y:newY(pt.y)});
@@ -367,7 +367,6 @@ const UniversalVTTImporter = (() => { // eslint-disable-line no-unused-vars
     const DoorColor = state[scriptName].config.doorColor;
     const DoorWidth = state[scriptName].config.doorWidth;
     const LightColor = state[scriptName].config.lightColor;
-
 
     if(data.hasOwnProperty('line_of_sight')){
       let lines = sread(data,['line_of_sight'])||[];
