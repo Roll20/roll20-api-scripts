@@ -17,6 +17,8 @@ on('ready', () => {
     */
     const leftBracket = '[[';
     const rightBracket = ']]';
+    const re_Lower = /^(\d+?) or lower$/i;
+    const re_Higher = /^(\d+?) or higher$/i;
     const re_bold = /<(strong|b)>.+?<(\/\1)>/gsmi;
     const re_findRoll = /<roll.+?<\/roll/gmis;
     const re_dash = /[-–]/;
@@ -26,7 +28,7 @@ on('ready', () => {
     const re_spaceReplace = /&nbsp;/gs;
     const re_tableRow = /<(thead|tr)>.+?<\/(thead|tr)>/gmis;
     const re_tableCell = /<t(h|d)>.+?<\/t(h|d)>/gmis;
-    const re_taggingTables = /<table>(((?!<table>).)*(>\d*d\d+?)<.+?)<\/table>/gmis;
+    const re_taggingTables = /<table>(((?!<table>).)*(>\d*d\d+?(\/d\d+?|\s*\+\s*\w+?)*)<.+?)<\/table>/gmis;
     const strip = /<[^>]*>/g;
     /*
       Dice related Regex
@@ -58,6 +60,7 @@ on('ready', () => {
       return total + num;
     };
     const GetMultiWeight = (arr, rng) => {
+      let multiWeight;
       if (rng[0]){
         if (rng[1]){
           multiWeight = arr.slice(rng[0]-1,rng[1]-1);
@@ -91,32 +94,30 @@ on('ready', () => {
       let loudLink = `<br><a href="\`!rt [[ 1t[${name}] ]]">Roll Recursive</a></br>`;
       return whisperLink + loudLink;
     };
-    const PlaceTableLink = (txt) => {
-      let resetTxt = txt.replace(/<!>/gsmi,'');
+const PlaceTableLink = (txt) => {
       let cnt = txt.match(/<!>/gmi);
       if (cnt){cnt = cnt.length;}
-      if (txt.includes(handoutTblNames[i])){return resetTxt;}
       for (let i = 0, j = cnt; i < j; i++) {
+        if (txt.includes(handoutTblNames[i])){continue;}
         let name = handoutTblNames[i];
-        let links = BuildTableLink(name);
+        let links;
+        if (name != '<@>') {
+          links = BuildTableLink(name);
+        } else {
+          links = '';
+        }
         if (!txt.includes(name)) {
           txt = txt.replace(/<!>/, links);
-        } else {
-          return txt = resetTxt;
         }
       }
       return txt;
     };
     const SendError = (msg, from) => {
-      if (from === undefined){from = "RollHandoutTables"};
+      if (from === undefined){from = "RollHandoutTables";}
       // sendChat(from, msg, null, {
         // 	noarchive: true
         // });
-      }
-    const PullRollTables = (element) => {
-      htmlTable = element.match(re_findRoll)[0];
-      return htmlTable;
-    };
+      };
     const WriteRollableTable = () => {
       if(!tbls.length){
         return;
@@ -130,7 +131,7 @@ on('ready', () => {
         }
         let name = ele.Name;
         let newTable;
-        if (name) {
+        if (name && name != '<@>') {
           newTable = createObj('rollabletable', {
             name: name
           });
@@ -145,8 +146,6 @@ on('ready', () => {
           } else {
             log('error processing table - no ranges found for table in: ' + rawHandoutName);
           }
-        } else {
-          log(`error processing ${rawHandoutName}`)
         }
         l++;
       });
@@ -167,13 +166,12 @@ on('ready', () => {
       this.Items = tableItems;
     }
     const BuildTableItems = (element) => {
-      objTable = [];
+      let objTable = [];
       let rows = element.match(re_tableRow);
-      let objRows = [];
-      for (i = 0, j = rows.length; i < j; i++) {
+      for (let i = 0, j = rows.length; i < j; i++) {
         let row = [];
         let cells = rows[i].match(re_tableCell);
-        for (a = 0, b = cells.length; a < b; a++) {
+        for (let a = 0, b = cells.length; a < b; a++) {
           let cell = cells[a].replace(strip, '').trim();
           row.push(cell);
         }
@@ -182,36 +180,42 @@ on('ready', () => {
       return objTable;
     };
     const ConstructTableObject = (name, items) => {
-      let newTbl
       if (items == undefined){
-        return;
-      }
-      newTbl = new TableConstructor(name, items);
+        name = '<@>';
+        items = 'error';
+    }
+      let newTbl = new TableConstructor(name, items);
       tbls.push(newTbl);
       handoutTblNames.push(newTbl.Name);
       return tbls;
     };
     const FinalNameCleaner = (str) => {
-      str = str.replace(/^\d\._/,'');
-      str = str.replace(/_Complications|_and_Appointments/,'');
-      str = str.replace(/Sentient_Magic_Items/,'Sentient_Item');
-      str = str.replace(/Personal_Decisions*/,'Motivation');
-      str = str.replace(/Adventurer_Story/,'Story');
-      str = str.replace(/Downtime_Activities/, 'Downtime');
-      str = str.replace(/Treasure_Challenge/,'Treasure');
-      str = str.replace(/Hoard_Challenge/, 'Hoard');
-      str = str.replace(/Attitude_and_Race/,'Ship_Attitude');
-      str = str.replace(/Encounters*/, 'Enctr');
-      str = str.replace(/Dungeons*/gi,'Dungeon');
-      str = str.replace(/Levels*/, 'Lvl');
-      str = str.replace(/Clan's_Notable_Trait/,handoutName + '_Notable_Trait');
-      str = str.replace(/Purpose_of_Raid/i,handoutName + '_Raid_Purpose');
-      str = str.replace(/tables_/i,'');
-      str = str.replace(/Random/i,'Rndm');
-      str = str.replace(/^(\w+?)_(\1)/i,'$2');
+      str = str.replace(/^\d\._/,'')
+      .replace(/_Complications|_and_Appointments/,'')
+      .replace(/Sentient_Magic_Items/,'Sentient_Item')
+      .replace(/Personal_Decisions*/,'Motivation')
+      .replace(/Adventurer_Story/,'Story')
+      .replace(/Downtime_Activities/, 'Downtime')
+      .replace(/Treasure_Challenge/,'Treasure')
+      .replace(/Hoard_Challenge/, 'Hoard')
+      .replace(/Attitude_and_Race/,'Ship_Attitude')
+      .replace(/Encounters*/, 'Enctr')
+      .replace(/Dungeons*/gi,'Dungeon')
+      .replace(/Levels*/, 'Lvl')
+      .replace(/^(Purpose_)/,handoutName + '_$1')
+      .replace(/Purpose_of_Raid/i,handoutName + '_Raid_Purpose')
+      .replace(/Clan's_Notable_Trait/,handoutName + '_Notable_Trait')
+      .replace(/Random/i,'Rndm')
+      .replace(/_Tables/i,'')
+      .replace(/Major_Beneficial_Property_error/i,'Minor_Detrimental_Property')
+      .replace(/Minor_Beneficial_Properties_error/i,'Major_Beneficial_Property')
+      .replace(/Artifacts_death_slaad/i,'Major_Detrimental_Property')
+      .replace(/(Creator)_or_Intended_User/i,'$1')
+      .replace(/^(\w+?)_(\1)/i,'$2');
       return str;
     };
     const GetWeight = (data) => {
+      let itemWeight;
       if (re_range.test(data)) {
         let range = data.split(re_dash);
         if (range[1] !== undefined) {
@@ -224,16 +228,33 @@ on('ready', () => {
         }
         let args = [itemWeight, parseInt(range[0]), parseInt(range[1])];
         return args;
+      } else {
+        if (re_Lower.test(data)){
+          let upper = parseInt(data.match(/\d+?/)[0]);
+          itemWeight = (upper - 1);
+          let args = [itemWeight, 1, upper];
+        }
+        if(re_Higher.test(data)){
+          let lower = parseInt(data.match(/\d+?/)[0]);
+          itemWeight = (100 - lower);
+          let args = [itemWeight, lower, 100];
+        }
       }
     };
     const GetTables = (element) => {
-      htmlTable = element.match(re_findRoll)[0];
+      let htmlTable = element.match(re_findRoll)[0];
       return htmlTable;
     };
-    const HandleEachRow = (dieToRoll, obj) => {
-      for (let i = 1, j = obj.length; i < j; i++) {
+    const HandleOneDie = (dieToRoll, obj) => {
+      let tableItems = [];
+      for (let i = 0, j = obj.length; i < j; i++) {
         let objRow = obj[i];
         if (re_anyDice.test(objRow[0])) {
+          if (objRow[0] != '') {
+            backupName = SetBackupName(objRow);
+          } else {
+            backupName = SetBackupName(obj[i+1]);
+          }
           continue;
         }
         let itemWeight;
@@ -251,12 +272,6 @@ on('ready', () => {
         // Write item description from html row
         if (i > 0) {
           PushItem(objRow, tableItems, itemWeight);
-        } else {
-          if (objRow[0] != '') {
-            backupName = SetBackupName(objRow);
-          } else {
-            backupName = SetBackupName(obj[i+1]);
-          }
         }
       }
       tableItems = tableItems.filter(ele => {
@@ -267,9 +282,10 @@ on('ready', () => {
       return tableItems;
     };
     const HandleMultiDice = (dieToRoll, obj) => {
+      let tableItems = [];
       let index = diceIndexArr.indexOf(dieToRoll);
       let diceWeight = diceWeightArr[index];
-      for (let i = 1, j = obj.length; i < j; i++) {
+      for (let i = 0, j = obj.length; i < j; i++) {
         let objRow = obj[i];
         if (re_anyDice.test(objRow[0])) {
           continue;
@@ -282,7 +298,6 @@ on('ready', () => {
           // Double Dice Handling
         } else {
           itemWeight = 1;
-          log('error getting item weight for: ' + obj);
         }
         // Write item description from html row
         if (i > 0) {
@@ -303,13 +318,13 @@ on('ready', () => {
       return tableItems;
     };
     const HandleTwoDice = (dieToRoll, obj, max) => {
-      log('building second table for: ' + handoutName);
       let altName;
-      for (let x = 0; x < j; x++) {
-        altRng = GetWeight(obj[x][0]);
+      let altTableItems = [];
+      for (let x = 0, j = obj.length; x < j; x++) {
+        let altRng = GetWeight(obj[x][0]);
         if(altRng){
           if (altRng[2] <= max) {
-            PushItem(obj[x], altTableItems, altRng[0])
+            PushItem(obj[x], altTableItems, altRng[0]);
             if (backupName){
               altName = `${handoutName}_${backupName}_${dieToRoll[0]}`;
             } else {
@@ -321,25 +336,20 @@ on('ready', () => {
       ConstructTableObject(altName, altTableItems);
     };
     const ParseSections = (element, index, array) => {
-      let backupName;
       let tableItems = [];
-      let altTableItems = [];
-      GetTables(element); // returns a rollable html Table
-      BuildTableItems(htmlTable); // returns table as an obj
+      let htmlTable = GetTables(element); // returns a rollable html Table
+      let objTable = BuildTableItems(htmlTable); // returns table as an obj
       tableItems = ParseTable(objTable);
       TableNaming(element);
       let name = newTableName;
       ConstructTableObject(name, tableItems);
     };
     const ParseTable = (obj) => {
-      tableItems = [];
-      altTableItems = [];
-      let dieToRoll = [];
       // Check for mulitple ranges and rearrange items
       obj = RangeChecker(obj);
       for (let i = 0, j = 2; i < j; i++) {
-        tblItems = SwitchDiceCheck(obj, i);
-        if (tableItems!=false){return tblItems;} else{continue;}
+        let tblItems = SwitchDiceCheck(obj, i);
+        if (tblItems!=false){return tblItems;} else{continue;}
       }
       // For each row in html object
     };
@@ -350,23 +360,29 @@ on('ready', () => {
       itemDesc = itemDesc.replace(re_diceRoll, `${leftBracket}$1${rightBracket}`);
       itemDesc = itemDesc.replace(re_multipy, `$1*$2`);
       arr.push([weight,itemDesc]);
-    }
+    };
     const RangeChecker = (obj) => {
       /*
-      Fails if there are multiple ranges and all columns contain numbers
-      No reports yet of a table that meets that criteria
+        Fails if there are multiple ranges and all columns contain numbers
+        No reports yet of a table that meets that criteria
       */
       let columnPoints = [];
       let newObj = obj;
       for (let x = 0, y = obj[1].length; x < y; x++) {
         if (re_range.test(obj[1][x]) && !re_range.test(obj[1][x-1])) {
           columnPoints.push(x);
+        } else {
+          if (obj[10]){
+            if (re_range.test(obj[10][x]) && !re_range.test(obj[10][x-1])) {
+              columnPoints.push(x);
+            }
+          }
         }
       }
       if (columnPoints.length > 1) {
         newObj = [];
         for (let i = 0, j = obj.length; i < j; i++) {
-          for (a = 0, b = columnPoints.length; a < b; a++) {
+          for (let a = 0, b = columnPoints.length; a < b; a++) {
             let replace = obj[i].slice(columnPoints[a], columnPoints[a+1]);
             newObj.push(replace);
           }
@@ -386,30 +402,31 @@ on('ready', () => {
     };
     const SwitchDiceCheck = (obj, i) => {
       let ele = obj[i][0];
+      let tblDie;
       switch (true) {
         case re_DR_MultDice.test(ele):
         return HandleMultiDice(ele, obj);
         case re_DR_TwoDice.test(ele):
+        log('two dice found');
         tblDie = ele.match(re_DR_TwoDice)[0].split('/');
         tblDie = tblDie[0];
-        tblDieB = tblDie[1];
-        return HandleEachRow([tblDie, tblDieB], obj);
+        let tblDieB = tblDie[1];
+        return HandleOneDie([tblDie, tblDieB], obj);
         case re_DR_Add.test(ele):
         tblDie = ele.match(re_DR_Add).split('+');
-        return HandleEachRow([tblDie], obj);
+        return HandleOneDie([tblDie], obj);
         case re_DR_OneDice.test(ele):
         tblDie = ele.match(re_DR_OneDice)[0];
-        return HandleEachRow([tblDie], obj);
+        return HandleOneDie([tblDie], obj);
         default:
         return false;
       }
     };
-    const TableNaming = (element) => {
+    const TableNaming = (element, lastResort) => {
       let hdrs = element.match(re_Header);
       let bool_handoutUsed = false;
-      let randomID = Math.floor(Math.random() * 999);
       if ((/Names/i).test(handoutName)){handoutName ='';}
-      if (backupName == ''){backupName = randomID.toString()}
+      if (backupName == ''){backupName = 'error';}
       if (hdrs) {
         let lastHdr = hdrs[hdrs.length-1].replace(strip,'');
         if (lastHdr) {
@@ -425,13 +442,13 @@ on('ready', () => {
           newTableName = altHdr;
         }
       }
-      if (!newTableName.length || handoutTblNames.includes(newTableName)) {
-        backupName = TxtCleaner(backupName);
-        newTableName = `${handoutName}_${backupName}`;
+      if (handoutTblNames.includes(newTableName)) {
+        newTableName = `${newTableName}_error`;
         bool_handoutUsed = true;
       }
-      if (handoutTblNames.includes(newTableName)) {
-        newTableName = `${handoutName}_${randomID}`;
+      if (!newTableName.length || handoutTblNames.includes(newTableName) || newTableName.split('_').length > 4) {
+        backupName = TxtCleaner(backupName);
+        newTableName = `${handoutName}_${backupName}`;
         bool_handoutUsed = true;
       }
       if (newTableName.split('_').length < 3 && !bool_handoutUsed) {
@@ -455,7 +472,9 @@ on('ready', () => {
       Variable declaration
     */
     const rawHandoutName = handout.get('name');
-    let tempName = rawHandoutName.replace(/\s/g,'_').replace(/[\:\(\)\,]/g,'');
+    let tempName = rawHandoutName.replace(/\s/g,'_')
+      .replace(/[\:\(\)\,]/g,'')
+      .replace(/_Tables/i,'');
     switch (true) {
         case tempName == 'Stocking_a_Dungeon':
             tempName = 'Dungeon';
@@ -467,7 +486,7 @@ on('ready', () => {
             tempName = 'Wilderness';
             break;
         case tempName == 'Random_Settlements':
-            tempName = 'Settlement'
+            tempName = 'Settlement';
             break;
         case tempName == 'Random_Ships':
             tempName = 'Ship';
@@ -487,7 +506,6 @@ on('ready', () => {
           notes = notes.replace(re_spaceReplace,'');
           let tempNotes = notes;
           if(notes.includes(`<table>`)) {
-            let rollableTbls = tempNotes.match(re_taggingTables);
             tempNotes = tempNotes.replace(re_taggingTables, '<!><roll>$1</roll>');
             let sections = tempNotes.match(re_sectByRollable);
             if(sections) {
