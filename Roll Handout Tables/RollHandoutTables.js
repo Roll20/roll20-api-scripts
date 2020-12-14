@@ -1,16 +1,16 @@
 on('ready', () => {
   let activeHandoutID = [];
   let linkToggle = true;
-    const ToggleLinks = (input) => {
-      if (!(/on|off/.test(input))){return;}
-      if (input == 'off') {
-        linkToggle = false;
-        sendChat('Roll Handout Tables','/w gm Writing links to handouts has been turned OFF');
-      } else {
-        linkToggle = true;
-        sendChat('Roll Handout Tables','/w gm Writing links to handouts has been turned ON');
-      }
-    };
+  const ToggleLinks = (input) => {
+    if (!(/on|off/.test(input))){return;}
+    if (input == 'off') {
+      linkToggle = false;
+      sendChat('Roll Handout Tables','/w gm Writing links to handouts has been turned OFF');
+    } else {
+      linkToggle = true;
+      sendChat('Roll Handout Tables','/w gm Writing links to handouts has been turned ON');
+    }
+  };
   const processSingleHandout = (handout) => {
     /*
       Format/HTML Regex
@@ -94,24 +94,24 @@ on('ready', () => {
       let loudLink = `<br><a href="\`!rt [[ 1t[${name}] ]]">Roll Recursive</a></br>`;
       return whisperLink + loudLink;
     };
-const PlaceTableLink = (txt) => {
-      let cnt = txt.match(/<!>/gmi);
-      if (cnt){cnt = cnt.length;}
-      for (let i = 0, j = cnt; i < j; i++) {
-        if (txt.includes(handoutTblNames[i])){continue;}
-        let name = handoutTblNames[i];
-        let links;
-        if (name != '<@>') {
-          links = BuildTableLink(name);
-        } else {
-          links = '';
-        }
-        if (!txt.includes(name)) {
-          txt = txt.replace(/<!>/, links);
-        }
-      }
-      return txt;
-    };
+    const PlaceTableLink = (txt) => {
+          let cnt = txt.match(/<!>/gmi);
+          if (cnt){cnt = cnt.length;}
+          for (let i = 0, j = cnt; i < j; i++) {
+            if (txt.includes(handoutTblNames[i])){continue;}
+            let name = handoutTblNames[i];
+            let links;
+            if (name != '<@>') {
+              links = BuildTableLink(name);
+            } else {
+              links = '';
+            }
+            if (!txt.includes(name)) {
+              txt = txt.replace(/<!>/, links);
+            }
+          }
+          return txt;
+        };
     const SendError = (msg, from) => {
       if (from === undefined){from = "RollHandoutTables";}
       // sendChat(from, msg, null, {
@@ -426,28 +426,37 @@ const PlaceTableLink = (txt) => {
       let hdrs = element.match(re_Header);
       let bool_handoutUsed = false;
       if ((/Names/i).test(handoutName)){handoutName ='';}
-      if (backupName == ''){backupName = 'error';}
-      if (hdrs) {
-        let lastHdr = hdrs[hdrs.length-1].replace(strip,'');
-        if (lastHdr) {
-          if(!handoutTblNames.includes(lastHdr)){
-            lastHdr = TxtCleaner(lastHdr);
-            newTableName = lastHdr;
+      backupName = TxtCleaner(backupName);
+      console.log(backupName);
+      if (backupName == ''){
+        console.log('uhh')
+        backupName = 'error';
+        if (hdrs) {
+          console.log('hders')
+          let lastHdr = hdrs[hdrs.length-1].replace(strip,'');
+          if (lastHdr) {
+            if(!handoutTblNames.includes(lastHdr)){
+              lastHdr = TxtCleaner(lastHdr);
+              newTableName = lastHdr;
+            }
+          }
+        } else {
+          console.log('no hdrs')
+          let bold = element.match(re_bold);
+          if (bold) {
+            let altHdr = TxtCleaner(bold[0].replace(strip,''));
+            newTableName = altHdr;
           }
         }
       } else {
-        let bold = element.match(re_bold);
-        if (bold) {
-          let altHdr = TxtCleaner(bold[0].replace(strip,''));
-          newTableName = altHdr;
-        }
+        newTableName = `${handoutName}_${backupName}`;
       }
       if (handoutTblNames.includes(newTableName)) {
+        console.log(newTableName);
         newTableName = `${newTableName}_error`;
         bool_handoutUsed = true;
       }
       if (!newTableName.length || handoutTblNames.includes(newTableName) || newTableName.split('_').length > 4) {
-        backupName = TxtCleaner(backupName);
         newTableName = `${handoutName}_${backupName}`;
         bool_handoutUsed = true;
       }
