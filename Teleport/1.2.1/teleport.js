@@ -13,7 +13,7 @@
         */
         var version = "1.2.1",
             author = "616652/Patrick K.",
-            lastModified = 1607696673;
+            lastModified = 1605432403;
         // State variables are carried over between sessions, 
         // so a user does not have to re-set configuration items every time a game starts
         state.teleport = state.teleport || {};
@@ -686,11 +686,9 @@
             }
             Campaign().set('playerspecificpages',props);
             setTimeout(()=>{
-                players.forEach(p=>{
-                    if(getObj("player",p).get("_online")){
-                        delete props[p]
-                    }
-                });
+                //players.forEach(p=>{
+                //        delete props[p]
+                //});
                 Campaign().set('playerspecificpages',false);
                 Campaign().set('playerspecificpages',props);
             },100);
@@ -784,6 +782,45 @@
                 }
             return player;
         },
+        cleanUpLinkCheck = function(obj){
+            if(obj.get("bar1_value") === "teleportpad"){
+                // first we get the global teleport pad list
+                // then we roll through each one to check for this token's id
+                let output = "";
+                output+= "<p>The teleport pad called " + obj.get("name") + " has been deleted.</p><p>Do you want to remove all references to it from all teleport pads?</p>";
+                output+= "<p>" + standardButtonBuilder( "Remove Pad References ","purgetokenid|" + obj.get("_id"),"error") + "</p>";
+                outputToChat(output);
+            }
+        },
+        purgeTokenId = function(deletedpadid){
+            log(deletedpadid);
+            let outputtext = "";
+            let completeList = globalTeleportPadList();
+            let removedcount = 0;
+            _.each(completeList, function(pageTokenArray,key){
+                if(Array.isArray(pageTokenArray) && pageTokenArray.length > 0){
+                    _.each(pageTokenArray, function(token){
+                        if(token.get("bar1_max") !== ""){
+                            let targetlist = token.get("bar1_max");
+                            if(Array.isArray(targetlist)){
+                                if(_.indexOf(targetlist,deletedpadid) !== -1){
+                                    token.set("bar1_max",_.without(targetlist,deletedpadid));
+                                    removedcount++;
+                                }
+                            }else{
+                                if(targetlist === deletedpadid){
+                                    token.set("bar1_max","");
+                                    removedcount++;
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+            outputtext += "<p>" + removedcount + " token references removed.</p>"
+            outputtext += "<p>" + standardButtonBuilder("Main Menu","menu","help") + "</p>";
+            outputToChat(outputtext);
+        },
         addPortalPadLink = function(pad, linktargetids, type){
             let completelinklist=[];
             if(type==="add"){
@@ -859,8 +896,9 @@
                 if(msg.content.indexOf("--globaltknlist") !== -1){
                     limboDisplay();
                 }
-                
-                
+                if(msg.content.indexOf("--purgetokenid") !== -1){
+                    purgeTokenId(msg.content.split("|")[1]);
+                }
                 if(msg.content.indexOf("--teleporttoken") !== -1){ 
                     if(typeof msg.selected !== "undefined"){
                         let pad = getObj("graphic",msg.content.split("|")[1]);
@@ -1027,7 +1065,7 @@
                     setStateParam("SHOWSFX",Teleport.configparams.SHOWSFX);
                     configDisplay();
                 }
-                if(msg.content.indexOf("--purge") !== -1){
+                if(msg.content.indexOf("--purge") !== -1 && msg.content.indexOf("--purgetokenid") === -1){
                     Campaign().set("playerspecificpages",{});
                     outputToChat("PlayerSpecificPages Data Purged");
                 }
@@ -1062,6 +1100,7 @@
         RegisterEventHandlers = function() {
             on("chat:message", msgHandler);
             on("change:graphic", autoTeleportCheck);
+            on("destroy:graphic", cleanUpLinkCheck);
             DEFAULTPLAYER = (function(){
                                 let player;
                                 let playerlist = findObjs({                              
