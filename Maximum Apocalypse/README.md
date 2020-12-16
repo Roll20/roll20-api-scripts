@@ -1,5 +1,7 @@
 **APIs to support Maximimum Apocalypse**
 
+Also see the Maximimum Apocalypse character sheet.
+
 **Commands:**  
   
 ***`!init`***
