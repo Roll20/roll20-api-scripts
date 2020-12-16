@@ -4,10 +4,10 @@
   
 ***`!init`***
 - Show the initiative tracker window & populate it with initiative values for all character tokens on current page.
-- An "<end of phase>" entry with zero initiative will also be added.
+- An "&lt;end of phase&gt;" entry with zero initiative will also be added.
 - "New Combat Round" will be chatted along with the fact its the first combat phase.
 - Use the "Advancing Turn" button as usual.
-- Once the "<end of phase>" turn reaches the top the "next phase" (!np) command will automatically be called.
+- Once the "&lt;end of phase&gt;" turn reaches the top the "next phase" (!np) command will automatically be called.
   
 ***`!np`***
 - Move to next action phase by subtracting 5 from all initiative values in tracker.
@@ -18,8 +18,8 @@
 - Show enemy attraction gauge.
 - Currently it appears at a fix location so may need to be moved.
 
-***`!uea <number>`***
-- Add <number> to enemy attraction gauge.
+***`!uea &lt;number&gt;`***
+- Add &lt;number> to enemy attraction gauge.
 - Can be positive or negative.
 
 ***`!rea`***
