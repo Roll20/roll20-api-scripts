@@ -18,7 +18,7 @@
 - Show enemy attraction gauge.
 - Currently it appears at a fix location so may need to be moved.
 
-***`!uea &lt;number&gt;`***
+***`!uea <number>`***
 - Add &lt;number> to enemy attraction gauge.
 - Can be positive or negative.
 
