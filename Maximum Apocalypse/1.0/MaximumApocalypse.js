@@ -1,8 +1,10 @@
 var MaxApoc = (function() {
 	'use strict';
 	
-	var init = function() {
-          
+	var END_OF_PHASE = '<end of phase>';
+	
+	var init = function() 
+	{
         // show turn order
         Campaign().set('initiativepage', Campaign().get('playerpageid'));
         
@@ -19,7 +21,6 @@ var MaxApoc = (function() {
           _subtype: "token"
         });
         _.each(currentPageGraphics, function(obj) {    
-            //log('Found graphic:'+JSON.stringify(obj));  
             
             let characterId = obj.get('represents');
             if(characterId)
@@ -33,9 +34,14 @@ var MaxApoc = (function() {
                 });
             }
         });
+                
+        // add marker so end of phase can be detected
+        addEndOfPhaseTurn(turnorder);
+        
+        // sort in descending order
+        turnorder.sort((a, b) => parseInt(b.pr) - parseInt(a.pr));
         
         // update turn order
-        //log('turnorder:'+JSON.stringify(turnorder))
         Campaign().set('turnorder', JSON.stringify(turnorder));
         
         // update players
@@ -48,10 +54,70 @@ var MaxApoc = (function() {
         '<span>Combat Phase: '+state.MaxApoc.initPhase+'</span>');
 	};
 	
+	var addEndOfPhaseTurn = function(tracker)
+	{
+        tracker.push({
+            id: '-1',
+            pr: '0',
+            custom: END_OF_PHASE
+        });
+	}
+
+	var handleTrackerEvent = function(tracker) 
+	{
+	    if(tracker[0].custom === END_OF_PHASE)
+	    {
+	        nextActionPhase();
+	    }
+	};
+	
+	var nextActionPhase = function() 
+	{    
+        if(state.MaxApoc.initPhase < 4)
+        {
+            var oldTurnorder;
+            if(Campaign().get("turnorder") == "") oldTurnorder = [];
+            else oldTurnorder = JSON.parse(Campaign().get("turnorder"));
+            var newTurnOrder = [];
+            
+            _.each(oldTurnorder, function(turn) 
+            {
+                // don't re-add the end of phase marker
+                if(turn.custom != END_OF_PHASE)
+                {
+                    turn.pr = turn.pr-5;
+                    newTurnOrder.push(turn);
+                }
+            });
+            
+            // add marker so end of phase can be detected
+            addEndOfPhaseTurn(newTurnOrder);
+            
+            // update turn order
+            Campaign().set('turnorder', JSON.stringify(newTurnOrder));
+            
+            // increment phase
+            state.MaxApoc.initPhase++;
+            
+            // notify players
+            sendChat(
+            'Initiative',
+            '<span>Combat Phase: '+state.MaxApoc.initPhase+'</span>');
+        }
+        else
+        { 
+            // increment Enemy Attraction
+            updateEnemyAttraction(5, true);
+            
+            // start new combat round
+            init();
+        }
+	};
+	
 	var enemyTokenName = "Enemy Attraction";
 	
-	var getEnemyToken = function() {
-	    
+	var getEnemyToken = function() 
+	{
 	    var enemyToken;
 	    
         let currentEnemyTokens = findObjs({                              
@@ -88,11 +154,13 @@ var MaxApoc = (function() {
         return enemyToken;
 	};
 
-	var showEnemyAttractionToken = function() {
+	var showEnemyAttractionToken = function() 
+	{
 	    getEnemyToken();
 	};
 
-	var updateEnemyAttraction = function(attractionValue, isIncrement) {
+	var updateEnemyAttraction = function(attractionValue, isIncrement) 
+	{
 	    var et = getEnemyToken();
 	    var currentAttraction = parseInt(et.get('bar1_value')) || 0;
 	    var newAttraction = isIncrement ? currentAttraction+attractionValue : attractionValue;
@@ -101,12 +169,20 @@ var MaxApoc = (function() {
 
 	return {
 		init: init,
+		handleTrackerEvent: handleTrackerEvent,
+		nextActionPhase: nextActionPhase,
 		showEnemyAttraction: showEnemyAttractionToken,
 		updateEnemyAttraction: updateEnemyAttraction
 	};
 }());
 
+/*
+ * HANDLE API CALLS
+ */
 on("chat:message", function(msg) {
+
+  log(JSON.stringify(msg.rolltemplate));
+  log(JSON.stringify(msg.content));
     
   // SHOW ENEMY ATTRACTION TOKEN
   if(msg.type == "api" && msg.content.indexOf("!sea") !== -1) {
@@ -133,40 +209,25 @@ on("chat:message", function(msg) {
     
   // NEXT PHASE OF INIATIVE
   if(msg.type == "api" && msg.content.indexOf("!np") !== -1) {
-    
-    if(state.MaxApoc.initPhase < 4)
-    {
-        var turnorder;
-        if(Campaign().get("turnorder") == "") turnorder = []; //NOTE: We check to make sure that the turnorder isn't just an empty string first. If it is treat it like an empty array.
-        else turnorder = JSON.parse(Campaign().get("turnorder"));
-        
-        _.each(turnorder, function(turn) {
-            turn.pr = turn.pr-5;
-        });
-        
-        // update turn order
-        log('turnorder:'+JSON.stringify(turnorder))
-        Campaign().set('turnorder', JSON.stringify(turnorder));
-        
-        // increment phase
-        state.MaxApoc.initPhase++;
-        
-        // notify players
-        sendChat(
-        'Initiative',
-        '<span>Combat Phase: '+state.MaxApoc.initPhase+'</span>');
-    }
-    else
-    {         
-        // increment Enemy Attraction
-        updateEnemyAttraction(5, true);
-
-	// Start new combat round
-        MaxApoc.init();
-    }
+      MaxApoc.nextActionPhase();
   }
+  
 });
 
+/*
+ * HANDLE INITIATIVE TRACKER CHANGES
+ */
+on('change:campaign:turnorder',function(obj) {
+    "use strict";
+
+    MaxApoc.handleTrackerEvent(JSON.parse(obj.get('turnorder')));
+    
+});
+
+
+/*
+ * SET-UP STATE
+ */
 on('ready',function() {
     "use strict";
 
