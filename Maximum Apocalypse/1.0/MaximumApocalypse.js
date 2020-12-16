@@ -45,13 +45,7 @@ var MaxApoc = (function() {
         Campaign().set('turnorder', JSON.stringify(turnorder));
         
         // update players
-        sendChat(
-        'Initiative',
-        '<span>New Combat Round</span>');
-        
-        sendChat(
-        'Initiative',
-        '<span>Combat Phase: '+state.MaxApoc.initPhase+'</span>');
+        sendChat('GM', styleMessage('Initiative', ['New Combat Round', 'Combat Phase: '+state.MaxApoc.initPhase+' (of 4)']));
 	};
 	
 	var addEndOfPhaseTurn = function(tracker)
@@ -100,9 +94,7 @@ var MaxApoc = (function() {
             state.MaxApoc.initPhase++;
             
             // notify players
-            sendChat(
-            'Initiative',
-            '<span>Combat Phase: '+state.MaxApoc.initPhase+'</span>');
+            sendChat('GM', styleMessage('Initiative', 'Combat Phase: '+state.MaxApoc.initPhase+' (of 4)'));
         }
         else
         { 
@@ -165,6 +157,49 @@ var MaxApoc = (function() {
 	    var currentAttraction = parseInt(et.get('bar1_value')) || 0;
 	    var newAttraction = isIncrement ? currentAttraction+attractionValue : attractionValue;
 	    et.set('bar1_value', newAttraction);
+	};
+	
+	var styleMessage = function(title, body)
+	{
+	    if (!Array.isArray(body)) body = [body];
+	    
+	    const s = (o) => _.map(o, (v, k) => `${k}:${v};`).join('');
+            const styles = {
+          	  outer: {
+                	'border': '8px double black',
+                	'margin-left': '-7px'
+	            },
+        	    title: {
+                	'font-size': '18px',
+	                'font-family': 'Blinker',
+        	        'font-weight': 'bold',
+                	'color': '#FFFFFF',
+	                'background-color': '#a90d04',
+        	        'padding': '5px'
+            	},
+	            bodyOdd: {
+        	        'font-size': '14px',
+                	'font-weight': 'bold',
+	                'background-color': '#FFFFFF',
+        	        'padding': '5px'
+	            },
+        	    bodyEven: {
+                	'font-size': '14px',
+	                'font-weight': 'bold',
+        	        'background-color': '#EEEEEE',
+	                'padding': '5px'
+        	    },
+	        };  
+        
+        	var styledMsg = `<div style="${s(styles.outer)}"><div style="${s(styles.title)}">${title}</div>`;
+	        for (let i = 0; i < body.length; i++) 
+        	{
+	            let style = i%2===0 ? s(styles.bodyOdd) : s(styles.bodyEven);
+        	    styledMsg += `<div style="${style}">${body[i]}</div>`;
+	        }
+	        styledMsg += `</div>`;
+        
+        	return styledMsg;
 	};
 
 	return {
