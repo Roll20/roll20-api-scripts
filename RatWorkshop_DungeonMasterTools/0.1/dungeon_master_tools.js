@@ -275,6 +275,7 @@ class DungeonMasterTools extends RatWorkshop_Module {
   COMMANDS = {
     // SET STATE COMMANDS
     'dm-award-xp': (options, msg) => this.awardXp(options, msg),
+    'dm-award-selected-xp': (options, msg) => this.awardSelectedXp(options, msg),
     'dm-action': (options, msg) => this.handleAction(options, msg),
     'dm-config': (options, msg) => this.setConfigOption(options, msg),
     'dm-token-tracking': (options, msg) => this.setTokenTracking(options, msg),
@@ -596,40 +597,65 @@ class DungeonMasterTools extends RatWorkshop_Module {
   }
 
   /**
+   * Looks up the Character for the Token and awards it XP
+   * @param token
+   * @param amount
+   * @return {boolean} - whether the xp was awarded or not
+   */
+  awardCharacterXP(token, amount) {
+    if (token) {
+      const characterId = token.get('represents');
+      const character = getObj("character", characterId);
+      // Only attempt to assign xp to a Character
+      if (character) {
+        const traits = filterObjs((obj) => {
+          if (obj.get('type') !== 'attribute') return false;
+          if (obj.get('characterid') !== characterId) return false;
+          if (obj.get('name') === 'experience') return true;
+        });
+        if (traits.length) {
+          const xp = traits[0];
+          const currentXp = parseInt(xp.get('current'), 10);
+          xp.set({ current: `${currentXp + amount}` });
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Awards XP To players' characters that are currently in the turn order
    * @param options
    * @param msg
    */
   awardXp(options, msg) {
-    const amount = parseInt(options[0], 10);
-    const message = options.slice(1).join(' ').replace('###XP###', amount);
-
     // Get Each Player
     const turnOrder = JSON.parse(Campaign().get('turnorder') || '[]');
+    const amount = parseInt(options[0], 10);
+    const message = options.slice(1).join(' ').replace('###XP###', amount);
+    let awarded = false;
+    _.each(turnOrder, turn => {
+      awarded |= this.awardCharacterXP(getObj('graphic', turn.id), amount)
+    });
+    if (awarded) {
+      this.sendActionMessage('Dungeon Master', message);
+    }
+  }
 
-    // Can only assign XP to Characters in the Turn Order
-    if (turnOrder.length) {
-      _.each(turnOrder, turn => {
-        const token = getObj('graphic', turn.id);
-        // Check that Turn Order Item represents a Token on the Map
-        if (token) {
-          const characterId = token.get('represents');
-          const character = getObj("character", characterId);
-          // Only attempt to assign xp to a Character
-          if (character) {
-            const traits = filterObjs((obj) => {
-              if (obj.get('type') !== 'attribute') return false;
-              if (obj.get('characterid') !== characterId) return false;
-              if (obj.get('name') === 'experience') return true;
-            });
-            if (traits.length) {
-              const xp = traits[0];
-              const currentXp = parseInt(xp.get('current'), 10);
-              xp.set({ current: `${currentXp + amount}` });
-            }
-          }
-        }
-      });
+  /**
+   * Awards XP To the selected players
+   * @param options
+   * @param msg
+   */
+  awardSelectedXp(options, msg) {
+    const amount = parseInt(options[0], 10);
+    const message = options.slice(1).join(' ').replace('###XP###', amount);
+    let awarded = false;
+    _.each(msg.selected, sel => {
+      awarded |= this.awardCharacterXP(getObj('graphic', sel._id), amount)
+    });
+    if (awarded) {
       this.sendActionMessage('Dungeon Master', message);
     }
   }

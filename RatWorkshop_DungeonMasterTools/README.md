@@ -32,4 +32,6 @@ Here's an example that would dispatch the **rage** action to the barbarian modul
 Here's an example use in a macro that prompts for xp amount:
 _!dm-award-xp ?{How much?|100} Your heroics have earned you ###XP### experience points!_
 
+**!dm-award-selected-xp** <amount> <message> - This will give each character selected on the map the amount of xp specified and display the message in chat.  Use *###XP###* as a place holder for the xp awarded.
+
 ## Interested in Expanding?
