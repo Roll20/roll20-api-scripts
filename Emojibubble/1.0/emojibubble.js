@@ -7,13 +7,27 @@ var emojibubble = emojibubble||(function(){
     const bubbleoffsetx=35, bubbleoffsety=-25, textoffsetx=bubbleoffsetx, textoffsety = bubbleoffsety - 4;
     
     var DEFAULTPLAYER;
-    
+    var calculatetokenoffset = function(token){
+        // figure width, height
+        let width = token.get("width"), height=token.get("height");
+        let pathX = (width/2);
+        let pathY = ((height/2) -10)*-1;
+        let textX = pathX;
+        let textY = pathY - 4;
+        return {
+            bubbleoffsetx:pathX,
+            bubbleoffsety:pathY,
+            textoffsetx:textX,
+            textoffsety:textY
+        };
+    }
     var emojibubbleregister = function(token,emoji){
         try{
             let ser = state.emojibubble.registry;
             let tokenid = token.id;
             if(emoji === "clearemojibubble"){
-                return emojibubblecheck(token);
+                //return emojibubblecheck(token);
+                return emojibubblecleanup(tokenid);
             }
             if(ser[tokenid]){
                 emojibubblecleanup(tokenid);
@@ -26,10 +40,33 @@ var emojibubble = emojibubble||(function(){
         }
     }
     
-    var emojibubblecheck = function(obj){
-        let tokenid = obj.get("id");
-        if(state.emojibubble.registry[tokenid]){
-            emojibubblecleanup(tokenid);
+    var emojibubblecheck = function(token){
+        let tokenid = token.id, ser = state.emojibubble.registry;
+        if(ser[tokenid]){
+            let x = token.get("left");
+            let y = token.get("top");
+            let pathObj = getObj("path",ser[tokenid].pathObj);
+            let textObj = getObj("text",ser[tokenid].textObj);
+            let offsets = calculatetokenoffset(token);
+            log(offsets);
+            try{
+                if(pathObj !== undefined && textObj !== undefined)
+                pathObj.set({ 
+                    left: x + offsets.bubbleoffsetx,
+                    top: y + offsets.bubbleoffsety
+                });
+                textObj.set({
+                    left: x + offsets.textoffsetx,
+                    top: y + offsets.textoffsety
+                });
+            }catch(err){
+                //log("In emojibubble.emojibubblecheck");
+                //log(err.message);
+                
+            }
+            
+            // emojibubblecleanup(tokenid);
+            // emojibubbleregister(token, emoji);
         }
     }
     
@@ -42,8 +79,8 @@ var emojibubble = emojibubble||(function(){
                 ser[tokenid].pathObj = null;
                 ser[tokenid].textObj = null;
             }catch(err){
-                log("Emojibubble Error:" + err.message);
-                log("Manual deletion may be necessary");
+                //log("Emojibubble Error:" + err.message);
+                //log("Manual deletion may be necessary");
                 ser[tokenid].pathObj = null;
                 ser[tokenid].textObj = null;
             }
@@ -53,10 +90,11 @@ var emojibubble = emojibubble||(function(){
     var createEmojiBubble = function(token, emoji){
         let x = token.get("left");
         let y = token.get("top");
+        let offsets = calculatetokenoffset(token);
         let pathObj = createObj('path', {
             pageid: token.get("pageid"),
-            left: x + bubbleoffsetx,
-            top: y + bubbleoffsety,
+            left: x + offsets.bubbleoffsetx,
+            top: y + offsets.bubbleoffsety,
             width: 35,
             height: 30,
             fill: "#ffffff",
@@ -68,8 +106,8 @@ var emojibubble = emojibubble||(function(){
         });
         let textObj = createObj('text', {
             pageid: token.get("pageid"),
-            left: x + textoffsetx,
-            top: y + textoffsety,
+            left: x + offsets.textoffsetx,
+            top: y + offsets.textoffsety,
             width:30,
             height:30,
             font_size:12,
@@ -421,7 +459,7 @@ var emojibubble = emojibubble||(function(){
         helpoutput += '<p>' + '<a href="http://journal.roll20.net/handout/' + state.emojibubble.help + '">Emojibubble Console</a></p>';
         createEmojiSelect = function(){
             let list = 'Select Emoji',count=0;
-            list += '';
+            list += '|Clear,clearemojibubble';
             _.each(state.emojibubble.customemoji, function(emobj,key){
                 list+= '|' + emojibuilder(key) + ',' + key;
             });
@@ -443,9 +481,9 @@ var emojibubble = emojibubble||(function(){
                 let action =rebuildmacrocontent(),
                 macro = createObj("macro",{
                     playerid:DEFAULTPLAYER.id,
-                    name:	"Target_Emojibubble",
-                    action:	action,
-                    visibleto:	DEFAULTPLAYER.id,
+                    name:   "Target_Emojibubble",
+                    action: action,
+                    visibleto:  DEFAULTPLAYER.id,
                     istokenaction:false
                 });
                 state.emojibubble.macro = macro.id;
@@ -464,9 +502,9 @@ var emojibubble = emojibubble||(function(){
                 let action =rebuildselectedmacrocontent(),
                 macro = createObj("macro",{
                     playerid:DEFAULTPLAYER.id,
-                    name:	"Selected_Emojibubble",
-                    action:	action,
-                    visibleto:	"all",
+                    name:   "Selected_Emojibubble",
+                    action: action,
+                    visibleto:  "all",
                     istokenaction:false
                 });
                 state.emojibubble.selectedmacro = macro.id;

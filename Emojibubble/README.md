@@ -1,5 +1,7 @@
 # Emojibubble
 
+[Emojibubble Forum Discussion](https://app.roll20.net/forum/post/9605567/script-emojibubble/?pageforid=9605567#post-9605567)
+
 This script provides a way for GMs and players to indicate mood, action, attention, really anything an emoji can communicate on the tabletop. Using either the emojibubble console handout, or the available macros, GMs and players can select an emoji, which causes a small word-balloon with a single emoji adjacent to the selected token's top-right. Only graphic:tokens can be targeted or selected.
 
 ## Installation
