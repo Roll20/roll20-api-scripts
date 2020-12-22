@@ -101,7 +101,7 @@ class RatWorkshop_Module {
    * @param message
    */
   sendActionMessage(character, message) {
-    this.sendMessage(character, message, RatWorkshop_Templates.TEMPLATES.DESC);
+    this.sendMessage(character, message, this.MSG_TEMPLATES.DESC);
   }
 
   /**
@@ -248,6 +248,9 @@ class RatWorkshop_Module {
   }
 }
 
+/**
+ * Handles Loading Configurations, Setting up Listeners, Registering Class Modules, Dispatching Actions, and Awarding XP
+ */
 class DungeonMasterTools extends RatWorkshop_Module {
   static VERSION = 0.1;
   static DEFAULT_STATE = {
@@ -580,12 +583,55 @@ class DungeonMasterTools extends RatWorkshop_Module {
   }
 
   /**
+   * Register a new Module with the Dungeon Master Tools
+   * @param module - the new module to register
+   * @param force - to force a new module even if the module would override existing actions
+   */
+  registerModule(module, force = false) {
+    // Only register if it is not already registered
+    if (!this.modules[module.name.toLowerCase()] || force) {
+      this.modules[module.name.toLowerCase()] = new module();
+      log(`${module.name} has been registered`);
+    }
+  }
+
+  /**
    * Awards XP To players' characters that are currently in the turn order
    * @param options
    * @param msg
    */
   awardXp(options, msg) {
-    // TODO
+    const amount = parseInt(options[0], 10);
+    const message = options.slice(1).join(' ').replace('###XP###', amount);
+
+    // Get Each Player
+    const turnOrder = JSON.parse(Campaign().get('turnorder') || '[]');
+
+    // Can only assign XP to Characters in the Turn Order
+    if (turnOrder.length) {
+      _.each(turnOrder, turn => {
+        const token = getObj('graphic', turn.id);
+        // Check that Turn Order Item represents a Token on the Map
+        if (token) {
+          const characterId = token.get('represents');
+          const character = getObj("character", characterId);
+          // Only attempt to assign xp to a Character
+          if (character) {
+            const traits = filterObjs((obj) => {
+              if (obj.get('type') !== 'attribute') return false;
+              if (obj.get('characterid') !== characterId) return false;
+              if (obj.get('name') === 'experience') return true;
+            });
+            if (traits.length) {
+              const xp = traits[0];
+              const currentXp = parseInt(xp.get('current'), 10);
+              xp.set({ current: `${currentXp + amount}` });
+            }
+          }
+        }
+      });
+      this.sendActionMessage('Dungeon Master', message);
+    }
   }
 }
 

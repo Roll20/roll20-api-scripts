@@ -12,7 +12,7 @@ Additional class specific modules can be installed to extend the functionality p
 
 ## API Commands
 
-**!dm-help** -Gives a list of the script's API commands in the chat tab.
+**!dm-help** - Gives a list of the script's API commands in the chat tab.
 
 **!dm-status** - Lists the current status of the script's features in the chat tab.
 
@@ -32,4 +32,4 @@ Here's an example that would dispatch the **rage** action to the barbarian modul
 Here's an example use in a macro that prompts for xp amount:
 _!dm-award-xp ?{How much?|100} Your heroics have earned you ###XP### experience points!_
 
-##Interested in Expanding?
+## Interested in Expanding?
