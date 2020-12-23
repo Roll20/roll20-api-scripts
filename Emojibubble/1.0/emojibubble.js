@@ -1,14 +1,14 @@
 var emojibubble = emojibubble||(function(){
     
     state.emojibubble = state.emojibubble||{};
-    
     state.emojibubble.registry = state.emojibubble.registry||{};
-    
-    const bubbleoffsetx=35, bubbleoffsety=-25, textoffsetx=bubbleoffsetx, textoffsety = bubbleoffsety - 4;
+    state.emojibubble.help = state.emojibubble.help||"";
+    state.emojibubble.customemoji = state.emojibubble.customemoji||initializeemoji();
+    state.emojibubble.macro = state.emojibubble.macro||"";
+    state.emojibubble.selectedmacro = state.emojibubble.selectedmacro||"";
     
     var DEFAULTPLAYER;
     var calculatetokenoffset = function(token){
-        // figure width, height
         let width = token.get("width"), height=token.get("height");
         let pathX = (width/2);
         let pathY = ((height/2) -10)*-1;
@@ -26,7 +26,6 @@ var emojibubble = emojibubble||(function(){
             let ser = state.emojibubble.registry;
             let tokenid = token.id;
             if(emoji === "clearemojibubble"){
-                //return emojibubblecheck(token);
                 return emojibubblecleanup(tokenid);
             }
             if(ser[tokenid]){
@@ -35,8 +34,7 @@ var emojibubble = emojibubble||(function(){
             let emojiBubbleObj = createEmojiBubble(token, emoji);
             ser[tokenid] = emojiBubbleObj;
         }catch(err){
-            log("Error in emojibubble:emojibubbleregister:");
-            log(err.message);
+
         }
     }
     
@@ -48,7 +46,6 @@ var emojibubble = emojibubble||(function(){
             let pathObj = getObj("path",ser[tokenid].pathObj);
             let textObj = getObj("text",ser[tokenid].textObj);
             let offsets = calculatetokenoffset(token);
-            log(offsets);
             try{
                 if(pathObj !== undefined && textObj !== undefined)
                 pathObj.set({ 
@@ -60,13 +57,9 @@ var emojibubble = emojibubble||(function(){
                     top: y + offsets.textoffsety
                 });
             }catch(err){
-                //log("In emojibubble.emojibubblecheck");
-                //log(err.message);
-                
+
             }
             
-            // emojibubblecleanup(tokenid);
-            // emojibubbleregister(token, emoji);
         }
     }
     
@@ -79,8 +72,6 @@ var emojibubble = emojibubble||(function(){
                 ser[tokenid].pathObj = null;
                 ser[tokenid].textObj = null;
             }catch(err){
-                //log("Emojibubble Error:" + err.message);
-                //log("Manual deletion may be necessary");
                 ser[tokenid].pathObj = null;
                 ser[tokenid].textObj = null;
             }
@@ -227,13 +218,10 @@ var emojibubble = emojibubble||(function(){
         });
         return emojilibrary;
     }
-    
-    state.emojibubble.customemoji = state.emojibubble.customemoji||initializeemoji();
-    
+
     var digestEmoji = function(emoji){
         var sliceEmoji = function(str) {
             let res = ['', ''];
-        
             for (let c of str) {
                 let n = c.codePointAt(0);
                 let isEmoji = n > 0xfff || n === 0x200d || (0xfe00 <= n && n <= 0xfeff);
@@ -241,14 +229,10 @@ var emojibubble = emojibubble||(function(){
             }
             return res;
         }
-        
         var hex = function(str) {
             return [...str].map(x => x.codePointAt(0).toString(16))
         }
-        
         return sliceEmoji(emoji).map(hex)[0];
-        
-        
     }
     
     var emojibuilder = (numref) => {
@@ -309,7 +293,6 @@ var emojibubble = emojibubble||(function(){
                 list+='<span style="font-size:14pt;margin:0 8pt 0 8pt;"> | </span>';
             }
         });
-       
         return list;  
     }
     
@@ -423,7 +406,6 @@ var emojibubble = emojibubble||(function(){
     var initialize = function(){
         on("chat:message", msgHandler);
         on("change:graphic", emojibubblecheck);
-        
         DEFAULTPLAYER = (function(){
                                 let player;
                                 let playerlist = findObjs({                              
@@ -521,4 +503,3 @@ var emojibubble = emojibubble||(function(){
 on("ready", function(){
     emojibubble.initialize();
 });
-
