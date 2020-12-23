@@ -62,7 +62,7 @@
     // Artificer
     "Flash of Genius": only_long_rest,
 
-    // DungeonMasterToolsBarbarian
+    // Barbarian
     "Rage": only_long_rest,
     "Consult the Spirits": only_long_rest,
 
