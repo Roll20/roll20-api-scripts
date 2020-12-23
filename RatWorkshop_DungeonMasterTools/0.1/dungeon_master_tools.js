@@ -245,6 +245,12 @@ class RatWorkshop_Module {
 
   constructor() {
     this.initialConfigurations();
+    // Quick Reference to the Stored States
+    this.configState = state.RatWorkShop_DungeonMasterTools_Roll20_5E.config || {};
+    this.tokenTrack = state.RatWorkShop_DungeonMasterTools_Roll20_5E.tokenTrack || {};
+    this.tokenIcons = state.RatWorkShop_DungeonMasterTools_Roll20_5E.tokenIcons || {};
+    this.tokenBars = state.RatWorkShop_DungeonMasterTools_Roll20_5E.tokenBars || {};
+    this.events = state.RatWorkShop_DungeonMasterTools_Roll20_5E.events || [];
   }
 }
 
@@ -266,6 +272,9 @@ class DungeonMasterTools extends RatWorkshop_Module {
     tokenBars: {
       hp: 'bar1',
       ac: 'bar2',
+    },
+    modules: {
+
     },
     events: [],
     gcUpdated: 0,
@@ -326,13 +335,6 @@ class DungeonMasterTools extends RatWorkshop_Module {
       this.updateConfiguration(state.RatWorkShop_DungeonMasterTools_Roll20_5E.tokenIcons, gc, 'tokenIcon-');
       this.updateConfiguration(state.RatWorkShop_DungeonMasterTools_Roll20_5E.tokenBars, gc, 'tokenBar-');
     }
-
-    // Quick Reference to the Stored States
-    this.configState = state.RatWorkShop_DungeonMasterTools_Roll20_5E.config || {};
-    this.tokenTrack = state.RatWorkShop_DungeonMasterTools_Roll20_5E.tokenTrack || {};
-    this.tokenIcons = state.RatWorkShop_DungeonMasterTools_Roll20_5E.tokenIcons || {};
-    this.tokenBars = state.RatWorkShop_DungeonMasterTools_Roll20_5E.tokenBars || {};
-    this.events = state.RatWorkShop_DungeonMasterTools_Roll20_5E.events || [];
   }
 
   constructor() {

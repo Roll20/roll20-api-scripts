@@ -35,3 +35,42 @@ _!dm-award-xp ?{How much?|100} Your heroics have earned you ###XP### experience 
 **!dm-award-selected-xp** <amount> <message> - This will give each character selected on the map the amount of xp specified and display the message in chat.  Use *###XP###* as a place holder for the xp awarded.
 
 ## Interested in Expanding?
+*  All expansions are done by extending the **RatWorkshop_Module** class
+
+```javascript
+class Barbarian extends RatWorkshop_Module
+```
+
+* Include a **static register()** method that check for the presence of the **dungeonMasterTools** and calls then calls the **registerModule** method.
+```javascript
+  static register() {
+    if (typeof dungeonMasterTools === 'object') {
+      log('Registering Barbarian Module');
+      dungeonMasterTools.registerModule(this);
+    }
+  }
+```
+
+* Call the register method from out side the class
+`Barbarian.register();`
+
+#### Actions
+All action methods need to have a prefix of **action_** and accepts an array of options and the original message (which can be deconstructed)
+```javascript
+action_rage(options, { playerid: playerId })
+```
+Callback functions can have any name, but for convention I prefix them with **end_action_** and match the action
+```javascript
+end_action_rage({ characterId })
+```
+
+#### Dungeon Master Tools API
+* sendMessage(who, message, template, prefix = '', options = {}, callback = null)
+* sendErrorMessage(playerId, message)
+* sendActionMessage(character, message) 
+* addTurnOrder(event)
+* addEvent(eventId, characterId, tokenId, action, callbackModule, callbackAction)
+* getTrait(characterId, trait)
+* getResource(characterId, resource) 
+* getGlobalModifier(characterId, modifier)
+* getToken(characterId)
