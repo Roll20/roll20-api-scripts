@@ -1,8 +1,8 @@
 class Barbarian extends RatWorkshop_Module {
   static MODULE_NAME = 'Barbarian';
-  VERSION = 0.1;
-  DEFAULT_STATE = {
-    version: this.VERSION,
+  static VERSION = 0.1;
+  static DEFAULT_STATE = {
+    version: Barbarian.VERSION,
     gcUpdated: 0,
   };
 
@@ -129,8 +129,8 @@ class Barbarian extends RatWorkshop_Module {
   initialConfigurations() {
     if (!state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[Barbarian.MODULE_NAME] ||
       !state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[Barbarian.MODULE_NAME].version ||
-      state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[Barbarian.MODULE_NAME].version !== this.VERSION) {
-      state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[Barbarian.MODULE_NAME] = this.DEFAULT_STATE;
+      state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[Barbarian.MODULE_NAME].version !== Barbarian.VERSION) {
+      state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[Barbarian.MODULE_NAME] = Barbarian.DEFAULT_STATE;
       state.RatWorkShop_DungeonMasterTools_Roll20_5E.tokenIcons['rage'] = 'strong';
     }
 
