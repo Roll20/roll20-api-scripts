@@ -1,8 +1,8 @@
-class Paladin extends RatWorkshop_Module {
+class DungeonMasterToolsPaladin extends RatWorkshop_Module {
   static MODULE_NAME = 'Paladin';
   static VERSION = 0.1;
   static DEFAULT_STATE = {
-    version: Paladin.VERSION,
+    version: DungeonMasterToolsPaladin.VERSION,
     gcUpdated: 0,
   };
 
@@ -92,28 +92,21 @@ class Paladin extends RatWorkshop_Module {
    * Initialize Configurations and update from userOptions
    */
   initialConfigurations() {
-    if (!state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[Paladin.MODULE_NAME] ||
-      !state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[Paladin.MODULE_NAME].version ||
-      state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[Paladin.MODULE_NAME].version !== Paladin.VERSION) {
-      state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[Paladin.MODULE_NAME] = Paladin.DEFAULT_STATE;
+    if (!state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[DungeonMasterToolsPaladin.MODULE_NAME] ||
+      !state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[DungeonMasterToolsPaladin.MODULE_NAME].version ||
+      state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[DungeonMasterToolsPaladin.MODULE_NAME].version !== DungeonMasterToolsPaladin.VERSION) {
+      state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[DungeonMasterToolsPaladin.MODULE_NAME] = DungeonMasterToolsPaladin.DEFAULT_STATE;
     }
 
     const gc = globalconfig && globalconfig.RatWorkShop_DungeonMasterTools_Roll20_5E;
-    if (gc && gc.lastsaved && gc.lastsaved > state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[Paladin.MODULE_NAME].gcUpdated) {
-      state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[Paladin.MODULE_NAME].gcUpdated = gc.lastsaved;
+    if (gc && gc.lastsaved && gc.lastsaved > state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[DungeonMasterToolsPaladin.MODULE_NAME].gcUpdated) {
+      state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[DungeonMasterToolsPaladin.MODULE_NAME].gcUpdated = gc.lastsaved;
     }
   }
 
   constructor() {
     super();
   }
-
-  static register() {
-    if (typeof dungeonMasterTools === 'object') {
-      log('Registering Paladin Module');
-      dungeonMasterTools.registerModule(this);
-    }
-  }
 }
 
-Paladin.register();
+DungeonMasterToolsPaladin.register();

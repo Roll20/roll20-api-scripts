@@ -36,23 +36,16 @@ _!dm-award-xp ?{How much?|100} Your heroics have earned you ###XP### experience 
 
 ## Interested in Expanding?
 *  All expansions are done by extending the **RatWorkshop_Module** class
-
-```javascript
-class Barbarian extends RatWorkshop_Module
-```
-
-* Include a **static register()** method that check for the presence of the **dungeonMasterTools** and calls then calls the **registerModule** method.
-```javascript
-  static register() {
-    if (typeof dungeonMasterTools === 'object') {
-      log('Registering Barbarian Module');
-      dungeonMasterTools.registerModule(this);
-    }
-  }
-```
-
+* Include a **static MODULE_NAME** set to the name of the module.
 * Call the register method from out side the class
-`Barbarian.register();`
+
+Here is a bare shell for a Barbarian Module
+```javascript
+class DungeonMasterToolsBarbarian extends RatWorkshop_Module {
+   static MODULE_NAME = 'Barbarian';
+}
+DungeonMasterToolsBarbarian.register();
+```
 
 #### Actions
 All action methods need to have a prefix of **action_** and accepts an array of options and the original message (which can be deconstructed)

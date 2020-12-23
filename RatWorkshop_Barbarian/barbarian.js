@@ -1,8 +1,8 @@
-class Barbarian extends RatWorkshop_Module {
+class DungeonMasterToolsBarbarian extends RatWorkshop_Module {
   static MODULE_NAME = 'Barbarian';
   static VERSION = 0.1;
   static DEFAULT_STATE = {
-    version: Barbarian.VERSION,
+    version: DungeonMasterToolsBarbarian.VERSION,
     gcUpdated: 0,
   };
 
@@ -102,7 +102,7 @@ class Barbarian extends RatWorkshop_Module {
     }
 
     // Add Event for Tracking
-    this.addEvent(eventId, character.id, token.id, 'rage', Barbarian.MODULE_NAME, 'end_action_rage');
+    this.addEvent(eventId, character.id, token.id, 'rage', DungeonMasterToolsBarbarian.MODULE_NAME, 'end_action_rage');
 
     // Send Action to the Chat Window
     this.sendActionMessage(
@@ -127,16 +127,16 @@ class Barbarian extends RatWorkshop_Module {
    * Initialize Configurations and update from userOptions
    */
   initialConfigurations() {
-    if (!state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[Barbarian.MODULE_NAME] ||
-      !state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[Barbarian.MODULE_NAME].version ||
-      state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[Barbarian.MODULE_NAME].version !== Barbarian.VERSION) {
-      state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[Barbarian.MODULE_NAME] = Barbarian.DEFAULT_STATE;
+    if (!state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[DungeonMasterToolsBarbarian.MODULE_NAME] ||
+      !state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[DungeonMasterToolsBarbarian.MODULE_NAME].version ||
+      state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[DungeonMasterToolsBarbarian.MODULE_NAME].version !== DungeonMasterToolsBarbarian.VERSION) {
+      state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[DungeonMasterToolsBarbarian.MODULE_NAME] = DungeonMasterToolsBarbarian.DEFAULT_STATE;
       state.RatWorkShop_DungeonMasterTools_Roll20_5E.tokenIcons['rage'] = 'strong';
     }
 
     const gc = globalconfig && globalconfig.RatWorkShop_DungeonMasterTools_Roll20_5E;
-    if (gc && gc.lastsaved && gc.lastsaved > state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[Barbarian.MODULE_NAME].gcUpdated) {
-      state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[Barbarian.MODULE_NAME].gcUpdated = gc.lastsaved;
+    if (gc && gc.lastsaved && gc.lastsaved > state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[DungeonMasterToolsBarbarian.MODULE_NAME].gcUpdated) {
+      state.RatWorkShop_DungeonMasterTools_Roll20_5E.modules[DungeonMasterToolsBarbarian.MODULE_NAME].gcUpdated = gc.lastsaved;
       if ('tokenIcon-rage' in gc) {
         state.RatWorkShop_DungeonMasterTools_Roll20_5E.tokenIcons['rage'] = gc['tokenIcon-rage'];
       }
@@ -146,13 +146,6 @@ class Barbarian extends RatWorkshop_Module {
   constructor() {
     super();
   }
-
-  static register() {
-    if (typeof dungeonMasterTools === 'object') {
-      log('Registering Barbarian Module');
-      dungeonMasterTools.registerModule(this);
-    }
-  }
 }
 
-Barbarian.register();
+DungeonMasterToolsBarbarian.register();

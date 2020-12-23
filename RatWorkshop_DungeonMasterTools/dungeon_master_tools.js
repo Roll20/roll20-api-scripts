@@ -39,6 +39,7 @@ class RatWorkshop_Library {
  * Contains Core Methods for sending messages to chat, as well as fetching data from a character sheet
  */
 class RatWorkshop_Module {
+  static MODULE_NAME = 'Base Module';
   MSG_CONTENT = '###CONTENT###';
   MSG_SOURCE = 'RatWorkshop';
   MSG_OPTIONS = {
@@ -237,6 +238,21 @@ class RatWorkshop_Module {
   }
 
   /**
+   * Registers the Module with the Dungeon Master Tools
+   */
+  static register() {
+    if (this.MODULE_NAME === RatWorkshop_Module.MODULE_NAME) {
+      log('Base RatWorkshop Module can not be registers, extend it first');
+      return;
+    }
+
+    if (typeof dungeonMasterTools === 'object') {
+      log(`Registering ${this.MODULE_NAME} Module`);
+      dungeonMasterTools.registerModule(this);
+    }
+  }
+
+  /**
    * Used to update State based on One-Click useroptions
    */
   initialConfigurations() {
@@ -273,9 +289,7 @@ class DungeonMasterTools extends RatWorkshop_Module {
       hp: 'bar1',
       ac: 'bar2',
     },
-    modules: {
-
-    },
+    modules: {},
     events: [],
     gcUpdated: 0,
     version: DungeonMasterTools.VERSION,
@@ -301,6 +315,11 @@ class DungeonMasterTools extends RatWorkshop_Module {
   TOKEN_TRACKED_STATUS = [
     'dead',
   ];
+
+  /**
+   * Dungeon Master Tools shouldn't register itself
+   */
+  static register() {}
 
   /**
    * Update Config with Values from globalConfig
@@ -592,9 +611,9 @@ class DungeonMasterTools extends RatWorkshop_Module {
    */
   registerModule(module, force = false) {
     // Only register if it is not already registered
-    if (!this.modules[module.name.toLowerCase()] || force) {
-      this.modules[module.name.toLowerCase()] = new module();
-      log(`${module.name} has been registered`);
+    if (!this.modules[module.MODULE_NAME.toLowerCase()] || force) {
+      this.modules[module.MODULE_NAME.toLowerCase()] = new module();
+      log(`${module.MODULE_NAME} has been registered`);
     }
   }
 
