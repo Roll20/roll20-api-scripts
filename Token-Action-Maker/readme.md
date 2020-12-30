@@ -1,6 +1,6 @@
 *Created by Kevin,*
 
-*modified by keithcurtis & Gigs*
+*modified by keithcurtis & Gigs & bretmckee*
 
 This script creates token actions on selected tokens for the D&D 5e by Roll20 sheet. Tokens must represent character sheets, either PC or NPC. As of 0.2.9, the script will also abbreviate common phrases like "(One Handed)" to "-1H"
 
