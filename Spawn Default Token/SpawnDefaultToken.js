@@ -55,7 +55,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.9';
+    const version = '0.10';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -134,7 +134,7 @@ const SpawnDefaultToken = (() => {
     
     //This function runs asynchronously, as called from the processCommands function
     //We will sendChat errors, but the rest of processCommands keeps running :(
-    async function spawnTokenAtXY (who, tokenJSON, pageID, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar2Val, bar2Max, bar3Val, bar3Max, expandIterations, expandDelay) {
+    async function spawnTokenAtXY (who, tokenJSON, pageID, spawnLayer, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar2Val, bar2Max, bar3Val, bar3Max, expandIterations, expandDelay) {
         let newSideImg;
         let spawnObj;
         let currentSideOld;
@@ -150,6 +150,7 @@ const SpawnDefaultToken = (() => {
             
             //set token properties
             baseObj.pageid = pageID;
+            baseObj.layer = spawnLayer;
             if (expandIterations === 0) {       //spawn full-sized token 
                 baseObj.left = spawnX;
                 baseObj.top = spawnY;
@@ -1034,8 +1035,9 @@ const SpawnDefaultToken = (() => {
             //  Spawn Placement  -- calculate all coordinates
             ///////////////////////////////////////////////////////////////
             
-            //All tokens spawn on the same page
+            //All tokens spawn on the same page and layer as the origin token(s)
             data.spawnPageID = data.originToks[0].get("pageid");
+            data.spawnLayer = data.originToks[0].get("layer");
             
             let left;
             let top;
@@ -1152,7 +1154,7 @@ const SpawnDefaultToken = (() => {
                                     spawnFx(data.spawnX[iteration], data.spawnY[iteration], data.fx, data.spawnPageID);
                                 }
                                 //Spawn the token!
-                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL, data.bar1Val, data.bar1Max, data.bar2Val, data.bar2Max,data.bar3Val, data.bar3Max, data.expandIterations, data.expandDelay);
+                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnLayer, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL, data.bar1Val, data.bar1Max, data.bar2Val, data.bar2Max,data.bar3Val, data.bar3Max, data.expandIterations, data.expandDelay);
                                 
                             } else {
                                 log("off the map!");
