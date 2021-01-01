@@ -1,7 +1,7 @@
 {
   "name": "emas",
-  "version": "0.8.3",
-  "description": "Provides player !emas and !as commands.",
+  "version": "0.8.4",
+  "description": "Provides a command that players can use to replicate GM-only and player chat commands.\r\rSupported commands are: `!emas`, `!as`, `!w`, `!r`, `!gr`, `!desc`.\r\rFor instructions run any of the commands with no arguments, or visit [Emas on the Wiki](https://wiki.roll20.net/Text_Chat#Speaking_and_Emoting_as_a_Random_NPC_.28.2Fas.29_.28.2Femas.29)",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -12,6 +12,7 @@
   "useroptions": [],
   "previousversions": [
     "0.8.1",
-    "0.8.2"
+    "0.8.2",
+    "0.8.3"
   ]
 }
