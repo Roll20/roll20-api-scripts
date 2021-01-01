@@ -685,6 +685,7 @@ var MaxApoc = (function() {
 	        }
 	    });
 	                
+	    /* EXAMPLE EFFECT 
         if(subtitle === "^{full_dodge}")
         {
             maLog("Full Dodge detected"); 
@@ -700,22 +701,7 @@ var MaxApoc = (function() {
                 sendMessage({target: characterName, title: 'Initiative', body: '-5 for Full Dodge'});
             }
         }
-        
-        if(subtitle === "^{riposte}")
-        {
-            maLog("Riposte detected");
-            maLog('Auto Init Reduction Enabled? - ' + CONFIG['autoInitReductionEnabled'].value, DEBUG_FINE);
-            
-            if(CONFIG['autoInitReductionEnabled'].value)
-            {
-                // increment Enemy Attraction
-                var newTurnOrder = updateTurnOrderArray(-3, -3, characterName);
-                setTurnOrder(newTurnOrder);
-                
-                // update players
-                sendMessage({target: characterName, title: 'Initiative', body: '-3 for Riposte'});
-            }
-        }
+        */
 	};
 	
 	var rollCheck = function(rollMacro, inlinerolls, rollTemplate, playerid)
@@ -924,12 +910,16 @@ on("chat:message", function(msg)
       return;
   }
   
+  /*
+   * IMPLEMENTED FULL DODGE AND RIPOSTE VIA TRACKER MACRO
+   * DISABLE UNTIL AOTHER USE
   if(msg.type == "general" && msg.rolltemplate == "maxapoc")
   {
       // handle player action effects
       MaxApoc.rollEffect(msg.content, msg.inlinerolls, msg.rolltemplate, msg.playerid);
       return;
   }
+  /*
   
   // Rest of the API only usable by GM
   if(msg.type == "api" && playerIsGM(msg.playerid)) 
