@@ -40,7 +40,8 @@ The following types of roll checks will be detected and effects applied:
 - If no players are selected, the increment will apply to all players on current page.
 
 ***`!ma acf <number>`***
-- Apply consumed food, equal to &lt;number&gt; units, to selected players and get chat summary of changes. 
+- Apply consumed food, equal to &lt;number&gt; units, to selected players and get chat summary of changes.
+- The number of food units below a character's food requirement will be added as hunger damage.
 - Hunger changes and whether they are starving/emaciated will be whispered to players. 
 - If no players are selected, the increment will apply to all players on current page.
 
