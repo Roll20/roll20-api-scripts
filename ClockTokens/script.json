@@ -1,0 +1,24 @@
+{
+    "name": "Clock Tokens",
+    "script": "ClockTokens.js",
+    "version": "1.0",
+    "authors": "Tyson Tiatia",
+    "description": "A script for GMs utilising Multi-sided tokens to track 'clocks', a common mechanic for tracking progress in Power By The Apocolypse and Forged In The Dark games, among others. Accepts the command !clocktokens with one of the following parameters: 'next', 'prev', 'first', 'last', and changes any multi-sided tokens selected to the corresponding image. Automatically adds four token macros for these commands.",
+    "roll20userid": "514883",
+    "useroptions": [
+        {
+            "name": "GM Only",
+            "type": "checkbox",
+            "value": "true",
+            "checked": "checked",
+            "description": "The commands and macros will only be visible and usable by players with GM permissions."
+        },
+        {
+            "name": "Use Macros",
+            "type": "checkbox",
+            "value": "true",
+            "checked": "checked",
+            "description": "Automatically create and maintain macros for this API."
+        }
+    ]
+}
