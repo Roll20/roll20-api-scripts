@@ -35,22 +35,26 @@ The following types of roll checks will be detected and effects applied:
 - Reset enemy attraction gauge to zero.
 
 ***`!ma uh <number>`***
-Increment selected players' hunger values by &lt;number&gt; and get chat summary of changes. Hunger changes and whether they are starving/emaciated will be whispered to players. If no players are selected, the increment will apply to all players on current page.
+- Increment selected players' hunger values by &lt;number&gt; and get chat summary of changes. 
+- Hunger changes and whether they are starving/emaciated will be whispered to players. 
+- If no players are selected, the increment will apply to all players on current page.
 
 ***`!ma acf <number>`***
-Apply consumed food, equal to &lt;number&gt; units, to selected players and get chat summary of changes. Hunger changes and whether they are starving/emaciated will be whispered to players. If no players are selected, the increment will apply to all players on current page.
+- Apply consumed food, equal to &lt;number&gt; units, to selected players and get chat summary of changes. 
+- Hunger changes and whether they are starving/emaciated will be whispered to players. 
+- If no players are selected, the increment will apply to all players on current page.
 
 ***`!ma roll <roll macro for maxapoc roll template>`***
-Perform specified roll and remember it so it can be re-rolled by `!ma lrr` command.
+- Perform specified roll and remember it so it can be re-rolled by `!ma lrr` command.
 
 ***`!ma lrr`***
-Use Luck to Re-Roll the last roll via the `!ma roll` command.
+- Use Luck to Re-Roll the last roll via the `!ma roll` command.
 
 ***`!ma config`***
-Chat configuration settings/buttons to enable/disable API features.
+- Chat configuration settings/buttons to enable/disable API features.
 
 ***`!ma config <config code> <true|false>`***
-Enable/disable specific API features.
+- Enable/disable specific API features.
   
 **Change Log:**  
 * 2020-12-14 - First version with features for showing/populating tracker, action phases, showing/updating enemy attraction gauge
