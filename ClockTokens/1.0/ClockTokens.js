@@ -1,7 +1,22 @@
+/*
+ * ClockTokens.js
+ * Current version: 1.0
+ * Last updated: 2021-01-01 by Tyson Tiatia
+ * 
+ * See README.md for full description
+ * 
+ * Commands:
+ *      !clocktokens [next|prev|first|last]
+ * 
+ * User Options:
+ *      [GM Only]
+ *      [Use Macros]
+ */
 var ClockTokens = ClockTokens || (function () {
     'use strict';
 
     var version = "1.0",
+        lastUpdate = "2021-01-01",
         listenerActive = false,
         userOptions = (globalconfig && globalconfig.ClockTokens) || {
             "GM Only": true,

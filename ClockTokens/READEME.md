@@ -12,7 +12,7 @@ The script changes the token image of currently selected tokens based on the com
 
 ##User Options
 * _GM Only_: (Default On) If enabled then only the GM can use the ``!clocktokens`` commands.
-* _Use Macros_: (default On) If enabled then token macros will automatically be created an maintained, one for each of the four commands above.
+* _Use Macros_: (Default On) If enabled then token macros will automatically be created an maintained, one for each of the four commands above.
 
 ##Why use this over other token scripts?
 This script was designed specifically for handling the large number of _Forged In The Dark_ and _Powered By The Apocolpyse_ games that I run. Multi-sided tokens take far too many clicks to move between sides, and there is no way to change multiple at once.
@@ -20,5 +20,5 @@ This script was designed specifically for handling the large number of _Forged I
 There are other token scripts with far more functionality, and if you feel you'll benefit from them then I recommend using those instead. However if you only want to flip multi-sided tokens back and forth in sequence then there's no need to bloat your game with a larger, more complicated script.
 
 ##Changelist
-###_v1.0_
+###_v1.0_ (2021-01-01)
 * Script created
