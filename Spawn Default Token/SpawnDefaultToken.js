@@ -55,7 +55,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.10';
+    const version = '0.11';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -1136,7 +1136,10 @@ const SpawnDefaultToken = (() => {
             //grab the character object to spawn from supplied spawnName
             let spawnObj = getCharacterFromName(data.spawnName);
             let validObj = validateObject(data.who, spawnObj, 'character', data.spawnName);
-            if (!(validObj === 'true')) {return retVal.push(validObj);}
+            if (!(validObj === 'true')) {
+                retVal.push(validObj);
+                return retVal;
+            }
             
             ///////////////////////////////////////////////////////////////////////////////////
             //  Start spawning!         --spawns (q=qty) tokens at each of (o=origin) locations
@@ -1183,7 +1186,10 @@ const SpawnDefaultToken = (() => {
                     var sheetCharObj = getCharacterFromName(data.sheetName);
                         validObj = validateObject(data.who, sheetCharObj, 'character', data.sheetName);
                 }
-                if (!(validObj === 'true')) {return retVal.push(validObj);}
+                if (!(validObj === 'true')) {
+                    retVal.push(validObj);
+                    return retVal
+                }
                 
                 //Get the characterID to find the ability 
                 let sheetCharID = sheetCharObj.get("id");
@@ -1192,7 +1198,10 @@ const SpawnDefaultToken = (() => {
                 validObj = 'false';
                 let abilityObj = getAbilityFromName(sheetCharID, data.abilityName);
                     validObj = validateObject(data.who, abilityObj, 'ability', data.abilityName);
-                    if (!(validObj === 'true')) {return retVal.push(validObj);}
+                    if (!(validObj === 'true')) {
+                        retVal.push(validObj);
+                        return retVal
+                    }
                  
                 let action = abilityObj.get("action");
                 
@@ -1354,6 +1363,7 @@ const SpawnDefaultToken = (() => {
                     //Ok, now that we've handled all the selected/target unpleasantness, we're ready to start spawning!
                     ///////////////////////////////////////////////////////////////////////////////////////////////////
                     let errorMsg = processCommands(data, args) || [];
+                    log(errorMsg);
                     if (errorMsg.length > 0) {
                         //Spam the chat with one or more errors (could be multiple due to user input validation checks)
                         errorMsg.forEach((errMsg) => {
