@@ -1363,7 +1363,6 @@ const SpawnDefaultToken = (() => {
                     //Ok, now that we've handled all the selected/target unpleasantness, we're ready to start spawning!
                     ///////////////////////////////////////////////////////////////////////////////////////////////////
                     let errorMsg = processCommands(data, args) || [];
-                    log(errorMsg);
                     if (errorMsg.length > 0) {
                         //Spam the chat with one or more errors (could be multiple due to user input validation checks)
                         errorMsg.forEach((errMsg) => {
