@@ -919,7 +919,7 @@ on("chat:message", function(msg)
       MaxApoc.rollEffect(msg.content, msg.inlinerolls, msg.rolltemplate, msg.playerid);
       return;
   }
-  /*
+  */
   
   // Rest of the API only usable by GM
   if(msg.type == "api" && playerIsGM(msg.playerid)) 
