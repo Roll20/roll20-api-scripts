@@ -1,3 +1,4 @@
+/* globals createObj, findObjs, getAttrByName, getObj, log, on, sendChat */
 /* read Help.txt */
 const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
   'use strict'
