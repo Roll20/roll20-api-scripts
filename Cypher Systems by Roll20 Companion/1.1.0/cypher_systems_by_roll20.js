@@ -25,14 +25,14 @@ const CypherSystemsByRoll20 = (function () {
     if (stat1 === 'recovery-rolls') {
       const objArray = findObjs({
         _type: 'attribute',
-        name: stat1,
-        _characterid: character.id
+        _characterid: character.id,
+        name: stat1
       })
       if (!objArray.length) {
         obj1 = createObj('attribute', {
+          characterid: character.id,
           name: stat1,
-          current: statCost,
-          characterid: character.id
+          current: statCost
         })
       } else {
         objArray[0].setWithWorker('current', statCost)
@@ -52,10 +52,10 @@ const CypherSystemsByRoll20 = (function () {
         pool1 = parseInt(getAttrByName(character.id, stat1, 'current')) || 0
         max1 = parseInt(getAttrByName(character.id, stat1, 'max')) || 0
         obj1 = createObj('attribute', {
+          characterid: character.id,
           name: stat1,
           current: pool1,
-          max: max1,
-          characterid: character.id
+          max: max1
         })
       } else {
         obj1 = objArray[0]
@@ -87,17 +87,17 @@ const CypherSystemsByRoll20 = (function () {
         }
         objArray = findObjs({
           _type: 'attribute',
-          name: stat2,
-          _characterid: character.id
+          _characterid: character.id,
+          name: stat2
         })
         if (!objArray.length) {
           pool2 = parseInt(getAttrByName(character.id, stat2, 'current')) || 0
           max2 = parseInt(getAttrByName(character.id, stat2, 'max')) || 0
           obj2 = createObj('attribute', {
+            characterid: character.id,
             name: stat2,
             current: pool2,
-            max: max2,
-            characterid: character.id
+            max: max2
           })
         } else {
           obj2 = objArray[0]
@@ -105,17 +105,17 @@ const CypherSystemsByRoll20 = (function () {
         }
         objArray = findObjs({
           _type: 'attribute',
-          name: stat3,
-          _characterid: character.id
+          _characterid: character.id,
+          name: stat3
         })
         if (!objArray.length) {
           pool3 = parseInt(getAttrByName(character.id, stat3, 'current')) || 0
           max3 = parseInt(getAttrByName(character.id, stat3, 'max')) || 0
           obj3 = createObj('attribute', {
+            characterid: character.id,
             name: stat3,
             current: pool3,
-            max: max3,
-            characterid: character.id
+            max: max3
           })
         } else {
           obj3 = objArray[0]
@@ -157,8 +157,8 @@ const CypherSystemsByRoll20 = (function () {
     //  - Health (token bar2)
     //  - Armor (token bar3)
     // Armor will diminish damage unless 'applyArmor'='n'
-    let dmg = parseInt(dmgDealt) || 0
     const npcName = character.get('name')
+    let dmg = parseInt(dmgDealt) || 0
     let npcHealth = 0
     let npcMaxHealth = 0
     let npcArmor = 0
@@ -178,8 +178,8 @@ const CypherSystemsByRoll20 = (function () {
       // It's a 'full' character NPC : get the attributes values
       attObjArray = findObjs({
         _type: 'attribute',
-        name: 'health',
-        _characterid: character.id
+        _characterid: character.id,
+        name: 'health'
       })
       if (attObjArray === false) {
         sendChat('GM', `/w gm npcDamage() Error: ${npcName} has no health attribute!`)
@@ -223,7 +223,7 @@ const CypherSystemsByRoll20 = (function () {
     paramArray[0] = msg.content.split(' ')[1]
 
     // uncomment to debug
-    log(`Function called: ${functionCalled} Parameters: ${paramArray[0]}`)
+    // log(`Function called: ${functionCalled} Parameters: ${paramArray[0]}`)
 
     if (parseInt(paramArray[0].indexOf('|')) !== -1) {
       // more than 1 parameter (supposedly character_id as first paramater)
