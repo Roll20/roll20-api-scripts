@@ -5,14 +5,13 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
   const modified = '2020-01-01'
   // const schemaversion = 1.0
   const author = 'Natha (roll20userid:75857)'
-  // -----------------------------------------------------------------------------
-  const checkInstall = function () {
+  function checkInstall () {
     log(`Cypher Systems by Roll20 Companion v${version} (${modified})
 Author: ${author}
 This script is designed for the Cypher Systems by Roll20 character sheet.
 `)
   }
-  // -----------------------------------------------------------------------------
+
   const modStat = function (characterObj, statName, statCost) {
     // checking the stat
     let stat1 = ''
@@ -149,7 +148,7 @@ This script is designed for the Cypher Systems by Roll20 character sheet.
       }
     }
   }
-  // -----------------------------------------------------------------------------
+
   const npcDamage = function (tokenObj, characterObj, dmgDealt, applyArmor) {
     // Apply damage (or healing if dmdDeal is negative ...) to Numenera NPC/Creature
     // And set 'death' marker if health is 0 or less.
@@ -210,30 +209,22 @@ This script is designed for the Cypher Systems by Roll20 character sheet.
     } else {
       sendChat('GM', '/w gm ' + npcName + ' is healed for ' + dmg + ' points. Health: ' + npcHealth + '->' + npcHealthFinal + '.')
     }
-    return
   }
-  // -----------------------------------------------------------------------------
+
   const handleInput = function (msg) {
-    if (msg.type !== 'api') {
-      return
-    }
-    if (msg.content.indexOf('!cypher-') !== 0) {
+    if (msg.type !== 'api' || msg.content.indexOf('!cypher-') !== 0 || parseInt(msg.content.indexOf(' ')) === -1) {
+      // every function requires at least one parameter
       return
     } else {
-      if (parseInt(msg.content.indexOf(' ')) === -1) {
-        // every function requires at least one parameter
-        return
-      } else {
-        let paramArray = new Array(1)
-        const functionCalled = msg.content.split(' ')[0]
-        paramArray[0] = msg.content.split(' ')[1]
-        // log('Function called:'+functionCalled+' Parameters:'+paramArray[0]) //DEBUG
-        if (parseInt(paramArray[0].indexOf('|')) !== -1) {
-          // more than 1 parameter (supposedly character_id as first paramater)
-          paramArray = paramArray[0].split('|')
-        }
-        const obj = getObj('character', paramArray[0])
+      let paramArray = new Array(1)
+      const functionCalled = msg.content.split(' ')[0]
+      paramArray[0] = msg.content.split(' ')[1]
+      // log('Function called:'+functionCalled+' Parameters:'+paramArray[0]) //DEBUG
+      if (parseInt(paramArray[0].indexOf('|')) !== -1) {
+        // more than 1 parameter (supposedly character_id as first paramater)
+        paramArray = paramArray[0].split('|')
       }
+      const obj = getObj('character', paramArray[0])
     }
     switch (functionCalled) {
       case '!cypher-npcdmg':
@@ -268,19 +259,18 @@ This script is designed for the Cypher Systems by Roll20 character sheet.
         modStat(obj, paramArray[1], paramArray[2], paramArray[3])
         break
     }
-    return
   }
-  // -----------------------------------------------------------------------------
+
   const registerEventHandlers = function () {
     on('chat:message', handleInput)
   }
-  // -----------------------------------------------------------------------------
+
   return {
     CheckInstall: checkInstall,
     RegisterEventHandlers: registerEventHandlers
   }
 }())
-// -----------------------------------------------------------------------------
+
 on('ready', function () {
   'use strict'
   CypherSystemsByRoll20.CheckInstall()
