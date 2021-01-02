@@ -15,13 +15,13 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
   const modStat = function (characterObj, statName, statCost) {
     // checking the stat
     let stat1 = ""
-    if (statName == "might" || statName == "speed" || statName == "intellect" || statName == "recovery-rolls") {
+    if (statName === "might" || statName === "speed" || statName === "intellect" || statName === "recovery-rolls") {
       stat1 = statName
     } else {
       sendChat("character|" + charId, "&{template:cyphMsg} {{modStat=1}} {{noAttribute=" + statName + "}}")
       return
     }
-    if (stat1 == "recovery-rolls") {
+    if (stat1 === "recovery-rolls") {
       const objArray = findObjs({
         _type: 'attribute',
         name: stat1,
@@ -162,14 +162,14 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
     let npcHealth = 0
     let npcMaxHealth = 0
     let npcArmor = 0
-    if (applyArmor != "n") {
+    if (applyArmor !== "n") {
       npcArmor = parseInt(getAttrByName(characterObj.id, "armor", "current")) || 0
       // DEBUG
       // sendChat("GM", "/w gm npcDamage() Debug : Armor of ('"+npcName+"', char id:"+characterObj.id+", token id:"+tokenObj.id+") = "+npcArmor)
     }
     // Is the token linked to the character ("full NPC") or a Mook ?
     const isChar = tokenObj.get("bar1_link")
-    if (isChar == "") {
+    if (isChar === "") {
       // It's a Mook : get the bars value
       npcHealth = parseInt(tokenObj.get("bar2_value"))
       npcMaxHealth = parseInt(tokenObj.get("bar2_max"))
@@ -180,7 +180,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         name: "health",
         _characterid: characterObj.id
       })
-      if (attObjArray == false) {
+      if (attObjArray === false) {
         sendChat("GM", "/w gm npcDamage() Error : this character ('" + npcName + "') has no 'health' attribute!")
         return false
       } else {
@@ -194,7 +194,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
       dmg = Math.max((dmg - npcArmor), 0)
     }
     const npcHealthFinal = Math.min(Math.max((npcHealth - dmg), 0), npcMaxHealth)
-    if (isChar == "") {
+    if (isChar === "") {
       // Mook : update bars onbly
       tokenObj.set("bar2_max", npcMaxHealth)
       tokenObj.set("bar2_value", npcHealthFinal)
@@ -203,7 +203,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
       attObjArray[0].setWithWorker("max", npcMaxHealth)
       attObjArray[0].setWithWorker("current", npcHealthFinal)
     }
-    tokenObj.set("status_dead", (npcHealthFinal == 0))
+    tokenObj.set("status_dead", (npcHealthFinal === 0))
     if (dmgDealt > 0) {
       sendChat("GM", "/w gm " + npcName + " takes " + dmg + " damage (" + dmgDealt + " - " + npcArmor + " Armor). Health: " + npcHealth + "->" + npcHealthFinal + ".")
     } else {
@@ -219,7 +219,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
     if (msg.content.indexOf("!cypher-") !== 0) {
       return
     } else {
-      if (parseInt(msg.content.indexOf(" ")) == -1) {
+      if (parseInt(msg.content.indexOf(" ")) === -1) {
         // every function requires at least one parameter
         return
       } else {
@@ -227,7 +227,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         const functionCalled = msg.content.split(" ")[0]
         paramArray[0] = msg.content.split(" ")[1]
         // log("Function called:"+functionCalled+" Parameters:"+paramArray[0]) //DEBUG
-        if (parseInt(paramArray[0].indexOf("|")) != -1) {
+        if (parseInt(paramArray[0].indexOf("|")) !== -1) {
           // more than 1 parameter (supposedly character_id as first paramater)
           paramArray = paramArray[0].split("|")
         }
@@ -237,7 +237,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
     switch (functionCalled) {
       case '!cypher-npcdmg':
         // this function requires 3 parameters : token_id|damage|apply armor y/n
-        if (paramArray.length != 3) {
+        if (paramArray.length !== 3) {
           sendChat("GM", "&{template:cyphMsg} {{chatmessage=cypher-npcdmg}} {{genericMsg=Wrong parameters (expected: token_id|damage|apply armor y/n): '" + Parameters + "''}}")
           return false
         }
@@ -255,7 +255,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         break
       case '!cypher-modstat':
         // this function requires 3 parameters : character_id|stat|cost
-        if (paramArray.length != 3) {
+        if (paramArray.length !== 3) {
           sendChat("GM", "&{template:cyphMsg} {{chatmessage=cypher-modstat}} {{genericMsg=Wrong parameters (expected: character_id|stat|cost): '" + Parameters + "''}}")
           return false
         }
