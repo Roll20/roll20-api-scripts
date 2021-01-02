@@ -213,55 +213,53 @@ const CypherSystemsByRoll20 = (function () {
   }
 
   function handleInput (msg) {
-    // Validate chat message. Every function requires at least one parameter.
-    if (msg.type !== 'api' || msg.content.indexOf('!cypher-') !== 0 || parseInt(msg.content.indexOf(' ')) === -1) {
-      return
-    }
+    // Validate chat command
+    if (msg.type === 'api' && msg.content.search(/^!cypher-\w+(\s|%20).+$/) === 0) {
+      let paramArray = new Array(1)
+      const functionCalled = msg.content.split(' ')[0]
+      paramArray[0] = msg.content.split(' ')[1]
 
-    let paramArray = new Array(1)
-    const functionCalled = msg.content.split(' ')[0]
-    paramArray[0] = msg.content.split(' ')[1]
+      // uncomment to debug
+      // log(`Function called: ${functionCalled} Parameters: ${paramArray[0]}`)
 
-    // uncomment to debug
-    // log(`Function called: ${functionCalled} Parameters: ${paramArray[0]}`)
+      if (parseInt(paramArray[0].indexOf('|')) !== -1) {
+        // more than 1 parameter (supposedly character_id as first paramater)
+        paramArray = paramArray[0].split('|')
+      }
+      let obj = getObj('character', paramArray[0])
 
-    if (parseInt(paramArray[0].indexOf('|')) !== -1) {
-      // more than 1 parameter (supposedly character_id as first paramater)
-      paramArray = paramArray[0].split('|')
-    }
-    let obj = getObj('character', paramArray[0])
-
-    switch (functionCalled) {
-      // this function requires 3 parameters : token_id|damage|apply armor y/n
-      case '!cypher-npcdmg':
-        if (paramArray.length !== 3) {
-          sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-npcdmg}} {{Message=Invalid parameters}} {{Expected=token_id,damage,apply_armor}} {{Received=${paramArray}}}`)
-          return false
-        }
-        obj = getObj('graphic', paramArray[0])
-        if (!obj) {
-          sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-npcdmg}} {{Message=noToken ${paramArray[0]}}}`)
-          return false
-        }
-        if (!obj.get('represents')) {
-          sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-npcdmg}} {{Message=notCharToken ${paramArray[0]}}}`)
-          return false
-        }
-        npcDamage(obj, getObj('character', obj.get('represents')), paramArray[1], paramArray[2])
-        break
-      // this function requires 3 parameters : character_id|stat|cost
-      case '!cypher-modstat':
-        if (paramArray.length !== 3) {
-          sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-modstat}} {{Message=Invalid parameters}} {{Expected=character_id,stat,cost}} {{Received=${paramArray}}}`)
-          return false
-        }
-        //
-        if (!obj) {
-          sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-modstat}} {{Message=notaCharacter ${paramArray[0]}}}`)
-          return false
-        }
-        modStat(obj, paramArray[1], paramArray[2], paramArray[3])
-        break
+      switch (functionCalled) {
+        // this function requires 3 parameters : token_id|damage|apply armor y/n
+        case '!cypher-npcdmg':
+          if (paramArray.length !== 3) {
+            sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-npcdmg}} {{Message=Invalid parameters}} {{Expected=token_id,damage,apply_armor}} {{Received=${paramArray}}}`)
+            return false
+          }
+          obj = getObj('graphic', paramArray[0])
+          if (!obj) {
+            sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-npcdmg}} {{Message=noToken ${paramArray[0]}}}`)
+            return false
+          }
+          if (!obj.get('represents')) {
+            sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-npcdmg}} {{Message=notCharToken ${paramArray[0]}}}`)
+            return false
+          }
+          npcDamage(obj, getObj('character', obj.get('represents')), paramArray[1], paramArray[2])
+          break
+        // this function requires 3 parameters : character_id|stat|cost
+        case '!cypher-modstat':
+          if (paramArray.length !== 3) {
+            sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-modstat}} {{Message=Invalid parameters}} {{Expected=character_id,stat,cost}} {{Received=${paramArray}}}`)
+            return false
+          }
+          //
+          if (!obj) {
+            sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-modstat}} {{Message=notaCharacter ${paramArray[0]}}}`)
+            return false
+          }
+          modStat(obj, paramArray[1], paramArray[2], paramArray[3])
+          break
+      }
     }
   }
 
