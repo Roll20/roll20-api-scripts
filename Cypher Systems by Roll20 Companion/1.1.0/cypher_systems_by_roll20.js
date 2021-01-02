@@ -212,20 +212,20 @@ This script is designed for the Cypher Systems by Roll20 character sheet.
   }
 
   const handleInput = function (msg) {
+    // Validate chat message. Every function requires at least one parameter.
     if (msg.type !== 'api' || msg.content.indexOf('!cypher-') !== 0 || parseInt(msg.content.indexOf(' ')) === -1) {
-      // every function requires at least one parameter
       return
-    } else {
-      let paramArray = new Array(1)
-      const functionCalled = msg.content.split(' ')[0]
-      paramArray[0] = msg.content.split(' ')[1]
-      // log('Function called:'+functionCalled+' Parameters:'+paramArray[0]) //DEBUG
-      if (parseInt(paramArray[0].indexOf('|')) !== -1) {
-        // more than 1 parameter (supposedly character_id as first paramater)
-        paramArray = paramArray[0].split('|')
-      }
-      const obj = getObj('character', paramArray[0])
     }
+
+    let paramArray = new Array(1)
+    const functionCalled = msg.content.split(' ')[0]
+    paramArray[0] = msg.content.split(' ')[1]
+    // log('Function called:'+functionCalled+' Parameters:'+paramArray[0]) //DEBUG
+    if (parseInt(paramArray[0].indexOf('|')) !== -1) {
+      // more than 1 parameter (supposedly character_id as first paramater)
+      paramArray = paramArray[0].split('|')
+    }
+    const obj = getObj('character', paramArray[0])
     switch (functionCalled) {
       case '!cypher-npcdmg':
         // this function requires 3 parameters : token_id|damage|apply armor y/n
