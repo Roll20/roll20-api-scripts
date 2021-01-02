@@ -1,25 +1,27 @@
 /* globals createObj, findObjs, getAttrByName, getObj, log, on, sendChat */
 /* read Help.txt */
-const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
+const CypherSystemsByRoll20 = (function () {
   'use strict'
   const version = '1.1.0'
   const modified = '2020-01-01'
   // const schemaversion = 1.0
   const author = 'Natha (roll20userid:75857)'
   function checkInstall () {
-    log(`Cypher Systems by Roll20 Companion v${version} (${modified})
-Author: ${author}
-This script is designed for the Cypher Systems by Roll20 character sheet.
-`)
+    log(`===========================================================================
+  Cypher Systems by Roll20 Companion v${version} (${modified})
+  Author: ${author}
+  This script is designed for the Cypher Systems by Roll20 character sheet.
+===========================================================================`)
   }
 
   function modStat (characterObj, statName, statCost) {
     // checking the stat
+    let obj1
     let stat1 = ''
     if (statName === 'might' || statName === 'speed' || statName === 'intellect' || statName === 'recovery-rolls') {
       stat1 = statName
     } else {
-      sendChat('character|' + charId, '&{template:cyphMsg} {{modStat=1}} {{noAttribute=' + statName + '}}')
+      sendChat('character|' + characterObj.id, '&{template:cyphMsg} {{modStat=1}} {{noAttribute=' + statName + '}}')
       return
     }
     if (stat1 === 'recovery-rolls') {
@@ -48,7 +50,6 @@ This script is designed for the Cypher Systems by Roll20 character sheet.
         name: stat1,
         _characterid: characterObj.id
       })
-      let obj1
       if (!objArray.length) {
         pool1 = parseInt(getAttrByName(characterObj.id, stat1, 'current')) || 0
         max1 = parseInt(getAttrByName(characterObj.id, stat1, 'max')) || 0
@@ -151,7 +152,7 @@ This script is designed for the Cypher Systems by Roll20 character sheet.
   }
 
   function npcDamage (tokenObj, characterObj, dmgDealt, applyArmor) {
-    // Apply damage (or healing if dmdDeal is negative ...) to Numenera NPC/Creature
+    // Apply damage (or healing if dmgDealt is negative ...) to Numenera NPC/Creature
     // And set 'death' marker if health is 0 or less.
     // The Mook or Non Player full Character must have the following attributes :
     //  - Level (token bar1)
@@ -163,6 +164,7 @@ This script is designed for the Cypher Systems by Roll20 character sheet.
     let npcHealth = 0
     let npcMaxHealth = 0
     let npcArmor = 0
+    let attObjArray = {}
     if (applyArmor !== 'n') {
       npcArmor = parseInt(getAttrByName(characterObj.id, 'armor', 'current')) || 0
       // DEBUG
@@ -176,7 +178,7 @@ This script is designed for the Cypher Systems by Roll20 character sheet.
       npcMaxHealth = parseInt(tokenObj.get('bar2_max'))
     } else {
       // It's a 'full' character NPC : get the attributes values
-      const attObjArray = findObjs({
+      attObjArray = findObjs({
         _type: 'attribute',
         name: 'health',
         _characterid: characterObj.id
@@ -221,40 +223,43 @@ This script is designed for the Cypher Systems by Roll20 character sheet.
     let paramArray = new Array(1)
     const functionCalled = msg.content.split(' ')[0]
     paramArray[0] = msg.content.split(' ')[1]
-    // log('Function called:'+functionCalled+' Parameters:'+paramArray[0]) //DEBUG
+
+    // uncomment to debug
+    log(`Function called: ${functionCalled} Parameters: ${paramArray[0]}`)
+
     if (parseInt(paramArray[0].indexOf('|')) !== -1) {
       // more than 1 parameter (supposedly character_id as first paramater)
       paramArray = paramArray[0].split('|')
     }
     let obj = getObj('character', paramArray[0])
+
     switch (functionCalled) {
+      // this function requires 3 parameters : token_id|damage|apply armor y/n
       case '!cypher-npcdmg':
-        // this function requires 3 parameters : token_id|damage|apply armor y/n
         if (paramArray.length !== 3) {
-          sendChat('GM', '&{template:cyphMsg} {{chatmessage=cypher-npcdmg}} {{genericMsg=Wrong parameters (expected: token_id|damage|apply armor y/n): ' + paramArray + '}}')
+          sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-npcdmg}} {{Message=Invalid parameters}} {{Expected=token_id,damage,apply_armor}} {{Received=${paramArray}}}`)
           return false
         }
-        //
         obj = getObj('graphic', paramArray[0])
         if (!obj) {
-          sendChat('GM', '&{template:cyphMsg} {{chatmessage=cypher-npcdmg}} {{noToken=' + paramArray[0] + '}}')
+          sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-npcdmg}} {{Message=noToken ${paramArray[0]}}}`)
           return false
         }
         if (!obj.get('represents')) {
-          sendChat('GM', '&{template:cyphMsg} {{chatmessage=cypher-npcdmg}} {{notCharToken=' + paramArray[0] + '}}')
+          sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-npcdmg}} {{Message=notCharToken ${paramArray[0]}}}`)
           return false
         }
         npcDamage(obj, getObj('character', obj.get('represents')), paramArray[1], paramArray[2])
         break
+      // this function requires 3 parameters : character_id|stat|cost
       case '!cypher-modstat':
-        // this function requires 3 parameters : character_id|stat|cost
         if (paramArray.length !== 3) {
-          sendChat('GM', '&{template:cyphMsg} {{chatmessage=cypher-modstat}} {{genericMsg=Wrong parameters (expected: character_id|stat|cost): ' + paramArray + '}}')
+          sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-modstat}} {{Message=Invalid parameters}} {{Expected=character_id,stat,cost}} {{Received=${paramArray}}}`)
           return false
         }
         //
         if (!obj) {
-          sendChat('GM', '&{template:cyphMsg} {{chatmessage=cypher-modstat}} {{notaCharacter=' + paramArray[0] + '}}')
+          sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-modstat}} {{Message=notaCharacter ${paramArray[0]}}}`)
           return false
         }
         modStat(obj, paramArray[1], paramArray[2], paramArray[3])
