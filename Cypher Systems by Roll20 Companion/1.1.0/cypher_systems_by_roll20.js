@@ -7,14 +7,14 @@ const CypherSystemsByRoll20 = (function () {
   // const schemaversion = 1.0
   const author = 'Natha (roll20userid:75857)'
   function checkInstall () {
-    log(`===========================================================================
-  Cypher Systems by Roll20 Companion v${version} (${modified})
-  Author: ${author}
-  This script is designed for the Cypher Systems by Roll20 character sheet.
-===========================================================================`)
+    log(`========================================================================
+Cypher Systems by Roll20 Companion v${version} (${modified})
+Author: ${author}
+This script is designed for the Cypher Systems by Roll20 character sheet.
+=========================================================================`)
   }
 
-  function modStat (character, statName, statCost) {
+  function modifyStat (character, statName, statCost) {
     // checking the stat
     if (statName !== 'might' && statName !== 'speed' && statName !== 'intellect' && statName !== 'recovery-rolls') {
       sendChat(`character|${character.id}`, `&{template:default} {{modStat=1}} {{noAttribute=${statName}}}`)
@@ -162,11 +162,11 @@ const CypherSystemsByRoll20 = (function () {
     let npcHealth = 0
     let npcMaxHealth = 0
     let npcArmor = 0
-    let attObjArray = {}
+    let attributes = {}
     if (applyArmor !== 'n') {
       npcArmor = parseInt(getAttrByName(character.id, 'armor', 'current')) || 0
       // DEBUG
-      // sendChat('GM', '/w gm npcDamage() Debug : Armor of (''+npcName+'', char id:'+characterObj.id+', token id:'+tokenObj.id+') = '+npcArmor)
+      // sendChat('Cypher System', `/w gm npcDamage() Debug : Armor of ("${npcName}", char id:${characterObj.id}, token id:${tokenObj.id}) = ${npcArmor}`)
     }
     // Is the token linked to the character ('full NPC') or a Mook ?
     const isChar = token.get('bar1_link')
@@ -175,89 +175,76 @@ const CypherSystemsByRoll20 = (function () {
       npcHealth = parseInt(token.get('bar2_value'))
       npcMaxHealth = parseInt(token.get('bar2_max'))
     } else {
-      // It's a 'full' character NPC : get the attributes values
-      attObjArray = findObjs({
+      // It's a full character NPC, so get the attributes values
+      attributes = findObjs({
         _type: 'attribute',
         _characterid: character.id,
         name: 'health'
       })
-      if (attObjArray === false) {
-        sendChat('GM', `/w gm npcDamage() Error: ${npcName} has no health attribute!`)
+      if (attributes === false) {
+        sendChat('Cypher System', `/w gm npcDamage() Error: ${npcName} has no health attribute!`)
         return false
       } else {
-        npcHealth = parseInt(attObjArray[0].get('current')) || 0
-        npcMaxHealth = parseInt(attObjArray[0].get('max')) || 0
+        npcHealth = parseInt(attributes[0].get('current')) || 0
+        npcMaxHealth = parseInt(attributes[0].get('max')) || 0
       }
     }
-    // In case the Health attribute / bar has no maximum value
+    // In case the Health attribute has no maximum value
     npcMaxHealth = Math.max(npcHealth, npcMaxHealth)
     if (dmg > 0) {
       dmg = Math.max((dmg - npcArmor), 0)
     }
     const npcHealthFinal = Math.min(Math.max((npcHealth - dmg), 0), npcMaxHealth)
     if (isChar === '') {
-      // Mook : update bars onbly
+      // Mook: update bars only
       token.set('bar2_max', npcMaxHealth)
       token.set('bar2_value', npcHealthFinal)
     } else {
       // Update character attributes
-      attObjArray[0].setWithWorker('max', npcMaxHealth)
-      attObjArray[0].setWithWorker('current', npcHealthFinal)
+      attributes[0].setWithWorker('max', npcMaxHealth)
+      attributes[0].setWithWorker('current', npcHealthFinal)
     }
     token.set('status_dead', (npcHealthFinal === 0))
-    if (dmgDealt > 0) {
-      sendChat('GM', `/w gm ${npcName} takes ${dmg} damage (${dmgDealt} - ${npcArmor} Armor). Health: ${npcHealth}->${npcHealthFinal}.`)
-    } else {
-      sendChat('GM', `/w gm ${npcName} is healed for ${dmg} points. Health: ${npcHealth}->${npcHealthFinal}.`)
-    }
+    sendChat('Cypher System', `/w gm ${npcName} receives ${dmg} points of ${dmgDealt >= 0 ? `damage (${dmgDealt} - ${npcArmor} Armor)` : 'healing'}. Health: ${npcHealth}->${npcHealthFinal}.`)
   }
 
   function handleInput (msg) {
     // Validate chat command
     if (msg.type === 'api' && msg.content.search(/^!cypher-\w+(\s|%20).+$/) === 0) {
-      let paramArray = new Array(1)
-      const functionCalled = msg.content.split(' ')[0]
-      paramArray[0] = msg.content.split(' ')[1]
+      const command = msg.content.split(' ')[0]
+      const args = msg.content.split(' ')[1].split('|')
+      let obj
 
-      // uncomment to debug
-      // log(`Function called: ${functionCalled} Parameters: ${paramArray[0]}`)
-
-      if (parseInt(paramArray[0].indexOf('|')) !== -1) {
-        // more than 1 parameter (supposedly character_id as first paramater)
-        paramArray = paramArray[0].split('|')
-      }
-      let obj = getObj('character', paramArray[0])
-
-      switch (functionCalled) {
-        // this function requires 3 parameters : token_id|damage|apply armor y/n
+      switch (command) {
+        // params: token_id|damage|apply_armor_y/n
         case '!cypher-npcdmg':
-          if (paramArray.length !== 3) {
-            sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-npcdmg}} {{Message=Invalid parameters}} {{Expected=token_id,damage,apply_armor}} {{Received=${paramArray}}}`)
+          if (args.length !== 3) {
+            sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-npcdmg}} {{Message=Invalid parameters}} {{Expected=token_id,damage,apply_armor_y/n}} {{Received=${args}}}`)
             return false
           }
-          obj = getObj('graphic', paramArray[0])
+          obj = getObj('graphic', args[0])
           if (!obj) {
-            sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-npcdmg}} {{Message=noToken ${paramArray[0]}}}`)
+            sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-npcdmg}} {{Message=Token not found: ${args[0]}}}`)
             return false
           }
           if (!obj.get('represents')) {
-            sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-npcdmg}} {{Message=notCharToken ${paramArray[0]}}}`)
+            sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-npcdmg}} {{Message=Token does not represent a character: ${args[0]}}}`)
             return false
           }
-          npcDamage(obj, getObj('character', obj.get('represents')), paramArray[1], paramArray[2])
+          npcDamage(obj, getObj('character', obj.get('represents')), args[1], args[2])
           break
-        // this function requires 3 parameters : character_id|stat|cost
+        // params: character_id|stat|cost
         case '!cypher-modstat':
-          if (paramArray.length !== 3) {
-            sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-modstat}} {{Message=Invalid parameters}} {{Expected=character_id,stat,cost}} {{Received=${paramArray}}}`)
+          if (args.length !== 3) {
+            sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-modstat}} {{Message=Invalid parameters}} {{Expected=character_id,stat,cost}} {{Received=${args}}}`)
             return false
           }
-          //
+          obj = getObj('character', args[0])
           if (!obj) {
-            sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-modstat}} {{Message=notaCharacter ${paramArray[0]}}}`)
+            sendChat('Cypher System', `&{template:default} {{name=Error}} {{Command=cypher-modstat}} {{Message=Character not found: ${args[0]}}}`)
             return false
           }
-          modStat(obj, paramArray[1], paramArray[2], paramArray[3])
+          modifyStat(obj, args[1], args[2], args[3])
           break
       }
     }
@@ -267,14 +254,14 @@ const CypherSystemsByRoll20 = (function () {
     on('chat:message', handleInput)
   }
 
-  return {
-    CheckInstall: checkInstall,
-    RegisterEventHandlers: registerEventHandlers
+  function load () {
+    checkInstall()
+    registerEventHandlers()
   }
-}())
 
-on('ready', function () {
-  'use strict'
-  CypherSystemsByRoll20.CheckInstall()
-  CypherSystemsByRoll20.RegisterEventHandlers()
-})
+  return {
+    load: load
+  }
+})()
+
+on('ready', CypherSystemsByRoll20.load)
