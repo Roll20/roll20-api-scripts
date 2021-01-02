@@ -1,18 +1,18 @@
 /* read Help.txt */
 var CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
   'use strict'
-  var version = 1.001,
-    releasedate= "2019-06-16",
-    schemaversion = 1.0,
-    author="Natha (roll20userid:75857)",
-    warning = "This script is meant to be used with the Cypher Systems by Roll20 sheet.",
+  var version = 1.001
+  var releasedate= "2019-06-16"
+  var schemaversion = 1.0
+  var author="Natha (roll20userid:75857)"
+  var warning = "This script is meant to be used with the Cypher Systems by Roll20 sheet."
     //-----------------------------------------------------------------------------
-    checkInstall = function() {
+  var checkInstall = function() {
       log("Cypher Systems by Roll20 Companion script, version "+version+" ("+releasedate+") installed.")
       log(warning)
-    },
+    }
     //-----------------------------------------------------------------------------
-    modStat = function (characterObj,statName,statCost) {
+  var modStat = function (characterObj,statName,statCost) {
       // checking the stat
       var stat1 = ""
       if(statName == "might" || statName == "speed" || statName == "intellect" || statName=="recovery-rolls") {
@@ -63,9 +63,14 @@ var CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         };
         if(statCost > pool1){
           //several stats will be diminished
-          var pool2, pool3, max2, max3 = 0
-          var stat2, stat3 = ''
-          var obj2, obj3
+          var pool2
+          var pool3
+          var max2
+          var max3 = 0
+          var stat2
+          var stat3 = ''
+          var obj2
+          var obj3
           switch(statName){
             case "might":
               stat2 = 'speed'
@@ -142,9 +147,9 @@ var CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
           sendChat("character|"+characterObj.id, "" + stat1 + ": " + pool1 + "-" + statCost + "=" + finalPool)
         };
       };
-    },
+    }
     //-----------------------------------------------------------------------------
-    npcDamage = function (tokenObj,characterObj,dmgDealt, applyArmor) {
+  var npcDamage = function (tokenObj,characterObj,dmgDealt, applyArmor) {
       // Apply damage (or healing if dmdDeal is negative ...) to Numenera NPC/Creature
       // And set "death" marker if health is 0 or less.
       // The Mook or Non Player full Character must have the following attributes :
@@ -206,9 +211,9 @@ var CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         sendChat("GM", "/w gm " + npcName + " is healed for " + dmg + " points. Health: " + npcHealth + "->" + npcHealthFinal + ".")
       }
       return
-    },
+    }
     //-----------------------------------------------------------------------------
-    handleInput = function(msg) {
+  var handleInput = function(msg) {
       if (msg.type !== "api") {
         return
       }
@@ -265,9 +270,9 @@ var CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
           break
       }
       return
-    },
+    }
     //-----------------------------------------------------------------------------
-    registerEventHandlers = function() {
+  var registerEventHandlers = function() {
       on('chat:message', handleInput)
     }
   //-----------------------------------------------------------------------------
