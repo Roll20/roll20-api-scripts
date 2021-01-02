@@ -10,7 +10,7 @@ var MaxApoc = (function() {
 	var DEBUG_FINE = 2;
 	var DEBUG_FINEST = 1;
 	
-	var DEBUG_LEVEL = DEBUG_FINE;
+	var DEBUG_LEVEL = DEBUG_INFO;
 	
 	var CONFIG = {
 	    combatPhasesEnabled: {name: 'Combat Phases', desc:'Automatically manage combat phases via turn order tracker.', value: true},
