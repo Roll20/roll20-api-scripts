@@ -225,7 +225,7 @@ This script is designed for the Cypher Systems by Roll20 character sheet.
       // more than 1 parameter (supposedly character_id as first paramater)
       paramArray = paramArray[0].split('|')
     }
-    const obj = getObj('character', paramArray[0])
+    let obj = getObj('character', paramArray[0])
     switch (functionCalled) {
       case '!cypher-npcdmg':
         // this function requires 3 parameters : token_id|damage|apply armor y/n
