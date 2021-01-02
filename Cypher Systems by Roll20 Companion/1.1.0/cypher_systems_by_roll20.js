@@ -1,18 +1,18 @@
 /* read Help.txt */
-let CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
+const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
   'use strict'
-  let version = 1.001
-  let releasedate= "2019-06-16"
-  let schemaversion = 1.0
-  let author="Natha (roll20userid:75857)"
-  let warning = "This script is meant to be used with the Cypher Systems by Roll20 sheet."
+  const version = 1.001
+  const releasedate= "2019-06-16"
+  const schemaversion = 1.0
+  const author="Natha (roll20userid:75857)"
+  const warning = "This script is meant to be used with the Cypher Systems by Roll20 sheet."
     //-----------------------------------------------------------------------------
-  let checkInstall = function() {
+    const checkInstall = function() {
       log("Cypher Systems by Roll20 Companion script, version "+version+" ("+releasedate+") installed.")
       log(warning)
     }
     //-----------------------------------------------------------------------------
-  let modStat = function (characterObj,statName,statCost) {
+    const modStat = function (characterObj,statName,statCost) {
       // checking the stat
       let stat1 = ""
       if(statName == "might" || statName == "speed" || statName == "intellect" || statName=="recovery-rolls") {
@@ -22,7 +22,7 @@ let CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         return
       }
       if(stat1 == "recovery-rolls"){
-        let objArray = findObjs({
+        const objArray = findObjs({
           _type: 'attribute',
           name: stat1,
           _characterid: characterObj.id
@@ -149,7 +149,7 @@ let CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
       };
     }
     //-----------------------------------------------------------------------------
-  let npcDamage = function (tokenObj,characterObj,dmgDealt, applyArmor) {
+  const npcDamage = function (tokenObj,characterObj,dmgDealt, applyArmor) {
       // Apply damage (or healing if dmdDeal is negative ...) to Numenera NPC/Creature
       // And set "death" marker if health is 0 or less.
       // The Mook or Non Player full Character must have the following attributes :
@@ -159,7 +159,7 @@ let CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
       // Armor will diminish damage unless "applyArmor"='n'
 
       let dmg = parseInt(dmgDealt) || 0
-      let npcName = characterObj.get("name")
+      const npcName = characterObj.get("name")
       let npcHealth = 0
       let npcMaxHealth = 0
       let npcArmor=0
@@ -169,14 +169,14 @@ let CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         //sendChat("GM", "/w gm npcDamage() Debug : Armor of ('"+npcName+"', char id:"+characterObj.id+", token id:"+tokenObj.id+") = "+npcArmor)
       }
       // Is the token linked to the character ("full NPC") or a Mook ?
-      let isChar = tokenObj.get("bar1_link")
+      const isChar = tokenObj.get("bar1_link")
       if (isChar == "") {
         // It's a Mook : get the bars value
         npcHealth = parseInt(tokenObj.get("bar2_value"))
         npcMaxHealth = parseInt(tokenObj.get("bar2_max"))
       } else {
         // It's a "full" character NPC : get the attributes values
-        let attObjArray = findObjs({
+        const attObjArray = findObjs({
           _type: "attribute",
           name: "health",
           _characterid: characterObj.id
@@ -194,7 +194,7 @@ let CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
       if (dmg > 0) {
         dmg = Math.max((dmg - npcArmor),0)
       }
-      let npcHealthFinal = Math.min(Math.max((npcHealth - dmg),0),npcMaxHealth)
+      const npcHealthFinal = Math.min(Math.max((npcHealth - dmg),0),npcMaxHealth)
       if (isChar == "") {
         // Mook : update bars onbly
         tokenObj.set("bar2_max", npcMaxHealth)
@@ -213,7 +213,7 @@ let CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
       return
     }
     //-----------------------------------------------------------------------------
-  let handleInput = function(msg) {
+  const handleInput = function(msg) {
       if (msg.type !== "api") {
         return
       }
@@ -224,16 +224,15 @@ let CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
           //every function requires at least one parameter
           return
         } else {
-          let functionCalled, obj
           let paramArray= new Array(1)
-          functionCalled = msg.content.split(" ")[0]
+          const functionCalled = msg.content.split(" ")[0]
           paramArray[0] = msg.content.split(" ")[1]
           //log("Function called:"+functionCalled+" Parameters:"+paramArray[0]); //DEBUG
           if (parseInt(paramArray[0].indexOf("|")) !=-1) {
             //more than 1 parameter (supposedly character_id as first paramater)
             paramArray = paramArray[0].split("|")
           }
-          obj = getObj("character", paramArray[0])
+          const obj = getObj("character", paramArray[0])
         }
       }
       switch(functionCalled) {
@@ -272,7 +271,7 @@ let CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
       return
     }
     //-----------------------------------------------------------------------------
-  let registerEventHandlers = function() {
+    const registerEventHandlers = function() {
       on('chat:message', handleInput)
     }
   //-----------------------------------------------------------------------------
