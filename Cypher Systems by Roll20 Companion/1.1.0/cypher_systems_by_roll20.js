@@ -16,14 +16,12 @@ const CypherSystemsByRoll20 = (function () {
 
   function modStat (characterObj, statName, statCost) {
     // checking the stat
-    let obj1
-    let stat1 = ''
-    if (statName === 'might' || statName === 'speed' || statName === 'intellect' || statName === 'recovery-rolls') {
-      stat1 = statName
-    } else {
+    if (statName !== 'might' && statName !== 'speed' && statName !== 'intellect' && statName !== 'recovery-rolls') {
       sendChat(`character|${characterObj.id}`, `&{template:default} {{modStat=1}} {{noAttribute=${statName}}}`)
       return
     }
+    let obj1
+    const stat1 = statName
     if (stat1 === 'recovery-rolls') {
       const objArray = findObjs({
         _type: 'attribute',
