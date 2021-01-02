@@ -13,7 +13,7 @@ This script is designed for the Cypher Systems by Roll20 character sheet.
 `)
   }
 
-  const modStat = function (characterObj, statName, statCost) {
+  function modStat (characterObj, statName, statCost) {
     // checking the stat
     let stat1 = ''
     if (statName === 'might' || statName === 'speed' || statName === 'intellect' || statName === 'recovery-rolls') {
@@ -150,7 +150,7 @@ This script is designed for the Cypher Systems by Roll20 character sheet.
     }
   }
 
-  const npcDamage = function (tokenObj, characterObj, dmgDealt, applyArmor) {
+  function npcDamage (tokenObj, characterObj, dmgDealt, applyArmor) {
     // Apply damage (or healing if dmdDeal is negative ...) to Numenera NPC/Creature
     // And set 'death' marker if health is 0 or less.
     // The Mook or Non Player full Character must have the following attributes :
@@ -212,7 +212,7 @@ This script is designed for the Cypher Systems by Roll20 character sheet.
     }
   }
 
-  const handleInput = function (msg) {
+  function handleInput (msg) {
     // Validate chat message. Every function requires at least one parameter.
     if (msg.type !== 'api' || msg.content.indexOf('!cypher-') !== 0 || parseInt(msg.content.indexOf(' ')) === -1) {
       return
@@ -262,7 +262,7 @@ This script is designed for the Cypher Systems by Roll20 character sheet.
     }
   }
 
-  const registerEventHandlers = function () {
+  function registerEventHandlers () {
     on('chat:message', handleInput)
   }
 
