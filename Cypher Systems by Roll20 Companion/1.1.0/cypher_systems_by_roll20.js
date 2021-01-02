@@ -21,7 +21,7 @@ const CypherSystemsByRoll20 = (function () {
     if (statName === 'might' || statName === 'speed' || statName === 'intellect' || statName === 'recovery-rolls') {
       stat1 = statName
     } else {
-      sendChat('character|' + characterObj.id, '&{template:cyphMsg} {{modStat=1}} {{noAttribute=' + statName + '}}')
+      sendChat(`character|${characterObj.id}`, `&{template:default} {{modStat=1}} {{noAttribute=${statName}}}`)
       return
     }
     if (stat1 === 'recovery-rolls') {
@@ -39,7 +39,7 @@ const CypherSystemsByRoll20 = (function () {
       } else {
         objArray[0].setWithWorker('current', statCost)
       }
-      sendChat('character|' + characterObj.id, 'Next recovery action updated.')
+      sendChat(`character|${characterObj.id}`, 'Next recovery period updated.')
     } else {
       // stat pool modification
       let pool1 = 0
@@ -131,22 +131,22 @@ const CypherSystemsByRoll20 = (function () {
           obj2.setWithWorker('current', 0)
           if (statCost > pool3) {
             obj3.setWithWorker('current', 0)
-            sendChat('character|' + characterObj.id, `He's dead, Jim! ${pool1}, ${pool2}, and ${pool3} down to 0.`)
+            sendChat(`character|${characterObj.id}`, `He's dead, Jim! ${pool1}, ${pool2}, and ${pool3} down to 0.`)
           } else {
             finalPool = pool3 - statCost
             obj3.setWithWorker('current', finalPool)
-            sendChat('character|' + characterObj.id, '' + stat1 + ' and ' + stat2 + ' down to 0. ' + stat3 + ': ' + pool3 + '-' + statCost + '=' + finalPool)
+            sendChat(`character|${characterObj.id}`, `${stat1} and ${stat2} down to 0. ${stat3}: ${pool3}-${statCost}=${finalPool}`)
           }
         } else {
           finalPool = pool2 - statCost
           obj2.setWithWorker('current', finalPool)
-          sendChat('character|' + characterObj.id, '' + stat1 + ' down to 0. ' + stat2 + ': ' + pool2 + '-' + statCost + '=' + finalPool)
+          sendChat(`character|${characterObj.id}`, `${stat1} down to 0. ${stat2}: ${pool2}-${statCost}=${finalPool}`)
         }
       } else {
         // just the current stat is diminished
         finalPool = pool1 - statCost
         obj1.setWithWorker('current', finalPool)
-        sendChat('character|' + characterObj.id, '' + stat1 + ': ' + pool1 + '-' + statCost + '=' + finalPool)
+        sendChat(`character|${characterObj.id}`, `${stat1}: ${pool1}-${statCost}=${finalPool}`)
       }
     }
   }
@@ -184,7 +184,7 @@ const CypherSystemsByRoll20 = (function () {
         _characterid: characterObj.id
       })
       if (attObjArray === false) {
-        sendChat('GM', '/w gm npcDamage() Error: ' + npcName + ' has no health attribute!')
+        sendChat('GM', `/w gm npcDamage() Error: ${npcName} has no health attribute!`)
         return false
       } else {
         npcHealth = parseInt(attObjArray[0].get('current')) || 0
@@ -208,9 +208,9 @@ const CypherSystemsByRoll20 = (function () {
     }
     tokenObj.set('status_dead', (npcHealthFinal === 0))
     if (dmgDealt > 0) {
-      sendChat('GM', '/w gm ' + npcName + ' takes ' + dmg + ' damage (' + dmgDealt + ' - ' + npcArmor + ' Armor). Health: ' + npcHealth + '->' + npcHealthFinal + '.')
+      sendChat('GM', `/w gm ${npcName} takes ${dmg} damage (${dmgDealt} - ${npcArmor} Armor). Health: ${npcHealth}->${npcHealthFinal}.`)
     } else {
-      sendChat('GM', '/w gm ' + npcName + ' is healed for ' + dmg + ' points. Health: ' + npcHealth + '->' + npcHealthFinal + '.')
+      sendChat('GM', `/w gm ${npcName} is healed for ${dmg} points. Health: ${npcHealth}->${npcHealthFinal}.`)
     }
   }
 
