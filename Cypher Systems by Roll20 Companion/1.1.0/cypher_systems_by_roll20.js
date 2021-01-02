@@ -15,13 +15,13 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
   const modStat = function (characterObj,statName,statCost) {
     // checking the stat
     let stat1 = ""
-    if(statName == "might" || statName == "speed" || statName == "intellect" || statName == "recovery-rolls") {
+    if (statName == "might" || statName == "speed" || statName == "intellect" || statName == "recovery-rolls") {
       stat1 = statName
     } else {
       sendChat("character|" + charId, "&{template:cyphMsg} {{modStat=1}} {{noAttribute=" + statName + "}}")
       return
     }
-    if(stat1 == "recovery-rolls") {
+    if (stat1 == "recovery-rolls") {
       const objArray = findObjs({
         _type: 'attribute',
         name: stat1,
@@ -60,8 +60,8 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
       } else {
         obj1 = objArray[0]
         pool1 = parseInt(obj1.get("current")) || 0
-      };
-      if(statCost > pool1) {
+      }
+      if (statCost > pool1) {
         // several stats will be diminished
         let pool2
         let pool3
@@ -71,7 +71,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         let stat3 = ''
         let obj2
         let obj3
-        switch(statName) {
+        switch (statName) {
           case "might":
             stat2 = 'speed'
             stat3 = 'intellect'
@@ -124,29 +124,29 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         // calculus
         statCost = statCost - pool1
         obj1.setWithWorker("current",0)
-        if(statCost > pool2) {
+        if (statCost > pool2) {
           statCost = statCost - pool2
           obj2.setWithWorker("current",0)
-          if(statCost > pool3) {
+          if (statCost > pool3) {
             obj3.setWithWorker("current",0)
             sendChat("character|" + characterObj.id, "He's dead, Jim! Might, Speed and Intellect down to 0.")
-          }else{
+          } else {
             finalPool = pool3 - statCost
             obj3.setWithWorker("current",finalPool)
             sendChat("character|" + characterObj.id, "" + stat1 + " and " + stat2 + " down to 0. " + stat3 + ": " + pool3 + "-" + statCost + "=" + finalPool)
           }
-        }else{
+        } else {
           finalPool = pool2 - statCost
           obj2.setWithWorker("current",finalPool)
           sendChat("character|" + characterObj.id, "" + stat1 + " down to 0. " + stat2 + ": " + pool2 + "-" + statCost + "=" + finalPool)
         }
-      }else{
+      } else {
         // just the current stat is diminished
         finalPool = pool1 - statCost
         obj1.setWithWorker("current",finalPool)
         sendChat("character|" + characterObj.id, "" + stat1 + ": " + pool1 + "-" + statCost + "=" + finalPool)
-      };
-    };
+      }
+    }
   }
   // -----------------------------------------------------------------------------
   const npcDamage = function (tokenObj,characterObj,dmgDealt, applyArmor) {
@@ -202,7 +202,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
       // Update character attributes
       attObjArray[0].setWithWorker("max",npcMaxHealth)
       attObjArray[0].setWithWorker("current",npcHealthFinal)
-    };
+    }
     tokenObj.set("status_dead", (npcHealthFinal == 0))
     if (dmgDealt > 0) {
       sendChat("GM", "/w gm " + npcName + " takes " + dmg + " damage (" + dmgDealt + " - " + npcArmor + " Armor). Health: " + npcHealth + "->" + npcHealthFinal + ".")
@@ -226,7 +226,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         let paramArray = new Array(1)
         const functionCalled = msg.content.split(" ")[0]
         paramArray[0] = msg.content.split(" ")[1]
-        // log("Function called:"+functionCalled+" Parameters:"+paramArray[0]); //DEBUG
+        // log("Function called:"+functionCalled+" Parameters:"+paramArray[0]) //DEBUG
         if (parseInt(paramArray[0].indexOf("|")) != -1) {
           // more than 1 parameter (supposedly character_id as first paramater)
           paramArray = paramArray[0].split("|")
@@ -234,20 +234,20 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         const obj = getObj("character", paramArray[0])
       }
     }
-    switch(functionCalled) {
+    switch (functionCalled) {
       case '!cypher-npcdmg':
         // this function requires 3 parameters : token_id|damage|apply armor y/n
-        if(paramArray.length != 3) {
+        if (paramArray.length != 3) {
           sendChat("GM", "&{template:cyphMsg} {{chatmessage=cypher-npcdmg}} {{genericMsg=Wrong parameters (expected: token_id|damage|apply armor y/n): '" + Parameters + "''}}")
           return false
         }
         //
         obj = getObj("graphic", paramArray[0])
-        if(!obj) {
+        if (!obj) {
           sendChat("GM", "&{template:cyphMsg} {{chatmessage=cypher-npcdmg}} {{noToken=" + paramArray[0] + "}}")
           return false
         }
-        if(!obj.get("represents")) {
+        if (!obj.get("represents")) {
           sendChat("GM", "&{template:cyphMsg} {{chatmessage=cypher-npcdmg}} {{notCharToken=" + paramArray[0] + "}}")
           return false
         }
@@ -255,7 +255,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         break
       case '!cypher-modstat':
         // this function requires 3 parameters : character_id|stat|cost
-        if(paramArray.length != 3) {
+        if (paramArray.length != 3) {
           sendChat("GM", "&{template:cyphMsg} {{chatmessage=cypher-modstat}} {{genericMsg=Wrong parameters (expected: character_id|stat|cost): '" + Parameters + "''}}")
           return false
         }
