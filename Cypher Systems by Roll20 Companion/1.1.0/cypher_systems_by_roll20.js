@@ -7,7 +7,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
   const author = "Natha (roll20userid:75857)"
   const warning = "This script is meant to be used with the Cypher Systems by Roll20 sheet."
   // -----------------------------------------------------------------------------
-  const checkInstall = function() {
+  const checkInstall = function () {
     log("Cypher Systems by Roll20 Companion script, version " + version + " (" + releasedate + ") installed.")
     log(warning)
   }
@@ -21,7 +21,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
       sendChat("character|" + charId, "&{template:cyphMsg} {{modStat=1}} {{noAttribute=" + statName + "}}")
       return
     }
-    if(stat1 == "recovery-rolls"){
+    if(stat1 == "recovery-rolls") {
       const objArray = findObjs({
         _type: 'attribute',
         name: stat1,
@@ -61,7 +61,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         obj1 = objArray[0]
         pool1 = parseInt(obj1.get("current")) || 0
       };
-      if(statCost > pool1){
+      if(statCost > pool1) {
         // several stats will be diminished
         let pool2
         let pool3
@@ -71,7 +71,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         let stat3 = ''
         let obj2
         let obj3
-        switch(statName){
+        switch(statName) {
           case "might":
             stat2 = 'speed'
             stat3 = 'intellect'
@@ -124,10 +124,10 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         // calculus
         statCost = statCost - pool1
         obj1.setWithWorker("current",0)
-        if(statCost > pool2){
+        if(statCost > pool2) {
           statCost = statCost - pool2
           obj2.setWithWorker("current",0)
-          if(statCost > pool3){
+          if(statCost > pool3) {
             obj3.setWithWorker("current",0)
             sendChat("character|" + characterObj.id, "He's dead, Jim! Might, Speed and Intellect down to 0.")
           }else{
@@ -162,7 +162,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
     let npcHealth = 0
     let npcMaxHealth = 0
     let npcArmor = 0
-    if (applyArmor != "n"){
+    if (applyArmor != "n") {
       npcArmor = parseInt(getAttrByName(characterObj.id, "armor", "current")) || 0
       // DEBUG
       // sendChat("GM", "/w gm npcDamage() Debug : Armor of ('"+npcName+"', char id:"+characterObj.id+", token id:"+tokenObj.id+") = "+npcArmor)
@@ -212,7 +212,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
     return
   }
   // -----------------------------------------------------------------------------
-  const handleInput = function(msg) {
+  const handleInput = function (msg) {
     if (msg.type !== "api") {
       return
     }
@@ -243,7 +243,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         }
         //
         obj = getObj("graphic", paramArray[0])
-        if(!obj){
+        if(!obj) {
           sendChat("GM", "&{template:cyphMsg} {{chatmessage=cypher-npcdmg}} {{noToken=" + paramArray[0] + "}}")
           return false
         }
@@ -270,7 +270,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
     return
   }
   // -----------------------------------------------------------------------------
-  const registerEventHandlers = function() {
+  const registerEventHandlers = function () {
     on('chat:message', handleInput)
   }
   // -----------------------------------------------------------------------------
@@ -280,7 +280,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
   }
 }())
 // -----------------------------------------------------------------------------
-on('ready',function() {
+on('ready',function () {
   'use strict'
   CypherSystemsByRoll20.CheckInstall()
   CypherSystemsByRoll20.RegisterEventHandlers()
