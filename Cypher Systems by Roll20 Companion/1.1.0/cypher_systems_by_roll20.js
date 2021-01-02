@@ -6,12 +6,12 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
   const schemaversion = 1.0
   const author = "Natha (roll20userid:75857)"
   const warning = "This script is meant to be used with the Cypher Systems by Roll20 sheet."
-  //-----------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------
   const checkInstall = function() {
     log("Cypher Systems by Roll20 Companion script, version " + version + " (" + releasedate + ") installed.")
     log(warning)
   }
-  //-----------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------
   const modStat = function (characterObj,statName,statCost) {
     // checking the stat
     let stat1 = ""
@@ -38,7 +38,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
       }
       sendChat("character|" + characterObj.id, "Next recovery action updated.")
     } else {
-      //stat pool modification
+      // stat pool modification
       let pool1 = 0
       let max1 = 0
       let finalPool = 0
@@ -62,7 +62,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         pool1 = parseInt(obj1.get("current")) || 0
       };
       if(statCost > pool1){
-        //several stats will be diminished
+        // several stats will be diminished
         let pool2
         let pool3
         let max2
@@ -141,14 +141,14 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
           sendChat("character|" + characterObj.id, "" + stat1 + " down to 0. " + stat2 + ": " + pool2 + "-" + statCost + "=" + finalPool)
         }
       }else{
-        //just the current stat is diminished
+        // just the current stat is diminished
         finalPool = pool1 - statCost
         obj1.setWithWorker("current",finalPool)
         sendChat("character|" + characterObj.id, "" + stat1 + ": " + pool1 + "-" + statCost + "=" + finalPool)
       };
     };
   }
-  //-----------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------
   const npcDamage = function (tokenObj,characterObj,dmgDealt, applyArmor) {
     // Apply damage (or healing if dmdDeal is negative ...) to Numenera NPC/Creature
     // And set "death" marker if health is 0 or less.
@@ -164,8 +164,8 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
     let npcArmor = 0
     if (applyArmor != "n"){
       npcArmor = parseInt(getAttrByName(characterObj.id, "armor", "current")) || 0
-      //DEBUG
-      //sendChat("GM", "/w gm npcDamage() Debug : Armor of ('"+npcName+"', char id:"+characterObj.id+", token id:"+tokenObj.id+") = "+npcArmor)
+      // DEBUG
+      // sendChat("GM", "/w gm npcDamage() Debug : Armor of ('"+npcName+"', char id:"+characterObj.id+", token id:"+tokenObj.id+") = "+npcArmor)
     }
     // Is the token linked to the character ("full NPC") or a Mook ?
     const isChar = tokenObj.get("bar1_link")
@@ -211,7 +211,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
     }
     return
   }
-  //-----------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------
   const handleInput = function(msg) {
     if (msg.type !== "api") {
       return
@@ -220,15 +220,15 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
       return
     } else {
       if (parseInt(msg.content.indexOf(" ")) == -1) {
-        //every function requires at least one parameter
+        // every function requires at least one parameter
         return
       } else {
         let paramArray = new Array(1)
         const functionCalled = msg.content.split(" ")[0]
         paramArray[0] = msg.content.split(" ")[1]
-        //log("Function called:"+functionCalled+" Parameters:"+paramArray[0]); //DEBUG
+        // log("Function called:"+functionCalled+" Parameters:"+paramArray[0]); //DEBUG
         if (parseInt(paramArray[0].indexOf("|")) != -1) {
-          //more than 1 parameter (supposedly character_id as first paramater)
+          // more than 1 parameter (supposedly character_id as first paramater)
           paramArray = paramArray[0].split("|")
         }
         const obj = getObj("character", paramArray[0])
@@ -236,7 +236,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
     }
     switch(functionCalled) {
       case '!cypher-npcdmg':
-        //this function requires 3 parameters : token_id|damage|apply armor y/n
+        // this function requires 3 parameters : token_id|damage|apply armor y/n
         if(paramArray.length != 3) {
           sendChat("GM", "&{template:cyphMsg} {{chatmessage=cypher-npcdmg}} {{genericMsg=Wrong parameters (expected: token_id|damage|apply armor y/n): '" + Parameters + "''}}")
           return false
@@ -254,7 +254,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         npcDamage(obj,getObj("character",obj.get("represents")),paramArray[1],paramArray[2])
         break
       case '!cypher-modstat':
-        //this function requires 3 parameters : character_id|stat|cost
+        // this function requires 3 parameters : character_id|stat|cost
         if(paramArray.length != 3) {
           sendChat("GM", "&{template:cyphMsg} {{chatmessage=cypher-modstat}} {{genericMsg=Wrong parameters (expected: character_id|stat|cost): '" + Parameters + "''}}")
           return false
@@ -269,17 +269,17 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
     }
     return
   }
-  //-----------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------
   const registerEventHandlers = function() {
     on('chat:message', handleInput)
   }
-  //-----------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------
   return {
     CheckInstall: checkInstall,
     RegisterEventHandlers: registerEventHandlers
   }
 }())
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 on('ready',function() {
   'use strict'
   CypherSystemsByRoll20.CheckInstall()
