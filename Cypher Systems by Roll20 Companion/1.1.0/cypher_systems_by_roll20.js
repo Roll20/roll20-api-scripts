@@ -12,7 +12,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
     log(warning)
   }
   // -----------------------------------------------------------------------------
-  const modStat = function (characterObj,statName,statCost) {
+  const modStat = function (characterObj, statName, statCost) {
     // checking the stat
     let stat1 = ""
     if (statName == "might" || statName == "speed" || statName == "intellect" || statName == "recovery-rolls") {
@@ -34,7 +34,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
           characterid: characterObj.id
         })
       } else {
-        objArray[0].setWithWorker("current",statCost)
+        objArray[0].setWithWorker("current", statCost)
       }
       sendChat("character|" + characterObj.id, "Next recovery action updated.")
     } else {
@@ -123,33 +123,33 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         }
         // calculus
         statCost = statCost - pool1
-        obj1.setWithWorker("current",0)
+        obj1.setWithWorker("current", 0)
         if (statCost > pool2) {
           statCost = statCost - pool2
-          obj2.setWithWorker("current",0)
+          obj2.setWithWorker("current", 0)
           if (statCost > pool3) {
-            obj3.setWithWorker("current",0)
+            obj3.setWithWorker("current", 0)
             sendChat("character|" + characterObj.id, "He's dead, Jim! Might, Speed and Intellect down to 0.")
           } else {
             finalPool = pool3 - statCost
-            obj3.setWithWorker("current",finalPool)
+            obj3.setWithWorker("current", finalPool)
             sendChat("character|" + characterObj.id, "" + stat1 + " and " + stat2 + " down to 0. " + stat3 + ": " + pool3 + "-" + statCost + "=" + finalPool)
           }
         } else {
           finalPool = pool2 - statCost
-          obj2.setWithWorker("current",finalPool)
+          obj2.setWithWorker("current", finalPool)
           sendChat("character|" + characterObj.id, "" + stat1 + " down to 0. " + stat2 + ": " + pool2 + "-" + statCost + "=" + finalPool)
         }
       } else {
         // just the current stat is diminished
         finalPool = pool1 - statCost
-        obj1.setWithWorker("current",finalPool)
+        obj1.setWithWorker("current", finalPool)
         sendChat("character|" + characterObj.id, "" + stat1 + ": " + pool1 + "-" + statCost + "=" + finalPool)
       }
     }
   }
   // -----------------------------------------------------------------------------
-  const npcDamage = function (tokenObj,characterObj,dmgDealt, applyArmor) {
+  const npcDamage = function (tokenObj, characterObj, dmgDealt, applyArmor) {
     // Apply damage (or healing if dmdDeal is negative ...) to Numenera NPC/Creature
     // And set "death" marker if health is 0 or less.
     // The Mook or Non Player full Character must have the following attributes :
@@ -191,17 +191,17 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
     // In case the Health attribute / bar has no maximum value
     npcMaxHealth = Math.max(npcHealth, npcMaxHealth)
     if (dmg > 0) {
-      dmg = Math.max((dmg - npcArmor),0)
+      dmg = Math.max((dmg - npcArmor), 0)
     }
-    const npcHealthFinal = Math.min(Math.max((npcHealth - dmg),0),npcMaxHealth)
+    const npcHealthFinal = Math.min(Math.max((npcHealth - dmg), 0), npcMaxHealth)
     if (isChar == "") {
       // Mook : update bars onbly
       tokenObj.set("bar2_max", npcMaxHealth)
-      tokenObj.set("bar2_value",npcHealthFinal)
+      tokenObj.set("bar2_value", npcHealthFinal)
     } else {
       // Update character attributes
-      attObjArray[0].setWithWorker("max",npcMaxHealth)
-      attObjArray[0].setWithWorker("current",npcHealthFinal)
+      attObjArray[0].setWithWorker("max", npcMaxHealth)
+      attObjArray[0].setWithWorker("current", npcHealthFinal)
     }
     tokenObj.set("status_dead", (npcHealthFinal == 0))
     if (dmgDealt > 0) {
@@ -251,7 +251,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
           sendChat("GM", "&{template:cyphMsg} {{chatmessage=cypher-npcdmg}} {{notCharToken=" + paramArray[0] + "}}")
           return false
         }
-        npcDamage(obj,getObj("character",obj.get("represents")),paramArray[1],paramArray[2])
+        npcDamage(obj, getObj("character", obj.get("represents")), paramArray[1], paramArray[2])
         break
       case '!cypher-modstat':
         // this function requires 3 parameters : character_id|stat|cost
@@ -264,7 +264,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
           sendChat("GM", "&{template:cyphMsg} {{chatmessage=cypher-modstat}} {{notaCharacter=" + paramArray[0] + "}}")
           return false
         }
-        modStat(obj,paramArray[1],paramArray[2],paramArray[3])
+        modStat(obj, paramArray[1], paramArray[2], paramArray[3])
         break
     }
     return
@@ -280,7 +280,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
   }
 }())
 // -----------------------------------------------------------------------------
-on('ready',function () {
+on('ready', function () {
   'use strict'
   CypherSystemsByRoll20.CheckInstall()
   CypherSystemsByRoll20.RegisterEventHandlers()
