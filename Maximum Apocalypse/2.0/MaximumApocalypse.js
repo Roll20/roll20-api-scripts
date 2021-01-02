@@ -10,12 +10,11 @@ var MaxApoc = (function() {
 	var DEBUG_FINE = 2;
 	var DEBUG_FINEST = 1;
 	
-	var DEBUG_LEVEL = DEBUG_INFO;
+	var DEBUG_LEVEL = DEBUG_FINE;
 	
 	var CONFIG = {
 	    combatPhasesEnabled: {name: 'Combat Phases', desc:'Automatically manage combat phases via turn order tracker.', value: true},
-    	combatTriggersEAG: {name: 'Combat triggered EAG', desc:'A combat round will make the Enemy Attraction Gauge appear.', value: true},
-    	autoInitReductionEnabled: {name: 'Auto Init Reduction', desc:"Use of Full Dodge & Riposte will automatically reduce character's initiative.", value: true}
+    	combatTriggersEAG: {name: 'Combat triggered EAG', desc:'A combat round will make the Enemy Attraction Gauge appear.', value: true}
 	};
 	
 	var maLog = function(msg, lvl)
@@ -60,7 +59,7 @@ var MaxApoc = (function() {
 	    {
 	        var configCode = cmdOptions[0];
 	        var configValue = cmdOptions[1] === 'true';
-	        var configObj = CONFIG[configCode];
+	        var configObj = state.MaxApoc.config[configCode];
 	        
 	        if(configObj)
 	        {
@@ -80,6 +79,11 @@ var MaxApoc = (function() {
 	    }
 	};
 	
+	var configIsEnabled = function(configCode)
+	{
+	    return state.MaxApoc.config[configCode].value;
+	};
+	
 	var init = function(continueCombat) 
     {
         // show turn order
@@ -94,41 +98,54 @@ var MaxApoc = (function() {
         // get All Character Tokens On Player Page
         let characterTokens = filterToCharacterTokens(getAllTokensOnPlayerPage());
         
-        // add turn order entries per character token on player page
-        _.each(characterTokens, function(obj) {    
-            
-            let characterId = obj.get('represents');
-            if(characterId)
-            {
-                let initiative = getAttrByName(characterId, 'init');
-                let name = obj.get('name');
-                
-                // populate turn order
-                turnorder.push({
-                    id: obj.id,
-                    pr: initiative,
-                    custom: name
-                });
-            }
-        });
-        
         // if not first round of combat, adjust by init stolen by previous round
         if(continueCombat)
         {
-            // index turn order
-            let previousTurnOrderIndex = {};
+            // index characters
+            let characterTokensIndex = {};
             let previousTurnOrder = getTurnOrder();
-            _.each(previousTurnOrder, function(turn) { 
-                previousTurnOrderIndex[turn.id] = turn.pr;
-            });
-            
-            // remove any stolen init values
-            _.each(turnorder, function(turn) { 
-                let prevInit = previousTurnOrderIndex[turn.id];
-                if(prevInit && prevInit < 0)
+            _.each(characterTokens, function(obj) { 
+                let characterId = obj.get('represents');
+                if(characterId)
                 {
-                    maLog('Adjusting "' + turn.custom + '" init for next round by ' + prevInit);
-                    turn.pr += prevInit;
+                    characterTokensIndex[obj.id] = getAttrByName(characterId, 'init');
+                }
+            });
+            maLog('Initiative character index:' + JSON.stringify(characterTokensIndex), DEBUG_FINE);
+            
+            // add character init to reduce next turn's value by any stolen init value
+            _.each(previousTurnOrder, function(turn) { 
+                let charInit = characterTokensIndex[turn.id];
+                if(charInit)
+                {
+                    let stolenInit = Math.min(turn.pr, 0);
+                    maLog('Adjusting "' + turn.custom + '" init (' + charInit + ') for next round by ' + stolenInit, DEBUG_INFO);
+                    turn.pr = charInit + stolenInit;
+                    turnorder.push(turn);
+                }
+                else
+                {
+                    maLog('Cannot find token/initiative for ' + turn.custom + ' (' + turn.id + ')', DEBUG_ERROR);
+                }
+            });
+        }
+        else
+        {
+            // add turn order entries per character token on player page
+            _.each(characterTokens, function(obj) {    
+                
+                let characterId = obj.get('represents');
+                if(characterId)
+                {
+                    let initiative = getAttrByName(characterId, 'init');
+                    let name = obj.get('name');
+                    
+                    // populate turn order
+                    turnorder.push({
+                        id: obj.id,
+                        pr: initiative,
+                        custom: name
+                    });
                 }
             });
         }
@@ -148,7 +165,7 @@ var MaxApoc = (function() {
 
 	var handleTrackerEvent = function(turnOrder) 
 	{   
-	    if(CONFIG['combatPhasesEnabled'].value && turnOrder && turnOrder.length > 0 && containsToken(turnOrder, END_OF_PHASE))
+	    if(configIsEnabled('combatPhasesEnabled') && turnOrder && turnOrder.length > 0 && containsToken(turnOrder, END_OF_PHASE))
     	{
     	    if(turnOrder[0].custom === END_OF_PHASE || countGreaterThanZero(turnOrder) == 0)
     	    {
@@ -178,9 +195,9 @@ var MaxApoc = (function() {
         }
         else
         { 
-            maLog('Triggering EAG? - ' + CONFIG['combatTriggersEAG'].value, DEBUG_FINE);
+            maLog('Triggering EAG? - ' + configIsEnabled('combatTriggersEAG'), DEBUG_FINE);
             
-            if(CONFIG['combatTriggersEAG'].value)
+            if(configIsEnabled('combatTriggersEAG'))
             {
                 // increment Enemy Attraction
                 updateEnemyAttraction(5, true);
@@ -691,7 +708,7 @@ var MaxApoc = (function() {
             maLog("Full Dodge detected"); 
             maLog('Auto Init Reduction Enabled? - ' + CONFIG['autoInitReductionEnabled'].value, DEBUG_FINE);
             
-            if(CONFIG['autoInitReductionEnabled'].value)
+            if(configIsEnabled('autoInitReductionEnabled'))
             {
                 // increment Enemy Attraction
                 var newTurnOrder = updateTurnOrderArray(-5, -5, characterName);
@@ -863,6 +880,7 @@ var MaxApoc = (function() {
 	};
 
 	return {
+	    CONFIG: CONFIG,
 		DEBUG_ERROR: DEBUG_ERROR,
         DEBUG_WARN:  DEBUG_WARN,
         DEBUG_INFO:  DEBUG_INFO, 
@@ -1023,18 +1041,29 @@ on('ready',function()
             initPhase: 0,
             gmPlayerId: '',
             gmChatSpeaksAs: '',
-            characterRolls: {}
+            characterRolls: {},
+            config: MaxApoc.CONFIG
         };
 
     // Check if the namespaced property exists, creating/updating it if it doesn't
     if( ! state.MaxApoc ) {
         state.MaxApoc = initialState;
     } else {
+        // ensure all properties are present
         _.each(initialState, function(propValue, propName)
         {
            if( ! state.MaxApoc[propName] ) 
            {
                state.MaxApoc[propName] = propValue;
+           }
+        });
+        
+        // ensure all config items are present
+        _.each(initialState.config, function(configValue, configName)
+        {
+           if( ! state.MaxApoc.config[configName] ) 
+           {
+               state.MaxApoc.config[configName] = configValue;
            }
         });
     }
