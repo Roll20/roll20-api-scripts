@@ -1,15 +1,16 @@
 /* read Help.txt */
 const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
   'use strict'
-  const version = 1.001
-  const releasedate = '2019-06-16'
-  const schemaversion = 1.0
+  const version = '1.1.0'
+  const modified = '2020-01-01'
+  // const schemaversion = 1.0
   const author = 'Natha (roll20userid:75857)'
-  const warning = 'This script is meant to be used with the Cypher Systems by Roll20 sheet.'
   // -----------------------------------------------------------------------------
   const checkInstall = function () {
-    log('Cypher Systems by Roll20 Companion script, version ' + version + ' (' + releasedate + ') installed.')
-    log(warning)
+    log(`Cypher Systems by Roll20 Companion v${version} (${modified})
+Author: ${author}
+This script is designed for the Cypher Systems by Roll20 character sheet.
+`)
   }
   // -----------------------------------------------------------------------------
   const modStat = function (characterObj, statName, statCost) {
@@ -129,7 +130,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
           obj2.setWithWorker('current', 0)
           if (statCost > pool3) {
             obj3.setWithWorker('current', 0)
-            sendChat('character|' + characterObj.id, 'He's dead, Jim! Might, Speed and Intellect down to 0.')
+            sendChat('character|' + characterObj.id, `He's dead, Jim! ${pool1}, ${pool2}, and ${pool3} down to 0.`)
           } else {
             finalPool = pool3 - statCost
             obj3.setWithWorker('current', finalPool)
@@ -181,7 +182,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
         _characterid: characterObj.id
       })
       if (attObjArray === false) {
-        sendChat('GM', '/w gm npcDamage() Error : this character ('' + npcName + '') has no 'health' attribute!')
+        sendChat('GM', '/w gm npcDamage() Error: ' + npcName + ' has no health attribute!')
         return false
       } else {
         npcHealth = parseInt(attObjArray[0].get('current')) || 0
@@ -238,7 +239,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
       case '!cypher-npcdmg':
         // this function requires 3 parameters : token_id|damage|apply armor y/n
         if (paramArray.length !== 3) {
-          sendChat('GM', '&{template:cyphMsg} {{chatmessage=cypher-npcdmg}} {{genericMsg=Wrong parameters (expected: token_id|damage|apply armor y/n): '' + Parameters + '''}}')
+          sendChat('GM', '&{template:cyphMsg} {{chatmessage=cypher-npcdmg}} {{genericMsg=Wrong parameters (expected: token_id|damage|apply armor y/n): ' + paramArray + '}}')
           return false
         }
         //
@@ -256,7 +257,7 @@ const CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
       case '!cypher-modstat':
         // this function requires 3 parameters : character_id|stat|cost
         if (paramArray.length !== 3) {
-          sendChat('GM', '&{template:cyphMsg} {{chatmessage=cypher-modstat}} {{genericMsg=Wrong parameters (expected: character_id|stat|cost): '' + Parameters + '''}}')
+          sendChat('GM', '&{template:cyphMsg} {{chatmessage=cypher-modstat}} {{genericMsg=Wrong parameters (expected: character_id|stat|cost): ' + paramArray + '}}')
           return false
         }
         //
