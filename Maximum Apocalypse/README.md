@@ -2,12 +2,6 @@
 
 Also see the Maximimum Apocalypse character sheet.
 
-**Roll Effects:**
-
-The following types of roll checks will be detected and effects applied:
-- Full Dodge: Character's initiative will be reduced by 5
-- Riposte: Character's initiative will be reduced by 3
-
 **Commands:**  
   
 ***`!ma init`***
