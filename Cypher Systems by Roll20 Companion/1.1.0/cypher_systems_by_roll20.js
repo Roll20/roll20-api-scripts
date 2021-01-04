@@ -210,7 +210,8 @@ This script is designed for the Cypher Systems by Roll20 character sheet.
 
   function handleInput (msg) {
     // Validate chat command
-    if (msg.type === 'api' && msg.content.search(/^!cypher-\w+(\s|%20).+$/) === 0) {
+    const validCommand = /^!cypher-\w+(\s|%20).+$/
+    if (msg.type === 'api' && validCommand.test(msg.content)) {
       const command = msg.content.split(' ')[0]
       const args = msg.content.split(' ')[1].split('|')
       let obj
