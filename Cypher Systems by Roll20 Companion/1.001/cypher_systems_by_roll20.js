@@ -15,10 +15,10 @@ var CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
     modStat = function (characterObj,statName,statCost) {
         // checking the stat
 	    var stat1 = "";
-	    if(statName == "might" || statName == "speed" || statName == "intellect" || statName=="recovery-rolls") {
+	    if(statName == "might" || statName == "speed" || statName == "intellect" || statName=="recovery-rolls" || statName=="xp") {
 	        stat1 = statName;
 	    } else {
-	        sendChat("character|"+charId, "&{template:cyphMsg} {{modStat=1}} {{noAttribute=" + statName + "}}");
+	        sendChat("character|"+characterObj.id, "&{template:cyphMsg} {{modStat=1}} {{noAttribute=" + statName + "}}");
 	        return;
 	    };
         if(stat1 == "recovery-rolls"){
@@ -37,6 +37,19 @@ var CypherSystemsByRoll20 = CypherSystemsByRoll20 || (function () {
     	        objArray[0].setWithWorker("current",statCost);
     	    };
             sendChat("character|"+characterObj.id, "Next recovery action updated.");
+        } else if (stat1 == "xp") {
+    	    var objArray = findObjs({
+    	                    _type: 'attribute',
+    	                    name: stat1,
+    	                    _characterid: characterObj.id
+    	                });
+	    obj1 = objArray[0];
+	    var currentXpValue = 0;
+	    var finalXpValue = 0;
+	    currentXpValue=parseInt(obj1.get("current")) || 0;
+	    finalXpValue = currentXpValue + parseInt(statCost);
+	    obj1.setWithWorker("current",finalXpValue);
+	    sendChat("character|"+characterObj.id, "" + stat1 + ": " + currentXpValue + "+" + statCost + "=" + finalXpValue);
         } else {
             //stat pool modification
     	    var pool1 = 0;
