@@ -1,9 +1,9 @@
 {
-	"name": "PaladinAura 5E",
+	"name": "D&D 5E - PaladinAura",
 	"script": "PaladinAura.js",
-	"version": "1.0",
+	"version": "1.1",
 	"previousversions": [],
-	"description": "A Roll20 API that auto-applies Paladin Auras and shows which characters are affected by the aura through the use of token-markers.\nDepreciated version: https://github.com/LaytonGB/PaladinAura",
+	"description": "A Roll20 API that auto-applies Paladin Auras and shows which characters are affected by the aura through the use of token-markers. Only Compatible with the **D&D 5E by Roll20** character sheet.\n\n* Forum Thread\n* [Readme & further instructions](https://github.com/Roll20/roll20-api-scripts/tree/master/PaladinAura)",
 	"authors": "Layton Burchell. Special thanks to: Gustav Merelius.",
 	"roll20userid": "1519557",
 	"patreon": "",

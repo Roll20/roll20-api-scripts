@@ -1,0 +1,16 @@
+{
+  "name": "MD5Sum",
+  "script": "MD5Sum.js",
+  "version": "0.1.0",
+  "description": "Provides MD5 hash calculation facilities for Roll20 Scripts. (Adapted from http://www.myersdaily.org/joseph/javascript/md5-text.html)\r\rThis script is used as a dependency for other scripts that need to calculate hashes for data to check for changes between operations.",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "useroptions": {},
+  "dependencies": {},
+  "modifies": {
+    "state.MD5Sum": "read,write"
+  },
+  "conflicts": [],
+  "previousversions": []
+}

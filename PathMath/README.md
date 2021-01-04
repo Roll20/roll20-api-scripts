@@ -157,6 +157,21 @@ function normalizePath(path)
 
 ```
 /**
+ * Produces a UDL window from a Path.
+ * This UDL window path will be created on the walls layer
+ * and its _path consists entirely of 'M' components.
+ * This may have unexpected behavior for paths that have breaks in them
+ * ('M' components between other components).
+ * Special thanks to Scott C. and Aaron for discovering this hidden UDL
+ * functionality.
+ * @param {Roll20Path} path
+ * @return {Roll20Path} The Path object for the new UDL window.
+ */
+function pathToUDLWindow(path)
+```
+
+```
+/**
  * Computes the intersection between the projected lines of two homogeneous
  * 2D line segments.
  * @param {Segment} seg1

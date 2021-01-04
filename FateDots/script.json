@@ -1,7 +1,7 @@
 {
   "name": "FateDots",
-  "version": "0.2.2",
-  "description": "Provides numbered multi dots for Fate stress boxes.",
+  "version": "0.2.3",
+  "description": "Provides numbered multi dots for Fate stress boxes.  By default, red and blue statuses will be treated specially.\r\rFor instructions, run `!fate-dots` with no arguments.",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -14,6 +14,7 @@
   "script": "FateDots.js",
   "useroptions": [],
   "previousversions": [
-    "0.2.1"
+    "0.2.1",
+    "0.2.2"
   ]
 }
