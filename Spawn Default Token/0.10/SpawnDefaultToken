@@ -55,7 +55,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.11';
+    const version = '0.10';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -1136,10 +1136,7 @@ const SpawnDefaultToken = (() => {
             //grab the character object to spawn from supplied spawnName
             let spawnObj = getCharacterFromName(data.spawnName);
             let validObj = validateObject(data.who, spawnObj, 'character', data.spawnName);
-            if (!(validObj === 'true')) {
-                retVal.push(validObj);
-                return retVal;
-            }
+            if (!(validObj === 'true')) {return retVal.push(validObj);}
             
             ///////////////////////////////////////////////////////////////////////////////////
             //  Start spawning!         --spawns (q=qty) tokens at each of (o=origin) locations
@@ -1186,10 +1183,7 @@ const SpawnDefaultToken = (() => {
                     var sheetCharObj = getCharacterFromName(data.sheetName);
                         validObj = validateObject(data.who, sheetCharObj, 'character', data.sheetName);
                 }
-                if (!(validObj === 'true')) {
-                    retVal.push(validObj);
-                    return retVal
-                }
+                if (!(validObj === 'true')) {return retVal.push(validObj);}
                 
                 //Get the characterID to find the ability 
                 let sheetCharID = sheetCharObj.get("id");
@@ -1198,10 +1192,7 @@ const SpawnDefaultToken = (() => {
                 validObj = 'false';
                 let abilityObj = getAbilityFromName(sheetCharID, data.abilityName);
                     validObj = validateObject(data.who, abilityObj, 'ability', data.abilityName);
-                    if (!(validObj === 'true')) {
-                        retVal.push(validObj);
-                        return retVal
-                    }
+                    if (!(validObj === 'true')) {return retVal.push(validObj);}
                  
                 let action = abilityObj.get("action");
                 
