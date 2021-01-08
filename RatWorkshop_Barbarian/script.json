@@ -14,7 +14,7 @@
             "description": "Which Icon to mark dead tokens with"
         }
     ],
-    "dependencies": ["Ratworkshop_DungeonMasterTools"],
+    "dependencies": ["D&D 5E Dungeon Master Tools"],
     "patreon":"https://www.patreon.com/ratworkshop",
     "modifies": {
         "token.*": "read,write",
