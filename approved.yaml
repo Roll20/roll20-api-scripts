@@ -937,17 +937,17 @@ maximumapocalypse:
   - "System Toolbox"
 
 clocktokens:
-  - "Clock Tokens"
+  - "ClockTokens"
   - "System Toolbox"
 
 5ebarbarian:
-  - "D&D 5E Barbarian Class Module"
+  - "RatWorkshop_Barbarian"
   - "System Toolbox"
 
 5edmtools:
-  - "D&D 5E Dungeon Master Tools"
+  - "RatWorkshop_DungeonMasterTools"
   - "System Toolbox"
 
 5epaladin:
-  - "D&D 5E Paladin Class Module"
+  - "RatWorkshop_Paladin"
   - "System Toolbox"
