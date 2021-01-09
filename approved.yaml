@@ -936,3 +936,18 @@ maximumapocalypse:
   - "Maximum Apocalypse"
   - "System Toolbox"
 
+clocktokens:
+  - "ClockTokens"
+  - "System Toolbox"
+
+5ebarbarian:
+  - "RatWorkshop_Barbarian"
+  - "System Toolbox"
+
+5edmtools:
+  - "RatWorkshop_DungeonMasterTools"
+  - "System Toolbox"
+
+5epaladin:
+  - "RatWorkshop_Paladin"
+  - "System Toolbox"

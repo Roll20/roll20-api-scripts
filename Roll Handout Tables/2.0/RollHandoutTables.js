@@ -1,3 +1,6 @@
+// Roll Handout tables
+// Version 2.0
+
 on('ready', () => {
   let activeHandoutID = [];
   let linkToggle = true;
