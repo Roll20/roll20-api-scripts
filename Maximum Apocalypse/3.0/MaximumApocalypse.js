@@ -84,7 +84,7 @@ var MaxApoc = (function() {
 	    return state.MaxApoc.config[configCode].value;
 	};
 	
-	var init = function(continueCombat) 
+	var init = function(continueCombat, selectedTokens) 
     {
         // show turn order
         Campaign().set('initiativepage', Campaign().get('playerpageid'));
@@ -96,7 +96,7 @@ var MaxApoc = (function() {
         let turnorder = [];
         
         // get All Character Tokens On Player Page
-        let characterTokens = filterToCharacterTokens(getAllTokensOnPlayerPage());
+        let characterTokens = getSelectedOrAllCharacterTokens(selectedTokens);
         
         // if not first round of combat, adjust by init stolen by previous round
         if(continueCombat)
@@ -377,12 +377,11 @@ var MaxApoc = (function() {
 	    return objects
 	};
 	
-	var filterToPlayerTokens = function(tokenArray)
+	var filterToPlayerTokens = function(characterTokenArray)
 	{
-	    var characters = filterToCharacterTokens(tokenArray);
 	    var players = [];
         
-        _.each(characters, function(obj) 
+        _.each(characterTokenArray, function(obj) 
         {    
             let characterId = obj.get('represents');
             
@@ -423,25 +422,34 @@ var MaxApoc = (function() {
         return characters;
 	};
 	
-	var getCharacterAttributes = function(selectedTokens, attrNames) 
+	var getSelectedOrAllCharacterTokens = function(selectedTokens)
 	{
-	    // get selected/all character tokens
 	    var characterTokens = [];
 	    if(selectedTokens && selectedTokens.length != 0 )
 	    {
-	        characterTokens = filterToPlayerTokens(getObjects(selectedTokens));
+	        characterTokens = getObjects(selectedTokens);
 	    }
 	    else
 	    {
-	        characterTokens = filterToPlayerTokens(getAllTokensOnPlayerPage());
+	        characterTokens = getAllTokensOnPlayerPage();
 	    }
+	    
+	    // filter to characters
+	    characterTokens = filterToCharacterTokens(characterTokens);
+        
+	    return characterTokens;
+	};
+	
+	var getPlayerCharacterAttributes = function(selectedTokens, attrNames) 
+	{
+	    // get selected/all player character tokens
+	    var characterTokens = filterToPlayerTokens(getSelectedOrAllCharacterTokens(selectedTokens));
 	    
 	    // remove duplicates
 	    characterTokens = _.uniq(characterTokens, function(item) 
 	    { 
             return item.get('represents');
         });
-	    
         
         // iterate over character tokens
 	    var characterAttributes = [];
@@ -508,7 +516,7 @@ var MaxApoc = (function() {
 	
 	var adjustHunger = function(gmPlayerName, selectedTokens, increment, incrementIsFood)
 	{
-	    let characterAttributes = getCharacterAttributes(selectedTokens, ['name', 'hunger', 'starving', 'emaciated', 'dead', 'starving_threshold', 'emaciated_threshold', 'for', 'food_req']);
+	    let characterAttributes = getPlayerCharacterAttributes(selectedTokens, ['name', 'hunger', 'starving', 'emaciated', 'dead', 'starving_threshold', 'emaciated_threshold', 'for', 'food_req']);
 	    maLog('Applying ' + increment + ' hunger/food increment to ' + characterAttributes.length + ' character(s).');
         let gmMsg = {title: 'Hunger Summary', body:[]};
         
@@ -1096,7 +1104,7 @@ on("chat:message", function(msg)
       // START ROUND OF INIATIVE
       if(msg.content.indexOf("!ma init") !== -1) 
       {
-          MaxApoc.init();
+          MaxApoc.init(false, msg.selected);
           return;
       }
         
