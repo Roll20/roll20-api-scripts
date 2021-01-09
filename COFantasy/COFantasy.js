@@ -3786,7 +3786,7 @@ var COFantasy = COFantasy || function() {
       overlay: overlay
     });
     addCellInFramedDisplay(display, cell, 150, true);
-    var comps = listeCompetences[carac];
+    var comps = [ ...listeCompetences[carac]];
     var attributes = findObjs({
       _type: 'attribute',
       _characterid: perso.charId,
@@ -4352,13 +4352,15 @@ var COFantasy = COFantasy || function() {
             error("Il manque un argument à l'option " + args[0], opts);
             return;
           }
-          if (options.nom && options.nom != args[1]) {
+          args.shift();
+          var nom = args.join(' ');
+          if (options.nom && options.nom != nom) {
             error("Nom du jet défini deux fois !", options.nom);
           }
-          options.nom = args[1];
+          options.nom = nom;
           if (options.competence)
-            options.bonusAttrs.push(args[1].toLowerCase());
-          else options.competence = args[1];
+            options.bonusAttrs.push(nom.toLowerCase());
+          else options.competence = nom;
           return;
         case "attribut":
           if (args.length < 2) {
@@ -7042,6 +7044,7 @@ var COFantasy = COFantasy || function() {
       defense += modCarac(target, 'sagesse');
     }
     if (attributeAsBool(target, 'armeSecreteBarde')) {
+      explications.push(tokenName + " est déstabilisé par une action de charme => -10 en DEF");
       defense -= 10;
     }
     if (options.metal && attributeAsBool(target, 'magnetisme')) {
@@ -7535,7 +7538,7 @@ var COFantasy = COFantasy || function() {
       stateCOF.chargeFantastique.tokenAttaque == attaquant.token.id) {
       attBonus += 3;
       var msgCharge = "Charge fantastique => +3 en Attaque";
-      if (!options.pasDeDmg) {
+      if (!options.pasDeDmg && !options.redo) {
         msgCharge += " et +1d6 DM";
         options.additionalDmg = options.additionalDmg || [];
         options.additionalDmg.push({
@@ -15173,6 +15176,19 @@ var COFantasy = COFantasy || function() {
       case 'sommeil':
         doSommeil(action.lanceur, action.cibles, options, action.ciblesSansSave, action.ciblesAvecSave);
         return true;
+      case 'natureNourriciere':
+        doNatureNourriciere(action.perso, options);
+        return true;
+      case 'tourDeForce':
+        doTourDeForce(action.perso, action.seuil, options);
+        return true;
+      case 'enduireDePoison':
+        doEnduireDePoison(action.perso, action.armeEnduite, action.savePoison, action.forcePoison, action.attribut,
+            action.testINT, action.infosAdditionelles, options);
+        return true;
+      case 'armeSecrete':
+        doArmeSecrete(action.perso, action.cible, options);
+        return true;
       default:
         return false;
     }
@@ -20512,7 +20528,8 @@ var COFantasy = COFantasy || function() {
     });
   }
 
-  function natureNourriciere(msg) {
+  function parseNatureNourriciere(msg) {
+    var options = parseOptions(msg);
     getSelected(msg, function(selected) {
       iterSelected(selected, function(lanceur) {
         var charId = lanceur.charId;
@@ -20520,65 +20537,87 @@ var COFantasy = COFantasy || function() {
         if (voieDeLaSurvie < 1) {
           sendChar(charId, " ne connaît pas la Voie de la Survie ?");
         }
-        var trouveBaies = charAttributeAsBool(lanceur, 'natureNourriciereBaies');
-
-        var duree = rollDePlus(6);
-        var attrName = 'dose_Plante médicinale';
-        var output = "cherche des herbes. ";
-        if (trouveBaies) output = "cherche des baies. ";
-        output += "Après " + duree.roll + " heures, " +
-          onGenre(lanceur, "il", "elle");
-        var evt = {
-          type: "recherche d'herbes"
-        };
-        testCaracteristique(lanceur, 'SAG', 10, 'natureNourriciere', {}, evt,
-          function(testRes) {
-            if ((testRes.reussite && !trouveBaies) || (trouveBaies && !testRes.reussite && testRes.valeur > 7)) {
-              if (voieDeLaSurvie > 0) {
-                setTokenAttr(lanceur, attrName, voieDeLaSurvie, evt, {
-                  maxVal: "!cof-soin @{selected|token_id} @{selected|token_id} 1D6"
-                });
-                output += " revient avec " + voieDeLaSurvie + " plantes médicinales.";
-              } else {
-                output += " revient avec de quoi soigner les blessés.";
-              }
-            } else if (testRes.reussite && trouveBaies) {
-              attrName = 'dose_Baie_magique';
-              var niveau = ficheAttributeAsInt(lanceur, 'niveau', 1);
-              var actionBaies = "!cof-consommer-baie " + niveau + " --limiteParJour 1 baieMagique";
-              var nbBaies = voieDeLaSurvie + Math.floor((testRes.valeur - 10) / 2);
-              if (nbBaies === 0) nbBaies = 1;
-              output += " revient avec " + nbBaies + " baies magiques.";
-              var baies = tokenAttribute(lanceur, attrName);
-              if (baies.length > 0) {
-                baies = baies[0];
-                var bd = parseInt(baies.get('current'));
-                if (!isNaN(bd) && bd > 0) nbBaies += bd;
-                evt.attributes = evt.attributes || [];
-                evt.attributes.push({
-                  attribute: baies,
-                  current: bd,
-                  max: baies.get('max')
-                });
-                baies.set({
-                  current: nbBaies,
-                  max: actionBaies
-                });
-              } else {
-                setTokenAttr(lanceur, attrName, nbBaies, evt, {
-                  maxVal: actionBaies
-                });
-              }
-            } else {
-              //TODO: ajouter la possibilité d'utiliser un point de chance
-              output += " revient bredouille.";
-            }
-            output += "(test de SAG:" + testRes.texte + ")";
-            sendChar(charId, output);
-            addEvent(evt);
-          });
+        doNatureNourriciere(lanceur, options);
       });
     });
+  }
+
+  function doNatureNourriciere(perso, options) {
+    var evt = {
+      type: "natureNourriciere",
+      action: {
+        perso: perso,
+        options: options,
+        rolls: {}
+      }
+    };
+    addEvent(evt);
+    var charId = perso.charId;
+    var voieDeLaSurvie = charAttributeAsInt(perso, 'voieDeLaSurvie', 0);
+    var trouveBaies = charAttributeAsBool(perso, 'natureNourriciereBaies');
+    if (options.rolls && options.rolls.duree) {
+      evt.action.rolls.duree = options.rolls.duree;
+    } else {
+      evt.action.rolls.duree = rollDePlus(6);
+    }
+    var attrName = 'dose_Plante médicinale';
+    var output = "cherche des herbes. ";
+    if (trouveBaies) output = "cherche des baies. ";
+    output += "Après " + evt.action.rolls.duree.roll + " heures, " +
+      onGenre(perso, "il", "elle");
+    var testId = 'natureNourriciere';
+    testCaracteristique(perso, 'SAG', 10, testId, options, evt,
+      function(tr) {
+        var post = "";
+        if ((tr.reussite && !trouveBaies) || (trouveBaies && !tr.reussite && tr.valeur > 7)) {
+          if (voieDeLaSurvie > 0) {
+            setTokenAttr(perso, attrName, voieDeLaSurvie, evt, {
+              maxVal: "!cof-soin @{selected|token_id} @{selected|token_id} 1D6"
+            });
+            output += " revient avec " + voieDeLaSurvie + " plantes médicinales.";
+          } else {
+            output += " revient avec de quoi soigner les blessés.";
+          }
+        } else if (tr.reussite && trouveBaies) {
+          attrName = 'dose_Baie_magique';
+          var niveau = ficheAttributeAsInt(perso, 'niveau', 1);
+          var actionBaies = "!cof-consommer-baie " + niveau + " --limiteParJour 1 baieMagique";
+          var nbBaies = voieDeLaSurvie + Math.floor((tr.valeur - 10) / 2);
+          if (nbBaies === 0) nbBaies = 1;
+          output += " revient avec " + nbBaies + " baies magiques.";
+          var baies = tokenAttribute(perso, attrName);
+          if (baies.length > 0) {
+            baies = baies[0];
+            var bd = parseInt(baies.get('current'));
+            if (!isNaN(bd) && bd > 0) nbBaies += bd;
+            evt.attributes = evt.attributes || [];
+            evt.attributes.push({
+              attribute: baies,
+              current: bd,
+              max: baies.get('max')
+            });
+            baies.set({
+              current: nbBaies,
+              max: actionBaies
+            });
+          } else {
+            setTokenAttr(perso, attrName, nbBaies, evt, {
+              maxVal: actionBaies
+            });
+          }
+        } else {
+          output += " revient bredouille.";
+          var pc = pointsDeChance(perso);
+          if (!tr.echecCritique && pc > 0) {
+            post += '<br/>' +
+              boutonSimple("!cof-bouton-chance " + evt.id + " " + testId, "Chance") +
+              " (reste " + pc + " PC)";
+          }
+        }
+        output += "(test de SAG:" + tr.texte + ")";
+        output += post;
+        sendChar(charId, output);
+      });
   }
 
   function ignorerLaDouleur(msg) {
@@ -21738,57 +21777,81 @@ var COFantasy = COFantasy || function() {
     });
   }
 
-  function tourDeForce(msg) {
-    var args = msg.content.split(' ');
-    if (args.length < 2) {
-      error("Il manque un argument à !cof-tour-de-force", args);
+  function parseTourDeForce(msg) {
+    var options = parseOptions(msg);
+    var cmd = options.cmd;
+    if (cmd < 2) {
+      error("Il manque un argument à !cof-tour-de-force", cmd);
       return;
     }
-    var seuil = parseInt(args[1]);
-    var action = "<b>Capacité</b> : Tour de force";
+    var seuil = parseInt(cmd[1]);
     getSelected(msg, function(selected, playerId) {
-      iterSelected(selected, function(barbare) {
+      iterSelected(selected, function (barbare) {
         if (isNaN(seuil)) {
           sendChar(barbare.charId, "le seuil de difficulté du tour de force doit être un nombre");
           return;
         }
-        var display = startFramedDisplay(playerId, action, barbare);
-        var evt = {
-          type: "Tour de force"
-        };
-        testCaracteristique(barbare, 'FOR', seuil, 'tourDeForce', {
-            bonus: 10
-          }, evt,
-          function(testRes) {
-            addLineToFramedDisplay(display, " Jet de force difficulté " + seuil);
-            var smsg = barbare.token.get('name') + " fait " + testRes.texte;
-            if (testRes.reussite) {
-              smsg += " => réussite";
-            } else {
-              smsg += " => échec";
-            }
-            addLineToFramedDisplay(display, smsg);
-            var d4 = rollDePlus(4);
-            var r = {
-              total: d4.val,
-              type: 'normal',
-              display: d4.roll
-            };
-            var explications = [];
-            barbare.ignoreTouteRD = true;
-            dealDamage(barbare, r, [], evt, false, {}, explications,
-              function(dmgDisplay, dmg) {
-                var dmgMsg = "mais cela lui coûte " + dmgDisplay + " PV";
-                addLineToFramedDisplay(display, dmgMsg);
-                explications.forEach(function(expl) {
-                  addLineToFramedDisplay(display, expl, 80);
-                });
-                sendChat('', endFramedDisplay(display));
-                addEvent(evt);
-              });
-          });
+        doTourDeForce(barbare, seuil, options);
       });
     });
+  }
+
+  function doTourDeForce(perso, seuil, options) {
+    var evt = {
+      type: "tourDeForce",
+      action: {
+        perso: perso,
+        seuil: seuil,
+        options: options
+      }
+    };
+    addEvent(evt);
+    var action = "<b>Capacité</b> : Tour de force";
+    var display = startFramedDisplay(options.playerId, action, perso);
+    var testId = 'tourDeForce';
+    options.bonus = 10;
+    testCaracteristique(perso, 'FOR', seuil, testId, options, evt,
+      function(tr) {
+        addLineToFramedDisplay(display, " Jet de force difficulté " + seuil);
+        var smsg = perso.token.get('name') + " fait " + tr.texte;
+        if (tr.reussite) {
+          smsg += " => réussite";
+        } else {
+          smsg += " => échec";
+          var pc = pointsDeChance(perso);
+          if (!tr.echecCritique && pc > 0) {
+            smsg += '<br/>' +
+                boutonSimple("!cof-bouton-chance " + evt.id + " " + testId, "Chance") +
+                " (reste " + pc + " PC)";
+          }
+          if (stateCOF.combat && attributeAsBool(perso, 'runeForgesort_énergie') &&
+              attributeAsInt(perso, 'limiteParCombat_runeForgesort_énergie', 1) > 0) {
+            smsg += '<br/>' + boutonSimple("!cof-bouton-rune-energie " + evt.id + " " + testId, "Rune d'énergie");
+          }
+          if (stateCOF.combat && attributeAsBool(perso, 'petitVeinard')) {
+            smsg += '<br/>' + boutonSimple("!cof-bouton-petit-veinard " + evt.id + " " + testId, "Petit veinard");
+          }
+        }
+        addLineToFramedDisplay(display, smsg);
+        var d4 = options.rolls.tourDeForceDmg || rollDePlus(4);
+        evt.action.rolls.tourDeForceDmg = d4;
+        var r = {
+          total: d4.val,
+          type: 'normal',
+          display: d4.roll
+        };
+        var explications = [];
+        perso.ignoreTouteRD = true;
+        dealDamage(perso, r, [], evt, false, {}, explications,
+          function(dmgDisplay, dmg) {
+            var dmgMsg = "mais cela lui coûte " + dmgDisplay + " PV";
+            addLineToFramedDisplay(display, dmgMsg);
+            explications.forEach(function(expl) {
+              addLineToFramedDisplay(display, expl, 80);
+            });
+            sendChat('', endFramedDisplay(display));
+          });
+      });
   }
 
   function removePreDmg(options, perso, champ, newVal) {
@@ -22521,9 +22584,10 @@ var COFantasy = COFantasy || function() {
 
   //!cof-enduire-poison label type dm save
   //si label = munition_nom, alors on enduit des munitions et non une arme.
-  function enduireDePoison(msg) {
+  function parseEnduireDePoison(msg) {
+    var options = parseOptions(msg);
     var optArgs = msg.content.split(' --');
-    var cmd = optArgs[0].split(' ');
+    var cmd = options.cmd;
     optArgs.shift();
     if (cmd.length < 5) {
       error("Usage : !cof-enduire-poison L type force save", cmd);
@@ -22545,9 +22609,6 @@ var COFantasy = COFantasy || function() {
       return;
     }
     var testINT = 14;
-    var dose;
-    var decrAttribute;
-    var proprio;
     optArgs.forEach(function(arg) {
       cmd = arg.split(' ');
       switch (cmd[0]) {
@@ -22562,43 +22623,18 @@ var COFantasy = COFantasy || function() {
             testINT = 14;
           }
           return;
-        case 'dose':
-          if (cmd.length < 2) {
-            error("Il manque le nom de la dose de poison", cmd);
-            return;
-          }
-          dose = cmd[1];
-          return;
-        case 'decrAttribute':
-          if (cmd.length < 2) {
-            error("Erreur interne d'une commande générée par bouton", cmd);
-            return;
-          }
-          var attr = getObj('attribute', cmd[1]);
-          if (attr === undefined) {
-            log("Attribut à changer perdu");
-            log(cmd);
-            return;
-          }
-          decrAttribute = attr;
-          return;
       }
     }); //fin du traitement des options
     getSelected(msg, function(selected, playerId) {
-      iterSelected(selected, function(perso) {
-        if (proprio && perso.token.id != proprio) {
-          sendChar(perso.charId, "ne peut pas utiliser un poison qu'il n'a pas");
-          return;
-        }
-        perso.tokName = perso.token.get('name');
-        var attr = tokenAttribute(perso, attribut);
+      iterSelected(selected, function (perso) {
         var armeEnduite;
+        var attr = tokenAttribute(perso, attribut);
         var infosAdditionelles = savePoison;
         if (estMunition) {
           armeEnduite = nomMunition.replace(/_/g, ' ');
           var attrMunitions = tokenAttribute(perso, labelArme);
           if (attrMunitions.length === 0) {
-            sendPlayer(msg, perso.tokName + "n'a pas de munition nommée " + nomMunition);
+            sendChar(perso.charId, perso.tokName + "n'a pas de munition nommée " + nomMunition);
             return;
           }
           attrMunitions = attrMunitions[0];
@@ -22645,98 +22681,88 @@ var COFantasy = COFantasy || function() {
             return;
           }
         }
-        var evt = {
-          type: "Enduire de poison"
-        };
-        var display = startFramedDisplay(playerId, "Essaie d'enduire " + armeEnduite + " de poison", perso);
-        if (dose) {
-          var nomDose = dose.replace(/_/g, ' ');
-          var doseAttr = tokenAttribute(perso, 'dose_' + dose);
-          if (doseAttr.length === 0) {
-            sendChar(perso.charId, "n'a pas de dose de " + nomDose);
-            return; //evt toujours vide
-          }
-          doseAttr = doseAttr[0];
-          var nbDoses = parseInt(doseAttr.get('current'));
-          if (isNaN(nbDoses) || nbDoses < 1) {
-            sendChar(perso.charId, "n'a plus de dose de " + nomDose);
-            return; //evt toujours vide
-          }
-          evt.attributes = evt.attributes || [];
-          evt.attributes.push({
-            attribute: doseAttr,
-            current: nbDoses
-          });
-          //À partir de ce point, tout return doit ajouter evt
-          nbDoses--;
-          addLineToFramedDisplay(display, "Il restera " + nbDoses + " dose de " + nomDose + " à " + perso.tokName);
-          doseAttr.set('current', nbDoses);
-        }
-        if (decrAttribute) {
-          var oldval = parseInt(decrAttribute.get('current'));
-          if (isNaN(oldval) || oldval < 1) {
-            sendChar(perso.charId, "n'a plus de ce poison");
-            return;
-          }
-          evt.attributes = evt.attributes || [];
-          evt.attributes.push({
-            attribute: decrAttribute,
-            current: oldval,
-            max: decrAttribute.get('max')
-          });
-          decrAttribute.set('current', oldval - 1);
-        }
-        //Test d'INT pour savoir si l'action réussit.
-        testCaracteristique(perso, 'INT', testINT, 'enduireDePoison', {}, evt,
-          function(tr) {
-            var jet = "Jet d'INT : " + tr.texte;
-            if (tr.echecCritique) { //échec critique
-              jet += " Échec critique !";
-              addLineToFramedDisplay(display, jet);
-              addLineToFramedDisplay(display, perso.tokName + " s'empoisonne.");
-              sendChat('', "[[" + forcePoison + "]]", function(res) {
-                var rolls = res[0];
-                var dmgRoll = rolls.inlinerolls[0];
-                var r = {
-                  total: dmgRoll.results.total,
-                  type: 'poison',
-                  display: buildinline(dmgRoll, 'poison')
-                };
-                var ps = {
-                  partialSave: {
-                    carac: 'CON',
-                    seuil: savePoison
-                  }
-                };
-                var explications = [];
-                dealDamage(perso, r, [], evt, false, ps, explications,
-                  function(dmgDisplay, dmg) {
-                    explications.forEach(function(e) {
-                      addLineToFramedDisplay(display, e);
-                    });
-                    addLineToFramedDisplay(perso.tokName + " subit " + dmgDisplay + " DM");
-                    addEvent(evt);
-                    sendChat("", endFramedDisplay(display));
-                  }); //fin de dmg dus à l'échec critique
-              }); //fin du jet de dmg
-            } else if (tr.reussite) {
-              jet += " &ge; " + testINT;
-              addLineToFramedDisplay(display, jet);
-              setTokenAttr(perso, attribut, forcePoison, evt, {
-                maxVal: infosAdditionelles
-              });
-              addLineToFramedDisplay(display, armeEnduite + " est maintenant enduit de poison");
-              addEvent(evt);
-              sendChat("", endFramedDisplay(display));
-            } else { //echec normal au jet d'INT
-              jet += " < " + testINT + " : échec";
-              addLineToFramedDisplay(display, jet);
-              addEvent(evt);
-              sendChat("", endFramedDisplay(display));
+        doEnduireDePoison(perso, armeEnduite, savePoison, forcePoison, attribut, testINT, infosAdditionelles, options);
+      });
+    });
+  }
+
+  function doEnduireDePoison(perso, armeEnduite, savePoison, forcePoison, attribut, testINT, infosAdditionelles, options) {
+    var evt = {
+      type: 'enduireDePoison',
+      action: {
+        perso: perso,
+        armeEnduite: armeEnduite,
+        savePoison: savePoison,
+        forcePoison: forcePoison,
+        attribut: attribut,
+        testINT: testINT,
+        infosAdditionelles: infosAdditionelles,
+        options: options
+      }
+    };
+    addEvent(evt);
+    if (limiteRessources(perso, options, 'enduirePoison', 'enduire de poison', evt)) return;
+    perso.tokName = perso.token.get('name');
+    var display = startFramedDisplay(options.playerId, "Essaie d'enduire " + armeEnduite + " de poison", perso);
+    //Test d'INT pour savoir si l'action réussit.
+    var testId = 'enduireDePoison';
+    testCaracteristique(perso, 'INT', testINT, testId, options, evt,
+      function(tr) {
+        var jet = "Jet d'INT : " + tr.texte;
+        if (tr.echecCritique) { //échec critique
+          jet += " Échec critique !";
+          addLineToFramedDisplay(display, jet);
+          addLineToFramedDisplay(display, perso.tokName + " s'empoisonne.");
+          sendChat('', "[[" + forcePoison + "]]", function(res) {
+            var dmgRoll;
+            if(options.rolls && options.rolls.enduireSelfDmg) {
+              dmgRoll = options.rolls.enduireSelfDmg;
+            } else {
+              dmgRoll = res[0].inlinerolls[0];
             }
-          }); //fin du test de carac
-      }); //fin de iterSelected
-    }); //fin de getSelected
+            evt.action.rolls.enduireSelfDmg = dmgRoll;
+            var r = {
+              total: dmgRoll.results.total,
+              type: 'poison',
+              display: buildinline(dmgRoll, 'poison')
+            };
+            options.partialSave = {
+              carac: 'CON',
+              seuil: savePoison
+            };
+            var explications = [];
+            dealDamage(perso, r, [], evt, false, options, explications,
+              function(dmgDisplay, dmg) {
+                explications.forEach(function(e) {
+                  addLineToFramedDisplay(display, e);
+                });
+                addLineToFramedDisplay(display,perso.tokName + " subit " + dmgDisplay + " DM");
+                sendChat("", endFramedDisplay(display));
+              }); //fin de dmg dus à l'échec critique
+          }); //fin du jet de dmg
+        } else if (tr.reussite) {
+          jet += " &ge; " + testINT;
+          addLineToFramedDisplay(display, jet);
+          setTokenAttr(perso, attribut, forcePoison, evt, {
+            maxVal: infosAdditionelles
+          });
+          addLineToFramedDisplay(display, armeEnduite + " est maintenant enduit de poison");
+          sendChat("", endFramedDisplay(display));
+        } else { //echec normal au jet d'INT
+          jet += " < " + testINT + " : échec";
+          var pc = pointsDeChance(perso);
+          if (!tr.echecCritique && pc > 0) {
+            jet += '<br/>' +
+                boutonSimple("!cof-bouton-chance " + evt.id + " " + testId, "Chance") +
+                " (reste " + pc + " PC)";
+          }
+          if (stateCOF.combat && attributeAsBool(perso, 'petitVeinard')) {
+            jet += '<br/>' + boutonSimple("!cof-bouton-petit-veinard " + evt.id + " " + testId, "Petit veinard");
+          }
+          addLineToFramedDisplay(display, jet);
+          sendChat("", endFramedDisplay(display));
+        }
+      }); //fin du test de carac
   }
 
   var consommableNomRegExp = new RegExp(/^(repeating_equipement_.*_)equip_nom/);
@@ -24030,8 +24056,8 @@ var COFantasy = COFantasy || function() {
   }
 
   //!cof-arme-secrete @{selected|token_id} @{target|token_id}
-  // TODO: ajouter la possibilité d'utiliser la chance
-  function armeSecrete(msg) {
+  function parseArmeSecrete(msg) {
+    var options = parseOptions(msg);
     var cmd = msg.content.split(' ');
     if (cmd.length < 3) {
       error("Il faut deux arguments à !cof-arme-secrete", cmd);
@@ -24047,40 +24073,56 @@ var COFantasy = COFantasy || function() {
       sendChar(barde.charId, "a déjà utilisé son arme secrète durant ce combat");
       return;
     }
+    doArmeSecrete(barde, cible, options);
+  }
+
+  function doArmeSecrete(perso, cible, options) {
     var evt = {
-      type: 'Arme secrète'
+      type: 'armeSecrete',
+      action: {
+        perso: perso,
+        cible: cible,
+        options: options
+      }
     };
+    addEvent(evt);
     if (!stateCOF.combat) {
       initiative([{
-        _id: barde.token.id
+        _id: perso.token.id
       }, {
         _id: cible.token.id
       }], evt);
     }
-    setTokenAttr(barde, 'armeSecreteBardeUtilisee', true, evt);
+    setTokenAttr(perso, 'armeSecreteBardeUtilisee', true, evt);
     var intCible = ficheAttributeAsInt(cible, 'intelligence', 10);
-    testCaracteristique(barde, 'CHA', intCible, 'armeSecreteBarde', {}, evt, function(testRes) {
-      var display = startFramedDisplay(getPlayerIdFromMsg(msg),
-        "Arme secrète", barde, {
+    var testId = 'armeSecreteBarde';
+    testCaracteristique(perso, 'CHA', intCible, testId, options, evt, function(tr) {
+      var display = startFramedDisplay(options.playerId,
+        "Arme secrète", perso, {
           perso2: cible
         });
-      var line = "Jet de CHA : " + testRes.texte;
-      if (testRes) {
+      var line = "Jet de CHA : " + tr.texte;
+      if (tr.reussite) {
         line += " &ge; " + intCible;
         addLineToFramedDisplay(display, line);
         addLineToFramedDisplay(display, cible.token.get('name') + " est complètement déstabilisé");
         setAttrDuree(cible, 'armeSecreteBarde', 1, evt);
       } else {
-        line += "< " + intCible;
+        line += " &lt; " + intCible;
+        var pc = pointsDeChance(perso);
+        if (!tr.echecCritique && pc > 0) {
+          line += '<br/>' +
+              boutonSimple("!cof-bouton-chance " + evt.id + " " + testId, "Chance") +
+              " (reste " + pc + " PC)";
+        }
+        if (stateCOF.combat && attributeAsBool(perso, 'petitVeinard')) {
+          line += '<br/>' + boutonSimple("!cof-bouton-petit-veinard " + evt.id + " " + testId, "Petit veinard");
+        }
         addLineToFramedDisplay(display, line);
-        addLineToFramedDisplay(display, cible.token.get('name') + " reste insensible au charme de " + barde.token.get('name'));
+        addLineToFramedDisplay(display, cible.token.get('name') + " reste insensible au charme de " + perso.token.get('name'));
       }
       sendChat("", endFramedDisplay(display));
-      addEvent(evt);
     }); //fin testCarac
-    // testRes.texte est l'affichage du jet de dé
-    // testRes.reussite indique si le jet est réussi
-    // testRes.echecCritique, testRes.critique pour le type
   }
 
   function nouveauNomDePerso(nom) {
@@ -28005,7 +28047,7 @@ var COFantasy = COFantasy || function() {
         aoeSoin(msg);
         return;
       case "!cof-nature-nourriciere":
-        natureNourriciere(msg);
+        parseNatureNourriciere(msg);
         return;
       case "!cof-ignorer-la-douleur":
         ignorerLaDouleur(msg);
@@ -28077,7 +28119,7 @@ var COFantasy = COFantasy || function() {
         parseInjonctionMortelle(msg);
         return;
       case '!cof-tour-de-force':
-        tourDeForce(msg);
+        parseTourDeForce(msg);
         return;
       case '!cof-encaisser-un-coup':
         doEncaisserUnCoup(msg);
@@ -28128,7 +28170,7 @@ var COFantasy = COFantasy || function() {
         parseDestructionDesMortsVivants(msg);
         return;
       case '!cof-enduire-poison':
-        enduireDePoison(msg);
+        parseEnduireDePoison(msg);
         return;
       case '!cof-consommables':
         listeConsommables(msg);
@@ -28161,7 +28203,7 @@ var COFantasy = COFantasy || function() {
         parseRageDuBerserk(msg);
         return;
       case '!cof-arme-secrete':
-        armeSecrete(msg);
+        parseArmeSecrete(msg);
         return;
       case '!cof-animer-arbre':
         animerUnArbre(msg);
@@ -31629,7 +31671,7 @@ on('ready', function() {
           attrSpec.name = prefix + 'carac';
           attrSpec.current = compToCarac[attrName];
           createObj('attribute', attrSpec);
-          if ((attrSpec.current == 'DEX' && attrName != 'crochetage' && attrName !='désamorçage') ||
+          if ((attrSpec.current == 'DEX' && attrName != 'crochetage' && attrName != 'désamorçage') ||
             (attrSpec.current == 'CON' && attrName == 'survie') ||
             attrName == 'natation' || attrName == 'escalade') {
             attrSpec.name = prefix + 'malus';
