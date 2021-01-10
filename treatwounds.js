@@ -7,11 +7,6 @@ Roll20:     https://app.roll20.net/users/580967/mark-s
 BitBucket:  https://bitbucket.org/desertwebdesigns/roll20/src/master/TreatWounds/
 
 */
-
-// Convert to await/async usage to be able to double healing amount on crit success
-// Do damage on crit failure
-// Nat 20 turns failure into success, currently registers as crit success
-
 // Future versions:
 // Send error message back to chat on failure
 // rename args array in handleInput for ease of use
@@ -75,12 +70,14 @@ RLRGaming.TreatWounds = RLRGaming.TreatWounds || (function() {
             return false;
     };
     
-    const performSurgery = (character, target) => {
+    const performSurgery = async (character, target) => {
         sendChat(character, "/em performs some risky surgery on " + target + " and deals [[1d8]] points of damage");
         return;
     };
 
-    const performHeal = (character, surgery, DC, player, target) => {
+
+
+    const performHeal = async (character, surgery, DC, player, target) => {
         if (surgery == "1") {
             var surgeryMod = 2;
             var riskySurgery = " + 2[Risky Surgery]";
@@ -89,79 +86,127 @@ RLRGaming.TreatWounds = RLRGaming.TreatWounds || (function() {
             var riskySurgery = '';
         };
         
-        sendChat(character, "/roll 1d20 + @{" + character + "|medicine} + " + surgeryMod, function(ops) {
-            var data = JSON.parse(ops[0].content);
-            var result = data.rolls[0].results[0].v;
-            var total = data.total;
-            
-            var checkDC = DC.replace( /^\D+/g, '');
-            var crit = 0;
+        var medCheck = await new Promise((resolve,reject) => {
+            sendChat(character, "/roll 1d20 + @{" + character + "|medicine} + " + surgeryMod, (ops) => {
+                resolve(JSON.parse(ops[0].content));
+            });
+        });
 
-            if (total >= Number(checkDC)+10) {
-                crit += 1;
-            } else if (total <= Number(checkDC)-10) {
-                crit -= 1;
-            }
-            
-            if (result == 1) {
-                crit -= 1;
-            } else if (result == 20) {
-                crit += 1;
-            }
-            switch (true) {
-                case (crit > 0):
-                    var critmsg = "<br>Critical Success!";
+        var dieresult = medCheck.rolls[0].results[0].v;
+        var medTotal = medCheck.total;
+        var medResult = '';
+
+        var checkDC = DC.replace( /^\D+/g, '');
+        switch (medTotal >= Number(checkDC)) {
+            case true:
+                if (
+                    (
+                        medTotal >= Number(checkDC) + 10 &&
+                        dieresult != 1
+                    ) ||
+                    dieresult == 20
+                ) {
+                    medResult = 'cs';
+                } else if (
+                    dieresult == 1 &&
+                    medTotal < Number(checkDC) + 10
+                ) {
+                    medResult = 'f';
+                } else {
+                    medResult = 's';
+                }
+                break;
+            case false:
+                if (
+                    (
+                        medTotal <= Number(checkDC) - 10 &&
+                        dieresult != 20
+                    ) ||
+                    dieresult == 1
+                ) {
+                    medResult = 'cf';
+                } else if (
+                    dieresult == 20 &&
+                    medTotal > Number(checkDC) - 10
+                ) {
+                    medResult = 's';
+                } else {
+                    medResult = 'f';
+                }
+                break;
+        }
+
+        var critmsg = '';
+        switch (medResult) {
+            case 'cs':
+                critmsg = "<br>Critical Success!";
+                break;
+            case 'cf':
+                critmsg = "<br>Critical Failure!";
+                break;
+        }
+        
+        if (medTotal >= checkDC) {
+            switch (Number(checkDC)) {
+                case 20:
+                    var healmod = 10;
                     break;
-                case (crit < 0):
-                    var critmsg = "<br>Critical Failure!";
+                case 30:
+                    var healmod = 20;
+                    break;
+                case 40:
+                    var healmod = 30;
                     break;
                 default:
-                    var critmsg = "";
-            }
-            
-            if (total >= checkDC) {
-                switch (Number(checkDC)) {
-                    case 20:
-                        var healmod = 10;
-                        break;
-                    case 30:
-                        var healmod = 20;
-                        break;
-                    case 40:
-                        var healmod = 30;
-                        break;
-                    default:
-                        var healmod = 0;
-                        break;
-                };
-                var heal = true;
-            } else {
-                var heal = false;
-            }
-            
-            var healmsg = "&{template:rolls} {{charactername=" + character + "}} {{header=Treat Wounds Check}} {{subheader=Skill}} {{roll01=[[" + result + riskySurgery + " + [@{" + character + "|medicine_proficiency_display}] (@{" + character + "|medicine})[@{" + character + "|text_modifier}] + (@{" + character + "|query_roll_bonus})[@{" + character + "|text_bonus}]]]}} {{roll01_type=skill}}";
+                    var healmod = 0;
+                    break;
+            };
+            var heal = true;
+        } else {
+            var heal = false;
+        }
+        
+        var healmsg = "&{template:rolls} {{charactername=" + character + "}} {{header=Treat Wounds Check}} {{subheader=Skill}} {{roll01=[[(" + dieresult + ") " + riskySurgery + " + [@{" + character + "|medicine_proficiency_display}] (@{" + character + "|medicine})[@{" + character + "|text_modifier}] + (@{" + character + "|query_roll_bonus})[@{" + character + "|text_bonus}]]]}} {{roll01_type=skill}}";
 
-            if (crit != 0) {
-                healmsg += "{{roll01_info=" + critmsg + "}} ";
+        
+        if (medResult == 'cs' || medResult == 'cf') {
+            healmsg += "{{roll01_info=" + critmsg + "}} ";
+        }
+        
+        if (heal) {
+            var healRollString = '';
+            
+            var healResult = await new Promise((resolve,reject) => {
+                sendChat(character, "/roll 2d8 + " + healmod, (ops) => {
+                    resolve(JSON.parse(ops[0].content));
+                });
+            });
+            
+            _.each(healResult.rolls[0].results, (die) => {
+                healRollString += "(" + die.v + ")+";
+            });
+
+            healRollString += healmod;
+            
+            if (medResult == 'cs') {
+                healRollString = "(" + healRollString + ") * 2";
             }
             
-            if (heal) {
-                healmsg += "{{roll02=[[2d8+" + healmod + "]]}} {{roll02_type=heal}} {{roll02_info=HP Healed}} {{roll02_misc=hp healed}} ";
-            }
-            
-            healmsg += "{{roll01misc=" + DC + "}} {{notes_show=@{" + character + "|roll_show_notes}}} {{notes=@{" + character + "|medicine_notes}}}";
-            
-            sendChat("player|" + player, healmsg);
-            
-            if (crit < 0) {
-                sendChat(character, "/em causes [[1d8]] points of damage to " + target + " due to their carelessness");
-            }
-        });
+            healmsg += "{{roll02=[[" + healRollString + "]]}} {{roll02_type=heal}} {{roll02_info=HP Healed}} {{roll02_misc=hp healed}} ";
+        }
+        
+        healmsg += "{{roll01misc=" + DC + "}} {{notes_show=@{" + character + "|roll_show_notes}}} {{notes=@{" + character + "|medicine_notes}}}";
+        
+        sendChat("player|" + player, healmsg);
+        
+        if (medResult == 'cf') {
+            sendChat(character, "/em causes [[1d8]] points of damage to " + target + " due to their carelessness");
+        }
     };
     
-    const handleInput = (msg) => {
+    const handleInput = async (msg) => {
         /* args = [
-            0 => !performsurgery,
+            0 => !treatwounds,
             1 => selected token or character name,
             2 => 1|0 (perform risky rurgery),
             3 => DC of check,
@@ -171,7 +216,7 @@ RLRGaming.TreatWounds = RLRGaming.TreatWounds || (function() {
         if(msg.type == "api") {
             var args = msg.content.split(",");
             switch(args[0].toLowerCase()) {
-                case '!performsurgery':
+                case '!treatwounds':
                     if (args.length == 5) {
                         if (hasCharacterControl(msg.playerid, getChar(args[1]))) {
                             var charname = getChar(args[1]).get("name");
@@ -180,14 +225,15 @@ RLRGaming.TreatWounds = RLRGaming.TreatWounds || (function() {
                             performHeal(charname, args[2], args[3], msg.playerid, args[4]);
                         }
                     } else {
-                        sendChat("GM", "/w GM Incorrect number of parameters sent to '!performsurgery'");
+                        sendChat("GM", "/w GM Incorrect number of parameters sent to '!treatwounds'");
                         return;
                     }
+                    break;
             }
         }
     };
     
-    const registerEventHandlers = () => {
+    const registerEventHandlers = async () => {
         on('chat:message', handleInput);
     };
     
@@ -197,7 +243,7 @@ RLRGaming.TreatWounds = RLRGaming.TreatWounds || (function() {
 }());
 
 
-on('ready', () => {
+on('ready', async () => {
     'use strict';
     RLRGaming.TreatWounds.RegisterEventHandlers();
 });
