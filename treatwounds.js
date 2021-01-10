@@ -17,7 +17,7 @@ BitBucket:  https://bitbucket.org/desertwebdesigns/roll20/src/master/TreatWounds
 
 var RLRGaming = RLRGaming || {};
 
-RLRGaming.TreatWounds = RLRGaming.TreatWounds || (function() {
+RLRGaming.TreatWounds = RLRGaming.TreatWounds || (() => {
     'use strict';
     
     const version = "0.2";
@@ -243,7 +243,7 @@ RLRGaming.TreatWounds = RLRGaming.TreatWounds || (function() {
     return {
         RegisterEventHandlers: registerEventHandlers
     };
-}());
+})();
 
 
 on('ready', async () => {
