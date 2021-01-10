@@ -1,7 +1,7 @@
 /*
 PF2E Treat Wounds Check
 
-Version     0.2
+Version     1.0
 Author:     Mark Stoecker
 Roll20:     https://app.roll20.net/users/580967/mark-s
 BitBucket:  https://bitbucket.org/desertwebdesigns/roll20/src/master/TreatWounds/
