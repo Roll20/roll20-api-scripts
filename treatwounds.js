@@ -10,10 +10,11 @@ BitBucket:  https://bitbucket.org/desertwebdesigns/roll20/src/master/TreatWounds
 // Future versions:
 // Send error message back to chat on failure
 // rename args array in handleInput for ease of use
+// Setup proper installer and allow for default settings and simpler command call with defaults
 // Allow for generic tokens that don't represent a character (requires sending healing modifier with api call)
 // Check for Risky Surgery Feat before prompting
 // Check for Proficiency and build option list from there
-// Above two options require sending API Buttons back to user when calling API
+// Above two options require sending API Buttons back to user when calling API. User will call script and API will send back a button with the appropriate user prompts depending on character sheet (ie, don't prompt for Risky Surgery if user does not have it in feats, don't allow Master/Legendary difficulty if user is only Expert, etc)
 
 var RLRGaming = RLRGaming || {};
 
