@@ -11,6 +11,9 @@ BitBucket:  https://bitbucket.org/desertwebdesigns/roll20/src/master/TreatWounds
 // Send error message back to chat on failure
 // rename args array in handleInput for ease of use
 // Allow for generic tokens that don't represent a character (requires sending healing modifier with api call)
+// Check for Risky Surgery Feat before prompting
+// Check for Proficiency and build option list from there
+// Above two options require sending API Buttons back to user when calling API
 
 var RLRGaming = RLRGaming || {};
 
