@@ -147,6 +147,12 @@ RLRGaming.TreatWounds = RLRGaming.TreatWounds || (() => {
             case 'cf':
                 critmsg = "<br>Critical Failure!";
                 break;
+            case 's':
+                if (surgery == "1") {
+                    medResult = 'cs';
+                    critmsg = "<br>Critical Success<br>due to Risky Surgery!";
+                }
+                break;
         }
         
         if (medTotal >= checkDC) {
