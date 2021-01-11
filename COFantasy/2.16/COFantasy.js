@@ -7479,8 +7479,8 @@ var COFantasy = COFantasy || function() {
             attaquant.armeGauche.modificateurs.includes("magique")) {
             typeDMGauche = 'magique';
           }
-          options.additionalDmg = options.additionalDmg || [];
-          options.additionalDmg.push({
+          attaquant.additionalDmg = attaquant.additionalDmg || [];
+          attaquant.additionalDmg.push({
             type: typeDMGauche,
             value: dmArmeGauche
           });
@@ -7513,8 +7513,8 @@ var COFantasy = COFantasy || function() {
         var msgHausserLeTon = "Hausse le ton => +5 en Attaque";
         if (!options.pasDeDmg) {
           msgHausserLeTon += " et +1d6 DM";
-          options.additionalDmg = options.additionalDmg || [];
-          options.additionalDmg.push({
+          attaquant.additionalDmg = attaquant.additionalDmg || [];
+          attaquant.additionalDmg.push({
             type: options.type || 'normal',
             value: '1d6'
           });
@@ -7538,10 +7538,10 @@ var COFantasy = COFantasy || function() {
       stateCOF.chargeFantastique.tokenAttaque == attaquant.token.id) {
       attBonus += 3;
       var msgCharge = "Charge fantastique => +3 en Attaque";
-      if (!options.pasDeDmg && !options.redo) {
+      if (!options.pasDeDmg) {
         msgCharge += " et +1d6 DM";
-        options.additionalDmg = options.additionalDmg || [];
-        options.additionalDmg.push({
+        attaquant.additionalDmg = attaquant.additionalDmg || [];
+        attaquant.additionalDmg.push({
           type: options.type || 'normal',
           value: '1d6'
         });
@@ -9176,6 +9176,7 @@ var COFantasy = COFantasy || function() {
     var attackerTokName = attaquant.tokName;
     var explications = [];
     if (options.messages) explications = [...options.messages];
+    attaquant.additionalDmg = [...options.additionalDmg]; // Reset du calcul des dommages additionnels liés à l'attaquant
     var sujetAttaquant = onGenre(attaquant, 'il', 'elle');
     if (options.contact) {
       //Prise en compte du corps élémentaire
@@ -9186,7 +9187,7 @@ var COFantasy = COFantasy || function() {
       });
       attrCorpsElem.forEach(function(attr) {
         var typeCorpsElem = attr.get('current');
-        options.additionalDmg.push({
+        attaquant.additionalDmg.push({
           type: typeCorpsElem,
           value: '1d6',
         });
@@ -9235,7 +9236,7 @@ var COFantasy = COFantasy || function() {
         var seuilMunitionsEmpoisonnees = parseInt(infosPoisonMunitions.substring(0, infosPoisonMunitionsIndex));
         var nombreMunitionsEmpoisonnees = parseInt(infosPoisonMunitions.substring(infosPoisonMunitionsIndex + 1));
         if (!isNaN(seuilMunitionsEmpoisonnees) && !isNaN(nombreMunitionsEmpoisonnees) && nombreMunitionsEmpoisonnees > 0) {
-          options.additionalDmg.push({
+          attaquant.additionalDmg.push({
             type: 'poison',
             value: poisonAttr.get('current'),
             partialSave: {
@@ -10375,26 +10376,26 @@ var COFantasy = COFantasy || function() {
       if (bonusMasque > 0) attDMBonusCommun += " +" + bonusMasque;
     }
     if (options.rageBerserk) {
-      options.additionalDmg.push({
+      attaquant.additionalDmg.push({
         type: mainDmgType,
         value: options.rageBerserk + options.d6
       });
     }
     if (attributeAsBool(attaquant, 'enragé')) {
-      options.additionalDmg.push({
+      attaquant.additionalDmg.push({
         type: mainDmgType,
         value: '1' + options.d6
       });
     }
     if (options.contact && attributeAsBool(attaquant, 'memePasMalBonus')) {
-      options.additionalDmg.push({
+      attaquant.additionalDmg.push({
         type: mainDmgType,
         value: '1' + options.d6,
       });
       explications.push("Même pas mal => +1" + options.d6 + " DM");
     }
     if (!options.auto && options.attaqueEnPuissance) {
-      options.additionalDmg.push({
+      attaquant.additionalDmg.push({
         type: mainDmgType,
         value: options.attaqueEnPuissance + options.d6
       });
@@ -10418,7 +10419,7 @@ var COFantasy = COFantasy || function() {
     // Les autres sources de dégâts
     if (options.distance) {
       if (options.semonce) {
-        options.additionalDmg.push({
+        attaquant.additionalDmg.push({
           type: mainDmgType,
           value: '1' + options.d6
         });
@@ -10435,7 +10436,7 @@ var COFantasy = COFantasy || function() {
         explications.push("Force de géant => +" + bonusForceDeGeant + " aux DM");
       }
       if (options.frappeDuVide) {
-        options.additionalDmg.push({
+        attaquant.additionalDmg.push({
           type: mainDmgType,
           value: '1' + options.d6
         });
@@ -10451,7 +10452,7 @@ var COFantasy = COFantasy || function() {
           feuForgeron = feuForgeron * (1 + feuForgeronIntense);
           removeTokenAttr(attaquant, attrForgeron + 'TempeteDeManaIntense', evt);
         }
-        options.additionalDmg.push({
+        attaquant.additionalDmg.push({
           type: 'feu',
           value: feuForgeron
         });
@@ -10475,7 +10476,7 @@ var COFantasy = COFantasy || function() {
       }
     }
     if (nAEF > 0) {
-      options.additionalDmg.push({
+      attaquant.additionalDmg.push({
         type: 'feu',
         value: nAEF + 'd6'
       });
@@ -10484,7 +10485,7 @@ var COFantasy = COFantasy || function() {
       var poisonAttr = tokenAttribute(attaquant, 'poisonRapide_' + attackLabel);
       if (poisonAttr.length > 0) {
         poisonAttr = poisonAttr[0];
-        options.additionalDmg.push({
+        attaquant.additionalDmg.push({
           type: 'poison',
           value: poisonAttr.get('current'),
           partialSave: {
@@ -10509,12 +10510,12 @@ var COFantasy = COFantasy || function() {
           var dmgArmeType = valDmgArme[0].get('max');
           if (dmgArmeType !== '') dmgArme.type = dmgArmeType;
         }
-        options.additionalDmg.push(dmgArme);
+        attaquant.additionalDmg.push(dmgArme);
         explications.push("Arme enduite => +" + dmgArme.value + " aux DM");
       }
     }
     if (options.champion) {
-      options.additionalDmg.push({
+      attaquant.additionalDmg.push({
         type: mainDmgType,
         value: '1' + options.d6
       });
@@ -10796,7 +10797,7 @@ var COFantasy = COFantasy || function() {
           computeMainDmgRollExpr(attaquant, target, weaponStats, attNbDices,
             attDMBonus, options);
         //Additional damage
-        var additionalDmg = options.additionalDmg.concat(target.additionalDmg);
+        var additionalDmg = attaquant.additionalDmg.concat(target.additionalDmg);
         //On enlève les DM qui ne passent pas les conditions
         additionalDmg = additionalDmg.filter(function(dmSpec) {
           if (dmSpec.conditions === undefined) return true;
