@@ -41,9 +41,9 @@
       --fx|          < type-color >         //Trigger FX at each origin point.
                                                     //Supported types are: bomb,bubbling,burn,burst,explode,glow,missile,nova,splatter
                                                     //Supported colors are: acid,blood,charm,death,fire,frost,holy,magic,slime,smoke,water
-      --bar1|        < currentVal/optionalMax >            //overrides the token's bar1 current and max values. Max is optional. If overridden, bar1_link will be removed
-      --bar2|        < currentVal/optionalMax >            //overrides the token's bar2 current and max values. Max is optional. If overridden, bar2_link will be removed
-      --bar3|        < currentVal/optionalMax >            //overrides the token's bar3 current and max values. Max is optional. If overridden, bar3_link will be removed
+      --bar1|        < currentVal/optionalMax optional "KeepLink">            //overrides the token's bar1 current and max values. Max is optional. Default is to remove bar1_link. If "KeepLink" is appended, the bar1_link will be preserved 
+      --bar2|        < currentVal/optionalMax optional "KeepLink">            //overrides the token's bar2 current and max values. Max is optional. Default is to remove bar2_link. If "KeepLink" is appended, the bar2_link will be preserved
+      --bar3|        < currentVal/optionalMax optional "KeepLink">            //overrides the token's bar3 current and max values. Max is optional. Default is to remove bar3_link. If "KeepLink" is appended, the bar3_link will be preserved
       --expand|      < #frames, delay >             //DEFAULT = 0,0. Animates the token during spawn. Expands from size = 0 to max size
                                                         //#frames: how many frames the expansion animation will use. Start with something like 20
                                                         //delay: how many milliseconds between triggering each frame? Start with something like 50. Any less than 30 may appear instant
@@ -55,7 +55,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.11';
+    const version = '0.12';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -134,7 +134,7 @@ const SpawnDefaultToken = (() => {
     
     //This function runs asynchronously, as called from the processCommands function
     //We will sendChat errors, but the rest of processCommands keeps running :(
-    async function spawnTokenAtXY (who, tokenJSON, pageID, spawnLayer, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar2Val, bar2Max, bar3Val, bar3Max, expandIterations, expandDelay) {
+    async function spawnTokenAtXY (who, tokenJSON, pageID, spawnLayer, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar1Link, bar2Val, bar2Max, bar2Link, bar3Val, bar3Max, bar3Link, expandIterations, expandDelay) {
         let newSideImg;
         let spawnObj;
         let currentSideOld;
@@ -179,7 +179,7 @@ const SpawnDefaultToken = (() => {
             //token bar overrides
             if (bar1Val !== "") {
                 baseObj.bar1_value = bar1Val;
-                baseObj.bar1_link = "";
+                if (bar1Link === false) {baseObj.bar1_link = ""}
             }
             if (bar1Max !== "") {
                 baseObj.bar1_max = bar1Max;
@@ -187,7 +187,7 @@ const SpawnDefaultToken = (() => {
             
             if (bar2Val !== "") {
                 baseObj.bar2_value = bar2Val;
-                baseObj.bar2_link = "";
+                if (bar2Link === false) {baseObj.bar2_link = ""}
             }
             if (bar2Max !== "") {
                 baseObj.bar2_max = bar2Max;
@@ -195,7 +195,7 @@ const SpawnDefaultToken = (() => {
             
             if (bar3Val !== "") {
                 baseObj.bar3_value = bar3Val;
-                baseObj.bar3_link = "";
+                if (bar3Link === false) {baseObj.bar3_link = ""}
             }
             if (bar3Max !== "") {
                 baseObj.bar3_max = bar3Max;
@@ -721,6 +721,12 @@ const SpawnDefaultToken = (() => {
                             }
                             break;
                         case "bar1":
+                            if (param.toLowerCase().includes('keeplink')) {
+                                data.bar1Link = true;
+                                param = param.replace(/keeplink/i,'').trim();
+                            } else {
+                                data.bar1Link = false;
+                            }
                             let bar1 = param.split('/');
                             data.bar1Val = bar1[0].trim();
                             if (bar1.length > 1) {
@@ -728,6 +734,12 @@ const SpawnDefaultToken = (() => {
                             }
                             break;
                          case "bar2":
+                            if (param.toLowerCase().includes('keeplink')) {
+                                data.bar2Link = true;
+                                param = param.replace(/keeplink/i,'').trim();
+                            } else {
+                                data.bar2Link = false;
+                            }
                             let bar2 = param.split('/');
                             data.bar2Val = bar2[0].trim();
                             if (bar2.length > 1) {
@@ -735,6 +747,12 @@ const SpawnDefaultToken = (() => {
                             }
                             break;
                          case "bar3":
+                             if (param.toLowerCase().includes('keeplink')) {
+                                data.bar3Link = true;
+                                param = param.replace(/keeplink/i,'').trim();
+                            } else {
+                                data.bar3Link = false;
+                            }
                             let bar3 = param.split('/');
                             data.bar3Val = bar3[0].trim();
                             if (bar3.length > 1) {
@@ -1157,7 +1175,7 @@ const SpawnDefaultToken = (() => {
                                     spawnFx(data.spawnX[iteration], data.spawnY[iteration], data.fx, data.spawnPageID);
                                 }
                                 //Spawn the token!
-                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnLayer, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL, data.bar1Val, data.bar1Max, data.bar2Val, data.bar2Max,data.bar3Val, data.bar3Max, data.expandIterations, data.expandDelay);
+                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnLayer, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL, data.bar1Val, data.bar1Max, data.bar1Link, data.bar2Val, data.bar2Max, data.bar2Link, data.bar3Val, data.bar3Max, data.bar3Link, data.expandIterations, data.expandDelay);
                                 
                             } else {
                                 log("off the map!");
@@ -1296,10 +1314,13 @@ const SpawnDefaultToken = (() => {
                     mook: false,        //Will the token use "represents"? If true, will change linked attributes for all associated tokens (e.g. hp)
                     bar1Val: "",        //bar1 overridevalue 
                     bar1Max: "",        //bar1_max overridevalue
+                    bar1Link: false,    //Do we retain the bar1 attribute link?
                     bar2Val: "",        //bar2 overridevalue 
                     bar2Max: "",        //bar2_max overridevalue
+                    bar2Link: false,    //Do we retain the bar2 attribute link?
                     bar3Val: "",        //bar3 overridevalue 
                     bar3Max: "",        //bar3_max overridevalue
+                    bar3Link: false,    //Do we retain the bar3 attribute link?
                     UDL: false,         //Does the page use UDL?
                     sheetName: "",          //the char sheet in which to look for the supplied ability, defaults to the sheet tied to the first selected token 
                     abilityName: "",        //an ability to trigger after spawning
@@ -1388,3 +1409,4 @@ const SpawnDefaultToken = (() => {
         registerEventHandlers();
     });
 })();
+
