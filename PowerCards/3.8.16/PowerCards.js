@@ -1031,8 +1031,11 @@ var PowerCards = PowerCards || (function () {
 							case "~%":
 								Success = ((LeftVal % RightVal) != 0);
 								break;
+							case "@@":
+								Success = ((String(LeftVal).includes(String(RightVal))));
+								break;							
 							default:
-								Success = false;
+							Success = false;
 							}
 							Operand = Conditional.shift();
 							if (Operand !== undefined) {
