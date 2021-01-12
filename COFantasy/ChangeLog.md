@@ -1,12 +1,130 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
-## 2.09
+## 2.16
+### Capacités
+* Charge fantastique du chevalier
+* Project de la Voie du colosse.
+* Ventre mou de la Voie du tueur de géants.
+* Suggestion de la Voie de la séduction du barde
+* Gestion du mot de pouvoir qui immobilise.
+* Différence entre vitalité surnaturelle qui continue à la mort, comme celle des trolls et celle qui s'arrête à la mort.
+* Support de la capacité Enchaînement du barbare.
+* Ajout de l'attaque d'étreinte et immolation de certains démons gardiens
+* Ajout de la capacité Hausser le ton de la Voie du champion
+
 ### Autres améliorations
+* Prise en compte des compétences sur la fiche
+* Ajout d'une option de sélection alliesEnVue
+* Prise en compte des immunités pour les effets temporaires.
+* Attribut pour diviser par 2 les effets ou les dm d'un type donné
+* Possibilité d'avoir des bonus aux saves contre un type donné.
+* Ajout des immunités aux différents états.
+* Ajout de la possibilité de sélectionner les tokens en vue d'un personnage.
+* Ajout d'une interface de gestion de la bourse.
+* Support de la pénombre
+* Support pour les personnages invisibles en combat
+
+### Corrections de bugs
+* Mise à jour de l'initiative quand on rengaine son arme à distance avec la voie du pistolero.
+* Donne le droit au joueur qui doit faire une réaction à une attaque de ne pas réagir.
+* Les créatures qui enveloppent ou étreignent leur cible la relachent quand elle meurt.
+* Le script ne prennait pas en compte la sagesse de l'attaquant contre les créatures immunisées aux armes.
+* Quand une créature peut résister avec SAG, INT ou CHA et qu'elle est sans esprit, alors on choisit cette caractéristique (car la réussite est alors automatique). Test un peu plus précoce pour la résistance à la peur.
+
+## 2.15
+### Capacités
+* Gestion des capacités d'auras.
+* Capacité "n'abandonne jamais", des guerriers maudits.
+* Réduire la distance de la Voie du tueur de géants.
+* Absorption d'énergie (spectre, vampire, sylvanien maudit)
+* Projeter (voie du Cogneur rang 3)
+* Second ennemi juré (voie du Traqueur rang 4)
+* Injonction Mortelle (Magie Maléfique rang 3)
+
+### Autres améliorations
+* Ajout du fer froid.
+* Reconnaissance des haches, et prise en compte des RD/hache.
+* Possibilité d'utiliser directement le nom d'un état lorsqu'on veut appliquer cet état seulement un certain nombre de tours (avec --effet d'une attaque ou avec !cof-effet-temp).
+* Il faut que le membre du groupe avec la capacité Sans peur soit sur la même page que l'allié pour lui faire bénéficier du bonus.
+* Une attaque avec le label -1 utilise l'arme en main, si il y en a une.
+* Prise en compte de l'immunité à l'asphyxie des démons.
+* Utilisation des consommables sur la fiche pour les PNJs aussi.
+* Si "Jet Secret" est configuré sur une fiche de PNJ, seul le total des jets d'attaques, de dommages, de caractéristiques et de sauvegardes sont affichés, sans les détails. Le MJ reçoit un whisper avec le détail du jet.
+* Ajout d'une option pour gérer le Contrecoup de l'option Mana Totale + Coût aléatoire
+* Ajout d'une option permettant l'affichage des coûts effectifs en PM au lancement du sort
+
+### Corrections de bugs
+* Correction d'un bug avec la forme d'arbre du druide.
+* Dur à cuir et enragés ne mourraient pas si tapé plus d'une fois dans le tour.
+
+## 2.14
+### Autres améliorations
+* Prise en compte de la chance pour les saves.
+* Prise en compte de la chance pour les esquives acrobatiques et les absorptions au bouclier
+* Utilisation de l'obglet des jets cachés des PNJs par le script
+* Réorganisation des menus de règles optionnelles
+* Suppression des options de génération d'attaques devenues obsolètes
+* Implémentation d'une option pour Brûlure de Magie (COTA, applicable à COF)
+* Implémentation d'une option de portée augmentée pour magie puissante (hors Tempête de Mana)
+* Implémentation d'une option pour l'affichage des durées des effets
+* Implémentation d'une option pour les armures/bouclier "de protection" (COF p. 203)
+
+### Corrections de bugs
+* Correction d'un bug sur le tour de force du barbare.
+* Correction d'un crash lors de l'utilisation d'un point de chance sur une riposte.
+* Correction d'un bug pour les conditions moins (comme moins FOR), quand l'attaquant est un PNJ et le défenseur un PJ.
+
+## 2.13
+### Corrections de bugs
+* Mise à jour des attributs d'équipement divers
+
+## 2.12
+### Capacités
+* Faucheuse de géants
+
+### Autres améliorations
+* Ajout des résistances permettant de diviser les dégâts d'un type donné.
+* Utilisation des consommables sur la fiche pour les PJs (au lieu des attributs dose_ ou consommable_).
+* Utilisation du token de la monture pour les personnages montés, dans les calculs de distance.
+
+## 2.11
+### Capacités
+* Commandant de la voie du chef d'armée.
+
+### Autres améliorations
+* Ajout d'une commande pour centrer sa vue du jeu sur un token.
+* Déplace la vue du joueur quand il emprunte un escalier.
+* Prise en compte des fiches Terres d'Arran
+* Possibilité de déplacer un personnage vers une autre carte.
+
+### Corrections de bugs
+* Prise en compte de la taille des cellules de la grille des cartes, car elle est utilisée en jeu pour mesurer les distances.
+
+## 2.10
+### Capacités
+* Chair à canon de la voie du PNJ récurrent
+* Nuée de criquets (Druide Prestige)
+* Increvable (Rôdeur, Survie rang 4)
+* Intervention divine du prêtre
+
+### Autres améliorations
+* Support du nouvel éclairage dynamique
+* Une série de capacités sont à déclencher par les joueurs avant les jets de dégâts : Absorber un Coup, Absorber un Sort, Encaisser un Coup, Résistance à la Magie, Esquive Acrobatique, Esquive fatale, Parade Magistrale, Rune de Protection
+
+## 2.09
+### Capacités
+* Vitalité surnaturelle du barbare
+* Riposte du guerrier
+
+### Autres améliorations
+* Ajout d'une option --plusCrit aux attaques.
+* Ajout d'une option --plageEchecCritique aux jets.
 * Ajout d'une macro pour suivre un autre personnage
 * Possibilité d'utiliser la défense et l'initiative d'un autre personnage.
 * Possibilité de lier les PVs.
 * Les effets temporaires lancés avec une option de mana disparaissent quand le lanceur meurt.
 
 ### Corrections de bugs
+* Undo avant de faire le jet d'attaque pour l'esquive acrobatique
 * Prise en compte correcte des caractéristiques de PNJs dans les jets.
 
 ## 2.08

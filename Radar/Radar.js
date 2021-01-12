@@ -47,7 +47,9 @@
                                                             //NOTE: if target tokens are found on DL(walls) or map layer, output will be in red text, indicating token is invisible to selected token
         --LoS|          <yes/true/1> or <no/false/0>    //Default=false. Will DL walls block radar sensor if completely obscured? To block, all corners and the center of the target token must be in LoS with the center of origin token 
         --title|        <text>                          //Default="Radar Ping Results". The title of the output template. e.g. "Divine Sense", "Tremorsense"
-        --silent|       <yes/true/1> or <no/false/0>    //Default=false. If true, no output template will be sent to chat. animations only.
+        --silent|       <yes/true/1> or <no/false/0> <gm>   //Default=false. If true, no output template will be sent to chat. animations only.
+                                                            // optional "gm" flag to send result output to gm chat
+                                                                    //e.g. --silent| true gm will only output to gm chat
         
         --units|        <u/units/squares/square/hexes/hex> for "u", or <anything else> to just use map settings, e.g. ft, km, miles
                                                         //Only affects Display output
@@ -75,6 +77,7 @@
                                                                                     // "#green"
                                                                                     // "#blue"
                                                                                     // "#yellow"
+                                                                                    // "#9900ff" (any custom html color accepted)
          
         --charfilter|   <attribute>:<includeText1, includeText2, -excludeText>  
                         e.g. "npc_type:celestial, fiend, undead, -nondetection"
@@ -93,7 +96,7 @@
 const Radar = (() => {
     
     const scriptName = "Radar";
-    const version = '0.3';
+    const version = '0.4.1';
     
     const PING_NAME = 'RadarPing'; 
     
@@ -160,6 +163,22 @@ const Radar = (() => {
         blue: (...o) => `<span style="color: blue">${o.join('')}</span>`,
         purple: (...o) => `<span style="color: rgba(112,32,130,1)">${o.join('')}</span>`,
         inlineResult: (...o) => `<span style="font-weight: bold;padding: .2em .2em; background-color:rgba(254,246,142,1);">${o.join('')}</span>`
+    };
+    
+    const toFullColor = function(htmlstring, defaultAlpha = 'ff') {
+        let s=htmlstring.toLowerCase().replace(/[^0-9a-f]/,'');
+        switch(s.length){
+            case 3:
+                s=`${s[0]}${s[0]}${s[1]}${s[1]}${s[2]}${s[2]}${defaultAlpha}`;
+                break;
+            case 4:
+                s=`${s[0]}${s[0]}${s[1]}${s[1]}${s[2]}${s[2]}${s[3]}${s[3]}`;
+                break;
+            case 6:
+                s=`${s}${defaultAlpha}`;
+                break;
+        }
+        return `#${s}`;
     };
     
     async function DeleteSpawnedToken(id, lifetime) {
@@ -597,7 +616,7 @@ const Radar = (() => {
             colors: []
         }
         let losBlocks = false;      //Will DL walls block radar sensor if completely obscured (will look at 5 pts per token to determine LoS)
-        let title = "Radar Ping Results";             //totle of the default template output
+        let title = "Radar Ping Results";             //title of the default template output
         let content = "";           //string value that will contain all the row content for default templates
         let displayOutput = true    //output results via sendChat (default template)
         let pageScaleNumber = 5;    //distance of one unit
@@ -606,6 +625,7 @@ const Radar = (() => {
         let displayUnits = "u";         //output distances in "units" or use pageScaleUnits 
         let includeTotalDist = false;   //inlude the total range in the output, or just directional (X & Y distances)
         let hasSight = false;       //Will the RadarPing token grant temporary sight to the 
+        let includeGM = false;      //Send a copy of the ouput to the GM chat if player calls script
         
         let gmToks = [];            //array of all tokens on GM layer
         let objToks = [];           //array of all tokens on object layer
@@ -695,7 +715,7 @@ const Radar = (() => {
                                             filter.colors.push(hBLUE);
                                             break;
                                         default:
-                                            filter.colors.push(hRED);
+                                            filter.colors.push(toFullColor(f[1]));
                                     }
                                     filter.vals[index] = f[0];  //strips the color out of the filter
                                 } else {
@@ -724,7 +744,7 @@ const Radar = (() => {
                                             filter.colors.push(hBLUE);
                                             break;
                                         default:
-                                            filter.colors.push(hRED);
+                                            filter.colors.push(toFullColor(f[1]));
                                     }
                                     filter.vals[index] = f[0];  //strips the color out of the filter
                                 } else {
@@ -737,11 +757,15 @@ const Radar = (() => {
                             title = param;
                             break;
                         case "silent":
-                            if (_.contains(['true', 'yes', '1'], param.toLowerCase())) {
+                            let p = param.toLowerCase();
+                            if (p.includes('true') || p.includes('yes') || p.includes('1') ) {
                                 displayOutput = false;
-                            } else if (_.contains(['false', 'no', '0'], param.toLowerCase())) {
+                            } else if (p.includes('false') || p.includes('no') || p.includes('0')) {
                                 displayOutput = true;
-                            } 
+                            }
+                            if (p.includes('gm')) {
+                                includeGM = true;
+                            }
                             break;
                         case "units":
                             if (_.contains(['u', 'units', 'squares', 'square', 'hexes', 'hex'], param.toLowerCase())) {
@@ -977,27 +1001,32 @@ const Radar = (() => {
                 while ( radius <= range ) {
                     pathstring = buildCircle(radius);
                     
-                    promise = new Promise((resolve, reject) => {
-                        setTimeout(() => {
-                            drawWave(pageID, pathstring, "transparent", "#ff0000", "objects", 3, radius, originX, originY, waveLife);
-                            resolve("done!");
-                        }, waveDelay);
-                    });
-                    
-                    result = await promise;
+                    let useAnimation = true;
+                    if (useAnimation === true) {
+                        promise = new Promise((resolve, reject) => {
+                            setTimeout(() => {
+                                drawWave(pageID, pathstring, "transparent", "#ff0000", "objects", 3, radius, originX, originY, waveLife);
+                                resolve("done!");
+                            }, waveDelay);
+                        });
+                        
+                        result = await promise;
+                    }
                     
                     oldRadius = radius;
                     radius += waveIncrement;
                     
                     //Ping target tokens as the radar wavefront hits them
-                    toksInRange.forEach( tok => {
-                        if ( (tok.dist > oldRadius) && (tok.dist <= radius) ) {
-                            spawnObj.get("_defaulttoken", async function(defaultToken) {
-                                result = await spawnTokenAtXY(who, defaultToken, pageID, tok["left"], tok["top"], tok["width"]+padding, tok["height"]+padding, controlledby, tokLife, tok.filterColor);
-                            });
-                            
-                        }
-                    });
+                    if (tokLife > 0) {
+                        toksInRange.forEach( tok => {
+                            if ( (tok.dist > oldRadius) && (tok.dist <= radius) ) {
+                                spawnObj.get("_defaulttoken", async function(defaultToken) {
+                                    result = await spawnTokenAtXY(who, defaultToken, pageID, tok["left"], tok["top"], tok["width"]+padding, tok["height"]+padding, controlledby, tokLife, tok.filterColor);
+                                });
+                                
+                            }
+                        });
+                    }
                     
                 }
                 
@@ -1005,7 +1034,7 @@ const Radar = (() => {
                 /////////       OPTIONAL OUTPUT
                 /////////       results appear in order of proximity to origin. Possibly grouped by filter keywords
                 ///////////////////////////////////////////////////////////////////////////
-                if (displayOutput) {
+                if (displayOutput || includeGM) {
                     toksInRange.sort((a,b) => (a.dist > b.dist) ? 1 : ((b.dist > a.dist) ? -1 : 0));
                     let counter;
                     if (filter.type !== "") {
@@ -1045,8 +1074,14 @@ const Radar = (() => {
                         }
                     }
                     let output = `&{template:default} {{name=${title} (Units:${displayUnits})}}` + content;
-                    sendChat(scriptName, `/w "${who}" `+ output);
+                    if (displayOutput) {
+                        sendChat(scriptName, `/w "${who}" `+ output);
+                    }
+                    if (includeGM && !playerIsGM(msg.playerid)) {
+                        sendChat(scriptName, '/w gm ' + output);
+                    }
                 }
+                
             let elapsedTime = Date.now()-startTimer;
             //sendChat('timer', 'elapsed time (ms) = ' + elapsedTime);
             }

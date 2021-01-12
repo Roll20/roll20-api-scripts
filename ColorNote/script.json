@@ -1,7 +1,7 @@
 {
   "name": "ColorNote",
-  "version": "0.2.2",
-  "description": "",
+  "version": "0.2.3",
+  "description": "ColorNote provides a way for players to output text similar to /em, but colored based on their player color.\r\n\r\nFor instructions, run `!note` with no arguments.",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -15,6 +15,7 @@
   "script": "ColorNote.js",
   "useroptions": [],
   "previousversions": [
-    "0.2.1"
+    "0.2.1",
+    "0.2.2"
   ]
 }
