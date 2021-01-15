@@ -1,7 +1,7 @@
 {
   "name": "InitiativeAssistant",
-  "version": "0.1.5",
-  "description": "Provides an easy interface to adding players to the inititaive order.",
+  "version": "0.1.6",
+  "description": "Provides an easy interface to adding players to the inititaive order.\r\rFor instructions, run `!init-assist --help`, or visit [InitiativeAssistant Forum Thread](https://app.roll20.net/forum/permalink/1854729/).",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -17,6 +17,7 @@
   "useroptions": [],
   "previousversions": [
     "0.1.3",
-    "0.1.4"
+    "0.1.4",
+    "0.1.5"
   ]
 }

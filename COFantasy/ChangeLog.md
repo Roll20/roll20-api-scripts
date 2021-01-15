@@ -1,4 +1,35 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 2.16
+### Capacités
+* Charge fantastique du chevalier
+* Project de la Voie du colosse.
+* Ventre mou de la Voie du tueur de géants.
+* Suggestion de la Voie de la séduction du barde
+* Gestion du mot de pouvoir qui immobilise.
+* Différence entre vitalité surnaturelle qui continue à la mort, comme celle des trolls et celle qui s'arrête à la mort.
+* Support de la capacité Enchaînement du barbare.
+* Ajout de l'attaque d'étreinte et immolation de certains démons gardiens
+* Ajout de la capacité Hausser le ton de la Voie du champion
+
+### Autres améliorations
+* Prise en compte des compétences sur la fiche
+* Ajout d'une option de sélection alliesEnVue
+* Prise en compte des immunités pour les effets temporaires.
+* Attribut pour diviser par 2 les effets ou les dm d'un type donné
+* Possibilité d'avoir des bonus aux saves contre un type donné.
+* Ajout des immunités aux différents états.
+* Ajout de la possibilité de sélectionner les tokens en vue d'un personnage.
+* Ajout d'une interface de gestion de la bourse.
+* Support de la pénombre
+* Support pour les personnages invisibles en combat
+
+### Corrections de bugs
+* Mise à jour de l'initiative quand on rengaine son arme à distance avec la voie du pistolero.
+* Donne le droit au joueur qui doit faire une réaction à une attaque de ne pas réagir.
+* Les créatures qui enveloppent ou étreignent leur cible la relachent quand elle meurt.
+* Le script ne prennait pas en compte la sagesse de l'attaquant contre les créatures immunisées aux armes.
+* Quand une créature peut résister avec SAG, INT ou CHA et qu'elle est sans esprit, alors on choisit cette caractéristique (car la réussite est alors automatique). Test un peu plus précoce pour la résistance à la peur.
+
 ## 2.15
 ### Capacités
 * Gestion des capacités d'auras.
@@ -18,9 +49,11 @@
 * Prise en compte de l'immunité à l'asphyxie des démons.
 * Utilisation des consommables sur la fiche pour les PNJs aussi.
 * Si "Jet Secret" est configuré sur une fiche de PNJ, seul le total des jets d'attaques, de dommages, de caractéristiques et de sauvegardes sont affichés, sans les détails. Le MJ reçoit un whisper avec le détail du jet.
+* Ajout d'une option pour gérer le Contrecoup de l'option Mana Totale + Coût aléatoire
+* Ajout d'une option permettant l'affichage des coûts effectifs en PM au lancement du sort
 
 ### Corrections de bugs
-* Correction d'nu bug avec la forme d'arbre du druide.
+* Correction d'un bug avec la forme d'arbre du druide.
 * Dur à cuir et enragés ne mourraient pas si tapé plus d'une fois dans le tour.
 
 ## 2.14
