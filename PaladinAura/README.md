@@ -34,6 +34,8 @@ Either leave a message on the [API Forum Post](https://app.roll20.net/forum/post
 
 ## Updates
 
+1.1.2 - Bug fix for multi-class.
+
 1.1.1 - Remove accidental log that was left over from bug fix.
 
 1.1.0 - Patch a bug that causes a crash for some people (reason unknown).
