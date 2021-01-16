@@ -1,9 +1,9 @@
 {
-    "name": "SR-RollExtender",
+    "name": "Shadowrun 5E - RollExtender",
     "script": "SR-RollExtender.js",
     "version": "0.2",
     "previousversions": ["0.1"],
-    "description": "Designed to be used with the Shadowrun: 5th Edition (Advanced) character sheet.\r\r Autoamticaly detect Glitches and roll Extended Tests.\r\r Glitch Detection is not yet configurable and will send a private message to the GM whenever a Glitch is rolled.\r\r To roll an Extended Test type: !RollEx xx\r xx being the number of dice to start with\r\rOptional parameters are:\r dy with y being the minimum number of dice before you want to stop\r sz with z being the number of successes after which you want to stop\r\r Example:\r !RollEx 16 d5 s24 \r will roll an extended test starting with 16 dice and dropping one after every roll until you either have a minimum of 24 successes, less than 5 dice remaining or roll a critical glitch\r\r\r type !RollEx ingame to see the help menu",
+    "description": "Designed to be used with the **Shadowrun: 5th Edition (Advanced)**-character sheet.\r\r Automatically detect Glitches and roll Extended Tests.\r\r Glitch Detection is not yet configurable and will send a private message to the GM whenever a Glitch is rolled.\r\r To roll an Extended Test type: `!RollEx xx`\r `xx` being the number of dice to start with\r\rOptional parameters are:\r `dy` with `y` being the minimum number of dice before you want to stop\r `sz` with `z` being the number of successes after which you want to stop\r\r Example:\r `!RollEx 16 d5 s24` \r will roll an extended test starting with 16 dice and dropping one after every roll until you either have a minimum of 24 successes, less than 5 dice remaining or roll a critical glitch\r\r\r type `!RollEx` ingame to see the help menu",
     "authors": "Jens 'xyro'",
     "roll20userid": "857511",
     "useroptions": [],

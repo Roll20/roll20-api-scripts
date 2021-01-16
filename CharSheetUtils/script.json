@@ -3,7 +3,7 @@
     "script": "index.js",
     "version": "1.0",
     "previousversions": [],
-    "description": "",
+    "description": "This script provides a collection of utility functions for reading and writing attributes from a character sheet, including support for attributes in repeating sections and calculated attributes. This script does nothing on its own. It is a helper library meant to be used by other scripts.\nFull documentation for the functions provided by this script are given in the jsdoc annotations in the source code.\n\n* [Readme](https://github.com/Roll20/roll20-api-scripts/blob/master/CharSheetUtils/README.md)\n* [sourcecode](https://github.com/Roll20/roll20-api-scripts/blob/master/CharSheetUtils/src/index.js)",
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
     "useroptions": [],
