@@ -18,7 +18,7 @@ on('ready', () => {
     const decodeUnicode = (str) => str.replace(/%u[0-9a-fA-F]{2,4}/g, (m) => String.fromCharCode(parseInt(m.slice(2), 16)));
 
 
-    const version = '0.0.7';
+    const version = '0.0.8';
     log('Supernotes v' + version + ' is ready!  To set the template of choice or to toggle the send to players option, Use the command !gmnote --config');
 
     on('chat:message', function(msg) {
@@ -36,7 +36,10 @@ on('ready', () => {
 
             //define option
             let option = msg.content.split(/\s+--/)[1];
-
+            let secondOption = msg.content.split(/\s+--/)[2];
+            if (option === 'notitle'){
+                option = secondOption;
+                secondOption = 'notitle';}
 
 
             const template = state.Supernotes.template;
@@ -47,7 +50,7 @@ on('ready', () => {
 
 
 
-            if (option !== undefined && option.includes('config')) {
+ if (option !== undefined && option.includes('config')) {
                 let templateChoice = option.split('|')[1]
 
                 if (templateChoice === undefined) {
@@ -149,6 +152,7 @@ on('ready', () => {
                             .forEach(c => {
                                 message = "<img src='" + c.get('avatar') + "'>";
                                 whom = c.get('name');
+                                            if (secondOption === 'notitle'){whom = '';}
                                 sendChat(whom, messagePrefix + '&{template:' + template + '}{{' + title + '=' + whom + '}} {{' + theText + '=' + message + playerButton + '}}');
                             });
                     } else {
@@ -203,6 +207,7 @@ on('ready', () => {
 
                                         whom = c.get('name');
                                         //Sends the final message
+                                            if (secondOption === 'notitle'){whom = '';}
                                         sendChat(whom, messagePrefix + '&{template:' + template + '}{{' + title + '=' + whom + '}} {{' + theText + '=' + message + playerButton + '}}');
 
                                     }
@@ -231,6 +236,7 @@ on('ready', () => {
                                             }
                                             whom = c.get('name');
                                             //Sends the final message
+                                            if (secondOption === 'notitle'){whom = '';}
                                             sendChat(whom, messagePrefix + '&{template:' + template + '}{{' + title + '=' + whom + '}} {{' + theText + '=' + message + playerButton + '}}');
 
                                         }
@@ -250,6 +256,7 @@ on('ready', () => {
 
                                     });
                                 //Sends the final message
+                                            if (secondOption === 'notitle'){whom = '';}
                                 sendChat(whom, messagePrefix + '&{template:' + template + '}{{' + title + '=' + whom + '}} {{' + theText + '=' + message + playerButton + '}}');
 
                             }
@@ -260,7 +267,9 @@ on('ready', () => {
                                 `THE MESSAGE =${message}`,
                                 `command = ${command}`,
                                 `option = ${option}`,
+                                `secondOption = ${secondOption}`,
                                 `messagePrefix = ${messagePrefix}`,
+                                `whom = ${whom}`,
                                 `message =${message}`
                             ].forEach(m => log(m));
                         }
