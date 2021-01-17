@@ -1,7 +1,8 @@
-```
-Deal-Init
-Roll20 API Script to Deal Initiative for Savage Worlds Games
 
+## Deal-Init
+### Roll20 API Script to Deal Initiative for Savage Worlds Games
+
+```
 DealInit supports Savage Worlds style card based inititive by dealing cards to the Turn Order and 
 sorting the order by suit.  
 (Note: If you are using the amazing VTTES to enhance your Roll20 experience, you must disable 
@@ -57,3 +58,22 @@ I personally use 4 macros to call the script that look like this:
 !deal-init --deal2chat
 
 ```
+
+## Debugging API Crashes:
+
+The most common help request I get is for debugging this API Crash error:
+```
+      TypeError: Cannot read property 'get' of undefined
+          at getInitiativeEdges (apiscript.js:523:66)
+          at dealInitiative (apiscript.js:968:10)
+```
+This type of problem occurs when the TurnOrder is not "flushed" between sessions or pages. Roll20 does a poor job of managing the Turn Order data structure across pages or sessions.  By "Flush" i mean:  Open Turn Order => Poke Blue Gear Button => Poke Red "Remove all Turns" button
+
+My workflow, when I use the script is like this:
+
+1. New Roll20 session or New Page => Flush Turn Order
+1. New Encounter: !deal-init --reset
+1. New Round: !deal-init
+1. Someone Spends a Benny to Draw a New Card: !deal-init --deal2chat  (then I just manually move them around in the TurnOrder)
+1. etc.
+

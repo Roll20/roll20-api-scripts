@@ -1,0 +1,19 @@
+{
+    "name": "Pathfinder 2 Treat Wounds",
+    "script": "treatwounds.js",
+    "version": "1.0",
+    "previousversions": [
+        "0.1"
+    ],
+    "description": "Treat Wounds is designed for Pathfinder 2nd Edition and aids in performing a Medicine check to treat wounds allowing for the user to pass in the specific DC of the check they want to attempt as well as opt to attempt Risky Surgery (per the feat). As with the PF2 ruleset, total healing is doubled on a critical success and will deal damage to the selected target on a critical failure. The script also accounts for the critical success/failure system with regards to beating/missing the DC by 10 or more and modifying results on a nat 1 or 20.",
+    "authors": "Mark S.",
+    "roll20userid": "580967",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {
+        "character.controlledby": "read",
+        "character.name": "read",
+        "graphic.represents": "read"
+    },
+    "conflicts": []
+}

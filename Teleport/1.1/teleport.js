@@ -636,7 +636,7 @@
                 if(typeof foundPlayerObj !== 'null'){ return false }
             });
             if(foundPlayerObj !== null){
-                // Campaign().set({playerspecificpages:false,playerpageid:pageid});
+                Campaign().set({playerspecificpages:false,playerpageid:pageid});
                 reconcileTargetPageId(obj,pageid);
                 return foundPlayerObj;
             }
@@ -650,7 +650,7 @@
                } 
             });
             if(foundPlayerObj !== null){
-               //Campaign().set({playerspecificpages:false,playerpageid:pageid});
+               Campaign().set({playerspecificpages:false,playerpageid:pageid});
                reconcileTargetPageId(obj,pageid);
                 return foundPlayerObj;
             }

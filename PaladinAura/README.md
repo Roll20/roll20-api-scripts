@@ -8,7 +8,7 @@ Depreciated version (not optimized enough to work properly): [Roll20 Forum](http
 
 ## Notes
 
-The API is only compatible with the Roll20 D&D 5E OGL Sheet.
+The API is only compatible with the [D&D 5E by Roll20](wiki.roll20.net/D%26D_5E_by_Roll20) Sheet.
 
 The API only runs on the player-ribbon page.
 
