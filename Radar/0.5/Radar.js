@@ -53,6 +53,12 @@
         --units|        <u/units/squares/square/hexes/hex> for "u", or <anything else> to just use map settings, e.g. ft, km, miles
                                                         //Only affects Display output
                                                         //for GRIDLESS MAP, this command must be included or else all results will be INFINITY
+        //--------------------------------------------------------------------------------------
+        //THE FOLLOWING TWO COMMANDS ARE USED WHEN CALLING RADAR FROM ANOTHER API SCRIPT 
+        //  e.g. sendChat(scriptName, `!radar --selectedID|${msg.selected[0]._id} --playerID|${msg.playerid}`
+        --selectedID|   <ID of the selected token>              //used to identify the radar origin token
+        --playerID|     <ID of the player calling the script>   //used to determine who gets whispered the results
+        //--------------------------------------------------------------------------------------
         
         //--------------------------------------------------------------------------------------
         //ONLY CHOOSE ONE OF THESE TWO FILTERS: (tokfilter or charfilter)
