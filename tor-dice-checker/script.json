@@ -1,0 +1,16 @@
+{
+  "name": "tor-dice-checker",
+  "version": "0.1.2",
+  "description": "checks rolls against the success criteria of the The One Ring system, and is best used in conjunction with the custom dice roll tables (https://wiki.roll20.net/The_One_Ring). Basically it will try to output a valuable message about the roll's success, and works best of supplied with a Target Number, like so: /roll 1d12 + 3d6 > 14\r\rchecks if you have rolled EDGE on your feat-die with the attack rollthis only works if your macros are following a clear structure",
+  "authors": "Michael Heilemann, Stefan Unterhuber, Stuart Johnson, David Domínguez, Eric Le Bourvellec, Michael (aka Aragent) I",
+  "roll20userid": "61774,1227702,383147,63716,211627,2624774",
+  "patreon": "",
+  "dependencies": [],
+  "modifies": {},
+  "conflicts": [],
+  "script": "tor-dice-checker.js",
+  "useroptions": [],
+  "previousversions": [
+    "0.1.1",
+  ]
+}

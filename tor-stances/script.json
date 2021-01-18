@@ -1,0 +1,16 @@
+{
+  "name": "tor-stances",
+  "version": "0.1.2",
+  "description": " sets player characters Stance, simply by dropping their token on the right area of a Battle Mat.",
+  "authors": "Michael Heilemann, Stefan Unterhuber, Stuart Johnson, David Domínguez, Eric Le Bourvellec, Michael (aka Aragent) I",
+  "roll20userid": "61774,1227702,383147,63716,211627,2624774",
+  "patreon": "",
+  "dependencies": [],
+  "modifies": {},
+  "conflicts": [],
+  "script": "tor-stances.js",
+  "useroptions": [],
+  "previousversions": [
+    "0.1.1",
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "tor-mooks-state-checker.js",
+  "version": "0.1.2",
+  "description": "This script will change the weary state automatically on mooks when hate hits 0,\r\rand if you then also set up your mook's macros to roll against [@{selected|bar3}] and you've set up your Rollable Tables in accordance with this page: https://wiki.roll20.net/The_One_Ring, you can have your macros automatically roll on the right table, etc.",
+  "authors": "Michael Heilemann, Stefan Unterhuber, Stuart Johnson, David Domínguez, Eric Le Bourvellec, Michael (aka Aragent) I",
+  "roll20userid": "61774,1227702,383147,63716,211627,2624774",
+  "patreon": "",
+  "dependencies": [],
+  "modifies": {},
+  "conflicts": [],
+  "script": "tor-mooks-state-checker.js",
+  "useroptions": [],
+  "previousversions": [
+    "0.1.1",
+  ]
+}

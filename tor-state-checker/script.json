@@ -1,0 +1,16 @@
+{
+  "name": "tor-state-checker",
+  "version": "0.1.2",
+  "description": "Checks to see if a character's endurance drops below her fatigue, and automatically sets the `weary` attribute to `weary` or `normal`, \r\rSets a half-heart marker on the tokens of wounded/treated wound characters, mostly to serve as a reminder.",\r\rSets a marker on the tokens of miserable characters. Also automatically detects if a character is turning miserable if hope is less or equal total_shadow. However it does not reset miserable. This is on purpose not to override any temporary miserable state.
+  "authors": "Michael Heilemann, Stefan Unterhuber, Stuart Johnson, David Domínguez, Eric Le Bourvellec, Michael (aka Aragent) I",
+  "roll20userid": "61774,1227702,383147,63716,211627,2624774",
+  "patreon": "",
+  "dependencies": [],
+  "modifies": {},
+  "conflicts": [],
+  "script": "tor-state-checker.js",
+  "useroptions": [],
+  "previousversions": [
+    "0.1.1",
+  ]
+}

@@ -1,0 +1,332 @@
+*//These are my macros for The One Ring for Roll20 I try and keep them updated and working, 
+where possible the makros are just pices that are chained together (stacked macros) in abilities to make a functioning code.
+this was done for two purposes one of which was hopefully make it easier to diganose if during roll20 upgrades something is broken.
+the secound was to help to minimise the number of macros needed to make this all work. //*
+
+*// for clarification npc refers to (Lore Master Characters or LM, adv refers to Adversary, and pc refers to Player Character //*
+*// to make the magic work npc and pc need to be placed on the battle mat or manually be given a stance. //*
+
+*// the next two macros are nothing more than the code we need to use to emote emas is a gm only ability so is used only for adv and npc
+so we use the command em to emote the players info //* 
+
+*// for adv and npc //*
+*// emas is a GM only command so cannot be used for pc //*
+emas
+/emas
+
+*// for pc //*
+em
+/em
+
+*// this is the meat of the code this is the code that tells us who is attacking with what weapon and who they are attacking //*
+attack_1
+@{selected|token_name} attacks @{target|token_name} with a @{selected|weapon_skill_name_1} vs. TN
+
+attack_1_thrown
+@{selected|token_name} attacks @{target|token_name} with a thrown @{selected|weapon_skill_name_1} vs. TN
+
+attack_2
+@{selected|token_name} attacks @{target|token_name} with a @{selected|weapon_skill_name_2} vs. TN 
+
+attack_2_thrown
+@{selected|token_name} attacks @{target|token_name} with a thrown @{selected|weapon_skill_name_2} vs. TN 
+
+
+attack_3
+@{selected|token_name} attacks @{target|token_name} with a @{selected|weapon_skill_name_3} vs. TN 
+
+attack_3_thrown
+@{selected|token_name} attacks @{target|token_name} with a thrown @{selected|weapon_skill_name_3} vs. TN 
+
+
+attack_4
+@{selected|token_name} attacks @{target|token_name} with a @{selected|weapon_skill_name_4} vs. TN 
+
+attack_4_thrown
+@{selected|token_name} attacks @{target|token_name} with a thrown @{selected|weapon_skill_name_4} vs. TN 
+
+
+attack_5
+@{selected|token_name} attacks @{target|token_name} with a @{selected|weapon_skill_name_5} vs. TN 
+
+attack_5_thrown
+@{selected|token_name} attacks @{target|token_name} with a thrown @{selected|weapon_skill_name_5} vs. TN 
+
+
+attack_6
+@{selected|token_name} attacks @{target|token_name} with a @{selected|weapon_skill_name_6} vs. TN 
+
+attack_6_thrown
+@{selected|token_name} attacks @{target|token_name} with a thrown @{selected|weapon_skill_name_6} vs. TN 
+
+
+*// again we seperated the two macros below to enamble the characters to roll the correct feat die so good characters can roll gandalf rune and the bad can roll the eye of sauron //* 
+
+*// for bad characters and mooks //*
+adv 
+/r (1t[lm-feat] +
+
+*// for good characters //*
+pc 
+/r (1t[feat] +
+
+
+*// This is the heart of the macro this tells it where to pull the data from the character sheet what weapon is it favored what our attribute level is is there any modifiers and what the defence are and did we hit or edge rating. //*
+
+*//this is for npc and adv characters //*
+npc_weapon_1
+@{selected|weapon_rating_1}t[@{selected|bar3}] + @{selected|weapon_favoured_1} * @{selected|attribute_level} + ?{Modifier|0}) > 
+
+npc_weapon_2
+@{selected|weapon_rating_2}t[@{selected|bar3}] + @{selected|weapon_favoured_2} * @{selected|attribute_level} + ?{Modifier|0}) > 
+
+npc_weapon_3
+@{selected|weapon_rating_3}t[@{selected|bar3}] + @{selected|weapon_favoured_3} * @{selected|attribute_level} + ?{Modifier|0}) > 
+
+npc_weapon_4
+@{selected|weapon_rating_4}t[@{selected|bar3}] + @{selected|weapon_favoured_4} * @{selected|attribute_level} + ?{Modifier|0}) > 
+
+npc_weapon_5
+@{selected|weapon_rating_5}t[@{selected|bar3}] + @{selected|weapon_favoured_5} * @{selected|attribute_level} + ?{Modifier|0}) > 
+
+npc_weapon_6
+@{selected|weapon_rating_6}t[@{selected|bar3}] + @{selected|weapon_favoured_6} * @{selected|attribute_level} + ?{Modifier|0}) > 
+
+
+*// this is for player characters //*
+pc_weapon_1
+@{selected|weapon_rating_1}t[@{selected|weary}] + ?{Modifier|0}) > 
+
+pc_weapon_2
+@{selected|weapon_rating_2}t[@{selected|weary}] + ?{Modifier|0}) > 
+
+pc_weapon_3
+@{selected|weapon_rating_3}t[@{selected|weary}] + ?{Modifier|0}) > 
+
+pc_weapon_4
+@{selected|weapon_rating_4}t[@{selected|weary}] + ?{Modifier|0}) > 
+
+pc_weapon_5
+@{selected|weapon_rating_5}t[@{selected|weary}] + ?{Modifier|0}) > 
+
+pc_weapon_6
+@{selected|weapon_rating_6}t[@{selected|weary}] + ?{Modifier|0}) > 
+
+
+*// this is the macro that determins the defence //*
+
+*// this is for adv //*
+npc_vs_pc_defense
+[[@{target|stance} + @{target|parry} + @{target|shield} + @{target|head-gear}]]
+
+*// this is for npc and pc //*
+pc_vs_npc_defense
+[[@{selected|stance} + @{target|parry} + @{target|shield} + @{target|head-gear}]]
+
+*// this is used in the upgraded script for determining edge rating //*
+edge_1
+Edge: @{selected|weapon_edge_1}
+
+edge_2
+Edge: @{selected|weapon_edge_2}
+
+edge_3
+Edge: @{selected|weapon_edge_3}
+
+edge_4
+Edge: @{selected|weapon_edge_4}
+
+edge_5
+Edge: @{selected|weapon_edge_5}
+
+edge_6
+Edge: @{selected|weapon_edge_6}
+
+
+*// this is optional but produes a nice weapon and damage template //*
+
+*// this is for npc and adv //* 
+npc_weapon_temp_1
+&{template:default} {{name=@{selected|weapon_skill_name_1}}} {{Damage=@{selected|weapon_damage_1}}} {{Edge = @{selected|weapon_edge_1}}} {{Injury=@{selected|weapon_injury_1}}} {{Called Shot = @{selected|weapon_called_shot_1}}} {{Damage Bonus = @{selected|attribute_level}}} {{Favoured = @{selected|weapon_favoured_1}}}
+
+npc_weapon_temp_2
+&{template:default} {{name=@{selected|weapon_skill_name_2}}} {{Damage=@{selected|weapon_damage_2}}} {{Edge = @{selected|weapon_edge_2}}} {{Injury=@{selected|weapon_injury_2}}} {{Called Shot = @{selected|weapon_called_shot_2}}} {{Damage Bonus = @{selected|attribute_level}}} {{Favoured = @{selected|weapon_favoured_2}}}
+
+npc_weapon_temp_3
+&{template:default} {{name=@{selected|weapon_skill_name_3}}} {{Damage=@{selected|weapon_damage_3}}} {{Edge = @{selected|weapon_edge_3}}} {{Injury=@{selected|weapon_injury_3}}} {{Called Shot = @{selected|weapon_called_shot_3}}} {{Damage Bonus = @{selected|attribute_level}}} {{Favoured = @{selected|weapon_favoured_3}}}
+
+npc_weapon_temp_4
+&{template:default} {{name=@{selected|weapon_skill_name_4}}} {{Damage=@{selected|weapon_damage_4}}} {{Edge = @{selected|weapon_edge_4}}} {{Injury=@{selected|weapon_injury_4}}} {{Called Shot = @{selected|weapon_called_shot_4}}} {{Damage Bonus = @{selected|attribute_level}}} {{Favoured = @{selected|weapon_favoured_4}}}
+
+npc_weapon_temp_5
+&{template:default} {{name=@{selected|weapon_skill_name_5}}} {{Damage=@{selected|weapon_damage_5}}} {{Edge = @{selected|weapon_edge_5}}} {{Injury=@{selected|weapon_injury_5}}} {{Called Shot = @{selected|weapon_called_shot_5}}} {{Damage Bonus = @{selected|attribute_level}}} {{Favoured = @{selected|weapon_favoured_5}}}
+
+npc_weapon_temp_6
+&{template:default} {{name=@{selected|weapon_skill_name_6}}} {{Damage=@{selected|weapon_damage_6}}} {{Edge = @{selected|weapon_edge_6}}} {{Injury=@{selected|weapon_injury_6}}} {{Called Shot = @{selected|weapon_called_shot_6}}} {{Damage Bonus = @{selected|attribute_level}}} {{Favoured = @{selected|weapon_favoured_1}}}
+
+*// this is for pc //*
+pc_weapon_temp_1
+&{template:default} {{name=@{selected|weapon_skill_name_1}}} {{Damage=@{selected|weapon_damage_1}}} {{Edge = @{selected|weapon_edge_1}}} {{Injury=@{selected|weapon_injury_1}}} {{Called Shot = @{selected|weapon_called_shot_1}}} {{Damage Bonus = @{selected|damage}}} {{Ranged Bonus = @{selected|ranged}}} {{Favoured = @{selected|weapon_favoured_1}}}
+
+pc_weapon_temp_2
+&{template:default} {{name=@{selected|weapon_skill_name_2}}} {{Damage=@{selected|weapon_damage_2}}} {{Edge = @{selected|weapon_edge_2}}} {{Injury=@{selected|weapon_injury_2}}} {{Called Shot = @{selected|weapon_called_shot_2}}} {{Damage Bonus = @{selected|damage}}} {{Ranged Bonus = @{selected|ranged}}} {{Favoured = @{selected|weapon_favoured_2}}}
+
+pc_weapon_temp_3
+&{template:default} {{name=@{selected|weapon_skill_name_3}}} {{Damage=@{selected|weapon_damage_3}}} {{Edge = @{selected|weapon_edge_3}}} {{Injury=@{selected|weapon_injury_3}}} {{Called Shot = @{selected|weapon_called_shot_3}}} {{Damage Bonus = @{selected|damage}}} {{Ranged Bonus = @{selected|ranged}}} {{Favoured = @{selected|weapon_favoured_3}}}
+
+pc_weapon_temp_4
+&{template:default} {{name=@{selected|weapon_skill_name_4}}} {{Damage=@{selected|weapon_damage_4}}} {{Edge = @{selected|weapon_edge_4}}} {{Injury=@{selected|weapon_injury_4}}} {{Called Shot = @{selected|weapon_called_shot_4}}} {{Damage Bonus = @{selected|damage}}} {{Ranged Bonus = @{selected|ranged}}} {{Favoured = @{selected|weapon_favoured_4}}}
+
+pc_weapon_temp_5
+&{template:default} {{name=@{selected|weapon_skill_name_5}}} {{Damage=@{selected|weapon_damage_5}}} {{Edge = @{selected|weapon_edge_5}}} {{Injury=@{selected|weapon_injury_5}}} {{Called Shot = @{selected|weapon_called_shot_5}}} {{Damage Bonus = @{selected|damage}}} {{Ranged Bonus = @{selected|ranged}}} {{Favoured = @{selected|weapon_favoured_5}}}
+
+pc_weapon_temp_6
+&{template:default} {{name=@{selected|weapon_skill_name_6}}} {{Damage=@{selected|weapon_damage_6}}} {{Edge = @{selected|weapon_edge_6}}} {{Injury=@{selected|weapon_injury_6}}} {{Called Shot = @{selected|weapon_called_shot_6}}} {{Damage Bonus = @{selected|damage}}} {{Ranged Bonus = @{selected|ranged}}} {{Favoured = @{selected|weapon_favoured_6}}}
+
+
+
+
+*// Abilities These are placed in the character sheet under attributes & abilities tab abilities (also known as Character macros)
+
+we broke the macros apart for two purposes one is to help with debuging should something break during a roll20 upgrade. the secound is to help reduce the number of macros
+
+this is where we start to string the above macros togehther to make working code
+
+ this emotes who attacks, with what weapon, and who they are attacking.
+Name these abilities the weapon name (example 1, Bow-of-Horn (favored) example 2, Jagged Knife) add the (favored) if its a favored weapon leave off if its not.//**
+
+*// this is for the npc/adv //*
+
+*// this is the normal abilities macro to use for weapons including bows //* 
+#emas #attack_1 #npc_vs_pc_defense
+
+#emas #attack_2 #npc_vs_pc_defense
+
+#emas #attack_3 #npc_vs_pc_defense
+
+#emas #attack_4 #npc_vs_pc_defense
+
+#emas #attack_5 #npc_vs_pc_defense
+
+#emas #attack_6 #npc_vs_pc_defense
+
+*// This abilities macro is used for thrown weapons just to help the gm and speed up the game //*
+#emas #attack_1_thrown #npc_vs_pc_defense
+
+#emas #attack_2_thrown #npc_vs_pc_defense
+
+#emas #attack_3_thrown #npc_vs_pc_defense
+
+#emas #attack_4_thrown #npc_vs_pc_defense
+
+#emas #attack_5_thrown #npc_vs_pc_defense
+
+#emas #attack_6_thrown #npc_vs_pc_defense
+
+
+*// this is what calls the weapon template //*
+
+*// this is for npc/adv //*
+#npc_weapon_temp_1
+
+#npc_weapon_temp_2
+
+#npc_weapon_temp_3
+
+#npc_weapon_temp_4
+
+#npc_weapon_temp_5
+
+#npc_weapon_temp_6
+
+*// this is for pc //*
+#pc_weapon_temp_1
+
+#pc_weapon_temp_2
+
+#pc_weapon_temp_3
+
+#pc_weapon_temp_4
+
+#pc_weapon_temp_5
+
+#pc_weapon_temp_6
+
+
+*// this is the abilities macro that combines the macros so it uses the right feat table, and pulls the right weapon data //*
+
+*// used for adv //*
+#adv #npc_weapon_1 #npc_vs_pc_defense #edge_1
+
+#adv #npc_weapon_2 #npc_vs_pc_defense #edge_2
+
+#adv #npc_weapon_3 #npc_vs_pc_defense #edge_3
+
+#adv #npc_weapon_4 #npc_vs_pc_defense #edge_4
+
+#adv #npc_weapon_5 #npc_vs_pc_defense #edge_5
+
+#adv #npc_weapon_6 #npc_vs_pc_defense #edge_6
+
+*// used for npc //*
+#pc #npc_weapon_1 #pc_vs_npc_defense #edge_1
+
+#pc #npc_weapon_2 #pc_vs_npc_defense #edge_2
+
+#pc #npc_weapon_3 #pc_vs_npc_defense #edge_3
+
+#pc #npc_weapon_4 #pc_vs_npc_defense #edge_4
+
+#pc #npc_weapon_5 #pc_vs_npc_defense #edge_5
+
+#pc #npc_weapon_6 #pc_vs_npc_defense #edge_6
+
+*// used for pc //*
+#pc #pc_weapon_1 #pc_vs_npc_defense #edge_1 
+
+#pc #pc_weapon_2 #pc_vs_npc_defense #edge_2 
+
+#pc #pc_weapon_3 #pc_vs_npc_defense #edge_3
+
+#pc #pc_weapon_4 #pc_vs_npc_defense #edge_4
+
+#pc #pc_weapon_5 #pc_vs_npc_defense #edge_5
+
+#pc #pc_weapon_6 #pc_vs_npc_defense #edge_6
+
+*// three complete examples below for adv, NPC (LM character), and pc //*
+*// these examples all use slot onr from the character sheets for other slots use the appropriate numbered slot //*
+
+*// for adv //*
+*// name of abilities //*
+Bow-of-Horn-(favored)
+
+*// abilities macro //*
+#emas #attack_1 #npc_vs_pc_defense
+#npc_weapon_temp_1
+#adv  #npc_weapon_1 #npc_vs_pc_defense #edge_1
+
+
+*// for NPC (LM character) //*
+*//name of abilities //*
+(Bows)-(Favored)
+
+*// abilities macro //*
+#emas #attack_1 #pc_vs_npc_defense
+#npc_weapon_temp_1
+#pc #npc_weapon_1 #pc_vs_npc_defense #edge_1
+
+
+*// for pc //*
+*// name of abilities //*
+(Axes) Axe
+
+*// abilities macro //*
+#em #attack_1 #pc_vs_npc_defense
+#pc_weapon_temp_1
+#pc #pc_weapon_1 #pc_vs_npc_defense #edge_1 
+
+
+*// I hope this helps everyone if you have any questions I moniter the roll20 forums also you can send me a private message on roll20 user name Michael I
+known as Aragent most other places. please drop me a line if you make any improvements. Happy Gaming. 
+ 

@@ -1,0 +1,16 @@
+{
+  "name": "tor-init-attributes.",
+  "version": "0.1.2",
+  "description": "Attribute initializer for TOR The One Ring in Roll20.\r\rsets attributes for characters when they are created.",
+  "authors": "Michael Heilemann, Stefan Unterhuber, Stuart Johnson, David Domínguez, Eric Le Bourvellec, Michael (aka Aragent) I",
+  "roll20userid": "61774,1227702,383147,63716,211627,2624774",
+  "patreon": "",
+  "dependencies": [],
+  "modifies": {},
+  "conflicts": [],
+  "script": "tor-init-attributes.js",
+  "useroptions": [],
+  "previousversions": [
+    "0.1.1",
+  ]
+}
