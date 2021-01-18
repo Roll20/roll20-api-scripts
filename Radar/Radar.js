@@ -2,7 +2,6 @@
 //  Overview
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
-
     The Radar script creates an animated wavefront from a selected token to reveal visible and invisible tokens on the map
         ---The radar temporarily "pings" all token objects on the layers specified by spawning the default token of a character named "RadarPing"
             ---the RadarPing token should be a completely transparent token with an aura not visible to all players, with no "controlled by" properties set
@@ -92,11 +91,11 @@
     }}
 */
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-          
+
 const Radar = (() => {
     
     const scriptName = "Radar";
-    const version = '0.4.1';
+    const version = '0.5';
     
     const PING_NAME = 'RadarPing'; 
     
@@ -600,8 +599,11 @@ const Radar = (() => {
     
     async function handleInput(msg) {
         let pathstring;             //JSON string for wavefront paths
-        
-        let validArgs = "range, wavespacing, wavedelay, wavelife, pinglife, layer, charfilter, tokfilter, title, silent, units, LoS";
+        let selected;               //msg.selected object
+        let selectedID;             //selected token
+        let playerID;               //which player called the script. Will determine who gets whispered results 
+        let oTok;                   //origin token
+        let validArgs = "range, wavespacing, wavedelay, wavelife, pinglife, layer, charfilter, tokfilter, title, silent, units, LoS, selectedID, playerID";
         let range = 350;            //how far the radar range extends, in pixels
         let convertRange = "";      //will we need to convert range from pixels to "u" or another page-defined distance unit?
         let waveIncrement = 35;     //the spacing between waves, in pixels (lower number = slower wavefront)
@@ -646,21 +648,6 @@ const Radar = (() => {
         
         try {
             if(msg.type=="api" && msg.content.indexOf("!radar") === 0 ) {
-                who = getObj('player',msg.playerid).get('_displayname');
-                
-                var startTimer = Date.now();
-                
-                var selected = msg.selected;
-                if (selected===undefined)
-                {
-                    sendChat(scriptName,`/w "${who}" `+ 'You must first select a token');
-                    return;
-                }
-                
-                //Set controlledBy property of token to determine who will see the pings. Include all GMs
-                controlledby = msg.playerid
-                
-                var oTok = getObj("graphic",selected[0]._id);
                 
                 //Parse msg into an array of argument objects [{cmd:params}]
                 let args = parseArgs(msg);
@@ -781,22 +768,64 @@ const Radar = (() => {
                                 losBlocks = false;
                             } 
                             break;
+                        case "selectedid":
+                            selectedID = param; 
+                            break;
+                        case "playerid":
+                            playerID = param;
+                            break;
                         default:
                             retVal.push('Unexpected argument identifier (' + option + '). Choose from: (' + validArgs + ')');
                             break;    
                     }
                 }); //end forEach arg
-               
+                
+                //------------------------------------------------------------------------
+                //Check if !radar was called by another api script
+                    //If so, it must pass both selected token ID and controlling playerid
+                    //Otherwise, get values directly from the msg object
+                //------------------------------------------------------------------------
+                if('API' === msg.playerid) {
+                    //RADAR WAS CALLED BY ANOTHER API SCRIPT
+                    if (playerID === undefined || selectedID ===undefined) {
+                        sendChat(scriptName, 'When Radar is called by another script, it must pass both the selected token ID and the playerID');
+                        return;
+                    }
+                    who = getObj('player',playerID).get('_displayname');
+                    controlledby = playerID;
+                    oTok = getObj("graphic",selectedID);
+                } else {
+                    //RADAR WAS CALLED DIRECTLY BY A PLAYER VIA CHAT. Get values from msg *IF* they weren't explicitly passed as arguments
+                    who = getObj('player',msg.playerid).get('_displayname');
+                    
+                    //Token select or ID validation
+                    if (selectedID===undefined && msg.selected===undefined) {
+                        sendChat(scriptName,`/w "${who}" `+ 'You must either select a token or pass the tokenID via --selectedID');
+                        return;
+                    }
+                    //Get the origin token object from either msg or an explicitly defined tokenID
+                    if (selectedID===undefined) {
+                        oTok = getObj("graphic",msg.selected[0]._id);
+                    } else {
+                        oTok = getObj("graphic",selectedID);
+                    }
+                    
+                    //Set controlledBy property of token to determine who will see the pings. Include all GMs
+                    if (playerID===undefined) {
+                        controlledby = msg.playerid;
+                    } else {
+                        controlledby = playerID;
+                    }
+                }
+                
                  //First data validation checkpoint
                 if (retVal.length > 0) {
                     sendChat(scriptName,`/w "${who}" `+ retVal);
                     return;
                 };
+                //------------------------------------------------------------------------
                 
-                ///////////////////////////////////////////////////////////////////////////
-                ///////////     TO DO: More data validation
-                ///////////////////////////////////////////////////////////////////////////
-                
+                //Get token values and page settings
                 radius = (oTok.get("width"))/2; 
                 pageID = oTok.get("pageid");
                 originX = oTok.get("left");
@@ -1081,14 +1110,15 @@ const Radar = (() => {
                         sendChat(scriptName, '/w gm ' + output);
                     }
                 }
-                
-            let elapsedTime = Date.now()-startTimer;
-            //sendChat('timer', 'elapsed time (ms) = ' + elapsedTime);
             }
         
         }
         catch(err) {
-          sendChat(scriptName,`/w "${who}" `+ 'Unhandled exception: ' + err.message);
+            if (who === undefined) {
+                sendChat(scriptName,'Unhandled exception: ' + err.message);
+            } else {
+                sendChat(scriptName,`/w "${who}" `+ 'Unhandled exception: ' + err.message);
+            }
         }
     };
     
