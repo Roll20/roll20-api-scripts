@@ -15,13 +15,14 @@ BitBucket:  https://bitbucket.org/desertwebdesigns/roll20/src/master/TreatWounds
 // Check for Risky Surgery Feat before prompting
 // Check for Proficiency and build option list from there
 // Above two options require sending API Buttons back to user when calling API. User will call script and API will send back a button with the appropriate user prompts depending on character sheet (ie, don't prompt for Risky Surgery if user does not have it in feats, don't allow Master/Legendary difficulty if user is only Expert, etc)
+// Heal multiple targets with Ward Medic
 
 var RLRGaming = RLRGaming || {};
 
 RLRGaming.TreatWounds = RLRGaming.TreatWounds || (() => {
     'use strict';
     
-    const version = "0.2";
+    const version = "1.0";
     
     const getChar = (tokenorname) => {
         var character = getCharByToken(tokenorname);
