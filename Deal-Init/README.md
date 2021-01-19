@@ -31,9 +31,10 @@ value in order for DealInit to start dealing to that token again.
 
 The script only has a few options:
 
-!deal-init [ --help ] [--reset ] [ --show ] [ --onlyto --string ] [ --deal2chat ]
+!deal-init [ --help ] [--clearTurnOrder] [--reset ] [--4jreset] [ --show ] [ --onlyto --string ] [ --deal2chat ]
 (no args) Deals cards to turn order and sorts by suit.
 --help : Displays the help.
+--clearTurnOrder : Removes all tokens from the Turn Order.  Useful after changing pages in Roll20.
 --reset : Reset the deck and shuffle. Use at the start of a new scene or encounter to start 
           the deck fresh
 --4jreset : Reset the deck with 4 Jokers and shuffle. Use at the start of a new scene or 
@@ -44,7 +45,7 @@ The script only has a few options:
 --deal2chat : Deal a card into the chat window.  Use this when someone spends a benny 
               to draw a new card
 
-I personally use 4 macros to call the script that look like this:
+I personally use these macros to call the script that look like this:
 "New Scene"
 !deal-init --4jreset
 
@@ -56,6 +57,9 @@ I personally use 4 macros to call the script that look like this:
 
 "Benny a New Card"
 !deal-init --deal2chat
+
+"Clear Turn Order"
+!deal-init --clearTurnOrder
 
 ```
 
@@ -71,9 +75,8 @@ This type of problem occurs when the TurnOrder is not "flushed" between sessions
 
 My workflow, when I use the script is like this:
 
-1. New Roll20 session or New Page => Flush Turn Order
+1. New Roll20 session or New Page => Clear Turn Order:  !deal-init --clearTurnOrder
 1. New Encounter: !deal-init --reset
 1. New Round: !deal-init
 1. Someone Spends a Benny to Draw a New Card: !deal-init --deal2chat  (then I just manually move them around in the TurnOrder)
 1. etc.
-
