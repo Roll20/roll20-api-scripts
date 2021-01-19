@@ -190,17 +190,12 @@ const PaladinAura = (function () {
         const multiclasses = [];
         const classesToCheck = ['class'];
         ['multiclass1', 'multiclass2', 'multiclass3'].forEach(a => {
-            multiclasses.push(getAttrByName(charID, a + '_flag'));
-        });
-        multiclasses.forEach(a => {
-            if (a === '1') {
-                classesToCheck.push(a);
-            }
+            let x = getAttrByName(charID, a + '_flag');
+            if (x && x === '1') classesToCheck.push(a);
         });
         const palClass = classesToCheck.find(c => {
             const val = getAttrByName(charID, c);
             if (!val) {
-                sendChat('PaladinAura', `/w gm Attribute: '${c}' not found on charId: ${charID}`);
                 return false;
             }
             return val.search(/paladin/gi) !== -1;
