@@ -1,0 +1,14 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Roll20 API Script Directory</title>
+  </head>
+  <body>
+    <title>Roll20 API Scripts</title>
+    <ul>
+      {{ range $name, $dir := . }}
+      <li><a href="./{{$dir}}/">{{$name}}</a></li>
+      {{ end }}
+    </ul>
+  </body>
+</html>
