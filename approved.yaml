@@ -956,3 +956,6 @@ treatwounds:
   - "TreatWounds"
   - "System Toolbox"
 
+initiativetrackerplus:
+  - "InitiativeTrackerPlus"
+  - "Utility"
