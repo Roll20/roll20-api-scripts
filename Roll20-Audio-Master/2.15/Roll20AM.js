@@ -13,7 +13,7 @@ var Roll20AM = Roll20AM || (function() {
         lastUpdate = 1491352004,
         schemaVersion = 2.02,
         debug = true,
-        displayTrack = true,
+        displayTrack = false,
         helpLink,
         delays = [],
         defaults = {
