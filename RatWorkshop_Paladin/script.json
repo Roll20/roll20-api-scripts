@@ -8,7 +8,7 @@
     "roll20userid": "5259711",
     "useroptions": [
     ],
-    "dependencies": ["Ratworkshop_DungeonMasterTools"],
+    "dependencies": ["D&D 5E Dungeon Master Tools"],
     "patreon":"https://www.patreon.com/ratworkshop",
     "modifies": {
         "token.*": "read,write",
