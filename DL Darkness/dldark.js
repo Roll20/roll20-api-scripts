@@ -19,21 +19,120 @@ SYNTAX
                                                 send the source token to the map layer after creating the DL path?
                                                 if true, will send to map layer and peform a z-order "ToFront"
                                                 if false, will keep on token layer and peform a z-order "ToBack"
-EXAMPLES
+STD EXAMPLES
     !dldark
     
     !dldark 15 true
     
     !dldark ?{buffer radius?|15} true false
+    
+De-linking EXAMPLES
+    !dldarkclear token      unlinks selected token and corresponding dynamic lighting path (requires token selection)
+    
+    !dldarkclear tok        (Alias) unlinks selected token and corresponding dynamic lighting path (requires token selection)
+    
+    !dldarkclear page       unlinks all tokens and corresponding dynamic lighting paths from the current page (requires token selection)
+    
+    !dldarkclear campaign   unlinks all tokens and corresponding dynamic lighting paths from the ENTIRE CAMPAIGN (Use caution!)
 */
 
 const dldark = (() => {
     const scriptName = "DLdark";
-    const version = '0.2';
+    const version = '0.3';
+    const schemaVersion = '0.1';
+    const byTOKEN = 'TOKEN';
+    const byPATH = 'PATH';
+    const clearTOKEN = 'TOKEN';
+    const clearALL = 'ALL';
     
     const checkInstall = function() {
         log(scriptName + ' v' + version + ' initialized.');
+        
+        //delete state[scriptName];
+        
+        if( ! _.has(state, scriptName) || state[scriptName].version !== schemaVersion) {
+            log('  > Updating Schema to v'+schemaVersion+' <');
+            switch(state[scriptName] && state[scriptName].version) {
+                case 0.1:
+                /* falls through */
+                case 'UpdateSchemaVersion':
+                    state[scriptName].version = schemaVersion;
+                    break;
+
+                default:
+                    state[scriptName] = {
+                        version: schemaVersion,
+                        links: []
+                    };
+                    break;
+            }
+        }
+        //log(state[scriptName]);
     };
+    
+    const clearCache = function(who, tokID=undefined, pageID=undefined) {
+        
+        //no arguments passed, clear all pinked pairs in ENTIRE CAMPAIGN
+        if(!tokID && !pageID) {
+            state[scriptName] = {
+                version: schemaVersion,
+                links: []
+            };
+            sendChat(scriptName,`/w "${who}" `+ 'DL darkness unlinked across ENTIRE CAMPAIGN!');
+            return;
+        }
+        
+        //token only
+        if (tokID) {
+            //iterate through linked pairs in state object to find pairs associated with tokID
+            for (let i = state[scriptName].links.length-1; i>-1; i--) {
+                if (state[scriptName].links[i].tokID === tokID) {
+                    //remove linked pair ids from state object
+                    state[scriptName].links.splice(i,1);
+                    sendChat(scriptName,`/w "${who}" `+ 'DL darkness unlinked for tokID = ' + tokID);
+                }
+            }
+        } 
+        
+        //all linked tokens in current page
+        if (pageID) {
+            //iterate through linked pairs in state object to find pairs associated with pageID
+            for (let i = state[scriptName].links.length-1; i>-1; i--) {
+                if (state[scriptName].links[i].pageID === pageID) {
+                    //remove linked pair ids from state object
+                    state[scriptName].links.splice(i,1);
+                }
+            }
+            sendChat(scriptName,`/w "${who}" `+ 'DL darkness unlinked for all tokens in pageID = ' + pageID);
+        } 
+        //log(state[scriptName]);
+    }
+    
+    const makeLinkedPair = function(tokID, pathID, pageID='') {
+        let link =  {
+            tokID: tokID,
+            pathID: pathID,
+            pageID: pageID
+        };
+        state[scriptName].links.push(link);
+        return link;
+    }
+    
+    //Return array of {tokID, pathID} pairs from state object, given tokenID or pathID based on searchType. Returns undefined if none found. 
+    const getLinkedPairs = function(ID, searchType) {
+        let pair = state[scriptName].links.filter(function (p) {
+            if (searchType === byTOKEN) {
+                return p.tokID === ID;
+            } else {
+                return p.pathID === ID;
+            }
+        });
+        if (pair.length>0) {
+            return pair;
+        } else {
+            return undefined;
+        }
+    }
     
     //Circle/ellipse building portion of function is modified from TheAaron's "dlcircle" script
     const buildCircleGrid = function(who, rad, left, top, makeGrid, gridSize) {
@@ -104,17 +203,130 @@ const dldark = (() => {
           sendChat(scriptName,`/w "${who}" `+ 'Unhandled exception: ' + err.message);
         }
     };
-
+    
+    //Move DL path to remain under source token
+    const handleTokenChange = function(obj,prev) {
+        //find all paths linked to token, returns an array of {tokID, pathID} pairs, or undefined
+        let pair = getLinkedPairs(obj.get('id'), byTOKEN);
+        
+        if (pair && obj && prev) {
+            //calc delta X & Y
+            let dX = obj.get('left') - prev['left']
+            let dY = obj.get('top') - prev['top']
+            //move path object(s) based on source token movement
+            for (let i = 0; i < pair.length; i++) {
+                let path = getObj('path', pair[i].pathID);
+                if (path) {
+                    let newX = parseInt(path.get('left')) + dX;
+                    let newY = parseInt(path.get('top')) + dY;
+                    path.set({left:newX, top:newY});
+                }
+            }
+        } 
+    }
+    
+    const handleRemoveToken = function(obj) {
+        let tokID = obj['id'];
+        
+        //iterate through linked pairs in state object to find pairs associated with tokID
+        for (let i = state[scriptName].links.length-1; i>-1; i--) {
+            if (state[scriptName].links[i].tokID === tokID) {
+                //get associated path object and remove if it still exists
+                let path = getObj('path',state[scriptName].links[i].pathID);
+                if (path) {
+                    path.remove();
+                    //note: when the path is removed, the handleRemovePath function will take care of deleting the linked pair from state object
+                } else {
+                    //remove linked pair ids from state object (shouldn't ever get called, but here just in case)
+                    state[scriptName].links.splice(i,1);
+                }
+            }
+        }
+        //log(state[scriptName]);
+    };
+    
+    const handleRemovePath = function(obj) {
+        let pathID = obj['id'];
+        
+        for (let i = state[scriptName].links.length-1; i>-1; i--) {
+            if (state[scriptName].links[i].pathID === pathID) {
+                //remove linked pair ids from state object
+                state[scriptName].links.splice(i,1);
+            }
+        }
+        //log(state[scriptName]);
+    };
+    
+    
     const handleInput = function(msg) {
+        let who, tok, tokID, pageID;
+        
         try {
-            if(msg.type=="api" && msg.content.indexOf("!dldark")==0)
-            {
+            //----------------------------------------------------------------------------
+            //   Optional script operation - clears linked pairs
+            //      e.g.    !dldarkclear tok    //clears all linked pairs associated with the selected token
+            //              !dldarkclear page    //clears all linked pairs on current page
+            //              !dldarkclear campaign    //clears all linked pairs in ENTIRE CAMPAIGN
+            //----------------------------------------------------------------------------
+            
+            if(msg.type=="api" && msg.content.indexOf("!dldarkclear")==0) {
+                who = getObj('player',msg.playerid).get('_displayname');
+                
+                let cmd = msg.content.split(/\s+/);
+                
+                if (cmd.length > 1) {
+                    
+                    if (msg.selected !== undefined) {
+                        tokID = msg.selected[0]['_id'];
+                        tok = getObj("graphic",tokID);
+                        pageID = tok.get('pageid');
+                    }
+                    
+                    switch(cmd[1].toLowerCase()) {
+                        case 'tok':
+                            if (tokID) {
+                                let clearTok = clearCache(who, tokID);
+                            } else {
+                                sendChat(scriptName,`/w "${who}" `+ 'Error. You must select a token to proceed with this command.');
+                                return;
+                            }
+                            break;
+                        case 'token':
+                            if (tokID) {
+                                let clearTok = clearCache(who, tokID);
+                            } else {
+                                sendChat(scriptName,`/w "${who}" `+ 'Error. You must select a token to proceed with this command.');
+                                return;
+                            }
+                            break;
+                        case 'page':
+                            if (tokID) {
+                                let clearTok = clearCache(who, undefined, pageID);
+                            } else {
+                                sendChat(scriptName,`/w "${who}" `+ 'Error. You must select a token to proceed with this command.');
+                                return;
+                            }
+                            break;
+                        case 'campaign':
+                            let clear = clearCache(who);
+                            break;
+                        default:
+                            sendChat(scriptName,`/w "${who}" `+ 'Unknown argument. Format is \"!dldarkclear tok/page/campaign\"');
+                            break;
+                    }
+                }
+                return;
+            }
+            //--------------------------------------------------------------------
+            //   Normal script operation
+            //--------------------------------------------------------------------
+            if(msg.type=="api" && msg.content.indexOf("!dldark")==0) {
                 let selected = msg.selected;
                 let buffer = 0;
                 let makeGrid = true;
                 let sendToMap = true;
                 
-                let who = getObj('player',msg.playerid).get('_displayname');
+                who = getObj('player',msg.playerid).get('_displayname');
                 
                 if (selected===undefined) {
                     sendChat(scriptName,`/w "${who}" `+ 'You must select a token to proceed');
@@ -151,7 +363,7 @@ const dldark = (() => {
                     }
                 }
                 
-                let tok = getObj("graphic",selected[0]._id);
+                tok = getObj("graphic",selected[0]._id);
                 let left = tok.get("left");
                 let top = tok.get("top");
                 let pageID = tok.get("pageid");
@@ -181,6 +393,8 @@ const dldark = (() => {
                     top: tok.get("top"),
                 });
                 
+                //log(path.get("id"));
+                
                 if (path) {
                     if (sendToMap) {
                         tok.set("layer", "map");
@@ -188,6 +402,10 @@ const dldark = (() => {
                     } else {
                         toBack(tok);
                     }
+                    
+                    //create a link between the source token and the darkness path (stored in state object)
+                    let newLink = makeLinkedPair(tok.get('_id'), path.get('_id'), tok.get('pageid'));
+                    
                     sendChat(scriptName,`/w "${who}" `+ 'Darkness created on Dynamic Lighting layer');
                 } else {
                     sendChat(scriptName,`/w "${who}" `+ 'Unknown error. createObj failed. DL path not created.');
@@ -202,6 +420,9 @@ const dldark = (() => {
     
     const registerEventHandlers = function() {
         on('chat:message', handleInput);
+        on('change:graphic', handleTokenChange);
+        on('destroy:graphic', handleRemoveToken);
+        on('destroy:path', handleRemovePath);
     };
 
     on("ready",() => {
