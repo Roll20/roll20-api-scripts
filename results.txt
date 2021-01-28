@@ -1,0 +1,1085 @@
+/home/sydney/roll20/code/roll20-api-scripts/DeathTracker/script.json: fail: modifies.state.DEATHTRACKER: modifies.state.DEATHTRACKER must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DeathTracker/script.json: fail: modifies.attribute.name: modifies.attribute.name must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DeathTracker/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/DeathTracker/script.json: fail: modifies.state.DEATHTRACKER: modifies.state.DEATHTRACKER must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DeathTracker/script.json: fail: modifies.attribute.name: modifies.attribute.name must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DeathTracker/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ItsATrap_theme_5E_Generic/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/DynamicLightHelper/script.json: fail: modifies.state.Dynamic_Light_Helper: modifies.state.Dynamic_Light_Helper must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DynamicLightHelper/script.json: fail: modifies.path.*: modifies.path.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DynamicLightHelper/script.json: fail: modifies.page.grid_type: modifies.page.grid_type must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DynamicLightHelper/script.json: fail: modifies.page.gridlabels: modifies.page.gridlabels must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DynamicLightHelper/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/DynamicLightHelper/script.json: fail: modifies.state.Dynamic_Light_Helper: modifies.state.Dynamic_Light_Helper must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DynamicLightHelper/script.json: fail: modifies.path.*: modifies.path.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DynamicLightHelper/script.json: fail: modifies.page.grid_type: modifies.page.grid_type must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DynamicLightHelper/script.json: fail: modifies.page.gridlabels: modifies.page.gridlabels must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DynamicLightHelper/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/RandomRotate/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Xeohelios' Fire Emblem Tabletop Companion/script.json: fail: modifies.graphic.statusmarkers: modifies.graphic.statusmarkers must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Xeohelios' Fire Emblem Tabletop Companion/script.json: fail: modifies.graphic.statusmarkers: modifies.graphic.statusmarkers must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Collision Detection/script.json: fail: modifies.token.left: modifies.token.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Collision Detection/script.json: fail: modifies.token.top: modifies.token.top must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Collision Detection/script.json: fail: modifies.token.left: modifies.token.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Collision Detection/script.json: fail: modifies.token.top: modifies.token.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/PCPP/script.json: fail: modifies.state.PCPP: modifies.state.PCPP must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/PCPP/script.json: fail: modifies.state.PCPP: modifies.state.PCPP must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/SR-NextPass/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/NoteLog/script.json: fail: modifies.state.NoteLog: modifies.state.NoteLog must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/NoteLog/script.json: fail: modifies.handout.notes: modifies.handout.notes must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/NoteLog/script.json: fail: modifies.state.NoteLog: modifies.state.NoteLog must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/NoteLog/script.json: fail: modifies.handout.notes: modifies.handout.notes must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Dealer/script.json: fail: modifies.hand.*: modifies.hand.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Dealer/script.json: fail: modifies.deck.*: modifies.deck.* must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Dealer/script.json: fail: modifies.hand.*: modifies.hand.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Dealer/script.json: fail: modifies.deck.*: modifies.deck.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MythicGM/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/UniversalVTTImporter/script.json: fail: modifies.state.UniversalVTTImporter: modifies.state.UniversalVTTImporter must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/UniversalVTTImporter/script.json: fail: modifies.state.UniversalVTTImporter: modifies.state.UniversalVTTImporter must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ImperialCalendar/script.json: fail: modifies.state.ImperialCalendar: modifies.state.ImperialCalendar must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/ImperialCalendar/script.json: fail: modifies.state.ImperialCalendar: modifies.state.ImperialCalendar must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/5th Edition OGL by Roll20 Companion/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Bump/script.json: fail: modifies.state.Bump: modifies.state.Bump must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Bump/script.json: fail: modifies.graphics: modifies.graphics must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Bump/script.json: fail: modifies.graphics.*: modifies.graphics.* must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Bump/script.json: fail: modifies.state.Bump: modifies.state.Bump must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Bump/script.json: fail: modifies.graphics: modifies.graphics must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Bump/script.json: fail: modifies.graphics.*: modifies.graphics.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ItsATrap_theme_WoDClassic/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/ColorNote/script.json: fail: modifies.state.ColorNote: modifies.state.ColorNote must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/ColorNote/script.json: fail: modifies.state.ColorNote: modifies.state.ColorNote must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ColorEmote/script.json: fail: modifies.state.ColorEmote: modifies.state.ColorEmote must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/ColorEmote/script.json: fail: modifies.state.ColorEmote: modifies.state.ColorEmote must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/InspirationTracker/script.json: fail: dependencies: Additional property state.INSPIRATIONTRACKER is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/InspirationTracker/script.json: fail: dependencies: Additional property attribute is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/InspirationTracker/script.json: fail: dependencies: Additional property attribute.current is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/InspirationTracker/script.json: fail: dependencies: Additional property graphic.statusmarkers is not allowed
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/InspirationTracker/script.json: fail: dependencies: Additional property state.INSPIRATIONTRACKER is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/InspirationTracker/script.json: fail: dependencies: Additional property attribute is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/InspirationTracker/script.json: fail: dependencies: Additional property attribute.current is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/InspirationTracker/script.json: fail: dependencies: Additional property graphic.statusmarkers is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/DynamicLightRecorder/script.json: fail: modifies.state.DynamicLightRecorder: modifies.state.DynamicLightRecorder must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DynamicLightRecorder/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DynamicLightRecorder/script.json: fail: modifies.path.*: modifies.path.* must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/DynamicLightRecorder/script.json: fail: modifies.state.DynamicLightRecorder: modifies.state.DynamicLightRecorder must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DynamicLightRecorder/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DynamicLightRecorder/script.json: fail: modifies.path.*: modifies.path.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TurnClock/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Roll20-Audio-Master/script.json: fail: modifies.state.Roll20AM: modifies.state.Roll20AM must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Roll20-Audio-Master/script.json: fail: modifies.handout: modifies.handout must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Roll20-Audio-Master/script.json: fail: modifies.jukeboxtrack: modifies.jukeboxtrack must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Roll20-Audio-Master/script.json: fail: previousversions.5: Does not match pattern '^([0-9]+(\.)?)+([0-9]+)?$'
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Roll20-Audio-Master/script.json: fail: modifies.state.Roll20AM: modifies.state.Roll20AM must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Roll20-Audio-Master/script.json: fail: modifies.handout: modifies.handout must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Roll20-Audio-Master/script.json: fail: modifies.jukeboxtrack: modifies.jukeboxtrack must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Roll20-Audio-Master/script.json: fail: previousversions.5: Does not match pattern '^([0-9]+(\.)?)+([0-9]+)?$'
+/home/sydney/roll20/code/roll20-api-scripts/tokenFate/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/OneRollEngine/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/LazyExperience/script.json: fail: dependencies: Additional property player.id is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/LazyExperience/script.json: fail: dependencies: Additional property player.displayname is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/LazyExperience/script.json: fail: dependencies: Additional property state.LAZYEXPERIENCE is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/LazyExperience/script.json: fail: dependencies: Additional property attribute.name is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/LazyExperience/script.json: fail: dependencies: Additional property attribute.current is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/LazyExperience/script.json: fail: dependencies: Additional property character.name is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/LazyExperience/script.json: fail: dependencies: Additional property character.id is not allowed
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/LazyExperience/script.json: fail: dependencies: Additional property player.id is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/LazyExperience/script.json: fail: dependencies: Additional property player.displayname is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/LazyExperience/script.json: fail: dependencies: Additional property state.LAZYEXPERIENCE is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/LazyExperience/script.json: fail: dependencies: Additional property attribute.name is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/LazyExperience/script.json: fail: dependencies: Additional property attribute.current is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/LazyExperience/script.json: fail: dependencies: Additional property character.name is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/LazyExperience/script.json: fail: dependencies: Additional property character.id is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/Customizable-Roll-Listener/script.json: fail: modifies.state.CRL: modifies.state.CRL must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Customizable-Roll-Listener/script.json: fail: modifies.ability: modifies.ability must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Customizable-Roll-Listener/script.json: fail: modifies.attribute: modifies.attribute must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Customizable-Roll-Listener/script.json: fail: modifies.character: modifies.character must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Customizable-Roll-Listener/script.json: fail: modifies.state.CRL: modifies.state.CRL must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Customizable-Roll-Listener/script.json: fail: modifies.ability: modifies.ability must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Customizable-Roll-Listener/script.json: fail: modifies.attribute: modifies.attribute must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Customizable-Roll-Listener/script.json: fail: modifies.character: modifies.character must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Numenera_Natha/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/RollableTableMacros/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Hourglass/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/RatWorkshop_Barbarian/script.json: fail: modifies.token.*: modifies.token.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/RatWorkshop_Barbarian/script.json: fail: modifies.character.*: modifies.character.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/RatWorkshop_Barbarian/script.json: fail: modifies.attribute.*: modifies.attribute.* must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/RatWorkshop_Barbarian/script.json: fail: modifies.token.*: modifies.token.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/RatWorkshop_Barbarian/script.json: fail: modifies.character.*: modifies.character.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/RatWorkshop_Barbarian/script.json: fail: modifies.attribute.*: modifies.attribute.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mass-Combat/script.json: fail: modifies.char.[npcstat]: modifies.char.[npcstat] must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mass-Combat/script.json: fail: modifies.char.[traits]: modifies.char.[traits] must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mass-Combat/script.json: fail: modifies.char.[actions]: modifies.char.[actions] must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mass-Combat/script.json: fail: modifies.state.MassCombat: modifies.state.MassCombat must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mass-Combat/script.json: fail: modifies.token.status_*: modifies.token.status_* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mass-Combat/script.json: fail: modifies.token.bar*: modifies.token.bar* must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Mass-Combat/script.json: fail: modifies.char.[npcstat]: modifies.char.[npcstat] must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mass-Combat/script.json: fail: modifies.char.[traits]: modifies.char.[traits] must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mass-Combat/script.json: fail: modifies.char.[actions]: modifies.char.[actions] must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mass-Combat/script.json: fail: modifies.state.MassCombat: modifies.state.MassCombat must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mass-Combat/script.json: fail: modifies.token.status_*: modifies.token.status_* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mass-Combat/script.json: fail: modifies.token.bar*: modifies.token.bar* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/RecursiveTable/script.json: fail: modifies.state.RecursiveTable: modifies.state.RecursiveTable must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/RecursiveTable/script.json: fail: modifies.state.RecursiveTable: modifies.state.RecursiveTable must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Shadowrun 5th Edition/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/ClockTokens/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Markov/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/InitiativeTrackerPlus/script.json: fail: modifies: Invalid type. Expected: [array,object], given: string
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/InitiativeTrackerPlus/script.json: fail: modifies: Invalid type. Expected: [array,object], given: string
+/home/sydney/roll20/code/roll20-api-scripts/Darker Dungeon/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/RoleplayingIsMagic_4E_Dice/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/ChangeTokenImage/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ChangeTokenImage/script.json: fail: modifies.state.ChangeTokenImage: modifies.state.ChangeTokenImage must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ChangeTokenImage/script.json: fail: modifies.attribute.currentSide: modifies.attribute.currentSide must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/ChangeTokenImage/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ChangeTokenImage/script.json: fail: modifies.state.ChangeTokenImage: modifies.state.ChangeTokenImage must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ChangeTokenImage/script.json: fail: modifies.attribute.currentSide: modifies.attribute.currentSide must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.bar1_max: modifies.token.bar1_max must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.light_radius: modifies.token.light_radius must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.light_dimradius: modifies.token.light_dimradius must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.bar2_link: modifies.token.bar2_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.aura2_color: modifies.token.aura2_color must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.name: modifies.token.name must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.attribute.max: modifies.attribute.max must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.showplayers_aura2: modifies.token.showplayers_aura2 must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.height: modifies.token.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.bar1_value: modifies.token.bar1_value must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.light_otherplayers: modifies.token.light_otherplayers must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.aura2_radius: modifies.token.aura2_radius must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.top: modifies.token.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.width: modifies.token.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.left: modifies.token.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.bar2_max: modifies.token.bar2_max must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.statusmarkers: modifies.token.statusmarkers must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.light_losangle: modifies.token.light_losangle must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.bar2_value: modifies.token.bar2_value must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.bar1_max: modifies.token.bar1_max must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.light_radius: modifies.token.light_radius must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.light_dimradius: modifies.token.light_dimradius must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.bar2_link: modifies.token.bar2_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.aura2_color: modifies.token.aura2_color must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.name: modifies.token.name must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.attribute.max: modifies.attribute.max must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.showplayers_aura2: modifies.token.showplayers_aura2 must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.height: modifies.token.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.bar1_value: modifies.token.bar1_value must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.light_otherplayers: modifies.token.light_otherplayers must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.aura2_radius: modifies.token.aura2_radius must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.top: modifies.token.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.width: modifies.token.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.left: modifies.token.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.bar2_max: modifies.token.bar2_max must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.statusmarkers: modifies.token.statusmarkers must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.light_losangle: modifies.token.light_losangle must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.token.bar2_value: modifies.token.bar2_value must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/COFantasy/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Rest-and-Recovery/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Rest-and-Recovery/script.json: fail: modifies.attribute.max: modifies.attribute.max must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Rest-and-Recovery/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Rest-and-Recovery/script.json: fail: modifies.attribute.max: modifies.attribute.max must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/GroupCheck/script.json: fail: modifies.state.groupCheck: modifies.state.groupCheck must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/GroupCheck/script.json: fail: modifies.state.groupCheck: modifies.state.groupCheck must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Drunk/script.json: fail: modifies.state.DRUNK: modifies.state.DRUNK must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Drunk/script.json: fail: modifies.attribute.name: modifies.attribute.name must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Drunk/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Drunk/script.json: fail: modifies.state.DRUNK: modifies.state.DRUNK must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Drunk/script.json: fail: modifies.attribute.name: modifies.attribute.name must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Drunk/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Terrain Generator/script.json: fail: modifies.graphic: modifies.graphic must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Terrain Generator/script.json: fail: modifies.page: modifies.page must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Terrain Generator/script.json: fail: modifies.graphic: modifies.graphic must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Terrain Generator/script.json: fail: modifies.page: modifies.page must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/PowerCards/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/TokenCondition/script.json: fail: modifies.state.TokenCondition: modifies.state.TokenCondition must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/TokenCondition/script.json: fail: modifies.state.TokenCondition: modifies.state.TokenCondition must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/WildShape/script.json: fail: modifies.state.WILDSHAPE: modifies.state.WILDSHAPE must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/WildShape/script.json: fail: modifies.character.*: modifies.character.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/WildShape/script.json: fail: modifies.attribute.*: modifies.attribute.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/WildShape/script.json: fail: modifies.token.*: modifies.token.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/WildShape/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/WildShape/script.json: fail: modifies.state.WILDSHAPE: modifies.state.WILDSHAPE must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/WildShape/script.json: fail: modifies.character.*: modifies.character.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/WildShape/script.json: fail: modifies.attribute.*: modifies.attribute.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/WildShape/script.json: fail: modifies.token.*: modifies.token.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/WildShape/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Facing/script.json: fail: modifies.state.Facing: modifies.state.Facing must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Facing/script.json: fail: modifies.graphic.left: modifies.graphic.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Facing/script.json: fail: modifies.graphic.top: modifies.graphic.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Facing/script.json: fail: modifies.graphic.width: modifies.graphic.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Facing/script.json: fail: modifies.graphic.height: modifies.graphic.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Facing/script.json: fail: modifies.graphic.layer: modifies.graphic.layer must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Facing/script.json: fail: modifies.graphic.rotation: modifies.graphic.rotation must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Facing/script.json: fail: modifies.graphic: modifies.graphic must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Facing/script.json: fail: modifies.attribute: modifies.attribute must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Facing/script.json: fail: modifies.state.Facing: modifies.state.Facing must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Facing/script.json: fail: modifies.graphic.left: modifies.graphic.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Facing/script.json: fail: modifies.graphic.top: modifies.graphic.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Facing/script.json: fail: modifies.graphic.width: modifies.graphic.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Facing/script.json: fail: modifies.graphic.height: modifies.graphic.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Facing/script.json: fail: modifies.graphic.layer: modifies.graphic.layer must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Facing/script.json: fail: modifies.graphic.rotation: modifies.graphic.rotation must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Facing/script.json: fail: modifies.graphic: modifies.graphic must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Facing/script.json: fail: modifies.attribute: modifies.attribute must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/namegen/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/CustomStatusMarkers/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/CombatMaster/script.json: fail: modifies.state.COMBATMASTER: modifies.state.COMBATMASTER must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/CombatMaster/script.json: fail: modifies.state.COMBATMASTER: modifies.state.COMBATMASTER must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/CombatMaster/2.40/script.json: fail: modifies.state.COMBATMASTER: modifies.state.COMBATMASTER must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/CombatMaster/2.40/script.json: fail: modifies.state.COMBATMASTER: modifies.state.COMBATMASTER must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/HeroRoller/script.json: fail: modifies: Array must have at most 0 items
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/HeroRoller/script.json: fail: modifies: Array must have at most 0 items
+/home/sydney/roll20/code/roll20-api-scripts/MapChange/script.json: fail: modifies.state.MapChange: modifies.state.MapChange must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MapChange/script.json: fail: modifies.Campaign.playerpageid: modifies.Campaign.playerpageid must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MapChange/script.json: fail: modifies.Campaign.playerspecificpages: modifies.Campaign.playerspecificpages must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/MapChange/script.json: fail: modifies.state.MapChange: modifies.state.MapChange must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MapChange/script.json: fail: modifies.Campaign.playerpageid: modifies.Campaign.playerpageid must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MapChange/script.json: fail: modifies.Campaign.playerspecificpages: modifies.Campaign.playerspecificpages must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.text.height: modifies.text.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.graphic.top: modifies.graphic.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.path.scaleY: modifies.path.scaleY must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.path.left: modifies.path.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.page.width: modifies.page.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.page.height: modifies.page.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.graphic.width: modifies.graphic.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.graphic.height: modifies.graphic.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.graphic.left: modifies.graphic.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.text.font_size: modifies.text.font_size must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.text.width: modifies.text.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.state.RESIZER: modifies.state.RESIZER must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.page.snapping_increment: modifies.page.snapping_increment must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.path.scaleX: modifies.path.scaleX must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.path.top: modifies.path.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.page.scale_number: modifies.page.scale_number must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.text.height: modifies.text.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.graphic.top: modifies.graphic.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.path.scaleY: modifies.path.scaleY must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.path.left: modifies.path.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.page.width: modifies.page.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.page.height: modifies.page.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.graphic.width: modifies.graphic.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.graphic.height: modifies.graphic.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.graphic.left: modifies.graphic.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.text.font_size: modifies.text.font_size must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.text.width: modifies.text.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.state.RESIZER: modifies.state.RESIZER must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.page.snapping_increment: modifies.page.snapping_increment must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.path.scaleX: modifies.path.scaleX must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.path.top: modifies.path.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Resizer/script.json: fail: modifies.page.scale_number: modifies.page.scale_number must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/FFG-SWRPG-DestinyTracker/script.json: fail: modifies.state.destiny: modifies.state.destiny must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/FFG-SWRPG-DestinyTracker/script.json: fail: modifies.state.destiny: modifies.state.destiny must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Knight Styles Markers/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Ammo/script.json: fail: modifies.state.Ammo: modifies.state.Ammo must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Ammo/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Ammo/script.json: fail: modifies.state.Ammo: modifies.state.Ammo must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Ammo/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/FFG-SWRPG-Dice-Roller/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/ESRO/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Measure/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/PageFX/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Flip Tokens/script.json: fail: modifies.token.fliph: modifies.token.fliph must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Flip Tokens/script.json: fail: modifies.token.flipv: modifies.token.flipv must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Flip Tokens/script.json: fail: modifies.token.fliph: modifies.token.fliph must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Flip Tokens/script.json: fail: modifies.token.flipv: modifies.token.flipv must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ArsMagica5eStressDie/script.json: fail: useroptions.0.type: useroptions.0.type must be one of the following: "text", "number", "select", "checkbox"
+/home/sydney/roll20/code/roll20-api-scripts/ArsMagica5eStressDie/script.json: fail: useroptions.1.type: useroptions.1.type must be one of the following: "text", "number", "select", "checkbox"
+/home/sydney/roll20/code/roll20-api-scripts/ArsMagica5eStressDie/script.json: fail: modifies.: modifies. must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/ArsMagica5eStressDie/script.json: fail: useroptions.0.type: useroptions.0.type must be one of the following: "text", "number", "select", "checkbox"
+/home/sydney/roll20/code/roll20-api-scripts/ArsMagica5eStressDie/script.json: fail: useroptions.1.type: useroptions.1.type must be one of the following: "text", "number", "select", "checkbox"
+/home/sydney/roll20/code/roll20-api-scripts/ArsMagica5eStressDie/script.json: fail: modifies.: modifies. must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/5EBattleMaster/script.json: fail: modifies.bar3_value: modifies.bar3_value must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/5EBattleMaster/script.json: fail: modifies.bar1_value: modifies.bar1_value must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/5EBattleMaster/script.json: fail: modifies.bar3_value: modifies.bar3_value must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/5EBattleMaster/script.json: fail: modifies.bar1_value: modifies.bar1_value must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/EncounterHelper/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/ItsATrap_theme_PathfinderSimple/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/GMSheet/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Spawn Default Token/script.json: fail: patreon: Invalid type. Expected: string, given: array
+/home/sydney/roll20/code/roll20-api-scripts/Spawn Default Token/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Spawn Default Token/script.json: fail: patreon: Invalid type. Expected: string, given: array
+/home/sydney/roll20/code/roll20-api-scripts/Spawn Default Token/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Feng Shui Initiative/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/MatrixMath/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Supernotes/script.json: fail: modifies.state.Supernotes: modifies.state.Supernotes must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Supernotes/script.json: fail: modifies.state.Supernotes: modifies.state.Supernotes must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Fumbler/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/StatusFX/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Initiative-Standby/script.json: fail: modifies.Campaign.turnorder: modifies.Campaign.turnorder must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Initiative-Standby/script.json: fail: modifies.Token.status_interdiction: modifies.Token.status_interdiction must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Initiative-Standby/script.json: fail: modifies.Campaign.turnorder: modifies.Campaign.turnorder must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Initiative-Standby/script.json: fail: modifies.Token.status_interdiction: modifies.Token.status_interdiction must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ExperienceTracker/script.json: fail: modifies.attribute: modifies.attribute must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ExperienceTracker/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ExperienceTracker/script.json: fail: modifies.character: modifies.character must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/ExperienceTracker/script.json: fail: modifies.attribute: modifies.attribute must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ExperienceTracker/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ExperienceTracker/script.json: fail: modifies.character: modifies.character must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Elevation/script.json: fail: modifies.state.Elevation: modifies.state.Elevation must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Elevation/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Elevation/script.json: fail: modifies.path.*: modifies.path.* must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Elevation/script.json: fail: modifies.state.Elevation: modifies.state.Elevation must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Elevation/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Elevation/script.json: fail: modifies.path.*: modifies.path.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/5eShapedCompanion/script.json: fail: modifies.token.*: modifies.token.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/5eShapedCompanion/script.json: fail: modifies.character.*: modifies.character.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/5eShapedCompanion/script.json: fail: modifies.attribute.*: modifies.attribute.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/5eShapedCompanion/script.json: fail: modifies.state.ShapedScripts: modifies.state.ShapedScripts must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/5eShapedCompanion/script.json: fail: modifies.token.*: modifies.token.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/5eShapedCompanion/script.json: fail: modifies.character.*: modifies.character.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/5eShapedCompanion/script.json: fail: modifies.attribute.*: modifies.attribute.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/5eShapedCompanion/script.json: fail: modifies.state.ShapedScripts: modifies.state.ShapedScripts must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Earthdawn (FASA Official) character sheet companion/script.json: fail: modifies.character: modifies.character must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Earthdawn (FASA Official) character sheet companion/script.json: fail: modifies.attribute: modifies.attribute must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Earthdawn (FASA Official) character sheet companion/script.json: fail: modifies.ability: modifies.ability must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Earthdawn (FASA Official) character sheet companion/script.json: fail: modifies.character: modifies.character must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Earthdawn (FASA Official) character sheet companion/script.json: fail: modifies.attribute: modifies.attribute must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Earthdawn (FASA Official) character sheet companion/script.json: fail: modifies.ability: modifies.ability must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ShortRest/script.json: fail: modifies.attribute.class_resource: modifies.attribute.class_resource must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ShortRest/script.json: fail: modifies.attribute.other_resource: modifies.attribute.other_resource must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ShortRest/script.json: fail: modifies.attribute.repeating_resource: modifies.attribute.repeating_resource must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ShortRest/script.json: fail: modifies.attribute.lvl$__slots_expended: modifies.attribute.lvl$__slots_expended must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ShortRest/script.json: fail: modifies.attribute.hp: modifies.attribute.hp must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ShortRest/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ShortRest/script.json: fail: modifies.attribute.hit_dice: modifies.attribute.hit_dice must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/ShortRest/script.json: fail: modifies.attribute.class_resource: modifies.attribute.class_resource must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ShortRest/script.json: fail: modifies.attribute.other_resource: modifies.attribute.other_resource must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ShortRest/script.json: fail: modifies.attribute.repeating_resource: modifies.attribute.repeating_resource must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ShortRest/script.json: fail: modifies.attribute.lvl$__slots_expended: modifies.attribute.lvl$__slots_expended must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ShortRest/script.json: fail: modifies.attribute.hp: modifies.attribute.hp must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ShortRest/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ShortRest/script.json: fail: modifies.attribute.hit_dice: modifies.attribute.hit_dice must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ItsATrap_theme_DnD3.5/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/DL Darkness/script.json: fail: patreon: Invalid type. Expected: string, given: array
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/DL Darkness/script.json: fail: patreon: Invalid type. Expected: string, given: array
+/home/sydney/roll20/code/roll20-api-scripts/Genesys-RPG-Roller/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/MapLock/script.json: fail: modifies.graphic.top: modifies.graphic.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MapLock/script.json: fail: modifies.graphic.width: modifies.graphic.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MapLock/script.json: fail: modifies.state.MapLock: modifies.state.MapLock must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MapLock/script.json: fail: modifies.graphic.height: modifies.graphic.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MapLock/script.json: fail: modifies.graphic.left: modifies.graphic.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MapLock/script.json: fail: modifies.graphic.rotation: modifies.graphic.rotation must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MapLock/script.json: fail: modifies.graphic.tint_color: modifies.graphic.tint_color must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/MapLock/script.json: fail: modifies.graphic.top: modifies.graphic.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MapLock/script.json: fail: modifies.graphic.width: modifies.graphic.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MapLock/script.json: fail: modifies.state.MapLock: modifies.state.MapLock must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MapLock/script.json: fail: modifies.graphic.height: modifies.graphic.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MapLock/script.json: fail: modifies.graphic.left: modifies.graphic.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MapLock/script.json: fail: modifies.graphic.rotation: modifies.graphic.rotation must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MapLock/script.json: fail: modifies.graphic.tint_color: modifies.graphic.tint_color must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TokenMod/script.json: fail: modifies.state.TokenMod: modifies.state.TokenMod must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TokenMod/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/TokenMod/script.json: fail: modifies.state.TokenMod: modifies.state.TokenMod must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TokenMod/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/PaladinAura/script.json: fail: modifies.token.status_bolt-shield: modifies.token.status_bolt-shield must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/PaladinAura/script.json: fail: modifies.state.PaladinAura: modifies.state.PaladinAura must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/PaladinAura/script.json: fail: conflicts: Invalid type. Expected: [array,object], given: string
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/PaladinAura/script.json: fail: modifies.token.status_bolt-shield: modifies.token.status_bolt-shield must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/PaladinAura/script.json: fail: modifies.state.PaladinAura: modifies.state.PaladinAura must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/PaladinAura/script.json: fail: conflicts: Invalid type. Expected: [array,object], given: string
+/home/sydney/roll20/code/roll20-api-scripts/FateDots/script.json: fail: modifies.state.FateDots: modifies.state.FateDots must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/FateDots/script.json: fail: modifies.graphic.statusmarkers: modifies.graphic.statusmarkers must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/FateDots/script.json: fail: modifies.state.FateDots: modifies.state.FateDots must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/FateDots/script.json: fail: modifies.graphic.statusmarkers: modifies.graphic.statusmarkers must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MD5Sum/script.json: fail: modifies.state.MD5Sum: modifies.state.MD5Sum must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/MD5Sum/script.json: fail: modifies.state.MD5Sum: modifies.state.MD5Sum must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/HeroTracker/1.0/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/HeroTracker/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/HeroTracker/1.1/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/UDLWindows/script.json: fail: modifies.state.UDLWindows: modifies.state.UDLWindows must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/UDLWindows/script.json: fail: modifies.state.UDLWindows: modifies.state.UDLWindows must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/SavageWorldsStatusChanger/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/MutantYearZero/script.json: fail: modifies.state.MutantYearZero: modifies.state.MutantYearZero must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/MutantYearZero/script.json: fail: modifies.state.MutantYearZero: modifies.state.MutantYearZero must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Roll Handout Tables/script.json: fail: useroptions.0: Invalid type. Expected: object, given: string
+/home/sydney/roll20/code/roll20-api-scripts/Roll Handout Tables/script.json: fail: modifies.handout.notes: modifies.handout.notes must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Roll Handout Tables/script.json: fail: modifies.rollabletable: modifies.rollabletable must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Roll Handout Tables/script.json: fail: modifies.table-items: modifies.table-items must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Roll Handout Tables/script.json: fail: dependencies: Invalid type. Expected: [array,object], given: string
+/home/sydney/roll20/code/roll20-api-scripts/Roll Handout Tables/script.json: fail: conflicts: Invalid type. Expected: [array,object], given: string
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Roll Handout Tables/script.json: fail: useroptions.0: Invalid type. Expected: object, given: string
+/home/sydney/roll20/code/roll20-api-scripts/Roll Handout Tables/script.json: fail: modifies.handout.notes: modifies.handout.notes must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Roll Handout Tables/script.json: fail: modifies.rollabletable: modifies.rollabletable must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Roll Handout Tables/script.json: fail: modifies.table-items: modifies.table-items must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Roll Handout Tables/script.json: fail: dependencies: Invalid type. Expected: [array,object], given: string
+/home/sydney/roll20/code/roll20-api-scripts/Roll Handout Tables/script.json: fail: conflicts: Invalid type. Expected: [array,object], given: string
+/home/sydney/roll20/code/roll20-api-scripts/WildShapeResizer/script.json: fail: modifies.token.width: modifies.token.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/WildShapeResizer/script.json: fail: modifies.token.height: modifies.token.height must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/WildShapeResizer/script.json: fail: modifies.token.width: modifies.token.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/WildShapeResizer/script.json: fail: modifies.token.height: modifies.token.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/SpellMaster/script.json: fail: modifies.state.SpellMaster: modifies.state.SpellMaster must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/SpellMaster/script.json: fail: modifies.state.SpellMaster: modifies.state.SpellMaster must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Interpreted sendChat/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/OneWayDynamicLighting/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/MidgardTurnTrackerHelper/script.json: fail: modifies.campaign.turnorder: modifies.campaign.turnorder must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/MidgardTurnTrackerHelper/script.json: fail: modifies.campaign.turnorder: modifies.campaign.turnorder must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ItsATrap_theme_RoleplayingIsMagic4/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Deal-Init/script.json: fail: modifies.turnorder.*: modifies.turnorder.* must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Deal-Init/script.json: fail: modifies.turnorder.*: modifies.turnorder.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/PathMath/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/levenshteinDistance/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/earthdawn/script.json: fail: modifies.: modifies. must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/earthdawn/script.json: fail: useroptions.0.type: useroptions.0.type must be one of the following: "text", "number", "select", "checkbox"
+/home/sydney/roll20/code/roll20-api-scripts/earthdawn/script.json: fail: useroptions.1.type: useroptions.1.type must be one of the following: "text", "number", "select", "checkbox"
+/home/sydney/roll20/code/roll20-api-scripts/earthdawn/script.json: fail: useroptions.2.type: useroptions.2.type must be one of the following: "text", "number", "select", "checkbox"
+/home/sydney/roll20/code/roll20-api-scripts/earthdawn/script.json: fail: useroptions.3.type: useroptions.3.type must be one of the following: "text", "number", "select", "checkbox"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/earthdawn/script.json: fail: modifies.: modifies. must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/earthdawn/script.json: fail: useroptions.0.type: useroptions.0.type must be one of the following: "text", "number", "select", "checkbox"
+/home/sydney/roll20/code/roll20-api-scripts/earthdawn/script.json: fail: useroptions.1.type: useroptions.1.type must be one of the following: "text", "number", "select", "checkbox"
+/home/sydney/roll20/code/roll20-api-scripts/earthdawn/script.json: fail: useroptions.2.type: useroptions.2.type must be one of the following: "text", "number", "select", "checkbox"
+/home/sydney/roll20/code/roll20-api-scripts/earthdawn/script.json: fail: useroptions.3.type: useroptions.3.type must be one of the following: "text", "number", "select", "checkbox"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.aura1_color: modifies.graphic.aura1_color must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.layer: modifies.graphic.layer must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.light_otherplayers: modifies.graphic.light_otherplayers must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.showname: modifies.graphic.showname must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.showplayers_aura1: modifies.graphic.showplayers_aura1 must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.state.Torch: modifies.state.Torch must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic: modifies.graphic must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.left: modifies.graphic.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.light_radius: modifies.graphic.light_radius must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.top: modifies.graphic.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.page.showlighting: modifies.page.showlighting must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.aura1_radius: modifies.graphic.aura1_radius must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.aura1_square: modifies.graphic.aura1_square must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.light_dimradius: modifies.graphic.light_dimradius must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.aura1_color: modifies.graphic.aura1_color must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.layer: modifies.graphic.layer must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.light_otherplayers: modifies.graphic.light_otherplayers must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.showname: modifies.graphic.showname must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.showplayers_aura1: modifies.graphic.showplayers_aura1 must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.state.Torch: modifies.state.Torch must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic: modifies.graphic must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.left: modifies.graphic.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.light_radius: modifies.graphic.light_radius must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.top: modifies.graphic.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.page.showlighting: modifies.page.showlighting must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.aura1_radius: modifies.graphic.aura1_radius must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.aura1_square: modifies.graphic.aura1_square must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Torch/script.json: fail: modifies.graphic.light_dimradius: modifies.graphic.light_dimradius must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/GoFish!/script.json: fail: modifies: Invalid type. Expected: [array,object], given: string
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/GoFish!/script.json: fail: modifies: Invalid type. Expected: [array,object], given: string
+/home/sydney/roll20/code/roll20-api-scripts/DLEllipseDrawer/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Hexploration/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/EasyExperience/script.json: fail: modifies.character: modifies.character must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/EasyExperience/script.json: fail: modifies.state.EASYEXPERIENCE: modifies.state.EASYEXPERIENCE must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/EasyExperience/script.json: fail: modifies.attribute.id: modifies.attribute.id must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/EasyExperience/script.json: fail: modifies.attribute: modifies.attribute must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/EasyExperience/script.json: fail: modifies.character: modifies.character must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/EasyExperience/script.json: fail: modifies.state.EASYEXPERIENCE: modifies.state.EASYEXPERIENCE must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/EasyExperience/script.json: fail: modifies.attribute.id: modifies.attribute.id must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/EasyExperience/script.json: fail: modifies.attribute: modifies.attribute must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TotalRolled for AGE/script.json: fail: modifies.msg.who: modifies.msg.who must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TotalRolled for AGE/script.json: fail: modifies.msg.content: modifies.msg.content must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TotalRolled for AGE/script.json: fail: modifies.sendChat: modifies.sendChat must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TotalRolled for AGE/script.json: fail: modifies.msg.inlinerolls: modifies.msg.inlinerolls must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/TotalRolled for AGE/script.json: fail: modifies.msg.who: modifies.msg.who must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TotalRolled for AGE/script.json: fail: modifies.msg.content: modifies.msg.content must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TotalRolled for AGE/script.json: fail: modifies.sendChat: modifies.sendChat must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TotalRolled for AGE/script.json: fail: modifies.msg.inlinerolls: modifies.msg.inlinerolls must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TokenNameNumber/script.json: fail: modifies.state.TokenNameNumber: modifies.state.TokenNameNumber must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TokenNameNumber/script.json: fail: modifies.graphic.name: modifies.graphic.name must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/TokenNameNumber/script.json: fail: modifies.state.TokenNameNumber: modifies.state.TokenNameNumber must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TokenNameNumber/script.json: fail: modifies.graphic.name: modifies.graphic.name must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/AgoneDice/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/SR-RollExtender/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/PublicSheet/script.json: fail: modifies.character.*: modifies.character.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/PublicSheet/script.json: fail: modifies.attribute.*: modifies.attribute.* must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/PublicSheet/script.json: fail: modifies.character.*: modifies.character.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/PublicSheet/script.json: fail: modifies.attribute.*: modifies.attribute.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TruePageCopy/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/CarryTokens/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/DupCharToken/script.json: fail: modifies.token.bar3_link: modifies.token.bar3_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DupCharToken/script.json: fail: modifies.character: modifies.character must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DupCharToken/script.json: fail: modifies.attribute: modifies.attribute must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DupCharToken/script.json: fail: modifies.ability: modifies.ability must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DupCharToken/script.json: fail: modifies.graphic: modifies.graphic must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DupCharToken/script.json: fail: modifies.token.bar1_link: modifies.token.bar1_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DupCharToken/script.json: fail: modifies.token.bar2_link: modifies.token.bar2_link must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/DupCharToken/script.json: fail: modifies.token.bar3_link: modifies.token.bar3_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DupCharToken/script.json: fail: modifies.character: modifies.character must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DupCharToken/script.json: fail: modifies.attribute: modifies.attribute must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DupCharToken/script.json: fail: modifies.ability: modifies.ability must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DupCharToken/script.json: fail: modifies.graphic: modifies.graphic must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DupCharToken/script.json: fail: modifies.token.bar1_link: modifies.token.bar1_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DupCharToken/script.json: fail: modifies.token.bar2_link: modifies.token.bar2_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/LightCrumb/script.json: fail: modifies.state.LightCrumb: modifies.state.LightCrumb must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/LightCrumb/script.json: fail: modifies.state.LightCrumb.config: modifies.state.LightCrumb.config must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/LightCrumb/script.json: fail: modifies.state.LightCrumb: modifies.state.LightCrumb must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/LightCrumb/script.json: fail: modifies.state.LightCrumb.config: modifies.state.LightCrumb.config must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TokenMarker/script.json: fail: modifies.statusmarkers: modifies.statusmarkers must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/TokenMarker/script.json: fail: modifies.statusmarkers: modifies.statusmarkers must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.state.DryErase: modifies.state.DryErase must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.graphics.width: modifies.graphics.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.graphics.left: modifies.graphics.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.path: modifies.path must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.path.width: modifies.path.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.path.top: modifies.path.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.path.layer: modifies.path.layer must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.graphics: modifies.graphics must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.graphics.height: modifies.graphics.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.graphics.top: modifies.graphics.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.path.height: modifies.path.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.path.left: modifies.path.left must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.state.DryErase: modifies.state.DryErase must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.graphics.width: modifies.graphics.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.graphics.left: modifies.graphics.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.path: modifies.path must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.path.width: modifies.path.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.path.top: modifies.path.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.path.layer: modifies.path.layer must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.graphics: modifies.graphics must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.graphics.height: modifies.graphics.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.graphics.top: modifies.graphics.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.path.height: modifies.path.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DryErase/script.json: fail: modifies.path.left: modifies.path.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/WFRP4e/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/DSA4_1-CritChecker/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/GeigerCounter/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/ChatTurnManager/script.json: fail: modifies.campaign.turnorder: modifies.campaign.turnorder must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/ChatTurnManager/script.json: fail: modifies.campaign.turnorder: modifies.campaign.turnorder must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/HuntersMark/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/APIHeartBeat/script.json: fail: modifies.state.APIHeartBeat: modifies.state.APIHeartBeat must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/APIHeartBeat/script.json: fail: modifies.state.APIHeartBeat: modifies.state.APIHeartBeat must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Observer/script.json: fail: modifies.token.controlledby: modifies.token.controlledby must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Observer/script.json: fail: modifies.state.Observer: modifies.state.Observer must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Observer/script.json: fail: modifies.graphic.controlledby: modifies.graphic.controlledby must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Observer/script.json: fail: modifies.token.controlledby: modifies.token.controlledby must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Observer/script.json: fail: modifies.state.Observer: modifies.state.Observer must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Observer/script.json: fail: modifies.graphic.controlledby: modifies.graphic.controlledby must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder2Utilities/script.json: fail: modifies: Array must have at most 0 items
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder2Utilities/script.json: fail: modifies: Array must have at most 0 items
+/home/sydney/roll20/code/roll20-api-scripts/Emojibubble/script.json: error: validate: invalid character '\'' in string escape code
+1 of 1 malformed documents
+/home/sydney/roll20/code/roll20-api-scripts/Emojibubble/script.json: error: validate: invalid character '\'' in string escape code
+/home/sydney/roll20/code/roll20-api-scripts/Door Knocker/script.json: fail: modifies.graphic: modifies.graphic must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Door Knocker/script.json: fail: modifies.path: modifies.path must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Door Knocker/script.json: fail: modifies.state.DoorKnocker: modifies.state.DoorKnocker must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Door Knocker/script.json: fail: modifies.character: modifies.character must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Door Knocker/script.json: fail: modifies.graphic: modifies.graphic must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Door Knocker/script.json: fail: modifies.path: modifies.path must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Door Knocker/script.json: fail: modifies.state.DoorKnocker: modifies.state.DoorKnocker must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Door Knocker/script.json: fail: modifies.character: modifies.character must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Health Status/script.json: fail: modifies.bar1_value: modifies.bar1_value must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Health Status/script.json: fail: modifies.bar1_max: modifies.bar1_max must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Health Status/script.json: fail: modifies.bar1_value: modifies.bar1_value must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Health Status/script.json: fail: modifies.bar1_max: modifies.bar1_max must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/FotN Companion/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/StatusInfo/script.json: fail: dependencies: Additional property state.STATUSINFO is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/StatusInfo/script.json: fail: dependencies: Additional property attribute.current is not allowed
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/StatusInfo/script.json: fail: dependencies: Additional property state.STATUSINFO is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/StatusInfo/script.json: fail: dependencies: Additional property attribute.current is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/SyncPage/script.json: fail: dependencies: Additional property graphic is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/SyncPage/script.json: fail: dependencies: Additional property text is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/SyncPage/script.json: fail: dependencies: Additional property path is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/SyncPage/script.json: fail: dependencies: Additional property page is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/SyncPage/script.json: fail: dependencies: Additional property state.TEMPLATE is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/SyncPage/script.json: fail: dependencies: Additional property attribute.current is not allowed
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/SyncPage/script.json: fail: dependencies: Additional property graphic is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/SyncPage/script.json: fail: dependencies: Additional property text is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/SyncPage/script.json: fail: dependencies: Additional property path is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/SyncPage/script.json: fail: dependencies: Additional property page is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/SyncPage/script.json: fail: dependencies: Additional property state.TEMPLATE is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/SyncPage/script.json: fail: dependencies: Additional property attribute.current is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/HtmlBuilder/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/InspirationTracking/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/EclipsePhaseAlternateCompanion/script.json: fail: modifies.token.*: modifies.token.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/EclipsePhaseAlternateCompanion/script.json: fail: modifies.character.*: modifies.character.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/EclipsePhaseAlternateCompanion/script.json: fail: modifies.attribute.*: modifies.attribute.* must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/EclipsePhaseAlternateCompanion/script.json: fail: modifies.token.*: modifies.token.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/EclipsePhaseAlternateCompanion/script.json: fail: modifies.character.*: modifies.character.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/EclipsePhaseAlternateCompanion/script.json: fail: modifies.attribute.*: modifies.attribute.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TreatWounds/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/wfrp2e-api/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Forbidden Lands Dice Roller/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/KABOOM/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/exaltScript/script.json: fail: modifies.state.exaltScript: modifies.state.exaltScript must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/exaltScript/script.json: fail: modifies.status_purplemarker: modifies.status_purplemarker must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/exaltScript/script.json: fail: modifies.status_ninja-mask: modifies.status_ninja-mask must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/exaltScript/script.json: fail: modifies.status_aura: modifies.status_aura must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/exaltScript/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/exaltScript/script.json: fail: modifies.Campaign.turnorder: modifies.Campaign.turnorder must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/exaltScript/script.json: fail: modifies.state.exaltScript: modifies.state.exaltScript must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/exaltScript/script.json: fail: modifies.status_purplemarker: modifies.status_purplemarker must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/exaltScript/script.json: fail: modifies.status_ninja-mask: modifies.status_ninja-mask must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/exaltScript/script.json: fail: modifies.status_aura: modifies.status_aura must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/exaltScript/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/exaltScript/script.json: fail: modifies.Campaign.turnorder: modifies.Campaign.turnorder must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Walls/script.json: fail: modifies.path: modifies.path must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Walls/script.json: fail: modifies.state.Walls: modifies.state.Walls must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Walls/script.json: fail: modifies.path: modifies.path must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Walls/script.json: fail: modifies.state.Walls: modifies.state.Walls must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MarchingOrder/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder Companion Neceros/script.json: fail: modifies.tokens: modifies.tokens must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder Companion Neceros/script.json: fail: modifies.character.defaulttoken: modifies.character.defaulttoken must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder Companion Neceros/script.json: fail: modifies.Characters: modifies.Characters must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder Companion Neceros/script.json: fail: modifies.state.PFCompanion: modifies.state.PFCompanion must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder Companion Neceros/script.json: fail: modifies.tokens: modifies.tokens must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder Companion Neceros/script.json: fail: modifies.character.defaulttoken: modifies.character.defaulttoken must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder Companion Neceros/script.json: fail: modifies.Characters: modifies.Characters must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder Companion Neceros/script.json: fail: modifies.state.PFCompanion: modifies.state.PFCompanion must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/HeroSystem6e/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/RatWorkshop_Paladin/script.json: fail: modifies.token.*: modifies.token.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/RatWorkshop_Paladin/script.json: fail: modifies.character.*: modifies.character.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/RatWorkshop_Paladin/script.json: fail: modifies.attribute.*: modifies.attribute.* must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/RatWorkshop_Paladin/script.json: fail: modifies.token.*: modifies.token.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/RatWorkshop_Paladin/script.json: fail: modifies.character.*: modifies.character.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/RatWorkshop_Paladin/script.json: fail: modifies.attribute.*: modifies.attribute.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ItsATrap_theme_5E_OGL/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Token-Action-Maker/script.json: fail: modifies.ability.*: modifies.ability.* must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Token-Action-Maker/script.json: fail: modifies.ability.*: modifies.ability.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Flight/script.json: fail: modifies.token.statusmarkers: modifies.token.statusmarkers must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Flight/script.json: fail: modifies.token.statusmarkers: modifies.token.statusmarkers must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TotalRolled/script.json: fail: modifies.msg.who: modifies.msg.who must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TotalRolled/script.json: fail: modifies.msg.content: modifies.msg.content must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TotalRolled/script.json: fail: modifies.sendChat: modifies.sendChat must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TotalRolled/script.json: fail: modifies.msg.inlinerolls: modifies.msg.inlinerolls must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/TotalRolled/script.json: fail: modifies.msg.who: modifies.msg.who must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TotalRolled/script.json: fail: modifies.msg.content: modifies.msg.content must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TotalRolled/script.json: fail: modifies.sendChat: modifies.sendChat must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TotalRolled/script.json: fail: modifies.msg.inlinerolls: modifies.msg.inlinerolls must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ABFRoll/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/RatWorkshop_DungeonMasterTools/script.json: fail: modifies.character.*: modifies.character.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/RatWorkshop_DungeonMasterTools/script.json: fail: modifies.attribute.*: modifies.attribute.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/RatWorkshop_DungeonMasterTools/script.json: fail: modifies.token.*: modifies.token.* must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/RatWorkshop_DungeonMasterTools/script.json: fail: modifies.character.*: modifies.character.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/RatWorkshop_DungeonMasterTools/script.json: fail: modifies.attribute.*: modifies.attribute.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/RatWorkshop_DungeonMasterTools/script.json: fail: modifies.token.*: modifies.token.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/PowerCards Macro Helper/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder Skillbook/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder Skillbook/script.json: fail: modifies.attribute.id: modifies.attribute.id must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder Skillbook/script.json: fail: modifies.attribute.name: modifies.attribute.name must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder Skillbook/script.json: fail: modifies.character.name: modifies.character.name must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder Skillbook/script.json: fail: modifies.attribute.characterid: modifies.attribute.characterid must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder Skillbook/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder Skillbook/script.json: fail: modifies.attribute.id: modifies.attribute.id must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder Skillbook/script.json: fail: modifies.attribute.name: modifies.attribute.name must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder Skillbook/script.json: fail: modifies.character.name: modifies.character.name must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder Skillbook/script.json: fail: modifies.attribute.characterid: modifies.attribute.characterid must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ChangeMap_CloneTokens/script.json: fail: useroptions.0: name is required
+/home/sydney/roll20/code/roll20-api-scripts/ChangeMap_CloneTokens/script.json: fail: useroptions.0: description is required
+/home/sydney/roll20/code/roll20-api-scripts/ChangeMap_CloneTokens/script.json: fail: useroptions.0: type is required
+/home/sydney/roll20/code/roll20-api-scripts/ChangeMap_CloneTokens/script.json: fail: modifies.token: modifies.token must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ChangeMap_CloneTokens/script.json: fail: modifies.Campaign.playerpageid: modifies.Campaign.playerpageid must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ChangeMap_CloneTokens/script.json: fail: modifies.Campaign.playerspecificpages: modifies.Campaign.playerspecificpages must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/ChangeMap_CloneTokens/script.json: fail: useroptions.0: name is required
+/home/sydney/roll20/code/roll20-api-scripts/ChangeMap_CloneTokens/script.json: fail: useroptions.0: description is required
+/home/sydney/roll20/code/roll20-api-scripts/ChangeMap_CloneTokens/script.json: fail: useroptions.0: type is required
+/home/sydney/roll20/code/roll20-api-scripts/ChangeMap_CloneTokens/script.json: fail: modifies.token: modifies.token must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ChangeMap_CloneTokens/script.json: fail: modifies.Campaign.playerpageid: modifies.Campaign.playerpageid must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ChangeMap_CloneTokens/script.json: fail: modifies.Campaign.playerspecificpages: modifies.Campaign.playerspecificpages must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Maximum Apocalypse/script.json: fail: modifies.state.MaxApoc: modifies.state.MaxApoc must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Maximum Apocalypse/script.json: fail: modifies.attribute.starving: modifies.attribute.starving must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Maximum Apocalypse/script.json: fail: modifies.graphic.bar1_value: modifies.graphic.bar1_value must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Maximum Apocalypse/script.json: fail: modifies.attribute.hunger: modifies.attribute.hunger must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Maximum Apocalypse/script.json: fail: modifies.attribute.luck_uses: modifies.attribute.luck_uses must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Maximum Apocalypse/script.json: fail: modifies.campaign.turnorder: modifies.campaign.turnorder must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Maximum Apocalypse/script.json: fail: modifies.attribute.emaciated: modifies.attribute.emaciated must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Maximum Apocalypse/script.json: fail: modifies.state.MaxApoc: modifies.state.MaxApoc must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Maximum Apocalypse/script.json: fail: modifies.attribute.starving: modifies.attribute.starving must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Maximum Apocalypse/script.json: fail: modifies.graphic.bar1_value: modifies.graphic.bar1_value must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Maximum Apocalypse/script.json: fail: modifies.attribute.hunger: modifies.attribute.hunger must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Maximum Apocalypse/script.json: fail: modifies.attribute.luck_uses: modifies.attribute.luck_uses must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Maximum Apocalypse/script.json: fail: modifies.campaign.turnorder: modifies.campaign.turnorder must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Maximum Apocalypse/script.json: fail: modifies.attribute.emaciated: modifies.attribute.emaciated must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ItsATrap_theme_BurnBryte/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/DifficultyRating/script.json: fail: modifies.state.DifficultyRating: modifies.state.DifficultyRating must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/DifficultyRating/script.json: fail: modifies.state.DifficultyRating: modifies.state.DifficultyRating must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Shadow of the Demon Lord/script.json: fail: modifies.state.DL: modifies.state.DL must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Shadow of the Demon Lord/script.json: fail: modifies.state.DL: modifies.state.DL must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Its A Trap/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/EX3Dice/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder HeroLab Import/script.json: fail: modifies.graphic.represents: modifies.graphic.represents must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder HeroLab Import/script.json: fail: modifies.attribute.characterid: modifies.attribute.characterid must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder HeroLab Import/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder HeroLab Import/script.json: fail: modifies.attribute.id: modifies.attribute.id must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder HeroLab Import/script.json: fail: modifies.attribute.name: modifies.attribute.name must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder HeroLab Import/script.json: fail: modifies.character.name: modifies.character.name must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder HeroLab Import/script.json: fail: modifies.graphic.represents: modifies.graphic.represents must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder HeroLab Import/script.json: fail: modifies.attribute.characterid: modifies.attribute.characterid must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder HeroLab Import/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder HeroLab Import/script.json: fail: modifies.attribute.id: modifies.attribute.id must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder HeroLab Import/script.json: fail: modifies.attribute.name: modifies.attribute.name must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Pathfinder HeroLab Import/script.json: fail: modifies.character.name: modifies.character.name must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Custom FX/script.json: fail: modifies.path.height: modifies.path.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Custom FX/script.json: fail: modifies.path.scaleX: modifies.path.scaleX must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Custom FX/script.json: fail: modifies.path.top: modifies.path.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Custom FX/script.json: fail: modifies.path.rotation: modifies.path.rotation must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Custom FX/script.json: fail: modifies.path.width: modifies.path.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Custom FX/script.json: fail: modifies.path.left: modifies.path.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Custom FX/script.json: fail: modifies.path.scaleY: modifies.path.scaleY must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Custom FX/script.json: fail: modifies.state.bshields.customfx: modifies.state.bshields.customfx must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Custom FX/script.json: fail: modifies.path.height: modifies.path.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Custom FX/script.json: fail: modifies.path.scaleX: modifies.path.scaleX must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Custom FX/script.json: fail: modifies.path.top: modifies.path.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Custom FX/script.json: fail: modifies.path.rotation: modifies.path.rotation must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Custom FX/script.json: fail: modifies.path.width: modifies.path.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Custom FX/script.json: fail: modifies.path.left: modifies.path.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Custom FX/script.json: fail: modifies.path.scaleY: modifies.path.scaleY must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Custom FX/script.json: fail: modifies.state.bshields.customfx: modifies.state.bshields.customfx must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/WelcomePackage/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/WorldMapDiscovery/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/CheckItOut/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/ChatSetAttr/script.json: fail: modifies.attribute.max: modifies.attribute.max must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ChatSetAttr/script.json: fail: modifies.state.ChatSetAttr: modifies.state.ChatSetAttr must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ChatSetAttr/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/ChatSetAttr/script.json: fail: modifies.attribute.max: modifies.attribute.max must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ChatSetAttr/script.json: fail: modifies.state.ChatSetAttr: modifies.state.ChatSetAttr must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ChatSetAttr/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/CashMaster/script.json: fail: modifies.attribute.gp: modifies.attribute.gp must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/CashMaster/script.json: fail: modifies.attribute.sp: modifies.attribute.sp must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/CashMaster/script.json: fail: modifies.attribute.cp: modifies.attribute.cp must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/CashMaster/script.json: fail: modifies.attribute.pp: modifies.attribute.pp must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/CashMaster/script.json: fail: modifies.attribute.ep: modifies.attribute.ep must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/CashMaster/script.json: fail: modifies.attribute.gp: modifies.attribute.gp must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/CashMaster/script.json: fail: modifies.attribute.sp: modifies.attribute.sp must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/CashMaster/script.json: fail: modifies.attribute.cp: modifies.attribute.cp must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/CashMaster/script.json: fail: modifies.attribute.pp: modifies.attribute.pp must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/CashMaster/script.json: fail: modifies.attribute.ep: modifies.attribute.ep must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TailsOfEquestriaHelper/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/KrystalDice/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Game Timer/script.json: fail: modifies.graphic.aura1_radius: modifies.graphic.aura1_radius must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Game Timer/script.json: fail: modifies.graphic.aura1_color: modifies.graphic.aura1_color must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Game Timer/script.json: fail: modifies.graphic.bar1_link: modifies.graphic.bar1_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Game Timer/script.json: fail: modifies.graphic.bar2_link: modifies.graphic.bar2_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Game Timer/script.json: fail: modifies.graphic.bar3_link: modifies.graphic.bar3_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Game Timer/script.json: fail: modifies.graphic.statusmarkers: modifies.graphic.statusmarkers must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Game Timer/script.json: fail: modifies.graphic.rotation: modifies.graphic.rotation must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Game Timer/script.json: fail: modifies.graphic.aura1_radius: modifies.graphic.aura1_radius must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Game Timer/script.json: fail: modifies.graphic.aura1_color: modifies.graphic.aura1_color must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Game Timer/script.json: fail: modifies.graphic.bar1_link: modifies.graphic.bar1_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Game Timer/script.json: fail: modifies.graphic.bar2_link: modifies.graphic.bar2_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Game Timer/script.json: fail: modifies.graphic.bar3_link: modifies.graphic.bar3_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Game Timer/script.json: fail: modifies.graphic.statusmarkers: modifies.graphic.statusmarkers must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Game Timer/script.json: fail: modifies.graphic.rotation: modifies.graphic.rotation must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/InitiativeAssistant/script.json: fail: modifies.state.InitiativeAssistant: modifies.state.InitiativeAssistant must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/InitiativeAssistant/script.json: fail: modifies.campaign.turnorder: modifies.campaign.turnorder must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/InitiativeAssistant/script.json: fail: modifies.state.InitiativeAssistant: modifies.state.InitiativeAssistant must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/InitiativeAssistant/script.json: fail: modifies.campaign.turnorder: modifies.campaign.turnorder must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/moveLighting/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/ItsATrap_theme_Starfinder/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/AgoneCleanOlds/script.json: fail: modifies.attribute.characterid: modifies.attribute.characterid must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/AgoneCleanOlds/script.json: fail: modifies.attribute.characterid: modifies.attribute.characterid must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/PortesMonstresTresors/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/13th Age Official Character Sheet Companion/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/_Example Script - Check for formatting details/script.json: fail: modifies.state.autoStaggered: modifies.state.autoStaggered must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/_Example Script - Check for formatting details/script.json: fail: modifies.state.autoRecovery: modifies.state.autoRecovery must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/_Example Script - Check for formatting details/script.json: fail: modifies.token.bar1_link: modifies.token.bar1_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/_Example Script - Check for formatting details/script.json: fail: modifies.token.bar2_link: modifies.token.bar2_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/_Example Script - Check for formatting details/script.json: fail: modifies.token.bar3_link: modifies.token.bar3_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/_Example Script - Check for formatting details/script.json: fail: modifies.attribute.id: modifies.attribute.id must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/_Example Script - Check for formatting details/script.json: fail: modifies.state.autoStaggered: modifies.state.autoStaggered must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/_Example Script - Check for formatting details/script.json: fail: modifies.state.autoRecovery: modifies.state.autoRecovery must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/_Example Script - Check for formatting details/script.json: fail: modifies.token.bar1_link: modifies.token.bar1_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/_Example Script - Check for formatting details/script.json: fail: modifies.token.bar2_link: modifies.token.bar2_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/_Example Script - Check for formatting details/script.json: fail: modifies.token.bar3_link: modifies.token.bar3_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/_Example Script - Check for formatting details/script.json: fail: modifies.attribute.id: modifies.attribute.id must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/PeekCard/script.json: fail: modifies.state.PeekCard: modifies.state.PeekCard must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/PeekCard/script.json: fail: modifies.state.PeekCard: modifies.state.PeekCard must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/BladesCompanion/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/BladesCompanion/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/BladesCompanion/script.json: fail: modifies.text.*: modifies.text.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/BladesCompanion/script.json: fail: modifies.state.BladesCompanion: modifies.state.BladesCompanion must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/BladesCompanion/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/BladesCompanion/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/BladesCompanion/script.json: fail: modifies.text.*: modifies.text.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/BladesCompanion/script.json: fail: modifies.state.BladesCompanion: modifies.state.BladesCompanion must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Concentration/script.json: fail: modifies.state.CONCENTRATION: modifies.state.CONCENTRATION must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Concentration/script.json: fail: modifies.graphic.statusmarkers: modifies.graphic.statusmarkers must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Concentration/script.json: fail: modifies.state.CONCENTRATION: modifies.state.CONCENTRATION must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Concentration/script.json: fail: modifies.graphic.statusmarkers: modifies.graphic.statusmarkers must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/WeaponArcs/script.json: fail: modifies.state.WeaponArcs: modifies.state.WeaponArcs must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/WeaponArcs/script.json: fail: modifies.state.WeaponArcs: modifies.state.WeaponArcs must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/DeltaGreenRPGCompanion/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/libTokenMarkers/script.json: fail: modifies.state.libTokenMarkers: modifies.state.libTokenMarkers must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/libTokenMarkers/script.json: fail: modifies.state.libTokenMarkers: modifies.state.libTokenMarkers must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Wrath And Glory/script.json: fail: previousversions.0: Does not match pattern '^([0-9]+(\.)?)+([0-9]+)?$'
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Wrath And Glory/script.json: fail: previousversions.0: Does not match pattern '^([0-9]+(\.)?)+([0-9]+)?$'
+/home/sydney/roll20/code/roll20-api-scripts/SpellMaster-SRD/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/MotD/script.json: fail: modifies.handout.notes: modifies.handout.notes must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/MotD/script.json: fail: modifies.handout.notes: modifies.handout.notes must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/CombatTracker/script.json: fail: dependencies: Additional property state.COMBATTRACKER is not allowed
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/CombatTracker/script.json: fail: dependencies: Additional property state.COMBATTRACKER is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/WildHelpers/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/TokenLock/script.json: fail: modifies.graphic.top: modifies.graphic.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TokenLock/script.json: fail: modifies.state.TokenLock: modifies.state.TokenLock must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TokenLock/script.json: fail: modifies.graphic.left: modifies.graphic.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TokenLock/script.json: fail: modifies.graphic.rotation: modifies.graphic.rotation must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/TokenLock/script.json: fail: modifies.graphic.top: modifies.graphic.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TokenLock/script.json: fail: modifies.state.TokenLock: modifies.state.TokenLock must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TokenLock/script.json: fail: modifies.graphic.left: modifies.graphic.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TokenLock/script.json: fail: modifies.graphic.rotation: modifies.graphic.rotation must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/SpinTokens/script.json: fail: modifies.state.SpinTokens: modifies.state.SpinTokens must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/SpinTokens/script.json: fail: modifies.state.SpinTokens: modifies.state.SpinTokens must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Radar/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Radar/script.json: fail: patreon: Invalid type. Expected: string, given: array
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Radar/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Radar/script.json: fail: patreon: Invalid type. Expected: string, given: array
+/home/sydney/roll20/code/roll20-api-scripts/Search/script.json: fail: modifies.state.Search: modifies.state.Search must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Search/script.json: fail: modifies.state.Search: modifies.state.Search must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Emas/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/HealthColors/script.json: fail: modifies.state.HealthColors: modifies.state.HealthColors must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/HealthColors/script.json: fail: modifies.token.aura1: modifies.token.aura1 must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/HealthColors/script.json: fail: modifies.token.aura2: modifies.token.aura2 must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/HealthColors/script.json: fail: modifies.custfx: modifies.custfx must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/HealthColors/script.json: fail: modifies.state.HealthColors: modifies.state.HealthColors must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/HealthColors/script.json: fail: modifies.token.aura1: modifies.token.aura1 must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/HealthColors/script.json: fail: modifies.token.aura2: modifies.token.aura2 must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/HealthColors/script.json: fail: modifies.custfx: modifies.custfx must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ItsATrap_theme_Pathfinder/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.state.teleport.config.AUTOTELEPORT: modifies.state.teleport.config.AUTOTELEPORT must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.state.teleport.config.SHOWSFX: modifies.state.teleport.config.SHOWSFX must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.name: modifies.token.name must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.bar2_link: modifies.token.bar2_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.handout.name: modifies.handout.name must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.bar3_max: modifies.token.bar3_max must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.left: modifies.token.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.state.teleport.config.AUTOPING: modifies.state.teleport.config.AUTOPING must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.state.teleport.config.HIDEPING: modifies.state.teleport.config.HIDEPING must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.state.teleport.increment: modifies.state.teleport.increment must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.bar1_link: modifies.token.bar1_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.bar2_max: modifies.token.bar2_max must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.bar3_link: modifies.token.bar3_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.bar1_max: modifies.token.bar1_max must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.handout.controlledby: modifies.handout.controlledby must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.Campaign().playerspecificpages: modifies.Campaign().playerspecificpages must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.state.teleport.help: modifies.state.teleport.help must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.fliph: modifies.token.fliph must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.top: modifies.token.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.handout.contents: modifies.handout.contents must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.handout.inplayerjournals: modifies.handout.inplayerjournals must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.state.teleport.config.AUTOTELEPORT: modifies.state.teleport.config.AUTOTELEPORT must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.state.teleport.config.SHOWSFX: modifies.state.teleport.config.SHOWSFX must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.name: modifies.token.name must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.bar2_link: modifies.token.bar2_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.handout.name: modifies.handout.name must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.bar3_max: modifies.token.bar3_max must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.left: modifies.token.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.state.teleport.config.AUTOPING: modifies.state.teleport.config.AUTOPING must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.state.teleport.config.HIDEPING: modifies.state.teleport.config.HIDEPING must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.state.teleport.increment: modifies.state.teleport.increment must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.bar1_link: modifies.token.bar1_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.bar2_max: modifies.token.bar2_max must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.bar3_link: modifies.token.bar3_link must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.bar1_max: modifies.token.bar1_max must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.handout.controlledby: modifies.handout.controlledby must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.Campaign().playerspecificpages: modifies.Campaign().playerspecificpages must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.state.teleport.help: modifies.state.teleport.help must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.fliph: modifies.token.fliph must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.token.top: modifies.token.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.handout.contents: modifies.handout.contents must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Teleport/script.json: fail: modifies.handout.inplayerjournals: modifies.handout.inplayerjournals must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Cyberpunk 2k20 v2/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Shuffle Tokens/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Shuffle Tokens/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Cypher Systems by Roll20 Companion/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Yatzoid/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/PathSplitter/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Critical/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/CharSheetUtils/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/CypherSystemSheet/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Vector Math/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/HandsUp/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/FalloutTerminal/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/WildDice/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Token Collisions/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/BounceTokens/script.json: fail: modifies.state.BounceTokens: modifies.state.BounceTokens must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/BounceTokens/script.json: fail: modifies.state.BounceTokens: modifies.state.BounceTokens must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Base64/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/ScaleOnAdd/script.json: fail: modifies.state.ScaleOnAdd: modifies.state.ScaleOnAdd must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/ScaleOnAdd/script.json: fail: modifies.state.ScaleOnAdd: modifies.state.ScaleOnAdd must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ModifyTokenImage/script.json: fail: modifies.graphic.imgurl: modifies.graphic.imgurl must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/ModifyTokenImage/script.json: fail: modifies.graphic.imgurl: modifies.graphic.imgurl must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ItsATrap_theme_5E_Shaped/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/AlignmentTracker/script.json: fail: dependencies: Additional property state.ALIGNMENTTRACKER is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/AlignmentTracker/script.json: fail: dependencies: Additional property attribute.current is not allowed
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/AlignmentTracker/script.json: fail: dependencies: Additional property state.ALIGNMENTTRACKER is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/AlignmentTracker/script.json: fail: dependencies: Additional property attribute.current is not allowed
+/home/sydney/roll20/code/roll20-api-scripts/GURPS_GE/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Charsheet/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/HiddenRollMessages/script.json: fail: modifies.handout.name.id: modifies.handout.name.id must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/HiddenRollMessages/script.json: fail: modifies.handout.name.id: modifies.handout.name.id must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Raise Count/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Page Navigator/script.json: fail: modifies.state.PAGENAVIGATOR.version: modifies.state.PAGENAVIGATOR.version must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Page Navigator/script.json: fail: modifies.Campaign.playerpageid: modifies.Campaign.playerpageid must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Page Navigator/script.json: fail: modifies.Campaign.playerspecificpages: modifies.Campaign.playerspecificpages must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Page Navigator/script.json: fail: modifies.state.PAGENAVIGATOR.version: modifies.state.PAGENAVIGATOR.version must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Page Navigator/script.json: fail: modifies.Campaign.playerpageid: modifies.Campaign.playerpageid must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Page Navigator/script.json: fail: modifies.Campaign.playerspecificpages: modifies.Campaign.playerspecificpages must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/GroupInitiative/script.json: fail: modifies.state.GroupInitiative: modifies.state.GroupInitiative must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/GroupInitiative/script.json: fail: modifies.campaign.turnorder: modifies.campaign.turnorder must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/GroupInitiative/script.json: fail: modifies.state.GroupInitiative: modifies.state.GroupInitiative must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/GroupInitiative/script.json: fail: modifies.campaign.turnorder: modifies.campaign.turnorder must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mark/script.json: fail: modifies.state.Mark: modifies.state.Mark must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mark/script.json: fail: modifies.graphic.height: modifies.graphic.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mark/script.json: fail: modifies.graphic.statusmarkers: modifies.graphic.statusmarkers must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mark/script.json: fail: modifies.graphic.top: modifies.graphic.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mark/script.json: fail: modifies.graphic.width: modifies.graphic.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mark/script.json: fail: modifies.graphic.layer: modifies.graphic.layer must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mark/script.json: fail: modifies.graphic.left: modifies.graphic.left must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Mark/script.json: fail: modifies.state.Mark: modifies.state.Mark must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mark/script.json: fail: modifies.graphic.height: modifies.graphic.height must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mark/script.json: fail: modifies.graphic.statusmarkers: modifies.graphic.statusmarkers must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mark/script.json: fail: modifies.graphic.top: modifies.graphic.top must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mark/script.json: fail: modifies.graphic.width: modifies.graphic.width must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mark/script.json: fail: modifies.graphic.layer: modifies.graphic.layer must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Mark/script.json: fail: modifies.graphic.left: modifies.graphic.left must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/5E Resting in Style/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/5E Resting in Style/script.json: fail: modifies.attribute.current: modifies.attribute.current must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TableExport/script.json: fail: modifies.rollabletable: modifies.rollabletable must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TableExport/script.json: fail: modifies.tableitem: modifies.tableitem must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/TableExport/script.json: fail: modifies.rollabletable: modifies.rollabletable must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/TableExport/script.json: fail: modifies.tableitem: modifies.tableitem must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MonsterHitDice/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/GMAura/script.json: fail: modifies.state.GMAura: modifies.state.GMAura must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/GMAura/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/GMAura/script.json: fail: modifies.state.GMAura: modifies.state.GMAura must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/GMAura/script.json: fail: modifies.graphic.*: modifies.graphic.* must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ItsATrap_theme_GammaWorld7/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Savage Worlds Raise Roller/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/vampire-v5/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/splitArgs/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Aborea/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Marking Conditions/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/APISelection/script.json: fail: modifies.state.APISelection: modifies.state.APISelection must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/APISelection/script.json: fail: modifies.state.APISelection: modifies.state.APISelection must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/MetaMacros/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/Tagmar/script.json: fail: modifies.state.Tagmar: modifies.state.Tagmar must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Tagmar/script.json: fail: modifies.state.Tagmar: modifies.state.Tagmar must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/Tales From the Loop Die Roller/script.json: fail: previousversions.0: Does not match pattern '^([0-9]+(\.)?)+([0-9]+)?$'
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/Tales From the Loop Die Roller/script.json: fail: previousversions.0: Does not match pattern '^([0-9]+(\.)?)+([0-9]+)?$'
+/home/sydney/roll20/code/roll20-api-scripts/AreasOfEffect/script.json: pass
+/home/sydney/roll20/code/roll20-api-scripts/ShareVision/script.json: fail: modifies.state.ShareVision.version: modifies.state.ShareVision.version must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ShareVision/script.json: fail: modifies.token.statusmarker: modifies.token.statusmarker must be one of the following: "read", "write", "read, write", "write, read"
+1 of 1 failed validation
+/home/sydney/roll20/code/roll20-api-scripts/ShareVision/script.json: fail: modifies.state.ShareVision.version: modifies.state.ShareVision.version must be one of the following: "read", "write", "read, write", "write, read"
+/home/sydney/roll20/code/roll20-api-scripts/ShareVision/script.json: fail: modifies.token.statusmarker: modifies.token.statusmarker must be one of the following: "read", "write", "read, write", "write, read"
