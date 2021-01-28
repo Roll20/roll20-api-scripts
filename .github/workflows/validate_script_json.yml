@@ -19,6 +19,7 @@ jobs:
         with:
           format: csv
       - name: Validate list of changed scripts
+        id: validation
         run: |
           chmod +x ./yajsv.linux.amd64
           IFS=',' read -r -a changed_files <<< "${{ steps.files-changed.outputs.all }}"
@@ -38,7 +39,7 @@ jobs:
           for ((i=0; i < ${#script_dirs[@]}; i++))
           do
             echo "Checking script directory: ${script_dirs[$i]}"
-            ./validate.sh "${script_dirs[$i]}"
+            ./validate.sh "${script_dirs[$i]}" >> results
             status=$?
             if [ $status -ne 0 ]; then
               clean="no"
@@ -46,8 +47,25 @@ jobs:
           done
           set -e
           if [ "$clean" = "yes" ]; then
+            echo "::set-output name=clean::yes"
+            if [ -f results ]; then
+              echo "::set-output name=results::$(cat results)"
+            else
+              echo "::set-output name=results::no changes to scripts"
+            fi
             exit 0
           else
+            echo "::set-output name=clean::no"
+            echo "::set-output name=results::$(cat results)"
             exit 1
           fi
 
+
+      - name: Comment on PR with results
+        uses: unsplash/comment-on-pr@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          msg: ${{ steps.validation.outputs.results }}
+          check_for_duplicate_msg: false
+        if: {{ always() }}
