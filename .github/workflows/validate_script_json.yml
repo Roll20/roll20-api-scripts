@@ -27,8 +27,7 @@ jobs:
           do
             check_dir=$(echo "${changed_files[$i]}" | cut -d/ -f1)
             if [ -f "$check_dir/script.json" ]; then
-              if [[ " ${script_dirs[@]} " =~ " ${check_dir} " ]]; then
-              else
+              if [[ ! " ${script_dirs[@]} " =~ " ${check_dir} " ]]; then
                 script_dirs+=("$check_dir")
               fi
             fi
