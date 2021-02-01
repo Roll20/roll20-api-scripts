@@ -208,10 +208,7 @@ const ScriptCards = (() => {
 
 							var params = thisContent.replace(/(?:\s+|\b)_/g, " --");
 							var apiMessage = `!${apicmd}${spacer}${params}`.trim();
-
-							setTimeout(function (){
-								sendChat(msg.who, apiMessage);
-							});
+							sendChat(msg.who, apiMessage);
 						}
 
 						// Handle setting roll ID variables
