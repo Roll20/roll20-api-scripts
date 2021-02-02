@@ -600,6 +600,7 @@ const ScriptCards = (() => {
 	function evaluateConditional(conditional) {
 		//var components = conditional.split(" ");
 		var components = conditional.match(/(?:[^\s"]+|"[^"]*")+/g);
+		if (!components) { return false; }
 		if (components.length !== 3) {
 			return false;
 		}
