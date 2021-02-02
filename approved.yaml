@@ -951,3 +951,11 @@ clocktokens:
 5epaladin:
   - "RatWorkshop_Paladin"
   - "System Toolbox"
+
+treatwounds:
+  - "TreatWounds"
+  - "System Toolbox"
+
+initiativetrackerplus:
+  - "InitiativeTrackerPlus"
+  - "Utility"
