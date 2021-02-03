@@ -15,6 +15,7 @@ jobs:
           target: .
       - name: Get list of files changed in this PR
         uses: jitterbit/get-changed-files@v1
+        continue-on-error: true
         id: files-changed
         with:
           format: csv
