@@ -797,7 +797,8 @@ const APILogic = (() => {
             nestlog(`PROCESS CONTENT ENDS`, c.indent, logcolor);
             return tokens;
         };
-        return processContents({ tokens: o.tokens, indent: 0 }).join('');
+        let content = processContents({ tokens: o.tokens, indent: 0 }).join('');
+        return { content: content, logicgroups: grouplib };
     };  
 
     const nestedInline = (cmd) => {
@@ -916,12 +917,12 @@ const APILogic = (() => {
         } else {    // not prepended with apitrigger
             if (!testConstructs(msg.content)) return;
             preserved = _.clone(msg);
+            preserved.logicgroups = {};
             apitrigger = `${apiproject}${generateUUID()}`;
             preserved.content = `!${apitrigger}${preserved.content.slice(1)}`;
             preserved.parsedinline = msg.inlinerolls ? libInline.getRollData(msg) : [];
             msg.content = ``;
         }
-
 
         if (testConstructs(preserved.content)) {
             // replace inline rolls tagged with .value or .table
@@ -935,7 +936,10 @@ const APILogic = (() => {
             }
             if (o.tokens) {
                 // reconstruct command line
-                preserved.content = reconstructCommandLine(o);
+                o.logicgroups = preserved.logicgroups;
+                let reconstruct = reconstructCommandLine(o);
+                preserved.content = reconstruct.content;
+                preserved.logicgroups = reconstruct.logicgroups;
             } else {
                 log('Unexpected error encountered. Unable to reconstruct command line.');
                 return;
