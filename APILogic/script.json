@@ -1,0 +1,23 @@
+{
+  "name": "APILogic",
+  "script": "APILogic.js",
+  "version": "1.0.0",
+  "description": "APILogic provides chat input logical constructs for shaping the command line, including IF, ELSEIF, and ELSE. It provides a way to define terms for text-replacment operations, or to name condition sets to re-use later in the logical processing.\r\rFor more information, see the APILogic README file at the Roll20 GitHub repo.",
+  "authors": "timmaugh",
+  "roll20userid": "5962076",
+  "useroptions": [],
+  "dependencies": [ "libInline" ],
+  "modifies": {
+    "state.APILogic": "read,write",
+    "attribute.characterid": "read",
+    "attribute.current": "read",
+    "attribute.id": "read",
+    "attribute.max": "read",
+    "attribute.name": "read",
+    "attribute.type": "read",
+    "ability.id": "read",
+    "ability.name": "read",
+    "ability.action": "read"
+  },
+  "conflicts": []
+}
