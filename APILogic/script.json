@@ -8,7 +8,7 @@
   "useroptions": [],
   "dependencies": [ "libinline" ],
   "modifies": {
-    "state.APILogic": "read,write",
+    "state.APILogic": "read, write",
     "attribute.characterid": "read",
     "attribute.current": "read",
     "attribute.id": "read",
