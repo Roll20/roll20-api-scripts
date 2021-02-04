@@ -964,6 +964,10 @@ initiativetrackerplus:
   - "InitiativeTrackerPlus"
   - "Utility"
 
+selectmanager:
+  - "SelectManager"
+  - "Utility"
+
 apilogic:
   - "APILogic"
   - "Utility"
