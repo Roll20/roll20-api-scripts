@@ -3,8 +3,8 @@
 Name			:	APILogic
 GitHub			:	https://github.com/TimRohr22/Cauldron/tree/master/APILogic
 Roll20 Contact	:	timmaugh
-Version			:	1.0.0
-Last Update		:	2/3/2021
+Version			:	1.0.1
+Last Update		:	2/4/2021
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -18,11 +18,11 @@ const APILogic = (() => {
     // ==================================================
     //		VERSION
     // ==================================================
-    const vrs = '1.0.0';
-    const vd = new Date(1612366265068);
     const apiproject = 'APILogic';
+    API_Meta[apiproject].version = '1.0.1';
+    const vd = new Date(1612452888987);
     const versionInfo = () => {
-        log(`\u0166\u0166 ${apiproject} v${vrs}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta.APILogic.offset}`);
+        log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta.APILogic.offset}`);
         return;
     };
     const logsig = () => {
@@ -94,8 +94,7 @@ const APILogic = (() => {
         elseifrx = /{&\s*elseif(?=\(|\s+|!)\s*/i,
         elserx = /{&\s*else\s*(?=})/i,
         endrx = /{&\s*end\s*}/i,
-        valuerx = /\$\[\[(?<rollnumber>\d+)]]\.value/gi,
-        tablerx = /\$\[\[(?<rollnumber>\d+)]]\.table/gi;
+        valuerx = /\$\[\[(?<rollnumber>\d+)]]\.value/gi;
 
     const nestlog = (stmt, ilvl = 0, logcolor = '') => {
         if (state[apiproject] && state[apiproject].logging === true) {
@@ -692,7 +691,7 @@ const APILogic = (() => {
                 item.metavalue = true;
                 switch (item.type) {
                     case 'text':
-                        item.groups.argtext = item.groups.argtext.replace(/\$\[\[(\d+)]]/g, ((r, g1) => preserved.inlinerolls[g1].results.total || 0));
+                        item.groups.argtext = item.groups.argtext.replace(/\$\[\[(\d+)]]/g, ((r, g1) => preserved.parsedinline[g1].value || 0));
                         if (grouplib.hasOwnProperty(item.groups.argtext)) {
                             if (grouplib[item.groups.argtext]) item.value = true;
                             else {
@@ -880,7 +879,6 @@ const APILogic = (() => {
                     msg.content = msg.content.replace(new RegExp(`\\$\\[\\[(${i})]]`, 'g'), `$[[${preserved.inlinerolls.length - 1}]]`);
                 });
                 preserved.parsedinline = [...(preserved.parsedinline || []), ...libInline.getRollData(msg)];
-                preserved.content = msg.content;
             } else {    // no inlineroll array
                 if (!testConstructs(msg.content)) { // we're on our way out of the script, format everything and release message
                     // replace all APIL formatted inline roll shorthand markers with roll20 formatted shorthand markers
@@ -914,6 +912,7 @@ const APILogic = (() => {
                     return;
                 }
             }
+            preserved.content = msg.content;
         } else {    // not prepended with apitrigger
             if (!testConstructs(msg.content)) return;
             preserved = _.clone(msg);

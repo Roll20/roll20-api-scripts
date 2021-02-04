@@ -3,8 +3,8 @@
 Name			:	libInline
 GitHub			:	https://github.com/TimRohr22/Cauldron/tree/master/libInline
 Roll20 Contact	:	timmaugh & The Aaron
-Version			:	1.0.0
-Last Update		:	2/3/2021
+Version			:	1.0.1
+Last Update		:	2/4/2021
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -17,11 +17,11 @@ const libInline = (() => {
     // ==================================================
     //		VERSION
     // ==================================================
-    const vrs = '1.0.0';
-    const vd = new Date(1612366188798);
+    API_Meta[apiproject].version = '1.0.1';
+    const vd = new Date(1612453098079);
     const apiproject = 'libInline';
     const versionInfo = () => {
-        log(`\u0166\u0166 ${apiproject} v${vrs}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
+        log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         return;
     };
     const logsig = () => {
