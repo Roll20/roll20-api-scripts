@@ -1,0 +1,14 @@
+{
+  "name": "SelectManager",
+  "script": "SelectManager.js",
+  "version": "0.0.4",
+  "description": "SelectManager stores the selected, who, and playerid properties from the last user-generated message (as opposed to API generated), and makes them available for another script to retrieve. This solves the problem of an API-generated message not having the original array of selected tokens, for instance. \r\rFor more information, see the SelectManager README file at the Roll20 GitHub repo.",
+  "authors": "timmaugh, The Aaron",
+  "roll20userid": "5962076, 104025",
+  "useroptions": [],
+  "dependencies": [],
+  "modifies": {
+    "state.SelectManager": "read, write"
+  },
+  "conflicts": []
+}
