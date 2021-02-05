@@ -1,0 +1,12 @@
+{
+  "name": "DiscreteWhisper",
+  "script": "DiscreteWhisper.js",
+  "version": "1.1.0",
+  "description": "DiscreteWhisper gives the ability to send a single command to the API and produce individual, differentiated whispers to various targets, including action buttons.\r\rFor more information, see the README file at the Roll20 GitHub repo.",
+  "authors": "timmaugh",
+  "roll20userid": "5962076",
+  "useroptions": [],
+  "dependencies": [],
+  "modifies": [],
+  "conflicts": []
+}
