@@ -6,7 +6,7 @@
   "authors": "timmaugh",
   "roll20userid": "5962076",
   "useroptions": [],
-  "dependencies": [ "libinline" ],
+  "dependencies": [ "libInline" ],
   "modifies": {
     "state.APILogic": "read, write",
     "attribute.characterid": "read",
