@@ -2,7 +2,7 @@
   "name": "InsertArg",
   "script": "InsertArg.js",
   "version": "1.5.1",
-  "description": "InsertArg provides a command-line interface for accessing various components of a Roll20 game from the chat interface. It can build command lines on the fly, or modify existing lines by use of hooks in the source text.\r\rFor more information, see the README file at the Roll20 GitHub repo.",
+  "description": "InsertArg provides a command-line interface for accessing various components of a Roll20 game from the chat interface. It can build command lines on the fly, or modify existing lines by use of hooks in the source text.\r\rFor more information, see the original thread in the API forum:\r\rhttps://app.roll20.net/forum/post/9097236/script-insertarg-script-preamp-siege-engine-menu-maker-command-line-constructor/",
   "authors": "timmaugh",
   "roll20userid": "5962076",
   "useroptions": [],
