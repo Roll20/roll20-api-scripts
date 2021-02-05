@@ -971,3 +971,7 @@ selectmanager:
 apilogic:
   - "APILogic"
   - "Utility"
+
+discretewhisper:
+  - "DiscreteWhisper"
+  - "Utility"
