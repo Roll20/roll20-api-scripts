@@ -7,7 +7,8 @@
     "authors": "Robin Kuiper",
     "roll20userid": "1226016",
     "useroptions": [],
-    "dependencies": {
+    "dependencies": [],
+    "modifies": {
         "state.TEMPLATE": "read,write",
         "attribute.current": "read",
         "graphic": "read,write",
@@ -15,6 +16,5 @@
         "path": "read,write",
         "page": "read,write"
     },
-    "modifies": {},
     "conflicts": []
 }

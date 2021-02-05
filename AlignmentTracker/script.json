@@ -8,10 +8,10 @@
     "roll20userid": "1226016",
     "patreon": "https://www.patreon.com/robinkuiper",
     "useroptions": [],
-    "dependencies": {
+    "dependencies": [],
+    "modifies": {
         "state.ALIGNMENTTRACKER": "read,write",
         "attribute.current": "read,write"
     },
-    "modifies": {},
     "conflicts": []
 }
