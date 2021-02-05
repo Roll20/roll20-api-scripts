@@ -975,3 +975,7 @@ apilogic:
 discretewhisper:
   - "DiscreteWhisper"
   - "Utility"
+
+insertarg:
+  - "InsertArg"
+  - "Utility"
