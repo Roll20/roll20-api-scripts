@@ -6,7 +6,14 @@ Roll20 Contact	:	timmaugh
 Version			:	1.1.0
 Last Update		:	11/12/2020
 =========================================================
+*/
+var API_Meta = API_Meta || {};
+API_Meta.DiscreteWhisper = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
+{
+    try { throw new Error(''); } catch (e) { API_Meta.DiscreteWhisper.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (13)); }
+}
 
+/*
 COMMAND LINE EXAMPLE:
 !w --character|character|character --any text {{aside|character|character}} more text {{Aside|character}} still more text --{{all/aside/Aside}}Button Label|
 
@@ -20,14 +27,15 @@ BUTTONS:
 
 */
 
-const discretewhisper = (() => {
+const DiscreteWhisper = (() => {
     // ==================================================
     //		VERSION
     // ==================================================
-    const vrs = '1.1.0';
+    const apiproject = 'DiscreteWhisper';
+    API_Meta[apiproject].version = '1.1.0';
     const vd = new Date(1605213957253);
     const versionInfo = () => {
-        log('\u0166\u0166 DiscreteWhisper v' + vrs + ', ' + vd.getFullYear() + '/' + (vd.getMonth() + 1) + '/' + vd.getDate() + ' \u0166\u0166');
+        log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         return;
     };
     const logsig = () => {
@@ -60,7 +68,6 @@ const discretewhisper = (() => {
     // ==================================================
     //		TABLES AND DEFINITIONS
     // ==================================================
-    const apiproject = 'discretewhisper';
     const msgtable = '<div style="width:100%;"><div style="border-radius:10px;border:2px solid #000000;background-color:__bg__; margin-right:16px; overflow:hidden;"><table style="width:100%; margin: 0 auto; border-collapse:collapse;font-size:12px;">__TABLE-ROWS__</table></div></div>';
     const msg1header = '<tr style="border-bottom:1px solid #000000;font-weight:bold;text-align:center; background-color:__bg__; line-height: 22px;"><td>__cell1__</td></tr>';
     const msg1row = '<tr style="background-color:__bg__;"><td style="padding:4px;__row-css__">__cell1__</td></tr>';
@@ -424,4 +431,4 @@ const discretewhisper = (() => {
     };
 
 })();
-
+{ try { throw new Error(''); } catch (e) { API_Meta.DiscreteWhisper.lineCount = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - API_Meta.DiscreteWhisper.offset); } }

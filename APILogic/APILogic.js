@@ -22,7 +22,7 @@ const APILogic = (() => {
     API_Meta[apiproject].version = '1.0.1';
     const vd = new Date(1612452888987);
     const versionInfo = () => {
-        log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta.APILogic.offset}`);
+        log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         return;
     };
     const logsig = () => {

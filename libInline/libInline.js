@@ -17,9 +17,9 @@ const libInline = (() => {
     // ==================================================
     //		VERSION
     // ==================================================
+    const apiproject = 'libInline';
     API_Meta[apiproject].version = '1.0.1';
     const vd = new Date(1612453098079);
-    const apiproject = 'libInline';
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         return;

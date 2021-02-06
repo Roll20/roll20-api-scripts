@@ -7,20 +7,26 @@ Roll20 Contact	:	timmaugh
                     COMPONENTS
 ---------------------------------------------------------
 Name			:	Core Engine     Core Lib        XRay
-Version			:	1.5.1           1.5.1           1.2
-Last Update		:	12/3/2020       12/2/2020       9/16/2020
+Version			:	1.5.2           1.5.1           1.2
+Last Update		:	2/6/2020       12/2/2020       9/16/2020
 =========================================================
-
 */
+var API_Meta = API_Meta || {};
+API_Meta.InsertArg = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
+{
+    try { throw new Error(''); } catch (e) { API_Meta.InsertArg.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (17)); }
+}
+
 const ia = (() => {
 
     // ==================================================
     //		VERSION
     // ==================================================
-    const vrs = '1.5.1';
-    const vd = new Date(1607054249663);
+    const apiproject = 'InsertArg';
+    API_Meta[apiproject].version = '1.5.2';
+    const vd = new Date(1612647328500);
     const versionInfo = () => {
-        log('\u0166\u0166 InsertArg v' + vrs + ', ' + vd.getFullYear() + '/' + (vd.getMonth() + 1) + '/' + vd.getDate() + ' \u0166\u0166');
+        log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         return;
     };
     const logsig = () => {
@@ -203,7 +209,7 @@ const ia = (() => {
         let msg = `<table style="width:100%;">\
                         <tr>\
                             <td style="font-weight:bold;">InsertArg</td>\
-                            <td style="text-align:right;font-weight:bold;">v&nbsp;${vrs}&nbsp;&nbsp;</td>\
+                            <td style="text-align:right;font-weight:bold;">v&nbsp;${API_Meta[apiproject].version}&nbsp;&nbsp;</td>\
                         </tr>\
                         <tr>\
                             <td style="font-weight:bold;">Core Library</td>\
@@ -2997,3 +3003,4 @@ const xray = (() => {
     };
 
 })();
+{ try { throw new Error(''); } catch (e) { API_Meta.InsertArg.lineCount = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - API_Meta.InsertArg.offset); } }
