@@ -11,7 +11,7 @@
   "modifies": {       
     "character.*": "read",
     "path.*": "read",
-    "graphic.*": "read,write",    
+    "graphic.*": "read, write",    
     "player.displayname": "read"
   },
   "conflicts": [],
