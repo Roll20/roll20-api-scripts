@@ -89,8 +89,8 @@ The above would return, for example:
     repeating_resources_-M5sYfPs0x3LgGSdmXC1_resource_name
 
 ...representing the attribute for `resource_name` where the resource represented "arrows". The name returned is the name of the field referenced as the last element in the structure, whatever that is. So the following would return the name of the `resource_quantity` attribute for the same "arrows" resource:
-    {& define *name|Bob the Slayer|resources|[resource_name="arrows"]|resource_quantity }
 
+    {& define *name|Bob the Slayer|resources|[resource_name="arrows"]|resource_quantity }
 
 #### Text as Condition
 If you need to include space in a bit of text to include as one side of a comparison operation, you should enclose the entire text string in either single quotes, double quotes, or tick marks. With three options available, you should have an option available even if the text you need to include might, itself have an instance of one of those characters. For instance, the following would not evaluate properly, because of the presence of the apostrophe in the word "don't":
@@ -289,4 +289,5 @@ If `smooth_jazz` exists for Bob the Slayer, the above example will run the `some
 ## Change Log:
 
 **Version 1.0.0** - Initial Release
+
 
