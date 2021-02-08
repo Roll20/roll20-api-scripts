@@ -82,7 +82,7 @@ The current special tests are:
 The above tests the existence of the `weaponsmith` attribute for Bob the Slayer, whether the `max` value is an integer, and whether that `max` value is over 10.
 **NAME:** Sometimes (especially for a repeating item), it is helpful to return the name of the thing on the sheet. Used in a definition, this give you an easy way to retrieve the value of a repeating item in other scripts. To get the name of a field from a repeating element, include `name` in the same position.
 
-    {& define *name|Bob the Slayer|resources|[resource_name="arrows"]|resource_name }
+    {& define ([arrowsattr] *name|Bob the Slayer|resources|[resource_name="arrows"]|resource_name ) }
 
 The above would return, for example:
 
@@ -90,8 +90,8 @@ The above would return, for example:
 
 ...representing the attribute for `resource_name` where the resource represented "arrows". The name returned is the name of the field referenced as the last element in the structure, whatever that is. So the following would return the name of the `resource_quantity` attribute for the same "arrows" resource:
 
-    {& define *name|Bob the Slayer|resources|[resource_name="arrows"]|resource_quantity }
-
+    {& define ([arrowsleft] *name|Bob the Slayer|resources|[resource_name="arrows"]|resource_quantity ) }
+For more information on using definitions, see **Use DEFINE Tag**, below.
 #### Text as Condition
 If you need to include space in a bit of text to include as one side of a comparison operation, you should enclose the entire text string in either single quotes, double quotes, or tick marks. With three options available, you should have an option available even if the text you need to include might, itself have an instance of one of those characters. For instance, the following would not evaluate properly, because of the presence of the apostrophe in the word "don't":
 
