@@ -3,8 +3,8 @@
 Name			:	APILogic
 GitHub			:	https://github.com/TimRohr22/Cauldron/tree/master/APILogic
 Roll20 Contact	:	timmaugh
-Version			:	1.1.0
-Last Update		:	2/8/2021
+Version			:	1.0.1
+Last Update		:	2/4/2021
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -19,8 +19,8 @@ const APILogic = (() => {
     //		VERSION
     // ==================================================
     const apiproject = 'APILogic';
-    API_Meta[apiproject].version = '1.1.0';
-    const vd = new Date(1612795921938);
+    API_Meta[apiproject].version = '1.0.1';
+    const vd = new Date(1612452888987);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         return;
@@ -122,11 +122,6 @@ const APILogic = (() => {
             a.lastIndex = 0;
         }, ret);
         return ret;
-    };
-    const internalTestLib = {
-        'int': (v) => +v === +v && parseInt(parseFloat(v, 10), 10) == v,
-        'num': (v) => +v === +v,
-        'tru': (v) => v == true
     };
 
     const charFromAmbig = (info) => {                                       // find a character where info is an identifying piece of information (id, name, or token id)
@@ -237,8 +232,6 @@ const APILogic = (() => {
             namerx = /^\[(?<groupname>[^\s]+?)]\s*/i,
             sheetitemrx = /^(?<negation>!?)\s*(?<type>(?:@|%))(?<operation>[^\s@%|]*)\|(?<character>[^|]+?)\|(?<item>[^)\]\s=~<>!&\|]+)\s*(?=!=|!~|>=|<=|[=~><]|&&|\|\||\)|})/i,
             rptgitemrx = /^(?<negation>!?)\s*(?<type>(?:\*))(?<operation>[^\s*|]*)\|(?<character>[^|]+?)\|(?<section>[^\s|]+)\|\[\s*(?<pattern>.+?)\s*]\s*\|(?<valuesuffix>[^)\]\s=~<>!&\|]+)\s*(?=!=|!~|>=|<=|[=~><]|&&|\|\||\)|})/i,
-            defsheetitemrx = /^(?<negation>!?)\s*(?<type>(?:@|%))(?<operation>[^\s@%|]*)\|(?<character>[^|]+?)\|(?<item>[^)\]\s=~<>!&\|]+)\s*/i,
-            defrptgitemrx = /^(?<negation>!?)\s*(?<type>(?:\*))(?<operation>[^\s*|]*)\|(?<character>[^|]+?)\|(?<section>[^\s|]+)\|\[\s*(?<pattern>.+?)\s*]\s*\|(?<valuesuffix>[^)\]\s=~<>!&\|]+)\s*/i,
             comprx = /^(?<operator>(?:>=|<=|~|!~|=|!=|<|>))\s*/,
             operatorrx = /^(?<operator>(?:&&|\|\|))\s*/,
             groupendrx = /^\)\s*/,
@@ -257,8 +250,6 @@ const APILogic = (() => {
             texttm = { rx: textrx, type: 'text' },
             sheetitemtm = { rx: sheetitemrx, type: 'sheetitem' },
             rptgitemtm = { rx: rptgitemrx, type: 'rptgitem' },
-            defsheetitemtm = { rx: defsheetitemrx, type: 'sheetitem' },
-            defrptgitemtm = { rx: defrptgitemrx, type: 'rptgitem' },
             defblocktm = { rx: defblockrx, type: 'defblock' };
 
         const endtokenregistry = {
@@ -524,55 +515,12 @@ const APILogic = (() => {
             let logcolor = 'yellow';
             let index = 0;
             let res = assertstart(definitionrx).exec(c.cmd);
-            let defres;
-            let definition = '';
-            let valtotest = '';
-            let retrieve = '';
-            let o = {};
             if (res) {
                 nestlog(`TERM INPUT: ${c.cmd}`, c.indent, logcolor);
                 let tokens = [];
                 let loopstop = false;
                 while (!loopstop) {
-                    defres = getfirst(res.groups.definition, defsheetitemtm, defrptgitemtm, texttm);
-                    if (defres.type === 'text') {
-                        definition = res.groups.definition;
-                    } else { // sheet item
-                        // determine what to test; also what to retrieve if another value isn't specified
-                        if (['@', '*'].includes(defres.groups.type) && !defres.groups.operation.includes('max')) {
-                            retrieve = 'current';
-                            valtotest = 'current';
-                        } else if (['@', '*'].includes(defres.groups.type)) {
-                            retrieve = 'max';
-                            valtotest = 'max';
-                        } else {
-                            retrieve = 'action';
-                            valtotest = 'action';
-                        }
-                        // determine if a different retrievable field is requested
-                        if (defres.groups.operation.includes('name')) {
-                            retrieve = 'name';
-                        }
-                        // go get the value
-                        o = getSheetItem(defres);
-                        if (!o) {
-                            definition = '';
-                        } else {
-                            definition = o.get(valtotest);
-                            let metavalue = true;
-                            for (const test in internalTestLib) {
-                                if (defres.groups.operation.includes(test)) {
-                                    metavalue = metavalue && internalTestLib[test](definition);
-                                }
-                                if (!metavalue) {
-                                    definition = '';
-                                    break;
-                                }
-                            }
-                            if (definition && valtotest !== retrieve) definition = o.get(retrieve);
-                        }
-                    }
-                    tokens.push({ term: res.groups.term, definition: definition });
+                    tokens.push({ term: res.groups.term, definition: res.groups.definition });
                     nestlog(`==TERM DEFINED: ${res.groups.term} = ${res.groups.definition}`);
                     index += res[0].length;
                     res = assertstart(definitionrx).exec(c.cmd.slice(index));
@@ -729,17 +677,16 @@ const APILogic = (() => {
             // comparable or usable text is different for text vs sheet item vs rpt item
             let o = {};
             let retrieve = '';	// retrievable field for attributes and abilities
-            // internalTestLib moved to outer scope
-
+            let internalTestLib = {
+                'i': (v) => +v === +v && parseInt(parseFloat(v, 10), 10) == v,
+                'n': (v) => +v === +v,
+                't': (v) => v == true
+            };
             t.contents.forEach(item => {
                 if (item.type !== 'text') {
-                    if (item.groups.operation.includes('name')) {
-                        retrieve = 'name';
-                    } else {
-                        if (['@', '*'].includes(item.groups.type) && !item.groups.operation.includes('max')) retrieve = 'current';
-                        else if (['@', '*'].includes(item.groups.type)) retrieve = 'max';
-                        else retrieve = 'action';
-                    }
+                    if (['@', '*'].includes(item.groups.type) && !item.groups.operation.includes('m')) retrieve = 'current';
+                    else if (['@', '*'].includes(item.groups.type)) retrieve = 'max';
+                    else retrieve = 'action';
                 }
                 item.metavalue = true;
                 switch (item.type) {
@@ -977,7 +924,7 @@ const APILogic = (() => {
         }
 
         if (testConstructs(preserved.content)) {
-            // replace inline rolls tagged with .value
+            // replace inline rolls tagged with .value or .table
             getValues(preserved);
 
             let o = ifTreeParser(preserved.content);
