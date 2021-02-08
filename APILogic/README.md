@@ -64,22 +64,34 @@ Last, note that if there is space in the text provided as the right hand side of
 If you don't know the suffixes of the sub-attributes for a repeating list, I suggest you utilize a script like [XRay](https://app.roll20.net/forum/post/9097236/script-insertarg-script-preamp-siege-engine-menu-maker-command-line-constructor/) (part of the InsertArg script) to help identify the naming parts you need.
 ##### Sheet Item Reminder
 Remember, Roll20 will parse standard calls to sheet items before the message is handed off to the API, so if you *know* an attribute exists, for instance, it could be simpler for you to use the standard syntax to trigger the Roll20 parser to derive the value. On the other hand, using the APILogic syntax to access the sheet item provides an implicit test for whether the item exists at all. Rather than derailing the message, that condition simply evaluates as false, and processing continues.
-##### Special Tests and Returning "max"
+##### Special Tests and Returning "max" or "name"
 Part of the implicit test performed on a sheet item is whether it exists (it's hard for an attribute to be 3-or-greater if it doesn't exist in the first place). Therefore, to test whether an item exists, you need only include it as a unary test in a condition set:
 
     {& if @|Bob the Slayer|weaponsmith }
-Other tests can be identified by including characters between the `@, %,` or `*` and the `|`. For instance, to also test whether the `weaponsmith` attribute is an integer, include an `i`:
+Other tests can be identified by including characters between the `@, %,` or `*` and the `|`. For instance, to also test whether the `weaponsmith` attribute is an integer, include an `int`:
 
-    {& if @i|Bob the Slayer|weaponsmith }
+    {& if @int|Bob the Slayer|weaponsmith }
 The current special tests are:
 
-    i	=>	integer
-    n	=>	number
-To return the max value, utilize an `m` in the same position, with or without other special tests.
+    int	=>	integer
+    num	=>	number
+**MAX:** To return the max value, utilize an `max` in the same position, with or without other special tests.
 
-    {& if @im|Bob the Slayer|weaponsmith > 10 }
+    {& if @intmax|Bob the Slayer|weaponsmith > 10 }
 
 The above tests the existence of the `weaponsmith` attribute for Bob the Slayer, whether the `max` value is an integer, and whether that `max` value is over 10.
+**NAME:** Sometimes (especially for a repeating item), it is helpful to return the name of the thing on the sheet. Used in a definition, this give you an easy way to retrieve the value of a repeating item in other scripts. To get the name of a field from a repeating element, include `name` in the same position.
+
+    {& define *name|Bob the Slayer|resources|[resource_name="arrows"]|resource_name }
+
+The above would return, for example:
+
+    repeating_resources_-M5sYfPs0x3LgGSdmXC1_resource_name
+
+...representing the attribute for `resource_name` where the resource represented "arrows". The name returned is the name of the field referenced as the last element in the structure, whatever that is. So the following would return the name of the `resource_quantity` attribute for the same "arrows" resource:
+    {& define *name|Bob the Slayer|resources|[resource_name="arrows"]|resource_quantity }
+
+
 #### Text as Condition
 If you need to include space in a bit of text to include as one side of a comparison operation, you should enclose the entire text string in either single quotes, double quotes, or tick marks. With three options available, you should have an option available even if the text you need to include might, itself have an instance of one of those characters. For instance, the following would not evaluate properly, because of the presence of the apostrophe in the word "don't":
 
@@ -277,3 +289,4 @@ If `smooth_jazz` exists for Bob the Slayer, the above example will run the `some
 ## Change Log:
 
 **Version 1.0.0** - Initial Release
+
