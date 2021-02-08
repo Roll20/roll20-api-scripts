@@ -10,7 +10,7 @@
   "dependencies": [],
   "modifies": {       
     "character.*": "read",
-    "graphic.*": "read,write",
+    "graphic.*": "read, write",
     "ability.*": "read",
     "player.displayname": "read"
   },
