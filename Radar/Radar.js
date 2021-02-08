@@ -53,6 +53,7 @@
         --units|        <u/units/squares/square/hexes/hex> for "u", or <anything else> to just use map settings, e.g. ft, km, miles
                                                         //Only affects Display output
                                                         //for GRIDLESS MAP, this command must be included or else all results will be INFINITY
+        --visible|       <yes/true/1> or <no/false/0>   //Default=true. Set to false/no/0 to prevent the drawing of the wavefront animation
         //--------------------------------------------------------------------------------------
         //THE FOLLOWING TWO COMMANDS ARE USED WHEN CALLING RADAR FROM ANOTHER API SCRIPT 
         //  e.g. sendChat(scriptName, `!radar --selectedID|${msg.selected[0]._id} --playerID|${msg.playerid}`
@@ -101,7 +102,7 @@
 const Radar = (() => {
     
     const scriptName = "Radar";
-    const version = '0.5';
+    const version = '0.6';
     
     const PING_NAME = 'RadarPing'; 
     
@@ -634,6 +635,7 @@ const Radar = (() => {
         let includeTotalDist = false;   //inlude the total range in the output, or just directional (X & Y distances)
         let hasSight = false;       //Will the RadarPing token grant temporary sight to the 
         let includeGM = false;      //Send a copy of the ouput to the GM chat if player calls script
+        let seeAnimation = true;
         
         let gmToks = [];            //array of all tokens on GM layer
         let objToks = [];           //array of all tokens on object layer
@@ -779,6 +781,14 @@ const Radar = (() => {
                             break;
                         case "playerid":
                             playerID = param;
+                            break;
+                        case "visible":
+                            let v = param.toLowerCase();
+                            if (v.includes('true') || v.includes('yes') || v.includes('1') ) {
+                                seeAnimation = true;
+                            } else if (v.includes('false') || v.includes('no') || v.includes('0')) {
+                                seeAnimation = false;
+                            }
                             break;
                         default:
                             retVal.push('Unexpected argument identifier (' + option + '). Choose from: (' + validArgs + ')');
@@ -1036,8 +1046,8 @@ const Radar = (() => {
                 while ( radius <= range ) {
                     pathstring = buildCircle(radius);
                     
-                    let useAnimation = true;
-                    if (useAnimation === true) {
+                    //let seeAnimation = true;
+                    if (seeAnimation === true) {
                         promise = new Promise((resolve, reject) => {
                             setTimeout(() => {
                                 drawWave(pageID, pathstring, "transparent", "#ff0000", "objects", 3, radius, originX, originY, waveLife);
