@@ -19,12 +19,11 @@ var ImperatorAPI = (function()
         heading: 'text-align: center; text-decoration: underline; font-size: 16px; line-height: 24px;'
     };
 
-	function getWho(who)
-	{
-		return who.split(' (GM)')[0];
-	}
-
-	// !dImperator>5_<skillName>-<skillValue>_<caracName>-<caracValue>_<dice mod.>_<malus>
+	/**
+	 * Whisper the help for this API to a player.
+	 * 
+	 * @param {String} who Name of the user asking for the help.
+	 */
 	function showHelp(who)
 	{
 		const command = "!dImperator>{difficulte}_{comp}-{compV}_{carac}-{caracV}_{modifDes}_{malus}";
@@ -50,18 +49,18 @@ var ImperatorAPI = (function()
 		sendChat(script_name, `/w "${who}" ${output}`);
 	}
 
-    /*
-	 * Give a style for a single result.
+    /**
+	 * Color a single result.
 	 *
-	 * @param d (Integer) result of a d10
+	 * @param {Integer} d Result of a d10
 	 */
 	function colorResult(d)
 	{
-	    if(d == 1) {
+	    if (d == 1) { // critical failure
             return "<span style='color: red;'>" + d.toString() + "</span>";
-        } else if (d == 10) {
+        } else if (d == 10) { // critical success
             return "<span style='color: green;'>" + d.toString() + "</span>";
-        } else {
+        } else { // regular roll
             return d.toString();
         }
 	}
@@ -69,14 +68,96 @@ var ImperatorAPI = (function()
 	/**
 	 * Check if the result is a failure
 	 * 
-	 * @param d (Integer) result of a d10
-     * @param t (Integer) threshold
+	 * @param {Integer} d Result of a d10
+     * @param {Integer} t Difficulty threshold
 	 */
 	function resultDice(d, t)
 	{
-        if (d == 1) return -1;
-        if (d == 10) return 2;
+        if (d == 1) return -1; // critical failure
+        if (d == 10) return 2; // critical success
         return d >= t;
+	}
+
+	/**
+	 * Roll for a skill check
+	 * 
+	 * @param {String}  playerID			  id of the player who asked for the check
+	 * @param {Object}  parameters 			  Parameters for the skill check
+	 * @param {Integer} parameters.difficulty Difficulty threshold of the check
+	 * @param {String}  parameters.skillName  Name of the skill
+	 * @param {Integer} parameters.skillValue Value of the skill
+	 * @param {String}  parameters.abName 	  Name of the ability (Corpus, Charisma, Sensus, Spiritus)
+	 * @param {Integer} parameters.abValue 	  Value of the ability
+	 * @param {Integer} parameters.diceMod 	  Dice modifiers
+	 * @param {Integer} parameters.malus 	  Malus modifier (as a positive value)
+	 * @param {Integer} parameters.nDices 	  Malus modifier (as a positive value)
+	 */
+	function skillCheck(playerID, parameters)
+	{
+		// roll dices and construct the string showing all results
+		var resultString = "(";
+		var total = 0;
+		for(var d = 0; d < parameters.nDices; ++d) {
+			let roll = randomInteger(10);
+			total += resultDice(roll, parameters.difficulty);
+			if (d < parameters.nDices - 1)
+				resultString += colorResult(roll) + "+";
+			else
+				resultString += colorResult(roll);
+		}
+		resultString += ")";
+
+		var totalHtml = "";
+		totalHtml += "<span class=\"inlinerollresult showtip tipsy\" title=\"Rolling " + parameters.nDices + "d10>" + parameters.difficulty + " = " + resultString + "\" style=\"padding: 0 3px; font-weight: bold; cursor: help; font-size: 1.1em;\">" + total.toString() + "</span>";
+
+		var message = '';
+		message += "&{template:competence} "
+				+ "{{carac_name=" + parameters.abName + "}} "
+				+ "{{carac_value=" + parameters.abValue + "}} "
+				+ "{{comp_name=" + parameters.skillName + "}} "
+				+ "{{comp_value=" + parameters.skillValue + "}} "
+				+ "{{malus=" + parameters.malus + "}} "
+				+ "{{modif_des=" + parameters.diceMod + "}} "
+				+ "{{result=" + totalHtml + "}}";
+
+		sendChat('player|' + playerID, '/direct ' + message);
+	}
+
+	/**
+	 * Parse the parameters of the command line
+	 * 
+	 * @param {String} 	  commandLine Respecting scheme "!dImperator>{difficulte}{delimiter}{comp}-{compV}{delimiter}{carac}-{caracV}{delimiter}{modifDes}{delimiter}{malus}"
+	 * @param {Character} delimiter 
+	 */
+	function parseSkillCheck(commandLine, delimiter)
+	{
+		let words = commandLine.split(delimiter);
+		let parameters = {};
+
+		// get the difficulty threshold
+		var gtIndex = words[0].indexOf('>');
+		parameters.difficulty = parseInt(words[0].substring(gtIndex+1));
+
+		// get the skill data
+		var skill = words[1].split('-');
+		parameters.skillName = skill[0];
+		parameters.skillValue = parseInt(skill[1]);
+
+		// get the ability data
+		var ability = words[2].split('-');
+		parameters.abName = ability[0];
+		parameters.abValue = parseInt(ability[1]);
+
+		// get the dice modifiers
+		parameters.diceMod = parseInt(words[3]);
+
+		// get the malus
+		parameters.malus = parseInt(words[4]);
+
+		// get the number of dices
+		parameters.nDices = parameters.skillValue + parameters.abValue + parameters.diceMod - parameters.malus;
+
+		return parameters;
 	}
 
 	function registerEventHandlers()
@@ -95,74 +176,11 @@ var ImperatorAPI = (function()
 		// Check if we are dealing with a [!dImperator>5_<skillName>-<skillValue>_<caracName>-<caracValue>_<dice mod.>_<malus>] command.
 		if (msg.type === "api" && msg.content.search(/!dImperator>\d/) !== -1)
 		{
-			var content = msg.content;
-			var words = content.split('_');
-
-			// Sanity check
-			if (words.length > 0)
-			{
-				// Sanity check
-				if (words[0].match(/!dImperator>\d/))
-				{
-                    // get the skill data
-                    var skill = words[1].split('-');
-                    var skillName = skill[0];
-                    var skillValue = parseInt(skill[1]);
-
-                    // get the carac data
-                    var carac = words[2].split('-');
-                    var caracName = carac[0];
-                    var caracValue = parseInt(carac[1]);
-
-                    // get the dice modifiers
-                    var diceMod = parseInt(words[3]);
-
-                    // get the malus
-                    var malus = parseInt(words[4]);
-
-				    // get the number of dices
-				    var numberOfDices = skillValue + caracValue + diceMod - malus;
-
-                    // get the difficulty threshold
-                    var gtIndex = words[0].indexOf('>');
-                    var difficulty = parseInt(words[0].substring(gtIndex+1));
-				    
-				    // roll dices
-				    var rolls = [];
-                    var resultString = "(";
-				    var total = 0;
-				    for(var d = 0; d < numberOfDices; ++d) {
-				        rolls.push(randomInteger(10));
-				        total += resultDice(rolls[d], difficulty);
-                        if (d < numberOfDices - 1)
-                            resultString += colorResult(rolls[d]) + "+";
-                        else
-                            resultString += colorResult(rolls[d]);
-				    }
-                    resultString += ")";
-
-					var totalHtml = "";
-					totalHtml += "<span class=\"inlinerollresult showtip tipsy\" title=\"Rolling " + numberOfDices + "d10>" + difficulty + " = " + resultString + "\" style=\"padding: 0 3px; font-weight: bold; cursor: help; font-size: 1.1em;\">" + total.toString() + "</span>";
-					log(totalHtml);
-
-                    var message = '';
-                    message += "&{template:competence} "
-                            + "{{carac_name=" + caracName + "}} "
-                            + "{{carac_value=" + caracValue + "}} "
-                            + "{{comp_name=" + skillName + "}} "
-                            + "{{comp_value=" + skillValue + "}} "
-                            + "{{malus=" + malus + "}} "
-                            + "{{modif_des=" + diceMod + "}} "
-                            + "{{result=" + totalHtml + "}} "
-                            + "{{tooltip=" + resultString + "}}";
-
-                    sendChat('player|' + msg.playerid, '/direct ' + message);
-				}
-			}
+			skillCheck(msg.playerid, parseSkillCheck(msg.content, '_'));
 		}
 		else if(msg.type === "api" && msg.content.search(/!imperator --help/) !== -1)
 		{
-			showHelp(getWho(msg.who));
+			showHelp(msg.who.split(' (GM)')[0]);
 		}
 	}
 
