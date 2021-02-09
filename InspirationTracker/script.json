@@ -8,12 +8,12 @@
     "roll20userid": "1226016",
     "patreon": "https://www.patreon.com/robinkuiper",
     "useroptions": [],
-    "dependencies": {
+    "dependencies": [],
+    "modifies": {
         "state.INSPIRATIONTRACKER": "read,write",
         "attribute": "read",
         "attribute.current": "read,write",
         "graphic.statusmarkers": "write"
     },
-    "modifies": {},
     "conflicts": []
 }
