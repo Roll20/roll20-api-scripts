@@ -400,7 +400,7 @@ const ScriptCards = (() => {
 									if (msg.selected) {
 										for (var x=0; x < msg.selected.length; x++) {
 											var obj = getObj(msg.selected[x]._type, msg.selected[x]._id);
-											stringVariables[variableName + (x+1).toString()] = obj.get("name");
+											stringVariables[variableName + (x+1).toString()] = obj.get("id");
 										}
 										stringVariables[variableName + "Count"] = msg.selected.length.toString();
 										rollVariables[variableName + "Count"] = parseDiceRoll(msg.selected.length.toString());
