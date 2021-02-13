@@ -55,7 +55,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.12';
+    const version = '0.13';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -208,7 +208,7 @@ const SpawnDefaultToken = (() => {
             let UDL = page[0].get("dynamic_lighting_enabled");
             
             //set emitted light
-            if (UDL) {
+            if (UDL && lightRad !== -999) {
                 //Updated Dynamic Lighting
                 iLightRad = parseInt(lightRad);
                 iLightDim = parseInt(lightDim);
@@ -224,7 +224,7 @@ const SpawnDefaultToken = (() => {
                     baseObj.emits_low_light = true;
                     baseObj.low_light_distance = (iLightRad + iLightDim).toString();
                 }
-            } else if (lightRad !== "") {
+            } else if (lightRad !== -999) {
                 //Legacy Dynamic Lighting
                 baseObj.light_radius = lightRad;
                 baseObj.light_dimradius = lightDim;
@@ -1409,4 +1409,3 @@ const SpawnDefaultToken = (() => {
         registerEventHandlers();
     });
 })();
-
