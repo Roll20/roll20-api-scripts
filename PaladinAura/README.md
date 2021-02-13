@@ -8,7 +8,7 @@ Depreciated version (not optimized enough to work properly): [Roll20 Forum](http
 
 ## Notes
 
-The API is only compatible with the Roll20 D&D 5E OGL Sheet.
+The API is only compatible with the [D&D 5E by Roll20](wiki.roll20.net/D%26D_5E_by_Roll20) Sheet.
 
 The API only runs on the player-ribbon page.
 
@@ -33,6 +33,12 @@ When a saving throw is made using the Roll20 5E OGL Sheet template (even if the 
 Either leave a message on the [API Forum Post](https://app.roll20.net/forum/post/9112039/script-paladin-aura-5e-d-and-d-api/?pagenum=1) or a [New Issue Report](https://gitlab.com/LaytonGB/Paladin-Aura-API/-/issues/new "Create a new issue report") on GitLab and I'll reply as soon as I can.
 
 ## Updates
+
+1.1.2 - Bug fix for multi-class.
+
+1.1.1 - Remove accidental log that was left over from bug fix.
+
+1.1.0 - Patch a bug that causes a crash for some people (reason unknown).
 
 1.0.2 - Character sheet saving throws are now detected.
 
