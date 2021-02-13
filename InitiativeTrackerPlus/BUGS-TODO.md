@@ -23,5 +23,4 @@ Things to add/fix
 
 **Feature Requests**
 * Create functionality to use a command `!tj -menu` that returns a whispered message with buttons for the various functions (start/pause, list favs, add fav, etc)
-* Change '? Round 1' (which changes to '?? Round 1' when paused) to use a play button image |> and pause button image || instead.
 

@@ -16,6 +16,7 @@ An attempt to modernize Tracker Jacker and add new functionality as it becomes d
 * 2020-11-23 - Changed references to Tracker Jacker to Initiative Tracker Plus.  I am doing this to differentiate the new and drastically changing codebase from Ken L.'s original codebase so users that are happy with OG Tracker Jacker can continue to use it without confusion.
 * 2020-12-02 - Added a command to clear all statuses from a token.  `!itp -dispmultistatusconfig removeall` while the token(s) are selected, or a button appears on the edit message as well.
 * 2020-12-02 - Some minor code cleanup to make it easier for me to work with.
+* 2020-12-28 - Changed '? Round 1' (which changes to '?? Round 1' when paused) to use a play button image |> and pause button image || instead.
 
 
 **Commands:**  

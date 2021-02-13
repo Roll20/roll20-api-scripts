@@ -479,7 +479,12 @@ var InitiativeTrackerPlus = (function() {
 			{turnorder = JSON.parse(turnorder);}
 		var tracker;
 
-		if (tracker = _.find(turnorder, function(e,i) {if (parseInt(e.id) === -1 && parseInt(e.pr) === fields.round_separator_initiative && e.custom.match(/Round\s*\d+/)){return true;}})) {
+		if (tracker = _.find(turnorder, function(e,i) {
+			if (parseInt(e.id) === -1 && parseInt(e.pr) === fields.round_separator_initiative && e.custom.match(/Round\s*\d+/)){
+					return true;
+				}
+			}
+		)) {
 			// resume logic
 		} else {
 			turnorder.push({
@@ -3083,6 +3088,21 @@ var InitiativeTrackerPlus = (function() {
 					+ '<li style="padding-left: 10px;">'
 						+ 'Remove a status from a group of selected tokens given the name.'
 					+ '</li>'
+
+					+ '<br>'
+					+ '<div style="font-weight: bold;">'
+						+ '!itp -dispmultistatusconfig removeall'
+					+ '</div>'
+					+ '<li style="padding-left: 10px;">'
+						+ 'Remove all statuses from selected token(s).'
+					+ '</li>'
+					+ '<br>'
+					+ '<div style="font-weight: bold;">'
+						+ '!itp -purge'
+					+ '</div>'
+					+ '<li style="padding-left: 10px;">'
+						+ 'Remove all statuses from selected token(s).'
+					+ '</li>'
 					+ '<br>'
 					+ '<div style="font-weight: bold;">'
 						+ '!itp -edit'
@@ -3283,6 +3303,14 @@ var InitiativeTrackerPlus = (function() {
 				doDisplayFavConfig(args);
 			} else if (args.indexOf('-dispmultistatusconfig') === 0) {
 				args = args.replace('-dispmultistatusconfig','').trim();
+				var sel = [];
+				_.each(selected, function(e) {
+					sel.push(e._id);
+				});
+				var sel = sel.join(' %% ');
+				doDisplayMultiStatusConfig(args, sel);
+			} else if (args.indexOf('-purge') === 0) {
+				args = args.replace('-purge','removeall').trim();
 				var sel = [];
 				_.each(selected, function(e) {
 					sel.push(e._id);
