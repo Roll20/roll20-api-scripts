@@ -1,51 +1,5 @@
 /**
  * initiative_tracker_plus.js
- *
- * * Copyright 2015: Ken L.
- * * Copyright 2020: James C.
- * Licensed under the GPL Version 3 license.
- * http://www.gnu.org/licenses/gpl.html
- *
- * This script is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This script is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *
- * The goal of this script is to be an iniative tracker, that manages statuses,
- * effects, and durations.
- *
- * 1. It should advance the turn order and display a notification in chat with
- * optional toggles.
- *
- * 1.1 It should have the ability to announce rounds
- *
- * 2. It should allow some kind of underlay graphic with or without some kind of
- * underlay graphic like TurnMarker.js
- *
- * 3. It should have the ability to tie status conditions to tokens with concise
- * visual cues to relay to chat (IE fog cloud has X turns remaining on it or has lasted N turns).
- *
- * 4. It should be extensible to other scripts by exposing a call structure for
- * a speedier access of innate functions without cluttering up the message queue. TODO
- *
- * 5. It should be verbose in terms of error reporting where all are recoverable.
- *
- * 6. It should save turn information within the state object to ensure recovery
- * of all effects in the event of API connection failure.
- *
- * 7. It should be lightweight with a minimal amount of passed messages.
- *
- *
- *
- *
  */
 
 /************************************************************************************
@@ -60,8 +14,9 @@
 var statusMarkers = [];
 var InitiativeTrackerPlus = (function() {
 	'use strict';
-	var version = 1.24,
+	var version = 1.25,
 		author = 'James C. (Chuz)',
+		lastUpdated = 'Feb 13 2021',
 		pending = null;
 
 	var ITP_StateEnum = Object.freeze({
@@ -86,7 +41,6 @@ var InitiativeTrackerPlus = (function() {
 		trackerImgRatio: 2.25,
 		rotation_degree: 15,
 		rotation_rate: 250, // time between rotation updates (lower number == faster rotation, likely will have negative impact on performance)
-
 		round_separator_initiative: -100, // the initiative value of the round separator, defaults to -100 to display [?Round # -100] in the turn tracker
 	};
 
@@ -267,14 +221,50 @@ var InitiativeTrackerPlus = (function() {
 	 * Init
 	 */
 	var init = function() {
-		if (!state.initiative_tracker_plus)
-			{state.initiative_tracker_plus = {};}
-		if (!state.initiative_tracker_plus.effects)
-			{state.initiative_tracker_plus.effects = {};}
-		if (!state.initiative_tracker_plus.statuses)
-			{state.initiative_tracker_plus.statuses = [];}
-		if (!state.initiative_tracker_plus.favs)
-			{state.initiative_tracker_plus.favs = {};}
+		if (!state.initiative_tracker_plus) {
+			state.initiative_tracker_plus = {};
+		}
+		if (!state.initiative_tracker_plus.effects) {
+			state.initiative_tracker_plus.effects = {};
+		}
+		if (!state.initiative_tracker_plus.statuses) {
+			state.initiative_tracker_plus.statuses = [];
+		}
+		if (!state.initiative_tracker_plus.favs) {
+			state.initiative_tracker_plus.favs = {};
+		}
+
+		if (!state.initiative_tracker_plus.config) {
+			state.initiative_tracker_plus.config = {};
+			state.initiative_tracker_plus.config.fields = {};
+			state.initiative_tracker_plus.config.flags = {};
+			state.initiative_tracker_plus.config.design = {};
+		}
+
+		// if the defaults are defined in the state copy them from the state to the used vars
+		// do this for fields, flags, and design
+		Object.keys(fields).forEach( function(key) {
+			if(state.initiative_tracker_plus.config.fields[key]) {
+				fields[key] = state.initiative_tracker_plus.config.fields[key];
+			}
+		});
+
+
+		Object.keys(flags).forEach( function(key) {
+			if(state.initiative_tracker_plus.config.flags[key]) {
+				flags[key] = state.initiative_tracker_plus.config.flags[key];
+			}
+		});
+
+
+		Object.keys(design).forEach( function(key) {
+			if(state.initiative_tracker_plus.config.design[key]) {
+				design[key] = state.initiative_tracker_plus.config.design[key];
+			}
+		});
+
+
+		log('-=> IT+ v'+version+' <=- ['+lastUpdated+']');
 	};
 
 
@@ -283,11 +273,12 @@ var InitiativeTrackerPlus = (function() {
 	 * Completely wipe state variables
 	 */
 	var cleanSlate = function() {
-		log('Clearing Persistent Data...');
+		log('IT+ Clearing Persistent Data...');
 		state.initiative_tracker_plus = {};
 		state.initiative_tracker_plus.effects = {};
 		state.initiative_tracker_plus.statuses = [];
 		state.initiative_tracker_plus.favs = {};
+		state.initiative_tracker_plus.config = {};
 	}
 
 
@@ -480,11 +471,10 @@ var InitiativeTrackerPlus = (function() {
 		var tracker;
 
 		if (tracker = _.find(turnorder, function(e,i) {
-			if (parseInt(e.id) === -1 && parseInt(e.pr) === fields.round_separator_initiative && e.custom.match(/Round\s*\d+/)){
-					return true;
-				}
+			if (parseInt(e.id) === -1 && parseInt(e.pr) == fields.round_separator_initiative && e.custom.match(/Round\s*\d+/)) {
+				return true;
 			}
-		)) {
+		})) {
 			// resume logic
 		} else {
 			turnorder.push({
@@ -1419,24 +1409,26 @@ var InitiativeTrackerPlus = (function() {
 	 * Handle the turn order advancement given the current and prior ordering
 	 */
 	var handleAdvanceTurn = function(turnorder,priororder) {
-		if (flags.tj_state === ITP_StateEnum.STOPPED || flags.tj_state === ITP_StateEnum.PAUSED || !turnorder || !priororder)
-			{return;}
-		if (typeof(turnorder) === 'string')
-			{turnorder = JSON.parse(turnorder);}
-		if (typeof(priororder) === 'string')
-			{priororder = JSON.parse(priororder);}
-		var currentTurn = turnorder[0];
+		if (flags.tj_state === ITP_StateEnum.STOPPED || flags.tj_state === ITP_StateEnum.PAUSED || !turnorder || !priororder) {
+			return;
+		}
+		if (typeof(turnorder) === 'string') {
+			turnorder = JSON.parse(turnorder);
+		}
+		if (typeof(priororder) === 'string') {
+			priororder = JSON.parse(priororder);
+		}
 
+		var currentTurn = turnorder[0];
 		if (currentTurn) {
-			if (turnorder.length > 1
-			&& isTracker(currentTurn)) {
+			if (turnorder.length > 1 && isTracker(currentTurn)) {
 				// ensure that last turn we weren't also atop the order
-				if (!priororder || isTracker(priororder[0]))
-					{return;}
+				if (!priororder || isTracker(priororder[0])) {
+					return;
+				}
 				var rounds = parseInt(currentTurn.custom.match(/\d+/)[0]);
 				rounds++;
-				currentTurn.custom = currentTurn.custom.substring(0,currentTurn.custom.indexOf('Round'))
-					+ 'Round ' + rounds;
+				currentTurn.custom = currentTurn.custom.substring(0,currentTurn.custom.indexOf('Round')) + 'Round ' + rounds;
 				announceRound(rounds);
 				turnorder.shift();
 				turnorder.push(currentTurn);
@@ -1745,6 +1737,66 @@ var InitiativeTrackerPlus = (function() {
 		});
 
 		sendFeedback('Favorites loaded from handout "ITPFavsJSON"');
+	}
+
+
+
+	/**
+	 * Set Configuration Variables
+	 */
+	var setConfigVariable = function(args) {
+		var pairs = args.split(' ');
+
+		pairs.forEach(function(pair) {
+			// p[0] == var, p[1] == value
+			var p = pair.split(':');
+
+			// fix the value if it's 'true' or 'false'
+			if(p[1] === 'true') {
+				p[1] = true;
+			}
+			if(p[1] === 'false') {
+				p[1] = false;
+			}
+
+			var oldvalue = '';
+			// There's probably a better way to do this, but I'm using this to explicitely define what defaults can be overridden.
+			switch(p[0]) {
+				case 'trackerImgRatio':
+					p[1] = parseFloat(p[1]);
+				case 'rotation_degree':
+				case 'rotation_rate':
+				case 'round_separator_initiative':
+					if(p[0] == 'round_separator_initiative') {
+						p[1] = parseInt(p[1]);
+					}
+					oldvalue = fields[p[0]];
+					fields[p[0]] = p[1];
+					state.initiative_tracker_plus.config.fields[p[0]] = p[1];
+					break;
+				case 'rotation':
+					oldvalue = flags[p[0]];
+					flags[p[0]] = p[1];
+					state.initiative_tracker_plus.config.flags[p[0]] = p[1];
+					break;
+				case 'turncolor':
+				case 'roundcolor':
+				case 'statuscolor':
+				case 'statusbgcolor':
+				case 'statusbordercolor':
+				case 'statusargscolor':
+					oldvalue = design[p[0]];
+					design[p[0]] = p[1];
+					state.initiative_tracker_plus.config.design[p[0]] = p[1];
+					break;
+				default:
+					break;
+			}
+
+		});
+
+
+
 	}
 
 
@@ -2829,12 +2881,11 @@ var InitiativeTrackerPlus = (function() {
 
 	/**
 	 * Animate the tracker
-	 *
-	 * TODO make the rotation rate a field variable
 	 */
 	var animateTracker = function() {
-		if (!flags.animating)
-			{return;}
+		if (!flags.animating) {
+			return;
+		}
 
 		if (flags.tj_state === ITP_StateEnum.ACTIVE) {
 			if (flags.rotation) {
@@ -2889,7 +2940,8 @@ var InitiativeTrackerPlus = (function() {
 		announceTurn(curToken, {public: '', hidden: ''});
 
 		updateTurnorderMarker();
-		if (!flags.animating) {
+
+		if (flags.animating == false) {
 			flags.animating = true;
 			animateTracker();
 		}
@@ -3180,6 +3232,27 @@ var InitiativeTrackerPlus = (function() {
 							+ '<li>Unpause the tracker if it was active, elsewise the next time the tracker is started the indicator will be the default green one.</li>'
 						+ '</ol>'
 					+ '</li>'
+					+ '<br>'
+					+ '<div style="font-weight: bold;">'
+						+ '!itp -setConfig [key]:[value]'
+					+ '</div>'
+					+ '<li style="padding-left: 10px;">'
+						+ 'Changes various configuration values.  Permitted keys and what they expect for values are:<br>'
+						+ 'Usage: <b>!itp -setConfig rotation:false</b>'
+						+ '<ul>'
+							+ "<li><b>trackerImgRatio</b> [2.25] - a decimal number, how much larger than the token it's highlighting that the turn indicator should be</li>"
+							+ "<li><b>rotation_degree</b> [15] - an integer number, how many degrees per step of the indicator animation that it rotates.</li>"
+							+ "<li><b>rotation_rate</b> [250] - an integer number, how many milliseconds between frames of the animation, smaller numbers are a faster animation but will load down roll20 more.</li>"
+							+ "<li><b>round_separator_initiative</b> [-100] - an integer number, displays the 'initiative' for the round separator 100 will put it at the top of the round, -100 will put it at the bottom of the round.</li>"
+							+ "<li><b>rotation</b> [true] - true or false, turns the spinning animation for the turn indicator on (true) or off (false)</li>"
+							+ "<li><b>turncolor</b> [#D8F9FF] - Hex color code, changes the color of the background of the chat message announcing who's turn it is.</li>"
+							+ "<li><b>roundcolor</b> [#363574] - Hex color code, changes the color of the round announcement chat message.</li>"
+							+ "<li><b>statuscolor</b> [#F0D6FF] - Hex color code, changes the color of the text of the chat message announcing statuses of the current actor.</li>"
+							+ "<li><b>statusbgcolor</b> [#897A87] - Hex color code, changes the background color of the chat message announcing statuses of the current actor.</li>"
+							+ "<li><b>statusbordercolor</b> [#430D3D] - Hex color code, changes the color of the border of the chat message announcing statuses of the current actor.</li>"
+							+ "<li><b>statusargscolor</b> [#FFFFFF] - Hex color code, changes the color of the feedback text when changing the marker for a status.</li>"
+						+ '</ul>'
+					+ '</li>'
 				+ '</div>'
    			+ '</div>';
 
@@ -3347,6 +3420,9 @@ var InitiativeTrackerPlus = (function() {
 				setIndicatorImage();
 			} else if (args.indexOf('-defaultIndicatorImage') === 0) {
 				defaultIndicatorImage();
+			} else if (args.indexOf('-setConfig') === 0) {
+				args = args.replace('-setConfig', '').trim();
+				setConfigVariable(args);
 			} else {
 				sendFeedback('<span style="color: red;">Invalid command " <b>'+msg.content+'</b> "</span>');
 				showHelp();
@@ -3447,7 +3523,7 @@ var InitiativeTrackerPlus = (function() {
 
 on("ready", function() {
 	'use strict';
-
+log('-=> IT+ Loading Markers... <=-');
 	const tokenMarkers = JSON.parse(Campaign().get("token_markers"));
 	const getMarkersFromCampaign = markers => {
 		var tms = [];
@@ -3460,7 +3536,7 @@ on("ready", function() {
 			tms.push(marker);
 log(marker);
 		});
-//log(tms);
+
 		return tms;
 	};
 	statusMarkers = getMarkersFromCampaign(tokenMarkers);
