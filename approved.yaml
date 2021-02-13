@@ -764,6 +764,10 @@ libtokenmrkers:
   - "libTokenMarkers"
   - "Utility"
 
+libinline:
+  - "libInline"
+  - "Utility"
+
 md5sum:
   - "MD5Sum"
   - "Utility"
@@ -958,4 +962,20 @@ treatwounds:
 
 initiativetrackerplus:
   - "InitiativeTrackerPlus"
+  - "Utility"
+
+selectmanager:
+  - "SelectManager"
+  - "Utility"
+
+apilogic:
+  - "APILogic"
+  - "Utility"
+
+discretewhisper:
+  - "DiscreteWhisper"
+  - "Utility"
+
+insertarg:
+  - "InsertArg"
   - "Utility"
