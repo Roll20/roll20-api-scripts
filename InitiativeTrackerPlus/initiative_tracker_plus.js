@@ -51,7 +51,8 @@ var InitiativeTrackerPlus = (function() {
 		rotation: true,
 		animating: false,
 		archive: false,
-		clearonclose: true
+		clearonclose: true,
+		show_eot: true
 	};
 
 	var design = {
@@ -1027,9 +1028,11 @@ var InitiativeTrackerPlus = (function() {
 					+ (name ? ('It is ' + name + '\'s turn') : 'Turn')
 				+ '</td>'
 				+ '<td width="32px" height="32px">'
-					+ '<a style="width: 20px; height: 18px; background: none; border: none;" href="!itp -disptokenconfig '+curToken.get('_id')+'"><img src="'+design.settings_icon+'"></img></a>'
-					+ '<a style="width: 30px; height: 18px; background: red; border: solid 1px; color: white; font-weight: heavy;" href="!eot"><nobr>EOT</nobr></a>'
-				+ '</td>'
+					+ '<a style="width: 20px; height: 18px; background: none; border: none;" href="!itp -disptokenconfig '+curToken.get('_id')+'"><img src="'+design.settings_icon+'"></img></a>';
+		if(flags.show_eot) {
+			content += '<a style="width: 30px; height: 18px; background: red; border: solid 1px; color: white; font-weight: heavy;" href="!eot"><nobr>EOT</nobr></a>'
+		}
+		content += '</td>'
 				+ '</tr>';
 
 		if (_.find(controllers,function(e){return (e === 'all');})) {
@@ -1774,6 +1777,7 @@ var InitiativeTrackerPlus = (function() {
 					fields[p[0]] = p[1];
 					state.initiative_tracker_plus.config.fields[p[0]] = p[1];
 					break;
+				case 'show_eot':
 				case 'rotation':
 					oldvalue = flags[p[0]];
 					flags[p[0]] = p[1];

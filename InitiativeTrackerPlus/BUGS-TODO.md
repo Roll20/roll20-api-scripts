@@ -7,7 +7,6 @@ Things to add/fix
   
 **New Features:**  
 * Add "Next Up" on the Turn Notification
-* Make EOT button hideable
 * Add a jukebox file to play/stop automatically when the initiative tracker starts/pauses/stops.  Also figure out how to actually do that.
 * Player (non-DM) level favorites, perhaps a flag on current favorites to flag them as 'public'.  This would make it easier for players to use the effects, a bonus for DMs with a rotating player base especially.
 * Create Favs categories???  

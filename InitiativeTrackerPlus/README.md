@@ -16,6 +16,7 @@ An attempt to modernize Tracker Jacker and add new functionality as it becomes d
 * 2020-11-23 - Changed references to Tracker Jacker to Initiative Tracker Plus.  I am doing this to differentiate the new and drastically changing codebase from Ken L.'s original codebase so users that are happy with OG Tracker Jacker can continue to use it without confusion.
 * 2020-12-02 - Added a command to clear all statuses from a token.  `!itp -dispmultistatusconfig removeall` while the token(s) are selected, or a button appears on the edit message as well.
 * 2020-12-02 - Some minor code cleanup to make it easier for me to work with.
+* 2020-12-04 - Added `!itp -purge` alias to remove all statuses
 * 2020-12-28 - Changed '? Round 1' (which changes to '?? Round 1' when paused) to use a play button image |> and pause button image || instead.
 * 2021-02-13 - Added -setConfig functionality to modify various fields, flags and design variables.  These changes will be stored in the state so should continue between sessions.  Use detailed below.
 
@@ -95,6 +96,7 @@ Changes various configuration values.  Permitted keys and what they expect for v
 * rotation_rate - [250] - an integer number, how many milliseconds between frames of the animation, smaller numbers are a faster animation but will load down roll20 more.
 * round_separator_initiative - [-100] - an integer number, displays the "initiative" for the round separator 100 will put it at the top of the round, -100 will put it at the bottom of the round.
 * rotation - [true] - true or false, turns the spinning animation for the turn indicator on (true) or off (false)
+* show_eot - [true] - true or false, shows or hides the EOT button when announcing actor turns.
 * turncolor - [#D8F9FF] - Hex color code, changes the color of the background of the chat message announcing who's turn it is.
 * roundcolor - [#363574] - Hex color code, changes the color of the round announcement chat message.
 * statuscolor - [#F0D6FF] - Hex color code, changes the color of the text of the chat message announcing statuses of the current actor.
