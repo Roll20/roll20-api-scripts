@@ -55,7 +55,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.13';
+    const version = '0.13a';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -683,8 +683,8 @@ const SpawnDefaultToken = (() => {
                             break;
                         case "offset":
                             let direction = param.split(',');
-                            data.offsetX = parseInt(direction[0]) * 70;
-                            data.offsetY = parseInt(direction[1]) * 70;
+                            data.offsetX = parseFloat(direction[0]) * 70;
+                            data.offsetY = parseFloat(direction[1]) * 70;
                             break;
                         case "sheet":
                             data.sheetName = param;
