@@ -79,6 +79,8 @@ var tokenAction = tokenAction || (function() {
                 } else {
                     repeatingName = repeatingName.replace(" (One-Handed)", "-1H");
                     repeatingName = repeatingName.replace(" (Two-Handed)", "-2H");
+                    repeatingName = repeatingName.replace("swarm has more than half HP", "HP>Half");
+                    repeatingName = repeatingName.replace("swarm has half HP or less", "HP<=Half");
                     repeatingName = repeatingName.replace(/\s\(Recharge(.*)Short or Long Rest\)/, "-(R Short/Long)");
                     repeatingName = repeatingName.replace(/\s\(Recharge(.*)Short Rest\)/, "-(R Short)");
                     repeatingName = repeatingName.replace(/\s\(Recharge(?=.*Long Rest)(?:(?!Short).)*\)/, "-(R Long)");
@@ -231,6 +233,8 @@ var tokenAction = tokenAction || (function() {
                 } else {
                     repeatingName = repeatingName.replace(" (One-Handed)", "-1H");
                     repeatingName = repeatingName.replace(" (Two-Handed)", "-2H");
+                    repeatingName = repeatingName.replace("swarm has more than half HP", "HP>Half");
+                    repeatingName = repeatingName.replace("swarm has half HP or less", "HP<=Half");
                     repeatingName = repeatingName.replace(/\s\(Recharge(.*)Short or Long Rest\)/, "-(R Short/Long)");
                     repeatingName = repeatingName.replace(/\s\(Recharge(.*)Short Rest\)/, "-(R Short)");
                     repeatingName = repeatingName.replace(/\s\(Recharge(?=.*Long Rest)(?:(?!Short).)*\)/, "-(R Long)");
