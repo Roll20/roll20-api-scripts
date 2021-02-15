@@ -1,7 +1,7 @@
 var tokenAction = tokenAction || (function() {
     'use strict';
 
-    var version = '0.3.2',
+    var version = '0.3.3',
         sheetVersion = 'D&D 5th Edition by Roll20',
 
         checkInstall = function() {
@@ -351,7 +351,7 @@ var tokenAction = tokenAction || (function() {
 
 
                 _.each(char, function(a) {
-                    if (isNpc(a.id) === 1) {
+                    if (parseInt(isNpc(a.id)) === 1) {
                         if (args.includes("init")) {
                             createAbility('Init', "%{" + a.id + "|npc_init}", a.id);
                         }
