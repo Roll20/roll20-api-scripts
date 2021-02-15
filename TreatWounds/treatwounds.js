@@ -1,7 +1,7 @@
 /*
 PF2E Treat Wounds Check
 
-Version     1.0
+Version     1.1
 Author:     Mark Stoecker
 Roll20:     https://app.roll20.net/users/580967/mark-s
 BitBucket:  https://bitbucket.org/desertwebdesigns/roll20/src/master/TreatWounds/
@@ -10,18 +10,18 @@ BitBucket:  https://bitbucket.org/desertwebdesigns/roll20/src/master/TreatWounds
 // Future versions:
 // Send error message back to chat on failure
 // rename args array in handleInput for ease of use
-// Setup proper installer and allow for default settings and simpler command call with defaults
 // Allow for generic tokens that don't represent a character (requires sending healing modifier with api call)
 // Check for Risky Surgery Feat before prompting
 // Check for Proficiency and build option list from there
 // Above two options require sending API Buttons back to user when calling API. User will call script and API will send back a button with the appropriate user prompts depending on character sheet (ie, don't prompt for Risky Surgery if user does not have it in feats, don't allow Master/Legendary difficulty if user is only Expert, etc)
+// Heal multiple targets with Ward Medic
 
 var RLRGaming = RLRGaming || {};
 
 RLRGaming.TreatWounds = RLRGaming.TreatWounds || (() => {
     'use strict';
     
-    const version = "0.2";
+    const version = "1.1";
     
     const getChar = (tokenorname) => {
         var character = getCharByToken(tokenorname);
@@ -78,7 +78,28 @@ RLRGaming.TreatWounds = RLRGaming.TreatWounds || (() => {
         sendChat(character, "/em performs some risky surgery on " + target + " and deals [[1d8]] points of damage");
         return;
     };
-
+    
+    const splitTargets = (targetList) => {
+        var targetStr = '';
+        switch(true) {
+            case targetList.length == 1:
+                targetStr = targetList[0];
+                break;
+            case targetList.length == 2:
+                targetStr = targetList[0] + " and " + targetList[1];
+                break;
+            case targetList.length >= 3:
+                _.each(targetList, (t,k) => {
+                    if (k == targetList.length - 1) {
+                        targetStr += "and " + t.trim();
+                    } else {
+                        targetStr += t.trim() + ", ";
+                    }
+                });
+                break;
+        }
+        return targetStr;
+    };
 
 
     const performHeal = async (character, surgery, DC, player, target) => {
@@ -202,10 +223,10 @@ RLRGaming.TreatWounds = RLRGaming.TreatWounds || (() => {
                 healRollString = "(" + healRollString + ") * 2";
             }
             
-            healmsg += "{{roll02=[[" + healRollString + "]]}} {{roll02_type=heal}} {{roll02_info=HP Healed}} {{roll02_misc=hp healed}} ";
+            healmsg += "{{roll02=[[" + healRollString + "]]}} {{roll02_type=heal}} {{roll02_info=HP Healed to " + target + "}} {{roll02_misc=hp healed}} ";
         }
         
-        healmsg += "{{roll01misc=" + DC + "}} {{notes_show=@{" + character + "|roll_show_notes}}} {{notes=@{" + character + "|medicine_notes}}}";
+        healmsg += "{{roll01misc=" + DC + "}} {{notes_show=[[" + ((state.RLRGaming.TreatWounds.config.showNotes === true) ? 1 : 0) + "]]}} {{notes=@{" + character + "|medicine_notes}}}";
         
         sendChat("player|" + player, healmsg);
         
@@ -220,20 +241,29 @@ RLRGaming.TreatWounds = RLRGaming.TreatWounds || (() => {
             1 => selected token or character name,
             2 => 1|0 (perform risky rurgery),
             3 => DC of check,
-            4 => Player to heal
+            4+ => Player(s) to heal
         ]
         */
         if(msg.type == "api") {
             var args = msg.content.split(",");
+
             switch(args[0].toLowerCase()) {
                 case '!treatwounds':
-                    if (args.length == 5) {
+                    if (args.length >= 5) {
                         if (hasCharacterControl(msg.playerid, getChar(args[1]))) {
                             var charname = getChar(args[1]).get("name");
                             if (args[2] == 1)
-                                performSurgery(charname, args[4]);
-                            performHeal(charname, args[2], args[3], msg.playerid, args[4]);
+                                performSurgery(charname, splitTargets(args.slice(4,)));
+                            performHeal(charname, args[2], args[3], msg.playerid, splitTargets(args.slice(4,)));
                         }
+                    } else if (args.length == 3 && args[1] == "config") {
+                        updateConfig(args[2]);
+                    } else if (args[1] == "config") {
+                        sendChat('','/w GM '+
+                            '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">' +
+                                getConfigOption_ShowNotes() +
+                            '</div>'
+                        );
                     } else {
                         sendChat("GM", "/w GM Incorrect number of parameters sent to '!treatwounds'");
                         return;
@@ -243,11 +273,65 @@ RLRGaming.TreatWounds = RLRGaming.TreatWounds || (() => {
         }
     };
     
+    const updateConfig = (arg) => {
+        switch (arg) {
+            case 'shownotes':
+                state.RLRGaming.TreatWounds.config.showNotes = !state.RLRGaming.TreatWounds.config.showNotes
+                sendChat('','/w GM '+
+                    '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
+                        getConfigOption_ShowNotes()+
+                    '</div>'
+                );
+                break;
+        }
+    }
+
+    const checkInstall = () => {
+        if (!state.RLRGaming ||
+            !state.RLRGaming.TreatWounds ||
+            !state.RLRGaming.TreatWounds.version ||
+            state.RLRGaming.TreatWounds.version !== version) {
+            state.RLRGaming = state.RLRGaming || {};
+            state.RLRGaming.TreatWounds = {
+                version: version,
+                gcUpdated: 0,
+                config: {}
+            };
+        }
+        checkGlobalConfig();
+    }
+    
+    const getConfigOption_ShowNotes = () => {
+        var text = (state.RLRGaming.TreatWounds.config.showNotes ?
+                '<span style="color: #007700; font-weight:bold; padding: 0px 4px;">ON</span><br>' :
+                '<span style="color: #FF0000; font-weight:bold; padding: 0px 4px;">OFF</span><br>'
+            );
+        return '<div>'+
+            'Show Notes in Rolls is currently '+
+                text+
+            '<a href="!treatwounds,config,shownotes">'+
+                'Toggle'+
+            '</a>'+
+        '</div>';
+
+    };
+
+    const checkGlobalConfig = () => {
+        var gc = globalconfig && globalconfig.treatwounds,
+            st = state.RLRGaming.TreatWounds;
+
+        if (gc && gc.lastsaved && gc.lastsaved > st.gcUpdated) {
+            st.gcUpdated = gc.lastsaved;
+            st.config.showNotes = 'showMedNotes' === gc['Show notes in rolls'];
+        }
+    }
+    
     const registerEventHandlers = async () => {
         on('chat:message', handleInput);
     };
     
     return {
+        CheckInstall: checkInstall,
         RegisterEventHandlers: registerEventHandlers
     };
 })();
@@ -255,5 +339,6 @@ RLRGaming.TreatWounds = RLRGaming.TreatWounds || (() => {
 
 on('ready', async () => {
     'use strict';
+    RLRGaming.TreatWounds.CheckInstall();
     RLRGaming.TreatWounds.RegisterEventHandlers();
 });
