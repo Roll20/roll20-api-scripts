@@ -7,7 +7,7 @@
 	"roll20userid": "162065",
 	"dependencies": [],
 	"modifies": {
-		"ability.*": "read,write"
+		"ability.*": "read, write"
 	},
 	"conflicts": [],
 	"previousversions": ["0.3.2"]
