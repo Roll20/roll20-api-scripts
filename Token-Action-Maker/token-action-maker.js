@@ -1,7 +1,7 @@
 var tokenAction = tokenAction || (function() {
     'use strict';
 
-    var version = '0.3.3',
+    var version = '0.3.2',
         sheetVersion = 'D&D 5th Edition by Roll20',
 
         checkInstall = function() {
@@ -79,6 +79,10 @@ var tokenAction = tokenAction || (function() {
                 } else {
                     repeatingName = repeatingName.replace(" (One-Handed)", "-1H");
                     repeatingName = repeatingName.replace(" (Two-Handed)", "-2H");
+                    repeatingName = repeatingName.replace(/\s\(Recharge(.*)Short or Long Rest\)/, "-(R Short/Long)");
+                    repeatingName = repeatingName.replace(/\s\(Recharge(.*)Short Rest\)/, "-(R Short)");
+                    repeatingName = repeatingName.replace(/\s\(Recharge(?=.*Long Rest)(?:(?!Short).)*\)/, "-(R Long)");
+                    repeatingName = repeatingName.replace(/\sVariant\)/, '\)');
                     repeatingName = repeatingName.replace(/\s\(Recharge\s(.*)\)/, '-\(R$1\)');
                     repeatingName = repeatingName.replace(/\s\(Costs\s(.*)\sActions\)/, '-\($1a\)');
 
@@ -227,6 +231,10 @@ var tokenAction = tokenAction || (function() {
                 } else {
                     repeatingName = repeatingName.replace(" (One-Handed)", "-1H");
                     repeatingName = repeatingName.replace(" (Two-Handed)", "-2H");
+                    repeatingName = repeatingName.replace(/\s\(Recharge(.*)Short or Long Rest\)/, "-(R Short/Long)");
+                    repeatingName = repeatingName.replace(/\s\(Recharge(.*)Short Rest\)/, "-(R Short)");
+                    repeatingName = repeatingName.replace(/\s\(Recharge(?=.*Long Rest)(?:(?!Short).)*\)/, "-(R Long)");
+                    repeatingName = repeatingName.replace(/\sVariant\)/, '\)');
                     repeatingName = repeatingName.replace(/\s\(Recharge\s(.*)\)/, '-\(R$1\)');
                     repeatingName = repeatingName.replace(/\s\(Costs\s(.*)\sActions\)/, '-\($1a\)');
 
