@@ -1,0 +1,14 @@
+{
+  "name": "MutantYearZero_SectorGenerator",
+  "version": "0.1.0",
+  "description": "MutantYearZero_SectorGenerator generates a sector for MutantYearZero randomly.\r\r## Commands\r\r```\r!sector-generate\r```",
+  "authors": "SmokeRaven",
+  "roll20userid": "1334975",
+  "patreon": "https://www.patreon.com/smokeraven",
+  "dependencies": {},
+  "modifies": {},
+  "conflicts": [],
+  "script": "sector-generator.js",
+  "useroptions": [],
+  "previousversions": []
+}
