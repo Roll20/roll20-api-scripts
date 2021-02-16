@@ -9,9 +9,9 @@
 	"useroptions": [],
 	"dependencies": [],
 	"modifies": {
-		"state.Roll20AM": "read,write",
-		"handout": "read,write",
-		"jukeboxtrack": "read,write"
+		"state.Roll20AM": "read, write",
+		"handout": "read, write",
+		"jukeboxtrack": "read, write"
 	},
 	"conflicts": []
 }
