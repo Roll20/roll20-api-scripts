@@ -15,11 +15,11 @@
 		"WildHelpers"
 	],
 	"modifies": {
-		"state.WILDSHAPE": "read,write",
-		"character.*": "read,write",
-    	"attribute.*": "read,write",
-    	"token.*": "read,write",
-    	"graphic.*": "read,write"
+		"state.WILDSHAPE": "read, write",
+		"character.*": "read, write",
+    	"attribute.*": "read, write",
+    	"token.*": "read, write",
+    	"graphic.*": "read, write"
 	},
 	"conflicts": []
 }
