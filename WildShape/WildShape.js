@@ -368,7 +368,8 @@ class WildShapeMenu extends WildMenu
         let settings = config[dataRoot];
 
         let isNpc = dataRoot == WS_API.FIELDS.CHAR_DATA.NPC_ROOT;
-        let menuTitle = (isNpc ? "NPC" : "PC") + " Settings";
+        let charType =  (isNpc ? "NPC" : "PC");
+        let menuTitle = charType + " Settings";
 
         let cmdEdit = this.CMD.CONFIG_EDIT + WS_API.FIELDS.TARGET.CONFIG + this.SEP + WS_API.FIELDS.TARGET.CHAR_DATA + this.SEP + dataRoot + this.SEP;
         let cmdToggle = this.SEP + WS_API.CMD.TOGGLE;
@@ -376,6 +377,7 @@ class WildShapeMenu extends WildMenu
         // PC settings
         let attributesDataList = [
             this.makeLabel("<p style='font-size: 120%'><b>Attributes:</b></p>"),
+            this.makeLabel("Attributes IDs for " + charType + " sheets","font-size: 80%"),
 
             this.makeList(
                 [ 
@@ -383,11 +385,11 @@ class WildShapeMenu extends WildMenu
                     this.makeLabelValue("SPEED Attribute", settings[WS_API.FIELDS.CHAR_DATA.SPEED]) + this.makeRightButton("Edit", cmdEdit + WS_API.FIELDS.CHAR_DATA.SPEED + this.SEP + "?{Attribute|" + settings[WS_API.FIELDS.CHAR_DATA.SPEED] + "}"),
                     ... (isNpc ? [this.makeLabelValue("SENSES", settings[WS_API.FIELDS.CHAR_DATA.SENSES]) + this.makeRightButton("Edit", cmdEdit + WS_API.FIELDS.CHAR_DATA.SENSES + this.SEP + "?{Attribute|" + settings[WS_API.FIELDS.CHAR_DATA.SENSES] + "}")] : []),
                 ], " padding-left: 10px"),
-
         ];
 
         let tokenDataList = [
             this.makeLabel("<p style='font-size: 120%'><b>Token Bars:</b></p>"),
+            this.makeLabel("Links Attributes to Bars when transforming into a " + charType + " (if not empty)","font-size: 80%"),
 
             this.makeList(
                 [ 
@@ -399,13 +401,14 @@ class WildShapeMenu extends WildMenu
         ];
 
         let rollSettingsDataList = [
-            this.makeLabel("<p style='font-size: 120%'><b>: " (isNpc ? "NPC" : "PC") + " Shifters Force Roll Settings:</b></p>"),
+            this.makeLabel("<p style='font-size: 120%'><b>Shifters - Force Roll Settings:</b></p>"),
+            this.makeLabel("If set to true it will change the roll settings on the target shape when a " + charType + " Shifter transforms into it", "font-size: 80%"),
             this.makeList(
                 [ 
                     this.makeLabelValue("Never Whisper", settings[WS_API.FIELDS.CHAR_DATA.FORCEROLL_NEVER_WHISPER], 'false') + this.makeRightButton("Toggle", cmdEdit + WS_API.FIELDS.CHAR_DATA.FORCEROLL_NEVER_WHISPER + cmdToggle),
                     this.makeLabelValue("Toggle Advantage", settings[WS_API.FIELDS.CHAR_DATA.FORCEROLL_TOGGLE_ADVANTAGE], 'false') + this.makeRightButton("Toggle", cmdEdit + WS_API.FIELDS.CHAR_DATA.FORCEROLL_TOGGLE_ADVANTAGE + cmdToggle),
                     this.makeLabelValue("Manual Damage Roll", settings[WS_API.FIELDS.CHAR_DATA.FORCEROLL_MANUAL_DAMAGEROLL], 'false') + this.makeRightButton("Toggle", cmdEdit + WS_API.FIELDS.CHAR_DATA.FORCEROLL_MANUAL_DAMAGEROLL + cmdToggle),
-                ]),
+                ], " padding-left: 10px"),
         ];
 
         let contents = this.makeList(attributesDataList)
@@ -553,26 +556,26 @@ class WildShapeMenu extends WildMenu
             this.makeLabel("<p style='font-size: 120%'><b>Config:</b></p>"),
 
             this.makeLabelValue("Commands Separator", this.SEP) + this.makeRightButton("Edit", cmdConfigEdit + WS_API.FIELDS.SEP + this.SEP + "?{New Separator}"),
-            this.makeLabel("Please make sure your names/strings don't include the separator used by the API", "font-size: 80%"),
+            this.makeLabel("Please make sure your names/strings don't include the separator used by the API", "font-size: 80%; padding-left: 10px"),
 
             this.makeLabelValue("<br>WildShape Resource", config[WS_API.FIELDS.DRUID_WS_RES]) + this.makeRightButton("Edit", cmdConfigEdit + WS_API.FIELDS.DRUID_WS_RES + this.SEP + "?{Edit|" + config[WS_API.FIELDS.DRUID_WS_RES] + "}"),
-            this.makeLabel("Automatically check and decrease resource for Druids (case insensitive)", "font-size: 80%"),
+            this.makeLabel("Automatically check and decrease resource for Druids (case insensitive)", "font-size: 80%; padding-left: 10px"),
 
             this.makeLabelValue("Mute Shift Messages", config[WS_API.FIELDS.MUTE_SHIFT], 'false') + this.makeRightButton("Toggle", cmdConfigEdit + WS_API.FIELDS.MUTE_SHIFT),
-            this.makeLabel("Mute messages sent to players when shapeshifting", "font-size: 80%"),
+            this.makeLabel("Mute messages sent to players when shapeshifting", "font-size: 80%; padding-left: 10px"),
 
             this.makeLabel("PC Settings") + this.makeRightButton("Edit", cmdConfigEdit + WS_API.FIELDS.TARGET.CHAR_DATA + this.SEP + WS_API.FIELDS.CHAR_DATA.PC_ROOT),
-            this.makeLabel("Global settings (attributes, rolls, etc.) for PC sheets", "font-size: 80%"),
+            this.makeLabel("Global settings (attributes, rolls, etc.) for PC sheets", "font-size: 80%; padding-left: 10px"),
 
             this.makeLabel("NPC  Settings") + this.makeRightButton("Edit", cmdConfigEdit + WS_API.FIELDS.TARGET.CHAR_DATA + this.SEP + WS_API.FIELDS.CHAR_DATA.NPC_ROOT),
-            this.makeLabel("Global settings (attributes, rolls, etc.) for NPC sheets", "font-size: 80%"),
+            this.makeLabel("Global settings (attributes, rolls, etc.) for NPC sheets", "font-size: 80%; padding-left: 10px"),
 
             // senses settings
             this.makeLabelValue("Write Senses", config[WS_API.FIELDS.SENSES.ROOT][WS_API.FIELDS.SENSES.OVERRIDE], 'false') + this.makeRightButton("Edit", cmdConfigEdit + WS_API.FIELDS.SENSES.ROOT),
-            this.makeLabel("Write senses to token, defaults if data cannot be found", "font-size: 80%; padding-left: 10px; padding-bottom: 10px"),
+            this.makeLabel("Write senses to token, defaults if data cannot be found", "font-size: 80%; padding-left: 10px"),
 
             this.makeLabelValue("Enable Debug Messages", config[WS_API.FIELDS.ENABLE_DEBUG], 'false') + this.makeRightButton("Toggle", cmdConfigEdit + WS_API.FIELDS.ENABLE_DEBUG),
-            this.makeLabel("Enable debug messages in the chat and in the API log", "font-size: 80%"),
+            this.makeLabel("Enable debug messages in the chat and in the API log", "font-size: 80%; padding-left: 10px"),
         ];
         
         // finalization
