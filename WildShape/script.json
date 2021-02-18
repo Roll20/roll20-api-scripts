@@ -1,10 +1,11 @@
 {
 	"name": "D&D 5E - WildShape",
 	"script": "WildShape.js",
-	"version": "1.4.0",
+	"version": "1.4.1",
 	"previousversions": [
 		"1.3.1",
-		"1.3.2"
+		"1.3.2",
+		"1.4.0"
 	],
     "description": "Easy shapeshift for your PCs/NPCs.Can be used for both PC and NPC to shape shift into either a PC or an NPC.\r\rAlt-double clicking on the shape shifted token will open the relative pc/npc sheet so that you can run actions from your new shape.\rAll data can be setup through menus.\r\rAutomatically:\r\r*   change the token size\r*   set hp/ac/speed (or any other attribute you might want) on bar1/2/3 when you shapeshift\r*   setup senses (e.g. light, vision) from darkvision/blindsight info on NPCs, can set defaults and overrides per shape\r*   change roll settings on NPC sheet (when transforming from a PC) to never whisper, toggle advantage, don't autoroll damage\r*   show journal entries to players for all their shapes\r*   change the token to the last taken shape when dropping a new shifter token (e.g. from the journal or copy/paste, useful when moving between maps)\r*   shapes can be mass imported from a journal folder\r\rAlso, for **Druids Only** it will automatically:\r\r*   copy INT/WIS/CHA attributes to NPCs\r*   set corrected saving throws and skills considering proficiencies according to 5e rules\r*   check and decrease a configurable wild shape resource\r\rForum thread: https://app.roll20.net/forum/permalink/8856337/ \r\rFull documentation here: https://github.com/ocangelo/roll20/tree/master/WildShape\r\r## IMPORTANT NOTES:\r\r### Note 1:\r\rThere is a limitation on using images directly from the marketplace, whenever you want to use a monster from the Monster Manual (or similar external resource in your compendium) the API might give you an error asking you to reupload the avatar when you try to transform into it, it's really hit or miss so i would suggest you try it first but in case you do get the error to fix it you will need to:\r\r*   open up the character sheet (let's say Black Dragon)\r*   save the avatar image on your PC (e.g. open the avatar image -> right click -> save as)\r*   upload that file to the library\r*   change the avatar on the Black Dragon character sheet to the file you uploaded to the library (if you can prefer you can set the token)\r\r### Note 2:\r\rRight now I am using the token names to find shifters when they try to shapeshift, if you change it in your game you will have to edit it in the shifter settings otherwise they won't be able to transform anymore",
 	"authors": "Angelo",
