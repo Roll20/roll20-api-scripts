@@ -8,9 +8,9 @@
     "roll20userid": "1226016",
     "patreon": "https://www.patreon.com/robinkuiper",
     "useroptions": [],
-    "dependencies": {
+    "dependencies": [],
+    "modifies": {
         "state.COMBATTRACKER": "read,write"
     },
-    "modifies": {},
     "conflicts": []
 }

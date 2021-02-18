@@ -207,8 +207,8 @@ itsatrapthemepathfinder:
 - "System Toolbox"
 
 falloutterminal:
-- "FalloutTerminal"
-- "System Toolbox"
+  - "FalloutTerminal"
+  - "Utility"
 
 chatsetattr:
 - "ChatSetAttr"
@@ -309,7 +309,7 @@ healthcolors:
 
 truepagecopy:
 - "TruePageCopy"
-- "Character"
+- "Maps & Drawing"
 - "hidden"
 
 srrollextender:
@@ -382,7 +382,7 @@ onerollengine:
 
 changetokenimage:
 - "ChangeTokenImage"
-- "Utility"
+- "Tokens"
 
 5ebattlemaster:
 - "5EBattleMaster"
@@ -490,7 +490,7 @@ inspirationtrack:
 
 syncpage:
 - SyncPage
-- Utility
+- "Maps & Drawing"
 
 combattracker:
 - CombatTracker
@@ -498,11 +498,11 @@ combattracker:
 
 movelighting:
 - moveLighting
-- Utility
+- "Dynamic Lighting"
 
 elevation:
-- Elevation
-- Utility
+  - Elevation
+  - "Dynamic Lighting"
 
 hero6playable:
 - HeroSystem6e
@@ -510,7 +510,7 @@ hero6playable:
 
 publicsheet:
 - PublicSheet
-- Utility
+- "Character"
 
 gmsheet:
 - GMSheet
@@ -590,7 +590,7 @@ charsheetutils:
 
 healthstatus:
   - "Health Status"
-  - "Utility"
+  - "Tokens"
 
 difficultyrating:
   - "DifficultyRating"
@@ -610,7 +610,7 @@ handsup:
 
 gmaura:
   - "GMAura"
-  - Utility
+  - "Tokens"
 
 savageworldsraiseroller:
   - 'Savage Worlds Raise Roller'
@@ -622,7 +622,7 @@ knightstylesmarkers:
 
 emas:
   - 'Emas'
-  - System Toolbox
+  - 'Chat'
 
 pcpp:
   - 'PCPP'
@@ -650,7 +650,7 @@ talesfromtheloopdierolelr:
 
 flight:
   - 'Flight'
-  - 'Utility'
+  - "Tokens"
 
 shadowofdemonlord:
   - 'Shadow of the Demon Lord'
@@ -662,11 +662,11 @@ myz:
 
 doorknocker:
   - 'Door Knocker'
-  - 'Utility'
+  - "Dynamic Lighting"
 
 randomrotate:
   - 'RandomRotate'
-  - 'Utility'
+  - "Tokens"
 
 dealer:
   - 'Dealer'
@@ -674,11 +674,11 @@ dealer:
 
 facing:
   - 'Facing'
-  - 'Utility'
+  - "Tokens"
 
 wilddice:
   - 'WildDice'
-  - 'Utility'
+  - "System Toolbox"
 
 aligmenttracker:
   - 'AlignmentTracker'
@@ -686,7 +686,7 @@ aligmenttracker:
 
 modifytokenimage:
   - ModifyTokenImage
-  - 'Utility'
+  - "Tokens"
 
 apiheartbeat:
   - 'APIHeartBeat'
@@ -694,19 +694,19 @@ apiheartbeat:
 
 fliptoken:
   - 'Flip Tokens'
-  - 'Utility'
+  - "Tokens"
 
 coloremote:
   - 'ColorEmote'
-  - 'Utility'
+  - 'Chat'
 
 colorenote:
   - 'ColorNote'
-  - 'Utility'
+  - 'Chat'
 
 sharevision:
   - 'ShareVision'
-  - 'Utility'
+  - "Dynamic Lighting"
 
 peekcard:
   - 'PeekCard'
@@ -714,7 +714,7 @@ peekcard:
 
 markingconditions:
   - 'Marking Conditions'
-  - System Toolbox
+  - "Tokens"
 
 imperialcalendar:
   - 'ImperialCalendar'
@@ -734,7 +734,7 @@ base64:
 
 dryerase:
   - "DryErase"
-  - "Utility"
+  - "Maps & Drawing"
 
 maplock:
   - "MapLock"
@@ -758,10 +758,18 @@ tableexport:
 
 tokencondition:
   - "TokenCondition"
-  - "Utility"
+  - "Tokens"
 
 libtokenmrkers:
   - "libTokenMarkers"
+  - "Utility"
+
+libinline:
+  - "libInline"
+  - "Utility"
+
+md5sum:
+  - "MD5Sum"
   - "Utility"
 
 abfroll:
@@ -802,7 +810,7 @@ savageworldsstatuschanger:
 
 midgardturntrackerhelper:
   - "MidgardTurnTrackerHelper"
-  - "Utility"
+  - "System Toolbox"
 
 shortrest:
   - "ShortRest"
@@ -810,7 +818,7 @@ shortrest:
 
 tokenmarker:
   - "TokenMarker"
-  - "Utility"
+  - "Tokens"
 
 heroroller:
   - "HeroRoller"
@@ -820,13 +828,17 @@ universalvttimport:
   - "UniversalVTTImporter"
   - "Utility"
 
+udlwindows:
+  - "UDLWindows"
+  - "Dynamic Lighting"
+
 supernotes:
   - "Supernotes"
   - "Utility"
 
 changemapclonetokens:
   - "ChangeMap_CloneTokens"
-  - "Utility"
+  - "Maps & Drawing"
 
 restandrecovery:
   - "Rest-and-Recovery"
@@ -834,7 +846,7 @@ restandrecovery:
 
 tokenactionmarker:
   - "Token-Action-Maker"
-  - "Utility"
+  - "Tokens"
 
 5erestinstyle:
   - "5E Resting in Style"
@@ -842,11 +854,11 @@ tokenactionmarker:
 
 huntersmark:
   - "HuntersMark"
-  - "Utility"
+  - "Tokens"
 
 spintokens:
   - "SpinTokens"
-  - "Utility"
+  - "Tokens"
 
 agonecleanolds:
   - "AgoneCleanOlds"
@@ -858,7 +870,7 @@ deltagreenrpgcompanion:
 
 dynamiclightrecorder:
   - "DynamicLightRecorder"
-  - "Utility"
+  - "Dynamic Lighting"
 
 gofish:
   - "GoFish!"
@@ -878,7 +890,7 @@ fotncompanion:
 
 hiddenrollmessages:
   - "HiddenRollMessages"
-  - "Utility"
+  - "Chat"
 
 dkrystal:
   - "KrystalDice"
@@ -890,7 +902,7 @@ paladinaura:
 
 dldarkness:
   - "DL Darkness"
-  - "Utility"
+  - "Dynamic Lighting"
 
 dsacritchecker:
   - "DSA4_1-CritChecker"
@@ -914,8 +926,56 @@ rolltablehandouts:
 
 dealinit:
   - "Deal-Init"
-  - "System Tooolbox"
+  - "System Toolbox"
 
 teleport:
   - "Teleport"
+  - "Utility"
+
+emojibubble:
+  - "Emojibubble"
+  - "Tokens"
+
+maximumapocalypse:
+  - "Maximum Apocalypse"
+  - "System Toolbox"
+
+clocktokens:
+  - "ClockTokens"
+  - "System Toolbox"
+
+5ebarbarian:
+  - "RatWorkshop_Barbarian"
+  - "System Toolbox"
+
+5edmtools:
+  - "RatWorkshop_DungeonMasterTools"
+  - "System Toolbox"
+
+5epaladin:
+  - "RatWorkshop_Paladin"
+  - "System Toolbox"
+
+treatwounds:
+  - "TreatWounds"
+  - "System Toolbox"
+
+initiativetrackerplus:
+  - "InitiativeTrackerPlus"
+  - "Utility"
+
+selectmanager:
+  - "SelectManager"
+  - "Utility"
+
+apilogic:
+  - "APILogic"
+  - "Utility"
+
+discretewhisper:
+  - "DiscreteWhisper"
+  - "Utility"
+
+insertarg:
+  - "InsertArg"
   - "Utility"

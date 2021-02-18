@@ -1,5 +1,5 @@
 {
-    "name": "Difficulty Rating",
+    "name": "D&D 5E Difficulty Rating",
     "script": "DifficultyRating.js",
     "version": "1.04",
     "previousversions": ["1.03"],
