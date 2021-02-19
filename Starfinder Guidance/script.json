@@ -1,0 +1,69 @@
+{
+  "name": "Starfinder - Guidance Tools for Starfinder (Simple) Character sheet",
+  "script": "guidance.js",
+  "version": "v1.0.0",
+  "previousversions": [],
+  "description": "This is a tool to support the usage of the Starfinder (Simple) character sheets in Roll20. It has the ability to read a statblock from the GMNotes section of a selected character and fill out the NPC section of the charactersheet. Statblocks from Archives of Nethys and Starjammer SRD are supported. Statblocks from PDFs can be used, but there may be parsing issues. Usage details are at..",
+  "authors": "Russell A. Sinclair",
+  "dependancies": [],
+  "roll20userid": 3028022,
+  "modifies": [
+    {
+      "_id": "read"
+    },
+    {
+      "_type": "read"
+    },
+    {
+      "_subtype": "read"
+    },
+    {
+      "_pageid": "read"
+    },
+    {
+      "name": "write"
+    },
+    {
+      "bar1_max": "write"
+    },
+    {
+      "bar1_value": "write"
+    },
+    {
+      "bar3_max": "write"
+    },
+    {
+      "bar3_value": "write"
+    },
+    {
+      "bar2_max": "write"
+    },
+    {
+      "bar2_value": "write"
+    },
+    {
+      "hit_points": "write"
+    },
+    {
+      "current": "write"
+    },
+    {
+      "max": "write"
+    },
+    {
+      "gmnotes": "read"
+    },
+    {
+      "attributes": "read"
+    },
+    {
+      "attributes": "write"
+    },
+    {
+      "abilities": "read"
+    },
+    {
+      "abilities": "write"
+    }
+  ]
+}
