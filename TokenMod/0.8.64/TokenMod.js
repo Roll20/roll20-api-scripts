@@ -10,7 +10,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
     const scriptName = "TokenMod";
     const version = '0.8.64';
     API_Meta.TokenMod.version = version;
-    const lastUpdate = 1613697184;
+    const lastUpdate = 1613710516;
     const schemaVersion = 0.4;
 
     const fields = {
@@ -45,7 +45,6 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
             has_limit_field_of_night_vision: {type: 'boolean'},
             has_directional_bright_light: {type: 'boolean'},
             has_directional_low_light: {type: 'boolean'},
-            dim_light_opacity: {type: 'number'},
             
 
             // bounded by screen size
@@ -84,6 +83,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
             night_vision_distance: {type: 'numberBlank'},
             bright_light_distance: {type: 'numberBlank'},
             low_light_distance: {type: 'numberBlank'},
+            dim_light_opacity: {type: 'percentage'},
 
             // text or numbers
             bar1_value: {type: 'text'},
@@ -135,6 +135,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
             night_distance: "night_vision_distance",   
             bright_distance: "bright_light_distance",    
             low_distance: "low_light_distance",
+            low_light_opacity: "dim_light_opacity",
             currentside: "currentSide"   // fix for case issue
         };
 
@@ -1392,15 +1393,26 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
 
 
         const transforms = {
+            percentage: (p)=>{
+                  let n = parseFloat(p);
+                  if(!_.isNaN(n)){
+                    if(n > 1){
+                      n = Math.min(1,Math.max(n/100,0));
+                    } else {
+                      n = Math.min(1,Math.max(n,0));
+                    }
+                  }
+                  return n;
+                },
             degrees: function(t){
-                    var n = parseFloat(t,10);
+                    var n = parseFloat(t);
                     if(!_.isNaN(n)) {
                         n %= 360;
                     }
                     return n;
                 },
             circleSegment: function(t){
-                    var n = Math.abs(parseFloat(t,10));
+                    var n = Math.abs(parseFloat(t));
                     if(!_.isNaN(n)) {
                         n = Math.min(360,Math.max(0,n));
                     }
@@ -1803,6 +1815,26 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
                 )
             ),
 
+        setPercentage: (/* context*/) => _h.join(
+                    _h.subhead('Percentage'),
+                    _h.inset(
+                        _h.paragraph(`Percentage values can be a floating point number between 0 and 1.0, such as ${_h.code('0.35')}, or an integer number between 1 and 100.`),
+                        _h.minorhead('Available Percentage Properties:'),
+                        _h.inset(
+                            _h.grid(
+                                _h.cell('dim_light_opacity'),
+                            )
+                        ),
+                        _h.paragraph(`Setting the low light opacity to 30%:`),
+                        _h.inset(
+                            _h.pre( '!token-mod --set dim_light_opacity|30' )
+                        ),
+                        _h.inset(
+                            _h.pre( '!token-mod --set dim_light_opacity|0.3' )
+                        )
+                    )
+                ),
+
         setNumbers: (/* context*/) => _h.join(
                     _h.subhead('Numbers'),
                     _h.inset(
@@ -1814,7 +1846,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
                                 _h.cell('top'),
                                 _h.cell('width'),
                                 _h.cell('height'),
-                                _h.cell('scale')
+                                _h.cell('scale'),
                             )
                         ),
                         _h.paragraph( `It${ch("'")}s probably a good idea not to set the location of a token off screen, or the width or height to 0.`),
@@ -2550,6 +2582,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
                     _h.paragraph('There are several types of keys with special value formats:'),
                     _h.inset(
                         helpParts.setNumbers(context),
+                        helpParts.setPercentage(context),
                         helpParts.setNumbersOrBlank(context),
                         helpParts.setDegrees(context),
                         helpParts.setCircleSegment(context),
@@ -2774,6 +2807,10 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
 
                 case 'number':
                     retr[cmd].push(numberOp.parse(cmd,args.shift(),false));
+                    break;
+
+                case 'percentage':
+                    retr[cmd].push(numberOp.parse(cmd,transforms.percentage(args.shift()),false));
                     break;
 
                 case 'degrees':
@@ -3091,6 +3128,9 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
 
 
                 case 'dim_light_opacity':
+                    mods = Object.assign( mods, f[0].getMods(token,mods));
+                    break;
+
                 case 'left':
                 case 'top':
                 case 'width':
