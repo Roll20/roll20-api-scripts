@@ -19,6 +19,23 @@ Using the `forselected` method, you would just insert the `forselected` text int
 
     !forselected set-attr --strmod|2
 If you have your dozen tokens selected, it will issue a dozen calls to ChatSetAttr, exactly the same except that the first call will see only the first token as selected, the second will see the second token selected, and so on.
+
+**As of version 0.0.6**, `forselected` will work with line-breaks in the macro, and it will work to be initiated by another script (rather than directly by the user). This allows for the user to fire a script which, itself, launches another script. If that downstream call is now prepended with the `forselected` handle, `forselected` will step into the line and iterate further downstream calls to the next script. See [this post](https://app.roll20.net/forum/permalink/9822730/) for an example.
+
+**As of version 0.0.7**, `forselected` will also detect and work around a trailing `!`, if one is in the line.
+
+    !forselected !spawn --oogies
+
+This behavior allows for the use of embedded macros or abilities that would be expanded and come with their own exclamation point:
+EXAMPLE: You construct a macro to call the Spawn script, and because you want to be able to run it for a given token, you include the exclamation point:
+
+    !spawn --things --that go bump
+
+You call that macro `Spawn-Things`. In chat, you could enter `!forselected #Spawn-Things`, so what actually reaches the chat (after the macro text is expanded by Roll20) is:
+
+    !forselected !spawn --things --that go bump
+
+This will now still work to iterate over that Spawn command.
 ### Special Constructions for Token or Character Sheet Info
 Anywhere you would use the `@{selected|...}` construction in a `forselected` command line,  you can use `at{selected|...}`, instead. This is necessary since the Roll20 parser will eat an `@{selected|token_id}` structure and spit out the token ID of the first (but only first) selected token, for instance. To make sure these process for each selected token in turn, you should replace the `@` version with the `at` version. SelectManager will detect these and retrieve the requested information for the current token in the cycle. See the [Roll20 Wiki article](https://wiki.roll20.net/Macros#Token) on what information can be retrieved from a Token this way.
 #### Special Cases for token_id and token_name
