@@ -118,6 +118,21 @@ var tokenAction = tokenAction || (function() {
                 _characterid: id
             });
             _.each(abilities, function(r) {
+                let abilityName = r.get('name');
+                if (abilityName.includes(".",-1)) {
+                } else{
+                r.remove();
+                };
+            });
+        },
+        
+                deleteAllAbilities = function(id) {
+            var abilities = findObjs({
+                _type: 'ability',
+                _characterid: id
+            });
+            _.each(abilities, function(r) {
+                let abilityName = r.get('name');
                 r.remove();
             });
         },
@@ -255,7 +270,7 @@ var tokenAction = tokenAction || (function() {
         handleInput = function(msg) {
             var char;
             var keywords = ['attacks', 'spells', 'abilities', 'saves', 'checks', 'traits', 'reactions', 'init'];
-            if (!(msg.type === 'api' && msg.selected && (msg.content.search(/^!ta\b/) || msg.content.search(/^!deleteta\b/) || msg.content.search(/^!sortta\b/)))) return;
+            if (!(msg.type === 'api' && msg.selected && (msg.content.search(/^!ta\b/) || msg.content.search(/^!deleteta\b/) || msg.content.search(/^!deleteallta\b/) || msg.content.search(/^!sortta\b/)))) return;
 
             var args = msg.content.split(" ");
             const usename = args.includes('name') ? true : false;
@@ -355,7 +370,14 @@ var tokenAction = tokenAction || (function() {
 
                 _.each(char, function(d) {
                     deleteAbilities(d.id);
-                    sendChat("TokenAction", "/w " + msg.who + " Deleted Token Actions for " + d.get('name') + ".");
+                    sendChat("TokenAction", "/w " + msg.who + " Deleted all unprotected Token Actions for " + d.get('name') + ".");
+                });
+            } else if (msg.content.search(/^!deleteallta\b/) !== -1) {
+                char = _.uniq(getSelectedCharacters(msg.selected));
+
+                _.each(char, function(d) {
+                    deleteAllAbilities(d.id);
+                    sendChat("TokenAction", "/w " + msg.who + " Deleted all Token Actions for " + d.get('name') + ".");
                 });
             } else if (msg.content.search(/^!sortta\b/) !== -1) {
 
