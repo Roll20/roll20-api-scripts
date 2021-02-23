@@ -1,7 +1,7 @@
 var tokenAction = tokenAction || (function() {
     'use strict';
 
-    var version = '0.3.2',
+    var version = '0.3.3',
         sheetVersion = 'D&D 5th Edition by Roll20',
 
         checkInstall = function() {
@@ -79,6 +79,12 @@ var tokenAction = tokenAction || (function() {
                 } else {
                     repeatingName = repeatingName.replace(" (One-Handed)", "-1H");
                     repeatingName = repeatingName.replace(" (Two-Handed)", "-2H");
+                    repeatingName = repeatingName.replace("swarm has more than half HP", "HP>Half");
+                    repeatingName = repeatingName.replace("swarm has half HP or less", "HP<=Half");
+                    repeatingName = repeatingName.replace(/\s\(Recharge(.*)Short or Long Rest\)/, "-(R Short/Long)");
+                    repeatingName = repeatingName.replace(/\s\(Recharge(.*)Short Rest\)/, "-(R Short)");
+                    repeatingName = repeatingName.replace(/\s\(Recharge(?=.*Long Rest)(?:(?!Short).)*\)/, "-(R Long)");
+                    repeatingName = repeatingName.replace(/\sVariant\)/, '\)');
                     repeatingName = repeatingName.replace(/\s\(Recharge\s(.*)\)/, '-\(R$1\)');
                     repeatingName = repeatingName.replace(/\s\(Costs\s(.*)\sActions\)/, '-\($1a\)');
 
@@ -112,6 +118,21 @@ var tokenAction = tokenAction || (function() {
                 _characterid: id
             });
             _.each(abilities, function(r) {
+                let abilityName = r.get('name');
+                if (abilityName.includes(".",-1)) {
+                } else{
+                r.remove();
+                };
+            });
+        },
+        
+                deleteAllAbilities = function(id) {
+            var abilities = findObjs({
+                _type: 'ability',
+                _characterid: id
+            });
+            _.each(abilities, function(r) {
+                let abilityName = r.get('name');
                 r.remove();
             });
         },
@@ -227,6 +248,12 @@ var tokenAction = tokenAction || (function() {
                 } else {
                     repeatingName = repeatingName.replace(" (One-Handed)", "-1H");
                     repeatingName = repeatingName.replace(" (Two-Handed)", "-2H");
+                    repeatingName = repeatingName.replace("swarm has more than half HP", "HP>Half");
+                    repeatingName = repeatingName.replace("swarm has half HP or less", "HP<=Half");
+                    repeatingName = repeatingName.replace(/\s\(Recharge(.*)Short or Long Rest\)/, "-(R Short/Long)");
+                    repeatingName = repeatingName.replace(/\s\(Recharge(.*)Short Rest\)/, "-(R Short)");
+                    repeatingName = repeatingName.replace(/\s\(Recharge(?=.*Long Rest)(?:(?!Short).)*\)/, "-(R Long)");
+                    repeatingName = repeatingName.replace(/\sVariant\)/, '\)');
                     repeatingName = repeatingName.replace(/\s\(Recharge\s(.*)\)/, '-\(R$1\)');
                     repeatingName = repeatingName.replace(/\s\(Costs\s(.*)\sActions\)/, '-\($1a\)');
 
@@ -243,7 +270,7 @@ var tokenAction = tokenAction || (function() {
         handleInput = function(msg) {
             var char;
             var keywords = ['attacks', 'spells', 'abilities', 'saves', 'checks', 'traits', 'reactions', 'init'];
-            if (!(msg.type === 'api' && msg.selected && (msg.content.search(/^!ta\b/) || msg.content.search(/^!deleteta\b/) || msg.content.search(/^!sortta\b/)))) return;
+            if (!(msg.type === 'api' && msg.selected && (msg.content.search(/^!ta\b/) || msg.content.search(/^!deleteta\b/) || msg.content.search(/^!deleteallta\b/) || msg.content.search(/^!sortta\b/)))) return;
 
             var args = msg.content.split(" ");
             const usename = args.includes('name') ? true : false;
@@ -343,7 +370,14 @@ var tokenAction = tokenAction || (function() {
 
                 _.each(char, function(d) {
                     deleteAbilities(d.id);
-                    sendChat("TokenAction", "/w " + msg.who + " Deleted Token Actions for " + d.get('name') + ".");
+                    sendChat("TokenAction", "/w " + msg.who + " Deleted all unprotected Token Actions for " + d.get('name') + ".");
+                });
+            } else if (msg.content.search(/^!deleteallta\b/) !== -1) {
+                char = _.uniq(getSelectedCharacters(msg.selected));
+
+                _.each(char, function(d) {
+                    deleteAllAbilities(d.id);
+                    sendChat("TokenAction", "/w " + msg.who + " Deleted all Token Actions for " + d.get('name') + ".");
                 });
             } else if (msg.content.search(/^!sortta\b/) !== -1) {
 
@@ -351,7 +385,7 @@ var tokenAction = tokenAction || (function() {
 
 
                 _.each(char, function(a) {
-                    if (isNpc(a.id) === 1) {
+                    if (parseInt(isNpc(a.id)) === 1) {
                         if (args.includes("init")) {
                             createAbility('Init', "%{" + a.id + "|npc_init}", a.id);
                         }
