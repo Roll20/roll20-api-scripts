@@ -97,7 +97,7 @@
       "maxItems": 0,
       "additionalProperties": {
         "type": "string",
-        "enum": ["read", "write", "read, write", "write, read"]
+        "enum": ["read", "write", "read, write", "write, read", "read,write", "write,read"]
       }
     },
     "conflicts":{
