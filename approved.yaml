@@ -979,3 +979,11 @@ discretewhisper:
 insertarg:
   - "InsertArg"
   - "Utility"
+
+starfinderguidance:
+  - "Starfinder Guidance"
+  - "System Toolbox"
+
+scriptcards:
+  - "ScriptCards"
+  - "Utility"
