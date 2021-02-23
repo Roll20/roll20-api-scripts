@@ -1,6 +1,8 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 2.16
 ### Capacités
+* Capacité de cyclone des élémentaires.
+* Présence glaciale de la Voie du gel
 * Charge fantastique du chevalier
 * Project de la Voie du colosse.
 * Ventre mou de la Voie du tueur de géants.
@@ -10,8 +12,20 @@
 * Support de la capacité Enchaînement du barbare.
 * Ajout de l'attaque d'étreinte et immolation de certains démons gardiens
 * Ajout de la capacité Hausser le ton de la Voie du champion
+* Ajout de la capacité Liberté d'action du barde
+* Implémentation des effets de Cercle de protection
+* Ajout de la capacité Combat kinétique du Psionique
+* Support du sort Armure d'eau
+* Support de Moment de perfection (moine)
+* Support d'Ensevelissement (nécromancien)
+* Support d'Armée des Morts (nécromancien) 
 
 ### Autres améliorations
+* Ajout d'un effet temporaire effetRetarde
+* Les aires d'effet en disque ne passent plus les murs.
+* Ajout de RD aux éléments.
+* Correction sur l'initiative entre PJs qui doivent comparer la sagesse
+* Ajout de la possibilité de faire des attaques de d12 qui font des critiques
 * Prise en compte des compétences sur la fiche
 * Ajout d'une option de sélection alliesEnVue
 * Prise en compte des immunités pour les effets temporaires.
@@ -22,8 +36,17 @@
 * Ajout d'une interface de gestion de la bourse.
 * Support de la pénombre
 * Support pour les personnages invisibles en combat
+* Meilleur support de la Prouesse du guerrier
+* Meilleur support de la Parade de projectiles du moine
+* Meilleur support du Tour de force
+* Meilleur support du Pacte Sanglant 
 
 ### Corrections de bugs
+* Correction des RD seulement contre perçant ou tranchant ou contondant.
+* Compatibilité de --maxDmg avec --reroll1 et --explodeMax
+* Crash de statut pour les personnages ayant un capitaine.
+* Correction du test d'attaque opposée
+* Calcul de score d'attaque corrigé pour les Terres d'Arran.
 * Mise à jour de l'initiative quand on rengaine son arme à distance avec la voie du pistolero.
 * Donne le droit au joueur qui doit faire une réaction à une attaque de ne pas réagir.
 * Les créatures qui enveloppent ou étreignent leur cible la relachent quand elle meurt.
