@@ -55,7 +55,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.13a';
+    const version = '0.12';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -208,7 +208,7 @@ const SpawnDefaultToken = (() => {
             let UDL = page[0].get("dynamic_lighting_enabled");
             
             //set emitted light
-            if (UDL && lightRad !== -999) {
+            if (UDL) {
                 //Updated Dynamic Lighting
                 iLightRad = parseInt(lightRad);
                 iLightDim = parseInt(lightDim);
@@ -224,7 +224,7 @@ const SpawnDefaultToken = (() => {
                     baseObj.emits_low_light = true;
                     baseObj.low_light_distance = (iLightRad + iLightDim).toString();
                 }
-            } else if (lightRad !== -999) {
+            } else if (lightRad !== "") {
                 //Legacy Dynamic Lighting
                 baseObj.light_radius = lightRad;
                 baseObj.light_dimradius = lightDim;
@@ -683,8 +683,8 @@ const SpawnDefaultToken = (() => {
                             break;
                         case "offset":
                             let direction = param.split(',');
-                            data.offsetX = parseFloat(direction[0]) * 70;
-                            data.offsetY = parseFloat(direction[1]) * 70;
+                            data.offsetX = parseInt(direction[0]) * 70;
+                            data.offsetY = parseInt(direction[1]) * 70;
                             break;
                         case "sheet":
                             data.sheetName = param;
