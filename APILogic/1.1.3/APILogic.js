@@ -3,8 +3,8 @@
 Name			:	APILogic
 GitHub			:	https://github.com/TimRohr22/Cauldron/tree/master/APILogic
 Roll20 Contact	:	timmaugh
-Version			:	1.1.2
-Last Update		:	2/17/2021
+Version			:	1.1.3
+Last Update		:	2/22/2021
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -18,8 +18,8 @@ const APILogic = (() => {
     //		VERSION
     // ==================================================
     const apiproject = 'APILogic';
-    API_Meta[apiproject].version = '1.1.2';
-    const vd = new Date(1613614788869);
+    API_Meta[apiproject].version = '1.1.3';
+    const vd = new Date(1614045045452);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         return;
@@ -922,22 +922,19 @@ const APILogic = (() => {
             '<': (t) => (internalTestLib.num(t.contents[0].value) ? Number(t.contents[0].value) : t.contents[0].value) < (internalTestLib.num(t.contents[1].value) ? Number(t.contents[1].value) : t.contents[1].value),
             '<=': (t) => (internalTestLib.num(t.contents[0].value) ? Number(t.contents[0].value) : t.contents[0].value) <= (internalTestLib.num(t.contents[1].value) ? Number(t.contents[1].value) : t.contents[1].value)
         }
-
         const resolveCondition = (t) => {
             // expects condition token
             // each item in t.contents should be a regex result also with a property type: 'sheetitem', 'rptgitem', 'text' 
             // t.type :: 'condition', '=', '!=', etc.
             // negation is at t.contents[#].groups.negation
             // comparable or usable text is different for text vs sheet item vs rpt item
-            let o = {};
-            let retrieve = '';	// retrievable field for attributes and abilities
             // internalTestLib moved to outer scope
 
             t.contents.forEach(item => {
                 item.metavalue = true;
                 switch (item.type) {
                     case 'text':
-                        item.groups.argtext = item.groups.argtext.replace(/\$\[\[(\d+)]]/g, ((r, g1) => preserved.parsedinline[g1].value || 0));
+                        item.groups.argtext = item.groups.argtext.replace(/\$\[\[(\d+)]]/g, ((r, g1) => o.parsedinline[g1].value || 0));
                         if (grouplib.hasOwnProperty(item.groups.argtext)) {
                             if (grouplib[item.groups.argtext]) item.value = true;
                             else {
@@ -1199,6 +1196,7 @@ const APILogic = (() => {
             if (o.tokens) {
                 // reconstruct command line
                 o.logicgroups = preserved.logicgroups;
+                o.parsedinline = preserved.parsedinline || [];
                 let reconstruct = reconstructCommandLine(o);
                 preserved.content = reconstruct.content;
                 preserved.logicgroups = reconstruct.logicgroups;

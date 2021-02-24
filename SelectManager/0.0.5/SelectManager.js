@@ -3,8 +3,8 @@
 Name			:	SelectManager
 GitHub			:   https://github.com/TimRohr22/Cauldron/tree/master/SelectManager
 Roll20 Contact	:	timmaugh && TheAaron
-Version			:	0.0.7
-Last Update		:	2/19/2020
+Version			:	0.0.5
+Last Update		:	2/17/2020
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -18,10 +18,10 @@ const SelectManager = (() => {
     //		VERSION
     // ==================================================
     const apiproject = 'SelectManager';
-    const version = '0.0.7';
+    const version = '0.0.5';
     const schemaVersion = 0.1;
     API_Meta[apiproject].version = version;
-    const vd = new Date(1613764140237);
+    const vd = new Date(1613569418736);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -231,45 +231,10 @@ const SelectManager = (() => {
     let preservedMsgObj = {
         [maintrigger]: { selected: undefined, who: '', playerid: '' }
     };
-    const fsrx = /^!forselected(--|\+\+|\+-|-\+|\+|-|)\s+.+/i;
-
-    const forselected = (msg, apitrigger) => {
-        apitrigger = `${apiproject}${generateUUID()}`;
-        preservedMsgObj[apitrigger] = { selected: [...msg.selected], who: msg.who, playerid: msg.playerid };
-        let fsres = fsrx.exec(msg.content);
-        switch (fsres[1] || '++') {
-            case '+-':
-                preservedMsgObj[apitrigger].replaceid = true;
-                preservedMsgObj[apitrigger].replacename = false;
-                break;
-            case '-':
-            case '-+':
-                preservedMsgObj[apitrigger].replaceid = false;
-                preservedMsgObj[apitrigger].replacename = true;
-                preservedMsgObj[apitrigger].nametoreplace = findObjs({ type: 'graphic', subtype: 'token', id: msg.selected[0]._id })[0].get('name');
-                break;
-            case '--':
-                preservedMsgObj[apitrigger].replaceid = false;
-                preservedMsgObj[apitrigger].replacename = false;
-                break;
-            case '+':
-            case '++':
-            default:
-                preservedMsgObj[apitrigger].replaceid = true;
-                preservedMsgObj[apitrigger].replacename = true;
-                preservedMsgObj[apitrigger].nametoreplace = findObjs({ type: 'graphic', subtype: 'token', id: msg.selected[0]._id })[0].get('name');
-                break;
-        }
-        let chatspeaker = getTheSpeaker(msg).chatSpeaker;
-        msg.content = msg.content.replace(/<br\/>\n/g, ' ');
-        msg.selected.forEach((t, i) => {
-            sendChat(chatspeaker, `!${apitrigger}${i} ${msg.content.replace(/^!forselected(--|\+\+|\+-|-\+|\+|-|)\s+!?/, '')}`);
-        });
-        setTimeout(() => { delete preservedMsgObj[apitrigger] }, 1000);
-    }
     const handleInput = (msg) => {
         const trigrx = new RegExp(`^!(${Object.keys(preservedMsgObj).join('|')})`);
         let apitrigger; // the apitrigger used by the message
+        let fsrx = /^!forselected(--|\+\+|\+-|-\+|\+|-|)\s+.+/i;
         if ('API' !== msg.playerid) { // user generated message
             [preservedMsgObj[maintrigger].who, preservedMsgObj[maintrigger].selected, preservedMsgObj[maintrigger].playerid] = [msg.who, msg.selected, msg.playerid];
             if (fsrx.test(msg.content)) { // user wants to iterate the command over the selected tokens
@@ -277,24 +242,43 @@ const SelectManager = (() => {
                     sendChat('API', `/w "${msg.who.replace(' (GM)', '')}" No selected tokens to use for that command. Please select some tokens then try again.`);
                     return;
                 }
-                forselected(msg, apitrigger);
+                apitrigger = `${apiproject}${generateUUID()}`;
+                preservedMsgObj[apitrigger] = { selected: [...msg.selected], who: msg.who, playerid: msg.playerid };
+                let fsres = fsrx.exec(msg.content);
+                switch (fsres[1] || '++') {
+                    case '+-':
+                        preservedMsgObj[apitrigger].replaceid = true;
+                        preservedMsgObj[apitrigger].replacename = false;
+                        break;
+                    case '-':
+                    case '-+':
+                        preservedMsgObj[apitrigger].replaceid = false;
+                        preservedMsgObj[apitrigger].replacename = true;
+                        preservedMsgObj[apitrigger].nametoreplace = findObjs({ type: 'graphic', subtype: 'token', id: msg.selected[0]._id })[0].get('name');
+                        break;
+                    case '--':
+                        preservedMsgObj[apitrigger].replaceid = false;
+                        preservedMsgObj[apitrigger].replacename = false;
+                        break;
+                    case '+':
+                    case '++':
+                    default:
+                        preservedMsgObj[apitrigger].replaceid = true;
+                        preservedMsgObj[apitrigger].replacename = true;
+                        preservedMsgObj[apitrigger].nametoreplace = findObjs({ type: 'graphic', subtype: 'token', id: msg.selected[0]._id })[0].get('name');
+                        break;
+                }
+                let chatspeaker = getTheSpeaker(msg).chatSpeaker;
+                msg.selected.forEach((t, i) => {
+                    sendChat(chatspeaker, `!${apitrigger}${i} ${msg.content.replace(/^!forselected(--|\+\+|\+-|-\+|\+|-|)\s+/, '')}`);
+                });
+                setTimeout(() => { delete preservedMsgObj[apitrigger] }, 1000);
                 return;
             } else if (/^!smconfig/.test(msg.content)) { // user wants to process config options for SelectManager
                 handleConfig(msg);
             }
         } else { // API generated message
-            if (fsrx.test(msg.content)) { // user had api generate call to iterate the command over the selected tokens
-                if (!preservedMsgObj[maintrigger].selected) {
-                    sendChat('API', `/w "${preservedMsgObj[maintrigger].who.replace(' (GM)', '')}" No selected tokens to use for that command. Please select some tokens then try again.`);
-                    return;
-                }
-                msg.selected = [];
-                msg.selected.push(...preservedMsgObj[maintrigger].selected);
-                msg.who = preservedMsgObj[maintrigger].who;
-                msg.playerid = preservedMsgObj[maintrigger].playerid;
-                forselected(msg, apitrigger);
-                return;
-            } else if (trigrx.test(msg.content)) { // message has apitrigger (iterative call of forselected) so cycle-in next selected
+            if (trigrx.test(msg.content)) { // message has apitrigger (cycle-in next selected)
                 apitrigger = trigrx.exec(msg.content)[1];
                 msg.content = msg.content.replace(apitrigger, '');
                 let nextindex = /^!(\d+)\s*/.exec(msg.content)[1];
@@ -329,7 +313,9 @@ const SelectManager = (() => {
                         }
                         return (findObjs({ type: 'attribute', character_id: character.id })[0] || { get: () => { return '' } }).get(g2 ? 'max' : 'current') || '';
                     }
-                });
+                })
+
+
             } else { // api generated call to another script, copy in the appropriate data
                 if (state[apiproject].autoinsert.includes('selected')) {
                     msg.selected = preservedMsgObj[maintrigger].selected;

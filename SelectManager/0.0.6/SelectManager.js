@@ -3,7 +3,7 @@
 Name			:	SelectManager
 GitHub			:   https://github.com/TimRohr22/Cauldron/tree/master/SelectManager
 Roll20 Contact	:	timmaugh && TheAaron
-Version			:	0.0.7
+Version			:	0.0.6
 Last Update		:	2/19/2020
 =========================================================
 */
@@ -18,10 +18,10 @@ const SelectManager = (() => {
     //		VERSION
     // ==================================================
     const apiproject = 'SelectManager';
-    const version = '0.0.7';
+    const version = '0.0.6';
     const schemaVersion = 0.1;
     API_Meta[apiproject].version = version;
-    const vd = new Date(1613764140237);
+    const vd = new Date(1613710889499);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -263,7 +263,7 @@ const SelectManager = (() => {
         let chatspeaker = getTheSpeaker(msg).chatSpeaker;
         msg.content = msg.content.replace(/<br\/>\n/g, ' ');
         msg.selected.forEach((t, i) => {
-            sendChat(chatspeaker, `!${apitrigger}${i} ${msg.content.replace(/^!forselected(--|\+\+|\+-|-\+|\+|-|)\s+!?/, '')}`);
+            sendChat(chatspeaker, `!${apitrigger}${i} ${msg.content.replace(/^!forselected(--|\+\+|\+-|-\+|\+|-|)\s+/, '')}`);
         });
         setTimeout(() => { delete preservedMsgObj[apitrigger] }, 1000);
     }
