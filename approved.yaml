@@ -987,3 +987,11 @@ starfinderguidance:
 scriptcards:
   - "ScriptCards"
   - "Utility"
+  
+discretewhisper:
+  - "DiscreteWhisper"
+  - "Utility"
+
+selectmanager:
+  - "SelectManager"
+  - "Utility"
