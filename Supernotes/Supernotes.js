@@ -22,16 +22,20 @@ on('ready', () => {
     log('Supernotes v' + version + ' is ready!  To set the template of choice or to toggle the send to players option, Use the command !gmnote --config');
 
     on('chat:message', function(msg) {
-        if ('api' === msg.type && msg.content.match(/^!(gm|pc)note\b/)) {
+        if ('api' === msg.type && msg.content.match(/^!(gm|pc|self)note\b/)) {
             let match = msg.content.match(/^!gmnote-(.*)$/);
 
             //define command                     
             let command = msg.content.split(/\s+--/)[0];
-
-
+let sender = msg.who
+log(sender);
             let messagePrefix = '/w gm ';
             if (command === '!pcnote') {
                 messagePrefix = '';
+            }
+            
+           if (command === '!selfnote') {
+                messagePrefix = '/w '+sender + ' ';
             }
 
             //define option
@@ -130,7 +134,7 @@ on('ready', () => {
 
 
                     let playerButton = '';
-                    if (sendToPlayers && command === '!gmnote') {
+                    if (sendToPlayers && (command === '!gmnote'||command ===  '!selfnote')) {
                         playerButton = '\n[Send to Players](!pcnote --' + option + ')';
                     }
 
