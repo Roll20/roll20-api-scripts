@@ -8,7 +8,8 @@
     "roll20userid": "1226016",
     "patreon": "https://www.patreon.com/robinkuiper",
     "useroptions": [],
-    "dependencies": {
+    "dependencies": [],
+    "modifies": {
         "state.LAZYEXPERIENCE": "read,write",
         "attribute.name": "read,write",
         "attribute.current": "read,write",
@@ -17,6 +18,5 @@
         "player.id": "read",
         "player.displayname": "read"
     },
-    "modifies": {},
     "conflicts": []
 }

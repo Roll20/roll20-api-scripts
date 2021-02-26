@@ -764,6 +764,10 @@ libtokenmrkers:
   - "libTokenMarkers"
   - "Utility"
 
+libinline:
+  - "libInline"
+  - "Utility"
+
 md5sum:
   - "MD5Sum"
   - "Utility"
@@ -936,3 +940,58 @@ maximumapocalypse:
   - "Maximum Apocalypse"
   - "System Toolbox"
 
+clocktokens:
+  - "ClockTokens"
+  - "System Toolbox"
+
+5ebarbarian:
+  - "RatWorkshop_Barbarian"
+  - "System Toolbox"
+
+5edmtools:
+  - "RatWorkshop_DungeonMasterTools"
+  - "System Toolbox"
+
+5epaladin:
+  - "RatWorkshop_Paladin"
+  - "System Toolbox"
+
+treatwounds:
+  - "TreatWounds"
+  - "System Toolbox"
+
+initiativetrackerplus:
+  - "InitiativeTrackerPlus"
+  - "Utility"
+
+selectmanager:
+  - "SelectManager"
+  - "Utility"
+
+apilogic:
+  - "APILogic"
+  - "Utility"
+
+discretewhisper:
+  - "DiscreteWhisper"
+  - "Utility"
+
+insertarg:
+  - "InsertArg"
+  - "Utility"
+
+starfinderguidance:
+  - "Starfinder Guidance"
+  - "System Toolbox"
+
+scriptcards:
+  - "ScriptCards"
+  - "Utility"
+  
+discretewhisper:
+  - "DiscreteWhisper"
+  - "Utility"
+
+selectmanager:
+  - "SelectManager"
+  - "Utility"
