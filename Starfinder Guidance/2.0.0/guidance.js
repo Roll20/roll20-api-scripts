@@ -1295,12 +1295,13 @@ var Guidance = Guidance || (function () {
     let addSpecialAbility = function (characterId, textToParse) {
         debugLog("Parsing Special Abilities");
         let uuid;
+        let abilityName = "";
 
         setAttribute(characterId, "npc-special-abilities-show", 1);
         if (textToParse.includes("(")) {
             do {
                 uuid = generateRowID();
-                let abilityName = textToParse.substring(0, textToParse.indexOf(")") + 1);
+                abilityName = textToParse.substring(0, textToParse.indexOf(")") + 1);
                 setAttribute(characterId, "repeating_special-ability_" + uuid + "_npc-spec-abil-name", abilityName.trim());
                 textToParse = textToParse.substring(textToParse.indexOf(")") + 1);
                 let nextAbility = textToParse.match(/\.([^\.]*?)\(..\)/);
