@@ -103,6 +103,7 @@ Changes various configuration values.  Permitted keys and what they expect for v
 * statusbgcolor - [#897A87] - Hex color code, changes the background color of the chat message announcing statuses of the current actor.
 * statusbordercolor [#430D3D] - Hex color code, changes the color of the border of the chat message announcing statuses of the current actor.
 * statusargscolor [#FFFFFF] - Hex color code, changes the color of the feedback text when changing the marker for a status.
+* eotcolor [#FF0000] - Hex color code, changes the color of the EOT button.
 
 
 
