@@ -12,6 +12,8 @@ This script as written is optimized for the D&D 5th Edition by Roll20 sheet, but
 
 **!pcnote** sends the note to all players
 
+**!selfnote** whispers the note to to the sender
+
 
 ## Paramaters
 
@@ -38,7 +40,7 @@ This script as written is optimized for the D&D 5th Edition by Roll20 sheet, but
 
 ## Configuration
 
-When first installed, Supernotes is configured for the default roll template. It will display a config dialog box at startup that will allow you to choose a roll template based on your character sheet of choice, as well as the option  to toggle whether you want the 'Send to Players' footer button to appear.
+When first installed, Supernotes is configured for the default roll template. It will display a config dialog box at startup that will allow you to choose a roll template based on your character sheet of choice, as well as the option  to toggle whether you want the 'Send to Players' footer button to appear. The footer will appear on a !selfnote whisper, so that the message can be shared with other players if desired.
 
 You will need to edit the code of the script if you wish to create a custom configuration, or contact keithcurtis on the Roll20 forum and request an addition. The pre-installed sheets are:
 
