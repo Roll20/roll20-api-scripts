@@ -19,7 +19,7 @@ _How to:_
 
 The script supports character statblocks from the [Archives of Nethys](https://www.aonsrd.com/Default.aspx) and the [Starjammer SRD](https://www.starjammersrd.com/). <span style="font-style: italic;">Society PDFs, at least in the earlier ones, sometimes present issues. Double check the results after importing a statblock from a PDF.</span>
 
-**<span style="font-style: italic;">!sf_starship</span>**
+**!sf_starship**
 
 This imports a Starfinder starship statblock from the GM Notes section of a [linked character sheet](https://wiki.roll20.net/Linking_Tokens_to_Journals) and populates the Starship page of the sheet. Furthermore, It adds gunnery and piloting check macros. If the statblock doesn’t have stats for the pilot/gunner, the script adds prompts so that when you click the macro, you are prompted for the bonus.
 
