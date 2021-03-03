@@ -979,3 +979,27 @@ discretewhisper:
 insertarg:
   - "InsertArg"
   - "Utility"
+
+starfinderguidance:
+  - "Starfinder Guidance"
+  - "System Toolbox"
+
+scriptcards:
+  - "ScriptCards"
+  - "Utility"
+  
+discretewhisper:
+  - "DiscreteWhisper"
+  - "Utility"
+
+selectmanager:
+  - "SelectManager"
+  - "Utility"
+ 
+imperator:
+  - "Imperator"
+  - "System Toolbox"
+  
+myzsectorgenerator:
+  - "MutantYearZero_SectorGenerator"
+  - "System Toolbox"
