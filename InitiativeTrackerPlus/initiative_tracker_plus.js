@@ -1,51 +1,5 @@
 /**
  * initiative_tracker_plus.js
- *
- * * Copyright 2015: Ken L.
- * * Copyright 2020: James C.
- * Licensed under the GPL Version 3 license.
- * http://www.gnu.org/licenses/gpl.html
- *
- * This script is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This script is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *
- * The goal of this script is to be an iniative tracker, that manages statuses,
- * effects, and durations.
- *
- * 1. It should advance the turn order and display a notification in chat with
- * optional toggles.
- *
- * 1.1 It should have the ability to announce rounds
- *
- * 2. It should allow some kind of underlay graphic with or without some kind of
- * underlay graphic like TurnMarker.js
- *
- * 3. It should have the ability to tie status conditions to tokens with concise
- * visual cues to relay to chat (IE fog cloud has X turns remaining on it or has lasted N turns).
- *
- * 4. It should be extensible to other scripts by exposing a call structure for
- * a speedier access of innate functions without cluttering up the message queue. TODO
- *
- * 5. It should be verbose in terms of error reporting where all are recoverable.
- *
- * 6. It should save turn information within the state object to ensure recovery
- * of all effects in the event of API connection failure.
- *
- * 7. It should be lightweight with a minimal amount of passed messages.
- *
- *
- *
- *
  */
 
 /************************************************************************************
@@ -60,8 +14,9 @@
 var statusMarkers = [];
 var InitiativeTrackerPlus = (function() {
 	'use strict';
-	var version = 1.24,
+	var version = 1.25,
 		author = 'James C. (Chuz)',
+		lastUpdated = 'Feb 13 2021',
 		pending = null;
 
 	var ITP_StateEnum = Object.freeze({
@@ -86,7 +41,6 @@ var InitiativeTrackerPlus = (function() {
 		trackerImgRatio: 2.25,
 		rotation_degree: 15,
 		rotation_rate: 250, // time between rotation updates (lower number == faster rotation, likely will have negative impact on performance)
-
 		round_separator_initiative: -100, // the initiative value of the round separator, defaults to -100 to display [?Round # -100] in the turn tracker
 	};
 
@@ -97,7 +51,8 @@ var InitiativeTrackerPlus = (function() {
 		rotation: true,
 		animating: false,
 		archive: false,
-		clearonclose: true
+		clearonclose: true,
+		show_eot: true
 	};
 
 	var design = {
@@ -112,6 +67,7 @@ var InitiativeTrackerPlus = (function() {
 		settings_icon: 'https://s3.amazonaws.com/files.d20.io/images/11920672/7a2wOvU1xjO-gK5kq5whgQ/thumb.png?1440940765',
 		apply_icon: 'https://s3.amazonaws.com/files.d20.io/images/11407460/cmCi3B1N0s9jU6ul079JeA/thumb.png?1439137300'
 	};
+
 
 
 	var InitiativeTrackerPlus_tmp = (function() {
@@ -148,15 +104,20 @@ var InitiativeTrackerPlus = (function() {
 			},
 
 			hasTemplate: function(type) {
-				if (!type)
-					{return false;}
+				if (!type) {
+					return false;
+				}
 				return !!_.find(_.keys(templates), function(elem) {
-					{return (elem === type);}
+					{
+						return (elem === type);
+					}
 				});
 
 			}
 		};
 	}());
+
+
 
 	/**
 	 * PendingResponse constructor
@@ -169,6 +130,8 @@ var InitiativeTrackerPlus = (function() {
 		this.func = func;
 		this.args = args;
 	};
+
+
 
 	/**
 	 * PendingResponse prototypes
@@ -183,6 +146,8 @@ var InitiativeTrackerPlus = (function() {
 		},
 		doCustomOps: function(args) { return this.func(args); },
 	};
+
+
 
 	/**
 	 * Add a pending response to the stack, return the associated hash
@@ -208,6 +173,8 @@ var InitiativeTrackerPlus = (function() {
 		return retval;
 	};
 
+
+
 	/**
 	 * find a pending response
 	 */
@@ -221,6 +188,8 @@ var InitiativeTrackerPlus = (function() {
 		return retval;
 	};
 
+
+
 	/**
 	 * Clear pending responses
 	 */
@@ -228,6 +197,8 @@ var InitiativeTrackerPlus = (function() {
 		if (pending[hash])
 			{delete pending[hash]; }
 	};
+
+
 
 	/**
 	* @author lordvlad @stackoverflow
@@ -245,31 +216,72 @@ var InitiativeTrackerPlus = (function() {
 		return hash;
 	};
 
+
+
 	/**
 	 * Init
 	 */
 	var init = function() {
-		if (!state.initiative_tracker_plus)
-			{state.initiative_tracker_plus = {};}
-		if (!state.initiative_tracker_plus.effects)
-			{state.initiative_tracker_plus.effects = {};}
-		if (!state.initiative_tracker_plus.statuses)
-			{state.initiative_tracker_plus.statuses = [];}
-		if (!state.initiative_tracker_plus.favs)
-			{state.initiative_tracker_plus.favs = {};}
+		if (!state.initiative_tracker_plus) {
+			state.initiative_tracker_plus = {};
+		}
+		if (!state.initiative_tracker_plus.effects) {
+			state.initiative_tracker_plus.effects = {};
+		}
+		if (!state.initiative_tracker_plus.statuses) {
+			state.initiative_tracker_plus.statuses = [];
+		}
+		if (!state.initiative_tracker_plus.favs) {
+			state.initiative_tracker_plus.favs = {};
+		}
+
+		if (!state.initiative_tracker_plus.config) {
+			state.initiative_tracker_plus.config = {};
+			state.initiative_tracker_plus.config.fields = {};
+			state.initiative_tracker_plus.config.flags = {};
+			state.initiative_tracker_plus.config.design = {};
+		}
+
+		// if the defaults are defined in the state copy them from the state to the used vars
+		// do this for fields, flags, and design
+		Object.keys(fields).forEach( function(key) {
+			if(state.initiative_tracker_plus.config.fields[key]) {
+				fields[key] = state.initiative_tracker_plus.config.fields[key];
+			}
+		});
+
+
+		Object.keys(flags).forEach( function(key) {
+			if(state.initiative_tracker_plus.config.flags[key]) {
+				flags[key] = state.initiative_tracker_plus.config.flags[key];
+			}
+		});
+
+
+		Object.keys(design).forEach( function(key) {
+			if(state.initiative_tracker_plus.config.design[key]) {
+				design[key] = state.initiative_tracker_plus.config.design[key];
+			}
+		});
+
+
+		log('-=> IT+ v'+version+' <=- ['+lastUpdated+']');
 	};
+
 
 
 	/**
 	 * Completely wipe state variables
 	 */
 	var cleanSlate = function() {
-		log('Clearing Persistent Data...');
+		log('IT+ Clearing Persistent Data...');
 		state.initiative_tracker_plus = {};
 		state.initiative_tracker_plus.effects = {};
 		state.initiative_tracker_plus.statuses = [];
 		state.initiative_tracker_plus.favs = {};
+		state.initiative_tracker_plus.config = {};
 	}
+
 
 
 	/**
@@ -293,6 +305,7 @@ var InitiativeTrackerPlus = (function() {
 	}
 
 
+
 	/**
 	 * Reset the tracker image to the default
 	 */
@@ -306,6 +319,7 @@ var InitiativeTrackerPlus = (function() {
 		fields.trackerImg = fields.defaultTrackerImg;
 		sendFeedback('Token Indicator reset to default');
 	}
+
 
 
 	/**
@@ -322,6 +336,8 @@ var InitiativeTrackerPlus = (function() {
 			{retval = obj[0];}
 		return retval;
 	};
+
+
 
 	/**
 	 * Return the string with the roll formatted, this is accomplished by simply
@@ -348,6 +364,8 @@ var InitiativeTrackerPlus = (function() {
 
 		return pre+"[["+expr+"]]"+getFormattedRoll(post);
 	};
+
+
 
 	/**
 	 * Return the target expression expanded as far as it logically can span
@@ -392,6 +410,8 @@ var InitiativeTrackerPlus = (function() {
 		return retval;
 	};
 
+
+
 	/**
 	 * Gets a legal roll expression.
 	 */
@@ -432,6 +452,8 @@ var InitiativeTrackerPlus = (function() {
 		return retval;
 	};
 
+
+
 	/**
 	 * Prepare the turn order by checking if the tracker is present,
 	 * if so, then we're resuming a previous turnorder (perhaps a restart).
@@ -449,7 +471,11 @@ var InitiativeTrackerPlus = (function() {
 			{turnorder = JSON.parse(turnorder);}
 		var tracker;
 
-		if (tracker = _.find(turnorder, function(e,i) {if (parseInt(e.id) === -1 && parseInt(e.pr) === fields.round_separator_initiative && e.custom.match(/Round\s*\d+/)){return true;}})) {
+		if (tracker = _.find(turnorder, function(e,i) {
+			if (parseInt(e.id) === -1 && parseInt(e.pr) == fields.round_separator_initiative && e.custom.match(/Round\s*\d+/)) {
+				return true;
+			}
+		})) {
 			// resume logic
 		} else {
 			turnorder.push({
@@ -471,6 +497,7 @@ var InitiativeTrackerPlus = (function() {
 	};
 
 
+
 	/**
 	 * update the status display the appears beneath the turn order
 	 */
@@ -487,12 +514,13 @@ var InitiativeTrackerPlus = (function() {
 			if (!e) {return;}
 			statusArgs = e;
 			gstatus = statusExists(e.name);
-			statusArgs.duration = parseInt(statusArgs.duration) +
-				parseInt(statusArgs.direction);
-			if (gstatus.marker)
-				{content += makeStatusDisplay(e);}
-			else
-				{hcontent += makeStatusDisplay(e)}
+			statusArgs.duration = parseInt(statusArgs.duration) + parseInt(statusArgs.direction);
+			if (gstatus.marker) {
+				content += makeStatusDisplay(e);
+			}
+			else {
+				hcontent += makeStatusDisplay(e);
+			}
 		});
 		effects = _.reject(effects,function(e) {
 			if (e.duration <= 0) {
@@ -507,6 +535,7 @@ var InitiativeTrackerPlus = (function() {
 		updateAllTokenMarkers(toRemove);
 		return {public: content, hidden: hcontent};
 	};
+
 
 
 	/**
@@ -546,6 +575,8 @@ var InitiativeTrackerPlus = (function() {
 		return retval;
 	};
 
+
+
 	/**
 	 * Updates every token marker related to a status
 	 */
@@ -562,15 +593,20 @@ var InitiativeTrackerPlus = (function() {
 			if (!token) {
 				return;
 			}
-			effects = getStatusEffects(token);
 
+			effects = getStatusEffects(token);
 			tokenStatusString = token.get('statusmarkers');
 
 			if (_.isUndefined(tokenStatusString) || tokenStatusString === 'undefined') {
 				log('Unable to get status string for ' + e + ' status string is ' + tokenStatusString);
-				return;
+//				return;
 			}
-			tokenStatusString = tokenStatusString.split(',');
+
+			if(tokenStatusString != '') {
+				tokenStatusString = tokenStatusString.split(',');
+			}
+
+
 			_.each(effects, function(elem) {
 				statusName = elem.name.toLowerCase();
 				status = _.findWhere(state.initiative_tracker_plus.statuses,{name: statusName});
@@ -610,6 +646,8 @@ var InitiativeTrackerPlus = (function() {
 			token.set('statusmarkers',(tokenStatusString||''));
 		});
 	};
+
+
 
 	/**
 	 * Update the tracker's marker in the turn order
@@ -660,12 +698,16 @@ var InitiativeTrackerPlus = (function() {
 
 	};
 
+
+
 	/**
 	 * Status exists
 	 */
 	var statusExists = function(statusName) {
 		return _.findWhere(state.initiative_tracker_plus.statuses,{name: statusName});
 	};
+
+
 
 	/**
 	 * get status effects for a token
@@ -680,6 +722,8 @@ var InitiativeTrackerPlus = (function() {
 		return undefined;
 	};
 
+
+
 	/**
 	 *  set status effects for a token
 	 */
@@ -690,6 +734,8 @@ var InitiativeTrackerPlus = (function() {
 		if(Array.isArray(effects))
 			{state.initiative_tracker_plus.effects[curToken.get('_id')] = effects;}
 	};
+
+
 
 	/**
 	 * Make the display for editing a status for multiple tokens.
@@ -777,23 +823,32 @@ var InitiativeTrackerPlus = (function() {
 
 	};
 
+
+
 	/**
 	 * Make the display for multi-token configuration in selecting
 	 * which status to edit for the group of tokens selected.
 	 */
 	var makeMultiTokenConfig = function(tuple) {
-		if (!tuple)
-			{return;}
+		if (!tuple) {
+			return;
+		}
 
 		var content = '',
 			midcontent = '',
 			gstatus,
-			markerdef;
+			markerdef,
+			selectedIds = {};
 
 		_.each(tuple, function(e) {
 			gstatus = statusExists(e.statusName);
-			if (!gstatus)
-				{return;}
+			if (!gstatus) {
+				return;
+			}
+
+			_.each(e.id.split(' %% '), function(id) {
+				selectedIds[id] = 1;
+			});
 
 			markerdef = _.findWhere(statusMarkers,{tag: gstatus.marker});
 			midcontent +=
@@ -817,8 +872,16 @@ var InitiativeTrackerPlus = (function() {
 				+ '</tr>';
 		});
 
+
 		if ('' === midcontent) {
 			midcontent = '<span style="font-style: italic;">No Status Effects Present</span>';
+		} else {
+			midcontent +=
+				'<tr style="'+design.statusbordercolor+';" >'
+					+ '<td height="32px" colspan=4>'
+						+ InitiativeTrackerPlus_tmp.getTemplate({command: '!itp -dispmultistatusconfig removeall @ ' + Object.keys(selectedIds).join(' %% '), text: 'Remove ALL Effects'},'button')
+					+ '</td>'
+				+ '</tr>';
 		}
 
 		content += '<div style="background-color: '+design.statuscolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em; text-align: center;">'
@@ -833,6 +896,7 @@ var InitiativeTrackerPlus = (function() {
 		content += '</table></div>';
 		return content;
 	};
+
 
 
 	/**
@@ -885,6 +949,8 @@ var InitiativeTrackerPlus = (function() {
 		return content;
 	};
 
+
+
 	/**
 	 * Build status display
 	 */
@@ -910,6 +976,8 @@ var InitiativeTrackerPlus = (function() {
 		return content;
 	};
 
+
+
 	/**
 	 * Build round display
 	 */
@@ -923,6 +991,8 @@ var InitiativeTrackerPlus = (function() {
 			+'</div>';
 		return content;
 	};
+
+
 
 	/**
 	 * Build turn display
@@ -958,9 +1028,11 @@ var InitiativeTrackerPlus = (function() {
 					+ (name ? ('It is ' + name + '\'s turn') : 'Turn')
 				+ '</td>'
 				+ '<td width="32px" height="32px">'
-					+ '<a style="width: 20px; height: 18px; background: none; border: none;" href="!itp -disptokenconfig '+curToken.get('_id')+'"><img src="'+design.settings_icon+'"></img></a>'
-					+ '<a style="width: 30px; height: 18px; background: red; border: solid 1px; color: white; font-weight: heavy;" href="!eot"><nobr>EOT</nobr></a>'
-				+ '</td>'
+					+ '<a style="width: 20px; height: 18px; background: none; border: none;" href="!itp -disptokenconfig '+curToken.get('_id')+'"><img src="'+design.settings_icon+'"></img></a>';
+		if(flags.show_eot) {
+			content += '<a style="width: 30px; height: 18px; background: red; border: solid 1px; color: white; font-weight: heavy;" href="!eot"><nobr>EOT</nobr></a>'
+		}
+		content += '</td>'
 				+ '</tr>';
 
 		if (_.find(controllers,function(e){return (e === 'all');})) {
@@ -982,6 +1054,8 @@ var InitiativeTrackerPlus = (function() {
 
 		return content;
 	};
+
+
 
 	/**
 	 * Build a listing of favorites with buttons that allow them
@@ -1041,6 +1115,8 @@ var InitiativeTrackerPlus = (function() {
 		return content;
 	};
 
+
+
 	/**
 	 * Build a settings dialog given a token that has effects upon it.
 	 */
@@ -1052,7 +1128,8 @@ var InitiativeTrackerPlus = (function() {
 			effects = getStatusEffects(curToken),
 			status = _.findWhere(effects,{name:statusName}),
 			mImg,
-			content = '';
+			content = '',
+			urlName;
 
 		if (!favored && (!status || !globalStatus)) {
 			return '<span style="color: red; font-weight: bold;">Invalid syntax</span>';
@@ -1068,10 +1145,14 @@ var InitiativeTrackerPlus = (function() {
 		}
 
 		mImg = _.findWhere(statusMarkers,{tag: globalStatus.marker});
-		if (mImg)
-			{mImg = '<img src="' + mImg.img + '"></img>';}
-		else
-			{mImg = 'none';}
+
+		if (mImg) {
+			urlName = mImg.urlName;
+			mImg = '<img src="' + mImg.img + '"></img>';
+		} else {
+			urlName = globalStatus.name.toLowerCase().replace('::', '~dc~');
+			mImg = 'none';
+		}
 
 		content += '<div style="background-color: '+design.statuscolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em; text-align: center;">'
 			+ '<div style="border-bottom: 2px solid black;">'
@@ -1130,9 +1211,7 @@ var InitiativeTrackerPlus = (function() {
 				+ '</tr>'
 				+ (favored ? '':('<tr>'
 					+ '<td colspan="2">'
-						//+ '<a href="!CreatureGen -help">cookies</a>'
-						//+ '<a style="font-weight: bold" href="!itp -addfav '+statusName+' %% '+status.duration+' %% '+status.direction+' %% '+status.msg+' %% '+globalStatus.marker+'"> Add to Favorites</a>'
-						+ InitiativeTrackerPlus_tmp.getTemplate({command: '!itp -addfav '+statusName+' %% '+status.duration+' %% '+status.direction+' %% '+status.msg+' %% '+globalStatus.marker, text: 'Add to Favorites'},'button')
+						+ InitiativeTrackerPlus_tmp.getTemplate({command: '!itp -addfav '+statusName+' %% '+status.duration+' %% '+status.direction+' %% '+status.msg+' %% '+urlName, text: 'Add to Favorites'},'button')
 
 					+ '</td>'
 				+ '</tr>'))
@@ -1142,6 +1221,8 @@ var InitiativeTrackerPlus = (function() {
 		return content;
 
 	};
+
+
 
 	/**
 	 * Build the token dialog to display statuses effecting it
@@ -1158,8 +1239,10 @@ var InitiativeTrackerPlus = (function() {
 
 		_.each(effects, function(e) {
 			gstatus = statusExists(e.name);
-			if (!gstatus)
-				{return;}
+			if (!gstatus) {
+				return;
+			}
+
 			markerdef = _.findWhere(statusMarkers,{tag: gstatus.marker});
 			midcontent +=
 				'<tr style="border-bottom: 1px solid '+design.statusbordercolor+';" >'
@@ -1184,7 +1267,13 @@ var InitiativeTrackerPlus = (function() {
 
 		if ('' === midcontent) {
 			midcontent += '<tr><td><div style="text-align: center; font-style: italic;">No Status Effects Present</div></td></tr>';
-		}
+		} else {
+			midcontent += '<tr style="'+design.statusbordercolor+';" >'
+					+ '<td height="32px" colspan=4>'
+						+ InitiativeTrackerPlus_tmp.getTemplate({command: '!itp -dispmultistatusconfig removeall @ ' + curToken.id, text: 'Remove ALL Effects'},'button')
+					+ '</td>'
+				+ '</tr>'		}
+
 
 		content += '<div style="background-color: '+design.statuscolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em; text-align: center;">'
 			+ '<div style="border-bottom: 2px solid black;">'
@@ -1200,6 +1289,8 @@ var InitiativeTrackerPlus = (function() {
 		return content;
 	};
 
+
+
 	/**
 	 * Show a listing of markers
 	 */
@@ -1207,6 +1298,8 @@ var InitiativeTrackerPlus = (function() {
 		var disp = makeMarkerDisplay();
 		sendFeedback(disp);
 	};
+
+
 
 	/**
 	 * Is a tracker
@@ -1218,6 +1311,8 @@ var InitiativeTrackerPlus = (function() {
 			{return true;}
 		return false;
 	};
+
+
 
 	/**
 	 * Get the graphic object for the tracker (if any) for the current page.
@@ -1262,6 +1357,8 @@ var InitiativeTrackerPlus = (function() {
 
 	};
 
+
+
 	/**
 	 * Find the current token at the top of the tracker if any
 	 */
@@ -1277,6 +1374,8 @@ var InitiativeTrackerPlus = (function() {
 		return;
 	};
 
+
+
 	/**
 	 * Announce the round
 	 */
@@ -1286,6 +1385,8 @@ var InitiativeTrackerPlus = (function() {
 		var disp = makeRoundDisplay(round);
 		sendPublic(disp);
 	};
+
+
 
 	/**
 	 * Announce the turn with an optional rider display
@@ -1305,28 +1406,32 @@ var InitiativeTrackerPlus = (function() {
 		}
 	};
 
+
+
 	/**
 	 * Handle the turn order advancement given the current and prior ordering
 	 */
 	var handleAdvanceTurn = function(turnorder,priororder) {
-		if (flags.tj_state === ITP_StateEnum.STOPPED || flags.tj_state === ITP_StateEnum.PAUSED || !turnorder || !priororder)
-			{return;}
-		if (typeof(turnorder) === 'string')
-			{turnorder = JSON.parse(turnorder);}
-		if (typeof(priororder) === 'string')
-			{priororder = JSON.parse(priororder);}
-		var currentTurn = turnorder[0];
+		if (flags.tj_state === ITP_StateEnum.STOPPED || flags.tj_state === ITP_StateEnum.PAUSED || !turnorder || !priororder) {
+			return;
+		}
+		if (typeof(turnorder) === 'string') {
+			turnorder = JSON.parse(turnorder);
+		}
+		if (typeof(priororder) === 'string') {
+			priororder = JSON.parse(priororder);
+		}
 
+		var currentTurn = turnorder[0];
 		if (currentTurn) {
-			if (turnorder.length > 1
-			&& isTracker(currentTurn)) {
+			if (turnorder.length > 1 && isTracker(currentTurn)) {
 				// ensure that last turn we weren't also atop the order
-				if (!priororder || isTracker(priororder[0]))
-					{return;}
+				if (!priororder || isTracker(priororder[0])) {
+					return;
+				}
 				var rounds = parseInt(currentTurn.custom.match(/\d+/)[0]);
 				rounds++;
-				currentTurn.custom = currentTurn.custom.substring(0,currentTurn.custom.indexOf('Round'))
-					+ 'Round ' + rounds;
+				currentTurn.custom = currentTurn.custom.substring(0,currentTurn.custom.indexOf('Round')) + 'Round ' + rounds;
 				announceRound(rounds);
 				turnorder.shift();
 				turnorder.push(currentTurn);
@@ -1382,6 +1487,8 @@ var InitiativeTrackerPlus = (function() {
 		Campaign().set('turnorder',turnorder);
 	};
 
+
+
 	/**
 	 * Check if a favorite status exists
 	 */
@@ -1394,6 +1501,8 @@ var InitiativeTrackerPlus = (function() {
 			{found = state.initiative_tracker_plus.favs[found]; }
 		return found;
 	};
+
+
 
 	/**
 	 * Produce a listing of favorites
@@ -1487,6 +1596,8 @@ var InitiativeTrackerPlus = (function() {
 		sendFeedback(content);
 	};
 
+
+
 	/**
 	 * Add a favorite status to the list of statuses
 	 */
@@ -1553,6 +1664,8 @@ var InitiativeTrackerPlus = (function() {
 
 	};
 
+
+
 	/**
 	 * Remove a favorite from the tracker
 	 */
@@ -1576,6 +1689,7 @@ var InitiativeTrackerPlus = (function() {
 		delete state.initiative_tracker_plus.favs[statusName];
 		sendFeedback(content);
 	};
+
 
 
 	/**
@@ -1613,6 +1727,7 @@ var InitiativeTrackerPlus = (function() {
 	}
 
 
+
 	/**
 		Read the handout "InitiativeTrackerPlus Favorites JSON" if it exists and create favorites list from it
 	**/
@@ -1626,6 +1741,68 @@ var InitiativeTrackerPlus = (function() {
 
 		sendFeedback('Favorites loaded from handout "ITPFavsJSON"');
 	}
+
+
+
+	/**
+	 * Set Configuration Variables
+	 */
+	var setConfigVariable = function(args) {
+		var pairs = args.split(' ');
+
+		pairs.forEach(function(pair) {
+			// p[0] == var, p[1] == value
+			var p = pair.split(':');
+
+			// fix the value if it's 'true' or 'false'
+			if(p[1] === 'true') {
+				p[1] = true;
+			}
+			if(p[1] === 'false') {
+				p[1] = false;
+			}
+
+			var oldvalue = '';
+			// There's probably a better way to do this, but I'm using this to explicitely define what defaults can be overridden.
+			switch(p[0]) {
+				case 'trackerImgRatio':
+					p[1] = parseFloat(p[1]);
+				case 'rotation_degree':
+				case 'rotation_rate':
+				case 'round_separator_initiative':
+					if(p[0] == 'round_separator_initiative') {
+						p[1] = parseInt(p[1]);
+					}
+					oldvalue = fields[p[0]];
+					fields[p[0]] = p[1];
+					state.initiative_tracker_plus.config.fields[p[0]] = p[1];
+					break;
+				case 'show_eot':
+				case 'rotation':
+					oldvalue = flags[p[0]];
+					flags[p[0]] = p[1];
+					state.initiative_tracker_plus.config.flags[p[0]] = p[1];
+					break;
+				case 'turncolor':
+				case 'roundcolor':
+				case 'statuscolor':
+				case 'statusbgcolor':
+				case 'statusbordercolor':
+				case 'statusargscolor':
+					oldvalue = design[p[0]];
+					design[p[0]] = p[1];
+					state.initiative_tracker_plus.config.design[p[0]] = p[1];
+					break;
+				default:
+					break;
+			}
+
+		});
+
+
+
+	}
+
 
 
 	/**
@@ -1740,6 +1917,8 @@ var InitiativeTrackerPlus = (function() {
 		sendFeedback(content);
 	};
 
+
+
 	/**
 	 * Remove a status from the selected tokens
 	 */
@@ -1790,11 +1969,15 @@ var InitiativeTrackerPlus = (function() {
 			+ '<span style="font-style: normal;">Status "<span style="color: '+design.statuscolor+';">' +args+'</span>" removed from the following:</span><br>';
 		content += midcontent;
 		content += '</div>';
-		if (!found)
-			{content = '<span style="color: red; font-weight:bold;">No status "' + args + '" exists on any in the selection</span>'; }
+		if (!found) {
+			content = '<span style="color: red; font-weight:bold;">No status "' + args + '" exists on any in the selection</span>';
+		}
+
 		updateAllTokenMarkers(toRemove);
 		sendFeedback(content);
 	};
+
+
 
 	/**
 	 * Display marker list (internally used)
@@ -1815,12 +1998,15 @@ var InitiativeTrackerPlus = (function() {
 		sendFeedback(content);
 	};
 
+
+
 	/**
 	 * Display token configuration (internally used)
 	 */
 	var doDisplayTokenConfig = function(args) {
-		if (!args)
-			{return;}
+		if (!args) {
+			return;
+		}
 
 		var curToken = getObj('graphic',args);
 		if (!curToken || curToken.get('_subtype') !== 'token') {
@@ -1830,6 +2016,8 @@ var InitiativeTrackerPlus = (function() {
 		var content = makeTokenConfig(curToken);
 		sendFeedback(content);
 	};
+
+
 
 	/**
 	 * Display status configuration (internally used)
@@ -1877,6 +2065,8 @@ var InitiativeTrackerPlus = (function() {
 		}
 	};
 
+
+
 	/**
 	 * Display favorite configuration
 	 */
@@ -1884,6 +2074,8 @@ var InitiativeTrackerPlus = (function() {
 		var content = makeFavoriteConfig(args);
 		sendFeedback(content);
 	};
+
+
 
 	/**
 	 * Perform a single edit operation
@@ -1903,12 +2095,15 @@ var InitiativeTrackerPlus = (function() {
 		sendFeedback(content);
 	};
 
+
+
 	/**
 	 * Display the status edit dialog for a multi edit
 	 */
-	var doDisplayMultiStatusConfig = function(args) {
-		if (!args)
-			{return;}
+	var doDisplayMultiStatusConfig = function(args, selectedIds) {
+		if (!args) {
+			return;
+		}
 
 		args = args.split(' @ ');
 
@@ -1925,6 +2120,31 @@ var InitiativeTrackerPlus = (function() {
 			});
 			doRemoveStatus(statusName,selection);
 			return;
+		} else if (action === 'removeall') {
+			if(args[1]) {
+				idString = args[1].split(' %% ');
+			} else if(selectedIds) {
+				idString = selectedIds.split(' %% ');
+			} else {
+				idString = [];
+			}
+			// walk the lilst of token ids
+			_.each(idString, function(t) {
+				var curToken = getObj('graphic', t);
+
+				if(curToken && curToken.get('_subtype') === 'token' && !curToken.get('isdrawing')) {
+					var effects = getStatusEffects(curToken);
+					if (effects) {
+						_.each(effects,function(e) {
+
+						doRemoveStatus(e.name,[{_id: t, _type: 'graphic'}]);
+						});
+					}
+				}
+			});
+
+
+			return;
 		} else if (action !== 'change') {
 			return;
 		}
@@ -1934,6 +2154,8 @@ var InitiativeTrackerPlus = (function() {
 		sendFeedback(content);
 
 	};
+
+
 
 	/**
 	 * Display the multi edit token dialog
@@ -1968,6 +2190,8 @@ var InitiativeTrackerPlus = (function() {
 		content = makeMultiTokenConfig(tuple);
 		sendFeedback(content);
 	};
+
+
 
 	/**
 	 * Perform the edit operation on multiple tokens whose ids
@@ -2083,6 +2307,8 @@ var InitiativeTrackerPlus = (function() {
 		if (midcontent)
 			{sendFeedback(content);}
 	};
+
+
 
 	/**
 	 * Add player statuses
@@ -2216,6 +2442,8 @@ var InitiativeTrackerPlus = (function() {
 			{doDispPlayerStatusAllow(statusArgs,selection,senderId);}
 	};
 
+
+
 	/**
 	 * make dialog to allow/disallow a player status add
 	 */
@@ -2330,6 +2558,8 @@ var InitiativeTrackerPlus = (function() {
 		sendResponse(senderId,'<span style="color: orange; font-weight: bold;">Request sent for \''+statusArgs.name+'\'</span>');
 	};
 
+
+
 	/**
 	 * Performs a direct marker application to a status name.
 	 * An internal command that is still sanitized to prevent
@@ -2405,6 +2635,8 @@ var InitiativeTrackerPlus = (function() {
 			}
 		}
 	};
+
+
 
 	/**
 	 * Perform a status edit on a single token, internal command, but
@@ -2575,6 +2807,8 @@ var InitiativeTrackerPlus = (function() {
 		return;
 	};
 
+
+
 	/**
 	 * Resets the turn order the the provided round number
 	 * or in its absense, configures it to 1. Does no other
@@ -2605,6 +2839,8 @@ var InitiativeTrackerPlus = (function() {
 
 	};
 
+
+
 	/**
 	 * Get an array of controllers for the current token either
 	 * from the direct token control, or linked journal control
@@ -2622,6 +2858,8 @@ var InitiativeTrackerPlus = (function() {
 		}
 		return controllers;
 	};
+
+
 
 	/**
 	 * determine if the sender controls the token either by
@@ -2643,14 +2881,15 @@ var InitiativeTrackerPlus = (function() {
 		return false;
 	};
 
+
+
 	/**
 	 * Animate the tracker
-	 *
-	 * TODO make the rotation rate a field variable
 	 */
 	var animateTracker = function() {
-		if (!flags.animating)
-			{return;}
+		if (!flags.animating) {
+			return;
+		}
 
 		if (flags.tj_state === ITP_StateEnum.ACTIVE) {
 			if (flags.rotation) {
@@ -2665,6 +2904,8 @@ var InitiativeTrackerPlus = (function() {
 			flags.animating = false;
 		}
 	};
+
+
 
 	/**
 	 * Start/Pause the tracker, does not annouce the starting turn
@@ -2703,11 +2944,14 @@ var InitiativeTrackerPlus = (function() {
 		announceTurn(curToken, {public: '', hidden: ''});
 
 		updateTurnorderMarker();
-		if (!flags.animating) {
+
+		if (flags.animating == false) {
 			flags.animating = true;
 			animateTracker();
 		}
 	};
+
+
 
 	/**
 	 * Stops the tracker, removing all initiative_tracker_plus controlled
@@ -2737,6 +2981,8 @@ var InitiativeTrackerPlus = (function() {
 		state.initiative_tracker_plus.statuses = [];
 	};
 
+
+
 	/**
 	 * Pause the tracker
 	 *
@@ -2750,6 +2996,8 @@ var InitiativeTrackerPlus = (function() {
 			updateTurnorderMarker();
 		}
 	};
+
+
 
 	/**
 	 * Perform player controled turn advancement (!eot)
@@ -2772,6 +3020,8 @@ var InitiativeTrackerPlus = (function() {
 		}
 	};
 
+
+
 	/**
 	 * Clear the turn order
 	 */
@@ -2779,6 +3029,8 @@ var InitiativeTrackerPlus = (function() {
 		Campaign().set('turnorder','');
 		doStopTracker();
 	};
+
+
 
 	/**
 	 * Handle Pending Requests
@@ -2812,6 +3064,8 @@ var InitiativeTrackerPlus = (function() {
 			}
 		}
 	};
+
+
 
 	/**
 	 * Show help message
@@ -2890,6 +3144,21 @@ var InitiativeTrackerPlus = (function() {
 					+ '<li style="padding-left: 10px;">'
 						+ 'Remove a status from a group of selected tokens given the name.'
 					+ '</li>'
+
+					+ '<br>'
+					+ '<div style="font-weight: bold;">'
+						+ '!itp -dispmultistatusconfig removeall'
+					+ '</div>'
+					+ '<li style="padding-left: 10px;">'
+						+ 'Remove all statuses from selected token(s).'
+					+ '</li>'
+					+ '<br>'
+					+ '<div style="font-weight: bold;">'
+						+ '!itp -purge'
+					+ '</div>'
+					+ '<li style="padding-left: 10px;">'
+						+ 'Remove all statuses from selected token(s).'
+					+ '</li>'
 					+ '<br>'
 					+ '<div style="font-weight: bold;">'
 						+ '!itp -edit'
@@ -2967,11 +3236,34 @@ var InitiativeTrackerPlus = (function() {
 							+ '<li>Unpause the tracker if it was active, elsewise the next time the tracker is started the indicator will be the default green one.</li>'
 						+ '</ol>'
 					+ '</li>'
+					+ '<br>'
+					+ '<div style="font-weight: bold;">'
+						+ '!itp -setConfig [key]:[value]'
+					+ '</div>'
+					+ '<li style="padding-left: 10px;">'
+						+ 'Changes various configuration values.  Permitted keys and what they expect for values are:<br>'
+						+ 'Usage: <b>!itp -setConfig rotation:false</b>'
+						+ '<ul>'
+							+ "<li><b>trackerImgRatio</b> [2.25] - a decimal number, how much larger than the token it's highlighting that the turn indicator should be</li>"
+							+ "<li><b>rotation_degree</b> [15] - an integer number, how many degrees per step of the indicator animation that it rotates.</li>"
+							+ "<li><b>rotation_rate</b> [250] - an integer number, how many milliseconds between frames of the animation, smaller numbers are a faster animation but will load down roll20 more.</li>"
+							+ "<li><b>round_separator_initiative</b> [-100] - an integer number, displays the 'initiative' for the round separator 100 will put it at the top of the round, -100 will put it at the bottom of the round.</li>"
+							+ "<li><b>rotation</b> [true] - true or false, turns the spinning animation for the turn indicator on (true) or off (false)</li>"
+							+ "<li><b>turncolor</b> [#D8F9FF] - Hex color code, changes the color of the background of the chat message announcing who's turn it is.</li>"
+							+ "<li><b>roundcolor</b> [#363574] - Hex color code, changes the color of the round announcement chat message.</li>"
+							+ "<li><b>statuscolor</b> [#F0D6FF] - Hex color code, changes the color of the text of the chat message announcing statuses of the current actor.</li>"
+							+ "<li><b>statusbgcolor</b> [#897A87] - Hex color code, changes the background color of the chat message announcing statuses of the current actor.</li>"
+							+ "<li><b>statusbordercolor</b> [#430D3D] - Hex color code, changes the color of the border of the chat message announcing statuses of the current actor.</li>"
+							+ "<li><b>statusargscolor</b> [#FFFFFF] - Hex color code, changes the color of the feedback text when changing the marker for a status.</li>"
+						+ '</ul>'
+					+ '</li>'
 				+ '</div>'
    			+ '</div>';
 
 		sendFeedback(content);
 	};
+
+
 
 	/**
 	 * Send public message
@@ -2982,6 +3274,8 @@ var InitiativeTrackerPlus = (function() {
 		var content = '/desc ' + msg;
 		sendChat('',content,null,(flags.archive ? {noarchive:true}:null));
 	};
+
+
 
 	/**
 	* Fake message is fake!
@@ -2995,6 +3289,8 @@ var InitiativeTrackerPlus = (function() {
 
 		sendChat(fields.feedbackName,content,null,(flags.archive ? {noarchive:true}:null));
 	};
+
+
 
 	/**
 	 * Sends a response
@@ -3017,9 +3313,13 @@ var InitiativeTrackerPlus = (function() {
 		sendChat((as ? as:fields.feedbackName),content);
 	};
 
+
+
 	var sendResponseError = function(pid,msg,as,img) {
 		sendResponse(pid,'<span style="color: red; font-weight: bold;">'+msg+'</span>',as,img);
 	};
+
+
 
 	/**
 	 * Send an error
@@ -3027,6 +3327,8 @@ var InitiativeTrackerPlus = (function() {
 	var sendError = function(msg) {
 		sendFeedback('<span style="color: red; font-weight: bold;">'+msg+'</span>');
 	};
+
+
 
 	/**
 	 * Handle chat message event
@@ -3078,7 +3380,20 @@ var InitiativeTrackerPlus = (function() {
 				doDisplayFavConfig(args);
 			} else if (args.indexOf('-dispmultistatusconfig') === 0) {
 				args = args.replace('-dispmultistatusconfig','').trim();
-				doDisplayMultiStatusConfig(args);
+				var sel = [];
+				_.each(selected, function(e) {
+					sel.push(e._id);
+				});
+				var sel = sel.join(' %% ');
+				doDisplayMultiStatusConfig(args, sel);
+			} else if (args.indexOf('-purge') === 0) {
+				args = args.replace('-purge','removeall').trim();
+				var sel = [];
+				_.each(selected, function(e) {
+					sel.push(e._id);
+				});
+				var sel = sel.join(' %% ');
+				doDisplayMultiStatusConfig(args, sel);
 			} else if (args.indexOf('-edit_status') === 0) {
 				args = args.replace('-edit_status','').trim();
 				doEditStatus(args);
@@ -3109,6 +3424,9 @@ var InitiativeTrackerPlus = (function() {
 				setIndicatorImage();
 			} else if (args.indexOf('-defaultIndicatorImage') === 0) {
 				defaultIndicatorImage();
+			} else if (args.indexOf('-setConfig') === 0) {
+				args = args.replace('-setConfig', '').trim();
+				setConfigVariable(args);
 			} else {
 				sendFeedback('<span style="color: red;">Invalid command " <b>'+msg.content+'</b> "</span>');
 				showHelp();
@@ -3126,12 +3444,16 @@ var InitiativeTrackerPlus = (function() {
 		}
 	};
 
+
+
 	/**
 	 * Handle turn order change event
 	 */
 	var handleChangeCampaignTurnorder = function(obj,prev) {
 		handleAdvanceTurn(obj.get('turnorder'),prev.turnorder);
 	};
+
+
 
 	var handleChangeCampaignInitativepage = function(obj,prev) {
 		if (obj.get('initiativepage')) {
@@ -3141,6 +3463,8 @@ var InitiativeTrackerPlus = (function() {
 				{doClearTurnorder();}
 		}
 	};
+
+
 
 	/**
 	 * Handle Graphic movement events
@@ -3178,6 +3502,8 @@ var InitiativeTrackerPlus = (function() {
 		},500);
 	};
 
+
+
 	/**
 	 * Register and bind event handlers
 	 */
@@ -3197,9 +3523,11 @@ var InitiativeTrackerPlus = (function() {
 
 }());
 
+
+
 on("ready", function() {
 	'use strict';
-
+log('-=> IT+ Loading Markers... <=-');
 	const tokenMarkers = JSON.parse(Campaign().get("token_markers"));
 	const getMarkersFromCampaign = markers => {
 		var tms = [];
@@ -3212,7 +3540,7 @@ on("ready", function() {
 			tms.push(marker);
 log(marker);
 		});
-//log(tms);
+
 		return tms;
 	};
 	statusMarkers = getMarkersFromCampaign(tokenMarkers);
