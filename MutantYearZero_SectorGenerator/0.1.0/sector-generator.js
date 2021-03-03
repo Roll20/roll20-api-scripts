@@ -1175,15 +1175,9 @@ function getD66Exclusions(){
 }
 
 // A shorthand to whisper stuff to the GM>
-<<<<<<< HEAD
-let say = function(msg, public) {
-    let msg2 = msg;
-    if(!public) {
-=======
 let say = function(msg, isPublic) {
     let msg2 = msg;
     if(!isPublic) {
->>>>>>> upstream/master
         msg2 = `/w gm ${msg}`;
     }
     sendChat("GM", msg2);
@@ -1312,31 +1306,17 @@ function getRandomSector() {
 
 
 on("chat:message", function(msg) {
-<<<<<<< HEAD
-    if (msg.type != "api" || msg.content.indexOf("!sector") !== 0) {
-        return;
-    }
-    let public = false;
-    if (msg.content.indexOf("--public") >= 0) {
-        public = true;
-    }
-=======
     if (msg.type !== "api" || msg.content.indexOf("!sector") !== 0) {
         return;
     }
 
->>>>>>> upstream/master
     if (msg.content.indexOf("!sector-generate") >= 0) {
 
         let output = generateSector();
         say(output);
     }
     if (msg.content.indexOf("!sector-random") >= 0) {
-<<<<<<< HEAD
-        say(`<b>Sector</b>: ${getRandomSector()}`, public);
-=======
       let public = (msg.content.indexOf("--public") >= 0) ? true : false;
       say(`<b>Sector</b>: ${getRandomSector()}`, public);
->>>>>>> upstream/master
     }
 });
