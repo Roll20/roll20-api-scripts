@@ -268,8 +268,7 @@ class WildShapeMenu extends WildMenu
     constructor() {
         super();
 
-        let apiConfig = state[WS_API.STATENAME][WS_API.DATA_CONFIG];
-        this.UTILS = new WildUtils(WS_API.NAME, apiConfig[WS_API.FIELDS.ENABLE_DEBUG]);
+        this.UTILS = new WildUtils(WS_API.NAME);
     }
 
     updateConfig()
@@ -608,8 +607,9 @@ class WildShapeMenu extends WildMenu
 
 var WildShape = WildShape || (function() {
     'use strict';
-    let MENU = new WildShapeMenu();
-    let UTILS = new WildUtils(WS_API.NAME, state[WS_API.STATENAME][WS_API.DATA_CONFIG][WS_API.FIELDS.ENABLE_DEBUG]);
+
+    let MENU  = new WildShapeMenu();
+    let UTILS = new WildUtils(WS_API.NAME);
 
     const validateSeparator = (sep) => {
         return sep && typeof(sep) === 'string' && sep !== "" && !sep.match(/[.*+?^${}()|[\]\\]/g);
@@ -2282,16 +2282,19 @@ var WildShape = WildShape || (function() {
         }
  
         // check version
-        let config = apiState[WS_API.DATA_CONFIG];
-
         if (!apiState[WS_API.DATA_CONFIG] || typeof apiState[WS_API.DATA_CONFIG] !== 'object' || reset) 
         {
             apiState[WS_API.DATA_CONFIG] = WS_API.DEFAULT_CONFIG;
             apiState[WS_API.DATA_CONFIG].VERSION = WS_API.VERSION;
-            config = apiState[WS_API.DATA_CONFIG];
             reset = true;
         }
-        else if (UTILS.compareVersion(apiState[WS_API.DATA_CONFIG].VERSION, WS_API.VERSION) < 0)
+
+        // initialize global references
+        let config = apiState[WS_API.DATA_CONFIG];
+        UTILS.debugEnable(config[WS_API.FIELDS.ENABLE_DEBUG]);
+
+        // check for upgrades
+        if (UTILS.compareVersion(config.VERSION, WS_API.VERSION) < 0)
         {
             oldVersionDetected = apiState[WS_API.DATA_CONFIG].VERSION;
             upgradeVersion();
@@ -2310,6 +2313,7 @@ var WildShape = WildShape || (function() {
             apiState[WS_API.DATA_SHIFTERS] = {};
         }
 
+        // update configuration after upgrade
         MENU.updateConfig();
 
         if (reset || oldVersionDetected)
