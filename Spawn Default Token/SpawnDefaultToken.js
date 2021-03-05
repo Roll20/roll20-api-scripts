@@ -30,11 +30,11 @@
                                                     //For Updated Dynamic Lighting (UDL):
                                                         //First # is the radius of bright light (bright_light_distance)
                                                         //Second # is the additional radius of dim light (so: 10,5 will be 10ft of bright light + 5ft of dim light)
-      --mook|        < yes/no >             //DEFAULT = false (the "represents" characteristic of the token is removed so changes to one linked attribute, e.g. hp, will not propagate to other associated tokens.
-                                                    //If set to true, linked attributes will affect all tokens associated with that sheet
-      --force|       < yes/no >             //DEFAULT = false. The origin point is by default relative to the geometric center of the origin token
-                                                    //Origin tokens of larger than 1x1 may spawn tokens in between squares, which may be strange depending on the specific case
-                                                    //Set to true in order to force the token to spawn in a full square
+      --mook|        < yes/true/1/no/false/0 >      //DEFAULT = false (the "represents" characteristic of the token is removed so changes to one linked attribute, e.g. hp, will not propagate to other associated tokens.
+                                                        //If set to true, linked attributes will affect all tokens associated with that sheet
+      --force|       < yes/true/1/no/false/0 >      //DEFAULT = false. The origin point is by default relative to the geometric center of the origin token
+                                                        //Origin tokens of larger than 1x1 may spawn tokens in between squares, which may be strange depending on the specific case
+                                                        //Set to true in order to force the token to spawn in a full square
       --sheet|       < charName2 >          //DEFAULT = selected character. The character sheet in which to look for the supplied ability
                                                     //useful if the ability exists on a "macro mule" or simply another character sheet
       --ability|     < abilityName >        //The ability to trigger after spawning occurs. With caveats s described below
@@ -47,6 +47,16 @@
       --expand|      < #frames, delay >             //DEFAULT = 0,0. Animates the token during spawn. Expands from size = 0 to max size
                                                         //#frames: how many frames the expansion animation will use. Start with something like 20
                                                         //delay: how many milliseconds between triggering each frame? Start with something like 50. Any less than 30 may appear instant
+      --deleteSource|  < yes/true/1/no/false/0 >    //DEFAULT = false. Deletes the selected token(s) upon spawn
+      --deleteTarget|  < yes/true/1/no/false/0 >    //DEFAULT = false. Deletes the target token(s) upon spawn
+      --resizeSource|  < #,# <optional #frames, #delay> >    //DEFAULT = n/a. Animates the selected token(s) during spawn. 
+                                                        //#,#: the new size of the selected token(s). If any dimension is set to 0, it will delete the token after animation
+                                                        //#frames: DEFAULT = 20. how many frames the animation will use.
+                                                        //delay: DEFAULT = 50. how many milliseconds between triggering each frame? Anything less than 30 may appear instant
+      --resizeTarget|  < #,# <optional #frames, #delay> >    //DEFAULT = n/a. Animates the target token(s) during spawn. 
+                                                        //#,#: the new size of the target token(s). If any dimension is set to 0, it will delete the token after animation
+                                                        //#frames: DEFAULT = 20. how many frames the animation will use.
+                                                        //delay: DEFAULT = 50. how many milliseconds between triggering each frame? Anything less than 30 may appear instant
     }}
     
     
@@ -55,7 +65,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.13a';
+    const version = '0.14';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -131,10 +141,50 @@ const SpawnDefaultToken = (() => {
         return;
     };
     
+    function round(value, decimals) {
+        return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+    }
+    
+    async function resizeToken (tok, iterations, delay, startX, startY, endX, endY) {
+        let new_W = startX;
+        let new_H = startY;
+        
+        let incrementX = Math.abs(startX-endX) * (1 / iterations);  // size expansion factor.
+        let incrementY = Math.abs(startY-endY) * (1 / iterations);  // size expansion factor.  
+        
+        while (new_W !== endX && new_H !== endY) {
+            promise = new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    if (startX > endX) {    //shrink X
+                        new_W = Math.max(new_W - incrementX, endX)
+                    } else {                //grow X
+                        new_W = Math.min(new_W + incrementX, endX)
+                    }
+                    if (startY > endY) {    //shrink Y
+                        new_H = Math.max(new_H - incrementY, endY)
+                    } else {                //grow Y
+                        new_H = Math.min(new_H + incrementY, endY)
+                    }
+                    
+                    tok.set("width", new_W);
+                    tok.set("height", new_H);
+                    
+                    resolve("done!");
+                }, delay);
+            });
+            
+            result = await promise;
+           
+        }
+        if (new_W <= 0 || new_H <= 0) {
+            tok.remove();
+        } 
+        return;
+    }
     
     //This function runs asynchronously, as called from the processCommands function
     //We will sendChat errors, but the rest of processCommands keeps running :(
-    async function spawnTokenAtXY (who, tokenJSON, pageID, spawnLayer, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar1Link, bar2Val, bar2Max, bar2Link, bar3Val, bar3Max, bar3Link, expandIterations, expandDelay) {
+    function spawnTokenAtXY (who, tokenJSON, pageID, spawnLayer, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar1Link, bar2Val, bar2Max, bar2Link, bar3Val, bar3Max, bar3Link, expandIterations, expandDelay) {
         let newSideImg;
         let spawnObj;
         let currentSideOld;
@@ -173,7 +223,9 @@ const SpawnDefaultToken = (() => {
             
             //check for mook
             if (mook === true) {
-                baseObj.represents = "";
+                baseObj.bar1_link = "";
+                baseObj.bar2_link = "";
+                baseObj.bar3_link = "";
             }
             
             //token bar overrides
@@ -285,7 +337,10 @@ const SpawnDefaultToken = (() => {
             }
             
             //check for expanding token size
+            
             if (expandIterations > 0) {
+                resizeToken(spawnObj, expandIterations, expandDelay, 0, 0, sizeX, sizeY);
+                /*
                 let new_W, new_H;
                 
                 let factor = 1 / expandIterations;  // size expansion factor.  
@@ -312,7 +367,9 @@ const SpawnDefaultToken = (() => {
                 if (spawnObj.get("height") > sizeY) {
                     spawnObj.set("height", sizeY);
                 }
+                */
             }
+            
         }
         catch(err) {
           sendChat('SpawnAPI',`/w "${who}" `+ 'Unhandled exception: ' + err.message)
@@ -630,7 +687,7 @@ const SpawnDefaultToken = (() => {
     };
     
     //This is the primary worker function
-    const processCommands = function(data, args) {
+    async function processCommands(data, args) {
         let retVal = [];        //array of potential error messages to pass back to main handleInput funtion
         let validObj = "false"; //data validation string
         let o = 0;              //counter for originTok loops
@@ -716,7 +773,7 @@ const SpawnDefaultToken = (() => {
                             break;
                         case "mook":
                             //Default case is false. Only change if user requests false
-                            if (_.contains(['yes', '1'], param.toLowerCase())) {
+                            if (_.contains(['true','yes', '1'], param.toLowerCase())) {
                                 data.mook = true;
                             }
                             break;
@@ -767,6 +824,38 @@ const SpawnDefaultToken = (() => {
                             data.expandIterations = parseInt(p[0]);
                             if (p.length > 1) {
                                 data.expandDelay = parseInt(p[1]);
+                            }
+                            break;
+                        case "deletesource":
+                            if (_.contains(['true','yes', '1'], param.toLowerCase())) {
+                                data.deleteSource = true;
+                            }
+                            break;
+                        case "deletetarget":
+                            if (_.contains(['true','yes', '1'], param.toLowerCase())) {
+                                data.deleteTarget = true;
+                            }
+                            break;
+                        case "resizesource":
+                            let sourceSizes = param.split(',');
+                            data.resizeSourceX = parseFloat(sourceSizes[0]) * 70;
+                            data.resizeSourceY = parseFloat(sourceSizes[1]) * 70;
+                            if (sourceSizes.length >2) {
+                                data.resizeSourceIterations = parseInt(sourceSizes[2]);
+                            }
+                            if (sourceSizes.length >3) {
+                                data.resizeSourceDelay = parseInt(sourceSizes[3]);
+                            }
+                            break;
+                        case "resizetarget":
+                            let targetSizes = param.split(',');
+                            data.resizeTargetX = parseFloat(targetSizes[0]) * 70;
+                            data.resizeTargetY = parseFloat(targetSizes[1]) * 70;
+                            if (targetSizes.length >2) {
+                                data.resizeTargetIterations = parseInt(targetSizes[2]);
+                            }
+                            if (targetSizes.length >3) {
+                                data.resizeTargetDelay = parseInt(targetSizes[3]);
                             }
                             break;
                         default:
@@ -1185,6 +1274,31 @@ const SpawnDefaultToken = (() => {
                     }
                 });
             
+            //Optional resize source token
+            if (data.resizeSourceX !== -999 && data.resizeSourceY !== -999) {
+                data.selectedToks.forEach(tok => {
+                    resizeToken(tok, data.resizeSourceIterations, data.resizeSourceDelay, tok.get("width"), tok.get("height"), data.resizeSourceX, data.resizeSourceY)
+                });
+            }
+            //Optional resize target token
+            if (data.resizeTargetX !== -999 && data.resizeTargetY !== -999) {
+                data.originToks.forEach(tok => {
+                    resizeToken(tok, data.resizeTargetIterations, data.resizeTargetDelay, tok.get("width"), tok.get("height"), data.resizeTargetX, data.resizeTargetY)
+                });
+            }
+            
+            //Optional delete source token
+            if (data.deleteSource === true) {
+                data.selectedToks.forEach(tok => {
+                    tok.remove();
+                });
+            }
+            //Optional delete target token
+            if (data.deleteTarget === true) {
+                data.originToks.forEach(tok => {
+                    tok.remove();
+                });
+            }
             
             
             /////////////////////////////////////////////////////////////////////////////////
@@ -1326,7 +1440,17 @@ const SpawnDefaultToken = (() => {
                     abilityName: "",        //an ability to trigger after spawning
                     fx: "",                  //fx to trigger at the origin point(s)
                     expandIterations: 0,    //how many animation frames to use if animated token expansion is called for
-                    expandDelay: 50         //delay (in ms) between each frame if animated expansion is called for
+                    expandDelay: 50,         //delay (in ms) between each frame if animated expansion is called for
+                    deleteSource: false,    //deletes the source token upon spawning new token
+                    deleteTarget: false,    //deletes the target token upon spawning new token
+                    resizeSourceX: -999,    //resizes the source token upon spawning new token
+                    resizeSourceY: -999,    //resizes the source token upon spawning new token
+                    resizeTargetX: -999,    //resizes the target token upon spawning new token
+                    resizeTargetY: -999,    //resizes the target token upon spawning new token
+                    resizeSourceIterations: 20,    //how many animation frames to use if animated source token resize is called for
+                    resizeSourceDelay: 50,         //delay (in ms) between each frame if animated source resize is called for
+                    resizeTargetIterations: 20,    //how many animation frames to use if animated target token resize is called for
+                    resizeTargetDelay: 50         //delay (in ms) between each frame if animated target resize is called for
                 };
                 
                 //Parse msg into an array of argument objects [{cmd:params}]
