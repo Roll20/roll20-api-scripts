@@ -1386,7 +1386,7 @@ const SpawnDefaultToken = (() => {
                 var data = {
                     who: whoDat,        //Who called the script
                     spawnName: "",      //name of the target to spawn
-                    validArgs: "name, qty, targets, placement, force, offset, sheet, ability, side, size, order, light, mook, fx, bar1, bar2, bar3, expand",    //list of valid user commands for error message
+                    validArgs: "name, qty, targets, placement, force, offset, sheet, ability, side, size, order, light, mook, fx, bar1, bar2, bar3, expand, deleteSource, deleteTarget, resizeSource, resizeTarget",    //list of valid user commands for error message
                     qty: 1,             //how many tokens to spawn at each origin
                     //tokenIDs and objects
                     originToks: [],     //array of token objects to be used as reference point(s) for spawn location(s). 
