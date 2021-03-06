@@ -65,7 +65,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.14';
+    const version = '0.14a';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -687,7 +687,7 @@ const SpawnDefaultToken = (() => {
     };
     
     //This is the primary worker function
-    async function processCommands(data, args) {
+    const processCommands = function(data, args) {
         let retVal = [];        //array of potential error messages to pass back to main handleInput funtion
         let validObj = "false"; //data validation string
         let o = 0;              //counter for originTok loops
@@ -868,6 +868,7 @@ const SpawnDefaultToken = (() => {
                 return retVal;
             }
             //First data validation checkpoint
+            log(retVal.length);
             if (retVal.length > 0) {return retVal};
             
             //////////////////////////////////////////////////////
