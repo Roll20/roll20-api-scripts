@@ -11,7 +11,7 @@
 
 const WS_API = {
     NAME : "WildShape",
-    VERSION : "1.4.2",
+    VERSION : "1.4.2.1",
     REQUIRED_HELPER_VERSION: "1.3.3",
 
     STATENAME : "WILDSHAPE",
@@ -599,7 +599,7 @@ class WildShapeMenu extends WildMenu
             contents += this.makeButton(key, cmdShapeShift + key, ' width: 100%');
         });
 
-        this.showMenu(WS_API.NAME, contents, WS_API.NAME + ': ' + shifterId + ' ShapeShift', {whisper: who});
+        this.showMenu(WS_API.NAME, contents, WS_API.NAME + ': ' + shifterId + ' ShapeShift', playerIsGM(playerid) ? null : {whisper: who});
     }
 }
 
