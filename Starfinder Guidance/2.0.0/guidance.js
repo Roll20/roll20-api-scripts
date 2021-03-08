@@ -6,7 +6,7 @@ Requires API, Starfinder (Simple) character sheets - official sheets not support
 var Guidance = Guidance || (function () {
     "use strict";
 
-    let version = "-=> Guidance is online. v2.0 Candidate <=-";
+    let version = "-=> Guidance is online. v2.0 <=-";
     let debugMode = false;
     let enableNewNPCParser = false;
 
