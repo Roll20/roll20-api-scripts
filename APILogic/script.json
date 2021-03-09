@@ -1,7 +1,7 @@
 {
   "name": "APILogic",
   "script": "APILogic.js",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "APILogic provides chat input logical constructs for shaping the command line, including IF, ELSEIF, and ELSE. It provides a way to define terms for text-replacment operations, or to name condition sets to re-use later in the logical processing. It also allows for math operations right in a macro's command line, as well as variable muling to track values between rolls.\r\rFor more information, see the original API forum thread:\r\rhttps://app.roll20.net/forum/post/9771314/script-apilogic-gives-if-slash-elseif-slash-else-processing-to-other-scripts/",
   "authors": "timmaugh",
   "roll20userid": "5962076",
