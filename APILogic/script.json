@@ -16,8 +16,8 @@
     "attribute.name": "read",
     "attribute.type": "read",
     "ability.id": "read",
-    "ability.name": "read",
-    "ability.action": "read"
+    "ability.name": "read, write",
+    "ability.action": "read, write"
   },
   "conflicts": []
 }
