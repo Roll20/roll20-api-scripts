@@ -10,7 +10,7 @@ const ListPlayerCharacters = (() => { // eslint-disable-line no-unused-vars
   const scriptName = 'ListPlayerCharacters';
   const version = '0.1.0';
   API_Meta.ListPlayerCharacters.version = version;
-  const lastUpdate = 1615433369;
+  const lastUpdate = 1615434023;
   const schemaVersion = 0.1;
   const secToMs = 1000;
   const IN_PLAYER_JOURNALS = true;
@@ -263,7 +263,7 @@ const ListPlayerCharacters = (() => { // eslint-disable-line no-unused-vars
       ),
       _h.subhead('Description'),
       _h.inset(
-        _h.paragraph(`ListPlayerCharacters whispers a list of characters divided by player to the GM.  Each character shows the character's avatar, name, and a button to open that character.  There is also a green plus button that will add a new character for that player.  Pressing it will prompt for a name (you can leave the prompt blank to have a default name assigned.)`),
+        _h.paragraph(`If called by the GM, ListPlayerCharacters whispers a list of characters divided by player.  If called by a player, they will see their own characters as well as characters available to all players.  Each character shows the character's avatar, name, and a button to open that character.  There is also a green plus button that will add a new character for that player.  Pressing it will prompt for a name (you can leave the prompt blank to have a default name assigned).`),
         _h.paragraph(`You can list all the characters that players have access to with the following command:`),
         _h.inset(
           _h.pre('!list-pcs')
@@ -271,7 +271,8 @@ const ListPlayerCharacters = (() => { // eslint-disable-line no-unused-vars
         _h.paragraph(`If you want, you can ignore characters with controlled by set to ${_h.code('all players')}.  Characters that also have an explicit character assigned will still be shown under that player:`),
         _h.inset(
           _h.pre('!list-pcs --skip-all')
-        )
+        ),
+        _h.paragraph(`Additionally, ListPlayerCharacters will whisper a list of available characters to a player when they log in to a game.`)
       )
     ),
     config: (context) => _h.join(
