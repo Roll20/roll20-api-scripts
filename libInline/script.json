@@ -1,7 +1,7 @@
 {
   "name": "libInline",
   "script": "libInline.js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "libInline provides an easy interface for interacting with inlinerolls from a message, including retrieving dice sets and/or obtaining the roll-tip for chat-level output.\r\rFor more information, see the original thread in the API forum:\r\rhttps://app.roll20.net/forum/post/9770117/script-libinline-provides-an-easy-interface-for-inlinerolls-including-roll-tips",
   "authors": "timmaugh, The Aaron",
   "roll20userid": "5962076, 104025",
