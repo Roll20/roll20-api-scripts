@@ -1,16 +1,16 @@
-// Github:   https://github.com/shdwjk/Roll20API/blob/master/ListPlayerCharacters/ListPlayerCharacters.js
+// Github:   https://github.com/shdwjk/Roll20API/blob/master/PlayerCharacters/PlayerCharacters.js
 // By:       The Aaron, Arcane Scriptomancer
 // Contact:  https://app.roll20.net/users/104025/the-aaron
 var API_Meta = API_Meta||{};
-API_Meta.ListPlayerCharacters={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
-{try{throw new Error('');}catch(e){API_Meta.ListPlayerCharacters.offset=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-6);}}
+API_Meta.PlayerCharacters={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
+{try{throw new Error('');}catch(e){API_Meta.PlayerCharacters.offset=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-6);}}
 
-const ListPlayerCharacters = (() => { // eslint-disable-line no-unused-vars
+const PlayerCharacters = (() => { // eslint-disable-line no-unused-vars
 
-  const scriptName = 'ListPlayerCharacters';
+  const scriptName = 'PlayerCharacters';
   const version = '0.1.0';
-  API_Meta.ListPlayerCharacters.version = version;
-  const lastUpdate = 1615434023;
+  API_Meta.PlayerCharacters.version = version;
+  const lastUpdate = 1615587930;
   const schemaVersion = 0.1;
   const secToMs = 1000;
   const IN_PLAYER_JOURNALS = true;
@@ -65,7 +65,7 @@ const ListPlayerCharacters = (() => { // eslint-disable-line no-unused-vars
     assureHelpHandout();
   };
 
-	const cbArray = (list) => list.split(/\s*,\s*/).filter(s=>s.length);
+  const cbArray = (list) => list.split(/\s*,\s*/).filter(s=>s.length);
 
   const playerCanControl = (obj, playerid='any') => {
     const playerInControlledByList = (list, playerid) => list.includes('all') || list.includes(playerid) || ('any'===playerid && list.length);
@@ -123,7 +123,7 @@ const ListPlayerCharacters = (() => { // eslint-disable-line no-unused-vars
 	const f = {
 		clear:  ()=>`<div style="clear:both"></div>`,
 		charImg: (c) => c.get('avatar')||defaultImg, 
-		addButton: (pid) => `<a style="${s.addBtn}" href="!list-pcs --add-character ${pid} --name ${HE(`?{Character Name (Empty for "${defaultName(pid)}")`)}}">+</a>`,
+		addButton: (pid) => `<a style="${s.addBtn}" href="!pcs --add-character ${pid} --name ${HE(`?{Character Name (Empty for "${defaultName(pid)}")`)}}">+</a>`,
 		showChar: (c) => `<div style="${s.charRow}"><a style="${s.link}" href="http://journal.roll20.net/character/${c.id}">Open</a><img style="${s.img}" src="${f.charImg(c)}"/>${c.get('name')}${f.clear()}</div>`,
 		showPlayer: (p,cs,showAdd) => `<div style="${s.box}"><div>${showAdd ? f.addButton(p.id) : ''}${p.get('displayname')}:${f.clear()}</div>${cs.map(f.showChar).join('')}</div>`,
 		showAll: (cs,showAdd) => `<div style="${s.box}"><div>${showAdd ? f.addButton('all') : ''}All Players:${f.clear()}</div>${cs.map(f.showChar).join('')}</div>`
@@ -245,7 +245,7 @@ const ListPlayerCharacters = (() => { // eslint-disable-line no-unused-vars
       _h.subhead('Commands'),
       _h.inset(
         _h.font.command(
-          `!list-pcs`,
+          `!pcs`,
           _h.optional(
             `--skip-all`,
             `--add-character ${_h.required('Player ID or all')}`,
@@ -263,16 +263,16 @@ const ListPlayerCharacters = (() => { // eslint-disable-line no-unused-vars
       ),
       _h.subhead('Description'),
       _h.inset(
-        _h.paragraph(`If called by the GM, ListPlayerCharacters whispers a list of characters divided by player.  If called by a player, they will see their own characters as well as characters available to all players.  Each character shows the character's avatar, name, and a button to open that character.  There is also a green plus button that will add a new character for that player.  Pressing it will prompt for a name (you can leave the prompt blank to have a default name assigned).`),
+        _h.paragraph(`If called by the GM, PlayerCharacters whispers a list of characters divided by player.  If called by a player, they will see their own characters as well as characters available to all players.  Each character shows the character's avatar, name, and a button to open that character.  There is also a green plus button that will add a new character for that player.  Pressing it will prompt for a name (you can leave the prompt blank to have a default name assigned).`),
         _h.paragraph(`You can list all the characters that players have access to with the following command:`),
         _h.inset(
-          _h.pre('!list-pcs')
+          _h.pre('!pcs')
         ),
         _h.paragraph(`If you want, you can ignore characters with controlled by set to ${_h.code('all players')}.  Characters that also have an explicit character assigned will still be shown under that player:`),
         _h.inset(
-          _h.pre('!list-pcs --skip-all')
+          _h.pre('!pcs --skip-all')
         ),
-        _h.paragraph(`Additionally, ListPlayerCharacters will whisper a list of available characters to a player when they log in to a game.`)
+        _h.paragraph(`Additionally, PlayerCharacters will whisper a list of available characters to a player when they log in to a game.`)
       )
     ),
     config: (context) => _h.join(
@@ -280,7 +280,7 @@ const ListPlayerCharacters = (() => { // eslint-disable-line no-unused-vars
       _h.section('Configuration',
         _h.paragraph(`${_h.italic('--config')} takes option value pairs, separated by | characters.`),
         _h.inset(
-          _h.pre( '!list-pcs --config option|value option|value')
+          _h.pre( '!pcs --config option|value option|value')
         ),
         _h.minorhead('Available Configuration Properties:'),
         _h.ul(
@@ -292,10 +292,10 @@ const ListPlayerCharacters = (() => { // eslint-disable-line no-unused-vars
         ),
         ( playerIsGM(context.playerid)
           ? _h.join(
-            _h.paragraph(_h.configButtonOnOff('Show Characters on Login','!list-pcs --config show-characters-on-login|toggle',state[scriptName].config.showCharsOnLogin)),
-            _h.paragraph(_h.configButtonPrompt('Show Characters Delay',`!list-pcs --config show-characters-delay|?{Delay|${state[scriptName].config.showCharsDelay}}`, state[scriptName].config.showCharsDelay)),
-            _h.paragraph(_h.configButtonOnOff('Players can add Characters','!list-pcs --config players-can-add-characters|toggle',state[scriptName].config.playersCanAddCharacters)),
-            _h.paragraph(_h.configButtonOnOff('Players can add All Player Characters','!list-pcs --config players-can-add-all-characters|toggle',state[scriptName].config.playersCanAddAllCharacters)),
+            _h.paragraph(_h.configButtonOnOff('Show Characters on Login','!pcs --config show-characters-on-login|toggle',state[scriptName].config.showCharsOnLogin)),
+            _h.paragraph(_h.configButtonPrompt('Show Characters Delay',`!pcs --config show-characters-delay|?{Delay|${state[scriptName].config.showCharsDelay}}`, state[scriptName].config.showCharsDelay)),
+            _h.paragraph(_h.configButtonOnOff('Players can add Characters','!pcs --config players-can-add-characters|toggle',state[scriptName].config.playersCanAddCharacters)),
+            _h.paragraph(_h.configButtonOnOff('Players can add All Player Characters','!pcs --config players-can-add-all-characters|toggle',state[scriptName].config.playersCanAddAllCharacters)),
           )
           : ''
         )
@@ -331,7 +331,7 @@ const ListPlayerCharacters = (() => { // eslint-disable-line no-unused-vars
 
 
   const handleInput = (msg) => {
-    if('api'===msg.type && /^!list-pcs(\b\s|$)/i.test(msg.content)){
+    if('api'===msg.type && /^!pcs(\b\s|$)/i.test(msg.content)){
       let who = (getObj('player',msg.playerid)||{get:()=>'API'}).get('_displayname');
       let isGM = playerIsGM(msg.playerid);
 
@@ -426,4 +426,4 @@ const ListPlayerCharacters = (() => { // eslint-disable-line no-unused-vars
 
 })();
 
-{try{throw new Error('');}catch(e){API_Meta.ListPlayerCharacters.lineCount=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-API_Meta.ListPlayerCharacters.offset);}}
+{try{throw new Error('');}catch(e){API_Meta.PlayerCharacters.lineCount=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-API_Meta.PlayerCharacters.offset);}}
