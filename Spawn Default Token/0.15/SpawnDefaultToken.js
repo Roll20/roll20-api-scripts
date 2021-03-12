@@ -977,9 +977,10 @@ const SpawnDefaultToken = (() => {
             //Numeric qty between 1 and 20 required
             if (isNaN(data.qty)) {
                 retVal.push('Non-numeric qty detected. Format is \"--qty|#\"');
-            } else if ( data.qty <  1 || data.qty > 20 ) {
+            } /* else if ( data.qty <  1 || data.qty > 20 ) {
                 retVal.push('Input qty out of range. Must be between 1 and 20.');
             }
+            */
             
             //Check for supported FX
             if (data.fx !== '') {
