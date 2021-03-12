@@ -5,7 +5,7 @@
     !Spawn {{
       --name|        < charName >    //(REQUIRED) name of the character whose target we want to spawn
       --targets|     < # >           //Destination override. Instead of using selected token(s) as origin, use target token(s)
-      --qty|         < # >           //How many tokens to spawn at each origin point. DEFAULT =
+      --qty|         < # >           //How many tokens to spawn at each origin point. DEFAULT = 1
       --offset|	 < #,# >         //X,Y pos or neg shift in position of the spawn origin point(s) relative to the origin token(s), in number of SQUARES 
                                             //DEFAULT = 0,0  // (NOTE: a POSITIVE Y offset means LOWER on the map)
       --placement|   < option >      //How to arrange the tokens relative to the origin point (+ offset)
@@ -977,9 +977,10 @@ const SpawnDefaultToken = (() => {
             //Numeric qty between 1 and 20 required
             if (isNaN(data.qty)) {
                 retVal.push('Non-numeric qty detected. Format is \"--qty|#\"');
-            } else if ( data.qty <  1 || data.qty > 20 ) {
+            } /* else if ( data.qty <  1 || data.qty > 20 ) {
                 retVal.push('Input qty out of range. Must be between 1 and 20.');
             }
+            */
             
             //Check for supported FX
             if (data.fx !== '') {
