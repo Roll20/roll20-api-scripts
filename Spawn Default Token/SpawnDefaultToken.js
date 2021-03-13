@@ -5,7 +5,7 @@
     !Spawn {{
       --name|        < charName >    //(REQUIRED) name of the character whose target we want to spawn
       --targets|     < # >           //Destination override. Instead of using selected token(s) as origin, use target token(s)
-      --qty|         < # >           //How many tokens to spawn at each origin point. DEFAULT = 1
+      --qty|         < # >           //How many tokens to spawn at each origin point. DEFAULT =
       --offset|	 < #,# >         //X,Y pos or neg shift in position of the spawn origin point(s) relative to the origin token(s), in number of SQUARES 
                                             //DEFAULT = 0,0  // (NOTE: a POSITIVE Y offset means LOWER on the map)
       --placement|   < option >      //How to arrange the tokens relative to the origin point (+ offset)
@@ -58,6 +58,7 @@
                                                         //#,#: the new size of the target token(s). If any dimension is set to 0, it will delete the token after animation
                                                         //#frames: DEFAULT = 20. how many frames the animation will use.
                                                         //delay: DEFAULT = 50. how many milliseconds between triggering each frame? Anything less than 30 may appear instant
+      --rotation|  < # or rand/random>
     }}
     
     
@@ -66,7 +67,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.15';
+    const version = '0.16';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -190,7 +191,7 @@ const SpawnDefaultToken = (() => {
     
     //This function runs asynchronously, as called from the processCommands function
     //We will sendChat errors, but the rest of processCommands keeps running :(
-    function spawnTokenAtXY (who, tokenJSON, pageID, spawnLayer, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar1Link, bar2Val, bar2Max, bar2Link, bar3Val, bar3Max, bar3Link, expandIterations, expandDelay, destroyWhenDone) {
+    function spawnTokenAtXY (who, tokenJSON, pageID, spawnLayer, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar1Link, bar2Val, bar2Max, bar2Link, bar3Val, bar3Max, bar3Link, expandIterations, expandDelay, destroyWhenDone, angle) {
         let newSideImg;
         let spawnObj;
         let currentSideOld;
@@ -212,11 +213,13 @@ const SpawnDefaultToken = (() => {
                 baseObj.top = spawnY;
                 baseObj.width = sizeX;
                 baseObj.height = sizeY;
+                baseObj.rotation = angle;
             } else {                            //will animate and expand token to full size after spawning
                 baseObj.left = spawnX;
                 baseObj.top = spawnY;
                 baseObj.width = 0;
                 baseObj.height = 0;
+                baseObj.rotation = angle;
             }
             
             baseObj.imgsrc = getCleanImgsrc(baseObj.imgsrc); //ensure that we're using the thumb.png
@@ -713,6 +716,10 @@ const SpawnDefaultToken = (() => {
         
     };
     
+    const isNumber = function isNumber(value) {
+       return typeof value === 'number' && isFinite(value);
+    }
+    
     //This is the primary worker function
     const processCommands = function(data, args) {
         let retVal = [];        //array of potential error messages to pass back to main handleInput funtion
@@ -890,6 +897,10 @@ const SpawnDefaultToken = (() => {
                                 data.resizeTargetDelay = parseInt(targetSizes[3]);
                             }
                             break;
+                        case "rotation":
+                            //either a number or ("random"/"rand"). Actually, any text will default to random
+                            data.angle = parseInt(param) || param;
+                            break;
                         default:
                             retVal.push('Unexpected argument identifier (' + option + '). Choose from: (' + data.validArgs + ')');
                             break;    
@@ -1002,6 +1013,16 @@ const SpawnDefaultToken = (() => {
                 if (isNaN(data.expandDelay)) {
                     retVal.push('Non-numeric animation delay detected. Format is \"--expand|#,#\" \(iterations, delay\)');
                 }
+            }
+            
+            if (!isNumber(data.angle)) {
+                if(!_.contains(['random','rand'], data.angle)) {
+                    retVal.push('Invalid rotation detected. Format is \"--rotation|# or rand/random\"');
+                } else {
+                    data.angle = randomInteger(360)-1;  //0 to 359deg
+                }
+            } else {    //normalize to account for excess degrees
+                data.angle %= 360
             }
             
             //2nd data validation checkpoint. Potentially return several error msgs
@@ -1321,7 +1342,7 @@ const SpawnDefaultToken = (() => {
                                     spawnFx(data.spawnX[iteration], data.spawnY[iteration], data.fx, data.spawnPageID);
                                 }
                                 //Spawn the token!
-                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnLayer, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL, data.bar1Val, data.bar1Max, data.bar1Link, data.bar2Val, data.bar2Max, data.bar2Link, data.bar3Val, data.bar3Max, data.bar3Link, data.expandIterations, data.expandDelay, data.destroySpawnWhenDone);
+                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnLayer, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL, data.bar1Val, data.bar1Max, data.bar1Link, data.bar2Val, data.bar2Max, data.bar2Link, data.bar3Val, data.bar3Max, data.bar3Link, data.expandIterations, data.expandDelay, data.destroySpawnWhenDone, data.angle);
                                 
                             } else {
                                 log("off the map!");
@@ -1508,7 +1529,8 @@ const SpawnDefaultToken = (() => {
                     resizeSourceDelay: 50,         //delay (in ms) between each frame if animated source resize is called for
                     resizeTargetIterations: 20,    //how many animation frames to use if animated target token resize is called for
                     resizeTargetDelay: 50,         //delay (in ms) between each frame if animated target resize is called for
-                    destroySpawnWhenDone: false
+                    destroySpawnWhenDone: false,   //delete the spawned token after animation is complete    
+                    angle: 0                       //change the rotation of the spawned token
                 };
                 
                 //Parse msg into an array of argument objects [{cmd:params}]
