@@ -58,7 +58,6 @@
                                                         //#,#: the new size of the target token(s). If any dimension is set to 0, it will delete the token after animation
                                                         //#frames: DEFAULT = 20. how many frames the animation will use.
                                                         //delay: DEFAULT = 50. how many milliseconds between triggering each frame? Anything less than 30 may appear instant
-      --rotation|  < # or rand/random>
     }}
     
     
@@ -1016,7 +1015,7 @@ const SpawnDefaultToken = (() => {
             }
             
             if (!isNumber(data.angle)) {
-                if(!_.contains(['random','rand'], data.angle)) {
+                if(!_.contains(['random','rand'], data.angle.toLowerCase())) {
                     retVal.push('Invalid rotation detected. Format is \"--rotation|# or rand/random\"');
                 } else {
                     data.angle = randomInteger(360)-1;  //0 to 359deg
