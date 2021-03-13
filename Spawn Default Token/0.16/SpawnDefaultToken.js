@@ -1015,7 +1015,7 @@ const SpawnDefaultToken = (() => {
             }
             
             if (!isNumber(data.angle)) {
-                if(!_.contains(['random','rand'], data.angle)) {
+                if(!_.contains(['random','rand'], data.angle.toLowerCase())) {
                     retVal.push('Invalid rotation detected. Format is \"--rotation|# or rand/random\"');
                 } else {
                     data.angle = randomInteger(360)-1;  //0 to 359deg
