@@ -1,5 +1,5 @@
 ﻿# APILogic
-APILogic introduces logical structures to Roll20 command lines: things like IF, ELSEIF, and ELSE. It can test sets of conditions and, depending on the result, include or exclude parts of the command line that actually reaches the chat processor. For example, given the statement:
+APILogic introduces logical structures (things like IF, ELSEIF, and ELSE) as well as real-time inline math operations, and variable muling to Roll20 command lines. It can test sets of conditions and, depending on the result, include or exclude parts of the command line that actually reaches the chat processor. For example, given the statement:
 
     !somescript {& if a = a} true stuff {& else} default stuff {& end}
 ...results in the following reaching the chat:
@@ -12,7 +12,7 @@ APILogic exploits a peculiarity of the way many of the scripts reach the chat in
 
 Although it requires the API, it is not only for API messages. You can use these logic structures with basic chat messages, too. This document will show you how.
 ## Triggering and Usage
-You won't invoke APILogic directly by using a particular handle and a line dedicated for the APILogic to detect. Instead, any API call (beginning with an exclamation point: '!')  that also includes either an IF or DEFINE tag somewhere in the line will trigger APILogic to examine and parse the message before handing it off to other scripts.
+You won't invoke APILogic directly by using a particular handle and a line dedicated for the APILogic to detect. Instead, any API call (beginning with an exclamation point: '!')  that also includes any IF, DEFINE, MULE,  EVAL, EVAL-, or MATH tag somewhere in the line will trigger APILogic to examine and parse the message before handing it off to other scripts.
 
 As mentioned, you are not limited to using APILogic only for calls that are intended for other scripts. There are mechanisms built into the logic that let you output a simple chat message (no API) once you've processed all of the logic structures. That means you can use the logic structures in a simple message that was never intended to be picked up by a script, and also in a message that, depending on the conditions provided, might need to be picked up by another script, or alternatively flattened to a simple message to hit the chat log.
 
@@ -49,7 +49,7 @@ APILogic currently can retrieve and evaluate attributes, repeating items, and ab
     *|Character Name|list|[pattern]|rpt_item_suffix
 
 In each example, where the character's name is referenced, you can substitute the character's ID or the token ID of a token that represents that character.
-For abilities, the text (or action) of the ability will be returned; for attributes and repeating attributes, the current value. To retrieve the "max" value of an attribute or repeating attribute, see **Special Tests and Returning "max"**, below.
+For abilities, the text (or action) of the ability will be returned; for attributes and repeating attributes, the current value. To retrieve the "max" value of an attribute or repeating attribute, see **Special Tests and Returns**, below.
 
     {& if @|Bob the Hirsuite|health > 18 }
     {& if %|-M4qbDlLf8x7lYHaZ4tt|Blast ~ power }
@@ -64,7 +64,7 @@ Last, note that if there is space in the text provided as the right hand side of
 If you don't know the suffixes of the sub-attributes for a repeating list, I suggest you utilize a script like [XRay](https://app.roll20.net/forum/post/9097236/script-insertarg-script-preamp-siege-engine-menu-maker-command-line-constructor/) (part of the InsertArg script) to help identify the naming parts you need.
 ##### Sheet Item Reminder
 Remember, Roll20 will parse standard calls to sheet items before the message is handed off to the API, so if you *know* an attribute exists, for instance, it could be simpler for you to use the standard syntax to trigger the Roll20 parser to derive the value. On the other hand, using the APILogic syntax to access the sheet item provides an implicit test for whether the item exists at all. Rather than derailing the message, that condition simply evaluates as false, and processing continues.
-##### Special Tests and Returning "max" or "name"
+##### Special Tests and Returns
 Part of the implicit test performed on a sheet item is whether it exists (it's hard for an attribute to be 3-or-greater if it doesn't exist in the first place). Therefore, to test whether an item exists, you need only include it as a unary test in a condition set:
 
     {& if @|Bob the Slayer|weaponsmith }
@@ -75,7 +75,8 @@ The current special tests are:
 
     int	=>	integer
     num	=>	number
-**MAX:** To return the max value, utilize an `max` in the same position, with or without other special tests.
+There are also special pieces of data that can be returned, utilizing this same position (with or without the special tests).
+**MAX:** To return the max value for an attribute, use `max`.
 
     {& if @intmax|Bob the Slayer|weaponsmith > 10 }
 
@@ -92,6 +93,21 @@ The above would return, for example:
 
     {& define ([arrowsleft] *name|Bob the Slayer|resources|[resource_name="arrows"]|resource_quantity ) }
 For more information on using definitions, see **Use DEFINE Tag**, below.
+
+**ROW:** Roll20 lets you use a "rowID shorthand" ($0, $1, etc.) to reference items in a repeating set based on their sorted order. To get the ordinal/sorted position, use `row`.
+
+    *row|Bob the Slayer|resources|[resource_name=arrows]|resource_name
+
+The above would return the rowID shorthand, for instance, $0. Using this method, you could manage a left/right resource list and keep the items in sync. If the elements were in the $2 position in both lists, you could extract and define the rowID in a DEFINE tag, then use it elsewhere in the command line for references to the left or right resource list.
+
+**ROWNAME:** Much like `row`, `rowname` leverages the rowID of the repeating item, but instead returns the full name of the attribute using that rowID. To get the name of the item in the repeating set using the rowID, use `rowname`.
+
+    *rowname|Bob the Slayer|resources|[resource_name=arrows|resource_name
+
+The above would return something like:
+
+    repeating_resources_$0_resource_name
+
 #### Text as Condition
 If you need to include space in a bit of text to include as one side of a comparison operation, you should enclose the entire text string in either single quotes, double quotes, or tick marks. With three options available, you should have an option available even if the text you need to include might, itself have an instance of one of those characters. For instance, the following would not evaluate properly, because of the presence of the apostrophe in the word "don't":
 
@@ -168,6 +184,185 @@ Since DEFINE replacements are simple text replacement operations, these can be a
 ### Difference Between Definition and Named Group
 As mentioned in the section on using named groups, although the syntax for defining a `term` is very similar to naming a group, the two structures are different. If you placed the entirety of a group as a `definition`, you would be replicating that text anywhere you referenced the associated `term`, but each time that text was encountered, the group would be evaluated anew. Declaring the name for the group in an IF tag, where that name represents a set of conditions, ensures that those conditions are only evaluated once.
 
+## Using the EVAL and EVAL- Tags
+EVAL tags are new to version 1.2.0, and represent a way to plug more processing power into the inline parsing engine of APILogic. EVAL tags can run plugin scriptlets (or even other scripts) from your existing command line. The advantage of plugging the scriptlet into APILogic is that it can sub the returned data into your command line in real time!
+
+Although APILogic includes a library with a few built-in functions, the real strength of the EVAL tag is that 3rd-party scripters (or even you) can write plugable scriptlets to allow this real-time return of game data to your command line. Need a PageID? Write a script and plug it in. Need the closest X number of tokens to a given token? Or all of the tokens within some given range? Write a script! (Or buy your local scripter a coffee and have them write it for you!)
+
+EVAL tags are represented by `{& eval} ... {& /eval}`, while EVAL- tags are represented by `{& eval-} ... {& /eval-}`. The difference between them is only one of timing: the EVAL tag runs after MULE tags but before DEFINE tags, while the EVAL- tag runs after the DEFINE tags but before the IF tags (see **Order of Operations**, below, for a fuller discussion of the order of parsing). A full EVAL block would be structured like this:
+
+    {& eval} scriptname(arguments for script){& /eval}
+    OR
+    {& eval} scriptname arguments for script{& /eval}
+    OR
+    {& eval} !scriptname arguments for script{& /eval}
+The `scriptname` can represent one of the library of plugin scriptlets, or it could be another script in the game. Everything between the parentheses is passed to that script as arguments.
+
+Use the first form when you want to access a plug-in designed to return information to the line. Plug-ins are built very similarly to normal scripts, and in fact a fully-fledged script can be co-opted to return a value, if the developer wishes. More on building plugins is in **APPENDIX I**.
+
+The last two forms are functionally the same as each other (the third line simply includes the leading exclamation point), but they differ from the first form in that they do not return anything to the command line. These forms are intended solely for launching other scripts (not plugins) that have nothing to do with returning a value to the command line. The EVAL tag will launch the other script and consume itself, leaving a zero-length footprint behind.
+
+---
+**EXAMPLE: All tokens in range**
+Your character has an attack spell that affects anyone within some given range. Your scripter friend writes a script that returns the IDs of all tokens within that range, telling you that to use it, you would use a command syntax of:
+
+    !withinrange range source delimiter
+
+So a typical call might be:
+
+    !withinrange 3 -M1234567890abcdef ,
+
+...returning a comma-separated list of tokens within 3 units of the given source token. Your scripter friend also tells you that they have built it as a plug-in for APILogic, so now you can use the same scriptlet in-line with another command to substitute in that comma-separated list:
+
+    !some-other-script --targets|{& eval}withinrange(3 -M1234567890abcdef ,){& /eval} --damage|tons
+
+By the time `some-other-script` picks up the message, the EVAL tag has been evaluated and now contains the comma-separated list of tokens within the given 3 unit range.
+
+---
+### Nest-able
+EVAL tags are nest-able, and are processed from inside-out, allowing you to use one EVAL tag to return a piece of data that would be used as an argument in an enclosing EVAL tag:
+
+    {& eval}withinrange({& eval}getsheetitem(*|Bob the Slayer|spells|[spell_name=Supernova]|spell_lvl){& /eval} -M1234567890abcdef ,{& /eval}
+
+In that example, the `spell_lvl` of the Supernova spell is the range. The inner EVAL tag block retrieves the data by use of the built-in `getsheetitem` scriptlet, and passes it to the outer EVAL block's `withinrange` scriptlet.
+
+### Available Built-In Scriptlet Functions
+At the time of writing this, there are two built-in functions, with more coming:
+- **getDiceByVal()** will retrieve dice from an inline roll that match a given set of value parameters (i.e., 2|5-6|>=10). Output options are a count of the dice, a total of the dice, or a list separated by a delimiter of your choice. More info on the syntax is in Appendix II.
+- **getDiceByPos()** will retrieve dice from an inline roll based on the position of the dice based on a set of position parameters (i.e., 2|5-6|>=10). Output options are a count of the dice, a total of the dice, or a list separated by a delimiter of your choice. More info on the syntax is in **APPENDIX II**.
+
+### Installing 3rd Party Scriptlets
+If you or your local scripter has written a scriptlet to plug into APILogic (which is easy enough to do -- see **APPENDIX I**, below), you only need to install it as you would any other script. Provided the script author implemented the syntax to register that scriptlet with APILogic, it will be available to you as soon as your sandbox restarts.
+## Using the MULE Tag (get/set variables)
+Mules are abilities on a character sheet that can help you track information across rolls, game sessions, or even, since they are stored on the sheet, campaigns. This could be an inventory, a series of condition mods, roll history, or even tables from a game system. You can have as many mules as you want on any character, and you can access any mule on any character you control.
+
+You can create a mule ability yourself, though if APILogic detects that the mule you have created doesn't exist, it will try to create it. Mules are formatted as lines of `variable=value`:
+
+    initMod=4
+    FavTeamMember=Mo the Raging
+    LeastFavoriteTeamMember=Lizzie PurePants
+
+Any lines that do not follow this format are not included in the set of parsed variables, so you if you wanted to add add in headers or grouping, you can:
+
+    === MODS ===
+    initMod=4
+    === TEAM DYNAMICS ===
+    FavTeamMember=Mo the Raging
+    LeastFavoriteTeamMember=Lizzie PurePants
+But be aware that if a variable does not exist, APILogic will create it, and it will create it at the bottom of the list. You can move it later without causing a problem, or you can leave it there. In fact, maybe you want an `=== UNCATEGORIZED ===` section. It's up to you.
+
+### Naming
+Obviously, since a Mule is a character sheet ability, it cannot contain a space in the name. Variable names may not contain spaces or an equals, though the value of the variable is free to be whatever you can fit on one line. Later, you will see how APILogic uses dot-notation to refer to `character.mule.variable`. You can continue this notation within your mule if you wanted to store similarly-named variables in the same mule but differentiate them from each other. For instance, if you wanted a table of EncumbranceMods (with the Encumbrance a character is carrying related as 0, 1, 2, etc.) in the same Mule as you wanted to store a table of FatigueMods (also in 0, 1, 2, etc.), you might use dot-notation in the names:
+
+    EncMods.0=0
+    EncMods.1=0
+    EncMods.2=-1
+    EncMods3=-1.5
+    ...etc.
+    FtgMods.0=1
+    FtgMods.1=1
+    FtgMods.2=1.1
+    ...etc.
+Though it might make more sense to store this information in separate Mules.
+### Loading a Mule
+Use the `{& mule ... }` tag to load Mules and make their variables available for you in your command line. Mule retrieval happens before variable retrieval, so it doesn't matter where in your line you put your Mule statement.
+
+    !somescript --stuff {& mule ModMule} --tacos
+
+You can load multiple Mules in the same statement just by separating them with a space.  Also, APILogic uses a "least common reference" (LCR) to identify the Mules to load... meaning that if you control two characters who each have a Mule named "ModMule", *both* will be loaded by the above statement (see below how to reference their variables independently). To load a "ModMule" Mule from only one character, use the dot notation:
+
+    {& mule Viper.ModMule}
+### Getting a Variable
+Once you have one or more Mules loaded, you can use a `get.varname` to retrieve it in your command:
+
+    !somescript --mod|get.initMod {& mule Viper.ModMule}
+
+The `get` statement can take these forms:
+
+    get.varname
+    get.mulename.varname
+    get.character.mulename.varname
+
+When a variable is loaded from a Mule, it takes over the location for that variable name, that mule.variable name, and that character.mule.variable name. That means that the least specific reference (`get.varname`) will always be filled with the *last* variable of that name to be found, and the `get.mulename.varname` version will always be filled with that variable from the last mule of that name to be found.
+
+**EXAMPLE: Naming Precedence**
+You load the Mule "MyLittleMule" using the statement:
+
+    {& mule MyLittleMule}
+
+However, you have two characters, Viper and Jester, who each have a MyLittleMule attribute. Viper's looks like this:
+
+    initMod=4
+    EncMod=5
+    motto=There's no time to think!
+    bestrecent=20
+Jester's looks like this:
+
+    initMod=3
+    EncMod=3
+    Motto=Where'd who go?
+If Viper loads before Jester, the map of variable reference would look like this:
+
+    get.initMod											=> 3	(Jester)
+    get.EncMod											=> 3	(Jester)
+    get.motto											=> There's no time to think!	(Viper)
+    get.Motto											=> Where'd who go?	(Jester)
+    get.bestrecent										=> 20	(Viper)
+    get.MyLittleMule.initMod							=> 3	(Jester)
+    get.MyLittleMule.EncMod								=> 3	(Jester)
+    get.MyLittleMule.motto								=> There's no time to think!	(Viper)
+    get.MyLittleMule.Motto								=> Where'd who go?	(Jester)
+    get.MyLittleMule.bestrecent							=> 20	(Viper)
+    get.Jester.MyLittleMule.initMod						=> 3	(Jester)
+    get.Jester.MyLittleMule.EncMod						=> 3	(Jester)
+    get.Jester.MyLittleMule.Motto						=> Where'd who go?	(Jester)
+    get.Viper.MyLittleMule.initMod						=> 4	(Viper)
+    get.Viper.MyLittleMule.EncMod						=> 5	(Viper)
+    get.Viper.MyLittleMule.motto						=> There's no time to think! (Viper)
+    get.Viper.MyLittleMule.bestrecent					=> 20	(Viper)
+
+Note that the variables are case-sensitive ("motto" vs "Motto"), and that it is only when you arrive at a unique piece of identifying data (in this case, the character name) that you are able to differentiate between the similarly named (and/or similarly-muled) variables. The point is, you should use the LCR guaranteed to get you the variable you intend to retrieve, but if you have only one Mule, you can use the simplest form for every variable.
+### Setting a Variable's Value
+Set a variable's value using the text formation `set.varname = value /set`. The implication of the LCR during setting is that all less-specific references to the variable are set, across all Mules, and among the available ways of referencing that variable. In the above example (Jester and Viper having similarly named Mules), the following statement:
+
+    set.initMod = 8
+
+...will set the initMod variable in both Mules to be the same value, 8. In fact, using the Mule name in the set statement would still result in both Mules being updated, since the name is shared between them. The only way to set only one of the variables would be to fully qualify the name with the character's name:
+
+    set.Viper.MyLittleMule.initMod = 8
+In setting that value, the less specific ways of referring to the variable (`get.initMod` and `get.MyLittleMule.initMod`) are also set, so that further references to these during this cycle of APILogic evaluating the command line will retrieve the new value. Although setting variables comes at the end of the cycle of operations, remember that the APILogic process is a loop, so there can be further references when the whole thing starts again (see both **Escaping Text (Deferring Processing)** and **Order of Operations**).
+## Using the MATH Tag
+Using the MATH tag, you can drop real-time, inline math calculations into your macro command to have the value rendered before the message is handed off to the intended script.
+
+The MATH tag is denoted by the `{& math ... }` formation, where the equation to evaluate follows the tag name:
+
+    {& math (2+3)/4}
+
+The above would output 1.25.
+
+You can use numbers, parentheses, known constants, mule variables, inline rolls or roll markers, and math functions as operands in + , - , * , / , and % (modulo) operations (exponentiation is handled in a function):
+
+    {& math round(sin(90) * pi, 2) / randb(0,4) }
+The above rounds (to 2 decimal places), the sine of 90 multiplied by pi, then divides that by a random number between 0 and 4.
+
+### Mule Variables
+All variables from all loaded mules are made available to the math processor directly, without the need of using the `get` statement. Of course, since mules are loaded (and variables retrieved) before equations are handed off to the math processor, using the `get` statement will still work. You just don't have to use it in a MATH tag's equation. If you have a variable named 'ArmorMod, then the following are functionally equivalent:
+
+    {& math ArmorMod + 4}
+    {& math get.ArmorMod + 4}
+### Functions
+Most of the javascript Math functions are exposed for you, as well as some that were added to answer common requirements. These include things like round (with a decimal places argument), ceiling, floor, min, max, random, random between, random among, absolute value, square root, cube root, and more. To use them, include the specified name followed by an open parentheses and any arguments as necessary before supplying a closing parentheses. Functions are nestable.
+
+For a full list of functions included in the math processor, see **APPENDIX III**.
+### Constants
+The following constants are available as part of the math processor:
+- **e** - Euler's number (javascript: Math.E)
+- **pi** - Pi (javascript: Math.PI)
+- **lntwo** - Natural log of 2 (javascript: Math.LN2)
+- **lnten** - Natural log of 10 (javascript: Math.LN10)
+- **logtwoe** - Base 2 log of e (javascript: Math. LOG2E)
+- **logtene** - Base 10 log of e (javascript: Math.LOG10E)
+Constants take priority over Mule variables of the same name, therefore if you have reason to store a variable under the name 'pi', for instance, you can only reach it within the math processor by a more specific LCR -- including the Mule or Character.Mule information.
 ## Escaping Text (Deferring Processing)
 You can use `\` characters to break up text formations that the Roll20 parser might otherwise recognize and try to process before you are ready. The escape character is removed before the message is released to other scripts.
 
@@ -181,7 +376,7 @@ Here's another example where that potentially non-existent value would be the ba
     \[\[ @\{Bob the Slayer|smooth_jazz}d10 \]\]
 
 ### Timing
-APILogic gets the message **after** the Roll20 parser has already handled things like requests for sheet items, roll queries, and inline rolls. Then it processes the DEFINE tag, followed by the logical constructs. After all of that work is finished, it un-escapes characters and uses a bit of script magic to invoke the whole process again (including Roll20 parsers to handle the "newly created" detectable items as well as the APILogic test for "newly created" DEFINE blocks or IF blocks) before releasing the message to other scripts.
+APILogic gets the message **after** the Roll20 parser has already handled things like requests for sheet items, roll queries, and inline rolls. Then it processes EVAL tags, DEFINE tags, and then the logical constructs. After all of that work is finished, it un-escapes characters and uses a bit of script magic to invoke the whole process again (including Roll20 parsers to handle the "newly created" detectable items as well as the APILogic test for "newly created" DEFINE blocks or IF blocks) before releasing the message to other scripts.
 ### Caveat
 Removing the escape characters happens automatically for any chat message that triggers APILogic to examine the command line (meaning an API call where you used either an IF or DEFINE tag). Because of this, for any message where you would use the IF and/or DEFINE tags and you also need to actually include a `\` character, you will need to escape the escape character: `\\`. Multiple levels of escaping require the same number of escapes for any slash you wish to keep.
 ## Post Processing Tags: STOP and SIMPLE
@@ -234,6 +429,27 @@ APILogic will try to extract the value from the `0` roll in the roll array on th
 Also note that any/all inline rolls are executed and caught by the Roll20 parser if they are recognized with the Roll20 parsing is invoked (as many times as necessary). These all exists, whether or not they are a part of text that will ultimately be included in the final command line. However, if you defer an inline roll in a section of command line that will never be parsed (for instance, it is in a `false` branch of the IF block), that text will never be unescaped, so that roll will never exist.
 
 Remember that APILogic is helping you construct the command line based on conditional checks, and if you would normally feed the resulting roll structure in the command line to an API call to another script, the chances are good that the receiving script already knows how to handle the inline rolls and roll markers. Most of the time, then, you shouldn't have to extract the result value for roll that is part of a command line that will ultimately be picked up by another script.
+## Order of Operations
+Once APILogic detects that it needs to do work on the message, it performs a loop of processing until it no longer detects that any further parsing is required. The order looks like this:
+
+    User sends command
+    ===== BEGIN LOOP =====
+    Roll20 parses (inline rolls, selected/target calls, sheet calls, etc.)
+    APILogic picks up the message (if necessary)
+    Inline rolls are collected
+    MULE (load/get): Mules loaded, variables retrieved
+    MATH: Math operations are run
+    EVAL: Early eval scriptlets launched
+    DEFINE: Definitions created
+    EVAL-: Late eval scriptlets launched
+    IF: Logical processing
+    MULE (set): Variables are set
+    ===== END LOOP =====
+    STOP/SIMPLE: Prior to releasing the message, these tags are evaluated for intended behaviors
+    MESSAGE RELEASED
+The loop is where the importance of deferring parts of the processing becomes apparent.
+
+**Note:** after the first trip through the loop, other things will contribute to telling APILogic to continue processing. In addition to automatically continuing if it sees an IF, DEFINE, EVAL, EVAL-, MULE, or MATH tag, after the second pass APILogic will also continue if it detects a new inline roll and/or a Mule `get` or a `set` statement (any of which would have been deferred to have been only detected at this point).
 ## Advanced Usage and Tricks
 ### Defining Inline Rolls
 Knowing which inline roll marker (i.e., `$[[0]]`) refers to which inline roll can sometimes be confusing, especially for rolls containing rolls in a message that has other rolls containing rolls, or for branches of the logic that don't exists anymore, or where you deferred an inline roll with escape characters in part of the command line that was never processed.
@@ -270,7 +486,7 @@ Be aware that the resulting roll will, itself be wrapped in an inline roll marke
 ### Conditional non-API Calls (Basic Chat Messages)
 If you want to just want to leverage logical structures for your simple chat message, so you don't want to end up with an API call at all, put a SIMPLE tag outside of any logical structure (in text that will always be included in the final, reconstructed command line). In that case, simply begin your message (or your first IF or DEFINE tag) after the `!`.
 
-    ![& if @|Bob the Slayer|slogan]@\{Bob the Slayer|slogan}[& end] For tomorrow we dine in hell.[& simple]
+    !{& if @|Bob the Slayer|slogan}@\{Bob the Slayer|slogan}{& end} For tomorrow we dine in hell.{& simple}
 
 If Bob the Slayer has a slogan, this will include that and tack on the extra. Otherwise, it would just output the last portion as a simple chat message.
 ### Obfuscating the API Handle
@@ -278,16 +494,164 @@ Since we are interrupting other scripts answering the API message and reconstruc
 
     !{& if @|Bob the Slayer|smooth_jazz}somescript arg1 arg2{&else} Sorry, speaker doesn't have the smooth_jazz attribute{&simple}{&end}
 If `smooth_jazz` exists for Bob the Slayer, the above example will run the `somescript` script. If it does not exist, the api handle for that script is dropped, but the `{& simple}` tag is included, ensuring that a readable message is sent to the chat window.
+
 ## Development Path:
 
  - Including token items as conditions
- - MAX/MIN tag
+ - ~~MAX/MIN tag~~
  - SWITCH/CASE tag
- - Levenshtein Distance for approximate names
- - Other special tests for sheet items
+ ~~- Levenshtein Distance for approximate names~~
+ - ~~Other special tests for sheet items~~
+ ~~- EVAL tag~~
+ - Token data as condition tests
 
 ## Change Log:
 
 **Version 1.0.0** - Initial Release
+**Version 1.0.1** - minor bug fix related to inline table resolution
+**Version 1.1.0** - changed special tests for sheet items to be `int` and `max` instead of `i` and `m`; changed DEFINE tags to evaluate sheet items; added the ability to return the `name` of a sheet item
+**Version 1.2.0** - added EVAL tag; added rule registration for scriptlet plugins; added `row` and `rowname` as retrievable things for repeating sheet items; added MATH tag for inline math calculations; added MULE tag (and get/set language) to handle variable storage
+# APPENDICES
+## APPENDIX I - Writing a 3rd-Party Script Plugin
+The EVAL tag allows for anyone with a little coding experience to provide an infinite number of extensible features. The EVAL tag will run the script as designated, looking first in its bank of registered plugins. If the script isn't found there, APILogic will send the script call to the chat to have the script fire that way.
+
+**Remember**, only plugins registered to APILogic are handled in sequence, with their result substituted into the command line. If nothing is returned, an empty string will be substituted in place of the EVAL block. Only after the plugin code finishes does APILogic take over again. Calls to outside scripts, on the other hand, are not guaranteed to finish before APILogic moves on.
+
+So, how do you write a scriptlet and register it to APILogic?
+### Accept a Message
+A plug-in for APILogic should accept a message object, just as any function that answers a chat event (i.e., handleInput). In fact, your script can *also* answer a chat event if you like (more on that under **Who Called?**). The message object will be identical to a message that would be received from a user -- it will have properties of `who`, `playerid`, `content`, etc. If there were any inline rolls, it will have an `inlinerolls` array. This will be a ***copy*** of the message data that is in APILogic, with the `content` replaced to be the reconstructed command line that the user would have sent had they invoked your script directly from chat.
+
+In other words, the `withinrange` script might require a command line like the following, if it were to be invoked from the chat interface: 
+
+    !withinrange 3 -M1234567890abcdef ,
+
+When a user places that in an EVAL tag block, they would write:
+
+    {& eval}withinrange(3 -M1234567890abcdef ,){& /eval}
+
+If APILogic detects `withinrange` as a registered plugin in that game, it will hand off a message with the former command line.
+
+Accepting a message might look like this:
+
+    const withinrange = (m) => {
+    	log(m.who); // logs who sent the message
+    };
+
+### Parse the content String
+As you would with any script, parse the command line to extract the data you require to perform your calculations. If you intend to allow the scriptlet to be called from the command line, make sure that you verify ownership of the message, as well. This might look like:
+
+    const withinrange = (m) => {
+	    // verify ownership
+	    if (m.type !== 'api' || !/^!withinrange\s/.test(m.content)) return;
+    	// parse arguments
+    	let [range, sourcetoken, delim] = m.content.split(' ').slice(1);
+    	log(range);
+    	log(sourcetoken);
+    	log(delim);
+    };
+
+### Perform Calculations and Return
+Code as you normally would to calculate and arrive at the data you are looking for. When you are done, if you want something to be substituted into the original command line (where APILogic called your plugin), return a string, number, bigint, or boolean. Anything else (included no return or an undefined return) will be replaced with an empty string.
+#### Who Called?
+A message that comes from APILogic to a plugin scriptlet will have one property that a chat-interface-generated or API-generated call will not have: `apil`. If you want your script to answer both a straight invocation as well as an APILogic invocation, you can differentiate your return based on if you detect this property.
+
+For instance, if a user invokes `withinrange` from the chat interface, maybe we want to display a small panel of information regarding the tokens that are in the specified range -- including their image, name, etc. However, if the call comes from APILogic, you only want to return the token IDs in a delimited string. In that case, once you have arrived at the data, you could test for existence of the `apil` property, and return accordingly:
+
+    let tokens = getTheTokens();
+    if (m.apil) return tokens.join(delim);
+    // if the code continues, you're dealing with a direct invocation
+    // so proceed to build the panel output...
+### Register to APILogic
+The step that turns your script into an APILogic plugin is when your script implements the APILogic.RegisterRule() function in an `on('ready'...)` block. Here is an example:
+
+    on('ready', () => {
+        try {
+            APILogic.RegisterRule(withinrange);
+        } catch (error) {
+            log(error);
+        }
+    });
+The RegisterRule() function can take any number of functions as parameters, so tack on as many plugins as you've written:
+
+    APILogic.RegisterRule(withinrange, getclosest, getpageforchar);
+## APPENDIX II - Included Script Plugins
+The following Script Plugins are included as a part of the APILogic script. If you find a script plugin that you use to be quite helpful, it can be rolled into the included library of plugins for a future release of APILogic.
+### getDiceByVal
+Retrieves a subset of dice from an inline roll based on testing them against a series of pipe-separated value ranges. Outputs either a count of the number of dice (the default), or a total of the dice, or a delimited list of the dice values (delimiter default is a comma).
+
+    ===== EXAMPLE SYNTAX =====
+    getDiceByVal( $[[0]] <=2|6-7|>10 total)
+The above would retrieve dice from the first inline roll ($[[0]]) that were either less-than-or-equal-to 2, between 6 and 7 (inclusive), or greater than 10. It would output the total of those dice.
+
+If you choose a list output, the default delimiter is a comma. You can alter this by using a pipe character followed by the delimiter you wish to include. If your delimiter includes a space, you must enclose it in either single-quotation marks, double-quotation marks, or tick characters.
+
+    getDiceByVal( $[[1]] 1|3|5|7|9 list)
+
+The above would output a comma-separated list of odd value die results from the second inline roll ($[[1]]). The following table shows how the delimiter changes based on altering the 'list' argument:
+
+    ARG			|	EXAMPLE OUTPUT
+    ------------|---------------------
+    list		|	3,7,5,9
+    list|", "	|	3, 7, 5, 9
+    list|+		|	3+7+5+9
+    list|` + `	|	3 + 7 + 5 + 9
+    list|		|	3759
+
+### getDiceByPos
+Retrieves a subset of dice from an inline roll based on testing them against a series of pipe-separated position ranges. Outputs either the total of the number of dice (the default), or a count of the dice (seems pointless, but it's available), or a delimited list of the dice values (delimiter default is a comma). Dice position is 0-based, so the first die is in position 0, the second in position 1, etc.
+
+    ===== EXAMPLE SYNTAX =====
+    getDiceByPos( $[[0]] <=2|6)
+The above would retrieve dice from the first inline roll ($[[0]]) that were in positions 0, 1, 2, or 6. It would output the total of those dice.
+
+The same guidelines apply for the list delimiter as for the *getDiceByVal* plugin, above.
+
+## APPENDIX III - Included Math Functions
+The following functions are available as part of the Math processor. Feel free to suggest others if you think one would be helpful.
+- **abs(x)** Returns the absolute value of *x*
+- **acos(x)** Returns the arc-cosine of *x*
+- **asin(x)** Returns the arc-sine of *x*
+- **asinh(x)** Returns the hyperbolic arc-sine of *x*
+- **atan(x)** Returns the arc-tangent of *x*
+- **atanh(x)** Returns the hyperbolic arc-tangent of *x*
+- **atantwo(x, y)** Returns the arc-tangent of the quotient of the arguments (*x*, *y*)
+- **cbrt(x)** Returns the cube root of *x*
+- **ceiling(x)** Returns the smallest integer larger than *x*
+	- -2.1 => -2
+	- 2.1 => 3
+- **cos(x)** Returns the cosine of *x*
+- **cosh(x)** Returns the hyperbolic cosine of *x*
+- **exp(x)** Returns Euler's constant (*e*), the base of the natural log, raised to *x*
+- **expmone(x)** Returns 1 subtracted from the value of Euler's constant (*e*) raised to *x*
+- **floor(x)** Returns the largest integer less than *x*
+	- -2.1 => -3
+	- 2.1 => 2
+- **hypot(x[, y [, ...]])** Returns the square root of the sum of the squares of its arguments
+- **log(x)** Returns the natural logarithm of *x*
+- **logonep(x)** Returns the natural logarithm of 1 + *x*
+- **logten(x)** Returns the base-10 logarithm of *x*
+- **logtwo(x)** Returns the base-2 logarithm of *x*
+- **min([x[, y[, ...]]])** Returns the smallest value of 0 or more numbers
+- **max([x[, y[, ...]]])** Returns the largest value of 0 or more numbers
+- **pow(x, y)** Returns the value of *x* raised to the *y* power
+- **rand()** Returns a pseudo-random number between 0 and 1
+- **randa(x[, y[, ...]])** Returns a random element from a list of 1 or more numbers
+- **randb(x, y)** Returns a pseudo-random number between *x* (inclusive) and *y* (inclusive)
+- **randib(x, y)** Returns a pseudo-random integer between *x* and *y*, where the lesser value is inclusive and the larger value is exclusive
+- **round(x, y)** Returns *x* rounded to *y* decimal places
+- **sin(x)** Returns the sine of *x*
+- **sinh(x)** Returns the hyperbolic sine of *x*
+- **sqrt(x)** Returns the square root of *x*
+- **tan(x)** Returns the tangent of *x*
+- **tanh(x)** Returns the hyperbolic tangent of *x*
+- **trunc(x)** Returns the integer portion of *x*
+	- -2.1 => -2
+	- 2.1 => 2
+
+
+
+
+
+
 
 
