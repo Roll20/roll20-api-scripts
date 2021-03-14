@@ -16,7 +16,7 @@ var InitiativeTrackerPlus = (function() {
 	'use strict';
 	var version = 1.25,
 		author = 'James C. (Chuz)',
-		lastUpdated = 'Feb 13 2021',
+		lastUpdated = 'Mar 15 2021',
 		pending = null;
 
 	var ITP_StateEnum = Object.freeze({
@@ -48,7 +48,7 @@ var InitiativeTrackerPlus = (function() {
 
 	var flags = {
 		tj_state: ITP_StateEnum.STOPPED, image: true,
-		rotation: true,
+		rotation: false,
 		animating: false,
 		archive: false,
 		clearonclose: true,
@@ -62,6 +62,7 @@ var InitiativeTrackerPlus = (function() {
 		statusbgcolor: '#897A87',
 		statusbordercolor: '#430D3D',
 		statusargscolor: '#fff',
+		eotcolor: '#FF0000',
 		edit_icon: 'https://s3.amazonaws.com/files.d20.io/images/11380920/W_Gy4BYGgzb7jGfclk0zVA/thumb.png?1439049597',
 		delete_icon: 'https://s3.amazonaws.com/files.d20.io/images/11381509/YcG-o2Q1-CrwKD_nXh5yAA/thumb.png?1439051579',
 		settings_icon: 'https://s3.amazonaws.com/files.d20.io/images/11920672/7a2wOvU1xjO-gK5kq5whgQ/thumb.png?1440940765',
@@ -264,8 +265,12 @@ var InitiativeTrackerPlus = (function() {
 			}
 		});
 
-
+		log(fields);
+		log(flags);
+		log(design);
 		log('-=> IT+ v'+version+' <=- ['+lastUpdated+']');
+
+		displayMotd();
 	};
 
 
@@ -1030,7 +1035,7 @@ var InitiativeTrackerPlus = (function() {
 				+ '<td width="32px" height="32px">'
 					+ '<a style="width: 20px; height: 18px; background: none; border: none;" href="!itp -disptokenconfig '+curToken.get('_id')+'"><img src="'+design.settings_icon+'"></img></a>';
 		if(flags.show_eot) {
-			content += '<a style="width: 30px; height: 18px; background: red; border: solid 1px; color: white; font-weight: heavy;" href="!eot"><nobr>EOT</nobr></a>'
+			content += '<a style="width: 30px; height: 18px; background: '+design.eotcolor+'; border: solid 1px; color: white; font-weight: heavy;" href="!eot"><nobr>EOT</nobr></a>'
 		}
 		content += '</td>'
 				+ '</tr>';
@@ -1113,6 +1118,35 @@ var InitiativeTrackerPlus = (function() {
 		content += '</table></div>';
 
 		return content;
+	};
+
+
+
+	/**
+	 * Display a login message if we want to
+	 */
+	var displayMotd = function(curToken, statusName, favored) {
+		var motd = 'Please be aware, it is possible the animation is causing some browsers to run out of memory.  For this reason the animation now defaults to disabled.  Use <br>"<span style="font-weight: bold;">!itp -setConfig rotation:true</span>"<br> to turn it back on if you desire this functionality.';
+		var content = '<div style="background-color: '+design.turncolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em; min-height: 50px;">'
+			+ '<table width="100%">'
+				+ '<tr>'
+					+ '<td width="100%" style="text-align: center; font-weight: bold; width: 100%">'
+						+ 'Initiative Tracker Plus (v.' + version + ')'
+					+ '</td>'
+				+ '</tr>'
+				+ '<tr>'
+					+ '<td>&nbsp;</td>'
+				+ '</tr>'
+				+ '<tr>'
+					+ '<td width="100%"  style="font-style: italic; text-align: left; padding: 5px;">'
+						+ motd
+					+ '</td>'
+				+ '</tr>'
+			+ '</table>'
+		+ '</div>';
+
+
+ 		sendFeedback(content);
 	};
 
 
@@ -1729,7 +1763,7 @@ var InitiativeTrackerPlus = (function() {
 
 
 	/**
-		Read the handout "InitiativeTrackerPlus Favorites JSON" if it exists and create favorites list from it
+		Read the handout "ITPFavsJSON" if it exists and create favorites list from it
 	**/
 	var loadFavs = function() {
 		var handouts = findObjs({type: 'handout', name: 'ITPFavsJSON'});
@@ -1789,6 +1823,7 @@ var InitiativeTrackerPlus = (function() {
 				case 'statusbgcolor':
 				case 'statusbordercolor':
 				case 'statusargscolor':
+				case 'eotcolor':
 					oldvalue = design[p[0]];
 					design[p[0]] = p[1];
 					state.initiative_tracker_plus.config.design[p[0]] = p[1];
@@ -3255,6 +3290,7 @@ var InitiativeTrackerPlus = (function() {
 							+ "<li><b>statusbgcolor</b> [#897A87] - Hex color code, changes the background color of the chat message announcing statuses of the current actor.</li>"
 							+ "<li><b>statusbordercolor</b> [#430D3D] - Hex color code, changes the color of the border of the chat message announcing statuses of the current actor.</li>"
 							+ "<li><b>statusargscolor</b> [#FFFFFF] - Hex color code, changes the color of the feedback text when changing the marker for a status.</li>"
+							+ "<li><b>eotcolor</b> [#FFFFFF] - Hex color code, changes the color of the EOT button.</li>"
 						+ '</ul>'
 					+ '</li>'
 				+ '</div>'
