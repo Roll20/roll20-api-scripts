@@ -15,8 +15,7 @@
                                             //'surround'   : A clockwise spiral placement around origin token, starting at top  (NOTE: any supplied offset will be ignored)
                                             //'grid #'     : A square grid with "#" tokens per row. Raster left to right
                                             //'burst #'    : An expanding diagonal distribution of tokens starting "#" squares from the 4 origin token corners. Large qty will form an "X" pattern
-                                            //'cross #'    : "evenly" distributed vert/horiz qty, starting directly above origin by # squares. Large qty will form a "+" pattern
-                                            //'random,rand #' : randomly populates tokens within a (# by #) square grid
+                                            //'cross #'     = "evenly" distributed vert/horiz qty, starting directly above origin by # squares. Large qty will form a "+" pattern
       --size|        < #,# >                //DEFAULT = 1,1 (X,Y) - How many SQUARES wide and tall are the spawned tokens?
       --side|        < # or rand>           //DEFAULT = 1. Sets the side of a rollable table token. 
                                                     // #              : Sets the side of all spawned tokens to "#"
@@ -45,7 +44,7 @@
       --bar1|        < currentVal/optionalMax optional "KeepLink">            //overrides the token's bar1 current and max values. Max is optional. Default is to remove bar1_link. If "KeepLink" is appended, the bar1_link will be preserved 
       --bar2|        < currentVal/optionalMax optional "KeepLink">            //overrides the token's bar2 current and max values. Max is optional. Default is to remove bar2_link. If "KeepLink" is appended, the bar2_link will be preserved
       --bar3|        < currentVal/optionalMax optional "KeepLink">            //overrides the token's bar3 current and max values. Max is optional. Default is to remove bar3_link. If "KeepLink" is appended, the bar3_link will be preserved
-      --expand|      < #frames, delay, optional yes/true/1 >         //DEFAULT = 0,0,false. Animates the token during spawn. Expands from size = 0 to max size. If third param =true, will delete spawned token after animation completes
+      --expand|      < #frames, delay >             //DEFAULT = 0,0. Animates the token during spawn. Expands from size = 0 to max size
                                                         //#frames: how many frames the expansion animation will use. Start with something like 20
                                                         //delay: how many milliseconds between triggering each frame? Start with something like 50. Any less than 30 may appear instant
       --deleteSource|  < yes/true/1/no/false/0 >    //DEFAULT = false. Deletes the selected token(s) upon spawn
@@ -58,7 +57,6 @@
                                                         //#,#: the new size of the target token(s). If any dimension is set to 0, it will delete the token after animation
                                                         //#frames: DEFAULT = 20. how many frames the animation will use.
                                                         //delay: DEFAULT = 50. how many milliseconds between triggering each frame? Anything less than 30 may appear instant
-      --layer| < object/token/map/gm >                  //DEFAULT = token(s) spawn on the same layer as the selected token(s). May explicitly set to spawn on a different layer.
     }}
     
     
@@ -67,7 +65,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.17';
+    const version = '0.14a';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -147,33 +145,29 @@ const SpawnDefaultToken = (() => {
         return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
     }
     
-    async function resizeToken (tok, iterations, delay, start_W, start_H, end_W, end_H, destroyWhenDone=false) {
-        let new_W = start_W;
-        let new_H = start_H;
+    async function resizeToken (tok, iterations, delay, startX, startY, endX, endY) {
+        let new_W = startX;
+        let new_H = startY;
         
-        let incrementX = Math.abs(start_W-end_W) * (1 / iterations);  // size expansion factor.
-        let incrementY = Math.abs(start_H-end_H) * (1 / iterations);  // size expansion factor.  
+        let incrementX = Math.abs(startX-endX) * (1 / iterations);  // size expansion factor.
+        let incrementY = Math.abs(startY-endY) * (1 / iterations);  // size expansion factor.  
         
-        while (new_W !== end_W && new_H !== end_H) {
+        while (new_W !== endX && new_H !== endY) {
             promise = new Promise((resolve, reject) => {
                 setTimeout(() => {
-                    if (start_W > end_W) {    //shrink X
-                        new_W = Math.max(new_W - incrementX, end_W)
+                    if (startX > endX) {    //shrink X
+                        new_W = Math.max(new_W - incrementX, endX)
                     } else {                //grow X
-                        new_W = Math.min(new_W + incrementX, end_W)
+                        new_W = Math.min(new_W + incrementX, endX)
                     }
-                    if (start_H > end_H) {    //shrink Y
-                        new_H = Math.max(new_H - incrementY, end_H)
+                    if (startY > endY) {    //shrink Y
+                        new_H = Math.max(new_H - incrementY, endY)
                     } else {                //grow Y
-                        new_H = Math.min(new_H + incrementY, end_H)
+                        new_H = Math.min(new_H + incrementY, endY)
                     }
                     
-                    tok.set({
-                        width: new_W,
-                        height: new_H
-                    });
-                    //tok.set("width", new_W);
-                    //tok.set("height", new_H);
+                    tok.set("width", new_W);
+                    tok.set("height", new_H);
                     
                     resolve("done!");
                 }, delay);
@@ -182,8 +176,7 @@ const SpawnDefaultToken = (() => {
             result = await promise;
            
         }
-        
-        if (new_W <= 0 || new_H <= 0 || destroyWhenDone) {
+        if (new_W <= 0 || new_H <= 0) {
             tok.remove();
         } 
         return;
@@ -191,7 +184,7 @@ const SpawnDefaultToken = (() => {
     
     //This function runs asynchronously, as called from the processCommands function
     //We will sendChat errors, but the rest of processCommands keeps running :(
-    function spawnTokenAtXY (who, tokenJSON, pageID, spawnLayer, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar1Link, bar2Val, bar2Max, bar2Link, bar3Val, bar3Max, bar3Link, expandIterations, expandDelay, destroyWhenDone, angle) {
+    function spawnTokenAtXY (who, tokenJSON, pageID, spawnLayer, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar1Link, bar2Val, bar2Max, bar2Link, bar3Val, bar3Max, bar3Link, expandIterations, expandDelay) {
         let newSideImg;
         let spawnObj;
         let currentSideOld;
@@ -213,13 +206,11 @@ const SpawnDefaultToken = (() => {
                 baseObj.top = spawnY;
                 baseObj.width = sizeX;
                 baseObj.height = sizeY;
-                baseObj.rotation = angle;
             } else {                            //will animate and expand token to full size after spawning
                 baseObj.left = spawnX;
                 baseObj.top = spawnY;
                 baseObj.width = 0;
                 baseObj.height = 0;
-                baseObj.rotation = angle;
             }
             
             baseObj.imgsrc = getCleanImgsrc(baseObj.imgsrc); //ensure that we're using the thumb.png
@@ -348,7 +339,7 @@ const SpawnDefaultToken = (() => {
             //check for expanding token size
             
             if (expandIterations > 0) {
-                resizeToken(spawnObj, expandIterations, expandDelay, 0, 0, sizeX, sizeY, destroyWhenDone);
+                resizeToken(spawnObj, expandIterations, expandDelay, 0, 0, sizeX, sizeY);
                 /*
                 let new_W, new_H;
                 
@@ -552,27 +543,6 @@ const SpawnDefaultToken = (() => {
         return pts;
     };
     
-    //Places tokens in random squares within a (numCols x numCols) grid
-    const GetRandArr = function (qty, startX, startY, numCols) {
-        function pt(x,y) {
-            this.x = x,
-            this.y = y
-        };
-        let pts = [];
-        
-        //first, populate all the coords as if the grid was filled completely
-        let fullQty = numCols*numCols;
-        let fullGridPts = GetGridArr(fullQty, startX, startY, numCols)
-        
-        for (let i=0; i<qty; i++) {
-            let idx = randomInteger(fullGridPts.length) - 1;
-            pts.push( fullGridPts[idx] );
-            fullGridPts.splice(idx, 1);    //remove used array element
-        }
-        
-        return pts;
-    };
-    
     //Similar to GetGridArr function above, but returns an array of coords "evenly" distributed at a certain burst radius...
     //      ... relative to the outer corner squares of the origin token (NOTE: when adjusted for offset, retains the "size" of origin token)
                     //  5           8
@@ -716,10 +686,6 @@ const SpawnDefaultToken = (() => {
         
     };
     
-    const isNumber = function isNumber(value) {
-       return typeof value === 'number' && isFinite(value);
-    }
-    
     //This is the primary worker function
     const processCommands = function(data, args) {
         let retVal = [];        //array of potential error messages to pass back to main handleInput funtion
@@ -854,15 +820,10 @@ const SpawnDefaultToken = (() => {
                             data.fx = param;
                             break;
                         case "expand":
-                            let p = param.split(',').map(e=>e.trim());
+                            let p = param.split(',');
                             data.expandIterations = parseInt(p[0]);
                             if (p.length > 1) {
                                 data.expandDelay = parseInt(p[1]);
-                            }
-                            if (p.length > 2) {
-                                if ( _.contains(['true','yes', '1'], p[2]) ) {
-                                    data.destroySpawnWhenDone = true;
-                                }
                             }
                             break;
                         case "deletesource":
@@ -897,15 +858,6 @@ const SpawnDefaultToken = (() => {
                                 data.resizeTargetDelay = parseInt(targetSizes[3]);
                             }
                             break;
-                        case "rotation":
-                            //either a number or ("random"/"rand"). Actually, any text will default to random
-                            data.angle = parseInt(param) || param;
-                            break;
-                        case "layer":
-                            //send token to object, gm, or map layer
-                            data.spawnLayer = param;
-                            data.userSpecifiedLayer = true;
-                            break;
                         default:
                             retVal.push('Unexpected argument identifier (' + option + '). Choose from: (' + data.validArgs + ')');
                             break;    
@@ -916,6 +868,7 @@ const SpawnDefaultToken = (() => {
                 return retVal;
             }
             //First data validation checkpoint
+            log(retVal.length);
             if (retVal.length > 0) {return retVal};
             
             //////////////////////////////////////////////////////
@@ -926,7 +879,7 @@ const SpawnDefaultToken = (() => {
                 retVal.push('No spawn target identified. Argument \"spawn|characterName\" required');;
             }
             
-            //"Placement" parameter. Additional checks if 'grid', 'burst', 'cross', or 'random' 
+            //"Placement" parameter. Additional checks if 'grid' or 'burst' 
             if ( _.contains(['stack', 'row', 'col', 'column', 'surround'], data.placement.toLowerCase()) ) {
                 //Good, no additional info req'd
             } else if ( data.placement.match(/grid/i) ) {
@@ -956,18 +909,6 @@ const SpawnDefaultToken = (() => {
                         data.crossRad = data.placement.match(/(\d+)/)[0];   //use first number found for crossRad
                         data.placement = 'cross';
                     }
-            }  else if ( data.placement.match(/rand/i) ) {
-                    //random case     --check for number
-                    if ( !data.placement.match(/(\d+)/) ) {
-                        retVal.push('Invalid random grid row length supplied (\"' + data.placement + '\"). Format is --placement|random #');
-                    } else if (data.qty > data.placement.match(/(\d+)/)[0]*data.placement.match(/(\d+)/)[0]) {
-                        let numSquares = data.placement.match(/(\d+)/)[0] * data.placement.match(/(\d+)/)[0];
-                        retVal.push('Input qty (\"' + data.qty + '\") exceeds the number of available grid squares(\"'+ numSquares + '\"). Consider increasing the grid size or reducing qty.');
-                    } else {        
-                        //good grid #
-                        data.gridCols = data.placement.match(/(\d+)/)[0];   //use first number found for gridCols
-                        data.placement = 'random';
-                    }
             } else {
                 retVal.push('Invalid placement argument (\"' + data.placement + '\"). Choose from: (' + data.validPlacements + ')');
             }
@@ -993,10 +934,9 @@ const SpawnDefaultToken = (() => {
             //Numeric qty between 1 and 20 required
             if (isNaN(data.qty)) {
                 retVal.push('Non-numeric qty detected. Format is \"--qty|#\"');
-            } /* else if ( data.qty <  1 || data.qty > 20 ) {
+            } else if ( data.qty <  1 || data.qty > 20 ) {
                 retVal.push('Input qty out of range. Must be between 1 and 20.');
             }
-            */
             
             //Check for supported FX
             if (data.fx !== '') {
@@ -1019,31 +959,6 @@ const SpawnDefaultToken = (() => {
                     retVal.push('Non-numeric animation delay detected. Format is \"--expand|#,#\" \(iterations, delay\)');
                 }
             }
-            
-            //check rotation input
-            if (!isNumber(data.angle)) {
-                if(!_.contains(['random','rand'], data.angle.toLowerCase())) {
-                    retVal.push('Invalid rotation detected. Format is \"--rotation|# or rand/random\"');
-                } else {
-                    data.angle = randomInteger(360)-1;  //0 to 359deg
-                }
-            } else {    //normalize to account for excess degrees
-                data.angle %= 360
-            }
-            
-            //check layer input
-            if (data.userSpecifiedLayer) {
-                if ( data.spawnLayer.match(/obj/i) || data.spawnLayer.match(/tok/i) ) {
-                    data.spawnLayer = 'objects';
-                } else if ( data.spawnLayer.match(/gm/i) ) {
-                    data.spawnLayer = 'gmlayer';
-                } else if ( data.spawnLayer.match(/map/i) ) {
-                    data.spawnLayer = 'map';
-                } else {
-                    retVal.push('Invalid layer requested. Valid layers are \"object(s)\", \"token\", \"tok\", \"gm\",\"map\"');
-                }
-            }
-            
             
             //2nd data validation checkpoint. Potentially return several error msgs
             if (retVal.length > 0) {return retVal};
@@ -1228,12 +1143,9 @@ const SpawnDefaultToken = (() => {
             //  Spawn Placement  -- calculate all coordinates
             ///////////////////////////////////////////////////////////////
             
-            //All tokens spawn on the same page and layer as the origin token(s) unless specified by user command
+            //All tokens spawn on the same page and layer as the origin token(s)
             data.spawnPageID = data.originToks[0].get("pageid");
-            if (data.userSpecifiedLayer===false) {
-                data.spawnLayer = data.originToks[0].get("layer");
-            } 
-            
+            data.spawnLayer = data.originToks[0].get("layer");
             
             let left;
             let top;
@@ -1307,19 +1219,7 @@ const SpawnDefaultToken = (() => {
                             data.spawnY.push(crossSquares[q].y);
                         }
                     }
-                    break;
-                case "random":   //arrange in random spaces within a square grid 
-                    for (o = 0; o < data.originToks.length; o++) {
-                        left = data.originToks[o].get("left") + data.offsetX + tokSizeCorrectX[o];
-                        top = data.originToks[o].get("top") + data.offsetY + tokSizeCorrectY[o];
-                        
-                        let randSquares = GetRandArr(data.qty, left, top, data.gridCols);
-                        for (q = 0; q < data.qty; q++) {
-                            data.spawnX.push(randSquares[q].x);   
-                            data.spawnY.push(randSquares[q].y);
-                        }
-                    }
-                    break; 
+                    break;   
                 case "stack":   //The default case is "stack"
                 default:    
                     for (o = 0; o < data.originToks.length; o++) {
@@ -1365,7 +1265,7 @@ const SpawnDefaultToken = (() => {
                                     spawnFx(data.spawnX[iteration], data.spawnY[iteration], data.fx, data.spawnPageID);
                                 }
                                 //Spawn the token!
-                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnLayer, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL, data.bar1Val, data.bar1Max, data.bar1Link, data.bar2Val, data.bar2Max, data.bar2Link, data.bar3Val, data.bar3Max, data.bar3Link, data.expandIterations, data.expandDelay, data.destroySpawnWhenDone, data.angle);
+                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnLayer, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL, data.bar1Val, data.bar1Max, data.bar1Link, data.bar2Val, data.bar2Max, data.bar2Link, data.bar3Val, data.bar3Max, data.bar3Link, data.expandIterations, data.expandDelay);
                                 
                             } else {
                                 log("off the map!");
@@ -1378,13 +1278,13 @@ const SpawnDefaultToken = (() => {
             //Optional resize source token
             if (data.resizeSourceX !== -999 && data.resizeSourceY !== -999) {
                 data.selectedToks.forEach(tok => {
-                    resizeToken(tok, data.resizeSourceIterations, data.resizeSourceDelay, tok.get("width"), tok.get("height"), data.resizeSourceX, data.resizeSourceY, data.destroySpawnWhenDone)
+                    resizeToken(tok, data.resizeSourceIterations, data.resizeSourceDelay, tok.get("width"), tok.get("height"), data.resizeSourceX, data.resizeSourceY)
                 });
             }
             //Optional resize target token
             if (data.resizeTargetX !== -999 && data.resizeTargetY !== -999) {
                 data.originToks.forEach(tok => {
-                    resizeToken(tok, data.resizeTargetIterations, data.resizeTargetDelay, tok.get("width"), tok.get("height"), data.resizeTargetX, data.resizeTargetY, data.destroySpawnWhenDone)
+                    resizeToken(tok, data.resizeTargetIterations, data.resizeTargetDelay, tok.get("width"), tok.get("height"), data.resizeTargetX, data.resizeTargetY)
                 });
             }
             
@@ -1486,7 +1386,7 @@ const SpawnDefaultToken = (() => {
                 var data = {
                     who: whoDat,        //Who called the script
                     spawnName: "",      //name of the target to spawn
-                    validArgs: "name, qty, targets, placement, force, offset, sheet, ability, side, size, order, light, mook, fx, bar1, bar2, bar3, expand, deleteSource, deleteTarget, resizeSource, resizeTarget, rotation, layer",    //list of valid user commands for error message
+                    validArgs: "name, qty, targets, placement, force, offset, sheet, ability, side, size, order, light, mook, fx, bar1, bar2, bar3, expand, deleteSource, deleteTarget, resizeSource, resizeTarget",    //list of valid user commands for error message
                     qty: 1,             //how many tokens to spawn at each origin
                     //tokenIDs and objects
                     originToks: [],     //array of token objects to be used as reference point(s) for spawn location(s). 
@@ -1551,11 +1451,7 @@ const SpawnDefaultToken = (() => {
                     resizeSourceIterations: 20,    //how many animation frames to use if animated source token resize is called for
                     resizeSourceDelay: 50,         //delay (in ms) between each frame if animated source resize is called for
                     resizeTargetIterations: 20,    //how many animation frames to use if animated target token resize is called for
-                    resizeTargetDelay: 50,         //delay (in ms) between each frame if animated target resize is called for
-                    destroySpawnWhenDone: false,   //delete the spawned token after animation is complete    
-                    angle: 0,                      //change the rotation of the spawned token
-                    userSpecifiedLayer: false,     //flag to determine how spawned token layer is defined
-                    spawnLayer: "objects"            //user can set to "object", "token", "gm", or "map"
+                    resizeTargetDelay: 50         //delay (in ms) between each frame if animated target resize is called for
                 };
                 
                 //Parse msg into an array of argument objects [{cmd:params}]
