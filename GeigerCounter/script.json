@@ -7,8 +7,7 @@
     "authors": "Stephen Lindberg",
     "roll20userid": 46544,
     "useroptions": [],
-    "dependencies": {
-    },
+    "dependencies": [],
     "modifies": {
         "chat": "write",
         "aura1_radius": "read",

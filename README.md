@@ -8,7 +8,7 @@ Contributing
 
 If you want to help improve an existing API script, just clone this repository, make your changes, and submit a pull request. If you would like to contribute a new script for the community to use, just clone this repository and create a new folder with the name of the script which matches the name in your script.json file. Optionally you can add a help.txt file with any instructions you want to include as well as any other files you feel will be helpful to the end user. Once everything is in the new folder send a pull request. If you have any questions or aren't familiar with Github or git in general, see [Beginner's Guide to GitHub](https://wiki.roll20.net/Beginner%27s_Guide_to_GitHub) on the wiki. If you still need help, feel free to drop us a line at team@roll20.net or post a question on the forums and we can help you get set up.
 
-**Creating a script.json File**
+### Creating a script.json File
 
 When you are ready to submit your script for **public use**, create a `script.json` file in your script's folder (see the "_Example Script" folder in the root folder for an example). The file has the following fields:
 
@@ -26,8 +26,17 @@ When you are ready to submit your script for **public use**, create a `script.js
 * `modifies`: A list of the common Roll20 objects and properties the script reads and writes to. Custom objects and properties inside a namespace don't need to be included. (e.g. `bar1_value: write`)
 * `conflicts`: A list of other API scripts this script is known to conflict with (e.g. `Recipes`) 
 
-**PLEASE VERIFY YOUR SCRIPT.JSON IS VALID JSON at http://jsonlint.com before you submit it!**
+### Validating script.json
+As of January 29, 2021, pull requests must pass validation of the `script.json` file for any changed scripts, 
+which will be done using the included [`script.json.schema`](script.json.schema) file.  This is a 
+[JSON Schema](https://json-schema.org/) file that describes what is and is not allowed in the `script.json` file.  Any 
+JSON Schema validator that supports Draft-04 or higher should work to help you validate during development/before making
+your pull request.
 
+If you want a web-based JSON Schema validator, [this one](https://www.jsonschemavalidator.net/) works well.  Paste
+the schema on the left, your `script.json` on the right.
+
+### Post-validation
 After we have reviewed your script and approve it, we will merge in your changes which will make them available to everyone. If we reject your script, we will comment on your Github commit and let you know what changes need to be made before it can be accepted. 
 
 Update the Wiki

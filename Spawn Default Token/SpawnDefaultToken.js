@@ -46,6 +46,7 @@
       --bar2|        < currentVal/optionalMax optional "KeepLink">            //overrides the token's bar2 current and max values. Max is optional. Default is to remove bar2_link. If "KeepLink" is appended, the bar2_link will be preserved
       --bar3|        < currentVal/optionalMax optional "KeepLink">            //overrides the token's bar3 current and max values. Max is optional. Default is to remove bar3_link. If "KeepLink" is appended, the bar3_link will be preserved
       --expand|      < #frames, delay, optional yes/true/1 >         //DEFAULT = 0,0,false. Animates the token during spawn. Expands from size = 0 to max size. If third param =true, will delete spawned token after animation completes
+
                                                         //#frames: how many frames the expansion animation will use. Start with something like 20
                                                         //delay: how many milliseconds between triggering each frame? Start with something like 50. Any less than 30 may appear instant
       --deleteSource|  < yes/true/1/no/false/0 >    //DEFAULT = false. Deletes the selected token(s) upon spawn
@@ -68,6 +69,7 @@ const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
     const version = '0.16';
+
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
