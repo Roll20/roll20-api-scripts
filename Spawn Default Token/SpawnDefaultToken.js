@@ -46,7 +46,6 @@
       --bar2|        < currentVal/optionalMax optional "KeepLink">            //overrides the token's bar2 current and max values. Max is optional. Default is to remove bar2_link. If "KeepLink" is appended, the bar2_link will be preserved
       --bar3|        < currentVal/optionalMax optional "KeepLink">            //overrides the token's bar3 current and max values. Max is optional. Default is to remove bar3_link. If "KeepLink" is appended, the bar3_link will be preserved
       --expand|      < #frames, delay, optional yes/true/1 >         //DEFAULT = 0,0,false. Animates the token during spawn. Expands from size = 0 to max size. If third param =true, will delete spawned token after animation completes
-
                                                         //#frames: how many frames the expansion animation will use. Start with something like 20
                                                         //delay: how many milliseconds between triggering each frame? Start with something like 50. Any less than 30 may appear instant
       --deleteSource|  < yes/true/1/no/false/0 >    //DEFAULT = false. Deletes the selected token(s) upon spawn
@@ -59,7 +58,7 @@
                                                         //#,#: the new size of the target token(s). If any dimension is set to 0, it will delete the token after animation
                                                         //#frames: DEFAULT = 20. how many frames the animation will use.
                                                         //delay: DEFAULT = 50. how many milliseconds between triggering each frame? Anything less than 30 may appear instant
-      --rotation|  < #/random/rand >            //sets the angle of the spawned token during runtime
+      --layer| < object/token/map/gm >                  //DEFAULT = token(s) spawn on the same layer as the selected token(s). May explicitly set to spawn on a different layer.
     }}
     
     
@@ -68,8 +67,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.16';
-
+    const version = '0.17';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -903,6 +901,11 @@ const SpawnDefaultToken = (() => {
                             //either a number or ("random"/"rand"). Actually, any text will default to random
                             data.angle = parseInt(param) || param;
                             break;
+                        case "layer":
+                            //send token to object, gm, or map layer
+                            data.spawnLayer = param;
+                            data.userSpecifiedLayer = true;
+                            break;
                         default:
                             retVal.push('Unexpected argument identifier (' + option + '). Choose from: (' + data.validArgs + ')');
                             break;    
@@ -1017,6 +1020,7 @@ const SpawnDefaultToken = (() => {
                 }
             }
             
+            //check rotation input
             if (!isNumber(data.angle)) {
                 if(!_.contains(['random','rand'], data.angle.toLowerCase())) {
                     retVal.push('Invalid rotation detected. Format is \"--rotation|# or rand/random\"');
@@ -1026,6 +1030,20 @@ const SpawnDefaultToken = (() => {
             } else {    //normalize to account for excess degrees
                 data.angle %= 360
             }
+            
+            //check layer input
+            if (data.userSpecifiedLayer) {
+                if ( data.spawnLayer.match(/obj/i) || data.spawnLayer.match(/tok/i) ) {
+                    data.spawnLayer = 'objects';
+                } else if ( data.spawnLayer.match(/gm/i) ) {
+                    data.spawnLayer = 'gmlayer';
+                } else if ( data.spawnLayer.match(/map/i) ) {
+                    data.spawnLayer = 'map';
+                } else {
+                    retVal.push('Invalid layer requested. Valid layers are \"object(s)\", \"token\", \"tok\", \"gm\",\"map\"');
+                }
+            }
+            
             
             //2nd data validation checkpoint. Potentially return several error msgs
             if (retVal.length > 0) {return retVal};
@@ -1210,9 +1228,12 @@ const SpawnDefaultToken = (() => {
             //  Spawn Placement  -- calculate all coordinates
             ///////////////////////////////////////////////////////////////
             
-            //All tokens spawn on the same page and layer as the origin token(s)
+            //All tokens spawn on the same page and layer as the origin token(s) unless specified by user command
             data.spawnPageID = data.originToks[0].get("pageid");
-            data.spawnLayer = data.originToks[0].get("layer");
+            if (data.userSpecifiedLayer===false) {
+                data.spawnLayer = data.originToks[0].get("layer");
+            } 
+            
             
             let left;
             let top;
@@ -1465,7 +1486,7 @@ const SpawnDefaultToken = (() => {
                 var data = {
                     who: whoDat,        //Who called the script
                     spawnName: "",      //name of the target to spawn
-                    validArgs: "name, qty, targets, placement, force, offset, sheet, ability, side, size, order, light, mook, fx, bar1, bar2, bar3, expand, deleteSource, deleteTarget, resizeSource, resizeTarget",    //list of valid user commands for error message
+                    validArgs: "name, qty, targets, placement, force, offset, sheet, ability, side, size, order, light, mook, fx, bar1, bar2, bar3, expand, deleteSource, deleteTarget, resizeSource, resizeTarget, rotation, layer",    //list of valid user commands for error message
                     qty: 1,             //how many tokens to spawn at each origin
                     //tokenIDs and objects
                     originToks: [],     //array of token objects to be used as reference point(s) for spawn location(s). 
@@ -1532,7 +1553,9 @@ const SpawnDefaultToken = (() => {
                     resizeTargetIterations: 20,    //how many animation frames to use if animated target token resize is called for
                     resizeTargetDelay: 50,         //delay (in ms) between each frame if animated target resize is called for
                     destroySpawnWhenDone: false,   //delete the spawned token after animation is complete    
-                    angle: 0                       //change the rotation of the spawned token
+                    angle: 0,                      //change the rotation of the spawned token
+                    userSpecifiedLayer: false,     //flag to determine how spawned token layer is defined
+                    spawnLayer: "objects"            //user can set to "object", "token", "gm", or "map"
                 };
                 
                 //Parse msg into an array of argument objects [{cmd:params}]
