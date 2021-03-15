@@ -58,6 +58,7 @@
                                                         //#,#: the new size of the target token(s). If any dimension is set to 0, it will delete the token after animation
                                                         //#frames: DEFAULT = 20. how many frames the animation will use.
                                                         //delay: DEFAULT = 50. how many milliseconds between triggering each frame? Anything less than 30 may appear instant
+      --rotation|  < #/random/rand >            //sets the angle of the spawned token during runtime
     }}
     
     
