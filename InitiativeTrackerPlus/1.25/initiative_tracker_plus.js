@@ -301,7 +301,9 @@ var InitiativeTrackerPlus = (function() {
 		var imgs = findObjs({ type: 'graphic', name: 'tracker_image' });
 		if(imgs[0]) {
 			fields.trackerImg = imgs[0].get('imgsrc').replace("max", "thumb").replace("med", "thumb");
+			state.initiative_tracker_plus.config.fields.trackerImg = fields.trackerImg;
 			fields.trackerId = imgs[0].get('_id');
+			state.initiative_tracker_plus.config.fields.trackerId = fields.trackerId;
 			imgs[0].remove();
 			sendFeedback('Tracker Indicator Image Updated');
 		} else {
