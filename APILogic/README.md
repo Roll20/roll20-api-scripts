@@ -1,4 +1,6 @@
 ﻿# APILogic
+**File Location:** [APILogic.js](https://github.com/TimRohr22/Cauldron/tree/master/APILogic) (submitted to the one-click, but until then, find it in my personal repo)
+**Script Dependency:** [libInline.js](https://github.com/TimRohr22/Cauldron/tree/master/libInline) (also submitted to the one-click)
 APILogic introduces logical structures (things like IF, ELSEIF, and ELSE) as well as real-time inline math operations, and variable muling to Roll20 command lines. It can test sets of conditions and, depending on the result, include or exclude parts of the command line that actually reaches the chat processor. For example, given the statement:
 
     !somescript {& if a = a} true stuff {& else} default stuff {& end}
@@ -8,16 +10,24 @@ APILogic introduces logical structures (things like IF, ELSEIF, and ELSE) as wel
 
 APILogic exploits a peculiarity of the way many of the scripts reach the chat interface (a peculiarity first discovered by -- who else? -- The Aaron) to give it the ability to intercept the chat message ***before*** it reaches other scripts, no matter if it is installed before or after them in the script library. It also uses a separate bit of script magic to let it retain ownership of the message even when otherwise asynchronous chat calls would be going.
 
-(The method APILogic utilizes has been tested and shown to work with a large number of scripts. If you find that it doesn't, you should be reminded that the most foolproof way to ensure proper timing of script execution is to load APILogic in your script library before the other script. But hopefully you'll find that you don't need to do that!)
+**Caveat:** The method APILogic utilizes has been tested and shown to work with a large number of scripts. If you find that it doesn't, you should be reminded that the most foolproof way to ensure proper timing of script execution is to load APILogic in your script library before the other script. But hopefully you'll find that you don't need to do that!)
 
-Although it requires the API, it is not only for API messages. You can use these logic structures with basic chat messages, too. This document will show you how.
+Also, although it requires the API, it is not only for API messages. You can use these logic structures with basic chat messages, too. This document will show you how.
+
+**Credits:** Many thanks to The Aaron for lending his expertise on questions I had, and to the other members of the House of Mod for sounding out and working through ideas.
+
 ## Triggering and Usage
 You won't invoke APILogic directly by using a particular handle and a line dedicated for the APILogic to detect. Instead, any API call (beginning with an exclamation point: '!')  that also includes any IF, DEFINE, MULE,  EVAL, EVAL-, or MATH tag somewhere in the line will trigger APILogic to examine and parse the message before handing it off to other scripts.
 
 As mentioned, you are not limited to using APILogic only for calls that are intended for other scripts. There are mechanisms built into the logic that let you output a simple chat message (no API) once you've processed all of the logic structures. That means you can use the logic structures in a simple message that was never intended to be picked up by a script, and also in a message that, depending on the conditions provided, might need to be picked up by another script, or alternatively flattened to a simple message to hit the chat log.
 
 ## The Basic Structures: IF, ELSEIF, ELSE, and END
-An IF begins a logical test, providing conditions that are evaluated. It can be followed by any number of ELSEIF tags, followed by zero or 1 ELSE tag. Finally, an IF block must be terminated with an END tag. Each of these are identified by the `{& ... }` formation. A properly structured IF block might look like this:
+An IF begins a logical test, providing conditions that are evaluated. It can be followed by any number of ELSEIF tags, followed by zero or 1 ELSE tag. Finally, an IF block must be terminated with an END tag. Each of these are identified by the `{& type ... }` formation. For instance:
+{& if ... }
+{& elseif ...}
+{& else}
+{& end}
+A properly structured IF block might look like this:
 
     {& if (conditions) } true text {& elseif (conditions) } alt text {& else } default text {& end}
 Each IF and ELSEIF tag include conditions to be evaluated (discussed in a moment). If an IF's conditions evaluate as `true`, the subsequent text is included in the command line. While nested IF blocks embedded within that included text are detected and evaluated, no further sibling tags to the initial IF tag are evaluated until the associated END tag. On the other hand, if an IF evaluates to false, evaluation moves to the next logical structure (ELSEIF, ELSE, or END). ELSEIFs are evaluated just as IFs are, with processing passing forward if we find a false set of conditions. If we ever reach an ELSE, that text is included.
@@ -49,7 +59,7 @@ APILogic currently can retrieve and evaluate attributes, repeating items, and ab
     *|Character Name|list|[pattern]|rpt_item_suffix
 
 In each example, where the character's name is referenced, you can substitute the character's ID or the token ID of a token that represents that character.
-For abilities, the text (or action) of the ability will be returned; for attributes and repeating attributes, the current value. To retrieve the "max" value of an attribute or repeating attribute, see **Special Tests and Returns**, below.
+For abilities, the text (or action) of the ability will be returned; for attributes and repeating attributes, the current value. To retrieve the "max" value of an attribute or repeating attribute, see **Special Tests and Returning "max" or "name"**, below.
 
     {& if @|Bob the Hirsuite|health > 18 }
     {& if %|-M4qbDlLf8x7lYHaZ4tt|Blast ~ power }
@@ -64,7 +74,7 @@ Last, note that if there is space in the text provided as the right hand side of
 If you don't know the suffixes of the sub-attributes for a repeating list, I suggest you utilize a script like [XRay](https://app.roll20.net/forum/post/9097236/script-insertarg-script-preamp-siege-engine-menu-maker-command-line-constructor/) (part of the InsertArg script) to help identify the naming parts you need.
 ##### Sheet Item Reminder
 Remember, Roll20 will parse standard calls to sheet items before the message is handed off to the API, so if you *know* an attribute exists, for instance, it could be simpler for you to use the standard syntax to trigger the Roll20 parser to derive the value. On the other hand, using the APILogic syntax to access the sheet item provides an implicit test for whether the item exists at all. Rather than derailing the message, that condition simply evaluates as false, and processing continues.
-##### Special Tests and Returns
+##### Special Tests and Returning "max" or "name"
 Part of the implicit test performed on a sheet item is whether it exists (it's hard for an attribute to be 3-or-greater if it doesn't exist in the first place). Therefore, to test whether an item exists, you need only include it as a unary test in a condition set:
 
     {& if @|Bob the Slayer|weaponsmith }
@@ -92,7 +102,7 @@ The above would return, for example:
 ...representing the attribute for `resource_name` where the resource represented "arrows". The name returned is the name of the field referenced as the last element in the structure, whatever that is. So the following would return the name of the `resource_quantity` attribute for the same "arrows" resource:
 
     {& define ([arrowsleft] *name|Bob the Slayer|resources|[resource_name="arrows"]|resource_quantity ) }
-For more information on using definitions, see **Use DEFINE Tag**, below.
+For more information on using definitions, see **Using DEFINE Tag**, below.
 
 **ROW:** Roll20 lets you use a "rowID shorthand" ($0, $1, etc.) to reference items in a repeating set based on their sorted order. To get the ordinal/sorted position, use `row`.
 
@@ -140,7 +150,7 @@ The reasoning behind why you would want to include a part of your command line m
 
     {& if ([sanitycheck] @|Bob the Slayer|sanity > 10 ) }
 
-The above would store the result of the condition (whether Bob the Slayer's sanity was over 10) as `sanitycheck`, available to be used later in the command line.
+The above would store the result of the condition (whether Bob the Slayer's sanity was over 10) as `sanitycheck`, available to be used later in the command line, including in future, deferred processing (disucssed later).
 
     {& if ([sanitycheck] @|Bob the Slayer|sanity > 10 ) } conditionally included text {& end} always included text {& if sanitycheck } conditionally included text {& end}
 **BE AWARE** that conditions are ONLY evaluated for IF and ELSEIF tags which reach the parser. If your group is defined in a portion of the command line that is not evaluated because the IF or ELSEIF was never reached, the group will never be evaluated and the test will never be stored.
@@ -178,6 +188,14 @@ A DEFINE tag is a way to provide definitions for terms that you will then use in
 The `term` refers to what you will use, elsewhere in the command line, to represent the `definition`. Since the `definition` is terminated by a parentheses, you do NOT need to enclose it in some form of quotation marks UNLESS you need to include leading or trailing spaces.
 
 Since DEFINE replacements are simple text replacement operations, these can be a way to save typing (providing a short `term` to represent a long `definition` that will need to be utilized a number of times in a command line). It also provides a way of minimizing work should a `definition` need to change -- giving you only one place to change it instead of many. This means you could define a `([speaker] Bob the Slayer)` term, and use `speaker` anywhere you would refer to the character; then, if you passed that macro language to a fellow player, they would only have to replace the name with their character in one place.
+
+**EDIT v1.1.0 & v1.1.1**: DEFINE tags will now process sheet items, returning the value of the requested thing. Use the syntax as described elsewhere in this post (for instance, @|Bob|smooth_jazz to get the smooth_jazz attribute for the character 'Bob'). Also, special returns are allowed. Instead of returning the value of the item, name will return the name of the item, row will return the rowID of a repeating element, and rowname will return the rowID version of a repeating element's name.
+
+    TERM    | EXAMPLE                                                    | EXAMPLE RETURN
+    --------|------------------------------------------------------------|-------------------------------------------------------
+    name    | *name|Bob|skills|[skill_name=Bowling]|skill_roll_target    | repeating_skills_-M1234567890abcdef_skill_roll_target
+    row     | *row|Bob|skills|[skill_name=Bowling]|skill_roll_target     | $2
+    rowname | *rowname|Bob|skills|[skill_name=Bowling]|skill_roll_target | repeating_skills_$2_skill_roll_target
 
 (See **Advanced Usage** for more ways to leverage the DEFINE tag.)
 
@@ -303,23 +321,25 @@ Jester's looks like this:
     Motto=Where'd who go?
 If Viper loads before Jester, the map of variable reference would look like this:
 
-    get.initMod											=> 3	(Jester)
-    get.EncMod											=> 3	(Jester)
-    get.motto											=> There's no time to think!	(Viper)
-    get.Motto											=> Where'd who go?	(Jester)
-    get.bestrecent										=> 20	(Viper)
-    get.MyLittleMule.initMod							=> 3	(Jester)
-    get.MyLittleMule.EncMod								=> 3	(Jester)
-    get.MyLittleMule.motto								=> There's no time to think!	(Viper)
-    get.MyLittleMule.Motto								=> Where'd who go?	(Jester)
-    get.MyLittleMule.bestrecent							=> 20	(Viper)
-    get.Jester.MyLittleMule.initMod						=> 3	(Jester)
-    get.Jester.MyLittleMule.EncMod						=> 3	(Jester)
-    get.Jester.MyLittleMule.Motto						=> Where'd who go?	(Jester)
-    get.Viper.MyLittleMule.initMod						=> 4	(Viper)
-    get.Viper.MyLittleMule.EncMod						=> 5	(Viper)
-    get.Viper.MyLittleMule.motto						=> There's no time to think! (Viper)
-    get.Viper.MyLittleMule.bestrecent					=> 20	(Viper)
+    VARIABLE REFERENCE                 |  CHAR  | VALUE
+    -----------------------------------|--------|-----------------------------
+    get.initMod                        | Jester | 3
+    get.EncMod                         | Jester | 3
+    get.motto                          | Viper  | There's no time to think!
+    get.Motto                          | Jester | Where'd who go?
+    get.bestrecent                     | Viper  | 20
+    get.MyLittleMule.initMod           | Jester | 3
+    get.MyLittleMule.EncMod            | Jester | 3
+    get.MyLittleMule.motto             | Viper  | There's no time to think!
+    get.MyLittleMule.Motto             | Jester | Where'd who go?
+    get.MyLittleMule.bestrecent        | Viper  | 20
+    get.Jester.MyLittleMule.initMod    | Jester | 3
+    get.Jester.MyLittleMule.EncMod     | Jester | 3
+    get.Jester.MyLittleMule.Motto      | Jester | Where'd who go?
+    get.Viper.MyLittleMule.initMod     | Viper  | 4
+    get.Viper.MyLittleMule.EncMod      | Viper  | 5
+    get.Viper.MyLittleMule.motto       | Viper  | There's no time to think!
+    get.Viper.MyLittleMule.bestrecent  | Viper  | 20
 
 Note that the variables are case-sensitive ("motto" vs "Motto"), and that it is only when you arrive at a unique piece of identifying data (in this case, the character name) that you are able to differentiate between the similarly named (and/or similarly-muled) variables. The point is, you should use the LCR guaranteed to get you the variable you intend to retrieve, but if you have only one Mule, you can use the simplest form for every variable.
 ### Setting a Variable's Value
@@ -366,7 +386,7 @@ Constants take priority over Mule variables of the same name, therefore if you h
 ## Escaping Text (Deferring Processing)
 You can use `\` characters to break up text formations that the Roll20 parser might otherwise recognize and try to process before you are ready. The escape character is removed before the message is released to other scripts.
 
-For instance, referencing an attribute that does not exist might normally through the parser and have an error report to the chat output. In that case, you could use escaping to mask the evaluation of the referenced attribute, and only include it in the command line if the attribute exists:
+For instance, referencing an attribute that does not exist might normally throw an error to the chat output. In that case, you could use escaping to mask the evaluation of the referenced attribute, and only include it in the command line if the attribute exists:
 
     !somescript {& if @|Bob the Slayer|smooth_jazz } @\{Bob the Slayer|smooth_jazz} {& end}
 The escape character prevents the Roll20 parser from recognizing the request for the `smooth_jazz` attribute until we've determined whether the attribute exists in the first place. If it doesn't exist, that portion of the line never survives to be included in the final output.
@@ -376,7 +396,7 @@ Here's another example where that potentially non-existent value would be the ba
     \[\[ @\{Bob the Slayer|smooth_jazz}d10 \]\]
 
 ### Timing
-APILogic gets the message **after** the Roll20 parser has already handled things like requests for sheet items, roll queries, and inline rolls. Then it processes EVAL tags, DEFINE tags, and then the logical constructs. After all of that work is finished, it un-escapes characters and uses a bit of script magic to invoke the whole process again (including Roll20 parsers to handle the "newly created" detectable items as well as the APILogic test for "newly created" DEFINE blocks or IF blocks) before releasing the message to other scripts.
+APILogic gets the message **after** the Roll20 parser has already handled things like requests for sheet items, roll queries, and inline rolls. APILogic processes EVAL, MULE, MATH, DEFINE, EVAL-, and IF tags before finally setting any variable values. After all of that work is finished, it un-escapes characters and uses a bit of script magic to invoke the whole process again (including Roll20 parsers to handle the "newly created" detectable items as well as the APILogic test for "newly created" blocks to trigger further processing) before releasing the message to other scripts. See **Order of Operations**, below, for a fuller breakdown of the sequence.
 ### Caveat
 Removing the escape characters happens automatically for any chat message that triggers APILogic to examine the command line (meaning an API call where you used either an IF or DEFINE tag). Because of this, for any message where you would use the IF and/or DEFINE tags and you also need to actually include a `\` character, you will need to escape the escape character: `\\`. Multiple levels of escaping require the same number of escapes for any slash you wish to keep.
 ## Post Processing Tags: STOP and SIMPLE
@@ -494,23 +514,46 @@ Since we are interrupting other scripts answering the API message and reconstruc
 
     !{& if @|Bob the Slayer|smooth_jazz}somescript arg1 arg2{&else} Sorry, speaker doesn't have the smooth_jazz attribute{&simple}{&end}
 If `smooth_jazz` exists for Bob the Slayer, the above example will run the `somescript` script. If it does not exist, the api handle for that script is dropped, but the `{& simple}` tag is included, ensuring that a readable message is sent to the chat window.
+### Mules as Static Access Tables
+Rollable tables on Roll20 do a lot to provide random results from weighted entries, which can be good for things like random encounters or the like, but which aren't as helpful for times when you know the value from which you need to derive the result. For instance, if a given level of a character's Stamina has a direct correlation to a mod applied to their activities, you don't need a randomized result... you need the result directly tied to what the character's Stamina is when you consult the table. Similarly, some systems have charts built for how rolls map an attack roll to damage. A Mule can fill this gap.
+
+Construct your Mule as the entries of the table, with the various states of the referenced input as the variable names. For an Encumbrance Mod table that would return a modifier to rolls based on the weight of the items the character was carrying, that might look like:
+
+    0=0
+    1=0
+    2=-1
+    3=-1
+    4=-1
+    5=-2
+    ...etc...
+If the Mule were named "EncumbranceTable", you can reference that using the character's CarryWeight attribute like so:
+
+    ... {& mule EncumbranceTable} ... get.@{selected|CarryWeight} ...
+Using a Mule this way, you can also leverage a MATH tag, if the input number needs to be altered at all:
+
+    get\.{& math @{selected|CarryWeight} + 2*(20-@{selected|Stamina}) }
+
+The above adds twice the value that the character's Stamina is below 20 to the CarryWeight before determining which row to retrieve. Also note that since MATH tags are evaluated *after* `get` statements, the `get` had to be deferred for one cycle of the loop.
 
 ## Development Path:
 
+- Numeric Ranges as Mule Variable Names (i.e., 1-10)
  - Including token items as conditions
- - ~~MAX/MIN tag~~
  - SWITCH/CASE tag
+ - ~~MAX/MIN tag~~
  ~~- Levenshtein Distance for approximate names~~
  - ~~Other special tests for sheet items~~
  ~~- EVAL tag~~
- - Token data as condition tests
 
 ## Change Log:
 
 **Version 1.0.0** - Initial Release
-**Version 1.0.1** - minor bug fix related to inline table resolution
-**Version 1.1.0** - changed special tests for sheet items to be `int` and `max` instead of `i` and `m`; changed DEFINE tags to evaluate sheet items; added the ability to return the `name` of a sheet item
-**Version 1.2.0** - added EVAL tag; added rule registration for scriptlet plugins; added `row` and `rowname` as retrievable things for repeating sheet items; added MATH tag for inline math calculations; added MULE tag (and get/set language) to handle variable storage
+**Version 1.0.1** ([link](https://app.roll20.net/forum/permalink/9772610/)) - minor bug fix related to inline table resolution
+**Version 1.1.0** ([link](https://app.roll20.net/forum/permalink/9787044/)) - changed special tests for sheet items to be `int` and `max` instead of `i` and `m`; changed DEFINE tags to evaluate sheet items; added the ability to return the `name` of a sheet item
+**Version 1.1.1** ([link](https://app.roll20.net/forum/permalink/9797691/)) - Minor bug fix, added rowname and row returns for repeating items
+**Version 1.1.2** ([link](https://app.roll20.net/forum/permalink/9818971/)) - Bug fix in the logic engine where numeric conditions were not always properly detected
+**Version 1.1.3** ([link](https://app.roll20.net/forum/permalink/9836244/)) - Bug fix where inline rolls in a condition were not accessed correctly
+**Version 1.2.0** (link) - added EVAL tag; added rule registration for scriptlet plugins; added `row` and `rowname` as retrievable things for repeating sheet items; added MATH tag for inline math calculations; added MULE tag (and get/set language) to handle variable storage
 # APPENDICES
 ## APPENDIX I - Writing a 3rd-Party Script Plugin
 The EVAL tag allows for anyone with a little coding experience to provide an infinite number of extensible features. The EVAL tag will run the script as designated, looking first in its bank of registered plugins. If the script isn't found there, APILogic will send the script call to the chat to have the script fire that way.
@@ -647,6 +690,9 @@ The following functions are available as part of the Math processor. Feel free t
 - **trunc(x)** Returns the integer portion of *x*
 	- -2.1 => -2
 	- 2.1 => 2
+
+
+
 
 
 
