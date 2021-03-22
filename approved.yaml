@@ -1003,3 +1003,7 @@ imperator:
 myzsectorgenerator:
   - "MutantYearZero_SectorGenerator"
   - "System Toolbox"
+  
+playercharacters:
+  - "PlayerCharacters"
+  - "Utility"
