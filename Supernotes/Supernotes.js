@@ -18,12 +18,19 @@ on('ready', () => {
     const decodeUnicode = (str) => str.replace(/%u[0-9a-fA-F]{2,4}/g, (m) => String.fromCharCode(parseInt(m.slice(2), 16)));
 
 
-    const version = '0.0.8';
+    const version = '0.0.91';
     log('Supernotes v' + version + ' is ready!  To set the template of choice or to toggle the send to players option, Use the command !gmnote --config');
 
     on('chat:message', function(msg) {
         if ('api' === msg.type && msg.content.match(/^!(gm|pc|self)note\b/)) {
             let match = msg.content.match(/^!gmnote-(.*)$/);
+
+
+//let theToken = msg.selected
+//theTOken = findObjs({type:'graphic', ids:'-MOnBpNz74VBKsJgBb3D'});
+//log('selected is ' + JSON.stringify(theToken));
+
+
 
             //define command                     
             let command = msg.content.split(/\s+--/)[0];
@@ -39,11 +46,40 @@ log(sender);
             }
 
             //define option
-            let option = msg.content.split(/\s+--/)[1];
+/*            let option = msg.content.split(/\s+--/)[1];
             let secondOption = msg.content.split(/\s+--/)[2];
             if (option === 'notitle'){
                 option = secondOption;
                 secondOption = 'notitle';}
+*/
+
+let secondOption = '';
+let args = msg.content.split(/\s+--/);
+let option = '';
+let notitle=false;
+let id = '';
+let theToken = msg.selected
+
+               args.forEach(a =>{
+                    if(a === 'notitle') {notitle = true}
+                    if (a.includes('id-')) {id = a.split(/id/)[1]}
+                    if(a !== command && !(a.includes('id-')) && a !== 'notitle'){option = a}
+                });
+                 log ('option = ' + option);
+
+                ((id) ? theToken = [{"_id": id,"type": "graphic"}] : theToken = msg.selected);
+//theToken = [{"_id": ids,"type": "graphic"}]
+//theToken = theToken.map({_id:ids,type:"graphic"})
+
+log('selected is ' + JSON.stringify(theToken));
+
+                
+                
+                
+                log ('notitle = ' + notitle);
+                log ('id = ' + id);
+                log ('command = ' + command);
+                log ('option = ' + option);
 
 
             const template = state.Supernotes.template;
@@ -103,7 +139,7 @@ log(sender);
                         state.Supernotes.sheet = 'Pathefinder 2e';
                         state.Supernotes.template = 'rolls';
                         state.Supernotes.title = 'header';
-                        state.Supernotes.theText = 'desc;
+                        state.Supernotes.theText = 'notes_show=[[1]]}} {{notes';
                         sendChat('Supernotes', '/w gm Supernotes set to ' + state.Supernotes.sheet);
                         break;
                     case 'starfinder':
@@ -135,9 +171,8 @@ log(sender);
 
                     let playerButton = '';
                     if (sendToPlayers && (command === '!gmnote'||command ===  '!selfnote')) {
-                        playerButton = '\n[Send to Players](!pcnote --' + option + ')';
+                        playerButton = '\n[Send to Players](' + msg.content.replace(/!(gm|self)/,"!pc") + ')';
                     }
-
 
                     let regex;
                     if (match && match[1]) {
@@ -148,7 +183,7 @@ log(sender);
                     let whom = '';
 
                     if (option === 'avatar') {
-                        (msg.selected || [])
+                        (theToken || [])
                         .map(o => getObj('graphic', o._id))
                             .filter(g => undefined !== g)
                             .map(t => getObj('character', t.get('represents')))
@@ -156,7 +191,7 @@ log(sender);
                             .forEach(c => {
                                 message = "<img src='" + c.get('avatar') + "'>";
                                 whom = c.get('name');
-                                            if (secondOption === 'notitle'){whom = '';}
+                                            if (notitle){whom = '';}
                                 sendChat(whom, messagePrefix + '&{template:' + template + '}{{' + title + '=' + whom + '}} {{' + theText + '=' + message + playerButton + '}}');
                             });
                     } else {
@@ -164,7 +199,7 @@ log(sender);
                         if (option.match(/^imag(e|es|e[1-9])/)) {
 
 
-                            (msg.selected || [])
+                            (theToken || [])
                             .map(o => getObj('graphic', o._id))
                                 .filter(g => undefined !== g)
                                 .map(t => getObj('character', t.get('represents')))
@@ -211,7 +246,7 @@ log(sender);
 
                                         whom = c.get('name');
                                         //Sends the final message
-                                            if (secondOption === 'notitle'){whom = '';}
+                                            if (notitle){whom = '';}
                                         sendChat(whom, messagePrefix + '&{template:' + template + '}{{' + title + '=' + whom + '}} {{' + theText + '=' + message + playerButton + '}}');
 
                                     }
@@ -223,7 +258,7 @@ log(sender);
                             if ((option === 'bio') || (option === 'charnote')) {
                                 let suboption = (option === 'charnote') ? 'gmnotes' : 'bio';
 
-                                (msg.selected || [])
+                                (theToken || [])
                                 .map(o => getObj('graphic', o._id))
                                     .filter(g => undefined !== g)
                                     .map(t => getObj('character', t.get('represents')))
@@ -240,13 +275,13 @@ log(sender);
                                             }
                                             whom = c.get('name');
                                             //Sends the final message
-                                            if (secondOption === 'notitle'){whom = '';}
+                                            if (notitle){whom = '';}
                                             sendChat(whom, messagePrefix + '&{template:' + template + '}{{' + title + '=' + whom + '}} {{' + theText + '=' + message + playerButton + '}}');
 
                                         }
                                     }));
                             } else {
-                                (msg.selected || [])
+                                (theToken || [])
                                 .map(o => getObj('graphic', o._id))
                                     .filter(g => undefined !== g)
                                     .filter((o) => o.get('gmnotes').length > 0)
@@ -260,7 +295,7 @@ log(sender);
 
                                     });
                                 //Sends the final message
-                                            if (secondOption === 'notitle'){whom = '';}
+                                            if (notitle){whom = '';}
                                 sendChat(whom, messagePrefix + '&{template:' + template + '}{{' + title + '=' + whom + '}} {{' + theText + '=' + message + playerButton + '}}');
 
                             }
@@ -270,7 +305,7 @@ log(sender);
                                 `### REPORT###`,
                                 `THE MESSAGE =${message}`,
                                 `command = ${command}`,
-                                `option = ${option}`,
+ //                               `option = ${option}`,
                                 `secondOption = ${secondOption}`,
                                 `messagePrefix = ${messagePrefix}`,
                                 `whom = ${whom}`,
