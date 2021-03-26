@@ -51,3 +51,7 @@ Default Template, D&D 5th Edition by Roll20, 5e Shaped, Pathfinder by Roll20, Pa
 ## Changelog
 
 0.0.7 Fixed bug where token notes would break on accented characters
+
+0.0.9 Added --notitle
+
+0.0.91 added --id
