@@ -11,7 +11,7 @@ const UDLWindows = (() => { // eslint-disable-line no-unused-vars
   const scriptName = 'UDLWindows';
   const version = '0.1.2';
   API_Meta.UDLWindows.version = version;
-  const lastUpdate = 1616861563;
+  const lastUpdate = 1616872594;
   const schemaVersion = 0.1;
 
   const assureHelpHandout = (create = false) => {
@@ -212,17 +212,19 @@ const UDLWindows = (() => { // eslint-disable-line no-unused-vars
 
     let count = oldWindows.length;
 
-    const burndown = ()=>{
-      let p = oldWindows.shift();
-      if(p){
-          convertToWindowPath(p);
-          setTimeout(burndown,0);
-      } else {
-        sendChat('UDLWindows',`/w gm <div><b>Converted <code>${count}</code> legacy windows to new representation.`);
-      }
+	if(count) {
+		const burndown = ()=>{
+		  let p = oldWindows.shift();
+		  if(p){
+			  convertToWindowPath(p);
+			  setTimeout(burndown,0);
+		  } else {
+			sendChat('UDLWindows',`/w gm <div><b>Converted <code>${count}</code> legacy windows to new representation.`);
+		  }
 
-    };
-    burndown();
+		};
+		burndown();
+	}
   };
 
   const isCirclePath = (p) => {
