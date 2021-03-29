@@ -1,5 +1,5 @@
 {
-  "name": "Starfinder - Guidance Tools for Starfinder (Simple) Character sheet",
+  "name": "Guidance: Starfinder Tools",
   "script": "guidance.js",
   "version": "2.0.0",
   "description": "API for Roll20 and Starfinder\n\nVersion 2.0.0\n\nThis is a tool to support the usage of the Starfinder (Simple) character sheets in Roll20.\nIt has the ability to read a statblock from the GMNotes section of a selected character and fill out the NPC section of the charactersheet. Statblocks from Archives of Nethys and Starjammer SRD are supported. Statblocks from PDFs can be used, but there may be parsing issues. Find other details on the wiki [HERE](https://wiki.roll20.net/Script:Starfinder_-_Guidance_Tools_for_Starfinder_(Simple)_Character_sheet).\n\nFeel free to reach out to me if you find any bug or have any suggestions [HERE](https://app.roll20.net/users/927625/kahn265).",
