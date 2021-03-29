@@ -1,0 +1,18 @@
+{
+  "name": "UDLPasswall",
+  "script": "UDLPasswall.js",
+  "version": "0.1.0",
+  "description": "UDLPasswall converts path objects to paths that block vision but don't block movement. This requires twice the space of the opening to make the full distance open. The excess space is spread to either side by default, but can be grouped on one side or the other, or can only require part of the space if you don't mind having some movement blocking in the middle.\r\rFor instructions see the *Help: UDLPasswall* Handout in game, or run `!to-window --help`, or visit [UDLPasswall Forum Thread](https://app.roll20.net/forum/permalink/9939691/).",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "useroptions":{
+  },
+  "dependencies": {
+  },
+  "modifies": {
+    "state.UDLPasswall": "read,write"
+  },
+  "conflicts": [
+  ]
+}
