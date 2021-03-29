@@ -1007,3 +1007,8 @@ myzsectorgenerator:
 playercharacters:
   - "PlayerCharacters"
   - "Utility"
+
+udlpasswall:
+  - "UDLPasswall"
+  - "Dynamic Lighting"
+  
