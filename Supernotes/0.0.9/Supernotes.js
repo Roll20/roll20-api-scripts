@@ -103,7 +103,7 @@ log(sender);
                         state.Supernotes.sheet = 'Pathefinder 2e';
                         state.Supernotes.template = 'rolls';
                         state.Supernotes.title = 'header';
-                        state.Supernotes.theText = 'notes_show=[[1]]}} {{notes';
+                        state.Supernotes.theText = 'desc';
                         sendChat('Supernotes', '/w gm Supernotes set to ' + state.Supernotes.sheet);
                         break;
                     case 'starfinder':
