@@ -1,0 +1,19 @@
+{
+    "name": "D&D 5E Paladin Class Module",
+    "script": "paladin.js",
+    "version": "0.1",
+    "previousversions": [],
+    "description": "This script is a Paladin Class Module add-on for the Dungeon Master Tools.\r\rThis module requires the Dungeon Master Tools and provides support for common Paladin Actions, such as Lay on hands. \r\r**API Commands:**\r\rSee the Dungeon Master Tools for a full list of api commands that the full frame provides\r\r**!dm-action <module> <action> [<options>]** - Used to dispatch an action to a class module\r\r**!dm-action paladin lay-on-hands paladin-id target amount gender*** - If the paladin-token has the Lay on hands action and the target is a valid Token, then the target is healed up to the amount.  Checks are done to make sure the Paladin has the asked amount available and the target needs that amount healed.",
+    "authors": "Patrick Kolenic",
+    "roll20userid": "5259711",
+    "useroptions": [
+    ],
+    "dependencies": ["D&D 5E Dungeon Master Tools"],
+    "patreon":"https://www.patreon.com/ratworkshop",
+    "modifies": {
+        "token.*": "read,write",
+        "character.*": "read,write",
+        "attribute.*": "read,write"
+    },
+    "conflicts": []
+}

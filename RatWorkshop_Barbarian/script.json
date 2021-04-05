@@ -1,0 +1,25 @@
+{
+    "name": "D&D 5E Barbarian Class Module",
+    "script": "barbarian.js",
+    "version": "0.1",
+    "previousversions": [],
+    "description": "This script is a Barbarian Class Module add-on for the Dungeon Master Tools.\r\rThis module requires the Dungeon Master Tools and provides support for common Barbarian Actions, such as Rage. \r\r**API Commands:**\r\rSee the Dungeon Master Tools for a full list of api commands that the full frame provides\r\r**!dm-action <module> <action> [<options>]** - Used to dispatch an action to a class module\r\r**!dm-action barbarian rage target gender*** - If the target has the rage action, an Rage Item is added to the turn order, the target has the 'rage icon' applied, the 'Rage Damage' global modifier is checked, and a Rage message is sent to Chat",
+    "authors": "Patrick Kolenic",
+    "roll20userid": "5259711",
+    "useroptions": [
+        {
+            "name": "tokenIcon-rage",
+            "type": "text",
+            "default": "strong",
+            "description": "Which Icon to mark dead tokens with"
+        }
+    ],
+    "dependencies": ["D&D 5E Dungeon Master Tools"],
+    "patreon":"https://www.patreon.com/ratworkshop",
+    "modifies": {
+        "token.*": "read,write",
+        "character.*": "read,write",
+        "attribute.*": "read,write"
+    },
+    "conflicts": []
+}

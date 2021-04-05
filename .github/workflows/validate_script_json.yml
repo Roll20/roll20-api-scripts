@@ -1,0 +1,62 @@
+name: Validate Script JSON
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout repository
+      - name: Install yajsv
+        uses: suisei-cn/actions-download-file@v1
+        with:
+          url: "https://github.com/neilpa/yajsv/releases/download/v1.4.0/yajsv.linux.amd64"
+          target: .
+      - name: Get list of files changed in this PR
+        uses: jitterbit/get-changed-files@v1
+        continue-on-error: true
+        id: files-changed
+        with:
+          format: csv
+      - name: Validate list of changed scripts
+        id: validation
+        run: |
+          chmod +x ./yajsv.linux.amd64
+          IFS=',' read -r -a changed_files <<< "${{ steps.files-changed.outputs.all }}"
+          script_dirs=()
+          for ((i=0; i < ${#changed_files[@]}; i++))
+          do
+            check_dir=$(echo "${changed_files[$i]}" | cut -d/ -f1)
+            if [ -f "$check_dir/script.json" ]; then
+              if [[ ! " ${script_dirs[@]} " =~ " ${check_dir} " ]]; then
+                script_dirs+=("$check_dir")
+              fi
+            fi
+          done
+          clean="yes"
+
+          set +e
+          for ((i=0; i < ${#script_dirs[@]}; i++))
+          do
+            echo "Checking script directory: ${script_dirs[$i]}"
+            ./validate.sh "${script_dirs[$i]}" >> results
+            status=$?
+            if [ $status -ne 0 ]; then
+              clean="no"
+            fi
+          done
+          set -e
+          if [ "$clean" = "yes" ]; then
+            echo "::set-output name=clean::yes"
+            if [ -f results ]; then
+              echo "::set-output name=results::$(cat results)"
+            else
+              echo "::set-output name=results::no changes to scripts"
+            fi
+            exit 0
+          else
+            echo "::set-output name=clean::no"
+            echo "::set-output name=results::$(cat results)"
+            exit 1
+          fi

@@ -1,4 +1,63 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 2.16
+### Capacités
+* Capacité de cyclone des élémentaires.
+* Présence glaciale de la Voie du gel
+* Charge fantastique du chevalier
+* Project de la Voie du colosse.
+* Ventre mou de la Voie du tueur de géants.
+* Suggestion de la Voie de la séduction du barde
+* Gestion du mot de pouvoir qui immobilise.
+* Différence entre vitalité surnaturelle qui continue à la mort, comme celle des trolls et celle qui s'arrête à la mort.
+* Support de la capacité Enchaînement du barbare.
+* Ajout de l'attaque d'étreinte et immolation de certains démons gardiens
+* Ajout de la capacité Hausser le ton de la Voie du champion
+* Ajout de la capacité Liberté d'action du barde
+* Implémentation des effets de Cercle de protection
+* Ajout de la capacité Combat kinétique du Psionique
+* Support du sort Armure d'eau
+* Support de Moment de perfection (moine)
+* Support d'Ensevelissement (nécromancien)
+* Support d'Armée des Morts (nécromancien)
+* Support d'Invocation d'un démon (nécromancien)
+
+### Autres améliorations
+* Prise en compte de l'option --secret pour !cof-bonus-couvert
+* Armes avec bonus de DEF
+* Possibilité d'afficher un message en cas de coup critique reçu.
+* Ajout d'un effet temporaire effetRetarde
+* Les aires d'effet en disque ne passent plus les murs.
+* Ajout de RD aux éléments.
+* Correction sur l'initiative entre PJs qui doivent comparer la sagesse
+* Ajout de la possibilité de faire des attaques de d12 qui font des critiques
+* Prise en compte des compétences sur la fiche
+* Ajout d'une option de sélection alliesEnVue
+* Prise en compte des immunités pour les effets temporaires.
+* Attribut pour diviser par 2 les effets ou les dm d'un type donné
+* Possibilité d'avoir des bonus aux saves contre un type donné.
+* Ajout des immunités aux différents états.
+* Ajout de la possibilité de sélectionner les tokens en vue d'un personnage.
+* Ajout d'une interface de gestion de la bourse.
+* Support de la pénombre
+* Support pour les personnages invisibles en combat
+* Meilleur support de la Prouesse du guerrier
+* Meilleur support de la Parade de projectiles du moine
+* Meilleur support du Tour de force
+* Meilleur support du Pacte Sanglant 
+* Permettre à un personnage d'être la Chair à canon de plusieurs autres
+
+### Corrections de bugs
+* Correction des RD seulement contre perçant ou tranchant ou contondant.
+* Compatibilité de --maxDmg avec --reroll1 et --explodeMax
+* Crash de statut pour les personnages ayant un capitaine.
+* Correction du test d'attaque opposée
+* Calcul de score d'attaque corrigé pour les Terres d'Arran.
+* Mise à jour de l'initiative quand on rengaine son arme à distance avec la voie du pistolero.
+* Donne le droit au joueur qui doit faire une réaction à une attaque de ne pas réagir.
+* Les créatures qui enveloppent ou étreignent leur cible la relachent quand elle meurt.
+* Le script ne prennait pas en compte la sagesse de l'attaquant contre les créatures immunisées aux armes.
+* Quand une créature peut résister avec SAG, INT ou CHA et qu'elle est sans esprit, alors on choisit cette caractéristique (car la réussite est alors automatique). Test un peu plus précoce pour la résistance à la peur.
+
 ## 2.15
 ### Capacités
 * Gestion des capacités d'auras.
@@ -18,9 +77,11 @@
 * Prise en compte de l'immunité à l'asphyxie des démons.
 * Utilisation des consommables sur la fiche pour les PNJs aussi.
 * Si "Jet Secret" est configuré sur une fiche de PNJ, seul le total des jets d'attaques, de dommages, de caractéristiques et de sauvegardes sont affichés, sans les détails. Le MJ reçoit un whisper avec le détail du jet.
+* Ajout d'une option pour gérer le Contrecoup de l'option Mana Totale + Coût aléatoire
+* Ajout d'une option permettant l'affichage des coûts effectifs en PM au lancement du sort
 
 ### Corrections de bugs
-* Correction d'nu bug avec la forme d'arbre du druide.
+* Correction d'un bug avec la forme d'arbre du druide.
 * Dur à cuir et enragés ne mourraient pas si tapé plus d'une fois dans le tour.
 
 ## 2.14

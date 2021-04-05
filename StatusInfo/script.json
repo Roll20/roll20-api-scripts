@@ -1,17 +1,17 @@
 {
     "name": "StatusInfo",
     "script": "StatusInfo.js",
-    "version": "0.3.10",
-    "previousversions": ["0.3.2", "0.3.4", "0.3.6", "0.3.8"],
+    "version": "0.3.11",
+    "previousversions": ["0.3.2", "0.3.4", "0.3.6", "0.3.8", "0.3.10"],
     "description": "All info and latest version on \n\n https://github.com/RobinKuiper/Roll20APIScripts/tree/master/StatusInfo",
     "authors": "Robin Kuiper",
     "roll20userid": "1226016",
     "patreon": "https://www.patreon.com/robinkuiper",
     "useroptions": [],
-    "dependencies": {
+    "dependencies": [],
+    "modifies": {
         "state.STATUSINFO": "read,write",
         "attribute.current": "read"
     },
-    "modifies": {},
     "conflicts": []
 }
