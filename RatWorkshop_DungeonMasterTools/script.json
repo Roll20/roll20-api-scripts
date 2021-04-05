@@ -1,0 +1,53 @@
+{
+    "name": "D&D 5E Dungeon Master Tools",
+    "script": "dungeon_master_tools.js",
+    "version": "0.1",
+    "previousversions": [],
+    "description": "This script provides a Framework to enhance the Roll20 experience.\r\rThe Dungeon Master tools currently supports automatically adding the Death Token Status, remove items from the turn order once their value drops below zero and provides a command for awarding XP.  Additional class specific modules can be installed to extend the functionality provided here.\r\r**API Commands:**\r\r**!dm-help** - Gives a list of the script's API commands in the chat tab.\r\r**!dm-status** - Lists the current status of the script's features in the chat tab.\r\r**!dm-reset** - Resets all configuration options, ignore any one-click user options currently set\r\r**!dm-token-tracking <icon> <value>** - Sets tracking of the token icon status, only supported <value> are 'on' and 'off'.  Initially the only <icon> supported is 'dead', but class modules will intro additional tracked icons.\r\r**!dm-config <option> <value>** - Sets status of configuration option, only supported <value> are 'on' and 'off'.  Initially the only <option> supported is 'purge-turn-order', but class modules will intro additional options that can be toggled.\r\r**!dm-action <module> <action> [<options>]** - Used to dispatch an action to a class module for example:\r*!dm-action barbarian rage @{selected|character_id} her*\rThis would dispatch the rage action in the barbarian module passing the selected token's value and *her* as the gender.\r\r**!dm-award-xp <amount> <message>** - This will give each player character currently in the turn order the amount of xp specified and display the message in chat.  Use *###XP###* as a place holder for the xp awarded.  Here's an example use in a macro that prompts for xp amount:\r*!dm-award-xp ?{How much?|100} Your heroics have earned you ###XP### experience points!*\r\r**!dm-award-selected-xp <amount> <message>** - This will give each character selected on the map the amount of xp specified and display the message in chat.  Use *###XP###* as a place holder for the xp awarded.\r\r** Interested in Expanding?** then view the [ReadMe on Github](https://github.com/pkolenic/roll20-api-scripts/tree/master/RatWorkshop_DungeonMasterTools) or view look at one of the class modules.",
+    "authors": "Patrick Kolenic",
+    "roll20userid": "5259711",
+    "useroptions": [
+        {
+            "name": "purge-turn-order",
+            "type": "select",
+            "options": ["on", "off"],
+            "default": "on",
+            "description": "Remove item from Turn Order when item value is less than 0"
+        },
+        {
+            "name": "tokenTrack-dead",
+            "type": "select",
+            "options": ["on", "off"],
+            "default": "on",
+            "description": "Auto set Dead Token Status when hp drops to 0 or less"
+        },
+        {
+            "name": "tokenIcon-dead",
+            "type": "text",
+            "default": "dead",
+            "description": "Which Icon to mark dead tokens with"
+        },
+        {
+            "name": "tokenBar-hp",
+            "type": "select",
+            "options": ["bar1", "bar2", "bar3"],
+            "default": "bar1",
+            "description": "Which token bar represents hp"
+        },
+        {
+            "name": "tokenBar-ac",
+            "type": "select",
+            "options": ["bar1", "bar2", "bar3"],
+            "default": "bar2",
+            "description": "Which token bar represents ac"
+        }
+    ],
+    "dependencies": [],
+    "patreon":"https://www.patreon.com/ratworkshop",
+    "modifies": {
+        "token.*": "read,write",
+        "character.*": "read,write",
+        "attribute.*": "read,write"
+    },
+    "conflicts": []
+}

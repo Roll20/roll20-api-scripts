@@ -8,8 +8,7 @@
   "patreon": "https://www.patreon.com/shdwjk",
   "useroptions":{
   },
-  "dependencies": {
-  },
+  "dependencies": [],
   "modifies": {
     "state.APISelection": "read,write"
   },

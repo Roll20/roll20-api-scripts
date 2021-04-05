@@ -1,0 +1,10 @@
+{
+    "name": "Imperator API",
+    "script": "Imperator.js",
+    "version": "0.1",
+    "previousversions": [],
+    "description": "Script pour comptabiliser correctement les réussites de jets sur le JdR Imperator (de JdR Editions).\r\rPour des instructions, saisissez `!imperator --help`.",
+    "authors": "Kapirklaa",
+    "roll20userid": "2085580",
+	"conflicts": []
+}
