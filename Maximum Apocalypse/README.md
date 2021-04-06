@@ -80,6 +80,7 @@ Also see the Maximimum Apocalypse character sheet.
 - (GM only)
   
 **Change Log:**  
+* 2021-04-05 - Fix initiative logic to ensure values treated as numbers. Fix to create character attribute, if it doesn't exist yet, when retrieving them.
 * 2021-02-26 - Fixed EAG commands to show at top left by default & configuration to control if visible to players by default. Add commands to hide & delete EAG.
 * 2020-12-14 - First version with features for showing/populating tracker, action phases, showing/updating enemy attraction gauge
 * 2020-12-31 - Standardise command behind `ma` alias, added hunger, roll, re-roll & config commands. Added automatic initiative reduction for Full Dodge & Riposte rolls.
