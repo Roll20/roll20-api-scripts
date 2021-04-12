@@ -47,23 +47,9 @@
   "dependencies": [],
   "modifies": {
     "state.Bump": "read,write",
-    "graphics": "create,remove",
     "graphics.*": "read,write",
     "campaign.turnorder": "read",
     "player.displayname": "read"
   },
-  "conflicts": [],
-  "previousversions": [
-    "0.2.10",
-    "0.2.11",
-    "0.2.12",
-    "0.2.13",
-    "0.2.14",
-    "0.2.16",
-    "0.2.17",
-    "0.2.18",
-    "0.2.19",
-    "0.2.8",
-    "0.2.9"
-  ]
+  "conflicts": []
 }

@@ -1,29 +1,60 @@
 // Github:   https://github.com/shdwjk/Roll20API/blob/master/Bump/Bump.js
 // By:       The Aaron, Arcane Scriptomancer
 // Contact:  https://app.roll20.net/users/104025/the-aaron
+// Forum:    https://app.roll20.net/forum/permalink/8584976/
+var API_Meta = API_Meta||{}; //eslint-disable-line no-var
+API_Meta.Bump={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
+{try{throw new Error('');}catch(e){API_Meta.Bump.offset=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-7);}}
 
-var globalConfig = globalConfig || undefined;
-var Bump = Bump || (function() {
-    'use strict';
+/* global GroupInitiative TokenMod */
+const Bump = (() => { // eslint-disable-line no-unused-vars
 
-    var version = '0.2.9',
-        lastUpdate = 1457503215,
-        schemaVersion = 0.3,
-        clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
-        checkerURL = 'https://s3.amazonaws.com/files.d20.io/images/16204335/MGS1pylFSsnd5Xb9jAzMqg/med.png?1455260461',
+  const scriptName = "Bump";
+  const version = '0.2.21';
+  API_Meta.Bump.version = version;
+  const lastUpdate = 1618240253;
+  const schemaVersion = 0.5;
+  const clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659';
+  const checkerURL = 'https://s3.amazonaws.com/files.d20.io/images/16204335/MGS1pylFSsnd5Xb9jAzMqg/med.png?1455260461';
 
-        regex = {
-    		colors: /(transparent|(?:#?[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?))/
-        },
+    const regex = {
+			colors: /(transparent|(?:#?[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?))/
+        };
 
-        mirroredProps = [
-            'name', 'left', 'top', 'width', 'height', 'rotation',
-            'flipv', 'fliph', 'bar1_value', 'bar1_max',
-            'bar2_value', 'bar2_max', 'bar3_value', 'bar3_max',
-            'tint_color', 'lastmove',
-            'represents','bar1_link','bar2_link','bar3_link'
-        ],
-        defaults = {
+        const mirroredPropsNoBar = [
+          'name', 'left', 'top', 'width', 'height', 'rotation', 'flipv', 'fliph',
+
+          // Bar settings (except max fields)
+          'bar1_value', 'bar2_value', 'bar3_value',
+          'bar1_link','bar2_link','bar3_link',
+
+          'tint_color', 'lastmove', 'controlledby', 'represents',
+
+          //LDL settings
+          'light_hassight', 'light_radius', 'light_dimradius', 'light_angle',
+          'light_losangle','light_multiplier', 'adv_fow_view_distance',
+
+          //UDL settings
+          "has_bright_light_vision", "has_night_vision", "night_vision_tint",
+          "night_vision_distance", "emits_bright_light", "bright_light_distance",
+          "emits_low_light", "low_light_distance", "has_limit_field_of_vision",
+          "limit_field_of_vision_center", "limit_field_of_vision_total",
+          "has_limit_field_of_night_vision", "limit_field_of_night_vision_center",
+          "limit_field_of_night_vision_total", "has_directional_bright_light",
+          "directional_bright_light_total", "directional_bright_light_center",
+          "has_directional_low_light", "directional_low_light_total",
+          "directional_low_light_center", "dim_light_opacity"
+        ];
+
+        const mirroredProps = [
+          ...mirroredPropsNoBar,
+          // Bar settings (max fields)
+          'bar1_max', 'bar2_max', 'bar3_max'
+        ];
+
+
+
+        const defaults = {
             css: {
                 button: {
                     'border': '1px solid #cccccc',
@@ -35,80 +66,95 @@ var Bump = Bump || (function() {
                     'color': 'white'
                 }
             }
-        },
-        templates = {},
+        };
 
-    buildTemplates = function() {
-        templates.cssProperty =_.template(
-            '<%=name %>: <%=value %>;'
-        );
+    const filterObj = (o) => Object.keys(o).reduce( (m,k) => (undefined === o[k] ? m : Object.assign({},m,{[k]:o[k]})), {});
+    const mergeObj = (...a) => Object.keys(a).reduce((m,k)=>Object.assign(m,filterObj(a[k])),{});
+    const css = (rules) => `style="${Object.keys(rules).map(k=>`${k}:${rules[k]};`).join('')}"`;
 
-        templates.style = _.template(
-            'style="<%='+
-                '_.map(css,function(v,k) {'+
-                    'return templates.cssProperty({'+
-                        'defaults: defaults,'+
-                        'templates: templates,'+
-                        'name:k,'+
-                        'value:v'+
-                    '});'+
-                '}).join("")'+
-            ' %>"'
-        );
 
-        templates.button = _.template(
-            '<a <%= templates.style({'+
-                'defaults: defaults,'+
-                'templates: templates,'+
-                'css: _.defaults(css,defaults.css.button)'+
-                '}) %> href="<%= command %>"><%= label||"Button" %></a>'
-        );
+    const makeButton = (command, label, backgroundColor, color) => `<a ${css(mergeObj(defaults.css.button,{color,'background-color':backgroundColor}))} href="${command}">${label}</a>`;
 
-    },
-    makeButton = function(command, label, backgroundColor, color){
-        return templates.button({
-            command: command,
-            label: label,
-            templates: templates,
-            defaults: defaults,
-            css: {
-                color: color,
-                'background-color': backgroundColor
-            }
-        });
-    },
+
+    const isPlayerToken = (obj) => {
+        let players = obj.get('controlledby')
+            .split(/,/)
+            .filter(s=>s.length);
+
+        if( players.includes('all') || players.filter((p)=>!playerIsGM(p)).length ) {
+           return true;
+        } 
+
+        if('' !== obj.get('represents') ) {
+            players = (getObj('character',obj.get('represents')) || {get: ()=>''} )
+                .get('controlledby').split(/,/)
+                .filter(s=>s.length);
+            return  players.includes('all') || players.filter((p)=>!playerIsGM(p)).length ;
+        }
+        return false;
+    };
     
-	cleanupObjectReferences = function(){
-		var inverse = _.invert(state.Bump.mirrored),
-            ids = _.union(_.keys(state.Bump.mirrored),_.keys(inverse));
-		filterObjs(function(o){
-			ids=_.without(ids,o.id);
-			return false;
-		});
-        _.each(ids,function(id){
-            var obj;
-            if(_.has(state.Bump.mirrored,id)){
-                if(!_.contains(ids,state.Bump.mirrored[id])){
-                    obj=getObj('graphic',state.Bump.mirrored[id]);
-                    if(obj){
-                        obj.remove();
+    
+    const keyForValue = (obj,v) => Object.keys(obj).find( key => obj[key] === v);
+	const cleanupObjectReferences = () => {
+        const allIds = findObjs({type:'graphic'}).map( o => o.id);
+        const ids = [
+                ...Object.keys(state[scriptName].mirrored),
+                ...Object.values(state[scriptName].mirrored)
+            ]
+            .filter( id => !allIds.includes(id) );
+
+            ids.forEach( id => {
+                if(state[scriptName].mirrored.hasOwnProperty(id)){
+                    if(!ids.includes(state[scriptName].mirrored[id])){
+                        let obj = getObj('graphic',state[scriptName].mirrored[id]);
+                        if(obj){
+                            obj.remove();
+                        }
+                    }
+                } else {
+                    let iid = keyForValue(state[scriptName].mirrored,id);
+                    delete state[scriptName].mirrored[iid];
+                    if(!ids.includes(iid)){
+                        createMirrored(iid, false, 'gm');
                     }
                 }
-                delete state.Bump.mirrored[id];
-            } else {
-                delete state.Bump.mirrored[inverse[id]];
-                if(!_.contains(ids,inverse[id])){
-                    createMirrored(inverse[id], false, 'gm');
-                }
-            }
-        });
-    },
+            });
+    };
 
-	checkGlobalConfig = function(){
-		var s=state.Bump,
-		g=globalConfig && globalConfig.bump,
-		parsedDots;
-		if(g && g.lastsaved && g.lastsaved > s.globalConfigCache.lastsaved
+    const simpleObj = (o)=>JSON.parse(JSON.stringify(o));
+
+    const fixupSlaveBars = () => {
+      let ids = Object.values(state[scriptName].mirrored);
+      const burndown = () =>{
+        if(ids.length){
+          let id = ids.shift();
+          let slave = getObj('graphic',id);
+          if(slave){
+            if(state[scriptName].config.noBars) {
+              slave.set({
+                bar1_max: '',
+                bar2_max: '',
+                bar3_max: '',
+                bar1_link: '',
+                bar2_link: '',
+                bar3_link: ''
+              });
+            }
+            let prev = simpleObj(slave);
+            handleTokenChange(slave,prev);
+          }
+          setTimeout(burndown,0);
+        }
+      };
+      burndown();
+    };
+
+	const checkGlobalConfig = () => {
+		let s=state[scriptName],
+		g=globalconfig && globalconfig.bump;
+
+		if(g && g.lastsaved && g.lastsaved > s.globalconfigCache.lastsaved
 		){
 			log('  > Updating from Global Config <  ['+(new Date(g.lastsaved*1000))+']');
 
@@ -121,160 +167,212 @@ var Bump = Bump || (function() {
 
 			s.config.autoPush = 'autoPush' === g['Auto Push'];
 			s.config.autoSlave = 'autoSlave' === g['Auto Slave'];
+			s.config.autoUnslave = 'autoUnslave' === g['Auto Unslave'];
+			s.config.noBars = 'noBars' === g['No Bars on Slave'];
 
-			state.Bump.globalConfigCache=globalConfig.bump;
+			state[scriptName].globalconfigCache=globalconfig.bump;
 		}
-	},
-    checkInstall = function() {
-        log('-=> Bump v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+	};
 
-        if( ! _.has(state,'Bump') || state.Bump.version !== schemaVersion) {
+    const checkInstall = () => {
+        log(`-=> ${scriptName} v${version} <=-  [${new Date(lastUpdate*1000)}]`);
+
+        if( ! state.hasOwnProperty(scriptName) || state[scriptName].version !== schemaVersion) {
             log('  > Updating Schema to v'+schemaVersion+' <');
-            switch(state.Bump && state.Bump.version) {
-				case 0.2:
-                  state.Bump.globalConfigCache = {lastsaved:0};
-
-                /* falls through */
+            switch(state[scriptName] && state[scriptName].version) {
                 case 0.1:
-                    state.Bump.config.autoSlave = false;
+                    state[scriptName].config.autoSlave = false;
+                    /* falls through */
 
-                /* falls through */
+                case 0.2:
+                case 0.3:
+                  delete state[scriptName].globalConfigCache;
+                  state[scriptName].globalconfigCache = {lastsaved:0};
+                  /* falls through */
+
+                case 0.4:
+                  state[scriptName].lastHelpVersion=version;
+                  state[scriptName].config.noBars = false;
+                  state[scriptName].config.autoUnslave = false;
+                  /* falls through */
+
                 case 'UpdateSchemaVersion':
-                    state.Bump.version = schemaVersion;
+                    state[scriptName].version = schemaVersion;
                     break;
 
                 default:
-                    state.Bump = {
+                    state[scriptName] = {
                         version: schemaVersion,
-                        globalConfigCache: {lastsaved:0},
+                        lastHelpVersion: version,
+                        globalconfigCache: {lastsaved:0},
                         config: {
                             layerColors: {
                                 'gmlayer' : '#008000',
                                 'objects' : '#800080'
                             },
                             autoPush: false,
-                            autoSlave: false
+                            autoSlave: false,
+                            noBars: false,
+                            autoUnslave: false
                         },
                         mirrored: {}
                     };
                     break;
             }
         }
-        buildTemplates();
+        checkGlobalConfig();
         cleanupObjectReferences();
-    },
+        assureHelpHandout();
+    };
 
-	ch = function (c) {
-		var entities = {
-			'<' : 'lt',
-			'>' : 'gt',
-			"'" : '#39',
-			'@' : '#64',
-			'{' : '#123',
-			'|' : '#124',
-			'}' : '#125',
-			'[' : '#91',
-			']' : '#93',
-			'"' : 'quot',
-			'-' : 'mdash',
-			' ' : 'nbsp'
-		};
+    const ch = (c) => {
+        const entities = {
+            '<' : 'lt',
+            '>' : 'gt',
+            "'" : '#39',
+            '@' : '#64',
+            '{' : '#123',
+            '|' : '#124',
+            '}' : '#125',
+            '[' : '#91',
+            ']' : '#93',
+            '"' : 'quot',
+            '*' : 'ast',
+            '/' : 'sol',
+            ' ' : 'nbsp'
+        };
 
-		if(_.has(entities,c) ){
-			return ('&'+entities[c]+';');
-		}
-		return '';
-	},
+        if( entities.hasOwnProperty(c) ){
+            return `&${entities[c]};`;
+        }
+        return '';
+    };
+
+    const _h = {
+        outer: (...o) => `<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">${o.join(' ')}</div>`,
+        title: (t,v) => `<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">${t} v${v}</div>`,
+        subhead: (...o) => `<b>${o.join(' ')}</b>`,
+        minorhead: (...o) => `<u>${o.join(' ')}</u>`,
+        optional: (...o) => `${ch('[')}${o.join(` ${ch('|')} `)}${ch(']')}`,
+        required: (...o) => `${ch('<')}${o.join(` ${ch('|')} `)}${ch('>')}`,
+        header: (...o) => `<div style="padding-left:10px;margin-bottom:3px;">${o.join(' ')}</div>`,
+        section: (s,...o) => `${_h.subhead(s)}${_h.inset(...o)}`,
+        paragraph: (...o) => `<p>${o.join(' ')}</p>`,
+        group: (...o) => `${o.join(' ')}`,
+        items: (o) => `<li>${o.join('</li><li>')}</li>`,
+        ol: (...o) => `<ol>${_h.items(o)}</ol>`,
+        ul: (...o) => `<ul>${_h.items(o)}</ul>`,
+        grid: (...o) => `<div style="padding: 12px 0;">${o.join('')}<div style="clear:both;"></div></div>`,
+        cell: (o) =>  `<div style="width: 130px; padding: 0 3px; float: left;">${o}</div>`,
+        inset: (...o) => `<div style="padding-left: 10px;padding-right:20px">${o.join(' ')}</div>`,
+        join: (...o) => o.join(' '),
+        pre: (...o) =>`<div style="border:1px solid #e1e1e8;border-radius:4px;padding:8.5px;margin-bottom:9px;font-size:12px;white-space:normal;word-break:normal;word-wrap:normal;background-color:#f7f7f9;font-family:monospace;overflow:auto;">${o.join(' ')}</div>`,
+        preformatted: (...o) =>_h.pre(o.join('<br>').replace(/\s/g,ch(' '))),
+        code: (...o) => `<code>${o.join(' ')}</code>`,
+        attr: {
+            bare: (o)=>`${ch('@')}${ch('{')}${o}${ch('}')}`,
+            selected: (o)=>`${ch('@')}${ch('{')}selected${ch('|')}${o}${ch('}')}`,
+            target: (o)=>`${ch('@')}${ch('{')}target${ch('|')}${o}${ch('}')}`,
+            char: (o,c)=>`${ch('@')}${ch('{')}${c||'CHARACTER NAME'}${ch('|')}${o}${ch('}')}`
+        },
+        bold: (...o) => `<b>${o.join(' ')}</b>`,
+        italic: (...o) => `<i>${o.join(' ')}</i>`,
+        font: {
+            command: (...o)=>`<b><span style="font-family:serif;">${o.join(' ')}</span></b>`
+        }
+    };
 
 
-    getMirroredPair = function(id) {
-        var mirrored;
-        _.find(state.Bump.mirrored,function(slaveid,masterid){
-            if(id === masterid || id === slaveid) {
-                mirrored = {
-                    master: getObj('graphic',masterid),
-                    slave: getObj('graphic',slaveid)
-                };
-                return true;
-            }
-            return false;
-        });
-        return mirrored;
-    },
+    const getMirroredPair = (id) => {
+        if(state[scriptName].mirrored.hasOwnProperty(id)){
+            return {
+                master: getObj('graphic',id),
+                slave: getObj('graphic',state[scriptName].mirrored[id])
+            };
+        }
+        let iid = keyForValue(state[scriptName].mirrored,id);
+        if(iid){
+            return {
+                master: getObj('graphic',iid),
+                slave: getObj('graphic',id)
+            };
+        }
+    };
 
-    getMirrored = function(id) {
-        var mirrored;
-        _.find(state.Bump.mirrored,function(slaveid,masterid){
-            if(id === masterid){
-                mirrored = getObj('graphic',slaveid);
-                return true;
-            } 
-            if(id === slaveid) {
-                mirrored = getObj('graphic',masterid);
-                return true;
-            } 
-            return false;
-        });
-        return mirrored;
-    },
+    const getMirrored = (id) => {
+        if(state[scriptName].mirrored.hasOwnProperty(id)){
+            return getObj('graphic',state[scriptName].mirrored[id]);
+        }
+        let iid = keyForValue(state[scriptName].mirrored,id);
+        if(iid){
+            return getObj('graphic',iid);
+        }
+    };
 
-
-    createMirrored = function(id, push, who) {
+    const createMirrored = (id, push, who) => {
         // get root obj
-        var master = getObj('graphic',id),
-            slave = getMirrored(id),
-            baseObj,
-            layer;
+        let master = getObj('graphic',id);
+        let slave = getMirrored(id);
 
         if(!slave && master) {
-            layer=((state.Bump.config.autoPush || push || 'gmlayer' === master.get('layer')) ? 'objects' : 'gmlayer');
-            if(state.Bump.config.autoPush || push) {
+            let layer=((state[scriptName].config.autoPush || push || 'gmlayer' === master.get('layer')) ? 'objects' : 'gmlayer');
+            if(state[scriptName].config.autoPush || push) {
                 master.set({layer: 'gmlayer'});
             }
-            baseObj = {
+            let baseObj = {
                 imgsrc: clearURL,
                 layer: layer,
                 pageid: master.get('pageid'),
-                aura1_color: state.Bump.config.layerColors[layer],
+                aura1_color: state[scriptName].config.layerColors[layer],
                 aura1_square: true,
-                aura1_radius: 0.000001
+                aura1_radius: 0.000001,
+                light_otherplayers: (isPlayerToken(master) ? master.get('light_otherplayers') : false),
+                showname: (isPlayerToken(master) ? master.get('showname') : false),
+                showplayers_name: false,
+                showplayers_bar1: false,
+                showplayers_bar2: false,
+                showplayers_bar3: false,
+                showplayers_aura1: false,
+                showplayers_aura2: false
             };
-            _.each(mirroredProps,function(p){
-                baseObj[p]=master.get(p);
-            });
+            (state[scriptName].config.noBars ? mirroredPropsNoBar : mirroredProps ).forEach( p => baseObj[p]=master.get(p) );
             slave = createObj('graphic',baseObj);
-            state.Bump.mirrored[master.id]=slave.id;
+            state[scriptName].mirrored[master.id]=slave.id;
         } else {
             if(!slave) {
-                sendChat('','/w "'+who+'" '+
+                sendChat('',`/w "${who}" `+
                     '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
-                        '<b>Error:</b> Couldn'+ch("'")+'t find a token for id: '+id+
+                        `<b>Error:</b> Couldn${ch("'")}t find a token for id: ${id}`+
                     '</div>'
                 );
             }
         }
-    },
+    };
 
-    setMasterLayer = function (obj,layer){
+    const setMasterLayer = (obj,layer) => {
         obj.set({
             layer: layer
         });
-    },
+    };
 
-    setSlaveLayer = function (obj,layer){
+    const setSlaveLayer = (obj,layer) => {
         obj.set({
             layer: layer,
-            aura1_color: state.Bump.config.layerColors[layer]
+            aura1_color: state[scriptName].config.layerColors[layer]
         });
-    },
+    };
 
-    bumpToken = function(id,who) {
-        var pair=getMirroredPair(id);
+    const bumpToken = (id,who) => {
+        let pair=getMirroredPair(id);
         if(pair && pair.master && pair.slave) {
             switch(pair.master.get('layer')){
                 case 'gmlayer':
                     setMasterLayer(pair.master,'objects');
-                    setSlaveLayer(pair.slave,'gmlayer');
+                    if(state[scriptName].config.autoUnslave){
+                        removeMirrored(pair.master.id);
+                    } else {
+                        setSlaveLayer(pair.slave,'gmlayer');
+                    }
                     break;
 
                 default:
@@ -282,34 +380,93 @@ var Bump = Bump || (function() {
                     setSlaveLayer(pair.slave,'objects');
                     break;
             }
-        } else if(state.Bump.config.autoSlave) {
+        } else if(state[scriptName].config.autoSlave) {
             createMirrored(id, false, who);
         }
-    },
+    };
 
-    removeMirrored = function(id) {
-        var pair=getMirroredPair(id);
+    const removeMirrored = (id) => {
+        let pair=getMirroredPair(id);
         if(pair) {
-            if(id === pair.master.id ) {
-                pair.slave.remove();
-            }
-            delete state.Bump.mirrored[pair.master.id];
+            pair.slave.remove();
+            delete state[scriptName].mirrored[pair.master.id];
         }
-    },
+    };
 
 
-    handleRemoveToken = function(obj) {
+    const handleRemoveToken = (obj) => {
         // special handling for deleting slaves?
         removeMirrored(obj.id);
-    },
+    };
+
+
+    const unpackSM = (stats) => stats.split(/,/).reduce((m,v) => {
+        let p = v.split(/@/);
+        let n = parseInt(p[1] || '0', 10);
+        if(p[0].length) {
+          m[p[0]] = Math.max(n, m[p[0]] || 0);
+        }
+        return m;
+      },{});
+
+    const packSM = (o) =>  Object.keys(o)
+      .map(k => ('dead' === k || o[k]<1 || o[k]>9) ? k : `${k}@${parseInt(o[k])}` ).join(',');
+
     
-    handleTokenChange = function(obj,prev) {
-        var pair = getMirroredPair(obj.id);
+    const handleTokenChange = (obj,prev) => {
+        let pair = getMirroredPair(obj.id);
         if(pair && obj) {
-            (pair.master.id === obj.id ? pair.slave : pair.master).set(_.reduce(mirroredProps,function(m,p){
+            // status markers
+            if(obj.id === pair.slave.id && obj.get('statusmarkers') !== prev.statusmarkers){
+                let sSM = unpackSM(obj.get('statusmarkers'));
+                let mSM = unpackSM(pair.master.get('statusmarkers'));
+                Object.keys(sSM).forEach( s => {
+                    if(sSM[s]) {
+                        mSM[s] = Math.min(Math.max((mSM[s]||0) + sSM[s],0),9);
+                    } else if(mSM.hasOwnProperty(s)) {
+                        delete mSM[s];
+                    } else {
+                        mSM[s]=0;
+                    }
+                });
+                pair.slave.set('statusmarkers','');
+                pair.master.set('statusmarkers',packSM(mSM));
+            }
+
+            const propList = (state[scriptName].config.noBars ? mirroredPropsNoBar : mirroredProps );
+
+            (pair.master.id === obj.id ? pair.slave : pair.master).set(propList.reduce((m,p) => {
                 m[p]=obj.get(p);
                 return m;
             },{}));
+
+            if(pair.slave.id === obj.id) {
+                pair.slave.set(Object.assign({
+                    showplayers_name: false,
+                    showplayers_bar1: false,
+                    showplayers_bar2: false,
+                    showplayers_bar3: false,
+                    showplayers_aura1: false,
+                    showplayers_aura2: false
+                },(propList.reduce((m,p) => {
+                    m[p]=pair.slave.get(p);
+                    return m;
+                },{}))));
+            } else {
+                pair.master.set(propList.reduce((m,p) => {
+                    m[p]=pair.master.get(p);
+                    return m;
+                },{}));
+                pair.slave.set({
+                    showplayers_name: false,
+                    showplayers_bar1: false,
+                    showplayers_bar2: false,
+                    showplayers_bar3: false,
+                    showplayers_aura1: false,
+                    showplayers_aura2: false
+                });
+            }
+
             if(obj.get('layer') !== prev.layer) {
                 if(pair.master.id === obj.id) {
                     setSlaveLayer(pair.slave,prev.layer);
@@ -319,11 +476,11 @@ var Bump = Bump || (function() {
                 }
             }
         }
-    },
+    };
 
-    makeConfigOption = function(config,command,text) {
-        var onOff = (config ? 'On' : 'Off' ),
-            color = (config ? '#5bb75b' : '#faa732' );
+    const makeConfigOption = (config,command,text) => {
+        let onOff = (config ? 'On' : 'Off' );
+        let color = (config ? '#5bb75b' : '#faa732' );
         return '<div style="'+
                 'border: 1px solid #ccc;'+
                 'border-radius: .2em;'+
@@ -338,11 +495,11 @@ var Bump = Bump || (function() {
                 '<div style="clear:both;"></div>'+
             '</div>';
         
-    },
+    };
 
-    makeConfigOptionColor = function(config,command,text) {
-        var color = ('transparent' === config ? "background-image: url('"+checkerURL+"');" : "background-color: "+config+";"),
-            buttonText ='<div style="border:1px solid #1d1d1d;width:40px;height:40px;display:inline-block;'+color+'">&nbsp;</div>';
+    const makeConfigOptionColor = (config,command,text) => {
+        let color = ('transparent' === config ? "background-image: url('"+checkerURL+"');" : "background-color: "+config+";");
+        let buttonText ='<div style="border:1px solid #1d1d1d;width:40px;height:40px;display:inline-block;'+color+'">&nbsp;</div>';
         return '<div style="'+
                 'border: 1px solid #ccc;'+
                 'border-radius: .2em;'+
@@ -356,217 +513,305 @@ var Bump = Bump || (function() {
                 text+
                 '<div style="clear:both;"></div>'+
             '</div>';
-    },
+    };
 
-    getConfigOption_GMLayerColor = function() {
+    const getConfigOption_GMLayerColor = () => {
         return makeConfigOptionColor(
-            state.Bump.config.layerColors.gmlayer,
-            '!bump-config --gm-layer-color|?{What aura color for when the master token is visible? (transparent for none, #RRGGBB for a color)|'+state.Bump.config.layerColors.gmlayer+'}',
+            state[scriptName].config.layerColors.gmlayer,
+            '!bump-config --gm-layer-color|?{What aura color for when the master token is visible? (transparent for none, #RRGGBB for a color)|'+state[scriptName].config.layerColors.gmlayer+'}',
             '<b>GM Layer (Visible) Color</b> is the color the overlay turns when it is on the GM Layer, thus indicating that the Bumped token is visible to the players on the Object Layer.'
         );
 
-    },
+    };
 
-    getConfigOption_ObjectsLayerColor = function() {
+    const getConfigOption_ObjectsLayerColor = () => {
         return makeConfigOptionColor(
-            state.Bump.config.layerColors.objects,
-            '!bump-config --objects-layer-color|?{What aura color for when the master token is invisible? (transparent for none, #RRGGBB for a color)|'+state.Bump.config.layerColors.objects+'}',
+            state[scriptName].config.layerColors.objects,
+            '!bump-config --objects-layer-color|?{What aura color for when the master token is invisible? (transparent for none, #RRGGBB for a color)|'+state[scriptName].config.layerColors.objects+'}',
             '<b>Objects Layer (Invisible) Color</b> is the color the overlay turns when it is on the Objects Layer, thus indicating that the Bumped token is invisible to the players on the GM Layer.'
         );
-    },
+    };
 
-    getConfigOption_AutoPush = function() {
+    const getConfigOption_AutoPush = () => {
         return makeConfigOption(
-            state.Bump.config.autoPush,
+            state[scriptName].config.autoPush,
             '!bump-config --toggle-auto-push',
             '<b>Auto Push</b> automatically moves a bumped token to the GM Layer when it gets added to Bump.'
         );
-    },
+    };
 
-    getConfigOption_AutoSlave = function() {
+    const getConfigOption_AutoSlave = () => {
         return makeConfigOption(
-            state.Bump.config.autoSlave,
+            state[scriptName].config.autoSlave,
             '!bump-config --toggle-auto-slave',
             '<b>Auto Slave</b> causes tokens that are not in Bump to be put into Bump when ever !bump is run with them selected.'
         );
-    },
+    };
 
-    getAllConfigOptions = function() {
+    const getConfigOption_AutoUnslave = () => {
+        return makeConfigOption(
+            state[scriptName].config.autoUnslave,
+            '!bump-config --toggle-auto-unslave',
+            '<b>Auto Unslave</b> causes tokens that are in Bump to be unslaved when they are moved back to the Token Layer.'
+        );
+    };
+
+    const getConfigOption_NoBars = () => {
+        return makeConfigOption(
+            state[scriptName].config.noBars,
+            '!bump-config --toggle-no-bars',
+            '<b>No Bars on Slave</b> causes slave tokens to only mirror the current value on the bars, not the max, preventing them from having bars.'
+        );
+    };
+
+    const getAllConfigOptions = () => {
         return getConfigOption_GMLayerColor() +
             getConfigOption_ObjectsLayerColor() +
             getConfigOption_AutoPush() +
-            getConfigOption_AutoSlave();
-    },
+            getConfigOption_AutoSlave() +
+            getConfigOption_AutoUnslave() +
+            getConfigOption_NoBars();
+    };
 
-    showHelp = function(who) {
+    const assureHelpHandout = (create = false) => {
+        const helpIcon = "https://s3.amazonaws.com/files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385";
 
-        sendChat('','/w "'+who+'" '+
-'<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
-	'<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'+
-		'Bump v'+version+
-	'</div>'+
-	'<div style="padding-left:10px;margin-bottom:3px;">'+
-		'<p>Bump provides a way to invisibly manipulate tokens on the GM Layer from the Objects Layer, and vice versa.</p>'+
-        '<p>When a token is added to Bump a slave token is created that mimics everything about to master token.  The slave token is only visible to the GM and has a color on it to show if the master token is on the GM Layer or the Objects layer.  Moving the slave token will move the master token and vice versa.  The slave token represents the same character as the master token and changes on the slave token will be reflected on the master token.</p>'+
-	'</div>'+
-	'<b>Commands</b>'+
-	'<div style="padding-left:10px;">'+
-		'<b><span style="font-family: serif;">!bump-slave [--push|--help]</span></b>'+
-		'<div style="padding-left: 10px;padding-right:20px">'+
-			'<p>Adds the selected tokens to Bump, creating their slave tokens.</p>'+
-			'<ul>'+
-				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
-					'<b><span style="font-family: serif;">--push</span></b> '+ch('-')+' If the selected token is on the Objects Layer, it will be pushed to the GM Layer.'+
-				'</li> '+
-				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
-					'<b><span style="font-family: serif;">--help</span></b> '+ch('-')+' Shows the Help screen'+
-				'</li> '+
-			'</ul>'+
-		'</div>'+
-    '</div>'+
-	'<div style="padding-left:10px;">'+
-		'<b><span style="font-family: serif;">!bump [--help]</span></b>'+
-		'<div style="padding-left: 10px;padding-right:20px">'+
-			'<p>Using !bump on a token in Bump causes it to swap with it'+ch("'")+' counterpart on the other layer.</p>'+
-			'<ul>'+
-				'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'+
-					'<b><span style="font-family: serif;">--help</span></b> '+ch('-')+' Shows the Help screen'+
-				'</li> '+
-			'</ul>'+
-		'</div>'+
-    '</div>'+
-	'<b>Configuration</b>'+
-    getAllConfigOptions()+
-'</div>'
-        );
-    },
+        // find handout
+        let props = {type:'handout', name:`Help: ${scriptName}`};
+        let hh = findObjs(props)[0];
+        if(!hh) {
+            hh = createObj('handout',Object.assign(props, {inplayerjournals: "all", avatar: helpIcon}));
+            create = true;
+        }
+        if(create || version !== state[scriptName].lastHelpVersion){
+            hh.set({
+                notes: helpParts.helpDoc({who:'handout',playerid:'handout'})
+            });
+            state[scriptName].lastHelpVersion = version;
+            log('  > Updating Help Handout to v'+version+' <');
+        }
+    };
 
-    handleInput = function(msg) {
-        var args, who;
 
-        if (msg.type !== "api" || !playerIsGM(msg.playerid)) {
+    const helpParts = {
+        helpBody: (context) => _h.join(
+                _h.header(
+                    _h.paragraph('Bump provides a way to invisibly manipulate tokens on the GM Layer from the Objects Layer, and vice versa.')
+                ),
+                _h.subhead('Commands'),
+                _h.inset(
+                    _h.font.command(
+                        `!bump-slave`,
+                        _h.optional(
+                            `--push`,
+                            `--help`
+                        )
+                    ),
+                    _h.paragraph( 'Adds the selected tokens to Bump, creating their slave tokens.'),
+                    _h.ul(
+                        `${_h.bold('--push')} -- If the selected token is on the Objects Layer, it will be pushed to the GM Layer.`,
+                        `${_h.bold('--help')} -- Shows the Help screen.`
+                    ),
+                    _h.font.command(
+                        `!bump`,
+                        _h.optional(
+                            `--help`
+                        )
+                    ),
+                    _h.paragraph( `Using !bump on a token in Bump causes it to swap with it${ch("'")}s counterpart on the other layer.`),
+                    _h.ul(
+                        `${_h.bold('--help')} -- Shows the Help screen.`
+                    ),
+                    _h.font.command(
+                        `!bump-unslave`,
+                        _h.optional(
+                            `--help`
+                        )
+                    ),
+                    _h.paragraph( 'Removes the selected tokens from Bump, removing their slave tokens.')
+                ),
+                _h.subhead('Description'),
+                _h.inset(
+                    _h.paragraph('When a token is added to Bump a slave token is created that mimics everything about the master token.  The slave token is only visible to the GM and has a color on it to show if the master token is on the GM Layer or the Objects layer.  Moving the slave token will move the master token and vice versa.  The slave token represents the same character as the master token and changes on the slave token will be reflected on the master token.'),
+                    _h.paragraph('Non-GM players can also use bump on characters they control.  They will be able to see their bumped token as a transparent aura, but other players will not.  This is useful for invisible characters.'),
+                    _h.paragraph(`While changes on the slave token will be reflected on the master token, Status Markers have a special behavior.  Status Markers are always cleared from the slave token to prevent it from being visible, with the following changes being made to the master token. Adding a Status Marker on a slave token that is not on the master token will cause that Status Marker to be added to the master token. Adding a Status Marker to the slave token that is on the master token causes it to be removed from the master token.  Adding a Status Marker with a number on the slave token will cause that number to be added to the master token${ch("'")}s Status Marker. Note that non-GM players will not be able to see Status Markers.`)
+                ),
+                ( playerIsGM(context.playerid)
+                    ?  _h.group(
+                            _h.subhead('Configuration'),
+                            getAllConfigOptions()
+                        )
+                    : ''
+                )
+            ),
+        helpDoc: (context) => _h.join(
+                _h.title(scriptName, version),
+                helpParts.helpBody(context)
+            ),
+
+        helpChat: (context) => _h.outer(
+                _h.title(scriptName, version),
+                helpParts.helpBody(context)
+            )
+        
+    };
+
+    const showHelp = (playerid) => {
+        const who=(getObj('player',playerid)||{get:()=>'API'}).get('_displayname');
+        let context = {
+            who,
+            playerid
+        };
+        sendChat('', '/w "'+who+'" '+ helpParts.helpChat(context));
+    };
+
+    const handleInput = (msg) => {
+      if (msg.type !== "api") {
+        return;
+      }
+      let who=(getObj('player',msg.playerid)||{get:()=>'API'}).get('_displayname');
+
+      let args = msg.content.split(/\s+/);
+      switch(args.shift()) {
+        case '!bump':
+          if(!msg.selected || args.includes('--help')) {
+            showHelp(msg.playerid);
             return;
-        }
-        who=getObj('player',msg.playerid).get('_displayname');
+          }
+          msg.selected.forEach( (s) => bumpToken(s._id,who) );
+          break;
 
-        args = msg.content.split(/\s+/);
-        switch(args.shift()) {
-            case '!bump':
-                if(!msg.selected || _.contains(args,'--help')) {
-                    showHelp(who);
-                    return;
+        case '!bump-slave':
+          if(!msg.selected || args.includes('--help')) {
+            showHelp(msg.playerid);
+            return;
+          }
+          msg.selected.forEach( (s) => createMirrored(s._id, args.includes('--push'), who) );
+          break;
+
+        case '!bump-unslave':
+          if(!msg.selected || args.includes('--help')) {
+            showHelp(msg.playerid);
+            return;
+          }
+          msg.selected.forEach( (s) => removeMirrored(s._id) );
+          break;
+
+
+        case '!bump-config':
+          if(args.includes('--help')) {
+            showHelp(msg.playerid);
+            return;
+          }
+          if(!playerIsGM(msg.playerid)){
+            break;
+          }
+          if(!args.length) {
+            sendChat('','/w "'+who+'" '+
+              '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
+              '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'+
+              'Bump v'+version+
+              '</div>'+
+              getAllConfigOptions()+
+              '</div>'
+            );
+            return;
+          }
+          args.forEach((a) => {
+            let opt=a.split(/\|/);
+            let omsg='';
+            switch(opt.shift()) {
+              case '--gm-layer-color':
+                if(opt[0].match(regex.colors)) {
+                  state[scriptName].config.layerColors.gmlayer=opt[0];
+                } else {
+                  omsg='<div><b>Error:</b> Not a valid color: '+opt[0]+'</div>';
                 }
-                _.each(msg.selected,function(s){
-                    bumpToken(s._id,who);
-                });
+                sendChat('','/w "'+who+'" '+
+                  '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
+                  omsg+
+                  getConfigOption_GMLayerColor()+
+                  '</div>'
+                );
                 break;
 
-            case '!bump-slave':
-                if(!msg.selected || _.contains(args,'--help')) {
-                    showHelp(who);
-                    return;
+              case '--objects-layer-color':
+                if(opt[0].match(regex.colors)) {
+                  state[scriptName].config.layerColors.objects=opt[0];
+                } else {
+                  omsg='<div><b>Error:</b> Not a valid color: '+opt[0]+'</div>';
                 }
-                _.each(msg.selected,function(s){
-                    createMirrored(s._id,_.contains(args,'--push'), who);
-                });
+                sendChat('','/w "'+who+'" '+
+                  '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
+                  omsg+
+                  getConfigOption_ObjectsLayerColor()+
+                  '</div>'
+                );
                 break;
 
-
-            case '!bump-config':
-                if(_.contains(args,'--help')) {
-                    showHelp(who);
-                    return;
-                }
-                if(!args.length) {
-                    sendChat('','/w "'+who+'" '+
-                        '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
-                            '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'+
-                                'Bump v'+version+
-                            '</div>'+
-                            getAllConfigOptions()+
-                        '</div>'
-                    );
-                    return;
-                }
-                _.each(args,function(a){
-                    var opt=a.split(/\|/),
-                        omsg='';
-                    switch(opt.shift()) {
-                        case '--gm-layer-color':
-                            if(opt[0].match(regex.colors)) {
-                               state.Bump.config.layerColors.gmlayer=opt[0];
-                            } else {
-                                omsg='<div><b>Error:</b> Not a valid color: '+opt[0]+'</div>';
-                            }
-                            sendChat('','/w "'+who+'" '+
-                                '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
-                                    omsg+
-                                    getConfigOption_GMLayerColor()+
-                                '</div>'
-                            );
-                            break;
-
-                        case '--objects-layer-color':
-                            if(opt[0].match(regex.colors)) {
-                               state.Bump.config.layerColors.objects=opt[0];
-                            } else {
-                                omsg='<div><b>Error:</b> Not a valid color: '+opt[0]+'</div>';
-                            }
-                            sendChat('','/w "'+who+'" '+
-                                '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
-                                    omsg+
-                                    getConfigOption_ObjectsLayerColor()+
-                                '</div>'
-                            );
-                            break;
-
-                        case '--toggle-auto-push':
-                            state.Bump.config.autoPush=!state.Bump.config.autoPush;
-                            sendChat('','/w "'+who+'" '+
-                                '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
-                                    getConfigOption_AutoPush()+
-                                '</div>'
-                            );
-                            break;
-                        
-                        case '--toggle-auto-slave':
-                            state.Bump.config.autoSlave=!state.Bump.config.autoSlave;
-                            sendChat('','/w "'+who+'" '+
-                                '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
-                                    getConfigOption_AutoSlave()+
-                                '</div>'
-                            );
-                            break;
-
-                        default:
-                            sendChat('','/w "'+who+'" '+
-                            '<div><b>Unsupported Option:</div> '+a+'</div>');
-                    }
-                            
-                });
-
+              case '--toggle-auto-push':
+                state[scriptName].config.autoPush=!state[scriptName].config.autoPush;
+                sendChat('','/w "'+who+'" '+
+                  '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
+                  getConfigOption_AutoPush()+
+                  '</div>'
+                );
                 break;
-        }
-    },
+
+              case '--toggle-auto-slave':
+                state[scriptName].config.autoSlave=!state[scriptName].config.autoSlave;
+                sendChat('','/w "'+who+'" '+
+                  '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
+                  getConfigOption_AutoSlave()+
+                  '</div>'
+                );
+                break;
+
+              case '--toggle-auto-unslave':
+                state[scriptName].config.autoUnslave=!state[scriptName].config.autoUnslave;
+                sendChat('','/w "'+who+'" '+
+                  '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
+                  getConfigOption_AutoUnslave()+
+                  '</div>'
+                );
+                break;
+
+              case '--toggle-no-bars':
+                state[scriptName].config.noBars=!state[scriptName].config.noBars;
+                fixupSlaveBars();
+                sendChat('','/w "'+who+'" '+
+                  '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
+                  getConfigOption_NoBars()+
+                  '</div>'
+                );
+                break;
+
+              default:
+                sendChat('','/w "'+who+'" '+
+                '<div><b>Unsupported Option:</div> '+a+'</div>');
+            }
+
+          });
+
+          break;
+      }
+    };
     
-    handleTurnOrderChange = function() {
+    const handleTurnOrderChange = () => {
          Campaign().set({
             turnorder: JSON.stringify(
-                _.map(JSON.parse( Campaign().get('turnorder') || '[]'), function(turn){
-                    _.find(state.Bump.mirrored,function(slaveid,masterid){
-                        if(slaveid === turn.id) {
-                            turn.id = masterid;
-                            return true;
-                        }
-                        return false;
-                    });
+                JSON.parse( Campaign().get('turnorder') || '[]').map( (turn) => {
+                    let iid = keyForValue(state[scriptName].mirrored,turn.id);
+                    if(iid) {
+                        turn.id = iid;
+                    }
                     return turn;
                 })
             )
         });
-    },
+    };
 
-    registerEventHandlers = function() {
+    const registerEventHandlers = () => {
         on('chat:message', handleInput);
         on('change:graphic', handleTokenChange);
         on('destroy:graphic', handleRemoveToken);
@@ -574,6 +819,9 @@ var Bump = Bump || (function() {
 
         if('undefined' !== typeof GroupInitiative && GroupInitiative.ObserveTurnOrderChange){
             GroupInitiative.ObserveTurnOrderChange(handleTurnOrderChange);
+        }
+        if('undefined' !== typeof TokenMod && TokenMod.ObserveTokenChange){
+            TokenMod.ObserveTokenChange(handleTokenChange);
         }
     };
 
@@ -583,12 +831,11 @@ var Bump = Bump || (function() {
         RegisterEventHandlers: registerEventHandlers
     };
     
-}());
+})();
 
-on('ready',function() {
-    'use strict';
-
+on('ready', () => {
     Bump.CheckInstall();
     Bump.RegisterEventHandlers();
 });
 
+{try{throw new Error('');}catch(e){API_Meta.Bump.lineCount=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-API_Meta.Bump.offset);}}
