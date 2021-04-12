@@ -988,14 +988,6 @@ scriptcards:
   - "ScriptCards"
   - "Utility"
   
-discretewhisper:
-  - "DiscreteWhisper"
-  - "Utility"
-
-selectmanager:
-  - "SelectManager"
-  - "Utility"
- 
 imperator:
   - "Imperator"
   - "System Toolbox"
@@ -1003,3 +995,12 @@ imperator:
 myzsectorgenerator:
   - "MutantYearZero_SectorGenerator"
   - "System Toolbox"
+  
+playercharacters:
+  - "PlayerCharacters"
+  - "Utility"
+
+udlpasswall:
+  - "UDLPasswall"
+  - "Dynamic Lighting"
+  

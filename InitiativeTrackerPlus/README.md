@@ -3,22 +3,24 @@
 An attempt to modernize Tracker Jacker and add new functionality as it becomes desired.  
   
 **Change Log:**  
-* 2020-09-12 - Updated heavily to pull all token markers enabled in the campaign and make them useable for condition/status effects  
-* 2020-09-12 - Added -cleanSlate command (!itp -cleanSlate) to completely wipe all persistent state data should not be used lightly but if effects get stuck in the system this will clear them  
+* 2021-03-02 - v1.25 published to one-click API script list
+* 2021-03-01 - Added eotcolor option to -setConfig to change [ EOT ] button color.
+* 2021-02-13 - Added -setConfig functionality to modify various fields, flags and design variables.  These changes will be stored in the state so should continue between sessions.  Use detailed below.
+* 2020-12-28 - Changed '? Round 1' (which changes to '?? Round 1' when paused) to use a play button image |> and pause button image || instead.
+* 2020-12-04 - Added `!itp -purge` alias to remove all statuses
+* 2020-12-02 - Some minor code cleanup to make it easier for me to work with.
+* 2020-12-02 - Added a command to clear all statuses from a token.  `!itp -dispmultistatusconfig removeall` while the token(s) are selected, or a button appears on the edit message as well.
+* 2020-11-23 - Changed references to Tracker Jacker to Initiative Tracker Plus.  I am doing this to differentiate the new and drastically changing codebase from Ken L.'s original codebase so users that are happy with OG Tracker Jacker can continue to use it without confusion.
+* 2020-11-23 - Updated initiative round indicator to have Play, Stop and Pause buttons instead of ? and ??
+* 2020-11-22 - Added the ability to change the initiative indicator (spinning green thing by default) to any other image.
+* 2020-11-22 - The first actor's turn is now announced when starting the tracker.
+* 2020-11-18 - Added the ability to save and load favorite.  The save creates a Handout called "ITPFavsJSON", the load looks for that handout and loads the JSON from it.
+* 2020-09-25 - Added the ability to display favorites alphabetically, it remains in the first in first out order by default.   To get an alphabetical list change `!itp -listfavs` to `!itp -listfavs 1`  
 * 2020-09-20 - Added EOT link to turn indicator  
 * 2020-09-20 - Added mouseover text to token marker selector list  
-* 2020-09-25 - Added the ability to display favorites alphabetically, it remains in the first in first out order by default.   To get an alphabetical list change `!itp -listfavs` to `!itp -listfavs 1`  
-* 2020-11-18 - Added the ability to save and load favorite.  The save creates a Handout called "ITPFavsJSON", the load looks for that handout and loads the JSON from it.
-* 2020-11-22 - The first actor's turn is now announced when starting the tracker.
-* 2020-11-22 - Added the ability to change the initiative indicator (spinning green thing by default) to any other image.
-* 2020-11-23 - Submit current codebase to Roll20's Script repository in the hopes of becoming a one-click API script.
-* 2020-11-23 - Updated initiative round indicator to have Play, Stop and Pause buttons instead of ? and ??
-* 2020-11-23 - Changed references to Tracker Jacker to Initiative Tracker Plus.  I am doing this to differentiate the new and drastically changing codebase from Ken L.'s original codebase so users that are happy with OG Tracker Jacker can continue to use it without confusion.
-* 2020-12-02 - Added a command to clear all statuses from a token.  `!itp -dispmultistatusconfig removeall` while the token(s) are selected, or a button appears on the edit message as well.
-* 2020-12-02 - Some minor code cleanup to make it easier for me to work with.
-* 2020-12-04 - Added `!itp -purge` alias to remove all statuses
-* 2020-12-28 - Changed '? Round 1' (which changes to '?? Round 1' when paused) to use a play button image |> and pause button image || instead.
-* 2021-02-13 - Added -setConfig functionality to modify various fields, flags and design variables.  These changes will be stored in the state so should continue between sessions.  Use detailed below.
+* 2020-09-12 - Added -cleanSlate command (!itp -cleanSlate) to completely wipe all persistent state data should not be used lightly but if effects get stuck in the system this will clear them  
+* 2020-09-12 - Updated heavily to pull all token markers enabled in the campaign and make them useable for condition/status effects  
+
 
 **Commands:**  
   

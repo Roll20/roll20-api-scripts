@@ -385,7 +385,7 @@
                 <h5>RD critique</h5>
                 <p>Utiliser un attribut <code>RD_critique</code> avec comme valeur courante la résistance aux critiques. Se combine avec une éventuelle RD critique fournie par le port d'un casque.</p>
                 <h5>Résistances</h5>
-                <p>Pour les effets qui divisent la dégâts subits d'un type donné, utilisez un attribut <code>resistanceA_<i>type</i></code>. Il est aussi possible d'octroyer une résistance temporaire, par exemple une potion de résistance au feu pourra être simulée par la commande <code>!cof-set-attribute resistanceA_feu true</code>. Il faut ensuite effacer l'attribut à la fin de l'effet.</p>
+                <p>Pour les effets qui divisent la dégâts subits d'un type donné, utilisez un attribut <code>resistanceA_<i>type</i></code>. Une resistance à tous les dégâts non-magiques est possible avec <code>resistanceA_nonMagique</code>.Il est aussi possible d'octroyer une résistance temporaire, par exemple une potion de résistance au feu pourra être simulée par la commande <code>!cof-set-attribute resistanceA_feu true</code>. Il faut ensuite effacer l'attribut à la fin de l'effet.</p>
                 <p>Pour les effets qui divisent par 2 les dégâts ou la durée, utiliser un attribut <code>diviseEffet_<i>type</i></code>.</p>
                 <p>Pour les effets qui donnent un bonus aux tests pour résister aux effets ou dégâts d'un certain type, utiliser un attribut <code>bonusSaveContre_<i>type</i></code> de valeur le bonus accordé. Par exemple, un objet qui donnerait +5 à tous les tests pour résister au poison pourrait être encodé par un attribut <code>bonusSaveContre_poison</code> de valeur <code>5</code>.</p>
                 <h5>Armures/Boucliers de Protection (COF p. 203)</h5>
@@ -409,16 +409,17 @@
                 <p>Pour certaines capacités, (commme <strong>Plus vite que son ombre</strong> ou <strong>Désarmer</strong>), il peut être utile de savoir quelle arme est en main. Pour cela, le script peut utiliser deux méthodes&nbsp;:
                 <ul>
                   <li><code>!cof-degainer <i>L</i></code> où <i>L</i> est le label d'une des attaques sur la fiche de personnage : cela fait rengainer l'arme en main et dégainer l'arme correspondant à cette attaque. Si le label ne correspond à aucune attaque (ou qu'on ne donne pas de label), l'action fait rengainer l'arme en main. <code>!cof-degainer <i>l</i> gauche</code> permet de porter un arme dans la main gauche. À noter que si une arme est notée comme arme gauche dans l'attaque, alors elle est toujours portée en main gauche. L'ordre de rengainer fait rengainer les deux armes, si le personnage porte une arme en main gauche.</li>
-                  <li>Si on attaque avec <code>!cof-attack <i>tok1 tok2 L</i></code>, et que l'attaque de label <code><i>L</i></code> contient le mot <code>arme</code> dans le champ <code>SPÉCIAL</code>, alors on considère qu'on doit dégainer cette arme pour pouvoir l'utiliser. Le script envoie le message et considère ensuite l'arme comme étant en main, au MJ de vérifier que le joueur dispose bien d'une action de mouvement pour le faire.</li>
+                  <li>Si on attaque avec <code>!cof-attack <i>tok1 tok2 L</i></code>, et que l'attaque est de type <code>Arme 1 main</code>, <code>Arme 2 mains</code> ou <code>Arme gauche</code>, alors on considère qu'on doit dégainer cette arme pour pouvoir l'utiliser. Le script envoie le message et considère ensuite l'arme comme étant en main, au MJ de vérifier que le joueur dispose bien d'une action de mouvement pour le faire.</li>
                   <li>En fin de combat, si le personnage a la capacité frappe du vide, le script va automatiquement lui faire rengainer son arme.</li>
                   <li>Enfin, en fin de combat, si le personnage possède un attribut <code>armeParDefaut</code>, le script va lui faire dégainer l'arme dont le label est stocké dans l'attribut. Donc si l'attribut est vide, le personnage va rengainer son arme.</li>
                 </ul>
-                Dans tous les cas, si le personnage dégaine une arme à 2 mains, le script fait enlever le bouclier, et il le fait remettre si on passe d'une arme à 2 mains à une arme à 1 main. Pour savoir si une attaque (identifiée par un label) est une arme à 2 mains, le script regarde le nom de l'arme. Parfois, c'est suffisant (genre 1 Épée à 2 mains), mais souvent ça ne suffit pas. Dans ce cas, le script regarde aussi le champ divers de l'attaque, et cherche si il trouve <code>2 mains</code> dans ce champ.
+                <p>Dans tous les cas, si le personnage dégaine une arme à 2 mains, le script fait enlever le bouclier, et il le fait remettre si on passe d'une arme à 2 mains à une arme à 1 main.</p>
+                <p>Si l'arme contient dans le champ <code>SPÉCIAL</code> le mot clé <code>DEF</code> suivi d'un certain nombre de blancs, puis <code>+<i>n</i></code>, l'arme est considérée comme une arme de parade qui augmente la défense de <i>n</i> quand elle est portée. La diminution et augmentation de défense est prise en compte au moment de dégainer/rengainer.</p>
                 </p>
               </div>
               <h4 class="text-secondary" id="degainer">Couvert :<code>!cof-bonus-couvert <i>b</i></code></h4>
               <div class="decalage">
-                Pour donner un bonus en DEF contre toutes les attaques à distance, on peut utiliser <code>!cof-bonus-couvert ?{Bonus du couvert?}</code> en sélectionnant les tokens bénéficiant du couvert.
+                Pour donner un bonus en DEF contre toutes les attaques à distance, on peut utiliser <code>!cof-bonus-couvert ?{Bonus du couvert?}</code> en sélectionnant les tokens bénéficiant du couvert. La commande accepte un argument <code>--secret</code> permettant de ne pas faire connaître l'action du personnage à tous les joueurs. Pour ne plus être à couvert, il suffit de lancer la commande sans argument.
               </div>
               <h4 class="text-secondary">Échecs critiques&nbsp;:</h4>
               <p>En cas d'échec critique à une attaque, le script va suggérer des effets d'échec critique inspirés de <a href="">cette table suggérée par l'auteur du jeu</a>. Le script proposera même dans la plupart des cas un bouton qui automatisera les lancers de dés et l'application de l'effet, si relevant.</p>
@@ -724,27 +725,6 @@
                   </ul>
                 </div>
                 <p>Pour les PNJs, qui n'ont pas encore d'onglet d'équipement, le script regarde tous les attributs qui commencent par <code>dose_</code>, <code>elixir_</code> ou <code>consommable_</code>. Pour ces attributs, la valeur courante doit être le nombre d'éléments possédé, et le max peut être une commande à effectuer pour activer l'effet. La fonction est à réserver aux tokens liés à un personnage. Il est aussi possible de simplement écrire un message qui s'affichera (et diminuera la quantité de consommables).</p>
-                <div class="alert alert-success">
-                  <p><strong>Exemple de consommables, à ajouter dans la case Effet d'un consommable du personnage :</strong></p>
-                  <ul>
-                    <li>
-                      Potions de soins légers
-                      <ul>
-                        <li>Name : <code>dose_Potion soins légers</code></li>
-                        <li>Current : <code>1</code> (la quantité)</li>
-                        <li>Max : <code>!cof-soin @{selected|token_id} @{selected|token_id} 1D8+@{selected|niveau}</code></li>
-                      </ul>
-                    </li>
-                    <li>
-                      Parchemin Flèche enflammée
-                      <ul>
-                        <li>Name : <code>dose_Parch. Flèche enflammée</code></li>
-                        <li>Current : <code>1</code> (la quantité)</li>
-                        <li>Max : <code>!cof-attack @{selected|token_id} @{target|token_id} ["Flèche_Enflammée",["@{selected|ATKCAC}",0],20,[1,6,"@{selected|SAG}",0],30] --fx beam-fire --feu --sortilege --enflamme</code></li>
-                      </ul>
-                    </li>
-                  </ul>
-                </div>
                 <p>L'échange via le symbole <span class="text-danger"><strong>&#8596;</strong></span> vous permettra de sélectionner un token destinataire qui recevra le consommable dans sa liste. Si le consommable existe déjà pour le destinataire, sa quantité sera augmenté de 1, sinon le consommable sera créé.</p>
                 <div class="alert alert-secondary">
                 <p>Cette fonction peut-être très utile pour que les PJ échangent entre eux un consommable, mais aussi pour faciliter la vente d'objet entre PNJ et PJ.</p>
@@ -1336,6 +1316,7 @@
                   </li>
                   <li><strong>Pacte sanglant</strong> : créer un attribut <code>pacteSanglant</code> de valeur 3 (rang 3) ou 5 (rang 5). Le script va automatiser l'ajout de boutons sur tous les tests <i>a posteriori</i>, y compris sur les attaques qui ciblent le personnage. Aux joueurs de s'accorder sur la nécessité d'une déclaration <i>a priori</i> nécessaire pour l'utilisation de la capacité.</li>
                   <li><strong>Aspect du démon</strong> : <code>!cof-effet-temp aspectDuDemon [[5+@{selected|INT}]] --mana 2</code>. Ajouter une attaque 1d6+4 au contact avec l'option <code>--si etat aspectDuDemon</code> (attaquer 2 fois au besoin).</li>
+                  <li><strong>Invocation d'un démon</strong> : <code>!cof-invoquer-demon @{selected|token_id} --mana 3</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de la mort</h4>
                 <ol>
@@ -1363,7 +1344,7 @@
                 <p style="margin-top:0px; margin-bottom:0px">Ajouter sur la fiche une compétence <code>Occultisme</code> avec en bonus 2 fois le rang dans cette voie.</p>
                 <ol>
                   <li><strong>Ténèbres</strong> : <code>!cof-tenebres @{selected|token_id} --disque @{target|token_id} 5 20</code>. La commande pose un token transparent avec une aura noire visible par les joueurs pour visualiser la zone, et une petite aura jaune visible uniquement par le MJ (pour sélectionner le token si nécessaire). Tous les tokens présents dans la zone au lancement du sort sont automatiquement aveuglés. Au MJ ensuite d'enlever l'état aveuglé quand les cibles sortent de la zone. A la fin de la durée du sort, ou à la fin du combat, la zone et les états aveuglés restant disparaissent automatiquement.</li>
-                  <li><strong>Pattes d'araignées</strong> : <code>!cof-lancer-sort peut se déplacer sur les murs pendants [[5+@{selected|INT]] tours</code></li>
+                  <li><strong>Pattes d'araignées</strong> : <code>!cof-lancer-sort peut se déplacer sur les murs pendants [[5+@{selected|INT}]] tours</code></li>
                   <li><strong>Strangulation</strong> : 
                     <ul>
                       <li>Attaque initiale : attaque magique, de portée 20 m, et de dégâts 1d6+INT, avec les options <code>--effet strangulation <i>rang</i> --mana 1 --sortilege</code>. Le script va vérifier que la cible est bien vivante, en se basant sur la race, et sinon sur la présence éventuelle d'un attribut <code>nonVivant</code>.</li>
@@ -1505,7 +1486,7 @@
                   <li><strong>Pas de loup</strong> : ajouter le bonus à une compétence <code>discrétion</code>.</li>
                   <li><strong>Ennemi juré</strong> : ajouter un attribut <code>ennemiJure</code> avec comme valeur la race des ennemis. Cette race doit se retrouver dans le champ race de l'ennemi. Le script reconnait aussi le type <code>mort-vivant</code> (tout en minuscules) et dans ce cas va déterminer si la cible est un mort-vivant (attribut <code>mortVivant</code> ou race reconnue comme mort-vivant).</li>
                   <li><strong>Embuscade</strong> : en cas d'attaque sur les ennemis, les mettre tous surpris avec la commande <code>!cof-set-state surpris true</code></li>
-                  <li><strong>Second ennemi juré</strong> : on peut renseigner une seconde race dans l'attribut <code>ennemiJure</code> en la séparant de la première par une virgule et/ou un blanc(exemple : <code>orque, araignée</code>)</li>
+                  <li><strong>Second ennemi juré</strong> : on peut renseigner une seconde race dans l'attribut <code>ennemiJure</code> en la séparant de la première par une virgule (exemple : <code>orque, araignée</code>)</li>
                   <li><strong>Perception héroïque</strong> : reporter les bonus sur la fiche</li>
                 </ol>
               </div>
@@ -1761,7 +1742,7 @@
                 <h4 class="text-secondary">Voie du PNJ récurrent</h4>
                 <ol>
                   <li><strong>Instinct de survie</strong> : ajouter un attribut <code>instinctDeSurvie</code> avec comme valeur le nombre de PV en-dessous duquel le PNJ gagne un bonus de DEF. les autres effets sont à faire par le MJ.</li>
-                  <li><strong>Chair à canon</strong> : ajouter un attribut <code>chairACanon</code> de valeur courante et maximale <code>1</code>. Ajouter ensuite à tous ses sous-fifres un attribut <code>chairACanonDe</code> de valeur le nom exact du token du PNJ.</li>
+                  <li><strong>Chair à canon</strong> : ajouter un attribut <code>chairACanon</code> de valeur courante et maximale <code>1</code>. Ajouter ensuite à tous ses sous-fifres un attribut <code>chairACanonDe</code> de valeur le nom exact du token du PNJ. On peut y mettre plusieurs noms séparés par des virgules.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du prédateur</h4>
                 <ol>
@@ -1796,7 +1777,7 @@
                   <li><strong>Baroud d'honneur</strong> : ajouter un attribut <code>baroudHonneur</code> (=true) (Quand le personnage arrive à 0 PV, il ne meurt pas jusqu'à sa prochaine attaque, qui se fait avec un bonus de +5)</li>
                   <li><strong>Cibles multiples</strong> (nuées) : ajouter un attribut <code>ciblesMultiples</code>, de valeur <code>true</code>.</li>
                   <li><strong>Clignotement</strong> : <code>!cof-effet-temp clignotement [[1d6+2]]</code>.</li>
-                  <li><strong>Créature non-vivante</strong> : ajouter un attribut <code>nonVivant</code></li>
+                  <li><strong>Créature non-vivante</strong> : ajouter un attribut <code>nonVivant</code> à <code>true</code>.</li>
                   <li><strong>Cyclone</strong> (pour les élementaires) : <code>!cof-effet-temp cyclone [[1d4+1]] --limiteParCombat 1</code>. Cela va proposer une attaque <code>Traverser</code> dans les actions de l'élémentaire, qui ne peut fonctionner que si le personnage a au moins une attaque sur sa fiche. Par défaut, l'attaque utilisée en traversant est l'attaque de label <code>1</code>, mais on peut préciser un autre label en utilisant l'option <code>--valeur</code>.</li>
                   <li><strong>Dégâts si touché au contact</strong> (élémentaire de feu,...) : ajouter un attribut nommé <code>dmSiToucheContact</code>, de valeur courante les dégâts, et de valeur maximale leur type. Par exemple, pour un élémentaire de feu, la valeur courant sera <code>1d6</code>, et la valeur maximale sera <code>feu</code>.</li>
                   <li><strong>Énergie de la mort</strong> (pour la campagne Vengeance) : ajouter un attribut <code>energieDeLaMort</code> de valeur <code>true</code>. Le MJ devra être attentif au message indiquant le retour à la vie, car c'est lui qui devra enlever l'état mort et ajuster les PVs.</li>
@@ -1813,6 +1794,7 @@
                   <li><strong>Insensible</strong> : ajouter un attribut <code>insensibleAffaibli</code> de valeur <code>true</code>.</li>
                   <li><strong>Invisible</strong> : passer le personnage invisible (<code>!cof-set-state invisible true</code>, ou mettre directment le statut sur le token). Si il peut rester invisible en combat, lui ajouter un attribut <code>invisibleEnCombat</code>, de valeur true. Si il est attaqué autrement qu'avec tir en aveugle par quelqu'un qui ne voit pas l'invisble (à vous de montrer au moins temporairement le token), un malus de +5 en DEF au contact et +10 à distance sera appliqué, de même que le bonus de +5 en attaque contre ceux qui ne voient pas l'invisible. Le script suppose toujours qu'un personnage qui dispose de tir aveugle utilise sa capacité contre les cibles invisibles: à vous de vérifier qu'il ne cumule pas ça avec une capacité limitée.</li>
                   <li><strong>Langage sombre</strong> : en plus de comprendre les elfes noirs, j'ai décidé d'octroyer un bonus de +1 en DEF et +1 aux DM contre les elfes noirs, bonus justifié par la meilleure compréhension de leur culture et de leurs tactiques. Pour cela, j'utiliser un attribut <code>langageSombreHetre</code> de valeur <code>true</code>.</li>
+                  <li><strong>Message en cas de coup critique reçu</strong> : on peut utiliser un attribut <code>messageSiCritique</code> avec en valeur courante un message à afficher en cas d'echec critique subit.</li>
                   <li><strong>Mot de pouvoir</strong> qui immobilise : <code>!cof-mot-de-pouvoir-immobilise --lanceur @{selected|token_id} --enVue --saufAllies</code> </li>
                   <li><strong>N'abandonne jamais</strong> : ajouter un attribut <code>nAbandonnejamais</code> de valeur <code>true</code>.</li>
                   <li><strong>Piqûres d'insectes</strong> : Rajouter un attribut <code>piquresDInsectes</code> avec comme valeur la résistance aux dégâts à distance appropriée</li>

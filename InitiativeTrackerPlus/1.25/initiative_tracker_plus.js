@@ -16,7 +16,7 @@ var InitiativeTrackerPlus = (function() {
 	'use strict';
 	var version = 1.25,
 		author = 'James C. (Chuz)',
-		lastUpdated = 'Feb 13 2021',
+		lastUpdated = 'Mar 15 2021',
 		pending = null;
 
 	var ITP_StateEnum = Object.freeze({
@@ -48,7 +48,7 @@ var InitiativeTrackerPlus = (function() {
 
 	var flags = {
 		tj_state: ITP_StateEnum.STOPPED, image: true,
-		rotation: true,
+		rotation: false,
 		animating: false,
 		archive: false,
 		clearonclose: true,
@@ -269,6 +269,8 @@ var InitiativeTrackerPlus = (function() {
 		log(flags);
 		log(design);
 		log('-=> IT+ v'+version+' <=- ['+lastUpdated+']');
+
+		displayMotd();
 	};
 
 
@@ -299,7 +301,9 @@ var InitiativeTrackerPlus = (function() {
 		var imgs = findObjs({ type: 'graphic', name: 'tracker_image' });
 		if(imgs[0]) {
 			fields.trackerImg = imgs[0].get('imgsrc').replace("max", "thumb").replace("med", "thumb");
+			state.initiative_tracker_plus.config.fields.trackerImg = fields.trackerImg;
 			fields.trackerId = imgs[0].get('_id');
+			state.initiative_tracker_plus.config.fields.trackerId = fields.trackerId;
 			imgs[0].remove();
 			sendFeedback('Tracker Indicator Image Updated');
 		} else {
@@ -1121,6 +1125,35 @@ var InitiativeTrackerPlus = (function() {
 
 
 	/**
+	 * Display a login message if we want to
+	 */
+	var displayMotd = function(curToken, statusName, favored) {
+		var motd = 'Please be aware, it is possible the animation is causing some browsers to run out of memory.  For this reason the animation now defaults to disabled.  Use <br>"<span style="font-weight: bold;">!itp -setConfig rotation:true</span>"<br> to turn it back on if you desire this functionality.';
+		var content = '<div style="background-color: '+design.turncolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em; min-height: 50px;">'
+			+ '<table width="100%">'
+				+ '<tr>'
+					+ '<td width="100%" style="text-align: center; font-weight: bold; width: 100%">'
+						+ 'Initiative Tracker Plus (v.' + version + ')'
+					+ '</td>'
+				+ '</tr>'
+				+ '<tr>'
+					+ '<td>&nbsp;</td>'
+				+ '</tr>'
+				+ '<tr>'
+					+ '<td width="100%"  style="font-style: italic; text-align: left; padding: 5px;">'
+						+ motd
+					+ '</td>'
+				+ '</tr>'
+			+ '</table>'
+		+ '</div>';
+
+
+ 		sendFeedback(content);
+	};
+
+
+
+	/**
 	 * Build a settings dialog given a token that has effects upon it.
 	 */
 	var makeStatusConfig = function(curToken, statusName, favored) {
@@ -1732,7 +1765,7 @@ var InitiativeTrackerPlus = (function() {
 
 
 	/**
-		Read the handout "InitiativeTrackerPlus Favorites JSON" if it exists and create favorites list from it
+		Read the handout "ITPFavsJSON" if it exists and create favorites list from it
 	**/
 	var loadFavs = function() {
 		var handouts = findObjs({type: 'handout', name: 'ITPFavsJSON'});
