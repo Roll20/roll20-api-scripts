@@ -17,7 +17,7 @@
                                             //'burst #'    : An expanding diagonal distribution of tokens starting "#" squares from the 4 origin token corners. Large qty will form an "X" pattern
                                             //'cross #'    : "evenly" distributed vert/horiz qty, starting directly above origin by # squares. Large qty will form a "+" pattern
                                             //'random,rand #' : randomly populates tokens within a (# by #) square grid
-      --size|        < #,# > or < # >       //DEFAULT = 1,1 (X,Y) - How many SQUARES wide and tall are the spawned tokens? If only one number is given, X & Y are set to equal size
+      --size|        < #,# >                //DEFAULT = 1,1 (X,Y) - How many SQUARES wide and tall are the spawned tokens?
       --side|        < # or rand>           //DEFAULT = 1. Sets the side of a rollable table token. 
                                                     // #              : Sets the side of all spawned tokens to "#"
                                                     // 'rand,random'  : Each spawned token will be set to a random side
@@ -59,7 +59,6 @@
                                                         //#frames: DEFAULT = 20. how many frames the animation will use.
                                                         //delay: DEFAULT = 50. how many milliseconds between triggering each frame? Anything less than 30 may appear instant
       --layer| < object/token/map/gm >                  //DEFAULT = token(s) spawn on the same layer as the selected token(s). May explicitly set to spawn on a different layer.
-      --isDrawing|  < yes/true/1/no/false/0 >    //DEFAULT = false. Sets the is drawing property of spawned token
     }}
     
     
@@ -68,7 +67,7 @@
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.18';
+    const version = '0.19';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -192,7 +191,7 @@ const SpawnDefaultToken = (() => {
     
     //This function runs asynchronously, as called from the processCommands function
     //We will sendChat errors, but the rest of processCommands keeps running :(
-    function spawnTokenAtXY (who, tokenJSON, pageID, spawnLayer, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar1Link, bar2Val, bar2Max, bar2Link, bar3Val, bar3Max, bar3Link, expandIterations, expandDelay, destroyWhenDone, angle, isDrawing) {
+    function spawnTokenAtXY (who, tokenJSON, pageID, spawnLayer, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar1Link, bar2Val, bar2Max, bar2Link, bar3Val, bar3Max, bar3Link, expandIterations, expandDelay, destroyWhenDone, angle, isDrawing, tokenName) {
         let newSideImg;
         let spawnObj;
         let currentSideOld;
@@ -216,6 +215,7 @@ const SpawnDefaultToken = (() => {
                 baseObj.height = sizeY;
                 baseObj.rotation = angle;
                 baseObj.isdrawing = isDrawing;
+                baseObj.name = tokenName;
             } else {                            //will animate and expand token to full size after spawning
                 baseObj.left = spawnX;
                 baseObj.top = spawnY;
@@ -223,6 +223,7 @@ const SpawnDefaultToken = (() => {
                 baseObj.height = 0;
                 baseObj.rotation = angle;
                 baseObj.isdrawing = isDrawing;
+                baseObj.name = tokenName;
             }
             
             baseObj.imgsrc = getCleanImgsrc(baseObj.imgsrc); //ensure that we're using the thumb.png
@@ -919,6 +920,9 @@ const SpawnDefaultToken = (() => {
                                 data.isDrawing = true;
                             }
                             break;
+                        case "tokenname":
+                            data.tokenName = param;
+                            break;
                         default:
                             retVal.push('Unexpected argument identifier (' + option + '). Choose from: (' + data.validArgs + ')');
                             break;    
@@ -1378,7 +1382,7 @@ const SpawnDefaultToken = (() => {
                                     spawnFx(data.spawnX[iteration], data.spawnY[iteration], data.fx, data.spawnPageID);
                                 }
                                 //Spawn the token!
-                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnLayer, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL, data.bar1Val, data.bar1Max, data.bar1Link, data.bar2Val, data.bar2Max, data.bar2Link, data.bar3Val, data.bar3Max, data.bar3Link, data.expandIterations, data.expandDelay, data.destroySpawnWhenDone, data.angle, data.isDrawing);
+                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnLayer, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL, data.bar1Val, data.bar1Max, data.bar1Link, data.bar2Val, data.bar2Max, data.bar2Link, data.bar3Val, data.bar3Max, data.bar3Link, data.expandIterations, data.expandDelay, data.destroySpawnWhenDone, data.angle, data.isDrawing, data.tokenName);
                                 
                             } else {
                                 log("off the map!");
@@ -1569,7 +1573,8 @@ const SpawnDefaultToken = (() => {
                     angle: 0,                      //change the rotation of the spawned token
                     userSpecifiedLayer: false,     //flag to determine how spawned token layer is defined
                     spawnLayer: "objects",         //user can set to "object", "token", "gm", or "map"
-                    isDrawing: false               //user can set isdrawing property of token 
+                    isDrawing: false,              //user can set isdrawing property of token 
+                    tokenName: ""                  //optional override for the token name - allows to be different than the character name 
                 };
                 
                 //Parse msg into an array of argument objects [{cmd:params}]
