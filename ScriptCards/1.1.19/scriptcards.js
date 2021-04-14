@@ -20,7 +20,7 @@
 		Please see the ScriptCards Wiki Entry on Roll20 at https://wiki.roll20.net/Script:ScriptCards for details.
 	*/
 		const APINAME = "ScriptCards";
-		const APIVERSION = "1.1.19a";
+		const APIVERSION = "1.1.19b";
 		const APIAUTHOR = "Kurt Jaegers";
 		
 		// These are the parameters that all cards will start with. This table is copied to the cardParameters table inside the processing loop and that table is updated
@@ -105,6 +105,7 @@
 		var arrayVariables = {};
 		var arrayIndexes = {};
 		var arrays = [];
+		var tokenMarkerURLs = [];
 
 		var rollComponents = [
 			'Base','Total','Ones','Aces','Odds','Evens','Odds','RollText','Text','Style', 'tableEntryText', 'tableEntryImgURL', 'tableEntryValue'
@@ -132,6 +133,11 @@
 			if (state[APINAME].storedSettings == undefined) { state[APINAME].storedSettings = {}; }
 			if (state[APINAME].storedStrings == undefined) { state[APINAME].storedStrings = {}; }
 			if (state[APINAME].storedSnippets == undefined) { state[APINAME].storedSnippets = {}; }
+
+			const tokenMarkers = JSON.parse(Campaign().get("token_markers"));
+			for (var x=0;x<tokenMarkers.length;x++) {
+				tokenMarkerURLs[tokenMarkers[x].name] = tokenMarkers[x].url;
+			}
 
 			loadLibraryHandounts();
 
@@ -2109,6 +2115,13 @@
 			for(var image in images) {
 				var work = images[image].replace("[img", "<img").replace("[/img]","></img>").replace("]"," src=");
 				outputLine = outputLine.replace(images[image], work);
+			}
+			var statusmarkers = outputLine.match(/\[sm(.*?)\](.*?)\[\/sm\]/gi);
+			for (var sm in statusmarkers) {
+				var markername = statusmarkers[sm].substring(statusmarkers[sm].indexOf("]") + 1);
+				markername = markername.substring(0,markername.indexOf("["));
+				var work = statusmarkers[sm].replace("[sm","<img ").replace("[/sm]","></img>").replace("]", " src=" + tokenMarkerURLs[markername]);
+				outputLine = outputLine.replace(statusmarkers[sm], work);
 			}
 			var buttons = outputLine.match(/\[button\](.*?)\:\:(.*?)\[\/button\]/gi);
 			for (var button in buttons) {
