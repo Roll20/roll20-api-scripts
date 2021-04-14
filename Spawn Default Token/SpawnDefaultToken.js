@@ -59,6 +59,7 @@
                                                         //#frames: DEFAULT = 20. how many frames the animation will use.
                                                         //delay: DEFAULT = 50. how many milliseconds between triggering each frame? Anything less than 30 may appear instant
       --layer| < object/token/map/gm >                  //DEFAULT = token(s) spawn on the same layer as the selected token(s). May explicitly set to spawn on a different layer.
+      --tokenName| < some name >                        //optional override for the token name - allows token name to be different than the character name
     }}
     
     
