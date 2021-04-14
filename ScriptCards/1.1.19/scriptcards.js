@@ -20,7 +20,7 @@
 		Please see the ScriptCards Wiki Entry on Roll20 at https://wiki.roll20.net/Script:ScriptCards for details.
 	*/
 		const APINAME = "ScriptCards";
-		const APIVERSION = "1.1.19";
+		const APIVERSION = "1.1.19a";
 		const APIAUTHOR = "Kurt Jaegers";
 		
 		// These are the parameters that all cards will start with. This table is copied to the cardParameters table inside the processing loop and that table is updated
@@ -809,6 +809,18 @@
 													if (variableName) { stringVariables[variableName] = "0"; }
 												}
 											}
+											if (params[1].toLowerCase() == "statusmarkers") {
+												arrayVariables[params[2]] = [];
+												var theToken = getObj("graphic", params[3]);
+												if (theToken) {
+													var markers = theToken.get("statusmarkers").split(",");
+													log(markers);
+													for (var x=0; x<markers.length; x++) {
+														arrayVariables[params[2]].push(markers[x]);
+													}
+													arrayIndexes[params[2]] = 0;
+												}
+											}
 											if (params[1].toLowerCase() == "add") {
 												if (!arrayVariables[params[2]]) { arrayVariables[params[2]] = []; arrayIndexes[params[2]] = 0; }
 												for (var x=3; x<params.length; x++) {
@@ -938,7 +950,6 @@
 												}												
 											}
 										}
-
 										if (params.length == 5) {
 											if (params[1].toLowerCase() == "replace") {
 												if (arrayVariables[params[2]]) { 
@@ -950,6 +961,14 @@
 
 												}
 												arrayIndexes[params[2]] = 0;												
+											}
+											if (params[1].toLowerCase() == "fromstring") {
+												arrayVariables[params[2]] = [];
+												var splitString = params[4].split(params[3]);
+												for (var x=0; x<splitString.length; x++) {
+													arrayVariables[params[2]].push(splitString[x]);
+												}
+												arrayIndexes[params[2]] = 0;
 											}
 										}
 										break;
