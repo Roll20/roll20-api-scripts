@@ -20,7 +20,7 @@
 		Please see the ScriptCards Wiki Entry on Roll20 at https://wiki.roll20.net/Script:ScriptCards for details.
 	*/
 		const APINAME = "ScriptCards";
-		const APIVERSION = "1.1.19b";
+		const APIVERSION = "1.1.19c";
 		const APIAUTHOR = "Kurt Jaegers";
 		
 		// These are the parameters that all cards will start with. This table is copied to the cardParameters table inside the processing loop and that table is updated
@@ -337,7 +337,14 @@
 						if (isReentrant) {
 							outputLines = [];
 							gmonlyLines = [];
-							if (lineLabels[resumeArgs[1]]) { lineCounter = lineLabels[resumeArgs[1]] } else { log(`ScriptCards Error: Label ${resumeArgs[1]} is not defined for reentrant script`)};
+							var entryLabel = resumeArgs[1].split(";")[0];
+							stringVariables["reentryval"] = resumeArgs[1].split(";")[1];
+							//log(`entryLabel: ${entryLabel}, reentryval: ${stringVariables["reentryval"]}`);
+							if (lineLabels[entryLabel]) { 
+								lineCounter = lineLabels[entryLabel] 
+							} else { 
+								log(`ScriptCards Error: Label ${resumeArgs[1]} is not defined for reentrant script`)
+							};
 						}
 						// log(lineLabels);
 
