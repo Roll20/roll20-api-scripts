@@ -20,7 +20,7 @@
 		Please see the ScriptCards Wiki Entry on Roll20 at https://wiki.roll20.net/Script:ScriptCards for details.
 	*/
 		const APINAME = "ScriptCards";
-		const APIVERSION = "1.1.19c";
+		const APIVERSION = "1.1.19d";
 		const APIAUTHOR = "Kurt Jaegers";
 		
 		// These are the parameters that all cards will start with. This table is copied to the cardParameters table inside the processing loop and that table is updated
@@ -697,6 +697,22 @@
 											}
 										}
 										break; 
+
+									case "attribute":
+										if (params.length > 4) {
+											if (params[1].toLowerCase() == "set") {
+												var theCharacter = getObj("character", params[2]);
+												if (theCharacter) {
+													var oldAttrs = findObjs({ _type:"attribute", _characterid: params[2], name: params[3].trim()});
+													if (oldAttrs.length > 0) {
+														oldAttrs.forEach(function(element) { element.remove(); });
+													}
+													if (params[4] !== "") {
+														createObj("attribute", { _characterid: params[2], name: params[3].trim(), current: params[4].trim() });
+													}
+												}
+											}
+										}
 
 									case "stringfuncs": // strlength, substring, replace, split, before, after
 									case "strings":
@@ -2461,14 +2477,15 @@
 			} catch (e) {
 				return (return_set)
 			};
-
 			var action_attrs = filterObjs(function (z) {
 				return (z.get("characterid") == charid && z.get("name").startsWith(action_prefix));
 			})
 
 			action_attrs.forEach(function (z) {
-				return_set.push(z.get("name").replace(action_prefix, "") + "|" + z.get("current").replace(/(?:\r\n|\r|\n)/g, "<br>"));
-				return_set.push(z.get("name").replace(action_prefix, "") + "_max|" + z.get("max"));
+				if (z.get("name")) {
+					return_set.push(z.get("name").toString().replace(action_prefix, "") + "|" + z.get("current").toString().replace(/(?:\r\n|\r|\n)/g, "<br>"));
+					return_set.push(z.get("name").toString().replace(action_prefix, "") + "_max|" + z.get("max").toString());
+				}
 			})
 
 			var PrefixEntry = "xxxActionIDxxxx|" + action_prefix.replace(sectionname+"_","");
