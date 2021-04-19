@@ -20,7 +20,7 @@
 		Please see the ScriptCards Wiki Entry on Roll20 at https://wiki.roll20.net/Script:ScriptCards for details.
 	*/
 		const APINAME = "ScriptCards";
-		const APIVERSION = "1.1.19d";
+		const APIVERSION = "1.1.19e";
 		const APIAUTHOR = "Kurt Jaegers";
 		
 		// These are the parameters that all cards will start with. This table is copied to the cardParameters table inside the processing loop and that table is updated
@@ -2171,7 +2171,7 @@
 					}
 				}
 				if (actor == "") {
-					var possible = findObjs({type: "character"}).filter(function(value, index,arg) { return character=>character.get("name").toLowerCase().trim() == tryID.toLowerCase().trim() });;
+					var possible = findObjs({type: "character"}).filter(function(value, index,arg) { return value.get("name").toLowerCase().trim() == tryID.toLowerCase().trim() });;
 					if (possible.length > 0) {
 						actor = possible[0].get("_id");
 					}
