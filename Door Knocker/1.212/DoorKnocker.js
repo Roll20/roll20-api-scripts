@@ -989,7 +989,7 @@ Possible stretch goal(s)
             log(oldPath);
             template = templatePath(oldPath);
             template.layer = playerIsGM(playerid) ? 'gmlayer' : 'objects';
-            template.stroke_width = 10;
+            template.stroke_width = template.stroke_width*1 + 20;
             template.stroke = template.stroke.replace(/(.{7}).*/,'$1');
             template.fill = template.fill.replace(/(transparent|.{7}).*/i,"$1");
             let path = createObj('path',template);
