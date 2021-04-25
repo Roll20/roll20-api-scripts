@@ -22,3 +22,5 @@ There are other token scripts with far more functionality, and if you feel you'l
 ##Changelist
 ###_v1.0_ (2021-01-01)
 * Script created
+###_v1.0_ (2021-01-01)
+* Changed logic to accomodate multi-GM games or games where the creator is not a GM.
