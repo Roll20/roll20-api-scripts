@@ -84,7 +84,7 @@ var AgoneDice = AgoneDice || (function () {
 					return;
 				}
 				var diceResult = diceRoll.rolls[i].results[0].v || 0;
-				var total = msg.inlinerolls[msg.inlinerolls.length - 1].results.total || 0;
+				var total = msg.inlinerolls[3].results.total || 0;
 				var t = msg.content.split('{');
 				t = t[2].split('}');
 				t = t[0].split('=');
