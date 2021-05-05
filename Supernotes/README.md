@@ -33,6 +33,8 @@ This script as written is optimized for the D&D 5th Edition by Roll20 sheet, but
 
 *--notitle* This option suppresses the title in the chat output. It is useful for times when the GM might wish to show an image or note to the player without clueing them in wha the note is about. For instance, they may wish to reveal an image of a monster without revealing its name. This parameter can be added to any command. It is the only paramater for which this is true. Example *!pcnote --image --notitle* wil pull the first of any images from the token's associate character sheet and send it to the chat without a title. *--notitle* may be added to the command in any order.
 
+*--id* supply this with a token id, and the script will attempt to read the notes associated with a specific token, or the character associate with that token. There is no space between --id and the token id. Only one token id may be passed.
+
 *--help* Displays help.
 
 *--config* Returns a configuration dialog box that allows you to set which sheet's roll template to use, and to toggle the 'Send to Players' footer.
@@ -49,3 +51,7 @@ Default Template, D&D 5th Edition by Roll20, 5e Shaped, Pathfinder by Roll20, Pa
 ## Changelog
 
 0.0.7 Fixed bug where token notes would break on accented characters
+
+0.0.9 Added --notitle
+
+0.0.91 added --id

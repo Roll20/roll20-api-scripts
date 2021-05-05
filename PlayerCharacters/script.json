@@ -1,0 +1,18 @@
+{
+  "name": "PlayerCharacters",
+  "script": "PlayerCharacters.js",
+  "version": "0.1.0",
+  "description": "PlayerCharacters provides a list of Characters by Player, as well as the means to add Characters for Players easily.\r\rFor instructions see the *Help: PlayerCharacters* Handout in game, or run `!list-pcs --help` in game, or visit [PlayerCharacters Forum Thread](https://app.roll20.net/forum/permalink/9888024/).",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "useroptions":{
+  },
+  "dependencies": {
+  },
+  "modifies": {
+    "state.PlayerCharacters": "read,write"
+  },
+  "conflicts": [
+  ]
+}
