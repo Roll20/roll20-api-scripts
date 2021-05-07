@@ -1,5 +1,5 @@
 /* 
- * Version 2.40
+ * Version 2.41
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,7 +11,7 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.40',
+	    version = '2.41',
         timerObj,
         intervalHandle,
         debug = true,
@@ -442,14 +442,16 @@ var CombatMaster = CombatMaster || (function() {
 
     clearTokenStatuses = function(selectedTokens) {
         let tokenObj
-        selectedTokens.forEach(token => {    
-            if (token._type == 'graphic') {
-                tokenObj        = getObj('graphic', token._id)    
-                if (tokenObj) {
-                    tokenObj.set('statusmarkers', "")
+        if (selectedTokens ) {
+            selectedTokens.forEach(token => {
+                if (token._type == 'graphic') {
+                    tokenObj        = getObj('graphic', token._id);
+                    if (tokenObj) {
+                        tokenObj.set('statusmarkers', "")
+                    }
                 }
-            }
-        })    
+            })    
+        }
     },
     
 //*************************************************************************************************************
@@ -1432,9 +1434,12 @@ var CombatMaster = CombatMaster || (function() {
   
     addTargetsToCondition = function(selectedTokens,id,key) {
         if (debug) {
-            log("Add Targets to Condition")
+            log("Add Targets to Condition");
         }
-        
+        if ((!selectedTokens || selectedTokens.length == 0)
+            makeAndSendMenu('No tokens selected.  Condition not added',' ', whisper);
+            return;
+        }
         [...state[combatState].conditions].forEach((condition,i) => {
             if (condition.id == id && condition.key == key) {
                 selectedTokens.forEach(token => {
@@ -1444,7 +1449,6 @@ var CombatMaster = CombatMaster || (function() {
                 })    
             }   
         });   
-        
         makeAndSendMenu('Selected Tokens Added',"Selected Tokens",'gm'); 
     },
     
