@@ -1436,7 +1436,7 @@ var CombatMaster = CombatMaster || (function() {
         if (debug) {
             log("Add Targets to Condition");
         }
-        if ((!selectedTokens || selectedTokens.length == 0)
+        if (!selectedTokens || selectedTokens.length == 0) {
             makeAndSendMenu('No tokens selected.  Condition not added',' ', whisper);
             return;
         }
