@@ -1,6 +1,34 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 2.17
+### Capacités
+* Ajout de la capacité Increvable de la Voie de l'humain.
+* Ajout de la capacité Briseur d'os du barbare.
+* Meilleure automatisation de l'Argument de taille du barbare.
+* Châtiment du mâle du Xyrufa.
+* Prise en compte de la rage dans la capacité Défier la mort du barbare.
+* Prescience (Voie de la divination)
+* Cône de froid (doc)
+* Gros Monstre, grosse arme (Voie des armes à 2 mains)
+* Hors de portée (shaman scorpion)
+* Nuée de scorpions (shaman scorpion)
+* Animation des Morts (Voie de l'outre-tombe)
+* Etreinte (scorpions)
+* Hémorragie (Voie du sang)
+* Lien de sang (Voie du sang)
+* Support complet de la Voie des armes à 2 mains (prestige)
+* Support + documentation Voie du Chevalier Dragon (prestige)
+* Support complet de la Voie du porteur de bouclier (prestige)
+
+### Autres améliorations
+* Possibilité de rajouter des attributs à afficher dans le statut.
+* Le script ne bloque plus que le déplacement des personnages immobilisés contrôlés par un joueur connecté.
+* En cas d'échec critique d'une boule de feu qui cible une cible artificielle, la cible est déplacée aléatoirement de 15 m.
+* Refactoring !cof-tenebres pour supporter les options de Mana (y compris Tempête de Mana)
+
 ## 2.16
 ### Capacités
+* Capacité de cyclone des élémentaires.
+* Présence glaciale de la Voie du gel
 * Charge fantastique du chevalier
 * Project de la Voie du colosse.
 * Ventre mou de la Voie du tueur de géants.
@@ -10,8 +38,27 @@
 * Support de la capacité Enchaînement du barbare.
 * Ajout de l'attaque d'étreinte et immolation de certains démons gardiens
 * Ajout de la capacité Hausser le ton de la Voie du champion
+* Ajout de la capacité Liberté d'action du barde
+* Implémentation des effets de Cercle de protection
+* Ajout de la capacité Combat kinétique du Psionique
+* Support du sort Armure d'eau
+* Support de Moment de perfection (moine)
+* Support d'Ensevelissement (nécromancien)
+* Support d'Armée des Morts (nécromancien)
+* Support d'Invocation d'un démon (nécromancien)
 
 ### Autres améliorations
+* Joli coup permet d'ignorer les bonus de couvert.
+* Implémentation de la règle de coups critiques étendus (dans les options, catégorie divers).
+* Pas de dépense de mana si une autre contrainte de resource rend une action impossible.
+* Prise en compte de l'option --secret pour !cof-bonus-couvert
+* Armes avec bonus de DEF
+* Possibilité d'afficher un message en cas de coup critique reçu.
+* Ajout d'un effet temporaire effetRetarde
+* Les aires d'effet en disque ne passent plus les murs.
+* Ajout de RD aux éléments.
+* Correction sur l'initiative entre PJs qui doivent comparer la sagesse
+* Ajout de la possibilité de faire des attaques de d12 qui font des critiques
 * Prise en compte des compétences sur la fiche
 * Ajout d'une option de sélection alliesEnVue
 * Prise en compte des immunités pour les effets temporaires.
@@ -22,12 +69,23 @@
 * Ajout d'une interface de gestion de la bourse.
 * Support de la pénombre
 * Support pour les personnages invisibles en combat
+* Meilleur support de la Prouesse du guerrier
+* Meilleur support de la Parade de projectiles du moine
+* Meilleur support du Tour de force
+* Meilleur support du Pacte Sanglant 
+* Permettre à un personnage d'être la Chair à canon de plusieurs autres
+* Rework Animation des Morts : meilleur support et automatisation
 
 ### Corrections de bugs
+* Correction des RD seulement contre perçant ou tranchant ou contondant.
+* Compatibilité de --maxDmg avec --reroll1 et --explodeMax
+* Crash de statut pour les personnages ayant un capitaine.
+* Correction du test d'attaque opposée
+* Calcul de score d'attaque corrigé pour les Terres d'Arran.
 * Mise à jour de l'initiative quand on rengaine son arme à distance avec la voie du pistolero.
 * Donne le droit au joueur qui doit faire une réaction à une attaque de ne pas réagir.
 * Les créatures qui enveloppent ou étreignent leur cible la relachent quand elle meurt.
-* Le script ne prennait pas en compte la sagesse de l'attaquant contre les créatures immunisées aux armes.
+* Le script ne prenait pas en compte la sagesse de l'attaquant contre les créatures immunisées aux armes.
 * Quand une créature peut résister avec SAG, INT ou CHA et qu'elle est sans esprit, alors on choisit cette caractéristique (car la réussite est alors automatique). Test un peu plus précoce pour la résistance à la peur.
 
 ## 2.15

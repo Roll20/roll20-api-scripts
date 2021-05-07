@@ -979,3 +979,28 @@ discretewhisper:
 insertarg:
   - "InsertArg"
   - "Utility"
+
+starfinderguidance:
+  - "Starfinder Guidance"
+  - "System Toolbox"
+
+scriptcards:
+  - "ScriptCards"
+  - "Utility"
+  
+imperator:
+  - "Imperator"
+  - "System Toolbox"
+  
+myzsectorgenerator:
+  - "MutantYearZero_SectorGenerator"
+  - "System Toolbox"
+  
+playercharacters:
+  - "PlayerCharacters"
+  - "Utility"
+
+udlpasswall:
+  - "UDLPasswall"
+  - "Dynamic Lighting"
+  

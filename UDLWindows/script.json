@@ -1,7 +1,7 @@
 {
   "name": "UDLWindows",
   "script": "UDLWindows.js",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "UDLWindows converts path objects to paths that don't block vision but do block movement.\r\rFor instructions see the *Help: UDLWindows* Handout in game, or run `!to-window --help`, or visit [UDLWindows Forum Thread](https://app.roll20.net/forum/permalink/9521203/).",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -11,8 +11,5 @@
   "modifies": {
     "state.UDLWindows": "read,write"
   },
-  "conflicts": [],
-  "previousversions": [
-    "0.1.0"
-  ]
+  "conflicts": []
 }

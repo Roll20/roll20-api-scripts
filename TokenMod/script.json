@@ -1,7 +1,7 @@
 {
   "name": "TokenMod",
   "script": "TokenMod.js",
-  "version": "0.8.63",
+  "version": "0.8.65",
   "description": "TokenMod provides an interface to setting almost all settable properties of a token.\r\rFor instructions see the *Help: TokenMod* Handout in game, or run `!token-mod --help` in game, or visit [TokenMod Forum Thread](https://app.roll20.net/forum/post/4225825/script-update-tokenmod-an-interface-to-adjusting-properties-of-a-token-from-a-macro-or-the-chat-area).",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -15,18 +15,7 @@
     }
   ],
   "dependencies": [],
-  "modifies": {
-    "state.TokenMod": "read,write",
-    "attribute.characterid": "read",
-    "attribute.current": "read",
-    "attribute.id": "read",
-    "attribute.max": "read",
-    "attribute.name": "read",
-    "attribute.type": "read",
-    "character.archived": "read",
-    "character.name": "read",
-    "graphic.*": "read,write"
-  },
+  "modifies": {},
   "conflicts": [],
   "previousversions": [
     "0.8.19",
@@ -67,6 +56,8 @@
     "0.8.59",
     "0.8.60",
     "0.8.61",
-    "0.8.62"
+    "0.8.62",
+    "0.8.63",
+    "0.8.64"
   ]
 }

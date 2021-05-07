@@ -19,18 +19,29 @@ Also see the Maximimum Apocalypse character sheet.
 - If any initiative has been borrowed from the next turn that will be reflected in next turn's initiative values.
 - (GM only)
   
-***`!ma sea`***
-- Show enemy attraction gauge.
-- Currently it appears at a fix location so may need to be moved.
+***`!ma sea` or `!ma seag`***
+- Show enemy attraction gauge on current player's page.
+- Currently it appears at a fixed location (top left).
 - (GM only)
 
-***`!ma uea <number>`***
+***`!ma uea <number>` or `!ma ueag <number>`***
 - Add &lt;number&gt; to enemy attraction gauge.
 - Can be positive or negative.
+- It will be moved to the current player's page, if not there already.
 - (GM only)
 
-***`!ma rea`***
+***`!ma rea` or `!ma reag`***
 - Reset enemy attraction gauge to zero.
+- It wil be moved to the current player's page, if not there already.
+- (GM only)
+
+***`!ma hea` or `!ma heag`***
+- Hide the enemy attraction gauge.
+- It wil be moved to the current player's page, if not there already.
+- (GM only)
+
+***`!ma dea` or `!ma deag`***
+- Delete the enemy attraction gauge.
 - (GM only)
 
 ***`!ma uh <number>`***
@@ -69,6 +80,8 @@ Also see the Maximimum Apocalypse character sheet.
 - (GM only)
   
 **Change Log:**  
+* 2021-04-05 - Fix initiative logic to ensure values treated as numbers. Fix to create character attribute, if it doesn't exist yet, when retrieving them.
+* 2021-02-26 - Fixed EAG commands to show at top left by default & configuration to control if visible to players by default. Add commands to hide & delete EAG.
 * 2020-12-14 - First version with features for showing/populating tracker, action phases, showing/updating enemy attraction gauge
 * 2020-12-31 - Standardise command behind `ma` alias, added hunger, roll, re-roll & config commands. Added automatic initiative reduction for Full Dodge & Riposte rolls.
 * 2021-01-09 - Seperate re-roll & luck re-roll (which noe decrements "luck_uses"). Add reset luck function.
