@@ -34,10 +34,16 @@
     !radar {{
         --range|        <# <optional units> >           //Default=350. How far the radar range extends, in pixels. Measured from center of selected token. Accepts inline rolls e.g. [[ 5*70 ]]
                                                             //optionally, can specify units in "u" or the units in Page settings. e.g. "60u" or "60ft"
+        --wavetype|     <circle/square/5e <optional coneDirection/tokenID coneAngle>    
+                                                        //default=circle. range determined by pythagorean theorem
+                                                        //square. Diagonals squares count as one unit
+                                                        //5e. will produce a cone of ~53.14 deg. The width of cone is equal to the cone legnth.
+                                                        //coneDirection - the angle of the center of the cone (clockwise positive, 0deg is straight up). If a tokenID is entered, the angle between the source and target token will be used
+                                                        //coneAngle - the angle of the cone in degrees
         --spacing|      <#>                             //Default=35. The spacing between waves, in pixels (lower number = slower wavefront)
         --wavedelay|    <#>                             //Default=50. How much time to wait before next wave, in ms (higher number = slower wavefront)
         --wavelife|     <#>                             //Default=200. How long each wave wil remain on screen, in ms (higher number = more waves present at any one time)
-        --pinglife|     <#>                             //Default=2000. How long each "RadarPing" token wil remain on screen, in ms 
+        --pinglife|     <#>                             //Default=2000. How long each "RaindarPing" token wil remain on screen, in ms 
         --layers|       <gmlayer, objects, walls, map>  //Default="gmlayer, objects". Which layers to look for tokens. any or all may be included
                                                             //accepts "gmlayer" or "gm"
                                                             //accepts "objects" or "tokens"
@@ -54,6 +60,9 @@
                                                         //Only affects Display output
                                                         //for GRIDLESS MAP, this command must be included or else all results will be INFINITY
         --visible|       <yes/true/1> or <no/false/0>   //Default=true. Set to false/no/0 to prevent the drawing of the wavefront animation
+        --graphoptions   < grid/circles/rings/reticle > //Default is a plain background. Can add graphical elements to display. Circles/Rings are interchangeable aliases
+        --output         < graph, table, compact >         //Default=table. Can include one or all of these elements. Compact attempts to put the table output on a single line
+        --groupby	     < yes/true/1> or <no/false/0 > //Default=true. When a charFilter or tokFilter is used, this flag determines if table results are grouped by filter attribute
         //--------------------------------------------------------------------------------------
         //THE FOLLOWING TWO COMMANDS ARE USED WHEN CALLING RADAR FROM ANOTHER API SCRIPT 
         //  e.g. sendChat(scriptName, `!radar --selectedID|${msg.selected[0]._id} --playerID|${msg.playerid}`
@@ -65,8 +74,9 @@
         //ONLY CHOOSE ONE OF THESE TWO FILTERS: (tokfilter or charfilter)
                 //if used, output template will group by filter keyword
                 
-        --tokfilter|    <property>:<includeText1<optional #color>,..., -exclude text>  
+        --tokfilter|    <property>:<optional matchType><filterText1<optional #color>,..., -exclude text>  
                         e.g. "bar3_value:celestial, fiend, undead, -cloak"
+                        e.g. "bar1_value:>0"
                                                                                 //only pings tokens where bar3_value contains either celestial, fiend, or undead. Ignore tokens with "cloak"
                                                                                 //the only valid <properties> are:
                                                                                     // "bar1_value"
@@ -76,21 +86,29 @@
                                                                                     // "bar2_max"
                                                                                     // "bar3_max"
                                                                                     // "gmnotes"
+                                                                                //optional matchTypes:
+                                                                                    //"@" - exact match
+                                                                                    //">" - greater than (numeric only)
+                                                                                    //"<" - less than (numeric only)
                         e.g. with optional color coded auras by filter group
                             "bar3_value:celestial#yellow, fiend#red, undead#blue, -cloak"
-                                                                                    //Valid aura colors:
+                                                                                //Valid aura colors:
                                                                                     // "#red"  (default)
                                                                                     // "#green"
                                                                                     // "#blue"
                                                                                     // "#yellow"
                                                                                     // "#9900ff" (any custom html color accepted)
          
-        --charfilter|   <attribute>:<includeText1, includeText2, -excludeText>  
+        --charfilter|   <attribute>:<optional matchType><filterText1, filterText2, -excludeText>  
                         e.g. "npc_type:celestial, fiend, undead, -nondetection"
                                                                                 //only ping tokens where npc_type attribute contains either celestial, fiend, or undead. Ignore tokens with "cloak"
                                                                                 //any text may be entered for <attribute>
                                                                                     //if attribute doesn't exist on character sheet, token is ignored
                                                                                     //if token does not represent a character, it is ignored if this filter is used
+                                                                                //optional matchTypes:
+                                                                                    //"@" - exact match
+                                                                                    //">" - greater than (numeric only)
+                                                                                    //"<" - less than (numeric only)
                         e.g. with optional color coded auras by filter group
                             "npc_type:celestial#yellow, fiend#red, undead#blue, -cloak"
                                                                                     //same colors available as for tokfilter
@@ -98,27 +116,75 @@
     }}
 */
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+// adding API_Meta for line offset
+var API_Meta = API_Meta || {};
+API_Meta.RadarWIP = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
+{
+    try { throw new Error(''); } catch (e) { API_Meta.RadarWIP.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (105)); }
+}
+//        log(`RadarWIP Offset: ${API_Meta.RadarWIP.offset}`);
 const Radar = (() => {
     
     const scriptName = "Radar";
-    const version = '0.6';
+    const version = '0.7';
     
     const PING_NAME = 'RadarPing'; 
-    
     const hRED = '#ff0000';
     const hYELLOW = '#ffff00';
     const hGREEN = '#00ff00';
     const hBLUE = '#0000ff';
     
+    //settings for graphical html output
+    let graphHeight = 230;
+    let graphWidth = 230;
+    
+    //Title ribbon + Table
+    let htmlTableTemplateStart = `<div style="width: 100%; min-height: 2em; z-index: 2; font-style:normal; font-size: 1em; text-align: center; line-height: 2em; font-weight: bold; color: #eeeeee; text-shadow: -1px 1px 0 #000, 1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000; background:#000000; background-image: radial-gradient(circle, #007700 0%, #006600 10%, #004400 40%, #003300 55%, #000000 80%, transparent 100%);border-width: 1px; border-style: solid; border-color: black; border-radius: 6px 6px 0px 0px;">=X=TITLE=X= (units:=X=UNITS=X=)</div>` +
+                                 `<div style="display: table; position: relative; padding-top: 0em; padding-bottom: 0.2em; width:100%; border: 1px solid #000000; border-radius: 0px 0px 6px 6px; border-collapse: separate; line-height: 2em; background:#ffffff; z-index: 1;">`
+	
+	let htmlTableTemplateEnd = `</div><br />`;
+    let tableLineCounter = 0;
+    
     const checkInstall = function() {
         log(scriptName + ' v' + version + ' initialized.');
+        log(`RadarWIP Offset: ${API_Meta.RadarWIP.offset}`);
     };
     
     const pt = function(x,y) {
         this.x = x,
         this.y = y
     };
+    
+    const buildRowOutput = function (useGroups, group, itemNum, text) {
+        let cellContents = '';
+        let rowHTML = '';
+        
+        tableLineCounter += 1;
+        
+        if (useGroups) {
+            //results are grouped by a filter
+            cellContents = `<div style="display: table-cell; padding-left: 5px"><b>${group}</b></div>` +
+                           `<div style="display: table-cell; text-align: center"><b>${itemNum}</b></div>` +
+                           `<div style="display: table-cell;">${text}</div>` 
+        } else {
+            //results are numbered individually
+            cellContents = `<div style="display: table-cell; text-align: center"><b>${itemNum}</b></div>` +
+                           `<div style="display: table-cell;">${text}</div>` 
+        }
+        
+        if (tableLineCounter % 2 == 0) {
+			rowHTML = `<div style="display: table-row; vertical-align: top; width:1px; white-space:nowrap; line-height: 1.7em; background:#dddddd;">` +
+                cellContents +
+            `</div>`
+		} else {
+			rowHTML = `<div style="display: table-row; vertical-align: top; width:1px; white-space:nowrap; line-height: 1.7em; background:#ffffff;">` +
+                cellContents +
+            `</div>`
+		}
+        
+		return rowHTML;
+	}
+    
     
     const getCleanImgsrc = function (imgsrc) {
         let parts = imgsrc.match(/(.*\/images\/.*)(thumb|med|original|max)([^\?]*)(\?[^?]+)?$/);
@@ -128,48 +194,15 @@ const Radar = (() => {
         return;
     };
     
-    //sendChat output formatting styles, modified from a portion of TheAaron's Token-mod script
+    //html output formatting styles, approach taken from TheAaron's Token-mod script
     const _h = {
-        outer: (...o) => `<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">${o.join(' ')}</div>`,
-        title: (t,v) => `<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">${t} v${v}</div>`,
-        subhead: (...o) => `<b>${o.join(' ')}</b>`,
-        minorhead: (...o) => `<u>${o.join(' ')}</u>`,
-        optional: (...o) => `${ch('[')}${o.join(` ${ch('|')} `)}${ch(']')}`,
-        required: (...o) => `${ch('<')}${o.join(` ${ch('|')} `)}${ch('>')}`,
-        header: (...o) => `<div style="padding-left:10px;margin-bottom:3px;">${o.join(' ')}</div>`,
-        section: (s,...o) => `${_h.subhead(s)}${_h.inset(...o)}`,
-        paragraph: (...o) => `<p>${o.join(' ')}</p>`,
-        experimental: (...o) => `<div style="display:inline-block;padding: .1em 1em; border: 1px solid #993333; border-radius:.5em;background-color:#cccccc;color:#ff0000;">${o.join(' ')}</div>`,
-        items: (o) => `<li>${o.join('</li><li>')}</li>`,
-        ol: (...o) => `<ol>${_h.items(o)}</ol>`,
-        ul: (...o) => `<ul>${_h.items(o)}</ul>`,
-        grid: (...o) => `<div style="padding: 12px 0;">${o.join('')}<div style="clear:both;"></div></div>`, 
-        cell: (o) =>  `<div style="width: 200px; padding: 0 3px; float: left;">${o}</div>`,
-        statusCell: (o) =>  {
-            let text = `${o.getName()}${o.getName()!==o.getTag()?` [${o.getTag()}]`:''}`;
-            return `<div style="width: auto; padding: .2em; margin: .1em .25em; border: 1px solid #ccc; border-radius: .25em; background-color: #eee; line-height:1.5em; height: 1.5em;float:left;">${o.getHTML()}${text}</div>`;
-        },
-        inset: (...o) => `<div style="padding-left: 10px;padding-right:20px">${o.join(' ')}</div>`,
-        join: (...o) => o.join(' '),
-        pre: (...o) =>`<div style="border:1px solid #e1e1e8;border-radius:4px;padding:8.5px;margin-bottom:9px;font-size:12px;white-space:normal;word-break:normal;word-wrap:normal;background-color:#f7f7f9;font-family:monospace;overflow:auto;">${o.join(' ')}</div>`,
-        preformatted: (...o) =>_h.pre(o.join('<br>').replace(/\s/g,ch(' '))),
-        code: (...o) => `<code>${o.join(' ')}</code>`,
-        attr: {
-            bare: (o)=>`${ch('@')}${ch('{')}${o}${ch('}')}`,
-            selected: (o)=>`${ch('@')}${ch('{')}selected${ch('|')}${o}${ch('}')}`,
-            target: (o)=>`${ch('@')}${ch('{')}target${ch('|')}${o}${ch('}')}`,
-            char: (o,c)=>`${ch('@')}${ch('{')}${c||'CHARACTER NAME'}${ch('|')}${o}${ch('}')}`
-        },
         bold: (...o) => `<b>${o.join(' ')}</b>`,
-        italic: (...o) => `<i>${o.join(' ')}</i>`,
-        font: {
-            command: (...o)=>`<b><span style="font-family:serif;">${o.join(' ')}</span></b>`
-        },
         red: (...o) => `<span style="color: red">${o.join('')}</span>`,
         blue: (...o) => `<span style="color: blue">${o.join('')}</span>`,
         purple: (...o) => `<span style="color: rgba(112,32,130,1)">${o.join('')}</span>`,
         inlineResult: (...o) => `<span style="font-weight: bold;padding: .2em .2em; background-color:rgba(254,246,142,1);">${o.join('')}</span>`
     };
+    
     
     const toFullColor = function(htmlstring, defaultAlpha = 'ff') {
         let s=htmlstring.toLowerCase().replace(/[^0-9a-f]/,'');
@@ -257,35 +290,335 @@ const Radar = (() => {
         return character;
     };
     
-    //Circle building portion of function is modified from TheAaron's "dlcircle" script
-    const buildCircle = function(rad) {
-        const centerX = rad
-        const centerY = rad
-        const at = (theta) => ({x: Math.cos(theta)*rad, y: Math.sin(theta)*rad}); 
-        //Reduced resolution from original script to ease DL processing strain
-        let steps = Math.min(Math.max(Math.round( (Math.PI*2*Math.sqrt((2*rad*rad)/2))/35),4),20);
-        //steps = Math.ceil(steps/10);
-        const stepSize = Math.PI/(2*steps);
-        let acc=[[],[],[],[]];
-        let th=0;
-        _.times(steps+1,()=>{
-            let pt=at(th);
-            acc[0].push([pt.x,pt.y]);
-            acc[1].push([-pt.x,pt.y]);
-            acc[2].push([-pt.x,-pt.y]);
-            acc[3].push([pt.x,-pt.y]);
-            th+=stepSize;
-        });
-        acc = acc[0].concat(
-            acc[1].reverse().slice(1),
-            acc[2].slice(1),
-            acc[3].reverse().slice(1)
-        );
+    const get5eConePt = function (rad, theta) {
+        let deg2rad = Math.PI/180;
+        //change in "normal" polar coord conversion due to 0deg being straight up and positive Y being "down"
+        let x = rad + rad * Math.sin(theta);
+        let y = rad + rad * Math.cos(theta + deg2rad*180);
+        return new pt(x,y);
+    }
+    
+    const getSquareArcPt = function (rad, theta) {
+        //theta in degrees
+        let x, y;
+        let deg2rad = Math.PI/180;
+        switch (true) {
+            case (theta === 0):
+                x = rad;
+                y = 0;
+                break;
+            case (theta>0 && theta<45):
+                x = rad + rad*Math.tan(theta*deg2rad);
+                y = 0;
+                break;
+            case (theta === 45):
+                x = 2*rad;
+                y = 0;
+                break;
+            case (theta>45 && theta<90):
+                x = 2*rad;
+                y = rad - rad*Math.tan(90*deg2rad - theta*deg2rad);
+                break;
+            case (theta === 90):
+                x = 2*rad;
+                y = rad;
+                break;
+            case (theta>90 && theta<135):
+                x = 2*rad;
+                y = rad + rad*Math.tan(theta*deg2rad - 90*deg2rad);
+                break;
+            case (theta === 135):
+                x = 2*rad;
+                y = 2*rad;
+                break;
+            case (theta>135 && theta<180):
+                x = rad + rad*Math.tan(180*deg2rad-theta*deg2rad);
+                y = 2*rad;
+                break;
+            case (theta === 180):
+                x = rad;
+                y = 2*rad;
+                break;
+            case (theta>180 && theta<225):
+                x = rad - rad*Math.tan(theta*deg2rad - 180*deg2rad);
+                y = 2*rad;
+                break;
+            case (theta === 225):
+                x = 0;
+                y = 2*rad;
+                break;
+            case (theta>225 && theta<270):
+                x = 0;
+                y = rad + rad*Math.tan(270*deg2rad-theta*deg2rad);
+                break;
+            case (theta === 270):
+                x = 0;
+                y = rad;
+                break;
+            case (theta>270 && theta<315):
+                x = 0;
+                y = rad - rad*Math.tan(theta*deg2rad-270*deg2rad);
+                break;
+            case (theta === 315):
+                x = 0;
+                y = 0;
+                break;
+            case (theta>315 && theta<360):
+                x = rad - rad*Math.tan(360*deg2rad-theta*deg2rad);
+                y = 0;
+                break;
+        }
+        let tempPt = new pt(x, y);
+        //log(tempPt.x + ', ' + tempPt.y);
+        return tempPt;
+    }
+    
+    const normalizeTo360deg = function(deg) {
+        deg = deg % 360;
+        if (deg < 0) {deg += 360;}
+        return deg;
+    }
+    
+    const isCoincidentPt = function(pt1, pt2) {
+        let coincident = false;
+        if (pt1.x === pt2.x && pt1.y === pt2.y) { coincident = true; }
+        return coincident;
+    }
+    
+    const addCornerPtsToCone = function(conePts, sqPts) {
+        //sqPts = [UL, UR, LR, LL]
+        //conePts = [pt1, pt2, pt3]     --pt2 is the "direction of the cone, pts 1&2 define the outer cone regions
+        //coneAngles = [th1, th2, th3]  --
+        //
+        //            side1                     e.g.
+        //      (UL)--------(UR)            (pt1)  (pt2) (UR)
+        //        |           |                 \   /
+        //  side0 |    (o)    | side2            \ /
+        //        |           |                  (o)-----(pt3)
+        //      (LL)--------(LR)                   
+        //            side3                        
+        //                                         
         
-        //Some js wizardry from TheAaron with the array map function. I couldn't make it work without returning the outer (1st & last) square brackets
-        //So, we will take this string, strip the last "]", then append the grid points to the path
-        let circlePoints = JSON.stringify(acc.map((v,i)=>([(i?'L':'M'),rad+v[0],rad+v[1]])));
-        circlePoints = circlePoints.substring(0, circlePoints.length - 1);
+        let finalPts = [conePts[0]];    //first pt of final array is always pt1
+        let conePtsSides = [-1, -1, -1];
+        let sqPtsIncluded = [false, false, false, false];   //UL, UR, LR, LL
+        let pt1Side = 0;
+        let pt2Side = 0;
+        let pt3Side = 0;
+        let isCoincident = false;
+        
+        //find which sides of square each conePt resides
+        for (let i=0; i<conePts.length; i++) {
+            if (conePts[i].x ===sqPts[0].x) { conePtsSides[i] = 0 } 
+            else if (conePts[i].y ===sqPts[1].y) { conePtsSides[i] = 1 }
+            else if (conePts[i].x ===sqPts[2].x) { conePtsSides[i] = 2 }
+            else if (conePts[i].y ===sqPts[3].y) { conePtsSides[i] = 3 }
+        }
+        
+        //Look for corners between pts 1 & 2
+            //corner inclusion is based on relative position of pts 1&2
+        for (let i=0; i<4; i++) {   //for all possible sides of pt1
+            isCoincident = isCoincidentPt(conePts[0], sqPts[i]);
+            if (conePtsSides[0] === i && conePtsSides[1] === (i+2)%4) {   //pt1 & pt2 are opposite sides
+                if (!isCoincident && !sqPtsIncluded[i]) {
+                    finalPts.push(sqPts[i])     //pt1 not coincident with corner1 => add corner i if not already added
+                    sqPtsIncluded[i] = true;
+                    if (!sqPtsIncluded[(i+1)%4]) {  
+                        finalPts.push(sqPts[(i+1)%4])       //add corner i+1 (wraps to 0), if not already added
+                        sqPtsIncluded[(i+1)%4] = true;
+                    }
+                } else if (!sqPtsIncluded[(i+1)%4]) {
+                    finalPts.push(sqPts[(i+1)%4])           //when pt1 is coincident with corner i => only add corner i+1 (wraps to 0), if not already added
+                    sqPtsIncluded[(i+1)%4] = true;
+                }
+            } else if (conePtsSides[0] === i && conePtsSides[1] === (i+1)%4) {   //pt1 & pt2 are on adjacent sides
+                if (!isCoincident) {
+                    finalPts.push(sqPts[i])     //only add corner i
+                    sqPtsIncluded[i] = true;
+                }
+            }
+        }
+        
+        //add pt2
+        finalPts.push(conePts[1]);  
+        
+        //Now, look for corners between pts 2 & 3
+        for (let i=0; i<4; i++) {   //for all possible sides of pt1
+            isCoincident = isCoincidentPt(conePts[1], sqPts[i]);
+            if (conePtsSides[1] === i && conePtsSides[2] === (i+2)%4) {   //pt1 & pt2 are opposite sides
+                if (!isCoincident && !sqPtsIncluded[i]) {
+                    finalPts.push(sqPts[i])     //pt2 not coincident with corner1 => add corner i if not already added
+                    sqPtsIncluded[i] = true;
+                    if (!sqPtsIncluded[(i+1)%4]) {  
+                        finalPts.push(sqPts[(i+1)%4])       //add corner i+1 (wraps to 0), if not already added
+                        sqPtsIncluded[(i+1)%4] = true;
+                    }
+                } else if (!sqPtsIncluded[(i+1)%4]) {
+                    finalPts.push(sqPts[(i+1)%4])           //when pt2 is coincident with corner i => only add corner i+1 (wraps to 0), if not already added
+                    sqPtsIncluded[(i+1)%4] = true;
+                }
+            } else if (conePtsSides[1] === i && conePtsSides[2] === (i+1)%4) {   //pt2 & pt3 are on adjacent sides
+                if (!isCoincident) {
+                    finalPts.push(sqPts[i])     //only add corner i
+                    sqPtsIncluded[i] = true;
+                }
+            }
+        }
+        
+        //add pt3
+        finalPts.push(conePts[2]);
+        
+        return finalPts;
+    }
+    
+    const build5eCone = function(rad, coneWidth, coneDirection) {
+        let pointsJSON = '';
+        let deg2rad = Math.PI/180;
+        let ptOrigin = new pt(rad, rad);
+        let ptUL = new pt(0,0);
+        let ptUR = new pt(2*rad,0);
+        let ptLR = new pt(2*rad,2*rad);
+        let ptLL = new pt(0,2*rad);
+        
+        let oX = oY = rad;
+        //normalize rotation to 360deg and find defining angles (converted to radians)
+        
+        coneDirection = normalizeTo360deg(coneDirection);
+        
+        //define "cone" angles (in degrees)
+        let th1 = deg2rad * normalizeTo360deg(coneDirection - coneWidth/2);
+        let th2 = deg2rad * normalizeTo360deg(coneDirection + coneWidth/2);
+        
+        //a 5e cone is defined by the orgin and two pts
+        let pt1 = get5eConePt(rad, th1);
+        let pt2 = get5eConePt(rad, th2);
+        let conePtsArr = [ptOrigin, pt1, pt2];
+        
+        //start path at the origin pt, connect to pts 1&2, then back to origin 
+        pointsJSON = `[[\"M\",${ptOrigin.x},${ptOrigin.y}],[\"L\",${pt1.x},${pt1.y}],[\"L\",${pt2.x},${pt2.y}],[\"L\",${ptOrigin.x},${ptOrigin.y}],`;
+        //add "phantom" single points to path corresponding to the four corners to keep the size computations correct
+        pointsJSON = pointsJSON + `[\"M\",${ptUL.x},${ptUL.y}],[\"L\",${ptUL.x},${ptUL.y}],[\"M\",${ptUR.x},${ptUR.y}],[\"L\",${ptUR.x},${ptUR.y}],[\"M\",${ptLR.x},${ptLR.y}],[\"L\",${ptLR.x},${ptLR.y}],[\"M\",${ptLL.x},${ptLL.y}],[\"L\",${ptLL.x},${ptLL.y}],[\"M\",${ptUL.x},${ptUL.y}],[\"L\",${ptUL.x},${ptUL.y}]]`;
+    
+        //log(pointsJSON);
+        return pointsJSON;
+    };
+    
+    const buildSquare = function(rad, coneWidth, coneDirection) {
+        let squarePointsJSON = '';
+        let deg2rad = Math.PI/180;
+        let ptOrigin = new pt(rad, rad);
+        let ptUL = new pt(0,0);
+        let ptUR = new pt(2*rad,0);
+        let ptLR = new pt(2*rad,2*rad);
+        let ptLL = new pt(0,2*rad);
+        let squarePtsArr = [ptUL, ptUR, ptLR, ptLL];     //array of square corner pts
+        
+        if (coneWidth % 360 === 0) {
+            //Full square
+            //squarePoints = `[[\"M\",0,0],[\"L\",0,${2*rad}],[\"L\",${2*rad},${2*rad}],[\"L\",${2*rad},0],[\"L\",0,0]]`;
+            squarePointsJSON = `[[\"M\",${ptUL.x},${ptUL.y}],[\"L\",${ptUR.x},${ptUR.y}],[\"L\",${ptLR.x},${ptLR.y}],[\"L\",${ptLL.x},${ptLL.y}],[\"L\",${ptUL.x},${ptUL.y}]]`;
+        } else {
+            //take a "slice" of the square
+            let oX = oY = rad;
+            //normalize rotation to 360deg and find defining angles (converted to radians)
+            coneDirection = normalizeTo360deg(coneDirection);
+            
+            //define "cone" angles (in degrees)
+            let th1 = normalizeTo360deg(coneDirection - coneWidth/2);
+            let th2 = normalizeTo360deg(coneDirection);
+            let th3 = normalizeTo360deg(coneDirection + coneWidth/2);
+            
+            //a slice of square is defined by three pts, plus potentially one or more of the square corner pts
+            let pt1 = getSquareArcPt(rad, th1);
+            let pt2 = getSquareArcPt(rad, th2);
+            let pt3 = getSquareArcPt(rad, th3);
+            let conePtsArr = [pt1, pt2, pt3];
+            
+            //**********THIS WORKS!!!**********
+            finalPtsArr = addCornerPtsToCone(conePtsArr, squarePtsArr);
+            //*********************************
+            //if isPointInCone(add stuff here for UL, UR, etc)
+            
+            //start path at the origin pt 
+            squarePointsJSON = `[[\"M\",${oX},${oY}],`;
+            for (let i=0; i<finalPtsArr.length; i++) {
+                squarePointsJSON = squarePointsJSON + `[\"L\",${finalPtsArr[i].x},${finalPtsArr[i].y}],`
+            }
+            //connect back to the origin pt
+            squarePointsJSON = squarePointsJSON + `[\"L\",${oX},${oY}],`
+            //add "phantom" single points to path corresponding to the four corners to keep the size computations correct
+            squarePointsJSON = squarePointsJSON + `[\"M\",${ptUL.x},${ptUL.y}],[\"L\",${ptUL.x},${ptUL.y}],[\"M\",${ptUR.x},${ptUR.y}],[\"L\",${ptUR.x},${ptUR.y}],[\"M\",${ptLR.x},${ptLR.y}],[\"L\",${ptLR.x},${ptLR.y}],[\"M\",${ptLL.x},${ptLL.y}],[\"L\",${ptLL.x},${ptLL.y}],[\"M\",${ptUL.x},${ptUL.y}],[\"L\",${ptUL.x},${ptUL.y}]]`;
+            
+        } 
+        
+        //log(squarePointsJSON);
+        return squarePointsJSON;
+    };
+    
+    //Circle building portion of function is modified from TheAaron's "dlcircle" script
+    const buildCircle = function(rad, coneWidth, coneDirection) {
+        let circlePoints;
+        let steps, stepSize;
+        let deg2rad = Math.PI/180;
+        
+        steps = Math.min(Math.max(Math.round( (Math.PI*2*Math.sqrt((2*rad*rad)/2))/35),4),20);
+        
+        const at = (theta) => ({x: Math.cos(theta)*rad, y: Math.sin(theta)*rad}); 
+        
+        if (coneWidth === 360) { 
+            //Build a full circle
+            stepSize = Math.PI/(2*steps);
+            
+            let acc=[[],[],[],[]];
+            let th=0;
+            _.times(steps+1,()=>{
+                let pt=at(th);
+                acc[0].push([pt.x,pt.y]);
+                acc[1].push([-pt.x,pt.y]);
+                acc[2].push([-pt.x,-pt.y]);
+                acc[3].push([pt.x,-pt.y]);
+                th+=stepSize;
+            });
+            acc = acc[0].concat(
+                acc[1].reverse().slice(1),
+                acc[2].slice(1),
+                acc[3].reverse().slice(1)
+            );
+            
+            //Some js wizardry from TheAaron with the array map function. I couldn't make it work without returning the outer (1st & last) square brackets
+            //So, we will take this string, strip the last "]", then append the grid points to the path
+            circlePoints = JSON.stringify(acc.map((v,i)=>([(i?'L':'M'),rad+v[0],rad+v[1]])));
+            circlePoints = circlePoints.substring(0, circlePoints.length - 1);
+        } else {
+            //build a cone instead
+            steps = 50;
+            stepSize = deg2rad * (coneWidth/(steps));
+            
+            let oX = oY = rad;
+            let x, y;
+            let startAngle = deg2rad * (coneDirection - coneWidth/2);
+            let endAngle = deg2rad * (coneDirection + coneWidth/2);
+            let ptUL = new pt(0,0);
+            let ptUR = new pt(2*rad,0);
+            let ptLR = new pt(2*rad,2*rad);
+            let ptLL = new pt(0,2*rad);
+            
+            //start path at the origin pt 
+            circlePoints = `[[\"M\",${oX},${oY}],`;
+            
+            //for loop takes into account cumulative floating point precision error
+            for (let th=startAngle; th<endAngle+Number.EPSILON*steps; th+=stepSize) {
+                //change in "normal" polar coord conversion due to 0deg being straight up and positive Y being "down"
+                x = oX + oX * Math.sin(th);
+                y = oY + oY * Math.cos(th + deg2rad*180);
+                circlePoints = circlePoints + `[\"L\",${x},${y}],`
+            }
+            
+            //connect back to the origin pt
+            circlePoints = circlePoints + `[\"L\",${oX},${oY}],`;
+            //add "phantom" single points to path corresponding to the four corners to keep the size computations correct
+            circlePoints = circlePoints + `[\"M\",${ptUL.x},${ptUL.y}],[\"L\",${ptUL.x},${ptUL.y}],[\"M\",${ptUR.x},${ptUR.y}],[\"L\",${ptUR.x},${ptUR.y}],[\"M\",${ptLR.x},${ptLR.y}],[\"L\",${ptLR.x},${ptLR.y}],[\"M\",${ptLL.x},${ptLL.y}],[\"L\",${ptLL.x},${ptLL.y}],[\"M\",${ptUL.x},${ptUL.y}],[\"L\",${ptUL.x},${ptUL.y}]`;
+        }
         
         //return  the path JSON
         return circlePoints + "]";
@@ -350,7 +683,7 @@ const Radar = (() => {
         }
     
     const DistBetweenPts = function(pt1, pt2) {
-        dist = Math.sqrt( Math.pow(pt1.x - pt2.x, 2) + Math.pow(pt1.y - pt2.y, 2) );
+        let dist = Math.sqrt( Math.pow(pt1.x - pt2.x, 2) + Math.pow(pt1.y - pt2.y, 2) );
         return dist;
     }
     
@@ -358,6 +691,8 @@ const Radar = (() => {
     const TokToOriginDistance = function(tok, originX, originY, gridIncrement) {
         let minDist;
         let dist;
+        let centerDistX;    //used for graphical outout (set by top, left)
+        let centerDistY;    //used for graphical outout (set by top, left)
         let tokX = tok.get("left");
         let tokY = tok.get("top");
         let w = tok.get("width");
@@ -367,13 +702,20 @@ const Radar = (() => {
         let closestDist;
         let corners = [];
         
+        //log('gridIncrement = ' + gridIncrement);
+        //log('target token center point = ' + tokX + ', ' + tokY);
+        centerDistX = tokX - originX; //used for graphical outout
+        centerDistY = tokY - originY; //used for graphical outout
+        
         //define the four corners of the target token as new points
-            //we will also rotate those corners appropirately around the target tok center
+            //we will also rotate those corners appropriately around the target tok center
+            //These will be used to determine LoS blocking
         corners.push(RotatePoint(tokX, tokY, rot, new pt( tokX-w/2, tokY-h/2 )))     //Upper left
         corners.push(RotatePoint(tokX, tokY, rot, new pt( tokX+w/2, tokY-h/2 )))     //Upper right
         corners.push(RotatePoint(tokX, tokY, rot, new pt( tokX-w/2, tokY+h/2 )))     //Lower left
         corners.push(RotatePoint(tokX, tokY, rot, new pt( tokX+w/2, tokY+h/2 )))     //Lower right
         
+        //Find the center of the squares corresponding to the corners of the target token (used to determine distance) 
         let pUL = new pt( tokX-w/2 + 35/gridIncrement, tokY-h/2 + 35/gridIncrement )     //Upper left
         let pUR = new pt( tokX+w/2 - 35/gridIncrement, tokY-h/2 + 35/gridIncrement )     //Upper right
         let pLL = new pt( tokX-w/2 + 35/gridIncrement, tokY+h/2 - 35/gridIncrement )     //Lower left
@@ -384,13 +726,25 @@ const Radar = (() => {
         pLL = RotatePoint(tokX, tokY, rot, pLL);
         pLR = RotatePoint(tokX, tokY, rot, pLR);
         
+        
+        //log(originX + ', ' + originY);
+        //log(pUL);
+        //log(pUR);
+        //log(pLL);
+        //log(pLR);
+        
+        let pOrigin = new pt(originX, originY); //center pt of the origin token
+        
         //Upper Left corner
-        minDist = dist = Math.sqrt( Math.pow(originX - pUL.x, 2) + Math.pow(originY - pUL.y, 2) );
+        //minDist = dist = Math.sqrt( Math.pow(originX - pUL.x, 2) + Math.pow(originY - pUL.y, 2) );
+        minDist = dist = DistBetweenPts(pOrigin, pUL)
+        
         closestPt = pUL;
         closestDist = dist;
         
         //Upper Right corner
-        dist = Math.sqrt( Math.pow(originX - pUR.x, 2) + Math.pow(originY - pUR.y, 2) );
+        dist = DistBetweenPts(pOrigin, pUR)
+        //log('distUR = ' + dist);
         if (dist < minDist) {
             minDist = dist;
             closestPt = pUR;
@@ -398,7 +752,8 @@ const Radar = (() => {
         }
         
         //Lower Left corner
-        dist = Math.sqrt( Math.pow(originX - pLL.x, 2) + Math.pow(originY - pLL.y, 2) );
+        dist = DistBetweenPts(pOrigin, pLL)
+        //log('distLL = ' + dist);
         if (dist < minDist) {
             minDist = dist;
             closestPt = pLL;
@@ -406,7 +761,8 @@ const Radar = (() => {
         }
         
         //Lower Right corner
-        dist = Math.sqrt( Math.pow(originX - pLR.x, 2) + Math.pow(originY - pLR.y, 2) );
+        dist = DistBetweenPts(pOrigin, pLR)
+        //log('distLR = ' + dist);
         if (dist < minDist) {
             minDist = dist;
             closestPt = pLR;
@@ -419,6 +775,8 @@ const Radar = (() => {
         
         return minDist = {
             dist: minDist,
+            centerDistX: centerDistX,
+            centerDistY: centerDistY,
             closestPt: closestPt,
             closestDist: closestDist,
             corners: corners
@@ -468,12 +826,107 @@ const Radar = (() => {
         return args;
     };
     
-    const GetDirectionalInfo = function(tokX, tokY, originX, originY, distType, includeTotalDist, scaleNumber, scaleUnits, gridIncrement) {
+    function makeButton(name, link) {
+        return '<a style = ' + buttonStyle + ' href="' + link + '">' + name + '</a>';
+    }
+    
+    const addPingHTML = function (pingHTML, tok_X, tok_Y, tok_W, tok_H, graphWidth, graphHeight, pingH, pingW, pingColor, range2GraphicScale) {
+        let borderWidth = '1'   //px
+        
+        let offsetX = (tok_X - (tok_W/2)) * range2GraphicScale;
+        let offsetY = (tok_Y - (tok_H/2)) * range2GraphicScale;
+        
+        pingW = tok_W * range2GraphicScale;
+        pingH = tok_H * range2GraphicScale;
+        let avgSize = (pingW + pingH) / 2;
+        let divSize = avgSize-borderWidth;
+        
+        let divLeft = graphWidth/2+offsetX;
+        let divTop = graphWidth/2+offsetY;
+        
+        let html = pingHTML + `<div style=\"height: ${divSize}px; width: ${divSize}px; left: ${divLeft}px; top: ${divTop}px; border: ${borderWidth}px solid ${pingColor}; background-image: radial-gradient(circle, ${pingColor} 0%, #000000cc 70%, #000000cc 100%); border-radius: 50%; position: absolute;\"></div>`
+        
+        return html;
+    }
+    
+    
+    const buildBackgroundHTML = function (graphWidth, graphHeight, numRows, numCols, colWidth, rowHeight, useGrid, useCircles, useRadial) {
+        let baseHTML = '';
+        let circlesHTML = '';
+        let radialHTML = '';
+        let gridHTML = '';
+        let borderWidth = '1'   //px
+        let root2 = Math.sqrt(2);
+        
+        baseHTML = baseHTML = `<div style=\"display: table; overflow: hidden; height: ${graphHeight}px; width: ${graphWidth}px; border: ${borderWidth}px solid #000000; background: #000000; border-radius: 6px; border-collapse: separate; background-size: 100% 100%;\">`
+        if (useCircles) {
+            //add border around outer circle
+            baseHTML = baseHTML + `<div style=\"height: ${graphHeight}px; width: ${graphWidth}px; border: ${borderWidth}px solid #00ff00; background-color: #999999; border-radius: 50%; border-collapse: separate; background-size: 100% 100%; position: relative; background-image: radial-gradient(circle, #007700 0%, #006600 10%, #004400 30%, #003300 45%, #000000 80%, transparent 100%)\">`
+        } else {
+            //no border around outer circle
+            baseHTML = baseHTML + `<div style=\"height: ${graphHeight}px; width: ${graphWidth}px;  background-color: #999999; border-radius: 50%; border-collapse: separate; background-size: 100% 100%; position: relative; background-image: radial-gradient(circle, #007700 0%, #006600 10%, #004400 30%, #003300 45%, #000000 80%, transparent 100%);\">`
+        }
+        
+        if (useRadial && useCircles) {
+            //creates radial lines at 45deg increments - shrink divs to stop diagonals at outer circle
+            //since transforms get stripped by the chat sanitizer, we make diagonals with narrow (1px) linear gradients
+            //log (graphHeight-graphHeight/root2)
+            radialHTML = `<div style=\"height: 115px; width: ${graphWidth}px; top: 0px; right: 0px; border-bottom: ${borderWidth}px solid rgba(0,255,0,0.9); position: absolute;\"></div>` +
+                `<div style=\"height: ${graphHeight}px; width: ${graphWidth/2}px; top: 0px; left: 0px; border-right: ${borderWidth}px solid rgba(0,255,0,0.9); position: absolute;\"></div>` +
+                `<div style=\"height: ${graphHeight/root2}px; width: ${graphWidth/root2}px; top: ${(graphHeight-graphHeight/root2)/2}px; left: ${(graphWidth-graphWidth/root2)/2}px; background-color: transparent; background-image: linear-gradient(45deg, transparent 100px ${graphWidth/2-0.5}px, #00ff00 ${graphWidth/2-0.5}px ${graphWidth/2+0.5}px, transparent ${graphWidth/2+0.5}px ${graphWidth}px); position: absolute;\"></div>` +
+                `<div style=\"height: ${graphHeight/root2}px; width: ${graphWidth/root2}px; top: ${(graphHeight-graphHeight/root2)/2}px; left: ${(graphWidth-graphWidth/root2)/2}px; background-color: transparent; background-image: linear-gradient(-45deg, transparent 100px ${graphWidth/2-0.5}px, #00ff00 ${graphWidth/2-0.5}px ${graphWidth/2+0.5}px, transparent ${graphWidth/2+0.5}px ${graphWidth}px); position: absolute;\"></div>`
+        } else if (useRadial && !useCircles) {
+            //creates radial lines at 45deg increments - div diagonals extend fully
+            radialHTML = `<div style=\"height: ${graphHeight/2}px; width: ${graphHeight}px; top: 0px; right: 0px; border-bottom: ${borderWidth}px solid rgba(0,255,0,0.9); position: absolute;\"></div>` +
+                `<div style=\"height: ${graphHeight}px; width: ${graphWidth/2}px; top: 0px; left: 0px; border-right: ${borderWidth}px solid rgba(0,255,0,0.9); position: absolute;\"></div>` +
+                `<div style=\"height: ${graphHeight}px; width: ${graphWidth}px; top: 0px; left: 0px; background-color: transparent; background-image: linear-gradient(45deg, transparent ${graphWidth/2}px ${graphWidth/root2-0.5}px, #00ff00dd ${graphWidth/root2-0.5}px ${graphWidth/root2+0.5}px, transparent ${graphWidth/root2+0.5}px ${graphWidth}px); position: absolute;\"></div>` +
+                `<div style=\"height: ${graphHeight}px; width: ${graphWidth}px; top: 0px; left: 0px; background-color: transparent; background-image: linear-gradient(-45deg, transparent ${graphWidth/2}px ${graphWidth/root2-0.5}px, #00ff00dd ${graphWidth/root2-0.5}px ${graphWidth/root2+0.5}px, transparent ${graphWidth/root2+0.5}px ${graphWidth}px); position: absolute;\"></div>`
+        }
+        
+        if (useGrid) {
+            //horizontal grid lines
+            gridHTML = `<div style=\"width: ${graphWidth}px; height: ${rowHeight}px; left: 0px; top: 0px; color: rgba(238,238,238,0.15); border-top: ${borderWidth}px solid; position: absolute;\"></div>`
+            for (let row=0; row<numRows; row++) {
+                gridHTML = gridHTML +`<div style=\"width: ${graphWidth}px; height: ${rowHeight}px; left: 0px; top: ${row*rowHeight}px; color: rgba(238,238,238,0.15); border-bottom: ${borderWidth}px solid; position: absolute;\"></div>`
+            }
+            //vertical grid lines
+            gridHTML = gridHTML +`<div style=\"width: ${colWidth}px; height: ${graphHeight}px; left: 0px; top: 0px; color: rgba(238,238,238,0.15); border-left: ${borderWidth}px solid; position: absolute;\"></div>`
+            for (let col=0; col<numCols; col++) {
+                gridHTML = gridHTML +`<div style=\"width: ${colWidth}px; height: ${graphHeight}px; left: ${col*colWidth}px; top: 0px; color: rgba(238,238,238,0.15); border-right: ${borderWidth}px solid; position: absolute;\"></div>`
+            }
+        }
+        
+        if (useCircles) {
+            //add four concentric circles
+            circlesHTML = `<div style=\"height: ${graphHeight}px; width: ${graphWidth}px; top: -${borderWidth}px; left: -${borderWidth}px; border: ${borderWidth}px solid #00ff00; border-radius: 50%; position: absolute;\"></div>` +
+                    `<div style=\"height: ${graphHeight*0.75-borderWidth*2}px; width: ${graphWidth*0.75-borderWidth*2}px; top: ${graphHeight*.25/2+borderWidth}px; left: ${graphWidth*.25/2+borderWidth}px; border: ${borderWidth}px solid #00ff00; border-radius: 50%; position: absolute;\"></div>` +
+                    `<div style=\"height: ${graphHeight*0.5-borderWidth*2}px; width: ${graphWidth*0.5-borderWidth*2}px; top: ${graphHeight*.5/2+borderWidth}px; left: ${graphWidth*.5/2+borderWidth}px; border: ${borderWidth}px solid #00ff00; border-radius: 50%; position: absolute;\"></div>` +
+                    `<div style=\"height: ${graphHeight*0.25-borderWidth*2}px; width: ${graphWidth*0.25-borderWidth*2}px; top: ${graphHeight*.75/2+borderWidth}px; left: ${graphWidth*.75/2+borderWidth}px; border: ${borderWidth}px solid #00ff00; border-radius: 50%; position: absolute;\"></div>`
+        }
+        
+        let html = baseHTML + radialHTML + gridHTML + circlesHTML
+        //log(html)
+        
+        return html;
+    }
+
+    //Calculates distance and direction from origin token. 
+    const GetDirectionalInfo = function(tokX, tokY, originX, originY, distType, includeTotalDist, scaleNumber, scaleUnits, gridIncrement, outputCompact) {
         let retVal = "";
         let xDist;
         let yDist;
         let totalDist;
+        let right = 'Right ';
+        let left = 'Left ';
+        let up = 'Up ';
+        let down = 'Down ';
         
+        if (outputCompact) {
+            right = 'R ';
+            left = 'L ';
+            up = 'U ';
+            down = 'D ';
+        }
         //log(tokX + ',' + tokY + ',' + originX + ',' + originY);
         
         if (distType === "u") {
@@ -491,18 +944,25 @@ const Radar = (() => {
         totalDist = Math.sqrt( Math.pow(xDist, 2) + Math.pow(yDist, 2) );
         
         if (xDist > 0) {
-            retVal = 'Right ' + _h.inlineResult(Math.round(xDist,1)) + ',';
+            retVal = right + _h.inlineResult(Math.round(xDist,1)) + ',';
         } else {
-            retVal = 'Left ' + _h.inlineResult(Math.round(Math.abs(xDist), 1)) + ',';
+            retVal = left + _h.inlineResult(Math.round(Math.abs(xDist), 1)) + ',';
         }
         
         if (yDist > 0) {
-            retVal = retVal + 'Down ' + _h.inlineResult(Math.round(yDist, 1)) + '';
+            retVal = retVal + down + _h.inlineResult(Math.round(yDist, 1)) + '';
         } else {
-            retVal = retVal + 'Up ' + _h.inlineResult(Math.round(Math.abs(yDist), 1)) + '';
+            retVal = retVal + up + _h.inlineResult(Math.round(Math.abs(yDist), 1)) + '';
         }
         
-        retVal = retVal + '\n' + 'Distance = ' + _h.inlineResult(parseFloat(totalDist).toFixed(1));
+        
+        //Format text output. Default is outputCompact=false
+        if (outputCompact) {
+            retVal = retVal + ',Dist ' + _h.inlineResult(parseFloat(totalDist).toFixed(1));
+        } else {
+            retVal = retVal + '<br>' + 'Distance = ' + _h.inlineResult(parseFloat(totalDist).toFixed(1));
+        }
+        
         return retVal;
     }
     
@@ -520,6 +980,150 @@ const Radar = (() => {
         point = RotatePoint(center.x, center.y, rot, point)
             
         return point;
+    }
+    
+    /** Get relationship between a point and a polygon using ray-casting algorithm
+     * @param {{x:number, y:number}} P: point to check
+     * @param {{x:number, y:number}[]} polygon: the polygon
+     * @returns true for inside or along edge; false if outside
+     */
+     //adapted from https://stackoverflow.com/posts/63436180/revisions
+    const isPointInPolygon = function(P, polygon) {
+        const between = (p, a, b) => p >= a && p <= b || p <= a && p >= b;
+        let inside = false;
+        for (let i = polygon.length-1, j = 0; j < polygon.length; i = j, j++) {
+            const A = polygon[i];
+            const B = polygon[j];
+            // corner cases
+            if (P.x == A.x && P.y == A.y || P.x == B.x && P.y == B.y) return true;
+            if (A.y == B.y && P.y == A.y && between(P.x, A.x, B.x)) return true;
+    
+            if (between(P.y, A.y, B.y)) { // if P inside the vertical range
+                // filter out "ray pass vertex" problem by treating the line a little lower
+                if (P.y == A.y && B.y >= A.y || P.y == B.y && A.y >= B.y) continue
+                // calc cross product `PA X PB`, P lays on left side of AB if c > 0 
+                const c = (A.x - P.x) * (B.y - P.y) - (B.x - P.x) * (A.y - P.y)
+                if (c == 0) return true;
+                if ((A.y < B.y) == (c > 0)) inside = !inside
+            }
+        }
+        
+        return inside? true: false;
+    }
+    
+    const getAngle2TargetToken = function(who, oPt, tokID) {
+        let deg2rad = Math.PI/180;
+        let tAngle;     //return value
+        
+        let tTok = getObj("graphic", tokID);
+        if (tTok) {
+            let tX = tTok.get("left");
+            let tY = tTok.get("top");
+            
+            let dX = Math.abs(tX - oPt.x);
+            let dY = Math.abs(tY - oPt.y);
+            let smallAngle = Math.atan(dY / dX);    //this does not take into account the quadrant in which the angle lies. More tests req'd to determine correct relative angle 
+           
+            if (tX < oPt.x && tY < oPt.y) { //UL quadrant
+                tAngle = 270*deg2rad + smallAngle;
+            } else if (tX > oPt.x && tY < oPt.y) { //UR quadrant
+                log('UR quadrant');
+                tAngle = 90*deg2rad - smallAngle;
+            } else if (tX > oPt.x && tY > oPt.y) { //LR quadrant
+                tAngle = 90*deg2rad + smallAngle;
+            } else if (tX < oPt.x && tY > oPt.y) { //LL quadrant
+                tAngle = 270*deg2rad - smallAngle;
+            } else if (tX === oPt.x && tY < oPt.y) { //straight up
+                tAngle = 0*deg2rad;
+            } else if (tX > oPt.x && tY === oPt.y) { //straight right
+                tAngle = 90*deg2rad;
+            } else if (tX === oPt.x && tY > oPt.y) { //straight down
+                tAngle = 180*deg2rad;
+            } else if (tX < oPt.x && tY === oPt.y) { //straight left
+                tAngle = 270*deg2rad;
+            }
+            
+            return tAngle/deg2rad;  //coneDirection expressed in angles
+            
+        } else {
+            sendChat(scriptName, `/w "${who}" Target token ID (${tokID}) was not found. Unable to calculate cone angle. Setting to 0 degrees.`);
+            return 0;
+        }
+    }
+    
+    const isPointInCone = function(pt, oPt, rad, coneDirection, coneWidth, isFlatCone) {
+        let deg2rad = Math.PI/180;
+        let pAngle;     //the angle between the cone origin and the test pt
+        let smallAngle;
+        let startAngle = deg2rad * (coneDirection - coneWidth/2);
+        let endAngle = deg2rad * (coneDirection + coneWidth/2);
+        let centerAngle = deg2rad * (coneDirection);
+        let halfConeWidth = deg2rad * (coneWidth/2);
+        let criticalDist;
+        
+        // Calculate polar co-ordinates
+        let polarRadius = DistBetweenPts(oPt, pt)
+        let dX = Math.abs(pt.x - oPt.x);
+        let dY = Math.abs(pt.y - oPt.y);
+        
+        //calculate "smallAngle" - this does not take into account the quadrant in which the angle lies. More tests req'd to determine correct relative angle 
+        if (dX===0) {
+            smallAngle = 90*deg2rad;
+        } else {
+            smallAngle = Math.atan(dY / dX);
+        }
+        
+        if (pt.x < oPt.x && pt.y < oPt.y) { //UL quadrant
+            pAngle = 270*deg2rad + smallAngle;
+        } else if (pt.x > oPt.x && pt.y < oPt.y) { //UR quadrant
+            pAngle = 90*deg2rad - smallAngle;
+        } else if (pt.x > oPt.x && pt.y > oPt.y) { //LR quadrant
+            pAngle = 90*deg2rad + smallAngle;
+        } else if (pt.x < oPt.x && pt.y > oPt.y) { //LL quadrant
+            pAngle = 270*deg2rad - smallAngle;
+        } else if (pt.x === oPt.x && pt.y < oPt.y) { //straight up
+            pAngle = 0*deg2rad;
+        } else if (pt.x > oPt.x && pt.y === oPt.y) { //straight right
+            pAngle = 90*deg2rad;
+        } else if (pt.x === oPt.x && pt.y > oPt.y) { //straight down
+            pAngle = 180*deg2rad;
+        } else if (pt.x < oPt.x && pt.y === oPt.y) { //straight left
+            pAngle = 270*deg2rad;
+        }
+        
+        //2nd test angle: Add 360deg to pAngle (to handle cases where startAngle is a negative value and endAngle is positive)
+        let pAngle360 = pAngle + 360*deg2rad;
+        
+        /*
+        log(pt);
+        log(oPt);
+        log('coneDirection = ' + coneDirection);
+        log('coneWidth = ' + coneWidth);
+        log('range = ' + rad);
+        log('polarRadius = ' + polarRadius);
+        log('startAngle = ' + startAngle/deg2rad);
+        log('endAngle = ' + endAngle/deg2rad);
+        log('smallAngle = ' + smallAngle/deg2rad);
+        log('pAngle = ' + pAngle/deg2rad);
+        log('pAngle360 = ' + pAngle360/deg2rad);
+        */
+        
+        if (isFlatCone) {
+            //for 5e-style cones. Basically a triangle (no rounded outer face)
+            dTheta = Math.abs(pAngle - centerAngle);
+            criticalDist = (rad*Math.cos(halfConeWidth)) / Math.cos(dTheta);
+        } else {
+            //compare to full radius cone
+            criticalDist = rad
+        }
+        
+        //test pAngle and pAngle360 against start/end Angles
+        if ( (pAngle >= startAngle) && (pAngle <= endAngle) && (polarRadius <= rad) || 
+                (pAngle360 >= startAngle) && (pAngle360 <= endAngle) && (polarRadius <= criticalDist) ) {
+           return true;
+        } else {
+            return false;
+        }
     }
     
     //Intersection code obtained from:
@@ -548,12 +1152,6 @@ const Radar = (() => {
         
         if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
             return true
-            /*
-            return {
-                x: p0.x + (t * s1_x),
-                y: p0.y + (t * s1_y)
-            };
-            */
         }
         return false;
     };
@@ -604,8 +1202,27 @@ const Radar = (() => {
            
     }
     
+    const checkFiltersForExcludeOnly = function(filterIgnores) {
+        let includeCount = 0;
+        
+        filterIgnores.forEach(ignore => {
+             if (ignore=== false) {
+                 includeCount +=1;
+             }
+        });
+        
+        if (includeCount > 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    
     async function handleInput(msg) {
         let pathstring;             //JSON string for wavefront paths
+        let pathstring_old;         //JSON string for wavefront paths
+        let polygon = [];           //array containing points of leading animated wavefront
+        let polygon_old = [];       //array containing points of trailing animated wavefront 
         let selected;               //msg.selected object
         let selectedID;             //selected token
         let playerID;               //which player called the script. Will determine who gets whispered results 
@@ -613,16 +1230,21 @@ const Radar = (() => {
         let validArgs = "range, wavespacing, wavedelay, wavelife, pinglife, layer, charfilter, tokfilter, title, silent, units, LoS, selectedID, playerID";
         let range = 350;            //how far the radar range extends, in pixels
         let convertRange = "";      //will we need to convert range from pixels to "u" or another page-defined distance unit?
+        var wavetype = 'circle';    //wavefront will either be circular or square
         let waveIncrement = 35;     //the spacing between waves, in pixels (lower number = slower wavefront)
         let waveDelay = 50;         //how much time to wait between each wave increment, in ms (higher number = slower wavefront)
         let waveLife = 200;         //how long each wave wil remain on screen, in ms (higher number = more waves present at any one time)
+        let waveColor = '#ff0000';
         let tokLife = 2000;         //how long each "RadarPing" token wil remain on screen, in ms 
         let layers = ['objects', 'gmlayer'];    //the layersin which to look for tokens. Default values are overriden if --layers command is used 
         let filter = {              //optional filters for which tokens will be actively pinged
             type: "",               //types include "char" and "tok"
             attr: "",               //key to filter on. e.g. "npc_type" attribute for a character sheet, or "bar3" for a token filter
             vals: [],                //array of values for which to filter against filter.attr     e.g. ["celestial", "fiend", "undead"]
-            colors: []
+            colors: [],
+            compareType: [],        //possible values: 'contains'(val is somewhere in string), '@'(exact match), '>' or '<' (numeric comparison)
+            ignore: [],             //flag to determine if the value is an ignore filter or a positive match filter
+            anyValueAllowed: false  //this flag will bypass normal checks. Used only for charFilters - The attribute just needs to exist in order for the toekn to be pinged 
         }
         let losBlocks = false;      //Will DL walls block radar sensor if completely obscured (will look at 5 pts per token to determine LoS)
         let title = "Radar Ping Results";             //title of the default template output
@@ -650,9 +1272,19 @@ const Radar = (() => {
         let originX;
         let originY;
         let originPt;
-        
         let controlledby;
-        let retVal = [];            //array of potential error messages to pass back to main handleInput funtion
+        let retVal = [];                //array of potential error messages to pass back to main handleInput funtion
+        let filterExcludeOnly = false;  //wil be set to true if token filters only include "ignore" tags
+        let useGrid = false;            //default background html setting 
+        let useCircles = false;         //default background html setting
+        let useRadial = false;          //default background html setting
+        let outputGraph = false;        
+        let outputTable = false;
+        let outputCompact = false;       //set to true for single line table output - total distance will not be included in output. 
+        let coneWidth = 360;
+        let coneDirection = 0;
+        let outputLines = [];
+        let groupBy = true;         //if filters are used, group tokens by filter condition in table output
         
         try {
             if(msg.type=="api" && msg.content.indexOf("!radar") === 0 ) {
@@ -668,10 +1300,28 @@ const Radar = (() => {
                     
                     switch(option) {
                         case "range":
-                            range = parseInt(param);
+                            range = parseFloat(param);
                             let u = param.match(/[a-z]/i);   //if not an empty string, we will use page settings to convert range to "u" or other map-defined units
                             if (u !== null) {
                                 convertRange = u[0]
+                            }
+                            break;
+                        case "wavetype":
+                            let w = param.toLowerCase();
+                            if (w.includes('sq')) {
+                                wavetype = 'square';
+                            } else if (w.includes('5e')) {
+                                wavetype = '5e';
+                                coneWidth = 53.14;
+                            } else {
+                                wavetype = 'circle';
+                            }
+                            let tempConeParams = param.split(",").map(layer => layer.trim() );
+                            if (tempConeParams.length > 1) {
+                                coneDirection = tempConeParams[1];  //this may be an angle or a tokenID. Later, we will parseFloat or find the angle between selected & target tokens
+                            }
+                            if (tempConeParams.length > 2 && wavetype !== '5e') {
+                                coneWidth = parseFloat(tempConeParams[2]);
                             }
                             break;
                         case "wavespacing":
@@ -683,6 +1333,12 @@ const Radar = (() => {
                         case "wavelife":
                             waveLife = parseInt(param);
                             break;
+                        case "wavecolor":
+                            if ( param.match(/#/) ) {
+                                let f = param.split('#')
+                                waveColor = toFullColor(f[1])
+                            }
+                            break;
                         case "pinglife":
                             tokLife = parseInt(param);
                             break;
@@ -690,45 +1346,21 @@ const Radar = (() => {
                             layers = [];    //delete default layers first
                             layers = param.split(",").map(layer => layer.trim() );
                             break;
-                        case "charfilter":
-                            filter.type = "char" 
-                            let tempCharFilter = param.split(":").map(layer => layer.trim() );
-                            filter.attr = tempCharFilter[0];
-                            filter.vals = tempCharFilter[1].split(",").map(layer => layer.trim() );
-                            //check for user-defined aura colors by filter value
-                            filter.vals.forEach((val, index) => {
-                                if ( val.match(/#/) ) {
-                                    let f = val.split('#')
-                                    switch (true) {
-                                        case f[1].toLowerCase().includes('yellow'):
-                                            filter.colors.push(hYELLOW);
-                                            break;
-                                        case f[1].toLowerCase().includes('green'):
-                                            filter.colors.push(hGREEN);
-                                            break;
-                                        case f[1].toLowerCase().includes('blue'):
-                                            filter.colors.push(hBLUE);
-                                            break;
-                                        default:
-                                            filter.colors.push(toFullColor(f[1]));
-                                    }
-                                    filter.vals[index] = f[0];  //strips the color out of the filter
-                                } else {
-                                    //default color
-                                    filter.colors.push(hRED)
-                                }
-                            });
-                            break;
+                        case "charfilter":  //fall through
                         case "tokfilter":
-                            filter.type = "tok" 
-                            let tempTokFilter = param.split(":").map(layer => layer.trim() );
-                            filter.attr = tempTokFilter[0];
-                            filter.vals = tempTokFilter[1].split(",").map(layer => layer.trim() );
+                            filter.type = option==='charfilter' ? "char" : "tok";
+                            let tempFilter = param.split(":").map(x => x.trim() );
+                            filter.attr = tempFilter[0];
+                            filter.vals = tempFilter[1].split(",").map(x => x.trim() );
                             //check for user-defined aura colors by filter value
                             filter.vals.forEach((val, index) => {
+                                let tempVal;
                                 if ( val.match(/#/) ) {
                                     let f = val.split('#')
                                     switch (true) {
+                                        case f[1].toLowerCase().includes('red'):
+                                            filter.colors.push(hRED);
+                                            break;
                                         case f[1].toLowerCase().includes('yellow'):
                                             filter.colors.push(hYELLOW);
                                             break;
@@ -741,12 +1373,53 @@ const Radar = (() => {
                                         default:
                                             filter.colors.push(toFullColor(f[1]));
                                     }
-                                    filter.vals[index] = f[0];  //strips the color out of the filter
+                                    tempVal = f[0];  //strips the color out of the filter
                                 } else {
                                     //default color
                                     filter.colors.push(hRED)
+                                    tempVal = val;
+                                }
+                                
+                                //check for filter comparison type (exact string, contains string, or numeric comparison)
+                                if (val.indexOf('-') === 0) {
+                                    //this is an ignore filter
+                                    filter.ignore.push(true);
+                                    tempVal = val.substring(1,val.length);  //strip the '-'
+                                } else {
+                                    //positive match filter
+                                    filter.ignore.push(false);
+                                }
+                                
+                                //log('tempVal.substring(0,1) = ' + tempVal.substring(0,1));
+                                switch (tempVal.substring(0,1)) {
+                                    case '@':
+                                        // exact match
+                                        filter.compareType.push('@');
+                                        filter.vals[index] = tempVal.substring(1,tempVal.length)    
+                                        break;
+                                    case '>':
+                                        // numeric greater than comparison
+                                        filter.compareType.push('>');
+                                        filter.vals[index] = tempVal.substring(1,tempVal.length)
+                                        break;
+                                    case '<':
+                                        // numeric less than comparison
+                                        filter.compareType.push('<');
+                                        filter.vals[index] = tempVal.substring(1,tempVal.length)
+                                        break;  
+                                    default:
+                                        // string comparison (contains)
+                                        filter.compareType.push('contains');
+                                        if (tempVal==='*') { 
+                                            filter.anyValueAllowed = true; 
+                                            filter.vals[index] = filter.attr;
+                                        } else {
+                                            filter.vals[index] = tempVal;
+                                        }
+                                        break;
                                 }
                             });
+                            //log(filter);
                             break;
                         case "title":
                             title = param;
@@ -790,11 +1463,39 @@ const Radar = (() => {
                                 seeAnimation = false;
                             }
                             break;
+                        case "graphoptions":
+                            let options = param.split(",").map(opt => opt.trim());
+                            options.forEach (o => {
+                                if (o.match(/grid/i)) { useGrid = true; }
+                                if (o.match(/circ/i) || o.match(/ring/i)) { useCircles = true; }
+                                if (o.match(/retic/i)) { useRadial = true; }
+                            });
+                            break;
+                        case "output":
+                            let outputTypes = param.split(",").map(ot => ot.trim());
+                            outputTypes.forEach (ot => {
+                                if (ot.match(/graph/i)) { outputGraph = true; }
+                                if (ot.match(/table/i)) { outputTable = true; }
+                                if (ot.match(/compact/i)) { outputCompact = true; }
+                            });
+                            break;
+                        case "groupby":
+                            if (_.contains(['true', 'yes', '1'], param.toLowerCase())) {
+                                groupBy = true;
+                            } else if (_.contains(['false', 'no', '0'], param.toLowerCase())) {
+                                groupBy = false;
+                            } 
+                            break;
                         default:
                             retVal.push('Unexpected argument identifier (' + option + '). Choose from: (' + validArgs + ')');
                             break;    
                     }
                 }); //end forEach arg
+                
+                //double-check: if user wants output (to self and/or GM) but hasn't defined any, then revert to default (table-only)
+                if (displayOutput===true && outputTable===false && outputGraph===false && includeGM===false) {
+                    outputTable = true;
+                }
                 
                 //------------------------------------------------------------------------
                 //Check if !radar was called by another api script
@@ -823,9 +1524,9 @@ const Radar = (() => {
                     if (selectedID===undefined) {
                         oTok = getObj("graphic",msg.selected[0]._id);
                     } else {
+                        //log(selectedID);
                         oTok = getObj("graphic",selectedID);
                     }
-                    
                     //Set controlledBy property of token to determine who will see the pings. Include all GMs
                     if (playerID===undefined) {
                         controlledby = msg.playerid;
@@ -842,11 +1543,25 @@ const Radar = (() => {
                 //------------------------------------------------------------------------
                 
                 //Get token values and page settings
-                radius = (oTok.get("width"))/2; 
+                originWidth = oTok.get("width")
+                originHeight = oTok.get("height")
+                originAvgSize = (originWidth+originHeight)/2;
+                radius = originWidth/2;         //starting radius for animated wavefront
                 pageID = oTok.get("pageid");
                 originX = oTok.get("left");
                 originY = oTok.get("top");
                 originPt = new pt(originX, originY);
+                
+                
+                //check to see if a cone angle was given explicitly or via the angle between the selected and target token
+                if (isNaN(coneDirection)) { 
+                    //"coneDirection" is holding a tokenID right now
+                    coneDirection = getAngle2TargetToken(who, originPt, coneDirection);
+                } else {
+                    //coneDirection is an explicitly defined angle
+                    coneDirection = parseFloat(coneDirection);
+                }
+                
                 //log('oTok_XY = ' + originX + ', ' + originY);
                 
                 let thePage = getObj("page", pageID);
@@ -921,6 +1636,8 @@ const Radar = (() => {
                         bar3_max: tok.get("bar3_max"),
                         gmnotes: tok.get("gmnotes"),
                         dist: originDist.dist,
+                        centerDistX: originDist.centerDistX,    //used for table outout
+                        centerDistY: originDist.centerDistY,    //used for table outout
                         closestPt: originDist.closestPt,    //the center of the closest square
                         closestDist: originDist.closestDist,
                         corners: originDist.corners,        //not currently used. Will be if ray tracing LoS
@@ -929,62 +1646,121 @@ const Radar = (() => {
                         filterColor: hRED  //default aura = red
                     }
                 });
-               
-                //Initial Filter: only those within range of the radar (meas from center of origin token to closet corner of target token)
-                //toksInRange = tokIdDist.filter(tok => (tok.dist <= range) && (tok.id !== oTok.id) );
-                toksInRange = tokIdDist.filter(tok => (tok.closestDist <= range) && (tok.id !== oTok.id) );
                 
+                //Initial Filter: only those within range of the radar (meas from center of origin token to center of closest corner of target token)
+                if (wavetype === 'circle') {
+                    toksInRange = tokIdDist.filter(tok => {
+                        if (tok.name.toLowerCase().indexOf('conetarget')>-1) {
+                            return false;
+                        } else if (coneWidth === 360) {
+                            //simple range calculation
+                            return (tok.closestDist <= range) && (tok.id !== oTok.id);
+                        } else {
+                            //only if tok is within the defined cone
+                            return isPointInCone(tok.closestPt, originPt, range, coneDirection, coneWidth, false);  //false flag denotes a "true cone" (rounded outer face)
+                        }
+                    });
+                } else if (wavetype === 'square') {    //square-shaped region. compare pt to full or "sliced" polygon
+                    toksInRange = tokIdDist.filter(tok => {
+                        if (tok.name.toLowerCase().indexOf('conetarget')>-1) {
+                            return false;
+                        } else {
+                            polygon = [];
+                            pathString = JSON.parse(buildSquare(range, coneWidth, coneDirection));
+                            pathString.forEach((vert) => {
+                                let tempPt = GetAbsoluteControlPt(vert, originPt, range*2, range*2, 0, 1, 1);
+                                polygon.push(tempPt)
+                            });
+                            if (coneWidth !== 360) { polygon.splice(-11); }   //removes the "phantom" points added to the path JSON for scaling purposes
+                            
+                            return isPointInPolygon(tok.closestPt, polygon) && (tok.id !== oTok.id);
+                        }
+                    });
+                } else if (wavetype === '5e') {
+                    toksInRange = tokIdDist.filter(tok => {
+                        if (tok.name.toLowerCase().indexOf('conetarget')>-1) {
+                            return false;
+                        } else {
+                            return isPointInCone(tok.closestPt, originPt, range, coneDirection, coneWidth, true);   //true flag denotes a "flat cone"
+                        }
+                    });
+                }
                 
                 //User may request to filter tokens by value of a character or token attribute
-                if (filter.type==="char") {
+                filterExcludeOnly = checkFiltersForExcludeOnly(filter.ignore);
+                if (filter.type==="char" || filter.type==="tok") {
                     toksInRange.map(tok => {
-                        if (tok.represents) {
-                            let tempAttr = findObjs({_type: "attribute", _characterid: tok.represents, name: filter.attr});
-                            if (tempAttr.length >= 1) {
+                        //if charFilter, only check tokens linked to sheets. If tokFilter, always check
+                        if ( (filter.type==="char" && tok.represents) || (filter.type==="tok")  ) {
+                            //populate attrCurrentVal with either char attr or token value
+                            let attrCurrentVal = 'not found';
+                            if (filter.type==="char") {
+                                let tempAttr = findObjs({_type: "attribute", _characterid: tok.represents, name: filter.attr});
+                                if (tempAttr.length >= 1) { attrCurrentVal = tempAttr[0].get("current") }
+                            } else {
+                                attrCurrentVal = tok[filter.attr].toString() || "NoMatch";
+                            }
+                            
+                            if (attrCurrentVal !== 'not found') {
+                                //let attrCurrentVal = tempAttr[0].get("current")
                                 filter.vals.forEach((val,index) => {
-                                    //If filter value starts with "-" or has already been tagged with 'ignore', then ignore this token if find a match against val
-                                    if ( val.indexOf('-') === 0 || tok.filterKey.match('ignore') ) {   
-                                        let regexVal = new RegExp(val.replace(/-/,''), "i");
-                                        if (tempAttr[0].get("current").match(regexVal) ) {
-                                            tok.filterKey = 'ignore';
-                                        }
-                                    } else {
-                                        //If positive match, tag it
-                                        let regexVal = new RegExp(val, "i");
-                                        if (tempAttr[0].get("current").match(regexVal) ) {
-                                            tok.filterKey = val;
-                                            tok.filterColor = filter.colors[index];
-                                        }
+                                    //if filter list only has "ignore values", then begin with  all tokens included 
+                                    if (!tok.filterKey.match('ignore') && filterExcludeOnly) {
+                                        tok.filterKey = 'include';
+                                        tok.filterColor = filter.colors[index];
                                     }
                                 });
+                                
+                                for (let i = 0; i<filter.vals.length; i++) {
+                                    let regexVal = new RegExp(filter.vals[i], "i");
+                                    if (filter.anyValueAllowed===true) {    //always include if there is some value for the attribute
+                                        tok.filterKey = filter.vals[i];     
+                                        tok.filterColor = filter.colors[i];
+                                    } else {
+                                        switch (filter.compareType[i]) {
+                                            case 'contains':
+                                                if ( (filter.ignore[i] || tok.filterKey.match('ignore')) && attrCurrentVal.match(regexVal) ) {
+                                                    tok.filterKey = 'ignore';   //found contains match - ignore
+                                                } else if (attrCurrentVal.match(regexVal)) {
+                                                    tok.filterKey = filter.vals[i];     //found contains match - include
+                                                    tok.filterColor = filter.colors[i];
+                                                }
+                                                break;
+                                            case '@':   //exact match
+                                                if ( (filter.ignore[i] || tok.filterKey.match('ignore')) && attrCurrentVal === filter.vals[i] ) {
+                                                    tok.filterKey = 'ignore';   //found exact match - ignore
+                                                } else if (attrCurrentVal === filter.vals[i]) {
+                                                    tok.filterKey = filter.vals[i];     //found exact match - include
+                                                    tok.filterColor = filter.colors[i];
+                                                }
+                                                break;
+                                            case '>':
+                                                if ( (filter.ignore[i] || tok.filterKey.match('ignore')) && (parseFloat(attrCurrentVal) > parseFloat(filter.vals[i])) ) {
+                                                    tok.filterKey = 'ignore';   //found greater than match - ignore
+                                                } else if ( parseFloat(attrCurrentVal) > parseFloat(filter.vals[i]) ) {
+                                                    tok.filterKey = filter.vals[i];     //found greater than match - include
+                                                    tok.filterColor = filter.colors[i];
+                                                }
+                                                break;
+                                            case '<':
+                                                if ( (filter.ignore[i] || tok.filterKey.match('ignore')) && (parseFloat(attrCurrentVal) < parseFloat(filter.vals[i])) ) {
+                                                    tok.filterKey = 'ignore';   //found less than match - ignore
+                                                } else if ( parseFloat(attrCurrentVal) < parseFloat(filter.vals[i]) ) {
+                                                    tok.filterKey = filter.vals[i];     //found less than match - include
+                                                    tok.filterColor = filter.colors[i];
+                                                }
+                                                break;
+                                        }
+                                    }
+                                }
                             }
                         }
                     });
-                    toksInRange = tokIdDist.filter(tok => (tok.filterKey !=="" && tok.filterKey !== 'ignore') );
-                } else if (filter.type==="tok") {
-                    toksInRange.map(tok => {
-                        filter.vals.forEach((val, index) => {
-                            //If filter value starts with "-" or has already been tagged with 'ignore', then ignore this token if find a match against val
-                            if ( val.indexOf('-') === 0 || tok.filterKey.match('ignore') ) {   
-                                let tempVal = tok[filter.attr].toString() || "NoMatch";
-                                let regexVal = new RegExp(val.replace(/-/,''), "i");
-                                if (tempVal.replace(/-/,'').match(regexVal) ) {
-                                    tok.filterKey = 'ignore';
-                                }
-                            } else {
-                                //If positive match, tag it
-                                let tempVal = tok[filter.attr].toString() || "NoMatch";
-                                let regexVal = new RegExp(val, "i");
-                                if (tempVal.match(regexVal) ) {
-                                    tok.filterKey = val;
-                                    tok.filterColor = filter.colors[index];
-                                }
-                            }
-                        });
-                    });
-                    toksInRange = tokIdDist.filter(tok => (tok.filterKey !=="" && tok.filterKey !== 'ignore') );
+                    
+                    //toksInRange = tokIdDist.filter(tok => (tok.filterKey !=="" && tok.filterKey !== 'ignore') );
+                    toksInRange = toksInRange.filter(tok => (tok.filterKey !=="" && tok.filterKey !== 'ignore') );
+                    
                 }
-                
                 
                 //LoS Filter. Test line segments from origin to 5pts per token (center & 4 corners). If all 5 intersect DL path segments, LoS is considered blocked 
                 if ( losBlocks && pageDL ) {
@@ -1027,30 +1803,34 @@ const Radar = (() => {
                         vertices = [];
                     });
                     
-                    //sendChat('testing','pathSegs.length = ' + pathSegs.length);
                     //Find if LoS is blocked for each target token in range, and filter out if blocked
                     toksInRange.map(tok => {
                         tok.losBlocked = isLoSBlocked(originX, originY, tok, pathSegs);
                     });
                     
                     toksInRange = tokIdDist.filter(tok => (tok.losBlocked === false) );
-                    
                 }
-                
                 
                 ///////////////////////////////////////////////////////////////////////////
                 /////////       RADAR ANIMATION
                 ///////////////////////////////////////////////////////////////////////////
                 let i = 0;
                 let oldRadius = 0;
+                polygon = [];
                 while ( radius <= range ) {
-                    pathstring = buildCircle(radius);
+                    if (wavetype === 'circle') {            //circular wavefront
+                        pathstring = buildCircle(radius, coneWidth, coneDirection);
+                    } else if (wavetype === 'square') {     //square wavefront
+                        pathstring = buildSquare(radius, coneWidth, coneDirection);
+                    } else if (wavetype === '5e') {         //5e-style cone  wavefront
+                        pathstring = build5eCone(radius, coneWidth, coneDirection);
+                    }
                     
                     //let seeAnimation = true;
                     if (seeAnimation === true) {
                         promise = new Promise((resolve, reject) => {
                             setTimeout(() => {
-                                drawWave(pageID, pathstring, "transparent", "#ff0000", "objects", 3, radius, originX, originY, waveLife);
+                                drawWave(pageID, pathstring, "transparent", waveColor, "objects", 3, radius, originX, originY, waveLife);
                                 resolve("done!");
                             }, waveDelay);
                         });
@@ -1060,70 +1840,201 @@ const Radar = (() => {
                     
                     oldRadius = radius;
                     radius += waveIncrement;
+                    pathstring_old = pathstring;
                     
                     //Ping target tokens as the radar wavefront hits them
                     if (tokLife > 0) {
                         toksInRange.forEach( tok => {
-                            if ( (tok.dist > oldRadius) && (tok.dist <= radius) ) {
+                            //use euclidean distance calcs - circle wavefront
+                            if ( (wavetype === 'circle') && (tok.closestDist > oldRadius) && (tok.closestDist <= radius) ) {
                                 spawnObj.get("_defaulttoken", async function(defaultToken) {
                                     result = await spawnTokenAtXY(who, defaultToken, pageID, tok["left"], tok["top"], tok["width"]+padding, tok["height"]+padding, controlledby, tokLife, tok.filterColor);
                                 });
+                            }
+                            
+                            // square wavefront
+                            if (wavetype === 'square') {
+                                let sqPath = JSON.parse(pathstring);
                                 
+                                //use bounding box of the square
+                                let bbUL_old = new pt(originX - oldRadius, originY - oldRadius);    //Upper Left of previous bounding box
+                                let bbLR_old = new pt(originX + oldRadius, originY + oldRadius);    //Lower Right of previous bounding box
+                                let bbUL_new = new pt(originX - radius, originY - radius);    //Upper Left of current bounding box
+                                let bbLR_new = new pt(originX + radius, originY + radius);    //Lower Right of current bounding box
+                                let tX = tok.closestPt.x;
+                                let tY = tok.closestPt.y;
+                                if ( (bbUL_new.x <= tX && tX <= bbLR_new.x && bbUL_new.y <= tY && tY <= bbLR_new.y) && !(bbUL_old.x <= tX && tX <= bbLR_old.x && bbUL_old.y <= tY && tY <= bbLR_old.y)) {
+                                    spawnObj.get("_defaulttoken", async function(defaultToken) {
+                                        result = await spawnTokenAtXY(who, defaultToken, pageID, tok["left"], tok["top"], tok["width"]+padding, tok["height"]+padding, controlledby, tokLife, tok.filterColor);
+                                    });
+                                }
+                            }
+                            
+                            //5e cone
+                            if (wavetype === '5e') {
+                                //just check distance, since tokens outside of angle were already filtered out
+                                
+                                if (isPointInCone(tok.closestPt, originPt, radius, coneDirection, coneWidth, true) && !isPointInCone(tok.closestPt, originPt, oldRadius, coneDirection, coneWidth, true)) {
+                                    spawnObj.get("_defaulttoken", async function(defaultToken) {
+                                        result = await spawnTokenAtXY(who, defaultToken, pageID, tok["left"], tok["top"], tok["width"]+padding, tok["height"]+padding, controlledby, tokLife, tok.filterColor);
+                                    });
+                                }
                             }
                         });
                     }
-                    
-                }
+                } 
+               
                 
                 ///////////////////////////////////////////////////////////////////////////
                 /////////       OPTIONAL OUTPUT
                 /////////       results appear in order of proximity to origin. Possibly grouped by filter keywords
                 ///////////////////////////////////////////////////////////////////////////
                 if (displayOutput || includeGM) {
+                    //------------------------------------------------------------------------------------
+                    //Optional Graphical Output Part 1 - we're going to piggyback on the loop through toks in range
+                    //-----------------------------------------------------------------------------------
+                    let pingHTML = '';   //html string for graphical representation of pinged tokens
+                    tableLineCounter = 0;
+                    
+                    //Calc number of cols & rows for grid
+                    let numCols, numRows, rangeInUnits;
+                    if (pageGridIncrement !== 0) {
+                        //grid map
+                        rangeInUnits = range / (70 * pageGridIncrement);
+                        //twice the range plus one grid unit
+                        numCols = rangeInUnits * 2 + 1;
+                        numRows = numCols;
+                        //The radar_range-to-graphic scaling factor. Range is already in pixels
+                        range2GraphicScale = graphHeight / (range * 2 + (70 * pageGridIncrement)); 
+                    } else {  
+                        //gridless map
+                        rangeInUnits = 2*(range * pageScaleNumber) / 70;
+                        rangeInUnits = range / 70;
+                        numCols = rangeInUnits * 2 + 1;
+                        numRows = numCols;
+                        range2GraphicScale = graphHeight / (range * 2 + 70); 
+                    }
+                    let rowHeight = graphHeight/numRows;
+                    let colWidth = graphWidth/numCols;
+                    let pingW = graphWidth/numCols;
+                    let pingH = graphHeight/numRows;
+                    //add ping for origin token 
+                    if (outputGraph) {pingHTML = addPingHTML(pingHTML, 0, 0, originAvgSize, originAvgSize, graphWidth, graphHeight, pingH, pingW, '#ffffffcc', range2GraphicScale);}  //adds to html string for graphical output
+
+                    //------------------------------------------------------------------------------------
+                    //loop through toks in range for building text and/or graphical output
+                    //------------------------------------------------------------------------------------
                     toksInRange.sort((a,b) => (a.dist > b.dist) ? 1 : ((b.dist > a.dist) ? -1 : 0));
                     let counter;
-                    if (filter.type !== "") {
-                        filter.vals.forEach( val => {
+                    if (filter.type !== "" && filterExcludeOnly === false && groupBy === true) {
+                        let group = '';
+                        let rowData = '';
+                        let addNewRowHeader = true; 
+                        
+                        //use user-defined filters
+                        for (let i = 0; i<filter.vals.length; i++) {
+                            addNewRowHeader = true;
                             counter = 0
-                            if ( val.indexOf('-') === 0 ) {
+                            if ( filter.ignore[i] === true ) {
                                 //this is an ignore filter, do not report anything
                             } else {
                                 //filter on this value
-                                content = content + '{{' + val + ':=';
+                                if (filter.compareType[i].includes('@') || filter.compareType[i].includes('>') || filter.compareType[i].includes('<')) {
+                                    group = filter.compareType[i] + filter.vals[i];
+                                } else {
+                                    group = filter.vals[i];
+                                }
+                                
                                 toksInRange.forEach( tok => {
-                                    if (tok.filterKey === val) {
-                                        if (tok.layer === 'gmlayer' || tok.layer === 'walls') {
+                                    if (tok.filterKey === filter.vals[i]) {
+                                        if (outputGraph) {pingHTML = addPingHTML(pingHTML, tok.centerDistX, tok.centerDistY, tok.width, tok.height, graphWidth, graphHeight, pingH, pingW, tok.filterColor, range2GraphicScale);}  //adds to html string for graphical output
+                                        
+                                        //check for "hidden" tokens
+                                        if (group.indexOf('-')===-1 && (tok.layer === 'gmlayer' || tok.layer === 'walls')) {
+                                            if (addNewRowHeader) {
+                                                addNewRowHeader = false;
+                                            } else {
+                                                group = '';   //only want the row header on the first row of output for each filter
+                                            }
                                             //identify hidden tokens in chat
-                                            content = content + _h.red(_h.bold(parseInt(counter+1) + '. ') + GetDirectionalInfo(parseInt(tok.closestPt.x), parseInt(tok.closestPt.y), originX, originY, displayUnits, includeTotalDist, pageScaleNumber, pageScaleUnits, pageGridIncrement)) + '\n';
-                                        } else {
+                                            content = GetDirectionalInfo(parseInt(tok.closestPt.x), parseInt(tok.closestPt.y), originX, originY, displayUnits, includeTotalDist, pageScaleNumber, pageScaleUnits, pageGridIncrement, outputCompact);
+                                            rowData = buildRowOutput(true, group, _h.red(parseInt(counter+1)+'.'), _h.red(content));
+                                            outputLines.push(rowData);
+                                        } else if (group.indexOf('-')===-1) {
+                                            if (addNewRowHeader) {
+                                                addNewRowHeader = false;
+                                            } else {
+                                                group = '';   //only want the row header on the first row of output for each filter
+                                            }
                                             //normal output
-                                            content = content + _h.bold(parseInt(counter+1) + '. ') + GetDirectionalInfo(parseInt(tok.closestPt.x), parseInt(tok.closestPt.y), originX, originY, displayUnits, includeTotalDist, pageScaleNumber, pageScaleUnits, pageGridIncrement) + '\n';
+                                            content = GetDirectionalInfo(parseInt(tok.closestPt.x), parseInt(tok.closestPt.y), originX, originY, displayUnits, includeTotalDist, pageScaleNumber, pageScaleUnits, pageGridIncrement, outputCompact);
+                                            rowData = buildRowOutput(true, group, parseInt(counter+1)+'.', content);
+                                            outputLines.push(rowData);
+                                            group = '';   //only want the row header on the first row of output for each filter
                                         }
                                         counter +=1;
                                     }  
                                 });
-                                if (counter === 0) { content = content + 'N/A'; }
-                                content = content + '}}';
+                                
+                                if (counter === 0 && group.indexOf('-')===-1) { 
+                                    content = 'N/A';
+                                    rowData = buildRowOutput(true, group, parseInt(counter+1)+'.', content);
+                                    outputLines.push(rowData);
+                                }
                             }
-                        });
+                        }
                     } else {
-                        //toksInRange.sort((a,b) => (a.dist > b.dist) ? 1 : ((b.dist > a.dist) ? -1 : 0));
-                        for (let i = 0; i < toksInRange.length; i++) {
-                            if (toksInRange[i].layer === 'gmlayer' || toksInRange[i].layer === 'walls') {
-                                //identify hidden tokens in chat
-                                content = content + '{{' + parseInt(i+1) + ':=' + _h.red(_h.bold(' ') + GetDirectionalInfo(parseInt(toksInRange[i].closestPt.x), parseInt(toksInRange[i].closestPt.y), originX, originY, displayUnits, includeTotalDist, pageScaleNumber, pageScaleUnits, pageGridIncrement)) + '}}';
-                            } else {
-                                //normal output
-                                content = content + '{{' + parseInt(i+1) + ':=' + GetDirectionalInfo(parseInt(toksInRange[i].closestPt.x), parseInt(toksInRange[i].closestPt.y), originX, originY, displayUnits, includeTotalDist, pageScaleNumber, pageScaleUnits, pageGridIncrement) + '}}';
+                        //no filters used
+                        if (toksInRange.length===0) {
+                            content = 'N/A';
+                            rowData = buildRowOutput(false, '', '1.', content);
+                            outputLines.push(rowData);
+                        } else {
+                            for (let i = 0; i < toksInRange.length; i++) {
+                                //graphical output stuff. Appends new graphical element to the string 
+                                if (outputGraph) {pingHTML = addPingHTML(pingHTML, toksInRange[i].centerDistX, toksInRange[i].centerDistY, toksInRange[i].width, toksInRange[i].height, graphWidth, graphHeight, pingH, pingW, '#ff0000', range2GraphicScale)};  //adds to html string for graphical output
+                                
+                                //text output stuff
+                                if (toksInRange[i].layer === 'gmlayer' || toksInRange[i].layer === 'walls') {
+                                    //identify hidden tokens in chat
+                                    content = GetDirectionalInfo(parseInt(toksInRange[i].closestPt.x), parseInt(toksInRange[i].closestPt.y), originX, originY, displayUnits, includeTotalDist, pageScaleNumber, pageScaleUnits, pageGridIncrement, outputCompact);
+                                    rowData = buildRowOutput(false, '', _h.red(parseInt(i+1)+'.'), _h.red(content));
+                                    outputLines.push(rowData);
+                                } else {
+                                    //normal output
+                                    content = GetDirectionalInfo(parseInt(toksInRange[i].closestPt.x), parseInt(toksInRange[i].closestPt.y), originX, originY, displayUnits, includeTotalDist, pageScaleNumber, pageScaleUnits, pageGridIncrement, outputCompact);
+                                    rowData = buildRowOutput(false, '', parseInt(i+1)+'.', content);
+                                    outputLines.push(rowData);
+                                }
                             }
                         }
                     }
-                    let output = `&{template:default} {{name=${title} (Units:${displayUnits})}}` + content;
-                    if (displayOutput) {
-                        sendChat(scriptName, `/w "${who}" `+ output);
+                    
+                    //------------------------------------------------------------------------------------
+                    //Optional Graphical Output Part 2 - we've built the html for graphical token pings, so build the rest now 
+                    //------------------------------------------------------------------------------------
+                    let backgroundHTML = buildBackgroundHTML(graphWidth, graphHeight, numRows, numCols, colWidth, rowHeight, useGrid, useCircles, useRadial);
+                    let graphicalOutput = backgroundHTML + pingHTML + '</div></div>';
+                    if (displayOutput && outputGraph) {
+                        sendChat(scriptName, `/w "${who}" `+ graphicalOutput);
                     }
-                    if (includeGM && !playerIsGM(msg.playerid)) {
-                        sendChat(scriptName, '/w gm ' + output);
+                    if (includeGM && !playerIsGM(msg.playerid) && outputGraph) {
+                        sendChat(scriptName, '/w gm ' + tableOutput);
+                    }
+                    
+                    //Build final html output
+                    let tableOutput = htmlTableTemplateStart.replace("=X=TITLE=X=", title).replace("=X=UNITS=X=", displayUnits);
+				
+                    for (let x=0; x<outputLines.length; x++) {
+						tableOutput += outputLines[x];
+					}
+					tableOutput += htmlTableTemplateEnd;
+					
+					if (displayOutput && outputTable) {
+                        sendChat(scriptName, `/w "${who}" `+ tableOutput);
+                    }
+                    if (includeGM && !playerIsGM(msg.playerid) && outputTable) {
+                        sendChat(scriptName, '/w gm ' + tableOutput);
                     }
                 }
             }
