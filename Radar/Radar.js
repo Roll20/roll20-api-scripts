@@ -1640,8 +1640,8 @@ const Radar = (() => {
                         centerDistY: originDist.centerDistY,    //used for table outout
                         closestPt: originDist.closestPt,    //the center of the closest square
                         closestDist: originDist.closestDist,
-                        corners: originDist.corners,        //not currently used. Will be if ray tracing LoS
-                        filterKey: "",
+                        corners: originDist.corners,        //Used for checking LoS
+                        filterKey: "",			//will contain 'ignore' or the name of the attribute or token property used for fltering
                         losBlocks: false,
                         filterColor: hRED  //default aura = red
                     }
