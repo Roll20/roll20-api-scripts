@@ -1,12 +1,11 @@
 {
   "name": "APILogic",
   "script": "APILogic.js",
-  "version": "1.2.1",
-  "description": "APILogic provides chat input logical constructs for shaping the command line, including IF, ELSEIF, and ELSE. It provides a way to define terms for text-replacment operations, or to name condition sets to re-use later in the logical processing. It also allows for math operations right in a macro's command line, as well as variable muling to track values between rolls.\r\rFor more information, see the original API forum thread:\r\rhttps://app.roll20.net/forum/post/9771314/script-apilogic-gives-if-slash-elseif-slash-else-processing-to-other-scripts/",
+  "version": "2.0.3",
+  "description": "APILogic is a meta-script and part of the Meta-Toolbox. APILogic provides chat input logical constructs for shaping the command line, including IF, ELSEIF, and ELSE. It provides a way to define terms for text-replacment operations, or to name condition sets to re-use later in the logical processing. \r\rFor more information, see the original API forum thread:\r\r[APILogic Forum Thread](https://app.roll20.net/forum/post/9771314/script-apilogic-gives-if-slash-elseif-slash-else-processing-to-other-scripts/)\r\rOr read about the full set of meta-scripts available: \r\r[Meta Toolbox Forum Thread](https://app.roll20.net/forum/post/10005695/script-set-the-meta-toolbox)",
   "authors": "timmaugh",
   "roll20userid": "5962076",
   "useroptions": [],
-  "dependencies": [ "libInline" ],
   "modifies": {
     "state.APILogic": "read, write",
     "attribute.characterid": "read",
@@ -19,5 +18,12 @@
     "ability.name": "read, write",
     "ability.action": "read, write"
   },
-  "conflicts": []
+  "conflicts": [],
+  "previousversions": [
+    "1.0.1",
+    "1.1.2",
+    "1.1.3",
+    "1.2.0",
+    "1.2.1"
+  ]
 }

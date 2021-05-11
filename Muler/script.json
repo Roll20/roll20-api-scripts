@@ -1,0 +1,15 @@
+{
+  "name": "Muler",
+  "script": "Muler.js",
+  "version": "1.0.4",
+  "description": "Muler is a meta-script and part of the Meta-Toolbox. Muler allows for you to designate and store variables in a character ability (called a Mule), then retrieve them in another call, and all from within other scripts.\t\tThese variables may be used as static-access tables, where you look up the value associated with a particular key, including keys that fall within given numerical ranges.  \r\rFor more information, see the original thread in the API forum:\r\r[Muler Forum Thread](https://app.roll20.net/forum/post/10005710/meta-script-muler-get-slash-set-variables-static-tables/?pageforid=10005710#post-10005710)\r\rOr read about the full set of meta-scripts available: \r\r[Meta Toolbox Forum Thread](https://app.roll20.net/forum/post/10005695/script-set-the-meta-toolbox)",
+  "authors": "timmaugh",
+  "roll20userid": "5962076",
+  "useroptions": [],
+  "dependencies": [],
+  "modifies": {
+    "state.Muler": "read, write"
+  },
+  "conflicts": [],
+  "previousversions": []
+}
