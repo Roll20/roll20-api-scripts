@@ -56,13 +56,15 @@
                                                             // optional "gm" flag to send result output to gm chat
                                                                     //e.g. --silent| true gm will only output to gm chat
         
-        --units|        <u/units/squares/square/hexes/hex> for "u", or <anything else> to just use map settings, e.g. ft, km, miles
-                                                        //Only affects Display output
+        --units|  <u/units/squares/square/hexes/hex, Optional 3.5/pf/5e>
+                                                        //if optional 5e or omitted, this will only affect display output (5e will use diag=1sq)
+							//if pf or 3.5 is used, then both the display output AND the determination of if tok is within range will use PF-style calcs, where every other diag=1.5sq
                                                         //for GRIDLESS MAP, this command must be included or else all results will be INFINITY
+							//	however, the optional parameters will only work with a gridded map.
         --visible|       <yes/true/1> or <no/false/0>   //Default=true. Set to false/no/0 to prevent the drawing of the wavefront animation
-        --graphoptions   < grid/circles/rings/reticle > //Default is a plain background. Can add graphical elements to display. Circles/Rings are interchangeable aliases
-        --output         < graph, table, compact >         //Default=table. Can include one or all of these elements. Compact attempts to put the table output on a single line
-        --groupby	     < yes/true/1> or <no/false/0 > //Default=true. When a charFilter or tokFilter is used, this flag determines if table results are grouped by filter attribute
+        --graphoptions|   < grid/circles/rings/reticle > //Default is a plain background. Can add graphical elements to display. Circles/Rings are interchangeable aliases
+        --output|         < graph, table, compact >         //Default=table. Can include one or all of these elements. Compact attempts to put the table output on a single line
+        --groupby|	     < yes/true/1> or <no/false/0 > //Default=true. When a charFilter or tokFilter is used, this flag determines if table results are grouped by filter attribute
         //--------------------------------------------------------------------------------------
         //THE FOLLOWING TWO COMMANDS ARE USED WHEN CALLING RADAR FROM ANOTHER API SCRIPT 
         //  e.g. sendChat(scriptName, `!radar --selectedID|${msg.selected[0]._id} --playerID|${msg.playerid}`
@@ -126,7 +128,7 @@ API_Meta.RadarWIP = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 const Radar = (() => {
     
     const scriptName = "Radar";
-    const version = '0.7';
+    const version = '0.8';
     
     const PING_NAME = 'RadarPing'; 
     const hRED = '#ff0000';
@@ -471,7 +473,111 @@ const Radar = (() => {
         return finalPts;
     }
     
-    const build5eCone = function(rad, coneWidth, coneDirection) {
+    /*
+    ~~~~5e cone~~~~
+    Have to size the svg [path] coordinate system to account for the corners of triangle potentially extending beyond the "radius" when rotated 
+    
+            maximum horiz dist from 0 to z = rsin(atan(0.5)) / tan(90-atan(0.5))
+            Occurs when on one of the outer cone lines lies at 0/90/180/270deg
+            
+            (z,0)           (z+r,0)
+    (0,0)    |              |                           (2*(z+r), 0)     
+        O-----------------------------------------------O
+        |                                               |
+        |                                               |
+        |                                               |
+        |                                               |
+        |       O                                       |
+        |      * *                                      |
+        |     *    *                                    |
+        |    *       *                                  |
+        |   **        *                                 |
+        |  *    * r     *                               |
+        | *         *    *                              |
+        |*              *  *                            |
+        O * z * * * * * * * O (origin)                  O (2*(z+r), z+r)
+        |                     (z+r,z+r)                 |
+        |                                               |
+        |                                               |
+        |                                               |
+        |                                               |
+        |                                               |
+        |                                               |
+        |                                               |
+        |                                               |
+        |                                               |
+        |                                               |
+        O_______________________________________________O(2*(z+r), 2*(z+r))
+    (0,2*(z+r))
+    
+    
+    
+    //attempte picture of a pie slice cone inside of a triangle. Triangle is the 5e cone.
+                O                                       
+               * *                                      
+              *  * *                                    
+             * *     *                                  
+            **        *                                 
+           **    * r    *                               
+          * *        *    *                              
+         *   *        th *  *                            
+        O * * * * * * * * * * O (origin)
+        |--z--|-------r-------|
+        
+        a) From SOHCAHTOA -> sin(th) = (r/2) / (r+z)
+        b) Also, half of cone width = (th) = atan(0.5) for a 5e cone, ~26.56deg
+        So, solving for z from eq (a)
+            z = (r / 2sin(th)) - r
+        Substitute for theta from eq (b) gives us the ratio between z & r
+            z = (r / 2sin(atan(0.5))) - r
+    
+    */
+    
+    const build5eCone = function(rad, z, coneWidth, coneDirection) {
+        let pointsJSON = '';
+        let deg2rad = Math.PI/180;
+        //see above for details of what "z" is
+        //let z = (rad / (2*Math.sin(Math.atan(0.5)))) - rad;
+                
+        let ptOrigin = new pt(rad+z, rad+z);
+        let ptUL = new pt(0,0);
+        let ptUR = new pt(2*(rad+z),0);
+        let ptLR = new pt(2*(rad+z),2*(rad+z));
+        let ptLL = new pt(0,2*(rad+z));
+        /*
+        log('rad = ' + rad);
+        log('z = ' + z);
+        log(ptOrigin);
+        log(ptUL);
+        log(ptUR);
+        log(ptLR);
+        log(ptLL);
+        */
+        let oX = oY = rad + z;
+        //normalize rotation to 360deg and find defining angles (converted to radians)
+        
+        coneDirection = normalizeTo360deg(coneDirection);
+        
+        //define "cone" angles (in degrees)
+        let th1 = deg2rad * (coneDirection - coneWidth/2);  //angle of trailing cone side
+        let th2 = deg2rad * (coneDirection + coneWidth/2);  //angle of leading cone side
+
+        //a 5e cone is defined by the orgin and two pts
+        let pt1 = get5eConePt(rad+z, th1);
+        let pt2 = get5eConePt(rad+z, th2);
+        //let conePtsArr = [ptOrigin, pt1, pt2];
+        
+        //start path at the origin pt, connect to pts 1&2, then back to origin 
+        pointsJSON = `[[\"M\",${ptOrigin.x},${ptOrigin.y}],[\"L\",${pt1.x},${pt1.y}],[\"L\",${pt2.x},${pt2.y}],[\"L\",${ptOrigin.x},${ptOrigin.y}],`;
+        //add "phantom" single points to path corresponding to the four corners to keep the size computations correct
+        pointsJSON = pointsJSON + `[\"M\",${ptUL.x},${ptUL.y}],[\"L\",${ptUL.x},${ptUL.y}],[\"M\",${ptUR.x},${ptUR.y}],[\"L\",${ptUR.x},${ptUR.y}],[\"M\",${ptLR.x},${ptLR.y}],[\"L\",${ptLR.x},${ptLR.y}],[\"M\",${ptLL.x},${ptLL.y}],[\"L\",${ptLL.x},${ptLL.y}],[\"M\",${ptUL.x},${ptUL.y}],[\"L\",${ptUL.x},${ptUL.y}]]`;
+    
+        //log(pointsJSON);
+        return pointsJSON;
+    };
+    
+    /*
+    const build5eConeBAD = function(rad, coneWidth, coneDirection) {
         let pointsJSON = '';
         let deg2rad = Math.PI/180;
         let ptOrigin = new pt(rad, rad);
@@ -486,9 +592,11 @@ const Radar = (() => {
         coneDirection = normalizeTo360deg(coneDirection);
         
         //define "cone" angles (in degrees)
-        let th1 = deg2rad * normalizeTo360deg(coneDirection - coneWidth/2);
-        let th2 = deg2rad * normalizeTo360deg(coneDirection + coneWidth/2);
-        
+        //let th1 = deg2rad * normalizeTo360deg(coneDirection - coneWidth/2);
+        //let th2 = deg2rad * normalizeTo360deg(coneDirection + coneWidth/2);
+        let th1 = deg2rad * (coneDirection - coneWidth/2);
+        let th2 = deg2rad * (coneDirection + coneWidth/2);
+
         //a 5e cone is defined by the orgin and two pts
         let pt1 = get5eConePt(rad, th1);
         let pt2 = get5eConePt(rad, th2);
@@ -502,6 +610,7 @@ const Radar = (() => {
         //log(pointsJSON);
         return pointsJSON;
     };
+    */
     
     const buildSquare = function(rad, coneWidth, coneDirection) {
         let squarePointsJSON = '';
@@ -682,13 +791,64 @@ const Radar = (() => {
           return p;
         }
     
-    const DistBetweenPts = function(pt1, pt2) {
-        let dist = Math.sqrt( Math.pow(pt1.x - pt2.x, 2) + Math.pow(pt1.y - pt2.y, 2) );
-        return dist;
+    const distBetweenPts = function(pt1, pt2, calcType='Euclidean', gridIncrement=-999, scaleNumber=-999, forDisplayOnly=false) {
+        let distPx;     //distance in Pixels
+        let distUnits;  //distance in units (gridded maps only)
+        if ( (calcType === 'PF' || (calcType === '5e' && forDisplayOnly === true)) && gridIncrement !== -999 & scaleNumber !== -999) {
+            //using 'Pathfinder' or '3.5e' distance rules, where every other diagonal unit counts as 1.5 units. 
+            //..or using 5e diagonal rules where each diag only counts 1 square. 
+            //..5e is special due to how t is constructed. We use Euclidean distance to determine if in cone, but we can display in 5e units. 
+                //Only compatible with gridded maps
+                //convert from pixels to units, do the funky pathfinder math, then convert back to pixels
+            let dX = (Math.abs(pt1.x - pt2.x) * scaleNumber / 70) / gridIncrement;
+            let dY = (Math.abs(pt1.y - pt2.y) * scaleNumber / 70) / gridIncrement;
+            let maxDelta = Math.max(dX,dY);
+            let minDelta = Math.min(dX, dY);
+            let minFloor1pt5Delta;
+            if (calcType === '5e') {
+                //diagonals count as one square
+                minFloor1pt5Delta = Math.floor(1.0 * minDelta);
+            } else if (calcType === 'PF') {
+                //every other diagonal counts as 1.5 squares
+                minFloor1pt5Delta = Math.floor(1.5 * minDelta);
+            }
+            
+            /*
+            log(pt1);
+            log(pt2);
+            log('gridIncrement = ' + gridIncrement);
+            log('scaleNumber = ' + scaleNumber);
+            log('dX = ' + dX);
+            log('dY = ' + dY);
+            log('maxDelta = ' + maxDelta);
+            log('MinDelta = ' + minDelta);
+            log('minFloor1pt5Delta = ' + minFloor1pt5Delta);
+            let temp = maxDelta - minDelta + minFloor1pt5Delta;
+            log('distU = ' + temp);
+            */
+            
+            //convert dist back to pixels
+            distUnits = Math.floor( (maxDelta-minDelta + minFloor1pt5Delta) / scaleNumber ) * scaleNumber
+            distPx = distUnits * 70 * gridIncrement / scaleNumber; 
+            //floor( ( maxDelta-minDelta + minFloor1pt5Delta ) /5  )*5
+            
+            //log('distP = ' + distPx);
+            /*
+            [[ floor((([[{abs((@{position-x}-@{target|Target|position-x})*5/70),abs((@{position-y}-@{target|Target|position-y})*5/70)}kh1]]-
+            [[{abs((@{position-x}-@{target|Target|position-x})*5/70),abs((@{position-y}-@{target|Target|position-y})*5/70)}kl1]])+
+            floor(1.5*([[{abs((@{position-x}-@{target|Target|position-x})*5/70),abs((@{position-y}-@{target|Target|position-y})*5/70)}kl1]])))/5)*5]]
+            */
+        } else {
+            //default Pythagorean theorem
+            distPx = Math.sqrt( Math.pow(pt1.x - pt2.x, 2) + Math.pow(pt1.y - pt2.y, 2) );
+        }
+        
+        return distPx;
     }
     
     //finds distance between origin pt(center of origin token) to the CLOSEST corner of the target token
-    const TokToOriginDistance = function(tok, originX, originY, gridIncrement) {
+        //if nearestUnit===true, then round the distance to the nearest square. e.g. 5ft squares-> if distance is 30.4ft, round to 30ft.
+    const TokToOriginDistance = function(tok, originX, originY, gridIncrement, scaleNumber, calcType) {
         let minDist;
         let dist;
         let centerDistX;    //used for graphical outout (set by top, left)
@@ -737,13 +897,13 @@ const Radar = (() => {
         
         //Upper Left corner
         //minDist = dist = Math.sqrt( Math.pow(originX - pUL.x, 2) + Math.pow(originY - pUL.y, 2) );
-        minDist = dist = DistBetweenPts(pOrigin, pUL)
+        minDist = dist = distBetweenPts(pOrigin, pUL, calcType, gridIncrement, scaleNumber)
         
         closestPt = pUL;
         closestDist = dist;
         
         //Upper Right corner
-        dist = DistBetweenPts(pOrigin, pUR)
+        dist = distBetweenPts(pOrigin, pUR, calcType, gridIncrement, scaleNumber)
         //log('distUR = ' + dist);
         if (dist < minDist) {
             minDist = dist;
@@ -752,7 +912,7 @@ const Radar = (() => {
         }
         
         //Lower Left corner
-        dist = DistBetweenPts(pOrigin, pLL)
+        dist = distBetweenPts(pOrigin, pLL, calcType, gridIncrement, scaleNumber)
         //log('distLL = ' + dist);
         if (dist < minDist) {
             minDist = dist;
@@ -761,7 +921,7 @@ const Radar = (() => {
         }
         
         //Lower Right corner
-        dist = DistBetweenPts(pOrigin, pLR)
+        dist = distBetweenPts(pOrigin, pLR, calcType, gridIncrement, scaleNumber)
         //log('distLR = ' + dist);
         if (dist < minDist) {
             minDist = dist;
@@ -769,7 +929,12 @@ const Radar = (() => {
             closestDist = dist;
         }
         
-        minDist = Math.round(minDist, 1); 
+        if (calcType==='Euclidean') {
+            //default case
+            minDist = Math.round(minDist, 1); 
+        } else {
+            //No display rounding needed. This was handled previously in the distBetweenPts function
+        }
         
         //log(closestDist + ' => ' + closestPt.x + ', ' + closestPt.y)
         
@@ -911,11 +1076,12 @@ const Radar = (() => {
     }
 
     //Calculates distance and direction from origin token. 
-    const GetDirectionalInfo = function(tokX, tokY, originX, originY, distType, includeTotalDist, scaleNumber, scaleUnits, gridIncrement, outputCompact) {
+    const GetDirectionalInfo = function(tokX, tokY, originX, originY, distType, includeTotalDist, scaleNumber, scaleUnits, gridIncrement, outputCompact, calcType) {
         let retVal = "";
         let xDist;
         let yDist;
         let totalDist;
+        let fixedDecimals = 1;
         let right = 'Right ';
         let left = 'Left ';
         let up = 'Up ';
@@ -941,7 +1107,29 @@ const Radar = (() => {
                 yDist = scaleNumber * ( (tokY - originY) / 70) / gridIncrement;
             }
         }
-        totalDist = Math.sqrt( Math.pow(xDist, 2) + Math.pow(yDist, 2) );
+        
+        //lazy coding. Going to re-assemble pts to pass to distance formula
+        let tokPt = new pt(tokX, tokY);
+        let originPt = new pt(originX, originY);
+        
+        if (calcType !== 'Euclidean') {
+            let totalDistPx = distBetweenPts(tokPt, originPt, calcType, gridIncrement, scaleNumber, true);  //last "true" param means distance is for display only - 5e determines "in cone" with Euclidean, but can report distance with diags counting 1 square
+            if (distType === "u") {
+                totalDist = (totalDistPx  / 70) / gridIncrement;
+            } else {
+                totalDist = (totalDistPx * scaleNumber / 70) / gridIncrement;
+            }
+            fixedDecimals = 0;
+        } else {
+            if (distType === "u") {
+                totalDist = (distBetweenPts(tokPt, originPt)  / 70) / gridIncrement;
+            } else {
+                totalDist = (distBetweenPts(tokPt, originPt) * scaleNumber / 70) / gridIncrement;
+            }
+            fixedDecimals = 1;
+        }
+        
+        //totalDist = Math.sqrt( Math.pow(xDist, 2) + Math.pow(yDist, 2) );
         
         if (xDist > 0) {
             retVal = right + _h.inlineResult(Math.round(xDist,1)) + ',';
@@ -958,9 +1146,9 @@ const Radar = (() => {
         
         //Format text output. Default is outputCompact=false
         if (outputCompact) {
-            retVal = retVal + ',Dist ' + _h.inlineResult(parseFloat(totalDist).toFixed(1));
+            retVal = retVal + ',Dist ' + _h.inlineResult(parseFloat(totalDist).toFixed(fixedDecimals));
         } else {
-            retVal = retVal + '<br>' + 'Distance = ' + _h.inlineResult(parseFloat(totalDist).toFixed(1));
+            retVal = retVal + '<br>' + 'Distance = ' + _h.inlineResult(parseFloat(totalDist).toFixed(fixedDecimals));
         }
         
         return retVal;
@@ -1051,18 +1239,24 @@ const Radar = (() => {
         }
     }
     
-    const isPointInCone = function(pt, oPt, rad, coneDirection, coneWidth, isFlatCone) {
+    const isPointInCone = function(pt, oPt, rad, coneDirection, coneWidth, isFlatCone, calcType='Euclidean', gridIncrement=-999, scaleNumber=-999) {
         let deg2rad = Math.PI/180;
         let pAngle;     //the angle between the cone origin and the test pt
         let smallAngle;
-        let startAngle = deg2rad * (coneDirection - coneWidth/2);
-        let endAngle = deg2rad * (coneDirection + coneWidth/2);
-        let centerAngle = deg2rad * (coneDirection);
+        let startAngle = deg2rad * normalizeTo360deg(coneDirection - coneWidth/2);
+        let endAngle = deg2rad * normalizeTo360deg(coneDirection + coneWidth/2);
+        let centerAngle = deg2rad * normalizeTo360deg(coneDirection);
         let halfConeWidth = deg2rad * (coneWidth/2);
         let criticalDist;
         
         // Calculate polar co-ordinates
-        let polarRadius = DistBetweenPts(oPt, pt)
+        let polarRadius;
+        if (calcType == 'PF' && gridIncrement !== -999 & scaleNumber !== -999) {
+            polarRadius = distBetweenPts(oPt, pt, calcType, gridIncrement, scaleNumber)
+        } else {
+            polarRadius = distBetweenPts(oPt, pt)
+        }
+        
         let dX = Math.abs(pt.x - oPt.x);
         let dY = Math.abs(pt.y - oPt.y);
         
@@ -1093,6 +1287,9 @@ const Radar = (() => {
         
         //2nd test angle: Add 360deg to pAngle (to handle cases where startAngle is a negative value and endAngle is positive)
         let pAngle360 = pAngle + 360*deg2rad;
+        if (endAngle < startAngle) {
+            endAngle = endAngle + 360*deg2rad;
+        }
         
         /*
         log(pt);
@@ -1110,15 +1307,18 @@ const Radar = (() => {
         
         if (isFlatCone) {
             //for 5e-style cones. Basically a triangle (no rounded outer face)
+            //let z = (rad / (2*Math.sin(Math.atan(0.5)))) - rad;
             dTheta = Math.abs(pAngle - centerAngle);
-            criticalDist = (rad*Math.cos(halfConeWidth)) / Math.cos(dTheta);
+            //criticalDist = ((rad+z)*Math.cos(halfConeWidth)) / Math.cos(dTheta);
+            criticalDist = rad / Math.cos(dTheta);
         } else {
             //compare to full radius cone
             criticalDist = rad
         }
+        //log('criticalDist = ' + criticalDist);
         
         //test pAngle and pAngle360 against start/end Angles
-        if ( (pAngle >= startAngle) && (pAngle <= endAngle) && (polarRadius <= rad) || 
+        if ( (pAngle >= startAngle) && (pAngle <= endAngle) && (polarRadius <= criticalDist) || 
                 (pAngle360 >= startAngle) && (pAngle360 <= endAngle) && (polarRadius <= criticalDist) ) {
            return true;
         } else {
@@ -1244,7 +1444,7 @@ const Radar = (() => {
             colors: [],
             compareType: [],        //possible values: 'contains'(val is somewhere in string), '@'(exact match), '>' or '<' (numeric comparison)
             ignore: [],             //flag to determine if the value is an ignore filter or a positive match filter
-            anyValueAllowed: false  //this flag will bypass normal checks. Used only for charFilters - The attribute just needs to exist in order for the toekn to be pinged 
+            anyValueAllowed: false  //this flag will bypass normal checks. Used only for charFilters - The attribute just needs to exist in order for the token to be pinged 
         }
         let losBlocks = false;      //Will DL walls block radar sensor if completely obscured (will look at 5 pts per token to determine LoS)
         let title = "Radar Ping Results";             //title of the default template output
@@ -1252,7 +1452,7 @@ const Radar = (() => {
         let displayOutput = true    //output results via sendChat (default template)
         let pageScaleNumber = 5;    //distance of one unit
         let pageScaleUnits = "ft";  //the type of units to use for the scale
-        let PageGridIncrement = 1;  //how many gridlines per 70px
+        let pageGridIncrement = 1;  //how many gridlines per 70px
         let displayUnits = "u";         //output distances in "units" or use pageScaleUnits 
         let includeTotalDist = false;   //inlude the total range in the output, or just directional (X & Y distances)
         let hasSight = false;       //Will the RadarPing token grant temporary sight to the 
@@ -1284,7 +1484,8 @@ const Radar = (() => {
         let coneWidth = 360;
         let coneDirection = 0;
         let outputLines = [];
-        let groupBy = true;         //if filters are used, group tokens by filter condition in table output
+        let groupBy = true;             //if filters are used, group tokens by filter condition in table output
+        let calcType = 'Euclidean';     //Can set to 'PF' to use the 'every-other-diagonal-counts-as-1.5-units' math (only for gridded maps)
         
         try {
             if(msg.type=="api" && msg.content.indexOf("!radar") === 0 ) {
@@ -1436,10 +1637,19 @@ const Radar = (() => {
                             }
                             break;
                         case "units":
-                            if (_.contains(['u', 'units', 'squares', 'square', 'hexes', 'hex'], param.toLowerCase())) {
+                            let tempUnits = param.split(",").map(x => x.trim());
+                            if (_.contains(['u', 'units', 'squares', 'square', 'hexes', 'hex'], tempUnits[0].toLowerCase())) {
                                 displayUnits = 'u'
                             } else {
                                 displayUnits = undefined;   //will re-define from the Page settings later.
+                            }
+                            if (tempUnits.length > 1) {
+                                if (_.contains(['pf', 'pathfinder', '3.5'], tempUnits[1].toLowerCase())) {
+                                    calcType = 'PF';
+                                }
+                                if (_.contains(['5e'], tempUnits[1].toLowerCase())) {
+                                    calcType = '5e';
+                                }
                             }
                             break
                         case "los":
@@ -1618,7 +1828,7 @@ const Radar = (() => {
                 
                 //Create an array of token-ish objects with only critical key values, PLUS distance to origin token, filter matches, and aura color by filter
                 tokIdDist = allToks.map(function(tok) {
-                    let originDist = TokToOriginDistance(tok, originX, originY, PageGridIncrement);
+                    let originDist = TokToOriginDistance(tok, originX, originY, pageGridIncrement, pageScaleNumber, calcType);
                     return retObj = {
                         id: tok.id,
                         left: tok.get("left"),
@@ -1640,8 +1850,8 @@ const Radar = (() => {
                         centerDistY: originDist.centerDistY,    //used for table outout
                         closestPt: originDist.closestPt,    //the center of the closest square
                         closestDist: originDist.closestDist,
-                        corners: originDist.corners,        //Used for checking LoS
-                        filterKey: "",			//will contain 'ignore' or the name of the attribute or token property used for fltering
+                        corners: originDist.corners,        //will contain 'ignore' or the name of the attribute or token property used for fltering
+                        filterKey: "",
                         losBlocks: false,
                         filterColor: hRED  //default aura = red
                     }
@@ -1657,7 +1867,7 @@ const Radar = (() => {
                             return (tok.closestDist <= range) && (tok.id !== oTok.id);
                         } else {
                             //only if tok is within the defined cone
-                            return isPointInCone(tok.closestPt, originPt, range, coneDirection, coneWidth, false);  //false flag denotes a "true cone" (rounded outer face)
+                            return isPointInCone(tok.closestPt, originPt, range, coneDirection, coneWidth, false, calcType, pageGridIncrement, pageScaleNumber);  //false flag denotes a "true cone" (rounded outer face)
                         }
                     });
                 } else if (wavetype === 'square') {    //square-shaped region. compare pt to full or "sliced" polygon
@@ -1790,7 +2000,7 @@ const Radar = (() => {
                        
                         for (let i = 0; i < vertices.length-1; i++) {
                             //we only want to count path segments with at least one vertex within range
-                            if ( DistBetweenPts(originPt, vertices[i]) <= range || DistBetweenPts(originPt, vertices[i+1]) <= range ) {
+                            if ( distBetweenPts(originPt, vertices[i]) <= range || distBetweenPts(originPt, vertices[i+1]) <= range ) {
                                 pathSegs.push({
                                     pt1: new pt(vertices[i].x, vertices[i].y),
                                     pt2: new pt(vertices[i+1].x, vertices[i+1].y)
@@ -1814,6 +2024,7 @@ const Radar = (() => {
                 ///////////////////////////////////////////////////////////////////////////
                 /////////       RADAR ANIMATION
                 ///////////////////////////////////////////////////////////////////////////
+                let z;  //only use for 5e cones. See build5eCone function documentation for details
                 let i = 0;
                 let oldRadius = 0;
                 polygon = [];
@@ -1823,14 +2034,19 @@ const Radar = (() => {
                     } else if (wavetype === 'square') {     //square wavefront
                         pathstring = buildSquare(radius, coneWidth, coneDirection);
                     } else if (wavetype === '5e') {         //5e-style cone  wavefront
-                        pathstring = build5eCone(radius, coneWidth, coneDirection);
+                        z = (radius / (2*Math.sin(Math.atan(0.5)))) - radius;
+                        pathstring = build5eCone(radius, z, coneWidth, coneDirection);
                     }
                     
                     //let seeAnimation = true;
                     if (seeAnimation === true) {
                         promise = new Promise((resolve, reject) => {
                             setTimeout(() => {
-                                drawWave(pageID, pathstring, "transparent", waveColor, "objects", 3, radius, originX, originY, waveLife);
+                                if (wavetype === '5e') {
+                                    drawWave(pageID, pathstring, "transparent", waveColor, "objects", 3, radius, originX-z, originY-z, waveLife);
+                                } else {
+                                    drawWave(pageID, pathstring, "transparent", waveColor, "objects", 3, radius, originX, originY, waveLife);
+                                }
                                 resolve("done!");
                             }, waveDelay);
                         });
@@ -1957,7 +2173,7 @@ const Radar = (() => {
                                                 group = '';   //only want the row header on the first row of output for each filter
                                             }
                                             //identify hidden tokens in chat
-                                            content = GetDirectionalInfo(parseInt(tok.closestPt.x), parseInt(tok.closestPt.y), originX, originY, displayUnits, includeTotalDist, pageScaleNumber, pageScaleUnits, pageGridIncrement, outputCompact);
+                                            content = GetDirectionalInfo(parseInt(tok.closestPt.x), parseInt(tok.closestPt.y), originX, originY, displayUnits, includeTotalDist, pageScaleNumber, pageScaleUnits, pageGridIncrement, outputCompact, calcType);
                                             rowData = buildRowOutput(true, group, _h.red(parseInt(counter+1)+'.'), _h.red(content));
                                             outputLines.push(rowData);
                                         } else if (group.indexOf('-')===-1) {
@@ -1967,7 +2183,7 @@ const Radar = (() => {
                                                 group = '';   //only want the row header on the first row of output for each filter
                                             }
                                             //normal output
-                                            content = GetDirectionalInfo(parseInt(tok.closestPt.x), parseInt(tok.closestPt.y), originX, originY, displayUnits, includeTotalDist, pageScaleNumber, pageScaleUnits, pageGridIncrement, outputCompact);
+                                            content = GetDirectionalInfo(parseInt(tok.closestPt.x), parseInt(tok.closestPt.y), originX, originY, displayUnits, includeTotalDist, pageScaleNumber, pageScaleUnits, pageGridIncrement, outputCompact, calcType);
                                             rowData = buildRowOutput(true, group, parseInt(counter+1)+'.', content);
                                             outputLines.push(rowData);
                                             group = '';   //only want the row header on the first row of output for each filter
@@ -1997,12 +2213,12 @@ const Radar = (() => {
                                 //text output stuff
                                 if (toksInRange[i].layer === 'gmlayer' || toksInRange[i].layer === 'walls') {
                                     //identify hidden tokens in chat
-                                    content = GetDirectionalInfo(parseInt(toksInRange[i].closestPt.x), parseInt(toksInRange[i].closestPt.y), originX, originY, displayUnits, includeTotalDist, pageScaleNumber, pageScaleUnits, pageGridIncrement, outputCompact);
+                                    content = GetDirectionalInfo(parseInt(toksInRange[i].closestPt.x), parseInt(toksInRange[i].closestPt.y), originX, originY, displayUnits, includeTotalDist, pageScaleNumber, pageScaleUnits, pageGridIncrement, outputCompact, calcType);
                                     rowData = buildRowOutput(false, '', _h.red(parseInt(i+1)+'.'), _h.red(content));
                                     outputLines.push(rowData);
                                 } else {
                                     //normal output
-                                    content = GetDirectionalInfo(parseInt(toksInRange[i].closestPt.x), parseInt(toksInRange[i].closestPt.y), originX, originY, displayUnits, includeTotalDist, pageScaleNumber, pageScaleUnits, pageGridIncrement, outputCompact);
+                                    content = GetDirectionalInfo(parseInt(toksInRange[i].closestPt.x), parseInt(toksInRange[i].closestPt.y), originX, originY, displayUnits, includeTotalDist, pageScaleNumber, pageScaleUnits, pageGridIncrement, outputCompact, calcType);
                                     rowData = buildRowOutput(false, '', parseInt(i+1)+'.', content);
                                     outputLines.push(rowData);
                                 }
