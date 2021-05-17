@@ -20,7 +20,7 @@ Fixed character name setting.
 var API_Meta = API_Meta || {};
 API_Meta.ImportHS6e = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 {
-try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (13)); }
+try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (23)); }
 }
 
 // TODO Deal with MP
@@ -509,9 +509,9 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
 
     modf.forEach(m => {                                                        // Loop all modifiers
       val = m.value;
-      val = val.replace('¾', '.75')                                            // Substitue decimals for fractions
-               .replace('½', '.5')
-               .replace('¼', '.25')
+      val = val.replace('Â¾', '.75')                                            // Substitue decimals for fractions
+               .replace('Â½', '.5')
+               .replace('Â¼', '.25')
                .replace(/[^\x00-\xBF]+/g, '')
 
       if(val.substring(0,1) === "-"){lval=lval+parseFloat(val);}               // Add to limitations
@@ -816,7 +816,7 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
     } else if (endm === 0){
       createOrSetAttr(rpem, "0 END", cid);
     } else if (endm === .5){
-      createOrSetAttr(rpem, "½ END", cid);
+      createOrSetAttr(rpem, "Â½ END", cid);
     } else {
       createOrSetAttr(rpem, "Costs " + endm + "x", cid);
     }
