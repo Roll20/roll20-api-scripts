@@ -56,9 +56,11 @@
                                                             // optional "gm" flag to send result output to gm chat
                                                                     //e.g. --silent| true gm will only output to gm chat
         
-        --units|        <u/units/squares/square/hexes/hex> for "u", or <anything else> to just use map settings, e.g. ft, km, miles
-                                                        //Only affects Display output
+        --units|  <u/units/squares/square/hexes/hex, Optional 3.5/pf/5e>
+                                                        //if optional 5e or omitted, this will only affect display output (5e will use diag=1sq)
+							//if pf or 3.5 is used, then both the display output AND the determination of if tok is within range will use PF-style calcs, where every other diag=1.5sq
                                                         //for GRIDLESS MAP, this command must be included or else all results will be INFINITY
+							//	however, the optional parameters will only work with a gridded map.
         --visible|       <yes/true/1> or <no/false/0>   //Default=true. Set to false/no/0 to prevent the drawing of the wavefront animation
         --graphoptions|   < grid/circles/rings/reticle > //Default is a plain background. Can add graphical elements to display. Circles/Rings are interchangeable aliases
         --output|         < graph, table, compact >         //Default=table. Can include one or all of these elements. Compact attempts to put the table output on a single line
