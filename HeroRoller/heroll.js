@@ -1,4 +1,4 @@
-﻿/*
+/*
 =========================================================
 Name			:	Hero Roller (heroll)
 Version			:	1.2.1
@@ -28,8 +28,8 @@ const HeRoll = (() => {
 	const apiproject = 'HeRoll';
 	API_Meta[apiproject].version = '1.2.1';
 	const schemaVersion = 0.1;
-	const vd = new Date(1592600907866);
-
+	const vd = new Date(1618319851550);
+	
 	const versionInfo = () => {
 		log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
 		return;
