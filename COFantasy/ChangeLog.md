@@ -1,6 +1,17 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 2.17
 ### Capacités
+* Capacité d'objet magique "Action libre"
+* Saisir et broyer pour les chaoses.
+* Amélioration de la prise en charge d'ombre mouvante.
+* Ajout de la capacité Force d'âme du haut elfe.
+* Ajout de la capacité Bûcheron
+* Ajout des capacités Attaque sanglante et Flèche sanglante.
+* Amélioration de la prise en compte des sens affûtés.
+* Amélioration de la prise en charge du second souffle du guerrier.
+* Ajout de l'effet noyade des plantes carnivores.
+* Ajout de la capacité Gober de la Voie du prédateur.
+* Meilleure prise en charge de la capacité Dévorer des prédateurs
 * Ajout de la capacité Increvable de la Voie de l'humain.
 * Ajout de la capacité Briseur d'os du barbare.
 * Meilleure automatisation de l'Argument de taille du barbare.
@@ -20,10 +31,21 @@
 * Support complet de la Voie du porteur de bouclier (prestige)
 
 ### Autres améliorations
+* Gestion des identités secrètes.
+* Possibilité de passer des options aux effets à dégâts sur la durée.
+* Un personnage invisible ne peut plus être vu des autres joueurs.
+* Ajout d'une possibilité de synchronisation des tokens entre cartes.
+* Une réussite critique à une feinte double les bonus de DM à l'attaque suivante.
+* Ajout d'un attribut pour des modification de tous les tests d'un personnage (bonus ou malus)
+* Tirage d'initiative aléatoire secret pour les tokens sur le layer MJ.
 * Possibilité de rajouter des attributs à afficher dans le statut.
 * Le script ne bloque plus que le déplacement des personnages immobilisés contrôlés par un joueur connecté.
 * En cas d'échec critique d'une boule de feu qui cible une cible artificielle, la cible est déplacée aléatoirement de 15 m.
 * Refactoring !cof-tenebres pour supporter les options de Mana (y compris Tempête de Mana)
+* Séparation des options de blessure grave et de dommages importants
+
+### Corrections de bugs
+* Correction de la prise en compte des familiers dans les aoe.
 
 ## 2.16
 ### Capacités
