@@ -760,7 +760,7 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
       {
         createOrSetAttr(rppft, "Variable Power Pool", cid);
         createOrSetAttr(rppfn, pwnm, cid);
-        createOrSetAttr(rppfe, "0", cid);
+        createOrSetAttr(rppef, "0", cid);
       }
 /*
 {"name":"repeating_powers_-MZcTB4QZrODnr95ikiX_pow_frame_type","current":"VPP Slot","max":"","_id":"-M_fEJw5Tb3Twd5QDRfm","_type":"attribute","_characterid":"-MZs-0JF2h1Ua0e2Hv1Y"},
