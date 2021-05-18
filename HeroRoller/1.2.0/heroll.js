@@ -1,37 +1,28 @@
 ﻿/*
 =========================================================
 Name			:	Hero Roller (heroll)
-Version			:	1.2.1
-Last Update		:	4/2/2021
+Version			:	1.2
+Last Update		:	6/17/2020
 GitHub			:	https://github.com/Roll20/roll20-api-scripts/tree/master/HeroRoller
 Roll20 Contact	:	timmaugh
 =========================================================
-*/
-var API_Meta = API_Meta || {};
-API_Meta.HeRoll = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
-{
-	try { throw new Error(''); } catch (e) { API_Meta.HeRoll.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (13)); }
-}
 
-/*
- * ----------- DEVELOPMENT PATH ----------------------------
+----------- DEVELOPMENT PATH ----------------------------
 	-- skill roll template (mechanic bubble for target, drawn automatically)
 	-- explosion rings (separate BODY/STUN, or BODY/PD for entangles) peeling off dice
 	-- track END spent
 	-- track charges/ammo
 */
-const HeRoll = (() => {
+const heroll = (() => {
+	'use strict';
 
 	// ==================================================
 	//		VERSION
 	// ==================================================
-	const apiproject = 'HeRoll';
-	API_Meta[apiproject].version = '1.2.1';
-	const schemaVersion = 0.1;
-	const vd = new Date(1592600907866);
-
 	const versionInfo = () => {
-		log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
+		const vrs = '1.2';
+		const vd = new Date(1592600907866);
+		log('\u0166\u0166 HeRoller v' + vrs + ', ' + vd.getFullYear() + '/' + (vd.getMonth() + 1) + '/' + vd.getDate() + ' \u0166\u0166');
 		return;
 	};
 
@@ -43,18 +34,18 @@ const HeRoll = (() => {
 		state.torii.sigtime = state.torii.sigtime || Date.now() - 3001;
 		if (!state.torii.siglogged || Date.now() - state.torii.sigtime > 3000) {
 			const logsig = '\n' +
-				'  _____________________________________________   ' + '\n' +
-				'   )_________________________________________(    ' + '\n' +
-				'     )_____________________________________(      ' + '\n' +
-				'           ___| |_______________| |___            ' + '\n' +
-				'          |___   _______________   ___|           ' + '\n' +
-				'              | |               | |               ' + '\n' +
-				'              | |               | |               ' + '\n' +
-				'              | |               | |               ' + '\n' +
-				'              | |               | |               ' + '\n' +
-				'              | |               | |               ' + '\n' +
-				'______________|_|_______________|_|_______________' + '\n' +
-				'                                                  ' + '\n';
+				'   ‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗     ' + '\n' +
+				'    ∖_______________________________________∕     ' + '\n' +
+				'      ∖___________________________________∕       ' + '\n' +
+				'           ___┃ ┃_______________┃ ┃___            ' + '\n' +
+				'          ┃___   _______________   ___┃           ' + '\n' +
+				'              ┃ ┃               ┃ ┃               ' + '\n' +
+				'              ┃ ┃               ┃ ┃               ' + '\n' +
+				'              ┃ ┃               ┃ ┃               ' + '\n' +
+				'              ┃ ┃               ┃ ┃               ' + '\n' +
+				'              ┃ ┃               ┃ ┃               ' + '\n' +
+				'______________┃ ┃_______________┃ ┃_______________' + '\n' +
+				'             ⎞⎞⎛⎛            ⎞⎞⎛⎛      ' + '\n';
 			log(`${logsig}`);
 			state.torii.siglogged = true;
 			state.torii.sigtime = Date.now();
@@ -189,9 +180,6 @@ const HeRoll = (() => {
 		"s": "selective",				// whether multiple targets get indiv to-hit rolls
 		"sel": "selective",
 		"selective": "selective",
-
-		"as": "source",  				// character from which to draw OCV (otherwise will be speaker)
-		"source": "source"
 	};
 
 	const templateAliasTable = {		// aliases for the various accepted templates
@@ -282,59 +270,9 @@ const HeRoll = (() => {
 	const lookForArg = (arg) => (a) => { return a[0] === arg; };
 	const lookForVal = (arg) => (a) => { return a[1] === arg; };
 	const aliasesFrom = (o) => (a) => { return [((a[0] in o) ? o[a[0]] : a[0]), a[1]]; };
-	const getKeyByValue = (object, value) => {
-		return Object.entries(object)
-			.filter(lookForVal(value))
-			.map((a) => { return a[0]; });
-	};
-	const escapeRegExp = (string) => { return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'); };
-
-	const getChar = (query, pid) => { // find a character where info is an identifying piece of information (id, name, or token id)
-		let character;
-		let qrx = new RegExp(escapeRegExp(query), 'i');
-		let charsIControl = findObjs({ type: 'character' });
-		charsIControl = playerIsGM(pid) ? charsIControl : charsIControl.filter(c => c.get('controlledby').split(',').includes(pid));
-		character = charsIControl.filter(c => c.id === query)[0] ||
-			charsIControl.filter(c => c.id === (getObj('graphic', query) || { get: () => { return '' } }).get('represents'))[0] ||
-			charsIControl.filter(c => c.get('name') === query)[0] ||
-			charsIControl.filter(c => qrx.test(c)).reduce((m, v) => {
-				let d = getEditDistance(query, v);
-				return !m.length || d < m[1] ? [v, d] : m;
-			}, [])[0];
-		return character;
-	};
-	const getEditDistance = (a, b) => {
-		if (a.length === 0) return b.length;
-		if (b.length === 0) return a.length;
-
-		var matrix = [];
-
-		// increment along the first column of each row
-		var i;
-		for (i = 0; i <= b.length; i++) {
-			matrix[i] = [i];
-		}
-
-		// increment each column in the first row
-		var j;
-		for (j = 0; j <= a.length; j++) {
-			matrix[0][j] = j;
-		}
-
-		// Fill in the rest of the matrix
-		for (i = 1; i <= b.length; i++) {
-			for (j = 1; j <= a.length; j++) {
-				if (b.charAt(i - 1) === a.charAt(j - 1)) {
-					matrix[i][j] = matrix[i - 1][j - 1];
-				} else {
-					matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, // substitution
-						Math.min(matrix[i][j - 1] + 1, // insertion
-							matrix[i - 1][j] + 1)); // deletion
-				}
-			}
-		}
-
-		return matrix[b.length][a.length];
+	const getKeyByValue = (object, value) => { return Object.entries(object)
+															.filter(lookForVal(value))
+															.map((a) => { return a[0]; });
 	};
 
 	const extendFromArray = (o, a) => {
@@ -366,7 +304,7 @@ const HeRoll = (() => {
 		return;
 	};
 
-	const roll3d6 = () => {
+	const roll3d6 =  () => {
 		return randomInteger(6) + randomInteger(6) + randomInteger(6);
 	};
 
@@ -403,7 +341,7 @@ const HeRoll = (() => {
 		return [+r, +g, +b];
 	};
 
-	const RGBToHex = (r, g, b) => {
+	const RGBToHex = (r, g, b) =>  {
 		r = r.toString(16);
 		g = g.toString(16);
 		b = b.toString(16);
@@ -435,9 +373,9 @@ const HeRoll = (() => {
 	};
 
 	const getTheSpeaker = (msg) => {
-		let characters = findObjs({ _type: 'character' });
-		let speaking;
-		characters.forEach(function (chr) { if (chr.get('name') === msg.who) speaking = chr; });
+		var characters = findObjs({ _type: 'character' });
+		var speaking;
+		characters.forEach(function (chr) { if (chr.get('name') == msg.who) speaking = chr; });
 		if (speaking) {
 			speaking.speakerType = "character";
 			speaking.localName = speaking.get("name");
@@ -454,7 +392,6 @@ const HeRoll = (() => {
 			speaking.ocvBase = 0;
 			speaking.ocvMods = 0;
 		}
-		speaking.playerid = msg.playerid;
 		speaking.chatSpeaker = `${speaking.speakerType}|${speaking.id}`;
 		return speaking;
 	};
@@ -685,9 +622,9 @@ const HeRoll = (() => {
 				break;
 
 			case "dice":
-				valInput = [1, 0, 0, "--", "1d6"]; // this will represent the dice[] array--> [#d6, #d3, adder, rollmechanic shorthand, rebuilt equation]
-				if (['check', 'skill', 'none'].includes(input)) {
-					valInput = [0, 0, 0, "--", "", "check"]; // extra element to trigger check
+				valInput = [1,0,0,"--","1d6"]; // this will represent the dice[] array--> [#d6, #d3, adder, rollmechanic shorthand, rebuilt equation]
+				if (input == "check" || input == "skill" || input == "none") {
+					valInput = [0, 0, 0, "--", "","check"]; // extra element to trigger check
 				} else {
 					let nomech = input;
 					var mecharray = ["l", "k", "n", "u"];
@@ -711,7 +648,7 @@ const HeRoll = (() => {
 				break;
 
 			case "extradice":
-				valInput = [0, 0, 0, "--", "0d6"]; // set to default values in case no number is provided
+				valInput = [0,0,0,"--","0d6"]; // set to default values in case no number is provided
 				if (isNaN(Number(input))) {
 				} else {
 					valInput[0] += Number(input);
@@ -779,16 +716,13 @@ const HeRoll = (() => {
 						valInput = "tall";
 						break;
 				}
-				break;
+
 			case "target":
 				valInput = origCap.split(/[\s,]/);				// split on white space or comma
 				break;
 
 			case "selective":
 				valInput = true;
-				break;
-			case "source":
-				valInput = origCap;
 				break;
 		}
 
@@ -835,8 +769,7 @@ const HeRoll = (() => {
 			verbose: "--",
 			target: "--",
 			selective: "--",
-			notes: "",
-			source: "--"
+			notes: ""
 		};
 
 		// KNOWN PARAMETER KEYS									// for later iteration
@@ -866,7 +799,6 @@ const HeRoll = (() => {
 			target: [],											// ids of any targets supplied
 			selective: false,									// whether to roll individual to-hits for each supplied target
 			verbose: false,
-			source: "--",
 
 			//inaccessible to user
 			outputas: "attack",
@@ -940,7 +872,7 @@ const HeRoll = (() => {
 
 	const processRecall = (thisRoller, args) => {
 		// the recall speaker was already set to current speaker with the defaults, so we only need to overwrite it if there is a value supplied
-		if (thisRoller.userparameters.recall !== "") {
+		if (thisRoller.userparameters.recall !== "") { 
 			thisRoller.recallParameters.speakID = (thisRoller.userparameters.recall === "last" && state.heroll.lastSpeaker !== "none") ? state.heroll.lastSpeaker : thisRoller.userparameters.recall;
 		}
 
@@ -991,7 +923,7 @@ const HeRoll = (() => {
 
 		// change unrecognized args with no value to have "NA" instead (used in verbose output)
 		Object.keys(thisRoller.userparameters).filter((a) => { return !thisRoller.knownparams.includes(a); })
-			.map((a) => { thisRoller.userparameters[a] === "" ? thisRoller.userparameters[a] = "NA" : thisRoller.userparameters[a]; });
+											  .map((a) => { thisRoller.userparameters[a] === "" ? thisRoller.userparameters[a] = "NA" : thisRoller.userparameters[a]; });
 
 		// set the roll mechanic parameter to the shorthand, if present
 		// the roll mechanic property can be set in three places; the priority should be: template < explicit mech argument < shorthand
@@ -1018,7 +950,7 @@ const HeRoll = (() => {
 					let chardcv = "";
 					let charishit = "";
 					if (token.get('represents') !== "") {						// check whether token has character sheet
-						chardcv = getCharacterAttr(attr, token.get('represents'));
+						chardcv = getCharacterAttr(attr, token.get('represents'));	
 						charishit = 11 + thisRoller.theSpeaker.ocvFinal - thr >= chardcv ? "&#9678;" : "";	// if character is hit, load the target character into the string; otherwise, empty
 					}
 					return {
@@ -1034,33 +966,20 @@ const HeRoll = (() => {
 						__TARGET_ISHIT__: (thisRoller.parameters.target.length === 1 || !thisRoller.parameters.selective) ? "" : charishit,
 					};
 				});
-		}
+		} 
 	};
 
 	const processOCV = (thisRoller) => {
-		let sourceChar;
-		if (thisRoller.parameters.source !== '--') {
-			sourceChar = getChar(thisRoller.parameters.source, thisRoller.theSpeaker.playerid);
-			if (sourceChar) {
-				thisRoller.theSpeaker.radio_target = getCharacterAttr("radio_target", sourceChar.id);
-				thisRoller.theSpeaker.ocvFinal = getCharacterAttr("OCV", sourceChar.id);
-				thisRoller.theSpeaker.ocvBase = getCharacterAttr("ocv_base", sourceChar.id);
-				thisRoller.theSpeaker.ocvMods = thisRoller.theSpeaker.ocvFinal - thisRoller.theSpeaker.ocvBase;
-				thisRoller.theSpeaker.sourceName = sourceChar.get('name');
-			}
-		} else if (thisRoller.theSpeaker.speakerType === 'character') {
-			sourceChar = thisRoller.theSpeaker;
-		}
 		// process using OMCV instead of OCV
-		if (thisRoller.parameters.useomcv === true && sourceChar) { // if there is a character involved, get the ocv and location info from the sheet
-			thisRoller.theSpeaker.ocvFinal = getCharacterAttr("OMCV", sourceChar.id);
-			thisRoller.theSpeaker.ocvBase = getCharacterAttr("omcv_base", sourceChar.id);
+		if (thisRoller.parameters.useomcv === true && thisRoller.theSpeaker !== undefined && thisRoller.theSpeaker.speakerType === "character") { // if there is a character involved, get the ocv and location info from the sheet
+			thisRoller.theSpeaker.ocvFinal = getCharacterAttr("OMCV", thisRoller.theSpeaker.id);
+			thisRoller.theSpeaker.ocvBase = getCharacterAttr("omcv_base", thisRoller.theSpeaker.id);
 			thisRoller.theSpeaker.ocvMods = thisRoller.theSpeaker.ocvFinal - thisRoller.theSpeaker.ocvBase;
 		}
 
 		// process changing the called location
-		let startingLocation = sourceChar ? radioTargetTable[getCharacterAttr("radio_target", sourceChar.id)] : radioTargetTable[thisRoller.theSpeaker.radio_target];
-		if (startingLocation !== thisRoller.parameters.loc && sourceChar) { //only matters if the location has changed
+		let startingLocation = radioTargetTable[thisRoller.theSpeaker.radio_target];
+		if (startingLocation !== thisRoller.parameters.loc && thisRoller.theSpeaker !== undefined && thisRoller.theSpeaker.speakerType === "character") { //only matters if the location has changed
 			var attr = findObjs({ _type: 'attribute', _characterid: thisRoller.theSpeaker.id, name: "radio_target" })[0];
 			attr.set({ current: Object.keys(radioTargetTable).find(key => radioTargetTable[key] === thisRoller.parameters.loc) });
 			if (thisRoller.parameters.useomcv === false) { // only process changes to the OCV if we are using OCV, not if we are using OMCV
@@ -1083,7 +1002,7 @@ const HeRoll = (() => {
 		// if it's a recall and the situation would normally trip a location generation (like random)
 		// we should only roll it if there is no recall version of the location argument passed
 		// original roll generates a random location; once set, that should stay the same for recalls, only changing if the recall explicitly includes new location argument
-		//		if (thisRoller.theResult.location.hitlabel !== "" /* default would mean no location, ie: first roll*/ && thisRoller.recallParameters.recall === true )
+//		if (thisRoller.theResult.location.hitlabel !== "" /* default would mean no location, ie: first roll*/ && thisRoller.recallParameters.recall === true )
 
 		let loc = {};
 		// if we need to get a location, get it; run the location through the locationDataTable to get properties
@@ -1181,19 +1100,20 @@ const HeRoll = (() => {
 				}, msg.content)
 				.value();
 		}
+		log(msg.content);
 
 		let args = msg.content.split(/\s--/)							// split at argument delimiter
 			.slice(1)													// drop the api tag
 			.map(splitArgs)												// split each arg (foo:bar becomes [foo, bar])
 			.map(joinVals)												// if the value included a colon (the delimiter), join the parts that were inadvertently separated
 			.map(aliasesFrom(argAliasTable));							// flatten all argument aliases to the valid, internally tracked args
-
+			
 		let thisRoller = {};											// local object for ephemeral data storage
 		setDefaults(msg, thisRoller);									// initializes all parameters, including speaker and template defaults
 		extendFromArray(thisRoller.userparameters, args);				// write all args to the userparameters, adding any unrecognized args
 		prioritizeArg("recall", processRecall, thisRoller, args);		// look for and process recall argument, if present
 
-		//		if (typeof state.heroll[thisRoller.recallParameters.speakID].parameters === 'undefined') {	// if no roll is stored for that speaker in the state variable
+//		if (typeof state.heroll[thisRoller.recallParameters.speakID].parameters === 'undefined') {	// if no roll is stored for that speaker in the state variable
 		prioritizeArg("template", setTemplateDefaults, thisRoller);		// look for and process template argument, if present
 		processArguments(thisRoller);									// process the rest of the arguments
 		processOCV(thisRoller);											// figure out if OMCV, location, or OCV override should alter the OCV (or replace it)
@@ -1214,11 +1134,6 @@ const HeRoll = (() => {
 	//		OUTPUT FUNCTIONS
 	// ==================================================
 	const prepOutput = (thisRoller) => {
-		// SOURCE NAME
-		if (thisRoller.theSpeaker.sourceName) {
-			thisRoller.outputParams.__CHARNAME__ = thisRoller.theSpeaker.sourceName;
-		}
-
 		// OUTPUT FORMAT
 		if (thisRoller.parameters.outputformat != "tall") {
 			thisRoller.outputParams.__DS_TALL_VIS__ = "none";
@@ -1270,7 +1185,7 @@ const HeRoll = (() => {
 		} else {
 			thisRoller.outputParams.__BODY_MULT__ = "--";										// this will either be hidden or direct people to the target info
 			thisRoller.outputParams.__STUN_MULT__ = "--";
-		}
+        }
 
 		// TO HIT BAR
 		thisRoller.outputParams.__TOHIT_ROLL__ = thisRoller.theResult.tohitroll;
@@ -1299,7 +1214,7 @@ const HeRoll = (() => {
 		}
 
 		// MECHANIC
-		var mechColors = { L: "#00b8a9", N: "#ff8000", K: "#bf1f2f", U: "#5438AF" };
+		var mechColors = { L: "#00b8a9", N: "#ff8000", K: "#bf1f2f", U:"#5438AF"};
 		thisRoller.outputParams.__MECH__ = thisRoller.parameters.mechanic.toUpperCase();
 		thisRoller.outputParams.__MECH_BGC__ = mechColors[thisRoller.outputParams.__MECH__];
 
@@ -1383,14 +1298,14 @@ const HeRoll = (() => {
 			} else {																	// only output images of targets
 				targetTable = '<!-- TARGETING BAR --><div style="overflow: hidden; background-color: black; display: block"><div style="width:95%; margin: 10px auto 7px; overflow:hidden;">__TABLE-ROWS__</div></div>';
 				targetRow = '<!--TARGET --><div style="width:33.3%; display: inline-block; float: left; position: relative;"><div style="overflow: visible; width: 94%; margin: 4px auto; border-radius: 5px; background-color: #ffffff; position: relative; float:left; display: block;"><div style="display: block"><div style="padding: 3px 1px 1px; text-align: center; font-weight: bold; background-color: white; border-radius: 5px 5px 5px 5px; color: black"><div style="background-size:48px; height: 48px; position: relative;"><img height="48" width="48" style="max-height:48px;" src="__TARGET_IMG__"><div style="position:absolute;left: 2px;top: -3px;font-size: 18px;line-height: 18px;color:#bf1f2f;font-weight: normal;">__TARGET_ISHIT__</div><div style="position:absolute;right: 3px;top: -1px;font-size: 13px;line-height: 16px;color: #bf1f2f;font-weight: normal;text-align: right;">__TARGET_DCV__</div></div></div></div></div></div>';
-			}
+            }
 			if (thisRoller.theResult.targetData.length > 0) {
 				let targetKeysRegex = new RegExp(Object.keys(thisRoller.theResult.targetData[0]).join("|"), 'gi');
 				let targetAllRows = thisRoller.theResult.targetData.reduce((a, v, i) => {
 					return a + targetRow.replace(targetKeysRegex, (matched) => { return v[matched]; })
-				}, "");
-				thisRoller.outputParams.__TARGET_TABLE_HOOK__ = targetTable.replace("__TABLE-ROWS__", targetAllRows);
-			}
+				},"");
+				thisRoller.outputParams.__TARGET_TABLE_HOOK__ = targetTable.replace("__TABLE-ROWS__",targetAllRows);
+            }
 		}
 
 		// NOTES
@@ -1407,7 +1322,7 @@ const HeRoll = (() => {
 			let verbheader = '<tr style="border-bottom:1px solid #000000;font-weight:bold;text-align:center; background-color:#dddddd"><td>ARG</td><td style="border-left:1px solid #000000;border-right:1px solid #000000">USER</td><td>EVAL</td></tr>';
 			let verbrows = Object.keys(thisRoller.userparameters).filter((p) => { return p !== "notes"; })
 				.reduce((a, v, i) => {
-					return a + '<tr style="background-color:' + rowbg[(i % 2)] + ';font-weight:bold;"><td style="padding-left:2px;">' + v + '</td><td style="border-left:1px solid #000000;border-right:1px solid #000000;text-align:center;">' + thisRoller.userparameters[v] + '</td><td style="padding-left:2px;">' + (["act", "ocv"].includes(v) && thisRoller.parameters[v] == -100 ? "none" : thisRoller.parameters[v]) + '</td></tr>'
+					return a + '<tr style="background-color:' + rowbg[(i % 2)] + ';font-weight:bold;"><td style="padding-left:2px;">' + v + '</td><td style="border-left:1px solid #000000;border-right:1px solid #000000;text-align:center;">' + thisRoller.userparameters[v] + '</td><td style="padding-left:2px;">' + (["act","ocv"].includes(v) && thisRoller.parameters[v] == -100 ? "none" : thisRoller.parameters[v]) + '</td></tr>'
 				}, verbheader);
 			thisRoller.outputParams.__V_NOTE__ = verbtable.replace("__TABLE-ROWS__", verbrows);
 		}
@@ -1430,15 +1345,17 @@ const HeRoll = (() => {
 		on('chat:message', handleInput);
 	};
 
-	on("ready", () => {
-		'use strict';
-		logsig();
-		versionInfo();
-		registerEventHandlers();
-	});
-
 	return {
+		VersionInfo: versionInfo,
+		LogSig: logsig,
+		RegisterEventHandlers: registerEventHandlers
 	};
 
 })();
-{ try { throw new Error(''); } catch (e) { API_Meta.HeRoll.lineCount = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - API_Meta.HeRoll.offset); } }
+
+on("ready", () => {
+	'use strict';
+	heroll.LogSig();
+	heroll.VersionInfo();
+	heroll.RegisterEventHandlers();
+});
