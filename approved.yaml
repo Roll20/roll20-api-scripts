@@ -1004,3 +1004,22 @@ udlpasswall:
   - "UDLPasswall"
   - "Dynamic Lighting"
   
+fetch:
+  - "Fetch"
+  - "Utility"
+
+mathops:
+  - "MathOps"
+  - "Utility"
+
+muler:
+  - "Muler"
+  - "Utility"
+
+plugger:
+  - "Plugger"
+  - "Utility"
+  
+zeroframe:
+  - "ZeroFrame"
+  - "Utility"
