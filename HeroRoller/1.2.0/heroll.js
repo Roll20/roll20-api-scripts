@@ -8,10 +8,10 @@ Roll20 Contact	:	timmaugh
 =========================================================
 
 ----------- DEVELOPMENT PATH ----------------------------
-	-- utilize a "target" command; if there are multiple, output multiple hit-vs DCV and knockback results
-	-- skill roll template
+	-- skill roll template (mechanic bubble for target, drawn automatically)
 	-- explosion rings (separate BODY/STUN, or BODY/PD for entangles) peeling off dice
-
+	-- track END spent
+	-- track charges/ammo
 */
 const heroll = (() => {
 	'use strict';
@@ -259,7 +259,6 @@ const heroll = (() => {
 		recall: "", // the default case for this will be the current speaker id, so it is grabbed at the time it is needed
 		selective: true,
 		loc: "random",
-
 	};
 
 	// ==================================================
