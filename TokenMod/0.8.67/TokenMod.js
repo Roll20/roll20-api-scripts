@@ -8,9 +8,9 @@ API_Meta.TokenMod={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
 const TokenMod = (() => { // eslint-disable-line no-unused-vars
 
     const scriptName = "TokenMod";
-    const version = '0.8.68';
+    const version = '0.8.67';
     API_Meta.TokenMod.version = version;
-    const lastUpdate = 1621430801;
+    const lastUpdate = 1621427905;
     const schemaVersion = 0.4;
 
     const fields = {
@@ -186,7 +186,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
     const regex = {
       moveAngle: /^(=)?([+-]?(?:0|[1-9][0-9]*))(!)?$/,
       moveDistance: /^([+-]?\d+\.?|\d*\.\d+)(u|g|s|ft|m|km|mi|in|cm|un|hex|sq)?$/i,
-      numberString: /^[-+*/=]?[-+]?(0|[1-9][0-9]*)([.]+[0-9]*)?([eE][-+]?[0-9]+)?(!)?$/,
+      numberString: /^[-+*/]?[-+]?(0|[1-9][0-9]*)([.]+[0-9]*)?([eE][-+]?[0-9]+)?(!)?$/,
       stripSingleQuotes: /'([^']+(?='))'/g,
       stripDoubleQuotes: /"([^"]+(?="))"/g,
       layers: /^(?:gmlayer|objects|map|walls)$/,
@@ -1518,11 +1518,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
 
     const notifyObservers = function(event,obj,prev){
         _.each(observers[event],function(handler){
-          try {
             handler(obj,prev);
-          } catch(e) {
-            log(`TokenMod: An observer threw and exception in handler: ${handler}`);
-          }
         });
     };
 

@@ -1,7 +1,7 @@
 {
   "name": "TokenMod",
   "script": "TokenMod.js",
-  "version": "0.8.66",
+  "version": "0.8.68",
   "description": "TokenMod provides an interface to setting almost all settable properties of a token.\r\rFor instructions see the *Help: TokenMod* Handout in game, or run `!token-mod --help` in game, or visit [TokenMod Forum Thread](https://app.roll20.net/forum/post/4225825/script-update-tokenmod-an-interface-to-adjusting-properties-of-a-token-from-a-macro-or-the-chat-area).",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -59,6 +59,8 @@
     "0.8.62",
     "0.8.63",
     "0.8.64",
-    "0.8.65"
+    "0.8.65",
+    "0.8.66",
+    "0.8.67"
   ]
 }
