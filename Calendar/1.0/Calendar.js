@@ -122,7 +122,7 @@
         this.month++;
       } else {
         this.day = 1;
-        this.month = 1;
+        this.month = 0;
         this.year++;
       }
     };
@@ -149,8 +149,8 @@
       } else if (this.day == 1) {
         this.day = 30;
         
-        if (this.month == 1) {
-          this.month = 12;
+        if (this.month == 0) {
+          this.month = 11;
           this.year--;
         } else {
           this.month--;
