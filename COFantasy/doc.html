@@ -201,7 +201,7 @@
                 <h5>Option altruiste</h5>
                 <p>Si vous désirez jouer avec l'option de Magie altruiste, il suffit de changer l'option en <code>--tempeteDeMana altruiste</code> sur les sorts où c'est utile.</p>
                 <h4>Terres d'Arran (COTA p. 112)</h4>
-                <p>Première chose à faire, activer l'option Brûlure de Magie via <code>!cof-options</code>. <i>Note : L'option Brûlure de Magie n'est pas compatible avec l'option Mana Totale, utilisez l'option Contrecoup à la place.</i></p>
+                <p>Première chose à faire, activer l'option Brûlure de Magie via <code>!cof-options</code>. <i>Note : si vous utilisez l'option de Brûlure de Magie avec l'option Mana Totale, vous pouvez utiliser un attribut <code>coefPVMana</code> qui va diviser le nombre de PVs dépensé par point de mana.</i></p>
                 <p>Vous pouvez ensuite réutiliser le même principe que le système de base en combinant dépense de Mana et effets supplémentaires. Voici un exemple pour une Boule de Feu (Voie de l'élémentaliste, rang 4) :</p>
                 <p><code>?{Incantation ?|Normale,--mana 4|Econome (L),--mana 2|Puissante (L),--mana 4 --puissant|Portée étendue (L),--mana 4 --puissant portee}</code></p>
               </div>
@@ -728,7 +728,7 @@
                 </div>
                 <h4 class="text-secondary">Effets retardés</h4>
                 <div class="decalage">
-                  <p>On peut utiliser l'effet temporaire générique <code>messageRetarde(<i>nom</i>)</code> pour programmer un message qui sera affiché après un certain nombre de tours. Au bout de ce nombre de tours, le nom est affiché, ainsi que le texte de valeur (avec <code>--valeur</code> si besoin. La syntaxe est <code>!cof-effet-temp messageRetarde(<i>nom</i>) <i>duree</i> --valeur <i>message</i></code>.</p>
+                  <p>On peut utiliser l'effet temporaire générique <code>messageRetarde(<i>nom</i>)</code> pour programmer un message qui sera affiché après un certain nombre de tours. Au bout de ce nombre de tours, le nom est affiché, ainsi que le texte de valeur (avec <code>--valeur</code> si besoin). La syntaxe est <code>!cof-effet-temp messageRetarde(<i>nom</i>) <i>duree</i> --valeur <i>message</i></code>. Si vous avez besoin d'un message qui contienne des espaces, remplacez les espaces par des <code>_</code>.</p>
                   <p>On peut aussi déclencher un effet après un certain nombre de tour avec l'effet temporaire générique <code>effetRetarde(<i>effet</i>)</code>. Après la durée de l'effet retardé, si <i>effet</i> est un état, la cible est mise dans cet état, si c'est un effet temporaire, on lui applique cet effet pour une durée de 1 tour, ou si un argument <code>--valeur</code> a été donné, il sera utilisé comme durée. Enfin si ce n'est ni l'un ni l'autre, un attribut avec le nom <i>effet</i> sera créé, de valeur courante <code>true</code>, ou bien si un argument <code>--valeur</code> a été donné, cette valeur sera utilisée comme valeur courante de l'attribut <i>effet</i>.</p>
                 </div>
                 <h4 class="text-secondary">Autres attributs : <code>!cof-set-attribute</code></h4>
@@ -782,7 +782,7 @@
               <h3 class="text-info" id="deplacements">2.11 Déplacements</h3>
               <h4 class="text-secondary">Retrouver un personnage</h4>
               <div class="decalage">
-                <p>Pour centrer la vue d'un joueur sur un token particulier, on peut utiliser <code>!cof-centrer-sur-token</code> suivi du nom du token. Généralement, c'est une bonne idée pour un joueur d'avoir une macro avec le nom de son token pour le retrouver facilement quand il arrive sur une nouvelle case.</p>
+                <p>Pour centrer la vue d'un joueur sur un token particulier, on peut utiliser <code>!cof-centrer-sur-token</code> suivi du nom du token. Généralement, c'est une bonne idée pour un joueur d'avoir une macro avec le nom de son token pour le retrouver facilement quand il arrive sur une nouvelle carte.</p>
               </div>
               <h4 class="text-secondary">Personnages immobilisés</h4>
               <div class="decalage">
@@ -878,7 +878,7 @@
                 </ol>
                 <h4 class="text-secondary">Voie du champ de bataille</h4>
                 <ol>
-                  <li><strong>Action concertée</strong> : utiliser <code>!cof-echange-init @{selected|token_id} @{target|token_id} <i>n</i></code> où <i>n</i> peut valoir 1 ou 2 selon le rang dans la voie. !Pas testé!</li>
+                  <li><strong>Action concertée</strong> : utiliser <code>!cof-echange-init @{selected|token_id} @{target|token_id} <i>n</i></code> où <i>n</i> peut valoir 1 ou 2 selon le rang dans la voie.</li>
                   <li><strong>À couvert</strong> : <code>!cof-a-couvert @{selected|token_id} @{target|token_id}</code> le target est l'allié qui se déplace avec l'arquebusier. Se sélectionner soi-même si pas d'allié.</li>
                   <li><strong>Combattant aguerri</strong> : se reporter à la capacité choisie</li>
                   <li><strong>Combat de masse</strong> : pas de support particulier, effectuer les actions supplémentaires en fonction des situations.</li>
@@ -1149,7 +1149,7 @@
                       <li>Objet de sort : <code>#Attaque Gland de pouvoir --toucher [[@{selected|ATKMAG}]] --dm 4d6+[[@{selected|CHA}]] --portee 10 --sortilege --psave DEX [[12+@{selected|DEX}]] --ligne --fx beam-holy</code></li>
                     </ul>
                   </li>
-                  <li><strong>Forme éthérée</strong> : <code>!cof-effet-temp intangible [[5 + @{selected|CHA}]] <i>--mana 3</i></code>.</li>
+                  <li><strong>Forme éthérée</strong> : <code>!cof-effet-temp intangible [[5 + @{selected|CHA}]] <i>--mana 3</i></code>. Pour implémentaer des variantes, il existe aussi un effet <code>intangibleInvisible</code> qui cumule les états intangible et invisible, et l'option <code>--puissant</code> donne la possibilité au personnage de passer entre l'état tangible et intangible à chaque tour, tant que dure l'effet.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de la divination</h4>
                 <ol>
@@ -1256,8 +1256,8 @@
                 </ol>
                 <h4 class="text-secondary">Voie du golem</h4>
                 <ol>
-                  <li><strong>Grosse tête</strong> : pas de support (pas de save basé sur INT ?)</li>
-                  <li><strong>Golem</strong> : ajouter un personnage et un token pour le golem (ne pas oublier l'attribut <code>nonVivant</code> à <code>true</code> pour le golem). Pour les réparations, utiliser <code>!cof-soin @{selected|token_id} <i>nom_du_golem</i> <i>rang</i>d6+@{selected|INT}</code>.</li>
+                  <li><strong>Grosse tête</strong> : Vous pouvez créer un attribut <code>grosseTete</code> de valeur <code>true</code>. Normalement, le bonus devrait dépendre des actions du forgesort. Si vous souhaitez le faire, vous pouvez ne pas mettre l'attribut, mais juste avant un jet de force pour lequel vous pensez que la grosse tête s'applique, faire <code>!cof-set-attribute grosseTete true</code> (en sélectionnant le token du forgesort), puis après le jet faire  <code>!cof-set-attribute grosseTete false</code>. Si vous voulez l'ajout de grosse tête par défaut, vous pouvez aussi faire l'opération dans l'ordre inverse pour les jets pour lesquels vous pensez que le bonus ne peut pas s'appliquer.</li>
+                  <li><strong>Golem</strong> : ajouter un personnage et un token pour le golem (ne pas oublier l'attribut <code>nonVivant</code> à <code>true</code> pour le golem). Pour les réparations, utiliser <code>!cof-soin @{selected|token_id} <i>nom_du_golem</i> <i>rang</i>d6+@{selected|INT}</code>. Attention, le nom du golem est celui du token représentant le golem, et il ne doit pas contenir de blanc.</li>
                   <li><strong>Protecteur</strong> : <code>!cof-interposer</code> permet de s'interposer à la place de la cible de la dernière attaque. (Attention, pas de undo pour cette action)</li>
                   <li><strong>Golem supérieur</strong> : reporter les avantages sur la fiche du golem.</li>
                   <li><strong>Intelligence héroïque</strong> : reporter sur la fiche</li>
@@ -1590,7 +1590,7 @@
                     </ul>
                     Les dégâts sont infligés au début de chaque tour, et la cible recevra à son initiative un bouton lui permettant d'effectuer le jet pour sortir. Elle pourra également ajouter un bonus manuel au jet, en fonction des actions réalisées pour l'aider à sortir.
                   </li>
-                  <li><strong>Armée des morts</strong> : <code>!cof-effet-temp armeeDesMorts @{selected|niveau} --limiteParJour 1 <i>--mana 3</i></code>. La zone couverte est symbolisée par l'activation d'une aura sur le token du lanceur. Le script utilisera pour cela l'aura 2 du token, donc attention si vous l'utilisez déjà sur le token du lanceur, elle sera écrasée. Toute cible (le script ignore les alliés du lanceur) qui s'active dans une zone couverte par une armée recevra dans ses actions un bouton spécial pour se défendre. Les dégâts sont infligés automatiquement en début de tour.</li>
+                  <li><strong>Armée des morts</strong> : <code>!cof-effet-temp armeeDesMorts @{selected|niveau} --limiteParJour 1 <i>--mana 3</i></code>. La zone couverte est symbolisée par l'activation d'une aura sur le token du lanceur. Le script utilisera pour cela l'aura 2 du token, donc attention si vous l'utilisez déjà sur le token du lanceur, elle sera écrasée. Toute cible (le script ignore les alliés du lanceur) qui s'active dans une zone couverte par une armée recevra dans ses actions un bouton spécial pour se défendre. Les dégâts sont infligés automatiquement en début de tour. En option, le script support l'argument <code>--puissant</code> des règles de Mana de base, qui doublent la surface couverte (rayon 28m). Il est aussi possible d'utiliser l'option de Tempête de Mana ; la surface couverte sera multipliée par le nombre de PM investis en Magie Intense.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du sang</h4>
                 <ol>
