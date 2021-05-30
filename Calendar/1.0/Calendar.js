@@ -170,7 +170,7 @@
         this.day = parseInt(day);
         this.month = parseInt(month) - 1;
         this.year = parseInt(year);
-      } else if (day && parseInt(day) != day && action.args.length >= 2) {
+      } else if (day && parseInt(day) != day) {
         let specialYear = action.args.pop();
 
         if (!SEJ.isValidInt(specialYear)) {
@@ -178,7 +178,7 @@
         }
 
         let specialDay = action.args.join('').toLowerCase().trim();
-        specialYear = parseInt(specialYear);
+        specialYear = parseInt(specialYear) || this.year;
         
         if (specialDay === 'midwinter') {
           this.holiday = 'Midwinter';
@@ -350,11 +350,11 @@
     };
 
     this.increment = function() {
-      date = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+      date = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1, 0, 0, 0);
     };
 
     this.decrement = function() {
-      date = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1);
+      date = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1, 0, 0, 0);
     };
 
     this.toString = function() {
