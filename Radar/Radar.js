@@ -128,7 +128,7 @@ API_Meta.RadarWIP = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 const Radar = (() => {
     
     const scriptName = "Radar";
-    const version = '0.8';
+    const version = '0.9';
     
     const PING_NAME = 'RadarPing'; 
     const hRED = '#ff0000';
@@ -596,7 +596,6 @@ const Radar = (() => {
         //let th2 = deg2rad * normalizeTo360deg(coneDirection + coneWidth/2);
         let th1 = deg2rad * (coneDirection - coneWidth/2);
         let th2 = deg2rad * (coneDirection + coneWidth/2);
-
         //a 5e cone is defined by the orgin and two pts
         let pt1 = get5eConePt(rad, th1);
         let pt2 = get5eConePt(rad, th2);
@@ -1444,7 +1443,8 @@ const Radar = (() => {
             colors: [],
             compareType: [],        //possible values: 'contains'(val is somewhere in string), '@'(exact match), '>' or '<' (numeric comparison)
             ignore: [],             //flag to determine if the value is an ignore filter or a positive match filter
-            anyValueAllowed: false  //this flag will bypass normal checks. Used only for charFilters - The attribute just needs to exist in order for the token to be pinged 
+            anyValueAllowed: false,  //this flag will bypass normal checks. Used only for charFilters - The attribute just needs to exist in order for the token to be pinged 
+            groups: []             //stores an array of filter groups formed based on tokens in range. Allows for tokens to be placed in composite groups (matching more than one condition)
         }
         let losBlocks = false;      //Will DL walls block radar sensor if completely obscured (will look at 5 pts per token to determine LoS)
         let title = "Radar Ping Results";             //title of the default template output
@@ -1596,17 +1596,20 @@ const Radar = (() => {
                                     case '@':
                                         // exact match
                                         filter.compareType.push('@');
-                                        filter.vals[index] = tempVal.substring(1,tempVal.length)    
+                                        filter.vals[index] = tempVal.substring(1,tempVal.length)  
+                                        filter.groups.push('@' + filter.vals[index])
                                         break;
                                     case '>':
                                         // numeric greater than comparison
                                         filter.compareType.push('>');
                                         filter.vals[index] = tempVal.substring(1,tempVal.length)
+                                        filter.groups.push('&gt;' + filter.vals[index])
                                         break;
                                     case '<':
                                         // numeric less than comparison
                                         filter.compareType.push('<');
                                         filter.vals[index] = tempVal.substring(1,tempVal.length)
+                                        filter.groups.push('&lt;' + filter.vals[index])
                                         break;  
                                     default:
                                         // string comparison (contains)
@@ -1617,6 +1620,7 @@ const Radar = (() => {
                                         } else {
                                             filter.vals[index] = tempVal;
                                         }
+                                        filter.groups.push(filter.vals[index])
                                         break;
                                 }
                             });
@@ -1853,7 +1857,8 @@ const Radar = (() => {
                         corners: originDist.corners,        //will contain 'ignore' or the name of the attribute or token property used for fltering
                         filterKey: "",
                         losBlocks: false,
-                        filterColor: hRED  //default aura = red
+                        filterColor: hRED,  //default aura = red
+                        filterGroup: []
                     }
                 });
                 
@@ -1898,8 +1903,10 @@ const Radar = (() => {
                 
                 //User may request to filter tokens by value of a character or token attribute
                 filterExcludeOnly = checkFiltersForExcludeOnly(filter.ignore);
+                
                 if (filter.type==="char" || filter.type==="tok") {
                     toksInRange.map(tok => {
+                        let tempGroup = [];
                         //if charFilter, only check tokens linked to sheets. If tokFilter, always check
                         if ( (filter.type==="char" && tok.represents) || (filter.type==="tok")  ) {
                             //populate attrCurrentVal with either char attr or token value
@@ -1926,14 +1933,20 @@ const Radar = (() => {
                                     if (filter.anyValueAllowed===true) {    //always include if there is some value for the attribute
                                         tok.filterKey = filter.vals[i];     
                                         tok.filterColor = filter.colors[i];
+                                        if (filter.compareType[i] === 'contains') {
+                                            tempGroup.push(filter.vals[i]);
+                                        } else {
+                                            tempGroup.push(filter.compareType[i] + filter.vals[i]);
+                                        }
                                     } else {
                                         switch (filter.compareType[i]) {
                                             case 'contains':
-                                                if ( (filter.ignore[i] || tok.filterKey.match('ignore')) && attrCurrentVal.match(regexVal) ) {
+                                                if ( (filter.ignore[i] || tok.filterKey.match('ignore')) && attrCurrentVal.toString().match(regexVal) ) {
                                                     tok.filterKey = 'ignore';   //found contains match - ignore
-                                                } else if (attrCurrentVal.match(regexVal)) {
+                                                } else if (attrCurrentVal.toString().match(regexVal)) {
                                                     tok.filterKey = filter.vals[i];     //found contains match - include
                                                     tok.filterColor = filter.colors[i];
+                                                    tempGroup.push(filter.vals[i]);
                                                 }
                                                 break;
                                             case '@':   //exact match
@@ -1942,6 +1955,7 @@ const Radar = (() => {
                                                 } else if (attrCurrentVal === filter.vals[i]) {
                                                     tok.filterKey = filter.vals[i];     //found exact match - include
                                                     tok.filterColor = filter.colors[i];
+                                                    tempGroup.push(filter.compareType[i] + filter.vals[i]);
                                                 }
                                                 break;
                                             case '>':
@@ -1950,6 +1964,7 @@ const Radar = (() => {
                                                 } else if ( parseFloat(attrCurrentVal) > parseFloat(filter.vals[i]) ) {
                                                     tok.filterKey = filter.vals[i];     //found greater than match - include
                                                     tok.filterColor = filter.colors[i];
+                                                    tempGroup.push('&gt;' + filter.vals[i]);
                                                 }
                                                 break;
                                             case '<':
@@ -1958,9 +1973,19 @@ const Radar = (() => {
                                                 } else if ( parseFloat(attrCurrentVal) < parseFloat(filter.vals[i]) ) {
                                                     tok.filterKey = filter.vals[i];     //found less than match - include
                                                     tok.filterColor = filter.colors[i];
+                                                    tempGroup.push('&lt;' + filter.vals[i]);
                                                 }
                                                 break;
                                         }
+                                    }
+                                }
+                                //build filter group string from array of matching filters
+                                if (tempGroup.length > 0) {
+                                    //assign filter group to token
+                                    tok.filterGroup = tempGroup.join('<br>'); 
+                                    if (!filter.groups.includes(tok.filterGroup)) {
+                                        //add unique filter group to array of valid filter groups (used later for table output)
+                                        filter.groups.push(tok.filterGroup);
                                     }
                                 }
                             }
@@ -2148,21 +2173,24 @@ const Radar = (() => {
                         let addNewRowHeader = true; 
                         
                         //use user-defined filters
-                        for (let i = 0; i<filter.vals.length; i++) {
+                        //for (let i = 0; i<filter.vals.length; i++) {
+                        for (let i = 0; i<filter.groups.length; i++) {
                             addNewRowHeader = true;
                             counter = 0
-                            if ( filter.ignore[i] === true ) {
+                            //if ( filter.ignore[i] === true ) {
                                 //this is an ignore filter, do not report anything
-                            } else {
+                            //} else {
                                 //filter on this value
+                                /*
                                 if (filter.compareType[i].includes('@') || filter.compareType[i].includes('>') || filter.compareType[i].includes('<')) {
                                     group = filter.compareType[i] + filter.vals[i];
                                 } else {
                                     group = filter.vals[i];
                                 }
-                                
+                                */
+                                group = filter.groups[i];
                                 toksInRange.forEach( tok => {
-                                    if (tok.filterKey === filter.vals[i]) {
+                                    if (tok.filterGroup === filter.groups[i]) {
                                         if (outputGraph) {pingHTML = addPingHTML(pingHTML, tok.centerDistX, tok.centerDistY, tok.width, tok.height, graphWidth, graphHeight, pingH, pingW, tok.filterColor, range2GraphicScale);}  //adds to html string for graphical output
                                         
                                         //check for "hidden" tokens
@@ -2182,6 +2210,7 @@ const Radar = (() => {
                                             } else {
                                                 group = '';   //only want the row header on the first row of output for each filter
                                             }
+                                            
                                             //normal output
                                             content = GetDirectionalInfo(parseInt(tok.closestPt.x), parseInt(tok.closestPt.y), originX, originY, displayUnits, includeTotalDist, pageScaleNumber, pageScaleUnits, pageGridIncrement, outputCompact, calcType);
                                             rowData = buildRowOutput(true, group, parseInt(counter+1)+'.', content);
@@ -2197,7 +2226,6 @@ const Radar = (() => {
                                     rowData = buildRowOutput(true, group, parseInt(counter+1)+'.', content);
                                     outputLines.push(rowData);
                                 }
-                            }
                         }
                     } else {
                         //no filters used
@@ -2235,12 +2263,12 @@ const Radar = (() => {
                         sendChat(scriptName, `/w "${who}" `+ graphicalOutput);
                     }
                     if (includeGM && !playerIsGM(msg.playerid) && outputGraph) {
-                        sendChat(scriptName, '/w gm ' + tableOutput);
+                        sendChat(scriptName, '/w gm ' + graphicalOutput);
                     }
                     
                     //Build final html output
                     let tableOutput = htmlTableTemplateStart.replace("=X=TITLE=X=", title).replace("=X=UNITS=X=", displayUnits);
-				
+				    
                     for (let x=0; x<outputLines.length; x++) {
 						tableOutput += outputLines[x];
 					}
