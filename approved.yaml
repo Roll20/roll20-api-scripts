@@ -1023,3 +1023,7 @@ plugger:
 zeroframe:
   - "ZeroFrame"
   - "Utility"
+
+calendar:
+  - "Calendar"
+  - "Utility"
