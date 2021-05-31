@@ -1,7 +1,7 @@
 {
   "name": "Bump",
   "script": "Bump.js",
-  "version": "0.2.21",
+  "version": "0.2.22",
   "description": "Bump provides a way to invisibly manipulate tokens on the GM Layer from the Objects Layer, and vice versa.\r\rWhen a token is added to Bump a slave token is created that mimics everything about to master token. The slave token is only visible to the GM and has a color on it to show if the master token is on the GM Layer or the Objects layer. Moving the slave token will move the master token and vice versa. The slave token represents the same character as the master token and changes on the slave token will be reflected on the master token.\n\nFor instructions see the *Help: Bump* Handout in game, or run `!bump --help` in game, or visit [Bump Forum Thread](https://app.roll20.net/forum/permalink/8584976/).",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -51,5 +51,19 @@
     "campaign.turnorder": "read",
     "player.displayname": "read"
   },
-  "conflicts": []
+  "conflicts": [],
+  "previousversions": [
+    "0.2.10",
+    "0.2.11",
+    "0.2.12",
+    "0.2.13",
+    "0.2.14",
+    "0.2.16",
+    "0.2.17",
+    "0.2.18",
+    "0.2.19",
+    "0.2.21",
+    "0.2.8",
+    "0.2.9"
+  ]
 }
