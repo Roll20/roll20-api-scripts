@@ -1,6 +1,7 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 2.17
 ### Capacités
+* Support de la capacité Grosse tête du forgesort
 * Capacité d'objet magique "Action libre"
 * Saisir et broyer pour les chaoses.
 * Amélioration de la prise en charge d'ombre mouvante.
@@ -31,6 +32,8 @@
 * Support complet de la Voie du porteur de bouclier (prestige)
 
 ### Autres améliorations
+* Termine les effets dont on enlève le marker à la main.
+* Utilisation des nom de caractéristiques au lieu de pictogrammes douteux pour les jets de caractéristiques et de compétences.
 * Gestion des identités secrètes.
 * Possibilité de passer des options aux effets à dégâts sur la durée.
 * Un personnage invisible ne peut plus être vu des autres joueurs.
@@ -45,6 +48,8 @@
 * Séparation des options de blessure grave et de dommages importants
 
 ### Corrections de bugs
+* Amélioration de l'Action concertée.
+* Correction d'un bug sur les bonus de compétences
 * Correction de la prise en compte des familiers dans les aoe.
 
 ## 2.16
