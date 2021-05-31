@@ -413,8 +413,22 @@
     let calendars = initCalendars();
 
     let isValidCalendar = (calendar) => {
+      if (calendar instanceof SEJ_Versatile_Calendar) {
+        return true;
+      }
+
       calendar = keyify(calendar);
       return calendar in calendars && calendars.hasOwnProperty(calendar);
+    };
+
+    let getCalendar = (calendar) => {
+      if (isValidCalendar(calendar)) {
+        if (typeof calendar === 'string') {
+          return calendars[keyify(calendar)];
+        } else {
+          return calendar;
+        }
+      }
     };
 
     this.process = function(message) {
@@ -534,14 +548,14 @@
           let previousType = this.date.calendar.name;
           let previousDate = this.date.toString();
           try {
-            this.date = new SEJ_Date(calendars[keyify(type)], this.date.date.day, this.date.date.month, this.date.date.year);
+            this.date = new SEJ_Date(getCalendar(type), this.date.date.day, this.date.date.month, this.date.date.year);
           } catch {
-            this.date = new SEJ_Date(calendars[keyify(type)], 1, 1, 1234);
+            this.date = new SEJ_Date(getCalendar(type), 1, 1, 1234);
           }
           this.save();
           sendChat('Calendar', `/w ${message.who} The calendar type has changed from <code>${previousType}</code> (${previousDate}) to <code>${type}</code> (${this.date.toString()}).`);
         } else {
-          throw new SEJ_Error(`unknown calendar type, allowed values are: ${Object.keys(calendars).join(', ')}`);
+          throw new SEJ_Error(`unknown calendar type '${type}', allowed values are: ${Object.keys(calendars).join(', ')}`);
         }
       } else {
         sendChat('Calendar', `The current calendar type is <code>${this.date.calendar.name}</code>.`);
@@ -596,11 +610,11 @@
     let data = state.SEJ_Calendar_Data || {};
 
     if (data.calendar && data.version === '1.1') {
-      this.date = new SEJ_Date(calendars[data.calendar], data);
+      this.date = new SEJ_Date(getCalendar(data.calendar), data);
     } else if (data.calendar && isValidInt(data.day) && isValidInt(data.month) && isValidInt(data.year) && isValidCalendar(data.calendar)) {
-      this.date = new SEJ_Date(calendars[keyify(data.calendar)], data.day, data.month + 1, data.year);
+      this.date = new SEJ_Date(getCalendar(data.calendar), data.day, data.month + 1, data.year);
     } else if (data.calendar && data.day && !isValidInt(data.day) && typeof data.day === 'string' && isValidInt(data.year) && isValidCalendar(data.calendar)) {
-      this.date = new SEJ_Date(calendars[keyify(data.calendar)], data.day, data.year);
+      this.date = new SEJ_Date(getCalendar(data.calendar), data.day, data.year);
     } else {
       let tmp = new Date();
       this.date = new SEJ_Date(calendars.gregorian, tmp.getDate(), tmp.getMonth() + 1, tmp.getFullYear());
