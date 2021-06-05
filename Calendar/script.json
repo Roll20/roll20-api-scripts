@@ -1,8 +1,8 @@
 {
   "name": "Calendar",
   "script": "Calendar.js",
-  "version": "1.1",
-  "previousversions": ["1.0"],
+  "version": "1.2",
+  "previousversions": ["1.0", "1.1"],
   "description": "# Calendar\n\nThis simple script is used to help keep track of the current in-game date for your game. It was designed to be extremely simple to use and update.\n\nIt currently supports 3 calendars:\n\n- **gregorian** - the calendar used in (most of) the real world.\n- **harptos** - the calendar used in the Forgotten Realms (12 months of 30 days, with 5 extra days between months and a sixth extra day every 4 years).\n- **barovian** - the lunar calendar used in Barovia (12 months of 28 days).\n\n## Setup\n\nOnce this script is installed in your game, setup is easy.\n\nFirst, set the type of calendar you want to use (in this example, I'll use harptos):\n\n```\n!cal type harptos\n```\n\nSecondly, set the date, which goes `day month year`:\n\n```\n!cal set 20 1 1491\n```\n\nSince the harptos calendar has days that fall between months, you can also use the name of that day and the year:\n\n```\n!cal set midsummer 1490\n!cal set feastofthemoon 1490\n!cal set Feast of the Moon 1490\n```\n\n## Usage\n\nOnce the calendar has been set up, it's pretty easy to use.\n\n\n**Display**\n\nTo see the current date (this command is available to everyone):\n\n```\n!cal\n```\n\nor\n\n```\n!cal display\n```\n\nTo see the current calendar being used:\n\n```\n!cal type\n```\n\n**Increment Day**\n\nTo make the calendar go to the next day (GM only command), use any of these:\n\n```\n!cal ++\n!cal next\n!cal increment\n```\n\n**Decrement Day**\n\nIf you incremented the day by accident or too many times, you can always go back (GM only command) using any of these:\n\n```\n!cal --\n!cal previous\n!cal decrement\n```",
   "authors": "Steven Jeffries",
   "roll20userid": "609756",
