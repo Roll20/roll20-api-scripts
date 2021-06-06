@@ -641,7 +641,8 @@
       'prev': 'previous',
       'system': 'type',
       '+=': 'add',
-      '-=': 'subtract'
+      '-=': 'subtract',
+      'w': 'whisper'
     };
 
     // The list of approves commands, which are also instance methods of this class.
@@ -653,10 +654,16 @@
       'set',
       'type',
       'add',
-      'subtract'
+      'subtract',
+      'whisper'
     ];
 
     let calendars = initCalendars();
+
+    let data = state.SEJ_Calendar_Data || {};
+
+    // Whether or not to only gm whisper commands.
+    this.gmWhisper = !!data.gmWhisper;
 
     // Checks if the given string or calendar instance is a valid calendar.
     let isValidCalendar = (calendar) => {
@@ -723,6 +730,22 @@
       command || (command = this.command);
       if (!this.gm) {
         throw new SEJ_Error(`The <code>${command}</code> command is for GMs only.`);
+      }
+    };
+
+    /**
+     * Sends a message in the chat, either publicly or to the GM depending on whether
+     * or not whispers are turned on.
+     * 
+     * @param {string} text the text to send in the chat
+     */
+    this.send = function(text) {
+      if (this.gmWhisper && !this.gm) {
+        sendChat('Calendar', `/w ${this.message.who} The calendar is currently in GM whisper mode.`);
+      } else if (this.gmWhisper) {
+        sendChat('Calendar', `/w gm ${text}`);
+      } else {
+        sendChat('Calendar', text);
       }
     };
 
@@ -813,6 +836,13 @@
           ${alias('!cal add [number of days]', '!cal += [number of days]', '!cal subtract [number of days]', '!cal -= [number of days]')}
 
           ${sec}
+          ${cmd('!cal whisper [whisper mode]')}
+          ${gm} Turns GM whisper mode on or off. If on, only the GM can use the calendar script to see the current date.<br />
+          <ul>
+            ${arg('whisper mode', 'on|off|toggle', 'on turns on GM whisper mode, off turns off GM whisper mode, toggle toggles GM whisper mode')}
+          </ul>
+
+          ${sec}
           ${cmd('!cal help')}
           ${all} Displays this help message.
         </div>
@@ -821,7 +851,35 @@
 
     
     this.help = function(message) {
-      sendChat('Calendar', `/w ${message.who} ${helpMessage}`);      
+      sendChat('Calendar', `/w ${message.who} ${helpMessage}`);
+    };
+
+    this.whisper = function(message, args) {
+      this.requireGM();
+
+      if (args.length === 0) {
+        throw new SEJ_Error('the <b>whisper</b> command requires one of: <code>on</code>, <code>off</code>, or <code>toggle</code>');
+      }
+
+      let action = args[0];
+
+      if (action === 'toggle') {
+        this.gmWhisper = !this.gmWhisper;
+      } else if (action === 'on') {
+        this.gmWhisper = true;
+      } else if (action === 'off') {
+        this.gmWhisper = false;
+      } else {
+        throw new SEJ_Error(`unknown <b>whisper</b> argument '${action}', expecting <code>on</code>, <code>off</code>, <code>toggle</code>, or no arguments`);
+      }
+
+      this.save();
+
+      if (this.gmWhisper) {
+        sendChat('Calendar', `/w ${message.who} The calendar has been placed in GM whisper mode.`);
+      } else {
+        sendChat('Calendar', `/w ${message.who} The calendar has been removed from GM whisper mode.`);
+      }
     };
 
     this.type = function(message, args) {
@@ -845,7 +903,7 @@
           throw new SEJ_Error(`unknown calendar type '${type}', allowed values are: ${Object.keys(calendars).join(', ')}`);
         }
       } else {
-        sendChat('Calendar', `The current calendar type is <code>${this.date.calendar.name}</code>.`);
+        this.send(`The current calendar type is <code>${this.date.calendar.name}</code>.`);
       }
     };
 
@@ -854,7 +912,7 @@
       this.date.add(args[0]);
       this.save();
       let s = parseInt(args[0]) === 1 ? '' : 's';
-      sendChat('Calendar', `${message.who} has advanced the date by ${args[0]} day${s} to <i>${this.date.toString()}</i>.`);
+      this.send(`${message.who} has advanced the date by ${args[0]} day${s} to <i>${this.date.toString()}</i>.`);
     };
 
     this.subtract = function(message, args) {
@@ -862,21 +920,21 @@
       this.date.subtract(args[0]);
       this.save();
       let s = parseInt(args[0]) === 1 ? '' : 's';
-      sendChat('Calendar', `${message.who} has decreased the date by ${args[0]} day${s} to <i>${this.date.toString()}</i>.`);
+      this.send(`${message.who} has decreased the date by ${args[0]} day${s} to <i>${this.date.toString()}</i>.`);
     };
 
     this.next = function(message) {
       this.requireGM();
       this.date.next();
       this.save();
-      sendChat('Calendar', `${message.who} has incremented the date to <i>${this.date.toString()}</i>.`);
+      this.send(`${message.who} has incremented the date to <i>${this.date.toString()}</i>.`);
     };
 
     this.previous = function(message) {
       this.requireGM();
       this.date.previous();
       this.save();
-      sendChat('Calendar', `${message.who} has decremented the date to <i>${this.date.toString()}</i>.`);
+      this.send(`${message.who} has decremented the date to <i>${this.date.toString()}</i>.`);
     };
 
     this.set = function(message, args) {
@@ -897,12 +955,12 @@
         throw new SEJ_Error('Invalid set arguments. Type `!cal help` for usage.');
       }
       this.save();
-      sendChat('Calendar', `${message.who} has set the in-game date to <i>${this.date.toString()}</i>.`);
+      this.send(`${message.who} has set the in-game date to <i>${this.date.toString()}</i>.`);
     };
 
 
     this.display = function() {
-      sendChat('Calendar', `The current in-game date is <i>${this.date.toString()}</i>.`);
+      this.send(`The current in-game date is <i>${this.date.toString()}</i>.`);
     };
 
     // The commands end here: ----------------------------------------------------
@@ -916,13 +974,14 @@
       let info = Object.assign({}, this.date.date);
       info.calendar = this.date.calendar.name;
       info.version = SEJ_Calendar_App.VERSION;
+      info.gmWhisper = this.gmWhisper;
       state.SEJ_Calendar_Data = info;
     };
 
-    let data = state.SEJ_Calendar_Data || {};
-
+    // This mess could be a lot cleaner, but it's loading the info depending on the script's version.
     if (data.calendar && (data.version === '1.1' || data.version === '1.2')) {
       this.date = new SEJ_Date(getCalendar(data.calendar), data);
+      this.gmWhisper = !!data.gmWhisper;
     } else if (data.calendar && isValidInt(data.day) && isValidInt(data.month) && isValidInt(data.year) && isValidCalendar(data.calendar)) {
       this.date = new SEJ_Date(getCalendar(data.calendar), data.day, data.month + 1, data.year);
     } else if (data.calendar && data.day && !isValidInt(data.day) && typeof data.day === 'string' && isValidInt(data.year) && isValidCalendar(data.calendar)) {
