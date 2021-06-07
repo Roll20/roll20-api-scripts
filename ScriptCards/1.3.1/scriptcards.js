@@ -1950,7 +1950,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 					if (rollVariables[vName] !== undefined) {
 						replacement = vSuffix == "Raw" ? rollVariables[vName]["Total"] : rollVariables[vName][vSuffix]
 					}
-					if (rollHilighting == true && vSuffix !== "Raw") {
+					if (rollHilighting == true && vSuffix == "Total") {
 						replacement = buildTooltip(replacement, "Roll: " + rollVariables[vName].RollText + "<br /><br />Result: " + rollVariables[vName].Text, rollVariables[vName].Style);
 					}
 					if (cardParameters.debug !== "0") {
