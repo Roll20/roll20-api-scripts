@@ -434,18 +434,21 @@
     this.process = function(message) {
       let args = message.content.split(' ');
       args.shift(); // Removes the !cal
-
+      
       let command = args.shift() || 'display';
       if (aliases[command]) {
         command = aliases[command];
       }
+      
+      this.message = message;
+      this.command = command;
+      this.args = args;
+      this.gm = false;
+
 
       if (commands.includes(command)) {
         try {
           this.gm = playerIsGM(message.playerid);
-          this.command = command;
-          this.message = message;
-          this.args = args;
           this[command](message, args);
         } catch (error) {
           if (error instanceof SEJ_Error) {
@@ -453,11 +456,6 @@
           } else {
             throw error;
           }
-        } finally {
-          this.gm = null;
-          this.command = null;
-          this.message = null;
-          this.args = null;
         }
       } else {
         this.error(`Unknown command <code>${command}</code>.`);
