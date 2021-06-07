@@ -48,6 +48,7 @@
 * Séparation des options de blessure grave et de dommages importants
 
 ### Corrections de bugs
+* Correction de bugs avec l'invisibilité.
 * Amélioration de l'Action concertée.
 * Correction d'un bug sur les bonus de compétences
 * Correction de la prise en compte des familiers dans les aoe.
