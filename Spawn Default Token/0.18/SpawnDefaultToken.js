@@ -17,7 +17,7 @@
                                             //'burst #'    : An expanding diagonal distribution of tokens starting "#" squares from the 4 origin token corners. Large qty will form an "X" pattern
                                             //'cross #'    : "evenly" distributed vert/horiz qty, starting directly above origin by # squares. Large qty will form a "+" pattern
                                             //'random,rand #' : randomly populates tokens within a (# by #) square grid
-      --size|        < #,# >                //DEFAULT = 1,1 (X,Y) - How many SQUARES wide and tall are the spawned tokens?
+      --size|        < #,# > or < # >       //DEFAULT = 1,1 (X,Y) - How many SQUARES wide and tall are the spawned tokens? If only one number is given, X & Y are set to equal size
       --side|        < # or rand>           //DEFAULT = 1. Sets the side of a rollable table token. 
                                                     // #              : Sets the side of all spawned tokens to "#"
                                                     // 'rand,random'  : Each spawned token will be set to a random side
@@ -59,24 +59,16 @@
                                                         //#frames: DEFAULT = 20. how many frames the animation will use.
                                                         //delay: DEFAULT = 50. how many milliseconds between triggering each frame? Anything less than 30 may appear instant
       --layer| < object/token/map/gm >                  //DEFAULT = token(s) spawn on the same layer as the selected token(s). May explicitly set to spawn on a different layer.
-      --tokenName| < some name >                        //optional override for the token name - allows token name to be different than the character name
+      --isDrawing|  < yes/true/1/no/false/0 >    //DEFAULT = false. Sets the is drawing property of spawned token
     }}
     
     
 */
-// adding API_Meta for line offset
-var API_Meta = API_Meta || {};
-API_Meta.SpawnWIP = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
-{
-    try { throw new Error(''); } catch (e) { API_Meta.SpawnWIP.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (71)); }
-}
-//        log(`SpawnWIP Offset: ${API_Meta.SpawnWIP.offset}`);
 
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.20';
-    var gridSize = 70;  //this may be updated based on page settings 
+    const version = '0.18';
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
@@ -117,8 +109,6 @@ const SpawnDefaultToken = (() => {
     
     const checkInstall = function() {
         log(scriptName + ' v' + version + ' initialized.');
-        log(`SpawnWIP Offset: ${API_Meta.SpawnWIP.offset}`);
-
     };
     
     function processInlinerolls(msg) {
@@ -202,7 +192,7 @@ const SpawnDefaultToken = (() => {
     
     //This function runs asynchronously, as called from the processCommands function
     //We will sendChat errors, but the rest of processCommands keeps running :(
-    function spawnTokenAtXY (who, tokenJSON, pageID, spawnLayer, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar1Link, bar2Val, bar2Max, bar2Link, bar3Val, bar3Max, bar3Link, expandIterations, expandDelay, destroyWhenDone, angle, isDrawing, tokenName) {
+    function spawnTokenAtXY (who, tokenJSON, pageID, spawnLayer, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar1Link, bar2Val, bar2Max, bar2Link, bar3Val, bar3Max, bar3Link, expandIterations, expandDelay, destroyWhenDone, angle, isDrawing) {
         let newSideImg;
         let spawnObj;
         let currentSideOld;
@@ -226,7 +216,6 @@ const SpawnDefaultToken = (() => {
                 baseObj.height = sizeY;
                 baseObj.rotation = angle;
                 baseObj.isdrawing = isDrawing;
-                baseObj.name = tokenName;
             } else {                            //will animate and expand token to full size after spawning
                 baseObj.left = spawnX;
                 baseObj.top = spawnY;
@@ -234,7 +223,6 @@ const SpawnDefaultToken = (() => {
                 baseObj.height = 0;
                 baseObj.rotation = angle;
                 baseObj.isdrawing = isDrawing;
-                baseObj.name = tokenName;
             }
             
             baseObj.imgsrc = getCleanImgsrc(baseObj.imgsrc); //ensure that we're using the thumb.png
@@ -473,12 +461,12 @@ const SpawnDefaultToken = (() => {
         
         let startX
         let startY
-        if ( (w/gridSize)%2 === 0 ) {     //width is an even number of squares
-            startX = originX - w/2 + gridSize/2;
-            startY = originY - h/2 - gridSize/2;
+        if ( (w/70)%2 === 0 ) {     //width is an even number of squares
+            startX = originX - w/2 + 35;
+            startY = originY - h/2 - 35;
         } else {                    //width is an odd number of squares
             startX = originX;
-            startY = originY - h/2 - gridSize/2;
+            startY = originY - h/2 - 35;
         }
             
         let x = startX; 
@@ -489,44 +477,44 @@ const SpawnDefaultToken = (() => {
         let i = 0;
         while (i < qty) {
             //go across right until upper right corner
-            while ( (x < originX + w/2 + gridSize/2) && (i < qty) ) {
+            while ( (x < originX + w/2 + 35) && (i < qty) ) {
                 pts.push( new pt(x,y) );
                 if (i === qty) {done = true;}
-                x += gridSize;
+                x += 70;
                 i++;
             }
             if (done === true) {break;}
             
             //go down until lower right corner
-            while ( y < originY + h/2 + gridSize/2 && i < qty ) {
+            while ( y < originY + h/2 + 35 && i < qty ) {
                 pts.push( new pt(x,y) );
                 if (i === qty) {done = true;}
-                y += gridSize;
+                y += 70;
                 i++;
             }
             if (done === true) {break;}
             
             //go across left until lower left corner
-            while ( x > originX - w/2 - gridSize/2 && i < qty ) {
+            while ( x > originX - w/2 - 35 && i < qty ) {
                 pts.push( new pt(x,y) );
                 if (i === qty) {done = true;}
-                x -= gridSize;
+                x -= 70;
                 i++;
             }
             if (done === true) {break;}
             
             //go up until just past upper left corner
-            while ( y > originY - h/2 - gridSize*1.5 && i < qty ) {
+            while ( y > originY - h/2 - 105 && i < qty ) {
                 pts.push( new pt(x,y) );
                 if (i === qty) {done = true;}
-                y -= gridSize;
+                y -= 70;
                 i++;
             }
             if (done === true) {break;}
             
             //We've gone all the way around the token. Now continue spiraling with a larger radius
-            w = w + gridSize*2;
-            h = h + gridSize*2;
+            w = w + 140;
+            h = h + 140;
         }
         
         return pts;
@@ -552,15 +540,15 @@ const SpawnDefaultToken = (() => {
             while ( (c < numCols) && (i < qty) ) {
                 pts.push( new pt(x,y) );
                 if (i === qty) {done = true;}
-                x += gridSize;
+                x += 70;
                 c++;
                 i++;
             }
             if (done === true) {break;}
             
             //Next row
-            x -= numCols*gridSize;
-            y += gridSize;
+            x -= numCols*70;
+            y += 70;
             c = 0;
         }
         
@@ -608,10 +596,10 @@ const SpawnDefaultToken = (() => {
         let w = parseFloat(tok.get("width"));
         let h = parseFloat(tok.get("height"));
         
-        let xSpacing = (2 * rad)*gridSize + w - gridSize;
-        let ySpacing = (2 * rad)*gridSize + h - gridSize;
-        let startX = (originX - w/2 - gridSize/2) - (rad-1)*gridSize;;
-        let startY = (originY - h/2 - gridSize/2)  - (rad-1)*gridSize;;
+        let xSpacing = (2 * rad)*70 + w - 70;
+        let ySpacing = (2 * rad)*70 + h - 70;
+        let startX = (originX - w/2 - 35) - (rad-1)*70;;
+        let startY = (originY - h/2 - 35)  - (rad-1)*70;;
         let x;
         let y;
         
@@ -639,10 +627,10 @@ const SpawnDefaultToken = (() => {
                     }
                 }
             }
-            xSpacing += gridSize*2;
-            ySpacing += gridSize*2;
-            startX -= gridSize;
-            startY -= gridSize;
+            xSpacing += 140;
+            ySpacing += 140;
+            startX -= 70;
+            startY -= 70;
             i++;
         }
         return pts;
@@ -666,21 +654,21 @@ const SpawnDefaultToken = (() => {
         let originX = left;
         let originY = top;
         
-        let xSpacing = (2 * rad)*gridSize + width - gridSize;
-        let ySpacing = (2 * rad)*gridSize + height - gridSize;
+        let xSpacing = (2 * rad)*70 + width - 70;
+        let ySpacing = (2 * rad)*70 + height - 70;
         
         
         let startX = originX;
         let startY 
         
-        if ( (height/gridSize)%2===0 ) {
+        if ( (height/70)%2===0 ) {
             if (force) {
-                startY = originY -gridSize - Math.floor(height/2) - (rad-1)*gridSize;
+                startY = originY -70 - Math.floor(height/2) - (rad-1)*70;
             } else {
-                startY = originY -gridSize/2 - Math.floor(height/2) - (rad-1)*gridSize;
+                startY = originY -35 - Math.floor(height/2) - (rad-1)*70;
             }
         } else {
-            startY = originY - height/2 -gridSize/2 - (rad-1)*gridSize;
+            startY = originY - height/2 -35 - (rad-1)*70;
         }
       
         
@@ -706,12 +694,12 @@ const SpawnDefaultToken = (() => {
                         case 2:         //LEFT
                             if ( (width/70)%2===0 ) {
                                 if (force) {
-                                    pts.push( new pt(x - gridSize - Math.floor(width/2) - (rad-1)*gridSize - revolutions*gridSize, originY ) );
+                                    pts.push( new pt(x - 70 - Math.floor(width/2) - (rad-1)*70 - revolutions*70, originY ) );
                                 } else {
-                                    pts.push( new pt(x - width/2 -gridSize/2 - (rad-1)*gridSize - revolutions*gridSize, originY ) );
+                                    pts.push( new pt(x - width/2-35 - (rad-1)*70 - revolutions*70, originY ) );
                                 }
                             } else {
-                                pts.push( new pt(x - gridSize/2 - Math.floor(width/2) - (rad-1)*gridSize - revolutions*gridSize, originY ) );
+                                pts.push( new pt(x - 35 - Math.floor(width/2) - (rad-1)*70 - revolutions*70, originY ) );
                             }
                             break;
                         case 3:         //RIGHT
@@ -721,10 +709,10 @@ const SpawnDefaultToken = (() => {
                 }
             }
             revolutions += 1;
-            xSpacing += gridSize*2;
-            ySpacing += gridSize*2;
+            xSpacing += 140;
+            ySpacing += 140;
             //startX -= 70;     //no X adjustment, start of each cross is just directly above the previous start
-            startY -= gridSize;
+            startY -= 70;
             i++;
         }
         return pts;
@@ -744,7 +732,7 @@ const SpawnDefaultToken = (() => {
         let fxModes = ['bomb', 'bubbling', 'burn', 'burst', 'explode', 'glow', 'missile', 'nova', 'splatter'];
         let fxColors = ['acid', 'blood', 'charm', 'death', 'fire', 'frost', 'holy', 'magic', 'slime', 'smoke', 'water'];
         
-        let pageGridIncrement = 1;
+        
         
         try {
             //args is an array object full of cmd:params pairs
@@ -789,8 +777,8 @@ const SpawnDefaultToken = (() => {
                             break;
                         case "offset":
                             let direction = param.split(',');
-                            data.offsetX = parseFloat(direction[0]);    //wil convert to pixels later
-                            data.offsetY = parseFloat(direction[1]);    //wil convert to pixels later
+                            data.offsetX = parseFloat(direction[0]) * 70;
+                            data.offsetY = parseFloat(direction[1]) * 70;
                             break;
                         case "sheet":
                             data.sheetName = param;
@@ -804,9 +792,9 @@ const SpawnDefaultToken = (() => {
                             break;
                         case "size":
                             let sizes = param.split(',');
-                            data.sizeX = parseFloat(sizes[0]);              //wil convert to pixels later
+                            data.sizeX = parseFloat(sizes[0]) * 70;
                             if (sizes.length > 1) {
-                                data.sizeY = parseFloat(sizes[1]);          //wil convert to pixels later
+                                data.sizeY = parseFloat(sizes[1]) * 70;
                             } else {
                                 data.sizeY = data.sizeX;
                             }
@@ -896,8 +884,8 @@ const SpawnDefaultToken = (() => {
                             break;
                         case "resizesource":
                             let sourceSizes = param.split(',');
-                            data.resizeSourceX = parseFloat(sourceSizes[0]);   //will convert to pixels later
-                            data.resizeSourceY = parseFloat(sourceSizes[1]);   //will convert to pixels later
+                            data.resizeSourceX = parseFloat(sourceSizes[0]) * 70;
+                            data.resizeSourceY = parseFloat(sourceSizes[1]) * 70;
                             if (sourceSizes.length >2) {
                                 data.resizeSourceIterations = parseInt(sourceSizes[2]);
                             }
@@ -907,8 +895,8 @@ const SpawnDefaultToken = (() => {
                             break;
                         case "resizetarget":
                             let targetSizes = param.split(',');
-                            data.resizeTargetX = parseFloat(targetSizes[0]);    //will convert to pixels later
-                            data.resizeTargetY = parseFloat(targetSizes[1]);    //will convert to pixels later
+                            data.resizeTargetX = parseFloat(targetSizes[0]) * 70;
+                            data.resizeTargetY = parseFloat(targetSizes[1]) * 70;
                             if (targetSizes.length >2) {
                                 data.resizeTargetIterations = parseInt(targetSizes[2]);
                             }
@@ -930,9 +918,6 @@ const SpawnDefaultToken = (() => {
                             if (_.contains(['true','yes', '1'], param.toLowerCase())) {
                                 data.isDrawing = true;
                             }
-                            break;
-                        case "tokenname":
-                            data.tokenName = param;
                             break;
                         default:
                             retVal.push('Unexpected argument identifier (' + option + '). Choose from: (' + data.validArgs + ')');
@@ -1094,31 +1079,6 @@ const SpawnDefaultToken = (() => {
                 data.originIDs.forEach(id => data.originToks.push(getObj("graphic",id)));
             }
             
-            //get the page grid settings
-            data.spawnPageID = data.originToks[0].get("pageid");
-            if (data.spawnPageID) {
-                let page = getObj("page", data.spawnPageID);
-                if (page) {
-                    pageGridIncrement = page.get("snapping_increment");
-                    gridSize = 70 * pageGridIncrement;
-                } else {
-                    sendChat('SpawnAPI',`/w "${data.who}" `+ 'Error: Unable to find pageGridIncrement for current page. Default 70px will be used');
-                }
-            } else {
-                 return 'Error: Unable to find SpawnPageID for origin token';
-            }
-            
-            //convert user input to pixels using current gridSize
-            data.offsetX = data.offsetX * gridSize;
-            data.offsetY = data.offsetY * gridSize;
-            data.sizeX = data.sizeX * gridSize;
-            data.sizeY = data.sizeY * gridSize;
-            if (data.resizeSourceX !== -999) { data.resizeSourceX = data.resizeSourceX * gridSize }
-            if (data.resizeSourceY !== -999) { data.resizeSourceY = data.resizeSourceY * gridSize }
-            
-            if (data.resizeTargetX !== -999) { data.resizeTargetX = data.resizeTargetX * gridSize }
-            if (data.resizeTargetY !== -999) { data.resizeTargetY = data.resizeTargetY * gridSize }
-            
             
             //For spawn tokens larger than 1x1, we need to apply a correction to the spawn position 
                     //otherwise inputting an offset could still spawn on top of the origin token 
@@ -1139,136 +1099,136 @@ const SpawnDefaultToken = (() => {
                         tokSizeCorrectX.push(0);
                         tokSizeCorrectY.push(0);
                         if (data.forceToSquare) {
-                            /*   */if ( (w/gridSize)%2 === 0 && (h/gridSize)%2 === 0) {     //EVEN && EVEN
-                                        tokSizeCorrectX[tokSizeCorrectX.length - 1] += gridSize/2;
-                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += gridSize/2;
-                            } else if ( (w/gridSize)%2 === 0 && (h/gridSize)%2 !== 0) {     //EVEN && ODD
-                                        tokSizeCorrectX[tokSizeCorrectX.length - 1] += gridSize/2;
-                            } else if ( (w/gridSize)%2 !== 0 && (h/gridSize)%2 === 0) {     //ODD && EVEN
-                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += gridSize/2;
-                            } else if ( (w/gridSize)%2 !== 0 && (h/gridSize)%2 !== 0) {     //ODD && ODD
+                            /*   */if ( (w/70)%2 === 0 && (h/70)%2 === 0) {     //EVEN && EVEN
+                                        tokSizeCorrectX[tokSizeCorrectX.length - 1] += 35;
+                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += 35;
+                            } else if ( (w/70)%2 === 0 && (h/70)%2 !== 0) {     //EVEN && ODD
+                                        tokSizeCorrectX[tokSizeCorrectX.length - 1] += 35;
+                            } else if ( (w/70)%2 !== 0 && (h/70)%2 === 0) {     //ODD && EVEN
+                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += 35;
+                            } else if ( (w/70)%2 !== 0 && (h/70)%2 !== 0) {     //ODD && ODD
                                         //no additional correction
                             } 
                             break;
                         }
                     case data.offsetX === 0 && data.offsetY > 0:    //X=0 && Y POS
                         tokSizeCorrectX.push(0);
-                        tokSizeCorrectY.push( (w-gridSize)/2 ); 
+                        tokSizeCorrectY.push( (w-70)/2 ); 
                         if (data.forceToSquare) {
-                            /*   */if ( (w/gridSize)%2 === 0 && (h/gridSize)%2 === 0) {     //EVEN && EVEN
-                                        tokSizeCorrectX[tokSizeCorrectX.length - 1] += gridSize/2;
-                            } else if ( (w/gridSize)%2 === 0 && (h/gridSize)%2 !== 0) {     //EVEN && ODD
-                                        tokSizeCorrectX[tokSizeCorrectX.length - 1] += gridSize/2;
-                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] -= gridSize/2;
-                            } else if ( (w/gridSize)%2 !== 0 && (h/gridSize)%2 === 0) {     //ODD && EVEN
-                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += gridSize/2;
-                            } else if ( (w/gridSize)%2 !== 0 && (h/gridSize)%2 !== 0) {     //ODD && ODD
+                            /*   */if ( (w/70)%2 === 0 && (h/70)%2 === 0) {     //EVEN && EVEN
+                                        tokSizeCorrectX[tokSizeCorrectX.length - 1] += 35;
+                            } else if ( (w/70)%2 === 0 && (h/70)%2 !== 0) {     //EVEN && ODD
+                                        tokSizeCorrectX[tokSizeCorrectX.length - 1] += 35;
+                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] -= 35;
+                            } else if ( (w/70)%2 !== 0 && (h/70)%2 === 0) {     //ODD && EVEN
+                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += 35;
+                            } else if ( (w/70)%2 !== 0 && (h/70)%2 !== 0) {     //ODD && ODD
                                         //no additional correction
                             } 
                             break;
                         }
                     case data.offsetX === 0 && data.offsetY < 0:    //X=0 && Y NEG
                         tokSizeCorrectX.push(0);
-                        tokSizeCorrectY.push( -(w-gridSize)/2 );
+                        tokSizeCorrectY.push( -(w-70)/2 );
                         if (data.forceToSquare) {
-                                /*   */if ( (w/gridSize)%2 === 0 && (h/gridSize)%2 === 0) {     //EVEN && EVEN
-                                        tokSizeCorrectX[tokSizeCorrectX.length - 1] += gridSize/2;
-                            } else if ( (w/gridSize)%2 === 0 && (h/gridSize)%2 !== 0) {     //EVEN && ODD
-                                        tokSizeCorrectX[tokSizeCorrectX.length - 1] += gridSize/2;
-                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += gridSize/2;
-                            } else if ( (w/gridSize)%2 !== 0 && (h/gridSize)%2 === 0) {     //ODD && EVEN
-                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] -= gridSize/2;
-                            } else if ( (w/gridSize)%2 !== 0 && (h/gridSize)%2 !== 0) {     //ODD && ODD
+                                /*   */if ( (w/70)%2 === 0 && (h/70)%2 === 0) {     //EVEN && EVEN
+                                        tokSizeCorrectX[tokSizeCorrectX.length - 1] += 35;
+                            } else if ( (w/70)%2 === 0 && (h/70)%2 !== 0) {     //EVEN && ODD
+                                        tokSizeCorrectX[tokSizeCorrectX.length - 1] += 35;
+                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += 35;
+                            } else if ( (w/70)%2 !== 0 && (h/70)%2 === 0) {     //ODD && EVEN
+                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] -= 35;
+                            } else if ( (w/70)%2 !== 0 && (h/70)%2 !== 0) {     //ODD && ODD
                                         //no additional correction
                             } 
                             break;
                         }
                     case data.offsetX > 0 && data.offsetY === 0:    //X POS && Y=0
-                        tokSizeCorrectX.push( (w-gridSize)/2 ); 
+                        tokSizeCorrectX.push( (w-70)/2 ); 
                         tokSizeCorrectY.push(0);
                         if (data.forceToSquare) {
-                                /*   */if ( (w/gridSize)%2 === 0 && (h/gridSize)%2 === 0) {     //EVEN && EVEN
-                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += gridSize/2;
-                            } else if ( (w/gridSize)%2 === 0 && (h/gridSize)%2 !== 0) {     //EVEN && ODD
+                                /*   */if ( (w/70)%2 === 0 && (h/70)%2 === 0) {     //EVEN && EVEN
+                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += 35;
+                            } else if ( (w/70)%2 === 0 && (h/70)%2 !== 0) {     //EVEN && ODD
                                         //tokSizeCorrectX[tokSizeCorrectX.length - 1] += 35;
-                            } else if ( (w/gridSize)%2 !== 0 && (h/gridSize)%2 === 0) {     //ODD && EVEN
-                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += gridSize/2;
-                            } else if ( (w/gridSize)%2 !== 0 && (h/gridSize)%2 !== 0) {     //ODD && ODD
+                            } else if ( (w/70)%2 !== 0 && (h/70)%2 === 0) {     //ODD && EVEN
+                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += 35;
+                            } else if ( (w/70)%2 !== 0 && (h/70)%2 !== 0) {     //ODD && ODD
                                         //no additional correction
                             } 
                             break;
                         }
                     case data.offsetX < 0 && data.offsetY === 0:    //X NEG && Y=0
-                        tokSizeCorrectX.push( -(w-gridSize)/2 ); 
+                        tokSizeCorrectX.push( -(w-70)/2 ); 
                         tokSizeCorrectY.push(0); 
                         if (data.forceToSquare) {
-                                /*   */if ( (w/gridSize)%2 === 0 && (h/gridSize)%2 === 0) {     //EVEN && EVEN
-                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += gridSize/2;
-                            } else if ( (w/gridSize)%2 === 0 && (h/gridSize)%2 !== 0) {     //EVEN && ODD
+                                /*   */if ( (w/70)%2 === 0 && (h/70)%2 === 0) {     //EVEN && EVEN
+                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += 35;
+                            } else if ( (w/70)%2 === 0 && (h/70)%2 !== 0) {     //EVEN && ODD
                                         //tokSizeCorrectX[tokSizeCorrectX.length - 1] += 35;
-                            } else if ( (w/gridSize)%2 !== 0 && (h/gridSize)%2 === 0) {     //ODD && EVEN
-                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += gridSize/2;
-                            } else if ( (w/gridSize)%2 !== 0 && (h/gridSize)%2 !== 0) {     //ODD && ODD
+                            } else if ( (w/70)%2 !== 0 && (h/70)%2 === 0) {     //ODD && EVEN
+                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += 35;
+                            } else if ( (w/70)%2 !== 0 && (h/70)%2 !== 0) {     //ODD && ODD
                                         //no additional correction
                             } 
                             break;
                         }
                     case data.offsetX > 0 && data.offsetY > 0:    //X POS && Y POS
-                        tokSizeCorrectX.push( (w-gridSize)/2 ); 
-                        tokSizeCorrectY.push( (w-gridSize)/2 );
+                        tokSizeCorrectX.push( (w-70)/2 ); 
+                        tokSizeCorrectY.push( (w-70)/2 );
                         if (data.forceToSquare) {
-                                /*   */if ( (w/gridSize)%2 === 0 && (h/gridSize)%2 === 0) {     //EVEN && EVEN
+                                /*   */if ( (w/70)%2 === 0 && (h/70)%2 === 0) {     //EVEN && EVEN
                                         //no additional correction
-                            } else if ( (w/gridSize)%2 === 0 && (h/gridSize)%2 !== 0) {     //EVEN && ODD
-                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] -= gridSize/2;
-                            } else if ( (w/gridSize)%2 !== 0 && (h/gridSize)%2 === 0) {     //ODD && EVEN
-                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += gridSize/2;
-                            } else if ( (w/gridSize)%2 !== 0 && (h/gridSize)%2 !== 0) {     //ODD && ODD
+                            } else if ( (w/70)%2 === 0 && (h/70)%2 !== 0) {     //EVEN && ODD
+                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] -= 35;
+                            } else if ( (w/70)%2 !== 0 && (h/70)%2 === 0) {     //ODD && EVEN
+                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += 35;
+                            } else if ( (w/70)%2 !== 0 && (h/70)%2 !== 0) {     //ODD && ODD
                                         //no additional correction
                             } 
                             break;
                         }
                     case data.offsetX > 0 && data.offsetY < 0:    //X POS && Y NEG
-                        tokSizeCorrectX.push( (w-gridSize)/2 ); 
-                        tokSizeCorrectY.push( -(w-gridSize)/2 );
+                        tokSizeCorrectX.push( (w-70)/2 ); 
+                        tokSizeCorrectY.push( -(w-70)/2 );
                         if (data.forceToSquare) {
-                                /*   */if ( (w/gridSize)%2 === 0 && (h/gridSize)%2 === 0) {     //EVEN && EVEN
+                                /*   */if ( (w/70)%2 === 0 && (h/70)%2 === 0) {     //EVEN && EVEN
                                         //no additional correction
-                            } else if ( (w/gridSize)%2 === 0 && (h/gridSize)%2 !== 0) {     //EVEN && ODD
-                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += gridSize/2;
-                            } else if ( (w/gridSize)%2 !== 0 && (h/gridSize)%2 === 0) {     //ODD && EVEN
-                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] -= gridSize/2;
-                            } else if ( (w/gridSize)%2 !== 0 && (h/gridSize)%2 !== 0) {     //ODD && ODD
+                            } else if ( (w/70)%2 === 0 && (h/70)%2 !== 0) {     //EVEN && ODD
+                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += 35;
+                            } else if ( (w/70)%2 !== 0 && (h/70)%2 === 0) {     //ODD && EVEN
+                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] -= 35;
+                            } else if ( (w/70)%2 !== 0 && (h/70)%2 !== 0) {     //ODD && ODD
                                         //no additional correction
                             } 
                             break;
                         }
                     case data.offsetX < 0 && data.offsetY > 0:    //X NEG && Y POS
-                        tokSizeCorrectX.push( -(w-gridSize)/2 ); 
-                        tokSizeCorrectY.push( (w-gridSize)/2 ); 
+                        tokSizeCorrectX.push( -(w-70)/2 ); 
+                        tokSizeCorrectY.push( (w-70)/2 ); 
                         if (data.forceToSquare) {
-                                /*   */if ( (w/gridSize)%2 === 0 && (h/gridSize)%2 === 0) {     //EVEN && EVEN
+                                /*   */if ( (w/70)%2 === 0 && (h/70)%2 === 0) {     //EVEN && EVEN
                                         //no additional correction
-                            } else if ( (w/gridSize)%2 === 0 && (h/gridSize)%2 !== 0) {     //EVEN && ODD
-                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] -= gridSize/2;
-                            } else if ( (w/gridSize)%2 !== 0 && (h/gridSize)%2 === 0) {     //ODD && EVEN
-                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += gridSize/2;
-                            } else if ( (w/gridSize)%2 !== 0 && (h/gridSize)%2 !== 0) {     //ODD && ODD
+                            } else if ( (w/70)%2 === 0 && (h/70)%2 !== 0) {     //EVEN && ODD
+                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] -= 35;
+                            } else if ( (w/70)%2 !== 0 && (h/70)%2 === 0) {     //ODD && EVEN
+                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += 35;
+                            } else if ( (w/70)%2 !== 0 && (h/70)%2 !== 0) {     //ODD && ODD
                                         //no additional correction
                             } 
                             break;
                         }
                     case data.offsetX < 0 && data.offsetY < 0:    //X NEG && Y NEG
-                        tokSizeCorrectX.push( -(w-gridSize)/2 ); 
-                        tokSizeCorrectY.push( -(w-gridSize)/2 );
+                        tokSizeCorrectX.push( -(w-70)/2 ); 
+                        tokSizeCorrectY.push( -(w-70)/2 );
                         if (data.forceToSquare) {
-                                /*   */if ( (w/gridSize)%2 === 0 && (h/gridSize)%2 === 0) {     //EVEN && EVEN
+                                /*   */if ( (w/70)%2 === 0 && (h/70)%2 === 0) {     //EVEN && EVEN
                                         //no additional correction
-                            } else if ( (w/gridSize)%2 === 0 && (h/gridSize)%2 !== 0) {     //EVEN && ODD
-                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += gridSize/2;
-                            } else if ( (w/gridSize)%2 !== 0 && (h/gridSize)%2 === 0) {     //ODD && EVEN
-                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] -= gridSize/2;
-                            } else if ( (w/gridSize)%2 !== 0 && (h/gridSize)%2 !== 0) {     //ODD && ODD
+                            } else if ( (w/70)%2 === 0 && (h/70)%2 !== 0) {     //EVEN && ODD
+                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] += 35;
+                            } else if ( (w/70)%2 !== 0 && (h/70)%2 === 0) {     //ODD && EVEN
+                                        tokSizeCorrectY[tokSizeCorrectY.length - 1] -= 35;
+                            } else if ( (w/70)%2 !== 0 && (h/70)%2 !== 0) {     //ODD && ODD
                                         //no additional correction
                             } 
                             break;    
@@ -1282,7 +1242,7 @@ const SpawnDefaultToken = (() => {
             ///////////////////////////////////////////////////////////////
             
             //All tokens spawn on the same page and layer as the origin token(s) unless specified by user command
-            //data.spawnPageID = data.originToks[0].get("pageid");      //this line moved up so we can get the page grid settings 
+            data.spawnPageID = data.originToks[0].get("pageid");
             if (data.userSpecifiedLayer===false) {
                 data.spawnLayer = data.originToks[0].get("layer");
             } 
@@ -1300,7 +1260,7 @@ const SpawnDefaultToken = (() => {
                         left = data.originToks[o].get("left");
                         top = data.originToks[o].get("top");
                         for (q = 0; q < data.qty; q++) {
-                            data.spawnX.push(left + data.offsetX  + tokSizeCorrectX[o] + q*gridSize);   
+                            data.spawnX.push(left + data.offsetX  + tokSizeCorrectX[o] + q*70);   
                             data.spawnY.push(top + data.offsetY  + tokSizeCorrectY[o]);
                         }
                     }
@@ -1312,7 +1272,7 @@ const SpawnDefaultToken = (() => {
                         top = data.originToks[o].get("top");
                         for (q = 0; q < data.qty; q++) {
                             data.spawnX.push(left + data.offsetX + tokSizeCorrectX[o]);   
-                            data.spawnY.push(top + data.offsetY  + tokSizeCorrectY[o] + q*gridSize);
+                            data.spawnY.push(top + data.offsetY  + tokSizeCorrectY[o] + q*70);
                         }
                     }
                     break;
@@ -1391,8 +1351,8 @@ const SpawnDefaultToken = (() => {
               _id: data.spawnPageID,                        
             });
             data.UDL = page[0].get("dynamic_lighting_enabled");
-            let spawnX_max = parseInt(page[0].get("width")) * 70/pageGridIncrement;
-            let spawnY_max = parseInt(page[0].get("height")) * 70/pageGridIncrement;
+            let spawnX_max = parseInt(page[0].get("width"))*70;
+            let spawnY_max = parseInt(page[0].get("height"))*70;
             
             //grab the character object to spawn from supplied spawnName
             let spawnObj = getCharacterFromName(data.spawnName);
@@ -1418,7 +1378,7 @@ const SpawnDefaultToken = (() => {
                                     spawnFx(data.spawnX[iteration], data.spawnY[iteration], data.fx, data.spawnPageID);
                                 }
                                 //Spawn the token!
-                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnLayer, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL, data.bar1Val, data.bar1Max, data.bar1Link, data.bar2Val, data.bar2Max, data.bar2Link, data.bar3Val, data.bar3Max, data.bar3Link, data.expandIterations, data.expandDelay, data.destroySpawnWhenDone, data.angle, data.isDrawing, data.tokenName);
+                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnLayer, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL, data.bar1Val, data.bar1Max, data.bar1Link, data.bar2Val, data.bar2Max, data.bar2Link, data.bar3Val, data.bar3Max, data.bar3Link, data.expandIterations, data.expandDelay, data.destroySpawnWhenDone, data.angle, data.isDrawing);
                                 
                             } else {
                                 log("off the map!");
@@ -1490,7 +1450,7 @@ const SpawnDefaultToken = (() => {
                     }
                  
                 let action = abilityObj.get("action");
-                log(action);
+                
                 sendChat(data.who, action);
             }
         
@@ -1574,8 +1534,8 @@ const SpawnDefaultToken = (() => {
                                             
                     //Spawned token properties
                     currentSide: -999,  //sets the side of a rollable table token
-                    sizeX: 1,          //sets the size of token (will be converted to pixels based on pege grid size)
-                    sizeY: 1,              //--Defaults to 1x1 square. (NOTE: user inputs in squares and gets converted to pixels)
+                    sizeX: 70,          //sets the size of token
+                    sizeY: 70,              //--Defaults to 1x1 square. (NOTE: user inputs in squares and gets converted to pixels)
                     zOrder: "toFront",  //Default z-order
                     lightRad: -999,     //Optional change the emitted light characteristics --> light_radius
                     lightDim: -999,     //Optional change the emitted light characteristics --> light_dimradius
@@ -1609,8 +1569,7 @@ const SpawnDefaultToken = (() => {
                     angle: 0,                      //change the rotation of the spawned token
                     userSpecifiedLayer: false,     //flag to determine how spawned token layer is defined
                     spawnLayer: "objects",         //user can set to "object", "token", "gm", or "map"
-                    isDrawing: false,              //user can set isdrawing property of token 
-                    tokenName: ""                  //optional override for the token name - allows token name to be different than the character name 
+                    isDrawing: false               //user can set isdrawing property of token 
                 };
                 
                 //Parse msg into an array of argument objects [{cmd:params}]
