@@ -257,7 +257,7 @@
               </div>
               <h4 class="text-secondary">Attaquer une (ou plusieurs) cible : <code>!cof-attack @{selected|token_id} @{target|token_id} <i>n</i></code></h4>
               <div class="decalage">
-                <p>où <i>n</i> est un argument optionnel qui peut soit correspondre au label de l'attaque sur la fiche du personnage (ce label est automatiquement généré par la fiche et affiché juste devant le nom), soit être le nom de l'attaque. Si cet argument est <code>-1</code>, le script cherchera si le personnage a une arme en main et utilisera cette arme. Si cet argument est absent ou qu'il ne correspond pas à un label de la fiche du personnage, l'attaque aura les valeurs par défaut d'une attaque au contact infligeant 1d4 DM. Pour plus de facilité, vous pouvez utiliser la macro <code>Attaque</code> qui fait <code>!cof-attack @{selected|token_id} @{target|token_id}</code></p>
+                <p>où <i>n</i> est un argument optionnel qui peut soit correspondre au label de l'attaque sur la fiche du personnage (ce label est automatiquement généré par la fiche et affiché juste devant le nom), soit être le nom de l'attaque. Si cet argument est <code>-1</code>, le script cherchera si le personnage a une arme en main et utilisera cette arme. Si c'est <code>-2</code>, il va chercher l'arme en main gauche. Si cet argument est absent ou qu'il ne correspond pas à un label de la fiche du personnage, l'attaque aura les valeurs par défaut d'une attaque au contact infligeant 1d4 DM. Pour plus de facilité, vous pouvez utiliser la macro <code>Attaque</code> qui fait <code>!cof-attack @{selected|token_id} @{target|token_id}</code></p>
                     <div class="alert alert-success" role="alert">
                       <p>Exemple avec label :</p>
                       <div class="decalage">
@@ -366,6 +366,7 @@
                   <li><code>--incrCritCoef <i>n</i></code> : augmente le coefficient des dégâts critiques de <i>n</i> (1 si on ne donne pas d'argument).</li>
                   <li><code>--diviseDmg <i>n</i></code> : divise les dégâts de base par <i>n</i>.</li>
                   <li><code>--maxDmg</code> : l'attaque inflige le maximum de DM permis par les dés de base.</li>
+                  <li><code>--runeDePuissance</code> : l'arme est enchantée avec une rune de puissance permanente. Contrairement à la rune de puissance du forgesort, l'activation est proposée avant de voir les dégâts et maximise tous les dés, pas seulement ceux de base de l'arme.</li>
                   <li><code>--difficultePVmax</code> : la difficulté du jet d'attaque est le maximum de PVs au lieu de la défense.</li>
                   <li><code>--difficultePV</code> : la difficulté du jet d'attaque est la valeur courante des PVs au lieu de la défense.</li>
                   <li><code>--affute</code> : augmente de 1 les chances de crit et +1d6 aux DM des crit.</li>
