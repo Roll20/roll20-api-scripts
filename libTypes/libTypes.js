@@ -5,12 +5,12 @@ var API_Meta = API_Meta||{}; //eslint-disable-line no-var
 API_Meta.libTypes={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
 {try{throw new Error('');}catch(e){API_Meta.libTypes.offset=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-6);}}
 
-const libTypes = (() => {
+const libTypes = (() => { // eslint-disable-line no-unused-vars
 
   const scriptName = 'libTypes';
   const version = '0.1.0';
   API_Meta.libTypes.version = version;
-  const lastUpdate = 1623105380;
+  const lastUpdate = 1623212510;
   const schemaVersion = 0.1;
 
   const checkInstall = () =>  {
@@ -502,7 +502,5 @@ const libTypes = (() => {
   };
 
 })();
-
-const {Rect,Quadtree} = libTypes;  // eslint-disable-line no-unused-vars
 
 {try{throw new Error('');}catch(e){API_Meta.libTypes.lineCount=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-API_Meta.libTypes.offset);}}
