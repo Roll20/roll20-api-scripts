@@ -75,7 +75,7 @@ API_Meta.SpawnWIP = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.20';
+    const version = '0.21';
     var gridSize = 70;  //this may be updated based on page settings 
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -226,7 +226,7 @@ const SpawnDefaultToken = (() => {
                 baseObj.height = sizeY;
                 baseObj.rotation = angle;
                 baseObj.isdrawing = isDrawing;
-                baseObj.name = tokenName;
+                if (tokenName !== '') { baseObj.name = tokenName }
             } else {                            //will animate and expand token to full size after spawning
                 baseObj.left = spawnX;
                 baseObj.top = spawnY;
@@ -234,7 +234,7 @@ const SpawnDefaultToken = (() => {
                 baseObj.height = 0;
                 baseObj.rotation = angle;
                 baseObj.isdrawing = isDrawing;
-                baseObj.name = tokenName;
+                if (tokenName !== '') { baseObj.name = tokenName }
             }
             
             baseObj.imgsrc = getCleanImgsrc(baseObj.imgsrc); //ensure that we're using the thumb.png
