@@ -242,7 +242,7 @@ const ia = (() => {
                     </table><br><br>\
                     INTERNAL FUNCTIONS:<br>`;
 
-        
+
         let rows = Object.keys(availFuncs).sort().map(f => {
             let btn = Object.prototype.hasOwnProperty.call(availHelp, f) ? btnAPI({ bg: cfgObj.bg, label: 'Help', api: `!ia --help#${f}`, css: cfgObj.css }) : "";
             return `<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;${f}</td><td style="text-align:right;">${btn}&nbsp;&nbsp;</td></tr>`;
@@ -447,7 +447,7 @@ const ia = (() => {
         if (token) return token;
         token = findObjs({ type: 'graphic', subtype: 'token' }).filter(t => t.get('name') === info)[0];
         return token;
-        
+
     };
     const msgbox = ({ c: c = "chat message", t: t = "title", btn: b = "buttons", send: send = false, sendas: sas = "API", wto: wto = "" }) => {
         let tbl = msgtable.replace("__bg__", rowbg[0]);
@@ -601,7 +601,7 @@ const ia = (() => {
                     case 'ce':
                     case 'eC':
                     case 'Ce':
-                        if (['Ce','eC'].includes(q2)) mArg = 'chat';
+                        if (['Ce', 'eC'].includes(q2)) mArg = 'chat';
                         if (!Object.prototype.hasOwnProperty.call(list[0], "cardapi")) {
                             ia.MsgBox({ c: `buildOutputOptions: Card output is currently only intended for repeating sections.`, t: 'NOT A REPEATING SOURCE', send: true, wto: theSpeaker.localName });
                             return retObj;
@@ -614,7 +614,7 @@ const ia = (() => {
                     case 'R':   // read the action text in a msgbox
                     case 'r':
                         if (q2 === 'R') mArg = 'chat';
-                        retObj.ret = list.map(a => ia.BtnAPI({ bg: bg, api: ia.InternalCallCoding(`!ia --${mArg} --show#msgbox{{!!c#get${elem}{{!!a#${a.execObj.id} !!h#true !!v#${v}}} !!t#${a.label} !!send#true !!sendas#getme{{!!r#cs}}}}`,true), label: a.label, charid: character.id, entity: sheetElem[elem], css: css }))
+                        retObj.ret = list.map(a => ia.BtnAPI({ bg: bg, api: ia.InternalCallCoding(`!ia --${mArg} --show#msgbox{{!!c#get${elem}{{!!a#${a.execObj.id} !!h#true !!v#${v}}} !!t#${a.label} !!send#true !!sendas#getme{{!!r#cs}}}}`, true), label: a.label, charid: character.id, entity: sheetElem[elem], css: css }))
                             .join(d);
                         break;
                     case 'e':   // spread the return out over multiple table elements
@@ -626,7 +626,7 @@ const ia = (() => {
                     case 'eR':  // same, but chat output (not whisper)
                     case 'Re':
                         if (['Re', 'eR'].includes(q2)) mArg = 'chat';
-                        retObj.ret = list.map(a => { return a.label + ia.ElemSplitter.inner + ia.BtnAPI({ bg: bg, api: ia.InternalCallCoding(`!ia --${mArg} --show#msgbox{{!!c#get${elem}{{!!a#${a.execObj.id} !!h#true !!v#${v}}} !!t#${a.label} !!send#true !!sendas#getme{{!!r#cs}}}}`,true), label: a.rlbl, charid: character.id, entity: sheetElem[elem], css: css }) })
+                        retObj.ret = list.map(a => { return a.label + ia.ElemSplitter.inner + ia.BtnAPI({ bg: bg, api: ia.InternalCallCoding(`!ia --${mArg} --show#msgbox{{!!c#get${elem}{{!!a#${a.execObj.id} !!h#true !!v#${v}}} !!t#${a.label} !!send#true !!sendas#getme{{!!r#cs}}}}`, true), label: a.rlbl, charid: character.id, entity: sheetElem[elem], css: css }) })
                             .join(ia.ElemSplitter.outer);
                         break;
                     case "":
@@ -788,7 +788,7 @@ const ia = (() => {
                 if (new RegExp(`${escapeRegExp(elemSplitter.outer)}$`).test(s)) {
                     s = base64.decode(s.slice(0, elemSplitter.outer.length * -1));
                 }
-//                s.split(elemSplitter.outer).map(e => e.split(elemSplitter.inner)).forEach(fe => { log(`LABEL: ${fe[0]}`); log(`BUTTON: ${fe[1]}`); });
+                //                s.split(elemSplitter.outer).map(e => e.split(elemSplitter.inner)).forEach(fe => { log(`LABEL: ${fe[0]}`); log(`BUTTON: ${fe[1]}`); });
                 retObj.ret = s.split(elemSplitter.outer).map(e => e.split(elemSplitter.inner))
                     .map(e => {
                         return (availMenus[ms.menu][r] || availMenus.default.row || "") // get the row (or default)
@@ -915,7 +915,7 @@ const ia = (() => {
             oldid: oldid,                                       // old handout id, if provided
             nn: nn = "",                                        // new handout name
             cfgObj: cfgObj,                                     // config settings
-            } = {}) => {
+        } = {}) => {
             let api = `http://journal.roll20.net/handout/`;
             if (!nn) {                                          // no new name provided
                 msgbox({ c: "Unable to rename: no new name provided.", t: "ERROR", send: true });
@@ -953,7 +953,7 @@ const ia = (() => {
             theSpeaker: theSpeaker,
             cfgObj: cfgObj,
             doc: doc = "",
-            
+
         } = {}) => {
             if (!doc) return retObj;
             let docarg;
@@ -979,11 +979,11 @@ const ia = (() => {
                             argtype: availFuncs[a] ? 'ARGUMENTS' : a.indexOf(getHelpArg()) > -1 ? 'OPTIONS' : 'unknown',
                             args: availHelp[a].args.map(o => {
                                 let h = /gethelp\(([^)]+)\)/g.exec(o[1]);
-                                if (h) return `<tr><td style="width:30px;">${o[0]}</td><td><span style="font-style:italic;">see help entry for <span style="font-style:italic;">${h[1].replace(getHelpArg(),'')}</span></td>`;
+                                if (h) return `<tr><td style="width:30px;">${o[0]}</td><td><span style="font-style:italic;">see help entry for <span style="font-style:italic;">${h[1].replace(getHelpArg(), '')}</span></td>`;
                                 return `<tr><td style="width:30px;">${o[0]}</td><td>${o[1]}</td>`;
                             })
-                            .join("")
-                        
+                                .join("")
+
                         };
                     });
                 let helpoutput = helpentries.map(h => helptemplate.replace('__helpheader__', h.dispname).replace('__type__', h.type).replace('__msg__', h.msg).replace('__argheader__', h.argtype).replace('__argrows__', h.args));
@@ -991,7 +991,7 @@ const ia = (() => {
                 helpho.set({ notes: helpoutput });
                 api = `http://journal.roll20.net/handout/${helpho.id}`;
                 btn = btnAPI({ bg: cfgObj.bg, api: api, label: `Open`, css: cfgObj.css, r20style: true });
-                
+
                 msgbox({ c: "Help handout named 'IA Help' created.", t: "HANDOUT CREATED", btn: btn, send: true, wto: theSpeaker.localName });
                 return retObj;
 
@@ -1054,8 +1054,8 @@ const ia = (() => {
         };
 
         let funcregex = getMapArgFuncRegex(funcTable);
-            // group 1: function from function{{arguments}}
-            // group 2: arguments from function{{arguments}}
+        // group 1: function from function{{arguments}}
+        // group 2: arguments from function{{arguments}}
         let f = funcregex.exec(args);
         if (f) {
             retObj = funcTable[f[1]]({
@@ -1078,7 +1078,7 @@ const ia = (() => {
         let { msg: msg = "No help specified", args: fargs = [["n/a", "No arguments specified"]] } = availHelp[f] || {};       // destructuring assignment of the help object, if present (empty object if not)
         let rows = fargs.map(a => `<tr><td style="vertical-align:top;">&nbsp;&nbsp;&nbsp;&nbsp;${a[0]}</td><td>&nbsp;&nbsp;</td><td>${a[1]}</td></tr>`).join("");
 
-        rows = rows.replace(/gethelp\(([^)]+)\)/g, ((m,g) => btnAPI({ bg: cfgObj.bg, label: 'Help', api: `!ia --help#${g}`, css: cfgObj.css })));        
+        rows = rows.replace(/gethelp\(([^)]+)\)/g, ((m, g) => btnAPI({ bg: cfgObj.bg, label: 'Help', api: `!ia --help#${g}`, css: cfgObj.css })));
 
         let tbl = `<table style="width:100%;">${rows}</table>`;
         let subhdr;
@@ -1120,7 +1120,7 @@ const ia = (() => {
         let alttextcolor = getTextColor(altcolor);
         retObj.ret = availMenus[menu].tbl                               // return the table structure
             .replace(/\bmaincolor\b/g, color)
-            .replace(/\bmaintextcolor\b/g, textcolor)                              
+            .replace(/\bmaintextcolor\b/g, textcolor)
             .replace(/\baltcolor\b/g, altcolor)
             .replace(/\balttextcolor\b/g, alttextcolor);
         retObj.suspend = false;                                         // let the process continue
@@ -1190,7 +1190,7 @@ const ia = (() => {
         // calls cfgIntoState, which calls parseConfig
         // 4 cases to manage: config file named to non-config, non-config named to config, config named to another config, or changes to notes
         let honame = cfgho.get('name');
-        if (!(horx.test(honame) || horx.test(prev.name) )) return;                          // if this wasn't a config template at some point in the change, we don't care
+        if (!(horx.test(honame) || horx.test(prev.name))) return;                          // if this wasn't a config template at some point in the change, we don't care
         let honamepart;
         if (honame !== prev.name) {                                                         // name was changed
             if (horx.test(prev.name)) {                                                     // if the old name is a config file
@@ -1244,10 +1244,10 @@ const ia = (() => {
         } else {                                                                        // if this is the global config, reassign the global
             state.ia.global = state.ia.global || {};
             state.ia.global.cfgObj = state.ia.global.cfgObj || {};
-            state.ia.global.cfgObj = getDefaultConfigObj(); 
+            state.ia.global.cfgObj = getDefaultConfigObj();
         }
         let duphos = findObjs({ type: 'handout', name: cfgho.get('name') });            // see if there is another config of that same name we should load, now
-        if (duphos.length > 0) {                                                        
+        if (duphos.length > 0) {
             let replacecfg = duphos[0];
             replacecfg.get('notes', (notes) => { cfgIntoState({ charname: honamepart, notes: notes }) });
         }
@@ -1268,8 +1268,9 @@ const ia = (() => {
         if (apicatch === "") return;
 
         let theSpeaker = getTheSpeaker(msg_orig);
-
-        let args = msg_orig.content.replace(/<br\/>\n\s*}}/g, '}}').replace(/<br\/>\n/g, ' ').split(/\s+--/)
+        let bracereplace = '}}';
+        if (/^!(?:ia|insertarg|insertargs)\s+{{/.test(msg_orig.content) && /}}$/.test(msg_orig.content)) bracereplace = '';
+        let args = msg_orig.content.replace(/<br\/>\n\s*}}/g, '}}').replace(/}}$/g, bracereplace).replace(/<br\/>\n/g, ' ').split(/\s+--/)
             .slice(1)                                                   // get rid of api handle
             .map(splitArgs)									            // split each arg (foo:bar becomes [foo, bar])
             .map(joinVals);									            // if the value included a # (the delimiter), join the parts that were inadvertently separated
@@ -1336,8 +1337,8 @@ const ia = (() => {
         }
 
         // HOOK ARGUMENTS
-        args.filter( a => !Object.keys(cfgObj).includes(a[0].toLowerCase()))                        // deal with only the custom hooks (not part of cfgObj)
-            .map( a => {
+        args.filter(a => !Object.keys(cfgObj).includes(a[0].toLowerCase()))                        // deal with only the custom hooks (not part of cfgObj)
+            .map(a => {
                 retObj = cmdLineParser({ cmd: decodeUrlEncoding(a[1]), funcObj: availFuncs, m: msg_orig, cfgObj: cfgObj, theSpeaker: theSpeaker });   // recursive parser to detect and condense internal functions
                 cmdline = replaceEngine(cmdline, retObj, a);                                        // insert the replacement text as specified into the cmdline around/in the hook
                 return;
@@ -1347,8 +1348,8 @@ const ia = (() => {
         safechat = !/(?:@|\?){/gm.test(cmdline);
         cmdline = internalCallCoding(cmdline, false);
         // if user wants to ouput to the chat but it's not safe to chat, change to button
-        if (['chat','whisper','menu',...Object.keys(mapArgFuncs)].includes(mapArg[0]) && !safechat) mapArg[0] = "button";
-        if (!['button','load'].includes(mapArg[0])) {
+        if (['chat', 'whisper', 'menu', ...Object.keys(mapArgFuncs)].includes(mapArg[0]) && !safechat) mapArg[0] = "button";
+        if (!['button', 'load'].includes(mapArg[0])) {
             sendChat(mapArg[0] === "whisper" ? `API` : theSpeaker.chatSpeaker, (['whisper', 'menu'].includes(mapArg[0]) ? `/w "${theSpeaker.localName}" ` : "") + cmdline);
         }
         else {
@@ -1457,7 +1458,7 @@ const ia = (() => {
             };
         };
         const getFuncRegex = (obj, e = false) => {
-            return new RegExp(`^${e ? '`' : ''}(${Object.keys(obj).join("|")}){{(?=}}|!!)`, 'i');
+            return new RegExp(`^${e ? '`' : ''}(${Object.keys(obj).join("|")})({{|\\(\\()\\s*(?=}}|\\)\\)|!!)`, 'i');
             // group 1: func from func{{arg*}}
             // if escaped, a tick (`) must preceed the func
         };
@@ -1465,7 +1466,7 @@ const ia = (() => {
 
         let funcrx = getFuncRegex(obj),
             efuncrx = getFuncRegex(obj, true),
-            textrx = /^(.*?)(?:}}|\s+!!|$)/,			// group 1: e from e !! --OR-- e}} --OR-- e{end of string}
+            textrx = /^(.*?)(?:}}|\)\)|\s+!!|$)/,			// group 1: e from e !! --OR-- e}} --OR-- e{end of string}
             flagrx = /^\s*!!([^\s)]+)(?=\s|}})/,		// group 1: flag from !!flag
             keyrx = /^\s*!!([^\s#)]+)#[^\s]+/;		// group 1: key from !!key#anything
 
@@ -1511,14 +1512,14 @@ const ia = (() => {
             let f = funcrx.exec(loccmd);
             if (f) {
                 nestlog(`FUNC DETECTS: ${f[1]}`)
-                let lp = /{{/.exec(loccmd).index;
+                let lp = /({{|\(\()/.exec(loccmd).index;
                 index += lp + 2;
                 indent++;
                 let params = zeroOrMore(arg).trimLeft();
                 indent--;
-                if (cmd.charAt(index) === '}' &&
+                if ([')', '}'].includes(cmd.charAt(index)) &&
                     index + 1 < cmd.length &&
-                    cmd.charAt(index + 1) === '}') {
+                    [')', '}'].includes(cmd.charAt(index + 1))) {
                     nestlog(`FUNC: Running ${f[1]}{{${params}}}`);
                     let retObj = obj[f[1]]({
                         ...(Object.fromEntries((params || "")
@@ -1546,7 +1547,7 @@ const ia = (() => {
             let f = efuncrx.exec(loccmd);
             if (f) {
                 nestlog(`EFUNC DETECTS: ${f[1]}`)
-                let lp = /{{/.exec(loccmd).index;
+                let lp = /({{|\(\()/.exec(loccmd).index;
 
                 let pos = lp + 1,
                     pairs = 1,
@@ -1555,14 +1556,14 @@ const ia = (() => {
 
                 while (pairs !== 0 && pos < loccmd.length) {
                     pos++;
-                    if (loccmd.charAt(pos) === '{') {
+                    if (['{', '('].includes(loccmd.charAt(pos))) {
                         if (obraced === pos - 1) {
                             pairs++;
                             obraced = 0;
                         } else {
                             obraced = pos;
                         }
-                    } else if (loccmd.charAt(pos) === '}')
+                    } else if (['{', '('].includes(loccmd.charAt(pos)))
                         if (cbraced === pos - 1) {
                             pairs--;
                             cbraced = 0;
@@ -2702,16 +2703,16 @@ const xray = (() => {
             ia.MsgBox({ c: `xray: No elements in ${s}.`, t: `NO RETURN`, send: true, wto: theSpeaker.localName });
             return;
         }
-/*
-        let sectionRX = new RegExp(`repeating_${s}_([^_]*?)_.*$`);
-        // group 1: attributeID from repeating_section_attributeID_suffix
-        let attrsinrep = findObjs({ type: 'attribute', characterid: character.id }).filter(r => sectionRX.test(r.get('name')));
-        if (!attrsinrep.length) {
-            ia.MsgBox({ c: `xray: No elements in ${s}.`, t: `NO RETURN`, send: true, wto: theSpeaker.localName });
-            return;
-        }
-        let uniquekeys = [...new Set(attrsinrep.map(a => sectionRX.exec(a.get('name'))[1]))];        // extract attributeID (group 1 of the regex), then get an array of unique values
-*/
+        /*
+                let sectionRX = new RegExp(`repeating_${s}_([^_]*?)_.*$`);
+                // group 1: attributeID from repeating_section_attributeID_suffix
+                let attrsinrep = findObjs({ type: 'attribute', characterid: character.id }).filter(r => sectionRX.test(r.get('name')));
+                if (!attrsinrep.length) {
+                    ia.MsgBox({ c: `xray: No elements in ${s}.`, t: `NO RETURN`, send: true, wto: theSpeaker.localName });
+                    return;
+                }
+                let uniquekeys = [...new Set(attrsinrep.map(a => sectionRX.exec(a.get('name'))[1]))];        // extract attributeID (group 1 of the regex), then get an array of unique values
+        */
         pos = Number(pos);
         if (isNaN(pos)) {
             ia.MsgBox({ c: `xray: Argument 'pos' not recognized as number.`, t: `INVALID POSITION`, send: true, wto: theSpeaker.localName });
