@@ -1,21 +1,20 @@
 /*
 =========================================================
-Name            :	InsertArg (ia)
-GitHub          :	https://github.com/TimRohr22/Cauldron/tree/master/InsertArg
-Roll20 Contact  :	timmaugh
-Version         :   1.6.0
+Name			:	InsertArg (ia)
+GitHub			:	https://github.com/TimRohr22/Cauldron/tree/master/InsertArg
+Roll20 Contact	:	timmaugh
 ---------------------------------------------------------
                     COMPONENTS
 ---------------------------------------------------------
-Name            :	Core Engine     Core Lib        XRay
-Version         :	1.5.2           1.5.2           1.2.1
-Last Update     :	2/6/2020       6/15/2020       6/15/2020
+Name			:	Core Engine     Core Lib        XRay
+Version			:	1.5.2           1.5.1           1.2
+Last Update		:	2/6/2020       12/2/2020       9/16/2020
 =========================================================
 */
 var API_Meta = API_Meta || {};
 API_Meta.InsertArg = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 {
-    try { throw new Error(''); } catch (e) { API_Meta.InsertArg.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (18)); }
+    try { throw new Error(''); } catch (e) { API_Meta.InsertArg.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (17)); }
 }
 
 const ia = (() => {
@@ -24,11 +23,10 @@ const ia = (() => {
     //		VERSION
     // ==================================================
     const apiproject = 'InsertArg';
-    API_Meta[apiproject].version = '1.6.0';
-    const vrs = '1.5.2'; // core engine
+    API_Meta[apiproject].version = '1.5.2';
     const vd = new Date(1612647328500);
     const versionInfo = () => {
-        log(`\u0166\u0166 ${apiproject} v${vrs}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
+        log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         return;
     };
     const logsig = () => {
@@ -1702,9 +1700,9 @@ const ialibcore = (() => {
     // ==================================================
     //		VERSION
     // ==================================================
-    const vrs = '1.5.2';
+    const vrs = '1.5.1';
     const versionInfo = () => {
-        const vd = new Date(1623765869623);
+        const vd = new Date(1606968110464);
         log('\u0166\u0166 InsertArg Core Lib v' + vrs + ', ' + vd.getFullYear() + '/' + (vd.getMonth() + 1) + '/' + vd.getDate() + ' \u0166\u0166');
         return;
     };
@@ -1996,7 +1994,7 @@ const ialibcore = (() => {
         if (!list.length) {
             if (!emptyok) ia.MsgBox({ c: `getrepeating: No attributes found with that naming suffix (sfxn).`, t: 'NO ATTRIBUTE', send: true, wto: theSpeaker.localName });
             return retObj;
-        } else if (!['bc', 'bC', 'c'].includes(op) && !list.filter(a => a.execObj.id).length) {
+        } else if (!['bc', 'bC', 'c'].includes(op) && list.filter(a => a.execObj.id).length) {
             if (!emptyok) ia.MsgBox({ c: `getrepeating: No attributes found with that action suffix (sfxa).`, t: 'NO ATTRIBUTE', send: true, wto: theSpeaker.localName });
             return retObj;
         }
@@ -2546,9 +2544,9 @@ const xray = (() => {
     // ==================================================
     //		VERSION
     // ==================================================
-    const vrs = '1.2.1';
+    const vrs = '1.2';
     const versionInfo = () => {
-        const vd = new Date(1623766309691);
+        const vd = new Date(1600308742949);
         log('\u0166\u0166 XRAY v' + vrs + ', ' + vd.getFullYear() + '/' + (vd.getMonth() + 1) + '/' + vd.getDate() + ' \u0166\u0166');
         return;
     };
@@ -2621,14 +2619,18 @@ const xray = (() => {
         let ordrx, match;
         if (attr_name) {
             ordrx = /^repeating_([^_]+)_([^_]+)_.*$/;
-            if (!ordrx.test(attr_name)) return; // the supplied attribute name isn't a repeating attribute at all
+            // group 1: section             from repeating_section_repID_suffix
+            // group 2: repID               from repeating_section_repID_suffix
+            if (!ordrx.test(attr_name)) return;                                                     // the supplied attribute name isn't a repeating attribute at all
+            ordrx.lastIndex = 0;
             match = ordrx.exec(attr_name);
             section = match[1];
+            // group 1: section             from repeating_section_repID_suffix
         }
         let sectionrx = new RegExp(`repeating_${section}_([^_]+)_.*$`);
-        let createOrderKeys = [...new Set(findObjs({ type: 'attribute', characterid: character_id })
+        let createOrderKeys = findObjs({ type: 'attribute', characterid: character_id })
             .filter(a => sectionrx.test(a.get('name')))
-            .map(a => sectionrx.exec(a.get('name'))[1]))];
+            .map(a => sectionrx.exec(a.get('name'))[1]);
         let sortOrderKeys = (findObjs({ type: 'attribute', characterid: character_id, name: `_reporder_repeating_${section}` })[0] || { get: () => { return ''; } })
             .get('current')
             .split(/\s*,\s*/)
