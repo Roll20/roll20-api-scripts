@@ -8,8 +8,8 @@ Version         :   1.6.0
                     COMPONENTS
 ---------------------------------------------------------
 Name            :	Core Engine     Core Lib        XRay
-Version         :	1.5.2           1.5.2           1.2.1
-Last Update     :	2/6/2020       6/15/2020       6/15/2020
+Version         :	1.5.3           1.5.2           1.2.1
+Last Update     :	6/15/2020       6/15/2020       6/15/2020
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -25,7 +25,7 @@ const ia = (() => {
     // ==================================================
     const apiproject = 'InsertArg';
     API_Meta[apiproject].version = '1.6.0';
-    const vrs = '1.5.2'; // core engine
+    const vrs = '1.5.3'; // core engine
     const vd = new Date(1612647328500);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${vrs}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
