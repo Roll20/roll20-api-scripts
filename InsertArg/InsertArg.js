@@ -1269,7 +1269,7 @@ const ia = (() => {
 
         let theSpeaker = getTheSpeaker(msg_orig);
 
-        let args = msg_orig.content.split(/\s+--/)
+        let args = msg_orig.content.replace(/<br\/>\n\s*}}/g, '}}').replace(/<br\/>\n/g, ' ').split(/\s+--/)
             .slice(1)                                                   // get rid of api handle
             .map(splitArgs)									            // split each arg (foo:bar becomes [foo, bar])
             .map(joinVals);									            // if the value included a # (the delimiter), join the parts that were inadvertently separated
@@ -2883,7 +2883,7 @@ const xray = (() => {
         let bg = cfgObj.bg;
         let css = cfgObj.css;
 
-        let args = msg_orig.content.split(/\s+--/)
+        let args = msg_orig.content.replace(/<br\/>\n\s*}}/g, '').replace(/}}$/g, '').replace(/<br\/>\n/g, ' ').split(/\s+--/)
             .slice(1)                                                   // get rid of api handle
 
         let charsICon = findObjs({ type: 'character' });
