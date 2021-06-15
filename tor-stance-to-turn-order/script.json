@@ -1,0 +1,16 @@
+{
+  "name": "tor-stance-to-turn-order",
+  "version": "0.1.2",
+  "description": " script which takes the Stance Regions and puts it into the Turn Order.",
+  "authors": "Michael Heilemann, Stefan Unterhuber, Stuart Johnson, David Domínguez, Eric Le Bourvellec, Michael (aka Aragent) I",
+  "roll20userid": "61774,1227702,383147,63716,211627,2624774",
+  "patreon": "",
+  "dependencies": [],
+  "modifies": {},
+  "conflicts": [],
+  "script": "tor-stance-to-turn-order.js",
+  "useroptions": [],
+  "previousversions": [
+    "0.1.1",
+  ]
+}
