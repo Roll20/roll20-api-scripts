@@ -1027,3 +1027,11 @@ zeroframe:
 calendar:
   - "Calendar"
   - "Utility"
+
+wfrp4epl:
+  - "WFRP4ePL"
+  - "System Toolbox"
+  
+libtypes:
+  - "libTypes"
+  - "Utility"
