@@ -496,7 +496,11 @@ const ZeroFrame = (() => {
                 .replace(simplerx, '')
                 .replace(/\$\[\[(\d+)]]/g, ((m, g1) => preserved.parsedinline[g1].getRollTip()))
                 .replace(/\({&br}\)/g, '<br/>\n');
-            if (preserved.rolltemplate && !temptag) preserved.content = `&{template:${preserved.rolltemplate}} ${preserved.content}`;
+            if (preserved.rolltemplate && !temptag) {
+                let dbpos = preserved.content.indexOf(`{{`);
+                dbpos = dbpos === -1 ? 0 : dbpos;
+                preserved.content = `${preserved.content.slice(0, dbpos)}&{template:${preserved.rolltemplate}} ${preserved.content.slice(dbpos)}`;
+            }
             let speakas = '';
             if (preserved.who.toLowerCase() === 'api') {
                 speakas = '';
