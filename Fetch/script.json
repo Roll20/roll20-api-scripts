@@ -1,7 +1,7 @@
 {
   "name": "Fetch",
   "script": "Fetch.js",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Fetch is a meta-script and part of the Meta-Toolbox. Fetch offers a unified syntax to expand the amount of things that can be retrieved with simple token or sheet calls. You can retrieve any token property, character property, sheet attribute, repeating attribute, ability, or macro with syntax that is intentionally very similar to Roll20's own syntax structures.\r\rToken property : @(selected.currentside)\rSheet Attribute: @(selected.Strength)\rSheet Attribute: @(Bob the Hirsute.Strength.max)\rRepeating Attr : *(Englebert Slaptiback.spells.[spell_name~Fireball prepared].spell_roll)\r\rIt also expands the source of the returned sheet item to include 'speaker'.\r\r@(speaker.Strength.max) ... and can return the rowID of a repeating attribute, the row number ($0), or the name of either brand of reference.\r\rNot only do these offer the advantage of not breaking the chat message if they don't exist (the way a standard token or sheet item call would), they also give you the ability to substitute in a default value should the one you are looking for not exist: \r\r@(The President of Burundi.Coffee[default value here]) \r\rFor more information, see the original API forum thread:\r\rhttps://app.roll20.net/forum/post/10005732/meta-script-fetch-retrieve-attributes-repeating-attributes-abilities-or-token-properties)\r\rOr read about the full set of meta-scripts available: \r\r[Meta Toolbox Forum Thread](https://app.roll20.net/forum/post/10005695/script-set-the-meta-toolbox)",
   "authors": "timmaugh",
   "roll20userid": "5962076",
@@ -16,6 +16,9 @@
     "attribute.type": "read"
   },
   "conflicts": [],
-  "previousversions": ["1.0.4"]
+  "previousversions": [
+    "1.0.4",
+    "1.0.5"
+  ]
 
 }
