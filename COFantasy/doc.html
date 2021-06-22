@@ -244,7 +244,7 @@
                     </ul>
                   </div>
                   <h4>Liste d'actions pour le personnage dont c'est le tour</h4>
-                    <p>Par défaut, le script affiche, pour le personnage dont c'est le tour, une liste d'actions. Cette liste est chuchotée au joueur qui contrôle le perosnnage. Elle se compose des attaques du personnage, des abilities et des actions d'attendre, se défendre et faire une manoeuvre. Il est possible de ne pas afficher une attaque en décochant la case sous le dé dans les options d'attaque.</p>
+                    <p>Par défaut, le script affiche, pour le personnage dont c'est le tour, une liste d'actions. Cette liste est chuchotée au joueur qui contrôle le perosnnage. Elle se compose des attaques du personnage, des abilities et des actions d'attendre, se défendre et faire une manoeuvre. Il est possible de ne pas afficher une attaque en décochant la case sous le dé dans les options d'attaque. Les attaques sont affichées dans l'ordre des labels d'attaques. les attaques avec des conditions impossibles (du genre limite par jour épuisée, etc.) ne sont pas affichées.</p>
                     <p>Si une "Abilities" dont le nom est <code>#Actions#</code> existe pour le personnage dont c'est le tour, la liste de toutes les abilities est remplacée par les %Ability et #Macro cliquables de <code>#Actions#</code>.</p>
                     <p>Pour voir ce message en dehors du changement d'initiative, ou pour le MJ, on peut utiliser <code>!cof-liste-actions</code> en sélectionnant le token (un bon candidat pour une macro de type token action, d'ailleurs généré par la commande <code>!cof-set-macros</code>). Il est possible de commenter temporairement une ligne de cette liste, en ajoutant <code>//</code> au début de celle-ci.</p>
                         <p><img class="img-fluid" src="https://i.imgur.com/tTfFoPW.png" data-href="https://i.imgur.com/tTfFoPW.png"></p>
@@ -291,6 +291,7 @@
                   <li><code>--poudre</code> : l'arme est une arme à poudre, utilisation d'un dé de poudre</li>
                   <li><code>--epieu</code> : l'arme est un épieu. À noter que l'arme est aussi considérée comme un épieu si elle contient <code>épieu</code> dans son nom ou dans son champs divers. Cette option augmente de 1 le nombre de dés contre un adversaire sans armure.</li>
                   <li><code>--hache</code> : l'arme est une hache. À noter que l'arme est aussi considérée comme une hache si elle contient <code>hache</code> dans son nom ou dans son champs divers. Cette option permet de passer la RD/hache (pour les sylvaniens, par exemple).</li>
+                  <li><code>--marteau</code> : l'arme est un marteau. À noter que l'arme est aussi considérée comme un marteau si elle contient <code>marteau</code> dans son nom ou dans son champs divers.</li>
                   <li><code>--auto</code> : l'attaque réussit automatiquement</li>
                   <li><code>--bonusAttaque <i>n</i></code> : ajoute <i>n</i> au jet d'attaque</li>
                   <li><code>--bonusCritique <i>n</i></code> : augmente <i>n</i> à la plage de coups critiques</li>
@@ -389,6 +390,7 @@
                   <li><code>--dmCible <i>dmg</i></code> : utilisé conjointement aux options de zone ci-dessus, cette option permet de remplacer les dommages de base de l'attaque spécifiquement sur la cible sélectionnée lors de l'attaque</li>
                   <li><code>--saufAllies</code> : ne cible pas les allies dans la zone ou les cibles spécifiées.</li>
                   <li><code>--target <i>id</i></code> : ajoute une cible à l'attaque (s'ajoute à la cible principale et aux options d'aoe).</li>
+                  <li><code>--ciblesDansDisque <i>n</i></code> : impose que les différentes cibles soient dans un disque de rayon <i>n</i>.</li>
                   <li><code>--message <i>texte</i></code> : ajoute une ligne avec le message dans la fenêtre de l'attaque. Attention, <i>texte</i> ne doit pas contenir la séquence <code> --</code>.</li>
                   <li><code>--secret</code> : affiche les jets et résultats de l'attaque seulement aux joueurs qui contrôlent l'attaquant ou ses cibles, ainsi qu'au MJ.</li>
                   <li><code>--allonge <i>n</i></code> : ajoute <i>n</i> mètres à la portée d'une attaque au contact. L'allonge peut être un nombre à virgule et même négative.</li>
@@ -517,11 +519,12 @@
                 <div class="decalage">
                   <p><i>x</i> peut être un nombre, un jet de dé ou <code>leger</code>, <code>modere</code>, <code>groupe</code> ou <code>secondSouffle</code>.</p>
                   <p>Les deux premiers arguments sont optionnels. Si <code>!cof-soin</code> n'a qu'un seul argument, c'est interprété comme le montant des soins, et les tokens soignés sont ceux sélectionnés. Si <code>!cof-soin</code> n'a que 2 arguments, le premier argument est le token du soigneur, et les cibles doivent être désignées avec une option de sélection de groupe.</p>
-                  <span>Options :</span>
+                  <span>Options (en plus de options normales de commandes):</span>
                   <ul>
                     <li><code>--portee <i>n</i></code> : permet de spécifier une distance maximum entre le soigneur et le soigné (au-delà, le soin échoue)</li>
                     <li><code>--transfer</code> : le soin est payé avec les PV du soigneur</li>
                     <li><code>--mana <i>n</i></code> : demande au lanceur de payer <i>n</i> points de mana</li>
+                    <li><code>--limiteSoinsParJour <i>n</i></code> : limite le nombre total de PVs soignés par jour. Cette limite peut être associée à une ressource (spécifier en deuxième argument de l'option, peut contenir des espaces), de sorte que seuls les soins qui mentionnent cette ressource sont concernés par cette limitation. Cette option n'a de sens que si un soigneur est précisé.</li>
                   </ul>
                 </div>
               </div>
@@ -724,6 +727,7 @@
                     <li><code>--son <i>son</i></code> : joue le son (normalement compatible avec Roll20AM)</li>
                     <li><code>--image <i>img</i></code> : affiche l'image dans le texte d'activation de l'effet.</li>
                     <li><code>--<i>type</i></code> : il est possible d'associer un type à l'effet. L'utilisation la plus courante est le type <code>poison</code> ou <code>maladie</code>, qui vont permettre de tenir compte des bonus ou immunités contre les effets de ce type.</li>
+                    <li><code>--montreActions</code> : affiche les actions du tours de la cible après avoir appliqué l'effet. Utile si les actions du tours dépendent de cet effet, pour afficher une liste à jour.</li>
                   </ul>
                   <p><code>!cof-boire-alcool</code> et <code>!cof-desaouler</code> permettent de faire varier le niveau d'ébriété. Par exemple, pour tester si le niveau d'ébriété augmente après avoir bu un certain nombre de verres, on peut utiliser la macro <code>!cof-boire-alcool --save CON [[10+?{Nombre de verres}]]</code>.
                 </div>
@@ -740,7 +744,7 @@
               <h3 class="text-info" id="sorts">2.8 Sorts</h3>
               <div class="decalage">
                 <p><code>!cof-attaque-magique @{selected|token_id} @{target|token_id}</code> : fait un jet d'attaque magique opposé entre le lanceur et sa cible, et dit juste si le sort est raté ou réussi. Options disponibles : <code>--portee</code> et <code>--mana</code>.</p>
-                <p><code>!cof-lancer-sort <i>texte</i></code> : le token sélectionné lance un sort sans support particulier du script (seul un whisper est envoyé au joueur et au MJ). Options disponibles : <code>--mana</code>pour indiquer un coût en mana et <code>--son</code> pour jouer un son.</p>
+                <p><code>!cof-lancer-sort <i>texte</i></code> : le token sélectionné lance un sort sans support particulier du script (seul un whisper est envoyé au joueur et au MJ). Options disponibles : <code>--mana</code>pour indiquer un coût en mana et <code>--son</code> pour jouer un son. Pour un sort sur plusieurs cibles, utiliser l'option <code>--lanceur @{selected|token_id}</code>.</p>
                 <p><code>!cof-peur <i>difficulté durée</i></code> : effet de peur (nécromant, dragon, etc). Tant que la peur est active, statut screaming. <i>difficulté</i> est la difficulté du jet de SAG.</p>
                 <span>Options :</span>
                 <ul>
@@ -933,7 +937,7 @@
                   <li><strong>Charge</strong> : faire une attaque avec les options <code>--bonusAttaque 2</code> <code>--plus 1d6</code>. Pour gérer plusieurs armes, vous pouvez aussi créer une liste d'actions, comme avec l'attaque sournoise du voleur.</li>
                   <li><strong>Enchaînement</strong> : ajouter un attribut <code>enchainement</code>, de valeur <code>true</code>.</li>
                   <li><strong>Déchaînement d'acier</strong> : pas de support particulier pour l'instant. Déplacer le token et faire les attaques au passage.</li>
-                  <li><strong>Attaque tourbillon</strong> : créer une ability <code>#Attaque-tourbillon#</code> reprise dans le menu <code>#Actions#</code>, avec sur la première ligne <code>!options --auto --portee 0 --disque 5</code> et sur les autres les lignes les attaques, ou bien <code>!attaques</code> pour les listes toutes, et utiliser l'attaque en se ciblant lui-même.</li>
+                  <li><strong>Attaque tourbillon</strong> : Faite une ability avec le code <code>!cof-attack @{selected|token_id} @{selected|token_id} -1 --auto --disque 5 --saufAllies --limiteParCombat 1 tourbillon</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du primitif</h4>
                 <ol>
@@ -1218,6 +1222,7 @@
                         </ol>
                       </li>
                     </ul>
+                        Pour une rapière dansante, il existe aussi un effet temporaire <code>rapiereDansante</code>.
                   </li>
                   <li><strong>Charisme héroïque</strong> : reporter sur la fiche</li>
                 </ol>
@@ -1659,7 +1664,7 @@
                   <li><strong>Foudres divines</strong> :
                     <ul>
                       <li>Sort : Ajouter une attaque sur la fiche utilisant l'attaque magique, dommages 1d6+SAG, portée 0, type Sortilège, dégâts électrique, options <code><i>--mana 2</i> --disque 10 --saufAllies</code>. Si le label de ce sort est <code><i>L</i></code>, il ne vous reste plus qu'à faire une ability avec <code>!cof-attack @{selected|token_id} @{selected|token_id} <i>L</i></code>.</li>
-                      <li>Objet de sort : <code>!cof-attack @{selected|token_id} @{selected|token_id} Foudres divines --toucher [[@{selected|ATKMAG}]] --dm 1d6+[[@{selected|SAG}]] --electrique --portee 0 --sortilege --disque 10 --saufAllies</code></li>
+                      <li>Objet de sort : <code>!cof-attack @{selected|token_id} @{selected|token_id} Foudres divines --toucher [[@{selected|ATKMAG}]] --dm 1d6+[[@{selected|SAG}]] --electrique --sortilege --disque 10 --saufAllies</code></li>
                     </ul>
                   </li>
                   <li><strong>Charisme héroïque</strong> : reporter les bonus sur la fiche</li>
@@ -1839,13 +1844,13 @@
                 </ol>
                 <h4 class="text-secondary">Voie de l'aventurier</h4>
                 <ol>
-                  <li><strong>Sprint</strong> : pas de support, au MJ de vérifier que ce n'est utilisé qu'une fois par combat.</li>
+                  <li><strong>Sprint</strong> : Pour vérifier que ce n'est bien utilisé qu'une fois par combat, on pourra utiliser <code>!cof-lancer-sort pousse un sprint --limiteParCombat 1 sprint</code>.</li>
                   <li><strong>Provocation</strong> : <code>!cof-provocation @{selected|token_id} @{target|token_id}</code>. Au joueur ensuite de faire son attaque gratuite si la provocation est réussie et que l'adversaire l'attaque.</li>
                   <li><strong>Grâce féline</strong> : ajouter un attribut <code>graceFeline</code> avec comme valeur <code>true</code>. Cela va affecter l'initiative et la DEF, mais sans se voir sur la fiche. Pour les tests de déplacement, ajouter un attribut <code>graceFelineVoleur</code> de valeur <code>true</code> (penser à proposer l'utilisation de compétences, en ajoutant les compétences <code>course</code>, <code>saut</code>, <code>acrobatie</code> et <code>escalade</code> au voleur ou sur le handout de compétences).</li>
                 </ol>
                 <h4 class="text-secondary">Voie du déplacement</h4>
                 <ol>
-                  <li><strong>Esquive</strong> : Ajouter un attribut <code>esquiveVoleur</code>, de valeur courante le rang dans la voie. Ne pas modifier la DEF sur la fiche, le script fera les ajustements (et montrera le total avec <code>!cof-statut</code>.</li>
+                  <li><strong>Esquive</strong> : Ajouter un attribut <code>esquiveVoleur</code>, de valeur courante le rang dans la voie. Ne pas modifier la DEF sur la fiche, le script fera les ajustements (et montrera le total avec <code>!cof-statut</code>).</li>
                   <li><strong>Chute</strong> : pas de support particulier.</li>
                   <li><strong>Acrobaties</strong> : faire <code>!cof-jet DEX 15</code> pour le jet de dextérité, le reste est géré par le MJ.</li>
                 </ol>
@@ -1939,7 +1944,13 @@
                 <ol>
                   <li><strong>Résistance</strong> : ajouter les bonus sur la fiche</li>
                   <li><strong>Solide comme un roc</strong> : ajouter le texte <code>2/1</code> dans la RD sur la fiche.</li>
+                  <li><strong>Haches et marteaux</strong> : ajouter un attribut <code>hachesEtMarteaux</code> de valeur <code>true</code>. Ne pas oublier de mettre le modificateur <code>hache</code> ou <code>marteau</code> pour les attaques qui sont concernées.</li>
                 </ol>
+                <h4 class="text-secondary">Minotaure</h4>
+                <ul>
+                  <li><a href="#Vision_dans_le_noir">Vision dans le noir</a>.</li>
+                  <li><strong>Grande taille</strong> : quand le minotaure rentre dans une construction de taille humaine, utiliser <code>!cof-effet constructionTailleHumaine true</code>. À la sortie du bâtiment, <code>!cof-effet constructionTailleHumaine false</code>. Pour les espaces exigus, de même avec l'effet <code>espaceExigu</code>.</li>
+                </ul>
                 <h4 class="text-secondary">Tieflin</h4>
                 <ul>
                   <li><a href="#Vision_dans_le_noir">Vision dans le noir</a>.</li>
@@ -2030,7 +2041,7 @@
                 <h4 class="text-secondary">Voie du colosse</h4>
                 <ol>
                   <li><strong>Fauchage</strong> : ajouter la RD, et ajouter un attribut <code>fauchage</code> de valeur <code>true</code>, qui va faire automatiquement le renversement si le dé d'attaque est entre 15 et 20. Il est possible de changer ce seuil en indiquant dans l'attribut la valeur à laquelle le dé d'attaque provoque le renversement (15 par défaut).</li>
-                  <li><strong>Balayage</strong> : faire une version de l'attaque avec <code>--target @{target|Target2|token_id}</code></li>
+                  <li><strong>Balayage</strong> : faire une version de l'attaque avec <code>--target @{target|Cible 2|token_id}</code></li>
                   <li><strong>Projection</strong> : ajouter un attribut <code>projection</code> de valeur <code>true</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie des créatures élémentaires</h4>
@@ -2110,6 +2121,7 @@
                 <ul>
                   <li><strong>Absorption d'énergie</strong> : ajouter un attribut <code>absorptionEnergie</code> de valeur courante la valeur du soin accordé à l'attaquant à chaque fois qu'il endommage une cible.</li>
                   <li><strong>Action libre</strong> : ajouter un attribut <code>actionLibre</code> de valeur <code>true</code>.</li>
+                  <li><strong>Agripper</strong> (démon dans Noirbois) : <code>!cof-agripper-de-demon @{selected|token_id} @{target|token_id}</code></li>
                   <li><strong>Attaque en meute</strong> : ajouter un attribut <code>attaqueEnMeute</code> de valeur courante le bonus d'attaque (2 pour un gobelin). Cela confère le bonus pour toutes les attaques de personnages avec cet attribut suivant une effectuée par un autre personnage avec cet attribut, jusqu'au prochain tour de ce personnage. Ainsi, si 2 créatures continuent d'attaquer la même cible, elles bénéficieront du bonus tout le temps, sauf la toute première attaque.</li>
                   <li><strong>Auras</strong> : pour les capacités qui font un effet permanent à une certaine portée, comme l'aura glaciale des spectres, utiliser un attribut nommé <code>aura</code>, de valeur courante la portée en mètres de l'aura, et de valeur maximale l'effet à appliquer. Si cet effet contient la chaîne de caractère <code>$TOKEN</code>, cette chaîne sera remplacée par le nom du token à l'origine de l'aura. Pour un exemple d'utilisation, voyez la ligne <code>Aura glaciale</code> en dessous.</li>
                   <li><strong>Aura glaciale</strong> : ajouter un attribut <code>aura</code>, de valeur courante <code>5</code>, et de valeur maximale <code>!cof-effet-temp ralenti [[1d6]] --save CON 12 --magique --seulementVivant --message une aura de froid intense émane de $TOKEN</code>.</li>
@@ -2139,6 +2151,7 @@
                   <li><strong>Message en cas de coup critique reçu</strong> : on peut utiliser un attribut <code>messageSiCritique</code> avec en valeur courante un message à afficher en cas d'echec critique subit.</li>
                   <li><strong>Mot de pouvoir</strong> qui immobilise : <code>!cof-mot-de-pouvoir-immobilise --lanceur @{selected|token_id} --enVue --saufAllies</code> </li>
                   <li><strong>N'abandonne jamais</strong> : ajouter un attribut <code>nAbandonnejamais</code> de valeur <code>true</code>.</li>
+                  <li><strong>Noirbois</strong> : À l'entrée dans des ténèbres magiques, utiliser la commande <code>!cof-tenebres-magiques</code>. À la sortie ou la fin de ces ténèbres, faire <code>!cof-tenebres-magiques fin</code>. Pour allumer la fiole de lumière, sélectionner un token est faire <code>!cof-fiole-de-lumiere <i>d</i></code> où <i>d</i> est la distance à laquelle la fiole éclaire. On peut ajouter un troisième argument, qui est la distance à laquelle la lumière devient moins brillante (pas d'effet sur la mécanique de jeu). Pour éteindre la lumière, il faut mettre utiliser <code>!cof-fiole-de-lumiere fin</code>.</li>
                   <li><strong>Noyade (plante carnivore)</strong> : il existe un effet de combat nommé <code>noyade</code> (pas de durée, il dure par défaut tout le combat) qui fait perdre 1d6 PV par tour, sauf à réussir un test de CON difficulté 15, et qui impose un malus de -3 aux attaques et aux DMs.</li>
                   <li><strong>Piqûres d'insectes</strong> : Rajouter un attribut <code>piquresDInsectes</code> avec comme valeur la résistance aux dégâts à distance appropriée</li>
                   <li>
