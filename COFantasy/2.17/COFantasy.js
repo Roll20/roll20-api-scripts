@@ -376,6 +376,7 @@ var COFantasy = COFantasy || function() {
   var etat_de_marker = {};
   var effet_de_marker = {};
 
+  //Rtourne une liste d'attributs
   function tokenAttribute(personnage, name) {
     var token = personnage.token;
     // Tokens Mook : attribut mook d'abord, attribut character sinon
@@ -3117,6 +3118,55 @@ var COFantasy = COFantasy || function() {
       lastParsed = p;
     });
     return weaponStats;
+  }
+
+  //options est un tableaux d'options obtenues par split(' --')
+  function actionImpossible(perso, options, defResource) {
+    var ai = options.some(function(opt) {
+      opt = opt.trim();
+      if (opt === '') return false;
+      var cmd = opt.split(' ');
+      switch (cmd[0]) {
+        case 'si':
+          var condition = parseCondition(cmd.slice(1));
+          switch (condition.type) {
+            case 'etat':
+              return !getState(perso, condition.etat);
+            case 'attribut':
+              return !attributeAsBool(perso, condition.attribute);
+          }
+          return false;
+        case 'mana':
+          if (cmd.length < 2) return false;
+          var mana = parseInt(cmd[1]);
+          if (isNaN(mana) || mana < 0) return false;
+          return !depenseManaPossible(perso, mana);
+        case 'limiteParJour':
+          if (cmd.length < 2) return false;
+          var limiteParJour = parseInt(cmd[1]);
+          if (isNaN(limiteParJour) || limiteParJour < 1) return false;
+          var ressourceParJour = defResource;
+          if (cmd.length > 2) {
+            cmd.splice(0, 2);
+            ressourceParJour = cmd.join('_');
+          }
+          ressourceParJour = "limiteParJour_" + ressourceParJour;
+          return attributeAsInt(perso, ressourceParJour, limiteParJour) === 0;
+        case 'limiteParCombat':
+          if (cmd.length < 2) return false;
+          var limiteParCombat = parseInt(cmd[1]);
+          if (isNaN(limiteParCombat) || limiteParCombat < 1) return false;
+          var ressourceParCombat = defResource;
+          if (cmd.length > 2) {
+            cmd.splice(0, 2);
+            ressourceParCombat = cmd.join('_');
+          }
+          ressourceParCombat = "limiteParCombat_" + ressourceParCombat;
+          return attributeAsInt(perso, ressourceParCombat, limiteParCombat) === 0;
+      }
+      return false;
+    });
+    return ai;
   }
 
   //options peut avoir les champs:
@@ -9207,21 +9257,25 @@ var COFantasy = COFantasy || function() {
         return;
       }
     }
-    if (!options.redo && charAttributeAsBool(attaquant, 'fauchage')) {
-      var seuilDeFauchage = charAttributeAsInt(attaquant, 'fauchage', 15);
+    var attrFauchage = charAttribute(attaquant.charId, 'fauchage');
+    if (!options.redo && attrAsBool(attrFauchage)) {
+      var deFauchage = attrAsInt(attrFauchage, 15);
+      var tailleFauchage = parseInt(attrFauchage[0].get('max'));
+      if (isNaN(tailleFauchage) || tailleFauchage < 1) 
+        tailleFauchage = taillePersonnage(attaquant, 4);
       var seuilFauchage = 10 + modCarac(attaquant, 'force');
       options.etats = options.etats || [];
       options.etats.push({
         etat: 'renverse',
         condition: {
           type: 'deAttaque',
-          seuil: seuilDeFauchage
+          seuil: deFauchage
         },
         save: {
           carac: 'FOR',
           carac2: 'DEX',
           seuil: seuilFauchage,
-          fauchage: taillePersonnage(attaquant, 4)
+          fauchage: tailleFauchage
         }
       });
     }
@@ -11306,7 +11360,7 @@ var COFantasy = COFantasy || function() {
                   });
                 }
                 //Botte mortelle (barde et duelliste)
-                if (options.contact && !options.feinte && !options.pasDeDmg && attackRoll > defense + 4 &&
+                if (options.contact && !options.feinte && !options.attaqueAssuree && !options.pasDeDmg && attackRoll > defense + 4 &&
                   charAttributeAsBool(attaquant, 'botteMortelle')) {
                   if (faireMouche === undefined)
                     faireMouche = charAttributeAsInt(attaquant, 'faireMouche', 0);
@@ -18977,55 +19031,6 @@ var COFantasy = COFantasy || function() {
     }
   }
 
-  //options est un tableaux d'options obtenues par split(' --')
-  function actionImpossible(perso, options, defResource) {
-    var ai = options.some(function(opt) {
-      opt = opt.trim();
-      if (opt === '') return false;
-      var cmd = opt.split(' ');
-      switch (cmd[0]) {
-        case 'si':
-          var condition = parseCondition(cmd.slice(1));
-          switch (condition.type) {
-            case 'etat':
-              return !getState(perso, condition.etat);
-            case 'attribut':
-              return !attributeAsBool(perso, condition.attribute);
-          }
-          return false;
-        case 'mana':
-          if (cmd.length < 2) return false;
-          var mana = parseInt(cmd[1]);
-          if (isNaN(mana) || mana < 0) return false;
-          return !depenseManaPossible(perso, mana);
-        case 'limiteParJour':
-          if (cmd.length < 2) return false;
-          var limiteParJour = parseInt(cmd[1]);
-          if (isNaN(limiteParJour) || limiteParJour < 1) return false;
-          var ressourceParJour = defResource;
-          if (cmd.length > 2) {
-            cmd.splice(0, 2);
-            ressourceParJour = cmd.join('_');
-          }
-          ressourceParJour = "limiteParJour_" + ressourceParJour;
-          return attributeAsInt(perso, ressourceParJour, limiteParJour) === 0;
-        case 'limiteParCombat':
-          if (cmd.length < 2) return false;
-          var limiteParCombat = parseInt(cmd[1]);
-          if (isNaN(limiteParCombat) || limiteParCombat < 1) return false;
-          var ressourceParCombat = defResource;
-          if (cmd.length > 2) {
-            cmd.splice(0, 2);
-            ressourceParCombat = cmd.join('_');
-          }
-          ressourceParCombat = "limiteParCombat_" + ressourceParJour;
-          return attributeAsInt(perso, ressourceParCombat, limiteParCombat) === 0;
-      }
-      return false;
-    });
-    return ai;
-  }
-
   function listeAttaquesVisibles(perso, options, target) {
     options = options || '';
     target = target || '@{target|token_id}';
@@ -19361,7 +19366,7 @@ var COFantasy = COFantasy || function() {
             options = options || {};
             var b = bouton(command, text, perso, options);
             if (options.actionImpossible) ligne += text + '<br />';
-            ligne += b + '<br />';
+            else ligne += b + '<br />';
           }
         });
       } else if (stateCOF.options.affichage.val.actions_par_defaut.val) {
@@ -30248,7 +30253,7 @@ var COFantasy = COFantasy || function() {
             setState(perso, 'immobilise', false, evt);
           if (attrName == 'etreinteScorpionPar') {
             var etrScorpAttr = tokenAttribute(perso, "etreinteScorpionRatee");
-            if (etrScorpAttr) {
+            if (etrScorpAttr && etrScorpAttr.length > 0) {
               etrScorpAttr[0].remove();
               evt.deletedAttributes.push(etrScorpAttr[0]);
             }
@@ -35299,6 +35304,7 @@ var COFantasy = COFantasy || function() {
       if (attributeAsBool(perso, 'toiles')) return true;
       if (attributeAsBool(perso, 'estGobePar')) return true;
       if (attributeAsBool(perso, 'agrippeParUnDemon')) return true;
+      if (attributeAsBool(perso, 'etreinteScorpionPar')) return true;
       return false;
     }
     return true;

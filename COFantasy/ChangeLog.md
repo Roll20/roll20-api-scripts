@@ -1,6 +1,7 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 2.17
 ### Capacités
+* Possibilité de changer la taille jusqu'à laquelle le fauchage est possible.
 * Haches et marteaux des nains.
 * Support de la capacité Agripper du démon de Noirbois.
 * Support de la capacité Grosse tête du forgesort
