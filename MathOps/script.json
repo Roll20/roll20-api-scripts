@@ -1,8 +1,7 @@
 {
   "name": "MathOps",
   "script": "MathOps.js",
-  "version": "1.0.2",
-  "previousversions": [],
+  "version": "1.0.3",
   "description": "MathOps is a meta-script and part of the Meta-Toolbox. MathOps offers a way to perform inline math operations in the macro command line for other scripts without the need for inline rolls and unpacking inline roll values. MathOps goes beyond standard inline rolls with the ability to nest operations and utilize built-in functions. Operations include addition (+), subtraction (-), multiplication (*), division (/), and modulo (%), and functions include min, max, absolute, and truncate, randomizer functions such as random, random integer, random among, and random between, trigonometric functions like sin, cos, tan, hypotenuse, arc- versions of the standard trig functions and hyperbolic versions, as well. It comes with built in constants, and can reference loaded variables if you have Muler (another meta-script) installed. Order operations with nested parentheses. \r\rFor more information, see the original thread in the API forum:\r\r[MathOps Forum Thread](https://app.roll20.net/forum/post/10005717/meta-script-mathops-inline-math-operations-and-nested-formulas)\r\rOr read about the full set of meta-scripts available: \r\r[Meta Toolbox Forum Thread](https://app.roll20.net/forum/post/10005695/script-set-the-meta-toolbox)",
   "authors": "timmaugh",
   "roll20userid": "5962076",
@@ -11,5 +10,5 @@
     "state.MathOps": "read, write"
   },
   "conflicts": [],
-  "previousversions": []
+  "previousversions": ["1.0.2"]
 }
