@@ -1,3 +1,8 @@
+# 13.9.1
+
+### Bug fixes
+- Fixed an issue where the script cannot generate a sheet to check the version.
+
 # 13.9.0
 
 ### Features
