@@ -128,7 +128,7 @@ API_Meta.RadarWIP = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 const Radar = (() => {
     
     const scriptName = "Radar";
-    const version = '0.9';
+    const version = '0.10';
     
     const PING_NAME = 'RadarPing'; 
     const hRED = '#ff0000';
@@ -793,7 +793,7 @@ const Radar = (() => {
     const distBetweenPts = function(pt1, pt2, calcType='Euclidean', gridIncrement=-999, scaleNumber=-999, forDisplayOnly=false) {
         let distPx;     //distance in Pixels
         let distUnits;  //distance in units (gridded maps only)
-        if ( (calcType === 'PF' || (calcType === '5e' && forDisplayOnly === true)) && gridIncrement !== -999 & scaleNumber !== -999) {
+        if ( (calcType === 'PF' || (calcType === '5e' && forDisplayOnly === true)) && gridIncrement !== -999 && gridIncrement !== 0 & scaleNumber !== -999) {
             //using 'Pathfinder' or '3.5e' distance rules, where every other diagonal unit counts as 1.5 units. 
             //..or using 5e diagonal rules where each diag only counts 1 square. 
             //..5e is special due to how t is constructed. We use Euclidean distance to determine if in cone, but we can display in 5e units. 
@@ -860,6 +860,7 @@ const Radar = (() => {
         let closestPt;
         let closestDist;
         let corners = [];
+        let pUL, pUR, pLR, pLL;
         
         //log('gridIncrement = ' + gridIncrement);
         //log('target token center point = ' + tokX + ', ' + tokY);
@@ -871,20 +872,27 @@ const Radar = (() => {
             //These will be used to determine LoS blocking
         corners.push(RotatePoint(tokX, tokY, rot, new pt( tokX-w/2, tokY-h/2 )))     //Upper left
         corners.push(RotatePoint(tokX, tokY, rot, new pt( tokX+w/2, tokY-h/2 )))     //Upper right
-        corners.push(RotatePoint(tokX, tokY, rot, new pt( tokX-w/2, tokY+h/2 )))     //Lower left
         corners.push(RotatePoint(tokX, tokY, rot, new pt( tokX+w/2, tokY+h/2 )))     //Lower right
+        corners.push(RotatePoint(tokX, tokY, rot, new pt( tokX-w/2, tokY+h/2 )))     //Lower left
+        
         
         //Find the center of the squares corresponding to the corners of the target token (used to determine distance) 
-        let pUL = new pt( tokX-w/2 + 35/gridIncrement, tokY-h/2 + 35/gridIncrement )     //Upper left
-        let pUR = new pt( tokX+w/2 - 35/gridIncrement, tokY-h/2 + 35/gridIncrement )     //Upper right
-        let pLL = new pt( tokX-w/2 + 35/gridIncrement, tokY+h/2 - 35/gridIncrement )     //Lower left
-        let pLR = new pt( tokX+w/2 - 35/gridIncrement, tokY+h/2 - 35/gridIncrement )     //Lower right
+        if (gridIncrement !== 0) {
+            pUL = new pt( tokX-w/2 + 35/gridIncrement, tokY-h/2 + 35/gridIncrement )     //Upper left
+            pUR = new pt( tokX+w/2 - 35/gridIncrement, tokY-h/2 + 35/gridIncrement )     //Upper right
+            pLR = new pt( tokX+w/2 - 35/gridIncrement, tokY+h/2 - 35/gridIncrement )     //Lower right
+            pLL = new pt( tokX-w/2 + 35/gridIncrement, tokY+h/2 - 35/gridIncrement )     //Lower left
+        } else {
+            pUL = new pt( tokX-w/2 + 35, tokY-h/2 + 35 )     //Upper left
+            pUR = new pt( tokX+w/2 - 35, tokY-h/2 + 35 )     //Upper right
+            pLR = new pt( tokX+w/2 - 35, tokY+h/2 - 35 )     //Lower right
+            pLL = new pt( tokX-w/2 + 35, tokY+h/2 - 35 )     //Lower left
+        }
         
         pUL = RotatePoint(tokX, tokY, rot, pUL);
         pUR = RotatePoint(tokX, tokY, rot, pUR);
-        pLL = RotatePoint(tokX, tokY, rot, pLL);
         pLR = RotatePoint(tokX, tokY, rot, pLR);
-        
+        pLL = RotatePoint(tokX, tokY, rot, pLL);
         
         //log(originX + ', ' + originY);
         //log(pUL);
@@ -1123,7 +1131,11 @@ const Radar = (() => {
             if (distType === "u") {
                 totalDist = (distBetweenPts(tokPt, originPt)  / 70) / gridIncrement;
             } else {
-                totalDist = (distBetweenPts(tokPt, originPt) * scaleNumber / 70) / gridIncrement;
+                if ( gridIncrement === 0) { //gridless map support
+                    totalDist = (distBetweenPts(tokPt, originPt) * scaleNumber / 70);
+                } else {
+                    totalDist = (distBetweenPts(tokPt, originPt) * scaleNumber / 70) / gridIncrement;
+                }
             }
             fixedDecimals = 1;
         }
