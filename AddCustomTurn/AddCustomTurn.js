@@ -391,7 +391,7 @@ const AddCustomTurn = (() => { // eslint-disable-line no-unused-vars
 
             case 'delete-ge':
               entry.autoDelete = true;
-              entry.deleteCondition = { op: 'LT', val: parseInt(parts[1])};
+              entry.deleteCondition = { op: 'GE', val: parseInt(parts[1])};
               break;
 
             case 'delete-gt':
@@ -436,7 +436,7 @@ const AddCustomTurn = (() => { // eslint-disable-line no-unused-vars
           let to = getTurnArray();
           let pigm = playerIsGM(msg.playerid);
           let idx = to.findIndex(e=>e.custom === ctname && (pigm || e.player === msg.playerid));
-          if(idx) {
+          if(-1 !== idx) {
             let e = to[idx];
             to = [...to.slice(0,idx),...to.slice(idx+1)];
             setTurnArray(to);
