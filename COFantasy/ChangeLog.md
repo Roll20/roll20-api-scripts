@@ -1,6 +1,10 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 2.18
+
 ## 2.17
 ### Capacités
+* Support des effets des ondes corruptrices
+* Support de la potion de sang de l'Arbre-Coeur
 * Possibilité de changer la taille jusqu'à laquelle le fauchage est possible.
 * Haches et marteaux des nains.
 * Support de la capacité Agripper du démon de Noirbois.
