@@ -10,7 +10,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
     const scriptName = "TokenMod";
     const version = '0.8.70';
     API_Meta.TokenMod.version = version;
-    const lastUpdate = 1625628581;
+    const lastUpdate = 1625628947;
     const schemaVersion = 0.4;
 
     const fields = {
@@ -1995,7 +1995,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
         setNightVisionEffect: (/* context*/) => _h.join(
                     _h.subhead('Night Vision Effect'),
                     _h.inset(
-                        _h.paragraph(`Night Vision Effect specifes how the region of night vision around a token looks.  There are two effects that can be turned on: ${_h.code('dimming')} and ${_h.code('nocturnal')}. You can disable Night Vision Effects using ${_h.code('off')}, ${_h.code('none')}, or leave the field blank.  Any other value is ignored.`),
+                        _h.paragraph(`Night Vision Effect specifies how the region of night vision around a token looks.  There are two effects that can be turned on: ${_h.code('dimming')} and ${_h.code('nocturnal')}. You can disable Night Vision Effects using ${_h.code('off')}, ${_h.code('none')}, or leave the field blank.  Any other value is ignored.`),
                         _h.minorhead('Available Night Vision Effect Properties:'),
                         _h.inset(
                             _h.grid(
