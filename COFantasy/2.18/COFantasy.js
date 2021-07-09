@@ -2292,30 +2292,62 @@ var COFantasy = COFantasy || function() {
                 _subtype: "token",
                 layer: "objects"
               });
+            //On cherche d'abord si un siphon des &acirc;mes est prioritaire
+            var prioriteSiphon = [];
             allToks.forEach(function(tok) {
               if (tok.id == token.id) return;
               var p = persoOfToken(tok);
               if (p === undefined) return;
               if (getState(p, 'mort')) return;
               if (distanceCombat(token, tok, pageId) > 20) return;
-              if (charIdAttributeAsBool(p.charId, 'siphonDesAmes')) {
+              if (charAttributeAsBool(p, 'siphonDesAmes')) {
+                prioriteSiphon.push({
+                  perso: p,
+                  priorite: charAttributeAsInt(p, 'siphonDesAmesPrioritaire', 0)
+                });
+              }
+            });
+            if (prioriteSiphon.length > 0) {
+              prioriteSiphon.sort(function(a, b) {
+                return b.priorite - a.priorite;
+              });
+              var fraction = 100;
+              var fractionPriorite = fraction;
+              var priorite = prioriteSiphon[0].priorite;
+              prioriteSiphon.forEach(function(x) {
+                if (x.priorite < priorite) {
+                  priorite = x.priorite;
+                  fractionPriorite = fraction;
+                }
+                var p = x.perso;
+                if (fractionPriorite < 1) {
+                  whisperChar(p.charId, "ne r&eacute;ussit pas &agrave; siphoner l'&acirc;me de " + token.get('name') + " un autre pouvoir l'a siphon&eacute;e avant lui");
+                  return;
+                }
                 var bonus = charAttributeAsInt(p, 'siphonDesAmes', 0);
                 var soin = rollDePlus(6, {
                   bonus: bonus
                 });
+                var soinTotal = soin.val;
+                soin.val = Math.ceil(soin.val * fractionPriorite / 100);
                 soigneToken(p, soin.val, evt,
                   function(s) {
                     var siphMsg = "siphone l'&acirc;me de " + token.get('name') +
-                      ". Il r&eacute;cup&egrave;re ";
-                    if (s == soin.val) siphMsg += soin.roll + " pv.";
-                    else siphMsg += s + " pv (jet " + soin.roll + ").";
+                      ". " + onGenre(p, 'Il', 'Elle') + " r&eacute;cup&egrave;re ";
+                    if (s == soinTotal) {
+                      siphMsg += soin.roll + " pv.";
+                      fraction = 0;
+                    } else {
+                      siphMsg += s + " pv (jet " + soin.roll + ").";
+                      fraction -= Math.ceil(s * 100 / soinTotal);
+                    }
                     whisperChar(p.charId, siphMsg);
                   },
                   function() {
                     whisperChar(p.charId, "est d&eacute;j&agrave; au maximum de point de vie. Il laisse &eacute;chapper l'&acirc;me de " + token.get('name'));
                   });
-              }
-            });
+              });
+            }
           }
           break;
         case 'immobilise':
@@ -3739,7 +3771,7 @@ var COFantasy = COFantasy || function() {
       !attributeAsBool(personnage, 'porteurDuBouclierDeGrabuge') &&
       !attributeAsBool(personnage, 'sangDeLArbreCoeur')) {
       var malusOndesCorruptrices = attributeAsInt(personnage, 'ondesCorruptrices', 2);
-      var msgOndesCorruptrices = "Naus&eacute;eu" + onGenre(personnage,"x","se");
+      var msgOndesCorruptrices = "Naus&eacute;eu" + onGenre(personnage, "x", "se");
       msgOndesCorruptrices += " : -" + malusOndesCorruptrices;
       expliquer(msgOndesCorruptrices + " aux tests");
       bonus -= malusOndesCorruptrices;
@@ -4227,7 +4259,7 @@ var COFantasy = COFantasy || function() {
       if (charAttributeAsBool(personnage, 'sansEsprit')) {
         testRes.reussite = true;
         testRes.texte = "(sans esprit : r&eacute;ussite automatique)";
-        callback(testRes);
+        callback(testRes, explications);
         return;
       }
     }
@@ -5737,7 +5769,6 @@ var COFantasy = COFantasy || function() {
         case 'pressionMortelle':
         case 'ignoreMoitieRD':
         case 'tempDmg':
-        case 'vampirise':
         case 'enflamme':
         case 'malediction':
         case 'pietine':
@@ -6180,6 +6211,7 @@ var COFantasy = COFantasy || function() {
         case 'poison':
         case 'maladie':
         case 'argent':
+        case 'drain':
           lastType = cmd[0];
           var l = 0;
           if (scope.additionalDmg) l = scope.additionalDmg.length;
@@ -6192,6 +6224,17 @@ var COFantasy = COFantasy || function() {
         case 'nature':
         case 'naturel':
           scope.nature = true;
+          return;
+        case 'vampirise':
+          var vampirise = 100;
+          if (cmd.length > 1) {
+            vampirise = parseInt(cmd[1]);
+            if (isNaN(vampirise)) {
+              error("Il faut un pourcentage entier comme argument &agrave; --vampirise", cmd);
+              vampirise = 100;
+            }
+          }
+          scope.vampirise = vampirise;
           return;
         case 'sournoise':
         case 'de6Plus': //deprecated
@@ -7032,8 +7075,9 @@ var COFantasy = COFantasy || function() {
   }
 
   function estNecromancie(options) {
-    return options.necromancie || options.malediction || options.vampirise ||
-      options.peur;
+    return options.necromancie || options.malediction ||
+      (options.vampirise && options.sortilege) || options.peur ||
+      options.type == 'drain';
   }
 
   //On copie les champs de scope dans options ou dans target
@@ -7184,6 +7228,7 @@ var COFantasy = COFantasy || function() {
             msgRate: msgRate,
             attaquant: attaquant,
             rolls: options.rolls,
+            sortilege: options.sortilege,
             chanceRollId: options.chanceRollId,
             type: ite.condition.typeDmg,
             necromancie: estNecromancie(options)
@@ -7508,6 +7553,7 @@ var COFantasy = COFantasy || function() {
         setTokenAttr(perso, 'PVsDebutCombat', perso.token.get('bar1_value'), evt);
       }
       if (!isActive(perso)) return;
+      if (charAttributeAsBool(perso, 'aucuneActionCombat')) return;
       var init = persoInit(perso, evt);
       // On place le token &agrave; sa place dans la liste du tour
       var dejaIndex =
@@ -8560,6 +8606,7 @@ var COFantasy = COFantasy || function() {
             case 'poison':
             case 'maladie':
             case 'magique':
+            case 'drain':
               typeDMGauche = attaquant.armeGauche.typeDegats;
           }
           if (typeDMGauche == 'normal' && attaquant.armeGauche.modificateurs &&
@@ -10375,12 +10422,12 @@ var COFantasy = COFantasy || function() {
       (options.aoe === undefined &&
         attributeAsBool(target, 'formeGazeuse'))) {
       expliquer("L'attaque passe &agrave; travers de " + target.token.get('name'));
-      if (displayRes) displayRes('0', 0);
+      if (displayRes) displayRes('0', 0, 0);
       return 0;
     }
     if (options.asphyxie) {
       if (immuniseAsphyxie(target, expliquer)) {
-        if (displayRes) displayRes('0', 0);
+        if (displayRes) displayRes('0', 0, 0);
         return 0;
       }
     }
@@ -13124,7 +13171,7 @@ var COFantasy = COFantasy || function() {
               } else {
                 dealDamage(target, mainDmgRoll, additionalDmg, evt, target.critique,
                   options, target.messages,
-                  function(dmgDisplay, dmg) {
+                  function(dmgDisplay, dmg, dmgDrain) {
                     if (options.strigeSuce) {
                       var suce = attributeAsInt(attaquant, 'strigeSuce', 0);
                       if (suce === 0) {
@@ -13151,8 +13198,11 @@ var COFantasy = COFantasy || function() {
                             attackerTokName + " continue &agrave; sucer le sang de " + target.tokName);
                       }
                     }
-                    if (options.vampirise || target.vampirise) {
-                      soigneToken(attaquant, dmg, evt, function(soins) {
+                    if (dmgDrain || (dmg > 0 && (options.vampirise || target.vampirise))) {
+                      var pcVampirise = target.vampirise || options.vampirise;
+                      var soinsVamp = dmgDrain || 0;
+                      if (pcVampirise) soinsVamp += Math.ceil(dmg * pcVampirise / 100);
+                      soigneToken(attaquant, soinsVamp, evt, function(soins) {
                         target.messages.push(
                           "L'attaque soigne " + attackerTokName + " de " + soins + " PV");
                       });
@@ -13186,7 +13236,7 @@ var COFantasy = COFantasy || function() {
                           };
                           dealDamage(attaquant, r, [], evt, false, options,
                             target.messages,
-                            function(dmgDisplay, dmg) {
+                            function(dmgDisplay, dmg, dmgDrain) {
                               var dmgMsg =
                                 "<b>D&eacute;charge &eacute;lectrique sur " + attackerTokName + " :</b> " +
                                 dmgDisplay;
@@ -13207,7 +13257,7 @@ var COFantasy = COFantasy || function() {
                           };
                           dealDamage(attaquant, r, [], evt, false, options,
                             target.messages,
-                            function(dmgDisplay, dmg) {
+                            function(dmgDisplay, dmg, dmgDrain) {
                               var dmgMsg =
                                 "<b>Le sang acide gicle sur " + attackerTokName + " :</b> " +
                                 dmgDisplay + " DM";
@@ -13233,7 +13283,7 @@ var COFantasy = COFantasy || function() {
                           };
                           dealDamage(attaquant, r, [], evt, false, options,
                             target.messages,
-                            function(dmgDisplay, dmg) {
+                            function(dmgDisplay, dmg, dmgDrain) {
                               var dmgMsg =
                                 "<b>" + attackerTokName + " est glac&eacute; :</b> " +
                                 dmgDisplay + " DM";
@@ -13260,7 +13310,7 @@ var COFantasy = COFantasy || function() {
                           };
                           dealDamage(attaquant, r, [], evt, false, options,
                             target.messages,
-                            function(dmgDisplay, dmg) {
+                            function(dmgDisplay, dmg, dmgDrain) {
                               var dmgMsg =
                                 "<b>" + attackerTokName + " subit :</b> " +
                                 dmgDisplay + " DM en touchant " + target.tokName;
@@ -13287,7 +13337,7 @@ var COFantasy = COFantasy || function() {
                           };
                           dealDamage(attaquant, r, [], evt, false, options,
                             target.messages,
-                            function(dmgDisplay, dmg) {
+                            function(dmgDisplay, dmg, dmgDrain) {
                               var dmgMsg =
                                 "<b>" + attackerTokName + " subit :</b> " +
                                 dmgDisplay + " DM en touchant " + target.tokName;
@@ -13322,6 +13372,7 @@ var COFantasy = COFantasy || function() {
                         msgPour: msgPour,
                         msgRate: msgRate,
                         attaquant: attaquant,
+                        sortilege: options.sortilege,
                         rolls: options.rolls,
                         chanceRollId: options.chanceRollId,
                         type: ce.typeDmg,
@@ -13416,6 +13467,7 @@ var COFantasy = COFantasy || function() {
                         msgRate: msgRate,
                         attaquant: attaquant,
                         rolls: options.rolls,
+                        sortilege: options.sortilege,
                         chanceRollId: options.chanceRollId,
                         type: ef.typeDmg,
                         necromancie: estNecromancie(options)
@@ -13964,6 +14016,7 @@ var COFantasy = COFantasy || function() {
   //   - fauchage
   //   - entrave (pour les action qui immobilisent, ralentissent ou paralysent)
   //   - necromancie
+  //   - sortilege
   function save(s, target, saveId, expliquer, options, evt, afterSave) {
     target.tokName = target.tokName || target.token.get('name');
     if (options.type && immuniseAuType(target, options.type, options.attaquant)) {
@@ -14029,8 +14082,18 @@ var COFantasy = COFantasy || function() {
     optionsTest.bonusAttrs = bonusAttrs;
     optionsTest.bonus = bonus;
     testCaracteristique(target, carac, s.seuil, saveId, optionsTest, evt,
-      function(tr) {
-        var smsg = target.tokName + " fait " + tr.texte;
+      function(tr, explications) {
+        var smsg = target.tokName + " fait ";
+        if (explications.length === 0) {
+          smsg += tr.texte;
+        } else {
+          smsg += '<span title="';
+          explications.forEach(function(e, i) {
+            if (i > 0) smsg += "&#13;";
+            smsg += e;
+          });
+          smsg += '">' + tr.texte + '</span>';
+        }
         if (tr.reussite) {
           smsg += " => r&eacute;ussite";
           if (options.msgReussite) smsg += options.msgReussite;
@@ -14278,7 +14341,7 @@ var COFantasy = COFantasy || function() {
         if (options.percant && rd.percant) rdMain += rd.percant;
         if (options.contondant && rd.contondant) rdMain += rd.contondant;
       }
-      if (rd.drain && (options.vampirise || target.vampirise)) {
+      if (rd.drain && (options.vampirise || target.vampirise) && mainDmgType != 'drain') {
         rdMain += rd.drain;
       }
       if (options.hache && rd.hache) {
@@ -14410,7 +14473,10 @@ var COFantasy = COFantasy || function() {
           }
         });
     }
-    var dmSuivis = {}; //si il faut noter les DMs d'un type particulier
+    var dmSuivis = {
+      drain: 0
+    }; //si il faut noter les DMs d'un type particulier
+    if (mainDmgType == 'drain') dmSuivis.drain = dmgTotal;
     charAttribute(target.charId, 'vitaliteSurnaturelle').forEach(function(a) {
       var typeVitalite = a.get('max').split(',');
       typeVitalite.forEach(function(tv) {
@@ -14418,8 +14484,8 @@ var COFantasy = COFantasy || function() {
         else dmSuivis[tv] = 0;
       });
     });
-    // Other sources of damage
-    // First count all other sources of damage, for synchronization
+    // Autres sources de d&eacute;g&acirc;ts
+    // On compte d'abord les autres sources, pour la synchronisation
     var count = 0;
     for (var dt in dmgParType) {
       if (immuniseAuType(target, dt, options.attaquant)) {
@@ -14579,7 +14645,7 @@ var COFantasy = COFantasy || function() {
         updateCurrentBar(personnage, 1, pvMax, evt, pvMax);
         var explications = [];
         dealDamage(personnage.attaquant, dmg, [], evt, false, {}, explications,
-          function(dmgDisplay, dmgFinal) {
+          function(dmgDisplay, dmgFinal, dmgDrain) {
             setTokenAttr(personnage, effet + 'Valeur', personnage.tokName + " r&eacute;apparait avec " + dmgFinal + " PV en plus.", evt);
             var attName = personnage.attaquant.tokName || personnage.attaquant.token.get('name');
             var msg = "se transforme en brume noire qui traverse " + attName + " de part en part avant de dispara&icirc;tre dans une paroi en poussant un hululement inhumain. le froid de la mort inflige " + dmgDisplay + " DM &agrave; " + attName;
@@ -14752,7 +14818,7 @@ var COFantasy = COFantasy || function() {
 
   //target prend un coup qui lui fait perdre tous ses PVs
   // Asynchrone
-  function prendreUnCoupMortel(target, dmgTotal, pvPerdus, bar1, tempDmg, dmgDisplay, showTotal, displayRes, options, evt, expliquer) {
+  function prendreUnCoupMortel(target, dmgTotal, pvPerdus, bar1, tempDmg, dmgDisplay, showTotal, dmDrains, displayRes, options, evt, expliquer) {
     pvPerdus += bar1;
     testBlessureGrave(target, dmgTotal, expliquer, evt);
     var defierLaMort = charAttributeAsInt(target, 'defierLaMort', 0);
@@ -14779,13 +14845,13 @@ var COFantasy = COFantasy || function() {
           } else {
             mettreAZeroPV(target, evt, expliquer);
           }
-          postBarUpdateForDealDamage(target, dmgTotal, pvPerdus, bar1, tempDmg, dmgDisplay, showTotal, displayRes, evt, expliquer);
+          postBarUpdateForDealDamage(target, dmgTotal, pvPerdus, bar1, tempDmg, dmgDisplay, showTotal, dmDrains, displayRes, evt, expliquer);
         });
       //On arr&ecirc;te l&agrave;, car tout le reste est fait dans la continuation du save.
       return;
     }
     mettreAZeroPV(target, evt, expliquer);
-    postBarUpdateForDealDamage(target, dmgTotal, pvPerdus, bar1, tempDmg, dmgDisplay, showTotal, displayRes, evt, expliquer);
+    postBarUpdateForDealDamage(target, dmgTotal, pvPerdus, bar1, tempDmg, dmgDisplay, showTotal, dmDrains, displayRes, evt, expliquer);
   }
 
   function dealDamageAfterOthers(target, crit, options, evt, expliquer, displayRes, dmgTotal, dmgDisplay, showTotal, dmSuivis) {
@@ -15150,7 +15216,7 @@ var COFantasy = COFantasy || function() {
           //On enregistre les dm suivis
           for (var dmType in dmSuivis) {
             var d = dmSuivis[dmType];
-            if (d) {
+            if (d && dmType != 'drain') {
               var attrDmSuivi = tokenAttribute(target, 'DMSuivis' + dmType);
               if (attrDmSuivi.length > 0) {
                 var cd = parseInt(attrDmSuivi[0].get('current'));
@@ -15250,17 +15316,17 @@ var COFantasy = COFantasy || function() {
                 //TODO: afficher les explications de calcul des bonus d'attaque ?
                 if (attackRollAttaquant < target.attackRoll) {
                   expliquer(msgIncrevable + " < " + target.attackRoll + " => &eacute;chec ");
-                  prendreUnCoupMortel(target, dmgTotal, pvPerdus, bar1, tempDmg, dmgDisplay, showTotal, displayRes, options, evt, expliquer);
+                  prendreUnCoupMortel(target, dmgTotal, pvPerdus, bar1, tempDmg, dmgDisplay, showTotal, dmSuivis.drain, displayRes, options, evt, expliquer);
                   return;
                 }
                 //L'attaque est &eacute;vit&eacute;e
                 expliquer(msgIncrevable + " > " + target.attackRoll + " => l'attaque est &eacute;vit&eacute;e ! ");
 
-                postBarUpdateForDealDamage(target, dmgTotal, 0, bar1, tempDmg, dmgDisplay, showTotal, displayRes, evt, expliquer);
+                postBarUpdateForDealDamage(target, dmgTotal, 0, bar1, tempDmg, dmgDisplay, showTotal, dmSuivis.drain, displayRes, evt, expliquer);
               });
               return;
             } else { //la cible prend le coup
-              prendreUnCoupMortel(target, dmgTotal, pvPerdus, bar1, tempDmg, dmgDisplay, showTotal, displayRes, options, evt, expliquer);
+              prendreUnCoupMortel(target, dmgTotal, pvPerdus, bar1, tempDmg, dmgDisplay, showTotal, dmSuivis.drain, displayRes, options, evt, expliquer);
               //La suite est fait en continuation car la fonction est asynchrone
               return;
             }
@@ -15270,32 +15336,34 @@ var COFantasy = COFantasy || function() {
             enlevePVStatueDeBois(target, pvPerdus, evt);
           }
         }
-        postBarUpdateForDealDamage(target, dmgTotal, pvPerdus, bar1, tempDmg, dmgDisplay, showTotal, displayRes, evt, expliquer);
+        postBarUpdateForDealDamage(target, dmgTotal, pvPerdus, bar1, tempDmg, dmgDisplay, showTotal, dmSuivis.drain, displayRes, evt, expliquer);
       });
     return dmgDisplay;
   }
 
-  function postBarUpdateForDealDamage(target, dmgTotal, pvPerdus, bar1, tempDmg, dmgDisplay, showTotal, displayRes, evt, expliquer) {
+  function postBarUpdateForDealDamage(target, dmgTotal, pvPerdus, bar1, tempDmg, dmgDisplay, showTotal, dmDrains, displayRes, evt, expliquer) {
     if (bar1 > 0 && tempDmg >= bar1) { //assom&eacute;
       setState(target, 'assome', true, evt);
     }
     var attrsLienDeSang = tokenAttribute(target, "lienDeSangVers");
     if (attrsLienDeSang.length > 0) {
       var lienDuSangDmg = Math.floor(dmgTotal / 2);
-      var r = {
-        total: lienDuSangDmg,
-        type: 'normal',
-        display: lienDuSangDmg
-      };
-      var personnageLie = persoOfId(attrsLienDeSang[0].get("current"));
-      if (personnageLie) {
-        expliquer("Le lien de sang inflige " + lienDuSangDmg + " d&eacute;g&acirc;ts &agrave; " + personnageLie.token.get("name"));
-        dealDamage(personnageLie, r, [], evt, false);
+      if (lienDuSangDmg > 0) {
+        var r = {
+          total: lienDuSangDmg,
+          type: 'normal',
+          display: lienDuSangDmg
+        };
+        var personnageLie = persoOfId(attrsLienDeSang[0].get("current"));
+        if (personnageLie) {
+          expliquer("Le lien de sang inflige " + lienDuSangDmg + " d&eacute;g&acirc;ts &agrave; " + personnageLie.token.get("name"));
+          dealDamage(personnageLie, r, [], evt, false);
+        }
       }
     }
     if (showTotal) dmgDisplay += " = " + dmgTotal;
     if (displayRes === undefined) return;
-    displayRes(dmgDisplay, pvPerdus);
+    displayRes(dmgDisplay, pvPerdus, dmDrains);
   }
 
   function buildinline(inlineroll, dmgType, magique) {
@@ -15350,6 +15418,9 @@ var COFantasy = COFantasy || function() {
         break;
       case 'argent':
         InlineColorOverride = ' background-color: #F1E6DA; color: #C0C0C0;';
+        break;
+      case 'drain':
+        InlineColorOverride = ' background-color: #0D1201; color: #E8F5C9;';
         break;
       default:
         if (critCheck && failCheck) {
@@ -20193,7 +20264,6 @@ var COFantasy = COFantasy || function() {
         case 'asphyxie':
         case 'affute':
         case "metal":
-        case 'vampirise':
         case 'magique':
         case 'artificiel':
         case 'tranchant':
@@ -20226,6 +20296,17 @@ var COFantasy = COFantasy || function() {
         case "nature":
         case "naturel":
           options.nature = true;
+          return;
+        case 'vampirise':
+          var vampirise = 100;
+          if (opt.length > 1) {
+            vampirise = parseInt(opt[1]);
+            if (isNaN(vampirise)) {
+              error("Il faut un pourcentage entier comme argument &agrave; --vampirise", opt);
+              vampirise = 100;
+            }
+          }
+          options.vampirise = vampirise;
           return;
         case "ignoreRD":
           if (opt.length < 2) {
@@ -21509,11 +21590,14 @@ var COFantasy = COFantasy || function() {
       case 'oui':
       case 'Oui':
       case 'true':
+      case 'd&eacute;but':
+      case 'debut':
         activer = true;
         break;
       case 'non':
       case 'Non':
       case 'false':
+      case 'fin':
         activer = false;
         break;
       default:
@@ -21593,13 +21677,15 @@ var COFantasy = COFantasy || function() {
           });
         }
         var msgEffet = whisper + messageEffetIndetermine[effet].activation;
+        var val = (valeur === undefined) ? true : valeur;
         iterSelected(selected, function(perso) {
           if (valeur !== undefined && (cmd[2].startsWith('+') || valeur < 0)) {
             addToAttributeAsInt(perso, effet, 0, valeur, evt);
             sendPerso(perso, effet + " varie de " + valeur, options.secret);
           } else {
+
             setTokenAttr(
-              perso, effet, true, evt, {
+              perso, effet, val, evt, {
                 msg: msgEffet
               });
             switch (effet) {
