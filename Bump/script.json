@@ -1,49 +1,12 @@
 {
   "name": "Bump",
   "script": "Bump.js",
-  "version": "0.2.24",
-  "description": "Bump provides a way to invisibly manipulate tokens on the GM Layer from the Objects Layer, and vice versa.\r\rWhen a token is added to Bump a slave token is created that mimics everything about to master token. The slave token is only visible to the GM and has a color on it to show if the master token is on the GM Layer or the Objects layer. Moving the slave token will move the master token and vice versa. The slave token represents the same character as the master token and changes on the slave token will be reflected on the master token.\n\nFor instructions see the *Help: Bump* Handout in game, or run `!bump --help` in game, or visit [Bump Forum Thread](https://app.roll20.net/forum/permalink/8584976/).",
+  "version": "0.2.25",
+  "description": "Bump provides a way to invisibly manipulate tokens on the GM Layer from the Objects Layer, and vice versa.\r\r For instructions, run `!bump --help`.\r\r Forum Discussion: https://app.roll20.net/forum/permalink/10226949/\r\r## API Interface\r\rTo require `Bump` for your script, add `\"Bump\"` to the `\"dependencies\"` property of your `script.json`:\r\r```json\r\"dependencies\": [\"Bump\"]\r```\r## Function Reference\r### `Bump.Bump(ids)`\rToggle the layer for each token represented by the ids in the array `ids`.\rTokens not already slaved in Bump will be ignored.  The array is not checked\rfor duplicates.\r\r### `Bump.Slave(ids,push=false)`\rAdds each token represented by the ids in the array `ids` to Bump.  If `push`\ris true, tokens on the objects layer will be pushed to the GM layer when\rslaved.\r\r### `Bump.Unslave(ids)`\rRemoves each token represented by the ids in the array `ids` from Bump.",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
-  "useroptions": [
-    {
-      "name": "Visible Color",
-      "type": "text",
-      "default": "#008000",
-      "description": "This is the color the overlay turns when the Bumped token is visible to the players on the Object Layer.  Colors must be an HTML color of the form `#RRGGBB` or the word `transparent`."
-    },
-    {
-      "name": "Invisible Color",
-      "type": "text",
-      "default": "#800080",
-      "description": "This is the color the overlay turns when the Bumped token is invisible to the players on the GM Layer.  Colors must be an HTML color of the form `#RRGGBB` or the word `transparent`."
-    },
-    {
-      "name": "Auto Push",
-      "type": "checkbox",
-      "description": "Select this checkbox if you want slaved tokens to be pushed to the GM Layer as soon as they are added to Bump.",
-      "value": "autoPush"
-    },
-    {
-      "name": "Auto Slave",
-      "type": "checkbox",
-      "description": "Select this checkbox if you want selected tokens that have not been slaved to be added to bump whenever `!bump` is executed.",
-      "value": "autoSlave"
-    },
-    {
-      "name": "Auto Unslave",
-      "type": "checkbox",
-      "description": "Select this checkbox if you want selected tokens that have been slaved to be unslaved when they are moved to the token layer when `!bump` is executed.",
-      "value": "autoUnslave"
-    },
-    {
-      "name": "No Bars on Slave",
-      "type": "checkbox",
-      "description": "Select this checkbox if you want slave tokens to only mirror the current value, and to not have their own bars.",
-      "value": "noBars"
-    }
-  ],
+  "useroptions": [],
   "dependencies": [],
   "modifies": {
     "state.Bump": "read,write",
@@ -65,6 +28,7 @@
     "0.2.21",
     "0.2.22",
     "0.2.23",
+    "0.2.24",
     "0.2.8",
     "0.2.9"
   ]
