@@ -1,6 +1,13 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 2.18
+
 ## 2.17
 ### Capacités
+* Support des effets des ondes corruptrices
+* Support de la potion de sang de l'Arbre-Coeur
+* Possibilité de changer la taille jusqu'à laquelle le fauchage est possible.
+* Haches et marteaux des nains.
+* Support de la capacité Agripper du démon de Noirbois.
 * Support de la capacité Grosse tête du forgesort
 * Capacité d'objet magique "Action libre"
 * Saisir et broyer pour les chaoses.
@@ -32,6 +39,11 @@
 * Support complet de la Voie du porteur de bouclier (prestige)
 
 ### Autres améliorations
+* Ajout de fonctions pour aider en Noirbois.
+* Quelques effets pour simuler la limitation Grande taille du minotaure.
+* On n'affiche pas les attaques qui ne sont pas possibles (limites épuisées, condition --si non remplie, pas assez de mana).
+* Ajout d'une option pour vérifier que les cibles d'une attaque peuvent tenir dans un disque d'un rayon donné.
+* Ajout d'une option de limitation du montant des soins par jour.
 * Label -2 pour l'arme en main gauche.
 * Termine les effets dont on enlève le marker à la main.
 * Utilisation des nom de caractéristiques au lieu de pictogrammes douteux pour les jets de caractéristiques et de compétences.

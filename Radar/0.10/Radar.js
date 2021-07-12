@@ -128,7 +128,7 @@ API_Meta.RadarWIP = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 const Radar = (() => {
     
     const scriptName = "Radar";
-    const version = '0.11';
+    const version = '0.10';
     
     const PING_NAME = 'RadarPing'; 
     const hRED = '#ff0000';
@@ -1438,7 +1438,7 @@ const Radar = (() => {
         let selectedID;             //selected token
         let playerID;               //which player called the script. Will determine who gets whispered results 
         let oTok;                   //origin token
-        let validArgs = "range, wavespacing, wavedelay, wavelife, pinglife, layer, charfilter, tokfilter, title, silent, units, LoS, selectedID, playerID, visible, graphoptions, output, groupby, public";
+        let validArgs = "range, wavespacing, wavedelay, wavelife, pinglife, layer, charfilter, tokfilter, title, silent, units, LoS, selectedID, playerID";
         let range = 350;            //how far the radar range extends, in pixels
         let convertRange = "";      //will we need to convert range from pixels to "u" or another page-defined distance unit?
         var wavetype = 'circle';    //wavefront will either be circular or square
@@ -1498,7 +1498,6 @@ const Radar = (() => {
         let outputLines = [];
         let groupBy = true;             //if filters are used, group tokens by filter condition in table output
         let calcType = 'Euclidean';     //Can set to 'PF' to use the 'every-other-diagonal-counts-as-1.5-units' math (only for gridded maps)
-        let publicOutput = false;       //default = whisper to player
         
         try {
             if(msg.type=="api" && msg.content.indexOf("!radar") === 0 ) {
@@ -1711,13 +1710,6 @@ const Radar = (() => {
                                 groupBy = true;
                             } else if (_.contains(['false', 'no', '0'], param.toLowerCase())) {
                                 groupBy = false;
-                            } 
-                            break;
-                        case "public":
-                            if (_.contains(['true', 'yes', '1'], param.toLowerCase())) {
-                                publicOutput = true;
-                            } else if (_.contains(['false', 'no', '0'], param.toLowerCase())) {
-                                publicOutput = false;
                             } 
                             break;
                         default:
@@ -2279,14 +2271,10 @@ const Radar = (() => {
                     //------------------------------------------------------------------------------------
                     let backgroundHTML = buildBackgroundHTML(graphWidth, graphHeight, numRows, numCols, colWidth, rowHeight, useGrid, useCircles, useRadial);
                     let graphicalOutput = backgroundHTML + pingHTML + '</div></div>';
-                    
-                    //no whisper if public output is set to true
-                    let whisperPrefix = publicOutput? '' : `/w "${who}" `;
-                    
                     if (displayOutput && outputGraph) {
-                        sendChat(scriptName, whisperPrefix + graphicalOutput);
+                        sendChat(scriptName, `/w "${who}" `+ graphicalOutput);
                     }
-                    if (includeGM && !playerIsGM(msg.playerid) && outputGraph && !publicOutput) {
+                    if (includeGM && !playerIsGM(msg.playerid) && outputGraph) {
                         sendChat(scriptName, '/w gm ' + graphicalOutput);
                     }
                     
@@ -2299,9 +2287,9 @@ const Radar = (() => {
 					tableOutput += htmlTableTemplateEnd;
 					
 					if (displayOutput && outputTable) {
-                        sendChat(scriptName, whisperPrefix + tableOutput);
+                        sendChat(scriptName, `/w "${who}" `+ tableOutput);
                     }
-                    if (includeGM && !playerIsGM(msg.playerid) && outputTable && !publicOutput) {
+                    if (includeGM && !playerIsGM(msg.playerid) && outputTable) {
                         sendChat(scriptName, '/w gm ' + tableOutput);
                     }
                 }

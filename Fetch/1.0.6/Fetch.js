@@ -3,8 +3,8 @@
 Name			:	Fetch
 GitHub			:	https://github.com/TimRohr22/Cauldron/tree/master/Fetch
 Roll20 Contact	:	timmaugh
-Version			:	1.0.7
-Last Update		:	6/28/2021
+Version			:	1.0.6
+Last Update		:	6/17/2021
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -15,10 +15,10 @@ API_Meta.Fetch = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 
 const Fetch = (() => {
     const apiproject = 'Fetch';
-    const version = '1.0.7';
+    const version = '1.0.6';
     const schemaVersion = 0.1;
     API_Meta[apiproject].version = version;
-    const vd = new Date(1624887801910);
+    const vd = new Date(1623936228178);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -522,7 +522,7 @@ const Fetch = (() => {
         return result;
     };
     const simpleObj = (o) => JSON.parse(JSON.stringify(o));
-    const handleInput = (msg, msgstate = {}) => {
+    const handleInput = (msg, msgstate) => {
         let funcret = { runloop: false, status: 'unchanged', notes: '' };
         if (msg.type !== 'api' || !testConstructs(msg.content)) return funcret;
         if (!msgstate && scriptisplugin) return funcret;

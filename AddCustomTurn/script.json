@@ -1,0 +1,16 @@
+{
+  "name": "AddCustomTurn",
+  "script": "AddCustomTurn.js",
+  "version": "0.1.1",
+  "description": "AddCustomTurn provides an easy way to add (and remove) custom turns which increment or decrement, and have auto delete features.\r\r For instructions, run `!act --help`.\r\r Forum Discussion: https://app.roll20.net/forum/permalink/10212772/",
+  "authors": "The Aaron",
+  "roll20userid": "104025",
+  "patreon": "https://www.patreon.com/shdwjk",
+  "useroptions": {},
+  "dependencies": {},
+  "modifies": {
+    "state.AddCustomTurn": "read,write"
+  },
+  "conflicts": [],
+  "previousversions": []
+}
