@@ -1,5 +1,15 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 2.18
+### Capacités
+* Ajout de la possibilité pour un siphon des âmes d'empêcher les autres siphons.
+
+### Correction de bugs
+* Prise en compte correcte des bonus de save contre les sorts.
+
+### Autres amélioration
+* Ajout d'un type drain.
+* Attribut aucuneActionCombat pour les personnages qui n'agissent pas en combat
+* Possibilité de préciser un pourcentage des dégâts transformés en soins avec l'option --vampirise.
 
 ## 2.17
 ### Capacités
