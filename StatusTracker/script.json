@@ -1,0 +1,10 @@
+{
+    "name": "StatusTracker",
+    "script": "StatusTracker.js",
+    "version": "0.1",
+    "previousversions": [],
+    "description": "Tracks status effects and markers on tokens and their duration within the turn tracker",
+    "authors": "Jason Martin",
+    "roll20userid": "5420868",
+    "dependencies": ["TokenHelper"]
+}
