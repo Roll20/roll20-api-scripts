@@ -151,13 +151,11 @@ var StatusTracker = StatusTracker || (function() {
     
     function add_status(token_id, status_name, duration, marker_name) {
         var durationNum = Number(duration);
-        log(tokenMarkers);
         
         var marker_tag = "";
         for (let i = 0; i < tokenMarkers.length; i++) {
-            if (tokenMarkers[i].get("name") == marker_name) {
-                marker_tag = tokenMarkers[i].get("tag");
-                log("Found marker tag " + marker_tag);
+            if (tokenMarkers[i].name == marker_name) {
+                marker_tag = tokenMarkers[i].tag;
                 break;
             }
         }
@@ -176,7 +174,6 @@ var StatusTracker = StatusTracker || (function() {
     } // function add_status
     
     function remove_status(token_id, status_name) {
-        log("Removing " + status_name + " from " + token_id);
         obj = _get_status(token_id, status_name);
         if (obj == "") {
             return;
@@ -203,9 +200,7 @@ var StatusTracker = StatusTracker || (function() {
     } // function get_status
     
     function add_status_target(token_id, status_name, target_id) {
-        log("add_status_target???");
         obj = _get_status(token_id, status_name);
-        log(obj);
         if (obj == "") {
             // not found
             log("add_status_target -- not found");
@@ -339,6 +334,23 @@ var StatusTrackerMenus = StatusTrackerMenus || (function() {
         }
     };
     
+    var markerSelect = "?{Select Marker|";
+    const base_markers = ['red', 'blue', 'green', 'brown', 'purple', 'pink', 'yellow', 'dead']
+    
+    function create_marker_select() {
+        _.each(base_markers, marker => {
+            markerSelect = markerSelect + marker + "|";
+        });
+        _.each(tokenMarkers, marker => {
+            markerSelect = markerSelect + marker.name + "|";
+        });
+        
+        // Trim off the trailing '|'
+        markerSelect = markerSelect.substring(0, markerSelect.length - 1);
+        markerSelect = markerSelect + "}";
+        
+    }
+    
     function _build_menu_panel(header, content) {
         let menu = new HtmlBuilder('.menu');
         menu.append('.menuHeader', header);
@@ -376,7 +388,8 @@ var StatusTrackerMenus = StatusTrackerMenus || (function() {
     function show_menu() {
         let content = new HtmlBuilder('div');
         content.append('.centeredBtn').append('a', "Add Status", {
-            href: '!statustracker add_status &#64;{selected|token_id} ?{Effect Name} ?{Duration in rounds (-1 for permanent)} ?{Marker}',
+            //href: '!statustracker add_status &#64;{selected|token_id} ?{Effect Name} ?{Duration in rounds (-1 for permanent)} ?{Marker}',
+            href: '!statustracker add_status &#64;{selected|token_id} ?{Effect Name} ?{Duration in rounds (-1 for permanent)} ' + markerSelect,
             title: 'Add New Status'
         });
         content.append('.centeredBtn').append('a', "Show Token Statuses", {
@@ -446,6 +459,7 @@ var StatusTrackerMenus = StatusTrackerMenus || (function() {
         createMenuMacro: create_menu_macro,
         showMenu: show_menu,
         showStatusMenu: show_status_menu,
+        createMarkerSelect: create_marker_select,
     };
     
 }());
@@ -534,6 +548,7 @@ on("chat:message", function(msg) {
 on('ready', () => { 
     'use strict';
     tokenMarkers = JSON.parse(Campaign().get("token_markers"));
+    StatusTrackerMenus.createMarkerSelect();
     StatusTrackerMenus.createMenuMacro();
     log("Loaded " + StatusTrackerConsts.SCRIPT_NAME);
 
