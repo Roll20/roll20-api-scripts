@@ -26,6 +26,41 @@ var tokenMarkers = "";
 var StatusTracker = StatusTracker || (function() {
     var _last_examined_token = "";
     
+    function _insert_status_into_turn_order(token_id, status_name, duration) {
+        log("_insert_status_into_turn_order");
+        turnorder = JSON.parse(Campaign().get('turnorder'));
+        for (let i = 0; i < turnorder.length; i++)
+        {
+            if (turnorder[i].id == token_id) {
+                statusObj = {
+                    id: "-1",
+                    pr: duration,
+                    custom: status_name,
+                    formula: -1,
+                    token_id: token_id,
+                }
+                turnorder.splice(i,0,statusObj);
+                break;
+            }
+        }
+        log("end _insert_status_into_turn_order");
+        log(turnorder);
+        Campaign().set('turnorder', JSON.stringify(turnorder));
+        return
+    }
+    
+    function _remove_status_from_turn_order(token_id, status_name) {
+        turnorder = JSON.parse(Campaign().get('turnorder'));
+        for (let i = 0; i < turnorder.length; i++)
+        {
+            if (turnorder[i].token_id == token_id && turnorder[i].custom == status_name) {
+                turnorder.splice(i,1);
+                break;
+            }
+        }
+        
+        Campaign().set('turnorder', JSON.stringify(turnorder));
+    }
     
     function _get_status(token_id, status_name) {
         for (let i = 0; i < state.status_tracker.length; i++) {
@@ -171,6 +206,9 @@ var StatusTracker = StatusTracker || (function() {
             'targets': new Array(),
         });
         
+        _insert_status_into_turn_order(token_id, status_name, duration);
+        return;
+        
     } // function add_status
     
     function remove_status(token_id, status_name) {
@@ -182,6 +220,7 @@ var StatusTracker = StatusTracker || (function() {
             _remove_marker(obj.targets[j], obj.marker);
         }
         state.status_tracker.splice(state.status_tracker.indexOf(obj), 1);
+        _remove_status_from_turn_order(token_id, status_name);
         return;
         
     } // function remove_status
@@ -476,6 +515,7 @@ var StatusTrackerCommandline = StatusTrackerCommandline || (function() {
             switch (argv[1].toLowerCase()) {
                 case StatusTrackerConsts.CMD_ADD_STATUS:
                     StatusTracker.addStatus(argv[2], argv[3], argv[4], argv[5]);
+                    StatusTrackerMenus.showStatusMenu(argv[2]);
                     break;
                 case StatusTrackerConsts.CMD_ADD_TARGET:
                     StatusTracker.addTarget(argv[2], argv[3], argv[4]);
@@ -531,7 +571,8 @@ var StatusTrackerCommandline = StatusTrackerCommandline || (function() {
 
 
 // Handler for the turner order changing
-on("change:campaign:turnorder", function() {
+on("change:campaign:turnorder", function(obj) {
+    log(obj.get("turnorder"));
     StatusTracker.nextTurn()
 });
 
