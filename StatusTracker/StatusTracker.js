@@ -202,7 +202,9 @@ var StatusTracker = StatusTracker || (function() {
             'targets': new Array(),
         });
         
-        _insert_status_into_turn_order(token_id, status_name, duration);
+        if (duration > 0) { 
+            _insert_status_into_turn_order(token_id, status_name, duration);
+        }
         return;
         
     } // function add_status
