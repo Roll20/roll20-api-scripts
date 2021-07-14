@@ -284,28 +284,38 @@ var StatusTracker = StatusTracker || (function() {
         let isAll = (token_id.toLowerCase() == "all");
         let deleteArray = new Array();
         
-        /**
-         * Walk through the status tracker elements. If we're deleteing all, or
-         * a specific token id, remove all markers associated with a
-         */
-        _.each(state.status_tracker, function(obj) {
-            if (isAll == true || obj.token_id == token_id) {
-                for (let i = 0; i < obj.targets.length; i++)
-                {
-                    _remove_marker(obj.targets[i], obj.marker);
-                }
-                deleteArray.push(state.status_tracker.indexOf(obj))
-            }
-        });
+        try {
         
-        /**
-         * Sort the delete array in descending order so we can remove them 
-         * without indexing nonsense. Then remove all indexes in the delete 
-         * array from the status_tracker list.
-         */ 
-        deleteArray.sort(function(a,b) {return b - a});
-        for (let i = 0; i < deleteArray.length; i++) {
-            state.status_tracker.splice(deleteArray[i], 1);
+            /**
+             * Walk through the status tracker elements. If we're deleteing all, or
+             * a specific token id, remove all markers associated with a
+             */
+            _.each(state.status_tracker, function(obj) {
+                if (isAll == true || obj.token_id == token_id) {
+                    for (let i = 0; i < obj.targets.length; i++)
+                    {
+                        _remove_marker(obj.targets[i], obj.marker);
+                    }
+                    deleteArray.push(state.status_tracker.indexOf(obj))
+                }
+            });
+            
+            /**
+             * Sort the delete array in descending order so we can remove them 
+             * without indexing nonsense. Then remove all indexes in the delete 
+             * array from the status_tracker list.
+             */ 
+            deleteArray.sort(function(a,b) {return b - a});
+            for (let i = 0; i < deleteArray.length; i++) {
+                state.status_tracker.splice(deleteArray[i], 1);
+            }
+        }
+        catch (err) {
+            log("clear :: " + err);
+            // This is an abort, in case the status_tracker content got borked
+            if (isAll) {
+                state.status_tracker = new Array();
+            }
         }
     }
 
