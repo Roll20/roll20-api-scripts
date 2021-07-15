@@ -12,7 +12,7 @@
  *   marker - Marker tag value to be placed on targets of the status
  *   targets - List of target tokens for the effect
  *
- * The expectation is that tuple (token_id, status_name) will be (mostly) 
+ * The expectation is that the tuple (token_id, status_name) will be (mostly) 
  * unique, and will be used to lookup a given status.
  */
 state.status_tracker = state.status_tracker || new Array();
