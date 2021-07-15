@@ -1,7 +1,7 @@
 // Github:   https://github.com/shdwjk/Roll20API/blob/master/Bump/Bump.js
 // By:       The Aaron, Arcane Scriptomancer
 // Contact:  https://app.roll20.net/users/104025/the-aaron
-// Forum:    https://app.roll20.net/forum/permalink/10226949/
+// Forum:    https://app.roll20.net/forum/permalink/8584976/
 var API_Meta = API_Meta||{}; //eslint-disable-line no-var
 API_Meta.Bump={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
 {try{throw new Error('');}catch(e){API_Meta.Bump.offset=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-7);}}
@@ -10,9 +10,9 @@ API_Meta.Bump={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
 const Bump = (() => { // eslint-disable-line no-unused-vars
 
   const scriptName = "Bump";
-  const version = '0.2.25';
+  const version = '0.2.24';
   API_Meta.Bump.version = version;
-  const lastUpdate = 1625972211;
+  const lastUpdate = 1625931176;
   const schemaVersion = 0.5;
   const clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659';
   const checkerURL = 'https://s3.amazonaws.com/files.d20.io/images/16204335/MGS1pylFSsnd5Xb9jAzMqg/med.png?1455260461';
@@ -88,7 +88,9 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
     const mergeObj = (...a) => Object.keys(a).reduce((m,k)=>Object.assign(m,filterObj(a[k])),{});
     const css = (rules) => `style="${Object.keys(rules).map(k=>`${k}:${rules[k]};`).join('')}"`;
 
+
     const makeButton = (command, label, backgroundColor, color) => `<a ${css(mergeObj(defaults.css.button,{color,'background-color':backgroundColor}))} href="${command}">${label}</a>`;
+
 
     const isPlayerToken = (obj) => {
         let players = obj.get('controlledby')
@@ -108,32 +110,32 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
         return false;
     };
     
+    
     const keyForValue = (obj,v) => Object.keys(obj).find( key => obj[key] === v);
+	const cleanupObjectReferences = () => {
+        const allIds = findObjs({type:'graphic'}).map( o => o.id);
+        const ids = [
+                ...Object.keys(state[scriptName].mirrored),
+                ...Object.values(state[scriptName].mirrored)
+            ]
+            .filter( id => !allIds.includes(id) );
 
-    const cleanupObjectReferences = () => {
-      const allIds = findObjs({type:'graphic'}).map( o => o.id);
-      const ids = [
-        ...Object.keys(state[scriptName].mirrored),
-        ...Object.values(state[scriptName].mirrored)
-      ]
-      .filter( id => !allIds.includes(id) );
-
-      ids.forEach( id => {
-        if(state[scriptName].mirrored.hasOwnProperty(id)){
-          if(!ids.includes(state[scriptName].mirrored[id])){
-            let obj = getObj('graphic',state[scriptName].mirrored[id]);
-            if(obj){
-              obj.remove();
-            }
-          }
-        } else {
-          let iid = keyForValue(state[scriptName].mirrored,id);
-          delete state[scriptName].mirrored[iid];
-          if(!ids.includes(iid)){
-            createMirrored(iid, false, 'gm');
-          }
-        }
-      });
+            ids.forEach( id => {
+                if(state[scriptName].mirrored.hasOwnProperty(id)){
+                    if(!ids.includes(state[scriptName].mirrored[id])){
+                        let obj = getObj('graphic',state[scriptName].mirrored[id]);
+                        if(obj){
+                            obj.remove();
+                        }
+                    }
+                } else {
+                    let iid = keyForValue(state[scriptName].mirrored,id);
+                    delete state[scriptName].mirrored[iid];
+                    if(!ids.includes(iid)){
+                        createMirrored(iid, false, 'gm');
+                    }
+                }
+            });
     };
 
     const fixupSlaveBars = () => {
@@ -162,6 +164,30 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
       };
       burndown();
     };
+
+	const checkGlobalConfig = () => {
+		let s=state[scriptName],
+		g=globalconfig && globalconfig.bump;
+
+		if(g && g.lastsaved && g.lastsaved > s.globalconfigCache.lastsaved
+		){
+			log('  > Updating from Global Config <  ['+(new Date(g.lastsaved*1000))+']');
+
+			if(g['Visible Color'].match(regex.colors)) {
+                s.config.layerColors.gmlayer =g['Visible Color'].match(regex.colors)[1];
+			}
+			if(g['Invisible Color'].match(regex.colors)) {
+                s.config.layerColors.objects=g['Invisible Color'].match(regex.colors)[1];
+			}
+
+			s.config.autoPush = 'autoPush' === g['Auto Push'];
+			s.config.autoSlave = 'autoSlave' === g['Auto Slave'];
+			s.config.autoUnslave = 'autoUnslave' === g['Auto Unslave'];
+			s.config.noBars = 'noBars' === g['No Bars on Slave'];
+
+			state[scriptName].globalconfigCache=globalconfig.bump;
+		}
+	};
 
     const checkInstall = () => {
         log(`-=> ${scriptName} v${version} <=-  [${new Date(lastUpdate*1000)}]`);
@@ -209,6 +235,7 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
                     break;
             }
         }
+        checkGlobalConfig();
         cleanupObjectReferences();
         assureHelpHandout();
     };
@@ -297,10 +324,6 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
         }
     };
 
-    const slaveByIds = (ids,push=false) => {
-      ids.forEach(id=>createMirrored(id,push,'API'));
-    };
-
     const createMirrored = (id, push, who) => {
         // get root obj
         let master = getObj('graphic',id);
@@ -382,10 +405,6 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
           },100);
         };
     })();
-  
-    const bumpByIds = (ids) => {
-      ids.forEach(id=>bumpToken(id,'API'));
-    };
 
     const bumpToken = (id,who) => {
         let pair=getMirroredPair(id);
@@ -411,10 +430,6 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
         }
 
 
-    };
-
-    const unslaveByIds = (ids) => {
-      ids.forEach(id=>removeMirrored(id));
     };
 
     const removeMirrored = (id) => {
@@ -633,24 +648,6 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
                 _h.subhead('Commands'),
                 _h.inset(
                     _h.font.command(
-                        `!bump`,
-                        _h.optional(
-                            `--help`,
-                            `--slave`,
-                            `--unslave`,
-                            `--push`,
-                            `--ids ${_h.required('token_id')} ${_h.optional(`${_h.required('token_id')} ...`)}`
-                        )
-                    ),
-                    _h.paragraph( `Using ${_h.code('!bump')} on a token in Bump causes it to swap with it${ch("'")}s counterpart on the other layer.`),
-                    _h.ul(
-                        `${_h.bold('--help')} -- Shows the Help screen.`,
-                        `${_h.bold('--slave')} -- Acts like ${_h.code('!bump-slave')} below.`,
-                        `${_h.bold('--push')} -- When used with ${_h.code('--slave')}, if the selected token is on the Objects Layer, it will be pushed to the GM Layer.`,
-                        `${_h.bold('--unslave')} -- Acts like ${_h.code('!bump-slave')} below.`,
-                        `${_h.bold(`--ids ${_h.required('token_id')} ${_h.optional(`${_h.required('token_id')} ...`)}`)} -- Optional list of ids to perform the operation on.  Useful for scripting events what reveal a whole swath of tokens.`
-                    ),
-                    _h.font.command(
                         `!bump-slave`,
                         _h.optional(
                             `--push`,
@@ -660,6 +657,16 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
                     _h.paragraph( 'Adds the selected tokens to Bump, creating their slave tokens.'),
                     _h.ul(
                         `${_h.bold('--push')} -- If the selected token is on the Objects Layer, it will be pushed to the GM Layer.`,
+                        `${_h.bold('--help')} -- Shows the Help screen.`
+                    ),
+                    _h.font.command(
+                        `!bump`,
+                        _h.optional(
+                            `--help`
+                        )
+                    ),
+                    _h.paragraph( `Using !bump on a token in Bump causes it to swap with it${ch("'")}s counterpart on the other layer.`),
+                    _h.ul(
                         `${_h.bold('--help')} -- Shows the Help screen.`
                     ),
                     _h.font.command(
@@ -705,117 +712,46 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
         sendChat('', '/w "'+who+'" '+ helpParts.helpChat(context));
     };
 
-
-    const playerCanControlFromID = (id,playerid) => {
-      let o=getObj('graphic',id);
-      if(o){
-        return playerCanControl(o,playerid);
-      }
-      return false;
-    };
-
-    const playerCanControl = (obj, playerid='any') => {
-        const playerInControlledByList = (list, playerid) => list.includes('all') || list.includes(playerid) || ('any'===playerid && list.length);
-        let players = obj.get('controlledby')
-            .split(/,/)
-            .filter(s=>s.length);
-
-        if(playerInControlledByList(players,playerid)){
-            return true;
-        }
-
-        if('' !== obj.get('represents') ) {
-            players = (getObj('character',obj.get('represents')) || {get: function(){return '';} } )
-                .get('controlledby').split(/,/)
-                .filter(s=>s.length);
-            return  playerInControlledByList(players,playerid);
-        }
-        return false;
-    };
-
     const handleInput = (msg) => {
       if (msg.type !== "api") {
         return;
       }
       let who=(getObj('player',msg.playerid)||{get:()=>'API'}).get('_displayname');
-      let mode;
-      let args = msg.content.split(/\s+--/);
-      let PIG = playerIsGM(msg.playerid);
-      let ids = [...(msg.selected||[]).map(o=>o._id)];
+
+      let args = msg.content.split(/\s+/);
       switch(args.shift()) {
         case '!bump':
-          mode = 'BUMP';
+          if(!msg.selected || args.includes('--help')) {
+            showHelp(msg.playerid);
+            return;
+          }
+          msg.selected.forEach( (s) => bumpToken(s._id,who) );
           break;
 
         case '!bump-slave':
-          mode = 'BUMP:SLAVE';
+          if(!msg.selected || args.includes('--help')) {
+            showHelp(msg.playerid);
+            return;
+          }
+          msg.selected.forEach( (s) => createMirrored(s._id, args.includes('--push'), who) );
           break;
 
         case '!bump-unslave':
-          mode = 'BUMP:UNSLAVE';
+          if(!msg.selected || args.includes('--help')) {
+            showHelp(msg.playerid);
+            return;
+          }
+          msg.selected.forEach( (s) => removeMirrored(s._id) );
           break;
+
 
         case '!bump-config':
-          mode = 'BUMP:CONFIG';
-          break;
-
-        default:
-          return;
-      }
-      let done = false;
-      let forcePush = false;
-      
-      args.forEach(a=>{
-        let cmds = a.split(/\s+/);
-        switch(cmds.shift()){
-          case 'help':
+          if(args.includes('--help')) {
             showHelp(msg.playerid);
-            done=true;
-            break;
-
-          case 'slave':
-            mode='BUMP:SLAVE';
-            break;
-
-          case 'unslave':
-            mode='BUMP:UNSLAVE';
-            break;
-          
-          case 'push':
-            forcePush = true;
-            break;
-
-          case 'config':
-            mode='BUMP:CONFIG';
-            break;
-
-          case 'ids':
-            ids=[...ids,...cmds.filter(id=>(PIG||playerCanControlFromID(id)))];
-            break;
-        }
-      });
-
-      if(done){
-        return;
-      }
-      ids = [...new Set(ids)].filter(id=>!ids.includes(state[scriptName].mirrored[id]));
-
-      switch(mode) {
-        case 'BUMP':
-          ids.forEach( (id) => bumpToken(id,who) );
-          break;
-
-        case 'BUMP:SLAVE':
-          ids.forEach( (id) => createMirrored(id, forcePush, who) );
-          break;
-
-        case 'BUMP:UNSLAVE':
-          ids.forEach( (id) => removeMirrored(id) );
-          break;
-
-        case 'BUMP:CONFIG':
-          if(!playerIsGM(msg.playerid)){
             return;
+          }
+          if(!playerIsGM(msg.playerid)){
+            break;
           }
           if(!args.length) {
             sendChat('','/w "'+who+'" '+
@@ -832,7 +768,7 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
             let opt=a.split(/\|/);
             let omsg='';
             switch(opt.shift()) {
-              case 'gm-layer-color':
+              case '--gm-layer-color':
                 if(opt[0].match(regex.colors)) {
                   state[scriptName].config.layerColors.gmlayer=opt[0];
                 } else {
@@ -846,7 +782,7 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
                 );
                 break;
 
-              case 'objects-layer-color':
+              case '--objects-layer-color':
                 if(opt[0].match(regex.colors)) {
                   state[scriptName].config.layerColors.objects=opt[0];
                 } else {
@@ -860,7 +796,7 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
                 );
                 break;
 
-              case 'toggle-auto-push':
+              case '--toggle-auto-push':
                 state[scriptName].config.autoPush=!state[scriptName].config.autoPush;
                 sendChat('','/w "'+who+'" '+
                   '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
@@ -869,7 +805,7 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
                 );
                 break;
 
-              case 'toggle-auto-slave':
+              case '--toggle-auto-slave':
                 state[scriptName].config.autoSlave=!state[scriptName].config.autoSlave;
                 sendChat('','/w "'+who+'" '+
                   '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
@@ -878,7 +814,7 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
                 );
                 break;
 
-              case 'toggle-auto-unslave':
+              case '--toggle-auto-unslave':
                 state[scriptName].config.autoUnslave=!state[scriptName].config.autoUnslave;
                 sendChat('','/w "'+who+'" '+
                   '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
@@ -887,7 +823,7 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
                 );
                 break;
 
-              case 'toggle-no-bars':
+              case '--toggle-no-bars':
                 state[scriptName].config.noBars=!state[scriptName].config.noBars;
                 fixupSlaveBars();
                 sendChat('','/w "'+who+'" '+
@@ -936,19 +872,17 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
         }
     };
 
-    on('ready', () => {
-      checkInstall();
-      registerEventHandlers();
-    });
-
     return {
+        CheckInstall: checkInstall,
         Notify_TurnOrderChange: handleTurnOrderChange,
-        Slave: slaveByIds,
-        Unslave: unslaveByIds,
-        Bump: bumpByIds
+        RegisterEventHandlers: registerEventHandlers
     };
     
 })();
 
+on('ready', () => {
+    Bump.CheckInstall();
+    Bump.RegisterEventHandlers();
+});
 
 {try{throw new Error('');}catch(e){API_Meta.Bump.lineCount=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-API_Meta.Bump.offset);}}

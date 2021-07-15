@@ -228,7 +228,7 @@
               <div class="decalage">
                 <h4 class="text-secondary">Initiative : <code>!cof-init</code></h4>
                 <div class="decalage">
-                  <p>Les tokens sélectionnés sont ajouté au tracker de tour. Si celui-ci n'existe pas, un nouveau est créé, avec compteur de tour à 1, et on rentre en combat.</p>
+                  <p>Les tokens sélectionnés sont ajouté au tracker de tour. Si celui-ci n'existe pas, un nouveau est créé, avec compteur de tour à 1, et on rentre en combat. Les tokens ayant un attribut <code>aucuneActionCombat</code> ne sont jamais ajoutés au turn tracker.</p>
                   <p>Une option du script (ajustable en utilisant <code>!cof-options</code>) permet d'utiliser la règle de l'initiative variable (ajout d'un d6 à l'initiative). </p>
                   <p>Les règles de tri suivent ce qui est donné p 70 : priorité aux PJs. Pour l'instant, on distingue un PJ d'un PNJ au dé de vie : si le personnage d'a pas de dé de vie, c'est un PNJ. Ensuite, entre PJs, priorité à la plus haute sagesse. Pour les PNJ, c'est aléatoire.</p>
                   <p>À chaque instant, le token dont c'est le tour d'agir est signalé par une aura qui bouge lentement. L'image de cette aura peut être modifiée dans les options (<code>!cof-options images</code>), et il est possible de spécifier une aura pour chaque token, en ajoutant une ligne dans le champ <code>GM Notes</code> du token (en bas de la partie basique de l'édition du token). Cette ligne doit commencer par <code>init_aura:</code>, et contenir une <a href=https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions>url valide pour un token</a>. N'oubliez pas de sauvegarder le token comme token par défaut our un personnage si vous voulez que ce personnage ait toujours cette aura.</p>
@@ -333,7 +333,7 @@
                   <li><code>--test</code> pour voir le résultat du jet d'attaque. On n'applique pas les résultats d'un touché.</li>
                   <li><code>--sournoise <i>n</i></code> : ajoute <i>n</i>d6 de dégâts d'attaque sournoise ou par surprise.</li>
                   <li><code>--magique</code> : les dégâts sont magiques. On peut passer en argument le niveau de magie. Il est utilisé contre les créatures immunisées aux armes. Le niveau par défaut est 1.</li>
-                  <li><code>--feu</code>, <code>--acide</code>, <code>--electrique</code>, <code>--froid</code>, <code>--sonique</code>, --<code>poison</code>, --<code>maladie</code>, <code>--argent</code>&nbsp;: les dégâts sont de type feu, acide, électrique, froid ou sonique. Le type spécifie uniquement le dernier <code>--plus</code> précédent cette option, ou si il n'y en a pas, celui des dégâts principaux. Seul le dernier type spécifié est pris en compte (pas de type multiple pour l'instant). Le type affecte différents attributs, et aussi la couleur d'affichage des dégâts.</li>
+                  <li><code>--feu</code>, <code>--acide</code>, <code>--electrique</code>, <code>--froid</code>, <code>--sonique</code>, --<code>poison</code>, --<code>maladie</code>, <code>--argent</code>, <code>--drain</code>&nbsp;: les dégâts sont de type feu, acide, électrique, froid, sonique, poison, maladie, argent ou drain. Le type spécifie uniquement le dernier <code>--plus</code> précédent cette option, ou si il n'y en a pas, celui des dégâts principaux. Seul le dernier type spécifié est pris en compte (pas de type multiple pour l'instant). Le type affecte différents attributs, et aussi la couleur d'affichage des dégâts.</li>
                   <li><code>--tranchant</code>, <code>--percant</code>, <code>--contondant</code> : précise le type d'arme (si pertinent), pour pouvoir utiliser les RD spécifiques à un type d'arme.</li>
                   <li><code>--ignoreRD</code> : l'attaque ignore les RD et division de DMs. Il est possible de donner en argument une valeur de RD ignorée, de sorte que l'attaque ignore les RD jusqu'à cette valeur. Par exemple, pour une arme en adamantium, on pourra écrire <code>--ignoreRD 5</code>.</li>
                   <li><code>--ignoreMoitieRD</code> : l'attaque ignore la moitié de la RD.</li>
@@ -346,7 +346,7 @@
                   <li><code>--limiteParJour <i>l</i></code> : limite le nombre d'utilisations de cette attaque à <i>l</i> fois par jour. On peut préciser un nom après <i>l</i>, qui va correspondre à une ressource pouvant être partagée avec d'autres attaques ou d'autres effets (voir <code>!cof-effet-temp</code>). Par défaut, le nom de cette ressource est le label de l'attaque.</li>
                   <li><code>--limiteParCombat</code> : même effet que la limite par jour. Si aucun argument n'est donné, la limite est de une fois par combat.</li>
                   <li><code>--munition <i>nom</i> <i>taux</i></code> : l'attaque utilise des munitions dont on garde le compte. Le nombre de munitions doit être inscrit dans un attribut <code>munition_<i>nom</i></code>. <i>nom</i> ne doit pas contenir de blanc, mais à l'affichage les <code>_</code> seront remplacés par des blancs. La valeur courante de l'attribut est le nombre qu'il reste sur le personnage, alors que le maximum contient ce qu'il a plus ce qu'il peut récupérer après le combat. À chaque attaque portée, une munition est utilisée, et il y a <i>taux</i> chances (sur 100) que la munition ne soit pas récupérable. En fin de combat, on considère que le personnage récupère toutes les munitions récupérables. Par défaut, le taux de pertes est de 100&nbsp;%.</li>
-                  <li><code>--vampirise</code> : soigne de tous les DM infligés</li>
+                  <li><code>--vampirise</code> : soigne de tous les DM infligés, quel que soit leur type. Il est possible de soigner un pourcentage des dégâts : pour cela, préciser le pourcentage entier après l'option. Par exemple, pour une attaque qui soigne de la moitié des dégâts infligés, on pourra mettre <code>--vampirise 50</code>. À noter que les soins se cumulent avec les dégâts de type drain.</li>
                   <li><code>--seulementVivant</code> : n'affecte que les cibles vivantes</li>
                   <li><code>--necromancie</code> : l'attaque est de la nécromancie</li>
                   <li><code>--ferFroid</code> : multiplie par 2 les dégâts contre les fées et les démons (le script reconnaît certaines races et les attributs <code>démon</code> et <code>fée</code>).</li>
@@ -1203,7 +1203,7 @@
                       <li>Pour le bonus en initiative, ajouter un attribut <code>familier</code> au personnage, avec comme valeur le nom du compagnon (doit être exactement le même que celui du token du compagnon). Cela automatise l'initiative quand le familier est présent.</li>
                       <li>Pour les points de vie partagés avec le familier, il faut mettre un attribut <code>PVPartagesAvec</code> de valeur le nom du familier (celui de la fiche, pas forcément le même que le token) pour le personnage, et un attribut similaire chez le familier, de valeur courante le nom du personnage. Le partage de PVs ne fonctionne pas avec des mooks, et il ne fait pas le partage de dégâts temporaires. En revanche, le script devrait gérer correctement les dégâts de zone.</li>
                       <li>Pour la défense du familier, ajouter lui un attribut <code>defDeriveeDe</code>, de valeur le nom du personnage (nom complet sur la fiche).</li>
-                      <li>L'initiative ne devrait pas être très utile, mais si besoin, ajoutez un attribut <code>initiativeDeriveeDe</code> de valeur le nom du personnage.</li>
+                      <li>L'initiative ne devrait pas être très utile, mais si besoin, ajoutez un attribut <code>initiativeDeriveeDe</code> de valeur le nom du personnage. En fait, pour les familiers normaux, je préfères même qu'ils n'apparaissent pas sur le turn tracker, et je leur met donc un attribut <code>aucuneActionCombat</code> à <code>true</code>.</li>
                     </ul>
                   </li>
                   <li><strong>Serviteur invisible&nbsp;</strong>: pas de support autre que <code>!cof-lancer-sort crée une force invisible pour ([[5+@{selected|CHA}]] minutes) <i>--mana 0</i></code></li>
@@ -1520,13 +1520,13 @@
                       <li>Sort :
                         <ol>
                           <li><code>!cof-effet-temp aspectDeLaSuccube [[5+@{selected|INT}]] <i>--mana 0</i></code> pour lancer le sort</li>
-                          <li>Ajouter une attaque sur la fiche utilisant l'attaque magique, dommages 1d4+CHA, portée 0, type Sortilège, dégâts magiques, options <code>--si etat aspectDeLaSuccube --vampirise</code>.</li>
+                          <li>Ajouter une attaque sur la fiche utilisant l'attaque magique, dommages 1d4+CHA, portée 0, type Sortilège, dégâts de drain, options <code>--si etat aspectDeLaSuccube</code>.</li>
                         </ol>
                       </li>
                       <li>Objet de sort : créer une ability <code>#Aspect-de-la-succube#</code> référencée dans le menu <code>#Actions#</code> du personnage et dont le contenu est, sur deux lignes<br/>
                         <ol>
                           <li><code>!cof-effet-temp aspectDeLaSuccube [[5+@{selected|INT}]]</code> pour lancer le sort</li>
-                          <li><code>#Attaque Attaque de la succube --toucher [[@{selected|ATKMAG}]] --dm 1d4+[[@{selected|CHA}]] --magique --portee 0 --sortilege --si etat aspectDeLaSuccube --vampirise</code></li>
+                          <li><code>#Attaque Attaque de la succube --toucher [[@{selected|ATKMAG}]] --dm 1d4+[[@{selected|CHA}]] --magique --portee 0 --sortilege --si etat aspectDeLaSuccube --drain</code></li>
                         </ol>
                       </li>
                     </ul>
@@ -1552,12 +1552,12 @@
                 </ol>
                 <h4 class="text-secondary">Voie de la mort</h4>
                 <ol>
-                  <li><strong>Siphon des âmes</strong> : ajouter un attribut <code>siphonDesAmes</code>, de valeur <code>true</code>.</li>
+                  <li><strong>Siphon des âmes</strong> : ajouter un attribut <code>siphonDesAmes</code>, de valeur <code>true</code>. Par défaut, si il y a plusieurs personnages avec ce pouvoir, tous vont siphoner les âmes sans interaction. Mais il est possible de déclarer un ordre de priorité, telle que si les personnages de plus haute priorité ont siphoné tous les points de vie qu'ils pouvaient, il ne reste rien à siphoner pour les autre. Pour se faire, utilisez un attribut <code>siphonDesAmesPrioritaire</code> avec la valeur numérique de la priorité (0 par défaut, plus la valeur est grande, plus le personnage est prioritaire).</li>
                   <li><strong>Masque mortuaire</strong> : <code>!cof-effet-temp masqueMortuaire [[5+@{selected|INT}]] <i>--mana 0</i></code></li>
                   <li><strong>Baiser du vampire</strong> :
                     <ul>
-                      <li>Sort : Ajouter une attaque sur la fiche utilisant l'attaque magique, dommages 1d8+INT, portée 50, type Sortilège, options <code><i>--mana 1</i> --vampirise --seulementVivant</code>.</li>
-                      <li>Objet de sort : <code>#Attaque Baiser du vampire --toucher [[@{selected|ATKMAG}]] --dm 1d8+[[@{selected|INT}]] --portee 50 --sortilege --vampirise --seulementVivant</code></li>
+                      <li>Sort : Ajouter une attaque sur la fiche utilisant l'attaque magique, dommages 1d8+INT, portée 50, type Sortilège, dégâts de drain, options <code><i>--mana 1</i> --seulementVivant</code>.</li>
+                      <li>Objet de sort : <code>#Attaque Baiser du vampire --toucher [[@{selected|ATKMAG}]] --dm 1d8+[[@{selected|INT}]] --portee 50 --sortilege --drain --seulementVivant</code></li>
                     </ul>
                   </li>
                   <li><strong>Briser les coeurs</strong> :
@@ -2054,7 +2054,7 @@
                 <h4 class="text-secondary">Voie des créatures magique</h4>
                 <ol>
                   <li><strong>Réduction des DM</strong> : Ajouter la RD sur la fiche <code>5/<i>genre</i></code>, où <i>genre</i> peut être <code>magique</code> ou un des types d'attaque (feu, acide, poison, etc...).</li>
-                  <li><strong>Vitalité surnaturelle</strong> : ajouter un attribut <code>vitaliteSurnaturelle</code>, de valeur courante le nombre de PV régénéré par tour. Si la régénération doit continuer même à la mort du personnage, ajoutez un <code>+</code> à la fin de la valeur courante. Si un type de dégât empêche la régénération, inscrire ce type en valeur maximal de l'attribut. Si plusieurs types de dégâts, les séparer par une virgule. Par exemple, un troll aura un attribut <code>vitaliteSurnaturelle</code>, de valeur courante <code>5+</code>, et de valeur maximale <code>feu,acide</code>. Si vous voulez réinitialiser les dégâts qui ne peuvent pas se régénérer sur un personnage, vous pouvez utiliser des soins normaux (<code>!cof-soin</code>), et si vous avez augmenté à la main les PVs, vous pouvez effacer les attributs <code>DMSuivis<em>type</em></code> qui ont été créés par le script.</li>
+                  <li><strong>Vitalité surnaturelle</strong> : ajouter un attribut <code>vitaliteSurnaturelle</code>, de valeur courante le nombre de PV régénéré par tour. Si la régénération doit continuer même à la mort du personnage, ajoutez un <code>+</code> à la fin de la valeur courante. Si un type de dégât empêche la régénération, inscrire ce type en valeur maximal de l'attribut (attention, ça ne peut pas être le type drain). Si plusieurs types de dégâts, les séparer par une virgule. Par exemple, un troll aura un attribut <code>vitaliteSurnaturelle</code>, de valeur courante <code>5+</code>, et de valeur maximale <code>feu,acide</code>. Si vous voulez réinitialiser les dégâts qui ne peuvent pas se régénérer sur un personnage, vous pouvez utiliser des soins normaux (<code>!cof-soin</code>), et si vous avez augmenté à la main les PVs, vous pouvez effacer les attributs <code>DMSuivis<em>type</em></code> qui ont été créés par le script.</li>
                 </ol>
                 <h4 class="text-secondary">Voie des créatures volantes</h4>
                 <ol>
@@ -2075,8 +2075,8 @@
                 <ol>
                   <li><strong>Vampirisation</strong> :
                     <ul>
-                      <li> Ajouter une attaque magique avec les DMs de vampirisation, lancée avec l'option <code>--vampirise</code> (et probablement aussi <code>--sortilege</code> et <code>--magique</code>).</li>
-                      <li> Ajouter un attribut <code>siphonDesAmes</code>, de valeur de NC de la créature (ou <code>true</code> si le NC est 0).</li>
+                      <li> Ajouter une attaque magique avec les DMs de vampirisation, faisant des dégâts de type drain. (En objet, on utilisera les options <code>--sortilege</code> et <code>--drain</code>).</li>
+                      <li> Ajouter un attribut <code>siphonDesAmes</code>, de valeur de NC de la créature (ou <code>true</code> si le NC est 0). Si vous voulez que ce siphon empêche un autre siphon des âmes, rajoutez un attribut <code>siphonDesAmesPrioritaire</code> contenant un nombre positif et supérieur à ceux sur lequel il est prioritaire.</li>
                     </ul>
                   </li>
                   <li><strong>Animer un cadavre</strong> : <code>!cof-animer-cadavre @{selected|token_id} @{target|token_id}</code>. Au cas où vous auriez besoin d'enlever l'état de cadavre, il suffit d'enlever l'attribut nommé <code>cadavreAnime</code>.</li>
