@@ -1,13 +1,22 @@
-/*
+/**
  * Version: 0.1
  * Made By Jason Martin
-*/
+ */
 
-/*
-If it hasn't been initialized before, initialized persistent storage in the 
-state object.
-*/
+/**
+ * If it hasn't been initialized before, initialized persistent status object 
+ * storage in the state object. Status objects have the following properties:
+ *   token_id - Token the status is tied to. 
+ *   status_name - A label for the status.
+ *   duration - Integer duration of the status. -1 is permanent
+ *   marker - Marker tag value to be placed on targets of the status
+ *   targets - List of target tokens for the effect
+ *
+ * The expectation is that tuple (token_id, status_name) will be (mostly) 
+ * unique, and will be used to lookup a given status.
+ */
 state.status_tracker = state.status_tracker || new Array();
+
 
 var StatusTrackerConsts = StatusTrackerConsts || {};
 StatusTrackerConsts.SCRIPT_NAME = "StatusTracker";
@@ -21,31 +30,47 @@ StatusTrackerConsts.CMD_REMOVE_TARGET = 'remove_target';
 StatusTrackerConsts.CMD_SHOWMENU = 'showmenu';
 StatusTrackerConsts.CMD_SHOW_STATUS = 'show_status';
 
-var tokenMarkers = "";
 
+// List of token objects loaded into this campaign. This gets populated on ready
+var tokenMarkers;
+
+
+/**
+ * Management of the status objects and markers.
+ */
 var StatusTracker = StatusTracker || (function() {
     var _last_examined_token = "";
     
+    /**
+     * Add a countdown object to the turn order for a status effect. Insert
+     * the countdown immediately before the turn order entity it's associated
+     * with.  
+     */
     function _insert_status_into_turn_order(token_id, status_name, duration) {
         turnorder = JSON.parse(Campaign().get('turnorder'));
         for (let i = 0; i < turnorder.length; i++)
         {
+            // Look for the turnorder object associated with the token_id
             if (turnorder[i].id == token_id) {
                 statusObj = {
-                    id: "-1",
-                    pr: duration,
-                    custom: status_name,
-                    formula: -1,
-                    token_id: token_id,
+                    id: "-1", // Not tied to any other objects
+                    pr: duration, // Duration as the turnorder value
+                    custom: status_name, // The name of the effect
+                    formula: -1, // -1 decrement of the pr value
+                    token_id: token_id, // This is so we can find it for removal
                 }
                 turnorder.splice(i,0,statusObj);
                 break;
             }
         }
         Campaign().set('turnorder', JSON.stringify(turnorder));
-        return
+        return;
     }
     
+    
+    /**
+     * Remove a countdown object from the turn order for a status effect.
+     */
     function _remove_status_from_turn_order(token_id, status_name) {
         turnorder = JSON.parse(Campaign().get('turnorder'));
         for (let i = 0; i < turnorder.length; i++)
@@ -59,6 +84,9 @@ var StatusTracker = StatusTracker || (function() {
         Campaign().set('turnorder', JSON.stringify(turnorder));
     }
     
+    /**
+     * Retrieve a status effect definition from the global status effect store
+     */
     function _get_status(token_id, status_name) {
         for (let i = 0; i < state.status_tracker.length; i++) {
             obj = state.status_tracker[i];
@@ -69,21 +97,17 @@ var StatusTracker = StatusTracker || (function() {
         return "";
     }
     
-    function _get_token_controller(token_id) {
-        var tokenObj = findObjs({
-            _type: "graphic",
-            _id: token_id,
-            _pageid: Campaign().get("playerpageid"),
-        })[0];
-        
-        return tokenObj.get("controlledby")
-    }
     
+    /**
+     * Get the token associated with the top entry in the turn tracker. If the
+     * token was the last one we looked at, assume that the turn track has not
+     * moved, and return a blank.
+     */
     function _get_current_token() {
         // Parse out the Campaign turn order
         var turn_order = JSON.parse(Campaign().get('turnorder'))
         // If nothing in the turn order, bail
-        if (!turn_order.length) {
+        if (turn_order.length == 0) {
             return "";
         }
         // Get the next element of turn_order
@@ -103,19 +127,19 @@ var StatusTracker = StatusTracker || (function() {
         return token;
     }
     
+    /**
+     * Process status effects associated with a given token id.
+     */
     function _process_turn(token_id) {
 
-        /*
-        List of effects to be removed. We don't want to remove them while
-        we're walking through the status list array, because, like, indexes.
-        */
+        // List of effects to be removed. We don't want to remove them while
+        // we're walking through the status list array, because, like, indexes.
         var status_delete = new Array();
         
-        /*
-        Walk through the status list, looking for effects that belong to this
-        token. If the duration is greater than zero, decriment it. If it's 
-        zero, record it for removal. If it's less than zero, it's permanent.
-        */ 
+        // Walk through the status list, looking for effects associated with 
+        // this token. If the duration is greater than zero, decriment it. If 
+        // it's zero, record it for removal. If it's less than zero, it's 
+        // permanent.
         for (let i = 0; i < state.status_tracker.length; i++) {
             if (state.status_tracker[i].token_id != token_id) {
                 continue;
@@ -149,6 +173,9 @@ var StatusTracker = StatusTracker || (function() {
 
     } // function _process_turn
     
+    /**
+     * Add a marker to a token.
+     */
     function _add_marker(token_id, marker_tag) {
         var tokens = findObjs({
             _type: "graphic",
@@ -160,8 +187,12 @@ var StatusTracker = StatusTracker || (function() {
             token_markers.push(marker_tag);
             obj.set("statusmarkers", token_markers.join(","));
         });
+        return;
     }
     
+    /**
+     * Remove a marker from a token
+     */
     function _remove_marker(token_id, marker_tag) {
         var tokens = findObjs({
             _type: "graphic",
@@ -178,11 +209,20 @@ var StatusTracker = StatusTracker || (function() {
                 }
             }
         });
+        return;
     }
     
+    
+    /** 
+     * Add a status to a token. Adding markers to targets of that status is a
+     * separate operation.
+     */
     function add_status(token_id, status_name, duration, marker_name) {
         var durationNum = Number(duration);
         
+        // Look up the marker tag, which may or may not be the same thing as 
+        // the marker name. The tag will get used to add/remove the marker from
+        // a token.
         var marker_tag = "";
         for (let i = 0; i < tokenMarkers.length; i++) {
             if (tokenMarkers[i].name == marker_name) {
@@ -190,10 +230,14 @@ var StatusTracker = StatusTracker || (function() {
                 break;
             }
         }
+        
+        // If we couldn't find the tag, use the name. The tag values of built-in
+        // markers are the same as their names. 
         if (marker_tag == "") {
             marker_tag = marker_name;
         }
         
+        // Add the status object to the global store.
         state.status_tracker.push({
             'token_id': token_id,
             'status_name': status_name,
@@ -202,6 +246,8 @@ var StatusTracker = StatusTracker || (function() {
             'targets': new Array(),
         });
         
+        // If there's a duration greater than zero, add a countdown entity to
+        // the turn tracker.
         if (duration > 0) { 
             _insert_status_into_turn_order(token_id, status_name, duration);
         }
@@ -209,21 +255,37 @@ var StatusTracker = StatusTracker || (function() {
         
     } // function add_status
     
+    
+    /**
+     * Remove a status from a token. Remove status markers from targets of that
+     * status.
+     */
     function remove_status(token_id, status_name) {
-        obj = _get_status(token_id, status_name);
-        if (obj == "") {
+        // Get the status object from the global store
+        statusObj = _get_status(token_id, status_name);
+        if (statusObj == "") {
             return;
         }
-        for (let j = 0; j < obj.targets.length; j++) {
-            _remove_marker(obj.targets[j], obj.marker);
+        
+        // Remove the markers from each target of the status
+        for (let j = 0; j < statusObj.targets.length; j++) {
+            _remove_marker(statusObj.targets[j], statusObj.marker);
         }
-        state.status_tracker.splice(state.status_tracker.indexOf(obj), 1);
+        
+        // Remove the status object from the global store.
+        state.status_tracker.splice(state.status_tracker.indexOf(statusObj), 1);
+        
+        // If there's a turn tracker entry for this object, remove it.
         _remove_status_from_turn_order(token_id, status_name);
         return;
         
     } // function remove_status
     
     
+    /**
+     * Get a list of status objects associated with a given token. A token id
+     * value of 'all' will return all status ojects.
+     */
     function get_token_statuses(token_id) {
         var status_list = new Array();
         let isAll = (token_id.toLowerCase() == "all");
@@ -236,38 +298,54 @@ var StatusTracker = StatusTracker || (function() {
         return status_list;
     } // function get_status
     
+    
+    /**
+     * Add a target for a given status. While a status might be associated with 
+     * a source token, 'targets' have markers added to them.
+     */
     function add_status_target(token_id, status_name, target_id) {
-        obj = _get_status(token_id, status_name);
-        if (obj == "") {
+        // Get the status object
+        statusObj = _get_status(token_id, status_name);
+        if (statusObj == "") {
             // not found
             return;
         }
-        for (let i = 0; i < obj.targets.length; i++) {
-            if (obj.targets[i] == target_id) {
-                // Already a target
-                return;
-            }
+        
+        if (statusObj.targets.indexOf(target_id) != -1) {
+            // Already a target
+            return;
         }
-        _add_marker(target_id, obj.marker);
-        obj.targets.push(target_id);
+        _add_marker(target_id, statusObj.marker);
+        statusObj.targets.push(target_id);
+        return;
     } // function add_status_target
     
+    
+    /**
+     * Remove a target from a status.
+     */
     function remove_status_target(token_id, status_name, target_id) {
-        obj = _get_status(token_id, status_name);
-        if (obj == "") {
+        // Get the status object
+        statusObj = _get_status(token_id, status_name);
+        if (statusObj == "") {
             // Not found
             return;
         }
-        index = obj.targets.indexOf(target_id);
+        index = statusObj.targets.indexOf(target_id);
         if (index == -1) {
             // Not a target
             return;
         }
-        _remove_marker(target_id, obj.marker);
-        obj.targets.splice(index, 1);
+        _remove_marker(target_id, statusObj.marker);
+        statusObj.targets.splice(index, 1);
+        return;
     } // function remove_status_target
     
     
+    /**
+     * Process the next turn. Get the token id at the top of the turn tracker,
+     * and process any statuses associated with that token.
+     */
     function next_turn() {
         // Get the token associated with the new turn
         var token = _get_current_token();
@@ -279,35 +357,25 @@ var StatusTracker = StatusTracker || (function() {
         return;
     } // function next_turn
     
+    
+    /**
+     * Remove all statuses associated with a token id. If the "id" specified is
+     * "all", remove all statuses.
+     */
     function clear(token_id) {
-        // See if the input param is 'all'. If it is, we're clearing out everything.
+        // See if the input param is 'all'. If it is, we're clearing out 
+        // everything.
         let isAll = (token_id.toLowerCase() == "all");
-        let deleteArray = new Array();
         
+        // This _should_ work. Walk the status_tracker array back-to-front, 
+        // meaning we're deleting things from the back, meaning we _shouldn't_
+        // be dorking with our array index. In theory.
         try {
-        
-            /**
-             * Walk through the status tracker elements. If we're deleteing all, or
-             * a specific token id, remove all markers associated with a
-             */
-            _.each(state.status_tracker, function(obj) {
+            for (let i = state.status_tracker.length; i > 0; i--) {
+                let obj = state.status_tracker[i-1];
                 if (isAll == true || obj.token_id == token_id) {
-                    for (let i = 0; i < obj.targets.length; i++)
-                    {
-                        _remove_marker(obj.targets[i], obj.marker);
-                    }
-                    deleteArray.push(state.status_tracker.indexOf(obj))
+                    remove_status(obj.token_id, obj.status_name);
                 }
-            });
-            
-            /**
-             * Sort the delete array in descending order so we can remove them 
-             * without indexing nonsense. Then remove all indexes in the delete 
-             * array from the status_tracker list.
-             */ 
-            deleteArray.sort(function(a,b) {return b - a});
-            for (let i = 0; i < deleteArray.length; i++) {
-                state.status_tracker.splice(deleteArray[i], 1);
             }
         }
         catch (err) {
@@ -317,7 +385,7 @@ var StatusTracker = StatusTracker || (function() {
                 state.status_tracker = new Array();
             }
         }
-    }
+    } // function clear
 
     return {
         // List of functions and params to expose
@@ -332,6 +400,9 @@ var StatusTracker = StatusTracker || (function() {
 }());
 
 
+/**
+ * Menus and interfaces.
+ */
 var StatusTrackerMenus = StatusTrackerMenus || (function() {
     
     var MENU_CSS = {
@@ -356,37 +427,23 @@ var StatusTrackerMenus = StatusTrackerMenus || (function() {
           'text-align': 'center'
         }
     };
+
     
-    var STATUS_CSS = {
-        'centeredBtn': {
-          'text-align': 'center'
-        },
-        'menu': {
-          'background': '#fff',
-          'border': 'solid 1px #000',
-          'border-radius': '5px',
-          'font-weight': 'bold',
-          'margin-bottom': '1em',
-          'overflow': 'hidden'
-        },
-        'menuBody': {
-          'padding': '5px',
-          'text-align': 'center'
-        },
-        'menuHeader': {
-          'background': '#000',
-          'color': '#fff',
-          'text-align': 'center'
-        }
-    };
-    
+    // Marker select is a prepopulated macro input line for selecting loaded 
+    // markers by name.
+    // TODO : Would love to get the images involves in the drop down.
     var markerSelect = "?{Select Marker|";
     const base_markers = ['red', 'blue', 'green', 'brown', 'purple', 'pink', 'yellow', 'dead']
     
+    /**
+     * Create the drop-down menu for the marker select input.
+     */
     function create_marker_select() {
+        // Add the default markers (colors and dead)
         _.each(base_markers, marker => {
             markerSelect = markerSelect + marker + "|";
         });
+        // Add the loaded token markers.
         _.each(tokenMarkers, marker => {
             markerSelect = markerSelect + marker.name + "|";
         });
@@ -394,16 +451,38 @@ var StatusTrackerMenus = StatusTrackerMenus || (function() {
         // Trim off the trailing '|'
         markerSelect = markerSelect.substring(0, markerSelect.length - 1);
         markerSelect = markerSelect + "}";
-        
-    }
+    } // function create_marker_select
     
+    
+    /**
+     * Create a menu panel using HtmlBuilder
+     */
     function _build_menu_panel(header, content) {
         let menu = new HtmlBuilder('.menu');
         menu.append('.menuHeader', header);
         menu.append('.menuBody', content);
         return menu;
+    } // function _build_menu_panel
+    
+    /**
+     * Get a token object.
+     */
+    function _get_token_object(token_id) {
+        var tokenList = findObjs({
+            _type: "graphic",
+            _id: token_id,
+            _pageid: Campaign().get("playerpageid"),
+        });
+        
+        if (tokenList.length == 0) {
+            return "";
+        }
+        return tokenList[0]
     }
     
+    /**
+     *  Create the "Show Menu" macro. Currently, this is only available for GMs.
+     */
     function create_menu_macro() {
         let players = findObjs({_type: 'player'});
          _.each(players, player => {
@@ -428,57 +507,68 @@ var StatusTrackerMenus = StatusTrackerMenus || (function() {
                 });
             }
         });
-    }
+    } // function create_menu_macro
     
     
+    /**
+     * Displays the base menu in the chat window.
+     */
     function show_menu() {
         let content = new HtmlBuilder('div');
         content.append('.centeredBtn').append('a', "Add Status", {
             //href: '!statustracker add_status &#64;{selected|token_id} ?{Effect Name} ?{Duration in rounds (-1 for permanent)} ?{Marker}',
-            href: '!statustracker add_status &#64;{selected|token_id} ?{Effect Name} ?{Duration in rounds (-1 for permanent)} ' + markerSelect,
+            href: '!statustracker add_status --token &#64;{selected|token_id} --status ?{Effect Name} --duration ?{Duration in rounds (-1 for permanent)} --marker ' + markerSelect,
             title: 'Add New Status'
         });
         content.append('.centeredBtn').append('a', "Show Token Statuses", {
-            href: '!statustracker show_status &#64;{selected|token_id}',
+            href: '!statustracker show_status --token &#64;{selected|token_id}',
             title: 'Show Token Statuses'
         });
         content.append('.centeredBtn').append('a', "Show All Statuses", {
-            href: '!statustracker status all',
+            href: '!statustracker show_status --token all',
             title: 'Show All Statuses'
         });
         content.append('.centeredBtn').append('a', "Remove Effect From Token", {
-            href: '!statustracker remove_status &#64;{selected|token_id} ?{Effect Name}',
+            href: '!statustracker remove_status --token &#64;{selected|token_id} --status ?{Effect Name}',
             title: 'Remove an Effect from a Token'
         });
         content.append('.centeredBtn').append('a', "Clear Token Statuses", {
-            href: '!statustracker clear &#64;{selected|token_id}',
+            href: '!statustracker clear --token &#64;{selected|token_id}',
             title: 'Clear All Token Statuses'
         });
         content.append('.centeredBtn').append('a', "Clear All Statuses", {
-            href: '!statustracker clear all',
+            href: '!statustracker clear --token all',
             title: 'Global Clear Statuses'
         });
         
         let menu = _build_menu_panel('StatusTracker Menu', content);
         sendChat(StatusTrackerConsts.SCRIPT_NAME, '/w gm ' + menu.toString(MENU_CSS));
-    }
+    } // function show_menu
     
+    
+    /**
+     * Build the target/end menu for an individual status. 
+     */
     function _build_status_menu(obj) {
         let content = new HtmlBuilder('div');
         content.append('.centeredBtn').append('a', "Add Target", {
-            href: '!statustracker add_target ' + obj.token_id + ' ' + obj.status_name + ' &#64;{selected|token_id}',
+            href: '!statustracker add_target --token ' + obj.token_id + ' --status ' + obj.status_name + ' --target &#64;{selected|token_id}',
             title: 'Add Target For Effect'
         });
         content.append('.centeredBtn').append('a', "Remove Target", {
-            href: '!statustracker remove_target ' + obj.token_id + ' ' + obj.status_name + ' &#64;{selected|token_id}',
+            href: '!statustracker remove_target --token ' + obj.token_id + ' --status ' + obj.status_name + ' --target &#64;{selected|token_id}',
             title: 'Remove Target For Effect'
         });
         content.append('.centeredBtn').append('a', "End", {
-            href: '!statustracker remove_status ' + obj.token_id + ' ' + obj.status_name,
+            href: '!statustracker remove_status --token ' + obj.token_id + ' --status ' + obj.status_name,
             title: 'End Effect'
         });
         
         let label = obj.status_name + " (" + obj.duration + ")";
+        let tokenObj = _get_token_object(obj.token_id);
+        if (tokenObj) {
+            label = label + " [" + tokenObj.get("name") + "]";
+        }
         if (obj.targets.length > 0) {
             label = label + " [";
             for (let i = 0; i < obj.targets.length; i++) {
@@ -489,17 +579,26 @@ var StatusTrackerMenus = StatusTrackerMenus || (function() {
         }
         let menu = _build_menu_panel(label, content);
         return menu;
-    }
+    } // function _build_status_menu
     
+    
+    /**
+     * Show the target/end menus for statuses associated with a given token.
+     */
     function show_status_menu(token_id) {
         let content = new HtmlBuilder('div');
         let statuses = StatusTracker.getTokenStatuses(token_id);
+        if (statuses.length == 0) {
+            sendChat(StatusTrackerConsts.SCRIPT_NAME, '/w gm No active statuses');
+            return;
+        }
         _.each(statuses, function(obj) {
             let submenu = _build_status_menu(obj);
             content.append(submenu);
         });
         sendChat(StatusTrackerConsts.SCRIPT_NAME, '/w gm ' + content.toString(MENU_CSS));
-    }
+        return
+    } // function show_status_menu
     
     return {
         createMenuMacro: create_menu_macro,
@@ -510,57 +609,90 @@ var StatusTrackerMenus = StatusTrackerMenus || (function() {
     
 }());
 
-var StatusTrackerCommandline = StatusTrackerCommandline || (function() {
 
+/**
+ * Input handling
+ */
+var StatusTrackerCommandline = StatusTrackerCommandline || (function() {
+    
+    /**
+     * Parses message content. The following presumptions are made:
+     * 1. A command and any sub commands will be the first elements of the msg
+     * 2. Parameters will be proceded by --<param name>
+     * 3. Each parameter name will be unique, and will be forced to lowercase.
+     * 
+     * An object will be returned with the potential properties of 'command', 
+     * 'subcommand', and any parameter names.
+     */
+    function _argparse(msg) {
+        var obj = {};
+        argv = msg.split(/\s+--/);
+        command = argv.shift().split(' ');
+        if (command.length == 0) {
+            return "";
+        };
+        
+        for (let i = 0; i < command.length; i++) {
+            command[i] = command[i].toLowerCase();
+        }
+        
+        if (command.length >= 1) {
+            obj['command'] = command[0];
+        };
+        if (command.length > 1) {
+            obj['subcommand'] = command.slice(1).join(' ');
+        }
+        
+        _.each(argv, function(args) {
+            let argSet = args.split(' ');
+            if (argSet.length == 0) {
+                return;
+            } else if (argSet.length == 1) {
+                obj[argSet[0].toLowerCase()] = true;
+            } else {
+                let key = argSet[0].toLowerCase();
+                let value = argSet.slice(1).join(' ');
+                obj[key] = value
+            }
+        });
+        return obj;
+    } // function _argparse
+
+    /**
+     * Processes command string
+     */
     function do_command(msg)
     {
         try {
-            argv = msg.content.split(' ');
-            if (argv[0].toLowerCase() != StatusTrackerConsts.CMD_PREFIX) {
+            args = _argparse(msg.content);
+            if (args.command != StatusTrackerConsts.CMD_PREFIX) {
                 return;
             }
-            switch (argv[1].toLowerCase()) {
+            switch (args.subcommand) {
                 case StatusTrackerConsts.CMD_ADD_STATUS:
-                    StatusTracker.addStatus(argv[2], argv[3], argv[4], argv[5]);
-                    StatusTrackerMenus.showStatusMenu(argv[2]);
+                    StatusTracker.addStatus(args.token, args.status, args.duration, args.marker);
+                    StatusTrackerMenus.showStatusMenu(args.token);
                     break;
                 case StatusTrackerConsts.CMD_ADD_TARGET:
-                    StatusTracker.addTarget(argv[2], argv[3], argv[4]);
+                    StatusTracker.addTarget(args.token, args.status, args.target);
                     break;
                 case StatusTrackerConsts.CMD_CLEAR:
-                    StatusTracker.clear(argv[2]);
+                    StatusTracker.clear(args.token);
                     break;
                 case StatusTrackerConsts.CMD_REMOVE_STATUS:
-                    StatusTracker.removeStatus(argv[2], argv[3]);
+                    StatusTracker.removeStatus(args.token, args.status);
                     break;
                 case StatusTrackerConsts.CMD_REMOVE_TARGET:
-                    StatusTracker.removeTarget(argv[2], argv[3], argv[4]);
-                    break;
-                case StatusTrackerConsts.CMD_STATUS:
-                    let status_list = StatusTracker.getTokenStatuses(argv[2]);
-                    _.each(status_list, function(obj) {
-                        var tokenObj = findObjs({
-                            _type: "graphic",
-                            _id: obj.token_id,
-                            _pageid: Campaign().get("playerpageid"),
-                        })[0];
-                        var data = "";
-                        if (tokenObj.get("controlledby") == "") {
-                            data = data + "/w gm ";
-                        }
-                        data = data + tokenObj.get("name") + " :: " + obj.status_name + " (" + obj.duration +")";
-                        sendChat(StatusTrackerConsts.SCRIPT_NAME, data);
-
-                    });
+                    StatusTracker.removeTarget(args.token, args.status, args.target);
                     break;
                 case StatusTrackerConsts.CMD_SHOWMENU:
                     StatusTrackerMenus.showMenu();
                     break;
                 case StatusTrackerConsts.CMD_SHOW_STATUS:
-                    StatusTrackerMenus.showStatusMenu(argv[2])
+                    StatusTrackerMenus.showStatusMenu(args.token)
                     break;
                 default:
-                    // print help
+                    // print help?
                     break;
             }
         }
@@ -578,7 +710,7 @@ var StatusTrackerCommandline = StatusTrackerCommandline || (function() {
 
 
 // Handler for the turner order changing
-on("change:campaign:turnorder", function(obj) {
+on("change:campaign:turnorder", function() {
     StatusTracker.nextTurn()
 });
 
