@@ -65,7 +65,7 @@ var StatusTracker = StatusTracker || (function() {
         }
         Campaign().set('turnorder', JSON.stringify(turnorder));
         return;
-    }
+    } // function _insert_status_into_turn_order
     
     
     /**
@@ -82,7 +82,9 @@ var StatusTracker = StatusTracker || (function() {
         }
         
         Campaign().set('turnorder', JSON.stringify(turnorder));
-    }
+        return;
+    } // function _remove_status_from_turn_order
+    
     
     /**
      * Retrieve a status effect definition from the global status effect store
@@ -95,7 +97,7 @@ var StatusTracker = StatusTracker || (function() {
             }
         }
         return "";
-    }
+    } // function _get_status
     
     
     /**
@@ -125,7 +127,8 @@ var StatusTracker = StatusTracker || (function() {
         // Set the 
         _last_examined_token = token;
         return token;
-    }
+    } // function _get_current_token
+    
     
     /**
      * Process status effects associated with a given token id.
@@ -173,6 +176,7 @@ var StatusTracker = StatusTracker || (function() {
 
     } // function _process_turn
     
+    
     /**
      * Add a marker to a token.
      */
@@ -188,7 +192,8 @@ var StatusTracker = StatusTracker || (function() {
             obj.set("statusmarkers", token_markers.join(","));
         });
         return;
-    }
+    } // function _add_marker
+    
     
     /**
      * Remove a marker from a token
@@ -296,7 +301,7 @@ var StatusTracker = StatusTracker || (function() {
             }
         }
         return status_list;
-    } // function get_status
+    } // function get_token_statuses
     
     
     /**
@@ -386,6 +391,40 @@ var StatusTracker = StatusTracker || (function() {
             }
         }
     } // function clear
+    
+    
+    /**
+     * If tokens were removed from the the turn order, remove any statuses 
+     * linked to those tokens.
+     */
+    function validate_statuses(currentTurn, previousTurn) {
+        removedTokens = new Array();
+        for (let i = 0; i < previousTurn.length; i++) {
+            let found = false;
+            let tokenId = previousTurn[i].id;
+            for (let j = 0; j < currentTurn.length; j++) {
+                if (currentTurn[j].id == tokenId) {
+                    found = true;
+                    break
+                }
+            }
+            if (found == false) {
+                remove_token(tokenId);
+            }
+        }
+    } // function validate_statuses
+
+
+    /**
+     * Removes all statuses associated with a given token id
+     */    
+    function remove_token(token_id) {
+        tokenStatuses = get_token_statuses(token_id);
+        for (let i = 0; i < tokenStatuses.length; i++) {
+            remove_status(token_id, tokenStatuses[i].status_name);
+        }
+    } // function remove_token
+
 
     return {
         // List of functions and params to expose
@@ -396,8 +435,10 @@ var StatusTracker = StatusTracker || (function() {
         addTarget: add_status_target,
         removeTarget: remove_status_target,
         clear: clear,
+        validateStatuses: validate_statuses,
+        removeToken: remove_token,
     };
-}());
+}()); // StatusTracker
 
 
 /**
@@ -464,6 +505,7 @@ var StatusTrackerMenus = StatusTrackerMenus || (function() {
         return menu;
     } // function _build_menu_panel
     
+    
     /**
      * Get a token object.
      */
@@ -478,7 +520,7 @@ var StatusTrackerMenus = StatusTrackerMenus || (function() {
             return "";
         }
         return tokenList[0]
-    }
+    } // function _get_token_object
     
     /**
      *  Create the "Show Menu" macro. Currently, this is only available for GMs.
@@ -607,7 +649,7 @@ var StatusTrackerMenus = StatusTrackerMenus || (function() {
         createMarkerSelect: create_marker_select,
     };
     
-}());
+}()); // StatusTrackerMenus
 
 
 /**
@@ -618,7 +660,7 @@ var StatusTrackerCommandline = StatusTrackerCommandline || (function() {
     /**
      * Parses message content. The following presumptions are made:
      * 1. A command and any sub commands will be the first elements of the msg
-     * 2. Parameters will be proceded by --<param name>
+     * 2. Parameters will be proceded by ' --<param name>'
      * 3. Each parameter name will be unique, and will be forced to lowercase.
      * 
      * An object will be returned with the potential properties of 'command', 
@@ -636,18 +678,18 @@ var StatusTrackerCommandline = StatusTrackerCommandline || (function() {
             command[i] = command[i].toLowerCase();
         }
         
+        obj['command'] = command.shift();
+            
         if (command.length >= 1) {
-            obj['command'] = command[0];
-        };
-        if (command.length > 1) {
-            obj['subcommand'] = command.slice(1).join(' ');
+            obj['subcommand'] = command.join(' ');
         }
-        
+
         _.each(argv, function(args) {
             let argSet = args.split(' ');
             if (argSet.length == 0) {
                 return;
             } else if (argSet.length == 1) {
+                // Treat parameters without as value as boolean
                 obj[argSet[0].toLowerCase()] = true;
             } else {
                 let key = argSet[0].toLowerCase();
@@ -657,6 +699,7 @@ var StatusTrackerCommandline = StatusTrackerCommandline || (function() {
         });
         return obj;
     } // function _argparse
+
 
     /**
      * Processes command string
@@ -701,32 +744,44 @@ var StatusTrackerCommandline = StatusTrackerCommandline || (function() {
             // print help
         } 
         return;
-    }
+    } // function do_command
+    
     
     return {
         doCommand: do_command,
     }
-}());
+}()); // StatusTrackerCommandline
 
 
 // Handler for the turner order changing
-on("change:campaign:turnorder", function() {
-    StatusTracker.nextTurn()
+on('change:campaign:turnorder', function(current, prev) {
+    currentTurnorder = JSON.parse(current.get('turnorder'));
+    previousTurnorder = JSON.parse(prev.turnorder);
+    StatusTracker.validateStatuses(currentTurnorder, previousTurnorder);
+    StatusTracker.nextTurn();
 });
 
 // Handler for chat messages
-on("chat:message", function(msg) {
+on('chat:message', function(msg) {
     if (msg.type != 'api') {
         return;
     }
     StatusTrackerCommandline.doCommand(msg);
 });
 
-// On start, add the create menu macro to the GM
+// Handler for graphic destruction. Remove statuses of tokens deleted off the 
+// board.
+on('destroy:graphic', function(obj) {
+   StatusTracker.removeToken(obj.id); 
+});
+
+// Handler for 'ready'. Do any initial do-once setup.
 on('ready', () => { 
     'use strict';
+    // Create the list of available token markers
     tokenMarkers = JSON.parse(Campaign().get("token_markers"));
     StatusTrackerMenus.createMarkerSelect();
+    // Create the show-menu macro
     StatusTrackerMenus.createMenuMacro();
     log("Loaded " + StatusTrackerConsts.SCRIPT_NAME);
 
