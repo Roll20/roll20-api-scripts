@@ -222,7 +222,7 @@ var StatusTracker = StatusTracker || (function() {
      * Add a status to a token. Adding markers to targets of that status is a
      * separate operation.
      */
-    function add_status(token_id, status_name, duration, marker_name) {
+    function add_status(token_id, status_name, duration, marker_name, show) {
         var durationNum = Number(duration);
         
         // Look up the marker tag, which may or may not be the same thing as 
@@ -253,7 +253,7 @@ var StatusTracker = StatusTracker || (function() {
         
         // If there's a duration greater than zero, add a countdown entity to
         // the turn tracker.
-        if (duration > 0) { 
+        if (show == 'yes' && duration > 0) { 
             _insert_status_into_turn_order(token_id, status_name, duration);
         }
         return;
@@ -559,7 +559,7 @@ var StatusTrackerMenus = StatusTrackerMenus || (function() {
         let content = new HtmlBuilder('div');
         content.append('.centeredBtn').append('a', "Add Status", {
             //href: '!statustracker add_status &#64;{selected|token_id} ?{Effect Name} ?{Duration in rounds (-1 for permanent)} ?{Marker}',
-            href: '!statustracker add_status --token &#64;{selected|token_id} --status ?{Effect Name} --duration ?{Duration in rounds (-1 for permanent)} --marker ' + markerSelect,
+            href: '!statustracker add_status --token &#64;{selected|token_id} --status ?{Effect Name} --duration ?{Duration in rounds (-1 for permanent)} --show ?{Show in turn tracker?|yes|no} --marker ' + markerSelect,
             title: 'Add New Status'
         });
         content.append('.centeredBtn').append('a', "Show Token Statuses", {
@@ -713,7 +713,7 @@ var StatusTrackerCommandline = StatusTrackerCommandline || (function() {
             }
             switch (args.subcommand) {
                 case StatusTrackerConsts.CMD_ADD_STATUS:
-                    StatusTracker.addStatus(args.token, args.status, args.duration, args.marker);
+                    StatusTracker.addStatus(args.token, args.status, args.duration, args.marker, args.show);
                     StatusTrackerMenus.showStatusMenu(args.token);
                     break;
                 case StatusTrackerConsts.CMD_ADD_TARGET:
@@ -741,7 +741,7 @@ var StatusTrackerCommandline = StatusTrackerCommandline || (function() {
         }
         catch (err)
         {
-            // print help
+            log('Error in do_command: \n' + err);
         } 
         return;
     } // function do_command
