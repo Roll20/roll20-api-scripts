@@ -16,7 +16,7 @@ var InitiativeTrackerPlus = (function() {
 	'use strict';
 	var version = 1.26,
 		author = 'James C. (Chuz)',
-		lastUpdated = 'Mar 15 2021',
+		lastUpdated = 'July 21 2021',
 		pending = null;
 
 	var ITP_StateEnum = Object.freeze({
@@ -1015,20 +1015,23 @@ var InitiativeTrackerPlus = (function() {
 			controllers = getTokenControllers(curToken);
 
 		if ((journal = getObj('character',curToken.get('represents')))) {
-			pseudonym = characterObjExists('ipt_pseudonym', 'attribute', journal.get('_id'));
+			pseudonym = characterObjExists('itp_pseudonym', 'attribute', journal.get('_id'));
 			name = characterObjExists('name','attribute',journal.get('_id'));
 
 			if(pseudonym) {
 				name = pseudonym.get('current');
+				if(name == '') {
+					name = 'NPC';
+				}
 			} else if (name) {
 				name = name.get('current');
 			} else if (curToken.get('showplayers_name')) {
+				pseudonym = characterObjExists('itp_pseudonym', 'attribute', journal.get('_id'));
 				name = curToken.get('name');
 			} else {
 				name = journal.get('name');
 			}
 		} else if (curToken.get('showplayers_name')) {
-			pseudonym = characterObjExists('itp_pseudonym', 'attribute', journal.get('_id'));
 			name = curToken.get('name');
 		}
 
