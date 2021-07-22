@@ -1006,7 +1006,7 @@ var InitiativeTrackerPlus = (function() {
 	var makeTurnDisplay = function(curToken) {
 		if (!curToken)
 			{return;}
-log(curToken);
+
 		var content = '',
 			journal,
 			pseudonym,
