@@ -14,7 +14,7 @@
 var statusMarkers = [];
 var InitiativeTrackerPlus = (function() {
 	'use strict';
-	var version = 1.25,
+	var version = 1.26,
 		author = 'James C. (Chuz)',
 		lastUpdated = 'Mar 15 2021',
 		pending = null;
@@ -33,7 +33,6 @@ var InitiativeTrackerPlus = (function() {
 
 	var fields = {
 		feedbackName: 'InitiativeTrackerPlus',
-//		feedbackImg: 'https://s3.amazonaws.com/files.d20.io/images/182010618/cD46In_LjS2Tu8eM_Hp71Q/thumb.png?1606747709',
 		feedbackImg: 'https://s3.amazonaws.com/files.d20.io/images/182013978/rBFyjNCx7ciwOe1mdn_WkA/thumb.png?1606749407',
 		trackerId: '',
 		trackerName: 'initiative_tracker_plus_tracker',
@@ -1007,22 +1006,29 @@ var InitiativeTrackerPlus = (function() {
 	var makeTurnDisplay = function(curToken) {
 		if (!curToken)
 			{return;}
-
+log(curToken);
 		var content = '',
 			journal,
+			pseudonym,
 			name,
 			player,
 			controllers = getTokenControllers(curToken);
 
 		if ((journal = getObj('character',curToken.get('represents')))) {
+			pseudonym = characterObjExists('ipt_pseudonym', 'attribute', journal.get('_id'));
 			name = characterObjExists('name','attribute',journal.get('_id'));
-			if (name)
-				{name = name.get('current');}
-			else if (curToken.get('showplayers_name'))
-				{name = curToken.get('name');}
-			else
-				{name = journal.get('name');}
+
+			if(pseudonym) {
+				name = pseudonym.get('current');
+			} else if (name) {
+				name = name.get('current');
+			} else if (curToken.get('showplayers_name')) {
+				name = curToken.get('name');
+			} else {
+				name = journal.get('name');
+			}
 		} else if (curToken.get('showplayers_name')) {
+			pseudonym = characterObjExists('itp_pseudonym', 'attribute', journal.get('_id'));
 			name = curToken.get('name');
 		}
 
