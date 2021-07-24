@@ -673,15 +673,11 @@ var StatusTrackerCommandline = StatusTrackerCommandline || (function() {
         if (command.length == 0) {
             return "";
         };
-        
-        for (let i = 0; i < command.length; i++) {
-            command[i] = command[i].toLowerCase();
-        }
-        
-        obj['command'] = command.shift();
+
+        obj['command'] = command.shift().toLowerCase();
             
         if (command.length >= 1) {
-            obj['subcommand'] = command.join(' ');
+            obj['subcommand'] = command.join(' ').toLowerCase();
         }
 
         _.each(argv, function(args) {
