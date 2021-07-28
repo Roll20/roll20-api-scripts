@@ -32,7 +32,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 
 */
 	const APINAME = "ScriptCards";
-	const APIVERSION = "1.3.9";
+	const APIVERSION = "1.3.9a";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 	
@@ -1139,6 +1139,18 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 										}
 										if (params[1].toLowerCase() == "closest" || params[1].toLowerCase() == "round") {
 											rollVariables[variableName] = parseDiceRoll(Math.round(Number(params[2])).toString(), cardParameters);
+										}
+									}
+
+									if (params.length == 4 && params[1].toLowerCase() == "angle") {
+										var token1 = getObj("graphic", params[2]);
+										var token2 = getObj("graphic", params[3]);
+										if (token1 && token2) {
+											var angle = Math.atan2(token2.get("top") - token1.get("top"), token2.get("left") - token1.get("left"));
+											angle *= 180 / Math.PI;
+											angle -= 270;
+											if (angle < 0) { angle = 360 + angle}
+											stringVariables[variableName] = angle;
 										}
 									}
 								break; 
