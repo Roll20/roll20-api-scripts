@@ -22,17 +22,11 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 
 /* Inline Update Notes - So I can keep track of what to put in the release notes :)
 
-	- Added titlefontshadow setting. Default is "-1px 1px 0 #000, 1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000;"
-
-	- Added "setatindex" function to the array function list.
-
-	- Added "findability" system function
-
-	- Improved support for [hr]
+	- Added "angle" function
 
 */
 	const APINAME = "ScriptCards";
-	const APIVERSION = "1.3.9a";
+	const APIVERSION = "1.3.9b";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 	
@@ -1149,7 +1143,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 											var angle = Math.atan2(token2.get("top") - token1.get("top"), token2.get("left") - token1.get("left"));
 											angle *= 180 / Math.PI;
 											angle -= 270;
-											if (angle < 0) { angle = 360 + angle}
+											while (angle < 0) { angle = 360 + angle}
 											stringVariables[variableName] = angle;
 										}
 									}
