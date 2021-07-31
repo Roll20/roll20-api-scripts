@@ -26,7 +26,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 
 */
 	const APINAME = "ScriptCards";
-	const APIVERSION = "1.3.9b";
+	const APIVERSION = "1.3.9c";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 	
@@ -3159,19 +3159,23 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 
 	function getSectionAttrs(charid, entryname, sectionname, searchtext) {
 		var return_set = [];
-		
+		var char_attrs = findObjs({type:"attribute", _characterid:charid});
 		try {
-			var action_prefix = filterObjs(function (z) {
-					return (z.get("characterid") == charid && z.get("name").startsWith(sectionname) && z.get("name").endsWith(searchtext));
-				})
-				.filter(entry => entry.get("current") == entryname)[0]
-				.get("name").slice(0, -searchtext.length);
-		} catch (e) {
-			return (return_set)
-		};
-		var action_attrs = filterObjs(function (z) {
-			return (z.get("characterid") == charid && z.get("name").startsWith(action_prefix));
-		})
+			var action_prefix = char_attrs
+			.filter(function(z) {
+				return (z.get("name").startsWith(sectionname) && z.get("name").endsWith(searchtext))
+			})	
+			.filter(entry => entry.get("current") == entryname)[0]
+			.get("name").slice(0, -searchtext.length);
+		} catch {
+			return return_set;
+		}
+
+		try {
+			action_attrs = char_attrs.filter(function(z) {return (z.get("name").startsWith(action_prefix));})
+		} catch {
+			return return_set;
+		}
 
 		action_attrs.forEach(function (z) {
 			if (z.get("name")) {
@@ -3193,9 +3197,8 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 		var action_prefix = sectionname + "_" + sectionID + "_";
 
 		try {
-			var action_attrs = filterObjs(function (z) {
-				return (z.get("characterid") == charid && z.get("name").startsWith(action_prefix));
-			})
+			var action_attrs = findObjs({type:"attribute", _characterid:charid})
+			action_attrs = action_attrs.filter(function(z) {return (z.get("name").startsWith(action_prefix));})
 		} catch {
 			return return_set;
 		}
@@ -3207,7 +3210,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 			} catch { }
 		})
 		return (return_set);
-	}
+	}	
 
 	function rollOnRollableTable(tableName, resultType) {
 		var theTable = findObjs({type: "rollabletable", name:tableName })[0];
