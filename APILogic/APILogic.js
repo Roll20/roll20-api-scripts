@@ -3,8 +3,8 @@
 Name			:	APILogic
 GitHub			:	https://github.com/TimRohr22/Cauldron/tree/master/APILogic
 Roll20 Contact	:	timmaugh
-Version			:	2.0.4
-Last Update		:	6/28/2021
+Version			:	2.0.5
+Last Update		:	7/20/2021
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -18,9 +18,9 @@ const APILogic = (() => {
     //		VERSION
     // ==================================================
     const apiproject = 'APILogic';
-    API_Meta[apiproject].version = '2.0.4';
+    API_Meta[apiproject].version = '2.0.5';
     const schemaVersion = 0.1;
-    const vd = new Date(1624887801910);
+    const vd = new Date(1626810300264);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -715,7 +715,7 @@ const APILogic = (() => {
     const handleInput = (msg, msgstate = {}) => {
         let funcret = { runloop: false, status: 'unchanged', notes: '' };
         if (msg.type !== 'api' || !testConstructs(msg.content)) return funcret;
-        if (!msgstate && scriptisplugin) return funcret;
+        if (!Object.keys(msgstate).length && scriptisplugin) return funcret;
         let status = [];
         let notes = [];
         const linebreak = '({&br-al})';
