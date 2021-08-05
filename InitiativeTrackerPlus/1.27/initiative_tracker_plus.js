@@ -14,7 +14,7 @@
 var statusMarkers = [];
 var InitiativeTrackerPlus = (function() {
 	'use strict';
-	var version = 1.26,
+	var version = 1.27,
 		author = 'James C. (Chuz)',
 		lastUpdated = 'July 21 2021',
 		pending = null;
