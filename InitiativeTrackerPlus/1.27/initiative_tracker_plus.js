@@ -1556,12 +1556,11 @@ var InitiativeTrackerPlus = (function() {
 	/**
 	 * Produce a listing of favorites
 	 */
-	var doApplyFavorite = function(statusName, selection) {
+	var doApplyFavorite = function(statusName,selection) {
 		if (!statusName)
 			{return;}
-log("statusName: "+statusName);
 		statusName = statusName.toLowerCase();
-log("statusName2: "+statusName);
+
 		var fav = favoriteExists(statusName),
 			markerdef,
 			curToken,
