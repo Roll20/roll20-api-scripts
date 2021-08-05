@@ -3,32 +3,25 @@
 Name:           ImportHS6e
 GitHub:         https://github.com/eepjr24/ImportHS6e
 Roll20 Contact: eepjr24
-Version:        1.00
-Last Update:    5/16/2021
+Version:        1.01
+Last Update:    8/4/2021
 =========================================================
 Updates:
-Fixed INT as base stat for Perception.
-Fixed combat skill level logging bug.
-Fixed combat skill level removal flag bug.
-Fixed penalty skill level removal flag bug.
-Fixed bug with empty values for endurance breaking code.
-Verified familiarities are working.
-Switched to text versus name for skill display.
-Fixed character name setting.
+Fixed JSON parsing error for unicode characters reserved for UTF-16 surrogate pairs
 
 */
 var API_Meta = API_Meta || {};
 API_Meta.ImportHS6e = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 {
-try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (23)); }
+try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (16)); }
 }
 
 // TODO Deal with MP
 // TODO create reserves
   const ImportHS6e = (() => {
 
-  let version = '1.00',
-  lastUpdate  = 1621211328100,
+  let version = '1.01',
+  lastUpdate  = 1628114013101,
   debug_log   = 0,                                                             // Debug settings, all debug values 1=on
   logObjs     = 0,                                                             // Output character object to api log
   comp_log    = 0,                                                             // Debug complications
@@ -919,7 +912,7 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
 
   const handleInput = (msg) => {                                               // Monitor the chat for commands, process sheet if import called
     if (!(msg.type === "api" &&
-        /^!(ImportHS6e|i6e)(\s|$)/.test(msg.content))) {                       // Ignore messages not intended for this script
+        /^!(importHS6e|i6e)(\s|$)/.test(msg.content))) {                       // Ignore messages not intended for this script
       return;
     }
 
@@ -994,7 +987,10 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
       // Clean JSON of extra junk the HTML adds.
       dec_gmnotes = dec_gmnotes.replace(/<[^>]*>/g, '')                        //   Remove <tags>
                                .replace(/&[^;]*;/g, '')                        //   Remove &nbsp;
+                               .replace(/[^\x0A-\xBF]/g, '')                   //   Remove nonstandard letters;
                                .replace(/\},\s{1,}\]/g, '\}\]');               //   Remove extra comma
+
+      logDebug(dec_gmnotes);
 
       if(gmnotes.length <= 5000)
       {
