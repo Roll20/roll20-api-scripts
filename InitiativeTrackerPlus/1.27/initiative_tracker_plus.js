@@ -1556,11 +1556,12 @@ var InitiativeTrackerPlus = (function() {
 	/**
 	 * Produce a listing of favorites
 	 */
-	var doApplyFavorite = function(statusName,selection) {
+	var doApplyFavorite = function(statusName, selection) {
 		if (!statusName)
 			{return;}
+log("statusName: "+statusName);
 		statusName = statusName.toLowerCase();
-
+log("statusName2: "+statusName);
 		var fav = favoriteExists(statusName),
 			markerdef,
 			curToken,
@@ -1582,11 +1583,11 @@ var InitiativeTrackerPlus = (function() {
 				{return true;}
 		});
 
-		if (markerUsed) {
-			markerdef = _.findWhere(statusMarkers,{tag: markerUsed.marker});
-			sendError('Status <i>"'+markerUsed.name+'"</i> already uses marker <img src="'+markerdef.img+'"></img>. You can either change the marker for favorite <i>"'+statusName+'"</i> or the marker for <i>"'+markerUsed.name+'"</i>');
-			return;
-		}
+//		if (markerUsed) {
+//			markerdef = _.findWhere(statusMarkers,{tag: markerUsed.marker});
+//			sendError('Status <i>"'+markerUsed.name+'"</i> already uses marker <img src="'+markerdef.img+'"></img>. You can either change the marker for favorite <i>"'+statusName+'"</i> or the marker for <i>"'+markerUsed.name+'"</i>');
+//			return;
+//		}
 
 		markerdef = _.findWhere(statusMarkers,{tag: fav.marker});
 
