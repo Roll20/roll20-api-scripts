@@ -1,6 +1,35 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 2.18
+### Capacités
+* Ajout de la possibilité pour un siphon des âmes d'empêcher les autres siphons.
+
+### Correction de bugs
+* Prise en compte correcte des bonus de save contre les sorts.
+
+### Autres amélioration
+* Ajout d'un type drain.
+* Attribut aucuneActionCombat pour les personnages qui n'agissent pas en combat
+* Possibilité de préciser un pourcentage des dégâts transformés en soins avec l'option --vampirise.
+
 ## 2.17
 ### Capacités
+* Support des effets des ondes corruptrices
+* Support de la potion de sang de l'Arbre-Coeur
+* Possibilité de changer la taille jusqu'à laquelle le fauchage est possible.
+* Haches et marteaux des nains.
+* Support de la capacité Agripper du démon de Noirbois.
+* Support de la capacité Grosse tête du forgesort
+* Capacité d'objet magique "Action libre"
+* Saisir et broyer pour les chaoses.
+* Amélioration de la prise en charge d'ombre mouvante.
+* Ajout de la capacité Force d'âme du haut elfe.
+* Ajout de la capacité Bûcheron
+* Ajout des capacités Attaque sanglante et Flèche sanglante.
+* Amélioration de la prise en compte des sens affûtés.
+* Amélioration de la prise en charge du second souffle du guerrier.
+* Ajout de l'effet noyade des plantes carnivores.
+* Ajout de la capacité Gober de la Voie du prédateur.
+* Meilleure prise en charge de la capacité Dévorer des prédateurs
 * Ajout de la capacité Increvable de la Voie de l'humain.
 * Ajout de la capacité Briseur d'os du barbare.
 * Meilleure automatisation de l'Argument de taille du barbare.
@@ -20,10 +49,32 @@
 * Support complet de la Voie du porteur de bouclier (prestige)
 
 ### Autres améliorations
+* Ajout de fonctions pour aider en Noirbois.
+* Quelques effets pour simuler la limitation Grande taille du minotaure.
+* On n'affiche pas les attaques qui ne sont pas possibles (limites épuisées, condition --si non remplie, pas assez de mana).
+* Ajout d'une option pour vérifier que les cibles d'une attaque peuvent tenir dans un disque d'un rayon donné.
+* Ajout d'une option de limitation du montant des soins par jour.
+* Label -2 pour l'arme en main gauche.
+* Termine les effets dont on enlève le marker à la main.
+* Utilisation des nom de caractéristiques au lieu de pictogrammes douteux pour les jets de caractéristiques et de compétences.
+* Gestion des identités secrètes.
+* Possibilité de passer des options aux effets à dégâts sur la durée.
+* Un personnage invisible ne peut plus être vu des autres joueurs.
+* Ajout d'une possibilité de synchronisation des tokens entre cartes.
+* Une réussite critique à une feinte double les bonus de DM à l'attaque suivante.
+* Ajout d'un attribut pour des modification de tous les tests d'un personnage (bonus ou malus)
+* Tirage d'initiative aléatoire secret pour les tokens sur le layer MJ.
 * Possibilité de rajouter des attributs à afficher dans le statut.
 * Le script ne bloque plus que le déplacement des personnages immobilisés contrôlés par un joueur connecté.
 * En cas d'échec critique d'une boule de feu qui cible une cible artificielle, la cible est déplacée aléatoirement de 15 m.
 * Refactoring !cof-tenebres pour supporter les options de Mana (y compris Tempête de Mana)
+* Séparation des options de blessure grave et de dommages importants
+
+### Corrections de bugs
+* Correction de bugs avec l'invisibilité.
+* Amélioration de l'Action concertée.
+* Correction d'un bug sur les bonus de compétences
+* Correction de la prise en compte des familiers dans les aoe.
 
 ## 2.16
 ### Capacités

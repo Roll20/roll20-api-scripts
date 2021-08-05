@@ -31,3 +31,4 @@ After initial setup, simply add your player characters to the default party, dra
 - 1.00: Initial Release
 - 1.03: Improve 5e-Shaped compatibility
 - 1.04: Fix CR < 1 bug
+- 1.05: Fix for bad player level and tokens not representing characters
