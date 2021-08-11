@@ -1,7 +1,7 @@
 {
     "name": "ImportHS6e",
     "script": "Import_HS6e_Roll20.js",
-    "version": "1.0",
+    "version": "1.01",
     "previousversions": [ "1.0" ],
     "description": "# ImportHS6e api script\r\nThis API is designed for use with the [HeroSystem6e character sheet](https:\/\/github.com\/Roll20\/roll20-character-sheets\/tree\/master\/HeroSystem6e).  If you are not using that character sheet, this api script will most likely be of no use to you.\r\n\r\nThis api script listens to chat for import calls and its primary functions execute when they detect a \"!i6e\" call.  This API will parse JSON from the GMNotes field of the character sheet to populate the Hero System 6e Roll20 character sheet.",
     "authors": "eepjr24",
