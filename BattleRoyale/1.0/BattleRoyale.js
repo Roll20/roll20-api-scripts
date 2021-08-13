@@ -24,6 +24,7 @@ var battleRoyale = battleRoyale || (function()
         spawnImg = "https://s3.amazonaws.com/files.d20.io/images/222396436/MRra05-JhBHi1AEL-OrvyA/thumb.png?1621081090", //Texture used for spawnpoints
         doorImg = "https://s3.amazonaws.com/files.d20.io/images/222898695/K-qXoJLvgypMFIKS4kUHmg/thumb.png?1621259804", //Texture used for doors
         defaultContestantImg = "https://s3.amazonaws.com/files.d20.io/images/131655898/DFizBm-scn3xyBMx2oCZrw/thumb.png?1588781694", //Texture used for new contestants
+        cmdPrefix = "br",
 
         /* ----- END OF CONFIGURABLE VARIABLES ----- */
 
@@ -36,7 +37,7 @@ var battleRoyale = battleRoyale || (function()
         nextTurn = function(msg){
 
             //Checks if a key was specified (eg. '!nextturn 1234' rather than simply '!nextturn')
-            var key = msg.content.replace("!nextturn", "");
+            var key = msg.content.replace("!" + cmdPrefix + " nextturn", "");
             if (key != ""){
                 if(key != turnKey){ //If there is a key but it doesnt match the expected key
                     chat("/w \"" + msg.who + "\" It is not your turn.");
@@ -78,7 +79,7 @@ var battleRoyale = battleRoyale || (function()
                     var name = obj.get("name");
                     chat("/desc " + name + "'s turn!");
 
-                    chat("/w " + name.split(" ")[0] + " [Click here when your turn is done](!nextturn " + turnKey + ")");
+                    chat("/w " + name.split(" ")[0] + " [Click here when your turn is done](!" + cmdPrefix + " nextturn " + turnKey + ")");
                 }
             }
             else{
@@ -124,8 +125,8 @@ var battleRoyale = battleRoyale || (function()
 
         //!counter [Duration] [Name] eg. *'!count 10 Hold Person'*. Starts a counter in the turn tracker.
         startCounter = function(msg){
-            var rounds = msg.content.replace("!counter", "").split(" ")[1];
-            var name = msg.content.replace("!counter " + rounds + " ", "");
+            var rounds = msg.content.replace("!" + cmdPrefix + " counter", "").split(" ")[1];
+            var name = msg.content.replace("!" + cmdPrefix + " counter " + rounds + " ", "");
 
             var turnorder;
             if(Campaign().get("turnorder") === "") turnorder = [];
@@ -143,7 +144,7 @@ var battleRoyale = battleRoyale || (function()
         //!remove [entry name]. Removes the given entry from the turn tracker. Usefull for removing counters when casters lose concentration etc.
         removeTurn = function(msg){
             var turnorder;
-            var name = msg.content.replace("!remove ", "");
+            var name = msg.content.replace("!" + cmdPrefix + " remove ", "");
 
             if(Campaign().get("turnorder") === "") turnorder = [];
             else turnorder = JSON.parse(Campaign().get("turnorder"));
@@ -217,7 +218,7 @@ var battleRoyale = battleRoyale || (function()
 
         //!vision [Range]. Gives a token vision out to a certain range. A large number can be given for effective "Daylight"
         vision = function(msg){
-            var range = msg.content.replace("!vision", "");
+            var range = msg.content.replace("!" + cmdPrefix + " vision", "");
             if(range === "") range = 60;
 
             if(msg.selected != null){
@@ -275,7 +276,7 @@ var battleRoyale = battleRoyale || (function()
 
         //!size [size]. Sets the token to a certain size.
         size = function(msg){
-            var size = msg.content.replace("!size ", "");
+            var size = msg.content.replace("!" + cmdPrefix + " size ", "");
 
             if(msg.selected != null){
                 _.each(msg.selected, function(obj){
@@ -308,7 +309,7 @@ var battleRoyale = battleRoyale || (function()
         claim = function(msg){
             if(!allow_claim) return;
 
-            var name = msg.content.replace("!claim ", "");
+            var name = msg.content.replace("!" + cmdPrefix + " claim ", "");
 
             var chars = findObjs({
                 _type: "character"
@@ -329,10 +330,10 @@ var battleRoyale = battleRoyale || (function()
 
         //!door [door id]. Opens or closes a door. Since it uses the token id it isn't useful as a manual command unless written as "!door @{target|token_id}"
         toggleDoor = function(msg){
-            var doorId = msg.content.replace("!door ", "")
+            var doorId = msg.content.replace("!" + cmdPrefix + " door ", "")
             var doorToken;
 
-            if(msg.content == "!door" && msg.selected.length == 1){
+            if(msg.content == "!" + cmdPrefix + " door" && msg.selected.length == 1){
                 doorToken = getObj(msg.selected[0]["_type"],msg.selected[0]["_id"]);
             }
             else{
@@ -411,7 +412,7 @@ var battleRoyale = battleRoyale || (function()
         //pings a location within 200 pixels of the character. Useful for letting other contestants know your general location if unseen buy noisy.
         soundPing = function(msg){
 
-            var range = msg.content.replace("!soundping ");
+            var range = msg.content.replace("!" + cmdPrefix + " soundping ");
             if(msg.selected != null){
                 _.each(msg.selected, function(obj){
                     var token = getObj(obj["_type"], obj["_id"]);
@@ -426,7 +427,7 @@ var battleRoyale = battleRoyale || (function()
 
         //changes to a new map using !map [page name, excluding the battleroyale_page_prefix tag].
         changeMap = function(msg){
-            var pageName = msg.content.replace("!map ", "");
+            var pageName = msg.content.replace("!" + cmdPrefix + " map ", "");
 
             var brPages = findObjs({
                 type: "page"
@@ -443,7 +444,7 @@ var battleRoyale = battleRoyale || (function()
                     maplist += "'" + brp.get("name").replace(battleroyale_page_prefix, "") + "'\n";
                 });
 
-                if(msg.content === "!map")
+                if(msg.content === "!" + cmdPrefix + " map")
                     chat("/w \"" + msg.who + "\" Currently available maps are: " + maplist);
                 else
                     chat("/w \"" + msg.who + "\" No page called '" + battleroyale_page_prefix + pageName + "' found. Currently available maps are: " + maplist);
@@ -454,14 +455,14 @@ var battleRoyale = battleRoyale || (function()
             var greet = "<div style='border:2px solid #c6c6c6'>";
             greet += "<span style='display:block; background-color:#eeeeee; padding: 5px; text-align: center'><strong>Battle Royale Commands</strong></span>";
             greet += "<span style='display:block; background-color:#d7d7d7; padding: 5px; text-align: center'><i>If you haven't done so already, import your character to the game, then claim it using the button in chat.</i></span>";
-            greet += "<span style='display:block; background-color:#e3e3e3; padding: 5px'>**Spectate:** !spectate or [Click here to Spectate](!spectate) </span>";
-            greet += "<span style='display:block; background-color:#d7d7d7; padding: 5px'>**Move Everyone to Spawns:** !spawn </span>";
-            greet += "<span style='display:block; background-color:#e3e3e3; padding: 5px'>**Spell Duration Counter:** !counter [Duration] [Name] eg. *'!count 10 Hold Person'* </span>";
-            greet += "<span style='display:block; background-color:#d7d7d7; padding: 5px'>**Displays/Hides Turn Tracker:** !turntracker </span>";
-            greet += "<span style='display:block; background-color:#e3e3e3; padding: 5px'>**Order Turn Tracker:** !orderturn </span>";
-            greet += "<span style='display:block; background-color:#d7d7d7; padding: 5px'>**Clear Turn Tracker:** !clearturn </span>";
-            greet += "<span style='display:block; background-color:#e3e3e3; padding: 5px'>**Advance Turn Tracker:** !nextturn </span>";
-            greet += "<span style='display:block; background-color:#d7d7d7; padding: 5px'>**Remove Turn Tracker Entry:** !remove [entry name] </span>";
+            greet += "<span style='display:block; background-color:#e3e3e3; padding: 5px'>**Spectate:** \"!" + cmdPrefix + " spectate\" or [Click here to Spectate](!" + cmdPrefix + " spectate) </span>";
+            greet += "<span style='display:block; background-color:#d7d7d7; padding: 5px'>**Move Everyone to Spawns:** !" + cmdPrefix + " spawn </span>";
+            greet += "<span style='display:block; background-color:#e3e3e3; padding: 5px'>**Spell Duration Counter:** !" + cmdPrefix + " counter [Duration] [Name] eg. *'!" + cmdPrefix + " count 10 Hold Person'* </span>";
+            greet += "<span style='display:block; background-color:#d7d7d7; padding: 5px'>**Displays/Hides Turn Tracker:** !" + cmdPrefix + " turntracker </span>";
+            greet += "<span style='display:block; background-color:#e3e3e3; padding: 5px'>**Order Turn Tracker:** !" + cmdPrefix + " orderturn </span>";
+            greet += "<span style='display:block; background-color:#d7d7d7; padding: 5px'>**Clear Turn Tracker:** !" + cmdPrefix + " clearturn </span>";
+            greet += "<span style='display:block; background-color:#e3e3e3; padding: 5px'>**Advance Turn Tracker:** !" + cmdPrefix + " nextturn </span>";
+            greet += "<span style='display:block; background-color:#d7d7d7; padding: 5px'>**Remove Turn Tracker Entry:** !" + cmdPrefix + " remove [entry name] </span>";
             greet += "</div>";
 
             chat("/w \"" + target + "\" " + greet);
@@ -480,7 +481,7 @@ var battleRoyale = battleRoyale || (function()
 
         //function to quickly verify if message is a specific command
         cmd = function(cmd, msg){
-            if (msg.content.substring(0, cmd.length+1) === "!" + cmd && msg.type === "api")
+            if (msg.content.substring(0, cmdPrefix.length + cmd.length + 2) === "!" + cmdPrefix + " " + cmd && msg.type === "api")
                 return true;
             else
                 return false;
@@ -505,12 +506,12 @@ var battleRoyale = battleRoyale || (function()
         },
 
         createAbilities = function(char){
-            createAbility(char, "Grant Vision", "!vision " + grant_vision_range);
-            createAbility(char, "Change Vision Range", "!vision ?{range|60}");
-            createAbility(char, "Open/Close Door", "!door @{target|Door|token_id}");
-            createAbility(char, "Toggle Invisibility", "!invis");
-            createAbility(char, "Change Size", "!size ?{Size|medium|large|huge|gargantuan}");
-            createAbility(char, "Sound Ping", "!soundping " + sound_ping_radius);
+            createAbility(char, "Grant Vision", "!" + cmdPrefix + " vision " + grant_vision_range);
+            createAbility(char, "Change Vision Range", "!" + cmdPrefix + " vision ?{range|60}");
+            createAbility(char, "Open/Close Door", "!" + cmdPrefix + " door @{target|Door|token_id}");
+            createAbility(char, "Toggle Invisibility", "!" + cmdPrefix + " invis");
+            createAbility(char, "Change Size", "!" + cmdPrefix + " size ?{Size|medium|large|huge|gargantuan}");
+            createAbility(char, "Sound Ping", "!" + cmdPrefix + " soundping " + sound_ping_radius);
         },
 
         //Checks if the current player page starts with the battleroyale_page_prefix
@@ -535,7 +536,7 @@ var battleRoyale = battleRoyale || (function()
 
             createObj("ability", {
                 name: "Open/Close Door",
-                action: "!door",
+                action: "!" + cmdPrefix + " door",
                 istokenaction: true,
                 _characterid: dc.get("_id")
             });
@@ -581,7 +582,8 @@ var battleRoyale = battleRoyale || (function()
                 createObj("graphic",{
                     imgsrc: spawnImg,
                     _pageid: page.get("_id"),
-                    layer: "objects",
+                    layer: "gmlayer",
+                    name: "Spawn Point",
                     width: 70,
                     height: 70,
                     top: spawn.y*70-35,
@@ -641,7 +643,7 @@ var battleRoyale = battleRoyale || (function()
                 });
             });
 
-            chat("!map example");
+            chat("!" + cmdPrefix + " map example");
 
         },
 
@@ -774,7 +776,7 @@ var battleRoyale = battleRoyale || (function()
 
             on('add:character', function(char){
                 if(allow_claim && char.get("name") != "Door" && char.get("name") != "Spawn Point")
-                    chat(char.get("name") + " was imported. [Claim Ownership](!claim " + char.get("name") + ")")
+                    chat(char.get("name") + " was imported. [Claim Ownership](!" + cmdPrefix + " claim " + char.get("name") + ")")
             });
 
             on('add:page', function(page){
