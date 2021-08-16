@@ -1039,3 +1039,7 @@ libtypes:
 addcustomturn:
   - "AddCustomTurn"
   - "Character"
+  
+battleroyale:
+  - "BattleRoyale"
+  - "Utility"
