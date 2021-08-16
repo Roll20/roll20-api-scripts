@@ -14,7 +14,7 @@
 var statusMarkers = [];
 var InitiativeTrackerPlus = (function() {
 	'use strict';
-	var version = 1.26,
+	var version = 1.27,
 		author = 'James C. (Chuz)',
 		lastUpdated = 'July 21 2021',
 		pending = null;
@@ -1582,11 +1582,11 @@ var InitiativeTrackerPlus = (function() {
 				{return true;}
 		});
 
-		if (markerUsed) {
-			markerdef = _.findWhere(statusMarkers,{tag: markerUsed.marker});
-			sendError('Status <i>"'+markerUsed.name+'"</i> already uses marker <img src="'+markerdef.img+'"></img>. You can either change the marker for favorite <i>"'+statusName+'"</i> or the marker for <i>"'+markerUsed.name+'"</i>');
-			return;
-		}
+//		if (markerUsed) {
+//			markerdef = _.findWhere(statusMarkers,{tag: markerUsed.marker});
+//			sendError('Status <i>"'+markerUsed.name+'"</i> already uses marker <img src="'+markerdef.img+'"></img>. You can either change the marker for favorite <i>"'+statusName+'"</i> or the marker for <i>"'+markerUsed.name+'"</i>');
+//			return;
+//		}
 
 		markerdef = _.findWhere(statusMarkers,{tag: fav.marker});
 
