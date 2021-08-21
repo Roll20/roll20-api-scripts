@@ -331,7 +331,7 @@ const Plugger = (() => {
 
         msg.content = msg.content.replace(new RegExp(escapeRegExp(linebreak), 'g'), '<br/>\n');
 
-        return condensereturn(funcret, status, notes);
+        return condensereturn(funcret,status,notes);
     };
 
     let scriptisplugin = false;

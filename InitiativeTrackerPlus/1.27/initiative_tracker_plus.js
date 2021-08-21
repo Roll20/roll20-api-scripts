@@ -14,7 +14,7 @@
 var statusMarkers = [];
 var InitiativeTrackerPlus = (function() {
 	'use strict';
-	var version = 1.26,
+	var version = 1.27,
 		author = 'James C. (Chuz)',
 		lastUpdated = 'July 21 2021',
 		pending = null;
@@ -518,8 +518,10 @@ var InitiativeTrackerPlus = (function() {
 
 		_.each(effects, function(e) {
 			if (!e) {return;}
+
 			statusArgs = e;
 			gstatus = statusExists(e.name);
+
 			statusArgs.duration = parseInt(statusArgs.duration) + parseInt(statusArgs.direction);
 			if (gstatus.marker) {
 				content += makeStatusDisplay(e);
@@ -529,6 +531,7 @@ var InitiativeTrackerPlus = (function() {
 			}
 		});
 		effects = _.reject(effects,function(e) {
+
 			if (e.duration <= 0) {
 				// remove from status args
 				var removedStatus = updateGlobalStatus(e.name,undefined,-1);
@@ -710,7 +713,7 @@ var InitiativeTrackerPlus = (function() {
 	 * Status exists
 	 */
 	var statusExists = function(statusName) {
-		return _.findWhere(state.initiative_tracker_plus.statuses,{name: statusName});
+		return _.findWhere(state.initiative_tracker_plus.statuses,{name: statusName.toLowerCase()});
 	};
 
 
@@ -1091,6 +1094,7 @@ var InitiativeTrackerPlus = (function() {
 
 		_.each(sorted, function(e) {
 			markerdef = _.findWhere(statusMarkers,{tag: e.marker});
+
 			midcontent +=
 				'<tr style="border-bottom: 1px solid '+design.statusbordercolor+';" >'
 					+ (markerdef ? ('<td width="21px" height="21px">'
@@ -1101,17 +1105,17 @@ var InitiativeTrackerPlus = (function() {
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
 						+ '<a style="height: 16px; width: 16px;  border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Apply '+e.name+' status" href="!itp -applyfav '
-							+ e.name
+							+ e.name.toLowerCase()
 							+ '"><img src="'+design.apply_icon+'"></img></a>'
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
 						+ '<a style="height: 16px; width: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit '+e.name+' status" href="!itp -dispstatusconfig '
-							+ ' %% changefav %% '+e.name
+							+ ' %% changefav %% '+e.name.toLowerCase()
 							+ '"><img src="'+design.edit_icon+'"></img></a>'
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
 						+ '<a style="height: 16px; width: 16px;  border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Remove '+e.name+' status" href="!itp -dispstatusconfig '
-							+ ' %% removefav %% '+e.name
+							+ ' %% removefav %% '+e.name.toLowerCase()
 							+ '"><img src="'+design.delete_icon+'"></img></a>'
 					+ '</td>'
 				+ '</tr>';
@@ -1206,7 +1210,7 @@ var InitiativeTrackerPlus = (function() {
 			+ '<table width="100%">'
 				+ '<tr style="background-color: #FFF; border-bottom: 1px solid '+design.statusbordercolor+';" >'
 					+ '<td>'
-						+ '<div><span style="font-weight: bold;">Name</span><br>'+'<span style="font-style: italic;">'+statusName+'</span></div>'
+						+ '<div><span style="font-weight: bold;">Name</span><br>'+'<span style="font-style: italic;">'+status.name+'</span></div>'
 					+ '</td>'
 					+ '<td width="32px" height="32px">'
 						+ '<a style= "width: 16px; height: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit Name" href="!itp -edit_status '
@@ -1538,7 +1542,7 @@ var InitiativeTrackerPlus = (function() {
 	 * Check if a favorite status exists
 	 */
 	var favoriteExists = function(statusName) {
-		statusName = statusName.toLowerCase();
+//		statusName = statusName.toLowerCase();
 		var found = _.find(_.keys(state.initiative_tracker_plus.favs), function(e) {
 			return e === statusName;
 		});
@@ -1578,11 +1582,11 @@ var InitiativeTrackerPlus = (function() {
 				{return true;}
 		});
 
-		if (markerUsed) {
-			markerdef = _.findWhere(statusMarkers,{tag: markerUsed.marker});
-			sendError('Status <i>"'+markerUsed.name+'"</i> already uses marker <img src="'+markerdef.img+'"></img>. You can either change the marker for favorite <i>"'+statusName+'"</i> or the marker for <i>"'+markerUsed.name+'"</i>');
-			return;
-		}
+//		if (markerUsed) {
+//			markerdef = _.findWhere(statusMarkers,{tag: markerUsed.marker});
+//			sendError('Status <i>"'+markerUsed.name+'"</i> already uses marker <img src="'+markerdef.img+'"></img>. You can either change the marker for favorite <i>"'+statusName+'"</i> or the marker for <i>"'+markerUsed.name+'"</i>');
+//			return;
+//		}
 
 		markerdef = _.findWhere(statusMarkers,{tag: fav.marker});
 
@@ -1662,10 +1666,11 @@ var InitiativeTrackerPlus = (function() {
 			direction = parseInt(args[2]),
 			msg = args[3],
 			marker = args[4],
-			markerdef;
+			markerdef,
+			keyname = args[0];
 
-		if (typeof(name) === 'string')
-			{name = name.toLowerCase();}
+		if (typeof(keyname) === 'string')
+			{keyname = keyname.toLowerCase();}
 
 		if (isNaN(duration) || isNaN(direction)) {
 			sendError('Invalid favorite status syntax');
@@ -1678,8 +1683,8 @@ var InitiativeTrackerPlus = (function() {
 			markerdef = _.findWhere(statusMarkers,{tag: marker});
 		}
 
-		if (favoriteExists(name)) {
-			sendError('Favorite with the name "'+name+'" already exists');
+		if (favoriteExists(keyname)) {
+			sendError('Favorite with the key "'+keyname+'" already exists');
 			return;
 		}
 
@@ -1691,7 +1696,7 @@ var InitiativeTrackerPlus = (function() {
 			marker: marker
 		};
 
-		state.initiative_tracker_plus.favs[name] = newFav;
+		state.initiative_tracker_plus.favs[keyname] = newFav;
 
 		var content = '<div style="font-weight: bold; background-color: '+design.statusbgcolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em;">'
 			+ '<div style="text-align: center; color: '+design.statuscolor+'; border-bottom: 2px solid black;">'
@@ -1702,7 +1707,7 @@ var InitiativeTrackerPlus = (function() {
 			+ '<br>Duration: ' + duration
 			+ '<br>Direction: ' + direction
 			+ (msg ? ('<br>Message: ' + msg):'')
-			+ (marker ? '':('<br><div style="text-align: center;">'+InitiativeTrackerPlus_tmp.getTemplate({command: '!itp -dispmarker '+name+ ' %% fav', text: 'Choose Marker'},'button')+'</div>'));
+			+ (marker ? '':('<br><div style="text-align: center;">'+InitiativeTrackerPlus_tmp.getTemplate({command: '!itp -dispmarker '+keyname+ ' %% fav', text: 'Choose Marker'},'button')+'</div>'));
 		content += '</div>';
 
 		sendFeedback(content);
@@ -1781,6 +1786,11 @@ var InitiativeTrackerPlus = (function() {
 		var handout = handouts[0];
 
 		handout.get("gmnotes", function(gmnotes) {
+			// strip arbitrary <br>, <p> and <\p> that roll20 adds to handouts when edited
+			gmnotes = gmnotes.replace(/<br>/gi, "");
+			gmnotes = gmnotes.replace(/<p>/gi, "");
+			gmnotes = gmnotes.replace(/<\/p>/gi, "");
+
 			state.initiative_tracker_plus.favs = JSON.parse(gmnotes);
 		});
 
@@ -2071,7 +2081,6 @@ var InitiativeTrackerPlus = (function() {
 	var doDisplayStatusConfig = function(args) {
 		if (!args)
 			{return;}
-
 		args = args.split(/ %% /);
 		var tokenId = args[0],
 			action = args[1],
@@ -2740,8 +2749,11 @@ var InitiativeTrackerPlus = (function() {
 						sendError('Status name already exists');
 						return;
 					}
+
+
 					gstatus = statusExists(statusName);
 					newValue = newValue.toLowerCase();
+
 					effectList = state.initiative_tracker_plus.effects;
 					_.each(effectList,function(effects) {
 						_.each(effects,function(e) {
@@ -2802,10 +2814,11 @@ var InitiativeTrackerPlus = (function() {
 						sendError('Favorite name already exists');
 						return;
 					}
-					fav.name = newValue.toLowerCase();
+					fav.name = newValue;
+
 					//manually remove from state
 					delete state.initiative_tracker_plus.favs[statusName];
-					state.initiative_tracker_plus.favs[newValue] = fav;
+					state.initiative_tracker_plus.favs[newValue.toLowerCase()] = fav;
 					midcontent += 'Status name now: ' + newValue;
 					break;
 				case 'marker':

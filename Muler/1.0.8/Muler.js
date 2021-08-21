@@ -4,7 +4,7 @@ Name			:	Muler
 GitHub			:	https://github.com/TimRohr22/Cauldron/tree/master/Muler
 Roll20 Contact	:	timmaugh
 Version			:	1.0.8
-Last Update		:	8/4/2021
+Last Update		:	8/2/2021
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -18,7 +18,7 @@ const Muler = (() => {
     const version = '1.0.8';
     const schemaVersion = 0.1;
     API_Meta[apiproject].version = version;
-    const vd = new Date(1628088174377);
+    const vd = new Date(1627917394945);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -268,8 +268,6 @@ const Muler = (() => {
     };
     const mulesetter = (msg, msgstate = {}) => {
         let funcret = { runloop: false, status: 'unchanged', notes: '' };
-        msg.variables = msg.variables || {};
-        msg.mules = msg.mules || [];
         if (msg.type !== 'api' || !testSetConstructs(msg)) return funcret;
         if (!Object.keys(msgstate).length && scriptisplugin) return funcret;
         let status = [];

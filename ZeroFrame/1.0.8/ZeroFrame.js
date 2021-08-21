@@ -3,8 +3,8 @@
 Name            : ZeroFrame
 GitHub          : https://github.com/TimRohr22/Cauldron/tree/master/ZeroFrame
 Roll20 Contact  : timmaugh
-Version         : 1.0.9
-Last Update     : 8/4/2021
+Version         : 1.0.8
+Last Update     : 7/30/2021
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -18,9 +18,9 @@ const ZeroFrame = (() => {
     //		VERSION
     // ==================================================
     const apiproject = 'ZeroFrame';
-    API_Meta[apiproject].version = '1.0.9';
+    API_Meta[apiproject].version = '1.0.8';
     const schemaVersion = 0.2;
-    const vd = new Date(1628088446660);
+    const vd = new Date(1627690811346);
     let stateReady = false;
     const checkInstall = () => {
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -352,30 +352,16 @@ const ZeroFrame = (() => {
         });
         // return preserved.content;
     };
-    const getValues = (msg, lastpass = false) => {
+    const getValues = (msg) => {
         // replace inline rolls tagged with .value
         const valuerx = /\$\[\[(?<rollnumber>\d+)]]\.value/gi;
-        const value2rx = /\({&(?<rollnumber>\d+)}\)\.value/gi;
         let retval = false;
         msg.content = msg.content.replace(valuerx, ((r, g1) => {
             retval = true;
             if (msg.inlinerolls.length > g1) {
                 return msg.parsedinline[g1].value;
-            } else if (lastpass) {
-                return '0';
             } else {
-                return r;
-            }
-        }));
-        msg.content = msg.content.replace(value2rx, ((r, g1) => {
-            if (msg.inlinerolls.length > g1) {
-                retval = true;
-                return msg.parsedinline[g1].value;
-            } else if (lastpass) {
-                retval = true;
                 return '0';
-            } else {
-                return r;
             }
         }));
         return retval;
@@ -467,7 +453,7 @@ const ZeroFrame = (() => {
         // replace all ZF formatted inline roll shorthand markers with roll20 formatted shorthand markers
         preserved.content = preserved.content.replace(/\({&(\d+)}\)/g, `$[[$1]]`);
         // replace inline rolls tagged with .value
-        getValues(preserved, true);
+        getValues(preserved);
 
         const stoprx = /(\()?{&\s*stop\s*}((?<=\({&\s*stop\s*})\)|\1)/gi,
             escaperx = /(\()?{&\s*escape\s+([^}]+?)\s*}((?<=\({&\s*escape\s+([^}]+?)\s*})\)|\1)/gi,
@@ -508,7 +494,7 @@ const ZeroFrame = (() => {
             notes.push(`SIMPLE or FLAT tag detected`)
             preserved.content = preserved.content.replace(/^!+\s*/, '')
                 .replace(simplerx, '')
-                .replace(/\$\[\[(\d+)]]/g, ((m, g1) => typeof preserved.parsedinline[g1] === 'undefined' ? m : preserved.parsedinline[g1].getRollTip()))
+                .replace(/\$\[\[(\d+)]]/g, ((m, g1) => preserved.parsedinline[g1].getRollTip()))
                 .replace(/\({&br}\)/g, '<br/>\n');
             if (preserved.rolltemplate && !temptag) {
                 let dbpos = preserved.content.indexOf(`{{`);
