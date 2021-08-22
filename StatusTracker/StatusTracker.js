@@ -47,7 +47,12 @@ var StatusTracker = StatusTracker || (function() {
      * with.  
      */
     function _insert_status_into_turn_order(token_id, status_name, duration) {
-        turnorder = JSON.parse(Campaign().get('turnorder'));
+        let turnorderStr = Campaign().get('turnorder')
+        if (turnorderStr == "") {
+            // Turn Order is empty. 
+            return
+        }
+        var turnorder = JSON.parse(turnorderStr);
         for (let i = 0; i < turnorder.length; i++)
         {
             // Look for the turnorder object associated with the token_id
