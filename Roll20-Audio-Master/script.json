@@ -2,7 +2,7 @@
 	"name": "Roll20 Audio Master",
 	"script": "Roll20AM.js",
 	"version": "2.15",
-	"previousversions": ["1.04","1.03","1.02","1.01","1.0","1,05","2.08", "2.10","2.12"],
+	"previousversions": ["1.04","1.03","1.02","1.01","1.0","1.05","2.08", "2.10","2.12"],
 	"description": "Roll20 Audio Master (a.k.a Roll20AM)  allows control of the jukebox via the chat interface and expands upon the standard jukebox functionality with some additional commands.\n### Getting Started\n* Import all Jukebox tracks & playlists to the Roll20AM: `!roll20AM --config,import`\n* Access the config menu `!roll20AM --config`\n* play a track named 'Wind' `!roll20AM --audio,play|Wind`\n###[Roll20AM Documentation](https://wiki.roll20.net/Script:Roll20_Audio_Master)",
 	"authors": "Victor B, Scott C.",
 	"roll20userid": "3135709, 459831",
