@@ -1,7 +1,3 @@
-/**
- * Version: 0.1
- * Made By Jason Martin
- */
 
 /**
  * If it hasn't been initialized before, initialized persistent status object 
@@ -15,9 +11,17 @@
  * The expectation is that the tuple (token_id, status_name) will be (mostly) 
  * unique, and will be used to lookup a given status.
  */
-state.status_tracker = state.status_tracker || new Array();
+function createStatusTrackerObj() {
+    var obj = new Object();
+    obj.nextId = 1;
+    obj.list = new Array();
+    return obj;
+}
+state.status_tracker = state.status_tracker || createStatusTrackerObj();
 
-
+/**
+ * Constants 
+ */
 var StatusTrackerConsts = StatusTrackerConsts || {};
 StatusTrackerConsts.SCRIPT_NAME = "StatusTracker";
 StatusTrackerConsts.CMD_PREFIX = '!statustracker';
@@ -30,60 +34,20 @@ StatusTrackerConsts.CMD_REMOVE_TARGET = 'remove_target';
 StatusTrackerConsts.CMD_SHOWMENU = 'showmenu';
 StatusTrackerConsts.CMD_SHOW_STATUS = 'show_status';
 StatusTrackerConsts.NO_TOKEN = "-1";
-StatusTrackerConsts.IMAGE_URL = "https://s3.amazonaws.com/files.d20.io/images/58732795/pfn3AoNw630KlzHP0dGMWw/thumb.png?1532188342";
-
 
 // List of token objects loaded into this campaign. This gets populated on ready
 var tokenMarkers;
 
+/******************************************************************************/
 
 /**
  * Management of the status objects and markers.
  */
 var StatusTracker = StatusTracker || (function() {
-    var _last_examined_token = "";
+    var _last_examined_status = "";
     
-    /**
-     * Add a countdown object to the turn order for a status effect. Insert
-     * the countdown immediately before the turn order entity it's associated
-     * with. Return the position index the new entity was inserted at.
-     */
-    function _insert_status_into_turn_order(token_id, status_name, duration, linkId, standalone) {
-        let turnorderStr = Campaign().get('turnorder')
-        if (turnorderStr == "" && standalone == false) {
-            // Turn Order is empty. 
-            return -1
-        }
-        var turnorder = JSON.parse(turnorderStr);
-        
-        // A standalone status will be put at the head of the turn order. 
-        // Otherwise, find the token athe status is associated with, and
-        // set the position to just in front of it in the turn order.
-        var position = 0;
-        if (standalone == false) {
-            for (let i = 0; i < turnorder.length; i++) {
-                // Look for the turnorder object associated with the token_id
-                if (turnorder[i].id == token_id) {
-                    position = i;
-                    break
-                }
-            }
-        }
-        statusObj = {
-            id: linkId, // -1 if not hidden, a token otherwise.
-            pr: duration, // Duration as the turnorder value
-            custom: status_name, // The name of the effect
-            formula: -1, // -1 decrement of the pr value
-            token_id: token_id, // This is so we can find it for removal
-        }
-        turnorder.splice(position,0,statusObj);
-        Campaign().set('turnorder', JSON.stringify(turnorder));
-        
-        return position;
-    } // function _insert_status_into_turn_order
 
-
-    function _create_token(status_name, show) {
+    function create_token(status_name, show) {
         var layer = (show == 'hidden' ? 'gmlayer' : 'objects')
         return createObj('graphic', {
            subtype: 'token',
@@ -97,349 +61,220 @@ var StatusTracker = StatusTracker || (function() {
            showname: true,
            pageid: Campaign().get("playerpageid"),
         });
-    }    
+    } // function create_token
     
-    /**
-     * Remove a countdown object from the turn order for a status effect.
-     */
-    function _remove_status_from_turn_order(token_id, status_name) {
-        turnorder = JSON.parse(Campaign().get('turnorder'));
-        for (let i = 0; i < turnorder.length; i++)
-        {
-            if (turnorder[i].token_id == token_id && turnorder[i].custom == status_name) {
-                turnorder.splice(i,1);
-                break;
-            }
-        }
-        
-        Campaign().set('turnorder', JSON.stringify(turnorder));
-        return;
-    } // function _remove_status_from_turn_order
-    
-    
-    /**
-     * Retrieve a status effect definition from the global status effect store
-     */
-    function _get_status(token_id, status_name) {
-        for (let i = 0; i < state.status_tracker.length; i++) {
-            obj = state.status_tracker[i];
-            if ( obj.status_name == status_name && 
-                 (obj.token_id == token_id || 
-                  (obj.token_id == StatusTrackerConsts.NO_TOKEN && obj.linked_token == token_id) 
-                 )
-               ) {
-                return obj;
-            }
-        }
-        return "";
-    } // function _get_status
-    
-    
-    /**
-     * Get the token associated with the top entry in the turn tracker. If the
-     * token was the last one we looked at, assume that the turn track has not
-     * moved, and return a blank.
-     */
-    function _get_current_token() {
-        // Parse out the Campaign turn order
-        var turn_order = JSON.parse(Campaign().get('turnorder'))
-        // If nothing in the turn order, bail
-        if (turn_order.length == 0) {
-            return "";
-        }
-        // Get the next element of turn_order
-        var turn = turn_order.shift();
-        // Get the token associated with the turn element
-        token = getObj('graphic', turn.id) || ""
-        // If no token found, bail
-        if (token == "") {
-            return "";
-        }
-        // If this token is the last thing we examined, bail
-        if (token == _last_examined_token) {
-            return "";
-        }
-        // Set the 
-        _last_examined_token = token;
-        return token;
-    } // function _get_current_token
-    
-    
-    /**
-     * Process status effects associated with a given token id.
-     */
-    function _process_turn(token_id) {
-        // List of effects to be removed. We don't want to remove them while
-        // we're walking through the status list array, because, like, indexes.
-        var status_delete = new Array();
-        
-        // Walk through the status list, looking for effects associated with 
-        // this token. If the duration is greater than zero, decriment it. If 
-        // it's zero, record it for removal. If it's less than zero, it's 
-        // permanent.
-        for (let i = 0; i < state.status_tracker.length; i++) {
-            var currentToken = state.status_tracker[i]
-            if ( (currentToken.token_id == StatusTrackerConsts.NO_TOKEN && currentToken.linked_token != token_id) || 
-                 (currentToken.token_id != StatusTrackerConsts.NO_TOKEN && currentToken.token_id != token_id) ) {
-                continue;
-            }
-            let duration = Number(state.status_tracker[i].duration || 1);
-            // Decriment duration counter
-            if (duration > 0 )
-            {
-                duration = duration - 1;
-                state.status_tracker[i].duration = duration;
-            }
-            
-            if (duration == -1) { // Permanent
-                
-            } 
-            else if (duration > 0) { // Still running
-
-            }
-            else { // Ended
-                status_delete.push(state.status_tracker[i].status_name)
-            }
-        }
-        
-        // Remove all effects recorded for removal.
-        for (let i = 0; i < status_delete.length; i++)
-        {
-            
-            remove_status(token_id, status_delete[i]);
-        }
-        
-        return;
-
-    } // function _process_turn
-    
-    
-    /**
-     * Add a marker to a token.
-     */
-    function _add_marker(token_id, marker_tag) {
-        var tokens = findObjs({
-            _type: "graphic",
-            _id: token_id,
-            _pageid: Campaign().get("playerpageid"),
-        });
-        _.each(tokens, function(obj) {
-            var token_markers = obj.get("statusmarkers").split(",");
-            token_markers.push(marker_tag);
-            obj.set("statusmarkers", token_markers.join(","));
-        });
-        return;
-    } // function _add_marker
-    
-    
-    /**
-     * Remove a marker from a token
-     */
-    function _remove_marker(token_id, marker_tag) {
-        var tokens = findObjs({
-            _type: "graphic",
-            _id: token_id,
-            _pageid: Campaign().get("playerpageid"),
-        });
-        _.each(tokens, function(obj) {
-            var token_markers = obj.get("statusmarkers").split(",");
-            for (let i = 0; i < token_markers.length; i++) {
-                if (token_markers[i] == marker_tag) {
-                    token_markers.splice(i, 1);
-                    obj.set("statusmarkers", token_markers.join(","));
-                    return;
+    function get_next_id() {
+        var found;
+        var id;
+        do {
+            found = false;
+            id = state.status_tracker.nextId++;
+            for (let i = 0; i < state.status_tracker.list.length; i++) {
+                if (state.status_tracker.list[i].id == id) {
+                    found = true;
+                    break;
                 }
             }
-        });
-        return;
-    }
+        } while (found == true)
+        return id;
+    } // function get_next_id
     
-    /**
-     * Coordinates the insertions into the turn order and global status store.
-     * 
-     */
-    function _add_status_helper(token_id, status_name, duration, marker_name, linkId, show) {
-        var durationNum = Number(duration);
+    function insert_status_into_turnorder(statusObj) {
+        let turnorderStr = Campaign().get('turnorder')
+        var turnorder = JSON.parse(turnorderStr);
+        var position = 0;
+        if (statusObj.link_id == StatusTrackerConsts.NO_TOKEN) {
+            for (let i = 0; i < turnorder.length; i++) {
+                // Look for the turnorder object associated with the token_id
+                if (turnorder[i].id == statusObj.token_id) {
+                    position = i;
+                    break;
+                }
+            } 
+        }
+        
+        // Create the turn order object
+        turnObj = new Object();
+        turnObj.id = statusObj.link_id;
+        turnObj.pr = statusObj.duration;
+        turnObj.custom = statusObj.name;
+        turnObj.status_id = statusObj.id;
+        turnObj.formula = (statusObj.duration == -1 ? 0 : -1);
+        turnObj.token_id = statusObj.token_id;
+        
+        turnorder.splice(position, 0, turnObj);
+        Campaign().set('turnorder', JSON.stringify(turnorder));
+        return;
+    } // function insert_status_into_turnorder
+    
+     
+    function add_status(tokenId, statusName, duration, markerName, show) {
+        let durationNum = Number(duration);
         
         // Look up the marker tag, which may or may not be the same thing as 
         // the marker name. The tag will get used to add/remove the marker from
         // a token.
-        var marker_tag = "";
+        var markerTag = "";
         for (let i = 0; i < tokenMarkers.length; i++) {
-            if (tokenMarkers[i].name == marker_name) {
-                marker_tag = tokenMarkers[i].tag;
+            if (tokenMarkers[i].name == markerName) {
+                markerTag = tokenMarkers[i].tag;
                 break;
             }
         }
         
         // If we couldn't find the tag, use the name. The tag values of built-in
         // markers are the same as their names. 
-        if (marker_tag == "") {
-            marker_tag = marker_name;
+        if (markerTag == "") {
+            markerTag = markerName;
         }
         
-        // If there's a duration greater than zero, add a countdown entity to
-        // the turn tracker.
-        if (durationNum > 0 && (show == 'yes' || show == 'hidden')) {
-            var standalone = (token_id == StatusTrackerConsts.NO_TOKEN ? true : false)
-            var position = _insert_status_into_turn_order(token_id, status_name, durationNum, linkId, standalone);
-            if (position == -1) {
-                log("ERROR: _add_status_helper: invalid position on insert")
-                return;
-            }
-            else if (position == 0 && duration > 0) {
-                // This is janky, but adding a new turn order entity was causing
-                // the turnorder changed event to fire, which decrimented the 
-                // duration prematurely. So if we're adding to the head of the 
-                // turnorder, add one to the duration to counteract. 
-                durationNum = durationNum + 1;
-            }
+        // If the status is hidden, or not associated with a game token, 
+        // create a phantom token for it.
+        var link_id = StatusTrackerConsts.NO_TOKEN;
+        if (show == 'hidden' || tokenId == StatusTrackerConsts.NO_TOKEN) {
+            var token = create_token(status_name, show)
+            link_id = token.id
         }
         
-        // Add the status object to the global store.
-        state.status_tracker.push({
-            'token_id': token_id,
-            'status_name': status_name,
-            'duration': durationNum,
-            'marker': marker_tag,
-            'linked_token': linkId,
-            'targets': new Array(),
-        });
+        // Create a new status object and insert it into the status tracker
+        newStatus = new Object();
+        newStatus.id = get_next_id();
+        newStatus.name = statusName;
+        newStatus.duration = durationNum;
+        newStatus.targets = new Array();
+        newStatus.token_id = tokenId;
+        newStatus.link_id = link_id;
+        newStatus.marker = markerTag;
+        newStatus.show = show;
         
+        // Insert the new status into the status list
+        state.status_tracker.list.push(newStatus);
+        // Add it to the turn order.
+        if (newStatus.show != 'no') {
+            insert_status_into_turnorder(newStatus);
+        }
         return;
-         
+    } // function add_status
+    
+    function add_status_target(statusId, targetId) {
+        statusObj = get_status_obj(statusId);
+        if (undefined == statusObj) {
+            return;
+        }
+        
+        if (-1 == statusObj.targets.indexOf(targetId)) {
+            // Already a target
+            return;
+        }
+        
+        add_marker(targetId, statusObj.marker);
+        statusObj.targets.push(targetId);
+        return;
+        
+    }
+    
+    function get_status_obj(statusId) {
+        for (let i = 0; i < state.status_tracker.list.length; i++) {
+            statusObj = state.status_tracker.list[i];
+            if (statusObj.id == statusId) {
+                return statusObj;
+            } 
+        }
+        return undefined;
     }
     
     
-    /** 
-     * Add a status to to the game. Adding markers to targets of that status is a
-     * separate operation.
-     */
-    function add_status(token_id, status_name, duration, marker_name, show) {
-        // Standalone (not associated with a token on the board) and hidden 
-        // statuses caused some headaches with coordinating processing of turns.
-        // The solution was the create temp token objects off the board. The 
-        // linkId is the token id of those out-of-view tokens.
-        var linkId = StatusTrackerConsts.NO_TOKEN;
-        if (show == 'hidden' || token_id == StatusTrackerConsts.NO_TOKEN) {
-            var token = _create_token(status_name, show)
-            linkId = token.id
+    function add_marker(targetId, marker) {
+        var token = getObj('graphic', tokenId);
+        if (undefined == token) {
+            return;
         }
-        _add_status_helper(token_id, status_name, duration, marker_name, linkId, show);
+        var token_markers = token.get('statusmarkers').split(",");
+        token_markers.push(marker);
+        token.set('statusmarkers', token_markers.join(","));
         return;
-        
-    } // function add_status
-    
+    } // function add_marker
     
     /**
-     * Remove a status from a token. Remove status markers from targets of that
-     * status.
+     * Remove a marker from a token
      */
-    function remove_status(token_id, status_name) {
+    function remove_marker(token_id, marker_tag) {
+        var token = getObj('graphic', token_id);
+        if (undefined == token) {
+            return;
+        }
+        var token_markers = token.get("statusmarkers").split(",");
+        for (let i = 0; i < token_markers.length; i++) {
+            if (token_markers[i] == marker_tag) {
+                token_markers.splice(i, 1);
+                token.set("statusmarkers", token_markers.join(","));
+                break;
+            }
+        }
+        return;
+    } // function remove_marker
+    
+    function remove_status(statusId) {
         // Get the status object from the global store
-        statusObj = _get_status(token_id, status_name);
-        if (statusObj == "") {
+        statusObj = get_status_obj(statusId);
+        if (undefined == statusObj) {
             return;
         }
         
         // Remove the markers from each target of the status
-        for (let j = 0; j < statusObj.targets.length; j++) {
-            _remove_marker(statusObj.targets[j], statusObj.marker);
+        for (let i = 0; i < statusObj.targets.length; i++) {
+            remove_marker(statusObj.targets[i], statusObj.marker);
         }
         
         // Remove the status object from the global store.
-        state.status_tracker.splice(state.status_tracker.indexOf(statusObj), 1);
+        let index = state.status_tracker.list.indexOf(statusObj)
+        if (-1 != index) {
+            state.status_tracker.list.splice(index, 1);
+        }
         
-        // If there's a turn tracker entry for this object, remove it.
-        _remove_status_from_turn_order(token_id, status_name);
-        if (statusObj.linked_token != '-1') {
-            // There's a standalone hidden token associated with this status.
-            // Remove it.
-            token = getObj('graphic', statusObj.linked_token)
-            if (token != undefined) {
-                token.remove()
+        // If there's a standalone token associated with this status, remove it.
+        if (StatusTrackerConsts.NO_TOKEN != statusObj.link_id) {
+            token = getObj('grapic', statusObj.link_id)
+            if (undefined != token) {
+                token.remove();
             }
         }
-        return;
-        
     } // function remove_status
     
-    
-    /**
-     * Get a list of status objects associated with a given token. A token id
-     * value of 'all' will return all status ojects.
-     */
-    function get_token_statuses(token_id) {
-        var status_list = new Array();
-        let isAll = (token_id.toLowerCase() == "all");
-        for (let i = 0; i < state.status_tracker.length; i++) {
-            obj =  state.status_tracker[i];
-            if (isAll == true || obj.token_id == token_id) {
-                status_list.push(obj);
+    function remove_token(tokenId) {
+        for (let i = state.status_tracker.list.length - 1; i >= 0; i--) {
+            if (state.status_tracker.list[i].token_id == tokenId) {
+                remove_status(state.status_tracker.list[i].id);
             }
         }
-        return status_list;
-    } // function get_token_statuses
+        
+    }
     
-    
-    /**
-     * Add a target for a given status. While a status might be associated with 
-     * a source token, 'targets' have markers added to them.
-     */
-    function add_status_target(token_id, status_name, target_id) {
-        // Get the status object
-        statusObj = _get_status(token_id, status_name);
-        if (statusObj == "") {
-            // not found
+    function next_turn(currentTurn) {
+        // If there's no status associated with this turn, kick out.
+        if (undefined == currentTurn || undefined == currentTurn.status_id) {
             return;
+        }
+        // Record the last examined token
+        _last_examined_status = currentTurn.status_id;
+        // Get the status object for this turn object.
+        statusObj = get_status_obj(currentTurn.status_id)
+        if (undefined == statusObj) {
+            
         }
         
-        if (statusObj.targets.indexOf(target_id) != -1) {
-            // Already a target
-            return;
+        // If the status has a duration, decriment it.
+        if (statusObj.duration > 0) {
+            statusObj.duration--;
         }
-        _add_marker(target_id, statusObj.marker);
-        statusObj.targets.push(target_id);
+        
+        if (0 == statusObj.duration) {
+            // remove the status object
+            remove_status(statusObj.id);
+        }
         return;
-    } // function add_status_target
-    
-    
-    /**
-     * Remove a target from a status.
-     */
-    function remove_status_target(token_id, status_name, target_id) {
-        // Get the status object
-        statusObj = _get_status(token_id, status_name);
-        if (statusObj == "") {
-            // Not found
-            return;
-        }
-        index = statusObj.targets.indexOf(target_id);
-        if (index == -1) {
-            // Not a target
-            return;
-        }
-        _remove_marker(target_id, statusObj.marker);
-        statusObj.targets.splice(index, 1);
-        return;
-    } // function remove_status_target
-    
-    
-    /**
-     * Process the next turn. Get the token id at the top of the turn tracker,
-     * and process any statuses associated with that token.
-     */
-    function next_turn() {
-        // Get the token associated with the new turn
-        var token = _get_current_token();
-        if (token == "") {
-            return;
-        }
-        // Process any status effects assocated with this token
-        _process_turn(token.id);
-        return;
-    } // function next_turn
-    
+    }
+
     
     /**
      * Remove all statuses associated with a token id. If the "id" specified is
@@ -468,6 +303,16 @@ var StatusTracker = StatusTracker || (function() {
             }
         }
     } // function clear
+        
+
+    function remove_token_statuses(tokenId) {
+        for (let i = state.status_tracker.list.length - 1; i >= 0; i--) {
+            statusObj = state.status_tracker.list[i];
+            if (tokenId == statusObj.token_id) {
+                remove_status(statusObj.id);
+            }
+        }
+    } // function remove_token_statuses
     
     
     /**
@@ -475,39 +320,48 @@ var StatusTracker = StatusTracker || (function() {
      * linked to those tokens.
      */
     function validate_statuses(currentTurn, previousTurn) {
-        removedTokens = new Array();
-        for (let i = 0; i < previousTurn.length; i++) {
+        for (let i = previousTurn.length - 1; i >= 0; i--) {
             let found = false;
-            let tokenId = previousTurn[i].id;
+            let turnId = previousTurn[i].id;
             for (let j = 0; j < currentTurn.length; j++) {
-                if (currentTurn[j].id == tokenId) {
+                if (currentTurn[j].id == turnId) {
                     found = true;
-                    break
                 }
             }
-            if (found == false) {
-                remove_token(tokenId);
+            if (false == found) {
+                if (undefined != previousTurn[i].status_id) {
+                    remove_status(previousTurn[i].status_id)
+                }
+                else if ("-1" != turnId) {
+                    remove_token_statuses(turnId);
+                }
             }
         }
     } // function validate_statuses
-
-
-    /**
-     * Removes all statuses associated with a given token id
-     */    
-    function remove_token(token_id) {
-        tokenStatuses = get_token_statuses(token_id);
-        for (let i = 0; i < tokenStatuses.length; i++) {
-            remove_status(token_id, tokenStatuses[i].status_name);
+    
+    function get_token_statuses(tokenId) {
+        var status_list = new Array();
+        let isAll = (tokenId.toLowerCase() == 'all');
+        for (let i = 0; i < state.status_tracker.list.length; i++) {
+            obj = state.status_tracker.list[i];
+            if (true == isAll || obj.token_id == tokenId) {
+                status_list.push(obj);
+            }
         }
-    } // function remove_token
-
+        return status_list;
+    }
+    
+    function remove_status_target(statusId, targetId)
+    {
+        
+    }
 
     return {
         // List of functions and params to expose
-        clear: clear,
+        
         addStatus: add_status,
         addTarget: add_status_target,
+        clear: clear,
         getTokenStatuses: get_token_statuses,
         nextTurn: next_turn,
         removeStatus: remove_status,
@@ -517,6 +371,9 @@ var StatusTracker = StatusTracker || (function() {
     };
 }()); // StatusTracker
 
+
+
+/******************************************************************************/
 
 /**
  * Menus and interfaces.
@@ -656,18 +513,18 @@ var StatusTrackerMenus = StatusTrackerMenus || (function() {
     /**
      * Build the target/end menu for an individual status. 
      */
-    function _build_status_menu(obj) {
+    function _build_status_menu(statusId) {
         let content = new HtmlBuilder('div');
         content.append('.centeredBtn').append('a', "Add Target", {
-            href: '!statustracker add_target --token ' + obj.token_id + ' --status ' + obj.status_name + ' --target &#64;{selected|token_id}',
+            href: '!statustracker add_target --id ' + statusId + ' --target &#64;{selected|token_id}',
             title: 'Add Target For Effect'
         });
         content.append('.centeredBtn').append('a', "Remove Target", {
-            href: '!statustracker remove_target --token ' + obj.token_id + ' --status ' + obj.status_name + ' --target &#64;{selected|token_id}',
+            href: '!statustracker remove_target --id ' + statusId + ' --target &#64;{selected|token_id}',
             title: 'Remove Target For Effect'
         });
         content.append('.centeredBtn').append('a', "End", {
-            href: '!statustracker remove_status --token ' + obj.token_id + ' --status ' + obj.status_name,
+            href: '!statustracker remove_status  --id ' + statusId,
             title: 'End Effect'
         });
         
@@ -717,6 +574,8 @@ var StatusTrackerMenus = StatusTrackerMenus || (function() {
 }()); // StatusTrackerMenus
 
 
+/******************************************************************************/
+
 /**
  * Input handling
  */
@@ -765,45 +624,39 @@ var StatusTrackerCommandline = StatusTrackerCommandline || (function() {
     /**
      * Processes command string
      */
-    function do_command(msg)
-    {
-        try {
-            args = _argparse(msg.content);
-            if (args.command != StatusTrackerConsts.CMD_PREFIX) {
-                return;
-            }
-            switch (args.subcommand) {
-                case StatusTrackerConsts.CMD_ADD_STATUS:
-                    StatusTracker.addStatus(args.token, args.status, args.duration, args.marker, args.show);
-                    StatusTrackerMenus.showStatusMenu(args.token);
-                    break;
-                case StatusTrackerConsts.CMD_ADD_TARGET:
-                    StatusTracker.addTarget(args.token, args.status, args.target);
-                    break;
-                case StatusTrackerConsts.CMD_CLEAR:
-                    StatusTracker.clear(args.token);
-                    break;
-                case StatusTrackerConsts.CMD_REMOVE_STATUS:
-                    StatusTracker.removeStatus(args.token, args.status);
-                    break;
-                case StatusTrackerConsts.CMD_REMOVE_TARGET:
-                    StatusTracker.removeTarget(args.token, args.status, args.target);
-                    break;
-                case StatusTrackerConsts.CMD_SHOWMENU:
-                    StatusTrackerMenus.showMenu();
-                    break;
-                case StatusTrackerConsts.CMD_SHOW_STATUS:
-                    StatusTrackerMenus.showStatusMenu(args.token)
-                    break;
-                default:
-                    // print help?
-                    break;
-            }
+    function do_command(msg) {
+        args = _argparse(msg.content);
+        if (args.command != StatusTrackerConsts.CMD_PREFIX) {
+            return;
         }
-        catch (err)
-        {
-            log('Error in do_command: \n' + err);
-        } 
+        switch (args.subcommand) {
+            case StatusTrackerConsts.CMD_ADD_STATUS:
+                StatusTracker.addStatus(args.token, args.status, args.duration, args.marker, args.show);
+                StatusTrackerMenus.showStatusMenu(args.token);
+                break;
+            case StatusTrackerConsts.CMD_ADD_TARGET:
+                StatusTracker.addTarget(args.id, args.target);
+                break;
+            case StatusTrackerConsts.CMD_CLEAR:
+                StatusTracker.clear(args.token);
+                break;
+            case StatusTrackerConsts.CMD_REMOVE_STATUS:
+                StatusTracker.removeStatus(args.id);
+                break;
+            case StatusTrackerConsts.CMD_REMOVE_TARGET:
+                StatusTracker.removeTarget(args.id, args.target);
+                break;
+            case StatusTrackerConsts.CMD_SHOWMENU:
+                StatusTrackerMenus.showMenu();
+                break;
+            case StatusTrackerConsts.CMD_SHOW_STATUS:
+                StatusTrackerMenus.showStatusMenu(args.token)
+                break;
+            default:
+                // print help?
+                break;
+        }
+
         return;
     } // function do_command
     
@@ -814,12 +667,15 @@ var StatusTrackerCommandline = StatusTrackerCommandline || (function() {
 }()); // StatusTrackerCommandline
 
 
-// Handler for the turner order changing
+/******************************************************************************/
+
+// Handler for the turn order changing
 on('change:campaign:turnorder', function(current, prev) {
     currentTurnorder = JSON.parse(current.get('turnorder'));
     previousTurnorder = JSON.parse(prev.turnorder);
     StatusTracker.validateStatuses(currentTurnorder, previousTurnorder);
-    StatusTracker.nextTurn();
+    currentTurn = currentTurnorder.shift()
+    StatusTracker.nextTurn(currentTurn);
 });
 
 // Handler for chat messages

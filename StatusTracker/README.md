@@ -1,2 +1,3 @@
 ## StatusTracker
-Keeps track of timed status effects, managing the 
+A helper script for managing timed status effects and associated markers on
+game tokens. 
