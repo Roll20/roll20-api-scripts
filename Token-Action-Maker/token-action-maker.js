@@ -240,6 +240,9 @@ var tokenAction = tokenAction || (function() {
                 if (pattern.match('npcaction-l')) {
                     repeatingName = "al-" + attr.get('current');
                 }
+                if (pattern.match('bonusaction')) {
+                    repeatingName = "b-" + attr.get('current');
+                }
                 var checkAbility = findObjs({
                     _type: 'ability',
                     _characterid: id,
@@ -416,6 +419,9 @@ var tokenAction = tokenAction || (function() {
                         }
                         if (args.includes("attacks")) {
                             sortRepeating(/repeating_npcaction-l_[^_]+_name\b/, 'repeating_npcaction-l_%%RID%%_npc_action', a.id, usename);
+                        }
+                         if (args.includes("bonusactions")) {
+                            sortRepeating(/repeating_npcbonusaction_[^_]+_name\b/, 'repeating_npcbonusaction_%%RID%%_npc_roll_output', a.id, usename);
                         }
                     }
                     sendChat("TokenAction", "/w " + msg.who + " Created Sorted Token Actions for " + a.get('name') + ".");
