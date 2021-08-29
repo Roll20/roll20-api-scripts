@@ -1,4 +1,4 @@
-Reporter is a script that reads the tokens on the board that are associated with character sheets and builds a report of them in the chat, returning selected values from either the token settings or the character sheets they are associated with. You can either select a set of tokens to work with, or if you select no tokens, it will assume all tokens on the Object/Token layer. This behavior can be altered using keywords, described below. The basic syntax is:
+**Reporter** is a script that reads the tokens on the board that are associated with character sheets and builds a report of them in the chat, returning selected values from either the token settings or the character sheets they are associated with. You can either select a set of tokens to work with, or if you select no tokens, it will assume all tokens on the Object/Token layer. This behavior can be altered using keywords, described below. The basic syntax is:
 
 `!report --[queries] ---[buttonline] ----[keywords]`
 ****
