@@ -1,7 +1,7 @@
 var tokenAction = tokenAction || (function() {
     'use strict';
 
-    var version = '0.3.4',
+    var version = '0.3.45',
         sheetVersion = 'D&D 5th Edition by Roll20',
 
         checkInstall = function() {
@@ -79,6 +79,10 @@ var tokenAction = tokenAction || (function() {
                 } else {
                     repeatingName = repeatingName.replace(" (One-Handed)", "-1H");
                     repeatingName = repeatingName.replace(" (Two-Handed)", "-2H");
+                    repeatingName = repeatingName.replace(" (Melee; One-Handed)", "-1Hm");
+                    repeatingName = repeatingName.replace(" (Melee; Two-Handed)", "-2Hm");
+                    repeatingName = repeatingName.replace(" (Melee)", "-m");
+                    repeatingName = repeatingName.replace(" (Ranged)", "-r");
                     repeatingName = repeatingName.replace("swarm has more than half HP", "HP>Half");
                     repeatingName = repeatingName.replace("swarm has half HP or less", "HP<=Half");
                     repeatingName = repeatingName.replace(/\s\(Recharge(.*)Short or Long Rest\)/, "-(R Short/Long)");
@@ -269,7 +273,7 @@ var tokenAction = tokenAction || (function() {
 
         handleInput = function(msg) {
             var char;
-            var keywords = ['attacks', 'spells', 'abilities', 'saves', 'checks', 'traits', 'reactions', 'init'];
+            var keywords = ['attacks', 'bonusactions', 'spells', 'abilities', 'saves', 'checks', 'traits', 'reactions', 'init'];
             if (!(msg.type === 'api' && msg.selected && (msg.content.search(/^!ta\b/) || msg.content.search(/^!deleteta\b/) || msg.content.search(/^!deleteallta\b/) || msg.content.search(/^!sortta\b/)))) return;
 
             var args = msg.content.split(" ");
@@ -286,15 +290,15 @@ var tokenAction = tokenAction || (function() {
                     args = [baseCommand, 'name', 'attacks', 'spells', 'checks', 'saves', 'reactions', 'init'];
                 }
                 if (args.length === 1) {
-                    args = [baseCommand, 'attacks', 'spells', 'checks', 'saves', 'traits', 'reactions', 'init'];
+                    args = [baseCommand, 'attacks', 'bonusactions', 'spells', 'checks', 'saves', 'traits', 'reactions', 'init'];
                 }
                 if (args.length === 2 && args.includes('name')) {
-                    args = [baseCommand, 'name', 'attacks', 'spells', 'checks', 'saves', 'traits', 'reactions', 'init'];
+                    args = [baseCommand, 'name', 'attacks', 'bonusactions', 'spells', 'checks', 'saves', 'traits', 'reactions', 'init'];
                 }
 
                 if (args.includes("help")) {
                     let header = "<div style='width: 100%; color: #000; border: 1px solid #000; background-color: #fff; box-shadow: 0 0 3px #000; width: 90%; display: block; text-align: left; font-size: 13px; padding: 5px; margin-bottom: 0.25em; font-family: sans-serif; white-space: pre-wrap;'>";
-                    let helpText = "<b>Token Action Creator</b> <i>v." + version + "</i><br><i>Created by Kevin,<br>Modified by keithcurtis</i><br>This script creates token actions on selected tokens for the D&D 5e by Roll20 sheet. Tokens must represent character sheets, either PC or NPC.<br><br><b>!ta</b> This command will create a full suite of token abilities.<br><b>!deleteta</b> will delete ALL token actions for the selected character, whether they were created by this script or not. Use with caution.<br><br>You can create specific classes of abilities by using the following arguments separated by spaces:<ul><li><b>attacks</b> Creates a button for each attack. In the case of NPCs, this includes all Actions.<br><li><b>traits</b> Creates a button for each trait. PCs can have quite a number of these, so it is not recommended to run this command on PCs.<br><li><b>reactions</b> Creates a button for each reaction. This will be ignored on PCs since only NPC sheets have a repeating attribute for reactions.<br><li><b>spells</b>Creates a button that calls up a chat menu of all spells the character can cast.<br><li><b>checks</b> Creates a drop down menu of all Ability and Skill (Ability) checks<br><li><b>saves</b> Creates a dropdown menu of all saving throws<br><li><b>init</b> Creates a button that rolls initiative for the selected token<br><li><b>help</b> Calls up this help documentation</ul><br>Example:<br><b>!ta saves checks</b> will create token ability buttons for Ability Checks and Saving Throws.";
+                    let helpText = "<b>Token Action Creator</b> <i>v." + version + "</i><br><i>Created by Kevin,<br>Modified by keithcurtis</i><br>This script creates token actions on selected tokens for the D&D 5e by Roll20 sheet. Tokens must represent character sheets, either PC or NPC.<br><br><b>!ta</b> This command will create a full suite of token abilities.<br><b>!deleteta</b> will delete ALL token actions for the selected character, whether they were created by this script or not. Use with caution.<br><br>You can create specific classes of abilities by using the following arguments separated by spaces:<ul><li><b>attacks</b> Creates a button for each attack. In the case of NPCs, this includes all Actions.<br><li><b>traits</b> Creates a button for each trait. PCs can have quite a number of these, so it is not recommended to run this command on PCs.<br><li><b>bonusactions</b> Creates a button for each npcbonusaction. This will be ignored on PCs since only NPC sheets have a repeating attribute for bonusactions.<br><li><li><b>reactions</b> Creates a button for each reaction. This will be ignored on PCs since only NPC sheets have a repeating attribute for reactions.<br><li><b>spells</b>Creates a button that calls up a chat menu of all spells the character can cast.<br><li><b>checks</b> Creates a drop down menu of all Ability and Skill (Ability) checks<br><li><b>saves</b> Creates a dropdown menu of all saving throws<br><li><b>init</b> Creates a button that rolls initiative for the selected token<br><li><b>help</b> Calls up this help documentation</ul><br>Example:<br><b>!ta saves checks</b> will create token ability buttons for Ability Checks and Saving Throws.";
                     let footer = '</div>';
                     sendChat("TokenAction", "/w " + msg.who + header + helpText + footer);
                     return;
@@ -331,6 +335,9 @@ var tokenAction = tokenAction || (function() {
                         }
                         if (args.includes("attacks")) {
                             createRepeating(/repeating_npcaction-l_[^_]+_name\b/, 'repeating_npcaction-l_%%RID%%_npc_action', a.id, usename);
+                        }
+                        if (args.includes("bonusactions")) {
+                            createRepeating(/repeating_npcbonusaction_[^_]+_name\b/, 'repeating_npcbonusaction_%%RID%%_npc_action', a.id, usename);
                         }
                         if (args.includes("traits")) {
                             createRepeating(/repeating_npctrait_[^_]+_name\b/, 'repeating_npctrait_%%RID%%_npc_roll_output', a.id, usename);
