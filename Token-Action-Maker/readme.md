@@ -7,6 +7,8 @@ This script creates token actions on selected tokens for the D&D 5e by Roll20 sh
 > *0.2.9, the script will also abbreviate common phrases like "(One Handed)" to "-1H".*
 > 
 > *0.3.3, the ability to protect specific token actions was added (put a period after the name).*
+> 
+> *0.3.4, added support for the new npc bonus action repeating field.*
 
 **!ta** This command will create a full suite of token action buttons for a selected character. Actions for NPCs and Attacks for PCs.
 
