@@ -405,6 +405,9 @@ var tokenAction = tokenAction || (function() {
                         if (args.includes("traits")) {
                             createRepeating(/repeating_npctrait_[^_]+_name\b/, 'repeating_npctrait_%%RID%%_npc_roll_output', a.id, usename);
                         }
+                        if (args.includes("bonusactions")) {
+                            createRepeating(/repeating_npcbonusaction_[^_]+_name\b/, 'repeating_npcbonusaction_%%RID%%_npc_roll_output', a.id, usename);
+                        }
                         if (args.includes("reactions")) {
                             createRepeating(/repeating_npcreaction_[^_]+_name\b/, 'repeating_npcreaction_%%RID%%_npc_roll_output', a.id, usename);
                         }
