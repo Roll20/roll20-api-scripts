@@ -6,7 +6,7 @@ Requires API, Starfinder (Simple) character sheets - official sheets not support
 var Guidance = Guidance || (function () {
     "use strict";
 
-    let version = "-=> Guidance is online. v2.0 <=-";
+    let version = "-=> Guidance is online. v2.0.1 <=-";
     let debugMode = false;
     let enableNewNPCParser = false;
 
@@ -25,11 +25,12 @@ var Guidance = Guidance || (function () {
     }
 
     class TemplateRow {
-        constructor(sortOrder, sheetAttrib, attribute, value) {
+        constructor(sortOrder, sheetAttrib, attribute, value, officialAttribute) {
             this.val = value;
             this.order = sortOrder;
             this.sheetAttribute = sheetAttrib;
             this.attribute = attribute;
+            this.official = officialAttribute;
         }
     }
 
@@ -423,6 +424,11 @@ var Guidance = Guidance || (function () {
             npcToken.set("bar3_value", "KAC " + armorClass.get("current"));
             npcToken.set("bar3_max", armorClass.get("current"));
             npcToken.set("showname", true);
+
+            //Create token macros for NPC saves and initiative rolls
+            createAbility("0-Init", "%{selected|NPC-Initiative-Roll}", characterId);
+            createAbility("1-Saves", "&{template:pf_check}{{name=@{Selected|character_name} Saves}}{{check=Fort: [[1d20+@{Fort-npc}]]\nRef: [[1d20+@{Ref-npc}]]\nWill: [[1d20+@{Will-npc}]] }}", characterId);
+
             speakAsGuidanceToGM("Token setup. For extra settings, check out the API TokenMod");
         } catch (e) {
             debugLog("Token failure");
@@ -430,6 +436,16 @@ var Guidance = Guidance || (function () {
             speakAsGuidanceToGM("Check to make sure the token is linked and the character sheet is populated");
         }
     };
+
+    //Get or replace ability with specified ID
+    let createAbility = function(name, pattern, id) {
+        var checkAbility = findObjs({_type: 'ability', _characterid: id, name: name});        
+        if (checkAbility[0]) {
+            checkAbility[0].set({action: pattern});
+        } else {
+            createObj('ability', {name: name, action: pattern, characterid: id, istokenaction: true});
+        }
+    }
 
     let populateFeats = function (characterId, text) {
         let match = text.split(",");
@@ -474,6 +490,8 @@ var Guidance = Guidance || (function () {
 
         let ship = parseStatBlock(getShipStatBlocks(), cleanNotes);
         setAttribute(c.characterId, "tab", 3);
+
+        setDefaultTokenForCharacter(c.characterSheet, c.npcToken);
 
         let basics = getShipBasics(cleanNotes);
         debugLog("Basics = " + basics);
@@ -835,6 +853,7 @@ var Guidance = Guidance || (function () {
                             return;
                         }
                         populateNPCData(gmNotes, c);
+                        setDefaultTokenForCharacter(c.characterSheet, c.npcToken);
                     });
                 });
                 return;
@@ -1282,26 +1301,30 @@ var Guidance = Guidance || (function () {
 
     let populateSpecialAbilities = function (characterId, textToParse) {
         debugLog("Parsing Special Abilities");
-        if (textToParse !== undefined) {
-            if (textToParse.includes("SPECIAL ABILITIES")) {
-                textToParse = textToParse.replace("SPECIAL ABILITIES", "").trim();
-                addSpecialAbility(characterId, textToParse);
+        try {
+            if (textToParse !== undefined) {
+                if (textToParse.includes("SPECIAL ABILITIES")) {
+                    textToParse = textToParse.replace("SPECIAL ABILITIES", "").trim();
+                    addSpecialAbility(characterId, textToParse);
+                }
+            } else {
+                setAttribute(characterId, "npc-special-abilities-show", 0);
             }
-        } else {
-            setAttribute(characterId, "npc-special-abilities-show", 0);
+        } catch (e) {
+            debugLog("Special ability - " + textToParse);
         }
     };
 
     let addSpecialAbility = function (characterId, textToParse) {
         debugLog("Parsing Special Abilities");
         let uuid;
-        let abilityName = "";
 
         setAttribute(characterId, "npc-special-abilities-show", 1);
         if (textToParse.includes("(")) {
             do {
                 uuid = generateRowID();
-                abilityName = textToParse.substring(0, textToParse.indexOf(")") + 1);
+                debugLog("Sniliyu " + textToParse);
+                let abilityName = textToParse.substring(0, textToParse.indexOf(")") + 1);
                 setAttribute(characterId, "repeating_special-ability_" + uuid + "_npc-spec-abil-name", abilityName.trim());
                 textToParse = textToParse.substring(textToParse.indexOf(")") + 1);
                 let nextAbility = textToParse.match(/\.([^\.]*?)\(..\)/);
@@ -1463,7 +1486,7 @@ var Guidance = Guidance || (function () {
         let weapon = "";
         while (isNaN(details[i]) && i < details.length) {
             weapon = weapon + details[i] + " ";
-            i++;
+            i++; 
         }
 
         if (i === details.length) {
@@ -1485,8 +1508,108 @@ var Guidance = Guidance || (function () {
         if (dnd[1] !== undefined) {
             setAttribute(characterId, "repeating_npc-weapon_" + uuid + "_npc-weapon-damage", dnd[1]);
         }
+        
+        i++;
+        //createWeaponDamageType(characterId, uuid, details, i);
+        try{
+            if(i <= details.length){
+                debugLog("Weapon type: " + details[i]);
+                let damageType = details[i];
+                //Test for 2 damage types aka plasma E & F
+                if(details[i+1] == "&"){
+                    damageType += details[++i] + " " + details[++i];
+                }
+                damageType = details[i].replace(/;/, "").replace(/\)/, "");
+                setAttribute(characterId, "repeating_npc-weapon_" + uuid + "_npc-weapon-type", damageType);
+            }
+        }catch(ex){
+            debugLog("Error parsing damage type for: " + uuid);
+            debugLog(ex);    
+        }
+        i++;
+        //createWeaponCriticals(characterId, uuid, details, i);
+        try{
+            if(i <= details.length && details[i] != ")"){
+                if(details[i] == "critical"){
+                    i++;
+                    //Probably need a foreach in here to go through the rest
+                    let critical = "";
+                    while(i < details.length){
+                        critical = critical + " " + details[i];
+                        i++;
+                    }
+                    critical = critical.replace(/\)/, "")
+                    debugLog("Weapon Critical: " + critical);
+                    setAttribute(characterId, "repeating_npc-weapon_" + uuid + "_npc-weapon-critical", critical);
+                }
+            }   
+        }catch(ex){
+            debugLog("Error parsing damage critical for: " + uuid);
+            debugLog(ex);    
+        }
+
+        //Add token macro for parsed weapon attack
+        debugLog("Creating weapon ability " + uuid);
+        try {
+            createObj("ability", {
+                name: "2-" + weapon,
+                description: details,
+                action: "%{selected|repeating_npc-weapon_"+ uuid + "_roll}",
+                _characterid: characterId,
+                istokenaction: true
+            });
+        } catch(ex) {
+            debugLog("Creating weapon ability error occurred.");
+            debugLog(ex);
+        }
+        debugLog("Creating weapon ability " + uuid + " completed");
     };
+    
+    let createWeaponDamageType = function(characterId, weaponUuid, details, position)
+    {
+        try{
+            if(position <= details.length){
+                debugLog("Weapon type: " + details[position]);
+                let damageType = details[i];
+                //Test for 2 damage types aka plasma E & F
+                if(details[position+1] == "&"){
+                    damageType += details[++position] + " " + details[++position];
+                }
+                damageType = details[position].replace(/;/, "").replace(/\)/, "");
+                setAttribute(characterId, "repeating_npc-weapon_" + weaponUuid + "_npc-weapon-type", damageType);
+            }
+        }catch(ex){
+            debugLog("Error parsing damage type for: " + uuid);
+            debugLog(ex);    
+        }
+    };
+
+    let createWeaponCriticals = function(characterId, weaponUuid, details, position)
+    {
+        try{
+            if(position <= details.length && details[position] != ")"){
+                if(details[position] == "critical"){
+                    position++;
+                    //Probably need a foreach in here to go through the rest
+                    let critical = "";
+                    while(position < details.length){
+                        critical = critical + " " + details[position];
+                        position++;
+                    }
+                    critical = critical.replace(/\)/, "")
+                    debugLog("Weapon Critical: " + critical);
+                    setAttribute(characterId, "repeating_npc-weapon_" + weaponUuid + "_npc-weapon-critical", critical);
+                }
+            }   
+        }catch(ex){
+            debugLog("Error parsing damage critical for: " + uuid);
+            debugLog(ex);    
+        }
+    };
+    
     //</editor-fold>
+
+    
 
     //<editor-fold desc="Stat block formatter templates">
     let getShipStatBlocks = function () {
@@ -1558,7 +1681,7 @@ var Guidance = Guidance || (function () {
     };
 
     let welcomeHandout = function () {
-        return "<p>This is a tool to support the usage of the Starfinder (Simple) character sheets in Roll20. It has the ability to read a statblock from the GMNotes section of a selected character and fill out the NPC section of the charactersheet. Statblocks from Archives of Nethys and Starjammer SRD are supported. Statblocks from PDFs can be used, but there may be parsing issues.</p> <p>&nbsp;</p> <h2>THE MAIN COMMANDS</h2> <p>&nbsp;</p> <p><em><strong>!sf_character</strong></em></p> <p>This imports a Starfinder statblock in the GM Notes section of a character sheet and will out the NPC section of the Starfinder (Simple) character sheet. Furthermore, it configures the token's hit points and give EAC/KAC indicators.</p> <p><em>How to:</em></p> <ol> <li>Select and copy a stat block and paste it into the \"GM Notes\" section of a Character sheet. (Don't worry about removing any formatting)</li> <li>Click Save.</li> <li>Select the token that you have<a href=\"https://wiki.roll20.net/Linking_Tokens_to_Journals\"> linked to the character sheet</a>.</li> <li>Type !sf_character. The script attempts to use the statblock to fill out the NPC section of the Starfinder (Simple) character sheet.</li> </ol> <p>The script supports character statblocks from the <a href=\"https://www.aonsrd.com/Default.aspx\">Archives of Nethys</a> and the <a href=\"https://www.starjammersrd.com/\">Starjammer SRD</a>. <span style=\"font-style: italic;\">Society PDFs, at least in the earlier ones, sometimes present issues. Double check the results after importing a statblock from a PDF.</span></p> <p>&nbsp;</p> <p><strong><span style=\"font-style: italic;\">!sf_starship</span></strong></p> <p>This imports a Starfinder starship statblock from the GM Notes section of a <a href=\"https://wiki.roll20.net/Linking_Tokens_to_Journals\">linked character sheet</a> and populates the Starship page of the sheet. Furthermore, It adds gunnery and piloting check macros. If the statblock doesn&rsquo;t have stats for the pilot/gunner, the script adds prompts so that when you click the macro, you are prompted for the bonus.</p> <p>This works the same as !sf_character but in practice, statblocks for starships are less consistent across platforms.</p> <p>&nbsp;</p> <p><em><strong>!sf_token</strong></em></p> <p>This populates the token with hitpoint, EAC, and KAC information in the event that the NPC sheet is setup, but the token isn't. The token will look like the one produced by !sf_character</p> <p>&nbsp;</p> <p><em><strong>!sf_clean</strong></em></p> <p>I've included this for completeness, but be warned - this command will <span style=\"text-decoration: underline;\"><strong>PERMANENTLY ERASE</strong></span> things from the character sheet so use with caution. As above, this command requires selecting a token that has been <a href=\"https://wiki.roll20.net/Linking_Tokens_to_Journals\">linked to the character sheet</a>.</p> <p><em>How to:</em></p> <p style=\"padding-left: 40px;\"><em><strong>!sf_clean CONFIRM</strong></em> - This will erase ALL stats from the character sheet AND remove ALL formatting from the token. It will not touch the GM Notes section of the character sheet so it can be reimported using !sf_character.</p> <p style=\"padding-left: 40px;\"><strong><em>!sf_clean ABILITIES</em></strong> - This will erase ALL macros from the character sheet.</p> <p>&nbsp;</p> <h3>OTHER USEFUL COMMANDS</h3> <p><em><strong>!sf_init</strong></em></p> <p>This rolls group initiative for all selected NPCs. The script refers to the Initiative bonus on the NPC tab of the character sheet to do this.</p> <p>&nbsp;</p> <p><em><strong>!sf_addtrick</strong></em></p> <p>This adds a macro to handle Trick Attacks for the NPC. Click over to the main \"Character\" page, and configure Trick Attacks to make it work.</p> <p>&nbsp;</p> <h3>The next two commands will require creating a simple macro to run correctly</h3> <p>The macro will look like this.</p> <blockquote> <p style=\"padding-left: 40px;\">!sf_ability ?{textToPaste}</p> </blockquote> <p>&nbsp;</p> <p><em><strong>!sf_ability</strong></em></p> <p>This adds a special ability to the NPC character sheet for quick reference. If the macro has been created as described above, a box appears allowing you to paste the full text of a special ability.</p> <p>&nbsp;</p> <p><em><strong>!sf_addspell</strong></em></p> <p>This adds a spell to the NPC character sheet as a macro. Similar to sf_ability, when you run the macro to call this, a box appears allowing you to paste the full text of the spell. The script formats the spellblock. Afterwards, I recommend manually editing the macro in the \"description\" tag to tailor the results of the macro for use in play.</p> <p>&nbsp;</p> <p>Find other details on the wiki <a href=\"https://wiki.roll20.net/Script:Starfinder_-_Guidance_Tools_for_Starfinder_(Simple)_Character_sheet\">HERE</a>.</p> <p>Feel free to reach out to me if you find any bug or have any suggestions <a href=\"https://app.roll20.net/users/927625/kahn265\">HERE</a>.</p>";
+        return "<p>This is a tool to support the usage of the Starfinder (Simple) character sheets in Roll20. It has the ability to read a statblock from the GMNotes section of a selected character and fill out the NPC section of the charactersheet. Statblocks from Archives of Nethys and Starjammer SRD are supported. Statblocks from PDFs can be used, but there may be parsing issues.</p> <p>&nbsp;</p> <h2>THE MAIN COMMANDS</h2> <p>&nbsp;</p> <p><em><strong>!sf_character</strong></em></p> <p>This imports a Starfinder statblock in the GM Notes section of a character sheet and will out the NPC section of the Starfinder (Simple) character sheet. Furthermore, it configures the token's hit points and give EAC/KAC indicators.</p> <p><em>How to:</em></p> <ol> <li>Select and copy a stat block and paste it into the \"GM Notes\" section of a Character sheet. (Don't worry about removing any formatting)</li> <li>Click Save.</li> <li>Select the token that you have<a href=\"https://wiki.roll20.net/Linking_Tokens_to_Journals\"> linked to the character sheet</a>.</li> <li>Type !sf_character. The script attempts to use the statblock to fill out the NPC section of the Starfinder (Simple) character sheet.</li> </ol> <p>The script supports character statblocks from the <a href=\"https://www.aonsrd.com/Default.aspx\">Archives of Nethys</a> and the <a href=\"https://www.starjammersrd.com/\">Starjammer SRD</a>. <span style=\"font-style: italic;\">Society PDFs, at least in the earlier ones, sometimes present issues. Double check the results after importing a statblock from a PDF.</span></p> <p>&nbsp;</p> <p><strong><span style=\"font-style: italic;\">!sf_starship</span></strong></p> <p>This imports a Starfinder starship statblock from the GM Notes section of a <a href=\"https://wiki.roll20.net/Linking_Tokens_to_Journals\">linked character sheet</a> and populates the Starship page of the sheet. Furthermore, It adds gunnery and piloting check macros. If the statblock doesn&rsquo;t have stats for the pilot/gunner, the script adds prompts so that when you click the macro, you are prompted for the bonus.</p> <p>This works the same as !sf_character but in practice, statblocks for starships are less consistent across platforms.</p> <p>&nbsp;</p> <p><em><strong>!sf_token</strong></em></p> <p>This populates the token with hitpoint, EAC, and KAC information in the event that the NPC sheet is setup, but the token isn't. The token will look like the one produced by !sf_character</p> <p>&nbsp;</p> <p><em><strong>!sf_clean</strong></em></p> <p>I've included this for completeness, but be warned - this command will <span style=\"text-decoration: underline;\"><strong>PERMANENTLY ERASE</strong></span> things from the character sheet so use with caution. As above, this command requires selecting a token that has been <a href=\"https://wiki.roll20.net/Linking_Tokens_to_Journals\">linked to the character sheet</a>.</p> <p><em>How to:</em></p> <p style=\"padding-left: 40px;\"><em><strong>!sf_clean CONFIRM</strong></em> - This will erase ALL stats from the character sheet AND remove ALL formatting from the token. It will not touch the GM Notes section of the character sheet so it can be reimported using !sf_character.</p> <p style=\"padding-left: 40px;\"><strong><em>!sf_clean ABILITIES</em></strong> - This will rease ALL macros from the character sheet.</p> <p>&nbsp;</p> <h3>OTHER USEFUL COMMANDS</h3> <p><em><strong>!sf_init</strong></em></p> <p>This rolls group initiative for all selected NPCs. The script refers to the Initiative bonus on the NPC tab of the character sheet to do this.</p> <p>&nbsp;</p> <p><em><strong>!sf_addtrick</strong></em></p> <p>This adds a macro to handle Trick Attacks for the NPC. Click over to the main \"Character\" page, and configure Trick Attacks to make it work.</p> <p>&nbsp;</p> <h3>The next two commands will require creating a simple macro to run correctly</h3> <p>The macro will look like this.</p> <blockquote> <p style=\"padding-left: 40px;\">!sf_ability ?{textToPaste}</p> </blockquote> <p>&nbsp;</p> <p><em><strong>!sf_ability</strong></em></p> <p>This adds a special ability to the NPC character sheet for quick reference. If the macro has been created as described above, a box appears allowing you to paste the full text of a special ability.</p> <p>&nbsp;</p> <p><em><strong>!sf_addspell</strong></em></p> <p>This adds a spell to the NPC character sheet as a macro. Similar to sf_ability, when you run the macro to call this, a box appears allowing you to paste the full text of the spell. The script formats the spellblock. Afterwards, I recommend manually editing the macro in the \"description\" tag to tailor the results of the macro for use in play.</p> <p>&nbsp;</p> <p>Find other details on the wiki <a href=\"https://wiki.roll20.net/Script:Starfinder_-_Guidance_Tools_for_Starfinder_(Simple)_Character_sheet\">HERE</a>.</p> <p>Feel free to reach out to me if you find any bug or have any suggestions <a href=\"https://app.roll20.net/users/927625/kahn265\">HERE</a>.</p>";
     };
 
     let getNPCStatBlocks = function () {

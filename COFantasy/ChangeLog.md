@@ -1,4 +1,81 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 2.18
+### Capacités
+* Ajout de la possibilité pour un siphon des âmes d'empêcher les autres siphons.
+
+### Correction de bugs
+* Prise en compte correcte des bonus de save contre les sorts.
+
+### Autres amélioration
+* Ajout d'un type drain.
+* Attribut aucuneActionCombat pour les personnages qui n'agissent pas en combat
+* Possibilité de préciser un pourcentage des dégâts transformés en soins avec l'option --vampirise.
+
+## 2.17
+### Capacités
+* Support des effets des ondes corruptrices
+* Support de la potion de sang de l'Arbre-Coeur
+* Possibilité de changer la taille jusqu'à laquelle le fauchage est possible.
+* Haches et marteaux des nains.
+* Support de la capacité Agripper du démon de Noirbois.
+* Support de la capacité Grosse tête du forgesort
+* Capacité d'objet magique "Action libre"
+* Saisir et broyer pour les chaoses.
+* Amélioration de la prise en charge d'ombre mouvante.
+* Ajout de la capacité Force d'âme du haut elfe.
+* Ajout de la capacité Bûcheron
+* Ajout des capacités Attaque sanglante et Flèche sanglante.
+* Amélioration de la prise en compte des sens affûtés.
+* Amélioration de la prise en charge du second souffle du guerrier.
+* Ajout de l'effet noyade des plantes carnivores.
+* Ajout de la capacité Gober de la Voie du prédateur.
+* Meilleure prise en charge de la capacité Dévorer des prédateurs
+* Ajout de la capacité Increvable de la Voie de l'humain.
+* Ajout de la capacité Briseur d'os du barbare.
+* Meilleure automatisation de l'Argument de taille du barbare.
+* Châtiment du mâle du Xyrufa.
+* Prise en compte de la rage dans la capacité Défier la mort du barbare.
+* Prescience (Voie de la divination)
+* Cône de froid (doc)
+* Gros Monstre, grosse arme (Voie des armes à 2 mains)
+* Hors de portée (shaman scorpion)
+* Nuée de scorpions (shaman scorpion)
+* Animation des Morts (Voie de l'outre-tombe)
+* Etreinte (scorpions)
+* Hémorragie (Voie du sang)
+* Lien de sang (Voie du sang)
+* Support complet de la Voie des armes à 2 mains (prestige)
+* Support + documentation Voie du Chevalier Dragon (prestige)
+* Support complet de la Voie du porteur de bouclier (prestige)
+
+### Autres améliorations
+* Ajout de fonctions pour aider en Noirbois.
+* Quelques effets pour simuler la limitation Grande taille du minotaure.
+* On n'affiche pas les attaques qui ne sont pas possibles (limites épuisées, condition --si non remplie, pas assez de mana).
+* Ajout d'une option pour vérifier que les cibles d'une attaque peuvent tenir dans un disque d'un rayon donné.
+* Ajout d'une option de limitation du montant des soins par jour.
+* Label -2 pour l'arme en main gauche.
+* Termine les effets dont on enlève le marker à la main.
+* Utilisation des nom de caractéristiques au lieu de pictogrammes douteux pour les jets de caractéristiques et de compétences.
+* Gestion des identités secrètes.
+* Possibilité de passer des options aux effets à dégâts sur la durée.
+* Un personnage invisible ne peut plus être vu des autres joueurs.
+* Ajout d'une possibilité de synchronisation des tokens entre cartes.
+* Une réussite critique à une feinte double les bonus de DM à l'attaque suivante.
+* Ajout d'un attribut pour des modification de tous les tests d'un personnage (bonus ou malus)
+* Tirage d'initiative aléatoire secret pour les tokens sur le layer MJ.
+* Possibilité de rajouter des attributs à afficher dans le statut.
+* Le script ne bloque plus que le déplacement des personnages immobilisés contrôlés par un joueur connecté.
+* En cas d'échec critique d'une boule de feu qui cible une cible artificielle, la cible est déplacée aléatoirement de 15 m.
+* Refactoring !cof-tenebres pour supporter les options de Mana (y compris Tempête de Mana)
+* Séparation des options de blessure grave et de dommages importants
+
+### Corrections de bugs
+* Correction de bugs avec l'invisibilité.
+* Amélioration de l'Action concertée.
+* Correction d'un bug sur les bonus de compétences
+* Correction de la prise en compte des familiers dans les aoe.
+
 ## 2.16
 ### Capacités
 * Capacité de cyclone des élémentaires.
@@ -22,6 +99,9 @@
 * Support d'Invocation d'un démon (nécromancien)
 
 ### Autres améliorations
+* Joli coup permet d'ignorer les bonus de couvert.
+* Implémentation de la règle de coups critiques étendus (dans les options, catégorie divers).
+* Pas de dépense de mana si une autre contrainte de resource rend une action impossible.
 * Prise en compte de l'option --secret pour !cof-bonus-couvert
 * Armes avec bonus de DEF
 * Possibilité d'afficher un message en cas de coup critique reçu.
@@ -45,6 +125,7 @@
 * Meilleur support du Tour de force
 * Meilleur support du Pacte Sanglant 
 * Permettre à un personnage d'être la Chair à canon de plusieurs autres
+* Rework Animation des Morts : meilleur support et automatisation
 
 ### Corrections de bugs
 * Correction des RD seulement contre perçant ou tranchant ou contondant.
@@ -55,7 +136,7 @@
 * Mise à jour de l'initiative quand on rengaine son arme à distance avec la voie du pistolero.
 * Donne le droit au joueur qui doit faire une réaction à une attaque de ne pas réagir.
 * Les créatures qui enveloppent ou étreignent leur cible la relachent quand elle meurt.
-* Le script ne prennait pas en compte la sagesse de l'attaquant contre les créatures immunisées aux armes.
+* Le script ne prenait pas en compte la sagesse de l'attaquant contre les créatures immunisées aux armes.
 * Quand une créature peut résister avec SAG, INT ou CHA et qu'elle est sans esprit, alors on choisit cette caractéristique (car la réussite est alors automatique). Test un peu plus précoce pour la résistance à la peur.
 
 ## 2.15

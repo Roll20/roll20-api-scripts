@@ -988,14 +988,6 @@ scriptcards:
   - "ScriptCards"
   - "Utility"
   
-discretewhisper:
-  - "DiscreteWhisper"
-  - "Utility"
-
-selectmanager:
-  - "SelectManager"
-  - "Utility"
- 
 imperator:
   - "Imperator"
   - "System Toolbox"
@@ -1007,3 +999,51 @@ myzsectorgenerator:
 playercharacters:
   - "PlayerCharacters"
   - "Utility"
+
+udlpasswall:
+  - "UDLPasswall"
+  - "Dynamic Lighting"
+  
+fetch:
+  - "Fetch"
+  - "Utility"
+
+mathops:
+  - "MathOps"
+  - "Utility"
+
+muler:
+  - "Muler"
+  - "Utility"
+
+plugger:
+  - "Plugger"
+  - "Utility"
+  
+zeroframe:
+  - "ZeroFrame"
+  - "Utility"
+
+calendar:
+  - "Calendar"
+  - "Utility"
+
+wfrp4epl:
+  - "WFRP4ePL"
+  - "System Toolbox"
+  
+libtypes:
+  - "libTypes"
+  - "Utility"
+
+addcustomturn:
+  - "AddCustomTurn"
+  - "Character"
+  
+battleroyale:
+  - "BattleRoyale"
+  - "Utility"
+
+hs6e:
+  - "ImportHS6e"
+  - "System Toolbox"
