@@ -255,6 +255,10 @@ var tokenAction = tokenAction || (function() {
                 } else {
                     repeatingName = repeatingName.replace(" (One-Handed)", "-1H");
                     repeatingName = repeatingName.replace(" (Two-Handed)", "-2H");
+                    repeatingName = repeatingName.replace(" (Melee; One-Handed)", "-1Hm");
+                    repeatingName = repeatingName.replace(" (Melee; Two-Handed)", "-2Hm");
+                    repeatingName = repeatingName.replace(" (Melee)", "-m");
+                    repeatingName = repeatingName.replace(" (Ranged)", "-r");
                     repeatingName = repeatingName.replace("swarm has more than half HP", "HP>Half");
                     repeatingName = repeatingName.replace("swarm has half HP or less", "HP<=Half");
                     repeatingName = repeatingName.replace(/\s\(Recharge(.*)Short or Long Rest\)/, "-(R Short/Long)");
