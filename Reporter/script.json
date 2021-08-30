@@ -2,7 +2,7 @@
 	"name": "Reporter",
 	"script": "Reporter.js",
 	"version": "1.1.0",
-	"description": "**Reporter** is a script primarily for the _D&D 5th Edition by Roll20_  sheet but does contain some support for the _Pathfinder Second Edition by Roll20_ Sheet. \r\rFor instructions, run `!report --help` in game, or visit [Reporter Thread](https://app.roll20.net/forum/post/9934364/script-reporter).",",
+	"description": "**Reporter** is a script primarily for the _D&D 5th Edition by Roll20_  sheet but does contain some support for the _Pathfinder Second Edition by Roll20_ Sheet. \r\rFor instructions, run `!report --help` in game, or visit [Reporter Thread](https://app.roll20.net/forum/post/9934364/script-reporter).",
 	"authors": "Keith Curtis",
 	"roll20userid": "162065",
 	"modifies": {
