@@ -1,4 +1,5 @@
-**Reporter** is a script that reads the tokens on the board that are associated with character sheets and builds a report of them in the chat, returning selected values from either the token settings or the character sheets they are associated with. You can either select a set of tokens to work with, or if you select no tokens, it will assume all tokens on the Object/Token layer. This behavior can be altered using keywords, described below. The basic syntax is:
+**Reporter** is a script primarily for the _D&D 5th Edition by Roll20_  sheet but does contain some support for the _Pathfinder Second Edition by Roll20_ Sheet. For its basic functions, it should work with most any sheet or no sheet at all.
+Reporter reads the tokens on the board that are associated with character sheets and builds a report of them in the chat, returning selected values from either the token settings or the character sheets they are associated with. You can either select a set of tokens to work with, or if you select no tokens, it will assume all tokens on the Object/Token layer. This behavior can be altered using keywords, described below. The basic syntax is:
 
 `!report --[queries] ---[buttonline] ----[keywords]`
 ****
@@ -134,7 +135,7 @@ If the layer keyword all is used the report will be on all token/character pairs
 
 If the layer keyword tracker is used the report will be on all token/character pairs on the Turn Tracker as if it were a layer. In this case, a layer character will appear on each subhead line of the report to let you know which layer the token is on. If you click on the layer token, it will switch the token from the GM/Notes layer to the  Token/Objects layer and back.
 
-`compact|[true|false]` _(default=false):_ The compact mode shows the token image at half size, and eliminates the second line of the report subhead, since it is not always desired. You may have a very large report you want to see better, or you may be using a sheet that does not support the default values. Currently the second line of the subhead only references the D&D 5th Edition by Roll20 Sheet. 
+`compact|[true|false]` _(default=false):_ The compact mode shows the token image at half size, and eliminates the second line of the report subhead, since it is not always desired. You may have a very large report you want to see better, or you may be using a sheet that does not support the default values. Currently the second line of the subhead only references the _D&D 5th Edition by Roll20_  and _Pathfinder Second Edition by Roll20_ Sheets. 
 
 `showheader|[true|false]` _(default=true):_ This will control whether the header will display at the top of the report. 
 
@@ -152,11 +153,11 @@ If the layer keyword tracker is used the report will be on all token/character p
 
 `charactersheetlink|[true|false]` _(default=true):_ if this keyword is set to false, the link to open the token's corresponding character sheet will not display 
 
-`subtitle|[true|false]` _(default=true):_ if this keyword is set to false, the line directly below the character name will not display. (This is also the default in Compact mode). This may be desirable if not using the D&D 5th Edition by Roll20 Sheet. 
+`subtitle|[true|false]` _(default=true):_ if this keyword is set to false, the line directly below the character name will not display. (This is also the default in Compact mode). This may be desirable if not using the _D&D 5th Edition by Roll20_  or _Pathfinder Second Edition by Roll20_ Sheets. 
 
 `ignoreselected|[true|false]` _(default=false):_ if this keyword is set to true, the search will not be preset to whichever tokens are selected. The report will run as if no tokens were selected, following whatever layer criteria might have been specified. 
 
-`npcsubstitutions[true|false]` _(default=true):_ if this keyword is set to false, the script will not automatically substitute npc attributes for their PC counterparts (ex: npc_senses for passive_wisdom).This is good for sheets that are not the D&D 5th Edition by Roll20 Sheet. 
+`npcsubstitutions[true|false]` _(default=true):_ if this keyword is set to false, the script will not automatically substitute npc attributes for their PC counterparts (ex: npc_senses for passive_wisdom).This is good for sheets that are not the _D&D 5th Edition by Roll20_  or _Pathfinder Second Edition by Roll20_ Sheets. 
 
 `sort|attribute` _(default is the raw order):_ This keyword will sort the final list. Most of the sorts are confined to the token attributes, since they require internal code and if they refer to a sheet may return poor or no results if the sheet does not have the proper attributes. Currently the following values can be sorted on:  
 
