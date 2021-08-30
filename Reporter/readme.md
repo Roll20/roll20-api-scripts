@@ -7,15 +7,15 @@
 
 Queries are constructed using
 
-**t|attribute** to poll a token attribute
+`t|attribute` to poll a token attribute
 
-**c|attribute** to poll a character sheet attribute
+`c|attribute` to poll a character sheet attribute
 
 **Examples**
 
-**--t|name** would return a report of all selected token names
+`--t|name` would return a report of all selected token names
 
-**--c|strength** would return a report of all strength values on the character sheets of the selected tokens
+`--c|strength` would return a report of all strength values on the character sheets of the selected tokens
 
 For character sheets, the script will try to pull a value from the character journal first, and if that does not exist, the installed character sheet.
 
@@ -23,13 +23,13 @@ For character sheets, the script will try to pull a value from the character jou
 
 You may not always want each attribute reported on its own line. You can add a code after the attribute name(not the alias) to use something either than a line return between attributes
 
-**comma (,)** Adds three non-breaking spaces between this attribute and the next, keeping them on the same line when possible.
+**comma (`,`)** Adds three non-breaking spaces between this attribute and the next, keeping them on the same line when possible.
 
-**period (.)** Adds a vertical pipe between this attribute and the next, keeping them on the same line when possible.
+**period (`.`)** Adds a vertical pipe between this attribute and the next, keeping them on the same line when possible.
 
-**dash (-)** Adds a thin gray horizontal rule between this attribute and the next.
+**dash (`-`)** Adds a thin gray horizontal rule between this attribute and the next.
 
-**Hashtag (#)** Adds a bit of horizontal space between this attribute and the next.
+**Hashtag (`#`)** Adds a bit of horizontal space between this attribute and the next.
 
 _Examples:_
 
