@@ -161,28 +161,16 @@ If the layer keyword tracker is used the report will be on all token/character p
 `sort|attribute` _(default is the raw order):_ This keyword will sort the final list. Most of the sorts are confined to the token attributes, since they require internal code and if they refer to a sheet may return poor or no results if the sheet does not have the proper attributes. Currently the following values can be sorted on:  
 
 - charName: character name. Sheet must have a "name" attribute.
-
 - charNameI: character name, inverse order. Sheet must have a "name" attribute.
-
 - tokenName: token name
-
 - tokenNameI: token name, inverse order.
-
 - bar1: token bar1 value
-
 - bar1I: token bar1 value, inverse order.
-
 - bar2: token bar2 value
-
 - bar2I: token bar2 value, inverse order.
-
 - bar3: token bar3 value
-
 - bar3I: token bar3 value, inverse order.
-
 - cr - Challenge Rating. D&D 5th Edition by Roll20 Sheet only
-
 - crI - Challenge Rating, inverse order. D&D 5th Edition by Roll20 Sheet only
-
 
 `title|Title|` If this is present in the keywords, the string in between pipes will be placed at the top of the report. If you only want the custom title to display, be sure turn off the header with showheader|false. The title must be placed between two pipes. title|My Title| will work. title|My Title will break.
