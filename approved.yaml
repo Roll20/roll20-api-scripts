@@ -1047,3 +1047,7 @@ battleroyale:
 hs6e:
   - "ImportHS6e"
   - "System Toolbox"
+
+reporter:
+  - "Reporter"
+  - "Tokens"
