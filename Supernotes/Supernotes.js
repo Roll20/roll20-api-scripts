@@ -18,7 +18,7 @@ on('ready', () => {
     const decodeUnicode = (str) => str.replace(/%u[0-9a-fA-F]{2,4}/g, (m) => String.fromCharCode(parseInt(m.slice(2), 16)));
 
 
-    const version = '0.0.91';
+    const version = '0.1.0';
     log('Supernotes v' + version + ' is ready!  To set the template of choice or to toggle the send to players option, Use the command !gmnote --config');
 
     on('chat:message', function(msg) {
@@ -58,6 +58,10 @@ let args = msg.content.split(/\s+--/);
 let option = '';
 let notitle=false;
 let id = '';
+let tokenImage = '';
+let tokenName = '';
+let trueToken = [];
+
 let theToken = msg.selected
 
                args.forEach(a =>{
@@ -73,9 +77,14 @@ let theToken = msg.selected
 
 log('selected is ' + JSON.stringify(theToken));
 
+if (undefined !== theToken){
+                 trueToken =getObj('graphic',theToken[0]._id);
+                 tokenImage = trueToken.get('imgsrc');
+                 tokenName =  trueToken.get('name');
+}
                 
-                
-                
+                                //log ('TEST DATA = ' + theToken.get.id);
+
                 log ('notitle = ' + notitle);
                 log ('id = ' + id);
                 log ('command = ' + command);
@@ -164,7 +173,7 @@ log('selected is ' + JSON.stringify(theToken));
                     sendChat('Supernotes', messagePrefix + '&{template:' + template + '}{{' + title + '=' + 'Supernotes Help' + '}} {{' + theText + '=' + message + '}}');
 
                 } else {
-                    if (!(option + '').match(/^(bio|charnote|avatar|imag(e|es|e[1-9]))/)) {
+                    if (!(option + '').match(/^(bio|charnote|tokenimage|avatar|imag(e|es|e[1-9]))/)) {
                         option = 'token';
                     }
 
@@ -182,7 +191,19 @@ log('selected is ' + JSON.stringify(theToken));
                     let message = '';
                     let whom = '';
 
-                    if (option === 'avatar') {
+                    if (option === 'tokenimage') {
+                        (theToken || [])
+                        .map(o => getObj('graphic', o._id))
+                            .filter(g => undefined !== g)
+                            .map(t => getObj('character', t.get('represents')))
+                            .filter(c => undefined !== c)
+                            .forEach(c => {
+                                message = "<img src='" + tokenImage + "'>";
+                                whom = c.get('name');
+                                            if (notitle){whom = '';}
+                                sendChat(whom, messagePrefix + '&{template:' + template + '}{{' + title + '=' + tokenName + '}} {{' + theText + '=' + message + playerButton + '}}');
+                            });
+                    } else {                    if (option === 'avatar') {
                         (theToken || [])
                         .map(o => getObj('graphic', o._id))
                             .filter(g => undefined !== g)
@@ -245,6 +266,7 @@ log('selected is ' + JSON.stringify(theToken));
                                         }
 
                                         whom = c.get('name');
+
                                         //Sends the final message
                                             if (notitle){whom = '';}
                                         sendChat(whom, messagePrefix + '&{template:' + template + '}{{' + title + '=' + whom + '}} {{' + theText + '=' + message + playerButton + '}}');
@@ -274,8 +296,13 @@ log('selected is ' + JSON.stringify(theToken));
                                                 message = decodeUnicode(val);
                                             }
                                             whom = c.get('name');
+                                                                                //Crops out GM info on player messages
+                                                if (command === '!pcnote') {
+                                                    message = (message.includes("-----") ? message.split('-----')[0] : message);
+                                                }
                                             //Sends the final message
                                             if (notitle){whom = '';}
+                                              // sendChat(whom, messagePrefix + '/direct ?{'  + message + playerButton + '|}');//This is a test
                                             sendChat(whom, messagePrefix + '&{template:' + template + '}{{' + title + '=' + whom + '}} {{' + theText + '=' + message + playerButton + '}}');
 
                                         }
@@ -294,8 +321,15 @@ log('selected is ' + JSON.stringify(theToken));
                                         whom = o.get('name');
 
                                     });
+                                    
+                                    //Crops out GM info on player messages
+                                                if (command === '!pcnote') {
+                                                    message = (message.includes("-----") ? message.split('-----')[0] : message);
+                                                }
+                                    
                                 //Sends the final message
                                             if (notitle){whom = '';}
+                                  //sendChat(whom, messagePrefix + '/direct ?{'  + message + playerButton + '|}');//This is a test
                                 sendChat(whom, messagePrefix + '&{template:' + template + '}{{' + title + '=' + whom + '}} {{' + theText + '=' + message + playerButton + '}}');
 
                             }
@@ -311,7 +345,7 @@ log('selected is ' + JSON.stringify(theToken));
                                 `whom = ${whom}`,
                                 `message =${message}`
                             ].forEach(m => log(m));
-                        }
+                        }}
                     }
                 }
             }
