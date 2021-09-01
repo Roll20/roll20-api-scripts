@@ -2,8 +2,9 @@
 // Last Updated: 2021-03-26
 // A script to report token and character calls in a list.
 // Syntax is !report --[t|token_attribute] [c|character_attribute]... ---macro code for each character
+
 on('ready', () => {
-    const version = '1.1.0'; //version number set here
+    const version = '1.0.1'; //verion number set here
     log('-=> Reporter v' + version + ' <=-'); //Logs version number to console
     sendChat('Reporter', '/w gm Ready');
 
@@ -14,7 +15,7 @@ on('ready', () => {
     const TKChar = '<span style="color: #000; font-weight: bold; background-color: orange; padding:0px 2px; margin-right:3px;">TK</span>';
     const DLChar = '<span style="color: #000; font-weight: bold; background-color: yellow; padding:0px 2px; margin-right:3px;">DL</span>';
     const MPChar = '<span style="color: #000; font-weight: bold; background-color: lightsteelblue; padding:0px 2px; margin-right:3px;">MP</span>';
-    const menuChar = `<a href='!report --menu' style='float:right; decoration:none; background-color: transparent; border: none; color: #fff; padding:0px 2px; margin-right:3px; !important'>☰</a>`;
+    const menuChar = `<a href='!report --menu' style='float:right; decoration:none; background-color: transparent; border: none; color: #fff; padding:0px 2px; font-family: pictos; margin-right:3px; !important'>l</a>`;
     const printChar = '<span style="color: #000">P</a>';
     const printButtonStyle = "'float:right; color: #000; font-weight:bold; color: white;text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; font-family: pictos; border:none; background-color: transparent; padding:0px 2px; margin-right:3px !important'";
     const notesButtonStyle = "'float:right; color: white; font-size: smaller; border:none; background-color: #999; padding:0px 2px; margin-right:3px !important'";
@@ -31,7 +32,7 @@ on('ready', () => {
         return '<a style = ' + buttonStyle + ' href="' + link + '">' + name + '</a>';
     }
 
-    let actionButtons = [];
+let actionButtons = [];
     let sheet = "OGL";
 
     // This sections swaps npc and pc sheet attributes as needed on the PF2 and D&D 5th Edition by Roll20 Sheet
@@ -39,7 +40,8 @@ on('ready', () => {
         ((sheet === "PF2") ? {
                 ["ac"]: "armor_class",
                 ["repeating_senses_$0_sense"]: 'senses'
-            } : {
+            } :
+            {
                 ["name"]: "npc_name",
                 ["ac"]: "npc_ac",
                 ["level"]: "npc_challenge",
@@ -91,101 +93,101 @@ on('ready', () => {
 
     function help() {
         sendChat('Reporter', '/w gm ' + openReport + openHeader + menuChar +
-            '**Reporter**' + '<BR>' +
-            `<span style='font-weight:normal;'>Documentation for v.${version}</span>${closeHeader}` + '<BR>' +
-            `${makeButton('How to read the report','!report --report')}` + '<BR>' +
-            `Reporter is a script that reads the tokens on the board that are associated with character sheets and builds a report of them in the chat, returning selected values from either the token settings or the character sheets they are associated with. You can either select a set of tokens to work with, or if you select *no* tokens, it will assume all tokens on the Object/Token layer. This behavior can be altered using *keywords*, described below. The basic syntax is:` + '<BR>' +
+            '**Reporter**' +'<BR>'+
+            `<span style='font-weight:normal;'>Documentation for v.${version}</span>${closeHeader}` +'<BR>'+
+            `${makeButton('How to read the report','!report --report')}` +'<BR>'+
+            `Reporter is a script that reads the tokens on the board that are associated with character sheets and builds a report of them in the chat, returning selected values from either the token settings or the character sheets they are associated with. You can either select a set of tokens to work with, or if you select *no* tokens, it will assume all tokens on the Object/Token layer. This behavior can be altered using *keywords*, described below. The basic syntax is:` +'<BR>' +
             '<BR>' +
-            `<code>!report --[queries] ---[buttonline] ----[keywords]</code>` + '<BR>' +
+            `<code>!report --[queries] ---[buttonline] ----[keywords]</code>` +'<BR>' +
             '<BR>' +
-            `**Queries**` + '<BR>' +
-            `Queries are constructed using` + '<BR>' +
-            `<code>t|attribute</code> to poll a token attribute` + '<BR>' +
-            `<code>c|attribute</code> to poll a character sheet attribute` + '<BR>' +
+            `**Queries**` +'<BR>'+
+            `Queries are constructed using` +'<BR>'+
+            `<code>t|attribute</code> to poll a token attribute` +'<BR>'+
+            `<code>c|attribute</code> to poll a character sheet attribute` +'<BR>' +
             '<BR>' +
-            `*Examples*` + '<BR>' +
-            `<code>--t|name</code> would return a report of all selected token names` + '<BR>' +
-            `<code>--c|strength</code> would return a report of all strength values on the character sheets of the selected tokens` + '<BR>' +
+            `*Examples*` +'<BR>'+
+            `<code>--t|name</code> would return a report of all selected token names` +'<BR>'+
+            `<code>--c|strength</code> would return a report of all strength values on the character sheets of the selected tokens` +'<BR>' +
             '<BR>' +
-            `For character sheets, the script will try to pull a value from the character journal first, and if that does not exist, the installed character sheet.` + '<BR>' +
+            `For character sheets, the script will try to pull a value from the character journal first, and if that does not exist, the installed character sheet.` +'<BR>' +
             '<BR>' +
-            `*Aliases*` + '<BR>' +
-            `There are times in the report when you would not like 'has_bright_light_vision' in the report. You can substitute an alias for the attribute name that will display in chat. For this, just add another pipe after the query and type an alias.` + '<BR>' +
+            `*Aliases*` +'<BR>'+
+            `There are times in the report when you would not like 'has_bright_light_vision' in the report. You can substitute an alias for the attribute name that will display in chat. For this, just add another pipe after the query and type an alias.` +'<BR>' +
             '<BR>' +
-            `For example, if a token has 60 feet of Night Vision:` + '<BR>' +
-            `<code>t|night_vision_distance</code>` + '<BR>' +
-            `might produce:` + '<BR>' +
-            `${tokenChar}: night_vision_distance = 60` + '<BR>' +
-            `but` + '<BR>' +
-            `<code>t|night_vision_distance?NV</code>` + '<BR>' +
-            `would yield:` + '<BR>' +
-            `${tokenChar}: NV= 60` + '<BR>' +
+            `For example, if a token has 60 feet of Night Vision:` +'<BR>'+
+            `<code>t|night_vision_distance</code>` +'<BR>'+
+            `might produce:` +'<BR>'+
+            `${tokenChar}: night_vision_distance = 60` +'<BR>'+
+            `but` +'<BR>'+
+            `<code>t|night_vision_distance?NV</code>` +'<BR>'+
+            `would yield:` +'<BR>'+
+            `${tokenChar}: NV= 60` +'<BR>' +
             '<BR>' +
-            `**Buttonline**` + '<BR>' +
-            `The buttonline is a string containing text and Ability or API Command buttons. These are formed using the normal syntax for such things with a few exceptions.` + '<BR>' +
-            `In order to keep the Roll20 parser from resolving queries and attribute calls before the script gets them, they need to be written slightly differently.` + '<BR>' +
-            `Examples:` + '<BR>' +
-            `<code>@{token|name}</code> is written as <code>A{token|name}</code>` + '<BR>' +
-            `<code>?{question|default_answer}</code> is written as <code>Q{question|default_answer}</code>` + '<BR>' +
+            `**Buttonline**` +'<BR>'+
+            `The buttonline is a string containing text and Ability or API Command buttons. These are formed using the normal syntax for such things with a few exceptions.` +'<BR>'+
+            `In order to keep the Roll20 parser from resolving queries and attribute calls before the script gets them, they need to be written slightly differently.` +'<BR>'+
+            `Examples:` +'<BR>'+
+            `<code>@{token|name}</code> is written as <code>A{token|name}</code>` +'<BR>'+
+            `<code>?{question|default_answer}</code> is written as <code>Q{question|default_answer}</code>` +'<BR>' +
             '<BR>' +
-            `Further, for a handful of scripts, the Reporter API will attempt to parse the code so that each buttonline refers to the specific token being reported on. Currently Token Mod, ChatSetAttr, and Supernotes are supported.` + '<BR>' +
+            `Further, for a handful of scripts, the Reporter API will attempt to parse the code so that each buttonline refers to the specific token being reported on. Currently Token Mod, ChatSetAttr, and Supernotes are supported.` +'<BR>' +
             '<BR>' +
-            `**Filters**` + '<BR>' +
-            `There are four types of operator.` + '<BR>' +
-            `<code>+</code> only includes the token/character pairs that matches the query` + '<BR>' +
-            `<code>-</code> excludes any token/character pair that exactly matches the query` + '<BR>' +
-            `<code>~</code> only includes any character that is a partial match for the query` + '<BR>' +
-            `<code>^</code> excludes any character that is a partial match for the query` + '<BR>' +
-            `thus:` + '<BR>' +
-            `<code>!report||-|c|name|Goblin</code> will return all tokens that are not represented by the Goblin character sheet.` + '<BR>' +
-            `<code>!report||~|c|name|Goblin</code> will return any tokens that are represented by the Goblin or Hobgoblin character sheet.` + '<BR>' +
-            `<code>!report||-|c|npc|1||+|t|</code> has_night_vision|true will exclude all NPCs (leaving only PCs), and then only return those that have nightvision set.` + '<BR>' +
+            `**Filters**` +'<BR>'+
+            `There are four types of operator.` +'<BR>'+
+`<code>+</code> only includes the token/character pairs that matches the query` +'<BR>'+
+`<code>-</code> excludes any token/character pair that exactly matches the query` +'<BR>'+
+`<code>~</code> only includes any character that is a partial match for the query` +'<BR>'+
+`<code>^</code> excludes any character that is a partial match for the query` +'<BR>'+
+`thus:` +'<BR>'+
+`<code>!report||-|c|name|Goblin</code> will return all tokens that are not represented by the Goblin character sheet.` +'<BR>'+
+`<code>!report||~|c|name|Goblin</code> will return any tokens that are represented by the Goblin or Hobgoblin character sheet.` +'<BR>'+
+`<code>!report||-|c|npc|1||+|t|</code> has_night_vision|true will exclude all NPCs (leaving only PCs), and then only return those that have nightvision set.` +'<BR>'+
 
-            +'<BR>' +
-            `Filters do not support an alias, because they are never displayed in the final report.` + '<BR>' +
-            `Filters are executed sequentially, with each filter working on the result from the last, so some logic is required for best results.` + '<BR>' +
-            `Filters are case insensitive.` + '<BR>' +
-            `There is as yet, no way to test for an empty, or undefined value.` + '<BR>' +
+ +'<BR>'+
+`Filters do not support an alias, because they are never displayed in the final report.` +'<BR>'+
+`Filters are executed sequentially, with each filter working on the result from the last, so some logic is required for best results.` +'<BR>'+
+`Filters are case insensitive.` +'<BR>'+
+`There is as yet, no way to test for an empty, or undefined value.` +'<BR>'+
             '<BR>' +
-            `**Special Codes**` + '<BR>' +
-            `Reporter contains a few special codes for common cases, to make macro writing easier. You can put thes in place of normal commands:` + '<BR>' +
-            `<code>--vision</code>as the Query will replace any declared query line with one designed to report most vision situations. It will give values for whether the token has sight, night vision and what the distance of any night vision is.` + '<BR>' +
-            `<code>---vision</code> as the Buttonline will replace any declared button line with a buttonline designed to handle most cases of vision and darkvision.` + '<BR>' +
-            `<code>--light</code> as the Query will replace any declared query line with one designed to report most lighting situations. It will give values for the amount of light, distance and what type.` + '<BR>' +
-            `<code>---light</code> as the Buttonline will replace any declared button line with a buttonline designed to handle most cases of lighting.` + '<BR>' +
-            `<code>---actions</code> as the Buttonline will replace any declared button line with a buttonline made up of the token action buttons associate with the character. This is designed for synergy with the Token Action Maker script, but is not essential. Not that the token actions created by this command cannot contain roll templates and will not convert the %{selected|commandname} structure. this requires very careful parsing and is best avoided. It should work flawlessly with Token Action Maker commands, with the exception of the "Check" and "Save" buttons, for the reasons just mentioned.` + '<BR>' +
+            `**Special Codes**` +'<BR>'+
+            `Reporter contains a few special codes for common cases, to make macro writing easier. You can put thes in place of normal commands:` +'<BR>'+
+            `<code>--vision</code>as the Query will replace any declared query line with one designed to report most vision situations. It will give values for whether the token has sight, night vision and what the distance of any night vision is.` +'<BR>'+
+            `<code>---vision</code> as the Buttonline will replace any declared button line with a buttonline designed to handle most cases of vision and darkvision.` +'<BR>' +
+            `<code>--light</code> as the Query will replace any declared query line with one designed to report most lighting situations. It will give values for the amount of light, distance and what type.` +'<BR>' +
+            `<code>---light</code> as the Buttonline will replace any declared button line with a buttonline designed to handle most cases of lighting.` +'<BR>' +
+            `<code>---actions</code> as the Buttonline will replace any declared button line with a buttonline made up of the token action buttons associate with the character. This is designed for synergy with the Token Action Maker script, but is not essential. Not that the token actions created by this command cannot contain roll templates and will not convert the %{selected|commandname} structure. this requires very careful parsing and is best avoided. It should work flawlessly with Token Action Maker commands, with the exception of the "Check" and "Save" buttons, for the reasons just mentioned.` +'<BR>' +
             '<BR>' +
-            '**Keywords**' + '<BR>' +
-            'keywords change the overall appearance or scope of the report. They are separated from the rest of the report by four dashes and must come at the end.' + '<BR>' +
-            '<code>layer|[gmlayer|objects|map|walls|tracker|all]</code> will constrain the report to a particular layer or all layers at once, so long as no tokens are selected. If any tokens are selected, Reporter will default to the layer the selected tokens are on. This makes it easier for instance to check the vision settings of tokens on the token layer and the gmlayer simultaneously, or to ping pull to note tokens on the gm layer without switching manually to that layer.  ' + '<BR>' +
-            'If the layer keyword all is used the report will be on all token/character pairs on all layers. In this case, a layer character will appear on each subhead line of the report to let you know which layer the token is on. ' + '<BR>' +
-            'If the layer keyword tracker is used the report will be on all token/character pairs on the Turn Tracker as if it were a layer. In this case, a layer character will appear on each subhead line of the report to let you know which layer the token is on. If you click on the layer token, it will switch the token from the GM/Notes layer to the  Token/Objects layer and back.' + '<BR>' +
-            '<code>compact|[true|false]</code> (default=false): The compact mode shows the token image at half size, and eliminates the second line of the report subhead, since it is not always desired. You may have a very large report you want to see better, or you may be using a sheet that does not support the default values. Currently the second line of the subhead only references the D&D 5th Edition by Roll20 Sheet. ' + '<BR>' +
-            '<code>showheader|[true|false]</code> (default=true): This will control whether the header will display at the top of the report. ' + '<BR>' +
-            '<code>showfooter|[true|false]</code> (default=true): This will control whether the footer will display at the bottom of the report. ' + '<BR>' +
-            '<code>printbutton|[true|false]</code> (default=true): This will control whether the print button will display on each line of the report. ' + '<BR>' +
-            '<code>notesbutton|[true|false]</code> (default=false): This will control whether a notes button will display on each line of the report. This notes button will return the token notes for the token on that line. The visibility of the notes button is controlled by the visibility keyword. If the visibility is "gm", it will use a !gmnote command, if the If the visibility is "whisper", it will use a !selftnote command, and if the visibility is "all", it will use a !pcnote command. ' + '<BR>' +
-            '<code>visibility|[gm|whisper|all]</code> (default=gm): This will determine how the report is presented. "gm" is whispered to the gm, "whisper" is whispered to the user who sent the command, "all" is posted openly for all to see. ' + '<BR>' +
-            '<code>showfooter|[true|false]</code> (default=true): This will control whether the footer will display at the bottom of the report. ' + '<BR>' +
-            '<code>source|[true|false]</code> (default=true): if source is set to false, the C and T characters that show whether an attribute comes fromthe token or the sheet will not be displayed. Use this is they are a distraction. ' + '<BR>' +
-            `<code>charactersheetlink|[true|false]</code> (default=true): if this keyword is set to false, the link to open the token's corresponding character sheet will not display ` + '<BR>' +
-            '<code>subtitle|[true|false]</code> (default=true): if this keyword is set to false, the line directly below the character name will not display. (This is also the default in Compact mode). This may be desirable if not using the D&D 5th Edition by Roll20 Sheet. ' + '<BR>' +
-            '<code>ignoreselected|[true|false]</code> (default=false): if this keyword is set to true, the search will not be preset to whichever tokens are selected. The report will run as if no tokens were selected, following whatever layer criteria might have been specified. ' + '<BR>' +
-            '<code>npcsubstitutions[true|false]</code> (default=true): if this keyword is set to false, the script will not automatically substitute npc attributes for their PC counterparts (ex: npc_senses for passive_wisdom).This is good for sheets that are not the D&D 5th Edition by Roll20 Sheet. ' + '<BR>' +
-            '<code>sort|attribute</code> (default is the raw order): This keyword will sort the final list. Most of the sorts are confined to the token attributes, since they require internal code and if they refer to a sheet may return poor or no results if the sheet does not have the proper attributes. Currently the following values can be sorted on:  ' + '<BR>' +
-            'charName: character name. Sheet must have a "name" attribute.<BR>' +
-            '<ul><li>charNameI: character name, inverse order. Sheet must have a "name" attribute.' + '<BR>' +
-            '<li>tokenName: token name' + '<BR>' +
-            '<li>tokenNameI: token name, inverse order.' + '<BR>' +
-            '<li>bar1: token bar1 value' + '<BR>' +
-            '<li>bar1I: token bar1 value, inverse order.' + '<BR>' +
-            '<li>bar2: token bar2 value' + '<BR>' +
-            '<li>bar2I: token bar2 value, inverse order.' + '<BR>' +
-            '<li>bar3: token bar3 value' + '<BR>' +
-            '<li>bar3I: token bar3 value, inverse order.' + '<BR>' +
-            '<li>cr - Challenge Rating. D&D 5th Edition by Roll20 Sheet only' + '<BR>' +
-            '<li>crI - Challenge Rating, inverse order. D&D 5th Edition by Roll20 Sheet only</UL>' + '<BR>' +
-            '<code>title|Title|</code> If this is present in the keywords, the string in between pipes will be placed at the top of the report. If you only want the custom title to display, be sure turn off the header with showheader|false. The title must be placed between two pipes. title|My Title| will work. title|My Title will break.' +
+            '**Keywords**' +'<BR>'+
+            'keywords change the overall appearance or scope of the report. They are separated from the rest of the report by four dashes and must come at the end.' +'<BR>'+
+            '<code>layer|[gmlayer|objects|map|walls|tracker|all]</code> will constrain the report to a particular layer or all layers at once, so long as no tokens are selected. If any tokens are selected, Reporter will default to the layer the selected tokens are on. This makes it easier for instance to check the vision settings of tokens on the token layer and the gmlayer simultaneously, or to ping pull to note tokens on the gm layer without switching manually to that layer.  '+'<BR>'+
+            'If the layer keyword all is used the report will be on all token/character pairs on all layers. In this case, a layer character will appear on each subhead line of the report to let you know which layer the token is on. '+'<BR>'+
+            'If the layer keyword tracker is used the report will be on all token/character pairs on the Turn Tracker as if it were a layer. In this case, a layer character will appear on each subhead line of the report to let you know which layer the token is on. If you click on the layer token, it will switch the token from the GM/Notes layer to the  Token/Objects layer and back.' +'<BR>'+
+            '<code>compact|[true|false]</code> (default=false): The compact mode shows the token image at half size, and eliminates the second line of the report subhead, since it is not always desired. You may have a very large report you want to see better, or you may be using a sheet that does not support the default values. Currently the second line of the subhead only references the D&D 5th Edition by Roll20 Sheet. '+'<BR>'+
+            '<code>showheader|[true|false]</code> (default=true): This will control whether the header will display at the top of the report. '+'<BR>'+
+            '<code>showfooter|[true|false]</code> (default=true): This will control whether the footer will display at the bottom of the report. '+'<BR>'+
+            '<code>printbutton|[true|false]</code> (default=true): This will control whether the print button will display on each line of the report. '+'<BR>'+
+            '<code>notesbutton|[true|false]</code> (default=false): This will control whether a notes button will display on each line of the report. This notes button will return the token notes for the token on that line. The visibility of the notes button is controlled by the visibility keyword. If the visibility is "gm", it will use a !gmnote command, if the If the visibility is "whisper", it will use a !selftnote command, and if the visibility is "all", it will use a !pcnote command. '+'<BR>'+
+            '<code>visibility|[gm|whisper|all]</code> (default=gm): This will determine how the report is presented. "gm" is whispered to the gm, "whisper" is whispered to the user who sent the command, "all" is posted openly for all to see. '+'<BR>'+
+            '<code>showfooter|[true|false]</code> (default=true): This will control whether the footer will display at the bottom of the report. '+'<BR>'+
+            '<code>source|[true|false]</code> (default=true): if source is set to false, the C and T characters that show whether an attribute comes fromthe token or the sheet will not be displayed. Use this is they are a distraction. '+'<BR>'+
+            `<code>charactersheetlink|[true|false]</code> (default=true): if this keyword is set to false, the link to open the token's corresponding character sheet will not display `+'<BR>'+
+            '<code>subtitle|[true|false]</code> (default=true): if this keyword is set to false, the line directly below the character name will not display. (This is also the default in Compact mode). This may be desirable if not using the D&D 5th Edition by Roll20 Sheet. '+'<BR>'+
+            '<code>ignoreselected|[true|false]</code> (default=false): if this keyword is set to true, the search will not be preset to whichever tokens are selected. The report will run as if no tokens were selected, following whatever layer criteria might have been specified. '+'<BR>'+
+            '<code>npcsubstitutions[true|false]</code> (default=true): if this keyword is set to false, the script will not automatically substitute npc attributes for their PC counterparts (ex: npc_senses for passive_wisdom).This is good for sheets that are not the D&D 5th Edition by Roll20 Sheet. '+'<BR>'+
+            '<code>sort|attribute</code> (default is the raw order): This keyword will sort the final list. Most of the sorts are confined to the token attributes, since they require internal code and if they refer to a sheet may return poor or no results if the sheet does not have the proper attributes. Currently the following values can be sorted on:  '+'<BR>'+
+            'charName: character name. Sheet must have a "name" attribute.<BR>'+
+        '<ul><li>charNameI: character name, inverse order. Sheet must have a "name" attribute.'+'<BR>'+
+        '<li>tokenName: token name'+'<BR>'+
+        '<li>tokenNameI: token name, inverse order.'+'<BR>'+
+        '<li>bar1: token bar1 value'+'<BR>'+
+        '<li>bar1I: token bar1 value, inverse order.'+'<BR>'+
+        '<li>bar2: token bar2 value'+'<BR>'+
+        '<li>bar2I: token bar2 value, inverse order.'+'<BR>'+
+        '<li>bar3: token bar3 value'+'<BR>'+
+        '<li>bar3I: token bar3 value, inverse order.'+'<BR>'+
+        '<li>cr - Challenge Rating. D&D 5th Edition by Roll20 Sheet only'+'<BR>'+
+        '<li>crI - Challenge Rating, inverse order. D&D 5th Edition by Roll20 Sheet only</UL>'+'<BR>'+
+'<code>title|Title|</code> If this is present in the keywords, the string in between pipes will be placed at the top of the report. If you only want the custom title to display, be sure turn off the header with showheader|false. The title must be placed between two pipes. title|My Title| will work. title|My Title will break.'+
             closeReport, null, {
                 noarchive: true
             });
@@ -333,7 +335,7 @@ on('ready', () => {
                 isAvatarButton = ((keywords.includes("avatarbutton|true")) ? true : false);
                 isImageButton = ((keywords.includes("imagebutton|true")) ? true : false);
                 subTitle = ((keywords.includes("subtitle|false")) ? false : true);
-                ignoreSelected = ((keywords.includes("ignoreselected|true")) || (keywords.includes("layer|tracker")) ? true : false);
+                ignoreSelected = ((keywords.includes("ignoreselected|true"))||(keywords.includes("layer|tracker")) ? true : false);
                 toWhom = ((keywords.includes("visibility|whisper")) ? '/w ' + msg.who : '/w gm ');
                 toWhom = ((keywords.includes("visibility|all")) ? '' : toWhom);
                 noteRecipient = ((keywords.includes("visibility|all")) ? '!pcnote' : '!gmnote');
@@ -386,7 +388,7 @@ on('ready', () => {
 
 
 
-            const repeatChar = `<a href='${msg.content}' style='float:right; decoration:none; background-color: transparent; border: none; color: #fff; padding:0px 2px; margin-right:3px; !important'>⟲</a>`;
+            const repeatChar = `<a href='${msg.content}' style='float:right; decoration:none; background-color: transparent; border: none; color: #fff; padding:0px 2px; font-family: pictos; margin-right:3px; !important'>1</a>`;
 
             const args = msg.content.split(/\s+--/);
 
@@ -402,7 +404,7 @@ on('ready', () => {
             // Default buttonLines
             switch (buttonCode) {
                 case 'vision':
-                    buttonLine = '**Vision** [Off](!token-mod --set bright_vision|false has_night_vision|false) | [On](!token-mod --set bright_vision|true) **Night** [Off](!token-mod --set has_night_vision|true night_vision_distance|0 bright_vision|false) | [On](!token-mod --set night_vision|true) | [Distance](!token-mod --set has_night_vision|true night_vision_distance|Q{Set night vision distance|60} bright_vision|false has_night_vision|false)'; // | **[SET DEFAULT TOKEN](!token-mod --set defaulttoken)**';
+                    buttonLine = '**Vision** [Off](!token-mod --set bright_vision|false has_night_vision|false) | [On](!token-mod --set bright_vision|true) **Night** [Off](!token-mod --set has_night_vision|true night_vision_distance|0 bright_vision|false) | [On](!token-mod --set night_vision|true) | [Distance](!token-mod --set has_night_vision|true night_vision_distance|Q{Set night vision distance|60} bright_vision|false has_night_vision|false)';// | **[SET DEFAULT TOKEN](!token-mod --set defaulttoken)**';
                     break;
                 case 'udl':
                     buttonLine = '**Vision** [Off](!token-mod --set bright_vision|false has_night_vision|false)|[On](!token-mod --set bright_vision|true) **Night** [Off](!token-mod --set has_night_vision|true night_vision_distance|0 bright_vision|false)•[On](!token-mod --set night_vision|true)•[Distance](!token-mod --set has_night_vision|true night_vision_distance|Q{Set night vision distance|60} bright_vision|false has_night_vision|false)';
@@ -451,12 +453,11 @@ on('ready', () => {
                     character: getObj('character', t.get('represents'))
                 }))
                 .filter(o => undefined !== o.character);
-            //test for empty set, then for sheet type of first found sheet
-            if (TCData.length > 0) {
-                if (TCData[0].character.get("text_proficiency")) {
-                    sheet = "PF2";
-                }
-            }
+//test for empty set, then for sheet type of first found sheet
+if (TCData.length > 0){
+            if (TCData[0].character.get("text_proficiency")) {
+                sheet = "PF2";
+            }}
 
             let filterTCData = TCData;
             let newTCData = [];
@@ -480,7 +481,7 @@ on('ready', () => {
                     if (!filterValue) {
                         filterValue = " "
                     }
-                    if (filterValue === "!") {
+                    if (filterValue === "!"){
                         filterValue = ""
                     }
 
@@ -662,32 +663,32 @@ on('ready', () => {
                             name = tc.token.get('name');
                             tId = tc.token.get('_id');
                             cId = tc.character.get('_id');
+                            
+                            
+if (buttonCode === 'actions') {
+    buttonLine = '';
+    actionList = findObjs({
+        type: 'ability',
+        _characterid: cId
+    });
+    actionList.forEach(a => {
+        if (a.get('istokenaction')) {
+            actionName = a.get('name');
+            actionName = actionName.replace(/\s\(/g, "–");
+            actionName = actionName.replace(/\)/g, "");
+            actionId = a.get('_id');
+            if (actionName !== "Check" && actionName !== "Save") {
+                buttonLine = buttonLine + '[' + actionName + '](~' + cId + '|' + actionId + ') | ';
+            }
 
+        }
+    })
+    buttonLine = buttonLine.replace(/\|\s*$/, "");
+}
+                            
 
-                            if (buttonCode === 'actions') {
-                                buttonLine = '';
-                                actionList = findObjs({
-                                    type: 'ability',
-                                    _characterid: cId
-                                });
-                                actionList.forEach(a => {
-                                    if (a.get('istokenaction')) {
-                                        actionName = a.get('name');
-                                        actionName = actionName.replace(/\s\(/g, "–");
-                                        actionName = actionName.replace(/\)/g, "");
-                                        actionId = a.get('_id');
-                                        if (actionName !== "Check" && actionName !== "Save") {
-                                            buttonLine = buttonLine + '[' + actionName + '](~' + cId + '|' + actionId + ') | ';
-                                        }
-
-                                    }
-                                })
-                                buttonLine = buttonLine.replace(/\|\s*$/, "");
-                            }
-
-
-
-
+                            
+                            
                             //                    log ('buttonLine = '+ buttonLine);
                             if (buttonLine) {
                                 newbuttonLine = buttonLine.replace(/!token-mod --/g, "!token-mod --ignore-selected --ids " + tId + " --")
@@ -747,7 +748,7 @@ on('ready', () => {
                             bioButton = ((isBioButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + " --bio --id" + tc.token.get('_id') + "'>B</a>" : "");
                             avatarButton = ((isAvatarButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + " --avatar --id" + tc.token.get('_id') + "'>A</a>" : "");
                             imageButton = ((isImageButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + " --image --id" + tc.token.get('_id') + "'>&thinsp;I&thinsp;</a>" : "");
-                            tokenImageButton = ((isTokenImageButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + " --tokenimage --id" + tc.token.get('_id') + "'>◉</a>" : "");
+                            tokenImageButton = ((isTokenImageButton) ? "<a style = 'float:right; decoration:none; background-color: transparent; border: none; color: #999; padding:0px; font-family: pictos; margin-right:3px; !important'" +  " href='" + noteRecipient + " --tokenimage --id" + tc.token.get('_id') + "'>L</a>" : "");
                             //tokenImageButton = ((isTokenImageButton) ? "<a style = 'float:right; opacity: 0.5'  href='" + noteRecipient + " --tokenimage --id" + tc.token.get('_id') + "'><img src='" + tc.token.get('imgsrc') + "' alt='token image' width='18' height='18'></a>" : "");
 
 
@@ -820,7 +821,7 @@ on('ready', () => {
                                             attribute = ((npcSubstitutions) ? npcSwap(attribute, ((getAttrByName(tc.character.get('_id'), 'sheet_type')) === "npc" ? "1" : "0")) : attribute); //accounts for differently named attributesbetween pc and npc
                                             break;
                                         default:
-                                            isNPC = getAttrByName(tc.character.get('_id'), 'npc').toString();
+                                        isNPC = getAttrByName(tc.character.get('_id'), 'npc').toString();
                                             attribute = ((npcSubstitutions) ? npcSwap(attribute, isNPC) : attribute); //accounts for differently named attributesbetween pc and npc
                                     }
                                     target = a.split(/\|/)[0];
@@ -854,7 +855,7 @@ on('ready', () => {
                                     // #########Corrects for status markers
                                     if (attribute === "statusmarkers") {
                                         value = value.replace(/::\d\d\d\d\d/g, "");
-                                        value = ((value.charAt(0) === ',') ? value.substring(1) : value);
+                                        value = ((value.charAt(0) === ',') ? value.substring(1) : value) ;
                                     }
                                     //Corrects for returns
                                     if (undefined !== value && typeof value === "string") {
@@ -870,10 +871,11 @@ on('ready', () => {
                                     } else {
                                         prefix = '<i>' + attribute + ': </i>'
                                     }
-                                    //############### TEST THIS FOR PROBLEMS ON MANY REPORT TYPES
-                                    if (hideEmpty && (value === '' || undefined === value)) {} else {
-                                        lines = lines + charType + prefix + value + separator;
-                                    }
+//############### TEST THIS FOR PROBLEMS ON MANY REPORT TYPES
+if (hideEmpty && (value === '' || undefined === value)){
+} else {
+                                    lines = lines + charType + prefix + value + separator;
+}
 
 
                                     //let attributeline = ((atrribute !== "-") ? attribute + ': ' : '') + value + separator;
@@ -889,12 +891,12 @@ on('ready', () => {
                         lines = openReport + ((customTitle) ? openHeader + menuChar + repeatChar + customTitle + "  <span style = 'float:right; color:#aaa;'> (" + TCData.length + ")</span>" + closeHeader : "") + ((showHeader) ? header + pageInfo : "") + lines + ((showFooter) ? header + pageInfo : "") + closeReport;
                 }
                 if (lines) {
-                    sendChat("Reporter", toWhom + lines, null, {
+                    sendChat("Reporter", toWhom  + lines, null, {
                         noarchive: true
                     });
                 }
             } else {
-                sendChat('Reporter', toWhom + openReport + `No viable tokens found.` + closeReport, null, {
+                sendChat('Reporter', toWhom  + openReport + `No viable tokens found.` + closeReport, null, {
                     noarchive: true
                 });
 
