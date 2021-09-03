@@ -7,6 +7,8 @@ This script creates token actions on selected tokens for the D&D 5e by Roll20 sh
 > *0.2.9, the script will also abbreviate common phrases like "(One Handed)" to "-1H".*
 > 
 > *0.3.3, the ability to protect specific token actions was added (put a period after the name).*
+> 
+> *0.3.4, added support for the new npc bonus action repeating field.*
 
 **!ta** This command will create a full suite of token action buttons for a selected character. Actions for NPCs and Attacks for PCs.
 
@@ -21,6 +23,7 @@ You can create specific classes of abilities by using the following arguments se
 - **attacks** Creates a button for each attack. In the case of NPCs, this includes all Actions.
 - **trait**s Creates a button for each trait. PCs can have quite a number of these, so it is not recommended to run this command on PCs.
 - **pc** creates full suite of buttons for everything but traits. Although this will also work on npcs, the intent is to not include trait buttons for pcs, which can get rather numerous. 
+- **bonusactions** Creates a button for each bonus action. This will be ignored on PCs since only NPC sheets have a repeating attribute for bonus actions.
 - **reactions** Creates a button for each reaction. This will be ignored on PCs since only NPC sheets have a repeating attribute for reactions.
 - **spells** Creates a button that calls up a chat menu of all spells the character can cast.
 - **checks** Creates a drop down menu of all Ability and Skill (Ability) checks

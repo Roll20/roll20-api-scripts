@@ -3,8 +3,8 @@
 Name			:	Muler
 GitHub			:	https://github.com/TimRohr22/Cauldron/tree/master/Muler
 Roll20 Contact	:	timmaugh
-Version			:	1.0.6
-Last Update		:	6/28/2021
+Version			:	1.0.8
+Last Update		:	8/4/2021
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -15,10 +15,10 @@ API_Meta.Muler = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 
 const Muler = (() => {
     const apiproject = 'Muler';
-    const version = '1.0.6';
+    const version = '1.0.8';
     const schemaVersion = 0.1;
     API_Meta[apiproject].version = version;
-    const vd = new Date(1624887801910);
+    const vd = new Date(1628088174377);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -150,7 +150,7 @@ const Muler = (() => {
         return result;
     };
     const testSetConstructs = m => {
-        let result = Object.keys(m.variables).length && setrx.test(m.content);
+        let result = m.variables && Object.keys(m.variables).length && setrx.test(m.content);
         setrx.lastIndex = 0;
         return result;
     };
@@ -164,7 +164,7 @@ const Muler = (() => {
         msg.variables = msg.variables || {};
         msg.mules = msg.mules || [];
         if (msg.type !== 'api' || !testGetConstructs(msg)) return funcret;
-        if (!msgstate && scriptisplugin) return funcret;
+        if (!Object.keys(msgstate).length && scriptisplugin) return funcret;
         let status = [];
         let notes = [];
 
@@ -268,8 +268,10 @@ const Muler = (() => {
     };
     const mulesetter = (msg, msgstate = {}) => {
         let funcret = { runloop: false, status: 'unchanged', notes: '' };
+        msg.variables = msg.variables || {};
+        msg.mules = msg.mules || [];
         if (msg.type !== 'api' || !testSetConstructs(msg)) return funcret;
-        if (!msgstate && scriptisplugin) return funcret;
+        if (!Object.keys(msgstate).length && scriptisplugin) return funcret;
         let status = [];
         let notes = [];
         let characters = findObjs({ type: 'character' })

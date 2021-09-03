@@ -1,7 +1,7 @@
 {
   "name": "Plugger",
   "script": "Plugger.js",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Plugger is a meta-script and part of the Meta-Toolbox. Plugger allows for scripts to be run from within the command lines that are inteded for other scripts, and it runs those scripts at meta-script priority (before the intended-recipient script receives the message). With only a few lines of modificadtions, scripts can be registered as plugins, which allows them to return information to the command line. By returning the data to the command line, Plugger ensures that the data is available to the intended-recipient script.\r\rFor more information, see the original thread in the API forum:\r\r[Plugger Forum Thread](https://app.roll20.net/forum/post/10005724/meta-script-plugger-give-scripts-and-plugins-zero-order-priority)\r\rOr read about the full set of meta-scripts available: \r\r[Meta Toolbox Forum Thread](https://app.roll20.net/forum/post/10005695/script-set-the-meta-toolbox)",
   "authors": "timmaugh",
   "roll20userid": "5962076",
@@ -11,5 +11,8 @@
     "state.Plugger": "read, write"
   },
   "conflicts": [],
-  "previousversions": ["1.0.3"]
+  "previousversions": [
+    "1.0.3",
+    "1.0.4"
+  ]
 }
