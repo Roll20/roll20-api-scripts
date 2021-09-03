@@ -1043,3 +1043,11 @@ addcustomturn:
 battleroyale:
   - "BattleRoyale"
   - "Utility"
+
+hs6e:
+  - "ImportHS6e"
+  - "System Toolbox"
+
+reporter:
+  - "Reporter"
+  - "Tokens"
