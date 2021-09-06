@@ -2,9 +2,8 @@
 // Last Updated: 2021-03-26
 // A script to report token and character calls in a list.
 // Syntax is !report --[t|token_attribute] [c|character_attribute]... ---macro code for each character
-
 on('ready', () => {
-    const version = '1.0.1'; //verion number set here
+    const version = '1.0.2'; //verion number set here
     log('-=> Reporter v' + version + ' <=-'); //Logs version number to console
     sendChat('Reporter', '/w gm Ready');
 
@@ -15,7 +14,7 @@ on('ready', () => {
     const TKChar = '<span style="color: #000; font-weight: bold; background-color: orange; padding:0px 2px; margin-right:3px;">TK</span>';
     const DLChar = '<span style="color: #000; font-weight: bold; background-color: yellow; padding:0px 2px; margin-right:3px;">DL</span>';
     const MPChar = '<span style="color: #000; font-weight: bold; background-color: lightsteelblue; padding:0px 2px; margin-right:3px;">MP</span>';
-    const menuChar = `<a href='!report --menu' style='float:right; decoration:none; background-color: transparent; border: none; color: #fff; padding:0px 2px; font-family: pictos; margin-right:3px; !important'>l</a>`;
+    const menuChar = `<a href='!report --menu' style='float:right; decoration:none; background-color: transparent; border: none; color: #fff; padding:0px 2px; font-family: pictos; margin-top:1px; margin-right:1px; !important'>l</a>`;
     const printChar = '<span style="color: #000">P</a>';
     const printButtonStyle = "'float:right; color: #000; font-weight:bold; color: white;text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; font-family: pictos; border:none; background-color: transparent; padding:0px 2px; margin-right:3px !important'";
     const notesButtonStyle = "'float:right; color: white; font-size: smaller; border:none; background-color: #999; padding:0px 2px; margin-right:3px !important'";
@@ -32,7 +31,7 @@ on('ready', () => {
         return '<a style = ' + buttonStyle + ' href="' + link + '">' + name + '</a>';
     }
 
-let actionButtons = [];
+    let actionButtons = [];
     let sheet = "OGL";
 
     // This sections swaps npc and pc sheet attributes as needed on the PF2 and D&D 5th Edition by Roll20 Sheet
@@ -40,8 +39,7 @@ let actionButtons = [];
         ((sheet === "PF2") ? {
                 ["ac"]: "armor_class",
                 ["repeating_senses_$0_sense"]: 'senses'
-            } :
-            {
+            } : {
                 ["name"]: "npc_name",
                 ["ac"]: "npc_ac",
                 ["level"]: "npc_challenge",
@@ -69,14 +67,25 @@ let actionButtons = [];
     //Uncomment out this line for Prod
     function menu() {
         sendChat('Reporter', '/w gm ' + openReport + openHeader + menuChar +
-            '**Reporter Menu**<BR><span style="font-weight:normal;">Use the commands below for specialized tasks</span><BR>' +
-            closeHeader +
-            makeButton("Vision", "!report --vision ---vision") + ' - Use this command to check the vision of selected tokens. If you have no selected tokens, it will return a report of all tokens on the Token/Objects layer.<BR>' +
-            makeButton("Light", "!report --light ---light") + ' - Use this command to check the lighting of selected tokens. If you have no selected tokens, it will return a report of all tokens on the Token/Objects layer.<BR>' +
-            '<BR>' +
-            makeButton("Help", "!report --help") + ' - Use this command display the documentation for the Reporter script.<BR>' +
-            '<BR>' +
-            makeButton("How to read the report", "!report --report") +
+            '**Reporter Menu**<BR>' +
+            closeHeader + '<div style =   "padding-left: 10px; text-indent: -10px; "> ' +
+            "Use the commands below for specialized tasks. you can use the text of the commands as presented in other macros, or just click on the buttons in this menu.<BR>" +
+            makeButton("!report --vision ---vision", "!report --vision ---vision") + ' - Use this command to check the vision of selected tokens. If you have no selected tokens, it will return a report of all tokens on the Token/Objects layer.<BR>' +
+            makeButton("!report|vision", "!report|vision") + ' - Shorthand for the above command. *--vision* and *---vision* are special keywords that can be used as substitutes in any reporter macro.<BR>' +
+            makeButton("!report --light ---light", "!report --light ---light") + ' - Use this command to check the lighting of selected tokens. If you have no selected tokens, it will return a report of all tokens on the Token/Objects layer.<BR>' +
+            makeButton("!report --light ---lightplus", "!report --light ---lightplus") + ' - A more detailed version of the above, with most common light sources.<BR>' +
+            makeButton("!report|light", "!report|light") + ' - Shorthand for the above command. *--light*, *---light* and *---lightplus* are special keywords that can be used as substitutes in any reporter macro.<BR>' +
+            makeButton("!report|help", "!report --help") + ' - Use this command display the documentation for the Reporter script. Also accepts *!report --help*<BR>' +
+            makeButton("!report|mapkeys", "!report|mapkeys") + ' - Use this command to display a list of all objects on the gm layer that represent a character called *Map Key* You can use this to navigate around a map quickly and call up any token notes that might be placed in the Map Key tokens.<BR>' +
+            makeButton("!report|mapkeys_sorted", "!report|mapkeys_sorted") + ' - As above, but sorted alphabetically.<BR>' +
+            makeButton("!report|pcs-detail", "!report|pcs-detail") + ' - A detailed display of all PCs on the map.<BR>' +
+            makeButton("!report|pcs", "!report|pcs") + ' - A compact display of all PCs on the map.<BR>' +
+            makeButton("!report|npcs-detail", "!report|npcs-detail") + ' - A compact display of all PCs on the map.<BR>' +
+            makeButton("!report|npcs-actions", "!report|npcs-actions") + ' - A detailed display of all PCs on the map with most token action buttons displayed. Works very well with the Token Action Maker script.<BR>' +
+            makeButton("!report|tracker", "!report|tracker") + ' - A compact display of all characters in the Turn Tracker.<BR>' +
+            makeButton("!report|tracker-actions", "!report|tracker-actions") + ' - A  display of all characters in the Turn Tracker with most token action buttons displayed.<BR>' +
+            makeButton("!report|report", "!report --report") + ' - How to read the report. Also accepts *!report --report*' +
+            '</div>' +
             closeReport, null, {
                 noarchive: true
             });
@@ -93,101 +102,101 @@ let actionButtons = [];
 
     function help() {
         sendChat('Reporter', '/w gm ' + openReport + openHeader + menuChar +
-            '**Reporter**' +'<BR>'+
-            `<span style='font-weight:normal;'>Documentation for v.${version}</span>${closeHeader}` +'<BR>'+
-            `${makeButton('How to read the report','!report --report')}` +'<BR>'+
-            `Reporter is a script that reads the tokens on the board that are associated with character sheets and builds a report of them in the chat, returning selected values from either the token settings or the character sheets they are associated with. You can either select a set of tokens to work with, or if you select *no* tokens, it will assume all tokens on the Object/Token layer. This behavior can be altered using *keywords*, described below. The basic syntax is:` +'<BR>' +
+            '**Reporter**' + '<BR>' +
+            `<span style='font-weight:normal;'>Documentation for v.${version}</span>${closeHeader}` + '<BR>' +
+            `${makeButton('How to read the report','!report --report')}` + '<BR>' +
+            `Reporter is a script that reads the tokens on the board that are associated with character sheets and builds a report of them in the chat, returning selected values from either the token settings or the character sheets they are associated with. You can either select a set of tokens to work with, or if you select *no* tokens, it will assume all tokens on the Object/Token layer. This behavior can be altered using *keywords*, described below. The basic syntax is:` + '<BR>' +
             '<BR>' +
-            `<code>!report --[queries] ---[buttonline] ----[keywords]</code>` +'<BR>' +
+            `<code>!report --[queries] ---[buttonline] ----[keywords]</code>` + '<BR>' +
             '<BR>' +
-            `**Queries**` +'<BR>'+
-            `Queries are constructed using` +'<BR>'+
-            `<code>t|attribute</code> to poll a token attribute` +'<BR>'+
-            `<code>c|attribute</code> to poll a character sheet attribute` +'<BR>' +
+            `**Queries**` + '<BR>' +
+            `Queries are constructed using` + '<BR>' +
+            `<code>t|attribute</code> to poll a token attribute` + '<BR>' +
+            `<code>c|attribute</code> to poll a character sheet attribute` + '<BR>' +
             '<BR>' +
-            `*Examples*` +'<BR>'+
-            `<code>--t|name</code> would return a report of all selected token names` +'<BR>'+
-            `<code>--c|strength</code> would return a report of all strength values on the character sheets of the selected tokens` +'<BR>' +
+            `*Examples*` + '<BR>' +
+            `<code>--t|name</code> would return a report of all selected token names` + '<BR>' +
+            `<code>--c|strength</code> would return a report of all strength values on the character sheets of the selected tokens` + '<BR>' +
             '<BR>' +
-            `For character sheets, the script will try to pull a value from the character journal first, and if that does not exist, the installed character sheet.` +'<BR>' +
+            `For character sheets, the script will try to pull a value from the character journal first, and if that does not exist, the installed character sheet.` + '<BR>' +
             '<BR>' +
-            `*Aliases*` +'<BR>'+
-            `There are times in the report when you would not like 'has_bright_light_vision' in the report. You can substitute an alias for the attribute name that will display in chat. For this, just add another pipe after the query and type an alias.` +'<BR>' +
+            `*Aliases*` + '<BR>' +
+            `There are times in the report when you would not like 'has_bright_light_vision' in the report. You can substitute an alias for the attribute name that will display in chat. For this, just add another pipe after the query and type an alias.` + '<BR>' +
             '<BR>' +
-            `For example, if a token has 60 feet of Night Vision:` +'<BR>'+
-            `<code>t|night_vision_distance</code>` +'<BR>'+
-            `might produce:` +'<BR>'+
-            `${tokenChar}: night_vision_distance = 60` +'<BR>'+
-            `but` +'<BR>'+
-            `<code>t|night_vision_distance?NV</code>` +'<BR>'+
-            `would yield:` +'<BR>'+
-            `${tokenChar}: NV= 60` +'<BR>' +
+            `For example, if a token has 60 feet of Night Vision:` + '<BR>' +
+            `<code>t|night_vision_distance</code>` + '<BR>' +
+            `might produce:` + '<BR>' +
+            `${tokenChar}: night_vision_distance = 60` + '<BR>' +
+            `but` + '<BR>' +
+            `<code>t|night_vision_distance?NV</code>` + '<BR>' +
+            `would yield:` + '<BR>' +
+            `${tokenChar}: NV= 60` + '<BR>' +
             '<BR>' +
-            `**Buttonline**` +'<BR>'+
-            `The buttonline is a string containing text and Ability or API Command buttons. These are formed using the normal syntax for such things with a few exceptions.` +'<BR>'+
-            `In order to keep the Roll20 parser from resolving queries and attribute calls before the script gets them, they need to be written slightly differently.` +'<BR>'+
-            `Examples:` +'<BR>'+
-            `<code>@{token|name}</code> is written as <code>A{token|name}</code>` +'<BR>'+
-            `<code>?{question|default_answer}</code> is written as <code>Q{question|default_answer}</code>` +'<BR>' +
+            `**Buttonline**` + '<BR>' +
+            `The buttonline is a string containing text and Ability or API Command buttons. These are formed using the normal syntax for such things with a few exceptions.` + '<BR>' +
+            `In order to keep the Roll20 parser from resolving queries and attribute calls before the script gets them, they need to be written slightly differently.` + '<BR>' +
+            `Examples:` + '<BR>' +
+            `<code>@{token|name}</code> is written as <code>A{token|name}</code>` + '<BR>' +
+            `<code>?{question|default_answer}</code> is written as <code>Q{question|default_answer}</code>` + '<BR>' +
             '<BR>' +
-            `Further, for a handful of scripts, the Reporter API will attempt to parse the code so that each buttonline refers to the specific token being reported on. Currently Token Mod, ChatSetAttr, and Supernotes are supported.` +'<BR>' +
+            `Further, for a handful of scripts, the Reporter API will attempt to parse the code so that each buttonline refers to the specific token being reported on. Currently Token Mod, ChatSetAttr, and Supernotes are supported.` + '<BR>' +
             '<BR>' +
-            `**Filters**` +'<BR>'+
-            `There are four types of operator.` +'<BR>'+
-`<code>+</code> only includes the token/character pairs that matches the query` +'<BR>'+
-`<code>-</code> excludes any token/character pair that exactly matches the query` +'<BR>'+
-`<code>~</code> only includes any character that is a partial match for the query` +'<BR>'+
-`<code>^</code> excludes any character that is a partial match for the query` +'<BR>'+
-`thus:` +'<BR>'+
-`<code>!report||-|c|name|Goblin</code> will return all tokens that are not represented by the Goblin character sheet.` +'<BR>'+
-`<code>!report||~|c|name|Goblin</code> will return any tokens that are represented by the Goblin or Hobgoblin character sheet.` +'<BR>'+
-`<code>!report||-|c|npc|1||+|t|</code> has_night_vision|true will exclude all NPCs (leaving only PCs), and then only return those that have nightvision set.` +'<BR>'+
+            `**Filters**` + '<BR>' +
+            `There are four types of operator.` + '<BR>' +
+            `<code>+</code> only includes the token/character pairs that matches the query` + '<BR>' +
+            `<code>-</code> excludes any token/character pair that exactly matches the query` + '<BR>' +
+            `<code>~</code> only includes any character that is a partial match for the query` + '<BR>' +
+            `<code>^</code> excludes any character that is a partial match for the query` + '<BR>' +
+            `thus:` + '<BR>' +
+            `<code>!report||-|c|name|Goblin</code> will return all tokens that are not represented by the Goblin character sheet.` + '<BR>' +
+            `<code>!report||~|c|name|Goblin</code> will return any tokens that are represented by the Goblin or Hobgoblin character sheet.` + '<BR>' +
+            `<code>!report||-|c|npc|1||+|t|</code> has_night_vision|true will exclude all NPCs (leaving only PCs), and then only return those that have nightvision set.` + '<BR>' +
 
- +'<BR>'+
-`Filters do not support an alias, because they are never displayed in the final report.` +'<BR>'+
-`Filters are executed sequentially, with each filter working on the result from the last, so some logic is required for best results.` +'<BR>'+
-`Filters are case insensitive.` +'<BR>'+
-`There is as yet, no way to test for an empty, or undefined value.` +'<BR>'+
+            +'<BR>' +
+            `Filters do not support an alias, because they are never displayed in the final report.` + '<BR>' +
+            `Filters are executed sequentially, with each filter working on the result from the last, so some logic is required for best results.` + '<BR>' +
+            `Filters are case insensitive.` + '<BR>' +
+            `There is as yet, no way to test for an empty, or undefined value.` + '<BR>' +
             '<BR>' +
-            `**Special Codes**` +'<BR>'+
-            `Reporter contains a few special codes for common cases, to make macro writing easier. You can put thes in place of normal commands:` +'<BR>'+
-            `<code>--vision</code>as the Query will replace any declared query line with one designed to report most vision situations. It will give values for whether the token has sight, night vision and what the distance of any night vision is.` +'<BR>'+
-            `<code>---vision</code> as the Buttonline will replace any declared button line with a buttonline designed to handle most cases of vision and darkvision.` +'<BR>' +
-            `<code>--light</code> as the Query will replace any declared query line with one designed to report most lighting situations. It will give values for the amount of light, distance and what type.` +'<BR>' +
-            `<code>---light</code> as the Buttonline will replace any declared button line with a buttonline designed to handle most cases of lighting.` +'<BR>' +
-            `<code>---actions</code> as the Buttonline will replace any declared button line with a buttonline made up of the token action buttons associate with the character. This is designed for synergy with the Token Action Maker script, but is not essential. Not that the token actions created by this command cannot contain roll templates and will not convert the %{selected|commandname} structure. this requires very careful parsing and is best avoided. It should work flawlessly with Token Action Maker commands, with the exception of the "Check" and "Save" buttons, for the reasons just mentioned.` +'<BR>' +
+            `**Special Codes**` + '<BR>' +
+            `Reporter contains a few special codes for common cases, to make macro writing easier. You can put thes in place of normal commands:` + '<BR>' +
+            `<code>--vision</code>as the Query will replace any declared query line with one designed to report most vision situations. It will give values for whether the token has sight, night vision and what the distance of any night vision is.` + '<BR>' +
+            `<code>---vision</code> as the Buttonline will replace any declared button line with a buttonline designed to handle most cases of vision and darkvision.` + '<BR>' +
+            `<code>--light</code> as the Query will replace any declared query line with one designed to report most lighting situations. It will give values for the amount of light, distance and what type.` + '<BR>' +
+            `<code>---light</code> as the Buttonline will replace any declared button line with a buttonline designed to handle most cases of lighting.` + '<BR>' +
+            `<code>---actions</code> as the Buttonline will replace any declared button line with a buttonline made up of the token action buttons associate with the character. This is designed for synergy with the Token Action Maker script, but is not essential. Not that the token actions created by this command cannot contain roll templates and will not convert the %{selected|commandname} structure. this requires very careful parsing and is best avoided. It should work flawlessly with Token Action Maker commands, with the exception of the "Check" and "Save" buttons, for the reasons just mentioned.` + '<BR>' +
             '<BR>' +
-            '**Keywords**' +'<BR>'+
-            'keywords change the overall appearance or scope of the report. They are separated from the rest of the report by four dashes and must come at the end.' +'<BR>'+
-            '<code>layer|[gmlayer|objects|map|walls|tracker|all]</code> will constrain the report to a particular layer or all layers at once, so long as no tokens are selected. If any tokens are selected, Reporter will default to the layer the selected tokens are on. This makes it easier for instance to check the vision settings of tokens on the token layer and the gmlayer simultaneously, or to ping pull to note tokens on the gm layer without switching manually to that layer.  '+'<BR>'+
-            'If the layer keyword all is used the report will be on all token/character pairs on all layers. In this case, a layer character will appear on each subhead line of the report to let you know which layer the token is on. '+'<BR>'+
-            'If the layer keyword tracker is used the report will be on all token/character pairs on the Turn Tracker as if it were a layer. In this case, a layer character will appear on each subhead line of the report to let you know which layer the token is on. If you click on the layer token, it will switch the token from the GM/Notes layer to the  Token/Objects layer and back.' +'<BR>'+
-            '<code>compact|[true|false]</code> (default=false): The compact mode shows the token image at half size, and eliminates the second line of the report subhead, since it is not always desired. You may have a very large report you want to see better, or you may be using a sheet that does not support the default values. Currently the second line of the subhead only references the D&D 5th Edition by Roll20 Sheet. '+'<BR>'+
-            '<code>showheader|[true|false]</code> (default=true): This will control whether the header will display at the top of the report. '+'<BR>'+
-            '<code>showfooter|[true|false]</code> (default=true): This will control whether the footer will display at the bottom of the report. '+'<BR>'+
-            '<code>printbutton|[true|false]</code> (default=true): This will control whether the print button will display on each line of the report. '+'<BR>'+
-            '<code>notesbutton|[true|false]</code> (default=false): This will control whether a notes button will display on each line of the report. This notes button will return the token notes for the token on that line. The visibility of the notes button is controlled by the visibility keyword. If the visibility is "gm", it will use a !gmnote command, if the If the visibility is "whisper", it will use a !selftnote command, and if the visibility is "all", it will use a !pcnote command. '+'<BR>'+
-            '<code>visibility|[gm|whisper|all]</code> (default=gm): This will determine how the report is presented. "gm" is whispered to the gm, "whisper" is whispered to the user who sent the command, "all" is posted openly for all to see. '+'<BR>'+
-            '<code>showfooter|[true|false]</code> (default=true): This will control whether the footer will display at the bottom of the report. '+'<BR>'+
-            '<code>source|[true|false]</code> (default=true): if source is set to false, the C and T characters that show whether an attribute comes fromthe token or the sheet will not be displayed. Use this is they are a distraction. '+'<BR>'+
-            `<code>charactersheetlink|[true|false]</code> (default=true): if this keyword is set to false, the link to open the token's corresponding character sheet will not display `+'<BR>'+
-            '<code>subtitle|[true|false]</code> (default=true): if this keyword is set to false, the line directly below the character name will not display. (This is also the default in Compact mode). This may be desirable if not using the D&D 5th Edition by Roll20 Sheet. '+'<BR>'+
-            '<code>ignoreselected|[true|false]</code> (default=false): if this keyword is set to true, the search will not be preset to whichever tokens are selected. The report will run as if no tokens were selected, following whatever layer criteria might have been specified. '+'<BR>'+
-            '<code>npcsubstitutions[true|false]</code> (default=true): if this keyword is set to false, the script will not automatically substitute npc attributes for their PC counterparts (ex: npc_senses for passive_wisdom).This is good for sheets that are not the D&D 5th Edition by Roll20 Sheet. '+'<BR>'+
-            '<code>sort|attribute</code> (default is the raw order): This keyword will sort the final list. Most of the sorts are confined to the token attributes, since they require internal code and if they refer to a sheet may return poor or no results if the sheet does not have the proper attributes. Currently the following values can be sorted on:  '+'<BR>'+
-            'charName: character name. Sheet must have a "name" attribute.<BR>'+
-        '<ul><li>charNameI: character name, inverse order. Sheet must have a "name" attribute.'+'<BR>'+
-        '<li>tokenName: token name'+'<BR>'+
-        '<li>tokenNameI: token name, inverse order.'+'<BR>'+
-        '<li>bar1: token bar1 value'+'<BR>'+
-        '<li>bar1I: token bar1 value, inverse order.'+'<BR>'+
-        '<li>bar2: token bar2 value'+'<BR>'+
-        '<li>bar2I: token bar2 value, inverse order.'+'<BR>'+
-        '<li>bar3: token bar3 value'+'<BR>'+
-        '<li>bar3I: token bar3 value, inverse order.'+'<BR>'+
-        '<li>cr - Challenge Rating. D&D 5th Edition by Roll20 Sheet only'+'<BR>'+
-        '<li>crI - Challenge Rating, inverse order. D&D 5th Edition by Roll20 Sheet only</UL>'+'<BR>'+
-'<code>title|Title|</code> If this is present in the keywords, the string in between pipes will be placed at the top of the report. If you only want the custom title to display, be sure turn off the header with showheader|false. The title must be placed between two pipes. title|My Title| will work. title|My Title will break.'+
+            '**Keywords**' + '<BR>' +
+            'keywords change the overall appearance or scope of the report. They are separated from the rest of the report by four dashes and must come at the end.' + '<BR>' +
+            '<code>layer|[gmlayer|objects|map|walls|tracker|all]</code> will constrain the report to a particular layer or all layers at once, so long as no tokens are selected. If any tokens are selected, Reporter will default to the layer the selected tokens are on. This makes it easier for instance to check the vision settings of tokens on the token layer and the gmlayer simultaneously, or to ping pull to note tokens on the gm layer without switching manually to that layer.  ' + '<BR>' +
+            'If the layer keyword all is used the report will be on all token/character pairs on all layers. In this case, a layer character will appear on each subhead line of the report to let you know which layer the token is on. ' + '<BR>' +
+            'If the layer keyword tracker is used the report will be on all token/character pairs on the Turn Tracker as if it were a layer. In this case, a layer character will appear on each subhead line of the report to let you know which layer the token is on. If you click on the layer token, it will switch the token from the GM/Notes layer to the  Token/Objects layer and back.' + '<BR>' +
+            '<code>compact|[true|false]</code> (default=false): The compact mode shows the token image at half size, and eliminates the second line of the report subhead, since it is not always desired. You may have a very large report you want to see better, or you may be using a sheet that does not support the default values. Currently the second line of the subhead only references the D&D 5th Edition by Roll20 Sheet. ' + '<BR>' +
+            '<code>showheader|[true|false]</code> (default=true): This will control whether the header will display at the top of the report. ' + '<BR>' +
+            '<code>showfooter|[true|false]</code> (default=true): This will control whether the footer will display at the bottom of the report. ' + '<BR>' +
+            '<code>printbutton|[true|false]</code> (default=true): This will control whether the print button will display on each line of the report. ' + '<BR>' +
+            '<code>notesbutton|[true|false]</code> (default=false): This will control whether a notes button will display on each line of the report. This notes button will return the token notes for the token on that line. The visibility of the notes button is controlled by the visibility keyword. If the visibility is "gm", it will use a !gmnote command, if the If the visibility is "whisper", it will use a !selftnote command, and if the visibility is "all", it will use a !pcnote command. ' + '<BR>' +
+            '<code>visibility|[gm|whisper|all]</code> (default=gm): This will determine how the report is presented. "gm" is whispered to the gm, "whisper" is whispered to the user who sent the command, "all" is posted openly for all to see. ' + '<BR>' +
+            '<code>showfooter|[true|false]</code> (default=true): This will control whether the footer will display at the bottom of the report. ' + '<BR>' +
+            '<code>source|[true|false]</code> (default=true): if source is set to false, the C and T characters that show whether an attribute comes fromthe token or the sheet will not be displayed. Use this is they are a distraction. ' + '<BR>' +
+            `<code>charactersheetlink|[true|false]</code> (default=true): if this keyword is set to false, the link to open the token's corresponding character sheet will not display ` + '<BR>' +
+            '<code>subtitle|[true|false]</code> (default=true): if this keyword is set to false, the line directly below the character name will not display. (This is also the default in Compact mode). This may be desirable if not using the D&D 5th Edition by Roll20 Sheet. ' + '<BR>' +
+            '<code>ignoreselected|[true|false]</code> (default=false): if this keyword is set to true, the search will not be preset to whichever tokens are selected. The report will run as if no tokens were selected, following whatever layer criteria might have been specified. ' + '<BR>' +
+            '<code>npcsubstitutions[true|false]</code> (default=true): if this keyword is set to false, the script will not automatically substitute npc attributes for their PC counterparts (ex: npc_senses for passive_wisdom).This is good for sheets that are not the D&D 5th Edition by Roll20 Sheet. ' + '<BR>' +
+            '<code>sort|attribute</code> (default is the raw order): This keyword will sort the final list. Most of the sorts are confined to the token attributes, since they require internal code and if they refer to a sheet may return poor or no results if the sheet does not have the proper attributes. Currently the following values can be sorted on:  ' + '<BR>' +
+            'charName: character name. Sheet must have a "name" attribute.<BR>' +
+            '<ul><li>charNameI: character name, inverse order. Sheet must have a "name" attribute.' + '<BR>' +
+            '<li>tokenName: token name' + '<BR>' +
+            '<li>tokenNameI: token name, inverse order.' + '<BR>' +
+            '<li>bar1: token bar1 value' + '<BR>' +
+            '<li>bar1I: token bar1 value, inverse order.' + '<BR>' +
+            '<li>bar2: token bar2 value' + '<BR>' +
+            '<li>bar2I: token bar2 value, inverse order.' + '<BR>' +
+            '<li>bar3: token bar3 value' + '<BR>' +
+            '<li>bar3I: token bar3 value, inverse order.' + '<BR>' +
+            '<li>cr - Challenge Rating. D&D 5th Edition by Roll20 Sheet only' + '<BR>' +
+            '<li>crI - Challenge Rating, inverse order. D&D 5th Edition by Roll20 Sheet only</UL>' + '<BR>' +
+            '<code>title|Title|</code> If this is present in the keywords, the string in between pipes will be placed at the top of the report. If you only want the custom title to display, be sure turn off the header with showheader|false. The title must be placed between two pipes. title|My Title| will work. title|My Title will break.' +
             closeReport, null, {
                 noarchive: true
             });
@@ -309,6 +318,116 @@ let actionButtons = [];
             let differentName = "";
             let prefix = "";
             let isNPC = "";
+            let showPageInfo = false;
+            let pageInfo = "";
+            let sheet = "OGL";
+
+
+            let testChar = findObjs({
+                type: 'character'
+            });
+            if (testChar.length > 0) {
+                testChar = testChar[0];
+                if (getAttrByName(testChar.get('_id'), 'text_proficiency')) {
+                    sheet = "PF2";
+                }
+            }
+            //intercept shorthand phrases that replace entire calls
+L({sheet});
+            switch (msg.content) {
+                case '!report|mapkeys':
+                    mapKeyChar = findObjs({
+                        type: 'character',
+                        name: 'Map Key'
+                    })[0];
+
+                    if (mapKeyChar) {
+                        mapKey = mapKeyChar.get('_id');
+                        msg.content = `!report||+|t|represents|${mapKey} ---  ---- layer|gmlayer compact|true charactersheetlink|false notesbutton|true showprintbutton|false title|Map Keys| tokennotesbutton|true ignoreselected|true showheader|false `;
+                    } else {
+                        msg.content = `!report||+|t|thereisnocharacterbythisname`
+                    }
+                    break;
+                case '!report|mapkeys_sorted':
+                    mapKeyChar = findObjs({
+                        type: 'character',
+                        name: 'Map Key'
+                    })[0];
+                    if (mapKeyChar) {
+                        mapKey = mapKeyChar.get('_id');
+                        msg.content = `!report||+|t|represents|${mapKey} ---  ---- layer|gmlayer compact|true sort|tokenName charactersheetlink|false notesbutton|true showprintbutton|false title|Map Keys| tokennotesbutton|true ignoreselected|true showheader|false `;
+                    } else {
+                        msg.content = `!report||+|t|thereisnocharacterbythisname`
+                    }
+                    break;
+                case '!report|pcs-detail':
+                    if (sheet === 'PF2') {
+                        msg.content = `!report||-|c|sheet_type|npc --detail ---vision ---- showfooter|false showheader|false printbutton|false hideempty|true source|false title|PCs Detail|`;
+                    } else {
+                        msg.content = `!report||+|c|npc|0 --c|strength,|Str c|dexterity,|Dex c|constitution|Con c|intelligence,|Int c|wisdom,|Wis c|charisma#|Cha c|hp,|hp c|ac,|AC c|gp|GP ---vision ---- showfooter|false showheader|false printbutton|false hideempty|true source|false title|PCs Detail|`;
+
+                    }
+                    break;
+                case '!report|pcs':
+                    if (sheet === 'PF2') {
+                        msg.content = `!report||-|c|sheet_type|npc ---- title|PC Directory| sort|bar1 compact|true showheader|false showfooter|false layer|objects charactersheetbutton|true ignoreselected|true printbutton|false`;
+                    } else {
+                        msg.content = `!report||+|c|npc|0 ---- title|PC Directory| sort|bar1 compact|true showheader|false showfooter|false layer|objects charactersheetbutton|true  ignoreselected|true printbutton|false`;
+                    }
+                    break;
+                case '!report|npcs-detail':
+                    if (sheet === 'PF2') {
+                        msg.content = `!report||+|c|sheet_type|npc --detail  ---vision ---- showfooter|false showheader|false printbutton|false hideempty|true source|false title|NPCs Detail|`;
+                    } else {
+                        msg.content = `!report||-|c|npc|0 --detail   ---- showfooter|false  showheader|false source|false printbutton|false hideempty|true charactersheetbutton|true title|NPCs Detail| `;
+                    }
+                    break;
+                case '!report|npcs-actions':
+                    if (sheet === 'PF2') {
+                        msg.content = `!report||+|c|sheet_type|npc --  ---actions ---- showfooter|false  showheader|false source|false printbutton|false compact|true charactersheetbutton|true title|NPC Actions| `;
+                    } else {
+                        msg.content = `!report||-|c|npc|0 --  ---actions ---- showfooter|false  showheader|false source|false printbutton|false compact|true charactersheetbutton|true title|NPC Actions| `;
+                    }
+                    break;
+                case '!report|tracker':
+                    msg.content = `!report --t|statusmarkers|- ---- showfooter|false showheader|false source|false title|Tracker Compact| layer|tracker compact|true hideempty|true charactersheetbutton|true `;
+                    break;
+                case '!report|tracker-actions':
+                    msg.content = `!report -- ---actions ---- showfooter|false showheader|false source|false title|Tracker Actions| layer|tracker compact|true charactersheetbutton|true `;
+                    break;
+                case '!report|light':
+                    msg.content = `!report --light ---lightplus ----showsource|false`;
+                    break;
+                case '!report|vision':
+                    msg.content = `!report --vision ---vision ----showsource|false`;
+                    break;
+                case '!report|help':
+                    msg.content = `!report --help`;
+                    break;
+                case '!report|menu':
+                    msg.content = `!report --menu`;
+                    break;
+                case '!report|report':
+                    msg.content = `!report --report`;
+                    break;
+
+                default:
+            }
+
+
+
+
+            if (msg.content === "!report --mapkeys") {
+                mapKeyChar = findObjs({
+                    type: 'character',
+                    name: 'Map Key'
+                })[0];
+                mapKey = mapKeyChar.get('_id');
+                L({
+                    mapKey
+                });
+                msg.content = `!report||+|t|represents|${mapKey} ---  ---- layer|gmlayer compact|true sort|tokennameI charactersheetlink|false notesbutton|true showprintbutton|false title|Map Keys| tokennotesbutton|true ignoreselected|true showheader|false `;
+            }
 
 
             //  ################## Keywords
@@ -325,6 +444,7 @@ let actionButtons = [];
                 compact = ((keywords.includes("compact|true")) ? true : false);
                 showFooter = ((keywords.includes("showfooter|false")) ? false : true);
                 showHeader = ((keywords.includes("showheader|false")) ? false : true);
+                showPageInfo = ((keywords.includes("showpageinfo|true")) ? true : false);
                 customTitle = ((keywords.includes(" title|")) ? keywords.match(/title\|.*?\|/).toString().split("|")[1] : '');
                 source = ((keywords.includes("source|false")) ? false : true);
                 isPrintbutton = ((keywords.includes("printbutton|true")) ? true : false);
@@ -335,7 +455,7 @@ let actionButtons = [];
                 isAvatarButton = ((keywords.includes("avatarbutton|true")) ? true : false);
                 isImageButton = ((keywords.includes("imagebutton|true")) ? true : false);
                 subTitle = ((keywords.includes("subtitle|false")) ? false : true);
-                ignoreSelected = ((keywords.includes("ignoreselected|true"))||(keywords.includes("layer|tracker")) ? true : false);
+                ignoreSelected = ((keywords.includes("ignoreselected|true")) || (keywords.includes("layer|tracker")) ? true : false);
                 toWhom = ((keywords.includes("visibility|whisper")) ? '/w ' + msg.who : '/w gm ');
                 toWhom = ((keywords.includes("visibility|all")) ? '' : toWhom);
                 noteRecipient = ((keywords.includes("visibility|all")) ? '!pcnote' : '!gmnote');
@@ -388,7 +508,7 @@ let actionButtons = [];
 
 
 
-            const repeatChar = `<a href='${msg.content}' style='float:right; decoration:none; background-color: transparent; border: none; color: #fff; padding:0px 2px; font-family: pictos; margin-right:3px; !important'>1</a>`;
+            const repeatChar = `<a href='${msg.content}' style='float:right; decoration:none; background-color: transparent; border: none; color: #fff; padding:0px 2px; font-family: pictos; margin-right:1px; !important'>1</a>`;
 
             const args = msg.content.split(/\s+--/);
 
@@ -404,10 +524,14 @@ let actionButtons = [];
             // Default buttonLines
             switch (buttonCode) {
                 case 'vision':
-                    buttonLine = '**Vision** [Off](!token-mod --set bright_vision|false has_night_vision|false) | [On](!token-mod --set bright_vision|true) **Night** [Off](!token-mod --set has_night_vision|true night_vision_distance|0 bright_vision|false) | [On](!token-mod --set night_vision|true) | [Distance](!token-mod --set has_night_vision|true night_vision_distance|Q{Set night vision distance|60} bright_vision|false has_night_vision|false)';// | **[SET DEFAULT TOKEN](!token-mod --set defaulttoken)**';
+                    buttonLine = '**Vision** [Off](!token-mod --set bright_vision|false has_night_vision|false)•[On](!token-mod --set bright_vision|true) **Night** [Off](!token-mod --set has_night_vision|false bright_vision|false)•[On](!token-mod --set bright_vision|true night_vision|true)•[Distance](!token-mod --set has_night_vision|true night_vision_distance|Q{Set night vision distance|60})'; // | **[SET DEFAULT TOKEN](!token-mod --set defaulttoken)**';
                     break;
                 case 'udl':
-                    buttonLine = '**Vision** [Off](!token-mod --set bright_vision|false has_night_vision|false)|[On](!token-mod --set bright_vision|true) **Night** [Off](!token-mod --set has_night_vision|true night_vision_distance|0 bright_vision|false)•[On](!token-mod --set night_vision|true)•[Distance](!token-mod --set has_night_vision|true night_vision_distance|Q{Set night vision distance|60} bright_vision|false has_night_vision|false)';
+                    buttonLine = '**Vision** [Off](!token-mod --set bright_vision|false has_night_vision|false)•[On](!token-mod --set bright_vision|true) **Night** [Off](!token-mod --set has_night_vision|false bright_vision|false)•[On](!token-mod --set bright_vision|true night_vision|true)•[Distance](!token-mod --set has_night_vision|true night_vision_distance|Q{Set night vision distance|60})';
+                    break;
+                case 'lightplus':
+                    //Low Light requires Bright Light to be on, even if the distance is 0
+                    buttonLine = '[Off](!token-mod --set emits_bright_light|off emits_low_light|off has_directional_bright_light|false has_directional_dim_light|false directional_bright_light_total|360 directional_dim_light_total|360) | [On](!token-mod --set emits_bright_light|on emits_low_light|on light_angle|360) | [Spot](!token-mod --set emits_bright_light|on bright_light_distance|5 low_light_distance|0 light_angle|360) | [Candle](!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|2 low_light_distance|5 light_angle|360) | [Lamp](!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|15 low_light_distance|15 light_angle|360) | [Torch](!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|20 low_light_distance|20 light_angle|360) | [Hooded Lantern](!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|30 low_light_distance|30 light_angle|360) | [Bullseye Lantern](!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|60 has_directional_bright_light|true has_directional_dim_light|true directional_bright_light_total|60 directional_dim_light_total|60) | [*Light*](!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|20 low_light_distance|20 light_angle|360) | [*Daylight*](!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|60 low_light_distance|60 light_angle|360) | [*Dancing*](!token-mod --set emits_bright_light|off emits_low_light|on bright_light_distance|0 low_light_distance|10 light_angle|360) | [*Faerie Fire*](!token-mod --set emits_bright_light|off emits_low_light|on bright_light_distance|0 low_light_distance|10 statusmarkers|purple light_angle|360) | [*Gem of Brightness*](!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|30 low_light_distance|30 light_angle|360)';
                     break;
                 case 'light':
                     //Low Light requires Bright Light to be on, even if the distance is 0
@@ -453,11 +577,12 @@ let actionButtons = [];
                     character: getObj('character', t.get('represents'))
                 }))
                 .filter(o => undefined !== o.character);
-//test for empty set, then for sheet type of first found sheet
-if (TCData.length > 0){
-            if (TCData[0].character.get("text_proficiency")) {
-                sheet = "PF2";
-            }}
+            //test for empty set, then for sheet type of first found sheet
+            if (TCData.length > 0) {
+                if (getAttrByName(TCData[0].character.get('_id'), 'text_proficiency')) {
+                    sheet = "PF2";
+                }
+            }
 
             let filterTCData = TCData;
             let newTCData = [];
@@ -481,7 +606,7 @@ if (TCData.length > 0){
                     if (!filterValue) {
                         filterValue = " "
                     }
-                    if (filterValue === "!"){
+                    if (filterValue === "!") {
                         filterValue = ""
                     }
 
@@ -508,7 +633,9 @@ if (TCData.length > 0){
             if (TCData.length > 0) {
                 pageData = (getObj('page', TCData[0].token.get('_pageid')));
                 let pageName = pageData.get('name');
-                let header = openHeader + menuChar + repeatChar + TCData[0].token.get('name') + " - " + TCData[TCData.length - 1].token.get('name') + "  <span style = 'float:right; color:#aaa;'> Count=" + TCData.length + "</span>" + closeHeader;
+                let countChar = "  <span style = 'float:right; color:#aaa;'>(" + TCData.length + ")</span>";
+
+                let header = openHeader + menuChar + repeatChar + countChar + TCData[0].token.get('name') + " - " + TCData[TCData.length - 1].token.get('name') + closeHeader;
 
 
                 currentLayer = currentLayer || TCData[0].token.get('layer');
@@ -526,8 +653,11 @@ if (TCData.length > 0){
                         layerChar = TKChar;
                 }
 
-
-                let pageInfo = "<div style='color:#fff; background-color:#404040; margin-right:3px%; padding:3px;'><a style = " + printButtonStyle + " href='!RPechochat --" + pageData.get('name') + "'>w</a><b>" + layerChar + pageData.get('name') + "</b> - UDL: " + ((pageData.get('dynamic_lighting_enabled')) ? '<a href="!RPpage-mod --dynamic_lighting_enabled|false" style = ' + headerButtonStyle + '>On</a>' : '<a href="!RPpage-mod --dynamic_lighting_enabled|true" style = ' + headerButtonStyle + '>Off</a>') + " | Daylight : " + ((pageData.get('daylight_mode_enabled')) ? '<a href="!RPpage-mod --daylight_mode_enabled|false" style = ' + headerButtonStyle + '>On</a>' : '<a href="!RPpage-mod --daylight_mode_enabled|true" style = ' + headerButtonStyle + '>Off</a>') + " | Opacity: " + '<a href="!RPpage-mod --fog_opacity|?{Input vlue between 0 and 100?|35}" style = ' + headerButtonStyle + '>' + (pageData.get('fog_opacity') * 100) + "%</a></a></i></div>";
+                if (showPageInfo) {
+                    pageInfo = "<div style='color:#fff; background-color:#404040; margin-right:3px%; padding:3px;'><a style = " + printButtonStyle + " href='!RPechochat --" + pageData.get('name') + "'>w</a><b>" + layerChar + pageData.get('name') + "</b><BR>DL: " + ((pageData.get('dynamic_lighting_enabled')) ? '<a href="!RPpage-mod --dynamic_lighting_enabled|false" style = ' + headerButtonStyle + '>On</a>' : '<a href="!RPpage-mod --dynamic_lighting_enabled|true" style = ' + headerButtonStyle + '>Off</a>') + " | Day: " + ((pageData.get('daylight_mode_enabled')) ? '<a href="!RPpage-mod --daylight_mode_enabled|false" style = ' + headerButtonStyle + '>On</a>' : '<a href="!RPpage-mod --daylight_mode_enabled|true" style = ' + headerButtonStyle + '>Off</a>') + " | Opacity: " + '<a href="!RPpage-mod --daylightModeOpacity|?{Input value between 0 and 100?|100}" style = ' + headerButtonStyle + '>' + (pageData.get('daylightModeOpacity') * 100) + "%</a></a></i></div>";
+                } else {
+                    pageInfo = ''
+                }
 
 
 
@@ -545,7 +675,7 @@ if (TCData.length > 0){
                             }
                             break;
                         case "light":
-                            attributes = ['t|emits_bright_light,|Bright|Bright', 't|bright_light_distance|dist', 't|emits_low_light.|Low', 't|low_light_distance|dist'];
+                            attributes = ['t|emits_bright_light,|Bright|Bright', 't|bright_light_distance|distance', 't|emits_low_light,|Low', 't|low_light_distance|distance'];
                             break;
                         case "detail":
                             if (sheet === "PF2") {
@@ -663,32 +793,32 @@ if (TCData.length > 0){
                             name = tc.token.get('name');
                             tId = tc.token.get('_id');
                             cId = tc.character.get('_id');
-                            
-                            
-if (buttonCode === 'actions') {
-    buttonLine = '';
-    actionList = findObjs({
-        type: 'ability',
-        _characterid: cId
-    });
-    actionList.forEach(a => {
-        if (a.get('istokenaction')) {
-            actionName = a.get('name');
-            actionName = actionName.replace(/\s\(/g, "–");
-            actionName = actionName.replace(/\)/g, "");
-            actionId = a.get('_id');
-            if (actionName !== "Check" && actionName !== "Save") {
-                buttonLine = buttonLine + '[' + actionName + '](~' + cId + '|' + actionId + ') | ';
-            }
 
-        }
-    })
-    buttonLine = buttonLine.replace(/\|\s*$/, "");
-}
-                            
 
-                            
-                            
+                            if (buttonCode === 'actions') {
+                                buttonLine = '';
+                                actionList = findObjs({
+                                    type: 'ability',
+                                    _characterid: cId
+                                });
+                                actionList.forEach(a => {
+                                    if (a.get('istokenaction')) {
+                                        actionName = a.get('name');
+                                        actionName = actionName.replace(/\s\(/g, "–");
+                                        actionName = actionName.replace(/\)/g, "");
+                                        actionId = a.get('_id');
+                                        if (actionName !== "Check" && actionName !== "Save") {
+                                            buttonLine = buttonLine + '[' + actionName + '](~' + cId + '|' + actionId + ') | ';
+                                        }
+
+                                    }
+                                })
+                                buttonLine = buttonLine.replace(/\|\s*$/, "");
+                            }
+
+
+
+
                             //                    log ('buttonLine = '+ buttonLine);
                             if (buttonLine) {
                                 newbuttonLine = buttonLine.replace(/!token-mod --/g, "!token-mod --ignore-selected --ids " + tId + " --")
@@ -740,7 +870,7 @@ if (buttonCode === 'actions') {
                                 }
                             }
 
-                            characterSheet = ((characterSheetLink) ? " — <i><a style = " + buttonStyle + "href='http://journal.roll20.net/character/" + tc.character.get('_id') + "'>" + tc.character.get('name') + "</a></i>" : ""); //" <a style = " + buttonStyle + "href='http://journal.roll20.net/character/" + tc.character.get('_id') + "'>&#128442;</a>"
+                            characterSheet = ((characterSheetLink) ? "<i> - <a style = " + buttonStyle + "href='http://journal.roll20.net/character/" + tc.character.get('_id') + "'>" + tc.character.get('name') + "</a></i>" : ""); //" <a style = " + buttonStyle + "href='http://journal.roll20.net/character/" + tc.character.get('_id') + "'>&#128442;</a>"
                             characterSheet = ((characterSheetButton) ? "</i> <a style = " + buttonStyle + "href='http://journal.roll20.net/character/" + tc.character.get('_id') + "'><b>" + linkBox + "</b></a>" : characterSheet); //" <a style = " + buttonStyle + "href='http://journal.roll20.net/character/" + tc.character.get('_id') + "'>&#128442;</a>"
                             printButton = ((isPrintbutton) ? "<a style = " + printButtonStyle + " href='!RPechochat --" + tc.token.get('name') + "'>w</a>" : "");
                             tokenNotesButton = ((isTokenNotesButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + " --id" + tc.token.get('_id') + "'>T</a>" : "");
@@ -748,7 +878,7 @@ if (buttonCode === 'actions') {
                             bioButton = ((isBioButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + " --bio --id" + tc.token.get('_id') + "'>B</a>" : "");
                             avatarButton = ((isAvatarButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + " --avatar --id" + tc.token.get('_id') + "'>A</a>" : "");
                             imageButton = ((isImageButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + " --image --id" + tc.token.get('_id') + "'>&thinsp;I&thinsp;</a>" : "");
-                            tokenImageButton = ((isTokenImageButton) ? "<a style = 'float:right; decoration:none; background-color: transparent; border: none; color: #999; padding:0px; font-family: pictos; margin-right:3px; !important'" +  " href='" + noteRecipient + " --tokenimage --id" + tc.token.get('_id') + "'>L</a>" : "");
+                            tokenImageButton = ((isTokenImageButton) ? "<a style = 'float:right; decoration:none; background-color: transparent; border: none; color: #999; padding:0px; font-family: pictos; margin-right:3px; !important'" + " href='" + noteRecipient + " --tokenimage --id" + tc.token.get('_id') + "'>L</a>" : "");
                             //tokenImageButton = ((isTokenImageButton) ? "<a style = 'float:right; opacity: 0.5'  href='" + noteRecipient + " --tokenimage --id" + tc.token.get('_id') + "'><img src='" + tc.token.get('imgsrc') + "' alt='token image' width='18' height='18'></a>" : "");
 
 
@@ -756,16 +886,16 @@ if (buttonCode === 'actions') {
                             noteButtons = tokenImageButton + tokenNotesButton + charNotesButton + bioButton + avatarButton + imageButton;
 
                             if (compact === false) {
-                                tokenGraphicHeight = 36;
+                                tokenGraphicHeight = 37;
                                 switch (sheet) {
                                     case "OGL":
-                                        secondline = ((subTitle) ? "&#10;<span style='font-size:12px; color:#aaa'>" + ((getAttrByName(tc.character.get('_id'), 'npc_type')) ? getAttrByName(tc.character.get('_id'), 'npc_type') : getAttrByName(tc.character.get('_id'), 'class_display')) : "");
+                                        secondline = ((subTitle) ? "&#10;<span style='display: block; font-size:12px; line-height:1; color:#aaa'>" + ((getAttrByName(tc.character.get('_id'), 'npc_type')) ? getAttrByName(tc.character.get('_id'), 'npc_type') : getAttrByName(tc.character.get('_id'), 'class_display')) + '</span>' : "");
                                         break;
                                     case "PF2":
-                                        secondline = ((subTitle) ? "&#10;<span style='font-size:12px; color:#aaa'>" + ((getAttrByName(tc.character.get('_id'), 'npc_type')) ? getAttrByName(tc.character.get('_id'), 'npc_type') + ", " + getAttrByName(tc.character.get('_id'), 'traits') : getAttrByName(tc.character.get('_id'), 'class') + " - " + getAttrByName(tc.character.get('_id'), 'level') + ", background: " + getAttrByName(tc.character.get('_id'), 'background')) : "");
+                                        secondline = ((subTitle) ? "&#10;<span style='display: block; font-size:12px; line-height:1; color:#aaa'>" + ((getAttrByName(tc.character.get('_id'), 'npc_type')) ? getAttrByName(tc.character.get('_id'), 'npc_type') + ", " + getAttrByName(tc.character.get('_id'), 'traits') : getAttrByName(tc.character.get('_id'), 'class') + " - " + getAttrByName(tc.character.get('_id'), 'level') + ", background: " + getAttrByName(tc.character.get('_id'), 'background')) + '</span>' : "");
                                         break;
                                     default:
-                                        secondline = ((subTitle) ? "&#10;<span style='font-size:12px; color:#aaa'>" + ((getAttrByName(tc.character.get('_id'), 'npc_type')) ? getAttrByName(tc.character.get('_id'), 'npc_type') : getAttrByName(tc.character.get('_id'), 'class_display')) : "");
+                                        secondline = ((subTitle) ? "&#10;<span style='display: block; font-size:12px; line-height:1; color:#aaa'>" + ((getAttrByName(tc.character.get('_id'), 'npc_type')) ? getAttrByName(tc.character.get('_id'), 'npc_type') : getAttrByName(tc.character.get('_id'), 'class_display')) + '</span>' : "");
                                 }
                             }
 
@@ -774,7 +904,7 @@ if (buttonCode === 'actions') {
                             if (sheet === "PF2") {
                                 differentName = ((getAttrByName(cId, 'sheet_type') !== "npc") ? " </i><span style ='color:#eee; float:right; background:#999; margin-right:2px; padding:0px 1px !important'> PC </span><i>" : "");
                             } else {
-                                differentName = ((characterSheetLink) ? ((tc.character.get('name') !== getAttrByName(cId, 'npc_name')) ? " </i><span style ='color:#eee; float:right; background:#999; margin-right:2px; padding:0px 1px !important'> " + ((getAttrByName(cId, 'npc_name') !== '') ? getAttrByName(cId, 'npc_name') : 'PC') + " </span><i>" : "") : "");
+                                differentName = ((characterSheetLink) ? ((tc.character.get('name') !== getAttrByName(cId, 'npc_name')) ? " </i><span style ='color:#eee; float:right; background:#999; margin-right:2px; padding:0px 1px !important'> " + ((getAttrByName(cId, 'npc_name') !== '') ? "<span title='" + getAttrByName(cId, 'npc_name') + "'>NPC</span>" : 'PC') + " </span><i>" : "") : "");
 
                             }
 
@@ -821,7 +951,7 @@ if (buttonCode === 'actions') {
                                             attribute = ((npcSubstitutions) ? npcSwap(attribute, ((getAttrByName(tc.character.get('_id'), 'sheet_type')) === "npc" ? "1" : "0")) : attribute); //accounts for differently named attributesbetween pc and npc
                                             break;
                                         default:
-                                        isNPC = getAttrByName(tc.character.get('_id'), 'npc').toString();
+                                            isNPC = getAttrByName(tc.character.get('_id'), 'npc').toString();
                                             attribute = ((npcSubstitutions) ? npcSwap(attribute, isNPC) : attribute); //accounts for differently named attributesbetween pc and npc
                                     }
                                     target = a.split(/\|/)[0];
@@ -855,7 +985,7 @@ if (buttonCode === 'actions') {
                                     // #########Corrects for status markers
                                     if (attribute === "statusmarkers") {
                                         value = value.replace(/::\d\d\d\d\d/g, "");
-                                        value = ((value.charAt(0) === ',') ? value.substring(1) : value) ;
+                                        value = ((value.charAt(0) === ',') ? value.substring(1) : value);
                                     }
                                     //Corrects for returns
                                     if (undefined !== value && typeof value === "string") {
@@ -871,11 +1001,10 @@ if (buttonCode === 'actions') {
                                     } else {
                                         prefix = '<i>' + attribute + ': </i>'
                                     }
-//############### TEST THIS FOR PROBLEMS ON MANY REPORT TYPES
-if (hideEmpty && (value === '' || undefined === value)){
-} else {
-                                    lines = lines + charType + prefix + value + separator;
-}
+                                    //############### TEST THIS FOR PROBLEMS ON MANY REPORT TYPES
+                                    if (hideEmpty && (value === '' || undefined === value)) {} else {
+                                        lines = lines + charType + prefix + value + separator;
+                                    }
 
 
                                     //let attributeline = ((atrribute !== "-") ? attribute + ': ' : '') + value + separator;
@@ -888,15 +1017,15 @@ if (hideEmpty && (value === '' || undefined === value)){
                             //lines = lines + '**Vision** [Off](!token-mod --ids '+ tId + ' --set bright_vision|false has_night_vision|false) |  [On](!token-mod --ids '+ tId + ' --set bright_vision|true) **DV** [30](!token-mod --ids '+ tId + ' --set has_night_vision|true night_vision_distance|30 bright_vision|false has_night_vision|false) | [60](!token-mod --ids '+ tId + ' --set has_night_vision|true night_vision_distance|60 bright_vision|false has_night_vision|false) | [90](!token-mod --ids '+ tId + ' --set has_night_vision|true night_vision_distance|90 bright_vision|false has_night_vision|false) | [120](!token-mod --ids '+ tId + ' --set has_night_vision|true night_vision_distance|120 bright_vision|false has_night_vision|false) | [??](!token-mod --ids '+ tId + ' --set has_night_vision|true night_vision_distance|?{nightvision distance|60} bright_vision|false has_night_vision|false) | **[Remove Darkvision](!token-mod --ids '+ tId + ' --set has_night_vision|true night_vision_distance|0 bright_vision|false)**';
                         });
 
-                        lines = openReport + ((customTitle) ? openHeader + menuChar + repeatChar + customTitle + "  <span style = 'float:right; color:#aaa;'> (" + TCData.length + ")</span>" + closeHeader : "") + ((showHeader) ? header + pageInfo : "") + lines + ((showFooter) ? header + pageInfo : "") + closeReport;
+                        lines = openReport + "<span style = 'display:inline-block; width:100%;'>" + ((customTitle) ? openHeader + menuChar + repeatChar + countChar + customTitle + closeHeader : "") + ((showHeader) ? header + pageInfo : "") + "</span>" + lines + ((showFooter) ? header + pageInfo : "") + closeReport;
                 }
                 if (lines) {
-                    sendChat("Reporter", toWhom  + lines, null, {
+                    sendChat("Reporter", toWhom + lines, null, {
                         noarchive: true
                     });
                 }
             } else {
-                sendChat('Reporter', toWhom  + openReport + `No viable tokens found.` + closeReport, null, {
+                sendChat('Reporter', toWhom + openReport + `No viable tokens found.` + closeReport, null, {
                     noarchive: true
                 });
 
@@ -987,12 +1116,11 @@ if (hideEmpty && (value === '' || undefined === value)){
                 pageValue = c.split(/\|/)[1];
                 //#################### Handling cases  ########################
                 //sendChat('Reporter', '/w gm pageAttribute is ' + pageAttribute + '<BR>pageValue is' + pageValue);
-
                 if (pageAttribute === 'fog_opacity') {
-                    if (pageValue > 1 && pageValue <= 100) {
+                    if (pageValue >= 1 && pageValue <= 100) {
                         pageValue = pageValue / 100;
                     } else {
-                        sendChat('Reporter', '/w gm ' + openReport + pageValue + ' is not a valid value for ' + pageAttribute + ' It has been set to 35%.', null, {
+                        sendChat('Reporter', '/w gm ' + openReport + pageValue + ' is not a valid value for ' + pageAttribute + ' It has been set to 35%.' + closeReport, null, {
                             noarchive: true
                         });
                         //                        sendChat('Reporter', '/w gm ' + pageValue + ' is not a valid value for ' + pageAttribute + ' It has been set to 35');
@@ -1000,14 +1128,24 @@ if (hideEmpty && (value === '' || undefined === value)){
                     }
                 }
 
+                if (pageAttribute === 'daylightModeOpacity') {
+                    if (pageValue >= 1 && pageValue <= 100) {
+                        pageValue = pageValue / 100;
+                    } else {
+                        sendChat('Reporter', '/w gm ' + openReport + pageValue + ' is not a valid value for ' + pageAttribute + ' It has been set to 100%.' + closeReport, null, {
+                            noarchive: true
+                        });
+                        pageValue = 1.0;
+                    }
+                }
+
 
                 if (pageAttribute === 'dynamic_lighting_enabled') {
                     if (pageValue === "false" || pageValue === "true") {
-                        log('1 pageValue requested ' + pageValue);
                         stringToBoolean(pageValue);
                         log('2 pageValue is now ' + pageValue);
                     } else {
-                        sendChat('Reporter', '/w gm ' + openReport + pageValue + ' is not a valid value for ' + pageAttribute + ' It has been set to false.', null, {
+                        sendChat('Reporter', '/w gm ' + openReport + pageValue + ' is not a valid value for ' + pageAttribute + ' It has been set to false.' + closeReport, null, {
                             noarchive: true
                         });
                         //                        sendChat('Reporter', '/w gm ' + pageValue + ' is not a valid value for ' + pageAttribute + ' It has been set to false.');
@@ -1020,7 +1158,7 @@ if (hideEmpty && (value === '' || undefined === value)){
                         (pageValue === 'true') ? true: false;
                     } else {
                         pageValue = false;
-                        sendChat('Reporter', '/w gm ' + openReport + pageValue + ' is not a valid value for ' + pageAttribute + ' It has been set to false.', null, {
+                        sendChat('Reporter', '/w gm ' + openReport + pageValue + ' is not a valid value for ' + pageAttribute + ' It has been set to false.' + closeReport, null, {
                             noarchive: true
                         });
                         //                        sendChat('Reporter', '/w gm ' + pageValue + ' is not a valid value for ' + pageAttribute + ' It has been set to false.');
@@ -1028,11 +1166,13 @@ if (hideEmpty && (value === '' || undefined === value)){
                 }
 
                 //log(pageAttribute + ' is ' + pageData.get(pageAttribute));
-                //log(pageAttribute + ' requested ' + pageValue);
+                //log(pageAttribute + ' requested' + pageValue);
                 if (pageValue === "false") {
                     pageData.set(pageAttribute, false);
+
                 } else {
                     pageData.set(pageAttribute, pageValue);
+                    pageData.set('force_lighting_refresh', true);
 
                 }
 
