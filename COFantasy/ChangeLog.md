@@ -1,4 +1,16 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 3.02
+* Affichage du nombre d'armes de jets sur la fiche, plus besoin de munitions.
+
+## 3.01
+* Affichage des armes cochées au lieu des armes non cochées, qui doivent pouvoir exister pour garder des attaques avec des armes que le personnage a temporairement perdues.
+* Passage d'une partie des attributs numériques qui ne dépendent pas des mooks en prédicats sur la fiche.
+
+## 3.00
+* Passage des listes d'actions sur la fiche
+* Passage des attributs booléens qui ne dépendent pas des mooks en prédicats sur la fiche
+* Ajout d'une fonction !cof-set-predicate pour modifier les prédicats depuis le chat.
+
 ## 2.18
 ### Capacités
 * Ajout de la possibilité pour un siphon des âmes d'empêcher les autres siphons.
