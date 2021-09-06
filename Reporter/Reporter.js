@@ -3,7 +3,7 @@
 // A script to report token and character calls in a list.
 // Syntax is !report --[t|token_attribute] [c|character_attribute]... ---macro code for each character
 on('ready', () => {
-    const version = '1.0.2'; //verion number set here
+    const version = '1.1.1'; //verion number set here
     log('-=> Reporter v' + version + ' <=-'); //Logs version number to console
     sendChat('Reporter', '/w gm Ready');
 
