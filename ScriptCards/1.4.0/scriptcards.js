@@ -21,7 +21,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 */
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "1.4.0d";
+	const APIVERSION = "1.4.0e";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -2187,6 +2187,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 		const failLimit = 1000;
 		var contentIn = content;
 		var charId = "";
+		if (content === undefined) { return content }
 		while(content.match(/\[(?:[\$|\&|\@|\%|\*])[\w|À-ÖØ-öø-ÿ|\%|\(|\:|\.|\_|\>|\^|\-|\)]*?(?!\w+[\[])(\])/g) !== null) {
 			var thisMatch = content.match(/\[(?:[\$|\&|\@|\%|\*])[\w|À-ÖØ-öø-ÿ|\%|\(|\:|\.|\_|\>|\^|\-|\)]*?(?!\w+[\[])(\])/g)[0];
 			var replacement = "";
@@ -3465,7 +3466,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	}
 
 	function removeBRs(str) {
-		if ((str===null) || (str===''))
+		if ((str===null) || (str==='') || (str === undefined))
 			return false;
 		else
 			return str.toString().replace(/<br \/\>/ig, '').replace(/<br\/\>/ig, '');
