@@ -3796,6 +3796,10 @@ var COFantasy = COFantasy || function() {
           }
           ressourceParCombat = "limiteParCombat_" + ressourceParCombat;
           return attributeAsInt(perso, ressourceParCombat, limiteParCombat) === 0;
+        case 'aussiArmeDeJet':
+          if (cmd.length < 2) return false;
+          let armeAssociee = getWeaponStats(perso, cmd[1]);
+          return armeAssociee.armeDeJet && armeAssociee.nbArmesDeJet < 1;
       }
       return false;
     });
@@ -6338,6 +6342,13 @@ var COFantasy = COFantasy || function() {
         case 'necromancie':
           options[cmd[0]] = true;
           return;
+        case 'aussiArmeDeJet':
+          if (cmd.length < 2) {
+            error("Il faut pr\xE9ciser l'arme associ\xE9e \xE0 celle-ci pour --aussiArmeDeJet", cmd);
+            return;
+          }
+          options.aussiArmeDeJet = cmd[1];
+          return;
         case 'm2d20':
         case 'avantage':
           options.avantage = options.avantage || 1;
@@ -8747,14 +8758,12 @@ var COFantasy = COFantasy || function() {
     }
     //gestion de l'\xE9pieu
     if (attaquant) {
-      var armeTarget = armesEnMain(target); //peuple target.arme et armeGauche
-      if (armeTarget) {
-        if (armeTarget.name.search(/[\xE9e]pieu/i) >= 0 || (armeTarget.divers && armeTarget.name.search(/[\xE9e]pieu/i) >= 0)) {
-          var armeAttaquant = tokenAttribute(attaquant, 'armeEnMain');
-          if (armeAttaquant.length === 0) {
-            defense += 2;
-            explications.push("\xC9pieu contre une attaque sans arme => +2 DEF");
-          }
+      let armeTarget = armesEnMain(target); //peuple target.arme et armeGauche
+      if (armeTarget && armeTarget.epieu) {
+        let armeAttaquant = tokenAttribute(attaquant, 'armeEnMain');
+        if (armeAttaquant.length === 0) {
+          defense += 2;
+          explications.push("\xC9pieu contre une attaque sans arme => +2 DEF");
         }
       }
     }
@@ -9859,7 +9868,7 @@ var COFantasy = COFantasy || function() {
     if (options.modifiePortee) {
       weaponStats.portee += options.modifiePortee;
     }
-    if (!options.epieu && weaponName.search(/[\xE9e]pieu/i) >= 0) {
+    if (weaponStats.epieu) {
       options.epieu = true;
     }
     weaponStats.attSkillDiv = parseInt(weaponStats.attSkillDiv);
@@ -11466,6 +11475,20 @@ var COFantasy = COFantasy || function() {
     return attCar + ficheAttributeAsInt(attaquant, 'niveau', 1) + attDiv;
   }
 
+  //Retourne le label de l'attaque \xE0 l'arme de jet.
+  function estAussiArmeDeJet(options) {
+    if (options.startsWith('-')) options = ' ' + options;
+    options = options.split(' --');
+    for (let opt in options) {
+      opt = opt.trim();
+      if (opt === '') continue;
+      opt = opt.split(' ');
+      if (opt.length < 2) continue;
+      if (opt[0] == 'aussiArmeDeJet') return opt[1];
+    }
+    return;
+  }
+
   //attaquant doit avoir un champ name
   function attackExpression(attaquant, nbDe, dice, crit, plusFort, weaponStats) {
     var de = computeDice(attaquant, {
@@ -11594,8 +11617,31 @@ var COFantasy = COFantasy || function() {
       } else {
         restant--;
         attr.set('current', restant);
+        if (restant === 0) {
+          let arme = armesEnMain(attaquant);
+          if (arme && arme.options && estAussiArmeDeJet(arme.options) == attackLabel) {
+            degainerArme(attaquant, '', evt, {
+              seulementDroite: true
+            });
+          } else if (attaquant.armeGauche && attaquant.armeGauche.options && estAussiArmeDeJet(attaquant.armeGauche.options) == attackLabel) {
+            degainerArme(attaquant, '', evt, {
+              gauche: true
+            });
+          }
+        }
       }
       explications.push("Il reste " + restant + " " + weaponName + " \xE0 " + attackerTokName);
+    }
+    if (options.aussiArmeDeJet && !estMook) {
+      let armeAssociee = getWeaponStats(attaquant, options.aussiArmeDeJet);
+      if (armeAssociee.armeDeJet) {
+        if (armeAssociee.nbArmesDeJet < 1) {
+          sendPerso(attaquant, "a d\xE9j\xE0 lanc\xE9 tous ses " + weaponName);
+          return;
+        }
+      } else {
+        error("L'arme de label " + options.aussiArmeDeJet + " n'est pas une arme de jet, option ignor\xE9e", armeAssociee);
+      }
     }
     // Munitions
     if (options.munition) {
@@ -21568,23 +21614,24 @@ var COFantasy = COFantasy || function() {
   }
 
   //renvoie le nom de l'arme si l'arme est d\xE9j\xE0 tenue en main
+  // options.seulementDroite permet de ne rengainer que l'arme droite
   function degainerArme(perso, labelArme, evt, options) {
-    var pageId = perso.pageId;
+    let pageId = perso.pageId;
     if (pageId === undefined) {
       pageId = perso.token.get('pageid');
       perso.pageId = pageId;
     }
     options = options || {};
-    var nouvelleArme;
+    let nouvelleArme;
     if (options.weaponStats) nouvelleArme = options.weaponStats;
     else if (labelArme && labelArme !== '') nouvelleArme = getWeaponStats(perso, labelArme);
     if (nouvelleArme && nouvelleArme.armeGauche) options.gauche = true;
     //D'abord, on rengaine l'arme en main, si besoin.
-    var armeActuelle = tokenAttribute(perso, 'armeEnMain');
-    var labelArmeActuelle;
-    var labelArmeActuelleGauche = '';
-    var ancienneArme;
-    var message = perso.token.get('name') + " ";
+    let armeActuelle = tokenAttribute(perso, 'armeEnMain');
+    let labelArmeActuelle;
+    let labelArmeActuelleGauche = '';
+    let ancienneArme;
+    let message = perso.token.get('name') + " ";
     if (armeActuelle.length > 0) {
       armeActuelle = armeActuelle[0];
       if (options.gauche) labelArmeActuelleGauche = armeActuelle.get('max');
@@ -21623,7 +21670,7 @@ var COFantasy = COFantasy || function() {
       }
       if ((!nouvelleArme || nouvelleArme.deuxMains || options.gauche) &&
         labelArmeActuelleGauche) {
-        var ancienneArmeGauche = getWeaponStats(perso, labelArmeActuelleGauche);
+        let ancienneArmeGauche = getWeaponStats(perso, labelArmeActuelleGauche);
         if (attributeAsBool(perso, 'forgeron(' + labelArmeActuelleGauche + ')')) {
           finDEffetDeNom(perso, 'forgeron(' + labelArmeActuelleGauche + ')', evt);
         }
@@ -21648,7 +21695,15 @@ var COFantasy = COFantasy || function() {
     //mais on v\xE9rifie que l'arme existe, sinon c'est juste un ordre de rengainer
     if (nouvelleArme === undefined) {
       if (armeActuelle) {
-        removeTokenAttr(perso, 'armeEnMain', evt);
+        if (options.seulementDroite && labelArmeActuelleGauche) {
+          setTokenAttr(perso, 'armeEnMain', '', evt);
+        } else if (options.gauche && labelArmeActuelle) {
+          setTokenAttr(perso, 'armeEnMain', labelArmeActuelle, evt, {
+            maxVal: ''
+          });
+        } else {
+          removeTokenAttr(perso, 'armeEnMain', evt);
+        }
         if (!stateCOF.combat) {
           //Si le perso a la capacit\xE9 frappe du vide, la r\xE9initialiser
           var attrFDV = tokenAttribute(perso, 'frappeDuVide');
@@ -37699,12 +37754,27 @@ on('ready', function() {
             current: n,
             characterid: cid,
           });
-          createObj('attribute', {
-            name: pref + 'actiontitre',
-            current: '%' + a.get('name'),
-            characterid: cid,
-          });
-          if (!a.get('istokenaction')) a.remove();
+          if (a.get('istokenaction')) {
+            createObj('attribute', {
+              name: pref + 'actiontitre',
+              current: '%' + a.get('name'),
+              characterid: cid,
+            });
+          } else { //On copie l'ability et on l'efface
+            let actionText = a.get('name').replace(/-/g, ' ').replace(/_/g, ' ');
+            let command = a.get('action').trim();
+            createObj('attribute', {
+              name: pref + 'actiontitre',
+              current: actionText,
+              characterid: cid,
+            });
+            createObj('attribute', {
+              name: pref + 'actioncode',
+              current: command,
+              characterid: cid,
+            });
+            a.remove();
+          }
         });
       }
       if (n > 0) attrRang.set('current', n);

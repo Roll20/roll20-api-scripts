@@ -371,6 +371,7 @@
                   <li><code>--limiteParJour <i>l</i></code> : limite le nombre d'utilisations de cette attaque à <i>l</i> fois par jour. On peut préciser un nom après <i>l</i>, qui va correspondre à une ressource pouvant être partagée avec d'autres attaques ou d'autres effets (voir <code>!cof-effet-temp</code>). Par défaut, le nom de cette ressource est le label de l'attaque.</li>
                   <li><code>--limiteParCombat</code> : même effet que la limite par jour. Si aucun argument n'est donné, la limite est de une fois par combat.</li>
                   <li><code>--munition <i>nom</i> <i>taux</i></code> : l'attaque utilise des munitions dont on garde le compte. Le nombre de munitions doit être inscrit dans un attribut <code>munition_<i>nom</i></code>. <i>nom</i> ne doit pas contenir de blanc, mais à l'affichage les <code>_</code> seront remplacés par des blancs. La valeur courante de l'attribut est le nombre qu'il reste sur le personnage, alors que le maximum contient ce qu'il a plus ce qu'il peut récupérer après le combat. À chaque attaque portée, une munition est utilisée, et il y a <i>taux</i> chances (sur 100) que la munition ne soit pas récupérable. En fin de combat, on considère que le personnage récupère toutes les munitions récupérables. Par défaut, le taux de pertes est de 100&nbsp;%. À noter que cette option devrait être inutile pour les armes de jet qui ont déjà leur propre cases sur la fiche.</li>
+                  <li><code>--aussiArmeDeJet <i>L</i></code> : permet d'indiquer que l'arme peut aussi être employée comme arme de jet. <i>L</i> doit être le label de l'attaque avec cette arme en tant qu'arme de jet. Cela permet de tenir compte des cas où l'arme a été lancée et ne peut donc plus être utilisée au corps à corps.</li>
                   <li><code>--vampirise</code> : soigne de tous les DM infligés, quel que soit leur type. Il est possible de soigner un pourcentage des dégâts : pour cela, préciser le pourcentage entier après l'option. Par exemple, pour une attaque qui soigne de la moitié des dégâts infligés, on pourra mettre <code>--vampirise 50</code>. À noter que les soins se cumulent avec les dégâts de type drain.</li>
                   <li><code>--seulementVivant</code> : n'affecte que les cibles vivantes</li>
                   <li><code>--necromancie</code> : l'attaque est de la nécromancie</li>
@@ -1635,7 +1636,7 @@
                   <li>
                     <strong>Arme d'argent</strong> :
                     <ul>
-                      <li><code>!cof-effet-combat armeDArgent <i>--mana 0</i></code> pour lancer le sort. Vous pouvez ajouter l'option <code>--montrerActions</code> si vous souhaitez que le prêtre puisse prendre l'arme en main dans le même tour.</li>
+                      <li><code>!cof-effet-combat armeDArgent <i>--mana 0</i></code> pour lancer le sort. Vous pouvez ajouter l'option <code>--montreActions</code> si vous souhaitez que le prêtre puisse prendre l'arme en main dans le même tour.</li>
                       <li>Pour attaquer avec l'arme d'argent, faire l'attaque avec les DM appropriés, puis l'utiliser avec les options <code>--si etat armeDArgent --armeDArgent --magique</code>.</li>
                     </ul>
                   </li>
