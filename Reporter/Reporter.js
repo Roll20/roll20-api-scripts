@@ -3,7 +3,7 @@
 // A script to report token and character calls in a list.
 // Syntax is !report --[t|token_attribute] [c|character_attribute]... ---macro code for each character
 on('ready', () => {
-    const version = '1.1.1'; //verion number set here
+    const version = '1.1.2'; //verion number set here
     log('-=> Reporter v' + version + ' <=-'); //Logs version number to console
     sendChat('Reporter', '/w gm Ready');
 
@@ -524,10 +524,10 @@ L({sheet});
             // Default buttonLines
             switch (buttonCode) {
                 case 'vision':
-                    buttonLine = '**Vision** [Off](!token-mod --set bright_vision|false has_night_vision|false)•[On](!token-mod --set bright_vision|true) **Night** [Off](!token-mod --set has_night_vision|false bright_vision|false)•[On](!token-mod --set bright_vision|true night_vision|true)•[Distance](!token-mod --set has_night_vision|true night_vision_distance|Q{Set night vision distance|60})'; // | **[SET DEFAULT TOKEN](!token-mod --set defaulttoken)**';
+                    buttonLine = '**Vision** [Off](!token-mod --set bright_vision|false has_night_vision|false)|[On](!token-mod --set bright_vision|true) **Night** [Off](!token-mod --set has_night_vision|false bright_vision|false)|[On](!token-mod --set bright_vision|true night_vision|true)|[Distance](!token-mod --set has_night_vision|true night_vision_distance|Q{Set night vision distance|60})'; // | **[SET DEFAULT TOKEN](!token-mod --set defaulttoken)**';
                     break;
                 case 'udl':
-                    buttonLine = '**Vision** [Off](!token-mod --set bright_vision|false has_night_vision|false)•[On](!token-mod --set bright_vision|true) **Night** [Off](!token-mod --set has_night_vision|false bright_vision|false)•[On](!token-mod --set bright_vision|true night_vision|true)•[Distance](!token-mod --set has_night_vision|true night_vision_distance|Q{Set night vision distance|60})';
+                    buttonLine = '**Vision** [Off](!token-mod --set bright_vision|false has_night_vision|false)|[On](!token-mod --set bright_vision|true) **Night** [Off](!token-mod --set has_night_vision|false bright_vision|false)|[On](!token-mod --set bright_vision|true night_vision|true)|[Distance](!token-mod --set has_night_vision|true night_vision_distance|Q{Set night vision distance|60})';
                     break;
                 case 'lightplus':
                     //Low Light requires Bright Light to be on, even if the distance is 0
@@ -535,7 +535,7 @@ L({sheet});
                     break;
                 case 'light':
                     //Low Light requires Bright Light to be on, even if the distance is 0
-                    buttonLine = '**Bright** [On](!token-mod --set emits_bright_light|on)•[Off](!token-mod --set emits_bright_light|off)•[Distance](!token-mod --set bright_light_distance|Q{Distance?|0}) - **Low** [On](!token-mod --set emits_low_light|on)•[Off](!token-mod --set emits_low_light|off)•[Distance](!token-mod --set low_distance|Q{Distance?|0})';
+                    buttonLine = '**Bright** [On](!token-mod --set emits_bright_light|on)|[Off](!token-mod --set emits_bright_light|off)|[Distance](!token-mod --set bright_light_distance|Q{Distance?|0}) - **Low** [On](!token-mod --set emits_low_light|on)|[Off](!token-mod --set emits_low_light|off)|[Distance](!token-mod --set low_distance|Q{Distance?|0})';
                     break;
                 default:
                     buttonLine = buttonCode;
@@ -804,7 +804,7 @@ L({sheet});
                                 actionList.forEach(a => {
                                     if (a.get('istokenaction')) {
                                         actionName = a.get('name');
-                                        actionName = actionName.replace(/\s\(/g, "–");
+                                        actionName = actionName.replace(/\s\(/g, "-");
                                         actionName = actionName.replace(/\)/g, "");
                                         actionId = a.get('_id');
                                         if (actionName !== "Check" && actionName !== "Save") {
@@ -927,7 +927,7 @@ L({sheet});
                                             break;
                                         case ".": //three spaces
                                             attribute = attribute.substring(0, attribute.length - 1);
-                                            separator = "<span style='color:#aaa'> | </span>";
+                                            separator = "<span style='color:#aaa'> &vert; </span>";
                                             break;
                                         case "#": //horzontal space between rows
                                             attribute = attribute.substring(0, attribute.length - 1);
