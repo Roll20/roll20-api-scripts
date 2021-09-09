@@ -1051,3 +1051,11 @@ hs6e:
 reporter:
   - "Reporter"
   - "Tokens"
+  
+dungeonalchemist:
+  - "DungeonAlchemistImporter"
+  - "Maps & Drawing"
+  
+statustracker:
+  - "StatusTracker"
+  - "Tokens"
