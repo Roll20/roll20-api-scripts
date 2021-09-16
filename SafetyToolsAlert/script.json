@@ -1,0 +1,15 @@
+{
+	"name" : "Safetly Tools Alert",
+	"script" : "safety_tools_alert.js",
+	"version" : "0.50",
+	"description" : "A simple API script that will do 1 or 2 things when a safety card (from the roll20 Safety Toolkit) or your own deck OR a character with a specified prefix to their name is dragged to the virtual tabletop.\r1) It will send a message to the GM from the API script, not the player, so as to preserve anonymity.  If you have the sounds for chat messages turned on you'll hear it if you are not on the chat tab or roll20 doesn't have focus.\r2) You can configure a sound in the Jukebox to play when a safety tool is placed in addition to the /w gm message in #1\r\rChat commands:\r***`!sta-config -deckname CARD-DECK-NAME`***\rThis will set the name of the deck that triggers the alerts to whatever you place as 'CARD-DECK-NAME'.  Example if you named your deck 'Safety Tools' (the default roll20 safety tools deck name) then as long as your deck is named 'Safety Tools' and a card from it is played, an alert will be triggered.\r\r***`!sta-config -cardname_prefix CHARACTER-NAME-PREFIX`***\r\rThis will set the prefix the script looks for for Safety Tool characters (Some GMs use a character token for the Safety Tools so they don't have a card deck cluttering up the play surface).  For example the default cardname_prefix is 'Safety:' so if you named a character 'Safety: X Card' placing that character's token would trigger the alert.\r\r***`!sta-config -play_sound SOUND-NAME`***\rThis will both turn on sound playing for alerts and set the name of the sound to be played.  If you have a sound in your jukebox named 'ALERT' and set SOUND-NAME to 'ALERT' then that sound will be played when the alerts are triggered.\r",
+	"authors" : "James C. (Chuz)",
+	"roll20userid" : "4306461",
+	"patreon" : "https://www.patreon.com/ChuzGaming",
+	"useroptions" : [],
+	"dependancies" : [],
+	"modifies" : {},
+	"conflicts" : [],
+	"previousversions" : [
+	]
+}
