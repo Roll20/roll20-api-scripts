@@ -75,7 +75,7 @@ API_Meta.SpawnWIP = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.21';
+    const version = '0.22';
     var gridSize = 70;  //this may be updated based on page settings 
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -841,6 +841,8 @@ const SpawnDefaultToken = (() => {
                             data.bar1Val = bar1[0].trim();
                             if (bar1.length > 1) {
                                 data.bar1Max = bar1[1].trim();
+                            } else {
+                                data.bar1Max = data.bar1Val
                             }
                             break;
                          case "bar2":
@@ -854,6 +856,8 @@ const SpawnDefaultToken = (() => {
                             data.bar2Val = bar2[0].trim();
                             if (bar2.length > 1) {
                                 data.bar2Max = bar2[1].trim();
+                            } else {
+                                data.bar2Max = data.bar2Val
                             }
                             break;
                          case "bar3":
@@ -867,6 +871,8 @@ const SpawnDefaultToken = (() => {
                             data.bar3Val = bar3[0].trim();
                             if (bar3.length > 1) {
                                 data.bar3Max = bar3[1].trim();
+                            } else {
+                                data.bar3Max = data.bar3Val
                             }
                             break;
                         case "fx":
