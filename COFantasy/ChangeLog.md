@@ -1,7 +1,21 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.02
+### Capacité
+* Ajout des réaction allergiques pour les chiens gobelins
+* Possibilité optionelle de lancer plus de soins légers en une journée que le rang dans la voie, en échange d'un coût en mana.
+
+### Corrections de bugs
+* Prise en compte du type drain dans les attaques sur la fiche.
+
+### Autres améliorations
+* Possibilité de restreindre une attaque aux cibles qui ne sont pas au contact.
+* Outil de conversion de Pathfinder vers COF
+* Ajout d'un test de prédicat pour la cible d'une attaque
+* Changement d'interface pour les montures : déplacer le cavalier ne fait plus descendre de monture.
+* Options --degainer pour les effets de combat
 * Option d'attaque aussiArmeDeJet, pour les armes qui peuvent être utilisées au contact ou lancées.
 * Affichage du nombre d'armes de jets sur la fiche, plus besoin de munitions.
+* Support de la ceinture de rage améliorée d'Anathazerïn
 
 ## 3.01
 * Affichage des armes cochées au lieu des armes non cochées, qui doivent pouvoir exister pour garder des attaques avec des armes que le personnage a temporairement perdues.
