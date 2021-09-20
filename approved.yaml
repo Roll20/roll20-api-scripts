@@ -1059,3 +1059,7 @@ dungeonalchemist:
 statustracker:
   - "StatusTracker"
   - "Tokens"
+
+safetytoolsalert:
+  - "SafetyToolsAlert"
+  - "Utility"
