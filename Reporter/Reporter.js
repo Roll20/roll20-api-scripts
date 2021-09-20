@@ -3,7 +3,7 @@
 // A script to report token and character calls in a list.
 // Syntax is !report --[t|token_attribute] [c|character_attribute]... ---macro code for each character
 on('ready', () => {
-    const version = '1.1.2'; //verion number set here
+    const version = '1.0.2'; //verion number set here
     log('-=> Reporter v' + version + ' <=-'); //Logs version number to console
     sendChat('Reporter', '/w gm Ready');
 
@@ -33,6 +33,7 @@ on('ready', () => {
 
     let actionButtons = [];
     let sheet = "OGL";
+
 
     // This sections swaps npc and pc sheet attributes as needed on the PF2 and D&D 5th Edition by Roll20 Sheet
     const npcLookup =
@@ -333,7 +334,7 @@ on('ready', () => {
                 }
             }
             //intercept shorthand phrases that replace entire calls
-L({sheet});
+            //L({sheet});
             switch (msg.content) {
                 case '!report|mapkeys':
                     mapKeyChar = findObjs({
@@ -423,9 +424,7 @@ L({sheet});
                     name: 'Map Key'
                 })[0];
                 mapKey = mapKeyChar.get('_id');
-                L({
-                    mapKey
-                });
+                //L({mapKey});
                 msg.content = `!report||+|t|represents|${mapKey} ---  ---- layer|gmlayer compact|true sort|tokennameI charactersheetlink|false notesbutton|true showprintbutton|false title|Map Keys| tokennotesbutton|true ignoreselected|true showheader|false `;
             }
 
@@ -465,7 +464,9 @@ L({sheet});
                 characterSheetLink = ((keywords.includes("charactersheetlink|false")) ? false : true);
                 characterSheetButton = ((keywords.includes("charactersheetbutton|true")) ? true : false);
                 sortTerm = ((keywords.includes("sort|")) ? keywords.split("sort|")[1].split(" ")[0] : 'identity');
+                reportName = ((keywords.includes(" handout|")) ? keywords.match(/handout\|.*?\|/).toString().split("|")[1] : "");
             }
+
 
             // ##### Assign selected if no tokens are selected
             if (msg.selected && ignoreSelected === false) {
@@ -845,7 +846,7 @@ L({sheet});
                             } else {
                                 newbuttonLine = "";
                             }
-
+                            //L({newbuttonLine});
 
 
                             // ######## report subheader
@@ -1020,9 +1021,62 @@ L({sheet});
                         lines = openReport + "<span style = 'display:inline-block; width:100%;'>" + ((customTitle) ? openHeader + menuChar + repeatChar + countChar + customTitle + closeHeader : "") + ((showHeader) ? header + pageInfo : "") + "</span>" + lines + ((showFooter) ? header + pageInfo : "") + closeReport;
                 }
                 if (lines) {
-                    sendChat("Reporter", toWhom + lines, null, {
-                        noarchive: true
-                    });
+                    //L({reportName});
+                    if (reportName) {
+
+
+                        let reportHandout = findObjs({
+                            type: 'handout',
+                            name: reportName
+                        });
+                        reportHandout = reportHandout ? reportHandout[0] : undefined;
+
+
+
+                        if (!reportHandout) {
+                            reportHandout = createObj('handout', {
+                                name: reportName,
+                                archived: false
+                            });
+                            let reportHandoutid = reportHandout.get("_id");
+                            sendChat('Reporter', toWhom + openReport + `Reporter has created a handout named <b>${reportName}</b>. <BR>Click <a href="http://journal.roll20.net/handout/${reportHandoutid}">here</a> to open.` + closeReport, null, {
+                                noarchive: true
+                            });
+
+
+                        }
+
+
+
+
+                        if (reportHandout) {
+
+                            if (reportHandout) {
+                                reportHandout.get("notes", function(notes) {
+                                    //L({notes});
+                                    if (notes.includes('<hr>')) {
+                                        notes = notes.split('<hr>')[0] + '<hr>'
+                                    } else {
+                                        notes = '<hr>'
+                                    }
+                                    reportHandout.set("notes", notes + lines)
+                                });
+                            }
+                        } else {
+                            sendChat('Reporter', toWhom + openReport + `No handout named ${reportName} was found.` + closeReport, null, {
+                                noarchive: true
+                            });
+
+                        }
+                    } else {
+
+                        sendChat("Reporter", toWhom + lines, null, {
+                            noarchive: true
+                        });
+                    }
+
+
+
                 }
             } else {
                 sendChat('Reporter', toWhom + openReport + `No viable tokens found.` + closeReport, null, {
