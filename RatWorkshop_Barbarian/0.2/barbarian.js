@@ -3,8 +3,7 @@ class DungeonMasterToolsBarbarian extends RatWorkshop_Module {
   static VERSION = 0.2;
   static DEFAULT_STATE = {
     tokenIcons: {
-      rage: 'cold',
-      fire: 'fire',
+      rage: 'strong',
     },
     version: DungeonMasterToolsBarbarian.VERSION,
     gcUpdated: 0,
