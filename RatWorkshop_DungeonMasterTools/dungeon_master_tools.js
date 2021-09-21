@@ -24,6 +24,15 @@ class RatWorkshop_Library {
   }
 
   /**
+   *Covererts String to Camel Case; underscore, dash, and space removed and first letter capitalized
+   * @param string
+   * @return {*}
+   */
+  static camelCase(string) {
+    return string.replace(/[-_ ]+(.)?/g, (m, c) => c.toUpperCase());
+  }
+
+  /**
    * Generates a Universally Unique ID
    * @return {string}
    */
@@ -39,7 +48,13 @@ class RatWorkshop_Library {
  * Contains Core Methods for sending messages to chat, as well as fetching data from a character sheet
  */
 class RatWorkshop_Module {
+  static VERSION = 0.2;
   static MODULE_NAME = 'Base Module';
+  static DEFAULT_STATE = {
+    version: RatWorkshop_Module.VERSION,
+    gcUpdated: 0,
+  };
+
   MSG_CONTENT = '###CONTENT###';
   MSG_SOURCE = 'RatWorkshop';
   MSG_OPTIONS = {
@@ -227,6 +242,72 @@ class RatWorkshop_Module {
   }
 
   /**
+   * Attempts to return the first matching Global Damage with the given damage type
+   * @param characterId
+   * @param damageType
+   * @return {null}
+   */
+  getGlobalDamage(characterId, damageType) {
+    try {
+      const damageTypeAttribute = filterObjs((obj) => {
+        if (obj.get('type') !== 'attribute') return false;
+        if (obj.get('characterid') !== characterId) return false;
+        if (!obj.get('name').endsWith('global_damage_type')) return false;
+        return obj.get('current').toLowerCase() === damageType.toLowerCase();
+      })[0];
+
+      // Get the Base name for the first found attribute and then fetch all attributes with that name
+      const baseName = damageTypeAttribute.get('name').replace('global_damage_type', '');
+      const attributes = filterObjs((obj) => {
+        if (obj.get('type') !== 'attribute') return false;
+        if (obj.get('characterid') !== characterId) return false;
+        return obj.get('name').startsWith(baseName);
+      });
+
+      // Return object with all the related attributes
+      const response = {};
+      _.each(attributes, (attribute) => {
+        const key = attribute.get('name').replace(baseName, '').replace('global_damage_', '');
+        response[key] = attribute;
+      });
+      return response;
+    } catch (error) {
+      log(`Unable to find Global Damage for => ${damageType}`);
+      return null;
+    }
+  }
+
+  getAttackRolls(characterId) {
+    return filterObjs((obj) => {
+      if (obj.get('type') !== 'attribute') return false;
+      if (obj.get('characterid') !== characterId) return false;
+      return (obj.get('name').endsWith('_rollbase_dmg') || obj.get('name').endsWith('_rollbase_crit'))
+    });
+  }
+
+  /** Attempt to return Global Damage Attributes*
+   * @param characterId
+   * @return {null}
+   */
+  getGlobalDamageModifier(characterId) {
+    const globalDmgObjs = filterObjs((obj) => {
+      if (obj.get('type') !== 'attribute') return false;
+      if (obj.get('characterid') !== characterId) return false;
+      return obj.get('name').startsWith('global_damage');
+    });
+    // Global Damage Not Found
+    if (!globalDmgObjs.length) {
+      return null;
+    }
+    const response = {};
+    _.each(globalDmgObjs, (attribute) => {
+      const key = attribute.get('name').replace('global_damage_mod_', '');
+      response[key] = attribute;
+    });
+    return response;
+  }
+
+  /**
    * Attempts to return the Character's token on the active page
    * @param characterId
    * @return {*}
@@ -237,6 +318,18 @@ class RatWorkshop_Module {
     return tokens[0] || null;
   }
 
+  /**
+   * Attempts to return all Tokens representing a character, npc, or monster on the active page
+   * @param characterId
+   * @return {Array}
+   */
+  getTokens(characterId) {
+    const pageId = Campaign().get('playerpageid');
+    const tokens = findObjs({ type: 'graphic', represents: characterId, _pageid: pageId });
+    return tokens || [];
+  }
+
+  /** INITIALIZATION METHODS **/
   /**
    * Registers the Module with the Dungeon Master Tools
    */
@@ -259,14 +352,21 @@ class RatWorkshop_Module {
     // Override in SubClasses
   }
 
-  constructor() {
-    this.initialConfigurations();
+  /**
+   * Populates the state references from the global state
+   */
+  setStateReferences() {
     // Quick Reference to the Stored States
+    this.settings = state.RatWorkShop_DungeonMasterTools_Roll20_5E || {};
     this.configState = state.RatWorkShop_DungeonMasterTools_Roll20_5E.config || {};
     this.tokenTrack = state.RatWorkShop_DungeonMasterTools_Roll20_5E.tokenTrack || {};
     this.tokenIcons = state.RatWorkShop_DungeonMasterTools_Roll20_5E.tokenIcons || {};
-    this.tokenBars = state.RatWorkShop_DungeonMasterTools_Roll20_5E.tokenBars || {};
     this.events = state.RatWorkShop_DungeonMasterTools_Roll20_5E.events || [];
+  }
+
+  constructor() {
+    this.initialConfigurations();
+    this.setStateReferences();
   }
 }
 
@@ -274,10 +374,12 @@ class RatWorkshop_Module {
  * Handles Loading Configurations, Setting up Listeners, Registering Class Modules, Dispatching Actions, and Awarding XP
  */
 class DungeonMasterTools extends RatWorkshop_Module {
-  static VERSION = 0.1;
+  static MODULE_NAME = 'DungeonMasterTools';
+  static VERSION = 0.2;
   static DEFAULT_STATE = {
     config: {
       'purge-turn-order': 'on',
+      'track-active-tokens': 'on',
     },
     tokenTrack: {
       dead: 'on',
@@ -289,10 +391,14 @@ class DungeonMasterTools extends RatWorkshop_Module {
       hp: 'bar1',
       ac: 'bar2',
     },
+    activeToken: {
+      'aura-color': '#ffff00',
+      'aura-index': 2,
+    },
     modules: {},
     events: [],
-    gcUpdated: 0,
     version: DungeonMasterTools.VERSION,
+    gcUpdated: 0,
   };
 
   COMMANDS = {
@@ -308,18 +414,11 @@ class DungeonMasterTools extends RatWorkshop_Module {
     'dm-reset': (options, msg) => this.resetState(msg),
   };
 
-  VALID_CONFIGS = [
-    'purge-turn-order',
-  ];
-
-  TOKEN_TRACKED_STATUS = [
-    'dead',
-  ];
-
   /**
    * Dungeon Master Tools shouldn't register itself
    */
-  static register() {}
+  static register() {
+  }
 
   /**
    * Update Config with Values from globalConfig
@@ -343,23 +442,47 @@ class DungeonMasterTools extends RatWorkshop_Module {
     if (!state.RatWorkShop_DungeonMasterTools_Roll20_5E ||
       !state.RatWorkShop_DungeonMasterTools_Roll20_5E.version ||
       state.RatWorkShop_DungeonMasterTools_Roll20_5E.version !== DungeonMasterTools.VERSION) {
-      state.RatWorkShop_DungeonMasterTools_Roll20_5E = DungeonMasterTools.DEFAULT_STATE;
+      // Sync Settings to Latest Settings
+      Object.entries(DungeonMasterTools.DEFAULT_STATE).forEach(([key, options]) => {
+        if(!['version', 'gcUpdated', 'events', 'modules'].includes(key)) {
+          const settings = Object.assign(state.RatWorkShop_DungeonMasterTools_Roll20_5E[key]);
+
+          // Merge New Default Settings over old settings
+          state.RatWorkShop_DungeonMasterTools_Roll20_5E[key] = { ...state.RatWorkShop_DungeonMasterTools_Roll20_5E[key], ...options };
+
+          // Now Merge back any custom changes
+          state.RatWorkShop_DungeonMasterTools_Roll20_5E[key] = { ...state.RatWorkShop_DungeonMasterTools_Roll20_5E[key], ...settings };
+        }
+      });
+      // Set State Version to current Version
+      state.RatWorkShop_DungeonMasterTools_Roll20_5E.version = DungeonMasterTools.VERSION;
     }
 
     const gc = globalconfig && globalconfig.RatWorkShop_DungeonMasterTools_Roll20_5E;
     if (gc && gc.lastsaved && gc.lastsaved > state.RatWorkShop_DungeonMasterTools_Roll20_5E.gcUpdated) {
+      log('  > Updating from Global Config <  ['+(new Date(g.lastsaved*1000))+']');
+
       state.RatWorkShop_DungeonMasterTools_Roll20_5E.gcUpdated = gc.lastsaved;
       this.updateConfiguration(state.RatWorkShop_DungeonMasterTools_Roll20_5E.config, gc);
       this.updateConfiguration(state.RatWorkShop_DungeonMasterTools_Roll20_5E.tokenTrack, gc, 'tokenTrack-');
       this.updateConfiguration(state.RatWorkShop_DungeonMasterTools_Roll20_5E.tokenIcons, gc, 'tokenIcon-');
       this.updateConfiguration(state.RatWorkShop_DungeonMasterTools_Roll20_5E.tokenBars, gc, 'tokenBar-');
+      this.updateConfiguration(state.RatWorkShop_DungeonMasterTools_Roll20_5E.activeToken, gc, 'activeToken-');
     }
+  }
+
+  setStateReferences() {
+    super.setStateReferences();
+    this.activeTokens = state.RatWorkShop_DungeonMasterTools_Roll20_5E.activeTurnTokens || [];
+    this.tokenBars = state.RatWorkShop_DungeonMasterTools_Roll20_5E.tokenBars || {};
   }
 
   constructor() {
     super();
     // Object to store registered modules
-    this.modules = {};
+    this.modules = {
+      'DungeonMasterTools': this,
+    };
 
     // Setup Listener for API messages
     on("chat:message", (msg) => {
@@ -378,14 +501,30 @@ class DungeonMasterTools extends RatWorkshop_Module {
 
     // Register Listener for Changes to the Campaign
     on("change:campaign", campaign => {
-      this.handleCampaignChange();
+      Object.values(this.modules).forEach((module) => {
+        Object.entries(this.configState).forEach(([key, value]) => {
+          const func = RatWorkshop_Library.camelCase(key);
+          if (value === 'on' && typeof module[func] === 'function') {
+            module[func]();
+          }
+        });
+      });
     });
 
     // Register Listener for Token Changes
     on("change:graphic", token => {
       const pageId = Campaign().get('playerpageid');
-      // Only listen for changes on the current page - @TODO might change in case players are on multiple pages
+      // Only listen for changes on the current page
+      // - @TODO might change in case players are on multiple pages
       if (token.get('_pageid') === pageId) {
+        Object.values(this.modules).forEach((module) => {
+          Object.entries(this.tokenTrack).forEach(([key, value]) => {
+            const func = RatWorkshop_Library.camelCase(`tokenTrack-${key}`);
+            if (value === 'on' && typeof module[func] === 'function') {
+              module[func](token);
+            }
+          });
+        });
         this.handleTokenChange(token);
       }
     });
@@ -398,16 +537,7 @@ class DungeonMasterTools extends RatWorkshop_Module {
    * @param token
    */
   handleTokenChange(token) {
-    if (this.tokenTrack.dead === 'on') {
-      const token_bar = this.tokenBars.hp;
-      if (!token_bar || token.get(`${token_bar}_max`) === "") {
-        return;
-      }
-      const token_status = {};
-      token_status[`status_${this.tokenIcons.dead}`] = token.get(`${token_bar}_value`) <= 0;
-      token.set(token_status);
-    }
-
+    // @TODO move the token tracking into a tokenTrack method for the icon, such as tokenTrackRage(token) for the barbarian
     // Check if Token no longer has a tracked status
     const events = this.events.filter(x => x.tokenId === token.id);
     const currentState = token.get('statusmarkers').split(',');
@@ -426,31 +556,6 @@ class DungeonMasterTools extends RatWorkshop_Module {
         Campaign().set('turnorder', JSON.stringify(turnOrder));
       }
     });
-  }
-
-  /**
-   * Logic applied when the Global Campaign Object changes value
-   */
-  handleCampaignChange() {
-    // Remove all Turn Orders that have Expired, i.e. are less than or equal to 0
-    if (this.configState['purge-turn-order'] === 'on') {
-      const turnOrder = JSON.parse(Campaign().get('turnorder') || '[]');
-
-      const updatedTurnOrder = turnOrder.filter(event => parseInt(event.pr, 10) >= 0);
-      Campaign().set('turnorder', JSON.stringify(updatedTurnOrder));
-
-      // Check if removed turn orders have callback functions
-      const expiredEvents = turnOrder.filter(x => !updatedTurnOrder.includes(x));
-      _.each(expiredEvents, turnEvent => {
-        const event = this.events.filter(x => x.eventId === turnEvent.eventId)[0] || null;
-        if (event) {
-          this.dispatchAction(event.callbackModule.toLowerCase(), event.callbackAction, event);
-          // Remove the Event
-          const index = this.events.findIndex((element) => element.eventId === event.eventId);
-          this.events.splice(index, 1);
-        }
-      });
-    }
   }
 
   /**
@@ -496,7 +601,7 @@ class DungeonMasterTools extends RatWorkshop_Module {
     const configOption = options[0].toLowerCase();
     const status = options[1] || 'off';
     // Only deal with valid Configuration Options
-    if (this.VALID_CONFIGS.includes(configOption)) {
+    if (Object.keys(this.configState).includes(configOption)) {
       // Only valid states are 'on' and 'off'
       this.configState[configOption] = status === 'off' ? 'off' : 'on';
       this.sendStateStatus(configOption, this.configState[configOption]);
@@ -518,7 +623,7 @@ class DungeonMasterTools extends RatWorkshop_Module {
     const status = options[1] ? options[1].toLowerCase() : false;
 
     // Only deal with valid Token Tracked Statues
-    if (this.TOKEN_TRACKED_STATUS.includes(token)) {
+    if (Object.keys(this.tokenTrack).includes(token)) {
       // Only valid states are 'on' and 'off'
       if (status && (status === "on" || status === "off")) {
         this.tokenTrack[token] = status;
@@ -537,7 +642,18 @@ class DungeonMasterTools extends RatWorkshop_Module {
       return;
     }
     // Reset State to default
-    state.RatWorkShop_DungeonMasterTools_Roll20_5E = DungeonMasterTools.DEFAULT_STATE;
+    Object.values(this.modules).forEach((module) => {
+      Object.entries(module.constructor.DEFAULT_STATE).forEach(([key, options]) => {
+        if (!['version', 'gcUpdated', 'events'].includes(key)) {
+          this.settings[key] = { ...this.settings[key], ...options };
+        }
+      });
+    });
+    this.settings.version = DungeonMasterTools.VERSION;
+    this.setStateReferences();
+    _.each(this.modules, module => {
+      module.setStateReferences();
+    });
     this.outputStatus({ playerid: playerId });
   }
 
@@ -588,16 +704,25 @@ class DungeonMasterTools extends RatWorkshop_Module {
     ];
     // Configuration
     const config = this.buildStatusOutput(this.configState, 'CONFIGURATIONS');
+    status.push(...config);
     // Token Tracking
     const token = this.buildStatusOutput(this.tokenTrack, 'TOKEN TRACKING');
+    status.push(...token);
     // Token Icon
     const icons = this.buildStatusOutput(this.tokenIcons, 'TOKEN ICONS');
+    status.push(...icons);
     // Token Bar
     const bars = this.buildStatusOutput(this.tokenBars, 'TOKEN BARS');
+    status.push(...bars);
+    // Active Token
+    if (this.configState['track-active-tokens'] === 'on') {
+      const activeToken = this.buildStatusOutput(this.settings.activeToken, 'ACTIVE TOKEN TRACKING');
+      status.push(...activeToken);
+    }
     // Dispatch Message
     this.sendMessage(
       this.MSG_SOURCE,
-      status.concat(config, token, icons, bars).join(''),
+      status.join(''),
       this.MSG_TEMPLATES.DESC,
       this.MSG_TYPE.STATUS,
       this.MSG_OPTIONS.NO_ARCHIVE,
@@ -679,6 +804,85 @@ class DungeonMasterTools extends RatWorkshop_Module {
     if (awarded) {
       this.sendActionMessage('Dungeon Master', message);
     }
+  }
+
+  /** TOKEN CHANGE FUNCTIONS **/
+  tokenTrackDead(token) {
+    const token_bar = this.tokenBars.hp;
+    if (!token_bar || token.get(`${token_bar}_max`) === "") {
+      return;
+    }
+    const token_status = {};
+    token_status[`status_${this.tokenIcons.dead}`] = token.get(`${token_bar}_value`) <= 0;
+    token.set(token_status);
+  }
+
+  /** CAMPAIGN CHANGE FUNCTIONS **/
+  /**
+   * Purge actions from the Turn Order that have an initative value less than zero
+   */
+  purgeTurnOrder() {
+    const turnOrder = JSON.parse(Campaign().get('turnorder') || '[]');
+
+    const updatedTurnOrder = turnOrder.filter(event => parseInt(event.pr, 10) >= 0);
+    Campaign().set('turnorder', JSON.stringify(updatedTurnOrder));
+
+    // Check if removed turn orders have callback functions
+    const expiredEvents = turnOrder.filter(x => !updatedTurnOrder.includes(x));
+    _.each(expiredEvents, turnEvent => {
+      const event = this.events.filter(x => x.eventId === turnEvent.eventId)[0] || null;
+      if (event) {
+        this.dispatchAction(event.callbackModule.toLowerCase(), event.callbackAction, event);
+        // Remove the Event
+        const index = this.events.findIndex((element) => element.eventId === event.eventId);
+        this.events.splice(index, 1);
+      }
+    });
+  }
+
+  /**
+   * Applies a visible Aura to all tokens representing the current Character in the Turn Tracker
+   */
+  trackActiveTokens() {
+    const aura_index = this.settings.activeToken['aura-index'] || 2;
+    const turnOrder = JSON.parse(Campaign().get('turnorder') || '[]');
+    const options = {};
+    // Remove turn aura from previously active tokens
+    options[`showplayers_aura${aura_index}`] = false;
+    options[`playersedit_aura${aura_index}`] = true;
+    options[`aura${aura_index}_radius`] = '';
+    options[`aura${aura_index}_color`] = 'transparent';
+    options[`aura${aura_index}_square`] = false;
+    // clear aura on tokens
+    _.each(this.activeTokens, obj => {
+      const tokenId = obj._id || obj.get('id');
+      const token = getObj('graphic', tokenId);
+      if (token) {
+        token.set(options);
+      }
+    });
+    this.activeTokens.length = 0;
+
+    // Find all tokens for the current turn and set turn aura on them
+    options[`showplayers_aura${aura_index}`] = true;
+    options[`playersedit_aura${aura_index}`] = false;
+    options[`aura${aura_index}_radius`] = '0.5';
+    options[`aura${aura_index}_color`] = this.settings.activeToken['aura-color'] || '#ffff00';
+    options[`aura${aura_index}_square`] = false;
+    if (turnOrder.length) {
+      const token = getObj('graphic', turnOrder[0].id);
+      if (token) {
+        const tokens = this.getTokens(token.get('represents'));
+        // set aura on tokens
+        _.each(tokens, token => {
+          token.set(options);
+          this.activeTokens.push(token);
+        });
+      }
+    }
+
+    // Persist activeTokens to state
+    state.RatWorkShop_DungeonMasterTools_Roll20_5E.activeTurnTokens = this.activeTokens;
   }
 }
 
