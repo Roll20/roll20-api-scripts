@@ -37440,7 +37440,7 @@ var COFantasy = COFantasy || function() {
     if (charId === undefined || charId === '') return; // Si token li\xE9 \xE0 un perso
     if (token.get('bar1_link') === '') return; // Si unique
     let perso = {
-      tokem: token,
+      token: token,
       charId: charId
     };
     synchronisationDesEtats(perso);
