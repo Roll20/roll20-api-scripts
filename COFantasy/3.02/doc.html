@@ -116,6 +116,7 @@
                   <li><a class="text-info" href="#Markers_Check">Activation et Vérification</a></li>
                 </ul>
                 <li data-toggle="collapse" data-target="#console"><a href="#Console">Console API</a></li>
+                <li><a href="#pathfinder">Conversion depuis Pathfinder</a></li>
 								<ul id="console" class="collapse">
                   <li><a class="text-info" href="#Generalites_Console">Généralités sur la Console API</a></li>
                   <li><a class="text-info" href="#Erreurs_Console">Principaux messages d'erreur</a></li>
@@ -205,7 +206,7 @@
                 <p>Vous pouvez activer la règle spécifique de Contrecoup via <code>!cof-options</code>.</p>
                 <h4>Tempête de Mana (COF Compagnon p. 105)</h4>
                 <p>Le script implémente un support complet des règles de Tempête de Mana. Pour ce faire, il faut ajouter les options <code>--tempeteDeMana --rang <i>X</i></code> sur les sorts combinables avec Tempête de Mana. L'option <code>rang</code> permet d'indiquer le rang du sort afin que le script puisse calculer le maximum de PM qu'on peut dépenser lors du lancement du sort. Pour mettre ça de manière générique sur une action ou une attaque et permettre au joueur de choisir de faire appel à Tempête de Mana ou pas, on peut utiliser :</p>
-                <p><code><i>--mana X</i> --rang <i>Y</i> ?{Tempête de Mana ?|Non,|Oui,--tempeteDeMana}</code></p>
+                <p><code><i>--mana X</i> --rang <i>Y</i> ?{Tempête de Mana ?|Non,&amp;#32;|Oui,--tempeteDeMana}</code></p>
                 <p>Tempête de Mana est compatible avec Mana Totale et Brûlure de Magie.</p>
                 <h5>Option altruiste</h5>
                 <p>Si vous désirez jouer avec l'option de Magie altruiste, il suffit de changer l'option en <code>--tempeteDeMana altruiste</code> sur les sorts où c'est utile.</p>
@@ -337,6 +338,7 @@
                       <li><code>etat</code> <i>e</i> : vrai si l'état <i>e</i> est actif sur l'attaquant. Cet état peut être un des états définis plus bas, ou un attribut quelconque.</li>
                       <li><code>etatCible</code> <i>e</i> : vrai si l'état <i>e</i> est actif sur toutes la cible. Cet état peut être un des états définis plus bas, ou un attribut quelconque.</li>
                       <li><code>attributCible</code> <i>attr</i> <i>val</i>: vrai si la cible possède un attribut <i>attr</i>, de valeur <i>val</i>, aux majuscules près. On peut optionnellement préciser qu'il s'agit d'un attribut par token en rajoutant le mot clé <code>local</code>, ou encore qu'il sagit d'un attribut de la fiche, avec éventuellement sa valeur par défaut, en ajoutant le mot clé <code>fiche <i>defaut</i></code>.</li>
+                      <li><code>predicatCible</code> <i>predicat</i>: vrai si la cible possède un prédicat <i>predicat</i>. On peut aussi spécifier une valeur auquel le prédicat doit être égal.</li>
                       <li><code>deAttaque</code> <i>n</i> : vrai si le jet de dé d'attaque est supérieur ou égal à <i>n</i>.</li>
                       <li><code>touche</code> : vrai si l'attaque touche.</li>
                       <li><code>critique</code> : vrai si l'attaque est un critique.</li>
@@ -372,6 +374,7 @@
                   <li><code>--limiteParCombat</code> : même effet que la limite par jour. Si aucun argument n'est donné, la limite est de une fois par combat.</li>
                   <li><code>--munition <i>nom</i> <i>taux</i></code> : l'attaque utilise des munitions dont on garde le compte. Le nombre de munitions doit être inscrit dans un attribut <code>munition_<i>nom</i></code>. <i>nom</i> ne doit pas contenir de blanc, mais à l'affichage les <code>_</code> seront remplacés par des blancs. La valeur courante de l'attribut est le nombre qu'il reste sur le personnage, alors que le maximum contient ce qu'il a plus ce qu'il peut récupérer après le combat. À chaque attaque portée, une munition est utilisée, et il y a <i>taux</i> chances (sur 100) que la munition ne soit pas récupérable. En fin de combat, on considère que le personnage récupère toutes les munitions récupérables. Par défaut, le taux de pertes est de 100&nbsp;%. À noter que cette option devrait être inutile pour les armes de jet qui ont déjà leur propre cases sur la fiche.</li>
                   <li><code>--aussiArmeDeJet <i>L</i></code> : permet d'indiquer que l'arme peut aussi être employée comme arme de jet. <i>L</i> doit être le label de l'attaque avec cette arme en tant qu'arme de jet. Cela permet de tenir compte des cas où l'arme a été lancée et ne peut donc plus être utilisée au corps à corps.</li>
+                  <li><code>--seulementDistance</code> : l'attaque ne peut être réalisée que contre un assez adversaire à distance.</li>
                   <li><code>--vampirise</code> : soigne de tous les DM infligés, quel que soit leur type. Il est possible de soigner un pourcentage des dégâts : pour cela, préciser le pourcentage entier après l'option. Par exemple, pour une attaque qui soigne de la moitié des dégâts infligés, on pourra mettre <code>--vampirise 50</code>. À noter que les soins se cumulent avec les dégâts de type drain.</li>
                   <li><code>--seulementVivant</code> : n'affecte que les cibles vivantes</li>
                   <li><code>--necromancie</code> : l'attaque est de la nécromancie</li>
@@ -552,6 +555,7 @@
                     <li><code>--portee <i>n</i></code> : permet de spécifier une distance maximum entre le soigneur et le soigné (au-delà, le soin échoue)</li>
                     <li><code>--transfer</code> : le soin est payé avec les PV du soigneur</li>
                     <li><code>--mana <i>n</i></code> : demande au lanceur de payer <i>n</i> points de mana</li>
+                    <li><code>--depasseLimite <i>n</i></code> : permet de lancer les sorts de soins léger, modéré ou de groupe quand la limite journalière est dépassée, mais en augmentant le coût en mana de <i>n</i> à chaque nouveau dépassement.</li>
                     <li><code>--limiteSoinsParJour <i>n</i></code> : limite le nombre total de PVs soignés par jour. Cette limite peut être associée à une ressource (spécifier en deuxième argument de l'option, peut contenir des espaces), de sorte que seuls les soins qui mentionnent cette ressource sont concernés par cette limitation. Cette option n'a de sens que si un soigneur est précisé.</li>
                   </ul>
                 </div>
@@ -756,6 +760,7 @@
                     <li><code>--image <i>img</i></code> : affiche l'image dans le texte d'activation de l'effet.</li>
                     <li><code>--<i>type</i></code> : il est possible d'associer un type à l'effet. L'utilisation la plus courante est le type <code>poison</code> ou <code>maladie</code>, qui vont permettre de tenir compte des bonus ou immunités contre les effets de ce type.</li>
                     <li><code>--montreActions</code> : affiche les actions du tours de la cible après avoir appliqué l'effet. Utile si les actions du tours dépendent de cet effet, pour afficher une liste à jour.</li>
+                    <li><code>--degainer <i>L</i></code> : le lanceur dégaine l'arme de label <i>L</i>.</li>
                   </ul>
                   <p><code>!cof-boire-alcool</code> et <code>!cof-desaouler</code> permettent de faire varier le niveau d'ébriété. Par exemple, pour tester si le niveau d'ébriété augmente après avoir bu un certain nombre de verres, on peut utiliser la macro <code>!cof-boire-alcool --save CON [[10+?{Nombre de verres}]]</code>.
                 </div>
@@ -837,7 +842,7 @@
               <h4 class="text-secondary" id="montures">Montures</h4>
               <div class="decalage">
                 <p>Pour qu'un personnage puisse monter sur une monture, il faut que cette monture soit associée à une fiche de personnage et qu'il possède un <a href=#predicats>prédicat</a> <code>monture</code>. La commande pour monter sur la monture est <code>!cof-en-selle @{selected|token_id} @{target|token_id}</code>, à lancer en sélectionnant le cavalier.</p>
-                <p>On peut ensuite bouger la monture, cela déplace le cavalier. Le mieux est de lancer la commander alors que le token du cavalier est sur le token de la monture. Si on déplace le cavalier, cela le fait descendre de sa monture.</p>
+                <p>On peut ensuite bouger la monture, cela déplace le cavalier. Le mieux est de lancer la commander alors que le token du cavalier est sur le token de la monture. Si on déplace le cavalier, cela fait aussi bouger sa monture.</p>
               </div>
               <h4 class="text-secondary" id="suivre">Suivre un autre personnages</h4>
               <div class="decalage">
@@ -986,8 +991,9 @@
                   <li><strong>Défier la mort</strong> : ajouter un attribut <code>defierLaMort</code> de valeur 10 et de maximum 10.</li>
                   <li><strong>Rage du berserk</strong> : utiliser <code>!cof-rage-du-berserk</code>, à la fois pour entrer en rage et pour tenter d'en sortir avant la fin du combat.</li>
                   <li><strong>Même pas mal</strong> : ajouter un <a href=#predicats>prédicat</a> <code>memePasMal</code>. Le joueur doit lui-même activer la rage ou le furie si il souhaite en profiter.</li>
-                  <li><strong>Rage du berserk</strong> : utiliser <code>!cof-rage-du-berserk --furie</code> pour entrer en rage et pour tenter d'en sortir avant la fin du combat. Pour sortir de la rage, l'option <code>--furie</code> peut être omise.</li>
+                  <li><strong>Furie du berserk</strong> : utiliser <code>!cof-rage-du-berserk --furie</code> pour entrer en rage et pour tenter d'en sortir avant la fin du combat. Pour sortir de la rage, l'option <code>--furie</code> peut être omise.</li>
                 </ol>
+                <i>Note: en option, il est possible de diviser par 2 la pénalité de défense infligée par la Rage ou la Furie en ajoutant un <a href=#predicats>prédicat</a> <code>rageDuBerserkAmelioree</code> au personnage (par exemple pour la ceinture d'Anathazerïn p. 341)</i>
               </div>
               <h3 class="text-info" id="Barde">Barde</h3>
               <div class="decalage">
@@ -1051,7 +1057,7 @@
               <div class="decalage">
                 <h4 class="text-secondary">Voie du cavalier</h4>
                 <ol>
-                  <li><strong>Fidèle monture</strong> : Faire un personnage pour la monture, avec un <a href=#predicats>prédicat</a> <code>monture</code>. Pour monter sur la monture, on peut utiliser <code>!cof-en-selle @{selected|token_id} <i>nom_de_la_monture</i></code>. Pour en descendre, il suffit de bouger le token du chevalier.</li>
+                  <li><strong>Fidèle monture</strong> : Faire un personnage pour la monture, avec un <a href=#predicats>prédicat</a> <code>monture</code>. Pour monter sur la monture, on peut utiliser une ability de type token action, avec <code>!cof-en-selle @{selected|token_id} <i>nom_de_la_monture</i></code>. Pour en descendre, il suffit de cliquer à nouveau sur le bouton de l'ability.</li>
                   <li><strong>Cavalier émérite</strong> : ajuster la DEF de la monture. Ajouter au chevalier un <a href=#predicats>prédicat</a> <code>cavalierEmerite:2</code>.</li>
                   <li><strong>Monture magique</strong> : pour les soins automatiques de la nuit, ajouter un <a href=#predicats>prédicat</a> <code>montureMagique</code>.</li>
                   <li>
@@ -1636,8 +1642,8 @@
                   <li>
                     <strong>Arme d'argent</strong> :
                     <ul>
-                      <li><code>!cof-effet-combat armeDArgent <i>--mana 0</i></code> pour lancer le sort. Vous pouvez ajouter l'option <code>--montreActions</code> si vous souhaitez que le prêtre puisse prendre l'arme en main dans le même tour.</li>
-                      <li>Pour attaquer avec l'arme d'argent, faire l'attaque avec les DM appropriés, puis l'utiliser avec les options <code>--si etat armeDArgent --armeDArgent --magique</code>.</li>
+                      <li>Pour attaquer avec l'arme d'argent, faire l'attaque avec les DM appropriés, les modificateurs <code>armeDArgent, magique</code> et l'option <code>--si etat armeDArgent</code>.</li>
+                      <li><code>!cof-effet-combat armeDArgent <i>--mana 0</i></code> pour lancer le sort. Vous pouvez ajouter l'option <code>--degainer <i>L</i></code> (où <i>L</i> est le label de l'attaque avec l'arme d'argent) si vous souhaitez que le prêtre puisse prendre l'arme en main dans le même tour.</li>
                     </ul>
                   </li>
                   <li><strong>Ailes célestes</strong> : <code>!cof-effet-temp ailesCelestes [[5+@{selected|SAG}]] <i>--mana 1</i></code>.</li>
@@ -1673,7 +1679,7 @@
                 <h4 class="text-secondary">Voie des soins</h4>
                 <p style="margin-top:0px; margin-bottom:0px">Ajouter un <a href=#predicats>prédicat</a> <code>voieDesSoins</code> avec comme valeur le rang dans la voie.</p>
                 <ol>
-                  <li><strong>Soins légers</strong> : <code>!cof-soin @{selected|token_id} @{target|token_id} leger <i>--mana 0</i></code>. Vous pouvez rajouter un petit effet visuel, par exemple avec <code>--targetFx bubbling-holy</code>.</li>
+                  <li><strong>Soins légers</strong> : <code>!cof-soin @{selected|token_id} @{target|token_id} leger <i>--mana 0</i></code>. Vous pouvez rajouter un petit effet visuel, par exemple avec <code>--targetFx bubbling-holy</code>. À titre personnel, j'ajoute <code>--depasseLimite 1</code> pour permettre de lancer plus de sorts de soins léger en une journée (mais avec une augmentation cumulative du coût en mana de 1 à chaque dépassement).</li>
                   <li><strong>Soins modérés</strong> : <code>!cof-soin @{selected|token_id} @{target|token_id} modere <i>--mana 0</i></code>.</li>
                   <li><strong>Soins de groupe</strong> : <code>!cof-soin @{selected|token_id} groupe <i>--mana 1</i></code> (ne pas oublier de définir des <a href="#allie">alliés</a>). Attention, toutefois, le sort ne va pas automatiquement soigner les personnages notés comme morts, ce qui est le cas général si ils sont tombés à 0 PV. Si certains alliés notés morts ne sont pas vraiment morts, mais juste inconscient, il faudra que le MJ fasse la mise à jour de l'état et des PV lui-même.</li>
                   <li><strong>Guérison</strong> : <code>!cof-guerison @{selected|token_id} @{target|token_id} --portee 0 --limiteParJour 1 <i>--mana 2</i></code>. Pour l'instant ça ne fait que remettre les points de vie au maximum.</li>
@@ -1783,7 +1789,7 @@
               <div class="decalage">
                 <h4 class="text-secondary">Voie de l'arc et du cheval</h4>
                 <ol>
-                  <li><strong>Monture loyale</strong> : ajouter un <a href=#predicats>prédicat</a> <code>montureLoyale</code>. Pour la monture, il faut faire un personnage avec un <a href=#predicats>prédicat</a> <code>monture</code>. Pour monter de la monture, utiliser <code>!cof-en-selle @{selected|token_id} nom_de_la_monture</code>, et pour en descendre, il suffit de bouger le token du samouraï.</li>
+                  <li><strong>Monture loyale</strong> : ajouter un <a href=#predicats>prédicat</a> <code>montureLoyale</code>. Pour la monture, il faut faire un personnage avec un <a href=#predicats>prédicat</a> <code>monture</code>. Pour monter de la monture, utiliser <code>!cof-en-selle @{selected|token_id} nom_de_la_monture</code>, et pour en descendre, il suffit de faire la même commande (utiliser une ability "token action" rend cela assez facile à l'usage).</li>
                   <li><strong>Tir en mouvement</strong> : pas de support particulier.</li>
                   <li><strong>Tir fatal</strong> : ajouter un attribut <code>tirFatal</code>, de valeur <code>true</code>. Pour tenir compte du bonus supplémentaire avec le rang dans la voie, ajouter un <a href=#predicats>prédicat</a> <code>voieDeLArcEtDuCheval</code> de valeur le rang atteint dans cette voie. Si vous souhaitez que cette capacité s'applique à une autre classe d'arme que les arcs, vous pouvez spécifier ce nom à la place de <code>true</code> dans la valeur courante de l'attribut <code>tirfatal</code> (attention, sans accent).</li>
                 </ol>
@@ -2147,6 +2153,7 @@
                   <li><strong>Potion de sang de l'Arbre-Coeur</strong> : <code>!cof-effet sangDeLArbreCoeur true</code>, à enlever quand les 24h sont passées.</li>
                   <li><strong>Protection contre les souffles</strong> et dégâts de zone : ajouter un <a href=#predicats>prédicat</a> <code>protectionDMZone</code>. Pour une protection contre un seul élément (feu, froid, etc), ajouter <code>_</code> et le nom de l'élément. Par exemple, contre le feu, on aura un prédicat <code>protectionDMZone_feu</code>.</li>
                   <li><strong>Putréfaction</strong> : ajouter à l'attaque <code>--effet putrefaction 5 --save CON 14</code> (pour les données des momies)</li>
+                  <li><strong>Réaction allergique</strong> : il existe un effet <code>reactionAllergique</code> qui fait le malus en DEX et CHA et disparaît en cas de soin magique. Pour une attaque, on peut par exemple mettre <code>--effet reactionAllergique --save CON 11</code>.</li>
                   <li><strong>Résistant (insectes)</strong> : ajouter un <a href=#predicats>prédicat</a> <code>durACuire</code>.</li>
                   <li><strong>Saisir et broyer</strong> : ajouter un <a href=#predicats>prédicat</a> <code>saisirEtBroyer</code></li>
                   <li><strong>Sang de fer</strong> : ajouter un <a href=#predicats>prédicat</a> <code>sangDeFerIf</code>.</li>
@@ -2220,7 +2227,11 @@
                 <li><code>Compétences sans caractéristique associée</code>Alerte : Erreur de déclaration dans le <a href="#jet_caracteristiques">handout de jets de caractéristique</a>.</li>
               </ul>
             </div>
-            <h2 class="text-primary" id="statistiques">7. Statistiques</h2>
+            <h2 class="text-primary" id="pathfinder">7. Utiliser des personnages Pathfinder</h2>
+						<div class="decalage">
+              <p>Il existe un support basique des fiches Roll20 venant du système Pathfinder 1. La fonction <code>!cof-pathfinder1</code> se lance en sélectionnant un ou plusieurs tokens liés à des fiches Pathfinder (par exemple obtenues en achetant des aventures Pathfinder sur le marketplace de Roll20). L'effet est d'une part de transformer une partie des attributs de la fiche en attributs compris par la fiche COF et le script COFantasy, de changer un peu le token associé à la fiche, mais surtout d'effacer les attributs inutiles pour COF. En effet, le script est relativement sensible au nombre total d'attributs en jeu, et les fiches Pathfinder ont tendence à en avoir vraiment beaucoup. Tout ce qui n'est pas compris par le script se retrouve dans un attribut <code>Attributs Pathfinder</code>. Mais le mieux est de compléter la fiche COF en se basant sur la fiche Pathfinder ouverte dans une autre partie.</p>
+            </div>
+            <h2 class="text-primary" id="statistiques">8. Statistiques</h2>
 						<div class="decalage">
 							<p>Il est possible d'activer la collecte de statistiques en utilisant la commande <code>!cof-demarrer-statistiques</code>.</p>
 							<p>On peut arrêter la collecte avec <code>!cof-arreter-statistiques</code>, et la mettre en pause avec <code>!cof-pause-statistiques</code>.<br />
