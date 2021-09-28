@@ -334,7 +334,9 @@ on('ready', () => {
                 }
             }
             //intercept shorthand phrases that replace entire calls
-            //L({sheet});
+            L({
+                sheet
+            });
             switch (msg.content) {
                 case '!report|mapkeys':
                     mapKeyChar = findObjs({
@@ -424,7 +426,9 @@ on('ready', () => {
                     name: 'Map Key'
                 })[0];
                 mapKey = mapKeyChar.get('_id');
-                //L({mapKey});
+                L({
+                    mapKey
+                });
                 msg.content = `!report||+|t|represents|${mapKey} ---  ---- layer|gmlayer compact|true sort|tokennameI charactersheetlink|false notesbutton|true showprintbutton|false title|Map Keys| tokennotesbutton|true ignoreselected|true showheader|false `;
             }
 
@@ -846,7 +850,9 @@ on('ready', () => {
                             } else {
                                 newbuttonLine = "";
                             }
-                            //L({newbuttonLine});
+                            L({
+                                newbuttonLine
+                            });
 
 
                             // ######## report subheader
@@ -1021,59 +1027,60 @@ on('ready', () => {
                         lines = openReport + "<span style = 'display:inline-block; width:100%;'>" + ((customTitle) ? openHeader + menuChar + repeatChar + countChar + customTitle + closeHeader : "") + ((showHeader) ? header + pageInfo : "") + "</span>" + lines + ((showFooter) ? header + pageInfo : "") + closeReport;
                 }
                 if (lines) {
-                    //L({reportName});
+                    L({reportName});
                     if (reportName) {
+                    
 
-
-                        let reportHandout = findObjs({
-                            type: 'handout',
-                            name: reportName
-                        });
-                        reportHandout = reportHandout ? reportHandout[0] : undefined;
-
-
-
-                        if (!reportHandout) {
-                            reportHandout = createObj('handout', {
-                                name: reportName,
-                                archived: false
-                            });
-                            let reportHandoutid = reportHandout.get("_id");
-                            sendChat('Reporter', toWhom + openReport + `Reporter has created a handout named <b>${reportName}</b>. <BR>Click <a href="http://journal.roll20.net/handout/${reportHandoutid}">here</a> to open.` + closeReport, null, {
-                                noarchive: true
-                            });
-
-
-                        }
+                    let reportHandout = findObjs({
+                        type: 'handout',
+                        name: reportName
+                    });
+                    reportHandout = reportHandout ? reportHandout[0] : undefined;
 
 
 
+if (!reportHandout) {
+reportHandout = createObj('handout', {
+    name: reportName,
+    archived: false
+});
+let reportHandoutid = reportHandout.get("_id");
+                    sendChat('Reporter', toWhom + openReport + `Reporter has created a handout named <b>${reportName}</b>. <BR>Click <a href="http://journal.roll20.net/handout/${reportHandoutid}">here</a> to open.` + closeReport, null, {
+                    noarchive: true
+                    });
 
-                        if (reportHandout) {
 
-                            if (reportHandout) {
-                                reportHandout.get("notes", function(notes) {
-                                    //L({notes});
-                                    if (notes.includes('<hr>')) {
-                                        notes = notes.split('<hr>')[0] + '<hr>'
-                                    } else {
-                                        notes = '<hr>'
-                                    }
-                                    reportHandout.set("notes", notes + lines)
-                                });
+}
+
+
+
+
+
+if (reportHandout){
+
+                    if (reportHandout) {
+                        reportHandout.get("notes", function(notes) {
+                            //L({notes});
+                            if (notes.includes('<hr>')) {
+                                notes = notes.split('<hr>')[0]+'<hr>'
+                            } else {
+                                notes = '<hr>'
                             }
-                        } else {
-                            sendChat('Reporter', toWhom + openReport + `No handout named ${reportName} was found.` + closeReport, null, {
-                                noarchive: true
-                            });
-
-                        }
-                    } else {
-
-                        sendChat("Reporter", toWhom + lines, null, {
-                            noarchive: true
+                            reportHandout.set("notes", notes + lines)
                         });
                     }
+}else{
+                    sendChat('Reporter', toWhom + openReport + `No handout named ${reportName} was found.` + closeReport, null, {
+                    noarchive: true
+                    });
+
+}
+} else {
+
+                    sendChat("Reporter", toWhom + lines, null, {
+                        noarchive: true
+                    });
+}
 
 
 
