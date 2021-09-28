@@ -41,11 +41,7 @@ This will deal a card from a deck called "Inspiration" to the player whose token
 This will take a card from a deck called "Inspiration" from the hand player whose token is selected. This would be ideal as a token ability to allow players to spend Inspiration
 
 
-`!deal --give`
-
-or
-
-`!deal --give --Playing Cards`
+`!deal --give` or `!deal --give --Playing Cards`
 
 This will deal a card from the Playing Cards deck to the player whose token is selected.
 
