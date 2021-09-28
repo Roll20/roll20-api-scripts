@@ -3,7 +3,7 @@
 // A script to deal and take cards to selected users from specified decks.
 // Syntax is !deal --[give,take] [number of cards as integer] --[deck name]|[card name]
 on('ready', () => {
-    const version = '1.1.0';
+    const version = '1.2.0';
     log('-=> Dealer v' + version + ' <=-');
 
     on('chat:message', (msg) => {
