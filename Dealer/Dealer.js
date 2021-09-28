@@ -7,7 +7,7 @@ on('ready', () => {
     log('-=> Dealer v' + version + ' <=-');
 
     on('chat:message', (msg) => {
-        if ('api' === msg.type && /!deal\b/i.test(msg.content) && msg.selected) {
+        if ('api' === msg.type && /!deal(\b\s|$)/i.test(msg.content) && msg.selected) {
 
 
             //get parameter and use default of 'give' if parameter is missing or malformed
