@@ -1,4 +1,4 @@
-# Dealer 1.1
+# Dealer 1.2
 Deals and takes cards from players by deck
 
 Syntax is:
@@ -21,3 +21,34 @@ If a token has more than one controller or is controlled by All and one or more 
 Script will try to let you know if you have not prepared a command or deck properly.
 
 If deck does not deal a card, you may need to manually shuffle (Roll20 bug). If the deck is shuffled, it may not recognize all cards in hand.
+
+Uses:
+Games which deal or take playing cards at random from a standard deck
+
+Awarding inspiration--or Bardic Inspiration from a separate deck.
+
+Awarding a random potion/scroll/treasure/piece of equipment from a properly prepared deck.
+
+### Examples
+
+`!deal --give --Inspiration`
+
+This will deal a card from a deck called "Inspiration" to the player whose token is selected. This would be ideal as a token ability or macro bar macro to allow GMs to award Inspiration to the player of a selected token.
+
+
+`!deal --take --Inspiration`
+
+This will take a card from a deck called "Inspiration" from the hand player whose token is selected. This would be ideal as a token ability to allow players to spend Inspiration
+
+
+`!deal --give`
+
+or
+
+`!deal --give --Playing Cards`
+
+This will deal a card from the Playing Cards deck to the player whose token is selected.
+
+`!deal --take`
+
+This will take a card from the Playing Cards deck from the hand player whose token is selected.
