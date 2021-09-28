@@ -1,13 +1,19 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 3.03
+* Passage de armeParDefaut en prédicat, et prise en compte de ce prédicat au moment de poser un token.
+
 ## 3.02
 ### Capacité
 * Ajout des réaction allergiques pour les chiens gobelins
 * Possibilité optionelle de lancer plus de soins légers en une journée que le rang dans la voie, en échange d'un coût en mana.
 
 ### Corrections de bugs
+* Correction d'un crash en cas de #Attaque -1 et pas d'arme en main.
+* Correction du prédicat increvable
 * Prise en compte du type drain dans les attaques sur la fiche.
 
 ### Autres améliorations
+* Ajout de la commande d'action !arme-en-main
 * Possibilité de restreindre une attaque aux cibles qui ne sont pas au contact.
 * Outil de conversion de Pathfinder vers COF
 * Ajout d'un test de prédicat pour la cible d'une attaque
