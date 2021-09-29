@@ -2,10 +2,24 @@
 // Last Updated: 2021-03-26
 // A script to report token and character calls in a list.
 // Syntax is !report --[t|token_attribute] [c|character_attribute]... ---macro code for each character
+
+on('ready', function () {
+    if (!_.has(state, 'Reporter')) {
+        state.Reporter = {
+            sheet: 'Other',
+        };
+        message = 'Welcome to Reporter! If this is your first time running it, the script is set to assume that no sheet is being used. Reporter will run much better if you choose which sheet you are using. Currently the D&D 5th Edition by Roll20 Sheet and Pathfinder 2 by Roll20 are fully supported. You may have diminished capability with other sheets<BR><BR>[D&D 5th Edition by Roll20](!report --config|D&D 5th Edition by Roll20)<BR>[D&D 5E Shaped](!report --config|D&D 5E Shaped)<BR>[Pathfinder First Edition by Roll20](!report --config|Pathfinder First Edition by Roll20)<BR>[Pathfinder Second Edition by Roll20](!report --config|Pathfinder Second Edition by Roll20)<BR>[Other](!report --config|Other)';
+        sendChat('Reporter', '/w gm &{template:default}{{ =' + message + '}}');
+    }
+});
+
+
+
+
 on('ready', () => {
-    const version = '1.1.3'; //verion number set here
+    const version = '1.1.4'; //version number set here
     log('-=> Reporter v' + version + ' <=-'); //Logs version number to console
-    sendChat('Reporter', '/w gm Ready');
+    sendChat('ReporterDev', '/w gm Ready');
 
     const L = (o) => Object.keys(o).forEach(k => log(`${k} is ${o[k]}`));
     const tokenChar = '<span style="color: #fff; font-weight: bold; background-color: #b30000; padding:0px 2px; margin-right:3px;">T</span>';
@@ -25,29 +39,54 @@ on('ready', () => {
     const closeReport = '</div>';
     const openReport = "<div style='color: #000; border: 1px solid #000; background-color: #fff; box-shadow: 0 0 3px #000; display: block; text-align: left; font-size: 13px; padding: 5px; margin-bottom: 0.25em; font-family: sans-serif; white-space: pre-wrap;'>";
     const linkBox = "<img src = 'https://s3.amazonaws.com/files.d20.io/images/227379729/jnwjD5rKjjr9QqGiy8EATg/original.png'";
-
+    let sheet = state.Reporter.sheet;
 
     function makeButton(name, link) {
         return '<a style = ' + buttonStyle + ' href="' + link + '">' + name + '</a>';
     }
 
     let actionButtons = [];
-    let sheet = "OGL";
 
 
-    // This sections swaps npc and pc sheet attributes as needed on the PF2 and D&D 5th Edition by Roll20 Sheet
-    const npcLookup =
-        ((sheet === "PF2") ? {
+
+
+    L({ sheet });
+
+
+
+
+    let npcLookup = undefined;
+    // This sections swaps npc and pc sheet attributes as needed on the Pathfinder Second Edition by Roll20 and D&D 5th Edition by Roll20 Sheet
+    switch (sheet) {
+        case "Pathfinder Second Edition by Roll20":
+            npcLookup = {
                 ["ac"]: "armor_class",
                 ["repeating_senses_$0_sense"]: 'senses'
-            } : {
+            }
+            break;
+        case "Pathfinder First Edition by Roll20":
+            npcLookup = {
+                ["race"]: "npc_type",
+                ["level"]: "npc_cr"
+            }
+            break;
+        case "D&D 5E Shaped":
+            npcLookup = {
+                ["name"]: "name",
+            }
+            break;
+        case "D&D 5th Edition by Roll20":
+            npcLookup = {
                 ["name"]: "npc_name",
                 ["ac"]: "npc_ac",
                 ["level"]: "npc_challenge",
                 ["passive_wisdom"]: "npc_senses"
             }
+            break;
+        default:
+            npcLookup = { ["name"]: "name" }
+    }
 
-        );
 
     const pcLookup = Object.keys(npcLookup).reduce((m, k) => ({
         [npcLookup[k]]: k,
@@ -57,7 +96,7 @@ on('ready', () => {
     const npcSwap = (attribute, npc) => {
         if (undefined !== npc) {
             let l = ("1" === npc) ? npcLookup : pcLookup;
-            //if (sheet === "PF2" && attribute === "name") l[attribute] = "name";
+            //if (sheet === "Pathfinder Second Edition by Roll20" && attribute === "name") l[attribute] = "name";
             return l[attribute] || attribute;
         }
         return attribute;
@@ -81,15 +120,16 @@ on('ready', () => {
             makeButton("!report|mapkeys_sorted", "!report|mapkeys_sorted") + ' - As above, but sorted alphabetically.<BR>' +
             makeButton("!report|pcs-detail", "!report|pcs-detail") + ' - A detailed display of all PCs on the map.<BR>' +
             makeButton("!report|pcs", "!report|pcs") + ' - A compact display of all PCs on the map.<BR>' +
-            makeButton("!report|npcs-detail", "!report|npcs-detail") + ' - A compact display of all PCs on the map.<BR>' +
-            makeButton("!report|npcs-actions", "!report|npcs-actions") + ' - A detailed display of all PCs on the map with most token action buttons displayed. Works very well with the Token Action Maker script.<BR>' +
+            makeButton("!report|npcs-detail", "!report|npcs-detail") + ' - A detailed display of all NPCs on the map.<BR>' +
+            makeButton("!report|npcs-actions", "!report|npcs-actions") + ' - A compact display of all NPCs on the map with most token action buttons displayed. Works very well with the Token Action Maker script.<BR>' +
             makeButton("!report|tracker", "!report|tracker") + ' - A compact display of all characters in the Turn Tracker.<BR>' +
             makeButton("!report|tracker-actions", "!report|tracker-actions") + ' - A  display of all characters in the Turn Tracker with most token action buttons displayed.<BR>' +
             makeButton("!report|report", "!report --report") + ' - How to read the report. Also accepts *!report --report*' +
+            makeButton("!report --config|sheet", "!report --config|sheet") + ' - Configure reporter to a particular sheet.' +
             '</div>' +
             closeReport, null, {
-                noarchive: true
-            });
+            noarchive: true
+        });
     }
     //menu();
 
@@ -100,12 +140,16 @@ on('ready', () => {
             return attribute
         }
     }
+    function sendMessage (message){
+       sendChat('Reporter', '/w gm ' + openReport + message  + closeReport, null, { noarchive: true });
+
+    }
 
     function help() {
         sendChat('Reporter', '/w gm ' + openReport + openHeader + menuChar +
             '**Reporter**' + '<BR>' +
             `<span style='font-weight:normal;'>Documentation for v.${version}</span>${closeHeader}` + '<BR>' +
-            `${makeButton('How to read the report','!report --report')}` + '<BR>' +
+            `${makeButton('How to read the report', '!report --report')}` + '<BR>' +
             `Reporter is a script that reads the tokens on the board that are associated with character sheets and builds a report of them in the chat, returning selected values from either the token settings or the character sheets they are associated with. You can either select a set of tokens to work with, or if you select *no* tokens, it will assume all tokens on the Object/Token layer. This behavior can be altered using *keywords*, described below. The basic syntax is:` + '<BR>' +
             '<BR>' +
             `<code>!report --[queries] ---[buttonline] ----[keywords]</code>` + '<BR>' +
@@ -199,8 +243,8 @@ on('ready', () => {
             '<li>crI - Challenge Rating, inverse order. D&D 5th Edition by Roll20 Sheet only</UL>' + '<BR>' +
             '<code>title|Title|</code> If this is present in the keywords, the string in between pipes will be placed at the top of the report. If you only want the custom title to display, be sure turn off the header with showheader|false. The title must be placed between two pipes. title|My Title| will work. title|My Title will break.' +
             closeReport, null, {
-                noarchive: true
-            });
+            noarchive: true
+        });
     }
 
     function readingReport() {
@@ -231,8 +275,8 @@ on('ready', () => {
             '⟲ will repeat the command that created the report, in case you want to confirm that changes were made.<BR>' +
             `<span style='font-family:pictos; !important'>w</span> will echo to the chat whatever is on that line: Token name on a report line, or Page name on the page line of the header.<BR>` +
             closeReport, null, {
-                noarchive: true
-            });
+            noarchive: true
+        });
     }
 
 
@@ -281,15 +325,56 @@ on('ready', () => {
 
     on('chat:message', (msg) => { //this is a fat rrow function. The argument is msg
 
-        //If this is an API message type
-        //AND begins with the word "!report is in the msg (that's the .test),
-        //AND there is at least one object selected
-        //THEN continue
+
 
         //       if ('api' === msg.type && /!report\b/i.test(msg.content) && msg.selected) {
         if ('api' === msg.type && /!report\b/i.test(msg.content)) {
             //            const repeatChar = `<a href='${msg.content}' style='float:right; decoration:none; background-color: transparent; border: none; color: #fff; padding:0px 2px; margin-right:3px; !important'>⟲</a>`;
-            //log ('repeatChar is ' + repeatChar);
+
+            //Set sheet
+            if (msg.content.includes("!report --config|")) {
+
+                switch (msg.content) {
+                    case "!report --config|dnd5e":
+                    case "!report --config|D&D 5th Edition by Roll20":
+                        state.Reporter.sheet = "D&D 5th Edition by Roll20"
+                        sheet = state.Reporter.sheet;
+                        sendMessage ('Sheet is now set to <BR><B>'+ sheet + '</B>')
+                        break;
+                    case "!report --config|shaped":
+                    case "!report --config|D&D 5E Shaped":
+                        state.Reporter.sheet = "D&D 5E Shaped"
+                        sheet = state.Reporter.sheet;
+                        sendMessage ('Sheet is now set to <BR><B>'+ sheet + '</B>')
+                        break;
+                    case "!report --config|pf2":
+                    case "!report --config|Pathfinder Second Edition by Roll20":
+                        state.Reporter.sheet = "Pathfinder Second Edition by Roll20";
+                        sheet = state.Reporter.sheet;
+                        sendMessage ('Sheet is now set to <BR><B>'+ sheet + '</B>')
+                        break;
+                    case "!report --config|pf1":
+                    case "!report --config|Pathfinder First Edition by Roll20":
+                        state.Reporter.sheet = "Pathfinder First Edition by Roll20";
+                        sheet = state.Reporter.sheet;
+                        sendMessage ('Sheet is now set to <BR><B>'+ sheet + '</B>')
+                        break;
+                    case "!report --config|sheet":
+
+                        message = 'The current sheet is:<BR><B>' + state.Reporter.sheet + '</B><BR>Currently the character sheets listed below are fully supported. For other sheets, choose "Other". This will disable the few sheet-specific shortcuts.<BR><BR>[D&D 5th Edition by Roll20](!report --config|D&D 5th Edition by Roll20)<BR>[D&D 5E Shaped](!report --config|D&D 5E Shaped)<BR>[Pathfinder First Edition by Roll20](!report --config|Pathfinder First Edition by Roll20)<BR>[Pathfinder Second Edition by Roll20](!report --config|Pathfinder Second Edition by Roll20)<BR>[Other](!report --config|Other)';
+                        sendChat('Reporter', '/w gm &{template:default}{{ =' + message + '}}');
+                        //                        sendChat('Reporter', '/w gm Current sheet is ' + state.Reporter.sheet  + '<BR>If this is incorrect. choose a supported sheet or choose "Other"<BR>[D&D 5th Edition by Roll20](!report --config|D&D 5th Edition by Roll20)<BR>[Pathfinder by Roll20](!report --config|Pathfinder Second Edition by Roll20)<BR>[Other](!report --config|other)');
+                        break;
+                    default:
+                        state.Reporter.sheet = "Other"
+                        sheet = state.Reporter.sheet;
+                        sendMessage ('Sheet is now set to <BR><B>'+ sheet + '</B>')
+                }
+
+                return;
+            }
+
+
             let toWhom = '/w gm ';
             let buttonLine = '';
             let currentLayer = "";
@@ -321,22 +406,14 @@ on('ready', () => {
             let isNPC = "";
             let showPageInfo = false;
             let pageInfo = "";
-            let sheet = "OGL";
 
 
             let testChar = findObjs({
                 type: 'character'
             });
-            if (testChar.length > 0) {
-                testChar = testChar[0];
-                if (getAttrByName(testChar.get('_id'), 'text_proficiency')) {
-                    sheet = "PF2";
-                }
-            }
+
+
             //intercept shorthand phrases that replace entire calls
-            L({
-                sheet
-            });
             switch (msg.content) {
                 case '!report|mapkeys':
                     mapKeyChar = findObjs({
@@ -363,35 +440,103 @@ on('ready', () => {
                         msg.content = `!report||+|t|thereisnocharacterbythisname`
                     }
                     break;
-                case '!report|pcs-detail':
-                    if (sheet === 'PF2') {
-                        msg.content = `!report||-|c|sheet_type|npc --detail ---vision ---- showfooter|false showheader|false printbutton|false hideempty|true source|false title|PCs Detail|`;
-                    } else {
-                        msg.content = `!report||+|c|npc|0 --c|strength,|Str c|dexterity,|Dex c|constitution|Con c|intelligence,|Int c|wisdom,|Wis c|charisma#|Cha c|hp,|hp c|ac,|AC c|gp|GP ---vision ---- showfooter|false showheader|false printbutton|false hideempty|true source|false title|PCs Detail|`;
 
+                case '!report|pcs-detail':
+
+                    switch (sheet) {
+                        case 'Other':
+                        msg.content = `!report||+|t|thereisnocharacterbythisname`
+                            sendChat('Reporter', toWhom + openReport + sheet + 'This command only works on a supported sheet. Click here to choose a supported sheet or forego using this preset command<BR>[Configure](!report --config|sheet)' + closeReport, null, { noarchive: true });
+                            break;
+                        case 'D&D 5E Shaped':
+                            msg.content = `!report||+|c|is_npc|0 --c|strength,|Str c|dexterity,|Dex c|constitution|Con c|intelligence,|Int c|wisdom,|Wis c|charisma#|Cha c|hp,|hp c|ac,|AC c|gp|GP ---vision ---- showfooter|false showheader|false printbutton|false hideempty|true source|false title|PCs Detail|`;
+                            break;
+                        case 'Pathfinder First Edition by Roll20':
+                            msg.content = `!report||+|c|npc|0 --detail ---vision ---- showfooter|false showheader|false printbutton|false hideempty|true source|false title|PCs Detail|`;
+                            break;
+                        case 'Pathfinder Second Edition by Roll20':
+                            msg.content = `!report||-|c|sheet_type|npc --detail ---vision ---- showfooter|false showheader|false printbutton|false hideempty|true source|false title|PCs Detail|`;
+                            break;
+                        case 'D&D 5th Edition by Roll20':
+                            msg.content = `!report||+|c|npc|0 --c|strength,|Str c|dexterity,|Dex c|constitution|Con c|intelligence,|Int c|wisdom,|Wis c|charisma#|Cha c|hp,|hp c|ac,|AC c|gp|GP ---vision ---- showfooter|false showheader|false printbutton|false hideempty|true source|false title|PCs Detail|`;
+                            break;
+                        default:
+                            break;
                     }
                     break;
+
+
+
                 case '!report|pcs':
-                    if (sheet === 'PF2') {
+                      switch (sheet) {
+                        case 'Other':
+                        msg.content = `!report||+|t|thereisnocharacterbythisname`
+                            sendChat('Reporter', toWhom + openReport + sheet + 'This command only works on a supported sheet. Click here to choose a supported sheet or forego using this preset command<BR>[Configure](!report --config|sheet)' + closeReport, null, { noarchive: true });
+                            break;
+                        case 'D&D 5E Shaped':
+                        msg.content = `!report||+|c|is_npc|0 ---- title|PC Directory| sort|bar1 compact|true showheader|false showfooter|false layer|objects charactersheetbutton|true  ignoreselected|true printbutton|false`;
+                            break;
+                        case 'Pathfinder First Edition by Roll20':
+                        msg.content = `!report||+|c|npc|0 ---- title|PC Directory| sort|bar1 compact|true showheader|false showfooter|false layer|objects charactersheetbutton|true ignoreselected|true printbutton|false`;
+                            break;
+                        case 'Pathfinder Second Edition by Roll20':
                         msg.content = `!report||-|c|sheet_type|npc ---- title|PC Directory| sort|bar1 compact|true showheader|false showfooter|false layer|objects charactersheetbutton|true ignoreselected|true printbutton|false`;
-                    } else {
+                            break;
+                        case 'D&D 5th Edition by Roll20':
                         msg.content = `!report||+|c|npc|0 ---- title|PC Directory| sort|bar1 compact|true showheader|false showfooter|false layer|objects charactersheetbutton|true  ignoreselected|true printbutton|false`;
+                            break;
+                        default:
+                            break;
                     }
                     break;
+
+                    
                 case '!report|npcs-detail':
-                    if (sheet === 'PF2') {
+                      switch (sheet) {
+                        case 'Other':
+                        msg.content = `!report||+|t|thereisnocharacterbythisname`
+                            sendChat('Reporter', toWhom + openReport + sheet + 'This command only works on a supported sheet. Click here to choose a supported sheet or forego using this preset command<BR>[Configure](!report --config|sheet)' + closeReport, null, { noarchive: true });
+                            break;
+                        case 'Pathfinder First Edition by Roll20':
+                        msg.content = `!report||+|c|npc|1 --detail  ---vision ---- showfooter|false showheader|false printbutton|false hideempty|true source|false title|NPCs Detail|`;
+                            break;
+                        case 'Pathfinder Second Edition by Roll20':
                         msg.content = `!report||+|c|sheet_type|npc --detail  ---vision ---- showfooter|false showheader|false printbutton|false hideempty|true source|false title|NPCs Detail|`;
-                    } else {
+                            break;
+                        case 'D&D 5E Shaped':
+                        msg.content = `!report||-|c|is_npc|0 --detail   ---- showfooter|false  showheader|false source|false printbutton|false hideempty|true charactersheetbutton|true title|NPCs Detail| `;
+                            break;
+                        case 'D&D 5th Edition by Roll20':
                         msg.content = `!report||-|c|npc|0 --detail   ---- showfooter|false  showheader|false source|false printbutton|false hideempty|true charactersheetbutton|true title|NPCs Detail| `;
+                            break;
+                        default:
+                            break;
                     }
-                    break;
+                    break;                    
+                    
                 case '!report|npcs-actions':
-                    if (sheet === 'PF2') {
+                      switch (sheet) {
+                        case 'Other':
+                        msg.content = `!report||+|t|thereisnocharacterbythisname`
+                            sendChat('Reporter', toWhom + openReport + sheet + 'This command only works on a supported sheet. Click here to choose a supported sheet or forego using this preset command<BR>[Configure](!report --config|sheet)' + closeReport, null, { noarchive: true });
+                            break;
+                        case 'Pathfinder First Edition by Roll20':
+                        msg.content = `!report||+|c|npc|1 --  ---actions ---- showfooter|false  showheader|false source|false printbutton|false compact|true charactersheetbutton|true title|NPC Actions| `;
+                            break;
+                        case 'Pathfinder Second Edition by Roll20':
                         msg.content = `!report||+|c|sheet_type|npc --  ---actions ---- showfooter|false  showheader|false source|false printbutton|false compact|true charactersheetbutton|true title|NPC Actions| `;
-                    } else {
+                            break;
+                        case 'D&D 5th Edition by Roll20':
                         msg.content = `!report||-|c|npc|0 --  ---actions ---- showfooter|false  showheader|false source|false printbutton|false compact|true charactersheetbutton|true title|NPC Actions| `;
+                            break;
+                        case 'D&D 5E Shaped':
+                        msg.content = `!report||-|c|is_npc|0 --  ---actions ---- showfooter|false  showheader|false source|false printbutton|false compact|true charactersheetbutton|true title|NPC Actions| `;
+                            break;
+                        default:
+                            break;
                     }
-                    break;
+                    break;                    
+
                 case '!report|tracker':
                     msg.content = `!report --t|statusmarkers|- ---- showfooter|false showheader|false source|false title|Tracker Compact| layer|tracker compact|true hideempty|true charactersheetbutton|true `;
                     break;
@@ -416,6 +561,7 @@ on('ready', () => {
 
                 default:
             }
+//                            sendChat('Reporter', toWhom + openReport + msg.content  + closeReport, null, { noarchive: true });
 
 
 
@@ -426,16 +572,13 @@ on('ready', () => {
                     name: 'Map Key'
                 })[0];
                 mapKey = mapKeyChar.get('_id');
-                L({
-                    mapKey
-                });
                 msg.content = `!report||+|t|represents|${mapKey} ---  ---- layer|gmlayer compact|true sort|tokennameI charactersheetlink|false notesbutton|true showprintbutton|false title|Map Keys| tokennotesbutton|true ignoreselected|true showheader|false `;
             }
 
 
             //  ################## Keywords
             let keywords = msg.content.split(/\s+----/)[1] || "";
-
+            let reportName = "";
             if (keywords) {
                 if (keywords.includes("layer|")) {
                     currentLayer = keywords.split(/layer\|/)[1].split(/\s+/)[0] || "";
@@ -480,9 +623,7 @@ on('ready', () => {
                     .map(o => getObj('graphic', o._id))
                     .filter(o => undefined !== o)
             } else {
-                if (currentLayer === 'all' || currentLayer === 'tracker')
-
-                {
+                if (currentLayer === 'all' || currentLayer === 'tracker') {
                     allLayers = true
 
                     selection = findObjs({
@@ -583,12 +724,12 @@ on('ready', () => {
                 }))
                 .filter(o => undefined !== o.character);
             //test for empty set, then for sheet type of first found sheet
-            if (TCData.length > 0) {
-                if (getAttrByName(TCData[0].character.get('_id'), 'text_proficiency')) {
-                    sheet = "PF2";
-                }
-            }
-
+            /*            if (TCData.length > 0) {
+                            if (getAttrByName(TCData[0].character.get('_id'), 'text_proficiency')) {
+                                sheet = "Pathfinder Second Edition by Roll20";
+                            }
+                        }
+            */
             let filterTCData = TCData;
             let newTCData = [];
 
@@ -672,24 +813,62 @@ on('ready', () => {
 
                     switch (attributeLine) {
                         case "vision":
-                            if (sheet === "PF2") {
-                                attributes = ['t|has_bright_light_vision.|Vision', 't|has_night_vision,|Night|NV', 't|night_vision_distance|NV-dist', 'c|repeating_senses_$0_sense|Senses'];
-                            } else {
-                                attributes = ['t|has_bright_light_vision.|Vision', 't|has_night_vision,|Night|NV', 't|night_vision_distance|NV-dist', 'c|npc_senses|Perc.'];
+                            
+                            
+                                switch (sheet) {
+                                    case "D&D 5th Edition by Roll20":
+                                         attributes = ['t|has_bright_light_vision.|Vision', 't|has_night_vision,|Night|NV', 't|night_vision_distance|NV-dist', 'c|npc_senses|Perc.'];
+                                        break;
+                                    case "D&D 5E Shaped":
+                                         attributes = ['t|has_bright_light_vision.|Vision', 't|has_night_vision,|Night|NV', 't|night_vision_distance|NV-dist', 'c|senses_string|Perc.'];
+                                        break;
+                                    case "Pathfinder First Edition by Roll20":
+                                        attributes = ['t|has_bright_light_vision.|Vision', 't|has_night_vision,|Night|NV', 't|night_vision_distance|NV-dist', 'c|senses|Senses'];
+                                        break;
+                                    case "Pathfinder Second Edition by Roll20":
+                                        attributes = ['t|has_bright_light_vision.|Vision', 't|has_night_vision,|Night|NV', 't|night_vision_distance|NV-dist', 'c|repeating_senses_$0_sense|Senses'];
+                                        break;
+                                    default:
+                                attributes = ['t|has_bright_light_vision.|Vision', 't|has_night_vision,|Night|NV', 't|night_vision_distance|NV-dist'];
+                                }
 
-                            }
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
                             break;
                         case "light":
                             attributes = ['t|emits_bright_light,|Bright|Bright', 't|bright_light_distance|distance', 't|emits_low_light,|Low', 't|low_light_distance|distance'];
                             break;
                         case "detail":
-                            if (sheet === "PF2") {
-                                attributes = ['c|strength,|Str', 'c|dexterity,|Dex ', 'c|constitution.|Con', 't|bar1|hp', 'c|intelligence,|Int', 'c|wisdom,|Wis', 'c|charisma.|Cha', 'c|armor_class#|AC', 'c|repeating_senses_$0_sense|Senses'];
-                            } else {
-                                attributes = ['c|strength.|St', 'c|dexterity.|Dx', 'c|constitution,|Cn', 't|bar1_value|hp', 'c|intelligence.|In', 'c|wisdom.|Ws', 'c|charisma,|Ch', 'c|ac|AC', 'c|npc_senses|Senses'];
-                            }
+
+                                switch (sheet) {
+                                    case "D&D 5th Edition by Roll20":
+                                        attributes = ['c|strength.|St', 'c|dexterity.|Dx', 'c|constitution,|Cn', 't|bar1_value|hp', 'c|intelligence.|In', 'c|wisdom.|Ws', 'c|charisma,|Ch', 'c|ac|AC', 'c|npc_senses|Senses'];
+                                        break;
+                                    case "D&D 5E Shaped":
+                                        attributes = ['c|strength.|St', 'c|dexterity.|Dx', 'c|constitution|Cn', 't|bar1_value|hp', 'c|intelligence.|In', 'c|wisdom.|Ws', 'c|charisma,|Ch', 'c|ac|AC', 'c|npc_senses|Senses'];
+                                        break;
+                                    case "Pathfinder First Edition by Roll20":
+                                        attributes = ['c|strength,|Str', 'c|dexterity,|Dex ', 'c|constitution|Con', 'c|intelligence,|Int', 'c|wisdom,|Wis', 'c|charisma|Cha', 'c|ac.|AC', 'c|ac_touch.|t', 'c|ac_flatfooted.|ff', 't|bar1|hp', 'c|senses|Senses'];
+                                        break;
+                                    case "Pathfinder Second Edition by Roll20":
+                                        attributes = ['c|strength,|Str', 'c|dexterity,|Dex ', 'c|constitution.|Con', 't|bar1|hp', 'c|intelligence,|Int', 'c|wisdom,|Wis', 'c|charisma.|Cha', 'c|armor_class#|AC', 'c|repeating_senses_$0_sense|Senses'];
+                                        break;
+                                    default:
+                            attributes = args[1].split(/\s+/)
+                                }
                             keywords = keywords + " source|false ";
                             source = false;
+
+
+
+
                             break;
                         default:
                             attributes = args[1].split(/\s+/)
@@ -850,9 +1029,6 @@ on('ready', () => {
                             } else {
                                 newbuttonLine = "";
                             }
-                            L({
-                                newbuttonLine
-                            });
 
 
                             // ######## report subheader
@@ -895,25 +1071,60 @@ on('ready', () => {
                             if (compact === false) {
                                 tokenGraphicHeight = 37;
                                 switch (sheet) {
-                                    case "OGL":
+                                    case "D&D 5th Edition by Roll20":
                                         secondline = ((subTitle) ? "&#10;<span style='display: block; font-size:12px; line-height:1; color:#aaa'>" + ((getAttrByName(tc.character.get('_id'), 'npc_type')) ? getAttrByName(tc.character.get('_id'), 'npc_type') : getAttrByName(tc.character.get('_id'), 'class_display')) + '</span>' : "");
                                         break;
-                                    case "PF2":
+                                    case "D&D 5E Shaped":
+                                        secondline = ((subTitle) ? "&#10;<span style='display: block; font-size:12px; line-height:1; color:#aaa'>" + ((getAttrByName(tc.character.get('_id'), 'is_npc')==='1') ? getAttrByName(tc.character.get('_id'), 'type') : getAttrByName(tc.character.get('_id'), 'class_and_level')) + '</span>' : "");
+                                        break;
+                                    case "Pathfinder First Edition by Roll20":
+                                        secondline = ((subTitle) ? "&#10;<span style='display: block; font-size:12px; line-height:1; color:#aaa'>" + ((getAttrByName(tc.character.get('_id'), 'npc')) ? getAttrByName(tc.character.get('_id'), 'npc_type') : getAttrByName(tc.character.get('_id'), 'race') +", "+ getAttrByName(tc.character.get('_id'), 'class')) + '</span>' : "");
+                                        break;
+                                    case "Pathfinder Second Edition by Roll20":
                                         secondline = ((subTitle) ? "&#10;<span style='display: block; font-size:12px; line-height:1; color:#aaa'>" + ((getAttrByName(tc.character.get('_id'), 'npc_type')) ? getAttrByName(tc.character.get('_id'), 'npc_type') + ", " + getAttrByName(tc.character.get('_id'), 'traits') : getAttrByName(tc.character.get('_id'), 'class') + " - " + getAttrByName(tc.character.get('_id'), 'level') + ", background: " + getAttrByName(tc.character.get('_id'), 'background')) + '</span>' : "");
+                                        break;
+                                    case "Other":
+                                        secondline = "";
                                         break;
                                     default:
                                         secondline = ((subTitle) ? "&#10;<span style='display: block; font-size:12px; line-height:1; color:#aaa'>" + ((getAttrByName(tc.character.get('_id'), 'npc_type')) ? getAttrByName(tc.character.get('_id'), 'npc_type') : getAttrByName(tc.character.get('_id'), 'class_display')) + '</span>' : "");
                                 }
                             }
+/*
+                      switch (sheet) {
+                        case 'Other':
+                            break;
+                        case 'Pathfinder Second Edition by Roll20':
+                            break;
+                        case 'D&D 5th Edition by Roll20':
+                            break;
+                        default:
+                            break;
+                    }
+                    */
 
 
-
-                            if (sheet === "PF2") {
+                      switch (sheet) {
+                        case 'Other':
+                                differentName = "";
+                            break;
+                        case 'Pathfinder First Edition by Roll20':
+                                differentName = ((getAttrByName(cId, 'npc') !== 1) ? " </i><span style ='color:#eee; float:right; background:#999; margin-right:2px; padding:0px 1px !important'> PC </span><i>" : "");
+                            break;
+                        case 'Pathfinder Second Edition by Roll20':
                                 differentName = ((getAttrByName(cId, 'sheet_type') !== "npc") ? " </i><span style ='color:#eee; float:right; background:#999; margin-right:2px; padding:0px 1px !important'> PC </span><i>" : "");
-                            } else {
+                            break;
+                        case 'D&D 5E Shaped':
+                                differentName = ((characterSheetLink) ? ((tc.character.get('name') !== getAttrByName(cId, 'character_name')) ? " </i><span style ='color:#eee; float:right; background:#999; margin-right:2px; padding:0px 1px !important'> " + ((getAttrByName(cId, 'character_name') !== '') ? "<span title='" + getAttrByName(cId, 'character_name') + "'>NPC</span>" : 'PC') + " </span><i>" : "") : "");
+                            break;
+                        case 'D&D 5th Edition by Roll20':
                                 differentName = ((characterSheetLink) ? ((tc.character.get('name') !== getAttrByName(cId, 'npc_name')) ? " </i><span style ='color:#eee; float:right; background:#999; margin-right:2px; padding:0px 1px !important'> " + ((getAttrByName(cId, 'npc_name') !== '') ? "<span title='" + getAttrByName(cId, 'npc_name') + "'>NPC</span>" : 'PC') + " </span><i>" : "") : "");
+                            break;
+                        default:
+                                differentName = "";
+                        break;
+                    }
 
-                            }
 
                             if (allLayers === true) {
                                 lines = lines + "<div style='background-color: #eee; margin-top:6px; min-height:" + tokenGraphicHeight + "px; padding: 0px 5px;'><div style = 'float:left;'><a style = " + buttonStyle + " href='!RPpingall " + tc.token.get('_id') + "'><img style = 'height:" + tokenGraphicHeight + "px;float:left;margin-right:5px;margin-bottom:-5px;' src='" + tc.token.get('imgsrc') + "'></img></a></div>" + printButton + noteButtons + "<b>" + specificLayer(tc.token.get('_id')) + "<a style = " + buttonStyle + " href='!RPpinggm " + tc.token.get('_id') + "'>" + tc.token.get('name') + "</a></b>" + differentName + characterSheet + secondline + "</div>";
@@ -954,12 +1165,24 @@ on('ready', () => {
 
                                     //attribute = ((tc.character.get('npc')) === 1) ? attribute : npcSwap(attribute); //accounts for differently named attributesbetween pc and npc
                                     switch (sheet) {
-                                        case "PF2": //three spaces
+                                        case "Pathfinder First Edition by Roll20": //three spaces
+                                            attribute = ((npcSubstitutions) ? npcSwap(attribute, ((getAttrByName(tc.character.get('_id'), 'npc')) === "1" ? "1" : "0")) : attribute); //accounts for differently named attributesbetween pc and npc
+                                            break;
+                                        case "Pathfinder Second Edition by Roll20": //three spaces
                                             attribute = ((npcSubstitutions) ? npcSwap(attribute, ((getAttrByName(tc.character.get('_id'), 'sheet_type')) === "npc" ? "1" : "0")) : attribute); //accounts for differently named attributesbetween pc and npc
                                             break;
-                                        default:
-                                            isNPC = getAttrByName(tc.character.get('_id'), 'npc').toString();
+                                        case 'D&D 5th Edition by Roll20':
+                                            isNPC = getAttrByName(tc.character.get('_id'), 'npc');
+                                            isNPC = ((isNPC) ? isNPC.toString() : '1');
                                             attribute = ((npcSubstitutions) ? npcSwap(attribute, isNPC) : attribute); //accounts for differently named attributesbetween pc and npc
+                                            break;
+                                        case 'D&D 5E Shaped':
+                                            isNPC = getAttrByName(tc.character.get('_id'), 'is_npc');
+                                            isNPC = ((isNPC) ? isNPC.toString() : '1');
+                                            attribute = ((npcSubstitutions) ? npcSwap(attribute, isNPC) : attribute); //accounts for differently named attributesbetween pc and npc
+                                            break;
+                                        default:
+                                            attribute = attribute; //accounts for differently named attributesbetween pc and npc
                                     }
                                     target = a.split(/\|/)[0];
                                     customTag = a.split(/\|/)[2];
@@ -1009,7 +1232,7 @@ on('ready', () => {
                                         prefix = '<i>' + attribute + ': </i>'
                                     }
                                     //############### TEST THIS FOR PROBLEMS ON MANY REPORT TYPES
-                                    if (hideEmpty && (value === '' || undefined === value)) {} else {
+                                    if (hideEmpty && (value === '' || undefined === value)) { } else {
                                         lines = lines + charType + prefix + value + separator;
                                     }
 
@@ -1021,66 +1244,65 @@ on('ready', () => {
                             }
                             lines = lines + newbuttonLine;
 
-                            //lines = lines + '**Vision** [Off](!token-mod --ids '+ tId + ' --set bright_vision|false has_night_vision|false) |  [On](!token-mod --ids '+ tId + ' --set bright_vision|true) **DV** [30](!token-mod --ids '+ tId + ' --set has_night_vision|true night_vision_distance|30 bright_vision|false has_night_vision|false) | [60](!token-mod --ids '+ tId + ' --set has_night_vision|true night_vision_distance|60 bright_vision|false has_night_vision|false) | [90](!token-mod --ids '+ tId + ' --set has_night_vision|true night_vision_distance|90 bright_vision|false has_night_vision|false) | [120](!token-mod --ids '+ tId + ' --set has_night_vision|true night_vision_distance|120 bright_vision|false has_night_vision|false) | [??](!token-mod --ids '+ tId + ' --set has_night_vision|true night_vision_distance|?{nightvision distance|60} bright_vision|false has_night_vision|false) | **[Remove Darkvision](!token-mod --ids '+ tId + ' --set has_night_vision|true night_vision_distance|0 bright_vision|false)**';
                         });
 
                         lines = openReport + "<span style = 'display:inline-block; width:100%;'>" + ((customTitle) ? openHeader + menuChar + repeatChar + countChar + customTitle + closeHeader : "") + ((showHeader) ? header + pageInfo : "") + "</span>" + lines + ((showFooter) ? header + pageInfo : "") + closeReport;
                 }
                 if (lines) {
-                    L({reportName});
+                    //L({ reportName });
                     if (reportName) {
-                    
-
-                    let reportHandout = findObjs({
-                        type: 'handout',
-                        name: reportName
-                    });
-                    reportHandout = reportHandout ? reportHandout[0] : undefined;
 
 
-
-if (!reportHandout) {
-reportHandout = createObj('handout', {
-    name: reportName,
-    archived: false
-});
-let reportHandoutid = reportHandout.get("_id");
-                    sendChat('Reporter', toWhom + openReport + `Reporter has created a handout named <b>${reportName}</b>. <BR>Click <a href="http://journal.roll20.net/handout/${reportHandoutid}">here</a> to open.` + closeReport, null, {
-                    noarchive: true
-                    });
-
-
-}
+                        let reportHandout = findObjs({
+                            type: 'handout',
+                            name: reportName
+                        });
+                        reportHandout = reportHandout ? reportHandout[0] : undefined;
 
 
 
+                        if (!reportHandout) {
+                            reportHandout = createObj('handout', {
+                                name: reportName,
+                                archived: false
+                            });
+                            let reportHandoutid = reportHandout.get("_id");
+                            sendChat('Reporter', toWhom + openReport + `Reporter has created a handout named <b>${reportName}</b>. <BR>Click <a href="http://journal.roll20.net/handout/${reportHandoutid}">here</a> to open.` + closeReport, null, {
+                                noarchive: true
+                            });
 
 
-if (reportHandout){
+                        }
 
-                    if (reportHandout) {
-                        reportHandout.get("notes", function(notes) {
-                            //L({notes});
-                            if (notes.includes('<hr>')) {
-                                notes = notes.split('<hr>')[0]+'<hr>'
-                            } else {
-                                notes = '<hr>'
+
+
+
+
+                        if (reportHandout) {
+
+                            if (reportHandout) {
+                                reportHandout.get("notes", function (notes) {
+                                    //L({notes});
+                                    if (notes.includes('<hr>')) {
+                                        notes = notes.split('<hr>')[0] + '<hr>'
+                                    } else {
+                                        notes = '<hr>'
+                                    }
+                                    reportHandout.set("notes", notes + lines)
+                                });
                             }
-                            reportHandout.set("notes", notes + lines)
+                        } else {
+                            sendChat('Reporter', toWhom + openReport + `No handout named ${reportName} was found.` + closeReport, null, {
+                                noarchive: true
+                            });
+
+                        }
+                    } else {
+
+                        sendChat("Reporter", toWhom + lines, null, {
+                            noarchive: true
                         });
                     }
-}else{
-                    sendChat('Reporter', toWhom + openReport + `No handout named ${reportName} was found.` + closeReport, null, {
-                    noarchive: true
-                    });
-
-}
-} else {
-
-                    sendChat("Reporter", toWhom + lines, null, {
-                        noarchive: true
-                    });
-}
 
 
 
@@ -1150,7 +1372,7 @@ if (reportHandout){
         let lines = '';
 
 
-        const stringToBoolean = function(string) {
+        const stringToBoolean = function (string) {
             switch (string.toLowerCase().trim()) {
                 case "true":
                 case "yes":
@@ -1216,7 +1438,7 @@ if (reportHandout){
 
                 if (pageAttribute === 'daylight_mode_enabled') {
                     if (pageValue === "false" || pageValue === "true") {
-                        (pageValue === 'true') ? true: false;
+                        (pageValue === 'true') ? true : false;
                     } else {
                         pageValue = false;
                         sendChat('Reporter', '/w gm ' + openReport + pageValue + ' is not a valid value for ' + pageAttribute + ' It has been set to false.' + closeReport, null, {
