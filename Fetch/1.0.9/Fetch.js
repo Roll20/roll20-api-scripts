@@ -456,6 +456,7 @@ const Fetch = (() => {
         showplayers_bar2: { refersto: 'showplayers_bar2', permissionreq: 'any', dataval: (d) => d },
         showplayers_bar3: { refersto: 'showplayers_bar3', permissionreq: 'any', dataval: (d) => d },
         showplayers_name: { refersto: 'showplayers_name', permissionreq: 'any', dataval: (d) => d },
+        show_tooltip: { refersto: 'show_tooltip', permissionreq: 'any', dataval: (d) => d },
         sides: { refersto: 'sides', permissionreq: 'any', dataval: (d) => d },
         markers: { refersto: 'statusmarkers', permissionreq: 'any', dataval: (d) => d },
         statusmarkers: { refersto: 'statusmarkers', permissionreq: 'any', dataval: (d) => d },
