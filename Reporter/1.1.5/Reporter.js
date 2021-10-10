@@ -17,7 +17,7 @@ on('ready', function () {
 
 
 on('ready', () => {
-    const version = '1.0.3'; //verion number set here
+    const version = '1.1.5'; //verion number set here
     log('-=> Reporter v' + version + ' <=-'); //Logs version number to console
     sendChat('ReporterDev', '/w gm Ready');
 
