@@ -17,7 +17,7 @@ on('ready', function () {
 
 
 on('ready', () => {
-    const version = '1.1.4'; //version number set here
+    const version = '1.0.3'; //verion number set here
     log('-=> Reporter v' + version + ' <=-'); //Logs version number to console
     sendChat('ReporterDev', '/w gm Ready');
 
@@ -592,6 +592,7 @@ on('ready', () => {
                 showHeader = ((keywords.includes("showheader|false")) ? false : true);
                 showPageInfo = ((keywords.includes("showpageinfo|true")) ? true : false);
                 customTitle = ((keywords.includes(" title|")) ? keywords.match(/title\|.*?\|/).toString().split("|")[1] : '');
+                customTitle = ((keywords.includes(" overtitle|")) ? keywords.match(/title\|.*?\|/).toString().split("|")[1] : customTitle);
                 source = ((keywords.includes("source|false")) ? false : true);
                 isPrintbutton = ((keywords.includes("printbutton|true")) ? true : false);
                 isTokenNotesButton = ((keywords.includes("tokennotesbutton|true")) ? true : false);
@@ -611,7 +612,11 @@ on('ready', () => {
                 characterSheetLink = ((keywords.includes("charactersheetlink|false")) ? false : true);
                 characterSheetButton = ((keywords.includes("charactersheetbutton|true")) ? true : false);
                 sortTerm = ((keywords.includes("sort|")) ? keywords.split("sort|")[1].split(" ")[0] : 'identity');
-                reportName = ((keywords.includes(" handout|")) ? keywords.match(/handout\|.*?\|/).toString().split("|")[1] : "");
+                reportName = ((keywords.match(/handout\|.*?\|/)) ? keywords.match(/handout\|.*?\|/).toString().split("|")[1] : "");
+                if (keywords.includes(" overtitle|")){
+                    showHeader = false;
+                    showFooter = false
+                }
             }
 
 
