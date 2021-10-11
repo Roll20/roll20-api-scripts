@@ -247,7 +247,7 @@ on('ready', () => {
                             (theToken || [])
                                 .map(o => getObj('graphic', o._id))
                                 .filter(g => undefined !== g)
-/*                                .map(t => getObj('character', t.get('represents')))*/
+                                .map(t => getObj('character', t.get('represents')))
                                 .filter(c => undefined !== c)
                                 .forEach(c => {
                                     message = "<img src='" + tokenImage + "'>";

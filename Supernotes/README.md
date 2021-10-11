@@ -37,6 +37,8 @@ This script as written is optimized for the D&D 5th Edition by Roll20 sheet, but
 
 *--id* supply this with a token id, and the script will attempt to read the notes associated with a specific token, or the character associate with that token. There is no space between --id and the token id. Only one token id may be passed.
 
+*--handout|Handoutname|* If this is present in the arguments, the note will be sent to a handout instead of chat. This can allow a note to remain usable without scrolling through the chat. It can also be used as a sort of floating palette. Notes in handouts can be updated. Running the macro again will regenerate the note. The string in between pipes will be used as the name of the note handout. If no handout by that name exists, Supernotes will create one and post a link in chat to open it. The title must be placed between two pipes. *handout|My Handout|* will work. *handout|My Handout* will fail. A note handout automatically creates a horizontal rule at the top of the handout. Anything typed manually above that rule will be persistent. Supernotes will not overwrite this portion. You can use this area to create Journal Command Buttons to generate new notes or to give some context to the existing note. All updates are live.
+
 *--help* Displays help.
 
 *--config* Returns a configuration dialog box that allows you to set which sheet's roll template to use, and to toggle the 'Send to Players' footer.
