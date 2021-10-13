@@ -5,8 +5,11 @@
 * Jets de dégâts séparés par cible pour la destruction des morts-vivants
 * Ajout d'une option de malus de répétition pour la destruction des morts-vivants.
 * Ajout du type d'ennemi juré gobelin
+* Implémentation de base de la voie de l'expert du combat
 
 ### Autres améliorations
+* Ajout d'un type de dégâts "énergie", pour des settings science fiction.
+* Message plus explicite en cas d'expression de soins incorrecte.
 * Modifie l'affichage des boutons de soins si plus disponibles
 * Un peu plus de discrétion avec les messages sur les limites par jour ou par combat
 * Passage en prédicats d'un grand nombre de capacités qui utilisaient encore des attributs.

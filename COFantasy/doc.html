@@ -367,7 +367,7 @@
                   <li><code>--test</code> pour voir le résultat du jet d'attaque. On n'applique pas les résultats d'un touché.</li>
                   <li><code>--sournoise <i>n</i></code> : ajoute <i>n</i>d6 de dégâts d'attaque sournoise ou par surprise.</li>
                   <li><code>--magique</code> : les dégâts sont magiques. On peut passer en argument le niveau de magie. Il est utilisé contre les créatures immunisées aux armes. Le niveau par défaut est 1.</li>
-                  <li><code>--feu</code>, <code>--acide</code>, <code>--electrique</code>, <code>--froid</code>, <code>--sonique</code>, --<code>poison</code>, --<code>maladie</code>, <code>--argent</code>, <code>--drain</code>&nbsp;: les dégâts sont de type feu, acide, électrique, froid, sonique, poison, maladie, argent ou drain. Le type spécifie uniquement le dernier <code>--plus</code> précédent cette option, ou si il n'y en a pas, celui des dégâts principaux. Seul le dernier type spécifié est pris en compte (pas de type multiple pour l'instant). Le type affecte différents attributs, et aussi la couleur d'affichage des dégâts.</li>
+                  <li><code>--feu</code>, <code>--acide</code>, <code>--electrique</code>, <code>--froid</code>, <code>--sonique</code>, --<code>poison</code>, --<code>maladie</code>, <code>--argent</code>, <code>--drain</code>, <code>--energie</code>&nbsp;: les dégâts sont de type feu, acide, électrique, froid, sonique, poison, maladie, argent, drain ou énergie. Le type spécifie uniquement le dernier <code>--plus</code> précédent cette option, ou si il n'y en a pas, celui des dégâts principaux. Seul le dernier type spécifié est pris en compte (pas de type multiple pour l'instant). Le type affecte différents attributs, et aussi la couleur d'affichage des dégâts.</li>
                   <li><code>--tranchant</code>, <code>--percant</code>, <code>--contondant</code> : précise le type d'arme (si pertinent), pour pouvoir utiliser les RD spécifiques à un type d'arme.</li>
                   <li><code>--ignoreRD</code> : l'attaque ignore les RD et division de DMs. Il est possible de donner en argument une valeur de RD ignorée, de sorte que l'attaque ignore les RD jusqu'à cette valeur. Par exemple, pour une arme en adamantium, on pourra écrire <code>--ignoreRD 5</code>.</li>
                   <li><code>--ignoreMoitieRD</code> : l'attaque ignore la moitié de la RD.</li>
@@ -1293,7 +1293,7 @@
                 <h4 class="text-secondary">Voie du golem</h4>
                 <ol>
                   <li><strong>Grosse tête</strong> : Vous pouvez ajouter un <a href=#predicats>prédicat</a> <code>grosseTete</code>. Normalement, le bonus devrait dépendre des actions du forgesort. Si vous souhaitez le faire, vous pouvez ne pas mettre le prédicat, mais juste avant un jet de force pour lequel vous pensez que la grosse tête s'applique, faire <code>!cof-set-predicate grosseTete true</code> (en sélectionnant le token du forgesort), puis après le jet faire  <code>!cof-set-predicate grosseTete false</code>. Si vous voulez l'ajout de grosse tête par défaut, vous pouvez aussi faire l'opération dans l'ordre inverse pour les jets pour lesquels vous pensez que le bonus ne peut pas s'appliquer.</li>
-                  <li><strong>Golem</strong> : ajouter un personnage et un token pour le golem (ne pas oublier le <a href=#predicats>prédicat</a> <code>nonVivant</code> pour le golem). Pour les réparations, utiliser <code>!cof-soin @{selected|token_id} <i>nom_du_golem</i> <i>rang</i>d6+@{selected|INT}</code>. Attention, le nom du golem est celui du token représentant le golem, et il ne doit pas contenir de blanc.</li>
+                  <li><strong>Golem</strong> : ajouter un personnage et un token pour le golem (ne pas oublier le <a href=#predicats>prédicat</a> <code>nonVivant</code> pour le golem). Pour les réparations, utiliser <code>!cof-soin @{selected|token_id} <i>nom_du_golem</i> <i>rang</i>d6+@{selected|INT}</code>. Bien remplacer <i>rang</i> par le rang dans la voie, dans cette commande. Attention, le nom du golem est celui du token représentant le golem, et il ne doit pas contenir de blanc.</li>
                   <li><strong>Protecteur</strong> : <code>!cof-interposer</code> permet de s'interposer à la place de la cible de la dernière attaque. (Attention, pas de undo pour cette action)</li>
                   <li><strong>Golem supérieur</strong> : reporter les avantages sur la fiche du golem.</li>
                   <li><strong>Intelligence héroïque</strong> : reporter sur la fiche</li>
@@ -1956,6 +1956,14 @@
               </div>
               <h3 class="text-info" id="Prestige">4.2 Voies de prestige et capacités épiques</h3>
               <div class="decalage">
+                <h4 class="text-secondary">Voie de l'expert du combat</h4>
+                <ol>
+                  <li><strong>Expertise du combat</strong> : créer un prédicat <code>expertDuCombat</code> avec comme valeur le rang dans la voie. La commande <code>!cof-statut</code> donne un état des lieux des dés dépensés pendant le combat/le tour. Les dés ne sont actifs qu'en combat et sont réinitialisés à l'utilisation de <code>!cof-fin-combat</code>. L'implémentation part du principe que l'augmentation de la DEF doit être décidée avant le jet de dommages, comme une esquive acrobatique par exemple.</li>
+                  <li><strong>Bousculer</strong> : <code>!cof-expert-combat-bousculer @{selected|token_id} @{target|token_id}</code></li>
+                  <li><strong>Expertise supérieure</strong> : il suffit de mettre à jour la valeur du prédicat <code>expertDuCombat</code> ; le script automatise la mise à jour des limites et la possibilité d'augmenter les DM.</li>
+                  <li><strong>Déplacement tactique</strong> : pas de support spécifique pour le déplacement, mais on peut prévoir une action <code>!cof-expert-combat</code> pour le personnage, qui ne fera qu'une dépense simple de dé d'expertise.</li>
+                  <li><strong>Expertise majeure</strong> : les limites de dés par tour sont automatiques avec la bonne valeur du prédicat <code>expertDuCombat</code>. Pour l'instant le cumul de dés sur le même jet n'est pas supporté.</li>
+                </ol>
                 <h4 class="text-secondary">Voie des armes à deux mains</h4>
                 <ol>
                   <li><strong>Allonge</strong> : reporter le bonus d'attaque sur la fiche. Par facilité, j'ai considéré que le bonus d'Init était permanent et nous l'avons reporté sur la fiche.</li>

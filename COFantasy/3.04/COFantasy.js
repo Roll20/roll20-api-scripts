@@ -587,7 +587,14 @@ var COFantasy = COFantasy || function() {
   function error(msg, obj) {
     log(msg);
     log(obj);
-    sendChat("COFantasy", msg);
+    if (msg) {
+      try {
+        sendChat('COFantasy', msg);
+      } catch (e) {
+        msg = msg.replace('[', '[ ');
+        sendChat('COFantasy', "Message sans jet : " + msg);
+      }
+    }
   }
 
   function determineSettingDeJeu() {
@@ -6439,6 +6446,7 @@ var COFantasy = COFantasy || function() {
       case 'poison':
       case 'maladie':
       case 'drain':
+      case 'energie':
         options.type = weaponStats.typeDegats;
         break;
       case 'tranchant':
@@ -6877,6 +6885,7 @@ var COFantasy = COFantasy || function() {
         case 'maladie':
         case 'argent':
         case 'drain':
+        case 'energie':
           lastType = cmd[0];
           var l = 0;
           if (scope.additionalDmg) l = scope.additionalDmg.length;
@@ -9058,6 +9067,10 @@ var COFantasy = COFantasy || function() {
       explications.push("Pacte Sanglant => +" + options.pacteSanglantDef[target.token.id] + " en DEF");
       defense += options.pacteSanglantDef[target.token.id];
     }
+    if (options.expertDuCombatDEF && options.expertDuCombatDEF[target.token.id]) {
+      explications.push("Expert du combat => +" + options.expertDuCombatDEF[target.token.id].roll + " en DEF");
+      defense += options.expertDuCombatDEF[target.token.id].val;
+    }
     var defArme = charAttributeAsInt(target, 'armeBonusDef', 0);
     if (defArme > 0) {
       explications.push("Arme de parade en main => +" + defArme + " en DEF");
@@ -9296,6 +9309,7 @@ var COFantasy = COFantasy || function() {
             case 'maladie':
             case 'magique':
             case 'drain':
+            case 'energie':
               typeDMGauche = attaquant.armeGauche.typeDegats;
           }
           if (typeDMGauche == 'normal' && attaquant.armeGauche.modificateurs &&
@@ -9406,6 +9420,23 @@ var COFantasy = COFantasy || function() {
       attBonus -= 2;
       options.fievreux = true;
       explications.push("Fi\xE9vreu" + onGenre(attaquant, 'x', 'se') + " => -2 en Att. et DM");
+    }
+    if (options.expertDuCombatTouche) {
+      let valDesExpert = options.rolls.expertDuCombatTouche || rollDePlus(6);
+      evt.action.rolls.expertDuCombatTouche = valDesExpert;
+      attBonus += valDesExpert.val;
+      explications.push("Expert du combat => +" + valDesExpert.roll + " en Attaque");
+    }
+    if (options.expertDuCombatDM && !options.pasDeDmg) {
+      let valDesExpert = options.rolls.expertDuCombatDM || rollDePlus(6);
+      evt.action.rolls.expertDuCombatDM = valDesExpert;
+      options.expertDuCombatDMSpec = {
+        type: "normal",
+        value: "1d6",
+        total: valDesExpert.val,
+        display: valDesExpert.roll
+      };
+      explications.push("Expert du combat => +" + valDesExpert.roll + " aux DM");
     }
     return attBonus;
   }
@@ -9804,14 +9835,15 @@ var COFantasy = COFantasy || function() {
         return true;
       }
     }
-    var ressource = '';
+    let ressource = '';
     if (defResource !== undefined) ressource = defResource;
-    var utilisations;
+    let utilisations;
     if (options.limiteParJour) {
       if (personnage) {
         if (options.limiteParJourRessource)
-          ressource = options.limiteParJourRessource;
-        ressource = "limiteParJour_" + ressource;
+          ressource = "limiteParJour_" + options.limiteParJourRessource;
+        else
+          ressource = "limiteParJour_" + defResource;
         utilisations =
           attributeAsInt(personnage, ressource, options.limiteParJour);
         if (utilisations === 0) {
@@ -9820,7 +9852,7 @@ var COFantasy = COFantasy || function() {
         }
         setTokenAttr(personnage, ressource, utilisations - 1, evt);
         if (options.limiteParJourRessource) {
-          var msgJour = personnage.token.get('name') + " ";
+          let msgJour = personnage.token.get('name') + " ";
           if (utilisations < 2) msgJour += "ne pourra plus utiliser ";
           else {
             msgJour += "pourra encore utiliser ";
@@ -9848,12 +9880,13 @@ var COFantasy = COFantasy || function() {
           return true;
         }
         if (options.limiteParCombatRessource)
-          ressource = options.limiteParCombatRessource;
-        ressource = "limiteParCombat_" + ressource;
+          ressource = "limiteParCombat_" + options.limiteParCombatRessource;
+        else
+          ressource = "limiteParCombat_" + defResource;
         utilisations =
           attributeAsInt(personnage, ressource, options.limiteParCombat);
         if (utilisations === 0) {
-          var msgToSend = "ne peut plus faire cette action pour ce combat";
+          let msgToSend = "ne peut plus faire cette action pour ce combat";
           sendPerso(personnage, msgToSend, options.secret);
           return true;
         }
@@ -9877,6 +9910,45 @@ var COFantasy = COFantasy || function() {
         }
       } else {
         error("Impossible de savoir \xE0 qui appliquer la limite par combat", options);
+        return true;
+      }
+    }
+    if (options.limiteParTour) {
+      if (personnage) {
+        if (!stateCOF.combat) {
+          sendPerso(personnage, "ne peut pas faire cette action en dehors des combats", options.secret);
+          return true;
+        }
+        if (options.limiteParTourRessource)
+          ressource = "limiteParTour_" + options.limiteParTourRessource;
+        else
+          ressource = "limiteParTour_" + defResource;
+        utilisations = attributeAsInt(personnage, ressource, options.limiteParTour);
+        if (utilisations === 0) {
+          let msgToSend = "ne peut plus faire cette action pour ce tour";
+          sendPerso(personnage, msgToSend, options.secret);
+          return true;
+        }
+        setTokenAttr(personnage, ressource, utilisations - 1, evt);
+        if (options.limiteParTourRessource) {
+          let msgCombat = personnage.token.get('name') + " ";
+          if (utilisations < 2) msgCombat += "ne pourra plus utiliser ";
+          else {
+            msgCombat += "pourra encore utiliser ";
+            if (utilisations == 2) msgCombat += "une fois ";
+            else msgCombat += (utilisations - 1) + " fois ";
+          }
+          msgCombat += options.limiteParTourRessource + " durant ce tour.";
+          if (explications) {
+            stateCOF.afterDisplay = stateCOF.afterDisplay || [];
+            stateCOF.afterDisplay.push({
+              msg: msgCombat,
+              destinataire: personnage
+            });
+          } else sendPerso(personnage, msgCombat, options.secret);
+        }
+      } else {
+        error("Impossible de savoir \xE0 qui appliquer la limite par tour", options);
         return true;
       }
     }
@@ -12678,6 +12750,14 @@ var COFantasy = COFantasy || function() {
                     options.preDmg[target.token.id] = options.preDmg[target.token.id] || {};
                     options.preDmg[target.token.id].esquiveAcrobatique = true;
                   }
+                  if (predicateAsBool(target, 'expertDuCombat') &&
+                    attributeAsInt(target, 'limiteParCombat_expertDuCombat', 1) > 0 &&
+                    attributeAsInt(target, 'limiteParTour_expertDuCombat', 1) > 0 &&
+                    (!options.expertDuCombatDEF || !options.expertDuCombatDEF[target.token.id])) {
+                    options.preDmg = options.preDmg || {};
+                    options.preDmg[target.token.id] = options.preDmg[target.token.id] || {};
+                    options.preDmg[target.token.id].expertDuCombatDEF = true;
+                  }
                   if (!options.sortilege && !options.aoe &&
                     capaciteDisponible(target, 'paradeMagistrale', 'tour')) {
                     options.preDmg = options.preDmg || {};
@@ -13198,6 +13278,10 @@ var COFantasy = COFantasy || function() {
     evt.action.pageId = pageId;
     evt.action.ciblesTouchees = ciblesTouchees;
     evt.action.choices = options.choices;
+    if (ciblesTouchees.length === 0) {
+      attackDealDmg(attaquant, evt.action.ciblesTouchees, echecCritique, attackLabel, weaponStats, d20roll, display, options, evt, explications, pageId, cibles);
+      return;
+    }
     if (evt.action.choices === undefined) {
       if (options.preDmg) {
         addLineToFramedDisplay(display, "<b>Attaque :</b> Touche !");
@@ -14062,6 +14146,9 @@ var COFantasy = COFantasy || function() {
               error("Expression de d\xE9g\xE2ts suppl\xE9mentaires mal form\xE9e : " + additionalDmg[i].value, additionalDmg[i]);
             }
           });
+          if (options.expertDuCombatDMSpec) {
+            correctAdditionalDmg.push(options.expertDuCombatDMSpec);
+          }
           additionalDmg = correctAdditionalDmg;
           if (target.touche) { //Devrait \xEAtre inutile ?
             if (options.tirDeBarrage) target.messages.push("Tir de barrage : undo si la cible d\xE9cide de ne pas bouger");
@@ -14825,6 +14912,11 @@ var COFantasy = COFantasy || function() {
               line += "<br/>" + boutonSimple(action, "tenter une esquive acrobatique");
               nbBoutons++;
             }
+            if (preDmgToken.expertDuCombatDEF) {
+              action = "!cof-expert-combat-def " + evt.id + " " + target.token.id;
+              line += "<br/>" + boutonSimple(action, "utiliser expert du combat");
+              nbBoutons++;
+            }
             if (preDmgToken.esquiveFatale) {
               preDmgToken.esquiveFatale.forEach(function(tok) {
                 line += "<br/>" +
@@ -14922,6 +15014,12 @@ var COFantasy = COFantasy || function() {
           if (predicateAsInt(perso, 'pacteSanglant', 0) >= 5) {
             addLineToFramedDisplay(display, boutonSimple("!cof-pacte-sanglant " + evt.id + " 5", "Pacte sanglant (+5)"));
           }
+          if (predicateAsInt(perso, 'expertDuCombat', 0) > 0 &&
+            attributeAsInt(perso, 'limiteParCombat_expertDuCombat', 1) > 0 &&
+            attributeAsInt(perso, 'limiteParTour_expertDuCombat', 1) > 0 &&
+            !options.expertDuCombatTouche) {
+            addLineToFramedDisplay(display, boutonSimple("!cof-expert-combat-touche " + evt.id, "Expert du Combat (Att. +1D6)"));
+          }
         } else {
           if (evt.action.weaponStats) {
             var attLabel = evt.action.weaponStats.label;
@@ -14932,6 +15030,12 @@ var COFantasy = COFantasy || function() {
                   "!cof-bouton-rune-puissance " + attLabel + ' ' + evt.id,
                   "Rune de puissance"));
             }
+          }
+          if (predicateAsInt(perso, 'expertDuCombat', 0) > 2 &&
+            attributeAsInt(perso, 'limiteParCombat_expertDuCombat', 1) > 0 &&
+            attributeAsInt(perso, 'limiteParTour_expertDuCombat', 1) > 0 &&
+            !options.expertDuCombatDM) {
+            addLineToFramedDisplay(display, boutonSimple("!cof-expert-combat-dm " + evt.id, "Expert du Combat (DM +1D6)"));
           }
           if (capaciteDisponible(perso, 'kiai', 'combat') &&
             !attributeAsBool(perso, 'rechargeDuKiai')) {
@@ -16550,6 +16654,9 @@ var COFantasy = COFantasy || function() {
       case 'drain':
         InlineColorOverride = ' background-color: #0D1201; color: #E8F5C9;';
         break;
+      case 'energie':
+        InlineColorOverride = ' background-color: #FFEEAA; color: #221100;';
+        break;
       default:
         if (critCheck && failCheck) {
           InlineColorOverride = ' background-color: #8FA4D4; color: #061539;';
@@ -17938,6 +18045,7 @@ var COFantasy = COFantasy || function() {
         case 'sonique':
         case 'poison':
         case 'maladie':
+        case 'energie':
           options.type = cmd[0];
           return;
         case 'bonus':
@@ -19192,6 +19300,124 @@ var COFantasy = COFantasy || function() {
     delete options.redo;
     delete options.preDmg;
     attack(action.playerName, action.playerId, perso, perso.token, action.weaponStats, options);
+  }
+
+  function persoUtiliseDeExpertDuCombat(perso, evt) {
+    let rangExpertDuCombat = predicateAsInt(perso, 'expertDuCombat', 0);
+    if (rangExpertDuCombat < 1) {
+      sendPerso(perso, "n'est pas un expert du combat");
+      return false;
+    }
+    let limiteParTour;
+    if (rangExpertDuCombat > 4) limiteParTour = 3;
+    else if (rangExpertDuCombat > 2) limiteParTour = 2;
+    else limiteParTour = 1;
+    if (limiteRessources(perso, {
+        limiteParCombat: rangExpertDuCombat * 2,
+        limiteParTour: limiteParTour
+      }, "expertDuCombat", "a atteint sa limite de d\xE9 d'expert du combat", evt)) {
+      addEvent(evt);
+      return false;
+    }
+    sendPerso(perso, "utilise un d\xE9 d'expert du combat");
+    return true;
+  }
+
+  //!cof-expert-combat
+  //!cof-expert-combat-touche
+  //!cof-expert-combat-dm
+  function expertDuCombat(msg) {
+    if (!stateCOF.combat) {
+      sendPlayer(msg, "On ne peut utiliser les d\xE9s d'expert du combat qu'en combat");
+      return;
+    }
+    var cmd = msg.content.split(' ');
+    var evtARefaire;
+    var evt = {
+      type: "D\xE9 d'expert du combat (touche)",
+      attributes: []
+    };
+    if (cmd.length > 1) { //On relance pour un \xE9v\xE9nement particulier
+      evtARefaire = findEvent(cmd[1]);
+      if (evtARefaire === undefined) {
+        error("L'action est trop ancienne ou a \xE9t\xE9 annul\xE9e", cmd);
+        return;
+      }
+      var perso = evtARefaire.personnage;
+      var action = evtARefaire.action;
+      if (action === undefined) {
+        error("Impossible de relancer l'action", evtARefaire);
+        return;
+      }
+      if (perso === undefined) {
+        error("Erreur interne du bouton expert de combat : l'\xE9venement n'a pas de personnage", evtARefaire);
+        return;
+      }
+      if (!peutController(msg, perso)) {
+        sendPlayer(msg, "pas le droit d'utiliser ce bouton");
+        return;
+      }
+      if (!persoUtiliseDeExpertDuCombat(perso, evt)) return;
+      undoEvent(evtARefaire);
+      addEvent(evt);
+      action.options = action.options || {};
+      if (cmd[0].includes("-touche"))
+        action.options.expertDuCombatTouche = action.options.expertDuCombatTouche + 1 || 1;
+      else if (cmd[0].includes("-dm"))
+        action.options.expertDuCombatDM = action.options.expertDuCombatDM + 1 || 1;
+      if (!redoEvent(evtARefaire, action, perso))
+        error("Type d'\xE9v\xE8nement pas support\xE9 par le bouton Rune d'Energie", evt);
+    } else { //Juste pour v\xE9rifier l'attribut et le diminuer
+      getSelected(msg, function(selection) {
+        if (selection.length === 0) {
+          sendPlayer(msg, 'Pas de token s\xE9lectionn\xE9 pour !cof-bouton-expert-combat-touche');
+          return;
+        }
+        iterSelected(selection, function(perso) {
+          persoUtiliseDeExpertDuCombat(perso, evt);
+        }); //fin iterSelected
+        addEvent(evt);
+      }); //fin getSelected
+    }
+  }
+
+  //!cof-expert-combat-def [evt.id] [targetId]
+  function expertDuCombatDEF(msg) {
+    var args = msg.content.split(' ');
+    if (args.length < 3) {
+      error("La fonction !cof-expert-combat-def n'a pas assez d'arguments", args);
+      return;
+    }
+    var evtARefaire = findEvent(args[1]);
+    if (evtARefaire === undefined) {
+      error("L'action est trop ancienne ou \xE9te annul\xE9e", args);
+      return;
+    }
+    var action = evtARefaire.action;
+    if (action === undefined) {
+      error("Le dernier \xE9v\xE8nement n'est pas une action", args);
+      return;
+    }
+    var perso = persoOfId([args[2]]);
+    if (perso === undefined) {
+      error("Erreur interne du bouton d'expert du combat (DEF) : pas de cible trouv\xE9e", args);
+      return;
+    }
+    if (!peutController(msg, perso)) {
+      sendPlayer(msg, "pas le droit d'utiliser ce bouton");
+      return;
+    }
+    var evt = {
+      type: 'expertDuCombatDEF',
+    };
+    if (!persoUtiliseDeExpertDuCombat(perso, evt)) return;
+    undoEvent(evtARefaire);
+    addEvent(evt);
+    action.options = action.options || {};
+    action.options.expertDuCombatDEF = action.options.expertDuCombatDEF || {};
+    action.options.expertDuCombatDEF[perso.token.id] = rollDePlus(6);
+    removePreDmg(action.options, perso, 'expertDuCombatDEF');
+    redoEvent(evtARefaire, action);
   }
 
   function persoUtiliseRuneEnergie(perso, evt) {
@@ -21339,6 +21565,20 @@ var COFantasy = COFantasy || function() {
           if (defense != defenseAffichee)
             addLineToFramedDisplay(display, "D\xE9fense actuelle : " + defense);
         }
+        var predicatExpertDuCombat = predicateAsInt(perso, "expertDuCombat", 0);
+        if (stateCOF.combat && predicatExpertDuCombat > 0) {
+          var nbDesExpertDuCombat_combat_max = predicatExpertDuCombat * 2;
+          var nbDesExpertDuCombat_combat = attributeAsInt(perso, "limiteParCombat_expertDuCombat", predicatExpertDuCombat * 2);
+          var nbDesExpertDuCombat_tour_max;
+          if (predicatExpertDuCombat > 4) nbDesExpertDuCombat_tour_max = 3;
+          else if (predicatExpertDuCombat > 2) nbDesExpertDuCombat_tour_max = 2;
+          else nbDesExpertDuCombat_tour_max = 1;
+          var nbDesExpertDuCombat_tour = Math.min(nbDesExpertDuCombat_combat,
+            attributeAsInt(perso, "limiteParTour_expertDuCombat", nbDesExpertDuCombat_tour_max));
+          addLineToFramedDisplay(display, "D\xE9s d'expertise du combat : <br>" +
+            "Tour : " + nbDesExpertDuCombat_tour + "/" + nbDesExpertDuCombat_tour_max + "<br>" +
+            "Combat : " + nbDesExpertDuCombat_combat + "/" + nbDesExpertDuCombat_combat_max + "<br>");
+        }
         var autresAttributs = charAttribute(charId, 'attributsDeStatut');
         autresAttributs.forEach(function(attr) {
           var listeAttrs = attr.get('current').split(',');
@@ -21517,14 +21757,15 @@ var COFantasy = COFantasy || function() {
         case 'sortilege':
           options[opt[0]] = true;
           return;
-        case "feu":
-        case "froid":
-        case "acide":
-        case "electrique":
-        case "sonique":
-        case "poison":
-        case "maladie":
-        case "argent":
+        case 'feu':
+        case 'froid':
+        case 'acide':
+        case 'electrique':
+        case 'sonique':
+        case 'poison':
+        case 'maladie':
+        case 'argent':
+        case 'energie':
           if (options.additionalDmg) {
             var l = options.additionalDmg.length;
             if (l > 0) {
@@ -21534,8 +21775,8 @@ var COFantasy = COFantasy || function() {
             }
           } else options.type = opt[0];
           return;
-        case "nature":
-        case "naturel":
+        case 'nature':
+        case 'naturel':
           options.nature = true;
           return;
         case 'vampirise':
@@ -24703,7 +24944,13 @@ var COFantasy = COFantasy || function() {
       }); //fin du sendChat du jet de d\xE9s
     } catch (e) {
       if (soins) {
-        error("L'expression des soins (" + soins + ") n'est pas bien form\xE9e", msg.content);
+        log(msg.content);
+        log("L'expression des soins \xE9tait " + soins + ", et il y a eu une erreur durant son \xE9valuation");
+        if (argSoin) {
+          error("L'expression des soins (" + argSoin + ") n'est pas bien form\xE9e", msg.content);
+        } else {
+          error("Erreur pendant l'\xE9valuation de l'expression des soins. Plus d'informations dans le log", msg);
+        }
       } else {
         error("Erreur pendant les soins ", msg.content);
         throw e;
@@ -29600,6 +29847,68 @@ var COFantasy = COFantasy || function() {
       });
   }
 
+  //!cof-expert-combat-bousculer
+  function expertDuCombatBousculer(msg) {
+    var cmd = msg.content.split(' ');
+    if (!stateCOF.combat) {
+      error("On ne peut utiliser !cof-expert-combat-bousculer qu'en combat", msg.content);
+      return;
+    }
+    if (cmd.length < 3) {
+      error("Il manque des arguments \xE0 !cof-expert-combat-bousculer", msg.content);
+      return;
+    }
+    var expert = persoOfId(cmd[1], cmd[1]);
+    if (expert === undefined) {
+      error("Le premier argument de !cof-expert-combat-bousculer n'est pas un token valide", cmd);
+      return;
+    }
+    expert.tokName = expert.token.get('name');
+    var cible = persoOfId(cmd[2], cmd[2]);
+    if (cible === undefined) {
+      error("Le deuxi\xE8me argument de !cof-expert-combat-bousculer n'est pas un token valide", cmd);
+      return;
+    }
+    if (!predicateAsBool(expert, 'expertDuCombat')) {
+      error(expert.tokName + " n'est pas un expert du combat !", cmd);
+      return;
+    }
+    cible.tokName = cible.token.get('name');
+    var pageId = expert.token.get('pageid');
+    if (distanceCombat(expert.token, cible.token, pageId)) {
+      sendPerso(expert, "est trop loin de " + cible.tokName + " pour le bousculer.");
+      return;
+    }
+    var evt = {
+      type: 'Bousculer'
+    };
+    addEvent(evt);
+    if (!persoUtiliseDeExpertDuCombat(expert, evt)) return;
+    var deExpertise = rollDePlus(6);
+    var playerId = getPlayerIdFromMsg(msg);
+    var explications = [];
+    testOppose("bouculer", expert, "FOR", {
+      bonus: deExpertise.val
+    }, cible, "FOR", {}, explications, evt, function(resultat, crit, rt1, rt2) {
+      var display = startFramedDisplay(playerId, "Bousculer", expert, {
+        perso2: cible
+      });
+      explications.push("D\xE9 d'expertise : " + deExpertise.roll);
+      if (resultat === 1) {
+        addLineToFramedDisplay(display, cible.tokName + " est repouss\xE9 de " +
+          Math.ceil(deExpertise.val / 2) + " m\xE8tre" + (deExpertise.val > 1 ? "s" : "") + "<br/>S'il est accul\xE9 : " +
+          boutonSimple("!cof-dmg " + deExpertise.val + " --target " + cmd[2], "Appliquer " + deExpertise.val + " DM"));
+        setState(cible, "renverse", "true", evt);
+      } else {
+        addLineToFramedDisplay(display, cible.tokName + " n'est pas renvers\xE9");
+      }
+      explications.forEach(function(expl) {
+        addLineToFramedDisplay(display, expl, 80);
+      });
+      sendChat("", endFramedDisplay(display));
+    });
+  }
+
   function sendCommands(from, commands) {
     if (commands.length === 0) return;
     var c = commands.shift();
@@ -30216,14 +30525,14 @@ var COFantasy = COFantasy || function() {
   };
 
   function conjurationPredateur(msg) {
-    var options = parseOptions(msg);
+    let options = parseOptions(msg);
     if (options === undefined) return;
-    var cmd = options.cmd;
+    let cmd = options.cmd;
     if (cmd === undefined) {
       error("Pas de commande", msg.content);
       return;
     }
-    var renforce = 0;
+    let renforce = 0;
     if (cmd.length > 1) {
       renforce = parseInt(cmd[1]);
       if (isNaN(renforce)) {
@@ -30236,19 +30545,19 @@ var COFantasy = COFantasy || function() {
         error("pas de lanceur pour la conjuration de pr\xE9dateurs", msg);
         return;
       }
-      var evt = {
+      let evt = {
         type: 'conjuration de pr\xE9dateurs'
       };
       initiative(selected, evt);
       iterSelected(selected, function(invocateur) {
-        var pageId = invocateur.token.get('pageid');
-        var niveau = ficheAttributeAsInt(invocateur, 'niveau', 1);
+        let pageId = invocateur.token.get('pageid');
+        let niveau = ficheAttributeAsInt(invocateur, 'niveau', 1);
         if (!renforce) {
           renforce = predicateAsInt(invocateur, 'voieDeLaConjuration', 0);
           if (renforce == 1) renforce = 0;
         }
         niveau += renforce;
-        var predateur;
+        let predateur;
         if (niveau < 5) predateur = predateurs.loup;
         else if (niveau < 9) predateur = predateurs.loupAlpha;
         else if (niveau < 12) predateur = predateurs.worg;
@@ -30257,9 +30566,9 @@ var COFantasy = COFantasy || function() {
         else if (niveau < 21) predateur = predateurs.oursPolaire;
         else if (niveau < 23) predateur = predateurs.tigreDentsDeSabre;
         else predateur = predateurs.oursPrehistorique;
-        var nomPredateur =
+        let nomPredateur =
           predateur.nom + ' de ' + invocateur.token.get('name');
-        var token = createObj('graphic', {
+        let token = createObj('graphic', {
           name: nomPredateur,
           subtype: 'token',
           pageid: pageId,
@@ -30277,7 +30586,7 @@ var COFantasy = COFantasy || function() {
           has_limit_field_of_vision: true,
         });
         toFront(token);
-        var charPredateur =
+        let charPredateur =
           createCharacter(nomPredateur, playerId, predateur.avatar, token, predateur);
         //Tous les pr\xE9dateurs sont des quadrup\xE8des
         let persoPredateur = {
@@ -30298,7 +30607,7 @@ var COFantasy = COFantasy || function() {
           _id: token.id
         }], evt);
         // Ajout du Pr\xE9dateur aux alli\xE9s de l'invocateur
-        var alliesInvocateur = alliesParPerso[invocateur.charId] || new Set();
+        let alliesInvocateur = alliesParPerso[invocateur.charId] || new Set();
         alliesInvocateur.add(charPredateur.id);
         alliesParPerso[invocateur.charId] = alliesInvocateur;
       }); //end iterSelected
@@ -34594,6 +34903,17 @@ var COFantasy = COFantasy || function() {
         return;
       case "!cof-bouton-chance":
         boutonChance(msg);
+        return;
+      case "!cof-expert-combat":
+      case "!cof-expert-combat-touche":
+      case "!cof-expert-combat-dm":
+        expertDuCombat(msg);
+        return;
+      case "!cof-expert-combat-def":
+        expertDuCombatDEF(msg);
+        return;
+      case "!cof-expert-combat-bousculer":
+        expertDuCombatBousculer(msg);
         return;
       case "!cof-bouton-rune-energie":
       case "!cof-rune-energie":
