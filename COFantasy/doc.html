@@ -2113,6 +2113,7 @@
               <div class="decalage">
                 Sorts qui ne sont pas dans des voies, mais peuvent venir du grimoire (dans le compagnon) ou d'effets de parchemins.
                 <ul>
+                  <li><strong>Animation des objets</strong> : <code>!cof-animation-des-objets @{selected|token_id} ?{Taille d'objet|tabouret ou coffret,1|chaise ou coffre,2|meuble bas ou table,4|grande table,7|grosse armoire,10}</code> On peut ajouter un troisième argument, <code>@{target|token_id}</code> pour animer un token d'objet sur la carte.</li>
                   <li><strong>Armure d'eau</strong> : <code>!cof-effet-combat armureDEau</code>. Le script automatise l'immunité aux étreintes (pas aux enveloppements) et à la capacité Agripper des créatures volantes.</li>
                   <li><strong>Force de géant</strong> : <code>!cof-effet-temp forceDeGeant 10</code>. Le bonus est de 2 par défaut, mais peut être modifié en utilisant l'option <code>--valeur</code>.</li>
                   <li><strong>Nuée de scorpions</strong> : ajouter une attaque magique, de portée 20 m. Puis appeler cette attaque (avec <code>!cof-attack</code>) avec les arguments <code>--pasDeDmg --sortilege --effet nueeDeScorpions 10</code>. Pas de support particulier pour les DM de zone qui détruisent la nuée (enlever l'attribut <code>nueeDeScorpions</code> sur la cible dans ce cas).</li>

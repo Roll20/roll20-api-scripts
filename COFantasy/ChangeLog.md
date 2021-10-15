@@ -1,6 +1,7 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.04
 ### Capacités
+* Support du sort d'animation des objets
 * Ajout de l'effet fiévreux.
 * Jets de dégâts séparés par cible pour la destruction des morts-vivants
 * Ajout d'une option de malus de répétition pour la destruction des morts-vivants.

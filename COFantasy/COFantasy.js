@@ -38,6 +38,8 @@ var generateUUID = (function() {
   };
 //--------------- end generateRowID ----------------------------------------
 
+const COF_BETA = false;
+
 var COF_loaded = false;
 
 var COFantasy = COFantasy || function() {
@@ -1525,7 +1527,7 @@ var COFantasy = COFantasy || function() {
   // evt peut \xEAtre undefined
   // options peut avoir les champs msg et secret
   function removeTokenAttr(personnage, attribute, evt, options) {
-    attribute = fullAttributeName(personnage, attribute.options);
+    attribute = fullAttributeName(personnage, attribute, options);
     let attr = findObjs({
       _type: 'attribute',
       _characterid: personnage.charId,
@@ -2160,25 +2162,46 @@ var COFantasy = COFantasy || function() {
       case 'demonInvoque':
       case 'predateurConjure':
       case 'arbreAnime':
+      case 'objetAnime':
       case 'degradationZombie': //effacer le personnage
         //Dans le cas d'un Zombie, diminuer la limite du n\xE9cromant si n\xE9cessaire
         if (effet == 'degradationZombie') {
-          var attrNecromant = charAttribute(charId, "necromant");
+          let attrNecromant = charAttribute(charId, 'necromant');
           if (attrNecromant.length > 0) {
-            let id = attrNecromant[0].get("current");
+            let id = attrNecromant[0].get('current');
             let necromant = persoOfId(id, id, options.pageId);
             if (necromant) {
-              var attrNbZombie = tokenAttribute(necromant, "zombiesControles");
+              let attrNbZombie = tokenAttribute(necromant, 'zombiesControles');
               if (attrNbZombie.length > 0) {
-                var nbZombie = attrAsInt(attrNbZombie, 1);
-                if (nbZombie > 1) setTokenAttr(necromant, "zombiesControles", nbZombie - 1, evt);
+                let nbZombie = attrAsInt(attrNbZombie, 1);
+                if (nbZombie > 1)
+                  setTokenAttr(necromant, 'zombiesControles', nbZombie - 1, evt);
                 else attrNbZombie[0].remove();
               }
             }
           }
         }
+        if (effet == 'objetAnime') {
+          let attr = charAttribute(charId, 'objetAnimePar');
+          if (attr.length > 0) {
+            let nid = attr[0].get("current");
+            let lanceur = persoOfIdName(nid, options.pageId);
+            if (lanceur) {
+              let attrNbObjets = tokenAttribute(lanceur, 'niveauDesObjetsAnimes');
+              if (attrNbObjets.length > 0) {
+                let niveauObjets = ficheAttributeAsInt({
+                  charId
+                }, 'niveau', 1);
+                let nbObjets = attrAsInt(attrNbObjets, niveauObjets);
+                if (nbObjets > niveauObjets)
+                  setTokenAttr(lanceur, 'niveauDesObjetsAnimes', nbObjets - niveauObjets, evt);
+                else attrNbObjets[0].remove();
+              }
+            }
+          }
+        }
         //On efface d'abord les attributs et les abilities
-        var charAttributes = findObjs({
+        let charAttributes = findObjs({
           _type: 'attribute',
           _characterid: charId
         });
@@ -2187,7 +2210,7 @@ var COFantasy = COFantasy || function() {
             if (otherAttr.id != attr.id) otherAttr.remove();
           }
         );
-        var charAbilities = findObjs({
+        let charAbilities = findObjs({
           _type: 'ability',
           _characterid: charId
         });
@@ -2196,14 +2219,14 @@ var COFantasy = COFantasy || function() {
             ab.remove();
           }
         );
-        if (effet == 'arbreAnime') {
+        if (effet == 'arbreAnime' || (effet == 'objetAnime' && charPredicateAsBool(charId, 'animeAPartirDExistant'))) {
           iterTokensOfAttribute(charId, options.pageId, effet, attrName,
             function(token) {
-              var perso = {
+              let perso = {
                 token: token,
                 charId: charId
               };
-              var nA = removeFromTurnTracker(perso, evt);
+              let nA = removeFromTurnTracker(perso, evt);
               if (nA) {
                 res = res || {};
                 res.oldTokenId = token.id;
@@ -2220,11 +2243,11 @@ var COFantasy = COFantasy || function() {
             });
         } else {
           iterTokensOfAttribute(charId, options.pageId, effet, attrName, function(token) {
-            var perso = {
+            let perso = {
               token: token,
               charId: charId
             };
-            var nP = removeFromTurnTracker(perso, evt);
+            let nP = removeFromTurnTracker(perso, evt);
             if (nP) {
               res = res || {};
               res.oldTokenId = token.id;
@@ -2242,7 +2265,7 @@ var COFantasy = COFantasy || function() {
         character = getObj('character', charId);
         if (character) {
           evt.deletedCharacters = evt.deletedCharacters || [];
-          var deletedChar = {
+          let deletedChar = {
             id: charId,
             name: character.get('name'),
             avatar: character.get('avatar'),
@@ -2812,7 +2835,7 @@ var COFantasy = COFantasy || function() {
             a.remove();
           });
           //On lib\xE8re les personnages aval\xE9s, si il y en a.
-          var attrGobe = tokenAttribute(personnage, 'aGobe');
+          let attrGobe = tokenAttribute(personnage, 'aGobe');
           attrGobe.forEach(function(a) {
             var cible = persoOfIdName(a.get('current'), pageId);
             if (cible) {
@@ -2878,20 +2901,20 @@ var COFantasy = COFantasy || function() {
             a.remove();
           });
           //On termine les effets temporaires li\xE9s au personnage
-          var etlAttr = tokenAttribute(personnage, 'effetsTemporairesLies');
+          let etlAttr = tokenAttribute(personnage, 'effetsTemporairesLies');
           if (etlAttr.length > 0) {
             etlAttr = etlAttr[0];
             evt.deletedAttributes = evt.deletedAttributes || [];
-            var etl = etlAttr.get('current').split(',');
+            let etl = etlAttr.get('current').split(',');
             etl.forEach(function(attrId) {
-              var attrEffet = getObj('attribute', attrId);
+              let attrEffet = getObj('attribute', attrId);
               if (attrEffet === undefined) return;
-              var nomAttrEffet = attrEffet.get('name');
-              var charId = attrEffet.get('characterid');
+              let nomAttrEffet = attrEffet.get('name');
+              let charId = attrEffet.get('characterid');
               if (estEffetTemp(nomAttrEffet)) {
                 finDEffet(attrEffet, effetTempOfAttribute(attrEffet), nomAttrEffet, charId, evt);
               } else if (estEffetCombat(nomAttrEffet)) {
-                var mc = messageEffetCombat[effetCombatOfAttribute(attrEffet)].fin;
+                let mc = messageEffetCombat[effetCombatOfAttribute(attrEffet)].fin;
                 if (mc && mc !== '') sendChar(charId, mc, true);
                 evt.deletedAttributes.push(attrEffet);
                 attrEffet.remove();
@@ -2900,11 +2923,15 @@ var COFantasy = COFantasy || function() {
             evt.deletedAttributes.push(etlAttr);
             etlAttr.remove();
           }
-          if (charAttributeAsBool(personnage, 'armeeConjuree')) {
+          if (attributeAsBool(personnage, 'objetAnime')) {
+            let attr = tokenAttribute(personnage, 'objetAnime')[0];
+            let nom = attr.get('name');
+            finDEffet(attr, 'objetAnime', nom, personnage.charId, evt);
+          } else if (charAttributeAsBool(personnage, 'armeeConjuree')) {
             removeFromTurnTracker(personnage, evt);
             deleteTokenWithUndo(personnage.token, evt);
             sendPerso(personnage, 'dispara\xEEt');
-            var armeeChar = getObj('character', personnage.charId);
+            let armeeChar = getObj('character', personnage.charId);
             if (armeeChar) {
               evt.deletedCharacters = evt.deletedCharacters || [];
               evt.deletedCharacters.push({
@@ -3706,8 +3733,8 @@ var COFantasy = COFantasy || function() {
       options: '',
     };
     if (attackLabel === undefined) return weaponStats;
-    var attaques = listAllAttacks(perso);
-    var att = attaques[attackLabel];
+    let attaques = listAllAttacks(perso);
+    let att = attaques[attackLabel];
     if (att === undefined) {
       weaponStats.name = attackLabel;
       return weaponStats;
@@ -3975,6 +4002,7 @@ var COFantasy = COFantasy || function() {
               case 'attaque-magique':
               case 'tueur-fantasmagorique':
               case 'mot-de-pouvoir-immobilise':
+              case 'animation-des-objets':
                 picto = '<span style="font-family: \'Pictos Three\'">g</span> ';
                 style = 'background-color:#9900ff';
                 break;
@@ -3991,6 +4019,7 @@ var COFantasy = COFantasy || function() {
               case 'effet-temp':
               case 'effet-combat':
               case 'set-state':
+              case 'lumiere':
                 if (act.includes(' --mana')) {
                   picto = '<span style="font-family: \'Pictos Three\'">g</span> ';
                   style = 'background-color:#9900ff';
@@ -11018,11 +11047,11 @@ var COFantasy = COFantasy || function() {
   function sortedActionList(perso, listNumber) {
     let actions = [];
     let rawActions = extractRepeating(perso, 'actions' + listNumber);
-    for (var pref in rawActions) {
+    for (let pref in rawActions) {
       let ra = rawActions[pref];
       if (ra.actiontitre === undefined) ra.actiontitre = ' ';
       if (ra.actionmontree === undefined || parseInt(ra.actionmontree) === 1) {
-        var rang = parseInt(ra.actionrang);
+        let rang = parseInt(ra.actionrang);
         if (isNaN(rang) || rang < 0) rang = 0;
         if (actions[rang]) {
           error("Plusieurs actions de m\xEAme rang " + rang + " dans la liste d'actions du tour", ra);
@@ -11236,17 +11265,17 @@ var COFantasy = COFantasy || function() {
   }
 
   function displayAttaqueOpportunite(vid, cibles, type, action, option) {
-    var attaquant = persoOfId(vid);
+    let attaquant = persoOfId(vid);
     if (attaquant === undefined) {
       error("Impossible de retrouver le personnage qui pouvait faire une attaque " + type, vid);
       return;
     }
     if (!isActive(attaquant)) return;
-    var abilities = findObjs({
+    let abilities = findObjs({
       _type: 'ability',
       _characterid: attaquant.charId,
     });
-    var actions = findListeActions(attaquant, action, abilities);
+    let actions = findListeActions(attaquant, action, abilities);
     if (actions === undefined) {
       if (action == 'Ripostes') {
         actions = findListeActions(attaquant, 'ActionsRiposte', abilities);
@@ -11256,7 +11285,7 @@ var COFantasy = COFantasy || function() {
           actions = findListeActions(attaquant, 'Attaques en tra\xEEtre', abilities);
       }
     }
-    var actionsOpportunite = [];
+    let actionsOpportunite = [];
     if (actions) {
       treatActions(attaquant, actions, abilities, function(command, text, macros, options) {
         if (command == 'liste des attaques') {
@@ -11278,9 +11307,9 @@ var COFantasy = COFantasy || function() {
       actionsOpportunite.reverse();
     } else {
       //On affiche l'attaque avec l'arme en main + les attaques naturelles coch\xE9es
-      var listeAttaques = listAllAttacks(attaquant);
-      for (var label in listeAttaques) {
-        var arme = listeAttaques[label];
+      let listeAttaques = listAllAttacks(attaquant);
+      for (let label in listeAttaques) {
+        let arme = listeAttaques[label];
         if (parseInt(arme.armeactionvisible) === 0) continue;
         if (arme.armetypeattaque == 'Naturel' || arme.armetypeattaque === 'undefined') {
           actionsOpportunite.push({
@@ -11294,17 +11323,18 @@ var COFantasy = COFantasy || function() {
         text: "Attaque avec l'arme en main"
       });
     }
-    var opt_display = {
+    let opt_display = {
       chuchote: true,
       retarde: true,
     };
     afficherOptionsAttaque(attaquant, opt_display);
     //On cr\xE9e un display sans le header
-    var display = startFramedDisplay(undefined, "Attaque " + type + " possible", attaquant, opt_display);
+    let display = 
+      startFramedDisplay(undefined, "Attaque " + type + " possible", attaquant, opt_display);
     cibles.forEach(function(target) {
       target.tokName = target.tokName || target.token.get('name');
       if (target.name === undefined) {
-        var targetChar = getObj('character', target.charId);
+        let targetChar = getObj('character', target.charId);
         if (targetChar === undefined) {
           error('Impossible de trouver le personnage repr\xE9sentant ' + target.tokName, target);
           return;
@@ -11313,7 +11343,7 @@ var COFantasy = COFantasy || function() {
       }
       addLineToFramedDisplay(display, "contre " + target.tokName, 100, true);
       actionsOpportunite.forEach(function(action) {
-        var opt = action.options;
+        let opt = action.options;
         if (opt) {
           if (option) opt = option + opt;
         } else opt = option;
@@ -11662,12 +11692,12 @@ var COFantasy = COFantasy || function() {
   }
 
   function computeArmeAtkPNJ(attaquant, x) {
-    var atk;
-    var listeAttaquesPNJ;
-    var oatk;
+    let atk;
+    let listeAttaquesPNJ;
+    let oatk;
     switch (x) {
       case '@{ATKCAC}':
-        var atkcac;
+        let atkcac;
         listeAttaquesPNJ = listAllAttacks(attaquant);
         for (let label in listeAttaquesPNJ) {
           let att = listeAttaquesPNJ[label];
@@ -11695,7 +11725,7 @@ var COFantasy = COFantasy || function() {
         }
         return atkcac;
       case '@{ATKTIR}':
-        var atktir;
+        let atktir;
         listeAttaquesPNJ = listAllAttacks(attaquant);
         for (let label in listeAttaquesPNJ) {
           let att = listeAttaquesPNJ[label];
@@ -11718,7 +11748,7 @@ var COFantasy = COFantasy || function() {
         }
         return atktir;
       case '@{ATKMAG}':
-        var atkmag;
+        let atkmag;
         listeAttaquesPNJ = listAllAttacks(attaquant);
         for (let label in listeAttaquesPNJ) {
           let att = listeAttaquesPNJ[label];
@@ -11746,8 +11776,8 @@ var COFantasy = COFantasy || function() {
   function computeArmeAtk(attaquant, x) {
     if (x === undefined) return '';
     if (persoEstPNJ(attaquant)) return computeArmeAtkPNJ(attaquant, x);
-    var attDiv;
-    var attCar;
+    let attDiv;
+    let attCar;
     switch (x) {
       case '@{ATKCAC}':
         attDiv = ficheAttributeAsInt(attaquant, 'ATKCAC_DIV', 0);
@@ -17279,6 +17309,7 @@ var COFantasy = COFantasy || function() {
     attrs = removeAllAttributes('pacifismeAnnule', evt, attrs);
     attrs = removeAllAttributes('pacifismeImpossible', evt, attrs);
     attrs = removeAllAttributes('traquenardImpossible', evt, attrs);
+    attrs = removeAllAttributes('niveauDesObjetsAnimes', evt, attrs);
     // Autres attributs
     // On r\xE9cup\xE8re les munitions r\xE9cup\xE9rables
     resetAttr(attrs, 'munition', evt, "r\xE9cup\xE8re ses munitions");
@@ -20547,7 +20578,8 @@ var COFantasy = COFantasy || function() {
     let ligne = '';
     //Cherche toutes les attaques \xE0 afficher
     let attaques = listAllAttacks(perso);
-    let attaquesTriees = {};
+    let attaquesTriees = [];
+    let attaquesNonTriees = {};
     for (let attLabel in attaques) {
       let att = attaques[attLabel];
       if (fieldAsInt(att, 'armeactionvisible', 1) === 0) continue;
@@ -20558,11 +20590,19 @@ var COFantasy = COFantasy || function() {
       //On regarde aussi si c'est une arme de jet
       if (att.armetypeattaque == 'Arme de jet' && fieldAsInt(att, 'armejetqte', 1) === 0) continue;
       let command = "!cof-attack @{selected|token_id} " + target + " " + attLabel + " " + ligneOptions;
-      attaquesTriees[attLabel] = bouton(command, att.armenom, perso);
+      let index = +attLabel;
+      if (isNaN(index) || parseInt(index) != index || index < 0)
+        attaquesNonTriees[attLabel] = bouton(command, att.armenom, perso);
+      else
+        attaquesTriees[attLabel] = bouton(command, att.armenom, perso);
     }
-    _.forEach(attaquesTriees, function(b) {
+    attaquesTriees.forEach(function(b) {
+      if (b === undefined) return;
       ligne += b + '<br />';
     });
+    for (let label in attaquesNonTriees) {
+      ligne += attaquesNonTriees[label] + '<br />';
+    }
     //On ajoute aussi les lancers de feu gr\xE9geois, si il y en a
     let attrFeuxGregeois = tokenAttribute(perso, 'elixir_feu_gr\xE9geois');
     if (attrFeuxGregeois.length > 0) {
@@ -20778,26 +20818,26 @@ var COFantasy = COFantasy || function() {
         ligne += bouton(command, 'Attaque', perso) + '<br />';
       }
       //On cherche si il y a une arm\xE9e conjur\xE9e \xE0 attaquer
-      var attrs_armee =
+      let attrs_armee =
         findObjs({
           _type: "attribute",
           name: 'armeeConjuree',
         });
       if (attrs_armee.length > 0) {
-        var allTokens =
+        let allTokens =
           findObjs({
             _type: "graphic",
             _pageid: pageId,
             _subtype: "token",
             layer: "objects"
           });
-        var scale = computeScale(pageId);
-        var px = perso.token.get('left');
-        var py = perso.token.get('top');
-        var pxp = px + 10 * PIX_PER_UNIT / scale;
-        var pxm = px - 10 * PIX_PER_UNIT / scale;
-        var pyp = py + 10 * PIX_PER_UNIT / scale;
-        var pym = py - 10 * PIX_PER_UNIT / scale;
+        let scale = computeScale(pageId);
+        let px = perso.token.get('left');
+        let py = perso.token.get('top');
+        let pxp = px + 10 * PIX_PER_UNIT / scale;
+        let pxm = px - 10 * PIX_PER_UNIT / scale;
+        let pyp = py + 10 * PIX_PER_UNIT / scale;
+        let pym = py - 10 * PIX_PER_UNIT / scale;
         var ps = tokenSize(perso.token, 0);
         pxp += ps;
         pxm -= ps;
@@ -20835,7 +20875,7 @@ var COFantasy = COFantasy || function() {
         (actionsDuTour === 0 && montrerAttaques);
       const montrerArmeEnMain = (actionsDuTour === 0 && ficheAttributeAsInt(perso, 'montrerarmeenmain', 1));
       if (afficherAttaquesFiche) {
-        var attackOptions = {};
+        let attackOptions = {};
         if (gobePar) attackOptions.target = gobePar.token.id;
         if (montrerArmeEnMain) attackOptions.nePasAfficherArmes = true;
         ligne += listeAttaquesVisibles(perso, attackOptions);
@@ -21602,15 +21642,15 @@ var COFantasy = COFantasy || function() {
   //retourne l'id du suivant si le token actuel \xE9tait en t\xEAte de liste
   function removeFromTurnTracker(perso, evt) {
     removeDernieresCiblesAttaquees(perso, evt);
-    var tokenId = perso.token.id;
-    var turnOrder = Campaign().get('turnorder');
+    let tokenId = perso.token.id;
+    let turnOrder = Campaign().get('turnorder');
     if (turnOrder === "" || !stateCOF.combat) {
       return;
     }
     evt.turnorder = evt.turnorder || turnOrder;
     turnOrder = JSON.parse(turnOrder);
     if (turnOrder.length === 0) return;
-    var res;
+    let res;
     if (turnOrder[0].id == tokenId) {
       if (turnOrder.length > 1) {
         res = {
@@ -29936,26 +29976,26 @@ var COFantasy = COFantasy || function() {
   //  - attributesFiche contient les attributs d\xE9finis dans la fiche
   //      nom_attribut: valeur
   //  - pv (permet d'\xEAtre ind\xE9pendant de PJ ou PNJ)
-  //  - attaques, liste d'attaques, chacune avec (nom, atk, nbde, dmde, dm,...)
+  //  - attaques, liste d'attaques, chacune avec (nom, atk, dmnbde, dmde, dm,...)
   //  - attributes autres attributs (name, current, max)
   //  - abilities (name, action), toujours rajout\xE9es \xE0 la liste d'actions
   //  - actions (titre, code), ajout\xE9es aux listes d'actions
   function createCharacter(nom, playerId, avatar, token, spec) {
-    var res = createObj('character', {
+    let res = createObj('character', {
       name: nom,
       avatar: avatar,
       controlledby: playerId
     });
     if (!res) return;
-    var charId = res.id;
+    let charId = res.id;
     if (token) {
       token.set('represents', charId);
     }
-    var attrs = findObjs({
+    let attrs = findObjs({
       _type: 'attribute',
       _characterid: charId,
     });
-    var attrVersion =
+    let attrVersion =
       attrs.find(function(a) {
         return a.get('name').toLowerCase() == 'version';
       });
@@ -29966,12 +30006,12 @@ var COFantasy = COFantasy || function() {
         current: versionFiche
       });
     }
-    var pnj = true;
+    let pnj = true;
     if (spec.attributesFiche) {
       if (spec.attributesFiche.type_personnage == 'PJ') pnj = false;
       for (var attrName in spec.attributesFiche) {
         /*jshint loopfunc: true */
-        var attr =
+        let attr =
           attrs.filter(function(a) {
             return a.get('name') == attrName;
           });
@@ -30033,12 +30073,12 @@ var COFantasy = COFantasy || function() {
       }
     }
     if (spec.attaques) {
-      var maxAttackLabel = 0;
-      var prefix_attaques = 'repeating_armes_';
+      let maxAttackLabel = 0;
+      let prefix_attaques = 'repeating_armes_';
       if (pnj) prefix_attaques = 'repeating_pnjatk_';
       spec.attaques.forEach(function(att) {
-        var id = generateRowID();
-        var pref = prefix_attaques + id + '_arme';
+        let id = generateRowID();
+        let pref = prefix_attaques + id + '_arme';
         _.forEach(att, function(value, field) {
           createObj('attribute', {
             _characterid: charId,
@@ -30117,7 +30157,7 @@ var COFantasy = COFantasy || function() {
     return res;
   }
 
-  var predateurs = {
+  const predateurs = {
     loup: {
       nom: 'Loup',
       avatar: "https://s3.amazonaws.com/files.d20.io/images/59094468/bX_aTjrVAbIRHjpRn-HwdQ/max.jpg?1532611383",
@@ -30192,7 +30232,7 @@ var COFantasy = COFantasy || function() {
       attaques: [{
         nom: 'Morsure',
         atk: 4,
-        nbde: 1,
+        dmnbde: 1,
         dmde: 6,
         dm: 3,
       }],
@@ -30593,7 +30633,7 @@ var COFantasy = COFantasy || function() {
           token: token,
           charId: charPredateur.id
         };
-        setPredicate(persoPredateur, 'quadrupede');
+        setPredicate(persoPredateur, 'quadrupede', evt);
         //Attribut de predateur conjur\xE9 pour la disparition automatique
         createObj('attribute', {
           name: 'predateurConjure',
@@ -34009,6 +34049,7 @@ var COFantasy = COFantasy || function() {
         let dexterite = 10;
         let mod_dex = 0;
         let init = 0;
+        let rd = '';
         let attaques = {};
         let abilities = {};
         let feats = {};
@@ -34030,6 +34071,19 @@ var COFantasy = COFantasy || function() {
             case 'hp':
               changeAttributeName(attr, 'PV', evt);
               return;
+            case 'hp_notes':
+              let hpNote = attr.get('current');
+              if (hpNote.startsWith('fast healing ')) {
+                let n = parseInt(hpNote.substring(13));
+                if (!isNaN(n) && n >0) {
+                  setTokenAttr(perso, 'vitaliteSurnaturelle', n, evt, optAttr);
+                  let index = 13 + (''+n).length;
+                  hpNote = hpNote.substring(index);
+                }
+              }
+              if (hpNote === '') deleteAttribute(attr, evt);
+              else attributsIgnores += 'hp_notes : ' + hpNote + ' .\n';
+              return;
             case 'immune':
               let immunites = attr.get('current').split(' ');
               let immunitesNonTraitees = '';
@@ -34037,14 +34091,29 @@ var COFantasy = COFantasy || function() {
                 i = i.trim();
                 if (i === '') return;
                 switch (i) {
-                  case 'disease':
-                    predicats += 'immunite_maladie ';
+                  case 'acid':
+                    predicats += 'immunite_acide ';
                     return;
                   case 'cold':
                     predicats += 'immunite_froid ';
                     return;
+                  case 'disease':
+                    predicats += 'immunite_maladie ';
+                    return;
+                  case 'electricity':
+                    predicats += 'immunite_electrique ';
+                    return;
+                  case 'fire':
+                    predicats += 'immunite_feu ';
+                    return;
                   case 'mind-affecting':
                     predicats += 'sansEsprit';
+                    return;
+                  case 'paralysis':
+                    predicats += 'immunite_paralyse';
+                    return;
+                  case 'poison':
+                    predicats += 'immunite_poison';
                     return;
                   case 'undead':
                   case 'traits':
@@ -34058,6 +34127,58 @@ var COFantasy = COFantasy || function() {
               if (immunitesNonTraitees !== '') {
                 log("Immunit\xE9s non trait\xE9es : " + immunitesNonTraitees);
                 attributsIgnores += 'immune : ' + immunitesNonTraitees + '.\n';
+              }
+              deleteAttribute(attr, evt);
+              return;
+            case 'resist':
+              let resistances = attr.get('current').split(', ');
+              let resistancesNonTraitees = '';
+              resistances.forEach(function(r) {
+                r = r.trim();
+                if (r === '') return;
+                let res = r.split(' ');
+                if (res.length != 2) {
+                  resistancesNonTraitees += r + ', ';
+                  return;
+                }
+                let resVal = parseInt(res[1]);
+                if (isNaN(resVal) || resVal < 1) {
+                  resistancesNonTraitees += r + ', ';
+                  return;
+                }
+                switch (res[0]) {
+                  case 'acid':
+                    if (rd === '') rd = 'acide:'+resVal;
+                    else rd += ', acide:'+resVal;
+                    return;
+                  case 'cold':
+                    if (rd === '') rd = 'froid:'+resVal;
+                    else rd += ', froid:'+resVal;
+                    return;
+                  case 'disease':
+                    if (rd === '') rd = 'maladie:'+resVal;
+                    else rd += ', maladie:'+resVal;
+                    return;
+                  case 'electricity':
+                    if (rd === '') rd = 'electrique:'+resVal;
+                    else rd += ', electrique:'+resVal;
+                    return;
+                  case 'fire':
+                    if (rd === '') rd = 'feu:'+resVal;
+                    else rd += ', feu:'+resVal;
+                    return;
+                  case 'poison':
+                    if (rd === '') rd = 'poison:'+resVal;
+                    else rd += ', poison:'+resVal;
+                    return;
+                  default:
+                    log("R\xE9sistance \xE0 " + res[0] + " non trait\xE9e");
+                    resistancesNonTraitees += r + ', ';
+                }
+              });
+              if (resistancesNonTraitees !== '') {
+                log("Resistances non trait\xE9es : " + resistancesNonTraitees);
+                attributsIgnores += 'resist : ' + resistancesNonTraitees + '.\n';
               }
               deleteAttribute(attr, evt);
               return;
@@ -34078,11 +34199,12 @@ var COFantasy = COFantasy || function() {
               deleteAttribute(attr, evt);
               return;
             case 'npc_dr':
-              let rd = attr.get('current');
-              if (rd) {
-                rd = '' + rd;
-                rd = rd.replace('bludgeoning', 'contondant').replace('slashing', 'tranchant').replace('piercing', 'percant');
-                setTokenAttr(perso, 'RDS', rd, evt, optAttr);
+              let rdn = attr.get('current');
+              if (rdn) {
+                rdn = '' + rdn;
+                rdn = rdn.replace('bludgeoning', 'contondant').replace('slashing', 'tranchant').replace('piercing', 'percant');
+                if (rd === '') rd = rdn;
+                else rd += ', ' + rdn;
               }
               deleteAttribute(attr, evt);
               return;
@@ -34108,7 +34230,7 @@ var COFantasy = COFantasy || function() {
                   predicats += 'insecte ';
                   break;
                 default:
-                  setTokenAttr(perso, 'race', npcType, optAttr);
+                  setTokenAttr(perso, 'race', npcType, evt, optAttr);
               }
               deleteAttribute(attr, evt);
               return;
@@ -34380,6 +34502,7 @@ var COFantasy = COFantasy || function() {
             case 'encumbrance_load_heavy':
             case 'encumbrance_run_factor':
             case 'fob_multi':
+            case 'hd':
             case 'hd_roll':
             case 'npc':
             case 'npc_speed':
@@ -34398,8 +34521,10 @@ var COFantasy = COFantasy || function() {
             case 'organization':
             case 'senses':
             case 'size_display':
+            case 'space':
             case 'spell_flag':
             case 'spellabilities_flag':
+            case 'sq':
             case 'xp':
             case 'l1mancer_status': //Attributs ignor\xE9s
               deleteAttribute(attr, evt);
@@ -34622,6 +34747,7 @@ var COFantasy = COFantasy || function() {
             case 'Toughness':
             case 'Weapon Finesse':
             case 'Dodge':
+            case 'Combat Casting':
               continue;
             case 'Defect Arrows':
               predicats += 'paradeDeProjectiles ';
@@ -34650,6 +34776,8 @@ var COFantasy = COFantasy || function() {
           setTokenAttr(perso, 'notes', notes, evt, optAttr);
         if (equip_div !== '')
           setTokenAttr(perso, 'equip_div', equip_div, evt, optAttr);
+        if (rd !== '')
+          setTokenAttr(perso, 'RDS', rd, evt, optAttr);
         setTokenAttr(perso, 'scriptVersion', 'true', evt, {
           charAttr: true,
           maxVal: stateCOF.version
@@ -34854,6 +34982,224 @@ var COFantasy = COFantasy || function() {
     });
   }
 
+  const objetsAnimes = {
+    1: {
+      token: "https://s3.amazonaws.com/files.d20.io/images/250177368/mJsYWMFqDeEmJDJy8tJKWA/thumb.png?1634130296",
+      avatar: "https://s3.amazonaws.com/files.d20.io/images/250177753/IMzDqEpNpuznVnAMYRil8A/max.jpg?1634130507",
+      taille: 'tr\xE8s petite',
+      force: 4,
+      pnj_for: -3,
+      constitution: 4,
+      pnj_con: -3,
+      pnj_def: 10,
+      pv: 4,
+      dmnbde: 0,
+      dmde: 4,
+      dm: 1,
+    },
+    2: {
+      token: "https://s3.amazonaws.com/files.d20.io/images/250179877/-j9v1JoPrX7StcH0jGTtMQ/thumb.png?1634132408",
+      avatar: "https://s3.amazonaws.com/files.d20.io/images/250179870/ana7iPnNx6lgPLRtSmBzXA/max.jpg?1634132399",
+      taille: 'petite',
+      force: 6,
+      pnj_for: -2,
+      constitution: 6,
+      pnj_con: -2,
+      pnj_def: 10,
+      pv: 8,
+      dmnbde: 1,
+      dmde: 4,
+      dm: 0,
+    },
+    4: {
+      token: "https://s3.amazonaws.com/files.d20.io/images/250181751/L0JdDzCXjJnOlbUPJufU7A/thumb.png?1634133729",
+      avatar: "https://s3.amazonaws.com/files.d20.io/images/250181765/aELyP7xCTkSddnD6-8Kllw/max.jpg?1634133738",
+      taille: 'moyenne',
+      force: 10,
+      pnj_for: 0,
+      constitution: 10,
+      pnj_con: 0,
+      pnj_def: 12,
+      pv: 15,
+      dmnbde: 1,
+      dmde: 6,
+      dm: 0,
+    },
+    7: {
+      token: "https://s3.amazonaws.com/files.d20.io/images/250303501/Kj38iSV6T0BIZMhGm74xqA/thumb.png?1634197833",
+      avatar: "https://s3.amazonaws.com/files.d20.io/images/250303491/pzSiwMs-tZqTiluuFIz8tA/max.jpg?1634197823",
+      taille: 'moyenne',
+      force: 16,
+      pnj_for: 3,
+      constitution: 16,
+      pnj_con: 3,
+      pnj_def: 14,
+      pv: 30,
+      dmnbde: 1,
+      dmde: 6,
+      dm: 3,
+    },
+    10: {
+      token: "https://s3.amazonaws.com/files.d20.io/images/250303495/k0LqXjurwtySR-aZQjsI1Q/thumb.png?1634197828",
+      avatar: "https://s3.amazonaws.com/files.d20.io/images/250303482/COH6jsSUovSjVQfvbjU51Q/max.jpg?1634197812",
+      taille: 'grande',
+      force: 22,
+      pnj_for: 6,
+      constitution: 22,
+      pnj_con: 6,
+      pnj_def: 16,
+      pv: 50,
+      dmnbde: 2,
+      dmde: 6,
+      dm: 6,
+    }
+  };
+
+  //!cof-animation-des-objets lid niveau [tid]
+  // la cible optionelle correspond \xE0 un token existant non associ\xE9 \xE0 un personnage
+  function animationDesObjets(msg) {
+    let options = parseOptions(msg);
+    if (options === undefined) return;
+    let cmd = options.cmd;
+    if (cmd === undefined) {
+      error("Probl\xE8me de parse options", msg.content);
+      return;
+    }
+    if (cmd.length < 3) {
+      error("Usage : !cof-animation-des-objets @{selected|token_id} niveau", msg.content);
+      return;
+    }
+    let lanceur = persoOfId(cmd[1], cmd[1], options.pageId);
+    if (lanceur === undefined) {
+      error("Token incorrect", cmd);
+      return;
+    }
+    let niveauObjet = parseInt(cmd[2]);
+    if (isNaN(niveauObjet) || niveauObjet < 1) {
+      error("Le niveau de l'objet anim\xE9 doit \xEAtre un nombre positif", cmd);
+      return;
+    }
+    if (niveauObjet > 10) niveauObjet = 10;
+    let stats = objetsAnimes[niveauObjet];
+    while (stats === undefined) {
+      niveauObjet--;
+      stats = objetsAnimes[niveauObjet];
+    }
+    let niveau = ficheAttributeAsInt(lanceur, 'niveau', 1);
+    let dejaAnime = attributeAsInt(lanceur, 'niveauDesObjetsAnimes', 0);
+    let playerId = getPlayerIdFromMsg(msg);
+    if (dejaAnime + niveauObjet > niveau) {
+      sendPlayer(msg, "Impossible d'animer plus d'objets pour le moment : somme des niveau anim\xE9s = " + dejaAnime, playerId);
+      return;
+    }
+    let tokenSize = 70;
+    switch (stats.taille) {
+      case 'tr\xE8s petite':
+        tokenSize = 35;
+        break;
+      case 'petite':
+        tokenSize = 50;
+        break;
+      case 'grande':
+        tokenSize = 105;
+        break;
+    }
+    let tokenObjet;
+    let aPartirDExistant;
+    if (cmd.length > 3) {
+      tokenObjet = getObj('graphic', cmd[3]);
+      aPartirDExistant = (tokenObjet !== undefined);
+    }
+    let pageId = lanceur.token.get('pageid');
+    tokenObjet = tokenObjet ||
+      createObj('graphic', {
+        name: 'Objet anim\xE9',
+        subtype: 'token',
+        pageid: pageId,
+        imgsrc: stats.token,
+        left: lanceur.token.get('left'),
+        top: lanceur.token.get('top'),
+        width: tokenSize,
+        height: tokenSize,
+        layer: 'objects',
+        showname: 'true',
+        showplayers_bar1: 'true',
+        light_hassight: 'true',
+        light_losangle: 0,
+        has_bright_light_vision: true,
+        has_limit_field_of_vision: true,
+        limit_field_of_vision_total: 0,
+      });
+    if (tokenObjet === undefined) {
+      error("Impossible de cr\xE9er le token", stats);
+      return;
+    }
+    toFront(tokenObjet);
+    let persoObjet = {
+      nom: 'Objet anim\xE9 par ' + lanceur.token.get('name'),
+      attributesFiche: {
+        type_personnage: 'PNJ',
+        niveau: niveauObjet,
+        force: stats.force,
+        pnj_for: stats.pnj_for,
+        dexterite: 10,
+        pnj_dex: 0,
+        constitution: stats.constitution,
+        pnj_con: stats.pnj_con,
+        intelligence: 2,
+        pnj_int: -4,
+        sagesse: 2,
+        pnj_sag: -4,
+        charisme: 2,
+        pnj_cha: -4,
+        pnj_def: stats.pnj_def,
+        pnj_init: 10
+      },
+      pv: stats.pv,
+      attaques: [{
+        nom: 'Frapper',
+        atk: computeArmeAtk(lanceur, '@{ATKMAG}'),
+        typedegats: 'contondant',
+        dmnbde: stats.dmnbde,
+        dmde: stats.dmde,
+        dm: stats.dm
+      }],
+      attributes: [{
+        name: 'objetAnime',
+        current: 5 + modCarac(lanceur, 'intelligence'),
+        max: getInit()
+      }, {
+        name: 'objetAnimePar',
+        current: lanceur.token.id + ' ' + lanceur.token.get('name')
+      }, {
+        name: 'predicats_script',
+        current: 'nonVivant'
+      }]
+    };
+    let charObjet =
+      createCharacter(persoObjet.nom, playerId, stats.avatar, tokenObjet, persoObjet);
+    let evt = {
+      type: "Animation d'objet",
+      tokens: [tokenObjet],
+      characters: [charObjet.id]
+    };
+    addEvent(evt);
+    if (aPartirDExistant)
+      setPredicate({
+        token: tokenObjet,
+        charId: charObjet.id
+      }, 'animeAPartirDExistant', evt);
+    initiative([{
+      _id: lanceur.token.id,
+    }, {
+      _id: tokenObjet.id
+    }], evt);
+    setTokenAttr(lanceur, 'niveauDesObjetsAnimes', dejaAnime + niveauObjet, evt);
+    let allies = alliesParPerso[lanceur.charId] || new Set();
+    allies.add(charObjet.charId);
+    alliesParPerso[lanceur.charId] = allies;
+  }
+
   function apiCommand(msg) {
     msg.content = msg.content.replace(/\s+/g, ' '); //remove duplicate whites
     var command = msg.content.split(" ", 1);
@@ -34861,6 +35207,9 @@ var COFantasy = COFantasy || function() {
     replaceInline(msg);
     var evt;
     switch (command[0]) {
+      case '!cof-animation-des-objets':
+        animationDesObjets(msg);
+        return;
       case '!cof-attack':
         parseAttack(msg);
         return;
@@ -34885,6 +35234,9 @@ var COFantasy = COFantasy || function() {
       case '!cof-pathfinder1':
         translateFromPathfinder1(msg);
         return;
+      case '!cof-recuperation':
+        parseRecuperer(msg);
+        return;
       case '!cof-resultat-jet':
         resultatJet(msg);
         return;
@@ -34894,9 +35246,6 @@ var COFantasy = COFantasy || function() {
       case '!cof-hors-combat':
       case '!cof-fin-combat':
         sortirDuCombat();
-        return;
-      case "!cof-recuperation":
-        parseRecuperer(msg);
         return;
       case "!cof-recharger":
         recharger(msg);
@@ -35499,6 +35848,14 @@ var COFantasy = COFantasy || function() {
       prejudiciable: true,
       visible: true
     },
+    nauseeuxTemp: {
+      activation: "souffre de violentes douleurs au ventre",
+      actif: "est naus\xE9eux, seul le mouvement est possible",
+      fin: "se sent mieux",
+      msgSave: "ne plus \xEAtre naus\xE9eux",
+      prejudiciable: true,
+      visible: true
+    },
     invisibleTemp: {
       activation: "dispara\xEEt",
       actif: "est invisible",
@@ -35867,6 +36224,12 @@ var COFantasy = COFantasy || function() {
       activation: "commence \xE0 bouger",
       actif: "est un arbre anim\xE9",
       fin: "redevient un arbre ordinaire",
+      visible: true
+    },
+    objetAnime: {
+      activation: "commence \xE0 bouger",
+      actif: "est un objet anim\xE9",
+      fin: "redevient un objet ordinaire",
       visible: true
     },
     magnetisme: {
@@ -37903,14 +38266,14 @@ var COFantasy = COFantasy || function() {
           x: x,
           y: y
         };
-        var murs = getWalls(page, pageId, prev.murs);
-        var distance =
+        let murs = getWalls(page, pageId, prev.murs);
+        let distance =
           Math.sqrt((x - prev.left) * (x - prev.left) + (y - prev.top) * (y - prev.top));
         attrSuivi.forEach(function(as) {
-          var suivants = as.get('current').split(':::');
-          var removedSuivant;
+          let suivants = as.get('current').split(':::');
+          let removedSuivant;
           suivants = suivants.filter(function(idn) {
-            var suivant = persoOfIdName(idn, pageId);
+            let suivant = persoOfIdName(idn, pageId);
             if (suivant === undefined) {
               removedSuivant = true;
               return false;
@@ -39934,18 +40297,22 @@ on('ready', function() {
 on("chat:message", function(msg) {
   "use strict";
   if (COF_loaded && msg.type == "api" && msg.content.startsWith('!cof-')) {
-    try {
+    if (COF_BETA) {
       COFantasy.apiCommand(msg);
-    } catch (e) {
-      sendChat('COF', "Erreur durant l'ex\xE9cution de " + msg.content);
-      log("Erreur durant l'ex\xE9cution de " + msg.content);
-      log(msg);
-      var errMsg = e.name;
-      if (e.lineNumber) errMsg += " at " + e.lineNumber;
-      else if (e.number) errMsg += " at " + e.number;
-      errMsg += ': ' + e.message;
-      sendChat('COF', errMsg);
-      log(errMsg);
+    } else {
+      try {
+        COFantasy.apiCommand(msg);
+      } catch (e) {
+        sendChat('COF', "Erreur durant l'ex\xE9cution de " + msg.content);
+        log("Erreur durant l'ex\xE9cution de " + msg.content);
+        log(msg);
+        var errMsg = e.name;
+        if (e.lineNumber) errMsg += " at " + e.lineNumber;
+        else if (e.number) errMsg += " at " + e.number;
+        errMsg += ': ' + e.message;
+        sendChat('COF', errMsg);
+        log(errMsg);
+      }
     }
   }
 });
