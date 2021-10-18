@@ -1,6 +1,7 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.04
 ### Capacités
+* Implémentation de l'immunité à tout ce qui n'est pas magique.
 * Support du sort d'animation des objets
 * Ajout de l'effet fiévreux.
 * Jets de dégâts séparés par cible pour la destruction des morts-vivants
@@ -9,6 +10,9 @@
 * Implémentation de base de la voie de l'expert du combat
 
 ### Autres améliorations
+* Possibilité d'utiliser --effet etat sans argument de durée.
+* Support pour les affaiblissements de caractéristiques
+* Ajout d'une condition d'attaque typeCible
 * Ajout d'un type de dégâts "énergie", pour des settings science fiction.
 * Message plus explicite en cas d'expression de soins incorrecte.
 * Modifie l'affichage des boutons de soins si plus disponibles

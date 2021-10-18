@@ -309,6 +309,7 @@
               <p>Toutes les attaques ayant une portée non nulles sont considérées par le script comme des attaques à distance.</p>
               <p>Le test d'attaque à distance tient compte de la portée (malus de -1 à -5 si distance entre portée et deux fois cette valeur), ainsi que des tokens sur le trajet de l'attaque. Une attaque de trop loin ne porte jamais.</p>
               <p>Utiliser une attaque fait rentrer l'attaquant en combat (et le rajoute au turn tracker).</p>
+              </div>
               <h4 class="text-secondary">Options pour l'attaque&nbsp;:</h4>
               <div class="decalage">
                 Toutes les options sans arguments peuvent être directement utilisées comme modificateurs dans le liste des modifcateurs d'une attaque.
@@ -346,6 +347,7 @@
                       <li><code>etatCible</code> <i>e</i> : vrai si l'état <i>e</i> est actif sur toutes la cible. Cet état peut être un des états définis plus bas, ou un attribut quelconque.</li>
                       <li><code>attributCible</code> <i>attr</i> <i>val</i>: vrai si la cible possède un attribut <i>attr</i>, de valeur <i>val</i>, aux majuscules près. On peut optionnellement préciser qu'il s'agit d'un attribut par token en rajoutant le mot clé <code>local</code>, ou encore qu'il sagit d'un attribut de la fiche, avec éventuellement sa valeur par défaut, en ajoutant le mot clé <code>fiche <i>defaut</i></code>.</li>
                       <li><code>predicatCible</code> <i>predicat</i>: vrai si la cible possède un prédicat <i>predicat</i>. On peut aussi spécifier une valeur auquel le prédicat doit être égal.</li>
+                      <li><code>typeCible</code> <i>type</i>: vrai si la cible est du type spécifié. Les types reconnus sont <code>animal</code>, <code>démon</code>, <code>fée</code>, <code>insecte</code>, <code>mauvais</code>, <code>mort-vivant</code>, <code>géant</code>, <code>gobelin</code>, et si le type n'est pas reconnu, va chercher si la race ou un prédicat correspondent.</li>
                       <li><code>deAttaque</code> <i>n</i> : vrai si le jet de dé d'attaque est supérieur ou égal à <i>n</i>.</li>
                       <li><code>touche</code> : vrai si l'attaque touche.</li>
                       <li><code>critique</code> : vrai si l'attaque est un critique.</li>
@@ -736,6 +738,13 @@
                   <p>À noter qu'un personnage ayant un <a href=#predicats>prédicat</a> nommé <code>immunite_<i>etat</i></code> ne pourra pas être mis dans l'état <i>etat</i>.</p>
                   <p>Enfin, il est possible de faire réaliser un jet pour se libérer d'un état, en utilisant la commande <code>!cof-save-state <i>etat</i> <i>carac</i> <i>seuil</i></code>. Il est possible de remplacer <i>seuil</i> par une id de token pour faire faire un test en opposition avec ce token. On peut aussi passer la caractéristique et le seuil en argument à <code>!cof-set-state</code> pour proposer le jet à chaque fois qu'on affiche les <a href="#actions_du_tour">actions du tour</a> ou qu'on affiche le statut du personnage.</p>
                 </div>
+                <h4 class="text-secondary">Affaiblissements de caractéristiques</h4>
+                <div class="decalage">
+                  <p>
+                  <code>!cof-affaiblir-carac <i>carac</i> <i>valeur</i></code> permet d'affaiblir temporairement une caractéristique (force, dextérité, constitution, intelligence, sagesse ou charisme) d'une valeur positive. Une caractéristique affaiblie remonte de 1 après chaque nuit de repos. Le sort de régénération permet de récupérer 1d4 points d'une seule caractéristique physique (d'abord constitution, puis force puis dextérité). Le sort délivrance permet de récupérer 1d4 point d'une seule caractéristique, et comme indiqué dans les règles, le sort de guérison annule tous les affaiblissements de caractéritiques. Enfin le script propose une commande dédiée, <code>!cof-soigner-affaiblissement <i>carac</i> <i>valeur</i></code> pour soigner les affaiblissements.
+                  </p>
+                  <p> À noter que la diminution de constitution fait baisser les points de vie maximum, et qu'une constitution de 0 conduit à la mort.</p>
+                </div>
                 <h4 class="text-secondary">Autres bufs et debufs</h4>
                 <div class="decalage">
                   <p><code>!cof-buf-def <i>n</i></code> : buf ou debuf de la DEF.</p>
@@ -775,11 +784,10 @@
                 <div class="decalage">
                   <p>On peut utiliser l'effet temporaire générique <code>messageRetarde(<i>nom</i>)</code> pour programmer un message qui sera affiché après un certain nombre de tours. Au bout de ce nombre de tours, le nom est affiché, ainsi que le texte de valeur (avec <code>--valeur</code> si besoin). La syntaxe est <code>!cof-effet-temp messageRetarde(<i>nom</i>) <i>duree</i> --valeur <i>message</i></code>. Si vous avez besoin d'un message qui contienne des espaces, remplacez les espaces par des <code>_</code>.</p>
                   <p>On peut aussi déclencher un effet après un certain nombre de tour avec l'effet temporaire générique <code>effetRetarde(<i>effet</i>)</code>. Après la durée de l'effet retardé, si <i>effet</i> est un état, la cible est mise dans cet état, si c'est un effet temporaire, on lui applique cet effet pour une durée de 1 tour, ou si un argument <code>--valeur</code> a été donné, il sera utilisé comme durée. Enfin si ce n'est ni l'un ni l'autre, un attribut avec le nom <i>effet</i> sera créé, de valeur courante <code>true</code>, ou bien si un argument <code>--valeur</code> a été donné, cette valeur sera utilisée comme valeur courante de l'attribut <i>effet</i>.</p>
+              </div>
                 <h4 class="text-secondary">Prédicats : <code>!cof-set-predicate</code></h4>
                 <div class="decalage">
                   <p>Il est possible d'ajouter ou de retirer un <a href=#predicats>prédicat</a> avec la fonction <code>!cof-set-predicate <i>nom</i></code>, optionellement suivi de <code>true</code> ou <code>false</code>.</p>
-                </div>
-              </div>
                 </div>
                 <h4 class="text-secondary">Autres attributs : <code>!cof-set-attribute</code></h4>
                 <div class="decalage">
@@ -2152,7 +2160,8 @@
                   <li><strong>Huile de fort assaut</strong> : <code>!cof-effet-temp dmgArme(<i>L</i>) 10 --valeur 1d6</code> où <i>L</i> est le label de l'arme qu'on veut enduire d'huile de fort assaut.</li>
                   <li><strong>Hurlement</strong> : Pour les chiens infernaux, <code>!cof-peur [[10+?{Nombre de chiens?}]] [[2d4]] --portee 50 --equipe Joueurs</code>, et pour les fantômes, <code>!cof-peur 12 [[1d6]] --portee 10 --equipe Joueurs</code>. Pour l'instant, pas de prise en compte de l'immunité au hurlement apès avoir réussi son jet de SAG.</li>
                   <li><strong>Illusion</strong> : Pour les illusions qui disparaissent et réapparaissent un peu plus loin quand on essaie de les toucher, ajouter un <a href=#predicats>prédicat</a> <code>estUneIllusion</code>.</li>
-                  <li><strong>Immunité aux armes</strong> : ajouter un <a href=#predicats>prédicat</a> <code>immuniteAuxArmes</code></li>
+                  <li><strong>Immunité aux armes</strong> : ajouter un <a href=#predicats>prédicat</a> <code>immuniteAuxArmes</code>. À noter qu'il est possible de spécifier le niveau de magie d'une attaque en donnant un argument à l'option <code>--magique</code>. Ainsi une arme de niveau magique 3 aura en argument <code>--magique 3</code>.</li>
+                  <li><strong>Immunité aux attaques non magiques</strong> : ajouter un <a href=#predicats>prédicat</a> <code>immunite_nonMagique</code></li>
                   <li><strong>Indéracinable</strong> : ajouter un <a href=#predicats>prédicat</a> <code>inderacinable</code>.</li>
                   <li><strong>Insensible</strong> : ajouter un <a href=#predicats>prédicat</a> <code>insensibleAffaibli</code>.</li>
                   <li><strong>Invisible</strong> : passer le personnage invisible (<code>!cof-set-state invisible true</code>, ou mettre directment le statut sur le token). Si il peut rester invisible en combat, lui ajouter un <a href=#predicats>prédicat</a> <code>invisibleEnCombat</code>. Si il est attaqué autrement qu'avec tir en aveugle par quelqu'un qui ne voit pas l'invisble (à vous de montrer au moins temporairement le token), un malus de +5 en DEF au contact et +10 à distance sera appliqué, de même que le bonus de +5 en attaque contre ceux qui ne voient pas l'invisible. Le script suppose toujours qu'un personnage qui dispose de tir aveugle utilise sa capacité contre les cibles invisibles: à vous de vérifier qu'il ne cumule pas ça avec une capacité limitée.</li>
