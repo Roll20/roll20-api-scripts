@@ -10,7 +10,7 @@ const UniversalVTTImporter = (() => { // eslint-disable-line no-unused-vars
   const scriptName = 'UniversalVTTImporter';
   const version = '0.1.8';
   API_Meta.UniversalVTTImporter.version = version;
-  const lastUpdate = 1634537177;
+  const lastUpdate = 1634577633;
   const schemaVersion = 0.2;
   const clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659';
 
@@ -111,9 +111,9 @@ const UniversalVTTImporter = (() => { // eslint-disable-line no-unused-vars
             config: {
               windowColor: '#cfe2f399',
               windowWidth: 3,
-              wallColor: '#e4a21e',
+              wallColor: '#0000ff',
               wallWidth: 15,
-              doorColor: '#ff0000',
+              doorColor: '#ff9900',
               doorWidth: 5,
               objectColor: '#00ff00',
               objectWidth: 1,
