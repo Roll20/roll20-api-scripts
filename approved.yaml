@@ -1063,3 +1063,7 @@ statustracker:
 safetytoolsalert:
   - "SafetyToolsAlert"
   - "Utility"
+
+shadowrun3e:
+  - "Shadowrun3e"
+  - "System Toolbox"
