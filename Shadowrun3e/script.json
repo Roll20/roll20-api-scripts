@@ -2,7 +2,7 @@
     "name": "Shadowrun 3rd Edition",
     "description": "",
     "script": "shadowrun3e.js",
-    "version": 1.01,
+    "version": "1.01",
     "previousversions": [],
     "authors": "Brad H",
     "roll20userid": "9045742",
