@@ -1,5 +1,33 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 3.04
+### Capacités
+* Implémentation de l'immunité à tout ce qui n'est pas magique.
+* Support du sort d'animation des objets
+* Ajout de l'effet fiévreux.
+* Jets de dégâts séparés par cible pour la destruction des morts-vivants
+* Ajout d'une option de malus de répétition pour la destruction des morts-vivants.
+* Ajout du type d'ennemi juré gobelin
+* Implémentation de base de la voie de l'expert du combat
+
+### Autres améliorations
+* Possibilité d'utiliser --effet etat sans argument de durée.
+* Support pour les affaiblissements de caractéristiques
+* Ajout d'une condition d'attaque typeCible
+* Ajout d'un type de dégâts "énergie", pour des settings science fiction.
+* Message plus explicite en cas d'expression de soins incorrecte.
+* Modifie l'affichage des boutons de soins si plus disponibles
+* Un peu plus de discrétion avec les messages sur les limites par jour ou par combat
+* Passage en prédicats d'un grand nombre de capacités qui utilisaient encore des attributs.
+
 ## 3.03
+### Capacités
+* Ajouts des capacités épiques d'Anathazerïn
+
+### Corrections de bugs
+* Correction de assome en assomme.
+
+### Autres améliorations
+* Ajout d'une option d'affichage pour que le MJ puisse prendre le temps de décrire une attaque avant de montrer le résultat aux joueurs.
 * Passage de armeParDefaut en prédicat, et prise en compte de ce prédicat au moment de poser un token.
 
 ## 3.02
