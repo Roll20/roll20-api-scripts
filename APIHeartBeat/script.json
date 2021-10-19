@@ -1,20 +1,17 @@
 {
   "name": "APIHeartBeat",
-  "version": "0.4.2",
-  "description": "Provides an API Heartbeat by setting the requesting player's color continuously.",
+  "version": "0.5.0",
+  "description": "APIHeartBeat provides visual feedback that the API is running.\r\rFor instructions see the *Help: APIHeartBeat* Handout in game, or run `!api-heartbeat --help`, or visit [APIHeartBeat Forum Thread](https://app.roll20.net/forum/permalink//).",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
   "dependencies": [],
-  "modifies": {
-    "state.APIHeartBeat": "read,write",
-    "player.color": "write",
-    "player.id": "read"
-  },
+  "modifies": {},
   "conflicts": [],
   "script": "APIHeartBeat.js",
   "useroptions": [],
   "previousversions": [
-    "0.4.1"
+    "0.4.1",
+    "0.4.2"
   ]
 }
