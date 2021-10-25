@@ -1,7 +1,7 @@
 {
   "name": "BounceTokens",
-  "version": "0.1.2",
-  "description": "Allows the GM to toggle bouncing of selected tokens.",
+  "version": "0.1.3",
+  "description": "Allows the GM to toggle bouncing of selected tokens.  Begin bouncing with the `!bounc-start` command, optionally followed by how many seconds it should take to bounce once.  End bouncing with the `!bounce-stop` command.\r\rFor instructions run either command with no tokens selected, or visit [BounceTokens ForumThread](https://app.roll20.net/forum/permalink/3973585/).",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -19,6 +19,7 @@
   "useroptions": [],
   "previousversions": [
     "0.1.0",
-    "0.1.1"
+    "0.1.1",
+    "0.1.2"
   ]
 }

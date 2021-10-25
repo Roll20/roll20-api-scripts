@@ -1,7 +1,7 @@
 {
   "name": "ColorEmote",
   "version": "0.1.9",
-  "description": "",
+  "description": "ColorEmote provides a long form emote block with a colored background and header based on the Character, Token, or Player speaking. The header contains a representative image for the speaker (Character Avatar, Token Image, or Player Image) as well as the name of the speaker.\r\n\r\n For instructions, run `!cem --help`.\r\n\r\n Forum Discussion: https://app.roll20.net/forum/permalink/2972233/",
   "authors": "The Aaron",
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
@@ -11,12 +11,5 @@
   },
   "conflicts": [],
   "script": "ColorEmote.js",
-  "useroptions": [],
-  "previousversions": [
-    "0.1.3",
-    "0.1.4",
-    "0.1.5",
-    "0.1.7",
-    "0.1.8"
-  ]
+  "useroptions": []
 }

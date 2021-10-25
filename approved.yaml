@@ -164,6 +164,7 @@ customfx:
 itsatraptheme5eshaped:
 - "ItsATrap_theme_5E_Shaped"
 - "System Toolbox"
+- "hidden"
 
 roleplayingismagic4edice:
 - "RoleplayingIsMagic_4E_Dice"
@@ -206,8 +207,8 @@ itsatrapthemepathfinder:
 - "System Toolbox"
 
 falloutterminal:
-- "FalloutTerminal"
-- "System Toolbox"
+  - "FalloutTerminal"
+  - "Utility"
 
 chatsetattr:
 - "ChatSetAttr"
@@ -224,6 +225,7 @@ htmlbuilder:
 itsatraptheme5eogl:
 - "ItsATrap_theme_5E_OGL"
 - "System Toolbox"
+- "hidden"
 
 itsatrapthemepathfindersimple:
 - "ItsATrap_theme_PathfinderSimple"
@@ -307,7 +309,7 @@ healthcolors:
 
 truepagecopy:
 - "TruePageCopy"
-- "Character"
+- "Maps & Drawing"
 - "hidden"
 
 srrollextender:
@@ -380,7 +382,7 @@ onerollengine:
 
 changetokenimage:
 - "ChangeTokenImage"
-- "Utility"
+- "Tokens"
 
 5ebattlemaster:
 - "5EBattleMaster"
@@ -488,7 +490,7 @@ inspirationtrack:
 
 syncpage:
 - SyncPage
-- Utility
+- "Maps & Drawing"
 
 combattracker:
 - CombatTracker
@@ -496,11 +498,11 @@ combattracker:
 
 movelighting:
 - moveLighting
-- Utility
+- "Dynamic Lighting"
 
 elevation:
-- Elevation
-- Utility
+  - Elevation
+  - "Dynamic Lighting"
 
 hero6playable:
 - HeroSystem6e
@@ -508,7 +510,7 @@ hero6playable:
 
 publicsheet:
 - PublicSheet
-- Utility
+- "Character"
 
 gmsheet:
 - GMSheet
@@ -588,7 +590,7 @@ charsheetutils:
 
 healthstatus:
   - "Health Status"
-  - "Utility"
+  - "Tokens"
 
 difficultyrating:
   - "DifficultyRating"
@@ -608,7 +610,7 @@ handsup:
 
 gmaura:
   - "GMAura"
-  - Utility
+  - "Tokens"
 
 savageworldsraiseroller:
   - 'Savage Worlds Raise Roller'
@@ -620,7 +622,7 @@ knightstylesmarkers:
 
 emas:
   - 'Emas'
-  - System Toolbox
+  - 'Chat'
 
 pcpp:
   - 'PCPP'
@@ -648,7 +650,7 @@ talesfromtheloopdierolelr:
 
 flight:
   - 'Flight'
-  - 'Utility'
+  - "Tokens"
 
 shadowofdemonlord:
   - 'Shadow of the Demon Lord'
@@ -660,11 +662,11 @@ myz:
 
 doorknocker:
   - 'Door Knocker'
-  - 'Utility'
+  - "Dynamic Lighting"
 
 randomrotate:
   - 'RandomRotate'
-  - 'Utility'
+  - "Tokens"
 
 dealer:
   - 'Dealer'
@@ -672,11 +674,11 @@ dealer:
 
 facing:
   - 'Facing'
-  - 'Utility'
+  - "Tokens"
 
 wilddice:
   - 'WildDice'
-  - 'Utility'
+  - "System Toolbox"
 
 aligmenttracker:
   - 'AlignmentTracker'
@@ -684,7 +686,7 @@ aligmenttracker:
 
 modifytokenimage:
   - ModifyTokenImage
-  - 'Utility'
+  - "Tokens"
 
 apiheartbeat:
   - 'APIHeartBeat'
@@ -692,19 +694,19 @@ apiheartbeat:
 
 fliptoken:
   - 'Flip Tokens'
-  - 'Utility'
+  - "Tokens"
 
 coloremote:
   - 'ColorEmote'
-  - 'Utility'
+  - 'Chat'
 
 colorenote:
   - 'ColorNote'
-  - 'Utility'
+  - 'Chat'
 
 sharevision:
   - 'ShareVision'
-  - 'Utility'
+  - "Dynamic Lighting"
 
 peekcard:
   - 'PeekCard'
@@ -712,7 +714,7 @@ peekcard:
 
 markingconditions:
   - 'Marking Conditions'
-  - System Toolbox
+  - "Tokens"
 
 imperialcalendar:
   - 'ImperialCalendar'
@@ -732,7 +734,7 @@ base64:
 
 dryerase:
   - "DryErase"
-  - "Utility"
+  - "Maps & Drawing"
 
 maplock:
   - "MapLock"
@@ -756,10 +758,18 @@ tableexport:
 
 tokencondition:
   - "TokenCondition"
-  - "Utility"
+  - "Tokens"
 
 libtokenmrkers:
   - "libTokenMarkers"
+  - "Utility"
+
+libinline:
+  - "libInline"
+  - "Utility"
+
+md5sum:
+  - "MD5Sum"
   - "Utility"
 
 abfroll:
@@ -800,7 +810,7 @@ savageworldsstatuschanger:
 
 midgardturntrackerhelper:
   - "MidgardTurnTrackerHelper"
-  - "Utility"
+  - "System Toolbox"
 
 shortrest:
   - "ShortRest"
@@ -808,7 +818,7 @@ shortrest:
 
 tokenmarker:
   - "TokenMarker"
-  - "Utility"
+  - "Tokens"
 
 heroroller:
   - "HeroRoller"
@@ -818,13 +828,17 @@ universalvttimport:
   - "UniversalVTTImporter"
   - "Utility"
 
+udlwindows:
+  - "UDLWindows"
+  - "Dynamic Lighting"
+
 supernotes:
   - "Supernotes"
   - "Utility"
 
 changemapclonetokens:
   - "ChangeMap_CloneTokens"
-  - "Utility"
+  - "Maps & Drawing"
 
 restandrecovery:
   - "Rest-and-Recovery"
@@ -832,7 +846,7 @@ restandrecovery:
 
 tokenactionmarker:
   - "Token-Action-Maker"
-  - "Utility"
+  - "Tokens"
 
 5erestinstyle:
   - "5E Resting in Style"
@@ -840,11 +854,11 @@ tokenactionmarker:
 
 huntersmark:
   - "HuntersMark"
-  - "Utility"
+  - "Tokens"
 
 spintokens:
   - "SpinTokens"
-  - "Utility"
+  - "Tokens"
 
 agonecleanolds:
   - "AgoneCleanOlds"
@@ -856,27 +870,27 @@ deltagreenrpgcompanion:
 
 dynamiclightrecorder:
   - "DynamicLightRecorder"
-  - "Utility"
+  - "Dynamic Lighting"
 
 gofish:
   - "GoFish!"
   - "Utility"
 
 weaponarcs:
-- "WeaponArcs"
-- "Tokens"
+  - "WeaponArcs"
+  - "Tokens"
 
 spawndefaulttoken:
-- "Spawn Default Token"
-- "Tokens"
+  - "Spawn Default Token"
+  - "Tokens"
 
 fotncompanion:
-- "FotN Companion"
-- "System Toolbox"
+  - "FotN Companion"
+  - "System Toolbox"
 
 hiddenrollmessages:
   - "HiddenRollMessages"
-  - "Utility"
+  - "Chat"
 
 dkrystal:
   - "KrystalDice"
@@ -888,16 +902,168 @@ paladinaura:
 
 dldarkness:
   - "DL Darkness"
-  - "Utility"
+  - "Dynamic Lighting"
 
 dsacritchecker:
   - "DSA4_1-CritChecker"
   - "System Toolbox"
 
 radar:
-    - "Radar"
-    - "Utility"
+  - "Radar"
+  - "Utility"
 
 chatturnmanager:
-    - "ChatTurnManager"
-    - "Utility"
+  - "ChatTurnManager"
+  - "Utility"
+
+encounterhelper:
+  - "EncounterHelper"
+  - "Utility"
+
+rolltablehandouts:
+  - "Roll Handout Tables"
+  - "Utility"
+
+dealinit:
+  - "Deal-Init"
+  - "System Toolbox"
+
+teleport:
+  - "Teleport"
+  - "Utility"
+
+emojibubble:
+  - "Emojibubble"
+  - "Tokens"
+
+maximumapocalypse:
+  - "Maximum Apocalypse"
+  - "System Toolbox"
+
+clocktokens:
+  - "ClockTokens"
+  - "System Toolbox"
+
+5ebarbarian:
+  - "RatWorkshop_Barbarian"
+  - "System Toolbox"
+
+5edmtools:
+  - "RatWorkshop_DungeonMasterTools"
+  - "System Toolbox"
+
+5epaladin:
+  - "RatWorkshop_Paladin"
+  - "System Toolbox"
+
+treatwounds:
+  - "TreatWounds"
+  - "System Toolbox"
+
+initiativetrackerplus:
+  - "InitiativeTrackerPlus"
+  - "Utility"
+
+selectmanager:
+  - "SelectManager"
+  - "Utility"
+
+apilogic:
+  - "APILogic"
+  - "Utility"
+
+discretewhisper:
+  - "DiscreteWhisper"
+  - "Utility"
+
+insertarg:
+  - "InsertArg"
+  - "Utility"
+
+starfinderguidance:
+  - "Starfinder Guidance"
+  - "System Toolbox"
+
+scriptcards:
+  - "ScriptCards"
+  - "Utility"
+  
+imperator:
+  - "Imperator"
+  - "System Toolbox"
+  
+myzsectorgenerator:
+  - "MutantYearZero_SectorGenerator"
+  - "System Toolbox"
+  
+playercharacters:
+  - "PlayerCharacters"
+  - "Utility"
+
+udlpasswall:
+  - "UDLPasswall"
+  - "Dynamic Lighting"
+  
+fetch:
+  - "Fetch"
+  - "Utility"
+
+mathops:
+  - "MathOps"
+  - "Utility"
+
+muler:
+  - "Muler"
+  - "Utility"
+
+plugger:
+  - "Plugger"
+  - "Utility"
+  
+zeroframe:
+  - "ZeroFrame"
+  - "Utility"
+
+calendar:
+  - "Calendar"
+  - "Utility"
+
+wfrp4epl:
+  - "WFRP4ePL"
+  - "System Toolbox"
+  
+libtypes:
+  - "libTypes"
+  - "Utility"
+
+addcustomturn:
+  - "AddCustomTurn"
+  - "Character"
+  
+battleroyale:
+  - "BattleRoyale"
+  - "Utility"
+
+hs6e:
+  - "ImportHS6e"
+  - "System Toolbox"
+
+reporter:
+  - "Reporter"
+  - "Tokens"
+  
+dungeonalchemist:
+  - "DungeonAlchemistImporter"
+  - "Maps & Drawing"
+  
+statustracker:
+  - "StatusTracker"
+  - "Tokens"
+
+safetytoolsalert:
+  - "SafetyToolsAlert"
+  - "Utility"
+
+shadowrun3e:
+  - "Shadowrun3e"
+  - "System Toolbox"

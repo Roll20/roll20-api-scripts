@@ -1,0 +1,64 @@
+{
+    "name": "Teleport",
+    "script": "teleport.js",
+    "version": "1.2.2",
+    "previousversions": ["1.0","1.1","1.2","1.2.1"],
+    "description": "# Teleport\r\r[Forum Teleport Discussion](https://app.roll20.net/forum/post/9436375/script-teleport-from-scratch-teleport-token) <= this has a how-to on using Teleport.\r\rThis script provides a way for GMs or players to teleport tokens within a page or between pages.\r\r## Installation\r\rOn installation, a note (*Teleport API*) is created, and help text appears in chat, both of which have buttons which activate the main menu. The note persists, and will not be re-created unless you remove the note, so you can always find and activate the menu button. You can also type ```!teleport --menu``` into chat. \r\r## Beginning Setup\rTo set up a teleport pad token, drag a token to the objects layer and then click on the chat button to \"Create Teleport Pad\" on the main menu.\r* You will be prompted with a naming box, name your teleport pad whatever you like. You can rename it later from the interface. This is for you to read, and is not used by the API to find portal pads, so don't worry about renaming it at any time. \r* The token will be automatically moved to the GM layer and set up with its initializing properties. Once you do this, the chat menu will pop up a list of teleport pads it detects on the page the **GM** is on currently. You can now use the teleport button on the chat (the emoji button that looks like sparkles, and gives you a tooltip of \"teleport token\" on mouseover) for that teleport pad to teleport a selected token to this teleport pad. \r\rTo set up auto-teleporting (players able to interact with one teleport pad that automatically moves them to another teleport pad), you need to **link** the first teleport pad you created to a second teleport pad. \r* Create a second teleport pad as you did the first one. \r* Now, go to the gmlayer and select both teleport pads. \r* On the teleport pad list, click the \"link\" button on either pad. Teleport is smart enough not to link a portal to itself, so it will add the **other** portal to the portal linking button you pressed, and it should list it this way (show the name of the linked portal in its \"linked to\" label).\r* If you want the portals to link to each-other and be a two-way teleport, repeat this for the second portal, so each shows \"linked\" to the other teleport pad.\r\rNow, on the objects layer, test this by dragging any token over one of the teleport pads. These pads are invisible to your players, so if you want them to find them it is good practice to put a visible marker of the teleport pad on the map layer. You should see the token move to the gm layer, move to the other teleport pad location, and re-appear on the token layer.\r\r## Cross-Page Teleport\r\rTo set up cross-page teleport, you must create teleport tokens on each page you want to link by way of teleport, and then use the Global Teleport Pad List to link them, similar to how you did in the **Beginning Setup**. You also must make sure that player tokens for each player you want to teleport exist in the target pages. Preferably, they should be on the GM layer. If you don't have player tokens on the target page, the teleport or auto-teleport will fail. Currently, the API has trouble with creating tokens on target pages (specifically to do with images from the Roll20 Marketplace), so **Teleport** doesn't try and make a player token on the target page at this point.\r\r## Some warnings: \r* Linking two pads, then copying one to another page will not work: teleport pads are linked by their unique IDs, and pasting a teleport pad to another page creates a new token with a new ID. It will keep links it has to **other teleport pads** but any links ***to*** it will be broken and will have to be re-set.\r* Cross-page teleport tries to spawn a specific page ribbon, and this will happen even if a player is not online - so teleporting player tokens to other pages when they are not online may have unforseen consequences. This is still being tested, and if out of synch can be \"fixed\" when all players are back online.\r\r## Creating API buttons from Teleport buttons\r\rAny activation of a button in chat will leave a record of what the command was - so you can press the up-arrow in chat to see the command that was passed to activate teleport.js. All commands are prefixed by !teleport and contain an attribute prefixed by two dashes to direct the command. ",
+    "authors": "Patrick K.",
+    "roll20userid": "616652",
+    "useroptions": [
+        {
+            "name": "AUTOTELEPORT", 
+            "type": "checkbox",
+            "value": "true",
+            "checked":"checked",
+            "description": "Determines whether or not players can use teleportation pads to move between linked pads."
+        },
+        {
+            "name": "AUTOPING", 
+            "type": "checkbox",
+            "value": "true",
+            "checked":"checked",
+            "description": "Determines whether or not players that are teleported get a ping to move their view to their new location."
+        },
+        {
+            "name": "HIDEPING", 
+            "type": "checkbox",
+            "value": "true",
+            "checked":"checked",
+            "description": "Determines whether or not a player specific ping hides the ping-ring that normally results by turning the player color transparent briefly."
+        },
+        {
+            "name": "SHOWSFX", 
+            "type": "checkbox",
+            "value": "true",
+            "checked":"checked",
+            "description": "Determines whether or not special effects are turned off globally, while sfx are normally determined per-pad. Can be useful to turn off if encountering lag."
+        }
+    ],
+    "dependencies": [],
+    "modifies": {
+        "state.teleport.config.AUTOTELEPORT": "read,write",
+        "state.teleport.config.AUTOPING": "read,write",
+        "state.teleport.config.HIDEPING": "read,write",
+        "state.teleport.config.SHOWSFX": "read,write",
+        "state.teleport.increment":"read,write",
+        "state.teleport.help":"read,write",
+        "token.name":"read,write",
+        "token.bar1_link": "read,write",
+        "token.bar2_link": "read,write",
+        "token.bar3_link": "read,write",
+        "token.bar1_max": "read,write",
+        "token.bar2_max": "read,write",
+        "token.bar3_max": "read,write",
+        "token.fliph":"read,write",
+        "token.top":"read,write",
+        "token.left":"read,write",
+        "handout.name":"read,write",
+        "handout.contents":"read,write",
+        "handout.inplayerjournals":"read,write",
+        "handout.controlledby":"read,write",
+        "Campaign().playerspecificpages":"read,write"
+    },
+    "conflicts": []
+}

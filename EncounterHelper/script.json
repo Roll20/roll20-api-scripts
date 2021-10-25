@@ -1,0 +1,31 @@
+{
+    "name": "EncounterHelper",
+    "script": "EncounterHelper.js",
+    "version": "1.0.14",
+    "previousversions": ["1.0.13","1.0.12","1.0.11","1.0.10"],
+    "description": "# EncounterHelper\n\nNote: Not game-system specific.\n\nThis API script allows you to define sets of tokens that comprise \u0027Encounters\u0027 that can be treated as a group entitiy and have actions performed on them, such as hiding, showing, and resetting their parameters.\n\n### Requirements\n\nOn any page you want to define encounters, you\u0027ll need to create a token and give it a very specific name. That name is \u0027Encounter Token\u0027 (case sensitive). Encounters for each page will be stored using the notes field on this token. It can be hidden on the GM layer, etc. Graphic and size are not important.\n\nOnce in Roll20, enter the command \u0027!eh pagelist\u0027 to list all pages with \u0027Encounter Token\u0027 tokens on them and select a page to become active. All Encounter Helper work will now be done on the active page. Run \u0027!eh pagelist\u0027 again to select a different page.\n\nFinally, the details/display function will display a table of all of the tokens in the encounter. By default it displays the value of Bar 3 (cur/max) and the npc_ac attribute, but these are customizable by using the \u0027import script\u0027 button below instead of \u0027add script\u0027 and editing the \u0027const columns\u0027 line near the top of the script (after the comments) so it can support any game/sheet.\n\n### Command\n!eh config : Show the in-game configuration menu\n!eh list : List all of the encounters on the active page.\n!eh create : Creates a named encounter containing the selected tokens and saves their current state.\n!eh show : Move the tokens for the given encounter to the Object (Token) layer.\n!eh hide : Move the tokens for the given encounter to the GM Layer.\n!eh display : List the tokens associated with an encounter and their tracked stats.\n\n### Localization\n\nEncounterHelper has support for multiple languages. You can activate this support choosing a language in the dropdown below. Currently the localization is provided via Google Translate, so if you have recommendations for better translations I\u0027m open to updating them.",
+    "useroptions": [
+        {
+            "name": "language",
+            "type": "select",
+            "options": ["english", "french", "spanish", "german"],
+            "default": "english",
+            "description": "Language to use for script output."
+        },
+        {
+            "name": "columns",
+            "type": "text",
+            "description": "Semi-colon separated list of token attributes to display in !eh display. Format is 'bar' or 'attr' (tokens must represent characters), vertical bar, column header, vertical bar, bar number OR attribute name (ie, bar|AC|2 is Bar 2 with a header of AC. attr|WIS|wisdom_mod is the 'wisdom_mod' attribute of the character the token represents.",
+            "default": "bar|HP|3;attr|AC|npc_ac"
+        },
+        {
+            "name": "resetValues",
+            "type": "text",
+            "description": "Semi-colon separated list of token attributes to save for restoring when using the reset command.",
+            "default": "left;top;width;height;bar3_value;bar3_max;statusmarkers"
+        }
+    ],
+    "authors": "Kurt Jaegers",
+    "patreon": "https://www.patreon.com/KurtJaegers",
+    "roll20userid": "2365448"
+}

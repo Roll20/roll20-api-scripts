@@ -274,6 +274,7 @@
                   <li><code>--peur <i>seuil duree</i></code> : fait un effet de peur si l'attaque touche. Le <i>seuil</i> sert pour le test de sagesse de résitance à la peur (tient compte de la capacité <b>sans peur</b> du chevalier).</li>
                   <li><code>--plus <i>dmg</i></code> :
                     ajoute <i>dmg</i> dégâts. Attention, si <i>dmg</i> est un simple nombre, ces dégâts sont multipliés par les critiques (sauf si de type différent de l'attaque principale). Ainsi, <code>--plus [[1d6]]</code> donnera des dégâts multipliés par les critiques (car la fonction ne voit que le résultat du jet), alors que <code>--plus 1d6</code> ne le sera pas. </li>
+                  <li><code>--plusCrit <i>dmg</i></code> : ajoute <i>dmg</i> dégâts en cas de réussite critique</li>
                   <li><code>--test</code> pour voir le résultat du jet d'attaque. On n'applique pas les résultats d'un touché.</li>
                   <li><code>--sournoise <i>n</i></code> : ajoute <i>n</i>d6 de dégâts d'attaque sournoise ou par surprise.</li>
                   <li><code>--magique</code> : les dégâts sont magiques. On peut passer en argument le niveau de magie. Il est utilisé contre les créatures immunisées aux armes. Le niveau par défaut est 1.</li>
@@ -726,6 +727,12 @@
                 <p>Pour qu'un personnage puisse monter sur une monture, il faut que cette monture soit associée à une fiche de personnage et qu'il possède l'attribute <code>monture</code> à <code>true</code>. La commande pour monter sur la monture est <code>!cof-en-selle @{selected|token_id} @{target|token_id}</code>, à lancer en sélectionnant le cavalier.</p>
                 <p>On peut ensuite bouger la monture, cela déplace le cavalier. Le mieux est de lancer la commander alors que le token du cavalier est sur le token de la monture. Si on déplace le cavalier, cela le fait descendre de sa monture.</p>
               </div>
+              <h4 class="text-secondary" id="montures">Suivre un autre personnages</h4>
+              <div class="decalage">
+                Le principe est le suivant : on sélectionne un token, dans les abilities qui s'affichent en haut de la map, on clique sur Suivre, puis on sélectionne le token à suivre. À partir de ce moment, le script déplace le premier token à chaque fois qu'on déplace le second (en tenant compte des états qui empêchent le mouvement et des obstacles sur le layer de lumière, si ils doivent empêcher le mouvement). On peut aussi suivre un token qui en suit un autre. Et pour arrêter de suivre un token, il suffit de déplacer manuellement le premier token.
+
+Ça permet donc d'avoir un familier qui suit un personnage, ou bien de faire automatiquement bouger un groupe de perosnnage dont l'ordre de marche est déterminé.
+              </div>
               <h3 class="text-info" id="lumiere">2.11 Lumière</h3>
               <div class="decalage">
                 <p>Pour faire de la lumière, on peut utiliser <code>!cof-lumiere <i>token_id portee</i></code>. Cela va faire en sorte que le token fasse de la lumière jusqu'à <i>portee</i> mètres. Il est possible d'avoir plusieurs sources de lumière, et la commande est compatible avec la <a href='#Vision_dans_le_noir'>vision dans le noir</a>. La commande admet un troisième argument qui est la distance à laquelle la lumière devient moins brillante, et un quatrième argument qui est le nom du type de lumière (par défaut, <code>lumiere</code>), utilisé quand on éteint les lumières.</p>
@@ -745,6 +752,7 @@
                   <li><code>--nom</code> précise le nom du jet à afficher. De plus, cela va aussi faire rechercher un attribut de même nom (en mettant les caractères en minuscule). Par exemple <code>!cof-jet DEX --nom Discrétion</code> va lancer un jet de DEX, qui sera affiché comme un jet de Discrétion, et qui va ajouter au jet le bonus d'un éventuel attribut <code>discrétion</code>.</li>
                   <li><code>--secret</code> : le jet n'est visible que par les personnes qui contrôlent le personnage, plus le MJ. Si la personne qui a lancé la commande est MJ, il sera le seul à voir le résultat.</li>
                   <li><code>--competences</code> : si la commande n'a pas déjà d'option <code>--nom</code>, invite l'utilisateur à choisir une compétence parmis une liste correspondant à la caractéristique (et provenant du handout <code>Compétences</code> tel que défini plus haut).</li>
+                  <li><code>--plageEchecCritique <i>c</i></code> : permet de considérer tout jet de dé inférieur ou égal à <i>c</i> comme un échec critique.</li>
                 </ul>
               </div>
               <h3 class="text-info" id="son">2.13 Jouer un son</h3>
@@ -827,6 +835,7 @@
                   <li><strong>Armure de vent</strong> : Ajouter un attribut <code>armureDeVent</code> avec comme valeur le rang dans la voie du primitif. Cela augmente la DEF, mais seulement lorsque le barbare ne porte pas d'armure (ne se voit pas sur le total de DEF de la fiche)</li>
                   <li><strong>Vigilance</strong> : ajouter 5 à un attribut <code>vigilance</code> et ajouter un attribut <code>immuniteAuxSournoises</code> avec comme valeur <code>true</code></li>
                   <li><strong>Résistance à la magie</strong> : ajouter un attribut <code>resistanceALaMagieBarbare</code>, de valeur courante 1 et de valeur maximale 1.</li>
+                  <li><strong>Vitalité débordante</strong> : faire une ability de type token action, avec le code <code>!cof-soin ?{Nombre d'heures écoulées}d6</code> --message guérit à une vitesse surnaturelle</li>
                 </ol>
                 <h4 class="text-secondary">Voie de la rage</h4>
                 <ol>
@@ -910,7 +919,7 @@
                   <li><strong>Ignorer la douleur</strong> : Ajouter un attribut <code>ignorerLaDouleur</code> de valeur <code>true</code>. Normalement, le script affiche un bouton quand cela est utilisable, mais on peut aussi le déclencher avec <code>!cof-ignorer-la-douleur</code> juste après le coup.</li>
                   <li><strong>Piqures d'insectes</strong> : ajouter un attribut <code>piquresDInsectes</code>, avec comme valeur le rang dans la voie</li>
                   <li><strong>Laissez-le-moi</strong> : pas de support pour restreindre au chef de groupe. On pourraît peut-être utiliser la voie du chef d'armée pour le faire automatiquement ? Pour l'instant, utiliser l'option <code>--plus 1d6</code> contre les leaders.</li>
-                  <li><strong>Seul contre tous</strong> : ajoute un attribut <code>seulContreTous</code>, de valeur <code>true</code>. Les actions affichées en cas de riposte seront en priorité les attaques d'un ability <code>#ActionsRiposte#</code> ou sinon les attaques des actions habituelles du personnages (venant donc de <code>#Actions#</code>).</li>
+                  <li><strong>Seul contre tous</strong> : Utiliser <code>!cof-effet-temp seulContreTous 1</code> pour se mettre en position. Les actions affichées en cas de riposte seront en priorité les attaques d'un ability <code>#ActionsRiposte#</code> ou sinon les attaques des actions habituelles du personnages (venant donc de <code>#Actions#</code>).</li>
                   <li><strong>Charisme héroïque</strong> : reporter sur la fiche.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du meneur d'hommes</h4>
@@ -1104,7 +1113,7 @@
                   <li><strong>Science du critique</strong> : pour ne pas avoir à modifier les chances de critique pour toutes les attaques, utiliser un attribut <code>scienceDuCritique</code> (valeur <code>true</code>). Attention à ne pas faire ça ET modifier les chances de critiques de l'attaque, car ça s'additionne.</li>
                   <li><strong>Spécialisation</strong> : reporter le bonus aux DM sur la fiche.</li>
                   <li><strong>Attaque parfaite</strong> : utiliser les options <code>--m2d20 --plus 1d6</code>.</li>
-                  <li><strong>Riposte</strong> : pas de support particulier.</li>
+                  <li><strong>Riposte</strong> : ajouter un attribut <code>riposteGuerrier</code> avec valeur courante et maximale <code>1</code>. Les actions affichées en cas de riposte seront en priorité les attaques d'un ability <code>#ActionsRiposte#</code> ou sinon les attaques des actions habituelles du personnages (venant donc de <code>#Actions#</code>).</li>
                 </ol>
                 <h4 class="text-secondary">Voie de la résistance</h4>
                 <ol>
@@ -1581,7 +1590,7 @@
                 <h4 class="text-secondary">Voie du chef d'armée</h4>
                 <ol>
                   <li><strong>Sergent</strong> : ne pas oublier l'action de plus donnée à un allié par tour. Utiliser un attribut <code>sergent</code> = true (pour l'attaque ignorée par combat)</li>
-                  <li><strong>Capitaine</strong> : pour désigner le capitaine d'un ensemble de tokens sélectionné (quelle que soit <a href="#methode_selection_groupes">la méthode</a>), on peut utiliser <code>!cof-capitaine @{selected|token_id}</code>, en ajoutant les options de sélection (comme <code>--target @{target|token_id}</code>. Au lieu de sélectionner une cible, on peut utiliser le nom d'un token. Si le capitaine fait parti de la sélection, il sera automatiquement exclu (on ne peut être son propre capitaine). Si à la place d'une id de token, l'argument est <code>--aucun</code>, cela enlève le capitaine. L'attribut généré est lié à un personnage, pas un token spécifique, il suffit donc de cibler un token représentant un personnage pour affecter tous les tokens qui représentent ce personnage. Pas de support particulier pour l'attaque supplémentaire en cas d'action limitée.</li>
+                  <li><strong>Capitaine</strong> : pour désigner le capitaine d'un ensemble de tokens sélectionné (quelle que soit <a href="#methode_selection_groupes">la méthode</a>), on peut utiliser <code>!cof-capitaine @{selected|token_id}</code>, en ajoutant les options de sélection (comme <code>--target @{target|token_id}</code>). Au lieu de sélectionner une cible, on peut utiliser le nom d'un token. Si le capitaine fait parti de la sélection, il sera automatiquement exclu (on ne peut être son propre capitaine). Si à la place d'une id de token, l'argument est <code>--aucun</code>, cela enlève le capitaine. L'attribut généré est lié à un personnage, pas un token spécifique, il suffit donc de cibler un token représentant un personnage pour affecter tous les tokens qui représentent ce personnage. Pas de support particulier pour l'attaque supplémentaire en cas d'action limitée.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du cogneur</h4>
                 <ol>
