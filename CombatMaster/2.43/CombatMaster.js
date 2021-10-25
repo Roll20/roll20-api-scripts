@@ -1,5 +1,5 @@
 /* 
- * Version 2.44
+ * Version 2.43
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
@@ -11,11 +11,11 @@ var CombatMaster = CombatMaster || (function() {
     'use strict';
 
     let round = 1,
-	    version = '2.44',
+	    version = '2.43',
         timerObj,
         intervalHandle,
         debug = true,
-        animationHandle,
+        rotationInterval,
         paused = false,
         who = 'gm',
         playerID = null,
@@ -695,10 +695,7 @@ var CombatMaster = CombatMaster || (function() {
 		    listItems.push(makeTextButton('Next Marker Name',turnorder.nextTokenMarkerName, '!cmaster --config,turnorder,key=nextTokenMarkerName,value=?{Next Marker Name|} --show,turnorder'))
             listItems.push(getDefaultIcon('Token Marker', turnorder.nextTokenMarkerName))
 		}	
-    	listItems.push(makeTextButton('Marker Size',turnorder.markerSize, '!cmaster --config,turnorder,key=markerSize,value=?{Marker Size (1.35 default)} --show,turnorder'))      
-        listItems.push(makeTextButton('Animate Marker',turnorder.animateMarker, '!cmaster --config,turnorder,key=animateMarker,value='+!turnorder.animateMarker + ' --show,turnorder'))    	  
-    	listItems.push(makeTextButton('Animation Angle Step',turnorder.animateMarkerDegree, '!cmaster --config,turnorder,key=animateMarkerDegree,value=?{Degrees to rotate every tick (15 default)} --show,turnorder'))      
-    	listItems.push(makeTextButton('Animation Angle Wait',turnorder.animateMarkerWait, '!cmaster --config,turnorder,key=animateMarkerWait,value=?{milliseconds per tick (250 default)} --show,turnorder'))         
+    	listItems.push(makeTextButton('Marker Size',turnorder.markerSize, '!cmaster --config,turnorder,key=markerSize,value=?{Marker Size (1.35 default)} --show,turnorder'))        
 		listItems.push('<div style="margin-top:3px"><i><b>Beginning of Each Round</b></i></div>' )
         listItems.push(makeTextButton('API',turnorder.roundAPI, '!cmaster --config,turnorder,key=roundAPI,value={{?{API Command|}}} --show,turnorder'))
         listItems.push(makeTextButton('Roll20AM',turnorder.roundRoll20AM, '!cmaster --config,turnorder,key=roundRoll20AM,value={{?{Roll20AM Command|}}} --show,turnorder'))
@@ -1841,8 +1838,6 @@ var CombatMaster = CombatMaster || (function() {
         }
         
         if(!next) checkMarkerturn(marker);
-
-        if(!next) startMarkerAnimation(marker);
         
         toBack(marker);
 
@@ -1868,7 +1863,7 @@ var CombatMaster = CombatMaster || (function() {
     },
     
     removeMarkers = function () {
-        stopMarkerAnimation();
+        stopRotate();
         getOrCreateMarker().remove();
         getOrCreateMarker(true).remove();
     },
@@ -1954,28 +1949,7 @@ var CombatMaster = CombatMaster || (function() {
                 }    
             }
         }
-    },   
-    startMarkerAnimation = function(marker) {
-        if( !animationHandle && state[combatState].config.turnorder.animateMarker) {
-            animationHandle = animateMarker;
-            setTimeout(function() {animateMarker(marker);}, state[combatState].config.turnorder.animateMarkerWait);                    
-        }                    
-    },
-    stopMarkerAnimation = function() {
-        animationHandle = null;
     },    
-    animateMarker = function(marker) {
-        if (!animationHandle) {
-             return;
-	}
-	if (!state[combatState].config.turnorder.animateMarker) {
-	    animationHandle = null;
-	    return;
-	}
-	marker.set('rotation',parseInt(marker.get('rotation'))+state[combatState].config.turnorder.animateMarkerDegree);
-	setTimeout(function() {animateMarker(marker);}, state[combatState].config.turnorder.animateMarkerWait);
-    },
-     
 //*************************************************************************************************************
 //TURNORDER
 //*************************************************************************************************************	      
@@ -3123,6 +3097,11 @@ var CombatMaster = CombatMaster || (function() {
         return (str.length > max) ? str.slice(0, max) + '...' : str;
     },
 
+
+    stopRotate = function () {
+        clearInterval(rotationInterval);
+    },
+
     randomBetween = function (min, max) {
         return Math.floor(Math.random()*(max-min+1)+min);
     },
@@ -3283,9 +3262,6 @@ var CombatMaster = CombatMaster || (function() {
 					nextTokenMarkerName: 'None',
 					nextTokenMarkerURL: null,
 					markerSize: 1.35,
-					animateMarker: true,
-					animateMarkerDegree: 15,
-					animateMarkerWait: 250,
 	                sortTurnOrder: true,
 					centerToken: true,	
 					turnAPI: 'None',
@@ -3827,15 +3803,6 @@ var CombatMaster = CombatMaster || (function() {
 				}				
 				if(!state[combatState].config.turnorder.hasOwnProperty('markerSize')){
 					state[combatState].config.turnorder.markerSize = combatDefaults.config.turnorder.markerSize;
-				}				
-				if(!state[combatState].config.turnorder.hasOwnProperty('animateMarker')){
-					state[combatState].config.turnorder.animateMarker = combatDefaults.config.turnorder.animateMarker;
-				}
-				if(!state[combatState].config.turnorder.hasOwnProperty('animateMarkerDegree')){
-					state[combatState].config.turnorder.animateMarkerDegree = combatDefaults.config.turnorder.animateMarkerDegree;
-				}
-				if(!state[combatState].config.turnorder.hasOwnProperty('animateMarkerWait')){
-					state[combatState].config.turnorder.animateMarkerWait = combatDefaults.config.turnorder.animateMarkerWait;
 				}				
 				if(!state[combatState].config.turnorder.hasOwnProperty('centerToken')){
 					state[combatState].config.turnorder.centerToken = combatDefaults.config.turnorder.centerToken;
