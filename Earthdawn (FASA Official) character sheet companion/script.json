@@ -8,10 +8,5 @@
     "roll20userid": "633707",
     "useroptions": [],
     "dependencies": ["HTML Builder"],
-    "modifies": {
-        "character": "read,write",
-        "attribute": "read,write,create",
-        "ability": "read,write,create,delete"
-    },
     "conflicts": []
 }
