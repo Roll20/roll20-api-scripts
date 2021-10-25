@@ -1,9 +1,9 @@
 {
-  "name": "Raise Count",
+  "name": "Savage Worlds - Raise Count",
   "script": "Raise Count.js",
   "version": "2.6",
   "previousversions": ["2.5", "2.4", "2.3","2.2","2.1","2.0","1.0"],
-  "description": "Counts raises for the Savage Worlds system. Use `!rc roll target` to make a roll.",
+  "description": "Counts raises for the Savage Worlds system. Use `!rc roll target` to make a roll. See [Readme](https://github.com/Roll20/roll20-api-scripts/tree/master/Raise%20Count) for more details.",
   "authors": "Brian Shields",
   "roll20userid": "235259",
   "patreon": "https://www.patreon.com/bshields",

@@ -1,12 +1,300 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
-## 2.09
+## 3.04
+### Capacités
+* Implémentation de l'immunité à tout ce qui n'est pas magique.
+* Support du sort d'animation des objets
+* Ajout de l'effet fiévreux.
+* Jets de dégâts séparés par cible pour la destruction des morts-vivants
+* Ajout d'une option de malus de répétition pour la destruction des morts-vivants.
+* Ajout du type d'ennemi juré gobelin
+* Implémentation de base de la voie de l'expert du combat
+
 ### Autres améliorations
+* Possibilité d'utiliser --effet etat sans argument de durée.
+* Support pour les affaiblissements de caractéristiques
+* Ajout d'une condition d'attaque typeCible
+* Ajout d'un type de dégâts "énergie", pour des settings science fiction.
+* Message plus explicite en cas d'expression de soins incorrecte.
+* Modifie l'affichage des boutons de soins si plus disponibles
+* Un peu plus de discrétion avec les messages sur les limites par jour ou par combat
+* Passage en prédicats d'un grand nombre de capacités qui utilisaient encore des attributs.
+
+## 3.03
+### Capacités
+* Ajouts des capacités épiques d'Anathazerïn
+
+### Corrections de bugs
+* Correction de assome en assomme.
+
+### Autres améliorations
+* Ajout d'une option d'affichage pour que le MJ puisse prendre le temps de décrire une attaque avant de montrer le résultat aux joueurs.
+* Passage de armeParDefaut en prédicat, et prise en compte de ce prédicat au moment de poser un token.
+
+## 3.02
+### Capacité
+* Ajout des réaction allergiques pour les chiens gobelins
+* Possibilité optionelle de lancer plus de soins légers en une journée que le rang dans la voie, en échange d'un coût en mana.
+
+### Corrections de bugs
+* Correction d'un crash en cas de #Attaque -1 et pas d'arme en main.
+* Correction du prédicat increvable
+* Prise en compte du type drain dans les attaques sur la fiche.
+
+### Autres améliorations
+* Ajout de la commande d'action !arme-en-main
+* Possibilité de restreindre une attaque aux cibles qui ne sont pas au contact.
+* Outil de conversion de Pathfinder vers COF
+* Ajout d'un test de prédicat pour la cible d'une attaque
+* Changement d'interface pour les montures : déplacer le cavalier ne fait plus descendre de monture.
+* Options --degainer pour les effets de combat
+* Option d'attaque aussiArmeDeJet, pour les armes qui peuvent être utilisées au contact ou lancées.
+* Affichage du nombre d'armes de jets sur la fiche, plus besoin de munitions.
+* Support de la ceinture de rage améliorée d'Anathazerïn
+
+## 3.01
+* Affichage des armes cochées au lieu des armes non cochées, qui doivent pouvoir exister pour garder des attaques avec des armes que le personnage a temporairement perdues.
+* Passage d'une partie des attributs numériques qui ne dépendent pas des mooks en prédicats sur la fiche.
+
+## 3.00
+* Passage des listes d'actions sur la fiche
+* Passage des attributs booléens qui ne dépendent pas des mooks en prédicats sur la fiche
+* Ajout d'une fonction !cof-set-predicate pour modifier les prédicats depuis le chat.
+
+## 2.18
+### Capacités
+* Ajout de la possibilité pour un siphon des âmes d'empêcher les autres siphons.
+
+### Correction de bugs
+* Prise en compte correcte des bonus de save contre les sorts.
+
+### Autres amélioration
+* Ajout d'un type drain.
+* Attribut aucuneActionCombat pour les personnages qui n'agissent pas en combat
+* Possibilité de préciser un pourcentage des dégâts transformés en soins avec l'option --vampirise.
+
+## 2.17
+### Capacités
+* Support des effets des ondes corruptrices
+* Support de la potion de sang de l'Arbre-Coeur
+* Possibilité de changer la taille jusqu'à laquelle le fauchage est possible.
+* Haches et marteaux des nains.
+* Support de la capacité Agripper du démon de Noirbois.
+* Support de la capacité Grosse tête du forgesort
+* Capacité d'objet magique "Action libre"
+* Saisir et broyer pour les chaoses.
+* Amélioration de la prise en charge d'ombre mouvante.
+* Ajout de la capacité Force d'âme du haut elfe.
+* Ajout de la capacité Bûcheron
+* Ajout des capacités Attaque sanglante et Flèche sanglante.
+* Amélioration de la prise en compte des sens affûtés.
+* Amélioration de la prise en charge du second souffle du guerrier.
+* Ajout de l'effet noyade des plantes carnivores.
+* Ajout de la capacité Gober de la Voie du prédateur.
+* Meilleure prise en charge de la capacité Dévorer des prédateurs
+* Ajout de la capacité Increvable de la Voie de l'humain.
+* Ajout de la capacité Briseur d'os du barbare.
+* Meilleure automatisation de l'Argument de taille du barbare.
+* Châtiment du mâle du Xyrufa.
+* Prise en compte de la rage dans la capacité Défier la mort du barbare.
+* Prescience (Voie de la divination)
+* Cône de froid (doc)
+* Gros Monstre, grosse arme (Voie des armes à 2 mains)
+* Hors de portée (shaman scorpion)
+* Nuée de scorpions (shaman scorpion)
+* Animation des Morts (Voie de l'outre-tombe)
+* Etreinte (scorpions)
+* Hémorragie (Voie du sang)
+* Lien de sang (Voie du sang)
+* Support complet de la Voie des armes à 2 mains (prestige)
+* Support + documentation Voie du Chevalier Dragon (prestige)
+* Support complet de la Voie du porteur de bouclier (prestige)
+
+### Autres améliorations
+* Ajout de fonctions pour aider en Noirbois.
+* Quelques effets pour simuler la limitation Grande taille du minotaure.
+* On n'affiche pas les attaques qui ne sont pas possibles (limites épuisées, condition --si non remplie, pas assez de mana).
+* Ajout d'une option pour vérifier que les cibles d'une attaque peuvent tenir dans un disque d'un rayon donné.
+* Ajout d'une option de limitation du montant des soins par jour.
+* Label -2 pour l'arme en main gauche.
+* Termine les effets dont on enlève le marker à la main.
+* Utilisation des nom de caractéristiques au lieu de pictogrammes douteux pour les jets de caractéristiques et de compétences.
+* Gestion des identités secrètes.
+* Possibilité de passer des options aux effets à dégâts sur la durée.
+* Un personnage invisible ne peut plus être vu des autres joueurs.
+* Ajout d'une possibilité de synchronisation des tokens entre cartes.
+* Une réussite critique à une feinte double les bonus de DM à l'attaque suivante.
+* Ajout d'un attribut pour des modification de tous les tests d'un personnage (bonus ou malus)
+* Tirage d'initiative aléatoire secret pour les tokens sur le layer MJ.
+* Possibilité de rajouter des attributs à afficher dans le statut.
+* Le script ne bloque plus que le déplacement des personnages immobilisés contrôlés par un joueur connecté.
+* En cas d'échec critique d'une boule de feu qui cible une cible artificielle, la cible est déplacée aléatoirement de 15 m.
+* Refactoring !cof-tenebres pour supporter les options de Mana (y compris Tempête de Mana)
+* Séparation des options de blessure grave et de dommages importants
+
+### Corrections de bugs
+* Correction de bugs avec l'invisibilité.
+* Amélioration de l'Action concertée.
+* Correction d'un bug sur les bonus de compétences
+* Correction de la prise en compte des familiers dans les aoe.
+
+## 2.16
+### Capacités
+* Capacité de cyclone des élémentaires.
+* Présence glaciale de la Voie du gel
+* Charge fantastique du chevalier
+* Project de la Voie du colosse.
+* Ventre mou de la Voie du tueur de géants.
+* Suggestion de la Voie de la séduction du barde
+* Gestion du mot de pouvoir qui immobilise.
+* Différence entre vitalité surnaturelle qui continue à la mort, comme celle des trolls et celle qui s'arrête à la mort.
+* Support de la capacité Enchaînement du barbare.
+* Ajout de l'attaque d'étreinte et immolation de certains démons gardiens
+* Ajout de la capacité Hausser le ton de la Voie du champion
+* Ajout de la capacité Liberté d'action du barde
+* Implémentation des effets de Cercle de protection
+* Ajout de la capacité Combat kinétique du Psionique
+* Support du sort Armure d'eau
+* Support de Moment de perfection (moine)
+* Support d'Ensevelissement (nécromancien)
+* Support d'Armée des Morts (nécromancien)
+* Support d'Invocation d'un démon (nécromancien)
+
+### Autres améliorations
+* Joli coup permet d'ignorer les bonus de couvert.
+* Implémentation de la règle de coups critiques étendus (dans les options, catégorie divers).
+* Pas de dépense de mana si une autre contrainte de resource rend une action impossible.
+* Prise en compte de l'option --secret pour !cof-bonus-couvert
+* Armes avec bonus de DEF
+* Possibilité d'afficher un message en cas de coup critique reçu.
+* Ajout d'un effet temporaire effetRetarde
+* Les aires d'effet en disque ne passent plus les murs.
+* Ajout de RD aux éléments.
+* Correction sur l'initiative entre PJs qui doivent comparer la sagesse
+* Ajout de la possibilité de faire des attaques de d12 qui font des critiques
+* Prise en compte des compétences sur la fiche
+* Ajout d'une option de sélection alliesEnVue
+* Prise en compte des immunités pour les effets temporaires.
+* Attribut pour diviser par 2 les effets ou les dm d'un type donné
+* Possibilité d'avoir des bonus aux saves contre un type donné.
+* Ajout des immunités aux différents états.
+* Ajout de la possibilité de sélectionner les tokens en vue d'un personnage.
+* Ajout d'une interface de gestion de la bourse.
+* Support de la pénombre
+* Support pour les personnages invisibles en combat
+* Meilleur support de la Prouesse du guerrier
+* Meilleur support de la Parade de projectiles du moine
+* Meilleur support du Tour de force
+* Meilleur support du Pacte Sanglant 
+* Permettre à un personnage d'être la Chair à canon de plusieurs autres
+* Rework Animation des Morts : meilleur support et automatisation
+
+### Corrections de bugs
+* Correction des RD seulement contre perçant ou tranchant ou contondant.
+* Compatibilité de --maxDmg avec --reroll1 et --explodeMax
+* Crash de statut pour les personnages ayant un capitaine.
+* Correction du test d'attaque opposée
+* Calcul de score d'attaque corrigé pour les Terres d'Arran.
+* Mise à jour de l'initiative quand on rengaine son arme à distance avec la voie du pistolero.
+* Donne le droit au joueur qui doit faire une réaction à une attaque de ne pas réagir.
+* Les créatures qui enveloppent ou étreignent leur cible la relachent quand elle meurt.
+* Le script ne prenait pas en compte la sagesse de l'attaquant contre les créatures immunisées aux armes.
+* Quand une créature peut résister avec SAG, INT ou CHA et qu'elle est sans esprit, alors on choisit cette caractéristique (car la réussite est alors automatique). Test un peu plus précoce pour la résistance à la peur.
+
+## 2.15
+### Capacités
+* Gestion des capacités d'auras.
+* Capacité "n'abandonne jamais", des guerriers maudits.
+* Réduire la distance de la Voie du tueur de géants.
+* Absorption d'énergie (spectre, vampire, sylvanien maudit)
+* Projeter (voie du Cogneur rang 3)
+* Second ennemi juré (voie du Traqueur rang 4)
+* Injonction Mortelle (Magie Maléfique rang 3)
+
+### Autres améliorations
+* Ajout du fer froid.
+* Reconnaissance des haches, et prise en compte des RD/hache.
+* Possibilité d'utiliser directement le nom d'un état lorsqu'on veut appliquer cet état seulement un certain nombre de tours (avec --effet d'une attaque ou avec !cof-effet-temp).
+* Il faut que le membre du groupe avec la capacité Sans peur soit sur la même page que l'allié pour lui faire bénéficier du bonus.
+* Une attaque avec le label -1 utilise l'arme en main, si il y en a une.
+* Prise en compte de l'immunité à l'asphyxie des démons.
+* Utilisation des consommables sur la fiche pour les PNJs aussi.
+* Si "Jet Secret" est configuré sur une fiche de PNJ, seul le total des jets d'attaques, de dommages, de caractéristiques et de sauvegardes sont affichés, sans les détails. Le MJ reçoit un whisper avec le détail du jet.
+* Ajout d'une option pour gérer le Contrecoup de l'option Mana Totale + Coût aléatoire
+* Ajout d'une option permettant l'affichage des coûts effectifs en PM au lancement du sort
+
+### Corrections de bugs
+* Correction d'un bug avec la forme d'arbre du druide.
+* Dur à cuir et enragés ne mourraient pas si tapé plus d'une fois dans le tour.
+
+## 2.14
+### Autres améliorations
+* Prise en compte de la chance pour les saves.
+* Prise en compte de la chance pour les esquives acrobatiques et les absorptions au bouclier
+* Utilisation de l'obglet des jets cachés des PNJs par le script
+* Réorganisation des menus de règles optionnelles
+* Suppression des options de génération d'attaques devenues obsolètes
+* Implémentation d'une option pour Brûlure de Magie (COTA, applicable à COF)
+* Implémentation d'une option de portée augmentée pour magie puissante (hors Tempête de Mana)
+* Implémentation d'une option pour l'affichage des durées des effets
+* Implémentation d'une option pour les armures/bouclier "de protection" (COF p. 203)
+
+### Corrections de bugs
+* Correction d'un bug sur le tour de force du barbare.
+* Correction d'un crash lors de l'utilisation d'un point de chance sur une riposte.
+* Correction d'un bug pour les conditions moins (comme moins FOR), quand l'attaquant est un PNJ et le défenseur un PJ.
+
+## 2.13
+### Corrections de bugs
+* Mise à jour des attributs d'équipement divers
+
+## 2.12
+### Capacités
+* Faucheuse de géants
+
+### Autres améliorations
+* Ajout des résistances permettant de diviser les dégâts d'un type donné.
+* Utilisation des consommables sur la fiche pour les PJs (au lieu des attributs dose_ ou consommable_).
+* Utilisation du token de la monture pour les personnages montés, dans les calculs de distance.
+
+## 2.11
+### Capacités
+* Commandant de la voie du chef d'armée.
+
+### Autres améliorations
+* Ajout d'une commande pour centrer sa vue du jeu sur un token.
+* Déplace la vue du joueur quand il emprunte un escalier.
+* Prise en compte des fiches Terres d'Arran
+* Possibilité de déplacer un personnage vers une autre carte.
+
+### Corrections de bugs
+* Prise en compte de la taille des cellules de la grille des cartes, car elle est utilisée en jeu pour mesurer les distances.
+
+## 2.10
+### Capacités
+* Chair à canon de la voie du PNJ récurrent
+* Nuée de criquets (Druide Prestige)
+* Increvable (Rôdeur, Survie rang 4)
+* Intervention divine du prêtre
+
+### Autres améliorations
+* Support du nouvel éclairage dynamique
+* Une série de capacités sont à déclencher par les joueurs avant les jets de dégâts : Absorber un Coup, Absorber un Sort, Encaisser un Coup, Résistance à la Magie, Esquive Acrobatique, Esquive fatale, Parade Magistrale, Rune de Protection
+
+## 2.09
+### Capacités
+* Vitalité surnaturelle du barbare
+* Riposte du guerrier
+
+### Autres améliorations
+* Ajout d'une option --plusCrit aux attaques.
+* Ajout d'une option --plageEchecCritique aux jets.
 * Ajout d'une macro pour suivre un autre personnage
 * Possibilité d'utiliser la défense et l'initiative d'un autre personnage.
 * Possibilité de lier les PVs.
 * Les effets temporaires lancés avec une option de mana disparaissent quand le lanceur meurt.
 
 ### Corrections de bugs
+* Undo avant de faire le jet d'attaque pour l'esquive acrobatique
 * Prise en compte correcte des caractéristiques de PNJs dans les jets.
 
 ## 2.08
