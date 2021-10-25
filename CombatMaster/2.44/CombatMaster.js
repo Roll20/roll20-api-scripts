@@ -1,5 +1,5 @@
 /* 
- * Version 2.43
+ * Version 2.44
  * Original By Robin Kuiper
  * Changes in Version 0.3.0 and greater by Victor B
  * Changes in this version and prior versions by The Aaron
