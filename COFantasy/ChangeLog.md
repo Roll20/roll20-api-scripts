@@ -1,6 +1,8 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.04
 ### Capacités
+* Réaction violente du demi-ogre.
+* Ajout de la capacité Insignifiant de la voie du gnome.
 * Implémentation de l'immunité à tout ce qui n'est pas magique.
 * Support du sort d'animation des objets
 * Ajout de l'effet fiévreux.
@@ -9,7 +11,13 @@
 * Ajout du type d'ennemi juré gobelin
 * Implémentation de base de la voie de l'expert du combat
 
+### Corrections de bugs
+* Prise en compte correcte des malus d'armure et de casques pour les compétences sur la fiche.
+
 ### Autres améliorations
+* La durée restante des effets est affichée pour le MJ dans le statut des persos.
+* !cof-effet-temp ne fait entrer en combat que si au moins une des cibles est effectivement affectée.
+* --divisePortee permet de diviser la portée d'une attaque.
 * Possibilité d'utiliser --effet etat sans argument de durée.
 * Support pour les affaiblissements de caractéristiques
 * Ajout d'une condition d'attaque typeCible
