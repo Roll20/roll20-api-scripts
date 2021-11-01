@@ -32,7 +32,7 @@
 // Define a Name-space
 var Earthdawn = Earthdawn || {};
             // define any name-space constants
-Earthdawn.Version = "2.00";
+Earthdawn.Version = "2.01";       // This is the version number of this API file.  state.Earthdawn.sheetVersion is the version number of the html file. 
 
 Earthdawn.whoFrom = {
   player:                 0x08,
@@ -203,13 +203,13 @@ Earthdawn.attribute = function ( attr, prev ) {
             state.Earthdawn.gED = !game || (game !== "1879" );
             state.Earthdawn.g1879 = !state.Earthdawn.gED;
             state.Earthdawn.game = state.Earthdawn.gED ? "ED" : "1879";
-            state.Earthdawn.sheetVersion = parseFloat( Earthdawn.getParam( dataLine, 2, ","));
+            state.Earthdawn.sheetVersion = parseFloat( Earthdawn.getParam( dataLine, 2, ","));    // This is the version number of the html file, Earthdawn.Version is the version number of this API file.
             if(!( "defRolltype" in state.Earthdawn ))
               state.Earthdawn.defRolltype = 0x03;
             if(!( "tokenLinkNPC" in state.Earthdawn ))
               state.Earthdawn.tokenLinkNPC = Earthdawn.tokenLinkNPC.showplayers_name  | Earthdawn.tokenLinkNPC.showplayers_wounds;
             
-            let cid = attr.get( "_characterid" );
+            let cid = attr.get( "_characterid" );   // Note, this tests SHEET (not js) version number. 
             if( shouldUpdate( 1.001 ))
               ED.updateVersion1p001( cid );
             if( shouldUpdate( 1.0021 ))
@@ -574,7 +574,7 @@ Earthdawn.attribute = function ( attr, prev ) {
       if(( rankFrom > 3 || rankTo > 3 ) && (wrapper !== "Speak" && wrapper !== "ReadWrite"))
         bCount = undefined;       // We don't need to count anything, because these definitely need accounting for.
 //log( stem + slink);
-      if( bCount === undefined && state.Earthdawn.sheetVersion <= Earthdawn.parseInt2( getAttrByName( cID, "Edition_max" ) )) {
+      if( bCount === undefined && state.Earthdawn.sheetVersion <= parsefloat( Earthdawn.getAttrBN( cID, "edition_max", 0 ) )) {
         let ED = new Earthdawn.EDclass();
         ED.chat( stem + Earthdawn.colonFix( slink ) + ")}}", Earthdawn.whoTo.player | Earthdawn.whoTo.gm | Earthdawn.whoFrom.noArchive, null, cID );
       }
@@ -634,7 +634,7 @@ Earthdawn.attribute = function ( attr, prev ) {
           }); // End for each attribute.
         }
 
-        if( count > maxcount && state.Earthdawn.sheetVersion <= Earthdawn.parseInt2( getAttrByName( cID, "Edition_max" ))) {
+        if( count > maxcount && state.Earthdawn.sheetVersion <= parsefloat( Earthdawn.getAttrBN( cID, "edition_max", 0 ))) {
           let ED = new Earthdawn.EDclass();
           ED.chat( send, Earthdawn.whoTo.player | Earthdawn.whoTo.gm | Earthdawn.whoFrom.noArchive, null, cID );
         }
@@ -1177,6 +1177,8 @@ Earthdawn.generateRowID = function () {
 
     // getAttrBN - get attribute by name. If does not exist, return the default value.
     // This is a replacement for the official system function getAttrByName() which had bugs and I think still probably does.
+    // Bug in getAttrByName() when dealing with repeating values, returns undefined if the value does not exist rather than the default value.
+    // So in cases where the API knows what the true default value is or that we want, use this routine. In cases where the lookup name is variable and you don't know what the default value should be, then using getAttryByName is just as good and if they fix the bug, better.
 Earthdawn.getAttrBN = function ( cID, nm, dflt ) {
   'use strict';
   try {
@@ -1188,9 +1190,11 @@ Earthdawn.getAttrBN = function ( cID, nm, dflt ) {
       log( "Invalid attribute '" + nm + "' for getAttrBN().   dflt: '" + dflt + "'    cID: " + cID )
       return dflt;
     }
+    if( nm === "charName" )     // due to charName being a special case that is not a true attribute, we need special handling. 
+      return getAttrByName( cID, "charName" );
     let mx = nm.endsWith( "_max" );
-    let attrib = findObjs({ _type: "attribute", _characterid: cID,  name: (mx ? nm.slice( 0, -4) : nm) });
-    return ( attrib.length > 0 ) ? attrib[ 0 ].get( mx ? "max" : "current") : dflt;
+    let attribBN = findObjs({ _type: "attribute", _characterid: cID,  name: (mx ? nm.slice( 0, -4) : nm) });
+    return ((attribBN === undefined) || (attribBN.length == 0)) ? dflt : attribBN[ 0 ].get( mx ? "max" : "current");
   } catch(err) {
     log( "Earthdawn:getAttrBN() error caught: " + err );
     log( "name: " + nm + "   default: " + dflt + "   cID: " + cID);
@@ -1519,7 +1523,7 @@ Earthdawn.SetDefaultAttribute = function( cID, attr, dflt, maxdflt )  {
   'use strict';
   try {
     let aobj = findObjs({ _type: 'attribute', _characterid: cID, name: attr })[0];
-    if ( aobj === undefined ) {
+    if ( aobj === undefined ) {     // If we actually found an existing attirbute, then do nothing, as this routine only does defaults.
       aobj = createObj("attribute", { name: attr, characterid: cID });
       if( dflt === null )
         dflt = getAttrByName( cID, attr, "current");    // This looks weird, but what it is doing is getting any default defined in the html.
@@ -1621,7 +1625,7 @@ Earthdawn.EDclass = function( origMsg ) {
     if( state.Earthdawn.tokenLinkNPC    === undefined )   state.Earthdawn.tokenLinkNPC    = Earthdawn.tokenLinkNPC.showplayers_name | Earthdawn.tokenLinkNPC.showplayers_wounds;    // Bitfield controls how NPCs are linked.;
     if( state.Earthdawn.style           === undefined )   state.Earthdawn.style           = Earthdawn.style.VagueRoll;
           // Everything works best if API and Sheet version are compatable, but some effort is made to let them limp along on different versions.
-    if( state.Earthdawn.version         === undefined )   state.Earthdawn.version         = Earthdawn.Version;      // Note: This is the API (this file) version.
+    if( state.Earthdawn.version         === undefined )   state.Earthdawn.version         = Earthdawn.Version;      // Note: This is the API (this file) version. Earthdawn.Version is hardcoded constant. state.Earthdawn.version is record of last version run with. 
     if( state.Earthdawn.sheetVersion    === undefined )   state.Earthdawn.sheetVersion    = 0.000;    // This is the Sheet (html file) version that we think we are dealing with.
 
           // Check to see if the current version of code is the same number as the previous version of code.
@@ -1642,7 +1646,7 @@ Earthdawn.EDclass = function( origMsg ) {
         ed.chat( count + " character sheets updated." );
       }
 
-      if( state.Earthdawn.version < 1.001)
+      if( state.Earthdawn.version < 1.001)                // Note, this tests JS version number, not sheet version number. 
         vUpdate( this, this.updateVersion1p001, 1.001 );
       if( state.Earthdawn.version < 1.0021)
         vUpdate( this, this.updateVersion1p0021, 1.0021 );
@@ -1650,6 +1654,8 @@ Earthdawn.EDclass = function( origMsg ) {
         vUpdate( this, this.updateVersion1p0022, 1.0022 );
       if( state.Earthdawn.version < 1.0023)
         vUpdate( this, this.updateVersion1p0023, 1.0023 );
+      if( state.Earthdawn.version < 2.001)
+        vUpdate( this, this.updateVersion2p001, 2.001 );
 
       state.Earthdawn.version = Earthdawn.Version;
     }
@@ -2051,6 +2057,54 @@ Earthdawn.EDclass = function( origMsg ) {
       return count;
     } catch(err) { log( "ED.updateVersion1p0023() cID=" + cID + "   error caught: " + err ); }
   }; // end updateVersion1p0023()
+
+
+
+  this.updateVersion2p001 = function( cID, ed, charCount ) {
+    'use strict';
+    try {
+      let count = 0;
+      if( charCount === 0 ) {     // If this is true then this is being called because a new API version has been detected (as opposed an old character sheet being imported) and this is the very first character. So do this once when new API is detected. 
+        let macs = findObjs({ _type: "macro", visibleto: "all" });      // These will be deleted in the macro refresh below, but lets specifically target them for deletion just in case. 
+        _.each( macs, function (macObj) {
+          let n = macObj.get( "name" );
+          if( n.startsWith( Earthdawn.constant( "Target" )) && n.endsWith( "r-Targets" ))
+            macObj.remove();
+        });
+
+        if( ed.msg === undefined )    // fake up a playerID. 
+          Earthdawn.pseudoMsg( ed );
+    		let edp = new ed.ParseObj( ed );
+        edp.funcMisc( [ "funcMisc", "macroCreate", "refresh" ] );
+      } // do once when new API detected. 
+
+      let attributes = findObjs({ _type: "attribute", _characterid: cID });
+      _.each( attributes, function (att) {
+        if ( att.get( "name" ).startsWith( "repeating_")) {
+          let nm = att.get( "name" );
+          if ( nm.endsWith( "_CombatSlot") || (nm.endsWith( "_Contains") && (Earthdawn.repeatSection( 3, nm) === "SPM" ))) {
+            let nmn,
+              rowID = Earthdawn.repeatSection( 2, nm),
+              code  = Earthdawn.repeatSection( 3, nm),
+              symbol = Earthdawn.constant( code ),
+              cbs = att.get( "current" ),
+              lu = "Name";
+            if( code === "SPM" ) {
+              cbs = "1";
+              lu = "Contains";
+            }
+            if ( code !== "SP" ) {    // skip if it is SP, we don't do those token actions. 
+              nmn = Earthdawn.getAttrBN( cID, Earthdawn.buildPre( code, rowID ) + lu, "" );
+              Earthdawn.abilityRemove( cID, symbol + nmn );
+              if( cbs == "1" )
+                Earthdawn.abilityAdd( cID, symbol + nmn, "!edToken~ %{selected|" + Earthdawn.buildPre( code, rowID ) + "Roll}" );
+            }
+          } // End Token Action maint.
+        }
+      }); // End for each attribute.
+      return count;
+    } catch(err) { log( "ED.updateVersion1p0023() cID=" + cID + "   error caught: " + err ); }
+  }; // end updateVersion2p001()
 
 
 
@@ -2562,7 +2616,7 @@ Step/Action Dice Table
                   + (( modtype === "Attack" || modtype === "Attack CC" )
                   ? (this.getValue( "combatOption-AggressiveAttack") * Earthdawn.getAttrBN( this.charID, "Misc-AggStance-Strain", "1"))
                   + this.getValue( "combatOption-CalledShot") : 0)
-                  + (( Earthdawn.getAttrBN( this.charID, pre + "Action") === "Standard" ) ? this.getValue( "combatOption-SplitMovement") : 0));
+                  + (( Earthdawn.getAttrBN( this.charID, pre + "Action", "Standard") === "Standard" ) ? this.getValue( "combatOption-SplitMovement") : 0));
             special = Earthdawn.getAttrBN( this.charID, pre + "Special", "None");
             if( special && special !== "None" )
               this.misc[ "Special" ] = special;
@@ -2570,7 +2624,7 @@ Step/Action Dice Table
               if (Earthdawn.getAttrBN( this.charID, "NPC", "0") != Earthdawn.charType.mook) {
                 let aobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: "Recovery-Tests" }, 0, 2);
                 if( (aobj.get( "current" ) || 0) <= 0) {
-                  this.chat( this.tokenInfo.name + " does not have a recover test to spend.", Earthdawn.whoFrom.apiWarning );
+                  this.chat( this.tokenInfo.name + " does not have a Recovery Test to spend.", Earthdawn.whoFrom.apiWarning );
                   return;
                 } else
                   Earthdawn.setWithWorker( aobj, "current", Earthdawn.parseInt2( aobj.get( "current" )) -1 );
@@ -3181,7 +3235,7 @@ Step/Action Dice Table
                 edParse.chat( "Error! chatMenu fxSet, Invalid sub-menu: " + JSON.stringify( ssa), Earthdawn.whoFrom.apiWarning | Earthdawn.whoFrom.noArchive );
             } // end switch submenu within fxSet. 
             if( s.length > 1 )
-              this.chat( "Setting Special Effects for " + Earthdawn.codeToName( ssa[ 3 ] ) + " " + Earthdawn.getAttrBN( this.charID, pre + "Name") + ".  "
+              this.chat( "Setting Special Effects for " + Earthdawn.codeToName( ssa[ 3 ] ) + " " + Earthdawn.getAttrBN( this.charID, pre + "Name", "") + ".  "
                     + (!ttip ? "" : Earthdawn.texttip( "(hover)", ttip)) + s
                     , Earthdawn.whoTo.player | Earthdawn.whoFrom.api | Earthdawn.whoFrom.noArchive );
           } break;  // end fxSet
@@ -3368,7 +3422,7 @@ Step/Action Dice Table
           case "link": {      // chatmenu: Link: (code - T, NAC, SK, SPM, WPN): rowID
                       // List all existing links for this rowID and ask if to be removed. And a button to add a link.
             let pre = Earthdawn.buildPre( ssa[ 2 ], ssa[ 3 ]);
-            s = "Managing links for " + Earthdawn.codeToName( ssa[ 2 ] ) + " " + Earthdawn.getAttrBN( this.charID, pre + "Name") + ".  "
+            s = "Managing links for " + Earthdawn.codeToName( ssa[ 2 ] ) + " " + Earthdawn.getAttrBN( this.charID, pre + "Name", "") + ".  "
                   + Earthdawn.texttip( "(hover)", "Links are used to automatically integrate a value from another ability in the calculation of this ability. "
                   + "For example, a Free Talent or Free Matrix should be linked to a Discipline so that its Rank automatically updates when the Circle is updated. "
                   + "A Knack would be linked to the referenced Talent, so that the Knack rank automatically uses the Talent Rank. "
@@ -3476,7 +3530,7 @@ Step/Action Dice Table
 
                     // walk links. Check to make sure that nothing links back to this (or anything else in the tree).
             function walkLinks( nextCode, nextRow, badLink, nameList ) {    // Check to make sure row being linked does not reference row adding link.
-              let links = Earthdawn.getAttrBN( edParse.charID, Earthdawn.buildPre( nextCode, nextRow) + "LinksGetValue_max");
+              let links = Earthdawn.getAttrBN( edParse.charID, Earthdawn.buildPre( nextCode, nextRow) + "LinksGetValue_max" );
               if( links ) {
                 let alinks = links.split();
                 for( let i = 0; i < alinks.length; ++i ) {
@@ -3486,13 +3540,13 @@ Step/Action Dice Table
                     return false;
                   } else if( alinks[ i ].startsWith( "repeating_" ))
                     if ( !walkLinks( Earthdawn.repeatSection( 3, alinks[ i ]), Earthdawn.repeatSection( 2, alinks[ i ]), badLink,
-                          nameList + " to " + Earthdawn.getAttrBN( edParse.charID, Earthdawn.buildPre( nextCode, nextRow) + "Name" )))
+                          nameList + " to " + Earthdawn.getAttrBN( edParse.charID, Earthdawn.buildPre( nextCode, nextRow) + "Name", "" )))
                       return false;
               } }
               return true;
             };  // end walkLinks()
 
-            if( !walkLinks( ssa[ 4 ], ssa[ 5 ], ssa[ 3 ], Earthdawn.getAttrBN( this.charID, Earthdawn.buildPre( ssa[ 2 ], ssa[ 3 ]) + "Name") ))
+            if( !walkLinks( ssa[ 4 ], ssa[ 5 ], ssa[ 3 ], Earthdawn.getAttrBN( this.charID, Earthdawn.buildPre( ssa[ 2 ], ssa[ 3 ]) + "Name", "" )))
               return;
             let att = (ssa[ 4 ] === "Attribute");
 
@@ -4466,7 +4520,7 @@ log( ssa);
                 let nm = att.get("name"),
                   rowID = Earthdawn.repeatSection( 2, nm),
                   code  = Earthdawn.repeatSection( 3, nm);
-                if( code === "DSP" || code === "MNT" || code === "TI" )     // These don't have a RowID.
+                if( code === "TI" )     // These don't have a RowID.
                   return;
                 if( nm.endsWith( "_Name" )) {     // When we find a repeating section name, Make sure we have a RowID that matches the rowID of the name.
                   let attrib = findObjs({ _type: "attribute", _characterid: po.charID,  name: nm.slice( 0, -5) + "_RowID" });
@@ -4484,7 +4538,7 @@ log( ssa);
                   lcase.push( rowID.toLowerCase() );
                 }
                 if( rowID === rowID.toLowerCase() || rowID === rowID.toUpperCase() ) {
-                  let t = needFixi.indexOf( rowID );    // needFixi is a one-dimentional array of strings that contains rowIDs that need fixing because they are all lower case.
+                  let t = needFixi.indexOf( rowID );    // needFixi is a one-dimensional array of strings that contains rowIDs that need fixing because they are all lower case.
                   if( t == -1 ) {
                     t = needFixi.push( rowID ) -1;
                     needFix.push( [] );
@@ -4567,7 +4621,7 @@ log( ssa);
           case "test":    // This is just temporary test code. Try stuff out here and see if it works.  Make sure nothing dangerous is here when released.
             try {
   //            this.chat( stem + Earthdawn.colonFix( slink ), Earthdawn.whoFrom.api | Earthdawn.whoFrom.noArchive );
-              this.edClass.updateVersion1p0023( this.charID, this.edClass, 0 );
+              this.edClass.updateVersion2p001( this.charID, this.edClass, 0 );
 
                     // Change all editions back to 1.000
   //            let attrib = findObjs({ _type: "attribute", name: "edition" }),
@@ -8251,7 +8305,7 @@ log("this.Spell " + JSON.stringify(ssa));
             let rid = ssa[ 3 ],
             pre2 = Earthdawn.buildPre( "T" ,rid);
             this.Karma( pre2 + "Karma", 0 );
-            if(Earthdawn.parseInt2(Earthdawn.getAttrBN( this.charID, pre2 + "Strain","0" )!==0)) this.misc[ "strain" ] =Earthdawn.parseInt2(Earthdawn.getAttrBN( this.charID, pre2 + "Strain","0" )) ;
+            if( Earthdawn.parseInt2( Earthdawn.getAttrBN( this.charID, pre2 + "Strain","0" ) !== 0)) this.misc[ "strain" ] = Earthdawn.parseInt2( Earthdawn.getAttrBN( this.charID, pre2 + "Strain","0" )) ;
             this.misc[ "reason" ] = "Weaving " + Earthdawn.getAttrBN( this.charID, pre2 + "Name", "0") + " : " + Earthdawn.getAttrBN( this.charID, pre + (!bGrim ? "Contains" : "Name" ),"");
             this.misc[ "headcolor" ] = "weave";
             this.bFlags |= Earthdawn.flags.VerboseRoll;
@@ -8286,7 +8340,7 @@ log("this.Spell " + JSON.stringify(ssa));
                   //At this stage, Action was taken, so we actually reset the sequence
             if( other && !seqended ) { //Another spell was in middle of an unfinished sequence
               this.misc[ "warnMsg" ]= "Cancelling Sequence for "
-                    + Earthdawn.getAttrBN( this.charID,  Earthdawn.buildPre(( aseq[1].startsWith("G") ? "SP" : "SPM")
+                    + Earthdawn.getAttrBN( this.charID,  Earthdawn.buildPre(( aseq[ 1 ].startsWith("G") ? "SP" : "SPM")
                     , aseq[ 2 ] )+ (aseq[1].startsWith("G") ? "Name" : "Contains"), "") + ". Sequence Restarted .";
               initSpell();
               aseq [ 3 ]="2";
@@ -8441,7 +8495,7 @@ log("this.Spell " + JSON.stringify(ssa));
               if( cntdwn >= 2 ) {
                 let tt = Campaign().get( 'turnorder' );
                 let tracker = (tt == "") ? [] : JSON.parse( tt );
-                let name = "CntDwn: " + Earthdawn.getAttrBN( this.charID, pre + (!bGrim ? "Contains" : "Name"));
+                let name = "CntDwn: " + Earthdawn.getAttrBN( this.charID, pre + (!bGrim ? "Contains" : "Name"), "");
                 let custom = {id: "-1" , pr: "-" + cntdwn ,custom: name, formula: "1" };
                 tracker.push( custom );
                 Campaign().set('turnorder', JSON.stringify( tracker ));
@@ -9308,7 +9362,7 @@ log("this.Spell " + JSON.stringify(ssa));
           } }
           sub( "SR", strRating);      sub( "DEX", save[ "dex" ]);   sub( "STR", save[ "str" ]);   sub( "TOU", save[ "tou" ]);
           sub( "PER", save[ "per" ]);   sub( "WIL", save[ "wil" ]);   sub( "CHA", save[ "cha" ]);
-log( "getSR " + orig + "  ret " + ret);
+//log( "getSR " + orig + "  ret " + ret);
           return ret;
         }
 
@@ -10051,7 +10105,7 @@ log("spirit " + strRating );
             blockIndex( "Recovery Tests" );
             blockIndex( "Knockdown" );
             blockIndex( "Physical Defense" ); blockIndex( "PhyDef" );
-            blockIndex( "Mystic Defense" );   blockIndex( "MysDef" );       blockIndex( "Spell Defense" ); // 3rd editon.
+            blockIndex( "Mystic Defense" );   blockIndex( "MysDef" );       blockIndex( "Spell Defense" ); // 3rd edition.
             blockIndex( "Social Defense" );   blockIndex( "SocDef" );
             blockIndex( "Physical Armor" );   blockIndex( "PhyArm" );
             blockIndex( "Mystic Armor" );     blockIndex( "MysArm" );
@@ -10059,8 +10113,10 @@ log("spirit " + strRating );
             blockIndex( "Movement" );
             blockIndex( "Move" );
             blockIndex( "Actions" );
+            blockIndex( "Starting Powers" );
             blockIndex( "Powers", true );
             blockIndex( "Suggested Powers" );
+            blockIndex( "Sample Distribution" );
             blockIndex( "Special Maneuvers" );
             blockIndex( "Equipment" );
             blockIndex( "Loot" );
@@ -10117,7 +10173,7 @@ log("spirit " + strRating );
                 toUpdate.push( { toFind: tf, lu: lookup, cur: save[ tf ] });
               else if( what & 0x01 )
                 modify( mult, lookup, save[ tf ] );
-log( "getStuff  what: " + what + "   to find: " + tf + "   lookup: " + lookup + "   Def: " + def + "   old: " + save[ tf + "Old" ] + "   save: " + save[ tf ]);
+//log( "getStuff  what: " + what + "   to find: " + tf + "   lookup: " + lookup + "   Def: " + def + "   old: " + save[ tf + "Old" ] + "   save: " + save[ tf ]);
             }
 
 
@@ -10142,7 +10198,7 @@ log( "getStuff  what: " + what + "   to find: " + tf + "   lookup: " + lookup + 
                   v = Earthdawn.parseInt2(aObj.get( "current")) + ((val * mult) - (Earthdawn.parseInt2(Earthdawn.getAttrBN( po.charID, base, baseDef)) - save[ tf + "Old" ]));
                 else                //  If what 0x00, then do simple adjust (probably from first loop)
                   v = Earthdawn.parseInt2(aObj.get( "current")) + (val * mult);     // add adjustment to old adjust.   does not matter what base is.
-log( "adjust what: " + what + "   to find: " + tf + "   old " + save[ tf + "Old" ] + "   value: " + val + "   base: " + base + "   baseDef: " + baseDef + "   adjustment: " + adj + "   new: " + v );
+//log( "adjust what: " + what + "   to find: " + tf + "   old " + save[ tf + "Old" ] + "   value: " + val + "   base: " + base + "   baseDef: " + baseDef + "   adjustment: " + adj + "   new: " + v );
                 if( !isNaN( v ))
                   Earthdawn.setWithWorker( aObj, "current", v);
                 else {
@@ -10219,10 +10275,12 @@ log( "adjust what: " + what + "   to find: " + tf + "   old " + save[ tf + "Old"
                   save[ tf ] = "<b>" + tf.slice(0, 1).toUpperCase() + tf.slice( 1 ) + ":</b> " + x[ "field" ];
                   lastBlock = Math.min(i, lastBlock);
                 } break;                  // Actions: 1; Horns 11 (18), Trample 11 (16)
-                case "actions": {             // Actions: 0; Attack +3 (Damage +0)
+                case "actions": {             // Actions: 0; Attack +3 (Damage +0)   or   Actions: 4; Bite 23 (30), Claws x4 23 (28)
                   save[ tf ] = statBlock( i, tf, "Actions", "num", mult );
                   lastBlock = Math.min(i, lastBlock);
                 } break;                  // Powers:    Charge (5)  Enhanced Sense [Smell] (2) Beast of Burden: When used as a mount, the dyre effectively has 2 less Strength for the purposes of a charging attack.
+                case "starting powers":
+                case "sample distribution":
                 case "powers": {              //        Ambush (+5): As the creature power, Gamemaster’s Guide, p. 250.       Stealthy Stride (DEX + Circle): As the skill, Player’s Guide, p. 170
                   save[ tf ] = statBlock( i, tf );
                   lastBlock = Math.min(i, lastBlock);
@@ -10388,6 +10446,8 @@ log( "adjust what: " + what + "   to find: " + tf + "   old " + save[ tf + "Old"
                       Adjust( 0x01, tf, undefined, "MD", 6, "Defense-Myst-Nat-Adjust" );      break;
                     case "socdef":        case "social defense": 
                       Adjust( 0x01, tf, undefined, "SD", 6, "Defense-Soc-Nat-Adjust" );       break;
+                    case "phyarm":	      case "physical armor":
+                      Adjust( 0x01, tf, undefined, "PA-Nat", 2, "Armor-Phys-Nat-Adjust" );    break;
                     case "mysarm":        case "mystic armor":
                       Adjust( 0x01, tf, undefined, "MA-Nat", 2, "Armor-Myst-Nat-Adjust" );    break;
                     case "actions": {   // Actions: 2; Bite: 18 (14), Claw x2: 18 (13)
@@ -10399,6 +10459,9 @@ log( "adjust what: " + what + "   to find: " + tf + "   old " + save[ tf + "Old"
                           att = ttmp.split( Earthdawn.constant( "Colon" ));
                         for( let i = 0; att && i < att.length; ++i ) {
                           let a2 = att[ i ];
+                          let fnd3 = a2.match( /\s+x\d+[\:\s]+/g );   // if there is something that looks like space an x, digits, an optional colon and a space, it is number of claws the creature has, get rid of it. 
+                          if( fnd3 )
+                            a2 = a2.replace( fnd3[ 0 ], " " );
                           let fnd = a2.match( /\(.+?\)/ );      // everything inside paren
                           if( fnd ) {
                             let dmgMaybe = fnd[0].replace( /[\(\,\)]/g, "" ).trim(),    // trim off ( and ) and comma
@@ -10495,6 +10558,8 @@ log( "adjust what: " + what + "   to find: " + tf + "   old " + save[ tf + "Old"
                       else save[ tf ] = tf;
                     } break;  // end Actions
                     case "suggested powers":
+                    case "starting powers":
+                    case "sample distribution":
                       var sugPowers = true;     // We fall through on purpose, these are processed the same way.
                     case "powers": {
                       let t = save[ tf ];
@@ -10527,20 +10592,35 @@ log( "adjust what: " + what + "   to find: " + tf + "   old " + save[ tf + "Old"
                       function checkPower( toFind, step, actn, txt ) {
                         'use strict';
                         try {
-                          let fnd = lst.match( new RegExp( Earthdawn.constant( "comma" ) + "[^" + Earthdawn.constant( "comma" ) + "]*?" + toFind.replace( /\s+/g, "\\s*") + "[^" + Earthdawn.constant( "comma" ) + "]*?" + Earthdawn.constant( "comma" ), "gi" ) );   // comma, anything, string to search for, anything, comma.
-                          if( fnd ) {
-                            let item = fnd[ 0 ],
-                              stp, attra, dispTxt,
-                              rawPwrFnd = item.replace( new RegExp(Earthdawn.constant( "comma" ), "g"), "").trim();
+                          let fnd = lst.match( new RegExp( Earthdawn.constant( "comma" ) + "[^" + Earthdawn.constant( "comma" ) + "]*?" 
+                                + toFind.replace( /\\s+/g, "\s*") + "[^" + Earthdawn.constant( "comma" ) + "]*?" 
+                                + Earthdawn.constant( "comma" ), "gi" ) );   // comma, anything, string to search for, anything, comma.
+                          if( fnd ) {       // We have found the search string, so process this power.
+                            let attra, attraVal = 0;
+
+                            function getAttra( att ) {
+                              if( attra === undefined ) {   // We should not ever see two attributes in a step, but if we did it would break stuff, so don't allow it. 
+                                let fnd4 = step.match( new RegExp( "\\b" + att + "\\b", "gi" ));
+                                if( fnd4 ) {
+                                  attra = att;
+                                  attraVal = save[ att.toLowerCase() ];
+                                  step = step.replace( fnd4[ 0 ], "");      // strip the attribure out of step so it will not be included in getSR below.
+                              } }
+                            } // end getAttra
+                            for( let i = 0; i < 6; ++i )
+                              getAttra( [ "Dex", "Str", "Tou", "Per", "Wil", "Cha" ][i] );
+
+                            let stp, dispTxt, item = fnd[ 0 ],
+                              rawPwrFnd = item.replace( new RegExp(Earthdawn.constant( "comma" ), "g"), "").trim();     // strip out commas
                             let pwrFnd = rawPwrFnd;
-                            lst = lst.replace( item, Earthdawn.constant( "comma" ));      // remove it from list.
-                            let fnd2 = item.match( /\(.+?\)/ );
+                            lst = lst.replace( item, Earthdawn.constant( "comma" ));      // remove the whole thing found from list, replaced with a comma.
+                            let fnd2 = item.match( /\(.+?\)/ );     // have something inside parentheses
                             if( fnd2 ) {    // have a step value specified. Use that.
-                              let s = fnd2[ 0 ].replace( /[\(\)]/g, "" ).toUpperCase();
+                              let s = fnd2[ 0 ].replace( /[\(\)]/g, "" ).toUpperCase();     // Strip the parentheses away
                               pwrFnd = pwrFnd.replace( fnd2[ 0 ], "");
                               if( s.indexOf( "," ) === -1 )
-                                stp = getSR( s );
-                              else {
+                                stp = getSR( s ) - attraVal;
+                              else {      // we have a comma inside the parentheses.  I THINK this only happens for Spirits Karma. 
                                 let t1 = [],
                                   t2 = s.split( "," );
                                 for( let n = 0; n < t2.length; ++n )
@@ -10551,7 +10631,7 @@ log( "adjust what: " + what + "   to find: " + tf + "   old " + save[ tf + "Old"
                               }
                               let a = fnd2[ 0 ].match( /[^A-Z][A-Z]{3}[^A-Z]/i );   // Three Letters, without letters before or after. That should be Dex or Cha, or whatnot.
                               if( a ) {
-                                let a2 = a[ 0 ].slice(0, 1) + a[ 0 ].slice( 1, 3).toLowerCase();
+                                let a2 = a[ 0 ].slice(0, 1).toUpperCase() + a[ 0 ].slice( 1, 3).toLowerCase();
                                 if( "Dex  Str  Tou  Per  Wil  Cha".indexOf( "a2" ) !== -1 )
                                   attra = a2;
                               }
@@ -11555,7 +11635,7 @@ log( "adjust what: " + what + "   to find: " + tf + "   old " + save[ tf + "Old"
               if (Earthdawn.getAttrBN( this.charID, "NPC", "0") != Earthdawn.charType.mook ) {
                 let aobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: "Recovery-Tests" }, 0, 2);
                 if( (aobj.get( "current" ) || 0) <= 0) {
-                  this.chat( this.tokenInfo.name + " does not have a recover test to spend.", Earthdawn.whoFrom.apiWarning );
+                  this.chat( this.tokenInfo.name + " does not have a Recovery Test to spend.", Earthdawn.whoFrom.apiWarning );
                   falloutParse = true;
                 } else
                   Earthdawn.setWithWorker( aobj, "current", Earthdawn.parseInt2( aobj.get( "current" )) -1 );
