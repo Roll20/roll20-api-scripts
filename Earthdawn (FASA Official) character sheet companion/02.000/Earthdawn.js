@@ -574,7 +574,7 @@ Earthdawn.attribute = function ( attr, prev ) {
       if(( rankFrom > 3 || rankTo > 3 ) && (wrapper !== "Speak" && wrapper !== "ReadWrite"))
         bCount = undefined;       // We don't need to count anything, because these definitely need accounting for.
 //log( stem + slink);
-      if( bCount === undefined && state.Earthdawn.sheetVersion <= parsefloat( Earthdawn.getAttrBN( cID, "edition_max", 0 ) )) {
+      if( bCount === undefined && state.Earthdawn.sheetVersion <= parseFloat( Earthdawn.getAttrBN( cID, "edition_max", 0 ) )) {
         let ED = new Earthdawn.EDclass();
         ED.chat( stem + Earthdawn.colonFix( slink ) + ")}}", Earthdawn.whoTo.player | Earthdawn.whoTo.gm | Earthdawn.whoFrom.noArchive, null, cID );
       }
@@ -634,7 +634,7 @@ Earthdawn.attribute = function ( attr, prev ) {
           }); // End for each attribute.
         }
 
-        if( count > maxcount && state.Earthdawn.sheetVersion <= parsefloat( Earthdawn.getAttrBN( cID, "edition_max", 0 ))) {
+        if( count > maxcount && state.Earthdawn.sheetVersion <= parseFloat( Earthdawn.getAttrBN( cID, "edition_max", 0 ))) {
           let ED = new Earthdawn.EDclass();
           ED.chat( send, Earthdawn.whoTo.player | Earthdawn.whoTo.gm | Earthdawn.whoFrom.noArchive, null, cID );
         }
@@ -9824,9 +9824,16 @@ log("this.Spell " + JSON.stringify(ssa));
                 case "weaving difficulty":
                 case "weaving": {       // Earthdawn
                   let x = statBlock( i, tf, null, "Num" );
-                  let y = Earthdawn.parseInt2( x[ "val" ] ) - 4;
-                  po.setWW( pre + "Circle", y);
+                  let y = Earthdawn.parseInt2( x[ "val" ] ) - 4,
+                    aobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: pre + "Circle" });
+//                  po.setWW( pre + "Circle", y);
                   po.setWW( pre + "Numbers", (y+4).toString() + "/" + (y+9) + "/" + (y+10) + "/" + (y+15));
+                  Earthdawn.set( aobj, "current", y);
+                  let myMap = new Map();
+                  myMap.set( "name", pre + "Circle");
+                  myMap.set( "current", y);
+                  myMap.set( "_characterid", po.charID );
+                  Earthdawn.attribute( myMap );    // Nov 21, roll20 setWithWorker bug, it does not trigger on repeating sections.  Try triggering it manually. 
                 } break;
                 case "success level":   // sometimes it is level, sometimes levels
                 case "success levels": {      // Earthdawn
@@ -10346,7 +10353,7 @@ log("spirit " + strRating );
                           let rfnd = undefined,
                             lst = [];
                                 // first, get list of MAN objects. While getting them, also look for maneuver name wanted.
-                          let attributes = findObjs({ _type: "attribute", _characterid: cID });
+                          let attributes = findObjs({ _type: "attribute", _characterid: po.charID });
                           _.each( attributes, function (att) {
                             if ( att.get("name").startsWith( "repeating_maneuvers_" )) {
                               lst.push( att );
