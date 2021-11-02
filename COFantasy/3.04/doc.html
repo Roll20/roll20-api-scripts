@@ -330,6 +330,7 @@
                   <li><code>--bonusAttaque <i>n</i></code> : ajoute <i>n</i> au jet d'attaque</li>
                   <li><code>--bonusCritique <i>n</i></code> : augmente <i>n</i> à la plage de coups critiques</li>
                   <li><code>--modifiePortee <i>n</i></code> : ajoute <i>n</i> à la portée de l'attaque.</li>
+                  <li><code>--divisePortee <i>n</i></code> : divise la portée de base par <i>n</i>. C'est appliqué avant toute modification de portée.</li>
                   <li><code>--bonusContreBouclier <i>n</i></code> : ajoute <i>n</i> au jet d'attaque si le défenseur porte un bouclier. Utile par exemple pour le fléau d'arme.</li>
                   <li><code>--psave <i>carac seuil</i></code> : jet de <i>carac</i>, si le jet est supérieur à <i>seuil</i>, les dégâts sont divisés par 2. <i>carac</i> est l'abbréviation de caractéristiques de 3 lettres standard (FOR, DEX, ...). Si on souhaite que le jet ne permette de réduire qu'une partie des dommages (la dernière ajoutée avec <code>--plus</code>), on peut ajouter <code>local</code>. La syntaxe complète est alors <code>--psave <i>carac seuil</i> local</code>. Si on souhaite que la difficulté soit augmentée en cas de tempête de mana, on peut utiliser le mot clé <code>tempete</code> suivi si besoin de l'incrément en fonction de la mana (par defaut 1 mana augmente de 1 la difficulté). Si on a besoin des 2 options, il suffit de les séparer par <code> +</code>. Enfin, il est possible de prendre la meilleure de 2 caractéristiques pour le save&nbsp;: pour cela indiquer les 2 caractéristiques collées (donc 6 caractères, par exemple FORDEX, pour le meilleur de FOR et de DEX). Le script choisira automatiquement la caractéristique qui donne les meilleures chances de réussite (en tenant compte de la difficulté et des caractéristiques supérieures).</li>
                   <li><code>--demiAuto</code> : si l'attaque rate, on considère juste que les saves partiels sont automatiquemet réussi. Ça signifie en général que la cible prend au moins la moitié des dégâts.</li>
@@ -1886,6 +1887,13 @@
                 <ol>
                   <li><strong>Main lourde</strong> : ajuster les DM, et enlever l'option <code>--tempDmg</code> pour l'attaque à mains nues.</li>
                 </ol>
+                <h4 class="text-secondary">Demi-ogre</h4>
+                <ul>
+                  <li><a href="#Vision_dans_le_noir">Vision dans le noir</a>.</li>
+                  <li><strong>Énorme</strong> : pas de support, ajuster les attaques</li>
+                  <li><strong>Grande taille</strong> : quand le demi-ogre rentre dans une construction de taille humaine, utiliser <code>!cof-effet constructionTailleHumaine true</code>. À la sortie du bâtiment, <code>!cof-effet constructionTailleHumaine false</code>. Pour les espaces exigus, de même avec l'effet <code>espaceExigu</code>.</li>
+                  <li><strong>Réaction violente</strong> : en cas de provocationm exécuter <code>!cof-effet-temp reactionViolente [[1d6]] --save SAG 10</code>. On peut par exemple mettre ce code en ability liée au token. Au MJ et au joueur de gérer les actions qui s'ensuivent. Le script propose une action à l'ogre pour prendre sur lui à chaque tour.</li>
+                </ul>
                 <h4 class="text-secondary">Demi-orque</h4>
                 <a href="#Vision_dans_le_noir">Vision dans le noir</a>.
                 <ol>
@@ -1916,6 +1924,8 @@
                 <h4 class="text-secondary">Gnome</h4>
                 <ol>
                   <li><strong>Petit pote</strong> : ajouter le bonus de CHA sur la fiche</li>
+                  <li><strong>Don occulte</strong> : se reporter aux capacités choisies.</li>
+                  <li><strong>Insignifiant</strong> :  ajouter un <a href=#predicats>prédicat</a> <code>insignifiant</code>.
                 </ol>
                 <h4 class="text-secondary">Halfelin</h4>
                 <p>Petite taille : ajouter le bonus de DEF sur la ficher, et ajouter 2 à une compétence <code>discrétion</code>.</p>
