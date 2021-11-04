@@ -18,7 +18,7 @@ on('ready', () => {
     const decodeUnicode = (str) => str.replace(/%u[0-9a-fA-F]{2,4}/g, (m) => String.fromCharCode(parseInt(m.slice(2), 16)));
 
 
-    const version = '0.1.1';
+    const version = '0.1.2';
     log('Supernotes v' + version + ' is ready!  To set the template of choice or to toggle the send to players option, Use the command !gmnote --config');
 
     on('chat:message', function (msg) {
@@ -29,7 +29,6 @@ on('ready', () => {
             //define command                     
             let command = msg.content.split(/\s+--/)[0];
             let sender = msg.who
-            log(sender);
             let messagePrefix = '/w gm ';
             if (command === '!pcnote') {
                 messagePrefix = '';
@@ -58,7 +57,6 @@ on('ready', () => {
             let trueToken = [];
             let handoutTitle = '';
             function sendMessage(whom, messagePrefix, template, title, theText, message, playerButton) {
-                log('HANDOUTTITLE is ' + handoutTitle);
 
                 if (handoutTitle === '') {
 
