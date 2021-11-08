@@ -546,11 +546,9 @@ Earthdawn.attribute = function ( attr, prev ) {
                     sTime = iTime + " weeks" + (( wrapper === "Rank") ? "." : " plus a month." );
       } } } } }
 
-      let sdate = today.getFullYear() + "-" + (today.getMonth()+1) + "-" + today.getDate();
       let stem = "&{template:chatrecord} {{header=" + getAttrByName( cID, "charName" ) + ": " + header + "}}"
             + ( rankDiff < 0 ? "{{refund=Refund}}" : "") + (tdate ? "{{throalic=" + tdate + "}}" : "");
       let slink = "{{button1=[Press here](!Earthdawn~ charID: " + cID;
-
       if ( miscval )
         stem += "{{misclabel=" + misclabel + "}}{{miscval=" + miscval + "}}";
 
@@ -559,7 +557,8 @@ Earthdawn.attribute = function ( attr, prev ) {
           stem += "{{lp=" + lp + "}}";
         if ( silver )
           stem += "{{sp=" + silver + "}}";
-        slink += "~ Record: " + sdate + ( state.Earthdawn.gED ? ": ?{Throalic Date|" : ": ?{Game world Date|") + tdate + "}: ";
+        slink += "~ Record: ?{Posting Date|" + today.getFullYear() + "-" + (today.getMonth() +1) + "-" + today.getDate()
+                  + "}: ?{" + ( state.Earthdawn.gED ? "Throalic Date|" : "Game world Date|" ) + tdate + "}: ";
         slink += lp ? (silver ? "LPSP: " : "LP: ") : "SP: ";
         slink += (lp     ? "?{" + (state.Earthdawn.g1879 ? "Action" : "Legend") + " Points to post|" + lp + "}" : "0") + ": ";
         slink += (silver ? "?{" + (state.Earthdawn.g1879 ? "Money" : "Silver Pieces") + " to post|" + silver + "}" : "0") + ": ";
@@ -1408,18 +1407,17 @@ Earthdawn.parseInt2 = function ( i, silent ){
 
 
       // pseudoMsg
-      // We don't see to have a valid .msg (because we are running on (on ready) or APIflag, but we need one. 
+      // We don't seem to have a valid .msg (because we are running from (on ready) or APIflag, but we need one. 
       // So fake one. 
-Earthdawn.pseudoMsg = function( pclass ) {   // If clear is TRUE then clear out all the data entry fields on the record tab to prepare for next entry.
+Earthdawn.pseudoMsg = function( pclass ) {
   'use strict';
   try {
-    if( pclass.msg === undefined )    // fake up a playerID. 
-    {
+    if( pclass.msg === undefined ) {    // fake up a playerID. 
       let players = findObjs({ _type: "player", _online: true });   // lets just find the first gm that is online. 
-      let found = _.find( players, function( plyr ) { playerIsGM( plyr.get( "_id" ))});
+      let found = _.find( players, function( plyr ) { return playerIsGM( plyr.get( "_id" ))});
       if( !found ) {
         players = findObjs({ _type: "player" });        // There are no GMs online, so lets just find a GM that is offline. 
-        found = _.find( players, function( plyr ) { playerIsGM( plyr.get( "_id" ))});
+        found = _.find( players, function( plyr ) { return playerIsGM( plyr.get( "_id" ))});
         if( !found && players && players.length > 0 )
           found = players[ 0 ];
       }
@@ -1632,19 +1630,29 @@ Earthdawn.EDclass = function( origMsg ) {
           // This will update all character sheets when a new API is loaded.
           // If a new character sheet is loaded without a new API version, each will be updated individually when the sheet is first opened.
     if( state.Earthdawn.version != Earthdawn.Version ) {        // This code will be run ONCE when a new API version is loaded. However the update routines below will be run once for each character. 
+
+
+            // It is possible that some update routines might take a lot of time to update, depending upon what updates are needed. 
+            // If a campaign has many characters, the servers might timeout with an infinite loop message before compleating (there is no infinite loop, just a loop that takes too much time). 
+            // Therefore use setTimeout to call each character one at a time, this lets the system know that progress is being made between characters. 
       function vUpdate( ed, routine, version) {
         'use strict';
-        let count = 0;
-        ed.chat( "Updating all characters to new character sheet version " + version );
-        let chars = findObjs({ _type: "character" });
-        _.each( chars, function (charObj) {
-          let cid = charObj.get( "_id" );
-          let attCount = routine( cid, ed, count );
-          ed.errorLog( "Updated " + attCount + " attributes or abilities for " + charObj.get( "name" ));
-          ++count;
-        }) // End ForEach character
-        ed.chat( count + " character sheets updated." );
-      }
+        let count = 0,
+          charQueue = findObjs({ _type: "character" });      // create the queue we'll be processing.
+        ed.chat( "Updating all characters (" + charQueue.length + ") to new character sheet version " + version, Earthdawn.whoFrom.apiWarning );
+
+        const charBurndown = () => {				// create the function that will process the next element of the queue
+          if( charQueue.length ) {
+            let c = charQueue.shift();
+            let attCount = routine( c.get( "_id" ), ed, count++ );
+            ed.errorLog( "Updated " + attCount + " things for " + c.get( "name" ));
+            setTimeout( charBurndown, 0);   // Do the next character
+          } else		// Have finished the last attribute. 
+            ed.chat( count + " character sheets updated.", Earthdawn.whoFrom.apiWarning );
+        };
+        charBurndown();   // start the execution by doing the first element. Each element will call the next.
+      } // end vUpdate
+
 
       if( state.Earthdawn.version < 1.001)                // Note, this tests JS version number, not sheet version number. 
         vUpdate( this, this.updateVersion1p001, 1.001 );
@@ -2068,13 +2076,15 @@ Earthdawn.EDclass = function( origMsg ) {
         let macs = findObjs({ _type: "macro", visibleto: "all" });      // These will be deleted in the macro refresh below, but lets specifically target them for deletion just in case. 
         _.each( macs, function (macObj) {
           let n = macObj.get( "name" );
-          if( n.startsWith( Earthdawn.constant( "Target" )) && n.endsWith( "r-Targets" ))
+          if( n.startsWith( Earthdawn.constant( "Target" )) && n.endsWith( "r-Targets" )) {
             macObj.remove();
+            ++count;
+          }
         });
 
         if( ed.msg === undefined )    // fake up a playerID. 
           Earthdawn.pseudoMsg( ed );
-    		let edp = new ed.ParseObj( ed );
+        let edp = new ed.ParseObj( ed );
         edp.funcMisc( [ "funcMisc", "macroCreate", "refresh" ] );
       } // do once when new API detected. 
 
@@ -2098,6 +2108,7 @@ Earthdawn.EDclass = function( origMsg ) {
               Earthdawn.abilityRemove( cID, symbol + nmn );
               if( cbs == "1" )
                 Earthdawn.abilityAdd( cID, symbol + nmn, "!edToken~ %{selected|" + Earthdawn.buildPre( code, rowID ) + "Roll}" );
+              ++count;
             }
           } // End Token Action maint.
         }
@@ -6064,7 +6075,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
             else 
               setObj = findMenu( level );
           } 
-log( setObj);
+//log( setObj);
           if( !setObj ) {
             this.chat( "Earthdawn: Markerset error. level is undefined.", Earthdawn.whoFrom.apiWarning );
             return;
@@ -6168,7 +6179,7 @@ log( setObj);
                         + "{{misclabel=Buy Karma}}{{miscval=" + newKarma + "}}"
                         + "{{lp=" + (newKarma * 10) + "}}",
                   slink = "{{button1=[Press here](!Earthdawn~ charID: " + this.charID
-                        + "~ Record: ?{Posting Date|" + today.getFullYear() + "-" + (today.getMonth()+1) + "-" + today.getDate()
+                        + "~ Record: ?{Posting Date|" + today.getFullYear() + "-" + (today.getMonth() +1) + "-" + today.getDate()
                         + "}: : LP: ?{Action Points to post|" + (newKarma * 10)
                         + "}: 0: Spend: ?{Reason|Buy " + newKarma + " Karma}";
                 this.chat( stem + Earthdawn.colonFix( slink ) + ")}}", Earthdawn.whoFrom.api | Earthdawn.whoFrom.noArchive );
@@ -6264,7 +6275,7 @@ log( setObj);
                   today = new Date();
   // CDD ToDo test this with new record.
                 this.chat( this.makeButton( "Buy Karma?", "!Earthdawn~ charID: " + this.charID + "~ Misc: Add: Karma: ?{How many Karma to buy|" + newKarma + "}"
-                      + "~ Record: ?{Posting Date|" + today.getFullYear() + "-" + (today.getMonth()+1) + "-" + today.getDate()
+                      + "~ Record: ?{Posting Date|" + today.getFullYear() + "-" + (today.getMonth() +1) + "-" + today.getDate()
                       + "}: : LP: ?{How many " + ( state.Earthdawn.gED ? "LP" : "AP" ) +" does that cost|" + newKarma * 10 + "}",
                       "Did you do a karma ritual and want to buy karma?", Earthdawn.Colors.param, Earthdawn.Colors.paramfg ),
                       Earthdawn.whoTo.player | Earthdawn.whoFrom.character | Earthdawn.whoFrom.noArchive );
@@ -9224,6 +9235,10 @@ log("this.Spell " + JSON.stringify(ssa));
           save = {},    // keep some values between sections.
           block, blockOffset = 0, blockIndexArray = [];
 
+        if( state.Earthdawn.logCommandline ) {
+          log( "textImport: " );
+          log( ssa );
+        }
 
 
             // When pasting from a pdf, you also get page numbers and chapter titles.
@@ -9628,14 +9643,14 @@ log("this.Spell " + JSON.stringify(ssa));
                     }
                     if( !tdate )
                       tdate = "1517-1-1";
-                    let sdate = today.getFullYear() + "-" + (today.getMonth()+1) + "-" + today.getDate();
                     let stem = "&{template:chatrecord} {{header=" + getAttrByName( po.charID, "charName" ) + ": " + name + "}}"
                         + "{{misclabel=Knack}}{{miscval=Rank " + rnk + "}}"
                         + "{{lp=" + (Earthdawn.fibonacci( rnk ) * 100) + "}}"
                         + "{{sp=" + (rnk * 50) + "}}"
                         + "{{time=" + rnk + " days}}"
                     let slink = "{{button1=[Press here](!Earthdawn~ charID: " + po.charID
-                        + "~ Record: " + sdate + ": ?{Throalic Date|" + tdate
+                        + "~ Record: ?{Posting Date|" + today.getFullYear() + "-" + (today.getMonth() +1) + "-" + today.getDate()
+                        + "}: ?{" + ( state.Earthdawn.gED ? "Throalic Date|" : "Game world Date|" ) + tdate;
                         + "}: LP: ?{Legend Points to post|" + (Earthdawn.fibonacci( rnk ) * 100)
                         + "}: ?{Silver to post|" + (rnk * 50) + "}: Spend: "
                         + "?{Time| and " + rnk + " days.}   "
@@ -11330,7 +11345,7 @@ log("spirit " + strRating );
           this.setWW( "record-date-throalic", ssa[ 1 ] );
         }
         let date = new Date();
-        let ds = date.getFullYear() + "-" + (date.getMonth()+1) + "-" + date.getDate();
+        let ds = date.getFullYear() + "-" + (date.getMonth() +1) + "-" + date.getDate();
         this.setWW( "record-date-real", ds );
       } catch(err) { this.edClass.errorLog( "ED.UpdateDates() error caught: " + err ); }
     } // End ParseObj.UpdateDates()
