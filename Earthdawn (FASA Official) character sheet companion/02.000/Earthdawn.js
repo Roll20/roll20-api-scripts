@@ -32,7 +32,7 @@
 // Define a Name-space
 var Earthdawn = Earthdawn || {};
             // define any name-space constants
-Earthdawn.Version = "2.01";       // This is the version number of this API file.  state.Earthdawn.sheetVersion is the version number of the html file. 
+Earthdawn.Version = "2.02";       // This is the version number of this API file.  state.Earthdawn.sheetVersion is the version number of the html file. 
 
 Earthdawn.whoFrom = {
   player:                 0x08,
