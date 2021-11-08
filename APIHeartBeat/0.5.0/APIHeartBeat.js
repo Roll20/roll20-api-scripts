@@ -1,7 +1,7 @@
 // Github:   https://github.com/shdwjk/Roll20API/blob/master/APIHeartBeat/APIHeartBeat.js
 // By:       The Aaron, Arcane Scriptomancer
 // Contact:  https://app.roll20.net/users/104025/the-aaron
-// Forum:    https://app.roll20.net/forum/permalink/10447182/
+// Forum:    
 var API_Meta = API_Meta||{}; //eslint-disable-line no-var
 API_Meta.APIHeartBeat={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
 {try{throw new Error('');}catch(e){API_Meta.APIHeartBeat.offset=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-7);}}
@@ -9,10 +9,10 @@ API_Meta.APIHeartBeat={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
 const APIHeartBeat = (()=> { // eslint-disable-line no-unused-vars
 
     const scriptName = "APIHeartBeat";
-    const version = '0.5.1';
+    const version = '0.5.0';
     API_Meta.APIHeartBeat.version = version;
-    const lastUpdate = 1634706237;
-    const schemaVersion = 0.4;
+    const lastUpdate = 1634614723;
+    const schemaVersion = 0.3;
     const beatPeriod = 200;
     const devScaleFactor = 5;
     let currentBeatPeriod=0;
@@ -20,90 +20,6 @@ const APIHeartBeat = (()=> { // eslint-disable-line no-unused-vars
     let beatInterval = false;
     let HBMacro;
     const S = () => state[scriptName];
-
-    const assureHelpHandout = (create = false) => {
-        const helpIcon = "https://s3.amazonaws.com/files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385";
-
-        // find handout
-        let props = {type:'handout', name:`Help: ${scriptName}`};
-        let hh = findObjs(props)[0];
-        if(!hh) {
-            hh = createObj('handout',Object.assign(props, {inplayerjournals: "all", avatar: helpIcon}));
-            create = true;
-        }
-        if(create || version !== state[scriptName].lastHelpVersion){
-            hh.set({
-                notes: helpParts.helpDoc({who:'handout',playerid:'handout'})
-            });
-            state[scriptName].lastHelpVersion = version;
-            log('  > Updating Help Handout to v'+version+' <');
-        }
-    };
-
-    const newTimeSegment = ()=> {
-      S().timeSegments = [{start: Date.now(), end: Date.now()},...S().timeSegments].slice(0,S().config.maxSegments);
-    };
-
-    const checkInstall = () => {
-      log(`-=> ${scriptName} v${version} <=-  [${new Date(lastUpdate*1000)}]`);
-      if( ! _.has(state,scriptName) || S().version !== schemaVersion) {
-        log('  > Updating Schema to v'+schemaVersion+' <');
-        switch(S() && S().version) {
-          case 0.2:
-            Object.keys(S().heartBeaters).forEach(k=>{
-              let color = S().heartBeaters[k].origColor;
-              let player = getObj('player',k);
-              if(k){
-                player.set({color: color});
-              }
-            });
-
-            // centralize config
-            S().config = {
-              devMode: S().devMode,
-              macroID: false,
-              spinner: 'ARROW',
-              latency: true
-            };
-
-            delete state[scriptName].heartBeaters;
-            delete state[scriptName].devMode;
-            /* break; // intentional dropthrough */ /* falls through */
-
-          case 0.3:
-            S().timeSegments = [];
-            S().config.maxSegments = 30;
-            S().config.showTime = false;
-            S().config.hourOffset = -5;
-            /* break; // intentional dropthrough */ /* falls through */
-
-          case 'UpdateSchemaVersion':
-            S().version = schemaVersion;
-            break;
-
-          default:
-            state[scriptName] = {
-              version: schemaVersion,
-              timeSegments: [],
-              config: {
-                devMode: false,
-                macroID: false,
-                spinner: 'ARROW',
-                latency: true,
-                maxSegments: 30,
-                showTime: false,
-                hourOffset: -5
-              }
-            };
-        }
-      }
-      HBMacro = getOrCreateMacro();
-      assureHelpHandout();
-      newTimeSegment();
-      startStopBeat();
-      sendCheck('gm');
-    };
-
 
     const ch = (c) => {
         const entities = {
@@ -130,7 +46,6 @@ const APIHeartBeat = (()=> { // eslint-disable-line no-unused-vars
 
     const checkStyle = `font-size: 0.8em; line-height: 1em; background-color: rgba(255,0,0,.2);color: red;font-weight: bold;border-bottom: 2px solid red;border-top: 4px solid red;font-variant: small-caps;left: -5em;position: relative;padding: 0 5em;width: 100%;right: 6em;`;
     const histogramStyle = ``;
-    const historyStyle = ``;
     const graphImg = "https://s3.amazonaws.com/files.d20.io/images/176281994/L28MUxhSDnieHtIl49363Q/thumb.jpg?160477139355";
     const sendCheck = (who) => sendChat('',`/w "${who}" <div style="${checkStyle}">API is Running.</div>`);
 
@@ -142,36 +57,6 @@ const APIHeartBeat = (()=> { // eslint-disable-line no-unused-vars
         latencyData.shift();
       }
     };
-
-    const zPad2 = (n)=>String(n).padStart(2,'0');
-    const UTCtoOffset = (n) => n + (S().config.hourOffset*HOUR_MS);
-    const monthAbbreviations = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-    const asDateString = (d) => `${monthAbbreviations[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
-    const asTimeString = (d) => `${zPad2(d.getHours())}:${zPad2(d.getMinutes())}:${zPad2(d.getSeconds())}`;
-    const asLocalDate = (n) => asDateString(new Date(UTCtoOffset(n)));
-    const asLocalTime = (n) => asTimeString(new Date(UTCtoOffset(n)));
-    const getTimeSegments = () => S().timeSegments.map(ts=>({
-      start: asLocalTime(ts.start),
-      end: asLocalTime(ts.end),
-      duration: timeIntervalString(ts),
-      date: asLocalDate(ts.start)
-    }));
-
-    const timeIntervalString = (interval) => {
-      const z = zPad2;
-      let time = Math.round((interval.end - interval.start)/1000);
-      let s = time%60;
-      time=Math.floor(time/60);
-      let m = time%60;
-      time=Math.floor(time/60);
-      let h = time%24;
-      time=Math.floor(time/24);
-
-      return `${time}:${z(h)}:${z(m)}:${z(s)}`;
-    };
-
-    const getUptime = () => timeIntervalString(S().timeSegments[0]);
 
     const getHistogram = ()=>{
       if(latencyData.length){
@@ -257,7 +142,7 @@ const APIHeartBeat = (()=> { // eslint-disable-line no-unused-vars
             entry:     (c,l) => `<div style="${s.entry}"><span style="${s.entry_color}background-color:${c}">&nbsp;</span> ${l}</div>`,
             legend:    ()  => `<div style="${s.legend}">${e.entry('#f00','Callback Latency')}${e.entry('#0f0','Interval Latency')}</div>`, 
             data:     (n,l) => `<div style="${s.data}"><span style="${s.data_num}">${n}</span> ${l}</div>`,
-            info:      () => `<div style="${s.info}">${e.data(latencyData.length,'Samples')}${e.data(data.length,'Seconds')}${e.data((gCBAccum/data.length).toFixed(1),'Avg Callback Latency')}${e.data((gITAccum/data.length).toFixed(1),'Avg Interval Latency')}${e.data(getUptime(),'Uptime')}</div>`,
+            info:      () => `<div style="${s.info}">${e.data(latencyData.length,'Samples')}${e.data(data.length,'Seconds')}${e.data((gCBAccum/data.length).toFixed(1),'Avg Callback Latency')}${e.data((gITAccum/data.length).toFixed(1),'Avg Interval Latency')}</div>`,
             row:       (ns) => e.barContainer(e.bar(ns[0],1),e.bar(ns[1],2)),
             barContainer: (...o) => `<div style="${s.barContainer}">${o.join('')}</div>`,
             bar:       (n,i) => `<span style="width:${Math.round(((n-gMin)/scale)*100)}%;${s[`bar${i}`]}"></span>`
@@ -266,52 +151,7 @@ const APIHeartBeat = (()=> { // eslint-disable-line no-unused-vars
       }
       return '';
     };
-
-    const getHistory = () => {
-      let rows = getTimeSegments();
-      let begin = asDateString(new Date(UTCtoOffset(S().timeSegments.slice(-1)[0].start)));
-      let end = asDateString(new Date(UTCtoOffset(Date.now())));
-
-      const s = {
-        container: `width:100%;border:1px solid #999;padding: .1em 0;background-color:#ccc;`,
-        title: `font-weight:bold;font-size:1.3em;`,
-        header: `text-align:center;margin-bottom:.1em;padding: .1em 0 0 0;`,
-        num: `font-weight:bold;border: 1px solid #999;font-size: .6em;line-height: .6em;background-color:white;border-radius:.5em;padding:.5em;`,
-        leftNum: `float:left;`,
-        rightNum: `float:right;`,
-        tableOuter:  `background-color: white;font-size: 0.8em;`,
-        table:  `border:1px solid #999;`,
-        tableHeader: `border-bottom: 3px solid #999;background-color:#000;font-weight:bold;color:white;`,
-        th: `width: 33%;text-align:center;display:inline-block;`,
-        td: `width: 33%;text-align:center;display:inline-block;`,
-        tableRow0: `background-color: #eeeeff;`,
-        tableRow1: ``,
-        dateRow: `border-top: 1px solid #999; background-color: #aacccc;font-weight:bold;font-size:.8em;`,
-        clear: `clear:both`
-      };
-
-      let lastDater;
-
-      const e = {
-        container: (...o) => `<div style="${s.container}">${o.join('')}</div>`,
-        title:     ()  => `<div style="${s.title}">Sandbox Run Interval History</div>`,
-        header:    ()  => `<div style="${s.header}">${e.leftNum(begin)}${e.rightNum(end)}${e.title()}${e.clear()}</div>`,
-        leftNum:   (o) => `<div style="${s.num}${s.leftNum}">${o}</div>`,
-        rightNum:  (o) => `<div style="${s.num}${s.rightNum}">${o}</div>`,
-        footer:    ()  => `<div style="${s.footer}">${e.clear()}</div>`,
-        clear:     ()  => `<div style="${s.clear}"></div>`,
-        th:        (l) => `<div style="${s.th}">${l}</div>`,
-        tableHeaders:()=> `<div style="${s.tableHeader}">${e.th('Start')}${e.th('Duration')}${e.th('End')}</div>`,
-        td:        (t) => `<div style="${s.td}">${t}</div>`,
-        dateRow:   (d) => `<div style="${s.dateRow}">${d}</div>`,
-        dater:     (d) => (lastDater !== d ? e.dateRow(lastDater=d) : ''),
-        tableRow:  (d,idx) => `${e.dater(d.date)}<div style="${s[`tableRow${idx%2}`]}">${e.td(d.start)}${e.td(d.duration)}${e.td(d.end)}</div>`,
-        table:     (r) => `<div style="${s.table}">${e.tableHeaders()}${r.map(e.tableRow).join('')}</div>`
-      };
-      return e.container(e.header(),e.table(rows),e.footer());
-    };
     const sendHistogram = (who) => sendChat('',`/w "${who}" <div style="${histogramStyle}">${getHistogram()}</div>`);
-    const sendHistory = (who) => sendChat('',`/w "${who}" <div style="${historyStyle}">${getHistory()}</div>`);
 
     const arrowCycle = {
         [`↖️`]: `⬆️`, 
@@ -352,28 +192,21 @@ const APIHeartBeat = (()=> { // eslint-disable-line no-unused-vars
     const swordRegex = new RegExp(`(${Object.keys(swordCycle).join('|')})`);
 
     const monoDigit0 = 0xff10;
-    const numToFixedString = (n,pad=3)=>`${n}`.padStart(pad,'0').split('').map(i=>String.fromCharCode(monoDigit0+(parseInt(i)))).join('');
-    const HOUR_MS = 60*60*1000;
-    const getMonospacedTime = (n) => {
-      let d = new Date(UTCtoOffset(n));
-      return `${numToFixedString(d.getHours(),2)}:${numToFixedString(d.getMinutes(),2)}:${numToFixedString(d.getSeconds(),2)}`;
-    };
-
+    const numToFixedString = (n)=>`${n}`.padStart(3,'0').split('').map(i=>String.fromCharCode(monoDigit0+(parseInt(i)))).join('');
     let lastRunTime = 0;
     
     const updateMacro = () => {
       let then = Date.now();
-      S().timeSegments[0].end = then;
       let intervalLatency = lastRunTime ? (then-lastRunTime-currentBeatPeriod) : 0;
       lastRunTime = then;
 
       setTimeout(()=>{
         let now = Date.now();
-        S().timeSegments[0].end = now;
         let label = HBMacro.get('name');
 
         let latency = now-then;
         recordLatency(now,latency,intervalLatency);
+        let delay = numToFixedString(Math.min(latency,999));
 
         let macName = '!-';
         switch(S().config.spinner){
@@ -401,11 +234,7 @@ const APIHeartBeat = (()=> { // eslint-disable-line no-unused-vars
         }
 
         if(S().config.latency){
-          macName+=`-${numToFixedString(Math.min(latency,999))}`;
-        }
-
-        if(S().config.showTime){
-          macName+=`-${getMonospacedTime(S().timeSegments[0].end)}`;
+          macName+=`-${delay}`;
         }
 
         HBMacro.set({
@@ -478,25 +307,6 @@ const APIHeartBeat = (()=> { // eslint-disable-line no-unused-vars
       `${_h.bold('Show Latency')} controls if the current API latency measurement is shown next to the spinner. Current value: ${_h.bold(S().config.latency ? 'On' : 'Off')}`
     );
 
-    const getConfigOption_ShowTime = () => makeConfigOption(
-      S().config.showTime,
-      `!api-heartbeat-config --toggle-show-time`,
-      `${_h.bold('Show Time')} controls if the current time is shown next to the spinner. Current value: ${_h.bold(S().config.showTime ? 'On' : 'Off')}`
-    );
-
-    const getConfigOption_HourOffset = () => makeConfigOptionNum(
-      S().config.hourOffset,
-      `!api-heartbeat-config --set-hour-offset|?{Hour Offset (decimals accepted)|${S().config.hourOffset}}`,
-      `${_h.bold('Hour Offset')} is used to adjust the UTC date/time to some reasonable local time.  This is the number of hours (with sign) that you want away from UTC.  You can use decimal numbers for fractional offsets, like ${_h.code("-3.5")} for Newfoundland.  Current setting: ${_h.bold(S().config.hourOffset)}`
-    );
-
-    const getConfigOption_MaxSegments = () => makeConfigOptionNum(
-      S().config.maxSegments,
-      `!api-heartbeat-config --set-max-segments|?{Interval History Size|${S().config.maxSegments}}`,
-      `${_h.bold('Interval History Size')} sets the number of Run Interval History records to keep (minimum 1). Current setting: ${_h.bold(S().config.maxSegments)}`
-    );
-
-
     const getConfigOption_DevMode = () => makeConfigOption(
       S().config.devMode,
       `!api-heartbeat-config --toggle-dev-mode`,
@@ -505,9 +315,6 @@ const APIHeartBeat = (()=> { // eslint-disable-line no-unused-vars
 
     const getAllConfigOptions = () => getConfigOption_SpinnerStyle() +
       getConfigOption_ShowLatency() +
-      getConfigOption_ShowTime() +
-      getConfigOption_HourOffset() +
-      getConfigOption_MaxSegments() +
       getConfigOption_DevMode() ;
 
   const defaults = {
@@ -583,15 +390,13 @@ const APIHeartBeat = (()=> { // eslint-disable-line no-unused-vars
                         _h.optional(
                             `--help`,
                             `--check`,
-                            `--histogram`,
-                            `--history`
+                            `--histogram`
                         )
                     ),
                     _h.ul(
                       `${_h.bold('--help')} -- Displays this help and configuration options.`,
                       `${_h.bold('--check')} -- Displays a simple message to show that the API is running.`,
-                      `${_h.bold('--histogram')} -- Displays a histogram of the last 600 measurements as well as some statistical information about how the API has been running.`,
-                      `${_h.bold('--history')} -- Displays a table of the previous run intervals for the API Sandbox, including start time, end time, and duration.`
+                      `${_h.bold('--histogram')} -- Displays a histogram of the last 600 measurements as well as some statistical information about how the API has been running.`
                     )
                 ),
                 _h.subhead('Description'),
@@ -606,16 +411,6 @@ const APIHeartBeat = (()=> { // eslint-disable-line no-unused-vars
                     : ''
                 )
             ),
-        helpConfig: (context) => _h.outer(
-          _h.title(scriptName, version),
-          ( playerIsGM(context.playerid)
-            ?  _h.group(
-              _h.subhead('Configuration'),
-              getAllConfigOptions()
-              )
-            : ''
-          )
-        ),
         helpDoc: (context) => _h.join(
                 _h.title(scriptName, version),
                 helpParts.helpBody(context)
@@ -663,10 +458,6 @@ const APIHeartBeat = (()=> { // eslint-disable-line no-unused-vars
               case 'histogram':
                 sendHistogram(who);
                 break;
-
-              case 'history':
-                sendHistory(who);
-                break;
             }
           }
           return;
@@ -690,10 +481,6 @@ const APIHeartBeat = (()=> { // eslint-disable-line no-unused-vars
 
               case 'histogram':
                 sendHistogram(who);
-                break;
-
-              case 'history':
-                sendHistory(who);
                 break;
 
               case 'dev':
@@ -743,49 +530,6 @@ const APIHeartBeat = (()=> { // eslint-disable-line no-unused-vars
               );
               break;
 
-            case 'toggle-show-time':
-              S().config.showTime=!S().config.showTime;
-              sendChat('','/w "'+who+'" '+
-                '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
-                getConfigOption_ShowTime()+
-                '</div>'
-              );
-              break;
-
-          case 'set-hour-offset':
-            if(parseFloat(opt[0])) {
-              S().config.hourOffset=parseFloat(opt[0]);
-            } else {
-              omsg='<div><b>Error:</b> Not a valid Hour Offset: '+opt[0]+'</div>';
-            }
-            sendChat('','/w "'+who+'" '+
-              '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
-                omsg+
-                getConfigOption_HourOffset()+
-              '</div>'
-            );
-            break;
-
-          case 'set-max-segments': {
-              let maxSegs = parseInt(opt[0]);
-              if(maxSegs>0){
-                S().config.maxSegments=maxSegs;
-              } else {
-                if(Number.isNaN(maxSegs)){
-                  omsg='<div><b>Error:</b> Not a valid Interval History Size: '+opt[0]+'</div>';
-                } else {
-                  omsg='<div><b>Error:</b> Interval History Size must be 1 or greater.</div>';
-                }
-              }
-              sendChat('','/w "'+who+'" '+
-                '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
-                  omsg+
-                  getConfigOption_MaxSegments()+
-                '</div>'
-              );
-            }
-            break;
-
             case 'set-spinner':
               if(SpinnerOptions.hasOwnProperty(opt[0])){
                 S().config.spinner=opt[0];
@@ -822,6 +566,73 @@ const APIHeartBeat = (()=> { // eslint-disable-line no-unused-vars
     };
 
 
+    const assureHelpHandout = (create = false) => {
+        const helpIcon = "https://s3.amazonaws.com/files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385";
+
+        // find handout
+        let props = {type:'handout', name:`Help: ${scriptName}`};
+        let hh = findObjs(props)[0];
+        if(!hh) {
+            hh = createObj('handout',Object.assign(props, {inplayerjournals: "all", avatar: helpIcon}));
+            create = true;
+        }
+        if(create || version !== state[scriptName].lastHelpVersion){
+            hh.set({
+                notes: helpParts.helpDoc({who:'handout',playerid:'handout'})
+            });
+            state[scriptName].lastHelpVersion = version;
+            log('  > Updating Help Handout to v'+version+' <');
+        }
+    };
+
+
+    const checkInstall = () => {
+      log(`-=> ${scriptName} v${version} <=-  [${new Date(lastUpdate*1000)}]`);
+      if( ! _.has(state,scriptName) || S().version !== schemaVersion) {
+        log('  > Updating Schema to v'+schemaVersion+' <');
+        switch(S() && S().version) {
+          case 0.2:
+            Object.keys(S().heartBeaters).forEach(k=>{
+              let color = S().heartBeaters[k].origColor;
+              let player = getObj('player',k);
+              if(k){
+                player.set({color: color});
+              }
+            });
+
+            // centralize config
+            S().config = {
+              devMode: S().devMode,
+              macroID: false,
+              spinner: 'ARROW',
+              latency: true
+            };
+
+            delete state[scriptName].heartBeaters;
+            delete state[scriptName].devMode;
+            /* break; // intentional dropthrough */ /* falls through */
+
+          case 'UpdateSchemaVersion':
+            S().version = schemaVersion;
+            break;
+
+          default:
+            state[scriptName] = {
+              version: schemaVersion,
+              config: {
+                devMode: false,
+                macroID: false,
+                spinner: 'ARROW',
+                latency: true
+              }
+            };
+        }
+      }
+      HBMacro = getOrCreateMacro();
+      assureHelpHandout();
+      startStopBeat();
+      sendCheck('gm');
+    };
 
       const registerEventHandlers = () => {
         on('chat:message', handleInput);
