@@ -365,11 +365,13 @@
                   <li><code>--valeur <i>v</i></code> : spécifie une valeur au dernier effet mentionné.</li>
                   <li><code>--optionEffet <i>opt arg1 arg2 ...</i></code> : spécifie une option au dernier effet mentionné. L'option <i>opt</i> doit être donnée sans le <code>--</code> et sera passée telle quelle à l'effet, par exemple pour les dégâts périodiques.</li>
                   <li><code>--peur <i>seuil duree</i></code> : fait un effet de peur si l'attaque touche. Le <i>seuil</i> sert pour le test de sagesse de résitance à la peur (tient compte de la capacité <b>sans peur</b> du chevalier).</li>
+                  <li><code>--affaiblirCarac <i>carac n</i></code> : l'attaque diminue la caractéristique <i>carac</i> de <i>n</i></li>
                   <li><code>--plus <i>dmg</i></code> : ajoute <i>dmg</i> dégâts. Attention, si <i>dmg</i> est un simple nombre, ces dégâts sont multipliés par les critiques (sauf si de type différent de l'attaque principale). Ainsi, <code>--plus [[1d6]]</code> donnera des dégâts multipliés par les critiques (car la fonction ne voit que le résultat du jet), alors que <code>--plus 1d6</code> ne le sera pas. </li>
                   <li><code>--plusCrit <i>dmg</i></code> : ajoute <i>dmg</i> dégâts en cas de réussite critique</li>
                   <li><code>--test</code> pour voir le résultat du jet d'attaque. On n'applique pas les résultats d'un touché.</li>
                   <li><code>--sournoise <i>n</i></code> : ajoute <i>n</i>d6 de dégâts d'attaque sournoise ou par surprise.</li>
                   <li><code>--magique</code> : les dégâts sont magiques. On peut passer en argument le niveau de magie. Il est utilisé contre les créatures immunisées aux armes. Le niveau par défaut est 1.</li>
+                  <li><code>--+<i>k</i></code> : l'attaque utilise une arme magique +<i>k</i>. Pratique à mettre dans les modificateurs de l'attaque (dans ce cas, on n'a pas les <code>--</code>), cela rajoute les bonus au toucher et aux dégâts, et indique que les dégâts sont magiques. Si un niveau de magie est spécifié, rajoute <i>k</i> à ce niveau.</li>
                   <li><code>--feu</code>, <code>--acide</code>, <code>--electrique</code>, <code>--froid</code>, <code>--sonique</code>, --<code>poison</code>, --<code>maladie</code>, <code>--argent</code>, <code>--drain</code>, <code>--energie</code>&nbsp;: les dégâts sont de type feu, acide, électrique, froid, sonique, poison, maladie, argent, drain ou énergie. Le type spécifie uniquement le dernier <code>--plus</code> précédent cette option, ou si il n'y en a pas, celui des dégâts principaux. Seul le dernier type spécifié est pris en compte (pas de type multiple pour l'instant). Le type affecte différents attributs, et aussi la couleur d'affichage des dégâts.</li>
                   <li><code>--tranchant</code>, <code>--percant</code>, <code>--contondant</code> : précise le type d'arme (si pertinent), pour pouvoir utiliser les RD spécifiques à un type d'arme.</li>
                   <li><code>--ignoreRD</code> : l'attaque ignore les RD et division de DMs. Il est possible de donner en argument une valeur de RD ignorée, de sorte que l'attaque ignore les RD jusqu'à cette valeur. Par exemple, pour une arme en adamantium, on pourra écrire <code>--ignoreRD 5</code>.</li>
@@ -435,14 +437,14 @@
                   <li><code>--message <i>texte</i></code> : ajoute une ligne avec le message dans la fenêtre de l'attaque. Attention, <i>texte</i> ne doit pas contenir la séquence <code> --</code>.</li>
                   <li><code>--secret</code> : affiche les jets et résultats de l'attaque seulement aux joueurs qui contrôlent l'attaquant ou ses cibles, ainsi qu'au MJ.</li>
                   <li><code>--allonge <i>n</i></code> : ajoute <i>n</i> mètres à la portée d'une attaque au contact. L'allonge peut être un nombre à virgule et même négative.</li>
-                  <li><code>--soundAttack <i>son</i></code> : joue le son <i>son</i>, à moins qu'une version plus longue de l'option (voir ci-dessous) n'existe et qu'elle osit active.</li>
+                  <li><code>--soundAttack <i>son</i></code> : joue le son <i>son</i>, à moins qu'une version plus longue de l'option (voir ci-dessous) n'existe et qu'elle soit active.</li>
                   <li><code>--soundAttackEchec <i>son</i></code> : joue le son <i>son</i> lorque l'arme fait un echec, sauf si c'est un échec particulier et une version plus longue existe.</li>
                   <li><code>--soundAttackEchecCritique <i>son</i></code> : joue le son <i>n</i> lorque l'arme fait un echec critique</li>
                   <li><code>--soundAttackEchecClignotement <i>son</i></code> : joue le son <i>son</i> lorque l'arme fait un echec par clignotement</li>
                   <li><code>--soundAttackSucces <i>son</i></code> : joue le son <i>son</i> lorque l'arme fait un succès</li>
                   <li><code>--soundAttackSuccesCritique <i>son</i></code> : joue le son <i>n</i> lorque l'arme fait un succès critique</li>
                   <li><code>--soundAttackSuccesChampion <i>son</i></code> : joue le son <i>son</i> lorque l'arme fait un succès champion</li>
-                  <li><code>--imgAttack <i>img</i></code> : Affiche dans le chat l'image (.jpg/.png/.gif) <i>img</i>, à moins qu'une version plus longue de l'option (voir ci-dessous) n'existe et qu'elle osit active.</li>
+                  <li><code>--imgAttack <i>img</i></code> : Affiche dans le chat l'image (.jpg/.png/.gif) <i>img</i>, à moins qu'une version plus longue de l'option (voir ci-dessous) n'existe et qu'elle soit active.</li>
                   <li><code>--imgAttackEchecCritique <i>img</i></code> : Affiche dans le chat l'image (.jpg/.png/.gif) <i>img</i> lorque l'arme fait un echec critique</li>
                   <li><code>--imgAttackEchec <i>img</i></code> : Affiche dans le chat l'image (.jpg/.png/.gif) <i>img</i> lorque l'arme fait un echec</li>
                   <li><code>--imgAttackEchecClignotement <i>img</i></code> : Affiche dans le chat l'image (.jpg/.png/.gif) <i>img</i> lorque l'arme fait un echec par clignotement</li>
@@ -742,7 +744,9 @@
                 <h4 class="text-secondary">Affaiblissements de caractéristiques</h4>
                 <div class="decalage">
                   <p>
-                  <code>!cof-affaiblir-carac <i>carac</i> <i>valeur</i></code> permet d'affaiblir temporairement une caractéristique (force, dextérité, constitution, intelligence, sagesse ou charisme) d'une valeur positive. Une caractéristique affaiblie remonte de 1 après chaque nuit de repos. Le sort de régénération permet de récupérer 1d4 points d'une seule caractéristique physique (d'abord constitution, puis force puis dextérité). Le sort délivrance permet de récupérer 1d4 point d'une seule caractéristique, et comme indiqué dans les règles, le sort de guérison annule tous les affaiblissements de caractéritiques. Enfin le script propose une commande dédiée, <code>!cof-soigner-affaiblissement <i>carac</i> <i>valeur</i></code> pour soigner les affaiblissements.
+                  <code>!cof-affaiblir-carac <i>carac</i> <i>valeur</i></code> permet d'affaiblir temporairement une caractéristique (force, dextérité, constitution, intelligence, sagesse ou charisme) d'une valeur positive. Il existe aussi une option pour les attaques, <code>--affaiblirCarac</code>, qui permet de n'affaiblir une caractéristique que si une attaque est réussie.
+                  </p>
+                  <p>Une caractéristique affaiblie remonte de 1 après chaque nuit de repos. Le sort de régénération permet de récupérer 1d4 points d'une seule caractéristique physique (d'abord constitution, puis force puis dextérité). Le sort délivrance permet de récupérer 1d4 point d'une seule caractéristique, et comme indiqué dans les règles, le sort de guérison annule tous les affaiblissements de caractéritiques. Enfin le script propose une commande dédiée, <code>!cof-soigner-affaiblissement <i>carac</i> <i>valeur</i></code> pour soigner les affaiblissements.
                   </p>
                   <p> À noter que la diminution de constitution fait baisser les points de vie maximum, et qu'une constitution de 0 conduit à la mort.</p>
                 </div>
@@ -767,6 +771,7 @@
                     <li><code>--save <i>carac seuil</i></code> : la cible peut faire un jet pour échapper à l'effet. Si on ajoute l'argument <code>demiDuree</code>, alors réussir la sauvegarde ne fait que diviser la durée.</li>
                     <li><code>--seulementVivant</code> : l'effet ne peut s'appliquer qu'aux personnages vivants.</li>
                   <li><code>--tempeteDeMana <i>liste</i></code> : indique des effets de tempête de mana. La liste peut contenir un nombre (pour l'effet intense), <code>duree</code>, <code>rapide</code> et <code>portee</code>. Si le rang du sort est spécifié (par l'option <code>--rang</code>, un message est affichée si le coût en mana est supérieur au rang. Si la liste d'options est vide, le script affiche un menu dans le chat pour spécifier les options de tempête de mana.</li>
+                  <li><code>--magieEnArmure</code> : indique d'appliquer les règles pour la magie en armure pour un profil hybride. Il faut pour cela un lanceur défini. Par defaut, va faire test l'intelligence par un jet de difficulté 10 + rang + malus d'armure. Le rang est obtenu par l'option <code>--rang</code>. J'utilise la malus d'armure car il n'y a pas moyen de distinguer la DEF intrinsèque de l'armure de ses bonus de DEF dûs à un bonus magique. Enfin, on peut utiliser la règle de dépense supplémentaire de mana à la place du jet d'INT en utilisant l'option <code>--magieEnarmure mana</code>. Encore une fois, je prends le malus d'armure, divisé par 3 et arrondi au supérieur pour les règles de mana de base.</li> 
                   <li><code>--accumuleDuree <i>n</i></code> : l'effet peut être accumulé : chaque fois qu'on applique à nouveau l'effet avec une durée donnée, on ajoute cette durée à la durée courante de l'effet sur la cible. On ne peut cumuler ainsi que <i>n</i> instances de l'effet.</li>
                     <li><code>--valeur <i>n</i></code> : pour certains effet, permet de spécifier une valeur qui remplace la valeur par défaut de l'effet.</li>
                     <li><code>--optionEffet <i>opt arg1 arg2 ...</i></code> : spécifie une option à l'effet. L'option <i>opt</i> doit être donnée sans le <code>--</code> et sera passée telle quelle à l'effet, par exemple pour les dégâts périodiques. Si on a besoin de plusieurs options, il faut utiliser plusieurs fois <code>--optionEffet</code>.</li>
@@ -1110,7 +1115,7 @@
                 <h4 class="text-secondary">Voie du meneur d'hommes</h4>
                 <ol>
                   <li><strong>Sans peur</strong> : Ajouter un prédicat <code>sansPeur</code>, utilisé quand on essaiera de faire peur à un <a href="#allie">allié</a>.</li>
-                  <li><strong>Intercepter</strong> : Juste après l'attaque réussie, utiliser <code>!cof-intercepter</code>. Il faut un <a href=#predicats>prédicat</a> <code>voieDuMeneurDHomme</code> avec comme valeur le rang dans la voie.</li>
+                  <li><strong>Intercepter</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>intercepter</code>, et un autre <code>voieDuMeneurDHomme</code> de valeur le rang dans la voie, s'il est différent de 2.</li>
                   <li><strong>Exemplaire</strong> : <code>!cof-exemplaire</code>, juste après l'attaque ratée.</li>
                   <li><strong>Ordre de bataille</strong> : pas de support</li>
                   <li><strong>Charge fantastique</strong> : <code>!cof-charge-fantastique @{selected|token_id} --alliesEnVue --self --limiteParCombat 1</code></li>
@@ -2136,6 +2141,7 @@
                   <li><strong>Force de géant</strong> : <code>!cof-effet-temp forceDeGeant 10</code>. Le bonus est de 2 par défaut, mais peut être modifié en utilisant l'option <code>--valeur</code>.</li>
                   <li><strong>Nuée de scorpions</strong> : ajouter une attaque magique, de portée 20 m. Puis appeler cette attaque (avec <code>!cof-attack</code>) avec les arguments <code>--pasDeDmg --sortilege --effet nueeDeScorpions 10</code>. Pas de support particulier pour les DM de zone qui détruisent la nuée (enlever l'attribut <code>nueeDeScorpions</code> sur la cible dans ce cas).</li>
                   <li><strong>Résistance à la magie</strong> : pour l'augmentation de la DEF contre la magie, utiliser un <a href=#predicats>prédicat</a> <code>DEF_magie</code> et pour le bonus aux tests, <code>resistanceALaMagie</code></li>
+                  <li><strong>Simulacre de vie</strong> : <code>!cof-set-attribute PVTemporaires [[1d10 + @{selected|niveau}]] --message simulacre de vie</code></li>
                   <li><strong>Sixième sens</strong> : <code>!cof-effet sixiemeSens true</code>. Pour mettre fin à l'effet du sort (qui a une durée en heures), on peut effacer l'attribut <code>sixiemeSens</code>, ou mieux encore, sélectionner le token et faire <code>!cof-effet sixiemeSens false</code>.</li>
                   <li><strong>Toiles</strong> : <code>!cof-effet-temp toiles [[5+@{selected|SAG}]] --saveParTour FOR [[10+@{selected|SAG}]] --lanceur @{selected|token_id} --disque @{target|token_id} 5 20 --saufAllies --mana 0</code>.</li>
                 </ul>
