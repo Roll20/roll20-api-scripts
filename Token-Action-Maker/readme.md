@@ -10,7 +10,7 @@ This script creates token actions on selected tokens for the D&D 5e by Roll20 sh
 > 
 > *0.3.5, numerous fixes*
 > 
-> *0.3.6, Added support for Pathfinder 2 by Roll20 Sheet. Oosh provided better fucntion to allow saves and checks to account for global modifiers*
+> *0.3.6, Added support for Pathfinder 2 by Roll20 Sheet. Oosh provided better function to allow saves and checks to account for global modifiers*
 
 **!ta** This command will create a full suite of token action buttons for a selected character. Actions for NPCs and Attacks for PCs.
 
