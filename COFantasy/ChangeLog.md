@@ -1,6 +1,9 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.04
 ### Capacités
+* Simulacre de vie
+* Ajout d'un visuel pour la prison végétale
+* Meilleure automatisation de la capacité intercepter du chevalier.
 * Réaction violente du demi-ogre.
 * Ajout de la capacité Insignifiant de la voie du gnome.
 * Implémentation de l'immunité à tout ce qui n'est pas magique.
@@ -12,9 +15,17 @@
 * Implémentation de base de la voie de l'expert du combat
 
 ### Corrections de bugs
+* --demiAuto divise les dégâts par deux en cas d'échec, même si il n'y a pas de jet de sauvegarde.
+* ne pas faire entrer en combat quand on fait un effet qui ne fait pas de DM ou qui n'est pas préjudiciable (conséquences sur pacifisme, sanctuaire, et).
 * Prise en compte correcte des malus d'armure et de casques pour les compétences sur la fiche.
 
 ### Autres améliorations
+* Prise en compte de --message pour !cof-animer-mort.
+* Ajout d'une option --affaiblirCarac pour les attaques.
+* Pour !cof-effet-temporaire, possibilité de prendre en compte la magie en armure.
+* Passage de l'aura d'initiative dynamique au layer map, pour éviter les sélections involontaires.
+* Ajout d'options pour des sons de réussite et échec critiques d'attaques par défaut.
+* Ajout de modificateurs d'attaque +n pour les armes magiques.
 * La durée restante des effets est affichée pour le MJ dans le statut des persos.
 * !cof-effet-temp ne fait entrer en combat que si au moins une des cibles est effectivement affectée.
 * --divisePortee permet de diviser la portée d'une attaque.
