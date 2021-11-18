@@ -4,7 +4,7 @@ var Arc = Arc || (function() {
 
   //#region Constants
   // ASSETS
-  const ASSET__URL = `https://raw.githubusercontent.com/morgdalaine/arc-momatoes/main/api-script/ARC/assets/`;
+  const ASSET__URL = `https://raw.githubusercontent.com/Roll20/roll20-api-scripts/master/ARC/assets/`;
   const IMAGE__BG_LIGHT = `${ASSET__URL}bg_light.png`;
   const IMAGE__BG_DARK =  `${ASSET__URL}bg_dark.png`;
   const IMAGE__BG_DOOM =  `${ASSET__URL}bg_doom.png`;
