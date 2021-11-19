@@ -11,7 +11,7 @@ var TurnMarker = TurnMarker || (function(){
     "use strict";
     
     var version = '1.3.11',
-        lastUpdate = 1637339198,
+        lastUpdate = 1637341057,
         schemaVersion = 1.18,
         active = false,
         threadSync = 1,
@@ -129,6 +129,11 @@ var TurnMarker = TurnMarker || (function(){
     '<div style="padding-left:10px;"><b><span style="font-family: serif;">!eot</span></b>'+
         '<div style="padding-left: 10px;padding-right:20px;">'+
             'Players may execute this command to advance the initiative to the next turn.  This only succeeds if the current token is one that the caller controls or if it is executed by a GM.'+
+        '</div>'+
+    '</div>'+
+    '<div style="padding-left:10px;"><b><span style="font-family: serif;">!pot</span></b>'+
+        '<div style="padding-left: 10px;padding-right:20px;">'+
+            'Players may execute this command to back up the initiative to the previous turn.  This only succeeds if the current token is one that the caller controls or if it is executed by a GM.'+
         '</div>'+
     '</div>'+
 '</div>'
@@ -396,7 +401,7 @@ var TurnMarker = TurnMarker || (function(){
                 )
             {
                 TurnOrder.Prev();
-                turnOrderChange(true);
+                turnOrderChange(true,true);
             }
         }
     },
@@ -445,7 +450,7 @@ var TurnMarker = TurnMarker || (function(){
         }
     },
 
-    turnOrderChange = function(FirstTurnChanged){
+    turnOrderChange = function(FirstTurnChanged,backwards=false){
         var marker = getMarker();
                     
         if( !Campaign().get('initiativepage') ) {
@@ -469,11 +474,11 @@ var TurnMarker = TurnMarker || (function(){
             return;
         }
       
-        handleMarkerTurn();
+        handleMarkerTurn(backwards);
 
         if(state.TurnMarker.autoskipHidden) {
             TurnOrder.NextVisible();
-            handleMarkerTurn();
+            handleMarkerTurn(backwards);
         }
 
         turnOrder=TurnOrder.Get();
@@ -572,19 +577,23 @@ var TurnMarker = TurnMarker || (function(){
         _.defer(dispatchInitiativePage);
     },
 
-    handleMarkerTurn = function(){
+    handleMarkerTurn = function(backwards = false){
         var marker = getMarker(),
             turnOrder = TurnOrder.Get(),
             round;
 
         if(turnOrder[0].id === marker.id) {
-            round=(parseInt(marker.get('bar2_value'))||0)+1;
+            round=(parseInt(marker.get('bar2_value'))||0)+ (backwards ? -1 : 1);
             marker.set({
                 name: state.TurnMarker.tokenName+' '+round,
                 bar2_value: round
             });
             announceRound(round);
-            TurnOrder.Next();
+            if(backwards) {
+                TurnOrder.Prev();
+            } else {
+                TurnOrder.Next();
+            }
         }
     },
     handleAnnounceTurnChange = function(){
@@ -633,7 +642,7 @@ var TurnMarker = TurnMarker || (function(){
             }
  
             
-            var PlayerAnnounceExtra='<a style="position:relative;z-index:10000; top:-1em;float: right;font-size: .6em; color: white; border: 1px solid #cccccc; border-radius: 1em; margin: 0 .1em; font-weight: bold; padding: .1em .4em;" href="!eot">EOT &'+'#x21e8;</a>';
+            var PlayerAnnounceExtra='<a style="position:relative;z-index:10000; top:-1em;float: left;font-size: .6em; color: white; border: 1px solid #cccccc; border-radius: 1em; margin: 0 .1em; font-weight: bold; padding: .1em .4em;" href="!pot">&'+'#x23ea; POT</a><a style="position:relative;z-index:10000; top:-1em;float: right;font-size: .6em; color: white; border: 1px solid #cccccc; border-radius: 1em; margin: 0 .1em; font-weight: bold; padding: .1em .4em;" href="!eot">EOT &'+'#x23e9;</a>';
             if(state.TurnMarker.announcePlayerInTurnAnnounce) {
                 var Char=currentToken.get('represents');
                 if(Char) {
