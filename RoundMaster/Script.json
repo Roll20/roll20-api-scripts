@@ -1,5 +1,5 @@
 {
-    "$schema": "https://github.com/Roll20/roll20-api-scripts/master/_Example%20Script%20-%20Check%20for%20formatting%20details/script.schema.json",
+    "$schema": "https://github.com/DameryDad/roll20-api-scripts/blob/RoundMasterAPI/RoundMaster/Script.json",
     "name": "RoundMaster",
     "script": "RoundMaster.js",
     "version": "3.020",
