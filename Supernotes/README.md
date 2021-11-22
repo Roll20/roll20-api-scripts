@@ -1,5 +1,5 @@
 # Supernotes
-*This was about 25% written by keithcurtis, adapted from code written by the Aaron.*
+*by keithcurtis, based on original code written by the Aaron.*
 
 This script pulls the contents from a token's GM Notes field and sends them to chat, based on a user-selectable roll template. If the token represents a character, you can optionally pull in the Bio or GM notes from the character. Options also exist to pull in images referenced by the token or its associated character. The user can decide whether to whisper the notes to the GM or broadcast them to all players. Finally, there is the option to add a footer to notes whispered to the GM. This footer creates a chat button to give the option of sending the notes on to the players.
 
@@ -50,14 +50,14 @@ When first installed, Supernotes is configured for the default roll template. It
 
 You will need to edit the code of the script if you wish to create a custom configuration, or contact keithcurtis on the Roll20 forum and request an addition. The pre-installed sheets are:
 
-Default Template, D&D 5th Edition by Roll20, 5e Shaped, Pathfinder by Roll20, Pathfinder Community, Pathfinder 2e by Roll20, Starfinder
+Default Template, D&D 5th Edition by Roll20, 5e Shaped, Pathfinder by Roll20, Pathfinder Community, Pathfinder 2e by Roll20, Starfinder, Call of Cthulhu 7th Edition by Roll20
 
 ## Changelog
 
-0.0.7 Fixed bug where token notes would break on accented characters
-
-0.0.9 Added --notitle
-
-0.0.91 added --id
-
-1.1.0 added --tokenimage, updated semantic versioning
+- 0.0.7 Fixed bug where token notes would break on accented characters
+- 0.0.9 Added `--notitle`
+- 0.0.91 added `--id`
+- 1.1.0 added  Improved Pathfinder template usage
+- 1.1.1 added `--tokenimage`, updated semantic versioning
+- 1.1.2 Added Handout Feature
+- 1.1.3 Added support for Call of Cthulhu 7th Edition by Roll20
