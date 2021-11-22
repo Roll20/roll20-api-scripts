@@ -778,6 +778,7 @@ var AlienRpg = AlienRpg || (function() {
             stressDice = {'1':0,'2':0,'3':0,'4':0,'5':0,'6':0}, // stress dice: yellow, success on 6, panic on 1
             rollname, // The roll name will be displayed under teh roller and above the dice
             roller=msg.who, // The original character/player who rolled
+            runas, // Impersonation
 
             baseDiceArray,
             stressDiceArray,
@@ -868,18 +869,32 @@ var AlienRpg = AlienRpg || (function() {
             var s=o.split(/\|/),
                 k=s.shift();
                 s=s.join('|');
-            return {
-                label: k,
-                msg: s
-            };
+                if ( k == "runas" ) { runas = s; }
+                return {
+                    label: k,
+                    msg: s
+                };
         });
-            //log('Getting Optional: '+JSON.stringify(optional));
+        //log('Getting Optional: '+JSON.stringify(optional));
+
+        // Using --runas optional will provide a way to display another name at the top of output (added to variable runas above)
+        // This will remove the runas information from the optional info since it will be shown at top instead
+        var optional = _.omit(optional, function(value, key, optional) {
+            return JSON.stringify(value).startsWith('{\"label\":\"runas\"'); });
+                
+        // In case of Runas impersonation, i.e. when running command to be listed as someone else. Will be used in character sheet. 
+        roller = runas ? runas : roller;  
+
+        
+        //log('Optional post-omit: '+JSON.stringify(optional) );
             //log('Optional: '+JSON.stringify(optional));
             //log('Command: '+JSON.stringify(cmd));
             //log('Args: '+JSON.stringify(args));
+            //log('Runas: '+JSON.stringify(runas));
             //log('Content: '+JSON.stringify(msg.content));
             //log('Header1: '+JSON.stringify((msg.content).match(/^(\!w?alienr)(\s*)(\[.*\])/)[0]));
             //log('Header3: '+JSON.stringify((msg.content).match(/^(\!w?alienr)(\s*)(\[.*\])/)[3]));
+
 
 
         cmd=args.shift();
@@ -892,12 +907,14 @@ var AlienRpg = AlienRpg || (function() {
         rollname = !rollname ? "" : (!rollname[rollname.length-2] ? "" : rollname[rollname.length-2]);
             //log("Getting rollname: "+ rollname);
             //log('Matches: '+JSON.stringify(matches));
+        
         if(matches){
             cmd=matches[1];
             log("Getting cmd: "+cmd);
             hash=parseInt(matches[2],10);
             log("Getting hash: "+hash);
         }
+
         
             //log('Hash: '+hash);
 
