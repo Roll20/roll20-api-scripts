@@ -152,7 +152,7 @@
  * v3.019  31/10/2021 Added Effects-DB database updating and version management
  * v3.020  10/11/2021 Changed Token bar value recovery to be more flexible and accurate.  Updated Effects-DB to 
  *                    use this altered functionality
- * v3.021  22/11/2021 Updated the --help text (belatedly).
+ * v3.021  22/11/2021 Updated the --help text (belatedly), and set database creation to "controlledby:all".
  */
  
 var RoundMaster = (function() {
@@ -223,6 +223,7 @@ var RoundMaster = (function() {
 	var dbNames = Object.freeze({
 	Effects_DB:		{bio:'<blockquote>Token Marker Effects Macro Library</blockquote><br><br>v5.1 10/11/2021<br><br>This database holds the definitions for all token status effects.  These are macros that optionally are triggered when a status of the same root name is placed on a token (statusname-start), each round it is still on the token (statusname-turn), and when the status countdown reaches zero or the token dies or is deleted (statusname-end)  There are also other possible status conditions such as weaponname-inhand, weaponname-dancing and weaponname-sheathed.  See the <b>RoundMaster API</b> documentation for further information.<br><br><b>Important Note:</b> Effects require a Roll20 Pro membership, and the installation of the ChatSetAttr, Tokenmod and RoundMaster API Scripts, to allow parameter passing between macros, update of character sheet variables, and marking spell effects on tokens.  If you do not have this level of subscription, I highly recommend you get it as a DM, as you get lots of other goodies as well.  If you want to know how to load the API Scripts to your game, the RoLL20 API help here gives guidance, or Richard can help you.<br><br><b>Important Note for DMs:</b> if a monster character sheet has multiple tokens associated with it, and token markers with associated Effects are placed on more than one of those Tokens, any Effect macros will run multiple times and, if changing variables on the Character Sheet using e.g. ChatSetAttr will make the changes multiple times to the same Character Sheet - generally this will cause unexpected results!  If using these Effect macros for Effects that could affect monsters in this way, it is <b>HIGHLY RECOMMENDED</b> that a 1 monster Token : 1 character sheet approach is adopted.',
 					gmnotes:'<blockquote>Change Log:</blockquote><br>v5.1  10/11/2021  Changed to use virtual Token bar field names, so bar allocations can be altered<br><br>v5.0  29/10/2021  First version loaded into roundMaster API<br><br>v4.2.4  03/10/2021  Added Hairy Spider poison v4.2.3  23/05/2021  Added a Timer effect that goes with the Time-Recorder Icon, to tell you when a Timer you set starts and ends.<br><br>v4.2.2  28/03/2021  Added Regeneration every Round for @conregen points<br><br>v4.2.1  25/02/2021  Added end effect for Wandering Monster check, so it recurs every n rounds<br><br>v4.2  23/02/2021  Added effect for Infravision to change night vision settings for token.<br><br>v4.1  17/12/2020  Added effects for Dr Lexicon use of spells, inc. Vampiric Touch & Spectral Hand<br><br>v4.0.3 09/11/2020 Added effects for Cube of Force<br><br>v4.0.2 20/10/2020 Added effects of a Slow spell<br><br>v4.0.1 17/10/2020 Added Qstaff-Dancing-turn to increment a dancing quarterstaff\'s round counter<br><br>v4.0  27/09/2020 Released into the new Version 4 Testbed<br><br>v1.0.1 16/09/2020 Initial full release for Lost & Found<br><br>v0.1 30/08/2020 Initial testing version',
+					controlledby:'all',
 					root:'effects-db',
 					version:5.1,
 					avatar:'https://s3.amazonaws.com/files.d20.io/images/2795868/caxnSIYW0gsdv4kOmO294w/thumb.png?1390102911',
@@ -4221,7 +4222,9 @@ var RoundMaster = (function() {
 		} else {
 			versionObj = findAttrObj( dbCS, fields.dbVersion[0] );
 			versionObj.set( 'current', dbObj.version );
-			dbCS.set({avatar: dbObj.avatar, bio:dbObj.bio});
+			dbCS.set('avatar',dbObj.avatar);
+			dbCS.set('bio',dbObj.bio);
+			dbCS.set('controlledby',dbObj.controlledby);
 			dbCS.set('gmnotes',dbObj.gmnotes);
 			msg = 'Updated database '+dbName+' to version '+String(dbObj.version);
 			if (!silent) {
