@@ -1067,3 +1067,11 @@ safetytoolsalert:
 shadowrun3e:
   - "Shadowrun3e"
   - "System Toolbox"
+  
+turnmarker1:
+  - "TurnMarker1"
+  - "Utility"
+  
+arcdoom:
+  - "ARC"
+  - "System Toolbox"
