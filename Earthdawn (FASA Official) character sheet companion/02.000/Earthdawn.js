@@ -434,6 +434,7 @@ Earthdawn.attribute = function ( attr, prev ) {
                 default:  header = "Std Matrix";
               }
               type = Earthdawn.getAttrBN( cID, sa.slice( 0, -4 ) + "Origin", "Free" );
+              if( type === "Pseudo" ) return;
                   // Note that this falls past SKK into Talent.
             case "SKK":
               if( type === undefined ) {
@@ -548,7 +549,7 @@ Earthdawn.attribute = function ( attr, prev ) {
 
       let stem = "&{template:chatrecord} {{header=" + getAttrByName( cID, "charName" ) + ": " + header + "}}"
             + ( rankDiff < 0 ? "{{refund=Refund}}" : "") + (tdate ? "{{throalic=" + tdate + "}}" : "");
-      let slink = "{{button1=[Press here](!Earthdawn~ charID: " + cID;
+      let slink = "!Earthdawn~ charID: " + cID;
       if ( miscval )
         stem += "{{misclabel=" + misclabel + "}}{{miscval=" + miscval + "}}";
 
@@ -575,10 +576,9 @@ Earthdawn.attribute = function ( attr, prev ) {
 //log( stem + slink);
       if( bCount === undefined && state.Earthdawn.sheetVersion <= parseFloat( Earthdawn.getAttrBN( cID, "edition_max", 0 ) )) {
         let ED = new Earthdawn.EDclass();
-        ED.chat( stem + Earthdawn.colonFix( slink ) + ")}}", Earthdawn.whoTo.player | Earthdawn.whoTo.gm | Earthdawn.whoFrom.noArchive, null, cID );
-      }
-      else {    // We need to count Talents or Skills to see if these are free during character creation or need to post a cost.
-        let send = stem + Earthdawn.colonFix( slink ) + ")}}",
+        ED.chat( stem + "{{button1=[Press here](" + Earthdawn.colonFix( slink ) + ")}}", Earthdawn.whoTo.player | Earthdawn.whoTo.gm | Earthdawn.whoFrom.noArchive, null, cID );
+      } else {    // We need to count Talents or Skills to see if these are free during character creation or need to post a cost.
+        let send = stem +  "{{button1=[Press here](" + Earthdawn.colonFix( slink ) + ")}}",
           count = Earthdawn.parseInt2( rankTo ),      // Don't get the stored rank of what is being updated, use this one instead.
           maxcount,
           rkey,
@@ -649,7 +649,7 @@ Earthdawn.attribute = function ( attr, prev ) {
       let code = Earthdawn.repeatSection( 3, sa ),
         rowID = Earthdawn.repeatSection( 2, sa );
       if( sa.endsWith( "_Name" ) || (sa.endsWith( "_Rank") )) {   // If a name or rank has changed, make sure we have saved the rowID.
-        Earthdawn.setWW( Earthdawn.buildPre( code, rowID ) + "RowID", cID, rowID );
+        Earthdawn.setWW( Earthdawn.buildPre( code, rowID ) + "RowID", rowID, cID );
         if( code === "MAN" ) {    // Keep a list of Manuver RowIDs, so we can process though them quicker.
           let t = rowID;
           let attributes = findObjs({ _type: "attribute", _characterid: cID });
@@ -840,7 +840,7 @@ Earthdawn.attribute = function ( attr, prev ) {
       } break; // end update status markers. 
       case "NPC": {
         let rtype = (state.Earthdawn.defRolltype & (( attr.get("current") === "2" ) ? 0x02 : ((attr.get("current") === "1") ? 0x01 :  0x04))) ? "/w gm" : " ";
-        Earthdawn.setWW( "RollType", cID, rtype );
+        Earthdawn.setWW( "RollType", rtype, cID );
       } // Falls through to Attack Rank below.
       case "Attack-Rank": {
         if( Earthdawn.parseInt2(Earthdawn.getAttrBN( cID, "NPC", "0")) > 0 && Earthdawn.getAttrBN( cID, "Attack-Rank", 0) != 0)     // NPC or Mook and have a generic attack value.
@@ -1504,14 +1504,18 @@ Earthdawn.setWithWorker = function( obj, att, val, dflt )  {
   } catch(err) { log( "Earthdawn:setWithWorker() error caught: " + err ); }
 } // end of setWithWorker()
 
-      // setWW
+      // setWW      (Note that there is also a ParseObj version that has access to this.charID, which this version does not)
       // helper routine that sets a value into an attribute and nothing else. 
-      // is part of parseObj so that have access to parseObj.char.ID
-Earthdawn.setWW = function( attName, cID, val, dflt ) {
+      // is part of parseObj so that have access to parseObj.charID
+Earthdawn.setWW = function( attName, val, cID, dflt ) {
   'use strict';
   try {
+    if( !cID ) {
+      this.edClass.errorLog( "ED.SetWW() Error, no cID: " + attName + " : " + val );
+    } else {
       let aobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: cID, name: attName });
       Earthdawn.setWithWorker( aobj, "current", val, dflt );
+    }
   } catch(err) { this.edClass.errorLog( "ED.SetWW() error caught: " + err ); }
 } // End ParseObj.SetWW()
 
@@ -1876,7 +1880,7 @@ Earthdawn.EDclass = function( origMsg ) {
   this.errorLog = function( msg ) {
     'use strict';
     try {
-      if( !state.Earthdawn.logCommandline && this.msg)
+      if( !state.Earthdawn.logCommandline && this.msg)    // If have not already logged the command line, do so. 
         log( this.msg );
       let today = new Date();
       log( today.getFullYear() + "-" + (today.getMonth() +1) + "-" + today.getDate() + " "
@@ -2423,7 +2427,7 @@ Step/Action Dice Table
     try {
       setTimeout(function() {       // When a character is imported from the character vault, the recalc caused by edition has been observed to cause a race condition. Delay this processig long enough for the import to have been done.
         try {
-          Earthdawn.setWW( "edition", cID, state.Earthdawn.edition );
+          Earthdawn.setWW( "edition", state.Earthdawn.edition, cID );
           Earthdawn.SetDefaultAttribute( cID, "effectIsAction", state.Earthdawn.effectIsAction );
           Earthdawn.SetDefaultAttribute( cID, "Misc-KarmaRitual", state.Earthdawn.karmaRitual === undefined ? "-1" :state.Earthdawn.karmaRitual );
           Earthdawn.SetDefaultAttribute( cID, "API", 1, 0 );
@@ -2551,9 +2555,10 @@ Step/Action Dice Table
     this.sendSWflag = function() {
       try {
         if( this.SWflag )
-          if( this.charID )
+          if( this.charID ) {
+//log(this.SWflag);
             this.setWW( "SWflag", this.SWflag.trim())
-          else
+          } else
             this.edClass.errorLog( "ED.checkSWflag error, no charID found!   SWflag was " + this.SWflag );
       } catch(err) { this.edClass.errorLog( "ED.checkSWflag() error caught: " + err ); }
     } // end sendSWflag()
@@ -2795,7 +2800,7 @@ Step/Action Dice Table
                 + (Earthdawn.getAttrBN( this.charID, "condition-KnockedDown", "0" ) == "1" ? 3 : 0)     // Armor-IP is almost certainly jump-up, so back out knocked down penalty.
                 - this.getValue( "Armor-IP" );
         else if( modtype.search( /Init/ ) != -1 )   // "@{Adjust-Effect-Tests-Total}+@{Initiative-Mods}"
-          modtypevalue = this.getValue( "Adjust-Effect-Tests-Total" ) + this.getValue( "Initiative-Mods");
+          modtypevalue = this.getValue( "Adjust-Effect-Tests-Total" ) + this.getValue( "Initiative-Mods") + this.getValue( "Initiative-Mods-Auto");
         else if (modtype == "0" || modtype == "(0)")
           modtypevalue = 0;
         else if( modtype.search( /Action/ ) != -1 )
@@ -3256,12 +3261,13 @@ Step/Action Dice Table
               this.chat( "Only GM can do this stuff!", Earthdawn.whoTo.player | Earthdawn.whoFrom.api | Earthdawn.whoFrom.noArchive, "gmState" );
             else {
               s += JSON.stringify( state.Earthdawn ) + "   ";
-              s += this.makeButton("Change Edition", "!Earthdawn~ Misc: State: edition: ?{What rules Edition|Earthdawn Forth Ed,4 ED|1879 1st Ed,-1 1879|Earthdawn Third Ed,3 ED|Earthdawn First Ed,1 ED}",
-                  "Switch API and Character sheet to Earthdawn 1st/3rd/4th Edition or 1879 1st Edition." ,Earthdawn.Colors.param ,Earthdawn.Colors.paramfg);
               s += this.makeButton("Result Style", "!Earthdawn~ Misc: State: Style: ?{What roll results style do you want|Vague Roll Result,2|Vague Success (not recommended),1|Full,0}",
                   "Switch API to provide different details on roll results. Vague Roll result is suggested. It does not say what the exact result is, but says how much it was made by. Vague Success says exactly what the roll was, but does not say the TN or how close you were." ,Earthdawn.Colors.param ,Earthdawn.Colors.paramfg);
+/*
               s += this.makeButton("Default RollType", "!Earthdawn~ Misc: State: ?{What category of character do you want to change|NPC|Mook|PC}: ?{Should new characters of that type default to Public or GM Only rolls|Public,0|GM Only,1}",
                   "By default, PCs default to public rolls, but NPCs and Mooks default to rolls visible only by the GM. This can be changed." ,Earthdawn.Colors.param ,Earthdawn.Colors.paramfg);
+              s += this.makeButton("Change Edition", "!Earthdawn~ Misc: State: edition: ?{What rules Edition|Earthdawn Forth Ed,4 ED|1879 1st Ed,-1 1879|Earthdawn Third Ed,3 ED|Earthdawn First Ed,1 ED}",
+                  "Switch API and Character sheet to Earthdawn 1st/3rd/4th Edition or 1879 1st Edition." ,Earthdawn.Colors.param ,Earthdawn.Colors.paramfg);
               s += this.makeButton("Default Karma Ritual", "!Earthdawn~ Misc: State: KarmaRitual: ?{What should the default for each new characters Karma Ritual be set to?|Fill to max,-1|Refill by Circle,-2|Refill by Racial Modifier,-3|Refill Nothing,0|Refill 1,1|Refill 2,2|Refill 3,3|Refill 4,4|Refill 5,5|Refill 6,6|Refill 7,7|Refill 8,8|Refill 9,9|Refill 10,10}",
                   "At charcter creation each charcters Karma Ritual behavior is set to this value. By default, The 'New Day' button refills a characters Karma pool up to Full." ,Earthdawn.Colors.param ,Earthdawn.Colors.paramfg);
 //  pre version 2.0
@@ -3270,6 +3276,7 @@ Step/Action Dice Table
                   "By default, when NPCs are linked, Nameplate and Wounds are visible to players, Damage and Karma are not. Token bars are above and not compact. This can change those defaults." ,Earthdawn.Colors.param ,Earthdawn.Colors.paramfg);
               s += this.makeButton("Effect is Action", "!Earthdawn~ Misc: State: EffectIsAction: ?{Is an Effect test to be treated identically to an Action test|No,0|Yes,1}",
                   "Two schools of thought. Effect Tests are Action tests, and modifiers that affect Action Tests also affect Effect Tests, or they are not and they don't." ,Earthdawn.Colors.param ,Earthdawn.Colors.paramfg);
+*/
               s += this.makeButton("Curse Luck Silent", "!Earthdawn~ Misc: State: CursedLuckSilent: ?{Does the Cursed Luck Horror power work silently|No,0|Yes,1}?{Does No-pile-on-dice work silently|No,0|Yes,1}?{Does No-pile-on-step work silently|No,0|Yes,1}",
                   "Normally the system announces when a dice roll has been affected by Cursed Luck. However the possibility exists that a GM might want it's effects to be unobtrusive. When this is set to 'yes', then the program just silently changes the dice rolls." ,Earthdawn.Colors.param ,Earthdawn.Colors.paramfg);
               s += this.makeButton("No Pile on - Dice", "!Earthdawn~ Misc: State: NoPileonDice: ?{Enter max number of times each die may explode. -1 to disable|-1}",
@@ -3291,6 +3298,7 @@ Step/Action Dice Table
             if( !playerIsGM( this.edClass.msg.playerid ) )
               this.chat( "Only GM can do this stuff!", Earthdawn.whoTo.player | Earthdawn.whoFrom.api | Earthdawn.whoFrom.noArchive, "gmState" );
             else {
+/*
               s = "Change Token Linking Options:  "
               + this.makeButton("NPC names", "!Earthdawn~ Misc: State: tokenLink: " + Earthdawn.tokenLinkNPC.showplayers_name + ": ?{Set or Unset|Set|Unset}: NPC names",
                 "Set or Unset players abilities to see NPC token Nameplates. Defaults to true" ,Earthdawn.Colors.param,Earthdawn.Colors.paramfg)
@@ -3352,6 +3360,7 @@ Step/Action Dice Table
               + this.makeButton("Compact", "!Earthdawn~ Misc: State: tokenLink: " + Earthdawn.tokenLinkNPC.pcCompact + ": Set: PC bars compact",
                 "Set PC token bars to Compact. Defaults to Standard" ,Earthdawn.Colors.param,Earthdawn.Colors.paramfg);
               this.chat( s.trim(), Earthdawn.whoTo.player | Earthdawn.whoFrom.api | Earthdawn.whoFrom.noArchive, "gmState" );
+*/
           } } break;  // end gmstateLink
           case "grimoire": {
             lst = this.getUniqueChars( 1 );
@@ -3474,7 +3483,7 @@ Step/Action Dice Table
           } break;  // end link
           case "linkadd1": {      // ChatMenu: linkadd1: (code: T, NAC, SK, SPM, WPN): (rowID): (Attribute, T, SK, DSP, TI, or WPN) : (name string to search for)
                         // User has given us a string to attempt to link to. Search all entries to see if there is a match. Confirm the match.
-            if( ssa.length < 5 || ssa[ 5 ].length < 2 )   // Make sure got a valid command line.
+            if( ssa.length < 6 || ssa[ 5 ].length < 2 )   // Make sure got a valid command line.
               return;
                       let attrib = (ssa[ 4 ] === "Attribute"),    skipmost = false;
             if( attrib ) {      // Check for the "real" attributes first, and if you find one, don't search for any more.
@@ -3536,9 +3545,8 @@ Step/Action Dice Table
                   // Second code/rowID combo is row that is being linked to (providing a value).
                   // Can make a link   T, NAC, SK,   SPM,  WPN
                   // Can link to    T, SK, WPN, DSP, TI, attributes???.  Maybe static talents.         // note removed NAC
-            if( ssa.length < 5 || ssa[ 5 ].length < 2 )   // Make sure got a valid command line.
+            if( ssa.length < 6 || ssa[ 5 ].length < 2 )   // Make sure got a valid command line.
               return;
-
                     // walk links. Check to make sure that nothing links back to this (or anything else in the tree).
             function walkLinks( nextCode, nextRow, badLink, nameList ) {    // Check to make sure row being linked does not reference row adding link.
               let links = Earthdawn.getAttrBN( edParse.charID, Earthdawn.buildPre( nextCode, nextRow) + "LinksGetValue_max" );
@@ -3586,9 +3594,9 @@ Step/Action Dice Table
               Earthdawn.set( obj, "max", llst.join(), linkToAdd );
   //log( "setww " + obj.get( "name" ) + "   from: " + obj.get( "current" ) + "   to: " + dlst.join());
               Earthdawn.setWithWorker( obj, "current", dlst.join(), dispAdd );
-  //            edParse.addSWflag( "Trigger", obj.get( "name" ) + ": " + dlst.join());
+//              edParse.addSWflag( "Trigger2", obj.get( "name" ));
+//              edParse.addSWflag( "Trigger", obj.get( "name" ) + ": " + llst.join());
             } // end linkAdd
-
             let t =  att ? ssa[ 5 ] : Earthdawn.getAttrBN( this.charID, Earthdawn.buildPre( ssa[ 4 ], ssa[ 5 ] ) + "Name", "" ),
               l;
             function lnk() {
@@ -3614,7 +3622,7 @@ Step/Action Dice Table
                     Earthdawn.getAttrBN( this.charID, Earthdawn.buildPre( ssa[ 2 ], ssa[ 3 ] ) + "Name", "" ).replace( /[\,|\+]/g, ""),
                     ssa[ 2 ] + ";" + ssa[ 3 ]);
             this.chat( "Linked " + ssa[ 4 ] + "-" + t, Earthdawn.whoFrom.apiWarning | Earthdawn.whoFrom.noArchive, "API" );
-  //          this.sendSWflag();
+            this.sendSWflag();
           } break;  // end linkAdd2
           case "linkremove":        // ChatMenu: linkRemove: (code: T, NAC, SK, SPM, WPN): (rowID): ( Attribute, T, SK, WPN, DSP, NAC, or WPN): linked rowID to be removed or Attrubite name.
           case "linkremovehalf": {    // ChatMenu: linkRemoveHalf: attribute name, rowID to remove.
@@ -3653,7 +3661,8 @@ Step/Action Dice Table
               Earthdawn.set( obj, "max", llst.join(), "" );
   //log( "setww " + obj.get( "name" ) + "   from: " + obj.get( "current" ) + "   to: " + dlst.join());
               Earthdawn.setWithWorker( obj, "current", dlst.join(), "" );
-  //            edParse.addSWflag( "Trigger", obj.get( "name" ) + ": " + dlst.join());
+//              edParse.addSWflag( "Trigger2", obj.get( "name" ));
+//              edParse.addSWflag( "Trigger", obj.get( "name" ) + ": " + llst.join());
             } // end linkRemove
 
 
@@ -3671,7 +3680,7 @@ Step/Action Dice Table
                 linkRemove( Earthdawn.buildPre( ssa[ 4 ], ssa[ 5 ]) + "LinksProvideValue", ssa[ 3 ], false);
               this.chat( done + " links removed.", Earthdawn.whoTo.player | Earthdawn.whoFrom.noArchive, "API" );
             }
-//          this.sendSWflag();
+            this.sendSWflag();
           } break;  // end linkRemove
           case "mask": {    // ChatMenu: Mask
                     // give a button for each mask present, allowing that mask to be removed.
@@ -3923,7 +3932,7 @@ Step/Action Dice Table
             this.edClass.errorLog( "edParse.ChatMenu() Illegal ssa. " );
             log( ssa );
         } // end main switch
-      } catch(err) { this.edClass.errorLog( "ED.ChatMenu() error caught: " + err ); }
+      } catch(err) { this.edClass.errorLog( "ED.ChatMenu() error caught: " + err ); log(ssa); }
       return false;
     } // End ChatMenu()
 
@@ -5810,15 +5819,16 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
     this.makeButton = function( buttonDisplayTxt, linkText, tipText, buttonColor, txtColor, noColonFix )  {
       'use strict';
       try {
-        return new HtmlBuilder( "a", buttonDisplayTxt, Object.assign({}, {
+        return new HtmlBuilder( "a", buttonDisplayTxt, Object.assign( {}, {
           href: noColonFix ? linkText : Earthdawn.encode( Earthdawn.colonFix( linkText )),
-          class: "sheet-chatbutton",
-          style: Object.assign( buttonColor ? { "background-color": buttonColor } : {},
-          txtColor ? { "color": txtColor } : {} )},
-          tipText ? {
-//            class: "showtip tipsy",   // removing this gives us black on white long tool tips rather than the white on black tooltips that have a display bug. 10
-            title: Earthdawn.encode( Earthdawn.encode( tipText )),
-          } : {})) + " ";
+          class: "sheet-chatbutton" },
+          ( buttonColor || txtColor ) ? {       // Optional style section if have a color
+            style: Object.assign( buttonColor ? { "background-color": buttonColor } : {},
+              txtColor ? { "color": txtColor } : {} )} : {},
+          tipText ? {     // Optional tipText section
+//            class: "showtip tipsy",   // removing this gives us black on white long tool tips rather than the white on black tooltips that have a display bug.
+            title: Earthdawn.encode( Earthdawn.encode( tipText )) } : {} 
+          )) + " ";
       } catch(err) { this.edClass.errorLog( "ED.makeButton error caught: " + err ); }
     } // end makeButton()
 
@@ -5891,7 +5901,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
             setObj,
             mook = (Earthdawn.getAttrBN( this.charID, "NPC", "0" ) == Earthdawn.charType.mook ),
             dupChar = false, 
-            valid = [ { level: -1111, attrib: 0, badge: false, marker: Earthdawn.getIcon( mi ) }],   // unset is always valid.
+            valid = [{ level: -1111, attrib: 0, badge: false, marker: Earthdawn.getIcon( mi ) }],   // unset is always valid.
             mia = _.filter( Earthdawn.StatusMarkerCollection, function(mio) { return mio[ "attrib" ] == attrib; });   // get an array of menu items with this attribute.
 
 //log(mia);
@@ -5918,7 +5928,9 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                 if( itma.length > 1 ) {     // we have a menu that can be broken appart. 
                   ++fnd;
                   let itm = itma[ 1 ].replace( "\[", "").replace( "\]", "" );   // remove brackets from code. 
-                  if( itm !== "0^u" ) {   // Unset is already in array. 
+                  if( itm !== "0^u" ) {   // Unset with value 0 is already in array.
+
+
                     let kernals = itm.split( "^" ),
                       kb = kernals[ 1 ],
                       kb2 = kb;
@@ -5931,8 +5943,12 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                         kb2 = kb.charCodeAt( 0 ) - "a".charCodeAt( 0 ) + 1;
                       if(( kb >= "A") && ( kb <= "I" ))
                         kb2 = kb.charCodeAt( 0 ) - "A".charCodeAt( 0 ) + 1;
-                      else if( !isNaN( kernals[ 0 ] ))
-                        valid.push({ level: Earthdawn.parseInt2( kernals[ 0 ]), attrib: Earthdawn.parseInt2( kernals[ 0 ]), badge: kb2, marker: mark });
+                      if( !isNaN( kernals[ 0 ] ))
+                        if(!kb2)
+                          valid[ 0 ].attrib = kernals[ 0 ];   //If we are in this loop, i.e. there is a submenu, but it is not "0^u", we should update the default unset attrib
+                        else
+                          valid.push({ level: Earthdawn.parseInt2( kernals[ 0 ]), attrib: Earthdawn.parseInt2( kernals[ 0 ]), badge: kb2, marker: mark });
+//                        log("test " + JSON.stringify(valid));
               } } } }
               if( !fnd ) {      // A classic submenu was not found, so we seem to have a freeform numeric input.  
                 valid.push({ level: 0, attrib: 0, badge: true, marker: mark });
@@ -6030,7 +6046,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                   high = item;
                 if( item.level > val && (rndup === undefined || item.level < rndup.level ))
                   rndup = item;
-                if( item.level < val && (rnddown === undefined || item.level > rnddown.vlaue ))
+                if( item.level < val && (rnddown === undefined || item.level > rnddown.level ))
                   rnddown = item;
               });
               if( rnddown === undefined ) return low;
@@ -6206,6 +6222,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                 this.MacroDetail( "Roll-Player-GM", "!edsdrGM~ ?{Step|0}~ ?{Bonus or Karma Step|0}~ for ?{reason| no reason}", false );
                 this.MacroDetail( "Roll-GM-Only", "!edsdrHidden~ ?{Step|0}~ ?{Bonus or Karma Step|0}~ for ?{reason| no reason}", false );
                 this.MacroDetail( "NpcReInit", "!Earthdawn~ rerollnpcinit", false );
+                this.MacroDetail( "ResetChars", "!Earthdawn~ Misc: ResetChars: ?{Mods Only or Full Reset|Mods Only|Full}", false );
                 this.MacroDetail( "Token", "!edToken~", false );
                 this.MacroDetail( "Dur-Track", "!Earthdawn~ ChatMenu: DurationTracker : ?{Name of the Effect|Effect}: ?{How many rounds ?|1}", false ); //new in v2 - Records duration of an effect in the turn tracker
 //              this.MacroDetail( "Test", "!edToken~ %{selected|Test}", true );     // Leave Test in here. It can be uncommented when it is actually needed.
@@ -6282,6 +6299,98 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
               }
             } catch(err) { this.edClass.errorLog( "ED.funcMisc.NewDay error caught: " + err ); }
             break;
+          case "resetchars":      // reset all selected tokens to full health, karma, Recovery Tests, and no modifications or status markers. 
+            try {       // Note, when this routine enters, we will not have this.charID or TokenInfo set. So be careful what other functions get called. 
+              let lst = this.getUniqueChars( 1 ),
+                  full = (ssa.length < 3) ? false : ssa[ 2 ].toUpperCase().startsWith( "F" ),   // default to Mods Only. Full if Starts with F
+                  nlist = "";
+              for( let c in lst ) {     // For each unique character, do the following. 
+                this.charID = c;
+                let kObj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: "Karma" });
+                let karma = kObj.get( "max" ),
+                    unc = Earthdawn.getAttrBN( this.charID, "Damage-Unc-Rating", "2" ),
+                    markers = "";
+                if( full ) {
+                  Earthdawn.setWithWorker( kObj, "current", karma );
+                  this.setWW( "Damage", 0);
+                  this.setWW( "Damage-Stun", 0);
+                  this.setWW( "Wounds", 0);
+                  this.setWW( "Recovery-Tests", Earthdawn.getAttrBN( this.charID, "Recovery-Tests_max", "2" ));
+                }
+                this.setWW( "Dex-Mods", 0);
+                this.setWW( "Str-Mods", 0);
+                this.setWW( "Tou-Mods", 0);
+                this.setWW( "Per-Mods", 0);
+                this.setWW( "Wil-Mods", 0);
+                this.setWW( "Cha-Mods", 0);
+                this.setWW( "Initiative-Mods", 0);
+                this.setWW( "Misc_Wound_Threshold-Buff", 0);
+                this.setWW( "PD-Buff", 0);
+                this.setWW( "MD-Buff", 0);
+                this.setWW( "SD-Buff", 0);
+                this.setWW( "PA-Buff", 0);
+                this.setWW( "MA-Buff", 0);
+                this.setWW( "Adjust-All-Tests-Misc", 0);
+                this.setWW( "Adjust-Effect-Tests-Misc", 0);
+                this.setWW( "Adjust-Defenses-Misc", 0);
+                this.setWW( "Adjust-Attacks-Misc", 0);
+                this.setWW( "Adjust-Damage-Misc", 0);
+                this.setWW( "Adjust-TN-Misc", 0);
+                this.setWW( "Adjust-Attacks-Bonus", 0);
+                this.setWW( "Adjust-Damage-Bonus", 0);
+                this.setWW( "Movement-Buff", 0);
+                this.setWW( "Shield-Phys-Buff", 0);
+                this.setWW( "Shield-Myst-Buff", 0);
+                this.setWW( "Attack-Step-Mod", 0);
+                if( Earthdawn.parseInt2( Earthdawn.getAttrBN( this.charID, "Creature-Ambush", "0" )) > 0 ) {    // If the creature can ambush, reset is that it is.
+                  let mi = _.find( Earthdawn.StatusMarkerCollection, function(mio){ return mio[ "code" ] == "ambushing"; });
+                  if( mi )
+                    markers += Earthdawn.getIcon( mi ) + ",";
+                }
+                if( Earthdawn.parseInt2( Earthdawn.getAttrBN( this.charID, "Creature-DiveCharge", "0" )) > 0 ) {    // If the creature can charge, reset is that it is.
+                  let mi = _.find( Earthdawn.StatusMarkerCollection, function(mio){ return mio[ "code" ] == "divingcharging"; });
+                  if( mi )
+                    markers += Earthdawn.getIcon( mi ) + ",";
+                }
+                for( let t in lst[ c ] ) {    // For each unique token found, do the following. 
+                  let TokenObj = getObj("graphic", lst[ c ][ t ][ "token" ]);
+                  if( TokenObj ) {
+                    this.tokenInfo = { type: "token", name: TokenObj.get( "name" ), tokenObj: TokenObj, characterObj: getObj("character", c ) };
+                    let tMarkers = markers,
+                        oldMarkers = TokenObj.get( "statusmarkers" );
+                    nlist += TokenObj.get( "name" ) + ", ";
+                    
+                    function keepthese( checkfor ) {        // There are certain markers that we don't want to clear away. 
+                      let mi = _.find( Earthdawn.StatusMarkerCollection, function(mio){ return mio[ "code" ] == checkfor; });
+                      if( mi ) {
+                        if( oldMarkers.indexOf( mi[ "customTag" ] ) !== -1 )
+                          tMarkers += mi[ "customTag" ] + ",";
+                        else if( oldMarkers.indexOf( mi[ "icon" ] ) !== -1 )
+                          tMarkers += mi[ "icon" ] + ",";
+                    } }
+                    keepthese( "karmaauto" );
+                    keepthese( "karmaask" );
+                    keepthese( "devpntauto" );
+                    keepthese( "devpntask" );
+                    keepthese( "flying" );
+
+                    let removed = _.difference( _.without( oldMarkers.split( "," ), ""), _.without( tMarkers.split( "," ), "") );
+                    if( removed.length ) {
+                      for( let i = 0; i < removed.length; ++i )			// unset everything with these markers.
+                        this.MarkerSet( [ "marker", removed[ i ].replace( /\@\d*/g, ""), "u"] );
+                    }
+
+                    Earthdawn.set( TokenObj, "statusmarkers", tMarkers.slice(0, -1) );   // set each tokens status markers to empty (except maybe ambush and charge, which default to on for those who have it)   Note that this should be unnessicary as far as the tokens go, but it also removes all hits and other things stored in the status markers. 
+                    if( full && ( Earthdawn.getAttrBN( this.charID, "NPC", "0" ) == Earthdawn.charType.mook )) {   // We only need to process tokens if they are mooks. Otherwise everything is linked to the character.
+                      Earthdawn.set( TokenObj, "bar1_value", karma);    // karma
+                      Earthdawn.set( TokenObj, "bar2_value", 0);        // wounds
+                      Earthdawn.set( TokenObj, "bar3_value", 0);        // damage
+                      Earthdawn.set( TokenObj, "bar3_max",   unc );
+                  } }   // end tokenObj
+              } }
+              this.chat( "Reset characters: " + nlist.slice( 0, -2 ) + ".", Earthdawn.whoTo.public | Earthdawn.whoFrom.noArchive );
+            } catch(err) { this.edClass.errorLog( "ED.funcMisc.ResetChars error caught: " + err ); }
+            break;
           case "setadjust":
             // For the current character, copy all the buffs from the Combat Tab as adjustments on the Adjustments tab.
             // This makes it easier for the GM to enter monsters. enter Buffs on the Combat tab until the values are right, then use this option to copy
@@ -6342,7 +6451,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                     let count = 0,
                        chars = findObjs({ _type: "character" });
                     _.each( chars, function (charObj) {
-                      Earthdawn.setWW( "edition", charObj.get( "_id" ), state.Earthdawn.edition );
+                      Earthdawn.setWW( "edition", state.Earthdawn.edition, charObj.get( "_id" ));
                       ++count;
                     }) // End ForEach character
                     this.chat( count + " character sheets updated." );
@@ -6355,11 +6464,11 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                     let count = 0,
                       chars = findObjs({ _type: "character" });
                     _.each( chars, function (charObj) {
-                      Earthdawn.setWW( "effectIsAction", charObj.get( "_id" ), state.Earthdawn.effectIsAction );
+                      Earthdawn.setWW( "effectIsAction", state.Earthdawn.effectIsAction, charObj.get( "_id" ) );
                       ++count;
                       if( state.Earthdawn.effectIsAction == "1" )
                         for( let ind = 0; ind < 6; ++ind ) {
-                          Earthdawn.setWW( [ "Dex", "Str", "Tou", "Per", "Wil", "Cha" ][ ind ] + "-ActnEfct", charObj.get( "_id" ), "1" );
+                          Earthdawn.setWW( [ "Dex", "Str", "Tou", "Per", "Wil", "Cha" ][ ind ] + "-ActnEfct", "1", charObj.get( "_id" ) );
                         }
                     }) // End ForEach character
                     this.chat( count + " character sheets updated." );
@@ -6378,7 +6487,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                     let count = 0,
                      chars = findObjs({ _type: "character" });
                     _.each( chars, function (charObj) {
-                      Earthdawn.setWW( "Misc-KarmaRitual", charObj.get( "_id" ), state.Earthdawn.karmaRitual );
+                      Earthdawn.setWW( "Misc-KarmaRitual", state.Earthdawn.karmaRitual, charObj.get( "_id" ) );
                       ++count;
                     }) // End ForEach character
                     this.chat( count + " character sheets updated." );
@@ -6562,16 +6671,15 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
           reason = ":",
           kobj  = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: "record-journal" }, ""),
           oldStr =  kobj.get( "current" );
-
         do {
-            res = oldStr.slice( nchar, 28 + nchar).match( /\b\d{4}[\-\#\\\/\s]\d{1,2}[\-\#\\\/\s]\d{1,2}\b/g );
+            res = oldStr.slice( nchar, 28 + nchar).match( /\b\d{4}[\-\#\\\/\s]\d{1,2}[\-\#\\\/\s]\d{1,2}\b/g );   // find things  that looks like dates near the start of lines. 
             if( res === null ) {
               nchar = oldStr.length;
               continue;
             }
 
             for( var i = 0; i < res.length; i++) {    // Find out what dates were on the last entry posted.
-              iyear = Earthdawn.parseInt2( res[ i ]);
+              iyear = Earthdawn.parseInt2( res[ i ], true);
               if( iyear > 2000 ) {
                 if ( oldReal === "" )
                   oldReal = res[ i ];
@@ -7026,7 +7134,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
             if( playerIsGM( this.edClass.msg.playerid ) ) {
               let targetChar = Earthdawn.tokToChar( this.targetIDs[ i ] );
               if( targetChar )
-                Earthdawn.setWW( "Creature-CursedLuck", targetChar, Earthdawn.parseInt2( this.misc[ "extraSucc" ]) + 1 );
+                Earthdawn.setWW( "Creature-CursedLuck", Earthdawn.parseInt2( this.misc[ "extraSucc" ]) + 1, targetChar );
             } else
               this.chat( "Error! Only GM is allowed to do Cursed Luck powers!", Earthdawn.whoFrom.apiError);
           } else {    // It is a more generic hit, without any special coding.
@@ -7170,23 +7278,22 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
           else if (modtype === "0" )
             modBit = 0x40;
 
-          if( modBit === 0x18 && (x = Earthdawn.getAttrBN( this.charID, "Armor-IP", "0" )) != 0)
+          if( modBit === 0x18 && (x = this.getValue( "Armor-IP" )) != 0)
             txt += Earthdawn.texttip( "  Armor (only) IP: -" + x, "Penalty from Armor (but not shield)." );
-          else if( modBit === 0x28 && (x = Earthdawn.getAttrBN( this.charID, "Initiative-Mods", "0" )) != 0)
+          else if( modBit === 0x28 && ((x = this.getValue( "Initiative-Mods" ) + this.getValue( "Initiative-Mods-Auto" )) != 0))
             txt += Earthdawn.texttip( "  IP: " + x, "Initiative Modifiers, most commonly penalty from armor and shield." );
           else if( modBit === 0x40 )
             txt += Earthdawn.texttip( "  Never. ", "This test never has any modifiers." );
 
-          if((( modBit & 0x10 ) || ( modBit & 0x20 && state.Earthdawn.effectIsAction))
-                && (x = Earthdawn.getAttrBN( this.charID, "Adjust-All-Tests-Misc", "0" )) != 0)
+          if((( modBit & 0x10 ) || ( modBit & 0x20 && state.Earthdawn.effectIsAction)) && (x = this.getValue( "Adjust-All-Tests-Misc" )) != 0)
             txt += Earthdawn.texttip( "  Action Misc: " + x, "Misc modifiers that apply to Action Tests." );
-          if(( modBit & 0x20 ) && !state.Earthdawn.effectIsAction && (x = Earthdawn.getAttrBN( this.charID, "Adjust-Effect-Tests-Misc", "0" )) != 0)
+          if(( modBit & 0x20 ) && !state.Earthdawn.effectIsAction && (x = this.getValue( "Adjust-Effect-Tests-Misc" )) != 0)
             txt += Earthdawn.texttip( "  Effect Misc: " + x, "Misc modifiers that apply to Effect Tests." );
-          if(( modBit == 0x12 || modBit == 0x14 ) && (x = Earthdawn.getAttrBN( this.charID, "Adjust-Attacks-Misc", "0" )) != 0)
+          if(( modBit == 0x12 || modBit == 0x14 ) && (x = this.getValue( "Adjust-Attacks-Misc" )) != 0)
             txt += Earthdawn.texttip( "  Attack Misc: " + x, "Misc modifiers that apply to Attack Tests." );
-          if(( modBit == 0x22 || modBit == 0x24 ) && (x = Earthdawn.getAttrBN( this.charID, "Adjust-Damage-Misc", "0" )) != 0)
+          if(( modBit == 0x22 || modBit == 0x24 ) && (x = this.getValue( "Adjust-Damage-Misc" )) != 0)
             txt += Earthdawn.texttip( "  Damage Misc: " + x, "Misc modifiers that apply to Damage Tests." );
-          if(( modBit & 0x04 ) && (Earthdawn.getAttrBN( this.charID, "combatOption-AggressiveAttack", "0" ) == "1" ))   // & 0x04 is -CC
+          if(( modBit & 0x04 ) && (this.getValue( "combatOption-AggressiveAttack" ) == "1" ))   // & 0x04 is -CC
             txt += Earthdawn.texttip( "  Aggressive: " + Earthdawn.getAttrBN( this.charID, "Misc-AggStance-Bonus", "3" ),
                 "Aggressive Stance: +" + Earthdawn.getAttrBN( this.charID, "Misc-AggStance-Bonus", "3" )
                 + " bonus to Close Combat attack and damage tests. " + Earthdawn.getAttrBN( this.charID, "Misc-AggStance-Penalty", "-3")
@@ -7194,7 +7301,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 
 //          if( "rsPrefix" in this.misc || "SP-Step" in this.misc ) {   // rsPrefix means came from "Action". SP-Step means spellcasing command line.
 // Note, I don't think the above test was needed. But maybe it was.
-          if(( modBit & 0x10 || modBit == 0x22 || modBit == 0x24 ) && Earthdawn.getAttrBN( this.charID, "combatOption-DefensiveStance", "0" ) == "1")
+          if(( modBit & 0x10 || modBit == 0x22 || modBit == 0x24 ) && this.getValue( "combatOption-DefensiveStance" ) == "1")
             if( "Defensive" in this.misc )
               extraMod += Earthdawn.parseInt2(Earthdawn.getAttrBN( this.charID, "Misc-DefStance-Penalty", "3" ));    // extraMod is adding back in stuff that already subtracted from the base modifications if that modification does not apply to this test.
             else
@@ -7202,44 +7309,44 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                   "Defensive Stance: +"  + Earthdawn.getAttrBN( this.charID, "Misc-DefStance-Bonus", "3" )
                   + " bonus to PD and MD. " + Earthdawn.getAttrBN( this.charID, "Misc-DefStance-Penalty", "-3")
                   + " penalty to all actions except defensive rolls and Knockdown tests." );
-          if(( modBit & 0x10 ) && Earthdawn.getAttrBN( this.charID, "condition-KnockedDown", "0" ) == "1")
+          if(( modBit & 0x10 ) && this.getValue( "condition-KnockedDown" ) == "1")
 //            if (("Resistance" in this.misc ) || (modBit == 0x18))
             if ("Resistance" in this.misc )
               extraMod += 3;
             else
               txt += Earthdawn.texttip( "  Knocked Down.", "Knocked Down: -3 penalty on all defenses and tests. Movement 2. May not use Combat Option other than Jump-Up." );
           if( "MoveBased" in this.misc ) {
-            extraMod -= Earthdawn.getAttrBN( this.charID, "condition-ImpairedMovement", "0" );
+            extraMod -= this.getValue( "condition-ImpairedMovement" );
             txt += Earthdawn.texttip( "  Impaired Move: " + this.misc[ "MoveBased" ], "Impaired Movement: -5/-10 to Movement Rate (1 min). -2/-4 Penalty to movement based tests due to footing, cramping, or vision impairments. Dex test to avoid tripping or halting." );
           }
           if( "VisionBased" in this.misc ) {
-            extraMod -= Earthdawn.getAttrBN( this.charID, "condition-Darkness", "0" );
+            extraMod -= this.getValue( "condition-Darkness" );
             txt += Earthdawn.texttip( "  Impaired Vision: " + this.misc[ "VisionBased" ], "Impaired Vision: -2/-4 Penalty to all sight based tests due to Darkness, Blindness or Dazzling." );
           }
 //          } // from Action() or spell.
 
           if(( modBit == 0x12 || modBit == 0x14)
-                && Earthdawn.getAttrBN( this.charID, "combatOption-CalledShot", "0" ) == "1" && !("SP-Step" in this.misc))
+                && this.getValue( "combatOption-CalledShot" ) == "1" && !("SP-Step" in this.misc))
             txt += Earthdawn.texttip( "  Called Shot: -3", "Take one Strain; –3 penalty to Attack test; if successful, attack hits designated area. One automatic extra success for maneuver being attempted, other extra successes spent that way count twice." );
-          if( modBit & 0x10 && Earthdawn.getAttrBN( this.charID, "combatOption-SplitMovement", "0" ) == "1" )
+          if( modBit & 0x10 && this.getValue( "combatOption-SplitMovement" ) == "1" )
             txt += Earthdawn.texttip( "  Split Move.", "Split Movement: Take 1 Strain and be Harried to attack during movement." );
-          if( modBit & 0x10 && Earthdawn.getAttrBN( this.charID, "combatOption-TailAttack", "0" ) == "1" )
+          if( modBit & 0x10 && this.getValue( "combatOption-TailAttack" ) == "1" )
             txt += Earthdawn.texttip( "  Tail Attack: -2", "Tail Attack: T'Skrang only: Make extra Attack, Damage = STR. -2 to all Tests." );
           if(( modBit == 0x12 || modBit == 0x22 || modBit == 0x14 || modBit == 0x24)    // Note, -CC does not make any sense, but if they DID do it, let them, especially since the updateAdjustAttacks() routine lets them and it is too much of a pain to fix.
-                && !("SP-Step" in this.misc) && Earthdawn.getAttrBN( this.charID, "condition-RangeLong", "0" ) == "1" )
+                && !("SP-Step" in this.misc) && this.getValue( "condition-RangeLong" ) == "1" )
             txt += Earthdawn.texttip( "  Long Range: -2", "The attack is being made at long range. -2 to attack and damage tests." );
-          if( Earthdawn.getAttrBN( this.charID, "condition-Surprised", "0" ) == "1" )
+          if( this.getValue( "condition-Surprised" ) == "1" )
             txt += Earthdawn.texttip( "  Surprised!", "Acting character is surprised. Can it do this action?" );
-          if( modBit & 0x10 && Earthdawn.getAttrBN( this.charID, "condition-Harried", "0" ) != "0" )
-            txt += Earthdawn.texttip( "  Harried: -" + Earthdawn.getAttrBN( this.charID, "condition-Harried", "0" ), "Harried: Penalty to all Tests and to PD and MD." );
-          if(( modBit & 0x02 || modBit & 0x04 || modBit == 28 )&& Earthdawn.getAttrBN( this.charID, "Creature-Ambushing", "0" ) != "0" )
-            txt += Earthdawn.texttip( "  Ambush: " + Earthdawn.getAttrBN( this.charID, "Creature-Ambush", "0" ), "Ambush: Added to Initiative, Attack, and Damage." );
-          if(( modBit & 0x02 || modBit & 0x04 )&& Earthdawn.getAttrBN( this.charID, "Creature-DivingCharging", "0" ) != "0" )
-            txt += Earthdawn.texttip( "  Diving or Charging: " + Earthdawn.getAttrBN( this.charID, "Creature-DiveCharge", "0" ), "Diving or Charging: Added to Attack, and Damage" );
-          if(( modBit & 0x10 || modBit & 0x20 ) && (x = Earthdawn.getAttrBN( this.charID, "Wounds", "0" )) > 0)
-            if( Earthdawn.getAttrBN( this.charID, "Creature-Fury", "0" ) >= x )
+          if( modBit & 0x10 && this.getValue( "condition-Harried" ) != "0" )
+            txt += Earthdawn.texttip( "  Harried: -" + this.getValue( "condition-Harried" ), "Harried: Penalty to all Tests and to PD and MD." );
+          if(( modBit & 0x02 || modBit & 0x04 || modBit == 28 )&& this.getValue( "Creature-Ambushing" ) != "0" )
+            txt += Earthdawn.texttip( "  Ambush: " + this.getValue( "Creature-Ambush" ), "Ambush: Added to Initiative, Attack, and Damage." );
+          if(( modBit & 0x02 || modBit & 0x04 )&& this.getValue( "Creature-DivingCharging" ) != "0" )
+            txt += Earthdawn.texttip( "  Diving or Charging: " + this.getValue( "Creature-DiveCharge" ), "Diving or Charging: Added to Attack, and Damage" );
+          if(( modBit & 0x10 || modBit & 0x20 ) && (x = this.getValue( "Wounds" )) > 0)
+            if( this.getValue( "Creature-Fury" ) >= x )
               txt += Earthdawn.texttip( "  +" + x + " Fury.", "Instead of suffering penalties, Wounds grant this creature a bonus to tests." );
-            else if ((x2 = Earthdawn.getAttrBN( this.charID, "Creature-ResistPain", "0" )) < x)
+            else if ((x2 = this.getValue( "Creature-ResistPain" )) < x)
               txt += Earthdawn.texttip( "  -" + (x2 - x) + " Wounds.", "-1 penalty to all action and effect tests per wound." );
 
           let modvalue = this.misc[ "ModValue" ] + extraMod;
@@ -7249,11 +7356,11 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                   "Total of all bonuses and Penalties." ) + txt.trim());
 
           txt = "";   // Stuff under here flows down into target.
-          if(( modBit == 0x12 || modBit == 0x14  || ("SP-Step" in this.misc)) && Earthdawn.getAttrBN( this.charID, "condition-Blindsiding", "0" ) == "1")
+          if(( modBit == 0x12 || modBit == 0x14  || ("SP-Step" in this.misc)) && this.getValue( "condition-Blindsiding" ) == "1")
             txt += Earthdawn.texttip( "  Blindsiding: +2", "The acting character is blindsiding the targeted character, who takes -2 penalty to PD and MD. Can't use shield. No active defenses." );
-          if(( modBit == 0x12 || modBit == 0x14 || "SP-Step" in this.misc) && Earthdawn.getAttrBN( this.charID, "condition-TargetPartialCover", "0" ) == "1")
+          if(( modBit == 0x12 || modBit == 0x14 || "SP-Step" in this.misc) && this.getValue( "condition-TargetPartialCover" ) == "1")
             txt += Earthdawn.texttip( "  Tgt Cover: +2", "The targeted character has cover from the acting character. +2 bonus to PD and MD." );
-          if( modBit & 0x10 && Earthdawn.getAttrBN( this.charID, "combatOption-Reserved", "0" ) == "1" )
+          if( modBit & 0x10 && this.getValue( "combatOption-Reserved" ) == "1" )
             txt += Earthdawn.texttip( "  Reserved Actn: +2", "Reserved Action: +2 to all Target Numbers. Specify an event to interrupt." );
         }  // end modType
 
@@ -7687,13 +7794,13 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 
 
 
-          // setWW
+          // setWW    (note that there is also an EARTHDAWN.setWW that accepts cID)
           // helper routine that sets a value into an attribute and nothing else. 
           // is part of parseObj so that have access to parseObj.char.ID
     this.setWW = function( attName, val, dflt ) {
       'use strict';
       try {
-        Earthdawn.setWW( attName, this.charID, val, dflt );
+        Earthdawn.setWW( attName, val, this.charID, dflt );
       } catch(err) { this.edClass.errorLog( "ParseObj.SetWW() error caught: " + err ); }
     } // End ParseObj.SetWW()
 
@@ -7756,7 +7863,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
     this.Spell = function( ssa ) {
       'use strict';
       try {
-log("this.Spell " + JSON.stringify(ssa));
+//log("this.Spell " + JSON.stringify(ssa));
             //Information coming directly from the Spell passed in the SSA
         let bGrim = ssa[ ssa.length - 1 ].toLowerCase().startsWith( "g" ),          // false = Matrix(SPM). true = Spell (SP).
           pre = Earthdawn.buildPre( bGrim ? "SP" : "SPM", ssa[ 1 ] ),               // The prefix for the spell, SPM or SP depending where the call was made from
@@ -7899,7 +8006,7 @@ log("this.Spell " + JSON.stringify(ssa));
         disp = Earthdawn.dispToName( tmp, false );    // Name of discipline, not short
         let target = Earthdawn.getAttrBN( this.charID, presp + "Casting", "0"),
           wilselect = Earthdawn.getAttrBN( this.charID, presp + "WilSelect", "None");
-        if (target.startsWith( "MD1" ) && seq.includes( "Target" )) target = "MDh";     //If we had an Extra Thread that adds Targets, change MD1 to MDh
+        if (target.startsWith( "MD1" ) && seq.includes( "Target" )) target = "MDh";     // If we had an Extra Thread that adds Targets, change MD1 to MDh
         let attributes = findObjs({ _type: "attribute", _characterid: this.charID });
         _.each( attributes, function (att) {
           if (att.get( "name" ).endsWith( "_T_Special" ) && att.get( "current" ).startsWith( "SPL-" )) {      // If any of the SPL- Talents. 
@@ -9237,7 +9344,7 @@ log("this.Spell " + JSON.stringify(ssa));
 
         if( state.Earthdawn.logCommandline ) {
           log( "textImport: " );
-          log( ssa );
+          log( ssa.join().replace( /\n/g, "\\n" ));
         }
 
 
@@ -9648,15 +9755,14 @@ log("this.Spell " + JSON.stringify(ssa));
                         + "{{lp=" + (Earthdawn.fibonacci( rnk ) * 100) + "}}"
                         + "{{sp=" + (rnk * 50) + "}}"
                         + "{{time=" + rnk + " days}}"
-                    let slink = "{{button1=[Press here](!Earthdawn~ charID: " + po.charID
+                    let slink = "!Earthdawn~ charID: " + po.charID
                         + "~ Record: ?{Posting Date|" + today.getFullYear() + "-" + (today.getMonth() +1) + "-" + today.getDate()
-                        + "}: ?{" + ( state.Earthdawn.gED ? "Throalic Date|" : "Game world Date|" ) + tdate;
+                        + "}: ?{" + ( state.Earthdawn.gED ? "Throalic Date|" : "Game world Date|" ) + tdate
                         + "}: LP: ?{Legend Points to post|" + (Earthdawn.fibonacci( rnk ) * 100)
                         + "}: ?{Silver to post|" + (rnk * 50) + "}: Spend: "
                         + "?{Time| and " + rnk + " days.}   "
                         + "?{Reason|" + name + " Knack Rank " + rnk + "}";
-                    sendChat( "API", Earthdawn.getAttrBN( po.charID, "playerWho", null ) + stem + slink + ")}}", null, {noarchive:true});
-  //                  sendChat( "API", Earthdawn.getAttrBN( po.charID, "playerWho", null ) + stem + Earthdawn.colonFix( slink ) + ")}}", null, {noarchive:true});
+                    sendChat( "API", Earthdawn.getAttrBN( po.charID, "playerWho", null ) + stem + "{{button1=[Press here](" + Earthdawn.colonFix( slink ) + ")}}", null, {noarchive:true});
                   }
                 } break;
                 case "restrictions":    // Knacks. Just paste it in.
@@ -9690,7 +9796,7 @@ log("this.Spell " + JSON.stringify(ssa));
                   break;
                 case "talent": {      // Knacks.
                   let x = statBlock( i, tf, pre + "BaseTalent" );
-                  po.Parse( "ChatMenu: Linkadd1: " + rowID + ": T:" + x[ "field" ] );
+                  po.Parse( "ChatMenu: Linkadd1: NAC:" + rowID + ": T:" + x[ "field" ] );
                 } break;
                 case "tier": {        // 1879
                   let x = statBlock( i, tf, null, "Word" );
@@ -9708,7 +9814,7 @@ log("this.Spell " + JSON.stringify(ssa));
           } break;    // end Talents, Knacks, and Skills.
 
           case "sp": {    // Spell: TextImport: SP:  (RowID): (text)
-  // Note: when 1879 spell tab is finalized, don't forget to come back here and adjust.
+// CDD Note: when 1879 spell tab is finalized, don't forget to come back here and adjust.
             let code = ssa[ 1 ],
               rowID = ssa[ 2],
               pre = Earthdawn.buildPre( code, rowID );
@@ -9757,7 +9863,7 @@ log("this.Spell " + JSON.stringify(ssa));
                     x = statBlock( i, tf ),
                     y = Earthdawn.parseInt2( x[  "field" ], true );
                   if( x[ "field" ].indexOf( "TMD" ) !== -1 )
-                    cd = "MDh";
+                    cd = "MD1";
                   else if (!isNaN( y ))
                     cd = y;
                   else
@@ -10060,6 +10166,8 @@ log("spirit " + strRating );
             function addPower( pwr, pwrFnd, step, attra, actn, txt, dispTxt ) {
               'use strict';
               try {
+                if( pwr === "Power" )   // Don't know why this word is showing up in spirit power lists, but it seems useless. 
+                  return;
                 let rowid = Earthdawn.generateRowID();
                 let pre = Earthdawn.buildPre( "T", rowid );
                 Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: pre + "RowID" }, rowid);
@@ -10101,12 +10209,28 @@ log("spirit " + strRating );
                   po.setWW( "Misc-Karma-max-Adjust", x);
                 }
                 if( pwr.toLowerCase().startsWith( "spell" )) {      // Spells or Spellcasting
-                  spells = true;
                   if( step && typeof step === "number" && state.Earthdawn.sheetVersion < 1.8 )
                     Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: "SP-Spellcasting-Rank" }, step - save[ "per" ]);
                   if( pwr.toLowerCase().startsWith( "spellcast" ) )
                     Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: pre + "Special" }, "SPL-Spellcasting");
-                }
+
+                  if( !spells ) {   // trigger this only once. 
+                    spells = true;
+                    po.addSWflag( "Trigger2", "AutoFill, " + pre + pwrFnd );
+                    rowid = Earthdawn.generateRowID();
+                    pre = Earthdawn.buildPre( "T", rowid );
+                    Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: pre + "RowID" }, rowid);
+                    Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: pre + "Name" }, "Wil");
+                    po.addSWflag( "Trigger2", "AutoFill, " + pre + "Name" );
+
+                    rowid = Earthdawn.generateRowID();
+                    pre = Earthdawn.buildPre( "T", rowid );
+                    Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: pre + "RowID" }, rowid);
+                    Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: pre + "Name" }, "Spell Weaving");
+                    if( step && typeof step === "number" )
+                      Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: pre + "Rank" }, step);
+                    po.addSWflag( "Trigger2", "AutoFill, " + pre + "Name" );
+                } }
               } catch(err) {
                 po.edClass.errorLog( "ED.textImport.addPower() error caught: " + err );
               }
@@ -10323,7 +10447,7 @@ log("spirit " + strRating );
 
                   save[ tf ] = statBlock( i, tf );
                   lastBlock = Math.min(i, lastBlock);
-                  let bio = "<b>" + tf.slice(0, 1).toUpperCase() + tf.slice( 1 ) + ":</b><br>",
+                  let gmnotes = "<b>" + tf.slice(0, 1).toUpperCase() + tf.slice( 1 ) + ":</b><br>",
                     sp = textBlock( save[ tf ][ "field" ].trim(), true ).split( "\n" );   // First textBlock groups them into lines that are hopefully right (one manuver per line), then we split them on those lines, so we can process each individually.
                   for( let i = 0; i < sp.length; ++i ) {
                     let toCheck = sp[ i ].trim(),
@@ -10338,9 +10462,9 @@ log("spirit " + strRating );
                     if( tnm !== -1 && tnm < nmpos )
                       nmpos = tnm;
                     if( nmpos != -1 && nmpos < 99999)
-                      bio += "<i>" + toCheck.slice(0, nmpos) + "</i>" + toCheck.slice( nmpos) + "<br>";   // highlight up to first colon or open paren.
+                      gmnotes += "<i>" + toCheck.slice(0, nmpos) + "</i>" + toCheck.slice( nmpos) + "<br>";   // highlight up to first colon or open paren.
                     else
-                      bio += toCheck + "<br>";
+                      gmnotes += toCheck + "<br>";
                     cnt += checkbx( toCheck, "Clip the Wing", "Opponent-ClipTheWing");
                     cnt += checkbx( toCheck, "Crack the Shell", "Opponent-CrackTheShell");
                     cnt += checkbx( toCheck, "Defang", "Opponent-Defang");
@@ -10393,7 +10517,7 @@ log("spirit " + strRating );
                       } else    // could not find a colon.
                         po.chat( "Warning!   Could not parse Special Maneuver " + toCheck + "   Do it manually. ", Earthdawn.whoFrom.apiWarning );
                   } }
-                  save[ tf ] = bio.trim().replace( "<br>$", "");
+                  save[ tf ] = gmnotes.trim().replace( "<br>$", "");
                 } break;      // End maneuver
                 case "equipment":         // Equipment: Cave Axe (Size 6, Damage Step 8, worth 50 silver), Hide Armor
                 case "loot": {          // Loot: Crystal shards and fragments of Elemental earth worth 3D6 × 20 silver pieces (worth Legend Points).
@@ -10477,7 +10601,7 @@ log("spirit " + strRating );
                       let t = save[ tf ];
                       if( !mult && t && t[ "remain" ] ) {     // This is a new creature, and we have attacks and damage to add.
                         let ttmp = t[ "remain" ].replace( /\)\s*\,/g, ")" + Earthdawn.constant( "Colon" ));   // comma sometimes comes inside a damage paren, so can't just split on comma.
-                        let bio = "<b>" + tf.slice(0, 1).toUpperCase() + tf.slice( 1 ) + ":</b> " + t[ "val" ] + " - ",
+                        let gmnotes = "<b>" + tf.slice(0, 1).toUpperCase() + tf.slice( 1 ) + ":</b> " + t[ "val" ] + " - ",
                           att = ttmp.split( Earthdawn.constant( "Colon" ));
                         for( let i = 0; att && i < att.length; ++i ) {
                           let a2 = att[ i ];
@@ -10506,7 +10630,7 @@ log("spirit " + strRating );
                                 Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: pre + "CloseCombat" }, "1");
                                 Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: pre + "CombatSlot" }, "1");
                                 Earthdawn.abilityAdd( po.charID, Earthdawn.constant( "Weapon" ) + typ, "!edToken~ %{selected|" + pre + "Roll}" );
-                                bio += "   <i>" + typ + ":</i> " + atk + " (" + dmg + (disp ? " " + disp: "") + ")";
+                                gmnotes += "   <i>" + typ + ":</i> " + atk + " (" + dmg + (disp ? " " + disp: "") + ")";
 
                                 rowid = Earthdawn.generateRowID();
                                 pre = Earthdawn.buildPre( "T", rowid );
@@ -10525,7 +10649,7 @@ log("spirit " + strRating );
                                 Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: pre + "CombatSlot" }, "1");
                                 Earthdawn.abilityAdd( po.charID, Earthdawn.constant( "Talent" ) + "Atk " + typ, "!edToken~ %{selected|" + pre + "Roll}" );
                         } } } }
-                        save[ tf ] = bio;
+                        save[ tf ] = gmnotes;
                       } else if( mult && t && t[ "remain" ] ) {     // This is a Mask, and we might have modifications to attacks and damage to process.
                         let atk, dmg, atk2, dmg2,
                           t2 = statBlock( t[ "remain" ], "Damage", null, "nocolon num" );
@@ -10590,7 +10714,7 @@ log("spirit " + strRating );
                       let sp = t[ "field" ],
                         cntnewlines = t[ "raw" ].match( /\n/g ),
                         cntnewlinesagain = sp.match( /\n/g ),
-                        bio = "<b>" + tf.slice(0, 1).toUpperCase() + tf.slice( 1 ) + ":</b> ",
+                        gmnotes = "<b>" + tf.slice(0, 1).toUpperCase() + tf.slice( 1 ) + ":</b> ",
                         lst, lst2 = "", cnt = 0;
                       if( cntnewlines && cntnewlinesagain && cntnewlines.length !== cntnewlinesagain.length ) {   // One of the newlines got stripped off when we removed the label. that means the label terminated in a newline, therefore there is no lst, only lst2.
                         lst = "";     // There is no list of standard powers such as spirits have.
@@ -10664,7 +10788,7 @@ log("spirit " + strRating );
                               dispTxt = fnd3[ 0 ].slice( 1, -1).trim();
                               pwrFnd = pwrFnd.replace( fnd3[ 0 ], "");
                             }
-                            bio += (cnt++ ? ", " : " ") + rawPwrFnd;
+                            gmnotes += (cnt++ ? ", " : " ") + rawPwrFnd;
                             adjustPower( toFind, pwrFnd.trim(), stp, attra, actn, txt, dispTxt);
                           }
                         } catch(err) { po.edClass.errorLog( "ED.textImport.checkPower() error caught: " + err ); }
@@ -10905,7 +11029,7 @@ log("spirit " + strRating );
                         cnt += parenvalue( pwr, rnk, "Charge", "Creature-DiveCharge", "Creature-DivingCharging");
 
                         pwr = pwr.trim();
-                        bio += "<br>" + "<i>" + pwr + "</i>" + (rnk ? " (" + rnk + ")" : "") + (ptxt ? " " + ptxt : "");
+                        gmnotes += "<br>" + "<i>" + pwr + "</i>" + (rnk ? " (" + rnk + ")" : "") + (ptxt ? " " + ptxt : "");
                         if( !cnt ) {    // The Power we found does not appear to be a standard one.
                           let sense = pwr.search( /\s+Sense\s+/i ) !== -1;
                           adjustPower( pwr, pwr, rnk, sense ? "Per" : null, sense ? "Free" : null, ptxt, null  );
@@ -10913,9 +11037,9 @@ log("spirit " + strRating );
                       } // end for each power
                       Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: "Hide-Spells-Tab" }, spells ? "0":  "1");
                       if( sugPowers )
-                        save[ "suggested powers" ] = bio.trim().replace( /<br>$/, "");
+                        save[ "suggested powers" ] = gmnotes.trim().replace( /<br>$/, "");
                       else
-                        save[ "powers" ] = bio.trim().replace( /<br>$/, "");
+                        save[ "powers" ] = gmnotes.trim().replace( /<br>$/, "");
                       sugPowers = undefined;    // be ready for the next time it arrives here!
                     } break;    // powers
                   } // end switch potential labels
@@ -10929,7 +11053,7 @@ log("spirit " + strRating );
                     po.edClass.errorLog( "ED.textImport.Creature: " + name + "  Unable to parse: " + block );
                   if( cObj ) {
                     Earthdawn.set( cObj, "name", name);
-                    Earthdawn.set( cObj, "bio", ("<p><b>" + name + "</b>&nbsp;&nbsp;-&nbsp;&nbsp;" + ("challenge" in save ? save[ "challenge" ] : "") +"</p>"
+                    Earthdawn.set( cObj, "gmnotes", ("<p><b>" + name + "</b>&nbsp;&nbsp;-&nbsp;&nbsp;" + ("challenge" in save ? save[ "challenge" ] : "") +"</p>"
                         + ("actions"  in save ? "<p>" + textBlock( save[ "actions"] ) + "</p>" : "" )
                         + ("move"     in save ? "<p>" + textBlock( save[ "move"] )    + "</p>" : "" )
                         + ("movement"   in save ? "<p>" + textBlock( save[ "movement"] )    + "</p>" : "" )
@@ -10955,9 +11079,8 @@ log("spirit " + strRating );
                           + " and set 'Circle' to the desired Strength Rating. This is an importaint step that can't be skipped.", Earthdawn.whoFrom.apiWarning );
                 }
                 po.setWW( "SpecialFunction", "Recalc");
-              } catch(err) {
-                log( "Earthdawn creature2() error caught: " + err );
-              }
+                po.sendSWflag();
+              } catch(err) { log( "Earthdawn creature2() error caught: " + err ); }
             } // end creature2()   Note: This is last code executed.
           } catch(err) { po.edClass.errorLog( "ParseObj.textImport.parseCreature() error caught: " + err ); }
           return true;
@@ -11171,19 +11294,30 @@ log("spirit " + strRating );
                 let t2;
                 let s = "";
                 _.each( matrices, function (indexMatrix) {
-                  switch( Earthdawn.getAttrBN( po.charID, Earthdawn.buildPre( "SPM", indexMatrix ) + "Type", "-10") ) {
+                  let prespm = Earthdawn.buildPre( "SPM", indexMatrix );
+                  switch( Earthdawn.getAttrBN( po.charID, prespm + "Type", "-10") ) {
                     case  "15":     t2 = "Enh";     break;
                     case  "25":     t2 = "Armd";    break;
                     case "-20":     t2 = "Shrd";    break;
                     case "-10":
                     default:        t2 = "Std";
                   }
-                  s += "[" + t2 + "-" + Earthdawn.getAttrBN( po.charID, Earthdawn.buildPre( "SPM", indexMatrix ) + "Rank", "0") +
-                          " " + Earthdawn.getAttrBN( po.charID, Earthdawn.buildPre( "SPM", indexMatrix ) + "Contains", "") +
-                          "](!Earthdawn~ charID: " + po.charID + "~ TuneMatrix: Matrix: " + ssa[2] + ": " + indexMatrix + ")";
+                  let pseu = ( Earthdawn.getAttrBN( po.charID, prespm + "Origin", "") == "Pseudo" ) ? "p" : "";
+                  s += po.makeButton( pseu + t2 + "-" + Earthdawn.getAttrBN( po.charID, prespm + "Rank", "0") + " " 
+                          + Earthdawn.getAttrBN( po.charID, prespm + "Contains", ""), 
+                          "!Earthdawn~ charID: " + po.charID + "~ TuneMatrix: Matrix: " + ssa[2] + ": " + indexMatrix, 
+                          undefined , Earthdawn.Colors.param, Earthdawn.Colors.paramfg );
+                  if( pseu )
+                    s += " " + po.makeButton( '&#x261A;X', "!Earthdawn~ charID: " + po.charID + "~ TuneMatrix: Destroy: " + indexMatrix 
+                          + ": ?{Confirm Destroy this psuedo matrix|No|Yes}",
+                          "The preceding is a pseudo-matrix and only exists when two spells can share a matrix, or in a shared matrix, or in a Spellstore. " 
+                          + "Use this button to delete the Pseudo matrix.", 
+                          Earthdawn.Colors.param2, Earthdawn.Colors.param2fg );
                 }); /// End each spell matrix
-                this.chat( "&{template:default} {{name=Load " + Earthdawn.getAttrBN( po.charID, Earthdawn.buildPre( "SP", ssa[2] ) + "Name", "")
-                      + " into which Matrix? " +  Earthdawn.colonFix( s ) + "}}", Earthdawn.whoTo.player | Earthdawn.whoFrom.noArchive);      // Chat buttons don't like colons.   Change them to something else. They will be changed back later.
+                this.chat( "Load " + Earthdawn.getAttrBN( po.charID, Earthdawn.buildPre( "SP", ssa[2] ) + "Name", "")
+                      + " into which Matrix? " + s.trim(), Earthdawn.whoTo.player | Earthdawn.whoFrom.noArchive);      // Chat buttons don't like colons.   Change them to something else. They will be changed back later.
+//                this.chat( "&{template:default} {{name=Load " + Earthdawn.getAttrBN( po.charID, Earthdawn.buildPre( "SP", ssa[2] ) + "Name", "")
+//                      + " into which Matrix? " +  Earthdawn.colonFix( s ) + "}}", Earthdawn.whoTo.player | Earthdawn.whoFrom.noArchive);      // Chat buttons don't like colons.   Change them to something else. They will be changed back later.
               } else
                 this.chat("ED.TuneMatrix() Warning - You don't have any matrices of high enough rank to attune this spell.");
             }
@@ -11219,6 +11353,7 @@ log("spirit " + strRating );
               toMatrix( "DR", "10");
               toMatrix( "Type", "-10");
               toMatrix( "Origin", "Pseudo" );
+              toMatrix( "Rank", 15 );
               if( state.Earthdawn.sheetVersion < 1.8 )
                 toMatrix( "mThreads", "0");
             }
@@ -11305,6 +11440,16 @@ log("spirit " + strRating );
             let aobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: Earthdawn.buildPre( "SPM", ssa[ 2 ] ) + "EnhThread" });
             Earthdawn.set( aobj, "current", ssa[ 3 ] );
             this.chat( "Updated to " + ssa[ 3 ], Earthdawn.whoTo.player | Earthdawn.whoFrom.noArchive);
+          } break;
+          case "destroy": {      // Destroy a pseudo matrix.    format Destroy: RowID
+            if( ssa[ 3 ].toUpperCase().startsWith( "Y" ) ) {
+              let pre = Earthdawn.buildPre( "SPM", ssa[ 2 ] ),
+                  attributes = findObjs({ _type: "attribute", _characterid: this.charID });
+              _.each( attributes, function (att) {
+                if( att.get( "name" ).startsWith( pre ) )
+                  att.remove();
+              }); // End for each attribute.
+            }
           } break;
           default:
             this.edClass.errorLog("ED.TuneMatrix() error - badly formed command.");
