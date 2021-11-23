@@ -6,7 +6,7 @@
 	"authors": "Richard W",
 	"roll20userid": "8097845",
 	"useroptions": [],
-	"dependencies": [],
+	"dependencies": {},
 	"modifies": {
 		"state.AlienRpg": "read,write"
 	  },
