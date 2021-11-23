@@ -1,0 +1,14 @@
+{
+	"name": "Alien RPG Dice Roller",
+	"script": "AlienRPG.js",
+	"version": "1.00",
+	"description": "This is a Dice Roller used for Alien RPG dice rolls. It can be used in combination with the Alien RPG Character Sheet, but can also be used independently. Get info on how to use with chat command '!arpg' (without quotes).",
+	"authors": "Richard W",
+	"roll20userid": "8097845",
+	"useroptions": [],
+	"dependencies": {},
+	"modifies": {
+		"state.AlienRpg": "read,write"
+	  },
+	"conflicts": []
+}
