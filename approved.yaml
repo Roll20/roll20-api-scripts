@@ -1075,3 +1075,7 @@ turnmarker1:
 arcdoom:
   - "ARC"
   - "System Toolbox"
+
+alienrpgroller:
+  - "AlienRPGroller"
+  - "System Toolbox"
