@@ -3,6 +3,19 @@ Roll20 API Scripts
 
 This repository is the collection of all the community-contributed API scripts that are available for use on Roll20.
 
+Accepted File Types
+============
+
+The following are the only file types we typically accept in a pull request: 
+
+* JavaScript (.js)
+* Images (.png, .svg, .jpg, .jpeg)
+* HTML (.html)
+* Text (.txt, .md)
+* Script JSON (.json)
+
+If you have a file type in your pull request that is not in this list, please leave a comment as to why and we will review on a case-by-case basis.
+
 Contributing
 ============
 
