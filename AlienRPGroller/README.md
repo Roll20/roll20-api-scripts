@@ -15,5 +15,5 @@ Some ideas:
 	
 ### Changelog
 
-** November, 2021: version 1.0 submitted to Roll20 by Richard W
+** November, 2021: version 1.00 submitted to Roll20 by Richard W
 
