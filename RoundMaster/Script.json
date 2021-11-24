@@ -2,8 +2,8 @@
     "$schema": "https://github.com/DameryDad/roll20-api-scripts/blob/RoundMasterAPI/RoundMaster/Script.json",
     "name": "RoundMaster",
     "script": "RoundMaster.js",
-    "version": "3.021",
-    "previousversions": ["1.0","0.5"],
+    "version": "3.022",
+    "previousversions": ["3.020"],
     "description": "RoundMaster is an API for the Roll20 RPG-DS.  Its purpose is to extend the functionality of the Turn Tracker capability already built in to Roll20.  It is one of several other similar APIs available on the platform that support the Turn Tracker and manage token and character statuses related to the passing of time: the USP of this one is the full richness of its functionality and the degree of user testing that has occurred over a 12 month period.  RoundMaster is based on the much older TrackerJacker API, and many thanks to Ken L. for creating TrackerJacker.  However, roundMaster is a considerable fix and extension to TrackerJacker, suited to many different applications in many different RPG scenarios.  RoundMaster is also the first release as part of the wider RPGMaster series of APIs for Roll20, composed of RoundMaster, CommandMaster, InitiativeMaster, AttackMaster, MagicMaster and MoneyMaster - other than RoundMaster (which is generic) these initially support only the AD&D2e RPG.  On loading, RoundMaster will create handouts in the Campaign with help on all its commands and functions.  It will also create a Character Sheet database of Effect macros - see the documentation in the handouts for more information."
     "authors": "Richard E. based on TrackerJacker by Ken L.",
     "roll20userid": "1",
