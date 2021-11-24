@@ -75,7 +75,7 @@ API_Meta.SpawnWIP = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.22';
+    const version = '0.23';
     var gridSize = 70;  //this may be updated based on page settings 
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -202,7 +202,7 @@ const SpawnDefaultToken = (() => {
     
     //This function runs asynchronously, as called from the processCommands function
     //We will sendChat errors, but the rest of processCommands keeps running :(
-    function spawnTokenAtXY (who, tokenJSON, pageID, spawnLayer, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar1Link, bar2Val, bar2Max, bar2Link, bar3Val, bar3Max, bar3Link, expandIterations, expandDelay, destroyWhenDone, angle, isDrawing, tokenName) {
+    function spawnTokenAtXY (who, tokenJSON, pageID, spawnLayer, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar1Link, bar2Val, bar2Max, bar2Link, bar3Val, bar3Max, bar3Link, expandIterations, expandDelay, destroyWhenDone, angle, isDrawing, tokenName, tooltip) {
         let newSideImg;
         let spawnObj;
         let currentSideOld;
@@ -215,7 +215,7 @@ const SpawnDefaultToken = (() => {
                 
         try {
             let baseObj = JSON.parse(tokenJSON);
-            
+            //log(baseObj);
             //set token properties
             baseObj.pageid = pageID;
             baseObj.layer = spawnLayer;
@@ -330,6 +330,11 @@ const SpawnDefaultToken = (() => {
                         return retVal;
                     }
                 }
+            }
+            
+            if (tooltip) {
+                baseObj.tooltip = tooltip;
+                baseObj.show_tooltip = true;
             }
             ////////////////////////////////////////////////////////////
             //      Spawn the Token!
@@ -940,6 +945,9 @@ const SpawnDefaultToken = (() => {
                         case "tokenname":
                             data.tokenName = param;
                             break;
+                        case "tooltip":
+                            data.tooltip = param;
+                            break;
                         default:
                             retVal.push('Unexpected argument identifier (' + option + '). Choose from: (' + data.validArgs + ')');
                             break;    
@@ -1424,7 +1432,7 @@ const SpawnDefaultToken = (() => {
                                     spawnFx(data.spawnX[iteration], data.spawnY[iteration], data.fx, data.spawnPageID);
                                 }
                                 //Spawn the token!
-                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnLayer, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL, data.bar1Val, data.bar1Max, data.bar1Link, data.bar2Val, data.bar2Max, data.bar2Link, data.bar3Val, data.bar3Max, data.bar3Link, data.expandIterations, data.expandDelay, data.destroySpawnWhenDone, data.angle, data.isDrawing, data.tokenName);
+                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnLayer, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL, data.bar1Val, data.bar1Max, data.bar1Link, data.bar2Val, data.bar2Max, data.bar2Link, data.bar3Val, data.bar3Max, data.bar3Link, data.expandIterations, data.expandDelay, data.destroySpawnWhenDone, data.angle, data.isDrawing, data.tokenName, data.tooltip);
                                 
                             } else {
                                 log("off the map!");
@@ -1496,7 +1504,7 @@ const SpawnDefaultToken = (() => {
                     }
                  
                 let action = abilityObj.get("action");
-                log(action);
+                //log(action);
                 sendChat(data.who, action);
             }
         
@@ -1616,7 +1624,8 @@ const SpawnDefaultToken = (() => {
                     userSpecifiedLayer: false,     //flag to determine how spawned token layer is defined
                     spawnLayer: "objects",         //user can set to "object", "token", "gm", or "map"
                     isDrawing: false,              //user can set isdrawing property of token 
-                    tokenName: ""                  //optional override for the token name - allows token name to be different than the character name 
+                    tokenName: "",                 //optional override for the token name - allows token name to be different than the character name 
+                    tooltip: ""                    //new tooltip token property    
                 };
                 
                 //Parse msg into an array of argument objects [{cmd:params}]
