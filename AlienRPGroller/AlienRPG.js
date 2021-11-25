@@ -871,6 +871,7 @@ var AlienRpg = AlienRpg || (function() {
                 k=s.shift();
                 s=s.join('|');
                 if ( k == "runas" ) { runas = s; }
+                if ( s === "" ) { s = "&nbsp;"; }
                 return {
                     label: k,
                     msg: s
