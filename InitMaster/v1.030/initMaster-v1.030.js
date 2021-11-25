@@ -77,25 +77,11 @@
  *                     prevent the API falling over
  * v1.029  03/07/2021  Implemented new Table Management suite not needing ChatSetAttr API
  * v1.030  04/06/2021  Updated MI field names to match MagicMaster API
- * v1.031  14/07/2021  Modified to support monster attack speeds in damage specs
- * v1.032  25/08/2021  sendResponse() for tokens controlled by All Players now sends message
- *                     to all players, including the GM.  Also fixed issues with multiple 
- *                     weapon attacks, enabled monster "Two Weapon" attacks, & made redo-initiative
- *                     automatically pull up the initiative menu.
- * v1.033  05/09/2021  Implemented initiative carry-over for monster attack 1 only
- * v1.034  13/10/2021  Changed calls to attackMaster API to not change AC based on attacks, but
- *                     instead call the attackMaster function to check current AC on submission
- *                     of the initiative
- * v1.035  03/11/2021  Added the Maintenance Menu for RoundMaster API control, and the 
- *                     --check-tracker command to check if all players have completed their
- *                     initiative rolls
- * v1.036  15/11/2021  Reduced fields object to only include fields used in InitMaster API,
- *                     and added API handshakes to detect other required APIs are loaded
  */
  
 var initMaster = (function() {
 	'use strict'; 
-	var version = 1.036,
+	var version = 1.030,
 		author = 'RED',
 		pending = null;
 
@@ -134,13 +120,16 @@ var initMaster = (function() {
 		roundMaster:        '!rounds',
 		attackMaster:       '!attk',
 		commandMaster:		'!cmd',
-		defaultTemplate:	'2Edefault',
-		spellTemplate:		'2Espell',
+		Total_level:        ['level-class5','current'],
 		Fighter_class:      ['class1','current'],
 		Fighter_level:      ['level-class1','current'],
 		Wizard_level:       ['level-class2','current'],
 		Priest_level:       ['level-class3','current'],
 		Rogue_level:        ['level-class4','current'],
+		Psion_level:        ['level-class5','current'],
+		Expenditure:		['expenditure','current'],
+		Thac0:              ['bar2','value'],
+		LightSource:        ['lightsource','current'],
 		Init_action:		['init_action', 'current'],
 		Init_2ndAction:		['init_action', 'max'],
 		Init_speed:			['init_speed', 'current'],
@@ -152,6 +141,8 @@ var initMaster = (function() {
 		Init_2Hweapon:		['init_2H','current'],
 		Init_2nd2Hweapon:	['init_2H', 'max'],
 		Init_chosen:		['init_chosen', 'current'],
+		initMultiplier:     ['comreact','max'],
+		initMod:            ['comreact','current'],
 		Init_submitVal:		['init_submitVal','current'],
 		Init_done:			['init_done', 'current'],
 		Init_carry:			['init_carry', 'current'],
@@ -161,59 +152,147 @@ var initMaster = (function() {
 		Init_carryWeapNum:	['init-carry_weapno', 'current'],
 		Init_carryPreInit:	['init-carry_preinit', 'current'],
 		Init_carry2H:		['init-carry_2H', 'current'],
-		initMultiplier:     ['comreact','max'],
-		initMod:            ['comreact','current'],
 		Prev_round:			['prev-round', 'current'],
+		Strength_hit:       ['strengthhit','current'],
+		Strength_dmg:       ['strengthdmg','current'],
+		Dmg_magicAdj:       ['strengthdmg','max'],
+		Wisdom:				['wisdom','current'],
+		Dex_missile:        ['dexmissile','current'],
+		Dex_react:          ['dexreact','current'],
+		Backstab_mult:      ['backstabmultiplier','current'],
 		Weapon_num:			['weapno','current'],
 		Weapon_2ndNum:		['weapno','max'],
-		Monster_hitDice:	['hitdice','current'],
-		Monster_hpExtra:	['monsterhpextra','current'],
-		Monster_int:		['monsterintelligence','current'],
-		Monster_attks:		['monsteratknum','current'],
-		Monster_speed:      ['monsterini','current'],
 		Monster_dmg1:		['monsterdmg','current'],
 		Monster_dmg2:		['monsterdmg2','current'],
 		Monster_dmg3:		['monsterdmg3','current'],
 		MWrows:				12,
-		MWdmgRows:			12,
 		MW_table:           ['repeating_weapons',0],
 		MW_name:            ['weaponname','current','-'],
 		MW_speed:           ['weapspeed','current',5],
 		MW_dancing:         ['weapspeed','max',0],
 		MW_noAttks:         ['attacknum','current',1],
+		MW_attkAdj:         ['attackadj','current',0],
+		MW_strBonus:        ['strbonus','current',1],
 		MW_twoHanded:       ['twohanded','current',0],
+		MW_profLevel:       ['prof-level','current',0],
+		MW_crit:            ['crit-thresh','current',20],
+		MWdmgRows:			12,
+		MW_dmgTable:        ['repeating_weapons-damage',0],
+		MW_dmgName:         ['weaponname1','current','-'],
+		MW_dmgAdj:          ['damadj','current',0],
+		MW_dmgSM:           ['damsm','current',0],
+		MW_dmgL:            ['daml','current',0],
+		MW_dmgStrBonus:     ['strBonus1','current',1],
+		MW_dmgSpecialist:   ['specialist-damage','current',0],
 		RWrows:				12,
 		RW_table:           ['repeating_weapons2',0],
 		RW_name:            ['weaponname2','current','-'],
 		RW_speed:           ['weapspeed2','current',5],
 		RW_dancing:         ['weapspeed2','max',0],
 		RW_noAttks:         ['attacknum2','current',1],
+		RW_attkAdj:         ['attackadj2','current',0],
+		RW_strBonus:        ['strbonus2','current',0],
+        RW_dexBonus:        ['dexbonus2','current',1],
         RW_twoHanded:       ['twohanded2','current',1],
+		RW_profLevel:       ['prof-level2','current',0],
+		RW_crit:            ['crit-thresh2','current',20],
+		RW_range:           ['range2','current','1/2/3'],
+		AmmoRows:			12,
+		Ammo_table:         ['repeating_ammo',0],
+		Ammo_name:          ['ammoname','current','-'],
+		Ammo_strBonus:      ['strbonus3','current',0],
+		Ammo_dmgAdj:        ['damadj2','current',0],
+		Ammo_dmgSM:         ['damsm2','current',0],
+		Ammo_dmgL:          ['daml','current',0],
+		Ammo_indirect:      ['Ammo-RW','current'],
+		Ammo_qty:           ['ammoremain','current',0],
+		Ammo_flag:          ['ammo-flag-RW','current',0],
+		WProws:				24,
 		WP_table:           ['repeating_weaponprofs',0],
 		WP_specialist:      ['specialist','current',0],
+		WP_mastery:         ['mastery','current',0],
+		WP_backstab:        ['chosen-weapon','current',0],
 		MUSpellNo_table:	['spell-level',0],
+		MUSpellNo_total:	['-total','current'],
 		MUSpellNo_memable:	['-castable','current'],
 		MUSpellNo_specialist:['-specialist','current'],
 		MUSpellNo_misc:		['-misc','current'],
+		MUbaseCol:          1,
 		PRSpellNo_table:	['spell-priest-level',0],
+		PRSpellNo_total:	['-total','current'],
 		PRSpellNo_memable:	['-castable','current'],
 		PRSpellNo_wisdom:	['-wisdom','current'],
 		PRSpellNo_misc:		['-misc','current'],
+		PRbaseCol:          28,
+		MISpellNo_table:	['spell-level',0],
+		MISpellNo_memable:  ['-castable','current'],
+		MISpellNo_total:	['-total','current'],
+		SpellsCols:         3,
 		Spells_table:       ['repeating_spells',false],
 		Spells_name:        ['spellname','current'],
+		Spells_db:			['spellname','max'],
 		Spells_speed:       ['casttime','current'],
+		Spells_cost:		['casttime','max'],
 		Spells_castValue:	['cast-value','current'],
+		Spells_castMax:		['cast-max','current'],
+		Spells_storedLevel:	['spell-points','current'],
+		Spells_miSpellSet:	['arc','current'],
+		Spells_msg:			['cast-macro','current'],
+		SpellToMem:			['spelltomem','current'],
+		SpellRowRef:		['spellrowref','current'],
+		SpellColIndex:		['spellref','current'],
+		SpellCharges:		['spellcharges','current'],
+		SpellChosen:		['spell-chosen','current'], 
+		Casting_level:      ['casting-level','current'],
+		MU_Casting_level:   ['mu-casting-level','current'],
+		PR_Casting_level:   ['pr-casting-level','current'],
+		Casting_name:       ['casting-name','current'],
+		Spellbook:          ['spellmem','current'],
 		PowersBaseCol:      67,
 		PowerRows:			9,
 		PowersCols:         3,
+		Powers_MIPowers:	27,
 		Powers_table:       ['repeating_spells',false],
 		Powers_name:        ['spellname','current'],
 		Powers_speed:       ['casttime','current'],
-		MIRows:             100,
+		Powers_castValue:	['cast-value','current'],
+		Powers_castMax:		['cast-max','current'],
+		Power_cast:			['spell-cast','current'],
+		MIRows:             24,
+		MIPowersRows:		9,
+		MIspellLevel:       15,
+		MIpowerLevel:		14,
 		Items_table:		['repeating_potions',0],
 		Items_name:			['potion','current'],
+		Items_trueName:		['potion','max'],
 		Items_speed:		['potion-speed','current'],
 		Items_trueSpeed:	['potion-speed','max'],
+		Items_qty:			['potionqty','current'],
+		Items_trueQty:		['potionqty','max'],
+		Items_cost: 		['potion-macro','current'],
+		Items_type:			['potion-macro','max'],
+		ItemContainerType:   ['check-for-mibag','current'],
+		ItemWeaponList:      ['spellmem','current'],
+		ItemArmourList:      ['spellmem2','current'],
+		ItemRingList:        ['spellmem3','current'],
+		ItemMiscList:        ['spellmem4','current'],
+		ItemPotionList:      ['spellmem10','current'],
+		ItemScrollList:      ['spellmem11','current'],
+		ItemWandsList:       ['spellmem12','current'],
+		ItemDMList:			['spellmem13','current'],
+		ItemMUspellsList:	['mi-muspells-','current'],
+		ItemMUspellValues:	['mi-muspells-','max'],
+		ItemPRspellsList:	['mi-prspells-','current'],
+		ItemPRspellValues:	['mi-prspells-','max'],
+		ItemPowersList:		['mi-powers-','current'],
+		ItemPowerValues:		['mi-powers-','max'],
+		MIspellPrefix:		['mi-spell-','current'],
+		MIpowerPrefix:		['mi-power-','current'],
+		Money_gold:         ['gold','current'],
+		Money_silver:       ['silver','current'],
+		Money_copper:       ['copper','current'],
+		Money_treasure:		['otherval','current'],
+		Monster_speed:      ['monsterini','current'],
 		Armor_name:         ['armorname','current'],
 		Armor_mod_none:     'noarmort',
 		Armor_mod_leather:  't',
@@ -229,324 +308,15 @@ var initMaster = (function() {
 		Climb_Walls:        ['cw','current'],
 		Read_Languages:     ['rl','current'],
 		Legend_Lore:        ['ib','current'],
+		Timespent:			['timespent','current'],
+		CharDay:			['in-game-day','current'],
+		Today:				['today','current'],
+		Today_weekday:		['today-weekday','current'],
+		Today_day:			['today-day','current'],
+		Today_dayth:		['today-dayth','current'],
+		Today_month:		['today-month','current'],
+		Today_year:			['today-year','current'],
 	}); 
-	
-	var handouts = Object.freeze({
-	InitMaster_Help:	{name:'InitiativeMaster Help',
-						 avatar:'https://s3.amazonaws.com/files.d20.io/images/141800/VLyMWsmneMt4n6OBOLYn6A/max.png?1344434416',
-						 bio:'<h1>Initiative Master API</h1>'
-							+'<p>This API supports initiative for RPGs using the Turn Order and the Tracker window.  The InitiativeMaster API provides functions dealing with all aspects of: managing how initiative is done; rolling for initiative; for “group” and “individual” initiative types providing Character action selection to determine the speed and number of attacks of weapons, the casting time of spells & the usage speed of magic items; supporting initiative for multiple attacks with one or multiple weapons per round; supporting and tracking actions that take multiple rounds; managing the resulting Turn Order; as well as performing the “End of Day” activity.  It works very closely with the <b>RoundMaster API</b> to the extent that InitiativeMaster cannot work without RoundMaster (though the reverse is possible).  InitiativeMaster also works closely with <b>AttackMaster API</b> and <b>MagicMaster API</b> and uses the data configured on the Character Sheet by these other APIs, although it can use manually completed Character Sheets once correctly configured.</p>'
-							+'<h2>Syntax of InitiativeMaster calls</h2>'
-							+'<p>The InitiativeMaster API is called using !init.</p>'
-							+'<pre>!init --help</pre>'
-							+'<p>Commands to be sent to the InitiativeMaster API must be preceded by two hyphens ‘--’ as above for the --help command.  Parameters to these commands are separated by vertical bars ‘|’, for example:</p>'
-							+'<pre>!init --init [party-roll]|[foes-roll]</pre>'
-							+'<p>If optional parameters are not to be included, but subsequent parameters are needed, just leave out the optional parameter but leave the vertical bars in, e.g.</p>'
-							+'<pre>--init  | [foes-roll]</pre>'
-							+'<p>Commands can be stacked in the call, for example:</p>'
-							+'<pre>!init --list-pcs  ALL  --init </pre>'
-							+'<p>When specifying the commands in this document, parameters enclosed in square brackets [like this] are optional: the square brackets are not included when calling the command with an optional parameter, they are just for description purposes in this document.  Parameters that can be one of a small number of options have those options listed, separated by forward slash ‘/’, meaning at least one of those listed must be provided (unless the parameter is also specified in [] as optional): again, the slash ‘/’ is not part of the command.  Parameters in UPPERCASE are literal, and must be spelt as shown (though their case is actually irrelevant).<\p>'
-							+'<h2>Using Character Sheet Ability/Action buttons</h2>'
-							+'<p>The most common approach for the Player to run these commands is to use Ability macros on their Character Sheets which are flagged to appear as Token Action Buttons: Ability macros & Token Action Buttons are standard Roll20 functionality, refer to the Roll20 Help Centre for information on creating and using these.</p>'
-							+'<p>In fact, the simplest configuration is to provide only Token Action Buttons for the menu commands: <b>--menu</b> and <b>--monmenu</b>.  From these, most other commands can be accessed.  If using the <b>CommandMaster API</b>, its character sheet setup finctions can be used to add all the necessary and/or desired Ability Macros and Token Action Buttons to any Character Sheet.</p>'
-							+'<h2>Command Index</h2>'
-							+'<p>All commands are preceded by !init unless otherwise stated.</p>'
-							+'<h3>1. Manage Initiative type, rolls & party</h3>'
-							+'<pre>--init [party-roll]|[foes-roll]<br>'
-							+'--type < STANDARD / GROUP / INDIVIDUAL ></pre>'
-							+'<h3>2. Show group / individual Initiative menus</h3>'
-							+'<pre>--menu [token-id]<br>'
-							+'--monmenu [token-id]</pre>'
-							+'<h3>3. Show action-specific Initiative menus</h3>'
-							+'<pre>--weapon [token-id]<br>'
-							+'--monster [token-id]<br>'
-							+'--complex [token-id]<br>'
-							+'--muspell [token-id]<br>'
-							+'--prspell [token-id]<br>'
-							+'--power [token-id]<br>'
-							+'--mibag [token-id]<br>'
-							+'--thief [token-id]<br>'
-							+'--other [token-id]</pre>'
-							+'<h3>4. Maintain the Turn Order and Rounds</h3>'
-							+'<pre>--maint<br>'
-							+'--check-tracker<br>'
-							+'--list-pcs  ALL / MAP / REPLACE / ADD</pre>'
-							+'<h3>5. End of Day processing</h3>'
-							+'<pre>--end-of-day [cost]</pre>'
-							+'<h3>6. Other commands</h3>'
-							+'<pre>--help<br>'
-							+'--handshake from | [cmd]<br>'
-							+'--hsq from | [cmd]<br>'
-							+'--hsr from | [cmd] | [TRUE/FALSE]<br>'
-							+'--debug ON/OFF</pre>'
-							+'<h3>7. How to use the InitiativeMaster API</h3>'
-							+'<br>'
-							+'<h2>Detail of Commands</h2>'
-							+'<h3>1. Manage Initiative type, rolls & party</h3>'
-							+'<h4>1.1 Manage the Initiative process</h4>'
-							+'<pre>--init [party-roll]|[foes-roll]</pre>'
-							+'<p>DM Only command.  Takes an optional dice roll result for the Party, and an optional dice roll result for the foes.</p>'
-							+'<p>This command displays a chat menu to specify:</p>'
-							+'<ul>'
-							+'	<li>the type of initiative to do (standard, group or individual),</li>'
-							+'	<li>the initiative rolls for the Party and the Foes (for standard and group initiative),</li>'
-							+'	<li>who is in the Party,</li>'
-							+'	<li>to check if everyone has selected their action for the next round (for group and individual initiative),</li>'
-							+'	<li>and whether to show this menu automatically as each new round starts.</li></ul>'
-							+'<p>The different types of AD&D2e Initiative process are explained in the DMG p55, and consist of “standard”, “group”, and “initiative”:</p>'
-							+'<table>'
-							+'	<tr><th scope="row">Standard:</th><td>the Party and the Foes (DM) each roll 1d10, and all of whichever gets the lowest roll goes first.  The system supports taking the two rolls, and putting entries in the Turn Order for all defined Party members, and one entry for the Foes.</td></tr>'
-							+'	<tr><th scope="row">Group:</th><td>the Party and the Foes (DM) each roll 1d10, and then all Party members and all Foes choose what actions they will perform during the next round.  The speed/casting time of the Character’s / Foes selected action will then be added to the relevant roll to define the Character’s / Foes initiative(s) which are added to the Turn Order.</td></tr>'
-							+'	<tr><th scope="row">Individual:</th><td>each individual Character & Foe chooses what action they will do each round, and the speed/casting time of that action is added to an individual system-rolled 1d10 for that Character / Foe resulting in each Character’s initiative(s) which are all added to the Turn Order.</td></tr>'
-							+'</table>'
-							+'<p>The type of initiative selected persists between game sessions.</p>'
-							+'<p>Who is in the party can be defined by using API Buttons on the menu to do one of: search all maps in the Campaign for tokens controlled by Players; search just the map the Players are on for tokens controlled by Players; select a number of tokens on any map and add them to the list; or replace the whole list with the selected tokens.</p>'
-							+'<p>Another API button checks to see if the Turn Order contains entries for every token listed as being in the Party, i.e. that everybody has selected their actions for the next round.</p>'
-							+'<p>This menu can appear automatically as each completed round finishes if <b>RoundMaster API</b> is managing the Turn Order and Rounds.  This is useful for standard and group initiative, as the first thing that needs to happen is for the Party & Foe initiative dice rolls to be entered.  It is less useful for this menu to appear for individual initiative, and it can be turned off with an API Button on the menu.</p>'
-							+'<h4>1.2 Set the type of Initiative being used in the Campaign</h4>'
-							+'<pre>--type < STANDARD / GROUP / INDIVIDUAL ></pre>'
-							+'<p>Takes a mandatory initiative type which must be one of those shown.</p>'
-							+'<p>This command sets the initiative type to the specified type without bringing up the complete --init menu.  The type of initiative specified persists between game sessions.</p>'
-							+'<br>'
-							+'<h3>2. Show Group / Individual initiative action selection menus</h3>'
-							+'<h4>2.1 Display a menu of possible actions for the selected Character / NPC</h4>'
-							+'<pre>--menu [token-id]</pre>'
-							+'<p>Takes an optional token ID.</p>'
-							+'<p>This command displays a chat menu of buttons for types of action that the Character / NPC / creature can perform.  Each of these buttons may take the Player to a more detailed list of specific action buttons.  Selecting any of the buttons will add the speed/casting time and correct number of instances of the selected action to the group or individual initiative dice roll (1d10) and enter the result in the Turn Order using the <b>RoundMaster API</b> – ‘individual’-type initiative dice rolls are performed in the background by the API and there is currently no option for the Player to do the roll instead.  The system records the action selected and the speed of that action along with any modifiers as a message to display when the Character’s / NPCs / creature’s turn comes around.</p>'
-							+'<p>For multiple actions per round, those subsequent to the first action with the same item have speeds in the Turn Order incremented from each other by the speed of the action: thus multiple attacks with a Longbow (2 per round, speed 8) after an initiative roll of 5 on a 1d10, will happen at priority 13 & 21.  For attacks by a Fighter with two weapons, such as a Longsword (sp 5) in their left hand and a Short sword (sp 3) in their right hand, after an initiative roll of 5, the Short sword will get a Turn Order priority of 8 and the Longsword 10 – that is they are consecutive not sequential.</p>'
-							+'<p>See the individual menu explanations for more detail on each type of action.</p>'
-							+'<h4>2.2 Display a menu of possible actions for the selected creature</h4>'
-							+'<pre>--monmenu [token-id]</pre>'
-							+'<p>Takes an optional token ID.</p>'
-							+'<p>This produces a slightly simpler form of the initiative action menu for creatures.  Otherwise, all actions result in similar processing as per the normal action selection.</p>'
-							+'<p>If the creature is very simple (only uses the simple attack lines on the Monster tab of the AD&D2e Character Sheet), then it might be sensible to use the <b>--monster</b> command instead: see below.</p>'
-							+'<br>'
-							+'<h3>3. Action specific Initiative menus</h3>'
-							+'<h4>3.1 Display initiative actions to attack with the weapons ‘in-hand’</h4>'
-							+'<pre>--weapon [token-id]</pre>'
-							+'<p>Takes an optional token ID.</p>'
-							+'<p>Displays a chat menu listing all the weapons that the Character / NPC / creature has ‘in-hand’ (i.e. that are currently in the Weapon and Ranged tables), with additional options as appropriate to the Character Sheet.  Rogue class characters will get a ‘Backstab’ option which will apply the Rogue backstab multiplier as appropriate.  Fighter & Rogue classes will get an option to choose two weapons (if there are two one-handed weapons in-hand) which presents the option of selecting a Primary and a Secondary weapon to do initiative for.</p>'
-							+'<p>If the Character / NPC / creature has Powers or Magic Items they can use, buttons also appear on the menu to go to the menus to select these instead of doing a weapon initiative – see the <b>--power</b> and <b>--mibag</b> commands.  There is also a button for ‘Other’ actions, such as Moving, Changing Weapon (which takes a round), doing nothing, or Player-specified actions – see the <b>--other</b> command.</p>'
-							+'<h4>3.2 Display initiative actions for a simple creature to attack</h4>'
-							+'<pre>--monster [token-id]</pre>'
-							+'<p>Takes an optional token ID.</p>'
-							+'<p>Displays a chat menu only listing innate monster attacks from the Monster tab of the AD&D2e Character Sheet.</p>'
-							+'<p>Creatures using the Innate Monster Attack fields on the AD&D2e Character Sheet Monster tab benefit from an extended syntax for entries in these fields: each field can take [&lt;Attack name&gt;,]&lt;damage dice roll&gt;[,&lt;speed&gt;] for example <code>Claw,1d8,2</code> and <code>Sword+1,2d4+1,5</code>.  These will result in possible initiative actions for that creature for <b>Claw</b> and <b>Sword+1</b>.  If Attack Name is omitted, the dice roll is displayed as the action name instead.  If the speed is omitted, the Innate attack speed field value is used instead.  The speed will then be used to calculate the Turn Order priority.</p>'
-							+'<h4>3.3 Display initiative actions for a weapon-wielding creature to attack</h4>'
-							+'<pre>--complex [token-id]</pre>'
-							+'<p>Takes an optional token ID.</p>'
-							+'<p>Displays a more complex monster attack menu, with both ‘Innate’ attacks from the Monster tab as well as weapon attacks from the Character tab weapons tables (the API does not use the recently introduced Weapon table for Monsters on the Monster tab so that the <b>AttackMaster API</b> only has to deal with one set of tables).  If the creature has powers or magic items, it will also offer action menu buttons for those.  The selected attack or weapon speed will then be used to calculate the Turn Order priority.</p>'
-							+'<h4>3.4 Display initiative actions for Wizard spells</h4>'
-							+'<pre>--muspell [token-id]</pre>'
-							+'<p>Takes an optional token ID.</p>'
-							+'<p>Displays a menu of Wizard spells that the Character / NPC has memorised (see the <b>MagicMaster API</b> documentation for memorising spells).  Any spell that is still memorised can be selected for initiative, and the relevant casting time will be used to calculate the Turn Order priority.</p>'
-							+'<h4>3.5 Display initiative actions for Priest spells</h4>'
-							+'<pre>--prspell [token-id]</pre>'
-							+'<p>Takes an optional token ID.</p>'
-							+'<p>Displays a menu of Priest spells that the Character / NPC has memorised (see the <b>MagicMaster API</b> documentation for memorising spells).  Any spell that is still memorised can be selected for initiative, and the relevant casting time will be used to calculate the Turn Order priority.<p>'
-							+'<h4>3.6 Display initiative actions for powers</h4>'
-							+'<pre>--power [token-id]</pre>'
-							+'<p>Takes an optional token ID.</p>'
-							+'<p>Displays a menu of Powers that the Character / NPC has been granted (see the MagicMaster API documentation for managing powers).  Any power that has not been consumed can be selected for initiative, and the relevant casting time will be used to calculate the Turn Order priority.</p>'
-							+'<h4>3.7 Display initiative actions for Magic Items</h4>'
-							+'<pre>--mibag [token-id]</pre>'
-							+'<p>Takes an optional token ID.</p>'
-							+'<p>Displays a menu of Magic Items and non-magical equipment that the Character / NPC / creature has on their person - that is in the Item table (by default, the Potions table on the AD&D2e character sheet): see the Character Sheet Setup handout, or the <b>MagicMaster API</b> documentation for information on Items.  Selecting an item for initiative uses the speed of action of that item to calculate the Turn Order priority.</p>'
-							+'<h4>3.8 Display initiative actions for Thieves</h4>'
-							+'<pre>--thief [token-id]</pre>'
-							+'<p>Takes an optional token ID.</p>'
-							+'<p>Displays a menu of Thievish actions (with current percentage proficiencies of each).  Selecting one for initiative uses the speed of action of that item to calculate the Turn Order priority.</p>'
-							+'<h4>3.9 Display other actions </h4>'
-							+'<pre>--other [token-id]</pre>'
-							+'<p>Takes an optional token ID.</p>'
-							+'<p>Displays a menu of other (non-attacking) actions that the Character / NPC / creature can take, namely: Moving (speed 0 as it is an innate ability); Changing Weapon (also speed 0 but takes all round); Doing Nothing (obviously speed 0); and one that allows the Player to enter a description and specify a speed for that action (presumably with the agreement of the DM).</p>'
-							+'<br>'
-							+'<h3>4. Maintain the Turn Order and Rounds</h3>'
-							+'<h4>4.1 Display the DM’s round maintenance menu</h4>'
-							+'<pre>--maint</pre>'
-							+'<p>DM Only command.  Does not take any parameters.</p>'
-							+'<p>Displays a chat menu of action API Buttons to control the Turn Order Tracker window using commands sent to the RoundMaster API.  The key one is Start/Pause, which initialises RoundMaster and starts it managing the Turn Order, or pauses it so that stepping through the Turn Order does not trigger any RoundMaster actions (such as counting down token status timers or initiating Effects).  The full list of functions is:</p>'
-							+'<table>'
-							+'	<thead>'
-							+'		<th scope="col">Maintenance Menu Button</th>'
-							+'		<th scope="col">RoundMaster !rounds command (unless otherwise stated)</th>'
-							+'		<th scope="col">Description</th>'
-							+'	</thead>'
-							+'	<tr><td>Start / Pause</td><td>--start</td><td>Starts / Pauses RoundMaster functioning</td></tr>'
-							+'	<tr><td>Start Melee</td><td>--clearonround on<br>--clear</td><td>Causes the Turn Order to automatically clear at the end of each round (once all actions have completed) ready for Players to select actions for their Characters</td></tr>'
-							+'	<tr><td>Stop Melee</td><td>--clearonround off</td><td>Stops the Turn Order from automatically clearing at the end of each round, so that the Turn Order is preserved.  Can be useful when just wanting to cycle around a list of Characters selected in the !init –init menu command and running ‘Standard’ initiative.</td></tr>'
-							+'	<tr><td>Re-start</td><td>--sort</td><td>Re-sorts the current Turn Order, effectively re-starting the round.  Useful if the DM accidentally starts the next round by moving the Turn Order on before all Players have completed their initiative actions – allow new actions to be selected and then use Re-start</td></tr>'
-							+'	<tr><td>Set Round Number</td><td>--reset #</td><td>Sets the current Round number to #.  If # is larger than the current round, all token status counters will advance by the number of rounds difference, ending if they reach 0 with the consequential Effects triggered</td></tr>'
-							+'	<tr><td>Clear Turn Order</td><td>--clear</td><td>Clears the Turn Order of all entries (except the round number)</td></tr>'
-							+'	<tr><td>Remove Tokens from Tracker</td><td>--removefromtracker</td><td>Removes all the selected tokens from the Turn Order and the Tracker window.  Multiple tokens can be selected and removed all at the same time.</td></tr>'
-							+'	<tr><td>Edit Selected Tokens</td><td>--edit</td><td>Displays the status markers on all the selected tokens, and offers options to edit or delete them.  The “spanner” icon edits the status, and the “bin” icon deletes it.</td></tr>'
-							+'	<tr><td>Move Token Status</td><td>--moveStatus</td><td>For each of the selected tokens in turn, searches for tokens in the whole campaign with the same name and representing the same character sheet, and moves all existing statuses and markers from all the found tokens to the selected token (removing any duplicates).  This supports Players moving from one Roll20 map to another and, indeed, roundMaster detects page changes and automatically runs this command for all tokens on the new page controlled by the Players who have moved to the new page.</td></tr>'
-							+'	<tr><td>Clean Selected Tokens</td><td>--clean</td><td>Drops all status markers from the selected token, whether they have associated effects or time left, or are just manually applied markers.  Useful when there might have been corruption, or everyone is just confused!  The token statuses still exist, and associated markers will be correctly rebuilt at the start of the next round or the next trigger event (but not manually added ones).</td></tr>'
-							+'	<tr><td>Enable Long Rest for PCs</td><td>–end-of-day <cost></td><td>Run the normal initMaster end-of-day command</td></tr>'
-							+'	<tr><td>Enable Long Rest for selected tokens</td><td>–enable-rest</td><td>Enable a long rest only for the characters / NPCs / creatures represented by the selected tokens.  See the MagicMaster API documentation for information on Long Rests</td></tr>'
-							+'	<tr><td>Set Date</td><td> </td><td>Currently not implemented – future expansion</td></tr>'
-							+'	<tr><td>Set Campaign</td><td> </td><td>Currently not implemented – future expansion</td></tr>'
-							+'	<tr><td>Update Selected Tokens</td><td>!cmd --abilities</td><td>Use the <b>CommandMaster API</b> function (if loaded) to setup and maintain Character ability action buttons, weapon proficiencies, spell books & granted powers, saving throws, token “bar & circle” assignment etc.  See CommandMaster API documentation on the –abilities command.</td></tr>'
-							+'	<tr><td>Emergency Stop!</td><td>--stop</td><td>After confirmation, performs a Full Stop and re-start of the RoundMaster API, dropping all internal tables of statuses & effects, token markers, timers etc.  <b><u>Use with care!</u></b></td></tr>'
-							+'</table>'
-							+'<h4>4.2 Display those characters that have not yet had initiative actions selected</h4>'
-							+'<pre>--check-tracker</pre>'
-							+'<p>DM Only command.  Does not take any parameters.</p>'
-							+'<p>Uses the Player Character name list created & maintained in the <b>--init</b> menu or with the <b>--list-pcs</b> command, and checks that all of the Character’s named have completed initiative selection to the point where their token name is in the Turn Order at least once, and appears in the Tracker window.  Names those that have not in a message to the DM, or states that initiative is complete.</p>'
-							+'<h4>4.3 Change the list of characters in the Party</h4>'
-							+'<pre>--list-pcs < ALL / MAP / REPLACE / ADD ></pre>'
-							+'<p>DM Only command.  Takes a specifier for the tokens to have in the Player Character list which must be one of those listed.</p>'
-							+'<p>Updates the internally held list of Characters that are controlled by Players (and others that the DM can add at will).  This list is displayed on the <b>--init</b> menu, and is used by <b>--check-tracker</b> and <b>--end-of-day</b> commands.  The list persists between sessions of game-play.  The following parameters have the following effects:</p>'
-							+'<table>'
-							+'	<tr><th scope="row">all:</th><td>looks across all tokens in the campaign and creates a new list composed of those representing Character Sheets controlled by a Player (standard Roll20 Character Sheet functionality – refer to the Help Centre for information on setting Players to control Character Sheets and their tokens).</td></tr>'
-							+'	<tr><th scope="row">map:</th><td>creates a new list that only has Characters represented by tokens on the current Player map that are controlled by Players.  (See Roll20 Help Centre on how to select the current Player map).</td></tr>'
-							+'	<tr><th scope="row">replace:</th><td>creates a new list including all the currently selected token(s) (whomever controls them), and no others.</td></tr>'
-							+'	<tr><th scope="row">add:</th><td>adds the currently selected token(s) (whomever controls them) to the existing list leaving all the others unchanged.</td></tr>'
-							+'</table>'
-							+'<br>'
-							+'<h3>5. End of Day processing</h3>'
-							+'<h4>5.1 Initiate End of Day processing</h4>'
-							+'<pre>--end-of-day [=][cost]</pre>'
-							+'<p>DM Only command.  Takes an optional cost parameter, optionally preceded by an ‘=’ character.</p>'
-							+'<p>This command performs the ‘End-of-Day’ processing for the campaign.  This consists of enabling Long Rests for all Characters / NPCs / creatures to regain their spells and powers, and for recharging Magic Items to regain their charges (see <b>MagicMaster API</b> documentation for information on Long Rests).  It also removes spent ammunition from quivers that has not been recovered, as it is assumed to be lost, broken or taken by other creatures during the period of the night (see <b>AttackMaster API</b> documentation about recovery of ammunition and its loss over a Long Rest).</p>'
-							+'<p>Each day can cost or earn the members of the Party money, perhaps depending on where they stay overnight, whether they eat just camp rations or lavish meals, use an Inn and drink too much, or earn money doing a job.  The optional cost parameter can be set to a positive cost to the party which will be deducted from every member, or a negative quantity which will be earned (a negative cost).  If no <i>cost</i> is given (and "=" is not used) the stored <i>standard nightly cost</i> previously set will be used instead.</p>'
-							+'<p>Preceding the cost with ‘=’ will <b><u>not</u></b> run the ‘End-of-Day’, but instead will set the standard nightly cost if no <i>cost</i> parameter is given.</p>'
-							+'<p>Each time the command is run, the DM is asked to confirm if they wish the cost to be deducted from/earned by all the Characters listed.  If No is selected, nothing is deducted or earned.</p>'
-							+'<p>If the ‘=’ is followed by a Roll Query (see Roll20 Help Centre for information on Roll Queries), the Roll Query will be run each time the <b>--end-of-day</b> command is run without a parameter, allowing (for instance) the DM to select from a list of possible nightly costs or earnings.  This is the case when the InitiativeMaster API is first loaded - if comes with a default Roll Query.</p>'
-							+'<br>'
-							+'<h3>6. Other Commands</h3>'
-							+'<h4>6.1 Display help on these commands</h4>'
-							+'<pre>--help</pre>'
-							+'<p>This command does not take any arguments.  It displays a very short version of this document, showing the mandatory and optional arguments, and a brief description of each command.</p>'
-							+'<h4>6.2 Handshake with other APIs</h4>'
-							+'<pre>--hsq from|[command]<br>'
-							+'--handshake from|[command]</pre>'
-							+'<p>Either form performs a handshake with another API, whose call (without the ‘!’) is specified as the <i>from</i> paramater in the command parameters.  The response from InitiativeMaster is always an –hsr command.  The command calls the from API command responding with its own command to confirm that RoundMaster is loaded and running: e.g. </p>'
-							+'<p>Received:	<i>!init –hsq magic</i><br>'
-							+'Response:	<i>!magic –hsr init</i></p>'
-							+'Which means the MagicMaster API has requested a handshake with InitiativeMaster to see if it is loaded, and InitiativeMaster has responded, proving it is running and taking commands.</p>'
-							+'<p>Optionally, a command query can be made to see if the command is supported by RoundMaster if the command string parameter is added, where command is the RoundMaster command (the ‘--’ text without the ‘--‘).  This will respond with a true/false response: e.g.</p>'
-							+'<p>Received:	<i>!init –handshake attk|monster</i><br>'
-							+'Response:	<i>!attk –hsr init|monster|true</i></p>'
-							+'<h4>6.3 Switch on or off Debug mode</h4>'
-							+'<pre>--debug (ON/OFF)</pre>'
-							+'<p>Takes one mandatory argument which should be ON or OFF.</p>'
-							+'<p>The command turns on a verbose diagnostic mode for the API which will trace what commands are being processed, including internal commands, what attributes are being set and changed, and more detail about any errors that are occurring.  The command can be used by the DM or any Player – so the DM or a technical advisor can play as a Player and see the debugging messages.</p>'
-							+'<br>'
-							+'<h2>How Initiative Master API works</h2>'
-							+'<p>The Initiative Master API (‘InitMaster’) provides commands that allow the DM to set and manage the type of initiative to be used in the campaign, and for Players to undertake initiative rolls.  The API uses data on the Character Sheet represented by a selected token to show menus of actions that can be taken: these commands are often added to the Character Sheet as Ability Macros that can be shown as Token Actions (see Roll20 Help Centre for how to achieve this, or the <b>CommandMaster API</b> documentation).  The API displays resulting Turn Order token names with action priorities in the Turn Order Tracker window (standard Roll20 functionality – see Roll20 documentation & Help Centre).</p>'
-							+'<p>The API (as with other APIs in the RPGMaster series) is distributed configured for the AD&D 2e Character Sheet from Peter B.  The API can be easily modified to work with other character sheets by changing the fields object in the API to map the internal names for fields to the character sheet field names – see the <b>Character Sheet Setup handout</b>.</p>'
-							+'<h3>Specifying a token</h3>'
-							+'<p>Most of the InitiativeMaster API commands need to know the token_id of the token that represents the character, NPC or creature that is to be acted upon.  This ID can be specified in two possible ways:</p>'
-							+'<ol><li>explicitly in the command call using either a literal Roll20 token ID or using @{selected|token_id} or @{target|token_id} in the command string to read the token_id of a selected token on the map window,<br>or</li>'
-							+'<li>by having a token selected on the map window, not specifying the token_id in the command call, and allowing the API to discover the selected token_id.</li></ol>'
-							+'<p>In either case, if more than one token is selected at the time of the call then using either @{selected|token_id} to specify the token in the command call, or allowing the command to find a selected token, is likely (but not guaranteed) to take the first token that was selected.  To avoid ambiguity, it is generally recommended to make command calls with only one token selected on the map window.</p>'
-							+'<h3>Types of Initiative System</h3>'
-							+'<p>The API supports AD&D2e methods for initiative: ‘standard’, ‘group’ and ‘individual’, selectable by the DM in-game and changeable during game play, if desired.</p>'
-							+'<p>‘Standard’ AD&D2e initiative just requires a ‘Party’ initiative dice roll and a ‘Foe’ initiative dice roll to be entered, and the Turn Order entries are set appropriately.  For ‘Group’ initiative, the same rolls are entered but, in addition, the action of each character / NPC / creature (each token) taking part specifies what actions they are going to perform that round and the speed of that action is added to the relevant group dice roll to create the Turn Order priority for that token.  For ‘Individual’ initiative, each character / NPC / creature makes its own individual dice roll as well as specifying their action, with the individual dice roll and speed of action being combined to give the Turn Order priority.</p>'
-							+'<h3>Monster Attack Initiatives</h3>'
-							+'<p>Creatures using the Innate Monster Attack fields on the AD&D2e Character Sheet Monster tab benefit from an extended syntax for entries in these fields: each field can take</p>'
-							+'<pre>[Attack name],damage dice roll,[speed] </pre>'
-							+'<p>for example <code>Claw,1d8,2</code> and <code>Sword+1,2d4+1,5</code>.  These will result in possible initiative actions for that creature for <b>Claw</b> and <b>Sword+1</b>.  If Attack Name is omitted, the dice roll is displayed as the action name instead.  If the Speed is omitted, the Innate attack speed field value is used instead.</p>'
-							+'<h3>Effect of Magic on Initiative</h3>'
-							+'<p>The system can take into account various modifiers applied by spells and/or magic items (e.g. Haste and Slow spells), and the spell, power & magic item macros provided with the <b>MagicMaster API</b> use this functionality when used in conjunction with <b>RoundMaster</b> <i>Effects</i>.  <b>The Character Sheet Setup handout</b> states which Character Sheet fields to enter the modifiers into in order for them to be taken into account.</p>'
-							+'<h3>Multi-attack Initiatives</h3>'
-							+'<p>The system can also create multiple initiative turns for weapons that achieve multiple attacks per round, like bows and daggers, as well as by the class, level and proficiency of the character or any combination of the three as per the AD&D rules, including 3 attacks per 2 rounds, or 5 per 2 (more attacks on even-numbered rounds).  Also Fighter classes using 2 weapons are catered for, even with those weapons possibly having multiple attacks themselves – the weapon specified by the character as the Primary will achieve its multiple attacks, whereas the secondary weapon will only get 1 attack, as per the rules for multiple attacks.</p>'
-							+'<h3>Multi-round Initiatives</h3>'
-							+'<p>Multi-round initiatives are also supported e.g. for spells like <i>Chant</i> which takes 2 rounds.  Any Character Sheet entry that has a speed of longer than 10 segments (1/10ths of a round), when chosen by a player, will add an entry for that action not only in the current round but also in the following and subsequent rounds as appropriate.  Each new round, the Player of that character (or the DM for a Foe) is asked if they want to continue with the action or has it been interrupted: if interrupted or stopped by choice the player can choose another action for that character.</p>'
-							+'<h3>Changing an Initiative Action</h3>'
-							+'<p>If using ‘Group’ or ‘Individual’ initiative and a Player has completed selecting an initiative action for a Character (or the DM for a Foe) and changes their mind about what they are doing before the DM starts the round, the Player can select the token and rerun the relevant command (use the relevant token action button) to do initiative again (presuming the DM’s agreement).  The system will warn the Player that initiative has already been completed for the Character and present a new button to redo initiative if the Player wants to (this is so that accidental selection of the redo command is prevented) – all entries for the token name will be removed from the Turn Order and the relevant menus presented again to the Player.</p>'
-							+'<p>Selecting any particular action for initiative <i><u>does not</u></i> force that to be the action the Player takes on their turn.  When that Character’s / NPC’s / creature’s turn comes up in the Turn Order, a message is displayed to all Players and the DM stating the action that was selected for initiative for that token.  The Player can then take that action, or do something else entirely (presumably with the DM’s agreement) for instance if circumstances have changed (e.g. the foe being attacked has died prior to an ‘Attack’ action).</p>'
-							+'<h3>In Summary</h3>'
-							+'<p>InitMaster manages the whole of this process seamlessly, and in addition will support actions that result in more than one Turn Order entry (such as firing a bow that can make two shots per round), automatically taking into account character class to allow two-weapon attack actions, supporting initiative for ‘dancing’ weapons (when used with the AttackMaster and MagicMaster APIs), and other complex aspects of initiative.</p>'
-							+'<p>The easiest way to set up Character Sheets for InitMaster operation is by using the rest of the APIs in the Master series:</p>'
-							+'<p>RoundMaster API is required for the operation of InitMaster.  It manages all aspects of interaction with the Turn Order Tracker window in Roll20, and the management of token statuses and Effects.</p>'
-							+'<p>CommandMaster API will add the relevant DM Macro Bar buttons, and Token Action Buttons to a Character Sheets for all commands needed for each of the APIs.  It will also support initial setup and on-going maintenance of Weapon Proficiencies (including Specialisation & Mastery/Double Specialisation), Spell Books (both Wizard & Priest), and Powers (innate character/creature abilities, such as a Priest’s ability to Turn Undead, or a Vampire’s power to change to Gaseous Form).</p>'
-							+'<p>MagicMaster API will support entering the correct data on the sheet for all sorts of weapons, magic items, spells and powers, through looting chests & bodies, learning & memorising spells and being granted powers.  It can also allow the DM & Players to enter the data through menus.  It also manages light sources for Characters, dynamically changing Token light settings as required (requires Roll20 Dynamic Lighting to be enabled).</p>'
-							+'<p>AttackMaster API will use the data from MagicMaster to arm the character by taking weapons and/or shields ‘in hand’.  It will also support making attacks with all the relevant modifiers, changing the weapons in-hand, managing ammunition for ranged weapons, selecting the correct range for ranged weapons and applying the right modifiers, supporting magical weapons and artifacts, and also dealing with armour & armour classes.</p>'
-							+'<p>Token setup for use with the Master series of APIs is simple (to almost non-existent) and explained in the Character Sheet Setup handout.</p>',
-						},
-	RPGCS_Setup:		{name:'RPGMaster CharSheet Setup',
-						 avatar:'https://s3.amazonaws.com/files.d20.io/images/141800/VLyMWsmneMt4n6OBOLYn6A/max.png?1344434416',
-						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">Character Sheets for RPGMaster APIs</span>'
-							+'</div>'
-							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
-							+'<h2>Character Sheet and Token setup for use with RPGMaster APIs</h2>'
-							+'<h3>1. Token configuration</h3>'
-							+'<p>The API can work with any Token configuration but requires tokens that are going to participate in API actions to represent a Character Sheet, so that actions relevant to the token and the character it represents can be selected. </p>'
-							+'<p>A single Character Sheet can have multiple Tokens representing it, and each of these are able to do individual actions made possible by the data on the Character Sheet jointly represented.  However, if such multi-token Characters / NPCs / creatures are likely to encounter spells that will affect the Character Sheet (such as <i>Haste</i> and <i>Slow</i>) they must be split with each Token representing a separate Character Sheet, or else the one spell will affect all tokens associated with the Character Sheet, whether they were targeted or not!  In fact, <b>it is recommended that tokens and character sheets are 1-to-1 to keep things simple.</b></p>'
-							+'<p>The recommended Token Bar assignments for all APIs in the Master Series are:</p>'
-							+'<pre>Bar1 (Green Circle):	Armour Class (AC field) – only current value<br>'
-							+'Bar2 (Blue Circle):	Base Thac0 (thac0-base field) before adjustments – only current value<br>'
-							+'Bar3 (Red Circle):	Hit Points (HP field) – current & max</pre>'
-							+'<p>It is recommended to use these assignments, and they are the bar assignments set by the <b>CommandMaster API</b> if its facilities are used to set up the tokens.  All tokens must be set the same way, whatever way you eventually choose.</p>'
-							+'<p>These assignments can be changed in each API, by changing the fields object near the top of the API script (<b>note:</b> no underscore, and ‘bar#’ and ‘value’ or ‘max’ are separate entries in an array of 2 elements).  <b><i><u>All APIs must use the same field definitions</u></i></b>:</p>'
-							+'<pre>fields.Token_AC:	defines the token field for the AC value (normally [‘bar1’,’value’])<br>'
-							+'fields.Token_MaxAC:	defines the token field for the AC max (normally [‘bar1’,’max’])<br>'
-							+'fields.Token_Thac0:	defines the token field for the Thac0 value (normally [‘bar2’,’value’])<br>'
-							+'fields.Token_MaxThac0: defines the token field for the Thac0 max (normally [‘bar2’,’max’])<br>'
-							+'fields.Token_HP:	defines the token field for the HP value (normally [‘bar3’,’value’])<br>'
-							+'fields.Token_MaxHP:	defines the token field for the HP max (normally [‘bar3’,’max’])</pre>'
-							+'<p>Alter the bar numbers appropriately or, <b><u><i>if you are not wanting one or more of these assigned</i></u></b>: leave the two elements of the array as [‘’,’’].  The system will generally work fine with reassignment or no assignment, but not always.  Specifically, some effects in the Effects-DB, which implement spell effects on Character Sheets and Tokens, may not set the right values if no assignment of one or more of HP, AC & Thac0 are made to the Token.</p>'
-							+'<br>'
-							+'<h3>2. Use with various game system character sheets</h3>'
-							+'<p>The API issued is initially set up to work with the AD&D 2E character sheet (as this is what the author mostly plays).  However, it can be set up for any character sheet.  In the AttackMaster API code, right at the top, is an object definition called ‘fields’: see section 3 for details.  This can be altered to get the API to work with other character sheets.</p>'
-							+'<p>The coding of the API is designed to use the AD&D 2E system of attack calculations, armour class values and saving throw management.  If you use another system (e.g. the D&D 5e system) the API coding will need to change.  This might be a future enhancement.</p>'
-							+'<h3>3. Matching the API to a type of Character Sheet</h3>'
-							+'<p>The API has an object definition called ‘fields’, which contains items of the form </p>'
-							+'<pre>Internal_api_name: [sheet_field_name, field_attribute, optional_default_value, optional_set_with_worker_flag]</pre>'
-							+'<p>A typical example might be:</p>'
-							+'<pre>Fighter_level:[\'level-class1\',\'current\'],<br>'
-							+'Or<br>'
-							+'MUSpellNo_memable:[\'spell-level-castable\',\'current\',\'\',true],</pre>'
-							+'<p>Table names are slightly different: always have an <i>internal_api_name</i> ending in ‘_table’ and their definition specifies the repeating table name and the index of the starting row of the table or -1 for a static field as the 1<sup>st</sup> row.</p>'
-							+'<p><i>Internal_api_table: [sheet_repeating_table_name,starting_index]</i></p>'
-							+'<p>An example is:</p>'
-							+'<pre>MW_table:[\'repeating_weapons\',0],</pre>'
-							+'<p>The <i>internal_api_name</i> <b><u>must not be altered!</b></u> Doing so will cause the system not to work.  However, the <i>sheet_repeating_table_name</i> and <i>starting_index</i> can be altered to match any character sheet.</p>'
-							+'<p>Each character sheet must have repeating tables to hold weapons, ammo and magic items.  By default, melee weapons ‘in hand’ are held in sections of the repeating_weapons table, melee weapon damage in the repeating_weapons-damage table, ranged weapons in the repeating_weapons2 table, ammo in the repeating_ammo table, and magic items are held in the repeating_potions table.  The table management system provided by the API expands and writes to repeating attributes automatically, and the DM & Players do not need to worry about altering or updating any of these tables on the Character Sheet. </p>'
-							+'<h3>4. Character Attributes, Races, Classes and Levels</h3>'
-							+'<p>Character Attributes of <i>Strength, Dexterity, Constitution, Intelligence, Wisdom</i> and <i>Charisma</i> are generally not directly important to the AttackMaster API, but the resulting bonuses and penalties are.  All Attributes and resulting modifiers should be entered into the Character Sheet in the appropriate places (that is in the Character Sheet fields identified in the ‘fields’ API object as noted in section 2 above).</p>'
-							+'<p>The Character’s race is also important for calculating saves and ability to use certain items.  The race should be set in the appropriate Character Sheet field.  Currently, the races <i>‘dwarf’, ‘elf’, ‘gnome’, ‘halfelf’, ‘halfling’, ‘half-orc’</i> and <i>‘human’</i> are implemented (not case sensitive, and spaces, hyphens and underscores are ignored).  If not specified, <i>human</i> is assumed.  The race impacts saves, some magic items and armour, and bonuses on some attacks.</p>'
-							+'<p>The system supports single-class and multi-class characters.  Classes must be entered in the appropriate fields on the Character Sheet.  Classes and levels affect spell casting ability, ability to do two-weapon attacks with or without penalty, and the ability to backstab and the related modifiers, among other things.  Class and level also determine valid armour, shields, some magic items and saves.</p>'
-							+'<p><b>Note:</b> on the Advanced D&D 2e Character Sheet, Fighter classes must be in the first class column, Wizard classes in the second column, Priest classes in the third, Rogues in the fourth, and Psions (or any others) in the fifth.  It is important that these locations are adhered to.</p>'
-							+'<p><b>Note:</b> classes of Fighter and Rogue (such as Rangers and Bards) that can use clerical &/or wizard spells will automatically be allowed to cast spells once they reach the appropriate level by AD&D 2e rules, but not before.  They <b><u>do not</b></u> need to have levels set in the corresponding spell-caster columns - the casting ability & level is worked out by the system</p>'
-							+'<p>The following Classes are currently supported:</p>'
-							+'<table><thead><tr><td>Fighter classes</td><td>Wizard Classes</td><td>Priest Classes</td><td>Rogue Classes</td></tr></thead>'
-							+'<tr><td>Warrior</td><td>Wizard</td><td>Priest</td><td>Rogue</td></tr>'
-							+'<tr><td>Fighter</td><td>Mage</td><td>Cleric</td><td>Thief</td></tr>'
-							+'<tr><td>Ranger</td><td>Abjurer</td><td>Druid</td><td>Bard</td></tr>'
-							+'<tr><td>Paladin</td><td>Conjurer</td><td>Healer</td><td>Assassin</td></tr>'
-							+'<tr><td>Beastmaster</td><td>Diviner</td><td>Priest of Life</td></tr>'
-							+'<tr><td>Barbarian</td><td>Enchanter</td><td>Priest of War	</td></tr>'
-							+'<tr><td>Defender (Dwarven)</td><td>Illusionist</td><td>Priest of Light</td></tr>'
-							+'<tr><td> </td><td>Invoker</td><td>Priest of Knowledge</td></tr>'
-							+'<tr><td> </td><td>Necromancer</td><td>Shaman</td></tr>'
-							+'<tr><td> </td><td>Transmuter</td></tr></table>'
-							+'<p>The level for each class must be entered in the corresponding field.  Multiple classes and levels can be entered, and will be dealt with accordingly.  Generally, the most beneficial outcome for any combination will be used.  </p>'
-							+'<h3>5. Magic Items and Equipment</h3>'
-							+'<p>All magic items and standard equipment, including weapons, armour, lanterns etc, are held in the Items table, which by default is set to the potions table, <i>repeating_potions</i>, on the Character Sheet.  As with other fields, this can be changed in the <i>‘fields’</i> object.  The best way to put items into this table is by using the <b>MagicMaster API</b> commands <b>--edit-mi</b> or the GM-only command <b>--gm-edit-mi</b>.  Alternatively, the <b>AttackMaster --edit-weapons</b> command can be used to load weapons, ammunition and armour into the Items table.  It is generally possible to enter item names and quantities directly into the table and use them within the system, but only items that also exist in the supplied databases will actually work fully with the API (i.e. be recognised by the API as weapons, armour, ammo, etc).  Other items can be in the table but will not otherwise be effective.</p>'
-							+'<p>Items can be added to the databases.  See the Database Handouts for more information on the databases.</p>'
-							+'<h3>6. Weapons and Ammo</h3>'
-							+'<p>For the APIs to work fully the melee weapons, damage, ranged weapons and ammo must be selected using the <b>AttackMaster --weapon</b> command to take the weapon ‘in hand’.  This will display a menu to take weapons and shields from the Items table and take them in hand, ready to use.  This automatically fills all the correct fields for the weapons and ammo to make attacks, including many fields that are not displayed.  Entering weapon data directly into the melee weapon, damage, ranged weapon and ammo tables will generally work, but will be overwritten if the --weapon command is used.  Also, some API functions may not work as well or at all.</p>'
-							+'<p>For the <b>InitiativeMaster API</b> to support weapon attack actions weapon name, speed and number of attacks are the most important fields.  For the <b>AttackMaster API</b> to support attack rolls, proficiency calculations, ranged attacks, strength and dexterity bonuses, and other aspects of functionality, fill in as many fields as are visible on the character sheet.  When entering data manually, ensure that the row a melee or ranged weapon is in matches the row damage or ammo is entered in the respective tables (there is no need to do this if using AttackMaster functions to take weapons in-hand, as the relevant lines are otherwise linked).</p>'
-							+'<h3>7. Weapon Proficiencies</h3>'
-							+'<p>Weapon Proficiencies must be set on the Character Sheet.  This is best done by using the <b>CommandMaster API</b> character sheet management functions, but can be done manually.  Both specific weapons and related weapon groups can be entered in the table, and when a Player changes the character’s weapons in-hand the table of proficiencies will be consulted to set the correct bonuses and penalties.  Weapon specialisation and mastery (otherwise known as double specialisation) are supported by the CommandMaster functions, but can also be set by ticking/selecting the relevant fields on the Character Sheet weapon proficiencies table.  If a weapon or its related weapon group does not appear in the list, it will be assumed to be not proficient.</p>'
-							+'<h3>8. Spell books and memorisable spells</h3>'
-							+'<p>Spells can only be cast if they have macros defined in the spell databases (see Spell Database Handout).  If the <b>CommandMaster API</b> is loaded, the DM can use the tools provided there to manage Character, NPC & creature spell books and granted powers from the provided spell & power databases.</p>'
-							+'<p>The spells a spell caster can memorise (what they have in their spell books, or what their god has granted to them) is held as a list of spell names separated by vertical bars ‘|’ in the character sheet attribute defined in <i>fields.Spellbook</i> (on the AD&D2E character sheet ‘spellmem’) of each level of spell.  On the AD&D2E sheet, the spell books are the large Spell Book text fields at the bottom of each spell level tab.  The spell names used must be identical (though not case sensitive) to the spell ability macro names in the spell databases (hence the hyphens in the names).   So, for example, a 1<sup>st</sup> level Wizard might have the following in their large Wizard Level 1 spell book field:</p>'
-							+'<pre>Armour|Burning-Hands|Charm-Person|Comprehend-Languages|Detect-Magic|Feather-fall|Grease|Identify|Light|Magic-Missile|Read-Magic|Sleep</pre>'
-							+'<p>Only these spells will be listed as ones they can memorise at level 1.  When they learn new spells and put them in their spell book, this string can be added to just by typing into it.  When they reach 3<sup>rd</sup> level and can have 2<sup>nd</sup> level spells, the following string might be put in the spell book on the Level 2 Wizard spells tab:</p>'
-							+'<pre>Alter-Self|Invisibility|Melfs-Acid-Arrow|Mirror-Image|Ray-of-Enfeeblement</pre>'
-							+'<p>Again, as they learn more spells and put them in their spell book, just edit the text to add the spells.</p>'
-							+'<p>Once these spell books are defined, the DM or Player can use the <b>MagicMaster –mem-spell</b> command (or an action button and associated ability macro on the Character Sheet) to memorise the correct number of these spells in any combination and store those on the Character Sheet.</p>'
-							+'<h3>9. Powers</h3>'
-							+'<p>Powers can only be used if they are defined in the Powers database – see Database handouts.  If the <b>CommandMaster API</b> is also loaded, the DM can use the tools provided there to manage Character, NPC & creature spellbooks and granted powers.</p>'
-							+'<p>Powers work in an almost identical way to Wizard & Priest spells, except that there is only 1 level of powers.  Powers that the character has are added to the spell book on the Powers tab in the same way as spells, and then memorised using the <b>--mem-spell</b> command (which also works for powers with the right parameters).</p>'
-							+'</div>',
-						},
-	});
 	
 	var Init_StateEnum = Object.freeze({
 		ACTIVE: 0,
@@ -637,8 +407,6 @@ var initMaster = (function() {
 		noMIBag: '&{template:2Edefault} {{name=^^tname^^\'s\nInitiative}}{{desc=^^tname^^ does not have Magic Item Bag, and thus no magic items.  You can go and buy one, and fill it on your next campaign.}}',
 		notThief: '&{template:2Edefault} {{name=^^tname^^\'s\nInitiative}}{{desc=^^tname^^ is not a thief.  You can try these skills if you want - everyone has at least a small chance of success...  but perhaps prepare for a long stint staying at the local lord\'s pleasure!}}',
 		heavyArmour: '&{template:2Edefault} {{name=^^tname^^\'s\nInitiative}}{{desc=^^tname^^ realises that the armour they are wearing prevents them from using any thievish skills.  You will have to remove it, and then perhaps you might have a chance.  Change the armour type on the Rogue tab of your Character Sheet.}}',
-		stdInit: '&{template:'+fields.defaultTemplate+'} {{name=^^tname^^\'s\nInitiative}}{{desc=Currently, the game is running on Standard AD&D Initiative rules, so it is a Party initiative roll.  You do not need to select an action.}}',
-		notYet: '&{template:'+fields.defaultTemplate+'} {{name=^^tname^^\'s\nInitiative}}{{desc=The game is running on Group AD&D Initiative rules, so the Party need to make an initiative roll before you add the speed of what you are doing.  You cannot yet select an action yet.}}',
 	});
 
 	var flags = {
@@ -660,26 +428,6 @@ var initMaster = (function() {
 		twoWeapPsion: false,
 	};
 	
-	var apiCommands = {};
-	
-	var	replacers = [
-			[/</g, "["],
-			[/\\lbrak/g, "["],
-			[/>/g, "]"],
-			[/\\rbrak/g, "]"],
-			[/;/g, "?"],
-			[/\\ques/g, "?"],
-			[/`/g, "@"],
-			[/\\at/g, "@"],
-			[/~/g, "-"],
-			[/\\n/g, "\n"],
-			[/£/g, "|"],
-			[/\\vbar/g, "|"],
-			[/¦/g, ":"],
-			[/\\clon/g, ":"],
-			[/\\amp[^;]/g, "&"],
-		];
-		
 	var spellLevels = Object.freeze({ 
 		mu: [{ spells: 0, base: 0,  book: 0 },
 		     { spells: 0, base: 1,  book: 1 },
@@ -806,33 +554,14 @@ var initMaster = (function() {
 			{state.initMaster.round = 1;}
 		if (!state.initMaster.changedRound)
 			{state.initMaster.changedRound = false;}
-		if (!state.initMaster.dailyCost)
-			{state.initMaster.dailyCost = '?{What costs?|Camping 1sp,0.1|Inn D&B&B 2gp,2|Inn B&B 1gp,1|Set other amount,?{How many GP (fractions OK&#41;?}';}
-		// RED: v1.035 get a list of Player-controlled characters
-		// to use where API calls act on all PCs.
-		if (!state.initMaster.playerChars)
-			{state.initMaster.playerChars = getPlayerCharList();}
-		// RED: v1.035 support individual, group, or standard 
-		// initiative types
-		if (!state.initMaster.initType)
-			{state.initMaster.initType = 'individual';}
-		if (!state.initMaster.playerRoll)
-			{state.initMaster.playerRoll = '';}
-		if (!state.initMaster.dmRoll)
-			{state.initMaster.dmRoll = '';}
-		if (!state.initMaster.dispRollOnInit)
-			{state.initMaster.dispRollOnInit = true;}
-			
-		state.initMaster.playerChars = getPlayerCharList();
-		state.initMaster.initType = 'individual';
-		
-		// RED: v1.036 handshake with RoundMaster API
-		setTimeout( () => issueHandshakeQuery('rounds'),5000);
-		
-	    // RED: log the version of the API Script
+		if (!state.initMaster.attrsToCreate)
+		    {state.initMaster.attrsToCreate = {};}
+
+	        // RED: log the version of the API Script
 
 		log(`-=> initMaster v${version} <=-`);
-		return;
+		
+
 	}; 
 	
     /**
@@ -987,14 +716,6 @@ var initMaster = (function() {
 	};
 
 
-	/*
-	 * Function to replace special characters in a string
-	 */
-	 
-	var parseStr=function(str){
-		return replacers.reduce((m, rep) => m.replace(rep[0], rep[1]), str);
-	}
-
 	/**
 	 * Handle Pending Requests
 	 */
@@ -1088,19 +809,17 @@ var initMaster = (function() {
 		    controlledBy = controlledBy.split(',');
 			viewerID = state.roundMaster.viewer.is_set ? (state.roundMaster.viewer.pid || null) : null;
             players = controlledBy.filter(id => id != viewerID);
-//            log('Init sendResponse: character is '+charCS.get('name')+', viewerID='+viewerID+', controlledBy='+controlledBy+', players.length='+players.length);
+            log('Init sendResponse: character is '+charCS.get('name')+', viewerID='+viewerID+', controlledBy='+controlledBy+', players.length='+players.length);
 			if (players.length) {
     		    isPlayer = _.some( controlledBy, function(playerID) {
         		    players = findObjs({_type: 'player', _id: playerID, _online: true});
-        		    return (players && players.length > 0);
+        		    return (players || players.length > 0);
         		});
-//			    log('Init sendResponse: has players other than viewer, online='+isPlayer);
+			    log('Init sendResponse: has players other than viewer, online='+isPlayer);
 			};
 		};
-//		log('Init sendResponse: !charCS='+!charCS+', controlledBy.length='+controlledBy.length+', !isPlayer='+!isPlayer);
-        if (controlledBy.includes('all')) {
-            to = '';
-        } else if (!charCS || controlledBy.length == 0 || !isPlayer) {
+		log('Init sendResponse: !charCS='+!charCS+', controlledBy.length='+controlledBy.length+', !isPlayer='+!isPlayer);
+		if (!charCS || controlledBy.length == 0 || !isPlayer) {
 			to = '/w gm ';
 		} else {
 			to = '/w "' + charCS.get('name') + '" ';
@@ -1256,13 +975,10 @@ var initMaster = (function() {
                     .union(createOrderKeys)
                     .value();
 
-//			log('getTable setting sortKeys');
-			if (_.isUndefined(tableObj.sortKeys)) {
+			if (_.isUndefined(tableObj.sortKeys) || tableObj.sortKeys.length <= sortOrderKeys.length) {
+//			    log('getTable setting sortKeys');
 				tableObj.sortKeys = sortOrderKeys;
-			} else {
-				tableObj.sortKeys = tableObj.sortKeys.concat(_.difference(sortOrderKeys,tableObj.sortKeys));
-				if (_.some(sortOrderKeys, (e,k) => e !== tableObj.sortKeys[k])) sendDebug('Warning: table '+tableDef[0]+', attr '+attrDef[0]+' is not fully aligned');
-			}
+			};
 //            log('getTable updating attrs length '+_.size(attrs));
 			tableObj[name].attrs=attrs;
         } else {
@@ -1333,7 +1049,7 @@ var initMaster = (function() {
 	 */
 	 
 	var tableLookup = function( tableObj, attrDef, index, defVal, retObj ) {
-//        log('tableLookup tableObj:'+!!tableObj+', attrDef:'+attrDef[0]+','+attrDef[1]+', index:'+index+', retObj:'+retObj);
+        log('tableLookup tableObj:'+!!tableObj+', attrDef:'+attrDef[0]+','+attrDef[1]+', index:'+index+', retObj:'+retObj);
         var val, name = attrDef[0];
         if (_.isUndefined(retObj)) {
 			retObj=false;
@@ -1398,7 +1114,7 @@ var initMaster = (function() {
 				attrValue = tableObj[name].defaultVal;
 			}
     		if (r < 0) {
-//    		    log('tableSet r<0 setting '+attrDef[0]+' to '+attrValue);
+    		    log('tableSet r<0 setting '+attrDef[0]+' to '+attrValue);
 				let attrObj = attrLookup( tableObj.character, [attrDef[0], null], null, null, null, caseSensitive );
 				if (!attrObj) attrObj = createObj( 'attribute', {characterid:tableObj.character.id, name:attrDef[0] });
 				attrObj.set(attrDef[1],attrValue);
@@ -1409,13 +1125,13 @@ var initMaster = (function() {
 				value = {},
 				rowObj;
 			    
-//			log('attrDef = '+attrDef);
-//			log('tableSet r='+r+', sok.length='+sortOrderKeys.length);
+			log('attrDef = '+attrDef);
+			log('tableSet r='+r+', sok.length='+sortOrderKeys.length);
 			if (r<sortOrderKeys.length && !_.has(attrs,sortOrderKeys[r])) {
 				let finalName = tableObj.table[0]+tableObj.column+'_'+sortOrderKeys[r]+'_'+attrDef[0]+tableObj.column;
-    	        value = tableObj.values[attrDef[0]] || {current:'', max:''};
+    	        value = {current:'', max:''};
     			value[attrDef[1]]=String(attrValue);
-//				log('tableSet create obj r='+r+', length='+sortOrderKeys.length+', _.has(attrs[sok[r]])='+_.has(attrs,sortOrderKeys[r])+', trying to set '+finalName+','+attrDef[1]+' to '+attrValue);
+				log('tableSet create obj r='+r+', length='+sortOrderKeys.length+', _.has(attrs[sok[r]])='+_.has(attrs,sortOrderKeys[r])+', trying to set '+finalName+','+attrDef[1]+' to '+attrValue);
 				rowObj = createObj( "attribute", {characterid: tableObj.character.id, name: finalName});
 				rowObj.set(value);
 				tableObj[name].attrs[sortOrderKeys[r]] = rowObj;
@@ -1425,10 +1141,10 @@ var initMaster = (function() {
 										&& attrDef[1]
 										&& !_.isUndefined(attrs[sortOrderKeys[r]])) {
 				attrs[sortOrderKeys[r]].set(attrDef[1],String(attrValue));
-//	            log('tableSet able to set '+tableObj.table[0]+' row '+r+' '+attrDef+' to '+attrs[sortOrderKeys[r]].get(attrDef[1])+', should be'+attrValue);
+	            log('tableSet able to set '+tableObj.table[0]+' row '+r+' '+attrDef+' to '+attrs[sortOrderKeys[r]].get(attrDef[1])+', should be'+attrValue);
 			} else {
 				log('tableSet not been able to set '+tableObj.table[0]+tableObj.column+'_$'+r+'_'+attrDef[0]+tableObj.column+' "'+attrDef[1]+'" to '+attrValue);
-				sendError('initMaster not able to save to '+tableObj.table[0]+' table row '+r);
+				sendError('attackMaster not able to save to '+tableObj.table[0]+' table row '+r);
 			}
 		}
 		return tableObj;
@@ -1483,17 +1199,19 @@ var initMaster = (function() {
 		if (!values) values = tableObj.values;
 		if (!fieldGroup) fieldGroup = tableObj.fieldGroup;
 		if (!fieldGroup) {
-			throw {name:'magicMaster Error',message:'undefined addTable fieldGroup'};
+		    log('addTableRow no fieldGroup in '+tableObj.table[0]);
+			sendDebug('addTableRow: no fieldGroup defined');
+			throw 'Internal magicMaster Error';
 		}
 		    
-//	    log('addTableRow called, tableObj.table='+tableObj.table[0]+', index='+index+', fieldGroup='+fieldGroup+', table '+(fieldGroup+'name')
-//	                    +', value='+tableLookup( tableObj, fields[fieldGroup+'name'], index, false ));
+	    log('addTableRow called, tableObj.table='+tableObj.table[0]+', index='+index+', fieldGroup='+fieldGroup+', table '+(fieldGroup+'name')
+	                    +', value='+tableLookup( tableObj, fields[fieldGroup+'name'], index, false ));
 		if ((index < 0) || !_.isUndefined(tableLookup( tableObj, fields[fieldGroup+'name'], index, false ))) {
 			_.each( list, (elem,key) => {
 			    if (_.isUndefined(elem.attrs)) return;
 				currentVal = (!values || _.isUndefined(values[key])) ? elem.defaultVal['current'] : values[key]['current'];
 				maxVal = (!values || _.isUndefined(values[key])) ? elem.defaultVal['max'] : values[key]['max'];
-//				log('addTableRow index='+index+' static or exists, setting '+key+' to be '+newVal);
+				log('addTableRow index='+index+' static or exists, setting '+key+' to be '+newVal);
 				tableObj = tableSet( tableObj, [key,'current'], index, currentVal );
 				tableObj = tableSet( tableObj, [key,'max'], index, maxVal );
 			});
@@ -1502,14 +1220,14 @@ var initMaster = (function() {
 			    namePt1 = tableObj.table[0]+tableObj.column+'_'+rowObjID+'_';
 			_.each( list, (elem,key) => {
 			    if (_.isUndefined(elem.attrs)) return;
-//				log('addTableRow found elem '+key);
+				log('addTableRow found elem '+key);
 				rowObj = createObj( "attribute", {characterid: tableObj.character.id, name: (namePt1+key+tableObj.column)} );
 				if (!values || _.isUndefined(values[key])) {
 					newVal = elem.defaultVal;
 				} else {
 					newVal = values[key];
 				}
-//				log('addTableRow creating elem[0] '+key+', newVal.current '+newVal.current+' max '+newVal.max+'');
+				log('addTableRow creating elem[0] '+key+', newVal.current '+newVal.current+' max '+newVal.max+'');
 				rowObj.set(newVal);
 				tableObj[key].attrs[rowObjID] = rowObj;
 				tableObj.sortKeys[index] = rowObjID;
@@ -1603,7 +1321,7 @@ var initMaster = (function() {
 	    
 //	    if(_.isUndefined(attrDef)) {log('setAttr attrDef:'+attrDef+', attrValue:'+attrValue+', tableDef:'+tableDef+', r:'+r+', c:'+c);}
 	    
-		var name, attrObj, match;
+		var name, attrObj, match, worker;
 
 	    try {
 	        name = attrDef[0];
@@ -1620,6 +1338,7 @@ var initMaster = (function() {
 //            log('setAttr: name:'+attrDef);
 			name = attrDef[0];
 		}
+		worker = attrDef[3];
 		match=name.match(/^(repeating_.*)_\$(\d+)_.*$/);
         if(match){
             let index=match[2],
@@ -1632,22 +1351,40 @@ var initMaster = (function() {
 		} else {
 			attrObj = attrLookup( character, [name, null], null, null, null, caseSensitive );
 			if (!attrObj) {
-//				log( 'setAttr: ' + name + ' not found so creating');
+				log( 'setAttr: ' + name + ' not found so creating');
 				attrObj = createObj( 'attribute', {characterid:character.id, name:attrDef[0]} );
 			}
 //    		log('setAttr: attrObj.get(name) = '+attrObj.get('name'));
 			if (_.isUndefined(attrDef)) {log('setAttr attrDef corrupted:'+attrDef);return undefined;}
 			sendDebug( 'setAttr: character ' + character.get('name') + ' attribute ' + attrDef[0] + ' ' + attrDef[1] + ' set to ' + attrValue );
-			if (attrDef[3]) {
-			    log('setAttr: setting with worker');
-				attrObj.setWithWorker( attrDef[1], String(attrValue) );
-			} else {
-				attrObj.set( attrDef[1], String(attrValue) );
-			}
+            if (!worker)
+    			attrObj.set( attrDef[1], String(attrValue) );
+    		else
+    		    attrObj.setWithWorker( attrDef[1], String(attrValue) );
+
 		}
 		return attrObj;
 	}
+	
+	/**
+	* Create any pending attributes in attrsToCreate using ChatSetAttr
+	* rather than build a function myself - though this will only
+	* handle simple attributes, not repeating tables
+	**/
+/*	
+	var createAttrs = function( silent, replace ) {
 		
+		if (state.magicMaster.attrsToCreate) {
+			_.each( state.magicMaster.attrsToCreate, function( attrs, charID ) {
+				let setVars = '!setattr ' + ( silent ? '--silent ' : '' ) + ( replace ? '--replace ' : '' ) + '--charid ' + charID;
+					setVars += attrs;
+				sendDebug( 'createAttrs: creating attributes for ' + getAttrByName( charID, 'character_name' ));
+				sendMagicAPI( setVars );
+			});
+			state.magicMaster.attrsToCreate = {};
+		};
+	};
+	
 // -------------------------------------------- utility functions ----------------------------------------------
 
 	/**
@@ -1667,38 +1404,6 @@ var initMaster = (function() {
 
 		return retval;
 	}; 
-	
-	/**
-	 * Update or create the help handouts
-	 **/
-	 
-	var updateHandouts = function(silent,senderId) {
-		
-		_.each(handouts,(obj,k) => {
-			let dbCS = findObjs({ type:'handout', name:obj.name },{caseInsensitive:true});
-			if (!dbCS || !dbCS[0]) {
-				dbCS = createObj('handout',{name:obj.name,inplayerjournals:senderId});
-			} else {
-				dbCS = dbCS[0];
-			}
-			dbCS.set({notes:obj.bio,avatar:obj.avatar});
-			if (!silent) sendFeedback(obj.name+' handout updated');
-			log(obj.name+' handout updated');
-		});
-		return;
-	}
-
-	/**
-	 * Issue a handshake request to check if another API or 
-	 * specific API command is present
-	 **/
-	 
-	var issueHandshakeQuery = function( api, cmd ) {
-		log('InitMaster issuing handshake to '+api+((cmd && cmd.length) ? (' for command '+cmd) : ''));
-		var handshake = '!'+api+' --hsq init'+((cmd && cmd.length) ? ('|'+cmd) : '');
-		sendInitAPI(handshake);
-		return;
-	};
 	
 	/**
 	 * Get valid character from a tokenID
@@ -1743,36 +1448,52 @@ var initMaster = (function() {
 
 	};
 	
-	/*
-	 * Create a list of currently Player-controlled Characters
-	 */
-	 
-	var getPlayerCharList = function( page=false, monster=false ) {
+    /**
+     * Get the sheet table types for a specific character sheet
+     */
+/*
+    var getSheetTypes = function( charCS ) {
+
+		var sheetTypes = {
+				sheetFlags: 0,
+				sheetType: 3,
+				sheetMUType: 6,
+				sheetPRType: 6,
+				sheetPowersType: 3,
+				sheetMIBagType: 6,
+				sheetLangsType: 0,
+				sheetNWPType: 0,
+				sheetGemsType: 12,
+				sheetThiefType: 1
+			};
 		
-		log('getPlayerCharList called with page='+page+', monster='+monster);
-		var charID,charCS,
-			nameList = [new Set()];
-			
-		nameList =  _.chain(filterObjs(function(obj) {
-					if ((obj.get('type') !== 'graphic') || (obj.get('subtype') !== 'token')) return false;
-					if (!(charID = obj.get('represents')).length > 0) return false;
-					if (page && (page !== obj.get('pageid'))) return false;
-					charCS = getObj('character',charID);
-					if (!charCS || (monster == (charCS.get('controlledby').length > 0))) return false;
-//					} else {
-//						if (charCS && (charCS.get('controlledby').length == 0)) return false;
-//					}
-					return true;
-				}))
-				.map(function(obj) {return {name:obj.get('name'),id:obj.id};})
-				.uniq(false,obj => obj.name)
-				.sortBy('name')
-				.value();
-		log('gPCL: got list '+(_.pluck(nameList,'name').join(', ')));
-		return nameList;
-	}
+		if (!charCS) {
+			sendDebug( 'getSheetTypes: invalid charID passed' );
+			sendError( 'Invalid character selected');
+			return sheetTypes;
+        };
+		sheetTypes.sheetFlags = attrLookup( charCS, 'sheet-flags', 'current' );
+		
+		if (sheetTypes.sheetFlags != 0) {
+			sheetTypes.sheetType = attrLookup( charCS, ['sheet-type', 'current'] );
+			sheetTypes.sheetMUType = attrLookup( charCS, ['sheet-mu-spells-type', 'current'] );
+			sheetTypes.sheetPRType = attrLookup( charCS, ['sheet-pr-spells-type', 'current'] );
+			sheetTypes.sheetPowersType = attrLookup( charCS, ['sheet-powers-type', 'current'] );
+			sheetTypes.sheetMIBagType = attrLookup( charCS, ['sheet-mibag-type', 'current'] );
+			sheetTypes.sheetLangsType = attrLookup( charCS, ['sheet-langs-type', 'current'] );
+			sheetTypes.sheetNWPType = attrLookup( charCS, ['sheet-nwp-type', 'current'] );
+			sheetTypes.sheetGemsType = attrLookup( charCS, ['sheet-gems-type', 'current'] );
+			sheetTypes.sheetThiefType = 1;
+		}
+		
+        return sheetTypes;
+    };
 	
-/*	var setAmmoFlags = function( charCS ) {
+	/**
+	 * Set the ammo flags, no ammo = false else true
+	 **/
+ 
+	var setAmmoFlags = function( charCS ) {
 	
 		var content = '',
 		    i,
@@ -1793,7 +1514,7 @@ var initMaster = (function() {
 		};
 		return;
 	};
-*/	
+	
 	/**
 	* Set the initiative variables when a button has been selected
 	* Push the previous selection into the max of each representing a second weapon
@@ -1840,10 +1561,6 @@ var initMaster = (function() {
 			speedMult,
 			tokenID = args[1],
 			rowIndex = args[2],
-			monIndex = args[3],
-			monAttk1 = attrLookup( charCS, fields.Monster_dmg1 ),
-			monAttk2 = attrLookup( charCS, fields.Monster_dmg2 ),
-			monAttk3 = attrLookup( charCS, fields.Monster_dmg3 ),
 			buildCall = '';
 
 		if (_.isUndefined(rowIndex)) {
@@ -1864,8 +1581,7 @@ var initMaster = (function() {
 				+ '|[[' + weapSpeed + ']]'
 				+ '|' + speedMult + '*1'
 				+ '|0'
-				+ '|-1'
-				+ '|'+monIndex;
+				+ '|-1';
 
 		sendInitAPI( buildCall );
 		return;
@@ -2174,7 +1890,8 @@ var initMaster = (function() {
 
 	var handleInitMIBag = function( charCS, args ) {
 	
-		var repItemField,
+		var rowNum,
+			repItemField,
 			itemName,
 			itemSpeed,
 			tokenID = args[1],
@@ -2188,10 +1905,11 @@ var initMaster = (function() {
 			return;
 		}
 
+		rowNum = (fields.MIFirstRowNum || rowIndex != 0);
 		repItemField = fields.Items_table[0] + '_$' + rowIndex + '_';
 
 		itemName = attrLookup( charCS, fields.Items_name, fields.Items_table, rowIndex );
-		itemSpeed = attrLookup( charCS, fields.Items_trueSpeed, fields.Items_table, rowIndex );
+		itemSpeed = attrLookup( charCS, fields.Items_speed, fields.Items_table, rowIndex );
 
 		// RED: v1.013 tacked the 2-handed weapon status to the end of the --buildmenu call
 
@@ -2274,7 +1992,7 @@ var initMaster = (function() {
 		var init_speed,
 		    buildCall;
 			
-//		setAmmoFlags( charCS );
+		setAmmoFlags( charCS );
 		setAttr( charCS, fields.Init_carry, 0 );
 		setAttr( charCS, fields.Init_done, 0 );
 		setAttr( charCS, fields.Init_submitVal, 1 );
@@ -2309,8 +2027,7 @@ var initMaster = (function() {
 		    initMenu = args[3],
 		    rowIndex2 = args[4],
 			tokenName = getObj('graphic',tokenID).get('name'),
-			row = parseInt(fields.MW_table[1]),
-			entry = 0,
+			entry = parseInt(fields.MW_table[1]),
 			speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 1),
 			init_Mod = parseInt(attrLookup( charCS, fields.initMod ) || 0),
 			hands = parseInt(attrLookup( charCS, fields.Equip_handedness ) || 2)+entry,
@@ -2322,80 +2039,72 @@ var initMaster = (function() {
 			WeaponTable, weapon, dancing, speed, 
 			actionNum, actions, initiative, i;
 
-//		log('handleAllWeapons getting Melee Weapon tables.  hands='+hands+', noDancing='+noDancing);
+		log('handleAllWeapons getting Melee Weapon tables.  hands='+hands+', noDancing='+noDancing);
 			
 		WeaponTable = getTable( charCS, {}, fields.MW_table, fields.MW_name );
 		WeaponTable = getTable( charCS, WeaponTable, fields.MW_table, fields.MW_speed );
 		WeaponTable = getTable( charCS, WeaponTable, fields.MW_table, fields.MW_noAttks );
 		WeaponTable = getTable( charCS, WeaponTable, fields.MW_table, fields.MW_dancing );
 		
-//		log('handleAllWeapons dancing default is '+WeaponTable[fields.MW_dancing[0]].defaultVal[fields.MW_dancing[1]]);
-//		log('handleAllWeapons about to loop on Melee Weapons');
+		log('handleAllWeapons about to loop on Melee Weapons');
 			
 		do {
-			weapon = tableLookup( WeaponTable, fields.MW_name, row, false );
-			dancing = parseInt(tableLookup( WeaponTable, fields.MW_dancing, row ));
+			weapon = tableLookup( WeaponTable, fields.MW_name, entry, false );
+			dancing = tableLookup( WeaponTable, fields.MW_dancing, entry );
     		log('handleAllWeapons found weapon '+weapon+', dancing='+dancing);
 			
 			if (_.isUndefined(weapon)) {break;}
-			if (weapon != '-' && (!onlyDancing || (!isNaN(dancing) && dancing != 0))) {
+			if (weapon != '-' && (!onlyDancing || dancing != 0)) {
 				weapons.push(weapon);
-				speed = parseInt(tableLookup( WeaponTable, fields.MW_speed, row, '0' ));
-				actionNum = tableLookup( WeaponTable, fields.MW_noAttks, row, '1' );
+				speed = parseInt(tableLookup( WeaponTable, fields.MW_speed, entry, '0' ));
+				actionNum = tableLookup( WeaponTable, fields.MW_noAttks, entry, '1' );
 				actions = eval(actionNum+'*2*'+speedMult);
 				initiative = base+speed+init_Mod;
-//		log('handleAllWeapons pushing init:'+initiative+', action: with their '+(!!dancing ? 'dancing ' : '')+weapon+', msg: rate '+actionNum+', speed '+speed+', modifier '+init_Mod);
+		log('handleAllWeapons pushing init:'+initiative+', action: with their '+(dancing ? 'dancing ' : '')+weapon+', msg: rate '+actionNum+', speed '+speed+', modifier '+init_Mod);
 			
-				attacks.push({init:initiative,ignore:0,action:('with their '+(!!dancing ? 'dancing ' : '')+weapon),msg:(' rate '+actionNum+', speed '+speed+', modifier '+init_Mod)});
+				attacks.push({init:initiative,ignore:0,action:('with their '+(dancing ? 'dancing ' : '')+weapon),msg:(' rate '+actionNum+', speed '+speed+', modifier '+init_Mod)});
 				for (i=(3+(round%2)); i<=actions; i+=2) {
 					initiative += speed;
-//        log('handleAllWeapons pushing init:'+initiative+', action: with their '+(!!dancing ? 'dancing ' : '')+weapon+', msg: rate '+actionNum+', speed '+speed+', modifier '+init_Mod);
-					attacks.push({init:initiative,ignore:0,action:('with their '+(!!dancing ? 'dancing ' : '')+weapon),msg:(' rate '+actionNum+', speed '+speed+', modifier '+init_Mod)});
+        log('handleAllWeapons pushing init:'+initiative+', action: with their '+(dancing ? 'dancing ' : '')+weapon+', msg: rate '+actionNum+', speed '+speed+', modifier '+init_Mod);
+					attacks.push({init:initiative,ignore:0,action:('with their '+(dancing ? 'dancing ' : '')+weapon),msg:(' rate '+actionNum+', speed '+speed+', modifier '+init_Mod)});
 				}
-				entry++;
 			}
-			row++;
+			entry++
 		} while (entry < hands+noDancing);
 		
-//		log('handleAllWeapons Getting Ranged Weapon tables');
+		log('handleAllWeapons Getting Ranged Weapon tables');
 
 		WeaponTable = getTable( charCS, {}, fields.RW_table, fields.RW_name );
 		WeaponTable = getTable( charCS, WeaponTable, fields.RW_table, fields.RW_speed );
 		WeaponTable = getTable( charCS, WeaponTable, fields.RW_table, fields.RW_noAttks );
 		WeaponTable = getTable( charCS, WeaponTable, fields.RW_table, fields.RW_dancing );
-		row = fields.RW_table[1];
+		entry = fields.RW_table[1];
 		
-//		log('handleAllWeapons about to start Ranged Weapon loop');
+		log('handleAllWeapons about to start Ranged Weapon loop');
 
 		do {
-			weapon = tableLookup( WeaponTable, fields.RW_name, row, false );
-			dancing = parseInt(tableLookup( WeaponTable, fields.RW_dancing, row ));
+			weapon = tableLookup( WeaponTable, fields.RW_name, entry, false );
+			dancing = tableLookup( WeaponTable, fields.RW_dancing, entry );
     		log('handleAllWeapons found weapon '+weapon+', dancing='+dancing);
 			if (_.isUndefined(weapon)) {break;}
 			if (weapon != '-' && !weapons.includes(weapon) && (!onlyDancing || dancing != 0)) {
 
-				speed = parseInt(tableLookup( WeaponTable, fields.RW_speed, row, '0' ));
-				actionNum = tableLookup( WeaponTable, fields.RW_noAttks, row, '1' );
+				speed = parseInt(tableLookup( WeaponTable, fields.RW_speed, entry, '0' ));
+				actionNum = tableLookup( WeaponTable, fields.RW_noAttks, entry, '1' );
 				actions = eval(actionNum+'*2*'+speedMult);
 				initiative = base+speed+init_Mod;
-//		log('handleAllWeapons pushing init:'+initiative+', action: with their '+(dancing ? 'dancing ' : '')+weapon+', msg: rate '+actionNum+', speed '+speed+', modifier '+init_Mod);
+		log('handleAllWeapons pushing init:'+initiative+', action: with their '+(dancing ? 'dancing ' : '')+weapon+', msg: rate '+actionNum+', speed '+speed+', modifier '+init_Mod);
 				attacks.push({init:initiative,ignore:0,action:('with their '+(dancing ? 'dancing ' : '')+weapon),msg:(' rate '+actionNum+', speed '+speed+', modifier '+init_Mod)});
 				for (i=(3+(round%2)); i<=actions; i+=2) {
 					initiative += speed;
-//		log('handleAllWeapons pushing init:'+initiative+', action: with their '+(dancing ? 'dancing ' : '')+weapon+', msg: rate '+actionNum+', speed '+speed+', modifier '+init_Mod);
+		log('handleAllWeapons pushing init:'+initiative+', action: with their '+(dancing ? 'dancing ' : '')+weapon+', msg: rate '+actionNum+', speed '+speed+', modifier '+init_Mod);
 					attacks.push({init:initiative,ignore:0,action:('with their '+(dancing ? 'dancing ' : '')+weapon),msg:(' rate '+actionNum+', speed '+speed+', modifier '+init_Mod)});
 				}
-				entry++;
 			}
-			row++;
+			entry++
 		} while (entry < hands+noDancing);
 		
-		if (entry > 0) {
-			setAttr( charCS, fields.Prev_round, 0 );
-			setAttr( charCS, [fields.Prev_round[0] + tokenID, fields.Prev_round[1]], state.initMaster.round, null, null, null, true );
-			buildMenu( initMenu, charCS, MenuState.DISABLED, args );
-		}
-//		log('handleAllWeapons got all '+(onlyDancing?'dancing':'')+' weapons');
+		log('handleAllWeapons got all '+(onlyDancing?'dancing':'')+' weapons');
 
 		return attacks;
 	}
@@ -2405,22 +2114,14 @@ var initMaster = (function() {
 	**/
 	
 	var handleInitSubmit = function( senderId, charCS, args ) {
-		
+
 		var	initCmd = args[0],
 			tokenID = args[1],
 		    rowIndex = args[2],
 		    initMenu = args[3],
 		    rowIndex2 = args[4],
-			base = (state.initMaster.initType == 'group' ? state.initMaster.playerRoll : randomInteger(10)),
+			base = randomInteger(10),
 			actions, initiative;
-
-		if (state.initMaster.initType == 'standard') {
-			sendParsedMsg( 'InitMaster', Init_Messages.stdInit, tokenID );
-			return;
-		} else if (state.initMaster.initType == 'group' && isNaN(state.initMaster.playerRoll)) {
-			sendParsedMsg( 'InitMaster', Init_Messages.notYet, tokenID );
-			return;
-		}
 
 		if (_.isUndefined(rowIndex)) {
 			sendDebug( 'handleInitSubmit: index undefined' );
@@ -2428,11 +2129,7 @@ var initMaster = (function() {
 			return;
 		}
 		
-		var charName = charCS.get('name'),
-			tokenName = getObj( 'graphic', tokenID ).get('name'),
-			submitVal = attrLookup( charCS, fields.Init_submitVal ),
-			content = fields.roundMaster;
-
+		var submitVal = attrLookup( charCS, fields.Init_submitVal );
 
 		if (rowIndex < 0 && !submitVal) {
 			sendParsedMsg( 'InitMaster', Init_Messages.doneInit, tokenID );
@@ -2445,41 +2142,14 @@ var initMaster = (function() {
 
         log('handleInitSubmit done handleAllWeapons');
 
-		if (rowIndex == 0 && (initMenu == MenuType.COMPLEX || initMenu == MenuType.SIMPLE)) {
-			buildMenu( initMenu, charCS, MenuState.DISABLED, args );
-			var monAttk1 = (attrLookup( charCS, fields.Monster_dmg1 ) || '').split(','),
-				monAttk2 = (attrLookup( charCS, fields.Monster_dmg2 ) || '').split(','),
-				monAttk3 = (attrLookup( charCS, fields.Monster_dmg3 ) || '').split(','),
-				monSpeed = parseInt(attrLookup( charCS, fields.Monster_speed ) || 0),
-				monSpeed1 = parseInt((monAttk1.length > 2) ? monAttk1[2] : monSpeed) || monSpeed,
-				monSpeed2 = parseInt((monAttk2.length > 2) ? monAttk2[2] : monSpeed) || monSpeed,
-				monSpeed3 = parseInt((monAttk3.length > 2) ? monAttk3[2] : monSpeed) || monSpeed,
-				monMod = parseInt(attrLookup( charCS, fields.initMod )) || 0;
-				
-			actions = [new Set()];
-			setAttr( charCS, fields.Prev_round, 0 );
-			setAttr( charCS, [fields.Prev_round[0] + tokenID, fields.Prev_round[1]], state.initMaster.round, null, null, null, true );
-			setAttr( charCS, fields.Init_chosen, 0 );
-			setAttr( charCS, fields.Init_done, -1 );
-			setAttr( charCS, fields.Init_submitVal, 0 );
-			setAttr( charCS, fields.Init_speed, monSpeed1 );
-			setAttr( charCS, fields.Init_carry, (monSpeed1 > 10 ? 1 : 0) );
-			setAttr( charCS, fields.Init_carrySpeed, (monSpeed1 - 10) );
-			setAttr( charCS, fields.Init_carryAction, 'with their '+monAttk1[0] );
-			setAttr( charCS, fields.Init_carryActNum, 1 );
-			setAttr( charCS, fields.Init_carryWeapNum, -1 );
-			setAttr( charCS, fields.Init_carryPreInit, 0 );
-			setAttr( charCS, fields.Init_carry2H, 0 );
-
-			if (monAttk1[0].length && (rowIndex2 == 0 || rowIndex2 == 1)) actions.push({init:(base+monSpeed1+monMod),ignore:0,action:('with their '+monAttk1[0]),msg:(' rate 1, speed '+monSpeed1+', modifier '+monMod)});
-			if (monAttk2[0].length && (rowIndex2 == 0 || rowIndex2 == 2)) actions.push({init:(base+monSpeed2+monMod),ignore:0,action:('with their '+monAttk2[0]),msg:(' rate 1, speed '+monSpeed2+', modifier '+monMod)});
-			if (monAttk3[0].length && (rowIndex2 == 0 || rowIndex2 == 3)) actions.push({init:(base+monSpeed3+monMod),ignore:0,action:('with their '+monAttk3[0]),msg:(' rate 1, speed '+monSpeed3+', modifier '+monMod)});
-
-		} else if (rowIndex != -2) {
-			var	fighterClass = (attrLookup( charCS, fields.Fighter_class ) || ''),
+		if (rowIndex != -2) {
+			var	charName = charCS.get('name'),
+				tokenName = getObj( 'graphic', tokenID ).get('name'),
+				fighterClass = (attrLookup( charCS, fields.Fighter_class ) || ''),
 				init_Mod = parseInt(attrLookup( charCS, fields.initMod )) || 0,
 				init_Mult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1),1),
 				init_Done = parseInt(attrLookup( charCS, fields.Init_done ), 10),
+
 				init_speed = parseInt(attrLookup( charCS, fields.Init_speed )) || 0,
 				init_action = attrLookup( charCS, fields.Init_action ),
 				init_actionnum = attrLookup( charCS, fields.Init_actNum ),
@@ -2491,7 +2161,7 @@ var initMaster = (function() {
 				twoHanded = attrLookup( charCS, fields.Init_2Hweapon ),
 				round = state.initMaster.round;
 			
-//			log('handleInitSubmit get initial vars');
+			log('handleInitSubmit get initial vars');
 
 			if (initMenu == MenuType.TWOWEAPONS) {
 				
@@ -2518,19 +2188,21 @@ var initMaster = (function() {
 			setAttr( charCS, fields.Init_carryPreInit, init_preinit );
 			setAttr( charCS, fields.Init_carry2H, twoHanded );
 			
-//			log('handleInitSubmit done setAttr block');
+			log('handleInitSubmit done setAttr block');
 			
 			if (init_Done) {
 				return;
 			}
 			
-//			log( 'handleInitSubmit first weapon='+init_action+', second weapon='+init_action2);
+			log( 'handleInitSubmit first weapon='+init_action+', second weapon='+init_action2);
 			buildMenu( initMenu, charCS, MenuState.DISABLED, args );
 			if (initMenu != MenuType.TWOWEAPONS) {
 				setAttr( charCS, fields.Weapon_num, -1 );
 				setAttr( charCS, fields.Weapon_2ndNum, -1 );
 			}
-//			log('handleInitSubmit: built menu again');
+			log('handleInitSubmit: built menu again');
+
+			var content = fields.roundMaster;
 
 			if (initMenu != MenuType.TWOWEAPONS || init_speed2 >= init_speed) {
 				
@@ -2591,19 +2263,39 @@ var initMaster = (function() {
 		    if (_.isUndefined(act.init)) {return;}
 			content += ' --addtotracker '+tokenName+'|'+tokenID+'|'+act.init+'|'+act.ignore+'|'+act.action+'|'+act.msg;
 		});
-//		log('handleInitSubmit actions.length+1 is '+(actions.length+1));
+		log('handleInitSubmit actions.length+1 is '+(actions.length+1));
 		content += ' --removefromtracker '+tokenName+'|'+tokenID+'|'+(actions.length);
-//		log('handleInitSubmit '+content);
+		log('handleInitSubmit '+content);
 
 		sendInitAPI( content, senderId );
 		
-/*		RED: v1.034 AttackMaster (v1.030) now uses the items the
-		            player says are in-hand and worn to determine 
-		            overall armour class, with a check requested 
-		            by InitMaster on Initiative Submission
+		content = fields.attackMaster;
+/*		RED: v1.023 AttackMaster now uses the weapno field to determine 
+					if two weapons are being used, and determines for 
+					itself what the penalty will be
+
+		if (flags.canChange2Weaps) {
+    		content += ' --twoswords ' + tokenID;
+    		if (initMenu == MenuType.TWOWEAPONS && fighterClass.toLowerCase() != 'ranger') {
+    			content += '|2';
+    			setAttr( charCS, fields.Weapon_2ndNum, 2 );
+    		} else {
+    			content += '|0';
+    			setAttr( charCS, fields.Weapon_2ndNum, 0 );
+    		}
+		}
 */
-		content = fields.attackMaster + ' --checkac ' + tokenID + '|Silent||' + senderId;
-   		sendInitAPI( content, senderId );
+		
+		// RED: v1.013 if the two-handed weapon initiative flag is either 0 or 1
+		// call --setACstatus in the attackMaster API to set the appropriate AC
+		// as two-handed weapons mean the wielder is shieldless.
+		if (flags.canChangeAC && twoHanded >= 0) {
+			content += ' --setacstatus ' + tokenID + '|' + (twoHanded > 0 ? 'Shieldless' : 'Full');
+		}
+		if (flags.canChange2Weaps || flags.canChangeAC) {
+    		sendInitAPI( content, senderId );
+		}
+
 	};
 
 	/*
@@ -2782,45 +2474,6 @@ var initMaster = (function() {
 	};
 	
 	/*
-	 * Make monster attack buttons 
-	 */
-	 
-	var makeMonAttkButtons = function( tokenID, charCS, charButton, monButton, submitted ) {
-		
-		var monAttk1 = attrLookup( charCS, fields.Monster_dmg1 ),
-			monAttk2 = attrLookup( charCS, fields.Monster_dmg2 ),
-			monAttk3 = attrLookup( charCS, fields.Monster_dmg3 ),
-			content = '';
-		
-		if ((monAttk1 && monAttk2) || (monAttk1 && monAttk3) || (monAttk2 && monAttk3)) {
-			content += ((0 == charButton && 0 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
-			content += 'All Innate Attks';
-			content += (((0 == charButton && 0 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|0)\n');
-		}
-		if (monAttk1) {
-			monAttk1 = monAttk1.split(',');
-			content += ((0 == charButton && 1 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
-			content += 'Monster '+monAttk1[0];
-			content += (((0 == charButton && 1 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|1)\n');
-		}
-		if (monAttk2) {
-			monAttk2 = monAttk2.split(',');
-			content += ((0 == charButton && 2 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
-			content += 'Monster '+monAttk2[0];
-			content += (((0 == charButton && 2 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|2)\n');
-		}
-		if (monAttk3) {
-			monAttk3 = monAttk3.split(',');
-			content += ((0 == charButton && 3 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
-			content += 'Monster '+monAttk3[0];
-			content += (((0 == charButton && 3 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|3)\n');
-		}
-		
-		return content;
-	}
-
-	
-	/*
 	 * Make weapon button lists
 	 */
 	 
@@ -2849,10 +2502,10 @@ var initMaster = (function() {
 		for (i = a; i < (fields.MWrows + a); i++) {
 			w = (1 - (a * 2)) + (i * 2);
 			weapName = tableLookup( WeaponTable, fields.MW_name, i, false );
-//			log('makeWeaponButtons i='+i+', weapName='+weapName);
+			log('makeWeaponButtons i='+i+', weapName='+weapName);
 			if (_.isUndefined(weapName)) {log('makeWeaponButtons MW loop breaking');break;}
 			if (_.isUndefined(weapName)) {break;}
-//			log('makeWeaponButtons name='+weapName+', 2H='+tableLookup( WeaponTable, fields.MW_twoHanded, i )+', dancing='+tableLookup(WeaponTable, fields.MW_dancing, i ));
+			log('makeWeaponButtons name='+weapName+', 2H='+tableLookup( WeaponTable, fields.MW_twoHanded, i )+', dancing='+tableLookup(WeaponTable, fields.MW_dancing, i ));
 			twoHanded = tableLookup( WeaponTable, fields.MW_twoHanded, i ) != 0;
 			dancing = tableLookup(WeaponTable, fields.MW_dancing, i ) != 0;
 			if (showInHand && (weapName != '-') && (show2H || !twoHanded) && !dancing) {
@@ -2865,7 +2518,7 @@ var initMaster = (function() {
 				content += (((w == charButton) || submitted) ? '</span>' : '](!init --button ' + MWcmd + '|' + tokenID + '|' + w + '|' + i + ')');
 			} else if ((weapName != '-') && dancing) {
 				dancingWeapons += '<span style='+(submitted ? design.grey_button : design.green_button)+'>'+weapName+'</span>';
-//				log('makeWeaponButtons adding '+weapName+' to dancingWeapons');
+				log('makeWeaponButtons adding '+weapName+' to dancingWeapons');
 			}
 		};
 		if (!header) {
@@ -2884,7 +2537,7 @@ var initMaster = (function() {
 			w = (2 - (a * 2)) + (i * 2);
 			weapName = tableLookup( WeaponTable, fields.RW_name, i );
 			if (_.isUndefined(weapName)) {break;}
-//			log('makeWeaponButtons name='+weapName+', 2H='+tableLookup( WeaponTable, fields.RW_twoHanded, i )+', dancing='+tableLookup(WeaponTable, fields.RW_dancing, i ));
+			log('makeWeaponButtons name='+weapName+', 2H='+tableLookup( WeaponTable, fields.RW_twoHanded, i )+', dancing='+tableLookup(WeaponTable, fields.RW_dancing, i ));
 			twoHanded = tableLookup( WeaponTable, fields.RW_twoHanded, i ) != 0;
 			dancing = tableLookup(WeaponTable, fields.RW_dancing, i ) != 0;
 			if (showInHand && weapName != '-' && (show2H || !twoHanded) && !dancing) {
@@ -2897,14 +2550,14 @@ var initMaster = (function() {
 				content += (((w == charButton) || submitted) ? '</span>' : '](!init --button ' + RWcmd + '|' + tokenID + '|' + w + '|' + i + ')');
 			} else if ((weapName != '-') && dancing && !dancingWeapons.includes('>'+weapName+'<')) {
 				dancingWeapons += '<span style='+design.green_button+'>'+weapName+'</span>';
-//				log('makeWeaponButtons adding '+weapName+' to dancingWeapons');
+				log('makeWeaponButtons adding '+weapName+' to dancingWeapons');
 			}
 		}
 		if (!header) {
 			content += '\n';
 		}
 		if (dancingWeapons.length) {
-//		    log('makeWeaponButtons adding dancingWeapons to returned string');
+		    log('makeWeaponButtons adding dancingWeapons to returned string');
 			content += '**Dancing weapons**\nAutomatic Initiative\n' + dancingWeapons;
 		}
 		
@@ -2920,7 +2573,6 @@ var initMaster = (function() {
 
         var tokenID = args[1],
 			charButton = args[2],
-			monButton = args[8],
 			tokenName,
             content;
             
@@ -2930,20 +2582,26 @@ var initMaster = (function() {
 				+ '{{subtitle=Initiative for Complex Monster Attacks}}'
 				+ '{{desc=**Innate weapons**\n';
 				
-		// add buttons for innate monster attack abilities using the monster initiative modifier
+		// add a button for innate monster attack abilities using the monster initiative modifier
 		
-		content += makeMonAttkButtons( tokenID, charCS, charButton, monButton, submitted );
+		content += (0 == charButton ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
+		content += 'Monster Attack';
+		content += (((0 == charButton) || submitted) ? '</span>' : '](!init --button ' + (complex ? BT.MON_INNATE : BT.MON_ATTACK) + '|' + tokenID + '|0|-1)');
 
 		if (complex) {
+
 			content += '\n'+makeWeaponButtons( tokenID, charButton, submitted, BT.MON_MELEE, BT.MON_RANGED );
-			content += MIandPowers( tokenID, submitted );			
+			content += MIandPowers( tokenID, submitted );
+			
+			
+
 		}
 		content	+= '}}'
 				+ '{{desc1=' + otherActions( (complex ? MenuType.COMPLEX : MenuType.SIMPLE), tokenID, charButton, submitted ) + '}}'
 				+ '{{desc2=Select action above, then '
 				+ (((charButton < 0) || submitted) ? '<span style=' + design.grey_button + '>' : '[')
 				+ 'Submit'
-				+ (((charButton < 0) || submitted) ? '</span>' : '](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + charButton + '|' + (complex ? MenuType.COMPLEX : MenuType.SIMPLE) + '|' + monButton + ')')
+				+ (((charButton < 0) || submitted) ? '</span>' : '](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + charButton + '|' + (complex ? MenuType.COMPLEX : MenuType.SIMPLE) + ')')
 				+ '}}';
 				
 		sendResponse( charCS, content );
@@ -2959,22 +2617,13 @@ var initMaster = (function() {
 
         var tokenID = args[1],
 			charButton = args[2],
-			monButton = args[8],
             curToken = getObj( 'graphic', tokenID ),
             baseMW = fields.MW_table[1],
             baseRW = fields.RW_table[1],
 			tokenName,
-			fighterLevel = parseInt(attrLookup( charCS, fields.Fighter_level ) || '0'),
-			rogueLevel = parseInt(attrLookup( charCS, fields.Rogue_level ) || '0'),
-			monsterHD = parseInt(attrLookup( charCS, fields.Monster_hitDice ) || '0'),
-			monsterHPplus = parseInt(attrLookup( charCS, fields.Monster_hpExtra )) || 0,
-			monsterIntField = attrLookup( charCS, fields.Monster_int ) || '',
-			monsterIntNum = (monsterIntField.match(/\d+/)||["1"])[0],
-			monsterInt = monsterIntField.toLowerCase().includes('non') ? 0 : monsterIntNum,
-			monsterLevel = Math.ceil((monsterHD + Math.ceil(monsterHPplus/4)) / (monsterInt != 0 ? 1 : 2)),
-			hands = parseInt(attrLookup( charCS, fields.Equip_handedness ) || 2 ),
-			monAttks = parseInt(attrLookup( charCS, fields.Monster_attks ) || 0 ),
-            weaponButtons,content;
+			fighterLevel, rogueLevel, hands,
+			monAttk1, monAttk2, monAttk3,
+            content;
 
         if (!curToken) {
             sendDebug( 'makeWeaponMenu: invalid tokenID' );
@@ -2984,34 +2633,39 @@ var initMaster = (function() {
             
 		tokenName = curToken.get('name');
 		
-		weaponButtons = makeWeaponButtons( tokenID, -1, false, BT.MELEE, BT.RANGED, false, false );
-		log('makeWeaponMenu weaponButtons = '+weaponButtons);
-
 		content = '&{template:2Edefault}{{name=What is ' + tokenName + ' doing?}}'
 				+ '{{subtitle=Initiative for Weapon Attacks}}';
 				
-		if (weaponButtons && weaponButtons.split(']').length > 1) {
-			if (fighterLevel || rogueLevel || (monsterLevel && monAttks > 1)) {
-				let refIndex = (charButton%2) ? (baseMW==0?((charButton-1)/2):((charButton-3)/2)) : ((baseRW==0)?((charButton-2)/2):((charButton-4)/2))
-				content += '{{Fighter\'s & Rogue\'s Option=';
-				content += submitted ? '<span style=' + design.grey_button + '>' : '[';
-				content += 'Two Weapons';
-				content += (submitted) ? '</span>' : '](!init --button ' + BT.TWOWEAPONS + '|' + tokenID + '|' + charButton + '|' + refIndex + ')';
-				content += '}}';
-			}
-			if (hands > 2 || monAttks > 1) {
-				content += '{{Many Hands Option='
-						+  (-2 == charButton ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['))
-						+  'All Weapons'
-						+  (((-2 == charButton) || submitted) ? '</span>' : '](!init --button ' + BT.ALLWEAPONS + '|' + tokenID + '|' + -2 + '|' + -2 + ')')
-						+  '}}';
-			}
+		fighterLevel = parseInt(attrLookup( charCS, fields.Fighter_level ) || '0');
+		rogueLevel = parseInt(attrLookup( charCS, fields.Rogue_level ) || '0');
+		hands = parseInt(attrLookup( charCS, fields.Equip_handedness ) || 2 );
+		if (fighterLevel || rogueLevel) {
+		    let refIndex = (charButton%2) ? (baseMW==0?((charButton-1)/2):((charButton-3)/2)) : ((baseRW==0)?((charButton-2)/2):((charButton-4)/2))
+		    content += '{{Fighter\'s & Rogue\'s Option=';
+			content += submitted ? '<span style=' + design.grey_button + '>' : '[';
+			content += 'Two Weapons';
+			content += (submitted) ? '</span>' : '](!init --button ' + BT.TWOWEAPONS + '|' + tokenID + '|' + charButton + '|' + refIndex + ')';
+			content += '}}';
+		}
+		if (hands > 2) {
+			content += '{{Many Hands Option='
+					+  (-2 == charButton ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['))
+					+  'All Weapons'
+					+  (((-2 == charButton) || submitted) ? '</span>' : '](!init --button ' + BT.ALLWEAPONS + '|' + tokenID + '|' + -2 + '|' + -2 + ')')
+					+  '}}';
 		}
 
 		content += '{{desc=';
-		
-		content += makeMonAttkButtons( tokenID, charCS, charButton, monButton, submitted );
 
+		monAttk1 = attrLookup( charCS, fields.Monster_dmg1 );
+		monAttk2 = attrLookup( charCS, fields.Monster_dmg2 );
+		monAttk3 = attrLookup( charCS, fields.Monster_dmg3 );
+		if (monAttk1 || monAttk2 || monAttk3) {
+			content += (0 == charButton ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
+			content += 'Monster Attack';
+			content += (((0 == charButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|-1)\n');
+		}
+				
 		content += makeWeaponButtons( tokenID, charButton, submitted, BT.MELEE, BT.RANGED );
 
 		content += MIandPowers( tokenID, submitted ) + '}}'
@@ -3019,7 +2673,7 @@ var initMaster = (function() {
 				+ '{{desc2=Select action above, then '
 				+ (((charButton == -1) || submitted) ? '<span style=' + design.grey_button + '>' : '[')
 				+ 'Submit'
-				+ (((charButton == -1) || submitted) ? '</span>' : '](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + charButton + '|' + MenuType.WEAPON + '|' + monButton + ')')
+				+ (((charButton == -1) || submitted) ? '</span>' : '](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + charButton + '|' + MenuType.WEAPON + ')')
 				+ '}}';
 				
 		sendResponse( charCS, content );
@@ -3440,7 +3094,7 @@ var initMaster = (function() {
 
 		// build the thieving skills list
 		
-		content = '&{template:'+fields.defaultTemplate+'}{{name=What Thieving ability is ' + tokenName + ' planning to use?}}'
+		content = '&{template:2Edefault}{{name=What Thieving ability is ' + tokenName + ' planning to use?}}'
 				+ '{{subtitle=' + tokenName + '\'s thieving abilities}}'
 				+ '{{desc=';
 				
@@ -3531,6 +3185,7 @@ var initMaster = (function() {
 		return;
 	}
 
+	
 //------------------------------------- do commands --------------------------------------------
 
 	/**
@@ -3615,7 +3270,7 @@ var initMaster = (function() {
 	 * Function to display all weapons tables
 	 * used by the initiative system to check validity
 	 **/
-/*	 
+	 
 	var doDispWeaps = function( args ) {
 		
 		if (!args)
@@ -3734,7 +3389,6 @@ var initMaster = (function() {
         sendInitAPI( tidyCmd );
         
         sendParsedMsg( 'initMaster', Init_Messages.redoMsg, tokenID );
-		doInitMenu(args,MenuType.MENU);
         
     };
 
@@ -3841,47 +3495,32 @@ var initMaster = (function() {
 		buildMenu( menu, charCS, MenuState.ENABLED, args );
 		return;
 	}
-	
+
 	/*
 	* Function to display the menu for doing initiative.
 	*/
 
-	var doInitMenu = function( args, selected, initMenu ) {
-		if (!initMenu)
+	var doInitMenu = function( args, initMenu ) {
+		if (!args || !initMenu)
 			{return;}
 
-		if (!args) args = [];
-			
-		if (!args[0] && selected && selected.length) {
-			args[0] = selected[0]._id;
-		} else if (!args[0]) {
-			sendDebug( 'doInitMenu: tokenID is invalid' );
-            sendError( 'No token selected' );
-            return;
- 		}	
-		
+		if (args.length !== 1) {
+			sendDebug('doInitMenu: Invalid number of arguments');
+			sendError('Invalid initMaster syntax');
+			return;
+		};
+
 		var tokenID = args[0],
 			curToken = getObj( 'graphic', tokenID ),
-			charID, charCS, foe,
-			initRoll, init_carry;
+			charID,
+			charCS,
+			init_carry;
 
 		if (!(charCS = getCharacter( tokenID ))) {
 			sendDebug( 'doInitMenu: invalid character' );
 			sendError( 'Invalid initMaster attributes' );
 			return;
 		}
-		
-		foe = charCS.get('controlledby').length == 0;
-		initRoll = foe ? state.initMaster.dmRoll : state.initMaster.playerRoll;
-		
-		if (state.initMaster.initType == 'standard') {
-			sendParsedMsg( 'InitMaster', Init_Messages.stdInit, tokenID );
-			return;
-		} else if (state.initMaster.initType == 'group' && isNaN(initRoll)) {
-			sendParsedMsg( 'InitMaster', Init_Messages.notYet, tokenID );
-			return;
-		}
-
 		
 //		init_carry = parseInt(attrLookup( charCS, 'init-carry', 'current' ));
 //		if (init_carry !== 0) {
@@ -3897,9 +3536,7 @@ var initMaster = (function() {
 			prevRound = (attrLookup( charCS, [fields.Prev_round[0] + tokenID, fields.Prev_round[1]], true ) || 0),
 			init_submitVal = (changedRound || (prevRound != roundCounter) ? 1 : 0 );
 			
-//		log('doInitMenu: changedRound = '+changedRound+', roundCounter = '+roundCounter+', prevRound = '+prevRound);
-			
-//		setAmmoFlags( charCS );
+		setAmmoFlags( charCS );
 		setAttr( charCS, fields.Init_done, 0 );
 		setAttr( charCS, fields.Init_submitVal, init_submitVal );
 
@@ -3921,273 +3558,7 @@ var initMaster = (function() {
 		return;
 
     };
-	
-	/*
-	 * Make the menu for managing initiative each round, including
-	 * changing initiative type, changing the listed Player Characters,
-	 * and rolling Initiative dice for Standard & Group 
-	 * Initiative as per the AD&D2e DMG 
-	 */
-	 
-	var doInitDiceRoll = function( args, msg='' ) {
-		
-//		log('doInitDiceRoll: on entry, state.initMaster.initType = '+state.initMaster.initType);
 
-		var playerRoll = args[0] || NaN,
-			dmRoll = args[1] || NaN,
-			cmd = (args[2] || '').toLowerCase(),
-			argStr = (args[0] || '') + '|' + (args[1] || ''),
-			charStr = _.pluck(state.initMaster.playerChars,'name').join(', '),
-			content = '&{template:'+fields.defaultTemplate+'}'
-					+ '{{name=Initiative Dice Rolls}}'
-					+ '{{subtitle=For Standard & Group Initiative}}'
-					+ (msg.length ? ('{{ ='+msg+'\n}}') : '' )
-					+ '{{  =Current Player Characters\n**'+charStr+'**\n\n'
-					+ '[PCs all maps](!init --list-pcs all|'+argStr+') [PCs this map](!init --list-pcs map|'+argStr+') '
-					+ '[Add selected to PCs](!init --list-pcs add|'+argStr+') [Replace with selected PCs](!init --list-pcs replace|'+argStr+')}}'
-					+ '{{   =Initiative type is currently\n'
-					+ ((state.initMaster.initType == 'standard') ? ('<span style='+design.selected_button+'>Standard</span> ') : '[Standard](!init --type standard|'+argStr+') ')
-					+ ((state.initMaster.initType == 'group') ? ('<span style='+design.selected_button+'>Group</span> ') : '[Group](!init --type group|'+argStr+') ')
-					+ ((state.initMaster.initType == 'individual') ? ('<span style='+design.selected_button+'>Individual</span>') : '[Individual](!init --type individual|'+argStr+')')
-					+ '}}';
-		if (state.initMaster.initType !== 'individual') {
-			state.initMaster.playerRoll = playerRoll;
-			state.initMaster.dmRoll = dmRoll;
-			content +='{{desc=Ask a Player to roll 1d10 and also roll 1d10 as DM, then enter the values below\n'
-					+ '['+(isNaN(playerRoll) ? ('Enter Party Roll') : ('<span style='+design.selected_button+'>Party Rolled '+playerRoll+'</span>'))+'](!init --roll &#63;{Enter 1d10 roll|&#124;1&#124;2&#124;3&#124;4&#124;5&#124;6&#124;7&#124;8&#124;9&#124;10}|'+dmRoll+'|menu)'
-					+ '['+(isNaN(dmRoll) ? ('Enter Foes Roll') : ('<span style='+design.selected_button+'>DM Rolled '+dmRoll+'</span>'))+'](!init --roll '+playerRoll+'|&#63;{Enter 1d10 roll|&#124;1&#124;2&#124;3&#124;4&#124;5&#124;6&#124;7&#124;8&#124;9&#124;10}|menu)'
-					+ '}}';
-		};
-		if (state.initMaster.initType !== 'standard') {
-			content +='{{desc1=Check that all Characters have specified what they are doing\n'
-					+ '[Check Tracker Complete](!init --check-tracker roll|'+argStr+')}}';
-		};
-		if (cmd == 'disptoggle') state.initMaster.dispRollOnInit = !state.initMaster.dispRollOnInit;
-		log('doInitDiceRoll: cmd = '+cmd+', dispRollOnInit = '+state.initMaster.dispRollOnInit);
-		content += '{{desc2=['+(state.initMaster.dispRollOnInit ? ('<span style='+design.selected_button+'>Auto-displaying</span>') : 'Auto-display')+'](!init --init '+args[0]+'|'+args[1]+'|dispToggle) on new round}}';
-		
-		if (cmd != 'rounds' || state.initMaster.dispRollOnInit) sendFeedback( content );
-		return;
-	};
-	
-	/*
-	 * Record an initiative roll made is doing 'standard'
-	 * or 'group' initiative
-	 */
-	 
-	var doInitRoll = function( args, isGM ) {
-		
-		var playerRoll = args[0] || '',
-			dmRoll = args[1] || '',
-			isMenu = ((args[2] || '') == 'menu');
-			
-		if (!isGM && !isNaN(state.initMaster.playerRoll)) return;
-
-		if (!isMenu && isNaN(playerRoll)) {
-			args[0] = state.initMaster.playerRoll;
-		}
-		if (!isNaN(args[0]) && state.initMaster.initType == 'standard') {
-			_.each(state.initMaster.playerChars, obj => sendInitAPI( fields.roundMaster+' --addtotracker '+obj.name+'|'+obj.id+'|='+args[0]+'|last|doing an action' ));
-		}
-
-		if (!isMenu && (!isGM || isNaN(dmRoll))) {
-			args[1] = state.initMaster.dmRoll;
-		}
-		if (!isNaN(args[1]) && state.initMaster.initType == 'standard') {
-			log('doInitRoll: sending foes roll to roundMaster');
-			sendInitAPI( fields.roundMaster+' --addtotracker Foes|-1|='+args[1]+'|last' );
-		}
-		doInitDiceRoll( args, 'Dice Roll made' );
-		return;
-	}
-
-	/*
-	 * Set the type of initiative to one of 'standard', 'group', or 'individual'
-	 * See the DMG p55 for details of each type
-	 */
-	 
-	var doSetInitType = function( args ) {
-		
-		if (!['standard','group','individual'].includes(args[0].toLowerCase())) {
-			sendError('Invalid initMaster parameter');
-			return;
-		}
-
-		var msg ='Set initiative type to '+args[0];
-		
-		state.initMaster.initType = args[0].toLowerCase();
-		args.shift();
-		log('doSetInitType: state.initType = '+state.initMaster.initType);
-		if (args.length) {
-			doInitDiceRoll( args, msg );
-		} else {
-			sendFeedback( msg );
-		}
-		return;
-	}
-	
-	/*
-	 * Modify the list of current player tokens which are
-	 * used for checking if all characters have completed
-	 * their initiative selections, and for "End of Day" processing.
-	 */
-	 
-	var doCharList = function( args, selected ) {
-		
-		var listType = (args[0] || '').toLowerCase(),
-			msg = '',
-			curToken, charID, charCS;
-		
-		log('doCharList: called with args='+args.join('|'));
-		switch( listType ) {
-		case 'all':
-			state.initMaster.playerChars = getPlayerCharList();
-			msg = 'All player-controlled tokens on all maps added to list';
-			break;
-		case 'map':
-			state.initMaster.playerChars = getPlayerCharList(Campaign().get('playerpageid'));
-			msg = 'All player-controlled tokens on the current map added to list';
-			break;
-		case 'replace':
-			state.initMaster.playerChars = [new Set()];
-			msg = 'List replaced.  ';
-		case 'add':
-			let list = state.initMaster.playerChars;
-			_.each(selected, token => {
-				if (!(curToken = getObj('graphic',token._id))) return;
-				if (!((charID=curToken.get('represents')).length)) return;
-				if (!(charCS = getObj('character',charID))) return;
-				log('doCharList: found token with name '+curToken.get('name'));
-				//				if (!(charCS.get('controlledby').length)) return;
-				list.push({name:curToken.get('name'),id:curToken.id});
-				log('doCharList: pushed object, length is now '+list.length);
-			});
-			list = _.uniq(list,false,obj => obj.name);
-			state.initMaster.playerChars = _.sortBy(list,'name');
-//			 = _.chain(state.initMaster.playerChars).uniq(false,obj => obj.name).sort('name').value();
-			log('doCharList: removed duplicates, length is now '+state.initMaster.playerChars.length);
-			msg += 'Added all selected tokens';
-			break;
-		default:
-			sendError('Invalid initMaster parameter');
-		};
-		log('doCharList: playerChars = '+_.pluck(state.initMaster.playerChars,'name').join());
-		args.shift();
-		if (args.length) {
-			doInitDiceRoll( args, msg );
-		} else {
-			sendFeedback( msg );
-		}
-		return;
-	}
-
-	/*
-	 * Check the Tracker against the current list of Player Character
-	 * tokens to see if they are all represented.  Display a list of those
-	 * who have not yet completed initiative.
-	 */
-	 
-	var doCheckTracker = function( args ) {
-		
-		var menuType = args[0] || '',
-			turnorder = Campaign().get('turnorder'),
-			tokenList = _.pluck(state.initMaster.playerChars,'name'),
-			msg = '',
-			token;
-		if (!turnorder) 
-			{return;} 
-		if (typeof(turnorder) === 'string') 
-			{turnorder = JSON.parse(turnorder);} 
-		
-		_.each(turnorder,turn => {
-			token = getObj('graphic',turn.id);
-			if (token) tokenList = _.without(tokenList,token.get('name'));
-		});
-		msg = (tokenList.length ? (tokenList.join(', ')+' have still to complete their initiative') : 'All Players have completed initiative');
-		if (menuType.toLowerCase() === 'roll') {
-			args.shift();
-			doInitDiceRoll( args, msg );
-		} else {
-			content = '&{template:'+fields.defaultTemplate+'}{{name=Check Tracker}}{{desc=' + msg +'}}'
-					+ (tokenList.length ? '{{desc1=[Check again](!init --check-tracker)}}' : '');
-			sendFeedback( content );
-		}
-		return;
-	}
-
-	/*
-	 * Make the Maintenance Menu to control the Initiative functions 
-	 * of the RoundMaster API.  InitMaster cannot function without 
-	 * RoundMaster.  If RoundMaster is used by itself, the GM must 
-	 * control it via chat commands or create their own menu
-	 */
-	 
-	var doMaintMenu = function( args, selected ) {
-		
-		var tokenID = (selected && selected[0]) ? selected[0].id : '',
-			tokenName = tokenID ? getObj('graphic',tokenID).get('name') : '';
-		
-		var	content = '&{template:2Edefault}{{name=Initiative Maintenance Menu}}'
-					+ '{{desc=**Turn Order**\n'
-					+ '[Start/Pause](!rounds --start&#13;&#47;w gm Tracker started/paused)\n'
-					+ '[Start Melee](!rounds --clearonround on --clear&#13;&#47;w gm Started Melee, Tracker will clear each round ready for next initiative)'
-						+ '[Stop-melee](!rounds --clearonround off&#13;&#47;w gm Stopped Melee, Tracker will not clear each round, but will cycle round)'
-						+ '[Re-start](!rounds --sort&#13;&#47;w gm Tracker restarted at start of current round)\n'
-					+ '[Set round no.](!rounds --reset &#63;{To round number?|1}&#13;/w gm redTrackerJacker set to round &#63;{To round number?})'
-						+ '[Clear Turn Order](!rounds --clear&#13;&#47;w gm Tracker cleared)'
-						+ '[Remove Tokens from Tracker](!rounds --removefromtracker&#13;&#47;w gm Cleared all entries for selected tokens from the Tracker)\n'
-					+ '**Status Markers**\n'
-					+ 'Select one or multiple tokens\n'
-					+ '[Edit Selected Tokens](!rounds --edit)[Move Token Status](!rounds --moveStatus)[Clean Selected Tokens](!rounds --clean)\n'
-					+ '**End of Day**\n'
-					+ '[Enable Long Rest for PCs](!init --end-of-day '+state.initMaster.dailyCost+')\n'
-					+ '[Enable Long Rest for selected tokens](!setattr --fb-from Spell system --fb-header Rest Enabled --fb-content _CHARNAME_ can now Rest --sel --timespent|1)\n'
-//					+ '**Manage Campaign**\n'
-//					+ '[Set Date](~Money-Gems-Exp|Set-Date)[Set Campaign](~Money-Gems-Exp|Set-Campaign)\n'
-					+ '**Add or Change Action Buttons**\n'
-					+ 'Select one or multiple tokens\n'
-					+ '[Update Selected Tokens](!cmd --abilities)\n'
-					+ '\n'
-					+ '}}{{desc1=[Emergency Stop!](!&#13;&#47;w gm Are you sure you want to stop the Turn Order, and clear all status durations it is tracking?  [Yes, stop it](!rounds --stop&amp;#13;&amp;#47;w gm Tracking & Status Tracking terminated&#41;)}}';
-					
-		sendFeedback( content );
-		return;
-	}
-	
-	/*
-	 * Ask the GM who has requested the End of Day 
-	 * what to charge for an overnight stay and whether 
-	 * to deduct the cost from Characters
-	 */
-	 
-	var doEndOfDay = function( args ) {
-		
-		var cost = args[0];
-			
-		if (cost && cost[0] === '=') {
-			state.initMaster.dailyCost = parseStr(cost.slice(1));
-			sendFeedback('Daily cost set');
-			return;
-		}
-		
-		if (!cost) {
-			cost = state.initMaster.dailyCost;
-		};
-		
-		var	content = '&{template:2Edefault}{{name=End of Day}}'
-					+ '{{desc=Are you sure you want to deduct '+cost+'gp from '
-					+ (_.pluck(state.initMaster.playerChars,'name').join())+' ? [Yes](!modattr --fb-public --fb-from The Bank --fb-header Deducting [['+cost+']]gp for day\'s living costs '
-					+ '--name '+(_.pluck(state.initMaster.playerChars,'name').join())+' --copper|-[[(floor([[([[0+'+cost+']])*100]]))%10]] --silver|-[[(floor([[([[0+'+cost+']])*10]]))%10]] '
-					+ '--gold|-[[floor([[0+'+cost+']])]]) [No](!&#13;&#47;w gm OK, no deduction made)}}\n'
-					+ '!setattr --fb-public --fb-from Dungeon Master --fb-header Enabling Long Rest --fb-content _CHARNAME_ has spent another day adventuring'
-					+ ' --name '+(_.pluck(state.initMaster.playerChars,'name').join())
-//					+ ' --in-game-day|@{Money-Gems-Exp|today}'
-					+ ' --timespent|1';
-		
-		sendFeedback( content );
-		return;
-	}
-	
 	/*
 	 * Handle a button press, and redirect to the correct handler
 	 */
@@ -4354,51 +3725,6 @@ var initMaster = (function() {
 		};
 
 	};
-	
-	/**
-	 * Handle a handshake from another API
-	 **/
-	 
-	/**
-	 * Handle handshake request
-	 **/
-	 
-	var doHsQueryResponse = function(args) {
-		if (!args) return;
-		var from = args[0] || '',
-			func = args[1] || '',
-			funcTrue = ['init','type','menu','monmenu','weapon','monster','complex','muspell','prspell','power','mibag','thief','other','maint','check-tracker','list-pcs',
-						'end-of-day','help','debug'].includes(func.toLowerCase()),
-			cmd = '!'+from+' --hsr init'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
-
-		log('InitMaster recieved handshake query from '+from+((func && func.length) ? (' checking command '+func+' so responding '+funcTrue) : (' and responding')));
-		sendRmAPI(cmd);
-		return;
-	};
-
-	/**
-	 * Handle the response to a handshake query
-	 **/
-	 
-	var doHandleHsResponse = function(args) {
-		if (!args) {
-			sendError('Invalid handshake response received');
-			return;
-		}
-		var from = args[0] || '',
-			func = args[1] || '',
-			funcExists = (!!args[2]) || false;
-		
-		if (!apiCommands[from]) {
-			apiCommands[from] = {};
-		}
-		apiCommands[from].exists = true;
-		if (func && func.length) {
-			apiCommands[from][func] = funcExists;
-		}
-		log('InitMaster recieved handshake response from '+from+((func && func.length) ? (' that command '+func+' is '+funcTrue) : (' so it is loaded')));
-		return;
-	}
 
 // ------------------------------------- process messages from chat ------------------------------------	
            
@@ -4414,14 +3740,13 @@ var initMaster = (function() {
 		var args = processInlinerolls(msg),
 			senderId = msg.playerid,
 			selected = msg.selected,
-			roundsExists = apiCommands.rounds && apiCommands.rounds.exists,
 			isGM = (playerIsGM(senderId) || state.commandMaster.debug === senderId);
 			
 		if (args.indexOf('!init') !== 0)
 			{return;}
 
         sendDebug('initMaster called');
-		
+
 		if (_.isUndefined(senderId) || _.isUndefined(getObj('player',senderId))) {
 			sendDebug('senderId undefined, looking for GM');
 			if (_.isUndefined(senderId = findTheGM())) {
@@ -4449,92 +3774,56 @@ var initMaster = (function() {
 			
 //			log('commandMaster parsed to '+cmd+' '+argString);
 
-			if (!(roundsExists || ['hsq','handshake','hsr','help','debug','isround','button'].includes(cmd))) {
-				sendError('RoundMaster API not found.  InitMaster requires RoundMaster API to be loaded and enabled');
-				return;
-			}
-
 			try {
 				switch (cmd) {
-				case 'maint':
-					if (isGM) doMaintMenu(arg,selected);
-					break;
-				case 'init':
-					if (isGM) doInitDiceRoll(arg);
-					break;
-				case 'roll':
-					doInitRoll(arg,isGM);
-					break;
-				case 'type':
-					if (isGM) doSetInitType(arg);
-					break;
 				case 'weapon':
-        			doInitMenu(arg,selected,MenuType.WEAPON);
+        			doInitMenu(arg,MenuType.WEAPON);
 					break;
 	    		case 'monster':
-		    		doInitMenu(arg,selected,MenuType.SIMPLE);
+		    		doInitMenu(arg,MenuType.SIMPLE);
 					break;
 	    		case 'complex':
-		    		doInitMenu(arg,selected,MenuType.COMPLEX);
+		    		doInitMenu(arg,MenuType.COMPLEX);
 					break;
 	    		case 'muspell':
-		    		doInitMenu(arg,selected,MenuType.MUSPELL);
+		    		doInitMenu(arg,MenuType.MUSPELL);
 					break;
 	    		case 'prspell':
-		    		doInitMenu(arg,selected,MenuType.PRSPELL);
+		    		doInitMenu(arg,MenuType.PRSPELL);
 					break;
 	    		case 'power':
-		    		doInitMenu(arg,selected,MenuType.POWER);
+		    		doInitMenu(arg,MenuType.POWER);
 					break;
 	    		case 'mibag':
-		    		doInitMenu(arg,selected,MenuType.MIBAG);
+		    		doInitMenu(arg,MenuType.MIBAG);
 					break;
 	    		case 'thief':
-		    		doInitMenu(arg,selected,MenuType.THIEF);
+		    		doInitMenu(arg,MenuType.THIEF);
 					break;
 	    		case 'other':
-		    		doInitMenu(arg,selected,MenuType.OTHER);
+		    		doInitMenu(arg,MenuType.OTHER);
 					break;
 	    		case 'menu':
-		    		doInitMenu(arg,selected,MenuType.MENU);
+		    		doInitMenu(arg,MenuType.MENU);
 					break;
 	    		case 'monmenu':
-		    		doInitMenu(arg,selected,MenuType.MONSTER_MENU);
+		    		doInitMenu(arg,MenuType.MONSTER_MENU);
 					break;
 	    		case 'redo':
 		    		doRedo(arg);
 					break;
-	    		case 'isround':
-		    		if (isGM) doIsRound(arg);
-					break;
-				case 'end-of-day':
-					if (isGM) doEndOfDay(arg);
-					break;
-				case 'check-tracker':
-					if (isGM) doCheckTracker(arg);
-					break;
-				case 'list-pcs':
-					if (isGM) doCharList(arg,selected);
-					break;
-				case 'hsq':
-				case 'handshake':
-					doHsQueryResponse(arg);
-					break;
-				case 'hsr':
-					doHandleHsResponse(arg);
-					break;
-				case 'handout':
-					if (isGM) updateHandouts(false,senderId);
-					break;
-				case 'button':
+	    		case 'button':
 		    		doButton(arg,senderId);
 					break;
 	    		case 'buildmenu':
 		    		doBuildMenu(arg);
 					break;
-//	    		case 'disp-weaps':
-//		    		doDispWeaps(arg);
-//					break;
+	    		case 'isround':
+		    		if (isGM) doIsRound(arg);
+					break;
+	    		case 'disp-weaps':
+		    		doDispWeaps(arg);
+					break;
     			case 'help':
     				showHelp();
 					break;
@@ -4559,7 +3848,7 @@ var initMaster = (function() {
 // ---------------------------------- register with Roll20 event handler ---------------------------------
 
 	/*
-	 * Register initMaster API with the
+	 * Register attackMaster API with the
 	 * commandMaster API
 	 */
 	 
