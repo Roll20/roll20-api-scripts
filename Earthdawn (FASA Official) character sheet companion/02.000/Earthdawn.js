@@ -32,7 +32,7 @@
 // Define a Name-space
 var Earthdawn = Earthdawn || {};
             // define any name-space constants
-Earthdawn.Version = "2.02";       // This is the version number of this API file.  state.Earthdawn.sheetVersion is the version number of the html file. 
+Earthdawn.Version = "2.031";       // This is the version number of this API file.  state.Earthdawn.sheetVersion is the version number of the html file. 
 
 Earthdawn.whoFrom = {
   player:                 0x08,
@@ -286,7 +286,7 @@ Earthdawn.attribute = function ( attr, prev ) {
       function typeLP() {
         if( type === undefined )
           type = Earthdawn.getAttrBN( cID, sa.slice( 0, -4 ) + "Type", "D1-Novice" );
-        if( type.indexOf( "-" ) > 0 ) {   // is of form D1-Novice or some such. Probably with a Discipline and a Tier. 
+        if( type !== "Free-link" && type.indexOf( "-" ) > -1 ) {   // is of form D1-Novice or some such. Probably with a Discipline and a Tier. 
           let tier = Earthdawn.getParam( type, 2, "-"),
             disc = Earthdawn.getParam( type, 1, "-");
           if( (state.Earthdawn.gED && tier == "Novice") || (state.Earthdawn.g1879 && ( bCount !== "S") && ( tier == "Initiate" || tier == "Profession" )))    // Note, bCount might have already been set in SKK.
@@ -1386,6 +1386,23 @@ Earthdawn.getStatusMarkerCollection = function()  {
   } catch(err) { log( "Earthdawn.getStatusMarkerCollection() error caught: " + err ); }
 } // End ParseObj.getStatusMarkerCollection()
 
+
+
+Earthdawn.newBody = function ( sect ) {
+  let body = sect.append( ".body", "", {
+    class:"sheet-rolltemplate-body"
+  });
+  body.setCss({
+    odd: { "background": "#white" },
+    even: { "background": "#E9E9E9" }
+  });
+  return body;
+};
+
+Earthdawn.newSect = function () {
+  return new HtmlBuilder( "", "", {
+    class:"sheet-rolltemplate-sect"
+})};
 
 
 
@@ -3700,12 +3717,15 @@ Step/Action Dice Table
             this.chat( s.trim(), Earthdawn.whoTo.player | Earthdawn.whoFrom.noArchive, "API" );
           } break;  // end Mask
           case "oppmnvr": { // Opponent Maneuverer.   Here we are just displaying a list of buttons that are possible.
-                    // Called from a button on RollESbuttons(). (If have extra successes)
-            let t="";   // Input string is "!Earthdawn~ chatmenu: oppmnvr: SetToken/CharID: id: target ID
-            function makeButtonLocal( txt, lnk, lnk2, tip ) {
-              ssa.splice( 0, 2, "OpponentManeuver", lnk);
-              let tssa = "!Earthdawn~ " + ssa.join( ":") + ((lnk2) ? lnk2 : "");
-              t += edParse.makeButton( txt, tssa, tip, Earthdawn.Colors.damage, Earthdawn.Colors.damagefg);
+                            // Called from a button on RollESbuttons(). (If have extra successes)
+                            // Input string is "!Earthdawn~ chatmenu: oppmnvr: SetToken/CharID: id: target ID
+            let cID = Earthdawn.tokToChar( ssa[ 2 ] ),    // NOTE: This is the Target cID. Not the acting cID. 
+                lst = Earthdawn.getAttrBN( cID, "ManRowIdList", "bad" ),
+                pIsGM = playerIsGM( this.edClass.msg.playerid ),
+                t = "";
+            function makeButtonLocal( txt, lnk, es, tip ) {
+              let tssa = "!Earthdawn~ setToken: " + ssa[ 2 ] + "~ OpponentManeuver: " + lnk + (es ? es : "");
+              t += edParse.makeButton( txt, tssa, tip, Earthdawn.Colors.damage, Earthdawn.Colors.damagefg );
             };
 
             let sectplayer = new HtmlBuilder( "", "", {
@@ -3717,21 +3737,24 @@ Step/Action Dice Table
                 "width":            "100%",
                 "text-align":       "left"
               }});
-            makeButtonLocal( "Clip the Wing", "ClipTheWing", undefined,
-                  "The attacker may spend two additional successes from an Attack test to remove the creature’s ability to fly until the end of the next round. If the attack causes a Wound, the creature cannot fly until the Wound is healed. If the creature is in flight, it falls and suffers falling damage for half the distance fallen." );
-            makeButtonLocal( "Crack the Shell", "CrackTheShell", ": ?{How many successes to spend Cracking the Shell|1}",
-                  "Importaint! Press this button AFTER rolling and applying damage, then press this button to record your manuver. The attacker may spend extra successes from physical attacks (not spells) to reduce the creature’s Physical Armor by 1 per success spent. This reduction takes place after damage is assessed, and lasts until the end of combat." );
-            makeButtonLocal( "Defang", "Defang", ": ?{How many successes to spend Defanging|1}",
-                  "The opponent may spend additional successes to affect the creature’s ability to use its poison. Each success spent reduces the Poison’s Step by 2. If the attack causes a Wound, the creature cannot use its Poison power at all until the Wound is healed." );
-            makeButtonLocal( "Enrage", "Enrage", ": ?{How many successes to spend Enraging|1}",
-                  "An opponent may spend additional successes from an Attack test to give a -1 penalty to the creature’s Attack tests and Physical Defense until the end of the next round. Multiple successes may be spent for a cumulative effect." );
-            makeButtonLocal( "Provoke", "Provoke", undefined,
-                  "The attacker may spend two additional successes from an Attack test to enrage the creature and guarantee he will be the sole target of the creature’s next set of attacks. Only the most recent application of this maneuver has any effect." );
-            makeButtonLocal( "Pry Loose", "PryLoose", ": ?{How many successes to spend Prying Loose|1}",
-                  "The attacker may spend additional successes from an Attack test to allow a grappled ally to immediately make an escape attempt with a +2 bonus per success spent on this maneuver." );
-            let cID = Earthdawn.tokToChar( ssa[ 2 ] ),
-              lst = Earthdawn.getAttrBN( cID, "ManRowIdList", "bad" ),
-              pIsGM = playerIsGM( this.edClass.msg.playerid );
+            if ( Earthdawn.parseInt2( Earthdawn.getAttrBN( cID, "Opponent-ClipTheWing", "0" )) > 0 )
+              makeButtonLocal( "Clip the Wing", "ClipTheWing", 2,
+                    "The attacker may spend two additional successes from an Attack test to remove the creature’s ability to fly until the end of the next round. If the attack causes a Wound, the creature cannot fly until the Wound is healed. If the creature is in flight, it falls and suffers falling damage for half the distance fallen." );
+            if ( Earthdawn.parseInt2( Earthdawn.getAttrBN( cID, "Opponent-CrackTheShell", "0" )) > 0 )
+              makeButtonLocal( "Crack the Shell", "CrackTheShell", ": ?{How many successes to spend Cracking the Shell|1}",
+                    "Importaint! Press this button AFTER rolling and applying damage, then press this button to record your manuver. The attacker may spend extra successes from physical attacks (not spells) to reduce the creature’s Physical Armor by 1 per success spent. This reduction takes place after damage is assessed, and lasts until the end of combat." );
+            if ( Earthdawn.parseInt2( Earthdawn.getAttrBN( cID, "Opponent-Defang", "0" )) > 0 )
+              makeButtonLocal( "Defang", "Defang", ": ?{How many successes to spend Defanging|1}",
+                    "The opponent may spend additional successes to affect the creature’s ability to use its poison. Each success spent reduces the Poison’s Step by 2. If the attack causes a Wound, the creature cannot use its Poison power at all until the Wound is healed." );
+            if ( Earthdawn.parseInt2( Earthdawn.getAttrBN( cID, "Opponent-Enrage", "0" )) > 0 )
+              makeButtonLocal( "Enrage", "Enrage", ": ?{How many successes to spend Enraging|1}",
+                    "An opponent may spend additional successes from an Attack test to give a -1 penalty to the creature’s Attack tests and Physical Defense until the end of the next round. Multiple successes may be spent for a cumulative effect." );
+            if ( Earthdawn.parseInt2( Earthdawn.getAttrBN( cID, "Opponent-Provoke", "0" )) > 0 )
+              makeButtonLocal( "Provoke", "Provoke", undefined,
+                    "The attacker may spend two additional successes from an Attack test to enrage the creature and guarantee he will be the sole target of the creature’s next set of attacks. Only the most recent application of this maneuver has any effect." );
+            if ( Earthdawn.parseInt2( Earthdawn.getAttrBN( cID, "Opponent-PryLoose", "0" )) > 0)
+              makeButtonLocal( "Pry Loose", "PryLoose", ": ?{How many successes to spend Prying Loose|1}",
+                    "The attacker may spend additional successes from an Attack test to allow a grappled ally to immediately make an escape attempt with a +2 bonus per success spent on this maneuver." );
             if( lst !== "bad" && lst.length > 1 ) {
               let arr = lst.split( ";" );
               for( let i = 0; i < arr.length; ++i ) {
@@ -3740,10 +3763,10 @@ Step/Action Dice Table
                   let n = Earthdawn.getAttrBN( cID, pre + "Name", ""),
                     d = Earthdawn.getAttrBN( cID, pre + "Desc", "");
                   if( n.length > 0 || d.length > 0 )
-                    makeButtonLocal( n, "oCustom1", ": ?{How many successes to spend on this maneuver|1}", d, "");
+                    makeButtonLocal( n, "Custom" + arr[ i ], ": ?{How many successes to spend on this maneuver|1}", d);
             } } }
             sectplayer.append( "", t);
-            this.chat( sectplayer.toString(), Earthdawn.whoTo.player | Earthdawn.whoFrom.player | Earthdawn.whoFrom.character | Earthdawn.whoFrom.noArchive);
+            this.chat( "Opponent Maneuvers " + sectplayer.toString(), Earthdawn.whoTo.player | Earthdawn.whoFrom.player | Earthdawn.whoFrom.character | Earthdawn.whoFrom.noArchive);
           } break;  // end oppmnvr
           case "skills": {      // List out all skills that are not already token actions.
                         // Called from a macro Token action (visible when any character is selected).
@@ -3943,22 +3966,35 @@ Step/Action Dice Table
             // user has pressed button to spend successes activating a creature power.
             // ssa[0]:
             //    CreaturePower: Name of Power: Target ID
+            //    CreaturePower: Custom-MpeF4fBTanxnZtZlKij: char ID
             //    OpponentManeuver: Name of Power: Target ID: [Optional] number of hits.
+            //    OpponentManeuver: oCustom1: -MejRq_ZKS9AGKSKIwtX: 1
     this.CreaturePower = function( ssa )  {
       'use strict';
       try {
         if( ssa[ 1 ].startsWith( "Custom" )) {
-          let row = ssa[ 1 ].slice( 6 ).trim();
-          let pre = Earthdawn.buildPre( "MAN", row);
+          let row = ssa[ 1 ].slice( 6 ).trim(),   // trim off the custom, leaving the rowID
+              cID = ssa[ 2 ],
+              pre = Earthdawn.buildPre( "MAN", row),
+              linenum = 0;
           if( Earthdawn.getAttrBN( cID, pre + "Type", "1") ) {    // type 1 is Creature
             let d = Earthdawn.getAttrBN( this.charID, pre + "Desc", "");
-            if( d )
-              this.chat( d, Earthdawn.whoFrom.noArchive );
+            if( d ) {
+              let sect = Earthdawn.newSect();
+              let body = Earthdawn.newBody( sect );
+              body.append( (( ++linenum % 2) ? ".odd" : ".even"), d);
+              this.chat( sect.toString(), Earthdawn.whoFrom.noArchive, Earthdawn.getAttrBN( this.charID, pre + "Name", "") );
+//              this.chat( d, Earthdawn.whoFrom.noArchive );
+            }
           } else    // not type is Opponent
-            if( Earthdawn.getAttrBN( cID, pre + "Show", "0") == "1" )
-              this.chat( ssa[3] + " successes spent on " + Earthdawn.getAttrBN( cID, pre + "Name", "") + ". "
-                    + Earthdawn.getAttrBN( cID, pre + "Desc", ""), Earthdawn.whoFrom.noArchive );
-            else
+            if( Earthdawn.getAttrBN( cID, pre + "Show", "0") == "1" ) {
+              let sect = Earthdawn.newSect();
+              let body = Earthdawn.newBody( sect );
+              body.append( (( ++linenum % 2) ? ".odd" : ".even"), ssa[3] + " successes spent on " + Earthdawn.getAttrBN( cID, pre + "Name", "") + ". "
+                    + Earthdawn.getAttrBN( cID, pre + "Desc", ""));
+              this.chat( sect.toString(), Earthdawn.whoFrom.noArchive );
+
+            } else
               this.chat( "GM has not enabled this Maneuver.", Earthdawn.whoFrom.noArchive );
         } else {
           switch (ssa[ 0 ] ) {
@@ -3984,9 +4020,8 @@ Step/Action Dice Table
                 log( ssa );
               }
               break;
-            case "OpponentManeuver":
-              let cID = Earthdawn.tokToChar( ssa[ 2 ] );
-              let oflags = Earthdawn.getAttrBN( cID, "CreatureFlags", 0 );
+            case "OpponentManeuver":        // {"content":"!Earthdawn~ setToken: -MejRq_ZKS9AGKSKIwtX~ OpponentManeuver: Provoke"
+              let oflags = Earthdawn.getAttrBN( this.charID, "CreatureFlags", 0 );
 
               switch (ssa[ 1 ] ) {
               case "ClipTheWing":
@@ -3996,8 +4031,8 @@ Step/Action Dice Table
                 break;
               case "CrackTheShell":
                 if( oflags & Earthdawn.flagsCreature.CrackTheShell ) {
-                  let attr = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: cID, name: "PA-Buff" }, 0);
-                  let newpa = Earthdawn.getAttrBN( cID, "Physical-Armor", "0") - ssa[ 3 ];
+                  let attr = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: "PA-Buff" }, 0);
+                  let newpa = Earthdawn.getAttrBN( this.charID, "Physical-Armor", "0") - ssa[ 3 ];
                   if( newpa < 0 ) {
                     Earthdawn.setWithWorker( attr, "current", Earthdawn.parseInt2( attr.get( "current" )) - (newpa + Earthdawn.parseInt2(ssa[ 3 ])), 0 );
                     this.chat( "Spent " + ssa[3] + " successes Cracking the Shell but only needed " + (newpa + Earthdawn.parseInt2(ssa[ 3 ])) + " to remove all remaining armor. Physical armor has been reduced. Important! This is supposed to be done AFTER rolling for damage and applying it.", Earthdawn.whoFrom.noArchive );
@@ -6621,23 +6656,18 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 
 
 
-          // If this is being processed for a single token,
-          // and that token is a mook, then
+          // If this is being processed for a single token, and that token is a mook, then
           // return the number of wounds that mook has, as recorded on the token bar2_value
     this.mookWounds = function() {
       'use strict';
       try {
-        if( this.tokenInfo === undefined ) {
-          this.chat( "Error! tokenInfo undefined in mookWounds() command. Msg is: " + this.edClass.msg.content, Earthdawn.whoFrom.apiError);
-          return 0;
-        }
         if( this.charID === undefined ) {
           this.chat( "Error! charID undefined in mookWounds() command. Msg is: " + this.edClass.msg.content, Earthdawn.whoFrom.apiError);
           return 0;
         }
         if( Earthdawn.getAttrBN( this.charID, "NPC", "0") != Earthdawn.charType.mook )
           return 0;
-        if( this.tokenInfo.type !== "token" )
+        if( this.tokenInfo === undefined || this.tokenInfo.type !== "token" )
           return 0;
 
         return Earthdawn.parseInt2( this.tokenInfo.tokenObj.get( "bar2_value" ) );
@@ -7193,7 +7223,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                       d = Earthdawn.getAttrBN( po.charID, pre + "Desc", "");
                     if( n.length > 0 || d.length > 0 )
                       makeButtonLocal( targetName, Earthdawn.getAttrBN( po.charID, pre + "Name", "" ),
-                            charStr1 + "~ CreaturePower: " + "Custom" + arr[ i ] + ": " + this.targetIDs[ i ],
+                            charStr1 + "~ CreaturePower: " + "Custom" + arr[ i ] + ": " + po.charID,
                             Earthdawn.getAttrBN( this.charID, pre + "Desc", "" ));
         } } } } } } // End it's a hit, and end foreach target
       } catch(err) { this.edClass.errorLog( "ED.RollESbuttons() error caught: " + err ); }
@@ -7212,22 +7242,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
           playerCardNix = [];
         let whichMsgs = recipients & ( pIsGM ? ~Earthdawn.whoTo.player : ~0x00);    // This is recipients, but if pIsGM, then strips out the to player bit.
 
-        function newSect() {
-          return new HtmlBuilder( "", "", {
-            class:"sheet-rolltemplate-sect"
-            })};
-
-        function newBody( sect ) {
-          let body = sect.append( ".body", "", {
-            class:"sheet-rolltemplate-body"
-          });
-          body.setCss({
-            odd: { "background": "#white" },
-            even: { "background": "#E9E9E9" }
-          });
-          return body;
-        };
-        let sect = newSect(),
+        let sect = Earthdawn.newSect(),
           cls="sheet-rolltemplate-header",
           bsub = ( "subheader" in this.misc) && ("reason" in this.misc) && ((this.misc[ "reason" ].length + this.misc[ "subheader" ].length) > 25);
         if( "headcolor" in this.misc ) 
@@ -7241,7 +7256,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                 class: "sheet-rolltemplate-subheadertext"});
 
         let linenum = 0, modBit = 0, x, x2,
-          body = newBody( sect ),
+          body = Earthdawn.newBody( sect ),
           txt = "";
         if( "warnMsg" in this.misc )
           body.append( "", this.misc[ "warnMsg" ], {
@@ -7561,8 +7576,8 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
           this.chat( sect.toString(), Earthdawn.whoTo.public | Earthdawn.whoFrom.player | Earthdawn.whoFrom.character );
           if( ("gmTN" in this.misc) || gmResult.length > 0 || (( "secondaryResult" in this.misc ) && !TNall)) {
             var bgmline = true;
-            var sectgm = newSect();
-            var bodygm = newBody( sectgm );
+            var sectgm = Earthdawn.newSect();
+            var bodygm = Earthdawn.newBody( sectgm );
             if ( pIsGM && buttonLine )
               bodygm.append( (( ++linenum % 2) ? ".odd" : ".even"), buttonLine);
             if ("gmTN" in this.misc)
@@ -7576,8 +7591,8 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
             setTimeout(function() {
               try {
                 if( buttonLine && (!pIsGM || !bgmline)) {
-                  let sectplayer = newSect();
-                  let bodyplayer = newBody( sectplayer );
+                  let sectplayer = Earthdawn.newSect();
+                  let bodyplayer = Earthdawn.newBody( sectplayer );
                   bodyplayer.append( (( ++linenum % 2) ? ".odd" : ".even"), buttonLine);
                   po.chat( sectplayer.toString(), Earthdawn.whoTo.player | Earthdawn.whoFrom.player | Earthdawn.whoFrom.character | Earthdawn.whoFrom.noArchive );
                 }
@@ -11273,7 +11288,7 @@ log("spirit " + strRating );
     this.TuneMatrix = function( ssa ) {
       'use strict';
       try {
-        let bPseudo = false,
+        let pseudoType,
           po = this;
         switch ( ssa[ 1 ].toLowerCase() ) {
           case "spell": {     // The user has chosen "Attune" from the button in the spell list. Send a message to the chat window asking what matrix to put this spell into.
@@ -11322,17 +11337,21 @@ log("spirit " + strRating );
                 this.chat("ED.TuneMatrix() Warning - You don't have any matrices of high enough rank to attune this spell.");
             }
           } break;
-          case "pseudo":
+          case "pseudo":    // TuneMatrix: share: (spellFrom ID): (Std, Enh, Arm, Sha)
           case "share": // Create a matrix and move a spell into it.
-            bPseudo = true;
-            ssa[ 3 ] = Earthdawn.generateRowID();
+            if( ssa[ ssa.length -2 ] === "Enh" ) pseudoType = 2;      // v2.04 changed the number of parameters.
+            else if( ssa[ ssa.length -2 ] === "Arm" ) pseudoType = 3;
+            else if( ssa[ ssa.length -2 ] === "Sha" ) pseudoType = 4;
+            else pseudoType = 1;
+            ssa[ ssa.length ] = Earthdawn.generateRowID();
                   // Note: this does NOT break, it falls down.
           case "matrix": {    // The user has told us to swap a spell into a certain matrix.
-            let spellFrom = ssa[ 2 ],     // rowID of repeating_spell
-            matrixTo = ssa[ 3 ],      // rowID of repeating_matrix
-            preFrom = Earthdawn.buildPre( "SP", spellFrom ),
-            preTo = Earthdawn.buildPre( "SPM", matrixTo ),
-            t = "";
+                  // TuneMatrix: matrix: (spellFrom ID): (spellTo ID)
+            let spellFrom = ssa[ ssa.length -2 ],     // rowID of repeating_spell
+                matrixTo = ssa[ ssa.length -1 ],      // rowID of repeating_matrix
+                preFrom = Earthdawn.buildPre( "SP", spellFrom ),
+                preTo = Earthdawn.buildPre( "SPM", matrixTo ),
+                t = "";
 
             function toMatrix( base, val )  {
               'use strict';
@@ -11348,12 +11367,28 @@ log("spirit " + strRating );
               toMatrix( base, (val === undefined || val === null) ? dflt : val );
             } // End CopySpell()
 
-            if ( bPseudo ) {
-              toMatrix( "RowID", ssa[ 3 ] );
-              toMatrix( "DR", "10");
-              toMatrix( "Type", "-10");
+            if ( pseudoType ) {
+              toMatrix( "RowID", ssa[ ssa.length -1 ] );
               toMatrix( "Origin", "Pseudo" );
               toMatrix( "Rank", 15 );
+              switch( pseudoType ) {
+                case 1: 
+                toMatrix( "DR", "10");
+                toMatrix( "Type", "-10");
+                break;
+                case 2: 
+                toMatrix( "DR", "15");
+                toMatrix( "Type", "15");
+                break;
+                case 3: 
+                toMatrix( "DR", "25");
+                toMatrix( "Type", "25");
+                break;
+                case 4: 
+                toMatrix( "DR", "20");
+                toMatrix( "Type", "-20");
+                break;
+              }
               if( state.Earthdawn.sheetVersion < 1.8 )
                 toMatrix( "mThreads", "0");
             }
