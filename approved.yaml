@@ -1079,3 +1079,7 @@ arcdoom:
 alienrpgroller:
   - "AlienRPGroller"
   - "System Toolbox"
+
+roundmaster:
+  - "RoundMaster"
+  - "Utility"
