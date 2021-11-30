@@ -15,11 +15,14 @@
 * Implémentation de base de la voie de l'expert du combat
 
 ### Corrections de bugs
+* Pas de DOT sur les personnages déjà morts.
 * --demiAuto divise les dégâts par deux en cas d'échec, même si il n'y a pas de jet de sauvegarde.
 * ne pas faire entrer en combat quand on fait un effet qui ne fait pas de DM ou qui n'est pas préjudiciable (conséquences sur pacifisme, sanctuaire, et).
 * Prise en compte correcte des malus d'armure et de casques pour les compétences sur la fiche.
 
 ### Autres améliorations
+* Prise en compte des options de sélections pour !cof-init.
+* Option d'attaque --forceMinimum
 * Prise en compte de --message pour !cof-animer-mort.
 * Ajout d'une option --affaiblirCarac pour les attaques.
 * Pour !cof-effet-temporaire, possibilité de prendre en compte la magie en armure.
