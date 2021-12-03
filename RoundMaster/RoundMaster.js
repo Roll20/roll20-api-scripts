@@ -154,11 +154,12 @@
  *                    use this altered functionality
  * v3.021  22/11/2021 Updated the --help text (belatedly), and set database creation to "controlledby:all".
  * v3.022  24/11/2021 General minor and cosmetic bug fixing.
+ * v3.023  30/11/2021 Changed avatars and added version control on handouts.
  */
  
 var RoundMaster = (function() {
 	'use strict'; 
-	var version = 3.022,
+	var version = 3.023,
 		author = 'Ken L. & RED',
 		pending = null;
 	
@@ -532,12 +533,13 @@ var RoundMaster = (function() {
 
 	var handouts = Object.freeze({
 	RoundMaster_Help:	{name:'RoundMaster Help',
-						 avatar:'https://s3.amazonaws.com/files.d20.io/images/141800/VLyMWsmneMt4n6OBOLYn6A/max.png?1344434416',
+						 version:1.03,
+						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">AttackMaster v'+version+'</span>'
+							+'<span style="font-weight: bold; font-size: 125%">RoundMaster Help v1.03</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
-							+'<h1>RoundMaster API for Roll20</h1>'
+							+'<h1>RoundMaster API v'+version+'</h1>'
 							+'<p>RoundMaster is an API for the Roll20 RPG-DS.  Its purpose is to extend the functionality of the Turn Tracker capability already built in to Roll20.  It is one of several other similar APIs available on the platform that support the Turn Tracker and manage token and character statuses related to the passing of time: the USP of this one is the full richness of its functionality and the degree of user testing that has occurred over a 12 month period.</p>'
 							+'<p>RoundMaster is based on the much older TrackerJacker API, and many thanks to Ken L. for creating TrackerJacker.  However, roundMaster is a considerable fix and extension to TrackerJacker, suited to many different applications in many different RPG scenarios.  RoundMaster is also the first release as part of the wider RPGMaster series of APIs for Roll20, composed of <b>RoundMaster, CommandMaster, InitiativeMaster, AttackMaster, MagicMaster</b> and <b>MoneyMaster</b> - other than RoundMaster (which is generic) these initially support only the AD&D2e RPG.</p>'
 							+'<p><b><u>Note:</u></b> For some aspects of the APIs to work, the <b>ChatSetAttr API</b> and the <b>Tokenmod API</b>, both from the Roll20 Script Library, must be loaded.  It is also <i>highly recommended</i> to load all the other RPGMaster series APIs listed above.  This will provide the most immersive game-support environment</p>'
@@ -703,16 +705,18 @@ var RoundMaster = (function() {
 							+'</div>',
 						},
 	EffectsDB_help:		{name:'Effects Database Help',
-						 avatar:'https://s3.amazonaws.com/files.d20.io/images/141800/VLyMWsmneMt4n6OBOLYn6A/max.png?1344434416',
+						 version:1.03,
+						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">RoundMaster v'+version+'</span>'
+							+'<span style="font-weight: bold; font-size: 125%">Effects Database Help v1.03</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
-							+'<h1>Effect Database for RoundMaster API</h1>'
+							+'<h1>Effect Database for RoundMaster API v'+version+'</h1>'
 							+'<p>Effect-DB is a database character sheet created, used and updated by the <b>RoundMaster API</b> (see separate handout).  The database holds macros as Ability Macros that are run when certain matching statuses are placed on or removed from tokens (see Roll20 Help Centre for information on Ability Macros and Character Sheet maintenance).  The macros are run when various events occur, such as <i>end-of-round</i> or <i>Character\'s turn</i>, at which point no token or an incorrect token may be selected - this makes @{selected|attribute-name} useless as a macro command.  Therefore, the macros have certain defined parameters dynamically replaced when run by RoundMaster, which makes the token & character IDs and names, and values such as AC, HP and Thac0, available for manipulation.</p>'
 							+'<p>The Effects database as distributed with the API holds many effects that work with the spell & magic item macros distributed with other RPGMaster APIs. The API also checks for, creates and updates the Effects database to the latest version on start-up.  DMs can add their own effects to additional databases, but the database provided is totally rewritten when new updates are released and so the DM must add their own database sheets.  If the <i>provided</i> databases are accidentally deleted or overwritten, they will be automatically recreated the next time the Campaign is opened. Additional databases should be named as <b>Effects-DB-added-name</b> where <i>"added-name"</i> can be any name you want.</p>'
 							+'<p><b>However:</b> the system will ignore any database with a name that includes a version number of the form “v#.#” where # can be any number or group of numbers e.g. Effects-DB v2.13 will be ignored.  This is so that the DM can version control their databases, with only the current one (without a version number) being live.</p>'
 							+'<p>There can be as many additional databases as you want.  Other Master series APIs come with additional databases, some of which overlap - this does not cause a problem as version control and merging unique macros is managed by the APIs.</p>'
+							+'<p><b>Important Note:</b> all Character Sheet databases <b><u><i>must</i></u></b> have their <i>\‘ControlledBy\’</i> value (found under the [Edit] button at the top right of each sheet) set to <i>\‘All Players\’</i>.  This must be for all databases, both those provided (set by the API) and any user-defined ones.  Otherwise, Players will not be able to run the macros contained in them.</p>'
 							+'<p>Effect macros are primarily intended to act on the Token and its variables, but can also act on the represented Character Sheet.  A single Character Sheet can have multiple Tokens representing it, and each of these are able to do individual actions using the data on the Character Sheet jointly represented.  However, if such multi-token Characters / NPCs / creatures are likely to encounter effects that will affect the Character Sheet they must be split with each Token representing a separate Character Sheet, or else the one effect will affect all tokens associated with the Character Sheet, whether they were targeted or not!  In fact, <b>it is recommended that tokens and character sheets are 1-to-1 to keep things simple.</b></p>'
 							+'<p><b><u>Note:</u></b> Effect macros are heavily dependent upon the <b>ChatSetAttr API</b> and the <b>Tokenmod API</b>, both from the Roll20 Script Library, and they must be loaded.  It is also <i>highly recommended</i> to load all the other RPGMaster series APIs: <b>InitiativeMaster, AttackMaster, MagicMaster and CommandMaster</b>.  This will provide the most immersive game-support environment</p>'
 							+'<h2>Setup of the Token</h2>'
@@ -971,13 +975,12 @@ var RoundMaster = (function() {
 		// RED: v3.019 check the version of any existing Effects databases,
 		// and update them as necessary, creating any missing ones.
 
-		setTimeout( () => doUpdateEffectsDB(['Silent']), 3000 );
+		setTimeout( () => doUpdateEffectsDB(['Silent']), 1000 );
 		
 		// RED: v3.020 added the help-text handouts and a 
 		// function to create and update them
-		
-		updateHandouts(findTheGM());
-		
+		setTimeout( () => updateHandouts(true,findTheGM()), 1000);
+				
 		// RED: v1.301 update the global ID of the Effects Library
 		var effectsLib = findObjs({ _type: 'character' , name: fields.effectlib });
         state.roundMaster.effectsLib = false;
@@ -5268,20 +5271,35 @@ var RoundMaster = (function() {
 	 * Update or create the help handouts
 	 **/
 	 
-	var updateHandouts = function(senderId) {
+	var updateHandouts = function(silent,senderId) {
 		
 		_.each(handouts,(obj,k) => {
 			let dbCS = findObjs({ type:'handout', name:obj.name },{caseInsensitive:true});
 			if (!dbCS || !dbCS[0]) {
+			    log(obj.name+' not found.  Creating version '+obj.version);
 				dbCS = createObj('handout',{name:obj.name,inplayerjournals:senderId});
+				dbCS.set('notes',obj.bio);
+				dbCS.set('avatar',obj.avatar);
 			} else {
 				dbCS = dbCS[0];
+				dbCS.get('notes',function(note) {
+					let reVersion = new RegExp(obj.name+'\\s*?v(\\d+?.\\d*?)</span>', 'im');
+					let version = note.match(reVersion);
+					version = (version && version.length) ? (parseFloat(version[1]) || 0) : 0;
+					if (version >= obj.version) {
+					    log('Not updating handout '+obj.name+' as is already version '+obj.version);
+					    return;
+					}
+					dbCS.set('notes',obj.bio);
+					dbCS.set('avatar',obj.avatar);
+					if (!silent) sendFeedback(obj.name+' handout updated to version '+obj.version);
+					log(obj.name+' handout updated to version '+obj.version);
+				});
 			}
-			dbCS.set({notes:obj.bio,avatar:obj.avatar});
 		});
 		return;
 	}
-	
+
 	/*
 	 * Run the effect macro specified in an external command call
 	 * Used by AttackMaster for weapon effects
@@ -5811,7 +5829,7 @@ var RoundMaster = (function() {
 						if (isGM) doUpdateEffectsDB(arg);
 						break;
 				case 'handout':
-						if (isGM) updateHandouts(senderId);
+						if (isGM) updateHandouts(false,senderId);
 						break;
 				case 'viewer':
 						// RED: v3.011 allow a player to be set as a "viewer" that will see what the 
