@@ -1,5 +1,8 @@
-**Reporter** is a script primarily for the _D&D 5th Edition by Roll20_  sheet but does contain some support for the _Pathfinder Second Edition by Roll20_ Sheet. For its basic functions, it should work with most any sheet or no sheet at all.
-Reporter reads the tokens on the board that are associated with character sheets and builds a report of them in the chat, returning selected values from either the token settings or the character sheets they are associated with. You can either select a set of tokens to work with, or if you select no tokens, it will assume all tokens on the Object/Token layer. This behavior can be altered using keywords, described below. The basic syntax is:
+**Reporter** reads the tokens on the board that are associated with character sheets and builds a report of them in the chat or to a handout, returning selected values from  the token settings or the character sheets they are associated with.
+
+Reporter has specific support for the _D&D 5th Edition by Roll20_, _D&D5E Shaped_, _Pathfinder First Edition by Roll20_, and _Pathfinder Second Edition by Roll20_ sheet. There is an option to choose *other* for the sheet, which will disable the few sheet-specific shortcuts. It should work with most any sheet or no sheet at all. The first time you run the script, it will ask you to choose which sheet you are using. You can change this behavior with `!report --config|sheet`
+
+You can either select a set of tokens to work with, or if you select no tokens, it will assume all tokens on the Object/Token layer. This behavior can be altered using keywords, described below. The basic syntax is:
 
 `!report --[queries] ---[buttonline] ----[keywords]`
 ****
@@ -175,3 +178,9 @@ If the layer keyword tracker is used the report will be on all token/character p
 - crI - Challenge Rating, inverse order. D&D 5th Edition by Roll20 Sheet only
 
 `title|Title|` If this is present in the keywords, the string in between pipes will be placed at the top of the report. If you only want the custom title to display, be sure turn off the header with showheader|false. The title must be placed between two pipes. title|My Title| will work. title|My Title will break.
+
+`handout|Handoutname|` If this is present in the keywords, the report will be sent to a handout instead of chat. This can allow a report to remain usable without scrolling through the chat. It can also be used as a sort of floating palette. Reports in handouts can be updated. Running the macro again will regenerate the table, as will pressing the Repeat button. The string in between pipes will be used as the name of the report handout. If no handout by that name exists, Reporter will create one and post a link in chat to open it. The title must be placed between two pipes. *handout|My Handout|* will work. *handout|My Handout* will break.
+
+A report Handout automatically creates a horizontal rule at the top of the handout. Anything typed manually above that rule will be persistent. Reporter will not overwrite it. You can use this area to create Journal Command Buttons to generate new reports or to give some context to the existing report. All updates are live.
+
+See this thread in the Roll20 Forums for more details [Reporter Feedback thread](https://app.roll20.net/forum/post/10381135/script-reporter-1-dot-x)

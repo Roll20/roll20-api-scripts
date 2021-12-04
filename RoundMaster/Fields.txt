@@ -1,0 +1,355 @@
+Visible	Internal Field	Character Sheet field	InitMaster	AttackMaster	MagicMaster	CommandMaster	RoundMaster	Description	
+	Characteristics								
+ü	"		Fighter_class"	class1	ü	ü	ü	ü		"The specific Fighter class name, such as 'Ranger' or 'Paladin' or 'Fighter'"	
+ü	"		Fighter_level"	level-class1	ü	ü	ü	ü		The Fighter class experience level 	
+ü	"		Wizard_class"	class2		ü	ü	ü		"The specific Wizard class name, such as 'Illusionist' or 'Envoker' or 'Mage'"	
+ü	"		Wizard_level"	level-class2	ü	ü	ü	ü		The Wizard class experience level 	
+ü	"		Priest_class"	class3		ü	ü	ü		"The specific Priest class name, such as 'Healer' or 'Priest of Light' or 'Priest'"	
+ü	"		Priest_level"	level-class3	ü	ü	ü	ü		The Priest class experience level 	
+ü	"		Rogue_class"	class4		ü	ü	ü		"The specific Rogue class name, such as 'Thief' or 'Bard' or 'Assassin'"	
+ü	"		Rogue_level"	level-class4	ü	ü	ü	ü		The Rogue class experience level 	
+ü	"		Psion_class"	class5		ü	ü	ü		The specific Psion class name	
+ü	"		Psion_level"	level-class5		ü	ü	ü		The Psion class experience level 	
+ü	"		Total_level"	level-total			ü	ü		The calculated total level equivalent for multi-class characters	
+									
+ü	"		Race"	race		ü		ü		The race of the character	
+									
+ü	"		AC"	AC		ü	ü	ü	ü	Current adjusted Armour Class	
+ü	"		MonsterAC"	monsterarmor		ü	ü	ü	ü	Monster base Armour Class (before magic & other adjustments)	
+ü	"		MonsterThac0"	monsterthac0		ü	ü	ü	ü	Monster base Thac0 (before magic & other adjustments)	
+ü	"		HP"	HP		ü	ü	ü	ü	Current Hit Points	
+	"		Thac0"	thac0		ü	ü	ü	ü	Legacy base Thac0 field (still listed for backwards compatability)	
+ü	"		Thac0_base"	thac0-base		ü	ü	ü	ü	"Base Thac0 by class & level (before weapon, magic & other adjustments)"	
+ü	"		Token_AC"	bar1 | value		ü			ü	Current AC displayed on Token (usually same as AC)	
+ü	"		Token_Thac0"	bar2 | value		ü			ü	Current Thac0 displayed on Token (usually same as Thac0_base)	
+ü	"		Token_HP"	bar3 | value		ü			ü	Current HP displayed on Token (usually same as HP)	
+ü	"		Token_MaxAC"	bar1 | max		ü			ü	Calculated AC under normal circumstances (only if different from AC)	
+ü	"		Token_MaxThac0"	bar2 | max		ü			ü	Calculated base Thac0 (only if different from Base_Thac0)	
+ü	"		Token_MaxHP"	bar3 | max		ü			ü	Current maximum HP displayed on Token	
+									
+ü	"		Constitution"	constitution				ü		"The Character's Constitution score, used for adjusting some race's saves"	
+ü	"		Wisdom"	wisdom			ü			"The Character's Wisdom score, used for Priest's additional spell knowledge"	
+ü	"		Wisdom_defAdj"	wisdef		ü				"The Wisdom mental attack bonus, used for situational saving throw bonuses"	
+ü	"		Dex_acBonus"	dexdefense		ü				"The Dexterity defense bonus, which adjusts Armour Class for most attacks"	
+ü	"		Dex_missile"	dexmissile		ü				"The Dexterity missile attack bonus, which adjusts many ranged weapon attacks"	
+ü	"		Strength_dmg"	strengthdmg		ü				"The Strength damage bonus, which adjusts many damage rolls"	
+	"		Magic_dmgAdj"	strengthdmg | max		ü				"The current spell effect damage bonus, set only when certain magic is used"	
+ü	"		Strength_hit"	strengthhit		ü	ü			"The Strength attack bonus, which adjusts many attack rolls"	
+	"		Magic_hitAdj"	strengthhit | max		ü				"The current spell effect attack bonus, set only when certain magic is used"	
+									
+	Monster Characteristics								
+ü	"		Monster_attks"	monsteratknum	ü					The number of attacks per round that a monster has	
+ü	"		Monster_dmg1"	monsterdmg	ü	ü				"The first innate monster damage field (can be attack_name,dmg_roll,speed)"	
+ü	"		Monster_dmg2"	monsterdmg2	ü	ü				"The second innate monster damage field (can be attack_name,dmg_roll,speed)"	
+ü	"		Monster_dmg3"	monsterdmg3	ü	ü				"The third innate monster damage field (can be attack_name,dmg_roll,speed)"	
+ü	"		Monster_hitDice"	hitdice	ü	ü	ü	ü		The number of Hit Dice the monster has	
+ü	"		Monster_hpExtra"	monsterhpextra	ü		ü	ü		"The Hit Dice plusses for the monster, as in the '+2' in 1d4+2"	
+ü	"		Monster_int"	monsterintelligence	ü			ü		"The Monster's intelligence (1-20), which affects saving throws"	
+ü	"		Monster_speed"	monsterini	ü					The default speed for innate monster attacks if not specified as part of the damage	
+ü	"		MonsterCritHit"	monstercrit		ü				The Critical Hit threshold for monster attack dice rolls	
+	"		MonsterCritMiss"	monstercrit | max		ü				The Critical Miss threshold for monster attack dice rolls	
+									
+	Armour Class								
+ü	"		Armour_normal"	ACtouch		ü		ü		"The system calculated Armour Class under normal, frontal attack"	
+ü	"		Armour_back"	ACback		ü		ü		The system calculated Armour Class from behind	
+ü	"		Armour_head"	AChead		ü		ü		The system calculated Armour Class for a called head shot	
+ü	"		Armour_missile"	ACmissile		ü		ü		The system calculated Armour Class against missiles	
+ü	"		Armour_surprised"	ACsurprise		ü		ü		The system calculated Armour Class when surprised	
+	"		Shieldless_normal"	ACshieldless		ü		ü		"The system calculated shieldless Armour Class under normal, frontal attack"	
+	"		Shieldless_back"	ACshieldless-back		ü		ü		The system calculated shieldless Armour Class from behind	
+	"		Shieldless_head"	ACshieldless-head		ü		ü		The system calculated shieldless Armour Class for a called head shot	
+	"		Shieldless_missile"	ACshieldless-missile		ü		ü		The system calculated shieldless Armour Class against missiles	
+	"		Shieldless_surprised"	ACshieldless-surprise		ü		ü		The system calculated shieldless Armour Class when surprised	
+	"		Armourless_normal"	ACarmourless		ü		ü		"The system calculated armourless Armour Class under normal, frontal attack"	
+	"		Armourless_back"	ACarmourless-back		ü		ü		The system calculated armourless Armour Class from behind	
+	"		Armourless_head"	ACarmourless-head		ü		ü		The system calculated armourless Armour Class for a called head shot	
+	"		Armourless_missile"	ACarmourless-missile		ü		ü		The system calculated armourless Armour Class against missiles	
+	"		Armourless_surprised"	ACarmourless-surprise		ü		ü		The system calculated armourless Armour Class when surprised	
+									
+	Thievish Abilities								
+ü	"		Open_Locks"	ol	ü					The 'root' part field name for theivish open locks success percentage 	
+ü	"		Pick_Pockets"	pp	ü		ü			The 'root' part field name for theivish pick pockets success percentage 	
+ü	"		Detect_Noise"	dn	ü					The 'root' part field name for theivish detect noise success percentage 	
+ü	"		Find_Traps"	rt	ü					The 'root' part field name for theivish find traps success percentage 	
+ü	"		Move_Silently"	ms	ü					The 'root' part field name for theivish move silently success percentage 	
+ü	"		Hide_in_Shadows"	hs	ü					The 'root' part field name for theivish hide in shadows success percentage 	
+ü	"		Climb_Walls"	cw	ü					The 'root' part field name for theivish climb walls success percentage 	
+ü	"		Read_Languages"	rl	ü					The 'root' part field name for theivish read languages success percentage 	
+ü	"		Legend_Lore"	ib	ü					The 'root' part field name for theivish legend lore success percentage 	
+									
+ü	"		Armor_name"	armorname	ü					"The armour name field for the current thievish armour type, which adjusts success"	
+	"		Armor_mod_leather"	t	ü					The field name modifier added to the 'root' when in thievish leather armour	
+	"		Armor_mod_none"	noarmort	ü					The field name modifier added to the 'root' when in no armour	
+	"		Armor_mod_studded"	armort	ü					The field name modifier added to the 'root' when in studded leather or better	
+									
+	"Time, Money & Others"								
+	"		Timespent"	timespent			ü			The number of in-game days passed since the last 'End-of-Day' routine was run	
+	"		CharDay"	in-game-day			ü			The current in-game date number for this Character / NPC	
+	"		Today"	today			ü			The overall current in-game date number	
+	"		Today_day"	today-day			ü			The overall current in-game day number	
+	"		Today_dayth"	today-dayth			ü			"One of 'st', 'nd', 'rd' or 'th' to put after the day number"	
+	"		Today_month"	today-month			ü			The overall current in-game month	
+	"		Today_weekday"	today-weekday			ü			The overall current in-game weekday name	
+	"		Today_year"	today-year			ü			The overall current in-game year number	
+	"		Expenditure"	expenditure			ü			A field used to hold expenditure calculation results	
+ü	"		Money_copper"	copper			ü			The current copper coins held by the Character	
+ü	"		Money_gold"	gold			ü			The current gold coins held by the Character	
+ü	"		Money_silver"	silver			ü			The current silver coins held by the Character	
+ü	"		Money_treasure"	otherval			ü			A field used to hold formatted text of treasure held by a creature / NPC	
+	"		LightSource"	lightsource			ü			The current light source held by the Character	
+									
+	"		SheetVersion"	character_sheet			ü	ü		The character sheet design version number (set by character sheet author)	
+	"		dbVersion"	db-version		ü	ü	ü	ü	The current database version number (for RPGMaster databases)	
+									
+	Initiative								
+	"		initMod"	comreact	ü					The magical initiative [+/-] modifier set by certain spells (e.g. Haste / Slow)	
+	"		initMultiplier"	comreact | max	ü					The magical initiative actions multiplier set by certain spells (e.g. Haste)	
+	"		Init_2Hweapon"	init_2H	ü					Internal flag indicating chosen weapon for initiative is 2-handed	
+	"		Init_2nd2Hweapon"	init_2H | max	ü					Internal flag indicating chosen 2nd weapon for initiative is 2-handed	
+	"		Init_action"	init_action	ü					Internal text describing the initiative action chosen	
+	"		Init_2ndAction"	init_action | max	ü					Internal text describing the 2nd initiative action chosen	
+	"		Init_actNum"	init_actionnum	ü					Internal number of actions to undertake	
+	"		Init_2ndActNum"	init_actionnum | max	ü					Internal number of 2nd actions to undertake	
+	"		Init_preInit"	init_preinit	ü					Internal flag indicating action first occurs before initiative (e.g. bow specialist)	
+	"		Init_2ndPreInit"	init_preinit | max	ü					Internal flag indicating 2nd action first occurs before initiative	
+	"		Init_speed"	init_speed	ü					Internal calculation of action speed to add to initiative roll	
+	"		Init_2ndSpeed"	init_speed | max	ü					Internal calculation of 2nd action speed to add to initiative roll	
+	"		Init_chosen"	init_chosen	ü					Exposed flag set when initiative action is chosen	
+	"		Init_done"	init_done	ü					Internal flag set when initiative has been completed for this round & character	
+	"		Init_submitVal"	init_submitVal	ü					Internal flag controlling initiative 'carry-overs' for action durations longer than 10	
+	"		Init_carry"	init_carry	ü					Internal flag controlling initiative 'carry-overs' for action durations longer than 10	
+	"		Init_carry2H"	init-carry_2H	ü					Internal flag for initiative 'carry-overs' involving 2-handed weapons	
+	"		Init_carryAction"	init-carry_action	ü					Internal text describing initiative 'carry-over'  action	
+	"		Init_carryActNum"	init-carry_actionnum	ü					Internal number of actions 'carried-over'	
+	"		Init_carryPreInit"	init-carry_preinit	ü					Internal flag for initiative 'carry-overs' that will eventually occur before initiative	
+	"		Init_carrySpeed"	init-carry_speed	ü					Internal count-down of duration of an initiative 'carry-over'	
+	"		Init_carryWeapNum"	init-carry_weapno	ü					Internal weapon number id for weapon attack initiative 'carry-overs'	
+	"		Prev_round"	prev-round	ü					The round number of the previous round	
+									
+	Weapons								
+	"		Primary_weapon"	weapno	ü	ü				The internal weapon number of the primary (or only) weapon used to attack	
+	"		Weapon_num"	weapno	ü					The internal weapon number of the primary (or only) weapon used to attack	
+	"		Weapon_2ndNum"	weapno | max	ü					The internal weapon number of the secondary weapon used to attack	
+									
+	Melee Weapons								
+	"		MWrows"	12	ü					The maximum number of melee weapon table rows that will be scanned	
+	"		MW_table"	repeating_weapons	ü	ü	ü	ü		The repeating table name for the melee weapons table	
+ü	"		MW_name"	weaponname	ü	ü				The name of the melee weapon	
+	"		MW_type"	weaponname | max		ü				"The generic name of this weapon, used for proficiency check"	
+ü	"		MW_adj"	attackadj		ü				The magical weapon attack adjustment	
+ü	"		MW_strBonus"	strbonus		ü				"A flag if true, applies strength bonus to attack rolls for this weapon"	
+	"		MW_twoHanded"	twohanded	ü	ü				"A flag if true, indicates this weapon is 2-handed"	
+ü	"		MW_critHit"	crit-thresh		ü				The critical hit dice roll threshold for this weapon (AC hit shown in green box)	
+	"		MW_critMiss"	crit-thresh | max		ü				The critical miss dice roll threshold for this weapon (AC hit shown in red box)	
+ü	"		MW_speed"	weapspeed	ü	ü				The speed of this weapon in segments	
+	"		MW_dancing"	weapspeed | max	ü	ü				"A flag if true, this weapon is dancing and has automatic initiative rolls"	
+ü	"		MW_profLevel"	prof-level		ü				The proficiency level adjustment for this weapon	
+	"		MW_dancingProf"	prof-level | max		ü				The proficiency level adjustment for this weapon if it is dancing	
+ü	"		MW_size"	size		ü				"The size of the weapon (T, S, M, L, H, G)"	
+	"		MW_miName"	size | max		ü				The unique name of this weapon in the Item databases	
+ü	"		MW_noAttks"	attacknum	ü	ü				"The number of attacks per round, adjusted by level & proficiency"	
+ü	"		MW_slash"	weaptype-slash		ü				"Flag if true, weapon can do slashing damage"	
+ü	"		MW_pierce"	weaptype-pierce		ü				"Flag if true, weapon can do piercing damage"	
+ü	"		MW_bludgeon"	weaptype-blunt		ü				"Flag if true, weapon can do bludgeoning damage"	
+ü	"		MW_range"	range		ü				The range of this melee weapon	
+	"		MW_superType"	range | max		ü				The weapon group (or type) of the weapon - used for related weapon proficiency	
+									
+	"		MWdmgRows"	12	ü					The maximum number of melee damage table rows that will be scanned	
+	"		Dmg_table"	repeating_weapons-damage		ü	ü	ü		The repeating table name for the melee weapon damage table	
+ü	"		Dmg_name"	weaponname1		ü				The name of the weapon doing this damage	
+	"		Dmg_miName"	weaponname1 | max		ü				The unique name of this weapon in the Item databases	
+ü	"		Dmg_adj"	damadj		ü				The magical damage roll adjustment for this weapon	
+ü	"		Dmg_dmgL"	daml		ü				The damage roll for the generic type of weapon vs large targets (no adjustments)	
+ü	"		Dmg_dmgSM"	damsm		ü				The damage roll for the generic type of weapon vs small/medium targets (no adjustments)	
+ü	"		Dmg_specialist"	specialist-damage		ü				"A flag if true, takes into account weapon specialisation and mastery damage adjustments"	
+ü	"		Dmg_strBonus"	strBonus1		ü				"A flag if true, takes strength damage bonus into account"	
+									
+	Ranged Weapons								
+	"		RWrows"	12	ü					The maximum number of ranged weapon table rows that will be scanned	
+	"		RW_table"	repeating_weapons2	ü	ü	ü	ü		The repeating table name for the ranged weapon table	
+ü	"		RW_name"	weaponname2	ü	ü				The name of the ranged weapon	
+	"		RW_type"	weaponname2 | max		ü				The generic type of the ranged weapon for proficiency check	
+ü	"		RW_adj"	attackadj2		ü				The magical attack bonus for the ranged weapon	
+ü	"		RW_strBonus"	strbonus2		ü				"A flag if true, applies the strength attack bonus to the attack roll"	
+ü	RW_dexBonus	dexbonus2		ü				"A flag if true, applies the dexterity missile attack bonus to the attack roll"	
+	RW_twoHanded	twohanded2	ü	ü				"A flag if true, the weapon is 2-handed"	
+ü	"		RW_noAttks"	attacknum2	ü	ü				"The number of attacks per round, adjusted by level & proficiency"	
+ü	"		RW_critHit"	crit-thresh2		ü				The critical hit dice roll threshold for this weapon (AC hit shown in green box)	
+	"		RW_critMiss"	crit-thresh2 | max		ü				The critical miss dice roll threshold for this weapon (AC hit shown in red box)	
+ü	"		RW_speed"	weapspeed2	ü	ü				The speed in segments for this weapon	
+	"		RW_dancing"	weapspeed2 | max	ü	ü				"A flag if true, this weapon is dancing and has automatic initiative rolls"	
+ü	"		RW_profLevel"	prof-level2		ü				The proficiency level adjustment for this weapon	
+	"		RW_dancingProf"	prof-level2 | max		ü				The proficiency level adjustment for this weapon if it is dancing	
+ü	"		RW_size"	size2		ü				"The size of the weapon (T, S, M, L, H, G)"	
+	"		RW_miName"	size2 | max		ü				The unique name of this weapon in the Item databases	
+ü	"		RW_slash"	weaptype-slash2		ü				"Flag if true, weapon can do slashing damage"	
+ü	"		RW_pierce"	weaptype-pierce2		ü				"Flag if true, weapon can do piercing damage"	
+ü	"		RW_bludgeon"	weaptype-blunt2		ü				"Flag if true, weapon can do bludgeoning damage"	
+ü	"		RW_range"	range2		ü				The range / ranges of range / range adjustment of this weapon	
+	"		RW_superType"	range2 | max		ü				The weapon group (or type) of the weapon - used for related weapon proficiency	
+	"		RWrange_mod"	rangemod-		ü				Internally used for range modifying magic items	
+									
+	Ammunition								
+	"		AmmoRows"	12	ü					The maximum number of ammunition table rows that will be scanned	
+	"		Ammo_table"	repeating_ammo		ü	ü	ü		The repeating table name for the ammunition table	
+ü	"		Ammo_name"	ammoname		ü				The name of the ammunition	
+	"		Ammo_type"	ammoname | max		ü				"The name, generic type, or weapon group of the weapon(s) that can fire this type of ammo"	
+ü	"		Ammo_strBonus"	strbonus3		ü				"A flag if true, strength bonus adjusts ammunition damage"	
+ü	"		Ammo_adj"	damadj2		ü				The magical damage adjustment for this ammunition	
+	"		Ammo_attkAdj"	damadj2 | max		ü				The magical attack adjustment for this ammunition in addition to weapon magical adjustment	
+ü	"		Ammo_dmgSM"	damsm2		ü				The damage roll for the generic type of ammo vs small/medium targets (no adjustments)	
+	"		Ammo_range"	damsm2 | max		ü				The range / ranges of range for this specific ammo with the weapon type in Ammo_type	
+ü	"		Ammo_dmgL"	daml2		ü				The damage roll for the generic type of ammo vs large targets (no adjustments)	
+	"		Ammo_miName"	daml2 | max		ü				The unique name of this ammunition in the Item databases	
+ü	"		Ammo_qty"	ammoremain	ü	ü				The current quantity of this ammunition remaining	
+ü	"		Ammo_maxQty"	ammoremain | max		ü				The maximum quantity of this ammunition set at the last ammunition retrieval	
+	"		Ammo_reuse"	reuse		ü				"A flag if true, the ammunition magially automatically returns to the character's quiver"	
+									
+	Weapons In-Hand								
+	"		InHand_table"	repeating_inhand		ü	ü			The repeating table name for the table of weapons 'in-hand'	
+	"		InHand_name"	inhandname		ü				The name of a weapon that is in-hand	
+	"		InHand_trueName"	inhandname | max		ü				The unique name of this weapon in the Item databases	
+	"		InHand_handedness"	inhandhands		ü				The number of hands this weapon takes to wield	
+	"		InHand_index"	inhandindex		ü				The row number of this weapon in the Character's Item table	
+									
+	Ammunition in Quiver								
+	"		Quiver_table"	repeating_quiver		ü	ü			The repeating table name for the table of ammunition for the in-hand weapons	
+	"		Quiver_name"	quiverammo		ü				The name of this ammunition	
+	"		Quiver_trueName"	quiverammo | max		ü				The unique name of this ammunition in the Item databases	
+	"		Quiver_index"	quiverindex		ü				The row number of this ammunition in the Character's Item table	
+									
+	Weapon Proficiencies								
+	"		WP_table"	repeating_weaponprofs	ü	ü	ü	ü		The repeating table name for the weapon proficiencies table	
+ü	"		WP_name"	weapprofname		ü		ü		The generic weapon name for an entry in the table	
+	"		WP_type"	weapprofname | max		ü		ü		The weapon group (superType) of this type of weapon to determine related weapon proficiency	
+ü	"		WP_expert"	expert				ü		"A flag if true, the Character is proficient or better in this weapon"	
+ü	"		WP_specialist"	specialist	ü	ü		ü		"A flag if true, the Character is specialised or better in this weapon"	
+ü	"		WP_mastery"	mastery		ü		ü		"A flag if true, the Character has mastery (double specialisation) or better in this weapon"	
+									
+	Items & Equipment								
+	"		MIRows"	100	ü	ü	ü			The maximum number of Item table rows that will be scanned	
+	"		Items_table"	repeating_potions	ü	ü	ü	ü		The repeating table name for the Items table	
+ü	"		Items_name"	potion	ü	ü	ü	ü		The name of this item in the Items database	
+	"		Items_trueName"	potion | max		ü	ü			The 'true name' of this item which might be different from Item_name for 'Hidden Items'	
+ü	"		Items_qty"	potionqty		ü	ü			The displayed or current quantity of this item	
+	"		Items_trueQty"	potionqty | max		ü	ü			The 'true' or maximum possible quantity for this item	
+ü	"		Items_speed"	potion-speed	ü	ü	ü			The speed in segments this item takes to use	
+	"		Items_trueSpeed"	potion-speed | max	ü	ü	ü			The 'true' speed in segments this item takes to use	
+ü	"		Items_cost"	potion-macro		ü	ü			The cost of this item if it is sold	
+	"		Items_type"	potion-macro | max		ü	ü			"The recharging type of this item, and the cursed status"	
+									
+ü	"		Equip_leftHand"	worn-Weapon1		ü				The current contents of the Character's left hand	
+ü	"		Equip_rightHand"	worn-Weapon2		ü				The current contents of the Character's right hand	
+ü	"		Equip_bothHands"	worn-Hands		ü				The current contents of an item held in both the Character's hands	
+	"		Equip_dancing"	dancing-count	ü	ü				The number of this Character's items currently 'dancing'	
+ü	"		Equip_handedness"	handedness	ü	ü				The number of hands and handedness of the Character 	
+									
+ü	"		ItemWeaponList"	spellmem			ü	ü	ü	The field on an Items database sheet holding the list of weapons in that sheet	
+ü	"		ItemArmourList"	spellmem2			ü		ü	The field on an Items database sheet holding the list of Armour in that sheet	
+ü	"		ItemRingList"	spellmem3			ü		ü	The field on an Items database sheet holding the list of Rings in that sheet	
+ü	"		ItemMiscList"	spellmem4			ü		ü	The field on an Items database sheet holding the list of Miscellaneous items in that sheet	
+ü	"		ItemPotionList"	spellmem10			ü		ü	The field on an Items database sheet holding the list of Potions in that sheet	
+ü	"		ItemScrollList"	spellmem11			ü		ü	The field on an Items database sheet holding the list of Scrolls & Spellbooks in that sheet	
+ü	"		ItemWandsList"	spellmem12			ü		ü	"The field on an Items database sheet holding the list of Rods, Staves & Wands in that sheet"	
+ü	"		ItemDMList"	spellmem13			ü		ü	The field on an Items database sheet holding the list of DM-only items in that sheet	
+									
+	"		ItemCastingTime"	Mict			ü			Legacy Field - used by magic item macros to store various values during use	
+	"		ItemChosen"	mi-name			ü			Field exposing the Item database name of the last used Item	
+	"		ItemSelected"	MI-chosen			ü			Legacy Flag - used by magic item macros to store various values during use	
+	ItemRowRef	MIrowref			ü			Field exposing the Item table row of the last used Item	
+	"		ItemContainerSize"	container-size			ü	ü		The size in rows set as the limit for this Character's Item table	
+	"		ItemContainerType"	check-for-mibag			ü			"The type of container - innert, held by sentient creature, or trapped"	
+	"		ItemMUspellsList"	mi-muspells-		ü	ü			The introductory tag for the list of Wizard spells held in a spell-storing magic item	
+	"		ItemMUspellValues"	mi-muspells- | max		ü	ü			The introductory tag for the list of Wizard spell levels held in a spell-storing magic item	
+	"		ItemPRspellsList"	mi-prspells-		ü	ü			The introductory tag for the list of Priest spells held in a spell-storing magic item	
+	"		ItemPRspellValues"	mi-prspells- | max		ü	ü			The introductory tag for the list of Priest spell levels held in a spell-storing magic item	
+	"		ItemPowersList"	mi-powers-		ü	ü			The introductory tag for the list of Powers a magic item has	
+	"		ItemPowerValues"	mi-powers- | max		ü	ü			The introductory tag for the list of Power uses per day on a magic item	
+									
+	MIRowsStandard	16			ü			Standard number of rows allowed in Item table unless reset by DM in GM-edit-MI menu	
+	MIpowerLevel	14			ü			The Character Sheet Wizard spell level tab used to store Magic Item powers	
+	MIspellLevel	15			ü			The Character Sheet Wizard spell level tab used to store Magic Item stored spells	
+	MIpowerPrefix	mi-power-			ü			Prefix for attributes to store magic item power row & column references	
+	MIspellPrefix	mi-spell-			ü			Prefix for attributes to store magic item stored spell row & column references	
+									
+	MISpellNo_table	spell-level			ü			"Prefix for attributes holding magic item spell counts, level will be appended"	
+	MISpellNo_memable	-castable			ü			"Postfix for attributes holding magic item spell counts, level will precede"	
+									
+	Spells & Powers								
+	"		SpellsCols"	3		ü	ü			Number of columns in the repeating_spells tables	
+	"		Spells_table"	repeating_spells	ü	ü	ü	ü		The repeating table name for the Spells table	
+ü	"		Spells_name"	spellname	ü		ü			The unique name of the spell that matches the Spells database	
+	"		Spells_db"	spellname | max			ü			The character sheet name of the database holding this spell	
+ü	"		Spells_castValue"	cast-value	ü		ü			The counter of the number of this spell memorised today (1 or 0)	
+ü	"		Spells_castMax"	cast-max			ü			The maximum bumber of this spell that can be memorised each day (max 1)	
+ü	"		Spells_miSpellSet"	arc			ü			"Flag if set, the spell is in a magic item and cannot be changed"	
+ü	"		Spells_speed"	casttime	ü		ü			The casting time of the spell in segments.  Can be > 10 to indicate more than 1 round	
+	"		Spells_cost"	casttime | max			ü			"The cost of the material components consumed in casting the spell, deducted from gold"	
+ü	"		Spells_storedLevel"	spell-points			ü			The stored level of the caster who cast the spell into a spell storing magic item	
+ü	"		Spells_msg"	cast-macro			ü			The spell name that must be stored in this magic item spell slot (or a message for other spells)	
+									
+	"		PowerRows"	9	ü					The maximum number of powers that will be scanned	
+	"		PowersBaseCol"	67	ü					The spell table index where Powers start to be stored	
+	"		PowersCols"	3	ü					The number of columns in the Powers table	
+	"		Powers_table"	repeating_spells	ü	ü	ü	ü		The repeating table name for the Powers table (currently shares the Spells table)	
+ü	"		Powers_name"	spellname	ü		ü			The unique name of the power that matches the Powers database	
+ü	"		Powers_castMax"	cast-max			ü			The maximum number of times this power can be used each day (or -1 for 'at will')	
+ü	"		Powers_castValue"	cast-value			ü			The number of times left available for casting today (or -1 for 'no limit')	
+ü	"		Powers_speed"	casttime	ü		ü			The casting time of the power in segments.  Can be > 10 to indicate more than 1 round	
+									
+	"		Casting_level"	casting-level			ü	ü		The level the current spell/power will be cast at.  Can be altered by spell & Item macros	
+	"		MU_Casting_level"	mu-casting-level			ü			The level the next Wizard spell/power will be cast at.  Can be altered by spell & Item macros	
+	"		PR_Casting_level"	pr-casting-level			ü			The level the next Priest spell/power will be cast at.  Can be altered by spell & Item macros	
+	"		Casting_name"	casting-name			ü	ü		The caster or other name of the next spell/power.  Can be altered by spell & Item macros	
+	"		CastingTimePrefix"	ct-		ü	ü			The prefix for attributes in the databases that hold casting times and other information	
+									
+	"		SpellCharges"	spellcharges			ü			A field exposing the charges remaining on a scroll or other spell on a magic item	
+	"		SpellColIndex"	spellref			ü			The Column index of the last spell cast (to use if --cast-again command used)	
+	"		SpellRowRef"	spellrowref			ü			The Row index of the last spell cast (to use if --cast-again command used)	
+	"		SpellToMem"	spelltomem			ü			A field exposing the last spell cast (used by --cast-again command and database macros)	
+	"		Spellbook"	spellmem			ü			The prefix for spell and power spellbook fields	
+	"		MUSpellbook"	spellmem				ü		The prefix for Wizard spellbook fields	
+	"		PRSpellbook"	spellmem				ü		The prefix for Priest spellbook fields	
+	"		PowersSpellbook"	spellmem23				ü		The prefix for Power spellbook fields	
+ü	"		MUSpellNo_table"	spell-level	ü	ü				The prefix for the fields displaying numbers of spells memorisable at each Wizarding level	
+ü	"		MUSpellNo_memable"	-castable	ü	ü				The postfix for the displayed number of generally memorisable Wizard spells	
+ü	"		MUSpellNo_specialist"	-specialist	ü	ü				The postfix for the displayed number of specialist memorisable Wizard spells	
+ü	"		MUSpellNo_misc"	-misc	ü	ü				The postfix for the displayed number of additionally memorisable Wizard spells	
+ü	"		MUSpellNo_total"	-total		ü				The postfix for the displayed total number of memorisable Wizard spells	
+ü	"		PRSpellNo_table"	spell-priest-level	ü	ü				The prefix for the fields displaying numbers of spells memorisable at each Priestly level	
+ü	"		PRSpellNo_memable"	-castable	ü	ü				The postfix for the displayed number of generally memorisable Priest spells	
+ü	"		PRSpellNo_misc"	-misc	ü	ü				The postfix for the displayed number of additionally memorisable Priest spells	
+ü	"		PRSpellNo_wisdom"	-wisdom	ü	ü				The postfix for the displayed number of Wisdom bonus memorisable Priest spells	
+ü	"		PRSpellNo_total"	-total		ü				The postfix for the displayed total number of memorisable Priest spells	
+									
+	Saving Throws								
+ü	"		Saves_breath"	breathtar		ü		ü		Saving throw vs. breath weapons	
+ü	"		Saves_death"	deatar		ü		ü		Saving throw vs. death magic	
+ü	"		Saves_paralysis"	partar		ü		ü		Saving throw vs. paralysis	
+ü	"		Saves_petrification"	pettar		ü		ü		Saving throw vs. petrification	
+ü	"		Saves_poison"	poitar		ü		ü		Saving throw vs. poison	
+ü	"		Saves_polymorph"	poltar		ü		ü		Saving throw vs. polymorph	
+ü	"		Saves_rod"	rodtar		ü		ü		Saving throw vs. spells & powers of rods	
+ü	"		Saves_spell"	sptar		ü		ü		Saving throw vs. spells	
+ü	"		Saves_staff"	statar		ü		ü		Saving throw vs. spells & powers of staves	
+ü	"		Saves_wand"	wantar		ü		ü		Saving throw vs. spells & powers of wands	
+ü	"		Saves_modBreath"	breathmod		ü		ü		Saving throw modifier vs. breath weapons	
+ü	"		Saves_modDeath"	deamod		ü		ü		Saving throw modifier vs. death magic	
+ü	"		Saves_modParalysis"	parmod		ü		ü		Saving throw modifier vs. paralysis	
+ü	"		Saves_modPetrification"	petmod		ü		ü		Saving throw modifier vs. petrification	
+ü	"		Saves_modPoison"	poimod		ü		ü		Saving throw modifier vs. poison	
+ü	"		Saves_modPolymorph"	polmod		ü		ü		Saving throw modifier vs. polymorph	
+ü	"		Saves_modRod"	rodmod		ü		ü		Saving throw modifier vs. spells & powers of rods	
+ü	"		Saves_modSpell"	spmod		ü		ü		Saving throw modifier vs. spells	
+ü	"		Saves_modStaff"	stamod		ü		ü		Saving throw modifier vs. spells & powers of staves	
+ü	"		Saves_modWand"	wanmod		ü		ü		Saving throw modifier vs. spells & powers of wands	
+ü	"		Saves_monBreath"	monbretar		ü		ü		Monster Saving throw vs. breath weapons	
+ü	"		Saves_monDeath"	mondeatar		ü		ü		Monster Saving throw vs. death magic	
+ü	"		Saves_monParalysis"	monpartar		ü		ü		Monster Saving throw vs. paralysis	
+ü	"		Saves_monPetri"	monpettar		ü		ü		Monster Saving throw vs. petrification	
+ü	"		Saves_monPoison"	monpoitar		ü		ü		Monster Saving throw vs. poison	
+ü	"		Saves_monPolymorph"	monpoltar		ü		ü		Monster Saving throw vs. polymorph	
+ü	"		Saves_monRod"	monrodtar		ü		ü		Monster Saving throw vs. spells & powers of rods	
+ü	"		Saves_monSpell"	monspetar		ü		ü		Monster Saving throw vs. spells	
+ü	"		Saves_monStaff"	monstatar		ü		ü		Monster Saving throw vs. spells & powers of staves	
+ü	"		Saves_monWand"	monwantar		ü		ü		Monster Saving throw vs. spells & powers of wands	

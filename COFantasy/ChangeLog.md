@@ -1,4 +1,87 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 3.04
+### Capacités
+* Simulacre de vie
+* Ajout d'un visuel pour la prison végétale
+* Meilleure automatisation de la capacité intercepter du chevalier.
+* Réaction violente du demi-ogre.
+* Ajout de la capacité Insignifiant de la voie du gnome.
+* Implémentation de l'immunité à tout ce qui n'est pas magique.
+* Support du sort d'animation des objets
+* Ajout de l'effet fiévreux.
+* Jets de dégâts séparés par cible pour la destruction des morts-vivants
+* Ajout d'une option de malus de répétition pour la destruction des morts-vivants.
+* Ajout du type d'ennemi juré gobelin
+* Implémentation de base de la voie de l'expert du combat
+
+### Corrections de bugs
+* Pas de DOT sur les personnages déjà morts.
+* --demiAuto divise les dégâts par deux en cas d'échec, même si il n'y a pas de jet de sauvegarde.
+* ne pas faire entrer en combat quand on fait un effet qui ne fait pas de DM ou qui n'est pas préjudiciable (conséquences sur pacifisme, sanctuaire, et).
+* Prise en compte correcte des malus d'armure et de casques pour les compétences sur la fiche.
+
+### Autres améliorations
+* Prise en compte des options de sélections pour !cof-init.
+* Option d'attaque --forceMinimum
+* Prise en compte de --message pour !cof-animer-mort.
+* Ajout d'une option --affaiblirCarac pour les attaques.
+* Pour !cof-effet-temporaire, possibilité de prendre en compte la magie en armure.
+* Passage de l'aura d'initiative dynamique au layer map, pour éviter les sélections involontaires.
+* Ajout d'options pour des sons de réussite et échec critiques d'attaques par défaut.
+* Ajout de modificateurs d'attaque +n pour les armes magiques.
+* La durée restante des effets est affichée pour le MJ dans le statut des persos.
+* !cof-effet-temp ne fait entrer en combat que si au moins une des cibles est effectivement affectée.
+* --divisePortee permet de diviser la portée d'une attaque.
+* Possibilité d'utiliser --effet etat sans argument de durée.
+* Support pour les affaiblissements de caractéristiques
+* Ajout d'une condition d'attaque typeCible
+* Ajout d'un type de dégâts "énergie", pour des settings science fiction.
+* Message plus explicite en cas d'expression de soins incorrecte.
+* Modifie l'affichage des boutons de soins si plus disponibles
+* Un peu plus de discrétion avec les messages sur les limites par jour ou par combat
+* Passage en prédicats d'un grand nombre de capacités qui utilisaient encore des attributs.
+
+## 3.03
+### Capacités
+* Ajouts des capacités épiques d'Anathazerïn
+
+### Corrections de bugs
+* Correction de assome en assomme.
+
+### Autres améliorations
+* Ajout d'une option d'affichage pour que le MJ puisse prendre le temps de décrire une attaque avant de montrer le résultat aux joueurs.
+* Passage de armeParDefaut en prédicat, et prise en compte de ce prédicat au moment de poser un token.
+
+## 3.02
+### Capacité
+* Ajout des réaction allergiques pour les chiens gobelins
+* Possibilité optionelle de lancer plus de soins légers en une journée que le rang dans la voie, en échange d'un coût en mana.
+
+### Corrections de bugs
+* Correction d'un crash en cas de #Attaque -1 et pas d'arme en main.
+* Correction du prédicat increvable
+* Prise en compte du type drain dans les attaques sur la fiche.
+
+### Autres améliorations
+* Ajout de la commande d'action !arme-en-main
+* Possibilité de restreindre une attaque aux cibles qui ne sont pas au contact.
+* Outil de conversion de Pathfinder vers COF
+* Ajout d'un test de prédicat pour la cible d'une attaque
+* Changement d'interface pour les montures : déplacer le cavalier ne fait plus descendre de monture.
+* Options --degainer pour les effets de combat
+* Option d'attaque aussiArmeDeJet, pour les armes qui peuvent être utilisées au contact ou lancées.
+* Affichage du nombre d'armes de jets sur la fiche, plus besoin de munitions.
+* Support de la ceinture de rage améliorée d'Anathazerïn
+
+## 3.01
+* Affichage des armes cochées au lieu des armes non cochées, qui doivent pouvoir exister pour garder des attaques avec des armes que le personnage a temporairement perdues.
+* Passage d'une partie des attributs numériques qui ne dépendent pas des mooks en prédicats sur la fiche.
+
+## 3.00
+* Passage des listes d'actions sur la fiche
+* Passage des attributs booléens qui ne dépendent pas des mooks en prédicats sur la fiche
+* Ajout d'une fonction !cof-set-predicate pour modifier les prédicats depuis le chat.
+
 ## 2.18
 ### Capacités
 * Ajout de la possibilité pour un siphon des âmes d'empêcher les autres siphons.

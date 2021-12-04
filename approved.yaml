@@ -1051,3 +1051,35 @@ hs6e:
 reporter:
   - "Reporter"
   - "Tokens"
+  
+dungeonalchemist:
+  - "DungeonAlchemistImporter"
+  - "Maps & Drawing"
+  
+statustracker:
+  - "StatusTracker"
+  - "Tokens"
+
+safetytoolsalert:
+  - "SafetyToolsAlert"
+  - "Utility"
+
+shadowrun3e:
+  - "Shadowrun3e"
+  - "System Toolbox"
+  
+turnmarker1:
+  - "TurnMarker1"
+  - "Utility"
+  
+arcdoom:
+  - "ARC"
+  - "System Toolbox"
+
+alienrpgroller:
+  - "AlienRPGroller"
+  - "System Toolbox"
+
+roundmaster:
+  - "RoundMaster"
+  - "Utility"
