@@ -157,6 +157,8 @@
  * v3.023  30/11/2021 Changed avatars and added version control on handouts.
  * v3.024  04/12/2021 Fixed bug which scrambled the 'play', 'pause' & 'stop' symbols portrayed in the 
  *                    turn order tracker when downloaded from the Roll20 One-Click Install
+ *                    Added --removetargetstatus command to deal with a caster loosing concentration
+ *                    Fixed issue with targeted statuses
  */
  
 var RoundMaster = (function() {
@@ -2812,7 +2814,7 @@ var RoundMaster = (function() {
 		    // legitimately no longer exist
 		    return;
 		}
-		args = args.join('|');
+//		args = args.join('|');
 		sendDebug('doAddTargetStatus: Target is ' + target.get('name'));
 		doAddStatus(args,target);
 		return;
@@ -5804,6 +5806,9 @@ var RoundMaster = (function() {
 						// RED: v1.210 allow players to remove statuses e.g. when
 						// spell durations end (mostly via macros)
 						doRemoveStatus(argString,selected,true);
+						break;
+				case 'removetargetstatus':
+						doDelTargetStatus(argString,true);
 						break;
 				case 'reset':
 						if (isGM) doResetTurnorder(argString);
