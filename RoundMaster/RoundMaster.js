@@ -1360,20 +1360,18 @@ var RoundMaster = (function() {
 	var updateStatusDisplay = function(curToken,isTurn) {
 		if (!curToken) {return;}
 		var effects = getStatusEffects(curToken),
-			isPlayer,
+			isPlayer = isPlayerControlled( curToken ),
 			gstatus,
 			statusArgs,
 			toRemove = [],
 			content = '',
 			hcontent = ''; 
 			
-		isPlayer = isPlayerControlled( curToken );
-			
 		_.each(effects, function(e) {
 			if (!e) {return;}
 			statusArgs = e;
 			gstatus = statusExists(e.name); 
-//			log('updateStatusDisplay: dealing with next valid effect');
+//			log('updateStatusDisplay: dealing with next valid effect, isTurn='+isTurn+', state.round='+state.roundMaster.round+', e.round='+e.round);
 			// RED: v1.204 only need to increment if the first or only turn in the round
 			if (isTurn && parseInt(e.round) !== parseInt(state.roundMaster.round)) {
 //				log('updateStatusDisplay: isTurn true and this effect has not yet been updated');
@@ -1384,7 +1382,7 @@ var RoundMaster = (function() {
 				if (state.roundMaster.effectsLib && e.duration > 0) {
 					// RED: v1.301 run the relevant effect-turn macro if it exists
 //					log('updateStatusDisplay: attempting to run '+statusArgs.name+'-turn for '+curToken.get('name'));
-					sendAPImacro( curToken, statusArgs.msg, statusArgs.name, '-turn' );
+					setTimeout( () => sendAPImacro( curToken, statusArgs.msg, statusArgs.name, '-turn' ),2000 );
 				}
 			}
 //			log('updateStatusDisplay: name='+curToken.get('name')+', effect.round='+e.round+', status.round='+state.roundMaster.round+', effect.duration='+e.duration);
@@ -1402,7 +1400,7 @@ var RoundMaster = (function() {
 					// RED: v1.301 when removing the status marker
 					// run the relevant effect-end macro if it exists
 //        			log('updateStatusDisplay: name='+curToken.get('name')+', attempting to run ending effect for '+e.name);
-					sendAPImacro( curToken, e.msg, e.name, '-end' );
+					setTimeout( () => sendAPImacro( curToken, e.msg, e.name, '-end' ),2000 );
 				}
 				// remove from status args
 				var removedStatus = updateGlobalStatus(e.name,undefined,-1);
@@ -1574,18 +1572,18 @@ var RoundMaster = (function() {
 				case RW_StateEnum.ACTIVE:
 					graphic.set('tint_color','transparent'); 
 					indicator = String.fromCodePoint(9654)+' ';  // 9654
-					log('Code for ACTIVE indicator ▶ is '+('▶ '.codePointAt(0)));
+//					log('Code for ACTIVE indicator ▶ is '+('▶ '.codePointAt(0)));
 					break;
 				case RW_StateEnum.PAUSED:
 					graphic = findTrackerGraphic();
 					graphic.set('tint_color','#FFFFFF'); 
 					indicator = String.fromCodePoint(9613) + String.fromCodePoint(9613); // 9613
-					log('Code for PAUSE indicator ▍▍ is '+('▍▍'.codePointAt(0)));
+//					log('Code for PAUSE indicator ▍▍ is '+('▍▍'.codePointAt(0)));
 					break;
 				case RW_StateEnum.STOPPED:
 					graphic.set('tint_color','transparent'); 
 					indicator = String.fromCodePoint(9724)+' '; // 9724
-					log('Code for STOPPED indicator ◼ is '+('◼ '.codePointAt(0)));
+//					log('Code for STOPPED indicator ◼ is '+('◼ '.codePointAt(0)));
 					break;
 				default:
 					indicator = tracker.custom.substring(0,tracker.custom.indexOf('Round')).trim();
@@ -2458,9 +2456,6 @@ var RoundMaster = (function() {
 				} else {
 					turnorder = newRoundSort(turnorder,flags.newRoundSort);
 				};
-				turnorder.push(currentTurn);
-				currentTurn = turnorder[0];
-				updateTurnorderMarker(turnorder);
 				// RED: v1.204 visit every token with statuses and update them if not already done
 				// TODO
         		_.each(_.keys(state.roundMaster.effects), function(e) {
@@ -2468,8 +2463,12 @@ var RoundMaster = (function() {
         			if (!token) {
         				return; 
         			}
+//					log('handleAdvanceTurn: update remaining statuses');
         			updateStatusDisplay(token,true);
         		});
+				turnorder.push(currentTurn);
+				currentTurn = turnorder[0];
+				updateTurnorderMarker(turnorder);
                 
 				// RED: v1.204 set the global round state variable to the current round number
 				state.roundMaster.round = rounds;
@@ -2566,6 +2565,7 @@ var RoundMaster = (function() {
 						}
 				    }
 					if (curToken) {
+//						log('handleAdvanceTurn: announce the next tokens turn');
 						announceTurn(curToken,updateStatusDisplay(curToken,true),currentTurn.custom);
 					}
 				}
@@ -2895,7 +2895,7 @@ var RoundMaster = (function() {
 					name: effect,
 					duration: duration,
 					direction: direction,
-					round: state.roundMaster.round,
+					round: state.roundMaster.round-1,
 					msg: msg
 				});
 				updateGlobalStatus(effect,undefined,1);
@@ -2905,7 +2905,7 @@ var RoundMaster = (function() {
 					name: effect,
 					duration: duration,
 					direction: direction,
-					round: state.roundMaster.round,
+					round: state.roundMaster.round-1,
 					msg: msg
 				});
 				updateGlobalStatus(effect,undefined,1);
@@ -3109,7 +3109,7 @@ var RoundMaster = (function() {
 		}
 		
 		var	msg = updateStatusDisplay(curToken,false);
-		log('doDisplayTokenStatus: msg.public='+msg.public+', and msg.hidden='+msg.hidden);
+//		log('doDisplayTokenStatus: msg.public='+msg.public+', and msg.hidden='+msg.hidden);
 		if (!isGM) {
 			sendResponse(senderId,msg.public);
 		} else {
@@ -3384,7 +3384,7 @@ var RoundMaster = (function() {
         if (!args)
             {return;}
 
-		log('doPlayerTargetStatus: args.length='+args.length);
+//		log('doPlayerTargetStatus: args.length='+args.length);
 		if (args.length <4 || args.length > 6) {
             sendDebug('doPlayerTargetStatus: Invalid number of arguments');
 			sendError('Invalid status item syntax');
@@ -4007,11 +4007,11 @@ var RoundMaster = (function() {
 	}
 
 	/**
-	 * Resets the turn order the the provided round number
-	 * or in its absense, configures it to 1. Does no other
+	 * Resets the turn order to the provided round number
+	 * or in its absence, configures it to 1. Does no other
 	 * operation other than change the round counter.
 	 */ 
-	var doResetTurnorder = function(args) {
+	var doResetTurnorder = function(args,isTurn=true) {
 		var initial = (typeof(args) === 'string' ? args.match(/\s*\d+/) : 1);
 		if (!initial) 
 				{initial = 1;}
@@ -4052,7 +4052,8 @@ var RoundMaster = (function() {
         			if (!token) {
         				return; 
         			}
-        			updateStatusDisplay(token,true);
+//					log('doResetTurnorder: update status display');
+        			updateStatusDisplay(token,isTurn);
         		});
 			}
 		}
@@ -4068,7 +4069,7 @@ var RoundMaster = (function() {
 	 
 	var abilityLookup = function( rootDB, abilityName ) {
 		
-        abilityName = abilityName.toLowerCase().trim();
+        abilityName = abilityName.toLowerCase().replace(reIgnore,'').trim();
         rootDB = rootDB.toLowerCase();
         if (!abilityName || abilityName.length==0) {
 			return {dB: rootDB, obj: undefined, ct: undefined};
@@ -4076,14 +4077,15 @@ var RoundMaster = (function() {
 	    
         var dBname,
 			magicDB, magicName,
-            abilityObj = _.chain(findObjs({type: 'ability', name: abilityName}, {caseInsensitive:true}))
-                            .filter(function(obj) {
-                                if (!(magicDB = getObj('character',obj.get('characterid')))) {return false;}
-                                magicName = magicDB.get('name').toLowerCase();
-								if ((magicName.indexOf(rootDB) !== 0) || (/\s*v\d*\.\d*/i.test(magicName))) {return false;}
-                    			if (!dBname) dBname = magicName;
-                    			return true;
-                            }).value();
+            abilityObj = filterObjs(function(obj) {
+							if (obj.get('type') != 'ability') return false;
+							if (obj.get('name').toLowerCase().replace(reIgnore,'') != abilityName) return false;
+							if (!(magicDB = getObj('character',obj.get('characterid')))) return false;
+							magicName = magicDB.get('name').toLowerCase();
+                           if ((magicName.indexOf(rootDB) !== 0) || (/\s*v\d*\.\d*/i.test(magicName))) return false;
+							if (!dBname) dBname = magicName;
+							return true;
+						});
 		if (!abilityObj || abilityObj.length === 0) {
 			dBname = rootDB;
 		}
@@ -4317,7 +4319,7 @@ var RoundMaster = (function() {
 					sq:		1,
 		};
 		
-		log('doSetAOE: called, args='+args.join('|'));
+//		log('doSetAOE: called, args='+args.join('|'));
 		
 		if (!args) args = [];
 		if (!args[0] && selected && selected.length) {
@@ -4381,54 +4383,54 @@ var RoundMaster = (function() {
 			args[0] = crossHairID = crossHairObj.id;
 			crossHair = crossHairObj;
 			question = !!!confirmedDrop;
-			log('doSetAOE: question for crossHair which is at '+chName);
+//			log('doSetAOE: question for crossHair which is at '+chName);
 		}
 		if (!shape || !['BOLT','CIRCLE','CONE','ELIPSE','RECTANGLE','SQUARE','WALL'].includes(shape)) {
 			// ask for shape of aoe
 			args[1] = '?{Specify area of effect shape|Bolt|Circle|Cone|Elipse|Rectangle|Square|Wall}';
 			question = true;
 			shape = 'ELIPSE';
-			log('doSetAOE: question for shape='+args[1]);
+//			log('doSetAOE: question for shape='+args[1]);
 		} 
 		if (!units || !['SQUARES','FEET','YARDS','UNITS'].includes(units)) {
 			// ask for units of dimensions
 			args[2] = '?{Specify units of measurement|Grid squares,squares|Feet,feet|Yards,yards}';
 			question = true;
-			log('doSetAOE: question for units='+args[2]);
+//			log('doSetAOE: question for units='+args[2]);
 		}
 		if (!args[3]) {
 			// ask for range
 			args[3] = '?{Specify the range'+(units ? (' in '+units) : '')+'}';
 			question = true;
-			log('doSetAOE: question for range='+args[3]);
+//			log('doSetAOE: question for range='+args[3]);
 		}
 		if (!length || length <= 0) {
 			// ask for length
 			args[4] = '?{Specify area of effect diameter/length'+(units ? (' in '+units) : '')+'}';
 			question = true;
-			log('doSetAOE: question for length='+args[4]);
+//			log('doSetAOE: question for length='+args[4]);
 		}
 		if ((!width || width <= 0) && ['CONE','RECTANGLE','ELIPSE','BOLT','WALL'].includes(shape)) { 
 			// ask for width
 			args[5] = '?{Specify area of effect width'+(units ? (' in '+units) : '')+'}';
 			question = true;
-			log('doSetAOE: question for width='+args[5]);
+//			log('doSetAOE: question for width='+args[5]);
 		}
 		if (!aoeImage || !aoeImage.length) {
 			// If there is no defined image, ask for a colour
 			args[6] = '?{Choose an effect/colour to show|Acid|Cold|Dark|Fire|Light|Lightning|Magic|Red|Yellow|Blue|Green|Magenta|Cyan|White|Black}';
 			question = true;
-			log('doSetAOE: question for aoeImage='+args[6]);
+//			log('doSetAOE: question for aoeImage='+args[6]);
 		}
 		if (!state.roundMaster.dropOnce && !confirmedDrop) {
 			// display a chat window button asking to confirm position of cross-hair
 			// Button will call --aoe with a confirmedDrop
 			args[7] = true;
 			question = true;
-			log('doSetAOE: question for confirming');
+//			log('doSetAOE: question for confirming');
 		}
 		if (question) {
-			log('doSetAOE: asking questions');
+//			log('doSetAOE: asking questions');
 			content = '&{template:default}{{name=Confirm AOE placement}}'
 					+ '{{AOE='+(range==0 ? ('Range is 0.') : ('Move the crosshair '+(range > 0 ? 'within the range depicted by the green area, then' : 'within the range, then')))
 					+ '<br>[Confirm](!rounds --aoe '+args.join('|')+') Area of Effect placement}}'
@@ -4456,8 +4458,8 @@ var RoundMaster = (function() {
 				endWidth = ((units == 'YARDS') ? (width * 3 / ftSize) : ((units == 'FEET') ? (width / ftSize) : width ))/((units == 'SQUARES') ? 1 : scale),
 				chImage = aoeImages[aoeImage.toUpperCase()];
 
-			log('doSetAOE: setting AOE, args='+args.join('|'));
-			log('doSetAOE: length='+length+', ftSize='+ftSize+', units='+units+', radius='+radius+', scale='+scale);
+//			log('doSetAOE: setting AOE, args='+args.join('|'));
+//			log('doSetAOE: length='+length+', ftSize='+ftSize+', units='+units+', radius='+radius+', scale='+scale);
 			if (!_.isUndefined(chImage)) {
 				chImage = chImage[shape] || '';
 			} else {
@@ -4636,7 +4638,7 @@ var RoundMaster = (function() {
      * set at the preserved round number
      */
             prepareTurnorder();
-            doResetTurnorder(rounds);
+            doResetTurnorder(rounds,false);
 		}
 
 	    
@@ -4719,15 +4721,15 @@ var RoundMaster = (function() {
 		        			
 		} else {
 			turnorder = _.filter(turnorder,(e,i)=>{if (parseInt(e.id) == -1 && e.custom.match(searchTerm)) {
-														log('doAddToTracker: found matching custom entry, keepAll='+keepAll);
+//														log('doAddToTracker: found matching custom entry, keepAll='+keepAll);
 														tracker.push({id: '-1', ix: i, pr: e.pr, custom: name});
 														return keepAll;
 													} else  if (parseInt(tokenId) != -1 && e.id == tokenId) {
-														log('doAddToTracker: found matching token entry, keepAll='+keepAll);
+//														log('doAddToTracker: found matching token entry, keepAll='+keepAll);
 														tracker.push({id: e.id, ix: i, pr: e.pr, custom: msg});
 														return keepAll;
 													} else {
-														log('doAddToTracker: not matched, keepAll='+keepAll);
+//														log('doAddToTracker: not matched, keepAll='+keepAll);
 														return true;
 													}
 			});
@@ -5228,9 +5230,9 @@ var RoundMaster = (function() {
 			}
 		}
 		if (player) {
-			log('doSetViewer: viewer set to be '+ playerName);
+//			log('doSetViewer: viewer set to be '+ playerName);
 		} else {
-			log('doSetViewer: viewer not set');
+//			log('doSetViewer: viewer not set');
 		}
 
 		return;
@@ -5258,7 +5260,7 @@ var RoundMaster = (function() {
 				buildCSdb( dbName, dbNames[dbLabel], silent );
 			}
 		} else if (_.some( dbNames, (db,dbName) => checkDBver( dbName, db, silent ))) {
-			log('Updating all Effect databases');
+//			log('Updating all Effect databases');
 			if (!silent) sendFeedback('Updating all Effect databases');
 			_.each( dbNames, (db,dbName) => {
 				let dbCS = findObjs({ type:'character', name:dbName.replace(/_/g,'-') },{caseInsensitive:true});
@@ -5294,7 +5296,7 @@ var RoundMaster = (function() {
 					let version = note.match(reVersion);
 					version = (version && version.length) ? (parseFloat(version[1]) || 0) : 0;
 					if (version >= obj.version) {
-					    log('Not updating handout '+obj.name+' as is already version '+obj.version);
+//					    log('Not updating handout '+obj.name+' as is already version '+obj.version);
 					    return;
 					}
 					dbCS.set('notes',obj.bio);
@@ -5368,7 +5370,7 @@ var RoundMaster = (function() {
 						.includes(func.toLowerCase()),
 			cmd = '!'+from+' --hsr rounds'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
 			
-		log('RoundMaster recieved handshake query from '+from+((func && func.length) ? (' checking command '+func+' so responding '+funcTrue) : (' and responding')));
+//		log('RoundMaster recieved handshake query from '+from+((func && func.length) ? (' checking command '+func+' so responding '+funcTrue) : (' and responding')));
 		sendRmAPI(cmd);
 		return;
 	};
@@ -5498,7 +5500,7 @@ var RoundMaster = (function() {
 				[thac0,thac0Field] = getTokenValues(curToken,fields.Token_Thac0,fields.Thac0,fields.MonsterThac0);
 				[hp,hpField] = getTokenValues(curToken,fields.Token_HP,fields.HP);
 				
-			log('sendAPImacro: hp.current='+hp.current+', hpField.current='+hpField.current);
+//			log('sendAPImacro: hp.current='+hp.current+', hpField.current='+hpField.current);
 
 			if (!effectMacro) {
 			    sendDebug('Not found effectMacro ' + effectsLib.get('name') + '|' + effect + macro);
@@ -5528,7 +5530,8 @@ var RoundMaster = (function() {
 				macroBody = macroBody.replace( /\^\^token_thac0_max\^\^/gi , thac0Field.max );
 				macroBody = macroBody.replace( /\^\^token_hp_max\^\^/gi , hpField.max );
         		sendDebug('sendAPImacro: macroBody is ' + macroBody );
-		        sendChat("character|"+cid,macroBody,null,{noarchive:!flags.archive, use3d:false});
+//		        sendChat("character|"+cid,macroBody,null,{noarchive:!flags.archive, use3d:false});
+		        sendChat('',macroBody,null,{noarchive:!flags.archive, use3d:false});
 				
 			}
 		}
@@ -6060,7 +6063,7 @@ var RoundMaster = (function() {
 						[hp,hpField] = getTokenValues(obj,fields.Token_HP,fields.HP);
 
 						if (!effectMacro || effectMacro.length === 0) {
-							log('handleDestroyToken: Not found effectMacro ' + effectsLib.get('name') + '|' + e.name + '-end');
+//							log('handleDestroyToken: Not found effectMacro ' + effectsLib.get('name') + '|' + e.name + '-end');
 							sendDebug('handleDestroyToken: Not found effectMacro ' + effectsLib.get('name') + '|' + e.name + '-end');
 						} else {
 							if (!cname) {
@@ -6108,9 +6111,9 @@ var RoundMaster = (function() {
 	
 	var handleTokenDeath = function(obj,prev) {
 		
-		log('handleTokenDeath: checking statusmarker change for death');
+//		log('handleTokenDeath: checking statusmarker change for death');
 		if (obj.get("status_dead")) {
-			log('handleTokenDeath: '+obj.get('name')+' has died');
+//			log('handleTokenDeath: '+obj.get('name')+' has died');
 			// If the token dies and is marked as "dead" by the GM
 			// remove all active effects from the token
 			doRemoveStatus( 'all', obj, false );
