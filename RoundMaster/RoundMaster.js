@@ -159,6 +159,8 @@
  *                    turn order tracker when downloaded from the Roll20 One-Click Install
  *                    Added --removetargetstatus command to deal with a caster loosing concentration
  *                    Fixed issue with targeted statuses
+ *                    Changed abilityLookup() to prioritise ability macros in user databases
+ *                    Fixed bug in Effect macro processing of token bar values
  */
  
 var RoundMaster = (function() {
@@ -1244,7 +1246,7 @@ var RoundMaster = (function() {
 			attr = field[0].toLowerCase(),
 			altAttr = altAttr ? altField[0].toLowerCase() : 'EMPTY',
 			property = field[1],
-			attrVal = {}, attrObj, attrName;
+			attrVal = {}, attrObj, attrName, name;
 			
 		
 		if (tokenBar && tokenBar[0].length) {
@@ -1253,6 +1255,7 @@ var RoundMaster = (function() {
 		}
 		if (!attrVal.current || isNaN(attrVal.current)) {
 			if (_.some( ['bar2_link','bar1_link','bar3_link'], linkName=>{
+				name = linkName;
 				let linkID = curToken.get(linkName);
 				if (linkID) {
 					attrObj = getObj('attribute',linkID);
@@ -1263,7 +1266,7 @@ var RoundMaster = (function() {
 				}
 				return false;
 			})) {
-				attrName = {current:linkName.substring(0,4)+'_value', max:linkName.substring(0,4)+'_max'};
+				attrName = {current:name.substring(0,4)+'_value', max:name.substring(0,4)+'_max'};
 				attrVal = {current:attrObj.get('current'), max:attrObj.get('max')};
 			}
 		}
@@ -4065,6 +4068,7 @@ var RoundMaster = (function() {
 	 * macro database with the specified root name, returning
 	 * the database name.  If can't find a matching ability macro
 	 * then return undefined objects
+	 * RED: v3.025 added a preference for user-defined macros
 	 **/
 	 
 	var abilityLookup = function( rootDB, abilityName ) {
@@ -4077,19 +4081,27 @@ var RoundMaster = (function() {
 	    
         var dBname,
 			magicDB, magicName,
-            abilityObj = filterObjs(function(obj) {
-							if (obj.get('type') != 'ability') return false;
-							if (obj.get('name').toLowerCase().replace(reIgnore,'') != abilityName) return false;
-							if (!(magicDB = getObj('character',obj.get('characterid')))) return false;
-							magicName = magicDB.get('name').toLowerCase();
-                           if ((magicName.indexOf(rootDB) !== 0) || (/\s*v\d*\.\d*/i.test(magicName))) return false;
-							if (!dBname) dBname = magicName;
-							return true;
-						});
-		if (!abilityObj || abilityObj.length === 0) {
+			abilityObj,
+			found = false;
+			
+		filterObjs(function(obj) {
+			if (found) return false;
+			if (obj.get('type') != 'ability') return false;
+			if (obj.get('name').toLowerCase().replace(reIgnore,'') != abilityName) return false;
+			if (!(magicDB = getObj('character',obj.get('characterid')))) return false;
+			magicName = magicDB.get('name');
+			if ((magicName.toLowerCase().indexOf(rootDB) !== 0) || (/\s*v\d*\.\d*/i.test(magicName))) return false;
+			if (!dbNames[magicName.replace(/-/g,'_')]) {
+				dBname = magicName;
+				found = true;
+			} else if (!dBname) dBname = magicName;
+			abilityObj = obj;
+			return true;
+		});
+		if (!abilityObj) {
 			dBname = rootDB;
 		}
-		return {dB: dBname, obj:abilityObj};
+		return {dB: dBname.toLowerCase(), obj:abilityObj};
 	}
 	
 	/*
@@ -5491,7 +5503,7 @@ var RoundMaster = (function() {
 			    bar3 = curToken.get('bar3_value'),
 				ac, acField, thac0, thac0Field, hp, hpField,
 				effectAbility = abilityLookup( fields.effectlib, effect+macro ),
-				effectMacro = effectAbility.obj && effectAbility.obj.length ? effectAbility.obj[0] : undefined;
+				effectMacro = effectAbility.obj;
 //				log('sendAPImacro: effectAbility.length='+effectAbility.length+', effectAbility.obj.length='+effectAbility.obj.length);
 				
 //				findObjs({ _type : 'ability' , characterid : effectsLib.id, name :  effect + macro }, {caseInsensitive: true});
@@ -6056,21 +6068,21 @@ var RoundMaster = (function() {
 							ac, acField, thac0,thac0Field, hp, hpField,
 //							effectMacro = findObjs({ _type : 'ability' , characterid : effectsLib.id, name :  e.name + '-end' }, {caseInsensitive: true});
 							effectAbility = abilityLookup( fields.effectlib, e.name+'-end' ),
-							effectMacro = effectAbility.obj && effectAbility.obj.length ? effectAbility.obj[0] : undefined;
+							effectMacro = effectAbility.obj;
 							
 						[ac,acField] = getTokenValues(obj,fields.Token_AC,fields.AC,fields.MonsterAC);
 						[thac0,thac0Field] = getTokenValues(obj,fields.Token_Thac0,fields.Thac0,fields.MonsterThac0);
 						[hp,hpField] = getTokenValues(obj,fields.Token_HP,fields.HP);
 
-						if (!effectMacro || effectMacro.length === 0) {
+						if (!effectMacro) {
 //							log('handleDestroyToken: Not found effectMacro ' + effectsLib.get('name') + '|' + e.name + '-end');
 							sendDebug('handleDestroyToken: Not found effectMacro ' + effectsLib.get('name') + '|' + e.name + '-end');
 						} else {
 							if (!cname) {
 								cname = oldName;
 							}
-							if (effectMacro.length > 0) {
-								var macroBody = effectMacro[0].get('action');
+							if (effectMacro) {
+								var macroBody = effectMacro.get('action');
 
 								macroBody = macroBody.replace( /\^\^cname\^\^/gi , cname );
 								macroBody = macroBody.replace( /\^\^tname\^\^/gi , oldName );
